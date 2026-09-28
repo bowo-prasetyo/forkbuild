@@ -24,6 +24,7 @@ import { CreateFriendRelationshipUseCase } from '../../application/identity/Crea
 import { CreateIdentityLifecyclePropagationUseCase } from '../../application/identity/CreateIdentityLifecyclePropagationUseCase.js';
 import { CreateDeviceAuthorizationUseCase } from '../../application/identity/CreateDeviceAuthorizationUseCase.js';
 import { CreatePeerBlockUseCase } from '../../application/peer/CreatePeerBlockUseCase.js';
+import { CreateFollowUseCase } from '../../application/identity/CreateFollowUseCase.js';
 import { ChatUseCase } from '../../application/chat/ChatUseCase.js';
 import { CreateChatOutboxUseCase } from '../../application/chat/CreateChatOutboxUseCase.js';
 import { CreateConversationStoreUseCase } from '../../application/chat/CreateConversationStoreUseCase.js';
@@ -42,7 +43,7 @@ import { SetBitcoinEsploraConfigurationUseCase } from '../../application/setting
 
 // Composition root, part 1: the local identity, the saved network settings
 // (STUN, TURN, rendezvous, Bitcoin Esplora), peer sessions and discovery,
-// relationships, blocking, device authorization, chat, presence and voice.
+// relationships, follows, blocking, device authorization, chat, presence and voice.
 export function composeIdentityAndPeers() {
     const identityProvider = new CreateIdentityProviderUseCase().execute();
     const identityUseCase = new IdentityUseCase(identityProvider);
@@ -110,6 +111,7 @@ export function composeIdentityAndPeers() {
     // Built before friendRelationshipUseCase so its isBlocked predicate can gate
     // the friendship protocol.
     const peerBlockUseCase = new CreatePeerBlockUseCase().execute(identityProvider);
+    const followUseCase = new CreateFollowUseCase().execute(identityProvider);
     const publicLobbyUseCase = new PublicLobbyUseCase({
         transports: Array.from(rendezvousTransports.values()),
         identityProvider,
@@ -200,6 +202,6 @@ export function composeIdentityAndPeers() {
         setBitcoinEsploraConfigurationUseCase, peerSessionManager, peerRelationshipUseCase,
         peerReconnectionUseCase, findPeerUseCase, peerMessageBus, peerBlockUseCase, deviceAuthorizationUseCase,
         friendRelationshipUseCase, identityLifecyclePropagationUseCase, chatUseCase, peerPresenceUseCase,
-        deviceConversationSyncUseCase, voiceUseCase, publicLobbyUseCase
+        deviceConversationSyncUseCase, voiceUseCase, publicLobbyUseCase, followUseCase
     };
 }

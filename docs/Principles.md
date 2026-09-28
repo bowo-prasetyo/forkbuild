@@ -21,7 +21,7 @@ that no longer apply are listed at the end of their theme file under
 | [Repository catalog and previews](principles/catalog.md) | 11 |
 | [Avatars, presence, movement and interaction](principles/avatars.md) | 68 |
 | [Identity, keys and devices](principles/identity.md) | 31 |
-| [Peers, friends, chat and voice](principles/peers.md) | 110 |
+| [Peers, friends, chat and voice](principles/peers.md) | 111 |
 | [Terrain, water and nature](principles/terrain.md) | 16 |
 | [Bricks, structures and blueprints](principles/building.md) | 27 |
 | [Shared worlds and collaboration](principles/collaboration.md) | 22 |

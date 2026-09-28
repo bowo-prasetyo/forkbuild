@@ -48,6 +48,7 @@ export default {
         const friendRelationshipUseCase = inject('friendRelationshipUseCase');
         const identityLifecyclePropagationUseCase = inject('identityLifecyclePropagationUseCase');
         const peerBlockUseCase = inject('peerBlockUseCase');
+        const followUseCase = inject('followUseCase', null);
         const findPeerUseCase = inject('findPeerUseCase');
         // Resolves an authorized device's connection to its parent identity,
         // so a friend connected from another device still shows as online.
@@ -141,10 +142,31 @@ export default {
         }
 
         // --- People -------------------------------------------------------------
+        const follows = ref(followUseCase ? followUseCase.getFollowing() : []);
+        const followedIds = computed(() => new Set(follows.value.map((f) => f.identityId)));
+        function refreshFollows() {
+            follows.value = followUseCase ? followUseCase.getFollowing() : [];
+        }
+        function canFollow(person) {
+            return Boolean(followUseCase && followUseCase.canFollow(person.identityId));
+        }
+        function toggleFollow(person) {
+            relationshipError.value = '';
+            try {
+                if (person.isFollowing) {
+                    followUseCase.unfollow(person.identityId);
+                } else {
+                    followUseCase.follow(person.identityId, { name: person.alias || null });
+                }
+            } catch (e) {
+                relationshipError.value = e.message.replace(/^FollowUseCase:\s*/, '');
+            }
+        }
         const people = computed(() => buildPeople({
             relationships: relationships.value,
             friendships: friendships.value,
             blockedIds: blockedIds.value,
+            followedIds: followedIds.value,
             authenticatedPeers: peers.value.filter(isAuthenticatedPeer),
             connectedPeersFor: (identityId) => {
                 void peers.value;
@@ -304,6 +326,7 @@ export default {
         let unsubscribeRelationships = null;
         let unsubscribeFriendships = null;
         let unsubscribeBlocked = null;
+        let unsubscribeFollows = null;
         let unsubscribeSession = null;
         let unsubscribeVaultLock = null;
         let unsubscribeReconnectRejected = null;
@@ -314,11 +337,13 @@ export default {
             unsubscribeRelationships = peerRelationshipUseCase.onRelationshipsChanged((list) => refreshRelationships(list));
             unsubscribeFriendships = friendRelationshipUseCase.onRelationshipsChanged((list) => refreshFriendships(list));
             unsubscribeBlocked = peerBlockUseCase.onBlockedChanged((list) => refreshBlocked(list));
+            unsubscribeFollows = followUseCase ? followUseCase.onFollowingChanged(() => refreshFollows()) : null;
             unsubscribeSession = identityUseCase.onSessionChanged(() => {
                 isAuthenticated.value = identityUseCase.isAuthenticated();
                 refreshRelationships();
                 refreshFriendships();
                 refreshBlocked();
+                refreshFollows();
                 refreshLockState();
             });
             // Locking and unlocking never fire onSessionChanged.
@@ -341,6 +366,7 @@ export default {
             if (unsubscribeRelationships) unsubscribeRelationships();
             if (unsubscribeFriendships) unsubscribeFriendships();
             if (unsubscribeBlocked) unsubscribeBlocked();
+            if (unsubscribeFollows) unsubscribeFollows();
             if (unsubscribeSession) unsubscribeSession();
             if (unsubscribeVaultLock) unsubscribeVaultLock();
             if (unsubscribeReconnectRejected) unsubscribeReconnectRejected();
@@ -356,7 +382,7 @@ export default {
             connectedFor, shortId,
             pendingPeers, requestPeers, attentionHeading, peerName, progressStep, progressLabel,
             replyTexts, completeErrors, submitComplete, awaitingReply,
-            people, peopleFilter, visiblePeople, personMeta, canAddFriend, identitySource, successorOf, isRevoked, lifecycleTitle,
+            people, peopleFilter, visiblePeople, personMeta, canAddFriend, canFollow, toggleFollow, identitySource, successorOf, isRevoked, lifecycleTitle,
             actionTargetId, actionError, actionTargetVisible, act, onMenuToggle, menuAction,
             renamingId, renameText, startRename, saveRename,
             reconnectTargetId, toggleReconnect, reconnectCreate, reconnectAccept, reconnectRejectedError,

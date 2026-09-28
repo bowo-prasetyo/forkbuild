@@ -76,8 +76,13 @@ and current animation) to open its **Avatar Info Panel**:
   avatar's data is
 - Position, distance (in World Units), and current animation (Walking, Idle,
   …)
-- **Follow** — locks your camera to their movement
+- **Follow Avatar** — locks your camera to their movement
 - **Greet / Wave / Point** — sends a one-off gesture to that avatar
+- **Follow Their Work** — follows the identity behind the avatar, so their
+  new creations show on the **Following** page (see
+  [Following people](07-PeerConnectionsAndFriends.md#following-people)).
+  It only appears when the avatar's presence is signed, because a signature
+  is what proves whose avatar it is.
 
 A remote avatar is otherwise view-only — there's no way to move, edit, or
 delete someone else's avatar, only to look, follow, and gesture.

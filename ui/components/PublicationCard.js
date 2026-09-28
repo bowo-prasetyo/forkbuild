@@ -1,6 +1,7 @@
 import PublicationPreview from './PublicationPreview.js';
 import PublicationCommentarySection from './PublicationCommentarySection.js';
 import SharePublicationButton from './SharePublicationButton.js';
+import FollowButton from './FollowButton.js';
 import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
 import { License } from '../../core/License.js';
 
@@ -31,10 +32,11 @@ import { License } from '../../core/License.js';
 // gate every optional capability in this codebase's UI layer follows.
 export default {
     name: 'PublicationCard',
-    components: { PublicationPreview, PublicationCommentarySection, SharePublicationButton },
+    components: { PublicationPreview, PublicationCommentarySection, SharePublicationButton, FollowButton },
     inject: {
         // Read only to decide whether to offer the Comment toggle.
-        getPublicationCommentariesCommand: { default: null }
+        getPublicationCommentariesCommand: { default: null },
+        followingFeed: { default: null }
     },
     props: {
         publication: { type: Object, required: true },
@@ -58,6 +60,11 @@ export default {
         };
     },
     computed: {
+        // Only a verified signer can be followed; the typed author name is
+        // a label anyone can choose.
+        publisherIdentityId() {
+            return this.followingFeed ? this.followingFeed.verifiedPublisherOf(this.publication) : null;
+        },
         licenseLabel() {
             return License.idOf(this.publication.license);
         },
@@ -112,6 +119,9 @@ export default {
                 >{{ commentaryOpen ? 'Hide Comments' : 'Comment' }}</button>
             </div>
             <SharePublicationButton :publication="publication" />
+            <div v-if="publisherIdentityId" class="publication-follow">
+                <FollowButton :identity-id="publisherIdentityId" :name="publication.author || null" />
+            </div>
 
             <PublicationCommentarySection
                 v-if="getPublicationCommentariesCommand && commentaryOpen"

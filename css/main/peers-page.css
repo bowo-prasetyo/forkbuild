@@ -175,6 +175,11 @@
     color: #7fd1a6;
 }
 
+.peers-tag--following {
+    border-color: rgba(90, 150, 224, 0.5);
+    color: #8ab8e8;
+}
+
 .peers-tag--blocked {
     border-color: rgba(224, 90, 90, 0.5);
     color: #e08a8a;

@@ -2122,3 +2122,34 @@ Steem).
   "Since 1.0.0" list in `docs/ReleaseNotes-1.0.md` was missing the did:key fix, the layout work, the Home key fix and
   the Bitcoin wallet on the Publications page; it moved to the new file and now points there. The README names 1.1.0
   and links both.
+
+## Following people (unnumbered, 2026-09-28)
+
+**You can follow someone to keep up with their work, as on X, without either side asking the other for anything.**
+Friendship is mutual and exists to authorize chat, voice and visibility; there was no way to say "show me what this
+person makes" without that. Following is that: private, one-sided, and granting the followed identity nothing (the
+principle "Following Is A Local Subscription, Never A Relationship").
+
+- Store: `core/FollowRecord.js` and `application/identity/FollowUseCase.js`, kept per signed-in identity under
+  `follows:<identityId>`. Only a did:key can be followed, never a typed author name, and never yourself. Nothing is
+  signed or sent.
+- Feed: `application/publication/FollowingFeed.js` lists the Repository's admitted Publications whose signature
+  verifies against a followed, unblocked identity, newest first. `ui/views/FollowingView.js` (`/following`, **Following**
+  in the top bar) shows the people you follow, with **Unfollow**, and that feed. It fetches nothing by itself.
+- Notifications: `DecentralizedPublicationDiscoveryProvider#onAdded()` is new; `FollowedAuthorPublicationNotifier`
+  listens to it, after the startup rebuild, and saves a `publication.followed-author-published` notification.
+  `core/NotificationDeduplicationPolicy.js` deduplicates that event type by `publicationId` instead of
+  `commentaryId`, so a Publication heard of again never notifies twice.
+- Announcement Index: an `isKeptFirst` option. `FollowedAnnouncementRetention.js` keeps Snapshot records carrying a
+  followed publisher's signed placement, and Place Naming claims a followed author signed, ahead of the rest when a
+  tag is full, after checking the signature. Publication leads carry no author and get no preference. This was listed
+  as not built in `docs/AnnouncementIndex.md`.
+- Shared Worlds: a followed identity counts as a trusted sharer for `AutoRetrieveSharedPublicationsUseCase`.
+- UI: `ui/components/FollowButton.js` on publication cards, on the Author view (one per verified signing identity
+  under that name), in the Peers page's ⋯ menu with a **Following** tag and filter, and as **Follow Their Work** in
+  World View's Avatar Info Panel. That panel's camera button now reads **Follow Avatar** / **Stop Following Avatar**,
+  so the two follows can't be confused. Remote avatar info carries `signerIdentityId`, the verified presence signer,
+  rather than the unverified `ownerIdentity`.
+- Not built: a public, signed follow list (as Nostr's contact lists), follower counts, and a per-author discovery tag
+  so following could fetch an author's history from relays.
+- Tests: `tests/Following.test.js`. `tests/support/MinimalVueCompositionApiShim.js#mountComponent()` takes props.

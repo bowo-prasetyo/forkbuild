@@ -29,6 +29,7 @@ export class DecentralizedPublicationDiscoveryProvider extends DiscoveryProvider
     constructor() {
         super();
         this._publications = [];
+        this._addedListeners = new Set();
     }
 
     // Accepts an already-resolved Publication and retains it as a
@@ -39,6 +40,20 @@ export class DecentralizedPublicationDiscoveryProvider extends DiscoveryProvider
             throw new Error('DecentralizedPublicationDiscoveryProvider.add() requires a Publication instance');
         }
         this._publications.push(publication);
+        // A listener's failure must not undo or fail the admission itself.
+        for (const listener of this._addedListeners) {
+            try {
+                listener(publication);
+            } catch {
+            }
+        }
+    }
+
+    // Calls `listener(publication)` after every later add(). Returns an
+    // unsubscribe function.
+    onAdded(listener) {
+        this._addedListeners.add(listener);
+        return () => this._addedListeners.delete(listener);
     }
 
     // Returns every Publication accumulated so far, in insertion order.

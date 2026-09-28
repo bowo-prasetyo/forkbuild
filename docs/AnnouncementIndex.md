@@ -90,8 +90,13 @@ database" rule. For Commentary, this design adds only the sync cursors
   that, the record least recently seen is removed first. It can always
   be discovered again.
 - **Per author.** Phase 5 adds a cap per Place Naming author for records
-  from peers. Keeping records from followed identities longer is not
-  built.
+  from peers.
+- **Followed identities.** When a tag is full, records signed by an
+  identity the signed-in identity follows are kept ahead of the rest:
+  Snapshot records carrying the publisher's signed placement, and Place
+  Naming claims. The signature is checked first, so only the followed
+  identity can have records kept in its name. A Publication lead names no
+  author, so it gets no preference.
 
 ## Storage
 

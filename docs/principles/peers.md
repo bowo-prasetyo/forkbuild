@@ -925,3 +925,12 @@ a durable outbox and a durable conversation store. See "A Reload
 Continues A Conversation; It Never Starts A New One (0.2.69)".
 
 [Full text](history/0.1-0.2.md#0261-ships-live-chat-not-a-message-database-0261)
+
+### Following Is A Local Subscription, Never A Relationship (2026-09-28)
+
+A follow is a private, one-sided note on this device, never signed, sent
+or counted, and it grants the followed identity nothing. It names a
+did:key and matches only work whose signature verifies against it; it
+selects from what reaches this device and never fetches. Blocking wins.
+
+[Full text](history/0.9.md#following-is-a-local-subscription-never-a-relationship-2026-09-28)

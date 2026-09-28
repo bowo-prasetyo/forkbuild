@@ -25,7 +25,11 @@ export class AnnouncementIndex {
         now = () => Date.now(),
         maxRecordsPerTag = DEFAULT_MAX_RECORDS_PER_TAG,
         maxPayloadBytes = DEFAULT_MAX_PAYLOAD_BYTES,
-        maxWatchedTags = DEFAULT_MAX_WATCHED_TAGS
+        maxWatchedTags = DEFAULT_MAX_WATCHED_TAGS,
+        // `(kind, payload) -> boolean`: records to keep ahead of the rest when a
+        // tag is full (a followed identity's signed ones). Never changes order
+        // or what list() returns.
+        isKeptFirst = null
     } = {}) {
         if (!storage || typeof storage.load !== 'function' || typeof storage.save !== 'function') {
             throw new Error('AnnouncementIndex: a StorageProvider is required');
@@ -36,6 +40,7 @@ export class AnnouncementIndex {
         this._maxRecordsPerTag = maxRecordsPerTag;
         this._maxPayloadBytes = maxPayloadBytes;
         this._maxWatchedTags = maxWatchedTags;
+        this._isKeptFirst = typeof isKeptFirst === 'function' ? isKeptFirst : null;
     }
 
     // Notes that this device searched `tag`, whether or not anything was
@@ -105,8 +110,27 @@ export class AnnouncementIndex {
 
         // Least recently seen goes first; it can always be discovered again.
         records.sort((a, b) => b.lastSeenAt - a.lastSeenAt);
-        this._storage.save(storageName(kind, tag), { version: STORAGE_VERSION, records: records.slice(0, this._maxRecordsPerTag) });
+        const kept = records.length > this._maxRecordsPerTag ? this._trim(kind, records) : records;
+        this._storage.save(storageName(kind, tag), { version: STORAGE_VERSION, records: kept });
         return { added, updated };
+    }
+
+    // `records` is sorted most recently seen first. Records isKeptFirst picks
+    // take their places first, so only the rest are evicted.
+    _trim(kind, records) {
+        if (!this._isKeptFirst) return records.slice(0, this._maxRecordsPerTag);
+        const first = [];
+        const rest = [];
+        for (const record of records) {
+            let keep = false;
+            try {
+                keep = this._isKeptFirst(kind, record.payload) === true;
+            } catch {
+                keep = false;
+            }
+            (keep ? first : rest).push(record);
+        }
+        return [...first, ...rest].slice(0, this._maxRecordsPerTag).sort((a, b) => b.lastSeenAt - a.lastSeenAt);
     }
 
     // Payloads stored under (kind, tag), most recently seen first. With

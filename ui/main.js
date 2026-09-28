@@ -34,6 +34,9 @@ import { CreateIpfsPublicationContentVerificationCoordinatorUseCase } from '../a
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { AnnouncementIndex } from '../application/announcementIndex/AnnouncementIndex.js';
+import { createFollowedAnnouncementRetention } from '../application/announcementIndex/FollowedAnnouncementRetention.js';
+import { FollowingFeed } from '../application/publication/FollowingFeed.js';
+import { FollowedAuthorPublicationNotifier } from '../application/publication/FollowedAuthorPublicationNotifier.js';
 import { composeAnnouncementSync } from './main/composeAnnouncementSync.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
@@ -58,7 +61,7 @@ const {
     peerSessionManager, peerRelationshipUseCase, peerReconnectionUseCase, findPeerUseCase, peerMessageBus,
     peerBlockUseCase, deviceAuthorizationUseCase, friendRelationshipUseCase,
     identityLifecyclePropagationUseCase, chatUseCase, peerPresenceUseCase, deviceConversationSyncUseCase,
-    voiceUseCase, publicLobbyUseCase
+    voiceUseCase, publicLobbyUseCase, followUseCase
 } = composeIdentityAndPeers();
 
 // The one LocalPublicationCatalog instance; every collaborator below shares it.
@@ -100,6 +103,29 @@ const { admissionLog: worldEncounterPublicationAdmissionLog } = new CreateWorldE
 new ReconstructWorldEncounterPublicationDiscoveryUseCase(
     worldEncounterPublicationAdmissionLog, decentralizedPublicationDiscoveryProvider
 ).execute();
+
+// Following: a local list, matched against verified Publication signatures.
+// Subscribed only after the rebuild above, so what was already here at startup
+// never notifies again.
+// Reads what the Repository reads: this device's catalog (other identities
+// signed in here) and what was admitted from peers and the network.
+const followingFeed = new FollowingFeed({
+    discoveryProvider: new CompositeDiscoveryProvider([
+        new LocalDiscoveryProvider(new LocalStorageProvider()),
+        decentralizedPublicationDiscoveryProvider
+    ]),
+    isFollowing: (identityId) => followUseCase.isFollowing(identityId),
+    isBlocked: (identityId) => peerBlockUseCase.isBlocked(identityId)
+});
+const followedAuthorPublicationNotifier = new FollowedAuthorPublicationNotifier({
+    identityProvider,
+    isFollowing: (identityId) => followUseCase.isFollowing(identityId),
+    isBlocked: (identityId) => peerBlockUseCase.isBlocked(identityId),
+    notificationSink: (notificationEvent) => new NotificationEventStore(new LocalStorageProvider()).save(notificationEvent)
+});
+decentralizedPublicationDiscoveryProvider.onAdded((publication) => {
+    followedAuthorPublicationNotifier.handlePublicationAdmitted(publication);
+});
 
 // Shares the commentary store's localStorage keys with
 // createPublicationCommentaryCommand. The store keeps no cache, so a saved
@@ -208,9 +234,9 @@ const {
     publicationSnapshotPlacementPeerExchange, publicationSnapshotPlacementDiscoveryCoordinator
 });
 // Share with Peers: this identity's own Worlds offered to peers, and Worlds
-// peers shared, retrieved automatically from Friends and Known Peers and by
-// hand from anyone else. A connection counts as the identity it speaks for,
-// so a friend's authorized device counts as the friend.
+// peers shared, retrieved automatically from Friends, Known Peers and people
+// you follow, and by hand from anyone else. A connection counts as the
+// identity it speaks for, so a friend's authorized device counts as the friend.
 const identityOfConnection = (connectedPeer) => {
     const resolved = deviceAuthorizationUseCase.resolveConnectionIdentity(connectedPeer);
     return resolved ? resolved.identityId : (connectedPeer.remoteIdentity ? connectedPeer.remoteIdentity.identityId : null);
@@ -236,7 +262,9 @@ const autoRetrieveSharedPublicationsUseCase = new AutoRetrieveSharedPublications
     identityOfConnection,
     publicationKindPlugin,
     isTrustedSharer: (identityId) => !peerBlockUseCase.isBlocked(identityId)
-        && (friendRelationshipUseCase.getState(identityId) === FriendshipState.FRIEND || peerRelationshipUseCase.isKnown(identityId))
+        && (friendRelationshipUseCase.getState(identityId) === FriendshipState.FRIEND
+            || peerRelationshipUseCase.isKnown(identityId)
+            || followUseCase.isFollowing(identityId))
 });
 
 const {
@@ -283,6 +311,8 @@ app.provide('friendRelationshipUseCase', friendRelationshipUseCase);
 app.provide('identityLifecyclePropagationUseCase', identityLifecyclePropagationUseCase);
 app.provide('deviceAuthorizationUseCase', deviceAuthorizationUseCase);
 app.provide('peerBlockUseCase', peerBlockUseCase);
+app.provide('followUseCase', followUseCase);
+app.provide('followingFeed', followingFeed);
 app.provide('chatUseCase', chatUseCase);
 app.provide('peerPresenceUseCase', peerPresenceUseCase);
 app.provide('deviceConversationSyncUseCase', deviceConversationSyncUseCase);
@@ -374,7 +404,14 @@ app.provide('snapshotPeerPossessionCoordinator', snapshotPeerPossessionCoordinat
 app.provide('snapshotMaterializationSelectionCoordinator', snapshotMaterializationSelectionCoordinator);
 
 // Every announcement this device has discovered (docs/AnnouncementIndex.md).
-const announcementIndex = new AnnouncementIndex({ storage: new LocalStorageProvider() });
+// A followed identity's signed records are the last to go when a tag is full.
+const announcementIndex = new AnnouncementIndex({
+    storage: new LocalStorageProvider(),
+    isKeptFirst: createFollowedAnnouncementRetention({
+        isFollowing: (identityId) => followUseCase.isFollowing(identityId),
+        isBlocked: (identityId) => peerBlockUseCase.isBlocked(identityId)
+    })
+});
 
 const {
     worldDiscoveryRuntime, worldEncounterMaterialVerifier, arweaveGatewayConfigurationStore,

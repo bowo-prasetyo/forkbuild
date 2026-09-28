@@ -1,4 +1,5 @@
 import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../../application/avatar/AvatarPresenceLabels.js';
+import FollowButton from './FollowButton.js';
 
 // 0.2.39 — the World Entity Interaction & Selection design doc's own
 // mockup, verbatim in what it shows AND in what it deliberately never
@@ -46,6 +47,7 @@ import { describeLifecycleState, describeTrustStatus, describeAnimationState } f
 // second, redundant one.
 export default {
     name: 'AvatarInfoPanel',
+    components: { FollowButton },
     props: {
         info: {
             type: Object,
@@ -121,11 +123,13 @@ export default {
             </div>
 
             <div class="info-actions" v-if="!info.isLocal">
-                <button v-if="!following" class="action-btn" @click="$emit('follow')">Follow</button>
-                <button v-else class="action-btn action-btn--primary" @click="$emit('stop-follow')">Stop Following</button>
+                <button v-if="!following" class="action-btn" @click="$emit('follow')">Follow Avatar</button>
+                <button v-else class="action-btn action-btn--primary" @click="$emit('stop-follow')">Stop Following Avatar</button>
                 <button class="action-btn" @click="$emit('interact', 'greet')">Greet</button>
                 <button class="action-btn" @click="$emit('interact', 'wave')">Wave</button>
                 <button class="action-btn" @click="$emit('interact', 'point')">Point</button>
+                <FollowButton v-if="info.signerIdentityId" :identity-id="info.signerIdentityId" :name="info.displayName || null"
+                              follow-label="Follow Their Work" following-label="Following Their Work ✓" />
             </div>
         </div>
     `

@@ -9,8 +9,9 @@ import { shortId } from './presentation.js';
 // `connectedPeersFor(identityId)` returns the live connections whose
 // resolved identity is that one, so a friend connected from an authorized
 // device still lands on the friend's card. Authenticated connections no
-// card claims become cards of their own.
-export function buildPeople({ relationships = [], friendships = [], blockedIds = new Set(), authenticatedPeers = [], connectedPeersFor = () => [] }) {
+// card claims become cards of their own. Following only tags a card: someone
+// you follow but have never connected to is listed on the Following page.
+export function buildPeople({ relationships = [], friendships = [], blockedIds = new Set(), followedIds = new Set(), authenticatedPeers = [], connectedPeersFor = () => [] }) {
     const byId = new Map();
     const entryFor = (identityId) => {
         if (!byId.has(identityId)) {
@@ -52,6 +53,7 @@ export function buildPeople({ relationships = [], friendships = [], blockedIds =
             isKnown: !!entry.relationship,
             isFriend: !!entry.friendship,
             isBlocked: blockedIds.has(entry.identityId),
+            isFollowing: followedIds.has(entry.identityId),
             alias,
             name: alias || (connectedPeer && connectedPeer.alias) || shortId(entry.identityId)
         };
@@ -69,11 +71,13 @@ function comparePeople(a, b) {
 export const PEOPLE_FILTERS = [
     { key: 'all', label: 'All' },
     { key: 'friends', label: 'Friends' },
+    { key: 'following', label: 'Following' },
     { key: 'online', label: 'Online' }
 ];
 
 export function filterPeople(people, filter) {
     if (filter === 'friends') return people.filter((person) => person.isFriend);
+    if (filter === 'following') return people.filter((person) => person.isFollowing);
     if (filter === 'online') return people.filter((person) => person.isOnline);
     return people;
 }

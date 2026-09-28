@@ -71,7 +71,9 @@ models").
   invitation, and authenticated with a challenge–response handshake.
 - An opt-in public lobby, one for everyone and one per World, for meeting
   people whose identity you don't know yet.
-- Remembered peers, mutual-consent friendships and blocking.
+- Remembered peers, mutual-consent friendships, private one-sided follows
+  (a Following page and notifications for new work by people you follow) and
+  blocking.
 - Chat with offline queuing, persistent history and read receipts, and voice
   calls.
 - Avatar profiles, presence, gestures and per-audience visibility, all shared

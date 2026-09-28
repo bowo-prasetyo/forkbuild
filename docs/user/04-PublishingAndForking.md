@@ -231,6 +231,12 @@ everything they've made, including their originals and all the forks that grew
 from them, using the exact same search/sort/pagination catalog as the
 Repository, just scoped to that one author.
 
+A card whose signature checks out also has a **Follow** button, and an
+Author view shows **Signed by …** with **Follow** for each identity that
+published under that name. Following someone puts their new work on your
+**Following** page and in your notifications; see
+[Following people](07-PeerConnectionsAndFriends.md#following-people).
+
 The Repository isn't limited to what was published from this device or
 discovered outright, either: a decentralized Repository creation a peer
 showed you in World View's own

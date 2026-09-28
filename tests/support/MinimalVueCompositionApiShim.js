@@ -80,7 +80,7 @@ export function watch() {
 // shape every Composition-API view file in this codebase already exports)
 // against `injectionContext`, returning `setup()`'s own returned object
 // after every `onMounted()` callback it registered has already run.
-export function mountComponent(component, injectionContext = {}) {
+export function mountComponent(component, injectionContext = {}, props = {}) {
     const previousInjectionContext = currentInjectionContext;
     const previousMountedCallbackQueue = currentMountedCallbackQueue;
     currentInjectionContext = injectionContext;
@@ -88,7 +88,7 @@ export function mountComponent(component, injectionContext = {}) {
     currentMountedCallbackQueue = mountedCallbackQueue;
     let exposed;
     try {
-        exposed = component.setup();
+        exposed = component.setup(props);
     } finally {
         currentInjectionContext = previousInjectionContext;
         currentMountedCallbackQueue = previousMountedCallbackQueue;

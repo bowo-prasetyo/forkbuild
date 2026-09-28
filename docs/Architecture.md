@@ -767,7 +767,7 @@ CreatePublicationDisplayKindRegistryUseCase's `publicationKindPlugin`
 rather than naming it. The UI is ui/components/SharePublicationButton.js on
 Repository cards and ui/components/SharedWithYouPanel.js above the catalog.
 
-**Relationships.** Three separate kinds of local state:
+**Relationships.** Four separate kinds of local state:
 
 - PeerRelationshipUseCase: peers this device chose to remember, by
   identity, with a local alias. Forgetting deletes only the local record.
@@ -776,6 +776,25 @@ Repository cards and ui/components/SharedWithYouPanel.js above the catalog.
   (`forkbuild:friendship`). Friendship needs both sides' consent.
 - PeerBlockUseCase: a one-sided, silent block, enforced in both
   directions by this device.
+- FollowUseCase (application/identity/): identities this identity follows,
+  as core/FollowRecord.js entries under `follows:<identityId>`. One-sided and
+  never sent; it grants the followed identity nothing. A follow is matched
+  only against verified signatures, never a typed author name:
+  - application/publication/FollowingFeed.js lists the Publications the
+    Repository knows (this device's catalog and the
+    DecentralizedPublicationDiscoveryProvider) whose signature verifies
+    against a followed, unblocked identity (the Following page,
+    ui/views/FollowingView.js). It fetches nothing itself.
+  - FollowedAuthorPublicationNotifier listens to the provider's onAdded(),
+    subscribed after the startup rebuild, and saves a
+    `publication.followed-author-published` NotificationEvent, deduplicated
+    by Publication id.
+  - application/announcementIndex/FollowedAnnouncementRetention.js is the
+    Announcement Index's `isKeptFirst`: Snapshot records with a followed
+    publisher's signed placement, and Place Naming claims a followed author
+    signed, are the last evicted when a tag is full.
+  - AutoRetrieveSharedPublicationsUseCase's trusted-sharer predicate also
+    accepts a followed identity.
 
 Presence and profile visibility (PUBLIC/FRIENDS/…) is decided by a
 visibility policy that reads these facts; see "Avatars and presence".
