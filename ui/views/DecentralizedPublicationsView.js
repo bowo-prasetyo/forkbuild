@@ -44,8 +44,10 @@ import { BaseTransactionBroadcastState } from '../../application/anchoring/base/
 import { BaseTransactionInclusionObservationState } from '../../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 import { isLegacyContentHash } from '../../serializer/contentHash.js';
+import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import {
     humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, OUTCOME_BADGE_CLASSES, republishAdviceFor,
+    preferredDistributionChoice, WALLET_GUIDED_ANCHOR_TYPES,
     EVIDENCE_BADGE_CLASSES
 } from './decentralizedPublications/presentation.js';
 import { useBaseAnchoring } from './decentralizedPublications/useBaseAnchoring.js';
@@ -181,6 +183,41 @@ export default {
         const availableAnchorTypes = creationCoordinator ? creationCoordinator.availableAnchorTypes() : [];
         // Same for storage types and "Create Placement".
         const availableStorageTypes = placementCreationCoordinator ? placementCreationCoordinator.availableStorageTypes() : [];
+
+        // The person's saved Content and Proof/Anchoring providers, read once
+        // (changing them means leaving for Settings, which remounts this
+        // page). When one can be used here, a card's Distribution section
+        // leads with a single button for it and folds the per-type cards;
+        // otherwise it shows the cards and says why. Nothing is chosen for
+        // the person: the button only ever uses their own saved choice.
+        const roleProviderPreferenceStore = inject('roleProviderPreferenceStore', null);
+        function savedProviderKey(role) {
+            try {
+                const preference = roleProviderPreferenceStore ? roleProviderPreferenceStore.get(role) : null;
+                return preference ? preference.providerKey : null;
+            } catch {
+                return null;
+            }
+        }
+        const contentPreference = preferredDistributionChoice(
+            savedProviderKey(RoleProviderRole.CONTENT),
+            preferredPlacementCreationCoordinator && typeof preferredPlacementCreationCoordinator.preferableStorageTypes === 'function'
+                ? preferredPlacementCreationCoordinator.preferableStorageTypes() : []
+        );
+        const anchorPreference = preferredDistributionChoice(
+            savedProviderKey(RoleProviderRole.PROOF_AND_ANCHORING),
+            preferredAnchorCreationCoordinator ? availableAnchorTypes : [],
+            { walletGuidedKeys: WALLET_GUIDED_ANCHOR_TYPES }
+        );
+        function preferenceHint(choice, noun, name) {
+            if (choice.reason === 'unavailable') return `Your preferred ${noun}, ${name(choice.savedKey)}, can't be used with one click here; use the options below.`;
+            if (choice.reason === 'wallet-guided') {
+                return `Your preferred ${noun}, ${name(choice.savedKey)}, is anchored through its wallet steps in this card's Details → Decentralization & Evidence tab.`;
+            }
+            return `No preferred ${noun} is set. Choose one under Configure to get a single button here.`;
+        }
+        const contentPreferenceHint = preferenceHint(contentPreference, 'storage', humanizeStorageType);
+        const anchorPreferenceHint = preferenceHint(anchorPreference, 'anchoring provider', humanizeAnchorType);
 
         const entries = reactive([]);
         const loading = ref(true);
@@ -891,6 +928,15 @@ export default {
             await refreshList();
         }
 
+        function preferredStoreButtonLabel(entry) {
+            return preferredPlacementCreationView(entry).state === 'creating'
+                ? 'Storing…' : `Store on ${humanizeStorageType(contentPreference.providerKey)}`;
+        }
+        function preferredAnchorButtonLabel(entry) {
+            return preferredCreationView(entry).state === 'creating'
+                ? 'Anchoring…' : `Anchor on ${humanizeAnchorType(anchorPreference.providerKey)}`;
+        }
+
         // A name for the card and the batch-anchor picker, read from content
         // that passed its check: a Publication's title or a place name
         // claim's name. Null otherwise (not checked, unavailable, failed, or
@@ -973,6 +1019,8 @@ export default {
             canRetrieve, retrieve, recheck, usableEntries, failedEntries, anyRetrievable,
             confirmingRemoveAllFailed, removeFailedEntry, removeAllFailedEntries, publicationTitle,
             isOwnLegacyEntry, ownLegacyCount, ownLegacyRepublishAdvice,
+            contentPreference, anchorPreference, contentPreferenceHint, anchorPreferenceHint,
+            preferredStoreButtonLabel, preferredAnchorButtonLabel,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel, verificationNote, creationFinality,
             preferredCreationFinality, batchAnchorTypes, batchAnchoring, batchSelectedIds, batchLimit,

@@ -38,8 +38,11 @@ when you expand the list.
 In a publication card's **Distribution** section, the **Proof / Anchoring**
 block has a card per kind of evidence this device can create, each with its
 own button: **Create Bitcoin Anchor**, **Create Arweave Anchor** and
-**Create Steem Anchor**. Each records the publication's content hash in a
-transaction on that network, with one of three outcomes:
+**Create Steem Anchor**. When you've saved a preferred provider, these cards
+are folded under **Other anchoring options**, below that provider's own
+button (see [Anchoring on a preferred provider](#anchoring-on-a-preferred-provider)).
+Each records the publication's content hash in a transaction on that
+network, with one of three outcomes:
 
 | Outcome | Meaning |
 |---|---|
@@ -90,14 +93,20 @@ anchor, verified on its own.
 
 ### Anchoring on a preferred provider
 
-The **Proof / Anchoring** block also has a **Configure** link and a
-**Use Preferred Provider** button. **Configure** opens
+The **Proof / Anchoring** block's **Configure** link opens
 [Proof / Anchoring Provider](10-NetworkSettings.md#proof--anchoring-provider),
-where you choose a default. **Use Preferred Provider** then anchors there
-without asking, with the same outcomes as the buttons above. It reads
-**Creating…** while it works and shows the new anchor's transaction and
-content hash when done. Saving a preference changes neither the explicit
-buttons nor existing anchors.
+where you choose a default. Once you have, the block leads with one button
+named for it, such as **Anchor on Steem**, which anchors there with the same
+outcomes as the buttons above. It reads **Anchoring…** while it works and
+shows the new anchor's transaction and content hash when done. Every other
+kind stays one click away under **Other anchoring options**. Saving a
+preference changes neither those buttons nor existing anchors.
+
+There's no such button, and all the options show, when nothing is saved,
+when the saved provider isn't registered on this device, or when it's
+Bitcoin: a Bitcoin anchor is made through its wallet steps (see
+[The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline)), and the block
+says so.
 
 ### Discover from Peers
 
@@ -464,8 +473,10 @@ people, can exist side by side; none is preferred.
 
 In a publication card's **Distribution** section, the **Content** block has
 a card per backend, with **Create Local Placement**, **Create IPFS
-Placement** or **Create Arweave Placement**. Each takes the bytes this
-device holds for the publication and hands them to that backend:
+Placement** or **Create Arweave Placement**. When you've saved a preferred
+storage, the block leads with one button for it, such as **Store on IPFS**,
+and folds these cards under **Other storage options**. Each takes the bytes
+this device holds for the publication and hands them to that backend:
 
 - **Placement created** — accepted; a new signed placement appears below.
 - **No placement was created** — the backend couldn't be reached, or this
@@ -487,10 +498,13 @@ content other people placed.
 
 ### Using a preferred provider
 
-**Use Preferred Provider**, next to the Create buttons, creates a placement
-on the backend saved under
+**Store on …** at the top of the **Content** block, and **Use Preferred
+Provider** in the card's **Details → Placements & IPFS** tab, create a
+placement on the backend saved under
 [Content Provider](10-NetworkSettings.md#content-provider). Saving a
 preference changes neither the explicit buttons nor existing placements.
+With nothing saved, or with IPFS (Remote Pinning) saved, the **Content**
+block shows every backend instead of **Store on …**.
 
 | Label | Meaning |
 |---|---|

@@ -123,9 +123,11 @@ Each publication card shows:
 
 Below that, two folded sections:
 
-- **Distribution** — the buttons that announce the publication, store its
-  content (**Create … Placement**) and anchor it (**Create … Anchor**), each
-  with a **Configure** link and **Use Preferred Provider**. See
+- **Distribution** — announce the publication, store its content and anchor
+  it. Storing and anchoring each lead with one button for the provider you
+  saved under **Configure** (**Store on IPFS**, **Anchor on Steem**), with
+  every other provider folded under **Other … options**. Without a saved
+  provider it can use, all the options show instead. See
   [Evidence & Storage](11-EvidenceAndStorage.md).
 - **Details**, in four tabs:
 

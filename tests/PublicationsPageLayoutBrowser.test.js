@@ -14,7 +14,11 @@ import { assert } from './support/Assert.js';
 // publications can be removed from this device after a confirm step. Cards
 // and picker rows are named by the checked content's title when it has one.
 // An old publication one of this device's identities signed is listed first
-// in the failed group, marked as yours, with how to publish it again.
+// in the failed group, marked as yours, with how to publish it again. The
+// page-wide tools sit below the publications. A card's Distribution section
+// leads with one button for the saved preferred storage or anchoring
+// provider, folding the per-type cards, and shows the cards with a reason
+// when that preference can't be used.
 
 await new Promise((resolve, reject) => {
     const link = document.createElement('link');
@@ -61,9 +65,36 @@ const coordinator = {
 };
 const { publicationKindPlugin } = new CreatePublicationDisplayKindRegistryUseCase().execute();
 const creationCoordinator = {
-    availableAnchorTypes: () => ['steem'],
+    availableAnchorTypes: () => ['bitcoin-op-return', 'steem'],
     batchAnchorTypes: () => [{ anchorType: 'steem', maxBatchSize: 64 }]
 };
+
+// Saved preferred providers by role, and what each preferred trigger was
+// asked to do.
+const preferences = { CONTENT: 'ipfs', PROOF_AND_ANCHORING: 'bitcoin-op-return' };
+const preferredCalls = { placements: [], anchors: [] };
+function provideDistribution(target) {
+    target.provide('roleProviderPreferenceStore', { get: (role) => (preferences[role] ? { role, providerKey: preferences[role] } : null) });
+    target.provide('snapshotPlacementCreationCoordinator', { availableStorageTypes: () => ['local', 'ipfs'] });
+    target.provide('preferredSnapshotPlacementCreationCoordinator', {
+        preferableStorageTypes: () => ['ipfs'],
+        create: async (publicationId) => {
+            preferredCalls.placements.push(publicationId);
+            return { outcome: 'placement-unavailable', placement: null, reason: 'the IPFS node could not be reached' };
+        }
+    });
+    target.provide('preferredPublicationAnchorCreationCoordinator', {
+        create: async (publicationId) => {
+            preferredCalls.anchors.push(publicationId);
+            return { outcome: 'publish-unavailable', anchor: null, reason: 'Steem Keychain is not installed' };
+        }
+    });
+}
+function distributionRoles(card) {
+    const roles = [...card.querySelectorAll('.identity-mgmt-distribution-role')];
+    const named = (title) => roles.find((role) => role.querySelector('.evidence-convergence-title').textContent.trim() === title);
+    return { content: named('Content'), proof: named('Proof / Anchoring') };
+}
 
 const host = document.createElement('div');
 document.body.appendChild(host);
@@ -77,6 +108,7 @@ app.provide('publicationDisplayKindPlugins', {
     'forkbuild.publication': publicationKindPlugin
 });
 app.provide('identityUseCase', { listIdentities: () => [{ identityId: 'did:key:zme' }] });
+provideDistribution(app);
 app.provide('peerSessionManager', { listPeers: () => [] });
 app.provide('publicationAnchorCreationCoordinator', creationCoordinator);
 app.provide('publicationEvidenceCoordinator', null);
@@ -152,6 +184,29 @@ await settle();
 assert(toolsPanel.open, "the intro's link opens it");
 assert(toolsPanel.querySelector('[role="tab"][aria-selected="true"]').textContent.trim() === 'Blockchain Anchoring', 'on the Blockchain Anchoring tab');
 
+// Distribution with a usable storage preference: one named button, the
+// per-backend cards folded under it.
+{
+    const { content, proof } = distributionRoles(usableCards[0]);
+    const storeButton = buttonNamed(content, 'Store on IPFS');
+    assert(storeButton && content.textContent.includes('your preferred storage'), 'Content leads with a button naming the saved storage');
+    const storageOptions = content.querySelector('details.identity-mgmt-distribution-options');
+    assert(storageOptions && !storageOptions.open && storageOptions.querySelector('summary').textContent.trim() === 'Other storage options (2)',
+        'the per-backend cards are folded under it');
+    storeButton.click();
+    await settle();
+    assert(preferredCalls.placements.join() === 'good', 'the button places this publication through the preferred trigger');
+    assert(content.textContent.includes('the IPFS node could not be reached'), 'and shows how that went');
+
+    // A Bitcoin preference takes wallet steps, so no one-click button: the
+    // cards stay open and the hint says where to go.
+    assert(!buttonNamed(proof, 'Anchor on Bitcoin'), 'no one-click button for a wallet-guided preference');
+    assert(proof.textContent.includes('Your preferred anchoring provider, Bitcoin, is anchored through its wallet steps'), 'the hint names it and says where');
+    const anchorOptions = proof.querySelector('details.identity-mgmt-distribution-options');
+    assert(anchorOptions.open && anchorOptions.querySelector('summary').textContent.trim() === 'Anchoring options (2)', 'the per-type cards are shown');
+    assert(buttonNamed(anchorOptions, 'Create Steem Anchor'), 'with their own buttons');
+}
+
 // Removing one failed publication asks first, and Cancel keeps it.
 const firstCard = failedGroup.querySelector('.identity-mgmt-card');
 buttonNamed(firstCard, 'Remove from This Device').click();
@@ -181,3 +236,42 @@ assert(mainList.querySelectorAll(':scope > .identity-mgmt-card').length === 3, '
 app.unmount();
 host.remove();
 console.log('✓ the Publications page separates usable publications from failed ones');
+
+// A second visit with a Steem anchoring preference and no storage preference.
+{
+    preferences.CONTENT = null;
+    preferences.PROOF_AND_ANCHORING = 'steem';
+    const secondHost = document.createElement('div');
+    document.body.appendChild(secondHost);
+    const second = createApp(DecentralizedPublicationsView);
+    second.config.warnHandler = () => {};
+    second.component('router-link', { props: ['to'], template: '<a :href="String(to)"><slot /></a>' });
+    second.provide('publicationCatalog', catalog);
+    second.provide('publicationResolutionCoordinator', coordinator);
+    second.provide('publicationDisplayKindPlugins', { 'forkbuild.structure': { describe: () => 'a structure' } });
+    second.provide('peerSessionManager', { listPeers: () => [] });
+    second.provide('publicationAnchorCreationCoordinator', creationCoordinator);
+    second.provide('publicationEvidenceCoordinator', null);
+    second.provide('publicationPeerExchange', null);
+    second.provide('publicationPeerContentExchange', null);
+    provideDistribution(second);
+    second.mount(secondHost);
+    await settle();
+
+    const card = secondHost.querySelector('.publications-view > .identity-mgmt-list > .identity-mgmt-card');
+    const { content, proof } = distributionRoles(card);
+    const anchorButton = buttonNamed(proof, 'Anchor on Steem');
+    assert(anchorButton && proof.textContent.includes('your preferred anchoring provider'), 'Proof / Anchoring leads with a button naming the saved provider');
+    assert(!proof.querySelector('details.identity-mgmt-distribution-options').open, 'the per-type cards are folded under it');
+    anchorButton.click();
+    await settle();
+    assert(preferredCalls.anchors.join() === 'good' && proof.textContent.includes('Steem Keychain is not installed'), 'it anchors through the preferred trigger and shows how that went');
+
+    assert(!content.querySelector('.evidence-discovery') && content.textContent.includes('No preferred storage is set'), 'with no storage saved, no button and no guess');
+    const storageOptions = content.querySelector('details.identity-mgmt-distribution-options');
+    assert(storageOptions.open && storageOptions.querySelector('summary').textContent.trim() === 'Storage options (2)', 'the per-backend cards are shown instead');
+
+    second.unmount();
+    secondHost.remove();
+    console.log('✓ Distribution leads with the saved preferred provider, or shows every option when there is none');
+}
