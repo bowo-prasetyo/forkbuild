@@ -267,9 +267,55 @@ export function describeSnapshotDiscoveryEnvelope(candidate) {
             y: candidate.claimedPosition.y,
             z: candidate.claimedPosition.z
         });
+        const placementRecord = describeSnapshotPlacementRecord(candidate.placementRecord, described);
+        if (placementRecord) {
+            described.placementRecord = placementRecord;
+        }
     }
 
     return Object.freeze(described);
+}
+
+// The publisher's signed PlacementRecord behind `claimedPosition`, as plain
+// JSON. Only its shape is checked here: it must name the same Publication and
+// sit exactly at the claimed position. Whether it is authentic and signed by
+// the publisher is the receiver's question (AdoptPublisherPlacementUseCase).
+// A record that doesn't fit is left out; the claim itself still stands.
+export function describeSnapshotPlacementRecord(record, described) {
+    if (!isPlainObject(record) || record.publicationId !== described.publicationId
+        || !isNonEmptyString(record.placementId) || !isFiniteCoordinates(record.position)) {
+        return null;
+    }
+    const { x, y, z } = described.claimedPosition;
+    if (record.position.x !== x || record.position.y !== y || record.position.z !== z) {
+        return null;
+    }
+    return deepFreeze(JSON.parse(JSON.stringify(record)));
+}
+
+function deepFreeze(value) {
+    if (value && typeof value === 'object') {
+        for (const key of Object.keys(value)) {
+            deepFreeze(value[key]);
+        }
+        Object.freeze(value);
+    }
+    return value;
+}
+
+// The discovery candidate an envelope becomes: its location, plus the
+// position claim and signed placement only when the envelope carried them,
+// never as null placeholders.
+export function snapshotCandidateFromEnvelope(envelope) {
+    const candidate = { contentHash: envelope.contentHash, locator: envelope.locator, storage: envelope.storage };
+    if (envelope.publicationId !== undefined) {
+        candidate.publicationId = envelope.publicationId;
+        candidate.claimedPosition = envelope.claimedPosition;
+    }
+    if (envelope.placementRecord !== undefined) {
+        candidate.placementRecord = envelope.placementRecord;
+    }
+    return candidate;
 }
 
 // Pure. Parses `rawPayload` — a JSON string, or an already-parsed plain

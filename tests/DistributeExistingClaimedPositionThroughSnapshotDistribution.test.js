@@ -392,8 +392,8 @@ async function run() {
         const commandSource = await readSource('application/snapshot/SnapshotDistributionCommand.js');
         const runFnMatch = commandSource.match(/async function runSnapshotDistribution\([\s\S]*?\n\}/);
         assert(runFnMatch, '1. runSnapshotDistribution() exists as an isolable function.');
-        assert(/discoveryPublisher\.publish\(\{\s*contentHash:\s*contentReference\.hash,\s*locator:\s*contentReference\.uri,\s*storage:\s*contentReference\.storage,\s*publicationId,\s*claimedPosition\s*\}\)/.test(runFnMatch[0]),
-            '2. it forwards publicationId/claimedPosition into discoveryPublisher.publish() alongside the pre-existing three fields, unmodified.');
+        assert(/discoveryPublisher\.publish\(\{\s*contentHash:\s*contentReference\.hash,\s*locator:\s*contentReference\.uri,\s*storage:\s*contentReference\.storage,\s*publicationId,\s*claimedPosition,\s*placementRecord\s*\}\)/.test(runFnMatch[0]),
+            '2. it forwards publicationId/claimedPosition (and the publisher\'s signed placementRecord) into discoveryPublisher.publish() alongside the pre-existing three fields, unmodified.');
 
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
@@ -404,8 +404,10 @@ async function run() {
         const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage, remotePinningConfiguration, discoveryProvider\)\s*\{[\s\S]*?\n    \}/);
         assert(distributeFnMatch, '3. AMENDED BY 0.9.669 — WorldView.js#distributeWorldEncounterSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) exists as an isolable function.');
         const body = distributeFnMatch[0];
-        assert(/session\.getPlacementInfoForPublication\(publication\.id\)/.test(body),
-            '4. it reads the claim through session.getPlacementInfoForPublication(publication.id) — the same collaborator Section A exercised directly.');
+        const claimFnMatch = worldViewSource.match(/function placementClaimFor\(publication\)\s*\{[\s\S]*?\n    \}/);
+        assert(/placementClaimFor\(publication\)/.test(body) && claimFnMatch
+            && /session\.getPlacementInfoForPublication\(publication\.id\)/.test(claimFnMatch[0]),
+            '4. it reads the claim through session.getPlacementInfoForPublication(publication.id) — the same collaborator Section A exercised directly — when no publisher-signed placement is held (placementClaimFor).');
         assert(!/publication\.toJSON\(\)|new Position\(|computeContentHash/.test(body),
             '5. it computes no new position and no new content hash of its own — every value it forwards was already computed elsewhere.');
     }

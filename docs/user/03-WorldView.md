@@ -338,6 +338,15 @@ trusting it blindly would let anyone put a build on top of yours. So a
 claimed build is shown as a **ghost** — its bricks drawn translucent at
 the claimed position — and never becomes a real placement on its own.
 
+There's one exception, and it needs no click. When a publisher distributes
+their Snapshot, the announcement also carries their own **signed
+placement**. Once this device knows that build's Publication (it's in your
+Repository, or you **Verify** it), ForkBuild checks the placement is signed
+with that Publication's own key and, if it is, shows the build solid,
+exactly where its publisher put it. It's still their placement, not yours:
+you can't move or remove it. If they later move it and distribute again,
+it moves for you too. A position signed by anyone else stays a ghost.
+
 A ghost is only drawn when:
 
 - its position is near you (your map cell or the ones around it, about
@@ -367,7 +376,9 @@ position. Each row has:
   was announced (the publisher may have distributed only the Snapshot —
   the combined **Distribute** button announces both), no copy was validly
   signed, or the signed Publication names different content. Verify never
-  accepts anything by itself.
+  accepts a claim by itself; but if the announcement carried the
+  publisher's signed placement, the build now appears solid where they
+  put it (see above), and the ghost goes away.
 - **Accept Position** — the one way to trust a claim. It places the build
   at the claimed position with a placement of *your own*, signed by you like
   any other placement, and from then on it's a normal build in your World. It's only

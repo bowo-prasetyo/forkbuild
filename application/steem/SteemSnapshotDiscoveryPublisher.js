@@ -17,7 +17,7 @@ export class SteemSnapshotDiscoveryPublisher {
 
     get discoveryTag() { return this._discoveryTag; }
 
-    async publish({ contentHash, locator, storage, publicationId, claimedPosition } = {}) {
+    async publish({ contentHash, locator, storage, publicationId, claimedPosition, placementRecord } = {}) {
         const described = describeSnapshotDiscoveryEnvelope({
             protocol: SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL,
             version: SNAPSHOT_DISCOVERY_ENVELOPE_VERSION,
@@ -25,7 +25,8 @@ export class SteemSnapshotDiscoveryPublisher {
             locator,
             storage,
             publicationId,
-            claimedPosition
+            claimedPosition,
+            placementRecord
         });
         if (described === null) return null;
         const announcement = await this._announcer.announce('snapshot', JSON.parse(JSON.stringify(described)));

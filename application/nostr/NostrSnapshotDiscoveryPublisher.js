@@ -207,7 +207,7 @@ export class NostrSnapshotDiscoveryPublisher {
     //   publishes the identical envelope this file has always published.
     //   Supplying only one of the two fails validation and resolves to
     //   `null`, exactly like any other malformed candidate.
-    async publish({ contentHash, locator, storage, publicationId, claimedPosition } = {}) {
+    async publish({ contentHash, locator, storage, publicationId, claimedPosition, placementRecord } = {}) {
         const described = describeSnapshotDiscoveryEnvelope({
             protocol: SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL,
             version: SNAPSHOT_DISCOVERY_ENVELOPE_VERSION,
@@ -215,7 +215,8 @@ export class NostrSnapshotDiscoveryPublisher {
             locator,
             storage,
             publicationId,
-            claimedPosition
+            claimedPosition,
+            placementRecord
         });
         if (described === null) {
             return null;

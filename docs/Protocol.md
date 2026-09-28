@@ -238,8 +238,11 @@ Each move creates a new revision with a new signature and an advanced
 earlier revisions keep their own signatures. `causalStamp` and `parents`
 are inside the signed envelope. A PlacementRecord whose Publication is
 `'publisher-only'` is valid only when signed by the publisher: a replica
-refuses to create any other, and ReplicaMergeService rejects one received
-from a peer (reason `PLACEMENT_POLICY`) when it knows the Publication. The spatial-index formats
+refuses to create any other. Placements from other devices arrive only as a
+publisher's own signed record beside a Snapshot (see "Signed placement"
+under the discovery families), which the policy always allows. The retired
+peer replication (ReplicaMergeService) also rejects one that breaks the
+policy (reason `PLACEMENT_POLICY`). The spatial-index formats
 (SpatialCell, SpatialIndexManifest, SpatialIndexRoot) and Delegation
 records are defined in core/ but not produced by the running app.
 
@@ -511,7 +514,7 @@ tag) are grouped into families, and a reader only queries its own:
 | Family | Tag | Envelope |
 |--------|-----|----------|
 | Publications | `forkbuild-publication`, plus `forkbuild-publication:<publicationId>` for a Publication (not an avatar) | `{ protocol: 'forkbuild', version: 1, kind, objectId, uri }` (core/DecentralizedDiscoveryEnvelope.js) |
-| Snapshots | `forkbuild-snapshot`, plus `forkbuild-snapshot:cell:<cx>:<cz>` when there is a `claimedPosition` | `{ protocol: 'forkbuild-snapshot-discovery', version: 1, publicationId, contentHash, storage, locator, claimedPosition }` (core/SnapshotDiscoveryEnvelope.js) |
+| Snapshots | `forkbuild-snapshot`, plus `forkbuild-snapshot:cell:<cx>:<cz>` when there is a `claimedPosition` | `{ protocol: 'forkbuild-snapshot-discovery', version: 1, publicationId, contentHash, storage, locator, claimedPosition, placementRecord }` (core/SnapshotDiscoveryEnvelope.js; `placementRecord` optional, see below) |
 | Place naming | per region, from `derivePlaceNamingDiscoveryTag(worldId, regionId)` | `{ protocol: 'forkbuild-place-naming-discovery', version: 1, worldId, regionId, claim }` (core/PlaceNamingDiscoveryEnvelope.js) |
 | Commentary | `forkbuild-commentary`, plus `forkbuild-commentary:<publicationId>` | see "Publication Commentary Distribution" |
 
@@ -521,6 +524,17 @@ carried on the same Nostr event (a second `t` tag) or Arweave transaction
 
 - **Snapshot cells.** A cell is a 1,000-unit square of the claimed
   position's `x` and `z`: `cx = floor(x / 1000)`, `cz = floor(z / 1000)`.
+- **Signed placement.** A Snapshot announcement with a `claimedPosition`
+  may also carry `placementRecord`: the publisher's own signed
+  PlacementRecord (see "Placement records") for that Publication, at
+  exactly the claimed position. The envelope checks only that shape and
+  otherwise leaves the record out, keeping the claim. A receiver adopts it
+  (application/placement/AdoptPublisherPlacementUseCase.js) only when it
+  already knows the Publication, the record is signed with that
+  Publication's `publisherIdentity` key (whose did:key must encode that
+  key), and it passes its own integrity check. A higher `revision` of the
+  same `placementId` replaces a lower one; a record never replaces one
+  held for another owner. Readers that predate the field ignore it.
 - **Readers.**
   - World View reads the player's cell beside `forkbuild-snapshot`.
   - A Commentary refresh reads its Publication's tag beside

@@ -599,7 +599,7 @@ async function run() {
         assert(!nostrDistributionSiteMatch[1].includes('arweaveContentStoreOptions') && !arweaveDistributionSiteMatch[1].includes('arweaveContentStoreOptions'), "39f. 0.9.506 — neither Distribution call site passes composeSnapshotDistributionRuntime() an arweaveContentStoreOptions of its own at all, since neither consumes that function's contentStore half");
         // AMENDED BY 0.9.669 — `discoveryProvider` joined the parameter
         // list as a new, optional fifth argument.
-        const snapshotDistributionCommandMatch = uiMainCode.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
+        const snapshotDistributionCommandMatch = uiMainCode.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider, placementRecord\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
         assert(Boolean(snapshotDistributionCommandMatch), "39g. AMENDED BY 0.9.669 — ui/main.js's real snapshotDistributionCommand accepts an explicit (bytes, storage) pair, defaulting storage to 'ar' for pre-0.9.506 callers (0.9.566 — now also (publicationId, claimedPosition), forwarded unmodified; 0.9.669 — now also discoveryProvider, optional)");
         assert(snapshotDistributionCommandMatch[1].includes('resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage)'), '39h. 0.9.506 — snapshotDistributionCommand resolves its contentStore from the SAME snapshotPlacementStoreRegistry Placement already builds, keyed by the caller\'s own storage choice');
 

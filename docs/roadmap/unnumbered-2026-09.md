@@ -1937,3 +1937,38 @@ key, set `publisherIdentity` to `{ id: <someone else's did:key>, publicKey: <the
 - New principle: "A did:key Names Its Key". Docs: `docs/Protocol.md` ("Signatures").
 - Tests: `tests/VerifierDidKeyBinding.test.js` (the binding helper; a forged Publication and a forged placement
   refused; genuine ones, and an attacker signing honestly as themselves, still valid).
+## Publisher placements travel with Snapshots (unnumbered, 2026-09-28)
+
+**Other people now see a build where its publisher put it.** Placement records never left the device that made
+them, so a walker saw someone else's build either as an unverified ghost at its announced `claimedPosition`, or at
+its deterministic fallback spot. Those differed whenever the publisher had moved it, and a build set to **Only I may
+place it** could then never appear at the publisher's real position for anyone else.
+
+- `core/SnapshotDiscoveryEnvelope.js`: an optional `placementRecord` beside `claimedPosition`, the publisher's signed
+  PlacementRecord. It is kept only when it names the same Publication at exactly the claimed position; otherwise it
+  is left out and the claim stands. `snapshotCandidateFromEnvelope()` replaces the field-by-field copies in the Nostr,
+  Arweave (two) and Steem query services and the Announcement Index sync. Readers that predate it ignore it.
+- Sending: World View's `placementClaimFor()` announces the publisher's own signed placement
+  (`getPublisherPlacementRecord()`, the most recently updated one this device holds signed by the Publication's
+  publisher) and its position; without one it falls back to the old unsigned claim. `snapshotDistributionCommand`,
+  `executeSnapshotDistributionCommand` and the three `publish()`s pass it through. The Remote IPFS path, which
+  announced no position at all, now announces the same claim.
+- Receiving: `application/placement/AdoptPublisherPlacementUseCase.js` (new) adopts a record into the placement
+  registry only when the Publication is known here, the record's owner is the Publication's `publisherIdentity`
+  (same id and key, and the did:key encodes that key), its integrity holds, and its signature verifies against the
+  Publication's key rather than the key the record carries. A higher revision of the same placement replaces a lower
+  one; a placement held for another owner is never replaced. `useClaimedBuilds` offers every candidate's record and
+  retries ones whose Publication is unknown when a reconcile finds it known (after **Verify**, a share or an
+  encounter). The ghost then yields to the real placement.
+- It deliberately doesn't use the retired peer-replication merge (`ReplicaMergeService`): one signer's revisions need
+  no vector-clock conflict handling, and `HistoricalPlacementReplicationBoundaryAudit` keeps that family unwired.
+- The Announcement Index and `SnapshotCandidateDiscoveryQueryService` add the record's own hash to their dedup keys,
+  so a later revision (the publisher moved it) is kept beside an earlier one instead of dropped as a duplicate.
+- New principle: "A Position Counts Only When Its Publisher Signed It". The placement-policy principle added the day
+  before no longer names peer merging as a live path. Docs: `docs/Protocol.md`, `docs/AnnouncementIndex.md`,
+  `docs/Architecture.md`, and both user guides.
+- Tests: `tests/PublisherPlacementAnnouncement.test.js` (the envelope, the index keys, adoption including a forged
+  key, a tampered position, a later move and a late older revision, which record gets announced, and World View
+  retrying once the Publication is known). Updated for the new source shapes: `ArweaveSnapshotDiscoveryQueryService`,
+  `DistributeExistingClaimedPositionThroughSnapshotDistribution` and `SnapshotDistributionRuntimeComposition`.
+- Not done: the Editor's post-publish **Distribute** still announces no position, as before.

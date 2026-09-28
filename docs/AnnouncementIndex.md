@@ -57,7 +57,7 @@ Each record is one announcement, identified by its kind and its key:
 
 | Kind | Payload | Key |
 |---|---|---|
-| `snapshot` | a Snapshot candidate: `{ contentHash, locator, storage, publicationId?, claimedPosition? }` | `storage contentHash locator`, the same identity SnapshotCandidateDiscoveryQueryService deduplicates by |
+| `snapshot` | a Snapshot candidate: `{ contentHash, locator, storage, publicationId?, claimedPosition?, placementRecord? }` | `storage contentHash locator`, plus the `placementRecord`'s own `contentHash` when there is one (so a later revision is kept beside an earlier one), the same identity SnapshotCandidateDiscoveryQueryService deduplicates by |
 | `place-naming` | a parsed Place Naming discovery envelope (the whole signed claim) | `claim.id` plus the claim's signature value, so a forged copy under a real claim id can never replace the real one |
 | `publication` | a Publication lead: `{ uri, storage }` | `origin uri`, because the origin decides which material source resolves the lead |
 

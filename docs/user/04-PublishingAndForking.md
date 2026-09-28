@@ -147,8 +147,14 @@ new one to apply.
 
 It works the same way the license's fork permission does: every copy of
 ForkBuild honors it, but it isn't a lock. Someone who changed the app's code
-could ignore it, and it can't take back a copy someone already placed
-before you chose it.
+could ignore it, and it can't take back a placement someone made before you
+chose it.
+
+Either way, other people see your build where *you* put it once you
+**Distribute** its Snapshot from World View: the announcement carries your
+signed placement, and their ForkBuild shows the build there as soon as it
+knows your Publication. Move it and distribute again, and it moves for them
+too.
 
 ## Editing a published creation
 
