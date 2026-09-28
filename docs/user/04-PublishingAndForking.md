@@ -24,7 +24,10 @@ below). It's also automatically given a position in the shared world, so
 **Explore** always has somewhere to take people — see
 [Finding worlds](03-WorldView.md#finding-worlds).
 
-> **Note:** Publishing stores your Document/World on this device only.
+> **Note:** Publishing stores your Document/World on this device only, and
+> its Repository card says **Only on this device** until you distribute it
+> to IPFS or Arweave. Back it up on [Your Data](13-YourData.md) to keep a
+> copy in the meantime.
 > Publishing never sends anything anywhere by itself. Two separate, optional
 > steps do: **Distribute**, described next, pushes the publication to
 > Arweave or IPFS and announces it on Nostr or Arweave so other people can

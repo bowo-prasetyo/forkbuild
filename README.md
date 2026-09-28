@@ -80,6 +80,14 @@ models").
   over authenticated peers.
 - Collaborative World editing with signed membership grants.
 
+**Your data**
+- Everything lives in this browser. **Your Data** backs all of it up to one
+  passphrase-encrypted file and restores it here or on another device,
+  adding what's missing or replacing everything. Documents, structures and
+  identities also export on their own pages, all at once or one at a time,
+  and the Repository marks your publications that exist only on this device.
+  See [Your Data](docs/user/13-YourData.md).
+
 **Experimental**
 
 These areas work, but may change or be removed in a later version, and what

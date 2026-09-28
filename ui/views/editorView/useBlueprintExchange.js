@@ -1,6 +1,8 @@
 import { deriveBlueprintFingerprint, describeBlueprintFingerprint, isLegacyBlueprintFingerprint } from '../../../core/BlueprintFingerprint.js';
 import { BLUEPRINT_ATTRIBUTION_KIND } from '../../../core/BlueprintAttribution.js';
 import { BLUEPRINT_LINEAGE_CLAIM_KIND } from '../../../core/BlueprintLineageClaim.js';
+import { buildBlueprintBundle, blueprintBundlePackages, isBlueprintBundle } from '../../../application/blueprint/BlueprintBundle.js';
+import { isDocumentBundle } from '../../../application/document/DocumentBundle.js';
 
 // Downloads `data` as pretty-printed JSON, with no intermediate modal.
 function downloadJson(filename, data) {
@@ -18,7 +20,9 @@ function slugify(text, fallback) {
 // bundled with them. Imported text is untrusted and validated before anything changes.
 export function useBlueprintExchange({
     blueprintAttributionExchange, blueprintAttributionUseCase, blueprintLineageExchange, blueprintLineageUseCase,
-    documentManager, editorSession, feedback, refreshPersonalStructureGroups
+    documentManager, editorSession, feedback, refreshPersonalStructureGroups,
+    personalStructureLibraryStore = null, exportAllDocumentsUseCase = null, importDocumentBundleUseCase = null,
+    onSavedDocumentsChanged = () => {}
 }) {
     // Exports the blueprint as a download, bundling the attributions and lineage
     // claims this replica has for it. The BuildLibraryPanel event is still named
@@ -26,9 +30,7 @@ export function useBlueprintExchange({
     function exportStructure(structure) {
         let pkg;
         try {
-            const { attributions } = blueprintAttributionUseCase.summarize(structure);
-            const lineageClaims = blueprintLineageUseCase.claimsForBlueprint(structure);
-            pkg = editorSession.exportBlueprint(structure, attributions, lineageClaims);
+            pkg = blueprintPackageFor(structure);
         } catch (e) {
             feedback.show(e.message);
             return;
@@ -38,6 +40,48 @@ export function useBlueprintExchange({
         }
         downloadJson(`forkbuild-blueprint-${slugify(structure.name, 'structure')}.json`, pkg);
         feedback.show(`Exported "${structure.name}" as a blueprint`);
+    }
+
+    function blueprintPackageFor(structure) {
+        const { attributions } = blueprintAttributionUseCase.summarize(structure);
+        const lineageClaims = blueprintLineageUseCase.claimsForBlueprint(structure);
+        return editorSession.exportBlueprint(structure, attributions, lineageClaims);
+    }
+
+    // Every structure in My Structures in one file, each packaged as Export
+    // Blueprint would.
+    function exportAllStructures() {
+        let packages;
+        try {
+            const structures = personalStructureLibraryStore ? personalStructureLibraryStore.listStructures() : [];
+            packages = structures.map(blueprintPackageFor).filter(Boolean);
+        } catch (e) {
+            feedback.show(e.message);
+            return;
+        }
+        if (packages.length === 0) {
+            feedback.show('My Structures is empty');
+            return;
+        }
+        downloadJson(`forkbuild-blueprints-${new Date().toISOString().slice(0, 10)}.json`, buildBlueprintBundle(packages));
+        feedback.show(`Exported ${packages.length} ${packages.length === 1 ? 'structure' : 'structures'}`);
+    }
+
+    // Every saved document in one file.
+    async function exportAllDocuments() {
+        let bundle;
+        try {
+            bundle = exportAllDocumentsUseCase ? await exportAllDocumentsUseCase.execute() : null;
+        } catch (e) {
+            feedback.show(e.message);
+            return;
+        }
+        if (!bundle) {
+            feedback.show('No saved documents to export');
+            return;
+        }
+        downloadJson(`forkbuild-documents-${new Date().toISOString().slice(0, 10)}.json`, bundle);
+        feedback.show(`Exported ${bundle.documents.length} ${bundle.documents.length === 1 ? 'document' : 'documents'}`);
     }
 
     // Filename follows the `forkbuild-<kind>-<slug>.json` convention.
@@ -68,6 +112,9 @@ export function useBlueprintExchange({
     		feedback.show('That is not valid JSON — choose a file exported with "Export."');
     		return;
     	}
+    	if (isDocumentBundle(json)) {
+    		return importDocumentBundle(json);
+    	}
     	try {
     		const imported = editorSession.importDocument(json);
     		if (!imported) {
@@ -77,6 +124,24 @@ export function useBlueprintExchange({
     	} catch (e) {
     		feedback.show(e.message.replace(/^DocumentSerializer:\s*/, ''));
     	}
+    }
+
+    // Saves every document in the bundle without opening any of them.
+    async function importDocumentBundle(bundle) {
+        if (!importDocumentBundleUseCase) {
+            return;
+        }
+        try {
+            const { added, copied, unchanged, failed } = await importDocumentBundleUseCase.execute(bundle);
+            onSavedDocumentsChanged();
+            const parts = [`Imported ${added + copied} ${added + copied === 1 ? 'document' : 'documents'}`];
+            if (copied) parts.push(`${copied} as a copy beside a different version here`);
+            if (unchanged) parts.push(`${unchanged} already here`);
+            if (failed) parts.push(`${failed} could not be read`);
+            feedback.show(parts.join(', ') + (added + copied ? ' — open them from Recent' : ''), { durationMs: 8000 });
+        } catch (e) {
+            feedback.show(e.message);
+        }
     }
 
     // Exports one attribution on its own; only reachable when `attribution.mine`
@@ -107,6 +172,10 @@ export function useBlueprintExchange({
             feedback.show('That is not valid JSON — choose a file exported with "Export Blueprint."');
             return;
         }
+        if (isBlueprintBundle(pkg)) {
+            importBlueprintBundle(pkg);
+            return;
+        }
         if (pkg && pkg.kind === BLUEPRINT_ATTRIBUTION_KIND) {
             importBareBlueprintAttribution(pkg);
             return;
@@ -126,6 +195,43 @@ export function useBlueprintExchange({
         } catch (e) {
             feedback.show(e.message.replace(/^(BlueprintImport|BlueprintPackage):\s*/, ''));
         }
+    }
+
+    // Each blueprint in the bundle is validated on its own, as a single file
+    // would be; a design already in My Structures is not added twice.
+    function importBlueprintBundle(bundle) {
+        let packages;
+        try {
+            packages = blueprintBundlePackages(bundle);
+        } catch (e) {
+            feedback.show(e.message);
+            return;
+        }
+        let added = 0;
+        let present = 0;
+        let failed = 0;
+        for (const pkg of packages) {
+            try {
+                const result = editorSession.importBlueprintIfNew(pkg);
+                if (!result) {
+                    return;
+                }
+                if (result.isNew) {
+                    added++;
+                    importBundledBlueprintAttributions(pkg, result.structure);
+                    importBundledBlueprintLineageClaims(pkg, result.structure);
+                } else {
+                    present++;
+                }
+            } catch (e) {
+                failed++;
+            }
+        }
+        refreshPersonalStructureGroups();
+        const parts = [`Imported ${added} ${added === 1 ? 'structure' : 'structures'} into My Structures`];
+        if (present) parts.push(`${present} already there`);
+        if (failed) parts.push(`${failed} could not be read`);
+        feedback.show(parts.join(', '));
     }
 
     // Each bundled attribution is cross-checked against the locally derived
@@ -247,7 +353,7 @@ export function useBlueprintExchange({
     }
 
     return {
-        exportBlueprintAttribution, exportBlueprintLineageClaim, exportDocument, exportStructure, importBlueprint,
-        importDocument
+        exportAllDocuments, exportAllStructures, exportBlueprintAttribution, exportBlueprintLineageClaim, exportDocument,
+        exportStructure, importBlueprint, importDocument
     };
 }

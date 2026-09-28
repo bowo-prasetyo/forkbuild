@@ -338,6 +338,13 @@ This is how you hand a build to a friend, or carry your own structures
 between your own devices: export on one side, send the file however you
 like, import on the other.
 
+**Export All** (beside **Import Blueprint**, once you have structures of
+your own) downloads every structure in My Structures as one file, each with
+its attributions and lineage claims. **Import Blueprint** reads that file
+too, and skips any design already in My Structures, so importing it twice
+doesn't give you duplicates. To keep a copy of everything else as well, use
+[Your Data](13-YourData.md).
+
 ### Claiming authorship
 
 A structure with a Blueprint identity (most saved ones have one) can also
@@ -433,6 +440,11 @@ means.
   Each entry also has a **Place** button — see
   [Structure instances](#structure-instances-a-live-reference)
   — for adding it to your *current* document instead of replacing it.
+  **Export All Documents** at the bottom downloads every saved document as
+  one file; **Import** reads it back, saving the documents this device
+  doesn't have (open them from Recent), skipping ones it has unchanged, and
+  saving a copy beside any it has in a different version. Unsaved changes
+  aren't included, so save first.
 
 ## Camera controls
 

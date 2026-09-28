@@ -450,6 +450,16 @@
     font-size: 0.8rem;
 }
 
+.publication-local-only {
+    margin: 0.35rem 0;
+    color: #e0b050;
+    font-size: 0.78rem;
+}
+
+.publication-local-only a {
+    color: #e0c070;
+}
+
 /* 0.2.31 — Publication Catalog & Repository UX. See
    ui/components/PublicationCatalog.js. */
 

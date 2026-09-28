@@ -36,7 +36,8 @@ export default {
     inject: {
         // Read only to decide whether to offer the Comment toggle.
         getPublicationCommentariesCommand: { default: null },
-        followingFeed: { default: null }
+        followingFeed: { default: null },
+        localOnlyPublicationCheck: { default: null }
     },
     props: {
         publication: { type: Object, required: true },
@@ -60,6 +61,9 @@ export default {
         };
     },
     computed: {
+        onlyOnThisDevice() {
+            return Boolean(this.localOnlyPublicationCheck && this.localOnlyPublicationCheck.isOnlyOnThisDevice(this.publication));
+        },
         // Only a verified signer can be followed; the typed author name is
         // a label anyone can choose.
         publisherIdentityId() {
@@ -107,6 +111,10 @@ export default {
             </p>
             <p class="publication-forks" v-if="forkCount > 0">
                 {{ forkCount }} fork(s)
+            </p>
+            <p v-if="onlyOnThisDevice" class="publication-local-only">
+                ⚠ Only on this device: clearing this browser's data deletes it.
+                <router-link to="/settings/data">Back it up</router-link>, or Explore it and use Distribute under My Publication.
             </p>
             <div class="publication-actions">
                 <button class="action-btn action-btn--open" @click="$emit('open', publication)">Open</button>

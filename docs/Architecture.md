@@ -317,6 +317,32 @@ written themselves and not yet stored. On open, `forkbuild:` entries still
 in localStorage are moved into IndexedDB. If IndexedDB is missing or does
 not open within 10 seconds, the session uses localStorage.
 
+## Backup and restore
+
+Clearing a browser's site data deletes everything above, so the Your Data
+page (ui/views/YourDataView.js, `/settings/data`) backs it up.
+application/backup/DeviceBackupUseCase.js reads every entry through the
+StorageProvider (`loadAsync()`, so cold entries are included) except the
+login session, and other people's published content unless asked;
+application/backup/DeviceBackupFile.js compresses the entries and encrypts
+them with a passphrase through WebCrypto (docs/Protocol.md, "Device
+backup"). application/backup/BackupEntryGroups.js names every store's key
+or prefix and the group it belongs to: the page counts entries by group,
+and a restore writes only names it lists, so a store added later must be
+added there. A restore replaces everything or adds what is missing (see
+the Protocol section for how the document, identity and own-publication
+lists are combined), waits for flushLocalStorage(), and reloads the page,
+because every store read its data when the app started. The page also
+shows `navigator.storage.estimate()` and asks for persistent storage.
+
+Smaller exports sit where their data is: every saved document from the
+Editor's Recent menu (application/document/DocumentBundle.js), every
+personal structure beside My Structures
+(application/blueprint/BlueprintBundle.js), and one identity with its
+signed lifecycle records (identity/IdentityLifecycleTransfer.js). The
+Repository marks your own publications never uploaded from this device to
+IPFS or Arweave (application/publication/LocalOnlyPublicationCheck.js).
+
 ## Announcement Index
 
 application/announcementIndex/ keeps every announcement this device has
@@ -628,11 +654,14 @@ top of it.
   unlocks (in memory only). Wrong export passphrases count against the
   same lockout.
 - **Export, import and recovery.** identity/IdentityExport.js builds a
-  JSON package with the encrypted private key; IdentityImport.js
+  JSON package with the encrypted private key, and the provider adds the
+  identity's signed revocation, successor and device grants
+  (identity/IdentityLifecycleTransfer.js); IdentityImport.js
   validates it (including the did:key derivation) before anything is
   decrypted; IdentityRecovery.js runs validate → duplicate check →
-  decrypt → verify, and importing an identity the device already has is
-  a no-op, never an overwrite.
+  decrypt → verify, and importing an identity the device already has
+  never overwrites its key: it only adds lifecycle records that verify
+  and are missing.
 - **Lifecycle.** An identity can declare a successor
   (core/IdentitySuccessionEnvelope.js, signed by the predecessor) and can
   be revoked permanently (core/IdentityRevocationEnvelope.js,

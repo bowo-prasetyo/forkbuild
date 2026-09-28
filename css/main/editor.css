@@ -322,6 +322,24 @@
     font-style: italic;
 }
 
+.toolbar-recent-export-all {
+    width: 100%;
+    margin-top: 0.4rem;
+    padding: 0.4rem 0.55rem;
+    background: transparent;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    color: #a0a0a0;
+    cursor: pointer;
+    font-size: 0.78rem;
+}
+
+.toolbar-recent-export-all:hover {
+    background: #262626;
+    border-color: #4caf7d;
+    color: #ffffff;
+}
+
 .editor-body {
     display: flex;
     flex: 1;
@@ -538,7 +556,7 @@
 }
 
 .personal-structure-library-title {
-    margin: 0;
+    margin: 0 auto 0 0;
 }
 
 /* 0.4.6 — Blueprint Sharing & Exchange. Import is a library-level action
@@ -552,6 +570,7 @@
    invisible native file input" shape most of the web already uses. */
 .personal-structure-library-header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;

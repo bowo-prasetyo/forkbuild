@@ -89,4 +89,21 @@ building and brick ids, remapped groups, and `parentDocumentId: null`,
 since an import is not a fork. Export and import are about portability,
 not publication: no signature, no announcement, no network.
 
+*Changed by "Back up your data" (2026-09-28):* a bundle of every saved
+document restores each one under its own id when nothing is stored under
+that id, so the placements and history that name it keep working; one
+already here is skipped when identical and otherwise imported as a copy
+with a fresh identity. A single file still always gets a fresh identity.
+
 [Full text](history/0.9.md#an-imported-document-always-gets-a-fresh-identity-09642)
+
+### A Device Backup Is Always Encrypted, And A Restore Never Logs Anyone In (2026-09-28)
+
+A backup can hold private keys stored without a passphrase and a TURN
+credential, so it is only ever written encrypted with a passphrase the user
+chooses. It leaves out the login session, and a restore never writes one:
+the restored device starts logged out, with each identity behind its own
+passphrase. A restore writes only entries this version knows, and says what
+it wrote, kept and skipped.
+
+[Full text](history/0.9.md#a-device-backup-is-always-encrypted-and-a-restore-never-logs-anyone-in-2026-09-28)

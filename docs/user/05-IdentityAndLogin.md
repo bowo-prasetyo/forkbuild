@@ -106,6 +106,16 @@ An imported identity always lands **locked**, and you are not automatically
 logged in as it — unlock it from My Identities or the login dialog like any
 other protected identity.
 
+The file also carries the identity's signed lifecycle records: its
+revocation, the successor it declared, and the devices it authorized or
+stopped authorizing. Importing restores them, so a revoked identity comes
+back revoked rather than active. Importing a newer file for an identity you
+already have adds any of these records the device lacks, and changes
+nothing else.
+
+To back up every identity at once, along with everything else, use
+[Your Data](13-YourData.md).
+
 Files exported by earlier versions of ForkBuild still import. Files exported
 now use a newer format that earlier versions can't read, so update ForkBuild
 on the other device first.

@@ -185,6 +185,27 @@ building ids, and remapped group membership, with `parentDocumentId` set to `nul
 reused as a storage key. Newer `schemaVersion`s are rejected. `protocolVersion` must still match exactly; there is
 no migration path for it yet.
 
+### Document Bundle
+
+Editor → Recent → **Export All Documents** writes every saved document in one file:
+
+    { kind: 'forkbuild-document-bundle', formatVersion: 1, exportedAt, documents: [ { schemaVersion, world, metadata }, … ] }
+
+Each entry is exactly what Save stores, and each is validated on import like a single file; one that fails is
+counted and skipped. A document whose `world.id` names nothing on this device is saved under that id, so documents
+moved to a new device keep the placements and history that name them. One already here with the same serialized
+content is skipped; one here with different content is imported as a copy with a fresh identity, as a single file
+is. Recovery checkpoints are not included. Newer `formatVersion`s are rejected.
+
+### Blueprint Bundle
+
+**Export All** beside My Structures writes every personal structure in one file:
+
+    { kind: 'forkbuild-blueprint-bundle', formatVersion: 1, exportedAt, blueprints: [ <blueprint package>, … ] }
+
+Each entry is the package Export Blueprint writes (with its attributions and lineage claims), validated on its own.
+A design whose blueprint fingerprint matches one already in My Structures is not added again.
+
 ## Publications and snapshots
 
 A Publication (publisher/Publication.js) is pure data about one publish:
@@ -486,7 +507,8 @@ Revocation is permanent; device grants can be revoked and granted again.
 Each record's signature covers every field.
 
     identity export: { formatVersion: 2, identityId, publicKey, algorithm, label, createdAt,
-                       encryptedPrivateKey }
+                       encryptedPrivateKey, lifecycle? }
+    lifecycle:       { revocation?, succession?, deviceAuthorizations?: [ { deviceIdentityId, grant, revocation } ] }
     encryptedPrivateKey: { version: 2, kdf: 'PBKDF2-SHA256', iterations, cipher: 'AES-256-GCM',
                            salt, nonce, ciphertext }            // hex strings
 
@@ -497,6 +519,41 @@ default, at most 10,000,000 accepted). `ciphertext` ends with the 16-byte GCM
 tag. The same record shape stores a protected key on the device. Importing
 still accepts `formatVersion: 1` files, whose key record has
 `kdf: 'PBKDF2-HMAC-SHA512'` and a separate `tag`.
+
+`lifecycle` is present when the identity has a revocation, a successor
+declaration or device grants: the signed records above, verbatim. On import
+each is verified and must name the imported identity (the revocation's and
+grants' `identityId`, the succession's `predecessorIdentityId`); anything
+else is dropped. A revocation or successor already on the device is kept;
+for each device the later grant and the later revocation win. Older copies
+ignore the field.
+
+## Device backup
+
+**Your Data → Back Up to a File** writes every storage entry except the
+login session (`local-session`) to one file, `*.forkbuild-backup`:
+
+    FORKBUILD-BACKUP\n
+    { formatVersion: 1, kdf: 'PBKDF2-SHA256', iterations, cipher: 'AES-256-GCM', compression: 'gzip',
+      salt, nonce }\n                                           // one line of JSON; hex strings
+    <ciphertext>                                                // raw bytes, ends with the 16-byte GCM tag
+
+The plaintext is gzip-compressed JSON, `{ formatVersion: 1, createdAt,
+entries: { <storage name>: <stored value> } }`. The key is derived from the
+backup passphrase by PBKDF2-HMAC-SHA256 (600,000 iterations by default, at
+most 10,000,000 accepted), and the magic line plus header line are the
+cipher's additional data, so a changed header fails like a wrong
+passphrase. The backup is never written unencrypted: it can hold private
+keys stored without a passphrase and a TURN credential.
+
+Published content by hash (`content:<hash>`) is included only for your own
+publications (a `contentHash` in `forkbuild-publications`), unless the user
+asks for downloaded builds too. A restore writes only names this version
+knows (application/backup/BackupEntryGroups.js) and reports how many it
+skipped. It either replaces everything on the device, or adds what the
+device lacks, keeping the device's own entry where both have one and
+combining the document, identity and own-publication lists
+(`forkbuild-index`, `local-identities`, `forkbuild-publications`).
 
 ## Social
 

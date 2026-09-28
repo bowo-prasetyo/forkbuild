@@ -2352,3 +2352,52 @@ tabs and tools don't yet, and stay Experimental.
   badges, the missing Bitcoin card, and Distribute Snapshot on a World and on another kind.
 - Not done: running Steem against a live node, and creating its monthly threads twelve months ahead, both needed
   before Steem can graduate. The one-click Bitcoin publisher itself is left in place.
+
+## Back up your data (unnumbered, 2026-09-28)
+
+**A new Your Data page backs up everything ForkBuild keeps in this browser to one encrypted file and restores it;
+documents and structures export all at once; an exported identity carries its lifecycle records; and the Repository
+marks publications that exist only on this device.** An audit of browser storage found every store writes through one
+StorageProvider keyspace (IndexedDB `forkbuild`, or `forkbuild:` localStorage keys), and that clearing site data
+deleted documents, recovery checkpoints, identities with their revocations and device grants, structures, your own
+publications (Publish stores them locally only), claims you authored, peers, friends, follows, chat, avatar and
+settings, with only single documents, single blueprints and single identity keys exportable. One full backup covers
+all of it; per-view buttons were added only where moving one kind of thing on its own is useful.
+
+- `application/backup/BackupEntryGroups.js` names every store's key or prefix and the kind of data it holds.
+  `DeviceBackupUseCase` collects every entry except `local-session` (other people's `content:` only on request, your
+  own publications' content always), and restores by replacing everything or by adding what's missing (keeping this
+  device's entry where both have one, and combining `forkbuild-index`, `local-identities` and
+  `forkbuild-publications`), writing only names it knows, then waits for `flushLocalStorage()`.
+  `DeviceBackupFile` is the `.forkbuild-backup` format: a magic line, a JSON header, and gzip-compressed JSON
+  encrypted with AES-256-GCM under PBKDF2-SHA256 (600,000 iterations), the header as additional data
+  (docs/Protocol.md, "Device backup").
+- `ui/views/YourDataView.js` at `/settings/data` (**Your Data** in the top menu): what's stored by kind,
+  `navigator.storage.estimate()`, a request for persistent storage, Back Up to a File, and Restore (open, preview,
+  choose merge or a confirmed replace, then reload, since every store read its data at start-up).
+- Editor: **Export All Documents** at the bottom of Recent writes a `forkbuild-document-bundle`
+  (`application/document/DocumentBundle.js`); the toolbar's **Import** reads it, saving documents under their own id
+  when nothing is stored there, skipping identical ones, and saving a copy beside a different version. The Toolbar
+  takes `savedDocumentsRevision` to re-read Recent. **Export All** beside My Structures writes a
+  `forkbuild-blueprint-bundle` (`application/blueprint/BlueprintBundle.js`); **Import Blueprint** reads it through
+  `EditorSession#importBlueprintIfNew()`, which skips a design whose fingerprint is already in My Structures.
+- Identity export adds `lifecycle` (revocation, succession, device authorizations) through
+  `identity/IdentityLifecycleTransfer.js`; import verifies each record and stores those the device lacks, for a new
+  identity and for one already there, and reports them as `restoredLifecycle`. Before, re-importing a revoked identity
+  after clearing data showed it as active.
+- `application/publication/LocalOnlyPublicationCheck.js` (provided as `localOnlyPublicationCheck`): an own
+  publication with no uploaded Signed Claim material and no IPFS or Arweave placement of its content. Repository cards
+  say **Only on this device**, linking to Your Data.
+- Principles: new "A Device Backup Is Always Encrypted, And A Restore Never Logs Anyone In"; "An Imported Document
+  Always Gets A Fresh Identity" and "Duplicate Identity Import Is A No-Op, Never A Silent Overwrite" amended.
+- Docs: README, `docs/user/13-YourData.md` (new), `02`, `04`, `05`, the user README and FAQ, `docs/Privacy.md`,
+  `docs/Architecture.md` ("Backup and restore", identity export) and `docs/Protocol.md` (document and blueprint
+  bundles, identity `lifecycle`, device backup).
+- Tests: `tests/DeviceBackup.test.js` (grouping, collection, the file's encryption and authenticated header, merge,
+  replace, an identity unlocking after a restore); `tests/YourDataPageBrowser.test.js` (the page in Chromium: summary,
+  backup download, wrong passphrase, merge, confirmed replace, reload, phone width);
+  `tests/ExportAllDocumentsAndStructures.test.js`; `tests/IdentityExportLifecycleRecords.test.js`;
+  `tests/LocalOnlyPublicationCheck.test.js`. `tests/PublisherPerformanceLeaderboardUi.test.js` counts thirteen top-nav
+  links.
+- Not done: a reminder when no backup has been made for a while, and backing up to anywhere but a downloaded file.
+

@@ -624,3 +624,72 @@
     color: #707070;
     font-size: 0.72rem;
 }
+
+/* Your Data: storage summary, backup and restore. */
+.your-data-view {
+    padding: 2rem 2.5rem 3rem;
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.your-data-section {
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.your-data-section h2 {
+    margin: 0 0 0.6rem;
+    font-size: 1.05rem;
+    color: #e0e0e0;
+}
+
+.your-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.your-data-table td {
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid #222;
+    color: #d0d0d0;
+}
+
+.your-data-count {
+    text-align: right;
+    color: #909090;
+    white-space: nowrap;
+}
+
+.your-data-checkbox,
+.your-data-radio {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    margin: 0.5rem 0;
+    font-size: 0.85rem;
+    color: #d0d0d0;
+}
+
+.your-data-checkbox input,
+.your-data-radio input {
+    margin-top: 0.2rem;
+}
+
+.your-data-view .modal-input {
+    margin-bottom: 0.5rem;
+}
+
+.your-data-view ul {
+    margin: 0.35rem 0;
+    padding-left: 1.25rem;
+}
+
+@media (max-width: 640px) {
+    .your-data-view {
+        padding: 1rem 16px 2rem;
+    }
+}
