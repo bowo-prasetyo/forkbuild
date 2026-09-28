@@ -34,7 +34,9 @@ import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/ip
 import { CreateIpfsPublicationContentVerifierUseCase } from '../application/ipfs/CreateIpfsPublicationContentVerifierUseCase.js';
 import { CreateIpfsPublicationContentVerificationCoordinatorUseCase } from '../application/ipfs/CreateIpfsPublicationContentVerificationCoordinatorUseCase.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
-import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
+import { LocalStorageProvider, flushLocalStorage } from '../storage/LocalStorageProvider.js';
+import { DeviceBackupUseCase } from '../application/backup/DeviceBackupUseCase.js';
+import { LocalOnlyPublicationCheck } from '../application/publication/LocalOnlyPublicationCheck.js';
 import { AnnouncementIndex } from '../application/announcementIndex/AnnouncementIndex.js';
 import { createFollowedAnnouncementRetention } from '../application/announcementIndex/FollowedAnnouncementRetention.js';
 import { FollowingFeed } from '../application/publication/FollowingFeed.js';
@@ -297,6 +299,7 @@ const { coordinator: ipfsPublicationContentVerificationCoordinator } =
     new CreateIpfsPublicationContentVerificationCoordinatorUseCase().execute({ ipfsPublicationContentVerifier });
 
 const app = createApp(App);
+app.provide('deviceBackupUseCase', new DeviceBackupUseCase({ storageProvider: new LocalStorageProvider(), flush: flushLocalStorage }));
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
 app.provide('peerRelationshipUseCase', peerRelationshipUseCase);
@@ -391,6 +394,7 @@ app.provide('ipfsPublicationContentVerificationCoordinator', ipfsPublicationCont
 // keeps a single shared instance app-wide.
 app.provide('publicationObservationArchiveStorage', new LocalStoragePublicationObservationArchive());
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
+app.provide('localOnlyPublicationCheck', new LocalOnlyPublicationCheck({ storageProvider: new LocalStorageProvider(), placementCatalog: publicationSnapshotPlacementCatalog }));
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);
 app.provide('publicationSnapshotPlacementDiscoveryCoordinator', publicationSnapshotPlacementDiscoveryCoordinator);
 app.provide('publicationSnapshotPlacementResolutionCoordinator', publicationSnapshotPlacementResolutionCoordinator);

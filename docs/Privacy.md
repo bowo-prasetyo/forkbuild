@@ -21,9 +21,11 @@ send it:
 - your avatar profile, settings, and a TURN server's username and credential
   if you enter one under **Network Settings**.
 
-Clearing this site's data in the browser deletes all of it. Export any
-identity you want to keep first (**My Identities → Export Identity**): there
-is no other copy and no way to recover it.
+Clearing this site's data in the browser deletes all of it, and there is no
+other copy and no way to recover it. Back it up first with **Your Data →
+Back Up to a File**: the file holds all of the above except which identity
+is logged in, encrypted with a passphrase you choose, and stays wherever you
+put it. ForkBuild never uploads it.
 
 ## What other people can see
 

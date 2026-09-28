@@ -264,6 +264,19 @@ export default {
             reader.readAsText(file);
         }
 
+        // The signed records the file carried besides the key, or null.
+        function restoredLifecycleSummary(result) {
+            const restored = result && result.restoredLifecycle;
+            if (!restored) {
+                return null;
+            }
+            const parts = [];
+            if (restored.revocation) parts.push('its revocation');
+            if (restored.succession) parts.push('its successor');
+            if (restored.deviceAuthorizations) parts.push(`${restored.deviceAuthorizations} device ${restored.deviceAuthorizations === 1 ? 'authorization' : 'authorizations'}`);
+            return parts.length ? `Also restored ${parts.join(', ')}.` : null;
+        }
+
         // importIdentity() publishes no event, so the list is re-read here.
         const importing = ref(false);
         async function confirmImport() {
@@ -374,7 +387,7 @@ export default {
             confirmProtect, confirmChangePassphrase, confirmDeclareSuccessor, confirmRevoke,
             newLabel, newPassphrase, newPassphraseConfirmation, allowUnprotected, createAttempted, creating, createError,
             createIdentity,
-            showImportForm, importText, importLabel, importPassphrase, importError, importResult, importing,
+            showImportForm, importText, importLabel, importPassphrase, importError, importResult, importing, restoredLifecycleSummary,
             importPreview, onImportFileChosen, confirmImport, dismissImportResult
         };
     },
@@ -558,11 +571,13 @@ export default {
 
                     <div v-if="importResult" class="identity-import-result">
                         <p v-if="importResult.status === 'ALREADY_EXISTS'">
-                            This identity already exists on this device as "{{ importResult.identity.label }}". Nothing was changed.
+                            This identity already exists on this device as "{{ importResult.identity.label }}".
+                            <template v-if="!restoredLifecycleSummary(importResult)">Nothing was changed.</template>
                         </p>
                         <p v-else>
                             Identity imported successfully. The identity is currently locked — unlock it when you're ready to use it.
                         </p>
+                        <p v-if="restoredLifecycleSummary(importResult)">{{ restoredLifecycleSummary(importResult) }}</p>
                         <button class="modal-btn modal-btn--secondary" @click="dismissImportResult">Dismiss</button>
                     </div>
 

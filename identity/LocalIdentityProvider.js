@@ -12,6 +12,7 @@ import { computeFnv1a32 } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 import * as IdentityExport from './IdentityExport.js';
 import * as IdentityRecovery from './IdentityRecovery.js';
+import { buildLifecycleRecords, verifiedLifecycleRecords, mergeDeviceAuthorizations } from './IdentityLifecycleTransfer.js';
 import { IdentityLifecycleState } from '../core/IdentityLifecycleState.js';
 import { toIdentityRevocationRecord, getIdentityRevocationSigningDescriptor } from '../core/IdentityRevocationEnvelope.js';
 import { toIdentitySuccessionRecord, getIdentitySuccessionSigningDescriptor } from '../core/IdentitySuccessionEnvelope.js';
@@ -450,7 +451,7 @@ export class LocalIdentityProvider extends IdentityProvider {
         } else {
             seedBytes = Ed25519.hexToBytes(stored.seed);
         }
-        return await IdentityExport.buildExportPackage({
+        const pkg = await IdentityExport.buildExportPackage({
             identityId: identity.identityId,
             publicKey: identity.publicKey,
             algorithm: identity.algorithm,
@@ -460,6 +461,12 @@ export class LocalIdentityProvider extends IdentityProvider {
             passphrase,
             iterations: this._pbkdf2Iterations
         });
+        const lifecycle = buildLifecycleRecords({
+            revocation: this.getRevocationRecord(identityId),
+            succession: this.getSuccessionRecord(identityId),
+            deviceAuthorizations: this._loadDeviceAuthorizations(identityId)
+        });
+        return lifecycle ? { ...pkg, lifecycle } : pkg;
     }
 
     // importLocalIdentity(package, passphrase, { label }) turns a package
@@ -479,9 +486,10 @@ export class LocalIdentityProvider extends IdentityProvider {
     //     IdentityRecovery.js: this is currently unreachable by any
     //     honestly-generated package, kept as a defensive floor.)
     //   - identityId already present with the SAME key material ->
-    //     returns { status: 'ALREADY_EXISTS', identity }, a pure no-op —
-    //     never creates a second copy, never touches the existing entry,
-    //     and notably never even requires the passphrase to be correct.
+    //     returns { status: 'ALREADY_EXISTS', identity } — never creates a
+    //     second copy or touches the stored key, and never even requires
+    //     the passphrase to be correct. Only the package's signed
+    //     lifecycle records this device lacks are added (see below).
     //   - genuinely new identity -> decrypts, verifies, and persists it
     //     as a NEW protected identity (`protected: true` always, even if
     //     the source was unprotected on its origin device — the only
@@ -493,6 +501,10 @@ export class LocalIdentityProvider extends IdentityProvider {
     //     owner explicitly unlocks it, exactly like any other protected
     //     identity created by protectIdentity() or createLocalIdentity()
     //     with a passphrase.
+    //
+    // Both successful outcomes also store the package's signed lifecycle
+    // records (revocation, successor, device grants) after verifying each,
+    // and report them as `restoredLifecycle`.
     //
     // `label` overrides the package's own (untrusted, presentation-only)
     // label hint; if neither is provided, falls back to a generic
@@ -506,7 +518,8 @@ export class LocalIdentityProvider extends IdentityProvider {
         });
 
         if (result.status === 'ALREADY_EXISTS') {
-            return { status: 'ALREADY_EXISTS', identity: LocalIdentity.fromJSON(result.entry) };
+            const restoredLifecycle = this._restoreLifecycleRecords(result.entry.identityId, pkg.lifecycle);
+            return { status: 'ALREADY_EXISTS', identity: this.getLocalIdentity(result.entry.identityId), restoredLifecycle };
         }
 
         const finalLabel = (label && label.trim()) || (result.label && result.label.trim()) || 'Imported Identity';
@@ -521,7 +534,46 @@ export class LocalIdentityProvider extends IdentityProvider {
         await this._storeProtectedKey(entry.identityId, result.seedBytes, entry.publicKey, entry.createdAt, passphrase);
         existingIndex.push(entry);
         this._saveIndex(existingIndex);
-        return { status: 'IMPORTED', identity: LocalIdentity.fromJSON(entry) };
+        const restoredLifecycle = this._restoreLifecycleRecords(entry.identityId, pkg.lifecycle);
+        return { status: 'IMPORTED', identity: this.getLocalIdentity(entry.identityId), restoredLifecycle };
+    }
+
+    // Stores the verified lifecycle records an imported package carries
+    // (identity/IdentityLifecycleTransfer.js). A revocation is permanent, so
+    // one already here is kept; a successor declaration is taken only when
+    // none is on file. Returns what was restored:
+    // { revocation, succession, deviceAuthorizations } (booleans and a count).
+    _restoreLifecycleRecords(identityId, lifecycle) {
+        const verified = verifiedLifecycleRecords(identityId, lifecycle);
+        const restored = { revocation: false, succession: false, deviceAuthorizations: 0 };
+        const index = this._loadIndex();
+        const entry = index.find((e) => e.identityId === identityId);
+        if (verified.succession && !this.getSuccessionRecord(identityId)) {
+            this._storageProvider.save(IDENTITY_SUCCESSION_PREFIX + identityId, verified.succession);
+            entry.successorIdentityId = verified.succession.successorIdentityId;
+            restored.succession = true;
+        }
+        if (verified.revocation && !this.getRevocationRecord(identityId)) {
+            this._storageProvider.save(IDENTITY_REVOCATION_PREFIX + identityId, verified.revocation);
+            entry.lifecycleState = IdentityLifecycleState.REVOKED;
+            if (verified.revocation.successorIdentityId) {
+                entry.successorIdentityId = verified.revocation.successorIdentityId;
+            }
+            this._vaultCache.delete(identityId);
+            restored.revocation = true;
+        }
+        if (verified.deviceAuthorizations.length > 0) {
+            const before = JSON.stringify(this._loadDeviceAuthorizations(identityId));
+            const merged = mergeDeviceAuthorizations(this._loadDeviceAuthorizations(identityId), verified.deviceAuthorizations);
+            if (JSON.stringify(merged) !== before) {
+                this._saveDeviceAuthorizations(identityId, merged);
+                restored.deviceAuthorizations = verified.deviceAuthorizations.length;
+            }
+        }
+        if (restored.revocation || restored.succession) {
+            this._saveIndex(index);
+        }
+        return restored;
     }
 
     // --- 0.2.67: identity lifecycle hardening ---------------------------

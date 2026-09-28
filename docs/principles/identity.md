@@ -97,8 +97,11 @@ both the file and its passphrase means the identity is gone.
 
 Import first checks whether the `identityId` already exists. If it does,
 with matching key material, it returns `ALREADY_EXISTS` without touching
-the passphrase. Overwriting could downgrade a protected identity, and
-ignoring the import silently would hide what happened.
+the passphrase or the stored key. Overwriting could downgrade a protected
+identity, and ignoring the import silently would hide what happened. The
+only thing it adds is a signed lifecycle record the package carries and
+the device lacks (a revocation, a successor, a device grant), after
+verifying it.
 
 [Full text](history/0.1-0.2.md#duplicate-identity-import-is-a-no-op-never-a-silent-overwrite-0248)
 

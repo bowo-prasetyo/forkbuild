@@ -59,6 +59,7 @@ import { usePostPublishDistribution } from './editorView/usePostPublishDistribut
 import { useSelectionActions } from './editorView/useSelectionActions.js';
 import { useStructureLibrary } from './editorView/useStructureLibrary.js';
 import { useBlueprintExchange } from './editorView/useBlueprintExchange.js';
+import { ExportAllDocumentsUseCase, ImportDocumentBundleUseCase } from '../../application/document/DocumentBundle.js';
 import { useStructureInspection } from './editorView/useStructureInspection.js';
 
 // Editing shortcuts come from EditorActionRegistry, shared with the palette,
@@ -83,10 +84,12 @@ export default {
                 :publish-document-use-case="publishDocumentUseCase"
                 :feedback="feedback"
                 :entry-context="entryContext"
+                :saved-documents-revision="savedDocumentsRevision"
                 @back-to-world="backToWorld"
                 @open-shortcuts="shortcutsOpen = true"
                 @published="onDocumentPublished"
                 @export-document="exportDocument"
+                @export-all-documents="exportAllDocuments"
                 @import-document="importDocument"
             />
             <RecoveryBanner
@@ -217,6 +220,7 @@ export default {
                         @remove-personal-structure="removePersonalStructure"
                         @export-personal-structure="exportStructure"
                         @import-blueprint="importBlueprint"
+                        @export-all-personal-structures="exportAllStructures"
                         @inspect-structure="inspectStructure"
                         @fork-to-library="forkStructureToLibrary"
                     />
@@ -320,9 +324,13 @@ export default {
         const toolRegistry = new CreateToolRegistryUseCase().execute();
         const documentManager = new CreateDocumentManagerUseCase().execute();
         const {
+            storageProvider: documentStorage,
             saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase, structureDocumentResolver,
             autosaveDocumentUseCase, recoverDocumentUseCase, discardRecoveryUseCase, checkRecoveryUseCase
         } = new CreatePersistenceUseCase().execute();
+        // Bumped when documents are saved without opening one, so the
+        // Toolbar's Recent list reads them again.
+        const savedDocumentsRevision = ref(0);
 
         // Watches this view's documentManager; started and stopped with the view so an
         // unmounted Editor never autosaves.
@@ -499,11 +507,15 @@ export default {
         });
 
         const {
-            exportBlueprintAttribution, exportBlueprintLineageClaim, exportDocument, exportStructure, importBlueprint,
-            importDocument
+            exportAllDocuments, exportAllStructures, exportBlueprintAttribution, exportBlueprintLineageClaim, exportDocument,
+            exportStructure, importBlueprint, importDocument
         } = useBlueprintExchange({
             blueprintAttributionExchange, blueprintAttributionUseCase, blueprintLineageExchange,
-            blueprintLineageUseCase, documentManager, editorSession, feedback, refreshPersonalStructureGroups
+            blueprintLineageUseCase, documentManager, editorSession, feedback, refreshPersonalStructureGroups,
+            personalStructureLibraryStore,
+            exportAllDocumentsUseCase: new ExportAllDocumentsUseCase(documentStorage),
+            importDocumentBundleUseCase: new ImportDocumentBundleUseCase(documentStorage),
+            onSavedDocumentsChanged: () => { savedDocumentsRevision.value++; }
         });
 
         const {
@@ -1060,6 +1072,9 @@ export default {
             removePersonalStructure,
             exportStructure,
             exportDocument,
+            exportAllDocuments,
+            exportAllStructures,
+            savedDocumentsRevision,
             importDocument,
             importBlueprint,
             brickRegistry: registry,

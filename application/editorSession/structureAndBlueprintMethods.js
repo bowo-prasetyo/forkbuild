@@ -122,6 +122,24 @@ export const structureAndBlueprintMethods = {
         return structure;
     },
 
+    // Like importBlueprint(), but a design already in My Structures (same
+    // fingerprint: same name, category, description and bricks) is not
+    // added again. Returns { structure, isNew }, or null if nothing is wired.
+    importBlueprintIfNew(pkg) {
+        if (!this._importBlueprintUseCase || !this._personalStructureLibraryStore) {
+            return null;
+        }
+        const structure = this._importBlueprintUseCase.execute(pkg, { registry: this._registry });
+        const fingerprint = deriveBlueprintFingerprint(structure);
+        const existing = this._personalStructureLibraryStore.listStructures()
+            .find((candidate) => deriveBlueprintFingerprint(candidate) === fingerprint);
+        if (existing) {
+            return { structure: existing, isNew: false };
+        }
+        this._personalStructureLibraryStore.addStructure(structure);
+        return { structure, isNew: true };
+    },
+
     exportBlueprintAttribution(attribution) {
         if (!this._blueprintAttributionExchange) {
             return null;

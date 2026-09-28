@@ -98,6 +98,7 @@ export default {
 	                    <router-link to="/conversations" class="app-nav-link">Conversations</router-link>
 	                    <router-link to="/publications" class="app-nav-link">Publications</router-link>
 	                    <router-link to="/settings" class="app-nav-link">Network Settings</router-link>
+	                    <router-link to="/settings/data" class="app-nav-link">Your Data</router-link>
 	                    <router-link to="/about" class="app-nav-link">About</router-link>
 	                </nav>
                     <!-- Beside the account: notifications are addressed to the signed-in identity. -->

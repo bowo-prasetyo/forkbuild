@@ -83,21 +83,26 @@ joining a lobby need you to unlock it again.
 
 ### How do I move my work to another computer or browser?
 
-Nothing syncs by itself. Move each kind of thing by file:
+Nothing syncs by itself. To move everything, back it up on **Your Data**
+and restore the file on the other device (see [Your Data](13-YourData.md)).
+To move one kind of thing:
 
-- **Documents**: **Export** in the Editor toolbar, then **Import** on the
-  other device.
+- **Documents**: **Export** in the Editor toolbar, or **Export All
+  Documents** at the bottom of **Recent**, then **Import** on the other
+  device.
 - **Your own structures**: **Export Blueprint** from a card's **⋮** menu,
-  then **Import Blueprint** beside **My Structures**.
+  or **Export All** beside **My Structures**, then **Import Blueprint**.
 - **Identities**: **Export** on **My Identities**, then **Import Identity**.
 
-Chat history, friends and settings stay on the device they're on.
+Chat history, friends and settings move only with a full backup.
 
 ### Will clearing my browser data delete my work?
 
 Yes. Documents, identities, friends and chat history all live in this
 browser's storage for this site, and clearing it deletes them for good.
-Export anything you want to keep first. See [Privacy](../Privacy.md).
+Back them up first with **Your Data → Back Up to a File**, and keep the
+file and its passphrase safe; **Restore** on the same page brings everything
+back. See [Your Data](13-YourData.md) and [Privacy](../Privacy.md).
 
 ### Can I rename or delete an identity?
 

@@ -277,7 +277,7 @@ export default {
         // caller owns parsing/validating/persisting it, same "this panel
         // finds and asks for things, it never decides what they mean" rule
         // this file's own header states.
-        'export-personal-structure', 'import-blueprint',
+        'export-personal-structure', 'import-blueprint', 'export-all-personal-structures',
         // 0.6.3 — Blueprint Authoring & Versioning UX. 'inspect-structure'
         // (any card's "⋮" menu, both built-in and personal — see
         // ui/components/StructureInfoPanel.js) and 'fork-to-library' (a
@@ -564,7 +564,10 @@ export default {
             window.removeEventListener('click', closeMenu);
         });
 
+        const hasPersonalStructures = computed(() => (props.personalStructureGroups || []).some((group) => group.structures.length > 0));
+
         return {
+            hasPersonalStructures,
             activeTab,
             query,
             selectedDefinitionId,
@@ -743,6 +746,13 @@ export default {
                             class="action-btn action-btn--secondary personal-structure-library-import"
                             @click="triggerImportBlueprint"
                         >Import Blueprint</button>
+                        <button
+                            v-if="hasPersonalStructures"
+                            type="button"
+                            class="action-btn action-btn--secondary personal-structure-library-export-all"
+                            title="Download every structure in My Structures in one file"
+                            @click="$emit('export-all-personal-structures')"
+                        >Export All</button>
                         <input
                             ref="importFileInput"
                             type="file"

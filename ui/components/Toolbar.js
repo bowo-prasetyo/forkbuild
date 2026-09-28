@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { saveFailureMessage } from './saveFailureMessages.js';
 import { saveDocument } from './saveDocument.js';
 
@@ -79,6 +79,12 @@ export default {
         entryContext: {
             type: Object,
             default: null
+        },
+        // Changes when documents were saved without the open document
+        // changing (importing a bundle), so Recent is read again.
+        savedDocumentsRevision: {
+            type: Number,
+            default: 0
         }
     },
     // 0.9.377 — EditorView Post-Publish Distribution Action. `published`
@@ -104,7 +110,7 @@ export default {
     // THIS component owns the native file picker (browser mechanics
     // only), EditorView owns JSON.parse and everything after it. Toolbar
     // never calls editorSession.importDocument() itself.
-    emits: ['back-to-world', 'open-shortcuts', 'published', 'export-document', 'import-document'],
+    emits: ['back-to-world', 'open-shortcuts', 'published', 'export-document', 'export-all-documents', 'import-document'],
     setup(props, { emit }) {
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
@@ -234,6 +240,13 @@ export default {
                 (doc.title || '').toLowerCase().includes(query));
         });
 
+        watch(() => props.savedDocumentsRevision, refresh);
+
+        function exportAllDocuments() {
+            recentOpen.value = false;
+            emit('export-all-documents');
+        }
+
         onMounted(() => {
             unsubscribe = props.documentManager.onStateChanged(refresh);
         });
@@ -249,7 +262,7 @@ export default {
             recentOpen, recentQuery, toggleRecent, formatModified,
             searchThreshold: SEARCH_THRESHOLD,
             save, createNew, load, place, publish, saveAndReturnToWorld,
-            importFileInput, triggerImportDocument, onImportDocumentFileChosen
+            importFileInput, triggerImportDocument, onImportDocumentFileChosen, exportAllDocuments
         };
     },
     template: `
@@ -350,6 +363,9 @@ export default {
                                 No documents match "{{ recentQuery }}"
                             </p>
                         </div>
+                        <button class="toolbar-recent-export-all" title="Download every saved document in one file" @click="exportAllDocuments">
+                            Export All Documents
+                        </button>
                     </div>
                 </template>
             </div>
