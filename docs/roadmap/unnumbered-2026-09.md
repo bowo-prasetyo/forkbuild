@@ -2108,10 +2108,12 @@ is.
 
 ## Release 1.1.0 (unnumbered, 2026-09-28)
 
-**Version 1.1.0 is released.** Everything since 1.0.0 ships under its own version number, so the security advisory
-GHSA-8ggw-xpjf-w4rh can name a patched version. It is a minor release rather than a patch because it also adds
-features (IndexedDB storage, the compact document format, touch controls, the public lobby, share links, background
-discovery and Steem).
+**Version 1.1.0 is released.** Everything since 1.0.0 ships under its own version number, so the two security
+advisories for 1.0.0 can name a patched version: GHSA-8ggw-xpjf-w4rh (forgeable content hashes and blueprint
+fingerprints) and GHSA-73v7-4rm7-r8jc (signatures not bound to the signer's did:key). Both list 1.0.0 and earlier as
+affected and 1.1.0 as patched. It is a minor release rather than a patch because it also adds features (IndexedDB
+storage, the compact document format, touch controls, the public lobby, share links, background discovery and
+Steem).
 
 - `package.json`, `package-lock.json` and `core/version.js` (shown on the About page and stamped into new documents
   as `engineVersion`) say 1.1.0. `PROTOCOL_VERSION` is unchanged.
