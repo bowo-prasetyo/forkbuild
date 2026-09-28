@@ -17,6 +17,7 @@ import { SharePublicationWithPeersUseCase } from '../application/publication/sha
 import { RetrieveSharedPublicationUseCase } from '../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
 import { AutoRetrieveSharedPublicationsUseCase } from '../application/publication/sharing/AutoRetrieveSharedPublicationsUseCase.js';
 import { CreatePublicationResolverUseCase } from '../application/publication/CreatePublicationResolverUseCase.js';
+import { CreateFindOwnSharedPublicationUseCase } from '../application/publication/sharing/CreateFindOwnSharedPublicationUseCase.js';
 import { CreatePublicationPeerExchangeUseCase } from '../application/publication/CreatePublicationPeerExchangeUseCase.js';
 import { CreatePeerContentExchangeUseCase } from '../application/peer/CreatePeerContentExchangeUseCase.js';
 import { CreatePublicationResolutionCoordinatorUseCase } from '../application/publication/CreatePublicationResolutionCoordinatorUseCase.js';
@@ -375,6 +376,9 @@ app.provide('publicationCatalogContentResolver', publicationCatalogContentResolv
 // look them up by contentReference here.
 app.provide('publicationContentStore', publicationContentStore);
 app.provide('sharePublicationWithPeersUseCase', sharePublicationWithPeersUseCase);
+// Which of this device's own Worlds an unresolvable catalog entry shares, for
+// the Publications page's "Open in Editor" on an old, legacy-hash entry.
+app.provide('findOwnSharedPublicationUseCase', new CreateFindOwnSharedPublicationUseCase().execute({ contentStore: publicationContentStore }));
 app.provide('retrieveSharedPublicationUseCase', retrieveSharedPublicationUseCase);
 app.provide('autoRetrieveSharedPublicationsUseCase', autoRetrieveSharedPublicationsUseCase);
 app.provide('ipfsRemotePublicationCoordinator', ipfsRemotePublicationCoordinator);

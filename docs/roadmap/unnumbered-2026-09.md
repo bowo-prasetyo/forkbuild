@@ -2286,3 +2286,27 @@ go.
 - Tests: `tests/PreferredDistributionChoice.test.js`; `tests/PublicationsPageLayoutBrowser.test.js` covers a usable
   storage preference (button, folded options, the click reaching the preferred trigger), a Bitcoin anchoring
   preference (no button, options open, hint), a Steem one, and no storage preference.
+
+## Your own old Worlds open in the Editor from the Publications page (unnumbered, 2026-09-28)
+
+**A World you shared before content hashes became SHA-256 now has its own title and an Open in Editor link on its
+Publications card, instead of a generic Open Repository.** With 19 such cards, "find the World in the Repository
+yourself" meant guessing which card was which.
+
+- Why the page couldn't say which World it was: the World's id is inside the entry's wrapped content, and that
+  content is read only after it matches the entry's hash, which an old FNV-1a hash can't vouch for.
+- `FindOwnSharedPublicationUseCase` (`application/publication/sharing/`) answers without trusting those bytes. It
+  reads them from this device's content store only as a claim of which Publication (id and snapshot hash) they wrap,
+  and returns `{ publicationId, documentId, title }` from this device's own record with exactly that id and hash,
+  through the new `LocalPublisherProvider#findOwnPublication()` (which `isOwnPublication()` now uses). Bytes from
+  anyone else can at most point at one of this device's own Worlds, and never supply the title or the World id. It
+  names no content kind, as `tests/PublicationDisplayKindIntegration.test.js` requires; bytes of another kind match
+  no record. `CreateFindOwnSharedPublicationUseCase` wires it to the same storage `CreatePublisherUseCase` publishes
+  into, and `ui/main.js` provides it as `findOwnSharedPublicationUseCase`.
+- The view looks up each of your own old entries once, after its check, and links to `/editor?load=<documentId>`,
+  as the Repository's Open does. Other people's entries are never looked up. Without a record (the World was
+  unpublished since), the card keeps the kind's own advice and Open Repository.
+- The entry itself is still refused, as before: the new link only helps you publish the World again.
+- Tests: `tests/FindOwnSharedPublication.test.js` (found, tampered bytes ignored beyond id and hash, every no-match
+  case, `findOwnPublication()`); `tests/PublicationsPageLayoutBrowser.test.js` covers the title, the Editor link,
+  that only your own entries are looked up, and the fallback.
