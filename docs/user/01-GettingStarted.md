@@ -76,7 +76,8 @@ ForkBuild has several main areas:
 
 1. Click **Editor** in the top bar.
 2. In the left sidebar, make sure the **Place** tool is active (press `2`).
-3. Click a brick in the **Core Library** palette — for example, **Cube**.
+3. In the **Build Library** below it, open the **Bricks** tab and click a
+   brick — for example, **Cube** under **Basic**.
 4. Move your mouse into the 3D viewport. A translucent **ghost** of the brick
    follows the grid.
 5. **Click** to place it.
@@ -106,7 +107,9 @@ some browsers ask whether ForkBuild may keep its data permanently; allowing
 it stops the browser from clearing it when the disk runs low.
 
 You don't need to be logged in to build. Logging in matters once you
-publish or work with other people.
+publish or work with other people: a creation you publish while logged out
+has no author and no signature, so it can't be shared with peers or
+distributed later. Log in first, then publish.
 
 ## What's next?
 

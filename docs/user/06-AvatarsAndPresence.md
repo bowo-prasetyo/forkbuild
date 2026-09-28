@@ -35,7 +35,7 @@ conflate them, so keep them distinct:
 | **Presence Visibility** | Who receives your *live position* — whether and where you show up moving around World View |
 | **Profile Visibility** | Who receives your *appearance* — template, colors, accessories, display name |
 
-Both offer the same four levels:
+Both offer the same four levels, and both start out on **Public**:
 
 - **Public** — anyone connected can see it.
 - **Friends** — mutual friends, plus any identities you list explicitly
@@ -43,7 +43,8 @@ Both offer the same four levels:
   request/approval flow — see
   [Peer Connections & Friends](07-PeerConnectionsAndFriends.md) for what
   "friend" means.
-- **Local** — only within this session's own connection scope.
+- **Local** — only other ForkBuild tabs open in this same browser; never
+  sent to any peer, not even a friend.
 - **Hidden** — never advertised, to anyone. This is how you go invisible.
 
 Each section has its own **Save** button — saving one never saves the
@@ -92,7 +93,11 @@ camera back toward them and they reappear.
 
 Flying the camera ([World View](03-WorldView.md#flying-around)) is one way
 to move, but you can also walk your avatar directly with **Avatar Control
-Mode**:
+Mode**. To turn it on, you need to be logged in with an avatar saved on
+**My Avatar**; then tick **Control My Avatar (WASD, Shift, Space)** in
+World View's **Avatar** section. The keys don't do anything until you do,
+and they're ignored while a text field has focus — click the 3D view
+first.
 
 | Key | Action |
 |---|---|

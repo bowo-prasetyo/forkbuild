@@ -61,9 +61,9 @@ selection, or edit anything. See
 
 As you move through the world, the interface shows derived context like:
 
-- "**Forest · near House**" — you're in a forest biome near a structure
-- "**Grassland · 120m from Origin**" — open terrain at a distance from center
-- "**River · House 50m SW**" — water feature with nearby building direction
+- "**Forest · near House**" — you're in a forest, within 50 units of a structure
+- "**Grassland · river**" — open terrain beside a river
+- "**Grassland · lake · near Barn**" — terrain, water, and the nearest structure
 
 These descriptions are computed from your position, terrain ecology,
 hydrology, and structure placements — nothing is stored in the world.
@@ -203,7 +203,7 @@ Composing, forking, and your personal library — see
 | Built-in card's **⋮** menu, **Fork to My Structures** | Add it to My Structures as-is | no document created, nothing extracted |
 | Any card's **⋮** menu, **Info** | Show a read-only name/category/bricks/footprint/height/source/description panel | never editable |
 | Selection with **1+ bricks**, then **Create Blueprint** (Selection panel's **Groups & blueprint** section, or Command Palette) | Open a small dialog (name / category / description + preview); save the selection as a new entry in **My Structures** | |
-| **My Structures** card's **⋮** menu, **Rename** | Edit a personal structure's name/category/tags/description | personal structures only |
+| **My Structures** card's **⋮** menu, **Rename** | Change a personal structure's name | personal structures only |
 | **My Structures** card's **⋮** menu, **Remove** | Delete it from your library | never touches bricks already composed or forked from it |
 | Any card's **⋮** menu, **Export Blueprint** | Download it as a portable JSON file | built-in or personal |
 | **Import Blueprint** button (beside the My Structures heading) | Add a blueprint file to your library as a new entry | fresh identity, even for a re-imported file |
@@ -216,7 +216,7 @@ selectable unit — a live reference, not a copy — see
 
 | Input | Action | Notes |
 |---|---|---|
-| Toolbar **Recent** dropdown, a document's **Place** button | Enter Place-Structure mode targeting that document | sibling to that entry's **Load** button |
+| Toolbar **Recent** dropdown, a document's **Place** button | Enter Place-Structure mode targeting that document | clicking the document's name opens it instead |
 | `R` / `Shift+R` while placing | Rotate the pending instance ±90° | same placement-preview keys as a brick |
 | Click a placed instance (Select tool) | Select it as one unit, distinct from a brick selection | |
 | Drag in the viewport, or the gizmo | Move / rotate the instance | |

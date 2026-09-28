@@ -37,14 +37,17 @@ question from whether you're logged in:
 
 - **Logged in, unlocked** — everything works normally.
 - **Logged in, locked** (🔒 next to your name in the top-right) — you're
-  still yourself, you can still browse and look around, but anything that
-  needs a fresh signature (saving, publishing, sending a message) will ask
-  for your passphrase first. Click **Unlock** to re-enter it.
+  still yourself, and you can still browse, build and save, but anything
+  that needs a fresh signature (publishing, being discoverable,
+  joining a lobby) fails with an "identity is locked"
+  message until you unlock. Click **Unlock** next to your name to enter
+  your passphrase, then try again.
 - **Logged out** — you're no one; open **Login** to pick or unlock an
   identity again.
 
-A vault locks automatically after **15 minutes** of inactivity since you last
-unlocked it, or whenever you click **Lock** yourself. Reloading the page
+A vault locks automatically **15 minutes after you unlock it**, whether or
+not you're still using the app (it isn't an inactivity timer), or whenever
+you click **Lock** yourself on **My Identities**. Reloading the page
 always leaves protected identities locked — the decrypted key is never
 written to disk, only ever held in memory — even though the app still
 remembers who you were logged in as.

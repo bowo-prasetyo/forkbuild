@@ -42,6 +42,9 @@ top-level [docs/](..) folder.
 
 ## Reference
 
+- **[FAQ](FAQ.md)** — short answers to the questions people most often
+  run into: sharing, licenses, lost passphrases, moving to another
+  device, walking your avatar, and reconnecting with friends.
 - **[Controls Reference](ControlsReference.md)** — every mouse and
   keyboard interaction in the Editor and World View, in one lookup
   table. If this page and the in-app Command Palette (`Ctrl/Cmd+K`)
