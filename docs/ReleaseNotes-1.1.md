@@ -23,12 +23,12 @@ Steem.
     by, are SHA-256 too. Older claims are no longer counted or imported;
     re-sign your own from a structure's **Info** panel
     (**Re-sign for this design**).
-- **A signature's key must be the one its did:key names.** In 1.0.0 a
-  record that carries its signer's identity (a Publication, a placement, an
-  anchor) was checked against the key it carried, without checking that the
-  key belongs to the did:key it names, so anyone could sign with their own
-  key and label the record with someone else's identity. Every such record
-  is now refused.
+- **A signature's key must be the one its did:key names** (advisory
+  GHSA-73v7-4rm7-r8jc). In 1.0.0 a record that carries its signer's
+  identity (a Publication, a placement, an anchor) was checked against the
+  key it carried, without checking that the key belongs to the did:key it
+  names, so anyone could sign with their own key and label the record with
+  someone else's identity. Every such record is now refused.
 
 ## New
 
