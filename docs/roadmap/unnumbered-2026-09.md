@@ -2049,3 +2049,59 @@ user docs, with Network Settings (not experimental) buried in it.
   in plain statements. Links from the other guides point at the moved sections.
 - Corrections found on the way: the Proof / Anchoring Provider page also offers Steem, and Historical Bitcoin
   Anchor Evidence is in the Blockchain Anchoring tab.
+
+## Blueprint fingerprints are SHA-256 (unnumbered, 2026-09-28)
+
+**A different design can no longer take over someone's signed authorship or lineage claims.** Signed attribution and
+lineage claims name a design only by its fingerprint, which was `"bp:"` plus 32-bit FNV-1a of the canonical design.
+Three characters in a description made any design match any fingerprint in about 13 ms, so Alice's signed "I made
+this" showed on Mallory's design, and the import check against "the design on file" passed. The content-hash fix
+earlier the same day left fingerprints on FNV-1a because every stored claim is signed over its fingerprint; this entry
+is that transition. Part of GHSA-8ggw-xpjf-w4rh.
+
+- `core/BlueprintFingerprint.js`: `deriveBlueprintFingerprint()` is `"bp2:"` plus SHA-256 (64 hex characters).
+  `deriveLegacyBlueprintFingerprint()` gives the old `"bp:"` value, only to find claims made under it.
+  `isCurrentBlueprintFingerprint()` and `isLegacyBlueprintFingerprint()` tell them apart by prefix and length.
+- Views: `BlueprintAttributionUseCase#communityView()` and `BlueprintLineageUseCase#lineageView()` add
+  `legacyClaims`, the claims under the design's old fingerprint. They are never counted as authors or shown as
+  lineage, because a different design can share that fingerprint.
+- Re-signing: `communityView()` also gives `myLegacyClaim`, and `resignLegacyAttribution(structure)` signs this
+  identity's authorship under the current fingerprint and retracts the old claim. It runs only when a person clicks
+  **Re-sign for this design** in the Structure info panel, which says how many older claims there are: the app never
+  re-signs on its own, since a forged design that matches the old fingerprint would otherwise get signed. A lineage
+  claim involves two designs, so it is declared again with **Derived from this**.
+- Imports: `BlueprintAttributionExchange`, `BlueprintLineageExchange` and the attribution publication kind refuse any
+  claim whose fingerprint isn't current, with a message saying its author needs to sign it again. Blueprint files
+  still import; their older bundled claims are left out, and the import message says how many.
+- Docs: `docs/Architecture.md`, the fingerprint principle (short version and a "Changed by" note), the Editor guide
+  and the release notes.
+- Tests: `tests/BlueprintFingerprintCollisionResistance.test.js` forges a design with Alice's old fingerprint and
+  checks her old claim counts for neither design; that she can re-sign it for her own design only, after which she is
+  the author and the forged design still has none; that old attributions are refused from files and from the network;
+  and that old lineage claims are counted apart, refused on import, and replaced by declaring the lineage again.
+  `tests/BlueprintIdentityAttribution.test.js` now expects `"bp2:"` fingerprints.
+
+## Delegations are signed for real (unnumbered, 2026-09-28)
+
+**The delegation code no longer trusts a signature anyone can write.** `core/SigningIdentity.js` was a placeholder from
+0.2.17 whose `sign()` produced the text `mock-sig-<publicKey>-<hash>` and whose `verify()` compared that text, so
+anyone who knew a public key (which is public) could "sign" a delegation in its owner's name. Only the delegation code
+used it, and delegation isn't wired into the running app, so nothing live was exposed; this removes the trap before it
+is.
+
+- `core/SigningIdentity.js` is deleted. `core/Delegation.js` uses the real public-key `identity/SigningIdentity.js`,
+  and gains `getSigningDescriptor()` (signature type `delegation`) and `withSignature()`.
+- `CreateDelegationUseCase(resolver, identityProvider)` signs through `signCanonical()`; the issuer is always the
+  provider's own identity.
+- `identity/DescriptorSignature.js` holds the one Ed25519 descriptor check (moved unchanged from
+  `LocalAuthorizationVerifier#verifyDescriptor()`, which now calls it) and `identityForDidKey()`.
+  `LocalAuthorizationVerifier#verifyDelegation()` and `VerifyDelegationUseCase` use it with the issuer's key taken
+  from its did:key; `DelegationVerifier#verify()` takes the action's `descriptor` and `signature` instead of a raw
+  payload and checks both the action and the delegation that way.
+- Tests: `tests/DelegatedAuthorization.test.js` is rewritten on real identities, keeping its 15 cases, and adds
+  forgeries: the old `mock-sig-…` format, a delegation in Alice's name signed by Bob, Alice's did:key paired with Bob's
+  key, a stored delegation changed after signing, and a delegation signature replayed as an action's. It used to end
+  in `runTests().catch(console.error)`, which reported success even when an assertion failed; it now uses top-level
+  `await`. `tests/TrustDiscoveryHardening.test.js` sections 13 and 17 use real identities.
+- Still needed before delegation is wired in: a way for grants to travel between devices, signed revocation, a nonce
+  check against replay, and a decision on chains (refused today). `docs/Architecture.md` lists them.

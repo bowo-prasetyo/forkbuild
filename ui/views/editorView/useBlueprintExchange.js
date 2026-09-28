@@ -1,4 +1,4 @@
-import { deriveBlueprintFingerprint, describeBlueprintFingerprint } from '../../../core/BlueprintFingerprint.js';
+import { deriveBlueprintFingerprint, describeBlueprintFingerprint, isLegacyBlueprintFingerprint } from '../../../core/BlueprintFingerprint.js';
 import { BLUEPRINT_ATTRIBUTION_KIND } from '../../../core/BlueprintAttribution.js';
 import { BLUEPRINT_LINEAGE_CLAIM_KIND } from '../../../core/BlueprintLineageClaim.js';
 
@@ -136,7 +136,12 @@ export function useBlueprintExchange({
             return '';
         }
         let imported = 0;
+        let legacy = 0;
         for (const attributionJSON of pkg.attributions) {
+            if (isLegacyBlueprintFingerprint(attributionJSON && attributionJSON.fingerprint)) {
+                legacy += 1;
+                continue;
+            }
             try {
                 const result = editorSession.importBlueprintAttribution(attributionJSON, structure);
                 if (result && result.isNew) {
@@ -146,7 +151,8 @@ export function useBlueprintExchange({
                 console.warn('Skipped an attribution bundled with this blueprint:', e.message);
             }
         }
-        return imported > 0 ? ` with ${imported} attributed ${imported === 1 ? 'author' : 'authors'}` : '';
+        return (imported > 0 ? ` with ${imported} attributed ${imported === 1 ? 'author' : 'authors'}` : '')
+            + legacySkippedSuffix(legacy, 'authorship');
     }
 
     // A bare attribution has no local Structure to cross-check against; it is still
@@ -192,7 +198,13 @@ export function useBlueprintExchange({
         }
         const structureFingerprint = deriveBlueprintFingerprint(structure);
         let imported = 0;
+        let legacy = 0;
         for (const claimJSON of pkg.lineageClaims) {
+            if (isLegacyBlueprintFingerprint(claimJSON && claimJSON.sourceFingerprint)
+                || isLegacyBlueprintFingerprint(claimJSON && claimJSON.derivedFingerprint)) {
+                legacy += 1;
+                continue;
+            }
             try {
                 const options = claimJSON.derivedFingerprint === structureFingerprint
                     ? { derivedStructure: structure }
@@ -205,7 +217,16 @@ export function useBlueprintExchange({
                 console.warn('Skipped a lineage claim bundled with this blueprint:', e.message);
             }
         }
-        return imported > 0 ? ` with ${imported} lineage ${imported === 1 ? 'claim' : 'claims'}` : '';
+        return (imported > 0 ? ` with ${imported} lineage ${imported === 1 ? 'claim' : 'claims'}` : '')
+            + legacySkippedSuffix(legacy, 'lineage');
+    }
+
+    // Claims signed under the old, collidable fingerprint can't be tied to this
+    // design, so they are left out, and said so.
+    function legacySkippedSuffix(count, kind) {
+        return count > 0
+            ? ` (${count} older ${kind} ${count === 1 ? 'claim was' : 'claims were'} left out: signed under an old fingerprint that can't be checked)`
+            : '';
     }
 
     function importBareBlueprintLineageClaim(pkg) {

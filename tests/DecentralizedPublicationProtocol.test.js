@@ -174,7 +174,7 @@ async function run() {
 
         // --- Alice's replica: signs an attribution, publishes it ------
         const alice = makeIdentity('Alice');
-        let attribution = new BlueprintAttribution({ fingerprint: 'bp:farmstead-1', authorIdentityId: alice.getSigningIdentity().id });
+        let attribution = new BlueprintAttribution({ fingerprint: 'bp2:1bc5a12c9226817f3d789596f82fc345c29dd9a16a377541ef74770636951b8a', authorIdentityId: alice.getSigningIdentity().id });
         attribution = attribution.withSignature(alice.signCanonical(attribution.getSigningDescriptor()));
 
         const aliceContentStore = new LocalContentStore(new InMemoryStorageProvider());
@@ -235,7 +235,7 @@ async function run() {
         const mismatchPlugin = createBlueprintAttributionPublicationKind({
             verifier: bobVerifier,
             store: bobAttributionStore,
-            expectedFingerprint: 'bp:some-other-design'
+            expectedFingerprint: 'bp2:8feaa110c18a0384054439d0f5b3e8fde4b6dd0ad147fa939e80595ea802b3ef'
         });
         const mismatchResult = await bobResolver.resolve(publicationJson, mismatchPlugin);
         assert(mismatchResult.outcome === PublicationResolutionOutcome.DOMAIN_CROSS_CHECK_FAILED, '12. reports DOMAIN_CROSS_CHECK_FAILED for a fingerprint that does not match an expected local fingerprint');
@@ -243,9 +243,9 @@ async function run() {
         const result = await bobResolver.resolve(publicationJson, kindPlugin);
         assert(result.outcome === PublicationResolutionOutcome.RESOLVED, '13. a genuine publication resolves');
         assert(result.content.isNew === true, '14. first resolution is new');
-        assert(result.content.attribution.fingerprint === 'bp:farmstead-1', '15. resolved attribution carries the correct fingerprint');
+        assert(result.content.attribution.fingerprint === 'bp2:1bc5a12c9226817f3d789596f82fc345c29dd9a16a377541ef74770636951b8a', '15. resolved attribution carries the correct fingerprint');
         assert(result.content.attribution.authorIdentityId === alice.getSigningIdentity().id, '16. resolved attribution carries the correct author');
-        assert(bobAttributionStore.has('bp:farmstead-1', attribution.id), '17. the resolved attribution is now in Bob\'s own store');
+        assert(bobAttributionStore.has('bp2:1bc5a12c9226817f3d789596f82fc345c29dd9a16a377541ef74770636951b8a', attribution.id), '17. the resolved attribution is now in Bob\'s own store');
 
         const secondResult = await bobResolver.resolve(publicationJson, kindPlugin);
         assert(secondResult.outcome === PublicationResolutionOutcome.RESOLVED, '18. re-resolving the same publication still resolves');

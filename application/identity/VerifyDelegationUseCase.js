@@ -1,22 +1,24 @@
 import { Delegation } from '../../core/Delegation.js';
+import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 
+// Checks a stored Delegation's issuer signature and expiry.
 export class VerifyDelegationUseCase {
-    constructor(delegationResolver) {
+    constructor(delegationResolver, verifier = new LocalAuthorizationVerifier()) {
         this._resolver = delegationResolver;
+        this._verifier = verifier;
     }
 
     async execute(delegationId, currentDate = new Date()) {
         let delegation = await this._resolver.get(delegationId);
         if (!delegation) return { valid: false, reason: 'NOT_FOUND' };
-        
-        // FIX: Reconstruct Delegation instance if the resolver returned plain JSON
+
         if (!(delegation instanceof Delegation)) {
             delegation = Delegation.fromJSON(delegation);
         }
 
-        const payload = delegation.getCanonicalPayload();
-        const sigValid = await delegation.issuerIdentity.verify(payload, delegation.signature);
-        if (!sigValid) return { valid: false, reason: 'INVALID_SIGNATURE' };
+        if (!this._verifier.verifyDelegation(delegation).valid) {
+            return { valid: false, reason: 'INVALID_SIGNATURE' };
+        }
         if (delegation.expiresAt && delegation.expiresAt < currentDate) {
             return { valid: false, reason: 'EXPIRED' };
         }

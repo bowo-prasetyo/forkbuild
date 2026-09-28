@@ -259,7 +259,7 @@ async function run() {
         bobPeerExchange.onPublicationReceived((result) => received.push(result));
 
         const attribution = new BlueprintAttribution({
-            fingerprint: 'bp:farmstead-1',
+            fingerprint: 'bp2:1bc5a12c9226817f3d789596f82fc345c29dd9a16a377541ef74770636951b8a',
             authorIdentityId: alice.getSigningIdentity().id
         });
         const signedAttribution = attribution.withSignature(alice.signCanonical(attribution.getSigningDescriptor()));
@@ -296,7 +296,7 @@ async function run() {
         const afterResult = await bobResolver.resolve(envelope, bobKindPlugin);
         assert(afterResult.outcome === PublicationResolutionOutcome.RESOLVED,
             '9. the identical peer-delivered publication now resolves once its bytes are locally available — with no second peer exchange');
-        assert(afterResult.content.attribution.fingerprint === 'bp:farmstead-1', '10. the resolved content is the correct attribution');
+        assert(afterResult.content.attribution.fingerprint === 'bp2:1bc5a12c9226817f3d789596f82fc345c29dd9a16a377541ef74770636951b8a', '10. the resolved content is the correct attribution');
         assert(bobCatalog.list().length === 1, '11. resolving never adds a second catalog entry');
 
         alicePeerExchange.dispose();

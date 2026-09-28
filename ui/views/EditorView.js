@@ -294,6 +294,7 @@ export default {
                 @claim-authorship="claimAuthorship"
                 @export-attribution="exportInspectedAttribution"
                 @publish-attribution="publishInspectedAttributionToNetwork"
+                @resign-attribution="resignInspectedAttribution"
                 @claim-lineage="claimLineage"
                 @export-lineage-claim="exportBlueprintLineageClaim"
                 @close="inspectedStructure = null"
@@ -509,7 +510,7 @@ export default {
             claimAuthorship, claimLineage, exportInspectedAttribution, exportInspectedStructure, inspectStructure,
             inspectedStructure, inspectedStructureAttribution, inspectedStructureLineage,
             inspectedStructureSimilarityCandidates, inspectedStructureSource, placeInspectedStructure,
-            publishInspectedAttributionToNetwork
+            publishInspectedAttributionToNetwork, resignInspectedAttribution
         } = useStructureInspection({
             blueprintAttributionUseCase, blueprintLineageUseCase, copyStructureIntoDocument,
             exportBlueprintAttribution, exportStructure, feedback, identityProvider, personalStructureLibraryStore,
@@ -1073,6 +1074,7 @@ export default {
             claimAuthorship,
             exportInspectedAttribution,
             publishInspectedAttributionToNetwork,
+            resignInspectedAttribution,
             claimLineage,
             exportBlueprintLineageClaim,
             showCreateBlueprintDialog,

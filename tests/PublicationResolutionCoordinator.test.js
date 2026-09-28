@@ -200,7 +200,7 @@ async function run() {
 
         const bobCoordinator = new PublicationResolutionCoordinator(bobResolver, bobContentExchange);
 
-        const attribution = new BlueprintAttribution({ fingerprint: 'bp:silo-2', authorIdentityId: alice.getSigningIdentity().id });
+        const attribution = new BlueprintAttribution({ fingerprint: 'bp2:ffcdd7ede0715d34374593f29b8bcd7978e59c738c8b3dfb1fd7b79d76ee0dc6', authorIdentityId: alice.getSigningIdentity().id });
         const signedAttribution = attribution.withSignature(alice.signCanonical(attribution.getSigningDescriptor()));
         const publication = await aliceResolver.publish({ content: signedAttribution, contentKind: BLUEPRINT_ATTRIBUTION_KIND, identityProvider: alice });
         aliceCatalog.add(publication);
@@ -215,13 +215,13 @@ async function run() {
         const withoutPeer = await bobCoordinator.resolve(envelope, bobKindPlugin);
         assert(withoutPeer.outcome === PublicationResolutionOutcome.CONTENT_UNAVAILABLE,
             '3. with no peer supplied, the coordinator behaves exactly like calling the resolver directly');
-        assert(bobAttributionStore.list('bp:silo-2').length === 0,
+        assert(bobAttributionStore.list('bp2:ffcdd7ede0715d34374593f29b8bcd7978e59c738c8b3dfb1fd7b79d76ee0dc6').length === 0,
             '4. an unresolved attempt never imports anything into the local attribution store');
 
         const withPeer = await bobCoordinator.resolve(envelope, bobKindPlugin, { peer: bobConnectedPeer });
         assert(withPeer.outcome === PublicationResolutionOutcome.RESOLVED,
             '5. supplying the live peer retrieves the content and re-resolves to RESOLVED, in one call');
-        assert(withPeer.content.attribution.fingerprint === 'bp:silo-2', '6. the resolved content is the correct attribution');
+        assert(withPeer.content.attribution.fingerprint === 'bp2:ffcdd7ede0715d34374593f29b8bcd7978e59c738c8b3dfb1fd7b79d76ee0dc6', '6. the resolved content is the correct attribution');
         assert(withPeer.content.isNew === true, '7. resolving through the coordinator still imports exactly once, via the kindPlugin\'s own store()');
         assert(bobCatalog.list().length === 1, '8. resolving never adds a second catalog entry');
 
@@ -251,14 +251,14 @@ async function run() {
         assert(kindPlugins[BLUEPRINT_ATTRIBUTION_KIND].store === undefined,
             '2. a display kindPlugin carries no store() — merely resolving it can never import anything');
 
-        const attribution = new BlueprintAttribution({ fingerprint: 'bp:granary-3', authorIdentityId: alice.getSigningIdentity().id });
+        const attribution = new BlueprintAttribution({ fingerprint: 'bp2:e7a241e392947b959688cc60457372423e5c9a61be3866a7e34fff2b2e49aea2', authorIdentityId: alice.getSigningIdentity().id });
         const signedAttribution = attribution.withSignature(alice.signCanonical(attribution.getSigningDescriptor()));
         const publication = await resolver.publish({ content: signedAttribution, contentKind: BLUEPRINT_ATTRIBUTION_KIND, identityProvider: alice });
 
         const view = await resolvePublicationView(publication, { coordinator, kindPlugins });
         assert(view.resolved === true, '3. resolvePublicationView() resolves a known, locally-available contentKind');
         assert(view.outcome === PublicationResolutionOutcome.RESOLVED, '4. its outcome is exactly what the coordinator returned');
-        assert(view.contentSummary.includes('bp:granary-3'), '5. contentSummary is built from the display kindPlugin\'s own describe()');
+        assert(view.contentSummary.includes('bp2:e7a241e392947b959688cc60457372423e5c9a61be3866a7e34fff2b2e49aea2'), '5. contentSummary is built from the display kindPlugin\'s own describe()');
         assert(view.publisherIdentityId === alice.getSigningIdentity().id, '6. publisherIdentityId reads the envelope\'s own publisherIdentity, never the wrapped content');
         assert(describePublicationOutcome(view.outcome) === 'Available', '7. describePublicationOutcome() labels RESOLVED as "Available"');
 

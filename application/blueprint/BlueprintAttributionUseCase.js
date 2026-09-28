@@ -1,5 +1,5 @@
 import { BlueprintAttribution } from '../../core/BlueprintAttribution.js';
-import { deriveBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
+import { deriveBlueprintFingerprint, deriveLegacyBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { attributionView } from '../../core/BlueprintAttributionView.js';
 
@@ -159,7 +159,7 @@ export class BlueprintAttributionUseCase {
     communityView(structure) {
         const fingerprint = deriveBlueprintFingerprint(structure);
         if (!fingerprint) {
-            return { ...attributionView(null, [], null), receivedAt: {} };
+            return { ...attributionView(null, [], null), receivedAt: {}, legacyClaims: [], myLegacyClaim: null };
         }
         const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
         const attributions = this._store.list(fingerprint);
@@ -170,6 +170,35 @@ export class BlueprintAttributionUseCase {
                 receivedAt[claim.id] = this._publicationLog.getReceivedAt(fingerprint, claim.id);
             }
         }
-        return { ...view, receivedAt };
+        const legacy = this._legacyClaims(structure, authorIdentityId);
+        return { ...view, receivedAt, ...legacy };
+    }
+
+    // Claims made before fingerprints were SHA-256 name this design only by
+    // an FNV-1a fingerprint another design can match. They are listed apart,
+    // never as authors; `myLegacyClaim` is this identity's own, which it can
+    // sign again for this design with resignLegacyAttribution().
+    _legacyClaims(structure, authorIdentityId) {
+        const legacyFingerprint = deriveLegacyBlueprintFingerprint(structure);
+        const legacyClaims = legacyFingerprint ? this._store.list(legacyFingerprint) : [];
+        const myLegacyClaim = authorIdentityId
+            ? legacyClaims.find((attribution) => attribution.authorIdentityId === authorIdentityId) || null
+            : null;
+        return { legacyClaims, myLegacyClaim };
+    }
+
+    // Signs this identity's authorship of `structure` under its current
+    // fingerprint and retracts its own legacy claim. Only on a person's
+    // explicit request while they look at the design: a different design
+    // can match the legacy fingerprint, so the app never re-signs on its own.
+    resignLegacyAttribution(structure) {
+        const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
+        const { myLegacyClaim } = this._legacyClaims(structure, authorIdentityId);
+        if (!myLegacyClaim) {
+            throw new Error('BlueprintAttributionUseCase: you have no earlier authorship claim to sign again for this design');
+        }
+        const current = this.summarize(structure).mine || this.publish(structure);
+        this._store.retract(myLegacyClaim.fingerprint, myLegacyClaim.id);
+        return current;
     }
 }

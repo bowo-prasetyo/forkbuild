@@ -1,5 +1,5 @@
 import { AuthorizationVerifier } from './AuthorizationVerifier.js';
-import { Signature, SIGNING_DOMAIN } from '../core/Signature.js';
+import { Signature } from '../core/Signature.js';
 import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvertisement.js';
 import { getAvatarProfileSigningDescriptor } from '../core/AvatarProfileAdvertisement.js';
 import { getAvatarInteractionSigningDescriptor } from '../core/AvatarInteractionAdvertisement.js';
@@ -24,8 +24,9 @@ import { getPublicationAnchorSigningDescriptor } from '../core/PublicationAnchor
 import { getPublicationSnapshotPlacementSigningDescriptor } from '../core/PublicationSnapshotPlacement.js';
 import { getPublisherLeaderboardSnapshotClaimSigningDescriptor } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { getPublicationCommentaryDistributionSigningDescriptor } from '../core/PublicationCommentaryDistributionEnvelope.js';
-import { computeFnv1a32 } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
+import { Delegation } from '../core/Delegation.js';
+import { identityForDidKey, verifySignedDescriptor } from './DescriptorSignature.js';
 
 // The V0.1 concrete verifier.
 //
@@ -753,39 +754,31 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         return this.verifyDescriptor(getPublicationCommentaryDistributionSigningDescriptor(record), record.signature, identity);
     }
 
-    // The core check, exposed for direct use (tests, future verifiers).
-    verifyDescriptor(descriptor, signature, identityJson) {
-        const sig = signature instanceof Signature ? signature : Signature.fromJSON(signature);
-        if (!sig || !identityJson || !identityJson.id || !identityJson.publicKey) {
-            return { valid: false, signed: false, reason: 'missing signature or identity' };
+    // A Delegation is valid only when its issuer signed it, with the key the
+    // issuer's did:key encodes; the key the record carries is never trusted
+    // on its own.
+    verifyDelegation(delegation) {
+        const record = delegation && typeof delegation.getSigningDescriptor === 'function'
+            ? delegation
+            : (delegation ? Delegation.fromJSON(delegation) : null);
+        if (!record || !record.issuerIdentity) {
+            return { valid: false, signed: false, reason: 'no delegation' };
         }
-        if (sig.algorithm !== 'Ed25519' || identityJson.algorithm !== 'Ed25519') {
-            return { valid: false, signed: true, reason: 'unsupported algorithm' };
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a delegation must be signed' };
         }
-        if (sig.signer !== identityJson.id) {
-            return { valid: false, signed: true, reason: 'signer identity mismatch' };
+        const identity = identityForDidKey(record.issuerIdentity.id);
+        if (!identity) {
+            return { valid: false, signed: true, reason: 'unknown issuer identity' };
         }
-        // Records that carry their signer's identity (Publications, placements,
-        // anchors…) could otherwise pair someone else's did:key with their own key.
-        if (!Ed25519.publicKeyMatchesDidKey(identityJson.id, identityJson.publicKey)) {
+        if (record.issuerIdentity.publicKey && record.issuerIdentity.publicKey !== identity.publicKey) {
             return { valid: false, signed: true, reason: 'public key does not match identity' };
         }
-        if (sig.domain !== SIGNING_DOMAIN + '/' + descriptor.type) {
-            return { valid: false, signed: true, reason: 'signature domain mismatch' };
-        }
-        const bytes = Signature.canonicalBytes(descriptor);
-        // signedHash is a cheap pre-check kept for stored signatures; the
-        // Ed25519 verification below is over the full bytes.
-        if (computeFnv1a32(bytes) !== sig.signedHash) {
-            return { valid: false, signed: true, reason: 'signed hash mismatch' };
-        }
-        const ok = Ed25519.verify(
-            Ed25519.hexToBytes(identityJson.publicKey),
-            Ed25519.utf8ToBytes(bytes),
-            Ed25519.hexToBytes(sig.signature)
-        );
-        return ok
-            ? { valid: true, signed: true, reason: null }
-            : { valid: false, signed: true, reason: 'signature verification failed' };
+        return this.verifyDescriptor(record.getSigningDescriptor(), record.signature, identity);
+    }
+
+    // The core check, exposed for direct use (tests, future verifiers).
+    verifyDescriptor(descriptor, signature, identityJson) {
+        return verifySignedDescriptor(descriptor, signature, identityJson);
     }
 }

@@ -315,7 +315,7 @@ async function run() {
         // Alice publishes and catalogs her own signed attribution, and
         // announces it — Bob is the only peer who ever hears it
         // directly from her.
-        const attribution = new BlueprintAttribution({ fingerprint: 'bp:harbor-7', authorIdentityId: alice.getSigningIdentity().id });
+        const attribution = new BlueprintAttribution({ fingerprint: 'bp2:e67943dc0103e3cb7d756326a917ce7c113246ea0df3a13e53dd680a9bf63e0d', authorIdentityId: alice.getSigningIdentity().id });
         const signedAttribution = attribution.withSignature(alice.signCanonical(attribution.getSigningDescriptor()));
         const publication = await aliceResolver.publish({ content: signedAttribution, contentKind: BLUEPRINT_ATTRIBUTION_KIND, identityProvider: alice });
         aliceCatalog.add(publication);

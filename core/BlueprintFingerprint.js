@@ -1,5 +1,5 @@
 import { Structure } from './Structure.js';
-import { computeFnv1a32 } from '../serializer/contentHash.js';
+import { computeContentHash, computeFnv1a32 } from '../serializer/contentHash.js';
 
 // 0.6.5 — Blueprint Identity & Attribution.
 //
@@ -94,7 +94,10 @@ import { computeFnv1a32 } from '../serializer/contentHash.js';
 // mutation — the same "Level 1" discipline core/PlaceFingerprint.js and
 // core/PlaceIdentity.js already committed to for geography, applied here
 // to a blueprint's own design content instead.
-export const BLUEPRINT_FINGERPRINT_PREFIX = 'bp:';
+export const BLUEPRINT_FINGERPRINT_PREFIX = 'bp2:';
+export const LEGACY_BLUEPRINT_FINGERPRINT_PREFIX = 'bp:';
+const CURRENT_FINGERPRINT_PATTERN = /^bp2:[0-9a-f]{64}$/;
+const LEGACY_FINGERPRINT_PATTERN = /^bp:[0-9a-f]{8}$/;
 const ROUND_PRECISION = 1e6;
 
 function roundForFingerprint(value) {
@@ -148,22 +151,42 @@ export function canonicalizeBlueprint(structure) {
     };
 }
 
-// The fingerprint itself — `"bp:" + computeFnv1a32(canonical JSON)`,
-// the exact same FNV-1a content hash serializer/contentHash.js already
-// computes for a published Document's own integrity check
-// (core/ContentReference.js), applied here to a blueprint's canonical
-// design content instead of a document's full serialization. `"bp:"`
-// mirrors core/PlaceFingerprint.js's own bare, un-prefixed convention
-// only loosely — a fingerprint here is a single opaque string (suitable
-// for direct display and direct equality), not a `{x,z,radius,kind}`
-// shape a caller destructures.
+// The fingerprint itself — `"bp2:" + SHA-256(canonical JSON)`. Signed
+// attribution and lineage claims name a design only by its fingerprint,
+// so it must be one nobody can match with a different design.
+//
+// Fingerprints made before 2026-09-28 were `"bp:" + FNV-1a` (8 hex
+// characters), which anyone can match with a different design in
+// milliseconds. Claims that name one can't be tied to any design: they
+// are kept and counted, never shown as authorship or lineage, and their
+// authors can sign again (deriveLegacyBlueprintFingerprint() finds them).
 export function deriveBlueprintFingerprint(structure) {
     const canonical = canonicalizeBlueprint(structure);
     if (!canonical) {
         return null;
     }
-    return BLUEPRINT_FINGERPRINT_PREFIX + computeFnv1a32(JSON.stringify(canonical));
+    return BLUEPRINT_FINGERPRINT_PREFIX + computeContentHash(JSON.stringify(canonical));
 }
+
+// The FNV-1a fingerprint this design had before 2026-09-28, only to find
+// claims made then. Never proof that a claim is about this design.
+export function deriveLegacyBlueprintFingerprint(structure) {
+    const canonical = canonicalizeBlueprint(structure);
+    if (!canonical) {
+        return null;
+    }
+    return LEGACY_BLUEPRINT_FINGERPRINT_PREFIX + computeFnv1a32(JSON.stringify(canonical));
+}
+
+export function isCurrentBlueprintFingerprint(fingerprint) {
+    return typeof fingerprint === 'string' && CURRENT_FINGERPRINT_PATTERN.test(fingerprint);
+}
+
+export function isLegacyBlueprintFingerprint(fingerprint) {
+    return typeof fingerprint === 'string' && LEGACY_FINGERPRINT_PATTERN.test(fingerprint);
+}
+
+export const LEGACY_BLUEPRINT_FINGERPRINT_REASON = 'it names a design by an old, insecure fingerprint that another design can match, so it can\'t be tied to any design; its author needs to sign it again';
 
 // True iff both fingerprints are non-null strings and identical —
 // deliberately this simple, the same "the entire matching rule" posture
@@ -179,10 +202,11 @@ export function describeBlueprintFingerprint(fingerprint) {
     if (!fingerprint || typeof fingerprint !== 'string') {
         return '';
     }
-    const hash = fingerprint.startsWith(BLUEPRINT_FINGERPRINT_PREFIX)
-        ? fingerprint.slice(BLUEPRINT_FINGERPRINT_PREFIX.length)
-        : fingerprint;
+    const prefix = fingerprint.startsWith(BLUEPRINT_FINGERPRINT_PREFIX)
+        ? BLUEPRINT_FINGERPRINT_PREFIX
+        : (fingerprint.startsWith(LEGACY_BLUEPRINT_FINGERPRINT_PREFIX) ? LEGACY_BLUEPRINT_FINGERPRINT_PREFIX : BLUEPRINT_FINGERPRINT_PREFIX);
+    const hash = fingerprint.startsWith(prefix) ? fingerprint.slice(prefix.length) : fingerprint;
     return hash.length > 4
-        ? `${BLUEPRINT_FINGERPRINT_PREFIX}${hash.slice(0, 4)}…`
-        : `${BLUEPRINT_FINGERPRINT_PREFIX}${hash}`;
+        ? `${prefix}${hash.slice(0, 4)}…`
+        : `${prefix}${hash}`;
 }

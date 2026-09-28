@@ -351,7 +351,7 @@ async function run() {
         const provider = new DecentralizedPublicationDiscoveryProvider();
 
         // E1. forkbuild.blueprint-attribution — real, signed.
-        let attribution = new BlueprintAttribution({ fingerprint: 'bp:repo-integration-1', authorIdentityId: alice.getSigningIdentity().id });
+        let attribution = new BlueprintAttribution({ fingerprint: 'bp2:3e838460fd6eb0c17b6449f498cd8a85e5a6c50720285369b2c37293dc6cc4ca', authorIdentityId: alice.getSigningIdentity().id });
         attribution = attribution.withSignature(alice.signCanonical(attribution.getSigningDescriptor()));
         const attributionEnvelope = await resolver.publish({
             content: attribution, contentKind: BLUEPRINT_ATTRIBUTION_KIND, contentSchemaVersion: ATTRIBUTION_SCHEMA_VERSION, identityProvider: alice

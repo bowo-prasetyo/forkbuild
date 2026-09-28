@@ -1,6 +1,10 @@
 import { createId } from './createId.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { SigningIdentity } from './SigningIdentity.js';
+import { SigningIdentity } from '../identity/SigningIdentity.js';
+
+// The signature type a Delegation is signed under, so a delegation
+// signature can never be replayed as any other kind of record.
+export const DELEGATION_SIGNATURE_TYPE = 'delegation';
 
 export const DelegationAction = Object.freeze({
     PLACE: 'PLACE',
@@ -118,6 +122,39 @@ export class Delegation {
             nonce: this._nonce,
             parentDelegationId: this._parentDelegationId
         });
+    }
+
+    // The canonical envelope the issuer signs through
+    // IdentityProvider#signCanonical() and a verifier checks with
+    // identity/LocalAuthorizationVerifier.js#verifyDelegation().
+    getSigningDescriptor() {
+        return {
+            type: DELEGATION_SIGNATURE_TYPE,
+            id: this._id,
+            revision: 1,
+            payload: JSON.parse(this.getCanonicalPayload())
+        };
+    }
+
+    withSignature(signature) {
+        const json = signature && typeof signature.toJSON === 'function' ? signature.toJSON() : signature;
+        return new Delegation({ ...this._fields(), signature: json });
+    }
+
+    _fields() {
+        return {
+            id: this._id,
+            issuerIdentity: this._issuerIdentity,
+            delegateIdentity: this._delegateIdentity,
+            action: this._action,
+            subject: this._subject,
+            constraints: this._constraints,
+            expiresAt: this._expiresAt,
+            signature: this._signature,
+            issuedAt: this._issuedAt,
+            nonce: this._nonce,
+            parentDelegationId: this._parentDelegationId
+        };
     }
 
     computeHash() {

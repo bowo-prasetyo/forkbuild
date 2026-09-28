@@ -1,3 +1,12 @@
+import { Delegation } from '../core/Delegation.js';
+import { identityForDidKey, verifySignedDescriptor } from './DescriptorSignature.js';
+
+// Decides whether `signerIdentity` may perform `requiredAction` on `subject`,
+// owned by `ownerIdentity`: directly as the owner, or through one Delegation
+// the owner signed. `descriptor` and `signature` are the action's own signed
+// record (its getSigningDescriptor() and Signature); both it and the
+// delegation are checked as real Ed25519 signatures, with each key taken from
+// its did:key.
 export class DelegationVerifier {
     async verify({
         signerIdentity,
@@ -5,15 +14,17 @@ export class DelegationVerifier {
         requiredAction,
         subject,
         signature,
-        payload,
+        descriptor,
         delegationId,
         delegationResolver,
         constraintsContext = null,
         currentDate = new Date()
     }) {
-        // 1. Verify the signature on the payload
-        const sigValid = await signerIdentity.verify(payload, signature);
-        if (!sigValid) return { authorized: false, reason: 'INVALID_SIGNATURE' };
+        // 1. Verify the signature on the action itself
+        const signer = identityForDidKey(signerIdentity && signerIdentity.id);
+        if (!signer || !verifySignedDescriptor(descriptor, signature, signer).valid) {
+            return { authorized: false, reason: 'INVALID_SIGNATURE' };
+        }
 
         // 2. Direct Ownership Path
         if (signerIdentity.id === ownerIdentity.id && !delegationId) {
@@ -25,11 +36,15 @@ export class DelegationVerifier {
             return { authorized: false, reason: 'MISSING_DELEGATION' };
         }
 
-        const delegation = await delegationResolver.get(delegationId);
-        if (!delegation) return { authorized: false, reason: 'DELEGATION_NOT_FOUND' };
+        const stored = await delegationResolver.get(delegationId);
+        if (!stored) return { authorized: false, reason: 'DELEGATION_NOT_FOUND' };
+        const delegation = stored instanceof Delegation ? stored : Delegation.fromJSON(stored);
 
-        const delSigValid = await delegation.issuerIdentity.verify(delegation.getCanonicalPayload(), delegation.signature);
-        if (!delSigValid) return { authorized: false, reason: 'INVALID_DELEGATION_SIGNATURE' };
+        const issuer = identityForDidKey(delegation.issuerIdentity && delegation.issuerIdentity.id);
+        if (!issuer || !delegation.signature
+            || !verifySignedDescriptor(delegation.getSigningDescriptor(), delegation.signature, issuer).valid) {
+            return { authorized: false, reason: 'INVALID_DELEGATION_SIGNATURE' };
+        }
 
         // 0.2.19: delegation chains (a delegate re-delegating under the
         // authority of a delegation THEY hold, rather than direct

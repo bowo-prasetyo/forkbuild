@@ -115,7 +115,7 @@ export default {
     },
     emits: [
         'place', 'export', 'close', 'claim-authorship', 'export-attribution', 'publish-attribution',
-        'claim-lineage', 'export-lineage-claim'
+        'claim-lineage', 'export-lineage-claim', 'resign-attribution'
     ],
     data() {
         return {
@@ -195,7 +195,14 @@ export default {
         hasLineageContent() {
             return this.derivedFromClaims.length > 0
                 || this.derivedDesignClaims.length > 0
-                || this.similarityCandidates.length > 0;
+                || this.similarityCandidates.length > 0
+                || this.legacyLineageCount > 0;
+        },
+        legacyAttributionCount() {
+            return this.attribution && Array.isArray(this.attribution.legacyClaims) ? this.attribution.legacyClaims.length : 0;
+        },
+        legacyLineageCount() {
+            return this.lineage && Array.isArray(this.lineage.legacyClaims) ? this.lineage.legacyClaims.length : 0;
         }
     },
     methods: {
@@ -308,6 +315,16 @@ export default {
                         <button v-if="attribution.mine" class="inline-link-btn" @click="$emit('export-attribution')">Export Attribution</button>
                         <button v-if="attribution.mine" class="inline-link-btn" @click="$emit('publish-attribution')">Publish to Network</button>
                     </div>
+                    <!-- Claims signed before fingerprints were SHA-256 can't be
+                         tied to this design, so they never count as authors. -->
+                    <p v-if="legacyAttributionCount > 0" class="form-hint form-hint--neutral structure-info-legacy-claims">
+                        {{ legacyAttributionCount }} older authorship {{ legacyAttributionCount === 1 ? 'claim uses' : 'claims use' }}
+                        an old fingerprint that another design can match, so {{ legacyAttributionCount === 1 ? 'it is not' : 'they are not' }} counted.
+                        <template v-if="attribution.myLegacyClaim">
+                            One is yours: if this is your design, sign it again.
+                            <button class="inline-link-btn" @click="$emit('resign-attribution')">Re-sign for this design</button>
+                        </template>
+                    </p>
 
                     <!-- Progressive disclosure, mirroring ui/components/
                          PlaceNamingPanel.js's own "More" toggle — the raw
@@ -350,6 +367,11 @@ export default {
                     <div v-if="lineageExpanded">
                         <p v-if="hasCycleWarning" class="form-hint form-hint--neutral">
                             ⚠ Possible lineage cycle — contradicting claims are on file for this design
+                        </p>
+                        <p v-if="legacyLineageCount > 0" class="form-hint form-hint--neutral structure-info-legacy-claims">
+                            {{ legacyLineageCount }} older lineage {{ legacyLineageCount === 1 ? 'claim uses' : 'claims use' }}
+                            an old fingerprint that another design can match, so {{ legacyLineageCount === 1 ? 'it is not' : 'they are not' }} shown.
+                            To keep one of yours, use "Derived from this" again.
                         </p>
 
                         <template v-if="derivedFromClaims.length">

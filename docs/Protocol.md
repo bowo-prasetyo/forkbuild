@@ -260,7 +260,11 @@ under the discovery families), which the policy always allows. The retired
 peer replication (ReplicaMergeService) also rejects one that breaks the
 policy (reason `PLACEMENT_POLICY`). The spatial-index formats
 (SpatialCell, SpatialIndexManifest, SpatialIndexRoot) and Delegation
-records are defined in core/ but not produced by the running app.
+records are defined in core/ but not produced by the running app. A
+Delegation is signed like every other record, under the signature type
+`delegation`, over `{ id, issuer, delegate, issuedFor, action, subject,
+constraints, expiresAt, issuedAt, nonce, parentDelegationId }` with
+`revision` 1, and is valid only with the key its issuer's did:key encodes.
 
 ## Rendezvous
 

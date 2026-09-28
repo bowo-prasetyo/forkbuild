@@ -1,5 +1,5 @@
 import { BlueprintLineageClaim } from '../../core/BlueprintLineageClaim.js';
-import { deriveBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
+import { deriveBlueprintFingerprint, deriveLegacyBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { lineageView as deriveLineageView } from '../../core/BlueprintLineageView.js';
 
@@ -106,13 +106,19 @@ export class BlueprintLineageUseCase {
     // claims for `structure`'s fingerprint and the currently signed-in
     // identity. Degrades to a fully empty, non-throwing view for a
     // structure with no derivable fingerprint.
+    // `legacyClaims` are claims made before fingerprints were SHA-256, which
+    // name this design only by an FNV-1a fingerprint another design can
+    // match. They are counted, never shown as lineage; a person declares
+    // the relationship again to replace one.
     lineageView(structure) {
         const fingerprint = deriveBlueprintFingerprint(structure);
         if (!fingerprint) {
-            return deriveLineageView(null, [], null);
+            return { ...deriveLineageView(null, [], null), legacyClaims: [] };
         }
         const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
         const claims = this._store.list(fingerprint);
-        return deriveLineageView(fingerprint, claims, authorIdentityId);
+        const legacyFingerprint = deriveLegacyBlueprintFingerprint(structure);
+        const legacyClaims = legacyFingerprint ? this._store.list(legacyFingerprint) : [];
+        return { ...deriveLineageView(fingerprint, claims, authorIdentityId), legacyClaims };
     }
 }

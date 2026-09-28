@@ -191,7 +191,9 @@ Structure and brick ids are local and regenerate on import. A blueprint
 fingerprint identifies the design itself, derived from canonicalized
 content (bricks, name, category, description) and blind to ids,
 timestamps and storage. It is computed on demand and never cached as a
-field.
+field. It is `bp2:` plus SHA-256, so no other design can take it; claims
+under the old `bp:` (FNV-1a) fingerprints can't be tied to any design and
+are never counted.
 
 [Full text](history/0.3-0.7.md#a-blueprint-fingerprint-is-derived-from-design-content-never-from-local-identity-065)
 

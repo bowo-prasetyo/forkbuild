@@ -1,5 +1,5 @@
 import { BlueprintAttribution } from '../../core/BlueprintAttribution.js';
-import { blueprintFingerprintsEqual } from '../../core/BlueprintFingerprint.js';
+import { LEGACY_BLUEPRINT_FINGERPRINT_REASON, blueprintFingerprintsEqual, isCurrentBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
 import { validateBlueprintAttributionPublication } from './BlueprintAttributionPublicationValidator.js';
 
 // 0.6.6 — Decentralized Blueprint Exchange.
@@ -128,6 +128,9 @@ export class BlueprintAttributionExchange {
     // ordinary cost of any gossip-style transport.
     importAttribution(pkg, { expectedFingerprint = null } = {}) {
         validateBlueprintAttributionPublication(pkg);
+        if (!isCurrentBlueprintFingerprint(pkg.fingerprint)) {
+            throw new Error(`BlueprintAttributionExchange: refusing to import this attribution — ${LEGACY_BLUEPRINT_FINGERPRINT_REASON}`);
+        }
 
         const attribution = BlueprintAttribution.fromJSON(pkg);
         const result = this._verifier.verifyBlueprintAttribution(attribution.toJSON());
