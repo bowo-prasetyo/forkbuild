@@ -943,7 +943,7 @@ export default {
         const {
             onKeyDown, onPointerDown, onPointerMove, onPointerUp
         } = useViewportInput({
-            compassHeading, onAvatarKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
+            compassHeading, goHome, onAvatarKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
         });
 
         onMounted(() => {

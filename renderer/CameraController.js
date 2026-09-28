@@ -25,8 +25,12 @@ const RESET_KEY = 'Home';
 // While disabled, OrbitControls ignores pointer movement AND the Home
 // reset shortcut is ignored here, so nothing can move the camera
 // underneath a live drag.
+//
+// `resetKey: null` turns the reset shortcut off, for a view that gives
+// that key its own meaning (World View's Home returns you to your world).
 export class CameraController {
-    constructor(domElement, aspect) {
+    constructor(domElement, aspect, { resetKey = RESET_KEY } = {}) {
+        this._resetKey = resetKey;
         this._camera = new THREE.PerspectiveCamera(DEFAULT_FOV, aspect, DEFAULT_NEAR, DEFAULT_FAR);
         this._defaultState = new CameraState();
         this._applyState(this._defaultState, this._camera);
@@ -104,7 +108,7 @@ export class CameraController {
         if (!this._controls.enabled) {
             return;
         }
-        if (event.key === RESET_KEY) {
+        if (this._resetKey !== null && event.key === this._resetKey) {
             this.resetView();
         }
     }

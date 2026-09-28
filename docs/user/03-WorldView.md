@@ -23,7 +23,8 @@ world's URL directly. You'll appear next to that creation in the shared world.
 - **Left-drag** — orbit the camera
 - **Right-drag** — pan
 - **Scroll** — zoom in and out
-- **Home** button — return to your own world (see below)
+- **Home** (the key, or the button in the panel) — return to your own world
+  (see below)
 
 As you move, nearby worlds **stream in and out** automatically. The panel on
 the left reads top to bottom: what you're looking at (the header), where you
@@ -197,7 +198,7 @@ The dialog opens with one set of settings, used for everything it
 distributes: a **Storage** — **Arweave**, **IPFS (Local Kubo)**, **IPFS
 (Remote Pinning)** (which needs a fresh Endpoint and Credential typed in
 every time; nothing about it is ever saved), or **Steem** (experimental,
-see [Steem](09-PublicationsAndEvidence.md#steem)) — and an **Announcement /
+see [Steem](11-EvidenceAndStorage.md#steem)) — and an **Announcement /
 Discovery substrate** (**Arweave**, **Nostr** or **Steem**). Both open on your saved
 provider preferences. Storage only lists the backends this device can
 actually place a Snapshot on (plus Remote Pinning), so you can't pick one
@@ -228,7 +229,7 @@ the matching extension installed, the attempt ends in "Distribution could
 not be completed." with the reason. A successful attempt shows the
 publication's id, its **Material** location, and its **Discovery**
 announcement id — one Discovery row per relay when you've configured
-several [Nostr relays](09-PublicationsAndEvidence.md#nostr-relays).
+several [Nostr relays](10-NetworkSettings.md#nostr-relays).
 
 The **Snapshot** section, right below it in the same dialog, has the same
 eligibility and needs the same extensions, but uses a different
@@ -869,8 +870,8 @@ the separate Snapshot protocol — see
 [Local Snapshot](09-PublicationsAndEvidence.md#local-snapshot) for what
 that distinction means. Remote IPFS pinning and Bitcoin/Base anchoring stay
 in the Publications page's own Publication Center (see
-[IPFS Publishing](09-PublicationsAndEvidence.md#ipfs-publishing) and
-[The Bitcoin Anchor Pipeline](09-PublicationsAndEvidence.md#the-bitcoin-anchor-pipeline)) —
+[IPFS Publishing](11-EvidenceAndStorage.md#ipfs-publishing) and
+[The Bitcoin Anchor Pipeline](11-EvidenceAndStorage.md#the-bitcoin-anchor-pipeline)) —
 both need an account or a connected wallet first, so neither is a
 one-click button here.
 

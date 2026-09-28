@@ -34,40 +34,6 @@ export const anchorEvidenceListTemplate = `<div v-if="entry.evidenceExpanded && 
                                     </button>
                                 </div>
 
-                                <!-- Wallet connection is independent of the
-                                     reconciliation card below, which needs no
-                                     wallet. -->
-                                <div v-if="anchorView.anchorType === 'bitcoin-op-return' && bitcoinWalletConnection"
-                                     class="evidence-inspection">
-                                    <span class="evidence-inspection-title">Bitcoin Wallet</span>
-                                    <div class="evidence-inspection-adapter">
-                                        <span class="peer-badge" :class="bitcoinWalletConnectionBadgeClass()">
-                                            {{ bitcoinWalletConnectionView().stateLabel }}
-                                        </span>
-                                        <dl v-if="isBitcoinWalletConnected()" class="evidence-fields">
-                                            <div class="evidence-field"><dt>Account</dt><dd>{{ shortId(bitcoinWalletConnectionView().account) }}</dd></div>
-                                            <div class="evidence-field"><dt>Network</dt><dd>{{ bitcoinWalletConnectionView().network }}</dd></div>
-                                        </dl>
-                                        <!-- A mismatch is named, never resolved
-                                             on the person's behalf. -->
-                                        <p v-if="bitcoinWalletConnectionView().networkMismatch" class="form-hint form-hint--neutral">
-                                            Wallet network ({{ bitcoinWalletConnectionView().network }}) does not match this anchor's network ({{ bitcoinWalletConnectionView().expectedNetwork }}). Connect a wallet on the matching network to continue.
-                                        </p>
-                                        <p v-if="bitcoinWalletConnectionState.reason" class="form-hint form-hint--neutral">
-                                            {{ bitcoinWalletConnectionState.reason }}
-                                        </p>
-                                    </div>
-                                    <div class="identity-mgmt-actions">
-                                        <button v-if="!isBitcoinWalletConnected()" class="action-btn action-btn--secondary"
-                                                :disabled="isBitcoinWalletConnecting()"
-                                                @click="connectBitcoinWallet()">
-                                            {{ isBitcoinWalletConnecting() ? 'Connecting…' : 'Connect Bitcoin Wallet' }}
-                                        </button>
-                                        <button v-else class="action-btn action-btn--secondary" @click="disconnectBitcoinWallet()">
-                                            Disconnect
-                                        </button>
-                                    </div>
-                                </div>
 
                                 <!-- Confirmation and content proof as reported
                                      now, side by side; a CONFIRMED transaction
