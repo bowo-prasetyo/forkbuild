@@ -121,7 +121,8 @@ wildlife — you can't walk through structures streamed in around you, through
 the trees generated as part of the terrain, or through a deer or rabbit
 grazing nearby (see [World View](03-WorldView.md#flying-around)).
 Wildlife only ever blocks your path like a tree does, wherever an animal
-has wandered to — it doesn't react or take damage, and a vehicle drives
+has wandered to — it may turn its head to watch you, but it never moves out
+of your way or takes damage, and a vehicle drives
 straight through it; only walking on foot is stopped. An animal you've
 caught no longer blocks anything. Your avatar can walk across placed structures,
 climb vertical surfaces, and navigate uneven terrain. The camera follows
@@ -242,7 +243,10 @@ inventory a stored vehicle lives in) and removes it from the world.
 Walk anywhere else and press **F** again — with nothing catchable
 nearby, this releases the most recently caught animal right where
 you're standing, and it's immediately catchable again if you want it
-back. There's no limit today on how many animals you can carry, and
+back. A released animal stays right where you let it go, but it isn't
+frozen: it grazes, looks around and turns to face a new way now and then,
+and turns its head to watch you when you come near.
+There's no limit today on how many animals you can carry, and
 catching one never disturbs a vehicle you're also carrying, or vice
 versa — they share the same backpack but never get mixed up.
 
@@ -253,7 +257,10 @@ part of the World — say, a rabbit sitting on top of something you built —
 stand next to an animal you released and press **G**. It becomes an
 **animal decoration**: saved into the World's own content, so it's
 included when that World is published or distributed and everyone who
-opens it sees it, looking exactly like the animal it came from.
+opens it sees it, looking exactly like the animal it came from. It stays
+on the spot you chose (so a rabbit on a rooftop never walks off it), but
+grazes, looks around and turns in place, and everyone who opens the World
+sees it doing the same thing at the same moment.
 
 A decoration is decorative only — it can't be caught with **F**. Changed
 your mind? Stand next to it and press **G** again: the decoration is

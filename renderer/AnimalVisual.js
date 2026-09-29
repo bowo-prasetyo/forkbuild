@@ -1,12 +1,18 @@
 import * as THREE from 'three';
+import { stationaryAnimalPoseAt } from '../core/WildlifeMotion.js';
+import { idleOffsetsAt } from './AnimalIdle.js';
+import { reactToObserver } from './AnimalReaction.js';
+import { BODY_FRAME, NECK } from './AnimalRenderer.js';
 
 // 0.9.701 — Released Animal Rendering.
 //
 // One released animal's live Three.js presence — the direct structural
 // twin of renderer/VehicleVisual.js, smaller still: core/AnimalPresence.js
 // carries no heading (see renderer/AnimalRenderer.js's own header for
-// why), so there is no setHeading() counterpart here at all — position
-// is the only thing that ever changes after construction.
+// why), so there is no setHeading() counterpart here at all. Position is
+// set by the caller; everything else — which way it faces, and grazing or
+// looking around — comes from animateAt(), which never moves it off its
+// spot (core/WildlifeMotion.js#stationaryAnimalPoseAt()).
 //
 // `root` is the ONE Object3D a caller (renderer/AnimalFieldRenderer.js)
 // ever adds to or removes from the scene — created once, reused for the
@@ -19,9 +25,14 @@ export class AnimalVisual {
         // adding it to the scene at all, the identical
         // graceful-degradation posture VehicleVisual's own
         // `isSupported` already establishes.
+        this._species = species;
         this._built = animalRenderer.build(species);
+        this._bodyFrame = null;
+        this._neck = null;
         if (this._built) {
             this.root.add(this._built);
+            this._bodyFrame = this._built.getObjectByName(BODY_FRAME) || null;
+            this._neck = this._built.getObjectByName(NECK) || null;
         }
     }
 
@@ -31,6 +42,30 @@ export class AnimalVisual {
 
     setPosition(position) {
         this.root.position.set(position.x, position.y, position.z);
+    }
+
+    // Poses this animal as it is at `timeSeconds`: which way it faces, and
+    // its idle action (renderer/AnimalIdle.js) — the same grazing and
+    // looking around a wild animal does, without ever leaving its spot.
+    // `animalKey` (its id) and `seed` pick its rhythm; the same key at the
+    // same time always gives the same pose. `observer` ({ x, z }, or null)
+    // is the viewer's own avatar, which it turns to watch
+    // (renderer/AnimalReaction.js).
+    animateAt(seed, animalKey, timeSeconds, observer = null) {
+        if (!this._built) {
+            return;
+        }
+        const pose = stationaryAnimalPoseAt(seed, animalKey, this._species, timeSeconds);
+        const own = idleOffsetsAt(this._species, pose.idleAction, pose.idleSeconds, pose.idleDuration);
+        const offsets = reactToObserver(this._species, own, pose, this.root.position.x, this.root.position.z, observer);
+        this.root.rotation.y = pose.rotationY;
+        if (this._bodyFrame) {
+            this._bodyFrame.position.y = offsets.lift;
+            this._bodyFrame.rotation.x = offsets.bodyPitch;
+        }
+        if (this._neck) {
+            this._neck.rotation.set(offsets.headPitch, offsets.headYaw, 0);
+        }
     }
 
     // Disposes only the per-instance-CLONED materials

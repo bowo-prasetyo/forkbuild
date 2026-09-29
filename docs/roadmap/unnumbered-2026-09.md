@@ -2547,3 +2547,58 @@ extra draw calls, and every replica sees the same animal doing the same thing at
   the neck.
 - Not done: released animals and decorations still stand still; idling never reacts to avatars (replicas would
   disagree); tail flicks and ear twitches (no tails or ears are modeled).
+
+## Released animals and decorations idle; ears and tails (unnumbered, 2026-09-29)
+
+**Released animals and animal decorations no longer stand frozen: they graze, look around and turn in place. And
+every animal now has ears and a tail** — long upright ears and a cotton tail for rabbits, ears held out to the
+sides and a short cocked tail for deer.
+
+- `core/WildlifeMotion.js#stationaryAnimalPoseAt(seed, animalKey, species, time)`: the idle-in-place counterpart of
+  `animalPoseAt()`, keyed by id (FNV-1a) instead of a lattice cell. Same per-species segments: one `IDLE_ACTION`
+  per pause, then a 1.2 s turn in place to a new heading. These animals never wander: their Y is authoritative and
+  can be the top of a structure, so a wander could leave them in mid-air. A decoration's id is World content, so
+  every replica sees it doing the same thing.
+- `renderer/AnimalRenderer.js` builds a small joint graph (`BODY_FRAME` → body, `NECK` → head), still two meshes;
+  `AnimalVisual#animateAt()` drives it with `renderer/AnimalIdle.js`'s offsets, matching exactly how
+  `WildlifeTileMesh.js` composes instance matrices. `AnimalFieldRenderer#animate()` and
+  `WorldRenderer#animateDecorations()` run every frame on the new `Renderer#wildlifeTime()`, wired by
+  `RenderWorldViewUseCase` and, for decorations in the Editor, `RenderWorldUseCase`.
+- Ears and tails: small low-poly ellipsoids merged into the shared `SPECIES_PRESET` head and body geometry (a local
+  merge helper; no new vendored file). They nod, hop and graze with what they are attached to, cost no extra mesh or
+  draw call, and reach released animals and decorations through the same presets.
+- Docs: `docs/user/03-WorldView.md`, `docs/user/06-AvatarsAndPresence.md`, `docs/Architecture.md`; the wandering
+  principle's full text covers animals that stay put.
+- Tests: `tests/StationaryAnimalIdle.test.js` (idle and turn in place per id, one action per pause, smooth turns,
+  determinism; the joint graph at rest and animated matching the tiles' composition exactly; per-frame drivers never
+  moving an animal; merged geometry well-formed, ears above the head, tail on the rump).
+- Not done: ears and tails don't twitch on their own (they would need their own instanced mesh: one more draw call
+  per species per tile); a decorated animal is keyed by its new decoration id, so it may turn to a new heading the
+  moment it is decorated; animals don't react to avatars.
+
+## Animals watch your avatar (unnumbered, 2026-09-29)
+
+**Come near an animal and it turns its head to watch you: a grazing deer stops and lifts its head, and a rabbit
+sits up if you get close.** Only your own avatar is watched, and only on your screen; no animal ever moves because
+of you, so where it is (and so collision and catching) stays the same for everyone.
+
+- `renderer/AnimalReaction.js#reactToObserver(species, offsets, pose, x, z, observer)`: applied after the gait or idle
+  offsets in all three draw paths (wildlife tiles, released animals, decorations). Stateless: a pure function of the
+  observer's position, the animal's position and its pose.
+  - Distance: fades in inside the look radius (deer 8, rabbits 5), full within 60% of it.
+  - View: an animal only sees what is in front of it; the reaction fades out toward directly behind, so the head
+    never whips from one shoulder to the other as you cross behind it. The head turns at most 1.3 rad (deer) or
+    1.1 rad (rabbit) on its neck.
+  - Posture: the head turns while walking too, but lifting it (and a rabbit within 3 sitting up in its alert pose)
+    only happens as far as the animal is settled in its pause (`idleEnvelope()`), so starting or ending a walk never
+    snaps.
+- `Renderer#setWildlifeObserver()` / `wildlifeObserver()`: `RenderWorldViewUseCase` hands it the local avatar's drawn
+  position, whether or not "show my avatar" is on (a hidden avatar still walks and collides). Never a remote avatar
+  (their positions arrive late, so reactions would not match what their owners see); no observer in the Editor.
+- Docs: `docs/user/03-WorldView.md`, `docs/user/06-AvatarsAndPresence.md`, `docs/Architecture.md`; the wandering
+  principle's full text covers reacting to the viewer.
+- Tests: `tests/AnimalReaction.test.js` (the look radius and view cone, the neck's limit, continuity circling and
+  approaching an animal and over a minute of real walks and pauses with an avatar nearby, grazing interrupted and
+  rabbits sitting up only while settled, every draw path, and positions never changing).
+- Not done: fleeing or any other change of position (would make players disagree about where an animal is);
+  reacting to other players' avatars; looking up or down at the avatar's height.

@@ -997,9 +997,22 @@ is lifted a second time. Released animals get the same lift as remote avatars.
   the head is its own InstancedMesh, so it nods without new geometry or draw calls. A standing animal idles:
   `animalPoseAt()` picks one `IDLE_ACTION` per pause (GRAZE, ALERT or NONE, at per-species odds) and reports how far
   into it the animal is, and `renderer/AnimalIdle.js` eases it in and out as body and head offsets, including a
-  sideways turn of the head. Catching one rebuilds its tile
+  sideways turn of the head. Ears and tails are small ellipsoids merged into the shared head and body geometry
+  (`SPECIES_PRESET`), so they move with them at no extra draw calls. Catching one rebuilds its tile
   without it (`TerrainStreamingController#invalidateTile()`). Released animals are drawn every frame by
-  `renderer/AnimalFieldRenderer.js`, which shares geometry with the tiles.
+  `renderer/AnimalFieldRenderer.js`, which shares geometry with the tiles. Released animals and decorations never
+  leave their spot (their Y is authoritative and may be on top of a structure) but idle and turn in place:
+  `stationaryAnimalPoseAt(seed, id, species, time)` gives the pose, keyed by id, and `AnimalVisual#animateAt()`
+  applies it to a body-frame/neck joint graph built by `AnimalRenderer` that matches the tiles' instance matrices.
+  `AnimalFieldRenderer#animate()` and `WorldRenderer#animateDecorations()` run each frame on
+  `Renderer#wildlifeTime()`, wired by `RenderWorldViewUseCase` (and `RenderWorldUseCase` for decorations in the
+  Editor).
+- **Watching the viewer (2026-09-29).** `renderer/AnimalReaction.js#reactToObserver()` is the last step of every
+  animal's look, in all three draw paths: within its look radius (deer 8, rabbits 5) and in front of it, an animal
+  turns its head toward the local avatar; while settled in a pause it also lifts its head (interrupting grazing),
+  and a rabbit within 3 sits up. It is stateless and purely visual, so positions stay the same for every viewer.
+  `RenderWorldViewUseCase` hands `Renderer#setWildlifeObserver()` the local avatar's drawn position (never a remote
+  avatar's, which arrives late); the Editor has no observer.
 - **Decorations (0.9.702/0.9.703).** `G` turns the nearest released animal into an `AnimalDecoration` in the World
   document through a registered command, or turns the nearest decoration back into a released animal. This is the
   one way a World View animal action becomes document content.

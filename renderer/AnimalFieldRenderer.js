@@ -50,6 +50,18 @@ export class AnimalFieldRenderer {
         return visual.root;
     }
 
+    // Poses every tracked released animal as it is at `timeSeconds` —
+    // idling and turning in place (renderer/AnimalVisual.js#animateAt()).
+    // Called once per frame with the renderer's wildlife time; the caller
+    // supplies the world seed, since this class decides nothing about the
+    // world, and `observer` — the viewer's own avatar, { x, z } or null —
+    // which the animals turn to watch.
+    animate(timeSeconds, seed, observer = null) {
+        for (const [id, visual] of this._entries) {
+            visual.animateAt(seed, id, timeSeconds, observer);
+        }
+    }
+
     getObject(id) {
         const visual = this._entries.get(id);
         return visual ? visual.root : null;
