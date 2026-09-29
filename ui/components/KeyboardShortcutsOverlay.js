@@ -15,9 +15,9 @@ import { EditorActionRegistry } from '../../application/editor/EditorActionRegis
 //      resolved — both read the same actions.
 //   2. VIEW_LOCAL_SHORTCUTS below — the small, deliberate set of
 //      shortcuts that live outside the action registry because they
-//      are not editing operations (tool switching, Save, and
+//      are not editing operations (sound, tool switching, Save, and
 //      placement-mode's own Rotate/Cancel carve-outs) — see
-//      ui/views/EditorView.js's own keydown handler, steps 4/4.5/4.6,
+//      ui/views/EditorView.js's own keydown handler, steps 3.8/4/4.5/4.6,
 //      for why each of these is handled before the registry ever sees
 //      the keystroke. Mirrors docs/user/ControlsReference.md by hand;
 //      keep the two in sync if either changes.
@@ -25,6 +25,7 @@ const VIEW_LOCAL_SHORTCUTS = [
     { label: 'Select Tool', shortcut: '1' },
     { label: 'Place Tool', shortcut: '2' },
     { label: 'Save', shortcut: 'Ctrl/Cmd+S' },
+    { label: 'Sound on/off', shortcut: 'M' },
     { label: 'Rotate ghost while placing', shortcut: 'R' },
     { label: 'Rotate ghost (opposite direction)', shortcut: 'Shift+R' },
     { label: 'Cancel placement', shortcut: 'Esc' }

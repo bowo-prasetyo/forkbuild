@@ -432,7 +432,8 @@ one for redo, and a small chord when you save. Changes a collaborator makes
 in the same document are silent.
 
 Turn sound off or on with the **Sound** button at the top right of the view
-or by pressing `M`; the slider beside it sets the volume. It's the same
+or by pressing `M` (listed in the Keyboard Shortcuts overlay, `?`); the
+slider beside it sets the volume. It's the same
 setting as World View's, remembered on this device. Sound starts with your
 first click or key press, as browsers require.
 

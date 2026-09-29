@@ -2840,3 +2840,14 @@ down; brake pads or tyres squealing, louder the faster you were going); the tree
   `tests/WorldSoundscapeService.test.js` and `tests/CreatureSoundObservation.test.js` (World View edits, and adding,
   undoing and redoing a real resident heard), and the browser test (both tree layers, every vehicle's get-on,
   get-off and brake).
+
+## `M` in the Editor's Keyboard Shortcuts overlay (unnumbered, 2026-09-29)
+
+The Editor's Keyboard Shortcuts overlay (`?`) now lists **Sound on/off — `M`** with the other view-level shortcuts
+(Save, tool switching), closing the last gap noted when Editor sounds landed. `M` stays a view shortcut
+(`ui/views/EditorView.js`, step 3.8) rather than a registry action, because it isn't an editing operation.
+
+- `ui/components/KeyboardShortcutsOverlay.js`: a `VIEW_LOCAL_SHORTCUTS` row.
+- Docs: `docs/user/02-TheEditor.md` (Sound).
+- Tests: `tests/KeyboardShortcutsOverlayBrowser.test.js` mounts the real overlay and checks the row is listed once,
+  and that no Editor action claims plain `M`.
