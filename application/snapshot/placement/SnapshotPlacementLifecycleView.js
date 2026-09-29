@@ -1,5 +1,6 @@
 import { SnapshotPlacementResolutionOutcome } from './SnapshotPlacementResolutionOutcome.js';
 import { SnapshotPlacementLifecycleState } from './SnapshotPlacementLifecycleState.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.26 — Snapshot Placement Lifecycle & Stale Availability Semantics.
 //
@@ -97,7 +98,7 @@ function stateForOutcome(outcome) {
 export function describeSnapshotPlacementLifecycleNote(lifecycle) {
     if (!lifecycle) return null;
     if (lifecycle.state === SnapshotPlacementLifecycleState.UNAVAILABLE && lifecycle.everResolved) {
-        return 'This snapshot was resolved successfully earlier; it is currently unavailable.';
+        return message('snapshotPlacementLifecycle.thisSnapshotWasResolvedSuccessfully');
     }
     return null;
 }

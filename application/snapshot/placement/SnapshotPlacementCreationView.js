@@ -1,6 +1,7 @@
 import { SnapshotPlacementCreationOutcome } from './SnapshotPlacementCreationOutcome.js';
 import { SnapshotPlacementCreationUiState } from './SnapshotPlacementCreationUiState.js';
 import { RoleProviderResolutionStatus } from '../../settings/RoleAwareProviderResolver.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.25 — Explicit Snapshot Placement Creation UX.
 //
@@ -52,7 +53,7 @@ export function describeCreationAttempt(attempt = null) {
     if (attempt.creating) {
         return {
             state: SnapshotPlacementCreationUiState.CREATING,
-            label: 'Creating…', message: null, placement: null, reason: null
+            label: message('placementCreation.creating'), message: null, placement: null, reason: null
         };
     }
 
@@ -69,8 +70,8 @@ export function describeCreationAttempt(attempt = null) {
     if (attempt.error) {
         return {
             state: SnapshotPlacementCreationUiState.UNAVAILABLE,
-            label: 'No placement was created',
-            message: 'This snapshot placement could not be created.',
+            label: message('placementCreation.noPlacementWasCreated'),
+            message: message('placementCreation.thisSnapshotPlacementCouldNot'),
             placement: null, reason: attempt.error
         };
     }
@@ -79,15 +80,15 @@ export function describeCreationAttempt(attempt = null) {
         case SnapshotPlacementCreationOutcome.CREATED:
             return {
                 state: SnapshotPlacementCreationUiState.CREATED,
-                label: 'Placement created',
-                message: `A snapshot placement was recorded for ${attempt.placement.storage}.`,
+                label: message('placementCreation.placementCreated'),
+                message: message('placementCreation.placementRecorded', { storage: attempt.placement.storage }),
                 placement: attempt.placement, reason: null
             };
         case SnapshotPlacementCreationOutcome.PLACEMENT_UNAVAILABLE:
             return {
                 state: SnapshotPlacementCreationUiState.UNAVAILABLE,
-                label: 'No placement was created',
-                message: 'The storage backend could not currently be reached. No placement was created.',
+                label: message('placementCreation.noPlacementWasCreated'),
+                message: message('placementCreation.theStorageBackendCouldNot'),
                 placement: null, reason: attempt.reason
             };
         // 0.9.301 — a preference IS configured, but names a storage
@@ -99,10 +100,10 @@ export function describeCreationAttempt(attempt = null) {
         case RoleProviderResolutionStatus.PROVIDER_NOT_FOUND:
             return {
                 state: SnapshotPlacementCreationUiState.PROVIDER_NOT_FOUND,
-                label: 'Preferred provider not found',
+                label: message('placementCreation.preferredProviderNotFound'),
                 message: attempt.preference
-                    ? `Your preferred content provider ('${attempt.preference.providerKey}') is not currently registered on this replica. No placement was created.`
-                    : 'Your preferred content provider is not currently registered on this replica. No placement was created.',
+                    ? message('placementCreation.preferredProviderMissing', { providerKey: attempt.preference.providerKey })
+                    : message('placementCreation.yourPreferredContentProviderIs'),
                 placement: null, reason: attempt.reason
             };
         default:
@@ -124,6 +125,8 @@ export function describeCreationAttempt(attempt = null) {
 // application/anchoring/PublicationAnchorCreationView.js#describeCreationButtonLabel()
 // exactly, one axis over.
 export function describeCreationButtonLabel(storageLabel, { creating = false, hasExisting = false } = {}) {
-    if (creating) return 'Creating…';
-    return hasExisting ? `Create Another ${storageLabel} Placement` : `Create ${storageLabel} Placement`;
+    if (creating) return message('placementCreation.creating');
+    return hasExisting
+        ? message('placementCreation.createAnother', { storage: storageLabel })
+        : message('placementCreation.create', { storage: storageLabel });
 }

@@ -32,6 +32,7 @@ import {
 } from '../../application/claimSnapshotReconciliation/evidenceExportComparison/PairedRecordDifferenceView.js';
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../components/reconciliation/EvidenceExportComparisonTable.js';
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector from '../components/reconciliation/EvidenceExportComparisonRecordPairSelector.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.8.192/0.8.194/0.8.196/0.8.201 — Reconciliation Candidate Leaderboard
 // Evidence Export Comparison UI, its Detail extension, its Identity
@@ -325,6 +326,7 @@ export default {
         const pairedRecordDifferenceView = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView(recordDifferenceReadModel.value));
 
         return {
+            t,
             sourceExportText, targetExportText,
             sourceInvalid, targetInvalid, hasCompared,
             compareEvidence, clearComparison,
@@ -335,46 +337,41 @@ export default {
     },
     template: `
         <section class="evidence-export-comparison-view reconciliation-leaderboard-view">
-            <h1>Evidence Export Comparison</h1>
+            <h1>{{ t('reconciliationCandidateLeaderboardEvidenceExportComparisonView.evidenceExportComparison') }}</h1>
             <p class="reconciliation-leaderboard-note">
-                Compare two previously exported evidence reports — a report from
-                last week against one from today, or a report you exported
-                against one a peer sent you. This never reads either replica's
-                own live archive and never merges into, replaces, or recomputes
-                the Reconciliation Candidate Leaderboard — it is a comparison
-                between two separate, portable documents, nothing more.
+                {{ t('reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareTwoPreviouslyExportedEvidence') }}
             </p>
 
             <div class="evidence-inspection-adapter">
-                <span class="evidence-inspection-adapter-title">Source Evidence Export</span>
+                <span class="evidence-inspection-adapter-title">{{ t('reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExport') }}</span>
                 <label class="form-field">
-                    <span class="form-label">Source evidence export JSON</span>
+                    <span class="form-label">{{ t('reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExportJson') }}</span>
                     <textarea class="form-input identity-export-json" rows="6" v-model="sourceExportText"
-                              placeholder="Paste a source evidence export document JSON"></textarea>
+                              :placeholder="t('reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteASourceEvidenceExport')"></textarea>
                 </label>
                 <p v-if="sourceInvalid" class="identity-unlock-error">
-                    This is not a valid evidence export document — the Source side was not updated.
+                    {{ t('reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid') }}
                 </p>
             </div>
 
             <div class="evidence-inspection-adapter">
-                <span class="evidence-inspection-adapter-title">Target Evidence Export</span>
+                <span class="evidence-inspection-adapter-title">{{ t('reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExport') }}</span>
                 <label class="form-field">
-                    <span class="form-label">Target evidence export JSON</span>
+                    <span class="form-label">{{ t('reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExportJson') }}</span>
                     <textarea class="form-input identity-export-json" rows="6" v-model="targetExportText"
-                              placeholder="Paste a target evidence export document JSON"></textarea>
+                              :placeholder="t('reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteATargetEvidenceExport')"></textarea>
                 </label>
                 <p v-if="targetInvalid" class="identity-unlock-error">
-                    This is not a valid evidence export document — the Target side was not updated.
+                    {{ t('reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid2') }}
                 </p>
             </div>
 
             <div class="identity-mgmt-actions">
                 <button type="button" class="action-btn action-btn--secondary" @click="compareEvidence">
-                    Compare Evidence
+                    {{ t('reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareEvidence') }}
                 </button>
                 <button type="button" class="action-btn action-btn--secondary" v-if="hasCompared" @click="clearComparison">
-                    Clear Comparison
+                    {{ t('reconciliationCandidateLeaderboardEvidenceExportComparisonView.clearComparison') }}
                 </button>
             </div>
 

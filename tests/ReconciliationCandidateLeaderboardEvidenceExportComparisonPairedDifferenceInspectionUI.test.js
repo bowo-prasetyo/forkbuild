@@ -2,6 +2,8 @@ import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordP
     pairDifferenceKey
 } from '../ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js';
 import { assert } from './support/Assert.js';
+import { withEnglish } from './support/EnglishSource.js';
+import en from '../ui/i18n/messages/en.js';
 
 // 0.8.202 — Paired Record Difference Inspection UI.
 //
@@ -88,9 +90,9 @@ async function main() {
     // ---------------------------------------------------------------
     // Section A — Rendering.
     // ---------------------------------------------------------------
-    const template = selector.template;
-    assert(template.includes('Decision Pair {{ index + 1 }}'), '1. FLAGSHIP — the template labels each decision pair with a 1-based "Decision Pair N" heading');
-    assert(template.includes('Observation Pair {{ index + 1 }}'), '2. FLAGSHIP — the template labels each observation pair with a 1-based "Observation Pair N" heading, independently of decision pairs');
+    const template = withEnglish(selector.template);
+    assert(template.includes("t('evidenceExportComparisonRecordPairSelector.decisionPair', { number: index + 1 })") && en['evidenceExportComparisonRecordPairSelector.decisionPair'] === 'Decision Pair {number}', '1. FLAGSHIP — the template labels each decision pair with a 1-based "Decision Pair N" heading');
+    assert(template.includes("t('evidenceExportComparisonRecordPairSelector.observationPair', { number: index + 1 })") && en['evidenceExportComparisonRecordPairSelector.observationPair'] === 'Observation Pair {number}', '2. FLAGSHIP — the template labels each observation pair with a 1-based "Observation Pair N" heading, independently of decision pairs');
     assert((template.match(/Inspect differences/g) || []).length === 2, '3. the template exposes exactly two "Inspect differences" toggle templates — one per dimension\'s own v-for row');
     assert((template.match(/Hide differences/g) || []).length === 2, '4. the template exposes exactly two "Hide differences" collapse labels — one per dimension\'s own v-for row');
     assert(template.includes("'No differences'"), '5. a zero-difference pair\'s own summary reads "No differences" rather than being omitted');
@@ -234,7 +236,8 @@ async function main() {
     );
     const selectorCodeOnly = selectorModuleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-    assert(!selectorCodeOnly.includes('import '), '29. the component still imports nothing at all, even after the 0.8.202 extension');
+    // The translator (ui/i18n/i18n.js) is the one import allowed: it gives text, never data.
+    assert(!selectorCodeOnly.replace(/^import \{[^}]*\} from '\.\.\/\.\.\/i18n\/i18n\.js';$/m, '').includes('import '), '29. the component still imports nothing but the translator, even after the 0.8.202 extension');
     for (const forbiddenCall of [
         'describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairs(',
         'describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifference(',

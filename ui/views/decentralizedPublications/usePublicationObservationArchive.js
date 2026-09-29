@@ -29,6 +29,7 @@ import {
 import {
     describePublicationObservationArchiveReplacementReview
 } from '../../../application/publication/observationArchive/PublicationObservationArchiveReplacementReview.js';
+import { t } from '../../i18n/i18n.js';
 
 // The publication observation archive: the one durable record this page keeps.
 // Records publish/verify/broadcast/confirmation observations and anchor
@@ -292,13 +293,13 @@ export function usePublicationObservationArchive({
         const difference = publicationArchiveDifferenceResult.value;
         if (!difference) return [];
         return [
-            { label: 'IPFS publication records', collection: difference.ipfsPublicationRecords },
-            { label: 'IPFS verification observations', collection: difference.ipfsContentVerificationObservationsByRecordIndex },
-            { label: 'Bitcoin broadcast observations', collection: difference.bitcoinBroadcastRecords },
-            { label: 'Bitcoin confirmation observations', collection: difference.bitcoinConfirmationObservationsByAnchorId },
-            { label: 'Bitcoin content-proof observations', collection: difference.bitcoinContentProofObservationsByAnchorId },
-            { label: 'Bitcoin publication records', collection: difference.bitcoinAnchorPublicationRecords },
-            { label: 'Base transaction inclusion observations', collection: difference.baseTransactionInclusionObservationsByTransactionHash }
+            { label: t('publications.ipfsPublicationRecords'), collection: difference.ipfsPublicationRecords },
+            { label: t('publications.ipfsVerificationObservations'), collection: difference.ipfsContentVerificationObservationsByRecordIndex },
+            { label: t('publications.bitcoinBroadcastObservations'), collection: difference.bitcoinBroadcastRecords },
+            { label: t('publications.bitcoinConfirmationObservations'), collection: difference.bitcoinConfirmationObservationsByAnchorId },
+            { label: t('publications.bitcoinContentProofObservations'), collection: difference.bitcoinContentProofObservationsByAnchorId },
+            { label: t('publications.bitcoinPublicationRecords'), collection: difference.bitcoinAnchorPublicationRecords },
+            { label: t('publications.baseTransactionInclusionObservations'), collection: difference.baseTransactionInclusionObservationsByTransactionHash }
         ];
     }
 

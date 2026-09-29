@@ -4,6 +4,7 @@ import {
     ReconcilePublisherLeaderboardSnapshotClaimOutcome
 } from '../../application/leaderboard/snapshot/ReconcileClaimUseCase.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
+import { t } from '../i18n/i18n.js';
 
 // The literal success value `execute()` itself returns on a fully
 // completed run — see "Result presentation," below, for exactly why this
@@ -173,6 +174,7 @@ export default {
         }
     },
     methods: {
+        t,
         // The ONE explicit action this workspace offers — see "Explicit
         // execution only," above. Constructs the use case fresh on every
         // click (mirroring how every other file in this family constructs
@@ -208,67 +210,57 @@ export default {
     },
     template: `
         <section class="reconciliation-workspace-view">
-            <h1>Reconciliation Workspace</h1>
+            <h1>{{ t('reconciliationWorkspaceView.reconciliationWorkspace') }}</h1>
             <p class="reconciliation-leaderboard-note">
-                Reconcile this replica's own local archive against one piece of
-                peer evidence, explicitly. Nothing on this page runs
-                automatically — reconciliation happens only when you click
-                "Reconcile," below.
+                {{ t('reconciliationWorkspaceView.reconcileThisReplicaSOwn') }}
             </p>
 
             <div class="evidence-inspection-adapter">
-                <span class="evidence-inspection-adapter-title">Local Archive</span>
+                <span class="evidence-inspection-adapter-title">{{ t('reconciliationWorkspaceView.localArchive') }}</span>
                 <p class="form-hint form-hint--neutral">
-                    This replica's own recorded evidence — the same archive the
-                    Publications page and the Reconciliation Candidate Leaderboard
-                    already read and write. There is no separate archive to pick.
+                    {{ t('reconciliationWorkspaceView.thisReplicaSOwnRecorded') }}
                 </p>
             </div>
 
             <div class="evidence-inspection-adapter">
-                <span class="evidence-inspection-adapter-title">Peer Evidence</span>
+                <span class="evidence-inspection-adapter-title">{{ t('reconciliationWorkspaceView.peerEvidence') }}</span>
                 <p class="form-hint form-hint--neutral">
-                    Paste a peer's own exported, signed leaderboard snapshot claim
-                    below (Export Claim, on their replica).
+                    {{ t('reconciliationWorkspaceView.pasteAPeerSOwn') }}
                 </p>
                 <label class="form-field">
-                    <span class="form-label">Peer evidence JSON</span>
+                    <span class="form-label">{{ t('reconciliationWorkspaceView.peerEvidenceJson') }}</span>
                     <textarea class="form-input identity-export-json" rows="6" v-model="peerEvidenceText"
-                              placeholder="Paste a peer's exported leaderboard snapshot claim JSON"></textarea>
+                              :placeholder="t('reconciliationWorkspaceView.pasteAPeerSExported')"></textarea>
                 </label>
             </div>
 
             <div class="identity-mgmt-actions">
                 <button type="button" class="action-btn action-btn--primary" @click="reconcile">
-                    Reconcile
+                    {{ t('reconciliationWorkspaceView.reconcile') }}
                 </button>
                 <button type="button" class="action-btn action-btn--secondary" v-if="result" @click="clearResult">
-                    Clear Result
+                    {{ t('reconciliationWorkspaceView.clearResult') }}
                 </button>
             </div>
 
             <div v-if="result" class="evidence-inspection-adapter reconciliation-workspace-result">
-                <span class="evidence-inspection-adapter-title">Result</span>
+                <span class="evidence-inspection-adapter-title">{{ t('reconciliationWorkspaceView.result') }}</span>
                 <template v-if="candidateProduced">
                     <p class="form-hint form-hint--neutral">
-                        Reconciliation produced a candidate, recorded as a decision
-                        and a revalidation observation in this replica's own
-                        archive.
+                        {{ t('reconciliationWorkspaceView.reconciliationProducedACandidateRecorded') }}
                     </p>
                     <router-link to="/reconciliation-leaderboard" class="action-btn action-btn--secondary">
-                        View in Leaderboard
+                        {{ t('reconciliationWorkspaceView.viewInLeaderboard') }}
                     </router-link>
                 </template>
                 <template v-else-if="noReconciliationCandidate">
                     <p class="form-hint form-hint--neutral">
-                        No reconciliation candidate was produced — this peer's
-                        evidence already agrees with this replica's own local
-                        snapshot.
+                        {{ t('reconciliationWorkspaceView.noReconciliationCandidateWasProduced') }}
                     </p>
                 </template>
                 <template v-else>
                     <p class="identity-unlock-error">
-                        Reconciliation did not complete — outcome: {{ result.outcome }}
+                        {{ t('reconciliationWorkspaceView.reconciliationDidNotCompleteOutcome', { outcome: result.outcome }) }}
                     </p>
                 </template>
             </div>

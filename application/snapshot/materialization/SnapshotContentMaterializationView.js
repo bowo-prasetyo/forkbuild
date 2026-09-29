@@ -1,5 +1,6 @@
 import { SnapshotContentTransferOutcome } from './SnapshotContentTransferOutcome.js';
 import { SnapshotContentMaterializationUiState } from './SnapshotContentMaterializationUiState.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.34 — Explicit Snapshot Materialization UX.
 //
@@ -50,7 +51,7 @@ export function describeMaterializationAttempt(attempt = null) {
         return {
             state: SnapshotContentMaterializationUiState.IMPORTING,
             importing: true,
-            label: 'Importing…', message: null, contentReference: null, publicationId: null
+            label: message('contentMaterialization.importing'), message: null, contentReference: null, publicationId: null
         };
     }
 
@@ -69,7 +70,7 @@ export function describeMaterializationAttempt(attempt = null) {
         return {
             state: SnapshotContentMaterializationUiState.UNAVAILABLE,
             importing: false,
-            label: 'Snapshot was not imported',
+            label: message('contentMaterialization.snapshotWasNotImported'),
             message: attempt.error,
             contentReference: null, publicationId: null
         };
@@ -80,28 +81,28 @@ export function describeMaterializationAttempt(attempt = null) {
             return {
                 state: SnapshotContentMaterializationUiState.IMPORTED,
                 importing: false,
-                label: 'Imported',
+                label: message('contentMaterialization.imported'),
                 message: attempt.publicationKnown
-                    ? "Snapshot was imported and matches the publication's content hash."
-                    : 'Snapshot imported. The publication is not currently known locally.',
+                    ? message('contentMaterialization.snapshotWasImportedAndMatches')
+                    : message('contentMaterialization.snapshotImportedThePublicationIs'),
                 contentReference: attempt.contentReference, publicationId: attempt.publicationId
             };
         case SnapshotContentTransferOutcome.ALREADY_STORED:
             return {
                 state: SnapshotContentMaterializationUiState.ALREADY_AVAILABLE,
                 importing: false,
-                label: 'Already available',
+                label: message('contentMaterialization.alreadyAvailable'),
                 message: attempt.publicationKnown
-                    ? 'The snapshot is already present locally.'
-                    : 'The snapshot is already present locally. The publication is not currently known locally.',
+                    ? message('contentMaterialization.theSnapshotIsAlreadyPresent')
+                    : message('contentMaterialization.theSnapshotIsAlreadyPresent2'),
                 contentReference: attempt.contentReference, publicationId: attempt.publicationId
             };
         case SnapshotContentTransferOutcome.CONTENT_HASH_MISMATCH:
             return {
                 state: SnapshotContentMaterializationUiState.REJECTED,
                 importing: false,
-                label: 'Import rejected',
-                message: "The imported bytes do not match this package's own claimed content hash. Nothing was stored.",
+                label: message('contentMaterialization.importRejected'),
+                message: message('contentMaterialization.theImportedBytesDoNot'),
                 contentReference: null, publicationId: attempt.publicationId
             };
         default:
@@ -122,5 +123,5 @@ export function describeMaterializationAttempt(attempt = null) {
 // placement is; it is always simply "Import Snapshot" again, exactly as
 // meaningful whether it turns out STORED, ALREADY_STORED, or rejected.
 export function describeMaterializationButtonLabel({ importing = false } = {}) {
-    return importing ? 'Importing…' : 'Import Snapshot';
+    return importing ? message('contentMaterialization.importing') : message('contentMaterialization.importSnapshot');
 }

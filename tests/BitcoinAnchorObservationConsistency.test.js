@@ -14,6 +14,7 @@ import {
 import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.77 — Bitcoin Anchor Observation Consistency Analysis.
 //
@@ -137,7 +138,7 @@ async function run() {
         assert(result.findings[0].previousObservation === obs1 && result.findings[0].laterObservation === obs2, '11. the analyzer preserves both complete observations, not merely a state string');
 
         const described = describeBitcoinAnchorObservationConsistency(result);
-        assert(described.findings[0].stateLabel === 'Confirmation count decreased while block placement remained unchanged between observation 1 and observation 2.', '12. the narrated sentence names the specific inconsistency factually');
+        assert(displayText(described.findings[0].stateLabel) === 'Confirmation count decreased while block placement remained unchanged between observation 1 and observation 2.', '12. the narrated sentence names the specific inconsistency factually');
     }
     console.log('✓ Section B: CONFIRMATION_COUNT_DECREASED — a decreased confirmationCount at an unchanged block is INCONSISTENT');
 
@@ -177,7 +178,7 @@ async function run() {
         assert(direct.finding.blockHeight === 900000, '23. the shared height is preserved on the finding');
         assert(direct.finding.previousBlockHash === BLOCK_A && direct.finding.laterBlockHash === BLOCK_B, '24. both differing hashes are preserved on the finding');
 
-        const described = describeBitcoinAnchorObservationConsistencyLabel(direct.state, direct.finding);
+        const described = displayText(describeBitcoinAnchorObservationConsistencyLabel(direct.state, direct.finding));
         assert(described === 'Different block hashes were observed at the same block height.', '25. the narrated sentence names the disagreement factually, with no verdict wording');
     }
     console.log('✓ Section D: DIFFERENT_HASH_SAME_HEIGHT — different block hashes at the same height are INCONSISTENT');
@@ -337,8 +338,8 @@ async function run() {
         assert(isValidBitcoinAnchorObservationConsistencyFindingKind(BitcoinAnchorObservationConsistencyFindingKind.DIFFERENT_HASH_AND_HEIGHT), '57. DIFFERENT_HASH_AND_HEIGHT is a recognized finding kind');
         assert(!isValidBitcoinAnchorObservationConsistencyFindingKind('fraud-detected'), '58. an invented fraud-detected value is never recognized');
 
-        const insufficientLabel = describeBitcoinAnchorObservationConsistencyLabel(BitcoinAnchorObservationConsistencyState.INSUFFICIENT_OBSERVATIONS);
-        assert(insufficientLabel === 'Not enough confirmed observations exist yet to analyze consistency.', '59. the insufficient-observations label names the gap factually');
+        const insufficientLabel = displayText(describeBitcoinAnchorObservationConsistencyLabel(BitcoinAnchorObservationConsistencyState.INSUFFICIENT_OBSERVATIONS));
+        assert(displayText(insufficientLabel) === 'Not enough confirmed observations exist yet to analyze consistency.', '59. the insufficient-observations label names the gap factually');
         assert(describeBitcoinAnchorObservationConsistencyLabel('not-a-real-state') === null, '60. an unrecognized state names nothing');
 
         assert(compareBitcoinAnchorObservationConsistency.length === 2, '61. the pure comparison function takes exactly two observations, no injected collaborator');

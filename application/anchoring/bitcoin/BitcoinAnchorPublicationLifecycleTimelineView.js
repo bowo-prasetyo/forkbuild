@@ -4,6 +4,7 @@ import { observeBitcoinAnchorChainPlacementChanges } from './BitcoinAnchorChainP
 import { analyzeBitcoinAnchorObservationConsistency } from './BitcoinAnchorObservationConsistencyAnalyzer.js';
 import { PublicationObservationArchive } from '../../publication/observationArchive/PublicationObservationArchive.js';
 import { findBitcoinAnchorPublicationRecordByAnchorId } from './BitcoinAnchorPublicationRecordHistory.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.81 — Bitcoin Anchor Publication Lifecycle Timeline.
 //
@@ -165,7 +166,7 @@ function publicationEntry(publicationRecord) {
         observedAt: publicationRecord.createdAt,
         anchorId: publicationRecord.anchorId,
         index: null,
-        label: 'Publication record created',
+        label: message('bitcoinAnchorPublicationLifecycleTimeline.publicationRecordCreated'),
         contentHash: publicationRecord.contentHash,
         txid: publicationRecord.txid,
         network: publicationRecord.network
@@ -180,7 +181,7 @@ function broadcastEntries(anchorId, section) {
             observedAt: entry.broadcastedAt,
             anchorId,
             index: entry.index,
-            label: `Broadcast observation #${entry.index}`,
+            label: message('bitcoinAnchorPublicationLifecycleTimeline.broadcastObservation', { number: entry.index }),
             state: entry.state,
             stateLabel: entry.stateLabel,
             txid: entry.txid,
@@ -196,7 +197,7 @@ function confirmationEntries(anchorId, section) {
             observedAt: entry.observedAt,
             anchorId,
             index: entry.index,
-            label: `Confirmation observation #${entry.index}`,
+            label: message('bitcoinAnchorPublicationLifecycleTimeline.confirmationObservation', { number: entry.index }),
             state: entry.state,
             stateLabel: entry.stateLabel,
             txid: entry.txid,
@@ -215,7 +216,7 @@ function contentProofEntries(anchorId, section) {
             observedAt: entry.observedAt,
             anchorId,
             index: entry.index,
-            label: `Content-proof observation #${entry.index}`,
+            label: message('bitcoinAnchorPublicationLifecycleTimeline.contentProofObservation', { number: entry.index }),
             state: entry.state,
             stateLabel: entry.stateLabel,
             contentHash: entry.contentHash,
@@ -235,7 +236,7 @@ function chainPlacementEntries(anchorId, section) {
         observedAt: laterOrOnlyObservedAt(comparison.previousBlock, comparison.laterBlock),
         anchorId,
         index: i + 1,
-        label: `Chain-placement comparison #${i + 1}`,
+        label: message('bitcoinAnchorPublicationLifecycleTimeline.chainPlacementComparison', { number: i + 1 }),
         outcome: comparison.outcome,
         outcomeLabel: comparison.outcomeLabel,
         previousObservationIndex: comparison.previousObservationIndex,
@@ -251,7 +252,7 @@ function consistencyEntries(anchorId, section) {
         observedAt: laterOrOnlyObservedAt(finding.previousBlock, finding.laterBlock),
         anchorId,
         index: i + 1,
-        label: `Consistency finding #${i + 1}`,
+        label: message('bitcoinAnchorPublicationLifecycleTimeline.consistencyFinding', { number: i + 1 }),
         state: finding.state,
         stateLabel: finding.stateLabel,
         finding: finding.finding,

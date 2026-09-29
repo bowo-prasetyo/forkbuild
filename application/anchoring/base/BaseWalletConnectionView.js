@@ -1,10 +1,11 @@
 import { BaseWalletConnectionState } from './BaseWalletConnectionState.js';
+import { message } from '../../../core/Message.js';
 
 const STATE_LABELS = {
-    [BaseWalletConnectionState.DISCONNECTED]: 'Disconnected',
-    [BaseWalletConnectionState.CONNECTING]: 'Connecting…',
-    [BaseWalletConnectionState.CONNECTED]: 'Connected',
-    [BaseWalletConnectionState.UNAVAILABLE]: 'Wallet unavailable'
+    [BaseWalletConnectionState.DISCONNECTED]: message('baseWalletConnection.disconnected'),
+    [BaseWalletConnectionState.CONNECTING]: message('baseWalletConnection.connecting'),
+    [BaseWalletConnectionState.CONNECTED]: message('baseWalletConnection.connected'),
+    [BaseWalletConnectionState.UNAVAILABLE]: message('baseWalletConnection.walletUnavailable')
 };
 
 // 0.8.90 — Explicit Base Network & Account Observation.

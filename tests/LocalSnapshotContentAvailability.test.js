@@ -25,6 +25,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
 //
@@ -101,35 +102,35 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const idle = describeLocalSnapshotContentAvailability(null);
-        assert(idle.checking === false && idle.checked === false && idle.outcome === null && idle.label === 'Not yet checked' && idle.message === null,
+        assert(idle.checking === false && idle.checked === false && idle.outcome === null && displayText(idle.label) === 'Not yet checked' && idle.message === null,
             '1. idle (never checked) reports checking:false, checked:false, no outcome, no message');
 
         const checking = describeLocalSnapshotContentAvailability({ checking: true });
-        assert(checking.checking === true && checking.checked === false && checking.label === 'Checking…',
+        assert(checking.checking === true && checking.checked === false && displayText(checking.label) === 'Checking…',
             '2. an in-flight check reports checking:true, checked:false');
 
         const available = describeLocalSnapshotContentAvailability({ outcome: LocalSnapshotContentAvailabilityOutcome.AVAILABLE });
         assert(available.checked === true && available.outcome === LocalSnapshotContentAvailabilityOutcome.AVAILABLE,
             '3. a completed AVAILABLE check reports checked:true with the outcome carried through');
-        assert(available.message === "Local snapshot is available and matches the publication's content hash.",
+        assert(displayText(available.message) === "Local snapshot is available and matches the publication's content hash.",
             '4. AVAILABLE carries the exact, deliberately unhedged sentence — never "verified"/"trusted"/"authentic"/"confirmed"');
 
         const notAvailable = describeLocalSnapshotContentAvailability({ outcome: LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE });
-        assert(notAvailable.message === 'This replica does not currently hold bytes for this snapshot.',
+        assert(displayText(notAvailable.message) === 'This replica does not currently hold bytes for this snapshot.',
             '5. NOT_AVAILABLE carries its own distinct sentence');
 
         const mismatch = describeLocalSnapshotContentAvailability({ outcome: LocalSnapshotContentAvailabilityOutcome.CONTENT_HASH_MISMATCH });
-        assert(mismatch.message !== notAvailable.message && mismatch.message.includes('no longer match'),
+        assert(mismatch.message !== notAvailable.message && displayText(mismatch.message).includes('no longer match'),
             '6. CONTENT_HASH_MISMATCH is worded as a distinct, definite finding — never conflated with NOT_AVAILABLE');
 
-        assert(describeAvailabilityOutcomeLabel(LocalSnapshotContentAvailabilityOutcome.AVAILABLE) === 'Available', '7. AVAILABLE label');
-        assert(describeAvailabilityOutcomeLabel(LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE) === 'Not available', '8. NOT_AVAILABLE label');
-        assert(describeAvailabilityOutcomeLabel(LocalSnapshotContentAvailabilityOutcome.CONTENT_HASH_MISMATCH) === 'Hash mismatch', '9. CONTENT_HASH_MISMATCH label');
+        assert(displayText(describeAvailabilityOutcomeLabel(LocalSnapshotContentAvailabilityOutcome.AVAILABLE)) === 'Available', '7. AVAILABLE label');
+        assert(displayText(describeAvailabilityOutcomeLabel(LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE)) === 'Not available', '8. NOT_AVAILABLE label');
+        assert(displayText(describeAvailabilityOutcomeLabel(LocalSnapshotContentAvailabilityOutcome.CONTENT_HASH_MISMATCH)) === 'Hash mismatch', '9. CONTENT_HASH_MISMATCH label');
         assert(describeAvailabilityOutcomeMessage('not-a-real-outcome') === null, '10. an unrecognized outcome yields no message');
 
-        assert(describeAvailabilityCheckButtonLabel({}) === 'Check Local Snapshot', '11. idle button label');
-        assert(describeAvailabilityCheckButtonLabel({ checking: true }) === 'Checking…', '12. in-flight button label');
-        assert(describeAvailabilityCheckButtonLabel({ checked: true }) === 'Check Again', '13. post-check button label');
+        assert(displayText(describeAvailabilityCheckButtonLabel({})) === 'Check Local Snapshot', '11. idle button label');
+        assert(displayText(describeAvailabilityCheckButtonLabel({ checking: true })) === 'Checking…', '12. in-flight button label');
+        assert(displayText(describeAvailabilityCheckButtonLabel({ checked: true })) === 'Check Again', '13. post-check button label');
     }
     console.log('✓ Section B: pure view functions over every outcome plus idle/checking');
 
@@ -197,7 +198,7 @@ async function run() {
         const carolResult = await carolChecker.execute(carolPublicationCatalog.get(PUBLICATION_ID));
         assert(carolResult.outcome === LocalSnapshotContentAvailabilityOutcome.AVAILABLE,
             '4. Carol\'s local availability check reports AVAILABLE — she possesses the bytes, obtained entirely through offline transfer');
-        assert(describeLocalSnapshotContentAvailability({ outcome: carolResult.outcome }).message === "Local snapshot is available and matches the publication's content hash.",
+        assert(displayText(describeLocalSnapshotContentAvailability({ outcome: carolResult.outcome }).message) === "Local snapshot is available and matches the publication's content hash.",
             '5. the displayed sentence is exactly the precise, unhedged claim this milestone allows');
 
         // --- Dave: imports the replica package, then possesses bytes

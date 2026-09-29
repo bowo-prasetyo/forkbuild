@@ -1,5 +1,6 @@
 import { StoreSnapshotContentOutcome } from './StoreSnapshotContentOutcome.js';
 import { describeSnapshotMaterializationSourceLabel } from './SnapshotMaterializationView.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.38 — Snapshot Materialization History & Source Inspection.
 //
@@ -37,9 +38,9 @@ import { describeSnapshotMaterializationSourceLabel } from './SnapshotMaterializ
 // (0.8.38)."
 export function describeSnapshotMaterializationOutcomeLabel(outcome) {
     switch (outcome) {
-        case StoreSnapshotContentOutcome.STORED: return 'Snapshot stored locally';
-        case StoreSnapshotContentOutcome.ALREADY_AVAILABLE: return 'Snapshot was already available';
-        case StoreSnapshotContentOutcome.HASH_MISMATCH: return 'Content hash mismatch';
+        case StoreSnapshotContentOutcome.STORED: return message('snapshotMaterializationHistory.snapshotStoredLocally');
+        case StoreSnapshotContentOutcome.ALREADY_AVAILABLE: return message('snapshotMaterializationHistory.snapshotWasAlreadyAvailable');
+        case StoreSnapshotContentOutcome.HASH_MISMATCH: return message('snapshotMaterializationHistory.contentHashMismatch');
         default: return null;
     }
 }

@@ -15,7 +15,8 @@ chosen.
 | Editor: toolbar, sidebar, Build Library, dialogs, touch bar, feedback | Translated |
 | Editor actions, license, placement, document status, presence labels, passphrase rules, opening a shared link | Translated |
 | World View: panels, dialogs, prompts, the Explore sidebar, the map, the compass, feedback | Translated |
-| Publications page | English |
+| Publications page, Repository, Recent Worlds, an author's page, leaderboards and reconciliation | Translated |
+| Why a publication's check failed (the checker's technical detail) | English |
 | Identity, Peers, Chat, Following, settings pages | English |
 | Resident speech in World View | English |
 | Undo/redo and history labels, a new document's default title | English (stored in documents; needs its own change) |
@@ -148,6 +149,13 @@ it:
   `regionKindText`, `spatialActivityText`, `spatialContextDescription`). A
   value without a message is shown as it came, so a newer client's value
   still reads.
+- **A sentence with a link or button inside it** is one message, with a
+  `{placeholder}` where the element goes, rendered by
+  `ui/i18n/I18nText.js`: `<I18nText keypath="…"><template #peer>…</template></I18nText>`.
+  Never split the sentence into pieces around the element: other languages
+  put it elsewhere.
+- **Names of networks and products** (Arweave, Nostr, Steem, IPFS, Bitcoin,
+  Base) are not messages.
 
 `tests/I18nMessageKeys.test.js` runs these modules and checks that every
 descriptor they produce has an English message.

@@ -1,5 +1,6 @@
 import { PublicationObservationArchive } from '../../application/publication/observationArchive/PublicationObservationArchive.js';
 import { reconstructPublisherLeaderboard } from '../../application/leaderboard/PublisherLeaderboardView.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.9.417 — Publisher Performance Leaderboard UI.
 //
@@ -100,34 +101,29 @@ export default {
             return reconstructPublisherLeaderboard(archive);
         }
     },
+    methods: { t },
     template: `
         <section class="publisher-performance-leaderboard-view">
-            <h1>Publisher Performance Leaderboard</h1>
+            <h1>{{ t('publisherPerformanceLeaderboardView.publisherPerformanceLeaderboard') }}</h1>
             <p class="reconciliation-leaderboard-note">
-                Publishers ranked by their own recorded achievements and publications,
-                computed fresh from this replica's own archive every time this page
-                loads. This is a presentation of the existing Publisher Ranking
-                Policy's own result — never a second ranking system — and nothing
-                shown here is persisted.
+                {{ t('publisherPerformanceLeaderboardView.publishersRankedByTheirOwn') }}
             </p>
             <p v-if="leaderboard.entryCount === 0" class="empty-state">
-                No publishers to rank yet — no publisher has explicitly associated a
-                publication in this replica's own archive.
+                {{ t('publisherPerformanceLeaderboardView.noPublishersToRankYet') }}
             </p>
             <template v-else>
                 <p class="reconciliation-leaderboard-summary">
-                    {{ leaderboard.entryCount }} publisher(s) ranked, under Publisher
-                    Ranking Policy v{{ leaderboard.policy.version }}
+                    {{ t('publisherPerformanceLeaderboardView.publisherSRankedUnderPublisher', { count: leaderboard.entryCount, version: leaderboard.policy.version }) }}
                 </p>
                 <div class="reconciliation-leaderboard-table-wrap">
                     <table class="reconciliation-leaderboard-table">
                         <thead>
                             <tr>
-                                <th>Rank</th>
-                                <th>Publisher</th>
-                                <th>Achievements</th>
-                                <th>Achievement Kinds</th>
-                                <th>Publications</th>
+                                <th>{{ t('publisherPerformanceLeaderboardView.rank') }}</th>
+                                <th>{{ t('publisherPerformanceLeaderboardView.publisher') }}</th>
+                                <th>{{ t('publisherPerformanceLeaderboardView.achievements') }}</th>
+                                <th>{{ t('publisherPerformanceLeaderboardView.achievementKinds') }}</th>
+                                <th>{{ t('publisherPerformanceLeaderboardView.publications') }}</th>
                             </tr>
                         </thead>
                         <tbody>

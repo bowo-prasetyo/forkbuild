@@ -4,27 +4,25 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                     <!-- This replica's own content state, separate from the
                          distributed claims under Decentralization. -->
                     <div v-if="localSnapshotContentAvailabilityUseCase || snapshotContentMaterializationCoordinator || snapshotPeerMaterializationCoordinator" class="decentralization-summary">
-                        <span class="evidence-convergence-title">Local Snapshot</span>
+                        <span class="evidence-convergence-title">{{ t('publications.localSnapshot') }}</span>
 
                         <!-- Summary of possession and acquisition counts;
                              hidden until something was checked or attempted
                              this session. -->
                         <div v-if="localSnapshotAvailabilityView(entry).checked || snapshotAcquisitionView(entry).acquisition.attemptCount > 0" class="evidence-list">
-                            <span class="evidence-convergence-title">Snapshot Acquisition <span class="experimental-badge">Experimental</span></span>
+                            <span class="evidence-convergence-title">{{ t('publications.snapshotAcquisition') }} <span class="experimental-badge">{{ t('publications.experimental3') }}</span></span>
                             <p class="form-hint form-hint--neutral">
                                 Current possession:
-                                {{ localSnapshotAvailabilityView(entry).checked ? localSnapshotAvailabilityView(entry).message : 'Not yet checked.' }}
+                                {{ localSnapshotAvailabilityView(entry).checked ? localSnapshotAvailabilityView(entry).message : t('publications.notYetChecked') }}
                             </p>
                             <p v-if="snapshotAcquisitionOutcomeCountsSentence(entry)" class="form-hint form-hint--neutral">
-                                Acquisition history: {{ snapshotAcquisitionOutcomeCountsSentence(entry) }}
+                                {{ t('publications.acquisitionHistory', { history: snapshotAcquisitionOutcomeCountsSentence(entry) }) }}
                             </p>
                             <p v-if="materializationSourceCountsSentence(entry)" class="form-hint form-hint--neutral">
-                                {{ materializationSourceCountsSentence(entry) }}
+                                {{ displayText(materializationSourceCountsSentence(entry)) }}
                             </p>
                             <p v-if="snapshotAcquisitionNeedsSourceHint(entry)" class="form-hint form-hint--neutral">
-                                This replica does not currently possess a valid snapshot. Choose a source below —
-                                "Import Snapshot," a placement's own "Materialize Snapshot," or a peer's own "Get
-                                Snapshot from Peer" — to try again.
+                                {{ t('publications.thisReplicaDoesNotCurrently') }}
                             </p>
 
                             <!-- Every acquisition attempt this session,
@@ -32,25 +30,25 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                                  ranking of sources. -->
                             <div v-if="materializationHistoryDetailsView(entry).count > 0" class="evidence-list">
                                 <button class="action-btn action-btn--secondary" @click="toggleMaterializationHistory(entry)">
-                                    {{ entry.materializationHistoryExpanded ? 'Hide Acquisition History' : 'Show Acquisition History' }}
+                                    {{ entry.materializationHistoryExpanded ? t('publications.hideAcquisitionHistory') : t('publications.showAcquisitionHistory') }}
                                 </button>
                                 <div v-if="entry.materializationHistoryExpanded">
                                     <ul class="replica-knowledge-claim-list">
                                         <li v-for="(item, index) in materializationHistoryDetailsView(entry).entries" :key="index" class="replica-knowledge-claim">
                                             <button class="action-btn action-btn--secondary" @click="toggleMaterializationHistoryEntry(entry, index)">
-                                                {{ formatWhen(item.observedAt) }} — {{ item.sourceLabel }} → {{ item.outcomeShortLabel }}
+                                                {{ formatWhen(item.observedAt) }} — {{ displayText(item.sourceLabel) }} → {{ displayText(item.outcomeShortLabel) }}
                                             </button>
                                             <dl v-if="isMaterializationHistoryEntryExpanded(entry, index)" class="evidence-fields">
                                                 <div class="evidence-field">
-                                                    <dt>Outcome</dt>
-                                                    <dd>{{ item.outcomeLabel }}</dd>
+                                                    <dt>{{ t('publications.outcome') }}</dt>
+                                                    <dd>{{ displayText(item.outcomeLabel) }}</dd>
                                                 </div>
                                                 <div class="evidence-field">
-                                                    <dt>Publication</dt>
+                                                    <dt>{{ t('publications.publication5') }}</dt>
                                                     <dd>{{ item.publicationId }}</dd>
                                                 </div>
                                                 <div class="evidence-field">
-                                                    <dt>Content hash</dt>
+                                                    <dt>{{ t('publications.contentHash8') }}</dt>
                                                     <dd>{{ item.contentHash }}</dd>
                                                 </div>
                                             </dl>
@@ -64,26 +62,26 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                              and placement counts stay on the Decentralization
                              card. -->
                         <p v-if="localSnapshotContentAvailabilityUseCase && localSnapshotAvailabilityView(entry).checked" class="form-hint form-hint--neutral">
-                            Publication: {{ replicaContentKnowledgeView(entry).hasPublication ? 'known locally' : 'not known locally' }}
-                            · Snapshot: {{ replicaContentKnowledgeView(entry).hasValidSnapshot ? 'available' : 'not available' }}
+                            Publication: {{ replicaContentKnowledgeView(entry).hasPublication ? t('publications.knownLocally') : t('publications.notKnownLocally') }}
+                            · Snapshot: {{ replicaContentKnowledgeView(entry).hasValidSnapshot ? 'available' : t('publications.notAvailable') }}
                         </p>
 
                         <div v-if="localSnapshotContentAvailabilityUseCase" class="evidence-discovery-header">
                             <button class="action-btn action-btn--secondary"
                                     :disabled="localSnapshotAvailabilityView(entry).checking"
                                     @click="checkLocalSnapshotAvailability(entry)">
-                                {{ localSnapshotAvailabilityButtonLabel(entry) }}
+                                {{ displayText(localSnapshotAvailabilityButtonLabel(entry)) }}
                             </button>
                             <span v-if="localSnapshotAvailabilityView(entry).checked" class="peer-badge" :class="localSnapshotAvailabilityBadgeClass(entry)">
-                                {{ localSnapshotAvailabilityView(entry).label }}
+                                {{ displayText(localSnapshotAvailabilityView(entry).label) }}
                             </span>
                         </div>
                         <p v-if="localSnapshotContentAvailabilityUseCase && localSnapshotAvailabilityView(entry).message" class="form-hint form-hint--neutral">
-                            {{ localSnapshotAvailabilityView(entry).message }}
+                            {{ displayText(localSnapshotAvailabilityView(entry).message) }}
                         </p>
 
                         <p v-if="localSnapshotMaterializationSourceView(entry).possessed" class="form-hint form-hint--neutral">
-                            Source: {{ localSnapshotMaterializationSourceView(entry).sourceLabel }}
+                            {{ t('publications.source', { source: localSnapshotMaterializationSourceView(entry).sourceLabel }) }}
                         </p>
 
                         <!-- Imports only what the person supplies, on an
@@ -91,37 +89,36 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                         <div v-if="snapshotContentMaterializationCoordinator" class="evidence-list">
                             <button v-if="!entry.materializationFormOpen" class="action-btn action-btn--secondary"
                                     @click="entry.materializationFormOpen = true">
-                                Import Snapshot
+                                {{ t('publications.importSnapshot') }}
                             </button>
                             <template v-else>
                                 <label class="form-field">
-                                    <span class="form-label">Publication Snapshot Transfer Package</span>
+                                    <span class="form-label">{{ t('publications.publicationSnapshotTransferPackage') }}</span>
                                     <input type="file" accept="application/json" class="form-input"
                                            @change="onMaterializationFileChosen(entry, $event)" />
                                 </label>
                                 <textarea v-model="entry.materializationImportText" class="form-input" rows="4"
-                                          placeholder="…or paste the exported Publication Snapshot Transfer Package JSON here"></textarea>
+                                          :placeholder="t('publications.orPasteTheExportedPublication')"></textarea>
                                 <div class="evidence-discovery-header">
                                     <button class="action-btn action-btn--primary"
                                             :disabled="materializationView(entry).importing"
                                             @click="importSnapshotContent(entry)">
-                                        {{ materializationButtonLabel(entry) }}
+                                        {{ displayText(materializationButtonLabel(entry)) }}
                                     </button>
                                     <span v-if="materializationView(entry).label" class="peer-badge" :class="materializationBadgeClass(entry)">
-                                        {{ materializationView(entry).label }}
+                                        {{ displayText(materializationView(entry).label) }}
                                     </span>
                                 </div>
                             </template>
                             <p v-if="entry.materializationFormOpen && materializationView(entry).message" class="form-hint form-hint--neutral">
-                                {{ materializationView(entry).message }}
+                                {{ displayText(materializationView(entry).message) }}
                             </p>
                         </div>
 
                         <!-- One notice for the three peer sections below,
                              which then show only what they already found. -->
                         <p v-if="retrievalPeers.length === 0 && (snapshotPeerMaterializationCoordinator || snapshotPeerPossessionCoordinator)" class="form-hint form-hint--neutral">
-                            No peer is connected, so you can't ask peers for this snapshot or whether they have it.
-                            Connect to one from <router-link to="/peers">Peers</router-link>.
+                            <I18nText keypath="publications.noPeerIsConnectedSo"><template #peers><router-link to="/peers">{{ t('publications.peers2') }}</router-link></template></I18nText>
                         </p>
 
                         <!-- The person picks the peer; no ranking and no
@@ -129,11 +126,11 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                         <div v-if="snapshotPeerMaterializationCoordinator && (retrievalPeers.length > 0 || peerMaterializationView(entry).message)" class="evidence-list">
                             <template v-if="retrievalPeers.length > 0">
                                 <label class="form-field">
-                                    <span class="form-label">Peer</span>
+                                    <span class="form-label">{{ t('publications.peer2') }}</span>
                                     <select v-model="entry.peerMaterializationSelectedPeerId" class="form-input">
-                                        <option value="" disabled>Choose an authenticated peer…</option>
+                                        <option value="" disabled>{{ t('publications.chooseAnAuthenticatedPeer') }}</option>
                                         <option v-for="peer in retrievalPeerOptions" :key="peer.connectionId" :value="peer.connectionId">
-                                            {{ retrievalPeerLabel(peer) }}
+                                            {{ displayText(retrievalPeerLabel(peer)) }}
                                         </option>
                                     </select>
                                 </label>
@@ -141,15 +138,15 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                                     <button class="action-btn action-btn--secondary"
                                             :disabled="peerMaterializationView(entry).requesting || !entry.peerMaterializationSelectedPeerId"
                                             @click="requestSnapshotFromPeer(entry)">
-                                        {{ peerMaterializationButtonLabel(entry) }}
+                                        {{ displayText(peerMaterializationButtonLabel(entry)) }}
                                     </button>
                                     <span v-if="peerMaterializationView(entry).label" class="peer-badge" :class="peerMaterializationBadgeClass(entry)">
-                                        {{ peerMaterializationView(entry).label }}
+                                        {{ displayText(peerMaterializationView(entry).label) }}
                                     </span>
                                 </div>
                             </template>
                             <p v-if="peerMaterializationView(entry).message" class="form-hint form-hint--neutral">
-                                {{ peerMaterializationView(entry).message }}
+                                {{ displayText(peerMaterializationView(entry).message) }}
                             </p>
                         </div>
 
@@ -157,14 +154,14 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                              asking it for them; a check never transfers
                              anything. -->
                         <div v-if="snapshotPeerPossessionCoordinator && (retrievalPeers.length > 0 || peerPossessionView(entry).message)" class="evidence-list">
-                            <span class="evidence-convergence-title">Peer Snapshot Possession <span class="experimental-badge">Experimental</span></span>
+                            <span class="evidence-convergence-title">{{ t('publications.peerSnapshotPossession') }} <span class="experimental-badge">{{ t('publications.experimental3') }}</span></span>
                             <template v-if="retrievalPeers.length > 0">
                                 <label class="form-field">
-                                    <span class="form-label">Peer</span>
+                                    <span class="form-label">{{ t('publications.peer2') }}</span>
                                     <select v-model="entry.peerPossessionSelectedPeerId" class="form-input">
-                                        <option value="" disabled>Choose an authenticated peer…</option>
+                                        <option value="" disabled>{{ t('publications.chooseAnAuthenticatedPeer') }}</option>
                                         <option v-for="peer in retrievalPeerOptions" :key="peer.connectionId" :value="peer.connectionId">
-                                            {{ retrievalPeerLabel(peer) }}
+                                            {{ displayText(retrievalPeerLabel(peer)) }}
                                         </option>
                                     </select>
                                 </label>
@@ -172,25 +169,25 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                                     <button class="action-btn action-btn--secondary"
                                             :disabled="peerPossessionView(entry).checking || !entry.peerPossessionSelectedPeerId"
                                             @click="checkSnapshotPossessionWithPeer(entry)">
-                                        {{ peerPossessionButtonLabel(entry) }}
+                                        {{ displayText(peerPossessionButtonLabel(entry)) }}
                                     </button>
                                     <span v-if="peerPossessionView(entry).label" class="peer-badge" :class="peerPossessionBadgeClass(entry)">
-                                        {{ peerPossessionView(entry).label }}
+                                        {{ displayText(peerPossessionView(entry).label) }}
                                     </span>
                                 </div>
                             </template>
                             <p v-if="peerPossessionView(entry).message" class="form-hint form-hint--neutral">
-                                {{ peerPossessionView(entry).message }}
+                                {{ displayText(peerPossessionView(entry).message) }}
                             </p>
                             <p v-if="peerPossessionView(entry).observedAt" class="form-hint form-hint--neutral">
-                                Observed: {{ formatWhen(peerPossessionView(entry).observedAt) }}
+                                {{ t('publications.observedColon', { when: formatWhen(peerPossessionView(entry).observedAt) }) }}
                             </p>
                         </div>
 
                         <!-- Several peers at once, with a history; reports what
                              each peer said, never ranks them. -->
                         <div v-if="snapshotPeerPossessionCoordinator && (retrievalPeers.length > 0 || peerPossessionComparisonView(entry).peers.length > 0 || peerPossessionObservationDetailsView(entry).count > 0)" class="evidence-list">
-                            <span class="evidence-convergence-title">Peer Snapshot Possession Comparison <span class="experimental-badge">Experimental</span></span>
+                            <span class="evidence-convergence-title">{{ t('publications.peerSnapshotPossessionComparison') }} <span class="experimental-badge">{{ t('publications.experimental3') }}</span></span>
                             <template v-if="retrievalPeers.length > 0">
                                 <ul class="replica-knowledge-claim-list">
                                     <li v-for="peer in retrievalPeers" :key="peer.connectionId" class="replica-knowledge-claim">
@@ -198,7 +195,7 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                                             <input type="checkbox"
                                                    :checked="entry.peerPossessionCompareSelectedPeerIds.includes(peer.connectionId)"
                                                    @change="togglePeerPossessionCompareSelection(entry, peer.connectionId)">
-                                            {{ peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : 'Unknown peer') }}
+                                            {{ peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : t('publications.unknownPeer')) }}
                                         </label>
                                     </li>
                                 </ul>
@@ -206,34 +203,32 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                                     <button class="action-btn action-btn--secondary"
                                             :disabled="entry.peerPossessionComparisonChecking || entry.peerPossessionCompareSelectedPeerIds.length === 0"
                                             @click="checkSnapshotPossessionWithSelectedPeers(entry)">
-                                        {{ entry.peerPossessionComparisonChecking ? 'Checking…' : (peerPossessionObservationHistoryView(entry).count > 0 ? 'Check Selected Peers Again' : 'Check Selected Peers') }}
+                                        {{ entry.peerPossessionComparisonChecking ? t('publications.checking') : (peerPossessionObservationHistoryView(entry).count > 0 ? t('publications.checkSelectedPeersAgain') : t('publications.checkSelectedPeers')) }}
                                     </button>
                                 </div>
                             </template>
 
                             <div v-if="peerPossessionComparisonView(entry).peers.length > 0">
                                 <p class="form-hint form-hint--neutral">
-                                    {{ peerPossessionComparisonView(entry).availableCount }} available ·
-                                    {{ peerPossessionComparisonView(entry).notAvailableCount }} not available ·
-                                    {{ peerPossessionComparisonView(entry).unavailableCount }} could not determine
+                                    {{ t('publications.possessionCounts', { available: peerPossessionComparisonView(entry).availableCount, notAvailable: peerPossessionComparisonView(entry).notAvailableCount, unknown: peerPossessionComparisonView(entry).unavailableCount }) }}
                                 </p>
                                 <ul class="replica-knowledge-claim-list">
                                     <li v-for="peerRow in peerPossessionComparisonView(entry).peers" :key="peerRow.peerId" class="replica-knowledge-claim">
                                         <dl class="evidence-fields">
                                             <div class="evidence-field">
-                                                <dt>Peer</dt>
-                                                <dd>{{ peerPossessionRowLabel(peerRow.peerId) }}</dd>
+                                                <dt>{{ t('publications.peer2') }}</dt>
+                                                <dd>{{ displayText(peerPossessionRowLabel(peerRow.peerId)) }}</dd>
                                             </div>
                                             <div class="evidence-field">
-                                                <dt>Reports</dt>
+                                                <dt>{{ t('publications.reports') }}</dt>
                                                 <dd>
                                                     <span class="peer-badge" :class="peerPossessionComparisonRowBadgeClass(peerRow)">
-                                                        {{ peerPossessionComparisonRowLabel(peerRow) }}
+                                                        {{ displayText(peerPossessionComparisonRowLabel(peerRow)) }}
                                                     </span>
                                                 </dd>
                                             </div>
                                             <div class="evidence-field">
-                                                <dt>Observed</dt>
+                                                <dt>{{ t('publications.observed2') }}</dt>
                                                 <dd>{{ formatWhen(peerRow.observedAt) }}</dd>
                                             </div>
                                         </dl>
@@ -244,14 +239,14 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                                             <button class="action-btn action-btn--secondary"
                                                     :disabled="comparisonPeerMaterializationView(entry, peerRow.peerId).requesting"
                                                     @click="materializeFromComparisonPeer(entry, peerRow.peerId)">
-                                                {{ comparisonPeerMaterializationButtonLabel(entry, peerRow) }}
+                                                {{ displayText(comparisonPeerMaterializationButtonLabel(entry, peerRow)) }}
                                             </button>
                                             <span v-if="comparisonPeerMaterializationView(entry, peerRow.peerId).label"
                                                   class="peer-badge" :class="comparisonPeerMaterializationBadgeClass(entry, peerRow.peerId)">
-                                                {{ comparisonPeerMaterializationView(entry, peerRow.peerId).label }}
+                                                {{ displayText(comparisonPeerMaterializationView(entry, peerRow.peerId).label) }}
                                             </span>
                                             <p v-if="comparisonPeerMaterializationView(entry, peerRow.peerId).message" class="form-hint form-hint--neutral">
-                                                {{ comparisonPeerMaterializationView(entry, peerRow.peerId).message }}
+                                                {{ displayText(comparisonPeerMaterializationView(entry, peerRow.peerId).message) }}
                                             </p>
                                         </template>
                                     </li>
@@ -262,25 +257,25 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                                  narration, never a ranking. -->
                             <div v-if="peerPossessionObservationDetailsView(entry).count > 0">
                                 <button class="action-btn action-btn--secondary" @click="togglePeerPossessionComparisonHistory(entry)">
-                                    {{ entry.peerPossessionComparisonHistoryExpanded ? 'Hide Observation History' : 'Show Observation History' }}
+                                    {{ entry.peerPossessionComparisonHistoryExpanded ? t('publications.hideObservationHistory') : t('publications.showObservationHistory') }}
                                 </button>
                                 <div v-if="entry.peerPossessionComparisonHistoryExpanded">
                                     <ul class="replica-knowledge-claim-list">
                                         <li v-for="(item, index) in peerPossessionObservationDetailsView(entry).entries" :key="index" class="replica-knowledge-claim">
                                             <button class="action-btn action-btn--secondary" @click="togglePeerPossessionObservationHistoryEntry(entry, index)">
-                                                {{ formatWhen(item.observedAt) }} — {{ peerPossessionRowLabel(item.peerId) }} → {{ item.stateShortLabel }}
+                                                {{ formatWhen(item.observedAt) }} — {{ displayText(peerPossessionRowLabel(item.peerId)) }} → {{ displayText(item.stateShortLabel) }}
                                             </button>
                                             <dl v-if="isPeerPossessionObservationHistoryEntryExpanded(entry, index)" class="evidence-fields">
                                                 <div class="evidence-field">
-                                                    <dt>Reported</dt>
-                                                    <dd>{{ item.stateLabel }}</dd>
+                                                    <dt>{{ t('publications.reported') }}</dt>
+                                                    <dd>{{ displayText(item.stateLabel) }}</dd>
                                                 </div>
                                                 <div class="evidence-field">
-                                                    <dt>Publication</dt>
+                                                    <dt>{{ t('publications.publication5') }}</dt>
                                                     <dd>{{ item.publicationId }}</dd>
                                                 </div>
                                                 <div class="evidence-field">
-                                                    <dt>Content hash</dt>
+                                                    <dt>{{ t('publications.contentHash8') }}</dt>
                                                     <dd>{{ item.contentHash }}</dd>
                                                 </div>
                                             </dl>
@@ -295,50 +290,48 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                          verdict; each hides until observed. -->
                     <div v-if="localSnapshotAvailabilityView(entry).checked || snapshotAcquisitionOutcomeCountsSentence(entry) || entry.placementConvergenceView || peerPossessionComparisonView(entry).peers.length > 0"
                          class="decentralization-summary">
-                        <span class="evidence-convergence-title">Snapshot State <span class="experimental-badge">Experimental</span></span>
+                        <span class="evidence-convergence-title">{{ t('publications.snapshotState') }} <span class="experimental-badge">{{ t('publications.experimental3') }}</span></span>
 
                         <div class="evidence-list">
-                            <span class="evidence-convergence-title">Content</span>
+                            <span class="evidence-convergence-title">{{ t('publications.content2') }}</span>
                             <dl class="evidence-fields">
                                 <div class="evidence-field">
-                                    <dt>Publication</dt>
+                                    <dt>{{ t('publications.publication5') }}</dt>
                                     <dd>{{ entry.publication.id }}</dd>
                                 </div>
                                 <div class="evidence-field">
-                                    <dt>Content hash</dt>
+                                    <dt>{{ t('publications.contentHash8') }}</dt>
                                     <dd>{{ entry.publication.contentReference.hash }}</dd>
                                 </div>
                             </dl>
                         </div>
 
                         <div class="evidence-list">
-                            <span class="evidence-convergence-title">Local possession</span>
+                            <span class="evidence-convergence-title">{{ t('publications.localPossession') }}</span>
                             <p class="form-hint form-hint--neutral">
-                                {{ localSnapshotAvailabilityView(entry).checked ? localSnapshotAvailabilityView(entry).message : 'Not yet checked.' }}
+                                {{ localSnapshotAvailabilityView(entry).checked ? localSnapshotAvailabilityView(entry).message : t('publications.notYetChecked') }}
                             </p>
                         </div>
 
                         <div v-if="snapshotAcquisitionOutcomeCountsSentence(entry)" class="evidence-list">
-                            <span class="evidence-convergence-title">Acquisition</span>
-                            <p class="form-hint form-hint--neutral">{{ snapshotAcquisitionOutcomeCountsSentence(entry) }}</p>
+                            <span class="evidence-convergence-title">{{ t('publications.acquisition4') }}</span>
+                            <p class="form-hint form-hint--neutral">{{ displayText(snapshotAcquisitionOutcomeCountsSentence(entry)) }}</p>
                         </div>
 
                         <div v-if="entry.placementConvergenceView" class="evidence-list">
-                            <span class="evidence-convergence-title">Placements</span>
+                            <span class="evidence-convergence-title">{{ t('publications.placements2') }}</span>
                             <p class="form-hint form-hint--neutral">
-                                {{ snapshotStatePlacementRelationshipLabel(snapshotStateInspectionView(entry)) }} ·
-                                {{ entry.placementConvergenceView.placementCount }} known placement{{ entry.placementConvergenceView.placementCount === 1 ? '' : 's' }} ·
-                                {{ entry.placementConvergenceView.storageTypeCount }} storage backend{{ entry.placementConvergenceView.storageTypeCount === 1 ? '' : 's' }} ·
-                                {{ entry.placementConvergenceView.locatorCount }} distinct location{{ entry.placementConvergenceView.locatorCount === 1 ? '' : 's' }}
+                                {{ displayText(snapshotStatePlacementRelationshipLabel(snapshotStateInspectionView(entry))) }} ·
+                                {{ t('publications.knownPlacementsPlural', { count: entry.placementConvergenceView.placementCount }) }} ·
+                                {{ t('publications.storageBackends', { count: entry.placementConvergenceView.storageTypeCount }) }} ·
+                                {{ t('publications.distinctLocations', { count: entry.placementConvergenceView.locatorCount }) }}
                             </p>
                         </div>
 
                         <div v-if="peerPossessionComparisonView(entry).peers.length > 0" class="evidence-list">
-                            <span class="evidence-convergence-title">Peer observations</span>
+                            <span class="evidence-convergence-title">{{ t('publications.peerObservations') }}</span>
                             <p class="form-hint form-hint--neutral">
-                                {{ peerPossessionComparisonView(entry).availableCount }} available ·
-                                {{ peerPossessionComparisonView(entry).notAvailableCount }} not available ·
-                                {{ peerPossessionComparisonView(entry).unavailableCount }} could not determine
+                                {{ t('publications.possessionCounts', { available: peerPossessionComparisonView(entry).availableCount, notAvailable: peerPossessionComparisonView(entry).notAvailableCount, unknown: peerPossessionComparisonView(entry).unavailableCount }) }}
                             </p>
                         </div>
                     </div>

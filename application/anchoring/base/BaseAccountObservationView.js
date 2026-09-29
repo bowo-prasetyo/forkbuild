@@ -1,9 +1,10 @@
 import { BaseNetworkObservationState } from './BaseNetworkObservationState.js';
+import { message } from '../../../core/Message.js';
 
 const STATE_LABELS = {
-    [BaseNetworkObservationState.OBSERVED]: 'Base account observed',
-    [BaseNetworkObservationState.CHAIN_MISMATCH]: 'Connected network is not Base',
-    [BaseNetworkObservationState.UNAVAILABLE]: 'Base account unavailable'
+    [BaseNetworkObservationState.OBSERVED]: message('baseAccountObservation.baseAccountObserved'),
+    [BaseNetworkObservationState.CHAIN_MISMATCH]: message('baseAccountObservation.connectedNetworkIsNotBase'),
+    [BaseNetworkObservationState.UNAVAILABLE]: message('baseAccountObservation.baseAccountUnavailable')
 };
 
 // 0.8.90 — Explicit Base Network & Account Observation.

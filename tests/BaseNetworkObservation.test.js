@@ -13,6 +13,7 @@ import { BlockchainPublicationIdentity } from '../application/anchoring/Blockcha
 import { BitcoinAnchorPublicationRecord } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js';
 import { BitcoinWalletConnection } from '../anchoring/BitcoinWalletConnection.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.90 — Explicit Base Network & Account Observation.
 //
@@ -174,7 +175,7 @@ async function run() {
 
         const unreachable = new BaseJsonRpcClient({ fetchImpl: fakeBaseRpcFetch({ throwFor: 'eth_chainId' }) });
         const unreachableResult = await unreachable.fetchChainId();
-        assert(unreachableResult.available === false && typeof unreachableResult.reason === 'string', '39. a throwing transport is reported as unavailable, never thrown onward');
+        assert(unreachableResult.available === false && typeof displayText(unreachableResult.reason) === 'string', '39. a throwing transport is reported as unavailable, never thrown onward');
 
         const badStatus = new BaseJsonRpcClient({ fetchImpl: fakeBaseRpcFetch({ statusFor: 'eth_chainId' }) });
         assert((await badStatus.fetchChainId()).available === false, '40. a non-2xx HTTP status is reported as unavailable');
@@ -287,9 +288,9 @@ async function run() {
     // Section F — label vocabularies and describe*() views.
     // ---------------------------------------------------------------
     {
-        assert(describeBaseAccountObservationStateLabel(BaseNetworkObservationState.OBSERVED) === 'Base account observed', '70. OBSERVED label');
-        assert(describeBaseAccountObservationStateLabel(BaseNetworkObservationState.CHAIN_MISMATCH) === 'Connected network is not Base', '71. CHAIN_MISMATCH label');
-        assert(describeBaseAccountObservationStateLabel(BaseNetworkObservationState.UNAVAILABLE) === 'Base account unavailable', '72. UNAVAILABLE label');
+        assert(displayText(describeBaseAccountObservationStateLabel(BaseNetworkObservationState.OBSERVED)) === 'Base account observed', '70. OBSERVED label');
+        assert(displayText(describeBaseAccountObservationStateLabel(BaseNetworkObservationState.CHAIN_MISMATCH)) === 'Connected network is not Base', '71. CHAIN_MISMATCH label');
+        assert(displayText(describeBaseAccountObservationStateLabel(BaseNetworkObservationState.UNAVAILABLE)) === 'Base account unavailable', '72. UNAVAILABLE label');
         assert(describeBaseAccountObservationStateLabel('not-a-real-state') === null, '73. an unrecognized state names nothing');
 
         const observation = new BaseAccountObservation({
@@ -305,8 +306,8 @@ async function run() {
         }
         assert(describeBaseAccountObservation(null).state === null, '77. describeBaseAccountObservation(null) degrades gracefully rather than throwing');
 
-        assert(describeBaseWalletConnectionStateLabel(BaseWalletConnectionState.CONNECTED) === 'Connected', '78. CONNECTED label');
-        assert(describeBaseWalletConnectionStateLabel(BaseWalletConnectionState.UNAVAILABLE) === 'Wallet unavailable', '79. UNAVAILABLE label');
+        assert(displayText(describeBaseWalletConnectionStateLabel(BaseWalletConnectionState.CONNECTED)) === 'Connected', '78. CONNECTED label');
+        assert(displayText(describeBaseWalletConnectionStateLabel(BaseWalletConnectionState.UNAVAILABLE)) === 'Wallet unavailable', '79. UNAVAILABLE label');
 
         const connectionAdapter = new BaseInjectedProviderWalletAdapter({ injectedProvider: fakeEip1193Provider({ account: ALICE_ADDRESS }) });
         const connection = new BaseWalletConnection({ provider: connectionAdapter });
@@ -395,10 +396,10 @@ async function run() {
         assert(observation.state === BaseNetworkObservationState.CHAIN_MISMATCH, '90. Ethereum mainnet (a real, reachable, EVM-compatible chain) is never mistaken for Base');
         assert(observation.network === null, '91. no network label of any kind is assigned to the mismatch');
         assert(observation.chainId === 1, '92. the actually-observed chain id (1) is preserved, never discarded or replaced with a Base default');
-        assert(typeof observation.reason === 'string' && observation.reason.includes('1'), '93. the mismatch reason names the actual chain id observed, for a person to act on');
+        assert(typeof displayText(observation.reason) === 'string' && displayText(observation.reason).includes('1'), '93. the mismatch reason names the actual chain id observed, for a person to act on');
 
         const view = describeBaseAccountObservation(observation);
-        assert(view.stateLabel === 'Connected network is not Base', '94. the UI-facing label for a mismatch is an honest sentence, never "Base account observed"');
+        assert(displayText(view.stateLabel) === 'Connected network is not Base', '94. the UI-facing label for a mismatch is an honest sentence, never "Base account observed"');
     }
     console.log('✓ Section H: a real, reachable, non-Base EVM chain is reported as a mismatch, never inferred to be Base by resemblance');
 

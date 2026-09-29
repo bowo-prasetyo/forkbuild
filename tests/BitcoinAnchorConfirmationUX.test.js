@@ -23,6 +23,7 @@ import { describeBitcoinAnchorConfirmationObservationHistoryDetails } from '../a
 import { BitcoinAnchorProofReconciliationView } from '../application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js';
 import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
 //
@@ -545,7 +546,7 @@ async function run() {
 
         const detailed = describeBitcoinAnchorConfirmationObservationHistoryDetails(history);
         assert(detailed.count === 3, '16. the detail view narrates all three entries');
-        assert(detailed.entries[0].stateShortLabel === 'Not confirmed' && detailed.entries[1].stateShortLabel === 'Confirmed' && detailed.entries[2].stateShortLabel === 'Confirmed',
+        assert(displayText(detailed.entries[0].stateShortLabel) === 'Not confirmed' && displayText(detailed.entries[1].stateShortLabel) === 'Confirmed' && displayText(detailed.entries[2].stateShortLabel) === 'Confirmed',
             '17. the detail view\'s short labels match each entry\'s own real state, oldest first');
     }
     console.log('✓ Section A (FLAGSHIP): fund -> construct -> review -> connect -> sign -> finalize -> broadcast -> observe (NOT_CONFIRMED) -> observe (CONFIRMED, 1) -> observe (CONFIRMED, 6), with a three-entry, never-rewritten history bound to the real broadcast txid throughout, and no automatic observation on broadcast');

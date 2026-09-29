@@ -1,5 +1,6 @@
 import { SnapshotPeerPossessionState } from './SnapshotPeerPossessionState.js';
 import { isPeerSnapshotPossessed } from './SnapshotPeerPossessionObservation.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.41 — Peer Snapshot Possession Comparison & Observation History.
 //
@@ -70,9 +71,9 @@ export function describeSnapshotPeerPossessionComparison(publicationId, contentH
 // collapsing "the peer said no" into "nothing came back."
 export function describeSnapshotPeerPossessionStateLabel(state) {
     switch (state) {
-        case SnapshotPeerPossessionState.AVAILABLE: return 'Available';
-        case SnapshotPeerPossessionState.NOT_AVAILABLE: return 'Not available';
-        case SnapshotPeerPossessionState.UNAVAILABLE: return 'Could not determine';
+        case SnapshotPeerPossessionState.AVAILABLE: return message('snapshotPeerPossessionComparison.available');
+        case SnapshotPeerPossessionState.NOT_AVAILABLE: return message('snapshotPeerPossessionComparison.notAvailable');
+        case SnapshotPeerPossessionState.UNAVAILABLE: return message('snapshotPeerPossessionComparison.couldNotDetermine');
         default: return null;
     }
 }

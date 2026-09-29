@@ -8,6 +8,7 @@ import {
     describeIpfsPublicationObservationTimeline
 } from '../application/ipfs/IpfsPublicationObservationTimelineView.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.73 — IPFS Publication Observation Timeline.
 //
@@ -185,7 +186,7 @@ async function run() {
         const verificationEntries = timeline.entries.filter((e) => e.kind === IpfsPublicationObservationTimelineEntryKind.CONTENT_VERIFICATION);
         const publicationEntries = timeline.entries.filter((e) => e.kind === IpfsPublicationObservationTimelineEntryKind.PUBLICATION);
         assert(verificationEntries.length === 3 && publicationEntries.length === 2, '16. publication and verification entries are cleanly separable by kind');
-        assert(verificationEntries.every((e) => typeof e.label === 'string' && e.label.includes(`#${e.recordIndex}`)), '17. every verification entry\'s own label names its own publication record\'s index');
+        assert(verificationEntries.every((e) => typeof displayText(e.label) === 'string' && displayText(e.label).includes(`#${e.recordIndex}`)), '17. every verification entry\'s own label names its own publication record\'s index');
 
         // Two different records sharing the identical contentHash — a
         // HASH_MATCH for one must never be mistakable for a HASH_MATCH on
@@ -214,7 +215,7 @@ async function run() {
     {
         const timeline = describeIpfsPublicationObservationTimeline(publicationHistory, verificationHistoriesByIndex);
         const unavailableEntry = timeline.entries.find((e) => e.state === IpfsPublicationContentVerificationState.UNAVAILABLE);
-        assert(unavailableEntry.reason === 'gateway timed out', '20. an UNAVAILABLE entry\'s own reason survives projection unchanged');
+        assert(displayText(unavailableEntry.reason) === 'gateway timed out', '20. an UNAVAILABLE entry\'s own reason survives projection unchanged');
         const publicationEntry0 = timeline.entries.find((e) => e.kind === IpfsPublicationObservationTimelineEntryKind.PUBLICATION && e.recordIndex === 0);
         assert(publicationEntry0.contentHash === HASH_A, '21. a publication entry\'s own contentHash survives projection unchanged');
         assert(publicationEntry0.observedAt.getTime() === new Date('2026-08-27T10:00:00Z').getTime(), '22. a publication entry\'s own observedAt is exactly its record\'s own publishedAt');

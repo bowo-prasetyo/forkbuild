@@ -3,6 +3,7 @@ import { describeBaseAnchorPublicationObservations } from './BaseAnchorPublicati
 import { describeBaseTransactionInclusionObservationHistory } from './BaseTransactionInclusionObservationView.js';
 import { PublicationObservationArchive } from '../../publication/observationArchive/PublicationObservationArchive.js';
 import { findBaseAnchorPublicationRecordByTxid } from './BaseAnchorPublicationRecordHistory.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.101 — Base Anchor Publication Lifecycle Timeline.
 //
@@ -158,7 +159,7 @@ function publicationEntry(publicationRecord) {
         observedAt: publicationRecord.createdAt,
         txid: publicationRecord.txid,
         index: null,
-        label: 'Publication record created',
+        label: message('baseAnchorPublicationLifecycleTimeline.publicationRecordCreated'),
         contentHash: publicationRecord.contentHash,
         network: publicationRecord.network
     });
@@ -172,7 +173,7 @@ function inclusionObservationEntries(txid, describedObservationHistory) {
             observedAt: entry.observedAt,
             txid,
             index: i + 1,
-            label: `Inclusion observation #${i + 1}`,
+            label: message('baseAnchorPublicationLifecycleTimeline.inclusionObservation', { number: i + 1 }),
             state: entry.state,
             stateLabel: entry.stateLabel,
             stateShortLabel: entry.stateShortLabel,

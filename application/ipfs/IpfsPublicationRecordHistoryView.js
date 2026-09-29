@@ -1,8 +1,9 @@
 import { IpfsPublicationMethod } from './IpfsPublicationRecord.js';
+import { message } from '../../core/Message.js';
 
 const PUBLICATION_METHOD_LABELS = {
-    [IpfsPublicationMethod.KUBO]: 'Local IPFS node (Kubo)',
-    [IpfsPublicationMethod.REMOTE_PINNING]: 'Remote pinning provider'
+    [IpfsPublicationMethod.KUBO]: message('ipfsPublicationRecordHistory.localIpfsNodeKubo'),
+    [IpfsPublicationMethod.REMOTE_PINNING]: message('ipfsPublicationRecordHistory.remotePinningProvider')
 };
 
 // 0.8.71 — IPFS Publication Record History & Inspection.

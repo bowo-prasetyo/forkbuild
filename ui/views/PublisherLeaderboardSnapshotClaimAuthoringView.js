@@ -3,6 +3,8 @@ import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../../applicatio
 import { exportPublisherLeaderboardSnapshotClaim } from '../../application/leaderboard/snapshot/ClaimExchange.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
+import { t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
 // 0.9.411 — Publisher Leaderboard Snapshot Claim Authoring & Export.
 //
@@ -106,6 +108,7 @@ import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityI
 // complete roster.
 export default {
     name: 'PublisherLeaderboardSnapshotClaimAuthoringView',
+    components: { I18nText },
     inject: {
         // The SAME app-wide IdentityUseCase every other injecting
         // component (`ui/components/PublicationCard.js`,
@@ -179,6 +182,7 @@ export default {
         }
     },
     methods: {
+        t,
         // The ONE explicit action that ever creates or signs a claim —
         // see this file's own header, "Create/sign and export are two
         // separate, explicit actions." Constructs the use case fresh on
@@ -242,65 +246,58 @@ export default {
     },
     template: `
         <section class="publisher-leaderboard-snapshot-claim-authoring-view">
-            <h1>Publisher Snapshot Claim</h1>
+            <h1>{{ t('publisherLeaderboardSnapshotClaimAuthoringView.publisherSnapshotClaim') }}</h1>
             <p class="reconciliation-leaderboard-note">
-                Author and export a signed claim about YOUR OWN replica's current
-                leaderboard snapshot — the exact evidence artifact the
-                Reconciliation Workspace's own "Peer Evidence" field asks a peer
-                to paste. Generating, signing, and exporting are three separate,
-                explicit actions; nothing on this page runs automatically.
+                {{ t('publisherLeaderboardSnapshotClaimAuthoringView.authorAndExportASigned') }}
             </p>
 
             <p v-if="!signedIn" class="form-hint form-hint--neutral">
-                Sign in to an identity before generating a claim —
-                <router-link to="/identity">My Identities</router-link>.
+                <I18nText keypath="publisherLeaderboardSnapshotClaimAuthoringView.signInToAnIdentity">
+                    <template #identities><router-link to="/identity">{{ t('publisherLeaderboardSnapshotClaimAuthoringView.myIdentities') }}</router-link></template>
+                </I18nText>
             </p>
 
             <div class="evidence-inspection-adapter">
-                <span class="evidence-inspection-adapter-title">Snapshot Claim</span>
+                <span class="evidence-inspection-adapter-title">{{ t('publisherLeaderboardSnapshotClaimAuthoringView.snapshotClaim') }}</span>
                 <p class="form-hint form-hint--neutral">
-                    Generating computes this replica's own current leaderboard
-                    snapshot fresh, right now, from its own recorded evidence,
-                    and signs a claim about EXACTLY that snapshot under your
-                    own currently signed-in identity.
+                    {{ t('publisherLeaderboardSnapshotClaimAuthoringView.generatingComputesThisReplicaS') }}
                 </p>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--primary" @click="generateAndSignClaim">
-                        Generate &amp; Sign Claim
+                        {{ t('publisherLeaderboardSnapshotClaimAuthoringView.generateSignClaim') }}
                     </button>
                     <button type="button" class="action-btn action-btn--secondary" v-if="claimCreated || error" @click="startOver">
-                        Start Over
+                        {{ t('publisherLeaderboardSnapshotClaimAuthoringView.startOver') }}
                     </button>
                 </div>
 
                 <p v-if="error" class="identity-unlock-error">{{ error }}</p>
 
                 <div v-if="claimCreated" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Claim Created</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publisherLeaderboardSnapshotClaimAuthoringView.claimCreated') }}</span>
                     <p class="form-hint form-hint--neutral">
-                        Claim created successfully — signed by {{ claim.signerIdentityId }}.
+                        {{ t('publisherLeaderboardSnapshotClaimAuthoringView.claimCreatedSuccessfullySignedBy', { signer: claim.signerIdentityId }) }}
                     </p>
                     <dl class="identity-claim-fields">
-                        <dt>Evidence fingerprint</dt><dd>{{ claim.evidenceFingerprint }}</dd>
-                        <dt>Policy version</dt><dd>{{ claim.policyVersion }}</dd>
-                        <dt>Snapshot fingerprint</dt><dd>{{ claim.snapshotFingerprint }}</dd>
+                        <dt>{{ t('publisherLeaderboardSnapshotClaimAuthoringView.evidenceFingerprint') }}</dt><dd>{{ claim.evidenceFingerprint }}</dd>
+                        <dt>{{ t('publisherLeaderboardSnapshotClaimAuthoringView.policyVersion') }}</dt><dd>{{ claim.policyVersion }}</dd>
+                        <dt>{{ t('publisherLeaderboardSnapshotClaimAuthoringView.snapshotFingerprint') }}</dt><dd>{{ claim.snapshotFingerprint }}</dd>
                     </dl>
                     <div class="identity-mgmt-actions">
                         <button type="button" class="action-btn action-btn--secondary" @click="exportClaim">
-                            Export Claim
+                            {{ t('publisherLeaderboardSnapshotClaimAuthoringView.exportClaim') }}
                         </button>
                     </div>
                 </div>
 
                 <div v-if="exported" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Exported Claim</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publisherLeaderboardSnapshotClaimAuthoringView.exportedClaim') }}</span>
                     <p class="form-hint form-hint--neutral">
-                        Paste this into a peer's Reconciliation Workspace "Peer
-                        Evidence" field, or send them the downloaded file.
+                        {{ t('publisherLeaderboardSnapshotClaimAuthoringView.pasteThisIntoAPeer') }}
                     </p>
                     <textarea class="form-input identity-export-json" rows="8" readonly :value="exportedClaimPackage.json"></textarea>
                     <div class="identity-mgmt-actions">
-                        <a class="modal-btn modal-btn--primary" :href="exportedClaimPackage.downloadHref" :download="exportedClaimPackage.fileName">Download Claim</a>
+                        <a class="modal-btn modal-btn--primary" :href="exportedClaimPackage.downloadHref" :download="exportedClaimPackage.fileName">{{ t('publisherLeaderboardSnapshotClaimAuthoringView.downloadClaim') }}</a>
                     </div>
                 </div>
             </div>

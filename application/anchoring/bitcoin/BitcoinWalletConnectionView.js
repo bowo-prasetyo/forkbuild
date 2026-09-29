@@ -1,10 +1,11 @@
 import { BitcoinWalletConnectionState } from './BitcoinWalletConnectionState.js';
+import { message } from '../../../core/Message.js';
 
 const STATE_LABELS = {
-    [BitcoinWalletConnectionState.DISCONNECTED]: 'Disconnected',
-    [BitcoinWalletConnectionState.CONNECTING]: 'Connecting…',
-    [BitcoinWalletConnectionState.CONNECTED]: 'Connected',
-    [BitcoinWalletConnectionState.UNAVAILABLE]: 'Wallet unavailable'
+    [BitcoinWalletConnectionState.DISCONNECTED]: message('bitcoinWalletConnection.disconnected'),
+    [BitcoinWalletConnectionState.CONNECTING]: message('bitcoinWalletConnection.connecting'),
+    [BitcoinWalletConnectionState.CONNECTED]: message('bitcoinWalletConnection.connected'),
+    [BitcoinWalletConnectionState.UNAVAILABLE]: message('bitcoinWalletConnection.walletUnavailable')
 };
 
 // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.

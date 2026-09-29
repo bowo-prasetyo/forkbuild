@@ -12,6 +12,7 @@ import {
     describeIpfsPublicationRecordHistory
 } from '../application/ipfs/IpfsPublicationRecordHistoryView.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.71 — IPFS Publication Record History & Inspection.
 //
@@ -190,8 +191,8 @@ async function run() {
     // Section D — describeIpfsPublicationMethodLabel().
     // ---------------------------------------------------------------
     {
-        assert(describeIpfsPublicationMethodLabel(IpfsPublicationMethod.KUBO) === 'Local IPFS node (Kubo)', '31. KUBO label');
-        assert(describeIpfsPublicationMethodLabel(IpfsPublicationMethod.REMOTE_PINNING) === 'Remote pinning provider', '32. REMOTE_PINNING label');
+        assert(displayText(describeIpfsPublicationMethodLabel(IpfsPublicationMethod.KUBO)) === 'Local IPFS node (Kubo)', '31. KUBO label');
+        assert(displayText(describeIpfsPublicationMethodLabel(IpfsPublicationMethod.REMOTE_PINNING)) === 'Remote pinning provider', '32. REMOTE_PINNING label');
         assert(describeIpfsPublicationMethodLabel('not-a-real-method') === null, '33. an unrecognized method names nothing');
         assert(describeIpfsPublicationMethodLabel(null) === null, '34. no method names nothing');
     }
@@ -207,7 +208,7 @@ async function run() {
         assert(narrated.records[0].contentHash === history[0].contentHash, '37. contentHash is carried through unchanged');
         assert(narrated.records[0].locator === history[0].locator, '38. locator is carried through unchanged');
         assert(narrated.records[0].publishedAt === history[0].publishedAt, '39. publishedAt is carried through unchanged');
-        assert(narrated.records[0].publicationMethodLabel === 'Remote pinning provider', '40. the first entry narrates its own publication method');
+        assert(displayText(narrated.records[0].publicationMethodLabel) === 'Remote pinning provider', '40. the first entry narrates its own publication method');
 
         const empty = describeIpfsPublicationRecordHistory(null);
         assert(empty.count === 0 && empty.records.length === 0, '41. a null history narrates as empty, never throwing');

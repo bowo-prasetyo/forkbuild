@@ -1,12 +1,13 @@
 import { BitcoinAnchorBroadcastState } from './BitcoinAnchorBroadcastState.js';
+import { message } from '../../../core/Message.js';
 
 const STATE_LABELS = {
-    [BitcoinAnchorBroadcastState.IDLE]: 'Not yet broadcast',
-    [BitcoinAnchorBroadcastState.BROADCASTING]: 'Broadcasting transaction…',
-    [BitcoinAnchorBroadcastState.BROADCASTED]: 'Transaction broadcasted',
-    [BitcoinAnchorBroadcastState.REJECTED]: 'Transaction rejected',
-    [BitcoinAnchorBroadcastState.UNAVAILABLE]: 'Broadcast unavailable',
-    [BitcoinAnchorBroadcastState.FAILED]: 'Broadcast failed'
+    [BitcoinAnchorBroadcastState.IDLE]: message('bitcoinAnchorBroadcast.notYetBroadcast'),
+    [BitcoinAnchorBroadcastState.BROADCASTING]: message('bitcoinAnchorBroadcast.broadcastingTransaction'),
+    [BitcoinAnchorBroadcastState.BROADCASTED]: message('bitcoinAnchorBroadcast.transactionBroadcasted'),
+    [BitcoinAnchorBroadcastState.REJECTED]: message('bitcoinAnchorBroadcast.transactionRejected'),
+    [BitcoinAnchorBroadcastState.UNAVAILABLE]: message('bitcoinAnchorBroadcast.broadcastUnavailable'),
+    [BitcoinAnchorBroadcastState.FAILED]: message('bitcoinAnchorBroadcast.broadcastFailed')
 };
 
 // 0.8.64 — Explicit Bitcoin Anchor Broadcast UI.

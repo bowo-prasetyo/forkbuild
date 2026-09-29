@@ -10,6 +10,7 @@ import {
     reconstructDistinctPublisherIdentifiers, reconstructPublisherAssociatedPublications
 } from '../../../application/publisher/PublisherAssociationView.js';
 import { PublisherIdentityRecord } from '../../../application/publisher/PublisherIdentityRecord.js';
+import { t } from '../../i18n/i18n.js';
 
 // Publisher-publication associations: recording which publisher identifier a
 // known publication is associated with, and the per-publisher profile view.
@@ -46,7 +47,7 @@ export function usePublisherAssociations({
         publisherAssociationError.value = '';
         const publicationIdentity = findKnownPublicationIdentity(publisherAssociationPublicationKey.value);
         if (!publisherAssociationPublisherId.value.trim() || !publicationIdentity) {
-            publisherAssociationError.value = 'Type a publisher identifier and choose a publication first.';
+            publisherAssociationError.value = t('publications.typePublisherAndChoose');
             return;
         }
         try {

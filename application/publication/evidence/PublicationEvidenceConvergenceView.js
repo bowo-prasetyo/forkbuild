@@ -1,4 +1,5 @@
 import { ContentBindingSetRelationship } from './ContentBindingSetRelationship.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.13 — Multi-Evidence Comparison & Conflict UX.
 //
@@ -76,7 +77,7 @@ export function publicationEvidenceConvergenceView(convergence) {
 // `hasConflict` itself.
 export function describeContentBindingSetRelationship(hasConflict, groupCount) {
     if (!hasConflict) return null;
-    return `Evidence claims disagree about the content hash — ${groupCount} different content hashes are each claimed by at least one anchor.`;
+    return message('publicationEvidenceConvergence.disagree', { count: groupCount });
 }
 
 // A plain, non-judgmental summary of how many DISTINCT content hashes
@@ -87,6 +88,6 @@ export function describeContentBindingSetRelationship(hasConflict, groupCount) {
 // worth highlighting.
 export function describeContentGroupCount(view) {
     const count = view ? view.contentGroups.length : 0;
-    if (!count) return 'No content binding known';
-    return `${count} distinct content hash${count === 1 ? '' : 'es'} claimed`;
+    if (!count) return message('publicationEvidenceConvergence.noContentBindingKnown');
+    return message('contentBinding.distinctHashesClaimed', { count });
 }

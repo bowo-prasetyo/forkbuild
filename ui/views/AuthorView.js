@@ -5,7 +5,8 @@ import PublicationCatalog from '../components/PublicationCatalog.js';
 import ForkTree from '../components/ForkTree.js';
 import FollowButton from '../components/FollowButton.js';
 import { shortIdentityId } from './following/followedPeople.js';
-import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
+import { computeAmbiguousPublishedDateIds } from '../../core/PublicationDateAmbiguity.js';
+import { publicationDateText } from '../i18n/dateText.js';
 // 0.9.525 — Repository Discovery & Material Trust Product
 // Reassessment, Section G. See application/
 // PublicationAuthorNameIdentityConvergence.js's own header for why this
@@ -18,6 +19,7 @@ import {
     derivePublicationAuthorNameIdentityConvergence,
     describePublicationAuthorNameIdentityConvergence
 } from '../../application/publication/PublicationAuthorNameIdentityConvergence.js';
+import { t } from '../i18n/i18n.js';
 
 // As of 0.2.31, the paginated "Publications" listing above is
 // ui/components/PublicationCatalog.js scoped to this author — the
@@ -96,22 +98,23 @@ export default {
         });
 
         return {
+            t,
             author,
             allPublications,
             signers,
             forkTreeRoots,
             authorNameIdentityNotice,
             preciseDateIds,
-            formatPublicationDate
+            publicationDateText
         };
     },
     template: `
         <section class="author-view">
-            <h1>{{ author || 'Anonymous' }}</h1>
-            <p class="author-stats">{{ allPublications.length }} publication(s)</p>
+            <h1>{{ author || t('authorView.anonymous') }}</h1>
+            <p class="author-stats">{{ t('authorView.publicationCount', { count: allPublications.length }) }}</p>
             <ul v-if="signers.length" class="author-follow-list">
                 <li v-for="signer in signers" :key="signer.identityId" class="author-follow-item">
-                    <span :title="signer.identityId">Signed by {{ signer.shortId }}</span>
+                    <span :title="signer.identityId">{{ t('authorView.signedBy', { signer: signer.shortId }) }}</span>
                     <FollowButton :identity-id="signer.identityId" :name="author || null" />
                 </li>
             </ul>
@@ -122,12 +125,12 @@ export default {
             <PublicationCatalog :author="author" />
 
             <div v-if="forkTreeRoots.length > 0" class="fork-graph-section">
-                <h2>Original Works & Forks</h2>
+                <h2>{{ t('authorView.originalWorksForks') }}</h2>
                 <div v-for="root in forkTreeRoots" :key="root.id" class="fork-tree">
                     <div class="fork-node fork-node--root">
                         <strong>{{ root.title }}</strong>
                         <span class="fork-node-date" v-if="root.publishedAt">
-                            {{ formatPublicationDate(root.publishedAt, preciseDateIds.has(root.id)) }}
+                            {{ publicationDateText(root.publishedAt, preciseDateIds.has(root.id)) }}
                         </span>
                     </div>
                     <ForkTree :publications="allPublications" :root-document-id="root.documentId" :precise-date-ids="preciseDateIds" />

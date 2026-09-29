@@ -1,6 +1,7 @@
 import { ExternalAnchorCreationOutcome } from './ExternalAnchorCreationOutcome.js';
 import { ExternalAnchorCreationUiState } from './ExternalAnchorCreationUiState.js';
 import { RoleProviderResolutionStatus } from '../settings/RoleAwareProviderResolver.js';
+import { message } from '../../core/Message.js';
 
 // 0.8.11 — Explicit External Anchoring UX.
 //
@@ -39,7 +40,7 @@ export function describeCreationAttempt(attempt = null) {
     if (attempt.creating) {
         return {
             state: ExternalAnchorCreationUiState.CREATING,
-            label: 'Creating…', message: null, anchor: null, reason: null
+            label: message('anchorCreation.creating'), message: null, anchor: null, reason: null
         };
     }
 
@@ -55,8 +56,8 @@ export function describeCreationAttempt(attempt = null) {
     if (attempt.error) {
         return {
             state: ExternalAnchorCreationUiState.UNAVAILABLE,
-            label: 'No anchor was created',
-            message: 'This anchor could not be created.',
+            label: message('anchorCreation.noAnchorWasCreated'),
+            message: message('anchorCreation.thisAnchorCouldNotBe'),
             anchor: null, reason: attempt.error
         };
     }
@@ -65,22 +66,22 @@ export function describeCreationAttempt(attempt = null) {
         case ExternalAnchorCreationOutcome.CREATED:
             return {
                 state: ExternalAnchorCreationUiState.CREATED,
-                label: 'Anchor created',
-                message: `${attempt.anchor.anchorType} evidence was recorded for this content hash.`,
+                label: message('anchorCreation.anchorCreated'),
+                message: message('anchorCreation.anchorRecorded', { anchorType: attempt.anchor.anchorType }),
                 anchor: attempt.anchor, reason: null
             };
         case ExternalAnchorCreationOutcome.PUBLISH_REJECTED:
             return {
                 state: ExternalAnchorCreationUiState.REJECTED,
-                label: 'Recording rejected',
-                message: 'The external system rejected the recording request. No anchor was created.',
+                label: message('anchorCreation.recordingRejected'),
+                message: message('anchorCreation.theExternalSystemRejectedThe'),
                 anchor: null, reason: attempt.reason
             };
         case ExternalAnchorCreationOutcome.PUBLISH_UNAVAILABLE:
             return {
                 state: ExternalAnchorCreationUiState.UNAVAILABLE,
-                label: 'No anchor was created',
-                message: 'The external system could not currently be reached. No anchor was created.',
+                label: message('anchorCreation.noAnchorWasCreated'),
+                message: message('anchorCreation.theExternalSystemCouldNot'),
                 anchor: null, reason: attempt.reason
             };
         // Preferred Proof & Anchoring Provider Creation Integration. A
@@ -95,10 +96,10 @@ export function describeCreationAttempt(attempt = null) {
         case RoleProviderResolutionStatus.PROVIDER_NOT_FOUND:
             return {
                 state: ExternalAnchorCreationUiState.PROVIDER_NOT_FOUND,
-                label: 'Preferred provider not found',
+                label: message('anchorCreation.preferredProviderNotFound'),
                 message: attempt.preference
-                    ? `Your preferred Proof/Anchoring provider ('${attempt.preference.providerKey}') is not currently registered on this replica. No anchor was created.`
-                    : 'Your preferred Proof/Anchoring provider is not currently registered on this replica. No anchor was created.',
+                    ? message('anchorCreation.preferredProviderMissing', { providerKey: attempt.preference.providerKey })
+                    : message('anchorCreation.yourPreferredProofAnchoringProvider'),
                 anchor: null, reason: attempt.reason
             };
         default:
@@ -120,6 +121,8 @@ export function describeCreationAttempt(attempt = null) {
 // docs/Principles.md, "External Anchoring Is An Explicit User Action
 // (0.8.11)."
 export function describeCreationButtonLabel(anchorTypeLabel, { creating = false, hasExisting = false } = {}) {
-    if (creating) return 'Creating…';
-    return hasExisting ? `Create Another ${anchorTypeLabel} Anchor` : `Create ${anchorTypeLabel} Anchor`;
+    if (creating) return message('anchorCreation.creating');
+    return hasExisting
+        ? message('anchorCreation.createAnother', { anchorType: anchorTypeLabel })
+        : message('anchorCreation.create', { anchorType: anchorTypeLabel });
 }

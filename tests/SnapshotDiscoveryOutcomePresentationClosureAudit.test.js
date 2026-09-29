@@ -438,7 +438,7 @@ async function runTests() {
         // state is over a LOCAL catalog (attribution/naming claims already
         // known to this replica), not the Snapshot candidate discovery
         // mechanism this milestone scopes — ruled out on the same grounds.
-        const decentralizedPublicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
+        const decentralizedPublicationsSource = withEnglish((await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n'));
         assert(/Nothing cataloged yet\./.test(decentralizedPublicationsSource),
             '48. DecentralizedPublicationsView.js\'s empty state describes a local catalog, unrelated to Snapshot candidate discovery — ruled OUT as a match');
 

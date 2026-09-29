@@ -18,6 +18,7 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.17 — Evidence Provenance & Observation Boundary.
 //
@@ -202,16 +203,16 @@ async function run() {
             const record = createAnchorKnowledgeRecord({ anchorId: 'a', acquisitionKind: kind });
             const view = describeAnchorKnowledge(record);
             assert(view.known === true && view.acquisitionKind === kind, `2. describeAnchorKnowledge() for ${kind} reports known: true and the same kind`);
-            assert(typeof view.acquisitionLabel === 'string' && view.acquisitionLabel.length > 0, `3. describeAnchorKnowledge() for ${kind} produces a non-empty label`);
+            assert(typeof displayText(view.acquisitionLabel) === 'string' && displayText(view.acquisitionLabel).length > 0, `3. describeAnchorKnowledge() for ${kind} produces a non-empty label`);
             assert(!/alice|bob|carol|peer-\w+|identity-\w+/i.test(view.acquisitionLabel), `4. describeAnchorKnowledge() for ${kind} never names a specific peer or identity in its label`);
             assert(!/trust|authorit|verified|confirm|✓/i.test(view.acquisitionLabel), `5. describeAnchorKnowledge() for ${kind} never reads as a trust or verification signal`);
             assert(view.firstSeenAt === record.firstSeenAt.toISOString(), `6. describeAnchorKnowledge() for ${kind} carries firstSeenAt as an ISO string`);
         }
-        assert(describeAnchorKnowledge(createAnchorKnowledgeRecord({ anchorId: 'a', acquisitionKind: AnchorAcquisitionKind.PEER })).acquisitionLabel === 'Learned via peer exchange',
+        assert(displayText(describeAnchorKnowledge(createAnchorKnowledgeRecord({ anchorId: 'a', acquisitionKind: AnchorAcquisitionKind.PEER })).acquisitionLabel) === 'Learned via peer exchange',
             '7. PEER reads exactly "Learned via peer exchange" — never "Source: <peer>"');
-        assert(describeAnchorKnowledge(createAnchorKnowledgeRecord({ anchorId: 'a', acquisitionKind: AnchorAcquisitionKind.LOCAL })).acquisitionLabel === 'Learned locally',
+        assert(displayText(describeAnchorKnowledge(createAnchorKnowledgeRecord({ anchorId: 'a', acquisitionKind: AnchorAcquisitionKind.LOCAL })).acquisitionLabel) === 'Learned locally',
             '8. LOCAL reads exactly "Learned locally"');
-        assert(describeAnchorKnowledge(createAnchorKnowledgeRecord({ anchorId: 'a', acquisitionKind: AnchorAcquisitionKind.PACKAGE })).acquisitionLabel === 'Learned via package import',
+        assert(displayText(describeAnchorKnowledge(createAnchorKnowledgeRecord({ anchorId: 'a', acquisitionKind: AnchorAcquisitionKind.PACKAGE })).acquisitionLabel) === 'Learned via package import',
             '9. PACKAGE reads exactly "Learned via package import"');
     }
     console.log('✓ Section C: PublicationAnchorKnowledgeView#describeAnchorKnowledge() — known/unknown shapes, and wording that never names a peer or reads as trust');

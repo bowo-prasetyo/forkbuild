@@ -209,6 +209,8 @@
 //   versa, when inspecting a pair.** Both are read verbatim off `pairedView`
 //   exactly as 0.8.200's own header already requires of every caller.
 
+import { displayText, t } from '../../i18n/i18n.js';
+
 function isGenuineSection(value) {
     return Boolean(value) && typeof value === 'object';
 }
@@ -275,34 +277,34 @@ function differencesOf(pairedView, key) {
 // functions of the same name — see this file's own header, "A record's
 // own candidate is shown alongside it."
 export function candidateLabel(candidate) {
-    if (!candidate || typeof candidate !== 'object') return 'Unknown candidate';
+    if (!candidate || typeof candidate !== 'object') return t('reconciliation.unknownCandidate');
     if (candidate.type === 'DIVERGENT_CORRESPONDENCE') {
-        return `Claim ${candidate.claimId} ↔ Snapshot #${candidate.snapshotIndex}`;
+        return t('reconciliation.claimAndSnapshot', { claimId: candidate.claimId, snapshotIndex: candidate.snapshotIndex });
     }
     if (candidate.type === 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT') {
-        return `Claim ${candidate.claimId} (no corresponding Snapshot)`;
+        return t('reconciliation.claimWithoutSnapshot', { claimId: candidate.claimId });
     }
     if (candidate.type === 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM') {
-        return `Snapshot #${candidate.snapshotIndex} (no corresponding Claim)`;
+        return t('reconciliation.snapshotWithoutClaim', { snapshotIndex: candidate.snapshotIndex });
     }
-    return 'Unknown candidate';
+    return t('reconciliation.unknownCandidate');
 }
 
 function formatWhen(isoString) {
-    return typeof isoString === 'string' && isoString.length > 0 ? isoString : 'unknown time';
+    return typeof isoString === 'string' && isoString.length > 0 ? isoString : t('reconciliation.unknownTime');
 }
 
 export function decisionRecordLabel(record) {
-    if (!record || typeof record !== 'object') return 'Unknown decision record';
+    if (!record || typeof record !== 'object') return t('reconciliation.unknownDecisionRecord');
     const disposition = typeof record.decision === 'string' ? record.decision : 'UNKNOWN';
-    return `${candidateLabel(record.candidate)} — ${disposition} — decided ${formatWhen(record.decidedAt)}`;
+    return t('reconciliation.decisionRecord', { candidate: candidateLabel(record.candidate), disposition, when: formatWhen(record.decidedAt) });
 }
 
 export function observationRecordLabel(record) {
-    if (!record || typeof record !== 'object') return 'Unknown observation record';
+    if (!record || typeof record !== 'object') return t('reconciliation.unknownObservationRecord');
     const decision = record.decision && typeof record.decision === 'object' ? record.decision : null;
     const disposition = decision && typeof decision.decision === 'string' ? decision.decision : 'UNKNOWN';
-    return `${candidateLabel(record.candidate)} — ${disposition} — observed ${formatWhen(record.observedAt)}`;
+    return t('reconciliation.observationRecord', { candidate: candidateLabel(record.candidate), disposition, when: formatWhen(record.observedAt) });
 }
 
 // pairDifferenceKey() — this component's own local, UI-only "Inspect
@@ -315,6 +317,7 @@ export function observationRecordLabel(record) {
 export function pairDifferenceKey(dimension, index) {
     return `${dimension}:${index}`;
 }
+
 
 export default {
     name: 'ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector',
@@ -371,6 +374,8 @@ export default {
         }
     },
     methods: {
+        t,
+        displayText,
         addDecisionPair() {
             if (!this.canAddDecisionPair) return;
             const source = recordAt(this.decisionPool, this.pendingDecisionSourceKey);
@@ -410,103 +415,101 @@ export default {
     },
     template: `
         <div class="evidence-export-comparison-pairing">
-            <h4 class="evidence-detail-group-title">Explicit Record Pairing</h4>
+            <h4 class="evidence-detail-group-title">{{ t('evidenceExportComparisonRecordPairSelector.explicitRecordPairing') }}</h4>
             <p class="reconciliation-leaderboard-note">
-                Nothing here decides which records correspond — pick a source
-                record and a target record yourself, from either export, in
-                either partition, then add them as an explicit pair.
+                {{ t('evidenceExportComparisonRecordPairSelector.nothingHereDecidesWhichRecords') }}
             </p>
 
             <div class="evidence-pair-selector">
-                <h5>Decision evidence</h5>
+                <h5>{{ t('evidenceExportComparisonRecordPairSelector.decisionEvidence') }}</h5>
                 <div class="evidence-pair-selector-controls">
                     <label class="form-field">
-                        <span class="form-label">Source record</span>
+                        <span class="form-label">{{ t('evidenceExportComparisonRecordPairSelector.sourceRecord') }}</span>
                         <select class="form-input" v-model="pendingDecisionSourceKey">
-                            <option value="">Select a source record…</option>
+                            <option value="">{{ t('evidenceExportComparisonRecordPairSelector.selectASourceRecord') }}</option>
                             <option v-for="entry in decisionPool" :key="'dps-' + entry.key" :value="entry.key">
-                                {{ decisionRecordLabel(entry.record) }} ({{ entry.section }})
+                                {{ displayText(decisionRecordLabel(entry.record)) }} ({{ entry.section }})
                             </option>
                         </select>
                     </label>
                     <label class="form-field">
-                        <span class="form-label">Target record</span>
+                        <span class="form-label">{{ t('evidenceExportComparisonRecordPairSelector.targetRecord') }}</span>
                         <select class="form-input" v-model="pendingDecisionTargetKey">
-                            <option value="">Select a target record…</option>
+                            <option value="">{{ t('evidenceExportComparisonRecordPairSelector.selectATargetRecord') }}</option>
                             <option v-for="entry in decisionPool" :key="'dpt-' + entry.key" :value="entry.key">
-                                {{ decisionRecordLabel(entry.record) }} ({{ entry.section }})
+                                {{ displayText(decisionRecordLabel(entry.record)) }} ({{ entry.section }})
                             </option>
                         </select>
                     </label>
                     <button type="button" class="action-btn action-btn--secondary" :disabled="!canAddDecisionPair" @click="addDecisionPair">
-                        Add Pair
+                        {{ t('evidenceExportComparisonRecordPairSelector.addPair') }}
                     </button>
                 </div>
                 <ul v-if="decisionPairs.length > 0" class="evidence-pair-list">
                     <li v-for="(pair, index) in decisionPairs" :key="'ddp-' + index">
-                        <span>{{ decisionRecordLabel(pair.source) }} ↔ {{ decisionRecordLabel(pair.target) }}</span>
-                        <button type="button" class="action-btn action-btn--secondary evidence-pair-remove-btn" @click="removeDecisionPair(index)">Remove</button>
+                        <span>{{ displayText(decisionRecordLabel(pair.source)) }} ↔ {{ displayText(decisionRecordLabel(pair.target)) }}</span>
+                        <button type="button" class="action-btn action-btn--secondary evidence-pair-remove-btn" @click="removeDecisionPair(index)">{{ t('evidenceExportComparisonRecordPairSelector.remove') }}</button>
                     </li>
                 </ul>
-                <p v-else class="evidence-detail-empty">No decision pairs selected yet.</p>
+                <p v-else class="evidence-detail-empty">{{ t('evidenceExportComparisonRecordPairSelector.noDecisionPairsSelectedYet') }}</p>
             </div>
 
             <div class="evidence-pair-selector">
-                <h5>Observation evidence</h5>
+                <h5>{{ t('evidenceExportComparisonRecordPairSelector.observationEvidence') }}</h5>
                 <div class="evidence-pair-selector-controls">
                     <label class="form-field">
-                        <span class="form-label">Source record</span>
+                        <span class="form-label">{{ t('evidenceExportComparisonRecordPairSelector.sourceRecord') }}</span>
                         <select class="form-input" v-model="pendingObservationSourceKey">
-                            <option value="">Select a source record…</option>
+                            <option value="">{{ t('evidenceExportComparisonRecordPairSelector.selectASourceRecord') }}</option>
                             <option v-for="entry in observationPool" :key="'ops-' + entry.key" :value="entry.key">
-                                {{ observationRecordLabel(entry.record) }} ({{ entry.section }})
+                                {{ displayText(observationRecordLabel(entry.record)) }} ({{ entry.section }})
                             </option>
                         </select>
                     </label>
                     <label class="form-field">
-                        <span class="form-label">Target record</span>
+                        <span class="form-label">{{ t('evidenceExportComparisonRecordPairSelector.targetRecord') }}</span>
                         <select class="form-input" v-model="pendingObservationTargetKey">
-                            <option value="">Select a target record…</option>
+                            <option value="">{{ t('evidenceExportComparisonRecordPairSelector.selectATargetRecord') }}</option>
                             <option v-for="entry in observationPool" :key="'opt-' + entry.key" :value="entry.key">
-                                {{ observationRecordLabel(entry.record) }} ({{ entry.section }})
+                                {{ displayText(observationRecordLabel(entry.record)) }} ({{ entry.section }})
                             </option>
                         </select>
                     </label>
                     <button type="button" class="action-btn action-btn--secondary" :disabled="!canAddObservationPair" @click="addObservationPair">
-                        Add Pair
+                        {{ t('evidenceExportComparisonRecordPairSelector.addPair') }}
                     </button>
                 </div>
                 <ul v-if="observationPairs.length > 0" class="evidence-pair-list">
                     <li v-for="(pair, index) in observationPairs" :key="'odp-' + index">
-                        <span>{{ observationRecordLabel(pair.source) }} ↔ {{ observationRecordLabel(pair.target) }}</span>
-                        <button type="button" class="action-btn action-btn--secondary evidence-pair-remove-btn" @click="removeObservationPair(index)">Remove</button>
+                        <span>{{ displayText(observationRecordLabel(pair.source)) }} ↔ {{ displayText(observationRecordLabel(pair.target)) }}</span>
+                        <button type="button" class="action-btn action-btn--secondary evidence-pair-remove-btn" @click="removeObservationPair(index)">{{ t('evidenceExportComparisonRecordPairSelector.remove') }}</button>
                     </li>
                 </ul>
-                <p v-else class="evidence-detail-empty">No observation pairs selected yet.</p>
+                <p v-else class="evidence-detail-empty">{{ t('evidenceExportComparisonRecordPairSelector.noObservationPairsSelectedYet') }}</p>
             </div>
 
             <div class="evidence-pair-differences">
-                <h5>Paired Record Differences</h5>
-                <p v-if="isResultEmpty" class="evidence-detail-empty">No explicit pairs added yet, on either side.</p>
+                <h5>{{ t('evidenceExportComparisonRecordPairSelector.pairedRecordDifferences') }}</h5>
+                <p v-if="isResultEmpty" class="evidence-detail-empty">{{ t('evidenceExportComparisonRecordPairSelector.noExplicitPairsAddedYet') }}</p>
                 <template v-else>
                     <div v-if="decisionDifferences.length > 0" class="evidence-pair-difference-group">
-                        <h6>Decision pairs</h6>
+                        <h6>{{ t('evidenceExportComparisonRecordPairSelector.decisionPairs') }}</h6>
                         <ul class="evidence-pair-difference-list">
                             <li v-for="(summary, index) in decisionDifferences" :key="'ddd-' + index" class="evidence-pair-difference-item">
                                 <div class="evidence-pair-difference-summary">
-                                    <span class="evidence-pair-difference-index">Decision Pair {{ index + 1 }}</span>
+                                    <span class="evidence-pair-difference-index">{{ t('evidenceExportComparisonRecordPairSelector.decisionPair', { number: index + 1 }) }}</span>
                                     <span class="evidence-pair-difference-count">
-                                        {{ summary.differenceCount === 0 ? 'No differences' : (summary.differenceCount + (summary.differenceCount === 1 ? ' difference' : ' differences')) }}
+                                        {{ summary.differenceCount === 0 ? t('evidenceExportComparisonRecordPairSelector.noDifferences') : t('evidenceExportComparisonRecordPairSelector.differences', { count: summary.differenceCount }) }}
                                     </span>
                                     <button type="button" class="action-btn action-btn--secondary evidence-pair-inspect-btn"
                                             @click="togglePairDifference(pairDifferenceKey('decision', index))">
-                                        {{ isPairDifferenceExpanded(pairDifferenceKey('decision', index)) ? 'Hide differences ▲' : 'Inspect differences ▼' }}
+                                        {{ isPairDifferenceExpanded(pairDifferenceKey('decision', index)) ? t('evidenceExportComparisonRecordPairSelector.hideDifferences') : t('evidenceExportComparisonRecordPairSelector.inspectDifferences') }}
                                     </button>
                                 </div>
                                 <div v-if="isPairDifferenceExpanded(pairDifferenceKey('decision', index))" class="evidence-pair-difference-detail">
-                                    <p><strong>Source:</strong> {{ decisionRecordLabel(decisionPairs[index] && decisionPairs[index].source) }}</p>
-                                    <p><strong>Target:</strong> {{ decisionRecordLabel(decisionPairs[index] && decisionPairs[index].target) }}</p>
-                                    <p v-if="summary.differenceCount === 0" class="evidence-detail-empty">Identical on every named field.</p>
+                                    <p><strong>{{ t('evidenceExportComparisonRecordPairSelector.source') }}</strong> {{ decisionRecordLabel(decisionPairs[index] && decisionPairs[index].source) }}</p>
+                                    <p><strong>{{ t('evidenceExportComparisonRecordPairSelector.target') }}</strong> {{ decisionRecordLabel(decisionPairs[index] && decisionPairs[index].target) }}</p>
+                                    <p v-if="summary.differenceCount === 0" class="evidence-detail-empty">{{ t('evidenceExportComparisonRecordPairSelector.identicalOnEveryNamedField') }}</p>
                                     <ul v-else class="evidence-detail-list">
                                         <li v-for="field in summary.differingFields" :key="field">{{ field }}</li>
                                     </ul>
@@ -515,23 +518,23 @@ export default {
                         </ul>
                     </div>
                     <div v-if="observationDifferences.length > 0" class="evidence-pair-difference-group">
-                        <h6>Observation pairs</h6>
+                        <h6>{{ t('evidenceExportComparisonRecordPairSelector.observationPairs') }}</h6>
                         <ul class="evidence-pair-difference-list">
                             <li v-for="(summary, index) in observationDifferences" :key="'odd-' + index" class="evidence-pair-difference-item">
                                 <div class="evidence-pair-difference-summary">
-                                    <span class="evidence-pair-difference-index">Observation Pair {{ index + 1 }}</span>
+                                    <span class="evidence-pair-difference-index">{{ t('evidenceExportComparisonRecordPairSelector.observationPair', { number: index + 1 }) }}</span>
                                     <span class="evidence-pair-difference-count">
-                                        {{ summary.differenceCount === 0 ? 'No differences' : (summary.differenceCount + (summary.differenceCount === 1 ? ' difference' : ' differences')) }}
+                                        {{ summary.differenceCount === 0 ? t('evidenceExportComparisonRecordPairSelector.noDifferences') : t('evidenceExportComparisonRecordPairSelector.differences', { count: summary.differenceCount }) }}
                                     </span>
                                     <button type="button" class="action-btn action-btn--secondary evidence-pair-inspect-btn"
                                             @click="togglePairDifference(pairDifferenceKey('observation', index))">
-                                        {{ isPairDifferenceExpanded(pairDifferenceKey('observation', index)) ? 'Hide differences ▲' : 'Inspect differences ▼' }}
+                                        {{ isPairDifferenceExpanded(pairDifferenceKey('observation', index)) ? t('evidenceExportComparisonRecordPairSelector.hideDifferences') : t('evidenceExportComparisonRecordPairSelector.inspectDifferences') }}
                                     </button>
                                 </div>
                                 <div v-if="isPairDifferenceExpanded(pairDifferenceKey('observation', index))" class="evidence-pair-difference-detail">
-                                    <p><strong>Source:</strong> {{ observationRecordLabel(observationPairs[index] && observationPairs[index].source) }}</p>
-                                    <p><strong>Target:</strong> {{ observationRecordLabel(observationPairs[index] && observationPairs[index].target) }}</p>
-                                    <p v-if="summary.differenceCount === 0" class="evidence-detail-empty">Identical on every named field.</p>
+                                    <p><strong>{{ t('evidenceExportComparisonRecordPairSelector.source') }}</strong> {{ observationRecordLabel(observationPairs[index] && observationPairs[index].source) }}</p>
+                                    <p><strong>{{ t('evidenceExportComparisonRecordPairSelector.target') }}</strong> {{ observationRecordLabel(observationPairs[index] && observationPairs[index].target) }}</p>
+                                    <p v-if="summary.differenceCount === 0" class="evidence-detail-empty">{{ t('evidenceExportComparisonRecordPairSelector.identicalOnEveryNamedField') }}</p>
                                     <ul v-else class="evidence-detail-list">
                                         <li v-for="field in summary.differingFields" :key="field">{{ field }}</li>
                                     </ul>

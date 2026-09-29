@@ -20,6 +20,7 @@ import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.j
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 //
@@ -151,7 +152,7 @@ async function run() {
 
         assert(result.outcome === PublicationResolutionOutcome.CONTENT_UNAVAILABLE,
             '1. a timed-out peer request returns the ORIGINAL CONTENT_UNAVAILABLE result, never a different outcome');
-        assert(result.reason === 'not here yet', '2. the original reason is preserved verbatim');
+        assert(displayText(result.reason) === 'not here yet', '2. the original reason is preserved verbatim');
         assert(elapsed >= 25, '3. resolve() actually waited out the configured timeout before giving up');
         assert(silentExchange.requested.length === 1 && silentExchange.requested[0].hash === 'deadbeef',
             '4. exactly one request was sent, for the exact hash the unresolved publication names');
@@ -258,9 +259,9 @@ async function run() {
         const view = await resolvePublicationView(publication, { coordinator, kindPlugins });
         assert(view.resolved === true, '3. resolvePublicationView() resolves a known, locally-available contentKind');
         assert(view.outcome === PublicationResolutionOutcome.RESOLVED, '4. its outcome is exactly what the coordinator returned');
-        assert(view.contentSummary.includes('bp2:e7a241e392947b959688cc60457372423e5c9a61be3866a7e34fff2b2e49aea2'), '5. contentSummary is built from the display kindPlugin\'s own describe()');
+        assert(displayText(view.contentSummary).includes('bp2:e7a241e392947b959688cc60457372423e5c9a61be3866a7e34fff2b2e49aea2'), '5. contentSummary is built from the display kindPlugin\'s own describe()');
         assert(view.publisherIdentityId === alice.getSigningIdentity().id, '6. publisherIdentityId reads the envelope\'s own publisherIdentity, never the wrapped content');
-        assert(describePublicationOutcome(view.outcome) === 'Available', '7. describePublicationOutcome() labels RESOLVED as "Available"');
+        assert(displayText(describePublicationOutcome(view.outcome)) === 'Available', '7. describePublicationOutcome() labels RESOLVED as "Available"');
 
         const unknownKindPublication = await resolver.publish({
             content: { toJSON: () => ({ x: 1 }) },
@@ -270,8 +271,8 @@ async function run() {
         const unknownView = await resolvePublicationView(unknownKindPublication, { coordinator, kindPlugins });
         assert(unknownView.outcome === null && unknownView.resolved === false,
             '8. an unsupported contentKind is reported directly, never guessed at with the wrong kindPlugin');
-        assert(unknownView.reason.includes('forkbuild.some-future-kind'), '9. the reason names the unsupported contentKind');
-        assert(describePublicationOutcome(unknownView.outcome) === 'Unsupported publication kind',
+        assert(displayText(unknownView.reason).includes('forkbuild.some-future-kind'), '9. the reason names the unsupported contentKind');
+        assert(displayText(describePublicationOutcome(unknownView.outcome)) === 'Unsupported publication kind',
             '10. describePublicationOutcome() labels a null outcome distinctly from every real PublicationResolutionOutcome');
     }
     console.log('✓ Section D: PublicationResolutionView derives a display-ready shape without importing anything, and reports an unsupported contentKind honestly');

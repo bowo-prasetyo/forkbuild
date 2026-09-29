@@ -1,4 +1,5 @@
 import ReconciliationCandidateEvidenceDetailPanel from './CandidateEvidenceDetailPanel.js';
+import { displayText, t } from '../../i18n/i18n.js';
 
 // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration.
 //
@@ -153,18 +154,18 @@ function candidateIdentityKey(candidate) {
 }
 
 export function describeCandidateLabel(candidate) {
-    if (!candidate || typeof candidate !== 'object') return 'Unknown candidate';
+    if (!candidate || typeof candidate !== 'object') return t('reconciliation.unknownCandidate');
 
     if (candidate.type === 'DIVERGENT_CORRESPONDENCE') {
-        return `Claim ${candidate.claimId} ↔ Snapshot #${candidate.snapshotIndex}`;
+        return t('reconciliation.claimAndSnapshot', { claimId: candidate.claimId, snapshotIndex: candidate.snapshotIndex });
     }
     if (candidate.type === 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT') {
-        return `Claim ${candidate.claimId} (no corresponding Snapshot)`;
+        return t('reconciliation.claimWithoutSnapshot', { claimId: candidate.claimId });
     }
     if (candidate.type === 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM') {
-        return `Snapshot #${candidate.snapshotIndex} (no corresponding Claim)`;
+        return t('reconciliation.snapshotWithoutClaim', { snapshotIndex: candidate.snapshotIndex });
     }
-    return 'Unknown candidate';
+    return t('reconciliation.unknownCandidate');
 }
 
 function safeCount(value) {
@@ -266,15 +267,17 @@ export default {
         // itself already holds for a malformed `page`.
         comparisonStateMessage() {
             if (this.comparisonState === 'PEER_PRESENT') {
-                return 'Comparing against a supplied peer archive.';
+                return t('reconciliation.comparingPeerArchive');
             }
             if (this.comparisonState === 'PEER_EMPTY') {
-                return 'A peer archive was supplied, but it has no evidence recorded — every count below still reflects this replica alone.';
+                return t('reconciliation.peerArchiveEmpty');
             }
-            return 'No peer archive supplied — every count below reflects this replica alone.';
+            return t('reconciliation.noPeerArchive');
         }
     },
     methods: {
+        t,
+        displayText,
         candidateKeyForIndex(index) {
             const pageRow = this.genuinePageRows[index];
             return candidateIdentityKey(pageRow ? pageRow.candidate : null);
@@ -291,32 +294,32 @@ export default {
     },
     template: `
         <div class="reconciliation-leaderboard">
-            <p v-if="isEmpty" class="empty-state">No reconciliation candidates to display.</p>
+            <p v-if="isEmpty" class="empty-state">{{ t('candidateLeaderboardTable.noReconciliationCandidatesToDisplay') }}</p>
             <template v-else>
                 <p class="reconciliation-leaderboard-comparison-state" :data-comparison-state="comparisonState">{{ comparisonStateMessage }}</p>
-                <p class="reconciliation-leaderboard-summary">{{ rowCount }} candidate(s)</p>
+                <p class="reconciliation-leaderboard-summary">{{ t('candidateLeaderboardTable.candidateS', { count: rowCount }) }}</p>
                 <div class="reconciliation-leaderboard-table-wrap">
                     <table class="reconciliation-leaderboard-table">
                         <thead>
                             <tr>
-                                <th rowspan="2" class="reconciliation-leaderboard-candidate-col">Candidate</th>
-                                <th colspan="3">Decision Evidence</th>
-                                <th colspan="3">Observation Evidence</th>
+                                <th rowspan="2" class="reconciliation-leaderboard-candidate-col">{{ t('candidateLeaderboardTable.candidate') }}</th>
+                                <th colspan="3">{{ t('candidateLeaderboardTable.decisionEvidence') }}</th>
+                                <th colspan="3">{{ t('candidateLeaderboardTable.observationEvidence') }}</th>
                                 <th rowspan="2"></th>
                             </tr>
                             <tr>
-                                <th>Shared</th>
-                                <th>Source-only</th>
-                                <th>Target-only</th>
-                                <th>Shared</th>
-                                <th>Source-only</th>
-                                <th>Target-only</th>
+                                <th>{{ t('candidateLeaderboardTable.shared') }}</th>
+                                <th>{{ t('candidateLeaderboardTable.sourceOnly') }}</th>
+                                <th>{{ t('candidateLeaderboardTable.targetOnly') }}</th>
+                                <th>{{ t('candidateLeaderboardTable.shared') }}</th>
+                                <th>{{ t('candidateLeaderboardTable.sourceOnly') }}</th>
+                                <th>{{ t('candidateLeaderboardTable.targetOnly') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             <template v-for="(row, index) in rows" :key="index">
                                 <tr>
-                                    <td class="reconciliation-leaderboard-candidate-col">{{ row.candidateLabel }}</td>
+                                    <td class="reconciliation-leaderboard-candidate-col">{{ displayText(row.candidateLabel) }}</td>
                                     <td>{{ row.decisionShared }}</td>
                                     <td>{{ row.decisionSourceOnly }}</td>
                                     <td>{{ row.decisionTargetOnly }}</td>
@@ -326,7 +329,7 @@ export default {
                                     <td>
                                         <button type="button" class="action-btn action-btn--secondary evidence-inspect-btn"
                                                 @click="toggleExpanded(candidateKeyForIndex(index))">
-                                            {{ isExpanded(candidateKeyForIndex(index)) ? 'Hide Evidence' : 'Inspect Evidence' }}
+                                            {{ isExpanded(candidateKeyForIndex(index)) ? t('candidateLeaderboardTable.hideEvidence') : t('candidateLeaderboardTable.inspectEvidence') }}
                                         </button>
                                     </td>
                                 </tr>

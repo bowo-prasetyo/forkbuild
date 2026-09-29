@@ -22,6 +22,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.34 — Explicit Snapshot Materialization UX.
 //
@@ -112,7 +113,7 @@ async function clickImportSnapshot(coordinator, rawText) {
             publicationId: result.publicationId, publicationKnown: result.publicationKnown
         };
     } catch (error) {
-        return { importing: false, outcome: null, error: error.message.replace(/^PublicationSnapshotTransferPackage:\s*/, '') };
+        return { importing: false, outcome: null, error: displayText(error.message).replace(/^PublicationSnapshotTransferPackage:\s*/, '') };
     }
 }
 
@@ -177,22 +178,22 @@ async function run() {
             '1. idle (never attempted) reports IDLE with no label/message');
 
         const importing = describeMaterializationAttempt({ importing: true });
-        assert(importing.state === SnapshotContentMaterializationUiState.IMPORTING && importing.importing === true && importing.label === 'Importing…',
+        assert(importing.state === SnapshotContentMaterializationUiState.IMPORTING && importing.importing === true && displayText(importing.label) === 'Importing…',
             '2. an in-flight import reports IMPORTING');
 
         const imported = describeMaterializationAttempt({ outcome: SnapshotContentTransferOutcome.STORED, publicationKnown: true, publicationId: 'p', contentReference: { hash: 'h' } });
         assert(imported.state === SnapshotContentMaterializationUiState.IMPORTED, '3. STORED + known reports IMPORTED');
-        assert(imported.message === "Snapshot was imported and matches the publication's content hash.",
+        assert(displayText(imported.message) === "Snapshot was imported and matches the publication's content hash.",
             '4. the exact, deliberately unhedged sentence this milestone permits for a known publication');
 
         const importedUnknown = describeMaterializationAttempt({ outcome: SnapshotContentTransferOutcome.STORED, publicationKnown: false, publicationId: 'p', contentReference: { hash: 'h' } });
         assert(importedUnknown.state === SnapshotContentMaterializationUiState.IMPORTED, '5. STORED + unknown still reports IMPORTED — publicationKnown never gates the outcome');
-        assert(importedUnknown.message === 'Snapshot imported. The publication is not currently known locally.',
+        assert(displayText(importedUnknown.message) === 'Snapshot imported. The publication is not currently known locally.',
             '6. the distinct sentence this milestone requires when the publication is not cataloged');
 
         const already = describeMaterializationAttempt({ outcome: SnapshotContentTransferOutcome.ALREADY_STORED, publicationKnown: true });
         assert(already.state === SnapshotContentMaterializationUiState.ALREADY_AVAILABLE, '7. ALREADY_STORED reports ALREADY_AVAILABLE');
-        assert(already.message === 'The snapshot is already present locally.', '8. the exact "already available" sentence');
+        assert(displayText(already.message) === 'The snapshot is already present locally.', '8. the exact "already available" sentence');
 
         const rejected = describeMaterializationAttempt({ outcome: SnapshotContentTransferOutcome.CONTENT_HASH_MISMATCH, publicationId: 'p' });
         assert(rejected.state === SnapshotContentMaterializationUiState.REJECTED, '9. CONTENT_HASH_MISMATCH reports REJECTED');
@@ -200,11 +201,11 @@ async function run() {
 
         const unavailable = describeMaterializationAttempt({ error: 'That is not valid JSON.' });
         assert(unavailable.state === SnapshotContentMaterializationUiState.UNAVAILABLE, '11. a local error reports UNAVAILABLE');
-        assert(unavailable.message === 'That is not valid JSON.', '12. the specific local error message is preserved, never replaced with a generic one');
+        assert(displayText(unavailable.message) === 'That is not valid JSON.', '12. the specific local error message is preserved, never replaced with a generic one');
 
-        assert(describeMaterializationButtonLabel({}) === 'Import Snapshot', '13. idle button label');
-        assert(describeMaterializationButtonLabel({ importing: true }) === 'Importing…', '14. in-flight button label');
-        assert(describeMaterializationButtonLabel({ importing: false }) === 'Import Snapshot',
+        assert(displayText(describeMaterializationButtonLabel({})) === 'Import Snapshot', '13. idle button label');
+        assert(displayText(describeMaterializationButtonLabel({ importing: true })) === 'Importing…', '14. in-flight button label');
+        assert(displayText(describeMaterializationButtonLabel({ importing: false })) === 'Import Snapshot',
             '15. the button label is always "Import Snapshot" after a completed attempt — never "Import Another"');
 
         // No two of IDLE/IMPORTING/IMPORTED/ALREADY_AVAILABLE/UNAVAILABLE/
@@ -215,10 +216,10 @@ async function run() {
         // The forbidden words this milestone's own design conversation
         // named directly never appear in any permitted message.
         const forbiddenWords = ['verified', 'trusted', 'authentic', 'permanent', 'canonical'];
-        const allMessages = [imported, importedUnknown, already, rejected].map((v) => v.message.toLowerCase());
+        const allMessages = [imported, importedUnknown, already, rejected].map((v) => displayText(v.message).toLowerCase());
         for (const word of forbiddenWords) {
             for (const message of allMessages) {
-                assert(!message.includes(word), `17. no permitted message ever uses the word "${word}" (checked: "${message}")`);
+                assert(!displayText(message).includes(word), `17. no permitted message ever uses the word "${word}" (checked: "${message}")`);
             }
         }
     }
@@ -260,7 +261,7 @@ async function run() {
         assert(firstAttempt.error === null && firstAttempt.outcome === SnapshotContentTransferOutcome.STORED, '4. a healthy import produces STORED');
         const firstView = describeMaterializationAttempt(firstAttempt);
         assert(firstView.state === SnapshotContentMaterializationUiState.IMPORTED, '5. the derived view reports IMPORTED');
-        assert(firstView.message === "Snapshot was imported and matches the publication's content hash.",
+        assert(displayText(firstView.message) === "Snapshot was imported and matches the publication's content hash.",
             '6. Bob already knows P, so the UI states the exact, unhedged "matches" sentence');
 
         assert((await bob.contentStore.get(contentReference)) === SNAPSHOT_BYTES, '7. Bob now genuinely possesses the exact snapshot bytes');
@@ -298,7 +299,7 @@ async function run() {
         assert(carolAttempt.outcome === SnapshotContentTransferOutcome.STORED, '16. Carol\'s import still succeeds — she now possesses the bytes');
         const carolView = describeMaterializationAttempt(carolAttempt);
         assert(carolView.state === SnapshotContentMaterializationUiState.IMPORTED, '17. the derived view still reports IMPORTED, never a failure');
-        assert(carolView.message === 'Snapshot imported. The publication is not currently known locally.',
+        assert(displayText(carolView.message) === 'Snapshot imported. The publication is not currently known locally.',
             '18. INVARIANT: the UI names the uncataloged publication explicitly, rather than silently pretending it is known');
         assert((await carol.contentStore.get(contentReference)) === SNAPSHOT_BYTES, '19. Carol genuinely possesses the exact snapshot bytes despite never having cataloged the publication');
     }

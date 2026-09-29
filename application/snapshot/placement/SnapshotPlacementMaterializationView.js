@@ -1,5 +1,6 @@
 import { SnapshotPlacementMaterializationOutcome } from './SnapshotPlacementMaterializationOutcome.js';
 import { SnapshotPlacementMaterializationUiState } from './SnapshotPlacementMaterializationUiState.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.35 — Explicit Placement-Backed Snapshot Materialization.
 //
@@ -44,7 +45,7 @@ export function describePlacementMaterializationAttempt(attempt = null) {
         return {
             state: SnapshotPlacementMaterializationUiState.MATERIALIZING,
             materializing: true,
-            label: 'Materializing…', message: null, contentReference: null, placementId: null, publicationId: null
+            label: message('placementMaterialization.materializing'), message: null, contentReference: null, placementId: null, publicationId: null
         };
     }
 
@@ -58,7 +59,7 @@ export function describePlacementMaterializationAttempt(attempt = null) {
         return {
             state: SnapshotPlacementMaterializationUiState.UNAVAILABLE,
             materializing: false,
-            label: 'Snapshot was not materialized',
+            label: message('placementMaterialization.snapshotWasNotMaterialized'),
             message: attempt.error,
             contentReference: null, placementId: null, publicationId: null
         };
@@ -69,44 +70,44 @@ export function describePlacementMaterializationAttempt(attempt = null) {
             return {
                 state: SnapshotPlacementMaterializationUiState.STORED,
                 materializing: false,
-                label: 'Materialized',
+                label: message('placementMaterialization.materialized'),
                 message: attempt.publicationKnown
-                    ? 'Snapshot was materialized from this placement and matches its own claimed content hash.'
-                    : 'Snapshot materialized from this placement. The publication is not currently known locally.',
+                    ? message('placementMaterialization.snapshotWasMaterializedFromThis')
+                    : message('placementMaterialization.snapshotMaterializedFromThisPlacement'),
                 contentReference: attempt.contentReference, placementId: attempt.placementId, publicationId: attempt.publicationId
             };
         case SnapshotPlacementMaterializationOutcome.ALREADY_AVAILABLE:
             return {
                 state: SnapshotPlacementMaterializationUiState.ALREADY_AVAILABLE,
                 materializing: false,
-                label: 'Already available',
+                label: message('placementMaterialization.alreadyAvailable'),
                 message: attempt.publicationKnown
-                    ? 'The snapshot is already present locally.'
-                    : 'The snapshot is already present locally. The publication is not currently known locally.',
+                    ? message('placementMaterialization.theSnapshotIsAlreadyPresent')
+                    : message('placementMaterialization.theSnapshotIsAlreadyPresent2'),
                 contentReference: attempt.contentReference, placementId: attempt.placementId, publicationId: attempt.publicationId
             };
         case SnapshotPlacementMaterializationOutcome.UNAVAILABLE:
             return {
                 state: SnapshotPlacementMaterializationUiState.UNAVAILABLE,
                 materializing: false,
-                label: 'Not available right now',
-                message: attempt.reason || 'This placement could not presently be resolved; nothing was materialized.',
+                label: message('placementMaterialization.notAvailableRightNow'),
+                message: attempt.reason || message('placementMaterialization.couldNotResolve'),
                 contentReference: null, placementId: attempt.placementId, publicationId: attempt.publicationId
             };
         case SnapshotPlacementMaterializationOutcome.HASH_MISMATCH:
             return {
                 state: SnapshotPlacementMaterializationUiState.HASH_MISMATCH,
                 materializing: false,
-                label: 'Rejected',
-                message: "The retrieved bytes do not match this placement's own claimed content hash. Nothing was stored.",
+                label: message('placementMaterialization.rejected'),
+                message: message('placementMaterialization.theRetrievedBytesDoNot'),
                 contentReference: null, placementId: attempt.placementId, publicationId: attempt.publicationId
             };
         case SnapshotPlacementMaterializationOutcome.INVALID_PLACEMENT:
             return {
                 state: SnapshotPlacementMaterializationUiState.INVALID_PLACEMENT,
                 materializing: false,
-                label: 'Invalid placement',
-                message: attempt.reason || 'This placement is not a validly signed claim; nothing was materialized.',
+                label: message('placementMaterialization.invalidPlacement'),
+                message: attempt.reason || message('placementMaterialization.notValidlySigned'),
                 contentReference: null, placementId: attempt.placementId, publicationId: attempt.publicationId
             };
         default:
@@ -129,6 +130,6 @@ export function describePlacementMaterializationAttempt(attempt = null) {
 // between attempts (0.8.20/0.8.26), so a second click meaningfully means
 // "check again, and keep the bytes this time if it works."
 export function describePlacementMaterializationButtonLabel({ materializing = false, materialized = false } = {}) {
-    if (materializing) return 'Materializing…';
-    return materialized ? 'Materialize Again' : 'Materialize Snapshot';
+    if (materializing) return message('placementMaterialization.materializing');
+    return materialized ? message('placementMaterialization.materializeAgain') : message('placementMaterialization.materializeSnapshot');
 }

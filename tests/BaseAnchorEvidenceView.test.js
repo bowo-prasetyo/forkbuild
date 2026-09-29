@@ -20,6 +20,8 @@ import { publicationsViewSourceWithTemplate, mainFiles } from './support/SourceF
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.511 — Base Anchor Evidence View.
 //
@@ -92,12 +94,12 @@ async function run() {
         const txid = '0x' + 'a'.repeat(64);
         const mainnetAnchor = { proof: { txid, network: 'mainnet' } };
         const mainnetDescribed = view.describe(mainnetAnchor);
-        assert(mainnetDescribed.summary === 'Base', '2. summary is "Base"');
-        const networkField = mainnetDescribed.fields.find((f) => f.label === 'Network');
-        const txidField = mainnetDescribed.fields.find((f) => f.label === 'Transaction Hash');
+        assert(displayText(mainnetDescribed.summary) === 'Base', '2. summary is "Base"');
+        const networkField = mainnetDescribed.fields.find((f) => displayText(f.label) === 'Network');
+        const txidField = mainnetDescribed.fields.find((f) => displayText(f.label) === 'Transaction Hash');
         assert(networkField.value === 'mainnet' && txidField.value === txid, '3. Network/Transaction Hash fields carry the proof\'s own values');
         assert(mainnetDescribed.externalLocator.url === `https://basescan.org/tx/${txid}`, '4. mainnet locator points at basescan.org\'s own /tx/ path');
-        assert(mainnetDescribed.externalLocator.label === 'View on block explorer', '5. locator label is honest and non-committal — the same wording Bitcoin\'s and Arweave\'s own adapters use');
+        assert(displayText(mainnetDescribed.externalLocator.label) === 'View on block explorer', '5. locator label is honest and non-committal — the same wording Bitcoin\'s and Arweave\'s own adapters use');
 
         const testnetDescribed = view.describe({ proof: { txid, network: 'testnet' } });
         assert(testnetDescribed.externalLocator.url === `https://sepolia.basescan.org/tx/${txid}`, '6. testnet is reflected as Base\'s own Sepolia testnet explorer host');
@@ -105,8 +107,8 @@ async function run() {
         // Malformed/missing proof degrades honestly — never a guess, never a throw.
         const noProof = view.describe({ proof: null });
         assert(noProof.externalLocator === null, '7. no proof -> no externalLocator');
-        assert(noProof.fields.find((f) => f.label === 'Transaction Hash').value === 'not available', '8. no proof -> "not available," never a fabricated txid');
-        assert(noProof.fields.find((f) => f.label === 'Network').value === 'unknown', '9. no proof -> Network reads "unknown"');
+        assert(noProof.fields.find((f) => displayText(f.label) === 'Transaction Hash').value === 'not available', '8. no proof -> "not available," never a fabricated txid');
+        assert(noProof.fields.find((f) => displayText(f.label) === 'Network').value === 'unknown', '9. no proof -> Network reads "unknown"');
 
         const malformedTxid = view.describe({ proof: { txid: 'not-hex', network: 'mainnet' } });
         assert(malformedTxid.externalLocator === null, '10. a malformed txid never produces a locator');
@@ -205,7 +207,7 @@ async function run() {
         // file (the existing "Create Base Anchor" button-label logic,
         // unrelated to evidence inspection), so the sweep is scoped to
         // this one template block rather than the whole file.
-        const viewSrc = publicationsViewSourceWithTemplate();
+        const viewSrc = withEnglish(publicationsViewSourceWithTemplate());
         const inspectionBlockStart = viewSrc.indexOf('evidence-inspection-title">External Evidence');
         const inspectionBlockEnd = viewSrc.indexOf('evidence-inspection-adapter-title', inspectionBlockStart);
         assert(inspectionBlockStart !== -1 && inspectionBlockEnd !== -1 && inspectionBlockEnd > inspectionBlockStart,
@@ -262,7 +264,7 @@ async function run() {
             '30. the detail view retains the anchor\'s own txid/network/contentHash-bearing identity — nothing invented');
         assert(detail.locator === `base:${txid}`, '31. locator is carried through unchanged');
         assert(JSON.stringify(detail.proof) === JSON.stringify({ txid, network: 'mainnet' }), '32. proof (txid, network) is exactly what the anchor carries — the generic detail view never reinterprets it');
-        assert(typeSpecific.summary === 'Base' && typeSpecific.externalLocator.url === `https://basescan.org/tx/${txid}`,
+        assert(displayText(typeSpecific.summary) === 'Base' && typeSpecific.externalLocator.url === `https://basescan.org/tx/${txid}`,
             '33. the Base-specific adapter derives a followable external destination from the SAME anchor');
 
         console.log('✓ Section E (inspect): a real, cataloged Base anchor is inspected through the identical evidence-view seam Bitcoin\'s and Arweave\'s own anchors already use — no mutation, no network call, txid/network/contentHash identity fully preserved');

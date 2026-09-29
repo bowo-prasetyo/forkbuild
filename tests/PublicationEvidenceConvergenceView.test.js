@@ -5,6 +5,7 @@ import {
 import { ContentBindingSetRelationship } from '../application/publication/evidence/ContentBindingSetRelationship.js';
 import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.13 — Multi-Evidence Comparison & Conflict UX.
 //
@@ -55,7 +56,7 @@ function run() {
         assert(empty.hasConflict === false, '6. no anchors -> no conflict');
         assert(empty.relationship === ContentBindingSetRelationship.AGREEMENT, '7. no anchors -> AGREEMENT, the vacuous case, never CONFLICT');
         assert(empty.conflictDescription === null, '8. no anchors -> no conflict description');
-        assert(describeContentGroupCount(empty) === 'No content binding known', '9. describeContentGroupCount() names the empty case honestly');
+        assert(displayText(describeContentGroupCount(empty)) === 'No content binding known', '9. describeContentGroupCount() names the empty case honestly');
     }
     console.log('✓ Section A: publicationEvidenceConvergenceView() argument handling — a convergence result is required, empty input tolerated');
 
@@ -99,9 +100,9 @@ function run() {
             '8. Conflict: the true, honest group sizes are reported (two vs. one)');
         assert(conflict.hasConflict === true, '9. Conflict: hasConflict is true');
         assert(conflict.relationship === ContentBindingSetRelationship.CONFLICT, '10. Conflict: relationship is CONFLICT');
-        assert(typeof conflict.conflictDescription === 'string' && conflict.conflictDescription.length > 0,
+        assert(typeof displayText(conflict.conflictDescription) === 'string' && displayText(conflict.conflictDescription).length > 0,
             '11. Conflict: a conflict description is present');
-        assert(conflict.conflictDescription === describeContentBindingSetRelationship(true, 2),
+        assert(displayText(conflict.conflictDescription) === displayText(describeContentBindingSetRelationship(true, 2)),
             '12. Conflict: describeContentBindingSetRelationship() produces the identical sentence the view embeds');
 
         // The larger group (two anchors) must never be presented as more
@@ -114,7 +115,7 @@ function run() {
         assert(!('winner' in conflict) && !('canonicalContentHash' in conflict) && !('majorityContentHash' in conflict),
             '14. no field naming either group the winner, canonical, or majority value');
 
-        assert(describeContentGroupCount(conflict) === '2 distinct content hashes claimed',
+        assert(displayText(describeContentGroupCount(conflict)) === '2 distinct content hashes claimed',
             '15. describeContentGroupCount() reports the count, never which group is "the" one');
     }
     console.log('✓ Section B: the two structural relationships — complete agreement (one group, no conflict) and conflicting content binding (multiple groups, true honest counts, one non-adjudicating warning sentence, no adjudicating language anywhere)');
@@ -170,7 +171,7 @@ function run() {
             '7. INVARIANT: the content groups are byte-identical before and after verification observations are supplied');
         assert(viewBefore.hasConflict === viewAfter.hasConflict && viewBefore.relationship === viewAfter.relationship,
             '8. INVARIANT: hasConflict and relationship are unchanged by verification observations');
-        assert(viewBefore.conflictDescription === viewAfter.conflictDescription,
+        assert(displayText(viewBefore.conflictDescription) === displayText(viewAfter.conflictDescription),
             '9. INVARIANT: the conflict description itself is unchanged by verification observations');
 
         // The per-anchor verification outcome IS visible on the

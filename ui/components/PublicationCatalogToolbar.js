@@ -1,5 +1,16 @@
 import { PublicationSort, PUBLICATION_SORT_LABELS } from '../../core/PublicationSort.js';
+
+// core/PublicationSort.js keeps English labels next to its ids; the toolbar
+// shows each id's message, falling back to that English.
+const SORT_MESSAGES = {
+    [PublicationSort.RECENTLY_PUBLISHED]: 'publicationSort.recentlyPublished',
+    [PublicationSort.OLDEST_PUBLISHED]: 'publicationSort.oldestPublished',
+    [PublicationSort.TITLE_ASC]: 'publicationSort.titleAsc',
+    [PublicationSort.TITLE_DESC]: 'publicationSort.titleDesc',
+    [PublicationSort.AUTHOR_ASC]: 'publicationSort.authorAsc'
+};
 import { GroupBy } from '../../core/PublicationGrouping.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.2.31 — search + sort + view + group controls for the Repository/
 // Author catalog, shared by both (see ui/components/PublicationCatalog.js).
@@ -37,6 +48,10 @@ export default {
         };
     },
     methods: {
+        t,
+        sortLabel(key) {
+            return SORT_MESSAGES[key] ? t(SORT_MESSAGES[key]) : this.sortLabels[key];
+        },
         onSubmit() {
             this.$emit('search', { text: this.queryText.trim(), includeDescriptions: this.includeDescriptions });
         }
@@ -48,44 +63,44 @@ export default {
                     v-model="queryText"
                     type="text"
                     class="form-input publication-catalog-search-input"
-                    placeholder="Search by title, author…"
+                    :placeholder="t('publicationCatalogToolbar.searchByTitleAuthor')"
                 />
                 <label class="publication-catalog-search-descriptions">
                     <input type="checkbox" v-model="includeDescriptions" />
-                    Include descriptions
+                    {{ t('publicationCatalogToolbar.includeDescriptions') }}
                 </label>
-                <button type="submit" class="action-btn">Search</button>
+                <button type="submit" class="action-btn">{{ t('publicationCatalogToolbar.search') }}</button>
             </form>
 
             <div class="publication-catalog-controls">
                 <label class="publication-catalog-control">
-                    Sort:
+                    {{ t('publicationCatalogToolbar.sort') }}
                     <select class="form-select publication-catalog-select" :value="sort" @change="$emit('change-sort', $event.target.value)">
-                        <option v-for="key in Object.values(sortOptions)" :key="key" :value="key">{{ sortLabels[key] }}</option>
+                        <option v-for="key in Object.values(sortOptions)" :key="key" :value="key">{{ sortLabel(key) }}</option>
                     </select>
                 </label>
                 <label class="publication-catalog-control">
-                    Group:
+                    {{ t('publicationCatalogToolbar.group') }}
                     <select class="form-select publication-catalog-select" :value="groupBy" @change="$emit('change-group-by', $event.target.value)">
-                        <option :value="groupOptions.NONE">None</option>
-                        <option :value="groupOptions.AUTHOR">Author</option>
-                        <option :value="groupOptions.DATE">Date</option>
-                        <option :value="groupOptions.LICENSE">License</option>
+                        <option :value="groupOptions.NONE">{{ t('publicationCatalogToolbar.none') }}</option>
+                        <option :value="groupOptions.AUTHOR">{{ t('publicationCatalogToolbar.author') }}</option>
+                        <option :value="groupOptions.DATE">{{ t('publicationCatalogToolbar.date') }}</option>
+                        <option :value="groupOptions.LICENSE">{{ t('publicationCatalogToolbar.license') }}</option>
                     </select>
                 </label>
                 <div class="publication-catalog-view-toggle">
                     <button
                         :class="['tool-btn', { 'tool-btn--active': view === 'cards' }]"
                         @click="$emit('change-view', 'cards')"
-                    >Cards</button>
+                    >{{ t('publicationCatalogToolbar.cards') }}</button>
                     <button
                         :class="['tool-btn', { 'tool-btn--active': view === 'list' }]"
                         @click="$emit('change-view', 'list')"
-                    >List</button>
+                    >{{ t('publicationCatalogToolbar.list') }}</button>
                 </div>
             </div>
 
-            <p class="publication-catalog-count">{{ totalCount }} publication{{ totalCount === 1 ? '' : 's' }}</p>
+            <p class="publication-catalog-count">{{ t('authorView.publicationCount', { count: totalCount }) }}</p>
         </div>
     `
 };

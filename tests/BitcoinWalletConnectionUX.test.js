@@ -6,6 +6,7 @@ import { BitcoinInjectedProviderWalletAdapter } from '../anchoring/BitcoinInject
 import { BitcoinWalletConnectionState } from '../application/anchoring/bitcoin/BitcoinWalletConnectionState.js';
 import { describeBitcoinWalletConnectionStateLabel, describeBitcoinWalletConnection } from '../application/anchoring/bitcoin/BitcoinWalletConnectionView.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.
 //
@@ -271,10 +272,10 @@ async function run() {
     // Section E — the label vocabulary and describeBitcoinWalletConnection().
     // ---------------------------------------------------------------
     {
-        assert(describeBitcoinWalletConnectionStateLabel(BitcoinWalletConnectionState.DISCONNECTED) === 'Disconnected', '24. DISCONNECTED label');
-        assert(describeBitcoinWalletConnectionStateLabel(BitcoinWalletConnectionState.CONNECTING) === 'Connecting…', '25. CONNECTING label');
-        assert(describeBitcoinWalletConnectionStateLabel(BitcoinWalletConnectionState.CONNECTED) === 'Connected', '26. CONNECTED label');
-        assert(describeBitcoinWalletConnectionStateLabel(BitcoinWalletConnectionState.UNAVAILABLE) === 'Wallet unavailable', '27. UNAVAILABLE label');
+        assert(displayText(describeBitcoinWalletConnectionStateLabel(BitcoinWalletConnectionState.DISCONNECTED)) === 'Disconnected', '24. DISCONNECTED label');
+        assert(displayText(describeBitcoinWalletConnectionStateLabel(BitcoinWalletConnectionState.CONNECTING)) === 'Connecting…', '25. CONNECTING label');
+        assert(displayText(describeBitcoinWalletConnectionStateLabel(BitcoinWalletConnectionState.CONNECTED)) === 'Connected', '26. CONNECTED label');
+        assert(displayText(describeBitcoinWalletConnectionStateLabel(BitcoinWalletConnectionState.UNAVAILABLE)) === 'Wallet unavailable', '27. UNAVAILABLE label');
         assert(describeBitcoinWalletConnectionStateLabel('not-a-real-state') === null, '28. an unrecognized state names nothing, rather than guessing');
 
         const adapter = new BitcoinInjectedProviderWalletAdapter({ injectedProvider: fakeUnisatProvider({}) });

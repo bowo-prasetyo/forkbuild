@@ -1,4 +1,5 @@
 import { PublicationKnowledgeSynchronizationUiState } from './PublicationKnowledgeSynchronizationUiState.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.30 — Explicit Replica Knowledge Synchronization.
 //
@@ -28,7 +29,7 @@ export function describeSynchronizationAttempt(attempt = null) {
     if (attempt.synchronizing) {
         return {
             state: PublicationKnowledgeSynchronizationUiState.SYNCHRONIZING,
-            label: 'Asking peers…', message: null,
+            label: message('knowledgeSync.askingPeers'), message: null,
             newAnchorCount: null, alreadyKnownAnchorCount: null,
             newPlacementCount: null, alreadyKnownPlacementCount: null
         };
@@ -43,8 +44,8 @@ export function describeSynchronizationAttempt(attempt = null) {
     if (attempt.error) {
         return {
             state: PublicationKnowledgeSynchronizationUiState.UNAVAILABLE,
-            label: 'Synchronization unavailable',
-            message: 'The requested peer synchronization could not complete.',
+            label: message('knowledgeSync.synchronizationUnavailable'),
+            message: message('knowledgeSync.theRequestedPeerSynchronizationCould'),
             newAnchorCount: null, alreadyKnownAnchorCount: null,
             newPlacementCount: null, alreadyKnownPlacementCount: null
         };
@@ -54,8 +55,8 @@ export function describeSynchronizationAttempt(attempt = null) {
     if (!attemptedPeers || attemptedPeers.length === 0) {
         return {
             state: PublicationKnowledgeSynchronizationUiState.UNAVAILABLE,
-            label: 'Synchronization unavailable',
-            message: 'No authenticated peer was available to ask.',
+            label: message('knowledgeSync.synchronizationUnavailable'),
+            message: message('knowledgeSync.noAuthenticatedPeerWasAvailable'),
             newAnchorCount: 0, alreadyKnownAnchorCount: 0,
             newPlacementCount: 0, alreadyKnownPlacementCount: 0
         };
@@ -71,7 +72,7 @@ export function describeSynchronizationAttempt(attempt = null) {
     if (totalNewCount > 0) {
         return {
             state: PublicationKnowledgeSynchronizationUiState.SYNCHRONIZED,
-            label: 'New claims received',
+            label: message('knowledgeSync.newClaimsReceived'),
             message: describeNewClaimsMessage(newAnchorCount, newPlacementCount),
             newAnchorCount, alreadyKnownAnchorCount, newPlacementCount, alreadyKnownPlacementCount
         };
@@ -83,21 +84,20 @@ export function describeSynchronizationAttempt(attempt = null) {
     // anchors or placements exist somewhere this replica did not ask.
     return {
         state: PublicationKnowledgeSynchronizationUiState.NO_NEW_CLAIMS,
-        label: 'No new claims',
-        message: `No new claims received from peers (${totalAlreadyKnownCount} already known).`,
+        label: message('knowledgeSync.noNewClaims'),
+        message: message('knowledgeSync.noNewClaimsKnown', { count: totalAlreadyKnownCount }),
         newAnchorCount: 0, alreadyKnownAnchorCount, newPlacementCount: 0, alreadyKnownPlacementCount
     };
 }
 
+// One whole message per combination, so each language words "and" its own way.
 function describeNewClaimsMessage(newAnchorCount, newPlacementCount) {
-    const parts = [];
-    if (newAnchorCount > 0) {
-        parts.push(`${newAnchorCount} new anchor${newAnchorCount === 1 ? '' : 's'}`);
+    const anchors = message('knowledgeSync.newAnchors', { count: newAnchorCount });
+    const placements = message('knowledgeSync.newPlacements', { count: newPlacementCount });
+    if (newAnchorCount > 0 && newPlacementCount > 0) {
+        return message('knowledgeSync.receivedBoth', { anchors, placements });
     }
-    if (newPlacementCount > 0) {
-        parts.push(`${newPlacementCount} new placement${newPlacementCount === 1 ? '' : 's'}`);
-    }
-    return `${parts.join(' and ')} received from peers.`;
+    return message('knowledgeSync.received', { claims: newAnchorCount > 0 ? anchors : placements });
 }
 
 // A short label for the button itself — deliberately separate from
@@ -106,6 +106,6 @@ function describeNewClaimsMessage(newAnchorCount, newPlacementCount) {
 // take. Mirrors application/publication/evidence/PublicationEvidenceDiscoveryView.js#
 // describeDiscoveryButtonLabel()'s own shape exactly.
 export function describeSynchronizationButtonLabel({ synchronizing = false, hasSynchronized = false } = {}) {
-    if (synchronizing) return 'Asking Peers…';
-    return hasSynchronized ? 'Synchronize Again' : 'Synchronize with Peers';
+    if (synchronizing) return message('knowledgeSync.askingPeers2');
+    return hasSynchronized ? message('knowledgeSync.synchronizeAgain') : message('knowledgeSync.synchronizeWithPeers');
 }

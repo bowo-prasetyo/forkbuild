@@ -4,6 +4,7 @@ import { BaseSignedTransactionFinalizationCoordinator } from '../application/anc
 import { BaseSignedTransactionFinalizationState, isValidBaseSignedTransactionFinalizationState } from '../application/anchoring/base/BaseSignedTransactionFinalizationState.js';
 import { describeBaseSignedTransactionFinalization, describeBaseSignedTransactionFinalizationStateLabel } from '../application/anchoring/base/BaseSignedTransactionFinalizationView.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.94 — Explicit Base Signed Transaction Verification & Finalization.
 //
@@ -499,7 +500,7 @@ async function run() {
         assert(states.length === 6, '47. exactly six states exist');
         for (const state of states) {
             assert(isValidBaseSignedTransactionFinalizationState(state), `48. ${state} is recognized as valid`);
-            assert(typeof describeBaseSignedTransactionFinalizationStateLabel(state) === 'string', `49. ${state} has a label`);
+            assert(typeof displayText(describeBaseSignedTransactionFinalizationStateLabel(state)) === 'string', `49. ${state} has a label`);
         }
         assert(!isValidBaseSignedTransactionFinalizationState('finalized_and_trusted'), '50. an invented state is never valid');
 

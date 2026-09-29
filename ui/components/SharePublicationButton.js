@@ -2,6 +2,8 @@
 // own signed Worlds (application/publication/sharing/SharePublicationWithPeersUseCase.js).
 // Sharing offers the World to every connected peer and to peers that
 // connect later; it cannot be taken back from those that received it.
+import { errorText, t } from '../i18n/i18n.js';
+
 export default {
     name: 'SharePublicationButton',
     inject: {
@@ -22,6 +24,7 @@ export default {
         this.shared = this.available && this.sharePublicationWithPeersUseCase.isShared(this.publication);
     },
     methods: {
+        t,
         async share() {
             this.pending = true;
             this.message = '';
@@ -30,10 +33,10 @@ export default {
                 const { announcedTo } = await this.sharePublicationWithPeersUseCase.share(this.publication);
                 this.shared = true;
                 this.message = announcedTo > 0
-                    ? `Shared with ${announcedTo} connected ${announcedTo === 1 ? 'peer' : 'peers'}, and with peers who connect later.`
-                    : 'Shared. No peers are connected right now; peers who connect later receive it.';
+                    ? t('sharePublicationButton.sharedWith', { count: announcedTo })
+                    : t('sharePublicationButton.sharedNoPeers');
             } catch (e) {
-                this.error = String(e.message || e).replace(/^\w+UseCase:\s*/, '');
+                this.error = errorText(e, String(e)).replace(/^\w+UseCase:\s*/, '');
             } finally {
                 this.pending = false;
             }
@@ -42,8 +45,8 @@ export default {
     template: `
         <div v-if="available" class="share-publication">
             <button class="action-btn action-btn--share" :disabled="pending" @click="share"
-                    :title="shared ? 'Announce it again to the peers connected now' : 'Offer this World to connected peers'">
-                {{ pending ? 'Sharing…' : (shared ? 'Shared ✓ · Share Again' : 'Share with Peers') }}
+                    :title="shared ? t('sharePublicationButton.announceItAgainToThe') : t('sharePublicationButton.offerThisWorldToConnected')">
+                {{ pending ? t('sharePublicationButton.sharing') : (shared ? t('sharePublicationButton.sharedShareAgain') : t('sharePublicationButton.shareWithPeers')) }}
             </button>
             <p v-if="message" class="form-hint form-hint--neutral share-publication-status">{{ message }}</p>
             <p v-if="error" class="identity-unlock-error share-publication-status">{{ error }}</p>

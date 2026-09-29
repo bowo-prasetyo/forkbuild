@@ -14,6 +14,7 @@ import {
 } from '../application/anchoring/base/BaseTransactionInclusionObservationHistory.js';
 import { BitcoinAnchorConfirmationObserver } from '../anchoring/BitcoinAnchorConfirmationObserver.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation.
 //
@@ -235,7 +236,7 @@ async function run() {
         const declaredUnavailable = fakeRpcSource({ receipts: { [TXID_A]: { available: false, reason: 'timeout' } } });
         const observation2 = await freshObserver(declaredUnavailable).observeInclusion(TXID_A);
         assert(observation2.state === BaseTransactionInclusionObservationState.UNAVAILABLE, '21. an available:false receipt result observes as UNAVAILABLE, never NOT_INCLUDED');
-        assert(observation2.reason === 'timeout', '22. the rpcSource\'s own reason is preserved');
+        assert(displayText(observation2.reason) === 'timeout', '22. the rpcSource\'s own reason is preserved');
     }
     console.log('✓ Section E (FLAGSHIP): RPC unavailability is always reported as UNAVAILABLE, never conflated with NOT_INCLUDED');
 
@@ -397,8 +398,8 @@ async function run() {
         assert(allStates.length === 3, '57. exactly three states exist');
         for (const state of allStates) {
             assert(isValidBaseTransactionInclusionObservationState(state), `58. ${state} is recognized as valid`);
-            assert(typeof describeBaseTransactionInclusionStateLabel(state) === 'string', `59. ${state} has a human label`);
-            assert(typeof describeBaseTransactionInclusionStateShortLabel(state) === 'string', `60. ${state} has a short label`);
+            assert(typeof displayText(describeBaseTransactionInclusionStateLabel(state)) === 'string', `59. ${state} has a human label`);
+            assert(typeof displayText(describeBaseTransactionInclusionStateShortLabel(state)) === 'string', `60. ${state} has a short label`);
         }
         for (const verdict of ['confirmed', 'safe', 'valid', 'trusted', 'success', 'failed']) {
             assert(!isValidBaseTransactionInclusionObservationState(verdict), `61. "${verdict}" is not part of this vocabulary`);
@@ -419,8 +420,8 @@ async function run() {
         assert(view.txid === TXID_A, '63. the view exposes the observation\'s own txid, unchanged');
         assert(view.blockHash === included.blockHash, '64. the view exposes blockHash unchanged');
         assert(view.confirmationCount === included.confirmationCount, '65. the view exposes confirmationCount unchanged');
-        assert(view.stateLabel === 'Transaction included', '66. INCLUDED carries the expected full sentence');
-        assert(view.stateShortLabel === 'Included', '67. INCLUDED carries the expected short label');
+        assert(displayText(view.stateLabel) === 'Transaction included', '66. INCLUDED carries the expected full sentence');
+        assert(displayText(view.stateShortLabel) === 'Included', '67. INCLUDED carries the expected short label');
         assert(Object.isFrozen(view), '68. describeBaseTransactionInclusionObservation() returns a frozen projection');
 
         const smuggled = { ...included, confirmed: true, safe: true, trusted: true };

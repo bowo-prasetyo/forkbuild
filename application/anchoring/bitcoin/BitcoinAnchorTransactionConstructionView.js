@@ -1,10 +1,11 @@
 import { BitcoinAnchorTransactionConstructionState } from './BitcoinAnchorTransactionConstructionState.js';
+import { message } from '../../../core/Message.js';
 
 const STATE_LABELS = {
-    [BitcoinAnchorTransactionConstructionState.IDLE]: 'Not yet constructed',
-    [BitcoinAnchorTransactionConstructionState.CONSTRUCTING]: 'Constructing…',
-    [BitcoinAnchorTransactionConstructionState.CONSTRUCTED]: 'Transaction plan constructed',
-    [BitcoinAnchorTransactionConstructionState.FAILED]: 'Unable to construct transaction'
+    [BitcoinAnchorTransactionConstructionState.IDLE]: message('bitcoinAnchorTransactionConstruction.notYetConstructed'),
+    [BitcoinAnchorTransactionConstructionState.CONSTRUCTING]: message('bitcoinAnchorTransactionConstruction.constructing'),
+    [BitcoinAnchorTransactionConstructionState.CONSTRUCTED]: message('bitcoinAnchorTransactionConstruction.transactionPlanConstructed'),
+    [BitcoinAnchorTransactionConstructionState.FAILED]: message('bitcoinAnchorTransactionConstruction.unableToConstructTransaction')
 };
 
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.

@@ -1,4 +1,6 @@
 import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
+import { errorText, t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
 function stripPrefix(message) {
     return String(message || '').replace(/^\w+UseCase:\s*/, '');
@@ -12,6 +14,7 @@ function stripPrefix(message) {
 // whenever a World joins the Repository, by hand or automatically.
 export default {
     name: 'SharedWithYouPanel',
+    components: { I18nText },
     emits: ['retrieved'],
     setup(props, { emit }) {
         const retrieveUseCase = inject('retrieveSharedPublicationUseCase', null);
@@ -44,7 +47,7 @@ export default {
                 const { publication } = await retrieveUseCase.retrieve(item.envelopeId);
                 emit('retrieved', publication);
             } catch (e) {
-                error.value = stripPrefix(e.message);
+                error.value = stripPrefix(errorText(e));
             } finally {
                 retrievingId.value = null;
                 refresh();
@@ -65,32 +68,30 @@ export default {
         });
         onBeforeUnmount(() => { for (const unsubscribe of unsubscribes) unsubscribe(); });
 
-        return { pending, retrievingId, error, retrieve, sharerLabel, receivedLabel, available: Boolean(retrieveUseCase) };
+        return { t, pending, retrievingId, error, retrieve, sharerLabel, receivedLabel, available: Boolean(retrieveUseCase) };
     },
     template: `
         <div v-if="available && pending.length" class="peer-signal-box shared-with-you">
-            <h3>Shared with you</h3>
+            <h3>{{ t('sharedWithYouPanel.sharedWithYou') }}</h3>
             <p class="form-hint form-hint--neutral">
-                Worlds peers offered to you. Shares from your Friends and Known Peers are retrieved on their own;
-                these are from others. <strong>Retrieve</strong> fetches a World only from the person who shared
-                it, and only while they are connected, then adds it here.
+                <I18nText keypath="sharedWithYouPanel.worldsPeersOfferedToYou"><template #retrieve><strong>{{ t('sharedWithYouPanel.retrieve') }}</strong></template></I18nText>
             </p>
             <p v-if="error" class="identity-unlock-error">{{ error }}</p>
             <div class="identity-mgmt-list">
                 <div v-for="item in pending" :key="item.envelopeId" class="identity-mgmt-card">
                     <div class="identity-mgmt-card-header">
-                        <span class="identity-mgmt-name">A World shared by {{ sharerLabel(item) }}</span>
+                        <span class="identity-mgmt-name">{{ t('sharedWithYouPanel.sharedBy', { sharer: sharerLabel(item) }) }}</span>
                         <span class="peer-badge" :class="item.sharerConnected ? 'peer-badge--authenticated' : 'peer-badge--pending'">
-                            {{ item.sharerConnected ? 'Connected' : 'Not connected' }}
+                            {{ item.sharerConnected ? t('sharedWithYouPanel.connected') : t('sharedWithYouPanel.notConnected') }}
                         </span>
                     </div>
-                    <p v-if="receivedLabel(item)" class="identity-mgmt-status">received {{ receivedLabel(item) }}</p>
+                    <p v-if="receivedLabel(item)" class="identity-mgmt-status">{{ t('sharedWithYouPanel.received', { when: receivedLabel(item) }) }}</p>
                     <div class="identity-mgmt-actions">
                         <button class="action-btn action-btn--primary"
                                 :disabled="!item.sharerConnected || retrievingId === item.envelopeId"
-                                :title="item.sharerConnected ? '' : 'They need to be connected'"
+                                :title="item.sharerConnected ? '' : t('sharedWithYouPanel.theyNeedToBeConnected')"
                                 @click="retrieve(item)">
-                            {{ retrievingId === item.envelopeId ? 'Retrieving…' : 'Retrieve' }}
+                            {{ retrievingId === item.envelopeId ? t('sharedWithYouPanel.retrieving') : t('sharedWithYouPanel.retrieve2') }}
                         </button>
                     </div>
                 </div>

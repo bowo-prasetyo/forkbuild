@@ -27,6 +27,7 @@ import { BaseTransactionBroadcastState } from '../../../application/anchoring/ba
 import { BaseTransactionInclusionObservationState } from '../../../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import { IpfsRemotePublicationState } from '../../../application/ipfs/IpfsRemotePublicationState.js';
 import { IpfsPublicationContentVerificationCoordinatorState } from '../../../application/ipfs/IpfsPublicationContentVerificationCoordinatorState.js';
+import { t } from '../../i18n/i18n.js';
 
 // Badge colors reuse the .peer-badge palette: green = good (an "already
 // available" duplicate counts as good), amber = honestly inconclusive (nothing
@@ -100,7 +101,7 @@ export const SYNCHRONIZATION_BADGE_CLASSES = {
 };
 
 export function humanizeContentKind(contentKind) {
-    if (!contentKind) return 'Unknown content';
+    if (!contentKind) return t('publications.unknownContent');
     return contentKind
         .replace(/^forkbuild\./, '')
         .replace(/[-.]/g, ' ')
@@ -116,7 +117,7 @@ export function republishAdviceFor(kindPlugin) {
     const advice = kindPlugin && kindPlugin.republishAdvice;
     return advice && advice.text
         ? { text: advice.text, route: advice.route || null, routeLabel: advice.route ? advice.routeLabel : null }
-        : { text: 'Publish it again from where you first published it.', route: null, routeLabel: null };
+        : { text: t('publications.publishItAgainFromWhere'), route: null, routeLabel: null };
 }
 
 // A storage code ('local'/'ipfs'/'ar') is not a word: title-casing gives
@@ -130,7 +131,12 @@ export const STORAGE_TYPE_LABELS = {
     'remote-pinning': 'IPFS (Remote Pinning)'
 };
 
+// Names of networks are shown as they are; the two labels made of words
+// are translated.
+const STORAGE_TYPE_MESSAGES = { local: 'publications.local', 'remote-pinning': 'publications.ipfsRemotePinning' };
+
 export function humanizeStorageType(storage) {
+    if (STORAGE_TYPE_MESSAGES[storage]) return t(STORAGE_TYPE_MESSAGES[storage]);
     return STORAGE_TYPE_LABELS[storage] || humanizeContentKind(storage);
 }
 
@@ -210,8 +216,8 @@ export function oneClickAnchorTypes(availableAnchorTypes) {
 // or, with no claims at all, 'Nothing to compare yet' (no claims agree on
 // anything).
 export function describeClaimRelationship(relationship, claimCount) {
-    if (!claimCount) return 'Nothing to compare yet';
-    return relationship === 'conflict' ? 'Conflict' : 'Agreement';
+    if (!claimCount) return t('publications.nothingToCompareYet');
+    return relationship === 'conflict' ? t('publications.conflict') : t('publications.agreement');
 }
 
 export function humanizeAnchorType(anchorType) {

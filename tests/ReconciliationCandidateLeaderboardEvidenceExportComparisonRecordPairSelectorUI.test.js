@@ -275,7 +275,8 @@ async function main() {
     );
     const selectorCodeOnly = selectorModuleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-    assert(!selectorCodeOnly.includes('import '), '33. the selector component imports nothing at all — the identical zero-imports discipline the Table component holds');
+    // The translator (ui/i18n/i18n.js) is the one import allowed: it gives text, never data.
+    assert(!selectorCodeOnly.replace(/^import \{[^}]*\} from '\.\.\/\.\.\/i18n\/i18n\.js';$/m, '').includes('import '), '33. the selector component imports nothing but the translator — the identical discipline the Table component holds');
     for (const forbiddenCall of [
         'describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairs(',
         'describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifference(',

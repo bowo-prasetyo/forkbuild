@@ -11,6 +11,7 @@ import {
 } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
 import { describeBitcoinAnchorContentProofStateLabel, describeBitcoinAnchorContentProof } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofView.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
 //
@@ -202,7 +203,7 @@ async function run() {
         // function ui/views/DecentralizedPublicationsView.js#
         // bitcoinAnchorReconciliationView() projects for "right now."
         const currentDetail = describeBitcoinAnchorConfirmationObservationDetail(click3.transaction.confirmation);
-        assert(currentDetail.stateShortLabel === 'Unavailable', '15. the current reconciliation\'s own confirmation projects the identical short label a history row would show');
+        assert(displayText(currentDetail.stateShortLabel) === 'Unavailable', '15. the current reconciliation\'s own confirmation projects the identical short label a history row would show');
     }
     console.log('✓ Section A (FLAGSHIP): NOT_CONFIRMED -> CONFIRMED -> UNAVAILABLE, each click\'s confirmation appended to history in order; an earlier CONFIRMED entry is never rewritten by a later UNAVAILABLE one');
 
@@ -235,8 +236,8 @@ async function run() {
             confirmation: describeBitcoinAnchorConfirmationObservationDetail(result.transaction.confirmation),
             contentProof: describeBitcoinAnchorContentProof(result.contentProof)
         };
-        assert(uiView.confirmation.stateLabel === 'Transaction confirmed', '18. confirmation reads as its own honest sentence');
-        assert(uiView.contentProof.stateLabel === 'Hash does not match OP_RETURN', '19. content proof reads as its own honest, SEPARATE sentence');
+        assert(displayText(uiView.confirmation.stateLabel) === 'Transaction confirmed', '18. confirmation reads as its own honest sentence');
+        assert(displayText(uiView.contentProof.stateLabel) === 'Hash does not match OP_RETURN', '19. content proof reads as its own honest, SEPARATE sentence');
         for (const forbidden of ['valid', 'healthy', 'trusted', 'anchorHealth', 'verdict', 'overall']) {
             assert(!(forbidden in uiView), `20. the combined display object never carries a "${forbidden}" field`);
             assert(!(forbidden in uiView.confirmation), `21. confirmation never carries a "${forbidden}" field`);
@@ -285,9 +286,9 @@ async function run() {
     // three content-proof states honestly.
     // ---------------------------------------------------------------
     {
-        assert(describeBitcoinAnchorContentProofStateLabel(BitcoinAnchorContentProofState.HASH_MATCH) === 'Hash matches OP_RETURN', '26. HASH_MATCH label');
-        assert(describeBitcoinAnchorContentProofStateLabel(BitcoinAnchorContentProofState.HASH_MISMATCH) === 'Hash does not match OP_RETURN', '27. HASH_MISMATCH label');
-        assert(describeBitcoinAnchorContentProofStateLabel(BitcoinAnchorContentProofState.UNAVAILABLE) === 'Content proof unavailable', '28. UNAVAILABLE label');
+        assert(displayText(describeBitcoinAnchorContentProofStateLabel(BitcoinAnchorContentProofState.HASH_MATCH)) === 'Hash matches OP_RETURN', '26. HASH_MATCH label');
+        assert(displayText(describeBitcoinAnchorContentProofStateLabel(BitcoinAnchorContentProofState.HASH_MISMATCH)) === 'Hash does not match OP_RETURN', '27. HASH_MISMATCH label');
+        assert(displayText(describeBitcoinAnchorContentProofStateLabel(BitcoinAnchorContentProofState.UNAVAILABLE)) === 'Content proof unavailable', '28. UNAVAILABLE label');
         assert(describeBitcoinAnchorContentProofStateLabel('not-a-real-state') === null, '29. an unrecognized state names nothing, rather than guessing');
         assert(describeBitcoinAnchorContentProof(null) === null, '30. no observation yet -> null, never a fabricated "unavailable" fact');
 

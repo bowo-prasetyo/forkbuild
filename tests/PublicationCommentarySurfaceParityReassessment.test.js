@@ -28,6 +28,7 @@ import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as rawSource } from './support/SourceText.js';
 import { withEnglish } from './support/EnglishSource.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.9.562 — Publication Commentary Surface Parity Reassessment.
 //
@@ -393,7 +394,7 @@ const SOURCE_ROOT = new URL('../', import.meta.url);
 
 async function codeOnlySource(relativePath) {
     const text = withEnglish(await rawSource(relativePath));
-    return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
+    return displayText(text).split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 async function listJsFilesRecursively(relativeDir) {
     const results = [];
@@ -727,7 +728,7 @@ async function runTests() {
             adapter.submit();
             assert(adapter.error() === 'notification relay unavailable', `29. ${name}: the first, ambiguous attempt is reported as a failure.`);
             assert(backend.commentaryStore.getForPublication(publication.id).length === 1, `30. ${name}: despite the reported failure, the commentary is already durably persisted.`);
-            assert(adapter.text() === 'ambiguous first attempt', `31. ${name}: the draft survives the failure, unedited, ready for retry.`);
+            assert(displayText(adapter.text()) === 'ambiguous first attempt', `31. ${name}: the draft survives the failure, unedited, ready for retry.`);
 
             sinkShouldFail = false;
             adapter.submit();
@@ -806,9 +807,9 @@ async function runTests() {
 
         assert(ctx.rowSection(p1).commentaryError === null && ctx.rowSection(p1).commentaries.some((c) => c.content === 'P1 succeeded'),
             '36. P1\'s own row: succeeded, its own commentary visible, no error.');
-        assert(ctx.rowSection(p2).commentaryError === 'P2 write rejected' && ctx.rowSection(p2).newCommentaryText === 'P2 draft, never sent',
+        assert(ctx.rowSection(p2).commentaryError === 'P2 write rejected' && displayText(ctx.rowSection(p2).newCommentaryText) === 'P2 draft, never sent',
             '37. P2\'s own row: its own failure and its own preserved draft, independent of P1.');
-        assert(ctx.rowSection(p3).commentaryError === 'P3 write rejected' && ctx.rowSection(p3).newCommentaryText === 'P3 draft, never sent',
+        assert(ctx.rowSection(p3).commentaryError === 'P3 write rejected' && displayText(ctx.rowSection(p3).newCommentaryText) === 'P3 draft, never sent',
             '38. P3\'s own row: its own DISTINCT failure and draft, independent of P1 and P2.');
         assert(ctx.isCommentaryOpen(p4) === true && ctx.rowSection(p4).commentaries.length === 0 && ctx.rowSection(p4).commentaryError === null,
             '39. P4\'s own row: merely expanded, genuinely untouched by anything that happened to P1/P2/P3.');
@@ -823,7 +824,7 @@ async function runTests() {
         const cardCtxF = cardCtx({ publication: p1, getPublicationCommentariesCommand: backend.getPublicationCommentariesCommand, addPublicationCommentaryCommand: backend.addPublicationCommentaryCommand });
         cardCtxF.newCommentaryText = 'typed in Card, never submitted';
         const freshListCtx = listCtx({ getPublicationCommentariesCommand: backend.getPublicationCommentariesCommand, addPublicationCommentaryCommand: backend.addPublicationCommentaryCommand });
-        assert(freshListCtx.rowSection(p1).newCommentaryText === '', '42. a fresh PublicationList instance\'s own row for P1 starts with an empty draft — Card\'s own unsent draft never transferred in.');
+        assert(displayText(freshListCtx.rowSection(p1).newCommentaryText) === '', '42. a fresh PublicationList instance\'s own row for P1 starts with an empty draft — Card\'s own unsent draft never transferred in.');
         assert(!('_moduleLevelCommentaryDraftCache' in freshListCtx), 'sanity: no such cache concept exists to even check.');
 
         classification['F — concurrent row/state isolation'] = 'ALREADY_CORRECT: PublicationList\'s own per-row Commentary sections keep P1-P4 fully independent under simultaneous use; Card and List share no module-level draft state across component instances.';
@@ -966,10 +967,10 @@ async function runTests() {
         // The card and list views each own their toggle; the rest of
         // their Commentary vocabulary lives in the shared section both
         // mount, so each is read together with it.
-        const sectionSource = await rawSource('ui/components/PublicationCommentarySection.js');
+        const sectionSource = withEnglish(await rawSource('ui/components/PublicationCommentarySection.js'));
         const files = {
-            'PublicationCard.js': await rawSource('ui/components/PublicationCard.js') + sectionSource,
-            'PublicationList.js': await rawSource('ui/components/PublicationList.js') + sectionSource,
+            'PublicationCard.js': withEnglish(await rawSource('ui/components/PublicationCard.js')) + sectionSource,
+            'PublicationList.js': withEnglish(await rawSource('ui/components/PublicationList.js')) + sectionSource,
             'OwnPublicationPanel.js': withEnglish((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')),
             'WorldEncounterCanvas.js': withEnglish((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n'))
         };

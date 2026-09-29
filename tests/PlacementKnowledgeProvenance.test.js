@@ -18,6 +18,7 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
 //
@@ -208,16 +209,16 @@ async function run() {
             const record = createSnapshotPlacementKnowledgeRecord({ placementId: 'p', acquisitionKind: kind });
             const view = describePlacementKnowledge(record);
             assert(view.known === true && view.acquisitionKind === kind, `2. describePlacementKnowledge() for ${kind} reports known: true and the same kind`);
-            assert(typeof view.acquisitionLabel === 'string' && view.acquisitionLabel.length > 0, `3. describePlacementKnowledge() for ${kind} produces a non-empty label`);
+            assert(typeof displayText(view.acquisitionLabel) === 'string' && displayText(view.acquisitionLabel).length > 0, `3. describePlacementKnowledge() for ${kind} produces a non-empty label`);
             assert(!/alice|bob|carol|peer-\w+|identity-\w+/i.test(view.acquisitionLabel), `4. describePlacementKnowledge() for ${kind} never names a specific peer or identity in its label`);
             assert(!/trust|authorit|verified|confirm|reliab|rank|✓/i.test(view.acquisitionLabel), `5. describePlacementKnowledge() for ${kind} never reads as a trust or availability signal`);
             assert(view.firstSeenAt === record.firstSeenAt.toISOString(), `6. describePlacementKnowledge() for ${kind} carries firstSeenAt as an ISO string`);
         }
-        assert(describePlacementKnowledge(createSnapshotPlacementKnowledgeRecord({ placementId: 'p', acquisitionKind: PlacementAcquisitionKind.PEER })).acquisitionLabel === 'Learned via peer exchange',
+        assert(displayText(describePlacementKnowledge(createSnapshotPlacementKnowledgeRecord({ placementId: 'p', acquisitionKind: PlacementAcquisitionKind.PEER })).acquisitionLabel) === 'Learned via peer exchange',
             '7. PEER reads exactly "Learned via peer exchange" — never "Source: <peer>"');
-        assert(describePlacementKnowledge(createSnapshotPlacementKnowledgeRecord({ placementId: 'p', acquisitionKind: PlacementAcquisitionKind.LOCAL })).acquisitionLabel === 'Learned locally',
+        assert(displayText(describePlacementKnowledge(createSnapshotPlacementKnowledgeRecord({ placementId: 'p', acquisitionKind: PlacementAcquisitionKind.LOCAL })).acquisitionLabel) === 'Learned locally',
             '8. LOCAL reads exactly "Learned locally"');
-        assert(describePlacementKnowledge(createSnapshotPlacementKnowledgeRecord({ placementId: 'p', acquisitionKind: PlacementAcquisitionKind.PACKAGE })).acquisitionLabel === 'Learned via package import',
+        assert(displayText(describePlacementKnowledge(createSnapshotPlacementKnowledgeRecord({ placementId: 'p', acquisitionKind: PlacementAcquisitionKind.PACKAGE })).acquisitionLabel) === 'Learned via package import',
             '9. PACKAGE reads exactly "Learned via package import"');
     }
     console.log('✓ Section C: PublicationSnapshotPlacementKnowledgeView#describePlacementKnowledge() — known/unknown shapes, and wording that never names a peer or reads as trust/availability');

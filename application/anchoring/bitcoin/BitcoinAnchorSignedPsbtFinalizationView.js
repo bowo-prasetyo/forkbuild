@@ -1,12 +1,13 @@
 import { BitcoinAnchorSignedPsbtFinalizationState } from './BitcoinAnchorSignedPsbtFinalizationState.js';
+import { message } from '../../../core/Message.js';
 
 const STATE_LABELS = {
-    [BitcoinAnchorSignedPsbtFinalizationState.IDLE]: 'Not yet finalized',
-    [BitcoinAnchorSignedPsbtFinalizationState.FINALIZING]: 'Verifying signature…',
-    [BitcoinAnchorSignedPsbtFinalizationState.FINALIZED]: 'Transaction finalized',
-    [BitcoinAnchorSignedPsbtFinalizationState.INVALID_SIGNATURE]: 'Signature did not verify',
-    [BitcoinAnchorSignedPsbtFinalizationState.UNAVAILABLE]: 'Finalization unavailable',
-    [BitcoinAnchorSignedPsbtFinalizationState.FAILED]: 'Finalization failed'
+    [BitcoinAnchorSignedPsbtFinalizationState.IDLE]: message('bitcoinAnchorSignedPsbtFinalization.notYetFinalized'),
+    [BitcoinAnchorSignedPsbtFinalizationState.FINALIZING]: message('bitcoinAnchorSignedPsbtFinalization.verifyingSignature'),
+    [BitcoinAnchorSignedPsbtFinalizationState.FINALIZED]: message('bitcoinAnchorSignedPsbtFinalization.transactionFinalized'),
+    [BitcoinAnchorSignedPsbtFinalizationState.INVALID_SIGNATURE]: message('bitcoinAnchorSignedPsbtFinalization.signatureDidNotVerify'),
+    [BitcoinAnchorSignedPsbtFinalizationState.UNAVAILABLE]: message('bitcoinAnchorSignedPsbtFinalization.finalizationUnavailable'),
+    [BitcoinAnchorSignedPsbtFinalizationState.FAILED]: message('bitcoinAnchorSignedPsbtFinalization.finalizationFailed')
 };
 
 // 0.8.63 — Explicit Signed PSBT Verification & Transaction Finalization UI.

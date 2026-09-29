@@ -21,6 +21,8 @@ import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { displayText } from '../ui/i18n/i18n.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.561 — Publication List Commentary Parity.
 //
@@ -148,7 +150,7 @@ function listCtx(overrides = {}) {
 
 async function codeOnlySource(relativePath) {
     const text = await rawSource(relativePath);
-    return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
+    return displayText(text).split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 
 async function runTests() {
@@ -220,7 +222,7 @@ async function runTests() {
         ctx.rowSection(publication).submitCommentary();
         assert(ctx.rowSection(publication).commentaryError === null, '9. a well-formed submission succeeds');
         assert(ctx.rowSection(publication).commentaries.length === 1, '10. the submitted commentary is immediately visible after re-query');
-        assert(ctx.rowSection(publication).newCommentaryText === '', '11. a successful submission clears that row\'s own draft');
+        assert(displayText(ctx.rowSection(publication).newCommentaryText) === '', '11. a successful submission clears that row\'s own draft');
 
         // Failed submission (unauthenticated) then retry after signing
         // back in — same two-step story PublicationCard.js's own Section
@@ -235,7 +237,7 @@ async function runTests() {
         ctx.rowSection(p2).submitCommentary();
         assert(typeof ctx.rowSection(p2).commentaryError === 'string' && ctx.rowSection(p2).commentaryError.length > 0,
             '12. a rejected submission surfaces the existing use case\'s own rejection, on that row only');
-        assert(ctx.rowSection(p2).newCommentaryText === 'nobody is signed in', '13. a rejected attempt never discards what was typed');
+        assert(displayText(ctx.rowSection(p2).newCommentaryText) === 'nobody is signed in', '13. a rejected attempt never discards what was typed');
         assert(ctx.rowSection(p2).commentaries.length === 0, '14. a rejected attempt persists nothing for that row');
 
         // Retry after signing back in — the SAME draft, same commentaryId
@@ -435,7 +437,7 @@ async function runTests() {
     // never internal ids/statuses, exposed to the viewer.
     // ---------------------------------------------------------------
     {
-        const rawTemplateSource = await rawSource('ui/components/PublicationList.js') + await rawSource('ui/components/PublicationCommentarySection.js');
+        const rawTemplateSource = withEnglish(await rawSource('ui/components/PublicationList.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
         assert(rawTemplateSource.includes('>Comment<') || rawTemplateSource.includes("'Hide Comments'"),
             '37. the action label is human-facing ("Comment"/"Hide Comments"), not an internal verb');
         assert(rawTemplateSource.includes('No commentary yet.'),

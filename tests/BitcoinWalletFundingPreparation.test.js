@@ -4,6 +4,7 @@ import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTrans
 import { BitcoinAnchorFundingObservationState } from '../application/anchoring/bitcoin/BitcoinAnchorFundingObservationState.js';
 import { describeBitcoinAnchorFundingStateLabel, describeBitcoinAnchorFunding } from '../application/anchoring/bitcoin/BitcoinAnchorFundingView.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation.
 //
@@ -139,7 +140,7 @@ async function run() {
         const p2sh = await observer.observeFunding({ account: ALICE_P2SH, network: 'mainnet' });
         assert(p2sh.state === BitcoinAnchorFundingObservationState.UNSUPPORTED, '13. a real P2SH address is honestly UNSUPPORTED, never guessed at as p2wpkh');
         assert(p2sh.scriptType === null && p2sh.utxos.length === 0 && p2sh.changeAccount === null, '14. an UNSUPPORTED observation carries no scriptType, utxos, or changeAccount');
-        assert(typeof p2sh.reason === 'string' && p2sh.reason.length > 0, '15. UNSUPPORTED carries a human-readable reason');
+        assert(typeof displayText(p2sh.reason) === 'string' && displayText(p2sh.reason).length > 0, '15. UNSUPPORTED carries a human-readable reason');
         assert(!requestedAddresses.includes(ALICE_P2SH), '16. the funding source is never even consulted for an unsupported address format');
 
         const p2wsh = await observer.observeFunding({ account: 'bc1q' + 'a'.repeat(58), network: 'mainnet' }); // 62 chars — P2WSH length
@@ -156,7 +157,7 @@ async function run() {
         const throwingObserver = new BitcoinWalletFundingObserver({ fundingSource: throwingSource });
         const throwingResult = await throwingObserver.observeFunding({ account: ALICE_P2WPKH, network: 'mainnet' });
         assert(throwingResult.state === BitcoinAnchorFundingObservationState.UNAVAILABLE, '18. a throwing fundingSource is reported as UNAVAILABLE, never propagated');
-        assert(throwingResult.reason.includes('unreachable'), '19. the underlying reason is preserved');
+        assert(displayText(throwingResult.reason).includes('unreachable'), '19. the underlying reason is preserved');
 
         const noAnswerSource = { fetchUtxos: async () => ({ found: false, reason: 'explorer returned 503' }) };
         const noAnswerObserver = new BitcoinWalletFundingObserver({ fundingSource: noAnswerSource });
@@ -196,9 +197,9 @@ async function run() {
     // staleness against the wallet's current network.
     // ---------------------------------------------------------------
     {
-        assert(describeBitcoinAnchorFundingStateLabel(BitcoinAnchorFundingObservationState.OBSERVED) === 'Funding observed', '24. OBSERVED label');
-        assert(describeBitcoinAnchorFundingStateLabel(BitcoinAnchorFundingObservationState.UNSUPPORTED) === 'Unsupported address format', '25. UNSUPPORTED label');
-        assert(describeBitcoinAnchorFundingStateLabel(BitcoinAnchorFundingObservationState.UNAVAILABLE) === 'Funding unavailable', '26. UNAVAILABLE label');
+        assert(displayText(describeBitcoinAnchorFundingStateLabel(BitcoinAnchorFundingObservationState.OBSERVED)) === 'Funding observed', '24. OBSERVED label');
+        assert(displayText(describeBitcoinAnchorFundingStateLabel(BitcoinAnchorFundingObservationState.UNSUPPORTED)) === 'Unsupported address format', '25. UNSUPPORTED label');
+        assert(displayText(describeBitcoinAnchorFundingStateLabel(BitcoinAnchorFundingObservationState.UNAVAILABLE)) === 'Funding unavailable', '26. UNAVAILABLE label');
         assert(describeBitcoinAnchorFundingStateLabel('not-a-real-state') === null, '27. an unrecognized state names nothing, rather than guessing');
 
         const { fetchImpl } = makeFakeEsploraFetch({ utxosByAddress: new Map([[ALICE_P2WPKH, [esploraUtxoEntry(TXID_A, 0, 20000)]]]) });

@@ -6,6 +6,7 @@ import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchori
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { BaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.100 — Publication Identity–Scoped Observation Correlation.
 //
@@ -283,7 +284,7 @@ async function run() {
 
         assert(described.publication.contentHash === CONTENT_HASH && described.publication.txid === TX_A, '29. the described publication carries the identity fields unchanged');
         assert(described.observations.count === 1, '30. the described observations section carries the correct count');
-        assert(described.observations.observations[0].stateLabel === 'Transaction included', '31. the described observation reuses application/anchoring/base/BaseTransactionInclusionObservationView.js\'s own, already-established labels — no new vocabulary');
+        assert(displayText(described.observations.observations[0].stateLabel) === 'Transaction included', '31. the described observation reuses application/anchoring/base/BaseTransactionInclusionObservationView.js\'s own, already-established labels — no new vocabulary');
 
         assert(describeBaseAnchorPublicationObservationProjection(null) === null, '32. a null projection describes as null, never throwing');
     }

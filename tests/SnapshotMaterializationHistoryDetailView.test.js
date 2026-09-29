@@ -15,6 +15,7 @@ import {
 } from '../application/snapshot/materialization/SnapshotMaterializationHistoryDetailView.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.44 — Explicit Snapshot Acquisition Attempt Inspection.
 //
@@ -90,10 +91,10 @@ async function run() {
         assert(Object.isFrozen(details.entries), '3. the entries array is frozen');
         assert(Object.isFrozen(details.entries[0]), '4. each individual entry is frozen');
 
-        assert(details.entries[0].sourceLabel === 'Placement' && details.entries[0].outcomeLabel === 'Snapshot stored locally',
+        assert(displayText(details.entries[0].sourceLabel) === 'Placement' && displayText(details.entries[0].outcomeLabel) === 'Snapshot stored locally',
             '5. the first (oldest) entry carries the same sourceLabel/outcomeLabel describeSnapshotMaterializationHistory() already narrates');
-        assert(details.entries[0].outcomeShortLabel === 'Stored', '6. STORED gets the short label "Stored"');
-        assert(details.entries[1].sourceLabel === 'Peer' && details.entries[1].outcomeShortLabel === 'Hash mismatch',
+        assert(displayText(details.entries[0].outcomeShortLabel) === 'Stored', '6. STORED gets the short label "Stored"');
+        assert(displayText(details.entries[1].sourceLabel) === 'Peer' && displayText(details.entries[1].outcomeShortLabel) === 'Hash mismatch',
             '7. the second (newest) entry is narrated correctly, with its own short label');
         assert(details.entries[0].observedAt === observedAt1 && details.entries[1].observedAt === observedAt2,
             '8. observedAt is carried through unchanged, oldest first — never sorted or reordered');
@@ -127,7 +128,7 @@ async function run() {
         const shortLabels = ['Stored', 'Already available', 'Hash mismatch'];
         for (const label of shortLabels) {
             for (const forbidden of FORBIDDEN_WORDS) {
-                assert(!label.toLowerCase().includes(forbidden), `17. outcomeShortLabel "${label}" never contains the forbidden word "${forbidden}"`);
+                assert(!displayText(label).toLowerCase().includes(forbidden), `17. outcomeShortLabel "${label}" never contains the forbidden word "${forbidden}"`);
             }
         }
     }
@@ -274,9 +275,9 @@ async function run() {
         const aliceDetails = describeSnapshotMaterializationHistoryDetails(alice.history);
         const bobDetails = describeSnapshotMaterializationHistoryDetails(bob.history);
 
-        assert(aliceDetails.count === 1 && aliceDetails.entries[0].sourceLabel === 'Transfer package',
+        assert(aliceDetails.count === 1 && displayText(aliceDetails.entries[0].sourceLabel) === 'Transfer package',
             '5. Alice\'s own detail narration holds exactly one PACKAGE entry');
-        assert(bobDetails.count === 2 && bobDetails.entries[0].outcomeShortLabel === 'Hash mismatch' && bobDetails.entries[1].outcomeShortLabel === 'Stored',
+        assert(bobDetails.count === 2 && displayText(bobDetails.entries[0].outcomeShortLabel) === 'Hash mismatch' && displayText(bobDetails.entries[1].outcomeShortLabel) === 'Stored',
             '6. Bob\'s own detail narration holds exactly two entries, in order — the rejection first, the success second');
         assert(JSON.stringify(aliceDetails) !== JSON.stringify(bobDetails),
             '7. INVARIANT: Alice\'s and Bob\'s detail narrations are DIFFERENT, despite both reporting the identical current possession');

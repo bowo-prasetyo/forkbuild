@@ -1,5 +1,6 @@
 import { describeBitcoinAnchorConfirmationObservationHistory } from './BitcoinAnchorConfirmationObservationHistoryView.js';
 import { BitcoinAnchorConfirmationState } from './BitcoinAnchorConfirmationState.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.56 — Bitcoin Anchor Confirmation Observation History & Per-Observation
 // Inspection.
@@ -106,9 +107,9 @@ export function describeBitcoinAnchorConfirmationObservationDetail(observation) 
 // meaning the full sentence does not already carry.
 function describeBitcoinAnchorConfirmationStateShortLabel(state) {
     switch (state) {
-        case BitcoinAnchorConfirmationState.CONFIRMED: return 'Confirmed';
-        case BitcoinAnchorConfirmationState.NOT_CONFIRMED: return 'Not confirmed';
-        case BitcoinAnchorConfirmationState.UNAVAILABLE: return 'Unavailable';
+        case BitcoinAnchorConfirmationState.CONFIRMED: return message('bitcoinAnchorConfirmationObservationHistoryDetail.confirmed');
+        case BitcoinAnchorConfirmationState.NOT_CONFIRMED: return message('bitcoinAnchorConfirmationObservationHistoryDetail.notConfirmed');
+        case BitcoinAnchorConfirmationState.UNAVAILABLE: return message('bitcoinAnchorConfirmationObservationHistoryDetail.unavailable');
         default: return null;
     }
 }

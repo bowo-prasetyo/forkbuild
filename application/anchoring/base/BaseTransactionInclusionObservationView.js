@@ -1,4 +1,5 @@
 import { BaseTransactionInclusionObservationState } from './BaseTransactionInclusionObservationState.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation.
 //
@@ -70,9 +71,9 @@ import { BaseTransactionInclusionObservationState } from './BaseTransactionInclu
 // access, no caching, no history of its own.
 export function describeBaseTransactionInclusionStateLabel(state) {
     switch (state) {
-        case BaseTransactionInclusionObservationState.INCLUDED: return 'Transaction included';
-        case BaseTransactionInclusionObservationState.NOT_INCLUDED: return 'Transaction not included';
-        case BaseTransactionInclusionObservationState.UNAVAILABLE: return 'Inclusion status unavailable';
+        case BaseTransactionInclusionObservationState.INCLUDED: return message('baseTransactionInclusionObservation.transactionIncluded');
+        case BaseTransactionInclusionObservationState.NOT_INCLUDED: return message('baseTransactionInclusionObservation.transactionNotIncluded');
+        case BaseTransactionInclusionObservationState.UNAVAILABLE: return message('baseTransactionInclusionObservation.inclusionStatusUnavailable');
         default: return null;
     }
 }
@@ -83,9 +84,9 @@ export function describeBaseTransactionInclusionStateLabel(state) {
 // meaning the full sentence does not already carry.
 export function describeBaseTransactionInclusionStateShortLabel(state) {
     switch (state) {
-        case BaseTransactionInclusionObservationState.INCLUDED: return 'Included';
-        case BaseTransactionInclusionObservationState.NOT_INCLUDED: return 'Not included';
-        case BaseTransactionInclusionObservationState.UNAVAILABLE: return 'Unavailable';
+        case BaseTransactionInclusionObservationState.INCLUDED: return message('baseTransactionInclusionObservation.included');
+        case BaseTransactionInclusionObservationState.NOT_INCLUDED: return message('baseTransactionInclusionObservation.notIncluded');
+        case BaseTransactionInclusionObservationState.UNAVAILABLE: return message('baseTransactionInclusionObservation.unavailable');
         default: return null;
     }
 }

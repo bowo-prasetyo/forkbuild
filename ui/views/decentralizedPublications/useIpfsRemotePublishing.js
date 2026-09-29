@@ -28,6 +28,7 @@ import {
     describeIpfsPublicationObservationTimeline, IpfsPublicationObservationTimelineEntryKind
 } from '../../../application/ipfs/IpfsPublicationObservationTimelineView.js';
 import { isLegacyContentHash } from '../../../serializer/contentHash.js';
+import { t } from '../../i18n/i18n.js';
 
 // Remote IPFS publishing: the pinning-service configuration form, publishing
 // an entry's content, verifying what was published, and the per-entry record,
@@ -226,8 +227,8 @@ export function useIpfsRemotePublishing({
     }
 
     function ipfsPublicationContentVerifyButtonLabel(entry) {
-        if (isVerifyingIpfsPublicationContent(entry)) return 'Verifying…';
-        return entry.ipfsPublicationContentVerification ? 'Verify Again' : 'Verify IPFS Content';
+        if (isVerifyingIpfsPublicationContent(entry)) return t('publications.verifying');
+        return entry.ipfsPublicationContentVerification ? t('publications.verifyAgain') : t('publications.verifyIpfsContent');
     }
 
     function ipfsPublicationRecordHistoryView(entry) {
@@ -300,8 +301,8 @@ export function useIpfsRemotePublishing({
     }
 
     function ipfsPublicationRecordVerifyButtonLabel(entry, index) {
-        if (isVerifyingIpfsPublicationRecordHistoryEntry(entry, index)) return 'Verifying…';
-        return ipfsPublicationRecordVerificationHistoryView(entry, index).count > 0 ? 'Verify Again' : 'Verify Content';
+        if (isVerifyingIpfsPublicationRecordHistoryEntry(entry, index)) return t('publications.verifying');
+        return ipfsPublicationRecordVerificationHistoryView(entry, index).count > 0 ? t('publications.verifyAgain') : t('publications.verifyContent');
     }
 
     // Only shows the history; never triggers a verification.

@@ -33,6 +33,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.30 — Explicit Replica Knowledge Synchronization.
 //
@@ -234,9 +235,9 @@ async function run() {
         assert(nothingNew.state === PublicationKnowledgeSynchronizationUiState.NO_NEW_CLAIMS, '7. no new claims in either dimension is NO_NEW_CLAIMS, never confused with "no claims exist"');
         assert(!/no claims exist/i.test(nothingNew.message), '8. wording never claims "no claims exist"');
 
-        assert(describeSynchronizationButtonLabel({}) === 'Synchronize with Peers', '9. default label');
-        assert(describeSynchronizationButtonLabel({ synchronizing: true }) === 'Asking Peers…', '10. in-flight label');
-        assert(describeSynchronizationButtonLabel({ hasSynchronized: true }) === 'Synchronize Again', '11. post-attempt label');
+        assert(displayText(describeSynchronizationButtonLabel({})) === 'Synchronize with Peers', '9. default label');
+        assert(displayText(describeSynchronizationButtonLabel({ synchronizing: true })) === 'Asking Peers…', '10. in-flight label');
+        assert(displayText(describeSynchronizationButtonLabel({ hasSynchronized: true })) === 'Synchronize Again', '11. post-attempt label');
     }
     console.log('✓ Section C: describeSynchronizationAttempt()/describeSynchronizationButtonLabel() — the five UI states');
 

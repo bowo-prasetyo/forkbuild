@@ -1,8 +1,10 @@
 import PublicationPreview from './PublicationPreview.js';
 import PublicationCommentarySection from './PublicationCommentarySection.js';
 import SharePublicationButton from './SharePublicationButton.js';
-import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
+import { publicationDateText } from '../i18n/dateText.js';
 import { License } from '../../core/License.js';
+import { describeLicense } from '../../application/document/LicenseLabels.js';
+import { displayText, t } from '../i18n/i18n.js';
 
 // 0.2.31 — the compact table/row view of a page of publications —
 // "best when there are hundreds or thousands," per the design doc,
@@ -48,13 +50,14 @@ export default {
         };
     },
     methods: {
+        t,
         licenseLabel(pub) {
-            return License.idOf(pub.license);
+            return displayText(describeLicense(License.idOf(pub.license)));
         },
         // 0.9.539 — the SAME `publishedAt` field, at finer precision,
         // never a new one.
         publishedAtLabel(pub) {
-            return formatPublicationDate(pub.publishedAt, this.preciseDateIds.has(pub.id)) || '—';
+            return publicationDateText(pub.publishedAt, this.preciseDateIds.has(pub.id)) || '—';
         },
         isCommentaryOpen(pub) {
             return !!this.openCommentaryIds[pub.id];
@@ -76,11 +79,11 @@ export default {
                 <thead>
                     <tr>
                         <th class="publication-table-preview-col"></th>
-                        <th>Title</th>
-                        <th>Author</th>
-                        <th>Published</th>
-                        <th>License</th>
-                        <th class="publication-table-actions-col">Actions</th>
+                        <th>{{ t('publicationList.title') }}</th>
+                        <th>{{ t('publicationList.author') }}</th>
+                        <th>{{ t('publicationList.published') }}</th>
+                        <th>{{ t('publicationList.license') }}</th>
+                        <th class="publication-table-actions-col">{{ t('publicationList.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -92,7 +95,7 @@ export default {
                             <td class="publication-table-title-col">
                                 <span class="publication-table-title">{{ pub.title }}</span>
                                 <span v-if="pub.parentDocumentId" class="publication-fork-of">
-                                    ↳ Fork of {{ parentTitles[pub.documentId] || 'Unknown' }}
+                                    ↳ Fork of {{ parentTitles[pub.documentId] || t('publicationList.unknown') }}
                                 </span>
                                 <span v-if="descriptions[pub.documentId]" class="publication-description publication-description--list">
                                     {{ descriptions[pub.documentId] }}
@@ -102,20 +105,20 @@ export default {
                                 <template v-if="pub.author">
                                     <a @click.prevent="$emit('view-author', pub.author)" class="publication-author-link">{{ pub.author }}</a>
                                 </template>
-                                <template v-else>anonymous</template>
+                                <template v-else>{{ t('publicationList.anonymous') }}</template>
                             </td>
                             <td class="publication-date">{{ publishedAtLabel(pub) }}</td>
                             <td class="publication-date">{{ licenseLabel(pub) }}</td>
                             <td>
                                 <div class="publication-actions publication-actions--row">
-                                    <button class="action-btn action-btn--open" @click="$emit('open', pub)">Open</button>
-                                    <button class="action-btn action-btn--fork" @click="$emit('fork', pub)">Fork</button>
-                                    <button class="action-btn action-btn--explore" @click="$emit('explore', pub)">Explore</button>
+                                    <button class="action-btn action-btn--open" @click="$emit('open', pub)">{{ t('publicationList.open') }}</button>
+                                    <button class="action-btn action-btn--fork" @click="$emit('fork', pub)">{{ t('publicationList.fork') }}</button>
+                                    <button class="action-btn action-btn--explore" @click="$emit('explore', pub)">{{ t('publicationList.explore') }}</button>
                                     <button
                                         v-if="getPublicationCommentariesCommand"
                                         class="action-btn action-btn--comment"
                                         @click="toggleCommentary(pub)"
-                                    >{{ isCommentaryOpen(pub) ? 'Hide Comments' : 'Comment' }}</button>
+                                    >{{ isCommentaryOpen(pub) ? t('publicationList.hideComments') : t('publicationList.comment') }}</button>
                                 </div>
                                 <SharePublicationButton :publication="pub" />
                             </td>

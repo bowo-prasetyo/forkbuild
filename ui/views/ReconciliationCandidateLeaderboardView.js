@@ -30,6 +30,8 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport
 } from '../../application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js';
 import ReconciliationCandidateLeaderboardTable from '../components/reconciliation/CandidateLeaderboardTable.js';
+import { displayText, t } from '../i18n/i18n.js';
+import { message } from '../../core/Message.js';
 
 // 0.8.181 — Explicit Peer Archive Leaderboard Comparison.
 //
@@ -323,16 +325,16 @@ import ReconciliationCandidateLeaderboardTable from '../components/reconciliatio
 // Evidence" is its own, separate, explicit action a person chooses to
 // click afterward, or not at all.
 export const RECONCILIATION_CANDIDATE_LEADERBOARD_EVIDENCE_KIND_OPTIONS = [
-    { value: ReconciliationCandidateLeaderboardEvidenceKind.ALL, label: 'All' },
-    { value: ReconciliationCandidateLeaderboardEvidenceKind.DECISIONS, label: 'Decisions' },
-    { value: ReconciliationCandidateLeaderboardEvidenceKind.OBSERVATIONS, label: 'Observations' }
+    { value: ReconciliationCandidateLeaderboardEvidenceKind.ALL, label: message('reconciliation.filter.all') },
+    { value: ReconciliationCandidateLeaderboardEvidenceKind.DECISIONS, label: message('reconciliation.filter.decisions') },
+    { value: ReconciliationCandidateLeaderboardEvidenceKind.OBSERVATIONS, label: message('reconciliation.filter.observations') }
 ];
 
 export const RECONCILIATION_CANDIDATE_LEADERBOARD_REPLICA_RELATION_OPTIONS = [
-    { value: ReconciliationCandidateLeaderboardReplicaRelation.ALL, label: 'All' },
-    { value: ReconciliationCandidateLeaderboardReplicaRelation.SHARED, label: 'Shared' },
-    { value: ReconciliationCandidateLeaderboardReplicaRelation.SOURCE_ONLY, label: 'Source-only' },
-    { value: ReconciliationCandidateLeaderboardReplicaRelation.TARGET_ONLY, label: 'Target-only' }
+    { value: ReconciliationCandidateLeaderboardReplicaRelation.ALL, label: message('reconciliation.filter.all') },
+    { value: ReconciliationCandidateLeaderboardReplicaRelation.SHARED, label: message('reconciliation.filter.shared') },
+    { value: ReconciliationCandidateLeaderboardReplicaRelation.SOURCE_ONLY, label: message('reconciliation.filter.sourceOnly') },
+    { value: ReconciliationCandidateLeaderboardReplicaRelation.TARGET_ONLY, label: message('reconciliation.filter.targetOnly') }
 ];
 export default {
     name: 'ReconciliationCandidateLeaderboardView',
@@ -469,6 +471,8 @@ export default {
         }
 
         return {
+            t,
+            displayText,
             page, evidenceDetail, comparisonState,
             evidenceKindFilter, replicaRelationFilter, filteredPage, filteredEvidenceDetail,
             evidenceKindOptions: RECONCILIATION_CANDIDATE_LEADERBOARD_EVIDENCE_KIND_OPTIONS,
@@ -480,76 +484,64 @@ export default {
     },
     template: `
         <section class="reconciliation-leaderboard-view">
-            <h1>Reconciliation Candidate Leaderboard</h1>
+            <h1>{{ t('reconciliationCandidateLeaderboardView.reconciliationCandidateLeaderboard') }}</h1>
             <p class="reconciliation-leaderboard-note">
-                Decision and observation evidence this replica has recorded for each
-                reconciliation candidate, compared explicitly against the peer archive
-                supplied below. Nothing here merges, replaces, or reconciles either
-                archive — this is a comparison, never a reconciliation.
+                {{ t('reconciliationCandidateLeaderboardView.decisionAndObservationEvidenceThis') }}
             </p>
 
             <div class="evidence-inspection-adapter">
-                <span class="evidence-inspection-adapter-title">Peer Archive</span>
+                <span class="evidence-inspection-adapter-title">{{ t('reconciliationCandidateLeaderboardView.peerArchive') }}</span>
                 <p v-if="comparisonState === 'NO_PEER'" class="form-hint form-hint--neutral">
-                    No peer archive supplied yet — every count below is Source-only
-                    until you paste one. Paste a peer replica's own exported archive
-                    (Export Archive, on the Publications page) and click
-                    "Use as Peer Archive".
+                    {{ t('reconciliationCandidateLeaderboardView.noPeerArchiveSuppliedYet') }}
                 </p>
                 <p v-else-if="comparisonState === 'PEER_EMPTY'" class="form-hint form-hint--neutral">
-                    Comparing against an explicitly supplied peer archive — but that
-                    peer archive has no decision or observation records of its own
-                    recorded yet, so every count below is still Source-only. This is
-                    a real, supplied peer, not the no-peer default.
+                    {{ t('reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied') }}
                 </p>
                 <p v-else class="form-hint form-hint--neutral">
-                    Comparing against an explicitly supplied peer archive.
+                    {{ t('reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied2') }}
                 </p>
                 <label class="form-field">
-                    <span class="form-label">Peer archive JSON</span>
+                    <span class="form-label">{{ t('reconciliationCandidateLeaderboardView.peerArchiveJson') }}</span>
                     <textarea class="form-input identity-export-json" rows="6" v-model="peerArchiveText"
-                              placeholder="Paste a peer replica's exported archive JSON"></textarea>
+                              :placeholder="t('reconciliationCandidateLeaderboardView.pasteAPeerReplicaS')"></textarea>
                 </label>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="usePeerArchive">
-                        Use as Peer Archive
+                        {{ t('reconciliationCandidateLeaderboardView.useAsPeerArchive') }}
                     </button>
                     <button type="button" class="action-btn action-btn--secondary" v-if="hasPeerArchive" @click="clearPeerArchive">
-                        Clear Peer Archive
+                        {{ t('reconciliationCandidateLeaderboardView.clearPeerArchive') }}
                     </button>
                 </div>
                 <p v-if="peerArchiveInvalid" class="identity-unlock-error">
-                    This is not a valid archive export — nothing was compared.
+                    {{ t('reconciliationCandidateLeaderboardView.thisIsNotAValid') }}
                 </p>
             </div>
 
             <div class="evidence-inspection-adapter reconciliation-leaderboard-evidence-filter">
-                <span class="evidence-inspection-adapter-title">Evidence Filter</span>
+                <span class="evidence-inspection-adapter-title">{{ t('reconciliationCandidateLeaderboardView.evidenceFilter') }}</span>
                 <label class="form-field">
-                    <span class="form-label">Evidence type</span>
+                    <span class="form-label">{{ t('reconciliationCandidateLeaderboardView.evidenceType') }}</span>
                     <select class="form-input" v-model="evidenceKindFilter">
-                        <option v-for="option in evidenceKindOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                        <option v-for="option in evidenceKindOptions" :key="option.value" :value="option.value">{{ displayText(option.label) }}</option>
                     </select>
                 </label>
                 <label class="form-field">
-                    <span class="form-label">Replica relation</span>
+                    <span class="form-label">{{ t('reconciliationCandidateLeaderboardView.replicaRelation') }}</span>
                     <select class="form-input" v-model="replicaRelationFilter">
-                        <option v-for="option in replicaRelationOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                        <option v-for="option in replicaRelationOptions" :key="option.value" :value="option.value">{{ displayText(option.label) }}</option>
                     </select>
                 </label>
             </div>
 
             <div class="evidence-inspection-adapter reconciliation-leaderboard-evidence-export">
-                <span class="evidence-inspection-adapter-title">Evidence Export</span>
+                <span class="evidence-inspection-adapter-title">{{ t('reconciliationCandidateLeaderboardView.evidenceExport') }}</span>
                 <p class="form-hint form-hint--neutral">
-                    Exports exactly the evidence currently shown above — the same Evidence
-                    Filter selection and the same peer comparison state — as a portable
-                    JSON document. Nothing here recomputes evidence, filters a candidate,
-                    or contacts a server.
+                    {{ t('reconciliationCandidateLeaderboardView.exportsExactlyTheEvidenceCurrently') }}
                 </p>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="exportEvidence">
-                        Export Evidence
+                        {{ t('reconciliationCandidateLeaderboardView.exportEvidence') }}
                     </button>
                     <!-- 0.9.403 — Evidence Export Comparison Contextual Entry
                          Point. A plain navigation edge, styled like the
@@ -559,48 +551,45 @@ export default {
                          obtains its own two inputs by paste, exactly as
                          before. -->
                     <router-link to="/evidence-export-comparison" class="action-btn action-btn--secondary">
-                        Compare Exported Evidence
+                        {{ t('reconciliationCandidateLeaderboardView.compareExportedEvidence') }}
                     </router-link>
                 </div>
                 <div v-if="evidenceExportPackage.json" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Exported Evidence</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('reconciliationCandidateLeaderboardView.exportedEvidence') }}</span>
                     <textarea class="form-input identity-export-json" rows="6" readonly :value="evidenceExportPackage.json"></textarea>
                     <div class="identity-mgmt-actions">
-                        <a class="modal-btn modal-btn--primary" :href="evidenceExportPackage.downloadHref" :download="evidenceExportPackage.fileName">Download Evidence Export</a>
+                        <a class="modal-btn modal-btn--primary" :href="evidenceExportPackage.downloadHref" :download="evidenceExportPackage.fileName">{{ t('reconciliationCandidateLeaderboardView.downloadEvidenceExport') }}</a>
                     </div>
                 </div>
             </div>
 
             <div class="evidence-inspection-adapter reconciliation-leaderboard-evidence-import">
-                <span class="evidence-inspection-adapter-title">Import Evidence Export</span>
+                <span class="evidence-inspection-adapter-title">{{ t('reconciliationCandidateLeaderboardView.importEvidenceExport') }}</span>
                 <p class="form-hint form-hint--neutral">
-                    Paste a previously exported evidence document (from the Evidence
-                    Export panel above, this replica's own or a peer's) to inspect it.
-                    This never merges into, replaces, or recomputes the live leaderboard
-                    above — it is a read-only look at a separate, portable document.
+                    {{ t('reconciliationCandidateLeaderboardView.pasteAPreviouslyExportedEvidence') }}
                 </p>
                 <label class="form-field">
-                    <span class="form-label">Evidence export JSON</span>
+                    <span class="form-label">{{ t('reconciliationCandidateLeaderboardView.evidenceExportJson') }}</span>
                     <textarea class="form-input identity-export-json" rows="6" v-model="importedEvidenceText"
-                              placeholder="Paste an exported evidence document JSON"></textarea>
+                              :placeholder="t('reconciliationCandidateLeaderboardView.pasteAnExportedEvidenceDocument')"></textarea>
                 </label>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="importEvidenceExport">
-                        Import Evidence
+                        {{ t('reconciliationCandidateLeaderboardView.importEvidence') }}
                     </button>
                     <button type="button" class="action-btn action-btn--secondary" v-if="importedEvidenceSummary" @click="clearImportedEvidence">
-                        Clear Imported Evidence
+                        {{ t('reconciliationCandidateLeaderboardView.clearImportedEvidence') }}
                     </button>
                 </div>
                 <p v-if="importedEvidenceInvalid" class="identity-unlock-error">
-                    This is not a valid evidence export document — nothing was imported.
+                    {{ t('reconciliationCandidateLeaderboardView.thisIsNotAValid2') }}
                 </p>
                 <div v-if="importedEvidenceSummary" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Imported Evidence</span>
-                    <p>Comparison: {{ importedEvidenceSummary.comparisonState }}</p>
-                    <p>Candidates: {{ importedEvidenceSummary.candidateCount }}</p>
-                    <p>Decisions: {{ importedEvidenceSummary.decisionRecordCount }}</p>
-                    <p>Observations: {{ importedEvidenceSummary.observationRecordCount }}</p>
+                    <span class="evidence-inspection-adapter-title">{{ t('reconciliationCandidateLeaderboardView.importedEvidence') }}</span>
+                    <p>{{ t('reconciliationCandidateLeaderboardView.comparison', { state: importedEvidenceSummary.comparisonState }) }}</p>
+                    <p>{{ t('reconciliationCandidateLeaderboardView.candidates', { count: importedEvidenceSummary.candidateCount }) }}</p>
+                    <p>{{ t('reconciliationCandidateLeaderboardView.decisions', { count: importedEvidenceSummary.decisionRecordCount }) }}</p>
+                    <p>{{ t('reconciliationCandidateLeaderboardView.observations', { count: importedEvidenceSummary.observationRecordCount }) }}</p>
                 </div>
             </div>
 

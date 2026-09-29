@@ -1,4 +1,5 @@
 import { DecentralizedSnapshotResolutionOutcome } from './DecentralizedSnapshotResolutionOutcome.js';
+import { message } from '../../core/Message.js';
 
 // 0.9.528 — Snapshot Encounter & Placement Product Experience
 // Reassessment, Section C/I.
@@ -70,19 +71,19 @@ import { DecentralizedSnapshotResolutionOutcome } from './DecentralizedSnapshotR
 // label — the identical degrade-to-raw-value discipline application/
 // WorldEncounterMaterialInspectionView.js's own label maps already hold.
 const RESOLUTION_OUTCOME_LABELS = {
-    [DecentralizedSnapshotResolutionOutcome.RESOLVED]: 'Retrieved — content hash confirmed',
-    [DecentralizedSnapshotResolutionOutcome.NOT_DISCOVERED]: 'Not currently announced by any known source',
-    [DecentralizedSnapshotResolutionOutcome.STORE_UNAVAILABLE]: 'No content store available for the announced location',
-    [DecentralizedSnapshotResolutionOutcome.CONTENT_UNAVAILABLE]: 'Could not retrieve content from the announced location',
-    [DecentralizedSnapshotResolutionOutcome.CONTENT_HASH_MISMATCH]: 'Retrieved content does not match the requested hash'
+    [DecentralizedSnapshotResolutionOutcome.RESOLVED]: message('snapshotOutcomeInspection.retrievedContentHashConfirmed'),
+    [DecentralizedSnapshotResolutionOutcome.NOT_DISCOVERED]: message('snapshotOutcomeInspection.notCurrentlyAnnouncedByAny'),
+    [DecentralizedSnapshotResolutionOutcome.STORE_UNAVAILABLE]: message('snapshotOutcomeInspection.noContentStoreAvailableFor'),
+    [DecentralizedSnapshotResolutionOutcome.CONTENT_UNAVAILABLE]: message('snapshotOutcomeInspection.couldNotRetrieveContentFrom'),
+    [DecentralizedSnapshotResolutionOutcome.CONTENT_HASH_MISMATCH]: message('snapshotOutcomeInspection.retrievedContentDoesNotMatch')
 };
 
 // The literal wire values application/SnapshotPublicationAttributionOutcome
 // .js's own MATCH/NO_MATCH freeze — 'match'/'no-match' — copied here as
 // plain strings rather than imported, per this file's own header above.
 const ATTRIBUTION_OUTCOME_LABELS = {
-    match: 'Confirmed to match this Publication',
-    'no-match': 'Does not match this Publication'
+    match: message('snapshotOutcomeInspection.confirmedToMatchThisPublication'),
+    'no-match': message('snapshotOutcomeInspection.doesNotMatchThisPublication')
 };
 
 // For `snapshotDiscoveryResult.outcome` and `selectedSnapshotResolutionResult

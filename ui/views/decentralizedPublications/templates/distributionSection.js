@@ -7,42 +7,41 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                          Folded, like the details below, so a long list stays
                          scannable. -->
                     <details class="identity-mgmt-card-details identity-mgmt-distribution">
-                        <summary class="identity-mgmt-card-details-summary">Distribution</summary>
+                        <summary class="identity-mgmt-card-details-summary">{{ t('publications.distribution') }}</summary>
 
                         <div v-if="publicationDistributionCommand || multiRelayNostrPublicationDistributionCommand || snapshotDistributionCommand" class="identity-mgmt-distribution-role">
-                            <span class="evidence-convergence-title">Announcement / Discovery</span>
+                            <span class="evidence-convergence-title">{{ t('publications.announcementDiscovery') }}</span>
                             <div class="evidence-list">
                                 <!-- Either command is enough;
                                      distributeEntryPublication() picks one per
                                      substrate. -->
                                 <div v-if="publicationDistributionCommand || multiRelayNostrPublicationDistributionCommand" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
-                                        <span class="evidence-anchor-type">Publication</span>
+                                        <span class="evidence-anchor-type">{{ t('publications.publication3') }}</span>
                                     </div>
                                     <p class="form-hint form-hint--neutral">
-                                        Distributes this Publication's own signed envelope — uploading its
-                                        material and announcing it via the chosen substrate in one call.
+                                        {{ t('publications.distributesThisPublicationSOwn') }}
                                     </p>
                                     <label class="form-label">
-                                        Substrate
+                                        {{ t('publications.substrate') }}
                                         <select v-model="entry.discoveryDistributionProvider" class="form-select"
                                                 :disabled="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.distributing">
                                             <option value="arweave">Arweave</option>
                                             <option value="nostr">Nostr</option>
-                                            <option value="steem">Steem (Experimental)</option>
+                                            <option value="steem">{{ t('publications.steemExperimental') }}</option>
                                         </select>
                                     </label>
                                     <div class="identity-mgmt-actions">
                                         <button class="action-btn action-btn--primary"
                                                 :disabled="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.distributing"
                                                 @click="distributePublicationForEntry(entry)">
-                                            {{ discoveryDistributionButtonLabel(entry) }}
+                                            {{ displayText(discoveryDistributionButtonLabel(entry)) }}
                                         </button>
                                         <!-- Where to configure the chosen
                                              substrate; says nothing about
                                              whether it is reachable. -->
                                         <router-link :to="discoveryDistributionConfigurationRoute(entry)" class="action-btn action-btn--secondary">
-                                            Configure {{ humanizeDiscoveryProvider(entry.discoveryDistributionProvider) }}
+                                            {{ t('publications.configureProvider', { provider: humanizeDiscoveryProvider(entry.discoveryDistributionProvider) }) }}
                                         </router-link>
                                     </div>
                                     <p v-if="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.error" class="form-hint form-hint--neutral">
@@ -55,7 +54,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                              several Nostr relay observations
                                              can coexist. -->
                                         <div v-for="observation in discoveryObservationsView(entry)" :key="observation.discoveryProvider + ':' + observation.origin" class="evidence-field">
-                                            <dt>Discovery ({{ observation.discoveryProvider }})</dt>
+                                            <dt>{{ t('publications.discoveryProvider', { provider: observation.discoveryProvider }) }}</dt>
                                             <dd>{{ observation.state }}</dd>
                                         </div>
                                     </dl>
@@ -64,55 +63,52 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
 
                                 <div v-if="snapshotDistributionCommand" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
-                                        <span class="evidence-anchor-type">Snapshot</span>
+                                        <span class="evidence-anchor-type">{{ t('publications.snapshot2') }}</span>
                                     </div>
                                     <p v-if="entryWorld(entry)" class="form-hint form-hint--neutral">
-                                        Stores this World's snapshot and announces it, with where its publisher placed it
-                                        when this device holds that placement, as World View's Distribute does. This
-                                        device needs the World's snapshot.
+                                        {{ t('publications.storesThisWorldSSnapshot') }}
                                     </p>
                                     <p v-else class="form-hint form-hint--neutral">
-                                        Stores this publication's content and announces it by its content hash. This
-                                        device needs the content.
+                                        {{ t('publications.storesThisPublicationSContent') }}
                                     </p>
                                     <!-- Where the snapshot's bytes are stored and
                                          where it is announced. Only eligible,
                                          registered backends are offered. -->
                                     <label v-if="snapshotDistributionStorageTypes.length > 0" class="form-label">
-                                        Content
+                                        {{ t('publications.content') }}
                                         <select v-model="entry.snapshotDistributionStorage" class="form-select"
                                                 :disabled="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing">
-                                            <option v-for="storage in snapshotDistributionStorageOptions" :key="storage" :value="storage">{{ storageTypeOptionLabel(storage) }}</option>
+                                            <option v-for="storage in snapshotDistributionStorageOptions" :key="storage" :value="storage">{{ displayText(storageTypeOptionLabel(storage)) }}</option>
                                         </select>
                                     </label>
                                     <label class="form-label">
-                                        Substrate
+                                        {{ t('publications.substrate') }}
                                         <select v-model="entry.snapshotDiscoveryProvider" class="form-select"
                                                 :disabled="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing">
                                             <option value="arweave">Arweave</option>
                                             <option value="nostr">Nostr</option>
-                                            <option value="steem">Steem (Experimental)</option>
+                                            <option value="steem">{{ t('publications.steemExperimental') }}</option>
                                         </select>
                                     </label>
                                     <div class="identity-mgmt-actions">
                                         <button class="action-btn action-btn--primary"
                                                 :disabled="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing"
                                                 @click="distributeSnapshot(entry)">
-                                            {{ snapshotDistributionButtonLabel(entry) }}
+                                            {{ displayText(snapshotDistributionButtonLabel(entry)) }}
                                         </button>
                                         <router-link :to="snapshotDistributionConfigurationRoute(entry)" class="action-btn action-btn--secondary">
-                                            Configure {{ humanizeStorageType(entry.snapshotDistributionStorage) }}
+                                            {{ t('publications.configureProvider', { provider: humanizeStorageType(entry.snapshotDistributionStorage) }) }}
                                         </router-link>
                                         <router-link :to="snapshotDiscoveryConfigurationRoute(entry)" class="action-btn action-btn--secondary">
-                                            Configure {{ humanizeDiscoveryProvider(entry.snapshotDiscoveryProvider) }}
+                                            {{ t('publications.configureProvider', { provider: humanizeDiscoveryProvider(entry.snapshotDiscoveryProvider) }) }}
                                         </router-link>
                                     </div>
-                                    <p v-if="steemUploadProgressText(entry)" class="form-hint form-hint--neutral" role="status">{{ steemUploadProgressText(entry) }}</p>
+                                    <p v-if="steemUploadProgressText(entry)" class="form-hint form-hint--neutral" role="status">{{ displayText(steemUploadProgressText(entry)) }}</p>
                                     <p v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.error" class="form-hint form-hint--neutral">
                                         {{ entry.snapshotDistributionAttempt.error }}
                                     </p>
                                     <dl v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.result" class="evidence-fields">
-                                        <div class="evidence-field"><dt>Content</dt><dd>{{ entry.snapshotDistributionAttempt.result.contentReference }}</dd></div>
+                                        <div class="evidence-field"><dt>{{ t('publications.content') }}</dt><dd>{{ entry.snapshotDistributionAttempt.result.contentReference }}</dd></div>
                                     </dl>
                                     <!-- A null announcement is
                                          SnapshotDistributionCommand's ordinary
@@ -122,10 +118,10 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                     <p v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.result" class="form-hint form-hint--neutral">
                                         <span class="peer-badge" :class="entry.snapshotDistributionAttempt.result.announcement ? 'peer-badge--authenticated' : 'peer-badge--failed'">
                                             {{ humanizeDiscoveryProvider(entry.snapshotDistributionAttempt.result.discoveryProvider) }}:
-                                            {{ entry.snapshotDistributionAttempt.result.announcement ? 'Announced' : 'Not announced' }}
+                                            {{ entry.snapshotDistributionAttempt.result.announcement ? t('publications.announced') : t('publications.notAnnounced') }}
                                         </span>
                                         <template v-if="entry.snapshotDistributionAttempt.result.announcement && entryWorld(entry)">
-                                            {{ entry.snapshotDistributionAttempt.result.positioned ? " — with its publisher's placement" : ' — without a position: this device holds no placement signed by its publisher' }}
+                                            {{ entry.snapshotDistributionAttempt.result.positioned ? t('publications.withPublisherPlacement') : t('publications.withoutAPositionThisDevice') }}
                                         </template>
                                     </p>
                                 </div>
@@ -139,8 +135,8 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                             <!-- One Configure link for the role: the Content
                                  preference is role-wide, not per storage type. -->
                             <div class="evidence-discovery-header">
-                                <span class="evidence-convergence-title">Content</span>
-                                <router-link to="/settings/content-provider" class="action-btn action-btn--secondary">Configure</router-link>
+                                <span class="evidence-convergence-title">{{ t('publications.content') }}</span>
+                                <router-link to="/settings/content-provider" class="action-btn action-btn--secondary">{{ t('publications.configure') }}</router-link>
                             </div>
                             <!-- One button for the saved preferred storage
                                  (the person's own choice, named); the
@@ -149,60 +145,59 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                  the hint says why. -->
                             <div v-if="contentPreference.providerKey" class="evidence-discovery">
                                 <p class="form-hint form-hint--neutral">
-                                    Stores this publication's content on <strong>{{ humanizeStorageType(contentPreference.providerKey) }}</strong>,
-                                    your preferred storage.
-                                    <span v-if="isExperimentalStorageType(contentPreference.providerKey)" class="experimental-badge">Experimental</span>
+                                    <I18nText keypath="publications.storesThisPublicationSContent2"><template #provider><strong>{{ humanizeStorageType(contentPreference.providerKey) }}</strong></template></I18nText>
+                                    <span v-if="isExperimentalStorageType(contentPreference.providerKey)" class="experimental-badge">{{ t('publications.experimental2') }}</span>
                                 </p>
                                 <div class="evidence-discovery-header">
                                     <button class="action-btn action-btn--primary"
                                             :disabled="preferredPlacementCreationView(entry).state === 'creating'"
                                             @click="createPreferredPlacement(entry)">
-                                        {{ preferredStoreButtonLabel(entry) }}
+                                        {{ displayText(preferredStoreButtonLabel(entry)) }}
                                     </button>
                                     <span v-if="preferredPlacementCreationView(entry).label" class="peer-badge" :class="preferredPlacementCreationBadgeClass(entry)">
-                                        {{ preferredPlacementCreationView(entry).label }}
+                                        {{ displayText(preferredPlacementCreationView(entry).label) }}
                                     </span>
                                 </div>
                                 <p v-if="preferredPlacementCreationView(entry).message" class="form-hint form-hint--neutral">
-                                    {{ preferredPlacementCreationView(entry).message }}
+                                    {{ displayText(preferredPlacementCreationView(entry).message) }}
                                 </p>
                                 <p v-if="preferredPlacementCreationView(entry).reason" class="form-hint form-hint--neutral">
-                                    {{ preferredPlacementCreationView(entry).reason }}
+                                    {{ displayText(preferredPlacementCreationView(entry).reason) }}
                                 </p>
                                 <dl v-if="preferredPlacementCreationView(entry).placement" class="evidence-fields">
-                                    <div class="evidence-field"><dt>Locator</dt><dd>{{ preferredPlacementCreationView(entry).placement.locator }}</dd></div>
-                                    <div class="evidence-field"><dt>Content hash</dt><dd>{{ preferredPlacementCreationView(entry).placement.contentHash }}</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.locator2') }}</dt><dd>{{ preferredPlacementCreationView(entry).placement.locator }}</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.contentHash6') }}</dt><dd>{{ preferredPlacementCreationView(entry).placement.contentHash }}</dd></div>
                                 </dl>
                             </div>
                             <p v-else class="form-hint form-hint--neutral">{{ contentPreferenceHint }}</p>
                             <details class="identity-mgmt-distribution-options" :open="!contentPreference.providerKey">
                                 <summary class="identity-mgmt-card-details-summary">
-                                    {{ contentPreference.providerKey ? 'Other storage options' : 'Storage options' }} ({{ availableStorageTypes.length }})
+                                    {{ contentPreference.providerKey ? t('publications.otherStorageOptions') : t('publications.storageOptions') }} ({{ availableStorageTypes.length }})
                                 </summary>
                             <div class="evidence-list">
                                 <div v-for="storage in availableStorageTypes" :key="storage" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
                                         <span class="evidence-anchor-type">{{ humanizeStorageType(storage) }}</span>
-                                        <span v-if="isExperimentalStorageType(storage)" class="experimental-badge">Experimental</span>
+                                        <span v-if="isExperimentalStorageType(storage)" class="experimental-badge">{{ t('publications.experimental2') }}</span>
                                         <span v-if="placementCreationView(entry, storage).label" class="peer-badge" :class="placementCreationBadgeClass(entry, storage)">
-                                            {{ placementCreationView(entry, storage).label }}
+                                            {{ displayText(placementCreationView(entry, storage).label) }}
                                         </span>
                                     </div>
                                     <p v-if="placementCreationView(entry, storage).message" class="form-hint form-hint--neutral">
-                                        {{ placementCreationView(entry, storage).message }}
+                                        {{ displayText(placementCreationView(entry, storage).message) }}
                                     </p>
                                     <p v-if="placementCreationView(entry, storage).reason" class="form-hint form-hint--neutral">
-                                        {{ placementCreationView(entry, storage).reason }}
+                                        {{ displayText(placementCreationView(entry, storage).reason) }}
                                     </p>
                                     <dl v-if="placementCreationView(entry, storage).placement" class="evidence-fields">
-                                        <div class="evidence-field"><dt>Locator</dt><dd>{{ placementCreationView(entry, storage).placement.locator }}</dd></div>
-                                        <div class="evidence-field"><dt>Content hash</dt><dd>{{ placementCreationView(entry, storage).placement.contentHash }}</dd></div>
+                                        <div class="evidence-field"><dt>{{ t('publications.locator2') }}</dt><dd>{{ placementCreationView(entry, storage).placement.locator }}</dd></div>
+                                        <div class="evidence-field"><dt>{{ t('publications.contentHash6') }}</dt><dd>{{ placementCreationView(entry, storage).placement.contentHash }}</dd></div>
                                     </dl>
                                     <div class="identity-mgmt-actions">
                                         <button class="action-btn action-btn--primary"
                                                 :disabled="placementCreationView(entry, storage).state === 'creating'"
                                                 @click="createPlacement(entry, storage)">
-                                            {{ placementCreationButtonLabel(entry, storage) }}
+                                            {{ displayText(placementCreationButtonLabel(entry, storage)) }}
                                         </button>
                                     </div>
                                 </div>
@@ -218,47 +213,46 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                              button is shown. -->
                         <div v-if="oneClickAnchorTypes.length > 0 || bitcoinWalletConnection || baseAnchorPublisher" class="identity-mgmt-distribution-role">
                             <div class="evidence-discovery-header">
-                                <span class="evidence-convergence-title">Proof / Anchoring</span>
-                                <span class="experimental-badge">Experimental</span>
-                                <router-link to="/settings/anchor-provider" class="action-btn action-btn--secondary">Configure</router-link>
+                                <span class="evidence-convergence-title">{{ t('publications.proofAnchoring') }}</span>
+                                <span class="experimental-badge">{{ t('publications.experimental2') }}</span>
+                                <router-link to="/settings/anchor-provider" class="action-btn action-btn--secondary">{{ t('publications.configure') }}</router-link>
                             </div>
                             <!-- Resolves the saved PROOF_AND_ANCHORING
                                  preference on every click; never offers Base. -->
                             <div v-if="preferredAnchorCreationCoordinator" class="evidence-discovery">
                                 <template v-if="anchorPreference.providerKey">
                                     <p class="form-hint form-hint--neutral">
-                                        Records this publication's content hash on <strong>{{ humanizeAnchorType(anchorPreference.providerKey) }}</strong>,
-                                        your preferred anchoring provider.
+                                        <I18nText keypath="publications.recordsThisPublicationSContent"><template #provider><strong>{{ humanizeAnchorType(anchorPreference.providerKey) }}</strong></template></I18nText>
                                     </p>
                                     <div class="evidence-discovery-header">
                                         <button class="action-btn action-btn--primary"
                                                 :disabled="preferredCreationView(entry).state === 'creating'"
                                                 @click="createPreferredAnchor(entry)">
-                                            {{ preferredAnchorButtonLabel(entry) }}
+                                            {{ displayText(preferredAnchorButtonLabel(entry)) }}
                                         </button>
                                         <span v-if="preferredCreationView(entry).label" class="peer-badge" :class="preferredCreationBadgeClass(entry)">
-                                            {{ preferredCreationView(entry).label }}
+                                            {{ displayText(preferredCreationView(entry).label) }}
                                         </span>
                                     </div>
                                     <p v-if="preferredCreationView(entry).message" class="form-hint form-hint--neutral">
-                                        {{ preferredCreationView(entry).message }}
+                                        {{ displayText(preferredCreationView(entry).message) }}
                                     </p>
                                     <p v-if="preferredCreationView(entry).reason" class="form-hint form-hint--neutral">
-                                        {{ preferredCreationView(entry).reason }}
+                                        {{ displayText(preferredCreationView(entry).reason) }}
                                     </p>
                                     <p v-if="preferredCreationFinality(entry)" class="form-hint form-hint--neutral">
-                                        <strong>{{ preferredCreationFinality(entry).label }}:</strong> {{ preferredCreationFinality(entry).message }}
+                                        <strong>{{ displayText(preferredCreationFinality(entry).label) }}:</strong> {{ displayText(preferredCreationFinality(entry).message) }}
                                     </p>
                                     <dl v-if="preferredCreationView(entry).anchor" class="evidence-fields">
-                                        <div class="evidence-field"><dt>Transaction</dt><dd>{{ preferredCreationView(entry).anchor.locator }}</dd></div>
-                                        <div class="evidence-field"><dt>Content hash</dt><dd>{{ preferredCreationView(entry).anchor.contentHash }}</dd></div>
+                                        <div class="evidence-field"><dt>{{ t('publications.transaction2') }}</dt><dd>{{ preferredCreationView(entry).anchor.locator }}</dd></div>
+                                        <div class="evidence-field"><dt>{{ t('publications.contentHash6') }}</dt><dd>{{ preferredCreationView(entry).anchor.contentHash }}</dd></div>
                                     </dl>
                                 </template>
                                 <p v-else class="form-hint form-hint--neutral">{{ anchorPreferenceHint }}</p>
                             </div>
                             <details class="identity-mgmt-distribution-options" :open="!anchorPreference.providerKey">
                                 <summary class="identity-mgmt-card-details-summary">
-                                    {{ anchorPreference.providerKey ? 'Other anchoring options' : 'Anchoring options' }} ({{ oneClickAnchorTypes.length }})
+                                    {{ anchorPreference.providerKey ? t('publications.otherAnchoringOptions') : t('publications.anchoringOptions') }} ({{ oneClickAnchorTypes.length }})
                                 </summary>
                             <!-- The generic loop can't run the wallet-guided
                                  Bitcoin pipeline or Base (which needs a
@@ -266,36 +260,36 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                  a pointer to those flows in the card's
                                  Details. -->
                             <p v-if="bitcoinWalletConnection || baseAnchorPublisher" class="form-hint form-hint--neutral">
-                                {{ bitcoinWalletConnection && baseAnchorPublisher ? 'Bitcoin and Base anchors are' : (bitcoinWalletConnection ? 'Bitcoin anchors are' : 'Base anchors are') }}
-                                made through their own wallet steps in this card's <strong>Details → Decentralization
-                                &amp; Evidence</strong> tab.
+                                <I18nText :keypath="bitcoinWalletConnection && baseAnchorPublisher ? 'publications.walletStepsBitcoinAndBase' : (bitcoinWalletConnection ? 'publications.walletStepsBitcoin' : 'publications.walletStepsBase')">
+                                    <template #tab><strong>{{ t('publications.detailsDecentralizationEvidence') }}</strong></template>
+                                </I18nText>
                             </p>
                             <div class="evidence-list">
                                 <div v-for="anchorType in oneClickAnchorTypes" :key="anchorType" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
                                         <span class="evidence-anchor-type">{{ humanizeAnchorType(anchorType) }}</span>
                                         <span v-if="creationView(entry, anchorType).label" class="peer-badge" :class="creationBadgeClass(entry, anchorType)">
-                                            {{ creationView(entry, anchorType).label }}
+                                            {{ displayText(creationView(entry, anchorType).label) }}
                                         </span>
                                     </div>
                                     <p v-if="creationView(entry, anchorType).message" class="form-hint form-hint--neutral">
-                                        {{ creationView(entry, anchorType).message }}
+                                        {{ displayText(creationView(entry, anchorType).message) }}
                                     </p>
                                     <p v-if="creationView(entry, anchorType).reason" class="form-hint form-hint--neutral">
-                                        {{ creationView(entry, anchorType).reason }}
+                                        {{ displayText(creationView(entry, anchorType).reason) }}
                                     </p>
                                     <p v-if="creationFinality(entry, anchorType)" class="form-hint form-hint--neutral">
-                                        <strong>{{ creationFinality(entry, anchorType).label }}:</strong> {{ creationFinality(entry, anchorType).message }}
+                                        <strong>{{ displayText(creationFinality(entry, anchorType).label) }}:</strong> {{ displayText(creationFinality(entry, anchorType).message) }}
                                     </p>
                                     <dl v-if="creationView(entry, anchorType).anchor" class="evidence-fields">
-                                        <div class="evidence-field"><dt>Transaction</dt><dd>{{ creationView(entry, anchorType).anchor.locator }}</dd></div>
-                                        <div class="evidence-field"><dt>Content hash</dt><dd>{{ creationView(entry, anchorType).anchor.contentHash }}</dd></div>
+                                        <div class="evidence-field"><dt>{{ t('publications.transaction2') }}</dt><dd>{{ creationView(entry, anchorType).anchor.locator }}</dd></div>
+                                        <div class="evidence-field"><dt>{{ t('publications.contentHash6') }}</dt><dd>{{ creationView(entry, anchorType).anchor.contentHash }}</dd></div>
                                     </dl>
                                     <div class="identity-mgmt-actions">
                                         <button class="action-btn action-btn--primary"
                                                 :disabled="creationView(entry, anchorType).state === 'creating'"
                                                 @click="createAnchor(entry, anchorType)">
-                                            {{ creationButtonLabel(entry, anchorType) }}
+                                            {{ displayText(creationButtonLabel(entry, anchorType)) }}
                                         </button>
                                     </div>
                                 </div>

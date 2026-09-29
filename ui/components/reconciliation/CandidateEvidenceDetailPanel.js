@@ -53,11 +53,11 @@ function safeList(value) {
 }
 
 function formatWhen(isoString) {
-    return typeof isoString === 'string' && isoString.length > 0 ? isoString : 'unknown time';
+    return typeof isoString === 'string' && isoString.length > 0 ? isoString : t('reconciliation.unknownTime');
 }
 
 function formatYesNo(value) {
-    return value === true ? 'yes' : 'no';
+    return value === true ? t('reconciliation.yes') : t('reconciliation.no');
 }
 
 // A plan fingerprint is a 64-character SHA-256 hex digest — long enough
@@ -68,7 +68,7 @@ function formatYesNo(value) {
 function shortFingerprint(planFingerprint) {
     return typeof planFingerprint === 'string' && planFingerprint.length > 0
         ? `${planFingerprint.slice(0, 12)}…`
-        : 'unknown plan';
+        : t('reconciliation.unknownPlan');
 }
 
 export function buildDecisionEntries(records) {
@@ -95,6 +95,8 @@ export function buildObservationEntries(records) {
             });
         });
 }
+
+import { t } from '../../i18n/i18n.js';
 
 export default {
     name: 'ReconciliationCandidateEvidenceDetailPanel',
@@ -127,62 +129,63 @@ export default {
             return buildObservationEntries(this.observationDetail && this.observationDetail.targetOnly);
         }
     },
+    methods: { t },
     template: `
         <div class="evidence-detail-panel">
             <div class="evidence-detail-group">
-                <h4 class="evidence-detail-group-title">Decision Evidence</h4>
+                <h4 class="evidence-detail-group-title">{{ t('candidateEvidenceDetailPanel.decisionEvidence') }}</h4>
                 <div class="evidence-detail-columns">
                     <div class="evidence-detail-column">
-                        <h5>Shared ({{ decisionShared.length }})</h5>
-                        <p v-if="decisionShared.length === 0" class="evidence-detail-empty">None</p>
+                        <h5>{{ t('candidateEvidenceDetailPanel.shared', { count: decisionShared.length }) }}</h5>
+                        <p v-if="decisionShared.length === 0" class="evidence-detail-empty">{{ t('candidateEvidenceDetailPanel.none') }}</p>
                         <ul v-else class="evidence-detail-list">
-                            <li v-for="(entry, index) in decisionShared" :key="'ds-' + index">{{ entry.disposition }} — decided {{ entry.decidedAt }}</li>
+                            <li v-for="(entry, index) in decisionShared" :key="'ds-' + index">{{ t('candidateEvidenceDetailPanel.decided', { disposition: entry.disposition, decidedAt: entry.decidedAt }) }}</li>
                         </ul>
                     </div>
                     <div class="evidence-detail-column">
-                        <h5>Source-only ({{ decisionSourceOnly.length }})</h5>
-                        <p v-if="decisionSourceOnly.length === 0" class="evidence-detail-empty">None</p>
+                        <h5>{{ t('candidateEvidenceDetailPanel.sourceOnly', { count: decisionSourceOnly.length }) }}</h5>
+                        <p v-if="decisionSourceOnly.length === 0" class="evidence-detail-empty">{{ t('candidateEvidenceDetailPanel.none') }}</p>
                         <ul v-else class="evidence-detail-list">
-                            <li v-for="(entry, index) in decisionSourceOnly" :key="'dso-' + index">{{ entry.disposition }} — decided {{ entry.decidedAt }}</li>
+                            <li v-for="(entry, index) in decisionSourceOnly" :key="'dso-' + index">{{ t('candidateEvidenceDetailPanel.decided', { disposition: entry.disposition, decidedAt: entry.decidedAt }) }}</li>
                         </ul>
                     </div>
                     <div class="evidence-detail-column">
-                        <h5>Target-only ({{ decisionTargetOnly.length }})</h5>
-                        <p v-if="decisionTargetOnly.length === 0" class="evidence-detail-empty">None</p>
+                        <h5>{{ t('candidateEvidenceDetailPanel.targetOnly', { count: decisionTargetOnly.length }) }}</h5>
+                        <p v-if="decisionTargetOnly.length === 0" class="evidence-detail-empty">{{ t('candidateEvidenceDetailPanel.none') }}</p>
                         <ul v-else class="evidence-detail-list">
-                            <li v-for="(entry, index) in decisionTargetOnly" :key="'dto-' + index">{{ entry.disposition }} — decided {{ entry.decidedAt }}</li>
+                            <li v-for="(entry, index) in decisionTargetOnly" :key="'dto-' + index">{{ t('candidateEvidenceDetailPanel.decided', { disposition: entry.disposition, decidedAt: entry.decidedAt }) }}</li>
                         </ul>
                     </div>
                 </div>
             </div>
 
             <div class="evidence-detail-group">
-                <h4 class="evidence-detail-group-title">Observation Evidence</h4>
+                <h4 class="evidence-detail-group-title">{{ t('candidateEvidenceDetailPanel.observationEvidence') }}</h4>
                 <div class="evidence-detail-columns">
                     <div class="evidence-detail-column">
-                        <h5>Shared ({{ observationShared.length }})</h5>
-                        <p v-if="observationShared.length === 0" class="evidence-detail-empty">None</p>
+                        <h5>{{ t('candidateEvidenceDetailPanel.shared', { count: observationShared.length }) }}</h5>
+                        <p v-if="observationShared.length === 0" class="evidence-detail-empty">{{ t('candidateEvidenceDetailPanel.none') }}</p>
                         <ul v-else class="evidence-detail-list">
                             <li v-for="(entry, index) in observationShared" :key="'os-' + index">
-                                {{ entry.disposition }} — observed {{ entry.observedAt }} — plan {{ entry.planFingerprint }} — present: {{ entry.candidatePresent }} — matches plan: {{ entry.candidateMatchesPlan }}
+                                {{ t('candidateEvidenceDetailPanel.observedPlanPresentMatchesPlan', { disposition: entry.disposition, observedAt: entry.observedAt, planFingerprint: entry.planFingerprint, candidatePresent: entry.candidatePresent, candidateMatchesPlan: entry.candidateMatchesPlan }) }}
                             </li>
                         </ul>
                     </div>
                     <div class="evidence-detail-column">
-                        <h5>Source-only ({{ observationSourceOnly.length }})</h5>
-                        <p v-if="observationSourceOnly.length === 0" class="evidence-detail-empty">None</p>
+                        <h5>{{ t('candidateEvidenceDetailPanel.sourceOnly', { count: observationSourceOnly.length }) }}</h5>
+                        <p v-if="observationSourceOnly.length === 0" class="evidence-detail-empty">{{ t('candidateEvidenceDetailPanel.none') }}</p>
                         <ul v-else class="evidence-detail-list">
                             <li v-for="(entry, index) in observationSourceOnly" :key="'oso-' + index">
-                                {{ entry.disposition }} — observed {{ entry.observedAt }} — plan {{ entry.planFingerprint }} — present: {{ entry.candidatePresent }} — matches plan: {{ entry.candidateMatchesPlan }}
+                                {{ t('candidateEvidenceDetailPanel.observedPlanPresentMatchesPlan', { disposition: entry.disposition, observedAt: entry.observedAt, planFingerprint: entry.planFingerprint, candidatePresent: entry.candidatePresent, candidateMatchesPlan: entry.candidateMatchesPlan }) }}
                             </li>
                         </ul>
                     </div>
                     <div class="evidence-detail-column">
-                        <h5>Target-only ({{ observationTargetOnly.length }})</h5>
-                        <p v-if="observationTargetOnly.length === 0" class="evidence-detail-empty">None</p>
+                        <h5>{{ t('candidateEvidenceDetailPanel.targetOnly', { count: observationTargetOnly.length }) }}</h5>
+                        <p v-if="observationTargetOnly.length === 0" class="evidence-detail-empty">{{ t('candidateEvidenceDetailPanel.none') }}</p>
                         <ul v-else class="evidence-detail-list">
                             <li v-for="(entry, index) in observationTargetOnly" :key="'oto-' + index">
-                                {{ entry.disposition }} — observed {{ entry.observedAt }} — plan {{ entry.planFingerprint }} — present: {{ entry.candidatePresent }} — matches plan: {{ entry.candidateMatchesPlan }}
+                                {{ t('candidateEvidenceDetailPanel.observedPlanPresentMatchesPlan', { disposition: entry.disposition, observedAt: entry.observedAt, planFingerprint: entry.planFingerprint, candidatePresent: entry.candidatePresent, candidateMatchesPlan: entry.candidateMatchesPlan }) }}
                             </li>
                         </ul>
                     </div>

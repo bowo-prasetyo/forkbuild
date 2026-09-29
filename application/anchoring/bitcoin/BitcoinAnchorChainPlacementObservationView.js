@@ -1,4 +1,5 @@
 import { BitcoinAnchorChainPlacementObservationOutcome } from './BitcoinAnchorChainPlacementObservation.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.76 — Bitcoin Anchor Chain Placement Change Observation.
 //
@@ -44,19 +45,21 @@ import { BitcoinAnchorChainPlacementObservationOutcome } from './BitcoinAnchorCh
 // caching. Calling either function twice with byte-identical arguments
 // returns a byte-identical result.
 export function describeBitcoinAnchorChainPlacementObservationOutcomeLabel(outcome, previousObservationIndex = null, laterObservationIndex = null) {
-    const positions = (Number.isInteger(previousObservationIndex) && Number.isInteger(laterObservationIndex))
-        ? ` between observation ${previousObservationIndex} and observation ${laterObservationIndex}`
-        : '';
+    // Each sentence has a form naming the two observations compared.
+    const positioned = Number.isInteger(previousObservationIndex) && Number.isInteger(laterObservationIndex);
+    const said = (key) => (positioned
+        ? message(`${key}Between`, { previous: previousObservationIndex, later: laterObservationIndex })
+        : message(key));
 
     switch (outcome) {
         case BitcoinAnchorChainPlacementObservationOutcome.UNCHANGED:
-            return `Observed block placement unchanged${positions}.`;
+            return said('bitcoinAnchorChainPlacementObservation.unchanged');
         case BitcoinAnchorChainPlacementObservationOutcome.PLACEMENT_CHANGED:
-            return `Observed block placement changed${positions}.`;
+            return said('bitcoinAnchorChainPlacementObservation.changed');
         case BitcoinAnchorChainPlacementObservationOutcome.INSUFFICIENT_OBSERVATIONS:
-            return 'Not enough confirmed observations exist yet to compare block placement.';
+            return message('bitcoinAnchorChainPlacementObservation.notEnoughConfirmedObservationsExist');
         case BitcoinAnchorChainPlacementObservationOutcome.INCOMPARABLE:
-            return `These observations cannot be compared for block placement${positions}.`;
+            return said('bitcoinAnchorChainPlacementObservation.incomparable');
         default:
             return null;
     }

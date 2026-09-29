@@ -20,7 +20,7 @@ export const outcomeAndMaterialPanelsTemplate = `<div v-if="selectedEncounter &&
                 </template>
 
                 <p v-else-if="selectionOutcome.status === 'RESOLVED'" class="world-encounter-selection-origin-resolved">
-                    {{ t('worldEncounterCanvas.source', { source: describeSelectionOriginLabel(selectionOutcome.resolvedSelection.origin) }) }}
+                    {{ t('worldEncounterCanvas.sourceValue', { source: describeSelectionOriginLabel(selectionOutcome.resolvedSelection.origin) }) }}
                 </p>
             </div>
 

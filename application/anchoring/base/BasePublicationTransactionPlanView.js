@@ -1,11 +1,12 @@
 import { BasePublicationTransactionPlanState } from './BasePublicationTransactionPlanState.js';
+import { message } from '../../../core/Message.js';
 
 const STATE_LABELS = {
-    [BasePublicationTransactionPlanState.IDLE]: 'Not yet constructed',
-    [BasePublicationTransactionPlanState.CONSTRUCTING]: 'Constructing…',
-    [BasePublicationTransactionPlanState.CONSTRUCTED]: 'Transaction plan constructed',
-    [BasePublicationTransactionPlanState.UNAVAILABLE]: 'Base network unavailable',
-    [BasePublicationTransactionPlanState.FAILED]: 'Unable to construct transaction'
+    [BasePublicationTransactionPlanState.IDLE]: message('basePublicationTransactionPlan.notYetConstructed'),
+    [BasePublicationTransactionPlanState.CONSTRUCTING]: message('basePublicationTransactionPlan.constructing'),
+    [BasePublicationTransactionPlanState.CONSTRUCTED]: message('basePublicationTransactionPlan.transactionPlanConstructed'),
+    [BasePublicationTransactionPlanState.UNAVAILABLE]: message('basePublicationTransactionPlan.baseNetworkUnavailable'),
+    [BasePublicationTransactionPlanState.FAILED]: message('basePublicationTransactionPlan.unableToConstructTransaction')
 };
 
 // 0.8.91 — Explicit Base Publication Transaction Construction.

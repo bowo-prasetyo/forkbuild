@@ -5,45 +5,41 @@ export const connectionsToolsTabTemplate = `<div v-show="publicationsToolsTab ==
                  never inferred. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Publication References</span>
-                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                    <span class="identity-mgmt-name">{{ t('publications.publicationReferences') }}</span>
+                    <span class="peer-badge peer-badge--pending">{{ t('publications.persistedLocally3') }}</span>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    An explicit, durable record that one publication references another — never inferred
-                    from matching content, timestamps, or authors. Both publications must already have a
-                    durable identity above; a reference is never a "fork" classification, only a plain,
-                    attributable fact: this publication points at that one.
+                    {{ t('publications.anExplicitDurableRecordThat2') }}
                 </p>
                 <dl class="evidence-fields">
-                    <div class="evidence-field"><dt>References recorded</dt><dd>{{ publicationReferenceRecordHistoryView().count }}</dd></div>
+                    <div class="evidence-field"><dt>{{ t('publications.referencesRecorded') }}</dt><dd>{{ publicationReferenceRecordHistoryView().count }}</dd></div>
                 </dl>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="togglePublicationReferences">
-                        {{ publicationReferencesExpanded ? 'Hide References' : 'Show References' }}
+                        {{ publicationReferencesExpanded ? t('publications.hideReferences') : t('publications.showReferences') }}
                     </button>
                 </div>
                 <div v-if="publicationReferencesExpanded" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Record A New Reference</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.recordANewReference') }}</span>
                     <p v-if="knownPublicationIdentityOptions().length < 2" class="form-hint form-hint--neutral">
-                        At least two publication identities (Bitcoin or Base, above) are needed before a
-                        reference can be recorded.
+                        {{ t('publications.atLeastTwoPublicationIdentities') }}
                     </p>
                     <template v-else>
                         <label class="form-field">
-                            <span class="form-label">Source publication (the one making the reference)</span>
+                            <span class="form-label">{{ t('publications.sourcePublicationTheOneMaking') }}</span>
                             <select v-model="publicationReferenceSourceKey" class="form-input">
-                                <option value="" disabled>Choose a publication…</option>
+                                <option value="" disabled>{{ t('publications.chooseAPublication') }}</option>
                                 <option v-for="option in knownPublicationIdentityOptions()" :key="'src-' + option.key" :value="option.key">
-                                    {{ option.label }}
+                                    {{ displayText(option.label) }}
                                 </option>
                             </select>
                         </label>
                         <label class="form-field">
-                            <span class="form-label">Referenced publication (the one being pointed at)</span>
+                            <span class="form-label">{{ t('publications.referencedPublicationTheOneBeing') }}</span>
                             <select v-model="publicationReferenceReferencedKey" class="form-input">
-                                <option value="" disabled>Choose a publication…</option>
+                                <option value="" disabled>{{ t('publications.chooseAPublication') }}</option>
                                 <option v-for="option in knownPublicationIdentityOptions()" :key="'ref-' + option.key" :value="option.key">
-                                    {{ option.label }}
+                                    {{ displayText(option.label) }}
                                 </option>
                             </select>
                         </label>
@@ -51,27 +47,23 @@ export const connectionsToolsTabTemplate = `<div v-show="publicationsToolsTab ==
                             <button type="button" class="action-btn action-btn--secondary"
                                     :disabled="!publicationReferenceSourceKey || !publicationReferenceReferencedKey"
                                     @click="recordPublicationReference">
-                                Record Reference
+                                {{ t('publications.recordReference') }}
                             </button>
                         </div>
                         <p v-if="publicationReferenceError" class="identity-unlock-error">{{ publicationReferenceError }}</p>
                     </template>
 
-                    <span class="evidence-inspection-adapter-title">Recorded References</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.recordedReferences') }}</span>
                     <p v-if="publicationReferenceRecordHistoryView().count === 0" class="form-hint form-hint--neutral">
-                        No references recorded yet.
+                        {{ t('publications.noReferencesRecordedYet') }}
                     </p>
                     <ul v-else class="replica-knowledge-claim-list">
                         <li v-for="(referenceRow, referenceIndex) in publicationReferenceRecordHistoryView().records" :key="referenceIndex" class="replica-knowledge-claim">
                             <span class="peer-badge peer-badge--pending">
-                                {{ referenceRow.sourcePublicationIdentity.blockchain }}:{{ shortId(referenceRow.sourcePublicationIdentity.chainReference) }}
-                                references
-                                {{ referenceRow.referencedPublicationIdentity.blockchain }}:{{ shortId(referenceRow.referencedPublicationIdentity.chainReference) }}
+                                {{ t('publications.references2', { blockchain: referenceRow.sourcePublicationIdentity.blockchain, chainReference: shortId(referenceRow.sourcePublicationIdentity.chainReference), blockchain2: referenceRow.referencedPublicationIdentity.blockchain, chainReference2: shortId(referenceRow.referencedPublicationIdentity.chainReference) }) }}
                             </span>
                             <p class="form-hint form-hint--neutral">
-                                Source content hash: {{ referenceRow.sourcePublicationIdentity.contentHash }} ·
-                                Referenced content hash: {{ referenceRow.referencedPublicationIdentity.contentHash }} ·
-                                Recorded: {{ formatWhen(referenceRow.createdAt) }}
+                                {{ t('publications.sourceContentHashReferencedContent', { contentHash: referenceRow.sourcePublicationIdentity.contentHash, contentHash2: referenceRow.referencedPublicationIdentity.contentHash, createdAt: formatWhen(referenceRow.createdAt) }) }}
                             </p>
                         </li>
                     </ul>
@@ -82,30 +74,27 @@ export const connectionsToolsTabTemplate = `<div v-show="publicationsToolsTab ==
                  ranking. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Publication Reference Graph</span>
-                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                    <span class="identity-mgmt-name">{{ t('publications.publicationReferenceGraph') }}</span>
+                    <span class="peer-badge peer-badge--pending">{{ t('publications.persistedLocally3') }}</span>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    The same recorded references above, grouped by publication so this replica's own
-                    reference graph is inspectable at a glance. A publication's outgoing/incoming counts
-                    are plain, attributable facts — never a score, a rank, or a claim that one
-                    publication is more valuable than another.
+                    {{ t('publications.theSameRecordedReferencesAbove') }}
                 </p>
                 <dl class="evidence-fields">
-                    <div class="evidence-field"><dt>Edges</dt><dd>{{ publicationReferenceGraphView().edgeCount }}</dd></div>
-                    <div class="evidence-field"><dt>Publications</dt><dd>{{ publicationReferenceGraphView().nodes.length }}</dd></div>
-                    <div class="evidence-field"><dt>Distinct sources</dt><dd>{{ publicationReferenceGraphView().distinctSourcePublicationCount }}</dd></div>
-                    <div class="evidence-field"><dt>Distinct referenced</dt><dd>{{ publicationReferenceGraphView().distinctReferencedPublicationCount }}</dd></div>
+                    <div class="evidence-field"><dt>{{ t('publications.edges') }}</dt><dd>{{ publicationReferenceGraphView().edgeCount }}</dd></div>
+                    <div class="evidence-field"><dt>{{ t('publications.publications4') }}</dt><dd>{{ publicationReferenceGraphView().nodes.length }}</dd></div>
+                    <div class="evidence-field"><dt>{{ t('publications.distinctSources') }}</dt><dd>{{ publicationReferenceGraphView().distinctSourcePublicationCount }}</dd></div>
+                    <div class="evidence-field"><dt>{{ t('publications.distinctReferenced') }}</dt><dd>{{ publicationReferenceGraphView().distinctReferencedPublicationCount }}</dd></div>
                 </dl>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="togglePublicationReferenceGraph">
-                        {{ publicationReferenceGraphExpanded ? 'Hide Reference Graph' : 'Show Reference Graph' }}
+                        {{ publicationReferenceGraphExpanded ? t('publications.hideReferenceGraph') : t('publications.showReferenceGraph') }}
                     </button>
                 </div>
                 <div v-if="publicationReferenceGraphExpanded" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Publications In This Graph</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.publicationsInThisGraph') }}</span>
                     <p v-if="publicationReferenceGraphView().nodes.length === 0" class="form-hint form-hint--neutral">
-                        No references recorded yet — record one above and it appears here.
+                        {{ t('publications.noReferencesRecordedYetRecord') }}
                     </p>
                     <ul v-else class="replica-knowledge-claim-list">
                         <li v-for="node in publicationReferenceGraphView().nodes" :key="node.identity.blockchain + ':' + node.identity.chainReference" class="replica-knowledge-claim">
@@ -113,26 +102,23 @@ export const connectionsToolsTabTemplate = `<div v-show="publicationsToolsTab ==
                                 {{ node.identity.blockchain }}:{{ shortId(node.identity.chainReference) }}
                             </button>
                             <p class="form-hint form-hint--neutral">
-                                Outgoing references: {{ node.outgoingReferenceCount }} ·
-                                Incoming references: {{ node.incomingReferenceCount }}
+                                {{ t('publications.outgoingReferencesIncomingReferences', { outgoingReferenceCount: node.outgoingReferenceCount, incomingReferenceCount: node.incomingReferenceCount }) }}
                             </p>
 
                             <div v-if="isPublicationReferenceGraphNodeExpanded(node)" class="evidence-list">
                                 <p v-if="node.outgoingReferenceCount === 0 && node.incomingReferenceCount === 0" class="form-hint form-hint--neutral">
-                                    No edges touch this publication.
+                                    {{ t('publications.noEdgesTouchThisPublication') }}
                                 </p>
                                 <template v-if="node.outgoingReferenceCount > 0">
-                                    <p class="form-hint form-hint--neutral"><strong>References →</strong></p>
+                                    <p class="form-hint form-hint--neutral"><strong>{{ t('publications.references') }}</strong></p>
                                     <p v-for="(edge, edgeIndex) in node.outgoingReferences" :key="'out-' + edgeIndex" class="form-hint form-hint--neutral">
-                                        {{ edge.referencedPublicationIdentity.blockchain }}:{{ shortId(edge.referencedPublicationIdentity.chainReference) }}
-                                        — recorded {{ formatWhen(edge.createdAt) }}
+                                        {{ t('publications.recorded2', { blockchain: edge.referencedPublicationIdentity.blockchain, chainReference: shortId(edge.referencedPublicationIdentity.chainReference), createdAt: formatWhen(edge.createdAt) }) }}
                                     </p>
                                 </template>
                                 <template v-if="node.incomingReferenceCount > 0">
-                                    <p class="form-hint form-hint--neutral"><strong>← Referenced by</strong></p>
+                                    <p class="form-hint form-hint--neutral"><strong>{{ t('publications.referencedBy') }}</strong></p>
                                     <p v-for="(edge, edgeIndex) in node.incomingReferences" :key="'in-' + edgeIndex" class="form-hint form-hint--neutral">
-                                        {{ edge.sourcePublicationIdentity.blockchain }}:{{ shortId(edge.sourcePublicationIdentity.chainReference) }}
-                                        — recorded {{ formatWhen(edge.createdAt) }}
+                                        {{ t('publications.recorded2', { blockchain: edge.sourcePublicationIdentity.blockchain, chainReference: shortId(edge.sourcePublicationIdentity.chainReference), createdAt: formatWhen(edge.createdAt) }) }}
                                     </p>
                                 </template>
                             </div>
@@ -144,57 +130,51 @@ export const connectionsToolsTabTemplate = `<div v-show="publicationsToolsTab ==
             <!-- Badges present achievement events; no points, scores or ranks. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Achievements</span>
-                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                    <span class="identity-mgmt-name">{{ t('publications.achievements') }}</span>
+                    <span class="peer-badge peer-badge--pending">{{ t('publications.persistedLocally3') }}</span>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    A human-facing presentation of this replica's own achievement events, each one
-                    attributed to the exact durable publication record that earned it. A badge is
-                    never a score, a rank, or a statement about a person's worth — only a threshold
-                    this replica's own publications have crossed, and when.
+                    {{ t('publications.aHumanFacingPresentationOf') }}
                 </p>
                 <dl class="evidence-fields">
-                    <div class="evidence-field"><dt>Badges earned</dt><dd>{{ achievementBadgesView().count }}</dd></div>
+                    <div class="evidence-field"><dt>{{ t('publications.badgesEarned') }}</dt><dd>{{ achievementBadgesView().count }}</dd></div>
                 </dl>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="toggleAchievements">
-                        {{ achievementsExpanded ? 'Hide Achievements' : 'Show Achievements' }}
+                        {{ achievementsExpanded ? t('publications.hideAchievements') : t('publications.showAchievements') }}
                     </button>
                 </div>
                 <div v-if="achievementsExpanded" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Achievement Badges</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.achievementBadges') }}</span>
                     <p v-if="achievementBadgesView().count === 0" class="form-hint form-hint--neutral">
-                        No achievements earned yet. Publishing a blockchain-anchored record elsewhere on
-                        this page earns one automatically, the moment its own threshold is crossed.
+                        {{ t('publications.noAchievementsEarnedYetPublishing') }}
                     </p>
                     <ul v-else class="replica-knowledge-claim-list">
                         <li v-for="badge in achievementBadgesView().badges" :key="badge.index" class="replica-knowledge-claim">
                             <button type="button" class="action-btn action-btn--secondary" @click="toggleAchievementBadge(badge.index)">
-                                {{ badge.icon }} {{ badge.title }}
+                                {{ badge.icon }} {{ displayText(badge.title) }}
                             </button>
                             <p class="form-hint form-hint--neutral">
-                                {{ badge.description }} — earned {{ formatWhen(badge.earnedAt) }}
+                                {{ t('publications.earned', { description: displayText(badge.description), earnedAt: formatWhen(badge.earnedAt) }) }}
                             </p>
 
                             <div v-if="isAchievementBadgeExpanded(badge.index)" class="evidence-list">
-                                <span class="evidence-convergence-title">Source Publication</span>
+                                <span class="evidence-convergence-title">{{ t('publications.sourcePublication') }}</span>
                                 <dl class="evidence-fields">
-                                    <div class="evidence-field"><dt>Blockchain</dt><dd>{{ badge.sourcePublicationIdentity.blockchain }}</dd></div>
-                                    <div class="evidence-field"><dt>Content hash</dt><dd>{{ badge.sourcePublicationIdentity.contentHash }}</dd></div>
-                                    <div class="evidence-field"><dt>Chain reference</dt><dd>{{ badge.sourcePublicationIdentity.chainReference }}</dd></div>
-                                    <div class="evidence-field"><dt>Created</dt><dd>{{ formatWhen(badge.sourcePublicationIdentity.createdAt) }}</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.blockchain') }}</dt><dd>{{ badge.sourcePublicationIdentity.blockchain }}</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.contentHash5') }}</dt><dd>{{ badge.sourcePublicationIdentity.contentHash }}</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.chainReference') }}</dt><dd>{{ badge.sourcePublicationIdentity.chainReference }}</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.created') }}</dt><dd>{{ formatWhen(badge.sourcePublicationIdentity.createdAt) }}</dd></div>
                                 </dl>
                                 <p class="form-hint form-hint--neutral">
-                                    This badge is a presentation of one achievement event — it names the exact
-                                    publication identity that earned it, never a score or a rank.
+                                    {{ t('publications.thisBadgeIsAPresentation') }}
                                 </p>
                                 <button v-if="canViewAchievementBadgeLifecycle(badge)" type="button" class="action-btn action-btn--secondary"
                                         @click="viewAchievementBadgeLifecycle(badge)">
-                                    View Publication Lifecycle Above
+                                    {{ t('publications.viewPublicationLifecycleAbove') }}
                                 </button>
                                 <p v-else class="form-hint form-hint--neutral">
-                                    This replica could not resolve this badge's own source anchor to a publication
-                                    lifecycle timeline above.
+                                    {{ t('publications.thisReplicaCouldNotResolve') }}
                                 </p>
                             </div>
                         </li>
@@ -205,56 +185,51 @@ export const connectionsToolsTabTemplate = `<div v-show="publicationsToolsTab ==
             <!-- Scoped to a publication identity, never a person or wallet. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Achievement Profile</span>
-                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                    <span class="identity-mgmt-name">{{ t('publications.achievementProfile') }}</span>
+                    <span class="peer-badge peer-badge--pending">{{ t('publications.persistedLocally3') }}</span>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    A publication identity's own slice of this replica's achievement events — never a
-                    human or wallet profile. ForkBuild can state that a publication earned an
-                    achievement; it cannot yet state that a person did, because no durable record here
-                    links a publication identity to a human identity.
+                    {{ t('publications.aPublicationIdentitySOwn') }}
                 </p>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="toggleAchievementProfile">
-                        {{ achievementProfileExpanded ? 'Hide Achievement Profile' : 'Show Achievement Profile' }}
+                        {{ achievementProfileExpanded ? t('publications.hideAchievementProfile') : t('publications.showAchievementProfile') }}
                     </button>
                 </div>
                 <div v-if="achievementProfileExpanded" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Choose A Publication</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.chooseAPublication2') }}</span>
                     <p v-if="knownPublicationIdentityOptions().length === 0" class="form-hint form-hint--neutral">
-                        No publication identities recorded yet — publish a Bitcoin or Base anchor above
-                        first.
+                        {{ t('publications.noPublicationIdentitiesRecordedYet') }}
                     </p>
                     <label v-else class="form-field">
-                        <span class="form-label">Publication</span>
+                        <span class="form-label">{{ t('publications.publication2') }}</span>
                         <select v-model="achievementProfileSelectedKey" class="form-input">
-                            <option value="" disabled>Choose a publication…</option>
+                            <option value="" disabled>{{ t('publications.chooseAPublication') }}</option>
                             <option v-for="option in knownPublicationIdentityOptions()" :key="'profile-' + option.key" :value="option.key">
-                                {{ option.label }}
+                                {{ displayText(option.label) }}
                             </option>
                         </select>
                     </label>
 
                     <template v-if="achievementProfileSelectedKey">
-                        <span class="evidence-inspection-adapter-title">Achievement Profile</span>
+                        <span class="evidence-inspection-adapter-title">{{ t('publications.achievementProfile') }}</span>
                         <dl class="evidence-fields">
-                            <div class="evidence-field"><dt>Publication</dt><dd>{{ achievementProfileView().publicationIdentity.blockchain }} — {{ shortId(achievementProfileView().publicationIdentity.chainReference) }}</dd></div>
-                            <div class="evidence-field"><dt>Achievements</dt><dd>{{ achievementProfileView().achievementCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.publication2') }}</dt><dd>{{ achievementProfileView().publicationIdentity.blockchain }} — {{ shortId(achievementProfileView().publicationIdentity.chainReference) }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.achievements') }}</dt><dd>{{ achievementProfileView().achievementCount }}</dd></div>
                         </dl>
                         <p v-if="achievementProfileView().achievementCount === 0" class="form-hint form-hint--neutral">
-                            This publication has not earned any achievements yet.
+                            {{ t('publications.thisPublicationHasNotEarned') }}
                         </p>
                         <ul v-else class="replica-knowledge-claim-list">
                             <li v-for="(achievement, achievementIndex) in achievementProfileView().achievements" :key="achievementIndex" class="replica-knowledge-claim">
-                                <span class="peer-badge peer-badge--pending">🏆 {{ achievement.label }}</span>
+                                <span class="peer-badge peer-badge--pending">🏆 {{ displayText(achievement.label) }}</span>
                                 <p class="form-hint form-hint--neutral">
-                                    Earned {{ formatWhen(achievement.observedAt) }}
+                                    {{ t('publications.earned2', { observedAt: formatWhen(achievement.observedAt) }) }}
                                 </p>
                             </li>
                         </ul>
                         <p class="form-hint form-hint--neutral">
-                            These achievements belong to this publication identity — not necessarily to
-                            any particular person.
+                            {{ t('publications.theseAchievementsBelongToThis') }}
                         </p>
                     </template>
                 </div>
@@ -264,44 +239,40 @@ export const connectionsToolsTabTemplate = `<div v-show="publicationsToolsTab ==
                  identity or ownership claim. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Publisher Associations</span>
-                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                    <span class="identity-mgmt-name">{{ t('publications.publisherAssociations') }}</span>
+                    <span class="peer-badge peer-badge--pending">{{ t('publications.persistedLocally3') }}</span>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    An explicit, durable record that a publisher identity claims a publication — never
-                    inferred from matching wallets, matching content, or matching names. A publisher
-                    identifier is a bare, explicit label, never a cryptographic proof of ownership or of
-                    the human behind it.
+                    {{ t('publications.anExplicitDurableRecordThat') }}
                 </p>
                 <dl class="evidence-fields">
-                    <div class="evidence-field"><dt>Associations recorded</dt><dd>{{ publisherPublicationAssociationRecordHistoryView().count }}</dd></div>
+                    <div class="evidence-field"><dt>{{ t('publications.associationsRecorded') }}</dt><dd>{{ publisherPublicationAssociationRecordHistoryView().count }}</dd></div>
                 </dl>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="togglePublisherAssociations">
-                        {{ publisherAssociationsExpanded ? 'Hide Publisher Associations' : 'Show Publisher Associations' }}
+                        {{ publisherAssociationsExpanded ? t('publications.hidePublisherAssociations') : t('publications.showPublisherAssociations') }}
                     </button>
                 </div>
                 <div v-if="publisherAssociationsExpanded" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Associate A Publication With A Publisher</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.associateAPublicationWithA') }}</span>
                     <p v-if="knownPublicationIdentityOptions().length === 0" class="form-hint form-hint--neutral">
-                        At least one publication identity (Bitcoin or Base, above) is needed before an
-                        association can be recorded.
+                        {{ t('publications.atLeastOnePublicationIdentity') }}
                     </p>
                     <template v-else>
                         <label class="form-field">
-                            <span class="form-label">Publisher identifier</span>
+                            <span class="form-label">{{ t('publications.publisherIdentifier') }}</span>
                             <input v-model="publisherAssociationPublisherId" type="text" class="form-input"
-                                   list="publisher-association-known-identifiers" placeholder="e.g. Publisher A">
+                                   list="publisher-association-known-identifiers" :placeholder="t('publications.eGPublisherA')">
                             <datalist id="publisher-association-known-identifiers">
                                 <option v-for="publisherId in distinctPublisherIdentifiersView()" :key="publisherId" :value="publisherId"></option>
                             </datalist>
                         </label>
                         <label class="form-field">
-                            <span class="form-label">Publication</span>
+                            <span class="form-label">{{ t('publications.publication2') }}</span>
                             <select v-model="publisherAssociationPublicationKey" class="form-input">
-                                <option value="" disabled>Choose a publication…</option>
+                                <option value="" disabled>{{ t('publications.chooseAPublication') }}</option>
                                 <option v-for="option in knownPublicationIdentityOptions()" :key="'assoc-' + option.key" :value="option.key">
-                                    {{ option.label }}
+                                    {{ displayText(option.label) }}
                                 </option>
                             </select>
                         </label>
@@ -309,15 +280,15 @@ export const connectionsToolsTabTemplate = `<div v-show="publicationsToolsTab ==
                             <button type="button" class="action-btn action-btn--secondary"
                                     :disabled="!publisherAssociationPublisherId.trim() || !publisherAssociationPublicationKey"
                                     @click="recordPublisherAssociation">
-                                Add Publication
+                                {{ t('publications.addPublication') }}
                             </button>
                         </div>
                         <p v-if="publisherAssociationError" class="identity-unlock-error">{{ publisherAssociationError }}</p>
                     </template>
 
-                    <span class="evidence-inspection-adapter-title">Recorded Associations</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.recordedAssociations') }}</span>
                     <p v-if="publisherPublicationAssociationRecordHistoryView().count === 0" class="form-hint form-hint--neutral">
-                        No associations recorded yet.
+                        {{ t('publications.noAssociationsRecordedYet') }}
                     </p>
                     <ul v-else class="replica-knowledge-claim-list">
                         <li v-for="(associationRow, associationIndex) in publisherPublicationAssociationRecordHistoryView().records" :key="associationIndex" class="replica-knowledge-claim">
@@ -326,21 +297,19 @@ export const connectionsToolsTabTemplate = `<div v-show="publicationsToolsTab ==
                                 {{ associationRow.publicationIdentity.blockchain }}:{{ shortId(associationRow.publicationIdentity.chainReference) }}
                             </span>
                             <p class="form-hint form-hint--neutral">
-                                Content hash: {{ associationRow.publicationIdentity.contentHash }} ·
-                                Recorded: {{ formatWhen(associationRow.createdAt) }}
+                                {{ t('publications.contentHashRecorded', { contentHash: associationRow.publicationIdentity.contentHash, createdAt: formatWhen(associationRow.createdAt) }) }}
                             </p>
                         </li>
                     </ul>
 
-                    <span class="evidence-inspection-adapter-title">A Publisher's Associated Publications</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.aPublisherSAssociatedPublications') }}</span>
                     <p v-if="distinctPublisherIdentifiersView().length === 0" class="form-hint form-hint--neutral">
-                        No publisher has been associated with anything yet — record one above and it
-                        appears here.
+                        {{ t('publications.noPublisherHasBeenAssociated') }}
                     </p>
                     <label v-else class="form-field">
-                        <span class="form-label">Publisher</span>
+                        <span class="form-label">{{ t('publications.publisher') }}</span>
                         <select v-model="publisherAssociationSelectedPublisherId" class="form-input">
-                            <option value="" disabled>Choose a publisher…</option>
+                            <option value="" disabled>{{ t('publications.chooseAPublisher') }}</option>
                             <option v-for="publisherId in distinctPublisherIdentifiersView()" :key="'view-' + publisherId" :value="publisherId">
                                 {{ publisherId }}
                             </option>
@@ -349,11 +318,11 @@ export const connectionsToolsTabTemplate = `<div v-show="publicationsToolsTab ==
 
                     <template v-if="publisherAssociationSelectedPublisherId">
                         <dl class="evidence-fields">
-                            <div class="evidence-field"><dt>Publisher</dt><dd>{{ publisherAssociationProfileView().publisherIdentity.publisherId }}</dd></div>
-                            <div class="evidence-field"><dt>Associated publications</dt><dd>{{ publisherAssociationProfileView().associationCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.publisher') }}</dt><dd>{{ publisherAssociationProfileView().publisherIdentity.publisherId }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.associatedPublications') }}</dt><dd>{{ publisherAssociationProfileView().associationCount }}</dd></div>
                         </dl>
                         <p v-if="publisherAssociationProfileView().associationCount === 0" class="form-hint form-hint--neutral">
-                            This publisher has not been associated with any publication.
+                            {{ t('publications.thisPublisherHasNotBeen') }}
                         </p>
                         <ul v-else class="replica-knowledge-claim-list">
                             <li v-for="(association, associationIndex) in publisherAssociationProfileView().associations" :key="associationIndex" class="replica-knowledge-claim">
@@ -361,15 +330,12 @@ export const connectionsToolsTabTemplate = `<div v-show="publicationsToolsTab ==
                                     {{ association.publicationIdentity.blockchain }} — {{ shortId(association.publicationIdentity.chainReference) }}
                                 </span>
                                 <p class="form-hint form-hint--neutral">
-                                    Content hash: {{ association.publicationIdentity.contentHash }} ·
-                                    Associated: {{ formatWhen(association.createdAt) }}
+                                    {{ t('publications.contentHashAssociated', { contentHash: association.publicationIdentity.contentHash, createdAt: formatWhen(association.createdAt) }) }}
                                 </p>
                             </li>
                         </ul>
                         <p class="form-hint form-hint--neutral">
-                            This is an explicit claim, not a verified fact — it states that this publisher
-                            identity was associated with these publications, never that this replica has
-                            proven who controls them.
+                            {{ t('publications.thisIsAnExplicitClaim') }}
                         </p>
                     </template>
                 </div>

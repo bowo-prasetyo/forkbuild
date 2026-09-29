@@ -9,6 +9,7 @@ import {
 } from '../application/ipfs/IpfsPublicationContentVerificationHistory.js';
 import { describeIpfsPublicationContentVerificationHistory } from '../application/ipfs/IpfsPublicationContentVerificationHistoryView.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.72 — IPFS Publication Verification History & Inspection UI.
 //
@@ -206,7 +207,7 @@ async function run() {
         assert(narrated.verifications[0].contentHash === history[0].contentHash, '30. contentHash is carried through unchanged');
         assert(narrated.verifications[0].locator === history[0].locator, '31. locator is carried through unchanged');
         assert(narrated.verifications[0].observedAt === history[0].observedAt, '32. observedAt is carried through unchanged');
-        assert(typeof narrated.verifications[0].stateLabel === 'string' && narrated.verifications[0].stateLabel.length > 0, '33. each entry narrates its own full-sentence stateLabel via the existing 0.8.70 view');
+        assert(typeof displayText(narrated.verifications[0].stateLabel) === 'string' && displayText(narrated.verifications[0].stateLabel).length > 0, '33. each entry narrates its own full-sentence stateLabel via the existing 0.8.70 view');
 
         const empty = describeIpfsPublicationContentVerificationHistory(null);
         assert(empty.count === 0 && empty.verifications.length === 0, '34. a null history narrates as empty, never throwing');

@@ -1,4 +1,4 @@
-import { formatRelativeVisit } from '../../utils/formatRelativeVisit.js';
+import { relativeVisitText } from '../i18n/dateText.js';
 import { displayText, t } from '../i18n/i18n.js';
 import { compassText } from '../i18n/worldText.js';
 
@@ -63,7 +63,7 @@ export default {
     emits: ['explore', 'dismiss', 'go-to-place'],
     computed: {
         lastVisitedLabel() {
-            return this.returning ? formatRelativeVisit(this.lastVisitedAt) : null;
+            return this.returning ? relativeVisitText(this.lastVisitedAt) : null;
         },
         // 0.5.6 — Geographic Place Navigation & Arrival. "You are IN"
         // only for a named WorldRegion the viewer is actually standing

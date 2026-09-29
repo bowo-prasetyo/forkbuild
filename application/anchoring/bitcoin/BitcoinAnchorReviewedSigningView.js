@@ -1,12 +1,13 @@
 import { BitcoinAnchorReviewedSigningState } from './BitcoinAnchorReviewedSigningState.js';
+import { message } from '../../../core/Message.js';
 
 const STATE_LABELS = {
-    [BitcoinAnchorReviewedSigningState.IDLE]: 'Not yet signed',
-    [BitcoinAnchorReviewedSigningState.SIGNING]: 'Waiting for wallet…',
-    [BitcoinAnchorReviewedSigningState.SIGNED]: 'Wallet returned a signed PSBT',
-    [BitcoinAnchorReviewedSigningState.DECLINED]: 'Signing declined',
-    [BitcoinAnchorReviewedSigningState.UNAVAILABLE]: 'Wallet unavailable',
-    [BitcoinAnchorReviewedSigningState.FAILED]: 'Signing failed'
+    [BitcoinAnchorReviewedSigningState.IDLE]: message('bitcoinAnchorReviewedSigning.notYetSigned'),
+    [BitcoinAnchorReviewedSigningState.SIGNING]: message('bitcoinAnchorReviewedSigning.waitingForWallet'),
+    [BitcoinAnchorReviewedSigningState.SIGNED]: message('bitcoinAnchorReviewedSigning.walletReturnedASignedPsbt'),
+    [BitcoinAnchorReviewedSigningState.DECLINED]: message('bitcoinAnchorReviewedSigning.signingDeclined'),
+    [BitcoinAnchorReviewedSigningState.UNAVAILABLE]: message('bitcoinAnchorReviewedSigning.walletUnavailable'),
+    [BitcoinAnchorReviewedSigningState.FAILED]: message('bitcoinAnchorReviewedSigning.signingFailed')
 };
 
 // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.

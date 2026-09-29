@@ -6,65 +6,59 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                         <div v-if="bitcoinAnchorTransactionConstructionCoordinator" class="evidence-list">
                             <div class="evidence-anchor-card">
                                 <div class="evidence-anchor-header">
-                                    <span class="evidence-anchor-type">Bitcoin Anchor Transaction</span>
+                                    <span class="evidence-anchor-type">{{ t('publications.bitcoinAnchorTransaction') }}</span>
                                     <span v-if="bitcoinAnchorTransactionConstructionView(entry)" class="peer-badge"
                                         :class="bitcoinAnchorTransactionConstructionBadgeClass(entry)">
-                                        {{ bitcoinAnchorTransactionConstructionView(entry).stateLabel }}
+                                        {{ displayText(bitcoinAnchorTransactionConstructionView(entry).stateLabel) }}
                                     </span>
                                 </div>
                                 <p class="form-hint form-hint--neutral">
-                                    Turns the wallet funding observed in Wallet, Archive &amp; Publisher Tools into an unsigned transaction plan for
-                                    THIS publication's own content hash. Nothing is signed or broadcast by
-                                    constructing this — it only names which observed inputs would be spent, and
-                                    what the resulting fee and change would be.
+                                    {{ t('publications.turnsTheWalletFundingObserved') }}
                                 </p>
                                 <p v-if="!isBitcoinAnchorFundingObserved()" class="form-hint form-hint--neutral">
-                                    First observe wallet funding in
-                                    <button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">Wallet, Archive &amp; Publisher Tools</button>
-                                    at the bottom of the page.
+                                    <I18nText keypath="publications.firstObserveWalletFundingIn">
+                                        <template #tools><button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">{{ t('publications.walletArchivePublisherTools') }}</button></template>
+                                    </I18nText>
                                 </p>
                                 <div class="identity-mgmt-actions">
                                     <button class="action-btn action-btn--primary"
                                             :disabled="!isBitcoinAnchorFundingObserved() || (bitcoinAnchorTransactionConstructionView(entry) && bitcoinAnchorTransactionConstructionView(entry).state === BitcoinAnchorTransactionConstructionState.CONSTRUCTING)"
                                             @click="constructBitcoinAnchorTransaction(entry)">
-                                        Create Transaction Plan
+                                        {{ t('publications.buildTransactionPlan') }}
                                     </button>
                                 </div>
 
                                 <template v-if="bitcoinAnchorTransactionConstructionView(entry)">
                                     <p v-if="bitcoinAnchorTransactionConstructionView(entry).reason" class="form-hint form-hint--neutral">
-                                        {{ bitcoinAnchorTransactionConstructionView(entry).reason }}
+                                        {{ displayText(bitcoinAnchorTransactionConstructionView(entry).reason) }}
                                     </p>
 
                                     <template v-if="bitcoinAnchorTransactionConstructionView(entry).state === BitcoinAnchorTransactionConstructionState.CONSTRUCTED">
                                         <dl class="evidence-fields">
-                                            <div class="evidence-field"><dt>Network</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).network }}</dd></div>
-                                            <div class="evidence-field"><dt>Content hash</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).contentHash }}</dd></div>
-                                            <div class="evidence-field"><dt>Selected inputs</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).selectedInputCount }}</dd></div>
-                                            <div class="evidence-field"><dt>Fee</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).feeSats }} sat</dd></div>
-                                            <div class="evidence-field"><dt>Change</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).changeSats }} sat</dd></div>
-                                            <div class="evidence-field"><dt>Total inputs</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).totalInputSats }} sat</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.network') }}</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).network }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.contentHash2') }}</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).contentHash }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.selectedInputs') }}</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).selectedInputCount }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.fee') }}</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).feeSats }} sat</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.change') }}</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).changeSats }} sat</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.totalInputs') }}</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).totalInputSats }} sat</dd></div>
                                         </dl>
                                         <div class="evidence-inspection-adapter">
-                                            <span class="evidence-inspection-adapter-title">Inputs</span>
+                                            <span class="evidence-inspection-adapter-title">{{ t('publications.inputs') }}</span>
                                             <dl v-for="input in bitcoinAnchorTransactionConstructionView(entry).inputs" :key="input.txid + ':' + input.vout" class="evidence-fields">
                                                 <div class="evidence-field"><dt>{{ shortId(input.txid) }}:{{ input.vout }}</dt><dd>{{ input.valueSats }} sat ({{ input.scriptType }})</dd></div>
                                             </dl>
                                         </div>
                                         <div class="evidence-inspection-adapter">
-                                            <span class="evidence-inspection-adapter-title">Outputs</span>
+                                            <span class="evidence-inspection-adapter-title">{{ t('publications.outputs') }}</span>
                                             <dl v-for="(output, index) in bitcoinAnchorTransactionConstructionView(entry).outputs" :key="index" class="evidence-fields">
                                                 <div class="evidence-field">
-                                                    <dt>{{ output.type === 'change' ? 'Change' : 'OP_RETURN' }}</dt>
+                                                    <dt>{{ output.type === 'change' ? t('publications.change3') : 'OP_RETURN' }}</dt>
                                                     <dd>{{ output.address ? shortId(output.address) + ' — ' : '' }}{{ output.valueSats }} sat</dd>
                                                 </div>
                                             </dl>
                                         </div>
                                         <p class="form-hint form-hint--neutral">
-                                            Funding observed {{ formatWhen(bitcoinAnchorTransactionConstructionView(entry).fundingObservedAt) }};
-                                            plan constructed {{ formatWhen(bitcoinAnchorTransactionConstructionView(entry).constructedAt) }}.
-                                            The observed funding may already be stale by now — this plan records what it was built from, it
-                                            does not claim those inputs are still spendable.
+                                            {{ t('publications.fundingObservedPlanConstructedThe', { fundingObservedAt: formatWhen(bitcoinAnchorTransactionConstructionView(entry).fundingObservedAt), constructedAt: formatWhen(bitcoinAnchorTransactionConstructionView(entry).constructedAt) }) }}
                                         </p>
                                     </template>
                                 </template>
@@ -77,56 +71,49 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                         <div v-if="basePublicationTransactionPlanCoordinator" class="evidence-list">
                             <div class="evidence-anchor-card">
                                 <div class="evidence-anchor-header">
-                                    <span class="evidence-anchor-type">Base Publication Transaction</span>
+                                    <span class="evidence-anchor-type">{{ t('publications.basePublicationTransaction') }}</span>
                                     <span v-if="basePublicationTransactionPlanView(entry)" class="peer-badge"
                                         :class="basePublicationTransactionPlanBadgeClass(entry)">
-                                        {{ basePublicationTransactionPlanView(entry).stateLabel }}
+                                        {{ displayText(basePublicationTransactionPlanView(entry).stateLabel) }}
                                     </span>
                                 </div>
                                 <p class="form-hint form-hint--neutral">
-                                    Turns the Base account observed in Wallet, Archive &amp; Publisher Tools into an unsigned, self-transfer
-                                    transaction plan carrying THIS publication's own content hash as raw
-                                    transaction data. Nothing is signed or broadcast by constructing this — it
-                                    only names the nonce, gas limit, and fee figures the account was observed
-                                    with, and the exact bytes the transaction would carry.
+                                    {{ t('publications.turnsTheBaseAccountObserved') }}
                                 </p>
                                 <p v-if="!isBaseAccountObserved()" class="form-hint form-hint--neutral">
-                                    First observe a Base account in
-                                    <button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">Wallet, Archive &amp; Publisher Tools</button>
-                                    at the bottom of the page.
+                                    <I18nText keypath="publications.firstObserveABaseAccount">
+                                        <template #tools><button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">{{ t('publications.walletArchivePublisherTools') }}</button></template>
+                                    </I18nText>
                                 </p>
                                 <div class="identity-mgmt-actions">
                                     <button class="action-btn action-btn--primary"
                                             :disabled="!isBaseAccountObserved() || (basePublicationTransactionPlanView(entry) && basePublicationTransactionPlanView(entry).state === BasePublicationTransactionPlanState.CONSTRUCTING)"
                                             @click="constructBasePublicationTransaction(entry)">
-                                        {{ basePublicationTransactionPlanView(entry) && basePublicationTransactionPlanView(entry).state === BasePublicationTransactionPlanState.CONSTRUCTING ? 'Constructing…' : 'Create Base Transaction Plan' }}
+                                        {{ basePublicationTransactionPlanView(entry) && basePublicationTransactionPlanView(entry).state === BasePublicationTransactionPlanState.CONSTRUCTING ? t('publications.constructing') : t('publications.createBaseTransactionPlan') }}
                                     </button>
                                 </div>
 
                                 <template v-if="basePublicationTransactionPlanView(entry)">
                                     <p v-if="basePublicationTransactionPlanView(entry).reason" class="form-hint form-hint--neutral">
-                                        {{ basePublicationTransactionPlanView(entry).reason }}
+                                        {{ displayText(basePublicationTransactionPlanView(entry).reason) }}
                                     </p>
 
                                     <template v-if="basePublicationTransactionPlanView(entry).state === BasePublicationTransactionPlanState.CONSTRUCTED">
                                         <dl class="evidence-fields">
-                                            <div class="evidence-field"><dt>Network</dt><dd>{{ basePublicationTransactionPlanView(entry).network }}</dd></div>
-                                            <div class="evidence-field"><dt>Chain ID</dt><dd>{{ basePublicationTransactionPlanView(entry).chainId }}</dd></div>
-                                            <div class="evidence-field"><dt>Content hash</dt><dd>{{ basePublicationTransactionPlanView(entry).contentHash }}</dd></div>
-                                            <div class="evidence-field"><dt>From</dt><dd>{{ shortId(basePublicationTransactionPlanView(entry).from) }}</dd></div>
-                                            <div class="evidence-field"><dt>To</dt><dd>{{ shortId(basePublicationTransactionPlanView(entry).to) }} (self-transfer)</dd></div>
-                                            <div class="evidence-field"><dt>Value</dt><dd>{{ basePublicationTransactionPlanView(entry).value }} wei</dd></div>
-                                            <div class="evidence-field"><dt>Nonce</dt><dd>{{ basePublicationTransactionPlanView(entry).nonce }}</dd></div>
-                                            <div class="evidence-field"><dt>Gas limit</dt><dd>{{ basePublicationTransactionPlanView(entry).gasLimit }}</dd></div>
-                                            <div class="evidence-field"><dt>Max fee per gas</dt><dd>{{ basePublicationTransactionPlanView(entry).maxFeePerGas }} wei</dd></div>
-                                            <div class="evidence-field"><dt>Priority fee</dt><dd>{{ basePublicationTransactionPlanView(entry).maxPriorityFeePerGas }} wei</dd></div>
-                                            <div class="evidence-field"><dt>Data</dt><dd>{{ basePublicationTransactionPlanView(entry).data }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.network') }}</dt><dd>{{ basePublicationTransactionPlanView(entry).network }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.chainId') }}</dt><dd>{{ basePublicationTransactionPlanView(entry).chainId }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.contentHash2') }}</dt><dd>{{ basePublicationTransactionPlanView(entry).contentHash }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.from') }}</dt><dd>{{ shortId(basePublicationTransactionPlanView(entry).from) }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.to') }}</dt><dd>{{ t('publications.selfTransfer', { to: shortId(basePublicationTransactionPlanView(entry).to) }) }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.value') }}</dt><dd>{{ basePublicationTransactionPlanView(entry).value }} wei</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.nonce') }}</dt><dd>{{ basePublicationTransactionPlanView(entry).nonce }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.gasLimit') }}</dt><dd>{{ basePublicationTransactionPlanView(entry).gasLimit }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.maxFeePerGas') }}</dt><dd>{{ basePublicationTransactionPlanView(entry).maxFeePerGas }} wei</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.priorityFee') }}</dt><dd>{{ basePublicationTransactionPlanView(entry).maxPriorityFeePerGas }} wei</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.data') }}</dt><dd>{{ basePublicationTransactionPlanView(entry).data }}</dd></div>
                                         </dl>
                                         <p class="form-hint form-hint--neutral">
-                                            Account observed {{ formatWhen(basePublicationTransactionPlanView(entry).accountObservedAt) }};
-                                            plan constructed {{ formatWhen(basePublicationTransactionPlanView(entry).constructedAt) }}.
-                                            The observed balance and fee figures may already be stale by now — this plan records what
-                                            it was built from, it does not claim the network still prices gas this way.
+                                            {{ t('publications.accountObservedPlanConstructedThe', { accountObservedAt: formatWhen(basePublicationTransactionPlanView(entry).accountObservedAt), constructedAt: formatWhen(basePublicationTransactionPlanView(entry).constructedAt) }) }}
                                         </p>
                                     </template>
                                 </template>
@@ -136,31 +123,28 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                                  read-only. -->
                             <div v-if="basePublicationTransactionReviewView(entry)" class="evidence-anchor-card">
                                 <div class="evidence-anchor-header">
-                                    <span class="evidence-anchor-type">Base Transaction Review</span>
+                                    <span class="evidence-anchor-type">{{ t('publications.baseTransactionReview') }}</span>
                                 </div>
                                 <p class="form-hint form-hint--neutral">
-                                    The following transaction plan will be supplied to the signing capability if
-                                    you explicitly continue. Reviewing it does not sign, broadcast, or validate it
-                                    against the network — it names exactly what a wallet would be asked to sign,
-                                    nothing more, and nothing assumed.
+                                    {{ t('publications.theFollowingTransactionPlanWill') }}
                                 </p>
                                 <dl class="evidence-fields">
-                                    <div class="evidence-field"><dt>From</dt><dd>{{ basePublicationTransactionReviewView(entry).from }}</dd></div>
-                                    <div class="evidence-field"><dt>To</dt><dd>{{ basePublicationTransactionReviewView(entry).to }}</dd></div>
-                                    <div class="evidence-field"><dt>Value</dt><dd>{{ basePublicationTransactionReviewView(entry).value }} wei</dd></div>
-                                    <div class="evidence-field"><dt>Nonce</dt><dd>{{ basePublicationTransactionReviewView(entry).nonce }}</dd></div>
-                                    <div class="evidence-field"><dt>Gas limit</dt><dd>{{ basePublicationTransactionReviewView(entry).gasLimit }}</dd></div>
-                                    <div class="evidence-field"><dt>Max fee per gas</dt><dd>{{ basePublicationTransactionReviewView(entry).maxFeePerGas }} wei</dd></div>
-                                    <div class="evidence-field"><dt>Priority fee</dt><dd>{{ basePublicationTransactionReviewView(entry).maxPriorityFeePerGas }} wei</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.from') }}</dt><dd>{{ basePublicationTransactionReviewView(entry).from }}</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.to') }}</dt><dd>{{ basePublicationTransactionReviewView(entry).to }}</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.value') }}</dt><dd>{{ basePublicationTransactionReviewView(entry).value }} wei</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.nonce') }}</dt><dd>{{ basePublicationTransactionReviewView(entry).nonce }}</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.gasLimit') }}</dt><dd>{{ basePublicationTransactionReviewView(entry).gasLimit }}</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.maxFeePerGas') }}</dt><dd>{{ basePublicationTransactionReviewView(entry).maxFeePerGas }} wei</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.priorityFee') }}</dt><dd>{{ basePublicationTransactionReviewView(entry).maxPriorityFeePerGas }} wei</dd></div>
                                 </dl>
                                 <div class="evidence-inspection-adapter">
-                                    <span class="evidence-inspection-adapter-title">Content Hash</span>
+                                    <span class="evidence-inspection-adapter-title">{{ t('publications.contentHash3') }}</span>
                                     <dl class="evidence-fields">
                                         <div class="evidence-field"><dd>{{ basePublicationTransactionReviewView(entry).contentHash }}</dd></div>
                                     </dl>
                                 </div>
                                 <div class="evidence-inspection-adapter">
-                                    <span class="evidence-inspection-adapter-title">Transaction Data</span>
+                                    <span class="evidence-inspection-adapter-title">{{ t('publications.transactionData') }}</span>
                                     <dl class="evidence-fields">
                                         <div class="evidence-field"><dd>{{ basePublicationTransactionReviewView(entry).transactionData }}</dd></div>
                                     </dl>
@@ -169,26 +153,24 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                                 <!-- One-click alternative to the step-by-step
                                      pipeline below; both stay usable. -->
                                 <div v-if="baseAnchorPublisher" class="evidence-inspection-adapter">
-                                    <span class="evidence-inspection-adapter-title">Create Base Anchor</span>
+                                    <span class="evidence-inspection-adapter-title">{{ t('publications.createBaseAnchor') }}</span>
                                     <p class="form-hint form-hint--neutral">
-                                        Signs, finalizes, and broadcasts the exact transaction reviewed above in one
-                                        step, then records a Base anchor for this publication — an alternative to
-                                        signing it step by step below.
+                                        {{ t('publications.signsFinalizesAndBroadcastsThe') }}
                                     </p>
                                     <button type="button" class="action-btn action-btn--secondary"
                                         :disabled="baseAnchorCreationView(entry).state === 'creating'"
                                         @click="createBaseAnchor(entry)">
-                                        {{ baseAnchorCreationButtonLabel(entry) }}
+                                        {{ displayText(baseAnchorCreationButtonLabel(entry)) }}
                                     </button>
                                     <span v-if="baseAnchorCreationView(entry).label" class="peer-badge"
                                         :class="baseAnchorCreationBadgeClass(entry)">
-                                        {{ baseAnchorCreationView(entry).label }}
+                                        {{ displayText(baseAnchorCreationView(entry).label) }}
                                     </span>
                                     <p v-if="baseAnchorCreationView(entry).message" class="form-hint form-hint--neutral">
-                                        {{ baseAnchorCreationView(entry).message }}
+                                        {{ displayText(baseAnchorCreationView(entry).message) }}
                                     </p>
                                     <p v-if="baseAnchorCreationView(entry).reason" class="form-hint form-hint--neutral">
-                                        {{ baseAnchorCreationView(entry).reason }}
+                                        {{ displayText(baseAnchorCreationView(entry).reason) }}
                                     </p>
                                 </div>
 
@@ -196,23 +178,22 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                                      the exact plan and review shown. Signing
                                      does not broadcast. -->
                                 <div v-if="baseReviewedSigningCoordinator" class="evidence-inspection-adapter">
-                                    <span class="evidence-inspection-adapter-title">Signing</span>
+                                    <span class="evidence-inspection-adapter-title">{{ t('publications.signing') }}</span>
                                     <p class="form-hint form-hint--neutral">
-                                        Signing authorizes the exact transaction reviewed above. It does not
-                                        reconstruct or modify it, and it does not broadcast it.
+                                        {{ t('publications.signingAuthorizesTheExactTransaction') }}
                                     </p>
                                     <button type="button" class="action-btn action-btn--secondary"
                                         :disabled="isBaseReviewedTransactionSigning(entry)"
                                         @click="signBaseReviewedTransaction(entry)">
-                                        {{ isBaseReviewedTransactionSigning(entry) ? 'Waiting for wallet…' : 'Sign Reviewed Transaction' }}
+                                        {{ isBaseReviewedTransactionSigning(entry) ? t('publications.waitingForWallet') : t('publications.signReviewedTransaction') }}
                                     </button>
 
                                     <span v-if="baseReviewedTransactionSigningView(entry).state !== BaseReviewedSigningState.IDLE" class="peer-badge"
                                         :class="baseReviewedTransactionSigningBadgeClass(entry)">
-                                        {{ baseReviewedTransactionSigningView(entry).stateLabel }}
+                                        {{ displayText(baseReviewedTransactionSigningView(entry).stateLabel) }}
                                     </span>
                                     <p v-if="baseReviewedTransactionSigningView(entry).reason" class="form-hint form-hint--neutral">
-                                        {{ baseReviewedTransactionSigningView(entry).reason }}
+                                        {{ displayText(baseReviewedTransactionSigningView(entry).reason) }}
                                     </p>
 
                                     <!-- SIGNED only means the wallet returned
@@ -220,9 +201,7 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                                          that it was verified or broadcast. -->
                                     <p v-if="baseReviewedTransactionSigningView(entry).state === BaseReviewedSigningState.SIGNED"
                                        class="form-hint form-hint--neutral">
-                                        The wallet returned a signed transaction. ForkBuild has not yet
-                                        inspected, verified, or broadcast it — those are separate, explicit
-                                        steps.
+                                        {{ t('publications.theWalletReturnedASigned') }}
                                     </p>
                                 </div>
 
@@ -231,24 +210,21 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                                      here. Finalizing does not broadcast. -->
                                 <div v-if="baseSignedTransactionFinalizationCoordinator && baseReviewedTransactionSigningView(entry).state === BaseReviewedSigningState.SIGNED"
                                      class="evidence-inspection-adapter">
-                                    <span class="evidence-inspection-adapter-title">Verification & Finalization</span>
+                                    <span class="evidence-inspection-adapter-title">{{ t('publications.verificationFinalization') }}</span>
                                     <p class="form-hint form-hint--neutral">
-                                        Finalizing independently, cryptographically verifies the signed
-                                        transaction against the exact plan reviewed above — including
-                                        recovering the actual signer from the signature itself. It does not
-                                        broadcast it.
+                                        {{ t('publications.finalizingIndependentlyCryptographicallyVerifiesThe') }}
                                     </p>
                                     <button type="button" class="action-btn action-btn--secondary"
                                         @click="finalizeBaseSignedTransaction(entry)">
-                                        Verify &amp; Finalize Transaction
+                                        {{ t('publications.verifyFinalizeTransaction') }}
                                     </button>
 
                                     <span v-if="baseSignedTransactionFinalizationView(entry).state !== BaseSignedTransactionFinalizationState.IDLE" class="peer-badge"
                                         :class="baseSignedTransactionFinalizationBadgeClass(entry)">
-                                        {{ baseSignedTransactionFinalizationView(entry).stateLabel }}
+                                        {{ displayText(baseSignedTransactionFinalizationView(entry).stateLabel) }}
                                     </span>
                                     <p v-if="baseSignedTransactionFinalizationView(entry).reason" class="form-hint form-hint--neutral">
-                                        {{ baseSignedTransactionFinalizationView(entry).reason }}
+                                        {{ displayText(baseSignedTransactionFinalizationView(entry).reason) }}
                                     </p>
 
                                     <!-- FINALIZED: decoded, matches the plan
@@ -257,12 +233,11 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                                          confirmed. -->
                                     <template v-if="baseSignedTransactionFinalizationView(entry).state === BaseSignedTransactionFinalizationState.FINALIZED">
                                         <dl class="evidence-fields">
-                                            <div class="evidence-field"><dt>Recovered signer</dt><dd>{{ baseSignedTransactionFinalizationView(entry).from }}</dd></div>
-                                            <div class="evidence-field"><dt>Transaction hash</dt><dd>{{ baseSignedTransactionFinalizationView(entry).transactionHash }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.recoveredSigner') }}</dt><dd>{{ baseSignedTransactionFinalizationView(entry).from }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.transactionHash') }}</dt><dd>{{ baseSignedTransactionFinalizationView(entry).transactionHash }}</dd></div>
                                         </dl>
                                         <p class="form-hint form-hint--neutral">
-                                            The signed transaction matches the reviewed transaction and is
-                                            ready for the separate broadcast step.
+                                            {{ t('publications.theSignedTransactionMatchesThe') }}
                                         </p>
                                     </template>
                                 </div>
@@ -272,28 +247,26 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                                      confirmed. -->
                                 <div v-if="baseTransactionBroadcastCoordinator && baseSignedTransactionFinalizationView(entry).state === BaseSignedTransactionFinalizationState.FINALIZED"
                                      class="evidence-inspection-adapter">
-                                    <span class="evidence-inspection-adapter-title">Broadcast</span>
+                                    <span class="evidence-inspection-adapter-title">{{ t('publications.broadcast') }}</span>
                                     <p class="form-hint form-hint--neutral">
-                                        Broadcasting submits the exact finalized transaction above to Base's
-                                        own network. It does not construct, sign, modify, or re-verify it —
-                                        and broadcasting does not mean the transaction has been confirmed.
+                                        {{ t('publications.broadcastingSubmitsTheExactFinalized') }}
                                     </p>
                                     <button type="button" class="action-btn action-btn--secondary"
                                         :disabled="isBaseTransactionBroadcasting(entry)"
                                         @click="broadcastBaseTransaction(entry)">
-                                        {{ isBaseTransactionBroadcasting(entry) ? 'Broadcasting…' : (baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.IDLE ? 'Broadcast Transaction' : 'Broadcast Again') }}
+                                        {{ isBaseTransactionBroadcasting(entry) ? t('publications.broadcasting') : (baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.IDLE ? t('publications.broadcastTransaction') : t('publications.broadcastAgain')) }}
                                     </button>
 
                                     <span v-if="baseTransactionBroadcastView(entry).state !== BaseTransactionBroadcastState.IDLE" class="peer-badge"
                                         :class="baseTransactionBroadcastBadgeClass(entry)">
-                                        {{ baseTransactionBroadcastView(entry).stateLabel }}
+                                        {{ displayText(baseTransactionBroadcastView(entry).stateLabel) }}
                                     </span>
                                     <p v-if="baseTransactionBroadcastView(entry).reason" class="form-hint form-hint--neutral">
-                                        {{ baseTransactionBroadcastView(entry).reason }}
+                                        {{ displayText(baseTransactionBroadcastView(entry).reason) }}
                                     </p>
 
                                     <dl v-if="baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.BROADCASTED" class="evidence-fields">
-                                        <div class="evidence-field"><dt>Transaction ID</dt><dd>{{ baseTransactionBroadcastView(entry).txid }}</dd></div>
+                                        <div class="evidence-field"><dt>{{ t('publications.transactionId2') }}</dt><dd>{{ baseTransactionBroadcastView(entry).txid }}</dd></div>
                                     </dl>
                                 </div>
 
@@ -302,16 +275,15 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                                      every observation is kept and archived. -->
                                 <div v-if="baseTransactionInclusionObservationCoordinator && baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.BROADCASTED"
                                      class="evidence-inspection-adapter">
-                                    <span class="evidence-inspection-adapter-title">Base Transaction Inclusion</span>
+                                    <span class="evidence-inspection-adapter-title">{{ t('publications.baseTransactionInclusion') }}</span>
                                     <p class="form-hint form-hint--neutral">
-                                        The network accepted this transaction for broadcast. Whether it has
-                                        since been included in a block is a separate, later observation.
+                                        {{ t('publications.theNetworkAcceptedThisTransaction') }}
                                     </p>
 
                                     <button type="button" class="action-btn action-btn--secondary"
                                         :disabled="isBaseTransactionInclusionObserving(entry)"
                                         @click="observeBaseTransactionInclusion(entry)">
-                                        {{ isBaseTransactionInclusionObserving(entry) ? 'Observing…' : (baseTransactionInclusionView(entry) ? 'Observe Transaction Again' : 'Observe Transaction') }}
+                                        {{ isBaseTransactionInclusionObserving(entry) ? t('publications.observing') : (baseTransactionInclusionView(entry) ? t('publications.observeTransactionAgain') : t('publications.observeTransaction')) }}
                                     </button>
                                     <p v-if="entry.baseTransactionInclusionError" class="form-hint form-hint--neutral">
                                         {{ entry.baseTransactionInclusionError }}
@@ -319,30 +291,29 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
 
                                     <template v-if="baseTransactionInclusionView(entry)">
                                         <span class="peer-badge" :class="baseTransactionInclusionBadgeClass(entry)">
-                                            {{ baseTransactionInclusionView(entry).stateLabel }}
+                                            {{ displayText(baseTransactionInclusionView(entry).stateLabel) }}
                                         </span>
 
                                         <!-- INCLUDED only means a receipt
                                              exists now; a reorganization is
                                              still possible and is not detected. -->
                                         <dl v-if="baseTransactionInclusionView(entry).state === BaseTransactionInclusionObservationState.INCLUDED" class="evidence-fields">
-                                            <div class="evidence-field"><dt>Block hash</dt><dd>{{ baseTransactionInclusionView(entry).blockHash }}</dd></div>
-                                            <div class="evidence-field"><dt>Block number</dt><dd>{{ baseTransactionInclusionView(entry).blockNumber }}</dd></div>
-                                            <div class="evidence-field"><dt>Transaction index</dt><dd>{{ baseTransactionInclusionView(entry).transactionIndex }}</dd></div>
-                                            <div class="evidence-field"><dt>Confirmations</dt><dd>{{ baseTransactionInclusionView(entry).confirmationCount }}</dd></div>
-                                            <div class="evidence-field"><dt>Observed</dt><dd>{{ formatWhen(baseTransactionInclusionView(entry).observedAt) }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.blockHash2') }}</dt><dd>{{ baseTransactionInclusionView(entry).blockHash }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.blockNumber') }}</dt><dd>{{ baseTransactionInclusionView(entry).blockNumber }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.transactionIndex') }}</dt><dd>{{ baseTransactionInclusionView(entry).transactionIndex }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.confirmations2') }}</dt><dd>{{ baseTransactionInclusionView(entry).confirmationCount }}</dd></div>
+                                            <div class="evidence-field"><dt>{{ t('publications.observed') }}</dt><dd>{{ formatWhen(baseTransactionInclusionView(entry).observedAt) }}</dd></div>
                                         </dl>
                                         <p v-else-if="baseTransactionInclusionView(entry).state === BaseTransactionInclusionObservationState.NOT_INCLUDED" class="form-hint form-hint--neutral">
-                                            No receipt was returned for this transaction at this observation
-                                            ({{ formatWhen(baseTransactionInclusionView(entry).observedAt) }}).
+                                            {{ t('publications.noReceiptWasReturnedFor', { observedAt: formatWhen(baseTransactionInclusionView(entry).observedAt) }) }}
                                         </p>
                                         <p v-if="baseTransactionInclusionView(entry).reason" class="form-hint form-hint--neutral">
-                                            {{ baseTransactionInclusionView(entry).reason }}
+                                            {{ displayText(baseTransactionInclusionView(entry).reason) }}
                                         </p>
 
                                         <button v-if="baseTransactionInclusionHistoryView(entry).count > 1" type="button" class="action-btn action-btn--secondary"
                                             @click="toggleBaseTransactionInclusionHistory(entry)">
-                                            {{ entry.baseTransactionInclusionHistoryExpanded ? 'Hide Observation History' : ('Show Observation History (' + baseTransactionInclusionHistoryView(entry).count + ')') }}
+                                            {{ entry.baseTransactionInclusionHistoryExpanded ? t('publications.hideObservationHistory') : t('publications.showObservationHistoryCount', { count: baseTransactionInclusionHistoryView(entry).count }) }}
                                         </button>
                                     </template>
 
@@ -350,12 +321,12 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                                         <ul class="replica-knowledge-claim-list">
                                             <li v-for="(item, index) in baseTransactionInclusionHistoryView(entry).observations" :key="index" class="replica-knowledge-claim">
                                                 <dl class="evidence-fields">
-                                                    <div class="evidence-field"><dt>Observed</dt><dd>{{ formatWhen(item.observedAt) }}</dd></div>
-                                                    <div class="evidence-field"><dt>State</dt><dd>{{ item.stateShortLabel }}</dd></div>
-                                                    <div v-if="item.blockHash" class="evidence-field"><dt>Block hash</dt><dd>{{ item.blockHash }}</dd></div>
-                                                    <div v-if="item.blockNumber !== null" class="evidence-field"><dt>Block number</dt><dd>{{ item.blockNumber }}</dd></div>
-                                                    <div v-if="item.confirmationCount !== null" class="evidence-field"><dt>Confirmations</dt><dd>{{ item.confirmationCount }}</dd></div>
-                                                    <div v-if="item.reason" class="evidence-field"><dt>Reason</dt><dd>{{ item.reason }}</dd></div>
+                                                    <div class="evidence-field"><dt>{{ t('publications.observed') }}</dt><dd>{{ formatWhen(item.observedAt) }}</dd></div>
+                                                    <div class="evidence-field"><dt>{{ t('publications.state2') }}</dt><dd>{{ displayText(item.stateShortLabel) }}</dd></div>
+                                                    <div v-if="item.blockHash" class="evidence-field"><dt>{{ t('publications.blockHash2') }}</dt><dd>{{ item.blockHash }}</dd></div>
+                                                    <div v-if="item.blockNumber !== null" class="evidence-field"><dt>{{ t('publications.blockNumber') }}</dt><dd>{{ item.blockNumber }}</dd></div>
+                                                    <div v-if="item.confirmationCount !== null" class="evidence-field"><dt>{{ t('publications.confirmations2') }}</dt><dd>{{ item.confirmationCount }}</dd></div>
+                                                    <div v-if="item.reason" class="evidence-field"><dt>{{ t('publications.reason2') }}</dt><dd>{{ displayText(item.reason) }}</dd></div>
                                                 </dl>
                                             </li>
                                         </ul>

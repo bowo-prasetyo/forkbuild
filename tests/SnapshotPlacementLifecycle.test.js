@@ -23,6 +23,7 @@ import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snaps
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.26 — Snapshot Placement Lifecycle & Stale Availability Semantics.
 //
@@ -191,8 +192,8 @@ async function run() {
         lifecycle = deriveSnapshotPlacementLifecycle(history);
         assert(lifecycle.state === SnapshotPlacementLifecycleState.UNAVAILABLE, '6. lifecycle state is UNAVAILABLE');
         assert(lifecycle.everResolved === true, '7. everResolved STAYS true — an earlier RESOLVED observation is never erased by a later UNAVAILABLE one');
-        const note = describeSnapshotPlacementLifecycleNote(lifecycle);
-        assert(typeof note === 'string' && /resolved successfully earlier/.test(note) && !/invalid|corrupt|removed|lost/i.test(note),
+        const note = displayText(describeSnapshotPlacementLifecycleNote(lifecycle));
+        assert(typeof displayText(note) === 'string' && /resolved successfully earlier/.test(note) && !/invalid|corrupt|removed|lost/i.test(note),
             '8. THE CENTRAL CASE: previously-RESOLVED-now-UNAVAILABLE gets an honest "resolved earlier, unavailable now" note, never language implying the claim itself is wrong');
 
         // T3 — the node recovers. The SAME unchanged placement resolves again.
@@ -294,8 +295,8 @@ async function run() {
         assert(lifecycle.state === SnapshotPlacementLifecycleState.UNAVAILABLE,
             '25. CONTENT_UNAVAILABLE derives the SAME UNAVAILABLE lifecycle state STORE_UNAVAILABLE derived at T1 — the two outcomes stay distinguishable in resolutionLabel, but not in lifecycle state');
         assert(lifecycle.everResolved === true, '26. everResolved stays true from T2\'s genuine success');
-        const note = describeSnapshotPlacementLifecycleNote(lifecycle);
-        assert(typeof note === 'string' && /resolved successfully earlier/.test(note), '27. the note now appears, because T2 really did resolve');
+        const note = displayText(describeSnapshotPlacementLifecycleNote(lifecycle));
+        assert(typeof displayText(note) === 'string' && /resolved successfully earlier/.test(note), '27. the note now appears, because T2 really did resolve');
         node.recover();
     }
     console.log('✓ Section C: STORE_UNAVAILABLE (no store registered) and CONTENT_UNAVAILABLE (a store registered, but unreachable) derive the identical UNAVAILABLE lifecycle state and the identical note behavior');

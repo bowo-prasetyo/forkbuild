@@ -21,6 +21,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
 //
@@ -227,20 +228,20 @@ async function run() {
 
         const errored = describeEvidenceDiscoveryAttempt({ discovering: false, error: 'boom' });
         assert(errored.state === PublicationEvidenceDiscoveryUiState.UNAVAILABLE, '4. a thrown error -> UNAVAILABLE');
-        assert(errored.message.toLowerCase().includes('could not complete'), '5. UNAVAILABLE (error) is worded as an operational failure');
+        assert(displayText(errored.message).toLowerCase().includes('could not complete'), '5. UNAVAILABLE (error) is worded as an operational failure');
 
         const noPeers = describeEvidenceDiscoveryAttempt({
             discovering: false, result: { attemptedPeers: [], discovered: [], newlyImportedCount: 0, alreadyKnownCount: 0 }
         });
         assert(noPeers.state === PublicationEvidenceDiscoveryUiState.UNAVAILABLE, '6. zero attempted peers -> UNAVAILABLE');
-        assert(!noPeers.message.toLowerCase().includes('no evidence'), '7. UNAVAILABLE (no peers) never says "no evidence"');
+        assert(!displayText(noPeers.message).toLowerCase().includes('no evidence'), '7. UNAVAILABLE (no peers) never says "no evidence"');
 
         const discovered = describeEvidenceDiscoveryAttempt({
             discovering: false,
             result: { attemptedPeers: [{ id: 'p' }], discovered: [{ isNew: true }], newlyImportedCount: 1, alreadyKnownCount: 0 }
         });
         assert(discovered.state === PublicationEvidenceDiscoveryUiState.DISCOVERED, '8. at least one new anchor -> DISCOVERED');
-        assert(discovered.message.includes('1 new evidence claim'), '9. DISCOVERED reports the exact count');
+        assert(displayText(discovered.message).includes('1 new evidence claim'), '9. DISCOVERED reports the exact count');
 
         const noNew = describeEvidenceDiscoveryAttempt({
             discovering: false,
@@ -249,16 +250,16 @@ async function run() {
         assert(noNew.state === PublicationEvidenceDiscoveryUiState.NO_NEW_EVIDENCE, '10. peers answered, nothing new -> NO_NEW_EVIDENCE');
         // THE CENTRAL WORDING RULE: "no new evidence claims discovered"
         // is never conflated with "no evidence exists."
-        const noNewWords = noNew.message.toLowerCase();
+        const noNewWords = displayText(noNew.message).toLowerCase();
         assert(noNewWords.includes('no new evidence'), '11. NO_NEW_EVIDENCE explicitly says "no NEW evidence"');
         assert(!noNewWords.includes('no evidence exists') && !noNewWords.includes('does not exist'),
             '12. NO_NEW_EVIDENCE never claims evidence does not exist — an authority-like conclusion this milestone forbids');
         assert(noNew.state !== errored.state && noNew.state !== noPeers.state,
             '13. NO_NEW_EVIDENCE and UNAVAILABLE are structurally distinct states, never merged');
 
-        assert(describeDiscoveryButtonLabel({}) === 'Discover from Peers', '14. default button label');
-        assert(describeDiscoveryButtonLabel({ discovering: true }) === 'Asking Peers…', '15. in-flight button label');
-        assert(describeDiscoveryButtonLabel({ hasDiscovered: true }) === 'Discover Again', '16. after any completed attempt, the label invites another one');
+        assert(displayText(describeDiscoveryButtonLabel({})) === 'Discover from Peers', '14. default button label');
+        assert(displayText(describeDiscoveryButtonLabel({ discovering: true })) === 'Asking Peers…', '15. in-flight button label');
+        assert(displayText(describeDiscoveryButtonLabel({ hasDiscovered: true })) === 'Discover Again', '16. after any completed attempt, the label invites another one');
     }
     console.log('✓ Section B: describeEvidenceDiscoveryAttempt() derives five structurally distinct states, and NO_NEW_EVIDENCE is worded so it can never be mistaken for "no evidence exists"');
 

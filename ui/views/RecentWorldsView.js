@@ -4,6 +4,8 @@ import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
 import { LocalWorldExperienceStore } from '../../application/world/LocalWorldExperienceStore.js';
 import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
 import WorldCard from '../components/WorldCard.js';
+import { t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
 // 0.3.10 — World Persistence & Return Experience. "Recent Worlds": a
 // local index of Worlds THIS replica has visited before, most-recent
@@ -39,7 +41,7 @@ const RECENT_WORLDS_LIMIT = 20;
 
 export default {
     name: 'RecentWorldsView',
-    components: { WorldCard },
+    components: { I18nText, WorldCard },
     setup() {
         const router = useRouter();
         const localWorldExperienceStore = new LocalWorldExperienceStore({ storageProvider: new LocalStorageProvider() });
@@ -84,7 +86,7 @@ export default {
 
             return {
                 documentId,
-                title: title || 'Untitled World',
+                title: title || t('recentWorldsView.untitledWorld'),
                 author,
                 structureCount,
                 landmarkCount,
@@ -102,16 +104,17 @@ export default {
             router.push({ path: `/world/${documentId}` });
         }
 
-        return { worlds, enterWorld };
+        return { t, worlds, enterWorld };
     },
     template: `
         <section class="recent-worlds-view">
-            <h1>My Worlds</h1>
-            <p class="recent-worlds-subtitle">Worlds you've visited before, on this device.</p>
+            <h1>{{ t('recentWorldsView.myWorlds') }}</h1>
+            <p class="recent-worlds-subtitle">{{ t('recentWorldsView.worldsYouVeVisitedBefore') }}</p>
 
             <div v-if="worlds.length === 0" class="empty-state">
-                You haven't visited any Worlds yet on this device.
-                <router-link to="/repository">Browse the Repository</router-link> to find one.
+                <I18nText keypath="recentWorldsView.youHavenTVisitedAny">
+                    <template #repository><router-link to="/repository">{{ t('recentWorldsView.browseTheRepository') }}</router-link></template>
+                </I18nText>
             </div>
 
             <ul v-else class="publication-list">

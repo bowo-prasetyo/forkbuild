@@ -18,6 +18,7 @@ import {
 } from '../application/snapshot/possession/SnapshotPeerPossessionObservationDetailView.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.45 — Explicit Peer Possession Observation Inspection.
 //
@@ -106,13 +107,13 @@ async function run() {
             '5. peerId/publicationId/contentHash are carried through unchanged');
         assert(details.entries[0].state === SnapshotPeerPossessionState.AVAILABLE, '6. the raw state is carried through unchanged');
         assert(details.entries[0].observedAt.getTime() === observedAt1.getTime(), '7. observedAt is carried through unchanged, oldest first — never sorted or reordered');
-        assert(details.entries[0].stateShortLabel === 'Available', '8. AVAILABLE gets the short label "Available"');
-        assert(details.entries[0].stateLabel === 'Peer reports snapshot available',
+        assert(displayText(details.entries[0].stateShortLabel) === 'Available', '8. AVAILABLE gets the short label "Available"');
+        assert(displayText(details.entries[0].stateLabel) === 'Peer reports snapshot available',
             '9. AVAILABLE gets the SAME full-sentence label application/snapshot/possession/SnapshotPeerPossessionView.js#describePeerPossessionAttempt() already produces');
 
         // UNAVAILABLE deliberately stays "Could not determine," never "Not available."
-        assert(details.entries[1].stateShortLabel === 'Could not determine', '10. UNAVAILABLE\'s short label is "Could not determine," never "Not available"');
-        assert(details.entries[1].stateLabel === 'No answer from peer',
+        assert(displayText(details.entries[1].stateShortLabel) === 'Could not determine', '10. UNAVAILABLE\'s short label is "Could not determine," never "Not available"');
+        assert(displayText(details.entries[1].stateLabel) === 'No answer from peer',
             '11. UNAVAILABLE\'s full-sentence label matches describePeerPossessionAttempt()\'s own wording exactly');
 
         // describeSnapshotPeerPossessionObservationDetail() on a single observation matches the batch call exactly.
@@ -188,7 +189,7 @@ async function run() {
         let bobHistory = appendSnapshotPeerPossessionObservationHistoryEntry([], firstObservation);
 
         const firstDetailsBefore = describeSnapshotPeerPossessionObservationDetails(bobHistory);
-        assert(firstDetailsBefore.count === 1 && firstDetailsBefore.entries[0].stateShortLabel === 'Available',
+        assert(firstDetailsBefore.count === 1 && displayText(firstDetailsBefore.entries[0].stateShortLabel) === 'Available',
             '2. Bob\'s own detail narration holds exactly one observation, reading "Available"');
 
         // Alice's own bytes vanish underneath her — never an explicit
@@ -208,8 +209,8 @@ async function run() {
         assert(detailsAfter.count === 2, '4. the SECOND observation is appended — Bob now holds two observations, never one "refreshed" observation');
         assert(JSON.stringify(detailsAfter.entries[0]) === JSON.stringify(firstDetailsBefore.entries[0]),
             '5. INVARIANT: Bob\'s FIRST observation\'s own detail narration is BYTE-IDENTICAL before and after Alice\'s bytes vanished — "Alice reported AVAILABLE at 20:21:04" is never rewritten');
-        assert(detailsAfter.entries[0].stateShortLabel === 'Available', '6. INVARIANT: the first entry still reads "Available," even though Alice no longer currently holds the bytes');
-        assert(detailsAfter.entries[1].stateShortLabel === 'Not available', '7. the SECOND, later entry honestly reads "Not available" — a NEW fact, not a correction of the first');
+        assert(displayText(detailsAfter.entries[0].stateShortLabel) === 'Available', '6. INVARIANT: the first entry still reads "Available," even though Alice no longer currently holds the bytes');
+        assert(displayText(detailsAfter.entries[1].stateShortLabel) === 'Not available', '7. the SECOND, later entry honestly reads "Not available" — a NEW fact, not a correction of the first');
         assert(detailsAfter.entries[0].observedAt === observedAt1 && detailsAfter.entries[1].observedAt === observedAt2,
             '8. both entries keep their own original observedAt, oldest first');
 
@@ -245,7 +246,7 @@ async function run() {
         assert(yDetails.count === 2, '3. replica Y\'s own full history holds exactly two observations');
         assert(JSON.stringify(xDetails) !== JSON.stringify(yDetails),
             '4. INVARIANT: the two replicas\' full detail histories remain DIFFERENT, despite reporting the identical current (latest-per-peer) comparison');
-        assert(yDetails.entries[0].stateShortLabel === 'Not available' && yDetails.entries[1].stateShortLabel === 'Available',
+        assert(displayText(yDetails.entries[0].stateShortLabel) === 'Not available' && displayText(yDetails.entries[1].stateShortLabel) === 'Available',
             '5. replica Y\'s own history still narrates BOTH of Alice\'s observations, in order — never collapsed down to only the latest');
 
         assertNoForbiddenVocabulary(xDetails, '', '6. replica X\'s own detail history');

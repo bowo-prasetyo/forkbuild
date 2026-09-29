@@ -25,6 +25,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as rawSource } from './support/SourceText.js';
 import { stripHtmlComments } from './support/StripHtmlComments.js';
 import { withEnglish } from './support/EnglishSource.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.9.538 — Publication Discovery Lead Lifecycle Product Reassessment.
 //
@@ -719,8 +720,8 @@ async function run() {
         // Retrieved -> Confirmed-to-match progression, never a stronger
         // claim.
         assert(/Discovered Snapshots/i.test(withEnglish((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n'))), 'I4. the candidate list is headed "Discovered," matching the first stage of the requested progression');
-        assert(describeSnapshotResolutionOutcomeLabel(DecentralizedSnapshotResolutionOutcome.RESOLVED).toLowerCase().includes('retrieved'), 'I5. a successful resolution is labeled "Retrieved," matching the third stage');
-        assert(describeSnapshotAttributionOutcomeLabel('match').toLowerCase().includes('confirmed to match'), 'I6. a hash match is labeled "Confirmed to match," matching the fourth stage — never "verified," "authentic," or "owned"');
+        assert(displayText(describeSnapshotResolutionOutcomeLabel(DecentralizedSnapshotResolutionOutcome.RESOLVED)).toLowerCase().includes('retrieved'), 'I5. a successful resolution is labeled "Retrieved," matching the third stage');
+        assert(displayText(describeSnapshotAttributionOutcomeLabel('match')).toLowerCase().includes('confirmed to match'), 'I6. a hash match is labeled "Confirmed to match," matching the fourth stage — never "verified," "authentic," or "owned"');
 
         // Selection state ("Selected") is real, structural UI state, not
         // merely a label — reconfirm the CSS-class binding exists.

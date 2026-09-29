@@ -7,6 +7,7 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport
 } from '../application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js';
 import { assert } from './support/Assert.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.8.188 — Reconciliation Candidate Leaderboard Evidence Export Import.
 //
@@ -87,9 +88,9 @@ async function run() {
     let moduleSource;
     let codeOnly;
     {
-        moduleSource = await (await import('node:fs/promises')).readFile(
+        moduleSource = withEnglish(await (await import('node:fs/promises')).readFile(
             new URL('../ui/views/ReconciliationCandidateLeaderboardView.js', import.meta.url), 'utf8'
-        );
+        ));
         codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(codeOnly.includes("from '../../application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js'"), '6. the view imports 0.8.188\'s own evidence-import module');

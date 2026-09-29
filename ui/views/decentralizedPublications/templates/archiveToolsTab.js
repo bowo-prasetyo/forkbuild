@@ -5,52 +5,47 @@ export const archiveToolsTabTemplate = `<div v-show="publicationsToolsTab === 'a
                  it; "Clear Archive" is the only removal. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Observation Archive</span>
-                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                    <span class="identity-mgmt-name">{{ t('publications.observationArchive') }}</span>
+                    <span class="peer-badge peer-badge--pending">{{ t('publications.persistedLocally2') }}</span>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    Publication and observation facts, kept durable across a page reload. Never a
-                    wallet connection, a signing capability, a private key, or any other
-                    credential — this archive never stores one, and reloading this page never
-                    restores one.
+                    {{ t('publications.publicationAndObservationFactsKept') }}
                 </p>
                 <dl class="evidence-fields">
-                    <div class="evidence-field"><dt>Publications</dt><dd>{{ publicationObservationArchiveView().publicationCount }}</dd></div>
-                    <div class="evidence-field"><dt>Observations</dt><dd>{{ publicationObservationArchiveView().observationCount }}</dd></div>
+                    <div class="evidence-field"><dt>{{ t('publications.publications3') }}</dt><dd>{{ publicationObservationArchiveView().publicationCount }}</dd></div>
+                    <div class="evidence-field"><dt>{{ t('publications.observations') }}</dt><dd>{{ publicationObservationArchiveView().observationCount }}</dd></div>
                 </dl>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="togglePublicationObservationArchive">
-                        {{ publicationObservationArchiveExpanded ? 'Hide Archive' : 'Show Archive' }}
+                        {{ publicationObservationArchiveExpanded ? t('publications.hideArchive') : t('publications.showArchive') }}
                     </button>
                     <button type="button" class="action-btn action-btn--danger"
                             :disabled="publicationObservationArchiveView().publicationCount === 0 && publicationObservationArchiveView().observationCount === 0"
                             @click="clearPublicationObservationArchive">
-                        Clear Archive
+                        {{ t('publications.clearArchive') }}
                     </button>
                 </div>
                 <div v-if="publicationObservationArchiveExpanded" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Archived Observation Timeline</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.archivedObservationTimeline') }}</span>
                     <p v-if="publicationObservationArchiveView().entryCount === 0" class="form-hint form-hint--neutral">
-                        Nothing archived yet. Publishing to IPFS, verifying content, broadcasting a
-                        Bitcoin transaction, or observing a confirmation on this page adds to this
-                        archive automatically.
+                        {{ t('publications.nothingArchivedYetPublishingTo') }}
                     </p>
                     <ul v-else class="replica-knowledge-claim-list">
                         <li v-for="(item, archiveIndex) in publicationObservationArchiveView().entries"
                             :key="archiveIndex" class="replica-knowledge-claim">
                             <span class="peer-badge" :class="crossDomainPublicationObservationTimelineEntryBadgeClass(item)">
-                                {{ formatWhen(item.observedAt) }} — {{ crossDomainPublicationObservationTimelineEntryDomainLabel(item) }} —
-                                {{ item.kind === PublicationObservationTimelineEntryKind.IPFS_PUBLICATION ? 'Published' : item.stateLabel }}
+                                {{ formatWhen(item.observedAt) }} — {{ displayText(crossDomainPublicationObservationTimelineEntryDomainLabel(item)) }} —
+                                {{ item.kind === PublicationObservationTimelineEntryKind.IPFS_PUBLICATION ? t('publications.published') : item.stateLabel }}
                             </span>
                             <p class="form-hint form-hint--neutral">
-                                {{ item.label }}
+                                {{ displayText(item.label) }}
                                 <template v-if="item.domain === PublicationObservationTimelineDomain.IPFS"> — {{ item.locator }}</template>
-                                <template v-else-if="item.txid"> — txid {{ item.txid }}</template>
+                                <template v-else-if="item.txid"> {{ t('publications.txid2', { txid: item.txid }) }}</template>
                             </p>
                             <p v-if="item.kind === PublicationObservationTimelineEntryKind.BITCOIN_CONFIRMATION && item.blockHeight != null" class="form-hint form-hint--neutral">
-                                Block height {{ item.blockHeight }}
+                                {{ t('publications.blockHeight3', { blockHeight: item.blockHeight }) }}
                             </p>
-                            <p v-if="item.reason" class="form-hint form-hint--neutral">{{ item.reason }}</p>
+                            <p v-if="item.reason" class="form-hint form-hint--neutral">{{ displayText(item.reason) }}</p>
                         </li>
                     </ul>
                 </div>
@@ -60,62 +55,55 @@ export const archiveToolsTabTemplate = `<div v-show="publicationsToolsTab === 'a
                  an invalid file is rejected. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Publication Archive</span>
-                    <span class="peer-badge peer-badge--pending">Export / Import</span>
+                    <span class="identity-mgmt-name">{{ t('publications.publicationArchive') }}</span>
+                    <span class="peer-badge peer-badge--pending">{{ t('publications.exportImport') }}</span>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    A portable copy of the recorded facts above — publication identities and
-                    observations only, never a wallet connection, a signing capability, a
-                    private key, or any pinning-provider credential. Exporting performs no
-                    network operation of its own. Importing REPLACES the current archive
-                    entirely — it never merges with it.
+                    {{ t('publications.aPortableCopyOfThe') }}
                 </p>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="exportPublicationArchive">
-                        Export Archive
+                        {{ t('publications.exportArchive') }}
                     </button>
                     <button type="button" class="action-btn action-btn--secondary" @click="togglePublicationArchiveImportForm">
-                        {{ showPublicationArchiveImportForm ? 'Cancel Import' : 'Import Archive' }}
+                        {{ showPublicationArchiveImportForm ? t('publications.cancelImport') : t('publications.importArchive2') }}
                     </button>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    Reconciling this archive against a peer's, authoring or exporting
-                    your own signed leaderboard snapshot claim, and seeing publishers
-                    ranked by their own recorded achievements all happen on the
-                    <router-link to="/leaderboard">Leaderboard</router-link> page.
+                    <I18nText keypath="publications.reconcilingThisArchiveAgainstA">
+                        <template #leaderboard><router-link to="/leaderboard">{{ t('publications.leaderboard') }}</router-link></template>
+                    </I18nText>
                 </p>
 
                 <div v-if="publicationArchiveExportedPackage.json" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Exported Archive</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.exportedArchive') }}</span>
                     <textarea class="form-input identity-export-json" rows="6" readonly :value="publicationArchiveExportedPackage.json"></textarea>
                     <div class="identity-mgmt-actions">
-                        <a class="modal-btn modal-btn--primary" :href="publicationArchiveExportedPackage.downloadHref" :download="publicationArchiveExportedPackage.fileName">Download Archive Export</a>
+                        <a class="modal-btn modal-btn--primary" :href="publicationArchiveExportedPackage.downloadHref" :download="publicationArchiveExportedPackage.fileName">{{ t('publications.downloadArchiveExport') }}</a>
                     </div>
                 </div>
 
                 <div v-if="showPublicationArchiveImportForm" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Import Archive</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.importArchive') }}</span>
                     <label class="form-field">
-                        <span class="form-label">Exported archive file</span>
+                        <span class="form-label">{{ t('publications.exportedArchiveFile') }}</span>
                         <input type="file" accept="application/json" @change="onPublicationArchiveImportFileChosen" class="form-input" />
                     </label>
                     <textarea v-model="publicationArchiveImportText" class="form-input identity-export-json" rows="6"
-                              placeholder="…or paste the exported archive JSON here"></textarea>
+                              :placeholder="t('publications.orPasteTheExportedArchive')"></textarea>
 
                     <p v-if="publicationArchiveImportOutcome && publicationArchiveImportOutcome.outcome === PublicationObservationArchiveImportOutcome.INVALID_ARCHIVE"
                        class="identity-unlock-error">
-                        This is not a valid publication archive export — nothing was changed.
+                        {{ t('publications.thisIsNotAValid') }}
                     </p>
 
                     <div v-if="publicationArchiveImportPreview" class="identity-import-preview">
-                        <p><strong>Imported archive holds:</strong> {{ publicationArchiveImportPreview.publicationCount }} publication(s), {{ publicationArchiveImportPreview.observationCount }} observation(s).</p>
+                        <p><strong>{{ t('publications.importedArchiveHolds') }}</strong> {{ t('publications.publicationsAndObservations', { publications: t('publications.nPublications', { count: publicationArchiveImportPreview.publicationCount }), observations: t('publications.nObservations', { count: publicationArchiveImportPreview.observationCount }) }) }}</p>
                         <p class="form-hint form-hint--neutral">
-                            Replacing discards every fact currently in the Observation Archive above
-                            ({{ publicationObservationArchiveView().publicationCount }} publication(s),
-                            {{ publicationObservationArchiveView().observationCount }} observation(s)) — this cannot be undone.
+                            {{ t('publications.replacingDiscardsEveryFactCurrently', { publications: t('publications.nPublications', { count: publicationObservationArchiveView().publicationCount }), observations: t('publications.nObservations', { count: publicationObservationArchiveView().observationCount }) }) }}
                         </p>
                         <button type="button" class="action-btn action-btn--danger" @click="confirmPublicationArchiveImport">
-                            Replace Current Archive
+                            {{ t('publications.replaceCurrentArchive') }}
                         </button>
                     </div>
                 </div>
@@ -124,174 +112,151 @@ export const archiveToolsTabTemplate = `<div v-show="publicationsToolsTab === 'a
             <!-- Inspecting an external archive never touches the current one. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Inspect External Archive</span>
-                    <span class="peer-badge peer-badge--pending">Read-only</span>
+                    <span class="identity-mgmt-name">{{ t('publications.inspectExternalArchive') }}</span>
+                    <span class="peer-badge peer-badge--pending">{{ t('publications.readOnly') }}</span>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    Look inside an exported archive file without importing it — the Observation
-                    Archive above, and everything derived from it, stays exactly as it is. Nothing
-                    here is fetched, verified, or reconciled against the current archive, and
-                    nothing here can ever replace it.
+                    {{ t('publications.lookInsideAnExportedArchive') }}
                 </p>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="togglePublicationArchiveInspectionForm">
-                        {{ showPublicationArchiveInspectionForm ? 'Cancel Inspection' : 'Inspect Archive' }}
+                        {{ showPublicationArchiveInspectionForm ? t('publications.cancelInspection') : t('publications.inspectArchive2') }}
                     </button>
                 </div>
 
                 <div v-if="showPublicationArchiveInspectionForm" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Inspect Archive</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.inspectArchive') }}</span>
                     <label class="form-field">
-                        <span class="form-label">Exported archive file</span>
+                        <span class="form-label">{{ t('publications.exportedArchiveFile') }}</span>
                         <input type="file" accept="application/json" @change="onPublicationArchiveInspectionFileChosen" class="form-input" />
                     </label>
                     <textarea v-model="publicationArchiveInspectionText" @input="invalidatePublicationArchiveDifference"
                               class="form-input identity-export-json" rows="6"
-                              placeholder="…or paste an exported archive JSON here"></textarea>
+                              :placeholder="t('publications.orPasteAnExportedArchive')"></textarea>
 
                     <p v-if="publicationArchiveInspectionOutcome && publicationArchiveInspectionOutcome.outcome === PublicationObservationArchiveInspectionOutcome.INVALID_ARCHIVE"
                        class="identity-unlock-error">
-                        This is not a valid publication archive export — nothing to inspect.
+                        {{ t('publications.thisIsNotAValid2') }}
                     </p>
 
                     <div v-if="publicationArchiveInspectionOutcome && publicationArchiveInspectionOutcome.outcome === PublicationObservationArchiveInspectionOutcome.INSPECTED"
                          class="identity-import-preview">
                         <dl class="evidence-fields">
-                            <div class="evidence-field"><dt>Schema version</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.schemaVersion }}</dd></div>
-                            <div class="evidence-field"><dt>IPFS publication records</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.ipfsPublicationCount }}</dd></div>
-                            <div class="evidence-field"><dt>IPFS verification observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.ipfsVerificationCount }}</dd></div>
-                            <div class="evidence-field"><dt>Bitcoin broadcast observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinBroadcastCount }}</dd></div>
-                            <div class="evidence-field"><dt>Bitcoin confirmation observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinConfirmationCount }}</dd></div>
-                            <div class="evidence-field"><dt>Bitcoin content-proof observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinContentProofCount }}</dd></div>
-                            <div class="evidence-field"><dt>Bitcoin publication records</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinAnchorPublicationRecordCount }}</dd></div>
-                            <div class="evidence-field"><dt>Base transaction inclusion observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.baseTransactionInclusionObservationCount }}</dd></div>
-                            <div class="evidence-field"><dt>Base publication records</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.baseAnchorPublicationRecordCount }}</dd></div>
-                            <div class="evidence-field"><dt>Local facts</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.localFactCount }}</dd></div>
-                            <div class="evidence-field"><dt>Imported facts</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.importedFactCount }}</dd></div>
-                            <div class="evidence-field"><dt>Import events</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.archiveImportCount }}</dd></div>
-                            <div class="evidence-field"><dt>Archive fingerprint</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.fingerprint }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.schemaVersion') }}</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.schemaVersion }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.ipfsPublicationRecords') }}</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.ipfsPublicationCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.ipfsVerificationObservations') }}</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.ipfsVerificationCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.bitcoinBroadcastObservations') }}</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinBroadcastCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.bitcoinConfirmationObservations') }}</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinConfirmationCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.bitcoinContentProofObservations') }}</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinContentProofCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.bitcoinPublicationRecords') }}</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinAnchorPublicationRecordCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.baseTransactionInclusionObservations') }}</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.baseTransactionInclusionObservationCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.basePublicationRecords') }}</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.baseAnchorPublicationRecordCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.localFacts') }}</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.localFactCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.importedFacts') }}</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.importedFactCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.importEvents') }}</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.archiveImportCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('publications.archiveFingerprint') }}</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.fingerprint }}</dd></div>
                         </dl>
                         <p v-if="publicationArchiveInspectionOutcome.inspection.bitcoinAnchorIds.length > 0" class="form-hint form-hint--neutral">
-                            Bitcoin anchor IDs: {{ publicationArchiveInspectionOutcome.inspection.bitcoinAnchorIds.join(', ') }}
+                            {{ t('publications.bitcoinAnchorIds', { bitcoinAnchorIds: publicationArchiveInspectionOutcome.inspection.bitcoinAnchorIds.join(', ') }) }}
                         </p>
                         <p v-if="publicationArchiveInspectionOutcome.inspection.ipfsPublicationRecordIndexes.length > 0" class="form-hint form-hint--neutral">
-                            IPFS publication record indexes: {{ publicationArchiveInspectionOutcome.inspection.ipfsPublicationRecordIndexes.join(', ') }}
+                            {{ t('publications.ipfsPublicationRecordIndexes', { ipfsPublicationRecordIndexes: publicationArchiveInspectionOutcome.inspection.ipfsPublicationRecordIndexes.join(', ') }) }}
                         </p>
                         <p v-if="publicationArchiveInspectionOutcome.inspection.baseTransactionHashes.length > 0" class="form-hint form-hint--neutral">
-                            Base transaction hashes: {{ publicationArchiveInspectionOutcome.inspection.baseTransactionHashes.join(', ') }}
+                            {{ t('publications.baseTransactionHashes', { baseTransactionHashes: publicationArchiveInspectionOutcome.inspection.baseTransactionHashes.join(', ') }) }}
                         </p>
                         <p class="form-hint form-hint--neutral">
-                            This is a read-only look at the file above — it changes nothing about the
-                            Observation Archive shown earlier on this page. Use "Import Archive" above
-                            if you want this archive to replace it.
+                            {{ t('publications.thisIsAReadOnly') }}
                         </p>
 
                         <!-- Difference is an explicit click; it never says
                              which archive is right. -->
                         <div class="identity-mgmt-actions">
                             <button type="button" class="action-btn action-btn--secondary" @click="comparePublicationArchiveDifference">
-                                Compare With Current Archive
+                                {{ t('publications.compareWithCurrentArchive') }}
                             </button>
                         </div>
 
                         <div v-if="publicationArchiveDifferenceResult" class="evidence-inspection-adapter">
-                            <span class="evidence-inspection-adapter-title">Archive Difference</span>
+                            <span class="evidence-inspection-adapter-title">{{ t('publications.archiveDifference') }}</span>
                             <p class="form-hint form-hint--neutral">
-                                This describes which durable facts and provenance tags differ between the
-                                current archive and the external archive above — it does not determine
-                                which archive is correct.
+                                {{ t('publications.thisDescribesWhichDurableFacts') }}
                             </p>
 
                             <p v-if="!publicationArchiveDifferenceResult.hasFactDifference && !publicationArchiveDifferenceResult.hasProvenanceDifference"
                                class="form-hint form-hint--neutral">
-                                These two archives hold identical durable facts and provenance.
+                                {{ t('publications.theseTwoArchivesHoldIdentical') }}
                             </p>
 
                             <ul class="replica-knowledge-claim-list">
                                 <li v-for="row in publicationArchiveDifferenceCollectionRows()" :key="row.label" class="replica-knowledge-claim">
-                                    <span class="peer-badge peer-badge--pending">{{ row.label }}</span>
+                                    <span class="peer-badge peer-badge--pending">{{ displayText(row.label) }}</span>
                                     <p class="form-hint form-hint--neutral">
-                                        Same: {{ row.collection.unchangedCount }} ·
-                                        Changed: {{ row.collection.changedCount }} ·
-                                        Only in current: {{ row.collection.onlyInCurrentCount }} ·
-                                        Only in external: {{ row.collection.onlyInExternalCount }} ·
-                                        Different provenance: {{ row.collection.provenanceChangedCount }}
+                                        {{ t('publications.sameChangedOnlyInCurrent', { unchangedCount: row.collection.unchangedCount, changedCount: row.collection.changedCount, onlyInCurrentCount: row.collection.onlyInCurrentCount, onlyInExternalCount: row.collection.onlyInExternalCount, provenanceChangedCount: row.collection.provenanceChangedCount }) }}
                                     </p>
                                 </li>
                             </ul>
 
                             <p class="form-hint form-hint--neutral">
-                                Import events: {{ publicationArchiveDifferenceResult.importEvents.currentCount }} current vs.
-                                {{ publicationArchiveDifferenceResult.importEvents.externalCount }} external — not part of
-                                the content fingerprint (0.8.84).
+                                {{ t('publications.importEventsCurrentVsExternal', { currentCount: publicationArchiveDifferenceResult.importEvents.currentCount, externalCount: publicationArchiveDifferenceResult.importEvents.externalCount }) }}
                             </p>
 
                             <!-- Review composes the difference; only "Replace
                                  Current Archive" changes anything. -->
                             <div class="identity-mgmt-actions">
                                 <button type="button" class="action-btn action-btn--secondary" @click="reviewPublicationArchiveReplacement">
-                                    Review Replacement
+                                    {{ t('publications.reviewReplacement') }}
                                 </button>
                             </div>
 
                             <div v-if="publicationArchiveReplacementReviewResult" class="evidence-inspection-adapter">
-                                <span class="evidence-inspection-adapter-title">Replacement Review</span>
+                                <span class="evidence-inspection-adapter-title">{{ t('publications.replacementReview') }}</span>
                                 <p class="form-hint form-hint--neutral">
-                                    What replacing the current archive with the external archive above would
-                                    change — the current archive stays exactly as it is until "Replace Current
-                                    Archive" below is clicked explicitly.
+                                    {{ t('publications.whatReplacingTheCurrentArchive') }}
                                 </p>
 
                                 <dl class="evidence-fields">
-                                    <div class="evidence-field"><dt>Current fingerprint</dt><dd>{{ publicationArchiveReplacementReviewResult.currentFingerprint }}</dd></div>
-                                    <div class="evidence-field"><dt>External fingerprint</dt><dd>{{ publicationArchiveReplacementReviewResult.externalFingerprint }}</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.currentFingerprint') }}</dt><dd>{{ publicationArchiveReplacementReviewResult.currentFingerprint }}</dd></div>
+                                    <div class="evidence-field"><dt>{{ t('publications.externalFingerprint') }}</dt><dd>{{ publicationArchiveReplacementReviewResult.externalFingerprint }}</dd></div>
                                 </dl>
 
                                 <ul class="replica-knowledge-claim-list">
                                     <li class="replica-knowledge-claim">
-                                        <span class="peer-badge peer-badge--pending">Facts</span>
+                                        <span class="peer-badge peer-badge--pending">{{ t('publications.facts') }}</span>
                                         <p class="form-hint form-hint--neutral">
-                                            Publications — current: {{ publicationArchiveReplacementReviewResult.current.publicationCount }},
-                                            external: {{ publicationArchiveReplacementReviewResult.external.publicationCount }}
+                                            {{ t('publications.publicationsCurrentExternal', { publicationCount: publicationArchiveReplacementReviewResult.current.publicationCount, publicationCount2: publicationArchiveReplacementReviewResult.external.publicationCount }) }}
                                         </p>
                                         <p class="form-hint form-hint--neutral">
-                                            Observations — current: {{ publicationArchiveReplacementReviewResult.current.observationCount }},
-                                            external: {{ publicationArchiveReplacementReviewResult.external.observationCount }}
+                                            {{ t('publications.observationsCurrentExternal', { observationCount: publicationArchiveReplacementReviewResult.current.observationCount, observationCount2: publicationArchiveReplacementReviewResult.external.observationCount }) }}
                                         </p>
                                     </li>
                                     <li class="replica-knowledge-claim">
-                                        <span class="peer-badge peer-badge--pending">Provenance</span>
+                                        <span class="peer-badge peer-badge--pending">{{ t('publications.provenance') }}</span>
                                         <p class="form-hint form-hint--neutral">
-                                            Local facts — current: {{ publicationArchiveReplacementReviewResult.current.localFactCount }},
-                                            external: {{ publicationArchiveReplacementReviewResult.external.localFactCount }}
+                                            {{ t('publications.localFactsCurrentExternal', { localFactCount: publicationArchiveReplacementReviewResult.current.localFactCount, localFactCount2: publicationArchiveReplacementReviewResult.external.localFactCount }) }}
                                         </p>
                                         <p class="form-hint form-hint--neutral">
-                                            Imported facts — current: {{ publicationArchiveReplacementReviewResult.current.importedFactCount }},
-                                            external: {{ publicationArchiveReplacementReviewResult.external.importedFactCount }}
+                                            {{ t('publications.importedFactsCurrentExternal', { importedFactCount: publicationArchiveReplacementReviewResult.current.importedFactCount, importedFactCount2: publicationArchiveReplacementReviewResult.external.importedFactCount }) }}
                                         </p>
                                     </li>
                                     <li class="replica-knowledge-claim">
-                                        <span class="peer-badge peer-badge--pending">Import events</span>
+                                        <span class="peer-badge peer-badge--pending">{{ t('publications.importEvents') }}</span>
                                         <p class="form-hint form-hint--neutral">
-                                            Current: {{ publicationArchiveReplacementReviewResult.current.archiveImportCount }},
-                                            external: {{ publicationArchiveReplacementReviewResult.external.archiveImportCount }}
+                                            {{ t('publications.currentExternal', { archiveImportCount: publicationArchiveReplacementReviewResult.current.archiveImportCount, archiveImportCount2: publicationArchiveReplacementReviewResult.external.archiveImportCount }) }}
                                         </p>
                                     </li>
                                 </ul>
 
                                 <p class="form-hint form-hint--neutral">
-                                    Replacing restamps every fact in the external archive above IMPORTED
-                                    (0.8.83) — the resulting current fingerprint will therefore differ from
-                                    "External fingerprint" shown above, even though the underlying
-                                    observations are identical.
+                                    {{ t('publications.replacingRestampsEveryFactIn') }}
                                 </p>
 
                                 <div class="identity-mgmt-actions">
                                     <button type="button" class="action-btn action-btn--secondary" @click="cancelPublicationArchiveReplacementReview">
-                                        Cancel
+                                        {{ t('publications.cancel2') }}
                                     </button>
                                     <button type="button" class="action-btn action-btn--danger" @click="confirmPublicationArchiveReplacementFromReview">
-                                        Replace Current Archive
+                                        {{ t('publications.replaceCurrentArchive') }}
                                     </button>
                                 </div>
                             </div>
@@ -304,26 +269,24 @@ export const archiveToolsTabTemplate = `<div v-show="publicationsToolsTab === 'a
                  it is true. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Archive Provenance</span>
-                    <span class="peer-badge peer-badge--pending">Where facts entered this archive</span>
+                    <span class="identity-mgmt-name">{{ t('publications.archiveProvenance') }}</span>
+                    <span class="peer-badge peer-badge--pending">{{ t('publications.whereFactsEnteredThisArchive') }}</span>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    Local facts were observed by this replica directly. Imported facts entered
-                    this archive through a prior "Replace Current Archive" import. Neither is
-                    more trustworthy than the other — this only states where each fact came from.
+                    {{ t('publications.localFactsWereObservedBy') }}
                 </p>
                 <dl class="evidence-fields">
-                    <div class="evidence-field"><dt>Local facts</dt><dd>{{ publicationObservationArchiveProvenanceView().localFactCount }}</dd></div>
-                    <div class="evidence-field"><dt>Imported facts</dt><dd>{{ publicationObservationArchiveProvenanceView().importedFactCount }}</dd></div>
+                    <div class="evidence-field"><dt>{{ t('publications.localFacts') }}</dt><dd>{{ publicationObservationArchiveProvenanceView().localFactCount }}</dd></div>
+                    <div class="evidence-field"><dt>{{ t('publications.importedFacts') }}</dt><dd>{{ publicationObservationArchiveProvenanceView().importedFactCount }}</dd></div>
                 </dl>
                 <div v-if="publicationObservationArchiveProvenanceView().archiveImportCount > 0" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Archive Imports</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.archiveImports') }}</span>
                     <ul class="replica-knowledge-claim-list">
                         <li v-for="(event, importIndex) in publicationObservationArchiveProvenanceView().archiveImportEvents"
                             :key="importIndex" class="replica-knowledge-claim">
                             <span class="peer-badge peer-badge--pending">{{ formatWhen(event.importedAt) }}</span>
                             <p class="form-hint form-hint--neutral">
-                                {{ event.importedEntryCount }} fact(s) imported (archive schema version {{ event.importedArchiveSchemaVersion }})
+                                {{ t('publications.factSImportedArchiveSchema', { count: event.importedEntryCount, importedArchiveSchemaVersion: event.importedArchiveSchemaVersion }) }}
                             </p>
                         </li>
                     </ul>
@@ -335,51 +298,46 @@ export const archiveToolsTabTemplate = `<div v-show="publicationsToolsTab === 'a
                  identical contents, nothing more. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Archive Fingerprint</span>
+                    <span class="identity-mgmt-name">{{ t('publications.archiveFingerprint2') }}</span>
                     <span class="peer-badge peer-badge--pending">{{ publicationObservationArchiveFingerprintView().algorithm }}</span>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    A deterministic digest of every fact and provenance tag recorded above.
-                    Two replicas whose fingerprints match hold exactly the same durable archive
-                    contents — this states nothing about whether those contents are authentic,
-                    verified, or correct.
+                    {{ t('publications.aDeterministicDigestOfEvery') }}
                 </p>
                 <dl class="evidence-fields">
-                    <div class="evidence-field"><dt>Fingerprint</dt><dd>{{ publicationObservationArchiveFingerprintView().fingerprint }}</dd></div>
+                    <div class="evidence-field"><dt>{{ t('publications.fingerprint') }}</dt><dd>{{ publicationObservationArchiveFingerprintView().fingerprint }}</dd></div>
                 </dl>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="copyArchiveFingerprint">
-                        {{ archiveFingerprintCopied ? 'Copied!' : 'Copy Fingerprint' }}
+                        {{ archiveFingerprintCopied ? t('publications.copied') : t('publications.copyFingerprint') }}
                     </button>
                 </div>
 
                 <div class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Compare With Another Fingerprint</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('publications.compareWithAnotherFingerprint') }}</span>
                     <label class="form-field">
-                        <span class="form-label">Fingerprint to compare</span>
+                        <span class="form-label">{{ t('publications.fingerprintToCompare') }}</span>
                         <input type="text" class="form-input" v-model="archiveFingerprintComparisonInput"
                                @input="onArchiveFingerprintComparisonInputChanged"
-                               placeholder="Paste a 64-character SHA-256 fingerprint" />
+                               :placeholder="t('publications.pasteA64CharacterSha')" />
                     </label>
                     <div class="identity-mgmt-actions">
                         <button type="button" class="action-btn action-btn--secondary" @click="compareArchiveFingerprint">
-                            Compare
+                            {{ t('publications.compare') }}
                         </button>
                     </div>
 
                     <p v-if="archiveFingerprintComparisonResult === PublicationObservationArchiveFingerprintComparisonResult.MATCH"
                        class="form-hint form-hint--neutral">
-                        Result: MATCH — the supplied fingerprint is equal to the digest computed from this
-                        archive above. This states nothing about whether either archive's facts are correct.
+                        {{ t('publications.resultMatchTheSuppliedFingerprint') }}
                     </p>
                     <p v-else-if="archiveFingerprintComparisonResult === PublicationObservationArchiveFingerprintComparisonResult.DIFFERENT"
                        class="form-hint form-hint--neutral">
-                        Result: DIFFERENT — the supplied fingerprint is not equal to the digest computed from
-                        this archive above.
+                        {{ t('publications.resultDifferentTheSuppliedFingerprint') }}
                     </p>
                     <p v-else-if="archiveFingerprintComparisonResult === PublicationObservationArchiveFingerprintComparisonResult.INVALID_FINGERPRINT"
                        class="identity-unlock-error">
-                        This is not a well-formed 64-character SHA-256 fingerprint — nothing was compared.
+                        {{ t('publications.thisIsNotAWell') }}
                     </p>
                 </div>
             </div>

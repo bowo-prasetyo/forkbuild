@@ -1,5 +1,6 @@
 import { AnchorVerificationOutcome } from './AnchorVerificationOutcome.js';
 import { AnchorVerificationLifecycleState } from './AnchorVerificationLifecycleState.js';
+import { message } from '../../core/Message.js';
 
 // 0.8.12 — External Anchor Lifecycle & Stale Evidence Semantics.
 //
@@ -77,7 +78,7 @@ function stateForOutcome(outcome) {
 export function describeAnchorVerificationLifecycleNote(lifecycle) {
     if (!lifecycle) return null;
     if (lifecycle.state === AnchorVerificationLifecycleState.UNAVAILABLE && lifecycle.everValid) {
-        return 'This evidence was independently verified earlier; verification is currently unavailable.';
+        return message('publicationAnchorVerificationLifecycle.thisEvidenceWasIndependentlyVerified');
     }
     return null;
 }

@@ -27,6 +27,7 @@ import {
 import {
     describeMaterializationAttempt, describeMaterializationButtonLabel
 } from '../../../application/snapshot/materialization/SnapshotContentMaterializationView.js';
+import { t } from '../../i18n/i18n.js';
 
 // Local snapshot content for one entry: checking availability, importing a
 // snapshot package, and the materialization history and source counts.
@@ -84,10 +85,10 @@ export function useSnapshotMaterialization({
     function snapshotAcquisitionOutcomeCountsSentence(entry) {
         const acquisition = snapshotAcquisitionView(entry).acquisition;
         if (acquisition.attemptCount === 0) return null;
-        const parts = [`${acquisition.attemptCount} attempt${acquisition.attemptCount === 1 ? '' : 's'}`];
-        if (acquisition.storedCount > 0) parts.push(`${acquisition.storedCount} stored`);
-        if (acquisition.alreadyAvailableCount > 0) parts.push(`${acquisition.alreadyAvailableCount} already available`);
-        if (acquisition.hashMismatchCount > 0) parts.push(`${acquisition.hashMismatchCount} hash mismatch`);
+        const parts = [t('publications.attempts', { count: acquisition.attemptCount })];
+        if (acquisition.storedCount > 0) parts.push(t('publications.storedCount', { count: acquisition.storedCount }));
+        if (acquisition.alreadyAvailableCount > 0) parts.push(t('publications.alreadyAvailableCount', { count: acquisition.alreadyAvailableCount }));
+        if (acquisition.hashMismatchCount > 0) parts.push(t('publications.hashMismatchCount', { count: acquisition.hashMismatchCount }));
         return parts.join(' · ');
     }
 
@@ -118,7 +119,7 @@ export function useSnapshotMaterialization({
             pkg = JSON.parse(entry.materializationImportText);
         } catch {
             entry.materializationAttempt = {
-                importing: false, outcome: null, error: 'That is not valid JSON — choose a file, or paste the contents, of an exported Publication Snapshot Transfer Package.'
+                importing: false, outcome: null, error: t('publications.thatIsNotValidJson')
             };
             return;
         }

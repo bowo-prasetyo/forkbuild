@@ -1,4 +1,5 @@
 import { AnchorVerificationOutcome } from '../../anchoring/AnchorVerificationOutcome.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.3 — Publication Center: External Evidence UX.
 //
@@ -73,7 +74,7 @@ export function describeAnchorEvidence(anchor, verification = null) {
         checking,
         verified,
         verificationOutcome: verified ? verification.outcome : null,
-        verificationLabel: checking ? 'Checking…' : (verified ? describeVerificationOutcome(verification.outcome) : 'Not yet verified'),
+        verificationLabel: checking ? message('publicationEvidence.checking') : (verified ? describeVerificationOutcome(verification.outcome) : message('publicationEvidence.notYetVerified')),
         verificationReason: verified ? verification.reason : null
     };
 }
@@ -90,14 +91,14 @@ export function describeAnchorEvidence(anchor, verification = null) {
 // milestone's own docs/Roadmap.md entry.
 export function describeVerificationOutcome(outcome) {
     switch (outcome) {
-        case AnchorVerificationOutcome.VALID: return 'Independently verified';
-        case AnchorVerificationOutcome.VALID_PROOF_UNVERIFIED: return 'Proof not independently verified';
-        case AnchorVerificationOutcome.PROOF_UNAVAILABLE: return 'Verification unavailable';
-        case AnchorVerificationOutcome.INVALID_ENVELOPE: return 'Invalid evidence';
-        case AnchorVerificationOutcome.INVALID_SIGNATURE: return 'Invalid signature';
-        case AnchorVerificationOutcome.CONTENT_MISMATCH: return 'Content mismatch';
-        case AnchorVerificationOutcome.INVALID_PROOF: return 'Invalid external proof';
-        default: return 'Not yet verified';
+        case AnchorVerificationOutcome.VALID: return message('publicationEvidence.independentlyVerified');
+        case AnchorVerificationOutcome.VALID_PROOF_UNVERIFIED: return message('publicationEvidence.proofNotIndependentlyVerified');
+        case AnchorVerificationOutcome.PROOF_UNAVAILABLE: return message('publicationEvidence.verificationUnavailable');
+        case AnchorVerificationOutcome.INVALID_ENVELOPE: return message('publicationEvidence.invalidEvidence');
+        case AnchorVerificationOutcome.INVALID_SIGNATURE: return message('publicationEvidence.invalidSignature');
+        case AnchorVerificationOutcome.CONTENT_MISMATCH: return message('publicationEvidence.contentMismatch');
+        case AnchorVerificationOutcome.INVALID_PROOF: return message('publicationEvidence.invalidExternalProof');
+        default: return message('publicationEvidence.notYetVerified');
     }
 }
 
@@ -110,6 +111,6 @@ export function describeVerificationOutcome(outcome) {
 // deciding which outcomes are worth highlighting.
 export function describeKnownEvidenceCount(view) {
     const count = view ? view.count : 0;
-    if (!count) return 'No external evidence known';
+    if (!count) return message('publicationEvidence.noExternalEvidenceKnown');
     return `${count} anchor${count === 1 ? '' : 's'} known`;
 }

@@ -1,4 +1,5 @@
 import { readSource } from './support/SourceText.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.403 — Evidence Export Comparison Contextual Entry Point.
 //
@@ -69,7 +70,7 @@ async function run() {
             n('A2. /evidence-export-comparison is still registered as a real route, wired to its real component')
         );
 
-        leaderboardViewSource = await readSource('ui/views/ReconciliationCandidateLeaderboardView.js');
+        leaderboardViewSource = withEnglish(await readSource('ui/views/ReconciliationCandidateLeaderboardView.js'));
         comparisonViewSource = await readSource('ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js');
 
         const leaderboardBackendImports = [

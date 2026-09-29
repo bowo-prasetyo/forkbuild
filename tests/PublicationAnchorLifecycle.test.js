@@ -13,6 +13,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.12 — External Anchor Lifecycle & Stale Evidence Semantics.
 //
@@ -175,8 +176,8 @@ async function run() {
         lifecycle = deriveAnchorVerificationLifecycle(history);
         assert(lifecycle.state === AnchorVerificationLifecycleState.UNAVAILABLE, '10. lifecycle state is UNAVAILABLE again');
         assert(lifecycle.everValid === true, '11. everValid STAYS true — an earlier VALID observation is never erased by a later UNAVAILABLE one');
-        const note = describeAnchorVerificationLifecycleNote(lifecycle);
-        assert(typeof note === 'string' && /independently verified earlier/.test(note) && !/invalid|revoked|expired/i.test(note),
+        const note = displayText(describeAnchorVerificationLifecycleNote(lifecycle));
+        assert(typeof displayText(note) === 'string' && /independently verified earlier/.test(note) && !/invalid|revoked|expired/i.test(note),
             '12. THE CENTRAL CASE: previously-VALID-now-UNAVAILABLE gets an honest "verified earlier, unavailable now" note, never language implying rejection');
 
         // T4 — the explorer recovers. The SAME unchanged anchor reports

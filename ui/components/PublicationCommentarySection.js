@@ -2,6 +2,7 @@ import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { createId } from '../../core/createId.js';
 import { describeSteemAnnouncingUnreadiness } from '../../application/steem/SteemAnnouncingReadiness.js';
+import { errorText, t } from '../i18n/i18n.js';
 
 // The Repository catalog's Commentary section for ONE Publication — the
 // single implementation both of the catalog's views mount:
@@ -101,6 +102,7 @@ export default {
         this.refreshCommentaries();
     },
     methods: {
+        t,
         // A Steem post that can't be signed fails silently after the local
         // save, so say why before posting. Checked on each render, since
         // Keychain can appear after load.
@@ -123,7 +125,7 @@ export default {
                 this.commentaries = Array.isArray(result) ? result : [];
                 this.commentaryError = null;
             } catch (error) {
-                this.commentaryError = 'Commentary could not be loaded.';
+                this.commentaryError = t('failure.commentaryLoaded');
             }
         },
         // The only call site of addPublicationCommentaryCommand. On
@@ -158,7 +160,7 @@ export default {
                 this.lastCommentaryDistributionProvider = discoveryProvider;
                 this.refreshCommentaries();
             } catch (error) {
-                this.commentaryError = (error && error.message) ? error.message : 'Commentary could not be created.';
+                this.commentaryError = errorText(error, t('failure.commentaryCreated'));
             }
         }
     },
@@ -168,7 +170,7 @@ export default {
 
             <PublicationCommentaryRemoteCheck :publication-id="publication.id" @refreshed="refreshCommentaries" />
 
-            <p v-if="!commentaries.length" class="publication-commentary-empty">No commentary yet.</p>
+            <p v-if="!commentaries.length" class="publication-commentary-empty">{{ t('publicationCommentarySection.noCommentaryYet') }}</p>
             <ul v-else class="publication-commentary-list">
                 <li
                     v-for="commentary in commentaries"
@@ -181,7 +183,7 @@ export default {
             </ul>
 
             <p v-if="addPublicationCommentaryCommand && !viewerIdentityId" class="publication-commentary-signin-hint">
-                Sign in to add commentary.
+                {{ t('publicationCommentarySection.signInToAddCommentary') }}
             </p>
             <form
                 v-else-if="addPublicationCommentaryCommand"
@@ -191,13 +193,13 @@ export default {
                 <textarea
                     v-model="newCommentaryText"
                     class="publication-commentary-input"
-                    placeholder="Add a comment…"
+                    :placeholder="t('publicationCommentarySection.addAComment')"
                 ></textarea>
                 <!-- 0.9.638 — the same two-option vocabulary as
                      EditorView.js's own "Announcement / Discovery
                      substrate" control. -->
                 <label class="publication-commentary-provider-label">
-                    Distribution:
+                    {{ t('publicationCommentarySection.distribution') }}
                     <select
                         v-model="selectedDiscoveryProvider"
                         class="form-select publication-commentary-provider-select"
@@ -212,11 +214,11 @@ export default {
                     type="submit"
                     class="action-btn publication-commentary-submit-action"
                     :disabled="!newCommentaryText.trim()"
-                >Post Comment</button>
+                >{{ t('publicationCommentarySection.postComment') }}</button>
             </form>
             <!-- Reports what was requested, never a success/receipt claim. -->
             <p v-if="addPublicationCommentaryCommand && lastCommentaryDistributionProvider" class="publication-commentary-distribution-status">
-                Comment saved locally. Distribution requested via {{ lastCommentaryDistributionProviderLabel }}.
+                {{ t('publicationCommentarySection.savedDistributionRequested', { provider: lastCommentaryDistributionProviderLabel }) }}
             </p>
         </div>
     `

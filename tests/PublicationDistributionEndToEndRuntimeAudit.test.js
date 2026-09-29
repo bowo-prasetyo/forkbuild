@@ -15,6 +15,7 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.9.122 — Publication Distribution End-to-End Runtime Audit.
 //
@@ -373,7 +374,7 @@ async function run() {
         const decliningSocketCtor = withAutoOpen(fakeRelayWebSocket({ accept: false }));
         const decliningPublish = createNostrInjectedProviderPublisher({ injectedProvider: fakeNostrExtension(), webSocketImpl: decliningSocketCtor });
         const declined = await decliningPublish('wss://relay.example', { kind: 30078, tags: [], content: 'declined' });
-        assert(declined.published === false && typeof declined.reason === 'string', 'B4. relay rejection resolves published: false with a distinguishable reason, never thrown, never conflated with success');
+        assert(declined.published === false && typeof displayText(declined.reason) === 'string', 'B4. relay rejection resolves published: false with a distinguishable reason, never thrown, never conflated with success');
 
         // B5 — relay silence times out, as a genuine rejection.
         const silentPublish = createNostrInjectedProviderPublisher({ injectedProvider: fakeNostrExtension(), webSocketImpl: withAutoOpen(silentRelayWebSocket()), timeoutMs: 50 });

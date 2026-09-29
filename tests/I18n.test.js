@@ -94,6 +94,21 @@ function placeholders(text) {
     console.log('✓ the pseudo-locale accents, pads and brackets text, keeping placeholders');
 }
 
+// A key written twice in a messages file keeps only its last value, silently,
+// so the file's text is checked rather than the object it builds.
+{
+    const { readFile } = await import('node:fs/promises');
+    const source = await readFile(new URL('../ui/i18n/messages/en.js', import.meta.url), 'utf8');
+    const seen = new Set();
+    const repeated = [];
+    for (const [, key] of source.matchAll(/^ {4}'([^']+)':/gm)) {
+        if (seen.has(key)) repeated.push(key);
+        seen.add(key);
+    }
+    assert(repeated.length === 0, `no English key is defined twice (repeated: ${repeated.join(', ')})`);
+    console.log('✓ no English key is defined twice');
+}
+
 // Every shipped locale has exactly English's keys, placeholders and plural
 // shapes, so no translation can drop or rename a parameter.
 {

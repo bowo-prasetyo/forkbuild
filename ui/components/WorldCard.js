@@ -1,10 +1,11 @@
 import { CameraPerspective } from '../../core/CameraPerspective.js';
-import { formatRelativeVisit } from '../../utils/formatRelativeVisit.js';
+import { relativeVisitText } from '../i18n/dateText.js';
+import { t } from '../i18n/i18n.js';
 
-const PERSPECTIVE_LABELS = {
-    [CameraPerspective.FIRST_PERSON]: 'First Person',
-    [CameraPerspective.THIRD_PERSON]: 'Third Person',
-    [CameraPerspective.BIRD_EYE]: "Bird's-Eye"
+const PERSPECTIVE_KEYS = {
+    [CameraPerspective.FIRST_PERSON]: 'worldCard.perspective.firstPerson',
+    [CameraPerspective.THIRD_PERSON]: 'worldCard.perspective.thirdPerson',
+    [CameraPerspective.BIRD_EYE]: 'worldCard.perspective.birdEye'
 };
 
 // 0.3.10 — World Persistence & Return Experience.
@@ -43,30 +44,31 @@ export default {
         statsParts() {
             const parts = [];
             if (typeof this.world.structureCount === 'number') {
-                parts.push(`${this.world.structureCount} structure${this.world.structureCount !== 1 ? 's' : ''}`);
+                parts.push(t('worldCard.structures', { count: this.world.structureCount }));
             }
             if (typeof this.world.landmarkCount === 'number') {
-                parts.push(`${this.world.landmarkCount} landmark${this.world.landmarkCount !== 1 ? 's' : ''}`);
+                parts.push(t('worldCard.landmarks', { count: this.world.landmarkCount }));
             }
             return parts;
         },
         lastVisitedLabel() {
-            return formatRelativeVisit(this.world.lastVisitedAt);
+            return relativeVisitText(this.world.lastVisitedAt);
         },
         perspectiveLabel() {
-            return PERSPECTIVE_LABELS[this.world.cameraPerspective] || null;
+            return PERSPECTIVE_KEYS[this.world.cameraPerspective] ? t(PERSPECTIVE_KEYS[this.world.cameraPerspective]) : null;
         }
     },
+    methods: { t },
     template: `
         <li class="publication-card world-card">
             <h3>{{ world.title }}</h3>
-            <p v-if="world.author" class="publication-meta">by {{ world.author }}</p>
+            <p v-if="world.author" class="publication-meta">{{ t('forkTree.byAuthor', { author: world.author }) }}</p>
             <p v-if="statsParts.length" class="publication-meta">{{ statsParts.join(' · ') }}</p>
             <p v-if="lastVisitedLabel || perspectiveLabel" class="publication-date">
-                <span v-if="lastVisitedLabel">Last visited {{ lastVisitedLabel }}</span><span v-if="perspectiveLabel" class="world-card-perspective"> · left in {{ perspectiveLabel }} view</span>
+                <span v-if="lastVisitedLabel">{{ t('worldCard.lastVisited', { when: lastVisitedLabel }) }}</span><span v-if="perspectiveLabel" class="world-card-perspective"> · {{ t('worldCard.leftInView', { perspective: perspectiveLabel }) }}</span>
             </p>
             <div class="publication-actions">
-                <button class="action-btn action-btn--explore" @click="$emit('enter', world.documentId)">Continue Exploring</button>
+                <button class="action-btn action-btn--explore" @click="$emit('enter', world.documentId)">{{ t('worldCard.continueExploring') }}</button>
             </div>
         </li>
     `

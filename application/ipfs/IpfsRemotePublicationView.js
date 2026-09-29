@@ -1,12 +1,13 @@
 import { IpfsRemotePublicationState } from './IpfsRemotePublicationState.js';
+import { message } from '../../core/Message.js';
 
 const STATE_LABELS = {
-    [IpfsRemotePublicationState.IDLE]: 'Not yet published',
-    [IpfsRemotePublicationState.PUBLISHING]: 'Publishing…',
-    [IpfsRemotePublicationState.PUBLISHED]: 'Published',
-    [IpfsRemotePublicationState.REJECTED]: 'Publish rejected',
-    [IpfsRemotePublicationState.UNAVAILABLE]: 'Publish unavailable',
-    [IpfsRemotePublicationState.FAILED]: 'Publish failed'
+    [IpfsRemotePublicationState.IDLE]: message('ipfsRemotePublication.notYetPublished'),
+    [IpfsRemotePublicationState.PUBLISHING]: message('ipfsRemotePublication.publishing'),
+    [IpfsRemotePublicationState.PUBLISHED]: message('ipfsRemotePublication.published'),
+    [IpfsRemotePublicationState.REJECTED]: message('ipfsRemotePublication.publishRejected'),
+    [IpfsRemotePublicationState.UNAVAILABLE]: message('ipfsRemotePublication.publishUnavailable'),
+    [IpfsRemotePublicationState.FAILED]: message('ipfsRemotePublication.publishFailed')
 };
 
 // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.

@@ -14,6 +14,7 @@ import {
 } from '../application/ipfs/IpfsPublicationContentVerificationView.js';
 import { IpfsPublicationContentVerificationState } from '../application/ipfs/IpfsPublicationContentVerificationState.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.70 — IPFS Publication & Content Verification UI.
 //
@@ -225,15 +226,15 @@ async function run() {
         assert(idleView.contentHash === null && idleView.locator === null && idleView.reason === null, '33. an IDLE view carries no leftover fact from any previous attempt');
 
         for (const state of Object.values(IpfsPublicationContentVerificationCoordinatorState)) {
-            const label = describeIpfsPublicationContentVerificationStateLabel(state);
-            assert(typeof label === 'string' && label.length > 0, `34. every named state (${state}) has a non-empty label`);
+            const label = displayText(describeIpfsPublicationContentVerificationStateLabel(state));
+            assert(typeof displayText(label) === 'string' && displayText(label).length > 0, `34. every named state (${state}) has a non-empty label`);
         }
         assert(describeIpfsPublicationContentVerificationStateLabel('not-a-real-state') === null, '35. an unrecognized state has no label');
 
         const outcome = { state: IpfsPublicationContentVerificationCoordinatorState.HASH_MATCH, contentHash: CONTENT_HASH, locator: 'ipfs://bafyVIEW', reason: null, observedAt: new Date() };
         const view = describeIpfsPublicationContentVerification(outcome);
         assert(view.contentHash === CONTENT_HASH && view.locator === 'ipfs://bafyVIEW', '36. the view exposes the real contentHash/locator, unmodified');
-        assert(view.stateLabel === 'Retrieved content matches the recorded content hash', '37. HASH_MATCH carries its own factual label');
+        assert(displayText(view.stateLabel) === 'Retrieved content matches the recorded content hash', '37. HASH_MATCH carries its own factual label');
     }
     console.log('✓ Section F: the view is a pure, stateless projection; IDLE by default; every state carries a factual label');
 

@@ -14,6 +14,7 @@ import {
 import {
     reconstructBaseAnchorPublicationLifecycleTimeline, BaseAnchorPublicationLifecycleTimelineEntryKind
 } from '../../../application/anchoring/base/BaseAnchorPublicationLifecycleTimelineView.js';
+import { displayText, formatNumber, t } from '../../i18n/i18n.js';
 
 // Read-only views over anchors recorded in the publication observation archive:
 // historical Bitcoin anchors, and Bitcoin/Base anchor publication records with
@@ -91,17 +92,17 @@ export function useArchivedAnchorPublications({
     function bitcoinAnchorPublicationLifecycleEntryDetail(item) {
         switch (item.kind) {
             case BitcoinAnchorPublicationLifecycleTimelineEntryKind.PUBLICATION:
-                return `Content hash ${item.contentHash} — txid ${item.txid} — ${item.network}`;
+                return t('publications.contentHashTxidNetwork', { contentHash: item.contentHash, txid: item.txid, network: item.network });
             case BitcoinAnchorPublicationLifecycleTimelineEntryKind.BROADCAST:
-                return item.stateLabel + (item.txid ? ` — txid ${item.txid}` : '');
+                return displayText(item.stateLabel) + (item.txid ? ` — ${t('publications.txid', { txid: item.txid })}` : '');
             case BitcoinAnchorPublicationLifecycleTimelineEntryKind.CONFIRMATION:
-                return item.stateLabel + (item.blockHeight != null ? ` — block height ${item.blockHeight}` : '');
+                return displayText(item.stateLabel) + (item.blockHeight != null ? ` — ${t('publications.blockHeightLower', { height: item.blockHeight })}` : '');
             case BitcoinAnchorPublicationLifecycleTimelineEntryKind.CONTENT_PROOF:
-                return item.stateLabel;
+                return displayText(item.stateLabel);
             case BitcoinAnchorPublicationLifecycleTimelineEntryKind.CHAIN_PLACEMENT:
-                return item.outcomeLabel;
+                return displayText(item.outcomeLabel);
             case BitcoinAnchorPublicationLifecycleTimelineEntryKind.CONSISTENCY:
-                return item.stateLabel;
+                return displayText(item.stateLabel);
             default:
                 return '';
         }
@@ -137,9 +138,9 @@ export function useArchivedAnchorPublications({
     function baseAnchorPublicationLifecycleEntryDetail(item) {
         switch (item.kind) {
             case BaseAnchorPublicationLifecycleTimelineEntryKind.PUBLICATION:
-                return `Content hash ${item.contentHash} — txid ${item.txid} — ${item.network}`;
+                return t('publications.contentHashTxidNetwork', { contentHash: item.contentHash, txid: item.txid, network: item.network });
             case BaseAnchorPublicationLifecycleTimelineEntryKind.INCLUSION_OBSERVATION:
-                return item.stateLabel + (item.blockNumber != null ? ` — block ${item.blockNumber.toLocaleString()}` : '');
+                return displayText(item.stateLabel) + (item.blockNumber != null ? ` — ${t('publications.blockValue', { block: formatNumber(item.blockNumber) })}` : '');
             default:
                 return '';
         }

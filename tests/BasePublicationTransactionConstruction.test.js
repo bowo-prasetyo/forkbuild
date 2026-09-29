@@ -19,6 +19,7 @@ import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTrans
 import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionCoordinator.js';
 import { BitcoinAnchorTransactionConstructionState } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.91 — Explicit Base Publication Transaction Construction.
 //
@@ -171,7 +172,7 @@ async function run() {
         // Never throws — every failure mode is reported honestly.
         const throwingClient = new BaseJsonRpcClient({ fetchImpl: fakeConstructionRpcFetch({ throwFor: 'eth_getTransactionCount' }) });
         const unreachable = await throwingClient.fetchTransactionCount(ALICE_ADDRESS);
-        assert(unreachable.available === false && typeof unreachable.reason === 'string', '16. an unreachable host is reported unavailable, never thrown');
+        assert(unreachable.available === false && typeof displayText(unreachable.reason) === 'string', '16. an unreachable host is reported unavailable, never thrown');
 
         const malformedClient = new BaseJsonRpcClient({ fetchImpl: fakeConstructionRpcFetch({ malformedMethod: 'eth_gasPrice' }) });
         const malformed = await malformedClient.fetchGasPrice();
@@ -211,7 +212,7 @@ async function run() {
             nativeBalanceWei: '1000000000000' // far below gasLimit(40000) * maxFeePerGas(1e9) = 4e13
         });
         assert(poorResult.built === false && poorResult.unavailable === false, '28. insufficient balance reports built:false, unavailable:false');
-        assert(typeof poorResult.reason === 'string' && poorResult.reason.includes('insufficient balance'), '29. the reason names the shortfall honestly');
+        assert(typeof displayText(poorResult.reason) === 'string' && displayText(poorResult.reason).includes('insufficient balance'), '29. the reason names the shortfall honestly');
 
         // Exact boundary: balance identical to the estimated cost is
         // sufficient (the check is strictly-less-than).
@@ -302,7 +303,7 @@ async function run() {
         const poorAccount = observedAccount({ nativeBalanceWei: '1' });
         const failedOutcome = await coordinator.construct({ publicationId: 'pub-1', contentHash: CONTENT_HASH, accountObservation: poorAccount });
         assert(failedOutcome.state === BasePublicationTransactionPlanState.FAILED && failedOutcome.construction === null, '59. insufficient balance maps to FAILED, with no construction');
-        assert(typeof failedOutcome.reason === 'string' && failedOutcome.reason.length > 0, '60. the planner\'s own reason is forwarded verbatim');
+        assert(typeof displayText(failedOutcome.reason) === 'string' && displayText(failedOutcome.reason).length > 0, '60. the planner\'s own reason is forwarded verbatim');
 
         const unavailablePlanner = new BasePublicationTransactionPlanner({ rpcSource: fakeConstructionRpcSource({ unavailableFor: 'fetchGasPrice' }) });
         const unavailableCoordinator = new BasePublicationTransactionPlanCoordinator({ basePublicationTransactionPlanner: unavailablePlanner });
@@ -315,11 +316,11 @@ async function run() {
     // Section F — labels and the describe*() view.
     // ---------------------------------------------------------------
     {
-        assert(describeBasePublicationTransactionPlanStateLabel(BasePublicationTransactionPlanState.IDLE) === 'Not yet constructed', '62. IDLE label');
-        assert(describeBasePublicationTransactionPlanStateLabel(BasePublicationTransactionPlanState.CONSTRUCTING) === 'Constructing…', '63. CONSTRUCTING label');
-        assert(describeBasePublicationTransactionPlanStateLabel(BasePublicationTransactionPlanState.CONSTRUCTED) === 'Transaction plan constructed', '64. CONSTRUCTED label');
-        assert(describeBasePublicationTransactionPlanStateLabel(BasePublicationTransactionPlanState.UNAVAILABLE) === 'Base network unavailable', '65. UNAVAILABLE label');
-        assert(describeBasePublicationTransactionPlanStateLabel(BasePublicationTransactionPlanState.FAILED) === 'Unable to construct transaction', '66. FAILED label');
+        assert(displayText(describeBasePublicationTransactionPlanStateLabel(BasePublicationTransactionPlanState.IDLE)) === 'Not yet constructed', '62. IDLE label');
+        assert(displayText(describeBasePublicationTransactionPlanStateLabel(BasePublicationTransactionPlanState.CONSTRUCTING)) === 'Constructing…', '63. CONSTRUCTING label');
+        assert(displayText(describeBasePublicationTransactionPlanStateLabel(BasePublicationTransactionPlanState.CONSTRUCTED)) === 'Transaction plan constructed', '64. CONSTRUCTED label');
+        assert(displayText(describeBasePublicationTransactionPlanStateLabel(BasePublicationTransactionPlanState.UNAVAILABLE)) === 'Base network unavailable', '65. UNAVAILABLE label');
+        assert(displayText(describeBasePublicationTransactionPlanStateLabel(BasePublicationTransactionPlanState.FAILED)) === 'Unable to construct transaction', '66. FAILED label');
 
         assert(describeBasePublicationTransactionPlan(null).state === BasePublicationTransactionPlanState.IDLE, '67. a null outcome projects to IDLE');
 

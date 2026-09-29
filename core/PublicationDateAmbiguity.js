@@ -68,9 +68,12 @@ export function computeAmbiguousPublishedDateIds(items) {
 // routinely land within the same second — this label exists
 // specifically to disambiguate that collision, not merely to look more
 // precise while still failing to.
-export function formatPublicationDate(publishedAt, precise) {
+//
+// `locales` is the Intl locale to format in (the UI passes the app's chosen
+// language); left out, the runtime's default is used.
+export function formatPublicationDate(publishedAt, precise, locales = undefined) {
     if (!publishedAt) return null;
-    if (!precise) return publishedAt.toLocaleDateString();
+    if (!precise) return publishedAt.toLocaleDateString(locales);
     const ms = String(publishedAt.getMilliseconds()).padStart(3, '0');
-    return `${publishedAt.toLocaleString()}.${ms}`;
+    return `${publishedAt.toLocaleString(locales)}.${ms}`;
 }

@@ -1,5 +1,6 @@
 import { SnapshotMaterializationSourceKind } from './SnapshotMaterializationSourceKind.js';
 import { StoreSnapshotContentOutcome } from './StoreSnapshotContentOutcome.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.36 — Unified Explicit Snapshot Materialization Sources.
 //
@@ -32,9 +33,9 @@ import { StoreSnapshotContentOutcome } from './StoreSnapshotContentOutcome.js';
 // Verification And Storage Stay Centralized (0.8.37)."
 export function describeSnapshotMaterializationSourceLabel(kind) {
     switch (kind) {
-        case SnapshotMaterializationSourceKind.PACKAGE: return 'Transfer package';
-        case SnapshotMaterializationSourceKind.PLACEMENT: return 'Placement';
-        case SnapshotMaterializationSourceKind.PEER: return 'Peer';
+        case SnapshotMaterializationSourceKind.PACKAGE: return message('snapshotMaterialization.transferPackage');
+        case SnapshotMaterializationSourceKind.PLACEMENT: return message('snapshotMaterialization.placement');
+        case SnapshotMaterializationSourceKind.PEER: return message('snapshotMaterialization.peer');
         default: return null;
     }
 }
