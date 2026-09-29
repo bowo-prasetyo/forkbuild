@@ -306,11 +306,16 @@ async function runTests() {
     // -------------------------------------------------------------
     // Section D — FLAGSHIP: a real avatar walking straight at a real,
     // deterministic animal, through the ENTIRE chain — WildlifeField ->
-    // WildlifeCollisionGeometry -> AvatarWildlifeCollisionQuery ->
-    // AvatarTreeMovement (reused) -> AvatarWildlifeConstraint ->
-    // AvatarMovementController -> avatar position.
+    // WildlifeMotion -> WildlifeCollisionGeometry ->
+    // AvatarWildlifeCollisionQuery -> AvatarTreeMovement (reused) ->
+    // AvatarWildlifeConstraint -> AvatarMovementController -> avatar
+    // position. The session's wildlife clock is frozen, so the animal
+    // stands still where it is at that moment — which is where the avatar
+    // must bump into it, not its spawn point.
     // -------------------------------------------------------------
     {
+        const frozenTime = 1_759_000_000;
+        const realAnimal = wildlifeCollisionGeometryInRegion(DEFAULT_WORLD_SEED, -300, -300, 300, 300, { timeSeconds: frozenTime })[0];
         const storage = new InMemoryStorageProvider();
         const alice = new LocalIdentityProvider(storage);
         alice.login('alice-wildlife');
@@ -322,7 +327,8 @@ async function runTests() {
 
         const session = new WorldNavigationSession({
             registry: new CreateBrickRegistryUseCase().execute(), loadPublicationDocumentUseCase: null, worldLayoutProvider: null,
-            identityProvider: alice, avatarProfileUseCase, avatarPresenceSession, avatarTemplateRegistry: registry
+            identityProvider: alice, avatarProfileUseCase, avatarPresenceSession, avatarTemplateRegistry: registry,
+            wildlifeClock: () => frozenTime
         });
         session._session = spyFacade();
         session._setupLocalAvatar();

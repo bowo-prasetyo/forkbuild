@@ -50,3 +50,12 @@ export function animalIdFor(seed, cellX, cellZ) {
     }
     return `animal:${seed}:${cellX},${cellZ}`;
 }
+
+const DETERMINISTIC_ANIMAL_ID = /^animal:-?\d+:-?\d+,-?\d+$/;
+
+// Whether `id` names a wild animal's lattice slot (exactly the format
+// above), rather than a released animal, which is minted a fresh UUID
+// instead.
+export function isDeterministicAnimalId(id) {
+    return typeof id === 'string' && DETERMINISTIC_ANIMAL_ID.test(id);
+}

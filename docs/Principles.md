@@ -31,7 +31,7 @@ that no longer apply are listed at the end of their theme file under
 | [Achievements, rankings and reconciliation](principles/achievements.md) | 20 |
 | [Notifications](principles/notifications.md) | 9 |
 | [Distribution, settings and wallets](principles/distribution.md) | 4 |
-| [Vehicles, inventory and animals](principles/vehicles.md) | 2 |
+| [Vehicles, inventory and animals](principles/vehicles.md) | 3 |
 
 ## History
 

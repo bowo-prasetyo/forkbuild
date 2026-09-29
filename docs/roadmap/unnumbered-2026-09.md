@@ -2460,3 +2460,41 @@ way; with no record, the card says "No distribution recorded on this device".
 - Not done: checking that a recorded upload is still available, and learning about distributions made from another
   device.
 
+
+## Wandering wildlife (unnumbered, 2026-09-29)
+
+**Deer and rabbits now wander slowly around where the world placed them, pausing, turning and walking, instead of
+standing frozen.** Motion is sampled from time exactly as placement is sampled from space, so it needs no storage,
+no simulation and no networking: everyone looking at the same spot at the same moment sees the same animals there.
+An audit of the animal code before this change found three systems (the renderer, collision and catching) each
+asking separately where an animal was, agreeing only because nothing moved; they now share one formula and one clock.
+
+- `core/WildlifeMotion.js`: `animalPoseAt(seed, animal, time)` and `wildlifeInRegionAt()`. Per-species segments
+  (deer 14 s, rabbits 7 s, offset per animal) of pause, turn, then an eased walk between hashed waypoints. Waypoints
+  stay inside the animal's lattice cell and its species' wander radius (deer 3, rabbits 2), and one off its zone or
+  in a river falls back to the spawn point. Staying in the cell keeps the tile partition, ids and catch exclusion
+  unchanged.
+- One clock: `WorldNavigationSession`'s `wildlifeClock` (wall-clock seconds) goes to `Renderer`,
+  `AvatarWildlifeConstraint`, `AvatarAnimalInteractionController` and `AnimalRuntimeInstances#sync()`, which now
+  refreshes wild animals to their current pose. Catching reads wild animals from a fresh query, never a stale
+  tracked copy.
+- Rendering: wildlife tiles keep their animals and `updateWildlifeTileMesh()` rewrites instance matrices each frame
+  (no rebuild, no extra draw call); bounding spheres are padded so a wandering animal is never culled while in view.
+- Fixed: a caught animal kept an invisible collider at its spawn point for the rest of the session; collision now
+  skips caught animals.
+- Fixed: the runtime store saved every tracked animal, so after a reload wild animals came back as "released" copies
+  drawn beside the real ones. Only released animals are saved now, and wild ones in an old save are skipped
+  (`core/AnimalIdentity.js#isDeterministicAnimalId()`).
+- Fixed: streamed tiles were removed from the scene but never disposed, so GPU memory grew while roaming.
+  `TerrainStreamingController` takes a `disposeTile` hook (`renderer/TileDisposal.js`): terrain and water tiles free
+  their geometry and material, vegetation and wildlife tiles only their instance buffers.
+- Principles: new "A Wild Animal Wanders On A Path Sampled From Time, Never Simulated"; "An Animal Has Three
+  Possible Homes" notes the change.
+- Docs: `docs/user/03-WorldView.md`, `docs/user/06-AvatarsAndPresence.md` and `docs/Architecture.md`.
+- Tests: `tests/WildlifeMotion.test.js` (determinism, staying in the cell and wander radius, continuous position and
+  heading, standing only on valid ground, region queries and tile partition while moving);
+  `tests/WildlifeMotionIntegration.test.js` (collision at the current pose and the caught-collider fix, catching,
+  store refresh, session persistence, tile updates and bounding spheres, tile disposal). The wildlife collision
+  flagship test now runs on a frozen clock.
+- Not done: released animals and decorations still stand still; no walk or hop animation (the animal glides); motion
+  never reacts to avatars, which would make replicas disagree.

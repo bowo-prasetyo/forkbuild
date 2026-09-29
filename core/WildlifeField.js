@@ -227,10 +227,10 @@ export function wildlifeInRegion(seed, minX, minZ, maxX, maxZ) {
 // Deliberately not yet: persisting a single placed animal anywhere (every
 // animal in this file is recomputed, never stored, the identical posture
 // docs/Principles.md's "Natural Features Are Sampled, Never Stored"
-// establishes for trees); movement, wandering, flocking, or any animation
-// whatsoever — every animal here is a static decoration at a fixed point,
-// the same "trees, placed deterministically" restraint 0.2.88 itself
-// shipped before any later milestone considered motion; collision with
+// establishes for trees); movement — this file only ever says where an
+// animal was PLACED, and core/WildlifeMotion.js derives where it has
+// wandered to at a given moment from that placement, never the reverse;
+// flocking or any reaction to avatars; collision with
 // trees, buildings, or avatars; ownership or interaction of any kind —
 // 0.9.700's own `id` field names WHICH animal a cell would produce, for
 // a future catch mechanic to reference; it still decides nothing about

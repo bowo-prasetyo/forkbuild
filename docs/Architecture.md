@@ -981,10 +981,19 @@ is lifted a second time. Released animals get the same lift as remote avatars.
   Drone altitude comes from `core/AvatarDroneVerticalState.js`, and `AvatarVehicleInteractionController` refuses
   to dismount a drone in mid-air.
 - **Persistence (0.9.701).** The inventory and both runtime stores persist through optional stores
-  (`storage/*PersistenceStore.js`). Runtime positions are written at most once a second.
-- **Rendering.** Deterministic animals are baked into wildlife tiles (`renderer/WildlifeTileMesh.js`). Catching one
-  rebuilds its tile without it (`TerrainStreamingController#invalidateTile()`). Released animals are drawn every
-  frame by `renderer/AnimalFieldRenderer.js`, which shares geometry with the tiles.
+  (`storage/*PersistenceStore.js`). Runtime positions are written at most once a second. Only released animals are
+  saved; wild ones are recomputed.
+- **Wandering (2026-09-29).** `core/WildlifeMotion.js#animalPoseAt(seed, animal, time)` says where a wild animal is
+  at a moment: pausing, turning and walking between hashed waypoints inside its own lattice cell, within its
+  species' wander radius of where it was placed. `WorldNavigationSession`'s `wildlifeClock` (wall-clock seconds by
+  default) is the one time source, handed to the renderer, `AvatarWildlifeConstraint`,
+  `AvatarAnimalInteractionController` and `AnimalRuntimeInstances#sync()`, so an animal is caught and collided
+  with where it is drawn. Caught animals stop colliding (`isExcluded`). Released animals and decorations stay put.
+- **Rendering.** Deterministic animals are drawn by their wildlife tile (`renderer/WildlifeTileMesh.js`), which keeps
+  owning them while they wander because they never leave their cell; every frame
+  `updateWildlifeTileMesh()` rewrites each loaded tile's instance matrices in place. Catching one rebuilds its tile
+  without it (`TerrainStreamingController#invalidateTile()`). Released animals are drawn every frame by
+  `renderer/AnimalFieldRenderer.js`, which shares geometry with the tiles.
 - **Decorations (0.9.702/0.9.703).** `G` turns the nearest released animal into an `AnimalDecoration` in the World
   document through a registered command, or turns the nearest decoration back into a released animal. This is the
   one way a World View animal action becomes document content.
@@ -1001,9 +1010,12 @@ pure function of `(seed, x, z)`:
 - `TerrainEcology`: which zone
 - `Hydrology`: lakes and river color
 - `NaturalFeatureField`: trees, with CONIFER, BROADLEAF or SCRUB chosen by moisture
-- `WildlifeField`: animals
+- `WildlifeField`: animals, where they were placed (`WildlifeMotion` adds time: where they have wandered to)
 
-None of it is stored, so a tile that streams out and back in is identical.
+None of it is stored, so a tile that streams out and back in is identical. An unloaded tile is disposed through the
+`disposeTile` hook its controller was built with (`renderer/TileDisposal.js`): terrain and water tiles free their own
+geometry and material, vegetation and wildlife tiles only their instance buffers, since their geometry and materials
+are shared by every tile.
 
 ## Collaboration
 

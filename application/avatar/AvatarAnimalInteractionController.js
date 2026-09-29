@@ -52,9 +52,10 @@ import { createId } from '../../core/createId.js';
 // the current AvatarInventory value moved out of either controller and
 // into this small shared holder.
 export class AvatarAnimalInteractionController {
-    constructor(avatarPresenceSession, { seed = DEFAULT_WORLD_SEED, animalRuntimeInstances = null, avatarInventoryStore = null } = {}) {
+    constructor(avatarPresenceSession, { seed = DEFAULT_WORLD_SEED, animalRuntimeInstances = null, avatarInventoryStore = null, clock = null } = {}) {
         this._avatarPresenceSession = avatarPresenceSession;
         this._seed = seed;
+        this._clock = clock;
         // `null` by default: a caller that builds this controller alone
         // (an older test, a minimal setup) gets a harmless no-op catch
         // path — see _tickCatch()'s own header for why catching, unlike
@@ -248,13 +249,19 @@ export class AvatarAnimalInteractionController {
     // already establishes. Absent the runtime store entirely when none
     // is wired, the same graceful-degradation posture that method
     // already takes.
+    //
+    // Wild animals move, so they always come from a fresh query at this
+    // controller's clock (core/WildlifeMotion.js), never from the store,
+    // whose copies are only as fresh as its last sync(). Only RELEASED
+    // animals, which exist nowhere else, come from the store.
     _nearbyAnimals(avatarPosition) {
         const rawDeterministic = animalPresenceInRegion(
             this._seed,
             avatarPosition.x - ANIMAL_INTERACTION_RADIUS,
             avatarPosition.z - ANIMAL_INTERACTION_RADIUS,
             avatarPosition.x + ANIMAL_INTERACTION_RADIUS,
-            avatarPosition.z + ANIMAL_INTERACTION_RADIUS
+            avatarPosition.z + ANIMAL_INTERACTION_RADIUS,
+            this._clock ? this._clock() : null
         );
         if (!this._animalRuntimeInstances) {
             return rawDeterministic;
@@ -264,7 +271,7 @@ export class AvatarAnimalInteractionController {
         // header for the exact bug this filter exists to prevent
         // (re-catching an id still sitting in inventory).
         const deterministic = rawDeterministic.filter((animal) => !this._animalRuntimeInstances.isExcluded(animal.id));
-        const tracked = this._animalRuntimeInstances.nearby(avatarPosition, ANIMAL_INTERACTION_RADIUS);
+        const tracked = this._animalRuntimeInstances.releasedNearby(avatarPosition, ANIMAL_INTERACTION_RADIUS);
         const trackedIds = new Set(tracked.map((animal) => animal.id));
         return [...tracked, ...deterministic.filter((animal) => !trackedIds.has(animal.id))];
     }

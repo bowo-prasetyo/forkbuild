@@ -120,9 +120,10 @@ Walking respects collision against nearby loaded buildings, trees, and
 wildlife — you can't walk through structures streamed in around you, through
 the trees generated as part of the terrain, or through a deer or rabbit
 grazing nearby (see [World View](03-WorldView.md#flying-around)).
-Wildlife only ever blocks your path like a tree does — it doesn't move,
-react, or take damage, and a vehicle drives straight through it; only
-walking on foot is stopped. Your avatar can walk across placed structures,
+Wildlife only ever blocks your path like a tree does, wherever an animal
+has wandered to — it doesn't react or take damage, and a vehicle drives
+straight through it; only walking on foot is stopped. An animal you've
+caught no longer blocks anything. Your avatar can walk across placed structures,
 climb vertical surfaces, and navigate uneven terrain. The camera follows
 your avatar naturally as you move.
 
@@ -233,7 +234,8 @@ out next; it never spawns or removes anything by itself.
 ### Animals
 
 Some worlds have wildlife — deer in forests, rabbits on open grassland.
-Wild animals stay where the world placed them. Walk close enough to one and a prompt appears telling you to
+Wild animals wander slowly around where the world placed them, never
+straying more than a few steps. Walk close enough to one and a prompt appears telling you to
 press **F** to catch it. Catching adds it to your inventory (the same
 inventory a stored vehicle lives in) and removes it from the world.
 

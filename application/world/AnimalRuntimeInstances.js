@@ -38,13 +38,11 @@ export const ANIMAL_RENDER_RADIUS = 50;
 //   it again.
 //
 // SIMPLER THAN VehicleRuntimeInstances IN ONE REAL WAY: no `setPosition()`.
-// A vehicle can be RIDDEN, so its own runtime position changes mid-session
-// even for an animal that came from a deterministic slot. An animal here
-// never moves on its own (core/WildlifeField.js's own header: "static
-// decoration at a fixed point") and a caught/released animal has no
-// vehicle-movement-shaped concept comparable to riding — so every
-// AnimalPresence this store ever tracks keeps the exact position it was
-// either placed at or released to, for its entire time in this store.
+// A vehicle can be RIDDEN, so its runtime position is a fact only this
+// session knows. A wild animal's position is never that: it wanders on a
+// deterministic path (core/WildlifeMotion.js), so sync() simply replaces
+// each wild animal's AnimalPresence with a fresh one at its current pose.
+// A released animal stays exactly where it was released.
 export class AnimalRuntimeInstances {
     constructor() {
         this._instances = new Map(); // animal id -> current runtime AnimalPresence
@@ -69,21 +67,24 @@ export class AnimalRuntimeInstances {
     // application/world/VehicleRuntimeInstances.js#sync()'s own reconciliation
     // exactly, minus any position-override step (see this file's own
     // header, "Simpler than VehicleRuntimeInstances").
-    sync(seed, centerPosition, radius) {
+    //
+    // `timeSeconds` (optional) is the wildlife time: every wild animal is
+    // tracked at where it is then, refreshed on every call. A released
+    // animal is never replaced — its id is never a deterministic candidate.
+    sync(seed, centerPosition, radius, timeSeconds = null) {
         const candidates = animalPresenceInRegion(
             seed,
             centerPosition.x - radius,
             centerPosition.z - radius,
             centerPosition.x + radius,
-            centerPosition.z + radius
+            centerPosition.z + radius,
+            timeSeconds
         );
         for (const candidate of candidates) {
-            if (this._excluded.has(candidate.id)) {
+            if (this._excluded.has(candidate.id) || this._released.has(candidate.id)) {
                 continue;
             }
-            if (!this._instances.has(candidate.id)) {
-                this._instances.set(candidate.id, candidate);
-            }
+            this._instances.set(candidate.id, candidate);
         }
         for (const [id, instance] of this._instances) {
             if (!withinRadiusXZ(instance.position, centerPosition, radius)) {
@@ -123,6 +124,15 @@ export class AnimalRuntimeInstances {
 
     get excludedIds() {
         return Array.from(this._excluded);
+    }
+
+    // Only the RELEASED instances — what is worth persisting. A wild
+    // animal this store merely discovered is recomputed from the seed and
+    // the clock; saving it would bring it back after a reload as a
+    // "released" copy frozen at an old position, drawn alongside the real,
+    // still-wandering one.
+    get releasedInstances() {
+        return Array.from(this._instances.values()).filter((instance) => this._released.has(instance.id));
     }
 
     // Every ALREADY-TRACKED AnimalPresence within `radius` of
@@ -264,8 +274,8 @@ export class AnimalRuntimeInstances {
 // Deliberately not yet: persistence, networking, or cross-replica
 // reconciliation of any kind (session-local, exactly like
 // application/world/VehicleRuntimeInstances.js's own identical posture);
-// movement of any kind (see this file's own header, "Simpler than
-// VehicleRuntimeInstances"); a capacity or eviction policy beyond plain
+// movement for a released animal (see this file's own header, "Simpler
+// than VehicleRuntimeInstances"); a capacity or eviction policy beyond plain
 // distance-from-center; resolving WHICH animal an avatar is carrying
 // (that stays core/AvatarInventory.js's own job, entirely untouched by
 // this file).

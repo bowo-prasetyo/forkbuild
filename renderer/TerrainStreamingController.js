@@ -20,10 +20,16 @@ export class TerrainStreamingController {
         // the full tile diff every single frame for no visible change —
         // recompute only once the camera has actually moved far enough
         // to plausibly change which tiles belong in the ring.
-        updateThreshold = tileSize / 4
+        updateThreshold = tileSize / 4,
+        // Frees one tile's GPU resources once it has left the scene — the
+        // factory knows what a tile owns and what it shares (see
+        // renderer/TileDisposal.js), so it is injected alongside it.
+        // Without it an unloaded tile is only removed from the scene.
+        disposeTile = null
     } = {}) {
         this._sink = sink;
         this._tileFactory = tileFactory;
+        this._disposeTile = disposeTile;
         this._tileSize = tileSize;
         this._streamingRadius = streamingRadius;
         this._updateThreshold = updateThreshold;
@@ -62,7 +68,7 @@ export class TerrainStreamingController {
 
         for (const [key, entry] of this._loadedTiles) {
             if (!desiredKeys.has(key)) {
-                this._sink.remove(entry.object);
+                this._unload(entry.object);
                 this._loadedTiles.delete(key);
             }
         }
@@ -95,18 +101,34 @@ export class TerrainStreamingController {
         if (!entry) {
             return;
         }
-        this._sink.remove(entry.object);
+        this._unload(entry.object);
         const object = this._tileFactory(tx, tz);
         this._sink.add(object);
         this._loadedTiles.set(key, { tx, tz, object });
     }
 
+    // Calls `callback(object, tx, tz)` for every loaded tile — for tiles
+    // whose contents change every frame (renderer/WildlifeTileMesh.js's
+    // wandering animals) without being rebuilt.
+    forEachLoadedTile(callback) {
+        for (const entry of this._loadedTiles.values()) {
+            callback(entry.object, entry.tx, entry.tz);
+        }
+    }
+
     dispose() {
         for (const entry of this._loadedTiles.values()) {
-            this._sink.remove(entry.object);
+            this._unload(entry.object);
         }
         this._loadedTiles.clear();
         this._lastUpdateX = null;
         this._lastUpdateZ = null;
+    }
+
+    _unload(object) {
+        this._sink.remove(object);
+        if (this._disposeTile) {
+            this._disposeTile(object);
+        }
     }
 }

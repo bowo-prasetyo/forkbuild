@@ -1,4 +1,5 @@
-import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE } from './WildlifeField.js';
+import { WILDLIFE_FEATURE_TYPE } from './WildlifeField.js';
+import { wildlifeInRegionAt } from './WildlifeMotion.js';
 import { AnimalPresence } from './AnimalPresence.js';
 import { Position } from './Position.js';
 
@@ -24,8 +25,12 @@ import { Position } from './Position.js';
 // own determinism, ordering, and half-open-interval bounds contract
 // completely unchanged; this file adds no filtering or sorting of its
 // own.
-export function animalPresenceInRegion(seed, minX, minZ, maxX, maxZ) {
-    return wildlifeInRegion(seed, minX, minZ, maxX, maxZ)
+//
+// `timeSeconds` (optional) places each animal where it is at that moment
+// (core/WildlifeMotion.js#wildlifeInRegionAt()); left out, at its placed
+// position.
+export function animalPresenceInRegion(seed, minX, minZ, maxX, maxZ, timeSeconds = null) {
+    return wildlifeInRegionAt(seed, minX, minZ, maxX, maxZ, timeSeconds)
         .filter((animal) => animal.type === WILDLIFE_FEATURE_TYPE.ANIMAL)
         .map((animal) => new AnimalPresence({
             id: animal.id,

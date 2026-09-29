@@ -32,7 +32,8 @@
 // so a visually larger animal also occupies a proportionally larger
 // physical footprint.
 
-import { WILDLIFE_FEATURE_TYPE, ANIMAL_SPECIES, wildlifeInRegion } from './WildlifeField.js';
+import { WILDLIFE_FEATURE_TYPE, ANIMAL_SPECIES } from './WildlifeField.js';
+import { wildlifeInRegionAt } from './WildlifeMotion.js';
 
 // An animal is the only COLLISION_OBJECT_KIND this file produces — kept as
 // a frozen, single-member vocabulary object, matching
@@ -85,8 +86,15 @@ export function animalCollisionCircleFor(feature) {
 // own identical mirroring of naturalFeaturesInRegion(). Filters to
 // WILDLIFE_FEATURE_TYPE.ANIMAL explicitly so a future second wildlife
 // feature type never silently gains a circular hitbox of its own.
-export function wildlifeCollisionGeometryInRegion(seed, minX, minZ, maxX, maxZ) {
-    return wildlifeInRegion(seed, minX, minZ, maxX, maxZ)
+//
+// Animals move (core/WildlifeMotion.js), so a circle sits wherever its
+// animal is at `timeSeconds`; left out, every circle sits at its animal's
+// placed position. `isExcluded(id)` drops animals that are no longer in
+// the world — caught ones — so an avatar never bumps into an animal it
+// can no longer see.
+export function wildlifeCollisionGeometryInRegion(seed, minX, minZ, maxX, maxZ, { timeSeconds = null, isExcluded = null } = {}) {
+    return wildlifeInRegionAt(seed, minX, minZ, maxX, maxZ, timeSeconds)
         .filter((feature) => feature.type === WILDLIFE_FEATURE_TYPE.ANIMAL)
+        .filter((feature) => !isExcluded || !isExcluded(feature.id))
         .map(animalCollisionCircleFor);
 }
