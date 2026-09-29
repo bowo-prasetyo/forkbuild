@@ -245,6 +245,13 @@ export class WorldNavigationSession {
         this._residentKeyHeld = false;
         // Where World Residents are; built on first use (see residentMethods).
         this._residentRuntimeInstance = null;
+        // Talking to residents ('T'): rising-edge tracking, how many times
+        // each resident has been talked to (what it says moves on), the last
+        // thing said, and how people are named. All local to this session.
+        this._residentTalkKeyHeld = false;
+        this._residentConversationTurns = new Map();
+        this._lastResidentSpeech = null;
+        this._residentDisplayNameResolver = null;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;
         // `null` means off (the free/orbit camera). Local UI state only: never
@@ -681,6 +688,8 @@ export class WorldNavigationSession {
         this._vehicleSteerRightHeld = false;
         this._decorateKeyHeld = false;
         this._residentKeyHeld = false;
+        this._residentTalkKeyHeld = false;
+        this._lastResidentSpeech = null;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;
         this._cameraPerspective = null;

@@ -19,10 +19,11 @@ import { Position } from './Position.js';
 //
 // NOT A PERSON. A resident has no identity, no profile, no presence and
 // no voice: it never becomes an AvatarPresence, never reaches the wire,
-// is never listed among People and can't be picked as an avatar. Nor is
-// it a guide: it gives no directions, quests or missions (see
-// docs/principles/navigation.md, "Exploration Guides Attention, Never
-// Ownership or Mutation"). It walks around its home, and it notices you.
+// is never listed among People and can't be picked as an avatar. It may
+// tell you what's around (core/ResidentTalk.js), but never what to do: no
+// quests, objectives or missions (see docs/principles/vehicles.md, "A
+// Resident Tells You What's Around, Never What To Do"). It walks around
+// its home, it notices you, and it answers when asked.
 export class WorldResident {
     constructor({ id, worldId, authorIdentityId, position } = {}) {
         if (!id) {

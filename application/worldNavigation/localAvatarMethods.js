@@ -476,9 +476,10 @@ export const localAvatarMethods = {
         // back on would read as a repeat and never fire.
         this._vehicleSteerLeftHeld = false;
         this._vehicleSteerRightHeld = false;
-        // Same for 'G' and 'R'.
+        // Same for 'G', 'R' and 'T'.
         this._decorateKeyHeld = false;
         this._residentKeyHeld = false;
+        this._residentTalkKeyHeld = false;
         if (!this._avatarControlModeActive && this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
@@ -512,6 +513,7 @@ export const localAvatarMethods = {
         // Also the decorate and resident keys.
         this._decorateKeyHeld = false;
         this._residentKeyHeld = false;
+        this._residentTalkKeyHeld = false;
         if (this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
@@ -558,7 +560,8 @@ export const localAvatarMethods = {
         // Tried independently: 'G' is claimed by nothing above.
         const worldAnimalDecorationConsumed = this._processWorldAnimalDecorationInput(key, 'keydown');
         // Tried independently: 'R' is claimed by nothing above.
-        const residentConsumed = this._processResidentInput(key, 'keydown');
+        const residentConsumed = this._processResidentInput(key, 'keydown')
+            || this._processResidentTalkInput(key, 'keydown');
         return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed || worldAnimalDecorationConsumed || residentConsumed;
     },
 
@@ -595,7 +598,8 @@ export const localAvatarMethods = {
         // mid-press.
         const worldAnimalDecorationConsumed = this._processWorldAnimalDecorationInput(key, 'keyup');
         // Always forwarded, like 'G'.
-        const residentConsumed = this._processResidentInput(key, 'keyup');
+        const residentConsumed = this._processResidentInput(key, 'keyup')
+            || this._processResidentTalkInput(key, 'keyup');
         return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed || worldAnimalDecorationConsumed || residentConsumed;
     },
 

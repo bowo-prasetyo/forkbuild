@@ -13,6 +13,9 @@ import {
     RESIDENT_INTERACTION_RADIUS,
     RESIDENT_OBSTACLE_QUERY_RADIUS
 } from '../world/ResidentRuntime.js';
+import { gatherResidentFacts, RESIDENT_KNOWLEDGE_RADIUS } from '../world/ResidentSurroundings.js';
+import { composeResidentRemarks } from '../../core/ResidentTalk.js';
+import { regionsContaining } from '../../core/WorldRegionGeography.js';
 
 // World Residents in World View: where they are drawn and collided with,
 // and how a World's author adds and removes them (the 'R' key).
@@ -26,6 +29,9 @@ import {
 
 // The 'R' key: add a resident here, or remove the one right here.
 const RESIDENT_KEY = 'r';
+
+// The 'T' key: talk to the resident right here (see talkToNearestResident()).
+const RESIDENT_TALK_KEY = 't';
 
 // An avatar whose feet are higher than this is standing on something (or
 // jumping), not on the ground.
@@ -196,6 +202,7 @@ export const residentMethods = {
     // may edit the World is not checked here (the press reports that), the
     // same split animalDecorationInteractionState() keeps. Null without an
     // avatar.
+    // `canTalk` says whether 'T' would talk to someone.
     residentInteractionState() {
         const avatarPos = this.getAvatarPosition();
         if (!avatarPos) {
@@ -203,10 +210,122 @@ export const residentMethods = {
         }
         const nearest = this._residentRuntime().nearest(avatarPos, RESIDENT_INTERACTION_RADIUS, this._wildlifeClock());
         if (nearest) {
-            return { canAdd: false, canRemove: true, refusal: null, targetResidentId: nearest.id };
+            return { canAdd: false, canRemove: true, canTalk: true, refusal: null, targetResidentId: nearest.id };
         }
         const refusal = this._residentRefusalAt(avatarPos);
-        return { canAdd: refusal === null, canRemove: false, refusal, targetResidentId: null };
+        return { canAdd: refusal === null, canRemove: false, canTalk: false, refusal, targetResidentId: null };
+    },
+
+    // -----------------------------------------------------------------
+    // Talking. A resident tells you what's around, never what to do (see
+    // docs/principles/vehicles.md, "A Resident Tells You What's Around,
+    // Never What To Do"). What it says is gathered from this replica's own
+    // view (application/world/ResidentSurroundings.js), spoken from where
+    // the resident stands, and shown only on this screen: nothing is stored
+    // or sent.
+    // -----------------------------------------------------------------
+
+    // How people are named when a resident mentions them: the same
+    // `(identityId) => string` the UI uses for its People lists. Without
+    // one, a shortened identity id.
+    setResidentDisplayNameResolver(resolveDisplayName) {
+        this._residentDisplayNameResolver = typeof resolveDisplayName === 'function' ? resolveDisplayName : null;
+    },
+
+    // Talks to the resident nearest the avatar (within
+    // RESIDENT_INTERACTION_RADIUS of where it is now): gathers what it knows
+    // about its surroundings and returns { residentId, remarks } — one or two
+    // sentences (core/ResidentTalk.js), which the facade also shows over the
+    // resident's head. Each conversation with the same resident moves on to
+    // other things. Null when nobody is close enough.
+    talkToNearestResident() {
+        const avatarPos = this.getAvatarPosition();
+        if (!avatarPos) {
+            return null;
+        }
+        const time = this._wildlifeClock();
+        const nearest = this._residentRuntime().nearest(avatarPos, RESIDENT_INTERACTION_RADIUS, time);
+        if (!nearest) {
+            return null;
+        }
+        if (!this._residentConversationTurns) {
+            this._residentConversationTurns = new Map();
+        }
+        const turn = this._residentConversationTurns.get(nearest.id) || 0;
+        this._residentConversationTurns.set(nearest.id, turn + 1);
+        const remarks = composeResidentRemarks(this._residentFactsAround(nearest, time), { turn });
+        this._lastResidentSpeech = { residentId: nearest.id, remarks };
+        if (this._session && typeof this._session.showResidentSpeech === 'function') {
+            this._session.showResidentSpeech(nearest.id, remarks);
+        }
+        return { residentId: nearest.id, remarks };
+    },
+
+    // What the last conversation said ({ residentId, remarks }), or null:
+    // for the UI's screen-reader announcement.
+    lastResidentSpeech() {
+        return this._lastResidentSpeech || null;
+    },
+
+    // Everything gatherResidentFacts() needs, from this session, around a
+    // resident's pose (from ResidentRuntime).
+    _residentFactsAround(pose, time) {
+        const position = { x: pose.x, y: 0, z: pose.z };
+        const landmarks = [];
+        for (const document of this.getLoadedDocuments()) {
+            const offset = this.getDocumentPosition(document.world.id) || { x: 0, y: 0, z: 0 };
+            for (const landmark of document.world.getWorldLandmarks()) {
+                landmarks.push({
+                    id: landmark.id,
+                    title: landmark.title,
+                    position: { x: landmark.position.x + offset.x, z: landmark.position.z + offset.z }
+                });
+            }
+        }
+        const self = resolveSigningIdentityId(this._identityProvider);
+        const people = this._getPresentCollaborators(this._residentDisplayNameResolver || undefined)
+            .filter((person) => person.identityId !== self)
+            .map((person) => ({ identityId: person.identityId, displayName: person.label, position: person.position }));
+        // The resident's own World, and what it was forked from, aren't
+        // "another build".
+        const home = this.getDocument(pose.documentId);
+        const excludedDocumentIds = [pose.documentId, pose.worldId, home && home.metadata ? home.metadata.parentDocumentId : null];
+        const mount = this.avatarVehicleMount();
+        const place = regionsContaining(position, this._collectRegions())[0];
+        return gatherResidentFacts({
+            position,
+            seed: this.getWorldSeed(),
+            timeSeconds: time,
+            vehicleRuntime: this._vehicleRuntimeInstances || null,
+            mountedVehicleId: mount ? mount.vehicleId : null,
+            animalRuntime: this._animalRuntimeInstances || null,
+            landmarks,
+            people,
+            builds: this.searchWorldByLocation({ center: position, radius: RESIDENT_KNOWLEDGE_RADIUS.BUILD }),
+            excludedDocumentIds,
+            placeName: place ? place.name : null
+        });
+    },
+
+    // The seam from the 'T' key to talkToNearestResident(), on the rising
+    // edge only, never letting an error escape.
+    _processResidentTalkInput(key, type) {
+        if (String(key || '').toLowerCase() !== RESIDENT_TALK_KEY) {
+            return false;
+        }
+        if (type === 'keyup') {
+            this._residentTalkKeyHeld = false;
+            return true;
+        }
+        if (!this._residentTalkKeyHeld) {
+            this._residentTalkKeyHeld = true;
+            try {
+                this.talkToNearestResident();
+            } catch {
+                // Nobody to talk to, or nothing to say: nothing happens.
+            }
+        }
+        return true;
     },
 
     // The seam from the 'R' key to toggleResidentHere(), on the rising edge

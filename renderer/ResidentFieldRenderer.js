@@ -3,6 +3,7 @@ import { AvatarVisual } from './AvatarVisual.js';
 import { residentFacingFor, RESIDENT_REACTION } from './ResidentReaction.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { AvatarInteractionKind } from '../core/AvatarInteractionKind.js';
+import { createSpeechBubble } from './ResidentSpeechBubble.js';
 
 // How long a resident's wave lasts.
 const WAVE_SECONDS = 2.2;
@@ -16,6 +17,20 @@ const GROUND_PER_GAIT_SECOND = 3;
 
 const RADIANS_TO_DEGREES = 180 / Math.PI;
 
+// How long a speech bubble stays up: long enough to read at an easy pace,
+// never less than MIN nor more than MAX seconds.
+const SPEECH_MIN_SECONDS = 5;
+const SPEECH_MAX_SECONDS = 14;
+const SPEECH_SECONDS_PER_WORD = 0.4;
+
+// Walk this far from a talking resident and its bubble goes.
+const SPEECH_HEARING_RADIUS = 8;
+
+export function speechSecondsFor(remarks) {
+    const words = remarks.join(' ').split(/\s+/).filter(Boolean).length;
+    return Math.min(SPEECH_MAX_SECONDS, Math.max(SPEECH_MIN_SECONDS, 2 + words * SPEECH_SECONDS_PER_WORD));
+}
+
 // Draws World Residents: each one an ordinary avatar body
 // (renderer/AvatarVisual.js) dressed as a resident, posed every frame from
 // application/world/ResidentRuntime.js's poses. The resident counterpart of
@@ -27,14 +42,25 @@ const RADIANS_TO_DEGREES = 180 / Math.PI;
 //
 // Also where a resident notices the viewer (renderer/ResidentReaction.js):
 // the facing is stateless; the wave is the one piece of memory, per
-// resident, kept only here and only for this viewer.
+// resident, kept only here and only for this viewer. And where what a
+// resident says is shown (say()): a speech bubble over its head
+// (renderer/ResidentSpeechBubble.js), gone after a while or once you walk
+// away — also only for this viewer.
 export class ResidentFieldRenderer {
     // `appearanceFor(id)` -> { template, appearance } dresses a resident;
     // `groundAt({ x, z })` -> { x, y, z } puts its feet on the ground.
-    constructor({ appearanceFor, groundAt = ({ x, z }) => ({ x, y: 0, z }), avatarRenderer = new AvatarRenderer() } = {}) {
+    // `speechBubbleFor(remarks)` -> { object, dispose() } or null draws a
+    // bubble (renderer/ResidentSpeechBubble.js by default).
+    constructor({
+        appearanceFor,
+        groundAt = ({ x, z }) => ({ x, y: 0, z }),
+        avatarRenderer = new AvatarRenderer(),
+        speechBubbleFor = createSpeechBubble
+    } = {}) {
         this._appearanceFor = appearanceFor;
         this._groundAt = groundAt;
         this._avatarRenderer = avatarRenderer;
+        this._speechBubbleFor = speechBubbleFor;
         this._entries = new Map(); // resident id -> { visual, last, waved, waveSeconds }
     }
 
@@ -62,10 +88,35 @@ export class ResidentFieldRenderer {
         for (const [id, entry] of this._entries) {
             if (seen.has(id)) continue;
             removed.push(entry.visual.root);
+            this._hush(entry);
             entry.visual.dispose();
             this._entries.delete(id);
         }
         return { added, removed };
+    }
+
+    // Shows `remarks` (sentences) in a bubble over resident `id`'s head,
+    // replacing anything it was saying. Returns whether it is drawn: false
+    // for a resident not drawn right now, or where no bubble can be drawn.
+    say(id, remarks) {
+        const entry = this._entries.get(id);
+        if (!entry || !Array.isArray(remarks) || remarks.length === 0) {
+            return false;
+        }
+        this._hush(entry);
+        const bubble = this._speechBubbleFor(remarks);
+        if (!bubble) {
+            return false;
+        }
+        entry.visual.root.add(bubble.object);
+        entry.speech = { bubble, secondsLeft: speechSecondsFor(remarks) };
+        return true;
+    }
+
+    // What resident `id` is saying right now (its bubble's object), or null.
+    speechObject(id) {
+        const entry = this._entries.get(id);
+        return entry && entry.speech ? entry.speech.bubble.object : null;
     }
 
     // Advances every resident's animation clocks: the gait by the ground it
@@ -79,6 +130,12 @@ export class ResidentFieldRenderer {
                 entry.waveSeconds -= deltaSeconds;
                 if (entry.waveSeconds <= 0) {
                     entry.visual.setGesture(null);
+                }
+            }
+            if (entry.speech) {
+                entry.speech.secondsLeft -= deltaSeconds;
+                if (entry.speech.secondsLeft <= 0) {
+                    this._hush(entry);
                 }
             }
         }
@@ -97,6 +154,7 @@ export class ResidentFieldRenderer {
         const removed = [];
         for (const entry of this._entries.values()) {
             removed.push(entry.visual.root);
+            this._hush(entry);
             entry.visual.dispose();
         }
         this._entries.clear();
@@ -129,5 +187,16 @@ export class ResidentFieldRenderer {
             entry.waveSeconds = 0;
             visual.setGesture(null);
         }
+        // Walk away and it stops talking.
+        if (entry.speech && facing.distance > SPEECH_HEARING_RADIUS) {
+            this._hush(entry);
+        }
+    }
+
+    _hush(entry) {
+        if (!entry.speech) return;
+        entry.visual.root.remove(entry.speech.bubble.object);
+        entry.speech.bubble.dispose();
+        entry.speech = null;
     }
 }

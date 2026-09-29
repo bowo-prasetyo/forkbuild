@@ -2645,3 +2645,40 @@ and it waves when you walk up to it.** A World's author adds one by standing whe
   disagree); no walking indoors through doorways (a door narrower than the resident's reach from home is just a
   wall); residents on rooftops or bridges; choosing a resident's look, name or wander radius; a touch-pad button
   (the Avatar panel's button works on touch); the Editor doesn't draw residents.
+
+## Residents tell you what's around (unnumbered, 2026-09-29)
+
+**Stand beside a resident and press `T` (or tap Talk), and it tells you about its neighbourhood in a speech bubble:
+a vehicle or an animal nearby, a landmark, someone who's around, the place it lives in, or another build some way
+off — "About 3.6 km to the north-east, there's a build called “Hill Fort” by bob."** Talk again and it moves on to
+something else. It points at what exists; it never sets a goal, a quest or a reward.
+
+- Principles: "Exploration Guides Attention, Never Ownership or Mutation" (0.3.9) gets a *Changed by* note — its "no
+  NPC guides" means no character that sets tasks, and a resident saying what's around is allowed. The residents
+  principle gets the same note, and a new principle states the rule: "A Resident Tells You What's Around, Never What
+  To Do".
+- `core/ResidentTalk.js`: facts to sentences. `describeDistance()` rounds ("just a few steps", "about 80 m",
+  "about 3.6 km"), `compassWord()` names the sector, `sanitizeSpokenText()` strips control and bidi-override
+  characters, collapses whitespace and caps length (60 for titles, 40 for names). `composeResidentRemarks(facts,
+  { turn })`: one nearby sentence (kinds take turns by nearest, the place last; a kind coming round again names its
+  next-nearest) and one build sentence (nearest three take turns); `QUIET_REMARK` when there is nothing.
+- `application/world/ResidentSurroundings.js#gatherResidentFacts()`: the replica's own view from the resident's
+  position — vehicles (150 m; stored ones and the ridden one left out, moved ones where they are now), animals
+  (100 m; caught ones left out, released ones in), landmarks (1 km), present people by shown name (500 m), other
+  builds from the location search (5 km; not its own World or its parent), and the region it stands in.
+- Session: `talkToNearestResident()`, `lastResidentSpeech()`, `setResidentDisplayNameResolver()`, the `T` key, and
+  `canTalk` in `residentInteractionState()`. A per-resident turn counter is kept in the session only.
+- Rendering: `renderer/ResidentSpeechBubble.js` draws the words as canvas text on a sprite over the resident's head
+  (sRGB, not tone-mapped); `ResidentFieldRenderer#say()` shows it for 5–14 s by length, and hides it when you walk
+  beyond 8 m or the resident leaves view. The facade's `showResidentSpeech()` passes it through.
+- UI: `[T] Talk · [R] Remove Resident` prompt, Talk buttons in the Avatar section and the touch pad, and a
+  screen-reader `aria-live` announcement ("A resident says: …").
+- Docs: `docs/user/06-AvatarsAndPresence.md`, `docs/user/03-WorldView.md`, `docs/user/ControlsReference.md`,
+  `docs/Architecture.md`, README, the principles above.
+- Tests: `tests/ResidentTalk.test.js` (rounding, directions, sanitizing, each kind's sentence, turns moving on,
+  nothing imperative; never a stored or ridden vehicle or a caught animal; builds deduplicated and never its own
+  World; the session's T key, rotation and hand-off to the renderer; the bubble's lifetime and walking away), and the
+  Avatar panel's Talk button in `tests/WorldViewPanelLayoutBrowser.test.js`.
+- Not done: residents don't mention placed structures inside loaded Worlds by title unless the catalog knows them as
+  builds; no voice (text only); no talking in the Editor; what a resident knows isn't limited by what it "could have
+  seen" — it is the viewer's knowledge.

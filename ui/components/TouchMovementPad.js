@@ -23,7 +23,10 @@ export default {
         animalState: { type: Object, default: null },
         decorationState: { type: Object, default: null },
         // The session's avatarContinuousMovementState(), or null.
-        cruiseState: { type: Object, default: null }
+        cruiseState: { type: Object, default: null },
+        // The session's residentInteractionState(), or null: Talk shows when a
+        // resident is close enough to talk to (it presses 'T').
+        residentState: { type: Object, default: null }
     },
     emits: ['key-down', 'key-up', 'decorate'],
     setup(props, { emit }) {
@@ -165,6 +168,12 @@ export default {
                     class="touch-pad-btn"
                     @click="tapButton('f')"
                 >{{ animalState.canCatch ? 'Catch' : 'Release' }}</button>
+                <button
+                    v-if="residentState && residentState.canTalk"
+                    type="button"
+                    class="touch-pad-btn"
+                    @click="tapButton('t')"
+                >Talk</button>
                 <button
                     v-if="decoration"
                     type="button"

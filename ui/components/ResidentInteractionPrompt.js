@@ -1,11 +1,11 @@
-// A floating, bottom-center affordance for World Residents: "[R] Remove
-// Resident" while one is close enough for 'R' to remove it. Adding one is
+// A floating, bottom-center affordance for World Residents: "[T] Talk ·
+// [R] Remove Resident" while one is close enough to talk to or remove. Adding one is
 // never prompted (it could be done almost anywhere, so the prompt would
 // never go away); the Avatar panel's Residents row offers that instead.
 //
 // PRESENTATION ONLY. `state` is exactly
 // WorldNavigationSession#residentInteractionState()'s
-// { canAdd, canRemove, refusal, targetResidentId }; this component decides
+// { canAdd, canRemove, canTalk, refusal, targetResidentId }; this component decides
 // nothing. Sits above AnimalInteractionPrompt (whose two lines end below
 // 200px), so the two never overlap.
 export default {
@@ -18,7 +18,14 @@ export default {
     },
     computed: {
         visible() {
-            return Boolean(this.state && this.state.canRemove);
+            return Boolean(this.state && (this.state.canTalk || this.state.canRemove));
+        },
+        label() {
+            if (!this.state) return '';
+            const parts = [];
+            if (this.state.canTalk) parts.push('[T] Talk');
+            if (this.state.canRemove) parts.push('[R] Remove Resident');
+            return parts.join(' · ');
         }
     },
     template: `
@@ -42,6 +49,6 @@ export default {
                 color: '#e0e0e0',
                 whiteSpace: 'nowrap'
             }"
-        >[R] Remove Resident</div>
+        >{{ label }}</div>
     `
 };

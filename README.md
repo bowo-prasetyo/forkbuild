@@ -39,7 +39,7 @@ models").
   can climb stairs and slopes; vehicles, an inventory, and catching and releasing
   animals.
 - Residents: people a World's author adds, who stroll around their homes,
-  walking round buildings, and turn to greet you.
+  walking round buildings, turn to greet you, and tell you what's around.
 - Text and spatial search, a map, named regions and landmarks, and World
   Encounters with publications that connected peers are sharing.
 - World View observes and navigates; editing happens in the Editor. **Edit a
