@@ -151,10 +151,17 @@ export class RenderWorldViewUseCase {
         // whenever none exist yet.
         // Released animals and animal decorations idle in place on the same
         // wildlife clock the tiles' wandering animals use.
+        // Every animal — wild, released or decoration — turns to watch the
+        // local avatar where it is drawn, and only it (see
+        // renderer/AnimalReaction.js for why never a remote one). Hiding
+        // your own avatar is only a display preference — it still walks and
+        // collides — so animals keep watching it.
+        renderer.setWildlifeObserver(() => (localAvatarVisual ? localAvatarVisual.root.position : null));
         renderer.addFrameListener(() => {
             const wildlifeTime = renderer.wildlifeTime();
-            animalFieldRenderer.animate(wildlifeTime, DEFAULT_WORLD_SEED);
-            worldRenderer.animateDecorations(wildlifeTime);
+            const observer = renderer.wildlifeObserver();
+            animalFieldRenderer.animate(wildlifeTime, DEFAULT_WORLD_SEED, observer);
+            worldRenderer.animateDecorations(wildlifeTime, DEFAULT_WORLD_SEED, observer);
         });
         renderer.addFrameListener((deltaSeconds) => {
             if (localAvatarVisual) {
