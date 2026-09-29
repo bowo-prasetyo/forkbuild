@@ -241,8 +241,13 @@ async function runTests() {
         const built = positionOfInstance(herd.bodyMesh, index);
         assert(Math.abs(built.x - pose.x) < 1e-3 && Math.abs(built.z - pose.z) < 1e-3 && Math.abs(built.y - pose.y) < 1e-3,
             '24. A tile built with a time draws each animal where it is at that time');
-        const head = positionOfInstance(herd.headMesh, index);
-        assert(head.distanceTo(built) < 1e-9, '25. ...head and body together');
+        // The head may be nodding, grazing or looking round, but it is always
+        // attached: its neck pivot lands on the same world point through the
+        // head's transform as through the body's.
+        const matrixOf = (mesh) => { const m = new THREE.Matrix4(); mesh.getMatrixAt(index, m); return m; };
+        const neckViaBody = herd.preset.neckPivot.clone().applyMatrix4(matrixOf(herd.bodyMesh));
+        const neckViaHead = herd.preset.neckPivot.clone().applyMatrix4(matrixOf(herd.headMesh));
+        assert(neckViaBody.distanceTo(neckViaHead) < 1e-3, '25. ...with its head attached to its body at the neck');
 
         const later = animalPoseAt(SEED, animal, T + 9);
         const bodyVersion = herd.bodyMesh.instanceMatrix.version;

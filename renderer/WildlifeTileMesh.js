@@ -3,6 +3,7 @@ import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE, ANIMAL_SPECIES } from '../core
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 import { animalPoseAt, MAX_WANDER_DISTANCE } from '../core/WildlifeMotion.js';
 import { gaitOffsetsAt, REST_GAIT } from './AnimalGait.js';
+import { idleOffsetsAt } from './AnimalIdle.js';
 
 // The renderer-side counterpart to core/WildlifeField.js — the identical
 // "core decides, renderer builds" split renderer/NaturalFeatureTileMesh.js
@@ -134,6 +135,7 @@ const _scaleVec = new THREE.Vector3();
 const _matrix = new THREE.Matrix4();
 const _headMatrix = new THREE.Matrix4();
 const _nod = new THREE.Matrix4();
+const _turn = new THREE.Matrix4();
 const _pivot = new THREE.Matrix4();
 
 // A tile's bounding spheres are computed once, from where its animals were
@@ -154,25 +156,28 @@ function applyBoundingSphere(mesh) {
 // group itself stays at the origin) — the same convention
 // renderer/NaturalFeatureTileMesh.js's own header documents for trees.
 //
-// `gait` (renderer/AnimalGait.js#gaitOffsetsAt()) lifts and pitches the
-// body, and nods the head about `preset.neckPivot` on top of that; at
-// rest the head simply shares the body's transform.
-function writeInstance(bodyMesh, headMesh, i, pose, scale, preset, gait = REST_GAIT) {
-    _position.set(pose.x, pose.y + gait.lift * scale, pose.z);
-    _euler.set(gait.bodyPitch, pose.rotationY, 0);
+// `offsets` (renderer/AnimalGait.js while walking, renderer/AnimalIdle.js
+// while standing) lifts and pitches the body, and turns and nods the head
+// about `preset.neckPivot` on top of that; at rest the head simply shares
+// the body's transform.
+function writeInstance(bodyMesh, headMesh, i, pose, scale, preset, offsets = REST_GAIT) {
+    _position.set(pose.x, pose.y + offsets.lift * scale, pose.z);
+    _euler.set(offsets.bodyPitch, pose.rotationY, 0);
     _quaternion.setFromEuler(_euler);
     _scaleVec.set(scale, scale, scale);
     _matrix.compose(_position, _quaternion, _scaleVec);
     bodyMesh.setMatrixAt(i, _matrix);
-    if (gait.headPitch === 0) {
+    if (offsets.headPitch === 0 && offsets.headYaw === 0) {
         headMesh.setMatrixAt(i, _matrix);
         return;
     }
-    // body × T(pivot) × Rx(nod) × T(-pivot), all in the geometry's own frame.
+    // body × T(pivot) × Ry(turn) × Rx(nod) × T(-pivot), all in the
+    // geometry's own frame: the head turns, then nods, about its neck.
     const { x, y, z } = preset.neckPivot;
     _headMatrix.copy(_matrix)
         .multiply(_pivot.makeTranslation(x, y, z))
-        .multiply(_nod.makeRotationX(gait.headPitch))
+        .multiply(_turn.makeRotationY(offsets.headYaw))
+        .multiply(_nod.makeRotationX(offsets.headPitch))
         .multiply(_pivot.makeTranslation(-x, -y, -z));
     headMesh.setMatrixAt(i, _headMatrix);
 }
@@ -259,14 +264,18 @@ export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE
 // draw call is added. Called once per frame for every loaded tile. A
 // group with no animals is left alone. A walking animal also moves with
 // its gait (renderer/AnimalGait.js) — hopping or stepping in time with the
-// ground it covers.
+// ground it covers — and a standing one with its idle action
+// (renderer/AnimalIdle.js): grazing, or alert and looking around.
 export function updateWildlifeTileMesh(group, timeSeconds) {
     const wildlife = group.userData.wildlife;
     if (!wildlife) return;
     for (const { species, preset, animals, bodyMesh, headMesh } of wildlife.herds) {
         animals.forEach((animal, i) => {
             const pose = animalPoseAt(wildlife.seed, animal, timeSeconds);
-            writeInstance(bodyMesh, headMesh, i, pose, animal.scale, preset, gaitOffsetsAt(species, pose.gaitPhase));
+            const offsets = pose.moving
+                ? gaitOffsetsAt(species, pose.gaitPhase)
+                : idleOffsetsAt(species, pose.idleAction, pose.idleSeconds, pose.idleDuration);
+            writeInstance(bodyMesh, headMesh, i, pose, animal.scale, preset, offsets);
         });
         bodyMesh.instanceMatrix.needsUpdate = true;
         headMesh.instanceMatrix.needsUpdate = true;

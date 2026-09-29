@@ -994,7 +994,10 @@ is lifted a second time. Released animals get the same lift as remote avatars.
   `updateWildlifeTileMesh()` rewrites each loaded tile's instance matrices in place. A walking animal also moves with
   its gait: `animalPoseAt()` reports `gaitPhase` (strides into the current walk, a whole number of them per walk), and
   `renderer/AnimalGait.js` turns it into body lift and pitch and a head nod about the neck (rabbits hop, deer step);
-  the head is its own InstancedMesh, so it nods without new geometry or draw calls. Catching one rebuilds its tile
+  the head is its own InstancedMesh, so it nods without new geometry or draw calls. A standing animal idles:
+  `animalPoseAt()` picks one `IDLE_ACTION` per pause (GRAZE, ALERT or NONE, at per-species odds) and reports how far
+  into it the animal is, and `renderer/AnimalIdle.js` eases it in and out as body and head offsets, including a
+  sideways turn of the head. Catching one rebuilds its tile
   without it (`TerrainStreamingController#invalidateTile()`). Released animals are drawn every frame by
   `renderer/AnimalFieldRenderer.js`, which shares geometry with the tiles.
 - **Decorations (0.9.702/0.9.703).** `G` turns the nearest released animal into an `AnimalDecoration` in the World

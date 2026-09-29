@@ -34,11 +34,11 @@ export const ANIMAL_GAIT = Object.freeze({
 });
 
 // A standing animal, or one exactly between strides.
-export const REST_GAIT = Object.freeze({ lift: 0, bodyPitch: 0, headPitch: 0 });
+export const REST_GAIT = Object.freeze({ lift: 0, bodyPitch: 0, headPitch: 0, headYaw: 0 });
 
 const TWO_PI = Math.PI * 2;
 
-// { lift, bodyPitch, headPitch } for `species` at `gaitPhase` strides into
+// { lift, bodyPitch, headPitch, headYaw } for `species` at `gaitPhase` strides into
 // a walk: how far to raise the body, and how far to tip the body and,
 // separately, the head about its neck.
 export function gaitOffsetsAt(species, gaitPhase) {
@@ -50,7 +50,8 @@ export function gaitOffsetsAt(species, gaitPhase) {
             lift: gait.hopHeight * Math.sin(Math.PI * stride),
             // Nose up while rising (negative), down while landing.
             bodyPitch: -gait.hopPitch * Math.sin(TWO_PI * stride),
-            headPitch: 0
+            headPitch: 0,
+            headYaw: 0
         };
     }
     // Two steps per stride: 0 → 1 → 0 twice.
@@ -58,6 +59,7 @@ export function gaitOffsetsAt(species, gaitPhase) {
     return {
         lift: gait.bobHeight * step,
         bodyPitch: 0,
-        headPitch: gait.headNod * step
+        headPitch: gait.headNod * step,
+        headYaw: 0
     };
 }

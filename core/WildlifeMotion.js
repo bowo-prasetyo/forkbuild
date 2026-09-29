@@ -47,10 +47,31 @@ import { lerp, smoothstep } from '../utils/interpolation.js';
 // covers (a deer's full step cycle, one rabbit hop). A segment is always
 // long enough for the longest possible walk (twice the wander radius)
 // plus a pause.
+//
+// `idleChances` is how often a pause is spent on each IDLE_ACTION (below);
+// whatever is left over is spent simply standing.
 export const ANIMAL_MOTION = Object.freeze({
-    [ANIMAL_SPECIES.DEER]: Object.freeze({ wanderRadius: 3, walkSpeed: 0.8, segmentSeconds: 14, strideLength: 1.0 }),
-    [ANIMAL_SPECIES.RABBIT]: Object.freeze({ wanderRadius: 2, walkSpeed: 1.6, segmentSeconds: 7, strideLength: 0.5 })
+    [ANIMAL_SPECIES.DEER]: Object.freeze({
+        wanderRadius: 3, walkSpeed: 0.8, segmentSeconds: 14, strideLength: 1.0,
+        idleChances: Object.freeze({ GRAZE: 0.55, ALERT: 0.25 })
+    }),
+    [ANIMAL_SPECIES.RABBIT]: Object.freeze({
+        wanderRadius: 2, walkSpeed: 1.6, segmentSeconds: 7, strideLength: 0.5,
+        idleChances: Object.freeze({ GRAZE: 0.5, ALERT: 0.3 })
+    })
 });
+
+// What a standing animal is doing during a pause. How each one looks is
+// the renderer's business (renderer/AnimalIdle.js); which one, and when,
+// is decided here, so every replica sees the same deer grazing.
+export const IDLE_ACTION = Object.freeze({
+    NONE: 'NONE',     // just standing
+    GRAZE: 'GRAZE',   // head down, eating
+    ALERT: 'ALERT'    // head up (a rabbit sits up), looking around
+});
+
+// A pause too short to fit an action in, eased in and out, is spent standing.
+const MIN_IDLE_SECONDS = 1.5;
 
 // The farthest any animal can ever be from its spawn point.
 export const MAX_WANDER_DISTANCE = Math.max(...Object.values(ANIMAL_MOTION).map((motion) => motion.wanderRadius));
@@ -70,6 +91,7 @@ const SAME_POINT_DISTANCE = 1e-6;
 const PHASE_SEED_OFFSET = 0x4d504853;    // 'MPHS'
 const ANGLE_SEED_OFFSET = 0x4d414e47;    // 'MANG'
 const DISTANCE_SEED_OFFSET = 0x4d445354; // 'MDST'
+const IDLE_SEED_OFFSET = 0x4d49444c;     // 'MIDL'
 
 const TWO_PI = Math.PI * 2;
 
@@ -138,6 +160,13 @@ function headingBetween(from, to) {
     return Math.atan2(dx, dz);
 }
 
+// Which IDLE_ACTION a uniform roll in [0, 1) lands on.
+function idleActionFor(roll, chances) {
+    if (roll < chances.GRAZE) return IDLE_ACTION.GRAZE;
+    if (roll < chances.GRAZE + chances.ALERT) return IDLE_ACTION.ALERT;
+    return IDLE_ACTION.NONE;
+}
+
 // How many earlier segments arrivalHeadingAt() looks back through.
 const ARRIVAL_LOOKBACK_SEGMENTS = 4;
 
@@ -166,6 +195,11 @@ function arrivalHeadingAt(seed, animal, cellX, cellZ, k, from, wanderRadius) {
 // rising to a whole number on arrival. Its fractional part is how far
 // through the current stride the animal is; how that looks (a hop, a
 // step) is the renderer's business (renderer/AnimalGait.js).
+//
+// A standing animal also reports idleAction (an IDLE_ACTION), idleSeconds
+// (how far into it) and idleDuration (how long it lasts): one action per
+// pause, lasting from arrival until the animal turns to set off again.
+// While walking or turning, idleAction is NONE and both times are 0.
 export function animalPoseAt(seed, animal, timeSeconds) {
     if (typeof timeSeconds !== 'number' || !Number.isFinite(timeSeconds)) {
         throw new Error(`animalPoseAt requires a finite timeSeconds, got ${JSON.stringify(timeSeconds)}`);
@@ -191,6 +225,9 @@ export function animalPoseAt(seed, animal, timeSeconds) {
     let rotationY;
     let moving = false;
     let gaitPhase = 0;
+    let idleAction = IDLE_ACTION.NONE;
+    let idleSeconds = 0;
+    let idleDuration = 0;
     if (departureHeading !== null && secondsIntoSegment >= walkStart) {
         const progress = smoothstep((secondsIntoSegment - walkStart) / walkSeconds);
         x = lerp(from.x, to.x, progress);
@@ -212,6 +249,15 @@ export function animalPoseAt(seed, animal, timeSeconds) {
         z = from.z;
         const arrivalHeading = arrivalHeadingAt(seed, animal, cellX, cellZ, k, from, motion.wanderRadius);
         rotationY = arrivalHeading;
+        // The idle window: from arrival until the animal starts turning
+        // toward its next waypoint, so an idle action never overlaps a turn
+        // or a walk. One action per pause, chosen by (seed, cell, segment).
+        const idleEnd = walkStart - TURN_SECONDS;
+        if (idleEnd >= MIN_IDLE_SECONDS && secondsIntoSegment < idleEnd) {
+            idleAction = idleActionFor(hash3D(seed + IDLE_SEED_OFFSET, cellX, cellZ, k), motion.idleChances);
+            idleSeconds = secondsIntoSegment;
+            idleDuration = idleEnd;
+        }
         const turnProgress = (secondsIntoSegment - (walkStart - TURN_SECONDS)) / TURN_SECONDS;
         if (turnProgress > 0) {
             // Walking next: face the way it is about to go. Staying put:
@@ -231,14 +277,17 @@ export function animalPoseAt(seed, animal, timeSeconds) {
         z,
         rotationY: normalizeAngle(rotationY),
         moving,
-        gaitPhase
+        gaitPhase,
+        idleAction,
+        idleSeconds,
+        idleDuration
     };
 }
 
 // wildlifeInRegion() at a moment in time: every animal whose CURRENT
 // position falls within [minX, maxX) x [minZ, maxZ), as the same records
 // wildlifeInRegion() returns with x/y/z/rotationY replaced by the animal's
-// pose at `timeSeconds`, plus `moving`, `gaitPhase`, `spawnX` and `spawnZ`. Sorted the
+// pose at `timeSeconds`, plus `moving`, `gaitPhase`, the idle fields, `spawnX` and `spawnZ`. Sorted the
 // same way (by x, then z).
 //
 // Looks MAX_WANDER_DISTANCE beyond every edge for placements, since an
@@ -251,7 +300,11 @@ export function animalPoseAt(seed, animal, timeSeconds) {
 export function wildlifeInRegionAt(seed, minX, minZ, maxX, maxZ, timeSeconds = null) {
     if (timeSeconds === null || timeSeconds === undefined) {
         return wildlifeInRegion(seed, minX, minZ, maxX, maxZ)
-            .map((animal) => ({ ...animal, moving: false, gaitPhase: 0, spawnX: animal.x, spawnZ: animal.z }));
+            .map((animal) => ({
+                ...animal, moving: false, gaitPhase: 0,
+                idleAction: IDLE_ACTION.NONE, idleSeconds: 0, idleDuration: 0,
+                spawnX: animal.x, spawnZ: animal.z
+            }));
     }
     const animals = [];
     const placed = wildlifeInRegion(

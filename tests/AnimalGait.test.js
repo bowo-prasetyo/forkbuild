@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { wildlifeInRegion, ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { animalPoseAt } from '../core/WildlifeMotion.js';
+import { animalPoseAt, IDLE_ACTION } from '../core/WildlifeMotion.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 import { gaitOffsetsAt, ANIMAL_GAIT, REST_GAIT } from '../renderer/AnimalGait.js';
@@ -146,13 +146,16 @@ function runTests() {
             const restCenter = localCenter.clone().applyMatrix4(body);
             assert(headCenter.y < restCenter.y, '18. ...and the nod dips the head');
 
-            // Once the deer stops, the head rides the body again.
+            // Standing with nothing to do (no idle action, see
+            // tests/AnimalIdle.test.js), the head rides the body again.
             let standing = null;
-            for (let t = deer.t; t < deer.t + 30; t += 0.1) {
-                if (!animalPoseAt(SEED, deer.animal, t).moving) { standing = t; break; }
+            for (let t = deer.t; t < deer.t + 600 && standing === null; t += 0.1) {
+                const pose = animalPoseAt(SEED, deer.animal, t);
+                if (!pose.moving && pose.idleAction === IDLE_ACTION.NONE) standing = t;
             }
+            assert(standing !== null, '19a. Setup: the deer stands idle-free at some point');
             updateWildlifeTileMesh(tile, standing);
-            assert(read(herd.bodyMesh, index).equals(read(herd.headMesh, index)), '19. A standing deer\'s head shares its body\'s transform');
+            assert(read(herd.bodyMesh, index).equals(read(herd.headMesh, index)), '19. A deer standing with nothing to do has its head sharing its body\'s transform');
         }
 
         // A tile built without a time (placed positions) is at rest.

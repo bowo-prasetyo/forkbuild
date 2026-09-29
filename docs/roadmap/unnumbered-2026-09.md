@@ -2520,4 +2520,30 @@ geometry: the gait is carried by the body and head transforms the wildlife tiles
   walks, lift/pitch/nod applied in the tile with the neck staying attached); `tests/WildlifeMotion.test.js` checks
   gaitPhase counts forward while walking, is 0 standing, and ends each walk on a whole stride.
 - Not done: legs (would change every animal's resting look and add a draw call per species per tile); idle
-  animation such as grazing; released animals and decorations.
+  animation such as grazing (added below); released animals and decorations.
+
+## Wildlife idle animation (unnumbered, 2026-09-29)
+
+**Standing animals no longer freeze between walks: deer graze with their muzzles in the grass or lift their heads
+and look around, and rabbits nibble or sit up on their haunches.** Like the walk, it needs no new geometry and no
+extra draw calls, and every replica sees the same animal doing the same thing at the same moment.
+
+- `core/WildlifeMotion.js`: a new `IDLE_ACTION` vocabulary (NONE, GRAZE, ALERT) and per-species `idleChances` (deer
+  55% graze, 25% alert; rabbits 50%, 30%; the rest just stand). `animalPoseAt()` picks one action per pause from
+  (seed, cell, segment) and reports `idleAction`, `idleSeconds` and `idleDuration`. The idle window runs from arrival
+  to the turn before the next walk, so an action never overlaps turning or walking; a window under 1.5 s is spent
+  standing.
+- `renderer/AnimalIdle.js`: `idleOffsetsAt()` turns the action into body lift and pitch and head pitch and yaw, eased
+  in and out over 0.7 s so every pause starts and ends at rest. A grazing deer lowers its head 0.45 rad and chews; an
+  alert deer raises it and slowly looks side to side; a rabbit nibbles at 4 Hz, or sits up (body pitched back 0.5 rad
+  and lifted so its rump stays on the ground) and glances about.
+- `renderer/WildlifeTileMesh.js`: walking animals take gait offsets and standing ones idle offsets; the head now also
+  turns (yaw) about its neck pivot.
+- Docs: `docs/user/03-WorldView.md`, `docs/Architecture.md`; the wandering principle's full text covers idling.
+- Tests: `tests/AnimalIdle.test.js` (one action per pause, only while standing, over before the turn, at the
+  species' odds; rest at both ends; continuity at 60 fps through walks, pauses and the moves between them; a grazing
+  head lowered but above the ground, a sitting rabbit's rump on the ground). `tests/AnimalGait.test.js` and
+  `tests/WildlifeMotionIntegration.test.js` now expect a standing head to move with idling while staying attached at
+  the neck.
+- Not done: released animals and decorations still stand still; idling never reacts to avatars (replicas would
+  disagree); tail flicks and ear twitches (no tails or ears are modeled).
