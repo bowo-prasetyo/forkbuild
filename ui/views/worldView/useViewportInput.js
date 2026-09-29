@@ -3,10 +3,10 @@ import { InputRouter } from '../../../application/editor/InputRouter.js';
 const DRAG_THRESHOLD_PX = 6;
 
 // Viewport input: pointer picks and hovers (focus and inspection only), and
-// keyboard shortcuts routed to text inputs, Undo/Redo, Home, then Avatar
-// Control Mode.
+// keyboard shortcuts routed to text inputs, Undo/Redo, Home, sound, then
+// Avatar Control Mode.
 export function useViewportInput({
-    compassHeading, goHome, onAvatarKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
+    compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
 }) {
     let pointerStart = null;
     let isDragging = false;
@@ -75,7 +75,11 @@ export function useViewportInput({
             goHome();
             return;
         }
-        // 4. Avatar Control Mode consumes W/A/S/D/Shift/Space only while on.
+        // 4. M: sound on or off.
+        if (onSoundKeyDown && onSoundKeyDown(event)) {
+            return;
+        }
+        // 5. Avatar Control Mode consumes W/A/S/D/Shift/Space only while on.
         if (onAvatarKeyDown(event)) {
             return;
         }

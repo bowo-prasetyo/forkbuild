@@ -18,7 +18,8 @@ send it:
 - known peers, friends, the people you follow, blocks, chat history and
   queued messages (nobody is told you follow them, and nothing about a follow
   is ever sent);
-- your avatar profile, settings, and a TURN server's username and credential
+- your avatar profile, settings (including whether World View plays sound,
+  and how loud), and a TURN server's username and credential
   if you enter one under **Network Settings**.
 
 Clearing this site's data in the browser deletes all of it, and there is no

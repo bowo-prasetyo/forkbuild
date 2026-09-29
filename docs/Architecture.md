@@ -77,8 +77,8 @@ presence/, collaboration/, replication/, placement/, spatial/,
 world-layout/, content/ (content stores), anchoring/ (Bitcoin, Arweave
 and Base anchoring), base/ (Base/EVM transactions), nostr/ and arweave/
 (injected-wallet signers and the relay client), steem/ (the Steem API
-client and Keychain broadcaster), and server/ (the reference rendezvous
-worker).
+client and Keychain broadcaster), audio/ (World View's synthesized sound),
+and server/ (the reference rendezvous worker).
 
 ## Dependency direction
 
@@ -1083,6 +1083,54 @@ None of it is stored, so a tile that streams out and back in is identical. An un
 `disposeTile` hook its controller was built with (`renderer/TileDisposal.js`): terrain and water tiles free their own
 geometry and material, vegetation and wildlife tiles only their instance buffers, since their geometry and materials
 are shared by every tile.
+
+## Sound
+
+    core/AmbientSoundscape.js#ambientMixAt(seed, x, z)   level 0..1 per layer: wind, birds, insects, water, stream
+            │  (ecologyZoneAt() and isRiverAt() underfoot, on a ring at 12 m and one at 30 m)
+    core/AvatarSoundCues.js#advanceAvatarSound()         per frame: footstep / jump / land cues, engine { vehicleType, load }
+            │  (from WorldNavigationSession#avatarSoundObservation(): position, animation, verticalState, vehicleType)
+    application/world/WorldSoundscapeService.js          samples 4×/s at the avatar (else the camera); cues and engine
+            │                                             every render frame (onRenderFrame()); mute/volume
+            │                                             ↔ SoundSettingsStore ('sound-settings', core/SoundSettings.js)
+    audio/WebAudioSoundscapeProvider.js                  Web Audio graph: ambient layers, then an effects bus for
+            ├── audio/AvatarSoundSynth.js                  footsteps per surface, jump whoosh, landing thud
+            └── audio/VehicleEngineVoice.js                one held voice per ridden vehicle type
+
+- **Mix.** Each ecology zone contributes a fixed level to each layer (forest: birds, sheltered from wind; highland
+  and rock: wind; field and grassland: insects; lake: lapping water, faintly at a beach; river: running water). The
+  spot underfoot weighs 0.4, the near ring 0.4 and the far ring 0.2, so a lake or forest is heard before it is
+  reached. Like the terrain it is a pure function of place: nothing is stored or sent, and every viewer at a spot
+  hears the same land.
+- **Service.** `WorldView` makes one through the `createWorldSoundscape` factory `ui/main.js` provides
+  (`ui/views/worldView/useWorldSoundscape.js`), after `session.start()`, and disposes it on unmount. It resamples
+  only when the listener has moved at least 0.5 m, and plays silence while there is no listener position. `unlock()`
+  is called from every pointerdown and keydown, because browsers only let audio start (and iOS only lets it resume)
+  from a user gesture. `M` and the Sound button (`ui/components/SoundControl.js`) toggle mute; the preference is
+  this device's own.
+- **Provider.** Every sound is synthesized, so there are no audio files and the Content Security Policy is
+  unchanged: looping brown noise through a gusting low-pass for wind and slow waves for a lake, band-passed white
+  noise for a river, a trilled 4.4 kHz tone for insects, and separate randomly timed chirp phrases for birds, more
+  often the more birds there are. Level changes fade with a 0.8 s time constant. The `AudioContext` is created on the
+  first `resume()`, and suspended while muted or while the page is hidden, so it costs nothing then.
+- **Avatar sounds.** `advanceAvatarSound(state, observation, deltaSeconds, seed)` is pure; the service keeps its
+  state between frames. Footsteps are counted by distance, one per stride (0.75 m walking, 0.94 m running: one per
+  leg swing of `core/AvatarPoseOffsets.js`'s 2 Hz and 3.2 Hz gaits at 3 and 6 m/s), so pushing against a wall is
+  silent, and a move over 10 m in one frame (a teleport) makes none. Only a grounded, walking or running, on-foot
+  avatar steps. `footstepSurfaceAt()` picks the surface: STRUCTURE when the avatar's simulated Y is above 0.05 (it
+  stands on bricks), else WATER in a lake or on a river, SAND on a beach, STONE on rock or highland, LEAVES in a
+  forest, GRASS otherwise. JUMP is SUPPORTED → RISING; LAND is a return to SUPPORTED after at least 0.15 s in the air
+  (a stair step-down is shorter), its intensity growing to 1 over a 1 s fall. Riding, the engine's `load` is the
+  vehicle's speed from frame to frame over its capability's top speed. The service only resends an engine when its
+  type changes or its load moves by 0.02.
+- **Effects.** Cues are dropped unless the context is running, so a suspended (muted, hidden) context never plays a
+  backlog on resume. A footstep is a filtered burst of the shared white noise, randomized ±10% in pitch and ±15% in
+  level, with a second crunch for leaves, a splash sweep for water and a low knock for bricks. Engines are
+  oscillator partials and filtered noise whose pitch, brightness and gain follow `load` with a 0.15 s time constant;
+  a bicycle is only tyre hiss chopped by a freewheel tick, silent at a standstill; a drone hums even hovering.
+  Short-lived nodes disconnect themselves when they end.
+- **Not yet.** Sound in the Editor, animals' and residents' own sounds, other avatars' footsteps, and positional
+  (3D) sound.
 
 ## Collaboration
 

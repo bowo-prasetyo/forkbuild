@@ -80,6 +80,31 @@ what's around. Unlike wildlife they're part of
 the World's own content: its author adds them. See
 [Residents](06-AvatarsAndPresence.md#residents).
 
+## Sound
+
+World View plays quiet background sound that matches where you are: wind on
+high and rocky ground, birdsong in forests, crickets in fields and grassland,
+water lapping at a lake, and running water beside a river. It fades as you
+walk from one kind of land to another.
+
+Your avatar makes its own sounds too. Footsteps keep time with its walk or
+run and change with what is underfoot: grass, crunching leaves in a forest,
+soft sand on a beach, stone on high and rocky ground, splashes in a lake or
+river, and a hollow knock on bricks. Jumping makes a whoosh, and landing a
+thud, heavier after a longer fall. Riding a vehicle, you hear it: a
+bicycle's tyres and freewheel, a motorcycle's buzz, a car's rumble or a
+drone's whine, rising as you speed up and fading when you get off.
+
+Everything is generated in your browser, so nothing is downloaded, and it
+is only heard on your device: other people don't hear your footsteps.
+
+Browsers don't let a page play sound until you interact with it, so sound
+starts with your first click, tap or key press. Turn it off or on with the
+**Sound** button at the top right of the view (bottom right on a phone) or
+by pressing `M`, and set how loud it is with the slider beside it; on a
+phone or tablet, use the device's own volume buttons. ForkBuild remembers
+your choice on this device. Sound pauses while the tab is hidden.
+
 ## Orientation and Locations
 
 Next to your camera coordinates, a small **compass** shows which way you're

@@ -548,6 +548,16 @@ export class WorldNavigationSession {
         this._setupAnimalRuntimePersistence();
     }
 
+    // Calls `callback(deltaSeconds)` every render frame, for listeners outside the
+    // session (World View's sound). Returns an unsubscribe function, or null when
+    // the render facade has no frame loop.
+    onRenderFrame(callback) {
+        if (typeof this._session.onAnimationFrame !== 'function') {
+            return null;
+        }
+        return this._session.onAnimationFrame(callback);
+    }
+
     // Independent of _setupLocalAvatar(): vehicles are a fact about the World,
     // so a logged-out spectator still sees vehicles near the camera (see
     // docs/Principles.md, "Watching Presence Never Requires Having One").
