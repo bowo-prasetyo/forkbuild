@@ -30,6 +30,7 @@ import {
     describeCreationButtonLabel as describePlacementCreationButtonLabel
 } from '../../../application/snapshot/placement/SnapshotPlacementCreationView.js';
 import { SnapshotPlacementCreationUiState } from '../../../application/snapshot/placement/SnapshotPlacementCreationUiState.js';
+import { t } from '../../i18n/i18n.js';
 
 // Snapshot placements for one entry: loading known placements, resolving,
 // inspecting, creating and materializing them. Resolving never materializes;
@@ -250,7 +251,7 @@ export function useSnapshotPlacements({
     // Storage-agnostic: which storage was used is only known from the
     // result.
     function preferredPlacementCreationButtonLabel(entry) {
-        return preferredPlacementCreationView(entry).state === SnapshotPlacementCreationUiState.CREATING ? 'Creating…' : 'Use Preferred Provider';
+        return preferredPlacementCreationView(entry).state === SnapshotPlacementCreationUiState.CREATING ? t('publications.creating') : t('publications.usePreferredProvider');
     }
 
     return {

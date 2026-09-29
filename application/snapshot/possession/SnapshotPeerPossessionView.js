@@ -1,5 +1,6 @@
 import { SnapshotPeerPossessionState } from './SnapshotPeerPossessionState.js';
 import { SnapshotPeerPossessionUiState } from './SnapshotPeerPossessionUiState.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.40 — Snapshot Possession Observation Exchange.
 //
@@ -33,7 +34,7 @@ export function describePeerPossessionAttempt(attempt = null) {
         return {
             state: SnapshotPeerPossessionUiState.CHECKING,
             checking: true,
-            label: 'Checking…', message: null, peerId: null, publicationId: null, contentHash: null, observedAt: null
+            label: message('snapshotPossession.checking'), message: null, peerId: null, publicationId: null, contentHash: null, observedAt: null
         };
     }
 
@@ -46,7 +47,7 @@ export function describePeerPossessionAttempt(attempt = null) {
         return {
             state: SnapshotPeerPossessionUiState.UNAVAILABLE,
             checking: false,
-            label: 'No answer from peer',
+            label: message('snapshotPossession.noAnswerFromPeer'),
             message: attempt.error,
             peerId: null, publicationId: null, contentHash: null, observedAt: null
         };
@@ -57,26 +58,24 @@ export function describePeerPossessionAttempt(attempt = null) {
             return {
                 state: SnapshotPeerPossessionUiState.AVAILABLE,
                 checking: false,
-                label: 'Peer reports snapshot available',
-                message: 'The selected peer answered that it currently holds bytes matching this content hash. '
-                    + 'This is a report from that peer, at this moment — not a guarantee, and not a copy this replica has obtained.',
+                label: message('snapshotPossession.peerReportsSnapshotAvailable'),
+                message: message('snapshotPossession.theSelectedPeerAnsweredThat'),
                 peerId: attempt.peerId, publicationId: attempt.publicationId, contentHash: attempt.contentHash, observedAt: attempt.observedAt
             };
         case SnapshotPeerPossessionState.NOT_AVAILABLE:
             return {
                 state: SnapshotPeerPossessionUiState.NOT_AVAILABLE,
                 checking: false,
-                label: 'Peer reports snapshot not available',
-                message: 'The selected peer answered that it does not currently hold bytes matching this content hash.',
+                label: message('snapshotPossession.peerReportsSnapshotNotAvailable'),
+                message: message('snapshotPossession.theSelectedPeerAnsweredThat2'),
                 peerId: attempt.peerId, publicationId: attempt.publicationId, contentHash: attempt.contentHash, observedAt: attempt.observedAt
             };
         case SnapshotPeerPossessionState.UNAVAILABLE:
             return {
                 state: SnapshotPeerPossessionUiState.UNAVAILABLE,
                 checking: false,
-                label: 'No answer from peer',
-                message: 'The selected peer did not answer before the request timed out. '
-                    + 'It may not currently be reachable; checking again, or choosing a different peer, may succeed.',
+                label: message('snapshotPossession.noAnswerFromPeer'),
+                message: message('snapshotPossession.theSelectedPeerDidNot'),
                 peerId: attempt.peerId, publicationId: attempt.publicationId, contentHash: attempt.contentHash, observedAt: attempt.observedAt
             };
         default:
@@ -94,6 +93,6 @@ export function describePeerPossessionAttempt(attempt = null) {
 // to take. A peer's own present possession can change between checks, so a
 // second click meaningfully means "ask again."
 export function describePeerPossessionButtonLabel({ checking = false, checked = false } = {}) {
-    if (checking) return 'Checking…';
-    return checked ? 'Check with Peer Again' : 'Check with Peer';
+    if (checking) return message('snapshotPossession.checking');
+    return checked ? message('snapshotPossession.checkWithPeerAgain') : message('snapshotPossession.checkWithPeer');
 }

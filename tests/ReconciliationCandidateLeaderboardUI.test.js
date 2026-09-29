@@ -11,6 +11,7 @@ import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLead
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { assert } from './support/Assert.js';
 import { serialize } from './support/Serialize.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration.
 //
@@ -132,14 +133,14 @@ async function run() {
     // Section A — describeCandidateLabel().
     // ---------------------------------------------------------------
     {
-        assert(describeCandidateLabel({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId: 'Claim-1' }) === 'Claim Claim-1 (no corresponding Snapshot)',
+        assert(displayText(describeCandidateLabel({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId: 'Claim-1' })) === 'Claim Claim-1 (no corresponding Snapshot)',
             '1. CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT decodes to a readable label naming its claimId');
-        assert(describeCandidateLabel({ type: 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM', snapshotIndex: 3 }) === 'Snapshot #3 (no corresponding Claim)',
+        assert(displayText(describeCandidateLabel({ type: 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM', snapshotIndex: 3 })) === 'Snapshot #3 (no corresponding Claim)',
             '2. SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM decodes to a readable label naming its snapshotIndex');
-        assert(describeCandidateLabel({ type: 'DIVERGENT_CORRESPONDENCE', claimId: 'Claim-9', snapshotIndex: 7 }) === 'Claim Claim-9 ↔ Snapshot #7',
+        assert(displayText(describeCandidateLabel({ type: 'DIVERGENT_CORRESPONDENCE', claimId: 'Claim-9', snapshotIndex: 7 })) === 'Claim Claim-9 ↔ Snapshot #7',
             '3. DIVERGENT_CORRESPONDENCE decodes to a readable label naming both sides');
         for (const malformed of [null, undefined, 'not-an-object', 42, {}, { type: 'SOMETHING_ELSE' }]) {
-            assert(describeCandidateLabel(malformed) === 'Unknown candidate', `4. malformed/unrecognized candidate (${serialize(malformed)}) degrades to a label, never throws`);
+            assert(displayText(describeCandidateLabel(malformed)) === 'Unknown candidate', `4. malformed/unrecognized candidate (${serialize(malformed)}) degrades to a label, never throws`);
         }
     }
     console.log('✓ Section A: describeCandidateLabel() decodes all three known candidate shapes, and degrades malformed/unrecognized input rather than throwing');
@@ -163,8 +164,8 @@ async function run() {
         });
         const rows = buildLeaderboardRows(page);
         assert(rows.length === 2, '6. every genuine row produces exactly one display row');
-        assert(rows[0].candidateLabel === 'Claim Claim-1 (no corresponding Snapshot)', '7. row order preserved — C1 first');
-        assert(rows[1].candidateLabel === 'Snapshot #3 (no corresponding Claim)', '8. row order preserved — C3 second');
+        assert(displayText(rows[0].candidateLabel) === 'Claim Claim-1 (no corresponding Snapshot)', '7. row order preserved — C1 first');
+        assert(displayText(rows[1].candidateLabel) === 'Snapshot #3 (no corresponding Claim)', '8. row order preserved — C3 second');
         assert(rows[0].decisionShared === 3 && rows[0].decisionSourceOnly === 1 && rows[0].decisionTargetOnly === 0, '9. decision counts copied straight across, unchanged');
         assert(rows[0].observationShared === 0 && rows[0].observationSourceOnly === 0 && rows[0].observationTargetOnly === 2, '10. observation counts copied straight across, unchanged');
         assert(Object.isFrozen(rows[0]), '11. each display row is frozen');
@@ -220,17 +221,17 @@ async function run() {
         }
 
         const r1 = rowFor(C1);
-        assert(r1.candidateLabel === 'Claim Claim-1 (no corresponding Snapshot)', '19. FLAGSHIP — C1 renders its own readable label');
+        assert(displayText(r1.candidateLabel) === 'Claim Claim-1 (no corresponding Snapshot)', '19. FLAGSHIP — C1 renders its own readable label');
         assert(r1.decisionShared === 1 && r1.decisionSourceOnly === 1 && r1.decisionTargetOnly === 0, '20. FLAGSHIP — C1 decision counts on screen: shared + source-only, no target-only');
         assert(r1.observationShared === 1 && r1.observationSourceOnly === 0 && r1.observationTargetOnly === 1, '21. FLAGSHIP — C1 observation counts on screen: shared + target-only, no source-only');
 
         const r2 = rowFor(C2);
-        assert(r2.candidateLabel === 'Claim Claim-2 (no corresponding Snapshot)', '22. FLAGSHIP — C2 renders its own readable label');
+        assert(displayText(r2.candidateLabel) === 'Claim Claim-2 (no corresponding Snapshot)', '22. FLAGSHIP — C2 renders its own readable label');
         assert(r2.decisionShared === 1 && r2.decisionSourceOnly === 0 && r2.decisionTargetOnly === 0, '23. FLAGSHIP — C2 decision counts on screen: shared only');
         assert(r2.observationShared === 0 && r2.observationSourceOnly === 1 && r2.observationTargetOnly === 0, '24. FLAGSHIP — C2 observation counts on screen: source-only only');
 
         const r3 = rowFor(C3);
-        assert(r3.candidateLabel === 'Snapshot #3 (no corresponding Claim)', '25. FLAGSHIP — C3 renders its own readable label');
+        assert(displayText(r3.candidateLabel) === 'Snapshot #3 (no corresponding Claim)', '25. FLAGSHIP — C3 renders its own readable label');
         assert(r3.decisionShared === 0 && r3.decisionSourceOnly === 0 && r3.decisionTargetOnly === 1, '26. FLAGSHIP — C3 decision counts on screen: target-only only');
         assert(r3.observationShared === 1 && r3.observationSourceOnly === 0 && r3.observationTargetOnly === 0, '27. FLAGSHIP — C3 observation counts on screen: shared only');
 
@@ -257,7 +258,7 @@ async function run() {
         const forbidden = ['conflict', 'conflicting', 'stale', 'resolved', 'correct', 'incorrect', 'winner', 'rank', 'score', 'confidence', 'status', 'preferred', 'valid'];
         const allVisibleText = serialize(rows).toLowerCase();
         for (const term of forbidden) {
-            assert(!allVisibleText.includes(term), `38. FLAGSHIP — the rendered rows never carry judgment/ranking vocabulary ('${term}')`);
+            assert(!displayText(allVisibleText).includes(term), `38. FLAGSHIP — the rendered rows never carry judgment/ranking vocabulary ('${term}')`);
         }
 
         assert(serialize(sourceArchive.toJSON()) === beforeSource, '39. FLAGSHIP — sourceArchive is never mutated by rendering');
@@ -284,7 +285,7 @@ async function run() {
         );
         const template = moduleSource.slice(moduleSource.indexOf('template: `'));
         for (const field of ['row.candidateLabel', 'row.decisionShared', 'row.decisionSourceOnly', 'row.decisionTargetOnly', 'row.observationShared', 'row.observationSourceOnly', 'row.observationTargetOnly']) {
-            assert(template.includes(`{{ ${field} }}`), `48. the template interpolates buildLeaderboardRows()'s own field "${field}" verbatim`);
+            assert(template.includes(`{{ ${field} }}`) || template.includes(`{{ displayText(${field}) }}`), `48. the template interpolates buildLeaderboardRows()'s own field "${field}" verbatim`);
         }
         assert(!/\{\{[^}]*[+\-*/][^}]*\}\}/.test(template), '49. no interpolation in the template performs arithmetic on a row\'s own fields');
         assert(!template.includes('.sort('), '50. the template performs no sort() of its own');

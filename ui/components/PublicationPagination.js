@@ -11,6 +11,8 @@
 // actually fetched.
 const WINDOW_RADIUS = 2; // how many page numbers to show on each side of the current one
 
+import { t } from '../i18n/i18n.js';
+
 export default {
     name: 'PublicationPagination',
     props: {
@@ -48,6 +50,7 @@ export default {
         }
     },
     methods: {
+        t,
         // '…' markers are rendered :disabled, so they never reach here.
         go(page) {
             if (page === this.page || page < 1 || page > this.totalPages) return;
@@ -55,12 +58,12 @@ export default {
         }
     },
     template: `
-        <nav v-if="totalPages > 1" class="publication-pagination" aria-label="Pagination">
+        <nav v-if="totalPages > 1" class="publication-pagination" :aria-label="t('publicationPagination.pagination')">
             <button
                 class="action-btn"
                 :disabled="!hasPrevious"
                 @click="go(page - 1)"
-            >← Previous</button>
+            >{{ t('publicationPagination.previous') }}</button>
             <span class="publication-pagination-pages">
                 <button
                     v-for="(p, i) in pageWindow"
@@ -74,7 +77,7 @@ export default {
                 class="action-btn"
                 :disabled="!hasNext"
                 @click="go(page + 1)"
-            >Next →</button>
+            >{{ t('publicationPagination.next') }}</button>
         </nav>
     `
 };

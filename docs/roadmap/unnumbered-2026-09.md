@@ -3055,3 +3055,35 @@ now be shown in another language. The Publications page and Identity, Peers, Cha
   panels, and scanning every text, title, label and placeholder: no plain English and no warnings.
 - Not done: resident speech, the 3D markers' labels, and numbers typed into the placement and search fields, which
   still need a `.` as the decimal point.
+
+## Internationalization, phase 3: the Publications page (unnumbered, 2026-09-29)
+
+The third area moved to `t()`: the Publications page with its Wallet, Archive & Publisher Tools, the Repository and
+its cards and list, Recent Worlds, an author's page, Home, and the experimental leaderboard and reconciliation
+pages can now be shown in another language. Identity, Peers, Chat, Following and the settings pages follow.
+
+- Components: `ui/views/DecentralizedPublicationsView.js`, its composables and templates in
+  `ui/views/decentralizedPublications/`, `RepositoryView`, `PublicationCatalog`, `PublicationCatalogToolbar`,
+  `PublicationCard`, `PublicationList`, `PublicationCommentarySection`, `SharePublicationButton`,
+  `SharedWithYouPanel`, `ForkTree`, `WorldCard`, `RecentWorldsView`, `AuthorView`, `HomeView`, the leaderboard and
+  reconciliation views, and `ui/components/reconciliation/`. Counts use plural forms; dates follow the chosen
+  language (`ui/i18n/dateText.js`: a publication's date, and "today / yesterday / 3 days ago" from
+  `Intl.RelativeTimeFormat`, which also fixes World View's welcome panel); a card's license reads as its name.
+- A sentence with a link or button inside it is one message: `ui/i18n/I18nText.js` places each element, passed as a
+  slot, where the message's `{placeholder}` sits, so a translation can move it.
+- Below the UI: the application views the page reads its states from return messages (core/Message.js), among them
+  what a publication check found, how a retrieval went, each content kind's summary and republish advice, and the
+  anchoring, evidence, snapshot, placement and IPFS views under `application/anchoring/`, `application/ipfs/`,
+  `application/publication/` and `application/snapshot/`. A sentence with an optional part ("… between observation
+  2 and observation 3") has one message per form.
+- Fixes found on the way: `worldEncounterCanvas.source` was defined twice in the English messages, so World View's
+  "Source" label read "Source: {source}"; `tests/I18n.test.js` now fails on a key written twice. Network and product
+  names (Arweave, Nostr, Steem, IPFS, Bitcoin, Base) are shown as they are rather than as messages.
+- Tests: `withEnglish()` also puts English back for `message('key')`, and the older tests that read this area's
+  wording from its source read through it; tests of the application views compare `displayText()` of what they
+  return. Checked in the real app in the pseudo-locale on every page named above, opening each folded panel and
+  clicking through its non-destructive buttons, with an identity signed in: no plain English but names and data,
+  and no warnings. The publication cards themselves are covered by `PublicationsPageLayoutBrowser`, which renders
+  them with real Vue.
+- Not done: the technical reason a publication failed its check (the checker's own detail) stays English, as does
+  a new document's default title.

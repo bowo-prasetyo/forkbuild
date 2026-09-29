@@ -12,6 +12,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.3 — Publication Center: External Evidence UX.
 //
@@ -88,7 +89,7 @@ async function run() {
 
         let preVerifyView = publicationEvidenceView(discovered);
         assert(preVerifyView.anchors[0].verified === false, '2. before verifying, the derived view reports the anchor as not verified');
-        assert(preVerifyView.anchors[0].verificationLabel === 'Not yet verified', '3. and labels it plainly, never a false positive');
+        assert(displayText(preVerifyView.anchors[0].verificationLabel) === 'Not yet verified', '3. and labels it plainly, never a false positive');
 
         // Verification — Bob explicitly selects this one anchor and
         // asks the coordinator to verify it, supplying a matching
@@ -102,7 +103,7 @@ async function run() {
 
         const view = publicationEvidenceView(discovered, { [anchor.id]: { outcome: result.outcome, reason: result.reason } });
         assert(view.anchors[0].verified === true, '5. the derived view now reports the anchor as verified');
-        assert(view.anchors[0].verificationLabel === 'Independently verified', '6. and labels it with the precise, non-"trust" wording this milestone requires');
+        assert(displayText(view.anchors[0].verificationLabel) === 'Independently verified', '6. and labels it with the precise, non-"trust" wording this milestone requires');
         assert(view.anchors[0].publicationId === 'pub-flagship' && view.anchors[0].contentHash === 'hash-flagship',
             '7. the view exposes the anchor\'s own claimed publicationId/contentHash binding, never a generic badge alone');
     }
@@ -123,13 +124,13 @@ async function run() {
         assert(coordinator.discover('pub-empty').length === 0, '4. no anchors known -> empty discovery, never an error');
         const emptyView = publicationEvidenceView(coordinator.discover('pub-empty'));
         assert(emptyView.count === 0, '5. the derived view reports zero known anchors');
-        assert(describeKnownEvidenceCount(emptyView) === 'No external evidence known', '6. and describes that plainly');
+        assert(displayText(describeKnownEvidenceCount(emptyView)) === 'No external evidence known', '6. and describes that plainly');
 
         const single = signAnchor(registry, { publicationId: 'pub-one', contentHash: 'hash-one', anchorType: 'local-test', locator: 'local://a' });
         addAnchor.execute(single.toJSON());
         const oneView = publicationEvidenceView(coordinator.discover('pub-one'));
         assert(oneView.count === 1, '7. one cataloged anchor -> one discovered/derived entry');
-        assert(describeKnownEvidenceCount(oneView) === '1 anchor known', '8. singular count wording');
+        assert(displayText(describeKnownEvidenceCount(oneView)) === '1 anchor known', '8. singular count wording');
 
         // Several independent anchors for the SAME publication — two
         // different anchoring identities, two different anchorTypes —
@@ -141,7 +142,7 @@ async function run() {
         const multiDiscovered = coordinator.discover('pub-multi');
         assert(multiDiscovered.length === 2, '9. multiple independent anchors for one publication all coexist');
         const multiView = publicationEvidenceView(multiDiscovered);
-        assert(multiView.count === 2 && describeKnownEvidenceCount(multiView) === '2 anchors known', '10. plural count wording');
+        assert(multiView.count === 2 && displayText(describeKnownEvidenceCount(multiView)) === '2 anchors known', '10. plural count wording');
         assert(multiView.anchors.every((a) => a.verified === false), '11. none is preferred, ranked, or pre-marked verified — all start identically');
         assert(multiDiscovered.map((a) => a.id).join(',') === catalog.findByPublicationId('pub-multi').map((a) => a.id).join(','),
             '12. discover() returns exactly the catalog\'s own order — this file never reorders or ranks');
@@ -160,13 +161,13 @@ async function run() {
         // no two distinct outcomes ever collapse onto the same label.
         const labels = Object.values(AnchorVerificationOutcome).map(describeVerificationOutcome);
         assert(new Set(labels).size === labels.length, '1. every AnchorVerificationOutcome value gets its own distinct label');
-        assert(describeVerificationOutcome(AnchorVerificationOutcome.VALID) === 'Independently verified', '2. VALID');
-        assert(describeVerificationOutcome(AnchorVerificationOutcome.VALID_PROOF_UNVERIFIED) === 'Proof not independently verified', '3. VALID_PROOF_UNVERIFIED');
-        assert(describeVerificationOutcome(AnchorVerificationOutcome.PROOF_UNAVAILABLE) === 'Verification unavailable', '4. PROOF_UNAVAILABLE');
-        assert(describeVerificationOutcome(AnchorVerificationOutcome.INVALID_ENVELOPE) === 'Invalid evidence', '5. INVALID_ENVELOPE');
-        assert(describeVerificationOutcome(AnchorVerificationOutcome.INVALID_SIGNATURE) === 'Invalid signature', '6. INVALID_SIGNATURE');
-        assert(describeVerificationOutcome(AnchorVerificationOutcome.CONTENT_MISMATCH) === 'Content mismatch', '7. CONTENT_MISMATCH');
-        assert(describeVerificationOutcome(AnchorVerificationOutcome.INVALID_PROOF) === 'Invalid external proof', '8. INVALID_PROOF');
+        assert(displayText(describeVerificationOutcome(AnchorVerificationOutcome.VALID)) === 'Independently verified', '2. VALID');
+        assert(displayText(describeVerificationOutcome(AnchorVerificationOutcome.VALID_PROOF_UNVERIFIED)) === 'Proof not independently verified', '3. VALID_PROOF_UNVERIFIED');
+        assert(displayText(describeVerificationOutcome(AnchorVerificationOutcome.PROOF_UNAVAILABLE)) === 'Verification unavailable', '4. PROOF_UNAVAILABLE');
+        assert(displayText(describeVerificationOutcome(AnchorVerificationOutcome.INVALID_ENVELOPE)) === 'Invalid evidence', '5. INVALID_ENVELOPE');
+        assert(displayText(describeVerificationOutcome(AnchorVerificationOutcome.INVALID_SIGNATURE)) === 'Invalid signature', '6. INVALID_SIGNATURE');
+        assert(displayText(describeVerificationOutcome(AnchorVerificationOutcome.CONTENT_MISMATCH)) === 'Content mismatch', '7. CONTENT_MISMATCH');
+        assert(displayText(describeVerificationOutcome(AnchorVerificationOutcome.INVALID_PROOF)) === 'Invalid external proof', '8. INVALID_PROOF');
         assert(describeVerificationOutcome(AnchorVerificationOutcome.PROOF_UNAVAILABLE) !== describeVerificationOutcome(AnchorVerificationOutcome.INVALID_PROOF),
             '9. "couldn\'t check" and "checked and rejected" are never the same label');
 
@@ -252,7 +253,7 @@ async function run() {
         const viewA = partialView.anchors.find((a) => a.anchorId === anchorA.id);
         const viewB = partialView.anchors.find((a) => a.anchorId === anchorB.id);
         assert(viewA.verified === true, '4. the verified anchor reports as verified');
-        assert(viewB.verified === false && viewB.verificationLabel === 'Not yet verified',
+        assert(viewB.verified === false && displayText(viewB.verificationLabel) === 'Not yet verified',
             '5. the OTHER known anchor for the same publication is completely unaffected — still "not yet verified"');
 
         // Verification results are never written back onto the catalog
@@ -267,7 +268,7 @@ async function run() {
         // state, never folded into either "verified" or "not yet
         // verified."
         const inFlightView = describeAnchorEvidence(targetAnchor, { checking: true });
-        assert(inFlightView.checking === true && inFlightView.verified === false && inFlightView.verificationLabel === 'Checking…',
+        assert(inFlightView.checking === true && inFlightView.verified === false && displayText(inFlightView.verificationLabel) === 'Checking…',
             '7. an in-flight verification is its own distinct, honestly labeled state');
 
         // The composition root wires already-constructed collaborators,

@@ -2,6 +2,7 @@ import {
     BitcoinAnchorObservationConsistencyState,
     BitcoinAnchorObservationConsistencyFindingKind
 } from './BitcoinAnchorObservationConsistencyState.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.77 — Bitcoin Anchor Observation Consistency Analysis.
 //
@@ -53,37 +54,40 @@ import {
 // caching. Calling either function twice with byte-identical arguments
 // returns a byte-identical result.
 export function describeBitcoinAnchorObservationConsistencyLabel(state, finding = null, previousObservationIndex = null, laterObservationIndex = null) {
-    const positions = (Number.isInteger(previousObservationIndex) && Number.isInteger(laterObservationIndex))
-        ? ` between observation ${previousObservationIndex} and observation ${laterObservationIndex}`
-        : '';
+    // Each sentence has a form naming the two observations compared, so a
+    // translation places them where its grammar needs.
+    const positioned = Number.isInteger(previousObservationIndex) && Number.isInteger(laterObservationIndex);
+    const said = (key, params = {}) => (positioned
+        ? message(`${key}Between`, { ...params, previous: previousObservationIndex, later: laterObservationIndex })
+        : message(key, params));
 
     switch (state) {
         case BitcoinAnchorObservationConsistencyState.CONSISTENT:
-            return `No consistency differences were found${positions}.`;
+            return said('bitcoinAnchorObservationConsistency.noDifferences');
         case BitcoinAnchorObservationConsistencyState.INCONSISTENT:
-            return `${describeBitcoinAnchorObservationConsistencyFindingMessage(finding)}${positions}.`;
+            return said('bitcoinAnchorObservationConsistency.finding', { finding: describeBitcoinAnchorObservationConsistencyFindingMessage(finding) });
         case BitcoinAnchorObservationConsistencyState.INSUFFICIENT_OBSERVATIONS:
-            return 'Not enough confirmed observations exist yet to analyze consistency.';
+            return message('bitcoinAnchorObservationConsistency.notEnoughConfirmedObservationsExist');
         case BitcoinAnchorObservationConsistencyState.INCOMPARABLE:
-            return `These observations cannot be compared for consistency${positions}.`;
+            return said('bitcoinAnchorObservationConsistency.incomparable');
         default:
             return null;
     }
 }
 
 function describeBitcoinAnchorObservationConsistencyFindingMessage(finding) {
-    if (!finding) return 'An observation inconsistency was found';
+    if (!finding) return message('bitcoinAnchorObservationConsistency.anObservationInconsistencyWasFound');
     switch (finding.kind) {
         case BitcoinAnchorObservationConsistencyFindingKind.CONFIRMATION_COUNT_DECREASED:
-            return 'Confirmation count decreased while block placement remained unchanged';
+            return message('bitcoinAnchorObservationConsistency.confirmationCountDecreasedWhileBlock');
         case BitcoinAnchorObservationConsistencyFindingKind.BLOCK_HEIGHT_CHANGED_SAME_HASH:
-            return 'Block height changed while the reported block hash remained unchanged';
+            return message('bitcoinAnchorObservationConsistency.blockHeightChangedWhileThe');
         case BitcoinAnchorObservationConsistencyFindingKind.DIFFERENT_HASH_SAME_HEIGHT:
-            return 'Different block hashes were observed at the same block height';
+            return message('bitcoinAnchorObservationConsistency.differentBlockHashesWereObserved');
         case BitcoinAnchorObservationConsistencyFindingKind.DIFFERENT_HASH_AND_HEIGHT:
-            return 'A different block hash and a different block height were both observed';
+            return message('bitcoinAnchorObservationConsistency.aDifferentBlockHashAnd');
         default:
-            return 'An observation inconsistency was found';
+            return message('bitcoinAnchorObservationConsistency.anObservationInconsistencyWasFound');
     }
 }
 

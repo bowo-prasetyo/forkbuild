@@ -30,6 +30,7 @@ import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.36 — Unified Explicit Snapshot Materialization Sources.
 //
@@ -193,18 +194,18 @@ async function run() {
         assert(packageAttempt.source.kind === SnapshotMaterializationSourceKind.PACKAGE, '13. the attempt carries the source kind it was built with');
         assert(Object.isFrozen(packageAttempt) && Object.isFrozen(packageAttempt.source), '14. an attempt record is frozen, exactly like application/snapshot/placement/SnapshotPlacementResolutionObservation.js\'s own record');
 
-        assert(describeSnapshotMaterializationSourceLabel(SnapshotMaterializationSourceKind.PACKAGE) === 'Transfer package', '15. the package source has its own label');
-        assert(describeSnapshotMaterializationSourceLabel(SnapshotMaterializationSourceKind.PLACEMENT) === 'Placement', '16. the placement source has its own, DIFFERENT label');
+        assert(displayText(describeSnapshotMaterializationSourceLabel(SnapshotMaterializationSourceKind.PACKAGE)) === 'Transfer package', '15. the package source has its own label');
+        assert(displayText(describeSnapshotMaterializationSourceLabel(SnapshotMaterializationSourceKind.PLACEMENT)) === 'Placement', '16. the placement source has its own, DIFFERENT label');
         assert(describeSnapshotMaterializationSourceLabel(null) === null, '17. an absent kind reports no label');
 
         const packageView = describeLocalSnapshotMaterializationSource(packageAttempt);
-        assert(packageView.possessed === true && packageView.sourceLabel === 'Transfer package', '18. a STORED attempt is reported as possessed, with its own source label');
+        assert(packageView.possessed === true && displayText(packageView.sourceLabel) === 'Transfer package', '18. a STORED attempt is reported as possessed, with its own source label');
 
         const placementAttempt = createSnapshotMaterializationAttempt({
             sourceKind: SnapshotMaterializationSourceKind.PLACEMENT, outcome: StoreSnapshotContentOutcome.ALREADY_AVAILABLE
         });
         const placementView = describeLocalSnapshotMaterializationSource(placementAttempt);
-        assert(placementView.possessed === true && placementView.sourceLabel === 'Placement', '19. ALREADY_AVAILABLE is possession too, exactly like STORED');
+        assert(placementView.possessed === true && displayText(placementView.sourceLabel) === 'Placement', '19. ALREADY_AVAILABLE is possession too, exactly like STORED');
 
         const rejectedAttempt = createSnapshotMaterializationAttempt({
             sourceKind: SnapshotMaterializationSourceKind.PACKAGE, outcome: StoreSnapshotContentOutcome.HASH_MISMATCH
@@ -288,8 +289,8 @@ async function run() {
         const carolAttempt = createSnapshotMaterializationAttempt({
             sourceKind: carolResult.source.kind, outcome: StoreSnapshotContentOutcome.STORED, contentReference: carolResult.contentReference
         });
-        assert(describeLocalSnapshotMaterializationSource(bobAttempt).sourceLabel === 'Placement', '11. Bob\'s own unified view names his source as "Placement"');
-        assert(describeLocalSnapshotMaterializationSource(carolAttempt).sourceLabel === 'Transfer package', '12. Carol\'s own unified view names her source as "Transfer package"');
+        assert(displayText(describeLocalSnapshotMaterializationSource(bobAttempt).sourceLabel) === 'Placement', '11. Bob\'s own unified view names his source as "Placement"');
+        assert(displayText(describeLocalSnapshotMaterializationSource(carolAttempt).sourceLabel) === 'Transfer package', '12. Carol\'s own unified view names her source as "Transfer package"');
 
         // --- The placement itself is untouched by either route. ---
         const placementJsonBefore = JSON.stringify(placement.toJSON());

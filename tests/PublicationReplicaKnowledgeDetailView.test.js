@@ -42,6 +42,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.31 — Replica Knowledge Provenance & Synchronization Inspection.
 //
@@ -175,10 +176,10 @@ async function run() {
         });
         const rowNoRecord = noRecord.evidence.claims[0];
         assert(rowNoRecord.anchorId === 'anchor-x', '9. anchorId passes through');
-        assert(rowNoRecord.acquisitionKind === null && rowNoRecord.acquisitionLabel === 'Local knowledge unavailable',
+        assert(rowNoRecord.acquisitionKind === null && displayText(rowNoRecord.acquisitionLabel) === 'Local knowledge unavailable',
             '10. no knowledge record -> acquisitionKind null, understated label, never an error');
         assert(rowNoRecord.firstSeenAt === null, '11. no knowledge record -> no firstSeenAt');
-        assert(rowNoRecord.verificationState === 'not-verified' && rowNoRecord.verificationStateLabel === 'Not yet verified',
+        assert(rowNoRecord.verificationState === 'not-verified' && displayText(rowNoRecord.verificationStateLabel) === 'Not yet verified',
             '12. no verification observations -> NOT_VERIFIED, worded identically to the existing per-anchor UI');
 
         // A real knowledge record, PEER, plus a real verification history.
@@ -193,9 +194,9 @@ async function run() {
         });
         const rowPeer = withPeer.evidence.claims[0];
         assert(rowPeer.acquisitionKind === AnchorAcquisitionKind.PEER, '13. acquisitionKind reflects the real record');
-        assert(rowPeer.acquisitionLabel === 'Learned via peer exchange', '14. acquisitionLabel is the SAME understated wording application/anchoring/PublicationAnchorKnowledgeView.js already established — no peer identity anywhere');
+        assert(displayText(rowPeer.acquisitionLabel) === 'Learned via peer exchange', '14. acquisitionLabel is the SAME understated wording application/anchoring/PublicationAnchorKnowledgeView.js already established — no peer identity anywhere');
         assert(rowPeer.firstSeenAt === '2026-01-01T00:00:00.000Z', '15. firstSeenAt is the ISO string from the real record');
-        assert(rowPeer.verificationState === 'verified' && rowPeer.verificationStateLabel === 'Verified', '16. a VALID observation lifts the state to VERIFIED');
+        assert(rowPeer.verificationState === 'verified' && displayText(rowPeer.verificationStateLabel) === 'Verified', '16. a VALID observation lifts the state to VERIFIED');
 
         // The placement-side sibling, mirrored exactly.
         const placementRecord = createSnapshotPlacementKnowledgeRecord({ placementId: 'placement-z', acquisitionKind: PlacementAcquisitionKind.PACKAGE, firstSeenAt: new Date('2026-01-02T00:00:00.000Z') });
@@ -210,8 +211,8 @@ async function run() {
         });
         const rowPlacement = withPlacement.placements.claims[0];
         assert(rowPlacement.placementId === 'placement-z', '17. placementId passes through');
-        assert(rowPlacement.acquisitionKind === PlacementAcquisitionKind.PACKAGE && rowPlacement.acquisitionLabel === 'Learned via package import', '18. placement acquisition mirrors the anchor side');
-        assert(rowPlacement.resolutionState === 'unavailable' && rowPlacement.resolutionStateLabel === 'Currently unavailable', '19. a CONTENT_UNAVAILABLE observation reports UNAVAILABLE, never "invalid"');
+        assert(rowPlacement.acquisitionKind === PlacementAcquisitionKind.PACKAGE && displayText(rowPlacement.acquisitionLabel) === 'Learned via package import', '18. placement acquisition mirrors the anchor side');
+        assert(rowPlacement.resolutionState === 'unavailable' && displayText(rowPlacement.resolutionStateLabel) === 'Currently unavailable', '19. a CONTENT_UNAVAILABLE observation reports UNAVAILABLE, never "invalid"');
         assert(withPlacement.placements.count === 1 && withPlacement.placements.relationship === SnapshotPlacementRelationship.AGREEMENT, '20. dimension-level fields still come from the supplied convergence view');
 
         // describeAcquisitionBreakdown() — a plain, non-judgmental tally.
@@ -352,8 +353,8 @@ async function run() {
         assert(daveView.placements.count === 2 && daveView.placements.relationship === SnapshotPlacementRelationship.AGREEMENT, '16. two agreeing placement claims');
 
         const evidenceById = Object.fromEntries(daveView.evidence.claims.map((c) => [c.anchorId, c]));
-        assert(evidenceById[anchorA.id].acquisitionKind === AnchorAcquisitionKind.PACKAGE && evidenceById[anchorA.id].acquisitionLabel === 'Learned via package import', '17. Anchor A\'s claim row reports PACKAGE');
-        assert(evidenceById[anchorB.id].acquisitionKind === AnchorAcquisitionKind.PEER && evidenceById[anchorB.id].acquisitionLabel === 'Learned via peer exchange', '18. Anchor B\'s claim row reports PEER, worded without naming Bob');
+        assert(evidenceById[anchorA.id].acquisitionKind === AnchorAcquisitionKind.PACKAGE && displayText(evidenceById[anchorA.id].acquisitionLabel) === 'Learned via package import', '17. Anchor A\'s claim row reports PACKAGE');
+        assert(evidenceById[anchorB.id].acquisitionKind === AnchorAcquisitionKind.PEER && displayText(evidenceById[anchorB.id].acquisitionLabel) === 'Learned via peer exchange', '18. Anchor B\'s claim row reports PEER, worded without naming Bob');
         assert(evidenceById[anchorA.id].verificationState === 'not-verified' && evidenceById[anchorB.id].verificationState === 'not-verified', '19. neither anchor has ever been verified by Dave — synchronization transfers claims, never observations');
 
         const placementsById = Object.fromEntries(daveView.placements.claims.map((c) => [c.placementId, c]));

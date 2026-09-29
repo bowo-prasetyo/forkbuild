@@ -1,12 +1,13 @@
 import { BaseSignedTransactionFinalizationState } from './BaseSignedTransactionFinalizationState.js';
+import { message } from '../../../core/Message.js';
 
 const STATE_LABELS = {
-    [BaseSignedTransactionFinalizationState.IDLE]: 'Not yet finalized',
-    [BaseSignedTransactionFinalizationState.FINALIZING]: 'Verifying signature…',
-    [BaseSignedTransactionFinalizationState.FINALIZED]: 'Transaction finalized',
-    [BaseSignedTransactionFinalizationState.INVALID_SIGNATURE]: 'Signature did not verify',
-    [BaseSignedTransactionFinalizationState.UNAVAILABLE]: 'Finalization unavailable',
-    [BaseSignedTransactionFinalizationState.FAILED]: 'Finalization failed'
+    [BaseSignedTransactionFinalizationState.IDLE]: message('baseSignedTransactionFinalization.notYetFinalized'),
+    [BaseSignedTransactionFinalizationState.FINALIZING]: message('baseSignedTransactionFinalization.verifyingSignature'),
+    [BaseSignedTransactionFinalizationState.FINALIZED]: message('baseSignedTransactionFinalization.transactionFinalized'),
+    [BaseSignedTransactionFinalizationState.INVALID_SIGNATURE]: message('baseSignedTransactionFinalization.signatureDidNotVerify'),
+    [BaseSignedTransactionFinalizationState.UNAVAILABLE]: message('baseSignedTransactionFinalization.finalizationUnavailable'),
+    [BaseSignedTransactionFinalizationState.FAILED]: message('baseSignedTransactionFinalization.finalizationFailed')
 };
 
 // 0.8.94 — Explicit Base Signed Transaction Verification & Finalization.

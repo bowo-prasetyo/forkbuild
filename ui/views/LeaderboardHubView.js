@@ -5,6 +5,8 @@ import { reconstructPublisherAchievementProfile } from '../../application/achiev
 import { reconstructPublisherAchievementBadges } from '../../application/achievement/PublisherAchievementBadgeView.js';
 import { reconstructPublisherAchievementStatistics } from '../../application/achievement/PublisherAchievementStatisticsView.js';
 import { sortLabels } from '../../utils/sortOptionsByLabel.js';
+import { displayText, t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
 // Leaderboard Hub — a single contextual entry point from /publications
 // (ui/views/DecentralizedPublicationsView.js's own "Publication Archive"
@@ -58,6 +60,7 @@ import { sortLabels } from '../../utils/sortOptionsByLabel.js';
 // plain link back to /publications replaces the interactive jump.
 export default {
     name: 'LeaderboardHubView',
+    components: { I18nText },
     inject: {
         publicationObservationArchiveStorage: { default: null }
     },
@@ -73,6 +76,8 @@ export default {
         };
     },
     methods: {
+        t,
+        displayText,
         archive() {
             return this.publicationObservationArchiveStorage
                 ? this.publicationObservationArchiveStorage.load()
@@ -126,46 +131,41 @@ export default {
     },
     template: `
         <section class="leaderboard-hub-view">
-            <h1>Leaderboard</h1>
+            <h1>{{ t('leaderboardHubView.leaderboard') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Reconciliation, publisher snapshot claims, and publisher performance —
-                every leaderboard-related workflow reachable from the Publications page,
-                collected in one place.
+                {{ t('leaderboardHubView.reconciliationPublisherSnapshotClaimsAnd') }}
             </p>
 
             <ul class="leaderboard-hub-list">
                 <li>
                     <router-link to="/reconciliation-leaderboard">
-                        <span class="leaderboard-hub-link-title">Reconciliation Candidate Leaderboard</span>
+                        <span class="leaderboard-hub-link-title">{{ t('leaderboardHubView.reconciliationCandidateLeaderboard') }}</span>
                         <span class="form-hint form-hint--neutral">
-                            Compare this archive's decision and observation evidence, candidate by
-                            candidate, against a peer's own exported archive.
+                            {{ t('leaderboardHubView.compareThisArchiveSDecision') }}
                         </span>
                     </router-link>
                 </li>
                 <li>
                     <router-link to="/reconciliation-workspace">
-                        <span class="leaderboard-hub-link-title">Reconciliation Workspace</span>
+                        <span class="leaderboard-hub-link-title">{{ t('leaderboardHubView.reconciliationWorkspace') }}</span>
                         <span class="form-hint form-hint--neutral">
-                            Reconcile this archive against a single piece of peer evidence, explicitly.
+                            {{ t('leaderboardHubView.reconcileThisArchiveAgainstA') }}
                         </span>
                     </router-link>
                 </li>
                 <li>
                     <router-link to="/publisher-snapshot-claim">
-                        <span class="leaderboard-hub-link-title">Publisher Snapshot Claim</span>
+                        <span class="leaderboard-hub-link-title">{{ t('leaderboardHubView.publisherSnapshotClaim') }}</span>
                         <span class="form-hint form-hint--neutral">
-                            Author and export your own signed leaderboard snapshot claim — the
-                            evidence a peer's Workspace expects.
+                            {{ t('leaderboardHubView.authorAndExportYourOwn') }}
                         </span>
                     </router-link>
                 </li>
                 <li>
                     <router-link to="/publisher-leaderboard">
-                        <span class="leaderboard-hub-link-title">Publisher Performance Leaderboard</span>
+                        <span class="leaderboard-hub-link-title">{{ t('leaderboardHubView.publisherPerformanceLeaderboard') }}</span>
                         <span class="form-hint form-hint--neutral">
-                            See publishers ranked by their own recorded achievements and publications,
-                            computed fresh from this replica's own archive alone.
+                            {{ t('leaderboardHubView.seePublishersRankedByTheir') }}
                         </span>
                     </router-link>
                 </li>
@@ -183,29 +183,28 @@ export default {
                  default. Performs ZERO network operations. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Publisher Achievement Profile</span>
-                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                    <span class="identity-mgmt-name">{{ t('leaderboardHubView.publisherAchievementProfile') }}</span>
+                    <span class="peer-badge peer-badge--pending">{{ t('leaderboardHubView.persistedLocally') }}</span>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    A publisher's own achievements, aggregated across every publication that publisher
-                    has explicitly claimed — never inferred from a shared content hash or wallet,
-                    and never a score, rank, or leaderboard entry.
+                    {{ t('leaderboardHubView.aPublisherSOwnAchievements') }}
                 </p>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="togglePublisherAchievementProfile">
-                        {{ publisherAchievementProfileExpanded ? 'Hide Publisher Achievement Profile' : 'Show Publisher Achievement Profile' }}
+                        {{ publisherAchievementProfileExpanded ? t('leaderboardHubView.hidePublisherAchievementProfile') : t('leaderboardHubView.showPublisherAchievementProfile') }}
                     </button>
                 </div>
                 <div v-if="publisherAchievementProfileExpanded" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Choose A Publisher</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('leaderboardHubView.chooseAPublisher') }}</span>
                     <p v-if="distinctPublisherIdentifiersView().length === 0" class="form-hint form-hint--neutral">
-                        No publisher has been associated with anything yet — record one on the
-                        <router-link to="/publications">Publications</router-link> page first.
+                        <I18nText keypath="leaderboardHubView.noPublisherHasBeenAssociated">
+                            <template #publications><router-link to="/publications">{{ t('leaderboardHubView.publications') }}</router-link></template>
+                        </I18nText>
                     </p>
                     <label v-else class="form-field">
-                        <span class="form-label">Publisher</span>
+                        <span class="form-label">{{ t('leaderboardHubView.publisher') }}</span>
                         <select v-model="publisherAchievementProfileSelectedPublisherId" class="form-input">
-                            <option value="" disabled>Choose a publisher…</option>
+                            <option value="" disabled>{{ t('leaderboardHubView.chooseAPublisher2') }}</option>
                             <option v-for="publisherId in distinctPublisherIdentifiersView()" :key="'achievement-profile-' + publisherId" :value="publisherId">
                                 {{ publisherId }}
                             </option>
@@ -213,31 +212,26 @@ export default {
                     </label>
 
                     <template v-if="publisherAchievementProfileSelectedPublisherId">
-                        <span class="evidence-inspection-adapter-title">Publisher Achievement Profile</span>
+                        <span class="evidence-inspection-adapter-title">{{ t('leaderboardHubView.publisherAchievementProfile') }}</span>
                         <dl class="evidence-fields">
-                            <div class="evidence-field"><dt>Publisher</dt><dd>{{ publisherAchievementProfileView().publisherIdentity.publisherId }}</dd></div>
-                            <div class="evidence-field"><dt>Associated publications</dt><dd>{{ publisherAchievementProfileView().publicationIdentityCount }}</dd></div>
-                            <div class="evidence-field"><dt>Achievements earned</dt><dd>{{ publisherAchievementProfileView().achievementCount }}</dd></div>
-                            <div class="evidence-field"><dt>Distinct achievement kinds</dt><dd>{{ publisherAchievementProfileView().distinctAchievementKindCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.publisher') }}</dt><dd>{{ publisherAchievementProfileView().publisherIdentity.publisherId }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.associatedPublications') }}</dt><dd>{{ publisherAchievementProfileView().publicationIdentityCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.achievementsEarned') }}</dt><dd>{{ publisherAchievementProfileView().achievementCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.distinctAchievementKinds') }}</dt><dd>{{ publisherAchievementProfileView().distinctAchievementKindCount }}</dd></div>
                         </dl>
                         <p v-if="publisherAchievementProfileView().achievementCount === 0" class="form-hint form-hint--neutral">
-                            None of this publisher's associated publications have earned an achievement
-                            yet.
+                            {{ t('leaderboardHubView.noneOfThisPublisherS') }}
                         </p>
                         <ul v-else class="replica-knowledge-claim-list">
                             <li v-for="(achievement, achievementIndex) in publisherAchievementProfileView().achievements" :key="achievementIndex" class="replica-knowledge-claim">
-                                <span class="peer-badge peer-badge--pending">🏆 {{ achievement.label }}</span>
+                                <span class="peer-badge peer-badge--pending">🏆 {{ displayText(achievement.label) }}</span>
                                 <p class="form-hint form-hint--neutral">
-                                    Earned {{ formatWhen(achievement.observedAt) }} by
-                                    {{ achievement.sourcePublicationIdentity.blockchain }} —
-                                    {{ shortId(achievement.sourcePublicationIdentity.chainReference) }}
+                                    {{ t('leaderboardHubView.earnedBy', { observedAt: formatWhen(achievement.observedAt), blockchain: achievement.sourcePublicationIdentity.blockchain, chainReference: shortId(achievement.sourcePublicationIdentity.chainReference) }) }}
                                 </p>
                             </li>
                         </ul>
                         <p class="form-hint form-hint--neutral">
-                            These achievements belong to the publications this publisher has explicitly
-                            claimed — never proof that this publisher controls, owns, or is the human
-                            behind any of them.
+                            {{ t('leaderboardHubView.theseAchievementsBelongToThe') }}
                         </p>
                     </template>
                 </div>
@@ -256,31 +250,28 @@ export default {
                  Collapsed by default. Performs ZERO network operations. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Publisher Achievement Badges</span>
-                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                    <span class="identity-mgmt-name">{{ t('leaderboardHubView.publisherAchievementBadges') }}</span>
+                    <span class="peer-badge peer-badge--pending">{{ t('leaderboardHubView.persistedLocally') }}</span>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    A badge presentation of the achievements this publisher has already earned, across
-                    every publication that publisher has explicitly claimed — never a new achievement,
-                    and never a score, rank, or leaderboard entry. Some achievements (reference-derived
-                    ones) have no badge presentation yet and appear only in the "Publisher Achievement
-                    Profile" card above.
+                    {{ t('leaderboardHubView.aBadgePresentationOfThe') }}
                 </p>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="togglePublisherAchievementBadges">
-                        {{ publisherAchievementBadgesExpanded ? 'Hide Publisher Achievement Badges' : 'Show Publisher Achievement Badges' }}
+                        {{ publisherAchievementBadgesExpanded ? t('leaderboardHubView.hidePublisherAchievementBadges') : t('leaderboardHubView.showPublisherAchievementBadges') }}
                     </button>
                 </div>
                 <div v-if="publisherAchievementBadgesExpanded" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Choose A Publisher</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('leaderboardHubView.chooseAPublisher') }}</span>
                     <p v-if="distinctPublisherIdentifiersView().length === 0" class="form-hint form-hint--neutral">
-                        No publisher has been associated with anything yet — record one on the
-                        <router-link to="/publications">Publications</router-link> page first.
+                        <I18nText keypath="leaderboardHubView.noPublisherHasBeenAssociated">
+                            <template #publications><router-link to="/publications">{{ t('leaderboardHubView.publications') }}</router-link></template>
+                        </I18nText>
                     </p>
                     <label v-else class="form-field">
-                        <span class="form-label">Publisher</span>
+                        <span class="form-label">{{ t('leaderboardHubView.publisher') }}</span>
                         <select v-model="publisherAchievementBadgesSelectedPublisherId" class="form-input">
-                            <option value="" disabled>Choose a publisher…</option>
+                            <option value="" disabled>{{ t('leaderboardHubView.chooseAPublisher2') }}</option>
                             <option v-for="publisherId in distinctPublisherIdentifiersView()" :key="'achievement-badges-' + publisherId" :value="publisherId">
                                 {{ publisherId }}
                             </option>
@@ -288,49 +279,44 @@ export default {
                     </label>
 
                     <template v-if="publisherAchievementBadgesSelectedPublisherId">
-                        <span class="evidence-inspection-adapter-title">Publisher Achievement Badges</span>
+                        <span class="evidence-inspection-adapter-title">{{ t('leaderboardHubView.publisherAchievementBadges') }}</span>
                         <dl class="evidence-fields">
-                            <div class="evidence-field"><dt>Publisher</dt><dd>{{ publisherAchievementBadgesView().publisherIdentity.publisherId }}</dd></div>
-                            <div class="evidence-field"><dt>Associated publications</dt><dd>{{ publisherAchievementBadgesView().publicationIdentityCount }}</dd></div>
-                            <div class="evidence-field"><dt>Badges earned</dt><dd>{{ publisherAchievementBadgesView().badgeCount }}</dd></div>
-                            <div class="evidence-field"><dt>Distinct badge kinds</dt><dd>{{ publisherAchievementBadgesView().distinctAchievementKindCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.publisher') }}</dt><dd>{{ publisherAchievementBadgesView().publisherIdentity.publisherId }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.associatedPublications') }}</dt><dd>{{ publisherAchievementBadgesView().publicationIdentityCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.badgesEarned') }}</dt><dd>{{ publisherAchievementBadgesView().badgeCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.distinctBadgeKinds') }}</dt><dd>{{ publisherAchievementBadgesView().distinctAchievementKindCount }}</dd></div>
                         </dl>
                         <p v-if="publisherAchievementBadgesView().badgeCount === 0" class="form-hint form-hint--neutral">
-                            None of this publisher's associated publications have earned a badge-presented
-                            achievement yet.
+                            {{ t('leaderboardHubView.noneOfThisPublisherS2') }}
                         </p>
                         <ul v-else class="replica-knowledge-claim-list">
                             <li v-for="badge in publisherAchievementBadgesView().badges" :key="badge.index" class="replica-knowledge-claim">
                                 <button type="button" class="action-btn action-btn--secondary" @click="togglePublisherAchievementBadge(badge.index)">
-                                    {{ badge.icon }} {{ badge.title }}
+                                    {{ badge.icon }} {{ displayText(badge.title) }}
                                 </button>
                                 <p class="form-hint form-hint--neutral">
-                                    {{ badge.description }} — earned {{ formatWhen(badge.earnedAt) }}
+                                    {{ t('leaderboardHubView.earned', { description: badge.description, earnedAt: formatWhen(badge.earnedAt) }) }}
                                 </p>
 
                                 <div v-if="isPublisherAchievementBadgeExpanded(badge.index)" class="evidence-list">
-                                    <span class="evidence-convergence-title">Source Publication</span>
+                                    <span class="evidence-convergence-title">{{ t('leaderboardHubView.sourcePublication') }}</span>
                                     <dl class="evidence-fields">
-                                        <div class="evidence-field"><dt>Blockchain</dt><dd>{{ badge.sourcePublicationIdentity.blockchain }}</dd></div>
-                                        <div class="evidence-field"><dt>Content hash</dt><dd>{{ badge.sourcePublicationIdentity.contentHash }}</dd></div>
-                                        <div class="evidence-field"><dt>Chain reference</dt><dd>{{ badge.sourcePublicationIdentity.chainReference }}</dd></div>
-                                        <div class="evidence-field"><dt>Created</dt><dd>{{ formatWhen(badge.sourcePublicationIdentity.createdAt) }}</dd></div>
+                                        <div class="evidence-field"><dt>{{ t('leaderboardHubView.blockchain') }}</dt><dd>{{ badge.sourcePublicationIdentity.blockchain }}</dd></div>
+                                        <div class="evidence-field"><dt>{{ t('leaderboardHubView.contentHash') }}</dt><dd>{{ badge.sourcePublicationIdentity.contentHash }}</dd></div>
+                                        <div class="evidence-field"><dt>{{ t('leaderboardHubView.chainReference') }}</dt><dd>{{ badge.sourcePublicationIdentity.chainReference }}</dd></div>
+                                        <div class="evidence-field"><dt>{{ t('leaderboardHubView.created') }}</dt><dd>{{ formatWhen(badge.sourcePublicationIdentity.createdAt) }}</dd></div>
                                     </dl>
                                     <p class="form-hint form-hint--neutral">
-                                        This badge is a presentation of one achievement already earned by a
-                                        publication this publisher has explicitly claimed — never a new
-                                        achievement, and never a score or a rank.
+                                        {{ t('leaderboardHubView.thisBadgeIsAPresentation') }}
                                     </p>
                                     <router-link to="/publications" class="action-btn action-btn--secondary">
-                                        View Publication On Publications Page
+                                        {{ t('leaderboardHubView.viewPublicationOnPublicationsPage') }}
                                     </router-link>
                                 </div>
                             </li>
                         </ul>
                         <p class="form-hint form-hint--neutral">
-                            These badges present achievements already earned by publications this publisher
-                            has explicitly claimed — never proof that this publisher controls, owns, or is
-                            the human behind any of them.
+                            {{ t('leaderboardHubView.theseBadgesPresentAchievementsAlready') }}
                         </p>
                     </template>
                 </div>
@@ -351,30 +337,28 @@ export default {
                  ZERO network operations. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Publisher Achievement Statistics</span>
-                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                    <span class="identity-mgmt-name">{{ t('leaderboardHubView.publisherAchievementStatistics') }}</span>
+                    <span class="peer-badge peer-badge--pending">{{ t('leaderboardHubView.persistedLocally') }}</span>
                 </div>
                 <p class="form-hint form-hint--neutral">
-                    Measurable facts about a publisher's explicitly associated publications and their
-                    derived achievements — never a score, rank, level, or leaderboard entry on their
-                    own. These are the same facts the Publisher Performance Leaderboard above ranks
-                    publishers by.
+                    {{ t('leaderboardHubView.measurableFactsAboutAPublisher') }}
                 </p>
                 <div class="identity-mgmt-actions">
                     <button type="button" class="action-btn action-btn--secondary" @click="togglePublisherAchievementStatistics">
-                        {{ publisherAchievementStatisticsExpanded ? 'Hide Publisher Achievement Statistics' : 'Show Publisher Achievement Statistics' }}
+                        {{ publisherAchievementStatisticsExpanded ? t('leaderboardHubView.hidePublisherAchievementStatistics') : t('leaderboardHubView.showPublisherAchievementStatistics') }}
                     </button>
                 </div>
                 <div v-if="publisherAchievementStatisticsExpanded" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Choose A Publisher</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('leaderboardHubView.chooseAPublisher') }}</span>
                     <p v-if="distinctPublisherIdentifiersView().length === 0" class="form-hint form-hint--neutral">
-                        No publisher has been associated with anything yet — record one on the
-                        <router-link to="/publications">Publications</router-link> page first.
+                        <I18nText keypath="leaderboardHubView.noPublisherHasBeenAssociated">
+                            <template #publications><router-link to="/publications">{{ t('leaderboardHubView.publications') }}</router-link></template>
+                        </I18nText>
                     </p>
                     <label v-else class="form-field">
-                        <span class="form-label">Publisher</span>
+                        <span class="form-label">{{ t('leaderboardHubView.publisher') }}</span>
                         <select v-model="publisherAchievementStatisticsSelectedPublisherId" class="form-input">
-                            <option value="" disabled>Choose a publisher…</option>
+                            <option value="" disabled>{{ t('leaderboardHubView.chooseAPublisher2') }}</option>
                             <option v-for="publisherId in distinctPublisherIdentifiersView()" :key="'achievement-statistics-' + publisherId" :value="publisherId">
                                 {{ publisherId }}
                             </option>
@@ -382,21 +366,20 @@ export default {
                     </label>
 
                     <template v-if="publisherAchievementStatisticsSelectedPublisherId">
-                        <span class="evidence-inspection-adapter-title">Publisher Achievement Statistics</span>
+                        <span class="evidence-inspection-adapter-title">{{ t('leaderboardHubView.publisherAchievementStatistics') }}</span>
                         <dl class="evidence-fields">
-                            <div class="evidence-field"><dt>Publisher</dt><dd>{{ publisherAchievementStatisticsView().publisherIdentity.publisherId }}</dd></div>
-                            <div class="evidence-field"><dt>Associated publications</dt><dd>{{ publisherAchievementStatisticsView().publicationIdentityCount }}</dd></div>
-                            <div class="evidence-field"><dt>Achievements earned</dt><dd>{{ publisherAchievementStatisticsView().achievementCount }}</dd></div>
-                            <div class="evidence-field"><dt>Distinct achievement kinds</dt><dd>{{ publisherAchievementStatisticsView().distinctAchievementKindCount }}</dd></div>
-                            <div class="evidence-field"><dt>Badges earned</dt><dd>{{ publisherAchievementStatisticsView().badgeCount }}</dd></div>
-                            <div class="evidence-field"><dt>Distinct badge kinds</dt><dd>{{ publisherAchievementStatisticsView().distinctBadgeKindCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.publisher') }}</dt><dd>{{ publisherAchievementStatisticsView().publisherIdentity.publisherId }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.associatedPublications') }}</dt><dd>{{ publisherAchievementStatisticsView().publicationIdentityCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.achievementsEarned') }}</dt><dd>{{ publisherAchievementStatisticsView().achievementCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.distinctAchievementKinds') }}</dt><dd>{{ publisherAchievementStatisticsView().distinctAchievementKindCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.badgesEarned') }}</dt><dd>{{ publisherAchievementStatisticsView().badgeCount }}</dd></div>
+                            <div class="evidence-field"><dt>{{ t('leaderboardHubView.distinctBadgeKinds') }}</dt><dd>{{ publisherAchievementStatisticsView().distinctBadgeKindCount }}</dd></div>
                             <div v-for="chain in publisherAchievementStatisticsView().blockchainPublicationCounts" :key="chain.blockchain" class="evidence-field">
-                                <dt>{{ chain.blockchain }} publications</dt><dd>{{ chain.count }}</dd>
+                                <dt>{{ t('leaderboardHubView.publications2', { blockchain: chain.blockchain }) }}</dt><dd>{{ chain.count }}</dd>
                             </div>
                         </dl>
                         <p v-if="publisherAchievementStatisticsView().achievementKindCounts.length === 0" class="form-hint form-hint--neutral">
-                            None of this publisher's associated publications have earned an achievement
-                            yet.
+                            {{ t('leaderboardHubView.noneOfThisPublisherS') }}
                         </p>
                         <ul v-else class="replica-knowledge-claim-list">
                             <li v-for="entry in publisherAchievementStatisticsView().achievementKindCounts" :key="entry.achievementKind" class="replica-knowledge-claim">
@@ -404,9 +387,7 @@ export default {
                             </li>
                         </ul>
                         <p class="form-hint form-hint--neutral">
-                            These are plain counts of already-earned facts — never a score, rank, level,
-                            tier, or leaderboard entry, and never proof that this publisher controls,
-                            owns, or is the human behind any of the publications counted above.
+                            {{ t('leaderboardHubView.theseArePlainCountsOf') }}
                         </p>
                     </template>
                 </div>

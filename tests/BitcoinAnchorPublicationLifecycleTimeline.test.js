@@ -12,6 +12,7 @@ import {
 } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationLifecycleTimelineView.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.81 — Bitcoin Anchor Publication Lifecycle Timeline.
 //
@@ -95,7 +96,7 @@ async function run() {
         assert(timeline.anchorId === 'anchor-fresh', '1. the timeline names the publication\'s own anchorId');
         assert(timeline.count === 1, '2. a fresh publication\'s timeline holds exactly one entry — never zero, never a fabricated stage');
         assert(timeline.entries[0].kind === BitcoinAnchorPublicationLifecycleTimelineEntryKind.PUBLICATION, '3. the one entry is the publication record itself');
-        assert(timeline.entries[0].label === 'Publication record created', '4. the label is a plain factual sentence');
+        assert(displayText(timeline.entries[0].label) === 'Publication record created', '4. the label is a plain factual sentence');
         assert(timeline.entries[0].anchorId === 'anchor-fresh', '5. the entry is stamped with the publication\'s own anchorId');
         assertNeverScored(timeline, 'freshTimeline');
     }
@@ -162,7 +163,7 @@ async function run() {
 
         const confirmationEntries = timeline.entries.filter((e) => e.kind === BitcoinAnchorPublicationLifecycleTimelineEntryKind.CONFIRMATION);
         assert(confirmationEntries[0].index === 1 && confirmationEntries[1].index === 2, '12. confirmation entries preserve their own original 1-based observation index');
-        assert(confirmationEntries[0].label === 'Confirmation observation #1' && confirmationEntries[1].label === 'Confirmation observation #2', '13. confirmation labels name their own index, never relying on timestamp identity alone');
+        assert(displayText(confirmationEntries[0].label) === 'Confirmation observation #1' && displayText(confirmationEntries[1].label) === 'Confirmation observation #2', '13. confirmation labels name their own index, never relying on timestamp identity alone');
 
         // Never mutated, never reordered — the caller's own arrays remain
         // exactly what they were.

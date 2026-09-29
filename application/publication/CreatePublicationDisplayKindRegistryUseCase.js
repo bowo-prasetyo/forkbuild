@@ -2,6 +2,7 @@ import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVer
 import { createBlueprintAttributionPublicationKind } from '../blueprint/BlueprintAttributionPublicationKind.js';
 import { createPlaceNamingClaimPublicationKind } from '../placeNaming/PlaceNamingClaimPublicationKind.js';
 import { createPublicationContentKind } from './PublicationContentKind.js';
+import { message } from '../../core/Message.js';
 
 function shortId(identityId) {
     return identityId ? identityId.slice(-14) : 'an unknown identity';
@@ -90,19 +91,19 @@ export class CreatePublicationDisplayKindRegistryUseCase {
 
         const blueprintAttributionKind = {
             ...createBlueprintAttributionPublicationKind({ verifier }),
-            describe: (attribution) => `Blueprint attribution — ${attribution.fingerprint}, claimed by ${shortId(attribution.authorIdentityId)}`,
+            describe: (attribution) => message('publicationKind.blueprintAttribution.summary', { fingerprint: attribution.fingerprint, author: shortId(attribution.authorIdentityId) }),
             republishAdvice: {
-                text: "In the Editor, open the structure's Info panel and click Re-sign for this design, then Publish to Network.",
+                text: message('publicationKind.blueprintAttribution.republish'),
                 route: '/editor',
-                routeLabel: 'Open Editor'
+                routeLabel: message('publicationKind.openEditor')
             }
         };
         const placeNamingClaimKind = {
             ...createPlaceNamingClaimPublicationKind({ verifier }),
-            describe: (claim) => `Place name claim — "${claim.name}", claimed by ${shortId(claim.authorIdentityId)}`,
+            describe: (claim) => message('publicationKind.placeNamingClaim.summary', { name: claim.name, author: shortId(claim.authorIdentityId) }),
             // World View opens one World at a time; no single page leads there.
             republishAdvice: {
-                text: "In World View, open the place's naming panel and use Publish A Name again.",
+                text: message('publicationKind.placeNamingClaim.republish'),
                 route: null,
                 routeLabel: null
             }
@@ -110,13 +111,19 @@ export class CreatePublicationDisplayKindRegistryUseCase {
         const publicationKind = {
             ...createPublicationContentKind({ verifier }),
             describe: (publication) => {
-                const title = publication.title ? `"${publication.title}"` : 'an untitled publication';
-                return publication.author ? `Publication — ${title}, by ${publication.author}` : `Publication — ${title}`;
+                if (!publication.title) {
+                    return publication.author
+                        ? message('publicationKind.publication.untitledBy', { author: publication.author })
+                        : message('publicationKind.publication.untitled');
+                }
+                return publication.author
+                    ? message('publicationKind.publication.titledBy', { title: publication.title, author: publication.author })
+                    : message('publicationKind.publication.titled', { title: publication.title });
             },
             republishAdvice: {
-                text: 'Publish the World again from the Editor, then click Share with Peers under it in the Repository.',
+                text: message('publicationKind.publication.republish'),
                 route: '/repository',
-                routeLabel: 'Open Repository'
+                routeLabel: message('publicationKind.openRepository')
             }
         };
 

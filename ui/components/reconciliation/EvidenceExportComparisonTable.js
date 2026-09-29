@@ -174,6 +174,8 @@
 //   identity" control on the candidate-presence dimension for the identical
 //   reason: a candidate object already IS its own complete identity.
 
+import { displayText, hasMessage, t } from '../../i18n/i18n.js';
+
 function isGenuineSection(value) {
     return Boolean(value) && typeof value === 'object';
 }
@@ -284,21 +286,21 @@ function observationIdentityFieldsOf(identityRecord) {
 // decoding: this component imports nothing, from `application/` or from any
 // sibling `ui/` file.
 export function candidateLabel(candidate) {
-    if (!candidate || typeof candidate !== 'object') return 'Unknown candidate';
+    if (!candidate || typeof candidate !== 'object') return t('reconciliation.unknownCandidate');
     if (candidate.type === 'DIVERGENT_CORRESPONDENCE') {
-        return `Claim ${candidate.claimId} ↔ Snapshot #${candidate.snapshotIndex}`;
+        return t('reconciliation.claimAndSnapshot', { claimId: candidate.claimId, snapshotIndex: candidate.snapshotIndex });
     }
     if (candidate.type === 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT') {
-        return `Claim ${candidate.claimId} (no corresponding Snapshot)`;
+        return t('reconciliation.claimWithoutSnapshot', { claimId: candidate.claimId });
     }
     if (candidate.type === 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM') {
-        return `Snapshot #${candidate.snapshotIndex} (no corresponding Claim)`;
+        return t('reconciliation.snapshotWithoutClaim', { snapshotIndex: candidate.snapshotIndex });
     }
-    return 'Unknown candidate';
+    return t('reconciliation.unknownCandidate');
 }
 
 function formatWhen(isoString) {
-    return typeof isoString === 'string' && isoString.length > 0 ? isoString : 'unknown time';
+    return typeof isoString === 'string' && isoString.length > 0 ? isoString : t('reconciliation.unknownTime');
 }
 
 // decisionRecordLabel()/observationRecordLabel() — a record's own candidate
@@ -307,17 +309,18 @@ function formatWhen(isoString) {
 // under that candidate's own heading — see this file's own header, "Detail
 // records stay flat."
 export function decisionRecordLabel(record) {
-    if (!record || typeof record !== 'object') return 'Unknown decision record';
+    if (!record || typeof record !== 'object') return t('reconciliation.unknownDecisionRecord');
     const disposition = typeof record.decision === 'string' ? record.decision : 'UNKNOWN';
-    return `${candidateLabel(record.candidate)} — ${disposition} — decided ${formatWhen(record.decidedAt)}`;
+    return t('reconciliation.decisionRecord', { candidate: candidateLabel(record.candidate), disposition, when: formatWhen(record.decidedAt) });
 }
 
 export function observationRecordLabel(record) {
-    if (!record || typeof record !== 'object') return 'Unknown observation record';
+    if (!record || typeof record !== 'object') return t('reconciliation.unknownObservationRecord');
     const decision = record.decision && typeof record.decision === 'object' ? record.decision : null;
     const disposition = decision && typeof decision.decision === 'string' ? decision.decision : 'UNKNOWN';
-    return `${candidateLabel(record.candidate)} — ${disposition} — observed ${formatWhen(record.observedAt)}`;
+    return t('reconciliation.observationRecord', { candidate: candidateLabel(record.candidate), disposition, when: formatWhen(record.observedAt) });
 }
+
 
 export default {
     name: 'ReconciliationCandidateLeaderboardEvidenceExportComparisonTable',
@@ -388,6 +391,14 @@ export default {
         }
     },
     methods: {
+        t,
+        displayText,
+        // An id recorded in the export ('NO_PEER', 'SOURCE_ONLY'), in words;
+        // one this version has no message for is shown as recorded.
+        idText(group, id) {
+            const key = typeof id === 'string' ? `${group}.${id.toLowerCase().replace(/_([a-z])/g, (m, c) => c.toUpperCase())}` : null;
+            return key && hasMessage(key) ? t(key) : id;
+        },
         toggleExpanded(dimension) {
             this.expanded[dimension] = !this.expanded[dimension];
         },
@@ -409,77 +420,77 @@ export default {
         <div class="evidence-export-comparison-table">
             <div class="evidence-export-comparison-metadata">
                 <div class="evidence-export-comparison-metadata-block">
-                    <span class="evidence-inspection-adapter-title">Comparison State</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('evidenceExportComparisonTable.comparisonState') }}</span>
                     <dl class="evidence-fields">
-                        <div class="evidence-field"><dt>Source</dt><dd>{{ comparisonState.source }}</dd></div>
-                        <div class="evidence-field"><dt>Target</dt><dd>{{ comparisonState.target }}</dd></div>
-                        <div class="evidence-field"><dt>Same</dt><dd>{{ comparisonState.same ? 'yes' : 'no' }}</dd></div>
+                        <div class="evidence-field"><dt>{{ t('evidenceExportComparisonTable.source') }}</dt><dd>{{ idText('reconciliation.state', comparisonState.source) }}</dd></div>
+                        <div class="evidence-field"><dt>{{ t('evidenceExportComparisonTable.target') }}</dt><dd>{{ idText('reconciliation.state', comparisonState.target) }}</dd></div>
+                        <div class="evidence-field"><dt>{{ t('evidenceExportComparisonTable.same') }}</dt><dd>{{ comparisonState.same ? t('reconciliation.yes') : t('reconciliation.no') }}</dd></div>
                     </dl>
                 </div>
                 <div class="evidence-export-comparison-metadata-block">
-                    <span class="evidence-inspection-adapter-title">Filter</span>
+                    <span class="evidence-inspection-adapter-title">{{ t('evidenceExportComparisonTable.filter') }}</span>
                     <dl class="evidence-fields">
-                        <div class="evidence-field"><dt>Source</dt><dd>{{ filter.source.evidenceKind }} / {{ filter.source.replicaRelation }}</dd></div>
-                        <div class="evidence-field"><dt>Target</dt><dd>{{ filter.target.evidenceKind }} / {{ filter.target.replicaRelation }}</dd></div>
-                        <div class="evidence-field"><dt>Same</dt><dd>{{ filter.same ? 'yes' : 'no' }}</dd></div>
+                        <div class="evidence-field"><dt>{{ t('evidenceExportComparisonTable.source') }}</dt><dd>{{ idText('reconciliation.filter', filter.source.evidenceKind) }} / {{ idText('reconciliation.filter', filter.source.replicaRelation) }}</dd></div>
+                        <div class="evidence-field"><dt>{{ t('evidenceExportComparisonTable.target') }}</dt><dd>{{ idText('reconciliation.filter', filter.target.evidenceKind) }} / {{ idText('reconciliation.filter', filter.target.replicaRelation) }}</dd></div>
+                        <div class="evidence-field"><dt>{{ t('evidenceExportComparisonTable.same') }}</dt><dd>{{ filter.same ? t('reconciliation.yes') : t('reconciliation.no') }}</dd></div>
                     </dl>
                 </div>
             </div>
 
-            <p v-if="isEmpty" class="empty-state">No candidates, decision evidence, or observation evidence in either export.</p>
+            <p v-if="isEmpty" class="empty-state">{{ t('evidenceExportComparisonTable.noCandidatesDecisionEvidenceOr') }}</p>
             <template v-else>
                 <div class="evidence-export-comparison-dimension">
-                    <h4 class="evidence-detail-group-title">Candidate presence</h4>
+                    <h4 class="evidence-detail-group-title">{{ t('evidenceExportComparisonTable.candidatePresence') }}</h4>
                     <table class="evidence-export-comparison-dimension-table">
-                        <thead><tr><th>Source-only</th><th>Shared</th><th>Target-only</th></tr></thead>
+                        <thead><tr><th>{{ t('evidenceExportComparisonTable.sourceOnly') }}</th><th>{{ t('evidenceExportComparisonTable.shared') }}</th><th>{{ t('evidenceExportComparisonTable.targetOnly') }}</th></tr></thead>
                         <tbody><tr><td>{{ candidateSummary.sourceOnlyCount }}</td><td>{{ candidateSummary.sharedCount }}</td><td>{{ candidateSummary.targetOnlyCount }}</td></tr></tbody>
                     </table>
                     <button type="button" class="action-btn action-btn--secondary evidence-export-comparison-inspect-btn" @click="toggleExpanded('candidates')">
-                        {{ expanded.candidates ? 'Hide records ▲' : 'Inspect records ▼' }}
+                        {{ expanded.candidates ? t('evidenceExportComparisonTable.hideRecords') : t('evidenceExportComparisonTable.inspectRecords') }}
                     </button>
                     <div v-if="expanded.candidates" class="evidence-detail-columns">
                         <div class="evidence-detail-column">
-                            <h5>Source-only ({{ candidateRecords.sourceOnly.length }})</h5>
-                            <p v-if="candidateRecords.sourceOnly.length === 0" class="evidence-detail-empty">None</p>
+                            <h5>{{ t('evidenceExportComparisonTable.sourceOnly2', { count: candidateRecords.sourceOnly.length }) }}</h5>
+                            <p v-if="candidateRecords.sourceOnly.length === 0" class="evidence-detail-empty">{{ t('evidenceExportComparisonTable.none') }}</p>
                             <ul v-else class="evidence-detail-list">
-                                <li v-for="(record, index) in candidateRecords.sourceOnly" :key="'c-so-' + index">{{ candidateLabel(record) }}</li>
+                                <li v-for="(record, index) in candidateRecords.sourceOnly" :key="'c-so-' + index">{{ displayText(candidateLabel(record)) }}</li>
                             </ul>
                         </div>
                         <div class="evidence-detail-column">
-                            <h5>Shared ({{ candidateRecords.shared.length }})</h5>
-                            <p v-if="candidateRecords.shared.length === 0" class="evidence-detail-empty">None</p>
+                            <h5>{{ t('evidenceExportComparisonTable.shared2', { count: candidateRecords.shared.length }) }}</h5>
+                            <p v-if="candidateRecords.shared.length === 0" class="evidence-detail-empty">{{ t('evidenceExportComparisonTable.none') }}</p>
                             <ul v-else class="evidence-detail-list">
-                                <li v-for="(record, index) in candidateRecords.shared" :key="'c-sh-' + index">{{ candidateLabel(record) }}</li>
+                                <li v-for="(record, index) in candidateRecords.shared" :key="'c-sh-' + index">{{ displayText(candidateLabel(record)) }}</li>
                             </ul>
                         </div>
                         <div class="evidence-detail-column">
-                            <h5>Target-only ({{ candidateRecords.targetOnly.length }})</h5>
-                            <p v-if="candidateRecords.targetOnly.length === 0" class="evidence-detail-empty">None</p>
+                            <h5>{{ t('evidenceExportComparisonTable.targetOnly2', { count: candidateRecords.targetOnly.length }) }}</h5>
+                            <p v-if="candidateRecords.targetOnly.length === 0" class="evidence-detail-empty">{{ t('evidenceExportComparisonTable.none') }}</p>
                             <ul v-else class="evidence-detail-list">
-                                <li v-for="(record, index) in candidateRecords.targetOnly" :key="'c-to-' + index">{{ candidateLabel(record) }}</li>
+                                <li v-for="(record, index) in candidateRecords.targetOnly" :key="'c-to-' + index">{{ displayText(candidateLabel(record)) }}</li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
                 <div class="evidence-export-comparison-dimension">
-                    <h4 class="evidence-detail-group-title">Decision evidence</h4>
+                    <h4 class="evidence-detail-group-title">{{ t('evidenceExportComparisonTable.decisionEvidence') }}</h4>
                     <table class="evidence-export-comparison-dimension-table">
-                        <thead><tr><th>Source-only</th><th>Shared</th><th>Target-only</th></tr></thead>
+                        <thead><tr><th>{{ t('evidenceExportComparisonTable.sourceOnly') }}</th><th>{{ t('evidenceExportComparisonTable.shared') }}</th><th>{{ t('evidenceExportComparisonTable.targetOnly') }}</th></tr></thead>
                         <tbody><tr><td>{{ decisionEvidence.sourceOnlyCount }}</td><td>{{ decisionEvidence.sharedCount }}</td><td>{{ decisionEvidence.targetOnlyCount }}</td></tr></tbody>
                     </table>
                     <button type="button" class="action-btn action-btn--secondary evidence-export-comparison-inspect-btn" @click="toggleExpanded('decisionEvidence')">
-                        {{ expanded.decisionEvidence ? 'Hide records ▲' : 'Inspect records ▼' }}
+                        {{ expanded.decisionEvidence ? t('evidenceExportComparisonTable.hideRecords') : t('evidenceExportComparisonTable.inspectRecords') }}
                     </button>
                     <div v-if="expanded.decisionEvidence" class="evidence-detail-columns">
                         <div class="evidence-detail-column">
-                            <h5>Source-only ({{ decisionRecords.sourceOnly.length }})</h5>
-                            <p v-if="decisionRecords.sourceOnly.length === 0" class="evidence-detail-empty">None</p>
+                            <h5>{{ t('evidenceExportComparisonTable.sourceOnly2', { count: decisionRecords.sourceOnly.length }) }}</h5>
+                            <p v-if="decisionRecords.sourceOnly.length === 0" class="evidence-detail-empty">{{ t('evidenceExportComparisonTable.none') }}</p>
                             <ul v-else class="evidence-detail-list">
                                 <li v-for="(record, index) in decisionRecords.sourceOnly" :key="'d-so-' + index">
-                                    {{ decisionRecordLabel(record) }}
+                                    {{ displayText(decisionRecordLabel(record)) }}
                                     <button type="button" class="action-btn action-btn--secondary evidence-identity-inspect-btn" @click="toggleIdentity(identityKey('decision', 'sourceOnly', index))">
-                                        {{ isIdentityExpanded(identityKey('decision', 'sourceOnly', index)) ? 'Hide identity ▲' : 'Inspect identity ▼' }}
+                                        {{ isIdentityExpanded(identityKey('decision', 'sourceOnly', index)) ? t('evidenceExportComparisonTable.hideIdentity') : t('evidenceExportComparisonTable.inspectIdentity') }}
                                     </button>
                                     <dl v-if="isIdentityExpanded(identityKey('decision', 'sourceOnly', index))" class="evidence-fields evidence-identity-fields">
                                         <div class="evidence-field" v-for="field in decisionIdentityFieldsOf(decisionIdentity.sourceOnly[index])" :key="field.key">
@@ -490,13 +501,13 @@ export default {
                             </ul>
                         </div>
                         <div class="evidence-detail-column">
-                            <h5>Shared ({{ decisionRecords.shared.length }})</h5>
-                            <p v-if="decisionRecords.shared.length === 0" class="evidence-detail-empty">None</p>
+                            <h5>{{ t('evidenceExportComparisonTable.shared2', { count: decisionRecords.shared.length }) }}</h5>
+                            <p v-if="decisionRecords.shared.length === 0" class="evidence-detail-empty">{{ t('evidenceExportComparisonTable.none') }}</p>
                             <ul v-else class="evidence-detail-list">
                                 <li v-for="(record, index) in decisionRecords.shared" :key="'d-sh-' + index">
-                                    {{ decisionRecordLabel(record) }}
+                                    {{ displayText(decisionRecordLabel(record)) }}
                                     <button type="button" class="action-btn action-btn--secondary evidence-identity-inspect-btn" @click="toggleIdentity(identityKey('decision', 'shared', index))">
-                                        {{ isIdentityExpanded(identityKey('decision', 'shared', index)) ? 'Hide identity ▲' : 'Inspect identity ▼' }}
+                                        {{ isIdentityExpanded(identityKey('decision', 'shared', index)) ? t('evidenceExportComparisonTable.hideIdentity') : t('evidenceExportComparisonTable.inspectIdentity') }}
                                     </button>
                                     <dl v-if="isIdentityExpanded(identityKey('decision', 'shared', index))" class="evidence-fields evidence-identity-fields">
                                         <div class="evidence-field" v-for="field in decisionIdentityFieldsOf(decisionIdentity.shared[index])" :key="field.key">
@@ -507,13 +518,13 @@ export default {
                             </ul>
                         </div>
                         <div class="evidence-detail-column">
-                            <h5>Target-only ({{ decisionRecords.targetOnly.length }})</h5>
-                            <p v-if="decisionRecords.targetOnly.length === 0" class="evidence-detail-empty">None</p>
+                            <h5>{{ t('evidenceExportComparisonTable.targetOnly2', { count: decisionRecords.targetOnly.length }) }}</h5>
+                            <p v-if="decisionRecords.targetOnly.length === 0" class="evidence-detail-empty">{{ t('evidenceExportComparisonTable.none') }}</p>
                             <ul v-else class="evidence-detail-list">
                                 <li v-for="(record, index) in decisionRecords.targetOnly" :key="'d-to-' + index">
-                                    {{ decisionRecordLabel(record) }}
+                                    {{ displayText(decisionRecordLabel(record)) }}
                                     <button type="button" class="action-btn action-btn--secondary evidence-identity-inspect-btn" @click="toggleIdentity(identityKey('decision', 'targetOnly', index))">
-                                        {{ isIdentityExpanded(identityKey('decision', 'targetOnly', index)) ? 'Hide identity ▲' : 'Inspect identity ▼' }}
+                                        {{ isIdentityExpanded(identityKey('decision', 'targetOnly', index)) ? t('evidenceExportComparisonTable.hideIdentity') : t('evidenceExportComparisonTable.inspectIdentity') }}
                                     </button>
                                     <dl v-if="isIdentityExpanded(identityKey('decision', 'targetOnly', index))" class="evidence-fields evidence-identity-fields">
                                         <div class="evidence-field" v-for="field in decisionIdentityFieldsOf(decisionIdentity.targetOnly[index])" :key="field.key">
@@ -527,23 +538,23 @@ export default {
                 </div>
 
                 <div class="evidence-export-comparison-dimension">
-                    <h4 class="evidence-detail-group-title">Observation evidence</h4>
+                    <h4 class="evidence-detail-group-title">{{ t('evidenceExportComparisonTable.observationEvidence') }}</h4>
                     <table class="evidence-export-comparison-dimension-table">
-                        <thead><tr><th>Source-only</th><th>Shared</th><th>Target-only</th></tr></thead>
+                        <thead><tr><th>{{ t('evidenceExportComparisonTable.sourceOnly') }}</th><th>{{ t('evidenceExportComparisonTable.shared') }}</th><th>{{ t('evidenceExportComparisonTable.targetOnly') }}</th></tr></thead>
                         <tbody><tr><td>{{ observationEvidence.sourceOnlyCount }}</td><td>{{ observationEvidence.sharedCount }}</td><td>{{ observationEvidence.targetOnlyCount }}</td></tr></tbody>
                     </table>
                     <button type="button" class="action-btn action-btn--secondary evidence-export-comparison-inspect-btn" @click="toggleExpanded('observationEvidence')">
-                        {{ expanded.observationEvidence ? 'Hide records ▲' : 'Inspect records ▼' }}
+                        {{ expanded.observationEvidence ? t('evidenceExportComparisonTable.hideRecords') : t('evidenceExportComparisonTable.inspectRecords') }}
                     </button>
                     <div v-if="expanded.observationEvidence" class="evidence-detail-columns">
                         <div class="evidence-detail-column">
-                            <h5>Source-only ({{ observationRecords.sourceOnly.length }})</h5>
-                            <p v-if="observationRecords.sourceOnly.length === 0" class="evidence-detail-empty">None</p>
+                            <h5>{{ t('evidenceExportComparisonTable.sourceOnly2', { count: observationRecords.sourceOnly.length }) }}</h5>
+                            <p v-if="observationRecords.sourceOnly.length === 0" class="evidence-detail-empty">{{ t('evidenceExportComparisonTable.none') }}</p>
                             <ul v-else class="evidence-detail-list">
                                 <li v-for="(record, index) in observationRecords.sourceOnly" :key="'o-so-' + index">
-                                    {{ observationRecordLabel(record) }}
+                                    {{ displayText(observationRecordLabel(record)) }}
                                     <button type="button" class="action-btn action-btn--secondary evidence-identity-inspect-btn" @click="toggleIdentity(identityKey('observation', 'sourceOnly', index))">
-                                        {{ isIdentityExpanded(identityKey('observation', 'sourceOnly', index)) ? 'Hide identity ▲' : 'Inspect identity ▼' }}
+                                        {{ isIdentityExpanded(identityKey('observation', 'sourceOnly', index)) ? t('evidenceExportComparisonTable.hideIdentity') : t('evidenceExportComparisonTable.inspectIdentity') }}
                                     </button>
                                     <dl v-if="isIdentityExpanded(identityKey('observation', 'sourceOnly', index))" class="evidence-fields evidence-identity-fields">
                                         <div class="evidence-field" v-for="field in observationIdentityFieldsOf(observationIdentity.sourceOnly[index])" :key="field.key">
@@ -554,13 +565,13 @@ export default {
                             </ul>
                         </div>
                         <div class="evidence-detail-column">
-                            <h5>Shared ({{ observationRecords.shared.length }})</h5>
-                            <p v-if="observationRecords.shared.length === 0" class="evidence-detail-empty">None</p>
+                            <h5>{{ t('evidenceExportComparisonTable.shared2', { count: observationRecords.shared.length }) }}</h5>
+                            <p v-if="observationRecords.shared.length === 0" class="evidence-detail-empty">{{ t('evidenceExportComparisonTable.none') }}</p>
                             <ul v-else class="evidence-detail-list">
                                 <li v-for="(record, index) in observationRecords.shared" :key="'o-sh-' + index">
-                                    {{ observationRecordLabel(record) }}
+                                    {{ displayText(observationRecordLabel(record)) }}
                                     <button type="button" class="action-btn action-btn--secondary evidence-identity-inspect-btn" @click="toggleIdentity(identityKey('observation', 'shared', index))">
-                                        {{ isIdentityExpanded(identityKey('observation', 'shared', index)) ? 'Hide identity ▲' : 'Inspect identity ▼' }}
+                                        {{ isIdentityExpanded(identityKey('observation', 'shared', index)) ? t('evidenceExportComparisonTable.hideIdentity') : t('evidenceExportComparisonTable.inspectIdentity') }}
                                     </button>
                                     <dl v-if="isIdentityExpanded(identityKey('observation', 'shared', index))" class="evidence-fields evidence-identity-fields">
                                         <div class="evidence-field" v-for="field in observationIdentityFieldsOf(observationIdentity.shared[index])" :key="field.key">
@@ -571,13 +582,13 @@ export default {
                             </ul>
                         </div>
                         <div class="evidence-detail-column">
-                            <h5>Target-only ({{ observationRecords.targetOnly.length }})</h5>
-                            <p v-if="observationRecords.targetOnly.length === 0" class="evidence-detail-empty">None</p>
+                            <h5>{{ t('evidenceExportComparisonTable.targetOnly2', { count: observationRecords.targetOnly.length }) }}</h5>
+                            <p v-if="observationRecords.targetOnly.length === 0" class="evidence-detail-empty">{{ t('evidenceExportComparisonTable.none') }}</p>
                             <ul v-else class="evidence-detail-list">
                                 <li v-for="(record, index) in observationRecords.targetOnly" :key="'o-to-' + index">
-                                    {{ observationRecordLabel(record) }}
+                                    {{ displayText(observationRecordLabel(record)) }}
                                     <button type="button" class="action-btn action-btn--secondary evidence-identity-inspect-btn" @click="toggleIdentity(identityKey('observation', 'targetOnly', index))">
-                                        {{ isIdentityExpanded(identityKey('observation', 'targetOnly', index)) ? 'Hide identity ▲' : 'Inspect identity ▼' }}
+                                        {{ isIdentityExpanded(identityKey('observation', 'targetOnly', index)) ? t('evidenceExportComparisonTable.hideIdentity') : t('evidenceExportComparisonTable.inspectIdentity') }}
                                     </button>
                                     <dl v-if="isIdentityExpanded(identityKey('observation', 'targetOnly', index))" class="evidence-fields evidence-identity-fields">
                                         <div class="evidence-field" v-for="field in observationIdentityFieldsOf(observationIdentity.targetOnly[index])" :key="field.key">

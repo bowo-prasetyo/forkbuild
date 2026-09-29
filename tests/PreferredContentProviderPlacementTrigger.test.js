@@ -24,6 +24,7 @@ import { assert } from './support/Assert.js';
 import { readSource as source } from './support/SourceText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.9.301 — Preferred Content Provider Placement Trigger.
 //
@@ -357,7 +358,7 @@ async function run() {
         assert(view.state === SnapshotPlacementCreationUiState.PROVIDER_NOT_FOUND, '21. PROVIDER_NOT_FOUND renders its own honest UI state — never IDLE');
         assert(view.state !== SnapshotPlacementCreationUiState.IDLE, '22. explicitly: never the silent IDLE collapse this milestone was commissioned to fix');
         assert(view.label && view.message, '23. a real label and message are shown — nothing renders as if no attempt had ever been made');
-        assert(view.message.includes('arweave'), '24. the message names WHAT was configured, not just that something went wrong');
+        assert(displayText(view.message).includes('arweave'), '24. the message names WHAT was configured, not just that something went wrong');
     }
     console.log('✓ Section E: an unresolvable preference reports PROVIDER_NOT_FOUND explicitly, touches no store, and now renders its own honest, visible UI state — never the silent IDLE collapse 0.9.300 found');
 

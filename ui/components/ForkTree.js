@@ -1,4 +1,5 @@
-import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
+import { publicationDateText } from '../i18n/dateText.js';
+import { t } from '../i18n/i18n.js';
 
 export default {
     name: 'ForkTree',
@@ -22,9 +23,9 @@ export default {
             return props.publications.filter((p) => p.parentDocumentId === documentId);
         }
         function publishedAtLabel(child) {
-            return formatPublicationDate(child.publishedAt, props.preciseDateIds.has(child.id));
+            return publicationDateText(child.publishedAt, props.preciseDateIds.has(child.id));
         }
-        return { getChildren, publishedAtLabel };
+        return { t, getChildren, publishedAtLabel };
     },
     template: `
         <ul class="fork-tree-list">
@@ -32,7 +33,7 @@ export default {
                 <div class="fork-tree-node">
                     <span class="fork-connector">└─</span>
                     <span class="fork-title">{{ child.title }}</span>
-                    <span v-if="child.author" class="fork-author">by {{ child.author }}</span>
+                    <span v-if="child.author" class="fork-author">{{ t('forkTree.byAuthor', { author: child.author }) }}</span>
                     <span v-if="child.publishedAt" class="fork-date">{{ publishedAtLabel(child) }}</span>
                 </div>
                 <ForkTree :publications="publications" :root-document-id="child.documentId" :precise-date-ids="preciseDateIds" />

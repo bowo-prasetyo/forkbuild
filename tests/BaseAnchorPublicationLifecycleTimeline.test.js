@@ -10,6 +10,7 @@ import {
 } from '../application/anchoring/base/BaseAnchorPublicationLifecycleTimelineView.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.101 — Base Anchor Publication Lifecycle Timeline.
 //
@@ -96,7 +97,7 @@ async function run() {
         assert(timeline.txid === TX_A, '1. the timeline names the publication\'s own txid');
         assert(timeline.count === 1, '2. a fresh publication\'s timeline holds exactly one entry — never zero, never a fabricated stage');
         assert(timeline.entries[0].kind === BaseAnchorPublicationLifecycleTimelineEntryKind.PUBLICATION, '3. the one entry is the publication record itself');
-        assert(timeline.entries[0].label === 'Publication record created', '4. the label is a plain factual sentence');
+        assert(displayText(timeline.entries[0].label) === 'Publication record created', '4. the label is a plain factual sentence');
         assert(timeline.entries[0].txid === TX_A, '5. the entry is stamped with the publication\'s own txid');
 
         // No observationsByTransactionHash argument at all, and an empty
@@ -144,7 +145,7 @@ async function run() {
         assert(observationEntries[1].state === BaseTransactionInclusionObservationState.UNAVAILABLE, '10. UNAVAILABLE stays on the timeline — an honest "could not tell" moment is never dropped from presentation');
         assert(observationEntries[2].state === BaseTransactionInclusionObservationState.INCLUDED, '11. the later INCLUDED observation follows it, in its own recorded order');
         assert(observationEntries[0].index === 1 && observationEntries[1].index === 2 && observationEntries[2].index === 3, '12. observation entries carry their own 1-based index — never relying on timestamp identity alone');
-        assert(observationEntries[0].label === 'Inclusion observation #1' && observationEntries[2].label === 'Inclusion observation #3', '13. labels name their own index');
+        assert(displayText(observationEntries[0].label) === 'Inclusion observation #1' && displayText(observationEntries[2].label) === 'Inclusion observation #3', '13. labels name their own index');
         assert(timeline.entries.every((e) => e.txid === TX_A), '14. every entry, of every kind, is stamped with the same txid');
 
         // Never mutated, never reordered.

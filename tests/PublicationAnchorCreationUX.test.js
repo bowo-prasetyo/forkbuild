@@ -20,6 +20,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.11 — Explicit External Anchoring UX.
 //
@@ -162,7 +163,7 @@ async function run() {
         assert(evidenceCoordinator.discover('pub-flagship').length === 0, '2. no evidence known before any anchor is created');
         const idleView = describeCreationAttempt(null);
         assert(idleView.state === ExternalAnchorCreationUiState.IDLE, '3. before any click, the derived view reports IDLE');
-        assert(describeCreationButtonLabel('Bitcoin', { hasExisting: false }) === 'Create Bitcoin Anchor', '4. the initial button reads "Create <type> Anchor"');
+        assert(displayText(describeCreationButtonLabel('Bitcoin', { hasExisting: false })) === 'Create Bitcoin Anchor', '4. the initial button reads "Create <type> Anchor"');
 
         // Alice clicks "Create Bitcoin Anchor."
         const attempt = await clickCreate(creationCoordinator, 'pub-flagship', 'bitcoin-op-return');
@@ -171,10 +172,10 @@ async function run() {
 
         const createdView = describeCreationAttempt(attempt);
         assert(createdView.state === ExternalAnchorCreationUiState.CREATED, '7. the derived view reports CREATED');
-        assert(createdView.message.includes('evidence was recorded for this content hash'), '8. the UI makes exactly the strongest permitted statement');
+        assert(displayText(createdView.message).includes('evidence was recorded for this content hash'), '8. the UI makes exactly the strongest permitted statement');
         const forbiddenWords = ['verified', 'confirmed', 'trusted', 'authoritative'];
         for (const word of forbiddenWords) {
-            assert(!createdView.message.toLowerCase().includes(word), `9. the creation message never uses the word "${word}"`);
+            assert(!displayText(createdView.message).toLowerCase().includes(word), `9. the creation message never uses the word "${word}"`);
         }
 
         // The new anchor immediately shows up in the ordinary,
@@ -225,7 +226,7 @@ async function run() {
         const attempt = await clickCreate(creationCoordinator, 'pub-rejected', 'bitcoin-op-return');
         const view = describeCreationAttempt(attempt);
         assert(view.state === ExternalAnchorCreationUiState.REJECTED, '13. a definite publisher rejection reports the REJECTED UI state');
-        assert(view.message.toLowerCase().includes('rejected') && view.reason === 'transaction rejected as non-standard',
+        assert(displayText(view.message).toLowerCase().includes('rejected') && displayText(view.reason) === 'transaction rejected as non-standard',
             '14. the rejection reason is shown, plainly, as the external system\'s own words');
     }
     {
@@ -238,7 +239,7 @@ async function run() {
         const attempt = await clickCreate(creationCoordinator, 'pub-unavailable', 'bitcoin-op-return');
         const view = describeCreationAttempt(attempt);
         assert(view.state === ExternalAnchorCreationUiState.UNAVAILABLE, '15. an explicit "cannot presently tell" reports the UNAVAILABLE UI state');
-        assert(view.reason === 'no funds currently available to spend', '16. its own real reason is preserved, never replaced with a generic one');
+        assert(displayText(view.reason) === 'no funds currently available to spend', '16. its own real reason is preserved, never replaced with a generic one');
     }
     {
         // Nobody is signed in on THIS identityProvider — a genuine local
@@ -266,7 +267,7 @@ async function run() {
         const view = describeCreationAttempt(attempt);
         assert(view.state === ExternalAnchorCreationUiState.UNAVAILABLE,
             '18. to a person looking at the button, "nobody signed in" reads exactly like "external system unreachable" — no anchor was created either way');
-        assert(view.reason.includes('sign in'), '19. but the SPECIFIC reason is preserved, never replaced with a generic message');
+        assert(displayText(view.reason).includes('sign in'), '19. but the SPECIFIC reason is preserved, never replaced with a generic message');
         assert(anchorCatalog.findByPublicationId('pub-signedout').length === 0, '20. nothing was ever cataloged — the broadcaster was never even reached');
     }
 
@@ -352,7 +353,7 @@ async function run() {
 
         const discovered = evidenceCoordinator.discover('pub-multi');
         assert(discovered.length === 2, '30. both independent anchors are discoverable — neither replaces the other');
-        assert(describeCreationButtonLabel('Bitcoin', { hasExisting: true }) === 'Create Another Bitcoin Anchor',
+        assert(displayText(describeCreationButtonLabel('Bitcoin', { hasExisting: true })) === 'Create Another Bitcoin Anchor',
             '31. once at least one anchor of a type exists, the button makes clear a SECOND, independent one is what clicking again produces');
 
         // Each verifies independently — one confirmed via a bad proof

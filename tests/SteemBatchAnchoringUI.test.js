@@ -21,6 +21,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
 import { fakeSteemChain } from './support/FakeSteemChain.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 const HASHES = ['fnv1a-32:0000000a', 'fnv1a-32:0000000b', 'fnv1a-32:0000000c'];
 
@@ -81,12 +82,12 @@ async function settle() {
     const { chain, entries, evidence } = setUp();
     const [entry] = entries;
     await evidence.createAnchor(entry, 'steem');
-    assert(evidence.creationView(entry, 'steem').label === 'Anchor created', 'the anchor is created');
+    assert(displayText(evidence.creationView(entry, 'steem').label) === 'Anchor created', 'the anchor is created');
     const pending = evidence.creationFinality(entry, 'steem');
     assert(pending && ['Waiting for finality', 'Anchored'].includes(pending.label), 'and its finality is being watched');
     await settle();
     const final = evidence.creationFinality(entry, 'steem');
-    assert(final.label === 'Anchored' && final.message.includes(`block ${entry.creationAttempts.steem.anchor.proof.blockNum}`), 'once the block is final, the card says Anchored');
+    assert(displayText(final.label) === 'Anchored' && displayText(final.message).includes(`block ${entry.creationAttempts.steem.anchor.proof.blockNum}`), 'once the block is final, the card says Anchored');
     assert(chain.broadcasts.length === 1, 'one broadcast');
     console.log('✓ a created Steem anchor is reported as anchored once final');
 }
@@ -104,8 +105,8 @@ async function settle() {
     await evidence.verifyAnchor(entry, anchorView);
     const note = evidence.verificationNote(entry, anchorView);
     const block = chain.blocks.get(anchor.proof.blockNum);
-    assert(note && note.includes(`Recorded in Steem block ${anchor.proof.blockNum} at ${block.timestamp.replace('T', ' ')} UTC by witness witness-one`), 'the verification note gives the block time and witness');
-    assert(note.includes('kept block evidence checks out offline'), 'and the kept evidence');
+    assert(note && displayText(note).includes(`Recorded in Steem block ${anchor.proof.blockNum} at ${block.timestamp.replace('T', ' ')} UTC by witness witness-one`), 'the verification note gives the block time and witness');
+    assert(displayText(note).includes('kept block evidence checks out offline'), 'and the kept evidence');
     console.log('✓ a verification shows the block time');
 }
 
@@ -113,18 +114,18 @@ async function settle() {
 {
     const { chain, entries, batch, loaded } = setUp();
     assert(batch.batchAnchorTypes.length === 1 && batch.batchAnchorTypes[0].anchorType === 'steem', 'Steem is offered for batches');
-    assert(batch.batchButtonDisabled('steem') && batch.batchButtonLabel('steem') === 'Anchor 0 Publications on Steem', 'nothing picked, nothing to do');
+    assert(batch.batchButtonDisabled('steem') && displayText(batch.batchButtonLabel('steem')) === 'Anchor 0 Publications on Steem', 'nothing picked, nothing to do');
     batch.selectUnanchoredForBatch('steem');
-    assert(batch.batchSelectedIds('steem').length === 3 && batch.batchButtonLabel('steem') === 'Anchor 3 Publications on Steem', 'every unanchored publication is picked');
+    assert(batch.batchSelectedIds('steem').length === 3 && displayText(batch.batchButtonLabel('steem')) === 'Anchor 3 Publications on Steem', 'every unanchored publication is picked');
     batch.batchAnchoring.steem.selected['pub-2'] = false;
     await batch.createBatchAnchors('steem');
     assert(chain.broadcasts.length === 1, 'one broadcast for the batch');
     const view = batch.batchCreationView('steem');
-    assert(view.label === 'Anchor created' && view.message.startsWith('2 publications anchored with one Steem transaction'), 'the batch reports its anchors');
+    assert(displayText(view.label) === 'Anchor created' && displayText(view.message).startsWith('2 publications anchored with one Steem transaction'), 'the batch reports its anchors');
     assert(loaded.join() === 'pub-0,pub-1' && entries[0].evidenceAnchors.length === 1 && entries[2].evidenceAnchors.length === 0, 'each picked publication gets its own anchor');
     assert(batch.batchSelectedIds('steem').length === 0, 'the selection is cleared');
     await settle();
-    assert(batch.batchFinality('steem').label === 'Anchored', 'and the shared block is watched until final');
+    assert(displayText(batch.batchFinality('steem').label) === 'Anchored', 'and the shared block is watched until final');
 
     batch.selectUnanchoredForBatch('steem');
     assert(batch.batchSelectedIds('steem').join() === 'pub-2', 'afterwards only the unanchored one is picked');
@@ -138,7 +139,7 @@ async function settle() {
     batch.selectUnanchoredForBatch('steem');
     await batch.createBatchAnchors('steem');
     const view = batch.batchCreationView('steem');
-    assert(view.label === 'No anchor was created' && view.reason === 'user_cancel', 'a declined batch says so');
+    assert(displayText(view.label) === 'No anchor was created' && displayText(view.reason) === 'user_cancel', 'a declined batch says so');
     assert(entries.every((entry) => entry.evidenceAnchors.length === 0) && batch.batchFinality('steem') === null, 'nothing was anchored or watched');
     console.log('✓ a declined batch');
 }

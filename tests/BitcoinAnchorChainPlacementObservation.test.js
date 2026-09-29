@@ -11,6 +11,7 @@ import {
 } from '../application/anchoring/bitcoin/BitcoinAnchorChainPlacementObservationView.js';
 import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.76 — Bitcoin Anchor Chain Placement Change Observation.
 //
@@ -250,12 +251,12 @@ async function run() {
             assert(!value.toLowerCase().includes('reorg'), `27. outcome value "${value}" never names a reorganization`);
         }
 
-        assert(described.comparisons[0].outcomeLabel === 'Observed block placement changed between observation 1 and observation 2.', '28. the narrated sentence names the change factually, with no verdict wording');
+        assert(displayText(described.comparisons[0].outcomeLabel) === 'Observed block placement changed between observation 1 and observation 2.', '28. the narrated sentence names the change factually, with no verdict wording');
         assert(isValidBitcoinAnchorChainPlacementObservationOutcome(BitcoinAnchorChainPlacementObservationOutcome.PLACEMENT_CHANGED), '29. PLACEMENT_CHANGED is a recognized outcome');
         assert(!isValidBitcoinAnchorChainPlacementObservationOutcome('reorg-detected'), '30. an invented reorg-detected value is never recognized');
 
-        const insufficientLabel = describeBitcoinAnchorChainPlacementObservationOutcomeLabel(BitcoinAnchorChainPlacementObservationOutcome.INSUFFICIENT_OBSERVATIONS);
-        assert(insufficientLabel === 'Not enough confirmed observations exist yet to compare block placement.', '31. the insufficient-observations label names the gap factually');
+        const insufficientLabel = displayText(describeBitcoinAnchorChainPlacementObservationOutcomeLabel(BitcoinAnchorChainPlacementObservationOutcome.INSUFFICIENT_OBSERVATIONS));
+        assert(displayText(insufficientLabel) === 'Not enough confirmed observations exist yet to compare block placement.', '31. the insufficient-observations label names the gap factually');
         assert(describeBitcoinAnchorChainPlacementObservationOutcomeLabel('not-a-real-outcome') === null, '32. an unrecognized outcome names nothing');
 
         const unchangedHistory = Object.freeze([

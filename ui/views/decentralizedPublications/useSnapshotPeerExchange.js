@@ -22,6 +22,7 @@ import { SnapshotMaterializationSourceKind } from '../../../application/snapshot
 import {
     describeSnapshotPeerPossessionObservationDetails
 } from '../../../application/snapshot/possession/SnapshotPeerPossessionObservationDetailView.js';
+import { t } from '../../i18n/i18n.js';
 
 // Snapshot exchange with peers: asking one peer for a snapshot, checking
 // whether one or several peers hold it (with a comparison and its history),
@@ -218,10 +219,10 @@ export function useSnapshotPeerExchange({
     function comparisonPeerMaterializationButtonLabel(entry, peerRow) {
         const view = comparisonPeerMaterializationView(entry, peerRow.peerId);
         const peerLabel = peerPossessionRowLabel(peerRow.peerId);
-        if (view.requesting) return 'Requesting…';
+        if (view.requesting) return t('publications.requesting');
         return view.state !== SnapshotPeerMaterializationUiState.IDLE
-            ? `Get Snapshot from ${peerLabel} Again`
-            : `Get Snapshot from ${peerLabel}`;
+            ? t('publications.getSnapshotFromPeerAgain', { peer: peerLabel })
+            : t('publications.getSnapshotFromPeer', { peer: peerLabel });
     }
 
     // Every recorded observation, including repeat checks, separate from
@@ -249,9 +250,9 @@ export function useSnapshotPeerExchange({
     // A peer that has since disconnected still shows by shortId; "Unknown
     // peer" is only for a null peerId.
     function peerPossessionRowLabel(peerId) {
-        if (!peerId) return 'Unknown peer';
+        if (!peerId) return t('publications.unknownPeer');
         const peer = retrievalPeers.value.find((candidate) => candidate.connectionId === peerId);
-        if (peer) return peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : 'Unknown peer');
+        if (peer) return peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : t('publications.unknownPeer'));
         return shortId(peerId);
     }
 

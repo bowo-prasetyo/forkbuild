@@ -6,6 +6,7 @@ import { describeBitcoinAnchorBroadcast } from '../../anchoring/bitcoin/BitcoinA
 import { describeBitcoinAnchorConfirmationObservationHistory } from '../../anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryView.js';
 import { describeBitcoinAnchorContentProof } from '../../anchoring/bitcoin/BitcoinAnchorContentProofView.js';
 import { describeBaseTransactionInclusionObservationHistory } from '../../anchoring/base/BaseTransactionInclusionObservationView.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.74 — Cross-Domain Publication Observation Timeline.
 //
@@ -225,8 +226,10 @@ function normalizedRecordIndex(recordIndex) {
     return Number.isInteger(recordIndex) ? recordIndex : null;
 }
 
-function bitcoinLabel(base, recordIndex) {
-    return Number.isInteger(recordIndex) ? `${base} — Publication #${recordIndex}` : base;
+function bitcoinLabel(key, recordIndex) {
+    return Number.isInteger(recordIndex)
+        ? message('publicationObservationTimeline.withPublication', { what: message(key), number: recordIndex })
+        : message(key);
 }
 
 function bitcoinBroadcastEntry(anchor) {
@@ -237,7 +240,7 @@ function bitcoinBroadcastEntry(anchor) {
         domain: PublicationObservationTimelineDomain.BITCOIN,
         kind: PublicationObservationTimelineEntryKind.BITCOIN_BROADCAST,
         recordIndex,
-        label: bitcoinLabel('Bitcoin broadcast', recordIndex),
+        label: bitcoinLabel('publicationObservationTimeline.bitcoinBroadcast', recordIndex),
         anchorId: anchor.anchorId != null ? anchor.anchorId : null,
         txid: described.txid,
         state: described.state,
@@ -252,7 +255,7 @@ function bitcoinConfirmationEntry(observation, { recordIndex, anchorId }) {
         domain: PublicationObservationTimelineDomain.BITCOIN,
         kind: PublicationObservationTimelineEntryKind.BITCOIN_CONFIRMATION,
         recordIndex,
-        label: bitcoinLabel('Bitcoin confirmation', recordIndex),
+        label: bitcoinLabel('publicationObservationTimeline.bitcoinConfirmation', recordIndex),
         anchorId: anchorId != null ? anchorId : null,
         txid: observation.txid,
         state: observation.state,
@@ -270,7 +273,7 @@ function bitcoinContentProofEntry(described, { recordIndex, anchorId, txid }) {
         domain: PublicationObservationTimelineDomain.BITCOIN,
         kind: PublicationObservationTimelineEntryKind.BITCOIN_CONTENT_PROOF,
         recordIndex,
-        label: bitcoinLabel('Bitcoin content proof', recordIndex),
+        label: bitcoinLabel('publicationObservationTimeline.bitcoinContentProof', recordIndex),
         anchorId: anchorId != null ? anchorId : null,
         txid: txid != null ? txid : null,
         state: described.state,
@@ -292,7 +295,7 @@ function baseTransactionInclusionEntry(observation, transactionHash) {
         domain: PublicationObservationTimelineDomain.BASE,
         kind: PublicationObservationTimelineEntryKind.BASE_TRANSACTION_INCLUSION,
         transactionHash,
-        label: 'Base transaction inclusion',
+        label: message('publicationObservationTimeline.baseTransactionInclusion'),
         txid: observation.txid,
         state: observation.state,
         stateLabel: observation.stateLabel,

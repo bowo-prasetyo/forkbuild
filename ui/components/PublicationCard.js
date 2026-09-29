@@ -2,9 +2,12 @@ import PublicationPreview from './PublicationPreview.js';
 import PublicationCommentarySection from './PublicationCommentarySection.js';
 import SharePublicationButton from './SharePublicationButton.js';
 import FollowButton from './FollowButton.js';
-import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
+import { publicationDateText } from '../i18n/dateText.js';
 import { License } from '../../core/License.js';
+import { describeLicense } from '../../application/document/LicenseLabels.js';
 import { DISTRIBUTION_KIND_LABELS } from '../../application/publication/OwnPublicationDistributionRecord.js';
+import { displayText, t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
 // 0.2.31 — one publication, in card form. Pure presentation: every
 // piece of enriched data (description, parent title, fork count) is
@@ -33,7 +36,7 @@ import { DISTRIBUTION_KIND_LABELS } from '../../application/publication/OwnPubli
 // gate every optional capability in this codebase's UI layer follows.
 export default {
     name: 'PublicationCard',
-    components: { PublicationPreview, PublicationCommentarySection, SharePublicationButton, FollowButton },
+    components: { I18nText, PublicationPreview, PublicationCommentarySection, SharePublicationButton, FollowButton },
     inject: {
         // Read only to decide whether to offer the Comment toggle.
         getPublicationCommentariesCommand: { default: null },
@@ -72,7 +75,7 @@ export default {
             return {
                 recorded: record.stored.length + record.announced.length > 0,
                 stored: record.stored.map((entry) => ({ label: label(entry), detail: entry.locator })),
-                announced: record.announced.map((entry) => ({ label: label(entry), detail: entry.id ? `Announcement ${entry.id}` : null }))
+                announced: record.announced.map((entry) => ({ label: label(entry), detail: entry.id ? t('publicationCard.announcementId', { id: entry.id }) : null }))
             };
         },
         // Only a verified signer can be followed; the typed author name is
@@ -81,16 +84,17 @@ export default {
             return this.followingFeed ? this.followingFeed.verifiedPublisherOf(this.publication) : null;
         },
         licenseLabel() {
-            return License.idOf(this.publication.license);
+            return displayText(describeLicense(License.idOf(this.publication.license)));
         },
         // 0.9.539 — the SAME `publishedAt` field, at finer precision,
         // never a new one. See needsPreciseDate's own comment above and
         // core/PublicationDateAmbiguity.js's formatPublicationDate().
         publishedAtLabel() {
-            return formatPublicationDate(this.publication.publishedAt, this.needsPreciseDate);
+            return publicationDateText(this.publication.publishedAt, this.needsPreciseDate);
         }
     },
     methods: {
+        t,
         // The only writer of `commentaryOpen`. A no-op whenever no
         // getPublicationCommentariesCommand was injected. Opening mounts
         // PublicationCommentarySection, which performs the first read.
@@ -106,45 +110,46 @@ export default {
             <PublicationPreview :publication="publication" size="card" />
             <h3>{{ publication.title }}</h3>
             <p v-if="publication.parentDocumentId" class="publication-fork-of">
-                ↳ Fork of {{ parentTitle || 'Unknown' }}
+                ↳ Fork of {{ parentTitle || t('publicationCard.unknown') }}
             </p>
             <p v-if="description" class="publication-description">{{ description }}</p>
             <p class="publication-meta">
-                <span class="publication-badge">🔒 Published</span>
-                by
-                <template v-if="publication.author">
-                    <a @click.prevent="$emit('view-author', publication.author)" class="publication-author-link">{{ publication.author }}</a>
-                </template>
-                <template v-else>anonymous</template>
+                <span class="publication-badge">{{ t('publicationCard.published') }}</span>
+                <I18nText keypath="publicationCard.by">
+                    <template #author>
+                        <a v-if="publication.author" @click.prevent="$emit('view-author', publication.author)" class="publication-author-link">{{ publication.author }}</a>
+                        <template v-else>{{ t('publicationCard.anonymous') }}</template>
+                    </template>
+                </I18nText>
             </p>
             <p class="publication-date" v-if="publication.publishedAt">
                 {{ publishedAtLabel }} · {{ licenseLabel }}
             </p>
             <p class="publication-forks" v-if="forkCount > 0">
-                {{ forkCount }} fork(s)
+                {{ t('publicationCard.forkCount', { count: forkCount }) }}
             </p>
             <p v-if="distribution && distribution.recorded" class="publication-distribution">
-                <template v-if="distribution.stored.length">Stored on
-                    <template v-for="(entry, index) in distribution.stored" :key="'s' + entry.label"><template v-if="index"> and </template><span class="publication-distribution-item" :title="entry.detail">{{ entry.label }}</span></template>
+                <template v-if="distribution.stored.length">{{ t('publicationCard.storedOn') }}
+                    <template v-for="(entry, index) in distribution.stored" :key="'s' + entry.label"><template v-if="index"> {{ t('publicationCard.and') }} </template><span class="publication-distribution-item" :title="entry.detail">{{ entry.label }}</span></template>
                 </template>
                 <template v-if="distribution.stored.length && distribution.announced.length"> · </template>
-                <template v-if="distribution.announced.length">Announced on
-                    <template v-for="(entry, index) in distribution.announced" :key="'a' + entry.label"><template v-if="index"> and </template><span class="publication-distribution-item" :title="entry.detail">{{ entry.label }}</span></template>
+                <template v-if="distribution.announced.length">{{ t('publicationCard.announcedOn') }}
+                    <template v-for="(entry, index) in distribution.announced" :key="'a' + entry.label"><template v-if="index"> {{ t('publicationCard.and') }} </template><span class="publication-distribution-item" :title="entry.detail">{{ entry.label }}</span></template>
                 </template>
             </p>
             <p v-else-if="distribution" class="publication-distribution publication-distribution--none">
-                No distribution recorded on this device.
-                <router-link to="/settings/data">Back it up</router-link>, or Explore it and use Distribute under My Publication.
+                {{ t('publicationCard.noDistributionRecordedOnThis') }}
+                <router-link to="/settings/data">{{ t('publicationCard.backItUp') }}</router-link>{{ t('publicationCard.orExploreItAndUse') }}
             </p>
             <div class="publication-actions">
-                <button class="action-btn action-btn--open" @click="$emit('open', publication)">Open</button>
-                <button class="action-btn action-btn--fork" @click="$emit('fork', publication)">Fork</button>
-                <button class="action-btn action-btn--explore" @click="$emit('explore', publication)">Explore</button>
+                <button class="action-btn action-btn--open" @click="$emit('open', publication)">{{ t('publicationCard.open') }}</button>
+                <button class="action-btn action-btn--fork" @click="$emit('fork', publication)">{{ t('publicationCard.fork') }}</button>
+                <button class="action-btn action-btn--explore" @click="$emit('explore', publication)">{{ t('publicationCard.explore') }}</button>
                 <button
                     v-if="getPublicationCommentariesCommand"
                     class="action-btn action-btn--comment"
                     @click="toggleCommentary"
-                >{{ commentaryOpen ? 'Hide Comments' : 'Comment' }}</button>
+                >{{ commentaryOpen ? t('publicationCard.hideComments') : t('publicationCard.comment') }}</button>
             </div>
             <SharePublicationButton :publication="publication" />
             <div v-if="publisherIdentityId" class="publication-follow">

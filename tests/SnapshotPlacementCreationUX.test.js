@@ -20,6 +20,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.25 — Explicit Snapshot Placement Creation UX.
 //
@@ -175,7 +176,7 @@ async function run() {
         assert(resolutionCoordinator.discover(publication.id).length === 0, '2. no placement known before any is created');
         const idleView = describeCreationAttempt(null);
         assert(idleView.state === SnapshotPlacementCreationUiState.IDLE, '3. before any click, the derived view reports IDLE');
-        assert(describeCreationButtonLabel('Ipfs', { hasExisting: false }) === 'Create Ipfs Placement', '4. the initial button reads "Create <storage> Placement"');
+        assert(displayText(describeCreationButtonLabel('Ipfs', { hasExisting: false })) === 'Create Ipfs Placement', '4. the initial button reads "Create <storage> Placement"');
 
         // Alice clicks "Create Ipfs Placement."
         const attempt = await clickCreate(creationCoordinator, publication.id, 'ipfs');
@@ -184,10 +185,10 @@ async function run() {
 
         const createdView = describeCreationAttempt(attempt);
         assert(createdView.state === SnapshotPlacementCreationUiState.CREATED, '7. the derived view reports CREATED');
-        assert(createdView.message.includes('A snapshot placement was recorded for ipfs'), '8. the UI makes exactly the strongest permitted statement');
+        assert(displayText(createdView.message).includes('A snapshot placement was recorded for ipfs'), '8. the UI makes exactly the strongest permitted statement');
         const forbiddenWords = ['decentralized', 'permanent', 'verified', 'confirmed', 'available everywhere', 'trusted'];
         for (const word of forbiddenWords) {
-            assert(!createdView.message.toLowerCase().includes(word), `9. the creation message never uses the word "${word}"`);
+            assert(!displayText(createdView.message).toLowerCase().includes(word), `9. the creation message never uses the word "${word}"`);
         }
 
         // The new placement immediately shows up in the ordinary, never-
@@ -224,7 +225,7 @@ async function run() {
         const attempt = await clickCreate(creationCoordinator, publication.id, 'ipfs');
         const view = describeCreationAttempt(attempt);
         assert(view.state === SnapshotPlacementCreationUiState.UNAVAILABLE, '13. a store that cannot presently place bytes reports the UNAVAILABLE UI state');
-        assert(view.message.toLowerCase().includes('could not currently be reached'), '14. the message names the honest, generic reason');
+        assert(displayText(view.message).toLowerCase().includes('could not currently be reached'), '14. the message names the honest, generic reason');
     }
     {
         // The publication itself was published by SOME authenticated
@@ -250,7 +251,7 @@ async function run() {
         const view = describeCreationAttempt(attempt);
         assert(view.state === SnapshotPlacementCreationUiState.UNAVAILABLE,
             '16. to a person looking at the button, "nobody signed in" reads exactly like "storage unreachable" — no placement was created either way');
-        assert(view.reason.includes('sign in'), '17. but the SPECIFIC reason is preserved, never replaced with a generic message');
+        assert(displayText(view.reason).includes('sign in'), '17. but the SPECIFIC reason is preserved, never replaced with a generic message');
         assert(placementCatalog.findByPublicationId(publication.id).length === 0, '18. nothing was ever cataloged — the store was never even reached');
     }
 
@@ -327,7 +328,7 @@ async function run() {
 
         const discovered = resolutionCoordinator.discover(publication.id);
         assert(discovered.length === 2, '29. both independent placements are discoverable — neither replaces the other');
-        assert(describeCreationButtonLabel('Ipfs', { hasExisting: true }) === 'Create Another Ipfs Placement',
+        assert(displayText(describeCreationButtonLabel('Ipfs', { hasExisting: true })) === 'Create Another Ipfs Placement',
             '30. once at least one placement of a storage type exists, the button makes clear a SECOND, independent one is what clicking again produces');
     }
     console.log('✓ Section D: creating the same storage type twice produces two independent, equally discoverable placements — never ranked or collapsed');

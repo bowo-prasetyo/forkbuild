@@ -13,6 +13,7 @@ import {
     describePublicationObservationTimeline
 } from '../application/publication/observationArchive/PublicationObservationTimelineView.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.74 — Cross-Domain Publication Observation Timeline.
 //
@@ -275,7 +276,7 @@ async function run() {
 
         const bitcoinEntry = timeline.entries.find((e) => e.domain === PublicationObservationTimelineDomain.BITCOIN);
         assert(bitcoinEntry.recordIndex === null, '23. an anchor with no caller-supplied recordIndex projects as recordIndex: null — never guessed from the identical contentHash the IPFS record above also carries');
-        assert(bitcoinEntry.label === 'Bitcoin broadcast', '24. an unlinked entry\'s own label carries no "Publication #" suffix at all, rather than a fabricated one');
+        assert(displayText(bitcoinEntry.label) === 'Bitcoin broadcast', '24. an unlinked entry\'s own label carries no "Publication #" suffix at all, rather than a fabricated one');
 
         // A non-integer recordIndex (a caller-contract mistake) is treated
         // exactly like "no association supplied" — never coerced or guessed.

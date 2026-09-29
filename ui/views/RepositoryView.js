@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import PublicationCatalog from '../components/PublicationCatalog.js';
 import SharedWithYouPanel from '../components/SharedWithYouPanel.js';
+import { t } from '../i18n/i18n.js';
 
 // Repository View — the "GitHub" mode: every published document,
 // browsable at catalog scale. As of 0.2.31 this is a thin wrapper
@@ -19,11 +20,11 @@ export default {
     components: { PublicationCatalog, SharedWithYouPanel },
     setup() {
         const catalogKey = ref(0);
-        return { catalogKey, reloadCatalog: () => { catalogKey.value++; } };
+        return { t, catalogKey, reloadCatalog: () => { catalogKey.value++; } };
     },
     template: `
         <section class="repository-view">
-            <h1>Repository</h1>
+            <h1>{{ t('repositoryView.repository') }}</h1>
             <SharedWithYouPanel @retrieved="reloadCatalog" />
             <PublicationCatalog :key="catalogKey" />
         </section>

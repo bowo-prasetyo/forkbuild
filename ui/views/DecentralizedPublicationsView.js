@@ -76,6 +76,8 @@ import { distributionSectionTemplate } from './decentralizedPublications/templat
 import { snapshotTabTemplate } from './decentralizedPublications/templates/snapshotTab.js';
 import { evidenceTabTemplate } from './decentralizedPublications/templates/evidenceTab.js';
 import { placementsTabTemplate } from './decentralizedPublications/templates/placementsTab.js';
+import { displayText, t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
 // Publications page (/publications). Lists every DecentralizedPublication in
 // the local catalog (this replica's own, or one a peer announced) with its
@@ -103,7 +105,7 @@ import { placementsTabTemplate } from './decentralizedPublications/templates/pla
 
 export default {
     name: 'DecentralizedPublicationsView',
-    components: { PublicationShareLink },
+    components: { I18nText, PublicationShareLink },
     setup() {
         // Groups the page-level tool cards into three tabs. Presentation only:
         // panels use v-show, so no card state changes.
@@ -214,15 +216,17 @@ export default {
             preferredAnchorCreationCoordinator ? availableAnchorTypes : [],
             { walletGuidedKeys: WALLET_GUIDED_ANCHOR_TYPES }
         );
-        function preferenceHint(choice, noun, name) {
-            if (choice.reason === 'unavailable') return `Your preferred ${noun}, ${name(choice.savedKey)}, can't be used with one click here; use the options below.`;
+        // `role` is 'storage' or 'anchoring': each has its own sentences, since
+        // the noun changes their grammar in other languages.
+        function preferenceHint(choice, role, name) {
+            if (choice.reason === 'unavailable') return t(`publications.preference.${role}.unavailable`, { name: name(choice.savedKey) });
             if (choice.reason === 'wallet-guided') {
-                return `Your preferred ${noun}, ${name(choice.savedKey)}, is anchored through its wallet steps in this card's Details → Decentralization & Evidence tab.`;
+                return t(`publications.preference.${role}.walletGuided`, { name: name(choice.savedKey) });
             }
-            return `No preferred ${noun} is set. Choose one under Configure to get a single button here.`;
+            return t(`publications.preference.${role}.none`);
         }
         const contentPreferenceHint = preferenceHint(contentPreference, 'storage', humanizeStorageType);
-        const anchorPreferenceHint = preferenceHint(anchorPreference, 'anchoring provider', humanizeAnchorType);
+        const anchorPreferenceHint = preferenceHint(anchorPreference, 'anchoring', humanizeAnchorType);
 
         const entries = reactive([]);
         const loading = ref(true);
@@ -315,7 +319,7 @@ export default {
         // alphabetically — display order only; `retrievalPeers` itself keeps
         // registry order for resolution. See utils/sortOptionsByLabel.js.
         function retrievalPeerLabel(peer) {
-            return peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : 'Unknown peer');
+            return peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : t('publications.unknownPeer'));
         }
         const retrievalPeerOptions = computed(() => sortOptionsByLabel(retrievalPeers.value, retrievalPeerLabel));
 
@@ -970,11 +974,11 @@ export default {
 
         function preferredStoreButtonLabel(entry) {
             return preferredPlacementCreationView(entry).state === 'creating'
-                ? 'Storing…' : `Store on ${humanizeStorageType(contentPreference.providerKey)}`;
+                ? t('publications.storing') : t('publications.storeOn', { provider: humanizeStorageType(contentPreference.providerKey) });
         }
         function preferredAnchorButtonLabel(entry) {
             return preferredCreationView(entry).state === 'creating'
-                ? 'Anchoring…' : `Anchor on ${humanizeAnchorType(anchorPreference.providerKey)}`;
+                ? t('publications.anchoring') : t('publications.anchorOn', { provider: humanizeAnchorType(anchorPreference.providerKey) });
         }
 
         // A name for the card and the batch-anchor picker, read from content
@@ -1001,8 +1005,8 @@ export default {
         }
 
         function statusLabel(entry) {
-            if (entry.checking) return 'Checking…';
-            if (!entry.view) return 'Checking…';
+            if (entry.checking) return t('publications.checking');
+            if (!entry.view) return t('publications.checking');
             return describePublicationOutcome(entry.view.outcome);
         }
 
@@ -1013,11 +1017,11 @@ export default {
             if (!entry.view) return null;
             if (entry.view.outcome === PublicationResolutionOutcome.RESOLVED) {
                 return describeRetrieval(entry.view)
-                    || "Available locally. The content matching this publication's cryptographic hash is stored on this device.";
+                    || t('publications.availableLocally');
             }
             if (entry.view.outcome === PublicationResolutionOutcome.CONTENT_UNAVAILABLE) {
                 return describeRetrieval(entry.view)
-                    || 'Unavailable locally. The publication is known, but its referenced content is not currently available on this device.';
+                    || t('publications.unavailableLocally');
             }
             return null;
         }
@@ -1053,6 +1057,8 @@ export default {
         });
 
         return {
+            t,
+            displayText,
             publicationsToolsOpen, openPublicationsTools,
             entries, loading, retrievalPeers, retrievalPeerOptions, retrievalPeerLabel, availableAnchorTypes,
             humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
@@ -1233,68 +1239,61 @@ export default {
     },
     template: `
         <section class="publications-view">
-            <h1>Publications</h1>
+            <h1>{{ t('publications.publications') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Every signed publication this device has seen — its own, or one a connected
-                <router-link to="/peers">peer</router-link> announced. Each status is checked fresh when the
-                page opens: being listed never means the content is on this device. Wallets, archives
-                and publisher tools are in
-                <button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">Wallet, Archive &amp; Publisher Tools</button>
-                at the bottom of the page.
+                <I18nText keypath="publications.intro">
+                    <template #peer><router-link to="/peers">{{ t('publications.peer') }}</router-link></template>
+                    <template #tools><button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">{{ t('publications.walletArchivePublisherTools') }}</button></template>
+                </I18nText>
             </p>
             <!-- The page is a regular feature; only the parts marked with an
                  Experimental badge may change or be removed. -->
             <p class="form-hint form-hint--neutral">
-                Parts marked <span class="experimental-badge">Experimental</span> (anchoring, wallets, Steem, remote
-                IPFS pinning and the expert tabs and tools) work, but may change or be removed in a later version,
-                and what they produce may not carry over.
+                {{ t('publications.partsMarked') }} <span class="experimental-badge">{{ t('publications.experimental') }}</span> {{ t('publications.anchoringWalletsSteemRemoteIpfs') }}
             </p>
             <p v-if="retrievalPeers.length === 0 && anyRetrievable" class="form-hint form-hint--neutral">
-                No peer is connected, so "Retrieve from Peers" can't fetch missing content. Connect to one
-                from <router-link to="/peers">Peers</router-link>.
+                <I18nText keypath="publications.noPeerIsConnectedSo2"><template #peers><router-link to="/peers">{{ t('publications.peers') }}</router-link></template></I18nText>
             </p>
 
 
-            <p v-if="loading" class="locations-panel-empty">Checking cataloged publications…</p>
+            <p v-if="loading" class="locations-panel-empty">{{ t('publications.checkingCatalogedPublications') }}</p>
             <p v-else-if="entries.length === 0" class="locations-panel-empty">
-                Nothing cataloged yet. Publish a signed attribution or naming claim, or connect to a peer who
-                has one, and it will show up here.
+                {{ t('publications.nothingCatalogedYetPublishA') }}
             </p>
 
             <p v-else-if="usableEntries.length === 0" class="locations-panel-empty">
-                None of the cataloged publications passed its check; they are listed below.
+                {{ t('publications.noneOfTheCatalogedPublications') }}
             </p>
 
             <div v-if="!loading && usableEntries.length > 0" class="identity-mgmt-list">
                 <div v-for="entry in usableEntries" :key="entry.publication.id" class="identity-mgmt-card">
                     <div class="identity-mgmt-card-header">
                         <span class="identity-mgmt-name">{{ publicationTitle(entry) || humanizeContentKind(entry.publication.contentKind) }}</span>
-                        <span class="peer-badge" :class="badgeClass(entry)">{{ statusLabel(entry) }}</span>
+                        <span class="peer-badge" :class="badgeClass(entry)">{{ displayText(statusLabel(entry)) }}</span>
                     </div>
                     <p class="identity-mgmt-status">
-                        <template v-if="publicationTitle(entry)">{{ humanizeContentKind(entry.publication.contentKind) }} · </template>Published by {{ shortId(entry.publication.publisherIdentity && entry.publication.publisherIdentity.id) }}
-                        · received {{ formatWhen(entry.receivedAt) }}
+                        <template v-if="publicationTitle(entry)">{{ humanizeContentKind(entry.publication.contentKind) }} · </template>{{ t('publications.publishedByReceived', { publisher: shortId(entry.publication.publisherIdentity && entry.publication.publisherIdentity.id), when: formatWhen(entry.receivedAt) }) }}
                     </p>
                     <p v-if="entry.view && entry.view.contentSummary" class="form-hint form-hint--neutral">
-                        {{ entry.view.contentSummary }}
+                        {{ displayText(entry.view.contentSummary) }}
                     </p>
                     <p v-if="availabilityText(entry)" class="form-hint form-hint--neutral">
-                        {{ availabilityText(entry) }}
+                        {{ displayText(availabilityText(entry)) }}
                     </p>
                     <p v-else-if="entry.view && entry.view.reason" class="form-hint form-hint--neutral">
-                        {{ entry.view.reason }}
+                        {{ displayText(entry.view.reason) }}
                     </p>
                     <p v-if="canRetrieve(entry) && retrievalPeers.length > 0" class="form-hint form-hint--neutral">
-                        {{ retrievalPeers.length }} connected peer{{ retrievalPeers.length === 1 ? '' : 's' }} may have this content.
+                        {{ t('publications.connectedPeersMayHave', { count: retrievalPeers.length }) }}
                     </p>
 
                     <div class="identity-mgmt-actions">
                         <button v-if="canRetrieve(entry)" class="action-btn action-btn--secondary"
                                 :disabled="entry.retrieving || retrievalPeers.length === 0" @click="retrieve(entry)">
-                            {{ entry.retrieving ? 'Asking peers…' : 'Retrieve from Peers' }}
+                            {{ entry.retrieving ? t('publications.askingPeers') : t('publications.retrieveFromPeers') }}
                         </button>
                         <button class="action-btn action-btn--secondary" :disabled="entry.checking" @click="recheck(entry)">
-                            {{ entry.checking ? 'Checking…' : 'Re-check' }}
+                            {{ entry.checking ? t('publications.checking') : t('publications.reCheck') }}
                         </button>
                     </div>
 
@@ -1302,28 +1301,28 @@ export default {
 
                     <!-- Per-publication details, collapsed by default. -->
                     <details class="identity-mgmt-card-details">
-                        <summary class="identity-mgmt-card-details-summary">Details</summary>
+                        <summary class="identity-mgmt-card-details-summary">{{ t('publications.details') }}</summary>
 
                         <div class="publications-tools-tabs" role="tablist">
                             <button type="button" role="tab" :aria-selected="entry.detailsTab === 'snapshot'"
                                     :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'snapshot' }]"
                                     @click="setEntryDetailsTab(entry, 'snapshot')">
-                                Snapshot
+                                {{ t('publications.snapshot') }}
                             </button>
                             <button type="button" role="tab" :aria-selected="entry.detailsTab === 'evidence'"
                                     :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'evidence' }]"
                                     @click="setEntryDetailsTab(entry, 'evidence')">
-                                Decentralization &amp; Evidence<span class="experimental-badge" title="Experimental: may change or be removed in a later version">Exp.</span>
+                                {{ t('publications.decentralizationEvidence') }}<span class="experimental-badge" :title="t('publications.experimentalMayChangeOrBe')">{{ t('publications.exp') }}</span>
                             </button>
                             <button type="button" role="tab" :aria-selected="entry.detailsTab === 'placements'"
                                     :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'placements' }]"
                                     @click="setEntryDetailsTab(entry, 'placements')">
-                                Placements &amp; IPFS<span class="experimental-badge" title="Experimental: may change or be removed in a later version">Exp.</span>
+                                {{ t('publications.placementsIpfs') }}<span class="experimental-badge" :title="t('publications.experimentalMayChangeOrBe')">{{ t('publications.exp') }}</span>
                             </button>
                             <button type="button" role="tab" :aria-selected="entry.detailsTab === 'history'"
                                     :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'history' }]"
                                     @click="setEntryDetailsTab(entry, 'history')">
-                                History<span class="experimental-badge" title="Experimental: may change or be removed in a later version">Exp.</span>
+                                {{ t('publications.history') }}<span class="experimental-badge" :title="t('publications.experimentalMayChangeOrBe')">{{ t('publications.exp') }}</span>
                             </button>
                         </div>
 
@@ -1338,38 +1337,35 @@ export default {
                          network access. -->
                     <div v-if="crossDomainPublicationObservationTimelineView(entry).count > 0" class="evidence-section">
                         <div class="evidence-summary">
-                            <span class="evidence-summary-title">Cross-Domain Observation Timeline</span>
+                            <span class="evidence-summary-title">{{ t('publications.crossDomainObservationTimeline') }}</span>
                             <span class="form-hint form-hint--neutral">
-                                Every IPFS and Bitcoin observation for this publication, in one true
-                                chronological order. Each entry keeps its own domain's own vocabulary —
-                                this is never a combined status, and an IPFS fact is never presented as
-                                evidence about a Bitcoin fact, or the other way around.
+                                {{ t('publications.everyIpfsAndBitcoinObservation') }}
                             </span>
                         </div>
                         <div class="identity-mgmt-actions">
                             <button type="button" class="action-btn action-btn--secondary"
                                     @click="toggleCrossDomainPublicationObservationTimeline(entry)">
-                                {{ entry.crossDomainPublicationObservationTimelineExpanded ? 'Hide Cross-Domain Timeline' : 'Show Cross-Domain Timeline' }}
+                                {{ entry.crossDomainPublicationObservationTimelineExpanded ? t('publications.hideCrossDomainTimeline') : t('publications.showCrossDomainTimeline') }}
                             </button>
                         </div>
                         <div v-if="entry.crossDomainPublicationObservationTimelineExpanded" class="evidence-inspection-adapter">
-                            <span class="evidence-inspection-adapter-title">Cross-Domain Observation Timeline</span>
+                            <span class="evidence-inspection-adapter-title">{{ t('publications.crossDomainObservationTimeline') }}</span>
                             <ul class="replica-knowledge-claim-list">
                                 <li v-for="(item, cdIndex) in crossDomainPublicationObservationTimelineView(entry).entries"
                                     :key="cdIndex" class="replica-knowledge-claim">
                                     <span class="peer-badge" :class="crossDomainPublicationObservationTimelineEntryBadgeClass(item)">
-                                        {{ formatWhen(item.observedAt) }} — {{ crossDomainPublicationObservationTimelineEntryDomainLabel(item) }} —
-                                        {{ item.kind === PublicationObservationTimelineEntryKind.IPFS_PUBLICATION ? 'Published' : item.stateLabel }}
+                                        {{ formatWhen(item.observedAt) }} — {{ displayText(crossDomainPublicationObservationTimelineEntryDomainLabel(item)) }} —
+                                        {{ item.kind === PublicationObservationTimelineEntryKind.IPFS_PUBLICATION ? t('publications.published') : item.stateLabel }}
                                     </span>
                                     <p class="form-hint form-hint--neutral">
-                                        {{ item.label }}
+                                        {{ displayText(item.label) }}
                                         <template v-if="item.domain === PublicationObservationTimelineDomain.IPFS"> — {{ item.locator }}</template>
-                                        <template v-else-if="item.txid"> — txid {{ item.txid }}</template>
+                                        <template v-else-if="item.txid"> — {{ t('publications.txid', { txid: item.txid }) }}</template>
                                     </p>
                                     <p v-if="item.kind === PublicationObservationTimelineEntryKind.BITCOIN_CONFIRMATION && item.blockHeight != null" class="form-hint form-hint--neutral">
-                                        Block height {{ item.blockHeight }}
+                                        {{ t('publications.blockHeightValue', { height: item.blockHeight }) }}
                                     </p>
-                                    <p v-if="item.reason" class="form-hint form-hint--neutral">{{ item.reason }}</p>
+                                    <p v-if="item.reason" class="form-hint form-hint--neutral">{{ displayText(item.reason) }}</p>
                                 </li>
                             </ul>
                         </div>
@@ -1387,76 +1383,69 @@ export default {
             <details v-if="!loading && failedEntries.length > 0" class="publications-tools-panel"
                      :open="usableEntries.length === 0">
                 <summary class="publications-tools-panel-summary">
-                    {{ failedEntries.length }} publication{{ failedEntries.length === 1 ? '' : 's' }} that can't be used
+                    {{ t('publications.failedCount', { count: failedEntries.length }) }}
                 </summary>
                 <p class="form-hint form-hint--neutral">
-                    These failed their check, so they can't be opened, distributed or anchored. Each says why;
-                    one published with an old content hash has to be published again by its author.
-                    Removing one only forgets it on this device; a peer that still has it may announce it again.
+                    {{ t('publications.theseFailedTheirCheckSo') }}
                 </p>
                 <p v-if="ownLegacyCount > 0" class="form-hint form-hint--neutral">
-                    <strong>{{ ownLegacyCount }} {{ ownLegacyCount === 1 ? 'is' : 'are' }} yours</strong>, published
-                    before content hashes became SHA-256. Each card below says how to publish it again; once you
-                    have, remove the old one.
+                    <I18nText keypath="publications.ownLegacy" :params="{ count: ownLegacyCount }"><template #yours><strong>{{ t('publications.ownLegacyYours', { count: ownLegacyCount }) }}</strong></template></I18nText>
                 </p>
                 <div class="identity-mgmt-actions">
                     <button v-if="!confirmingRemoveAllFailed" class="action-btn action-btn--secondary"
                             @click="confirmingRemoveAllFailed = true">
-                        Remove All {{ failedEntries.length }} from This Device
+                        {{ t('publications.removeAllCount', { count: failedEntries.length }) }}
                     </button>
                     <template v-else>
-                        <span class="form-hint form-hint--neutral">Remove all {{ failedEntries.length }} from this device?</span>
-                        <button class="action-btn action-btn--danger" @click="removeAllFailedEntries()">Remove All</button>
-                        <button class="action-btn action-btn--secondary" @click="confirmingRemoveAllFailed = false">Cancel</button>
+                        <span class="form-hint form-hint--neutral">{{ t('publications.removeAllConfirm', { count: failedEntries.length }) }}</span>
+                        <button class="action-btn action-btn--danger" @click="removeAllFailedEntries()">{{ t('publications.removeAll') }}</button>
+                        <button class="action-btn action-btn--secondary" @click="confirmingRemoveAllFailed = false">{{ t('publications.cancel') }}</button>
                     </template>
                 </div>
                 <div class="identity-mgmt-list">
                     <div v-for="entry in failedEntries" :key="entry.publication.id" class="identity-mgmt-card">
                         <div class="identity-mgmt-card-header">
                             <span class="identity-mgmt-name">{{ (entry.ownRecord && entry.ownRecord.title) || humanizeContentKind(entry.publication.contentKind) }}</span>
-                            <span class="peer-badge" :class="badgeClass(entry)">{{ statusLabel(entry) }}</span>
+                            <span class="peer-badge" :class="badgeClass(entry)">{{ displayText(statusLabel(entry)) }}</span>
                         </div>
                         <p class="identity-mgmt-status">
-                            <template v-if="entry.ownRecord && entry.ownRecord.title">{{ humanizeContentKind(entry.publication.contentKind) }} · </template>Published by {{ shortId(entry.publication.publisherIdentity && entry.publication.publisherIdentity.id) }}
-                            · received {{ formatWhen(entry.receivedAt) }}
-                            · content {{ shortHash(entry.publication.contentReference.hash) }}
+                            <template v-if="entry.ownRecord && entry.ownRecord.title">{{ humanizeContentKind(entry.publication.contentKind) }} · </template>{{ t('publications.publishedByReceived', { publisher: shortId(entry.publication.publisherIdentity && entry.publication.publisherIdentity.id), when: formatWhen(entry.receivedAt) }) }}
+                            · {{ t('publications.contentHashShort', { hash: shortHash(entry.publication.contentReference.hash) }) }}
                         </p>
                         <!-- Found among this device's own Worlds: open that
                              World, publish it again, share the new copy. -->
                         <p v-if="isOwnLegacyEntry(entry) && entry.ownRecord" class="form-hint form-hint--neutral">
-                            <span class="peer-badge peer-badge--pending">Yours</span>
-                            You shared this World before content hashes became SHA-256, so nobody can check it.
-                            Open it in the Editor and publish it again, then click Share with Peers under the new
-                            copy in the Repository.
+                            <span class="peer-badge peer-badge--pending">{{ t('publications.yours') }}</span>
+                            {{ t('publications.youSharedThisWorldBefore') }}
                         </p>
                         <p v-else-if="isOwnLegacyEntry(entry)" class="form-hint form-hint--neutral">
-                            <span class="peer-badge peer-badge--pending">Yours</span>
-                            You published this before content hashes became SHA-256, so nobody can check it.
-                            {{ ownLegacyRepublishAdvice(entry).text }}
+                            <span class="peer-badge peer-badge--pending">{{ t('publications.yours') }}</span>
+                            {{ t('publications.youPublishedBeforeSha256') }}
+                            {{ displayText(ownLegacyRepublishAdvice(entry).text) }}
                         </p>
                         <p v-else-if="entry.view && entry.view.reason" class="form-hint form-hint--neutral">
-                            {{ entry.view.reason }}
+                            {{ displayText(entry.view.reason) }}
                         </p>
                         <div class="identity-mgmt-actions">
                             <router-link v-if="isOwnLegacyEntry(entry) && entry.ownRecord"
                                          :to="ownRecordEditorRoute(entry)" class="action-btn action-btn--primary">
-                                Open in Editor
+                                {{ t('publications.openInEditor') }}
                             </router-link>
                             <router-link v-else-if="isOwnLegacyEntry(entry) && ownLegacyRepublishAdvice(entry).route"
                                          :to="ownLegacyRepublishAdvice(entry).route" class="action-btn action-btn--primary">
-                                {{ ownLegacyRepublishAdvice(entry).routeLabel }}
+                                {{ displayText(ownLegacyRepublishAdvice(entry).routeLabel) }}
                             </router-link>
                             <button class="action-btn action-btn--secondary" :disabled="entry.checking" @click="recheck(entry)">
-                                {{ entry.checking ? 'Checking…' : 'Re-check' }}
+                                {{ entry.checking ? t('publications.checking') : t('publications.reCheck') }}
                             </button>
                             <button v-if="!entry.confirmingRemoval" class="action-btn action-btn--secondary"
                                     @click="entry.confirmingRemoval = true">
-                                Remove from This Device
+                                {{ t('publications.removeFromThisDevice') }}
                             </button>
                             <template v-else>
-                                <span class="form-hint form-hint--neutral">Remove it from this device?</span>
-                                <button class="action-btn action-btn--danger" @click="removeFailedEntry(entry)">Remove</button>
-                                <button class="action-btn action-btn--secondary" @click="entry.confirmingRemoval = false">Cancel</button>
+                                <span class="form-hint form-hint--neutral">{{ t('publications.removeItFromThisDevice') }}</span>
+                                <button class="action-btn action-btn--danger" @click="removeFailedEntry(entry)">{{ t('publications.remove') }}</button>
+                                <button class="action-btn action-btn--secondary" @click="entry.confirmingRemoval = false">{{ t('publications.cancel') }}</button>
                             </template>
                         </div>
                     </div>
@@ -1469,10 +1458,9 @@ export default {
                  need a wallet observed here first. -->
             <details id="publications-tools" class="publications-tools-panel" :open="publicationsToolsOpen"
                      @toggle="publicationsToolsOpen = $event.target.open">
-                <summary class="publications-tools-panel-summary">Wallet, Archive &amp; Publisher Tools <span class="experimental-badge">Experimental</span></summary>
+                <summary class="publications-tools-panel-summary">{{ t('publications.walletArchivePublisherTools') }} <span class="experimental-badge">{{ t('publications.experimental') }}</span></summary>
                 <p class="form-hint form-hint--neutral">
-                    Experimental. Everything in this panel works, but may change or be removed in a later version,
-                    and what it produces may not carry over.
+                    {{ t('publications.experimentalEverythingInThisPanel') }}
                 </p>
 
                 <!-- Tab panels use v-show so card state survives tab switches. -->
@@ -1480,17 +1468,17 @@ export default {
                     <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'anchoring'"
                             :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'anchoring' }]"
                             @click="setPublicationsToolsTab('anchoring')">
-                        Blockchain Anchoring
+                        {{ t('publications.blockchainAnchoring') }}
                     </button>
                     <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'archive'"
                             :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'archive' }]"
                             @click="setPublicationsToolsTab('archive')">
-                        Archive Tools
+                        {{ t('publications.archiveTools') }}
                     </button>
                     <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'connections'"
                             :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'connections' }]"
                             @click="setPublicationsToolsTab('connections')">
-                        References &amp; Achievements
+                        {{ t('publications.referencesAchievements') }}
                     </button>
                 </div>
 

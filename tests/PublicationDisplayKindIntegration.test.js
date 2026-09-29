@@ -25,6 +25,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.9.333 — Decentralized Publication Display-Kind Integration.
 //
@@ -194,9 +195,9 @@ async function run() {
         assert(flagshipView.resolved === true, `4. the decentralized-origin Publication resolves through the Publications Center's own view path (${flagshipView.reason})`);
         assert(flagshipView.outcome === PublicationResolutionOutcome.RESOLVED, '5. outcome is RESOLVED, not merely truthy');
         assert(flagshipView.content instanceof Publication, '6. resolved content handed to the view is a real Publication instance');
-        assert(typeof flagshipView.contentSummary === 'string' && flagshipView.contentSummary.startsWith('Publication —'),
+        assert(typeof displayText(flagshipView.contentSummary) === 'string' && displayText(flagshipView.contentSummary).startsWith('Publication —'),
             `7. the view carries a real contentSummary produced by the newly-registered describe() (got: ${JSON.stringify(flagshipView.contentSummary)})`);
-        assert(flagshipView.contentSummary.includes('The Farmstead') && flagshipView.contentSummary.includes('alice'),
+        assert(displayText(flagshipView.contentSummary).includes('The Farmstead') && displayText(flagshipView.contentSummary).includes('alice'),
             '8. the summary actually reflects this publication\'s own title and author, not a generic placeholder');
     }
     console.log('✓ Section A: FLAGSHIP — a real Publication travels publish() -> announce() -> (wire) -> _handleIncoming() -> importPublication() -> catalog -> resolvePublicationView(), driven by the real CreatePublicationDisplayKindRegistryUseCase output, and becomes visible in the Publications Center exactly like any other cataloged content kind — the one gap 0.9.332 named is closed.');
@@ -225,7 +226,7 @@ async function run() {
         const localView = await resolvePublicationView(localEnvelope, { coordinator: localCoordinator, kindPlugins });
 
         assert(localView.resolved === true, `1. the purely local publication resolves (${localView.reason})`);
-        assert(localView.contentSummary === flagshipView.contentSummary,
+        assert(displayText(localView.contentSummary) === displayText(flagshipView.contentSummary),
             `2. the LOCAL view's contentSummary is byte-identical to the DECENTRALIZED-origin view's own (local: ${JSON.stringify(localView.contentSummary)}, decentralized: ${JSON.stringify(flagshipView.contentSummary)}) — acquisition origin does not alter presentation`);
         assert(localView.content.title === flagshipView.content.title && localView.content.author === flagshipView.content.author,
             '3. title/author converge across both acquisition paths');
@@ -284,7 +285,7 @@ async function run() {
             content: makePublication({}, alice), contentKind: PUBLICATION_CONTENT_KIND, identityProvider: alice
         });
         const publicationView = await resolvePublicationView(publicationEnvelope, { coordinator, kindPlugins });
-        assert(publicationView.resolved && publicationView.contentSummary.startsWith('Publication —'),
+        assert(publicationView.resolved && displayText(publicationView.contentSummary).startsWith('Publication —'),
             `1. a forkbuild.publication envelope dispatches to the Publication describe() (${publicationView.contentSummary})`);
 
         // D2. forkbuild.blueprint-attribution — real, signed, self-describing.
@@ -294,7 +295,7 @@ async function run() {
             content: attribution, contentKind: BLUEPRINT_ATTRIBUTION_KIND, contentSchemaVersion: ATTRIBUTION_SCHEMA_VERSION, identityProvider: alice
         });
         const attributionView = await resolvePublicationView(attributionEnvelope, { coordinator, kindPlugins });
-        assert(attributionView.resolved && attributionView.contentSummary.startsWith('Blueprint attribution —'),
+        assert(attributionView.resolved && displayText(attributionView.contentSummary).startsWith('Blueprint attribution —'),
             `2. a forkbuild.blueprint-attribution envelope dispatches to the BlueprintAttribution describe(), never the Publication one (${attributionView.contentSummary})`);
 
         // D3. forkbuild.place-naming-claim — real, signed, wrapped.
@@ -304,7 +305,7 @@ async function run() {
             content: buildPlaceNamingClaimPublication(claim), contentKind: PLACE_NAMING_CLAIM_PUBLICATION_KIND, contentSchemaVersion: NAMING_SCHEMA_VERSION, identityProvider: alice
         });
         const claimView = await resolvePublicationView(claimEnvelope, { coordinator, kindPlugins });
-        assert(claimView.resolved && claimView.contentSummary.startsWith('Place name claim —'),
+        assert(claimView.resolved && displayText(claimView.contentSummary).startsWith('Place name claim —'),
             `3. a forkbuild.place-naming-claim envelope dispatches to the PlaceNamingClaim describe(), never the Publication one (${claimView.contentSummary})`);
 
         // D4. Every summary is distinct — no two kinds ever converge on
@@ -327,7 +328,7 @@ async function run() {
         const unknownView = await resolvePublicationView(unknownEnvelope, { coordinator, kindPlugins });
         assert(unknownView.resolved === false && unknownView.outcome === null,
             '5. an unregistered contentKind is never resolved, never silently handled by the Publication kindPlugin');
-        assert(typeof unknownView.reason === 'string' && unknownView.reason.includes('forkbuild.some-future-kind'),
+        assert(typeof displayText(unknownView.reason) === 'string' && displayText(unknownView.reason).includes('forkbuild.some-future-kind'),
             `6. the reason names the exact unsupported kind, exactly as application/publication/PublicationResolutionView.js already does for every other unknown kind (${unknownView.reason})`);
     }
     console.log('✓ Section D: forkbuild.publication, forkbuild.blueprint-attribution, and forkbuild.place-naming-claim each dispatch to their own, distinct presentation — three real resolutions, three real, non-overlapping summaries. An unregistered fourth kind still falls through to the existing "unsupported kind" case, proving the generic Publication renderer never became an accidental fallback for every content kind.');
@@ -342,10 +343,10 @@ async function run() {
         const regressionIdentityId = 'did:key:zRegressionIdentityLongEnough';
         const shortId = regressionIdentityId.slice(-14);
 
-        assert(kindPlugins[BLUEPRINT_ATTRIBUTION_KIND].describe({ fingerprint: 'bp:regression-1', authorIdentityId: regressionIdentityId }) ===
+        assert(displayText(kindPlugins[BLUEPRINT_ATTRIBUTION_KIND].describe({ fingerprint: 'bp:regression-1', authorIdentityId: regressionIdentityId })) ===
             `Blueprint attribution — bp:regression-1, claimed by ${shortId}`,
             '1. BlueprintAttribution\'s own describe() format is exactly what it was before this milestone — untouched by the new third entry');
-        assert(kindPlugins[PLACE_NAMING_CLAIM_PUBLICATION_KIND].describe({ name: 'Regression Cove', authorIdentityId: regressionIdentityId }) ===
+        assert(displayText(kindPlugins[PLACE_NAMING_CLAIM_PUBLICATION_KIND].describe({ name: 'Regression Cove', authorIdentityId: regressionIdentityId })) ===
             `Place name claim — "Regression Cove", claimed by ${shortId}`,
             '2. PlaceNamingClaim\'s own describe() format is exactly what it was before this milestone — untouched by the new third entry');
 

@@ -6,7 +6,8 @@
 //   {{ t('a.b') }}      → the English
 //   :title="t('a.b')"   → title="the English"
 //   t('a.b') elsewhere  → 'the English' (a string literal)
-// A t() call with parameters is left as it is.
+//   message('a.b')      → 'the English' (core/ and application/ code)
+// A call with parameters is left as it is.
 import en from '../../ui/i18n/messages/en.js';
 
 function english(key) {
@@ -27,5 +28,5 @@ export function withEnglish(source) {
     return source
         .replace(/\{\{\s*t\('([\w.]+)'\)\s*\}\}/g, (match, key) => english(key))
         .replace(/:([\w-]+)="t\('([\w.]+)'\)"/g, (match, attribute, key) => `${attribute}="${english(key)}"`)
-        .replace(/\bt\('([\w.]+)'\)/g, (match, key) => `'${quoted(key)}'`);
+        .replace(/\b(?:t|message)\('([\w.]+)'\)/g, (match, key) => `'${quoted(key)}'`);
 }

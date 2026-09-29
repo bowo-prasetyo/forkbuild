@@ -26,6 +26,9 @@ import PublicationList from '../ui/components/PublicationList.js';
 import { stylesheetFiles, editorViewFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { displayText } from '../ui/i18n/i18n.js';
+import { withEnglish } from './support/EnglishSource.js';
+import en from '../ui/i18n/messages/en.js';
 
 // 0.9.564 — Repository Discovery Experience Product Reassessment.
 //
@@ -92,7 +95,7 @@ async function readSource(relativePath) {
 }
 async function codeOnlySource(relativePath) {
     const text = await readSource(relativePath);
-    return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
+    return displayText(text).split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 
 function makeDocument(title, author, description = '') {
@@ -220,12 +223,12 @@ async function main() {
         assert(repoEmpty.items.length === 0 && repoEmpty.totalCount === 0, '1. LIVE: an untouched Repository reports zero items/zero totalCount, not an error or undefined page.');
         assert(authorEmpty.items.length === 0, '2. LIVE: an author with no publications reports zero items the same way.');
 
-        const catalogSource = await codeOnlySource('ui/components/PublicationCatalog.js');
+        const catalogSource = withEnglish(await codeOnlySource('ui/components/PublicationCatalog.js'));
         assert(catalogSource.includes("'No publications yet. Publish a creation from the Editor to see it here.'"),
             '3. LIVE: Repository\'s own empty-state message (author: null) explains WHAT Repository is FOR, not merely that it is empty — a first-time Wanderer is told the one action that would populate it.');
         assert(catalogSource.includes("'No publications found for this author.'"),
             '4. LIVE: Author view\'s own empty-state message is distinct from Repository\'s, and names the scope (this author) rather than reusing Repository\'s generic wording.');
-        assert(catalogSource.includes('No matches for'),
+        assert(catalogSource.includes("t('publicationCatalog.noMatches'") && en['publicationCatalog.noMatches'].startsWith('No matches for'),
             "5. LIVE: a SEARCH that matches nothing (catalog non-empty) is worded differently from an EMPTY catalog — 'no matches for X' vs 'no publications yet' are never conflated into one message.");
 
         // A2. One, then many, then mixed-origin (local + decentralized)
@@ -263,7 +266,7 @@ async function main() {
             '10. LIVE: RepositoryView.js never re-implements its own empty-state copy — it mounts the shared catalog, which already owns that message.');
         assert(authorViewSource.includes('<PublicationCatalog :author="author" />'),
             '11. LIVE: AuthorView.js mounts the identical shared catalog, scoped by the one `author` prop — never a parallel, independently-maintained author-catalog implementation.');
-        assert(authorViewSource.includes("{{ author || 'Anonymous' }}") && authorViewSource.includes('{{ allPublications.length }} publication'),
+        assert(authorViewSource.includes("{{ author || t('authorView.anonymous') }}") && authorViewSource.includes("t('authorView.publicationCount', { count: allPublications.length })"),
             '12. LIVE: AuthorView.js\'s own page-level heading and count give it a distinct identity from Repository\'s bare "Repository" heading — a Wanderer landing on either page can tell which scope they\'re looking at without reading the URL.');
 
         results.push(['A', 'Repository entry & empty state (0/1/many/mixed-origin)', 'ALREADY_CORRECT']);
@@ -338,7 +341,7 @@ async function main() {
 
         // C5. The toolbar's own search affordance never overclaims what
         // it actually does.
-        const toolbarSource = await codeOnlySource('ui/components/PublicationCatalogToolbar.js');
+        const toolbarSource = withEnglish(await codeOnlySource('ui/components/PublicationCatalogToolbar.js'));
         assert(toolbarSource.includes("placeholder=\"Search by title, author…\""),
             '25. LIVE: the search input\'s own placeholder names exactly what it matches (title, author) — never "search by ID," "verify," or "find exact match."');
         assert(!/\b(verify|verified|content hash|publicationId|exact match)\b/i.test(toolbarSource),
@@ -414,9 +417,9 @@ async function main() {
     // Author, live parity across both catalog views.
     // ===================================================================
     {
-        const cardSource = await readSource('ui/components/PublicationCard.js');
-        const listSource = await readSource('ui/components/PublicationList.js');
-        const catalogSource = await codeOnlySource('ui/components/PublicationCatalog.js');
+        const cardSource = withEnglish(await readSource('ui/components/PublicationCard.js'));
+        const listSource = withEnglish(await readSource('ui/components/PublicationList.js'));
+        const catalogSource = withEnglish(await codeOnlySource('ui/components/PublicationCatalog.js'));
 
         // The five actions the brief names, checked as literal,
         // human-facing affordances in BOTH views' own templates — not
@@ -566,7 +569,7 @@ async function main() {
         }
         const malformedDescription = resolveDescription(malformed);
         const healthyDescription = resolveDescription(healthy);
-        assert(malformedDescription === '', '45. LIVE: the malformed entry\'s failed document load resolves to an empty description, never a thrown error that would abort the page.');
+        assert(displayText(malformedDescription) === '', '45. LIVE: the malformed entry\'s failed document load resolves to an empty description, never a thrown error that would abort the page.');
         assert(healthyDescription !== undefined, '46. LIVE: the healthy neighbor\'s own description resolution is completely unaffected by the malformed entry\'s failure — one bad candidate never poisons another.');
 
         // Failed Open/Fork/Explore for the malformed entry: the ROUTE
@@ -645,7 +648,7 @@ async function main() {
         // documentation and the buttons never drifted apart from each
         // other after 0.9.563 shipped.
         const forkingDoc = await readSource('docs/user/04-PublishingAndForking.md');
-        const cardSource = await readSource('ui/components/PublicationCard.js');
+        const cardSource = withEnglish(await readSource('ui/components/PublicationCard.js'));
         assert(/Also called "Edit a Copy" in World View/.test(forkingDoc) && cardSource.includes('>Fork<'),
             '58. LIVE: the documentation names "Fork" as Repository/Author\'s own label (0.9.563), and PublicationCard.js\'s own button is still literally labeled "Fork" — doc and button agree.');
         assert(/Explore.{0,400}Continue Exploring/s.test(forkingDoc) && cardSource.includes('>Explore<'),

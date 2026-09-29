@@ -61,6 +61,11 @@ export function formatDate(value, options) {
     return translator.formatDate(value, options);
 }
 
+// The Intl locale the app formats with (a pseudo-locale formats as English).
+export function intlLocale() {
+    return translator.intlLocale;
+}
+
 export function currentLocale() {
     return findLocale(translator.locale);
 }

@@ -1,12 +1,13 @@
 import { BaseTransactionBroadcastState } from './BaseTransactionBroadcastState.js';
+import { message } from '../../../core/Message.js';
 
 const STATE_LABELS = {
-    [BaseTransactionBroadcastState.IDLE]: 'Not yet broadcast',
-    [BaseTransactionBroadcastState.BROADCASTING]: 'Broadcasting transaction…',
-    [BaseTransactionBroadcastState.BROADCASTED]: 'Transaction broadcasted',
-    [BaseTransactionBroadcastState.REJECTED]: 'Transaction rejected',
-    [BaseTransactionBroadcastState.UNAVAILABLE]: 'Broadcast unavailable',
-    [BaseTransactionBroadcastState.FAILED]: 'Broadcast failed'
+    [BaseTransactionBroadcastState.IDLE]: message('baseTransactionBroadcast.notYetBroadcast'),
+    [BaseTransactionBroadcastState.BROADCASTING]: message('baseTransactionBroadcast.broadcastingTransaction'),
+    [BaseTransactionBroadcastState.BROADCASTED]: message('baseTransactionBroadcast.transactionBroadcasted'),
+    [BaseTransactionBroadcastState.REJECTED]: message('baseTransactionBroadcast.transactionRejected'),
+    [BaseTransactionBroadcastState.UNAVAILABLE]: message('baseTransactionBroadcast.broadcastUnavailable'),
+    [BaseTransactionBroadcastState.FAILED]: message('baseTransactionBroadcast.broadcastFailed')
 };
 
 // 0.8.95 — Explicit Base Transaction Broadcast.

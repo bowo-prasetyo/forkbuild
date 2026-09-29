@@ -1,4 +1,5 @@
 import { LocalSnapshotContentAvailabilityOutcome } from './LocalSnapshotContentAvailabilityOutcome.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
 //
@@ -23,7 +24,7 @@ export function describeLocalSnapshotContentAvailability(attempt = null) {
         checking,
         checked,
         outcome: checked ? attempt.outcome : null,
-        label: checking ? 'Checking…' : (checked ? describeAvailabilityOutcomeLabel(attempt.outcome) : 'Not yet checked'),
+        label: checking ? message('localSnapshotContentAvailability.checking') : (checked ? describeAvailabilityOutcomeLabel(attempt.outcome) : message('localSnapshotContentAvailability.notYetChecked')),
         message: checked ? describeAvailabilityOutcomeMessage(attempt.outcome) : null
     };
 }
@@ -32,10 +33,10 @@ export function describeLocalSnapshotContentAvailability(attempt = null) {
 // SnapshotPlacementView.js#describeResolutionOutcome()'s own restraint.
 export function describeAvailabilityOutcomeLabel(outcome) {
     switch (outcome) {
-        case LocalSnapshotContentAvailabilityOutcome.AVAILABLE: return 'Available';
-        case LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE: return 'Not available';
-        case LocalSnapshotContentAvailabilityOutcome.CONTENT_HASH_MISMATCH: return 'Hash mismatch';
-        default: return 'Not yet checked';
+        case LocalSnapshotContentAvailabilityOutcome.AVAILABLE: return message('localSnapshotContentAvailability.available');
+        case LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE: return message('localSnapshotContentAvailability.notAvailable');
+        case LocalSnapshotContentAvailabilityOutcome.CONTENT_HASH_MISMATCH: return message('localSnapshotContentAvailability.hashMismatch');
+        default: return message('localSnapshotContentAvailability.notYetChecked');
     }
 }
 
@@ -48,11 +49,11 @@ export function describeAvailabilityOutcomeLabel(outcome) {
 export function describeAvailabilityOutcomeMessage(outcome) {
     switch (outcome) {
         case LocalSnapshotContentAvailabilityOutcome.AVAILABLE:
-            return "Local snapshot is available and matches the publication's content hash.";
+            return message('localSnapshotContentAvailability.localSnapshotIsAvailableAnd');
         case LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE:
-            return 'This replica does not currently hold bytes for this snapshot.';
+            return message('localSnapshotContentAvailability.thisReplicaDoesNotCurrently');
         case LocalSnapshotContentAvailabilityOutcome.CONTENT_HASH_MISMATCH:
-            return "This replica holds bytes under this snapshot's hash, but they no longer match it.";
+            return message('localSnapshotContentAvailability.thisReplicaHoldsBytesUnder');
         default:
             return null;
     }
@@ -64,6 +65,6 @@ export function describeAvailabilityOutcomeMessage(outcome) {
 // PublicationKnowledgeSynchronizationView.js#
 // describeSynchronizationButtonLabel()'s own shape exactly.
 export function describeAvailabilityCheckButtonLabel({ checking = false, checked = false } = {}) {
-    if (checking) return 'Checking…';
-    return checked ? 'Check Again' : 'Check Local Snapshot';
+    if (checking) return message('localSnapshotContentAvailability.checking');
+    return checked ? message('localSnapshotContentAvailability.checkAgain') : message('localSnapshotContentAvailability.checkLocalSnapshot');
 }

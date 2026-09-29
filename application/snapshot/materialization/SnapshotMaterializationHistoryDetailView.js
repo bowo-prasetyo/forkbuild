@@ -1,5 +1,6 @@
 import { describeSnapshotMaterializationHistory } from './SnapshotMaterializationHistoryView.js';
 import { StoreSnapshotContentOutcome } from './StoreSnapshotContentOutcome.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.44 — Explicit Snapshot Acquisition Attempt Inspection.
 //
@@ -74,9 +75,9 @@ export function describeSnapshotMaterializationHistoryEntry(attempt) {
 // the full sentence does not already carry.
 function describeSnapshotMaterializationOutcomeShortLabel(outcome) {
     switch (outcome) {
-        case StoreSnapshotContentOutcome.STORED: return 'Stored';
-        case StoreSnapshotContentOutcome.ALREADY_AVAILABLE: return 'Already available';
-        case StoreSnapshotContentOutcome.HASH_MISMATCH: return 'Hash mismatch';
+        case StoreSnapshotContentOutcome.STORED: return message('snapshotMaterializationHistoryDetail.stored');
+        case StoreSnapshotContentOutcome.ALREADY_AVAILABLE: return message('snapshotMaterializationHistoryDetail.alreadyAvailable');
+        case StoreSnapshotContentOutcome.HASH_MISMATCH: return message('snapshotMaterializationHistoryDetail.hashMismatch');
         default: return null;
     }
 }

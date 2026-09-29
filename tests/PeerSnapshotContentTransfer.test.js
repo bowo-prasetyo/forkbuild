@@ -28,6 +28,7 @@ import { SnapshotMaterializationSourceKind } from '../application/snapshot/mater
 import { describeSnapshotMaterializationSourceLabel } from '../application/snapshot/materialization/SnapshotMaterializationView.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.37 — Explicit Peer Snapshot Content Transfer.
 //
@@ -337,11 +338,11 @@ async function run() {
             const pending = coordinator.materialize({ peer, publicationId: 'pub-1', contentHash: 'a-hash-nobody-answers' });
             const result = await pending;
             assert(result.outcome === PeerSnapshotMaterializationOutcome.UNAVAILABLE, '15. a request nobody answers times out to UNAVAILABLE');
-            assert(typeof result.reason === 'string' && result.reason.length > 0, '16. UNAVAILABLE carries a plain-language reason');
+            assert(typeof displayText(result.reason) === 'string' && displayText(result.reason).length > 0, '16. UNAVAILABLE carries a plain-language reason');
         }
 
         // Views / UI state.
-        assert(describeSnapshotMaterializationSourceLabel(SnapshotMaterializationSourceKind.PEER) === 'Peer',
+        assert(displayText(describeSnapshotMaterializationSourceLabel(SnapshotMaterializationSourceKind.PEER)) === 'Peer',
             '17. the PEER source label is exactly "Peer" — no adjective, never "preferred," "trusted," or "verified via"');
         assert(describePeerMaterializationAttempt(null).state === SnapshotPeerMaterializationUiState.IDLE, '18. no attempt yet reads IDLE');
         assert(describePeerMaterializationAttempt({ requesting: true }).state === SnapshotPeerMaterializationUiState.REQUESTING, '19. an in-flight attempt reads REQUESTING');
@@ -349,9 +350,9 @@ async function run() {
             '20. a STORED outcome reads STORED');
         assert(describePeerMaterializationAttempt({ outcome: PeerSnapshotMaterializationOutcome.HASH_MISMATCH }).state === SnapshotPeerMaterializationUiState.HASH_MISMATCH,
             '21. a HASH_MISMATCH outcome reads HASH_MISMATCH, never conflated with UNAVAILABLE');
-        assert(describePeerMaterializationButtonLabel({}) === 'Get Snapshot from Peer', '22. the initial button label is "Get Snapshot from Peer"');
-        assert(describePeerMaterializationButtonLabel({ materialized: true }) === 'Get Snapshot from Peer Again', '23. after a completed attempt the label invites trying again');
-        assert(describePeerMaterializationButtonLabel({ requesting: true }) === 'Requesting…', '24. while in flight the label reads "Requesting…"');
+        assert(displayText(describePeerMaterializationButtonLabel({})) === 'Get Snapshot from Peer', '22. the initial button label is "Get Snapshot from Peer"');
+        assert(displayText(describePeerMaterializationButtonLabel({ materialized: true })) === 'Get Snapshot from Peer Again', '23. after a completed attempt the label invites trying again');
+        assert(displayText(describePeerMaterializationButtonLabel({ requesting: true })) === 'Requesting…', '24. while in flight the label reads "Requesting…"');
     }
     console.log('✓ Section C: MaterializeSnapshotFromPeerUseCase — single-peer request/timeout shape, STORED/ALREADY_AVAILABLE/HASH_MISMATCH/UNAVAILABLE, source PEER, coordinator pass-through, views');
 

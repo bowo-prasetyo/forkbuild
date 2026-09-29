@@ -1,4 +1,5 @@
 import { BitcoinAnchorContentProofState } from './BitcoinAnchorContentProofState.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
 //
@@ -40,9 +41,9 @@ import { BitcoinAnchorContentProofState } from './BitcoinAnchorContentProofState
 // arguments returns a byte-identical result.
 export function describeBitcoinAnchorContentProofStateLabel(state) {
     switch (state) {
-        case BitcoinAnchorContentProofState.HASH_MATCH: return 'Hash matches OP_RETURN';
-        case BitcoinAnchorContentProofState.HASH_MISMATCH: return 'Hash does not match OP_RETURN';
-        case BitcoinAnchorContentProofState.UNAVAILABLE: return 'Content proof unavailable';
+        case BitcoinAnchorContentProofState.HASH_MATCH: return message('bitcoinAnchorContentProof.hashMatchesOpReturn');
+        case BitcoinAnchorContentProofState.HASH_MISMATCH: return message('bitcoinAnchorContentProof.hashDoesNotMatchOp');
+        case BitcoinAnchorContentProofState.UNAVAILABLE: return message('bitcoinAnchorContentProof.contentProofUnavailable');
         default: return null;
     }
 }

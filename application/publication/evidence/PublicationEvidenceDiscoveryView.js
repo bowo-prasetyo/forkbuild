@@ -1,4 +1,5 @@
 import { PublicationEvidenceDiscoveryUiState } from './PublicationEvidenceDiscoveryUiState.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
 //
@@ -30,7 +31,7 @@ export function describeEvidenceDiscoveryAttempt(attempt = null) {
     if (attempt.discovering) {
         return {
             state: PublicationEvidenceDiscoveryUiState.DISCOVERING,
-            label: 'Asking peers…', message: null, newlyImportedCount: null, alreadyKnownCount: null
+            label: message('evidenceDiscovery.askingPeers'), message: null, newlyImportedCount: null, alreadyKnownCount: null
         };
     }
 
@@ -42,8 +43,8 @@ export function describeEvidenceDiscoveryAttempt(attempt = null) {
     if (attempt.error) {
         return {
             state: PublicationEvidenceDiscoveryUiState.UNAVAILABLE,
-            label: 'Discovery unavailable',
-            message: 'The requested peer discovery operation could not complete.',
+            label: message('evidenceDiscovery.discoveryUnavailable'),
+            message: message('evidenceDiscovery.theRequestedPeerDiscoveryOperation'),
             newlyImportedCount: null, alreadyKnownCount: null
         };
     }
@@ -52,8 +53,8 @@ export function describeEvidenceDiscoveryAttempt(attempt = null) {
     if (!attemptedPeers || attemptedPeers.length === 0) {
         return {
             state: PublicationEvidenceDiscoveryUiState.UNAVAILABLE,
-            label: 'Discovery unavailable',
-            message: 'No authenticated peer was available to ask.',
+            label: message('evidenceDiscovery.discoveryUnavailable'),
+            message: message('evidenceDiscovery.noAuthenticatedPeerWasAvailable'),
             newlyImportedCount: 0, alreadyKnownCount: 0
         };
     }
@@ -61,8 +62,8 @@ export function describeEvidenceDiscoveryAttempt(attempt = null) {
     if (newlyImportedCount > 0) {
         return {
             state: PublicationEvidenceDiscoveryUiState.DISCOVERED,
-            label: 'New evidence discovered',
-            message: `${newlyImportedCount} new evidence claim${newlyImportedCount === 1 ? '' : 's'} discovered from peers.`,
+            label: message('evidenceDiscovery.newEvidenceDiscovered'),
+            message: message('evidenceDiscovery.newClaimsDiscovered', { count: newlyImportedCount }),
             newlyImportedCount, alreadyKnownCount
         };
     }
@@ -73,8 +74,8 @@ export function describeEvidenceDiscoveryAttempt(attempt = null) {
     // whether more evidence exists somewhere this replica did not ask.
     return {
         state: PublicationEvidenceDiscoveryUiState.NO_NEW_EVIDENCE,
-        label: 'No new evidence',
-        message: 'No new evidence claims discovered from peers.',
+        label: message('evidenceDiscovery.noNewEvidence'),
+        message: message('evidenceDiscovery.noNewEvidenceClaimsDiscovered'),
         newlyImportedCount: 0, alreadyKnownCount
     };
 }
@@ -85,6 +86,6 @@ export function describeEvidenceDiscoveryAttempt(attempt = null) {
 // about to take. Mirrors application/anchoring/PublicationAnchorCreationView.js#
 // describeCreationButtonLabel()'s own shape exactly.
 export function describeDiscoveryButtonLabel({ discovering = false, hasDiscovered = false } = {}) {
-    if (discovering) return 'Asking Peers…';
-    return hasDiscovered ? 'Discover Again' : 'Discover from Peers';
+    if (discovering) return message('evidenceDiscovery.askingPeers2');
+    return hasDiscovered ? message('evidenceDiscovery.discoverAgain') : message('evidenceDiscovery.discoverFromPeers');
 }

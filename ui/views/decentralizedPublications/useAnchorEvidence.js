@@ -19,6 +19,7 @@ import {
     describeCreationAttempt, describeCreationButtonLabel
 } from '../../../application/anchoring/PublicationAnchorCreationView.js';
 import { ExternalAnchorCreationUiState } from '../../../application/anchoring/ExternalAnchorCreationUiState.js';
+import { t } from '../../i18n/i18n.js';
 
 // External anchor evidence for one entry: verifying and inspecting known
 // anchors, creating new ones, and discovering/synchronizing anchors with peers.
@@ -293,7 +294,7 @@ export function useAnchorEvidence({
     // anchorType-agnostic: which type was used is only known from the
     // result.
     function preferredCreationButtonLabel(entry) {
-        return preferredCreationView(entry).state === ExternalAnchorCreationUiState.CREATING ? 'Creating…' : 'Use Preferred Provider';
+        return preferredCreationView(entry).state === ExternalAnchorCreationUiState.CREATING ? t('publications.creating') : t('publications.usePreferredProvider');
     }
 
     return {

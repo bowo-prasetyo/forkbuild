@@ -326,7 +326,8 @@ async function run() {
         // ranking — verified on the real source, not merely on this one
         // fixture's own behavior.
         const computedStart = viewSource.indexOf('leaderboard()');
-        const computedBodyEnd = viewSource.indexOf('\n    },\n    template:');
+        // The computed block ends where `methods` (the translator) or the template begins.
+        const computedBodyEnd = viewSource.search(/\n    \},\n    (methods: \{[^\n]*\},\n    )?template:/);
         assert(computedStart !== -1 && computedBodyEnd !== -1 && computedBodyEnd > computedStart, n('G3. the leaderboard() computed property\'s own source slice is locatable'));
         const computedBody = viewSource.slice(computedStart, computedBodyEnd);
         assert(!/catch/.test(computedBody), n('G4. the leaderboard() computed property\'s own source contains no catch block — a genuine data-source failure is never quietly absorbed into a fallback or fabricated ranking'));

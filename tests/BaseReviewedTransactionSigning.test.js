@@ -11,6 +11,7 @@ import { BaseReviewedSigningCoordinator } from '../application/anchoring/base/Ba
 import { BaseReviewedSigningState, isValidBaseReviewedSigningState } from '../application/anchoring/base/BaseReviewedSigningState.js';
 import { describeBaseReviewedSigning, describeBaseReviewedSigningStateLabel } from '../application/anchoring/base/BaseReviewedSigningView.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.93 — Explicit Base Reviewed Transaction Signing.
 //
@@ -349,7 +350,7 @@ async function run() {
     {
         for (const state of Object.values(BaseReviewedSigningState)) {
             assert(isValidBaseReviewedSigningState(state), `48. ${state} is a recognized BaseReviewedSigningState`);
-            assert(typeof describeBaseReviewedSigningStateLabel(state) === 'string', `49. ${state} has a real label`);
+            assert(typeof displayText(describeBaseReviewedSigningStateLabel(state)) === 'string', `49. ${state} has a real label`);
         }
         assert(!isValidBaseReviewedSigningState('ready'), '50. "ready" is never a recognized state — no sixth value for "will definitely sign"');
 

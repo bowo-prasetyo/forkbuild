@@ -1,4 +1,5 @@
 import { BitcoinAnchorConfirmationState } from './BitcoinAnchorConfirmationState.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.56 — Bitcoin Anchor Confirmation Observation History & Per-Observation
 // Inspection.
@@ -48,9 +49,9 @@ import { BitcoinAnchorConfirmationState } from './BitcoinAnchorConfirmationState
 // adds a sentence for an existing `state`, never a new fact.
 export function describeBitcoinAnchorConfirmationStateLabel(state) {
     switch (state) {
-        case BitcoinAnchorConfirmationState.CONFIRMED: return 'Transaction confirmed';
-        case BitcoinAnchorConfirmationState.NOT_CONFIRMED: return 'Transaction not confirmed';
-        case BitcoinAnchorConfirmationState.UNAVAILABLE: return 'Confirmation status unavailable';
+        case BitcoinAnchorConfirmationState.CONFIRMED: return message('bitcoinAnchorConfirmationObservationHistory.transactionConfirmed');
+        case BitcoinAnchorConfirmationState.NOT_CONFIRMED: return message('bitcoinAnchorConfirmationObservationHistory.transactionNotConfirmed');
+        case BitcoinAnchorConfirmationState.UNAVAILABLE: return message('bitcoinAnchorConfirmationObservationHistory.confirmationStatusUnavailable');
         default: return null;
     }
 }

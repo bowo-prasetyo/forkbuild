@@ -13,6 +13,7 @@ import {
     describeBitcoinAnchorConfirmationObservationDetail
 } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.56 — Bitcoin Anchor Confirmation Observation History & Per-Observation
 // Inspection.
@@ -162,9 +163,9 @@ async function run() {
     // Section D — describeBitcoinAnchorConfirmationStateLabel().
     // ---------------------------------------------------------------
     {
-        assert(describeBitcoinAnchorConfirmationStateLabel(BitcoinAnchorConfirmationState.CONFIRMED) === 'Transaction confirmed', '23. CONFIRMED label');
-        assert(describeBitcoinAnchorConfirmationStateLabel(BitcoinAnchorConfirmationState.NOT_CONFIRMED) === 'Transaction not confirmed', '24. NOT_CONFIRMED label');
-        assert(describeBitcoinAnchorConfirmationStateLabel(BitcoinAnchorConfirmationState.UNAVAILABLE) === 'Confirmation status unavailable', '25. UNAVAILABLE label');
+        assert(displayText(describeBitcoinAnchorConfirmationStateLabel(BitcoinAnchorConfirmationState.CONFIRMED)) === 'Transaction confirmed', '23. CONFIRMED label');
+        assert(displayText(describeBitcoinAnchorConfirmationStateLabel(BitcoinAnchorConfirmationState.NOT_CONFIRMED)) === 'Transaction not confirmed', '24. NOT_CONFIRMED label');
+        assert(displayText(describeBitcoinAnchorConfirmationStateLabel(BitcoinAnchorConfirmationState.UNAVAILABLE)) === 'Confirmation status unavailable', '25. UNAVAILABLE label');
         assert(describeBitcoinAnchorConfirmationStateLabel('not-a-real-state') === null, '26. an unrecognized state names nothing');
         assert(describeBitcoinAnchorConfirmationStateLabel(undefined) === null, '27. no state names nothing');
     }
@@ -177,15 +178,15 @@ async function run() {
         const narrated = describeBitcoinAnchorConfirmationObservationHistory(history);
         assert(narrated.count === 3, '28. the narration counts every entry');
         assert(narrated.observations.length === 3, '29. the narration lists every entry');
-        assert(narrated.observations[0].stateLabel === 'Transaction not confirmed', '30. the first entry narrates NOT_CONFIRMED in full');
-        assert(narrated.observations[1].stateLabel === 'Transaction confirmed' && narrated.observations[1].blockHeight === 900000, '31. the second entry narrates CONFIRMED with its own block height');
+        assert(displayText(narrated.observations[0].stateLabel) === 'Transaction not confirmed', '30. the first entry narrates NOT_CONFIRMED in full');
+        assert(displayText(narrated.observations[1].stateLabel) === 'Transaction confirmed' && narrated.observations[1].blockHeight === 900000, '31. the second entry narrates CONFIRMED with its own block height');
         assert(narrated.observations[2].blockHeight === 900001, '32. the third entry keeps its own, different block height — oldest first, never reordered');
         assert(narrated.observations[0].txid === TXID, '33. txid is carried through unchanged');
 
         const unavailableObservation = { state: BitcoinAnchorConfirmationState.UNAVAILABLE, txid: TXID, blockHash: null, blockHeight: null, confirmationCount: null, reason: 'confirmation source unreachable', observedAt: new Date() };
         const withUnavailable = describeBitcoinAnchorConfirmationObservationHistory([unavailableObservation]);
-        assert(withUnavailable.observations[0].reason === 'confirmation source unreachable', '34. an UNAVAILABLE observation\'s own reason is carried through unchanged');
-        assert(withUnavailable.observations[0].stateLabel === 'Confirmation status unavailable', '35. UNAVAILABLE narrates in full');
+        assert(displayText(withUnavailable.observations[0].reason) === 'confirmation source unreachable', '34. an UNAVAILABLE observation\'s own reason is carried through unchanged');
+        assert(displayText(withUnavailable.observations[0].stateLabel) === 'Confirmation status unavailable', '35. UNAVAILABLE narrates in full');
 
         const empty = describeBitcoinAnchorConfirmationObservationHistory(null);
         assert(empty.count === 0 && empty.observations.length === 0, '36. a null history narrates as empty, never throwing');
@@ -198,15 +199,15 @@ async function run() {
     {
         const details = describeBitcoinAnchorConfirmationObservationHistoryDetails(history);
         assert(details.count === 3, '37. inspection counts every entry');
-        assert(details.entries[0].stateShortLabel === 'Not confirmed' && details.entries[0].stateLabel === 'Transaction not confirmed', '38. the first entry carries both the short and full label');
-        assert(details.entries[1].stateShortLabel === 'Confirmed', '39. the second entry\'s short label');
-        assert(details.entries[2].blockHeight === 900001 && details.entries[2].stateShortLabel === 'Confirmed', '40. the third entry keeps its own block height alongside its short label');
+        assert(displayText(details.entries[0].stateShortLabel) === 'Not confirmed' && displayText(details.entries[0].stateLabel) === 'Transaction not confirmed', '38. the first entry carries both the short and full label');
+        assert(displayText(details.entries[1].stateShortLabel) === 'Confirmed', '39. the second entry\'s short label');
+        assert(details.entries[2].blockHeight === 900001 && displayText(details.entries[2].stateShortLabel) === 'Confirmed', '40. the third entry keeps its own block height alongside its short label');
         assert(Object.isFrozen(details), '41. the top-level details result is frozen');
         assert(Object.isFrozen(details.entries), '42. the entries array is frozen');
         assert(Object.isFrozen(details.entries[0]), '43. each entry is frozen');
 
         const single = describeBitcoinAnchorConfirmationObservationDetail(history[1]);
-        assert(single.stateShortLabel === 'Confirmed' && single.blockHeight === 900000, '44. a single observation\'s own detail matches its entry in the full history');
+        assert(displayText(single.stateShortLabel) === 'Confirmed' && single.blockHeight === 900000, '44. a single observation\'s own detail matches its entry in the full history');
         assert(describeBitcoinAnchorConfirmationObservationDetail(null) === null, '45. no observation describes as null');
         assert(describeBitcoinAnchorConfirmationObservationDetail(undefined) === null, '46. undefined describes as null');
 

@@ -6,6 +6,7 @@ import { BaseTransactionBroadcastState, isValidBaseTransactionBroadcastState } f
 import { describeBaseTransactionBroadcast, describeBaseTransactionBroadcastStateLabel } from '../application/anchoring/base/BaseTransactionBroadcastView.js';
 import { BitcoinAnchorTransactionBroadcaster } from '../anchoring/BitcoinAnchorTransactionBroadcaster.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.95 — Explicit Base Transaction Broadcast.
 //
@@ -563,7 +564,7 @@ async function run() {
         assert(allStates.length === 6, '47. exactly six states exist');
         for (const state of allStates) {
             assert(isValidBaseTransactionBroadcastState(state), `48. ${state} is recognized as valid`);
-            assert(typeof describeBaseTransactionBroadcastStateLabel(state) === 'string', `49. ${state} has a human label`);
+            assert(typeof displayText(describeBaseTransactionBroadcastStateLabel(state)) === 'string', `49. ${state} has a human label`);
         }
         assert(!isValidBaseTransactionBroadcastState('confirmed'), '50. CONFIRMED is not part of this vocabulary — broadcasting is not confirmation');
         assert(!isValidBaseTransactionBroadcastState('safe'), '51. no verdict-shaped state exists');
@@ -594,7 +595,7 @@ async function run() {
         });
         const rejected = await rejectingClient.broadcastRawTransaction('0xdeadbeef');
         assert(rejected.broadcasted === false && !rejected.unavailable, '57. a definite JSON-RPC error is REJECTED-shaped (no unavailable flag)');
-        assert(rejected.reason.includes('nonce too low'), '58. the RPC error message is preserved in the reason');
+        assert(displayText(rejected.reason).includes('nonce too low'), '58. the RPC error message is preserved in the reason');
 
         // Unreachable — a throwing fetch.
         const unreachableClient = new BaseJsonRpcClient({

@@ -27,6 +27,7 @@ import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.35 — Explicit Placement-Backed Snapshot Materialization.
 //
@@ -243,21 +244,21 @@ async function run() {
             '1. idle (never attempted) reports IDLE with no label/message');
 
         const materializing = describePlacementMaterializationAttempt({ materializing: true });
-        assert(materializing.state === SnapshotPlacementMaterializationUiState.MATERIALIZING && materializing.label === 'Materializing…',
+        assert(materializing.state === SnapshotPlacementMaterializationUiState.MATERIALIZING && displayText(materializing.label) === 'Materializing…',
             '2. an in-flight materialization reports MATERIALIZING');
 
         const stored = describePlacementMaterializationAttempt({ outcome: SnapshotPlacementMaterializationOutcome.STORED, publicationKnown: true, placementId: 'pl', publicationId: 'p', contentReference: { hash: 'h' } });
         assert(stored.state === SnapshotPlacementMaterializationUiState.STORED, '3. STORED + known reports STORED');
-        assert(stored.message === 'Snapshot was materialized from this placement and matches its own claimed content hash.',
+        assert(displayText(stored.message) === 'Snapshot was materialized from this placement and matches its own claimed content hash.',
             '4. the exact, deliberately unhedged sentence this milestone permits for a known publication');
 
         const storedUnknown = describePlacementMaterializationAttempt({ outcome: SnapshotPlacementMaterializationOutcome.STORED, publicationKnown: false, placementId: 'pl', publicationId: 'p', contentReference: { hash: 'h' } });
-        assert(storedUnknown.message === 'Snapshot materialized from this placement. The publication is not currently known locally.',
+        assert(displayText(storedUnknown.message) === 'Snapshot materialized from this placement. The publication is not currently known locally.',
             '5. the distinct sentence this milestone requires when the publication is not cataloged — publicationKnown never gates the outcome');
 
         const already = describePlacementMaterializationAttempt({ outcome: SnapshotPlacementMaterializationOutcome.ALREADY_AVAILABLE, publicationKnown: true });
         assert(already.state === SnapshotPlacementMaterializationUiState.ALREADY_AVAILABLE, '6. ALREADY_AVAILABLE reports ALREADY_AVAILABLE');
-        assert(already.message === 'The snapshot is already present locally.', '7. the exact "already available" sentence');
+        assert(displayText(already.message) === 'The snapshot is already present locally.', '7. the exact "already available" sentence');
 
         const unavailable = describePlacementMaterializationAttempt({ outcome: SnapshotPlacementMaterializationOutcome.UNAVAILABLE, reason: 'the referenced content is not available from this content store' });
         assert(unavailable.state === SnapshotPlacementMaterializationUiState.UNAVAILABLE, '8. UNAVAILABLE reports UNAVAILABLE');
@@ -271,7 +272,7 @@ async function run() {
 
         const localError = describePlacementMaterializationAttempt({ error: 'a contract violation message' });
         assert(localError.state === SnapshotPlacementMaterializationUiState.UNAVAILABLE, '12. a local error shares UNAVAILABLE\'s UI state');
-        assert(localError.message === 'a contract violation message', '13. the specific local error message is preserved, never replaced with a generic one');
+        assert(displayText(localError.message) === 'a contract violation message', '13. the specific local error message is preserved, never replaced with a generic one');
 
         // No two of IDLE/MATERIALIZING/STORED/ALREADY_AVAILABLE/
         // UNAVAILABLE/HASH_MISMATCH/INVALID_PLACEMENT ever collapse onto
@@ -279,16 +280,16 @@ async function run() {
         const states = [idle, materializing, stored, already, unavailable, hashMismatch, invalidPlacement].map((v) => v.state);
         assert(new Set(states).size === 7, '14. all seven UI states are genuinely distinct');
 
-        assert(describePlacementMaterializationButtonLabel({}) === 'Materialize Snapshot', '15. idle button label');
-        assert(describePlacementMaterializationButtonLabel({ materializing: true }) === 'Materializing…', '16. in-flight button label');
-        assert(describePlacementMaterializationButtonLabel({ materialized: true }) === 'Materialize Again',
+        assert(displayText(describePlacementMaterializationButtonLabel({})) === 'Materialize Snapshot', '15. idle button label');
+        assert(displayText(describePlacementMaterializationButtonLabel({ materializing: true })) === 'Materializing…', '16. in-flight button label');
+        assert(displayText(describePlacementMaterializationButtonLabel({ materialized: true })) === 'Materialize Again',
             '17. once an attempt has completed, the button reads "Materialize Again" — mirroring "Resolve Snapshot"/"Resolve Again"');
 
         const forbiddenWords = ['verified', 'trusted', 'authentic', 'permanent', 'canonical'];
-        const allMessages = [stored, storedUnknown, already].map((v) => v.message.toLowerCase());
+        const allMessages = [stored, storedUnknown, already].map((v) => displayText(v.message).toLowerCase());
         for (const word of forbiddenWords) {
             for (const message of allMessages) {
-                assert(!message.includes(word), `18. no permitted success message ever uses the word "${word}" (checked: "${message}")`);
+                assert(!displayText(message).includes(word), `18. no permitted success message ever uses the word "${word}" (checked: "${message}")`);
             }
         }
     }
@@ -321,7 +322,7 @@ async function run() {
         assert(firstAttempt.publicationKnown === true, '4. Bob already knows the publication, reported as a plain observation');
         const firstView = describePlacementMaterializationAttempt(firstAttempt);
         assert(firstView.state === SnapshotPlacementMaterializationUiState.STORED, '5. the derived view reports STORED');
-        assert(firstView.message === 'Snapshot was materialized from this placement and matches its own claimed content hash.',
+        assert(displayText(firstView.message) === 'Snapshot was materialized from this placement and matches its own claimed content hash.',
             '6. the exact, unhedged sentence for a known publication');
 
         assert((await bob.contentStore.get(publication.contentReference)) !== null, '7. Bob now genuinely possesses bytes for the publication\'s own contentReference');

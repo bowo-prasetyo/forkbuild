@@ -1,15 +1,17 @@
+import { t } from '../i18n/i18n.js';
+
 export default {
     name: 'HomeView',
+    methods: { t },
     template: `
         <section class="home-view">
-            <h1>ForkBuild</h1>
-            <p class="tagline">Build. Fork. Share. Evolve.</p>
+            <h1>{{ t('homeView.forkbuild') }}</h1>
+            <p class="tagline">{{ t('homeView.buildForkShareEvolve') }}</p>
             <p>
-                An open-source, browser-based, decentralized building game.
-                Creations are stored using interchangeable publishing providers.
+                {{ t('homeView.anOpenSourceBrowserBased') }}
             </p>
-            <router-link to="/editor" class="cta-button">Start Building</router-link>
-            <img src="favicon.svg" alt="BuildFork icon">
+            <router-link to="/editor" class="cta-button">{{ t('homeView.startBuilding') }}</router-link>
+            <img src="favicon.svg" :alt="t('homeView.buildforkIcon')">
         </section>
     `
 };

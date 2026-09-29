@@ -1,4 +1,5 @@
 import { describeIpfsPublicationContentVerification } from './IpfsPublicationContentVerificationView.js';
+import { message } from '../../core/Message.js';
 
 // 0.8.73 — IPFS Publication Observation Timeline.
 //
@@ -88,7 +89,7 @@ function publicationEntry(record, recordIndex) {
         observedAt: record.publishedAt,
         kind: IpfsPublicationObservationTimelineEntryKind.PUBLICATION,
         recordIndex,
-        label: `Publication #${recordIndex}`,
+        label: message('ipfsPublicationObservationTimeline.publication', { number: recordIndex }),
         locator: record.locator,
         contentHash: record.contentHash
     });
@@ -100,7 +101,7 @@ function contentVerificationEntry(observation, recordIndex) {
         observedAt: described.observedAt,
         kind: IpfsPublicationObservationTimelineEntryKind.CONTENT_VERIFICATION,
         recordIndex,
-        label: `Content retrieval — Publication #${recordIndex}`,
+        label: message('ipfsPublicationObservationTimeline.contentRetrieval', { number: recordIndex }),
         state: described.state,
         stateLabel: described.stateLabel,
         locator: described.locator,

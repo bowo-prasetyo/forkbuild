@@ -22,6 +22,7 @@ import {
 } from '../../../application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyAnalyzer.js';
 import { describeBitcoinAnchorObservationEvidence } from '../../../application/anchoring/bitcoin/BitcoinAnchorObservationEvidenceView.js';
 import { composeBitcoinAnchorObservationEvidence } from '../../../application/anchoring/bitcoin/BitcoinAnchorObservationEvidence.js';
+import { t } from '../../i18n/i18n.js';
 
 // Per-anchor Bitcoin reconciliation: an explicit re-read of an anchor's chain
 // placement and content proof, plus the confirmation history, chain placement
@@ -85,8 +86,8 @@ export function useBitcoinAnchorReconciliation({
 
     function bitcoinAnchorReconcileButtonLabel(entry, anchorView) {
         const view = bitcoinAnchorReconciliationView(entry, anchorView);
-        if (view.reconciling) return 'Reconciling…';
-        return view.confirmation ? 'Reconcile Again' : 'Reconcile';
+        if (view.reconciling) return t('publications.reconciling');
+        return view.confirmation ? t('publications.reconcileAgain') : t('publications.reconcile');
     }
 
     function bitcoinAnchorConfirmationHistoryView(entry, anchorView) {

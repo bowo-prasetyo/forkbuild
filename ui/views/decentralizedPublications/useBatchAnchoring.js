@@ -2,6 +2,7 @@ import { reactive } from 'vue';
 import { ExternalAnchorCreationOutcome } from '../../../application/anchoring/ExternalAnchorCreationOutcome.js';
 import { describeCreationAttempt } from '../../../application/anchoring/PublicationAnchorCreationView.js';
 import { CREATION_BADGE_CLASSES, humanizeAnchorType } from './presentation.js';
+import { t } from '../../i18n/i18n.js';
 
 // Anchoring several publications with one external recording (one wallet
 // approval), for each anchorType whose publisher can (Steem today). The
@@ -79,7 +80,7 @@ export function useBatchAnchoring({ creationCoordinator, entries, loadEvidence, 
         const view = describeCreationAttempt(attempt ? { ...attempt, anchor: attempt.anchors[0] || null } : null);
         if (attempt && attempt.outcome === ExternalAnchorCreationOutcome.CREATED) {
             const locator = attempt.anchors[0] ? attempt.anchors[0].locator : '';
-            return { ...view, message: `${attempt.anchors.length} publication${attempt.anchors.length === 1 ? '' : 's'} anchored with one ${humanizeAnchorType(anchorType)} transaction (${locator}). Each has its own signed anchor in its evidence list.` };
+            return { ...view, message: t('publications.batchAnchored', { count: attempt.anchors.length, anchorType: humanizeAnchorType(anchorType), locator }) };
         }
         return view;
     }
@@ -95,9 +96,9 @@ export function useBatchAnchoring({ creationCoordinator, entries, loadEvidence, 
 
     function batchButtonLabel(anchorType) {
         const attempt = batchAnchoring[anchorType] && batchAnchoring[anchorType].attempt;
-        if (attempt && attempt.creating) return 'Anchoring…';
+        if (attempt && attempt.creating) return t('publications.anchoring');
         const count = batchSelectedIds(anchorType).length;
-        return `Anchor ${count} Publication${count === 1 ? '' : 's'} on ${humanizeAnchorType(anchorType)}`;
+        return t('publications.anchorCountOn', { count, anchorType: humanizeAnchorType(anchorType) });
     }
 
     function batchButtonDisabled(anchorType) {

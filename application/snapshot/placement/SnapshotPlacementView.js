@@ -1,4 +1,5 @@
 import { SnapshotPlacementResolutionOutcome } from './SnapshotPlacementResolutionOutcome.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX.
 //
@@ -74,7 +75,7 @@ export function describeSnapshotPlacement(placement, resolution = null) {
         checking,
         resolved,
         resolutionOutcome: resolved ? resolution.outcome : null,
-        resolutionLabel: checking ? 'Resolving…' : (resolved ? describeResolutionOutcome(resolution.outcome) : 'Not yet resolved'),
+        resolutionLabel: checking ? message('snapshotPlacement.resolving') : (resolved ? describeResolutionOutcome(resolution.outcome) : message('snapshotPlacement.notYetResolved')),
         resolutionReason: resolved ? resolution.reason : null
     };
 }
@@ -93,13 +94,13 @@ export function describeSnapshotPlacement(placement, resolution = null) {
 // apart.
 export function describeResolutionOutcome(outcome) {
     switch (outcome) {
-        case SnapshotPlacementResolutionOutcome.RESOLVED: return 'Content available';
-        case SnapshotPlacementResolutionOutcome.INVALID_ENVELOPE: return 'Invalid placement';
-        case SnapshotPlacementResolutionOutcome.INVALID_SIGNATURE: return 'Invalid signature';
-        case SnapshotPlacementResolutionOutcome.STORE_UNAVAILABLE: return 'No storage backend configured';
-        case SnapshotPlacementResolutionOutcome.CONTENT_UNAVAILABLE: return 'Content unavailable';
-        case SnapshotPlacementResolutionOutcome.CONTENT_HASH_MISMATCH: return 'Retrieved content does not match this placement';
-        default: return 'Not yet resolved';
+        case SnapshotPlacementResolutionOutcome.RESOLVED: return message('snapshotPlacement.contentAvailable');
+        case SnapshotPlacementResolutionOutcome.INVALID_ENVELOPE: return message('snapshotPlacement.invalidPlacement');
+        case SnapshotPlacementResolutionOutcome.INVALID_SIGNATURE: return message('snapshotPlacement.invalidSignature');
+        case SnapshotPlacementResolutionOutcome.STORE_UNAVAILABLE: return message('snapshotPlacement.noStorageBackendConfigured');
+        case SnapshotPlacementResolutionOutcome.CONTENT_UNAVAILABLE: return message('snapshotPlacement.contentUnavailable');
+        case SnapshotPlacementResolutionOutcome.CONTENT_HASH_MISMATCH: return message('snapshotPlacement.retrievedContentDoesNotMatch');
+        default: return message('snapshotPlacement.notYetResolved');
     }
 }
 
@@ -112,6 +113,6 @@ export function describeResolutionOutcome(outcome) {
 // rather than this file deciding which outcomes are worth highlighting.
 export function describeKnownPlacementCount(view) {
     const count = view ? view.count : 0;
-    if (!count) return 'No snapshot placements known';
+    if (!count) return message('snapshotPlacement.noSnapshotPlacementsKnown');
     return `${count} placement${count === 1 ? '' : 's'} known`;
 }

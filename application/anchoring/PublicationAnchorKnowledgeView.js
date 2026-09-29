@@ -1,4 +1,5 @@
 import { AnchorAcquisitionKind } from './AnchorAcquisitionKind.js';
+import { message } from '../../core/Message.js';
 
 // 0.8.17 — Evidence Provenance & Observation Boundary.
 //
@@ -11,9 +12,9 @@ import { AnchorAcquisitionKind } from './AnchorAcquisitionKind.js';
 // "Source: Alice ✓." See that file's own design note on why naming a
 // peer here would misread as an authority claim.
 const ACQUISITION_LABELS = Object.freeze({
-    [AnchorAcquisitionKind.LOCAL]: 'Learned locally',
-    [AnchorAcquisitionKind.PACKAGE]: 'Learned via package import',
-    [AnchorAcquisitionKind.PEER]: 'Learned via peer exchange'
+    [AnchorAcquisitionKind.LOCAL]: message('publicationAnchorKnowledge.learnedLocally'),
+    [AnchorAcquisitionKind.PACKAGE]: message('publicationAnchorKnowledge.learnedViaPackageImport'),
+    [AnchorAcquisitionKind.PEER]: message('publicationAnchorKnowledge.learnedViaPeerExchange')
 });
 
 // `record`: an application/anchoring/AnchorKnowledgeRecord.js instance, or null —
@@ -26,7 +27,7 @@ export function describeAnchorKnowledge(record) {
         return {
             known: false,
             acquisitionKind: null,
-            acquisitionLabel: 'Local knowledge unavailable',
+            acquisitionLabel: message('publicationAnchorKnowledge.localKnowledgeUnavailable'),
             firstSeenAt: null,
             firstSeenAtLabel: null
         };
@@ -34,8 +35,8 @@ export function describeAnchorKnowledge(record) {
     return {
         known: true,
         acquisitionKind: record.acquisition.kind,
-        acquisitionLabel: ACQUISITION_LABELS[record.acquisition.kind] || 'Learned by an unrecognized means',
+        acquisitionLabel: ACQUISITION_LABELS[record.acquisition.kind] || message('publicationAnchorKnowledge.learnedUnrecognized'),
         firstSeenAt: record.firstSeenAt.toISOString(),
-        firstSeenAtLabel: 'First seen by this replica'
+        firstSeenAtLabel: message('publicationAnchorKnowledge.firstSeenByThisReplica')
     };
 }

@@ -28,6 +28,7 @@ import {
 } from '../application/snapshot/possession/SnapshotPeerPossessionComparisonView.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.41 — Peer Snapshot Possession Comparison & Observation History.
 //
@@ -212,9 +213,9 @@ async function run() {
             assert(!comparison.peers.some((peer) => key in peer), `11. no individual peer row ever carries a "${key}" field either (checked "${key}")`);
         }
 
-        assert(describeSnapshotPeerPossessionStateLabel(SnapshotPeerPossessionState.AVAILABLE) === 'Available', '12. AVAILABLE has its own label');
-        assert(describeSnapshotPeerPossessionStateLabel(SnapshotPeerPossessionState.NOT_AVAILABLE) === 'Not available', '13. NOT_AVAILABLE has its own, DIFFERENT label');
-        assert(describeSnapshotPeerPossessionStateLabel(SnapshotPeerPossessionState.UNAVAILABLE) === 'Could not determine',
+        assert(displayText(describeSnapshotPeerPossessionStateLabel(SnapshotPeerPossessionState.AVAILABLE)) === 'Available', '12. AVAILABLE has its own label');
+        assert(displayText(describeSnapshotPeerPossessionStateLabel(SnapshotPeerPossessionState.NOT_AVAILABLE)) === 'Not available', '13. NOT_AVAILABLE has its own, DIFFERENT label');
+        assert(displayText(describeSnapshotPeerPossessionStateLabel(SnapshotPeerPossessionState.UNAVAILABLE)) === 'Could not determine',
             '14. UNAVAILABLE reads "Could not determine" — deliberately NOT "Not available," preserving the three-way distinction');
         assert(describeSnapshotPeerPossessionStateLabel(null) === null, '15. an unrecognized state reports no label');
 
@@ -224,7 +225,7 @@ async function run() {
         );
         const historyView = describeSnapshotPeerPossessionObservationHistory(history);
         assert(historyView.count === 2 && historyView.observations.length === 2, '16. the history view reports the correct count and one entry per observation');
-        assert(historyView.observations[0].peerId === 'conn-alice' && historyView.observations[0].stateLabel === 'Available',
+        assert(historyView.observations[0].peerId === 'conn-alice' && displayText(historyView.observations[0].stateLabel) === 'Available',
             '17. the first (oldest) history entry is narrated correctly');
         assert(describeSnapshotPeerPossessionObservationHistory(null).count === 0, '18. describeSnapshotPeerPossessionObservationHistory() tolerates a null/absent history');
     }

@@ -8,19 +8,20 @@ import { PUBLICATION_CONTENT_KIND } from '../application/publication/Publication
 import { PLACE_NAMING_CLAIM_PUBLICATION_KIND } from '../application/placeNaming/PlaceNamingClaimPublication.js';
 import { BLUEPRINT_ATTRIBUTION_KIND } from '../core/BlueprintAttribution.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 const { kindPlugins } = new CreatePublicationDisplayKindRegistryUseCase().execute();
 
 const world = republishAdviceFor(kindPlugins[PUBLICATION_CONTENT_KIND]);
-assert(world.text.includes('Publish the World again') && world.text.includes('Share with Peers'), 'a World is published and shared again');
-assert(world.route === '/repository' && world.routeLabel === 'Open Repository', 'from the Repository');
+assert(displayText(world.text).includes('Publish the World again') && displayText(world.text).includes('Share with Peers'), 'a World is published and shared again');
+assert(world.route === '/repository' && displayText(world.routeLabel) === 'Open Repository', 'from the Repository');
 
 const attribution = republishAdviceFor(kindPlugins[BLUEPRINT_ATTRIBUTION_KIND]);
-assert(attribution.text.includes('Re-sign for this design') && attribution.text.includes('Publish to Network'), 'an attribution is re-signed and published');
-assert(attribution.route === '/editor' && attribution.routeLabel === 'Open Editor', 'from the Editor');
+assert(displayText(attribution.text).includes('Re-sign for this design') && displayText(attribution.text).includes('Publish to Network'), 'an attribution is re-signed and published');
+assert(attribution.route === '/editor' && displayText(attribution.routeLabel) === 'Open Editor', 'from the Editor');
 
 const placeName = republishAdviceFor(kindPlugins[PLACE_NAMING_CLAIM_PUBLICATION_KIND]);
-assert(placeName.text.includes('Publish A Name') && placeName.route === null && placeName.routeLabel === null,
+assert(displayText(placeName.text).includes('Publish A Name') && placeName.route === null && placeName.routeLabel === null,
     'a place name is published again in World View, which has no single page to link');
 
 for (const plugin of [undefined, null, { contentKind: 'forkbuild.something-new' }, { republishAdvice: { text: '' } }]) {

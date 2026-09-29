@@ -35,6 +35,7 @@ import { PublicationSnapshotContentPeerExchange } from '../application/snapshot/
 import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.40 — Snapshot Possession Observation Exchange.
 //
@@ -364,15 +365,15 @@ async function run() {
         // Views / UI state.
         assert(describePeerPossessionAttempt(null).state === SnapshotPeerPossessionUiState.IDLE, '20. no attempt yet reads IDLE');
         assert(describePeerPossessionAttempt({ checking: true }).state === SnapshotPeerPossessionUiState.CHECKING, '21. an in-flight attempt reads CHECKING');
-        assert(describePeerPossessionAttempt({ state: SnapshotPeerPossessionState.AVAILABLE }).label === 'Peer reports snapshot available',
+        assert(displayText(describePeerPossessionAttempt({ state: SnapshotPeerPossessionState.AVAILABLE }).label) === 'Peer reports snapshot available',
             '22. an AVAILABLE attempt reads exactly "Peer reports snapshot available" — a report, never a verdict');
-        assert(describePeerPossessionAttempt({ state: SnapshotPeerPossessionState.NOT_AVAILABLE }).label === 'Peer reports snapshot not available',
+        assert(displayText(describePeerPossessionAttempt({ state: SnapshotPeerPossessionState.NOT_AVAILABLE }).label) === 'Peer reports snapshot not available',
             '23. a NOT_AVAILABLE attempt reads exactly "Peer reports snapshot not available"');
         assert(describePeerPossessionAttempt({ state: SnapshotPeerPossessionState.UNAVAILABLE }).state === SnapshotPeerPossessionUiState.UNAVAILABLE,
             '24. an UNAVAILABLE attempt reads UNAVAILABLE');
-        assert(describePeerPossessionButtonLabel({}) === 'Check with Peer', '25. the initial button label is "Check with Peer"');
-        assert(describePeerPossessionButtonLabel({ checked: true }) === 'Check with Peer Again', '26. after a completed attempt the label invites checking again');
-        assert(describePeerPossessionButtonLabel({ checking: true }) === 'Checking…', '27. while in flight the label reads "Checking…"');
+        assert(displayText(describePeerPossessionButtonLabel({})) === 'Check with Peer', '25. the initial button label is "Check with Peer"');
+        assert(displayText(describePeerPossessionButtonLabel({ checked: true })) === 'Check with Peer Again', '26. after a completed attempt the label invites checking again');
+        assert(displayText(describePeerPossessionButtonLabel({ checking: true })) === 'Checking…', '27. while in flight the label reads "Checking…"');
     }
     console.log('✓ Section C: ObservePeerSnapshotPossessionUseCase — single-peer request/timeout shape, AVAILABLE/NOT_AVAILABLE/UNAVAILABLE, peer+hash-scoped matching, frozen observation shape, coordinator pass-through, views');
 

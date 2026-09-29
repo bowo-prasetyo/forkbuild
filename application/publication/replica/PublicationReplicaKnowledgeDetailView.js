@@ -5,6 +5,7 @@ import { AnchorVerificationLifecycleState } from '../../anchoring/AnchorVerifica
 import { describePlacementKnowledge } from '../../snapshot/placement/PublicationSnapshotPlacementKnowledgeView.js';
 import { deriveSnapshotPlacementLifecycle } from '../../snapshot/placement/SnapshotPlacementLifecycleView.js';
 import { SnapshotPlacementLifecycleState } from '../../snapshot/placement/SnapshotPlacementLifecycleState.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.31 — Replica Knowledge Provenance & Synchronization Inspection.
 //
@@ -171,19 +172,19 @@ function describePlacementClaims(claims) {
 // PublicationAnchorVerificationLifecycleView.js#
 // describeAnchorVerificationLifecycleNote()'s own wording one level up.
 const VERIFICATION_STATE_LABELS = Object.freeze({
-    [AnchorVerificationLifecycleState.NOT_VERIFIED]: 'Not yet verified',
-    [AnchorVerificationLifecycleState.VERIFIED]: 'Verified',
-    [AnchorVerificationLifecycleState.UNVERIFIED_PROOF]: 'Verified (proof unverified)',
-    [AnchorVerificationLifecycleState.UNAVAILABLE]: 'Currently unavailable',
-    [AnchorVerificationLifecycleState.REJECTED]: 'Rejected'
+    [AnchorVerificationLifecycleState.NOT_VERIFIED]: message('publicationReplicaKnowledgeDetail.notYetVerified'),
+    [AnchorVerificationLifecycleState.VERIFIED]: message('publicationReplicaKnowledgeDetail.verified'),
+    [AnchorVerificationLifecycleState.UNVERIFIED_PROOF]: message('publicationReplicaKnowledgeDetail.verifiedProofUnverified'),
+    [AnchorVerificationLifecycleState.UNAVAILABLE]: message('publicationReplicaKnowledgeDetail.currentlyUnavailable'),
+    [AnchorVerificationLifecycleState.REJECTED]: message('publicationReplicaKnowledgeDetail.rejected')
 });
 
 const RESOLUTION_STATE_LABELS = Object.freeze({
-    [SnapshotPlacementLifecycleState.NOT_RESOLVED]: 'Not yet resolved',
-    [SnapshotPlacementLifecycleState.RESOLVED]: 'Resolved',
-    [SnapshotPlacementLifecycleState.UNAVAILABLE]: 'Currently unavailable',
-    [SnapshotPlacementLifecycleState.HASH_MISMATCH]: 'Content hash mismatch',
-    [SnapshotPlacementLifecycleState.INVALID_PLACEMENT]: 'Invalid placement'
+    [SnapshotPlacementLifecycleState.NOT_RESOLVED]: message('publicationReplicaKnowledgeDetail.notYetResolved'),
+    [SnapshotPlacementLifecycleState.RESOLVED]: message('publicationReplicaKnowledgeDetail.resolved'),
+    [SnapshotPlacementLifecycleState.UNAVAILABLE]: message('publicationReplicaKnowledgeDetail.currentlyUnavailable'),
+    [SnapshotPlacementLifecycleState.HASH_MISMATCH]: message('publicationReplicaKnowledgeDetail.contentHashMismatch'),
+    [SnapshotPlacementLifecycleState.INVALID_PLACEMENT]: message('publicationReplicaKnowledgeDetail.invalidPlacement')
 });
 
 // A plain, non-judgmental tally of how many of this dimension's claims

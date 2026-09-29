@@ -1,4 +1,5 @@
 import { PublicationResolutionOutcome } from './PublicationResolutionOutcome.js';
+import { message } from '../../core/Message.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 //
@@ -67,7 +68,7 @@ export async function resolvePublicationView(publication, { coordinator, kindPlu
         return {
             publication, contentKind, publisherIdentityId,
             outcome: null, resolved: false,
-            reason: `this replica does not yet know how to display a "${contentKind}" publication`,
+            reason: message('publicationOutcome.unsupportedKindReason', { contentKind }),
             content: null, contentSummary: null, retrieval: null
         };
     }
@@ -95,15 +96,15 @@ export async function resolvePublicationView(publication, { coordinator, kindPlu
 // CONTENT_UNAVAILABLE or any other outcome it did not actually reach.
 export function describePublicationOutcome(outcome) {
     switch (outcome) {
-        case PublicationResolutionOutcome.RESOLVED: return 'Available';
-        case PublicationResolutionOutcome.CONTENT_UNAVAILABLE: return 'Content unavailable';
-        case PublicationResolutionOutcome.INVALID_ENVELOPE: return 'Invalid publication envelope';
-        case PublicationResolutionOutcome.INVALID_PUBLICATION_SIGNATURE: return 'Invalid publication signature';
-        case PublicationResolutionOutcome.CONTENT_HASH_MISMATCH: return 'Content does not match its own reference';
-        case PublicationResolutionOutcome.INVALID_CONTENT: return 'Invalid content';
-        case PublicationResolutionOutcome.INVALID_CONTENT_SIGNATURE: return 'Invalid content signature';
-        case PublicationResolutionOutcome.DOMAIN_CROSS_CHECK_FAILED: return 'Failed a domain-specific check';
-        default: return 'Unsupported publication kind';
+        case PublicationResolutionOutcome.RESOLVED: return message('publicationOutcome.available');
+        case PublicationResolutionOutcome.CONTENT_UNAVAILABLE: return message('publicationOutcome.contentUnavailable');
+        case PublicationResolutionOutcome.INVALID_ENVELOPE: return message('publicationOutcome.invalidEnvelope');
+        case PublicationResolutionOutcome.INVALID_PUBLICATION_SIGNATURE: return message('publicationOutcome.invalidPublicationSignature');
+        case PublicationResolutionOutcome.CONTENT_HASH_MISMATCH: return message('publicationOutcome.contentHashMismatch');
+        case PublicationResolutionOutcome.INVALID_CONTENT: return message('publicationOutcome.invalidContent');
+        case PublicationResolutionOutcome.INVALID_CONTENT_SIGNATURE: return message('publicationOutcome.invalidContentSignature');
+        case PublicationResolutionOutcome.DOMAIN_CROSS_CHECK_FAILED: return message('publicationOutcome.domainCrossCheckFailed');
+        default: return message('publicationOutcome.unsupportedKind');
     }
 }
 
@@ -132,12 +133,13 @@ export function describeRetrieval(view) {
     }
     if (retrieval.retrieved) {
         const count = retrieval.attemptedPeers ? retrieval.attemptedPeers.length : 1;
-        const tried = count > 1 ? ` (${count - 1} earlier candidate${count - 1 === 1 ? '' : 's'} did not answer in time)` : '';
-        return `Retrieved from a connected peer${tried}. The received bytes were accepted only after their hash matched this publication's own content reference.`;
+        return count > 1
+            ? message('publicationRetrieval.retrievedAfterEarlier', { count: count - 1 })
+            : message('publicationRetrieval.retrieved');
     }
     const attempted = retrieval.attemptedPeers ? retrieval.attemptedPeers.length : 0;
     if (attempted === 0) {
-        return 'No connected peer was asked for this content.';
+        return message('publicationRetrieval.noPeerAsked');
     }
-    return `Asked ${attempted} connected peer${attempted === 1 ? '' : 's'}; none responded with verified content before their own timeout.`;
+    return message('publicationRetrieval.noVerifiedAnswer', { count: attempted });
 }

@@ -1,12 +1,13 @@
 import { IpfsPublicationContentVerificationCoordinatorState } from './IpfsPublicationContentVerificationCoordinatorState.js';
+import { message } from '../../core/Message.js';
 
 const STATE_LABELS = {
-    [IpfsPublicationContentVerificationCoordinatorState.IDLE]: 'Not yet verified',
-    [IpfsPublicationContentVerificationCoordinatorState.VERIFYING]: 'Verifying…',
-    [IpfsPublicationContentVerificationCoordinatorState.HASH_MATCH]: 'Retrieved content matches the recorded content hash',
-    [IpfsPublicationContentVerificationCoordinatorState.HASH_MISMATCH]: 'Retrieved content does not match the recorded content hash',
-    [IpfsPublicationContentVerificationCoordinatorState.UNAVAILABLE]: 'Content retrieval unavailable',
-    [IpfsPublicationContentVerificationCoordinatorState.FAILED]: 'Verification failed'
+    [IpfsPublicationContentVerificationCoordinatorState.IDLE]: message('ipfsPublicationContentVerification.notYetVerified'),
+    [IpfsPublicationContentVerificationCoordinatorState.VERIFYING]: message('ipfsPublicationContentVerification.verifying'),
+    [IpfsPublicationContentVerificationCoordinatorState.HASH_MATCH]: message('ipfsPublicationContentVerification.retrievedContentMatchesTheRecorded'),
+    [IpfsPublicationContentVerificationCoordinatorState.HASH_MISMATCH]: message('ipfsPublicationContentVerification.retrievedContentDoesNotMatch'),
+    [IpfsPublicationContentVerificationCoordinatorState.UNAVAILABLE]: message('ipfsPublicationContentVerification.contentRetrievalUnavailable'),
+    [IpfsPublicationContentVerificationCoordinatorState.FAILED]: message('ipfsPublicationContentVerification.verificationFailed')
 };
 
 // 0.8.70 — IPFS Publication & Content Verification UI.

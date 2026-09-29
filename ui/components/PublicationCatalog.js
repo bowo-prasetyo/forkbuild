@@ -9,6 +9,7 @@ import PublicationCatalogToolbar from './PublicationCatalogToolbar.js';
 import PublicationCard from './PublicationCard.js';
 import PublicationList from './PublicationList.js';
 import PublicationPagination from './PublicationPagination.js';
+import { t } from '../i18n/i18n.js';
 
 const DESCRIPTION_SNIPPET_LENGTH = 160;
 
@@ -176,10 +177,10 @@ export default {
         const emptyMessage = computed(() => {
             if (!catalogHasAnyPublications.value) {
                 return props.author
-                    ? 'No publications found for this author.'
-                    : 'No publications yet. Publish a creation from the Editor to see it here.';
+                    ? t('publicationCatalog.noneForAuthor')
+                    : t('publicationCatalog.noneYet');
             }
-            return `No matches for "${submittedText.value}".`;
+            return t('publicationCatalog.noMatches', { query: submittedText.value });
         });
 
         function openPublication(pub) {
@@ -197,6 +198,7 @@ export default {
         }
 
         return {
+            t,
             sort, view, groupBy, pageResult, groups, emptyMessage,
             descriptions, parentTitles, forkCounts, preciseDateIds,
             onSearch, onChangeSort, onChangeView, onChangeGroupBy, onGoPage,

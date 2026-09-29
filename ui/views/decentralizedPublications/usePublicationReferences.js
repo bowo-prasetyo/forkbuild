@@ -8,6 +8,7 @@ import {
     describePublicationReferenceRecordHistory
 } from '../../../application/publication/PublicationReferenceRecordHistoryView.js';
 import { reconstructPublicationReferenceGraph } from '../../../application/publication/PublicationReferenceGraphView.js';
+import { t } from '../../i18n/i18n.js';
 
 // Publication references: recording that one known publication references
 // another (into the archive), and browsing the resulting reference graph.
@@ -33,11 +34,11 @@ export function usePublicationReferences({
     function knownPublicationIdentityOptions() {
         const bitcoinOptions = publicationObservationArchive.value.bitcoinAnchorPublicationRecords.map((record) => {
             const identity = record.toBlockchainPublicationIdentity();
-            return { key: `${identity.blockchain}:${identity.chainReference}`, identity, label: `Bitcoin — ${shortId(identity.chainReference)} — content ${shortId(identity.contentHash)}` };
+            return { key: `${identity.blockchain}:${identity.chainReference}`, identity, label: t('publications.chainPublicationOption', { chain: 'Bitcoin', reference: shortId(identity.chainReference), contentHash: shortId(identity.contentHash) }) };
         });
         const baseOptions = publicationObservationArchive.value.baseAnchorPublicationRecords.map((record) => {
             const identity = record.toBlockchainPublicationIdentity();
-            return { key: `${identity.blockchain}:${identity.chainReference}`, identity, label: `Base — ${shortId(identity.chainReference)} — content ${shortId(identity.contentHash)}` };
+            return { key: `${identity.blockchain}:${identity.chainReference}`, identity, label: t('publications.chainPublicationOption', { chain: 'Base', reference: shortId(identity.chainReference), contentHash: shortId(identity.contentHash) }) };
         });
         return Object.freeze(sortOptionsByLabel([...bitcoinOptions, ...baseOptions]));
     }
@@ -56,7 +57,7 @@ export function usePublicationReferences({
         const sourceIdentity = findKnownPublicationIdentity(publicationReferenceSourceKey.value);
         const referencedIdentity = findKnownPublicationIdentity(publicationReferenceReferencedKey.value);
         if (!sourceIdentity || !referencedIdentity) {
-            publicationReferenceError.value = 'Choose a source and a referenced publication first.';
+            publicationReferenceError.value = t('publications.chooseSourceAndReferenced');
             return;
         }
         try {

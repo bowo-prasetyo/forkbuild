@@ -1,5 +1,6 @@
 import { PeerSnapshotMaterializationOutcome } from './PeerSnapshotMaterializationOutcome.js';
 import { SnapshotPeerMaterializationUiState } from './SnapshotPeerMaterializationUiState.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.37 — Explicit Peer Snapshot Content Transfer.
 //
@@ -31,7 +32,7 @@ export function describePeerMaterializationAttempt(attempt = null) {
         return {
             state: SnapshotPeerMaterializationUiState.REQUESTING,
             requesting: true,
-            label: 'Requesting…', message: null, contentReference: null, publicationId: null, contentHash: null
+            label: message('peerMaterialization.requesting'), message: null, contentReference: null, publicationId: null, contentHash: null
         };
     }
 
@@ -44,7 +45,7 @@ export function describePeerMaterializationAttempt(attempt = null) {
         return {
             state: SnapshotPeerMaterializationUiState.UNAVAILABLE,
             requesting: false,
-            label: 'Snapshot was not obtained',
+            label: message('peerMaterialization.snapshotWasNotObtained'),
             message: attempt.error,
             contentReference: null, publicationId: null, contentHash: null
         };
@@ -55,36 +56,36 @@ export function describePeerMaterializationAttempt(attempt = null) {
             return {
                 state: SnapshotPeerMaterializationUiState.STORED,
                 requesting: false,
-                label: 'Obtained',
+                label: message('peerMaterialization.obtained'),
                 message: attempt.publicationKnown
-                    ? 'Snapshot was obtained from the selected peer and matches its own claimed content hash.'
-                    : 'Snapshot obtained from the selected peer. The publication is not currently known locally.',
+                    ? message('peerMaterialization.snapshotWasObtainedFromThe')
+                    : message('peerMaterialization.snapshotObtainedFromTheSelected'),
                 contentReference: attempt.contentReference, publicationId: attempt.publicationId, contentHash: attempt.contentHash
             };
         case PeerSnapshotMaterializationOutcome.ALREADY_AVAILABLE:
             return {
                 state: SnapshotPeerMaterializationUiState.ALREADY_AVAILABLE,
                 requesting: false,
-                label: 'Already available',
+                label: message('peerMaterialization.alreadyAvailable'),
                 message: attempt.publicationKnown
-                    ? 'The snapshot is already present locally.'
-                    : 'The snapshot is already present locally. The publication is not currently known locally.',
+                    ? message('peerMaterialization.theSnapshotIsAlreadyPresent')
+                    : message('peerMaterialization.theSnapshotIsAlreadyPresent2'),
                 contentReference: attempt.contentReference, publicationId: attempt.publicationId, contentHash: attempt.contentHash
             };
         case PeerSnapshotMaterializationOutcome.UNAVAILABLE:
             return {
                 state: SnapshotPeerMaterializationUiState.UNAVAILABLE,
                 requesting: false,
-                label: 'Not available right now',
-                message: attempt.reason || 'The selected peer did not respond with verified content; nothing was obtained.',
+                label: message('peerMaterialization.notAvailableRightNow'),
+                message: attempt.reason || message('peerMaterialization.noVerifiedContent'),
                 contentReference: null, publicationId: attempt.publicationId, contentHash: attempt.contentHash
             };
         case PeerSnapshotMaterializationOutcome.HASH_MISMATCH:
             return {
                 state: SnapshotPeerMaterializationUiState.HASH_MISMATCH,
                 requesting: false,
-                label: 'Rejected',
-                message: "The selected peer's bytes do not match this snapshot's own claimed content hash. Nothing was stored.",
+                label: message('peerMaterialization.rejected'),
+                message: message('peerMaterialization.theSelectedPeerSBytes'),
                 contentReference: null, publicationId: attempt.publicationId, contentHash: attempt.contentHash
             };
         default:
@@ -105,6 +106,6 @@ export function describePeerMaterializationAttempt(attempt = null) {
 // possession can change between attempts, so a second click meaningfully
 // means "ask again, and keep the bytes this time if it works."
 export function describePeerMaterializationButtonLabel({ requesting = false, materialized = false } = {}) {
-    if (requesting) return 'Requesting…';
-    return materialized ? 'Get Snapshot from Peer Again' : 'Get Snapshot from Peer';
+    if (requesting) return message('peerMaterialization.requesting');
+    return materialized ? message('peerMaterialization.getSnapshotFromPeerAgain') : message('peerMaterialization.getSnapshotFromPeer');
 }

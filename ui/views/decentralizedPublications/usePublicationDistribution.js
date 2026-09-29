@@ -3,7 +3,7 @@ import { sortOptionsByLabel } from '../../../utils/sortOptionsByLabel.js';
 import { humanizeStorageType, discoveryProviderConfigurationRoute } from './presentation.js';
 import { Publication } from '../../../publisher/Publication.js';
 import { describeSteemContentUploadProgress } from '../../../application/steem/SteemContentUploadProgressText.js';
-import { displayText } from '../../i18n/i18n.js';
+import { displayText, t } from '../../i18n/i18n.js';
 
 // Distributing an entry's publication and snapshot with the same app-wide
 // commands WorldView uses, plus the storage and announcement choices they read.
@@ -48,7 +48,7 @@ export function usePublicationDistribution({
         // Nostr fans out to every relay; Arweave and Steem each have one publisher.
         if (discoveryProviderChoice === 'arweave' || discoveryProviderChoice === 'steem') {
             if (!publicationDistributionCommand) {
-                return Promise.reject(new Error('Publication distribution is not available.'));
+                return Promise.reject(new Error(t('publications.publicationDistributionUnavailable')));
             }
             return publicationDistributionCommand({
                 publication: entry.publication,
@@ -57,7 +57,7 @@ export function usePublicationDistribution({
             });
         }
         if (!multiRelayNostrPublicationDistributionCommand) {
-            return Promise.reject(new Error('Publication distribution is not available.'));
+            return Promise.reject(new Error(t('publications.publicationDistributionUnavailable')));
         }
         return multiRelayNostrPublicationDistributionCommand({
             publication: entry.publication,
@@ -81,13 +81,13 @@ export function usePublicationDistribution({
         const world = entryWorld(entry);
         const contentReference = world ? world.contentReference : entry.publication.contentReference;
         if (!snapshotDistributionCommand || !publicationContentStore || !contentReference) {
-            return Promise.reject(new Error('Snapshot distribution is not available.'));
+            return Promise.reject(new Error(t('publications.snapshotDistributionIsNotAvailable')));
         }
         const snapshotBytes = await publicationContentStore.get(contentReference);
         if (snapshotBytes === null || snapshotBytes === undefined) {
             return Promise.reject(new Error(world
-                ? "This World's snapshot isn't on this device. Open it in World View first, or get it from a peer."
-                : 'Snapshot distribution is not available.'));
+                ? t('publications.thisWorldSSnapshotIsn')
+                : t('publications.snapshotDistributionIsNotAvailable')));
         }
         const claim = world && publisherPlacementClaimLookup ? publisherPlacementClaimLookup.claimFor(world) : {};
         const result = await snapshotDistributionCommand(
@@ -120,8 +120,8 @@ export function usePublicationDistribution({
 
     function discoveryDistributionButtonLabel(entry) {
         return (entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.distributing)
-            ? 'Distributing…'
-            : 'Distribute Publication';
+            ? t('publications.distributing')
+            : t('publications.distributePublication');
     }
 
     async function distributeSnapshot(entry) {
@@ -139,8 +139,8 @@ export function usePublicationDistribution({
 
     function snapshotDistributionButtonLabel(entry) {
         return (entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing)
-            ? 'Distributing…'
-            : 'Distribute Snapshot';
+            ? t('publications.distributing')
+            : t('publications.distributeSnapshot');
     }
 
     // A plain read of the lifecycle store, keyed by this entry's

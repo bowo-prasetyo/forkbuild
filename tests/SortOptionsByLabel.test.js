@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { sortOptionsByLabel, sortLabels, compareOptionLabels } from '../utils/sortOptionsByLabel.js';
 import { publicationsPageFiles, publicationsViewSourceWithTemplate } from './support/SourceFileGroups.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // Choice lists are shown alphabetically unless their order carries meaning.
 //
@@ -142,7 +143,7 @@ async function run() {
             'region kinds keep their Continent → Place scale');
         const license = await source('ui/components/MetadataEditorDialog.js');
         assert(!/sortOptionsByLabel/.test(license), 'licenses keep their most → least permissive order');
-        const toolbar = await source('ui/components/PublicationCatalogToolbar.js');
+        const toolbar = withEnglish(await source('ui/components/PublicationCatalogToolbar.js'));
         assert(/<option :value="groupOptions\.NONE">None<\/option>\s*<option :value="groupOptions\.AUTHOR">Author<\/option>\s*<option :value="groupOptions\.DATE">Date<\/option>\s*<option :value="groupOptions\.LICENSE">License<\/option>/.test(toolbar),
             'Group by: "None" first, then alphabetical');
         const chat = await source('ui/views/ChatView.js');

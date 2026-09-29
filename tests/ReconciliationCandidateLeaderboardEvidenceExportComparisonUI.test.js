@@ -23,6 +23,8 @@ import {
 import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../ui/components/reconciliation/EvidenceExportComparisonTable.js';
 import { assert } from './support/Assert.js';
 import { serialize } from './support/Serialize.js';
+import { displayText } from '../ui/i18n/i18n.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.8.192/0.8.194 — Reconciliation Candidate Leaderboard Evidence Export
 // Comparison UI, and its Detail extension.
@@ -439,12 +441,12 @@ async function run() {
     // ---------------------------------------------------------------
     // Section J/K/L — new file vocabulary boundaries, plus wiring.
     // ---------------------------------------------------------------
-    const viewModuleSource = await (await import('node:fs/promises')).readFile(
+    const viewModuleSource = withEnglish(await (await import('node:fs/promises')).readFile(
         new URL('../ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js', import.meta.url), 'utf8'
-    );
-    const tableModuleSource = await (await import('node:fs/promises')).readFile(
+    ));
+    const tableModuleSource = withEnglish(await (await import('node:fs/promises')).readFile(
         new URL('../ui/components/reconciliation/EvidenceExportComparisonTable.js', import.meta.url), 'utf8'
-    );
+    ));
     const viewCodeOnly = viewModuleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
     const tableCodeOnly = tableModuleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -565,7 +567,8 @@ async function run() {
             }
         }
 
-        assert(!tableModuleSource.includes("from '"), '50. the table component imports NOTHING at all — not from application/, not from any sibling ui/ file');
+        // The translator (ui/i18n/i18n.js) is the one import allowed: it gives text, never data.
+        assert(!tableModuleSource.replace(/^import \{[^}]*\} from '\.\.\/\.\.\/i18n\/i18n\.js';$/m, '').includes("from '"), '50. the table component imports nothing but the translator — not from application/, not from any sibling ui/ file');
         assert(tableModuleSource.includes('Candidate presence'), '51. the template renders the "Candidate presence" section');
         assert(tableModuleSource.includes('Decision evidence'), '52. the template renders the "Decision evidence" section');
         assert(tableModuleSource.includes('Observation evidence'), '53. the template renders the "Observation evidence" section');
@@ -946,7 +949,7 @@ async function run() {
         // The local inspection key never appears anywhere on the
         // `view`/`detail`/`identity` props themselves — it is genuinely
         // this component's own local state only.
-        assert(!beforeView.includes('sourceOnly:0') && !beforeDetail.includes('sourceOnly:0') && !beforeIdentity.includes('sourceOnly:0'),
+        assert(!beforeView.includes('sourceOnly:0') && !displayText(beforeDetail).includes('sourceOnly:0') && !beforeIdentity.includes('sourceOnly:0'),
             '121. Section W — the local inspection key never leaks onto the view/detail/identity props — it exists only in this component\'s own expandedIdentityRecords');
     }
     console.log('✓ Section W: identity expand/collapse is purely local, per-record UI state keyed by this component\'s own local inspection key (never application/domain data or record identity) — it never mutates view/detail/identity, defaults to fully collapsed, toggles independently per record, and summary counts stay untouched throughout');
@@ -970,7 +973,7 @@ async function run() {
             assert(observationRecords.shared.length > 0, `123. Section X — with malformed identity (${serialize(malformedIdentity)}), the genuine observationRecords.shared still renders its own real records`);
 
             const decisionLabel = table.methods.decisionRecordLabel(decisionRecords.sourceOnly[0]);
-            assert(typeof decisionLabel === 'string' && decisionLabel.length > 0 && decisionLabel !== 'Unknown decision record',
+            assert(typeof displayText(decisionLabel) === 'string' && displayText(decisionLabel).length > 0 && displayText(decisionLabel) !== 'Unknown decision record',
                 `124. Section X — a genuine decision record's own label still renders correctly even when identity is malformed`);
 
             // The identity sections themselves degrade to empty arrays —

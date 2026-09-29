@@ -6,6 +6,7 @@ import { SnapshotPlacementRelationship } from '../application/snapshot/placement
 import { createResolutionObservation } from '../application/snapshot/placement/SnapshotPlacementResolutionObservation.js';
 import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.23 — Multi-Placement Convergence & Relationship UX.
 //
@@ -58,7 +59,7 @@ function run() {
         assert(empty.relationship === SnapshotPlacementRelationship.AGREEMENT, '7. no placements -> AGREEMENT, the vacuous case, never CONFLICT');
         assert(empty.conflictDescription === null, '8. no placements -> no conflict description');
         assert(empty.storageTypeCount === 0 && empty.locatorCount === 0, '9. no placements -> zero storage/locator diversity');
-        assert(describeSnapshotPlacementContentGroupCount(empty) === 'No content binding known', '10. describeSnapshotPlacementContentGroupCount() names the empty case honestly');
+        assert(displayText(describeSnapshotPlacementContentGroupCount(empty)) === 'No content binding known', '10. describeSnapshotPlacementContentGroupCount() names the empty case honestly');
     }
     console.log('✓ Section A: publicationSnapshotPlacementConvergenceView() argument handling — a convergence result is required, empty input tolerated');
 
@@ -105,9 +106,9 @@ function run() {
             '9. Conflict: the true, honest group sizes are reported (three vs. one)');
         assert(conflict.hasConflict === true, '10. Conflict: hasConflict is true');
         assert(conflict.relationship === SnapshotPlacementRelationship.CONFLICT, '11. Conflict: relationship is CONFLICT');
-        assert(typeof conflict.conflictDescription === 'string' && conflict.conflictDescription.length > 0,
+        assert(typeof displayText(conflict.conflictDescription) === 'string' && displayText(conflict.conflictDescription).length > 0,
             '12. Conflict: a conflict description is present');
-        assert(conflict.conflictDescription === describeSnapshotPlacementRelationship(true, 2),
+        assert(displayText(conflict.conflictDescription) === displayText(describeSnapshotPlacementRelationship(true, 2)),
             '13. Conflict: describeSnapshotPlacementRelationship() produces the identical sentence the view embeds');
 
         // The larger group (three placements) must never be presented as
@@ -120,7 +121,7 @@ function run() {
         assert(!('winner' in conflict) && !('canonicalContentHash' in conflict) && !('majorityContentHash' in conflict) && !('bestPlacement' in conflict) && !('preferredLocation' in conflict),
             '15. no field naming either group the winner, canonical, majority, best, or preferred value — mirroring this milestone\'s own explicit "no best placement, no preferred location" design constraint');
 
-        assert(describeSnapshotPlacementContentGroupCount(conflict) === '2 distinct content hashes claimed',
+        assert(displayText(describeSnapshotPlacementContentGroupCount(conflict)) === '2 distinct content hashes claimed',
             '16. describeSnapshotPlacementContentGroupCount() reports the count, never which group is "the" one');
     }
     console.log('✓ Section B: the two structural relationships — complete agreement (one group, no conflict, storage diversity still reported) and conflicting content binding (multiple groups, true honest counts, one non-adjudicating warning sentence, no adjudicating language anywhere)');
@@ -186,7 +187,7 @@ function run() {
             '9. INVARIANT: the content groups are byte-identical before and after Bob resolves every placement he knows');
         assert(viewBefore.hasConflict === viewAfter.hasConflict && viewBefore.relationship === viewAfter.relationship,
             '10. INVARIANT: hasConflict and relationship are unchanged by resolution observations');
-        assert(viewBefore.conflictDescription === viewAfter.conflictDescription,
+        assert(displayText(viewBefore.conflictDescription) === displayText(viewAfter.conflictDescription),
             '11. INVARIANT: the conflict description itself is unchanged by resolution observations');
         assert(JSON.stringify(viewBefore) === JSON.stringify(viewAfter),
             '12. INVARIANT: the ENTIRE derived view is byte-identical before and after — placement A resolving to RESOLVED never promotes Hash X\'s group, and placement C resolving to CONTENT_HASH_MISMATCH never demotes it out of the group it structurally belongs to');

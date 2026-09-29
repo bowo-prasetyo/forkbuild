@@ -18,6 +18,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.572 — Decentralized Publication Discovery Presentation Consistency
 // Product Reassessment.
@@ -253,7 +254,8 @@ async function run() {
     // =======================================================================
     {
         const materialInspectionSource = await readSource('application/worldEncounter/WorldEncounterMaterialInspectionView.js');
-        const snapshotOutcomeSource = await readSource('application/snapshot/SnapshotOutcomeInspectionView.js');
+        // Its labels are messages now (core/Message.js), read here as their English.
+        const snapshotOutcomeSource = withEnglish(await readSource('application/snapshot/SnapshotOutcomeInspectionView.js'));
         assert(materialInspectionSource.includes("'Confirmed to match the selected encounter'"),
             'E1. WorldEncounterMaterialInspectionView.js still holds its own VERIFIED label unchanged.');
         assert(snapshotOutcomeSource.includes("match: 'Confirmed to match this Publication'"),

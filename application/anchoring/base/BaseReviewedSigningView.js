@@ -1,12 +1,13 @@
 import { BaseReviewedSigningState } from './BaseReviewedSigningState.js';
+import { message } from '../../../core/Message.js';
 
 const STATE_LABELS = {
-    [BaseReviewedSigningState.IDLE]: 'Not yet signed',
-    [BaseReviewedSigningState.SIGNING]: 'Waiting for wallet…',
-    [BaseReviewedSigningState.SIGNED]: 'Wallet returned a signed transaction',
-    [BaseReviewedSigningState.DECLINED]: 'Signing declined',
-    [BaseReviewedSigningState.UNAVAILABLE]: 'Wallet unavailable',
-    [BaseReviewedSigningState.FAILED]: 'Signing failed'
+    [BaseReviewedSigningState.IDLE]: message('baseReviewedSigning.notYetSigned'),
+    [BaseReviewedSigningState.SIGNING]: message('baseReviewedSigning.waitingForWallet'),
+    [BaseReviewedSigningState.SIGNED]: message('baseReviewedSigning.walletReturnedASignedTransaction'),
+    [BaseReviewedSigningState.DECLINED]: message('baseReviewedSigning.signingDeclined'),
+    [BaseReviewedSigningState.UNAVAILABLE]: message('baseReviewedSigning.walletUnavailable'),
+    [BaseReviewedSigningState.FAILED]: message('baseReviewedSigning.signingFailed')
 };
 
 // 0.8.93 — Explicit Base Reviewed Transaction Signing.

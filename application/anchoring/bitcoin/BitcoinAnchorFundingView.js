@@ -1,9 +1,10 @@
 import { BitcoinAnchorFundingObservationState } from './BitcoinAnchorFundingObservationState.js';
+import { message } from '../../../core/Message.js';
 
 const STATE_LABELS = {
-    [BitcoinAnchorFundingObservationState.OBSERVED]: 'Funding observed',
-    [BitcoinAnchorFundingObservationState.UNSUPPORTED]: 'Unsupported address format',
-    [BitcoinAnchorFundingObservationState.UNAVAILABLE]: 'Funding unavailable'
+    [BitcoinAnchorFundingObservationState.OBSERVED]: message('bitcoinAnchorFunding.fundingObserved'),
+    [BitcoinAnchorFundingObservationState.UNSUPPORTED]: message('bitcoinAnchorFunding.unsupportedAddressFormat'),
+    [BitcoinAnchorFundingObservationState.UNAVAILABLE]: message('bitcoinAnchorFunding.fundingUnavailable')
 };
 
 // 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation.

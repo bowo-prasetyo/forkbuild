@@ -1,4 +1,5 @@
 import { SnapshotPlacementRelationship } from './SnapshotPlacementRelationship.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.23 — Multi-Placement Convergence & Relationship UX.
 //
@@ -80,7 +81,7 @@ export function publicationSnapshotPlacementConvergenceView(convergence) {
 // exactly, one domain over.
 export function describeSnapshotPlacementRelationship(hasConflict, groupCount) {
     if (!hasConflict) return null;
-    return `Placement claims disagree about the content hash — ${groupCount} different content hashes are each claimed by at least one placement. No claim is ranked or selected.`;
+    return message('publicationSnapshotPlacementConvergence.disagree', { count: groupCount });
 }
 
 // A plain, non-judgmental summary of how many DISTINCT content hashes
@@ -89,6 +90,6 @@ export function describeSnapshotPlacementRelationship(hasConflict, groupCount) {
 // own restraint.
 export function describeSnapshotPlacementContentGroupCount(view) {
     const count = view ? view.contentGroups.length : 0;
-    if (!count) return 'No content binding known';
-    return `${count} distinct content hash${count === 1 ? '' : 'es'} claimed`;
+    if (!count) return message('publicationSnapshotPlacementConvergence.noContentBindingKnown');
+    return message('contentBinding.distinctHashesClaimed', { count });
 }

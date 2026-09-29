@@ -35,6 +35,7 @@ import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.38 — Snapshot Materialization History & Source Inspection.
 //
@@ -253,17 +254,17 @@ async function run() {
         assert(describeSnapshotMaterializationSourceCounts(null).peer === 0, '11. a null history is handled the same as empty, never throws');
 
         // describeSnapshotMaterializationOutcomeLabel
-        assert(describeSnapshotMaterializationOutcomeLabel(StoreSnapshotContentOutcome.STORED) === 'Snapshot stored locally', '12. STORED has its own label');
-        assert(describeSnapshotMaterializationOutcomeLabel(StoreSnapshotContentOutcome.ALREADY_AVAILABLE) === 'Snapshot was already available', '13. ALREADY_AVAILABLE has its own, DIFFERENT label');
-        assert(describeSnapshotMaterializationOutcomeLabel(StoreSnapshotContentOutcome.HASH_MISMATCH) === 'Content hash mismatch', '14. HASH_MISMATCH has its own label');
+        assert(displayText(describeSnapshotMaterializationOutcomeLabel(StoreSnapshotContentOutcome.STORED)) === 'Snapshot stored locally', '12. STORED has its own label');
+        assert(displayText(describeSnapshotMaterializationOutcomeLabel(StoreSnapshotContentOutcome.ALREADY_AVAILABLE)) === 'Snapshot was already available', '13. ALREADY_AVAILABLE has its own, DIFFERENT label');
+        assert(displayText(describeSnapshotMaterializationOutcomeLabel(StoreSnapshotContentOutcome.HASH_MISMATCH)) === 'Content hash mismatch', '14. HASH_MISMATCH has its own label');
         assert(describeSnapshotMaterializationOutcomeLabel(null) === null, '15. an unrecognized outcome reports no label');
 
         // describeSnapshotMaterializationHistory — the full narration.
         const view = describeSnapshotMaterializationHistory(historyWithMismatch);
         assert(view.count === 3 && view.attempts.length === 3, '16. the view reports the correct count and one entry per attempt');
-        assert(view.attempts[0].sourceLabel === 'Transfer package' && view.attempts[0].outcomeLabel === 'Snapshot stored locally' && view.attempts[0].possessed === true,
+        assert(displayText(view.attempts[0].sourceLabel) === 'Transfer package' && displayText(view.attempts[0].outcomeLabel) === 'Snapshot stored locally' && view.attempts[0].possessed === true,
             '17. the first (oldest) attempt is narrated correctly, and reported possessed');
-        assert(view.attempts[2].sourceLabel === 'Transfer package' && view.attempts[2].outcomeLabel === 'Content hash mismatch' && view.attempts[2].possessed === false,
+        assert(displayText(view.attempts[2].sourceLabel) === 'Transfer package' && displayText(view.attempts[2].outcomeLabel) === 'Content hash mismatch' && view.attempts[2].possessed === false,
             '18. the LAST attempt (the rejected one) is narrated correctly, and reported NOT possessed');
         assert(describeSnapshotMaterializationHistory(null).count === 0, '19. describeSnapshotMaterializationHistory() tolerates a null/absent history');
         assert(describeSnapshotMaterializationHistory([]).attempts.length === 0, '20. an empty history narrates zero attempts');
@@ -273,7 +274,7 @@ async function run() {
         const labels = ['Snapshot stored locally', 'Snapshot was already available', 'Content hash mismatch'];
         for (const label of labels) {
             for (const forbidden of forbiddenWords) {
-                assert(!label.toLowerCase().includes(forbidden), `21. outcome label "${label}" never contains the forbidden word "${forbidden}"`);
+                assert(!displayText(label).toLowerCase().includes(forbidden), `21. outcome label "${label}" never contains the forbidden word "${forbidden}"`);
             }
         }
     }
@@ -348,11 +349,11 @@ async function run() {
         const bobView = describeSnapshotMaterializationHistory(bobHistory);
         const carolView = describeSnapshotMaterializationHistory(carolHistory);
         const daveView = describeSnapshotMaterializationHistory(daveHistory);
-        assert(bobView.attempts[0].sourceLabel === 'Transfer package' && bobView.attempts[0].outcomeLabel === 'Snapshot stored locally',
+        assert(displayText(bobView.attempts[0].sourceLabel) === 'Transfer package' && displayText(bobView.attempts[0].outcomeLabel) === 'Snapshot stored locally',
             '7. Bob\'s own history narrates "Transfer package" / "Snapshot stored locally"');
-        assert(carolView.attempts[0].sourceLabel === 'Placement' && carolView.attempts[0].outcomeLabel === 'Snapshot stored locally',
+        assert(displayText(carolView.attempts[0].sourceLabel) === 'Placement' && displayText(carolView.attempts[0].outcomeLabel) === 'Snapshot stored locally',
             '8. Carol\'s own history narrates "Placement" / "Snapshot stored locally"');
-        assert(daveView.attempts[0].sourceLabel === 'Peer' && daveView.attempts[0].outcomeLabel === 'Snapshot stored locally',
+        assert(displayText(daveView.attempts[0].sourceLabel) === 'Peer' && displayText(daveView.attempts[0].outcomeLabel) === 'Snapshot stored locally',
             '9. Dave\'s own history narrates "Peer" / "Snapshot stored locally"');
 
         // --- All three independently report AVAILABLE, through the SAME unchanged 0.8.33 check. ---

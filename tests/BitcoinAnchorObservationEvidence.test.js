@@ -8,6 +8,7 @@ import { composeBitcoinAnchorObservationEvidence } from '../application/anchorin
 import { describeBitcoinAnchorObservationEvidence } from '../application/anchoring/bitcoin/BitcoinAnchorObservationEvidenceView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.78 — Bitcoin Anchor Observation Evidence Correlation.
 //
@@ -372,17 +373,17 @@ async function run() {
 
         assert(described.anchorId === 'anchor-view', '54. the described view names the same anchorId');
         assert(described.broadcastObservations.count === 1, '55. broadcast section reports the correct count');
-        assert(described.broadcastObservations.observations[0].stateLabel === 'Transaction broadcasted', '56. the broadcast label reuses application/anchoring/bitcoin/BitcoinAnchorBroadcastView.js\'s own vocabulary unchanged');
+        assert(displayText(described.broadcastObservations.observations[0].stateLabel) === 'Transaction broadcasted', '56. the broadcast label reuses application/anchoring/bitcoin/BitcoinAnchorBroadcastView.js\'s own vocabulary unchanged');
         assert(described.broadcastObservations.observations[0].index === 1, '57. the broadcast entry carries its own index');
         assert(described.broadcastObservations.observations[0].broadcastedAt.getTime() === b1.broadcastedAt.getTime(), '58. broadcastedAt is carried through');
 
         assert(described.confirmationObservations.count === 1, '59. confirmation section reports the correct count');
-        assert(described.confirmationObservations.observations[0].stateLabel === 'Transaction confirmed', '60. the confirmation label reuses application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryView.js\'s own vocabulary unchanged');
+        assert(displayText(described.confirmationObservations.observations[0].stateLabel) === 'Transaction confirmed', '60. the confirmation label reuses application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryView.js\'s own vocabulary unchanged');
         assert(described.confirmationObservations.observations[0].index === 1, '61. the confirmation entry carries its own index');
         assert(described.confirmationObservations.observations[0].blockHeight === 900000, '62. confirmation fields are carried through');
 
         assert(described.contentProofObservations.count === 1, '63. content-proof section reports the correct count');
-        assert(described.contentProofObservations.observations[0].stateLabel === 'Hash matches OP_RETURN', '64. the content-proof label reuses application/anchoring/bitcoin/BitcoinAnchorContentProofView.js\'s own vocabulary unchanged');
+        assert(displayText(described.contentProofObservations.observations[0].stateLabel) === 'Hash matches OP_RETURN', '64. the content-proof label reuses application/anchoring/bitcoin/BitcoinAnchorContentProofView.js\'s own vocabulary unchanged');
         assert(described.contentProofObservations.observations[0].index === 1, '65. the content-proof entry carries its own index');
 
         assert(typeof described.chainPlacementObservations.count === 'number', '66. the chain-placement section is the same shape application/anchoring/bitcoin/BitcoinAnchorChainPlacementObservationView.js already produces');

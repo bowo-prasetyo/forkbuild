@@ -1,4 +1,5 @@
 import { PlacementAcquisitionKind } from '../../placement/PlacementAcquisitionKind.js';
+import { message } from '../../../core/Message.js';
 
 // 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
 //
@@ -12,9 +13,9 @@ import { PlacementAcquisitionKind } from '../../placement/PlacementAcquisitionKi
 // "confidence," or "rank." See that file's own design note on why naming
 // a peer here would misread as an authority claim.
 const ACQUISITION_LABELS = Object.freeze({
-    [PlacementAcquisitionKind.LOCAL]: 'Learned locally',
-    [PlacementAcquisitionKind.PACKAGE]: 'Learned via package import',
-    [PlacementAcquisitionKind.PEER]: 'Learned via peer exchange'
+    [PlacementAcquisitionKind.LOCAL]: message('publicationSnapshotPlacementKnowledge.learnedLocally'),
+    [PlacementAcquisitionKind.PACKAGE]: message('publicationSnapshotPlacementKnowledge.learnedViaPackageImport'),
+    [PlacementAcquisitionKind.PEER]: message('publicationSnapshotPlacementKnowledge.learnedViaPeerExchange')
 });
 
 // `record`: an application/snapshot/placement/SnapshotPlacementKnowledgeRecord.js instance,
@@ -27,7 +28,7 @@ export function describePlacementKnowledge(record) {
         return {
             known: false,
             acquisitionKind: null,
-            acquisitionLabel: 'Local knowledge unavailable',
+            acquisitionLabel: message('publicationSnapshotPlacementKnowledge.localKnowledgeUnavailable'),
             firstSeenAt: null,
             firstSeenAtLabel: null
         };
@@ -35,8 +36,8 @@ export function describePlacementKnowledge(record) {
     return {
         known: true,
         acquisitionKind: record.acquisition.kind,
-        acquisitionLabel: ACQUISITION_LABELS[record.acquisition.kind] || 'Learned by an unrecognized means',
+        acquisitionLabel: ACQUISITION_LABELS[record.acquisition.kind] || message('publicationSnapshotPlacementKnowledge.learnedUnrecognized'),
         firstSeenAt: record.firstSeenAt.toISOString(),
-        firstSeenAtLabel: 'First seen by this replica'
+        firstSeenAtLabel: message('publicationSnapshotPlacementKnowledge.firstSeenByThisReplica')
     };
 }
