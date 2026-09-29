@@ -63,7 +63,7 @@ import { ExportAllDocumentsUseCase, ImportDocumentBundleUseCase } from '../../ap
 import { useStructureInspection } from './editorView/useStructureInspection.js';
 import { useSoundControls } from '../composables/useSoundControls.js';
 import SoundControl from '../components/SoundControl.js';
-import { displayText } from '../i18n/i18n.js';
+import { displayText, errorText, t } from '../i18n/i18n.js';
 
 // Editing shortcuts come from EditorActionRegistry, shared with the palette,
 // the sidebar and the controls docs. Escape priority: text input > shortcuts
@@ -107,7 +107,7 @@ export default {
             -->
             <div v-if="publishedPublication || distributionError || (distributionResult && distributionResult.length) || snapshotDistributionError || snapshotDistributionResult" class="editor-post-publish-overlay">
                 <div v-if="publishedPublication" class="editor-post-publish-action">
-                    <span class="editor-post-publish-message">Publication published successfully.</span>
+                    <span class="editor-post-publish-message">{{ t('editor.published') }}</span>
 
                     <!-- Opens EditorDistributionDialog, which holds every storage/substrate choice. -->
                     <button
@@ -115,12 +115,12 @@ export default {
                         type="button"
                         class="action-btn action-btn--primary editor-post-publish-distribute-trigger"
                         @click="distributionDialogOpen = true"
-                    >Distribute</button>
+                    >{{ t('editor.distribute') }}</button>
                     <button
                         type="button"
                         class="action-btn action-btn--secondary editor-post-publish-dismiss-btn"
                         @click="dismissPublishAction"
-                    >Dismiss</button>
+                    >{{ t('editor.dismiss') }}</button>
                 </div>
 
                 <EditorDistributionDialog
@@ -150,39 +150,39 @@ export default {
             <div :class="['editor-body', { 'editor-body--sidebar-open': sidebarOpen }]">
                 <div class="sidebar">
                   <div class="sidebar-scroll">
-                    <div class="tool-switcher tool-switcher--editor" role="group" aria-label="Tool">
+                    <div class="tool-switcher tool-switcher--editor" role="group" :aria-label="t('editor.tool')">
                         <button
                             :class="['tool-btn', { 'tool-btn--active': activeTool === ToolId.SELECT }]"
                             :aria-pressed="activeTool === ToolId.SELECT ? 'true' : 'false'"
                             @click="setTool(ToolId.SELECT)"
                         >
-                            Select
+                            {{ t('editor.select') }}
                         </button>
                         <button
                             :class="['tool-btn', { 'tool-btn--active': PLACING_TOOLS.has(activeTool) }]"
                             :aria-pressed="PLACING_TOOLS.has(activeTool) ? 'true' : 'false'"
                             @click="setTool(ToolId.PLACE)"
                         >
-                            Place
+                            {{ t('editor.place') }}
                         </button>
                     </div>
                     <template v-if="touchInput">
                         <p v-if="activeTool === ToolId.PLACE" class="placement-hint">
-                            Tap the ground to place; Rotate turns the brick first.
+                            {{ t('editor.touchPlaceHint') }}
                         </p>
                         <p v-if="activeTool === ToolId.PLACE_STRUCTURE || activeTool === ToolId.COMPOSE_STRUCTURE" class="placement-hint">
-                            Placing "{{ activeTool === ToolId.PLACE_STRUCTURE ? activeStructureTitle : activeCompositionTitle }}" — tap the ground to place; Rotate turns it first.
+                            {{ t('editor.touchPlacingHint', { title: activeTool === ToolId.PLACE_STRUCTURE ? activeStructureTitle : activeCompositionTitle }) }}
                         </p>
                     </template>
                     <template v-else>
                     <p v-if="activeTool === ToolId.PLACE" class="placement-hint">
-                        Hover the ground, R to rotate, click to place.
+                        {{ t('editor.placeHint') }}
                     </p>
                     <p v-if="activeTool === ToolId.PLACE_STRUCTURE" class="placement-hint">
-                        Placing "{{ activeStructureTitle }}" — hover the ground, R to rotate, click to place.
+                        {{ t('editor.placingHint', { title: activeStructureTitle }) }}
                     </p>
                     <p v-if="activeTool === ToolId.COMPOSE_STRUCTURE" class="placement-hint">
-                        Placing "{{ activeCompositionTitle }}" — hover the ground, R to rotate, click to place, Esc to cancel.
+                        {{ t('editor.composingHint', { title: activeCompositionTitle }) }}
                     </p>
                     </template>
                     <DocumentInfoPanel compact :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
@@ -238,7 +238,7 @@ export default {
                         class="action-btn editor-sidebar-toggle"
                         :aria-expanded="sidebarOpen ? 'true' : 'false'"
                         @click="sidebarOpen = !sidebarOpen"
-                    >{{ sidebarOpen ? 'Hide Tools' : 'Tools' }}</button>
+                    >{{ sidebarOpen ? t('editor.hideTools') : t('editor.tools') }}</button>
                     <EditorTouchActionBar
                         v-if="touchInput"
                         :registry="actionRegistry"
@@ -614,10 +614,10 @@ export default {
                 editorSession.openDocument(recovered);
                 documentManager.markDirty();
                 recoveryObserver.clear();
-                feedback.show('Recovered unsaved changes from a previous session');
+                feedback.show(t('editor.recovered'));
             } catch (e) {
                 // A corrupt checkpoint never takes down the Editor or the open document.
-                feedback.show(`Recovery failed: ${e.message}`);
+                feedback.show(t('editor.recoveryFailed', { error: errorText(e) }));
             }
         }
 
@@ -631,9 +631,9 @@ export default {
             try {
                 discardRecoveryUseCase.execute(documentId);
                 recoveryObserver.clear();
-                feedback.show('Discarded the recovered checkpoint');
+                feedback.show(t('editor.discarded'));
             } catch (e) {
-                feedback.show(`Discard failed: ${e.message}`);
+                feedback.show(t('editor.discardFailed', { error: errorText(e) }));
             }
         }
 
@@ -666,7 +666,7 @@ export default {
         function onSaveMetadata({ title, description, license, placementPolicy }) {
             updateDocumentMetadataUseCase.execute(documentManager, { title, description, license, placementPolicy });
             showMetadataEditor.value = false;
-            feedback.show('Updated document properties');
+            feedback.show(t('editor.propertiesUpdated'));
         }
 
         const paletteOpen = ref(false);
@@ -676,7 +676,7 @@ export default {
             },
             // The registry cannot collect a name itself; null means Cancel.
             promptRenameGroup(currentName = '') {
-                return prompt('New group name:', currentName || '');
+                return prompt(t('editor.groupNamePrompt'), currentName || '');
             },
             focusNumeric: null,
             // Opens CreateBlueprintDialog with a preview Structure built from the current
@@ -684,13 +684,13 @@ export default {
             openCreateBlueprintDialog() {
                 let preview = null;
                 try {
-                    preview = editorSession.createStructureFromSelection({ name: 'Untitled Blueprint', category: 'uncategorized', description: '' });
+                    preview = editorSession.createStructureFromSelection({ name: t('editor.untitledBlueprint'), category: 'uncategorized', description: '' });
                 } catch (e) {
-                    feedback.show(e.message);
+                    feedback.show(errorText(e));
                     return;
                 }
                 if (!preview) {
-                    feedback.show('Nothing to create — select bricks first');
+                    feedback.show(t('editor.nothingToCreate'));
                     return;
                 }
                 createBlueprintPreview.value = preview;
@@ -738,7 +738,7 @@ export default {
             if (!touchBoxSelect.value && editorSession.cancelMarquee()) {
                 updateMarqueeRect();
             }
-            feedback.show(touchBoxSelect.value ? 'Box on — drag to select' : 'Box off');
+            feedback.show(t(touchBoxSelect.value ? 'editor.boxOn' : 'editor.boxOff'));
         }
         function runTouchAction(id) {
             actionRegistry.execute(id, getActionContext());
@@ -749,7 +749,7 @@ export default {
         // no preview before the tap, so say that it turned.
         function rotateTouchPlacement() {
             editorSession.onKeyDown({ key: 'r' });
-            feedback.show('Rotated +90° — tap the ground to place');
+            feedback.show(t('editor.touchRotated'));
         }
 
         let onPointerDown = null;
@@ -865,8 +865,8 @@ export default {
                     arrivalDocumentId = decodedEntryContext ? forkedDocument.world.id : null;
                     // Transient arrival message, naming what was being looked at when known.
                     feedback.show(decodedEntryContext && decodedEntryContext.title
-                        ? `Editing a copy of "${decodedEntryContext.title}"`
-                        : `Created your editable fork of "${forkedDocument.metadata.title}"`);
+                        ? t('editor.editingCopy', { title: decodedEntryContext.title })
+                        : t('editor.forkCreated', { title: forkedDocument.metadata.title }));
                 } catch (err) {
                     // A failed fork shows a dialog with the reason and a way back to where the
                     // viewer came from, instead of a transient toast.
@@ -883,9 +883,9 @@ export default {
                 } catch (err) {
                     // Never shows the raw error message (it leaked class names and storage ids);
                     // branches on err.reason, with a safe fallback.
-                    feedback.show(err.reason === LoadFailureReason.MATERIAL_UNAVAILABLE
-                        ? "This Publication's material is currently unavailable."
-                        : 'This document could not be opened.');
+                    feedback.show(t(err.reason === LoadFailureReason.MATERIAL_UNAVAILABLE
+                        ? 'editor.materialUnavailable'
+                        : 'editor.couldNotOpen'));
                 }
                 router.replace({ path: '/editor' });
             }
@@ -1065,6 +1065,7 @@ export default {
         });
 
         return {
+            t,
             soundAvailable,
             soundMuted,
             soundVolume,

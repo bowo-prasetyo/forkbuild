@@ -1,5 +1,6 @@
 // Actions on the current selection: structure placements (move, rotate, duplicate, delete,
 // open source), groups, repeat and recolor, plus the summaries the sidebar shows for it.
+import { t } from '../../i18n/i18n.js';
 export function useSelectionActions({
     documentVersion, editorContext, editorSession, feedback, selectedPlacementInfo, selectionSummary
 }) {
@@ -21,8 +22,8 @@ export function useSelectionActions({
     function repeatSelection(options) {
         const repeated = editorSession.repeatSelection(options);
         feedback.show(repeated
-            ? `Repeated ${options.count} ${options.count === 1 ? 'copy' : 'copies'}`
-            : 'Repeat blocked — check the count/offset, or that the copies fit');
+            ? t('editor.repeated', { count: options.count })
+            : t('editor.repeatBlocked'));
         refreshSelectionSummary();
     }
 
@@ -43,22 +44,22 @@ export function useSelectionActions({
         const result = editorSession.applyPlacementTransform(payload);
         refreshSelectedPlacementInfo();
         if (result.blocked) {
-            feedback.show('That position is occupied — X/Z left unchanged');
+            feedback.show(t('editor.positionOccupied'));
         } else if (result.moved || result.rotated) {
-            feedback.show('Updated instance transform');
+            feedback.show(t('editor.instanceUpdated'));
         }
     }
 
     function duplicateSelectedPlacement() {
         const newId = editorSession.duplicateSelection();
         if (newId) {
-            feedback.show('Copy created — R to rotate, drag to move');
+            feedback.show(t('editorAction.selection.duplicate.done'));
         }
     }
 
     function deleteSelectedPlacement() {
         if (editorSession.deleteSelection()) {
-            feedback.show('Deleted structure instance');
+            feedback.show(t('editor.instanceDeleted'));
         }
     }
 
@@ -66,7 +67,7 @@ export function useSelectionActions({
     // no-argument command.
     function recolorSelection(color) {
         if (editorSession.recolorSelection(color)) {
-            feedback.show('Recolored selection');
+            feedback.show(t('editor.recolored'));
         }
     }
 
@@ -77,7 +78,7 @@ export function useSelectionActions({
             return;
         }
         editorSession.editStructurePlacementSource(info.documentId);
-        feedback.show(`Editing "${info.title}"`);
+        feedback.show(t('editor.editingTitle', { title: info.title }));
     }
 
     return {

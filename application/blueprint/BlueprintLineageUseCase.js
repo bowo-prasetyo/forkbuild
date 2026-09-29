@@ -2,6 +2,8 @@ import { BlueprintLineageClaim } from '../../core/BlueprintLineageClaim.js';
 import { deriveBlueprintFingerprint, deriveLegacyBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { lineageView as deriveLineageView } from '../../core/BlueprintLineageView.js';
+import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
 
 // 0.6.8 — Blueprint Lineage & Revision Discovery.
 //
@@ -52,18 +54,18 @@ export class BlueprintLineageUseCase {
     publish(derivedStructure, sourceStructure) {
         const derivedFingerprint = deriveBlueprintFingerprint(derivedStructure);
         if (!derivedFingerprint) {
-            throw new Error('BlueprintLineageUseCase: the derived structure has no derivable design content');
+            throw new UserFacingError(message('blueprint.derivedNoDesignContent'), { detail: 'BlueprintLineageUseCase: the derived structure has no derivable design content' });
         }
         const sourceFingerprint = deriveBlueprintFingerprint(sourceStructure);
         if (!sourceFingerprint) {
-            throw new Error('BlueprintLineageUseCase: the source structure has no derivable design content');
+            throw new UserFacingError(message('blueprint.sourceNoDesignContent'), { detail: 'BlueprintLineageUseCase: the source structure has no derivable design content' });
         }
         const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
         if (!authorIdentityId) {
-            throw new Error('BlueprintLineageUseCase: sign in to claim a lineage relationship');
+            throw new UserFacingError(message('blueprint.signInToClaimLineage'), { detail: 'BlueprintLineageUseCase: sign in to claim a lineage relationship' });
         }
         if (typeof this._identityProvider.signCanonical !== 'function') {
-            throw new Error('BlueprintLineageUseCase: this identity provider cannot sign a lineage claim');
+            throw new UserFacingError(message('blueprint.cannotSignLineage'), { detail: 'BlueprintLineageUseCase: this identity provider cannot sign a lineage claim' });
         }
         let claim = new BlueprintLineageClaim({ sourceFingerprint, derivedFingerprint, authorIdentityId });
         const signature = this._identityProvider.signCanonical(claim.getSigningDescriptor());
@@ -71,7 +73,7 @@ export class BlueprintLineageUseCase {
 
         const result = this._verifier.verifyBlueprintLineageClaim(claim.toJSON());
         if (!result.valid) {
-            throw new Error(`BlueprintLineageUseCase: refusing to publish an unverifiable lineage claim — ${result.reason}`);
+            throw new UserFacingError(message('blueprint.unverifiableLineage', { reason: result.reason }), { detail: `BlueprintLineageUseCase: refusing to publish an unverifiable lineage claim — ${result.reason}` });
         }
         this._store.save(claim);
         return claim;

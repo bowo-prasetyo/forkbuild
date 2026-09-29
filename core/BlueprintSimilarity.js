@@ -1,4 +1,5 @@
 import { canonicalizeBlueprint, deriveBlueprintFingerprint, blueprintFingerprintsEqual } from './BlueprintFingerprint.js';
+import { message } from './Message.js';
 
 // 0.6.8 — Blueprint Lineage & Revision Discovery.
 //
@@ -158,16 +159,16 @@ export function isPossibleLineageCandidate(evidence, threshold = DEFAULT_SIMILAR
     return !!evidence && !evidence.identical && evidence.similarity >= threshold;
 }
 
-// A short, human-readable summary for display — e.g. "86% design
-// similarity" — never a stored or signed fact, the same presentation-
+// A short summary for display, as a message (core/Message.js) — e.g. "86%
+// design similarity" — never a stored or signed fact, the same presentation-
 // only posture core/BlueprintFingerprint.js#describeBlueprintFingerprint()
-// already keeps.
+// already keeps. '' when there is nothing to describe.
 export function describeBlueprintSimilarity(evidence) {
     if (!evidence) {
         return '';
     }
     if (evidence.identical) {
-        return 'Identical design';
+        return message('blueprintSimilarity.identical');
     }
-    return `${Math.round(evidence.similarity * 100)}% design similarity`;
+    return message('blueprintSimilarity.percent', { percent: Math.round(evidence.similarity * 100) });
 }

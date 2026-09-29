@@ -6,6 +6,7 @@ import {
     DEFAULT_SIMILARITY_THRESHOLD
 } from '../core/BlueprintSimilarity.js';
 import { assert } from './support/Assert.js';
+import { t } from '../ui/i18n/i18n.js';
 
 // 0.6.8 — Blueprint Lineage & Revision Discovery.
 //
@@ -49,7 +50,7 @@ async function run() {
             '5. an identical pair reports every ratio at 1');
         assert(evidence.changedBricks === 0 && evidence.addedBricks === 0 && evidence.removedBricks === 0,
             '6. an identical pair reports zero changed/added/removed');
-        assert(describeBlueprintSimilarity(evidence) === 'Identical design', '7. describeBlueprintSimilarity labels an identical pair distinctly');
+        assert(t(describeBlueprintSimilarity(evidence)) === 'Identical design', '7. describeBlueprintSimilarity labels an identical pair distinctly');
         assert(isPossibleLineageCandidate(evidence) === false,
             '8. an identical pair is NEVER offered as a lineage candidate — same design, not a derivation');
     }
@@ -84,7 +85,7 @@ async function run() {
             '15. similarity is the documented plain average of the two overlap ratios');
         assert(isPossibleLineageCandidate(evidence, 0.5) === true, '16. a similar-enough pair clears the default threshold');
         assert(isPossibleLineageCandidate(evidence, 0.99) === false, '17. the same evidence fails a stricter threshold');
-        assert(describeBlueprintSimilarity(evidence).endsWith('% design similarity'), '18. describeBlueprintSimilarity renders a percentage for a non-identical pair');
+        assert(t(describeBlueprintSimilarity(evidence)).endsWith('% design similarity'), '18. describeBlueprintSimilarity renders a percentage for a non-identical pair');
     }
     console.log('✓ Section B: a real added/changed comparison reports the documented ratios');
 

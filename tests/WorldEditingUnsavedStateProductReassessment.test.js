@@ -720,11 +720,13 @@ async function main() {
         // as a presentation fact (what does the Editor show?), not as
         // new error infrastructure.
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
-        const loadCatchMatch = editorViewSource.match(/} catch \(err\) \{\s*\/\/[\s\S]*?feedback\.show\(err\.reason === LoadFailureReason\.MATERIAL_UNAVAILABLE[\s\S]*?\);/);
+        const loadCatchMatch = editorViewSource.match(/} catch \(err\) \{\s*\/\/[\s\S]*?feedback\.show\(t\(err\.reason === LoadFailureReason\.MATERIAL_UNAVAILABLE[\s\S]*?\)\);/);
         assert(loadCatchMatch !== null, 'J3a. EditorView.js\'s own route.query.load catch block located.');
-        assert(/"This Publication's material is currently unavailable\."/.test(loadCatchMatch[0]),
+        // The sentence is a message now: check the key it names reads as that sentence.
+        const unavailableKey = (loadCatchMatch[0].match(/'(editor\.materialUnavailable)'/) || [])[1];
+        assert(unavailableKey && t(unavailableKey) === "This Publication's material is currently unavailable.",
             'J3b. A MATERIAL_UNAVAILABLE load failure shows a plain, safe, Wanderer-facing sentence — never a raw class name or storage key (the exact leak 0.9.559/0.9.574 named and this same file already fixed, reconfirmed still true here).');
-        const feedbackShowCallMatch = loadCatchMatch[0].match(/feedback\.show\([\s\S]*?\);/);
+        const feedbackShowCallMatch = loadCatchMatch[0].match(/feedback\.show\([\s\S]*?\)\);/);
         assert(feedbackShowCallMatch !== null && !/LoadDocumentUseCase:/.test(feedbackShowCallMatch[0]) && !/err\.message/.test(feedbackShowCallMatch[0]),
             'J3c. The actual feedback.show(...) call site never interpolates the internal use-case error message or its raw class name into the user-facing toast — only its own two hardcoded, plain-language strings (the surrounding comment\'s mention of the OLD, already-fixed `err.message` interpolation is historical context, not current code).');
         assert(/router\.replace\(\{ path: '\/editor' \}\);/.test(editorViewSource),
@@ -829,7 +831,8 @@ async function main() {
         // vocabulary (dirty/clean only) that coexists with
         // DocumentInfoPanel's finer one — never says "Published" either.
         const toolbarSource = await readSource('ui/components/Toolbar.js');
-        assert(/\{\{ dirty \? '● Unsaved changes' : 'Saved' \}\}/.test(toolbarSource),
+        assert(/\{\{ dirty \? t\('toolbar\.unsaved'\) : t\('toolbar\.saved'\) \}\}/.test(toolbarSource)
+            && t('toolbar.unsaved') === '● Unsaved changes' && t('toolbar.saved') === 'Saved',
             'L4a. Toolbar\'s own always-visible pill is a strictly binary dirty/clean indicator — quoted verbatim.');
         assert(!/'Published'|"Published"/.test(toolbarSource),
             'L4b. The literal string "Published" never appears anywhere in Toolbar.js — its persistent, always-on-screen indicator can say "Saved" immediately after a successful Publish (dirty correctly stays false — publishing never marks the document dirty) and will keep saying "Saved" from then on, for the rest of that editing session, even while a Publication genuinely exists for exactly what is on screen.');
@@ -837,9 +840,10 @@ async function main() {
         // L5. RecoveryBanner — confirmed clean of raw implementation
         // vocabulary, and its date formatting degrades gracefully.
         const bannerSource = await readSource('ui/components/RecoveryBanner.js');
-        assert(/Unsaved changes from \{\{ formatSavedAt\(status\.recovery\.savedAt\) \}\} were found for this document\./.test(bannerSource),
+        assert(/t\('recovery\.found', \{ when: formatSavedAt\(status\.recovery\.savedAt\) \}\)/.test(bannerSource)
+            && t('recovery.found', { when: 'Tuesday' }) === 'Unsaved changes from Tuesday were found for this document.',
             'L5a. RecoveryBanner\'s user-facing sentence is plain language — no "checkpoint," "contentHash," or "revision" jargon leaks into it.');
-        assert(/return Number\.isNaN\(date\.getTime\(\)\) \? 'an earlier session' : date\.toLocaleString\(\);/.test(bannerSource),
+        assert(/return Number\.isNaN\(date\.getTime\(\)\)\s*\?\s*t\('recovery\.earlierSession'\)/.test(bannerSource) && t('recovery.earlierSession') === 'an earlier session',
             'L5b. formatSavedAt() degrades gracefully to "an earlier session" rather than showing "Invalid Date" for a malformed timestamp — confirmed live below.');
         const RecoveryBannerModule = await import('../ui/components/RecoveryBanner.js');
         const formatSavedAt = RecoveryBannerModule.default.methods.formatSavedAt;

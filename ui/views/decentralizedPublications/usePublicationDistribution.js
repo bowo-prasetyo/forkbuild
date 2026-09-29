@@ -3,6 +3,7 @@ import { sortOptionsByLabel } from '../../../utils/sortOptionsByLabel.js';
 import { humanizeStorageType, discoveryProviderConfigurationRoute } from './presentation.js';
 import { Publication } from '../../../publisher/Publication.js';
 import { describeSteemContentUploadProgress } from '../../../application/steem/SteemContentUploadProgressText.js';
+import { displayText } from '../../i18n/i18n.js';
 
 // Distributing an entry's publication and snapshot with the same app-wide
 // commands WorldView uses, plus the storage and announcement choices they read.
@@ -166,7 +167,7 @@ export function usePublicationDistribution({
     function steemUploadProgressText(entry) {
         const attempt = entry.snapshotDistributionAttempt;
         if (!attempt || !attempt.distributing || entry.snapshotDistributionStorage !== 'steem' || !steemContentUploadProgress) return null;
-        return describeSteemContentUploadProgress(steemContentUploadProgress.value);
+        return displayText(describeSteemContentUploadProgress(steemContentUploadProgress.value));
     }
 
     // The Settings route for the entry's chosen Content backend; IPFS uses

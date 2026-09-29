@@ -2991,3 +2991,36 @@ chosen language. English reads exactly as before.
 - Not done: command history descriptions ("Place Brick", "Undo …"), which documents store, so they need their own
   change; the Publications page's result views (`PublicationEvidenceDiscoveryView.js` and the other four), which move
   with that page; other thrown errors, area by area; resident speech.
+
+## Internationalization, phase 3: the Editor (unnumbered, 2026-09-29)
+
+The first area of the UI moved to `t()`, so the whole Editor can be shown in another language: in the pseudo-locale
+nothing is left in plain English but the ForkBuild name, blueprint fingerprints and a new document's default title.
+Phase 3 goes area by area, one pull request each; World View, the Publications page, and Identity, Peers, Chat and
+the settings pages follow.
+
+- Components: `Toolbar`, `EditingSidebar`, `SelectionInspector`, `NumericTransformPanel`, `AlignmentPanel`,
+  `RepeatPanel`, `StructureInstancePanel`, `BuildLibraryPanel`, `StructureLibraryCard`, `StructureInfoPanel`,
+  `DocumentInfoPanel`, `MetadataEditorDialog`, `CreateBlueprintDialog`, `ForkFailureDialog`, `RecoveryBanner`,
+  `TransformFeedback`, `EditorTouchActionBar`, `EditorDistributionDialog`, `PublicationShareLink` and
+  `saveFailureMessages`; `ui/views/EditorView.js` and its composables in `ui/views/editorView/`. Summaries built
+  from pieces ("Imported 3 documents, 1 already here") are now separate messages joined with the language's list
+  format; counts use plural forms; dates and numbers use the chosen locale.
+- Build Library categories: `libraryCategoryName()` in `ui/i18n/libraryText.js` translates built-in structure
+  categories and brick sections, and leaves a category a person typed as they typed it; the category filter is sorted
+  by the names shown.
+- Below the UI: `core/BlueprintSimilarity.js#describeBlueprintSimilarity()`, `core/sortStructures.js`'s sort labels,
+  `application/steem/SteemContentUploadProgressText.js` (one whole message per combination of resuming and Resource
+  Credits) and `application/publication/PublicationShareLink.js` return messages. The refusals in
+  `BlueprintAttributionUseCase` and `BlueprintLineageUseCase` (sign in first, nothing to claim, a claim that won't
+  verify) are UserFacingErrors, so the Editor shows them in the person's language instead of the use case's own
+  text with its class name stripped.
+- Docs: `docs/Translating.md` lists which areas are ready.
+- Tests: updated to read converted text through `t()`, including older source-text checks in
+  `WorldEditingUnsavedStateProductReassessment`, `SortOptionsByLabel`, `EditorTransformGestureFeedback` (which now
+  allows its one translator import) and the harnesses of `ForkFailureUXConvergenceAudit` and
+  `UnifiedDistributionActionUX`, which run extracted source and now receive `t`. Checked in the real app by scanning
+  every text, title, label and placeholder of the Editor, its Structures tab, a structure's details, the document
+  properties dialog, a selected brick and the Recent list in the pseudo-locale.
+- Not done: the default title of a new document and the undo/redo and history labels, which are stored in documents;
+  numbers typed into the numeric panel still need a `.` as the decimal point.

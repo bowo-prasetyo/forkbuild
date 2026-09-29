@@ -1,6 +1,8 @@
 import { ref } from 'vue';
 import { BLUEPRINT_ATTRIBUTION_KIND } from '../../../core/BlueprintAttribution.js';
 import { compareBlueprintSimilarity, isPossibleLineageCandidate } from '../../../core/BlueprintSimilarity.js';
+import { errorText, t } from '../../i18n/i18n.js';
+import { libraryItemName } from '../../i18n/libraryText.js';
 
 // The structure inspection panel: what a Structure is and where it came from (attribution,
 // lineage, similar designs), plus claiming, publishing and exporting that evidence.
@@ -66,9 +68,9 @@ export function useStructureInspection({
         try {
             blueprintAttributionUseCase.publish(structure);
             inspectedStructureAttribution.value = blueprintAttributionUseCase.communityView(structure);
-            feedback.show(`You are now credited as an author of "${structure.name}"`);
+            feedback.show(t('editor.credited', { name: libraryItemName(structure) }));
         } catch (e) {
-            feedback.show(e.message.replace(/^BlueprintAttributionUseCase:\s*/, ''));
+            feedback.show(errorText(e));
         }
     }
 
@@ -82,9 +84,9 @@ export function useStructureInspection({
         try {
             blueprintAttributionUseCase.resignLegacyAttribution(structure);
             inspectedStructureAttribution.value = blueprintAttributionUseCase.communityView(structure);
-            feedback.show(`Signed your authorship of "${structure.name}" again`);
+            feedback.show(t('editor.resigned', { name: libraryItemName(structure) }));
         } catch (e) {
-            feedback.show(e.message.replace(/^BlueprintAttributionUseCase:\s*/, ''));
+            feedback.show(errorText(e));
         }
     }
 
@@ -113,10 +115,10 @@ export function useStructureInspection({
             publicationCatalog.add(publication);
             const peerCount = publicationPeerExchange.announce(publication);
             feedback.show(peerCount > 0
-                ? `Published to the network — announced to ${peerCount} connected ${peerCount === 1 ? 'peer' : 'peers'}.`
-                : 'Published to the network — cataloged locally; no peers are connected to announce to right now.');
+                ? t('editor.attributionAnnounced', { count: peerCount })
+                : t('editor.attributionCataloged'));
         } catch (e) {
-            feedback.show(e.message.replace(/^PublicationResolver:\s*/, ''));
+            feedback.show(errorText(e).replace(/^PublicationResolver:\s*/, ''));
         }
     }
 
@@ -132,9 +134,9 @@ export function useStructureInspection({
             blueprintLineageUseCase.publish(structure, sourceStructure);
             inspectedStructureLineage.value = blueprintLineageUseCase.lineageView(structure);
             inspectedStructureSimilarityCandidates.value = computeSimilarityCandidates(structure, inspectedStructureLineage.value);
-            feedback.show(`Recorded "${structure.name}" as derived from "${sourceStructure.name}"`);
+            feedback.show(t('editor.lineageRecorded', { name: libraryItemName(structure), source: libraryItemName(sourceStructure) }));
         } catch (e) {
-            feedback.show(e.message.replace(/^BlueprintLineageUseCase:\s*/, ''));
+            feedback.show(errorText(e));
         }
     }
 

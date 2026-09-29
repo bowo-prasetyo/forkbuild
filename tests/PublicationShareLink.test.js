@@ -1,6 +1,6 @@
 import { publicationShareUrl } from '../core/ForkBuildAppLinks.js';
 import {
-    canUseShareSheet, copyPublicationShareLink, describePublicationShare, sharePublicationLink
+    canUseShareSheet, copyPublicationShareLink, describePublicationShare as describePublicationShareMessages, sharePublicationLink
 } from '../application/publication/PublicationShareLink.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
@@ -9,6 +9,16 @@ import { PublicationDistributionLifecyclePersistenceBridge } from '../applicatio
 import { PublicationDistributionLifecycleRestorer } from '../application/publication/distribution/PublicationDistributionLifecycleRestorer.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
+
+// As the UI shows it: the messages turned into English text.
+function describePublicationShare(input) {
+    const share = describePublicationShareMessages(input);
+    return share && {
+        ...share,
+        title: displayText(share.title), text: displayText(share.text), note: displayText(share.note), reason: displayText(share.reason)
+    };
+}
 
 // Sharing a distributed Publication: the link from where its Signed Claim is
 // stored, and the share sheet or clipboard.

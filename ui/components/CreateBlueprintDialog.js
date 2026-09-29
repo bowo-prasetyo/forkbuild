@@ -1,4 +1,5 @@
 import BuildLibraryPreview from './BuildLibraryPreview.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.6.3 — Blueprint Authoring & Versioning UX. Replaces the 0.4.2
 // window.prompt() chain (Name, then Category, then Description, three
@@ -45,6 +46,7 @@ export default {
         }
     },
     methods: {
+        t,
         onCreate() {
             const trimmedName = this.name.trim();
             if (!trimmedName) {
@@ -66,28 +68,28 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="Create Blueprint"
+            :aria-label="t('createBlueprint.title')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel create-blueprint-dialog">
-                <h3>Create Blueprint</h3>
+                <h3>{{ t('createBlueprint.title') }}</h3>
 
                 <label class="form-field">
-                    <span class="form-label">Name</span>
+                    <span class="form-label">{{ t('createBlueprint.name') }}</span>
                     <input
                         v-model="name"
                         type="text"
                         class="form-input"
-                        placeholder="e.g. Farmstead"
+                        :placeholder="t('createBlueprint.namePlaceholder')"
                         maxlength="200"
                         autofocus
                     />
                 </label>
 
                 <label class="form-field">
-                    <span class="form-label">Category</span>
+                    <span class="form-label">{{ t('createBlueprint.category') }}</span>
                     <input
                         v-model="category"
                         type="text"
@@ -97,28 +99,28 @@ export default {
                 </label>
 
                 <label class="form-field">
-                    <span class="form-label">Description</span>
+                    <span class="form-label">{{ t('createBlueprint.description') }}</span>
                     <textarea
                         v-model="description"
                         class="form-textarea"
                         rows="3"
-                        placeholder="What is this? (optional)"
+                        :placeholder="t('createBlueprint.descriptionPlaceholder')"
                     ></textarea>
                 </label>
 
                 <div v-if="preview" class="form-field create-blueprint-preview">
-                    <span class="form-label">Preview</span>
+                    <span class="form-label">{{ t('createBlueprint.preview') }}</span>
                     <div class="create-blueprint-preview-body">
                         <BuildLibraryPreview kind="structure" :item="preview" :preview-service="previewService" />
                         <span class="create-blueprint-preview-count">
-                            {{ brickCount }} {{ brickCount === 1 ? 'brick' : 'bricks' }} selected
+                            {{ t('createBlueprint.selected', { count: brickCount }) }}
                         </span>
                     </div>
                 </div>
 
                 <div class="modal-actions">
-                    <button class="action-btn" @click="$emit('cancel')">Cancel</button>
-                    <button class="action-btn action-btn--primary" :disabled="!name.trim()" @click="onCreate">Create Blueprint</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('createBlueprint.cancel') }}</button>
+                    <button class="action-btn action-btn--primary" :disabled="!name.trim()" @click="onCreate">{{ t('createBlueprint.create') }}</button>
                 </div>
             </div>
         </div>

@@ -3,7 +3,11 @@ import {
     isSteemNoticeImageUrl, steemContentManifestOperations, steemContentNotice, steemNoticeText
 } from '../core/SteemContentManifest.js';
 import { createSteemPublicationNoticeDescriber } from '../application/steem/SteemPublicationNoticeCard.js';
-import { describeSteemContentUploadProgress } from '../application/steem/SteemContentUploadProgressText.js';
+import { describeSteemContentUploadProgress as describeSteemContentUploadProgressMessage } from '../application/steem/SteemContentUploadProgressText.js';
+import { displayText } from '../ui/i18n/i18n.js';
+
+// The progress line as the UI shows it, in English.
+const describeSteemContentUploadProgress = (state) => displayText(describeSteemContentUploadProgressMessage(state));
 import { SteemContentStore } from '../content/SteemContentStore.js';
 import { createSteemAnnouncer } from '../application/steem/SteemAnnouncer.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';

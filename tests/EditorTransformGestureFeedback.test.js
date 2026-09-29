@@ -434,7 +434,10 @@ async function run() {
         // TransformFeedback.js itself remains purely presentational — the
         // milestone's own "not a new transform system" boundary.
         const transformFeedbackSource = await rawSource('ui/components/TransformFeedback.js');
-        assert(!/CommandHistory|Autosave|Snapshot|Publication|import\s/.test(transformFeedbackSource.replace(/\/\/.*$/gm, '')), '11. TransformFeedback.js still imports nothing and references no history/autosave/snapshot/publication machinery');
+        // Its one import is the translator, which only turns its words into
+        // the chosen language.
+        const withoutTranslator = transformFeedbackSource.replace(/\/\/.*$/gm, '').replace(/^import \{[^}]*\} from '\.\.\/i18n\/i18n\.js';$/m, '');
+        assert(!/CommandHistory|Autosave|Snapshot|Publication|import\s/.test(withoutTranslator), '11. TransformFeedback.js still imports nothing but the translator and references no history/autosave/snapshot/publication machinery');
 
         console.log('✓ G. Structural boundary — EditorView.js\'s new lines are a bare passthrough of result.feedback, clear the overlay on Escape-cancel and on every SELECTION_CHANGED (document-switch isolation), and touch nothing outside the gesture-feedback seam itself.');
     }

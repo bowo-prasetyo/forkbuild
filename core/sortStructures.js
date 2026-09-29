@@ -1,4 +1,5 @@
 import { SpatialBounds } from './SpatialBounds.js';
+import { message } from './Message.js';
 
 // 0.6.4 — Blueprint Discovery, Search & Library Organization.
 //
@@ -18,13 +19,9 @@ import { SpatialBounds } from './SpatialBounds.js';
 // whatever order Array#prototype.sort's own (engine-dependent, if the
 // comparator ever returned 0 unresolved) stability happened to
 // preserve.
-export const STRUCTURE_SORT_OPTIONS = [
-    { key: 'name', label: 'Name' },
-    { key: 'recent', label: 'Recently created' },
-    { key: 'brickCount', label: 'Brick count' },
-    { key: 'footprint', label: 'Footprint' },
-    { key: 'height', label: 'Height' }
-];
+// Each label is a message (core/Message.js), in menu order.
+export const STRUCTURE_SORT_OPTIONS = ['name', 'recent', 'brickCount', 'footprint', 'height']
+    .map((key) => Object.freeze({ key, label: message(`structureSort.${key}`) }));
 
 const DEFAULT_SORT_KEY = 'name';
 

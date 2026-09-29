@@ -31,6 +31,7 @@ import ForkFailureDialog from '../ui/components/ForkFailureDialog.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { t } from '../ui/i18n/i18n.js';
 
 // 0.9.354 — Fork Failure UX Convergence Audit.
 //
@@ -180,7 +181,8 @@ async function run() {
     // Mirrors EditorView.js's own setup() closure exactly: `entryContext`
     // and `forkFailure` are refs (`{ value }`), `arrivalDocumentId` is a
     // plain closure `let`, `router.replace`/`feedback.show` are the only
-    // two methods this block ever calls on those two collaborators.
+    // two methods this block ever calls on those two collaborators, and
+    // `t` is the real translator its messages go through.
     function runForkHandler({ route, identityProvider, findPublicationUseCase, forkDocumentUseCase }) {
         const entryContextRef = { value: null };
         const forkFailureRef = { value: null };
@@ -194,13 +196,13 @@ async function run() {
         const factory = new Function(
             'route', 'identityProvider', 'findPublicationUseCase', 'forkDocumentUseCase',
             'editorEntryContextFromQuery', 'editorSession', 'feedback', 'router',
-            'entryContext', 'forkFailure',
+            'entryContext', 'forkFailure', 't',
             `let arrivalDocumentId = null;\n${forkBlockSource}\nreturn { arrivalDocumentId };`
         );
         const result = factory(
             route, identityProvider, findPublicationUseCase, forkDocumentUseCase,
             editorEntryContextFromQuery, editorSession, feedback, router,
-            entryContextRef, forkFailureRef
+            entryContextRef, forkFailureRef, t
         );
         return {
             entryContext: entryContextRef.value,

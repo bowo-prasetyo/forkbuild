@@ -36,6 +36,7 @@ export default {
     },
     emits: ['edit-metadata'],
     methods: {
+        t,
         displayText,
         placementPolicyLabel(policy) {
             return t(describePlacementPolicy(policy || 'anyone'));
@@ -54,18 +55,18 @@ export default {
         <div v-if="info && compact" class="document-info-panel document-info-panel--compact">
             <div class="document-info-compact-row">
                 <span class="document-info-compact-title" :title="info.description || info.title">{{ info.title }}</span>
-                <span v-if="isDraft(info)" class="document-info-compact-draft" :title="displayText(info.statusLabel)">Draft</span>
+                <span v-if="isDraft(info)" class="document-info-compact-draft" :title="displayText(info.statusLabel)">{{ t('documentInfo.draft') }}</span>
                 <button
                     v-if="info.editable !== false"
                     type="button"
                     class="document-info-compact-edit"
-                    title="Edit title, description, license and author"
-                    aria-label="Edit document details"
+                    :title="t('documentInfo.editHint')"
+                    :aria-label="t('documentInfo.editLabel')"
                     @click="$emit('edit-metadata')"
                 >✎</button>
             </div>
             <p v-if="info.parentDocumentId || info.parentStructureId" class="document-info-compact-origin">
-                Forked from {{ info.parentStructureId || shortId(info.parentDocumentId) }}
+                {{ t('documentInfo.forkedFromCompact', { origin: info.parentStructureId || shortId(info.parentDocumentId) }) }}
             </p>
             <p
                 v-if="info.editabilityNotice"
@@ -75,38 +76,38 @@ export default {
             </p>
         </div>
         <div v-else-if="info" class="document-info-panel">
-            <h4>Document Information</h4>
+            <h4>{{ t('documentInfo.title') }}</h4>
 
             <div class="info-row">
-                <span class="info-label">Title</span>
+                <span class="info-label">{{ t('documentInfo.fieldTitle') }}</span>
                 <span class="info-value">{{ info.title }}</span>
             </div>
             <div class="info-row" v-if="info.description">
-                <span class="info-label">Description</span>
+                <span class="info-label">{{ t('documentInfo.description') }}</span>
                 <span class="info-value info-value--wrap">{{ info.description }}</span>
             </div>
             <div class="info-row">
-                <span class="info-label">License</span>
+                <span class="info-label">{{ t('documentInfo.license') }}</span>
                 <span class="info-value">{{ licenseLabel(info.license) }}</span>
             </div>
             <div class="info-row">
-                <span class="info-label">Placement</span>
+                <span class="info-label">{{ t('documentInfo.placement') }}</span>
                 <span class="info-value">{{ placementPolicyLabel(info.placementPolicy) }}</span>
             </div>
             <div class="info-row">
-                <span class="info-label">Status</span>
+                <span class="info-label">{{ t('documentInfo.status') }}</span>
                 <span class="info-value">{{ displayText(info.statusLabel) }}</span>
             </div>
             <div class="info-row" v-if="info.author">
-                <span class="info-label">Author</span>
+                <span class="info-label">{{ t('documentInfo.author') }}</span>
                 <span class="info-value">{{ info.author }}</span>
             </div>
             <div class="info-row" v-if="info.parentDocumentId">
-                <span class="info-label">Forked from</span>
+                <span class="info-label">{{ t('documentInfo.forkedFrom') }}</span>
                 <span class="info-value">{{ shortId(info.parentDocumentId) }}</span>
             </div>
             <div class="info-row" v-if="info.parentStructureId">
-                <span class="info-label">Forked from Structure</span>
+                <span class="info-label">{{ t('documentInfo.forkedFromStructure') }}</span>
                 <span class="info-value">{{ info.parentStructureId }}</span>
             </div>
 
@@ -118,7 +119,7 @@ export default {
             </p>
 
             <div class="info-actions" v-if="info.editable !== false">
-                <button class="action-btn" @click="$emit('edit-metadata')">Edit Metadata</button>
+                <button class="action-btn" @click="$emit('edit-metadata')">{{ t('documentInfo.editMetadata') }}</button>
             </div>
         </div>
     `

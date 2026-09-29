@@ -12,8 +12,18 @@ export function libraryItemKey(id) {
         return null;
     }
     const [namespace, name] = id.split(':', 2);
-    const camel = name.replace(/[_-]+([A-Za-z0-9])/g, (match, letter) => letter.toUpperCase());
-    return `library.${namespace}.${camel}`;
+    return `library.${namespace}.${camelCase(name)}`;
+}
+
+function camelCase(text) {
+    return text.replace(/[_\s&-]+([A-Za-z0-9])/g, (match, letter) => letter.toUpperCase()).replace(/^[A-Z]/, (letter) => letter.toLowerCase());
+}
+
+// A structure or brick category: the built-in ones are translated, and one a
+// person typed for their own blueprint is shown as they typed it.
+export function libraryCategoryName(category) {
+    const key = typeof category === 'string' && category ? `library.category.${camelCase(category)}` : null;
+    return key && hasMessage(key) ? t(key) : category;
 }
 
 export function libraryItemName(item) {

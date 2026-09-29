@@ -35,6 +35,7 @@
 // inspector, not a "next operation" scratch pad like
 // ui/components/NumericTransformPanel.js) so dragging the gizmo, nudging
 // with the keyboard, or clicking Rotate all show up here immediately.
+import { formatNumber, t } from '../i18n/i18n.js';
 export default {
     name: 'StructureInstancePanel',
     props: {
@@ -50,7 +51,7 @@ export default {
     },
     computed: {
         groundYDisplay() {
-            return Number.isFinite(this.info.groundY) ? this.info.groundY.toFixed(1) : '—';
+            return Number.isFinite(this.info.groundY) ? formatNumber(this.info.groundY, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '—';
         }
     },
     watch: {
@@ -65,6 +66,7 @@ export default {
         }
     },
     methods: {
+        t,
         applyTransform() {
             const x = Number(this.x);
             const z = Number(this.z);
@@ -83,10 +85,9 @@ export default {
     },
     template: `
         <div class="structure-instance-panel">
-            <h4 class="structure-instance-heading">Selected: {{ info.title }}</h4>
+            <h4 class="structure-instance-heading">{{ t('structureInstance.selected', { title: info.title }) }}</h4>
             <p class="structure-instance-hint">
-                Drag in the viewport — or the arrows/ring on the gizmo — to move
-                and rotate. Arrow keys / PgUp / PgDn nudge.
+                {{ t('structureInstance.hint') }}
             </p>
 
             <div class="structure-instance-transform">
@@ -106,29 +107,29 @@ export default {
                         />
                     </label>
                 </div>
-                <p class="structure-instance-ground-y" title="Elevation is terrain-derived — never a manual target">
-                    Ground Y: {{ groundYDisplay }}
+                <p class="structure-instance-ground-y" :title="t('structureInstance.groundHint')">
+                    {{ t('structureInstance.ground', { value: groundYDisplay }) }}
                 </p>
                 <label class="form-field structure-instance-field">
-                    <span class="form-label">Rotation °</span>
+                    <span class="form-label">{{ t('structureInstance.rotation') }}</span>
                     <input
                         type="number" step="15" class="form-input"
                         v-model.number="rotation" @keydown="onFieldKeydown"
                     />
                 </label>
                 <button type="button" class="structure-instance-btn structure-instance-apply" @click="applyTransform">
-                    Apply
+                    {{ t('structureInstance.apply') }}
                 </button>
             </div>
 
             <div class="structure-instance-actions">
-                <button type="button" class="structure-instance-btn" title="Rotate +90°" @click="$emit('rotate', 90)">Rotate ↻</button>
-                <button type="button" class="structure-instance-btn" title="Rotate −90°" @click="$emit('rotate', -90)">Rotate ↺</button>
-                <button type="button" class="structure-instance-btn" title="Place another instance of the same structure" @click="$emit('duplicate')">Duplicate</button>
-                <button type="button" class="structure-instance-btn structure-instance-btn--danger" title="Remove this instance from the World" @click="$emit('delete')">Delete</button>
+                <button type="button" class="structure-instance-btn" :title="t('structureInstance.rotateCwHint')" @click="$emit('rotate', 90)">{{ t('structureInstance.rotateCw') }}</button>
+                <button type="button" class="structure-instance-btn" :title="t('structureInstance.rotateCcwHint')" @click="$emit('rotate', -90)">{{ t('structureInstance.rotateCcw') }}</button>
+                <button type="button" class="structure-instance-btn" :title="t('structureInstance.duplicateHint')" @click="$emit('duplicate')">{{ t('structureInstance.duplicate') }}</button>
+                <button type="button" class="structure-instance-btn structure-instance-btn--danger" :title="t('structureInstance.deleteHint')" @click="$emit('delete')">{{ t('structureInstance.delete') }}</button>
             </div>
-            <button type="button" class="structure-instance-edit-source" title="Open the referenced Document to edit its bricks" @click="$emit('edit-source')">
-                Edit Source Document
+            <button type="button" class="structure-instance-edit-source" :title="t('structureInstance.editSourceHint')" @click="$emit('edit-source')">
+                {{ t('structureInstance.editSource') }}
             </button>
         </div>
     `

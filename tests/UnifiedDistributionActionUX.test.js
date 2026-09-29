@@ -6,6 +6,7 @@ import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/
 import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 import { worldEncounterCanvasFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { readSource } from './support/SourceText.js';
+import { t } from '../ui/i18n/i18n.js';
 
 // UX-level distribution unification.
 //
@@ -158,7 +159,7 @@ function buildEditorViewHarness(editorViewSource, {
 
     // eslint-disable-next-line no-new-func
     const factory = new Function(
-        'inject', 'ref', 'sanitizeDistributionErrorMessage',
+        'inject', 'ref', 'sanitizeDistributionErrorMessage', 't',
         `${blockSource}\nreturn {
             publishedPublication,
             distributionExecuting,
@@ -177,7 +178,7 @@ function buildEditorViewHarness(editorViewSource, {
             snapshotDistributionStorageTypes
         };`
     );
-    return factory(inject, ref, sanitizeDistributionErrorMessage);
+    return factory(inject, ref, sanitizeDistributionErrorMessage, t);
 }
 
 async function runTests() {

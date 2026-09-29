@@ -1,7 +1,7 @@
 import { SpatialBounds } from '../../core/SpatialBounds.js';
 import { describeBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
-import { t } from '../i18n/i18n.js';
-import { libraryItemDescription, libraryItemName } from '../i18n/libraryText.js';
+import { displayText, formatDate, t } from '../i18n/i18n.js';
+import { libraryCategoryName, libraryItemDescription, libraryItemName } from '../i18n/libraryText.js';
 import { describeBlueprintSimilarity } from '../../core/BlueprintSimilarity.js';
 
 // 0.6.3 — Blueprint Authoring & Versioning UX. A read-only detail
@@ -136,13 +136,13 @@ export default {
         },
         footprint() {
             const size = this.bounds.size;
-            return `${this.round1(size.x)} × ${this.round1(size.z)}`;
+            return t('structureInfo.footprintValue', { width: this.round1(size.x), depth: this.round1(size.z) });
         },
         height() {
             return this.round1(this.bounds.size.y);
         },
         sourceLabel() {
-            return this.source === 'personal' ? 'My Structures' : 'Village Library';
+            return t(this.source === 'personal' ? 'structureInfo.sourcePersonal' : 'structureInfo.sourceVillage');
         },
         hasAttribution() {
             return !!(this.attribution && this.attribution.fingerprint);
@@ -211,6 +211,7 @@ export default {
         t,
         libraryItemName,
         libraryItemDescription,
+        libraryCategoryName,
         round1(value) {
             return Math.round((Number(value) || 0) * 10) / 10;
         },
@@ -223,14 +224,14 @@ export default {
         // undercut "attribution claims who signed it, never who a
         // display name merely says they are."
         formatAuthor(identityId) {
-            if (!identityId) return 'unknown';
-            if (identityId === this.myAuthorId) return 'You';
+            if (!identityId) return t('structureInfo.unknownAuthor');
+            if (identityId === this.myAuthorId) return t('structureInfo.you');
             return identityId.length > 16 ? `${identityId.slice(0, 12)}…` : identityId;
         },
         formatWhen(value) {
             if (!value) return '';
             const date = value instanceof Date ? value : new Date(value);
-            return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString();
+            return Number.isNaN(date.getTime()) ? '' : formatDate(date, { dateStyle: 'medium' });
         },
         // The one timing fact this panel is willing to show for a claim
         // that isn't the viewer's own: WHEN THIS REPLICA FIRST RECEIVED
@@ -245,13 +246,13 @@ export default {
         claimTimingLabel(claim) {
             if (claim.authorIdentityId === this.myAuthorId) {
                 const when = this.formatWhen(claim.createdAt);
-                return when ? `Signed by you · ${when}` : 'Signed by you';
+                return when ? t('structureInfo.signedByYouOn', { when }) : t('structureInfo.signedByYou');
             }
             const receivedAt = this.attribution && this.attribution.receivedAt
                 ? this.attribution.receivedAt[claim.id]
                 : null;
             const when = this.formatWhen(receivedAt);
-            return when ? `Received locally · ${when}` : 'Received locally';
+            return when ? t('structureInfo.receivedOn', { when }) : t('structureInfo.received');
         },
         onKeydown(event) {
             if (event.key === 'Escape') {
@@ -264,7 +265,7 @@ export default {
             return describeBlueprintFingerprint(fingerprint);
         },
         describeSimilarity(evidence) {
-            return describeBlueprintSimilarity(evidence);
+            return displayText(describeBlueprintSimilarity(evidence));
         },
         isMyLineageClaim(claim) {
             return !!(this.lineage && this.lineage.mine && claim.id === this.lineage.mine.id);
@@ -280,14 +281,14 @@ export default {
         >
             <div class="modal-panel structure-info-panel">
                 <h3>{{ libraryItemName(structure) }}</h3>
-                <p class="structure-info-category">{{ structure.category }}</p>
+                <p class="structure-info-category">{{ libraryCategoryName(structure.category) }}</p>
 
                 <dl class="structure-info-facts">
-                    <dt>Bricks</dt><dd>{{ structure.bricks.length }}</dd>
-                    <dt>Footprint</dt><dd>{{ footprint }}</dd>
-                    <dt>Height</dt><dd>{{ height }}</dd>
-                    <dt>Source</dt><dd>{{ sourceLabel }}</dd>
-                    <dt v-if="hasAttribution">Blueprint</dt>
+                    <dt>{{ t('structureInfo.bricks') }}</dt><dd>{{ structure.bricks.length }}</dd>
+                    <dt>{{ t('structureInfo.footprint') }}</dt><dd>{{ footprint }}</dd>
+                    <dt>{{ t('structureInfo.height') }}</dt><dd>{{ height }}</dd>
+                    <dt>{{ t('structureInfo.source') }}</dt><dd>{{ sourceLabel }}</dd>
+                    <dt v-if="hasAttribution">{{ t('structureInfo.blueprint') }}</dt>
                     <dd v-if="hasAttribution" :title="attribution.fingerprint">{{ fingerprintLabel }}</dd>
                 </dl>
 
@@ -300,34 +301,33 @@ export default {
                      "wins." See core/BlueprintAttributionView.js's own
                      header. -->
                 <section v-if="hasAttribution" class="naming-panel-section structure-info-attribution">
-                    <h4 class="locations-panel-section-title">Community Attribution</h4>
+                    <h4 class="locations-panel-section-title">{{ t('structureInfo.communityAttribution') }}</h4>
                     <p v-if="authors.length === 0" class="locations-panel-empty">
-                        No community attribution yet. You can publish a signed authorship claim.
+                        {{ t('structureInfo.noAttribution') }}
                     </p>
                     <ul v-else class="naming-panel-list">
                         <li v-for="author in authors" :key="author.authorIdentityId" class="naming-panel-item">
                             <div class="naming-panel-item-info">
                                 <span class="naming-panel-item-name">{{ formatAuthor(author.authorIdentityId) }}</span>
-                                <span class="naming-panel-item-score">{{ author.score }} {{ author.score === 1 ? 'claim' : 'claims' }}</span>
+                                <span class="naming-panel-item-score">{{ t('structureInfo.claims', { count: author.score }) }}</span>
                             </div>
                         </li>
                     </ul>
                     <p v-if="attribution.mine" class="form-hint form-hint--neutral">
-                        ✓ You have signed an attribution claim
+                        {{ t('structureInfo.youSigned') }}
                     </p>
                     <div class="structure-info-attribution-actions">
-                        <button v-if="canClaimAuthorship" class="inline-link-btn" @click="$emit('claim-authorship')">Claim authorship</button>
-                        <button v-if="attribution.mine" class="inline-link-btn" @click="$emit('export-attribution')">Export Attribution</button>
-                        <button v-if="attribution.mine" class="inline-link-btn" @click="$emit('publish-attribution')">Publish to Network</button>
+                        <button v-if="canClaimAuthorship" class="inline-link-btn" @click="$emit('claim-authorship')">{{ t('structureInfo.claimAuthorship') }}</button>
+                        <button v-if="attribution.mine" class="inline-link-btn" @click="$emit('export-attribution')">{{ t('structureInfo.exportAttribution') }}</button>
+                        <button v-if="attribution.mine" class="inline-link-btn" @click="$emit('publish-attribution')">{{ t('structureInfo.publishAttribution') }}</button>
                     </div>
                     <!-- Claims signed before fingerprints were SHA-256 can't be
                          tied to this design, so they never count as authors. -->
                     <p v-if="legacyAttributionCount > 0" class="form-hint form-hint--neutral structure-info-legacy-claims">
-                        {{ legacyAttributionCount }} older authorship {{ legacyAttributionCount === 1 ? 'claim uses' : 'claims use' }}
-                        an old fingerprint that another design can match, so {{ legacyAttributionCount === 1 ? 'it is not' : 'they are not' }} counted.
+                        {{ t('structureInfo.legacyAttribution', { count: legacyAttributionCount }) }}
                         <template v-if="attribution.myLegacyClaim">
-                            One is yours: if this is your design, sign it again.
-                            <button class="inline-link-btn" @click="$emit('resign-attribution')">Re-sign for this design</button>
+                            {{ t('structureInfo.legacyMine') }}
+                            <button class="inline-link-btn" @click="$emit('resign-attribution')">{{ t('structureInfo.resign') }}</button>
                         </template>
                     </p>
 
@@ -342,7 +342,7 @@ export default {
                         :aria-expanded="claimsExpanded"
                         @click="claimsExpanded = !claimsExpanded"
                     >
-                        {{ claimsExpanded ? '▾' : '▸' }} Attribution Claims ({{ allClaims.length }})
+                        {{ claimsExpanded ? '▾' : '▸' }} {{ t('structureInfo.attributionClaims', { count: allClaims.length }) }}
                     </button>
                     <ul v-if="claimsExpanded" class="naming-panel-list">
                         <li v-for="claim in allClaims" :key="claim.id" class="naming-panel-item">
@@ -367,48 +367,46 @@ export default {
                         :aria-expanded="lineageExpanded"
                         @click="lineageExpanded = !lineageExpanded"
                     >
-                        {{ lineageExpanded ? '▾' : '▸' }} Possible Lineage
+                        {{ lineageExpanded ? '▾' : '▸' }} {{ t('structureInfo.possibleLineage') }}
                     </button>
                     <div v-if="lineageExpanded">
                         <p v-if="hasCycleWarning" class="form-hint form-hint--neutral">
-                            ⚠ Possible lineage cycle — contradicting claims are on file for this design
+                            {{ t('structureInfo.lineageCycle') }}
                         </p>
                         <p v-if="legacyLineageCount > 0" class="form-hint form-hint--neutral structure-info-legacy-claims">
-                            {{ legacyLineageCount }} older lineage {{ legacyLineageCount === 1 ? 'claim uses' : 'claims use' }}
-                            an old fingerprint that another design can match, so {{ legacyLineageCount === 1 ? 'it is not' : 'they are not' }} shown.
-                            To keep one of yours, use "Derived from this" again.
+                            {{ t('structureInfo.legacyLineage', { count: legacyLineageCount }) }}
                         </p>
 
                         <template v-if="derivedFromClaims.length">
-                            <h4 class="locations-panel-section-title">Derived From</h4>
+                            <h4 class="locations-panel-section-title">{{ t('structureInfo.derivedFrom') }}</h4>
                             <ul class="naming-panel-list">
                                 <li v-for="claim in derivedFromClaims" :key="claim.id" class="naming-panel-item">
                                     <div class="naming-panel-item-info">
                                         <span class="naming-panel-item-name" :title="claim.sourceFingerprint">{{ describeFingerprint(claim.sourceFingerprint) }}</span>
-                                        <span class="naming-panel-item-meta">Claimed by {{ formatAuthor(claim.authorIdentityId) }}</span>
+                                        <span class="naming-panel-item-meta">{{ t('structureInfo.claimedBy', { author: formatAuthor(claim.authorIdentityId) }) }}</span>
                                     </div>
-                                    <button v-if="isMyLineageClaim(claim)" class="inline-link-btn" @click="$emit('export-lineage-claim', claim)">Export</button>
+                                    <button v-if="isMyLineageClaim(claim)" class="inline-link-btn" @click="$emit('export-lineage-claim', claim)">{{ t('structureInfo.export') }}</button>
                                 </li>
                             </ul>
                         </template>
 
                         <template v-if="derivedDesignClaims.length">
-                            <h4 class="locations-panel-section-title">Derived Designs</h4>
+                            <h4 class="locations-panel-section-title">{{ t('structureInfo.derivedDesigns') }}</h4>
                             <ul class="naming-panel-list">
                                 <li v-for="claim in derivedDesignClaims" :key="claim.id" class="naming-panel-item">
                                     <div class="naming-panel-item-info">
                                         <span class="naming-panel-item-name" :title="claim.derivedFingerprint">{{ describeFingerprint(claim.derivedFingerprint) }}</span>
-                                        <span class="naming-panel-item-meta">Claimed by {{ formatAuthor(claim.authorIdentityId) }}</span>
+                                        <span class="naming-panel-item-meta">{{ t('structureInfo.claimedBy', { author: formatAuthor(claim.authorIdentityId) }) }}</span>
                                     </div>
-                                    <button v-if="isMyLineageClaim(claim)" class="inline-link-btn" @click="$emit('export-lineage-claim', claim)">Export</button>
+                                    <button v-if="isMyLineageClaim(claim)" class="inline-link-btn" @click="$emit('export-lineage-claim', claim)">{{ t('structureInfo.export') }}</button>
                                 </li>
                             </ul>
                         </template>
 
                         <template v-if="similarityCandidates.length">
-                            <h4 class="locations-panel-section-title">Possible Predecessors</h4>
+                            <h4 class="locations-panel-section-title">{{ t('structureInfo.possiblePredecessors') }}</h4>
                             <p class="form-hint form-hint--neutral">
-                                Evidence only — nothing here is asserted. Confirm one only if you know it's true.
+                                {{ t('structureInfo.evidenceOnly') }}
                             </p>
                             <ul class="naming-panel-list">
                                 <li v-for="candidate in similarityCandidates" :key="candidate.structure.id" class="naming-panel-item">
@@ -416,7 +414,7 @@ export default {
                                         <span class="naming-panel-item-name">{{ libraryItemName(candidate.structure) }}</span>
                                         <span class="naming-panel-item-meta">{{ describeSimilarity(candidate.evidence) }}</span>
                                     </div>
-                                    <button class="inline-link-btn" @click="$emit('claim-lineage', candidate.structure)">Derived from this</button>
+                                    <button class="inline-link-btn" @click="$emit('claim-lineage', candidate.structure)">{{ t('structureInfo.derivedFromThis') }}</button>
                                 </li>
                             </ul>
                         </template>
@@ -424,9 +422,9 @@ export default {
                 </section>
 
                 <div class="modal-actions">
-                    <button class="action-btn" @click="$emit('close')">Close</button>
-                    <button class="action-btn action-btn--secondary" @click="$emit('export')">Export Blueprint</button>
-                    <button class="action-btn action-btn--primary" @click="$emit('place')">Place</button>
+                    <button class="action-btn" @click="$emit('close')">{{ t('structureInfo.close') }}</button>
+                    <button class="action-btn action-btn--secondary" @click="$emit('export')">{{ t('structureInfo.exportBlueprint') }}</button>
+                    <button class="action-btn action-btn--primary" @click="$emit('place')">{{ t('structureInfo.place') }}</button>
                 </div>
             </div>
         </div>

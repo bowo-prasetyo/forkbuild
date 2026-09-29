@@ -1,5 +1,5 @@
 import { describePublicationClaimLocator, publicationClaimLocatorFromViewPath, publicationShareUrl, publicationViewUrl } from '../core/ForkBuildAppLinks.js';
-import { describePublicationShare } from '../application/publication/PublicationShareLink.js';
+import { describePublicationShare as describePublicationShareMessages } from '../application/publication/PublicationShareLink.js';
 import { openPublicationLink, OpenPublicationLinkOutcome as Outcome } from '../application/publication/OpenPublicationLink.js';
 import { createPublicationClaimRetriever } from '../application/publication/PublicationClaimRetriever.js';
 import { IpfsWorldEncounterMaterialResolver } from '../application/worldEncounter/IpfsWorldEncounterMaterialResolver.js';
@@ -22,6 +22,15 @@ import { Position } from '../core/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 import { displayText, errorText, t } from '../ui/i18n/i18n.js';
+
+// As the UI shows it: the messages turned into English text.
+function describePublicationShare(input) {
+    const share = describePublicationShareMessages(input);
+    return share && {
+        ...share,
+        title: displayText(share.title), text: displayText(share.text), note: displayText(share.note), reason: displayText(share.reason)
+    };
+}
 
 // Links to Publications whose Signed Claim is stored on Arweave or IPFS: the
 // links themselves, what Share says about them, the IPFS claim reader, the

@@ -2,13 +2,18 @@ import { computed, inject, onBeforeUnmount, ref, watch } from 'vue';
 import {
     canUseShareSheet, copyPublicationShareLink, describePublicationShare, sharePublicationLink
 } from '../../application/publication/PublicationShareLink.js';
+import { displayText, t } from '../i18n/i18n.js';
 
 const FEEDBACK = Object.freeze({
-    shared: 'Shared.',
-    copied: 'Link copied.',
-    cancelled: '',
-    unavailable: 'Copy the link below by hand.'
+    shared: 'share.shared',
+    copied: 'share.copied',
+    cancelled: null,
+    unavailable: 'share.copyByHand'
 });
+
+function feedbackText(outcome) {
+    return FEEDBACK[outcome] ? t(FEEDBACK[outcome]) : '';
+}
 
 // Share and Copy link for a distributed Publication, from its distribution
 // record (publicationDistributionLifecycleStore, restored from this browser's
@@ -46,29 +51,37 @@ export default {
         watch(() => props.publicationId, follow, { immediate: true });
         onBeforeUnmount(() => unsubscribe?.());
 
-        const share = computed(() => describePublicationShare({ lifecycle: lifecycle.value, title: props.title }));
+        // The share functions and the share sheet take text, so the messages
+        // are translated once here.
+        const share = computed(() => {
+            const described = describePublicationShare({ lifecycle: lifecycle.value, title: props.title });
+            if (!described) return null;
+            return described.available
+                ? { ...described, title: displayText(described.title), text: t(described.text), note: displayText(described.note) }
+                : { ...described, reason: t(described.reason) };
+        });
         const shareSheet = computed(() => canUseShareSheet(share.value));
 
         async function shareNow() {
-            feedback.value = FEEDBACK[await sharePublicationLink(share.value)];
+            feedback.value = feedbackText(await sharePublicationLink(share.value));
         }
         async function copy() {
-            feedback.value = FEEDBACK[await copyPublicationShareLink(share.value)];
+            feedback.value = feedbackText(await copyPublicationShareLink(share.value));
         }
 
-        return { share, shareSheet, feedback, shareNow, copy };
+        return { t, share, shareSheet, feedback, shareNow, copy };
     },
     template: `
         <div v-if="share" class="publication-share-link">
             <template v-if="share.available">
                 <div class="publication-share-link-actions">
-                    <button v-if="shareSheet" type="button" class="action-btn action-btn--primary" @click="shareNow">Share…</button>
-                    <button type="button" :class="['action-btn', shareSheet ? 'action-btn--secondary' : 'action-btn--primary']" @click="copy">Copy link</button>
+                    <button v-if="shareSheet" type="button" class="action-btn action-btn--primary" @click="shareNow">{{ t('share.share') }}</button>
+                    <button type="button" :class="['action-btn', shareSheet ? 'action-btn--secondary' : 'action-btn--primary']" @click="copy">{{ t('share.copy') }}</button>
                     <span class="publication-share-link-feedback" role="status">{{ feedback }}</span>
                 </div>
-                <input class="publication-share-link-url" readonly :value="share.url" aria-label="Link to share" @focus="$event.target.select()">
+                <input class="publication-share-link-url" readonly :value="share.url" :aria-label="t('share.linkLabel')" @focus="$event.target.select()">
                 <p class="form-hint form-hint--neutral">
-                    Anyone can open this link on any device to see the build in 3D, once its Snapshot has been distributed too.
+                    {{ t('share.hint') }}
                     <template v-if="share.note"> {{ share.note }}</template>
                 </p>
             </template>

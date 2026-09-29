@@ -1,4 +1,5 @@
 import { TransformInput } from '../../application/editor/TransformInput.js';
+import { t } from '../i18n/i18n.js';
 
 // Numeric transform input surface (0.1.49).
 //
@@ -53,6 +54,7 @@ export default {
         }
     },
     methods: {
+        t,
         setMode(absolute) {
             this.absolute = absolute;
         },
@@ -157,15 +159,15 @@ export default {
                 <button
                     :disabled="!enabled"
                     :style="modeButtonStyle(absolute)"
-                    title="Values are targets: translation targets the selection pivot, rotation targets the primary brick's orientation"
+                    :title="t('numericPanel.absoluteHint')"
                     @click="setMode(true)"
-                >Absolute</button>
+                >{{ t('numericPanel.absolute') }}</button>
                 <button
                     :disabled="!enabled"
                     :style="modeButtonStyle(!absolute)"
-                    title="Values are deltas applied to every selected brick"
+                    :title="t('numericPanel.offsetHint')"
                     @click="setMode(false)"
-                >Offset</button>
+                >{{ t('numericPanel.offset') }}</button>
             </div>
             <div :style="rowStyle()">
                 <span :style="labelStyle()">X</span>
@@ -173,7 +175,7 @@ export default {
                     type="text"
                     :disabled="!enabled"
                     :style="inputStyle('x')"
-                    :title="absolute ? 'Target X for the selection pivot' : 'Move selection along X'"
+                    :title="t(absolute ? 'numericPanel.targetAxis' : 'numericPanel.moveAxis', { axis: 'X' })"
                     placeholder=""
                     v-model="xText"
                     @keydown="onFieldKeydown"
@@ -185,7 +187,7 @@ export default {
                     type="text"
                     :disabled="!enabled"
                     :style="inputStyle('y')"
-                    :title="absolute ? 'Target Y for the selection pivot' : 'Move selection along Y'"
+                    :title="t(absolute ? 'numericPanel.targetAxis' : 'numericPanel.moveAxis', { axis: 'Y' })"
                     placeholder=""
                     v-model="yText"
                     @keydown="onFieldKeydown"
@@ -197,19 +199,19 @@ export default {
                     type="text"
                     :disabled="!enabled"
                     :style="inputStyle('z')"
-                    :title="absolute ? 'Target Z for the selection pivot' : 'Move selection along Z'"
+                    :title="t(absolute ? 'numericPanel.targetAxis' : 'numericPanel.moveAxis', { axis: 'Z' })"
                     placeholder=""
                     v-model="zText"
                     @keydown="onFieldKeydown"
                 />
             </div>
             <div :style="rowStyle()">
-                <span :style="labelStyle()">R</span>
+                <span :style="labelStyle()">{{ t('numericPanel.rotationShort') }}</span>
                 <input
                     type="text"
                     :disabled="!enabled"
                     :style="inputStyle('rotation')"
-                    :title="absolute ? 'Target rotation for the primary brick (all members turn by the same delta)' : 'Rotate around the selection pivot (degrees)'"
+                    :title="t(absolute ? 'numericPanel.targetRotation' : 'numericPanel.rotate')"
                     placeholder=""
                     v-model="rotationText"
                     @keydown="onFieldKeydown"
@@ -219,15 +221,15 @@ export default {
                 <button
                     :disabled="!enabled"
                     :style="actionButtonStyle(true)"
-                    title="Apply as one operation (one undo step)"
+                    :title="t('numericPanel.applyHint')"
                     @click="onApply"
-                >Apply</button>
+                >{{ t('numericPanel.apply') }}</button>
                 <button
                     :disabled="!enabled"
                     :style="actionButtonStyle(false)"
-                    title="Empty the fields without changing the selection (Esc)"
+                    :title="t('numericPanel.resetHint')"
                     @click="onClear"
-                >Reset fields</button>
+                >{{ t('numericPanel.reset') }}</button>
             </div>
         </div>
     `

@@ -3,7 +3,7 @@ import NumericTransformPanel from './NumericTransformPanel.js';
 import RepeatPanel from './RepeatPanel.js';
 import CollapsibleSection from './CollapsibleSection.js';
 import SelectionInspector from './SelectionInspector.js';
-import { displayText } from '../i18n/i18n.js';
+import { displayText, t } from '../i18n/i18n.js';
 
 // The Editor's contextual Selection panel. It only shows controls that can
 // act right now: with nothing selected, a hint plus Select All / Paste and
@@ -64,6 +64,7 @@ export default {
         this.ui.focusRepeat = () => this.expandAndFocus('arrangeCollapsed', '.repeat-panel-count');
     },
     methods: {
+        t,
         run(id) {
             this.registry.execute(id, this.context);
         },
@@ -97,32 +98,32 @@ export default {
     template: `
         <div v-if="!isStructurePlacementSelection" class="editing-sidebar">
             <section v-if="isEmpty" class="editor-panel editing-sidebar-empty">
-                <h4 class="editor-panel-heading">Selection</h4>
-                <p class="editor-panel-hint">Click a brick to select it, or pick one from the library below to start placing.</p>
+                <h4 class="editor-panel-heading">{{ t('editingSidebar.selection') }}</h4>
+                <p class="editor-panel-hint">{{ t('editingSidebar.emptyHint') }}</p>
                 <div class="editor-panel-actions">
                     <button
                         type="button" class="editor-panel-btn"
                         :disabled="isDisabled('selection.selectAll')"
-                        :title="titleFor('selection.selectAll', 'Select every brick (Ctrl/Cmd+A)')"
+                        :title="titleFor('selection.selectAll', t('editingSidebar.selectAllHint'))"
                         @click="run('selection.selectAll')"
-                    >Select All</button>
+                    >{{ t('editingSidebar.selectAll') }}</button>
                     <button
                         v-if="!context.clipboardEmpty"
                         type="button" class="editor-panel-btn"
                         :disabled="isDisabled('clipboard.paste')"
-                        :title="titleFor('clipboard.paste', 'Paste the clipboard contents (Ctrl/Cmd+V)')"
+                        :title="titleFor('clipboard.paste', t('editingSidebar.pasteHint'))"
                         @click="run('clipboard.paste')"
-                    >Paste</button>
+                    >{{ t('editingSidebar.paste') }}</button>
                 </div>
                 <template v-if="context.hasGroups">
-                    <h5 class="editor-panel-subheading">Groups</h5>
+                    <h5 class="editor-panel-subheading">{{ t('editingSidebar.groups') }}</h5>
                     <ul class="editing-sidebar-group-list">
                         <li v-for="group in context.groups" :key="group.id">
                             <button
                                 type="button" class="editing-sidebar-group"
-                                title="Select this group's bricks"
+                                :title="t('editingSidebar.selectGroupHint')"
                                 @click="onSelectGroup(group.id)"
-                            >{{ group.name || '(unnamed group)' }} <span class="editing-sidebar-group-count">{{ group.memberCount }}</span></button>
+                            >{{ group.name || t('editingSidebar.unnamedGroup') }} <span class="editing-sidebar-group-count">{{ group.memberCount }}</span></button>
                         </li>
                     </ul>
                 </template>
@@ -136,7 +137,7 @@ export default {
                 :recolor="recolor"
             >
                 <CollapsibleSection
-                    title="Exact position & rotation"
+                    :title="t('editingSidebar.numeric')"
                     :collapsed="numericCollapsed"
                     @toggle="numericCollapsed = $event"
                 >
@@ -146,7 +147,7 @@ export default {
                     />
                 </CollapsibleSection>
                 <CollapsibleSection
-                    title="Align, distribute, repeat"
+                    :title="t('editingSidebar.arrange')"
                     :collapsed="arrangeCollapsed"
                     @toggle="arrangeCollapsed = $event"
                 >
@@ -161,7 +162,7 @@ export default {
                     />
                 </CollapsibleSection>
                 <CollapsibleSection
-                    title="Groups & blueprint"
+                    :title="t('editingSidebar.groupsAndBlueprint')"
                     :collapsed="groupsCollapsed"
                     @toggle="groupsCollapsed = $event"
                 >
@@ -171,38 +172,38 @@ export default {
                                 type="button"
                                 :class="['editing-sidebar-group', { 'editing-sidebar-group--selected': group.id === context.selectedGroupId }]"
                                 :aria-pressed="group.id === context.selectedGroupId ? 'true' : 'false'"
-                                title="Select this group — the group buttons below act on it"
+                                :title="t('editingSidebar.chooseGroupHint')"
                                 @click="onSelectGroup(group.id)"
-                            >{{ group.name || '(unnamed group)' }} <span class="editing-sidebar-group-count">{{ group.memberCount }}</span></button>
+                            >{{ group.name || t('editingSidebar.unnamedGroup') }} <span class="editing-sidebar-group-count">{{ group.memberCount }}</span></button>
                         </li>
                     </ul>
                     <div class="editor-panel-actions">
                         <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.create')"
-                            :title="titleFor('group.create', 'Group the selected bricks')"
-                            @click="run('group.create')">New group</button>
+                            :title="titleFor('group.create', t('editingSidebar.newGroupHint'))"
+                            @click="run('group.create')">{{ t('editingSidebar.newGroup') }}</button>
                         <template v-if="context.hasGroups">
                             <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.addSelection')"
-                                :title="titleFor('group.addSelection', 'Add the selected bricks to the selected group')"
-                                @click="run('group.addSelection')">Add to group</button>
+                                :title="titleFor('group.addSelection', t('editingSidebar.addToGroupHint'))"
+                                @click="run('group.addSelection')">{{ t('editingSidebar.addToGroup') }}</button>
                             <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.removeSelection')"
-                                :title="titleFor('group.removeSelection', 'Remove the selected bricks from the selected group')"
-                                @click="run('group.removeSelection')">Remove from group</button>
+                                :title="titleFor('group.removeSelection', t('editingSidebar.removeFromGroupHint'))"
+                                @click="run('group.removeSelection')">{{ t('editingSidebar.removeFromGroup') }}</button>
                             <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.rename')"
-                                :title="titleFor('group.rename', 'Rename the selected group')"
-                                @click="run('group.rename')">Rename group</button>
+                                :title="titleFor('group.rename', t('editingSidebar.renameGroupHint'))"
+                                @click="run('group.rename')">{{ t('editingSidebar.renameGroup') }}</button>
                             <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.duplicate')"
-                                :title="titleFor('group.duplicate', 'Duplicate the selected group')"
-                                @click="run('group.duplicate')">Duplicate group</button>
+                                :title="titleFor('group.duplicate', t('editingSidebar.duplicateGroupHint'))"
+                                @click="run('group.duplicate')">{{ t('editingSidebar.duplicateGroup') }}</button>
                             <button type="button" class="editor-panel-btn editor-panel-btn--danger" :disabled="isDisabled('group.delete')"
-                                :title="titleFor('group.delete', 'Delete the selected group (its bricks stay)')"
-                                @click="run('group.delete')">Delete group</button>
+                                :title="titleFor('group.delete', t('editingSidebar.deleteGroupHint'))"
+                                @click="run('group.delete')">{{ t('editingSidebar.deleteGroup') }}</button>
                         </template>
                     </div>
                     <div class="editor-panel-actions">
                         <button type="button" class="editor-panel-btn"
                             :disabled="isDisabled('structure.createFromSelection')"
-                            :title="titleFor('structure.createFromSelection', 'Save this selection as a reusable Structure in My Structures')"
-                            @click="run('structure.createFromSelection')">Create Blueprint</button>
+                            :title="titleFor('structure.createFromSelection', t('editingSidebar.createBlueprintHint'))"
+                            @click="run('structure.createFromSelection')">{{ t('editingSidebar.createBlueprint') }}</button>
                     </div>
                 </CollapsibleSection>
             </SelectionInspector>
