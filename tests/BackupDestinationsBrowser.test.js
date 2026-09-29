@@ -9,6 +9,7 @@ import { BackupDestinations, AutomaticBackupOutcome } from '../application/backu
 import { decodeDeviceBackup } from '../application/backup/DeviceBackupFile.js';
 import { IndexedDbValueStore } from '../storage/IndexedDbValueStore.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { backupFileName } from '../application/backup/BackupFolder.js';
 import { assert } from './support/Assert.js';
 
 // Backups to a folder, the remembered key, sharing and the reminder banner,
@@ -112,7 +113,12 @@ const statusStore = new BackupStatusStore(storage);
 const deviceBackup = new DeviceBackupUseCase({ storageProvider: storage, statusStore });
 const databaseName = `forkbuild-backup-test-${Date.now()}`;
 const valueStore = valueStoreWithFolder(databaseName, folder);
-let clock = new Date('2026-09-28T10:00:00Z');
+// Your Data's "Last backup: today" line reads the real clock, so the backups
+// here are dated from now rather than a fixed day, which would stop being
+// "today" once a day had passed.
+const DAY_MS = 24 * 60 * 60 * 1000;
+const firstBackupAt = new Date();
+let clock = firstBackupAt;
 const makeDestinations = () => new BackupDestinations({
     deviceBackup, statusStore,
     valueStore,
@@ -170,7 +176,7 @@ HTMLAnchorElement.prototype.click = function clickLink() {
     click(host.querySelector('.your-data-backup-folder'));
     await waitFor(() => host.querySelector('.your-data-backup-result'), 'the folder backup');
     const files = await folderFiles(folder);
-    const name = 'forkbuild-backup-2026-09-28.forkbuild-backup';
+    const name = backupFileName(clock);
     assert(files[name], `the backup is in the folder (${Object.keys(files).join(', ')})`);
     assert((await decodeDeviceBackup(files[name], PASSPHRASE)).entries[DOC].world === 'mine', 'and opens with the passphrase');
     await waitFor(() => /Last backup: today, to the backup folder/.test(text(host.querySelector('.your-data-last-backup'))), 'the status line');
@@ -184,9 +190,9 @@ HTMLAnchorElement.prototype.click = function clickLink() {
     assert(statusStore.get().automaticFolderBackup, 'automatic backups are turned on');
 
     // One click, no passphrase: the remembered key.
-    clock = new Date('2026-09-29T10:00:00Z');
+    clock = new Date(firstBackupAt.getTime() + DAY_MS);
     click(host.querySelector('.your-data-backup-folder'));
-    await waitFor(async () => (await folderFiles(folder))['forkbuild-backup-2026-09-29.forkbuild-backup'], 'the one-click backup');
+    await waitFor(async () => (await folderFiles(folder))[backupFileName(clock)], 'the one-click backup');
 
     // Share: the first tap prepares the file, the second shares it.
     setInput(host.querySelector('.your-data-backup-passphrase'), PASSPHRASE);
@@ -211,10 +217,10 @@ HTMLAnchorElement.prototype.click = function clickLink() {
     const later = makeDestinations();
     const state = await later.state();
     assert(state.folder && state.folder.name === folder.name && state.keyRemembered, 'the folder and the key (from IndexedDB) are there in a later session');
-    clock = new Date('2026-09-30T12:00:00Z');
+    clock = new Date(firstBackupAt.getTime() + 2 * DAY_MS + 2 * 60 * 60 * 1000);
     assert(await later.runAutomatic() === AutomaticBackupOutcome.BACKED_UP, 'the automatic backup runs a day later');
     const files = await folderFiles(folder);
-    assert((await decodeDeviceBackup(files['forkbuild-backup-2026-09-30.forkbuild-backup'], PASSPHRASE)).entries[DOC], 'with the remembered key');
+    assert((await decodeDeviceBackup(files[backupFileName(clock)], PASSPHRASE)).entries[DOC], 'with the remembered key');
     console.log('✓ a later session reads the key back from IndexedDB and backs up automatically');
 }
 
