@@ -1,5 +1,5 @@
 import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../../application/avatar/AvatarPresenceLabels.js';
-import { t } from '../i18n/i18n.js';
+import { formatNumber, t } from '../i18n/i18n.js';
 
 // 0.2.43 — the design doc's own mockup, verbatim:
 //
@@ -38,6 +38,8 @@ export default {
     },
     emits: ['select'],
     methods: {
+        t,
+        formatNumber,
         lifecycleLabel(state) {
             return t(describeLifecycleState(state));
         },
@@ -59,7 +61,7 @@ export default {
     },
     template: `
         <div v-if="entries.length > 0" class="nearby-avatars-panel">
-            <h4>Nearby Avatars</h4>
+            <h4>{{ t('nearbyAvatarsPanel.nearbyAvatars') }}</h4>
             <ul class="nearby-avatars-list">
                 <li
                     v-for="entry in entries"
@@ -72,7 +74,7 @@ export default {
                             <span :class="['avatar-info-status-dot', statusDotClass(entry)]"></span>
                             {{ entry.displayName }}
                         </span>
-                        <span class="nearby-avatars-item-distance">{{ entry.distance.toFixed(1) }} World Units</span>
+                        <span class="nearby-avatars-item-distance">{{ t('units.worldUnits', { value: formatNumber(entry.distance, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false }) }) }}</span>
                         <span class="nearby-avatars-item-detail">{{ animationLabel(entry.animation) }} · {{ lifecycleLabel(entry.lifecycleState) }} · {{ trustLabel(entry.trustStatus) }}</span>
                     </div>
                 </li>

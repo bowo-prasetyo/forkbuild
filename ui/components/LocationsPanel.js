@@ -45,6 +45,7 @@
 // row — a description, distance/direction, and which named place it
 // sits inside — without moving anything. See core/WorldFocusContext.js's
 // own header on why this panel is never itself called "Focus."
+import { formatNumber, t } from '../i18n/i18n.js';
 export default {
     name: 'LocationsPanel',
     props: {
@@ -89,8 +90,10 @@ export default {
         }
     },
     methods: {
+        t,
         formatPosition(loc) {
-            return `${loc.position.x.toFixed(1)}, ${loc.position.y.toFixed(1)}, ${loc.position.z.toFixed(1)}`;
+            const one = (value) => formatNumber(value, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false });
+            return t('units.coordinates', { x: one(loc.position.x), y: one(loc.position.y), z: one(loc.position.z) });
         },
         onKeydown(event) {
             if (event.key === 'Escape') {
@@ -102,38 +105,38 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="Locations"
+            :aria-label="t('locationsPanel.locations')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel locations-panel">
-                <h3>Locations</h3>
+                <h3>{{ t('locationsPanel.locations') }}</h3>
                 <p class="locations-panel-hint">
-                    Navigation only — focusing a location moves the camera; it never loads or selects anything.
-                    <span v-if="canEdit">Landmarks are World content you can add, rename, or remove here.</span>
+                    {{ t('locationsPanel.navigationOnlyFocusingALocation') }}
+                    <span v-if="canEdit">{{ t('locationsPanel.landmarksAreWorldContentYou') }}</span>
                 </p>
 
                 <p v-if="locations.length === 0" class="locations-panel-empty">
-                    No locations known yet — load or place a structure to see it here.
+                    {{ t('locationsPanel.noLocationsKnownYetLoad') }}
                 </p>
 
                 <template v-else>
                     <section v-if="originLocations.length > 0" class="locations-panel-section">
-                        <h4 class="locations-panel-section-title">World</h4>
+                        <h4 class="locations-panel-section-title">{{ t('locationsPanel.world') }}</h4>
                         <ul class="locations-panel-list">
                             <li v-for="loc in originLocations" :key="loc.id" class="locations-panel-item">
                                 <div class="locations-panel-item-info">
                                     <span class="locations-panel-item-title">🏠 {{ loc.title }}</span>
                                     <span class="locations-panel-item-position">{{ formatPosition(loc) }}</span>
                                 </div>
-                                <button class="action-btn" @click="$emit('focus', loc.id)">Focus</button>
+                                <button class="action-btn" @click="$emit('focus', loc.id)">{{ t('locationsPanel.focus') }}</button>
                             </li>
                         </ul>
                     </section>
 
                     <section v-if="structureLocations.length > 0" class="locations-panel-section">
-                        <h4 class="locations-panel-section-title">Structures</h4>
+                        <h4 class="locations-panel-section-title">{{ t('locationsPanel.structures') }}</h4>
                         <ul class="locations-panel-list">
                             <li v-for="loc in structureLocations" :key="loc.id" class="locations-panel-item">
                                 <div class="locations-panel-item-info">
@@ -141,8 +144,8 @@ export default {
                                     <span class="locations-panel-item-position">{{ formatPosition(loc) }}</span>
                                 </div>
                                 <div class="locations-panel-item-actions">
-                                    <button class="action-btn" @click="$emit('focus', loc.id)">Focus</button>
-                                    <button class="action-btn" @click="$emit('inspect', loc.id)">Info</button>
+                                    <button class="action-btn" @click="$emit('focus', loc.id)">{{ t('locationsPanel.focus') }}</button>
+                                    <button class="action-btn" @click="$emit('inspect', loc.id)">{{ t('locationsPanel.info') }}</button>
                                 </div>
                             </li>
                         </ul>
@@ -150,11 +153,11 @@ export default {
 
                     <section class="locations-panel-section">
                         <div class="locations-panel-section-header">
-                            <h4 class="locations-panel-section-title">Landmarks</h4>
-                            <button v-if="canEdit" class="action-btn" @click="$emit('add-landmark')">+ Add Landmark</button>
+                            <h4 class="locations-panel-section-title">{{ t('locationsPanel.landmarks') }}</h4>
+                            <button v-if="canEdit" class="action-btn" @click="$emit('add-landmark')">{{ t('locationsPanel.addLandmark') }}</button>
                         </div>
                         <p v-if="landmarkLocations.length === 0" class="locations-panel-empty">
-                            No landmarks yet — mark a place worth remembering.
+                            {{ t('locationsPanel.noLandmarksYetMarkA') }}
                         </p>
                         <ul v-else class="locations-panel-list">
                             <li v-for="loc in landmarkLocations" :key="loc.id" class="locations-panel-item">
@@ -163,10 +166,10 @@ export default {
                                     <span class="locations-panel-item-position">{{ formatPosition(loc) }}</span>
                                 </div>
                                 <div class="locations-panel-item-actions">
-                                    <button class="action-btn" @click="$emit('focus', loc.id)">Focus</button>
-                                    <button class="action-btn" @click="$emit('inspect', loc.id)">Info</button>
-                                    <button v-if="canEdit" class="action-btn" @click="$emit('edit-landmark', loc.id)">Edit</button>
-                                    <button v-if="canEdit" class="action-btn action-btn--danger" @click="$emit('remove-landmark', loc.id)">Remove</button>
+                                    <button class="action-btn" @click="$emit('focus', loc.id)">{{ t('locationsPanel.focus') }}</button>
+                                    <button class="action-btn" @click="$emit('inspect', loc.id)">{{ t('locationsPanel.info') }}</button>
+                                    <button v-if="canEdit" class="action-btn" @click="$emit('edit-landmark', loc.id)">{{ t('locationsPanel.edit') }}</button>
+                                    <button v-if="canEdit" class="action-btn action-btn--danger" @click="$emit('remove-landmark', loc.id)">{{ t('locationsPanel.remove') }}</button>
                                 </div>
                             </li>
                         </ul>
@@ -174,11 +177,11 @@ export default {
 
                     <section class="locations-panel-section">
                         <div class="locations-panel-section-header">
-                            <h4 class="locations-panel-section-title">Places</h4>
-                            <button v-if="canEdit" class="action-btn" @click="$emit('add-region')">+ Name This Area</button>
+                            <h4 class="locations-panel-section-title">{{ t('locationsPanel.places') }}</h4>
+                            <button v-if="canEdit" class="action-btn" @click="$emit('add-region')">{{ t('locationsPanel.nameThisArea') }}</button>
                         </div>
                         <p v-if="regionLocations.length === 0" class="locations-panel-empty">
-                            No named areas yet — give a stretch of this World a name.
+                            {{ t('locationsPanel.noNamedAreasYetGive') }}
                         </p>
                         <ul v-else class="locations-panel-list">
                             <li v-for="loc in regionLocations" :key="loc.id" class="locations-panel-item">
@@ -187,11 +190,11 @@ export default {
                                     <span class="locations-panel-item-position">{{ formatPosition(loc) }}</span>
                                 </div>
                                 <div class="locations-panel-item-actions">
-                                    <button class="action-btn" @click="$emit('focus', loc.id)">Focus</button>
-                                    <button class="action-btn" @click="$emit('inspect', loc.id)">Info</button>
-                                    <button class="action-btn" @click="$emit('manage-names', loc.id)">Names</button>
-                                    <button v-if="canEdit" class="action-btn" @click="$emit('edit-region', loc.id)">Edit</button>
-                                    <button v-if="canEdit" class="action-btn action-btn--danger" @click="$emit('remove-region', loc.id)">Remove</button>
+                                    <button class="action-btn" @click="$emit('focus', loc.id)">{{ t('locationsPanel.focus') }}</button>
+                                    <button class="action-btn" @click="$emit('inspect', loc.id)">{{ t('locationsPanel.info') }}</button>
+                                    <button class="action-btn" @click="$emit('manage-names', loc.id)">{{ t('locationsPanel.names') }}</button>
+                                    <button v-if="canEdit" class="action-btn" @click="$emit('edit-region', loc.id)">{{ t('locationsPanel.edit') }}</button>
+                                    <button v-if="canEdit" class="action-btn action-btn--danger" @click="$emit('remove-region', loc.id)">{{ t('locationsPanel.remove') }}</button>
                                 </div>
                             </li>
                         </ul>
@@ -199,7 +202,7 @@ export default {
                 </template>
 
                 <div class="modal-actions">
-                    <button class="action-btn" @click="$emit('cancel')">Close</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('locationsPanel.close') }}</button>
                 </div>
             </div>
         </div>

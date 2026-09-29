@@ -3,6 +3,7 @@ import { WorldViewPrimaryMode } from '../../../application/world/WorldViewNaviga
 import { geographicPlaceLocationId } from '../../../core/GeographicPlaceNavigation.js';
 import { WorldFocusKind } from '../../../core/WorldFocusContext.js';
 import { withReturnWorld, editorEntryContextToQuery } from '../../../core/EditorEntryContext.js';
+import { t } from '../../i18n/i18n.js';
 
 // The map panel, the geographic place directory and detail panel, and the
 // Focus panel that inspects a location, place or collaborator.
@@ -61,7 +62,7 @@ export function usePlacesAndFocus({
     function openFocusForLocation(locationId) {
         const context = session.getFocusContextForLocation(locationId);
         if (!context) {
-            feedback.show('That is no longer available');
+            feedback.show(t('worldView.thatIsNoLongerAvailable'));
             return;
         }
         focusContext.value = context.toJSON();
@@ -76,7 +77,7 @@ export function usePlacesAndFocus({
     function openFocusForCollaborator(deviceId) {
         const context = session.getFocusContextForCollaborator(deviceId, (identityId) => resolveIdentityDisplayName(identityId));
         if (!context) {
-            feedback.show('That person is no longer nearby');
+            feedback.show(t('worldView.thatPersonIsNoLonger'));
             return;
         }
         focusContext.value = context.toJSON();
@@ -98,7 +99,7 @@ export function usePlacesAndFocus({
             ? session.focusCollaborator(id)
             : session.focusLocation(kind === WorldFocusKind.GEOGRAPHIC_PLACE ? geographicPlaceLocationId(id) : id);
         if (!moved) {
-            feedback.show('That is no longer available');
+            feedback.show(t('worldView.thatIsNoLongerAvailable'));
             closeFocusPanel();
             return;
         }
@@ -192,7 +193,7 @@ export function usePlacesAndFocus({
     function goToGeographicPlace(fingerprintKey) {
         const moved = session.focusLocation(geographicPlaceLocationId(fingerprintKey));
         if (!moved) {
-            feedback.show('That geographic place is no longer available');
+            feedback.show(t('worldView.thatGeographicPlaceIsNo'));
             return;
         }
         refreshSpatialUI();
@@ -216,7 +217,7 @@ export function usePlacesAndFocus({
     function openGeographicPlace(fingerprintKey) {
         const place = session.getGeographicPlace(fingerprintKey);
         if (!place) {
-            feedback.show('That geographic place is no longer available');
+            feedback.show(t('worldView.thatGeographicPlaceIsNo'));
             return;
         }
         geographicPlace.value = place.toJSON();

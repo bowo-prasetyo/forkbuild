@@ -7,7 +7,7 @@ export const publicationDiscoveryPanelsTemplate = `<!--
                 with a discoverSnapshotCommand.
             -->
             <div v-if="selectedEncounter && selectedEncounter.kind === 'PUBLICATION' && discoverSnapshotCommand" class="world-encounter-snapshot-discovery-panel">
-                <h4 class="world-encounter-snapshot-discovery-title">Snapshot Discovery</h4>
+                <h4 class="world-encounter-snapshot-discovery-title">{{ t('worldEncounterCanvas.snapshotDiscovery') }}</h4>
 
                 <!-- Disabled with nothing to discover or while a call is in flight. -->
                 <button
@@ -15,7 +15,7 @@ export const publicationDiscoveryPanelsTemplate = `<!--
                     class="action-btn world-encounter-snapshot-discovery-action"
                     :disabled="!distributablePublication || snapshotDiscoveryExecuting"
                     @click="discoverSelectedSnapshot"
-                >{{ snapshotDiscoveryExecuting ? 'Discovering…' : 'Discover Snapshot' }}</button>
+                >{{ snapshotDiscoveryExecuting ? t('worldEncounterCanvas.discovering') : t('worldEncounterCanvas.discoverSnapshot') }}</button>
 
                 <!--
                     Outcome rendered through SnapshotOutcomeInspectionView.js's label, not the
@@ -23,14 +23,14 @@ export const publicationDiscoveryPanelsTemplate = `<!--
                 -->
                 <p v-if="snapshotDiscoveryError" class="world-encounter-snapshot-discovery-error">{{ snapshotDiscoveryError }}</p>
                 <dl v-else-if="snapshotDiscoveryResult" class="world-encounter-snapshot-discovery-detail">
-                    <dt>Outcome</dt>
+                    <dt>{{ t('worldEncounterCanvas.outcome') }}</dt>
                     <dd>{{ describeSnapshotResolutionLabel(snapshotDiscoveryResult.outcome) }}</dd>
                     <template v-if="snapshotDiscoveryResult.reason">
-                        <dt>Reason</dt>
+                        <dt>{{ t('worldEncounterCanvas.reason') }}</dt>
                         <dd>{{ snapshotDiscoveryResult.reason }}</dd>
                     </template>
                     <template v-if="snapshotDiscoveryResult.locator">
-                        <dt>Locator</dt>
+                        <dt>{{ t('worldEncounterCanvas.locator') }}</dt>
                         <dd>{{ snapshotDiscoveryResult.locator }}</dd>
                     </template>
                 </dl>
@@ -43,7 +43,7 @@ export const publicationDiscoveryPanelsTemplate = `<!--
                     trust) as the Material/Verification panel (see docs/Principles.md).
                 -->
                 <dl v-if="snapshotAttributionResult" class="world-encounter-snapshot-attribution-detail">
-                    <dt>Snapshot Attribution</dt>
+                    <dt>{{ t('worldEncounterCanvas.snapshotAttribution') }}</dt>
                     <dd>{{ describeSnapshotAttributionLabel(snapshotAttributionResult.outcome) }}</dd>
                 </dl>
             </div>
@@ -54,7 +54,7 @@ export const publicationDiscoveryPanelsTemplate = `<!--
                 type="button"
                 class="action-btn world-encounter-publication-discovery-trigger"
                 @click="publicationDiscoveryOpen = true"
-            >Publication Discovery</button>
+            >{{ t('worldEncounterCanvas.publicationDiscovery') }}</button>
 
             <div
                 v-if="publicationDiscoveryOpen"
@@ -62,22 +62,22 @@ export const publicationDiscoveryPanelsTemplate = `<!--
                 @click.self="publicationDiscoveryOpen = false"
             >
                 <div class="modal-panel world-encounter-publication-discovery-modal">
-                    <h3>Publication Discovery</h3>
+                    <h3>{{ t('worldEncounterCanvas.publicationDiscovery') }}</h3>
 
                     <!--
                         Independent of selectedEncounter: a discovered Publication is never a marker. Uses
                         the same Material/Verification classes as the selection panel.
                     -->
                     <div v-if="discoveryCommand" class="world-encounter-discovery-panel">
-                        <h4 class="world-encounter-discovery-title">Discover Publication</h4>
-                        <input v-model="discoveryObjectId" placeholder="Publication id" :disabled="discovering" />
-                        <input v-model="discoveryTag" placeholder="Discovery tag" :disabled="discovering" />
+                        <h4 class="world-encounter-discovery-title">{{ t('worldEncounterCanvas.discoverPublication') }}</h4>
+                        <input v-model="discoveryObjectId" :placeholder="t('worldEncounterCanvas.publicationId')" :disabled="discovering" />
+                        <input v-model="discoveryTag" :placeholder="t('worldEncounterCanvas.discoveryTag')" :disabled="discovering" />
                         <button
                             type="button"
                             class="action-btn world-encounter-discovery-action"
                             :disabled="discovering"
                             @click="discoverPublication"
-                        >{{ discovering ? 'Discovering…' : 'Discover Publication' }}</button>
+                        >{{ discovering ? t('worldEncounterCanvas.discovering') : t('worldEncounterCanvas.discoverPublication2') }}</button>
 
                         <p v-if="discoveryError" class="world-encounter-discovery-error">{{ discoveryError }}</p>
                         <template v-else-if="discoveryResult">
@@ -87,7 +87,7 @@ export const publicationDiscoveryPanelsTemplate = `<!--
                                 route through.
                             -->
                             <dl class="world-encounter-discovery-detail">
-                                <dt>Discovery</dt>
+                                <dt>{{ t('worldEncounterCanvas.discovery') }}</dt>
                                 <dd>{{ discoveryResult.resolution.status }}</dd>
                             </dl>
 
@@ -96,9 +96,9 @@ export const publicationDiscoveryPanelsTemplate = `<!--
                                 state a stronger verification claim for the same fact.
                             -->
                             <template v-if="discoveryResult.inspection">
-                                <h4 class="world-encounter-material-title">Material</h4>
+                                <h4 class="world-encounter-material-title">{{ t('worldEncounterCanvas.material') }}</h4>
                                 <dl class="world-encounter-material-detail">
-                                    <dt>Status</dt>
+                                    <dt>{{ t('worldEncounterCanvas.status') }}</dt>
                                     <dd>{{ describeMaterialLoadStatusLabel(discoveryResult.inspection.loading.status) }}</dd>
                                 </dl>
 
@@ -108,13 +108,13 @@ export const publicationDiscoveryPanelsTemplate = `<!--
                                     and rendered verbatim.
                                 -->
                                 <dl v-if="discoveryResult.provenance" class="world-encounter-provenance-detail">
-                                    <dt>Source</dt>
+                                    <dt>{{ t('worldEncounterCanvas.source') }}</dt>
                                     <dd>{{ discoveryResult.provenance.origin }}</dd>
                                 </dl>
 
-                                <h4 class="world-encounter-verification-title">Verification</h4>
+                                <h4 class="world-encounter-verification-title">{{ t('worldEncounterCanvas.verification') }}</h4>
                                 <dl class="world-encounter-verification-detail">
-                                    <dt>Status</dt>
+                                    <dt>{{ t('worldEncounterCanvas.status') }}</dt>
                                     <dd>{{ describeMaterialVerificationStatusLabel(discoveryResult.inspection.verification.status) }}</dd>
                                 </dl>
 
@@ -124,7 +124,7 @@ export const publicationDiscoveryPanelsTemplate = `<!--
                                     type="button"
                                     class="action-btn world-encounter-discovery-selection-action"
                                     @click="selectDiscoveredPublication"
-                                >Select Publication</button>
+                                >{{ t('worldEncounterCanvas.selectPublication') }}</button>
                             </template>
                         </template>
                     </div>
@@ -134,13 +134,13 @@ export const publicationDiscoveryPanelsTemplate = `<!--
                         shows.
                     -->
                     <div v-if="selectedDiscoveredPublication" class="world-encounter-discovered-selection-panel">
-                        <p class="world-encounter-discovered-selection-notice">Selected discovered publication.</p>
+                        <p class="world-encounter-discovered-selection-notice">{{ t('worldEncounterCanvas.selectedDiscoveredPublication') }}</p>
                     </div>
 
                     <button
                         type="button"
                         class="action-btn world-encounter-publication-discovery-close"
                         @click="publicationDiscoveryOpen = false"
-                    >Close</button>
+                    >{{ t('worldEncounterCanvas.close') }}</button>
                 </div>
             </div>`;

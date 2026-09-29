@@ -1,7 +1,7 @@
 // World view template: the unavailable, loaded and nearby World lists.
 // It renders in WorldView's scope, so it uses the names its setup() returns.
 export const worldListsSectionTemplate = `<div v-if="failedWorlds.length > 0" class="world-view-section world-view-section--error">
-                    <h4>Unavailable ({{ failedWorlds.length }})</h4>
+                    <h4>{{ t('worldView.unavailableWorlds', { count: failedWorlds.length }) }}</h4>
                     <ul class="world-list world-list--failed">
                         <li v-for="w in failedWorlds" :key="w.documentId" class="world-item world-item--failed">
                             <span class="world-item-title">{{ w.title }}</span>
@@ -12,7 +12,7 @@ export const worldListsSectionTemplate = `<div v-if="failedWorlds.length > 0" cl
 
                 <!-- Hidden while it would only repeat the header's own World. -->
                 <div v-if="loadedWorlds.some((w) => w.documentId !== $route.params.documentId)" class="world-view-section">
-                    <h4>Worlds in View ({{ loadedWorlds.length }})</h4>
+                    <h4>{{ t('worldView.worldsInView', { count: loadedWorlds.length }) }}</h4>
                     <ul class="world-list world-list--loaded">
                         <li
                             v-for="w in loadedWorlds"
@@ -26,7 +26,7 @@ export const worldListsSectionTemplate = `<div v-if="failedWorlds.length > 0" cl
                 </div>
 
                 <div v-if="nearbyWorlds.length > 0" class="world-view-section">
-                    <h4>Nearby Worlds</h4>
+                    <h4>{{ t('worldView.nearbyWorlds') }}</h4>
                     <ul class="world-list world-list--nearby">
                         <li
                             v-for="w in nearbyWorlds"

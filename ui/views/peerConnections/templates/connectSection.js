@@ -102,6 +102,6 @@ export const connectSectionTemplate = `<section class="peers-section" aria-label
                     <p class="form-hint form-hint--neutral">
                         Meet people you don't know yet. Each World also has its own lobby, under <strong>Lobby</strong> in World View.
                     </p>
-                    <PublicLobbyPanel :lobby="PUBLIC_LOBBY" title="Everyone" />
+                    <PublicLobbyPanel :lobby="PUBLIC_LOBBY" :title="t('publicLobbyPanel.everyone')" />
                 </div>
             </section>`;

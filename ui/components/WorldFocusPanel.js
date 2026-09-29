@@ -24,6 +24,8 @@
 // every other panel in this codebase, this is a dumb, controlled
 // component; the host (ui/views/WorldView.js) wires each emit to the
 // actual navigation call.
+import { displayText, t } from '../i18n/i18n.js';
+import { compassText } from '../i18n/worldText.js';
 const KIND_GLYPH = {
     region: '⬢',
     landmark: '★',
@@ -43,6 +45,9 @@ export default {
     },
     emits: ['go', 'show-on-map', 'open-names', 'edit-copy', 'cancel'],
     methods: {
+        t,
+        displayText,
+        compassText,
         glyph() {
             return (this.context && KIND_GLYPH[this.context.kind]) || '•';
         },
@@ -50,8 +55,9 @@ export default {
             if (!this.context || this.context.distance === null) {
                 return '';
             }
-            const direction = this.context.direction ? ` ${this.context.direction}` : '';
-            return `${this.context.distance}m${direction}`;
+            return this.context.direction
+                ? t('units.metersToward', { distance: this.context.distance, direction: compassText(this.context.direction) })
+                : t('units.meters', { distance: this.context.distance });
         },
         onKeydown(event) {
             if (event.key === 'Escape') {
@@ -64,24 +70,23 @@ export default {
         <div
             v-if="context"
             role="dialog"
-            aria-label="Focus"
+            :aria-label="t('worldFocusPanel.focus')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel world-focus-panel">
-                <p class="world-focus-panel-subtitle">{{ glyph() }} {{ context.subtitle }}</p>
-                <h3>{{ context.title }}</h3>
+                <p class="world-focus-panel-subtitle">{{ glyph() }} {{ displayText(context.subtitle) }}</p>
+                <h3>{{ displayText(context.title) }}</h3>
 
-                <p v-if="context.description" class="world-focus-panel-description">{{ context.description }}</p>
+                <p v-if="context.description" class="world-focus-panel-description">{{ displayText(context.description) }}</p>
 
                 <p v-if="formatDistance()" class="locations-panel-hint">{{ formatDistance() }}</p>
 
-                <p class="world-focus-panel-arrival">{{ context.arrivalPhrase }}</p>
+                <p class="world-focus-panel-arrival">{{ displayText(context.arrivalPhrase) }}</p>
 
                 <p v-if="context.geographicPlace" class="world-focus-panel-nearby">
-                    Nearest other place: {{ context.geographicPlace.displayName }}
-                    ({{ context.geographicPlace.distance }}m {{ context.geographicPlace.direction }})
+                    {{ t('worldFocusPanel.nearestPlace', { place: context.geographicPlace.displayName, distance: context.geographicPlace.distance, direction: compassText(context.geographicPlace.direction) }) }}
                 </p>
 
                 <div class="modal-actions">
@@ -89,26 +94,26 @@ export default {
                         v-if="context.availableActions.includes('go')"
                         class="action-btn action-btn--primary"
                         @click="$emit('go')"
-                    >Go</button>
+                    >{{ t('worldFocusPanel.go') }}</button>
                     <button
                         v-if="context.availableActions.includes('map')"
                         class="action-btn"
                         @click="$emit('show-on-map')"
-                    >Show on Map</button>
+                    >{{ t('worldFocusPanel.showOnMap') }}</button>
                     <button
                         v-if="context.availableActions.includes('names')"
                         class="action-btn"
                         @click="$emit('open-names')"
-                    >Names</button>
+                    >{{ t('worldFocusPanel.names') }}</button>
                     <button
                         v-if="context.availableActions.includes('edit_copy')"
                         class="action-btn"
                         @click="$emit('edit-copy')"
-                    >Edit a Copy</button>
-                    <button class="action-btn" @click="$emit('cancel')">Close</button>
+                    >{{ t('worldFocusPanel.editACopy') }}</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('worldFocusPanel.close') }}</button>
                 </div>
                 <p v-if="context.availableActions.includes('edit_copy')" class="world-focus-panel-hint">
-                    Creates an independent copy of this document and opens it in the Editor.
+                    {{ t('worldFocusPanel.createsAnIndependentCopyOf') }}
                 </p>
             </div>
         </div>

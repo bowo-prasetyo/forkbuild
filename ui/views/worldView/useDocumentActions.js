@@ -1,4 +1,5 @@
 // Document-level actions on the World View: metadata editing, Save and Publish.
+import { t } from '../../i18n/i18n.js';
 export function useDocumentActions({
     activeDocumentInfo, feedback, guarded, metadataEditTarget, refreshSpatialUI, session, showMetadataEditor
 }) {
@@ -27,7 +28,7 @@ export function useDocumentActions({
         if (!info) return;
         guarded(() => {
             session.saveDocument(info.documentId);
-            feedback.show('Saved');
+            feedback.show(t('toolbar.saved'));
         });
         refreshSpatialUI();
     }
@@ -37,7 +38,7 @@ export function useDocumentActions({
         if (!info) return;
         guarded(() => {
             const publication = session.publishDocument(info.documentId);
-            feedback.show(`Published "${publication.title}"`);
+            feedback.show(t('worldView.published2', { title: publication.title }));
         });
         refreshSpatialUI();
     }

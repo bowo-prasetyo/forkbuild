@@ -1,4 +1,5 @@
 import { ref, watch, inject, onBeforeUnmount } from 'vue';
+import { t } from '../i18n/i18n.js';
 
 // Follow / Following for one identity (application/identity/FollowUseCase.js).
 // Hidden when nobody is signed in, for the signed-in identity itself, and for
@@ -10,8 +11,9 @@ export default {
         // Shown for the follow until their work has been seen here; a label only.
         name: { type: String, default: null },
         // World View already has a camera "Follow", so it says which follow this is.
-        followLabel: { type: String, default: 'Follow' },
-        followingLabel: { type: String, default: 'Following ✓' }
+        // Default to "Follow" and "Following ✓" in the chosen language.
+        followLabel: { type: String, default: null },
+        followingLabel: { type: String, default: null }
     },
     setup(props) {
         const followUseCase = inject('followUseCase', null);
@@ -40,15 +42,15 @@ export default {
             }
         }
 
-        return { available, following, error, toggle };
+        return { t, available, following, error, toggle };
     },
     template: `
         <span v-if="available" class="follow-button">
             <button type="button"
                     :class="['action-btn', following ? 'action-btn--secondary follow-button--following' : 'action-btn--primary']"
                     :aria-pressed="following ? 'true' : 'false'"
-                    :title="following ? 'Stop following. Only this device knows you follow them.' : 'See their new work under Following. Only this device knows you follow them.'"
-                    @click="toggle">{{ following ? followingLabel : followLabel }}</button>
+                    :title="following ? t('followButton.stopFollowingOnlyThisDevice') : t('followButton.seeTheirNewWorkUnder')"
+                    @click="toggle">{{ following ? (followingLabel || t('followButton.following')) : (followLabel || t('followButton.follow')) }}</button>
             <span v-if="error" class="identity-unlock-error">{{ error }}</span>
         </span>
     `

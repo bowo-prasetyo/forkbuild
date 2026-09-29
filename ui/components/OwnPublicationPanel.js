@@ -10,6 +10,7 @@ import { publicationActionsSectionTemplate } from './ownPublicationPanel/templat
 import { diagnosticToolsSectionTemplate } from './ownPublicationPanel/templates/diagnosticToolsSection.js';
 import { commentarySectionTemplate } from './ownPublicationPanel/templates/commentarySection.js';
 import PublicationShareLink from './PublicationShareLink.js';
+import { errorText, t } from '../i18n/i18n.js';
 
 // Actions on the local user's own current Publication in World View:
 // distribute it and its Snapshot, export the Snapshot, place or unpublish it,
@@ -394,6 +395,7 @@ export default {
         this.selectedSnapshotMaterializationRequestId += 1;
     },
     methods: {
+        t,
         readSessionIdentity() {
             let identityId = null;
             try {
@@ -418,7 +420,7 @@ export default {
                 this.publicationCommentaries = Array.isArray(commentaries) ? commentaries : [];
                 this.publicationCommentaryError = null;
             } catch (error) {
-                this.publicationCommentaryError = 'Commentary could not be loaded.';
+                this.publicationCommentaryError = t('ownPublicationPanel.commentaryLoadFailed');
             }
         },
         // Sends only { publicationId, content }. On success, clears the draft and
@@ -444,7 +446,7 @@ export default {
                 this.pendingCommentaryDraft = null;
                 this.refreshPublicationCommentaries();
             } catch (error) {
-                this.publicationCommentaryError = (error && error.message) ? error.message : 'Commentary could not be created.';
+                this.publicationCommentaryError = (error && error.message) ? errorText(error) : t('ownPublicationPanel.commentaryCreateFailed');
             } finally {
                 this.publicationCommentarySubmitting = false;
             }
@@ -463,7 +465,7 @@ export default {
                 this.publicationPlacements = Array.isArray(placements) ? placements : [];
                 this.publicationPlacementsError = null;
             } catch (error) {
-                this.publicationPlacementsError = 'Placements could not be loaded.';
+                this.publicationPlacementsError = t('ownPublicationPanel.placementsLoadFailed');
             }
         },
         ...publicationActionMethods,
@@ -471,19 +473,19 @@ export default {
     },
     template: `
         <div v-if="snapshotDistributionCommand" class="own-publication-panel">
-            <h4 class="own-publication-panel-title">{{ publication && !isOwnPublication ? 'Publication' : 'My Publication' }}</h4>
+            <h4 class="own-publication-panel-title">{{ publication && !isOwnPublication ? t('ownPublicationPanel.publication') : t('ownPublicationPanel.myPublication') }}</h4>
 
             <dl v-if="publication" class="own-publication-detail">
-                <dt>Title</dt>
-                <dd>{{ publication.title || 'Untitled' }}</dd>
-                <dt>Author</dt>
+                <dt>{{ t('ownPublicationPanel.title') }}</dt>
+                <dd>{{ publication.title || t('ownPublicationPanel.untitled') }}</dd>
+                <dt>{{ t('ownPublicationPanel.author') }}</dt>
                 <dd>{{ publication.author || 'anonymous' }}</dd>
             </dl>
             <p v-else class="own-publication-empty-hint">
-                Publish your current World to distribute its Snapshot.
+                {{ t('ownPublicationPanel.publishYourCurrentWorldTo') }}
             </p>
             <p v-if="publication && !isOwnPublication" class="own-publication-empty-hint">
-                Someone else published this World, so only they can unpublish or distribute it.
+                {{ t('ownPublicationPanel.someoneElsePublishedThisWorld') }}
             </p>
 
             ${placementsSectionTemplate}

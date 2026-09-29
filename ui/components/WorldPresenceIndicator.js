@@ -12,6 +12,7 @@
 // own worldOnlineCount) — this component never counts anything itself,
 // exactly the same "purely presentational, never its own polling"
 // discipline CompassIndicator's own header documents.
+import { t } from '../i18n/i18n.js';
 export default {
     name: 'WorldPresenceIndicator',
     props: {
@@ -21,15 +22,16 @@ export default {
         }
     },
     emits: ['open'],
+    methods: { t },
     template: `
         <button
             type="button"
             class="world-presence-indicator"
-            aria-label="World presence — open Members panel"
-            title="Members"
+            :aria-label="t('worldPresenceIndicator.worldPresenceOpenMembersPanel')"
+            :title="t('worldPresenceIndicator.members')"
             @click="$emit('open')"
         >
-            👥 <span class="world-presence-indicator-count">{{ onlineCount }}</span> online
+            👥 <span class="world-presence-indicator-count">{{ onlineCount }}</span> {{ t('worldPresenceIndicator.online') }}
         </button>
     `
 };

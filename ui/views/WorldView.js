@@ -83,6 +83,7 @@ import { navigationHudSectionTemplate } from './worldView/templates/navigationHu
 import { publicationSectionTemplate } from './worldView/templates/publicationSection.js';
 import { hoverCardTemplate } from './worldView/templates/hoverCard.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
+import { compassText, spatialContextDescription } from '../i18n/worldText.js';
 
 // Snapshot fetches the automatic cascade runs at once.
 const AUTOMATIC_SNAPSHOT_FETCH_CONCURRENCY = 4;
@@ -113,7 +114,7 @@ export default {
         const viewport = ref(null);
         const initialDocumentId = route.params.documentId;
 
-        const title = ref('Loading...');
+        const title = ref(t('worldView.loading'));
         const author = ref(null);
         // Info for the ACTIVE document (drives the header badge), which can differ
         // from the inspected `documentInfo` below.
@@ -547,8 +548,8 @@ export default {
                 const pub = pubMap.get(id);
                 return {
                     documentId: id,
-                    title: doc?.metadata?.title || pub?.title || 'Untitled',
-                    author: doc?.metadata?.author || pub?.author || 'anonymous'
+                    title: doc?.metadata?.title || pub?.title || t('worldView.untitled'),
+                    author: doc?.metadata?.author || pub?.author || t('worldLocationBrowser.anonymous')
                 };
             };
             loadedWorlds.value = state.loaded.map((id) => worldRow(id, docs.find((d) => d.world.id === id)));
@@ -649,7 +650,7 @@ export default {
             const activeId = session.getActiveDocumentId();
             const activeDoc = docs.find((d) => d.world.id === activeId);
             if (activeDoc) {
-                title.value = activeDoc.metadata.title || 'Untitled';
+                title.value = activeDoc.metadata.title || t('worldView.untitled');
                 author.value = activeDoc.metadata.author;
             }
             activeDocumentInfo.value = activeId ? session.getDocumentInfo(activeId) : null;
@@ -682,7 +683,7 @@ export default {
             } else {
                 const focusedDoc = docs.find((d) => d.world.id === focusedId);
                 const focusedPub = pubMap.get(focusedId);
-                focusedDocumentTitle.value = focusedDoc?.metadata?.title || focusedPub?.title || 'Untitled';
+                focusedDocumentTitle.value = focusedDoc?.metadata?.title || focusedPub?.title || t('worldView.untitled');
             }
         }
 
@@ -736,7 +737,7 @@ export default {
         // list even when not loaded.
         function parentTitle(parentDocumentId) {
             const pub = allPublications.value.find((p) => p.documentId === parentDocumentId);
-            return pub ? (pub.title || 'Untitled') : null;
+            return pub ? (pub.title || t('worldView.untitled')) : null;
         }
 
         function refreshHoverUI() {
@@ -750,8 +751,8 @@ export default {
                     buildingId: hover.buildingId,
                     brickId: hover.brickId,
                     position: hover.position,
-                    worldTitle: pub?.title || 'Untitled',
-                    worldAuthor: pub?.author || 'anonymous'
+                    worldTitle: pub?.title || t('worldView.untitled'),
+                    worldAuthor: pub?.author || t('worldLocationBrowser.anonymous')
                 };
             } else {
                 spatialHover.value = null;
@@ -1116,6 +1117,9 @@ export default {
 
         return {
             displayText,
+            compassText,
+            spatialContextDescription,
+            t,
             viewport,
             title,
             author,
@@ -1393,7 +1397,7 @@ export default {
                   class="action-btn world-view-panel-toggle"
                   :aria-expanded="panelOpen ? 'true' : 'false'"
                   @click="togglePanel"
-              >{{ panelOpen ? 'Hide Panel' : 'Panel' }}</button>
+              >{{ panelOpen ? t('worldView.hidePanel') : t('worldView.panel') }}</button>
               <div class="world-view-overlay-scroll">
                 ${headerSectionTemplate}
                 <!--
@@ -1403,62 +1407,62 @@ export default {
                     Explore / Map / Places are the three mutually exclusive primary modes.
                 -->
                 <div v-if="cameraPosition || activeDocumentInfo" class="world-view-actions world-view-actions--navigation">
-                    <button v-if="cameraPosition" class="action-btn" @click="goHome">Home</button>
+                    <button v-if="cameraPosition" class="action-btn" @click="goHome">{{ t('worldView.home') }}</button>
                     <button
                         v-if="activeDocumentInfo"
                         class="action-btn"
-                        title="Landmarks, regions, and every structure this session knows about"
+                        :title="t('worldView.landmarksRegionsAndEveryStructure')"
                         @click="openLocationsPanel"
-                    >Locations</button>
+                    >{{ t('worldView.locations') }}</button>
                     <!--
                         The online count is the Members button. Subtle, so the World stays
                         dominant (docs/Principles.md, "The UI Displays Authorization; It Never
                         Decides It").
                     -->
                     <WorldPresenceIndicator v-if="activeDocumentInfo" :online-count="worldOnlineCount" @open="openMembersPanel" />
-                    <button v-if="activeDocumentInfo && activeWorldLobby" class="action-btn" @click="openLobbyPanel">Lobby</button>
+                    <button v-if="activeDocumentInfo && activeWorldLobby" class="action-btn" @click="openLobbyPanel">{{ t('worldView.lobby') }}</button>
                     <button
                         v-if="cameraPosition"
                         type="button"
                         :class="['action-btn', 'world-view-controls-toggle', { 'action-btn--active': controlsHintOpen }]"
-                        title="Controls"
-                        aria-label="Controls"
+                        :title="t('worldView.controls')"
+                        :aria-label="t('worldView.controls')"
                         :aria-expanded="controlsHintOpen ? 'true' : 'false'"
                         @click="controlsHintOpen = !controlsHintOpen"
                     >?</button>
                 </div>
                 <template v-if="cameraPosition && controlsHintOpen">
                     <p v-if="touchInput" class="world-view-hint world-view-hint--controls">
-                        Drag to orbit • Pinch to zoom • Two fingers to pan • Tap to inspect<template v-if="avatarControlMode"> • Joystick to walk, push to the edge to run</template>
+                        {{ t('worldView.dragToOrbitPinchTo') }}<template v-if="avatarControlMode"> {{ t('worldView.joystickToWalkPushTo') }}</template>
                     </p>
                     <p v-else class="world-view-hint world-view-hint--controls">
-                        Drag to orbit • Scroll to zoom • Home to reset • Click to inspect<template v-if="avatarControlMode"> • WASD to walk • Shift to run • Space to jump</template>
+                        {{ t('worldView.dragToOrbitScrollTo') }}<template v-if="avatarControlMode"> {{ t('worldView.wasdToWalkShiftTo') }}</template>
                     </p>
                 </template>
                 <WorldCollaboratorIndicator v-if="activeDocumentInfo" :rows="spatialCollaboratorRows" @follow="followCollaborator" />
                 <div v-if="cameraPosition" class="world-view-primary-nav">
                     <button
                         :class="['action-btn', { 'action-btn--active': primaryMode === WorldViewPrimaryMode.EXPLORE }]"
-                        title="What's around me, and where can I go?"
+                        :title="t('worldView.whatSAroundMeAnd')"
                         @click="setPrimaryMode(WorldViewPrimaryMode.EXPLORE)"
-                    >Explore</button>
+                    >{{ t('worldView.explore') }}</button>
                     <button
                         :class="['action-btn', { 'action-btn--active': primaryMode === WorldViewPrimaryMode.MAP }]"
-                        title="Where is everything?"
+                        :title="t('worldView.whereIsEverything')"
                         @click="setPrimaryMode(WorldViewPrimaryMode.MAP)"
-                    >Map</button>
+                    >{{ t('worldView.map') }}</button>
                     <button
                         :class="['action-btn', { 'action-btn--active': primaryMode === WorldViewPrimaryMode.PLACES }]"
-                        title="What places exist?"
+                        :title="t('worldView.whatPlacesExist')"
                         @click="setPrimaryMode(WorldViewPrimaryMode.PLACES)"
-                    >Places</button>
+                    >{{ t('worldView.places') }}</button>
                 </div>
                 ${nearbySectionTemplate}
 
                 ${inspectionPanelsTemplate}
 
                 <div class="world-view-section world-view-section--search">
-                    <h4>Search</h4>
+                    <h4>{{ t('worldView.search') }}</h4>
                     <WorldSearchPanel
                         :results="searchResults"
                         :catalog-empty="catalogEmpty"
@@ -1506,7 +1510,7 @@ export default {
                 :class="['action-btn', 'world-view-walk-toggle', { 'action-btn--active': avatarControlMode }]"
                 :aria-pressed="avatarControlMode ? 'true' : 'false'"
                 @click="toggleAvatarControlMode"
-            >Walk</button>
+            >{{ t('worldView.walk') }}</button>
         </div>
     `
 };

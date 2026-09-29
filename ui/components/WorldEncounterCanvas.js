@@ -19,6 +19,7 @@ import { observerLocalEncounterPanelTemplate } from './worldEncounterCanvas/temp
 import { snapshotPanelsTemplate } from './worldEncounterCanvas/templates/snapshotPanels.js';
 import { outcomeAndMaterialPanelsTemplate } from './worldEncounterCanvas/templates/outcomeAndMaterialPanels.js';
 import { publicationDiscoveryPanelsTemplate } from './worldEncounterCanvas/templates/publicationDiscoveryPanels.js';
+import { formatDate, t } from '../i18n/i18n.js';
 
 // World Encounter Canvas: a simple 2D World View of encounterable
 // publications and avatars, plus the Wanderer's own marker.
@@ -533,6 +534,8 @@ export default {
         ...snapshotComparisonComputed
     },
     methods: {
+        t,
+        formatDate,
         // The only writer of `selectedEncounter`: stores `{ kind, objectId }`
         // verbatim. While comparison is armed, the click goes to
         // selectComparisonEncounter() instead and none of the resets below run.
@@ -651,12 +654,12 @@ export default {
                 class="world-encounter-canvas"
                 viewBox="0 0 600 600"
                 role="img"
-                aria-label="World View"
+                :aria-label="t('worldEncounterCanvas.worldView')"
             >
                 <rect class="world-encounter-canvas-background" x="0" y="0" width="600" height="600" />
 
                 <text v-if="isWorldEmpty" class="world-encounter-canvas-empty-hint" x="300" y="24" text-anchor="middle">
-                    Nothing encounterable here yet.
+                    {{ t('worldEncounterCanvas.nothingEncounterableHereYet') }}
                 </text>
 
                 <WorldEncounterMarker
@@ -694,8 +697,8 @@ export default {
                     @click="selectObserverLocalEncounter(marker)"
                 >
                     <text class="world-encounter-marker-glyph" text-anchor="middle" dy="4">📄</text>
-                    <text class="world-encounter-observer-local-label" text-anchor="middle" dy="18">Discovered here</text>
-                    <title>This publication was discovered while you were here. Its publisher's own location claim has not been used as a World placement.</title>
+                    <text class="world-encounter-observer-local-label" text-anchor="middle" dy="18">{{ t('worldEncounterCanvas.discoveredHere') }}</text>
+                    <title>{{ t('worldEncounterCanvas.thisPublicationWasDiscoveredWhile') }}</title>
                 </g>
 
                 <WandererMarker :x="projectedWanderer.x" :y="projectedWanderer.y" />

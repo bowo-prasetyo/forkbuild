@@ -17,6 +17,7 @@ import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvid
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { geographicPlaceLocationId } from '../core/GeographicPlaceNavigation.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.5.8 — World View Contextual Focus & Information Hierarchy.
@@ -117,7 +118,7 @@ async function run() {
         const regionContext = deriveWorldFocusContext({ kind: WorldFocusKind.REGION, entity: regionEntity, viewerPosition: viewer, regions });
         assert(regionContext instanceof WorldFocusContext, '5. deriveWorldFocusContext() returns a WorldFocusContext instance');
         assert(regionContext.kind === WorldFocusKind.REGION && regionContext.title === 'Willow Village', '6. region title/kind derive correctly');
-        assert(regionContext.subtitle === 'Region · Village', '7. region subtitle includes the capitalized RegionKind');
+        assert(displayText(regionContext.subtitle) === 'Region · Village', '7. region subtitle includes the capitalized RegionKind');
         assert(regionContext.description === 'A quiet village', '8. region description is the WorldRegion\'s own description');
         assert(regionContext.regionPath.length === 1 && regionContext.regionPath[0].id === 'r-outer',
             '9. a region\'s own regionPath contains the LARGER region it sits inside, never itself');
@@ -134,11 +135,11 @@ async function run() {
         // carries its own description.
         const landmarkEntity = { id: 'lm-1', title: 'Village Well', description: 'Central water source', position: { x: 12, y: 0, z: 12 } };
         const landmarkContext = deriveWorldFocusContext({ kind: WorldFocusKind.LANDMARK, entity: landmarkEntity, viewerPosition: viewer, regions });
-        assert(landmarkContext.subtitle === 'Landmark' && landmarkContext.description === 'Central water source', '15. landmark subtitle/description');
+        assert(displayText(landmarkContext.subtitle) === 'Landmark' && landmarkContext.description === 'Central water source', '15. landmark subtitle/description');
         assert(JSON.stringify(landmarkContext.availableActions) === JSON.stringify([WorldFocusAction.GO, WorldFocusAction.EDIT_COPY]), '16. a landmark offers Go and Edit a Copy (0.5.9)');
         assert(landmarkContext.regionPath.length === 2 && landmarkContext.regionPath[0].id === 'r-inner',
             '17. a landmark\'s regionPath includes every containing region, innermost first, WITHOUT the self-exclusion regions apply to themselves');
-        assert(landmarkContext.arrivalPhrase === 'You are in Willow Village · Green Valley', '18. "in" wording when real regions contain the target, innermost first');
+        assert(displayText(landmarkContext.arrivalPhrase) === 'You are in Willow Village · Green Valley', '18. "in" wording when real regions contain the target, innermost first');
 
         // STRUCTURE — no description field at all (structures carry none
         // in this codebase), Go and Edit a Copy (0.5.9). Placed well
@@ -146,18 +147,18 @@ async function run() {
         // genuinely empty.
         const structureEntity = { id: 'st-1', title: 'Old Bridge', position: { x: 2000, y: 0, z: 2000 } };
         const structureContext = deriveWorldFocusContext({ kind: WorldFocusKind.STRUCTURE, entity: structureEntity, viewerPosition: viewer, regions });
-        assert(structureContext.subtitle === 'Structure' && structureContext.description === '', '19. structure subtitle/empty description');
+        assert(displayText(structureContext.subtitle) === 'Structure' && structureContext.description === '', '19. structure subtitle/empty description');
         assert(JSON.stringify(structureContext.availableActions) === JSON.stringify([WorldFocusAction.GO, WorldFocusAction.EDIT_COPY]), '20. a structure offers Go and Edit a Copy (0.5.9)');
         assert(structureContext.regionPath.length === 0, '21. a structure far from any region has an empty regionPath');
         assert(structureContext.geographicPlace === null, '22. no candidates supplied -> no geographicPlace');
-        assert(structureContext.arrivalPhrase === 'Unmarked ground — no named place claims this yet.', '23. neutral wording when neither a region nor a geographic place is known');
+        assert(displayText(structureContext.arrivalPhrase) === 'Unmarked ground — no named place claims this yet.', '23. neutral wording when neither a region nor a geographic place is known');
 
         // COLLABORATOR — description reads the activity, in the same
         // wording convention core/WorldWelcomeContext.js already uses.
         const collabEntity = { identityId: 'bob-id', deviceId: 'bob-device', displayName: 'Bob', activity: 'BUILDING', position: { x: 15, y: 0, z: 15 } };
         const collabContext = deriveWorldFocusContext({ kind: WorldFocusKind.COLLABORATOR, entity: collabEntity, viewerPosition: viewer, regions });
-        assert(collabContext.title === 'Bob' && collabContext.subtitle === 'Collaborator', '24. collaborator title/subtitle');
-        assert(collabContext.description === 'building nearby', '25. collaborator description reads the formatted activity');
+        assert(collabContext.title === 'Bob' && displayText(collabContext.subtitle) === 'Collaborator', '24. collaborator title/subtitle');
+        assert(displayText(collabContext.description) === 'building nearby', '25. collaborator description reads the formatted activity');
         assert(collabContext.source.id === 'bob-device', '26. collaborator source id is the deviceId (what focusCollaborator() takes), not the identityId');
         assert(JSON.stringify(collabContext.availableActions) === JSON.stringify([WorldFocusAction.GO]), '27. a collaborator offers ONLY Go');
 
@@ -170,8 +171,8 @@ async function run() {
         ];
         const placeEntity = { fingerprintKey: 'self-key', displayName: 'Kawahara Village', descriptionCount: 3, worldCount: 2, authorCount: 7, position: { x: 5, y: 0, z: 5 } };
         const placeContext = deriveWorldFocusContext({ kind: WorldFocusKind.GEOGRAPHIC_PLACE, entity: placeEntity, viewerPosition: viewer, regions: [], nearbyPlaceEntries });
-        assert(placeContext.subtitle === 'Geographic Place', '28. geographic place subtitle');
-        assert(placeContext.description === '3 descriptions · 2 Worlds · 7 contributors', '29. description is the same three-count summary GeographicPlacePanel already renders');
+        assert(displayText(placeContext.subtitle) === 'Geographic Place', '28. geographic place subtitle');
+        assert(displayText(placeContext.description) === '3 descriptions · 2 Worlds · 7 contributors', '29. description is the same three-count summary GeographicPlacePanel already renders');
         assert(JSON.stringify(placeContext.availableActions) === JSON.stringify([WorldFocusAction.GO, WorldFocusAction.MAP]), '30. a geographic place offers Go and Map, never Names');
         assert(placeContext.geographicPlace && placeContext.geographicPlace.displayName === 'Old Market',
             '31. the nearest OTHER geographic place excludes the target itself, even though it was the closest candidate in the input list');
@@ -188,7 +189,7 @@ async function run() {
         // toJSON() round-trip carries every field a UI needs, including
         // the derived arrivalPhrase/placeName — never raw class instances.
         const json = landmarkContext.toJSON();
-        assert(json.kind === 'landmark' && json.title === 'Village Well' && json.arrivalPhrase === landmarkContext.arrivalPhrase,
+        assert(json.kind === 'landmark' && json.title === 'Village Well' && displayText(json.arrivalPhrase) === displayText(landmarkContext.arrivalPhrase),
             '38. toJSON() carries kind/title/arrivalPhrase through');
         assert(Array.isArray(json.regionPath) && json.regionPath.length === 2, '39. toJSON() carries regionPath as a plain array');
         assert(JSON.stringify(json) === JSON.stringify(landmarkContext.toJSON()), '40. two consecutive toJSON() reads of the SAME instance are byte-identical');
@@ -233,7 +234,7 @@ async function run() {
         stubCollaboratorRoster(session, worldId, [{ identityId: 'bob-id', deviceId: 'bob-device', displayName: 'Bob', activity: 'EDITING', position: new Position(2, 0, 2) }]);
         const collabFocus = session.getFocusContextForCollaborator('bob-device');
         assert(collabFocus && collabFocus.kind === WorldFocusKind.COLLABORATOR, '51. getFocusContextForCollaborator() resolves a present collaborator');
-        assert(collabFocus.description === 'editing nearby', '52. the resolved collaborator context reads their live activity');
+        assert(displayText(collabFocus.description) === 'editing nearby', '52. the resolved collaborator context reads their live activity');
         assert(session.getFocusContextForCollaborator('unknown-device') === null, '53. an unknown deviceId on a wired session is still null');
 
         // No mutation, ever — the World this session read from is
@@ -289,7 +290,7 @@ async function run() {
     const fromLocationsPanel = session.getFocusContextForLocation('village-well');
     assert(JSON.stringify(fromExplore.toJSON()) === JSON.stringify(fromLocationsPanel.toJSON()),
         '58. the same landmark reached from two different surfaces produces byte-identical WorldFocusContext JSON');
-    assert(fromExplore.arrivalPhrase === 'You are in Willow Village · Green Valley', '59. the landmark\'s own regionPath breadcrumb reports innermost-first containment');
+    assert(displayText(fromExplore.arrivalPhrase) === 'You are in Willow Village · Green Valley', '59. the landmark\'s own regionPath breadcrumb reports innermost-first containment');
     assert(fromExplore.regionPath.length === 2 && fromExplore.regionPath[0].name === 'Willow Village' && fromExplore.regionPath[1].name === 'Green Valley',
         '60. regionPath itself is innermost-first, matching core/WorldRegionGeography.js\'s own convention');
     console.log('✓ Phase C: the same landmark reached from two different surfaces converges on one identical context');
@@ -299,7 +300,7 @@ async function run() {
     const villageFocus = session.getFocusContextForLocation('willow-village');
     assert(villageFocus.regionPath.length === 1 && villageFocus.regionPath[0].id === 'green-valley',
         '61. Willow Village\'s own focus context reports Green Valley as containing it, never itself');
-    assert(villageFocus.arrivalPhrase === 'You are in Green Valley', '62. arrivalPhrase for a nested region names only its OWN container');
+    assert(displayText(villageFocus.arrivalPhrase) === 'You are in Green Valley', '62. arrivalPhrase for a nested region names only its OWN container');
     console.log('✓ Phase D: a region\'s own focus context never lists itself as its own container');
 
     // Phase E — Focus never navigates: reading any number of focus

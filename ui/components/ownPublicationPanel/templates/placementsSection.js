@@ -6,12 +6,12 @@ export const placementsSectionTemplate = `<!--
                 revision is what is authorized.
             -->
             <div v-if="getPublicationPlacementsCommand" class="own-publication-placements">
-                <h5 class="own-publication-placements-title">Placements ({{ publicationPlacements.length }})</h5>
+                <h5 class="own-publication-placements-title">{{ t('ownPublicationPanel.placementsCount', { count: publicationPlacements.length }) }}</h5>
 
                 <p v-if="publicationPlacementsError" class="own-publication-placements-error">{{ publicationPlacementsError }}</p>
 
                 <p v-else-if="!publicationPlacements.length" class="own-publication-placements-empty">
-                    This Publication has not been placed anywhere yet.
+                    {{ t('ownPublicationPanel.thisPublicationHasNotBeen') }}
                 </p>
                 <ul v-else class="own-publication-placements-list">
                     <li
@@ -20,11 +20,11 @@ export const placementsSectionTemplate = `<!--
                         class="own-publication-placement-entry"
                     >
                         <dl class="own-publication-placement-detail">
-                            <dt>Position</dt>
+                            <dt>{{ t('ownPublicationPanel.position') }}</dt>
                             <dd>{{ placement.position.x.toFixed(1) }}, {{ placement.position.y.toFixed(1) }}, {{ placement.position.z.toFixed(1) }}</dd>
-                            <dt>Revision</dt>
+                            <dt>{{ t('ownPublicationPanel.revision') }}</dt>
                             <dd>{{ placement.revision }}</dd>
-                            <dt v-if="placement.owner">Owner</dt>
+                            <dt v-if="placement.owner">{{ t('ownPublicationPanel.owner') }}</dt>
                             <dd v-if="placement.owner">{{ placement.owner }}</dd>
                         </dl>
                         <div
@@ -36,39 +36,39 @@ export const placementsSectionTemplate = `<!--
                                 type="button"
                                 class="action-btn own-publication-placement-move-action"
                                 :disabled="!placement.movable"
-                                :title="placement.movable ? 'Move this placement to another position' : 'Only the owner of this placement can move it'"
+                                :title="placement.movable ? t('ownPublicationPanel.moveThisPlacementToAnother') : t('ownPublicationPanel.onlyTheOwnerOfThis')"
                                 @click="movePublicationPlacement(placement)"
-                            >Move…</button>
+                            >{{ t('ownPublicationPanel.move') }}</button>
                             <button
                                 v-if="removePlacementCommand"
                                 type="button"
                                 class="action-btn own-publication-placement-remove-request-action"
                                 :disabled="!placement.removable"
-                                :title="placement.removable ? 'Remove this placement from the World' : 'Only the owner of this placement can remove it'"
+                                :title="placement.removable ? t('ownPublicationPanel.removeThisPlacementFromThe2') : t('ownPublicationPanel.onlyTheOwnerOfThis2')"
                                 @click="requestPlacementRemoval(placement)"
-                            >Remove…</button>
+                            >{{ t('ownPublicationPanel.remove') }}</button>
                         </div>
                         <div
                             v-else-if="removePlacementCommand"
                             class="own-publication-placement-remove-confirm"
                             role="alertdialog"
-                            aria-label="Confirm placement removal"
+                            :aria-label="t('ownPublicationPanel.confirmPlacementRemoval')"
                         >
                             <p class="own-publication-placement-remove-confirm-text">
                                 {{ publicationPlacements.length === 1
-                                    ? 'Remove the only placement? The build will no longer appear in the World, but stays published and can be placed again.'
-                                    : 'Remove this placement from the World? The other placements and the Publication stay.' }}
+                                    ? t('ownPublicationPanel.removeTheOnlyPlacementThe')
+                                    : t('ownPublicationPanel.removeThisPlacementFromThe') }}
                             </p>
                             <button
                                 type="button"
                                 class="action-btn action-btn--danger own-publication-placement-remove-action"
                                 @click="confirmPlacementRemoval(placement)"
-                            >Remove</button>
+                            >{{ t('ownPublicationPanel.remove2') }}</button>
                             <button
                                 type="button"
                                 class="action-btn own-publication-placement-remove-cancel-action"
                                 @click="pendingRemovalPlacementId = null"
-                            >Cancel</button>
+                            >{{ t('ownPublicationPanel.cancel') }}</button>
                         </div>
                     </li>
                 </ul>
@@ -83,9 +83,9 @@ export const placementsSectionTemplate = `<!--
                         type="button"
                         class="action-btn own-publication-place-action"
                         :disabled="!publication"
-                        title="Places this same build again, at your current position. It adds a placement, not a copy: the build stays one Publication. To relocate an existing placement, use its Move… button above."
+                        :title="t('ownPublicationPanel.placesThisSameBuildAgain')"
                         @click="placeOwnPublication"
-                    >Add Placement Here</button>
+                    >{{ t('ownPublicationPanel.addPlacementHere') }}</button>
                     <!-- The host's own placement actions (World View's Move Placement). -->
                     <slot name="placement-actions"></slot>
                 </div>

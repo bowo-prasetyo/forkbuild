@@ -7,7 +7,7 @@ export const commentarySectionTemplate = `<div v-if="getPublicationCommentariesC
                         class="own-publication-commentary-toggle"
                         :aria-expanded="commentaryOpen ? 'true' : 'false'"
                         @click="commentaryOpen = !commentaryOpen"
-                    >{{ commentaryOpen ? '▾' : '▸' }} Commentary ({{ publicationCommentaries.length }})</button>
+                    >{{ commentaryOpen ? '▾' : '▸' }} {{ t('ownPublicationPanel.commentaryCount', { count: publicationCommentaries.length }) }}</button>
                 </h5>
 
                 <!--
@@ -24,7 +24,7 @@ export const commentarySectionTemplate = `<div v-if="getPublicationCommentariesC
                     @refreshed="refreshPublicationCommentaries"
                 />
 
-                <p v-if="!publicationCommentaries.length" class="own-publication-commentary-empty">No commentary yet.</p>
+                <p v-if="!publicationCommentaries.length" class="own-publication-commentary-empty">{{ t('ownPublicationPanel.noCommentaryYet') }}</p>
                 <ul v-else class="own-publication-commentary-list">
                     <li
                         v-for="commentary in publicationCommentaries"
@@ -37,7 +37,7 @@ export const commentarySectionTemplate = `<div v-if="getPublicationCommentariesC
                 </ul>
 
                 <p v-if="addPublicationCommentaryCommand && !viewerIdentityId" class="own-publication-commentary-signin-hint">
-                    Sign in to add commentary.
+                    {{ t('ownPublicationPanel.signInToAddCommentary') }}
                 </p>
                 <form
                     v-else-if="addPublicationCommentaryCommand"
@@ -48,13 +48,13 @@ export const commentarySectionTemplate = `<div v-if="getPublicationCommentariesC
                         v-model="newCommentaryText"
                         class="own-publication-commentary-input"
                         :disabled="!publication || publicationCommentarySubmitting"
-                        placeholder="Add a comment…"
+                        :placeholder="t('ownPublicationPanel.addAComment')"
                     ></textarea>
                     <button
                         type="submit"
                         class="action-btn own-publication-commentary-submit-action"
                         :disabled="!publication || !newCommentaryText.trim() || publicationCommentarySubmitting"
-                    >{{ publicationCommentarySubmitting ? 'Posting…' : 'Post Comment' }}</button>
+                    >{{ publicationCommentarySubmitting ? t('ownPublicationPanel.posting') : t('ownPublicationPanel.postComment') }}</button>
                 </form>
                 </div>
             </div>`;

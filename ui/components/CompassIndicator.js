@@ -26,6 +26,8 @@
 // label/distance lives in the plain-text legend WorldView.js renders
 // alongside the dial, this component's own `title` attribute carrying
 // the same text as an accessible/hover fallback.
+import { t } from '../i18n/i18n.js';
+import { compassText } from '../i18n/worldText.js';
 const MARKER_DIRECTION_DEGREES = {
     N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315
 };
@@ -56,6 +58,8 @@ export default {
         }
     },
     methods: {
+        t,
+        compassText,
         // Same rotate-then-push-outward positioning the needle already
         // uses, just anchored at the dial's own edge (--compass-radius,
         // sized per dial in css/main.css) instead of its center.
@@ -65,12 +69,12 @@ export default {
         }
     },
     template: `
-        <div class="compass-indicator" :class="{ 'compass-indicator--unknown': !heading }" aria-label="Compass">
+        <div class="compass-indicator" :class="{ 'compass-indicator--unknown': !heading }" :aria-label="t('compassIndicator.compass')">
             <div class="compass-indicator-dial">
-                <span class="compass-indicator-tick compass-indicator-tick--n">N</span>
-                <span class="compass-indicator-tick compass-indicator-tick--e">E</span>
-                <span class="compass-indicator-tick compass-indicator-tick--s">S</span>
-                <span class="compass-indicator-tick compass-indicator-tick--w">W</span>
+                <span class="compass-indicator-tick compass-indicator-tick--n">{{ compassText('N') }}</span>
+                <span class="compass-indicator-tick compass-indicator-tick--e">{{ compassText('E') }}</span>
+                <span class="compass-indicator-tick compass-indicator-tick--s">{{ compassText('S') }}</span>
+                <span class="compass-indicator-tick compass-indicator-tick--w">{{ compassText('W') }}</span>
                 <div class="compass-indicator-needle" :style="needleStyle"></div>
                 <span
                     v-for="marker in markers"
@@ -82,7 +86,7 @@ export default {
                 ></span>
             </div>
             <span class="compass-indicator-label">
-                {{ heading ? heading.label + ' · ' + Math.round(heading.degrees) + '°' : '—' }}
+                {{ heading ? t('compassIndicator.heading', { direction: compassText(heading.label), degrees: Math.round(heading.degrees) }) : '—' }}
             </span>
         </div>
     `

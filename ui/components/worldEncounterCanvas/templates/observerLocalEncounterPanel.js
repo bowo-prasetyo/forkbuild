@@ -7,7 +7,7 @@ export const observerLocalEncounterPanelTemplate = `<!--
                 World Encounter panel. Both can be open at once.
             -->
             <div v-if="selectedObserverLocalEncounter" class="world-encounter-inspection-panel world-encounter-observer-local-inspection-panel">
-                <h4 class="world-encounter-inspection-title">Discovered Publication</h4>
+                <h4 class="world-encounter-inspection-title">{{ t('worldEncounterCanvas.discoveredPublication') }}</h4>
 
                 <!-- Answers "is it temporary?" explicitly — see this
                      milestone's own product brief, item 3: "The UI can
@@ -15,34 +15,32 @@ export const observerLocalEncounterPanelTemplate = `<!--
                      session-scoped store without implying World
                      placement." -->
                 <p class="world-encounter-observer-local-inspection-note">
-                    This was discovered during your current World session. It has not been placed
-                    anywhere in the shared World, and will not be found here again after you leave
-                    or reload.
+                    {{ t('worldEncounterCanvas.thisWasDiscoveredDuringYour') }}
                 </p>
 
                 <dl class="world-encounter-inspection-detail">
-                    <dt>Publication</dt>
+                    <dt>{{ t('worldEncounterCanvas.publication') }}</dt>
                     <dd>{{ selectedObserverLocalEncounter.publicationId }}</dd>
-                    <dt>Content Hash</dt>
+                    <dt>{{ t('worldEncounterCanvas.contentHash') }}</dt>
                     <dd class="world-encounter-inspection-content-hash">{{ selectedObserverLocalEncounter.contentHash }}</dd>
                 </dl>
 
                 <!-- Same Material/Verification labels as the primary panel. -->
                 <template v-if="observerLocalEncounterInspection">
-                    <h4 class="world-encounter-material-title">Material</h4>
+                    <h4 class="world-encounter-material-title">{{ t('worldEncounterCanvas.material') }}</h4>
                     <dl class="world-encounter-material-detail">
-                        <dt>Status</dt>
+                        <dt>{{ t('worldEncounterCanvas.status') }}</dt>
                         <dd>{{ describeMaterialLoadStatusLabel(observerLocalEncounterInspection.loading.status) }}</dd>
                     </dl>
 
-                    <h4 class="world-encounter-verification-title">Verification</h4>
+                    <h4 class="world-encounter-verification-title">{{ t('worldEncounterCanvas.verification') }}</h4>
                     <dl class="world-encounter-verification-detail">
-                        <dt>Status</dt>
+                        <dt>{{ t('worldEncounterCanvas.status') }}</dt>
                         <dd>{{ describeMaterialVerificationStatusLabel(observerLocalEncounterInspection.verification.status) }}</dd>
                     </dl>
                 </template>
                 <p v-else class="world-encounter-inspection-unavailable">
-                    This publication's material could not be inspected.
+                    {{ t('worldEncounterCanvas.thisPublicationSMaterialCould') }}
                 </p>
 
                 <!--
@@ -51,25 +49,25 @@ export const observerLocalEncounterPanelTemplate = `<!--
                     Publication's title and plain verbs; ids stay in the detail list above.
                 -->
                 <div v-if="observerLocalEncounterActionablePublication" class="world-encounter-observer-local-actions">
-                    <h4 class="world-encounter-observer-local-actions-title">{{ observerLocalEncounterActionablePublication.title || 'This publication' }}</h4>
+                    <h4 class="world-encounter-observer-local-actions-title">{{ observerLocalEncounterActionablePublication.title || t('worldEncounterCanvas.thisPublication') }}</h4>
                     <button
                         v-if="openPublicationCommand"
                         type="button"
                         class="action-btn world-encounter-observer-local-open"
                         @click="openObserverLocalEncounterPublication"
-                    >Open</button>
+                    >{{ t('worldEncounterCanvas.open') }}</button>
                     <button
                         v-if="explorePublicationCommand"
                         type="button"
                         class="action-btn world-encounter-observer-local-explore"
                         @click="exploreObserverLocalEncounterPublication"
-                    >Explore</button>
+                    >{{ t('worldEncounterCanvas.explore') }}</button>
                     <button
                         v-if="forkPublicationCommand"
                         type="button"
                         class="action-btn world-encounter-observer-local-fork"
                         @click="forkObserverLocalEncounterPublication"
-                    >Fork</button>
+                    >{{ t('worldEncounterCanvas.fork') }}</button>
                 </div>
 
                 <!--
@@ -79,20 +77,20 @@ export const observerLocalEncounterPanelTemplate = `<!--
                     on material.
                 -->
                 <div v-if="observerLocalEncounterCommentaryPublicationId && getPublicationCommentariesCommand" class="world-encounter-observer-local-commentary-panel">
-                    <h4 class="world-encounter-observer-local-commentary-title">Commentary</h4>
+                    <h4 class="world-encounter-observer-local-commentary-title">{{ t('worldEncounterCanvas.commentary') }}</h4>
 
                     <button
                         type="button"
                         class="action-btn world-encounter-observer-local-commentary-toggle"
                         @click="toggleObserverLocalEncounterCommentary"
-                    >{{ observerLocalEncounterCommentaryOpen ? 'Hide Comments' : 'Comment' }}</button>
+                    >{{ observerLocalEncounterCommentaryOpen ? t('worldEncounterCanvas.hideComments') : t('worldEncounterCanvas.comment') }}</button>
 
                     <div v-if="observerLocalEncounterCommentaryOpen" class="world-encounter-observer-local-commentary-body">
                         <p v-if="observerLocalEncounterCommentaryError" class="world-encounter-observer-local-commentary-error">{{ observerLocalEncounterCommentaryError }}</p>
 
                         <PublicationCommentaryRemoteCheck :publication-id="observerLocalEncounterCommentaryPublicationId" @refreshed="refreshObserverLocalEncounterCommentaries" />
 
-                        <p v-if="!observerLocalEncounterCommentaries.length" class="world-encounter-observer-local-commentary-empty">No commentary yet.</p>
+                        <p v-if="!observerLocalEncounterCommentaries.length" class="world-encounter-observer-local-commentary-empty">{{ t('worldEncounterCanvas.noCommentaryYet') }}</p>
                         <ul v-else class="world-encounter-observer-local-commentary-list">
                             <li
                                 v-for="commentary in observerLocalEncounterCommentaries"
@@ -105,7 +103,7 @@ export const observerLocalEncounterPanelTemplate = `<!--
                         </ul>
 
                         <p v-if="addPublicationCommentaryCommand && !viewerIdentityId" class="world-encounter-observer-local-commentary-signin-hint">
-                            Sign in to add commentary.
+                            {{ t('worldEncounterCanvas.signInToAddCommentary') }}
                         </p>
                         <form
                             v-else-if="addPublicationCommentaryCommand"
@@ -116,13 +114,13 @@ export const observerLocalEncounterPanelTemplate = `<!--
                                 v-model="newObserverLocalEncounterCommentaryText"
                                 class="world-encounter-observer-local-commentary-input"
                                 :disabled="observerLocalEncounterCommentarySubmitting"
-                                placeholder="Add a comment…"
+                                :placeholder="t('worldEncounterCanvas.addAComment')"
                             ></textarea>
                             <button
                                 type="submit"
                                 class="action-btn world-encounter-observer-local-commentary-submit-action"
                                 :disabled="!newObserverLocalEncounterCommentaryText.trim() || observerLocalEncounterCommentarySubmitting"
-                            >{{ observerLocalEncounterCommentarySubmitting ? 'Posting…' : 'Post Comment' }}</button>
+                            >{{ observerLocalEncounterCommentarySubmitting ? t('worldEncounterCanvas.posting') : t('worldEncounterCanvas.postComment') }}</button>
                         </form>
                     </div>
                 </div>
@@ -131,5 +129,5 @@ export const observerLocalEncounterPanelTemplate = `<!--
                     type="button"
                     class="action-btn world-encounter-observer-local-inspection-close"
                     @click="dismissObserverLocalEncounterInspection"
-                >Close</button>
+                >{{ t('worldEncounterCanvas.close') }}</button>
             </div>`;

@@ -3,6 +3,7 @@ import { sanitizeDistributionErrorMessage } from '../../../application/publicati
 import { Publication } from '../../../publisher/Publication.js';
 import { resolveSnapshotPublicationAttribution } from '../../../application/snapshot/SnapshotPublicationAttribution.js';
 import { unregisterMaterializedSnapshotWorldSource } from '../../../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { t } from '../../i18n/i18n.js';
 
 // WorldEncounterCanvas methods: material inspection, repository admission and distribution.
 // Spread into the component's `methods`, so `this` is the component instance.
@@ -137,7 +138,7 @@ export const materialAndDistributionMethods = {
                 if (requestId === this.distributionRequestId) {
                     console.error('Publication distribution failed:', error);
                     this.distributionError = sanitizeDistributionErrorMessage(error)
-                        || 'Distribution could not be completed.';
+                        || t('failure.distributionCompleted');
                 }
             })
             .then(() => {
@@ -178,7 +179,7 @@ export const materialAndDistributionMethods = {
                 if (requestId === this.snapshotDistributionRequestId) {
                     console.error('Snapshot distribution failed:', error);
                     this.snapshotDistributionError = sanitizeDistributionErrorMessage(error)
-                        || 'Snapshot distribution could not be completed.';
+                        || t('failure.snapshotDistributionCompleted');
                 }
             })
             .then(() => {
@@ -231,7 +232,7 @@ export const materialAndDistributionMethods = {
                 if (requestId === this.snapshotDiscoveryRequestId) {
                     console.error('Snapshot discovery failed:', error);
                     this.snapshotDiscoveryError = sanitizeDistributionErrorMessage(error)
-                        || 'Snapshot discovery could not be completed.';
+                        || t('failure.snapshotDiscoveryCompleted');
                 }
             })
             .then(() => {

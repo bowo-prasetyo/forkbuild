@@ -12,6 +12,8 @@ import ResidentSpeechActions from '../ui/components/ResidentSpeechActions.js';
 import { CameraPerspective } from '../core/CameraPerspective.js';
 import { WorldViewPrimaryMode } from '../application/world/WorldViewNavigationState.js';
 import { assert } from './support/Assert.js';
+import { displayText, errorText, t } from '../ui/i18n/i18n.js';
+import { compassText, spatialContextDescription } from '../ui/i18n/worldText.js';
 
 // World View's left panel layout, rendered by real Vue in Chromium: the
 // Nearby section's groups and camera actions, Worlds in View shown only
@@ -32,6 +34,8 @@ function mount(component, { route = null } = {}) {
     const host = document.createElement('div');
     document.body.appendChild(host);
     const app = createApp(component);
+    // The World View templates' translation helpers, as WorldView's setup() exposes them.
+    Object.assign(app.config.globalProperties, { t, displayText, errorText, compassText, spatialContextDescription });
     if (route) {
         app.config.globalProperties.$route = route;
     }

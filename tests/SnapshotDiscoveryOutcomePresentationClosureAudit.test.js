@@ -13,6 +13,7 @@ import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles, ownPu
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
 import { stripHtmlComments } from './support/StripHtmlComments.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.590 — Snapshot Discovery Outcome Presentation Closure Audit.
 //
@@ -297,7 +298,7 @@ async function runTests() {
         assert(malformedCtx.snapshotCandidateDiscoveryOutcome === 'some-unexpected-value',
             '26. the panel stores whatever it is handed verbatim — it validates nothing itself');
 
-        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
+        const panelSource = withEnglish((await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n'));
         const templateStart = panelSource.indexOf('template: `');
         const template = panelSource.slice(templateStart);
         assert(/snapshotCandidateDiscoveryResult\.length === 0 && snapshotCandidateDiscoveryOutcome === 'unavailable'/.test(template),
@@ -344,7 +345,7 @@ async function runTests() {
 
         // The method body itself never references any downstream family's
         // own fields — a static, structural guarantee, not just this one run.
-        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
+        const panelSource = withEnglish((await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n'));
         const methodMatch = panelSource.match(/discoverSnapshotCandidates\(\) \{[\s\S]*?\n {4}\},?/);
         assert(methodMatch, '34. discoverSnapshotCandidates() method body is present and extractable');
         const methodBody = methodMatch[0];
@@ -405,7 +406,7 @@ async function runTests() {
         assert(!/corrupt|unreadable|deserialize/i.test(rendererSource),
             '43. renderer/WorldRenderer.js still asserts no reason for an absent Structure Document (I3b stays out of scope)');
 
-        const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
+        const worldEncounterCanvasSource = withEnglish((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'));
         assert(!/have been announced/i.test(worldEncounterCanvasSource),
             '44. WorldEncounterCanvas.js makes no equivalent "have been announced" claim');
 
@@ -415,7 +416,7 @@ async function runTests() {
         // carries its OWN separate, honest network-failure indicator
         // (placeNamingDiscoveryError) shown independently of the empty-list
         // copy. Reconfirmed live, not merely by memory of 0.9.589's audit.
-        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
+        const worldViewSource = withEnglish((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         assert(/No nearby place naming claims were discovered\./.test(worldViewSource),
             '45. WorldView.js\'s nearby-claims empty copy says "were discovered," not a flat existence claim');
         assert(/Place naming discovery is temporarily unavailable/.test(worldViewSource),
@@ -429,7 +430,7 @@ async function runTests() {
         // published a naming claim for this place yet" is an accurate
         // statement about local knowledge, the same category of honesty
         // this codebase already draws elsewhere — ruled out, not a match.
-        const placeNamingPanelSource = await readSource('ui/components/PlaceNamingPanel.js');
+        const placeNamingPanelSource = withEnglish(await readSource('ui/components/PlaceNamingPanel.js'));
         assert(/core\/PlaceNamingView\.js#namingView\(\)/.test(placeNamingPanelSource),
             '47. PlaceNamingPanel.js\'s namingView is documented as a local, pure view — not a network discovery result, ruled OUT as a match');
 

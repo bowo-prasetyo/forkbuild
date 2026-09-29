@@ -1,5 +1,5 @@
 import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../../application/avatar/AvatarPresenceLabels.js';
-import { t } from '../i18n/i18n.js';
+import { formatNumber, t } from '../i18n/i18n.js';
 import FollowButton from './FollowButton.js';
 
 // 0.2.39 — the World Entity Interaction & Selection design doc's own
@@ -61,6 +61,8 @@ export default {
     },
     emits: ['follow', 'stop-follow', 'interact'],
     methods: {
+        t,
+        formatNumber,
         lifecycleLabel(state) {
             return t(describeLifecycleState(state));
         },
@@ -85,19 +87,19 @@ export default {
             <h4>{{ info.displayName }}</h4>
 
             <div class="info-row">
-                <span class="info-label">Avatar</span>
+                <span class="info-label">{{ t('avatarInfoPanel.avatar') }}</span>
                 <span class="info-value">
-                    {{ info.templateLabel || 'Unknown' }}
-                    <span v-if="info.templatePlaceholder" class="avatar-info-placeholder-note">(placeholder — appearance not yet synchronized)</span>
+                    {{ info.templateLabel || t('avatarInfoPanel.unknown') }}
+                    <span v-if="info.templatePlaceholder" class="avatar-info-placeholder-note">{{ t('avatarInfoPanel.placeholderAppearanceNotYetSynchronized') }}</span>
                 </span>
             </div>
 
             <div class="info-row" v-if="info.isLocal">
-                <span class="info-label">Status</span>
-                <span class="info-value">This is you</span>
+                <span class="info-label">{{ t('avatarInfoPanel.status') }}</span>
+                <span class="info-value">{{ t('avatarInfoPanel.thisIsYou') }}</span>
             </div>
             <div class="info-row" v-else>
-                <span class="info-label">Status</span>
+                <span class="info-label">{{ t('avatarInfoPanel.status') }}</span>
                 <span class="info-value">
                     <span :class="['avatar-info-status-dot', statusDotClass(info)]"></span>
                     {{ lifecycleLabel(info.lifecycleState) }} · {{ trustLabel(info.trustStatus) }}
@@ -105,7 +107,7 @@ export default {
             </div>
 
             <div class="info-row">
-                <span class="info-label">Position</span>
+                <span class="info-label">{{ t('avatarInfoPanel.position') }}</span>
                 <span class="info-value">
                     X {{ info.position.x.toFixed(1) }}<br>
                     Y {{ info.position.y.toFixed(1) }}<br>
@@ -114,23 +116,23 @@ export default {
             </div>
 
             <div class="info-row" v-if="info.distance !== null">
-                <span class="info-label">Distance</span>
-                <span class="info-value">{{ info.distance.toFixed(1) }} World Units</span>
+                <span class="info-label">{{ t('avatarInfoPanel.distance') }}</span>
+                <span class="info-value">{{ t('units.worldUnits', { value: formatNumber(info.distance, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false }) }) }}</span>
             </div>
 
             <div class="info-row">
-                <span class="info-label">Animation</span>
+                <span class="info-label">{{ t('avatarInfoPanel.animation') }}</span>
                 <span class="info-value">{{ animationLabel(info.animation) }}</span>
             </div>
 
             <div class="info-actions" v-if="!info.isLocal">
-                <button v-if="!following" class="action-btn" @click="$emit('follow')">Follow Avatar</button>
-                <button v-else class="action-btn action-btn--primary" @click="$emit('stop-follow')">Stop Following Avatar</button>
-                <button class="action-btn" @click="$emit('interact', 'greet')">Greet</button>
-                <button class="action-btn" @click="$emit('interact', 'wave')">Wave</button>
-                <button class="action-btn" @click="$emit('interact', 'point')">Point</button>
+                <button v-if="!following" class="action-btn" @click="$emit('follow')">{{ t('avatarInfoPanel.followAvatar') }}</button>
+                <button v-else class="action-btn action-btn--primary" @click="$emit('stop-follow')">{{ t('avatarInfoPanel.stopFollowingAvatar') }}</button>
+                <button class="action-btn" @click="$emit('interact', 'greet')">{{ t('avatarInfoPanel.greet') }}</button>
+                <button class="action-btn" @click="$emit('interact', 'wave')">{{ t('avatarInfoPanel.wave') }}</button>
+                <button class="action-btn" @click="$emit('interact', 'point')">{{ t('avatarInfoPanel.point') }}</button>
                 <FollowButton v-if="info.signerIdentityId" :identity-id="info.signerIdentityId" :name="info.displayName || null"
-                              follow-label="Follow Their Work" following-label="Following Their Work ✓" />
+                              :follow-label="t('avatarInfoPanel.followWork')" :following-label="t('avatarInfoPanel.followingWork')" />
             </div>
         </div>
     `

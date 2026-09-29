@@ -2,14 +2,14 @@
 // landmarks, people, place names and encounters).
 // It renders in WorldView's scope, so it uses the names its setup() returns.
 export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode === WorldViewPrimaryMode.EXPLORE" class="world-view-section world-view-section--nearby">
-                <h4>Nearby</h4>
+                <h4>{{ t('worldView.nearby') }}</h4>
                 <!--
                     Browse by camera position (docs/Principles.md, "Exploring A Location Is Not
                     A Second Search").
                 -->
                 <div class="world-view-actions world-view-actions--explore">
-                    <button class="action-btn" @click="exploreHere">Explore Here</button>
-                    <button class="action-btn" @click="whatsHere">What's Here?</button>
+                    <button class="action-btn" @click="exploreHere">{{ t('worldView.exploreHere') }}</button>
+                    <button class="action-btn" @click="whatsHere">{{ t('worldView.whatSHere') }}</button>
                 </div>
                 <!--
                     Places, Landmarks and People show only when they have something; while all
@@ -19,55 +19,55 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                 <p
                     v-if="nearbyGeographicPlaces.length === 0 && nearbyLandmarkRows.length === 0 && nearbyPeopleRows.length === 0"
                     class="world-view-nearby-empty"
-                >No places, landmarks or people nearby yet.</p>
+                >{{ t('worldView.noPlacesLandmarksOrPeople') }}</p>
                 <CollapsibleSection
                     v-if="nearbyGeographicPlaces.length > 0"
-                    title="Places"
+                    :title="t('worldView.places')"
                     :count="nearbyGeographicPlaces.length"
                     :collapsed="nearbySectionsCollapsed.places"
                     @toggle="setNearbySectionCollapsed('places', NEARBY_PLACES_SECTION, $event)"
                 >
                     <div v-for="place in nearbyGeographicPlaces" :key="place.fingerprintKey" class="world-view-nearby-row">
                         <span class="world-view-nearby-row-label">⬢ {{ place.displayName }}</span>
-                        <span class="world-view-nearby-row-distance">{{ place.distance }}m {{ place.direction }}</span>
-                        <button class="action-btn world-view-nearby-row-go" @click="openFocusForGeographicPlace(place.fingerprintKey)">Info</button>
-                        <button class="action-btn world-view-nearby-row-go" @click="goToGeographicPlace(place.fingerprintKey)">Go</button>
+                        <span class="world-view-nearby-row-distance">{{ t('units.metersToward', { distance: place.distance, direction: compassText(place.direction) }) }}</span>
+                        <button class="action-btn world-view-nearby-row-go" @click="openFocusForGeographicPlace(place.fingerprintKey)">{{ t('worldView.info') }}</button>
+                        <button class="action-btn world-view-nearby-row-go" @click="goToGeographicPlace(place.fingerprintKey)">{{ t('worldView.go') }}</button>
                     </div>
                 </CollapsibleSection>
                 <CollapsibleSection
                     v-if="nearbyLandmarkRows.length > 0"
-                    title="Landmarks"
+                    :title="t('worldView.landmarks')"
                     :count="nearbyLandmarkRows.length"
                     :collapsed="nearbySectionsCollapsed.landmarks"
                     @toggle="setNearbySectionCollapsed('landmarks', NEARBY_LANDMARKS_SECTION, $event)"
                 >
                     <div v-for="landmark in nearbyLandmarkRows" :key="landmark.id" class="world-view-nearby-row">
                         <span class="world-view-nearby-row-label">★ {{ landmark.title }}</span>
-                        <span class="world-view-nearby-row-distance">{{ landmark.distance }}m {{ landmark.direction }}</span>
-                        <button class="action-btn world-view-nearby-row-go" @click="openFocusForLocation(landmark.id)">Info</button>
-                        <button class="action-btn world-view-nearby-row-go" @click="focusLocation(landmark.id)">Go</button>
+                        <span class="world-view-nearby-row-distance">{{ t('units.metersToward', { distance: landmark.distance, direction: compassText(landmark.direction) }) }}</span>
+                        <button class="action-btn world-view-nearby-row-go" @click="openFocusForLocation(landmark.id)">{{ t('worldView.info') }}</button>
+                        <button class="action-btn world-view-nearby-row-go" @click="focusLocation(landmark.id)">{{ t('worldView.go') }}</button>
                     </div>
                 </CollapsibleSection>
                 <CollapsibleSection
                     v-if="nearbyPeopleRows.length > 0"
-                    title="People"
+                    :title="t('worldView.people')"
                     :count="nearbyPeopleRows.length"
                     :collapsed="nearbySectionsCollapsed.people"
                     @toggle="setNearbySectionCollapsed('people', NEARBY_PEOPLE_SECTION, $event)"
                 >
                     <div v-for="person in nearbyPeopleRows" :key="person.identityId" class="world-view-nearby-row">
                         <span class="world-view-nearby-row-label">{{ person.displayName }}</span>
-                        <span class="world-view-nearby-row-distance">{{ person.distance }}m {{ person.direction }}</span>
+                        <span class="world-view-nearby-row-distance">{{ t('units.metersToward', { distance: person.distance, direction: compassText(person.direction) }) }}</span>
                         <button
                             v-if="person.deviceId"
                             class="action-btn world-view-nearby-row-go"
                             @click="openFocusForCollaborator(person.deviceId)"
-                        >Info</button>
+                        >{{ t('worldView.info') }}</button>
                         <button
                             v-if="person.deviceId"
                             class="action-btn world-view-nearby-row-go"
                             @click="followCollaborator(person.deviceId)"
-                        >Go</button>
+                        >{{ t('worldView.go') }}</button>
                     </div>
                 </CollapsibleSection>
                 <!--
@@ -75,15 +75,15 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                     has no name. The error never hides the last successful results.
                 -->
                 <CollapsibleSection
-                    title="Place Names"
+                    :title="t('worldView.placeNames')"
                     :count="nearbyPlaceNamingClaimRows.length"
                     :collapsed="nearbySectionsCollapsed.placeNaming"
                     @toggle="setNearbySectionCollapsed('placeNaming', NEARBY_PLACE_NAMING_SECTION, $event)"
                 >
                     <p v-if="placeNamingDiscoveryError" class="world-view-nearby-empty world-view-place-naming-error">
-                        Place naming discovery is temporarily unavailable — showing the last known claims, if any.
+                        {{ t('worldView.placeNamingDiscoveryIsTemporarily') }}
                     </p>
-                    <p v-if="nearbyPlaceNamingClaimRows.length === 0" class="world-view-nearby-empty">No nearby place naming claims were discovered.</p>
+                    <p v-if="nearbyPlaceNamingClaimRows.length === 0" class="world-view-nearby-empty">{{ t('worldView.noNearbyPlaceNamingClaims') }}</p>
                     <div
                         v-for="claim in nearbyPlaceNamingClaimRows"
                         :key="claim.claimId"
@@ -91,15 +91,15 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                         :title="claim.claimId"
                     >
                         <span class="world-view-nearby-row-label">✎ {{ claim.name }}</span>
-                        <span class="world-view-nearby-row-distance" v-if="claim.position">at ({{ Math.round(claim.position.x) }}, {{ Math.round(claim.position.z) }})</span>
-                        <span class="world-view-place-naming-author">claimed by {{ claim.authorDisplayName }}</span>
+                        <span class="world-view-nearby-row-distance" v-if="claim.position">{{ t('worldView.atPosition', { x: Math.round(claim.position.x), z: Math.round(claim.position.z) }) }}</span>
+                        <span class="world-view-place-naming-author">{{ t('worldView.claimedBy', { author: claim.authorDisplayName }) }}</span>
                         <!-- No signature/verification indicator here (see nearbyPlaceNamingClaimRows). -->
-                        <span v-if="claim.createdAtLabel" class="world-view-place-naming-created">Created: {{ claim.createdAtLabel }}</span>
+                        <span v-if="claim.createdAtLabel" class="world-view-place-naming-created">{{ t('worldView.created', { when: claim.createdAtLabel }) }}</span>
                         <!-- Navigate only moves the camera; it never adopts, verifies or renames. -->
                         <button
                             class="action-btn world-view-nearby-row-go"
                             @click="navigateToNearbyPlaceNamingClaim(claim)"
-                        >Navigate</button>
+                        >{{ t('worldView.navigate') }}</button>
                         <!--
                             Adopt is the only action that imports a claim, and only on this click. Once
                             saved, a passive "Already saved" line replaces the button ("saved", not
@@ -109,8 +109,8 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                             v-if="!claim.alreadySaved"
                             class="action-btn world-view-nearby-row-adopt"
                             @click="adoptNearbyPlaceNamingClaim(claim)"
-                        >Adopt</button>
-                        <span v-else class="world-view-nearby-row-status">✓ Already saved</span>
+                        >{{ t('worldView.adopt') }}</button>
+                        <span v-else class="world-view-nearby-row-status">{{ t('worldView.alreadySaved') }}</span>
                     </div>
                 </CollapsibleSection>
                 <!--
@@ -121,7 +121,7 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                 -->
                 <CollapsibleSection
                     v-if="claimedBuildRows.length > 0"
-                    title="Claimed Builds"
+                    :title="t('worldView.claimedBuilds')"
                     :count="claimedBuildRows.length"
                     :collapsed="nearbySectionsCollapsed.claimedBuilds"
                     @toggle="setNearbySectionCollapsed('claimedBuilds', NEARBY_CLAIMED_BUILDS_SECTION, $event)"
@@ -133,34 +133,34 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                         :title="build.publicationId"
                     >
                         <span class="world-view-nearby-row-label">◌ {{ build.title }}</span>
-                        <span class="world-view-nearby-row-distance">{{ build.distance }}m · at ({{ Math.round(build.position.x) }}, {{ Math.round(build.position.z) }})</span>
+                        <span class="world-view-nearby-row-distance">{{ t('worldView.distanceAt', { distance: build.distance, x: Math.round(build.position.x), z: Math.round(build.position.z) }) }}</span>
                         <span v-if="build.publisherKey" class="world-view-claimed-build-author">
-                            signed by {{ build.signedBy || 'an unnamed publisher' }} (key {{ build.publisherKey }}) · unverified position
+                            {{ t('worldView.signedByUnverified', { publisher: build.signedBy || t('worldView.anUnnamedPublisher'), key: build.publisherKey }) }}
                         </span>
-                        <span v-else class="world-view-claimed-build-author">claimed{{ build.author ? ' by ' + build.author : '' }} · unverified position</span>
+                        <span v-else class="world-view-claimed-build-author">{{ build.author ? t('worldView.claimedByUnverified', { author: build.author }) : t('worldView.claimedUnverified') }}</span>
                         <button
                             class="action-btn world-view-nearby-row-go"
                             @click="navigateToClaimedBuild(build)"
-                        >Navigate</button>
+                        >{{ t('worldView.navigate') }}</button>
                         <!-- Fetches and checks the signed Publication; never accepts by itself. -->
                         <button
                             v-if="build.canVerify"
                             class="action-btn world-view-claimed-build-verify"
                             :disabled="build.verifying"
-                            title="Fetch this build's signed Publication and check it matches what you see"
+                            :title="t('worldView.fetchThisBuildSSigned')"
                             @click="verifyClaimedBuild(build)"
-                        >{{ build.verifying ? 'Verifying…' : 'Verify' }}</button>
+                        >{{ build.verifying ? t('worldView.verifying') : t('worldView.verify') }}</button>
                         <button
                             class="action-btn world-view-claimed-build-accept"
                             :disabled="!build.acceptable"
                             :title="build.acceptanceHint"
                             @click="acceptClaimedBuild(build)"
-                        >Accept Position</button>
+                        >{{ t('worldView.acceptPosition') }}</button>
                         <button
                             class="action-btn world-view-claimed-build-hide"
-                            title="Hide this ghost for the rest of this visit"
+                            :title="t('worldView.hideThisGhostForThe')"
                             @click="dismissClaimedBuild(build)"
-                        >Hide</button>
+                        >{{ t('worldView.hide') }}</button>
                         <span v-if="build.verificationMessage" class="world-view-claimed-build-hint">{{ build.verificationMessage }}</span>
                         <span v-else-if="!build.acceptable" class="world-view-claimed-build-hint">{{ build.acceptanceHint }}</span>
                     </div>
@@ -171,7 +171,7 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                     behavior stays inside the canvas; this view constructs and decides nothing.
                 -->
                 <CollapsibleSection
-                    title="World Encounters"
+                    :title="t('worldView.worldEncounters')"
                     :collapsed="nearbySectionsCollapsed.worldEncounters"
                     @toggle="setNearbySectionCollapsed('worldEncounters', WORLD_ENCOUNTERS_SECTION, $event)"
                 >

@@ -2,6 +2,8 @@ import { distanceXZ } from './WorldSpatialAnchor.js';
 import { regionsContaining, describePlace } from './WorldRegionGeography.js';
 import { directionLabelBetween, deriveNearbyGeographicPlaces, DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS } from './GeographicPlaceNavigation.js';
 import { deriveEditorEntryContext } from './EditorEntryContext.js';
+import { message } from './Message.js';
+import { RegionKind } from './RegionKind.js';
 
 // 0.5.8 — World View Contextual Focus & Information Hierarchy.
 //
@@ -178,14 +180,17 @@ export class WorldFocusContext {
     // phrasing is ever upgraded into the other: a target sitting at a
     // geographic place's own representative center still reads "near,"
     // never "in," unless a real WorldRegion actually contains it.
+    //
+    // A message descriptor (core/Message.js), shown in the chosen language
+    // by the UI.
     get arrivalPhrase() {
         if (this._regionPath.length > 0) {
-            return `You are in ${this.placeName}`;
+            return message('worldFocus.arrival.inPlace', { place: this.placeName });
         }
         if (this._geographicPlace) {
-            return `You are near ${this._geographicPlace.displayName}`;
+            return message('worldFocus.arrival.nearPlace', { place: this._geographicPlace.displayName });
         }
-        return 'Unmarked ground — no named place claims this yet.';
+        return message('worldFocus.arrival.unmarked');
     }
 
     toJSON() {
@@ -217,20 +222,27 @@ function capitalize(word) {
     return word ? `${word.charAt(0).toUpperCase()}${word.slice(1)}` : '';
 }
 
-function formatActivity(activity) {
-    if (!activity) return '';
-    const activityMap = {
-        BUILDING: 'building nearby',
-        EDITING: 'editing nearby',
-        INSPECTING: 'inspecting nearby',
-        WALKING: 'exploring nearby',
-        IDLE: 'standing by'
-    };
-    return activityMap[activity] || activity.toLowerCase();
+// "Region · Village". A kind outside RegionKind (a newer client's) has no
+// message, so it is shown as it was stored.
+function regionSubtitle(kind) {
+    if (!kind) {
+        return message('worldFocus.kind.region');
+    }
+    const kindText = Object.values(RegionKind).includes(kind) ? message(`regionKind.${kind}`) : capitalize(kind);
+    return message('worldFocus.kind.regionOfKind', { kind: kindText });
 }
 
-function pluralize(count, noun) {
-    return `${count} ${noun}${count === 1 ? '' : 's'}`;
+const ACTIVITY_MESSAGES = {
+    BUILDING: 'worldFocus.activity.building',
+    EDITING: 'worldFocus.activity.editing',
+    INSPECTING: 'worldFocus.activity.inspecting',
+    WALKING: 'worldFocus.activity.walking',
+    IDLE: 'worldFocus.activity.idle'
+};
+
+function formatActivity(activity) {
+    if (!activity) return '';
+    return ACTIVITY_MESSAGES[activity] ? message(ACTIVITY_MESSAGES[activity]) : activity.toLowerCase();
 }
 
 // A short summary line for a geographic place candidate — the exact
@@ -239,11 +251,11 @@ function pluralize(count, noun) {
 // `description` reads the same "3 descriptions · 2 Worlds · 7
 // contributors" line regardless of which surface opened it.
 function formatGeographicPlaceSummary(place) {
-    return [
-        pluralize(place.descriptionCount || 0, 'description'),
-        pluralize(place.worldCount || 0, 'World'),
-        pluralize(place.authorCount || 0, 'contributor')
-    ].join(' · ');
+    return message('geographicPlace.summary', {
+        descriptions: message('geographicPlace.descriptions', { count: place.descriptionCount || 0 }),
+        worlds: message('geographicPlace.worlds', { count: place.worldCount || 0 }),
+        contributors: message('geographicPlace.contributors', { count: place.authorCount || 0 })
+    });
 }
 
 // The one place a WorldFocusContext is ever built. Pure: no session, no
@@ -335,7 +347,7 @@ export function deriveWorldFocusContext({
             return new WorldFocusContext({
                 kind,
                 title: entity.name,
-                subtitle: `Region${entity.kind ? ` · ${capitalize(entity.kind)}` : ''}`,
+                subtitle: regionSubtitle(entity.kind),
                 description: entity.description || '',
                 position, distance: roundedDistance, direction, regionPath, geographicPlace,
                 availableActions: [WorldFocusAction.GO, WorldFocusAction.MAP, WorldFocusAction.NAMES, WorldFocusAction.EDIT_COPY],
@@ -351,7 +363,7 @@ export function deriveWorldFocusContext({
             return new WorldFocusContext({
                 kind,
                 title: entity.title,
-                subtitle: 'Landmark',
+                subtitle: message('worldFocus.kind.landmark'),
                 description: entity.description || '',
                 position, distance: roundedDistance, direction, regionPath, geographicPlace,
                 availableActions: [WorldFocusAction.GO, WorldFocusAction.EDIT_COPY],
@@ -361,7 +373,7 @@ export function deriveWorldFocusContext({
             return new WorldFocusContext({
                 kind,
                 title: entity.title,
-                subtitle: 'Structure',
+                subtitle: message('worldFocus.kind.structure'),
                 description: '',
                 position, distance: roundedDistance, direction, regionPath, geographicPlace,
                 availableActions: [WorldFocusAction.GO, WorldFocusAction.EDIT_COPY],
@@ -376,8 +388,8 @@ export function deriveWorldFocusContext({
         case WorldFocusKind.COLLABORATOR:
             return new WorldFocusContext({
                 kind,
-                title: entity.displayName || 'Collaborator',
-                subtitle: 'Collaborator',
+                title: entity.displayName || message('worldFocus.kind.collaborator'),
+                subtitle: message('worldFocus.kind.collaborator'),
                 description: formatActivity(entity.activity),
                 position, distance: roundedDistance, direction, regionPath, geographicPlace,
                 availableActions: [WorldFocusAction.GO],
@@ -387,7 +399,7 @@ export function deriveWorldFocusContext({
             return new WorldFocusContext({
                 kind,
                 title: entity.displayName,
-                subtitle: 'Geographic Place',
+                subtitle: message('worldFocus.kind.geographicPlace'),
                 description: formatGeographicPlaceSummary(entity),
                 position, distance: roundedDistance, direction, regionPath, geographicPlace,
                 availableActions: [WorldFocusAction.GO, WorldFocusAction.MAP],

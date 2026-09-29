@@ -1,8 +1,9 @@
 import { ref } from 'vue';
 import { detectSpatialOverlap } from '../../../core/SpatialOverlap.js';
+import { formatNumber, t } from '../../i18n/i18n.js';
 
 function formatPosition(position) {
-    return `${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)}`;
+    return t('units.coordinates', { x: formatNumber(position.x, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false }), y: formatNumber(position.y, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false }), z: formatNumber(position.z, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false }) });
 }
 
 // The active World's own publication: the placement editor, unpublish/place,
@@ -69,14 +70,14 @@ export function useOwnPublicationActions({
             }
             placementOverlapWarning.value = null;
             if (check && !check.allowed) {
-                feedback.show('This position is not available.');
+                feedback.show(t('worldView.thisPositionIsNotAvailable'));
                 return;
             }
         }
 
         guarded(() => {
             applyMove(info, position);
-            feedback.show('Placement moved');
+            feedback.show(t('worldView.placementMoved'));
         });
         placementsRevision.value += 1;
         closePlacementEditor();
@@ -90,7 +91,7 @@ export function useOwnPublicationActions({
         if (!info) return;
         guarded(() => {
             session.removePlacement(info.documentId, info.placementId);
-            feedback.show('Placement removed from World');
+            feedback.show(t('worldView.placementRemovedFromWorld'));
         });
         placementsRevision.value += 1;
         refreshSpatialUI();
@@ -101,7 +102,7 @@ export function useOwnPublicationActions({
         if (!placement) return;
         guarded(() => {
             session.removePublicationPlacement(placement.publicationId, placement.placementId);
-            feedback.show('Placement removed from World');
+            feedback.show(t('worldView.placementRemovedFromWorld'));
         });
         placementsRevision.value += 1;
         refreshSpatialUI();
@@ -114,7 +115,7 @@ export function useOwnPublicationActions({
         guarded(() => {
             const removed = session.unpublishDocument(publication.documentId, publication.id);
             if (removed) {
-                feedback.show('Publication unpublished');
+                feedback.show(t('worldView.publicationUnpublished'));
             }
         });
         refreshSpatialUI();
@@ -130,12 +131,12 @@ export function useOwnPublicationActions({
             const position = session.getAvatarPosition() || session.getCameraPosition() || { x: 0, y: 0, z: 0 };
             const existing = session.getPlacementsForPublication(publication.id);
             if (!detectSpatialOverlap(position, existing).isEmpty) {
-                feedback.show('This build is already placed here. Move elsewhere to place it again, or use a placement\'s Move… to relocate it.');
+                feedback.show(t('worldView.thisBuildIsAlreadyPlaced'));
                 return;
             }
             session.placePublication(publication.id, position);
             const count = existing.length + 1;
-            feedback.show(`Placed at ${formatPosition(position)} (${count} ${count === 1 ? 'placement' : 'placements'} now)`);
+            feedback.show(t('worldView.placedAt', { position: formatPosition(position), count }));
         });
         placementsRevision.value += 1;
         refreshSpatialUI();

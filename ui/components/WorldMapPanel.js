@@ -8,6 +8,7 @@ import {
     MIN_MAP_SPAN,
     MAX_MAP_SPAN
 } from '../../core/WorldMapProjection.js';
+import { formatNumber, t } from '../i18n/i18n.js';
 
 // 0.5.1 — World Maps & Geographic Navigation.
 //
@@ -160,10 +161,13 @@ export default {
             return this.span < MAX_MAP_SPAN;
         },
         scaleLabel() {
-            return this.span >= 1000 ? `${(this.span / 1000).toFixed(1)}km across` : `${Math.round(this.span)}m across`;
+            return this.span >= 1000
+                ? t('worldMapPanel.kilometresAcross', { value: formatNumber(this.span / 1000, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false }) })
+                : t('worldMapPanel.metresAcross', { value: Math.round(this.span) });
         }
     },
     methods: {
+        t,
         initial(label) {
             return (label || '?').trim().charAt(0).toUpperCase() || '?';
         },
@@ -212,23 +216,22 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="World Map"
+            :aria-label="t('worldMapPanel.worldMap')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel world-map-panel">
-                <h3>World Map</h3>
+                <h3>{{ t('worldMapPanel.worldMap') }}</h3>
                 <p class="world-map-hint">
-                    Click a place or person to move your camera there. Click empty map space to pan; scroll or use +/- to zoom.
-                    Nothing here edits the World — this is only a view.
+                    {{ t('worldMapPanel.clickAPlaceOrPerson') }}
                 </p>
 
                 <div class="world-map-toolbar">
                     <button class="action-btn" @click="zoomOut" :disabled="!canZoomOut">−</button>
                     <span class="world-map-scale">{{ scaleLabel }}</span>
                     <button class="action-btn" @click="zoomIn" :disabled="!canZoomIn">+</button>
-                    <button class="action-btn" :disabled="!content.viewerPosition" @click="centerOnMe">Center On Me</button>
+                    <button class="action-btn" :disabled="!content.viewerPosition" @click="centerOnMe">{{ t('worldMapPanel.centerOnMe') }}</button>
                 </div>
 
                 <svg
@@ -300,16 +303,16 @@ export default {
                         :transform="'translate(' + viewerMarker.x + ',' + viewerMarker.y + ')'"
                     >
                         <text class="world-map-marker-glyph" text-anchor="middle" dy="4">▲</text>
-                        <text class="world-map-marker-label" text-anchor="middle" dy="16">You</text>
+                        <text class="world-map-marker-label" text-anchor="middle" dy="16">{{ t('worldMapPanel.you') }}</text>
                     </g>
                 </svg>
 
                 <p v-if="content.regions.length === 0 && content.landmarks.length === 0 && content.structures.length === 0" class="world-map-empty">
-                    Nothing named or built here yet — the map fills in as this World does.
+                    {{ t('worldMapPanel.nothingNamedOrBuiltHere') }}
                 </p>
 
                 <div class="modal-actions">
-                    <button class="action-btn" @click="$emit('cancel')">Close</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('worldMapPanel.close') }}</button>
                 </div>
             </div>
         </div>

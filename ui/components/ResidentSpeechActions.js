@@ -9,6 +9,7 @@
 // speech is current and the viewer is still beside the resident); clicking
 // emits 'focus' with the target's index, and the host calls
 // focusResidentMention(). Labels are plain text, drawn as text.
+import { t } from '../i18n/i18n.js';
 export default {
     name: 'ResidentSpeechActions',
     props: {
@@ -19,21 +20,22 @@ export default {
         }
     },
     emits: ['focus'],
+    methods: { t },
     template: `
         <div
             v-if="targets.length > 0"
             class="resident-speech-actions"
             role="group"
-            aria-label="Look at what the resident mentioned"
+            :aria-label="t('residentSpeechActions.lookAtWhatTheResident')"
         >
             <button
                 v-for="(target, index) in targets"
                 :key="index"
                 type="button"
                 class="action-btn resident-speech-actions-btn"
-                :title="'Move the camera to look at ' + target.label + ' (your avatar stays here)'"
+                :title="t('residentSpeechActions.focusHint', { target: target.label })"
                 @click="$emit('focus', index)"
-            >Focus: {{ target.label }}</button>
+            >{{ t('residentSpeechActions.focus', { target: target.label }) }}</button>
         </div>
     `
 };

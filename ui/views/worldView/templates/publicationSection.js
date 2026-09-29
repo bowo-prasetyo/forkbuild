@@ -38,5 +38,5 @@ export const publicationSectionTemplate = `<!--
                         class="action-btn"
                         :disabled="!activePlacementInfo.movable"
                         @click="openPlacementEditor(activePlacementInfo)"
-                    >Move Placement</button>
+                    >{{ t('worldView.movePlacement') }}</button>
                 </div>`;

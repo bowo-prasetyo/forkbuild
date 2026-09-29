@@ -2,6 +2,7 @@ import { applicationFiles } from './support/ApplicationFiles.js';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { worldViewFiles, ownPublicationPanelSource } from './support/SourceFileGroups.js';
+import { withEnglish } from './support/EnglishSource.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
 import { stripHtmlComments } from './support/StripHtmlComments.js';
@@ -96,7 +97,7 @@ async function runTests() {
     console.log('Running Diagnostic Tools Surface tests...\n');
 
     // Order checks span the template, so read the panel with it expanded.
-    const rawPanel = ownPublicationPanelSource();
+    const rawPanel = withEnglish(ownPublicationPanelSource());
     const codePanel = codeOnlyText(rawPanel);
 
     // ---------------------------------------------------------------

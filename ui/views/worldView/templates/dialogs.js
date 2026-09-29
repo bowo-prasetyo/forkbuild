@@ -11,7 +11,7 @@ export const dialogsTemplate = `<ActionFeedback :message="feedbackMessage" :visi
             <ResidentSpeechActions :targets="residentFocusTargets" @focus="focusResidentMention" />
             <!-- What a resident just said, for screen readers; the bubble over its head shows it. -->
             <div class="visually-hidden" aria-live="polite">
-                <template v-if="residentSpeech">A resident says: {{ residentSpeech.remarks.join(' ') }}</template>
+                <template v-if="residentSpeech">{{ t('worldView.residentSays', { remarks: residentSpeech.remarks.join(' ') }) }}</template>
             </div>
             <MetadataEditorDialog
                 v-if="showMetadataEditor"
@@ -162,11 +162,11 @@ export const dialogsTemplate = `<ActionFeedback :message="feedbackMessage" :visi
                 @revoke="revokeWorldMember"
                 @cancel="closeMembersPanel"
             />
-            <div v-if="showLobbyPanel && activeWorldLobby" role="dialog" aria-label="World Lobby" class="modal-overlay" @click.self="closeLobbyPanel">
+            <div v-if="showLobbyPanel && activeWorldLobby" role="dialog" :aria-label="t('worldView.worldLobby')" class="modal-overlay" @click.self="closeLobbyPanel">
                 <div class="modal-panel">
-                    <PublicLobbyPanel :lobby="activeWorldLobby" title="This World's Lobby" />
+                    <PublicLobbyPanel :lobby="activeWorldLobby" :title="t('worldView.thisWorldSLobby')" />
                     <div class="modal-actions">
-                        <button class="action-btn" @click="closeLobbyPanel">Close</button>
+                        <button class="action-btn" @click="closeLobbyPanel">{{ t('worldView.close') }}</button>
                     </div>
                 </div>
             </div>`;

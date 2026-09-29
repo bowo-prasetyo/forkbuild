@@ -16,6 +16,7 @@
 // session.createLandmarkHere(...) or session.updateLandmark(id, ...)
 // depending on which mode opened this dialog. Emits cancel with
 // nothing applied.
+import { t } from '../i18n/i18n.js';
 export default {
     name: 'LandmarkFormModal',
     props: {
@@ -38,6 +39,7 @@ export default {
         }
     },
     methods: {
+        t,
         onSave() {
             const trimmedTitle = this.title.trim();
             if (!trimmedTitle) {
@@ -55,47 +57,46 @@ export default {
     template: `
         <div
             role="dialog"
-            :aria-label="isEditing ? 'Edit landmark' : 'Add landmark'"
+            :aria-label="isEditing ? t('landmarkFormModal.editLandmark2') : t('landmarkFormModal.addLandmark2')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel landmark-form">
-                <h3>{{ isEditing ? 'Edit Landmark' : 'Add Landmark' }}</h3>
+                <h3>{{ isEditing ? t('landmarkFormModal.editLandmark') : t('landmarkFormModal.addLandmark') }}</h3>
                 <p v-if="!isEditing" class="form-hint form-hint--neutral">
-                    Placed at your avatar's current position — a named point
-                    other collaborators will see too.
+                    {{ t('landmarkFormModal.placedAtYourAvatarS') }}
                 </p>
 
                 <label class="form-field">
-                    <span class="form-label">Title</span>
+                    <span class="form-label">{{ t('landmarkFormModal.title') }}</span>
                     <input
                         v-model="title"
                         type="text"
                         class="form-input"
-                        placeholder="Old Bridge"
+                        :placeholder="t('landmarkFormModal.oldBridge')"
                         maxlength="200"
                         autofocus
                     />
                 </label>
 
                 <label class="form-field">
-                    <span class="form-label">Description</span>
+                    <span class="form-label">{{ t('landmarkFormModal.description') }}</span>
                     <textarea
                         v-model="description"
                         class="form-textarea"
                         rows="3"
-                        placeholder="Nice view of the river"
+                        :placeholder="t('landmarkFormModal.niceViewOfTheRiver')"
                     ></textarea>
                 </label>
 
                 <div class="modal-actions">
-                    <button class="action-btn" @click="$emit('cancel')">Cancel</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('landmarkFormModal.cancel') }}</button>
                     <button
                         class="action-btn action-btn--primary"
                         :disabled="!title.trim()"
                         @click="onSave"
-                    >{{ isEditing ? 'Save' : 'Place Here' }}</button>
+                    >{{ isEditing ? t('landmarkFormModal.save') : t('landmarkFormModal.placeHere') }}</button>
                 </div>
             </div>
         </div>

@@ -19,32 +19,32 @@ export const navigationHudSectionTemplate = `<!--
                 <div v-if="spatialContext && spatialContext.placeName" class="world-view-nav-context world-view-nav-context--place">
                     {{ spatialContext.placeName }}
                 </div>
-                <div v-if="spatialContext && spatialContext.description" class="world-view-nav-context">
-                    {{ spatialContext.description }}
+                <div v-if="spatialContext && spatialContextDescription(spatialContext)" class="world-view-nav-context">
+                    {{ spatialContextDescription(spatialContext) }}
                 </div>
                 <!-- Readable legend for the compass markers: the dial has no room for labels. -->
                 <div v-if="spatialContext && spatialContext.nearbyStructures && spatialContext.nearbyStructures.length > 0" class="world-view-nav-markers">
                     <div v-for="structure in spatialContext.nearbyStructures.slice(0, 3)" :key="structure.id" class="world-view-nav-marker">
-                        <span class="marker-direction">{{ structure.direction }}</span>
-                        <span class="marker-label">{{ structure.title }} ({{ structure.distance }}m)</span>
+                        <span class="marker-direction">{{ compassText(structure.direction) }}</span>
+                        <span class="marker-label">{{ structure.title }} ({{ t('units.meters', { distance: structure.distance }) }})</span>
                     </div>
                 </div>
                 <div v-if="spatialContext && spatialContext.nearbyCollaborators && spatialContext.nearbyCollaborators.length > 0" class="world-view-nav-markers">
                     <div v-for="collab in spatialContext.nearbyCollaborators.slice(0, 3)" :key="collab.identityId" class="world-view-nav-marker collaborator">
-                        <span class="marker-direction">{{ collab.direction }}</span>
-                        <span class="marker-label">{{ collab.displayName }} ({{ collab.distance }}m)</span>
+                        <span class="marker-direction">{{ compassText(collab.direction) }}</span>
+                        <span class="marker-label">{{ collab.displayName }} ({{ t('units.meters', { distance: collab.distance }) }})</span>
                     </div>
                 </div>
                 <div v-if="spatialContext && spatialContext.nearbyLandmarks && spatialContext.nearbyLandmarks.length > 0" class="world-view-nav-markers">
                     <div v-for="landmark in spatialContext.nearbyLandmarks.slice(0, 3)" :key="landmark.id" class="world-view-nav-marker landmark">
-                        <span class="marker-direction">{{ landmark.direction }}</span>
-                        <span class="marker-label">★ {{ landmark.title }} ({{ landmark.distance }}m)</span>
+                        <span class="marker-direction">{{ compassText(landmark.direction) }}</span>
+                        <span class="marker-label">★ {{ landmark.title }} ({{ t('units.meters', { distance: landmark.distance }) }})</span>
                     </div>
                 </div>
                 <div v-if="nearbyGeographicPlaces && nearbyGeographicPlaces.length > 0" class="world-view-nav-markers">
                     <div v-for="place in nearbyGeographicPlaces.slice(0, 3)" :key="place.fingerprintKey" class="world-view-nav-marker place">
-                        <span class="marker-direction">{{ place.direction }}</span>
-                        <span class="marker-label">⬢ {{ place.displayName }} ({{ place.distance }}m)</span>
+                        <span class="marker-direction">{{ compassText(place.direction) }}</span>
+                        <span class="marker-label">⬢ {{ place.displayName }} ({{ t('units.meters', { distance: place.distance }) }})</span>
                     </div>
                 </div>
             </div>`;

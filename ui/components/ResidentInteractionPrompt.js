@@ -8,6 +8,7 @@
 // { canAdd, canRemove, canTalk, refusal, targetResidentId }; this component decides
 // nothing. Sits above AnimalInteractionPrompt (whose two lines end below
 // 200px), so the two never overlap.
+import { t } from '../i18n/i18n.js';
 export default {
     name: 'ResidentInteractionPrompt',
     props: {
@@ -23,8 +24,8 @@ export default {
         label() {
             if (!this.state) return '';
             const parts = [];
-            if (this.state.canTalk) parts.push('[T] Talk');
-            if (this.state.canRemove) parts.push('[R] Remove Resident');
+            if (this.state.canTalk) parts.push(t('residentPrompt.talk'));
+            if (this.state.canRemove) parts.push(t('residentPrompt.remove'));
             return parts.join(' · ');
         }
     },

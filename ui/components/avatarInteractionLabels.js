@@ -3,25 +3,26 @@
 // the touch pad (TouchMovementPad), so both show the same actions under the
 // same conditions. Each function only formats a state the session already
 // resolved; none decides eligibility.
+import { t } from '../i18n/i18n.js';
 
 const VEHICLE_TYPE_LABEL = Object.freeze({
-    bicycle: 'Bicycle',
-    motorcycle: 'Motorcycle',
-    car: 'Car',
-    drone: 'Drone'
+    bicycle: 'vehicle.bicycle',
+    motorcycle: 'vehicle.motorcycle',
+    car: 'vehicle.car',
+    drone: 'vehicle.drone'
 });
 
 const ANIMAL_SPECIES_LABEL = Object.freeze({
-    DEER: 'Deer',
-    RABBIT: 'Rabbit'
+    DEER: 'animal.deer',
+    RABBIT: 'animal.rabbit'
 });
 
 export function vehicleTypeLabel(type) {
-    return VEHICLE_TYPE_LABEL[type] || 'Vehicle';
+    return t(VEHICLE_TYPE_LABEL[type] || 'vehicle.other');
 }
 
 export function animalSpeciesLabel(species) {
-    return ANIMAL_SPECIES_LABEL[species] || 'Animal';
+    return t(ANIMAL_SPECIES_LABEL[species] || 'animal.other');
 }
 
 // `state` is WorldNavigationSession#avatarStoreInteractionState():
@@ -60,11 +61,11 @@ export function describeAnimalDecorationAction(state) {
 // Why a World Resident can't be added where the avatar stands, keyed by
 // application/worldNavigation/residentMethods.js#RESIDENT_REFUSAL's values.
 const RESIDENT_REFUSAL_LABEL = Object.freeze({
-    'not-on-ground': 'Residents live on the ground: step down to add one.',
-    riding: 'Get off your vehicle to add a resident.',
-    water: 'Residents stay on dry land: move out of the water to add one.'
+    'not-on-ground': 'residentRefusal.notOnGround',
+    riding: 'residentRefusal.riding',
+    water: 'residentRefusal.water'
 });
 
 export function residentRefusalLabel(refusal) {
-    return RESIDENT_REFUSAL_LABEL[refusal] || '';
+    return RESIDENT_REFUSAL_LABEL[refusal] ? t(RESIDENT_REFUSAL_LABEL[refusal]) : '';
 }

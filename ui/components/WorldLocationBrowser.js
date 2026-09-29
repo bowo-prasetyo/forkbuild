@@ -1,5 +1,5 @@
 import { TrustStatus } from '../../core/TrustObservation.js';
-import { displayText } from '../i18n/i18n.js';
+import { displayText, formatNumber, t } from '../i18n/i18n.js';
 
 // 0.9.521 — Close Remaining Raw Status Rendering Boundaries.
 //
@@ -125,19 +125,24 @@ import { displayText } from '../i18n/i18n.js';
 // itself, exactly like every other label map in this codebase
 // (LOAD_STATUS_LABELS, STORAGE_TYPE_LABELS, ...) degrades an unknown key.
 const TRUST_OBSERVATION_LABELS = Object.freeze({
-    [TrustStatus.VALID]: 'Signature and authorization confirmed',
-    [TrustStatus.LEGACY_UNSIGNED]: 'No signature to check (recorded before signing)',
-    [TrustStatus.INVALID_SIGNATURE]: 'Signature does not match',
-    [TrustStatus.UNAUTHORIZED]: 'Signature valid, but signer not authorized',
-    [TrustStatus.STALE]: 'Superseded by a newer observation',
-    [TrustStatus.CONFLICTING]: 'Conflicts with another observation',
-    [TrustStatus.EQUIVOCATING]: 'Signer sent conflicting versions',
-    [TrustStatus.MISSING]: 'Not found in this discovery pass',
-    [TrustStatus.UNAVAILABLE]: 'Found but unreadable',
-    [TrustStatus.INTEGRITY_FAILURE]: 'Content hash does not match',
-    [TrustStatus.REPLAYED]: 'Already seen in an earlier observation',
-    [TrustStatus.BLOCKED]: 'From a signer this replica has blocked'
+    [TrustStatus.VALID]: 'worldLocationBrowser.trust.valid',
+    [TrustStatus.LEGACY_UNSIGNED]: 'worldLocationBrowser.trust.legacyUnsigned',
+    [TrustStatus.INVALID_SIGNATURE]: 'worldLocationBrowser.trust.invalidSignature',
+    [TrustStatus.UNAUTHORIZED]: 'worldLocationBrowser.trust.unauthorized',
+    [TrustStatus.STALE]: 'worldLocationBrowser.trust.stale',
+    [TrustStatus.CONFLICTING]: 'worldLocationBrowser.trust.conflicting',
+    [TrustStatus.EQUIVOCATING]: 'worldLocationBrowser.trust.equivocating',
+    [TrustStatus.MISSING]: 'worldLocationBrowser.trust.missing',
+    [TrustStatus.UNAVAILABLE]: 'worldLocationBrowser.trust.unavailable',
+    [TrustStatus.INTEGRITY_FAILURE]: 'worldLocationBrowser.trust.integrityFailure',
+    [TrustStatus.REPLAYED]: 'worldLocationBrowser.trust.replayed',
+    [TrustStatus.BLOCKED]: 'worldLocationBrowser.trust.blocked'
 });
+
+// One decimal, in the chosen language's number format.
+function round1(value) {
+    return formatNumber(Number(value) || 0, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false });
+}
 
 export default {
     name: 'WorldLocationBrowser',
@@ -198,16 +203,18 @@ export default {
     computed: {
         emptyMessage() {
             if (this.catalogEmpty) {
-                return 'No documents have been published yet.';
+                return t('worldLocationBrowser.catalogEmpty');
             }
             if (!this.center) {
-                return 'Nothing to explore yet.';
+                return t('worldLocationBrowser.nothingYet');
             }
             const c = this.center;
-            return `Nothing discoverable within ${this.radius} World Units of (${c.x.toFixed(1)}, ${c.y.toFixed(1)}, ${c.z.toFixed(1)}).`;
+            return t('worldLocationBrowser.nothingWithin', { radius: this.radius, x: round1(c.x), y: round1(c.y), z: round1(c.z) });
         }
     },
     methods: {
+        t,
+        round1,
         displayText,
         onExplore() {
             const radius = Number(this.radiusInput);
@@ -224,7 +231,7 @@ export default {
         // unrecognized status to the raw value itself, never a fabricated
         // label.
         describeInspectedTrustStatusLabel(status) {
-            return TRUST_OBSERVATION_LABELS[status] || status || null;
+            return TRUST_OBSERVATION_LABELS[status] ? t(TRUST_OBSERVATION_LABELS[status]) : (status || null);
         },
         onKeydown(event) {
             if (event.key === 'Escape') {
@@ -236,16 +243,16 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="Explore Location"
+            :aria-label="t('worldLocationBrowser.exploreLocation')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel world-location-browser">
-                <h3>Explore Location</h3>
+                <h3>{{ t('worldLocationBrowser.exploreLocation') }}</h3>
                 <p v-if="center" class="world-location-browser-context">
-                    📍 Center: {{ center.x.toFixed(1) }}, {{ center.y.toFixed(1) }}, {{ center.z.toFixed(1) }}<br>
-                    ⭕ Radius: {{ radius }} World Units
+                    {{ t('worldLocationBrowser.center', { x: round1(center.x), y: round1(center.y), z: round1(center.z) }) }}<br>
+                    {{ t('worldLocationBrowser.radius', { radius }) }}
                 </p>
 
                 <form class="world-location-browser-radius-form" @submit.prevent="onExplore">
@@ -255,9 +262,9 @@ export default {
                         step="1"
                         min="0"
                         class="form-input world-location-browser-radius-input"
-                        aria-label="Radius (World Units)"
+                        :aria-label="t('worldLocationBrowser.radiusWorldUnits')"
                     />
-                    <button type="submit" class="action-btn">Explore</button>
+                    <button type="submit" class="action-btn">{{ t('worldLocationBrowser.explore') }}</button>
                 </form>
 
                 <div
@@ -269,44 +276,44 @@ export default {
                     }"
                 >
                     <p v-if="diagnostics.fatal" class="world-location-browser-diagnostics-line">
-                        ⚠ Could not verify this region's spatial index ({{ diagnostics.fatal }}). Showing locally known documents only.
+                        {{ t('worldLocationBrowser.indexUnverified', { reason: diagnostics.fatal }) }}
                     </p>
                     <template v-else-if="diagnostics.available">
                         <p v-if="diagnostics.complete" class="world-location-browser-diagnostics-line">
-                            ✓ Discovery complete
+                            {{ t('worldLocationBrowser.discoveryComplete') }}
                         </p>
                         <p v-else v-for="w in diagnostics.warnings" :key="w.status" class="world-location-browser-diagnostics-line">
                             ⚠ {{ w.message }}
                         </p>
                     </template>
                     <p v-else class="world-location-browser-diagnostics-line world-location-browser-diagnostics-line--neutral">
-                        Discovery diagnostics unavailable — showing locally known documents only.
+                        {{ t('worldLocationBrowser.discoveryDiagnosticsUnavailableShowingLocally') }}
                     </p>
                 </div>
 
                 <p v-if="documents.length === 0" class="world-location-browser-empty">{{ emptyMessage }}</p>
                 <template v-else>
                     <p class="world-location-browser-count">
-                        Showing {{ documents.length }} of {{ documents.length }} discoverable documents
+                        {{ t('worldLocationBrowser.showing', { count: documents.length }) }}
                     </p>
                     <ul class="world-location-browser-list">
                         <li v-for="r in documents" :key="r.documentId" class="world-location-browser-item">
                             <div class="world-location-browser-item-row">
                                 <div class="world-location-browser-item-info">
                                     <span class="world-location-browser-item-title">📍 {{ r.title }}</span>
-                                    <span class="world-location-browser-item-author">by {{ r.author || 'anonymous' }}</span>
+                                    <span class="world-location-browser-item-author">{{ t('worldLocationBrowser.by', { author: r.author || t('worldLocationBrowser.anonymous') }) }}</span>
                                     <span v-if="r.distance !== null" class="world-location-browser-item-distance">
-                                        📏 {{ r.distance.toFixed(1) }} World Units away
+                                        {{ t('worldLocationBrowser.distance', { distance: round1(r.distance) }) }}
                                     </span>
                                     <span v-if="!r.hasPlacement" class="world-location-browser-item-note">
-                                        No placement recorded — using a default position
+                                        {{ t('worldLocationBrowser.noPlacementRecordedUsingA') }}
                                     </span>
                                 </div>
                                 <div class="world-location-browser-item-actions">
-                                    <button class="action-btn" @click="$emit('focus', r.documentId)">Focus</button>
-                                    <button class="action-btn" @click="$emit('select', r.documentId)">Select</button>
+                                    <button class="action-btn" @click="$emit('focus', r.documentId)">{{ t('worldLocationBrowser.focus') }}</button>
+                                    <button class="action-btn" @click="$emit('select', r.documentId)">{{ t('worldLocationBrowser.select') }}</button>
                                     <button class="action-btn" @click="onInspectClick(r.documentId)">
-                                        {{ isInspecting(r.documentId) ? 'Hide' : 'Inspect' }}
+                                        {{ isInspecting(r.documentId) ? t('worldLocationBrowser.hide') : t('worldLocationBrowser.inspect') }}
                                     </button>
                                 </div>
                             </div>
@@ -314,46 +321,42 @@ export default {
                             <div v-if="isInspecting(r.documentId)" class="world-location-browser-inspect">
                                 <template v-if="inspected.documentInfo">
                                     <div class="inspection-row">
-                                        <span class="inspection-label">Title</span>
+                                        <span class="inspection-label">{{ t('worldLocationBrowser.title') }}</span>
                                         <span class="inspection-value">{{ inspected.documentInfo.title }}</span>
                                     </div>
                                     <div class="inspection-row">
-                                        <span class="inspection-label">Author</span>
+                                        <span class="inspection-label">{{ t('worldLocationBrowser.author') }}</span>
                                         <span class="inspection-value">{{ inspected.documentInfo.author || 'anonymous' }}</span>
                                     </div>
                                     <div class="inspection-row">
-                                        <span class="inspection-label">Status</span>
+                                        <span class="inspection-label">{{ t('worldLocationBrowser.status') }}</span>
                                         <span class="inspection-value">{{ displayText(inspected.documentInfo.statusLabel) }}</span>
                                     </div>
                                     <div v-if="inspected.documentInfo.description" class="inspection-row">
-                                        <span class="inspection-label">Description</span>
+                                        <span class="inspection-label">{{ t('worldLocationBrowser.description') }}</span>
                                         <span class="inspection-value">{{ inspected.documentInfo.description }}</span>
                                     </div>
                                 </template>
                                 <p v-else class="world-location-browser-inspect-note">
-                                    Not currently loaded in this session — showing what this search already
-                                    knows: "{{ r.title }}" by {{ r.author || 'anonymous' }}.
+                                    {{ t('worldLocationBrowser.notLoaded', { title: r.title, author: r.author || t('worldLocationBrowser.anonymous') }) }}
                                 </p>
                                 <template v-if="inspected.placementInfo">
                                     <div class="inspection-row">
-                                        <span class="inspection-label">Position</span>
+                                        <span class="inspection-label">{{ t('worldLocationBrowser.position') }}</span>
                                         <span class="inspection-value">
-                                            {{ inspected.placementInfo.position.x.toFixed(1) }},
-                                            {{ inspected.placementInfo.position.y.toFixed(1) }},
-                                            {{ inspected.placementInfo.position.z.toFixed(1) }}
+                                            {{ t('worldLocationBrowser.coordinates', { x: round1(inspected.placementInfo.position.x), y: round1(inspected.placementInfo.position.y), z: round1(inspected.placementInfo.position.z) }) }}
                                         </span>
                                     </div>
                                     <div class="inspection-row">
-                                        <span class="inspection-label">Owner</span>
-                                        <span class="inspection-value">{{ inspected.placementInfo.owner || 'unrecorded' }}</span>
+                                        <span class="inspection-label">{{ t('worldLocationBrowser.owner') }}</span>
+                                        <span class="inspection-value">{{ inspected.placementInfo.owner || t('worldLocationBrowser.unrecorded') }}</span>
                                     </div>
                                 </template>
                                 <p v-else-if="r.position" class="world-location-browser-inspect-note">
-                                    Position shown above is
-                                    {{ r.hasPlacement ? 'from the recorded placement.' : 'a default fallback — no placement recorded.' }}
+                                    {{ t(r.hasPlacement ? 'worldLocationBrowser.positionRecorded' : 'worldLocationBrowser.positionFallback') }}
                                 </p>
                                 <div v-if="inspected.trust" class="inspection-row">
-                                    <span class="inspection-label">Discovery status</span>
+                                    <span class="inspection-label">{{ t('worldLocationBrowser.discoveryStatus') }}</span>
                                     <span class="inspection-value">{{ describeInspectedTrustStatusLabel(inspected.trust.status) }}</span>
                                 </div>
                                 <p v-if="inspected.trust && inspected.trust.reason" class="world-location-browser-inspect-note">
@@ -365,7 +368,7 @@ export default {
                 </template>
 
                 <div class="modal-actions">
-                    <button class="action-btn" @click="$emit('cancel')">Close</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('worldLocationBrowser.close') }}</button>
                 </div>
             </div>
         </div>

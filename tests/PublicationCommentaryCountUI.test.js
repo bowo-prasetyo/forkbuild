@@ -18,6 +18,8 @@ import { readFile } from 'node:fs/promises';
 import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { withEnglish } from './support/EnglishSource.js';
+import en from '../ui/i18n/messages/en.js';
 
 // 0.9.251 — Publication Commentary Count UI.
 //
@@ -94,7 +96,7 @@ function panelCtx(overrides = {}) {
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 async function codeOnlySource(relativePath) {
-    const text = await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
+    const text = withEnglish(await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8'));
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 
@@ -116,7 +118,7 @@ async function runTests() {
         assert(ctx.publicationCommentaries.length === 3, '1. three comments are persisted and loaded');
 
         const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
-        assert(panelCode.includes('Commentary ({{ publicationCommentaries.length }})'),
+        assert(panelCode.includes("t('ownPublicationPanel.commentaryCount', { count: publicationCommentaries.length })") && en['ownPublicationPanel.commentaryCount'] === 'Commentary ({count})',
             '2. the template renders the count as a direct interpolation of publicationCommentaries.length');
 
         console.log('✓ Section A: existing commentary produces the exact rendered count');

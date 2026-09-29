@@ -6,6 +6,7 @@ import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/P
 import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.257 — World View Place Naming Presentation.
 // See docs/Roadmap.md, "0.9.257 — World View Place Naming Presentation."
@@ -177,7 +178,7 @@ function freshRefs() {
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
 async function codeOnlySource(relativePath) {
-    const text = await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
+    const text = withEnglish(await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8'));
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 

@@ -2,46 +2,46 @@
 // actions and commentary.
 // It renders in WorldEncounterCanvas's scope, so it uses the component's props, data, computed properties and methods.
 export const encounterInspectionPanelTemplate = `<div v-if="selectedEncounter" class="world-encounter-inspection-panel">
-                <h4 class="world-encounter-inspection-title">World Encounter</h4>
+                <h4 class="world-encounter-inspection-title">{{ t('worldEncounterCanvas.worldEncounter') }}</h4>
 
                 <dl v-if="selectedEncounterInspection && selectedEncounterInspection.kind === 'PUBLICATION'" class="world-encounter-inspection-detail">
-                    <dt>Kind</dt>
-                    <dd>Publication</dd>
-                    <dt>Source</dt>
+                    <dt>{{ t('worldEncounterCanvas.kind') }}</dt>
+                    <dd>{{ t('worldEncounterCanvas.publication') }}</dd>
+                    <dt>{{ t('worldEncounterCanvas.source') }}</dt>
                     <dd class="world-encounter-inspection-source" :class="'world-encounter-inspection-source--' + selectedEncounterPresentationSourceLabel.toLowerCase()">{{ selectedEncounterPresentationSourceLabel }}</dd>
-                    <dt>Title</dt>
+                    <dt>{{ t('worldEncounterCanvas.title') }}</dt>
                     <dd>{{ selectedEncounterInspection.title }}</dd>
-                    <dt>Publisher</dt>
+                    <dt>{{ t('worldEncounterCanvas.publisher') }}</dt>
                     <dd>{{ selectedEncounterInspectionPublisherIdentityLabel }}</dd>
-                    <dt>Signed</dt>
-                    <dd>{{ selectedEncounterInspection.isSigned ? 'Yes' : 'No' }}</dd>
-                    <dt>Position</dt>
+                    <dt>{{ t('worldEncounterCanvas.signed') }}</dt>
+                    <dd>{{ selectedEncounterInspection.isSigned ? t('worldEncounterCanvas.yes') : t('worldEncounterCanvas.no') }}</dd>
+                    <dt>{{ t('worldEncounterCanvas.position') }}</dt>
                     <dd>{{ selectedEncounterInspection.x }}, {{ selectedEncounterInspection.y }}, {{ selectedEncounterInspection.z }}</dd>
-                    <dt>Anchors</dt>
+                    <dt>{{ t('worldEncounterCanvas.anchors') }}</dt>
                     <dd>{{ selectedEncounterInspection.anchorCount }}</dd>
-                    <dt>Placements</dt>
+                    <dt>{{ t('worldEncounterCanvas.placements') }}</dt>
                     <dd>{{ selectedEncounterInspection.placementCount }}</dd>
                     <template v-if="selectedEncounterSnapshotInspection">
-                        <dt>Content Hash</dt>
-                        <dd class="world-encounter-inspection-content-hash">{{ selectedEncounterSnapshotInspection.contentHash || 'Unknown' }}</dd>
+                        <dt>{{ t('worldEncounterCanvas.contentHash') }}</dt>
+                        <dd class="world-encounter-inspection-content-hash">{{ selectedEncounterSnapshotInspection.contentHash || t('worldEncounterCanvas.unknown') }}</dd>
                     </template>
                 </dl>
 
                 <dl v-else-if="selectedEncounterInspection && selectedEncounterInspection.kind === 'AVATAR'" class="world-encounter-inspection-detail">
-                    <dt>Kind</dt>
-                    <dd>Avatar</dd>
-                    <dt>Source</dt>
+                    <dt>{{ t('worldEncounterCanvas.kind') }}</dt>
+                    <dd>{{ t('worldEncounterCanvas.avatar') }}</dd>
+                    <dt>{{ t('worldEncounterCanvas.source') }}</dt>
                     <dd class="world-encounter-inspection-source" :class="'world-encounter-inspection-source--' + selectedEncounterPresentationSourceLabel.toLowerCase()">{{ selectedEncounterPresentationSourceLabel }}</dd>
-                    <dt>Name</dt>
+                    <dt>{{ t('worldEncounterCanvas.name') }}</dt>
                     <dd>{{ selectedEncounterInspection.displayName }}</dd>
-                    <dt>Owner</dt>
+                    <dt>{{ t('worldEncounterCanvas.owner') }}</dt>
                     <dd>{{ selectedEncounterInspection.ownerIdentity }}</dd>
-                    <dt>Position</dt>
+                    <dt>{{ t('worldEncounterCanvas.position') }}</dt>
                     <dd>{{ selectedEncounterInspection.x }}, {{ selectedEncounterInspection.y }}, {{ selectedEncounterInspection.z }}</dd>
                 </dl>
 
                 <p v-else class="world-encounter-inspection-unavailable">
-                    This encounter is no longer part of the World.
+                    {{ t('worldEncounterCanvas.thisEncounterIsNoLonger') }}
                 </p>
 
                 <div v-if="selectedEncounterSnapshotInspection" class="world-encounter-inspection-actions">
@@ -49,25 +49,25 @@ export const encounterInspectionPanelTemplate = `<div v-if="selectedEncounter" c
                         type="button"
                         class="world-encounter-unregister-snapshot"
                         @click="unregisterSelectedSnapshot"
-                    >Remove Snapshot from World</button>
+                    >{{ t('worldEncounterCanvas.removeSnapshotFromWorld') }}</button>
                 </div>
 
                 <!-- Commentary for a live PUBLICATION selection. Not gated on ownership. -->
                 <div v-if="encounterCommentaryPublicationId && getPublicationCommentariesCommand" class="world-encounter-commentary-panel">
-                    <h4 class="world-encounter-commentary-title">Commentary</h4>
+                    <h4 class="world-encounter-commentary-title">{{ t('worldEncounterCanvas.commentary') }}</h4>
 
                     <button
                         type="button"
                         class="action-btn world-encounter-commentary-toggle"
                         @click="toggleEncounterCommentary"
-                    >{{ encounterCommentaryOpen ? 'Hide Comments' : 'Comment' }}</button>
+                    >{{ encounterCommentaryOpen ? t('worldEncounterCanvas.hideComments') : t('worldEncounterCanvas.comment') }}</button>
 
                     <div v-if="encounterCommentaryOpen" class="world-encounter-commentary-body">
                         <p v-if="encounterCommentaryError" class="world-encounter-commentary-error">{{ encounterCommentaryError }}</p>
 
                         <PublicationCommentaryRemoteCheck :publication-id="encounterCommentaryPublicationId" @refreshed="refreshEncounterCommentaries" />
 
-                        <p v-if="!encounterCommentaries.length" class="world-encounter-commentary-empty">No commentary yet.</p>
+                        <p v-if="!encounterCommentaries.length" class="world-encounter-commentary-empty">{{ t('worldEncounterCanvas.noCommentaryYet') }}</p>
                         <ul v-else class="world-encounter-commentary-list">
                             <li
                                 v-for="commentary in encounterCommentaries"
@@ -80,7 +80,7 @@ export const encounterInspectionPanelTemplate = `<div v-if="selectedEncounter" c
                         </ul>
 
                         <p v-if="addPublicationCommentaryCommand && !viewerIdentityId" class="world-encounter-commentary-signin-hint">
-                            Sign in to add commentary.
+                            {{ t('worldEncounterCanvas.signInToAddCommentary') }}
                         </p>
                         <form
                             v-else-if="addPublicationCommentaryCommand"
@@ -91,13 +91,13 @@ export const encounterInspectionPanelTemplate = `<div v-if="selectedEncounter" c
                                 v-model="newEncounterCommentaryText"
                                 class="world-encounter-commentary-input"
                                 :disabled="encounterCommentarySubmitting"
-                                placeholder="Add a comment…"
+                                :placeholder="t('worldEncounterCanvas.addAComment')"
                             ></textarea>
                             <button
                                 type="submit"
                                 class="action-btn world-encounter-commentary-submit-action"
                                 :disabled="!newEncounterCommentaryText.trim() || encounterCommentarySubmitting"
-                            >{{ encounterCommentarySubmitting ? 'Posting…' : 'Post Comment' }}</button>
+                            >{{ encounterCommentarySubmitting ? t('worldEncounterCanvas.posting') : t('worldEncounterCanvas.postComment') }}</button>
                         </form>
                     </div>
                 </div>

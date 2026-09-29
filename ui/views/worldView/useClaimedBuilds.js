@@ -8,23 +8,24 @@ import {
 } from '../../../application/snapshot/claimed/ClaimedBuilds.js';
 import { ClaimedBuildVerificationOutcome } from '../../../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
 import { PublisherPlacementAdoption } from '../../../application/placement/AdoptPublisherPlacementUseCase.js';
+import { t } from '../../i18n/i18n.js';
 
 // refreshSpatialUI() runs as the camera moves; the ghost set changes far less
 // often, so an unforced reconcile runs at most this often.
 const RECONCILE_INTERVAL_MS = 1000;
 
 const ACCEPTANCE_HINTS = Object.freeze({
-    [ClaimedBuildAcceptance.ACCEPTABLE]: 'Places this build at the claimed position, with a placement signed by you.',
-    [ClaimedBuildAcceptance.PUBLICATION_UNKNOWN]: 'Its publisher\'s signed Publication isn\'t on this device yet. Verify fetches it from the network; it also arrives when they share it with you, or from a connected peer in World Encounters.',
-    [ClaimedBuildAcceptance.CONTENT_MISMATCH]: 'The verified Publication names different content than this ghost shows, so accepting it could place something else.',
-    [ClaimedBuildAcceptance.PUBLISHER_ONLY]: 'Its publisher allows only their own placements of this build, so you can\'t place it.'
+    [ClaimedBuildAcceptance.ACCEPTABLE]: 'claimedBuild.acceptable',
+    [ClaimedBuildAcceptance.PUBLICATION_UNKNOWN]: 'claimedBuild.publicationUnknown',
+    [ClaimedBuildAcceptance.CONTENT_MISMATCH]: 'claimedBuild.contentMismatch',
+    [ClaimedBuildAcceptance.PUBLISHER_ONLY]: 'claimedBuild.publisherOnly'
 });
 
 const VERIFICATION_MESSAGES = Object.freeze({
-    [ClaimedBuildVerificationOutcome.NOT_FOUND]: 'No announcement of this build\'s signed Publication was found. Its publisher may have distributed only the Snapshot.',
-    [ClaimedBuildVerificationOutcome.UNVERIFIED]: 'Its Publication was found, but no copy was validly signed for this build.',
-    [ClaimedBuildVerificationOutcome.CONTENT_MISMATCH]: 'Its signed Publication names different content than this ghost shows, so it can\'t be accepted.',
-    failed: 'Verification could not be completed. Try again later.'
+    [ClaimedBuildVerificationOutcome.NOT_FOUND]: 'claimedBuild.notFound',
+    [ClaimedBuildVerificationOutcome.UNVERIFIED]: 'claimedBuild.unverified',
+    [ClaimedBuildVerificationOutcome.CONTENT_MISMATCH]: 'claimedBuild.verifiedMismatch',
+    failed: 'claimedBuild.verificationFailed'
 });
 
 // "did:key:z6MkhaXgBZDv…a1b2c3": enough to recognise a key again, short
@@ -135,7 +136,7 @@ export function useClaimedBuilds({
                 contents.set(claim.key, {
                     status: 'ready',
                     world: document.world,
-                    title: document.metadata.title || 'Untitled',
+                    title: document.metadata.title || t('worldView.untitled'),
                     author: document.metadata.author || null
                 });
             })
@@ -213,7 +214,7 @@ export function useClaimedBuilds({
                 author: content.author,
                 distance: Math.round(distanceBetween(claim.position, viewerPosition)),
                 acceptable: acceptance === ClaimedBuildAcceptance.ACCEPTABLE,
-                acceptanceHint: ACCEPTANCE_HINTS[acceptance],
+                acceptanceHint: ACCEPTANCE_HINTS[acceptance] ? t(ACCEPTANCE_HINTS[acceptance]) : undefined,
                 // Once verified: who signed it, as the key itself. The name is
                 // the publisher's own label; the key is what was checked.
                 signedBy: publication ? (publication.author || null) : null,
@@ -246,14 +247,14 @@ export function useClaimedBuilds({
             .then((outcome) => {
                 verifications.set(row.key, {
                     verifying: false,
-                    message: outcome === ClaimedBuildVerificationOutcome.VERIFIED ? null : VERIFICATION_MESSAGES[outcome] || VERIFICATION_MESSAGES.failed
+                    message: outcome === ClaimedBuildVerificationOutcome.VERIFIED ? null : t(VERIFICATION_MESSAGES[outcome] || VERIFICATION_MESSAGES.failed)
                 });
                 if (outcome === ClaimedBuildVerificationOutcome.VERIFIED) {
                     const hasPublisherPlacement = Array.from(pendingPlacements.values())
                         .some((record) => record.publicationId === row.publicationId);
                     feedback.show(hasPublisherPlacement
-                        ? `Verified "${row.title}" — showing it where its publisher placed it`
-                        : `Verified "${row.title}" — you can now accept its position`);
+                        ? t('claimedBuild.verifiedShown', { title: row.title })
+                        : t('claimedBuild.verifiedAcceptable', { title: row.title }));
                 }
                 if (active) {
                     reconcileClaimedBuilds({ force: true });
@@ -281,13 +282,13 @@ export function useClaimedBuilds({
         }
         const acceptance = describeClaimedBuildAcceptance(claim, findPublicationById, isPlacementPermitted);
         if (acceptance !== ClaimedBuildAcceptance.ACCEPTABLE) {
-            feedback.show(ACCEPTANCE_HINTS[acceptance]);
+            feedback.show(ACCEPTANCE_HINTS[acceptance] ? t(ACCEPTANCE_HINTS[acceptance]) : '');
             reconcileClaimedBuilds({ force: true });
             return;
         }
         guarded(() => {
             session.placePublication(claim.publicationId, { ...claim.position });
-            feedback.show(`Accepted "${row.title}" at its claimed position`);
+            feedback.show(t('claimedBuild.accepted', { title: row.title }));
         });
         reconcileClaimedBuilds({ force: true });
         refreshSpatialUI();

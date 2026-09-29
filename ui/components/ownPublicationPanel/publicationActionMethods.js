@@ -1,5 +1,6 @@
 import { resolveSnapshotPublicationAttribution } from '../../../application/snapshot/SnapshotPublicationAttribution.js';
 import { sanitizeDistributionErrorMessage } from '../../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
+import { t } from '../../i18n/i18n.js';
 
 // The Nostr path resolves an array (one per relay) and Arweave a single
 // result; normalize to an array, as EditorView does.
@@ -89,7 +90,7 @@ export const publicationActionMethods = {
                 if (requestId === this.snapshotDistributionRequestId) {
                     console.error('Snapshot distribution failed:', error);
                     this.snapshotDistributionError = sanitizeDistributionErrorMessage(error)
-                        || 'Snapshot distribution could not be completed.';
+                        || t('failure.snapshotDistributionCompleted');
                 }
             })
             .then(() => {
@@ -125,7 +126,7 @@ export const publicationActionMethods = {
                 if (requestId === this.publicationDistributionRequestId) {
                     console.error('Publication distribution failed:', error);
                     this.publicationDistributionError = sanitizeDistributionErrorMessage(error)
-                        || 'Publication distribution could not be completed.';
+                        || t('failure.publicationDistributionCompleted');
                 }
             })
             .then(() => {
@@ -165,7 +166,7 @@ export const publicationActionMethods = {
                 if (requestId === this.snapshotDiscoveryRequestId) {
                     console.error('Snapshot discovery failed:', error);
                     this.snapshotDiscoveryError = sanitizeDistributionErrorMessage(error)
-                        || 'Snapshot discovery could not be completed.';
+                        || t('failure.snapshotDiscoveryCompleted');
                 }
             })
             .then(() => {
@@ -196,7 +197,7 @@ export const publicationActionMethods = {
                 if (requestId === this.snapshotExportRequestId) {
                     console.error('Snapshot export failed:', error);
                     this.snapshotExportError = sanitizeDistributionErrorMessage(error)
-                        || 'Snapshot export could not be completed.';
+                        || t('failure.snapshotExportCompleted');
                 }
             })
             .then(() => {

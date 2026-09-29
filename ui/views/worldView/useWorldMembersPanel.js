@@ -1,3 +1,4 @@
+import { t } from '../../i18n/i18n.js';
 
 
 // The World Members panel: open/close, and granting or revoking a member.
@@ -25,7 +26,7 @@ export function useWorldMembersPanel({
         collaborationPendingIdentityId.value = identityId;
         try {
             session.grantWorldEdit(documentId, identityId);
-            feedback.show('Grant propagated — now an Editor');
+            feedback.show(t('worldView.grantPropagatedNowAnEditor'));
         } catch (err) {
             feedback.show(err.message);
         } finally {
@@ -42,7 +43,7 @@ export function useWorldMembersPanel({
         collaborationPendingIdentityId.value = identityId;
         try {
             session.revokeWorldEdit(documentId, identityId);
-            feedback.show('Revocation propagated — now Read only');
+            feedback.show(t('worldView.revocationPropagatedNowReadOnly'));
         } catch (err) {
             feedback.show(err.message);
         } finally {

@@ -27,6 +27,7 @@
 // on this same id immediately before Preview/Restore actually run, so a
 // selection made before an intervening edit changed the history can never
 // silently act on whatever now happens to sit at the old index.
+import { t } from '../i18n/i18n.js';
 export default {
     name: 'HistoryTimelinePanel',
     props: {
@@ -72,6 +73,7 @@ export default {
         }
     },
     methods: {
+        t,
         formatTimestamp(timestamp) {
             const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
             return Number.isNaN(date.getTime()) ? '' : date.toLocaleString();
@@ -86,22 +88,19 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="History"
+            :aria-label="t('historyTimelinePanel.history')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel history-timeline-panel">
-                <h3>History</h3>
+                <h3>{{ t('historyTimelinePanel.history') }}</h3>
                 <p class="locations-panel-hint">
-                    Read-only until you choose Preview or Restore below — selecting an
-                    entry never changes the document by itself. Preview reconstructs a
-                    past state alongside the live one without touching it; Restore
-                    rebases the live document onto that state and leaves it dirty.
+                    {{ t('historyTimelinePanel.readOnlyUntilYouChoose') }}
                 </p>
 
                 <p v-if="timeline.length === 0" class="locations-panel-empty">
-                    No history yet — make an edit to this document to see it here.
+                    {{ t('historyTimelinePanel.noHistoryYetMakeAn') }}
                 </p>
 
                 <ul v-else class="locations-panel-list history-timeline-list">
@@ -118,7 +117,7 @@ export default {
                         <div class="locations-panel-item-info">
                             <span class="locations-panel-item-title">{{ entry.index + 1 }}. {{ entry.description }}</span>
                             <span class="locations-panel-item-position">
-                                {{ formatTimestamp(entry.timestamp) }}<template v-if="!entry.applied"> · undone</template><template v-if="entry.index + 1 === previewCursor"> · previewing</template>
+                                {{ formatTimestamp(entry.timestamp) }}<template v-if="!entry.applied"> {{ t('historyTimelinePanel.undone') }}</template><template v-if="entry.index + 1 === previewCursor"> {{ t('historyTimelinePanel.previewing') }}</template>
                             </span>
                         </div>
                     </li>
@@ -129,18 +128,18 @@ export default {
                         class="action-btn"
                         :disabled="!selectedEntryId"
                         @click="$emit('preview', selectedEntryId)"
-                    >Preview</button>
+                    >{{ t('historyTimelinePanel.preview') }}</button>
                     <button
                         v-if="isPreviewing"
                         class="action-btn"
                         @click="$emit('cancel-preview')"
-                    >Cancel Preview</button>
+                    >{{ t('historyTimelinePanel.cancelPreview') }}</button>
                     <button
                         class="action-btn action-btn--primary"
                         :disabled="!selectedEntryId"
                         @click="$emit('restore', selectedEntryId)"
-                    >Restore</button>
-                    <button class="action-btn" @click="$emit('cancel')">Close</button>
+                    >{{ t('historyTimelinePanel.restore') }}</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('historyTimelinePanel.close') }}</button>
                 </div>
             </div>
         </div>

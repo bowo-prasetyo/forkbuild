@@ -1,5 +1,6 @@
 import { formatRelativeVisit } from '../../utils/formatRelativeVisit.js';
-import { displayText } from '../i18n/i18n.js';
+import { displayText, t } from '../i18n/i18n.js';
+import { compassText } from '../i18n/worldText.js';
 
 // 0.3.9 — World Welcome & Guided Exploration.
 //
@@ -77,10 +78,10 @@ export default {
         // Not Become World Content (0.5.6)."
         arrivalNote() {
             if (this.context && this.context.placeName) {
-                return `You are in ${this.context.placeName}`;
+                return t('worldWelcomePanel.youAreIn', { place: this.context.placeName });
             }
             if (this.context && this.context.primaryGeographicPlace) {
-                return `You are near ${this.context.primaryGeographicPlace.displayName}`;
+                return t('worldWelcomePanel.youAreNear', { place: this.context.primaryGeographicPlace.displayName });
             }
             return null;
         },
@@ -122,6 +123,8 @@ export default {
         }
     },
     methods: {
+        t,
+        compassText,
         displayText,
         suggestionIcon(suggestion) {
             switch (suggestion.kind) {
@@ -133,7 +136,7 @@ export default {
             }
         },
         suggestionActionLabel(suggestion) {
-            return suggestion.kind === 'collaborator' ? 'Follow' : 'Go to';
+            return t(suggestion.kind === 'collaborator' ? 'worldWelcomePanel.follow' : 'worldWelcomePanel.goTo');
         },
         suggestionKey(suggestion) {
             const location = suggestion.location || {};
@@ -154,30 +157,30 @@ export default {
         <div
             v-if="context"
             role="dialog"
-            aria-label="World Welcome"
+            :aria-label="t('worldWelcomePanel.worldWelcome')"
             class="modal-overlay"
             @click.self="$emit('dismiss')"
             @keydown="onKeydown"
         >
             <div class="modal-panel world-welcome-panel">
-                <h3 v-if="isArrival && returning">Welcome back to {{ worldTitle }}</h3>
-                <h3 v-else-if="isArrival">Welcome to {{ worldTitle }}</h3>
+                <h3 v-if="isArrival && returning">{{ t('worldWelcomePanel.welcomeBack', { title: worldTitle }) }}</h3>
+                <h3 v-else-if="isArrival">{{ t('worldWelcomePanel.welcome', { title: worldTitle }) }}</h3>
                 <h3 v-else>{{ worldTitle }}</h3>
 
-                <p v-if="returning && lastVisitedLabel" class="world-welcome-panel-stats">Last visited {{ lastVisitedLabel }}</p>
+                <p v-if="returning && lastVisitedLabel" class="world-welcome-panel-stats">{{ t('worldWelcomePanel.lastVisited', { when: lastVisitedLabel }) }}</p>
                 <p v-if="arrivalNote" class="world-welcome-panel-arrival-note">{{ arrivalNote }}</p>
                 <p v-if="context.currentPlace" class="world-welcome-panel-place">★ {{ context.currentPlace.title }}</p>
                 <p v-if="statsParts.length" class="world-welcome-panel-stats">{{ statsParts.join(' · ') }}</p>
 
                 <section v-if="context.activitySummary && context.activitySummary.length" class="world-welcome-panel-section">
-                    <h4 class="world-welcome-panel-section-title">What's happening nearby?</h4>
+                    <h4 class="world-welcome-panel-section-title">{{ t('worldWelcomePanel.whatSHappeningNearby') }}</h4>
                     <ul class="world-welcome-panel-activity">
                         <li v-for="(line, i) in context.activitySummary" :key="i">● {{ displayText(line) }}</li>
                     </ul>
                 </section>
 
                 <section v-if="suggestions.length" class="world-welcome-panel-section">
-                    <h4 class="world-welcome-panel-section-title">Nearby</h4>
+                    <h4 class="world-welcome-panel-section-title">{{ t('worldWelcomePanel.nearby') }}</h4>
                     <ul class="world-welcome-panel-list">
                         <li v-for="s in suggestions" :key="suggestionKey(s)" class="world-welcome-panel-item">
                             <div class="world-welcome-panel-item-info">
@@ -197,24 +200,24 @@ export default {
                      viewer never mistakes a geographic guess for
                      confirmed World content. -->
                 <section v-if="nearbyGeographicPlaces.length" class="world-welcome-panel-section">
-                    <h4 class="world-welcome-panel-section-title">Nearby Places</h4>
+                    <h4 class="world-welcome-panel-section-title">{{ t('worldWelcomePanel.nearbyPlaces') }}</h4>
                     <ul class="world-welcome-panel-list">
                         <li v-for="place in nearbyGeographicPlaces" :key="place.fingerprintKey" class="world-welcome-panel-item">
                             <div class="world-welcome-panel-item-info">
                                 <span class="world-welcome-panel-item-title">● {{ place.displayName }}</span>
-                                <span class="world-welcome-panel-item-reason">{{ place.distance }} m<span v-if="place.direction"> · {{ place.direction }}</span></span>
+                                <span class="world-welcome-panel-item-reason">{{ t('units.metersSpaced', { distance: place.distance }) }}<span v-if="place.direction"> · {{ compassText(place.direction) }}</span></span>
                             </div>
-                            <button class="action-btn" @click="$emit('go-to-place', place.fingerprintKey)">Go to Place</button>
+                            <button class="action-btn" @click="$emit('go-to-place', place.fingerprintKey)">{{ t('worldWelcomePanel.goToPlace') }}</button>
                         </li>
                     </ul>
                 </section>
 
                 <p v-if="!context.hasContent" class="world-welcome-panel-empty">
-                    Nothing nearby yet — this is a quiet corner of the World.
+                    {{ t('worldWelcomePanel.nothingNearbyYetThisIs') }}
                 </p>
 
                 <div class="modal-actions">
-                    <button class="action-btn action-btn--primary" @click="$emit('dismiss')">{{ isArrival ? (returning ? 'Continue Exploring' : 'Explore Freely') : 'Close' }}</button>
+                    <button class="action-btn action-btn--primary" @click="$emit('dismiss')">{{ isArrival ? t(returning ? 'worldWelcomePanel.continueExploring' : 'worldWelcomePanel.exploreFreely') : t('worldWelcomePanel.close') }}</button>
                 </div>
             </div>
         </div>

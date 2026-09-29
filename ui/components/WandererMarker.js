@@ -15,17 +15,19 @@
 // See ui/components/WorldEncounterCanvas.js for where the Wanderer's own
 // world position actually lives — page-local UI state, never persisted,
 // never synchronized (see docs/Roadmap.md's own 0.9.3 entry).
+import { t } from '../i18n/i18n.js';
 export default {
     name: 'WandererMarker',
     props: {
         x: { type: Number, required: true },
         y: { type: Number, required: true }
     },
+    methods: { t },
     template: `
         <g class="wanderer-marker" :transform="'translate(' + x + ',' + y + ')'">
             <text class="wanderer-marker-glyph" text-anchor="middle" dy="4">🧭</text>
-            <text class="wanderer-marker-label" text-anchor="middle" dy="18">Wanderer</text>
-            <title>Wanderer</title>
+            <text class="wanderer-marker-label" text-anchor="middle" dy="18">{{ t('wandererMarker.wanderer') }}</text>
+            <title>{{ t('wandererMarker.wanderer') }}</title>
         </g>
     `
 };

@@ -3024,3 +3024,34 @@ the settings pages follow.
   properties dialog, a selected brick and the Recent list in the pseudo-locale.
 - Not done: the default title of a new document and the undo/redo and history labels, which are stored in documents;
   numbers typed into the numeric panel still need a `.` as the decimal point.
+
+## Internationalization, phase 3: World View (unnumbered, 2026-09-29)
+
+The second area moved to `t()`: World View's panels, dialogs, prompts, Explore sidebar, map, compass and feedback can
+now be shown in another language. The Publications page and Identity, Peers, Chat and the settings pages follow.
+
+- Components: the 88 files World View renders — `ui/views/WorldView.js`, its composables and templates in
+  `ui/views/worldView/`, `WorldEncounterCanvas` and `OwnPublicationPanel` with their subdirectories, and the panels
+  they open (locations, landmarks, regions, place naming, geographic places, search, map, members, collaborators,
+  focus, welcome, lobby, placement, avatar, vehicle, animal and resident prompts, touch pad). Messages are named
+  after the component (`worldSearchPanel.find`). Fallback failures ("… could not be completed.") are `failure.*`
+  messages, and an error's own text is shown with `errorText()`. Counts use plural forms; dates, distances and
+  radii use the chosen locale.
+- Values core/ keeps as ids: `ui/i18n/worldText.js` translates compass directions (the dial, the legend and every
+  "12m NE"), region kinds, terrain zones and lakes/rivers in the location reading, and what a collaborator is doing
+  ("Building House"). `RegionFormModal`'s kind list uses the same messages.
+- Below the UI: `core/WorldFocusContext.js` returns messages for the focus panel's subtitle, a collaborator's
+  activity, a geographic place's summary and "You are in / near …". `core/WorldSpatialContext.js#description` and
+  `describeSpatialActivity()` keep their English for the 3D markers, which the renderer draws and are not yet
+  translated.
+- Fixes found on the way: coordinates are shown without digit grouping ("1095.0", not "1,095.0"), and the
+  distribution dialog's network names (Arweave, Nostr, Steem) stay names rather than messages.
+- Tests: `tests/support/EnglishSource.js#withEnglish()` puts the English back where a source has `t('key')`, so the
+  older tests that check World View's wording by reading its source still check the words a person sees; about
+  fifteen of them read through it now. `WorldViewFocus` reads the focus text through `displayText()`; the "imports
+  nothing" checks on `HistoryTimelinePanel`, `PlacementInfoPanel` and `WandererMarker` allow the translator; the
+  list of unreachable networks is joined by `Intl.ListFormat` ("Nostr, Arweave, or Steem"). Checked in the real
+  app by opening a saved document in World View in the pseudo-locale, clicking through its sidebar, modes and
+  panels, and scanning every text, title, label and placeholder: no plain English and no warnings.
+- Not done: resident speech, the 3D markers' labels, and numbers typed into the placement and search fields, which
+  still need a `.` as the decimal point.

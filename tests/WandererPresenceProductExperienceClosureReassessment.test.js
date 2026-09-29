@@ -30,8 +30,12 @@ import { buildWorldCollaborationRoster, WorldCollaborationAccess } from '../ui/c
 import { buildSpatialCollaboratorRows } from '../ui/components/WorldCollaboratorIndicator.js';
 import { worldNavigationSessionFiles, stylesheetFiles, worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
-import { readSource } from './support/SourceText.js';
+import { readSource as readRawSource } from './support/SourceText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { withEnglish } from './support/EnglishSource.js';
+
+// Wording checks below read the English a person sees (support/EnglishSource.js).
+const readSource = async (relativePath) => withEnglish(await readRawSource(relativePath));
 
 // 0.9.583 — Wanderer Presence Product Experience Closure Reassessment.
 //
@@ -340,7 +344,7 @@ async function main() {
             lifecycleState: 'present', trustStatus: 'valid',
             position: { x: 5, y: 0, z: 5 }, distance: 7.07, animation: 'walking'
         };
-        const infoTemplate = AvatarInfoPanel.template;
+        const infoTemplate = withEnglish(AvatarInfoPanel.template);
         assert(infoTemplate.includes('v-if="info.isLocal"') && infoTemplate.includes('This is you'),
             'C1a. The Status row explicitly reads "This is you" for the local avatar — never a lifecycle/trust judgment applied to yourself.');
         assert(infoTemplate.includes('v-if="!info.isLocal"') && infoTemplate.includes("$emit('follow')"),
@@ -523,7 +527,7 @@ async function main() {
         // G1 — VISIBLE: a remote avatar is rendered (Section D already
         // proved this live) purely from presence, with no click required.
         // G2 — OBSERVABLE: AvatarInfoPanel's own info rows.
-        const infoTemplate = AvatarInfoPanel.template;
+        const infoTemplate = withEnglish(AvatarInfoPanel.template);
         for (const label of ['Avatar', 'Status', 'Position', 'Distance', 'Animation']) {
             assert(infoTemplate.includes(`>${label}<`), `G2. AvatarInfoPanel exposes a "${label}" row — inspection ("look") is a real, reachable capability.`);
         }
@@ -694,7 +698,7 @@ async function main() {
         // `{{ entry.animation }}` interpolated the raw enum value with
         // no label function — this assertion pins the FIXED state so a
         // future edit cannot silently regress it back to the raw value.
-        const infoTemplate = AvatarInfoPanel.template;
+        const infoTemplate = withEnglish(AvatarInfoPanel.template);
         const nearbyTemplate = NearbyAvatarsPanel.template;
         assert(infoTemplate.includes('{{ animationLabel(info.animation) }}') && !infoTemplate.includes('{{ info.animation }}'),
             'K1a. AvatarInfoPanel.js now renders animationLabel(info.animation), never the raw info.animation value.');

@@ -1,5 +1,6 @@
 import { createId } from '../../../core/createId.js';
 import { sanitizeDistributionErrorMessage } from '../../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
+import { errorText, t } from '../../i18n/i18n.js';
 
 // WorldEncounterCanvas methods: publication discovery and encounter commentary.
 // Spread into the component's `methods`, so `this` is the component instance.
@@ -34,7 +35,7 @@ export const publicationDiscoveryMethods = {
                 if (requestId === this.discoveryRequestId) {
                     console.error('Discovery failed:', error);
                     this.discoveryError = sanitizeDistributionErrorMessage(error)
-                        || 'Discovery could not be completed.';
+                        || t('failure.discoveryCompleted');
                 }
             })
             .then(() => {
@@ -76,7 +77,7 @@ export const publicationDiscoveryMethods = {
             this.encounterCommentaries = Array.isArray(result) ? result : [];
             this.encounterCommentaryError = null;
         } catch (error) {
-            this.encounterCommentaryError = 'Commentary could not be loaded.';
+            this.encounterCommentaryError = t('failure.commentaryLoaded');
         }
     },
     // The only caller of addPublicationCommentaryCommand; sends only
@@ -104,7 +105,7 @@ export const publicationDiscoveryMethods = {
             this.pendingEncounterCommentaryDraft = null;
             this.refreshEncounterCommentaries();
         } catch (error) {
-            this.encounterCommentaryError = (error && error.message) ? error.message : 'Commentary could not be created.';
+            this.encounterCommentaryError = (error && error.message) ? errorText(error) : t('failure.commentaryCreated');
         } finally {
             this.encounterCommentarySubmitting = false;
         }
