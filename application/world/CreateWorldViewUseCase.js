@@ -275,6 +275,18 @@ export class CreateWorldViewUseCase {
                 ...(isBlocked ? { isBlocked } : {})
             })
             : new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-interaction');
+        // A fourth: which vehicle, if any, the avatar rides. Gated by the presence
+        // policy, since it only means something alongside presence.
+        const avatarVehicleBroadcastProvider = usePeerTransport
+            ? new PeerAvatarPresenceBroadcastProvider({
+                peerMessageBus,
+                connectedPeerRegistry,
+                protocol: 'forkbuild:avatar-vehicle',
+                ...(presenceVisibilityUseCase ? { getVisibilityPolicy: () => presenceVisibilityUseCase.getPolicy() } : {}),
+                ...(isFriend ? { isFriend } : {}),
+                ...(isBlocked ? { isBlocked } : {})
+            })
+            : new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-vehicle');
         const avatarTemplateRegistry = new CreateAvatarTemplateRegistryUseCase().execute();
 
         return {
@@ -368,6 +380,7 @@ export class CreateWorldViewUseCase {
                     avatarTemplateRegistry,
                     avatarProfileBroadcastProvider,
                     avatarInteractionBroadcastProvider,
+                    avatarVehicleBroadcastProvider,
                     hasFriend,
                     isBlocked,
                     structureResolver: structureDocumentResolver,

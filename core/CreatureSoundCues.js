@@ -2,8 +2,9 @@
 // are already doing: an animal's call when it looks up alert and when you
 // come close, its steps while it walks, a sound as you catch or release one;
 // a resident's hello when it greets you, its murmur when it talks and its
-// steps; another player's footsteps, jumps and landings. Pure: the caller
-// keeps the state between ticks.
+// steps; another player's footsteps, jumps and landings, and, while it rides,
+// its engine, getting on and off and braking. Pure: the caller keeps the
+// state between ticks.
 //
 // Every placed cue carries `gain` (fading with distance), `pan` (-1 left to 1
 // right of the camera), so a deer to the right is heard on the right, and
@@ -24,7 +25,10 @@ export const CREATURE_SOUND_CUE = Object.freeze({
     RESIDENT_STEP: 'resident-step',
     PLAYER_FOOTSTEP: 'player-footstep',
     PLAYER_JUMP: 'player-jump',
-    PLAYER_LAND: 'player-land'
+    PLAYER_LAND: 'player-land',
+    PLAYER_MOUNT: 'player-mount',
+    PLAYER_DISMOUNT: 'player-dismount',
+    PLAYER_BRAKE: 'player-brake'
 });
 
 // Another player's own sounds, from its presence, as the local avatar's are
@@ -32,10 +36,27 @@ export const CREATURE_SOUND_CUE = Object.freeze({
 const PLAYER_CUE = Object.freeze({
     [AVATAR_SOUND_CUE.FOOTSTEP]: CREATURE_SOUND_CUE.PLAYER_FOOTSTEP,
     [AVATAR_SOUND_CUE.JUMP]: CREATURE_SOUND_CUE.PLAYER_JUMP,
-    [AVATAR_SOUND_CUE.LAND]: CREATURE_SOUND_CUE.PLAYER_LAND
+    [AVATAR_SOUND_CUE.LAND]: CREATURE_SOUND_CUE.PLAYER_LAND,
+    [AVATAR_SOUND_CUE.MOUNT]: CREATURE_SOUND_CUE.PLAYER_MOUNT,
+    [AVATAR_SOUND_CUE.DISMOUNT]: CREATURE_SOUND_CUE.PLAYER_DISMOUNT
 });
 const PLAYER_RANGE = 20;
 const PLAYER_LOUDNESS = 0.8;
+// Engines and brakes carry farther than steps; only the nearest few engines
+// are heard, so a crowd of riders doesn't drown everything else.
+export const RIDER_RANGE = 40;
+export const MAX_RIDER_ENGINES = 3;
+// Braking isn't sent, so it is heard when a rider slows sharply: its speed
+// (smoothed, as a fraction of top speed) falls to half of its recent peak,
+// from a peak of at least BRAKE_FROM. The peak sinks by PEAK_DECAY a second,
+// so easing off slowly is silent. It can sound again once the rider is back
+// up to BRAKE_FROM.
+const BRAKE_FROM = 0.45;
+const PEAK_DECAY = 0.5;
+// Positions arrive a few times a second and are interpolated between, so a
+// rider can seem to stand still for a moment: speed is smoothed over about
+// this many seconds before it drives an engine or a brake.
+const LOAD_SMOOTHING_SECONDS = 0.4;
 const DEFAULT_SAMPLE_SECONDS = 0.1;
 
 // How far each sound carries, in meters.
@@ -184,34 +205,56 @@ function advanceResidents(state, listener, residents, speech, cues) {
     return next;
 }
 
-// Each other player steps, jumps and lands through the same step as the local
-// avatar. Presence carries no vertical state (docs/Principles.md, "Local
-// Physics Is Local"), so its JUMPING animation stands for being in the air,
-// and a player's vehicle isn't known, so a rider is heard as standing still.
-function advancePlayers(state, listener, players, seed, deltaSeconds, cues) {
+// Each other player steps, jumps, lands, gets on and off through the same
+// step as the local avatar. Presence carries no vertical state
+// (docs/Principles.md, "Local Physics Is Local"), so its JUMPING animation
+// stands for being in the air; what it rides comes from its signed vehicle
+// message (`vehicleType`, null on foot). Riders' engines are returned in
+// `engines`, the nearest first.
+function advancePlayers(state, listener, players, seed, deltaSeconds, cues, engines) {
     const next = new Map();
+    const dt = Number.isFinite(deltaSeconds) && deltaSeconds > 0 ? deltaSeconds : 0;
     for (const player of players) {
-        const previous = state.players.get(player.id) || createAvatarSoundState();
-        const result = advanceAvatarSound(previous, {
+        const previous = state.players.get(player.id) || { sound: createAvatarSoundState(), load: 0, peak: 0, brakeArmed: false };
+        const result = advanceAvatarSound(previous.sound, {
             position: player.position,
             animation: player.animation,
             verticalState: player.animation === AvatarAnimationState.JUMPING
                 ? AvatarVerticalState.RISING
                 : AvatarVerticalState.SUPPORTED,
-            vehicleType: null
+            vehicleType: player.vehicleType || null
         }, deltaSeconds, seed);
-        next.set(player.id, result.state);
         const { x, z } = player.position;
+        const source = { x, y: player.y, z };
+        const engine = result.engine;
+        const sameVehicle = Boolean(engine) && previous.sound.vehicleType === engine.vehicleType;
+        const blend = 1 - Math.exp(-dt / LOAD_SMOOTHING_SECONDS);
+        const load = sameVehicle ? previous.load + (engine.load - previous.load) * blend : 0;
+        const peak = sameVehicle ? Math.max(load, previous.peak - PEAK_DECAY * dt) : 0;
+        const braking = sameVehicle && previous.brakeArmed && peak >= BRAKE_FROM && load <= peak / 2;
+        const brakeArmed = sameVehicle && !braking && (previous.brakeArmed || load >= BRAKE_FROM);
+        next.set(player.id, { sound: result.state, load, peak: braking ? load : peak, brakeArmed });
+
         const placement = placeSound(listener, x, z, PLAYER_RANGE);
-        if (!placement) continue;
-        for (const own of result.cues) {
-            const kind = PLAYER_CUE[own.kind];
-            if (kind) {
-                cues.push(cue(kind, placement, { surface: own.surface, intensity: own.intensity * PLAYER_LOUDNESS },
-                    { x, y: player.y, z }));
+        if (placement) {
+            for (const own of result.cues) {
+                const kind = PLAYER_CUE[own.kind];
+                if (!kind) continue;
+                const extra = own.vehicleType
+                    ? { vehicleType: own.vehicleType }
+                    : { surface: own.surface, intensity: own.intensity * PLAYER_LOUDNESS };
+                cues.push(cue(kind, placement, extra, source));
             }
         }
+        const far = engine ? placeSound(listener, x, z, RIDER_RANGE) : null;
+        if (!far) continue;
+        if (braking) {
+            cues.push(cue(CREATURE_SOUND_CUE.PLAYER_BRAKE, far, { vehicleType: engine.vehicleType, intensity: peak }, source));
+        }
+        engines.push({ id: player.id, vehicleType: engine.vehicleType, load, placement: far, source });
     }
+    engines.sort((a, b) => a.placement.distance - b.placement.distance);
+    engines.splice(MAX_RIDER_ENGINES);
     return next;
 }
 
@@ -219,20 +262,28 @@ function advancePlayers(state, listener, players, seed, deltaSeconds, cues) {
 // residentSpeech, remoteAvatars } (application/worldNavigation/
 // soundObservationMethods.js), or null; `seed` picks the surface under a
 // player's feet and `deltaSeconds` is the time since the last look. Returns the
-// next state and the cues to play now.
+// next state, the cues to play now and the other players' engines to hear
+// until the next look: { id, vehicleType, load, gain, pan, position }, placed
+// like a cue.
 export function advanceCreatureSound(state, observation, { seed = 0, deltaSeconds = DEFAULT_SAMPLE_SECONDS } = {}) {
     if (!observation || !observation.listener) {
-        return { state: createCreatureSoundState(), cues: [] };
+        return { state: createCreatureSoundState(), cues: [], engines: [] };
     }
     const cues = [];
     const { listener } = observation;
     const animals = advanceAnimals(state, listener, observation.animals || [], cues);
     const carried = advanceCarried(state, observation.carriedAnimals, cues);
     const residents = advanceResidents(state, listener, observation.residents || [], observation.residentSpeech, cues);
-    const players = advancePlayers(state, listener, observation.remoteAvatars || [], seed, deltaSeconds, cues);
+    const riders = [];
+    const players = advancePlayers(state, listener, observation.remoteAvatars || [], seed, deltaSeconds, cues, riders);
+    const engines = riders.map(({ id, vehicleType, load, placement, source }) => {
+        const { kind, ...placed } = cue(null, placement, { id, vehicleType, load }, source);
+        return Object.freeze(placed);
+    });
     const speech = observation.residentSpeech;
     return {
         state: Object.freeze({ animals, residents, players, carried, lastSpokenAt: speech ? speech.spokenAt : null }),
-        cues
+        cues,
+        engines
     };
 }

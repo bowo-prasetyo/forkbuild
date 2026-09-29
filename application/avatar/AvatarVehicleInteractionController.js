@@ -55,7 +55,7 @@ import { createId } from '../../core/createId.js';
 // lookups fall back to the deterministic spawn query.
 
 export class AvatarVehicleInteractionController {
-    constructor(avatarPresenceSession, { seed = DEFAULT_WORLD_SEED, vehicleRuntimeInstances = null, avatarInventoryStore = null } = {}) {
+    constructor(avatarPresenceSession, { seed = DEFAULT_WORLD_SEED, vehicleRuntimeInstances = null, avatarInventoryStore = null, isTakenByOther = () => false } = {}) {
         this._avatarPresenceSession = avatarPresenceSession;
         this._seed = seed;
         // Shared with AvatarAnimalInteractionController in a real session; a private
@@ -63,6 +63,9 @@ export class AvatarVehicleInteractionController {
         this._inventoryStore = avatarInventoryStore || new AvatarInventoryStore();
         // Optional; without it lookups fall back to the deterministic spawn query.
         this._vehicleRuntimeInstances = vehicleRuntimeInstances;
+        // A vehicle another player is riding (docs/Protocol.md, "Presence,
+        // profiles and interactions"): not drawn here, so never mountable.
+        this._isTakenByOther = typeof isTakenByOther === 'function' ? isTakenByOther : () => false;
         this._interactKeyHeld = false;
         // Set once a press causes a transition; cleared on key release.
         this._interactKeyConsumed = false;
@@ -389,13 +392,14 @@ export class AvatarVehicleInteractionController {
             avatarPosition.x + VEHICLE_INTERACTION_RADIUS,
             avatarPosition.z + VEHICLE_INTERACTION_RADIUS
         );
+        const free = (vehicle) => !this._isTakenByOther(vehicle.id);
         if (!this._vehicleRuntimeInstances) {
-            return rawDeterministic;
+            return rawDeterministic.filter(free);
         }
         const deterministic = rawDeterministic.filter((vehicle) => !this._vehicleRuntimeInstances.isExcluded(vehicle.id));
         const tracked = this._vehicleRuntimeInstances.nearby(avatarPosition, VEHICLE_INTERACTION_RADIUS);
         const trackedIds = new Set(tracked.map((vehicle) => vehicle.id));
-        return [...tracked, ...deterministic.filter((vehicle) => !trackedIds.has(vehicle.id))];
+        return [...tracked, ...deterministic.filter((vehicle) => !trackedIds.has(vehicle.id))].filter(free);
     }
 
     // Releasing re-arms `_interactKeyConsumed`.

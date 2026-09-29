@@ -232,6 +232,23 @@ Bicycle (1/3)") so you can find an older one without deploying and
 re-storing your way past it. Cycling only changes what **Q** will bring
 out next; it never spawns or removes anything by itself.
 
+#### Riding with other people around
+
+People who can see your avatar also see what you ride: your bicycle,
+motorcycle, car or drone is drawn under you on their screen, facing the
+way you're going, and they hear its engine, your getting on and off and
+your braking (see "Sound" in [03 — World View](03-WorldView.md)). You see
+and hear theirs the same way. It follows your presence setting: whoever
+can't see you doesn't learn what you ride either.
+
+While someone else rides a vehicle, your own copy of it disappears and you
+can't get on it; the vehicle you're riding yourself always stays yours.
+Where a vehicle stands when nobody rides it isn't shared, though: once
+they get off, it reappears on your screen wherever you last saw it
+standing, which may not be where they left it. A vehicle stored with
+**Q** or deployed somewhere new is likewise only on its owner's screen
+until they ride it.
+
 ### Animals
 
 Some worlds have wildlife — deer in forests, rabbits on open grassland.
@@ -326,7 +343,8 @@ What a resident says is what *your* copy of ForkBuild knows: the builds in
 your catalog, the people present with you, the vehicles and animals you
 haven't taken. Someone else talking to the same resident may hear different
 things, and nobody else ever sees what it told you. It never mentions a
-vehicle you've stored or are riding, or an animal you've caught. Builds are
+vehicle you've stored or are riding, one someone else is riding, or an
+animal you've caught. Builds are
 named with their title and author as their publication gives them, the
 same as everywhere else in the app.
 

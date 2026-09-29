@@ -33,6 +33,8 @@ export const RESIDENT_KNOWLEDGE_RADIUS = Object.freeze({
 //                              this session are left out, moved ones are
 //                              where they are now, deployed ones included
 //   mountedVehicleId         — the vehicle the viewer is riding, left out
+//   riddenVehicleIds         — vehicles other players ride now, left out:
+//                              they are drawn under the rider, not here
 //   animalRuntime            — AnimalRuntimeInstances: caught animals are
 //                              left out, released ones included
 //   landmarks                — [{ id, title, position }] in shared space
@@ -52,6 +54,7 @@ export function gatherResidentFacts({
     timeSeconds = null,
     vehicleRuntime = null,
     mountedVehicleId = null,
+    riddenVehicleIds = [],
     animalRuntime = null,
     landmarks = [],
     structures = [],
@@ -83,7 +86,7 @@ export function gatherResidentFacts({
         }
     }
     for (const [id, vehicle] of vehicles) {
-        if (id === mountedVehicleId || !within(vehicle.position, r)) continue;
+        if (id === mountedVehicleId || riddenVehicleIds.includes(id) || !within(vehicle.position, r)) continue;
         facts.push({ kind: RESIDENT_FACT_KIND.VEHICLE, key: id, vehicleType: vehicle.type, ...at(vehicle.position) });
     }
 

@@ -2,8 +2,10 @@
 // ambient layers (wind, birds, insects, lake, river, leaves and pines), the
 // local avatar's footsteps, jumps and landings (audio/AvatarSoundSynth.js),
 // the engine of what it rides and getting on, off and braking
-// (audio/VehicleEngineVoice.js, audio/VehicleEventSynth.js), animals and
-// residents (audio/CreatureSoundSynth.js) and edits (audio/EditorSoundSynth.js).
+// (audio/VehicleEngineVoice.js, audio/VehicleEventSynth.js), animals,
+// residents and other players (audio/CreatureSoundSynth.js, and the same
+// vehicle sounds, placed where each rider is) and edits
+// (audio/EditorSoundSynth.js).
 // Every sound is synthesized from noise and oscillators, so nothing is
 // downloaded and there are no audio files to license. What to play comes from
 // the services in application/; these files only decide how it sounds.
@@ -27,6 +29,11 @@ const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream', 'leaves', 'pines'
 const EFFECTS_GAIN = 0.7;
 // A placed cue's nodes are let go once it has surely finished.
 const PLACED_CUE_SECONDS = 4;
+// Other riders' engines are updated ten times a second; their loudness and
+// place glide between updates instead of stepping.
+const REMOTE_ENGINE_TIME_CONSTANT = 0.08;
+// A stopped engine's nodes are let go once its fade has finished.
+const REMOTE_ENGINE_RELEASE_SECONDS = 1;
 
 // Each layer's gain at level 1, balanced by ear so no single layer dominates.
 const LAYER_PEAK = Object.freeze({ wind: 0.4, birds: 0.35, insects: 0.035, water: 0.35, stream: 0.2, leaves: 0.12, pines: 0.18 });
@@ -52,6 +59,21 @@ function setVector(node, name, vector) {
     } else if (name === 'position' && typeof node.setPosition === 'function') {
         node.setPosition(x, y, z);
     }
+}
+
+// The same, gliding there over `timeConstant` seconds from `now`; set at once
+// where only the deprecated setter exists.
+function glideVector(node, name, vector, now, timeConstant) {
+    if (!vector) {
+        return;
+    }
+    if (!node[`${name}X`]) {
+        setVector(node, name, vector);
+        return;
+    }
+    node[`${name}X`].setTargetAtTime(Number(vector.x) || 0, now, timeConstant);
+    node[`${name}Y`].setTargetAtTime(Number(vector.y) || 0, now, timeConstant);
+    node[`${name}Z`].setTargetAtTime(Number(vector.z) || 0, now, timeConstant);
 }
 
 function defaultContextFactory() {
@@ -82,6 +104,10 @@ export class WebAudioSoundscapeProvider {
         this._effectsNoise = null;
         this._engineVoice = null;
         this._engine = null;
+        // Other riders' engines: the last list asked for, and the voices
+        // playing it, by rider id.
+        this._remoteEngines = [];
+        this._remoteEngineVoices = new Map();
         this._sources = [];
         this._levels = Object.fromEntries(LAYERS.map((layer) => [layer, 0]));
         this._volume = 0.5;
@@ -196,6 +222,15 @@ export class WebAudioSoundscapeProvider {
             case CREATURE_SOUND_CUE.PLAYER_LAND:
                 playLanding(context, level, noise, cue.surface, cue.intensity, random);
                 break;
+            case CREATURE_SOUND_CUE.PLAYER_MOUNT:
+                playMount(context, level, noise, cue.vehicleType, random);
+                break;
+            case CREATURE_SOUND_CUE.PLAYER_DISMOUNT:
+                playDismount(context, level, noise, cue.vehicleType, random);
+                break;
+            case CREATURE_SOUND_CUE.PLAYER_BRAKE:
+                playBrake(context, level, noise, cue.vehicleType, cue.intensity, random);
+                break;
             default:
                 break;
         }
@@ -290,6 +325,63 @@ export class WebAudioSoundscapeProvider {
         this._engineVoice.setLoad(this._engine.load);
     }
 
+    // Other riders' engines (core/CreatureSoundCues.js): each
+    // { id, vehicleType, load, gain, pan, position }, placed like a cue and
+    // held until a list leaves it out. A rider who changes vehicle, or a
+    // switch between 3D and stereo, gets a fresh voice.
+    setRemoteEngines(engines) {
+        this._remoteEngines = (Array.isArray(engines) ? engines : [])
+            .filter((engine) => engine && typeof engine.id === 'string' && hasEngineVoice(engine.vehicleType));
+        if (!this._context) {
+            return;
+        }
+        const wanted = new Map(this._remoteEngines.map((engine) => [engine.id, engine]));
+        for (const [id, entry] of this._remoteEngineVoices) {
+            const engine = wanted.get(id);
+            if (!engine || engine.vehicleType !== entry.voice.vehicleType || entry.spatial !== this._spatialFor(engine)) {
+                this._releaseRemoteEngine(id);
+            }
+        }
+        const now = this._context.currentTime;
+        for (const engine of this._remoteEngines) {
+            let entry = this._remoteEngineVoices.get(engine.id);
+            if (!entry) {
+                const level = this._context.createGain();
+                level.gain.value = 0;
+                const output = this._placeOutput(level, engine);
+                output.connect(this._effects);
+                const voice = new VehicleEngineVoice(this._context, level, this._effectsNoise, engine.vehicleType, this._random);
+                entry = { voice, level, output, spatial: this._spatialFor(engine) };
+                this._remoteEngineVoices.set(engine.id, entry);
+            }
+            entry.voice.setLoad(engine.load);
+            entry.level.gain.setTargetAtTime(Math.min(1, Math.max(0, Number(engine.gain) || 0)), now, REMOTE_ENGINE_TIME_CONSTANT);
+            if (entry.spatial) {
+                glideVector(entry.output, 'position', engine.position, now, REMOTE_ENGINE_TIME_CONSTANT);
+            } else if (entry.output.pan) {
+                entry.output.pan.setTargetAtTime(Math.min(1, Math.max(-1, Number(engine.pan) || 0)), now, REMOTE_ENGINE_TIME_CONSTANT);
+            }
+        }
+    }
+
+    // Whether an engine is placed with a 3D panner (see _placeOutput()).
+    _spatialFor(engine) {
+        return this._spatial && Boolean(engine.position) && typeof this._context.createPanner === 'function';
+    }
+
+    _releaseRemoteEngine(id) {
+        const entry = this._remoteEngineVoices.get(id);
+        if (!entry) {
+            return;
+        }
+        this._remoteEngineVoices.delete(id);
+        entry.voice.stop();
+        this._setTimeout(() => {
+            entry.level.disconnect();
+            entry.output.disconnect();
+        }, REMOTE_ENGINE_RELEASE_SECONDS * 1000);
+    }
+
     setVolume(volume) {
         const value = Number(volume);
         if (!Number.isFinite(value)) {
@@ -328,6 +420,9 @@ export class WebAudioSoundscapeProvider {
         if (this._engineVoice) {
             this._engineVoice.stop();
             this._engineVoice = null;
+        }
+        for (const id of Array.from(this._remoteEngineVoices.keys())) {
+            this._releaseRemoteEngine(id);
         }
         if (this._context && typeof this._context.close === 'function' && this._context.state !== 'closed') {
             this._context.close().catch(() => {});
@@ -411,6 +506,7 @@ export class WebAudioSoundscapeProvider {
         if (this._engine) {
             this.setEngine(this._engine);
         }
+        this.setRemoteEngines(this._remoteEngines);
         this._applyListener();
     }
 

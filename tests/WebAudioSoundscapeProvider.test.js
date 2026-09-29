@@ -426,6 +426,78 @@ async function runTests() {
         console.log('✓ 3D placement follows the listener; stereo when 3D is off');
     }
 
+    // Other riders' engines: one voice per rider, placed where it is, as loud
+    // as its gain; gone when a list leaves it out.
+    {
+        const render = async (seconds, act, { spatial = true } = {}) => {
+            const offline = new OfflineAudioContext(2, SAMPLE_RATE * seconds, SAMPLE_RATE);
+            const context = new Proxy(offline, {
+                get(target, prop) {
+                    if (prop === 'state') return 'running';
+                    if (prop === 'resume' || prop === 'suspend' || prop === 'close') return () => Promise.resolve();
+                    const value = Reflect.get(target, prop, target);
+                    return typeof value === 'function' ? value.bind(target) : value;
+                }
+            });
+            let seedState = 777;
+            const random = () => {
+                seedState = (seedState * 1103515245 + 12345) % 2147483648;
+                return seedState / 2147483648;
+            };
+            const provider = new WebAudioSoundscapeProvider({
+                contextFactory: () => context, documentRef: null, random, setTimeoutFn: () => 1, clearTimeoutFn: () => {}
+            });
+            provider.setVolume(1);
+            provider.setSpatial(spatial);
+            provider.setListener({ position: { x: 0, y: 0, z: 0 }, forward: { x: 0, y: 0, z: 1 }, up: { x: 0, y: 1, z: 0 } });
+            act(provider, offline);
+            provider.resume();
+            const buffer = await offline.startRendering();
+            provider.dispose();
+            return { left: buffer.getChannelData(0), right: buffer.getChannelData(1) };
+        };
+        const rider = (extra) => ({ id: 'alice', vehicleType: 'car', load: 0.8, gain: 1, pan: 0, position: { x: 0, y: 0, z: 5 }, ...extra });
+        const settled = (data) => rmsOf(data, SAMPLE_RATE * 0.5, SAMPLE_RATE);
+
+        for (const vehicleType of ['bicycle', 'motorcycle', 'car', 'drone']) {
+            const { left } = await render(1, (p) => p.setRemoteEngines([rider({ vehicleType })]));
+            assert(settled(left) > 0.001, `another player's ${vehicleType} is audible (${settled(left)})`);
+        }
+        const none = await render(1, (p) => p.setRemoteEngines([rider({ vehicleType: 'none' }), { vehicleType: 'car' }, null]));
+        assert(rmsOf(none.left) === 0, 'no vehicle, or no rider id, plays nothing');
+
+        // A bicycle's broadband hiss: HRTF hardly separates a car's low rumble.
+        const onRight = await render(1, (p) => p.setRemoteEngines([rider({ vehicleType: 'bicycle', position: { x: -5, y: 0, z: 0 } })]));
+        assert(settled(onRight.right) > settled(onRight.left) * 1.2, `in 3D a rider on the right is heard on the right (${settled(onRight.right)} vs ${settled(onRight.left)})`);
+        const stereoLeft = await render(1, (p) => p.setRemoteEngines([rider({ pan: -1 })]), { spatial: false });
+        assert(settled(stereoLeft.left) > settled(stereoLeft.right) * 5, 'with 3D off, its pan decides left and right');
+
+        const near = await render(1, (p) => p.setRemoteEngines([rider({ gain: 1 })]));
+        const far = await render(1, (p) => p.setRemoteEngines([rider({ gain: 0.1 })]));
+        assert(settled(far.left) < settled(near.left) * 0.3, 'a distant rider is quieter');
+        const two = await render(1, (p) => p.setRemoteEngines([rider(), rider({ id: 'bob', vehicleType: 'motorcycle' })]));
+        assert(settled(two.left) > settled(near.left), 'two riders are two engines');
+
+        const leaving = await render(2, (p, offline) => {
+            p.setRemoteEngines([rider()]);
+            offline.suspend(1).then(() => {
+                p.setRemoteEngines([]);
+                offline.resume();
+            });
+        });
+        const before = rmsOf(leaving.left, SAMPLE_RATE * 0.5, SAMPLE_RATE);
+        const after = rmsOf(leaving.left, SAMPLE_RATE * 1.6, SAMPLE_RATE * 2);
+        assert(before > 0.001 && after < before * 0.05, `a rider left out of the list fades away (${before} then ${after})`);
+
+        for (const kind of ['player-mount', 'player-dismount']) {
+            const data = await renderEffects(1.5, (p) => p.playCreatureCue({ kind, vehicleType: 'motorcycle', gain: 1, pan: 0, position: null }));
+            assert(rmsOf(data, 0, SAMPLE_RATE) > 0.002, `${kind} is audible`);
+        }
+        const brake = await renderEffects(1.5, (p) => p.playCreatureCue({ kind: 'player-brake', vehicleType: 'car', intensity: 1, gain: 1, pan: 0, position: null }));
+        assert(rmsOf(brake, 0, SAMPLE_RATE) > 0.001, 'another player braking is audible');
+        console.log('✓ other riders: engines placed where they are, getting on, off and braking');
+    }
+
     // Without Web Audio the provider stays silent instead of throwing.
     {
         const provider = new WebAudioSoundscapeProvider({ contextFactory: () => null, documentRef: null });

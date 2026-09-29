@@ -63,6 +63,7 @@ class RecordingProvider {
     setListener(pose) { this.listener = pose; }
     playCue(cue) { this.cues.push(cue); }
     setEngine(engine) { this.engines.push(engine); }
+    setRemoteEngines(engines) { this.remoteEngines = engines; }
     dispose() {}
 }
 

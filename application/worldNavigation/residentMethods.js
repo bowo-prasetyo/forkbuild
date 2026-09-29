@@ -357,6 +357,7 @@ export const residentMethods = {
             timeSeconds: time,
             vehicleRuntime: this._vehicleRuntimeInstances || null,
             mountedVehicleId: mount ? mount.vehicleId : null,
+            riddenVehicleIds: [...this._remotelyRiddenVehicleIds()],
             animalRuntime: this._animalRuntimeInstances || null,
             landmarks,
             structures,

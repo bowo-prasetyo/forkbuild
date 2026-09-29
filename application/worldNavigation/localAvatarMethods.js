@@ -159,7 +159,9 @@ export const localAvatarMethods = {
             {
                 vehicleRuntimeInstances: this._vehicleRuntimeInstances,
                 // The same AvatarInventoryStore the animal controller gets.
-                avatarInventoryStore: this._avatarInventoryStore
+                avatarInventoryStore: this._avatarInventoryStore,
+                // Someone else is riding it: not drawn here, so not mountable.
+                isTakenByOther: (vehicleId) => this._remotelyRiddenVehicleIds().has(vehicleId)
             }
         );
         // Shares `_animalRuntimeInstances` and `_avatarInventoryStore`, as the
@@ -251,6 +253,8 @@ export const localAvatarMethods = {
                     this._avatarMovementController.tick(deltaSeconds);
                 }
                 const now = Date.now();
+                // Tells other players what this avatar rides, when it changes.
+                this._publishLocalVehicle(now);
                 // Expires a finished gesture and refreshes the facing override; local
                 // presentation only.
                 this._updateLocalAvatarInteractionPresentation(now);

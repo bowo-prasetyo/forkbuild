@@ -204,3 +204,74 @@ function run(observations) {
     assert(farCues.length === 0, 'a player beyond 20 m is not heard');
     console.log('✓ other players walking, jumping and landing');
 }
+
+// Other riders: their engine follows their speed from where they are, their
+// getting on and off is heard, a sharp slowdown sounds as a brake, and only
+// the nearest few engines within 40 m play.
+{
+    const { resolveAvatarVehicleMovementCapability } = await import('../core/AvatarVehicleMovementCapability.js');
+    const { MAX_RIDER_ENGINES, RIDER_RANGE } = await import('../core/CreatureSoundCues.js');
+    const topSpeed = resolveAvatarVehicleMovementCapability('car').movementSpeed;
+    const look = (state, players, listenerX = 0) => advanceCreatureSound(state, { listener: listenerAt(listenerX, 0), remoteAvatars: players }, { deltaSeconds: 0.1 });
+    const rider = (id, x, z, vehicleType = 'car') => ({ id, position: { x, y: 2, z }, y: 2, animation: 'idle', vehicleType });
+
+    // On foot, then on a car, cruising at full speed for 2 s, stopping in 0.3 s, then off.
+    let state = createCreatureSoundState();
+    let x = 0;
+    const frames = [];
+    const speeds = [
+        ['walking', null, 0], ['idle', 'car', 0],
+        ...Array(20).fill(['idle', 'car', topSpeed]),
+        ['idle', 'car', topSpeed * 0.3], ['idle', 'car', 0], ...Array(6).fill(['idle', 'car', 0]),
+        ['idle', null, 0]
+    ];
+    for (const [animation, vehicleType, speed] of speeds) {
+        x += speed * 0.1;
+        // Heard by someone keeping pace with them.
+        const result = look(state, [{ ...rider('alice', x, 10, vehicleType), animation }], x);
+        state = result.state;
+        frames.push(result);
+    }
+    const kinds = frames.map((frame) => frame.cues.map((c) => c.kind));
+    assert(kinds[1].includes(CREATURE_SOUND_CUE.PLAYER_MOUNT) && frames[1].cues[0].vehicleType === 'car', 'getting on is heard, with the vehicle');
+    assert(kinds.at(-1).includes(CREATURE_SOUND_CUE.PLAYER_DISMOUNT), 'and getting off');
+    assert(frames[0].engines.length === 0 && frames.at(-1).engines.length === 0, 'no engine on foot');
+    const cruising = frames[21].engines[0];
+    assert(cruising.id === 'alice' && cruising.vehicleType === 'car' && cruising.load > 0.9,
+        `an engine at full speed works hard (${cruising.load})`);
+    assert(frames[3].engines[0].load < cruising.load, 'and builds up rather than jumping');
+    assert(cruising.position.z === 10 && cruising.position.y === 2 && cruising.gain > 0, 'placed where the rider is drawn');
+    const brakes = kinds.flat().filter((kind) => kind === CREATURE_SOUND_CUE.PLAYER_BRAKE);
+    assert(brakes.length === 1, `a sharp stop brakes once (${brakes.length})`);
+    const braked = frames.findIndex((frame) => frame.cues.some((c) => c.kind === CREATURE_SOUND_CUE.PLAYER_BRAKE));
+    assert(braked > 21 && braked < 29, `soon after slowing (${braked})`);
+
+    // Slowing gently, over 4 s, is not braking.
+    state = createCreatureSoundState();
+    x = 0;
+    const gentle = [];
+    for (let i = 0; i < 70; i++) {
+        const speed = i < 20 ? topSpeed : Math.max(0, topSpeed * (1 - (i - 20) / 40));
+        x += speed * 0.1;
+        const result = look(state, [rider('alice', x, 10)]);
+        state = result.state;
+        gentle.push(...result.cues.map((c) => c.kind));
+    }
+    assert(!gentle.includes(CREATURE_SOUND_CUE.PLAYER_BRAKE), 'easing off slowly is silent');
+
+    // A rider first heard already on a car makes no getting-on sound.
+    const already = look(createCreatureSoundState(), [rider('bob', 0, 10)]);
+    assert(already.cues.length === 0 && already.engines.length === 1, 'someone already riding just has an engine');
+
+    // The nearest few engines within range, nearest first.
+    const crowd = [5, 30, 12, 20, 8].map((z, i) => rider(`r${i}`, 0, z));
+    const heard = look(createCreatureSoundState(), [...crowd, rider('far', 0, RIDER_RANGE + 5, 'drone')]).engines;
+    assert(heard.length === MAX_RIDER_ENGINES && MAX_RIDER_ENGINES === 3, 'a crowd is heard as the nearest three');
+    assert(heard.map((e) => e.id).join() === 'r0,r4,r2', `nearest first (${heard.map((e) => e.id)})`);
+    assert(look(createCreatureSoundState(), [rider('far', 0, RIDER_RANGE + 5)]).engines.length === 0, 'none beyond 40 m');
+    const quiet = look(createCreatureSoundState(), [rider('a', 0, 30)]).engines[0];
+    const loud = look(createCreatureSoundState(), [rider('a', 0, 5)]).engines[0];
+    assert(quiet.gain < loud.gain && quiet.pan === 0, 'a farther engine is quieter');
+    assert(look(createCreatureSoundState(), [rider('a', 10, 0)]).engines[0].pan < 0, 'and one to the left is on the left');
+    console.log('✓ other riders: engines, getting on and off, braking');
+}

@@ -55,7 +55,17 @@ distance and direction from where it stands. It points at what exists and
 never sets a goal or a quest. The viewer may choose Focus on a mentioned
 thing that stays put: a camera-only look, never moving the avatar. What it says comes from the viewer's own
 replica and stays on the viewer's screen, so two viewers may hear different
-things; it never mentions a vehicle they stored or ride, or an animal they
-caught.
+things; it never mentions a vehicle they stored or ride, one someone else is
+riding, or an animal they caught.
 
 [Full text](history/0.9.md#a-resident-tells-you-whats-around-never-what-to-do-2026-09-29)
+
+### Others See What You Ride, Never Where You Parked (2026-09-29)
+
+Which vehicle an avatar rides is sent, signed, on its own channel
+(`forkbuild:avatar-vehicle`), only where presence is, and never stored.
+Others draw and hear it under the rider and can't get on their copy of it
+meanwhile. Where a vehicle stands unridden stays each replica's own: after
+the rider gets off, it reappears wherever each replica last had it.
+
+[Full text](history/0.9.md#others-see-what-you-ride-never-where-you-parked-2026-09-29)

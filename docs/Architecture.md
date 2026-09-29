@@ -931,6 +931,24 @@ who you are, what your avatar looks like, and where it is right now.
   AvatarInteractionTrustBoundary with a bounded replay window; a
   claimed target is never an instruction to the target. Facing a target
   (core/AvatarFacing.js) is a local rendering override only.
+- **Riding.** What an avatar rides is its own signed message
+  (core/AvatarVehicleAdvertisement.js over `forkbuild:avatar-vehicle`,
+  not a presence field, so older clients keep accepting presence).
+  application/worldNavigation/remoteVehicleMethods.js sends it on getting
+  on or off and every 2 s (`_publishLocalVehicle()`), through the same
+  visibility-gated broadcast providers as presence, and each frame
+  `_syncRemoteVehicles()` pulls what arrived through
+  AvatarVehicleSyncService (AvatarVehicleTrustBoundary: signature,
+  blocking, the PresenceAuthorityRegistry binding, replay, equivocation,
+  order), forgets avatars no longer present and tells the renderer
+  (`setRemoteAvatarVehicle()`). renderer/RemoteRiderVehicles.js draws the
+  vehicle under the rider, heading from its movement; the rider isn't
+  lifted by the ground height again, because a rider's position already
+  includes it. `_remotelyRiddenVehicleIds()` hides this replica's copy of a
+  ridden vehicle from `syncVehicles()` and from
+  AvatarVehicleInteractionController (`isTakenByOther`), never the local
+  mount's. Unridden vehicle positions stay local, so after a dismount a
+  vehicle reappears where this replica last had it.
 - **Camera and movement modes.** core/CameraPerspective.js gives each
   camera perspective an offset from the avatar; it never replaces the
   camera machinery, and the chosen avatar control mode persists locally.
@@ -1171,14 +1189,20 @@ are shared by every tile.
   histories, so it is never heard. `application/commands/describeCommand.js` gives both sessions the
   `{ type, children }` shape.
 - **Other players.** `remoteAvatarsForSound()` reads each remote avatar where it is drawn now
-  (`RemoteAvatarRegistry#currentPresence()`, the interpolated presence the renderer uses), within 30 m, and none
+  (`RemoteAvatarRegistry#currentPresence()`, the interpolated presence the renderer uses), within 40 m, and none
   while `setRemoteAvatarsVisible(false)` hides them. `advanceCreatureSound()` runs each through the local avatar's own
   `advanceAvatarSound()` (its own state per avatar id), with the JUMPING animation standing for RISING because
-  presence carries no vertical state, and no vehicle; the resulting footstep, jump and land cues become
-  PLAYER_FOOTSTEP/JUMP/LAND at 0.8 of their intensity, placed within 20 m. Nothing new is sent or stored: presence
-  already carries position and animation.
+  presence carries no vertical state, and the vehicle from `remoteAvatarVehicle()` (the riding message); the
+  resulting footstep, jump, land, mount and dismount cues become PLAYER_FOOTSTEP/JUMP/LAND/MOUNT/DISMOUNT, footsteps
+  at 0.8 of their intensity, placed within 20 m. Riders are read within 40 m (`RIDER_RANGE`): their speed, smoothed
+  over about 0.4 s because interpolated positions stall between updates, drives an engine load, and a fall to half
+  of its recent peak (which sinks 0.5 of top speed a second) from at least 0.45 is heard as PLAYER_BRAKE, since
+  braking isn't sent. `advanceCreatureSound()` returns the nearest three (`MAX_RIDER_ENGINES`) as `engines`, placed
+  like cues, and `WorldSoundscapeService` hands them to `provider.setRemoteEngines()`, which keeps one
+  VehicleEngineVoice per rider id behind its own gain and PannerNode (or stereo panner), gliding loudness and place
+  between the ten-a-second updates, and fades out a rider left out of the list.
 - **3D.** Every placed cue carries `position` (`{ x, y, z }`, heights where things are drawn: terrain plus the
-  presence's own `y`, animals 0.5 m and residents 1.5 m up). With `spatial` on (`core/SoundSettings.js`, default
+  presence's own `y`, or just that `y` for a rider, animals 0.5 m and residents 1.5 m up). With `spatial` on (`core/SoundSettings.js`, default
   true, the World View **3D**/**Stereo** button), the provider places it with a PannerNode (`panningModel` HRTF,
   `rolloffFactor` 0, since the cue's own gain already fades with distance); otherwise, or without a position, with
   the stereo `pan`. `WorldNavigationSession#soundListenerPose()` gives the AudioListener, set every render frame:
