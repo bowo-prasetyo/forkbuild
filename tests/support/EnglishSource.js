@@ -17,9 +17,15 @@ function english(key) {
     return value;
 }
 
+// The English as the inside of a single-quoted literal: backslashes first,
+// then quotes, so the literal reads back as the same text.
+function quoted(key) {
+    return english(key).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
 export function withEnglish(source) {
     return source
         .replace(/\{\{\s*t\('([\w.]+)'\)\s*\}\}/g, (match, key) => english(key))
         .replace(/:([\w-]+)="t\('([\w.]+)'\)"/g, (match, attribute, key) => `${attribute}="${english(key)}"`)
-        .replace(/\bt\('([\w.]+)'\)/g, (match, key) => `'${english(key).replace(/'/g, "\\'")}'`);
+        .replace(/\bt\('([\w.]+)'\)/g, (match, key) => `'${quoted(key)}'`);
 }
