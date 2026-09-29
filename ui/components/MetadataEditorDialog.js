@@ -1,4 +1,5 @@
 import { LICENSE_OPTIONS } from '../../application/document/LicenseLabels.js';
+import { t } from '../i18n/i18n.js';
 import { License, LicenseId } from '../../core/License.js';
 import { PLACEMENT_POLICY_OPTIONS } from '../../application/document/PlacementPolicyLabels.js';
 import { PlacementPolicy } from '../../core/PlacementPolicy.js';
@@ -36,6 +37,7 @@ export default {
         };
     },
     methods: {
+        t,
         onSave() {
             const trimmedTitle = this.title.trim();
             if (!trimmedTitle) {
@@ -100,7 +102,7 @@ export default {
                     <span class="form-label">License</span>
                     <select v-model="licenseId" class="form-select">
                         <option v-for="opt in licenseOptions" :key="opt.id" :value="opt.id">
-                            {{ opt.label }}
+                            {{ t(opt.label) }}
                         </option>
                     </select>
                 </label>
@@ -112,7 +114,7 @@ export default {
                     <span class="form-label">Who can place it in the World</span>
                     <select v-model="placementPolicy" class="form-select">
                         <option v-for="opt in placementPolicyOptions" :key="opt.id" :value="opt.id">
-                            {{ opt.label }}
+                            {{ t(opt.label) }}
                         </option>
                     </select>
                 </label>

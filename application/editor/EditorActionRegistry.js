@@ -28,18 +28,18 @@
 // Action shape:
 //   {
 //       id: 'transform.alignLeft',        // unique, dotted, stable
-//       label: 'Align Left',              // palette/sidebar display
-//       category: 'Transform',            // grouping, palette sections
+//       label: message,                   // palette/sidebar display
+//       category: 'transform',            // grouping id, palette sections
 //       tier: 'primary'|'common'|'advanced', // 0.6.2 — contextual action
 //                                          // hierarchy (see this field's
 //                                          // own note below); never
 //                                          // consulted by enabled()/
 //                                          // execute() — display-only
-//       description: '...',               // help text / docs
+//       description: message,             // help text / docs
 //       shortcut: 'Ctrl/Cmd+K' | null,    // display string
 //       keys: [{ key, ctrl, shift, alt }] | null,  // machine matching
 //       enabled: (context) => boolean,
-//       disabledReason: (context) => string | null,
+//       disabledReason: (context) => message | null,
 //       execute: (invocation) => void     // invocation: { context }
 //   }
 //
@@ -57,6 +57,21 @@
 // action is still reachable by search or shortcut regardless of tier,
 // per docs/Principles.md's own "no second, poorer surface" posture.
 // Unset defaults to 'common' via define()'s own spread below.
+import { message } from '../../core/Message.js';
+import { isUserFacingError } from '../../core/UserFacingError.js';
+
+// Text is never written here: every label, description, reason and bit of
+// feedback is a message named after the action's id (core/Message.js), which
+// the UI shows in the chosen language. See docs/Translating.md, "Editor
+// actions", for the key names.
+export function actionLabel(id) {
+    return message(`editorAction.${id}`);
+}
+
+export function actionCategoryLabel(category) {
+    return message(`editorActionCategory.${category}`);
+}
+
 export class EditorActionRegistry {
     constructor(actions = []) {
         this._actions = new Map();
@@ -85,14 +100,16 @@ export class EditorActionRegistry {
     }
 
     // Normalized substring matching across label, category, and id —
-    // deliberately simple for 0.1.50 (no fuzzy engine).
-    findMatching(query) {
+    // deliberately simple for 0.1.50 (no fuzzy engine). `toText` turns a
+    // label into the text the person sees (the UI passes t()), so searching
+    // works in their language; without it the message keys are searched.
+    findMatching(query, toText = (label) => String(label)) {
         const normalized = EditorActionRegistry.normalizeQuery(query);
         if (!normalized) {
             return this.getAll();
         }
         return this.getAll().filter((action) => {
-            const haystack = `${action.label} ${action.category} ${action.id}`.toLowerCase();
+            const haystack = `${toText(action.label)} ${toText(actionCategoryLabel(action.category))} ${action.id}`.toLowerCase();
             return haystack.includes(normalized);
         });
     }
@@ -171,15 +188,18 @@ export class EditorActionRegistry {
 // enabled rules) are identical everywhere.
 // ---------------------------------------------------------------------
 export function createStandardActions({ session, feedback, ui = {} }) {
+    // Every action's label and description are named after its id (see
+    // actionLabel() below), so a definition only spells out its behavior.
     const define = (partial) => ({
+        label: actionLabel(partial.id),
+        description: message(`editorAction.${partial.id}.description`),
         shortcut: null,
         keys: null,
-        description: '',
         tier: 'common', // 0.6.2 — see this file's own header
         enabled: () => true,
         disabledReason: () => null,
         // 0.9.213 — Editor Undo/Redo Label Mirrors. Display-only, exactly
-        // like disabledReason: (ctx) => string|null above — a null means
+        // like disabledReason: (ctx) => message|null above — a null means
         // "show the static label instead." Every action gets the inert
         // default; only history.undo/history.redo override it, and only
         // with a straight passthrough of ctx.undoLabel/ctx.redoLabel
@@ -195,11 +215,15 @@ export function createStandardActions({ session, feedback, ui = {} }) {
 
     // Editing shortcuts make no sense while placing bricks or mid-gesture.
     const editingAllowed = (ctx) => !ctx.placementMode && !ctx.gestureActive;
-    const selectionRequired = (ctx) => (ctx.hasSelection ? null : 'No bricks selected');
+    const reason = (name, params) => message(`editorActionReason.${name}`, params);
+    const selectionRequired = (ctx) => (ctx.hasSelection ? null : reason('noSelection'));
+    const done = (id) => message(`editorAction.${id}.done`);
+    const nothing = (id) => message(`editorAction.${id}.nothing`);
 
-    const surfaceCall = (methodName, unavailableMessage, run) => {
+    // `capability` names the "… is not available on this surface" message.
+    const surfaceCall = (methodName, capability, run) => {
         if (typeof session[methodName] !== 'function') {
-            feedback.show(unavailableMessage);
+            feedback.show(message(`editorActionUnavailable.${capability}`));
             return;
         }
         try {
@@ -212,24 +236,21 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             // throwing" contract this registry already promises for
             // an unavailable capability — extend it to a *refused*
             // one instead of letting the error reach the UI raw.
-            feedback.show(err.message);
+            feedback.show(isUserFacingError(err) ? err.userMessage : err.message);
         }
     };
 
-    const nudge = (suffix, label, shortcut, keyName, delta, axis) => define({
+    const nudge = (suffix, shortcut, keyName, delta) => define({
         id: `transform.nudge${suffix}`,
-        label: `Move ${label}`,
-        category: 'Transform',
+        category: 'transform',
         tier: 'primary', // 0.6.2 — "Move" is a Primary bucket action
         shortcut,
         keys: [{ key: keyName }],
-        description: `Nudge the selection ${label.toLowerCase()} by one grid step`,
         enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection,
         disabledReason: selectionRequired,
-        execute: () => surfaceCall('moveSelection', 'Move is not available on this surface', (moveSelection) => {
+        execute: () => surfaceCall('moveSelection', 'move', (moveSelection) => {
             moveSelection(delta);
-            const amount = delta[axis];
-            feedback.show(`Moved ${axis.toUpperCase()} ${amount > 0 ? '+' : ''}${amount}`);
+            feedback.show(done(`transform.nudge${suffix}`));
         })
     });
 
@@ -238,46 +259,47 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         ['Bottom', 'y-min'], ['Center Y', 'y-center'], ['Top', 'y-max'],
         ['Front', 'z-min'], ['Center Z', 'z-center'], ['Back', 'z-max']
     ];
-    const alignActions = ALIGN_OPERATIONS.map(([label, mode]) => define({
-        id: `transform.align${label.replace(/\s+/g, '')}`,
-        label: `Align ${label}`,
-        category: 'Transform',
-        tier: 'advanced', // 0.6.2
-        description: `Align the selection to its ${label.toLowerCase()} reference on the world ${mode[0].toUpperCase()} axis`,
-        enabled: (ctx) => editingAllowed(ctx) && ctx.selectionCount >= 2,
-        disabledReason: (ctx) => (ctx.selectionCount >= 2 ? null : 'Select at least 2 bricks'),
-        execute: () => surfaceCall('alignSelection', 'Alignment is not available on this surface', (alignSelection) => {
-            alignSelection(mode);
-            feedback.show(`Aligned ${label}`);
-        })
-    }));
+    const alignActions = ALIGN_OPERATIONS.map(([label, mode]) => {
+        const id = `transform.align${label.replace(/\s+/g, '')}`;
+        return define({
+            id,
+            category: 'transform',
+            tier: 'advanced', // 0.6.2
+            enabled: (ctx) => editingAllowed(ctx) && ctx.selectionCount >= 2,
+            disabledReason: (ctx) => (ctx.selectionCount >= 2 ? null : reason('selectAtLeast', { count: 2 })),
+            execute: () => surfaceCall('alignSelection', 'align', (alignSelection) => {
+                alignSelection(mode);
+                feedback.show(done(id));
+            })
+        });
+    });
 
-    const distributeActions = ['x', 'y', 'z'].map((axis) => define({
-        id: `transform.distribute${axis.toUpperCase()}`,
-        label: `Distribute ${axis.toUpperCase()}`,
-        category: 'Transform',
-        tier: 'advanced', // 0.6.2
-        description: `Distribute the selection's centers evenly along world ${axis.toUpperCase()}`,
-        enabled: (ctx) => editingAllowed(ctx) && ctx.selectionCount >= 3,
-        disabledReason: (ctx) => (ctx.selectionCount >= 3 ? null : 'Select at least 3 bricks'),
-        execute: () => surfaceCall('distributeSelection', 'Distribution is not available on this surface', (distributeSelection) => {
-            distributeSelection(axis);
-            feedback.show(`Distributed ${axis.toUpperCase()}`);
-        })
-    }));
+    const distributeActions = ['x', 'y', 'z'].map((axis) => {
+        const id = `transform.distribute${axis.toUpperCase()}`;
+        return define({
+            id,
+            category: 'transform',
+            tier: 'advanced', // 0.6.2
+            enabled: (ctx) => editingAllowed(ctx) && ctx.selectionCount >= 3,
+            disabledReason: (ctx) => (ctx.selectionCount >= 3 ? null : reason('selectAtLeast', { count: 3 })),
+            execute: () => surfaceCall('distributeSelection', 'distribute', (distributeSelection) => {
+                distributeSelection(axis);
+                feedback.show(done(id));
+            })
+        });
+    });
 
-    const groupAction = (suffix, label, methodName, unavailable, requirement, reason, done, tier = 'advanced') => define({
+    const groupRequired = (ctx) => (ctx.hasSelectedGroup ? null : reason('selectGroup'));
+    const groupAction = (suffix, methodName, requirement, requirementReason, tier = 'advanced') => define({
         id: `group.${suffix}`,
-        label,
-        category: 'Groups',
+        category: 'groups',
         tier, // 0.6.2 — every group operation is Advanced except the
               // entry point itself (group.create, called with 'common')
-        description: `${label} — operates on the resolved selection or the selected group`,
         enabled: (ctx) => editingAllowed(ctx) && requirement(ctx),
-        disabledReason: (ctx) => (requirement(ctx) ? null : reason(ctx)),
-        execute: () => surfaceCall(methodName, unavailable, (method) => {
+        disabledReason: (ctx) => (requirement(ctx) ? null : requirementReason(ctx)),
+        execute: () => surfaceCall(methodName, 'groups', (method) => {
             method();
-            feedback.show(done);
+            feedback.show(done(`group.${suffix}`));
         })
     });
 
@@ -285,29 +307,25 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         // ----------------------------------------------------- Selection
         define({
             id: 'selection.selectAll',
-            label: 'Select All',
-            category: 'Selection',
+            category: 'selection',
             shortcut: 'Ctrl/Cmd+A',
             keys: [{ key: 'a', ctrl: true }],
-            description: 'Select every brick in the active document',
             enabled: (ctx) => !ctx.gestureActive,
-            execute: () => surfaceCall('selectAll', 'Select All is not available on this surface', (selectAll) => {
+            execute: () => surfaceCall('selectAll', 'selectAll', (selectAll) => {
                 selectAll();
-                feedback.show('Selected all bricks');
+                feedback.show(done('selection.selectAll'));
             })
         }),
         define({
             id: 'selection.clear',
-            label: 'Clear Selection',
-            category: 'Selection',
+            category: 'selection',
             shortcut: 'Esc',
             keys: [{ key: 'escape' }],
-            description: 'Clear the current selection',
             enabled: (ctx) => ctx.hasSelection && !ctx.gestureActive,
             disabledReason: selectionRequired,
-            execute: () => surfaceCall('clearSelection', 'Clear Selection is not available on this surface', (clearSelection) => {
+            execute: () => surfaceCall('clearSelection', 'clearSelection', (clearSelection) => {
                 clearSelection();
-                feedback.show('Selection cleared');
+                feedback.show(done('selection.clear'));
             })
         }),
         // 0.2.91 — World Instance Editing & Placement Management gated
@@ -320,34 +338,30 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         // — any non-empty selection is duplicable, exactly like delete.
         define({
             id: 'selection.duplicate',
-            label: 'Duplicate',
-            category: 'Selection',
+            category: 'selection',
             shortcut: 'Ctrl/Cmd+D',
             keys: [{ key: 'd', ctrl: true }],
-            description: 'Duplicate the selected bricks or structure placement (one undo step)',
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection,
             disabledReason: selectionRequired,
-            execute: () => surfaceCall('duplicateSelection', 'Duplicate is not available on this surface', (duplicateSelection) => {
+            execute: () => surfaceCall('duplicateSelection', 'duplicate', (duplicateSelection) => {
                 const newId = duplicateSelection();
                 // 0.6.2 — "what happens next": name the next likely
                 // action instead of only confirming the last one, the
                 // same contextual-hint posture the placement/collision
                 // feedback strings already used before this milestone.
-                feedback.show(newId ? 'Copy created — R to rotate, drag to move' : 'Nothing to duplicate');
+                feedback.show(newId ? done('selection.duplicate') : nothing('selection.duplicate'));
             })
         }),
         define({
             id: 'selection.delete',
-            label: 'Delete Selection',
-            category: 'Selection',
+            category: 'selection',
             shortcut: 'Del',
             keys: [{ key: 'delete' }, { key: 'backspace' }],
-            description: 'Delete the selected bricks, or the selected structure placement (one undo step)',
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection,
             disabledReason: selectionRequired,
-            execute: () => surfaceCall('deleteSelection', 'Delete is not available on this surface', (deleteSelection) => {
+            execute: () => surfaceCall('deleteSelection', 'delete', (deleteSelection) => {
                 const deleted = deleteSelection();
-                feedback.show(deleted !== false ? 'Deleted selection' : 'Nothing to delete');
+                feedback.show(deleted !== false ? done('selection.delete') : nothing('selection.delete'));
             })
         }),
         // 0.9.661 — Add Editor Selection Focus Action. Composed entirely
@@ -366,48 +380,42 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         // something this action silently attempts.
         define({
             id: 'selection.focus',
-            label: 'Focus Selection',
-            category: 'Selection',
-            description: 'Frame the camera on the selected bricks',
+            category: 'selection',
             enabled: (ctx) => ctx.hasSelection && !ctx.selectionIsStructurePlacement,
             disabledReason: (ctx) => {
-                if (ctx.selectionIsStructurePlacement) return 'Focus Selection is available for brick selections only';
-                return ctx.hasSelection ? null : 'No bricks selected';
+                if (ctx.selectionIsStructurePlacement) return reason('focusBricksOnly');
+                return ctx.hasSelection ? null : reason('noSelection');
             },
             execute: () => {
                 if (typeof session.getSelectionSummary !== 'function' || typeof session.frameCameraOn !== 'function') {
-                    feedback.show('Focus Selection is not available on this surface');
+                    feedback.show(message('editorActionUnavailable.focus'));
                     return;
                 }
                 const summary = session.getSelectionSummary();
                 if (!summary) {
-                    feedback.show('Nothing to focus');
+                    feedback.show(nothing('selection.focus'));
                     return;
                 }
                 session.frameCameraOn(summary.bounds.center);
-                feedback.show('Focused selection');
+                feedback.show(done('selection.focus'));
             }
         }),
 
         // -------------------------------------------------------- Groups
-        groupAction('create', 'Create Group', 'createGroupFromSelection',
-            'Groups are not available on this surface',
-            (ctx) => ctx.hasSelection, selectionRequired, 'Created group', 'common'),
+        groupAction('create', 'createGroupFromSelection', (ctx) => ctx.hasSelection, selectionRequired, 'common'),
         define({
             id: 'group.rename',
-            label: 'Rename Group',
-            category: 'Groups',
+            category: 'groups',
             tier: 'advanced', // 0.6.2
-            description: 'Rename the selected group',
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelectedGroup,
-            disabledReason: (ctx) => (ctx.hasSelectedGroup ? null : 'Select a group'),
+            disabledReason: groupRequired,
             // renameSelectedGroup(name) has no default for `name` — this
             // has to actually collect one before calling it, through the
             // same "ui hook, degrade to feedback if absent" posture as
             // structure.createFromSelection's ui.openCreateBlueprintDialog.
-            execute: () => surfaceCall('renameSelectedGroup', 'Groups are not available on this surface', (rename) => {
+            execute: () => surfaceCall('renameSelectedGroup', 'groups', (rename) => {
                 if (typeof ui.promptRenameGroup !== 'function') {
-                    feedback.show('Groups are not available on this surface');
+                    feedback.show(message('editorActionUnavailable.groups'));
                     return;
                 }
                 const groups = typeof session.getGroups === 'function' ? session.getGroups() : [];
@@ -418,53 +426,41 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                     return;
                 }
                 rename(name.trim() || null);
-                feedback.show('Renamed group');
+                feedback.show(done('group.rename'));
             })
         }),
-        groupAction('duplicate', 'Duplicate Group', 'duplicateSelectedGroup',
-            'Groups are not available on this surface',
-            (ctx) => ctx.hasSelectedGroup, (ctx) => (ctx.hasSelectedGroup ? null : 'Select a group'), 'Duplicated group'),
-        groupAction('delete', 'Delete Group', 'deleteSelectedGroup',
-            'Groups are not available on this surface',
-            (ctx) => ctx.hasSelectedGroup, (ctx) => (ctx.hasSelectedGroup ? null : 'Select a group'), 'Deleted group'),
-        groupAction('addSelection', 'Add Selection to Group', 'addSelectionToSelectedGroup',
-            'Groups are not available on this surface',
+        groupAction('duplicate', 'duplicateSelectedGroup', (ctx) => ctx.hasSelectedGroup, groupRequired),
+        groupAction('delete', 'deleteSelectedGroup', (ctx) => ctx.hasSelectedGroup, groupRequired),
+        groupAction('addSelection', 'addSelectionToSelectedGroup',
             (ctx) => ctx.hasSelection && ctx.hasSelectedGroup,
-            (ctx) => (!ctx.hasSelection ? 'No bricks selected' : 'Select a group'),
-            'Added selection to group'),
-        groupAction('removeSelection', 'Remove Selection from Group', 'removeSelectionFromSelectedGroup',
-            'Groups are not available on this surface',
+            (ctx) => (!ctx.hasSelection ? reason('noSelection') : reason('selectGroup'))),
+        groupAction('removeSelection', 'removeSelectionFromSelectedGroup',
             (ctx) => ctx.hasSelection && ctx.hasSelectedGroup,
-            (ctx) => (!ctx.hasSelection ? 'No bricks selected' : 'Select a group'),
-            'Removed selection from group'),
+            (ctx) => (!ctx.hasSelection ? reason('noSelection') : reason('selectGroup'))),
 
         // ----------------------------------------------------- Clipboard
         define({
             id: 'clipboard.copy',
-            label: 'Copy',
-            category: 'Clipboard',
+            category: 'clipboard',
             shortcut: 'Ctrl/Cmd+C',
             keys: [{ key: 'c', ctrl: true }],
-            description: 'Copy the selected bricks to the clipboard',
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection,
             disabledReason: selectionRequired,
-            execute: () => surfaceCall('copySelection', 'Clipboard is not available on this surface', (copySelection) => {
+            execute: () => surfaceCall('copySelection', 'clipboard', (copySelection) => {
                 copySelection();
-                feedback.show('Copied selection');
+                feedback.show(done('clipboard.copy'));
             })
         }),
         define({
             id: 'clipboard.paste',
-            label: 'Paste',
-            category: 'Clipboard',
+            category: 'clipboard',
             shortcut: 'Ctrl/Cmd+V',
             keys: [{ key: 'v', ctrl: true }],
-            description: 'Paste the clipboard contents into the document',
             enabled: (ctx) => editingAllowed(ctx) && !ctx.clipboardEmpty,
-            disabledReason: (ctx) => (ctx.clipboardEmpty ? 'Clipboard is empty' : null),
-            execute: () => surfaceCall('paste', 'Clipboard is not available on this surface', (paste) => {
+            disabledReason: (ctx) => (ctx.clipboardEmpty ? reason('clipboardEmpty') : null),
+            execute: () => surfaceCall('paste', 'clipboard', (paste) => {
                 paste();
-                feedback.show('Pasted');
+                feedback.show(done('clipboard.paste'));
             })
         }),
 
@@ -482,19 +478,17 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         // itself once the user submits it (EditorView#onCreateBlueprint()).
         define({
             id: 'structure.createFromSelection',
-            label: 'Create Blueprint',
-            category: 'Structure',
+            category: 'structure',
             tier: 'advanced', // 0.6.3 — a "what's next," not an always-visible button
-            description: 'Create a reusable Structure from the selected bricks, normalized to its own local origin',
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection && !ctx.selectionIsStructurePlacement,
             disabledReason: (ctx) => {
-                if (!ctx.hasSelection) return 'No bricks selected';
-                if (ctx.selectionIsStructurePlacement) return 'Create Structure requires brick selections only';
+                if (!ctx.hasSelection) return reason('noSelection');
+                if (ctx.selectionIsStructurePlacement) return reason('blueprintBricksOnly');
                 return null;
             },
             execute: () => {
                 if (typeof ui.openCreateBlueprintDialog !== 'function') {
-                    feedback.show('Create Blueprint is not available on this surface');
+                    feedback.show(message('editorActionUnavailable.createBlueprint'));
                     return;
                 }
                 ui.openCreateBlueprintDialog();
@@ -502,57 +496,51 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         }),
 
         // ----------------------------------------------------- Transform
-        nudge('Right', 'Right', '→', 'arrowright', { x: 1, y: 0, z: 0 }, 'x'),
-        nudge('Left', 'Left', '←', 'arrowleft', { x: -1, y: 0, z: 0 }, 'x'),
-        nudge('Forward', 'Forward', '↑', 'arrowup', { x: 0, y: 0, z: -1 }, 'z'),
-        nudge('Back', 'Back', '↓', 'arrowdown', { x: 0, y: 0, z: 1 }, 'z'),
-        nudge('Up', 'Up', 'PgUp', 'pageup', { x: 0, y: 1, z: 0 }, 'y'),
-        nudge('Down', 'Down', 'PgDn', 'pagedown', { x: 0, y: -1, z: 0 }, 'y'),
+        nudge('Right', '→', 'arrowright', { x: 1, y: 0, z: 0 }),
+        nudge('Left', '←', 'arrowleft', { x: -1, y: 0, z: 0 }),
+        nudge('Forward', '↑', 'arrowup', { x: 0, y: 0, z: -1 }),
+        nudge('Back', '↓', 'arrowdown', { x: 0, y: 0, z: 1 }),
+        nudge('Up', 'PgUp', 'pageup', { x: 0, y: 1, z: 0 }),
+        nudge('Down', 'PgDn', 'pagedown', { x: 0, y: -1, z: 0 }),
         define({
             id: 'transform.rotateClockwise',
-            label: 'Rotate Clockwise',
-            category: 'Transform',
+            category: 'transform',
             tier: 'primary', // 0.6.2
             shortcut: 'R',
             keys: [{ key: 'r' }],
-            description: 'Rotate the selection +90° around its pivot',
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection,
             disabledReason: selectionRequired,
-            execute: () => surfaceCall('rotateSelection', 'Rotate is not available on this surface', (rotateSelection) => {
+            execute: () => surfaceCall('rotateSelection', 'rotate', (rotateSelection) => {
                 rotateSelection(90);
-                feedback.show('Rotated +90°');
+                feedback.show(done('transform.rotateClockwise'));
             })
         }),
         define({
             id: 'transform.rotateCounterClockwise',
-            label: 'Rotate Counter-Clockwise',
-            category: 'Transform',
+            category: 'transform',
             tier: 'primary', // 0.6.2
             shortcut: 'Shift+R',
             keys: [{ key: 'r', shift: true }],
-            description: 'Rotate the selection −90° around its pivot',
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection,
             disabledReason: selectionRequired,
-            execute: () => surfaceCall('rotateSelection', 'Rotate is not available on this surface', (rotateSelection) => {
+            execute: () => surfaceCall('rotateSelection', 'rotate', (rotateSelection) => {
                 rotateSelection(-90);
-                feedback.show('Rotated −90°');
+                feedback.show(done('transform.rotateCounterClockwise'));
             })
         }),
         ...alignActions,
         ...distributeActions,
         define({
             id: 'transform.numeric',
-            label: 'Numeric Transform Panel',
-            category: 'Transform',
+            category: 'transform',
             tier: 'advanced', // 0.6.2
-            description: 'Focus the numeric transform input in the sidebar',
             enabled: (ctx) => editingAllowed(ctx),
             execute: () => {
                 if (typeof ui.focusNumeric === 'function') {
                     ui.focusNumeric();
-                    feedback.show('Numeric transform ready');
+                    feedback.show(done('transform.numeric'));
                 } else {
-                    feedback.show('Numeric panel is not available on this surface');
+                    feedback.show(message('editorActionUnavailable.numeric'));
                 }
             }
         }),
@@ -570,18 +558,16 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         // touch.
         define({
             id: 'transform.repeat',
-            label: 'Repeat Selection',
-            category: 'Transform',
+            category: 'transform',
             tier: 'advanced',
-            description: 'Focus the Repeat panel in the sidebar',
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection,
             disabledReason: selectionRequired,
             execute: () => {
                 if (typeof ui.focusRepeat === 'function') {
                     ui.focusRepeat();
-                    feedback.show('Repeat panel ready');
+                    feedback.show(done('transform.repeat'));
                 } else {
-                    feedback.show('Repeat panel is not available on this surface');
+                    feedback.show(message('editorActionUnavailable.repeat'));
                 }
             }
         }),
@@ -589,50 +575,44 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         // ------------------------------------------------------- History
         define({
             id: 'history.undo',
-            label: 'Undo',
-            category: 'History',
+            category: 'history',
             shortcut: 'Ctrl/Cmd+Z',
             keys: [{ key: 'z', ctrl: true }],
-            description: 'Undo the last operation',
             enabled: (ctx) => ctx.canUndo && !ctx.gestureActive,
-            disabledReason: (ctx) => (ctx.canUndo ? null : 'Nothing to undo'),
+            disabledReason: (ctx) => (ctx.canUndo ? null : reason('nothingToUndo')),
             // 0.9.213 — ctx.undoLabel IS CommandHistory's own
             // getUndoLabel() ("Undo Create Landmark", already prefixed),
             // mirrored through EditorActionContext.capture()'s historyCall()
             // helper. Null whenever ctx.canUndo is false, so this never
             // disagrees with disabledReason above.
             contextualLabel: (ctx) => ctx.undoLabel,
-            execute: () => surfaceCall('undo', 'Undo is not available on this surface', (undo) => {
+            execute: () => surfaceCall('undo', 'undo', (undo) => {
                 undo();
-                feedback.show('Undone');
+                feedback.show(done('history.undo'));
             })
         }),
         define({
             id: 'history.redo',
-            label: 'Redo',
-            category: 'History',
+            category: 'history',
             shortcut: 'Ctrl/Cmd+Shift+Z',
             keys: [{ key: 'z', ctrl: true, shift: true }, { key: 'y', ctrl: true }],
-            description: 'Redo the last undone operation',
             enabled: (ctx) => ctx.canRedo && !ctx.gestureActive,
-            disabledReason: (ctx) => (ctx.canRedo ? null : 'Nothing to redo'),
+            disabledReason: (ctx) => (ctx.canRedo ? null : reason('nothingToRedo')),
             // 0.9.213 — see history.undo's own contextualLabel above;
             // ctx.redoLabel is CommandHistory's own getRedoLabel().
             contextualLabel: (ctx) => ctx.redoLabel,
-            execute: () => surfaceCall('redo', 'Redo is not available on this surface', (redo) => {
+            execute: () => surfaceCall('redo', 'redo', (redo) => {
                 redo();
-                feedback.show('Redone');
+                feedback.show(done('history.redo'));
             })
         }),
 
         // ------------------------------------------------------------ UI
         define({
             id: 'ui.commandPalette',
-            label: 'Command Palette',
-            category: 'Interface',
+            category: 'interface',
             shortcut: 'Ctrl/Cmd+K',
             keys: [{ key: 'k', ctrl: true }],
-            description: 'Open the command palette',
             execute: () => {
                 if (typeof ui.togglePalette === 'function') {
                     ui.togglePalette();

@@ -82,6 +82,7 @@ import { worldListsSectionTemplate } from './worldView/templates/worldListsSecti
 import { navigationHudSectionTemplate } from './worldView/templates/navigationHudSection.js';
 import { publicationSectionTemplate } from './worldView/templates/publicationSection.js';
 import { hoverCardTemplate } from './worldView/templates/hoverCard.js';
+import { displayText, errorText, t } from '../i18n/i18n.js';
 
 // Snapshot fetches the automatic cascade runs at once.
 const AUTOMATIC_SNAPSHOT_FETCH_CONCURRENCY = 4;
@@ -372,9 +373,10 @@ export default {
 
         // ----------------------------- action surface -------------
 
+        // `message` is text or a message descriptor (core/Message.js).
         const feedback = {
             show(message) {
-                feedbackMessage.value = message;
+                feedbackMessage.value = displayText(message);
                 feedbackVisible.value = true;
                 if (feedbackTimer) {
                     clearTimeout(feedbackTimer);
@@ -393,11 +395,11 @@ export default {
                 const result = fn();
                 const notice = session.consumeForkNotice();
                 if (notice) {
-                    feedback.show(`Created your own editable copy — "${notice.sourceTitle}" is unchanged`);
+                    feedback.show(t('worldView.forkCreated', { title: notice.sourceTitle }));
                 }
                 return result;
             } catch (err) {
-                feedback.show(err.message);
+                feedback.show(errorText(err));
                 return undefined;
             }
         }
@@ -1113,6 +1115,7 @@ export default {
         });
 
         return {
+            displayText,
             viewport,
             title,
             author,

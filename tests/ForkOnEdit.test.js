@@ -23,6 +23,7 @@ import { SpatialCameraController } from '../application/world/SpatialCameraContr
 import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
+import { t } from '../ui/i18n/i18n.js';
 
 // ---------------------------------------------------------------------
 // Helpers
@@ -456,7 +457,7 @@ async function runTests() {
             '21. a forkable published snapshot reports blocked:false with an explanatory message');
 
         const blockedNotice = session.getEditabilityNotice(blockedPub.documentId);
-        assert(blockedNotice && blockedNotice.blocked === true && /ALL-RIGHTS-RESERVED/.test(blockedNotice.message),
+        assert(blockedNotice && blockedNotice.blocked === true && /ALL-RIGHTS-RESERVED/.test(t(blockedNotice.message)),
             '21b. a fork-forbidden published snapshot reports blocked:true naming the license');
 
         assert(session.getEditabilityNotice(null) === null && session.getEditabilityNotice('nonexistent') === null,

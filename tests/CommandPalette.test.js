@@ -1,6 +1,7 @@
-import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { EditorActionRegistry, actionCategoryLabel, createStandardActions } from '../application/editor/EditorActionRegistry.js';
 import { EditorActionContext } from '../application/editor/EditorActionContext.js';
 import { assert } from './support/Assert.js';
+import { displayText, t } from '../ui/i18n/i18n.js';
 
 // 0.1.50 — Command palette tests. The component (ui/components/
 // CommandPalette.js) is a thin visual layer; everything testable
@@ -32,7 +33,7 @@ class MinimalSession {
 
 function harness(sessionState = {}) {
     const session = new MinimalSession(sessionState);
-    const feedback = { messages: [], show(message) { this.messages.push(message); } };
+    const feedback = { messages: [], show(message) { this.messages.push(displayText(message)); } };
     const registry = new EditorActionRegistry(createStandardActions({ session, feedback, ui: {} }));
     return { session, feedback, registry };
 }
@@ -62,14 +63,14 @@ function contextFor(sessionState = {}) {
 // ---------------------------------------------------------------------
 {
     const { registry } = harness();
-    const alignResults = registry.findMatching('align');
+    const alignResults = registry.findMatching('align', t);
     assert(alignResults.length === 9, 'palette search finds all nine align actions');
-    const leftResults = registry.findMatching('left');
+    const leftResults = registry.findMatching('left', t);
     assert(leftResults.some((action) => action.id === 'transform.alignLeft'), 'label fragments match');
-    const historyResults = registry.findMatching('history');
+    const historyResults = registry.findMatching('history', t);
     assert(historyResults.some((action) => action.id === 'history.undo')
         && historyResults.some((action) => action.id === 'history.redo'), 'category text matches');
-    const idResults = registry.findMatching('rotatecounter');
+    const idResults = registry.findMatching('rotatecounter', t);
     assert(idResults.some((action) => action.id === 'transform.rotateCounterClockwise'), 'id text matches');
     console.log('✓ search results');
 }
@@ -79,11 +80,11 @@ function contextFor(sessionState = {}) {
 // ---------------------------------------------------------------------
 {
     const { registry } = harness();
-    const groups = EditorActionRegistry.groupByCategory(registry.findMatching(''));
+    const groups = EditorActionRegistry.groupByCategory(registry.findMatching('', t));
     assert(groups.length >= 5, 'palette shows multiple category sections');
-    const transformGroup = groups.find((group) => group.category === 'Transform');
+    const transformGroup = groups.find((group) => t(actionCategoryLabel(group.category)) === 'Transform');
     assert(transformGroup.actions.length >= 18, 'transform section carries the full operation set');
-    const order = groups.map((group) => group.category);
+    const order = groups.map((group) => t(actionCategoryLabel(group.category)));
     assert(order.indexOf('Selection') < order.indexOf('Interface'), 'section order is stable');
     console.log('✓ grouped rendering data');
 }
@@ -94,11 +95,11 @@ function contextFor(sessionState = {}) {
 {
     const { registry } = harness({ selectionCount: 2 });
     const context = contextFor({ selectionCount: 2 });
-    const distributeResults = registry.findMatching('distribute');
+    const distributeResults = registry.findMatching('distribute', t);
     assert(distributeResults.length === 3, 'disabled actions still appear in search');
     for (const action of distributeResults) {
         assert(action.enabled(context) === false, `${action.id} disabled with two bricks`);
-        assert(action.disabledReason(context) === 'Select at least 3 bricks', `${action.id} explains why`);
+        assert(t(action.disabledReason(context)) === 'Select at least 3 bricks', `${action.id} explains why`);
     }
     console.log('✓ disabled visibility with reasons');
 }

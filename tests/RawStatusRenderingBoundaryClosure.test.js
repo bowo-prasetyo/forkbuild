@@ -5,7 +5,10 @@ import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/
 import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
 import { TrustStatus } from '../core/TrustObservation.js';
-import { describeTrustStatus } from '../application/avatar/AvatarPresenceLabels.js';
+import { describeTrustStatus as describeTrustStatusMessage } from '../application/avatar/AvatarPresenceLabels.js';
+import { t } from '../ui/i18n/i18n.js';
+// Each label as a person reads it, in English.
+const describeTrustStatus = (...args) => t(describeTrustStatusMessage(...args));
 import { worldEncounterCanvasFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { readSource as source } from './support/SourceText.js';
 

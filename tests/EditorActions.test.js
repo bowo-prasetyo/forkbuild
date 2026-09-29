@@ -1,4 +1,5 @@
-import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { EditorActionRegistry, actionCategoryLabel, createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { displayText, hasMessage, t } from '../ui/i18n/i18n.js';
 import { EditorActionContext } from '../application/editor/EditorActionContext.js';
 import { InputRouter } from '../application/editor/InputRouter.js';
 import { assert } from './support/Assert.js';
@@ -66,7 +67,8 @@ class FakeSession {
 
 function buildHarness(sessionState = {}, sessionOverride = null) {
     const session = sessionOverride || new FakeSession(sessionState);
-    const feedback = { messages: [], show(message) { this.messages.push(message); } };
+    // Feedback is recorded as the English the person would read.
+    const feedback = { messages: [], show(message) { this.messages.push(displayText(message)); } };
     const ui = {
         toggled: 0,
         togglePalette() { this.toggled += 1; },
@@ -110,9 +112,9 @@ function rawKey(key, { ctrl = false, shift = false, alt = false, meta = false, r
     assert(new Set(ids).size === ids.length, 'every action id is unique');
     assert(actions.length >= 30, 'the standard set covers all operation families');
     for (const action of actions) {
-        assert(typeof action.label === 'string' && action.label.length > 0, `${action.id} has a label`);
-        assert(typeof action.category === 'string', `${action.id} has a category`);
-        assert(typeof action.description === 'string' && action.description.length > 0, `${action.id} has a description`);
+        assert(hasMessage(action.label.key) && t(action.label).length > 0, `${action.id} has a label`);
+        assert(typeof action.category === 'string' && hasMessage(actionCategoryLabel(action.category).key), `${action.id} has a category`);
+        assert(hasMessage(action.description.key) && t(action.description).length > 0, `${action.id} has a description`);
         assert(typeof action.enabled === 'function', `${action.id} has enabled()`);
         assert(typeof action.execute === 'function', `${action.id} has execute()`);
     }
@@ -175,12 +177,14 @@ function rawKey(key, { ctrl = false, shift = false, alt = false, meta = false, r
 // ---------------------------------------------------------------------
 {
     const { registry } = buildHarness();
-    assert(registry.findMatching('align').length === 9, 'align matches the nine alignment actions');
-    assert(registry.findMatching('ALIGN').length === 9, 'matching is case-insensitive');
-    assert(registry.findMatching('  distribute  ').length === 3, 'matching trims whitespace');
-    assert(registry.findMatching('transform').length >= 18, 'category text is searchable');
-    assert(registry.findMatching('').length === registry.getAll().length, 'empty query returns everything');
-    assert(registry.findMatching('zzz-not-a-command').length === 0, 'no false positives');
+    // Searched as the person reads it: labels and categories through t().
+    assert(registry.findMatching('align', t).length === 9, 'align matches the nine alignment actions');
+    assert(registry.findMatching('ALIGN', t).length === 9, 'matching is case-insensitive');
+    assert(registry.findMatching('  distribute  ', t).length === 3, 'matching trims whitespace');
+    assert(registry.findMatching('transform', t).length >= 18, 'category text is searchable');
+    assert(registry.findMatching('Rotate Counter', t).length === 1, 'a label is searchable in its displayed words');
+    assert(registry.findMatching('', t).length === registry.getAll().length, 'empty query returns everything');
+    assert(registry.findMatching('zzz-not-a-command', t).length === 0, 'no false positives');
     console.log('✓ search / matching');
 }
 
@@ -190,7 +194,7 @@ function rawKey(key, { ctrl = false, shift = false, alt = false, meta = false, r
 {
     const { registry } = buildHarness();
     const groups = EditorActionRegistry.groupByCategory(registry.getAll());
-    const names = groups.map((group) => group.category);
+    const names = groups.map((group) => t(actionCategoryLabel(group.category)));
     for (const expected of ['Selection', 'Groups', 'Clipboard', 'Transform', 'History', 'Interface']) {
         assert(names.includes(expected), `category ${expected} present`);
     }
@@ -219,11 +223,11 @@ function rawKey(key, { ctrl = false, shift = false, alt = false, meta = false, r
     const emptyClipboard = contextFor({ selectionCount: 3, clipboardCount: 0 });
     const pasteAction = registry.get('clipboard.paste');
     assert(pasteAction.enabled(emptyClipboard) === false, 'paste disabled with empty clipboard');
-    assert(pasteAction.disabledReason(emptyClipboard) === 'Clipboard is empty', 'paste explains itself');
+    assert(t(pasteAction.disabledReason(emptyClipboard)) === 'Clipboard is empty', 'paste explains itself');
     const alignReason = registry.get('transform.alignLeft').disabledReason(contextFor({ selectionCount: 1 }));
-    assert(alignReason === 'Select at least 2 bricks', 'align explains itself');
+    assert(t(alignReason) === 'Select at least 2 bricks', 'align explains itself');
     const distributeReason = registry.get('transform.distributeX').disabledReason(contextFor({ selectionCount: 2 }));
-    assert(distributeReason === 'Select at least 3 bricks', 'distribute explains itself');
+    assert(t(distributeReason) === 'Select at least 3 bricks', 'distribute explains itself');
     console.log('✓ disabled actions never execute (and explain why)');
 }
 
@@ -400,7 +404,7 @@ function rawKey(key, { ctrl = false, shift = false, alt = false, meta = false, r
     for (const id of editorIds) {
         const a = editorHarness.registry.get(id);
         const b = worldHarness.registry.get(id);
-        assert(a.label === b.label && a.category === b.category && a.shortcut === b.shortcut,
+        assert(a.label.key === b.label.key && a.category === b.category && a.shortcut === b.shortcut,
             `definition parity for ${id}`);
     }
     console.log('✓ surface parity: one registry shape for both views');

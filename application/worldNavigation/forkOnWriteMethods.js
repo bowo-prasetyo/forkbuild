@@ -2,6 +2,8 @@ import { CommandHistory } from '../editor/CommandHistory.js';
 import { License } from '../../core/License.js';
 import { SpatialSelectionState } from '../spatial-state/SpatialSelectionState.js';
 import { SpatialHoverState } from '../spatial-state/SpatialHoverState.js';
+import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
 
 // WorldNavigationSession fork-on-write: a published snapshot is never edited
 // in place; its first mutation forks a new Document and remaps selection,
@@ -24,22 +26,19 @@ export const forkOnWriteMethods = {
     // Otherwise:
     //   { blocked: false, message } — editable; first edit forks silently
     //   { blocked: true,  message } — fork policy forbids it
+    // `message` is a descriptor (core/Message.js).
     getEditabilityNotice(documentId) {
         if (!documentId || !this._publishedDocumentIds.has(documentId)) {
             return null;
         }
         const { allowed, license } = this._checkForkPolicy(documentId);
         if (!allowed) {
-            const licenseLabel = license ? license.id : 'UNSPECIFIED';
             return {
                 blocked: true,
-                message: `Published under "${licenseLabel}" — the author has not allowed forking, so this world can be viewed but not edited.`
+                message: message('fork.notice.blocked', { license: license ? license.id : 'UNSPECIFIED' })
             };
         }
-        return {
-            blocked: false,
-            message: 'Published snapshot — your first edit creates your own editable fork; the original is never changed.'
-        };
+        return { blocked: false, message: message('fork.notice.forkOnEdit') };
     },
 
     // Document Properties entry point. Metadata edits are mutations, so they go
@@ -88,10 +87,10 @@ export const forkOnWriteMethods = {
 
         const policy = this._checkForkPolicy(sourceDocumentId);
         if (!policy.allowed) {
-            throw new Error(
-                `WorldNavigationSession: forking is not permitted under license `
-                + `${policy.license ? policy.license.id : 'UNSPECIFIED'} for document "${sourceDocumentId}"`
-            );
+            const license = policy.license ? policy.license.id : 'UNSPECIFIED';
+            throw new UserFacingError(message('fork.notPermitted', { license }), {
+                detail: `WorldNavigationSession: forking is not permitted under license ${license} for document "${sourceDocumentId}"`
+            });
         }
 
         const user = this._identityProvider ? this._identityProvider.currentUser() : null;

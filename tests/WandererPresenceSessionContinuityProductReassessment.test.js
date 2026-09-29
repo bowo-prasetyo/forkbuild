@@ -935,11 +935,13 @@ async function main() {
         // enum constants — are translated to human words in exactly one
         // place before a viewer ever sees them, never the raw constant
         // string leaking through.
-        const labelsSource = await readSource('application/avatar/AvatarPresenceLabels.js');
-        assert(/'Present'/.test(labelsSource) && /'Stale'/.test(labelsSource) && /'Trusted'/.test(labelsSource),
+        const { describeLifecycleState, describeTrustStatus } = await import('../application/avatar/AvatarPresenceLabels.js');
+        const { TrustStatus: LabelTrustStatus } = await import('../core/TrustObservation.js');
+        const { t } = await import('../ui/i18n/i18n.js');
+        assert(t(describeLifecycleState(PresenceLifecycleState.PRESENT)) === 'Present' && t(describeLifecycleState(PresenceLifecycleState.STALE)) === 'Stale'
+            && t(describeTrustStatus(LabelTrustStatus.VALID)) === 'Trusted',
             'L2a. application/avatar/AvatarPresenceLabels.js translates the raw PresenceLifecycleState/TrustStatus vocabulary into plain words.');
-        const { describeLifecycleState } = await import('../application/avatar/AvatarPresenceLabels.js');
-        assert(describeLifecycleState(PresenceLifecycleState.PRESENT) === 'Present' && describeLifecycleState('not-a-real-state') === 'Unknown',
+        assert(t(describeLifecycleState(PresenceLifecycleState.PRESENT)) === 'Present' && t(describeLifecycleState('not-a-real-state')) === 'Unknown',
             'L2b. Live: a genuine state resolves to its human label; an unrecognized one degrades to "Unknown" rather than leaking the raw internal value or throwing.');
 
         // L3. World Presence's own advertisement carries an

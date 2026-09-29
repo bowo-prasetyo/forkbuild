@@ -1,4 +1,5 @@
 import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../../application/avatar/AvatarPresenceLabels.js';
+import { t } from '../i18n/i18n.js';
 import FollowButton from './FollowButton.js';
 
 // 0.2.39 — the World Entity Interaction & Selection design doc's own
@@ -61,13 +62,13 @@ export default {
     emits: ['follow', 'stop-follow', 'interact'],
     methods: {
         lifecycleLabel(state) {
-            return describeLifecycleState(state);
+            return t(describeLifecycleState(state));
         },
         trustLabel(status) {
-            return describeTrustStatus(status);
+            return t(describeTrustStatus(status));
         },
         animationLabel(state) {
-            return describeAnimationState(state);
+            return t(describeAnimationState(state));
         },
         statusDotClass(info) {
             if (info.trustStatus === 'EQUIVOCATING' || info.trustStatus === 'UNAUTHORIZED') {

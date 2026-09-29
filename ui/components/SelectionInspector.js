@@ -1,4 +1,5 @@
 import { fromCssHex } from '../../core/ColorHex.js';
+import { displayText } from '../i18n/i18n.js';
 
 // The card for an ordinary BRICK selection: count, live position and the
 // everyday actions. StructureInstancePanel is the card for a
@@ -45,7 +46,7 @@ export default {
                 return enabledTitle;
             }
             const action = this.registry.get(id);
-            return action && action.disabledReason ? action.disabledReason(this.context) : null;
+            return action && action.disabledReason ? displayText(action.disabledReason(this.context)) : null;
         }
     },
     template: `

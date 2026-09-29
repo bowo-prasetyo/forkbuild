@@ -6,6 +6,7 @@ import { IdentityUseCase } from '../application/identity/IdentityUseCase.js';
 import { evaluateNewPassphrase } from '../application/identity/NewPassphrasePolicy.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
+import { t } from '../ui/i18n/i18n.js';
 
 // The identity cryptography: audited Ed25519 signing, WebCrypto key
 // encryption, compatibility with keys and export files written by the
@@ -185,8 +186,8 @@ function throws(fn, pattern) {
     assert(evaluateNewPassphrase({ allowUnprotected: true }).ok && !evaluateNewPassphrase({ allowUnprotected: true }).protect,
         'unless the user explicitly chose an unprotected identity');
     assert(!evaluateNewPassphrase({ allowUnprotected: true, offerUnprotected: false }).ok, 'forms that protect an identity never allow blank');
-    assert(/at least 8/.test(evaluateNewPassphrase({ passphrase: 'short', confirmation: 'short' }).message), 'too short');
-    assert(/don't match/.test(evaluateNewPassphrase({ passphrase: 'long enough', confirmation: 'long enougj' }).message), 'mismatch');
+    assert(/at least 8/.test(t(evaluateNewPassphrase({ passphrase: 'short', confirmation: 'short' }).message)), 'too short');
+    assert(/don't match/.test(t(evaluateNewPassphrase({ passphrase: 'long enough', confirmation: 'long enougj' }).message)), 'mismatch');
     const good = evaluateNewPassphrase({ passphrase: 'long enough', confirmation: 'long enough' });
     assert(good.ok && good.protect && good.message === null, 'a matching passphrase of 8+ characters is accepted');
     console.log('✓ NewPassphrasePolicy: passphrase by default, explicit opt-out, length and confirmation');

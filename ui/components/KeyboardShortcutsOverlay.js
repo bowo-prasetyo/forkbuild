@@ -1,4 +1,5 @@
-import { EditorActionRegistry } from '../../application/editor/EditorActionRegistry.js';
+import { EditorActionRegistry, actionCategoryLabel } from '../../application/editor/EditorActionRegistry.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.6.2 — Editor UX Consolidation: "Keyboard shortcuts become
 // discoverable." Opened with `?` (or a click on Toolbar's own shortcuts
@@ -22,20 +23,22 @@ import { EditorActionRegistry } from '../../application/editor/EditorActionRegis
 //      the keystroke. Mirrors docs/user/ControlsReference.md by hand;
 //      keep the two in sync if either changes.
 const VIEW_LOCAL_SHORTCUTS = [
-    { label: 'Select Tool', shortcut: '1' },
-    { label: 'Place Tool', shortcut: '2' },
-    { label: 'Save', shortcut: 'Ctrl/Cmd+S' },
-    { label: 'Sound on/off', shortcut: 'M' },
-    { label: 'Rotate ghost while placing', shortcut: 'R' },
-    { label: 'Rotate ghost (opposite direction)', shortcut: 'Shift+R' },
-    { label: 'Cancel placement', shortcut: 'Esc' }
+    { label: 'shortcuts.view.selectTool', shortcut: '1' },
+    { label: 'shortcuts.view.placeTool', shortcut: '2' },
+    { label: 'shortcuts.view.save', shortcut: 'Ctrl/Cmd+S' },
+    { label: 'shortcuts.view.sound', shortcut: 'M' },
+    { label: 'shortcuts.view.rotateGhost', shortcut: 'R' },
+    { label: 'shortcuts.view.rotateGhostBack', shortcut: 'Shift+R' },
+    { label: 'shortcuts.view.cancelPlacement', shortcut: 'Esc' }
 ];
 
+// `shortcut` is a key name the person presses, except the mouse gestures,
+// which are messages too.
 const CAMERA_SHORTCUTS = [
-    { label: 'Orbit', shortcut: 'Left-drag' },
-    { label: 'Pan', shortcut: 'Right-drag' },
-    { label: 'Zoom', shortcut: 'Scroll' },
-    { label: 'Reset camera', shortcut: 'Home' }
+    { label: 'shortcuts.camera.orbit', shortcut: 'shortcuts.camera.orbitGesture' },
+    { label: 'shortcuts.camera.pan', shortcut: 'shortcuts.camera.panGesture' },
+    { label: 'shortcuts.camera.zoom', shortcut: 'shortcuts.camera.zoomGesture' },
+    { label: 'shortcuts.camera.reset', shortcut: 'Home' }
 ];
 
 export default {
@@ -47,6 +50,15 @@ export default {
         }
     },
     emits: ['close'],
+    methods: {
+        t,
+        categoryName(category) {
+            return t(actionCategoryLabel(category));
+        },
+        cameraShortcut(row) {
+            return row.shortcut.startsWith('shortcuts.') ? t(row.shortcut) : row.shortcut;
+        }
+    },
     computed: {
         registryGroups() {
             const withShortcut = this.registry.getAll().filter((action) => !!action.shortcut);
@@ -56,7 +68,7 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="Keyboard shortcuts"
+            :aria-label="t('shortcuts.title')"
             :style="{
                 position: 'fixed',
                 inset: 0,
@@ -84,32 +96,32 @@ export default {
                 }"
             >
                 <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #2a2a2a' }">
-                    <strong :style="{ fontSize: '13px', color: '#e0e0e0' }">Keyboard Shortcuts</strong>
-                    <button type="button" @click="$emit('close')" :style="{ background: 'transparent', border: 'none', color: '#909090', fontSize: '16px', cursor: 'pointer', lineHeight: 1 }" aria-label="Close">×</button>
+                    <strong :style="{ fontSize: '13px', color: '#e0e0e0' }">{{ t('shortcuts.title') }}</strong>
+                    <button type="button" @click="$emit('close')" :style="{ background: 'transparent', border: 'none', color: '#909090', fontSize: '16px', cursor: 'pointer', lineHeight: 1 }" :aria-label="t('shortcuts.close')">×</button>
                 </div>
                 <div :style="{ overflowY: 'auto', padding: '6px 12px 12px' }">
-                    <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#707070' }">Camera</div>
+                    <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#707070' }">{{ t('shortcuts.camera') }}</div>
                     <div v-for="row in CAMERA_SHORTCUTS" :key="'camera-' + row.label" :style="{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', color: '#d0d0d0' }">
-                        <span>{{ row.label }}</span>
-                        <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: '#707070' }">{{ row.shortcut }}</span>
+                        <span>{{ t(row.label) }}</span>
+                        <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: '#707070' }">{{ cameraShortcut(row) }}</span>
                     </div>
 
-                    <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#707070' }">Tools & View</div>
+                    <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#707070' }">{{ t('shortcuts.toolsAndView') }}</div>
                     <div v-for="row in VIEW_LOCAL_SHORTCUTS" :key="'view-' + row.label" :style="{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', color: '#d0d0d0' }">
-                        <span>{{ row.label }}</span>
+                        <span>{{ t(row.label) }}</span>
                         <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: '#707070' }">{{ row.shortcut }}</span>
                     </div>
 
                     <template v-for="group in registryGroups" :key="group.category">
-                        <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#707070' }">{{ group.category }}</div>
+                        <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#707070' }">{{ categoryName(group.category) }}</div>
                         <div v-for="action in group.actions" :key="action.id" :style="{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', color: '#d0d0d0' }">
-                            <span>{{ action.label }}</span>
+                            <span>{{ t(action.label) }}</span>
                             <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: '#707070' }">{{ action.shortcut }}</span>
                         </div>
                     </template>
 
                     <p :style="{ margin: '10px 0 0', color: '#707070', fontSize: '11px' }">
-                        Ctrl/Cmd+K opens the Command Palette, which searches every one of these by name.
+                        {{ t('shortcuts.paletteHint') }}
                     </p>
                 </div>
             </div>

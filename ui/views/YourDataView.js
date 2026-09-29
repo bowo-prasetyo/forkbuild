@@ -5,6 +5,7 @@ import { RestoreMode } from '../../application/backup/DeviceBackupUseCase.js';
 import { BackupDestination, REMINDER_INTERVAL_OPTIONS_DAYS } from '../../application/backup/BackupStatusStore.js';
 import { backupFileName } from '../../application/backup/BackupFolder.js';
 import { evaluateNewPassphrase } from '../../application/identity/NewPassphrasePolicy.js';
+import { displayText } from '../i18n/i18n.js';
 import { formatByteSize } from '../../utils/formatByteSize.js';
 import { formatRelativeVisit } from '../../utils/formatRelativeVisit.js';
 
@@ -137,7 +138,7 @@ export default {
             attempted: false, busy: false, error: '', result: null
         });
         const backupPassphraseHint = computed(() => backupForm.attempted && !usesRememberedKey()
-            ? evaluateNewPassphrase({ passphrase: backupForm.passphrase, confirmation: backupForm.confirmation, offerUnprotected: false }).message
+            ? displayText(evaluateNewPassphrase({ passphrase: backupForm.passphrase, confirmation: backupForm.confirmation, offerUnprotected: false }).message)
             : null);
         const canShareFiles = Boolean(fileSharing && typeof fileSharing.canShare === 'function'
             && safeCanShare(fileSharing, [new File([new Uint8Array(1)], 'test' + BACKUP_FILE_EXTENSION)]));

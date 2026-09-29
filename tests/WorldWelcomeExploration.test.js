@@ -13,6 +13,7 @@ import {
     deriveWorldWelcomeContext 
 } from '../core/WorldWelcomeContext.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.3.9 — World Welcome & Guided Exploration.
 //
@@ -411,12 +412,12 @@ console.log('Section D — FLAGSHIP: Full arrival and exploration scenario');
     });
     
     assert(welcomeBobBuilding.activitySummary.length > 0, 'D3.1: activity summary reflects Bob\'s action');
-    assert(welcomeBobBuilding.activitySummary[0].includes('building'), 'D3.2: activity shows building');
+    assert(displayText(welcomeBobBuilding.activitySummary[0]).includes('building'), 'D3.2: activity shows building');
     
     // Verify suggestion includes Bob's activity
     const bobSuggestion = welcomeBobBuilding.suggestedDestinations.find(s => s.kind === 'collaborator');
     assert(bobSuggestion !== undefined, 'D3.3: Bob appears in suggestions');
-    assert(bobSuggestion.reason.includes('building'), 'D3.4: suggestion reason includes activity');
+    assert(displayText(bobSuggestion.reason).includes('building'), 'D3.4: suggestion reason includes activity');
     
     // Phase F — Alice chooses a destination (focusLocation simulation)
     // Note: We don't actually call focusLocation here since that requires
@@ -509,7 +510,7 @@ console.log('Section E — Exploration suggestion prioritization');
     // Active collaborator who is closer should appear first
     const firstSuggestion = context.suggestedDestinations[0];
     assert(firstSuggestion.kind === 'collaborator', 'E1.1: active collaborator is first suggestion');
-    assert(firstSuggestion.reason.includes('building'), 'E1.2: reason describes activity');
+    assert(displayText(firstSuggestion.reason).includes('building'), 'E1.2: reason describes activity');
     
     // Verify all suggestion kinds are present
     const kinds = context.suggestedDestinations.map(s => s.kind);
@@ -543,9 +544,9 @@ console.log('Section F — Activity summary ("What\'s happening?")');
     });
 
     assert(context.activitySummary.length === 3, 'F1.1: all three collaborators in summary');
-    assert(context.activitySummary.some(s => s.includes('Bob') && s.includes('building')), 'F1.2: Bob building mentioned');
-    assert(context.activitySummary.some(s => s.includes('Alice') && s.includes('exploring')), 'F1.3: Alice exploring mentioned');
-    assert(context.activitySummary.some(s => s.includes('Charlie') && s.includes('inspecting')), 'F1.4: Charlie inspecting mentioned');
+    assert(context.activitySummary.map(displayText).some(s => s.includes('Bob') && s.includes('building')), 'F1.2: Bob building mentioned');
+    assert(context.activitySummary.map(displayText).some(s => s.includes('Alice') && s.includes('exploring')), 'F1.3: Alice exploring mentioned');
+    assert(context.activitySummary.map(displayText).some(s => s.includes('Charlie') && s.includes('inspecting')), 'F1.4: Charlie inspecting mentioned');
 }
 
 {

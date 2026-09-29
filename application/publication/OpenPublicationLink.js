@@ -6,6 +6,8 @@ import { verifyWorldEncounterMaterial, WorldEncounterMaterialVerificationStatus 
 import { SnapshotCandidateDiscoveryOutcome } from '../snapshot/SnapshotCandidateDiscoveryOutcome.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { StoreSnapshotContentOutcome } from '../snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { message } from '../../core/Message.js';
+import { isUserFacingError } from '../../core/UserFacingError.js';
 
 // Opening a Publication from a link (`#/view/steem/<author>/<permlink>`,
 // `#/view/ar/<id>` or `#/view/ipfs/<cid>`: the notice on a Steem post, or a
@@ -37,19 +39,9 @@ export const OpenPublicationLinkOutcome = Object.freeze({
 });
 
 const Outcome = OpenPublicationLinkOutcome;
-const NETWORK_NAMES = Object.freeze({ steem: 'Steem', arweave: 'Arweave', ipfs: 'IPFS' });
-// Said when a claim can't be found yet, per network.
-const NOT_FOUND_HINTS = Object.freeze({
-    steem: 'or it can\'t be read',
-    arweave: 'or it isn\'t available yet: a new Arweave upload can take a few minutes to appear',
-    ipfs: 'or no IPFS gateway can reach it right now'
-});
-// Said when a network can't be reached, per network.
-const UNREACHABLE_HINTS = Object.freeze({
-    steem: '',
-    arweave: '',
-    ipfs: ' A gateway can take a while to find content kept on someone\'s own IPFS node, so try again. If it keeps failing, add another gateway in Network Settings (for example your pinning service\'s own gateway) so there is one more to fall back to.'
-});
+// Every result's `message` is a descriptor (core/Message.js), with a message
+// per network where what to say differs (publicationLink.<outcome>.<network>).
+// `detail` is the network's own error text, which is not translated.
 const CANDIDATE_STORAGE_ORDER = ['steem', 'ar', 'ipfs'];
 
 // `locator` is where the Signed Claim is stored; `retrieveClaim(locator)`
@@ -64,17 +56,19 @@ export async function openPublicationLink({
     discoveryProvider = null, admissionLog = null
 }) {
     const where = describePublicationClaimLocator(locator);
-    if (!where) return failure(Outcome.INVALID_LINK, 'This link does not name a Publication ForkBuild can open.');
-    const network = NETWORK_NAMES[where.network];
+    if (!where) return failure(Outcome.INVALID_LINK, message('publicationLink.invalid'));
 
     let material;
     try {
         material = await retrieveClaim(where.locator);
     } catch (error) {
-        return failure(Outcome.UNREACHABLE, `${network} could not be reached to read ${where.label}: ${error.message}.${UNREACHABLE_HINTS[where.network]}`.replace(/\.\.(\s|$)/, '.$1'));
+        return failure(Outcome.UNREACHABLE, message(`publicationLink.unreachable.${where.network}`, {
+            label: where.label,
+            detail: isUserFacingError(error) ? error.userMessage : String(error.message).replace(/\.$/, '')
+        }));
     }
     if (material === null || material === undefined) {
-        return failure(Outcome.CLAIM_UNAVAILABLE, `${where.label} is not a Publication stored on ${network} by ForkBuild, ${NOT_FOUND_HINTS[where.network]}.`);
+        return failure(Outcome.CLAIM_UNAVAILABLE, message(`publicationLink.claimUnavailable.${where.network}`, { label: where.label }));
     }
 
     let publication = null;
@@ -84,7 +78,7 @@ export async function openPublicationLink({
         // Reported just below.
     }
     if (!publication || !publication.id || !publication.documentId || !publication.contentHash) {
-        return failure(Outcome.NOT_A_PUBLICATION, `${where.label} does not hold a ForkBuild Publication.`);
+        return failure(Outcome.NOT_A_PUBLICATION, message('publicationLink.notAPublication', { label: where.label }));
     }
 
     const verification = await verifyWorldEncounterMaterial({
@@ -93,9 +87,9 @@ export async function openPublicationLink({
         verifier
     });
     if (verification.status !== WorldEncounterMaterialVerificationStatus.VERIFIED) {
-        return failure(Outcome.NOT_VERIFIED, verification.status === WorldEncounterMaterialVerificationStatus.REJECTED
-            ? `The signature on "${publication.title}" does not check out, so it isn't shown.`
-            : `"${publication.title}" is not signed, so it isn't shown.`, publication);
+        return failure(Outcome.NOT_VERIFIED, message(verification.status === WorldEncounterMaterialVerificationStatus.REJECTED
+            ? 'publicationLink.signatureRejected'
+            : 'publicationLink.unsigned', { title: publication.title }), publication);
     }
 
     const contentHash = publication.contentReference?.hash ?? publication.contentHash;
@@ -147,15 +141,19 @@ async function findSnapshot({ publication, contentHash, hasLocalContent, findSna
         }
         const stored = await storeSnapshotContent({ contentHash, bytes: resolution.bytes });
         if (stored.outcome === StoreSnapshotContentOutcome.STORED || stored.outcome === StoreSnapshotContentOutcome.ALREADY_AVAILABLE) return { ok: true };
-        reasons.push('the build found does not match the Publication');
+        reasons.push(message('publicationLink.buildMismatch'));
     }
-    const title = `"${publication.title}" by ${publication.author ?? 'an unknown author'} is signed and checks out, but`;
+    const params = {
+        title: publication.title,
+        author: publication.author ?? message('publicationLink.unknownAuthor')
+    };
     if (candidates.length === 0) {
-        return { ok: false, message: searchFailed
-            ? `${title} its build couldn't be looked for right now. Try again later.`
-            : `${title} its build has not been found on Steem, Nostr or Arweave.` };
+        return { ok: false, message: message(searchFailed ? 'publicationLink.buildSearchFailed' : 'publicationLink.buildNotFound', params) };
     }
-    return { ok: false, message: `${title} its build couldn't be loaded: ${reasons.join('; ') || 'no store could read it'}.` };
+    return {
+        ok: false,
+        message: message('publicationLink.buildNotLoaded', { ...params, reasons: reasons.length ? reasons : [message('publicationLink.noStoreCouldRead')] })
+    };
 }
 
 function rank(storage) {

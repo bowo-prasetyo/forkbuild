@@ -29,6 +29,7 @@ import { Position } from '../core/Position.js';
 import { License, LicenseId } from '../core/License.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // The "see it in 3D" link on a Signed Claim stored on Steem: the notice
 // carries it, and opening it reads and verifies the claim, finds and checks
@@ -189,7 +190,7 @@ function visitor(chain) {
     assert((await guest.open('Not An Account', 'p')).outcome === Outcome.INVALID_LINK, 'a link that names no Steem post');
     assert((await guest.open('alice', 'forkbuild-c-missing-abcd1234')).outcome === Outcome.CLAIM_UNAVAILABLE, 'a post that does not exist');
     const unreachable = await visitor(fakeChain({ unreachable: true })).open('alice', 'forkbuild-c-x-abcd1234');
-    assert(unreachable.outcome === Outcome.STEEM_UNREACHABLE && unreachable.message.includes('no Steem API node answered'), `Steem that can't be reached (got ${unreachable.message})`);
+    assert(unreachable.outcome === Outcome.STEEM_UNREACHABLE && displayText(unreachable.message).includes('no Steem API node answered'), `Steem that can't be reached (got ${unreachable.message})`);
 
     const notClaim = await distribute(chain, build, { claimJson: { hello: 'world' }, announceSnapshot: false });
     assert((await guest.open(notClaim.author, notClaim.permlink)).outcome === Outcome.NOT_A_PUBLICATION, 'content that is not a Publication');
@@ -197,7 +198,7 @@ function visitor(chain) {
     const tamperedChain = fakeChain();
     const tamperedPost = await distribute(tamperedChain, build, { claimJson: { ...build.publication.toJSON(), title: 'Changed after signing' } });
     const rejected = await visitor(tamperedChain).open(tamperedPost.author, tamperedPost.permlink);
-    assert(rejected.outcome === Outcome.NOT_VERIFIED && rejected.message.includes('does not check out'), `a claim changed after signing is not shown (got ${rejected.outcome}: ${rejected.message})`);
+    assert(rejected.outcome === Outcome.NOT_VERIFIED && displayText(rejected.message).includes('does not check out'), `a claim changed after signing is not shown (got ${rejected.outcome}: ${rejected.message})`);
 
     const unsignedChain = fakeChain();
     const unsigned = await distribute(unsignedChain, build, { claimJson: { ...build.publication.toJSON(), signature: null } });
@@ -207,11 +208,11 @@ function visitor(chain) {
     const lonely = await distribute(lonelyChain, build, { announceSnapshot: false });
     const lonelyGuest = visitor(lonelyChain);
     const notFound = await lonelyGuest.open(lonely.author, lonely.permlink);
-    assert(notFound.outcome === Outcome.BUILD_NOT_FOUND && notFound.publication?.title === 'A small tower' && notFound.message.includes('has not been found'),
+    assert(notFound.outcome === Outcome.BUILD_NOT_FOUND && notFound.publication?.title === 'A small tower' && displayText(notFound.message).includes('has not been found'),
         `a verified claim whose build is nowhere announced says so, naming the Publication (got ${notFound.message})`);
     assert(lonelyGuest.discoveryProvider.list().length === 0, 'and nothing is admitted without its build');
     const searchDown = await lonelyGuest.open(lonely.author, lonely.permlink, { findSnapshotCandidates: async () => ({ outcome: 'unavailable', candidates: [] }) });
-    assert(searchDown.outcome === Outcome.BUILD_NOT_FOUND && searchDown.message.includes("couldn't be looked for"), `a search that fails says to try later (got ${searchDown.message})`);
+    assert(searchDown.outcome === Outcome.BUILD_NOT_FOUND && displayText(searchDown.message).includes("couldn't be looked for"), `a search that fails says to try later (got ${searchDown.message})`);
 
     const wrongBuildChain = fakeChain();
     const wrong = await distribute(wrongBuildChain, build);
@@ -220,7 +221,7 @@ function visitor(chain) {
     const mismatch = await wrongGuest.open(wrong.author, wrong.permlink, {
         resolveSnapshotCandidate: async () => ({ outcome: 'resolved', bytes: other.snapshotText })
     });
-    assert(mismatch.outcome === Outcome.BUILD_NOT_FOUND && mismatch.message.includes('does not match'), `a build that doesn't match the Publication is not kept (got ${mismatch.message})`);
+    assert(mismatch.outcome === Outcome.BUILD_NOT_FOUND && displayText(mismatch.message).includes('does not match'), `a build that doesn't match the Publication is not kept (got ${mismatch.message})`);
     assert(!wrongGuest.localContentStore.has(other.publication.contentReference), 'the mismatched build is not stored');
     console.log('✓ what stops a link from opening');
 }

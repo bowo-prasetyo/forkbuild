@@ -4,6 +4,7 @@ import StructureLibraryCard from './StructureLibraryCard.js';
 import { sortStructures, STRUCTURE_SORT_OPTIONS } from '../../core/sortStructures.js';
 import { toCssHex, fromCssHex } from '../../core/ColorHex.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
+import { libraryItemDescription, libraryItemName } from '../i18n/libraryText.js';
 
 // Exported (not just module-local) so tests/BuildLibraryUX.test.js can
 // exercise the actual matching rule directly — the same "logic lives
@@ -343,7 +344,7 @@ export default {
                 .map((group) => ({
                     category: group.category,
                     definitions: group.definitions.filter((definition) =>
-                        matches(normalized, definition.name, definition.category, group.category, definition.tags.join(' '))
+                        matches(normalized, libraryItemName(definition), definition.name, definition.category, group.category, definition.tags.join(' '))
                     )
                 }))
                 .filter((group) => group.definitions.length > 0);
@@ -360,7 +361,7 @@ export default {
                 .map((group) => ({
                     category: group.category,
                     structures: group.structures.filter((structure) =>
-                        matches(normalized, structure.name, structure.category, structure.tags.join(' '), structure.description))
+                        matches(normalized, libraryItemName(structure), structure.name, structure.category, structure.tags.join(' '), libraryItemDescription(structure), structure.description))
                 }))
                 .filter((group) => group.structures.length > 0);
         });
@@ -376,7 +377,7 @@ export default {
                 .map((group) => ({
                     category: group.category,
                     structures: group.structures.filter((structure) =>
-                        matches(normalized, structure.name, structure.category, structure.tags.join(' '), structure.description))
+                        matches(normalized, libraryItemName(structure), structure.name, structure.category, structure.tags.join(' '), libraryItemDescription(structure), structure.description))
                 }))
                 .filter((group) => group.structures.length > 0);
         });
@@ -427,7 +428,7 @@ export default {
         const filteredRecentStructures = computed(() => {
             const normalized = normalize(query.value);
             return (props.recentStructures || []).filter(({ structure }) =>
-                matches(normalized, structure.name, structure.category, structure.tags.join(' '), structure.description));
+                matches(normalized, libraryItemName(structure), structure.name, structure.category, structure.tags.join(' '), libraryItemDescription(structure), structure.description));
         });
 
         function setTab(tab) {
@@ -567,6 +568,7 @@ export default {
         const hasPersonalStructures = computed(() => (props.personalStructureGroups || []).some((group) => group.structures.length > 0));
 
         return {
+            libraryItemName, libraryItemDescription,
             hasPersonalStructures,
             activeTab,
             query,
@@ -643,11 +645,11 @@ export default {
                             v-for="definition in group.definitions"
                             :key="definition.id"
                             :class="['palette-item', 'build-library-item', { 'palette-item--active': definition.id === selectedDefinitionId }]"
-                            :title="definition.description"
+                            :title="libraryItemDescription(definition)"
                             @click="selectBrick(definition.id)"
                         >
                             <BuildLibraryPreview kind="brick" :item="definition" :preview-service="previewService" />
-                            <span class="palette-item-name">{{ definition.name }}</span>
+                            <span class="palette-item-name">{{ libraryItemName(definition) }}</span>
                         </li>
                     </ul>
                 </div>

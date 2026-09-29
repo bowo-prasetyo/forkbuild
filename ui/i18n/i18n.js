@@ -9,6 +9,8 @@
 // page (see ui/views/LanguageSettingsView.js), so no text computed earlier is
 // left in the old language.
 import { Translator } from './Translator.js';
+import { isMessage } from '../../core/Message.js';
+import { isUserFacingError } from '../../core/UserFacingError.js';
 import { LOCALES, SOURCE_LOCALE, SOURCE_MESSAGES, findLocale } from './locales.js';
 
 function reportMissing(key, locale) {
@@ -17,8 +19,38 @@ function reportMissing(key, locale) {
 
 let translator = new Translator({ locale: SOURCE_LOCALE, messages: SOURCE_MESSAGES, onMissing: reportMissing });
 
-export function t(key, params) {
-    return translator.translate(key, params);
+// `t('app.nav.home')`, `t('language.current', { language })`, or a message
+// descriptor from core/ or application/ (core/Message.js): `t(message)`.
+export function t(keyOrMessage, params) {
+    if (isMessage(keyOrMessage)) {
+        return translator.translate(keyOrMessage.key, keyOrMessage.params);
+    }
+    return translator.translate(keyOrMessage, params);
+}
+
+// For a value that may be a descriptor or text that is already final (a
+// title someone wrote, or text not yet moved to messages): descriptors are
+// translated, strings shown as they are, and nothing stays nothing.
+export function displayText(value) {
+    if (isMessage(value)) {
+        return t(value);
+    }
+    return value === null || value === undefined ? value : String(value);
+}
+
+// What to tell a person about `error`: its message in their language when it
+// is a UserFacingError, otherwise its own text, or `fallback` when it has none.
+export function errorText(error, fallback = '') {
+    if (isUserFacingError(error)) {
+        return t(error.userMessage);
+    }
+    return (error && error.message) || (typeof error === 'string' ? error : fallback);
+}
+
+// Whether a message exists, for text looked up by an id that only some items
+// have messages for (see ui/i18n/libraryText.js).
+export function hasMessage(key) {
+    return translator.has(key);
 }
 
 export function formatNumber(value, options) {

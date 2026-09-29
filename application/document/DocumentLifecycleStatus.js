@@ -1,3 +1,5 @@
+import { message } from '../../core/Message.js';
+
 // 0.2.21: one place that names the three tiers a document moves
 // through — Draft -> Saved -> Published — so the Editor's Document
 // Info panel and World View's Document Info panel compute (and label)
@@ -39,13 +41,14 @@ export function computeLifecycleStatus({ hasBeenSaved = false, isPublished = fal
     return hasBeenSaved ? LifecycleStatus.SAVED : LifecycleStatus.DRAFT;
 }
 
+// A message (core/Message.js) for the UI to show.
 export function describeLifecycleStatus(status, { dirty = false } = {}) {
     switch (status) {
         case LifecycleStatus.PUBLISHED:
-            return 'Published — immutable snapshot';
+            return message('documentStatus.published');
         case LifecycleStatus.SAVED:
-            return dirty ? 'Saved — unsaved changes' : 'Saved';
+            return message(dirty ? 'documentStatus.savedDirty' : 'documentStatus.saved');
         default:
-            return 'Draft — not yet saved';
+            return message('documentStatus.draft');
     }
 }

@@ -12,9 +12,13 @@ import { DocumentCloneService } from '../application/document/DocumentCloneServi
 import {
     LifecycleStatus,
     computeLifecycleStatus,
-    describeLifecycleStatus
+    describeLifecycleStatus as describeLifecycleStatusMessage
 } from '../application/document/DocumentLifecycleStatus.js';
-import { describeLicense, LICENSE_OPTIONS } from '../application/document/LicenseLabels.js';
+import { describeLicense as describeLicenseMessage, LICENSE_OPTIONS } from '../application/document/LicenseLabels.js';
+import { t } from '../ui/i18n/i18n.js';
+// Each label as a person reads it, in English.
+const describeLicense = (...args) => t(describeLicenseMessage(...args));
+const describeLifecycleStatus = (...args) => t(describeLifecycleStatusMessage(...args));
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
@@ -279,7 +283,7 @@ async function runTests() {
 
         const info = session.getDocumentInfo(publication.documentId);
         assert(info.editabilityNotice && info.editabilityNotice.blocked === true
-            && /UNSPECIFIED/.test(info.editabilityNotice.message),
+            && /UNSPECIFIED/.test(t(info.editabilityNotice.message)),
             '10c. the Document Info panel explains why — the actionable reason the design asked for');
     }
 

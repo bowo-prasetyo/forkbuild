@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { AvatarInteractionState } from '../application/spatial-state/AvatarInteractionState.js';
-import { describeLifecycleState, describeTrustStatus } from '../application/avatar/AvatarPresenceLabels.js';
+import { describeLifecycleState as describeLifecycleStateMessage, describeTrustStatus as describeTrustStatusMessage } from '../application/avatar/AvatarPresenceLabels.js';
+import { t } from '../ui/i18n/i18n.js';
+// Each label as a person reads it, in English.
+const describeLifecycleState = (...args) => t(describeLifecycleStateMessage(...args));
+const describeTrustStatus = (...args) => t(describeTrustStatusMessage(...args));
 import { AvatarPickingService } from '../renderer/AvatarPickingService.js';
 import { PickingService } from '../renderer/PickingService.js';
 import { PresenceLifecycleState } from '../core/PresenceLifecycleState.js';

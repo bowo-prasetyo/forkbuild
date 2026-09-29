@@ -28,7 +28,10 @@ import { DocumentCloneService } from '../application/document/DocumentCloneServi
 import { ImportDocumentUseCase } from '../application/document/ImportDocumentUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { UpdateDocumentMetadataUseCase } from '../application/document/UpdateDocumentMetadataUseCase.js';
-import { describePlacementPolicy, PLACEMENT_POLICY_OPTIONS } from '../application/document/PlacementPolicyLabels.js';
+import { describePlacementPolicy as describePlacementPolicyMessage, PLACEMENT_POLICY_OPTIONS } from '../application/document/PlacementPolicyLabels.js';
+import { t } from '../ui/i18n/i18n.js';
+// Each label as a person reads it, in English.
+const describePlacementPolicy = (...args) => t(describePlacementPolicyMessage(...args));
 import { ClaimedBuildAcceptance, describeClaimedBuildAcceptance } from '../application/snapshot/claimed/ClaimedBuilds.js';
 import MetadataEditorDialog from '../ui/components/MetadataEditorDialog.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
