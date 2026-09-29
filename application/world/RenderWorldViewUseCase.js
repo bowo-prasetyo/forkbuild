@@ -29,10 +29,12 @@ import { DEFAULT_MAX_WALKING_DEPTH } from '../../core/AvatarWaterWalkability.js'
 // identical definitions. As of 0.1.47 the pointer move/up functions
 // carry modifier state down (precision mode) and gesture feedback up.
 export class RenderWorldViewUseCase {
-    execute(container, registry, eventBus = null, { gestureService = null, structureResolver = null } = {}) {
+    execute(container, registry, eventBus = null, { gestureService = null, structureResolver = null, wildlifeClock = undefined } = {}) {
         // World View binds Home to "go home" itself (ui/views/worldView/
         // useViewportInput.js), so the Editor's camera-reset shortcut is off here.
-        const renderer = new Renderer(container, { cameraResetKey: null });
+        // `wildlifeClock` is the session's, so animals are drawn where
+        // collision and catching think they are.
+        const renderer = new Renderer(container, { cameraResetKey: null, wildlifeClock });
         // 0.2.90 — structureResolver is threaded through for symmetry
         // with RenderWorldUseCase and so WorldRenderer's own placement-
         // rendering path is uniform across both modes (see its header),

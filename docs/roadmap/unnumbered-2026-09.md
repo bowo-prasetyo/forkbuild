@@ -2460,3 +2460,90 @@ way; with no record, the card says "No distribution recorded on this device".
 - Not done: checking that a recorded upload is still available, and learning about distributions made from another
   device.
 
+
+## Wandering wildlife (unnumbered, 2026-09-29)
+
+**Deer and rabbits now wander slowly around where the world placed them, pausing, turning and walking, instead of
+standing frozen.** Motion is sampled from time exactly as placement is sampled from space, so it needs no storage,
+no simulation and no networking: everyone looking at the same spot at the same moment sees the same animals there.
+An audit of the animal code before this change found three systems (the renderer, collision and catching) each
+asking separately where an animal was, agreeing only because nothing moved; they now share one formula and one clock.
+
+- `core/WildlifeMotion.js`: `animalPoseAt(seed, animal, time)` and `wildlifeInRegionAt()`. Per-species segments
+  (deer 14 s, rabbits 7 s, offset per animal) of pause, turn, then an eased walk between hashed waypoints. Waypoints
+  stay inside the animal's lattice cell and its species' wander radius (deer 3, rabbits 2), and one off its zone or
+  in a river falls back to the spawn point. Staying in the cell keeps the tile partition, ids and catch exclusion
+  unchanged.
+- One clock: `WorldNavigationSession`'s `wildlifeClock` (wall-clock seconds) goes to `Renderer`,
+  `AvatarWildlifeConstraint`, `AvatarAnimalInteractionController` and `AnimalRuntimeInstances#sync()`, which now
+  refreshes wild animals to their current pose. Catching reads wild animals from a fresh query, never a stale
+  tracked copy.
+- Rendering: wildlife tiles keep their animals and `updateWildlifeTileMesh()` rewrites instance matrices each frame
+  (no rebuild, no extra draw call); bounding spheres are padded so a wandering animal is never culled while in view.
+- Fixed: a caught animal kept an invisible collider at its spawn point for the rest of the session; collision now
+  skips caught animals.
+- Fixed: the runtime store saved every tracked animal, so after a reload wild animals came back as "released" copies
+  drawn beside the real ones. Only released animals are saved now, and wild ones in an old save are skipped
+  (`core/AnimalIdentity.js#isDeterministicAnimalId()`).
+- Fixed: streamed tiles were removed from the scene but never disposed, so GPU memory grew while roaming.
+  `TerrainStreamingController` takes a `disposeTile` hook (`renderer/TileDisposal.js`): terrain and water tiles free
+  their geometry and material, vegetation and wildlife tiles only their instance buffers.
+- Principles: new "A Wild Animal Wanders On A Path Sampled From Time, Never Simulated"; "An Animal Has Three
+  Possible Homes" notes the change.
+- Docs: `docs/user/03-WorldView.md`, `docs/user/06-AvatarsAndPresence.md` and `docs/Architecture.md`.
+- Tests: `tests/WildlifeMotion.test.js` (determinism, staying in the cell and wander radius, continuous position and
+  heading, standing only on valid ground, region queries and tile partition while moving);
+  `tests/WildlifeMotionIntegration.test.js` (collision at the current pose and the caught-collider fix, catching,
+  store refresh, session persistence, tile updates and bounding spheres, tile disposal). The wildlife collision
+  flagship test now runs on a frozen clock.
+- Not done: released animals and decorations still stand still; no walk or hop animation (the animal glides; added
+  below); motion never reacts to avatars, which would make replicas disagree.
+
+## Wildlife walk animation (unnumbered, 2026-09-29)
+
+**Wandering animals no longer glide: rabbits hop and deer step along, nodding their heads.** No legs or new
+geometry: the gait is carried by the body and head transforms the wildlife tiles already rewrite every frame.
+
+- `core/WildlifeMotion.js`: `animalPoseAt()` also reports `gaitPhase`, the strides walked so far in the current walk
+  (0 when standing). Each species has a `strideLength` (deer 1.0, rabbit 0.5); a walk takes a whole number of
+  strides, rounded down so a stride is never shorter than the species' own and the cadence never flutters, and the
+  phase follows the eased walk's progress, so the gait speeds up and slows down with the animal and every walk ends
+  exactly on a stride boundary. Walks shorter than one stride (1% of rabbit and 3% of deer walking time) shuffle.
+- `renderer/AnimalGait.js`: `gaitOffsetsAt(species, gaitPhase)` → `{ lift, bodyPitch, headPitch }`, zero at every
+  whole stride. A rabbit hop is an arc (0.16 high) with the nose tipping up on take-off and down on landing; a deer
+  step raises the body slightly twice per stride and nods the head (0.22 rad) in time.
+- `renderer/WildlifeTileMesh.js`: body and head matrices are now written separately; the head nods about a
+  per-species `neckPivot` set back inside the body, so it swings on a neck-length arm. At rest the head still shares
+  the body's transform. Collision and catching only read x/z, so they are unaffected.
+- Docs: `docs/user/03-WorldView.md`, `docs/Architecture.md`.
+- Tests: `tests/AnimalGait.test.js` (rest at whole strides, hop and step shapes, continuity at 60 fps over real
+  walks, lift/pitch/nod applied in the tile with the neck staying attached); `tests/WildlifeMotion.test.js` checks
+  gaitPhase counts forward while walking, is 0 standing, and ends each walk on a whole stride.
+- Not done: legs (would change every animal's resting look and add a draw call per species per tile); idle
+  animation such as grazing (added below); released animals and decorations.
+
+## Wildlife idle animation (unnumbered, 2026-09-29)
+
+**Standing animals no longer freeze between walks: deer graze with their muzzles in the grass or lift their heads
+and look around, and rabbits nibble or sit up on their haunches.** Like the walk, it needs no new geometry and no
+extra draw calls, and every replica sees the same animal doing the same thing at the same moment.
+
+- `core/WildlifeMotion.js`: a new `IDLE_ACTION` vocabulary (NONE, GRAZE, ALERT) and per-species `idleChances` (deer
+  55% graze, 25% alert; rabbits 50%, 30%; the rest just stand). `animalPoseAt()` picks one action per pause from
+  (seed, cell, segment) and reports `idleAction`, `idleSeconds` and `idleDuration`. The idle window runs from arrival
+  to the turn before the next walk, so an action never overlaps turning or walking; a window under 1.5 s is spent
+  standing.
+- `renderer/AnimalIdle.js`: `idleOffsetsAt()` turns the action into body lift and pitch and head pitch and yaw, eased
+  in and out over 0.7 s so every pause starts and ends at rest. A grazing deer lowers its head 0.45 rad and chews; an
+  alert deer raises it and slowly looks side to side; a rabbit nibbles at 4 Hz, or sits up (body pitched back 0.5 rad
+  and lifted so its rump stays on the ground) and glances about.
+- `renderer/WildlifeTileMesh.js`: walking animals take gait offsets and standing ones idle offsets; the head now also
+  turns (yaw) about its neck pivot.
+- Docs: `docs/user/03-WorldView.md`, `docs/Architecture.md`; the wandering principle's full text covers idling.
+- Tests: `tests/AnimalIdle.test.js` (one action per pause, only while standing, over before the turn, at the
+  species' odds; rest at both ends; continuity at 60 fps through walks, pauses and the moves between them; a grazing
+  head lowered but above the ground, a sitting rabbit's rump on the ground). `tests/AnimalGait.test.js` and
+  `tests/WildlifeMotionIntegration.test.js` now expect a standing head to move with idling while staying attached at
+  the neck.
+- Not done: released animals and decorations still stand still; idling never reacts to avatars (replicas would
+  disagree); tail flicks and ear twitches (no tails or ears are modeled).

@@ -165,7 +165,8 @@ export const localAvatarMethods = {
             this._avatarPresenceSession,
             {
                 animalRuntimeInstances: this._animalRuntimeInstances,
-                avatarInventoryStore: this._avatarInventoryStore
+                avatarInventoryStore: this._avatarInventoryStore,
+                clock: this._wildlifeClock
             }
         );
         // Shares `_vehicleRuntimeInstances` with vehicle rendering, and the same
@@ -321,9 +322,13 @@ export const localAvatarMethods = {
         return new AvatarWaterConstraint();
     },
 
-    // Animal placement is a pure function of (seed, x, z); defaults suffice.
+    // Animals block the avatar where they are now (the session's wildlife
+    // clock) and stop blocking it once caught.
     _buildAvatarWildlifeConstraint() {
-        return new AvatarWildlifeConstraint();
+        return new AvatarWildlifeConstraint({
+            clock: this._wildlifeClock,
+            isExcluded: (id) => this._animalRuntimeInstances.isExcluded(id)
+        });
     },
 
     // Whether Avatar Control Mode currently captures W/A/S/D/Shift/

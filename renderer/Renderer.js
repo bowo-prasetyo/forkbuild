@@ -8,7 +8,8 @@ import { TerrainStreamingController } from './TerrainStreamingController.js';
 import { buildTerrainTileMesh } from './TerrainTileMesh.js';
 import { buildNaturalFeatureTileMesh } from './NaturalFeatureTileMesh.js';
 import { buildWaterTileMesh } from './WaterTileMesh.js';
-import { buildWildlifeTileMesh } from './WildlifeTileMesh.js';
+import { buildWildlifeTileMesh, updateWildlifeTileMesh } from './WildlifeTileMesh.js';
+import { disposeOwnedTile, disposeInstancedTile } from './TileDisposal.js';
 import { terrainHeightAt as computeTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 
@@ -20,9 +21,13 @@ const SKY_COLOR = 0x87ceeb;
 // about what those objects represent lives in core/ and world/, not here.
 export class Renderer {
     // `cameraResetKey` is passed to CameraController; null turns its reset
-    // shortcut off.
-    constructor(container, { cameraResetKey } = {}) {
+    // shortcut off. `wildlifeClock` returns wildlife time in seconds, the
+    // moment at which wandering animals are drawn (core/WildlifeMotion.js);
+    // World View passes its session's clock so animals are drawn where
+    // collision and catching find them.
+    constructor(container, { cameraResetKey, wildlifeClock = () => Date.now() / 1000 } = {}) {
         this._container = container;
+        this._wildlifeClock = wildlifeClock;
 
         this._webglRenderer = new THREE.WebGLRenderer({ antialias: true });
         this._webglRenderer.setPixelRatio(window.devicePixelRatio || 1);
@@ -54,7 +59,8 @@ export class Renderer {
         // second, independently-computed terrain function anywhere else.
         this._terrainStreaming = new TerrainStreamingController(
             this._sceneManager,
-            (tx, tz) => buildTerrainTileMesh(tx, tz, DEFAULT_WORLD_SEED)
+            (tx, tz) => buildTerrainTileMesh(tx, tz, DEFAULT_WORLD_SEED),
+            { disposeTile: disposeOwnedTile }
         );
         this._terrainStreaming.update(
             this._cameraController.camera.position.x,
@@ -75,7 +81,8 @@ export class Renderer {
         // for the trunk/canopy instancing this factory produces.
         this._vegetationStreaming = new TerrainStreamingController(
             this._sceneManager,
-            (tx, tz) => buildNaturalFeatureTileMesh(tx, tz, DEFAULT_WORLD_SEED)
+            (tx, tz) => buildNaturalFeatureTileMesh(tx, tz, DEFAULT_WORLD_SEED),
+            { disposeTile: disposeInstancedTile }
         );
         this._vegetationStreaming.update(
             this._cameraController.camera.position.x,
@@ -98,7 +105,8 @@ export class Renderer {
         // already does.
         this._waterStreaming = new TerrainStreamingController(
             this._sceneManager,
-            (tx, tz) => buildWaterTileMesh(tx, tz, DEFAULT_WORLD_SEED)
+            (tx, tz) => buildWaterTileMesh(tx, tz, DEFAULT_WORLD_SEED),
+            { disposeTile: disposeOwnedTile }
         );
         this._waterStreaming.update(
             this._cameraController.camera.position.x,
@@ -112,7 +120,7 @@ export class Renderer {
         // for water — never a new streaming system, never a
         // WildlifeStreamingController. Wildlife shares the ground's tile
         // grid and load/unload orchestration by construction, differing
-        // only in what its tileFactory builds: static deer/rabbit
+        // only in what its tileFactory builds: deer/rabbit
         // decorations (renderer/WildlifeTileMesh.js) instead of colored
         // ground, trees, or water. See core/WildlifeField.js's own header
         // for why animals are recomputed per tile, never persisted, the
@@ -123,10 +131,14 @@ export class Renderer {
         // (re)build of every wildlife tile, forever after — see
         // markAnimalCaught() below for the only place anything is ever
         // added to it.
+        // Animals wander (core/WildlifeMotion.js): a tile is built already
+        // posed at the current wildlife time, and _renderFrame() moves every
+        // loaded tile's animals on from there.
         this._caughtAnimalIds = new Set();
         this._wildlifeStreaming = new TerrainStreamingController(
             this._sceneManager,
-            (tx, tz) => buildWildlifeTileMesh(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._caughtAnimalIds)
+            (tx, tz) => buildWildlifeTileMesh(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._caughtAnimalIds, this._wildlifeClock()),
+            { disposeTile: disposeInstancedTile }
         );
         this._wildlifeStreaming.update(
             this._cameraController.camera.position.x,
@@ -240,6 +252,8 @@ export class Renderer {
         this._vegetationStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         this._waterStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         this._wildlifeStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
+        const wildlifeTime = this._wildlifeClock();
+        this._wildlifeStreaming.forEachLoadedTile((tile) => updateWildlifeTileMesh(tile, wildlifeTime));
         for (const listener of this._frameListeners) {
             listener(deltaSeconds);
         }

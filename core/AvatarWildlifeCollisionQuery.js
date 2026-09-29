@@ -65,12 +65,16 @@ export const CANDIDATE_QUERY_MARGIN = AVATAR_COLLISION_RADIUS + MAX_ANIMAL_COLLI
 // horizontal collision radius of whatever body is actually sweeping this
 // path, the same seam core/AvatarTreeCollisionQuery.js's own
 // `avatarRadius` argument already establishes.
-export function wildlifeCollisionCandidatesForMovement({ seed, currentPosition, requestedPosition, avatarRadius = AVATAR_COLLISION_RADIUS }) {
+//
+// `timeSeconds` and `isExcluded` (both optional) pass straight through to
+// wildlifeCollisionGeometryInRegion(): where each animal is right now, and
+// which animals (caught ones) no longer count.
+export function wildlifeCollisionCandidatesForMovement({ seed, currentPosition, requestedPosition, avatarRadius = AVATAR_COLLISION_RADIUS, timeSeconds = null, isExcluded = null }) {
     const margin = avatarRadius + MAX_ANIMAL_COLLISION_RADIUS;
     const minX = Math.min(currentPosition.x, requestedPosition.x) - margin;
     const maxX = Math.max(currentPosition.x, requestedPosition.x) + margin;
     const minZ = Math.min(currentPosition.z, requestedPosition.z) - margin;
     const maxZ = Math.max(currentPosition.z, requestedPosition.z) + margin;
 
-    return wildlifeCollisionGeometryInRegion(seed, minX, minZ, maxX, maxZ);
+    return wildlifeCollisionGeometryInRegion(seed, minX, minZ, maxX, maxZ, { timeSeconds, isExcluded });
 }

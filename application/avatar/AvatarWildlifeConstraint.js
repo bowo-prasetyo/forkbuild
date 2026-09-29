@@ -32,9 +32,18 @@ import { DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
 //
 // `collided` is DERIVED by comparing the resolved X/Z against the
 // requested X/Z, matching AvatarTreeConstraint's own identical posture.
+//
+// Animals move (core/WildlifeMotion.js). `clock()` returns the wildlife time
+// in seconds, the same clock the renderer draws animals with, so an avatar
+// collides with an animal where it is seen; without a clock every animal
+// stays at its placed position. `isExcluded(id)` names caught animals,
+// which no longer block anything (usually
+// application/world/AnimalRuntimeInstances.js#isExcluded).
 export class AvatarWildlifeConstraint {
-    constructor({ seed = DEFAULT_WORLD_SEED } = {}) {
+    constructor({ seed = DEFAULT_WORLD_SEED, clock = null, isExcluded = null } = {}) {
         this._seed = seed;
+        this._clock = clock;
+        this._isExcluded = isExcluded;
     }
 
     // `position` — the avatar's position BEFORE this tick's movement.
@@ -54,7 +63,9 @@ export class AvatarWildlifeConstraint {
             seed: this._seed,
             currentPosition: position,
             requestedPosition: desiredPosition,
-            avatarRadius
+            avatarRadius,
+            timeSeconds: this._clock ? this._clock() : null,
+            isExcluded: this._isExcluded
         });
         if (animals.length === 0) {
             return { position: desiredPosition, collided: false };

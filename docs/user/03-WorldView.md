@@ -54,12 +54,17 @@ who's looking at it or when.
 Forest ground carries its own mix of tree species from that same seed —
 conifers where the moisture is higher, broadleaf trees where it's drier, and
 scrub trees fringing the grassland — and deer (in forest) and rabbits (on
-grassland) appear as further seed-driven scenery alongside them. Like the
-rest of the terrain, none of it wanders or reacts to you: every tree and
-animal is placed once, deterministically, and simply stays there. Wildlife
-does still block your path on foot exactly like a tree does — see
-[Walking your avatar](06-AvatarsAndPresence.md#walking-your-avatar) — but
-nothing about it is editable or ever moves on its own.
+grassland) appear as further seed-driven scenery alongside them. Trees
+stay exactly where they are placed. Animals wander slowly around the spot
+they were placed at, never more than a few steps from it, pausing and
+turning as they go — rabbits hop, deer step along with a nod of the head.
+While they stand, they graze with their heads down in the grass, or look up
+and around (a rabbit sits up on its haunches). They don't react to you. Their paths come from the
+same seed and the clock, so everyone looking at the same place at the same
+moment sees the same animals in the same places. Wildlife blocks your path
+on foot exactly like a tree does, wherever an animal has wandered to — see
+[Walking your avatar](06-AvatarsAndPresence.md#walking-your-avatar) — and
+none of it is editable.
 
 ## Orientation and Locations
 

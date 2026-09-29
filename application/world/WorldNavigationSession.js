@@ -9,6 +9,7 @@ import { EventBus } from '../../core/events/EventBus.js';
 import { SpatialAllocationPolicy } from '../../core/SpatialAllocationPolicy.js';
 import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
 import { AnimalRuntimeInstances, ANIMAL_RENDER_RADIUS } from './AnimalRuntimeInstances.js';
+import { isDeterministicAnimalId } from '../../core/AnimalIdentity.js';
 import { AvatarInventoryStore } from '../avatar/AvatarInventoryStore.js';
 import { AvatarInventoryTransferPeerExchange } from '../avatar/AvatarInventoryTransferPeerExchange.js';
 import { AvatarInteractionState } from '../spatial-state/AvatarInteractionState.js';
@@ -151,8 +152,15 @@ export class WorldNavigationSession {
         // avatarInventoryTransferPeerExchange(): sending a carried entry is
         // unavailable rather than silently broken.
         peerMessageBus = null,
-        connectedPeerRegistry = null
+        connectedPeerRegistry = null,
+        // Wildlife time in seconds (see core/WildlifeMotion.js). One clock
+        // for everything that asks where a wild animal is — the renderer,
+        // collision, catching — so an animal is caught and bumped into
+        // where it is drawn. Wall-clock time, so peers see the same
+        // animals in the same places without exchanging anything.
+        wildlifeClock = () => Date.now() / 1000
     }) {
+        this._wildlifeClock = wildlifeClock;
         this._registry = registry;
         this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
         this._loadPublishedWorldSessionUseCase = loadPublishedWorldSessionUseCase;
@@ -439,6 +447,12 @@ export class WorldNavigationSession {
         if (this._animalRuntimeInstancePersistenceStore) {
             const { instances, excludedIds } = this._animalRuntimeInstancePersistenceStore.load();
             for (const instance of instances) {
+                // Earlier versions also saved wild animals the store had only
+                // discovered; re-adding one would mark it released and draw a
+                // frozen copy beside the real one. Only released animals load.
+                if (isDeterministicAnimalId(instance.id)) {
+                    continue;
+                }
                 this._animalRuntimeInstances.add(instance);
             }
             for (const id of excludedIds) {
@@ -504,7 +518,7 @@ export class WorldNavigationSession {
             // structureResolver lets World View render (and so pick/inspect)
             // StructurePlacements. gestureService is always null: World View owns no
             // gizmo kernel, and the gizmo controller's null guards make that a no-op.
-            { gestureService: null, structureResolver: this._structureResolver }
+            { gestureService: null, structureResolver: this._structureResolver, wildlifeClock: this._wildlifeClock }
         );
         this._spatialCameraController = new SpatialCameraController(this._session);
         this._inspectionService = new SpatialInspectionService(this);
@@ -576,7 +590,7 @@ export class WorldNavigationSession {
             if (!position) {
                 return;
             }
-            this._animalRuntimeInstances.sync(this.getWorldSeed(), position, ANIMAL_RENDER_RADIUS);
+            this._animalRuntimeInstances.sync(this.getWorldSeed(), position, ANIMAL_RENDER_RADIUS, this._wildlifeClock());
             this._session.syncAnimals(this._animalRuntimeInstances.releasedNearby(position, ANIMAL_RENDER_RADIUS));
         });
     }
@@ -614,7 +628,7 @@ export class WorldNavigationSession {
             }
             this._lastAnimalRuntimeSaveAt = now;
             this._animalRuntimeInstancePersistenceStore.save(
-                this._animalRuntimeInstances.instances,
+                this._animalRuntimeInstances.releasedInstances,
                 this._animalRuntimeInstances.excludedIds
             );
         });
@@ -709,7 +723,7 @@ export class WorldNavigationSession {
         }
         if (this._animalRuntimeInstancePersistenceStore) {
             this._animalRuntimeInstancePersistenceStore.save(
-                this._animalRuntimeInstances.instances,
+                this._animalRuntimeInstances.releasedInstances,
                 this._animalRuntimeInstances.excludedIds
             );
         }

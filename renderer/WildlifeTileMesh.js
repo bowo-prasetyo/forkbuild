@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE, ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+import { animalPoseAt, MAX_WANDER_DISTANCE } from '../core/WildlifeMotion.js';
+import { gaitOffsetsAt, REST_GAIT } from './AnimalGait.js';
+import { idleOffsetsAt } from './AnimalIdle.js';
 
 // The renderer-side counterpart to core/WildlifeField.js — the identical
 // "core decides, renderer builds" split renderer/NaturalFeatureTileMesh.js
@@ -23,13 +26,15 @@ import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 // would visually compete with a building or an avatar. No legs, ears, or
 // tail are modeled — the same "no roots modeled" restraint
 // renderer/NaturalFeatureTileMesh.js's own trunk/canopy presets already
-// accept for trees.
+// accept for trees. A walking animal's gait is therefore carried by the
+// body and head transforms alone (renderer/AnimalGait.js): body and head
+// are separate InstancedMeshes precisely so the head can nod on its own.
 //
-// Deliberately untested directly, same posture as
-// renderer/NaturalFeatureTileMesh.js — see that file's own header for why
-// the load/unload ORCHESTRATION is unit-tested (with a fake tile factory,
-// reused unchanged for wildlife — see renderer/Renderer.js) while the real
-// Three.js geometry-building glue here isn't.
+// Unlike renderer/NaturalFeatureTileMesh.js, whose geometry-building glue
+// is deliberately untested, this file's per-frame motion
+// (updateWildlifeTileMesh()) is tested directly in
+// tests/WildlifeMotionIntegration.test.js: where each instance ends up and
+// that its bounding sphere always contains it are behavior worth pinning.
 
 const BODY_SEGMENTS_WIDTH = 7; // low-poly on purpose
 const BODY_SEGMENTS_HEIGHT = 5; // low-poly on purpose
@@ -105,7 +110,13 @@ function buildPreset({ bodyRadiusX, bodyRadiusY, bodyRadiusZ, headRadius, headHe
         // as "fixed head color, per-variant body/fur color."
         bodyMaterial: new THREE.MeshStandardMaterial(),
         headMaterial: new THREE.MeshStandardMaterial({ color: headColor }),
-        furColors
+        furColors,
+        // The base of the (unmodeled) neck, in the same local frame as the
+        // geometry: the point a nodding head swings about (see
+        // renderer/AnimalGait.js). Set back inside the front of the body,
+        // at the head's height, so the head swings on a neck-length arm —
+        // a pivot at the head itself would only spin the sphere in place.
+        neckPivot: new THREE.Vector3(0, bodyRadiusY * headHeightFactor, bodyRadiusZ * 0.35)
     };
 }
 
@@ -116,33 +127,70 @@ const EMPTY_EXCLUSION_SET = new Set();
 
 const _position = new THREE.Vector3();
 const _quaternion = new THREE.Quaternion();
-const _euler = new THREE.Euler();
+// 'YXZ': turn to the heading first, then pitch about the animal's own
+// sideways axis — so a positive pitch always tips its nose down, whichever
+// way it faces.
+const _euler = new THREE.Euler(0, 0, 0, 'YXZ');
 const _scaleVec = new THREE.Vector3();
 const _matrix = new THREE.Matrix4();
+const _headMatrix = new THREE.Matrix4();
+const _nod = new THREE.Matrix4();
+const _turn = new THREE.Matrix4();
+const _pivot = new THREE.Matrix4();
+
+// A tile's bounding spheres are computed once, from where its animals were
+// placed, and padded by how far they can wander (core/WildlifeMotion.js)
+// so frustum culling never hides an animal that has walked toward the
+// edge of the view. Twice the wander distance leaves room for the terrain
+// rising or falling under a wandering animal as well.
+const BOUNDING_SPHERE_PADDING = MAX_WANDER_DISTANCE * 2;
 
 function applyBoundingSphere(mesh) {
-    if (typeof mesh.computeBoundingSphere === 'function') mesh.computeBoundingSphere();
+    if (typeof mesh.computeBoundingSphere !== 'function') return;
+    mesh.computeBoundingSphere();
+    if (mesh.boundingSphere) mesh.boundingSphere.radius += BOUNDING_SPHERE_PADDING;
+}
+
+// Writes one animal's transform, at `pose`, into instance `i` of both
+// meshes. Instance matrices hold ABSOLUTE world coordinates directly (the
+// group itself stays at the origin) — the same convention
+// renderer/NaturalFeatureTileMesh.js's own header documents for trees.
+//
+// `offsets` (renderer/AnimalGait.js while walking, renderer/AnimalIdle.js
+// while standing) lifts and pitches the body, and turns and nods the head
+// about `preset.neckPivot` on top of that; at rest the head simply shares
+// the body's transform.
+function writeInstance(bodyMesh, headMesh, i, pose, scale, preset, offsets = REST_GAIT) {
+    _position.set(pose.x, pose.y + offsets.lift * scale, pose.z);
+    _euler.set(offsets.bodyPitch, pose.rotationY, 0);
+    _quaternion.setFromEuler(_euler);
+    _scaleVec.set(scale, scale, scale);
+    _matrix.compose(_position, _quaternion, _scaleVec);
+    bodyMesh.setMatrixAt(i, _matrix);
+    if (offsets.headPitch === 0 && offsets.headYaw === 0) {
+        headMesh.setMatrixAt(i, _matrix);
+        return;
+    }
+    // body × T(pivot) × Ry(turn) × Rx(nod) × T(-pivot), all in the
+    // geometry's own frame: the head turns, then nods, about its neck.
+    const { x, y, z } = preset.neckPivot;
+    _headMatrix.copy(_matrix)
+        .multiply(_pivot.makeTranslation(x, y, z))
+        .multiply(_turn.makeRotationY(offsets.headYaw))
+        .multiply(_nod.makeRotationX(offsets.headPitch))
+        .multiply(_pivot.makeTranslation(-x, -y, -z));
+    headMesh.setMatrixAt(i, _headMatrix);
 }
 
 // Builds one species' worth of animals within a tile into a body/head
-// InstancedMesh pair, using that species' own shared preset geometry.
+// InstancedMesh pair, using that species' own shared preset geometry,
+// with every animal at its placed position.
 function buildSpeciesMeshes(preset, animals) {
     const bodyMesh = new THREE.InstancedMesh(preset.bodyGeometry, preset.bodyMaterial, animals.length);
     const headMesh = new THREE.InstancedMesh(preset.headGeometry, preset.headMaterial, animals.length);
 
-    // Instance matrices hold ABSOLUTE world coordinates directly (the
-    // group itself stays at the origin) — the same convention
-    // renderer/NaturalFeatureTileMesh.js's own header documents for trees,
-    // applied here to an animal's instance transform.
     animals.forEach((animal, i) => {
-        _position.set(animal.x, animal.y, animal.z);
-        _euler.set(0, animal.rotationY, 0);
-        _quaternion.setFromEuler(_euler);
-        _scaleVec.set(animal.scale, animal.scale, animal.scale);
-        _matrix.compose(_position, _quaternion, _scaleVec);
-
-        bodyMesh.setMatrixAt(i, _matrix);
-        headMesh.setMatrixAt(i, _matrix);
+        writeInstance(bodyMesh, headMesh, i, animal, animal.scale, preset);
         bodyMesh.setColorAt(i, preset.furColors[animal.variant] ?? preset.furColors[0]);
     });
     bodyMesh.instanceMatrix.needsUpdate = true;
@@ -171,7 +219,14 @@ function buildSpeciesMeshes(preset, animals) {
 // application/world/VehicleRuntimeInstances.js's own render sync already
 // establishes for vehicles. This file still computes no catch/exclusion
 // policy of its own — it only ever filters a set it is handed.
-export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, excludedAnimalIds = EMPTY_EXCLUSION_SET) {
+//
+// A tile holds the animals PLACED in it, and keeps holding them while
+// they wander: core/WildlifeMotion.js never lets an animal leave its own
+// lattice cell, so it never leaves its tile either. The tile remembers
+// them (in `userData.wildlife`) so updateWildlifeTileMesh() can move them
+// each frame. `timeSeconds` (optional) poses them straight away; without
+// it they start at their placed positions.
+export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, excludedAnimalIds = EMPTY_EXCLUSION_SET, timeSeconds = null) {
     const minX = tx * tileSize;
     const minZ = tz * tileSize;
     const animals = wildlifeInRegion(seed, minX, minZ, minX + tileSize, minZ + tileSize)
@@ -187,10 +242,42 @@ export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE
         else bySpecies.set(animal.species, [animal]);
     }
 
+    const herds = [];
     for (const [species, speciesAnimals] of bySpecies) {
         const preset = SPECIES_PRESET[species] ?? SPECIES_PRESET[ANIMAL_SPECIES.RABBIT];
-        for (const mesh of buildSpeciesMeshes(preset, speciesAnimals)) group.add(mesh);
+        const [bodyMesh, headMesh] = buildSpeciesMeshes(preset, speciesAnimals);
+        group.add(bodyMesh);
+        group.add(headMesh);
+        herds.push({ species, preset, animals: speciesAnimals, bodyMesh, headMesh });
     }
+    group.userData.wildlife = { seed, herds };
 
+    if (timeSeconds !== null && timeSeconds !== undefined) {
+        updateWildlifeTileMesh(group, timeSeconds);
+    }
     return group;
+}
+
+// Moves every animal in a tile built by buildWildlifeTileMesh() to where
+// it is at `timeSeconds` (core/WildlifeMotion.js#animalPoseAt()) by
+// rewriting instance transforms in place — no geometry is rebuilt and no
+// draw call is added. Called once per frame for every loaded tile. A
+// group with no animals is left alone. A walking animal also moves with
+// its gait (renderer/AnimalGait.js) — hopping or stepping in time with the
+// ground it covers — and a standing one with its idle action
+// (renderer/AnimalIdle.js): grazing, or alert and looking around.
+export function updateWildlifeTileMesh(group, timeSeconds) {
+    const wildlife = group.userData.wildlife;
+    if (!wildlife) return;
+    for (const { species, preset, animals, bodyMesh, headMesh } of wildlife.herds) {
+        animals.forEach((animal, i) => {
+            const pose = animalPoseAt(wildlife.seed, animal, timeSeconds);
+            const offsets = pose.moving
+                ? gaitOffsetsAt(species, pose.gaitPhase)
+                : idleOffsetsAt(species, pose.idleAction, pose.idleSeconds, pose.idleDuration);
+            writeInstance(bodyMesh, headMesh, i, pose, animal.scale, preset, offsets);
+        });
+        bodyMesh.instanceMatrix.needsUpdate = true;
+        headMesh.instanceMatrix.needsUpdate = true;
+    }
 }
