@@ -819,3 +819,15 @@
 .world-view-sound-volume {
     width: 6rem;
 }
+
+.world-view-sound-spatial {
+    background: transparent;
+    color: #e0e0e0;
+    border: 1px solid rgba(224, 224, 224, 0.3);
+    font-size: 0.8rem;
+    padding: 0.1rem 0.4rem;
+}
+
+.world-view-sound-spatial[aria-pressed="true"] {
+    border-color: rgba(76, 175, 125, 0.8);
+}

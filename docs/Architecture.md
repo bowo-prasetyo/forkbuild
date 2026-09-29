@@ -1170,7 +1170,23 @@ are shared by every tile.
   operation is executed straight against the document by `WorldCommandPropagationUseCase`, never through these
   histories, so it is never heard. `application/commands/describeCommand.js` gives both sessions the
   `{ type, children }` shape.
-- **Not yet.** Other avatars' footsteps, vehicles other people ride, and true 3D (HRTF) sound.
+- **Other players.** `remoteAvatarsForSound()` reads each remote avatar where it is drawn now
+  (`RemoteAvatarRegistry#currentPresence()`, the interpolated presence the renderer uses), within 30 m, and none
+  while `setRemoteAvatarsVisible(false)` hides them. `advanceCreatureSound()` runs each through the local avatar's own
+  `advanceAvatarSound()` (its own state per avatar id), with the JUMPING animation standing for RISING because
+  presence carries no vertical state, and no vehicle; the resulting footstep, jump and land cues become
+  PLAYER_FOOTSTEP/JUMP/LAND at 0.8 of their intensity, placed within 20 m. Nothing new is sent or stored: presence
+  already carries position and animation.
+- **3D.** Every placed cue carries `position` (`{ x, y, z }`, heights where things are drawn: terrain plus the
+  presence's own `y`, animals 0.5 m and residents 1.5 m up). With `spatial` on (`core/SoundSettings.js`, default
+  true, the World View **3D**/**Stereo** button), the provider places it with a PannerNode (`panningModel` HRTF,
+  `rolloffFactor` 0, since the cue's own gain already fades with distance); otherwise, or without a position, with
+  the stereo `pan`. `WorldNavigationSession#soundListenerPose()` gives the AudioListener, set every render frame:
+  the avatar's ears (drawn ground plus `y` plus 1.6 m; a rider's position already includes the ground), else the
+  camera, facing the camera's full direction with up made perpendicular to it. The deprecated
+  `setPosition()`/`setOrientation()` are used where AudioParams are missing (older Safari).
+- **Not yet.** Vehicles other people ride (presence doesn't say who is riding what), and a player's landing
+  weight (their vertical speed isn't sent).
 
 ## Collaboration
 

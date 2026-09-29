@@ -21,6 +21,8 @@ class FakeProvider {
     setLayerLevels(levels) { this.levels = levels; this.calls.push('levels'); }
     setVolume(volume) { this.volume = volume; }
     setMuted(muted) { this.muted = muted; }
+    setSpatial(spatial) { this.spatial = spatial; }
+    setListener(pose) { this.listener = pose; }
     playCue(cue) { this.calls.push(`cue:${cue.kind}`); }
     playEditorCue(cue) { this.calls.push(`edit:${cue}`); }
     setEngine(engine) { this.calls.push(engine ? `engine:${engine.vehicleType}:${engine.load.toFixed(2)}` : 'engine:off'); }
@@ -222,4 +224,36 @@ function build({ position = { x: 10, y: 0, z: -20 }, storage = new InMemoryStora
     service.dispose();
     assert(unsubscribed, 'dispose() stops listening to edits');
     console.log('✓ World View edits');
+}
+
+// The listener follows the camera every frame, and 3D can be turned off and on.
+{
+    const provider = new FakeProvider();
+    const storage = new InMemoryStorageProvider();
+    const frames = [];
+    let pose = { position: { x: 1, y: 2, z: 3 }, forward: { x: 0, y: 0, z: 1 }, up: { x: 0, y: 1, z: 0 } };
+    const service = new WorldSoundscapeService({
+        provider,
+        settingsStore: new SoundSettingsStore({ storageProvider: storage }),
+        listenerPosition: () => null,
+        seed: DEFAULT_WORLD_SEED,
+        listenerPose: () => pose,
+        onRenderFrame: (callback) => { frames.push(callback); return () => {}; },
+        setIntervalFn: () => 1,
+        clearIntervalFn: () => {}
+    });
+    service.start();
+    assert(provider.spatial === true, '3D is on to start');
+    frames[0](1 / 60);
+    assert(provider.listener === pose, 'the listener is handed over each frame');
+    pose = { ...pose, position: { x: 5, y: 2, z: 3 } };
+    frames[0](1 / 60);
+    assert(provider.listener.position.x === 5, 'and follows as it moves');
+    const off = service.toggleSpatial();
+    assert(off.spatial === false && provider.spatial === false, 'toggleSpatial() turns 3D off');
+    assert(new SoundSettingsStore({ storageProvider: storage }).get().spatial === false, 'and it is remembered');
+    service.toggleSpatial();
+    assert(provider.spatial === true, 'and back on');
+    service.dispose();
+    console.log('✓ listener pose and the 3D toggle');
 }

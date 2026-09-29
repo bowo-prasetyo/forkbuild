@@ -22,6 +22,8 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { RemoteAvatarRegistry } from '../application/avatar/RemoteAvatarRegistry.js';
+import { terrainHeightAt } from '../core/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -57,6 +59,8 @@ class RecordingProvider {
     setLayerLevels() {}
     setVolume() {}
     setMuted() {}
+    setSpatial(spatial) { this.spatial = spatial; }
+    setListener(pose) { this.listener = pose; }
     playCue() {}
     setEngine() {}
     playCreatureCue(cue) { this.creatureCues.push(cue); }
@@ -172,6 +176,54 @@ const service = new WorldSoundscapeService({
     service.sampleCreatures();
     assert(provider.creatureCues.slice(before).filter((c) => c.kind === CREATURE_SOUND_CUE.RESIDENT_SPEECH).length === 1, 'once per thing said');
     console.log('✓ a resident talking from the real session');
+}
+
+// The 3D listener: at the avatar's ears where it is drawn, facing where the
+// camera looks, pitch included, with up perpendicular to that.
+{
+    const pose = session.soundListenerPose();
+    const p = avatarPresenceSession.current.position;
+    assert(Math.abs(pose.position.y - (terrainHeightAt(SEED, p.x, p.z) + p.y + 1.6)) < 1e-9, 'the listener is at ear height above the drawn ground');
+    // The camera is 10 up and 10 back, looking down at the avatar at 45 degrees.
+    assert(Math.abs(pose.forward.z - Math.SQRT1_2) < 1e-9 && Math.abs(pose.forward.y + Math.SQRT1_2) < 1e-9, 'forward follows the camera, looking down');
+    const dot = pose.forward.x * pose.up.x + pose.forward.y * pose.up.y + pose.forward.z * pose.up.z;
+    assert(Math.abs(dot) < 1e-9 && pose.up.y > 0, 'up is perpendicular to forward, and upward');
+    console.log('✓ the 3D listener pose');
+}
+
+// Other players, from the real remote-avatar registry: heard walking, placed
+// where they are drawn; not heard while other avatars are hidden.
+{
+    const facade = { setRemoteAvatar() {}, removeRemoteAvatar() {}, updateRemoteAvatarPresence() {} };
+    const registry = new RemoteAvatarRegistry(facade);
+    session._remoteAvatarRegistry = registry;
+    const here = avatarPresenceSession.current.position;
+    let sequence = 1;
+    const advertise = (x, animation, now) => registry.sync([{ advertisement: {
+        avatarId: 'bob-avatar', ownerIdentity: 'bob', position: { x, y: 0, z: here.z + 6 },
+        rotation: { x: 0, y: 0, z: 0 }, animation, sequence: sequence++
+    } }], now);
+    const t0 = Date.now() - 10_000;
+    advertise(here.x, 'walking', t0);
+    const heard = session.remoteAvatarsForSound(session.getAvatarPosition());
+    assert(heard.length === 1 && heard[0].id === 'bob-avatar' && heard[0].animation === 'walking', 'another player nearby is heard');
+    assert(Math.abs(heard[0].y - terrainHeightAt(SEED, heard[0].position.x, heard[0].position.z)) < 1e-9, 'at the height they are drawn');
+
+    const before = provider.creatureCues.length;
+    service.sampleCreatures(0.1);
+    for (let i = 1; i <= 20; i++) {
+        advertise(here.x + 0.3 * i, 'walking', t0 + i * 1000);
+        service.sampleCreatures(0.1);
+    }
+    const steps = provider.creatureCues.slice(before).filter((c) => c.kind === CREATURE_SOUND_CUE.PLAYER_FOOTSTEP);
+    assert(steps.length >= 5, `their footsteps are heard (${steps.length})`);
+    assert(steps.every((c) => c.position && c.position.z === here.z + 6), 'from where they are');
+
+    session.setRemoteAvatarsVisible(false);
+    assert(session.remoteAvatarsForSound(session.getAvatarPosition()).length === 0, 'hidden players are not heard');
+    session.setRemoteAvatarsVisible(true);
+    session._remoteAvatarRegistry = null;
+    console.log('✓ other players from the real registry');
 }
 
 // Creatures are looked at ten times a second through render frames.

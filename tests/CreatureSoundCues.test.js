@@ -150,3 +150,57 @@ function run(observations) {
     assert(result.cues.length === 0, 'nothing without a listener');
     console.log('✓ silent without a listener');
 }
+
+// Placed cues carry where they come from, for 3D sound; a catch is heard at the listener.
+{
+    const call = run([
+        { listener: listenerAt(), animals: [deer({ y: 12.5 })] },
+        { listener: listenerAt(), animals: [deer({ y: 12.5, idleAction: IDLE_ACTION.ALERT })] }
+    ]).flat()[0];
+    assert(call.position && call.position.x === 0 && call.position.y === 12.5 && call.position.z === 20, 'an animal call carries its position');
+    const caught = run([
+        { listener: listenerAt(), animals: [], carriedAnimals: [] },
+        { listener: listenerAt(), animals: [], carriedAnimals: [{ id: 'a', species: ANIMAL_SPECIES.RABBIT }] }
+    ]).flat()[0];
+    assert(caught.position === null, 'a catch has no position: it is heard up close');
+    console.log('✓ placed cues carry their position');
+}
+
+// Other players are heard walking, jumping and landing, from where they are.
+{
+    const { advanceCreatureSound: advance } = await import('../core/CreatureSoundCues.js');
+    const { DEFAULT_WORLD_SEED } = await import('../core/TerrainHeightField.js');
+    const seed = DEFAULT_WORLD_SEED;
+    const step = (state, player) => advance(state, { listener: listenerAt(0, 0), animals: [], remoteAvatars: [player] }, { seed, deltaSeconds: 0.1 });
+    let state = createCreatureSoundState();
+    const cues = [];
+    for (let i = 0; i <= 20; i++) {
+        const result = step(state, { id: 'p1', position: { x: 0.3 * i, y: 0, z: 8 }, y: 3.2, animation: 'walking' });
+        state = result.state;
+        cues.push(...result.cues);
+    }
+    const steps = cues.filter((c) => c.kind === CREATURE_SOUND_CUE.PLAYER_FOOTSTEP);
+    assert(steps.length >= 7 && steps.length <= 9, `2 s of another player walking is about 8 steps (${steps.length})`);
+    assert(steps.every((c) => c.position.y === 3.2 && c.position.z === 8 && c.gain > 0 && typeof c.surface === 'string'),
+        'each step is placed where the player is drawn, on its surface');
+    assert(steps.every((c) => c.intensity < 0.6), 'a little softer than your own');
+
+    const jump = [];
+    for (const [animation, x] of [['idle', 0], ['jumping', 0.1], ['jumping', 0.2], ['jumping', 0.3], ['idle', 0.4]]) {
+        const result = step(state, { id: 'p1', position: { x, y: 0, z: 8 }, y: 3.2, animation });
+        state = result.state;
+        jump.push(result.cues.map((c) => c.kind));
+    }
+    assert(jump[1].includes(CREATURE_SOUND_CUE.PLAYER_JUMP), 'their jump is heard');
+    assert(jump[4].includes(CREATURE_SOUND_CUE.PLAYER_LAND), 'and their landing');
+
+    let far = createCreatureSoundState();
+    const farCues = [];
+    for (let i = 0; i <= 10; i++) {
+        const result = step(far, { id: 'p2', position: { x: 0.3 * i, y: 0, z: 25 }, y: 0, animation: 'walking' });
+        far = result.state;
+        farCues.push(...result.cues);
+    }
+    assert(farCues.length === 0, 'a player beyond 20 m is not heard');
+    console.log('✓ other players walking, jumping and landing');
+}

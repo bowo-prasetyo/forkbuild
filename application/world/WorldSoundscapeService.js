@@ -8,7 +8,8 @@
 // The provider is an adapter (audio/WebAudioSoundscapeProvider.js in the
 // browser) with resume(), setLayerLevels(levels), playCue(cue),
 // playCreatureCue(cue), playEditorCue(cue), setEngine(engine),
-// setVolume(volume), setMuted(muted) and dispose().
+// setListener(pose), setSpatial(spatial), setVolume(volume), setMuted(muted)
+// and dispose().
 // Browsers keep audio silent until the user interacts with the page, so the
 // view calls unlock() from its first key press or tap.
 import { ambientMixAt, silentAmbientMix } from '../../core/AmbientSoundscape.js';
@@ -34,6 +35,7 @@ export class WorldSoundscapeService {
         seed,
         avatarObservation = null,
         creatureObservation = null,
+        listenerPose = null,
         onRenderFrame = null,
         onCommandActivity = null,
         sampleIntervalMs = DEFAULT_SAMPLE_INTERVAL_MS,
@@ -58,6 +60,7 @@ export class WorldSoundscapeService {
         this._creatureObservation = typeof creatureObservation === 'function' ? creatureObservation : null;
         this._creatureSoundState = createCreatureSoundState();
         this._creatureSeconds = CREATURE_SAMPLE_SECONDS;
+        this._listenerPose = typeof listenerPose === 'function' ? listenerPose : null;
         this._engine = null;
         this._frameUnsubscribe = null;
         this._onCommandActivity = typeof onCommandActivity === 'function' ? onCommandActivity : null;
@@ -72,7 +75,7 @@ export class WorldSoundscapeService {
         this._preference.apply();
         this.sample();
         this._interval = this._setInterval(() => this.sample(), this._sampleIntervalMs);
-        if ((this._avatarObservation || this._creatureObservation) && this._onRenderFrame) {
+        if ((this._avatarObservation || this._creatureObservation || this._listenerPose) && this._onRenderFrame) {
             this._frameUnsubscribe = this._onRenderFrame((deltaSeconds) => this.frame(deltaSeconds));
         }
         // World View's own edits (places, residents, decorations) sound as they
@@ -92,6 +95,13 @@ export class WorldSoundscapeService {
         if (this._disposed) {
             return;
         }
+        // Where 3D sound is heard from follows the avatar and camera every frame.
+        if (this._listenerPose) {
+            const pose = this._listenerPose();
+            if (pose) {
+                this._provider.setListener(pose);
+            }
+        }
         if (this._avatarObservation) {
             const { state, cues, engine } = advanceAvatarSound(
                 this._avatarSoundState, this._avatarObservation(), deltaSeconds, this._seed
@@ -105,18 +115,22 @@ export class WorldSoundscapeService {
         if (this._creatureObservation) {
             this._creatureSeconds += Number.isFinite(deltaSeconds) && deltaSeconds > 0 ? deltaSeconds : 0;
             if (this._creatureSeconds >= CREATURE_SAMPLE_SECONDS) {
+                const elapsed = this._creatureSeconds;
                 this._creatureSeconds = 0;
-                this.sampleCreatures();
+                this.sampleCreatures(elapsed);
             }
         }
     }
 
     // One look at the animals and residents around the listener.
-    sampleCreatures() {
+    // `deltaSeconds` is the time since the last look.
+    sampleCreatures(deltaSeconds = CREATURE_SAMPLE_SECONDS) {
         if (this._disposed || !this._creatureObservation) {
             return;
         }
-        const { state, cues } = advanceCreatureSound(this._creatureSoundState, this._creatureObservation());
+        const { state, cues } = advanceCreatureSound(this._creatureSoundState, this._creatureObservation(), {
+            seed: this._seed, deltaSeconds
+        });
         this._creatureSoundState = state;
         for (const cue of cues) {
             this._provider.playCreatureCue(cue);
@@ -176,6 +190,10 @@ export class WorldSoundscapeService {
 
     setVolume(volume) {
         return this._preference.setVolume(volume);
+    }
+
+    toggleSpatial() {
+        return this._preference.toggleSpatial();
     }
 
     dispose() {

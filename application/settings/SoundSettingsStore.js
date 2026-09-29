@@ -23,7 +23,7 @@ export class SoundSettingsStore {
 
     save(settings) {
         const normalized = normalizeSoundSettings(settings);
-        this._storage.save(STORAGE_KEY, { muted: normalized.muted, volume: normalized.volume });
+        this._storage.save(STORAGE_KEY, { muted: normalized.muted, volume: normalized.volume, spatial: normalized.spatial });
         return normalized;
     }
 }

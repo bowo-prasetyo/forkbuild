@@ -195,6 +195,8 @@ class RecordingProvider {
     resume() { this.resumed++; }
     setVolume(volume) { this.volume = volume; }
     setMuted(muted) { this.muted = muted; }
+    setSpatial(spatial) { this.spatial = spatial; }
+    setListener(pose) { this.listener = pose; }
     playEditorCue(cue) { this.cues.push(cue); }
     dispose() { this.disposed = true; }
 }

@@ -52,3 +52,15 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
     assert(threw, 'a StorageProvider is required');
     console.log('✓ SoundSettingsStore keeps the choice and tolerates damage');
 }
+
+// 3D is on unless turned off, and an older saved choice reads as 3D.
+{
+    assert(DEFAULT_SOUND_SETTINGS.spatial === true, '3D is on by default');
+    assert(normalizeSoundSettings({ muted: true, volume: 0.3 }).spatial === true, 'a choice saved before 3D existed reads as 3D');
+    assert(normalizeSoundSettings({ spatial: false }).spatial === false, 'turning 3D off is kept');
+    const storage = new InMemoryStorageProvider();
+    const store = new SoundSettingsStore({ storageProvider: storage });
+    store.save({ muted: false, volume: 0.4, spatial: false });
+    assert(new SoundSettingsStore({ storageProvider: storage }).get().spatial === false, '3D off is remembered');
+    console.log('✓ the 3D choice');
+}

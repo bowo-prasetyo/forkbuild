@@ -369,6 +369,63 @@ async function runTests() {
         console.log('✓ getting on, off and braking, for every vehicle');
     }
 
+    // 3D: a placed sound is heard from its position around the listener;
+    // turning 3D off falls back to the left/right pan.
+    {
+        const render = async ({ spatial, position, pan = 0, listener = null }) => {
+            const offline = new OfflineAudioContext(2, SAMPLE_RATE * 1.5, SAMPLE_RATE);
+            const context = new Proxy(offline, {
+                get(target, prop) {
+                    if (prop === 'state') return 'running';
+                    if (prop === 'resume' || prop === 'suspend' || prop === 'close') return () => Promise.resolve();
+                    const value = Reflect.get(target, prop, target);
+                    return typeof value === 'function' ? value.bind(target) : value;
+                }
+            });
+            // The same seeded random sequence each time, so every render plays the
+            // identical footstep and only its placement differs.
+            let seedState = 12345;
+            const random = () => {
+                seedState = (seedState * 1103515245 + 12345) % 2147483648;
+                return seedState / 2147483648;
+            };
+            const provider = new WebAudioSoundscapeProvider({
+                contextFactory: () => context, documentRef: null, random, setTimeoutFn: () => 1, clearTimeoutFn: () => {}
+            });
+            provider.setVolume(1);
+            provider.setSpatial(spatial);
+            // Set before audio starts: applied once it does.
+            provider.setListener(listener || { position: { x: 0, y: 0, z: 0 }, forward: { x: 0, y: 0, z: 1 }, up: { x: 0, y: 1, z: 0 } });
+            provider.resume();
+            provider.playCreatureCue({ kind: 'player-footstep', surface: 'stone', intensity: 1, gain: 1, pan, position });
+            const buffer = await offline.startRendering();
+            provider.dispose();
+            return { left: rmsOf(buffer.getChannelData(0)), right: rmsOf(buffer.getChannelData(1)) };
+        };
+        // Facing +Z with up +Y, the listener's right is -X.
+        const right = await render({ spatial: true, position: { x: -5, y: 0, z: 0 } });
+        const left = await render({ spatial: true, position: { x: 5, y: 0, z: 0 } });
+        assert(right.right > right.left * 1.2, `in 3D a sound to the right is louder in the right ear (${right.right} vs ${right.left})`);
+        assert(left.left > left.right * 1.2, 'and one to the left in the left ear');
+        const ahead = await render({ spatial: true, position: { x: 0, y: 0, z: 5 } });
+        assert(ahead.left > 0.001 && Math.abs(ahead.left - ahead.right) < ahead.left * 0.2, 'one straight ahead reaches both ears alike');
+        const turned = await render({
+            spatial: true, position: { x: 0, y: 0, z: 5 },
+            listener: { position: { x: 0, y: 0, z: 0 }, forward: { x: 1, y: 0, z: 0 }, up: { x: 0, y: 1, z: 0 } }
+        });
+        assert(turned.right > turned.left * 1.2, 'turning to face +X puts +Z on the right');
+        const farAway = await render({ spatial: true, position: { x: 0, y: 0, z: 50 } });
+        assert(Math.abs(farAway.left - ahead.left) < ahead.left * 0.1, 'distance is left to the cue gain, not the panner');
+
+        const stereoRight = await render({ spatial: false, position: { x: 5, y: 0, z: 0 }, pan: 1 });
+        assert(stereoRight.right > stereoRight.left * 5, 'with 3D off, the cue pan decides left and right');
+        for (const kind of ['player-jump', 'player-land']) {
+            const data = await renderEffects(1, (p) => p.playCreatureCue({ kind, surface: 'grass', intensity: 0.8, gain: 1, pan: 0, position: null }));
+            assert(rmsOf(data) > 0.001, `${kind} is audible`);
+        }
+        console.log('✓ 3D placement follows the listener; stereo when 3D is off');
+    }
+
     // Without Web Audio the provider stays silent instead of throwing.
     {
         const provider = new WebAudioSoundscapeProvider({ contextFactory: () => null, documentRef: null });
@@ -385,12 +442,13 @@ async function runTests() {
     {
         const events = [];
         const fake = {
-            _settings: { muted: false, volume: 0.5 },
+            _settings: { muted: false, volume: 0.5, spatial: true },
             settings() { return this._settings; },
             start() { events.push('start'); },
             unlock() { events.push('unlock'); },
             toggleMuted() { this._settings = { ...this._settings, muted: !this._settings.muted }; return this._settings; },
             setVolume(volume) { this._settings = { ...this._settings, volume }; return this._settings; },
+            toggleSpatial() { this._settings = { ...this._settings, spatial: !this._settings.spatial }; return this._settings; },
             dispose() { events.push('dispose'); }
         };
         const session = { getAvatarPosition: () => null, getCameraPosition: () => ({ x: 1, y: 2, z: 3 }), getWorldSeed: () => 7 };
@@ -421,6 +479,9 @@ async function runTests() {
 
         sound.setSoundVolume(0.8);
         assert(sound.soundVolume.value === 0.8, 'the slider sets the volume');
+        assert(sound.soundSpatial.value === true, '3D starts from the saved choice');
+        sound.toggleSoundSpatial();
+        assert(sound.soundSpatial.value === false, 'the 3D button switches to stereo');
 
         sound.stopSound();
         assert(events.includes('dispose') && sound.soundAvailable.value === false, 'stopSound() disposes');

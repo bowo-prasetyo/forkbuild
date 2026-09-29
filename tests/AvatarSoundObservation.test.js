@@ -59,6 +59,8 @@ class RecordingProvider {
     setLayerLevels() {}
     setVolume() {}
     setMuted() {}
+    setSpatial(spatial) { this.spatial = spatial; }
+    setListener(pose) { this.listener = pose; }
     playCue(cue) { this.cues.push(cue); }
     setEngine(engine) { this.engines.push(engine); }
     dispose() {}

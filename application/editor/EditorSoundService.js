@@ -60,6 +60,10 @@ export class EditorSoundService {
         return this._preference.setVolume(volume);
     }
 
+    toggleSpatial() {
+        return this._preference.toggleSpatial();
+    }
+
     dispose() {
         if (this._disposed) {
             return;
