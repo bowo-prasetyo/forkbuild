@@ -1047,6 +1047,18 @@ is lifted a second time. Released animals get the same lift as remote avatars.
   legs advance with the ground it covered. `renderer/ResidentReaction.js#residentFacingFor()` turns a settled
   resident to face the local avatar within 6 (fading out toward its back), and the field renderer waves once per
   approach within 3.5.
+- **Talking.** `T` (or a Talk button) calls `WorldNavigationSession#talkToNearestResident()`:
+  `application/world/ResidentSurroundings.js#gatherResidentFacts()` collects what this replica knows around the
+  resident — deterministic vehicles minus those `VehicleRuntimeInstances` excludes (stored), at their runtime
+  positions, minus the ridden one (150 m); wild animals at the session clock minus caught ones, plus released ones
+  (100 m); loaded Worlds' landmarks (1 km); present collaborators by their shown name (500 m); other builds from
+  `searchWorldByLocation()` excluding the resident's own World and its parent (5 km); the innermost region it stands
+  in. `core/ResidentTalk.js#composeResidentRemarks()` turns them into one nearby sentence (kinds take turns, then
+  each kind's next-nearest) and one build sentence, with rounded distances, compass words and sanitized plain-text
+  titles and names. A per-resident turn counter makes each conversation move on. The facade's
+  `showResidentSpeech()` puts a canvas-text sprite over the resident (`renderer/ResidentSpeechBubble.js`), gone
+  after 5–14 s or beyond 8 m; the UI also announces the words through an `aria-live` region. Nothing is stored or
+  sent: what a resident says is local to the viewer.
 
 ## Terrain layers
 

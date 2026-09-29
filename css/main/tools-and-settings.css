@@ -524,6 +524,20 @@
     margin-top: 0.5rem;
 }
 
+/* Read out to screen readers, never drawn: e.g. what a World Resident just
+   said, which is drawn as a bubble over its head instead. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* Camera Perspective selector (0.3.2) — a fixed offset around the
    local avatar, styled as a small button group rather than checkboxes
    since the three perspectives (plus "Free") are mutually exclusive,

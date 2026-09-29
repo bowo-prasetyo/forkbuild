@@ -115,12 +115,13 @@ nearby or you're carrying one.
 
 See [Avatars & Presence](06-AvatarsAndPresence.md#residents). Requires Avatar
 Control Mode; the Avatar section's **Add Resident Here** / **Remove Resident**
-button does the same without it.
+and **Talk** buttons do the same without it.
 
 | Input | Action | Notes |
 |---|---|---|
 | `R` (on open ground, no resident right beside you) | Add a resident whose home is where you stand | Saved into the World's content; needs EDIT access. Not on a rooftop, in water, or while riding |
 | `R` (next to a resident) | Remove it from its World | A prompt shows **[R] Remove Resident**; undo with `Ctrl/Cmd+Z` |
+| `T` (next to a resident) | Talk: it tells you what's around | Shown in a bubble over its head; talk again for something else. The Avatar section's and touch pad's **Talk** button does the same |
 
 Your inventory, placed vehicles, and released animals are saved on this
 device and survive a reload — see

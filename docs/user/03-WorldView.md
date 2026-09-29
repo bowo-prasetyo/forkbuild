@@ -75,7 +75,8 @@ none of it is editable.
 
 A World can also have **residents** — people who live there and stroll
 around their homes, walking round buildings rather than through them, and
-turning to greet you when you come close. Unlike wildlife they're part of
+turning to greet you when you come close; talk to one and it tells you
+what's around. Unlike wildlife they're part of
 the World's own content: its author adds them. See
 [Residents](06-AvatarsAndPresence.md#residents).
 

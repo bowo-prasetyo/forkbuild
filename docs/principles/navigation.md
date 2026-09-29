@@ -230,7 +230,9 @@ it.
 `WorldWelcomeContext` and its exploration suggestions are derived and
 ephemeral, recomputed on every call and never part of `World#toJSON()`.
 There is no welcome message, visit count or recommended location stored
-on a World. Choosing a suggestion is ordinary navigation.
+on a World. Choosing a suggestion is ordinary navigation. Suggestions, and
+a World Resident telling you what's around, point at what exists; nothing
+sets you quests, objectives or rewards, or tells you what to do.
 
 [Full text](history/0.3-0.7.md#exploration-guides-attention-never-ownership-or-mutation-039)
 

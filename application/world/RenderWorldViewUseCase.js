@@ -690,6 +690,10 @@ export class RenderWorldViewUseCase {
                     renderer.remove(object);
                 }
             },
+            // World Residents: what a resident said when talked to
+            // (WorldNavigationSession#talkToNearestResident()), in a bubble
+            // over its head on this screen only.
+            showResidentSpeech: (residentId, remarks) => residentFieldRenderer.say(residentId, remarks),
             // 0.9.700 — Animal Catching. A thin pass-through to
             // renderer.markAnimalCaught() — see that method's own header
             // for what it actually does. This facade adds no policy of

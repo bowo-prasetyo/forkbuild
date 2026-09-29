@@ -46,3 +46,15 @@ the viewer's own avatar, which changes only that viewer's screen. It is
 never a person: no identity, presence or People listing, and no quests.
 
 [Full text](history/0.9.md#a-resident-walks-a-path-sampled-from-time-and-the-world-and-is-never-a-person-2026-09-29)
+
+### A Resident Tells You What's Around, Never What To Do (2026-09-29)
+
+Asked, a resident says one or two things about its surroundings (vehicles,
+animals, landmarks, people, other builds, its place) with a rounded
+distance and direction from where it stands. It points at what exists and
+never sets a goal or a quest. What it says comes from the viewer's own
+replica and stays on the viewer's screen, so two viewers may hear different
+things; it never mentions a vehicle they stored or ride, or an animal they
+caught.
+
+[Full text](history/0.9.md#a-resident-tells-you-whats-around-never-what-to-do-2026-09-29)

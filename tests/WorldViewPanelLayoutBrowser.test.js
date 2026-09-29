@@ -183,6 +183,7 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
             toggleShowMyAvatar() {}, toggleShowOtherAvatars() {}, toggleAvatarControlMode() {},
             toggleFollowAvatar() {}, setCameraPerspective() {}, selectNearbyAvatar() {},
             toggleResidentHere() { toggled.push(true); },
+            talkToResident() { toggled.push('talk'); },
             residentRefusalLabel: residentRefusalLabel
         },
         template: avatarSectionTemplate
@@ -194,6 +195,11 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     vm.residentInteractionState = { canAdd: false, canRemove: true, refusal: null, targetResidentId: 'r' };
     await nextTick();
     assert(JSON.stringify(buttonLabels(row())) === JSON.stringify(['Remove Resident']), 'next to a resident it offers Remove Resident');
+    vm.residentInteractionState = { canAdd: false, canRemove: true, canTalk: true, refusal: null, targetResidentId: 'r' };
+    await nextTick();
+    assert(JSON.stringify(buttonLabels(row())) === JSON.stringify(['Talk', 'Remove Resident']), 'and Talk, when it can be talked to');
+    row().querySelector('button').click();
+    assert(toggled[toggled.length - 1] === 'talk', 'Talk does what T would');
     vm.residentInteractionState = { canAdd: false, canRemove: false, refusal: 'not-on-ground', targetResidentId: null };
     await nextTick();
     assert(buttonLabels(row()).length === 0 && row().textContent.includes('step down'), 'up on something it says why, with no button');

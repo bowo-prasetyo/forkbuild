@@ -303,11 +303,31 @@ its side, within a few steps, it turns to face you, and if you walk right
 up to it, it waves. It waves once each time you come over. As with animals,
 this only happens on your screen, and only for your own avatar.
 
+Residents also know their neighbourhood. Stand beside one and press **T**
+(a prompt shows **[T] Talk**; the Avatar section and the touch pad have a
+**Talk** button too), and it tells you a thing or two about what's around,
+in a speech bubble over its head: a bicycle or a deer nearby, a landmark,
+someone who's around, the place it lives in, or another build some way
+off — for example *"About 3.6 km to the north-east, there's a build called
+“Hill Fort” by bob."* Distances are rounded and directions are seen from
+where the resident stands (north is the way the compass points). Talk to it
+again and it mentions something else. The bubble goes after a few seconds,
+or as soon as you walk away.
+
+What a resident says is what *your* copy of ForkBuild knows: the builds in
+your catalog, the people present with you, the vehicles and animals you
+haven't taken. Someone else talking to the same resident may hear different
+things, and nobody else ever sees what it told you. It never mentions a
+vehicle you've stored or are riding, or an animal you've caught. Builds are
+named with their title and author as their publication gives them, the
+same as everywhere else in the app.
+
 A resident needs dry, open ground: not a rooftop, not the water, and not
 while you're riding. The Avatar section says why when it can't add one
 where you're standing. Residents aren't people — they have no profile,
-never show up under People or Nearby, can't be clicked for info, and don't
-hand out quests or directions — they just live there.
+never show up under People or Nearby, can't be clicked for info, and never
+give you quests, tasks or rewards — they just live there, and tell you
+what's around when you ask.
 
 #### What survives a reload
 

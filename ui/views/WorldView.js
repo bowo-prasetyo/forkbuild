@@ -336,6 +336,10 @@ export default {
         // is an avatar, since the Avatar panel's Residents row shows without
         // Avatar Control Mode too.
         const residentInteractionState = ref(null);
+        // The last thing a resident said (session.lastResidentSpeech()), for a
+        // screen-reader announcement; the words themselves are drawn in a bubble
+        // over the resident's head.
+        const residentSpeech = ref(null);
         const cruiseState = ref(null);
         // null means the free orbit camera.
         const cameraPerspective = ref(null);
@@ -948,6 +952,12 @@ export default {
 
         // The Avatar panel's Residents button: the same action as 'R', but through
         // guarded() so a refusal (not signed in, no edit access) is shown.
+        // The Avatar panel's and touch pad's Talk: the same action as 'T'.
+        function talkToResident() {
+            guarded(() => session.talkToNearestResident());
+            residentSpeech.value = session.lastResidentSpeech();
+        }
+
         function toggleResidentHere() {
             guarded(() => session.toggleResidentHere());
             residentInteractionState.value = session.residentInteractionState();
@@ -1008,6 +1018,8 @@ export default {
             // that must appear as the avatar approaches a vehicle. Only reads session
             // state. Hidden when Avatar Control Mode is off, since the key would do
             // nothing.
+            // Residents name people the way the People lists do.
+            session.setResidentDisplayNameResolver((identityId) => resolveIdentityDisplayName(identityId));
             vehicleInteractionInterval = setInterval(() => {
                 vehicleInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.avatarVehicleInteractionState()
@@ -1025,6 +1037,11 @@ export default {
                 residentInteractionState.value = hasLocalAvatar.value
                     ? session.residentInteractionState()
                     : null;
+                // 'T' talks without going through the UI, so pick up what was said.
+                const speech = session.lastResidentSpeech();
+                if (speech !== residentSpeech.value) {
+                    residentSpeech.value = speech;
+                }
                 cruiseState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.avatarContinuousMovementState()
                     : null;
@@ -1077,6 +1094,8 @@ export default {
             toggleAnimalDecoration,
             residentInteractionState,
             toggleResidentHere,
+            residentSpeech,
+            talkToResident,
             residentRefusalLabel,
             cruiseState,
             cameraPerspective,
@@ -1420,6 +1439,7 @@ export default {
                 :animal-state="animalInteractionState"
                 :decoration-state="decorationInteractionState"
                 :cruise-state="cruiseState"
+                :resident-state="residentInteractionState"
                 @key-down="pressAvatarKey"
                 @key-up="releaseAvatarKey"
                 @decorate="toggleAnimalDecoration"

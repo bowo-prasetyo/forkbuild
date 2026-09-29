@@ -57,9 +57,16 @@ export const avatarSectionTemplate = `<!--
                     </label>
                     <!--
                         World Residents: people who live in the active World and stroll
-                        around where they were added. Same action as the R key.
+                        around where they were added. Talk is the T key; Add/Remove the R key.
                     -->
                     <div v-if="hasLocalAvatar && residentInteractionState" class="world-view-residents">
+                        <button
+                            v-if="residentInteractionState.canTalk"
+                            type="button"
+                            class="action-btn"
+                            title="Ask the resident next to you what's around (T)"
+                            @click="talkToResident"
+                        >Talk</button>
                         <button
                             v-if="residentInteractionState.canAdd || residentInteractionState.canRemove"
                             type="button"
