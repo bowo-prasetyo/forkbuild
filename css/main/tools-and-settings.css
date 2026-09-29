@@ -415,7 +415,8 @@
 .steem-reading-settings-view,
 .stun-settings-view,
 .turn-server-settings-view,
-.rendezvous-settings-view {
+.rendezvous-settings-view,
+.language-settings-view {
     padding: 2rem 2.5rem 3rem;
     max-width: 560px;
     margin: 0 auto;
@@ -432,7 +433,8 @@
 .stun-settings-form,
 .turn-server-settings-form,
 .rendezvous-settings-form,
-.ipfs-node-settings-form {
+.ipfs-node-settings-form,
+.language-settings-form {
     margin-top: 1.5rem;
 }
 
@@ -448,8 +450,13 @@
 .stun-settings-form :is(.form-input, .form-textarea),
 .turn-server-settings-form :is(.form-input, .form-textarea),
 .rendezvous-settings-form :is(.form-input, .form-textarea),
-.ipfs-node-settings-form :is(.form-input, .form-textarea) {
+.ipfs-node-settings-form :is(.form-input, .form-textarea),
+.language-settings-form .form-select {
     margin-bottom: 0.85rem;
+}
+
+.language-settings-form .action-btn {
+    margin-bottom: 1rem;
 }
 
 .content-provider-option,
