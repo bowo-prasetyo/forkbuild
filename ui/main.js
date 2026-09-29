@@ -60,6 +60,9 @@ import { composeInjectedWalletServices } from './main/composeInjectedWalletServi
 import { composePublicationDistribution } from './main/composePublicationDistribution.js';
 import { composeSnapshotDiscovery } from './main/composeSnapshotDiscovery.js';
 import { openPublicationLink } from '../application/publication/OpenPublicationLink.js';
+import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.js';
+import { WorldSoundscapeService } from '../application/world/WorldSoundscapeService.js';
+import { WebAudioSoundscapeProvider } from '../audio/WebAudioSoundscapeProvider.js';
 import { verifyClaimedBuildPublication } from '../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
 
 const {
@@ -424,6 +427,15 @@ app.provide('placementKnowledgeStore', placementKnowledgeStore);
 app.provide('snapshotPlacementCreationCoordinator', snapshotPlacementCreationCoordinator);
 app.provide('preferredSnapshotPlacementCreationCoordinator', preferredSnapshotPlacementCreationCoordinator);
 app.provide('roleProviderPreferenceStore', roleProviderPreferenceStore);
+// World View's ambient sound; one per visit, sharing this device's sound
+// preference.
+const soundSettingsStore = new SoundSettingsStore({ storageProvider: new LocalStorageProvider() });
+app.provide('createWorldSoundscape', ({ listenerPosition, seed }) => new WorldSoundscapeService({
+    provider: new WebAudioSoundscapeProvider(),
+    settingsStore: soundSettingsStore,
+    listenerPosition,
+    seed
+}));
 app.provide('setRoleProviderPreferenceUseCase', setRoleProviderPreferenceUseCase);
 // Only a seed for each Announcement/Discovery picker's own selection, never
 // read again after the picker mounts.

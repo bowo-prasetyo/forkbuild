@@ -21,6 +21,7 @@ import WorldLocationBrowser from '../components/WorldLocationBrowser.js';
 import AvatarInfoPanel from '../components/AvatarInfoPanel.js';
 import NearbyAvatarsPanel from '../components/NearbyAvatarsPanel.js';
 import CompassIndicator from '../components/CompassIndicator.js';
+import SoundControl from '../components/SoundControl.js';
 import LocationsPanel from '../components/LocationsPanel.js';
 import LandmarkFormModal from '../components/LandmarkFormModal.js';
 import RegionFormModal from '../components/RegionFormModal.js';
@@ -69,6 +70,7 @@ import { useHomeAndLocations } from './worldView/useHomeAndLocations.js';
 import { useEditorHandoff } from './worldView/useEditorHandoff.js';
 import { useDocumentActions } from './worldView/useDocumentActions.js';
 import { useWorldPresenceSync } from './worldView/useWorldPresenceSync.js';
+import { useWorldSoundscape } from './worldView/useWorldSoundscape.js';
 // Large template sections live in ./worldView/templates/ as strings
 // interpolated into `template`; they share this component's scope.
 import { nearbySectionTemplate } from './worldView/templates/nearbySection.js';
@@ -102,7 +104,7 @@ export default {
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
         WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt, AnimalInteractionPrompt, ResidentInteractionPrompt, ResidentSpeechActions,
-        HistoryTimelinePanel, TouchMovementPad
+        HistoryTimelinePanel, TouchMovementPad, SoundControl
     },
     setup() {
         const route = useRoute();
@@ -988,9 +990,13 @@ export default {
         }
 
         const {
+            soundAvailable, soundMuted, soundVolume, startSound, stopSound, toggleSound, setSoundVolume, onSoundKeyDown
+        } = useWorldSoundscape({ createWorldSoundscape: inject('createWorldSoundscape', null), session });
+
+        const {
             onKeyDown, onPointerDown, onPointerMove, onPointerUp
         } = useViewportInput({
-            compassHeading, goHome, onAvatarKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
+            compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
         });
 
         onMounted(() => {
@@ -1010,6 +1016,8 @@ export default {
                 }
                 router.replace({ path: `/world/${initialDocumentId}` });
             }
+
+            startSound();
 
             hasLocalAvatar.value = session.hasLocalAvatar();
             // Applies the default-on avatar toggles once session.start() has created a
@@ -1095,6 +1103,7 @@ export default {
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
             disposeWorldPresence();
+            stopSound();
             // Defensive: end any preview before disposing the session.
             if (historyPreviewCursor.value !== null) {
                 guarded(() => session.cancelHistoryPreview());
@@ -1133,6 +1142,11 @@ export default {
             pressAvatarKey,
             releaseAvatarKey,
             touchInput,
+            soundAvailable,
+            soundMuted,
+            soundVolume,
+            toggleSound,
+            setSoundVolume,
             touchPadVisible,
             panelOpen,
             togglePanel,
@@ -1469,6 +1483,13 @@ export default {
                 @key-down="pressAvatarKey"
                 @key-up="releaseAvatarKey"
                 @decorate="toggleAnimalDecoration"
+            />
+            <SoundControl
+                v-if="soundAvailable"
+                :muted="soundMuted"
+                :volume="soundVolume"
+                @toggle="toggleSound"
+                @volume="setSoundVolume"
             />
             <button
                 v-if="touchInput && hasLocalAvatar"

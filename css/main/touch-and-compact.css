@@ -367,3 +367,25 @@
         flex-shrink: 0;
     }
 }
+
+/* On a narrow screen the navigation HUD takes the top right, so the sound
+   button moves to the bottom right; on a touch screen it sits above the touch
+   pad, and the device's own volume buttons stand in for the slider. */
+@media (max-width: 720px) {
+    .world-view-sound {
+        top: auto;
+        right: 0.5rem;
+        bottom: 1rem;
+    }
+}
+
+@media (pointer: coarse) {
+    .world-view-sound {
+        top: auto;
+        bottom: calc(128px + 2rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .world-view-sound-volume {
+        display: none;
+    }
+}

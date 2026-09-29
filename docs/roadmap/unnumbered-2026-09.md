@@ -2709,3 +2709,38 @@ the camera over for a look.**
   structures within reach, naming by publication or saved title and never by id, Focus through `focusPosition()` on the
   ground without moving the avatar or changing the World); `tests/WorldViewPanelLayoutBrowser.test.js` (the Focus row).
 - Not done: Focus on people (they move; the People list's Follow already covers them).
+
+## Ambient sound in World View (unnumbered, 2026-09-29)
+
+**World View was silent. It now plays quiet background sound that follows the land around you — wind on high and
+rocky ground, birdsong in forests, crickets in fields and grassland, lapping at a lake, running water by a river —
+fading as you walk from one kind of land to another. `M` or the Sound button turns it off; a slider sets the
+volume.**
+
+Why this first: an audit of what World View already knows found that ecology zones and rivers are pure functions of
+place, which is exactly what a background soundscape needs, and that everything could be synthesized with Web Audio:
+no audio files to download or license, no new server, no Content Security Policy change and no new library.
+Footsteps, vehicles, animals, residents and Editor sounds are later phases, built on the same provider.
+
+- Mix: `core/AmbientSoundscape.js#ambientMixAt(seed, x, z)` weighs each zone's level per layer underfoot and on rings
+  at 12 m and 30 m; `isRiverAt()` adds the stream layer.
+- Service: `application/world/WorldSoundscapeService.js` samples at the local avatar (or the camera) four times a
+  second, only after a 0.5 m move, and owns mute and volume through `application/settings/SoundSettingsStore.js`
+  (`core/SoundSettings.js`, read leniently). Sound is on by default at half volume; browsers keep it silent until
+  the first click, tap or key press, which calls `unlock()`.
+- Provider: `audio/WebAudioSoundscapeProvider.js`, a new adapter directory. Noise loops and oscillators per layer,
+  randomly timed bird calls, fades on every level change; the `AudioContext` is made on the first gesture and
+  suspended while muted or hidden.
+- UI: `ui/components/SoundControl.js` over the viewport (top right; bottom right on a narrow screen, above the touch
+  pad on a touch screen, where the slider gives way to the device's volume buttons), `M` in
+  `ui/views/worldView/useViewportInput.js`, wiring in `ui/views/worldView/useWorldSoundscape.js` and `ui/main.js`.
+- Docs: `docs/user/03-WorldView.md` (Sound), `docs/user/ControlsReference.md`, `docs/Architecture.md` (Ambient
+  sound), `docs/Privacy.md` (the stored preference).
+- Tests: `tests/AmbientSoundscape.test.js` (levels in range, pure, silent without a position, forest/highland/field/
+  lake/river each sound like themselves), `tests/SoundSettings.test.js`, `tests/WorldSoundscapeService.test.js`
+  (preference applied, the mix follows the listener, no resume before a gesture, mute/volume remembered, dispose),
+  and the browser test `tests/WebAudioSoundscapeProvider.test.js` (renders each layer with an `OfflineAudioContext`
+  and checks it is audible, silence, volume and mute, fade-in, suspension while muted or hidden, no Web Audio, and
+  World View's `M` key and gesture unlock).
+- Not done: no sound in the Editor; no positional sound; recorded sounds could replace the synthesized ones later
+  without changing the service.

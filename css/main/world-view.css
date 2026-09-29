@@ -792,3 +792,30 @@
     margin: 0;
     pointer-events: none;
 }
+
+/* Sound button and volume (ui/components/SoundControl.js), top right of the
+   viewport above the navigation HUD, clear of the hover card below. */
+.world-view-sound {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(18, 18, 18, 0.6);
+    border: 1px solid rgba(74, 74, 74, 0.5);
+    border-radius: 6px;
+}
+
+.world-view-sound-toggle {
+    background: transparent;
+    color: #e0e0e0;
+    border: none;
+    white-space: nowrap;
+}
+
+.world-view-sound-volume {
+    width: 6rem;
+}
