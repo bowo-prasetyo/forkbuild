@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { stationaryAnimalPoseAt } from '../core/WildlifeMotion.js';
 import { idleOffsetsAt } from './AnimalIdle.js';
+import { reactToObserver } from './AnimalReaction.js';
 import { BODY_FRAME, NECK } from './AnimalRenderer.js';
 
 // 0.9.701 — Released Animal Rendering.
@@ -47,13 +48,16 @@ export class AnimalVisual {
     // its idle action (renderer/AnimalIdle.js) — the same grazing and
     // looking around a wild animal does, without ever leaving its spot.
     // `animalKey` (its id) and `seed` pick its rhythm; the same key at the
-    // same time always gives the same pose.
-    animateAt(seed, animalKey, timeSeconds) {
+    // same time always gives the same pose. `observer` ({ x, z }, or null)
+    // is the viewer's own avatar, which it turns to watch
+    // (renderer/AnimalReaction.js).
+    animateAt(seed, animalKey, timeSeconds, observer = null) {
         if (!this._built) {
             return;
         }
         const pose = stationaryAnimalPoseAt(seed, animalKey, this._species, timeSeconds);
-        const offsets = idleOffsetsAt(this._species, pose.idleAction, pose.idleSeconds, pose.idleDuration);
+        const own = idleOffsetsAt(this._species, pose.idleAction, pose.idleSeconds, pose.idleDuration);
+        const offsets = reactToObserver(this._species, own, pose, this.root.position.x, this.root.position.z, observer);
         this.root.rotation.y = pose.rotationY;
         if (this._bodyFrame) {
             this._bodyFrame.position.y = offsets.lift;

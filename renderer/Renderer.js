@@ -28,6 +28,8 @@ export class Renderer {
     constructor(container, { cameraResetKey, wildlifeClock = () => Date.now() / 1000 } = {}) {
         this._container = container;
         this._wildlifeClock = wildlifeClock;
+        // Who animals turn to watch; see setWildlifeObserver().
+        this._wildlifeObserver = () => null;
 
         this._webglRenderer = new THREE.WebGLRenderer({ antialias: true });
         this._webglRenderer.setPixelRatio(window.devicePixelRatio || 1);
@@ -224,6 +226,18 @@ export class Renderer {
         return this._wildlifeClock();
     }
 
+    // `observer()` returns where the viewer's own avatar is drawn ({ x, z },
+    // or null when there is none): the one avatar animals turn to watch
+    // (renderer/AnimalReaction.js). Purely visual; nothing about where an
+    // animal is depends on it.
+    setWildlifeObserver(observer) {
+        this._wildlifeObserver = typeof observer === 'function' ? observer : () => null;
+    }
+
+    wildlifeObserver() {
+        return this._wildlifeObserver() || null;
+    }
+
     // Registers `callback(deltaSeconds)` to run once per render frame,
     // real elapsed seconds since the previous frame. Returns an
     // unsubscribe function, the same shape every EventBus subscription
@@ -261,7 +275,8 @@ export class Renderer {
         this._waterStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         this._wildlifeStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         const wildlifeTime = this._wildlifeClock();
-        this._wildlifeStreaming.forEachLoadedTile((tile) => updateWildlifeTileMesh(tile, wildlifeTime));
+        const observer = this.wildlifeObserver();
+        this._wildlifeStreaming.forEachLoadedTile((tile) => updateWildlifeTileMesh(tile, wildlifeTime, observer));
         for (const listener of this._frameListeners) {
             listener(deltaSeconds);
         }

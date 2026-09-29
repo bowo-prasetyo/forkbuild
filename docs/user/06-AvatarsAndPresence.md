@@ -121,7 +121,8 @@ wildlife — you can't walk through structures streamed in around you, through
 the trees generated as part of the terrain, or through a deer or rabbit
 grazing nearby (see [World View](03-WorldView.md#flying-around)).
 Wildlife only ever blocks your path like a tree does, wherever an animal
-has wandered to — it doesn't react or take damage, and a vehicle drives
+has wandered to — it may turn its head to watch you, but it never moves out
+of your way or takes damage, and a vehicle drives
 straight through it; only walking on foot is stopped. An animal you've
 caught no longer blocks anything. Your avatar can walk across placed structures,
 climb vertical surfaces, and navigate uneven terrain. The camera follows
@@ -243,7 +244,8 @@ Walk anywhere else and press **F** again — with nothing catchable
 nearby, this releases the most recently caught animal right where
 you're standing, and it's immediately catchable again if you want it
 back. A released animal stays right where you let it go, but it isn't
-frozen: it grazes, looks around and turns to face a new way now and then.
+frozen: it grazes, looks around and turns to face a new way now and then,
+and turns its head to watch you when you come near.
 There's no limit today on how many animals you can carry, and
 catching one never disturbs a vehicle you're also carrying, or vice
 versa — they share the same backpack but never get mixed up.

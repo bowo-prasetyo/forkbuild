@@ -59,7 +59,12 @@ stay exactly where they are placed. Animals wander slowly around the spot
 they were placed at, never more than a few steps from it, pausing and
 turning as they go — rabbits hop, deer step along with a nod of the head.
 While they stand, they graze with their heads down in the grass, or look up
-and around (a rabbit sits up on its haunches). They don't react to you.
+and around (a rabbit sits up on its haunches). Come near one and it turns
+its head to watch you — a grazing deer stops and lifts its head, and a
+rabbit sits up if you get close — though it can't see you from directly
+behind. Animals never run away or change where they are because of you:
+the reaction is only on your screen, and other people's animals watch them
+instead.
 Rabbits have long upright ears and a cotton tail; deer have ears held out
 to the sides and a short tail. Their paths come from the
 same seed and the clock, so everyone looking at the same place at the same

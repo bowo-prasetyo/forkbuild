@@ -403,10 +403,11 @@ export class WorldRenderer {
     // (renderer/AnimalVisual.js#animateAt()). Keyed by decoration id, which
     // is part of the World document, so everyone who opens the World sees
     // each decoration doing the same thing. Called once per frame by
-    // whichever use case owns the render loop.
-    animateDecorations(timeSeconds, seed = DEFAULT_WORLD_SEED) {
+    // whichever use case owns the render loop. `observer` ({ x, z }, or null)
+    // is the viewer's own avatar, which decorations turn to watch.
+    animateDecorations(timeSeconds, seed = DEFAULT_WORLD_SEED, observer = null) {
         for (const [decorationId, visual] of this._animalDecorationVisuals) {
-            visual.animateAt(seed, decorationId, timeSeconds);
+            visual.animateAt(seed, decorationId, timeSeconds, observer);
         }
     }
 

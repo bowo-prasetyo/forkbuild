@@ -2575,3 +2575,30 @@ sides and a short cocked tail for deer.
 - Not done: ears and tails don't twitch on their own (they would need their own instanced mesh: one more draw call
   per species per tile); a decorated animal is keyed by its new decoration id, so it may turn to a new heading the
   moment it is decorated; animals don't react to avatars.
+
+## Animals watch your avatar (unnumbered, 2026-09-29)
+
+**Come near an animal and it turns its head to watch you: a grazing deer stops and lifts its head, and a rabbit
+sits up if you get close.** Only your own avatar is watched, and only on your screen; no animal ever moves because
+of you, so where it is (and so collision and catching) stays the same for everyone.
+
+- `renderer/AnimalReaction.js#reactToObserver(species, offsets, pose, x, z, observer)`: applied after the gait or idle
+  offsets in all three draw paths (wildlife tiles, released animals, decorations). Stateless: a pure function of the
+  observer's position, the animal's position and its pose.
+  - Distance: fades in inside the look radius (deer 8, rabbits 5), full within 60% of it.
+  - View: an animal only sees what is in front of it; the reaction fades out toward directly behind, so the head
+    never whips from one shoulder to the other as you cross behind it. The head turns at most 1.3 rad (deer) or
+    1.1 rad (rabbit) on its neck.
+  - Posture: the head turns while walking too, but lifting it (and a rabbit within 3 sitting up in its alert pose)
+    only happens as far as the animal is settled in its pause (`idleEnvelope()`), so starting or ending a walk never
+    snaps.
+- `Renderer#setWildlifeObserver()` / `wildlifeObserver()`: `RenderWorldViewUseCase` hands it the local avatar's drawn
+  position, whether or not "show my avatar" is on (a hidden avatar still walks and collides). Never a remote avatar
+  (their positions arrive late, so reactions would not match what their owners see); no observer in the Editor.
+- Docs: `docs/user/03-WorldView.md`, `docs/user/06-AvatarsAndPresence.md`, `docs/Architecture.md`; the wandering
+  principle's full text covers reacting to the viewer.
+- Tests: `tests/AnimalReaction.test.js` (the look radius and view cone, the neck's limit, continuity circling and
+  approaching an animal and over a minute of real walks and pauses with an avatar nearby, grazing interrupted and
+  rabbits sitting up only while settled, every draw path, and positions never changing).
+- Not done: fleeing or any other change of position (would make players disagree about where an animal is);
+  reacting to other players' avatars; looking up or down at the avatar's height.

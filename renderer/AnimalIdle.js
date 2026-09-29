@@ -41,6 +41,14 @@ export const IDLE_EASE_SECONDS = 0.7;
 const TWO_PI = Math.PI * 2;
 
 // 0 at both ends of the idle window, rising smoothly to 1 in between.
+// Exported as how settled an animal is in its pause: renderer/AnimalReaction.js
+// only changes a body's posture as far as this allows, so a reaction never
+// snaps when a walk starts or ends.
+export function idleEnvelope(seconds, duration) {
+    if (!(duration > 0)) return 0;
+    return envelope(seconds, duration);
+}
+
 function envelope(seconds, duration) {
     const edge = Math.min(seconds, duration - seconds) / IDLE_EASE_SECONDS;
     return smoothstep(Math.max(0, Math.min(1, edge)));

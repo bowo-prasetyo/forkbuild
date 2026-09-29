@@ -4,6 +4,7 @@ import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 import { animalPoseAt, MAX_WANDER_DISTANCE } from '../core/WildlifeMotion.js';
 import { gaitOffsetsAt, REST_GAIT } from './AnimalGait.js';
 import { idleOffsetsAt } from './AnimalIdle.js';
+import { reactToObserver } from './AnimalReaction.js';
 
 // The renderer-side counterpart to core/WildlifeField.js — the identical
 // "core decides, renderer builds" split renderer/NaturalFeatureTileMesh.js
@@ -331,15 +332,20 @@ export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE
 // its gait (renderer/AnimalGait.js) — hopping or stepping in time with the
 // ground it covers — and a standing one with its idle action
 // (renderer/AnimalIdle.js): grazing, or alert and looking around.
-export function updateWildlifeTileMesh(group, timeSeconds) {
+//
+// `observer` ({ x, z } — the viewer's own avatar — or null) is who the
+// animals watch (renderer/AnimalReaction.js): heads turn toward it, and
+// nothing about where an animal is changes.
+export function updateWildlifeTileMesh(group, timeSeconds, observer = null) {
     const wildlife = group.userData.wildlife;
     if (!wildlife) return;
     for (const { species, preset, animals, bodyMesh, headMesh } of wildlife.herds) {
         animals.forEach((animal, i) => {
             const pose = animalPoseAt(wildlife.seed, animal, timeSeconds);
-            const offsets = pose.moving
+            const own = pose.moving
                 ? gaitOffsetsAt(species, pose.gaitPhase)
                 : idleOffsetsAt(species, pose.idleAction, pose.idleSeconds, pose.idleDuration);
+            const offsets = reactToObserver(species, own, pose, pose.x, pose.z, observer);
             writeInstance(bodyMesh, headMesh, i, pose, animal.scale, preset, offsets);
         });
         bodyMesh.instanceMatrix.needsUpdate = true;
