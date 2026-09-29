@@ -42,5 +42,9 @@ export const DomainEvent = Object.freeze({
     // placed; removing and re-decorating covers every real case a v1
     // consumer has).
     ANIMAL_DECORATION_ADDED: 'AnimalDecorationAdded',
-    ANIMAL_DECORATION_REMOVED: 'AnimalDecorationRemoved'
+    ANIMAL_DECORATION_REMOVED: 'AnimalDecorationRemoved',
+    // World Residents: ambient people authored into a World. Like a
+    // decoration, added and removed but never updated in place.
+    RESIDENT_ADDED: 'ResidentAdded',
+    RESIDENT_REMOVED: 'ResidentRemoved'
 });

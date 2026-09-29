@@ -2602,3 +2602,46 @@ of you, so where it is (and so collision and catching) stays the same for everyo
   rabbits sitting up only while settled, every draw path, and positions never changing).
 - Not done: fleeing or any other change of position (would make players disagree about where an animal is);
   reacting to other players' avatars; looking up or down at the avatar's height.
+
+## World Residents (unnumbered, 2026-09-29)
+
+**A World can have residents: people who live there and stroll around the spot they call home, walking round
+buildings, trees and water rather than through them. When one is standing and you come near, it turns to face you,
+and it waves when you walk up to it.** A World's author adds one by standing where it should live and pressing `R`
+(or the Avatar panel's **Add Resident Here**); it is World content, saved, published and forked with the World.
+
+- `core/WorldResident.js`: `{ id, worldId, authorIdentityId, position }`, the position being the resident's home
+  (World-local, y always 0). `World#addResident()`/`removeResident()`/`getResident(s)()`, `RESIDENT_ADDED`/`_REMOVED`
+  events; `toJSON()` writes `residents` only when there is one, so other Worlds serialize byte for byte as before.
+  `DocumentValidator` checks the field. `CreateWorldResidentCommand`/`RemoveWorldResidentCommand`, registered.
+- `core/ResidentMotion.js#residentPoseAt(resident, time, { isClear })`: sampled from time and keyed by id, like a
+  wild animal (16 s segments, 1.1 m/s, 6 m wander radius). A waypoint is home unless home can see it; a walk goes
+  straight when clear and by way of home (turning in place there) otherwise, so each segment depends only on
+  (id, k) and the World.
+- `core/ResidentPath.js#isResidentWalkClear()`: brick footprints and tree trunks against the resident's 0.3 radius,
+  and dry, walkable ground all along. `application/world/ResidentRuntime.js` gathers each home's obstacles from
+  `AvatarMovementConstraint#obstaclesNear()` (new: the bricks an avatar on the ground bumps into) and
+  `treeCollisionGeometryInRegion()`, refreshed every 2 s one resident at a time, with each answer memoized.
+- Rendering: `renderer/ResidentFieldRenderer.js`, an `AvatarVisual` per resident (at most 16, nearest first), dressed
+  by `core/ResidentAppearance.js` from its id in an earthy palette; legs advance with the ground covered.
+  `renderer/ResidentReaction.js#residentFacingFor()`: stateless, a settled resident within 6 turns to face the local
+  avatar, fading out toward its back; one wave per approach within 3.5. Never in `remoteAvatarVisuals`, so never
+  picked, listed or hidden as a player.
+- Collision: `AvatarResidentConstraint`, last in `AvatarMovementController`'s pipeline, at the session's
+  `wildlifeClock`; skipped when the avatar is up on something.
+- Session: `application/worldNavigation/residentMethods.js` (`addResidentHere()`, `removeNearestResidentHere()`,
+  `toggleResidentHere()`, `residentInteractionState()`, the `R` key, per-frame `syncResidents()`). Adding is refused on
+  a rooftop, in water or while riding; a new resident's id is chosen so it appears standing at the avatar's feet.
+  UI: the Avatar panel's Residents row and a `[R] Remove Resident` prompt.
+- Docs: `docs/user/03-WorldView.md`, `docs/user/06-AvatarsAndPresence.md`, `docs/user/ControlsReference.md`,
+  `docs/Architecture.md`, `docs/Protocol.md`, `docs/CapabilityMatrix.md`, README; a new principle, "A Resident Walks
+  A Path Sampled From Time And The World, And Is Never A Person".
+- Tests: `tests/WorldResident.test.js` (value object, World, envelope and validation, commands and replay, forks),
+  `tests/ResidentMotion.test.js` (determinism, bounds, continuity over an hour, walls never crossed, detours by way
+  of home, path checks, appearance, noticing the viewer), `tests/ResidentIntegration.test.js` (runtime, a real brick
+  wall, avatar collision, the session's add/remove/refusals/undo/key/rendering hand-off, the field renderer and its
+  wave).
+- Not done: a resident never reacts to anyone with its path (no stepping aside, following or fleeing — replicas would
+  disagree); no walking indoors through doorways (a door narrower than the resident's reach from home is just a
+  wall); residents on rooftops or bridges; choosing a resident's look, name or wander radius; a touch-pad button
+  (the Avatar panel's button works on touch); the Editor doesn't draw residents.

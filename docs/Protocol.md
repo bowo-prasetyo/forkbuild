@@ -79,7 +79,8 @@ deserializing and serializing again gives byte-identical JSON):
         landmarks: [ { id, worldId, authorIdentityId, title, description, position } ],
         regions: [ { id, worldId, authorIdentityId, name, description, kind,
                      position, radius, parentRegionId } ],
-        animalDecorations: [ AnimalDecoration ]
+        animalDecorations: [ AnimalDecoration ],
+        residents: [ WorldResident ]                                   // optional, see below
       },
       metadata: {
         title, description, author, authorIdentityId, created, modified,
@@ -172,6 +173,22 @@ Worlds serialized before 0.9.702 have no field and read as `[]`.
 
 A decoration is not a live animal. It has its own id space, separate from the deterministic ids below, and other
 replicas can't catch it.
+
+### World Residents (2026-09-29)
+
+A World with residents serializes a `residents` array next to its animal decorations:
+
+    { id, worldId, authorIdentityId, position: { x, y, z } }   // position: the resident's home; y is always 0
+
+A resident is authored World content, created by `CreateWorldResidentCommand` and removed by
+`RemoveWorldResidentCommand`, so it is published, forked and replayed with the World. The field is written only when
+the World has at least one resident, so a World without residents serializes byte for byte as before; a World
+without the field reads as having none. `DocumentValidator` rejects a `residents` value that is not an array, and an
+entry without string `id`, `worldId` and `authorIdentityId` or without a finite `position.x` and `position.z`.
+
+Nothing else about a resident is stored or sent. Where it is at a moment is computed by every replica from its id,
+its home, the time and the loaded Worlds' geometry (`core/ResidentMotion.js`), and it never appears in avatar
+presence or any other message.
 
 ### Editor Document Export File (0.9.641–0.9.642)
 

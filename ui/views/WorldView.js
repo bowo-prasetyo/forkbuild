@@ -41,6 +41,8 @@ import WorldEncounterCanvas from '../components/WorldEncounterCanvas.js';
 import OwnPublicationPanel from '../components/OwnPublicationPanel.js';
 import VehicleInteractionPrompt from '../components/VehicleInteractionPrompt.js';
 import AnimalInteractionPrompt from '../components/AnimalInteractionPrompt.js';
+import ResidentInteractionPrompt from '../components/ResidentInteractionPrompt.js';
+import { residentRefusalLabel } from '../components/avatarInteractionLabels.js';
 import HistoryTimelinePanel from '../components/HistoryTimelinePanel.js';
 import TouchMovementPad from '../components/TouchMovementPad.js';
 import { useMediaQuery, COMPACT_LAYOUT_QUERY, TOUCH_INPUT_QUERY } from '../composables/useMediaQuery.js';
@@ -98,7 +100,7 @@ export default {
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator, PublicLobbyPanel,
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
-        WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt, AnimalInteractionPrompt,
+        WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt, AnimalInteractionPrompt, ResidentInteractionPrompt,
         HistoryTimelinePanel, TouchMovementPad
     },
     setup() {
@@ -330,6 +332,10 @@ export default {
         const storeInteractionState = ref(null);
         const animalInteractionState = ref(null);
         const decorationInteractionState = ref(null);
+        // WorldNavigationSession#residentInteractionState(): polled whenever there
+        // is an avatar, since the Avatar panel's Residents row shows without
+        // Avatar Control Mode too.
+        const residentInteractionState = ref(null);
         const cruiseState = ref(null);
         // null means the free orbit camera.
         const cameraPerspective = ref(null);
@@ -940,6 +946,14 @@ export default {
             refreshSpatialUI();
         }
 
+        // The Avatar panel's Residents button: the same action as 'R', but through
+        // guarded() so a refusal (not signed in, no edit access) is shown.
+        function toggleResidentHere() {
+            guarded(() => session.toggleResidentHere());
+            residentInteractionState.value = session.residentInteractionState();
+            refreshSpatialUI();
+        }
+
         const {
             onKeyDown, onPointerDown, onPointerMove, onPointerUp
         } = useViewportInput({
@@ -1008,6 +1022,9 @@ export default {
                 decorationInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.animalDecorationInteractionState()
                     : null;
+                residentInteractionState.value = hasLocalAvatar.value
+                    ? session.residentInteractionState()
+                    : null;
                 cruiseState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.avatarContinuousMovementState()
                     : null;
@@ -1058,6 +1075,9 @@ export default {
             animalInteractionState,
             decorationInteractionState,
             toggleAnimalDecoration,
+            residentInteractionState,
+            toggleResidentHere,
+            residentRefusalLabel,
             cruiseState,
             cameraPerspective,
             CameraPerspective,

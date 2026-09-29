@@ -1,4 +1,4 @@
-# Principles: Vehicles, inventory and animals
+# Principles: Vehicles, inventory, animals and residents
 
 Each rule links to its full text in [the history](../Principles.md#history).
 
@@ -35,3 +35,14 @@ asks at the same session clock, so it is caught and collided with where it
 is drawn. Motion never reacts to an avatar, so replicas always agree.
 
 [Full text](history/0.9.md#a-wild-animal-wanders-on-a-path-sampled-from-time-never-simulated-2026-09-29)
+
+### A Resident Walks A Path Sampled From Time And The World, And Is Never A Person (2026-09-29)
+
+A World Resident is World content that stores only its home. Where it is
+is a pure function of its id, home, the time and the World's geometry: it
+strolls between waypoints home can see, around walls, trees and water, and
+never reacts to anyone, so replicas agree. It may turn to face and wave at
+the viewer's own avatar, which changes only that viewer's screen. It is
+never a person: no identity, presence or People listing, and no quests.
+
+[Full text](history/0.9.md#a-resident-walks-a-path-sampled-from-time-and-the-world-and-is-never-a-person-2026-09-29)

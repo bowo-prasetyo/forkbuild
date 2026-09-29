@@ -514,6 +514,16 @@
     color: #707070;
 }
 
+/* World Residents: Add Resident Here / Remove Resident, or the reason
+   adding isn't possible where the avatar stands. */
+.world-view-residents {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+}
+
 /* Camera Perspective selector (0.3.2) — a fixed offset around the
    local avatar, styled as a small button group rather than checkboxes
    since the three perspectives (plus "Free") are mutually exclusive,

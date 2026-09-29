@@ -143,6 +143,17 @@ export class AvatarMovementConstraint {
         };
     }
 
+    // The world-space brick boxes that would stand in the way of a body of
+    // `avatarRadius` at `position` supported at `supportHeight`, out to this
+    // constraint's query radius: exactly the obstacles apply() resolves
+    // against. For callers that plan a walk rather than resolve one —
+    // application/world/ResidentRuntime.js asks for a World Resident's
+    // (supportHeight 0: residents walk on the ground), so a resident is
+    // blocked by exactly the bricks an avatar on the ground would be.
+    obstaclesNear(position, { supportHeight, avatarRadius } = {}) {
+        return this._collectObstacles(position, supportHeight, avatarRadius);
+    }
+
     _collectObstacles(position, supportHeight, avatarRadius) {
         const obstacles = [];
         if (!this._loadedDocuments || !this._getWorldPosition) {

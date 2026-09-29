@@ -5,6 +5,7 @@ export const dialogsTemplate = `<ActionFeedback :message="feedbackMessage" :visi
             <template v-if="!touchPadVisible">
                 <VehicleInteractionPrompt :state="vehicleInteractionState" :store-state="storeInteractionState" />
                 <AnimalInteractionPrompt :state="animalInteractionState" :decoration-state="decorationInteractionState" />
+                <ResidentInteractionPrompt v-if="avatarControlMode" :state="residentInteractionState" />
             </template>
             <MetadataEditorDialog
                 v-if="showMetadataEditor"

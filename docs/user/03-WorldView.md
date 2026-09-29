@@ -73,6 +73,12 @@ on foot exactly like a tree does, wherever an animal has wandered to — see
 [Walking your avatar](06-AvatarsAndPresence.md#walking-your-avatar) — and
 none of it is editable.
 
+A World can also have **residents** — people who live there and stroll
+around their homes, walking round buildings rather than through them, and
+turning to greet you when you come close. Unlike wildlife they're part of
+the World's own content: its author adds them. See
+[Residents](06-AvatarsAndPresence.md#residents).
+
 ## Orientation and Locations
 
 Next to your camera coordinates, a small **compass** shows which way you're

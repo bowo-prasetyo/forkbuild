@@ -4,6 +4,7 @@ import { StructurePlacement } from './StructurePlacement.js';
 import { WorldLandmark } from './WorldLandmark.js';
 import { WorldRegion } from './WorldRegion.js';
 import { AnimalDecoration } from './AnimalDecoration.js';
+import { WorldResident } from './WorldResident.js';
 import { DomainEvent } from './events/Event.js';
 import { createId } from './createId.js';
 
@@ -22,6 +23,7 @@ export class World {
         this._landmarks = new Map();
         this._regions = new Map();
         this._animalDecorations = new Map();
+        this._residents = new Map();
         this._metadata = metadata;
         this._eventBus = eventBus;
     }
@@ -372,6 +374,35 @@ export class World {
         return Array.from(this._animalDecorations.values());
     }
 
+    // -----------------------------------------------------------------
+    // World Residents — ambient people who live in this World (see
+    // core/WorldResident.js). Stored World content like a decoration: added
+    // and removed by undoable commands, never updated in place (a resident's
+    // only field is its home; moving it is removing and adding again).
+    // -----------------------------------------------------------------
+
+    addResident(resident) {
+        this._residents.set(resident.id, resident);
+        this._publish(DomainEvent.RESIDENT_ADDED, { resident });
+    }
+
+    removeResident(id) {
+        const resident = this._residents.get(id);
+        if (!resident) {
+            return;
+        }
+        this._residents.delete(id);
+        this._publish(DomainEvent.RESIDENT_REMOVED, { resident });
+    }
+
+    getResident(id) {
+        return this._residents.get(id) || null;
+    }
+
+    getResidents() {
+        return Array.from(this._residents.values());
+    }
+
     // compactBricks: see Building#toJSON().
     toJSON({ compactBricks = false } = {}) {
         return {
@@ -382,7 +413,12 @@ export class World {
             placements: this.getStructurePlacements().map((placement) => placement.toJSON()),
             landmarks: this.getWorldLandmarks().map((landmark) => landmark.toJSON()),
             regions: this.getWorldRegions().map((region) => region.toJSON()),
-            animalDecorations: this.getAnimalDecorations().map((decoration) => decoration.toJSON())
+            animalDecorations: this.getAnimalDecorations().map((decoration) => decoration.toJSON()),
+            // Only written when there is one, so a World without residents
+            // serializes byte for byte as it did before residents existed.
+            ...(this._residents.size > 0
+                ? { residents: this.getResidents().map((resident) => resident.toJSON()) }
+                : {})
         };
     }
 
@@ -410,6 +446,10 @@ export class World {
         // Worlds serialized before 0.9.702 have no animalDecorations field.
         for (const decorationJson of json.animalDecorations || []) {
             world.addAnimalDecoration(AnimalDecoration.fromJSON(decorationJson));
+        }
+        // A World with no residents has no residents field.
+        for (const residentJson of json.residents || []) {
+            world.addResident(WorldResident.fromJSON(residentJson));
         }
         return world;
     }

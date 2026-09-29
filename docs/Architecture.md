@@ -1019,6 +1019,35 @@ is lifted a second time. Released animals get the same lift as remote avatars.
 - **Transfer (0.9.702).** `AvatarInventoryTransferPeerExchange` moves an entry between connected avatars
   (`docs/Protocol.md`, "Avatar Inventory Transfer"). It is reachable from the session API only; there is no UI yet.
 
+## World Residents
+
+    core/WorldResident.js         World content: { id, worldId, authorIdentityId, position (home) }
+            │  (loaded Worlds, homes lifted by each World's position)
+    application/world/ResidentRuntime.js ── obstacles per home: AvatarMovementConstraint#obstaclesNear()
+            │                                (bricks an avatar on the ground bumps into) + tree trunks,
+            │                                gathered again every 2 s, one resident at a time
+    core/ResidentMotion.js#residentPoseAt(resident, time, { isClear })
+            │                     isClear = core/ResidentPath.js#isResidentWalkClear()
+            ├── WorldNavigationSession._setupResidentRendering() → facade.syncResidents(poses)
+            │      → renderer/ResidentFieldRenderer.js (one AvatarVisual each, at most 16, nearest first)
+            └── AvatarResidentConstraint (last in AvatarMovementController's pipeline)
+
+- **Content.** A resident is added and removed by `CreateWorldResidentCommand` / `RemoveWorldResidentCommand`
+  (`R`, or the Avatar panel's Residents button; `application/worldNavigation/residentMethods.js`), so it is undoable,
+  saved, published and forked with its World. `World#toJSON()` writes `residents` only when there is one, so a World
+  without residents serializes exactly as before. A new resident's id is chosen so that it is standing at the
+  avatar's feet at that moment (`ResidentRuntime#newResidentIdNear()`).
+- **Motion.** Sampled from time like a wild animal's (16 s pause-then-walk segments, 1.1 m/s, within 6 m of home),
+  keyed by id. A waypoint is kept only if the walk from home to it is clear; a walk between waypoints goes straight
+  if clear and by way of home otherwise, turning in place there. `isClear` checks brick footprints (grown by the
+  resident's 0.3 radius), tree trunks, lakes, rivers and slope. The session's `wildlifeClock` is the one clock.
+- **Rendering.** Each resident is an ordinary `AvatarVisual` dressed by `core/ResidentAppearance.js` (template
+  `humanoid-01`, options and an earthy palette picked from the id), kept apart from `remoteAvatarVisuals`: never
+  picked, listed or hidden as a player. Its feet use the same `withGroundElevation()` as the avatar's; its walking
+  legs advance with the ground it covered. `renderer/ResidentReaction.js#residentFacingFor()` turns a settled
+  resident to face the local avatar within 6 (fading out toward its back), and the field renderer waves once per
+  approach within 3.5.
+
 ## Terrain layers
 
 `renderer/Renderer.js` runs four `TerrainStreamingController`s: terrain, vegetation, water and wildlife. Each is a

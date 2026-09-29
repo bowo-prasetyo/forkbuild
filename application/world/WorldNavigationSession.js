@@ -23,6 +23,7 @@ import { collaborationMethods } from '../worldNavigation/collaborationMethods.js
 import { placementMethods } from '../worldNavigation/placementMethods.js';
 import { forkOnWriteMethods } from '../worldNavigation/forkOnWriteMethods.js';
 import { worldContentMethods } from '../worldNavigation/worldContentMethods.js';
+import { residentMethods } from '../worldNavigation/residentMethods.js';
 import { placeNamingMethods } from '../worldNavigation/placeNamingMethods.js';
 import { documentHistoryMethods } from '../worldNavigation/documentHistoryMethods.js';
 import { navigationMethods } from '../worldNavigation/navigationMethods.js';
@@ -240,6 +241,10 @@ export class WorldNavigationSession {
         // Rising-edge tracking for 'G': decorating is one-shot, so a held key's
         // repeat keydowns must not re-trigger it.
         this._decorateKeyHeld = false;
+        // The same, for 'R' (add or remove a World Resident).
+        this._residentKeyHeld = false;
+        // Where World Residents are; built on first use (see residentMethods).
+        this._residentRuntimeInstance = null;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;
         // `null` means off (the free/orbit camera). Local UI state only: never
@@ -531,6 +536,7 @@ export class WorldNavigationSession {
         this._setupVehicleRendering();
         this._setupWildlifeExclusionSync();
         this._setupAnimalRendering();
+        this._setupResidentRendering();
         this._setupVehicleRuntimePersistence();
         this._setupAnimalRuntimePersistence();
     }
@@ -674,6 +680,7 @@ export class WorldNavigationSession {
         this._vehicleSteerLeftHeld = false;
         this._vehicleSteerRightHeld = false;
         this._decorateKeyHeld = false;
+        this._residentKeyHeld = false;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;
         this._cameraPerspective = null;
@@ -704,6 +711,10 @@ export class WorldNavigationSession {
         if (this._animalRenderFrameSubscription) {
             this._animalRenderFrameSubscription();
             this._animalRenderFrameSubscription = null;
+        }
+        if (this._residentRenderFrameSubscription) {
+            this._residentRenderFrameSubscription();
+            this._residentRenderFrameSubscription = null;
         }
         // Same teardown, plus one final unthrottled save so nothing from the last
         // interval is lost.
@@ -799,6 +810,7 @@ installMethods(
     placementMethods,
     forkOnWriteMethods,
     worldContentMethods,
+    residentMethods,
     placeNamingMethods,
     documentHistoryMethods,
     navigationMethods,

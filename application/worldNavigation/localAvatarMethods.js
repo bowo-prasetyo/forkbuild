@@ -144,7 +144,10 @@ export const localAvatarMethods = {
             // Avatar-only, same posture as terrainConstraint/stepConstraint/
             // waterConstraint above — see
             // application/avatar/AvatarWildlifeConstraint.js's own header.
-            this._buildAvatarWildlifeConstraint()
+            this._buildAvatarWildlifeConstraint(),
+            // Avatar-only too: World Residents block the avatar where they are
+            // drawn (application/avatar/AvatarResidentConstraint.js).
+            this._buildAvatarResidentConstraint()
         );
         // Built from the same avatarPresenceSession as the movement controller.
         // It also gets `_vehicleRuntimeInstances`, so dismount resolves the mounted
@@ -473,8 +476,9 @@ export const localAvatarMethods = {
         // back on would read as a repeat and never fire.
         this._vehicleSteerLeftHeld = false;
         this._vehicleSteerRightHeld = false;
-        // Same for 'G'.
+        // Same for 'G' and 'R'.
         this._decorateKeyHeld = false;
+        this._residentKeyHeld = false;
         if (!this._avatarControlModeActive && this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
@@ -505,8 +509,9 @@ export const localAvatarMethods = {
         // Also the steer hold bits; see setAvatarControlMode().
         this._vehicleSteerLeftHeld = false;
         this._vehicleSteerRightHeld = false;
-        // Also the decorate key.
+        // Also the decorate and resident keys.
         this._decorateKeyHeld = false;
+        this._residentKeyHeld = false;
         if (this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
@@ -552,7 +557,9 @@ export const localAvatarMethods = {
         const vehicleSteeringConsumed = this._processVehicleSteeringInput(key, 'keydown');
         // Tried independently: 'G' is claimed by nothing above.
         const worldAnimalDecorationConsumed = this._processWorldAnimalDecorationInput(key, 'keydown');
-        return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed || worldAnimalDecorationConsumed;
+        // Tried independently: 'R' is claimed by nothing above.
+        const residentConsumed = this._processResidentInput(key, 'keydown');
+        return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed || worldAnimalDecorationConsumed || residentConsumed;
     },
 
     avatarKeyUp(key) {
@@ -587,7 +594,9 @@ export const localAvatarMethods = {
         // Always forwarded, so `_decorateKeyHeld` clears even if the mode turned off
         // mid-press.
         const worldAnimalDecorationConsumed = this._processWorldAnimalDecorationInput(key, 'keyup');
-        return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed || worldAnimalDecorationConsumed;
+        // Always forwarded, like 'G'.
+        const residentConsumed = this._processResidentInput(key, 'keyup');
+        return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed || worldAnimalDecorationConsumed || residentConsumed;
     },
 
     // The one seam from a raw key to setContinuousMovementIntent() and
