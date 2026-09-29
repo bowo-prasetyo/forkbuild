@@ -4,6 +4,7 @@ import { residentFacingFor, RESIDENT_REACTION } from './ResidentReaction.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { AvatarInteractionKind } from '../core/AvatarInteractionKind.js';
 import { createSpeechBubble } from './ResidentSpeechBubble.js';
+import { speechSecondsFor } from '../core/ResidentTalk.js';
 
 // How long a resident's wave lasts.
 const WAVE_SECONDS = 2.2;
@@ -17,19 +18,12 @@ const GROUND_PER_GAIT_SECOND = 3;
 
 const RADIANS_TO_DEGREES = 180 / Math.PI;
 
-// How long a speech bubble stays up: long enough to read at an easy pace,
-// never less than MIN nor more than MAX seconds.
-const SPEECH_MIN_SECONDS = 5;
-const SPEECH_MAX_SECONDS = 14;
-const SPEECH_SECONDS_PER_WORD = 0.4;
+// How long a speech bubble stays up is core/ResidentTalk.js#speechSecondsFor(),
+// shared with the UI's Focus buttons. Re-exported for callers of this file.
+export { speechSecondsFor };
 
 // Walk this far from a talking resident and its bubble goes.
 const SPEECH_HEARING_RADIUS = 8;
-
-export function speechSecondsFor(remarks) {
-    const words = remarks.join(' ').split(/\s+/).filter(Boolean).length;
-    return Math.min(SPEECH_MAX_SECONDS, Math.max(SPEECH_MIN_SECONDS, 2 + words * SPEECH_SECONDS_PER_WORD));
-}
 
 // Draws World Residents: each one an ordinary avatar body
 // (renderer/AvatarVisual.js) dressed as a resident, posed every frame from

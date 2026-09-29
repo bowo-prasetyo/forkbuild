@@ -10,14 +10,16 @@ export const RESIDENT_KNOWLEDGE_RADIUS = Object.freeze({
     VEHICLE: 150,
     ANIMAL: 100,
     LANDMARK: 1000,
+    STRUCTURE: 300,
     PERSON: 500,
     BUILD: 5000
 });
 
 // What a World Resident standing at `position` ({ x, z }, shared space) knows
 // about its surroundings: an array of facts for core/ResidentTalk.js, each
-// { kind, key, distance, direction, ... } with distance and compass
-// direction seen from the resident.
+// { kind, key, distance, direction, position, ... } with distance and
+// compass direction seen from the resident, and the thing's own position
+// ({ x, z }, shared space) so the viewer can be offered a look at it.
 //
 // Every source is this replica's own view of the world, handed in by the
 // caller (application/worldNavigation/residentMethods.js), so what a
@@ -34,6 +36,10 @@ export const RESIDENT_KNOWLEDGE_RADIUS = Object.freeze({
 //   animalRuntime            — AnimalRuntimeInstances: caught animals are
 //                              left out, released ones included
 //   landmarks                — [{ id, title, position }] in shared space
+//   structures               — [{ id, title, author, position }]: structures
+//                              placed in loaded Worlds, named by the document
+//                              they place (unnamed ones are left out by the
+//                              caller)
 //   people                   — [{ identityId, displayName, position }]
 //   builds                   — [{ documentId, title, author, position }]
 //                              (World View's own location search)
@@ -48,6 +54,7 @@ export function gatherResidentFacts({
     mountedVehicleId = null,
     animalRuntime = null,
     landmarks = [],
+    structures = [],
     people = [],
     builds = [],
     excludedDocumentIds = [],
@@ -56,7 +63,8 @@ export function gatherResidentFacts({
     const facts = [];
     const at = (target) => ({
         distance: Math.hypot(target.x - position.x, target.z - position.z),
-        direction: directionLabelBetween(position, target)
+        direction: directionLabelBetween(position, target),
+        position: { x: target.x, z: target.z }
     });
     const within = (target, radius) => Math.hypot(target.x - position.x, target.z - position.z) <= radius;
 
@@ -96,6 +104,11 @@ export function gatherResidentFacts({
     for (const landmark of landmarks) {
         if (!landmark.position || !within(landmark.position, RESIDENT_KNOWLEDGE_RADIUS.LANDMARK)) continue;
         facts.push({ kind: RESIDENT_FACT_KIND.LANDMARK, key: landmark.id, title: landmark.title, ...at(landmark.position) });
+    }
+
+    for (const structure of structures) {
+        if (!structure.position || !within(structure.position, RESIDENT_KNOWLEDGE_RADIUS.STRUCTURE)) continue;
+        facts.push({ kind: RESIDENT_FACT_KIND.STRUCTURE, key: structure.id, title: structure.title, author: structure.author, ...at(structure.position) });
     }
 
     for (const person of people) {

@@ -122,6 +122,7 @@ and **Talk** buttons do the same without it.
 | `R` (on open ground, no resident right beside you) | Add a resident whose home is where you stand | Saved into the World's content; needs EDIT access. Not on a rooftop, in water, or while riding |
 | `R` (next to a resident) | Remove it from its World | A prompt shows **[R] Remove Resident**; undo with `Ctrl/Cmd+Z` |
 | `T` (next to a resident) | Talk: it tells you what's around | Shown in a bubble over its head; talk again for something else. The Avatar section's and touch pad's **Talk** button does the same |
+| **Focus: …** button (while a resident's words are up) | Look at what it mentioned | Camera only; your avatar stays put. Offered for landmarks, structures, builds and vehicles |
 
 Your inventory, placed vehicles, and released animals are saved on this
 device and survive a reload — see

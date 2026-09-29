@@ -1051,7 +1051,9 @@ is lifted a second time. Released animals get the same lift as remote avatars.
   `application/world/ResidentSurroundings.js#gatherResidentFacts()` collects what this replica knows around the
   resident — deterministic vehicles minus those `VehicleRuntimeInstances` excludes (stored), at their runtime
   positions, minus the ridden one (150 m); wild animals at the session clock minus caught ones, plus released ones
-  (100 m); loaded Worlds' landmarks (1 km); present collaborators by their shown name (500 m); other builds from
+  (100 m); loaded Worlds' landmarks (1 km); structures placed in loaded Worlds (300 m), named by the document they
+  place — a known publication's title and author, else this device's saved title, else not at all
+  (`_residentStructureName()`); present collaborators by their shown name (500 m); other builds from
   `searchWorldByLocation()` excluding the resident's own World and its parent (5 km); the innermost region it stands
   in. `core/ResidentTalk.js#composeResidentRemarks()` turns them into one nearby sentence (kinds take turns, then
   each kind's next-nearest) and one build sentence, with rounded distances, compass words and sanitized plain-text
@@ -1059,6 +1061,11 @@ is lifted a second time. Released animals get the same lift as remote avatars.
   `showResidentSpeech()` puts a canvas-text sprite over the resident (`renderer/ResidentSpeechBubble.js`), gone
   after 5–14 s or beyond 8 m; the UI also announces the words through an `aria-live` region. Nothing is stored or
   sent: what a resident says is local to the viewer.
+- **Focus.** `pickResidentRemarkFacts()` exposes which facts were spoken; `focusTargetsFor()` turns the ones that
+  stay put (vehicles, landmarks, structures, builds) into `{ label, position }`, carried in `lastResidentSpeech()`
+  with `spokenAt` and `seconds` (`speechSecondsFor()`, shared with the bubble). `ui/components/ResidentSpeechActions.js`
+  shows a Focus button per target while that speech is current and the viewer is beside the resident;
+  `focusResidentMention(index)` calls the camera-only `focusPosition()` at the ground there.
 
 ## Terrain layers
 

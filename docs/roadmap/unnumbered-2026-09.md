@@ -2682,3 +2682,30 @@ something else. It points at what exists; it never sets a goal, a quest or a rew
 - Not done: residents don't mention placed structures inside loaded Worlds by title unless the catalog knows them as
   builds; no voice (text only); no talking in the Editor; what a resident knows isn't limited by what it "could have
   seen" — it is the viewer's knowledge.
+
+## Residents name placed structures; Focus on what they mention (unnumbered, 2026-09-29)
+
+**A resident now also mentions structures placed in the World around it ("“Old Mill” by carol stands about 40 m to
+the north."), and while its words are up a Focus button appears for each thing it mentioned that stays put, to swing
+the camera over for a look.**
+
+- Structures: `_residentFactsAround()` collects every loaded World's `StructurePlacement`s (300 m), named by
+  `_residentStructureName(documentId)`: a known publication's title and author (`findByDocumentId()`), else the
+  title this device saved the document under, else nothing — a bare document id is never spoken. New
+  `RESIDENT_FACT_KIND.STRUCTURE`, one of the nearby kinds that take turns.
+- Focus: `pickResidentRemarkFacts()` (what `composeResidentRemarks()` now speaks) and `focusTargetsFor()` for the kinds
+  in `FOCUSABLE_FACT_KINDS` (vehicles, landmarks, structures, builds — not animals or people, who move on). Every
+  gathered fact now carries its `position`. `lastResidentSpeech()` adds `focusTargets`, `spokenAt` and `seconds`;
+  `speechSecondsFor()` moved to `core/ResidentTalk.js` so the bubble and the buttons agree.
+  `focusResidentMention(index)` is the camera-only `focusPosition()` at the ground there: the avatar stays put and the
+  active World is unchanged.
+- UI: `ui/components/ResidentSpeechActions.js`, bottom-center above the prompts, shown on touch screens too, while the
+  speech is current and the viewer is beside that resident.
+- Principles: the talking principle gets a *Changed by* note — the viewer may choose Focus; a resident's words never
+  move the camera by themselves.
+- Also: `core/ResidentTalk.js` and its test spelled the invisible direction-override characters they strip as literal
+  characters; they are `\u` escapes now.
+- Tests: `tests/ResidentTalk.test.js` Section E (structure sentences, turns, focus targets and what never gets one,
+  structures within reach, naming by publication or saved title and never by id, Focus through `focusPosition()` on the
+  ground without moving the avatar or changing the World); `tests/WorldViewPanelLayoutBrowser.test.js` (the Focus row).
+- Not done: Focus on people (they move; the People list's Follow already covers them).
