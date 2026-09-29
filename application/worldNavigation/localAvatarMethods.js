@@ -750,8 +750,9 @@ export const localAvatarMethods = {
     },
 
     // What the local avatar is doing, for its sounds (core/AvatarSoundCues.js):
-    // where it is, its animation and vertical state, and the type of vehicle it
-    // rides (null on foot). Null without a local avatar.
+    // where it is, its animation and vertical state, the type of vehicle it
+    // rides (null on foot) and whether it is braking. Null without a local
+    // avatar.
     avatarSoundObservation() {
         if (!this._avatarPresenceSession) {
             return null;
@@ -763,7 +764,8 @@ export const localAvatarMethods = {
             position: { x: current.position.x, y: current.position.y, z: current.position.z },
             animation: current.animation,
             verticalState: this._avatarMovementController ? this._avatarMovementController.verticalState() : null,
-            vehicleType: vehicle ? vehicle.type : null
+            vehicleType: vehicle ? vehicle.type : null,
+            braking: this._avatarMovementController ? this._avatarMovementController.movementState().brakingRequested : false
         };
     },
 

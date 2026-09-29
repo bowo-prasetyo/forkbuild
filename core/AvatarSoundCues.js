@@ -1,7 +1,8 @@
 // The local avatar's sounds, derived frame by frame from what it is already
 // doing: a footstep every stride while it walks or runs on the ground, a
-// jump as it leaves the ground, a landing as it returns, and an engine while
-// it rides. Pure: the caller keeps the state between frames.
+// jump as it leaves the ground, a landing as it returns; getting on and off a
+// vehicle, braking, and an engine while it rides. Pure: the caller keeps the
+// state between frames.
 import { AvatarAnimationState } from './AvatarAnimationState.js';
 import { AvatarVerticalState } from './AvatarVerticalState.js';
 import { ecologyZoneAt, ECOLOGY_ZONE } from './TerrainEcology.js';
@@ -21,8 +22,15 @@ export const FOOTSTEP_SURFACE = Object.freeze({
 export const AVATAR_SOUND_CUE = Object.freeze({
     FOOTSTEP: 'footstep',
     JUMP: 'jump',
-    LAND: 'land'
+    LAND: 'land',
+    MOUNT: 'mount',
+    DISMOUNT: 'dismount',
+    BRAKE: 'brake'
 });
+
+// Braking is only heard when the vehicle is going at least this fraction of
+// its top speed: pressing the brake at a standstill makes no squeal.
+const BRAKE_AUDIBLE_LOAD = 0.15;
 
 // One footstep per leg swing of core/AvatarPoseOffsets.js's gait: 3 m/s over
 // its 2 Hz walking cycle, 6 m/s over its 3.2 Hz running cycle, two steps a
@@ -69,7 +77,9 @@ export function createAvatarSoundState() {
         lastPosition: null,
         strideDistance: WALK_STRIDE * FIRST_STEP_FRACTION,
         verticalState: AvatarVerticalState.SUPPORTED,
-        airborneSeconds: 0
+        airborneSeconds: 0,
+        vehicleType: null,
+        braking: false
     });
 }
 
@@ -89,8 +99,8 @@ function engineFor(vehicleType, speed) {
     return Object.freeze({ vehicleType, load });
 }
 
-// `observation` is { position, animation, verticalState, vehicleType } for
-// the local avatar, or null without one. Returns the next state, the one-off
+// `observation` is { position, animation, verticalState, vehicleType,
+// braking } for the local avatar, or null without one. Returns the next state, the one-off
 // cues to play this frame, and the engine to hear (null on foot).
 export function advanceAvatarSound(state, observation, deltaSeconds, seed) {
     if (!observation || !observation.position) {
@@ -111,16 +121,33 @@ export function advanceAvatarSound(state, observation, deltaSeconds, seed) {
         lastPosition: { x: position.x, y: position.y, z: position.z },
         strideDistance: state.strideDistance,
         verticalState,
-        airborneSeconds: verticalState === AvatarVerticalState.SUPPORTED ? 0 : state.airborneSeconds + dt
+        airborneSeconds: verticalState === AvatarVerticalState.SUPPORTED ? 0 : state.airborneSeconds + dt,
+        vehicleType: isRiding(vehicleType) ? vehicleType : null,
+        braking: Boolean(observation.braking) && isRiding(vehicleType)
     };
+
+    const cues = [];
+    // Getting on or off is only heard once the state is known: the first frame
+    // after sound starts, already riding, is not a mount.
+    const known = state.lastPosition !== null;
+    const wasRiding = isRiding(state.vehicleType);
+    if (known && wasRiding && state.vehicleType !== next.vehicleType) {
+        cues.push(Object.freeze({ kind: AVATAR_SOUND_CUE.DISMOUNT, vehicleType: state.vehicleType }));
+    }
+    if (known && isRiding(vehicleType) && state.vehicleType !== vehicleType) {
+        cues.push(Object.freeze({ kind: AVATAR_SOUND_CUE.MOUNT, vehicleType }));
+    }
 
     if (isRiding(vehicleType)) {
         next.strideDistance = WALK_STRIDE * FIRST_STEP_FRACTION;
         const speed = dt > 0 ? moved / dt : 0;
-        return { state: Object.freeze(next), cues: [], engine: engineFor(vehicleType, speed) };
+        const engine = engineFor(vehicleType, speed);
+        if (next.braking && !state.braking && engine.load >= BRAKE_AUDIBLE_LOAD) {
+            cues.push(Object.freeze({ kind: AVATAR_SOUND_CUE.BRAKE, vehicleType, intensity: engine.load }));
+        }
+        return { state: Object.freeze(next), cues, engine };
     }
 
-    const cues = [];
     const surface = () => footstepSurfaceAt(seed, position.x, position.z, {
         onStructure: position.y > ON_STRUCTURE_HEIGHT
     });

@@ -84,7 +84,9 @@ the World's own content: its author adds them. See
 
 World View plays quiet background sound that matches where you are: wind on
 high and rocky ground, birdsong in forests, crickets in fields and grassland,
-water lapping at a lake, and running water beside a river. It fades as you
+water lapping at a lake, and running water beside a river. The trees around
+you are heard by kind: leaves rustling in broadleaf woods and scrub, wind
+sighing through conifers, louder the closer they are. It all fades as you
 walk from one kind of land to another.
 
 Your avatar makes its own sounds too. Footsteps keep time with its walk or
@@ -93,7 +95,16 @@ soft sand on a beach, stone on high and rocky ground, splashes in a lake or
 river, and a hollow knock on bricks. Jumping makes a whoosh, and landing a
 thud, heavier after a longer fall. Riding a vehicle, you hear it: a
 bicycle's tyres and freewheel, a motorcycle's buzz, a car's rumble or a
-drone's whine, rising as you speed up and fading when you get off.
+drone's whine, rising as you speed up and fading when you get off. Getting
+on and off has its own sound too (a bicycle's bell and kickstand, a
+motorcycle's kick-start, a car door and ignition, a drone's rotors spinning
+up and down), and braking at speed makes the tyres or brake pads squeal,
+louder the faster you were going.
+
+The changes you make to a World here have the same short sounds as in the
+Editor: naming a landmark or region, adding or removing a resident, turning an
+animal into a decoration or back, and undo and redo. Changes a collaborator
+makes are silent.
 
 The animals and people around you are heard too, from the direction they
 are in and quieter the farther away they are. A deer snorts and a rabbit

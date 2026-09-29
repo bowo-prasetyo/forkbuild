@@ -145,7 +145,9 @@ service.start();
     const engines = riderProvider.engines.filter(Boolean);
     assert(engines.length > 0 && engines.every((e) => e.vehicleType === vehicle.type), `riding plays the ${vehicle.type}`);
     assert(Math.max(...engines.map((e) => e.load)) > 0.3, 'riding along works the engine');
-    assert(riderProvider.cues.length === 0, 'riding makes no footsteps');
+    assert(!riderProvider.cues.some((c) => c.kind === 'footstep'), 'riding makes no footsteps');
+    const mounts = riderProvider.cues.filter((c) => c.kind === 'mount');
+    assert(mounts.length === 1 && mounts[0].vehicleType === vehicle.type, `getting on the ${vehicle.type} is heard once`);
 
     rider.avatarKeyDown('e');
     fireRider(0.016);
@@ -153,8 +155,46 @@ service.start();
     fireRider(0.016);
     assert(rider.avatarVehicleMount() === null, 'setup: dismounted');
     assert(riderProvider.engines[riderProvider.engines.length - 1] === null, 'dismounting stops the engine');
+    const dismounts = riderProvider.cues.filter((c) => c.kind === 'dismount');
+    assert(dismounts.length === 1 && dismounts[0].vehicleType === vehicle.type, 'getting off is heard once');
     riderSound.dispose();
     console.log('✓ vehicle engine from the real session');
+}
+
+// Braking at speed is heard once, as the brake key goes down.
+{
+    const brakerFrames = new Set();
+    const braker = buildSession(new Position(vehicle.position.x - 0.5, 0, vehicle.position.z), brakerFrames);
+    const fireBraker = (seconds) => { for (const callback of [...brakerFrames]) callback(seconds); };
+    const brakerProvider = new RecordingProvider();
+    const brakerSound = new WorldSoundscapeService({
+        provider: brakerProvider,
+        settingsStore: new SoundSettingsStore({ storageProvider: new InMemoryStorageProvider() }),
+        listenerPosition: () => braker.getAvatarPosition(),
+        seed: DEFAULT_WORLD_SEED,
+        avatarObservation: () => braker.avatarSoundObservation(),
+        onRenderFrame: (callback) => braker.onRenderFrame(callback),
+        setIntervalFn: () => 1,
+        clearIntervalFn: () => {}
+    });
+    brakerSound.start();
+    fireBraker(0.016);
+    braker.avatarKeyDown('e');
+    fireBraker(0.016);
+    braker.avatarKeyUp('e');
+    assert(braker.avatarVehicleMount() !== null, 'setup: mounted for braking');
+    braker.avatarKeyDown('w');
+    for (let i = 0; i < 30; i++) fireBraker(0.05);
+    braker.avatarKeyDown('Control');
+    assert(braker.avatarSoundObservation().braking === true, 'the observation reports braking');
+    for (let i = 0; i < 10; i++) fireBraker(0.05);
+    braker.avatarKeyUp('Control');
+    braker.avatarKeyUp('w');
+    const brakes = brakerProvider.cues.filter((c) => c.kind === 'brake');
+    assert(brakes.length === 1 && brakes[0].vehicleType === vehicle.type && brakes[0].intensity > 0.15,
+        `braking at speed is heard once (${brakes.length})`);
+    brakerSound.dispose();
+    console.log('✓ braking from the real session');
 }
 
 service.dispose();

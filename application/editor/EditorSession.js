@@ -11,6 +11,7 @@ import { ToolManager } from './ToolManager.js';
 import { CommandHistory } from './CommandHistory.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
 import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
+import { describeCommand } from '../commands/describeCommand.js';
 import { RemoteDocumentOperationApplicationUseCase } from '../document/RemoteDocumentOperationApplicationUseCase.js';
 import { DocumentOperationCausalGapObservationUseCase } from '../document/DocumentOperationCausalGapObservationUseCase.js';
 import { DocumentOperationCausalGapDetector } from '../../core/DocumentOperationCausalGapDetector.js';
@@ -533,11 +534,3 @@ installMethods(
     structureAndBlueprintMethods,
     pointerInputMethods
 );
-
-function describeCommand(command, depth = 0) {
-    if (!command || depth > 8) {
-        return { type: null, children: [] };
-    }
-    const children = Array.isArray(command.commands) ? command.commands.map((child) => describeCommand(child, depth + 1)) : [];
-    return { type: command.type, children };
-}

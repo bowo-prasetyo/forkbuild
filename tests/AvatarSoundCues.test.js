@@ -24,8 +24,8 @@ function findWhere(predicate) {
 // Where a zone holds and there is no river, so the zone decides the surface.
 const zoneSpot = (zone) => findWhere((x, z) => ecologyZoneAt(SEED, x, z) === zone && !isRiverAt(SEED, x, z));
 
-function observe(position, { animation = AvatarAnimationState.WALKING, verticalState = AvatarVerticalState.SUPPORTED, vehicleType = null } = {}) {
-    return { position, animation, verticalState, vehicleType };
+function observe(position, { animation = AvatarAnimationState.WALKING, verticalState = AvatarVerticalState.SUPPORTED, vehicleType = null, braking = false } = {}) {
+    return { position, animation, verticalState, vehicleType, braking };
 }
 
 // Walks in a straight line along +x at `speed` for `seconds`, returning every cue.
@@ -147,4 +147,52 @@ function walk({ start, speed, seconds, animation = AvatarAnimationState.WALKING,
     const result = advanceAvatarSound(createAvatarSoundState(), null, DT, SEED);
     assert(result.cues.length === 0 && result.engine === null, 'no avatar, no sound');
     console.log('✓ no avatar is silent');
+}
+
+// Getting on and off a vehicle, and braking.
+{
+    const spot = zoneSpot(ECOLOGY_ZONE.GRASSLAND);
+    const ride = (vehicleType, x, braking = false) => observe({ x, y: 0, z: spot.z }, { vehicleType, braking, animation: AvatarAnimationState.IDLE });
+    const run = (observations) => {
+        let state = createAvatarSoundState();
+        return observations.map((observation) => {
+            const result = advanceAvatarSound(state, observation, DT, SEED);
+            state = result.state;
+            return result.cues;
+        });
+    };
+    const x = spot.x;
+    const cues = run([
+        ride(null, x),
+        ride(VehicleType.MOTORCYCLE, x),
+        ride(VehicleType.MOTORCYCLE, x + 0.1),
+        ride(null, x + 0.1)
+    ]);
+    assert(cues[1].length === 1 && cues[1][0].kind === AVATAR_SOUND_CUE.MOUNT && cues[1][0].vehicleType === VehicleType.MOTORCYCLE,
+        'getting on is heard, with the vehicle');
+    assert(cues[2].length === 0, 'riding on is not another mount');
+    assert(cues[3].length === 1 && cues[3][0].kind === AVATAR_SOUND_CUE.DISMOUNT && cues[3][0].vehicleType === VehicleType.MOTORCYCLE,
+        'getting off is heard, with the vehicle left');
+    const already = run([ride(VehicleType.CAR, x)]);
+    assert(already[0].length === 0, 'already riding when sound starts is not a mount');
+    const swap = run([ride(VehicleType.BICYCLE, x), ride(VehicleType.CAR, x)]);
+    assert(swap[1].map((c) => c.kind).join() === 'dismount,mount', 'changing vehicle is off one, on the other');
+
+    // A car at 12 m/s top speed: 0.2 m a frame at 60 fps is full speed.
+    const brake = run([
+        ride(VehicleType.CAR, x),
+        ride(VehicleType.CAR, x + 0.2),
+        ride(VehicleType.CAR, x + 0.4, true),
+        ride(VehicleType.CAR, x + 0.5, true),
+        ride(VehicleType.CAR, x + 0.55, false),
+        ride(VehicleType.CAR, x + 0.55, true)
+    ]);
+    const brakes = brake.map((list) => list.filter((c) => c.kind === AVATAR_SOUND_CUE.BRAKE));
+    assert(brakes[2].length === 1 && brakes[2][0].vehicleType === VehicleType.CAR, 'pressing the brake at speed is heard');
+    assert(Math.abs(brakes[2][0].intensity - 1) < 1e-9, 'harder the faster it was going');
+    assert(brakes[3].length === 0, 'holding the brake is heard once');
+    assert(brakes[5].length === 0, 'braking at a standstill is silent');
+    const onFoot = run([ride(null, x, true), ride(null, x + 0.05, true)]);
+    assert(onFoot.flat().length === 0, 'braking on foot is nothing');
+    console.log('✓ getting on, getting off and braking');
 }
