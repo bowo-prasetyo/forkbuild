@@ -11,6 +11,7 @@ import { CreateWorldResidentCommand } from '../application/commands/CreateWorldR
 import { RemoveWorldResidentCommand } from '../application/commands/RemoveWorldResidentCommand.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { createSecureId } from '../core/createId.js';
 import { assert } from './support/Assert.js';
 
 // World Residents as World content: core/WorldResident.js, core/World.js,
@@ -157,6 +158,25 @@ function runTests() {
         const fork = new DocumentCloneService().execute(new Document({ world, metadata: new DocumentMetadata({ title: 'Village' }) }));
         assert(fork.world.id !== 'w-1' && fork.world.getResident('res-1') !== null,
             '32. A fork keeps its residents under the same ids, so they keep walking the same paths');
+    }
+
+    // -------------------------------------------------------------
+    // Section F — resident ids come from a secure random source only
+    // -------------------------------------------------------------
+    {
+        const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+        const ids = new Set(Array.from({ length: 200 }, () => createSecureId()));
+        assert(ids.size === 200 && [...ids].every((id) => UUID_V4.test(id)), '33. createSecureId() mints distinct v4 UUIDs');
+        const original = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+        try {
+            const real = globalThis.crypto;
+            Object.defineProperty(globalThis, 'crypto', { configurable: true, value: { getRandomValues: (bytes) => real.getRandomValues(bytes) } });
+            assert(UUID_V4.test(createSecureId()), '34. ...from getRandomValues() where randomUUID() is missing');
+            Object.defineProperty(globalThis, 'crypto', { configurable: true, value: undefined });
+            assertThrows(() => createSecureId(), '35. ...and refuses, rather than falling back to Math.random(), with no secure source at all');
+        } finally {
+            Object.defineProperty(globalThis, 'crypto', original);
+        }
     }
 
     console.log('✅ All World Resident tests passed.');

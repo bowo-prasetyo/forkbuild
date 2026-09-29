@@ -1,6 +1,6 @@
 import { WorldResident } from '../../core/WorldResident.js';
 import { Position } from '../../core/Position.js';
-import { createId } from '../../core/createId.js';
+import { createSecureId } from '../../core/createId.js';
 import { Command } from './Command.js';
 
 // World Residents: adds an ambient resident whose home is `position`
@@ -34,7 +34,7 @@ export class CreateWorldResidentCommand extends Command {
     execute(context) {
         this._assertWorldMatches(context);
         const resident = new WorldResident({
-            id: this._executedResidentId || createId(),
+            id: this._executedResidentId || createSecureId(),
             worldId: this._worldId,
             authorIdentityId: this._authorIdentityId,
             position: this._position

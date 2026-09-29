@@ -2,7 +2,7 @@ import { residentPoseAt, RESIDENT_MOTION } from '../../core/ResidentMotion.js';
 import { isResidentWalkClear, RESIDENT_COLLISION_RADIUS } from '../../core/ResidentPath.js';
 import { treeCollisionGeometryInRegion } from '../../core/TreeCollisionGeometry.js';
 import { DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
-import { createId } from '../../core/createId.js';
+import { createSecureId } from '../../core/createId.js';
 
 // How far from the viewer residents are drawn, as ANIMAL_RENDER_RADIUS is
 // for animals: well beyond the range of any interaction.
@@ -125,7 +125,7 @@ export class ResidentRuntime {
     // wherever its day would otherwise have taken it. Tries up to `tries`
     // fresh ids and keeps the nearest standing one; one within `radius` is
     // found after a few dozen tries on open ground.
-    newResidentIdNear(home, timeSeconds, { radius = 1.5, tries = 256, mintId = createId } = {}) {
+    newResidentIdNear(home, timeSeconds, { radius = 1.5, tries = 256, mintId = createSecureId } = {}) {
         const isClear = this._buildIsClear(home);
         let best = null;
         let bestDistance = Infinity;
