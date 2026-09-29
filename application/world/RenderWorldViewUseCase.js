@@ -149,6 +149,13 @@ export class RenderWorldViewUseCase {
         // arrives (see renderer/AvatarVisual.js's own header). Covers
         // the local avatar and every known remote one; a cheap no-op
         // whenever none exist yet.
+        // Released animals and animal decorations idle in place on the same
+        // wildlife clock the tiles' wandering animals use.
+        renderer.addFrameListener(() => {
+            const wildlifeTime = renderer.wildlifeTime();
+            animalFieldRenderer.animate(wildlifeTime, DEFAULT_WORLD_SEED);
+            worldRenderer.animateDecorations(wildlifeTime);
+        });
         renderer.addFrameListener((deltaSeconds) => {
             if (localAvatarVisual) {
                 localAvatarVisual.tick(deltaSeconds);

@@ -30,6 +30,9 @@ export class RenderWorldUseCase {
         const renderer = new Renderer(container);
         const worldRenderer = new WorldRenderer(renderer, registry, undefined, undefined, structureResolver, TransformMath);
         worldRenderer.subscribe(eventBus);
+        // Animal decorations idle in place in the Editor too, on the same
+        // wildlife clock as the terrain's animals.
+        renderer.addFrameListener(() => worldRenderer.animateDecorations(renderer.wildlifeTime()));
         renderer.start();
         const pickingService = new PickingService(
             renderer.camera,

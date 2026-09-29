@@ -4,6 +4,7 @@ import { PlacementMeshRegistry } from './PlacementMeshRegistry.js';
 import { AnimalRenderer } from './AnimalRenderer.js';
 import { AnimalVisual } from './AnimalVisual.js';
 import { DomainEvent } from '../core/events/Event.js';
+import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 
 // WorldRenderer has no render(world) sweep. It subscribes to the domain
 // events World publishes and reacts incrementally — one event, one brick
@@ -395,6 +396,18 @@ export class WorldRenderer {
         });
         this._renderer.add(visual.root);
         this._animalDecorationVisuals.set(decoration.id, visual);
+    }
+
+    // Poses every animal decoration as it is at `timeSeconds`: idling and
+    // turning in place, never moving off the spot its author placed it on
+    // (renderer/AnimalVisual.js#animateAt()). Keyed by decoration id, which
+    // is part of the World document, so everyone who opens the World sees
+    // each decoration doing the same thing. Called once per frame by
+    // whichever use case owns the render loop.
+    animateDecorations(timeSeconds, seed = DEFAULT_WORLD_SEED) {
+        for (const [decorationId, visual] of this._animalDecorationVisuals) {
+            visual.animateAt(seed, decorationId, timeSeconds);
+        }
     }
 
     _removeAnimalDecorationVisual(decorationId) {

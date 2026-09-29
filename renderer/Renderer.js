@@ -216,6 +216,14 @@ export class Renderer {
         return computeTerrainHeightAt(DEFAULT_WORLD_SEED, x, z);
     }
 
+    // The wildlife time right now, in seconds: the moment wandering
+    // animals are drawn at (see the constructor's `wildlifeClock`). For
+    // animals drawn outside the wildlife tiles — released ones and
+    // decorations — so they share the tiles' clock.
+    wildlifeTime() {
+        return this._wildlifeClock();
+    }
+
     // Registers `callback(deltaSeconds)` to run once per render frame,
     // real elapsed seconds since the previous frame. Returns an
     // unsubscribe function, the same shape every EventBus subscription

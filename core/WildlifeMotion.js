@@ -322,3 +322,67 @@ export function wildlifeInRegionAt(seed, minX, minZ, maxX, maxZ, timeSeconds = n
     animals.sort((a, b) => (a.x - b.x) || (a.z - b.z));
     return animals;
 }
+
+// How long an animal that stays put takes to turn to a new heading.
+const STATIONARY_TURN_SECONDS = 1.2;
+
+// Module-private FNV-1a over a string's UTF-16 code units, for animals
+// keyed by an id rather than a lattice cell.
+function hashString(text) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < text.length; i++) {
+        h = Math.imul(h ^ text.charCodeAt(i), 0x01000193);
+    }
+    return h | 0;
+}
+
+// The pose of an animal that never leaves its spot — a released animal
+// (application/world/AnimalRuntimeInstances.js) or an AnimalDecoration.
+// Both have an authoritative position, often on top of something a player
+// built, so walking off it would leave the animal standing in mid-air; it
+// only idles and turns in place. Returns { rotationY, moving, gaitPhase,
+// idleAction, idleSeconds, idleDuration } in the same shape and meaning as
+// animalPoseAt() (moving is always false; there is no x/y/z, since the
+// position is the caller's own).
+//
+// Keyed by `animalKey` (its id) instead of a lattice cell: a decoration's
+// id is part of the World document, so every replica that loads the World
+// sees it doing the same thing at the same moment. Time runs in the same
+// per-species segments as a wandering animal's: each one is a pause spent
+// on one IDLE_ACTION, then a turn in place to a new heading.
+export function stationaryAnimalPoseAt(seed, animalKey, species, timeSeconds) {
+    if (typeof timeSeconds !== 'number' || !Number.isFinite(timeSeconds)) {
+        throw new Error(`stationaryAnimalPoseAt requires a finite timeSeconds, got ${JSON.stringify(timeSeconds)}`);
+    }
+    const motion = motionFor(species);
+    const key = hashString(String(animalKey));
+    const segments = timeSeconds / motion.segmentSeconds + hash3D(seed + PHASE_SEED_OFFSET, key, 0, 0);
+    const k = Math.floor(segments);
+    const secondsIntoSegment = (segments - k) * motion.segmentSeconds;
+    const headingAt = (segment) => hash3D(seed + ANGLE_SEED_OFFSET, key, 1, segment) * TWO_PI;
+
+    const turnStart = motion.segmentSeconds - STATIONARY_TURN_SECONDS;
+    let rotationY = headingAt(k);
+    if (secondsIntoSegment >= turnStart) {
+        const progress = smoothstep((secondsIntoSegment - turnStart) / STATIONARY_TURN_SECONDS);
+        rotationY = lerpAngle(rotationY, headingAt(k + 1), progress);
+    }
+
+    let idleAction = IDLE_ACTION.NONE;
+    let idleSeconds = 0;
+    let idleDuration = 0;
+    if (turnStart >= MIN_IDLE_SECONDS && secondsIntoSegment < turnStart) {
+        idleAction = idleActionFor(hash3D(seed + IDLE_SEED_OFFSET, key, 1, k), motion.idleChances);
+        idleSeconds = secondsIntoSegment;
+        idleDuration = turnStart;
+    }
+
+    return {
+        rotationY: normalizeAngle(rotationY),
+        moving: false,
+        gaitPhase: 0,
+        idleAction,
+        idleSeconds,
+        idleDuration
+    };
+}
