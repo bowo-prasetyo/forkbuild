@@ -19,7 +19,9 @@ send it:
   queued messages (nobody is told you follow them, and nothing about a follow
   is ever sent);
 - your avatar profile, settings (including whether World View plays sound,
-  how loud, and in 3D or stereo), and a TURN server's username and credential
+  how loud, and in 3D or stereo, and the language you chose; when you
+  haven't chosen one, ForkBuild reads the browser's preferred languages on
+  the device and sends them nowhere), and a TURN server's username and credential
   if you enter one under **Network Settings**.
 
 Clearing this site's data in the browser deletes all of it, and there is no

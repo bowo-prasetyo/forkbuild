@@ -42,6 +42,9 @@ to run matching files only: `npm run test:node -- Avatar`.
    - No scripts from other origins and no inline scripts: libraries go through
      `vendor/` (`scripts/vendor.mjs`).
    - Tests don't use the internet; inject a fake when a test needs a server.
+   - Text the app shows goes through `t()` so it can be translated; see
+     [docs/Translating.md](docs/Translating.md), which also covers adding
+     a language.
 2. Add or update tests for what you change, and run `npm test`.
 3. Update the docs the change affects: the user guides in `docs/user/`, and
    `docs/Architecture.md` or `docs/Protocol.md`, edited in place;

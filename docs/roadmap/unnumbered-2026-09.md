@@ -2912,3 +2912,38 @@ replica's own, as before: after a dismount the vehicle reappears for others wher
   for easing off, the nearest three within 40 m) and the browser test (placed engine voices per vehicle, 3D and
   stereo, fading out, rider cues). Checked in the real app with two identities in two browsers.
 - Not done: sharing where a vehicle was left; a stored or newly deployed vehicle is seen by others only while ridden.
+
+## Internationalization, phase 1: the foundation (unnumbered, 2026-09-29)
+
+ForkBuild showed English only, with every piece of text written straight into its components. This lays the
+foundation for translating it without changing how anything else works: a translator, a way to choose the language,
+and a pseudo-locale for finding text that isn't ready yet. It is the first of the phases planned for i18n: next,
+text built in `core/` and `application/` (action labels, library names, errors) becomes keys, then the UI is moved
+over area by area, then resident speech and the hand-made plurals, then a first real translation.
+
+- Translator: `ui/i18n/Translator.js` (lookup with an English fallback and a one-time report of each gap,
+  `Intl.PluralRules` plural forms with `=N` exact matches, `{name}` parameters, `Intl` number and date formatting);
+  `ui/i18n/i18n.js` holds the app's one instance and exports `t()`, `formatNumber()`, `formatDate()`,
+  `setAppLocale()` and `applyDocumentLanguage()`. No library: the browser's `Intl` does the locale work, and the
+  import map and its CSP hash are unchanged.
+- Locales: `ui/i18n/locales.js` lists English and the pseudo-locale `en-XA` (`ui/i18n/pseudoLocalize.js`: accented,
+  30% longer, bracketed, placeholders kept) and chooses one from the saved setting, then the browser's languages
+  (exact, then by language), then English. The pseudo-locale is never chosen automatically.
+- Setting: `core/LanguageSettings.js` and `application/settings/LanguageSettingsStore.js` (`language-settings`,
+  read leniently). `ui/boot.js` sets the locale and the page's `lang`/`dir` after opening storage and before
+  importing the app. Changing the language saves it and reloads, rather than switching live and leaving text
+  computed earlier in the old language.
+- UI: a **Language** page (`ui/views/LanguageSettingsView.js`, `/settings/language`) in the top nav, listing each
+  language by its own name, with the pseudo-locale under **For translators**. `ui/App.js`'s header and nav and
+  `ui/components/SoundControl.js` now go through `t()` as the first examples.
+- Docs: `docs/Translating.md` (messages, plurals, adding a language, making text translatable),
+  `docs/CodingConventions.md`, `docs/Architecture.md` (UI), `docs/Privacy.md`, `docs/user/01-GettingStarted.md`,
+  `CONTRIBUTING.md`.
+- Tests: `tests/I18n.test.js` (parameters, number and date formatting per locale, plural categories in English,
+  Polish and Indonesian, fallback and gap reporting, the pseudo-locale, every shipped locale matching English's keys,
+  placeholders and plural shapes, locale choice, the stored setting, the Language page saving and reloading, the
+  app-wide translator and page language) and `tests/I18nSoundControlBrowser.test.js` (the real SoundControl in
+  English and in the pseudo-locale). `tests/PublisherPerformanceLeaderboardUi.test.js` now counts fourteen top-nav
+  links.
+- Not done: the rest of the UI's text, keys from `core/` and `application/`, any real translation, right-to-left
+  styles (the stylesheet still uses physical `left`/`right`), and translated user docs.

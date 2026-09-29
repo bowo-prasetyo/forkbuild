@@ -17,7 +17,7 @@ rendezvous server of your own (see
 
 The bar at the top is always visible:
 
-`ForkBuild Home Editor Repository My Worlds My Avatar My Identities Peers Conversations Publications (Exp.) Network Settings About [Login]`
+`ForkBuild Home Editor Repository My Worlds My Avatar My Identities Peers Following Conversations Publications Network Settings Your Data Language About 🔔 [Login]`
 
 - **Home** — the landing page
 - **Editor** — where you build
@@ -38,6 +38,11 @@ The bar at the top is always visible:
 - **Network Settings** — gateways, relays, providers, and peer-connection
   servers, see
   [Network Settings](10-NetworkSettings.md)
+- **Language** — the language ForkBuild shows on this device. It follows
+  your browser's languages until you choose one; saving reloads the page, so
+  save your work first. English is the only language so far: the rest of
+  the app is being prepared for translation
+  (see [Translating ForkBuild](../Translating.md)).
 - **About** — version info
 
 ## Logging in

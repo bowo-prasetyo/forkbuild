@@ -1488,7 +1488,7 @@ app.provide() call stays in ui/main.js. ui/router/index.js
 defines the routes: Home, Editor (`/editor`), Repository, Recent Worlds,
 Author, World View (`/world/:documentId`), Live World, Avatar, Identity,
 Peers, Chat and Conversations, Publications (`/publications`), the
-settings pages under `/settings/…`, the leaderboard and reconciliation
+settings pages under `/settings/…` (including Language), the leaderboard and reconciliation
 views, and About. Views reach application/ through injected services;
 the composables in ui/composables/ share the settings-form logic
 (useEndpointSettingsForm, useEndpointListSettings,
@@ -1498,6 +1498,22 @@ Experimental banner from ui/App.js. A page that is a regular feature with
 Experimental parts, like the Publications page, marks those parts itself
 with `.experimental-badge` instead; `decentralizedPublications/presentation.js`
 lists its Experimental storage types.
+
+Text the app shows goes through ui/i18n/ (see docs/Translating.md).
+ui/i18n/i18n.js holds the one Translator (ui/i18n/Translator.js: message
+lookup with an English fallback, Intl.PluralRules plural forms, `{name}`
+parameters, and Intl number and date formatting); components import t()
+from it and expose it to their template. ui/i18n/locales.js lists the
+shipped locales and picks one: the saved choice
+(LanguageSettingsStore, 'language-settings', core/LanguageSettings.js),
+else the browser's languages, else English. ui/boot.js sets it, and the
+page's `lang` and `dir`, after opening storage and before importing the
+app, so text is in that language from the first render. The locale never
+changes while the app runs: the Language page (`/settings/language`)
+saves the choice and reloads. The pseudo-locale `en-XA`
+(ui/i18n/pseudoLocalize.js) shows English accented and padded, to find
+text not yet moved to t(). Most components still write English directly
+and are moved over area by area.
 
 index.html loads the app as ES modules with no build step. Its import map
 resolves `vue`, `vue-router`, `@vue/devtools-api`, `three` and

@@ -5,6 +5,7 @@ import ExperimentalBanner from './components/ExperimentalBanner.js';
 import BackupReminderBanner from './components/BackupReminderBanner.js';
 import NotificationHistoryPanel from './components/NotificationHistoryPanel.js';
 import { CreatePreviewUseCase } from '../application/editor/CreatePreviewUseCase.js';
+import { t } from './i18n/i18n.js';
 
 export default {
     name: 'App',
@@ -72,7 +73,7 @@ export default {
         }
 
         return {
-            menuOpen, notificationsOpen, openNotifications,
+            t, menuOpen, notificationsOpen, openNotifications,
             getRecipientNotificationEventsCommand, viewNotificationPublication
         };
     },
@@ -85,29 +86,30 @@ export default {
                     class="app-menu-toggle"
                     :aria-expanded="menuOpen ? 'true' : 'false'"
                     @click="menuOpen = !menuOpen"
-                >{{ menuOpen ? 'Close' : 'Menu' }}</button>
+                >{{ menuOpen ? t('app.menu.close') : t('app.menu.open') }}</button>
                 <div class="app-header-right">
 	                <nav :class="['app-nav', { 'app-nav--open': menuOpen }]">
-	                    <router-link to="/" class="app-nav-link">Home</router-link>
-	                    <router-link to="/editor" class="app-nav-link">Editor</router-link>
-	                    <router-link to="/repository" class="app-nav-link">Repository</router-link>
-	                    <router-link to="/worlds/recent" class="app-nav-link">My Worlds</router-link>
-	                    <router-link to="/avatar" class="app-nav-link">My Avatar</router-link>
-	                    <router-link to="/identity" class="app-nav-link">My Identities</router-link>
-	                    <router-link to="/peers" class="app-nav-link">Peers</router-link>
-	                    <router-link to="/following" class="app-nav-link">Following</router-link>
-	                    <router-link to="/conversations" class="app-nav-link">Conversations</router-link>
-	                    <router-link to="/publications" class="app-nav-link">Publications</router-link>
-	                    <router-link to="/settings" class="app-nav-link">Network Settings</router-link>
-	                    <router-link to="/settings/data" class="app-nav-link">Your Data</router-link>
-	                    <router-link to="/about" class="app-nav-link">About</router-link>
+	                    <router-link to="/" class="app-nav-link">{{ t('app.nav.home') }}</router-link>
+	                    <router-link to="/editor" class="app-nav-link">{{ t('app.nav.editor') }}</router-link>
+	                    <router-link to="/repository" class="app-nav-link">{{ t('app.nav.repository') }}</router-link>
+	                    <router-link to="/worlds/recent" class="app-nav-link">{{ t('app.nav.myWorlds') }}</router-link>
+	                    <router-link to="/avatar" class="app-nav-link">{{ t('app.nav.myAvatar') }}</router-link>
+	                    <router-link to="/identity" class="app-nav-link">{{ t('app.nav.myIdentities') }}</router-link>
+	                    <router-link to="/peers" class="app-nav-link">{{ t('app.nav.peers') }}</router-link>
+	                    <router-link to="/following" class="app-nav-link">{{ t('app.nav.following') }}</router-link>
+	                    <router-link to="/conversations" class="app-nav-link">{{ t('app.nav.conversations') }}</router-link>
+	                    <router-link to="/publications" class="app-nav-link">{{ t('app.nav.publications') }}</router-link>
+	                    <router-link to="/settings" class="app-nav-link">{{ t('app.nav.networkSettings') }}</router-link>
+	                    <router-link to="/settings/data" class="app-nav-link">{{ t('app.nav.yourData') }}</router-link>
+	                    <router-link to="/settings/language" class="app-nav-link">{{ t('app.nav.language') }}</router-link>
+	                    <router-link to="/about" class="app-nav-link">{{ t('app.nav.about') }}</router-link>
 	                </nav>
                     <!-- Beside the account: notifications are addressed to the signed-in identity. -->
                     <button
                         type="button"
                         class="app-notifications-button"
-                        title="Notifications"
-                        aria-label="Notifications"
+                        :title="t('app.notifications')"
+                        :aria-label="t('app.notifications')"
                         @click="openNotifications"
                     >🔔</button>
                     <UserWidget />

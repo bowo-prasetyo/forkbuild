@@ -34,6 +34,7 @@ import PublisherLeaderboardSnapshotClaimAuthoringView from '../views/PublisherLe
 import PublisherPerformanceLeaderboardView from '../views/PublisherPerformanceLeaderboardView.js';
 import LeaderboardHubView from '../views/LeaderboardHubView.js';
 import YourDataView from '../views/YourDataView.js';
+import LanguageSettingsView from '../views/LanguageSettingsView.js';
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },
@@ -97,6 +98,7 @@ const routes = [
     // ui/views/NetworkSettingsView.js's own header.
     { path: '/settings', name: 'network-settings', component: NetworkSettingsView },
     { path: '/settings/data', name: 'your-data', component: YourDataView },
+    { path: '/settings/language', name: 'language-settings', component: LanguageSettingsView },
     // 0.9.302 — Content Provider Preference Settings Entry Point. The one
     // ordinary product path to create/change the persisted CONTENT role
     // provider preference (core/RoleProviderPreference.js, 0.9.293) that

@@ -16,6 +16,8 @@ No global variables except the Vue application bootstrap
 
 Choice lists (select boxes, radio groups, checkbox lists) show their options in alphabetical order of the visible label, via utils/sortOptionsByLabel.js, unless the order itself carries meaning (a scale, a sort-by menu, a system-provided order). "All", "None", "System default…" and "Choose a…" entries stay first.
 
+Text the app shows goes through t() from ui/i18n/i18n.js, with its English text in ui/i18n/messages/en.js, so it can be translated: labels, tooltips, aria-labels, messages and errors a person reads. Use its plural forms for anything that depends on a count, and formatNumber()/formatDate() for numbers and dates. core/ and application/ return message keys or codes, never text for the UI to show. Older components still write English directly; move their text over when you change them. docs/Translating.md explains messages, plurals and the pseudo-locale.
+
 Comments explain why: a constraint, invariant or deliberate omission the code itself can't show. Don't narrate what the code plainly does or restate another file's header, and keep comments short (usually one to three lines).
 
 Change history belongs in docs/Roadmap.md and commit messages, not in code comments: no milestone or version tags ("0.8.79 — …"), and no "moved from" or "amended by" notes. Older files still carry them; trim them when you change that code.

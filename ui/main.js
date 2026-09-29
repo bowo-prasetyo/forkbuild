@@ -61,6 +61,7 @@ import { composePublicationDistribution } from './main/composePublicationDistrib
 import { composeSnapshotDiscovery } from './main/composeSnapshotDiscovery.js';
 import { openPublicationLink } from '../application/publication/OpenPublicationLink.js';
 import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.js';
+import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
 import { WorldSoundscapeService } from '../application/world/WorldSoundscapeService.js';
 import { WebAudioSoundscapeProvider } from '../audio/WebAudioSoundscapeProvider.js';
 import { EditorSoundService } from '../application/editor/EditorSoundService.js';
@@ -428,6 +429,8 @@ app.provide('placementKnowledgeStore', placementKnowledgeStore);
 app.provide('snapshotPlacementCreationCoordinator', snapshotPlacementCreationCoordinator);
 app.provide('preferredSnapshotPlacementCreationCoordinator', preferredSnapshotPlacementCreationCoordinator);
 app.provide('roleProviderPreferenceStore', roleProviderPreferenceStore);
+// Read once by ui/boot.js before the app loads; the Language page saves to it.
+app.provide('languageSettingsStore', new LanguageSettingsStore({ storageProvider: new LocalStorageProvider() }));
 // World View's sound; one per visit, sharing this device's sound
 // preference.
 const soundSettingsStore = new SoundSettingsStore({ storageProvider: new LocalStorageProvider() });
