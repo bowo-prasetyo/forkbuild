@@ -1093,9 +1093,16 @@ are shared by every tile.
     application/world/WorldSoundscapeService.js          samples 4×/s at the avatar (else the camera); cues and engine
             │                                             every render frame (onRenderFrame()); mute/volume
             │                                             ↔ SoundSettingsStore ('sound-settings', core/SoundSettings.js)
+    core/CreatureSoundCues.js#advanceCreatureSound()     10×/s: animal calls and steps, catch/release, resident
+            │  greet, speech and steps, each with { gain, pan } (soundObservationMethods.js#creatureSoundObservation())
     audio/WebAudioSoundscapeProvider.js                  Web Audio graph: ambient layers, then an effects bus for
             ├── audio/AvatarSoundSynth.js                  footsteps per surface, jump whoosh, landing thud
-            └── audio/VehicleEngineVoice.js                one held voice per ridden vehicle type
+            ├── audio/VehicleEngineVoice.js                one held voice per ridden vehicle type
+            ├── audio/CreatureSoundSynth.js                animal and resident sounds, through a gain and stereo pan
+            └── audio/EditorSoundSynth.js                  the Editor's edit sounds
+
+    Editor: EditorSession#onCommandActivity() → core/EditorSoundCues.js#editorSoundCueFor()
+            → application/editor/EditorSoundService.js → WebAudioSoundscapeProvider({ ambience: false })
 
 - **Mix.** Each ecology zone contributes a fixed level to each layer (forest: birds, sheltered from wind; highland
   and rock: wind; field and grassland: insects; lake: lapping water, faintly at a beach; river: running water). The
@@ -1129,8 +1136,29 @@ are shared by every tile.
   oscillator partials and filtered noise whose pitch, brightness and gain follow `load` with a 0.15 s time constant;
   a bicycle is only tyre hiss chopped by a freewheel tick, silent at a standstill; a drone hums even hovering.
   Short-lived nodes disconnect themselves when they end.
-- **Not yet.** Sound in the Editor, animals' and residents' own sounds, other avatars' footsteps, and positional
-  (3D) sound.
+- **Creatures.** `WorldNavigationSession#creatureSoundObservation()` (`application/worldNavigation/
+  soundObservationMethods.js`) reads the listener (`soundListener()`: the avatar, else the camera, and the camera's
+  horizontal viewing direction), the animals within 30 m (wild ones posed at the session's `wildlifeClock` minus
+  caught ones, released ones and decorations with `stationaryAnimalPoseAt()`), the animals carried, the residents
+  within 30 m and `lastResidentSpeech()`. `advanceCreatureSound()` is pure. An animal calls when its `idleAction`
+  turns ALERT (so every replica hears the same deer look up at the same moment) and, `startled`, when the listener
+  first comes within its look radius (deer 8, rabbits 5, `renderer/AnimalReaction.js`), rearmed at twice that; it
+  steps each time its `gaitPhase` passes a whole stride, within 12 m. A carried animal that appears is a CATCH, one
+  that goes a RELEASE. A standing resident greets once within 3.5 m, rearmed beyond 7 m
+  (`renderer/ResidentReaction.js`); a new `spokenAt` is heard as speech, 3 to 14 syllables by word count, within
+  15 m; a walking one steps every 0.7 m. Nothing already true when sound starts is played. `placeSound()` fades each
+  cue by distance (full within 2 m, squared falloff to its range) and pans it by its bearing against the camera's
+  right (`(-forward.z, forward.x)`). Each resident's voice (110–230 Hz and its vowels' jitter) comes from a hash of
+  its id. The service samples creatures on render frames every 0.1 s.
+- **Editor.** `EditorSession#onCommandActivity(listener)` reports executed, undone and redone commands, whichever
+  document is open, as `{ type, children }`; a collaborator's operation, applied through
+  `_remoteApplyingHistory()` (a proxy of the CommandHistory whose `execute()` sets a flag), is left out.
+  `editorSoundCueFor()` maps every registered command type to a cue, a composite to its first child that has one,
+  and undo and redo to their own. `EditorSoundService` plays them, plus a chord on Save (the Toolbar's `saved`
+  event and Ctrl+S), on a provider built with `ambience: false`: no layers, no birds, only cues.
+  `application/settings/SoundPreference.js` applies and saves mute and volume for both services, and
+  `ui/composables/useSoundControls.js` gives both views the Sound button, `M` and the gesture unlock.
+- **Not yet.** Other avatars' footsteps, vehicles other people ride, and true 3D (HRTF) sound.
 
 ## Collaboration
 

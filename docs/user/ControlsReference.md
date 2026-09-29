@@ -68,11 +68,11 @@ As you move through the world, the interface shows derived context like:
 These descriptions are computed from your position, terrain ecology,
 hydrology, and structure placements — nothing is stored in the world.
 
-## Sound (World View)
+## Sound (both views)
 
 | Input | Action | Notes |
 |---|---|---|
-| `M` | Turn sound off or on | Same as the **Sound** button; remembered on this device. See [Sound](03-WorldView.md#sound) |
+| `M` | Turn sound off or on | Same as the **Sound** button; one setting for both views, remembered on this device. See [World View](03-WorldView.md#sound) and [the Editor](02-TheEditor.md#sound) |
 
 ## Avatar Movement (World View)
 

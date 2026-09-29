@@ -110,7 +110,8 @@ export default {
     // THIS component owns the native file picker (browser mechanics
     // only), EditorView owns JSON.parse and everything after it. Toolbar
     // never calls editorSession.importDocument() itself.
-    emits: ['back-to-world', 'open-shortcuts', 'published', 'export-document', 'export-all-documents', 'import-document'],
+    // `saved` follows a successful Save, for the Editor's save sound.
+    emits: ['back-to-world', 'open-shortcuts', 'published', 'saved', 'export-document', 'export-all-documents', 'import-document'],
     setup(props, { emit }) {
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
@@ -131,6 +132,7 @@ export default {
                 return;
             }
             report('Saved');
+            emit('saved');
         }
 
         function createNew() {

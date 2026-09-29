@@ -31,6 +31,7 @@ import { selectionMethods } from '../worldNavigation/selectionMethods.js';
 import { stateQueryMethods } from '../worldNavigation/stateQueryMethods.js';
 import { worldStreamingMethods } from '../worldNavigation/worldStreamingMethods.js';
 import { documentOperationMethods } from '../worldNavigation/documentOperationMethods.js';
+import { soundObservationMethods } from '../worldNavigation/soundObservationMethods.js';
 
 // Throttle for runtime vehicle/animal persistence. A ridden vehicle moves
 // every frame; one snapshot per second is indistinguishable after a reload.
@@ -836,5 +837,6 @@ installMethods(
     selectionMethods,
     stateQueryMethods,
     worldStreamingMethods,
-    documentOperationMethods
+    documentOperationMethods,
+    soundObservationMethods
 );

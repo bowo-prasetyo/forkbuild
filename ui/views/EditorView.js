@@ -61,6 +61,8 @@ import { useStructureLibrary } from './editorView/useStructureLibrary.js';
 import { useBlueprintExchange } from './editorView/useBlueprintExchange.js';
 import { ExportAllDocumentsUseCase, ImportDocumentBundleUseCase } from '../../application/document/DocumentBundle.js';
 import { useStructureInspection } from './editorView/useStructureInspection.js';
+import { useSoundControls } from '../composables/useSoundControls.js';
+import SoundControl from '../components/SoundControl.js';
 
 // Editing shortcuts come from EditorActionRegistry, shared with the palette,
 // the sidebar and the controls docs. Escape priority: text input > shortcuts
@@ -73,7 +75,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, EditorTouchActionBar },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, EditorTouchActionBar, SoundControl },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -88,6 +90,7 @@ export default {
                 @back-to-world="backToWorld"
                 @open-shortcuts="shortcutsOpen = true"
                 @published="onDocumentPublished"
+                @saved="onDocumentSaved"
                 @export-document="exportDocument"
                 @export-all-documents="exportAllDocuments"
                 @import-document="importDocument"
@@ -253,6 +256,13 @@ export default {
                         :style="{ left: marqueeRect.left + 'px', top: marqueeRect.top + 'px', width: marqueeRect.width + 'px', height: marqueeRect.height + 'px' }"
                     ></div>
                     <TransformFeedback :feedback="transformFeedback" />
+                    <SoundControl
+                        v-if="soundAvailable"
+                        :muted="soundMuted"
+                        :volume="soundVolume"
+                        @toggle="toggleSound"
+                        @volume="setSoundVolume"
+                    />
                 </div>
             </div>
             <CommandPalette
@@ -772,8 +782,22 @@ export default {
             transformFeedback.value = null;
         }
 
+        // A short sound for each edit, with World View's mute and volume.
+        const createEditorSound = inject('createEditorSound', null);
+        const {
+            soundAvailable, soundMuted, soundVolume, startSound, stopSound, toggleSound, setSoundVolume, onSoundKeyDown, sound
+        } = useSoundControls(() => (typeof createEditorSound === 'function' ? createEditorSound({ editorSession }) : null));
+
+        function onDocumentSaved() {
+            const service = sound();
+            if (service) {
+                service.saved();
+            }
+        }
+
         onMounted(() => {
             editorSession.start(viewport.value);
+            startSound();
 
             unsubTool = editorContext.eventBus.subscribe(
                 EditorEvent.TOOL_CHANGED,
@@ -940,6 +964,10 @@ export default {
                     updateMarqueeRect();
                     return;
                 }
+                // 3.8. M turns sound off or on.
+                if (onSoundKeyDown(event)) {
+                    return;
+                }
                 const shortcutTool = TOOL_SHORTCUTS[event.key];
                 if (shortcutTool && !event.ctrlKey && !event.metaKey) {
                     editorContext.setActiveTool(shortcutTool);
@@ -947,7 +975,7 @@ export default {
                 }
                 if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
                     event.preventDefault();
-                    saveDocument(saveDocumentUseCase, documentManager).catch((error) => {
+                    saveDocument(saveDocumentUseCase, documentManager).then(onDocumentSaved, (error) => {
                         console.error('Save failed:', error);
                         feedback.show(saveFailureMessage(error), { durationMs: 10000 });
                     });
@@ -1024,6 +1052,7 @@ export default {
             window.removeEventListener('pointercancel', onPointerCancel);
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
+            stopSound();
             editorSession.dispose();
             // Created per mount, so dispose it to avoid leaking bus subscriptions.
             if (documentCommandPropagation) {
@@ -1035,6 +1064,12 @@ export default {
         });
 
         return {
+            soundAvailable,
+            soundMuted,
+            soundVolume,
+            toggleSound,
+            setSoundVolume,
+            onDocumentSaved,
             viewport,
             touchInput,
             sidebarOpen,
