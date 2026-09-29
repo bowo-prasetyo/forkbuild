@@ -38,6 +38,22 @@ const VOLUME_TIME_CONSTANT = 0.05;
 const NOISE_SECONDS = 4;
 const BIRD_AUDIBLE_LEVEL = 0.05;
 
+// Sets a node's `<name>X/Y/Z` AudioParams (a panner's position, the
+// listener's position, forward and up), or the deprecated setter where
+// those don't exist.
+function setVector(node, name, vector) {
+    const x = Number(vector.x) || 0;
+    const y = Number(vector.y) || 0;
+    const z = Number(vector.z) || 0;
+    if (node[`${name}X`]) {
+        node[`${name}X`].value = x;
+        node[`${name}Y`].value = y;
+        node[`${name}Z`].value = z;
+    } else if (name === 'position' && typeof node.setPosition === 'function') {
+        node.setPosition(x, y, z);
+    }
+}
+
 function defaultContextFactory() {
     const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioContext;
     return AudioContextClass ? new AudioContextClass() : null;
@@ -70,6 +86,10 @@ export class WebAudioSoundscapeProvider {
         this._levels = Object.fromEntries(LAYERS.map((layer) => [layer, 0]));
         this._volume = 0.5;
         this._muted = false;
+        // 3D placement (a PannerNode per placed cue, heard from `_listener`), or
+        // only left and right.
+        this._spatial = true;
+        this._listener = null;
         this._unlocked = false;
         this._disposed = false;
         this._birdTimer = null;
@@ -143,13 +163,7 @@ export class WebAudioSoundscapeProvider {
         const context = this._context;
         const level = context.createGain();
         level.gain.value = Math.min(1, Math.max(0, Number(cue.gain) || 0));
-        let output = level;
-        if (typeof context.createStereoPanner === 'function') {
-            const panner = context.createStereoPanner();
-            panner.pan.value = Math.min(1, Math.max(-1, Number(cue.pan) || 0));
-            level.connect(panner);
-            output = panner;
-        }
+        const output = this._placeOutput(level, cue);
         output.connect(this._effects);
         const noise = this._effectsNoise;
         const random = this._random;
@@ -173,6 +187,15 @@ export class WebAudioSoundscapeProvider {
             case CREATURE_SOUND_CUE.RESIDENT_STEP:
                 playResidentStep(context, level, noise, random);
                 break;
+            case CREATURE_SOUND_CUE.PLAYER_FOOTSTEP:
+                playFootstep(context, level, noise, cue.surface, cue.intensity, random);
+                break;
+            case CREATURE_SOUND_CUE.PLAYER_JUMP:
+                playJump(context, level, noise, cue.surface, cue.intensity, random);
+                break;
+            case CREATURE_SOUND_CUE.PLAYER_LAND:
+                playLanding(context, level, noise, cue.surface, cue.intensity, random);
+                break;
             default:
                 break;
         }
@@ -180,6 +203,64 @@ export class WebAudioSoundscapeProvider {
             level.disconnect();
             output.disconnect();
         }, PLACED_CUE_SECONDS * 1000);
+    }
+
+    // Where a placed cue is heard from. In 3D, a PannerNode at the cue's
+    // position (HRTF: in front or behind, above or below); its own distance
+    // rolloff is off, because the cue's gain already fades with distance
+    // (core/CreatureSoundCues.js#placeSound()). Otherwise, or for a cue with no
+    // position, a stereo pan.
+    _placeOutput(level, cue) {
+        const context = this._context;
+        const position = cue.position;
+        if (this._spatial && position && typeof context.createPanner === 'function') {
+            const panner = context.createPanner();
+            panner.panningModel = 'HRTF';
+            panner.distanceModel = 'linear';
+            panner.rolloffFactor = 0;
+            setVector(panner, 'position', position);
+            level.connect(panner);
+            return panner;
+        }
+        if (typeof context.createStereoPanner === 'function') {
+            const panner = context.createStereoPanner();
+            panner.pan.value = Math.min(1, Math.max(-1, Number(cue.pan) || 0));
+            level.connect(panner);
+            return panner;
+        }
+        return level;
+    }
+
+    // Whether placed sounds are heard in 3D or only left and right.
+    setSpatial(spatial) {
+        this._spatial = Boolean(spatial);
+    }
+
+    // Where 3D sound is heard from: { position, forward, up }, each { x, y, z },
+    // where things are drawn.
+    setListener(pose) {
+        if (!pose || !pose.position || !pose.forward || !pose.up) {
+            return;
+        }
+        this._listener = pose;
+        this._applyListener();
+    }
+
+    _applyListener() {
+        const listener = this._context ? this._context.listener : null;
+        const pose = this._listener;
+        if (!listener || !pose) {
+            return;
+        }
+        if (listener.positionX) {
+            setVector(listener, 'position', pose.position);
+            setVector(listener, 'forward', pose.forward);
+            setVector(listener, 'up', pose.up);
+        } else if (typeof listener.setPosition === 'function') {
+            // Older Safari: the deprecated setters.
+            listener.setPosition(pose.position.x, pose.position.y, pose.position.z);
+            listener.setOrientation(pose.forward.x, pose.forward.y, pose.forward.z, pose.up.x, pose.up.y, pose.up.z);
+        }
     }
 
     // An Editor edit's sound (core/EditorSoundCues.js).
@@ -330,6 +411,7 @@ export class WebAudioSoundscapeProvider {
         if (this._engine) {
             this.setEngine(this._engine);
         }
+        this._applyListener();
     }
 
     _noiseBuffer(brown) {

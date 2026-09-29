@@ -111,6 +111,13 @@ export class RemoteAvatarRegistry {
         return interpolator ? interpolator.currentPresence(now).position : null;
     }
 
+    // The full interpolated presence ({ position, rotation, animation }) the
+    // renderer is drawing now, or null: what World View's sound hears.
+    currentPresence(avatarId, now = Date.now()) {
+        const interpolator = this._interpolators.get(avatarId);
+        return interpolator ? interpolator.currentPresence(now) : null;
+    }
+
     dispose() {
         for (const avatarId of this._interpolators.keys()) {
             this._renderFacade.removeRemoteAvatar(avatarId);

@@ -2,12 +2,17 @@
 // are already doing: an animal's call when it looks up alert and when you
 // come close, its steps while it walks, a sound as you catch or release one;
 // a resident's hello when it greets you, its murmur when it talks and its
-// steps. Pure: the caller keeps the state between ticks.
+// steps; another player's footsteps, jumps and landings. Pure: the caller
+// keeps the state between ticks.
 //
-// Every cue carries `gain` (fading with distance) and `pan` (-1 left to 1
-// right of the camera), so a deer to the right is heard on the right.
+// Every placed cue carries `gain` (fading with distance), `pan` (-1 left to 1
+// right of the camera), so a deer to the right is heard on the right, and
+// `position` ({ x, y, z } where it is drawn) for 3D sound.
 import { ANIMAL_SPECIES } from './WildlifeField.js';
 import { IDLE_ACTION } from './WildlifeMotion.js';
+import { advanceAvatarSound, createAvatarSoundState, AVATAR_SOUND_CUE } from './AvatarSoundCues.js';
+import { AvatarAnimationState } from './AvatarAnimationState.js';
+import { AvatarVerticalState } from './AvatarVerticalState.js';
 
 export const CREATURE_SOUND_CUE = Object.freeze({
     ANIMAL_CALL: 'animal-call',
@@ -16,8 +21,22 @@ export const CREATURE_SOUND_CUE = Object.freeze({
     RELEASE: 'release',
     RESIDENT_GREET: 'resident-greet',
     RESIDENT_SPEECH: 'resident-speech',
-    RESIDENT_STEP: 'resident-step'
+    RESIDENT_STEP: 'resident-step',
+    PLAYER_FOOTSTEP: 'player-footstep',
+    PLAYER_JUMP: 'player-jump',
+    PLAYER_LAND: 'player-land'
 });
+
+// Another player's own sounds, from its presence, as the local avatar's are
+// from the local one (core/AvatarSoundCues.js), a little softer.
+const PLAYER_CUE = Object.freeze({
+    [AVATAR_SOUND_CUE.FOOTSTEP]: CREATURE_SOUND_CUE.PLAYER_FOOTSTEP,
+    [AVATAR_SOUND_CUE.JUMP]: CREATURE_SOUND_CUE.PLAYER_JUMP,
+    [AVATAR_SOUND_CUE.LAND]: CREATURE_SOUND_CUE.PLAYER_LAND
+});
+const PLAYER_RANGE = 20;
+const PLAYER_LOUDNESS = 0.8;
+const DEFAULT_SAMPLE_SECONDS = 0.1;
 
 // How far each sound carries, in meters.
 const CALL_RANGE = 30;
@@ -41,7 +60,7 @@ const SPEECH_SYLLABLES_MIN = 3;
 const SPEECH_SYLLABLES_MAX = 14;
 
 export function createCreatureSoundState() {
-    return Object.freeze({ animals: new Map(), residents: new Map(), carried: null, lastSpokenAt: undefined });
+    return Object.freeze({ animals: new Map(), residents: new Map(), players: new Map(), carried: null, lastSpokenAt: undefined });
 }
 
 // Loudness and left/right position of a sound at (x, z) heard by `listener`
@@ -74,8 +93,11 @@ export function voiceFor(id) {
     return (h >>> 0) / 4294967296;
 }
 
-function cue(kind, placement, extra) {
-    return Object.freeze({ kind, gain: placement.gain, pan: placement.pan, ...extra });
+// `source` is where the sound comes from ({ x, y, z }), for 3D sound; a cue
+// heard up close at the listener (a catch) has none.
+function cue(kind, placement, extra, source = null) {
+    const position = source ? { x: source.x, y: Number.isFinite(source.y) ? source.y : 0, z: source.z } : null;
+    return Object.freeze({ kind, gain: placement.gain, pan: placement.pan, position, ...extra });
 }
 
 function advanceAnimals(state, listener, animals, cues) {
@@ -97,11 +119,11 @@ function advanceAnimals(state, listener, animals, cues) {
             const alerted = animal.idleAction === IDLE_ACTION.ALERT && previous.idleAction !== IDLE_ACTION.ALERT;
             const startled = !previous.startled && entry.startled;
             if (alerted || startled) {
-                cues.push(cue(CREATURE_SOUND_CUE.ANIMAL_CALL, call, { species: animal.species, startled }));
+                cues.push(cue(CREATURE_SOUND_CUE.ANIMAL_CALL, call, { species: animal.species, startled }, animal));
             }
             const near = placeSound(listener, animal.x, animal.z, STEP_RANGE);
             if (near && animal.moving && step > previous.step) {
-                cues.push(cue(CREATURE_SOUND_CUE.ANIMAL_STEP, near, { species: animal.species }));
+                cues.push(cue(CREATURE_SOUND_CUE.ANIMAL_STEP, near, { species: animal.species }, animal));
             }
         }
         next.set(animal.id, entry);
@@ -137,13 +159,13 @@ function advanceResidents(state, listener, residents, speech, cues) {
         };
         if (!entry.greeted && !resident.moving && distance < GREET_RADIUS && placement) {
             entry.greeted = true;
-            cues.push(cue(CREATURE_SOUND_CUE.RESIDENT_GREET, placement, { voice: voiceFor(resident.id) }));
+            cues.push(cue(CREATURE_SOUND_CUE.RESIDENT_GREET, placement, { voice: voiceFor(resident.id) }, resident));
         }
         if (previous && resident.moving) {
             entry.stride += Math.hypot(resident.x - previous.x, resident.z - previous.z);
             if (entry.stride >= RESIDENT_STRIDE) {
                 entry.stride = Math.min(entry.stride - RESIDENT_STRIDE, RESIDENT_STRIDE);
-                if (placement) cues.push(cue(CREATURE_SOUND_CUE.RESIDENT_STEP, placement, {}));
+                if (placement) cues.push(cue(CREATURE_SOUND_CUE.RESIDENT_STEP, placement, {}, resident));
             }
         }
         next.set(resident.id, entry);
@@ -156,16 +178,49 @@ function advanceResidents(state, listener, residents, speech, cues) {
         if (placement) {
             const words = (speech.remarks || []).join(' ').split(/\s+/).filter(Boolean).length;
             const syllables = Math.max(SPEECH_SYLLABLES_MIN, Math.min(SPEECH_SYLLABLES_MAX, Math.round(words / 2)));
-            cues.push(cue(CREATURE_SOUND_CUE.RESIDENT_SPEECH, placement, { voice: voiceFor(speech.residentId), syllables }));
+            cues.push(cue(CREATURE_SOUND_CUE.RESIDENT_SPEECH, placement, { voice: voiceFor(speech.residentId), syllables }, speaker));
+        }
+    }
+    return next;
+}
+
+// Each other player steps, jumps and lands through the same step as the local
+// avatar. Presence carries no vertical state (docs/Principles.md, "Local
+// Physics Is Local"), so its JUMPING animation stands for being in the air,
+// and a player's vehicle isn't known, so a rider is heard as standing still.
+function advancePlayers(state, listener, players, seed, deltaSeconds, cues) {
+    const next = new Map();
+    for (const player of players) {
+        const previous = state.players.get(player.id) || createAvatarSoundState();
+        const result = advanceAvatarSound(previous, {
+            position: player.position,
+            animation: player.animation,
+            verticalState: player.animation === AvatarAnimationState.JUMPING
+                ? AvatarVerticalState.RISING
+                : AvatarVerticalState.SUPPORTED,
+            vehicleType: null
+        }, deltaSeconds, seed);
+        next.set(player.id, result.state);
+        const { x, z } = player.position;
+        const placement = placeSound(listener, x, z, PLAYER_RANGE);
+        if (!placement) continue;
+        for (const own of result.cues) {
+            const kind = PLAYER_CUE[own.kind];
+            if (kind) {
+                cues.push(cue(kind, placement, { surface: own.surface, intensity: own.intensity * PLAYER_LOUDNESS },
+                    { x, y: player.y, z }));
+            }
         }
     }
     return next;
 }
 
 // `observation` is { listener, animals, carriedAnimals, residents,
-// residentSpeech } (application/worldNavigation/soundObservationMethods.js),
-// or null. Returns the next state and the cues to play now.
-export function advanceCreatureSound(state, observation) {
+// residentSpeech, remoteAvatars } (application/worldNavigation/
+// soundObservationMethods.js), or null; `seed` picks the surface under a
+// player's feet and `deltaSeconds` is the time since the last look. Returns the
+// next state and the cues to play now.
+export function advanceCreatureSound(state, observation, { seed = 0, deltaSeconds = DEFAULT_SAMPLE_SECONDS } = {}) {
     if (!observation || !observation.listener) {
         return { state: createCreatureSoundState(), cues: [] };
     }
@@ -174,9 +229,10 @@ export function advanceCreatureSound(state, observation) {
     const animals = advanceAnimals(state, listener, observation.animals || [], cues);
     const carried = advanceCarried(state, observation.carriedAnimals, cues);
     const residents = advanceResidents(state, listener, observation.residents || [], observation.residentSpeech, cues);
+    const players = advancePlayers(state, listener, observation.remoteAvatars || [], seed, deltaSeconds, cues);
     const speech = observation.residentSpeech;
     return {
-        state: Object.freeze({ animals, residents, carried, lastSpokenAt: speech ? speech.spokenAt : null }),
+        state: Object.freeze({ animals, residents, players, carried, lastSpokenAt: speech ? speech.spokenAt : null }),
         cues
     };
 }

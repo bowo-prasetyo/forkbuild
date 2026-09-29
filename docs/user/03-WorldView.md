@@ -116,15 +116,26 @@ own when it talks to you, and its footsteps are heard as it strolls past.
 Every visitor hears the same deer look up at the same moment, because when an
 animal does so is part of the World.
 
-Everything is generated in your browser, so nothing is downloaded, and it
-is only heard on your device: other people don't hear your footsteps.
+Other people's avatars are heard too: their footsteps on whatever they are
+walking on, and their jumps and landings, from where they are. Only the people
+you can see are heard; hide other avatars and they fall silent. Someone riding
+a vehicle isn't heard yet.
+
+Sounds around you are placed in **3D**: ahead or behind, above or below, as
+well as left or right, turning as you turn the camera. It's best with
+headphones. The **3D** button beside the volume slider switches to plain left
+and right (**Stereo**), which may suit a slow device or speakers better.
+
+Everything is generated in your browser, so nothing is downloaded and no
+sound is ever sent. Other people hear your footsteps the way you hear theirs:
+their browser makes them from where it already sees your avatar walking.
 
 Browsers don't let a page play sound until you interact with it, so sound
 starts with your first click, tap or key press. Turn it off or on with the
 **Sound** button at the top right of the view (bottom right on a phone) or
 by pressing `M`, and set how loud it is with the slider beside it; on a
 phone or tablet, use the device's own volume buttons. ForkBuild remembers
-your choice on this device. Sound pauses while the tab is hidden.
+your choices, including 3D or Stereo, on this device. Sound pauses while the tab is hidden.
 
 ## Orientation and Locations
 

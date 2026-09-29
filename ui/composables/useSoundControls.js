@@ -8,11 +8,13 @@ export function useSoundControls(createSound) {
     const soundAvailable = ref(false);
     const soundMuted = ref(false);
     const soundVolume = ref(0.5);
+    const soundSpatial = ref(true);
     let service = null;
 
     function applySettings(settings) {
         soundMuted.value = settings.muted;
         soundVolume.value = settings.volume;
+        soundSpatial.value = settings.spatial;
     }
 
     // Browsers only let audio start from a user gesture, and iOS can suspend
@@ -60,6 +62,12 @@ export function useSoundControls(createSound) {
         }
     }
 
+    function toggleSoundSpatial() {
+        if (service) {
+            applySettings(service.toggleSpatial());
+        }
+    }
+
     // M without modifiers toggles sound. Returns whether it handled the key.
     function onSoundKeyDown(event) {
         if (!service || event.ctrlKey || event.metaKey || event.altKey || event.key.toLowerCase() !== 'm') {
@@ -78,7 +86,7 @@ export function useSoundControls(createSound) {
     }
 
     return {
-        soundAvailable, soundMuted, soundVolume,
-        startSound, stopSound, toggleSound, setSoundVolume, onSoundKeyDown, sound
+        soundAvailable, soundMuted, soundVolume, soundSpatial,
+        startSound, stopSound, toggleSound, setSoundVolume, toggleSoundSpatial, onSoundKeyDown, sound
     };
 }

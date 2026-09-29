@@ -2851,3 +2851,29 @@ The Editor's Keyboard Shortcuts overlay (`?`) now lists **Sound on/off — `M`**
 - Docs: `docs/user/02-TheEditor.md` (Sound).
 - Tests: `tests/KeyboardShortcutsOverlayBrowser.test.js` mounts the real overlay and checks the row is listed once,
   and that no Editor action claims plain `M`.
+
+## Other players' footsteps, and 3D sound (unnumbered, 2026-09-29)
+
+**Other people's avatars are heard now: footsteps on whatever they walk on, jumps and landings, from where they are,
+as long as you can see them. And the sounds around you are placed in 3D (in front or behind, above or below, as well
+as left and right) turning as the camera turns, with a 3D/Stereo button beside the volume slider.**
+
+Both use what World View already has: presence already carries each player's position and animation, and Web Audio's
+PannerNode (HRTF) and AudioListener do the placement. Nothing new is sent; the 3D choice is kept with the sound
+preference. Other players' vehicles need a presence change and stay a separate milestone.
+
+- Players: `soundObservationMethods.js#remoteAvatarsForSound()` (over the new `RemoteAvatarRegistry#currentPresence()`)
+  feeds `core/CreatureSoundCues.js`, which runs each player through `advanceAvatarSound()`; PLAYER_FOOTSTEP, JUMP and
+  LAND cues, played through the same footstep synthesis. Hidden avatars aren't heard.
+- 3D: cues carry `position`; `soundListenerPose()` sets the AudioListener every frame through the new
+  `listenerPose` option of `WorldSoundscapeService`; the provider's `setSpatial()`/`setListener()` and a PannerNode per
+  placed cue with its rolloff off. `core/SoundSettings.js` gains `spatial` (a choice saved before reads as on),
+  `SoundPreference#setSpatial()`/`toggleSpatial()`, and `SoundControl`'s 3D/Stereo button in World View.
+- Docs: `docs/user/03-WorldView.md` (Sound), `docs/Architecture.md` (Sound), `docs/Privacy.md` (the stored choice).
+- Tests: `tests/CreatureSoundCues.test.js` (positions on placed cues; another player's steps, jump and landing, placed
+  where drawn, softer, not beyond 20 m), `tests/CreatureSoundObservation.test.js` (the real listener pose; a real
+  `RemoteAvatarRegistry` player heard walking and silent when hidden), `tests/SoundSettings.test.js` and
+  `tests/WorldSoundscapeService.test.js` (the 3D choice, the listener every frame), and the browser test (rendered
+  HRTF: right and left ears, straight ahead, a turned listener, distance left to the cue's gain, the stereo fallback,
+  and the 3D button).
+- Not done: vehicles other people ride; a player's landing weight (their vertical speed isn't sent).
