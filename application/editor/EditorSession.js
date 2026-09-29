@@ -10,6 +10,7 @@ import { InputDispatcher } from './InputDispatcher.js';
 import { ToolManager } from './ToolManager.js';
 import { CommandHistory } from './CommandHistory.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
+import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
 import { RemoteDocumentOperationApplicationUseCase } from '../document/RemoteDocumentOperationApplicationUseCase.js';
 import { DocumentOperationCausalGapObservationUseCase } from '../document/DocumentOperationCausalGapObservationUseCase.js';
 import { DocumentOperationCausalGapDetector } from '../../core/DocumentOperationCausalGapDetector.js';
@@ -125,6 +126,9 @@ export class EditorSession {
         this._container = null;
         this._session = null;
         this._commandHistory = null;
+        this._commandActivityListeners = new Set();
+        this._activitySubscriptions = [];
+        this._applyingRemoteOperation = false;
         this._toolManager = null;
         this._inputDispatcher = null;
         this._untrackDirtyState = null;
@@ -175,7 +179,7 @@ export class EditorSession {
             ? this._documentOperationDeferral.attachToPropagation(
                 this._documentCommandPropagation,
                 () => (this._documentManager.document && this._commandHistory
-                    ? { documentId: this._documentManager.document.world.id, commandHistory: this._commandHistory }
+                    ? { documentId: this._documentManager.document.world.id, commandHistory: this._remoteApplyingHistory() }
                     : null)
             )
             : null;
@@ -300,6 +304,7 @@ export class EditorSession {
 
     dispose() {
         this._teardown();
+        this._commandActivityListeners.clear();
         if (this._unattachRemoteApplication) {
             this._unattachRemoteApplication();
             this._unattachRemoteApplication = null;
@@ -390,6 +395,63 @@ export class EditorSession {
             this._commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_REDONE, refreshGizmo)
         ];
         this._refreshGizmo();
+        this._subscribeCommandActivity();
+    }
+
+    // Relays the current CommandHistory's events to onCommandActivity()
+    // listeners; called for each history a rebuild makes.
+    _subscribeCommandActivity() {
+        for (const subscription of this._activitySubscriptions) {
+            subscription.unsubscribe();
+        }
+        const activity = (kind) => ({ command }) => this._emitCommandActivity(kind, command);
+        this._activitySubscriptions = [
+            this._commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_EXECUTED, activity(EDITOR_ACTIVITY.EXECUTED)),
+            this._commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_UNDONE, activity(EDITOR_ACTIVITY.UNDONE)),
+            this._commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_REDONE, activity(EDITOR_ACTIVITY.REDONE))
+        ];
+    }
+
+    // Calls `listener(activity, command)` for every edit the user makes in this
+    // Editor, whichever document is open: an EDITOR_ACTIVITY and the command as
+    // { type, children } (children for a composite). Collaborators' edits
+    // arriving from peers are left out. Returns an unsubscribe function.
+    onCommandActivity(listener) {
+        this._commandActivityListeners.add(listener);
+        return () => this._commandActivityListeners.delete(listener);
+    }
+
+    _emitCommandActivity(activity, command) {
+        if (this._applyingRemoteOperation || this._commandActivityListeners.size === 0) {
+            return;
+        }
+        const described = describeCommand(command);
+        for (const listener of [...this._commandActivityListeners]) {
+            listener(activity, described);
+        }
+    }
+
+    // The command history as remote operations see it: the same history, but
+    // executing through it marks the edit as a collaborator's, so
+    // onCommandActivity() leaves it out.
+    _remoteApplyingHistory() {
+        const history = this._commandHistory;
+        return new Proxy(history, {
+            get: (target, property) => {
+                if (property === 'execute') {
+                    return (command) => {
+                        this._applyingRemoteOperation = true;
+                        try {
+                            return target.execute(command);
+                        } finally {
+                            this._applyingRemoteOperation = false;
+                        }
+                    };
+                }
+                const value = Reflect.get(target, property, target);
+                return typeof value === 'function' ? value.bind(target) : value;
+            }
+        });
     }
 
     _teardown() {
@@ -397,6 +459,10 @@ export class EditorSession {
             subscription.unsubscribe();
         }
         this._gizmoSubscriptions = [];
+        for (const subscription of this._activitySubscriptions) {
+            subscription.unsubscribe();
+        }
+        this._activitySubscriptions = [];
         this._editorCommandHistories.clear();
         if (this._unattachCommandHistoryPropagation) {
             this._unattachCommandHistoryPropagation();
@@ -467,3 +533,11 @@ installMethods(
     structureAndBlueprintMethods,
     pointerInputMethods
 );
+
+function describeCommand(command, depth = 0) {
+    if (!command || depth > 8) {
+        return { type: null, children: [] };
+    }
+    const children = Array.isArray(command.commands) ? command.commands.map((child) => describeCommand(child, depth + 1)) : [];
+    return { type: command.type, children };
+}

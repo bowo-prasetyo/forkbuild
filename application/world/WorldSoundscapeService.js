@@ -1,22 +1,29 @@
 // World View's sound: samples the land around the listener a few times a
 // second and hands the resulting layer levels to a sound provider, which fades
-// between them; and, every render frame, turns what the local avatar is doing
-// into footsteps, jumps, landings and a vehicle engine. Owns the device's mute
-// and volume preference.
+// between them; every render frame, turns what the local avatar is doing into
+// footsteps, jumps, landings and a vehicle engine; and ten times a second,
+// turns the animals and residents around it into calls, steps and speech.
+// Owns the device's mute and volume preference.
 //
 // The provider is an adapter (audio/WebAudioSoundscapeProvider.js in the
 // browser) with resume(), setLayerLevels(levels), playCue(cue),
-// setEngine(engine), setVolume(volume), setMuted(muted) and dispose().
+// playCreatureCue(cue), setEngine(engine), setVolume(volume), setMuted(muted)
+// and dispose().
 // Browsers keep audio silent until the user interacts with the page, so the
 // view calls unlock() from its first key press or tap.
 import { ambientMixAt, silentAmbientMix } from '../../core/AmbientSoundscape.js';
 import { advanceAvatarSound, createAvatarSoundState } from '../../core/AvatarSoundCues.js';
+import { advanceCreatureSound, createCreatureSoundState } from '../../core/CreatureSoundCues.js';
+import { SoundPreference } from '../settings/SoundPreference.js';
 
 const DEFAULT_SAMPLE_INTERVAL_MS = 250;
 // Moving less than this since the last sample can't change what is heard.
 const RESAMPLE_DISTANCE = 0.5;
 // An engine's load changes smaller than this aren't worth a new ramp.
 const ENGINE_LOAD_STEP = 0.02;
+// Animals and residents are looked at this often: often enough to catch a
+// hop, rarely enough to cost nothing.
+const CREATURE_SAMPLE_SECONDS = 0.1;
 
 export class WorldSoundscapeService {
     constructor({
@@ -25,6 +32,7 @@ export class WorldSoundscapeService {
         listenerPosition,
         seed,
         avatarObservation = null,
+        creatureObservation = null,
         onRenderFrame = null,
         sampleIntervalMs = DEFAULT_SAMPLE_INTERVAL_MS,
         setIntervalFn = globalThis.setInterval.bind(globalThis),
@@ -34,18 +42,20 @@ export class WorldSoundscapeService {
             throw new Error('WorldSoundscapeService requires a provider, a settingsStore and a listenerPosition function');
         }
         this._provider = provider;
-        this._settingsStore = settingsStore;
         this._listenerPosition = listenerPosition;
         this._seed = seed;
         this._sampleIntervalMs = sampleIntervalMs;
         this._setInterval = setIntervalFn;
         this._clearInterval = clearIntervalFn;
-        this._settings = settingsStore.get();
+        this._preference = new SoundPreference({ provider, settingsStore });
         this._interval = null;
         this._lastSampledAt = null;
         this._avatarObservation = typeof avatarObservation === 'function' ? avatarObservation : null;
         this._onRenderFrame = typeof onRenderFrame === 'function' ? onRenderFrame : null;
         this._avatarSoundState = createAvatarSoundState();
+        this._creatureObservation = typeof creatureObservation === 'function' ? creatureObservation : null;
+        this._creatureSoundState = createCreatureSoundState();
+        this._creatureSeconds = CREATURE_SAMPLE_SECONDS;
         this._engine = null;
         this._frameUnsubscribe = null;
         this._disposed = false;
@@ -55,28 +65,48 @@ export class WorldSoundscapeService {
         if (this._interval !== null || this._disposed) {
             return;
         }
-        this._provider.setVolume(this._settings.volume);
-        this._provider.setMuted(this._settings.muted);
+        this._preference.apply();
         this.sample();
         this._interval = this._setInterval(() => this.sample(), this._sampleIntervalMs);
-        if (this._avatarObservation && this._onRenderFrame) {
+        if ((this._avatarObservation || this._creatureObservation) && this._onRenderFrame) {
             this._frameUnsubscribe = this._onRenderFrame((deltaSeconds) => this.frame(deltaSeconds));
         }
     }
 
     // One render frame of the local avatar's own sounds.
     frame(deltaSeconds) {
-        if (this._disposed || !this._avatarObservation) {
+        if (this._disposed) {
             return;
         }
-        const { state, cues, engine } = advanceAvatarSound(
-            this._avatarSoundState, this._avatarObservation(), deltaSeconds, this._seed
-        );
-        this._avatarSoundState = state;
-        for (const cue of cues) {
-            this._provider.playCue(cue);
+        if (this._avatarObservation) {
+            const { state, cues, engine } = advanceAvatarSound(
+                this._avatarSoundState, this._avatarObservation(), deltaSeconds, this._seed
+            );
+            this._avatarSoundState = state;
+            for (const cue of cues) {
+                this._provider.playCue(cue);
+            }
+            this._updateEngine(engine);
         }
-        this._updateEngine(engine);
+        if (this._creatureObservation) {
+            this._creatureSeconds += Number.isFinite(deltaSeconds) && deltaSeconds > 0 ? deltaSeconds : 0;
+            if (this._creatureSeconds >= CREATURE_SAMPLE_SECONDS) {
+                this._creatureSeconds = 0;
+                this.sampleCreatures();
+            }
+        }
+    }
+
+    // One look at the animals and residents around the listener.
+    sampleCreatures() {
+        if (this._disposed || !this._creatureObservation) {
+            return;
+        }
+        const { state, cues } = advanceCreatureSound(this._creatureSoundState, this._creatureObservation());
+        this._creatureSoundState = state;
+        for (const cue of cues) {
+            this._provider.playCreatureCue(cue);
+        }
     }
 
     _updateEngine(engine) {
@@ -119,30 +149,19 @@ export class WorldSoundscapeService {
     }
 
     settings() {
-        return this._settings;
+        return this._preference.settings();
     }
 
     setMuted(muted) {
-        this._settings = this._settingsStore.save({ ...this._settings, muted: Boolean(muted) });
-        this._provider.setMuted(this._settings.muted);
-        if (!this._settings.muted) {
-            this._provider.resume();
-        }
-        return this._settings;
+        return this._preference.setMuted(muted);
     }
 
     toggleMuted() {
-        return this.setMuted(!this._settings.muted);
+        return this._preference.toggleMuted();
     }
 
     setVolume(volume) {
-        const next = Number(volume);
-        if (!Number.isFinite(next)) {
-            return this._settings;
-        }
-        this._settings = this._settingsStore.save({ ...this._settings, volume: next });
-        this._provider.setVolume(this._settings.volume);
-        return this._settings;
+        return this._preference.setVolume(volume);
     }
 
     dispose() {

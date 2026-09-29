@@ -1,10 +1,11 @@
-// Plays World View's sound with the Web Audio API: the ambient layers, the
-// local avatar's footsteps, jumps and landings (audio/AvatarSoundSynth.js) and
-// the engine of what it rides (audio/VehicleEngineVoice.js). Every sound is
-// synthesized from noise and oscillators, so nothing is downloaded and there
-// are no audio files to license. What to play comes from
-// application/world/WorldSoundscapeService.js; these files only decide how it
-// sounds.
+// Plays World View's and the Editor's sound with the Web Audio API: the
+// ambient layers, the local avatar's footsteps, jumps and landings
+// (audio/AvatarSoundSynth.js), the engine of what it rides
+// (audio/VehicleEngineVoice.js), animals and residents (audio/CreatureSoundSynth.js)
+// and Editor edits (audio/EditorSoundSynth.js). Every sound is synthesized
+// from noise and oscillators, so nothing is downloaded and there are no audio
+// files to license. What to play comes from the services in application/;
+// these files only decide how it sounds.
 //
 // The AudioContext is made on the first resume(), which the view calls from a
 // user gesture: browsers refuse to start audio before one. While the page is
@@ -13,10 +14,17 @@
 import { AVATAR_SOUND_CUE } from '../core/AvatarSoundCues.js';
 import { playFootstep, playJump, playLanding } from './AvatarSoundSynth.js';
 import { VehicleEngineVoice, hasEngineVoice } from './VehicleEngineVoice.js';
+import { CREATURE_SOUND_CUE } from '../core/CreatureSoundCues.js';
+import {
+    playAnimalCall, playAnimalStep, playCatchOrRelease, playResidentGreet, playResidentSpeech, playResidentStep
+} from './CreatureSoundSynth.js';
+import { playEditorSound, hasEditorSound } from './EditorSoundSynth.js';
 
 const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream'];
 // The avatar's own sounds sit in front of the ambience.
 const EFFECTS_GAIN = 0.7;
+// A placed cue's nodes are let go once it has surely finished.
+const PLACED_CUE_SECONDS = 4;
 
 // Each layer's gain at level 1, balanced by ear so no single layer dominates.
 const LAYER_PEAK = Object.freeze({ wind: 0.4, birds: 0.35, insects: 0.035, water: 0.35, stream: 0.2 });
@@ -38,12 +46,15 @@ export class WebAudioSoundscapeProvider {
         contextFactory = defaultContextFactory,
         documentRef = globalThis.document ?? null,
         random = Math.random,
+        ambience = true,
         setTimeoutFn = globalThis.setTimeout.bind(globalThis),
         clearTimeoutFn = globalThis.clearTimeout.bind(globalThis)
     } = {}) {
         this._contextFactory = contextFactory;
         this._document = documentRef;
         this._random = random;
+        // Without ambience (the Editor) there are no layers or birds, only cues.
+        this._ambience = Boolean(ambience);
         this._setTimeout = setTimeoutFn;
         this._clearTimeout = clearTimeoutFn;
         this._context = null;
@@ -112,6 +123,63 @@ export class WebAudioSoundscapeProvider {
         } else if (cue.kind === AVATAR_SOUND_CUE.LAND) {
             playLanding(...args);
         }
+    }
+
+    // An animal's or resident's sound (core/CreatureSoundCues.js), at the
+    // loudness and left/right position the cue carries. Dropped, like every
+    // cue, unless audio is playing.
+    playCreatureCue(cue) {
+        if (!cue || !this._isPlaying()) {
+            return;
+        }
+        const context = this._context;
+        const level = context.createGain();
+        level.gain.value = Math.min(1, Math.max(0, Number(cue.gain) || 0));
+        let output = level;
+        if (typeof context.createStereoPanner === 'function') {
+            const panner = context.createStereoPanner();
+            panner.pan.value = Math.min(1, Math.max(-1, Number(cue.pan) || 0));
+            level.connect(panner);
+            output = panner;
+        }
+        output.connect(this._effects);
+        const noise = this._effectsNoise;
+        const random = this._random;
+        switch (cue.kind) {
+            case CREATURE_SOUND_CUE.ANIMAL_CALL:
+                playAnimalCall(context, level, noise, cue.species, Boolean(cue.startled), random);
+                break;
+            case CREATURE_SOUND_CUE.ANIMAL_STEP:
+                playAnimalStep(context, level, noise, cue.species, random);
+                break;
+            case CREATURE_SOUND_CUE.CATCH:
+            case CREATURE_SOUND_CUE.RELEASE:
+                playCatchOrRelease(context, level, noise, cue.kind === CREATURE_SOUND_CUE.CATCH, random);
+                break;
+            case CREATURE_SOUND_CUE.RESIDENT_GREET:
+                playResidentGreet(context, level, cue.voice, random);
+                break;
+            case CREATURE_SOUND_CUE.RESIDENT_SPEECH:
+                playResidentSpeech(context, level, cue.voice, cue.syllables, random);
+                break;
+            case CREATURE_SOUND_CUE.RESIDENT_STEP:
+                playResidentStep(context, level, noise, random);
+                break;
+            default:
+                break;
+        }
+        this._setTimeout(() => {
+            level.disconnect();
+            output.disconnect();
+        }, PLACED_CUE_SECONDS * 1000);
+    }
+
+    // An Editor edit's sound (core/EditorSoundCues.js).
+    playEditorCue(cue) {
+        if (!hasEditorSound(cue) || !this._isPlaying()) {
+            return;
+        }
+        playEditorSound(this._context, this._effects, this._effectsNoise, cue);
     }
 
     // `engine` is { vehicleType, load } while riding, null on foot.
@@ -209,7 +277,9 @@ export class WebAudioSoundscapeProvider {
                     // A context that can't resume stays silent.
                 }
             }
-            this._scheduleBird();
+            if (this._ambience) {
+                this._scheduleBird();
+            }
         } else if (context.state === 'running' && typeof context.suspend === 'function') {
             context.suspend().catch(() => {});
         }
@@ -236,11 +306,13 @@ export class WebAudioSoundscapeProvider {
             this._layerGains[layer] = gain;
         }
         const white = this._noiseBuffer(false);
-        const brown = this._noiseBuffer(true);
-        this._buildWind(brown);
-        this._buildWater(brown);
-        this._buildStream(white);
-        this._buildInsects();
+        if (this._ambience) {
+            const brown = this._noiseBuffer(true);
+            this._buildWind(brown);
+            this._buildWater(brown);
+            this._buildStream(white);
+            this._buildInsects();
+        }
         this._effects = context.createGain();
         this._effects.gain.value = EFFECTS_GAIN;
         this._effects.connect(this._master);

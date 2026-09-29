@@ -63,6 +63,7 @@ import { openPublicationLink } from '../application/publication/OpenPublicationL
 import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.js';
 import { WorldSoundscapeService } from '../application/world/WorldSoundscapeService.js';
 import { WebAudioSoundscapeProvider } from '../audio/WebAudioSoundscapeProvider.js';
+import { EditorSoundService } from '../application/editor/EditorSoundService.js';
 import { verifyClaimedBuildPublication } from '../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
 
 const {
@@ -427,13 +428,19 @@ app.provide('placementKnowledgeStore', placementKnowledgeStore);
 app.provide('snapshotPlacementCreationCoordinator', snapshotPlacementCreationCoordinator);
 app.provide('preferredSnapshotPlacementCreationCoordinator', preferredSnapshotPlacementCreationCoordinator);
 app.provide('roleProviderPreferenceStore', roleProviderPreferenceStore);
-// World View's ambient sound; one per visit, sharing this device's sound
+// World View's sound; one per visit, sharing this device's sound
 // preference.
 const soundSettingsStore = new SoundSettingsStore({ storageProvider: new LocalStorageProvider() });
 app.provide('createWorldSoundscape', (options) => new WorldSoundscapeService({
     ...options,
     provider: new WebAudioSoundscapeProvider(),
     settingsStore: soundSettingsStore
+}));
+// The Editor's edit sounds, one per Editor visit, with the same preference.
+app.provide('createEditorSound', ({ editorSession }) => new EditorSoundService({
+    provider: new WebAudioSoundscapeProvider({ ambience: false }),
+    settingsStore: soundSettingsStore,
+    editorSession
 }));
 app.provide('setRoleProviderPreferenceUseCase', setRoleProviderPreferenceUseCase);
 // Only a seed for each Announcement/Discovery picker's own selection, never

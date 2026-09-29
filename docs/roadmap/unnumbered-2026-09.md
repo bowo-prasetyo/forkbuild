@@ -2778,3 +2778,41 @@ sent, and other people don't hear your footsteps.
   no queued cues while suspended or muted, each engine louder and higher at speed, a silent parked bicycle, engines
   fading out and starting once audio does).
 - Not done: other avatars' footsteps and positional sound; animals, residents and the Editor.
+
+## Animal, resident and Editor sounds (unnumbered, 2026-09-29)
+
+**The living things around you are heard now, and so is building. A deer snorts and a rabbit thumps when it looks up
+alert or when you come close, their steps are heard as they wander, and catching or releasing one makes a rustle and
+a rising or falling pluck. A resident hums a hello as it greets you, murmurs in its own voice as it talks, and is
+heard walking by. Each is placed left or right of the camera and fades with distance. In the Editor every edit has a
+short sound of its own, with undo, redo and save sounds, and the same Sound button, `M` and mute setting as World
+View.**
+
+Phase 3 of sound, on the same synthesized provider. As before nothing is downloaded, stored (beyond the existing
+preference) or sent.
+
+- Creatures: `core/CreatureSoundCues.js#advanceCreatureSound()`, a pure step over
+  `WorldNavigationSession#creatureSoundObservation()` (new `application/worldNavigation/soundObservationMethods.js`:
+  `soundListener()`, `animalsForSound()`, `carriedAnimalsForSound()`, `residentsForSound()`). Calls come from the
+  deterministic idle schedule (`idleAction` turning ALERT) and from approach within an animal's look radius; steps from
+  its `gaitPhase`; catch and release from the carried animals changing; a resident's greeting from standing within
+  3.5 m, speech from a new `lastResidentSpeech()`, steps every 0.7 m. Nothing already true when sound starts is played.
+  `placeSound()` gives each cue its distance fade and pan. `WorldSoundscapeService` samples them every 0.1 s of render
+  frames and plays them with `provider.playCreatureCue()` (`audio/CreatureSoundSynth.js`).
+- Editor: `EditorSession#onCommandActivity()` reports the user's own executed, undone and redone commands (a
+  collaborator's arrive through `_remoteApplyingHistory()` and are left out); `core/EditorSoundCues.js` maps every
+  registered command type to one of eleven cues; `application/editor/EditorSoundService.js` plays them, and Save, on
+  `WebAudioSoundscapeProvider({ ambience: false })` with `audio/EditorSoundSynth.js`. The Toolbar emits `saved`.
+- Shared: `application/settings/SoundPreference.js` (mute and volume, used by both services) and
+  `ui/composables/useSoundControls.js` (the Sound button, `M` and gesture unlock, used by both views;
+  `useWorldSoundscape()` is now a thin wrapper). `ui/main.js` provides `createEditorSound`.
+- Docs: `docs/user/03-WorldView.md` and `docs/user/02-TheEditor.md` (Sound), `docs/user/ControlsReference.md`
+  (`M` in both views), `docs/Architecture.md` (Sound).
+- Tests: `tests/CreatureSoundCues.test.js` (distance fade and pan, alert calls once, startle and rearm, steps, catch and
+  release, greetings, speech once and longer for more words, resident steps and voices), the end-to-end
+  `tests/CreatureSoundObservation.test.js` (a real session: listener, a real wild animal caught and released, a real
+  resident talked to, 10 Hz sampling), `tests/EditorSound.test.js` (every registered command has a sound, composites,
+  undo/redo, a real two-replica collaboration where the remote edit is silent, the service and shared preference), and
+  the browser test (every creature and Editor sound audible, panning, distance, no ambience in the Editor).
+- Not done: other avatars' footsteps and vehicles, and true 3D (HRTF) sound; `M` isn't listed in the Editor's
+  Keyboard Shortcuts overlay, which lists the action registry.

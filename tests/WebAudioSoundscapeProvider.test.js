@@ -276,6 +276,81 @@ async function runTests() {
         console.log('✓ engines for every vehicle, following speed');
     }
 
+    // Animals and residents are audible, placed left or right, and quieter far away.
+    {
+        const stereo = async (cue) => {
+            const offline = new OfflineAudioContext(2, SAMPLE_RATE * 2, SAMPLE_RATE);
+            const context = new Proxy(offline, {
+                get(target, prop) {
+                    if (prop === 'state') return 'running';
+                    if (prop === 'resume' || prop === 'suspend' || prop === 'close') return () => Promise.resolve();
+                    const value = Reflect.get(target, prop, target);
+                    return typeof value === 'function' ? value.bind(target) : value;
+                }
+            });
+            const provider = new WebAudioSoundscapeProvider({
+                contextFactory: () => context, documentRef: null, setTimeoutFn: () => 1, clearTimeoutFn: () => {}
+            });
+            provider.setVolume(1);
+            provider.resume();
+            provider.playCreatureCue(cue);
+            const buffer = await offline.startRendering();
+            provider.dispose();
+            return { left: rmsOf(buffer.getChannelData(0)), right: rmsOf(buffer.getChannelData(1)) };
+        };
+        const kinds = [
+            { kind: 'animal-call', species: 'DEER', startled: true },
+            { kind: 'animal-call', species: 'RABBIT' },
+            { kind: 'animal-step', species: 'DEER' },
+            { kind: 'animal-step', species: 'RABBIT' },
+            { kind: 'catch', species: 'RABBIT' },
+            { kind: 'release', species: 'DEER' },
+            { kind: 'resident-greet', voice: 0.3 },
+            { kind: 'resident-speech', voice: 0.7, syllables: 6 },
+            { kind: 'resident-step' }
+        ];
+        for (const cue of kinds) {
+            const { left, right } = await stereo({ ...cue, gain: 1, pan: 0 });
+            assert(left > 0.001 && right > 0.001, `${cue.kind} (${cue.species || cue.voice || ''}) is audible (${left})`);
+        }
+        const onLeft = await stereo({ kind: 'animal-call', species: 'DEER', gain: 1, pan: -1 });
+        assert(onLeft.left > onLeft.right * 5, `a sound to the left is heard on the left (${onLeft.left} vs ${onLeft.right})`);
+        const onRight = await stereo({ kind: 'animal-call', species: 'DEER', gain: 1, pan: 1 });
+        assert(onRight.right > onRight.left * 5, 'a sound to the right is heard on the right');
+        const faint = await stereo({ kind: 'animal-call', species: 'DEER', gain: 0.1, pan: 0 });
+        const loud = await stereo({ kind: 'animal-call', species: 'DEER', gain: 1, pan: 0 });
+        assert(faint.left < loud.left * 0.3, 'a distant animal is quieter');
+        const unknown = await stereo({ kind: 'nonsense', gain: 1, pan: 0 });
+        assert(unknown.left === 0, 'an unknown creature cue plays nothing');
+        console.log('✓ animal and resident sounds, placed and faded');
+    }
+
+    // Every Editor edit sound is audible and short; the Editor has no ambience.
+    {
+        for (const cue of ['place', 'remove', 'move', 'rotate', 'paste', 'color', 'group', 'mark', 'undo', 'redo', 'save']) {
+            const data = await renderEffects(1.5, (p) => p.playEditorCue(cue));
+            const sound = rmsOf(data, 0, SAMPLE_RATE * 0.7);
+            assert(sound > 0.002, `the ${cue} sound is audible (${sound})`);
+            assert(rmsOf(data, SAMPLE_RATE, SAMPLE_RATE * 1.5) < sound * 0.05, `the ${cue} sound is short`);
+        }
+        assert(rmsOf(await renderEffects(1, (p) => p.playEditorCue('nonsense'))) === 0, 'an unknown Editor cue is silent');
+
+        const { offline, context } = runningOffline(2);
+        const timers = [];
+        const editor = new WebAudioSoundscapeProvider({
+            contextFactory: () => context, documentRef: null, ambience: false,
+            setTimeoutFn: (fn) => { timers.push(fn); return timers.length; }, clearTimeoutFn: () => {}
+        });
+        editor.setVolume(1);
+        editor.setLayerLevels({ wind: 1, birds: 1, insects: 1, water: 1, stream: 1 });
+        editor.resume();
+        assert(timers.length === 0, 'no birdsong is scheduled without ambience');
+        const silent = (await offline.startRendering()).getChannelData(0);
+        editor.dispose();
+        assert(rmsOf(silent) === 0, 'without ambience, layer levels make no sound');
+        console.log('✓ Editor sounds, and no ambience in the Editor');
+    }
+
     // Without Web Audio the provider stays silent instead of throwing.
     {
         const provider = new WebAudioSoundscapeProvider({ contextFactory: () => null, documentRef: null });

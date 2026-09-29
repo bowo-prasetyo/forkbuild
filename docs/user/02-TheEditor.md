@@ -421,6 +421,21 @@ controls whether — and how — other people are allowed to fork it. See
 [Publishing & Forking](04-PublishingAndForking.md) for what each license
 means.
 
+## Sound
+
+Each change you make has its own short sound, so you can hear what happened
+without looking: a snap when a brick or structure is placed, a pop when one
+is removed, a tick for a move and a double tick for a turn, a quick run of
+blips for a paste or duplicate, a bright ping for a new color, two notes for
+grouping, a bell for naming a place, a falling blip for undo and a rising
+one for redo, and a small chord when you save. Changes a collaborator makes
+in the same document are silent.
+
+Turn sound off or on with the **Sound** button at the top right of the view
+or by pressing `M`; the slider beside it sets the volume. It's the same
+setting as World View's, remembered on this device. Sound starts with your
+first click or key press, as browsers require.
+
 ## Saving, publishing, starting over
 
 - **Save** (`Ctrl+S`) — keep your work on this device.

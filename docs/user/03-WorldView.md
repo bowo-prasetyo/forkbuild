@@ -95,6 +95,16 @@ thud, heavier after a longer fall. Riding a vehicle, you hear it: a
 bicycle's tyres and freewheel, a motorcycle's buzz, a car's rumble or a
 drone's whine, rising as you speed up and fading when you get off.
 
+The animals and people around you are heard too, from the direction they
+are in and quieter the farther away they are. A deer snorts and a rabbit
+thumps its foot when it looks up alert, and again, startled, when you come
+close; you can hear their steps as they wander by. Catching one makes a
+rustle and a rising pluck, and letting it go the same falling. A resident
+hums a friendly "hm-hm" when it turns to greet you, murmurs in a voice of its
+own when it talks to you, and its footsteps are heard as it strolls past.
+Every visitor hears the same deer look up at the same moment, because when an
+animal does so is part of the World.
+
 Everything is generated in your browser, so nothing is downloaded, and it
 is only heard on your device: other people don't hear your footsteps.
 
