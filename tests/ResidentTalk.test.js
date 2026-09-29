@@ -171,6 +171,8 @@ function runTests() {
         assert(movedFact && Math.abs(movedFact.distance - 50) < 1e-9 && movedFact.direction === 'N', '27. A moved vehicle is where it is now (north is +Z)');
         const ridden = gatherResidentFacts({ position: home, seed: SEED, timeSeconds: T, vehicleRuntime: vehicles, mountedVehicleId: moved.id });
         assert(!ridden.some((f) => f.key === moved.id), '28. Nor is the vehicle you are riding');
+        const riddenByOther = gatherResidentFacts({ position: home, seed: SEED, timeSeconds: T, vehicleRuntime: vehicles, riddenVehicleIds: [moved.id] });
+        assert(!riddenByOther.some((f) => f.key === moved.id), '28b. Nor one someone else is riding');
         if (wild.length > 0) {
             assert(!of(RESIDENT_FACT_KIND.ANIMAL).some((f) => f.key === wild[0].id), '29. A caught animal is never mentioned');
         }

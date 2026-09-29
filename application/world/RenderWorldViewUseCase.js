@@ -12,6 +12,7 @@ import { AvatarRenderer } from '../../renderer/AvatarRenderer.js';
 import { AvatarVisual } from '../../renderer/AvatarVisual.js';
 import { RemoteSpatialPresenceRenderer } from '../../renderer/RemoteSpatialPresenceRenderer.js';
 import { VehicleFieldRenderer } from '../../renderer/VehicleFieldRenderer.js';
+import { RemoteRiderVehicles } from '../../renderer/RemoteRiderVehicles.js';
 import { AnimalFieldRenderer } from '../../renderer/AnimalFieldRenderer.js';
 import { AnimalPresence } from '../../core/AnimalPresence.js';
 import { ResidentFieldRenderer } from '../../renderer/ResidentFieldRenderer.js';
@@ -104,6 +105,8 @@ export class RenderWorldViewUseCase {
         // never a document/placement fact (see core/VehicleInstance.js's
         // own header), so this has nothing to look up a mesh for.
         const vehicleFieldRenderer = new VehicleFieldRenderer();
+        // Vehicles other players ride, drawn under them.
+        const remoteRiderVehicles = new RemoteRiderVehicles();
         // 0.9.701 — Released Animal Rendering. The animal-side twin of
         // vehicleFieldRenderer immediately above, for the identical
         // reason — see renderer/AnimalFieldRenderer.js's own header.
@@ -275,6 +278,16 @@ export class RenderWorldViewUseCase {
         // formula, just the one lift, applied once.
         function resolveAvatarRenderPosition(position, ridingVehicle) {
             return ridingVehicle ? position : withGroundElevation(position);
+        }
+
+        // Another player's avatar where it is drawn: a rider sits on its vehicle,
+        // whose position already has the ground in it, so it isn't lifted again.
+        function placeRemoteAvatar(avatarId, visual, presenceLike) {
+            const riding = remoteRiderVehicles.isRiding(avatarId);
+            visual.setPose(resolveAvatarRenderPosition(presenceLike.position, riding), presenceLike.rotation);
+            if (riding) {
+                remoteRiderVehicles.place(avatarId, presenceLike.position, presenceLike.rotation ? presenceLike.rotation.y : 0);
+            }
         }
 
         return {
@@ -461,7 +474,7 @@ export class RenderWorldViewUseCase {
                     }
                 }
                 visual.setAppearance(template, appearance);
-                visual.setPose(withGroundElevation(presenceLike.position), presenceLike.rotation);
+                placeRemoteAvatar(avatarId, visual, presenceLike);
                 visual.setAnimation(presenceLike.animation);
             },
             // The cheap per-frame path — pose/animation only, never
@@ -473,8 +486,20 @@ export class RenderWorldViewUseCase {
                 if (!visual) {
                     return;
                 }
-                visual.setPose(withGroundElevation(presenceLike.position), presenceLike.rotation);
+                placeRemoteAvatar(avatarId, visual, presenceLike);
                 visual.setAnimation(presenceLike.animation);
+            },
+            // What another player rides (a vehicle type, or null), from
+            // application/worldNavigation/remoteVehicleMethods.js once a frame
+            // before their presence is drawn.
+            setRemoteAvatarVehicle: (avatarId, vehicleType) => {
+                const { added, removed } = remoteRiderVehicles.setRiding(avatarId, vehicleType || null);
+                if (removed) {
+                    renderer.remove(removed);
+                }
+                if (added && remoteAvatarsVisible) {
+                    renderer.add(added);
+                }
             },
             // 0.2.41 — the remote-avatar counterpart to
             // updateLocalAvatarAppearance: called only by
@@ -514,6 +539,10 @@ export class RenderWorldViewUseCase {
                 visual.setGesture(interactionKind);
             },
             removeRemoteAvatar: (avatarId) => {
+                const vehicle = remoteRiderVehicles.remove(avatarId);
+                if (vehicle) {
+                    renderer.remove(vehicle);
+                }
                 const visual = remoteAvatarVisuals.get(avatarId);
                 if (!visual) {
                     return;
@@ -708,11 +737,11 @@ export class RenderWorldViewUseCase {
             // Object3Ds are actually in the scene.
             setRemoteAvatarsVisible: (visible) => {
                 remoteAvatarsVisible = visible;
-                for (const visual of remoteAvatarVisuals.values()) {
+                for (const root of [...Array.from(remoteAvatarVisuals.values(), (visual) => visual.root), ...remoteRiderVehicles.roots()]) {
                     if (visible) {
-                        renderer.add(visual.root);
+                        renderer.add(root);
                     } else {
-                        renderer.remove(visual.root);
+                        renderer.remove(root);
                     }
                 }
             },
@@ -730,6 +759,10 @@ export class RenderWorldViewUseCase {
                     visual.dispose();
                 }
                 remoteAvatarVisuals.clear();
+                for (const root of remoteRiderVehicles.roots()) {
+                    renderer.remove(root);
+                }
+                remoteRiderVehicles.dispose();
                 for (const deviceId of remoteSpatialPresenceRenderer.trackedDeviceIds()) {
                     const object = remoteSpatialPresenceRenderer.getObject(deviceId);
                     if (object) {

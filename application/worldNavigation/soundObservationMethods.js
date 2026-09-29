@@ -9,6 +9,7 @@
 import { wildlifeInRegionAt, stationaryAnimalPoseAt } from '../../core/WildlifeMotion.js';
 import { InventoryEntryKind } from '../../core/AvatarInventory.js';
 import { terrainHeightAt } from '../../core/TerrainHeightField.js';
+import { RIDER_RANGE } from '../../core/CreatureSoundCues.js';
 
 // Nothing farther than this is heard (core/CreatureSoundCues.js).
 export const CREATURE_EARSHOT = 30;
@@ -127,8 +128,10 @@ export const soundObservationMethods = {
 
     // Other players within `radius` of `center`, where they are drawn now:
     // { id, position (the presence's own, for footsteps), y (drawn height),
-    // animation }. None while other avatars are hidden: you hear who you see.
-    remoteAvatarsForSound(center, radius = CREATURE_EARSHOT) {
+    // animation, vehicleType (what it rides, null on foot) }. Riders are heard
+    // farther than walkers, so the default reaches their engines. None while
+    // other avatars are hidden: you hear who you see.
+    remoteAvatarsForSound(center, radius = RIDER_RANGE) {
         if (!center || !this._remoteAvatarRegistry || !this._remoteAvatarsVisible) {
             return [];
         }
@@ -140,11 +143,15 @@ export const soundObservationMethods = {
             if (!presence || !presence.position) continue;
             const { x, y, z } = presence.position;
             if (Math.hypot(x - center.x, z - center.z) > radius) continue;
+            const riding = this.remoteAvatarVehicle(avatarId);
             heard.push({
                 id: avatarId,
                 position: { x, y, z },
-                y: terrainHeightAt(seed, x, z) + y,
-                animation: presence.animation
+                // A rider's position already carries terrain height, as the
+                // local rider's does.
+                y: riding ? y : terrainHeightAt(seed, x, z) + y,
+                animation: presence.animation,
+                vehicleType: riding ? riding.vehicleType : null
             });
         }
         return heard;

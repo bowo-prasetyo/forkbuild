@@ -2,12 +2,14 @@
 // second and hands the resulting layer levels to a sound provider, which fades
 // between them; every render frame, turns what the local avatar is doing into
 // footsteps, jumps, landings and a vehicle engine; and ten times a second,
-// turns the animals and residents around it into calls, steps and speech.
+// turns the animals, residents and other players around it into calls, steps,
+// speech and the engines of what the players ride.
 // Owns the device's mute and volume preference.
 //
 // The provider is an adapter (audio/WebAudioSoundscapeProvider.js in the
 // browser) with resume(), setLayerLevels(levels), playCue(cue),
 // playCreatureCue(cue), playEditorCue(cue), setEngine(engine),
+// setRemoteEngines(engines),
 // setListener(pose), setSpatial(spatial), setVolume(volume), setMuted(muted)
 // and dispose().
 // Browsers keep audio silent until the user interacts with the page, so the
@@ -128,13 +130,14 @@ export class WorldSoundscapeService {
         if (this._disposed || !this._creatureObservation) {
             return;
         }
-        const { state, cues } = advanceCreatureSound(this._creatureSoundState, this._creatureObservation(), {
+        const { state, cues, engines } = advanceCreatureSound(this._creatureSoundState, this._creatureObservation(), {
             seed: this._seed, deltaSeconds
         });
         this._creatureSoundState = state;
         for (const cue of cues) {
             this._provider.playCreatureCue(cue);
         }
+        this._provider.setRemoteEngines(engines);
     }
 
     _updateEngine(engine) {

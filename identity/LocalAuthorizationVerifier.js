@@ -3,6 +3,7 @@ import { Signature } from '../core/Signature.js';
 import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvertisement.js';
 import { getAvatarProfileSigningDescriptor } from '../core/AvatarProfileAdvertisement.js';
 import { getAvatarInteractionSigningDescriptor } from '../core/AvatarInteractionAdvertisement.js';
+import { getAvatarVehicleSigningDescriptor } from '../core/AvatarVehicleAdvertisement.js';
 import { getFriendshipSigningDescriptor } from '../core/FriendshipAdvertisement.js';
 import { getRendezvousPublicationSigningDescriptor } from '../core/RendezvousPublicationEnvelope.js';
 import { getLobbyCardSigningDescriptor } from '../core/LobbyCard.js';
@@ -204,6 +205,29 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getAvatarInteractionSigningDescriptor(advertisement), advertisement.signature, identity);
+    }
+
+    // What an avatar rides (core/AvatarVehicleAdvertisement.js): the same shape
+    // as verifyAvatarProfileAdvertisement(), the did:key signer being the
+    // public key. Unsigned is tolerated here, as for presence;
+    // application/avatar/AvatarVehicleTrustBoundary.js decides the rest.
+    verifyAvatarVehicleAdvertisement(advertisement) {
+        if (!advertisement) {
+            return { valid: false, signed: false, reason: 'no advertisement' };
+        }
+        if (!advertisement.signature) {
+            return { valid: true, signed: false, reason: 'unsigned vehicle advertisement' };
+        }
+        const sig = Signature.fromJSON(advertisement.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getAvatarVehicleSigningDescriptor(advertisement), advertisement.signature, identity);
     }
 
     // 0.2.57 — unlike verifyPresenceAdvertisement()/

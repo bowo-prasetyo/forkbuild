@@ -42,7 +42,9 @@ of backups.
 - **Peers you connect to** learn your identity's public key, and your IP
   address (a direct connection needs it; a TURN relay hides it from the peer
   but not from the relay). Connected peers can see your avatar and presence
-  according to its visibility setting, and your friends can message you.
+  according to its visibility setting, including which vehicle you are riding
+  (its type and id, sent only while presence would be; where you left a
+  vehicle is never sent), and your friends can message you.
   They also receive the Snapshot and Place Naming announcements your device
   has discovered, so they learn which World regions you have searched for
   place names (docs/AnnouncementIndex.md).

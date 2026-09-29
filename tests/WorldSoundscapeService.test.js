@@ -26,6 +26,7 @@ class FakeProvider {
     playCue(cue) { this.calls.push(`cue:${cue.kind}`); }
     playEditorCue(cue) { this.calls.push(`edit:${cue}`); }
     setEngine(engine) { this.calls.push(engine ? `engine:${engine.vehicleType}:${engine.load.toFixed(2)}` : 'engine:off'); }
+    setRemoteEngines(engines) { this.remoteEngines = engines; }
     dispose() { this.disposed = true; }
 }
 

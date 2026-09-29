@@ -119,7 +119,11 @@ animal does so is part of the World.
 Other people's avatars are heard too: their footsteps on whatever they are
 walking on, and their jumps and landings, from where they are. Only the people
 you can see are heard; hide other avatars and they fall silent. Someone riding
-a vehicle isn't heard yet.
+a vehicle is heard riding it, up to 40 m away: its engine rising and falling
+with their speed, their getting on and off, and a squeal when they slow down
+sharply (braking itself isn't sent, so a hard stop is taken for it). Only
+the three nearest riders' engines play, so a crowd doesn't drown out the
+rest.
 
 Sounds around you are placed in **3D**: ahead or behind, above or below, as
 well as left or right, turning as you turn the camera. It's best with
@@ -127,8 +131,9 @@ headphones. The **3D** button beside the volume slider switches to plain left
 and right (**Stereo**), which may suit a slow device or speakers better.
 
 Everything is generated in your browser, so nothing is downloaded and no
-sound is ever sent. Other people hear your footsteps the way you hear theirs:
-their browser makes them from where it already sees your avatar walking.
+sound is ever sent. Other people hear your footsteps and your vehicle the way
+you hear theirs: their browser makes them from where it already sees your
+avatar walking or riding.
 
 Browsers don't let a page play sound until you interact with it, so sound
 starts with your first click, tap or key press. Turn it off or on with the

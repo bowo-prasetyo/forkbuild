@@ -267,7 +267,7 @@ property order (core/Signature.js):
 replayed as another. core/Signature.js's `SignatureType` lists the first
 types (`publication`, `placement-record`, `spatial-index-root`,
 `avatar-presence`, `avatar-profile`, `avatar-interaction`,
-`peer-authentication`); each later envelope defines its own type in its
+`avatar-vehicle`, `peer-authentication`); each later envelope defines its own type in its
 `get…SigningDescriptor()`. The signature itself is stored as:
 
     { algorithm: 'Ed25519', signer, signature, signedHash, domain, signedAt }
@@ -393,6 +393,7 @@ reads `payload`.
 | `forkbuild:avatar-presence` | core/AvatarPresenceAdvertisement.js | where an avatar is |
 | `forkbuild:avatar-profile` | core/AvatarProfileAdvertisement.js | what an avatar looks like |
 | `forkbuild:avatar-interaction` | core/AvatarInteractionAdvertisement.js | gestures |
+| `forkbuild:avatar-vehicle` | core/AvatarVehicleAdvertisement.js | what an avatar rides |
 | `forkbuild:avatar-inventory-transfer` | application/avatar/AvatarInventoryTransferPeerProtocol.js | see "Avatar Inventory Transfer (0.9.702)" |
 | `forkbuild:identity-lifecycle` | core/IdentityLifecycleGossip.js | succession and revocation records |
 | `forkbuild:device-authorization` | core/DeviceAuthorizationGossip.js | device grants and revocations |
@@ -479,6 +480,8 @@ regardless of which peer relayed them.
                     appearance, displayName, signature? }
     interaction:  { avatarId, ownerIdentity, interactionId, kind, targetAvatarId,
                     sequence, timestamp, signature? }
+    vehicle:      { avatarId, ownerIdentity, riding, vehicleId, vehicleType,
+                    sequence, signature? }
 
 - `animation` is IDLE, WALKING, RUNNING or JUMPING; gesture `kind` is
   GREET, WAVE or POINT and never appears in `animation`.
@@ -489,6 +492,23 @@ regardless of which peer relayed them.
   LOCAL, HIDDEN) decides whether it is sent at all.
 - There is no proximity message. Nearness is always derived locally
   from presence already received.
+- The vehicle message says what an avatar rides. `riding` is true only
+  with a `vehicleType` of bicycle, motorcycle, car or drone and a
+  `vehicleId` (1 to 200 characters); on foot, both are null. It is
+  signed as type `avatar-vehicle` over all six fields, with `avatarId`
+  as the id and `sequence` as the revision, and judged like presence:
+  signature, blocking, the avatar's bound signer, replay, a second
+  claim at one `sequence` (equivocation), then order. It is sent when
+  the avatar gets on or off and every 2 s while nothing changes, only
+  where presence would be sent, and never persisted. It is a message of
+  its own, not a presence field, so older clients, which don't know the
+  protocol id, ignore it and still accept presence.
+- A receiver draws the vehicle under a rider, at the rider's position
+  (which already includes the ground height), facing the way it
+  travels, and hides and refuses to mount its own copy of that
+  `vehicleId` while it is ridden. Where a vehicle stands when nobody
+  rides it is not sent: once the rider gets off, each replica shows it
+  where it last had it.
 
 ## World collaboration
 
@@ -1408,7 +1428,8 @@ derived from its lattice cell (`core/AnimalIdentity.js`):
 Two replicas, or one replica returning to a tile, compute the same id for the same animal. Catching removes that id
 from the local field (`AnimalRuntimeInstances` excludes it). Releasing creates a runtime animal with a fresh id.
 Neither is sent to peers: caught and released animals, and placed vehicles, are local state persisted under
-`avatar-inventory`, `vehicle-runtime-instances` and `animal-runtime-instances`.
+`avatar-inventory`, `vehicle-runtime-instances` and `animal-runtime-instances`. Only which vehicle an avatar is
+riding is sent, on `forkbuild:avatar-vehicle` (see "Presence, profiles and interactions").
 
 ### Avatar Inventory Transfer (0.9.702)
 

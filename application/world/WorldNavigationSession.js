@@ -32,6 +32,7 @@ import { stateQueryMethods } from '../worldNavigation/stateQueryMethods.js';
 import { worldStreamingMethods } from '../worldNavigation/worldStreamingMethods.js';
 import { documentOperationMethods } from '../worldNavigation/documentOperationMethods.js';
 import { soundObservationMethods } from '../worldNavigation/soundObservationMethods.js';
+import { remoteVehicleMethods } from '../worldNavigation/remoteVehicleMethods.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
 import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
 import { describeCommand } from '../commands/describeCommand.js';
@@ -106,6 +107,8 @@ export class WorldNavigationSession {
         presenceVisibilityUseCase = null,
         avatarProfileBroadcastProvider = null,
         avatarInteractionBroadcastProvider = null,
+        // What each avatar rides, on its own channel (core/AvatarVehicleAdvertisement.js).
+        avatarVehicleBroadcastProvider = null,
         avatarProfileVisibilityUseCase = null,
         hasFriend = null,
         isBlocked = null,
@@ -326,6 +329,12 @@ export class WorldNavigationSession {
         // _applyRemoteAvatarInteraction/_expireRemoteAvatarGestures.
         this._avatarInteractionBroadcastProvider = avatarInteractionBroadcastProvider;
         this._avatarInteractionSyncService = null;
+        this._avatarVehicleBroadcastProvider = avatarVehicleBroadcastProvider;
+        this._avatarVehicleSyncService = null;
+        // What was last sent about the local avatar's vehicle, and when.
+        this._advertisedRidingKey = null;
+        this._lastVehicleAdvertisedAt = 0;
+        this._vehicleAdvertisementSequence = 0;
         this._localInteractionSequence = 0;
         this._remoteAvatarGestureExpiry = new Map();
         // Raw DiscoveryDiagnostics from the most recent
@@ -618,7 +627,12 @@ export class WorldNavigationSession {
             if (!position) {
                 return;
             }
-            this._session.syncVehicles(this._vehicleRuntimeInstances.sync(this.getWorldSeed(), position));
+            // A vehicle another player rides is drawn under them, not here too.
+            const riddenByOthers = this._remotelyRiddenVehicleIds();
+            const instances = this._vehicleRuntimeInstances.sync(this.getWorldSeed(), position);
+            this._session.syncVehicles(riddenByOthers.size > 0
+                ? instances.filter((instance) => !riddenByOthers.has(instance.id))
+                : instances);
         });
     }
 
@@ -813,6 +827,12 @@ export class WorldNavigationSession {
             this._avatarInteractionSyncService.dispose();
             this._avatarInteractionSyncService = null;
         }
+        if (this._avatarVehicleSyncService) {
+            this._avatarVehicleSyncService.dispose();
+            this._avatarVehicleSyncService = null;
+        }
+        this._advertisedRidingKey = null;
+        this._lastVehicleAdvertisedAt = 0;
         this._localInteractionSequence = 0;
         this._remoteAvatarGestureExpiry.clear();
         // Never leave a subscription on the app-wide peer bus. An offer still in
@@ -880,5 +900,6 @@ installMethods(
     stateQueryMethods,
     worldStreamingMethods,
     documentOperationMethods,
-    soundObservationMethods
+    soundObservationMethods,
+    remoteVehicleMethods
 );

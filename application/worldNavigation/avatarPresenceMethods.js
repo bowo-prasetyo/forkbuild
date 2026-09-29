@@ -99,6 +99,7 @@ export const avatarPresenceMethods = {
             defaultTemplate, defaultAppearance,
             appearanceResolver: this._remoteAvatarAppearanceRegistry
         });
+        this._setupRemoteVehicles(localAvatarId, isBlocked);
         if (typeof this._session.setRemoteAvatarsVisible === 'function') {
             this._session.setRemoteAvatarsVisible(this._remoteAvatarsVisible);
         }
@@ -115,6 +116,8 @@ export const avatarPresenceMethods = {
                 }
                 const knownPresences = this._presenceSyncService.pull(now);
                 this._remoteAvatarRegistry.sync(knownPresences, now);
+                // Before tick(): a rider is drawn on its vehicle, not lifted off the ground.
+                this._syncRemoteVehicles();
                 this._remoteAvatarRegistry.tick(now);
                 // Both reuse this frame's knownPresences; no extra query.
                 this._pruneAvatarInteractionIfGone(knownPresences);

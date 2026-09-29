@@ -2877,3 +2877,38 @@ preference. Other players' vehicles need a presence change and stay a separate m
   HRTF: right and left ears, straight ahead, a turned listener, distance left to the cue's gain, the stereo fallback,
   and the 3D button).
 - Not done: vehicles other people ride; a player's landing weight (their vertical speed isn't sent).
+
+## Other players' vehicles, seen and heard (unnumbered, 2026-09-29)
+
+**Someone riding a bicycle, motorcycle, car or drone is now seen riding it: the vehicle is drawn under them, facing
+the way they go, and heard: its engine following their speed from where they are, their getting on and off, and a
+squeal when they stop sharply. Your own copy of a vehicle someone else rides disappears and can't be mounted
+meanwhile.**
+
+What an avatar rides travels as its own signed message on `forkbuild:avatar-vehicle`, not as a presence field, so
+older clients keep accepting presence and simply don't see riders. Where a vehicle stands unridden stays each
+replica's own, as before: after a dismount the vehicle reappears for others wherever their replica last had it.
+
+- Message: `core/AvatarVehicleAdvertisement.js` (`{ avatarId, ownerIdentity, riding, vehicleId, vehicleType,
+  sequence }`, signing type `avatar-vehicle`), `LocalAuthorizationVerifier#verifyAvatarVehicleAdvertisement()`,
+  `AvatarVehicleTrustBoundary`, `AvatarVehicleSigning`, `AvatarVehicleSyncService`; wired in `CreateWorldViewUseCase`
+  like the profile and interaction channels, gated by the presence visibility policy.
+- Session: `application/worldNavigation/remoteVehicleMethods.js` sends on getting on or off and every 2 s, takes in
+  others' each frame, hides ridden vehicles from `syncVehicles()`, from mounting (`isTakenByOther` on
+  `AvatarVehicleInteractionController`) and from what residents mention (`riddenVehicleIds` in
+  `ResidentSurroundings`).
+- Drawing: `renderer/RemoteRiderVehicles.js` and `setRemoteAvatarVehicle()` on the render facade; a remote rider is no
+  longer lifted by the ground height twice.
+- Sound: `core/CreatureSoundCues.js` runs each player through its vehicle, adds PLAYER_MOUNT/DISMOUNT/BRAKE (braking
+  estimated from a sharp slowdown) and returns the nearest three riders' engines within 40 m;
+  `WebAudioSoundscapeProvider#setRemoteEngines()` keeps a placed engine voice per rider.
+- Docs: `docs/Protocol.md`, `docs/Privacy.md`, `docs/Architecture.md` (Riding, Sound), the principle "Others See What
+  You Ride, Never Where You Parked", `docs/user/06-AvatarsAndPresence.md` and `docs/user/03-WorldView.md`.
+- Tests: `tests/RemoteRiderVehicles.test.js` (message shape and signing; the trust boundary; two real sessions over
+  in-memory channels: getting on is told once and drawn for the other, their copy hidden and not mountable, the
+  heartbeat, getting off, heard riding at the drawn height), `tests/RemoteRiderVehiclesRenderer.test.js`,
+  `tests/ResidentTalk.test.js` (a vehicle someone else rides isn't mentioned),
+  `tests/CreatureSoundCues.test.js` (engines follow speed, getting on and off, one brake for a sharp stop and none
+  for easing off, the nearest three within 40 m) and the browser test (placed engine voices per vehicle, 3D and
+  stereo, fading out, rider cues). Checked in the real app with two identities in two browsers.
+- Not done: sharing where a vehicle was left; a stored or newly deployed vehicle is seen by others only while ridden.
