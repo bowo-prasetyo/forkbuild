@@ -430,11 +430,10 @@ app.provide('roleProviderPreferenceStore', roleProviderPreferenceStore);
 // World View's ambient sound; one per visit, sharing this device's sound
 // preference.
 const soundSettingsStore = new SoundSettingsStore({ storageProvider: new LocalStorageProvider() });
-app.provide('createWorldSoundscape', ({ listenerPosition, seed }) => new WorldSoundscapeService({
+app.provide('createWorldSoundscape', (options) => new WorldSoundscapeService({
+    ...options,
     provider: new WebAudioSoundscapeProvider(),
-    settingsStore: soundSettingsStore,
-    listenerPosition,
-    seed
+    settingsStore: soundSettingsStore
 }));
 app.provide('setRoleProviderPreferenceUseCase', setRoleProviderPreferenceUseCase);
 // Only a seed for each Announcement/Discovery picker's own selection, never

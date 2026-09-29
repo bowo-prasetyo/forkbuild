@@ -1,14 +1,22 @@
-// Plays World View's ambient layers with the Web Audio API. Every sound is
+// Plays World View's sound with the Web Audio API: the ambient layers, the
+// local avatar's footsteps, jumps and landings (audio/AvatarSoundSynth.js) and
+// the engine of what it rides (audio/VehicleEngineVoice.js). Every sound is
 // synthesized from noise and oscillators, so nothing is downloaded and there
-// are no audio files to license. Levels come from
-// application/world/WorldSoundscapeService.js; this file only decides how
-// each layer sounds.
+// are no audio files to license. What to play comes from
+// application/world/WorldSoundscapeService.js; these files only decide how it
+// sounds.
 //
 // The AudioContext is made on the first resume(), which the view calls from a
 // user gesture: browsers refuse to start audio before one. While the page is
 // hidden or sound is muted the context is suspended, so it costs no CPU.
 
+import { AVATAR_SOUND_CUE } from '../core/AvatarSoundCues.js';
+import { playFootstep, playJump, playLanding } from './AvatarSoundSynth.js';
+import { VehicleEngineVoice, hasEngineVoice } from './VehicleEngineVoice.js';
+
 const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream'];
+// The avatar's own sounds sit in front of the ambience.
+const EFFECTS_GAIN = 0.7;
 
 // Each layer's gain at level 1, balanced by ear so no single layer dominates.
 const LAYER_PEAK = Object.freeze({ wind: 0.4, birds: 0.35, insects: 0.035, water: 0.35, stream: 0.2 });
@@ -41,6 +49,10 @@ export class WebAudioSoundscapeProvider {
         this._context = null;
         this._master = null;
         this._layerGains = {};
+        this._effects = null;
+        this._effectsNoise = null;
+        this._engineVoice = null;
+        this._engine = null;
         this._sources = [];
         this._levels = Object.fromEntries(LAYERS.map((layer) => [layer, 0]));
         this._volume = 0.5;
@@ -85,6 +97,42 @@ export class WebAudioSoundscapeProvider {
         }
     }
 
+    // A footstep, jump or landing (core/AvatarSoundCues.js). Dropped unless
+    // audio is playing: a suspended context would otherwise play every queued
+    // cue at once when it resumes.
+    playCue(cue) {
+        if (!cue || !this._isPlaying()) {
+            return;
+        }
+        const args = [this._context, this._effects, this._effectsNoise, cue.surface, cue.intensity, this._random];
+        if (cue.kind === AVATAR_SOUND_CUE.FOOTSTEP) {
+            playFootstep(...args);
+        } else if (cue.kind === AVATAR_SOUND_CUE.JUMP) {
+            playJump(...args);
+        } else if (cue.kind === AVATAR_SOUND_CUE.LAND) {
+            playLanding(...args);
+        }
+    }
+
+    // `engine` is { vehicleType, load } while riding, null on foot.
+    setEngine(engine) {
+        this._engine = engine && hasEngineVoice(engine.vehicleType) ? engine : null;
+        if (!this._context) {
+            return;
+        }
+        if (this._engineVoice && (!this._engine || this._engineVoice.vehicleType !== this._engine.vehicleType)) {
+            this._engineVoice.stop();
+            this._engineVoice = null;
+        }
+        if (!this._engine) {
+            return;
+        }
+        if (!this._engineVoice) {
+            this._engineVoice = new VehicleEngineVoice(this._context, this._effects, this._effectsNoise, this._engine.vehicleType, this._random);
+        }
+        this._engineVoice.setLoad(this._engine.load);
+    }
+
     setVolume(volume) {
         const value = Number(volume);
         if (!Number.isFinite(value)) {
@@ -120,6 +168,10 @@ export class WebAudioSoundscapeProvider {
             }
         }
         this._sources = [];
+        if (this._engineVoice) {
+            this._engineVoice.stop();
+            this._engineVoice = null;
+        }
         if (this._context && typeof this._context.close === 'function' && this._context.state !== 'closed') {
             this._context.close().catch(() => {});
         }
@@ -134,6 +186,10 @@ export class WebAudioSoundscapeProvider {
             return;
         }
         this._master.gain.setTargetAtTime(this._masterTarget(), this._context.currentTime, VOLUME_TIME_CONSTANT);
+    }
+
+    _isPlaying() {
+        return Boolean(this._context) && this._context.state === 'running' && this._shouldRun();
     }
 
     _shouldRun() {
@@ -185,6 +241,13 @@ export class WebAudioSoundscapeProvider {
         this._buildWater(brown);
         this._buildStream(white);
         this._buildInsects();
+        this._effects = context.createGain();
+        this._effects.gain.value = EFFECTS_GAIN;
+        this._effects.connect(this._master);
+        this._effectsNoise = white;
+        if (this._engine) {
+            this.setEngine(this._engine);
+        }
     }
 
     _noiseBuffer(brown) {

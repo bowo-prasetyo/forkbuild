@@ -1,17 +1,22 @@
-// World View's ambient sound: samples the land around the listener a few
-// times a second and hands the resulting layer levels to a sound provider,
-// which fades between them. Owns the device's mute and volume preference.
+// World View's sound: samples the land around the listener a few times a
+// second and hands the resulting layer levels to a sound provider, which fades
+// between them; and, every render frame, turns what the local avatar is doing
+// into footsteps, jumps, landings and a vehicle engine. Owns the device's mute
+// and volume preference.
 //
 // The provider is an adapter (audio/WebAudioSoundscapeProvider.js in the
-// browser) with resume(), setLayerLevels(levels), setVolume(volume),
-// setMuted(muted) and dispose(). Browsers keep audio silent until the user
-// interacts with the page, so the view calls unlock() from its first key
-// press or tap.
+// browser) with resume(), setLayerLevels(levels), playCue(cue),
+// setEngine(engine), setVolume(volume), setMuted(muted) and dispose().
+// Browsers keep audio silent until the user interacts with the page, so the
+// view calls unlock() from its first key press or tap.
 import { ambientMixAt, silentAmbientMix } from '../../core/AmbientSoundscape.js';
+import { advanceAvatarSound, createAvatarSoundState } from '../../core/AvatarSoundCues.js';
 
 const DEFAULT_SAMPLE_INTERVAL_MS = 250;
 // Moving less than this since the last sample can't change what is heard.
 const RESAMPLE_DISTANCE = 0.5;
+// An engine's load changes smaller than this aren't worth a new ramp.
+const ENGINE_LOAD_STEP = 0.02;
 
 export class WorldSoundscapeService {
     constructor({
@@ -19,6 +24,8 @@ export class WorldSoundscapeService {
         settingsStore,
         listenerPosition,
         seed,
+        avatarObservation = null,
+        onRenderFrame = null,
         sampleIntervalMs = DEFAULT_SAMPLE_INTERVAL_MS,
         setIntervalFn = globalThis.setInterval.bind(globalThis),
         clearIntervalFn = globalThis.clearInterval.bind(globalThis)
@@ -36,6 +43,11 @@ export class WorldSoundscapeService {
         this._settings = settingsStore.get();
         this._interval = null;
         this._lastSampledAt = null;
+        this._avatarObservation = typeof avatarObservation === 'function' ? avatarObservation : null;
+        this._onRenderFrame = typeof onRenderFrame === 'function' ? onRenderFrame : null;
+        this._avatarSoundState = createAvatarSoundState();
+        this._engine = null;
+        this._frameUnsubscribe = null;
         this._disposed = false;
     }
 
@@ -47,6 +59,37 @@ export class WorldSoundscapeService {
         this._provider.setMuted(this._settings.muted);
         this.sample();
         this._interval = this._setInterval(() => this.sample(), this._sampleIntervalMs);
+        if (this._avatarObservation && this._onRenderFrame) {
+            this._frameUnsubscribe = this._onRenderFrame((deltaSeconds) => this.frame(deltaSeconds));
+        }
+    }
+
+    // One render frame of the local avatar's own sounds.
+    frame(deltaSeconds) {
+        if (this._disposed || !this._avatarObservation) {
+            return;
+        }
+        const { state, cues, engine } = advanceAvatarSound(
+            this._avatarSoundState, this._avatarObservation(), deltaSeconds, this._seed
+        );
+        this._avatarSoundState = state;
+        for (const cue of cues) {
+            this._provider.playCue(cue);
+        }
+        this._updateEngine(engine);
+    }
+
+    _updateEngine(engine) {
+        const current = this._engine;
+        if (!engine && !current) {
+            return;
+        }
+        if (engine && current && engine.vehicleType === current.vehicleType
+            && Math.abs(engine.load - current.load) < ENGINE_LOAD_STEP) {
+            return;
+        }
+        this._engine = engine;
+        this._provider.setEngine(engine);
     }
 
     // Called from a user gesture: the only moment a browser lets audio start.
@@ -110,6 +153,10 @@ export class WorldSoundscapeService {
         if (this._interval !== null) {
             this._clearInterval(this._interval);
             this._interval = null;
+        }
+        if (typeof this._frameUnsubscribe === 'function') {
+            this._frameUnsubscribe();
+            this._frameUnsubscribe = null;
         }
         this._provider.dispose();
     }

@@ -2744,3 +2744,37 @@ Footsteps, vehicles, animals, residents and Editor sounds are later phases, buil
   World View's `M` key and gesture unlock).
 - Not done: no sound in the Editor; no positional sound; recorded sounds could replace the synthesized ones later
   without changing the service.
+
+## Footsteps, jumps, landings and vehicle engines (unnumbered, 2026-09-29)
+
+**Your avatar is now heard as well as the land: footsteps that keep time with its walk or run and change with what
+is underfoot (grass, forest leaves, beach sand, stone, water, bricks), a whoosh as it jumps and a thud as it lands,
+and, while riding, the vehicle itself — a bicycle's tyres, a motorcycle's buzz, a car's rumble, a drone's whine —
+rising with speed.**
+
+Phase 2 of World View's sound, on the same synthesized Web Audio provider as the ambience, so still no audio files,
+no server and no policy change. Everything is derived from what the avatar already does; nothing new is stored or
+sent, and other people don't hear your footsteps.
+
+- Cues: `core/AvatarSoundCues.js`. `advanceAvatarSound()` is a pure per-frame step over
+  `{ position, animation, verticalState, vehicleType }`. Footsteps are counted by distance at one per leg swing of
+  the existing gait (0.75 m walking, 0.94 m running), so being blocked is silent and teleports make none;
+  `footstepSurfaceAt()` reads the ecology zone, rivers, and whether the avatar stands on bricks. A jump is leaving the
+  ground; a landing needs 0.15 s in the air, so stair steps don't thud. An engine's load is speed over the ridden
+  vehicle's top speed.
+- Session: `WorldNavigationSession#avatarSoundObservation()` and `#onRenderFrame(callback)`.
+- Service: `WorldSoundscapeService` subscribes to render frames when given an avatar observation, plays cues through
+  `provider.playCue()`, and resends `provider.setEngine()` only on a type change or a load change of 0.02; it
+  unsubscribes on dispose.
+- Audio: `audio/AvatarSoundSynth.js` (footstep per surface, jump, landing) and `audio/VehicleEngineVoice.js` (a held
+  voice per vehicle type) on an effects bus in `audio/WebAudioSoundscapeProvider.js`. Cues are dropped while the
+  context isn't running, so unmuting never plays a backlog.
+- Docs: `docs/user/03-WorldView.md` (Sound), `docs/Architecture.md` (the "Ambient sound" section is now "Sound").
+- Tests: `tests/AvatarSoundCues.test.js` (surfaces per zone, river and bricks; step cadence walking and running; no
+  steps idle, blocked or teleported; jump, landing, and no thud for a brief drop; engine load per vehicle; no avatar),
+  `tests/WorldSoundscapeService.test.js` (frame cues, engine throttling, unsubscribing), the end-to-end
+  `tests/AvatarSoundObservation.test.js` (a real session walked, jumped, ridden and dismounted), and the browser test
+  `tests/WebAudioSoundscapeProvider.test.js` (each surface audible and short, softer steps quieter, jump and landing,
+  no queued cues while suspended or muted, each engine louder and higher at speed, a silent parked bicycle, engines
+  fading out and starting once audio does).
+- Not done: other avatars' footsteps and positional sound; animals, residents and the Editor.

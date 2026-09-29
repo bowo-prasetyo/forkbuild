@@ -749,6 +749,24 @@ export const localAvatarMethods = {
         return this._localAvatarVisible;
     },
 
+    // What the local avatar is doing, for its sounds (core/AvatarSoundCues.js):
+    // where it is, its animation and vertical state, and the type of vehicle it
+    // rides (null on foot). Null without a local avatar.
+    avatarSoundObservation() {
+        if (!this._avatarPresenceSession) {
+            return null;
+        }
+        const current = this._avatarPresenceSession.current;
+        const mount = this.avatarVehicleMount();
+        const vehicle = mount && this._vehicleRuntimeInstances ? this._vehicleRuntimeInstances.get(mount.vehicleId) : null;
+        return {
+            position: { x: current.position.x, y: current.position.y, z: current.position.z },
+            animation: current.animation,
+            verticalState: this._avatarMovementController ? this._avatarMovementController.verticalState() : null,
+            vehicleType: vehicle ? vehicle.type : null
+        };
+    },
+
     // Moves a never-moved local avatar (sequence 0) near where the camera is
     // about to focus, instead of world origin. Fires at most once per session,
     // on the first focusDocument(). After the avatar has moved, navigating the

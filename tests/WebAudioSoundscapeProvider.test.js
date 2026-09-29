@@ -25,6 +25,50 @@ async function render(configure) {
     return Math.sqrt(sum / data.length);
 }
 
+// An OfflineAudioContext that reports itself running, as a live context
+// would after a gesture, so cues play into it.
+function runningOffline(seconds) {
+    const offline = new OfflineAudioContext(1, SAMPLE_RATE * seconds, SAMPLE_RATE);
+    const context = new Proxy(offline, {
+        get(target, prop) {
+            if (prop === 'state') return 'running';
+            if (prop === 'resume' || prop === 'suspend' || prop === 'close') return () => Promise.resolve();
+            const value = Reflect.get(target, prop, target);
+            return typeof value === 'function' ? value.bind(target) : value;
+        }
+    });
+    return { offline, context };
+}
+
+function rmsOf(data, from = 0, to = data.length) {
+    let sum = 0;
+    for (let i = from; i < to; i++) sum += data[i] * data[i];
+    return Math.sqrt(sum / Math.max(1, to - from));
+}
+
+// Renders what `act(provider)` plays over `seconds`, ambience silent.
+async function renderEffects(seconds, act) {
+    const { offline, context } = runningOffline(seconds);
+    const provider = new WebAudioSoundscapeProvider({
+        contextFactory: () => context, documentRef: null, setTimeoutFn: () => 1, clearTimeoutFn: () => {}
+    });
+    provider.setVolume(1);
+    provider.resume();
+    act(provider);
+    const buffer = await offline.startRendering();
+    provider.dispose();
+    return buffer.getChannelData(0);
+}
+
+// A spectral cue to pitch: how often the signal crosses zero per second.
+function zeroCrossingRate(data, from, to) {
+    let crossings = 0;
+    for (let i = from + 1; i < to; i++) {
+        if ((data[i - 1] < 0) !== (data[i] < 0)) crossings++;
+    }
+    return crossings / ((to - from) / SAMPLE_RATE);
+}
+
 async function runTests() {
     // Every continuous layer makes sound on its own, and silence is silent.
     for (const layer of ['wind', 'water', 'stream', 'insects']) {
@@ -158,6 +202,78 @@ async function runTests() {
         assert(busy[0] < sparse[0], `more birds call more often (${busy[0]} ms vs ${sparse[0]} ms)`);
         assert(busyDelay > 0, 'calls are spaced out');
         console.log('✓ bird calls are audible and denser where there are more birds');
+    }
+
+    // Footsteps on every surface, a jump and a landing are audible and short.
+    {
+        for (const surface of ['grass', 'leaves', 'sand', 'stone', 'water', 'structure']) {
+            const data = await renderEffects(1, (provider) => provider.playCue({ kind: 'footstep', surface, intensity: 1 }));
+            const burst = rmsOf(data, 0, SAMPLE_RATE * 0.3);
+            const after = rmsOf(data, SAMPLE_RATE * 0.6, SAMPLE_RATE);
+            assert(burst > 0.005, `a footstep on ${surface} is audible (rms ${burst})`);
+            assert(after < burst * 0.05, `a footstep on ${surface} is short (${after} after vs ${burst})`);
+        }
+        const soft = rmsOf(await renderEffects(1, (p) => p.playCue({ kind: 'footstep', surface: 'grass', intensity: 0.3 })), 0, SAMPLE_RATE * 0.3);
+        const hard = rmsOf(await renderEffects(1, (p) => p.playCue({ kind: 'footstep', surface: 'grass', intensity: 1 })), 0, SAMPLE_RATE * 0.3);
+        assert(soft < hard, `a softer step is quieter (${soft} vs ${hard})`);
+        const jump = rmsOf(await renderEffects(1, (p) => p.playCue({ kind: 'jump', surface: 'grass', intensity: 0.8 })), 0, SAMPLE_RATE * 0.4);
+        assert(jump > 0.005, `a jump is audible (${jump})`);
+        const light = rmsOf(await renderEffects(1, (p) => p.playCue({ kind: 'land', surface: 'grass', intensity: 0.4 })), 0, SAMPLE_RATE * 0.4);
+        const heavy = rmsOf(await renderEffects(1, (p) => p.playCue({ kind: 'land', surface: 'grass', intensity: 1 })), 0, SAMPLE_RATE * 0.4);
+        assert(light > 0.005 && heavy > light, `a landing is audible, heavier after a longer fall (${light} vs ${heavy})`);
+        const unknown = await renderEffects(1, (p) => p.playCue({ kind: 'nonsense', surface: 'grass', intensity: 1 }));
+        assert(rmsOf(unknown) === 0, 'an unknown cue plays nothing');
+        console.log('✓ footsteps, jumps and landings');
+    }
+
+    // Cues are dropped while audio isn't playing, rather than piling up.
+    {
+        const offline = new OfflineAudioContext(1, SAMPLE_RATE, SAMPLE_RATE);
+        const provider = new WebAudioSoundscapeProvider({ contextFactory: () => offline, documentRef: null, setTimeoutFn: () => 1, clearTimeoutFn: () => {} });
+        provider.resume();
+        provider.playCue({ kind: 'footstep', surface: 'stone', intensity: 1 });
+        const buffer = await offline.startRendering();
+        provider.dispose();
+        assert(rmsOf(buffer.getChannelData(0)) === 0, 'a cue while suspended is not queued');
+        const muted = await renderEffects(1, (p) => { p.setMuted(true); p.playCue({ kind: 'footstep', surface: 'stone', intensity: 1 }); });
+        assert(rmsOf(muted) === 0, 'a cue while muted plays nothing');
+        console.log('✓ cues never queue up while silent');
+    }
+
+    // Each vehicle has an engine that rises in pitch and loudness with speed.
+    {
+        for (const vehicleType of ['motorcycle', 'car', 'drone']) {
+            const idle = await renderEffects(2, (p) => p.setEngine({ vehicleType, load: 0 }));
+            const fast = await renderEffects(2, (p) => p.setEngine({ vehicleType, load: 1 }));
+            const idleRms = rmsOf(idle, SAMPLE_RATE, SAMPLE_RATE * 2);
+            const fastRms = rmsOf(fast, SAMPLE_RATE, SAMPLE_RATE * 2);
+            assert(idleRms > 0.005, `a ${vehicleType} idles audibly (${idleRms})`);
+            assert(fastRms > idleRms, `a ${vehicleType} is louder at speed (${fastRms} vs ${idleRms})`);
+            const idleRate = zeroCrossingRate(idle, SAMPLE_RATE, SAMPLE_RATE * 2);
+            const fastRate = zeroCrossingRate(fast, SAMPLE_RATE, SAMPLE_RATE * 2);
+            assert(fastRate > idleRate, `a ${vehicleType} is higher at speed (${fastRate} vs ${idleRate} crossings/s)`);
+        }
+        const parkedBike = rmsOf(await renderEffects(2, (p) => p.setEngine({ vehicleType: 'bicycle', load: 0 })), SAMPLE_RATE, SAMPLE_RATE * 2);
+        const rollingBike = rmsOf(await renderEffects(2, (p) => p.setEngine({ vehicleType: 'bicycle', load: 0.8 })), SAMPLE_RATE, SAMPLE_RATE * 2);
+        assert(parkedBike < 0.001 && rollingBike > 0.005, `a bicycle is silent standing and hisses rolling (${parkedBike}, ${rollingBike})`);
+
+        const stopped = await renderEffects(2, (p) => { p.setEngine({ vehicleType: 'car', load: 1 }); p.setEngine(null); });
+        assert(rmsOf(stopped, SAMPLE_RATE, SAMPLE_RATE * 2) < 0.001, 'getting off fades the engine out');
+        const unknown = await renderEffects(1, (p) => p.setEngine({ vehicleType: 'none', load: 1 }));
+        assert(rmsOf(unknown) === 0, 'no engine for a non-vehicle');
+        {
+            const { offline, context } = runningOffline(2);
+            const provider = new WebAudioSoundscapeProvider({
+                contextFactory: () => context, documentRef: null, setTimeoutFn: () => 1, clearTimeoutFn: () => {}
+            });
+            provider.setEngine({ vehicleType: 'car', load: 0.5 });
+            assert(provider.context === null, 'setup: no context yet');
+            provider.resume();
+            const early = (await offline.startRendering()).getChannelData(0);
+            provider.dispose();
+            assert(rmsOf(early, SAMPLE_RATE, SAMPLE_RATE * 2) > 0.005, 'an engine set before audio starts plays once it does');
+        }
+        console.log('✓ engines for every vehicle, following speed');
     }
 
     // Without Web Audio the provider stays silent instead of throwing.

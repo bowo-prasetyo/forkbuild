@@ -1,8 +1,9 @@
 import { ref } from 'vue';
 
-// World View's ambient sound: made once the session has started, heard at the
-// local avatar (or the camera, for a spectator), and toggled with M or the
-// sound button. Absent when the app provides no soundscape factory.
+// World View's sound: made once the session has started, heard at the local
+// avatar (or the camera, for a spectator), with the avatar's own footsteps,
+// jumps, landings and engine, and toggled with M or the sound button. Absent
+// when the app provides no soundscape factory.
 export function useWorldSoundscape({ createWorldSoundscape, session }) {
     const soundAvailable = ref(false);
     const soundMuted = ref(false);
@@ -28,7 +29,9 @@ export function useWorldSoundscape({ createWorldSoundscape, session }) {
         }
         soundscape = createWorldSoundscape({
             listenerPosition: () => session.getAvatarPosition() || session.getCameraPosition(),
-            seed: session.getWorldSeed()
+            seed: session.getWorldSeed(),
+            avatarObservation: () => session.avatarSoundObservation(),
+            onRenderFrame: (callback) => session.onRenderFrame(callback)
         });
         applySettings(soundscape.settings());
         soundscape.start();

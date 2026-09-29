@@ -2,6 +2,9 @@ import { WorldSoundscapeService } from '../application/world/WorldSoundscapeServ
 import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.js';
 import { ambientMixAt } from '../core/AmbientSoundscape.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
+import { AvatarVerticalState } from '../core/AvatarVerticalState.js';
+import { VehicleType } from '../core/VehicleType.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -18,6 +21,8 @@ class FakeProvider {
     setLayerLevels(levels) { this.levels = levels; this.calls.push('levels'); }
     setVolume(volume) { this.volume = volume; }
     setMuted(muted) { this.muted = muted; }
+    playCue(cue) { this.calls.push(`cue:${cue.kind}`); }
+    setEngine(engine) { this.calls.push(engine ? `engine:${engine.vehicleType}:${engine.load.toFixed(2)}` : 'engine:off'); }
     dispose() { this.disposed = true; }
 }
 
@@ -123,4 +128,70 @@ function build({ position = { x: 10, y: 0, z: -20 }, storage = new InMemoryStora
     }
     assert(threw, 'a settings store is required');
     console.log('✓ required collaborators are checked');
+}
+
+// Every render frame turns the avatar's doings into cues and an engine.
+{
+    const provider = new FakeProvider();
+    const frames = [];
+    let unsubscribed = false;
+    let avatar = { position: { x: 0, y: 0, z: 0 }, animation: AvatarAnimationState.WALKING, verticalState: AvatarVerticalState.SUPPORTED, vehicleType: null };
+    const service = new WorldSoundscapeService({
+        provider,
+        settingsStore: new SoundSettingsStore({ storageProvider: new InMemoryStorageProvider() }),
+        listenerPosition: () => avatar.position,
+        seed: DEFAULT_WORLD_SEED,
+        avatarObservation: () => avatar,
+        onRenderFrame: (callback) => { frames.push(callback); return () => { unsubscribed = true; }; },
+        setIntervalFn: () => 1,
+        clearIntervalFn: () => {}
+    });
+    service.start();
+    assert(frames.length === 1, 'the service listens to render frames');
+    const tick = (dx) => {
+        avatar = { ...avatar, position: { ...avatar.position, x: avatar.position.x + dx } };
+        frames[0](1 / 60);
+    };
+    for (let i = 0; i < 60; i++) tick(3 / 60);
+    const steps = provider.calls.filter((c) => c === 'cue:footstep').length;
+    assert(steps >= 3 && steps <= 5, `a second of walking plays about 4 footsteps (${steps})`);
+    assert(!provider.calls.some((c) => c.startsWith('engine')), 'no engine on foot');
+
+    avatar = { ...avatar, vehicleType: VehicleType.CAR };
+    for (let i = 0; i < 30; i++) tick(6 / 60);
+    const engines = provider.calls.filter((c) => c.startsWith('engine:car'));
+    assert(engines.length >= 1, 'riding starts the engine');
+    assert(engines.length < 5, `a steady speed doesn't re-send the engine every frame (${engines.length})`);
+    assert(engines[engines.length - 1] === 'engine:car:0.50', `half speed is half load (${engines[engines.length - 1]})`);
+
+    avatar = { ...avatar, vehicleType: null };
+    tick(0);
+    assert(provider.calls[provider.calls.length - 1] === 'engine:off', 'getting off stops the engine');
+    const count = provider.calls.length;
+    tick(0);
+    assert(provider.calls.length === count, 'on foot and still, nothing more is sent');
+
+    service.dispose();
+    assert(unsubscribed, 'dispose() stops listening to frames');
+    service.frame(1 / 60);
+    assert(provider.calls.length === count, 'a disposed service plays nothing');
+    console.log('✓ avatar sounds every frame');
+}
+
+// Without an avatar observation there is no frame listener at all.
+{
+    let subscribed = false;
+    const service = new WorldSoundscapeService({
+        provider: new FakeProvider(),
+        settingsStore: new SoundSettingsStore({ storageProvider: new InMemoryStorageProvider() }),
+        listenerPosition: () => null,
+        seed: DEFAULT_WORLD_SEED,
+        onRenderFrame: () => { subscribed = true; return () => {}; },
+        setIntervalFn: () => 1,
+        clearIntervalFn: () => {}
+    });
+    service.start();
+    assert(!subscribed, 'ambient-only needs no frames');
+    service.dispose();
+    console.log('✓ ambient-only without an avatar');
 }
