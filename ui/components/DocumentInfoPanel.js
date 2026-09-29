@@ -1,6 +1,7 @@
 import { describeLicense } from '../../application/document/LicenseLabels.js';
 import { describePlacementPolicy } from '../../application/document/PlacementPolicyLabels.js';
 import { LifecycleStatus } from '../../application/document/DocumentLifecycleStatus.js';
+import { displayText, t } from '../i18n/i18n.js';
 
 // 0.2.21: the "Document Information" panel from the milestone design
 // — one component, shared by the Editor sidebar and World View's
@@ -35,11 +36,12 @@ export default {
     },
     emits: ['edit-metadata'],
     methods: {
+        displayText,
         placementPolicyLabel(policy) {
-            return describePlacementPolicy(policy || 'anyone');
+            return t(describePlacementPolicy(policy || 'anyone'));
         },
         licenseLabel(license) {
-            return describeLicense(license ? license.id : null);
+            return t(describeLicense(license ? license.id : null));
         },
         isDraft(info) {
             return info.status === LifecycleStatus.DRAFT;
@@ -52,7 +54,7 @@ export default {
         <div v-if="info && compact" class="document-info-panel document-info-panel--compact">
             <div class="document-info-compact-row">
                 <span class="document-info-compact-title" :title="info.description || info.title">{{ info.title }}</span>
-                <span v-if="isDraft(info)" class="document-info-compact-draft" :title="info.statusLabel">Draft</span>
+                <span v-if="isDraft(info)" class="document-info-compact-draft" :title="displayText(info.statusLabel)">Draft</span>
                 <button
                     v-if="info.editable !== false"
                     type="button"
@@ -69,7 +71,7 @@ export default {
                 v-if="info.editabilityNotice"
                 :class="['editability-notice', { 'editability-notice--blocked': info.editabilityNotice.blocked }]"
             >
-                {{ info.editabilityNotice.blocked ? '🔒' : 'ℹ️' }} {{ info.editabilityNotice.message }}
+                {{ info.editabilityNotice.blocked ? '🔒' : 'ℹ️' }} {{ displayText(info.editabilityNotice.message) }}
             </p>
         </div>
         <div v-else-if="info" class="document-info-panel">
@@ -93,7 +95,7 @@ export default {
             </div>
             <div class="info-row">
                 <span class="info-label">Status</span>
-                <span class="info-value">{{ info.statusLabel }}</span>
+                <span class="info-value">{{ displayText(info.statusLabel) }}</span>
             </div>
             <div class="info-row" v-if="info.author">
                 <span class="info-label">Author</span>
@@ -112,7 +114,7 @@ export default {
                 v-if="info.editabilityNotice"
                 :class="['editability-notice', { 'editability-notice--blocked': info.editabilityNotice.blocked }]"
             >
-                {{ info.editabilityNotice.blocked ? '🔒' : 'ℹ️' }} {{ info.editabilityNotice.message }}
+                {{ info.editabilityNotice.blocked ? '🔒' : 'ℹ️' }} {{ displayText(info.editabilityNotice.message) }}
             </p>
 
             <div class="info-actions" v-if="info.editable !== false">

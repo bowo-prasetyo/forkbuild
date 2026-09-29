@@ -7,12 +7,16 @@
 // is always required, since every locale has it.
 //
 // `{name}` in a message is replaced by params.name; numbers are formatted for
-// the locale. A placeholder with no matching parameter is left as written, so
-// a missing value shows up instead of silently vanishing.
+// the locale, a message descriptor (core/Message.js) is translated first, and
+// a list is joined the locale's way ("a, b, c"). A placeholder with no
+// matching parameter is left as written, so a missing value shows up instead
+// of silently vanishing.
 //
 // A key missing from the locale's messages falls back to the source
 // (English) messages, then to the key itself, and is reported once to
 // `onMissing`.
+import { isMessage } from '../../core/Message.js';
+
 const PLACEHOLDER = /\{([A-Za-z0-9_]+)\}/g;
 
 export class Translator {
@@ -37,6 +41,11 @@ export class Translator {
         }
         const text = typeof message === 'string' ? message : this._pluralForm(message, params.count);
         return this._interpolate(text, params);
+    }
+
+    has(key) {
+        return Object.prototype.hasOwnProperty.call(this._messages, key)
+            || Object.prototype.hasOwnProperty.call(this._fallbackMessages, key);
     }
 
     formatNumber(value, options) {
@@ -79,8 +88,20 @@ export class Translator {
             if (!Object.prototype.hasOwnProperty.call(params, name) || params[name] === undefined || params[name] === null) {
                 return placeholder;
             }
-            const value = params[name];
-            return typeof value === 'number' ? this.formatNumber(value) : String(value);
+            return this._paramText(params[name]);
         });
+    }
+
+    _paramText(value) {
+        if (typeof value === 'number') {
+            return this.formatNumber(value);
+        }
+        if (isMessage(value)) {
+            return this.translate(value.key, value.params);
+        }
+        if (Array.isArray(value)) {
+            return new Intl.ListFormat(this.intlLocale, { type: 'unit', style: 'long' }).format(value.map((item) => this._paramText(item)));
+        }
+        return String(value);
     }
 }

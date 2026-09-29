@@ -1,4 +1,5 @@
 import { isSteemAccountName } from './SteemDiscoveryThread.js';
+import { message } from './Message.js';
 import { parseSteemContentLocator, steemContentLocator } from './SteemContentManifest.js';
 
 // Links into the published ForkBuild app, for text written where ForkBuild
@@ -32,14 +33,14 @@ export function steemPublicationViewUrl(author, permlink, appUrl = FORKBUILD_APP
 export function describePublicationClaimLocator(locator) {
     if (typeof locator !== 'string') return null;
     const steem = parseSteemContentLocator(locator);
-    if (steem) return Object.freeze({ network: 'steem', locator, path: steemPublicationViewPath(steem.author, steem.permlink), label: `@${steem.author}/${steem.permlink}` });
+    if (steem) return Object.freeze({ network: 'steem', locator, path: steemPublicationViewPath(steem.author, steem.permlink), label: message('publicationLink.label.steem', { author: steem.author, permlink: steem.permlink }) });
     if (locator.startsWith('ar://')) {
         const id = locator.slice('ar://'.length);
-        return ARWEAVE_ID_PATTERN.test(id) ? Object.freeze({ network: 'arweave', locator, path: `/view/ar/${id}`, label: `Arweave transaction ${id}` }) : null;
+        return ARWEAVE_ID_PATTERN.test(id) ? Object.freeze({ network: 'arweave', locator, path: `/view/ar/${id}`, label: message('publicationLink.label.arweave', { id }) }) : null;
     }
     if (locator.startsWith('ipfs://')) {
         const cid = locator.slice('ipfs://'.length);
-        return IPFS_CID_PATTERN.test(cid) ? Object.freeze({ network: 'ipfs', locator, path: `/view/ipfs/${cid}`, label: `IPFS content ${cid}` }) : null;
+        return IPFS_CID_PATTERN.test(cid) ? Object.freeze({ network: 'ipfs', locator, path: `/view/ipfs/${cid}`, label: message('publicationLink.label.ipfs', { cid }) }) : null;
     }
     return null;
 }

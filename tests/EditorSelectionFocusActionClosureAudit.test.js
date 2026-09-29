@@ -15,7 +15,8 @@ import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { EditorSession } from '../application/editor/EditorSession.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { EditorActionRegistry, actionCategoryLabel, createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { displayText, t } from '../ui/i18n/i18n.js';
 import { EditorActionContext } from '../application/editor/EditorActionContext.js';
 
 // 0.9.661 — Add Editor Selection Focus Action.
@@ -106,7 +107,7 @@ function openDocument(editorSession, documentManager, document) {
 }
 
 async function run() {
-    const feedback = { messages: [], show(msg) { this.messages.push(msg); } };
+    const feedback = { messages: [], show(msg) { this.messages.push(displayText(msg)); } };
     const { editorSession, editorContext, documentManager } = makeEditorSession();
     const actions = createStandardActions({ session: editorSession, feedback, ui: {} });
     const registry = new EditorActionRegistry(actions);
@@ -225,7 +226,7 @@ async function run() {
         const action = registry.get('selection.focus');
         assert(action.enabled(emptyContext) === false,
             n('E1. selection.focus is disabled with no selection'));
-        assert(action.disabledReason(emptyContext) === 'No bricks selected',
+        assert(t(action.disabledReason(emptyContext)) === 'No bricks selected',
             n('E2. its disabled reason matches the same "No bricks selected" convention as Duplicate/Delete/Clear'));
 
         const before = editorSession._session.getCameraState();
@@ -271,7 +272,7 @@ async function run() {
     // ===============================================================
     {
         const focusAction = registry.get('selection.focus');
-        assert(focusAction !== null && focusAction.category === 'Selection',
+        assert(focusAction !== null && t(actionCategoryLabel(focusAction.category)) === 'Selection',
             n('G1. selection.focus is registered under the "Selection" category — one registry entry, no second command system'));
 
         const registrySource = await import('node:fs/promises').then((m) =>
@@ -308,7 +309,7 @@ async function run() {
         const action = registry.get('selection.focus');
         assert(action.enabled(placementContext) === false,
             n('H1. selection.focus is disabled for a structure-placement selection — 0.9.661 explicitly does not claim to focus structures'));
-        assert(action.disabledReason(placementContext) === 'Focus Selection is available for brick selections only',
+        assert(t(action.disabledReason(placementContext)) === 'Focus Selection is available for brick selections only',
             n('H2. its disabled reason says exactly that, rather than a generic "no selection" message'));
 
         const before = editorSession._session.getCameraState();

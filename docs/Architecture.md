@@ -1512,8 +1512,16 @@ app, so text is in that language from the first render. The locale never
 changes while the app runs: the Language page (`/settings/language`)
 saves the choice and reloads. The pseudo-locale `en-XA`
 (ui/i18n/pseudoLocalize.js) shows English accented and padded, to find
-text not yet moved to t(). Most components still write English directly
-and are moved over area by area.
+text not yet moved to t(). core/ and application/ never write text for the
+screen: they return message descriptors (core/Message.js, a key and its
+parameters) and throw UserFacingError (core/UserFacingError.js) for refusals
+a person should read, and the UI shows them with t(), displayText() or
+errorText(). The Editor action registry, the license, placement, document
+status and presence label modules, the passphrase rules, opening a
+Publication link, fork-on-edit and the World welcome suggestions work this
+way; built-in library items are translated by id (ui/i18n/libraryText.js).
+Many components still write English directly and are moved over area by
+area.
 
 index.html loads the app as ES modules with no build step. Its import map
 resolves `vue`, `vue-router`, `@vue/devtools-api`, `three` and

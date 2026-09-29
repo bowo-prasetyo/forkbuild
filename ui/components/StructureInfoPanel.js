@@ -1,5 +1,7 @@
 import { SpatialBounds } from '../../core/SpatialBounds.js';
 import { describeBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
+import { t } from '../i18n/i18n.js';
+import { libraryItemDescription, libraryItemName } from '../i18n/libraryText.js';
 import { describeBlueprintSimilarity } from '../../core/BlueprintSimilarity.js';
 
 // 0.6.3 — Blueprint Authoring & Versioning UX. A read-only detail
@@ -206,6 +208,9 @@ export default {
         }
     },
     methods: {
+        t,
+        libraryItemName,
+        libraryItemDescription,
         round1(value) {
             return Math.round((Number(value) || 0) * 10) / 10;
         },
@@ -268,13 +273,13 @@ export default {
     template: `
         <div
             role="dialog"
-            :aria-label="'Structure info: ' + structure.name"
+            :aria-label="t('structureInfo.label', { name: libraryItemName(structure) })"
             class="modal-overlay"
             @click.self="$emit('close')"
             @keydown="onKeydown"
         >
             <div class="modal-panel structure-info-panel">
-                <h3>{{ structure.name }}</h3>
+                <h3>{{ libraryItemName(structure) }}</h3>
                 <p class="structure-info-category">{{ structure.category }}</p>
 
                 <dl class="structure-info-facts">
@@ -286,7 +291,7 @@ export default {
                     <dd v-if="hasAttribution" :title="attribution.fingerprint">{{ fingerprintLabel }}</dd>
                 </dl>
 
-                <p v-if="structure.description" class="structure-info-description">{{ structure.description }}</p>
+                <p v-if="structure.description" class="structure-info-description">{{ libraryItemDescription(structure) }}</p>
 
                 <!-- 0.6.7 — Blueprint Attribution Resolution & Community
                      Identity. A real list, one row per DISTINCT
@@ -408,7 +413,7 @@ export default {
                             <ul class="naming-panel-list">
                                 <li v-for="candidate in similarityCandidates" :key="candidate.structure.id" class="naming-panel-item">
                                     <div class="naming-panel-item-info">
-                                        <span class="naming-panel-item-name">{{ candidate.structure.name }}</span>
+                                        <span class="naming-panel-item-name">{{ libraryItemName(candidate.structure) }}</span>
                                         <span class="naming-panel-item-meta">{{ describeSimilarity(candidate.evidence) }}</span>
                                     </div>
                                     <button class="inline-link-btn" @click="$emit('claim-lineage', candidate.structure)">Derived from this</button>

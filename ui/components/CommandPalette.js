@@ -1,4 +1,5 @@
-import { EditorActionRegistry } from '../../application/editor/EditorActionRegistry.js';
+import { EditorActionRegistry, actionCategoryLabel } from '../../application/editor/EditorActionRegistry.js';
+import { displayText, t } from '../i18n/i18n.js';
 
 // The command palette (0.1.50): one searchable list over the
 // EditorActionRegistry — the same definitions that drive keyboard
@@ -18,8 +19,8 @@ import { EditorActionRegistry } from '../../application/editor/EditorActionRegis
 // display-only field — null for every action except history.undo/
 // history.redo, which mirror CommandHistory's own getUndoLabel()/
 // getRedoLabel()) and falls back to the static action.label. Search
-// still matches on the static label only (EditorActionRegistry.findMatching()
-// is unchanged) — this is a display override, not a second label.
+// still matches on the static label only, in the chosen language — this is
+// a display override, not a second label.
 export default {
     name: 'CommandPalette',
     props: {
@@ -44,7 +45,7 @@ export default {
             return this.getContext();
         },
         filtered() {
-            return this.registry.findMatching(this.query);
+            return this.registry.findMatching(this.query, t);
         },
         rows() {
             const rows = [];
@@ -72,6 +73,10 @@ export default {
         });
     },
     methods: {
+        t,
+        categoryName(category) {
+            return t(actionCategoryLabel(category));
+        },
         actionEnabled(action) {
             return action.enabled(this.context);
         },
@@ -79,7 +84,7 @@ export default {
             if (!action.disabledReason) {
                 return null;
             }
-            return action.disabledReason(this.context);
+            return displayText(action.disabledReason(this.context));
         },
         // 0.9.213 — see this file's own header. action.contextualLabel is
         // the same "read by the UI, defaults to inert" shape as
@@ -90,10 +95,10 @@ export default {
             if (typeof action.contextualLabel === 'function') {
                 const label = action.contextualLabel(this.context);
                 if (label) {
-                    return label;
+                    return displayText(label);
                 }
             }
-            return action.label;
+            return t(action.label);
         },
         rowStyle(row) {
             if (row.header) {
@@ -155,7 +160,7 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="Command palette"
+            :aria-label="t('commandPalette.title')"
             :style="{
                 position: 'fixed',
                 inset: 0,
@@ -186,8 +191,8 @@ export default {
                     ref="search"
                     v-model="query"
                     type="text"
-                    placeholder="Type a command..."
-                    aria-label="Search commands"
+                    :placeholder="t('commandPalette.placeholder')"
+                    :aria-label="t('commandPalette.search')"
                     @keydown="onKeydown"
                     :style="{
                         padding: '10px 12px',
@@ -202,16 +207,16 @@ export default {
                 />
                 <div :style="{ overflowY: 'auto', padding: '6px' }">
                     <div v-if="rows.length === 0" :style="{ padding: '12px 10px', color: '#707070', fontSize: '12px' }">
-                        No matching commands.
+                        {{ t('commandPalette.noMatches') }}
                     </div>
                     <template v-for="(row, rowIndex) in rows" :key="rowIndex">
-                        <div v-if="row.header" :style="rowStyle(row)">{{ row.category }}</div>
+                        <div v-if="row.header" :style="rowStyle(row)">{{ categoryName(row.category) }}</div>
                         <button
                             v-else
                             type="button"
                             :disabled="!actionEnabled(row.action)"
                             :aria-disabled="!actionEnabled(row.action)"
-                            :title="actionEnabled(row.action) ? row.action.description : reasonFor(row.action)"
+                            :title="actionEnabled(row.action) ? t(row.action.description) : reasonFor(row.action)"
                             :style="rowStyle(row)"
                             @click="executeAt(row.index)"
                             @mouseenter="activeIndex = row.index"

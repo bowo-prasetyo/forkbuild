@@ -1,21 +1,26 @@
 import { LicenseId } from '../../core/License.js';
+import { message } from '../../core/Message.js';
 
 // 0.2.21: human-readable labels for LicenseId, shared by the license
 // selector (Document Properties editor) and the Document Info panel's
 // read view — one place, so the two never drift apart, same reasoning
-// as DocumentLifecycleStatus.
-const LICENSE_LABELS = Object.freeze({
-    [LicenseId.CC0_1_0]: 'CC0 1.0 — Public Domain',
-    [LicenseId.CC_BY_4_0]: 'CC BY 4.0 — Attribution',
-    [LicenseId.CC_BY_SA_4_0]: 'CC BY-SA 4.0 — Attribution, ShareAlike',
-    [LicenseId.CC_BY_ND_4_0]: 'CC BY-ND 4.0 — Attribution, No Derivatives',
-    [LicenseId.CC_BY_NC_4_0]: 'CC BY-NC 4.0 — Attribution, NonCommercial',
-    [LicenseId.ALL_RIGHTS_RESERVED]: 'All Rights Reserved',
-    [LicenseId.UNSPECIFIED]: 'No license specified'
+// as DocumentLifecycleStatus. Each label is a message (core/Message.js); a
+// license id this version doesn't know is shown as the id itself.
+const LICENSE_KEYS = Object.freeze({
+    [LicenseId.CC0_1_0]: 'license.cc0',
+    [LicenseId.CC_BY_4_0]: 'license.ccBy',
+    [LicenseId.CC_BY_SA_4_0]: 'license.ccBySa',
+    [LicenseId.CC_BY_ND_4_0]: 'license.ccByNd',
+    [LicenseId.CC_BY_NC_4_0]: 'license.ccByNc',
+    [LicenseId.ALL_RIGHTS_RESERVED]: 'license.allRightsReserved',
+    [LicenseId.UNSPECIFIED]: 'license.unspecified'
 });
 
 export function describeLicense(licenseId) {
-    return LICENSE_LABELS[licenseId] || licenseId || LICENSE_LABELS[LicenseId.UNSPECIFIED];
+    if (LICENSE_KEYS[licenseId]) {
+        return message(LICENSE_KEYS[licenseId]);
+    }
+    return licenseId ? message('license.other', { id: licenseId }) : message(LICENSE_KEYS[LicenseId.UNSPECIFIED]);
 }
 
 // Selector options in a deliberate order: the permissive end first,

@@ -19,6 +19,7 @@ import { EditorActionContext } from '../application/editor/EditorActionContext.j
 import { LocalStructureLibraryStore } from '../application/editor/LocalStructureLibraryStore.js';
 import { ForkStructureToLibraryUseCase } from '../application/editor/ForkStructureToLibraryUseCase.js';
 import { assert } from './support/Assert.js';
+import { t } from '../ui/i18n/i18n.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.6.3 — Blueprint Authoring & Versioning UX.
@@ -111,7 +112,7 @@ async function run() {
     {
         const actions = createStandardActions({ session: {}, feedback: { show() {} }, ui: {} });
         const action = actions.find((a) => a.id === 'structure.createFromSelection');
-        assert(action.label === 'Create Blueprint', '1. label renamed from "Create Structure" to "Create Blueprint"');
+        assert(t(action.label) === 'Create Blueprint', '1. label renamed from "Create Structure" to "Create Blueprint"');
         assert(action.tier === 'advanced', '2. tier is Advanced — a "what\'s next," not an always-visible button');
 
         const stubStructure = new Structure({ id: 'preview-1', name: 'X', bricks: [] });
@@ -127,7 +128,7 @@ async function run() {
         assert(dialogOpened === true, '4. ui.openCreateBlueprintDialog() is called');
 
         const feedbackLog = [];
-        const registryWithoutDialog = new EditorActionRegistry(createStandardActions({ session, feedback: { show: (m) => feedbackLog.push(m) }, ui: {} }));
+        const registryWithoutDialog = new EditorActionRegistry(createStandardActions({ session, feedback: { show: (m) => feedbackLog.push(t(m)) }, ui: {} }));
         registryWithoutDialog.execute('structure.createFromSelection', ctx);
         assert(feedbackLog.at(-1) === 'Create Blueprint is not available on this surface', '5. a surface without the dialog hook degrades to feedback, never throws');
 

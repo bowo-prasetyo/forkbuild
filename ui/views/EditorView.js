@@ -63,6 +63,7 @@ import { ExportAllDocumentsUseCase, ImportDocumentBundleUseCase } from '../../ap
 import { useStructureInspection } from './editorView/useStructureInspection.js';
 import { useSoundControls } from '../composables/useSoundControls.js';
 import SoundControl from '../components/SoundControl.js';
+import { displayText } from '../i18n/i18n.js';
 
 // Editing shortcuts come from EditorActionRegistry, shared with the palette,
 // the sidebar and the controls docs. Escape priority: text input > shortcuts
@@ -482,10 +483,10 @@ export default {
         const feedbackVisible = ref(false);
         let feedbackTimer = null;
         // Failures that ask the user to act stay up longer than a routine
-        // "Saved".
+        // "Saved". `message` is text or a message descriptor (core/Message.js).
         const feedback = {
             show(message, { durationMs = 2500 } = {}) {
-                feedbackMessage.value = message;
+                feedbackMessage.value = displayText(message);
                 feedbackVisible.value = true;
                 if (feedbackTimer) {
                     clearTimeout(feedbackTimer);

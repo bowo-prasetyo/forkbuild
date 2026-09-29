@@ -20,6 +20,7 @@ import { EditorActionRegistry, createStandardActions } from '../application/edit
 import { EditorActionContext } from '../application/editor/EditorActionContext.js';
 import { editorSessionFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
+import { displayText, t } from '../ui/i18n/i18n.js';
 
 // 0.9.213 — Editor Undo/Redo Label Mirrors.
 //
@@ -130,7 +131,7 @@ function selectBricks(editorContext, building, brickIds) {
 }
 
 function registryFor(session) {
-    const feedback = { messages: [], show(message) { this.messages.push(message); } };
+    const feedback = { messages: [], show(message) { this.messages.push(displayText(message)); } };
     return new EditorActionRegistry(createStandardActions({ session, feedback, ui: {} }));
 }
 
@@ -172,7 +173,7 @@ async function run() {
         const paletteInstance = { context: ctx, ...CommandPalette.methods };
         assert(paletteInstance.displayLabel(undoAction) === expectedLabel,
             '6. CommandPalette.displayLabel() renders the authoritative label VERBATIM — the exact string CommandHistory produced, not a re-derived one');
-        assert(undoAction.label === 'Undo', '7. the static action.label is untouched — search/KeyboardShortcutsOverlay still see a stable, context-free "Undo"');
+        assert(t(undoAction.label) === 'Undo', '7. the static action.label is untouched — search/KeyboardShortcutsOverlay still see a stable, context-free "Undo"');
 
         console.log('✓ A. Domain-to-Editor label convergence: CommandHistory -> EditorSession -> EditorActionContext -> EditorActionRegistry -> CommandPalette, the identical string at every hop');
     }
@@ -264,7 +265,7 @@ async function run() {
 
         ctx = ctxFor(session);
         assert(registry.get('history.redo').contextualLabel(ctx) === null, '2. the old B redo branch is gone — the mirror reflects it correctly, not a stale label');
-        assert(registry.get('history.redo').disabledReason(ctx) === 'Nothing to redo', '3. disabledReason still carries the generic text once nothing is there to name');
+        assert(t(registry.get('history.redo').disabledReason(ctx)) === 'Nothing to redo', '3. disabledReason still carries the generic text once nothing is there to name');
         assert(registry.get('history.undo').contextualLabel(ctx) === 'Undo Delete Brick', '4. undo mirror correctly names C, the real top of the stack');
 
         console.log('✓ D. Branch invalidation: an invalidated redo branch takes its mirrored label down with it');
@@ -293,8 +294,8 @@ async function run() {
         assert(!threw, '3. contextualLabel() never throws on empty history');
 
         assert(undoAction.enabled(ctx) === false && redoAction.enabled(ctx) === false, '4. both actions report disabled');
-        assert(undoAction.disabledReason(ctx) === 'Nothing to undo', '5. undo disabledReason is the generic neutral text');
-        assert(redoAction.disabledReason(ctx) === 'Nothing to redo', '6. redo disabledReason is the generic neutral text');
+        assert(t(undoAction.disabledReason(ctx)) === 'Nothing to undo', '5. undo disabledReason is the generic neutral text');
+        assert(t(redoAction.disabledReason(ctx)) === 'Nothing to redo', '6. redo disabledReason is the generic neutral text');
 
         console.log('✓ E. Empty history: both mirrors correctly neutral, no exceptions');
     }

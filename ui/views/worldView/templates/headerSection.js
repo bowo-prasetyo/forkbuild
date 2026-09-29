@@ -11,7 +11,7 @@ export const headerSectionTemplate = `<h2>{{ title }}</h2>
                     <span v-else-if="activeDocumentInfo.parentDocumentId">
                         ✎ Editing fork<template v-if="parentTitle(activeDocumentInfo.parentDocumentId)"> — forked from {{ parentTitle(activeDocumentInfo.parentDocumentId) }}</template>
                     </span>
-                    <span v-else>✎ {{ activeDocumentInfo.statusLabel }}</span>
+                    <span v-else>✎ {{ displayText(activeDocumentInfo.statusLabel) }}</span>
                 </p>
                 <!--
                     Camera focus and the active document are tracked separately (docs/

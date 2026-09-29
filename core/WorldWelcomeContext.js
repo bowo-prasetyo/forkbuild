@@ -18,6 +18,7 @@
 //
 // See docs/Principles.md, "Exploration Guides Attention, Never Ownership
 // or Mutation (0.3.9)."
+import { message } from './Message.js';
 import { distanceXZ } from './WorldSpatialAnchor.js';
 import { regionsContaining, describePlace } from './WorldRegionGeography.js';
 
@@ -478,7 +479,7 @@ function deriveExplorationSuggestions({
         if (collab.activity && collab.position) {
             suggestions.push(new WorldExplorationSuggestion({
                 location: { collaborator: collab },
-                reason: `${collab.label} is ${formatActivity(collab.activity)}`,
+                reason: describeActivity(collab.label, collab.activity),
                 kind: 'collaborator'
             }));
         }
@@ -486,9 +487,9 @@ function deriveExplorationSuggestions({
     
     // Priority 2: Landmarks (especially if we're in a place)
     for (const landmark of landmarks) {
-        let reason = 'Nearby landmark';
+        let reason = message('welcome.reason.nearbyLandmark');
         if (currentPlace && currentPlace.landmark && currentPlace.landmark.id === landmark.id) {
-            reason = 'You are here';
+            reason = message('welcome.reason.youAreHere');
         }
         suggestions.push(new WorldExplorationSuggestion({
             location: { landmark },
@@ -501,7 +502,7 @@ function deriveExplorationSuggestions({
     for (const structure of structures) {
         suggestions.push(new WorldExplorationSuggestion({
             location: { structure },
-            reason: 'A structure in this place',
+            reason: message('welcome.reason.structure'),
             kind: 'structure'
         }));
     }
@@ -510,7 +511,7 @@ function deriveExplorationSuggestions({
     if (currentPlace && currentPlace.title && !landmarks.some(l => l.title === currentPlace.title)) {
         suggestions.push(new WorldExplorationSuggestion({
             location: { place: currentPlace },
-            reason: 'Explore this area',
+            reason: message('welcome.reason.exploreArea'),
             kind: 'place'
         }));
     }
@@ -518,33 +519,34 @@ function deriveExplorationSuggestions({
     return suggestions;
 }
 
-// Derive a human-readable activity summary from collaborators.
-// E.g., "Bob is building the Market"
+// Derive a summary of what collaborators are doing, e.g. "Bob is building
+// the Market": one message per collaborator (core/Message.js).
 function deriveActivitySummary(collaborators = []) {
     const summaries = [];
     
     for (const collab of collaborators) {
         if (collab.activity && collab.label) {
-            const activityText = formatActivity(collab.activity);
-            const target = collab.activityTarget ? ` the ${collab.activityTarget}` : '';
-            summaries.push(`${collab.label} is ${activityText}${target}`);
+            summaries.push(describeActivity(collab.label, collab.activity, collab.activityTarget));
         }
     }
     
     return summaries;
 }
 
-// Format activity enum into human-readable text
-function formatActivity(activity) {
-    if (!activity) return 'exploring';
-    
-    const activityMap = {
-        'BUILDING': 'building',
-        'EDITING': 'editing',
-        'INSPECTING': 'inspecting',
-        'WALKING': 'exploring',
-        'IDLE': 'standing by'
-    };
-    
-    return activityMap[activity] || activity.toLowerCase();
+const ACTIVITY_NAMES = Object.freeze({
+    BUILDING: 'building',
+    EDITING: 'editing',
+    INSPECTING: 'inspecting',
+    WALKING: 'exploring',
+    IDLE: 'standingBy'
+});
+
+// A whole sentence per activity, with and without what it is done to, since
+// the words around the name and target differ between languages. An activity
+// this version doesn't know is named as it came.
+function describeActivity(name, activity, target = null) {
+    const known = activity ? ACTIVITY_NAMES[activity] : 'exploring';
+    const params = known ? { name } : { name, activity: String(activity).toLowerCase() };
+    const form = target ? 'welcome.activityOn' : 'welcome.activity';
+    return message(`${form}.${known || 'other'}`, target ? { ...params, target } : params);
 }

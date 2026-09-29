@@ -27,7 +27,10 @@ import { DocumentRevision } from '../core/DocumentRevision.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { ForkPublishedWorldUseCase } from '../application/publication/ForkPublishedWorldUseCase.js';
-import { LifecycleStatus, computeLifecycleStatus, describeLifecycleStatus } from '../application/document/DocumentLifecycleStatus.js';
+import { LifecycleStatus, computeLifecycleStatus, describeLifecycleStatus as describeLifecycleStatusMessage } from '../application/document/DocumentLifecycleStatus.js';
+import { t } from '../ui/i18n/i18n.js';
+// Each label as a person reads it, in English.
+const describeLifecycleStatus = (...args) => t(describeLifecycleStatusMessage(...args));
 import { worldNavigationSessionFiles, editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';

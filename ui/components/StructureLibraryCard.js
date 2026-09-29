@@ -1,4 +1,6 @@
 import BuildLibraryPreview from './BuildLibraryPreview.js';
+import { t } from '../i18n/i18n.js';
+import { libraryItemName } from '../i18n/libraryText.js';
 
 // 0.6.4 — Blueprint Discovery, Search & Library Organization. Extracted
 // from ui/components/BuildLibraryPanel.js's own triplicated card markup
@@ -21,14 +23,15 @@ export default {
         isMenuOpen: { type: Boolean, default: false }
     },
     emits: ['place', 'toggle-menu', 'info', 'fork', 'fork-to-library', 'export', 'rename', 'remove'],
+    methods: { t, libraryItemName },
     template: `
         <li
             class="structure-item build-library-item"
-            :title="'Place ' + structure.name"
+            :title="t('buildLibrary.place', { name: libraryItemName(structure) })"
             @click="$emit('place', structure)"
         >
             <BuildLibraryPreview kind="structure" :item="structure" :preview-service="previewService" />
-            <span class="structure-item-name">{{ structure.name }}</span>
+            <span class="structure-item-name">{{ libraryItemName(structure) }}</span>
             <div class="structure-item-menu" @click.stop>
                 <button
                     type="button"

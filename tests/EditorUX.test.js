@@ -20,6 +20,7 @@ import { EditorActionRegistry, createStandardActions } from '../application/edit
 import { EditorActionContext } from '../application/editor/EditorActionContext.js';
 import { LocalStructureLibraryStore } from '../application/editor/LocalStructureLibraryStore.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.6.2 — Editor UX Consolidation.
@@ -128,7 +129,7 @@ function selectBricks(editorContext, building, brickIds) {
 // ---------------------------------------------------------------------
 {
     const feedbackLog = [];
-    const feedback = { show(message) { feedbackLog.push(message); } };
+    const feedback = { show(message) { feedbackLog.push(displayText(message)); } };
     const actions = createStandardActions({ session: {}, feedback, ui: {} });
 
     assert(actions.length > 0, '1. createStandardActions() still produces the full standard set');
@@ -214,7 +215,7 @@ function selectBricks(editorContext, building, brickIds) {
     selectBricks(editorContext, building, ids);
 
     const feedbackLog = [];
-    const feedback = { show(message) { feedbackLog.push(message); } };
+    const feedback = { show(message) { feedbackLog.push(displayText(message)); } };
     let focused = false;
     const ui = { focusRepeat: () => { focused = true; } };
     const registry = new EditorActionRegistry(createStandardActions({ session, feedback, ui }));
@@ -259,7 +260,7 @@ function selectBricks(editorContext, building, brickIds) {
     ]);
     const { session, editorContext, personalStructureLibraryStore } = buildSession({ world, building });
     const feedbackLog = [];
-    const feedback = { show(message) { feedbackLog.push(message); } };
+    const feedback = { show(message) { feedbackLog.push(displayText(message)); } };
 
     // Stands in for EditorView's own openCreateBlueprintDialog() +
     // onCreateBlueprint() pair: the dialog "submits" immediately.

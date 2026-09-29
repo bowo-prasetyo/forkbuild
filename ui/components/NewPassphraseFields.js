@@ -1,5 +1,6 @@
 import { computed } from 'vue';
 import { evaluateNewPassphrase } from '../../application/identity/NewPassphrasePolicy.js';
+import { t } from '../i18n/i18n.js';
 
 // The passphrase part of "create an identity" and "protect an identity":
 // a passphrase and its confirmation, and, when offerUnprotected is set, an
@@ -20,7 +21,7 @@ export default {
     emits: ['update:passphrase', 'update:confirmation', 'update:allowUnprotected', 'submit'],
     setup(props) {
         const evaluation = computed(() => evaluateNewPassphrase(props));
-        return { evaluation };
+        return { evaluation, t };
     },
     template: `
         <div class="new-passphrase-fields">
@@ -45,7 +46,7 @@ export default {
                     Create without a passphrase
                 </label>
             </template>
-            <p v-if="showHint && evaluation.message" class="identity-unlock-error">{{ evaluation.message }}</p>
+            <p v-if="showHint && evaluation.message" class="identity-unlock-error">{{ t(evaluation.message) }}</p>
         </div>
     `
 };

@@ -1,4 +1,5 @@
 import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../../application/avatar/AvatarPresenceLabels.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.2.43 — the design doc's own mockup, verbatim:
 //
@@ -38,13 +39,13 @@ export default {
     emits: ['select'],
     methods: {
         lifecycleLabel(state) {
-            return describeLifecycleState(state);
+            return t(describeLifecycleState(state));
         },
         trustLabel(status) {
-            return describeTrustStatus(status);
+            return t(describeTrustStatus(status));
         },
         animationLabel(state) {
-            return describeAnimationState(state);
+            return t(describeAnimationState(state));
         },
         statusDotClass(entry) {
             if (entry.trustStatus === 'EQUIVOCATING' || entry.trustStatus === 'UNAUTHORIZED') {

@@ -21,6 +21,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
+import { displayText, errorText, t } from '../ui/i18n/i18n.js';
 
 // Links to Publications whose Signed Claim is stored on Arweave or IPFS: the
 // links themselves, what Share says about them, the IPFS claim reader, the
@@ -69,7 +70,7 @@ function publishBuild() {
     for (const bad of ['/view/ar/short', `/view/ar/${TX}/more`, '/view/ipfs/', '/view/nostr/x', '/world/x', `view/ar/${TX}`, null]) {
         assert(publicationClaimLocatorFromViewPath(bad) === null, `${JSON.stringify(bad)} names no claim`);
     }
-    assert(describePublicationClaimLocator(`ar://${TX}`).label === `Arweave transaction ${TX}`, 'each locator has a readable label');
+    assert(t(describePublicationClaimLocator(`ar://${TX}`).label) === `Arweave transaction ${TX}`, 'each locator has a readable label');
     console.log('✓ the links');
 }
 
@@ -125,7 +126,7 @@ function publishBuild() {
     assert((await retrieve(`ar://${TX}`)).from === 'arweave' && (await retrieve(`ipfs://${CID_V0}`)).from === 'ipfs' && (await retrieve('steem://forkbuild/forkbuild-c-x')).from === 'steem', 'each network goes to its reader');
     assert(await retrieve('https://example.org/x') === null && asked.length === 3, 'something that isn\'t a claim locator reads nothing');
     const noSteem = await rejection(createPublicationClaimRetriever({})('steem://forkbuild/forkbuild-c-x'));
-    assert(noSteem?.message === 'reading from Steem isn\'t available in this browser', 'a network with no reader says so');
+    assert(errorText(noSteem) === 'reading from Steem isn\'t available in this browser', 'a network with no reader says so');
     console.log('✓ the retriever');
 }
 
@@ -174,15 +175,15 @@ function publishBuild() {
     }
 
     const notYet = await visit(`ar://${'N'.repeat(43)}`).open();
-    assert(notYet.outcome === Outcome.CLAIM_UNAVAILABLE && notYet.message.includes('can take a few minutes'), `an Arweave claim not found yet says it may still be coming (got ${notYet.message})`);
+    assert(notYet.outcome === Outcome.CLAIM_UNAVAILABLE && displayText(notYet.message).includes('can take a few minutes'), `an Arweave claim not found yet says it may still be coming (got ${notYet.message})`);
     arweaveUp = false;
     const down = await visit(`ar://${TX}`).open();
-    assert(down.outcome === Outcome.UNREACHABLE && down.message.startsWith('Arweave could not be reached') && down.message.includes('Failed to fetch'), `Arweave down (got ${down.message})`);
+    assert(down.outcome === Outcome.UNREACHABLE && displayText(down.message).startsWith('Arweave could not be reached') && displayText(down.message).includes('Failed to fetch'), `Arweave down (got ${down.message})`);
     const ipfsMissing = await visit('ipfs://QmMissingMissingMissingMissingMissingMissingMi').open();
-    assert(ipfsMissing.outcome === Outcome.UNREACHABLE && ipfsMissing.message.startsWith('IPFS could not be reached'), `an IPFS claim no gateway returns (got ${ipfsMissing.message})`);
-    assert(ipfsMissing.message.includes('so try again') && ipfsMissing.message.includes('add another gateway in Network Settings') && !ipfsMissing.message.includes('..'),
+    assert(ipfsMissing.outcome === Outcome.UNREACHABLE && displayText(ipfsMissing.message).startsWith('IPFS could not be reached'), `an IPFS claim no gateway returns (got ${ipfsMissing.message})`);
+    assert(displayText(ipfsMissing.message).includes('so try again') && displayText(ipfsMissing.message).includes('add another gateway in Network Settings') && !displayText(ipfsMissing.message).includes('..'),
         `and it says what to do (got ${ipfsMissing.message})`);
-    assert(!down.message.includes('Network Settings'), 'Arweave\'s message carries no IPFS advice');
+    assert(!displayText(down.message).includes('Network Settings'), 'Arweave\'s message carries no IPFS advice');
     assert((await visit('ftp://x').open()).outcome === Outcome.INVALID_LINK, 'a locator no link can name');
     console.log('✓ opening Arweave and IPFS links');
 }

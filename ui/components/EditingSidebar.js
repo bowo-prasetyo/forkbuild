@@ -3,6 +3,7 @@ import NumericTransformPanel from './NumericTransformPanel.js';
 import RepeatPanel from './RepeatPanel.js';
 import CollapsibleSection from './CollapsibleSection.js';
 import SelectionInspector from './SelectionInspector.js';
+import { displayText } from '../i18n/i18n.js';
 
 // The Editor's contextual Selection panel. It only shows controls that can
 // act right now: with nothing selected, a hint plus Select All / Paste and
@@ -75,7 +76,7 @@ export default {
                 return enabledTitle;
             }
             const action = this.registry.get(id);
-            return action && action.disabledReason ? action.disabledReason(this.context) : null;
+            return action && action.disabledReason ? displayText(action.disabledReason(this.context)) : null;
         },
         expandAndFocus(collapsedKey, selector) {
             this[collapsedKey] = false;

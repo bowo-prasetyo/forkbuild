@@ -1,4 +1,5 @@
 import { formatRelativeVisit } from '../../utils/formatRelativeVisit.js';
+import { displayText } from '../i18n/i18n.js';
 
 // 0.3.9 — World Welcome & Guided Exploration.
 //
@@ -121,6 +122,7 @@ export default {
         }
     },
     methods: {
+        displayText,
         suggestionIcon(suggestion) {
             switch (suggestion.kind) {
                 case 'landmark': return '★';
@@ -170,7 +172,7 @@ export default {
                 <section v-if="context.activitySummary && context.activitySummary.length" class="world-welcome-panel-section">
                     <h4 class="world-welcome-panel-section-title">What's happening nearby?</h4>
                     <ul class="world-welcome-panel-activity">
-                        <li v-for="(line, i) in context.activitySummary" :key="i">● {{ line }}</li>
+                        <li v-for="(line, i) in context.activitySummary" :key="i">● {{ displayText(line) }}</li>
                     </ul>
                 </section>
 
@@ -180,7 +182,7 @@ export default {
                         <li v-for="s in suggestions" :key="suggestionKey(s)" class="world-welcome-panel-item">
                             <div class="world-welcome-panel-item-info">
                                 <span class="world-welcome-panel-item-title">{{ suggestionIcon(s) }} {{ s.label }}</span>
-                                <span class="world-welcome-panel-item-reason">{{ s.reason }}</span>
+                                <span class="world-welcome-panel-item-reason">{{ displayText(s.reason) }}</span>
                             </div>
                             <button class="action-btn" @click="$emit('explore', s)">{{ suggestionActionLabel(s) }}</button>
                         </li>

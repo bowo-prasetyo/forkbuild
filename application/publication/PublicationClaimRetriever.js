@@ -1,4 +1,6 @@
 import { describePublicationClaimLocator } from '../../core/ForkBuildAppLinks.js';
+import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
 import { buildArweaveWorldEncounterMaterialResolver } from '../worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
 import { IpfsWorldEncounterMaterialResolver } from '../worldEncounter/IpfsWorldEncounterMaterialResolver.js';
 import { IpfsGatewayContentStore } from '../../content/IpfsGatewayContentStore.js';
@@ -12,12 +14,13 @@ import { IpfsGatewayFailoverContentStore } from '../../content/IpfsGatewayFailov
 // link says that network can't be reached rather than that nothing is there.
 export function createPublicationClaimRetriever({ steem = null, arweave = null, ipfs = null } = {}) {
     const readers = { steem, arweave, ipfs };
-    const names = { steem: 'Steem', arweave: 'Arweave', ipfs: 'IPFS' };
     return async function retrieveClaim(locator) {
         const where = describePublicationClaimLocator(locator);
         if (!where) return null;
         const reader = readers[where.network];
-        if (!reader || typeof reader.retrieveByUri !== 'function') throw new Error(`reading from ${names[where.network]} isn't available in this browser`);
+        if (!reader || typeof reader.retrieveByUri !== 'function') {
+            throw new UserFacingError(message(`publicationLink.noReader.${where.network}`), { detail: `no ${where.network} reader` });
+        }
         return reader.retrieveByUri(where.locator);
     };
 }

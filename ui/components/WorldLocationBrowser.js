@@ -1,4 +1,5 @@
 import { TrustStatus } from '../../core/TrustObservation.js';
+import { displayText } from '../i18n/i18n.js';
 
 // 0.9.521 — Close Remaining Raw Status Rendering Boundaries.
 //
@@ -207,6 +208,7 @@ export default {
         }
     },
     methods: {
+        displayText,
         onExplore() {
             const radius = Number(this.radiusInput);
             if (!Number.isFinite(radius) || radius < 0) return;
@@ -321,7 +323,7 @@ export default {
                                     </div>
                                     <div class="inspection-row">
                                         <span class="inspection-label">Status</span>
-                                        <span class="inspection-value">{{ inspected.documentInfo.statusLabel }}</span>
+                                        <span class="inspection-value">{{ displayText(inspected.documentInfo.statusLabel) }}</span>
                                     </div>
                                     <div v-if="inspected.documentInfo.description" class="inspection-row">
                                         <span class="inspection-label">Description</span>

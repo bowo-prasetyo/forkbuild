@@ -2947,3 +2947,47 @@ over area by area, then resident speech and the hand-made plurals, then a first 
   links.
 - Not done: the rest of the UI's text, keys from `core/` and `application/`, any real translation, right-to-left
   styles (the stylesheet still uses physical `left`/`right`), and translated user docs.
+
+## Internationalization, phase 2: text from `core/` and `application/` as messages (unnumbered, 2026-09-29)
+
+Phase 1 gave the UI a translator, but much of what a person reads was written in English below the UI, where `t()`
+can't be called: the Editor's action labels and feedback, the license and presence labels, the passphrase rules,
+the messages for opening a Publication link, the fork-on-edit notice and refusal, the World welcome suggestions and
+the Build Library's names. Those layers now name their text with a message key instead, and the UI shows it in the
+chosen language. English reads exactly as before.
+
+- Mechanism: `core/Message.js` (`message(key, params)`, a frozen descriptor whose `toString()` is its key, so one
+  that slips past `t()` is visible rather than `[object Object]`) and `core/UserFacingError.js` (an Error carrying a
+  descriptor; its `.message` is the key plus a developer detail). `ui/i18n/i18n.js` adds `t(descriptor)`,
+  `displayText()`, `errorText()` and `hasMessage()`; `Translator` translates descriptor parameters and joins lists
+  with `Intl.ListFormat`.
+- Editor actions (`application/editor/EditorActionRegistry.js`): every label and description is named after the
+  action's id (`editorAction.<id>`, `.description`, `.done`, `.nothing`), categories are ids
+  (`editorActionCategory.<id>`), and reasons and "not available" feedback are messages. `findMatching(query, toText)`
+  searches what the person reads. A session refusing an action with a UserFacingError now reaches the person as its
+  message, where the fork-on-edit refusal used to show "WorldNavigationSession: forking is not permitted…". The
+  command palette, Keyboard Shortcuts overlay (including its own tables), sidebar, selection inspector and both views'
+  feedback show them.
+- Label modules: `LicenseLabels.js`, `PlacementPolicyLabels.js`, `DocumentLifecycleStatus.js`,
+  `AvatarPresenceLabels.js` and `NewPassphrasePolicy.js` return descriptors; `forkOnWriteMethods.js`'s notice and
+  refusal too.
+- Links: `OpenPublicationLink.js` says each outcome as one whole sentence per network, with the network's own error
+  as an untranslated `{detail}`; `core/ForkBuildAppLinks.js` labels and `PublicationClaimRetriever.js`'s missing-reader
+  error are messages; `ui/views/PublicationLinkView.js` is fully translated.
+- `core/WorldWelcomeContext.js`: suggestion reasons and activity summaries are messages, one whole sentence per
+  activity with and without a target.
+- Build Library: `ui/i18n/libraryText.js` looks up a built-in brick's or structure's name and description by id
+  (`library.core.slope45`), falling back to the item's own name, so personal blueprints and community libraries are
+  never translated; search matches both the shown and the English name.
+- Docs: `docs/Translating.md` (text from `core/` and `application/`), `docs/CodingConventions.md`,
+  `docs/Architecture.md` (UI).
+- Tests: `tests/I18nMessageKeys.test.js` (descriptors, UserFacingError, `t`/`displayText`/`errorText`, nested and
+  list parameters, every editor action run through a capable, an empty and a bare session with every label, reason
+  and report checked for an English message, a refusal reaching the person as its message, every label module value,
+  every link outcome on every network, every built-in library item, and the pseudo-locale); 18 existing tests now read
+  labels and feedback through `t()`, and `WandererPresenceSessionContinuityProductReassessment` checks the presence
+  labels by behavior instead of source text. Checked in the real app: the Editor's library, palette and shortcuts in
+  English and the pseudo-locale, with no untranslated keys.
+- Not done: command history descriptions ("Place Brick", "Undo …"), which documents store, so they need their own
+  change; the Publications page's result views (`PublicationEvidenceDiscoveryView.js` and the other four), which move
+  with that page; other thrown errors, area by area; resident speech.

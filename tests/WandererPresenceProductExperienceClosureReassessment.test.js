@@ -16,7 +16,12 @@ import { toAvatarPresenceAdvertisement } from '../core/AvatarPresenceAdvertiseme
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
 import { computeNearbyAvatars } from '../core/AvatarProximity.js';
 
-import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../application/avatar/AvatarPresenceLabels.js';
+import { describeLifecycleState as describeLifecycleStateMessage, describeTrustStatus as describeTrustStatusMessage, describeAnimationState as describeAnimationStateMessage } from '../application/avatar/AvatarPresenceLabels.js';
+import { t } from '../ui/i18n/i18n.js';
+// Each label as a person reads it, in English.
+const describeLifecycleState = (...args) => t(describeLifecycleStateMessage(...args));
+const describeTrustStatus = (...args) => t(describeTrustStatusMessage(...args));
+const describeAnimationState = (...args) => t(describeAnimationStateMessage(...args));
 import NearbyAvatarsPanel from '../ui/components/NearbyAvatarsPanel.js';
 import AvatarInfoPanel from '../ui/components/AvatarInfoPanel.js';
 import WorldMembersPanel from '../ui/components/WorldMembersPanel.js';

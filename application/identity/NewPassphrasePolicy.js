@@ -1,4 +1,5 @@
 import { MIN_PASSPHRASE_LENGTH } from '../../identity/LocalIdentityProvider.js';
+import { message } from '../../core/Message.js';
 
 // Whether a "new passphrase" form (creating or protecting an identity) can
 // be submitted, and what to tell the user if not. A passphrase is the
@@ -7,7 +8,7 @@ import { MIN_PASSPHRASE_LENGTH } from '../../identity/LocalIdentityProvider.js';
 // stored in plain form on this device.
 //
 // Returns { ok, protect, message }: protect says whether to encrypt the
-// key; message is the hint to show, or null.
+// key; message is the hint to show (core/Message.js), or null.
 export function evaluateNewPassphrase({ passphrase = '', confirmation = '', allowUnprotected = false, offerUnprotected = true } = {}) {
     if (!passphrase) {
         if (offerUnprotected && allowUnprotected) {
@@ -16,16 +17,14 @@ export function evaluateNewPassphrase({ passphrase = '', confirmation = '', allo
         return {
             ok: false,
             protect: false,
-            message: offerUnprotected
-                ? 'Choose a passphrase, or tick "Create without a passphrase".'
-                : 'Choose a passphrase.'
+            message: message(offerUnprotected ? 'passphrase.chooseOrSkip' : 'passphrase.choose')
         };
     }
     if (passphrase.length < MIN_PASSPHRASE_LENGTH) {
-        return { ok: false, protect: true, message: `A passphrase needs at least ${MIN_PASSPHRASE_LENGTH} characters.` };
+        return { ok: false, protect: true, message: message('passphrase.tooShort', { count: MIN_PASSPHRASE_LENGTH }) };
     }
     if (confirmation !== passphrase) {
-        return { ok: false, protect: true, message: 'The two passphrases don\'t match.' };
+        return { ok: false, protect: true, message: message('passphrase.mismatch') };
     }
     return { ok: true, protect: true, message: null };
 }

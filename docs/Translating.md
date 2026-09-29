@@ -85,10 +85,50 @@ done yet.
   screen it belongs to. Keys are dotted camelCase: `<area>.<name>`.
 - Call `t()` when rendering, not when a module loads, so it reads the chosen
   language.
-- `core/` and `application/` never call `t()`: they return a key and its
-  parameters (or an error code), and the UI turns them into text.
+- `core/` and `application/` never call `t()` or write English for the
+  screen; see the next section.
 - Check your work in the pseudo-locale (**Language → For translators**). It
   shows every translated message accented, padded and bracketed:
   `⟦Šöüñð öñ ~~~⟧`. Plain English that is left shows text still written
   into a component. A cut-off bracket shows a layout too narrow for a longer
   translation.
+
+## For developers: text from `core/` and `application/`
+
+Those layers can't import the UI, so they name their text instead of writing
+it:
+
+- **A message descriptor**, from `message(key, params)` in `core/Message.js`,
+  is what a use case, label module or result returns wherever it used to
+  return an English string: `message('passphrase.tooShort', { count: 8 })`.
+  The UI shows it with `t(descriptor)`, or `displayText(value)` where a value
+  may be either a descriptor or text that is already final (a title someone
+  wrote). A descriptor that reaches the screen untranslated shows its key,
+  which the pseudo-locale makes easy to spot.
+- **A parameter can be a descriptor or a list.** A descriptor is translated
+  first (`{ author: message('publicationLink.unknownAuthor') }`) and a list is
+  joined the language's way ("a, b, c"). Use these rather than joining
+  translated pieces yourself.
+- **A `UserFacingError`** (`core/UserFacingError.js`) is an error meant for
+  the person using the app: a refused action or an invalid input. It carries
+  a descriptor, and its own `.message` stays the key plus a developer detail
+  for logs. The UI shows any error with `errorText(error)`, which uses the
+  descriptor when there is one. Programmer errors (a missing collaborator, a
+  broken invariant) stay plain English `Error`s: nobody using the app reads
+  them.
+- **Enum-to-label modules** (`application/document/LicenseLabels.js`,
+  `application/avatar/AvatarPresenceLabels.js`) map each value to a key, with
+  a message for anything unrecognized.
+- **Text people write is never a message**: titles, names, a personal
+  blueprint's name. Built-in content that has a stable id is translated by
+  looking that id up (`ui/i18n/libraryText.js`: `core:slope_45` →
+  `library.core.slope45`), falling back to the item's own name.
+- **Editor actions** (`application/editor/EditorActionRegistry.js`) name
+  everything after the action's id: `editorAction.<id>` is its label, and
+  `.description`, `.done` (what it reports) and `.nothing` (when there was
+  nothing to act on) follow it; `editorActionCategory.<category>`,
+  `editorActionReason.<reason>` and `editorActionUnavailable.<capability>`
+  cover the rest. A new action needs only its English messages.
+
+`tests/I18nMessageKeys.test.js` runs these modules and checks that every
+descriptor they produce has an English message.
