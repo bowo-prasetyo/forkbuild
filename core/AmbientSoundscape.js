@@ -1,15 +1,33 @@
 // What the World sounds like where the listener stands: a level from 0 to 1
 // for each ambient layer, derived from the same terrain functions that draw
-// the land, so a place always sounds the same and nothing is stored.
+// the land and its trees, so a place always sounds the same and nothing is
+// stored.
 import { ecologyZoneAt, ECOLOGY_ZONE } from './TerrainEcology.js';
 import { isRiverAt } from './Hydrology.js';
+import { naturalFeaturesInRegion, TREE_SPECIES } from './NaturalFeatureField.js';
 
 export const AMBIENT_LAYER = Object.freeze({
     WIND: 'wind',
     BIRDS: 'birds',
     INSECTS: 'insects',
     WATER: 'water',
-    STREAM: 'stream'
+    STREAM: 'stream',
+    // Leaves rustling in broadleaf trees and scrub, and wind sighing through
+    // conifers, from the trees actually standing around the listener.
+    LEAVES: 'leaves',
+    PINES: 'pines'
+});
+
+// Trees within this distance are heard, the nearest loudest.
+const TREE_EARSHOT = 20;
+// This much nearness-weighted tree (a few close trees, or a forest around
+// you) is a full layer.
+const TREES_FOR_FULL_LAYER = 6;
+// A scrub bush rustles less than a broadleaf tree.
+const TREE_RUSTLE = Object.freeze({
+    [TREE_SPECIES.BROADLEAF]: { leaves: 1 },
+    [TREE_SPECIES.SCRUB]: { leaves: 0.4 },
+    [TREE_SPECIES.CONIFER]: { pines: 1 }
 });
 
 export const AMBIENT_LAYERS = Object.freeze(Object.values(AMBIENT_LAYER));
@@ -58,6 +76,14 @@ export function ambientMixAt(seed, x, z) {
                 mix[AMBIENT_LAYER.STREAM] += sampleWeight;
             }
         }
+    }
+    const trees = naturalFeaturesInRegion(seed, x - TREE_EARSHOT, z - TREE_EARSHOT, x + TREE_EARSHOT, z + TREE_EARSHOT);
+    for (const tree of trees) {
+        const nearness = 1 - Math.hypot(tree.x - x, tree.z - z) / TREE_EARSHOT;
+        if (nearness <= 0) continue;
+        const rustle = TREE_RUSTLE[tree.species] || {};
+        mix[AMBIENT_LAYER.LEAVES] += ((rustle.leaves || 0) * nearness) / TREES_FOR_FULL_LAYER;
+        mix[AMBIENT_LAYER.PINES] += ((rustle.pines || 0) * nearness) / TREES_FOR_FULL_LAYER;
     }
     for (const layer of AMBIENT_LAYERS) {
         mix[layer] = Math.min(1, Math.max(0, mix[layer]));

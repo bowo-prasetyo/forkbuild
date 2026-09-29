@@ -22,6 +22,7 @@ class FakeProvider {
     setVolume(volume) { this.volume = volume; }
     setMuted(muted) { this.muted = muted; }
     playCue(cue) { this.calls.push(`cue:${cue.kind}`); }
+    playEditorCue(cue) { this.calls.push(`edit:${cue}`); }
     setEngine(engine) { this.calls.push(engine ? `engine:${engine.vehicleType}:${engine.load.toFixed(2)}` : 'engine:off'); }
     dispose() { this.disposed = true; }
 }
@@ -194,4 +195,31 @@ function build({ position = { x: 10, y: 0, z: -20 }, storage = new InMemoryStora
     assert(!subscribed, 'ambient-only needs no frames');
     service.dispose();
     console.log('✓ ambient-only without an avatar');
+}
+
+// World View's own edits are heard as in the Editor, until disposed.
+{
+    const provider = new FakeProvider();
+    let listener = null;
+    let unsubscribed = false;
+    const service = new WorldSoundscapeService({
+        provider,
+        settingsStore: new SoundSettingsStore({ storageProvider: new InMemoryStorageProvider() }),
+        listenerPosition: () => null,
+        seed: DEFAULT_WORLD_SEED,
+        onCommandActivity: (l) => { listener = l; return () => { unsubscribed = true; }; },
+        setIntervalFn: () => 1,
+        clearIntervalFn: () => {}
+    });
+    service.start();
+    assert(typeof listener === 'function', 'the service listens to World edits');
+    listener('executed', { type: 'create-world-landmark', children: [] });
+    listener('executed', { type: 'create-world-resident', children: [] });
+    listener('undone', { type: 'create-world-resident', children: [] });
+    listener('executed', { type: 'unknown-thing', children: [] });
+    const edits = provider.calls.filter((c) => c.startsWith('edit:'));
+    assert(edits.join() === 'edit:mark,edit:place,edit:undo', `landmark, resident and undo are heard (${edits})`);
+    service.dispose();
+    assert(unsubscribed, 'dispose() stops listening to edits');
+    console.log('✓ World View edits');
 }

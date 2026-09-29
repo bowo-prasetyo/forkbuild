@@ -1086,7 +1086,8 @@ are shared by every tile.
 
 ## Sound
 
-    core/AmbientSoundscape.js#ambientMixAt(seed, x, z)   level 0..1 per layer: wind, birds, insects, water, stream
+    core/AmbientSoundscape.js#ambientMixAt(seed, x, z)   level 0..1 per layer: wind, birds, insects, water, stream,
+            │                                             leaves, pines
             │  (ecologyZoneAt() and isRiverAt() underfoot, on a ring at 12 m and one at 30 m)
     core/AvatarSoundCues.js#advanceAvatarSound()         per frame: footstep / jump / land cues, engine { vehicleType, load }
             │  (from WorldNavigationSession#avatarSoundObservation(): position, animation, verticalState, vehicleType)
@@ -1107,7 +1108,9 @@ are shared by every tile.
 - **Mix.** Each ecology zone contributes a fixed level to each layer (forest: birds, sheltered from wind; highland
   and rock: wind; field and grassland: insects; lake: lapping water, faintly at a beach; river: running water). The
   spot underfoot weighs 0.4, the near ring 0.4 and the far ring 0.2, so a lake or forest is heard before it is
-  reached. Like the terrain it is a pure function of place: nothing is stored or sent, and every viewer at a spot
+  reached. LEAVES and PINES come from the trees themselves: every tree `naturalFeaturesInRegion()` puts within 20 m
+  adds its nearness (1 − distance / 20) over 6 to its layer, BROADLEAF fully and SCRUB at 0.4 to LEAVES, CONIFER to
+  PINES. Like the terrain it is a pure function of place: nothing is stored or sent, and every viewer at a spot
   hears the same land.
 - **Service.** `WorldView` makes one through the `createWorldSoundscape` factory `ui/main.js` provides
   (`ui/views/worldView/useWorldSoundscape.js`), after `session.start()`, and disposes it on unmount. It resamples
@@ -1129,7 +1132,10 @@ are shared by every tile.
   forest, GRASS otherwise. JUMP is SUPPORTED → RISING; LAND is a return to SUPPORTED after at least 0.15 s in the air
   (a stair step-down is shorter), its intensity growing to 1 over a 1 s fall. Riding, the engine's `load` is the
   vehicle's speed from frame to frame over its capability's top speed. The service only resends an engine when its
-  type changes or its load moves by 0.02.
+  type changes or its load moves by 0.02. MOUNT and DISMOUNT (with the vehicle type) are the ridden type changing,
+  never on the first frame, so already riding when sound starts is silent; BRAKE is the observation's `braking`
+  (`movementState().brakingRequested`) turning on at a load of at least 0.15, its intensity that load
+  (`audio/VehicleEventSynth.js`).
 - **Effects.** Cues are dropped unless the context is running, so a suspended (muted, hidden) context never plays a
   backlog on resume. A footstep is a filtered burst of the shared white noise, randomized ±10% in pitch and ±15% in
   level, with a second crunch for leaves, a splash sweep for water and a low knock for bricks. Engines are
@@ -1158,6 +1164,12 @@ are shared by every tile.
   event and Ctrl+S), on a provider built with `ambience: false`: no layers, no birds, only cues.
   `application/settings/SoundPreference.js` applies and saves mute and volume for both services, and
   `ui/composables/useSoundControls.js` gives both views the Sound button, `M` and the gesture unlock.
+- **World View edits.** `WorldNavigationSession#onCommandActivity(listener)` reports the same for each World's
+  CommandHistory (`_registerCommandHistory()` subscribes, `_unregisterCommandHistory()` and `dispose()`
+  unsubscribe), and `WorldSoundscapeService` plays the cue through `provider.playEditorCue()`. A collaborator's World
+  operation is executed straight against the document by `WorldCommandPropagationUseCase`, never through these
+  histories, so it is never heard. `application/commands/describeCommand.js` gives both sessions the
+  `{ type, children }` shape.
 - **Not yet.** Other avatars' footsteps, vehicles other people ride, and true 3D (HRTF) sound.
 
 ## Collaboration

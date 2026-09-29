@@ -2816,3 +2816,27 @@ preference) or sent.
   the browser test (every creature and Editor sound audible, panning, distance, no ambience in the Editor).
 - Not done: other avatars' footsteps and vehicles, and true 3D (HRTF) sound; `M` isn't listed in the Editor's
   Keyboard Shortcuts overlay, which lists the action registry.
+
+## Vehicle get-on, get-off and brake sounds, tree sounds, World View edit sounds (unnumbered, 2026-09-29)
+
+**Three gaps left after the sound phases, from the original audit: getting on and off a vehicle and braking are
+heard now (a bicycle's bell and kickstand, a motorcycle's kick-start, a car door and ignition, a drone spinning up and
+down; brake pads or tyres squealing, louder the faster you were going); the trees around you are heard by kind
+(leaves rustling in broadleaf woods and scrub, wind sighing in conifers); and changes made to a World in World View
+(landmarks, regions, residents, decorations, undo and redo) make the same sounds as in the Editor.**
+
+- Vehicles: `core/AvatarSoundCues.js` adds MOUNT, DISMOUNT and BRAKE cues from the ridden vehicle type changing and
+  from `braking` (`avatarSoundObservation()` now reports `movementState().brakingRequested`) turning on at 15% of top
+  speed or more; `audio/VehicleEventSynth.js` plays them.
+- Trees: `core/AmbientSoundscape.js` adds LEAVES and PINES layers from `naturalFeaturesInRegion()` within 20 m,
+  weighted by nearness; the provider plays them as a gusting high rustle and a slow airy band.
+- World View edits: `WorldNavigationSession#onCommandActivity()` over each World's CommandHistory (a collaborator's
+  operations never pass through it), played by `WorldSoundscapeService` with the Editor's cues.
+  `application/commands/describeCommand.js` is now shared by both sessions.
+- Docs: `docs/user/03-WorldView.md` (Sound), `docs/Architecture.md` (Sound).
+- Tests: `tests/AmbientSoundscape.test.js` (broadleaf, conifer and treeless ground; a lone tree louder up close),
+  `tests/AvatarSoundCues.test.js` (mount, dismount, changing vehicle, already riding, braking at speed once, not at a
+  standstill or on foot), `tests/AvatarSoundObservation.test.js` (a real session mounting, dismounting and braking),
+  `tests/WorldSoundscapeService.test.js` and `tests/CreatureSoundObservation.test.js` (World View edits, and adding,
+  undoing and redoing a real resident heard), and the browser test (both tree layers, every vehicle's get-on,
+  get-off and brake).

@@ -60,6 +60,7 @@ class RecordingProvider {
     playCue() {}
     setEngine() {}
     playCreatureCue(cue) { this.creatureCues.push(cue); }
+    playEditorCue(cue) { (this.editorCues ||= []).push(cue); }
     dispose() {}
 }
 
@@ -99,6 +100,7 @@ const service = new WorldSoundscapeService({
     listenerPosition: () => session.getAvatarPosition(),
     seed: SEED,
     creatureObservation: () => session.creatureSoundObservation(),
+    onCommandActivity: (listener) => session.onCommandActivity(listener),
     setIntervalFn: () => 1,
     clearIntervalFn: () => {}
 });
@@ -149,8 +151,17 @@ const service = new WorldSoundscapeService({
     session._loadedDocuments.set('w-home', new Document({ world, metadata: new DocumentMetadata({ title: 'Home' }) }));
     session._registerCommandHistory('w-home', new CommandHistory({ world }));
     session._activeDocumentId = 'w-home';
+    const activity = [];
+    const stopActivity = session.onCommandActivity((kind, command) => activity.push(`${kind}:${command.type}`));
     const id = session.addResidentHere();
     assert(id, 'setup: a resident lives here');
+    assert(activity.join() === 'executed:create-world-resident', `adding a resident is reported (${activity})`);
+    assert((provider.editorCues || []).join() === 'place', 'and heard like a placement');
+    session.undo();
+    session.redo();
+    assert(activity.slice(1).join() === 'undone:create-world-resident,redone:create-world-resident', `undo and redo are reported (${activity})`);
+    assert(provider.editorCues.slice(1).join() === 'undo,redo', 'and heard');
+    stopActivity();
     assert(session.residentsForSound(session.getAvatarPosition()).some((r) => r.id === id), 'the resident is within earshot');
     service.sampleCreatures();
     const before = provider.creatureCues.length;

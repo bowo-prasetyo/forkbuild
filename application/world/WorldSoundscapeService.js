@@ -7,14 +7,15 @@
 //
 // The provider is an adapter (audio/WebAudioSoundscapeProvider.js in the
 // browser) with resume(), setLayerLevels(levels), playCue(cue),
-// playCreatureCue(cue), setEngine(engine), setVolume(volume), setMuted(muted)
-// and dispose().
+// playCreatureCue(cue), playEditorCue(cue), setEngine(engine),
+// setVolume(volume), setMuted(muted) and dispose().
 // Browsers keep audio silent until the user interacts with the page, so the
 // view calls unlock() from its first key press or tap.
 import { ambientMixAt, silentAmbientMix } from '../../core/AmbientSoundscape.js';
 import { advanceAvatarSound, createAvatarSoundState } from '../../core/AvatarSoundCues.js';
 import { advanceCreatureSound, createCreatureSoundState } from '../../core/CreatureSoundCues.js';
 import { SoundPreference } from '../settings/SoundPreference.js';
+import { editorSoundCueFor } from '../../core/EditorSoundCues.js';
 
 const DEFAULT_SAMPLE_INTERVAL_MS = 250;
 // Moving less than this since the last sample can't change what is heard.
@@ -34,6 +35,7 @@ export class WorldSoundscapeService {
         avatarObservation = null,
         creatureObservation = null,
         onRenderFrame = null,
+        onCommandActivity = null,
         sampleIntervalMs = DEFAULT_SAMPLE_INTERVAL_MS,
         setIntervalFn = globalThis.setInterval.bind(globalThis),
         clearIntervalFn = globalThis.clearInterval.bind(globalThis)
@@ -58,6 +60,8 @@ export class WorldSoundscapeService {
         this._creatureSeconds = CREATURE_SAMPLE_SECONDS;
         this._engine = null;
         this._frameUnsubscribe = null;
+        this._onCommandActivity = typeof onCommandActivity === 'function' ? onCommandActivity : null;
+        this._activityUnsubscribe = null;
         this._disposed = false;
     }
 
@@ -70,6 +74,16 @@ export class WorldSoundscapeService {
         this._interval = this._setInterval(() => this.sample(), this._sampleIntervalMs);
         if ((this._avatarObservation || this._creatureObservation) && this._onRenderFrame) {
             this._frameUnsubscribe = this._onRenderFrame((deltaSeconds) => this.frame(deltaSeconds));
+        }
+        // World View's own edits (places, residents, decorations) sound as they
+        // do in the Editor.
+        if (this._onCommandActivity) {
+            this._activityUnsubscribe = this._onCommandActivity((activity, command) => {
+                const cue = editorSoundCueFor(activity, command);
+                if (cue) {
+                    this._provider.playEditorCue(cue);
+                }
+            });
         }
     }
 
@@ -176,6 +190,10 @@ export class WorldSoundscapeService {
         if (typeof this._frameUnsubscribe === 'function') {
             this._frameUnsubscribe();
             this._frameUnsubscribe = null;
+        }
+        if (typeof this._activityUnsubscribe === 'function') {
+            this._activityUnsubscribe();
+            this._activityUnsubscribe = null;
         }
         this._provider.dispose();
     }

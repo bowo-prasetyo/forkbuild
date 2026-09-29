@@ -1,11 +1,12 @@
 // Plays World View's and the Editor's sound with the Web Audio API: the
-// ambient layers, the local avatar's footsteps, jumps and landings
-// (audio/AvatarSoundSynth.js), the engine of what it rides
-// (audio/VehicleEngineVoice.js), animals and residents (audio/CreatureSoundSynth.js)
-// and Editor edits (audio/EditorSoundSynth.js). Every sound is synthesized
-// from noise and oscillators, so nothing is downloaded and there are no audio
-// files to license. What to play comes from the services in application/;
-// these files only decide how it sounds.
+// ambient layers (wind, birds, insects, lake, river, leaves and pines), the
+// local avatar's footsteps, jumps and landings (audio/AvatarSoundSynth.js),
+// the engine of what it rides and getting on, off and braking
+// (audio/VehicleEngineVoice.js, audio/VehicleEventSynth.js), animals and
+// residents (audio/CreatureSoundSynth.js) and edits (audio/EditorSoundSynth.js).
+// Every sound is synthesized from noise and oscillators, so nothing is
+// downloaded and there are no audio files to license. What to play comes from
+// the services in application/; these files only decide how it sounds.
 //
 // The AudioContext is made on the first resume(), which the view calls from a
 // user gesture: browsers refuse to start audio before one. While the page is
@@ -19,15 +20,16 @@ import {
     playAnimalCall, playAnimalStep, playCatchOrRelease, playResidentGreet, playResidentSpeech, playResidentStep
 } from './CreatureSoundSynth.js';
 import { playEditorSound, hasEditorSound } from './EditorSoundSynth.js';
+import { playMount, playDismount, playBrake } from './VehicleEventSynth.js';
 
-const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream'];
+const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream', 'leaves', 'pines'];
 // The avatar's own sounds sit in front of the ambience.
 const EFFECTS_GAIN = 0.7;
 // A placed cue's nodes are let go once it has surely finished.
 const PLACED_CUE_SECONDS = 4;
 
 // Each layer's gain at level 1, balanced by ear so no single layer dominates.
-const LAYER_PEAK = Object.freeze({ wind: 0.4, birds: 0.35, insects: 0.035, water: 0.35, stream: 0.2 });
+const LAYER_PEAK = Object.freeze({ wind: 0.4, birds: 0.35, insects: 0.035, water: 0.35, stream: 0.2, leaves: 0.12, pines: 0.18 });
 
 // Time constant of a level change: walking into a forest fades birds in over
 // a couple of seconds rather than switching them on.
@@ -122,6 +124,12 @@ export class WebAudioSoundscapeProvider {
             playJump(...args);
         } else if (cue.kind === AVATAR_SOUND_CUE.LAND) {
             playLanding(...args);
+        } else if (cue.kind === AVATAR_SOUND_CUE.MOUNT) {
+            playMount(this._context, this._effects, this._effectsNoise, cue.vehicleType, this._random);
+        } else if (cue.kind === AVATAR_SOUND_CUE.DISMOUNT) {
+            playDismount(this._context, this._effects, this._effectsNoise, cue.vehicleType, this._random);
+        } else if (cue.kind === AVATAR_SOUND_CUE.BRAKE) {
+            playBrake(this._context, this._effects, this._effectsNoise, cue.vehicleType, cue.intensity, this._random);
         }
     }
 
@@ -312,6 +320,8 @@ export class WebAudioSoundscapeProvider {
             this._buildWater(brown);
             this._buildStream(white);
             this._buildInsects();
+            this._buildLeaves(white);
+            this._buildPines(white);
         }
         this._effects = context.createGain();
         this._effects.gain.value = EFFECTS_GAIN;
@@ -407,6 +417,31 @@ export class WebAudioSoundscapeProvider {
     }
 
     // Crickets: a high tone chopped into a fast trill that comes and goes.
+    // Leaves rustling: bright, thin noise that swells in gusts and flutters.
+    _buildLeaves(white) {
+        const filter = this._filter('highpass', 3000, 0.7);
+        const rustle = this._context.createGain();
+        rustle.gain.value = 0.5;
+        this._modulate(rustle.gain, 0.23, 0.35);
+        this._modulate(rustle.gain, 6.5, 0.12);
+        this._loop(white, NOISE_SECONDS / 3).connect(filter);
+        filter.connect(rustle);
+        rustle.connect(this._layerGains.leaves);
+    }
+
+    // Wind through conifers: a soft, airy sigh, higher than open-ground wind,
+    // rising and falling slowly.
+    _buildPines(white) {
+        const filter = this._filter('bandpass', 900, 0.5);
+        this._modulate(filter.frequency, 0.05, 300);
+        const sigh = this._context.createGain();
+        sigh.gain.value = 0.6;
+        this._modulate(sigh.gain, 0.09, 0.35);
+        this._loop(white, (NOISE_SECONDS * 2) / 3).connect(filter);
+        filter.connect(sigh);
+        sigh.connect(this._layerGains.pines);
+    }
+
     _buildInsects() {
         const tone = this._context.createOscillator();
         tone.type = 'sine';

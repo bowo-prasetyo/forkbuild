@@ -32,6 +32,9 @@ import { stateQueryMethods } from '../worldNavigation/stateQueryMethods.js';
 import { worldStreamingMethods } from '../worldNavigation/worldStreamingMethods.js';
 import { documentOperationMethods } from '../worldNavigation/documentOperationMethods.js';
 import { soundObservationMethods } from '../worldNavigation/soundObservationMethods.js';
+import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
+import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
+import { describeCommand } from '../commands/describeCommand.js';
 
 // Throttle for runtime vehicle/animal persistence. A ridden vehicle moves
 // every frame; one snapshot per second is indistinguishable after a reload.
@@ -342,6 +345,8 @@ export class WorldNavigationSession {
         // replaced or removed CommandHistory stops broadcasting.
         this._worldCommandPropagation = worldCommandPropagation;
         this._commandHistoryUnsubscribes = new Map();
+        this._commandActivityListeners = new Set();
+        this._commandActivityUnsubscribes = new Map();
 
         this._worldMembershipUseCase = worldMembershipUseCase;
         this._worldPresenceUseCase = worldPresenceUseCase;
@@ -506,7 +511,35 @@ export class WorldNavigationSession {
             });
             this._commandHistoryUnsubscribes.set(worldId, unsubscribe);
         }
+        const activity = (kind) => ({ command }) => this._emitCommandActivity(kind, command);
+        const subscriptions = [
+            history.eventBus.subscribe(CommandHistoryEvent.COMMAND_EXECUTED, activity(EDITOR_ACTIVITY.EXECUTED)),
+            history.eventBus.subscribe(CommandHistoryEvent.COMMAND_UNDONE, activity(EDITOR_ACTIVITY.UNDONE)),
+            history.eventBus.subscribe(CommandHistoryEvent.COMMAND_REDONE, activity(EDITOR_ACTIVITY.REDONE))
+        ];
+        this._commandActivityUnsubscribes.set(worldId, () => subscriptions.forEach((subscription) => subscription.unsubscribe()));
         return history;
+    }
+
+    // Calls `listener(activity, command)` for every change the user makes to a
+    // World from World View (naming places, residents, decorations, and undo and
+    // redo of them): an EDITOR_ACTIVITY and the command as { type, children }.
+    // A collaborator's change is applied straight to the document, never
+    // through these histories, so it is never reported. Returns an unsubscribe
+    // function.
+    onCommandActivity(listener) {
+        this._commandActivityListeners.add(listener);
+        return () => this._commandActivityListeners.delete(listener);
+    }
+
+    _emitCommandActivity(activity, command) {
+        if (this._commandActivityListeners.size === 0) {
+            return;
+        }
+        const described = describeCommand(command);
+        for (const listener of [...this._commandActivityListeners]) {
+            listener(activity, described);
+        }
     }
 
     // Mirror of _registerCommandHistory(): a history this session no longer owns
@@ -516,6 +549,11 @@ export class WorldNavigationSession {
         if (unsubscribe) {
             unsubscribe();
             this._commandHistoryUnsubscribes.delete(worldId);
+        }
+        const stopActivity = this._commandActivityUnsubscribes.get(worldId);
+        if (stopActivity) {
+            stopActivity();
+            this._commandActivityUnsubscribes.delete(worldId);
         }
         this._commandHistories.delete(worldId);
     }
@@ -799,6 +837,10 @@ export class WorldNavigationSession {
             unsubscribe();
         }
         this._commandHistoryUnsubscribes.clear();
+        for (const stopActivity of this._commandActivityUnsubscribes.values()) {
+            stopActivity();
+        }
+        this._commandActivityUnsubscribes.clear();
         this._commandHistories.clear();
         this._loadedDocuments.clear();
         this._failedLoads.clear();

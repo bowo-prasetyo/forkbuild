@@ -71,7 +71,7 @@ function zeroCrossingRate(data, from, to) {
 
 async function runTests() {
     // Every continuous layer makes sound on its own, and silence is silent.
-    for (const layer of ['wind', 'water', 'stream', 'insects']) {
+    for (const layer of ['wind', 'water', 'stream', 'insects', 'leaves', 'pines']) {
         const rms = await render((provider) => provider.setLayerLevels({ ...silence(), [layer]: 1 }));
         assert(rms > 0.001, `${layer} is audible (rms ${rms})`);
     }
@@ -349,6 +349,24 @@ async function runTests() {
         editor.dispose();
         assert(rmsOf(silent) === 0, 'without ambience, layer levels make no sound');
         console.log('✓ Editor sounds, and no ambience in the Editor');
+    }
+
+    // Getting on, getting off and braking every vehicle are audible and short;
+    // a harder brake is louder.
+    {
+        for (const vehicleType of ['bicycle', 'motorcycle', 'car', 'drone']) {
+            for (const kind of ['mount', 'dismount']) {
+                const data = await renderEffects(2, (p) => p.playCue({ kind, vehicleType }));
+                const sound = rmsOf(data, 0, SAMPLE_RATE * 1.2);
+                assert(sound > 0.002, `${kind} ${vehicleType} is audible (${sound})`);
+                assert(rmsOf(data, SAMPLE_RATE * 1.6, SAMPLE_RATE * 2) < sound * 0.05, `${kind} ${vehicleType} is short`);
+            }
+            const soft = rmsOf(await renderEffects(1.5, (p) => p.playCue({ kind: 'brake', vehicleType, intensity: 0.3 })), 0, SAMPLE_RATE);
+            const hard = rmsOf(await renderEffects(1.5, (p) => p.playCue({ kind: 'brake', vehicleType, intensity: 1 })), 0, SAMPLE_RATE);
+            assert(soft > 0.001 && hard > soft, `braking a ${vehicleType} is audible, harder is louder (${soft} vs ${hard})`);
+        }
+        assert(rmsOf(await renderEffects(1, (p) => p.playCue({ kind: 'mount', vehicleType: 'none' }))) === 0, 'no vehicle, no sound');
+        console.log('✓ getting on, off and braking, for every vehicle');
     }
 
     // Without Web Audio the provider stays silent instead of throwing.

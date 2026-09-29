@@ -88,3 +88,50 @@ function mixAt({ x, z }) {
     assert(river[AMBIENT_LAYER.STREAM] > 0, 'a river is heard running');
     console.log('✓ forest, highland, field, lake and river each sound like themselves');
 }
+
+// Trees are heard by kind: leaves rustle in broadleaf woods, wind sighs in
+// conifers, and open ground far from any tree has neither.
+{
+    const { naturalFeaturesInRegion, TREE_SPECIES } = await import('../core/NaturalFeatureField.js');
+    const treesAround = (x, z) => naturalFeaturesInRegion(SEED, x - 20, z - 20, x + 20, z + 20)
+        .filter((tree) => Math.hypot(tree.x - x, tree.z - z) < 20);
+    const findWood = (species) => {
+        for (let x = -3000; x < 3000; x += 16) {
+            for (let z = -3000; z < 3000; z += 32) {
+                const trees = treesAround(x, z);
+                if (trees.length >= 15 && trees.every((tree) => tree.species === species)) return { x, z };
+            }
+        }
+        throw new Error(`no ${species} wood found`);
+    };
+    const findTreeless = () => {
+        for (let x = 0; x < 3000; x += 16) {
+            if (treesAround(x, 40).length === 0) return { x, z: 40 };
+        }
+        throw new Error('no treeless ground found');
+    };
+    const broadleaf = mixAt(findWood(TREE_SPECIES.BROADLEAF));
+    assert(broadleaf[AMBIENT_LAYER.LEAVES] > 0.5 && broadleaf[AMBIENT_LAYER.PINES] === 0,
+        `a broadleaf wood rustles (${broadleaf.leaves}) without pines`);
+    const conifer = mixAt(findWood(TREE_SPECIES.CONIFER));
+    assert(conifer[AMBIENT_LAYER.PINES] > 0.5 && conifer[AMBIENT_LAYER.LEAVES] === 0,
+        `a conifer wood sighs (${conifer.pines}) without rustling`);
+    const open = mixAt(findTreeless());
+    assert(open[AMBIENT_LAYER.LEAVES] === 0 && open[AMBIENT_LAYER.PINES] === 0, 'open ground far from trees has neither');
+
+    // One tree: louder the closer you stand.
+    let tree = null;
+    for (let x = -3000; x < 3000 && !tree; x += 200) {
+        for (let z = -3000; z < 3000 && !tree; z += 200) {
+            tree = naturalFeaturesInRegion(SEED, x, z, x + 200, z + 200)
+                .find((t) => t.species !== TREE_SPECIES.CONIFER && treesAround(t.x, t.z).length === 1) || null;
+        }
+    }
+    assert(tree, 'setup: a lone tree exists');
+    {
+        const near = ambientMixAt(SEED, tree.x + 1, tree.z)[AMBIENT_LAYER.LEAVES];
+        const far = ambientMixAt(SEED, tree.x + 15, tree.z)[AMBIENT_LAYER.LEAVES];
+        assert(near > far && far > 0, `a lone tree rustles louder up close (${near} vs ${far})`);
+    }
+    console.log('✓ leaves and pines follow the trees around you');
+}
