@@ -2547,3 +2547,31 @@ extra draw calls, and every replica sees the same animal doing the same thing at
   the neck.
 - Not done: released animals and decorations still stand still; idling never reacts to avatars (replicas would
   disagree); tail flicks and ear twitches (no tails or ears are modeled).
+
+## Released animals and decorations idle; ears and tails (unnumbered, 2026-09-29)
+
+**Released animals and animal decorations no longer stand frozen: they graze, look around and turn in place. And
+every animal now has ears and a tail** — long upright ears and a cotton tail for rabbits, ears held out to the
+sides and a short cocked tail for deer.
+
+- `core/WildlifeMotion.js#stationaryAnimalPoseAt(seed, animalKey, species, time)`: the idle-in-place counterpart of
+  `animalPoseAt()`, keyed by id (FNV-1a) instead of a lattice cell. Same per-species segments: one `IDLE_ACTION`
+  per pause, then a 1.2 s turn in place to a new heading. These animals never wander: their Y is authoritative and
+  can be the top of a structure, so a wander could leave them in mid-air. A decoration's id is World content, so
+  every replica sees it doing the same thing.
+- `renderer/AnimalRenderer.js` builds a small joint graph (`BODY_FRAME` → body, `NECK` → head), still two meshes;
+  `AnimalVisual#animateAt()` drives it with `renderer/AnimalIdle.js`'s offsets, matching exactly how
+  `WildlifeTileMesh.js` composes instance matrices. `AnimalFieldRenderer#animate()` and
+  `WorldRenderer#animateDecorations()` run every frame on the new `Renderer#wildlifeTime()`, wired by
+  `RenderWorldViewUseCase` and, for decorations in the Editor, `RenderWorldUseCase`.
+- Ears and tails: small low-poly ellipsoids merged into the shared `SPECIES_PRESET` head and body geometry (a local
+  merge helper; no new vendored file). They nod, hop and graze with what they are attached to, cost no extra mesh or
+  draw call, and reach released animals and decorations through the same presets.
+- Docs: `docs/user/03-WorldView.md`, `docs/user/06-AvatarsAndPresence.md`, `docs/Architecture.md`; the wandering
+  principle's full text covers animals that stay put.
+- Tests: `tests/StationaryAnimalIdle.test.js` (idle and turn in place per id, one action per pause, smooth turns,
+  determinism; the joint graph at rest and animated matching the tiles' composition exactly; per-frame drivers never
+  moving an animal; merged geometry well-formed, ears above the head, tail on the rump).
+- Not done: ears and tails don't twitch on their own (they would need their own instanced mesh: one more draw call
+  per species per tile); a decorated animal is keyed by its new decoration id, so it may turn to a new heading the
+  moment it is decorated; animals don't react to avatars.

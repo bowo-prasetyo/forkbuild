@@ -23,8 +23,10 @@ import { idleOffsetsAt } from './AnimalIdle.js';
 // ("buildings and avatars remain the visual focus"), extended here: every
 // ANIMAL_SPECIES is still just two low-poly spheres (an elongated-body
 // ellipsoid under a smaller head), never a detailed creature asset that
-// would visually compete with a building or an avatar. No legs, ears, or
-// tail are modeled — the same "no roots modeled" restraint
+// would visually compete with a building or an avatar. Ears and a tail are
+// small ellipsoids merged into the head's and body's own geometry, so they
+// cost no extra mesh or draw call and move with what they are attached
+// to. No legs are modeled — the same "no roots modeled" restraint
 // renderer/NaturalFeatureTileMesh.js's own trunk/canopy presets already
 // accept for trees. A walking animal's gait is therefore carried by the
 // body and head transforms alone (renderer/AnimalGait.js): body and head
@@ -40,6 +42,8 @@ const BODY_SEGMENTS_WIDTH = 7; // low-poly on purpose
 const BODY_SEGMENTS_HEIGHT = 5; // low-poly on purpose
 const HEAD_SEGMENTS_WIDTH = 6; // low-poly on purpose
 const HEAD_SEGMENTS_HEIGHT = 5; // low-poly on purpose
+const APPENDAGE_SEGMENTS_WIDTH = 5; // ears and tails: lower-poly still
+const APPENDAGE_SEGMENTS_HEIGHT = 4;
 
 // One geometry+color preset per core/WildlifeField.js#ANIMAL_SPECIES —
 // each pivoted at its own base (y=0, matching an animal standing at
@@ -65,6 +69,9 @@ export const SPECIES_PRESET = {
     [ANIMAL_SPECIES.DEER]: buildPreset({
         bodyRadiusX: 0.34, bodyRadiusY: 0.42, bodyRadiusZ: 0.72,
         headRadius: 0.26, headHeightFactor: 1.05, headForwardOverlap: 0.55,
+        // Broad ears held out to the sides; a short tail, cocked up.
+        ears: { width: 0.075, height: 0.15, depth: 0.028, spread: 0.15, rise: 0.24, back: -0.07, splay: 0.75, tilt: -0.2 },
+        tail: { width: 0.05, height: 0.1, depth: 0.04, rise: 0.23, back: 0.61, tilt: -0.5 },
         headColor: new THREE.Color(0.32, 0.22, 0.14),
         furColors: [
             new THREE.Color(0.52, 0.38, 0.24), // warm tan
@@ -77,6 +84,9 @@ export const SPECIES_PRESET = {
     [ANIMAL_SPECIES.RABBIT]: buildPreset({
         bodyRadiusX: 0.20, bodyRadiusY: 0.20, bodyRadiusZ: 0.28,
         headRadius: 0.17, headHeightFactor: 1.15, headForwardOverlap: 0.5,
+        // Long ears standing up and swept back; a round cotton tail.
+        ears: { width: 0.04, height: 0.15, depth: 0.022, spread: 0.055, rise: 0.27, back: -0.04, splay: 0.15, tilt: -0.25 },
+        tail: { width: 0.07, height: 0.07, depth: 0.07, rise: 0.04, back: 0.266, tilt: 0 },
         headColor: new THREE.Color(0.38, 0.34, 0.28),
         furColors: [
             new THREE.Color(0.55, 0.51, 0.44), // warm grey
@@ -86,13 +96,68 @@ export const SPECIES_PRESET = {
     })
 };
 
-function buildPreset({ bodyRadiusX, bodyRadiusY, bodyRadiusZ, headRadius, headHeightFactor, headForwardOverlap, headColor, furColors }) {
-    const bodyGeometry = new THREE.SphereGeometry(1, BODY_SEGMENTS_WIDTH, BODY_SEGMENTS_HEIGHT);
-    bodyGeometry.scale(bodyRadiusX, bodyRadiusY, bodyRadiusZ);
-    bodyGeometry.translate(0, bodyRadiusY, 0);
+// A small low-poly ellipsoid of the given radii, tipped back by `tilt`
+// about X and out by `splay` about Z (both about its own center), then
+// moved to `(x, y, z)`. The one shape ears and tails are made of.
+function ellipsoidAt({ width, height, depth, tilt = 0, splay = 0 }, x, y, z) {
+    const geometry = new THREE.SphereGeometry(1, APPENDAGE_SEGMENTS_WIDTH, APPENDAGE_SEGMENTS_HEIGHT);
+    geometry.scale(width, height, depth);
+    geometry.rotateX(tilt);
+    geometry.rotateZ(splay);
+    geometry.translate(x, y, z);
+    return geometry;
+}
 
-    const headGeometry = new THREE.SphereGeometry(headRadius, HEAD_SEGMENTS_WIDTH, HEAD_SEGMENTS_HEIGHT);
-    headGeometry.translate(0, bodyRadiusY * headHeightFactor, bodyRadiusZ + headRadius * headForwardOverlap);
+// Concatenates indexed geometries sharing position/normal/uv attributes
+// into one, so ears ride in the head's geometry and a tail in the body's:
+// no extra meshes, no extra draw calls, and they nod, turn and hop with
+// whatever they are part of.
+function mergeGeometries(geometries) {
+    const merged = new THREE.BufferGeometry();
+    for (const name of ['position', 'normal', 'uv']) {
+        const itemSize = geometries[0].attributes[name].itemSize;
+        const arrays = geometries.map((g) => g.attributes[name].array);
+        const combined = new Float32Array(arrays.reduce((sum, a) => sum + a.length, 0));
+        let offset = 0;
+        for (const array of arrays) {
+            combined.set(array, offset);
+            offset += array.length;
+        }
+        merged.setAttribute(name, new THREE.BufferAttribute(combined, itemSize));
+    }
+    const indices = [];
+    let base = 0;
+    for (const geometry of geometries) {
+        for (const index of geometry.index.array) indices.push(index + base);
+        base += geometry.attributes.position.count;
+    }
+    merged.setIndex(indices);
+    for (const geometry of geometries) geometry.dispose();
+    return merged;
+}
+
+function buildPreset({ bodyRadiusX, bodyRadiusY, bodyRadiusZ, headRadius, headHeightFactor, headForwardOverlap, ears, tail, headColor, furColors }) {
+    const body = new THREE.SphereGeometry(1, BODY_SEGMENTS_WIDTH, BODY_SEGMENTS_HEIGHT);
+    body.scale(bodyRadiusX, bodyRadiusY, bodyRadiusZ);
+    body.translate(0, bodyRadiusY, 0);
+    // The tail sits on the rump: `rise` above the body's middle, `back`
+    // behind its center.
+    const bodyGeometry = mergeGeometries([
+        body,
+        ellipsoidAt(tail, 0, bodyRadiusY + tail.rise, -tail.back)
+    ]);
+
+    const headY = bodyRadiusY * headHeightFactor;
+    const headZ = bodyRadiusZ + headRadius * headForwardOverlap;
+    const head = new THREE.SphereGeometry(headRadius, HEAD_SEGMENTS_WIDTH, HEAD_SEGMENTS_HEIGHT);
+    head.translate(0, headY, headZ);
+    // A pair of ears, mirrored: `spread` to each side of the head's
+    // center, `rise` above it, `back` along it, each splayed outward.
+    const headGeometry = mergeGeometries([
+        head,
+        ellipsoidAt({ ...ears, splay: -ears.splay }, ears.spread, headY + ears.rise, headZ + ears.back),
+        ellipsoidAt({ ...ears, splay: ears.splay }, -ears.spread, headY + ears.rise, headZ + ears.back)
+    ]);
 
     return {
         bodyGeometry,

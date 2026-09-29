@@ -59,7 +59,9 @@ stay exactly where they are placed. Animals wander slowly around the spot
 they were placed at, never more than a few steps from it, pausing and
 turning as they go — rabbits hop, deer step along with a nod of the head.
 While they stand, they graze with their heads down in the grass, or look up
-and around (a rabbit sits up on its haunches). They don't react to you. Their paths come from the
+and around (a rabbit sits up on its haunches). They don't react to you.
+Rabbits have long upright ears and a cotton tail; deer have ears held out
+to the sides and a short tail. Their paths come from the
 same seed and the clock, so everyone looking at the same place at the same
 moment sees the same animals in the same places. Wildlife blocks your path
 on foot exactly like a tree does, wherever an animal has wandered to — see

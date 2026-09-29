@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { SPECIES_PRESET } from './WildlifeTileMesh.js';
 
+// Names of the nodes in a built animal that renderer/AnimalVisual.js moves.
+export const BODY_FRAME = 'bodyFrame';
+export const NECK = 'neck';
+
 // 0.9.701 — Released Animal Rendering.
 //
 // The renderer-side "dumb executor" for an ANIMAL_SPECIES, the exact
@@ -48,7 +52,9 @@ import { SPECIES_PRESET } from './WildlifeTileMesh.js';
 // NO POSITION, NO ANIMATION, NO STATE OF ANY KIND — build() constructs
 // a brand new Object3D graph on every call, exactly the same "dumb
 // executor, no instance bookkeeping" discipline
-// renderer/VehicleRenderer.js's own header already establishes.
+// renderer/VehicleRenderer.js's own header already establishes. The graph
+// has named joints (BODY_FRAME, NECK) so renderer/AnimalVisual.js can
+// animate it; this file never moves them itself.
 export class AnimalRenderer {
     build(species) {
         const preset = SPECIES_PRESET[species];
@@ -57,12 +63,33 @@ export class AnimalRenderer {
         }
         const group = new THREE.Group();
 
+        // group → BODY_FRAME (lifted and pitched as a whole) → body mesh,
+        //                      and NECK (at preset.neckPivot; turns and
+        //                      nods) → head mesh (offset back by the pivot,
+        //                      so at rest it sits exactly where the tile
+        //                      draws a head).
+        // The same body/head/neck-pivot composition
+        // renderer/WildlifeTileMesh.js writes into instance matrices, as a
+        // scene graph; renderer/AnimalVisual.js#animateAt() drives it.
+        const bodyFrame = new THREE.Group();
+        bodyFrame.name = BODY_FRAME;
+        group.add(bodyFrame);
+
         const bodyMaterial = preset.bodyMaterial.clone();
         bodyMaterial.color.copy(preset.furColors[0]);
-        group.add(new THREE.Mesh(preset.bodyGeometry, bodyMaterial));
+        bodyFrame.add(new THREE.Mesh(preset.bodyGeometry, bodyMaterial));
+
+        const neck = new THREE.Group();
+        neck.name = NECK;
+        neck.position.copy(preset.neckPivot);
+        // Turn (Y) first, then nod (X), about the neck.
+        neck.rotation.order = 'YXZ';
+        bodyFrame.add(neck);
 
         const headMaterial = preset.headMaterial.clone();
-        group.add(new THREE.Mesh(preset.headGeometry, headMaterial));
+        const head = new THREE.Mesh(preset.headGeometry, headMaterial);
+        head.position.copy(preset.neckPivot).negate();
+        neck.add(head);
 
         return group;
     }
