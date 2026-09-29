@@ -2496,5 +2496,28 @@ asking separately where an animal was, agreeing only because nothing moved; they
   `tests/WildlifeMotionIntegration.test.js` (collision at the current pose and the caught-collider fix, catching,
   store refresh, session persistence, tile updates and bounding spheres, tile disposal). The wildlife collision
   flagship test now runs on a frozen clock.
-- Not done: released animals and decorations still stand still; no walk or hop animation (the animal glides); motion
-  never reacts to avatars, which would make replicas disagree.
+- Not done: released animals and decorations still stand still; no walk or hop animation (the animal glides; added
+  below); motion never reacts to avatars, which would make replicas disagree.
+
+## Wildlife walk animation (unnumbered, 2026-09-29)
+
+**Wandering animals no longer glide: rabbits hop and deer step along, nodding their heads.** No legs or new
+geometry: the gait is carried by the body and head transforms the wildlife tiles already rewrite every frame.
+
+- `core/WildlifeMotion.js`: `animalPoseAt()` also reports `gaitPhase`, the strides walked so far in the current walk
+  (0 when standing). Each species has a `strideLength` (deer 1.0, rabbit 0.5); a walk takes a whole number of
+  strides, rounded down so a stride is never shorter than the species' own and the cadence never flutters, and the
+  phase follows the eased walk's progress, so the gait speeds up and slows down with the animal and every walk ends
+  exactly on a stride boundary. Walks shorter than one stride (1% of rabbit and 3% of deer walking time) shuffle.
+- `renderer/AnimalGait.js`: `gaitOffsetsAt(species, gaitPhase)` → `{ lift, bodyPitch, headPitch }`, zero at every
+  whole stride. A rabbit hop is an arc (0.16 high) with the nose tipping up on take-off and down on landing; a deer
+  step raises the body slightly twice per stride and nods the head (0.22 rad) in time.
+- `renderer/WildlifeTileMesh.js`: body and head matrices are now written separately; the head nods about a
+  per-species `neckPivot` set back inside the body, so it swings on a neck-length arm. At rest the head still shares
+  the body's transform. Collision and catching only read x/z, so they are unaffected.
+- Docs: `docs/user/03-WorldView.md`, `docs/Architecture.md`.
+- Tests: `tests/AnimalGait.test.js` (rest at whole strides, hop and step shapes, continuity at 60 fps over real
+  walks, lift/pitch/nod applied in the tile with the neck staying attached); `tests/WildlifeMotion.test.js` checks
+  gaitPhase counts forward while walking, is 0 standing, and ends each walk on a whole stride.
+- Not done: legs (would change every animal's resting look and add a draw call per species per tile); idle
+  animation such as grazing; released animals and decorations.

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE, ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 import { animalPoseAt, MAX_WANDER_DISTANCE } from '../core/WildlifeMotion.js';
+import { gaitOffsetsAt, REST_GAIT } from './AnimalGait.js';
 
 // The renderer-side counterpart to core/WildlifeField.js — the identical
 // "core decides, renderer builds" split renderer/NaturalFeatureTileMesh.js
@@ -24,7 +25,9 @@ import { animalPoseAt, MAX_WANDER_DISTANCE } from '../core/WildlifeMotion.js';
 // would visually compete with a building or an avatar. No legs, ears, or
 // tail are modeled — the same "no roots modeled" restraint
 // renderer/NaturalFeatureTileMesh.js's own trunk/canopy presets already
-// accept for trees.
+// accept for trees. A walking animal's gait is therefore carried by the
+// body and head transforms alone (renderer/AnimalGait.js): body and head
+// are separate InstancedMeshes precisely so the head can nod on its own.
 //
 // Unlike renderer/NaturalFeatureTileMesh.js, whose geometry-building glue
 // is deliberately untested, this file's per-frame motion
@@ -106,7 +109,13 @@ function buildPreset({ bodyRadiusX, bodyRadiusY, bodyRadiusZ, headRadius, headHe
         // as "fixed head color, per-variant body/fur color."
         bodyMaterial: new THREE.MeshStandardMaterial(),
         headMaterial: new THREE.MeshStandardMaterial({ color: headColor }),
-        furColors
+        furColors,
+        // The base of the (unmodeled) neck, in the same local frame as the
+        // geometry: the point a nodding head swings about (see
+        // renderer/AnimalGait.js). Set back inside the front of the body,
+        // at the head's height, so the head swings on a neck-length arm —
+        // a pivot at the head itself would only spin the sphere in place.
+        neckPivot: new THREE.Vector3(0, bodyRadiusY * headHeightFactor, bodyRadiusZ * 0.35)
     };
 }
 
@@ -117,9 +126,15 @@ const EMPTY_EXCLUSION_SET = new Set();
 
 const _position = new THREE.Vector3();
 const _quaternion = new THREE.Quaternion();
-const _euler = new THREE.Euler();
+// 'YXZ': turn to the heading first, then pitch about the animal's own
+// sideways axis — so a positive pitch always tips its nose down, whichever
+// way it faces.
+const _euler = new THREE.Euler(0, 0, 0, 'YXZ');
 const _scaleVec = new THREE.Vector3();
 const _matrix = new THREE.Matrix4();
+const _headMatrix = new THREE.Matrix4();
+const _nod = new THREE.Matrix4();
+const _pivot = new THREE.Matrix4();
 
 // A tile's bounding spheres are computed once, from where its animals were
 // placed, and padded by how far they can wander (core/WildlifeMotion.js)
@@ -138,14 +153,28 @@ function applyBoundingSphere(mesh) {
 // meshes. Instance matrices hold ABSOLUTE world coordinates directly (the
 // group itself stays at the origin) — the same convention
 // renderer/NaturalFeatureTileMesh.js's own header documents for trees.
-function writeInstance(bodyMesh, headMesh, i, pose, scale) {
-    _position.set(pose.x, pose.y, pose.z);
-    _euler.set(0, pose.rotationY, 0);
+//
+// `gait` (renderer/AnimalGait.js#gaitOffsetsAt()) lifts and pitches the
+// body, and nods the head about `preset.neckPivot` on top of that; at
+// rest the head simply shares the body's transform.
+function writeInstance(bodyMesh, headMesh, i, pose, scale, preset, gait = REST_GAIT) {
+    _position.set(pose.x, pose.y + gait.lift * scale, pose.z);
+    _euler.set(gait.bodyPitch, pose.rotationY, 0);
     _quaternion.setFromEuler(_euler);
     _scaleVec.set(scale, scale, scale);
     _matrix.compose(_position, _quaternion, _scaleVec);
     bodyMesh.setMatrixAt(i, _matrix);
-    headMesh.setMatrixAt(i, _matrix);
+    if (gait.headPitch === 0) {
+        headMesh.setMatrixAt(i, _matrix);
+        return;
+    }
+    // body × T(pivot) × Rx(nod) × T(-pivot), all in the geometry's own frame.
+    const { x, y, z } = preset.neckPivot;
+    _headMatrix.copy(_matrix)
+        .multiply(_pivot.makeTranslation(x, y, z))
+        .multiply(_nod.makeRotationX(gait.headPitch))
+        .multiply(_pivot.makeTranslation(-x, -y, -z));
+    headMesh.setMatrixAt(i, _headMatrix);
 }
 
 // Builds one species' worth of animals within a tile into a body/head
@@ -156,7 +185,7 @@ function buildSpeciesMeshes(preset, animals) {
     const headMesh = new THREE.InstancedMesh(preset.headGeometry, preset.headMaterial, animals.length);
 
     animals.forEach((animal, i) => {
-        writeInstance(bodyMesh, headMesh, i, animal, animal.scale);
+        writeInstance(bodyMesh, headMesh, i, animal, animal.scale, preset);
         bodyMesh.setColorAt(i, preset.furColors[animal.variant] ?? preset.furColors[0]);
     });
     bodyMesh.instanceMatrix.needsUpdate = true;
@@ -214,7 +243,7 @@ export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE
         const [bodyMesh, headMesh] = buildSpeciesMeshes(preset, speciesAnimals);
         group.add(bodyMesh);
         group.add(headMesh);
-        herds.push({ animals: speciesAnimals, bodyMesh, headMesh });
+        herds.push({ species, preset, animals: speciesAnimals, bodyMesh, headMesh });
     }
     group.userData.wildlife = { seed, herds };
 
@@ -228,13 +257,16 @@ export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE
 // it is at `timeSeconds` (core/WildlifeMotion.js#animalPoseAt()) by
 // rewriting instance transforms in place — no geometry is rebuilt and no
 // draw call is added. Called once per frame for every loaded tile. A
-// group with no animals is left alone.
+// group with no animals is left alone. A walking animal also moves with
+// its gait (renderer/AnimalGait.js) — hopping or stepping in time with the
+// ground it covers.
 export function updateWildlifeTileMesh(group, timeSeconds) {
     const wildlife = group.userData.wildlife;
     if (!wildlife) return;
-    for (const { animals, bodyMesh, headMesh } of wildlife.herds) {
+    for (const { species, preset, animals, bodyMesh, headMesh } of wildlife.herds) {
         animals.forEach((animal, i) => {
-            writeInstance(bodyMesh, headMesh, i, animalPoseAt(wildlife.seed, animal, timeSeconds), animal.scale);
+            const pose = animalPoseAt(wildlife.seed, animal, timeSeconds);
+            writeInstance(bodyMesh, headMesh, i, pose, animal.scale, preset, gaitOffsetsAt(species, pose.gaitPhase));
         });
         bodyMesh.instanceMatrix.needsUpdate = true;
         headMesh.instanceMatrix.needsUpdate = true;

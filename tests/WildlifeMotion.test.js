@@ -89,7 +89,17 @@ function runTests() {
                 maxTurn = Math.max(maxTurn, angleDelta(pose.rotationY, previous.rotationY));
                 if (pose.moving) {
                     sawMoving = true;
+                    assert(pose.gaitPhase >= 0 && (!previous.moving || pose.gaitPhase >= previous.gaitPhase),
+                        '13b. While walking, gaitPhase only ever counts forward');
                 } else {
+                    assert(pose.gaitPhase === 0, '13c. A standing animal has gaitPhase 0');
+                    if (previous.moving) {
+                        // The walk just ended: its last frame was within one
+                        // frame's worth of a whole number of strides.
+                        const fromWhole = Math.abs(previous.gaitPhase - Math.round(previous.gaitPhase));
+                        assert(fromWhole < 0.2,
+                            `13d. A walk ends on a whole number of strides (last frame at ${previous.gaitPhase.toFixed(3)})`);
+                    }
                     sawStanding = true;
                     assert(ecologyZoneAt(SEED, pose.x, pose.z) === animal.zone,
                         '16. A standing animal always stands in its own ecology zone');

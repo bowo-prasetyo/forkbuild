@@ -991,7 +991,10 @@ is lifted a second time. Released animals get the same lift as remote avatars.
   with where it is drawn. Caught animals stop colliding (`isExcluded`). Released animals and decorations stay put.
 - **Rendering.** Deterministic animals are drawn by their wildlife tile (`renderer/WildlifeTileMesh.js`), which keeps
   owning them while they wander because they never leave their cell; every frame
-  `updateWildlifeTileMesh()` rewrites each loaded tile's instance matrices in place. Catching one rebuilds its tile
+  `updateWildlifeTileMesh()` rewrites each loaded tile's instance matrices in place. A walking animal also moves with
+  its gait: `animalPoseAt()` reports `gaitPhase` (strides into the current walk, a whole number of them per walk), and
+  `renderer/AnimalGait.js` turns it into body lift and pitch and a head nod about the neck (rabbits hop, deer step);
+  the head is its own InstancedMesh, so it nods without new geometry or draw calls. Catching one rebuilds its tile
   without it (`TerrainStreamingController#invalidateTile()`). Released animals are drawn every frame by
   `renderer/AnimalFieldRenderer.js`, which shares geometry with the tiles.
 - **Decorations (0.9.702/0.9.703).** `G` turns the nearest released animal into an `AnimalDecoration` in the World

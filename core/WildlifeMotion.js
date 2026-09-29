@@ -42,12 +42,14 @@ import { isRiverAt } from './Hydrology.js';
 import { lerp, smoothstep } from '../utils/interpolation.js';
 
 // Per species: how far from its spawn point it roams, how fast it walks
-// (average speed over a walk; the eased walk peaks at 1.5x this), and how
-// long one pause-then-walk segment lasts. A segment is always long enough
-// for the longest possible walk (twice the wander radius) plus a pause.
+// (average speed over a walk; the eased walk peaks at 1.5x this), how
+// long one pause-then-walk segment lasts, and how much ground one stride
+// covers (a deer's full step cycle, one rabbit hop). A segment is always
+// long enough for the longest possible walk (twice the wander radius)
+// plus a pause.
 export const ANIMAL_MOTION = Object.freeze({
-    [ANIMAL_SPECIES.DEER]: Object.freeze({ wanderRadius: 3, walkSpeed: 0.8, segmentSeconds: 14 }),
-    [ANIMAL_SPECIES.RABBIT]: Object.freeze({ wanderRadius: 2, walkSpeed: 1.6, segmentSeconds: 7 })
+    [ANIMAL_SPECIES.DEER]: Object.freeze({ wanderRadius: 3, walkSpeed: 0.8, segmentSeconds: 14, strideLength: 1.0 }),
+    [ANIMAL_SPECIES.RABBIT]: Object.freeze({ wanderRadius: 2, walkSpeed: 1.6, segmentSeconds: 7, strideLength: 0.5 })
 });
 
 // The farthest any animal can ever be from its spawn point.
@@ -157,9 +159,13 @@ function arrivalHeadingAt(seed, animal, cellX, cellZ, k, from, wanderRadius) {
 
 // Where `animal` — one record exactly as core/WildlifeField.js#wildlifeInRegion()
 // returns it — is at `timeSeconds` (any finite number; callers pass
-// wall-clock seconds). Returns { x, y, z, rotationY, moving }: y is the
-// terrain height under the animal, rotationY is in [0, 2π), and moving
-// says whether it is walking rather than standing.
+// wall-clock seconds). Returns { x, y, z, rotationY, moving, gaitPhase }:
+// y is the terrain height under the animal, rotationY is in [0, 2π),
+// moving says whether it is walking rather than standing, and gaitPhase
+// counts strides walked so far in the current walk — 0 when standing,
+// rising to a whole number on arrival. Its fractional part is how far
+// through the current stride the animal is; how that looks (a hop, a
+// step) is the renderer's business (renderer/AnimalGait.js).
 export function animalPoseAt(seed, animal, timeSeconds) {
     if (typeof timeSeconds !== 'number' || !Number.isFinite(timeSeconds)) {
         throw new Error(`animalPoseAt requires a finite timeSeconds, got ${JSON.stringify(timeSeconds)}`);
@@ -184,12 +190,23 @@ export function animalPoseAt(seed, animal, timeSeconds) {
     let z;
     let rotationY;
     let moving = false;
+    let gaitPhase = 0;
     if (departureHeading !== null && secondsIntoSegment >= walkStart) {
         const progress = smoothstep((secondsIntoSegment - walkStart) / walkSeconds);
         x = lerp(from.x, to.x, progress);
         z = lerp(from.z, to.z, progress);
         rotationY = departureHeading;
         moving = true;
+        // A whole number of strides per walk, so the last stride ends
+        // exactly on arrival: gaitPhase runs from 0 to that whole number,
+        // in step with the ground actually covered (the eased walk's
+        // progress), so the gait never slides and never cuts off mid-hop.
+        // Rounded down, so a stride is never shorter than strideLength and
+        // the cadence never outruns the species' own (a rabbit never
+        // flutters through tiny hops); a walk shorter than one stride has
+        // none, and the animal just shuffles over.
+        const strides = Math.floor(Math.hypot(to.x - from.x, to.z - from.z) / motion.strideLength);
+        gaitPhase = progress * strides;
     } else {
         x = from.x;
         z = from.z;
@@ -213,14 +230,15 @@ export function animalPoseAt(seed, animal, timeSeconds) {
         y: terrainHeightAt(seed, x, z),
         z,
         rotationY: normalizeAngle(rotationY),
-        moving
+        moving,
+        gaitPhase
     };
 }
 
 // wildlifeInRegion() at a moment in time: every animal whose CURRENT
 // position falls within [minX, maxX) x [minZ, maxZ), as the same records
 // wildlifeInRegion() returns with x/y/z/rotationY replaced by the animal's
-// pose at `timeSeconds`, plus `moving`, `spawnX` and `spawnZ`. Sorted the
+// pose at `timeSeconds`, plus `moving`, `gaitPhase`, `spawnX` and `spawnZ`. Sorted the
 // same way (by x, then z).
 //
 // Looks MAX_WANDER_DISTANCE beyond every edge for placements, since an
@@ -233,7 +251,7 @@ export function animalPoseAt(seed, animal, timeSeconds) {
 export function wildlifeInRegionAt(seed, minX, minZ, maxX, maxZ, timeSeconds = null) {
     if (timeSeconds === null || timeSeconds === undefined) {
         return wildlifeInRegion(seed, minX, minZ, maxX, maxZ)
-            .map((animal) => ({ ...animal, moving: false, spawnX: animal.x, spawnZ: animal.z }));
+            .map((animal) => ({ ...animal, moving: false, gaitPhase: 0, spawnX: animal.x, spawnZ: animal.z }));
     }
     const animals = [];
     const placed = wildlifeInRegion(
