@@ -43,3 +43,23 @@ export function createId() {
         return value.toString(16);
     });
 }
+
+// A UUID v4 from the platform's cryptographic random source only: never
+// Math.random(). For identities that other replicas trust to be unguessable
+// and unique — a World Resident's id also decides where it walks
+// (core/ResidentMotion.js). Throws where no secure source exists, rather
+// than quietly minting a predictable id.
+export function createSecureId() {
+    const cryptoApi = typeof crypto !== 'undefined' ? crypto : null;
+    if (cryptoApi && typeof cryptoApi.randomUUID === 'function') {
+        return cryptoApi.randomUUID();
+    }
+    if (!cryptoApi || typeof cryptoApi.getRandomValues !== 'function') {
+        throw new Error('createSecureId: no secure random number generator (crypto.getRandomValues) is available');
+    }
+    const bytes = cryptoApi.getRandomValues(new Uint8Array(16));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}

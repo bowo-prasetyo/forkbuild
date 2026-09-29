@@ -27,6 +27,8 @@ import { UpdateWorldRegionCommand } from '../commands/UpdateWorldRegionCommand.j
 import { RemoveWorldRegionCommand } from '../commands/RemoveWorldRegionCommand.js';
 import { CreateWorldAnimalDecorationCommand } from '../commands/CreateWorldAnimalDecorationCommand.js';
 import { RemoveWorldAnimalDecorationCommand } from '../commands/RemoveWorldAnimalDecorationCommand.js';
+import { CreateWorldResidentCommand } from '../commands/CreateWorldResidentCommand.js';
+import { RemoveWorldResidentCommand } from '../commands/RemoveWorldResidentCommand.js';
 
 // Builds the CommandRegistry and registers every built-in command type.
 // Later, community tools or plugin commands get one extra line here —
@@ -89,6 +91,9 @@ export class CreateCommandRegistryUseCase {
         // player deliberately reverses it, never catchable again
         // otherwise).
         registry.register('remove-world-animal-decoration', RemoveWorldAnimalDecorationCommand);
+        // World Residents: ambient people authored into a World.
+        registry.register('create-world-resident', CreateWorldResidentCommand);
+        registry.register('remove-world-resident', RemoveWorldResidentCommand);
         return registry;
     }
 }

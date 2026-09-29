@@ -7,6 +7,7 @@ import { worldListsSectionTemplate } from '../ui/views/worldView/templates/world
 import { inspectionPanelsTemplate } from '../ui/views/worldView/templates/inspectionPanels.js';
 import { hoverCardTemplate } from '../ui/views/worldView/templates/hoverCard.js';
 import { avatarSectionTemplate } from '../ui/views/worldView/templates/avatarSection.js';
+import { residentRefusalLabel } from '../ui/components/avatarInteractionLabels.js';
 import { CameraPerspective } from '../core/CameraPerspective.js';
 import { WorldViewPrimaryMode } from '../application/world/WorldViewNavigationState.js';
 import { assert } from './support/Assert.js';
@@ -164,6 +165,44 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
         'with an avatar, all four toggles and the camera perspectives show');
     withAvatar.unmount();
     console.log('✓ Avatar shows only usable controls');
+}
+
+// Avatar: the Residents row — one button that does what R would, or the
+// reason neither is possible, never a disabled button.
+{
+    const toggled = [];
+    const { host, vm, unmount } = mount({
+        components: { NearbyAvatarsPanel: { template: '<div></div>' } },
+        data: () => ({
+            hasLocalAvatar: true, showMyAvatar: true, showOtherAvatars: true, avatarControlMode: true,
+            followAvatar: false, cameraPerspective: null, CameraPerspective,
+            remoteAvatarDiagnostics: { total: 0 }, nearbyAvatars: [],
+            residentInteractionState: { canAdd: true, canRemove: false, refusal: null, targetResidentId: null }
+        }),
+        methods: {
+            toggleShowMyAvatar() {}, toggleShowOtherAvatars() {}, toggleAvatarControlMode() {},
+            toggleFollowAvatar() {}, setCameraPerspective() {}, selectNearbyAvatar() {},
+            toggleResidentHere() { toggled.push(true); },
+            residentRefusalLabel: residentRefusalLabel
+        },
+        template: avatarSectionTemplate
+    });
+    const row = () => host.querySelector('.world-view-residents');
+    assert(JSON.stringify(buttonLabels(row())) === JSON.stringify(['Add Resident Here']), 'on open ground the row offers Add Resident Here');
+    row().querySelector('button').click();
+    assert(toggled.length === 1, 'which does what R would');
+    vm.residentInteractionState = { canAdd: false, canRemove: true, refusal: null, targetResidentId: 'r' };
+    await nextTick();
+    assert(JSON.stringify(buttonLabels(row())) === JSON.stringify(['Remove Resident']), 'next to a resident it offers Remove Resident');
+    vm.residentInteractionState = { canAdd: false, canRemove: false, refusal: 'not-on-ground', targetResidentId: null };
+    await nextTick();
+    assert(buttonLabels(row()).length === 0 && row().textContent.includes('step down'), 'up on something it says why, with no button');
+    assert(!host.querySelector('.world-view-residents button:disabled'), 'and nothing disabled is left on screen');
+    vm.residentInteractionState = null;
+    await nextTick();
+    assert(!row(), 'without a state (no avatar) the row is gone');
+    unmount();
+    console.log('✓ Avatar offers one usable Residents action, or says why not');
 }
 
 // Worlds in View is hidden while it would only repeat the header's World.

@@ -14,6 +14,9 @@ import { RemoteSpatialPresenceRenderer } from '../../renderer/RemoteSpatialPrese
 import { VehicleFieldRenderer } from '../../renderer/VehicleFieldRenderer.js';
 import { AnimalFieldRenderer } from '../../renderer/AnimalFieldRenderer.js';
 import { AnimalPresence } from '../../core/AnimalPresence.js';
+import { ResidentFieldRenderer } from '../../renderer/ResidentFieldRenderer.js';
+import { residentAppearanceFor, RESIDENT_TEMPLATE_ID } from '../../core/ResidentAppearance.js';
+import { CreateAvatarTemplateRegistryUseCase } from '../avatar/CreateAvatarTemplateRegistryUseCase.js';
 import { WorldSpatialPresentationMode } from '../../core/WorldSpatialAnchor.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY } from '../../core/TerrainSurface.js';
 import { LAKE_SURFACE_HEIGHT } from '../../core/Hydrology.js';
@@ -105,6 +108,17 @@ export class RenderWorldViewUseCase {
         // vehicleFieldRenderer immediately above, for the identical
         // reason — see renderer/AnimalFieldRenderer.js's own header.
         const animalFieldRenderer = new AnimalFieldRenderer();
+        // World Residents: ambient people who live in a World, each drawn as
+        // an ordinary avatar body dressed from its id, feet on the same
+        // rendered ground an avatar's are (withGroundElevation, below). Kept
+        // apart from remoteAvatarVisuals, so a resident is never picked,
+        // listed or hidden as a player.
+        const residentTemplate = new CreateAvatarTemplateRegistryUseCase().execute().get(RESIDENT_TEMPLATE_ID);
+        const residentFieldRenderer = new ResidentFieldRenderer({
+            avatarRenderer: new AvatarRenderer(),
+            appearanceFor: (id) => ({ template: residentTemplate, appearance: residentAppearanceFor(id, residentTemplate) }),
+            groundAt: ({ x, z }) => withGroundElevation({ x, y: 0, z })
+        });
         const transformGizmoRenderer = new TransformGizmoRenderer(renderer);
         const transformGizmoController = new TransformGizmoController({
             camera: renderer.camera,
@@ -164,6 +178,7 @@ export class RenderWorldViewUseCase {
             worldRenderer.animateDecorations(wildlifeTime, DEFAULT_WORLD_SEED, observer);
         });
         renderer.addFrameListener((deltaSeconds) => {
+            residentFieldRenderer.tick(deltaSeconds);
             if (localAvatarVisual) {
                 localAvatarVisual.tick(deltaSeconds);
             }
@@ -661,6 +676,20 @@ export class RenderWorldViewUseCase {
                     animalFieldRenderer.removeAnimal(id);
                 }
             },
+            // World Residents: draws exactly `poses` (from
+            // application/world/ResidentRuntime.js#posesNear()), each
+            // noticing the local avatar where it is drawn, and only it, as
+            // animals do (see renderer/ResidentReaction.js).
+            syncResidents: (poses) => {
+                const observer = localAvatarVisual ? localAvatarVisual.root.position : null;
+                const { added, removed } = residentFieldRenderer.sync(poses, observer);
+                for (const object of added) {
+                    renderer.add(object);
+                }
+                for (const object of removed) {
+                    renderer.remove(object);
+                }
+            },
             // 0.9.700 — Animal Catching. A thin pass-through to
             // renderer.markAnimalCaught() — see that method's own header
             // for what it actually does. This facade adds no policy of
@@ -718,6 +747,9 @@ export class RenderWorldViewUseCase {
                     }
                 }
                 animalFieldRenderer.dispose();
+                for (const object of residentFieldRenderer.clear()) {
+                    renderer.remove(object);
+                }
                 renderer.dispose();
             }
         };

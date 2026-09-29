@@ -38,6 +38,8 @@ models").
 - An avatar you can walk, run and jump with, which collides with buildings and
   can climb stairs and slopes; vehicles, an inventory, and catching and releasing
   animals.
+- Residents: people a World's author adds, who stroll around their homes,
+  walking round buildings, and turn to greet you.
 - Text and spatial search, a map, named regions and landmarks, and World
   Encounters with publications that connected peers are sharing.
 - World View observes and navigates; editing happens in the Editor. **Edit a

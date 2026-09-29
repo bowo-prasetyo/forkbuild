@@ -276,6 +276,39 @@ copy of it — as long as its license allows forking. If none of that
 applies, **G** simply does nothing; the touch pad's **Decorate** button
 tells you why instead.
 
+### Residents
+
+A World can have **residents**: people who live there and stroll around the
+spot they call home, going about their day among your buildings. To add
+one, stand on open ground where you want them to live and press **R** (or
+click **Add Resident Here** in the **Avatar** section). They appear right
+beside you, and from then on they're part of the World's own content —
+saved, published and forked with it, like a
+[landmark](03-WorldView.md#landmarks--marking-a-place-worth-remembering).
+Adding one needs you signed in with EDIT access to the World you're in; on
+someone else's published World, the resident goes into your own copy of it.
+Changed your mind? Stand next to a resident and press **R** again (a prompt
+shows **[R] Remove Resident**), or undo with **Ctrl/Cmd+Z**.
+
+Residents stay within about six steps of home. They walk around walls,
+trees and water, never through them, and they take a break now and then to
+stand and look around. Everyone who opens the World sees each resident in
+the same place at the same moment, because where they are comes from the
+World and the clock, not from anything sent between players. They're solid:
+you bump into them like you would a tree. They don't stop or step aside for
+you, though, so one may walk straight through you while you stand still.
+
+Residents notice you. When one is standing and you're in front of it or to
+its side, within a few steps, it turns to face you, and if you walk right
+up to it, it waves. It waves once each time you come over. As with animals,
+this only happens on your screen, and only for your own avatar.
+
+A resident needs dry, open ground: not a rooftop, not the water, and not
+while you're riding. The Avatar section says why when it can't add one
+where you're standing. Residents aren't people — they have no profile,
+never show up under People or Nearby, can't be clicked for info, and don't
+hand out quests or directions — they just live there.
+
 #### What survives a reload
 
 Your inventory — every vehicle and animal you're carrying — is saved on

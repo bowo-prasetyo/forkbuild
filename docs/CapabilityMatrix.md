@@ -31,7 +31,7 @@ does not expose the method at all (not merely a disabled UI affordance).
 | brick color          | ✓      | –     | –         |
 | structure face snapping (0.9.611) | ✓ | – | –   |
 | gizmo drag           | ✓      | –     | –         |
-| undo / redo          | ✓      | ✓ (Region/Landmark/Animal Decoration commands only) | – |
+| undo / redo          | ✓      | ✓ (Region/Landmark/Animal Decoration/Resident commands only) | – |
 | save / publish       | ✓      | ✓     | –         |
 | export / import document file (0.9.641/0.9.642) | ✓ | – | – |
 | focus selection (camera only, 0.9.661) | ✓ | – | – |
@@ -48,6 +48,7 @@ constructs brick, structure or group content:
 | World Landmark naming (create/update/remove) | ✓ | Same reasoning as Region naming. |
 | Move or remove a world's placement (`WorldPlacement`, 0.2.23/0.9.197) | ✓ | "Moving A Placement Is Not Editing A Document" (0.2.23) — changes where a published world sits in shared space, never the Document/Publication itself, and never forks. |
 | World Animal Decoration (create/remove, the `G` key, 0.9.702/0.9.703) | ✓ | Turns a released animal the avatar is standing next to into decorative World content, or back. Like landmark naming, it depends on being somewhere in a live World. It goes through the same fork-on-write, authorization and command-history path as landmarks, and adds no geometry. |
+| World Resident (add/remove, the `R` key, 2026-09-29) | ✓ | Adds a resident homed where the avatar stands, or removes the one beside it. Like a landmark it is a point in a live World, going through the same fork-on-write, authorization and command-history path, and adds no geometry. |
 
 World View also changes **runtime state that is not document content**: riding
 vehicles, storing and deploying them (`Q`), catching and releasing animals (`F`),
@@ -81,8 +82,9 @@ and `tests/WorldViewReadOnlyFork.test.js`.
 - Explore / Map / Places browsing, Focus (0.5.7/0.5.8)
 - World Region/Landmark naming (avatar-position-driven annotation)
 - World Animal Decorations (bake a released animal into the World, or undo it)
+- World Residents (add one where the avatar stands, or remove the one beside it)
 - Moving or removing a world's placement (WorldPlacement; where a published world sits)
-- Timeline / preview / restore (for the Region/Landmark/Animal Decoration commands above)
+- Timeline / preview / restore (for the Region/Landmark/Animal Decoration/Resident commands above)
 - Vehicles, inventory and animal catching (runtime state, not document content)
 - Distribution of the user's own or encountered Publications (Distribute dialog)
 - Camera controls
@@ -99,7 +101,7 @@ and `tests/WorldViewReadOnlyFork.test.js`.
 brick/structure/group content-mutation operation lives on `EditorSession`
 alone. `WorldNavigationSession` exposes only read/navigation/focus
 operations, plus the deliberate exceptions above (World Region/Landmark
-naming, World Animal Decorations, and moving or removing a world's
+naming, World Animal Decorations, World Residents, and moving or removing a world's
 placement). None of
 them authors new geometry or composes content. `EditorActionRegistry`/`createStandardActions()`
 is no longer constructed by World View at all; there is nothing left in it

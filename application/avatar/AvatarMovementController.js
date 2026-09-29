@@ -35,7 +35,7 @@ import { AvatarVehicleBrakingIntent, isValidAvatarVehicleBrakingIntent } from '.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
-    constructor(avatarPresenceSession, movementConstraint = null, terrainConstraint = null, stepConstraint = null, treeConstraint = null, waterConstraint = null, wildlifeConstraint = null) {
+    constructor(avatarPresenceSession, movementConstraint = null, terrainConstraint = null, stepConstraint = null, treeConstraint = null, waterConstraint = null, wildlifeConstraint = null, residentConstraint = null) {
         this._avatarPresenceSession = avatarPresenceSession;
         this._movementConstraint = movementConstraint;
         this._terrainConstraint = terrainConstraint;
@@ -43,6 +43,9 @@ export class AvatarMovementController {
         this._treeConstraint = treeConstraint;
         this._waterConstraint = waterConstraint;
         this._wildlifeConstraint = wildlifeConstraint;
+        // World Residents (application/avatar/AvatarResidentConstraint.js), last:
+        // a resident blocks the avatar where it is drawn.
+        this._residentConstraint = residentConstraint;
         this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false };
         this._verticalVelocity = 0;
         this._grounded = true;
@@ -61,6 +64,7 @@ export class AvatarMovementController {
         this._collidedWithTree = false;
         this._blockedByWaterDepth = false;
         this._collidedWithWildlife = false;
+        this._collidedWithResident = false;
     }
 
     // Returns whether `key` is handled, so the caller knows to swallow the event.
@@ -260,6 +264,15 @@ export class AvatarMovementController {
             this._collidedWithWildlife = wildlifeResult.collided;
         }
 
+        this._collidedWithResident = false;
+        if (this._residentConstraint) {
+            const residentResult = this._residentConstraint.apply(currentPosition, finalPosition, {
+                avatarRadius: this._resolvedCollisionRadius()
+            });
+            finalPosition = residentResult.position;
+            this._collidedWithResident = residentResult.collided;
+        }
+
         const positionChanged = !samePosition(finalPosition, current.position);
         const rotationChanged = Math.abs(result.rotationY - currentRotationY) > EPSILON;
         const animationChanged = result.animation !== current.animation;
@@ -292,6 +305,10 @@ export class AvatarMovementController {
 
     isCollidedWithWildlife() {
         return this._collidedWithWildlife;
+    }
+
+    isCollidedWithResident() {
+        return this._collidedWithResident;
     }
 
     isCollidedWithTree() {

@@ -55,6 +55,22 @@ export const avatarSectionTemplate = `<!--
                         />
                         Follow Avatar
                     </label>
+                    <!--
+                        World Residents: people who live in the active World and stroll
+                        around where they were added. Same action as the R key.
+                    -->
+                    <div v-if="hasLocalAvatar && residentInteractionState" class="world-view-residents">
+                        <button
+                            v-if="residentInteractionState.canAdd || residentInteractionState.canRemove"
+                            type="button"
+                            class="action-btn"
+                            :title="residentInteractionState.canRemove ? 'Remove the resident next to you from its World (R)' : 'Add a resident who lives here and strolls around this spot (R)'"
+                            @click="toggleResidentHere"
+                        >{{ residentInteractionState.canRemove ? 'Remove Resident' : 'Add Resident Here' }}</button>
+                        <span v-else class="form-hint form-hint--neutral">
+                            {{ residentRefusalLabel(residentInteractionState.refusal) }}
+                        </span>
+                    </div>
                     <p v-if="!hasLocalAvatar" class="form-hint form-hint--neutral">
                         Log in and create an avatar (My Avatar) to appear here.
                     </p>

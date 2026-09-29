@@ -89,6 +89,32 @@ export const DocumentValidator = Object.freeze({
                 }
             }
         }
+        // residents are optional (a World without any has no field)
+        if (world.residents !== undefined) {
+            if (!Array.isArray(world.residents)) {
+                errors.push('world.residents must be an array when present');
+            } else {
+                for (let i = 0; i < world.residents.length; i++) {
+                    DocumentValidator._validateResident(world.residents[i], `world.residents[${i}]`, errors);
+                }
+            }
+        }
+    },
+
+    _validateResident(resident, prefix, errors) {
+        if (!resident || typeof resident !== 'object' || Array.isArray(resident)) {
+            errors.push(`${prefix} must be an object`);
+            return;
+        }
+        for (const field of ['id', 'worldId', 'authorIdentityId']) {
+            if (typeof resident[field] !== 'string' || resident[field].length === 0) {
+                errors.push(`${prefix}.${field} must be a non-empty string`);
+            }
+        }
+        const position = resident.position;
+        if (!position || typeof position !== 'object' || !Number.isFinite(position.x) || !Number.isFinite(position.z)) {
+            errors.push(`${prefix}.position must have finite x and z`);
+        }
     },
 
     _validateBuilding(building, index, errors, warnings) {

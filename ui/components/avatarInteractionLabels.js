@@ -56,3 +56,15 @@ export function describeAnimalDecorationAction(state) {
         speciesLabel: animalSpeciesLabel(state.species)
     });
 }
+
+// Why a World Resident can't be added where the avatar stands, keyed by
+// application/worldNavigation/residentMethods.js#RESIDENT_REFUSAL's values.
+const RESIDENT_REFUSAL_LABEL = Object.freeze({
+    'not-on-ground': 'Residents live on the ground: step down to add one.',
+    riding: 'Get off your vehicle to add a resident.',
+    water: 'Residents stay on dry land: move out of the water to add one.'
+});
+
+export function residentRefusalLabel(refusal) {
+    return RESIDENT_REFUSAL_LABEL[refusal] || '';
+}

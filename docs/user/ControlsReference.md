@@ -75,7 +75,7 @@ Walking your avatar directly, instead of flying the camera — see
 
 | Input | Action | Notes |
 |---|---|---|
-| `W` / `A` / `S` / `D` | Move / turn | Blocked by nearby buildings, trees, and wildlife, same as a wall |
+| `W` / `A` / `S` / `D` | Move / turn | Blocked by nearby buildings, trees, wildlife and residents, same as a wall |
 | `Shift` (held) | Run | |
 | `Space` | Jump | |
 | `Alt` + `W` / `S` | Start continuous walk forward/backward | Keeps moving after keys are released; an ordinary `W`/`S` tap without Alt cancels it |
@@ -110,6 +110,17 @@ nearby or you're carrying one.
 | `F` (not near a catchable animal, carrying one) | Release the most recently caught animal | Spawns it at your current position, catchable again |
 | `G` (near an animal you released) | Decorate the World with it | Saves it into the World's content as a decoration — no longer catchable; needs EDIT access. A prompt shows when `G` would do something |
 | `G` (near an animal decoration, no released animal nearby) | Undo the decoration | Removes it from the World and turns it back into a live, catchable animal |
+
+## Residents (World View)
+
+See [Avatars & Presence](06-AvatarsAndPresence.md#residents). Requires Avatar
+Control Mode; the Avatar section's **Add Resident Here** / **Remove Resident**
+button does the same without it.
+
+| Input | Action | Notes |
+|---|---|---|
+| `R` (on open ground, no resident right beside you) | Add a resident whose home is where you stand | Saved into the World's content; needs EDIT access. Not on a rooftop, in water, or while riding |
+| `R` (next to a resident) | Remove it from its World | A prompt shows **[R] Remove Resident**; undo with `Ctrl/Cmd+Z` |
 
 Your inventory, placed vehicles, and released animals are saved on this
 device and survive a reload — see
