@@ -7,6 +7,19 @@ is still written straight into its components, and is moved over area by
 area. Until an area is moved, it shows in English whatever language is
 chosen.
 
+## What is ready
+
+| Area | Status |
+|---|---|
+| Header, navigation, Language page, sound control | Translated |
+| Editor: toolbar, sidebar, Build Library, dialogs, touch bar, feedback | Translated |
+| Editor actions, license, placement, document status, presence labels, passphrase rules, opening a shared link | Translated |
+| World View | English |
+| Publications page | English |
+| Identity, Peers, Chat, Following, settings pages | English |
+| Resident speech in World View | English |
+| Undo/redo and history labels, a new document's default title | English (stored in documents; needs its own change) |
+
 ## How it works
 
 - Every piece of text the app shows has a **key**, like `app.nav.home`. The

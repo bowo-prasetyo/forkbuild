@@ -117,9 +117,9 @@ async function run() {
         assert(/options: sortOptionsByLabel\(described\.options\)/.test(content), 'Content Provider radio options are sorted');
 
         const library = await source('ui/components/BuildLibraryPanel.js');
-        assert(/sortOptionsByLabel\(options, \(option\) => option\.category\)/.test(library),
-            'Build Library category filter is sorted');
-        assert(/<option value="all">All/.test(library), '"All" stays first as its own static option');
+        assert(/sortOptionsByLabel\(options, \(option\) => libraryCategoryName\(option\.category\)\)/.test(library),
+            'Build Library category filter is sorted by the category names it shows');
+        assert(/<option value="all">\{\{ t\('buildLibrary\.allCount'/.test(library), '"All" stays first as its own static option');
 
         const avatar = await source('ui/views/AvatarSettingsView.js');
         assert(/sortOptionsByLabel\(wired\.templateRegistry\.getAll\(\), \(t\) => t\.displayLabel\)/.test(avatar),

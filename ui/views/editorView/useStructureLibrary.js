@@ -1,4 +1,6 @@
 import { ref } from 'vue';
+import { t } from '../../i18n/i18n.js';
+import { libraryItemName } from '../../i18n/libraryText.js';
 
 // The Build Library's structures: built-in and personal groups, recently used, and the
 // actions that rename, remove, fork, place or create a personal Structure.
@@ -42,14 +44,14 @@ export function useStructureLibrary({
     }
 
     function renamePersonalStructure(structure) {
-        const name = prompt('Rename structure:', structure.name);
+        const name = prompt(t('editor.renameStructurePrompt'), structure.name);
         if (name === null || !name.trim()) {
             return;
         }
         personalStructureLibraryStore.updateStructureMetadata(structure.id, { name: name.trim() });
         refreshPersonalStructureGroups();
         refreshRecentStructures();
-        feedback.show(`Renamed to "${name.trim()}"`);
+        feedback.show(t('editor.structureRenamed', { name: name.trim() }));
     }
 
     function removePersonalStructure(structure) {
@@ -57,13 +59,13 @@ export function useStructureLibrary({
         personalStructureLibraryStore.removeStructure(structure.id);
         refreshPersonalStructureGroups();
         refreshRecentStructures();
-        feedback.show(`Removed "${structure.name}" from My Structures`);
+        feedback.show(t('editor.structureRemoved', { name: libraryItemName(structure) }));
     }
 
     function forkStructure(structure) {
         const forked = editorSession.forkStructure(structure);
         if (forked) {
-            feedback.show(`Forked "${structure.name}" — now editing your own copy`);
+            feedback.show(t('editor.structureForked', { name: libraryItemName(structure) }));
         }
     }
 
@@ -73,7 +75,7 @@ export function useStructureLibrary({
         const forked = editorSession.forkStructureToPersonalLibrary(structure);
         if (forked) {
             refreshPersonalStructureGroups();
-            feedback.show(`"${forked.name}" added to My Structures`);
+            feedback.show(t('editor.structureAddedToLibrary', { name: libraryItemName(forked) }));
         }
     }
 
@@ -83,7 +85,7 @@ export function useStructureLibrary({
     function copyStructureIntoDocument(structure) {
         const started = editorSession.beginStructureComposition(structure);
         if (started) {
-            feedback.show(`Placing "${structure.name}" — click to place, R to rotate, Esc to cancel`);
+            feedback.show(t('editor.placingStructure', { name: libraryItemName(structure) }));
             // Recorded on place intent, even if later cancelled; a stale entry is harmless.
             libraryUsageHistoryStore.recordUse(structure.id);
             refreshRecentStructures();
@@ -101,14 +103,14 @@ export function useStructureLibrary({
         const structure = editorSession.createStructureFromSelection({ name, category, description });
         closeCreateBlueprintDialog();
         if (!structure) {
-            feedback.show('Nothing to create — select bricks first');
+            feedback.show(t('editor.nothingToCreate'));
             return;
         }
         const saved = editorSession.saveStructureToPersonalLibrary(structure);
         if (saved) {
             refreshPersonalStructureGroups();
         }
-        feedback.show(saved ? `"${structure.name}" created in My Structures` : `Created "${structure.name}"`);
+        feedback.show(t(saved ? 'editor.blueprintSaved' : 'editor.blueprintCreated', { name: structure.name }));
     }
 
     return {

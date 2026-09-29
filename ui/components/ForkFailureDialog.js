@@ -1,4 +1,5 @@
 import { ForkFailureReason } from '../../application/document/ForkFailureReason.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.9.353 — Fork Failure Reason Presentation.
 //
@@ -35,11 +36,11 @@ import { ForkFailureReason } from '../../application/document/ForkFailureReason.
 // 0.9.352's own brief warned against, and what application/
 // ForkFailureReason.js exists to make unnecessary.
 const FORK_FAILURE_MESSAGES = Object.freeze({
-    [ForkFailureReason.LICENSE_DENIED]: 'This Publication cannot be forked under its license.',
-    [ForkFailureReason.MATERIAL_UNAVAILABLE]: "This Publication's material is currently unavailable."
+    [ForkFailureReason.LICENSE_DENIED]: 'forkFailure.licenseDenied',
+    [ForkFailureReason.MATERIAL_UNAVAILABLE]: 'forkFailure.materialUnavailable'
 });
 
-const FALLBACK_MESSAGE = 'This Publication could not be forked right now.';
+const FALLBACK_MESSAGE = 'forkFailure.other';
 
 export default {
     name: 'ForkFailureDialog',
@@ -49,10 +50,11 @@ export default {
     emits: ['back'],
     computed: {
         message() {
-            return FORK_FAILURE_MESSAGES[this.reason] || FALLBACK_MESSAGE;
+            return t(FORK_FAILURE_MESSAGES[this.reason] || FALLBACK_MESSAGE);
         }
     },
     methods: {
+        t,
         onKeydown(event) {
             if (event.key === 'Escape') {
                 event.stopPropagation();
@@ -63,16 +65,16 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="Fork Unavailable"
+            :aria-label="t('forkFailure.title')"
             class="modal-overlay"
             @click.self="$emit('back')"
             @keydown="onKeydown"
         >
             <div class="modal-panel fork-failure-dialog">
-                <h3>Fork Unavailable</h3>
+                <h3>{{ t('forkFailure.title') }}</h3>
                 <p class="fork-failure-dialog-message">{{ message }}</p>
                 <div class="modal-actions">
-                    <button class="action-btn action-btn--primary" autofocus @click="$emit('back')">Back to Publication</button>
+                    <button class="action-btn action-btn--primary" autofocus @click="$emit('back')">{{ t('forkFailure.back') }}</button>
                 </div>
             </div>
         </div>

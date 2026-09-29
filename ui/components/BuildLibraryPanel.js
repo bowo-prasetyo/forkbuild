@@ -4,7 +4,8 @@ import StructureLibraryCard from './StructureLibraryCard.js';
 import { sortStructures, STRUCTURE_SORT_OPTIONS } from '../../core/sortStructures.js';
 import { toCssHex, fromCssHex } from '../../core/ColorHex.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
-import { libraryItemDescription, libraryItemName } from '../i18n/libraryText.js';
+import { libraryCategoryName, libraryItemDescription, libraryItemName } from '../i18n/libraryText.js';
+import { t } from '../i18n/i18n.js';
 
 // Exported (not just module-local) so tests/BuildLibraryUX.test.js can
 // exercise the actual matching rule directly — the same "logic lives
@@ -57,7 +58,8 @@ export function buildCategoryOptions(...groupsLists) {
 
 // The brick registry's own categories give most bricks a heading to
 // themselves, so the palette shows them in a few broader sections
-// instead. Display only: BrickDefinition.category is left alone.
+// instead. Display only: BrickDefinition.category is left alone. The
+// section names here are ids; brickSectionName() shows them.
 const BRICK_SECTIONS = ['Basic', 'Structure', 'Roofs & Stairs', 'Openings', 'Details'];
 const BRICK_SECTION_BY_CATEGORY = {
     primitive: 'Basic',
@@ -74,6 +76,20 @@ const BRICK_SECTION_BY_CATEGORY = {
     decorative: 'Details'
 };
 const OPENING_TAGS = new Set(['window', 'door', 'opening']);
+
+const BRICK_SECTION_KEYS = {
+    Basic: 'buildLibrary.section.basic',
+    Structure: 'buildLibrary.section.structure',
+    'Roofs & Stairs': 'buildLibrary.section.roofsAndStairs',
+    Openings: 'buildLibrary.section.openings',
+    Details: 'buildLibrary.section.details'
+};
+
+// A section's heading; a category without a section of its own is named as
+// a library category.
+function brickSectionName(section) {
+    return BRICK_SECTION_KEYS[section] ? t(BRICK_SECTION_KEYS[section]) : libraryCategoryName(section);
+}
 
 function brickSectionFor(definition) {
     if ((definition.tags || []).some((tag) => OPENING_TAGS.has(tag))) {
@@ -396,7 +412,7 @@ export default {
         // display order only; the groups below keep their registry order.
         const categoryOptions = computed(() => {
             const { total, options } = buildCategoryOptions(sourceFilteredBuiltIn.value, sourceFilteredPersonal.value);
-            return { total, options: sortOptionsByLabel(options, (option) => option.category) };
+            return { total, options: sortOptionsByLabel(options, (option) => libraryCategoryName(option.category)) };
         });
 
         // 0.6.4 — narrows to the selected category (if any), then sorts
@@ -568,7 +584,7 @@ export default {
         const hasPersonalStructures = computed(() => (props.personalStructureGroups || []).some((group) => group.structures.length > 0));
 
         return {
-            libraryItemName, libraryItemDescription,
+            t, libraryItemName, libraryItemDescription, libraryCategoryName, brickSectionName,
             hasPersonalStructures,
             activeTab,
             query,
@@ -603,7 +619,7 @@ export default {
     },
     template: `
         <div class="build-library">
-            <h3 class="palette-title">Build Library</h3>
+            <h3 class="palette-title">{{ t('buildLibrary.title') }}</h3>
             <div class="build-library-tabs" role="tablist">
                 <button
                     type="button"
@@ -612,7 +628,7 @@ export default {
                     :class="['build-library-tab', { 'build-library-tab--active': activeTab === 'bricks' }]"
                     @click="setTab('bricks')"
                 >
-                    Bricks
+                    {{ t('buildLibrary.bricks') }}
                 </button>
                 <button
                     type="button"
@@ -621,25 +637,25 @@ export default {
                     :class="['build-library-tab', { 'build-library-tab--active': activeTab === 'structures' }]"
                     @click="setTab('structures')"
                 >
-                    Structures
+                    {{ t('buildLibrary.structures') }}
                 </button>
             </div>
             <input
                 v-model="query"
                 type="text"
                 class="build-library-search"
-                :placeholder="'Search ' + activeTab + '...'"
-                :aria-label="'Search ' + activeTab"
+                :placeholder="t(activeTab === 'bricks' ? 'buildLibrary.searchBricks' : 'buildLibrary.searchStructures')"
+                :aria-label="t(activeTab === 'bricks' ? 'buildLibrary.searchBricksLabel' : 'buildLibrary.searchStructuresLabel')"
             />
 
             <div v-if="activeTab === 'bricks'" class="brick-palette">
-                <label v-if="selectedDefinitionId" class="brick-palette-color" title="Choose the color for the next bricks you place">
-                    Color
+                <label v-if="selectedDefinitionId" class="brick-palette-color" :title="t('buildLibrary.colorHint')">
+                    {{ t('buildLibrary.color') }}
                     <input type="color" class="brick-palette-color-input" :value="activeColorCss" @input="onColorChange" />
                 </label>
-                <p v-if="filteredBrickGroups.length === 0" class="build-library-empty">No matching bricks.</p>
+                <p v-if="filteredBrickGroups.length === 0" class="build-library-empty">{{ t('buildLibrary.noBricks') }}</p>
                 <div v-for="group in filteredBrickGroups" :key="group.category" class="palette-group">
-                    <h4 class="palette-category">{{ group.category }}</h4>
+                    <h4 class="palette-category">{{ brickSectionName(group.category) }}</h4>
                     <ul class="palette-list palette-list--grid">
                         <li
                             v-for="definition in group.definitions"
@@ -663,31 +679,31 @@ export default {
                         :aria-selected="sourceFilter === 'all'"
                         :class="['build-library-source-tab', { 'build-library-source-tab--active': sourceFilter === 'all' }]"
                         @click="setSourceFilter('all')"
-                    >All</button>
+                    >{{ t('buildLibrary.all') }}</button>
                     <button
                         type="button"
                         role="tab"
                         :aria-selected="sourceFilter === 'built-in'"
                         :class="['build-library-source-tab', { 'build-library-source-tab--active': sourceFilter === 'built-in' }]"
                         @click="setSourceFilter('built-in')"
-                    >Built-in</button>
+                    >{{ t('buildLibrary.builtIn') }}</button>
                     <button
                         type="button"
                         role="tab"
                         :aria-selected="sourceFilter === 'personal'"
                         :class="['build-library-source-tab', { 'build-library-source-tab--active': sourceFilter === 'personal' }]"
                         @click="setSourceFilter('personal')"
-                    >My Structures</button>
+                    >{{ t('buildLibrary.myStructures') }}</button>
                 </div>
                 <div class="build-library-filters">
-                    <select v-model="categoryFilter" class="build-library-filter-select" aria-label="Filter by category">
-                        <option value="all">All ({{ categoryOptions.total }})</option>
+                    <select v-model="categoryFilter" class="build-library-filter-select" :aria-label="t('buildLibrary.filterLabel')">
+                        <option value="all">{{ t('buildLibrary.allCount', { count: categoryOptions.total }) }}</option>
                         <option v-for="option in categoryOptions.options" :key="option.category" :value="option.category">
-                            {{ option.category }} ({{ option.count }})
+                            {{ t('buildLibrary.categoryCount', { category: libraryCategoryName(option.category), count: option.count }) }}
                         </option>
                     </select>
-                    <select v-model="sortKey" class="build-library-filter-select" aria-label="Sort structures">
-                        <option v-for="option in sortOptions" :key="option.key" :value="option.key">{{ option.label }}</option>
+                    <select v-model="sortKey" class="build-library-filter-select" :aria-label="t('buildLibrary.sortLabel')">
+                        <option v-for="option in sortOptions" :key="option.key" :value="option.key">{{ t(option.label) }}</option>
                     </select>
                 </div>
 
@@ -695,11 +711,11 @@ export default {
                     v-if="filteredStructureGroups.length === 0 && filteredPersonalStructureGroups.length === 0 && filteredRecentStructures.length === 0"
                     class="build-library-empty"
                 >
-                    No matching structures.
+                    {{ t('buildLibrary.noStructures') }}
                 </p>
 
                 <div v-if="filteredRecentStructures.length > 0" class="palette-group recent-structures-group">
-                    <h4 class="palette-category">Recent</h4>
+                    <h4 class="palette-category">{{ t('buildLibrary.recent') }}</h4>
                     <ul class="structure-list">
                         <StructureLibraryCard
                             v-for="entry in filteredRecentStructures"
@@ -721,7 +737,7 @@ export default {
                 </div>
 
                 <div v-for="group in filteredStructureGroups" :key="group.category" class="palette-group">
-                    <h4 class="palette-category">{{ group.category }}</h4>
+                    <h4 class="palette-category">{{ libraryCategoryName(group.category) }}</h4>
                     <ul class="structure-list">
                         <StructureLibraryCard
                             v-for="structure in group.structures"
@@ -742,30 +758,30 @@ export default {
 
                 <div v-if="sourceFilter !== 'built-in'" class="personal-structure-library">
                     <div class="personal-structure-library-header">
-                        <h4 class="palette-title personal-structure-library-title">My Structures</h4>
+                        <h4 class="palette-title personal-structure-library-title">{{ t('buildLibrary.myStructures') }}</h4>
                         <button
                             type="button"
                             class="action-btn action-btn--secondary personal-structure-library-import"
                             @click="triggerImportBlueprint"
-                        >Import Blueprint</button>
+                        >{{ t('buildLibrary.importBlueprint') }}</button>
                         <button
                             v-if="hasPersonalStructures"
                             type="button"
                             class="action-btn action-btn--secondary personal-structure-library-export-all"
-                            title="Download every structure in My Structures in one file"
+                            :title="t('buildLibrary.exportAllHint')"
                             @click="$emit('export-all-personal-structures')"
-                        >Export All</button>
+                        >{{ t('buildLibrary.exportAll') }}</button>
                         <input
                             ref="importFileInput"
                             type="file"
                             accept="application/json"
                             class="personal-structure-library-import-input"
-                            aria-label="Import blueprint file"
+                            :aria-label="t('buildLibrary.importFile')"
                             @change="onImportBlueprintFileChosen"
                         />
                     </div>
                     <div v-for="group in filteredPersonalStructureGroups" :key="group.category" class="palette-group">
-                        <h4 class="palette-category">{{ group.category }}</h4>
+                        <h4 class="palette-category">{{ libraryCategoryName(group.category) }}</h4>
                         <ul class="structure-list">
                             <StructureLibraryCard
                                 v-for="structure in group.structures"

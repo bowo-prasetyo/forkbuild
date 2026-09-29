@@ -24,6 +24,7 @@
 // rather than commit. Absent/true reads exactly as before this
 // milestone, so structure-placement feedback (which sets `valid` too)
 // and any older caller that never sets it both render identically.
+import { formatNumber, t } from '../i18n/i18n.js';
 export default {
     name: 'TransformFeedback',
     props: {
@@ -47,18 +48,20 @@ export default {
             if (!fb) {
                 return '';
             }
-            const precisionTag = this.precise ? ' (precision)' : '';
+            let title;
             if (fb.mode === 'rotate') {
                 const increment = fb.rotationSnap !== null && fb.rotationSnap !== undefined
-                    ? `${this.formatNumber(fb.rotationSnap)}°`
-                    : 'free';
-                return `Rotate Y • ${increment}${precisionTag}`;
+                    ? t('transformFeedback.degrees', { value: this.formatNumber(fb.rotationSnap) })
+                    : t('transformFeedback.free');
+                title = t('transformFeedback.rotate', { increment });
+            } else {
+                const axis = fb.axis ? fb.axis.toUpperCase() : t('transformFeedback.freeAxis');
+                const increment = fb.translationSnap !== null && fb.translationSnap !== undefined
+                    ? t('transformFeedback.grid', { size: this.formatNumber(fb.translationSnap) })
+                    : t('transformFeedback.snapOff');
+                title = t('transformFeedback.move', { axis, increment });
             }
-            const axisLabel = fb.axis ? fb.axis.toUpperCase() : 'Free';
-            const increment = fb.translationSnap !== null && fb.translationSnap !== undefined
-                ? `Grid ${this.formatNumber(fb.translationSnap)}`
-                : 'Snap off';
-            return `Move ${axisLabel} • ${increment}${precisionTag}`;
+            return this.precise ? t('transformFeedback.precise', { title }) : title;
         },
         lines() {
             const fb = this.feedback;
@@ -79,7 +82,7 @@ export default {
                 );
             }
             if (this.invalid) {
-                lines.push('Blocked — collision');
+                lines.push(t('transformFeedback.blocked'));
             }
             return lines;
         }
@@ -89,11 +92,11 @@ export default {
             if (value === null || value === undefined || !Number.isFinite(Number(value))) {
                 return '—';
             }
-            return String(Number(Number(value).toFixed(4)));
+            return formatNumber(Number(value), { maximumFractionDigits: 4 });
         },
         formatSigned(value) {
             const num = Number(Number(value || 0).toFixed(4));
-            return `${num >= 0 ? '+' : ''}${num}`;
+            return `${num >= 0 ? '+' : ''}${formatNumber(num, { maximumFractionDigits: 4 })}`;
         }
     },
     template: `

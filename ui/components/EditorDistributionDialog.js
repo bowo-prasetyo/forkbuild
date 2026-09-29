@@ -1,13 +1,14 @@
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 import { describeSteemContentUploadProgress } from '../../application/steem/SteemContentUploadProgressText.js';
 import PublicationShareLink from './PublicationShareLink.js';
+import { displayText, t } from '../i18n/i18n.js';
 
 // Steem holds both the Snapshot and the Signed Claim (docs/Protocol.md,
 // "Proposed: Steem Content Storage").
 const STORAGE_OPTION_LABELS = {
-    ipfs: 'IPFS (Local Kubo)',
-    ar: 'Arweave',
-    steem: 'Steem'
+    ipfs: 'storage.ipfsLocal',
+    ar: 'storage.arweave',
+    steem: 'storage.steem'
 };
 
 // 0.9.672 — Editor View Distribution Dialog.
@@ -111,7 +112,7 @@ export default {
         steemUploadProgressText() {
             // Options API injections arrive with the ref already unwrapped.
             if (!this.snapshotDistributionExecuting) return null;
-            return describeSteemContentUploadProgress(this.steemContentUploadProgress);
+            return displayText(describeSteemContentUploadProgress(this.steemContentUploadProgress));
         },
         storageModel: {
             get() { return this.storage; },
@@ -134,13 +135,14 @@ export default {
             return sortOptionsByLabel([
                 ...registryStorages.map((storage) => ({
                     value: storage,
-                    label: STORAGE_OPTION_LABELS[storage] || 'Arweave'
+                    label: t(STORAGE_OPTION_LABELS[storage] || 'storage.arweave')
                 })),
-                { value: 'remote-pinning', label: 'IPFS (Remote Pinning)' }
+                { value: 'remote-pinning', label: t('storage.remotePinning') }
             ]);
         }
     },
     methods: {
+        t,
         onKeydown(event) {
             if (event.key === 'Escape') {
                 event.stopPropagation();
@@ -151,17 +153,17 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="Distribute"
+            :aria-label="t('distribution.title')"
             class="modal-overlay"
             @click.self="$emit('close')"
             @keydown="onKeydown"
         >
             <div class="modal-panel editor-distribution-dialog">
-                <h3>Distribute</h3>
+                <h3>{{ t('distribution.title') }}</h3>
 
                 <div class="editor-distribution-dialog-settings">
                     <label class="form-field editor-distribution-dialog-storage-label">
-                        <span class="form-label">Storage</span>
+                        <span class="form-label">{{ t('distribution.storage') }}</span>
                         <select v-model="storageModel" class="form-select editor-distribution-dialog-storage-select" :disabled="anyExecuting">
                             <option v-for="option in storageOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                         </select>
@@ -169,26 +171,26 @@ export default {
 
                     <div v-if="storage === 'remote-pinning'" class="editor-distribution-dialog-remote-pinning-draft">
                         <label class="form-field">
-                            <span class="form-label">Endpoint</span>
+                            <span class="form-label">{{ t('distribution.endpoint') }}</span>
                             <input type="text" class="form-input" v-model="remotePinningDraft.endpoint" placeholder="https://api.pinata.cloud/pinning/pinFileToIPFS" />
                         </label>
                         <label class="form-field">
-                            <span class="form-label">Credential (optional)</span>
-                            <input type="password" class="form-input" v-model="remotePinningDraft.credential" placeholder="Bearer token" />
+                            <span class="form-label">{{ t('distribution.credential') }}</span>
+                            <input type="password" class="form-input" v-model="remotePinningDraft.credential" :placeholder="t('distribution.credentialPlaceholder')" />
                         </label>
                         <label class="form-field">
-                            <span class="form-label">Request field (optional)</span>
+                            <span class="form-label">{{ t('distribution.requestField') }}</span>
                             <input type="text" class="form-input" v-model="remotePinningDraft.requestField" placeholder="file" />
                         </label>
                         <label class="form-field">
-                            <span class="form-label">Response field (optional)</span>
+                            <span class="form-label">{{ t('distribution.responseField') }}</span>
                             <input type="text" class="form-input" v-model="remotePinningDraft.responseField" placeholder="cid (Pinata: IpfsHash)" />
                         </label>
-                        <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you distribute.</p>
+                        <p class="form-hint form-hint--neutral">{{ t('distribution.notSaved') }}</p>
                     </div>
 
                     <label class="form-field editor-distribution-dialog-provider-label">
-                        <span class="form-label">Announcement / Discovery substrate</span>
+                        <span class="form-label">{{ t('distribution.substrate') }}</span>
                         <select v-model="discoveryProviderModel" class="form-select editor-distribution-dialog-provider-select" :disabled="anyExecuting">
                             <option value="arweave">Arweave</option>
                             <option value="nostr">Nostr</option>
@@ -203,60 +205,60 @@ export default {
                         class="action-btn action-btn--primary editor-distribution-dialog-combined-action"
                         :disabled="anyExecuting"
                         @click="$emit('distribute-both')"
-                    >{{ anyExecuting ? 'Distributing…' : 'Distribute' }}</button>
-                    <p class="editor-distribution-dialog-combined-hint form-hint form-hint--neutral">Distributes the Signed Claim and the Snapshot together with the settings above — each still its own protocol, reported separately below.</p>
+                    >{{ anyExecuting ? t('distribution.distributing') : t('distribution.distribute') }}</button>
+                    <p class="editor-distribution-dialog-combined-hint form-hint form-hint--neutral">{{ t('distribution.combinedHint') }}</p>
                 </div>
 
                 <div v-if="canDistributeSnapshot" class="editor-distribution-dialog-section editor-distribution-dialog-snapshot-section">
-                    <h4 class="editor-distribution-dialog-section-title">Snapshot</h4>
+                    <h4 class="editor-distribution-dialog-section-title">{{ t('distribution.snapshot') }}</h4>
 
                     <button
                         type="button"
                         :class="['action-btn', canDistributePublication ? 'action-btn--secondary' : 'action-btn--primary', 'editor-distribution-dialog-distribute-snapshot-btn']"
                         :disabled="anyExecuting"
                         @click="$emit('distribute-snapshot')"
-                    >{{ snapshotDistributionExecuting ? 'Distributing…' : (canDistributePublication ? 'Distribute Snapshot only' : 'Distribute Snapshot') }}</button>
+                    >{{ snapshotDistributionExecuting ? t('distribution.distributing') : t(canDistributePublication ? 'distribution.snapshotOnly' : 'distribution.distributeSnapshot') }}</button>
 
                     <p v-if="steemUploadProgressText" class="form-hint form-hint--neutral editor-distribution-dialog-steem-progress" role="status">{{ steemUploadProgressText }}</p>
                     <p v-if="snapshotDistributionError" class="editor-distribution-dialog-distribution-error">{{ snapshotDistributionError }}</p>
                     <dl v-else-if="snapshotDistributionResult" class="editor-distribution-dialog-distribution-detail">
-                        <dt>Content hash</dt>
+                        <dt>{{ t('distribution.contentHash') }}</dt>
                         <dd>{{ snapshotDistributionResult.contentReference.hash }}</dd>
-                        <dt>Locator</dt>
+                        <dt>{{ t('distribution.locator') }}</dt>
                         <dd>{{ snapshotDistributionResult.contentReference.uri }}</dd>
-                        <dt>Announcement</dt>
-                        <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : (snapshotDistributionResult.announcementError || 'No announcement') }}</dd>
+                        <dt>{{ t('distribution.announcement') }}</dt>
+                        <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : (snapshotDistributionResult.announcementError || t('distribution.noAnnouncement')) }}</dd>
                     </dl>
                 </div>
 
                 <div v-if="canDistributePublication" class="editor-distribution-dialog-section editor-distribution-dialog-publication-section">
-                    <h4 class="editor-distribution-dialog-section-title">Publication</h4>
+                    <h4 class="editor-distribution-dialog-section-title">{{ t('distribution.publication') }}</h4>
 
                     <button
                         type="button"
                         :class="['action-btn', canDistributeSnapshot ? 'action-btn--secondary' : 'action-btn--primary', 'editor-distribution-dialog-distribute-btn']"
                         :disabled="anyExecuting"
                         @click="$emit('distribute-publication')"
-                    >{{ distributionExecuting ? 'Distributing…' : (canDistributeSnapshot ? 'Distribute Publication only' : 'Distribute Publication') }}</button>
+                    >{{ distributionExecuting ? t('distribution.distributing') : t(canDistributeSnapshot ? 'distribution.publicationOnly' : 'distribution.distributePublication') }}</button>
 
                     <p v-if="distributionError" class="editor-distribution-dialog-distribution-error">{{ distributionError }}</p>
                     <dl v-else-if="distributionResult && distributionResult.length" class="editor-distribution-dialog-distribution-detail">
-                        <dt>Publication</dt>
+                        <dt>{{ t('distribution.publication') }}</dt>
                         <dd>{{ distributionResult[0].publication.objectId }}</dd>
-                        <dt>Material</dt>
-                        <dd>{{ distributionResult[0].material ? distributionResult[0].material.uri : 'Not yet uploaded' }}</dd>
+                        <dt>{{ t('distribution.material') }}</dt>
+                        <dd>{{ distributionResult[0].material ? distributionResult[0].material.uri : t('distribution.notUploaded') }}</dd>
                         <template v-for="(relayResult, relayIndex) in distributionResult" :key="relayIndex">
-                            <dt>{{ distributionResult.length > 1 ? \`Discovery (relay \${relayIndex + 1})\` : 'Discovery' }}</dt>
-                            <dd>{{ relayResult.discovery ? relayResult.discovery.id : 'Not yet announced' }}</dd>
+                            <dt>{{ distributionResult.length > 1 ? t('distribution.discoveryRelay', { number: relayIndex + 1 }) : t('distribution.discovery') }}</dt>
+                            <dd>{{ relayResult.discovery ? relayResult.discovery.id : t('distribution.notAnnounced') }}</dd>
                         </template>
                         <template v-if="documentId">
-                            <dt>Repository</dt>
+                            <dt>{{ t('distribution.repository') }}</dt>
                             <dd>
                                 <button
                                     type="button"
                                     class="action-btn action-btn--secondary editor-distribution-dialog-view-btn"
                                     @click="$emit('view-in-repository')"
-                                >Explore</button>
+                                >{{ t('distribution.explore') }}</button>
                             </dd>
                         </template>
                     </dl>
@@ -268,7 +270,7 @@ export default {
                 </div>
 
                 <div class="modal-actions">
-                    <button type="button" class="action-btn action-btn--secondary editor-distribution-dialog-close-action" @click="$emit('close')">Close</button>
+                    <button type="button" class="action-btn action-btn--secondary editor-distribution-dialog-close-action" @click="$emit('close')">{{ t('distribution.close') }}</button>
                 </div>
             </div>
         </div>

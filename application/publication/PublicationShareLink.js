@@ -1,5 +1,6 @@
 import { describePublicationClaimLocator, publicationShareUrl } from '../../core/ForkBuildAppLinks.js';
 import { PublicationDistributionState } from './distribution/PublicationDistributionLifecycle.js';
+import { message } from '../../core/Message.js';
 
 // Sharing a distributed Publication with friends: the link that opens it in
 // World View on any device (core/ForkBuildAppLinks.js), taken from where its
@@ -10,7 +11,9 @@ import { PublicationDistributionState } from './distribution/PublicationDistribu
 // `{ available: true, url, title, text, note }` when it can be shared (`note`
 // says what to expect where the claim is stored, or is null);
 // `{ available: false, reason }` when its claim is stored where no link can
-// reach it.
+// reach it. `reason`, `note` and `text` are messages (core/Message.js), and so
+// is `title` when the Publication has none; the UI hands the share functions
+// below a copy with them turned into text.
 export function describePublicationShare({ lifecycle, title = null }) {
     const material = lifecycle?.material;
     if (!material || material.state !== PublicationDistributionState.PRESENT) return null;
@@ -18,19 +21,19 @@ export function describePublicationShare({ lifecycle, title = null }) {
     if (!url) {
         return Object.freeze({
             available: false,
-            reason: 'This Publication\'s Signed Claim is stored where a link can\'t reach it. Distribute it again with Steem, Arweave or IPFS storage to get a link.'
+            reason: message('share.unreachable')
         });
     }
-    const name = typeof title === 'string' && title.trim() ? title.trim() : 'A build';
-    return Object.freeze({ available: true, url, title: name, text: `${name}, built with ForkBuild`, note: shareNote(material) });
+    const name = typeof title === 'string' && title.trim() ? title.trim() : message('share.untitled');
+    return Object.freeze({ available: true, url, title: name, text: message('share.text', { title: name }), note: shareNote(material) });
 }
 
 // What a friend should expect, from where the claim is stored.
 function shareNote(material) {
     const network = describePublicationClaimLocator(material.uri)?.network;
-    if (network === 'arweave') return 'Stored on Arweave: right after distributing, the link can take a few minutes to open.';
+    if (network === 'arweave') return message('share.arweaveNote');
     if (network === 'ipfs' && material.storage !== 'remote-pinning') {
-        return 'Stored on your own IPFS node: friends can open the link only while your node is online and reachable. Remote pinning or Arweave keeps it available.';
+        return message('share.ipfsNodeNote');
     }
     return null;
 }

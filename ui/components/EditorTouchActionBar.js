@@ -3,6 +3,7 @@
 // toggle (a drag then draws the Shift-drag marquee), and the Command Palette,
 // which reaches every other action. Each runs the same
 // EditorActionRegistry action as its shortcut, with the same enabled rules.
+import { t } from '../i18n/i18n.js';
 const ACTIONS = Object.freeze({
     undo: 'history.undo',
     redo: 'history.redo',
@@ -28,6 +29,7 @@ export default {
         }
     },
     methods: {
+        t,
         isDisabled(name) {
             const action = this.registry.get(ACTIONS[name]);
             return !action || !action.enabled(this.context);
@@ -44,24 +46,24 @@ export default {
         }
     },
     template: `
-        <div class="editor-touch-bar" role="toolbar" aria-label="Touch editing actions">
-            <button type="button" class="editor-touch-btn" :disabled="isDisabled('undo')" @click="run('undo')">Undo</button>
-            <button type="button" class="editor-touch-btn" :disabled="isDisabled('redo')" @click="run('redo')">Redo</button>
-            <button type="button" class="editor-touch-btn" :disabled="!placing && isDisabled('rotate')" @click="rotate">Rotate</button>
-            <button type="button" class="editor-touch-btn" :disabled="isDisabled('delete')" @click="run('delete')">Delete</button>
+        <div class="editor-touch-bar" role="toolbar" :aria-label="t('touchBar.label')">
+            <button type="button" class="editor-touch-btn" :disabled="isDisabled('undo')" @click="run('undo')">{{ t('touchBar.undo') }}</button>
+            <button type="button" class="editor-touch-btn" :disabled="isDisabled('redo')" @click="run('redo')">{{ t('touchBar.redo') }}</button>
+            <button type="button" class="editor-touch-btn" :disabled="!placing && isDisabled('rotate')" @click="rotate">{{ t('touchBar.rotate') }}</button>
+            <button type="button" class="editor-touch-btn" :disabled="isDisabled('delete')" @click="run('delete')">{{ t('touchBar.delete') }}</button>
             <button
                 type="button"
                 :class="['editor-touch-btn', { 'editor-touch-btn--active': multiSelect }]"
                 :aria-pressed="multiSelect ? 'true' : 'false'"
                 @click="$emit('toggle-multi-select')"
-            >Multi</button>
+            >{{ t('touchBar.multi') }}</button>
             <button
                 type="button"
                 :class="['editor-touch-btn', { 'editor-touch-btn--active': boxSelect }]"
                 :aria-pressed="boxSelect ? 'true' : 'false'"
                 @click="$emit('toggle-box-select')"
-            >Box</button>
-            <button type="button" class="editor-touch-btn" @click="run('palette')">More</button>
+            >{{ t('touchBar.box') }}</button>
+            <button type="button" class="editor-touch-btn" @click="run('palette')">{{ t('touchBar.more') }}</button>
         </div>
     `
 };

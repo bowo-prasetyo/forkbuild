@@ -2,6 +2,8 @@ import { BlueprintAttribution } from '../../core/BlueprintAttribution.js';
 import { deriveBlueprintFingerprint, deriveLegacyBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { attributionView } from '../../core/BlueprintAttributionView.js';
+import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
 
 // 0.6.5 — Blueprint Identity & Attribution.
 //
@@ -62,14 +64,14 @@ export class BlueprintAttributionUseCase {
     publish(structure) {
         const fingerprint = deriveBlueprintFingerprint(structure);
         if (!fingerprint) {
-            throw new Error('BlueprintAttributionUseCase: structure has no derivable design content');
+            throw new UserFacingError(message('blueprint.noDesignContent'), { detail: 'BlueprintAttributionUseCase: structure has no derivable design content' });
         }
         const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
         if (!authorIdentityId) {
-            throw new Error('BlueprintAttributionUseCase: sign in to claim authorship of a blueprint');
+            throw new UserFacingError(message('blueprint.signInToAttribute'), { detail: 'BlueprintAttributionUseCase: sign in to claim authorship of a blueprint' });
         }
         if (typeof this._identityProvider.signCanonical !== 'function') {
-            throw new Error('BlueprintAttributionUseCase: this identity provider cannot sign an attribution');
+            throw new UserFacingError(message('blueprint.cannotSignAttribution'), { detail: 'BlueprintAttributionUseCase: this identity provider cannot sign an attribution' });
         }
         let attribution = new BlueprintAttribution({ fingerprint, authorIdentityId });
         const signature = this._identityProvider.signCanonical(attribution.getSigningDescriptor());
@@ -83,7 +85,7 @@ export class BlueprintAttributionUseCase {
         // normal runtime outcome.
         const result = this._verifier.verifyBlueprintAttribution(attribution.toJSON());
         if (!result.valid) {
-            throw new Error(`BlueprintAttributionUseCase: refusing to publish an unverifiable attribution — ${result.reason}`);
+            throw new UserFacingError(message('blueprint.unverifiableAttribution', { reason: result.reason }), { detail: `BlueprintAttributionUseCase: refusing to publish an unverifiable attribution — ${result.reason}` });
         }
         this._store.save(attribution);
         return attribution;
@@ -195,7 +197,7 @@ export class BlueprintAttributionUseCase {
         const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
         const { myLegacyClaim } = this._legacyClaims(structure, authorIdentityId);
         if (!myLegacyClaim) {
-            throw new Error('BlueprintAttributionUseCase: you have no earlier authorship claim to sign again for this design');
+            throw new UserFacingError(message('blueprint.noEarlierClaim'), { detail: 'BlueprintAttributionUseCase: you have no earlier authorship claim to sign again for this design' });
         }
         const current = this.summarize(structure).mine || this.publish(structure);
         this._store.retract(myLegacyClaim.fingerprint, myLegacyClaim.id);

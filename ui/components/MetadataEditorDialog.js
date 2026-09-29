@@ -69,37 +69,37 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="Document properties"
+            :aria-label="t('metadataEditor.label')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel metadata-editor">
-                <h3>Document Properties</h3>
+                <h3>{{ t('metadataEditor.title') }}</h3>
 
                 <label class="form-field">
-                    <span class="form-label">Title</span>
+                    <span class="form-label">{{ t('metadataEditor.fieldTitle') }}</span>
                     <input
                         v-model="title"
                         type="text"
                         class="form-input"
-                        placeholder="Untitled"
+                        :placeholder="t('metadataEditor.untitled')"
                         maxlength="200"
                     />
                 </label>
 
                 <label class="form-field">
-                    <span class="form-label">Description</span>
+                    <span class="form-label">{{ t('metadataEditor.description') }}</span>
                     <textarea
                         v-model="description"
                         class="form-textarea"
                         rows="3"
-                        placeholder="What is this world?"
+                        :placeholder="t('metadataEditor.descriptionPlaceholder')"
                     ></textarea>
                 </label>
 
                 <label class="form-field">
-                    <span class="form-label">License</span>
+                    <span class="form-label">{{ t('metadataEditor.license') }}</span>
                     <select v-model="licenseId" class="form-select">
                         <option v-for="opt in licenseOptions" :key="opt.id" :value="opt.id">
                             {{ t(opt.label) }}
@@ -107,11 +107,11 @@ export default {
                     </select>
                 </label>
                 <p class="form-hint" v-if="licenseId === 'UNSPECIFIED'">
-                    No license means forking is not permitted until one is set.
+                    {{ t('metadataEditor.noLicenseHint') }}
                 </p>
 
                 <label class="form-field">
-                    <span class="form-label">Who can place it in the World</span>
+                    <span class="form-label">{{ t('metadataEditor.placement') }}</span>
                     <select v-model="placementPolicy" class="form-select">
                         <option v-for="opt in placementPolicyOptions" :key="opt.id" :value="opt.id">
                             {{ t(opt.label) }}
@@ -119,12 +119,12 @@ export default {
                     </select>
                 </label>
                 <p class="form-hint" v-if="placementPolicy !== 'anyone'">
-                    Others can still find, view and (if the license allows) fork it, but ForkBuild won't let them place it in their World. Applies from your next publish.
+                    {{ t('metadataEditor.placementHint') }}
                 </p>
 
                 <div class="modal-actions">
-                    <button class="action-btn" @click="$emit('cancel')">Cancel</button>
-                    <button class="action-btn action-btn--primary" :disabled="!title.trim()" @click="onSave">Save</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('metadataEditor.cancel') }}</button>
+                    <button class="action-btn action-btn--primary" :disabled="!title.trim()" @click="onSave">{{ t('metadataEditor.save') }}</button>
                 </div>
             </div>
         </div>

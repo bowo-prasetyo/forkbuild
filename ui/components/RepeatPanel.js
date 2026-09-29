@@ -15,6 +15,7 @@
 // atomic collision check) or an invalid field is reported by the host
 // view's feedback toast, never by this panel — it only ever calls
 // `repeat()` with parsed, valid numbers.
+import { t } from '../i18n/i18n.js';
 export default {
     name: 'RepeatPanel',
     props: {
@@ -40,6 +41,7 @@ export default {
         }
     },
     methods: {
+        t,
         onRepeat(axis) {
             if (!this.enabled) {
                 return;
@@ -89,27 +91,27 @@ export default {
     template: `
         <div :style="{ display: 'flex', flexDirection: 'column', gap: '6px', opacity: enabled ? 1 : 0.55 }">
             <div :style="{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }">
-                <span :style="labelStyle()">Copies</span>
+                <span :style="labelStyle()">{{ t('repeatPanel.copies') }}</span>
                 <input
                     type="text" class="repeat-panel-count"
                     :disabled="!enabled"
                     :style="inputStyle()"
-                    title="How many additional copies to create"
+                    :title="t('repeatPanel.copiesHint')"
                     v-model="countText"
                 />
-                <span :style="labelStyle()">Offset</span>
+                <span :style="labelStyle()">{{ t('repeatPanel.offset') }}</span>
                 <input
                     type="text"
                     :disabled="!enabled"
                     :style="inputStyle()"
-                    title="Distance between each copy, along whichever axis you click below"
+                    :title="t('repeatPanel.offsetHint')"
                     v-model="offsetText"
                 />
             </div>
             <div :style="{ display: 'flex', gap: '4px', flexWrap: 'wrap' }">
-                <button type="button" :disabled="!enabled" :style="buttonStyle()" title="Repeat along world X" @click="onRepeat('x')">Repeat X</button>
-                <button type="button" :disabled="!enabled" :style="buttonStyle()" title="Repeat along world Y" @click="onRepeat('y')">Repeat Y</button>
-                <button type="button" :disabled="!enabled" :style="buttonStyle()" title="Repeat along world Z" @click="onRepeat('z')">Repeat Z</button>
+                <button type="button" :disabled="!enabled" :style="buttonStyle()" :title="t('repeatPanel.alongHint', { axis: 'X' })" @click="onRepeat('x')">{{ t('repeatPanel.along', { axis: 'X' }) }}</button>
+                <button type="button" :disabled="!enabled" :style="buttonStyle()" :title="t('repeatPanel.alongHint', { axis: 'Y' })" @click="onRepeat('y')">{{ t('repeatPanel.along', { axis: 'Y' }) }}</button>
+                <button type="button" :disabled="!enabled" :style="buttonStyle()" :title="t('repeatPanel.alongHint', { axis: 'Z' })" @click="onRepeat('z')">{{ t('repeatPanel.along', { axis: 'Z' }) }}</button>
             </div>
         </div>
     `

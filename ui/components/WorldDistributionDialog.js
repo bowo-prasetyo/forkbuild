@@ -1,6 +1,7 @@
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 import { describeSteemContentUploadProgress } from '../../application/steem/SteemContentUploadProgressText.js';
 import PublicationShareLink from './PublicationShareLink.js';
+import { displayText } from '../i18n/i18n.js';
 
 // Steem holds both the Snapshot and the Signed Claim (docs/Protocol.md,
 // "Proposed: Steem Content Storage").
@@ -136,7 +137,7 @@ export default {
         steemUploadProgressText() {
             // Options API injections arrive with the ref already unwrapped.
             if (!this.snapshotDistributionExecuting) return null;
-            return describeSteemContentUploadProgress(this.steemContentUploadProgress);
+            return displayText(describeSteemContentUploadProgress(this.steemContentUploadProgress));
         },
         storageModel: {
             get() { return this.storage; },

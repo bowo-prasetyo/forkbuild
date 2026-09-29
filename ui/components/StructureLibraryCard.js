@@ -36,40 +36,40 @@ export default {
                 <button
                     type="button"
                     class="action-btn action-btn--secondary structure-item-menu-toggle"
-                    aria-label="More actions"
+                    :aria-label="t('structureCard.moreActions')"
                     :aria-expanded="isMenuOpen"
                     @click="$emit('toggle-menu', structure.id)"
                 >⋮</button>
                 <div v-if="isMenuOpen" class="structure-item-menu-list">
                     <button class="action-btn action-btn--secondary structure-item-info" @click="$emit('info', structure)">
-                        Info
+                        {{ t('structureCard.info') }}
                     </button>
                     <button class="action-btn action-btn--fork structure-item-fork" @click="$emit('fork', structure)">
-                        Fork As New Document
+                        {{ t('structureCard.fork') }}
                     </button>
                     <button
                         v-if="source === 'built-in'"
                         class="action-btn action-btn--secondary structure-item-fork-to-library"
                         @click="$emit('fork-to-library', structure)"
                     >
-                        Fork to My Structures
+                        {{ t('structureCard.forkToLibrary') }}
                     </button>
                     <button
                         v-if="source === 'personal'"
                         class="action-btn action-btn--secondary structure-item-rename"
                         @click="$emit('rename', structure)"
                     >
-                        Rename
+                        {{ t('structureCard.rename') }}
                     </button>
                     <button class="action-btn action-btn--secondary structure-item-export" @click="$emit('export', structure)">
-                        Export Blueprint
+                        {{ t('structureCard.export') }}
                     </button>
                     <button
                         v-if="source === 'personal'"
                         class="action-btn action-btn--danger structure-item-remove"
                         @click="$emit('remove', structure)"
                     >
-                        Remove
+                        {{ t('structureCard.remove') }}
                     </button>
                 </div>
             </div>

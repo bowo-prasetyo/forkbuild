@@ -3,6 +3,9 @@ import { BLUEPRINT_ATTRIBUTION_KIND } from '../../../core/BlueprintAttribution.j
 import { BLUEPRINT_LINEAGE_CLAIM_KIND } from '../../../core/BlueprintLineageClaim.js';
 import { buildBlueprintBundle, blueprintBundlePackages, isBlueprintBundle } from '../../../application/blueprint/BlueprintBundle.js';
 import { isDocumentBundle } from '../../../application/document/DocumentBundle.js';
+import { message } from '../../../core/Message.js';
+import { errorText, t } from '../../i18n/i18n.js';
+import { libraryItemName } from '../../i18n/libraryText.js';
 
 // Downloads `data` as pretty-printed JSON, with no intermediate modal.
 function downloadJson(filename, data) {
@@ -32,14 +35,14 @@ export function useBlueprintExchange({
         try {
             pkg = blueprintPackageFor(structure);
         } catch (e) {
-            feedback.show(e.message);
+            feedback.show(errorText(e));
             return;
         }
         if (!pkg) {
             return;
         }
         downloadJson(`forkbuild-blueprint-${slugify(structure.name, 'structure')}.json`, pkg);
-        feedback.show(`Exported "${structure.name}" as a blueprint`);
+        feedback.show(t('blueprintExchange.exported', { name: libraryItemName(structure) }));
     }
 
     function blueprintPackageFor(structure) {
@@ -56,15 +59,15 @@ export function useBlueprintExchange({
             const structures = personalStructureLibraryStore ? personalStructureLibraryStore.listStructures() : [];
             packages = structures.map(blueprintPackageFor).filter(Boolean);
         } catch (e) {
-            feedback.show(e.message);
+            feedback.show(errorText(e));
             return;
         }
         if (packages.length === 0) {
-            feedback.show('My Structures is empty');
+            feedback.show(t('blueprintExchange.libraryEmpty'));
             return;
         }
         downloadJson(`forkbuild-blueprints-${new Date().toISOString().slice(0, 10)}.json`, buildBlueprintBundle(packages));
-        feedback.show(`Exported ${packages.length} ${packages.length === 1 ? 'structure' : 'structures'}`);
+        feedback.show(t('blueprintExchange.exportedStructures', { count: packages.length }));
     }
 
     // Every saved document in one file.
@@ -73,15 +76,15 @@ export function useBlueprintExchange({
         try {
             bundle = exportAllDocumentsUseCase ? await exportAllDocumentsUseCase.execute() : null;
         } catch (e) {
-            feedback.show(e.message);
+            feedback.show(errorText(e));
             return;
         }
         if (!bundle) {
-            feedback.show('No saved documents to export');
+            feedback.show(t('blueprintExchange.noDocuments'));
             return;
         }
         downloadJson(`forkbuild-documents-${new Date().toISOString().slice(0, 10)}.json`, bundle);
-        feedback.show(`Exported ${bundle.documents.length} ${bundle.documents.length === 1 ? 'document' : 'documents'}`);
+        feedback.show(t('blueprintExchange.exportedDocuments', { count: bundle.documents.length }));
     }
 
     // Filename follows the `forkbuild-<kind>-<slug>.json` convention.
@@ -90,7 +93,7 @@ export function useBlueprintExchange({
     	try {
     		json = editorSession.exportDocument();
     	} catch (e) {
-    		feedback.show(e.message);
+    		feedback.show(errorText(e));
     		return;
     	}
     	if (!json) {
@@ -98,7 +101,7 @@ export function useBlueprintExchange({
     	}
     	const title = documentManager.document.metadata.title || '';
     	downloadJson(`forkbuild-document-${slugify(title, 'document')}.json`, json);
-    	feedback.show(`Exported "${title || 'document'}"`);
+    	feedback.show(title ? t('blueprintExchange.exportedDocument', { title }) : t('blueprintExchange.exportedUntitled'));
     }
 
     // `rawText` is untrusted. JSON parse errors and invalid documents are reported
@@ -109,7 +112,7 @@ export function useBlueprintExchange({
     	try {
     		json = JSON.parse(rawText);
     	} catch (e) {
-    		feedback.show('That is not valid JSON — choose a file exported with "Export."');
+    		feedback.show(t('blueprintExchange.invalidDocumentJson'));
     		return;
     	}
     	if (isDocumentBundle(json)) {
@@ -120,9 +123,9 @@ export function useBlueprintExchange({
     		if (!imported) {
     			return;
     		}
-    		feedback.show(`Imported "${imported.metadata.title || 'document'}"`);
+    		feedback.show(imported.metadata.title ? t('blueprintExchange.importedDocument', { title: imported.metadata.title }) : t('blueprintExchange.importedUntitled'));
     	} catch (e) {
-    		feedback.show(e.message.replace(/^DocumentSerializer:\s*/, ''));
+    		feedback.show(errorText(e).replace(/^DocumentSerializer:\s*/, ''));
     	}
     }
 
@@ -134,13 +137,13 @@ export function useBlueprintExchange({
         try {
             const { added, copied, unchanged, failed } = await importDocumentBundleUseCase.execute(bundle);
             onSavedDocumentsChanged();
-            const parts = [`Imported ${added + copied} ${added + copied === 1 ? 'document' : 'documents'}`];
-            if (copied) parts.push(`${copied} as a copy beside a different version here`);
-            if (unchanged) parts.push(`${unchanged} already here`);
-            if (failed) parts.push(`${failed} could not be read`);
-            feedback.show(parts.join(', ') + (added + copied ? ' — open them from Recent' : ''), { durationMs: 8000 });
+            const parts = [message('blueprintExchange.importedDocuments', { count: added + copied })];
+            if (copied) parts.push(message('blueprintExchange.copiedBeside', { count: copied }));
+            if (unchanged) parts.push(message('blueprintExchange.alreadyHere', { count: unchanged }));
+            if (failed) parts.push(message('blueprintExchange.unreadable', { count: failed }));
+            feedback.show(t(added + copied ? 'blueprintExchange.summaryOpenRecent' : 'blueprintExchange.summary', { parts }), { durationMs: 8000 });
         } catch (e) {
-            feedback.show(e.message);
+            feedback.show(errorText(e));
         }
     }
 
@@ -151,14 +154,14 @@ export function useBlueprintExchange({
         try {
             pkg = editorSession.exportBlueprintAttribution(attribution);
         } catch (e) {
-            feedback.show(e.message);
+            feedback.show(errorText(e));
             return;
         }
         if (!pkg) {
             return;
         }
         downloadJson(`forkbuild-blueprint-attribution-${slugify(describeBlueprintFingerprint(attribution.fingerprint), 'attribution')}.json`, pkg);
-        feedback.show('Exported your attribution');
+        feedback.show(t('blueprintExchange.exportedAttribution'));
     }
 
     // `rawText` is untrusted, parsed and validated in two separate steps. It may be
@@ -169,7 +172,7 @@ export function useBlueprintExchange({
         try {
             pkg = JSON.parse(rawText);
         } catch (e) {
-            feedback.show('That is not valid JSON — choose a file exported with "Export Blueprint."');
+            feedback.show(t('blueprintExchange.invalidBlueprintJson'));
             return;
         }
         if (isBlueprintBundle(pkg)) {
@@ -188,12 +191,15 @@ export function useBlueprintExchange({
             const structure = editorSession.importBlueprint(pkg);
             if (structure) {
                 refreshPersonalStructureGroups();
-                const attributionSummary = importBundledBlueprintAttributions(pkg, structure);
-                const lineageSummary = importBundledBlueprintLineageClaims(pkg, structure);
-                feedback.show(`Imported "${structure.name}" into My Structures${attributionSummary}${lineageSummary}`);
+                const parts = [
+                    message('blueprintExchange.importedBlueprint', { name: libraryItemName(structure) }),
+                    ...importBundledBlueprintAttributions(pkg, structure),
+                    ...importBundledBlueprintLineageClaims(pkg, structure)
+                ];
+                feedback.show(t('blueprintExchange.summary', { parts }));
             }
         } catch (e) {
-            feedback.show(e.message.replace(/^(BlueprintImport|BlueprintPackage):\s*/, ''));
+            feedback.show(errorText(e).replace(/^(BlueprintImport|BlueprintPackage):\s*/, ''));
         }
     }
 
@@ -204,7 +210,7 @@ export function useBlueprintExchange({
         try {
             packages = blueprintBundlePackages(bundle);
         } catch (e) {
-            feedback.show(e.message);
+            feedback.show(errorText(e));
             return;
         }
         let added = 0;
@@ -228,18 +234,18 @@ export function useBlueprintExchange({
             }
         }
         refreshPersonalStructureGroups();
-        const parts = [`Imported ${added} ${added === 1 ? 'structure' : 'structures'} into My Structures`];
-        if (present) parts.push(`${present} already there`);
-        if (failed) parts.push(`${failed} could not be read`);
-        feedback.show(parts.join(', '));
+        const parts = [message('blueprintExchange.importedStructures', { count: added })];
+        if (present) parts.push(message('blueprintExchange.alreadyThere', { count: present }));
+        if (failed) parts.push(message('blueprintExchange.unreadable', { count: failed }));
+        feedback.show(t('blueprintExchange.summary', { parts }));
     }
 
     // Each bundled attribution is cross-checked against the locally derived
     // fingerprint, never the one the package claims. A bad attribution never undoes
-    // the successful blueprint import. Returns a feedback suffix or ''.
+    // the successful blueprint import. Returns what to add to the feedback.
     function importBundledBlueprintAttributions(pkg, structure) {
         if (!Array.isArray(pkg.attributions) || pkg.attributions.length === 0 || !blueprintAttributionExchange) {
-            return '';
+            return [];
         }
         let imported = 0;
         let legacy = 0;
@@ -257,26 +263,28 @@ export function useBlueprintExchange({
                 console.warn('Skipped an attribution bundled with this blueprint:', e.message);
             }
         }
-        return (imported > 0 ? ` with ${imported} attributed ${imported === 1 ? 'author' : 'authors'}` : '')
-            + legacySkippedSuffix(legacy, 'authorship');
+        return [
+            ...(imported > 0 ? [message('blueprintExchange.withAuthors', { count: imported })] : []),
+            ...legacySkipped(legacy, 'blueprintExchange.legacyAuthorship')
+        ];
     }
 
     // A bare attribution has no local Structure to cross-check against; it is still
     // a legitimate, unconfirmed import. It never touches the personal library.
     function importBareBlueprintAttribution(pkg) {
         if (!blueprintAttributionExchange) {
-            feedback.show('Blueprint attribution exchange is not available');
+            feedback.show(t('blueprintExchange.attributionUnavailable'));
             return;
         }
         try {
             const { attribution, isNew } = editorSession.importBlueprintAttribution(pkg);
             if (!isNew) {
-                feedback.show('That attribution was already known — nothing changed');
+                feedback.show(t('blueprintExchange.attributionKnown'));
                 return;
             }
-            feedback.show(`Imported an attribution for ${describeBlueprintFingerprint(attribution.fingerprint)}`);
+            feedback.show(t('blueprintExchange.importedAttribution', { fingerprint: describeBlueprintFingerprint(attribution.fingerprint) }));
         } catch (e) {
-            feedback.show(e.message.replace(/^BlueprintAttributionExchange:\s*/, ''));
+            feedback.show(errorText(e).replace(/^BlueprintAttributionExchange:\s*/, ''));
         }
     }
 
@@ -285,7 +293,7 @@ export function useBlueprintExchange({
         try {
             pkg = editorSession.exportBlueprintLineageClaim(claim);
         } catch (e) {
-            feedback.show(e.message);
+            feedback.show(errorText(e));
             return;
         }
         if (!pkg) {
@@ -293,14 +301,14 @@ export function useBlueprintExchange({
         }
         const fingerprints = `${describeBlueprintFingerprint(claim.sourceFingerprint)}-to-${describeBlueprintFingerprint(claim.derivedFingerprint)}`;
         downloadJson(`forkbuild-blueprint-lineage-${slugify(fingerprints, 'lineage-claim')}.json`, pkg);
-        feedback.show('Exported your lineage claim');
+        feedback.show(t('blueprintExchange.exportedLineage'));
     }
 
     // A bundled claim's structure may be its source or derived design; the matching
     // fingerprint decides which cross-check runs.
     function importBundledBlueprintLineageClaims(pkg, structure) {
         if (!Array.isArray(pkg.lineageClaims) || pkg.lineageClaims.length === 0 || !blueprintLineageExchange) {
-            return '';
+            return [];
         }
         const structureFingerprint = deriveBlueprintFingerprint(structure);
         let imported = 0;
@@ -323,32 +331,32 @@ export function useBlueprintExchange({
                 console.warn('Skipped a lineage claim bundled with this blueprint:', e.message);
             }
         }
-        return (imported > 0 ? ` with ${imported} lineage ${imported === 1 ? 'claim' : 'claims'}` : '')
-            + legacySkippedSuffix(legacy, 'lineage');
+        return [
+            ...(imported > 0 ? [message('blueprintExchange.withLineage', { count: imported })] : []),
+            ...legacySkipped(legacy, 'blueprintExchange.legacyLineage')
+        ];
     }
 
     // Claims signed under the old, collidable fingerprint can't be tied to this
     // design, so they are left out, and said so.
-    function legacySkippedSuffix(count, kind) {
-        return count > 0
-            ? ` (${count} older ${kind} ${count === 1 ? 'claim was' : 'claims were'} left out: signed under an old fingerprint that can't be checked)`
-            : '';
+    function legacySkipped(count, key) {
+        return count > 0 ? [message(key, { count })] : [];
     }
 
     function importBareBlueprintLineageClaim(pkg) {
         if (!blueprintLineageExchange) {
-            feedback.show('Blueprint lineage exchange is not available');
+            feedback.show(t('blueprintExchange.lineageUnavailable'));
             return;
         }
         try {
             const { claim, isNew } = editorSession.importBlueprintLineageClaim(pkg);
             if (!isNew) {
-                feedback.show('That lineage claim was already known — nothing changed');
+                feedback.show(t('blueprintExchange.lineageKnown'));
                 return;
             }
-            feedback.show(`Imported a lineage claim: ${describeBlueprintFingerprint(claim.derivedFingerprint)} derived from ${describeBlueprintFingerprint(claim.sourceFingerprint)}`);
+            feedback.show(t('blueprintExchange.importedLineage', { derived: describeBlueprintFingerprint(claim.derivedFingerprint), source: describeBlueprintFingerprint(claim.sourceFingerprint) }));
         } catch (e) {
-            feedback.show(e.message.replace(/^BlueprintLineageExchange:\s*/, ''));
+            feedback.show(errorText(e).replace(/^BlueprintLineageExchange:\s*/, ''));
         }
     }
 

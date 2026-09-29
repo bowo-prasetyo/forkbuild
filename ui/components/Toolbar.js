@@ -1,6 +1,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { saveFailureMessage } from './saveFailureMessages.js';
 import { saveDocument } from './saveDocument.js';
+import { errorText, formatDate, t } from '../i18n/i18n.js';
 
 // Save/New/dirty indicator/Recent Documents — all driven by
 // DocumentManager, LoadDocumentUseCase, and (as of 0.1.20C) EditorSession
@@ -131,7 +132,7 @@ export default {
                 props.feedback.show(saveFailureMessage(error), { durationMs: 10000 });
                 return;
             }
-            report('Saved');
+            report(t('toolbar.saved'));
             emit('saved');
         }
 
@@ -157,7 +158,7 @@ export default {
             recentOpen.value = false;
             recentQuery.value = '';
             if (placed) {
-                report(`Placing "${doc.title}" — click the ground to place, R to rotate`);
+                report(t('toolbar.placing', { title: doc.title }));
             }
         }
 
@@ -169,14 +170,14 @@ export default {
         function publish() {
             try {
                 const publication = props.publishDocumentUseCase.execute(props.documentManager);
-                report(`Published "${publication.title}"`);
+                report(t('toolbar.published', { title: publication.title }));
                 // 0.9.377 — forwards the exact just-published Publication
                 // to whichever host holds a `@published` listener. What,
                 // if anything, a listener does with it is entirely its
                 // own concern — see EditorView.js's own 0.9.377 comment.
                 emit('published', publication);
             } catch (err) {
-                report(`Publish failed: ${err.message}`);
+                report(t('toolbar.publishFailed', { error: errorText(err) }));
             }
         }
 
@@ -228,7 +229,7 @@ export default {
 
         function formatModified(modified) {
             const date = new Date(modified);
-            return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString();
+            return Number.isNaN(date.getTime()) ? '' : formatDate(date, { dateStyle: 'short' });
         }
 
         const sortedRecentDocuments = computed(() => {
@@ -260,6 +261,7 @@ export default {
         });
 
         return {
+            t,
             dirty, recentDocuments, sortedRecentDocuments, filteredRecentDocuments,
             recentOpen, recentQuery, toggleRecent, formatModified,
             searchThreshold: SEARCH_THRESHOLD,
@@ -283,42 +285,42 @@ export default {
                  — a stale/hand-typed URL degrades to no subtitle rather
                  than "From: undefined." -->
             <template v-if="entryContext && entryContext.returnWorldId">
-                <button class="toolbar-back-to-world" @click="$emit('back-to-world')">← Back to World</button>
+                <button class="toolbar-back-to-world" @click="$emit('back-to-world')">{{ t('toolbar.backToWorld') }}</button>
                 <span class="toolbar-entry-context">
-                    Editing a copy of "{{ entryContext.title || entryContext.returnWorldTitle || 'this' }}"<template v-if="entryContext.returnWorldTitle"> · From: {{ entryContext.returnWorldTitle }}</template>
+                    {{ t('toolbar.editingCopy', { title: entryContext.title || entryContext.returnWorldTitle || t('toolbar.thisWorld') }) }}<template v-if="entryContext.returnWorldTitle"> · {{ t('toolbar.from', { title: entryContext.returnWorldTitle }) }}</template>
                 </span>
             </template>
 
-            <button class="toolbar-save" @click="save">Save</button>
-            <button class="toolbar-export" @click="$emit('export-document')">Export</button>
-            <button class="toolbar-import" @click="triggerImportDocument">Import</button>
+            <button class="toolbar-save" @click="save">{{ t('toolbar.save') }}</button>
+            <button class="toolbar-export" @click="$emit('export-document')">{{ t('toolbar.export') }}</button>
+            <button class="toolbar-import" @click="triggerImportDocument">{{ t('toolbar.import') }}</button>
             <input
                 ref="importFileInput"
                 type="file"
                 accept="application/json"
                 class="toolbar-import-input"
-                aria-label="Import document file"
+                :aria-label="t('toolbar.importFile')"
                 @change="onImportDocumentFileChosen"
             />
-            <button class="toolbar-publish" @click="publish">Publish</button>
-            <button class="toolbar-new" @click="createNew">New</button>
+            <button class="toolbar-publish" @click="publish">{{ t('toolbar.publish') }}</button>
+            <button class="toolbar-new" @click="createNew">{{ t('toolbar.new') }}</button>
             <button
                 v-if="entryContext && entryContext.returnWorldId"
                 class="toolbar-save-return"
                 @click="saveAndReturnToWorld"
             >
-                Save &amp; Return to World
+                {{ t('toolbar.saveAndReturn') }}
             </button>
 
             <span class="toolbar-dirty" :class="{ 'toolbar-dirty--clean': !dirty }">
-                {{ dirty ? '● Unsaved changes' : 'Saved' }}
+                {{ dirty ? t('toolbar.unsaved') : t('toolbar.saved') }}
             </span>
 
             <!-- 0.6.2 — Editor UX Consolidation: discoverability for the
                  same overlay the '?' key opens (see EditorView's own
                  keydown handler) — a viewer who never guesses that a
                  shortcuts list exists can still find it. -->
-            <button class="toolbar-shortcuts" title="Keyboard shortcuts (?)" @click="$emit('open-shortcuts')">⌨ Shortcuts</button>
+            <button class="toolbar-shortcuts" :title="t('toolbar.shortcutsHint')" @click="$emit('open-shortcuts')">{{ t('toolbar.shortcuts') }}</button>
 
             <div class="toolbar-recent" v-if="recentDocuments.length">
                 <button
@@ -326,7 +328,7 @@ export default {
                     :class="{ 'toolbar-recent-toggle--open': recentOpen }"
                     @click="toggleRecent"
                 >
-                    Recent <span class="toolbar-recent-count">{{ recentDocuments.length }}</span>
+                    {{ t('toolbar.recent') }} <span class="toolbar-recent-count">{{ recentDocuments.length }}</span>
                     <span class="toolbar-recent-caret">▾</span>
                 </button>
                 <template v-if="recentOpen">
@@ -337,7 +339,7 @@ export default {
                             v-model="recentQuery"
                             type="text"
                             class="toolbar-recent-search"
-                            placeholder="Filter documents…"
+                            :placeholder="t('toolbar.filter')"
                             autofocus
                         />
                         <div class="toolbar-recent-dropdown-list">
@@ -355,18 +357,18 @@ export default {
                                 </button>
                                 <button
                                     class="toolbar-recent-dropdown-place"
-                                    title="Place this document as a structure in the current World"
+                                    :title="t('toolbar.placeHint')"
                                     @click="place(doc)"
                                 >
-                                    Place
+                                    {{ t('toolbar.place') }}
                                 </button>
                             </div>
                             <p v-if="filteredRecentDocuments.length === 0" class="toolbar-recent-dropdown-empty">
-                                No documents match "{{ recentQuery }}"
+                                {{ t('toolbar.noMatches', { query: recentQuery }) }}
                             </p>
                         </div>
-                        <button class="toolbar-recent-export-all" title="Download every saved document in one file" @click="exportAllDocuments">
-                            Export All Documents
+                        <button class="toolbar-recent-export-all" :title="t('toolbar.exportAllHint')" @click="exportAllDocuments">
+                            {{ t('toolbar.exportAll') }}
                         </button>
                     </div>
                 </template>

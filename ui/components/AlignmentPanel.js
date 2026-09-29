@@ -16,6 +16,7 @@
 //
 // Inline styles (same self-contained precedent as TransformFeedback) so
 // the component drops into both views without touching main.css.
+import { t } from '../i18n/i18n.js';
 export default {
     name: 'AlignmentPanel',
     props: {
@@ -42,31 +43,32 @@ export default {
         alignRows() {
             return [
                 [
-                    { mode: 'x-min', label: '← Left', title: 'Align left edges (world X minimum)' },
-                    { mode: 'x-center', label: 'Center X', title: 'Align centers on world X' },
-                    { mode: 'x-max', label: 'Right →', title: 'Align right edges (world X maximum)' }
+                    { mode: 'x-min', label: t('alignmentPanel.xMin'), title: t('alignmentPanel.xMin.hint') },
+                    { mode: 'x-center', label: t('alignmentPanel.xCenter'), title: t('alignmentPanel.xCenter.hint') },
+                    { mode: 'x-max', label: t('alignmentPanel.xMax'), title: t('alignmentPanel.xMax.hint') }
                 ],
                 [
-                    { mode: 'y-min', label: '↓ Bottom', title: 'Align bottom edges (world Y minimum)' },
-                    { mode: 'y-center', label: 'Center Y', title: 'Align centers on world Y' },
-                    { mode: 'y-max', label: 'Top ↑', title: 'Align top edges (world Y maximum)' }
+                    { mode: 'y-min', label: t('alignmentPanel.yMin'), title: t('alignmentPanel.yMin.hint') },
+                    { mode: 'y-center', label: t('alignmentPanel.yCenter'), title: t('alignmentPanel.yCenter.hint') },
+                    { mode: 'y-max', label: t('alignmentPanel.yMax'), title: t('alignmentPanel.yMax.hint') }
                 ],
                 [
-                    { mode: 'z-min', label: 'Front', title: 'Align front edges (world Z minimum)' },
-                    { mode: 'z-center', label: 'Center Z', title: 'Align centers on world Z' },
-                    { mode: 'z-max', label: 'Back', title: 'Align back edges (world Z maximum)' }
+                    { mode: 'z-min', label: t('alignmentPanel.zMin'), title: t('alignmentPanel.zMin.hint') },
+                    { mode: 'z-center', label: t('alignmentPanel.zCenter'), title: t('alignmentPanel.zCenter.hint') },
+                    { mode: 'z-max', label: t('alignmentPanel.zMax'), title: t('alignmentPanel.zMax.hint') }
                 ]
             ];
         },
         distributeAxes() {
             return [
-                { axis: 'x', label: 'Distribute X', title: 'Distribute centers evenly along world X' },
-                { axis: 'y', label: 'Distribute Y', title: 'Distribute centers evenly along world Y' },
-                { axis: 'z', label: 'Distribute Z', title: 'Distribute centers evenly along world Z' }
+                { axis: 'x', label: t('alignmentPanel.distributeX'), title: t('alignmentPanel.distributeX.hint') },
+                { axis: 'y', label: t('alignmentPanel.distributeY'), title: t('alignmentPanel.distributeY.hint') },
+                { axis: 'z', label: t('alignmentPanel.distributeZ'), title: t('alignmentPanel.distributeZ.hint') }
             ];
         }
     },
     methods: {
+        t,
         onAlign(mode) {
             if (this.canAlign) {
                 this.align(mode);
@@ -112,7 +114,7 @@ export default {
                     v-for="distributeAxis in distributeAxes"
                     :key="distributeAxis.axis"
                     :disabled="!canDistribute"
-                    :title="distributeAxis.title + (canDistribute ? '' : ' (select 3+ bricks)')"
+                    :title="canDistribute ? distributeAxis.title : t('alignmentPanel.needsThree', { hint: distributeAxis.title })"
                     :style="buttonStyle(canDistribute)"
                     @click="onDistribute(distributeAxis.axis)"
                 >{{ distributeAxis.label }}</button>

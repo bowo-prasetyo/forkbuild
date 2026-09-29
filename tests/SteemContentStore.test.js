@@ -28,7 +28,11 @@ import { DecentralizedSnapshotResolver } from '../application/snapshot/Decentral
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { SteemContentUploadStore } from '../storage/SteemContentUploadStore.js';
-import { describeSteemContentUploadProgress } from '../application/steem/SteemContentUploadProgressText.js';
+import { describeSteemContentUploadProgress as describeSteemContentUploadProgressMessage } from '../application/steem/SteemContentUploadProgressText.js';
+import { displayText } from '../ui/i18n/i18n.js';
+
+// The progress line as the UI shows it, in English.
+const describeSteemContentUploadProgress = (state) => displayText(describeSteemContentUploadProgressMessage(state));
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

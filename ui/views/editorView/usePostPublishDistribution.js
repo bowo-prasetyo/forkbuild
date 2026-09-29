@@ -1,6 +1,7 @@
 import { ref, inject } from 'vue';
 import { sanitizeDistributionErrorMessage } from '../../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 import { IpfsRemotePublicationState } from '../../../application/ipfs/IpfsRemotePublicationState.js';
+import { t } from '../../i18n/i18n.js';
 
 // Post-publish distribution: after a publish, the Editor offers to distribute that exact
 // Publication (announcement/discovery plus content) and its snapshot bytes. Page-local,
@@ -77,7 +78,7 @@ export function usePostPublishDistribution({
 
         if (discoveryProvider === 'arweave' || discoveryProvider === 'steem') {
             if (!publicationDistributionCommand) {
-                return Promise.reject(new Error('Publication distribution is not available.'));
+                return Promise.reject(new Error(t('distribution.publicationUnavailable')));
             }
             return publicationDistributionCommand({
                 publication,
@@ -88,7 +89,7 @@ export function usePostPublishDistribution({
             });
         }
         if (!multiRelayNostrPublicationDistributionCommand) {
-            return Promise.reject(new Error('Publication distribution is not available.'));
+            return Promise.reject(new Error(t('distribution.publicationUnavailable')));
         }
         return multiRelayNostrPublicationDistributionCommand({
             publication,
@@ -102,25 +103,25 @@ export function usePostPublishDistribution({
     // with no placement here, claimedPosition and publicationId stay undefined.
     async function distributeEditorSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) {
         if (!publicationContentStore || !publication.contentReference) {
-            return Promise.reject(new Error('Snapshot distribution is not available.'));
+            return Promise.reject(new Error(t('distribution.snapshotUnavailable')));
         }
         const snapshotBytes = await publicationContentStore.get(publication.contentReference);
         if (snapshotBytes === null || snapshotBytes === undefined) {
-            return Promise.reject(new Error('Snapshot distribution is not available.'));
+            return Promise.reject(new Error(t('distribution.snapshotUnavailable')));
         }
         if (storage === 'remote-pinning') {
             if (!ipfsRemotePublicationCoordinator) {
-                return Promise.reject(new Error('Snapshot distribution is not available.'));
+                return Promise.reject(new Error(t('distribution.snapshotUnavailable')));
             }
             return ipfsRemotePublicationCoordinator.publish({ bytes: snapshotBytes, configuration: remotePinningConfiguration })
                 .then((outcome) => {
                     if (outcome.state !== IpfsRemotePublicationState.PUBLISHED) {
-                        throw new Error(outcome.reason || 'Remote IPFS publish failed.');
+                        throw new Error(outcome.reason || t('distribution.remotePinFailed'));
                     }
                     const contentReference = { hash: outcome.contentHash, uri: outcome.locator, storage: 'ipfs' };
                     const discoveryPublisher = resolveSnapshotDiscoveryPublisher ? resolveSnapshotDiscoveryPublisher(discoveryProvider) : null;
                     if (!discoveryPublisher) {
-                        return { contentReference, announcement: null, announcementError: 'Snapshot distribution is not available.' };
+                        return { contentReference, announcement: null, announcementError: t('distribution.snapshotUnavailable') };
                     }
                     return discoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs' })
                         .then((announcement) => ({ contentReference, announcement }))
@@ -131,13 +132,13 @@ export function usePostPublishDistribution({
                             return {
                                 contentReference,
                                 announcement: null,
-                                announcementError: sanitizeDistributionErrorMessage(error) || 'Announcement could not be completed.'
+                                announcementError: sanitizeDistributionErrorMessage(error) || t('distribution.announcementFailed')
                             };
                         });
                 });
         }
         if (!snapshotDistributionCommand) {
-            return Promise.reject(new Error('Snapshot distribution is not available.'));
+            return Promise.reject(new Error(t('distribution.snapshotUnavailable')));
         }
         return snapshotDistributionCommand(snapshotBytes, storage, undefined, undefined, discoveryProvider);
     }
@@ -243,7 +244,7 @@ export function usePostPublishDistribution({
             ),
             {
                 logLabel: 'Publication distribution',
-                fallbackMessage: 'Publication distribution could not be completed.',
+                fallbackMessage: t('distribution.publicationFailed'),
                 toDisplay: normalizeDistributionResultForDisplay
             }
         );
@@ -265,7 +266,7 @@ export function usePostPublishDistribution({
             ),
             {
                 logLabel: 'Snapshot distribution',
-                fallbackMessage: 'Snapshot distribution could not be completed.'
+                fallbackMessage: t('distribution.snapshotFailed')
             }
         );
     }
