@@ -20,6 +20,7 @@
 // simply never receives one it can't meaningfully present. The
 // `:disabled="!doc.documentId"` guard below is kept regardless, as
 // defense in depth for any future caller of this same component.
+import { formatNumber, t } from '../i18n/i18n.js';
 export default {
     name: 'LocationDocumentsDialog',
     props: {
@@ -34,6 +35,8 @@ export default {
     },
     emits: ['focus', 'cancel'],
     methods: {
+        t,
+        formatNumber,
         onKeydown(event) {
             if (event.key === 'Escape') {
                 event.stopPropagation();
@@ -44,15 +47,15 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="Documents at this location"
+            :aria-label="t('locationDocumentsDialog.documentsAtThisLocation')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel location-documents">
-                <h3>Documents Here</h3>
+                <h3>{{ t('locationDocumentsDialog.documentsHere') }}</h3>
                 <p v-if="position" class="form-hint form-hint--neutral">
-                    {{ position.x.toFixed(1) }}, {{ position.y.toFixed(1) }}, {{ position.z.toFixed(1) }} (World Units)
+                    {{ t('units.position', { x: formatNumber(position.x, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false }), y: formatNumber(position.y, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false }), z: formatNumber(position.z, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false }) }) }}
                 </p>
 
                 <ul class="location-documents-list">
@@ -65,15 +68,15 @@ export default {
                             class="action-btn"
                             :disabled="!doc.documentId"
                             @click="$emit('focus', doc.documentId)"
-                        >Focus</button>
+                        >{{ t('locationDocumentsDialog.focus') }}</button>
                     </li>
                     <li v-if="occupants.length === 0" class="location-documents-empty">
-                        Nothing else is recorded at this exact position.
+                        {{ t('locationDocumentsDialog.nothingElseIsRecordedAt') }}
                     </li>
                 </ul>
 
                 <div class="modal-actions">
-                    <button class="action-btn" @click="$emit('cancel')">Close</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('locationDocumentsDialog.close') }}</button>
                 </div>
             </div>
         </div>

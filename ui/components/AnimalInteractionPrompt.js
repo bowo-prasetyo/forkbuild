@@ -1,4 +1,5 @@
 import { animalSpeciesLabel, describeAnimalDecorationAction } from './avatarInteractionLabels.js';
+import { t } from '../i18n/i18n.js';
 
 // The structural twin of ui/components/VehicleInteractionPrompt.js: a
 // floating, bottom-center affordance — "[F] Catch <Species>" while an
@@ -50,11 +51,12 @@ export default {
             }
             const speciesLabel = animalSpeciesLabel(this.state.species);
             if (this.state.canCatch) {
-                return `[F] Catch ${speciesLabel}`;
+                return t('animalPrompt.catch', { species: speciesLabel });
             }
             if (this.state.canRelease) {
-                const suffix = this.state.carriedCount > 1 ? ` (${this.state.carriedCount} carried)` : '';
-                return `[F] Release ${speciesLabel}${suffix}`;
+                return this.state.carriedCount > 1
+                    ? t('animalPrompt.releaseCarried', { species: speciesLabel, count: this.state.carriedCount })
+                    : t('animalPrompt.release', { species: speciesLabel });
             }
             return '';
         },
@@ -66,8 +68,8 @@ export default {
                 return '';
             }
             return this.decoration.action === 'decorate'
-                ? `[G] Decorate with ${this.decoration.speciesLabel}`
-                : `[G] Undo ${this.decoration.speciesLabel} Decoration`;
+                ? t('animalPrompt.decorate', { species: this.decoration.speciesLabel })
+                : t('animalPrompt.undecorate', { species: this.decoration.speciesLabel });
         }
     },
     template: `

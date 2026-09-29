@@ -1,4 +1,6 @@
 import { searchGeographicPlaces } from '../../core/GeographicPlaceNavigation.js';
+import { t } from '../i18n/i18n.js';
+import { compassText } from '../i18n/worldText.js';
 
 // 0.5.5 — Geographic Place Directory & Identity UX.
 // 0.5.6 — Geographic Place Navigation & Arrival: adds a "Nearby Places"
@@ -69,11 +71,14 @@ export default {
         }
     },
     methods: {
+        t,
+        compassText,
         formatSummary(place) {
-            const descriptions = place.descriptionCount === 1 ? '1 description' : `${place.descriptionCount} descriptions`;
-            const worlds = place.worldCount === 1 ? '1 World' : `${place.worldCount} Worlds`;
-            const contributors = place.authorCount === 1 ? '1 contributor' : `${place.authorCount} contributors`;
-            return `${descriptions} · ${worlds} · ${contributors}`;
+            return t('geographicPlace.summary', {
+                descriptions: t('geographicPlace.descriptions', { count: place.descriptionCount }),
+                worlds: t('geographicPlace.worlds', { count: place.worldCount }),
+                contributors: t('geographicPlace.contributors', { count: place.authorCount })
+            });
         },
         onKeydown(event) {
             if (event.key === 'Escape') {
@@ -85,32 +90,28 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="Geographic Places"
+            :aria-label="t('geographicPlaceDirectoryPanel.geographicPlaces')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel geographic-place-directory-panel">
-                <h3>Geographic Places</h3>
+                <h3>{{ t('geographicPlaceDirectoryPanel.geographicPlaces') }}</h3>
                 <p class="locations-panel-hint">
-                    Candidate geographic identities across every World you
-                    currently have loaded — regions whose geometry looks
-                    similar enough to describe the same ground. This is a
-                    directory of suggestions, never a claim that any two
-                    regions actually are the same place.
+                    {{ t('geographicPlaceDirectoryPanel.candidateGeographicIdentitiesAcrossEvery') }}
                 </p>
 
                 <section v-if="nearby.length > 0" class="naming-panel-section geographic-place-nearby-section">
-                    <h4 class="locations-panel-section-title">Nearby Places</h4>
+                    <h4 class="locations-panel-section-title">{{ t('geographicPlaceDirectoryPanel.nearbyPlaces') }}</h4>
                     <ul class="naming-panel-list">
                         <li v-for="place in nearby" :key="place.fingerprintKey" class="naming-panel-item">
                             <div class="naming-panel-item-info">
                                 <span class="naming-panel-item-name">● {{ place.displayName }}</span>
-                                <span class="naming-panel-item-meta">{{ place.distance }} m<span v-if="place.direction"> · {{ place.direction }}</span></span>
+                                <span class="naming-panel-item-meta">{{ t('units.metersSpaced', { distance: place.distance }) }}<span v-if="place.direction"> · {{ compassText(place.direction) }}</span></span>
                             </div>
                             <div class="naming-panel-item-actions">
-                                <button class="action-btn" @click="$emit('go-to-place', place.fingerprintKey)">Go</button>
-                                <button class="action-btn" @click="$emit('open-place', place.fingerprintKey)">Open</button>
+                                <button class="action-btn" @click="$emit('go-to-place', place.fingerprintKey)">{{ t('geographicPlaceDirectoryPanel.go') }}</button>
+                                <button class="action-btn" @click="$emit('open-place', place.fingerprintKey)">{{ t('geographicPlaceDirectoryPanel.open') }}</button>
                             </div>
                         </li>
                     </ul>
@@ -120,15 +121,15 @@ export default {
                     v-model="searchQuery"
                     type="text"
                     class="form-input geographic-place-search-input"
-                    placeholder="Search places..."
-                    aria-label="Search geographic places"
+                    :placeholder="t('geographicPlaceDirectoryPanel.searchPlaces')"
+                    :aria-label="t('geographicPlaceDirectoryPanel.searchGeographicPlaces')"
                 />
 
                 <p v-if="places.length === 0" class="locations-panel-empty">
-                    No geographic places known yet — name a region to see it here.
+                    {{ t('geographicPlaceDirectoryPanel.noGeographicPlacesKnownYet') }}
                 </p>
                 <p v-else-if="filteredPlaces.length === 0" class="locations-panel-empty">
-                    No places match "{{ searchQuery }}".
+                    {{ t('geographicPlace.noMatches', { query: searchQuery }) }}
                 </p>
 
                 <ul v-else class="locations-panel-list geographic-place-directory-list">
@@ -145,12 +146,12 @@ export default {
                             <span class="locations-panel-item-title">⬢ {{ place.displayName }}</span>
                             <span class="locations-panel-item-position">{{ formatSummary(place) }}</span>
                         </div>
-                        <button class="action-btn" @click.stop="$emit('open-place', place.fingerprintKey)">Open</button>
+                        <button class="action-btn" @click.stop="$emit('open-place', place.fingerprintKey)">{{ t('geographicPlaceDirectoryPanel.open') }}</button>
                     </li>
                 </ul>
 
                 <div class="modal-actions">
-                    <button class="action-btn" @click="$emit('cancel')">Close</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('geographicPlaceDirectoryPanel.close') }}</button>
                 </div>
             </div>
         </div>

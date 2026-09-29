@@ -1,4 +1,5 @@
 import { describeVehicleStoreAction, vehicleTypeLabel } from './avatarInteractionLabels.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.9.98 — Vehicle Mount/Dismount World View Integration.
 //
@@ -62,9 +63,9 @@ export default {
                 return '';
             }
             if (this.state.mounted) {
-                return '[E] Dismount';
+                return t('vehiclePrompt.dismount');
             }
-            return `[E] Mount ${vehicleTypeLabel(this.state.vehicleType)}`;
+            return t('vehiclePrompt.mount', { vehicle: vehicleTypeLabel(this.state.vehicleType) });
         },
         store() {
             return describeVehicleStoreAction(this.storeState);
@@ -77,16 +78,18 @@ export default {
                 return '';
             }
             if (this.store.action === 'store') {
-                return '[Q] Store';
+                return t('vehiclePrompt.store');
             }
-            const position = this.store.position ? ` (${this.store.position})` : '';
-            return `[Q] Deploy ${this.store.vehicleLabel}${position}`;
+            return this.store.position
+                ? t('vehiclePrompt.deployNumbered', { vehicle: this.store.vehicleLabel, position: this.store.position })
+                : t('vehiclePrompt.deploy', { vehicle: this.store.vehicleLabel });
         },
         // Only while there is something to cycle through and somewhere to deploy.
         cycleVisible() {
             return Boolean(this.store && this.store.canCycle);
         }
     },
+    methods: { t },
     template: `
         <div
             v-if="visible || storeVisible"
@@ -145,7 +148,7 @@ export default {
                     color: '#a8a8a8',
                     whiteSpace: 'nowrap'
                 }"
-            >[ [ / ] ] Cycle</div>
+            >{{ t('vehicleInteractionPrompt.cycle') }}</div>
         </div>
     `
 };

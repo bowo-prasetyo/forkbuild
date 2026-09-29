@@ -295,8 +295,8 @@ async function runTests() {
             '3. removePlacement()\'s own body touches only placement resolution and RemoveWorldPlacementUseCase — no Snapshot/Nostr/Arweave/unpublish call sites');
 
         const placementInfoPanelSource = await rawSource('ui/components/PlacementInfoPanel.js');
-        assert(!/^\s*import\s/m.test(placementInfoPanelSource),
-            '4. PlacementInfoPanel.js still has zero imports — a pure presentation component that cannot reach the placement store directly even by accident');
+        assert(!/^\s*import\s/m.test(placementInfoPanelSource.replace(/^import \{[^}]*\} from '\.\.\/i18n\/i18n\.js';$/m, '')),
+            '4. PlacementInfoPanel.js still imports nothing but the translator — a pure presentation component that cannot reach the placement store directly even by accident');
 
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const codeOnly = codeOnlyLines(worldViewSource).join('\n');

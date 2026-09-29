@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { t } from '../../i18n/i18n.js';
 
 // Add/edit/remove forms for World landmarks and regions.
 export function useLandmarkAndRegionForms({
@@ -17,7 +18,7 @@ export function useLandmarkAndRegionForms({
     function openEditLandmarkForm(landmarkId) {
         const landmark = session.getLandmark(landmarkId);
         if (!landmark) {
-            feedback.show('That landmark is no longer available');
+            feedback.show(t('worldView.thatLandmarkIsNoLonger'));
             return;
         }
         landmarkFormTarget.value = landmark;
@@ -34,10 +35,10 @@ export function useLandmarkAndRegionForms({
         guarded(() => {
             if (target) {
                 session.updateLandmark(target.id, { title, description });
-                feedback.show(`Updated "${title}"`);
+                feedback.show(t('worldView.updated', { title }));
             } else {
                 session.createLandmarkHere(title, description);
-                feedback.show(`Added landmark "${title}"`);
+                feedback.show(t('worldView.addedLandmark', { title }));
             }
         });
         closeLandmarkForm();
@@ -48,7 +49,7 @@ export function useLandmarkAndRegionForms({
     function removeLandmarkFromPanel(landmarkId) {
         guarded(() => {
             session.removeLandmark(landmarkId);
-            feedback.show('Landmark removed');
+            feedback.show(t('worldView.landmarkRemoved'));
         });
         refreshLocationsPanel();
         refreshSpatialUI();
@@ -65,7 +66,7 @@ export function useLandmarkAndRegionForms({
     function openEditRegionForm(regionId) {
         const region = session.getRegion(regionId);
         if (!region) {
-            feedback.show('That region is no longer available');
+            feedback.show(t('worldView.thatRegionIsNoLonger'));
             return;
         }
         regionFormTarget.value = region;
@@ -82,10 +83,10 @@ export function useLandmarkAndRegionForms({
         guarded(() => {
             if (target) {
                 session.updateRegion(target.id, { name, description, kind, radius });
-                feedback.show(`Updated "${name}"`);
+                feedback.show(t('worldView.updated2', { name }));
             } else {
                 session.createRegionHere(name, { description, kind, radius });
-                feedback.show(`Named "${name}"`);
+                feedback.show(t('worldView.named', { name }));
             }
         });
         closeRegionForm();
@@ -96,7 +97,7 @@ export function useLandmarkAndRegionForms({
     function removeRegionFromPanel(regionId) {
         guarded(() => {
             session.removeRegion(regionId);
-            feedback.show('Region removed');
+            feedback.show(t('worldView.regionRemoved'));
         });
         refreshLocationsPanel();
         refreshSpatialUI();

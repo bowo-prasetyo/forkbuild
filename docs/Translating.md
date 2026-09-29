@@ -14,7 +14,7 @@ chosen.
 | Header, navigation, Language page, sound control | Translated |
 | Editor: toolbar, sidebar, Build Library, dialogs, touch bar, feedback | Translated |
 | Editor actions, license, placement, document status, presence labels, passphrase rules, opening a shared link | Translated |
-| World View | English |
+| World View: panels, dialogs, prompts, the Explore sidebar, the map, the compass, feedback | Translated |
 | Publications page | English |
 | Identity, Peers, Chat, Following, settings pages | English |
 | Resident speech in World View | English |
@@ -142,6 +142,12 @@ it:
   nothing to act on) follow it; `editorActionCategory.<category>`,
   `editorActionReason.<reason>` and `editorActionUnavailable.<capability>`
   cover the rest. A new action needs only its English messages.
+- **Values core/ keeps as ids** (a compass direction such as `NE`, a region
+  kind, a terrain zone, what a collaborator is doing) are translated where
+  they reach the screen, by `ui/i18n/worldText.js` (`compassText`,
+  `regionKindText`, `spatialActivityText`, `spatialContextDescription`). A
+  value without a message is shown as it came, so a newer client's value
+  still reads.
 
 `tests/I18nMessageKeys.test.js` runs these modules and checks that every
 descriptor they produce has an English message.

@@ -1,5 +1,6 @@
 import { ref, watch, onMounted, onBeforeUnmount, inject } from 'vue';
 import { MAX_DISPLAY_NAME_LENGTH } from '../../core/LobbyCard.js';
+import { t } from '../i18n/i18n.js';
 
 const REFRESH_INTERVAL_MS = 30 * 1000;
 
@@ -21,7 +22,8 @@ export default {
     props: {
         // 'public', or a `world:<documentId>` lobby (core/LobbyCard.js).
         lobby: { type: String, required: true },
-        title: { type: String, default: 'Public Lobby' }
+        // Defaults to "Public Lobby" in the chosen language.
+        title: { type: String, default: null }
     },
     setup(props) {
         const publicLobbyUseCase = inject('publicLobbyUseCase');
@@ -115,7 +117,7 @@ export default {
         }
 
         function memberName(member) {
-            return member.displayName || 'Unnamed';
+            return member.displayName || t('publicLobbyPanel.unnamed');
         }
 
         let unsubscribe = null;
@@ -140,6 +142,7 @@ export default {
         });
 
         return {
+            t,
             available, displayName, joined, joinedName, joinPending, joinError, members, total, loading, listError,
             connectingId, connectError, connectingIds, refresh, toggleJoin, connect, block, memberName, shortId,
             MAX_DISPLAY_NAME_LENGTH
@@ -147,61 +150,57 @@ export default {
     },
     template: `
         <div class="peer-signal-box public-lobby-panel">
-            <h3>{{ title }}</h3>
+            <h3>{{ title || t('publicLobbyPanel.title') }}</h3>
             <p v-if="!available" class="form-hint form-hint--neutral">
-                The lobby needs a rendezvous server. Add one under <strong>Network Settings</strong>.
+                {{ t('publicLobbyPanel.theLobbyNeedsARendezvous') }} <strong>{{ t('publicLobbyPanel.networkSettings') }}</strong>.
             </p>
             <template v-else>
                 <p class="form-hint form-hint--neutral">
-                    Joining lists your name and identity here for anyone to see, and lets people you don't know
-                    connect to you. Anyone who connects learns your IP address, sees your avatar as your
-                    visibility settings allow, and swaps Snapshot announcements and publications with you.
-                    Chat and voice still need a friendship. You stay listed for up to 10 minutes after you
-                    close the app, or until you leave.
+                    {{ t('publicLobbyPanel.joiningListsYourNameAnd') }}
                 </p>
                 <div v-if="!joined" class="public-lobby-join">
                     <label class="peer-alias-field">
-                        <span class="form-label">Display name</span>
+                        <span class="form-label">{{ t('publicLobbyPanel.displayName') }}</span>
                         <input type="text" class="form-input" v-model="displayName" :maxlength="MAX_DISPLAY_NAME_LENGTH"
-                               placeholder="How others see you here" @keyup.enter="toggleJoin" />
+                               :placeholder="t('publicLobbyPanel.howOthersSeeYouHere')" @keyup.enter="toggleJoin" />
                     </label>
-                    <p class="form-hint form-hint--neutral">Anyone can choose any name; the identity next to it is what a connection checks.</p>
+                    <p class="form-hint form-hint--neutral">{{ t('publicLobbyPanel.anyoneCanChooseAnyName') }}</p>
                 </div>
                 <p v-if="joined" class="form-hint form-hint--neutral">
-                    You're in this lobby<template v-if="joinedName"> as <strong>{{ joinedName }}</strong></template>.
+                    {{ t('publicLobbyPanel.youReInThisLobby') }}<template v-if="joinedName"> {{ t('publicLobbyPanel.as') }} <strong>{{ joinedName }}</strong></template>.
                 </p>
                 <p v-if="joinError" class="identity-unlock-error">{{ joinError }}</p>
                 <div class="modal-actions">
                     <button class="modal-btn modal-btn--primary" :disabled="joinPending" @click="toggleJoin">
-                        {{ joinPending ? 'Working…' : (joined ? 'Leave Lobby' : 'Join Lobby') }}
+                        {{ joinPending ? t('publicLobbyPanel.working') : t(joined ? 'publicLobbyPanel.leave' : 'publicLobbyPanel.join') }}
                     </button>
-                    <button class="modal-btn" :disabled="loading" @click="refresh">{{ loading ? 'Refreshing…' : 'Refresh' }}</button>
+                    <button class="modal-btn" :disabled="loading" @click="refresh">{{ loading ? t('publicLobbyPanel.refreshing') : t('publicLobbyPanel.refresh') }}</button>
                 </div>
 
                 <p v-if="listError" class="identity-unlock-error">{{ listError }}</p>
                 <p v-if="connectError" class="identity-unlock-error">{{ connectError }}</p>
                 <p v-if="members.length" class="form-hint form-hint--neutral">
-                    {{ members.length }} <template v-if="total > members.length">of {{ total }} </template>here now<template v-if="total > members.length"> (a random sample; refresh to see others)</template>.
+                    {{ total > members.length ? t('publicLobbyPanel.sampleHere', { count: members.length, total }) : t('publicLobbyPanel.here', { count: members.length }) }}
                 </p>
                 <div v-if="members.length" class="identity-mgmt-list">
                     <div v-for="member in members" :key="member.identityId" class="identity-mgmt-card">
                         <div class="identity-mgmt-card-header">
                             <span class="identity-mgmt-name">{{ memberName(member) }}</span>
-                            <span v-if="member.connected" class="peer-badge peer-badge--authenticated">Connected</span>
-                            <span v-else-if="connectingIds.has(member.identityId)" class="peer-badge peer-badge--pending">Connecting…</span>
+                            <span v-if="member.connected" class="peer-badge peer-badge--authenticated">{{ t('publicLobbyPanel.connected') }}</span>
+                            <span v-else-if="connectingIds.has(member.identityId)" class="peer-badge peer-badge--pending">{{ t('publicLobbyPanel.connecting') }}</span>
                         </div>
                         <p class="identity-mgmt-status">…{{ shortId(member.identityId) }}</p>
                         <div class="identity-mgmt-actions">
                             <button v-if="!member.connected && !connectingIds.has(member.identityId)" class="action-btn action-btn--primary"
                                     :disabled="connectingId === member.identityId" @click="connect(member)">
-                                {{ connectingId === member.identityId ? 'Connecting…' : 'Connect' }}
+                                {{ connectingId === member.identityId ? t('publicLobbyPanel.connecting') : t('publicLobbyPanel.connect') }}
                             </button>
-                            <button class="action-btn" @click="block(member)">Block</button>
+                            <button class="action-btn" @click="block(member)">{{ t('publicLobbyPanel.block') }}</button>
                         </div>
                     </div>
                 </div>
                 <p v-else-if="!loading && !listError" class="form-hint form-hint--neutral">
-                    Nobody else is here right now.
+                    {{ t('publicLobbyPanel.nobodyElseIsHereRight') }}
                 </p>
             </template>
         </div>

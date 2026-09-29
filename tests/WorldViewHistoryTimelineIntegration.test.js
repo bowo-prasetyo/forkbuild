@@ -437,7 +437,7 @@ async function run() {
         const panelSource = codeOnlyLines(await rawSource('ui/components/HistoryTimelinePanel.js'));
         assert(!/from ['"].*\/(application|storage|persistence)\//.test(panelSource),
             'HistoryTimelinePanel.js imports nothing from application/, storage/, or persistence/');
-        assert(!panelSource.includes('import '), 'HistoryTimelinePanel.js has zero imports — purely presentational, like LocationsPanel.js/RecoveryBanner.js');
+        assert(!panelSource.replace(/^import \{[^}]*\} from '\.\.\/i18n\/i18n\.js';$/m, '').includes('import '), 'HistoryTimelinePanel.js imports only the translator — purely presentational, like LocationsPanel.js/RecoveryBanner.js');
         for (const verb of ['select', 'preview', 'cancel-preview', 'restore', 'cancel']) {
             assert(panelSource.includes(`'${verb}'`), `HistoryTimelinePanel.js declares the '${verb}' emit`);
         }

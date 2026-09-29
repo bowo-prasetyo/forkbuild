@@ -9,6 +9,7 @@ import { Position } from '../core/Position.js';
 import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.308 — Publication Multi-Placement Visibility.
 //
@@ -75,7 +76,7 @@ function panelCtx(overrides = {}) {
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 async function codeOnlySource(relativePath) {
-    const text = await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
+    const text = withEnglish(await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8'));
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 

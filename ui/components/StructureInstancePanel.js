@@ -51,7 +51,7 @@ export default {
     },
     computed: {
         groundYDisplay() {
-            return Number.isFinite(this.info.groundY) ? formatNumber(this.info.groundY, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '—';
+            return Number.isFinite(this.info.groundY) ? formatNumber(this.info.groundY, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false }) : '—';
         }
     },
     watch: {

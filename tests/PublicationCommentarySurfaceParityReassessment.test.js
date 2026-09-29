@@ -27,6 +27,7 @@ import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/S
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.562 — Publication Commentary Surface Parity Reassessment.
 //
@@ -391,7 +392,7 @@ function canvasObserverLocalAdapter(ctx) {
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
 async function codeOnlySource(relativePath) {
-    const text = await rawSource(relativePath);
+    const text = withEnglish(await rawSource(relativePath));
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 async function listJsFilesRecursively(relativeDir) {
@@ -969,8 +970,8 @@ async function runTests() {
         const files = {
             'PublicationCard.js': await rawSource('ui/components/PublicationCard.js') + sectionSource,
             'PublicationList.js': await rawSource('ui/components/PublicationList.js') + sectionSource,
-            'OwnPublicationPanel.js': (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n'),
-            'WorldEncounterCanvas.js': (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')
+            'OwnPublicationPanel.js': withEnglish((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')),
+            'WorldEncounterCanvas.js': withEnglish((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n'))
         };
         const sharedStrings = [
             'No commentary yet.',
@@ -1015,7 +1016,7 @@ async function runTests() {
         // own header scopes the count explicitly to this one file), not a
         // functional gap — no surface's underlying commentary differs,
         // only whether a number is shown alongside it.
-        assert(files['OwnPublicationPanel.js'].includes('Commentary ({{ publicationCommentaries.length }})'), '59. OwnPublicationPanel.js renders a live commentary count in its own heading.');
+        assert(files['OwnPublicationPanel.js'].includes("t('ownPublicationPanel.commentaryCount', { count: publicationCommentaries.length })"), '59. OwnPublicationPanel.js renders a live commentary count in its own heading.');
         for (const name of ['PublicationCard.js', 'PublicationList.js', 'WorldEncounterCanvas.js']) {
             assert(!/Commentary \(\{\{/.test(files[name]), `60. ${name} renders no equivalent count heading — confirmed still absent, not silently added.`);
         }

@@ -5,6 +5,7 @@ import { registerMaterializedSnapshotWorldSource } from '../../../application/sn
 import { resolveSnapshotWorldPositionClaim } from '../../../application/snapshot/placement/SnapshotWorldPositionClaim.js';
 import { SnapshotWorldPositionClaimOutcome } from '../../../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
 import { sanitizeDistributionErrorMessage } from '../../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
+import { t } from '../../i18n/i18n.js';
 
 // OwnPublicationPanel methods: the manual Snapshot diagnostic pipeline
 // (discover candidates, select, resolve, attribute, materialize, claim a
@@ -37,7 +38,7 @@ export const snapshotDiagnosticMethods = {
                 if (requestId === this.snapshotCandidateDiscoveryRequestId) {
                     console.error('Snapshot candidate discovery failed:', error);
                     this.snapshotCandidateDiscoveryError = sanitizeDistributionErrorMessage(error)
-                        || 'Snapshot candidate discovery could not be completed.';
+                        || t('failure.snapshotCandidateDiscoveryCompleted');
                 }
             })
             .then(() => {
@@ -96,7 +97,7 @@ export const snapshotDiagnosticMethods = {
                 if (requestId === this.selectedSnapshotResolutionRequestId) {
                     console.error('Selected Snapshot resolution failed:', error);
                     this.selectedSnapshotResolutionError = sanitizeDistributionErrorMessage(error)
-                        || 'Selected Snapshot resolution could not be completed.';
+                        || t('failure.selectedSnapshotResolutionCompleted');
                 }
             })
             .then(() => {
@@ -140,7 +141,7 @@ export const snapshotDiagnosticMethods = {
                 if (requestId === this.selectedSnapshotMaterializationRequestId) {
                     console.error('Selected Snapshot materialization failed:', error);
                     this.selectedSnapshotMaterializationError = sanitizeDistributionErrorMessage(error)
-                        || 'Selected Snapshot materialization could not be completed.';
+                        || t('failure.selectedSnapshotMaterializationCompleted');
                 }
             })
             .then(() => {

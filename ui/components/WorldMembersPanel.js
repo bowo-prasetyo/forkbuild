@@ -36,6 +36,7 @@
 // down, in application/presence/WorldPresenceUseCase.js#getRoster() (0.2.98);
 // this component only ever renders the number it's handed.
 import { WorldCollaborationAccess } from './WorldCollaborationRoster.js';
+import { t } from '../i18n/i18n.js';
 
 export default {
     name: 'WorldMembersPanel',
@@ -75,13 +76,14 @@ export default {
         };
     },
     methods: {
+        t,
         accessLabel(access) {
-            if (access === WorldCollaborationAccess.OWNER) return 'Owner';
-            if (access === WorldCollaborationAccess.EDITOR) return 'Editor';
-            return 'Read only';
+            if (access === WorldCollaborationAccess.OWNER) return t('worldMembersPanel.owner');
+            if (access === WorldCollaborationAccess.EDITOR) return t('worldMembersPanel.editor');
+            return t('worldMembersPanel.readOnly');
         },
         activityLabel(activity) {
-            return activity === 'editing' ? 'Editing' : 'Exploring';
+            return activity === 'editing' ? t('worldMembersPanel.editing') : t('worldMembersPanel.exploring');
         },
         submitGrant() {
             const identityId = this.newSubjectId.trim();
@@ -99,19 +101,19 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="World Members"
+            :aria-label="t('worldMembersPanel.worldMembers')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel world-members-panel">
-                <h3>World Members</h3>
+                <h3>{{ t('worldMembersPanel.worldMembers') }}</h3>
                 <p class="world-members-panel-hint">
-                    Presence and access are shown here — never decided here. Granting or revoking Edit is verified fresh by this World's own owner-only membership authority.
+                    {{ t('worldMembersPanel.presenceAndAccessAreShown') }}
                 </p>
 
                 <p v-if="roster.length === 0" class="world-members-panel-empty">
-                    No members known yet.
+                    {{ t('worldMembersPanel.noMembersKnownYet') }}
                 </p>
                 <ul v-else class="world-members-panel-list">
                     <li
@@ -124,36 +126,36 @@ export default {
                             <span class="world-members-panel-item-name">{{ row.displayName }}</span>
                             <span class="world-members-panel-item-meta">
                                 {{ accessLabel(row.access) }}
-                                <template v-if="row.online"> · <span class="world-members-panel-online">● Online</span></template>
-                                <template v-else> · <span class="world-members-panel-offline">○ Offline</span></template>
+                                <template v-if="row.online"> · <span class="world-members-panel-online">{{ t('worldMembersPanel.online') }}</span></template>
+                                <template v-else> · <span class="world-members-panel-offline">{{ t('worldMembersPanel.offline') }}</span></template>
                                 <template v-if="row.deviceCount">
-                                    · {{ row.deviceCount }} device<template v-if="row.deviceCount !== 1">s</template>
+                                    · {{ t('units.devices', { count: row.deviceCount }) }}
                                 </template>
                                 <template v-if="row.online && row.activity"> · {{ activityLabel(row.activity) }}</template>
                             </span>
                         </div>
                         <div v-if="row.canManage" class="world-members-panel-item-actions">
                             <span v-if="pendingIdentityId === row.identityId" class="world-members-panel-pending">
-                                {{ row.access === 'editor' ? 'Revoking…' : 'Granting…' }}
+                                {{ row.access === 'editor' ? t('worldMembersPanel.revoking') : t('worldMembersPanel.granting') }}
                             </span>
                             <template v-else>
                                 <button
                                     v-if="row.access === 'editor'"
                                     class="action-btn"
                                     @click="$emit('revoke', row.identityId)"
-                                >Revoke Edit</button>
+                                >{{ t('worldMembersPanel.revokeEdit') }}</button>
                                 <button
                                     v-else
                                     class="action-btn"
                                     @click="$emit('grant', row.identityId)"
-                                >Grant Edit</button>
+                                >{{ t('worldMembersPanel.grantEdit') }}</button>
                             </template>
                         </div>
                     </li>
                 </ul>
 
                 <form v-if="isOwner" class="world-members-panel-grant-form" @submit.prevent="submitGrant">
-                    <label for="world-members-grant-input">Grant Edit to a new identity</label>
+                    <label for="world-members-grant-input">{{ t('worldMembersPanel.grantEditToANew') }}</label>
                     <div class="world-members-panel-grant-row">
                         <input
                             id="world-members-grant-input"
@@ -162,12 +164,12 @@ export default {
                             placeholder="did:key:..."
                             :disabled="Boolean(pendingIdentityId)"
                         />
-                        <button class="action-btn action-btn--primary" type="submit" :disabled="!newSubjectId.trim() || Boolean(pendingIdentityId)">Grant Edit</button>
+                        <button class="action-btn action-btn--primary" type="submit" :disabled="!newSubjectId.trim() || Boolean(pendingIdentityId)">{{ t('worldMembersPanel.grantEdit') }}</button>
                     </div>
                 </form>
 
                 <div class="modal-actions">
-                    <button class="action-btn" @click="$emit('cancel')">Close</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('worldMembersPanel.close') }}</button>
                 </div>
             </div>
         </div>

@@ -4,6 +4,7 @@ import { AvatarContinuousMovementIntent } from '../../core/AvatarContinuousMovem
 import { AvatarContinuousMovementMode } from '../../core/AvatarContinuousMovementMode.js';
 import { clampTouchJoystickOffset } from '../../core/TouchJoystickKeys.js';
 import { describeAnimalDecorationAction, describeVehicleStoreAction } from './avatarInteractionLabels.js';
+import { t } from '../i18n/i18n.js';
 
 // World View's on-screen controls for touch screens: a joystick for W/A/S/D
 // (pushed to the rim, it runs) and buttons for the other avatar keys. It only
@@ -97,14 +98,14 @@ export default {
         const cruise = computed(() => {
             const state = props.cruiseState;
             if (!state || state.intent === AvatarContinuousMovementIntent.NONE) {
-                return { active: false, label: 'Cruise', next: 'Walk hands-free' };
+                return { active: false, label: t('touchMovementPad.cruise'), next: t('touchMovementPad.walkHandsFree') };
             }
             if (state.intent === AvatarContinuousMovementIntent.BACKWARD) {
-                return { active: true, label: 'Cruise: Back', next: 'Stop' };
+                return { active: true, label: t('touchMovementPad.cruiseBack'), next: t('touchMovementPad.stop') };
             }
             return state.mode === AvatarContinuousMovementMode.RUN
-                ? { active: true, label: 'Cruise: Run', next: 'Stop' }
-                : { active: true, label: 'Cruise: Walk', next: 'Run hands-free' };
+                ? { active: true, label: t('touchMovementPad.cruiseRun'), next: t('touchMovementPad.stop') }
+                : { active: true, label: t('touchMovementPad.cruiseWalk'), next: t('touchMovementPad.runHandsFree') };
         });
         function tapCruise() {
             input.pressChord(cruiseChord(props.cruiseState));
@@ -113,6 +114,7 @@ export default {
         onBeforeUnmount(() => input.releaseAll());
 
         return {
+            t,
             thumb, mounted, mountVisible, store, animalVisible, decoration,
             cruise, tapCruise,
             onStickDown, onStickMove, onStickUp, holdButton, releaseButton, tapButton
@@ -122,7 +124,7 @@ export default {
         <div class="touch-pad" @contextmenu.prevent>
             <div
                 class="touch-pad-joystick"
-                aria-label="Move: push to walk, push to the edge to run"
+                :aria-label="t('touchMovementPad.movePushToWalkPush')"
                 @pointerdown.prevent="onStickDown"
                 @pointermove="onStickMove"
                 @pointerup="onStickUp"
@@ -140,25 +142,25 @@ export default {
                     type="button"
                     class="touch-pad-btn"
                     @click="tapButton('e')"
-                >{{ mounted ? 'Get Off' : 'Ride' }}</button>
+                >{{ mounted ? t('touchMovementPad.getOff') : t('touchMovementPad.ride') }}</button>
                 <div v-if="store" class="touch-pad-group">
                     <button
                         v-if="store.canCycle"
                         type="button"
                         class="touch-pad-btn touch-pad-btn--small"
-                        aria-label="Older stored vehicle"
+                        :aria-label="t('touchMovementPad.olderStoredVehicle')"
                         @click="tapButton('[')"
                     >‹</button>
                     <button
                         type="button"
                         class="touch-pad-btn"
                         @click="tapButton('q')"
-                    >{{ store.action === 'store' ? 'Store' : 'Deploy ' + store.vehicleLabel }}<span v-if="store.position" class="touch-pad-btn-detail">{{ store.position }}</span></button>
+                    >{{ store.action === 'store' ? t('touchMovementPad.store') : t('touchMovementPad.deploy', { vehicle: store.vehicleLabel }) }}<span v-if="store.position" class="touch-pad-btn-detail">{{ store.position }}</span></button>
                     <button
                         v-if="store.canCycle"
                         type="button"
                         class="touch-pad-btn touch-pad-btn--small"
-                        aria-label="Newer stored vehicle"
+                        :aria-label="t('touchMovementPad.newerStoredVehicle')"
                         @click="tapButton(']')"
                     >›</button>
                 </div>
@@ -167,30 +169,30 @@ export default {
                     type="button"
                     class="touch-pad-btn"
                     @click="tapButton('f')"
-                >{{ animalState.canCatch ? 'Catch' : 'Release' }}</button>
+                >{{ animalState.canCatch ? t('touchMovementPad.catch') : t('touchMovementPad.release') }}</button>
                 <button
                     v-if="residentState && residentState.canTalk"
                     type="button"
                     class="touch-pad-btn"
                     @click="tapButton('t')"
-                >Talk</button>
+                >{{ t('touchMovementPad.talk') }}</button>
                 <button
                     v-if="decoration"
                     type="button"
                     class="touch-pad-btn"
                     @click="$emit('decorate')"
-                >{{ decoration.action === 'decorate' ? 'Decorate' : 'Undo Decoration' }}</button>
+                >{{ decoration.action === 'decorate' ? t('touchMovementPad.decorate') : t('touchMovementPad.undoDecoration') }}</button>
                 <template v-if="mounted">
                     <button
                         type="button"
                         class="touch-pad-btn"
-                        aria-label="Steer left"
+                        :aria-label="t('touchMovementPad.steerLeft')"
                         @click="tapButton('ArrowLeft')"
                     >↶</button>
                     <button
                         type="button"
                         class="touch-pad-btn"
-                        aria-label="Steer right"
+                        :aria-label="t('touchMovementPad.steerRight')"
                         @click="tapButton('ArrowRight')"
                     >↷</button>
                     <button
@@ -200,7 +202,7 @@ export default {
                         @pointerup="releaseButton('Control')"
                         @pointercancel="releaseButton('Control')"
                         @lostpointercapture="releaseButton('Control')"
-                    >Brake</button>
+                    >{{ t('touchMovementPad.brake') }}</button>
                 </template>
                 <button
                     type="button"
@@ -216,7 +218,7 @@ export default {
                     @pointerup="releaseButton(' ')"
                     @pointercancel="releaseButton(' ')"
                     @lostpointercapture="releaseButton(' ')"
-                >Jump</button>
+                >{{ t('touchMovementPad.jump') }}</button>
             </div>
         </div>
     `

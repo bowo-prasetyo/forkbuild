@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue';
 import { PlaceNamingClaim } from '../../../core/PlaceNamingClaim.js';
 import { buildPlaceNamingClaimPublication } from '../../../application/placeNaming/PlaceNamingClaimPublication.js';
+import { formatDate, t } from '../../i18n/i18n.js';
 
 // Explore mode's Nearby sections: places, landmarks, people, World encounters
 // and discovered place naming claims (with navigate and adopt).
@@ -69,7 +70,7 @@ export function useNearbySections({
     // computed here. An unparseable createdAt formats as ''.
     function formatNearbyPlaceNamingCreatedAt(createdAt) {
         const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
-        return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString();
+        return Number.isNaN(date.getTime()) ? '' : formatDate(date);
     }
 
     // Carries every field the claim publication validator needs (regionId,
@@ -101,7 +102,7 @@ export function useNearbySections({
         const regionStillExists = session.getRegions()
             .some((region) => region.id === row.regionId && region.worldId === row.worldId);
         if (!regionStillExists) {
-            feedback.show('That place no longer exists in this World');
+            feedback.show(t('worldView.thatPlaceNoLongerExists'));
             return false;
         }
         session.focusLocation(row.regionId);
@@ -132,10 +133,10 @@ export function useNearbySections({
         // recompute alreadySaved all at once.
         nearbyPlaceNamingClaims.value = [...nearbyPlaceNamingClaims.value];
         if (!isNew) {
-            feedback.show(`"${claim.name}" was already known — nothing changed`);
+            feedback.show(t('worldView.wasAlreadyKnownNothingChanged', { name: claim.name }));
             return;
         }
-        feedback.show(`Adopted "${claim.name}"`);
+        feedback.show(t('worldView.adopted', { name: claim.name }));
     }
 
     return {

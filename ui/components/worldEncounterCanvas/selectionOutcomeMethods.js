@@ -3,6 +3,7 @@ import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry } f
 import { describeWorldEncounterPresentationSourceFamily, WorldEncounterPresentationSourceFamily } from '../../../application/worldEncounter/WorldEncounterPresentation.js';
 import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../../../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
 import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../../application/snapshot/SnapshotOutcomeInspectionView.js';
+import { t } from '../../i18n/i18n.js';
 
 // WorldEncounterCanvas methods: selection and decentralized-lead outcomes, and their labels.
 // Spread into the component's `methods`, so `this` is the component instance.
@@ -144,11 +145,11 @@ export const selectionOutcomeMethods = {
         }
         if (family === WorldEncounterPresentationSourceFamily.PEER) {
             const identityId = origin.slice('peer:'.length);
-            return `Peer ${shortIdentityId(identityId)}`;
+            return t('worldEncounterCanvas.peerSource', { id: shortIdentityId(identityId) });
         }
         if (family === WorldEncounterPresentationSourceFamily.SNAPSHOT) {
             const contentHash = origin.slice('snapshot:'.length).split(':')[0];
-            return `Snapshot ${shortContentHash(contentHash)}`;
+            return t('worldEncounterCanvas.snapshotSource', { hash: shortContentHash(contentHash) });
         }
         return origin;
     },

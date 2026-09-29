@@ -29,6 +29,7 @@
 // touches the Publication, the Document, or its material — it just
 // takes this specific location back. See docs/Principles.md, "A
 // Publication Is What; A Placement Is Where."
+import { t } from '../i18n/i18n.js';
 export default {
     name: 'PlacementInfoPanel',
     props: {
@@ -38,34 +39,35 @@ export default {
         }
     },
     emits: ['focus', 'move', 'remove', 'view-here'],
+    methods: { t },
     template: `
         <div v-if="info" class="placement-info-panel">
-            <h4>Placement</h4>
+            <h4>{{ t('placementInfoPanel.placement') }}</h4>
             <div class="info-row">
-                <span class="info-label">Position (World Units)</span>
+                <span class="info-label">{{ t('placementInfoPanel.positionWorldUnits') }}</span>
                 <span class="info-value">
                     {{ info.position.x.toFixed(1) }}, {{ info.position.y.toFixed(1) }}, {{ info.position.z.toFixed(1) }}
                 </span>
             </div>
             <div class="info-row">
-                <span class="info-label">Revision</span>
+                <span class="info-label">{{ t('placementInfoPanel.revision') }}</span>
                 <span class="info-value">{{ info.revision }}</span>
             </div>
             <div class="info-row" v-if="info.owner">
-                <span class="info-label">Owner</span>
+                <span class="info-label">{{ t('placementInfoPanel.owner') }}</span>
                 <span class="info-value">{{ info.owner }}</span>
             </div>
             <p v-if="!info.movable" class="editability-notice editability-notice--blocked">
-                🔒 Placed by {{ info.owner }} — you can view this placement but not move it.
+                {{ t('placementInfoPanel.notYours', { owner: info.owner }) }}
             </p>
             <p v-if="info.overlapCount > 0" class="placement-overlap-notice">
-                ⚠ {{ info.overlapCount }} other {{ info.overlapCount === 1 ? 'document shares' : 'documents share' }} this location.
-                <button type="button" class="inline-link-btn" @click="$emit('view-here')">View</button>
+                {{ t('placementInfoPanel.overlap', { count: info.overlapCount }) }}
+                <button type="button" class="inline-link-btn" @click="$emit('view-here')">{{ t('placementInfoPanel.view') }}</button>
             </p>
             <div class="info-actions">
-                <button class="action-btn" @click="$emit('focus')">Focus</button>
-                <button class="action-btn" :disabled="!info.movable" @click="$emit('move')">Move</button>
-                <button class="action-btn action-btn--danger" :disabled="!info.removable" @click="$emit('remove')">Remove from World</button>
+                <button class="action-btn" @click="$emit('focus')">{{ t('placementInfoPanel.focus') }}</button>
+                <button class="action-btn" :disabled="!info.movable" @click="$emit('move')">{{ t('placementInfoPanel.move') }}</button>
+                <button class="action-btn action-btn--danger" :disabled="!info.removable" @click="$emit('remove')">{{ t('placementInfoPanel.removeFromWorld') }}</button>
             </div>
         </div>
     `

@@ -21,9 +21,13 @@
 // none were found on the networks that answered, never that none exist.
 // A network that could not be reached is named, and the comments stored
 // on this device stay on screen either way.
-// "Nostr", "Nostr and Arweave", "Nostr, Arweave and Steem".
+import { currentLocale, t } from '../i18n/i18n.js';
+
+// "Nostr", "Nostr and Arweave", "Nostr, Arweave and Steem", the chosen
+// language's way.
 function joinNames(names, conjunction) {
-    return names.length <= 2 ? names.join(` ${conjunction} `) : `${names.slice(0, -1).join(', ')} ${conjunction} ${names[names.length - 1]}`;
+    const locale = currentLocale();
+    return new Intl.ListFormat(locale.intlLocale || locale.code, { type: conjunction === 'or' ? 'disjunction' : 'conjunction' }).format(names);
 }
 
 export default {
@@ -45,7 +49,7 @@ export default {
     computed: {
         statusText() {
             if (this.checking) {
-                return 'Checking the network for new comments…';
+                return t('commentaryCheck.checking');
             }
             const outcome = this.outcome;
             if (!outcome) {
@@ -53,13 +57,14 @@ export default {
             }
             const reached = outcome.checked.filter((name) => !outcome.failed.includes(name));
             if (reached.length === 0 && outcome.failed.length > 0) {
-                return `Couldn't reach ${joinNames(outcome.failed, 'or')} — showing comments stored on this device.`;
+                return t('commentaryCheck.unreachable', { networks: joinNames(outcome.failed, 'or') });
             }
             const found = outcome.newCount === 0
-                ? 'No new comments found'
-                : `Found ${outcome.newCount} new ${outcome.newCount === 1 ? 'comment' : 'comments'}`;
-            const unreachable = outcome.failed.length > 0 ? ` · ${joinNames(outcome.failed, 'and')} unavailable` : '';
-            return `${found}${unreachable}.`;
+                ? t('commentaryCheck.noneNew')
+                : t('commentaryCheck.found', { count: outcome.newCount });
+            return outcome.failed.length > 0
+                ? t('commentaryCheck.foundSomeUnavailable', { found, networks: joinNames(outcome.failed, 'and') })
+                : t('commentaryCheck.foundAll', { found });
         }
     },
     watch: {
@@ -77,6 +82,7 @@ export default {
         this.requestId += 1;
     },
     methods: {
+        t,
         check() {
             if (!this.refreshPublicationCommentaryCommand || !this.publicationId) {
                 return;
@@ -87,7 +93,10 @@ export default {
             this.checking = true;
             Promise.resolve()
                 .then(() => this.refreshPublicationCommentaryCommand(publicationId))
-                .catch(() => ({ newCount: 0, checked: ['the network'], failed: ['the network'] }))
+                .catch(() => {
+                    const network = t('commentaryCheck.theNetwork');
+                    return { newCount: 0, checked: [network], failed: [network] };
+                })
                 .then((outcome) => {
                     if (requestId !== this.requestId) {
                         return;
@@ -107,7 +116,7 @@ export default {
                 class="action-btn commentary-remote-check-action"
                 :disabled="checking"
                 @click="check"
-            >{{ checking ? 'Checking…' : 'Check for new comments' }}</button>
+            >{{ checking ? t('publicationCommentaryRemoteCheck.checking') : t('publicationCommentaryRemoteCheck.checkForNewComments') }}</button>
             <span v-if="statusText" class="commentary-remote-check-status" role="status">{{ statusText }}</span>
         </div>
     `

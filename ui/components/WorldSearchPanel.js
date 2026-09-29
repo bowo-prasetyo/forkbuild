@@ -28,6 +28,7 @@
 // inline — this is also what finally makes the 0.2.24 coordinate
 // system something a person actually reads, not just an internal
 // convention.
+import { formatNumber, t } from '../i18n/i18n.js';
 export default {
     name: 'WorldSearchPanel',
     props: {
@@ -60,19 +61,23 @@ export default {
         },
         emptyMessage() {
             if (this.catalogEmpty) {
-                return 'No documents have been published yet.';
+                return t('worldLocationBrowser.catalogEmpty');
             }
             if (this.submittedHasLocation) {
                 const c = this.submittedCenter;
-                const location = `${c.x}, ${c.y}, ${c.z}`;
+                const location = t('units.coordinates', { x: c.x, y: c.y, z: c.z });
                 return this.submittedQuery
-                    ? `No matches for "${this.submittedQuery}" within ${this.submittedRadius} World Units of (${location}).`
-                    : `Nothing found within ${this.submittedRadius} World Units of (${location}).`;
+                    ? t('worldSearchPanel.noMatchesNear', { query: this.submittedQuery, radius: this.submittedRadius, location })
+                    : t('worldSearchPanel.nothingNear', { radius: this.submittedRadius, location });
             }
-            return `No matches for "${this.submittedQuery}".`;
+            return t('worldSearchPanel.noMatches', { query: this.submittedQuery });
         }
     },
     methods: {
+        t,
+        one(value) {
+            return formatNumber(value, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false });
+        },
         onSubmit() {
             const text = this.queryInput.trim();
             const radius = Number(this.radiusInput);
@@ -110,18 +115,18 @@ export default {
                     v-model="queryInput"
                     type="text"
                     class="form-input world-search-input"
-                    placeholder="Search by title or author…"
+                    :placeholder="t('worldSearchPanel.searchByTitleOrAuthor')"
                 />
-                <button type="submit" class="action-btn">Find</button>
+                <button type="submit" class="action-btn">{{ t('worldSearchPanel.find') }}</button>
             </form>
 
             <div class="world-search-location">
-                <span class="form-label">Location (World Units)</span>
+                <span class="form-label">{{ t('worldSearchPanel.locationWorldUnits') }}</span>
                 <div class="world-search-location-fields">
-                    <input v-model.number="centerX" type="number" step="1" class="form-input world-search-coord" placeholder="X" aria-label="Center X" />
-                    <input v-model.number="centerY" type="number" step="1" class="form-input world-search-coord" placeholder="Y" aria-label="Center Y" />
-                    <input v-model.number="centerZ" type="number" step="1" class="form-input world-search-coord" placeholder="Z" aria-label="Center Z" />
-                    <input v-model="radiusInput" type="number" step="1" min="0" class="form-input world-search-radius" placeholder="Radius" aria-label="Radius" />
+                    <input v-model.number="centerX" type="number" step="1" class="form-input world-search-coord" placeholder="X" :aria-label="t('worldSearchPanel.centerX')" />
+                    <input v-model.number="centerY" type="number" step="1" class="form-input world-search-coord" placeholder="Y" :aria-label="t('worldSearchPanel.centerY')" />
+                    <input v-model.number="centerZ" type="number" step="1" class="form-input world-search-coord" placeholder="Z" :aria-label="t('worldSearchPanel.centerZ')" />
+                    <input v-model="radiusInput" type="number" step="1" min="0" class="form-input world-search-radius" :placeholder="t('worldSearchPanel.radius')" :aria-label="t('worldSearchPanel.radius')" />
                 </div>
             </div>
 
@@ -129,22 +134,22 @@ export default {
                 <p v-if="results.length === 0" class="world-search-empty">{{ emptyMessage }}</p>
                 <template v-else>
                     <p class="world-search-count">
-                        {{ results.length }} {{ results.length === 1 ? 'match' : 'matches' }}
+                        {{ t('worldSearchPanel.matchCount', { count: results.length }) }}
                     </p>
                     <ul class="world-search-list">
                         <li v-for="r in results" :key="r.documentId" class="world-search-item">
                             <div class="world-search-item-info">
                                 <span class="world-search-item-title">{{ r.title }}</span>
-                                <span class="world-search-item-author">by {{ r.author || 'anonymous' }}</span>
+                                <span class="world-search-item-author">{{ t('worldLocationBrowser.by', { author: r.author || t('worldLocationBrowser.anonymous') }) }}</span>
                                 <span v-if="r.position" class="world-search-item-position">
-                                    📍 {{ r.position.x.toFixed(1) }}, {{ r.position.y.toFixed(1) }}, {{ r.position.z.toFixed(1) }}
-                                    <template v-if="r.distance !== null"> · 📏 {{ r.distance.toFixed(1) }} World Units away</template>
+                                    📍 {{ t('units.coordinates', { x: one(r.position.x), y: one(r.position.y), z: one(r.position.z) }) }}
+                                    <template v-if="r.distance !== null"> · {{ t('worldLocationBrowser.distance', { distance: one(r.distance) }) }}</template>
                                 </span>
                                 <span v-if="!r.hasPlacement" class="world-search-item-note">
-                                    No placement recorded — using a default position
+                                    {{ t('worldSearchPanel.noPlacementRecordedUsingA') }}
                                 </span>
                             </div>
-                            <button class="action-btn" @click="$emit('focus', r.documentId)">Focus</button>
+                            <button class="action-btn" @click="$emit('focus', r.documentId)">{{ t('worldSearchPanel.focus') }}</button>
                         </li>
                     </ul>
                 </template>

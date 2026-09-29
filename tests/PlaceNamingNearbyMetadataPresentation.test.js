@@ -17,6 +17,8 @@ import { worldViewFiles, stylesheetFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { withEnglish } from './support/EnglishSource.js';
+import en from '../ui/i18n/messages/en.js';
 
 // 0.9.266 — Nearby Place Naming Claim Metadata Presentation.
 //
@@ -498,7 +500,7 @@ async function runTests() {
         assert(regionRecord.name === 'Original Region Name', '11a. computing rows never renames the WorldRegion the claim describes');
 
         const computedRowsBlock = extractBetween(
-            codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')),
+            codeOnlyLines(withEnglish((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'))),
             'const nearbyPlaceNamingClaimRows = computed(() => (',
             'function navigateToNearbyPlaceNamingClaim(row) {'
         );
@@ -516,7 +518,7 @@ async function runTests() {
     // the new code.
     // ---------------------------------------------------------------
     {
-        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
+        const worldViewCode = codeOnlyLines(withEnglish((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')));
         const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         const formatterBlock = extractBetween(worldViewCode, 'function formatNearbyPlaceNamingCreatedAt(createdAt) {', 'const nearbyPlaceNamingClaimRows = computed(() => (');
 
@@ -587,7 +589,7 @@ async function runTests() {
     // genuinely matches what ui/views/WorldView.js contains.
     // ---------------------------------------------------------------
     {
-        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
+        const worldViewCode = codeOnlyLines(withEnglish((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')));
 
         assert(worldViewCode.includes('function formatNearbyPlaceNamingCreatedAt(createdAt) {'),
             '14a. WorldView.js defines the real formatNearbyPlaceNamingCreatedAt() formatter');
@@ -599,7 +601,8 @@ async function runTests() {
 
         const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(nearbyBlock.includes('claim.createdAtLabel'), '14d. the real template renders claim.createdAtLabel');
-        assert(nearbyBlock.includes('Created:'), '14e. the real template labels the rendered date "Created:"');
+        assert(nearbyBlock.includes("t('worldView.created', { when: claim.createdAtLabel })") && en['worldView.created'].startsWith('Created:'),
+            '14e. the real template labels the rendered date "Created:"');
         assert(!nearbyBlock.includes('claim.createdAt }}') && !nearbyBlock.includes('claim.createdAt.'),
             '14f. the real template never renders the RAW claim.createdAt directly — only the formatted createdAtLabel');
 

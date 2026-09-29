@@ -1,5 +1,6 @@
 import { IpfsRemotePublicationState } from '../../../application/ipfs/IpfsRemotePublicationState.js';
 import { sanitizeDistributionErrorMessage } from '../../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
+import { t } from '../../i18n/i18n.js';
 
 // Distribution and Snapshot commands handed to WorldEncounterCanvas and
 // OwnPublicationPanel: each wraps an app-wide command with this World's material.
@@ -28,7 +29,7 @@ export function useWorldEncounterCommands({
 
         if (discoveryProvider === 'arweave' || discoveryProvider === 'steem') {
             if (!publicationDistributionCommand) {
-                return Promise.reject(new Error('Publication distribution is not available.'));
+                return Promise.reject(new Error(t('distribution.publicationUnavailable')));
             }
             return publicationDistributionCommand({
                 publication,
@@ -39,7 +40,7 @@ export function useWorldEncounterCommands({
             });
         }
         if (!multiRelayNostrPublicationDistributionCommand) {
-            return Promise.reject(new Error('Publication distribution is not available.'));
+            return Promise.reject(new Error(t('distribution.publicationUnavailable')));
         }
         return multiRelayNostrPublicationDistributionCommand({
             publication,
@@ -60,16 +61,16 @@ export function useWorldEncounterCommands({
     // shape. `discoveryProvider` applies to every storage path.
     async function distributeWorldEncounterSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) {
         if (!publicationContentStore || !publication.contentReference) {
-            return Promise.reject(new Error('Snapshot distribution is not available.'));
+            return Promise.reject(new Error(t('distribution.snapshotUnavailable')));
         }
         const claim = placementClaimFor(publication);
         const snapshotBytes = await publicationContentStore.get(publication.contentReference);
         if (snapshotBytes === null || snapshotBytes === undefined) {
-            return Promise.reject(new Error('Snapshot distribution is not available.'));
+            return Promise.reject(new Error(t('distribution.snapshotUnavailable')));
         }
         if (storage === 'remote-pinning') {
             if (!ipfsRemotePublicationCoordinator) {
-                return Promise.reject(new Error('Snapshot distribution is not available.'));
+                return Promise.reject(new Error(t('distribution.snapshotUnavailable')));
             }
             return ipfsRemotePublicationCoordinator.publish({ bytes: snapshotBytes, configuration: remotePinningConfiguration })
                 .then((outcome) => {
@@ -79,7 +80,7 @@ export function useWorldEncounterCommands({
                     const contentReference = { hash: outcome.contentHash, uri: outcome.locator, storage: 'ipfs' };
                     const discoveryPublisher = resolveSnapshotDiscoveryPublisher ? resolveSnapshotDiscoveryPublisher(discoveryProvider) : null;
                     if (!discoveryPublisher) {
-                        return { contentReference, announcement: null, announcementError: 'Snapshot distribution is not available.' };
+                        return { contentReference, announcement: null, announcementError: t('distribution.snapshotUnavailable') };
                     }
                     return discoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs', ...claim })
                         .then((announcement) => ({ contentReference, announcement }))
@@ -90,13 +91,13 @@ export function useWorldEncounterCommands({
                             return {
                                 contentReference,
                                 announcement: null,
-                                announcementError: sanitizeDistributionErrorMessage(error) || 'Announcement could not be completed.'
+                                announcementError: sanitizeDistributionErrorMessage(error) || t('distribution.announcementFailed')
                             };
                         });
                 });
         }
         if (!snapshotDistributionCommand) {
-            return Promise.reject(new Error('Snapshot distribution is not available.'));
+            return Promise.reject(new Error(t('distribution.snapshotUnavailable')));
         }
         return snapshotDistributionCommand(
             snapshotBytes,
@@ -129,7 +130,7 @@ export function useWorldEncounterCommands({
     // name.
     function discoverOwnSnapshot(publication) {
         if (!discoverSnapshotCommand || !publication || !publication.contentReference) {
-            return Promise.reject(new Error('Snapshot discovery is not available.'));
+            return Promise.reject(new Error(t('distribution.snapshotDiscoveryUnavailable')));
         }
         return discoverSnapshotCommand(publication.contentReference.hash);
     }
@@ -138,7 +139,7 @@ export function useWorldEncounterCommands({
     // transfer package or rejects; the panel handles display.
     function exportOwnSnapshot(publication) {
         if (!exportSnapshotCommand || !publication) {
-            return Promise.reject(new Error('Snapshot export is not available.'));
+            return Promise.reject(new Error(t('distribution.snapshotExportUnavailable')));
         }
         return exportSnapshotCommand(publication.id);
     }

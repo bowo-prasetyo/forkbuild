@@ -7,6 +7,7 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.558 — Known Publication Encounter Continuation.
 //
@@ -174,7 +175,7 @@ async function runTests() {
     // ===============================================================
     {
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
-        const catalogSource = await rawSource('ui/components/PublicationCatalog.js');
+        const catalogSource = withEnglish(await rawSource('ui/components/PublicationCatalog.js'));
 
         assert(worldViewSource.includes("router.push({ path: '/editor', query: { load: publication.documentId } });"), 'C1. openEncounteredPublicationCommand() in WorldView.js builds the IDENTICAL route PublicationCatalog.js\'s own openPublication(pub) builds.');
         assert(catalogSource.includes("router.push({ path: '/editor', query: { load: pub.documentId } });"), 'C2. Sanity: PublicationCatalog.js\'s own route, unmodified, for comparison.');
@@ -396,7 +397,7 @@ async function runTests() {
     // exposed as the primary affordance.
     // ===============================================================
     {
-        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
+        const canvasSource = withEnglish((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n'));
         const actionsBlockStart = canvasSource.indexOf('world-encounter-observer-local-actions');
         const actionsBlockEnd = canvasSource.indexOf('world-encounter-observer-local-commentary-panel');
         const actionsBlock = canvasSource.slice(actionsBlockStart, actionsBlockEnd);

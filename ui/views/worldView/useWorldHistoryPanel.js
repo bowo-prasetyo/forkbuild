@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { t } from '../../i18n/i18n.js';
 
 // The World history panel and Undo/Redo: timeline, preview, restore.
 export function useWorldHistoryPanel({
@@ -57,7 +58,7 @@ export function useWorldHistoryPanel({
         const entry = fresh.find((candidate) => candidate.id === selectedHistoryEntryId.value);
         if (!entry) {
             selectedHistoryEntryId.value = null;
-            feedback.show('That history entry no longer exists — the timeline has changed');
+            feedback.show(t('worldView.thatHistoryEntryNoLonger'));
             return null;
         }
         return entry.index + 1;
@@ -66,7 +67,7 @@ export function useWorldHistoryPanel({
     function previewSelectedHistoryEntry() {
         const docId = historyPanelDocumentId.value;
         if (!docId || docId !== session.getActiveDocumentId()) {
-            feedback.show('The active document changed — reopen History to preview it');
+            feedback.show(t('worldView.theActiveDocumentChangedReopen'));
             return;
         }
         const cursor = _resolveSelectedHistoryCursor();
@@ -95,7 +96,7 @@ export function useWorldHistoryPanel({
             return true;
         });
         if (!restored) return;
-        feedback.show('Restored to an earlier point in history');
+        feedback.show(t('worldView.restoredToAnEarlierPoint'));
         closeHistoryPanel();
         refreshSpatialUI();
     }
@@ -105,7 +106,7 @@ export function useWorldHistoryPanel({
     function undoAction() {
         const performed = guarded(() => session.undo());
         if (performed) {
-            feedback.show('Undone');
+            feedback.show(t('editorAction.history.undo.done'));
         }
         refreshSpatialUI();
     }
@@ -113,7 +114,7 @@ export function useWorldHistoryPanel({
     function redoAction() {
         const performed = guarded(() => session.redo());
         if (performed) {
-            feedback.show('Redone');
+            feedback.show(t('editorAction.history.redo.done'));
         }
         refreshSpatialUI();
     }

@@ -3,9 +3,9 @@
 // It renders in WorldEncounterCanvas's scope, so it uses the component's props, data, computed properties and methods.
 export const outcomeAndMaterialPanelsTemplate = `<div v-if="selectedEncounter && selectionOutcome && selectionOutcome.status !== 'UNAVAILABLE'" class="world-encounter-selection-origin-panel">
                 <template v-if="selectionOutcome.status === 'AMBIGUOUS'">
-                    <h4 class="world-encounter-selection-origin-title">Choose Source</h4>
+                    <h4 class="world-encounter-selection-origin-title">{{ t('worldEncounterCanvas.chooseSource') }}</h4>
                     <p v-if="!resolvedEncounterSelection" class="world-encounter-selection-origin-hint">
-                        This encounter is offered by more than one source.
+                        {{ t('worldEncounterCanvas.thisEncounterIsOfferedBy') }}
                     </p>
                     <ul class="world-encounter-selection-origin-list">
                         <li v-for="candidate in selectionOutcome.candidates" :key="candidate.origin">
@@ -20,15 +20,15 @@ export const outcomeAndMaterialPanelsTemplate = `<div v-if="selectedEncounter &&
                 </template>
 
                 <p v-else-if="selectionOutcome.status === 'RESOLVED'" class="world-encounter-selection-origin-resolved">
-                    Source: {{ describeSelectionOriginLabel(selectionOutcome.resolvedSelection.origin) }}
+                    {{ t('worldEncounterCanvas.source', { source: describeSelectionOriginLabel(selectionOutcome.resolvedSelection.origin) }) }}
                 </p>
             </div>
 
             <div v-if="selectedEncounter && decentralizedLeadOutcome && decentralizedLeadOutcome.status !== 'UNAVAILABLE'" class="world-encounter-lead-panel">
                 <template v-if="decentralizedLeadOutcome.status === 'AMBIGUOUS'">
-                    <h4 class="world-encounter-lead-title">Choose Location</h4>
+                    <h4 class="world-encounter-lead-title">{{ t('worldEncounterCanvas.chooseLocation') }}</h4>
                     <p v-if="!resolvedLead" class="world-encounter-lead-hint">
-                        More than one decentralized lead is currently associated with this encounter.
+                        {{ t('worldEncounterCanvas.moreThanOneDecentralizedLead') }}
                     </p>
                     <ul class="world-encounter-lead-list">
                         <li v-for="candidate in decentralizedLeadOutcome.candidates" :key="candidate.origin + '|' + candidate.discoveryTag + '|' + candidate.uri">
@@ -43,7 +43,7 @@ export const outcomeAndMaterialPanelsTemplate = `<div v-if="selectedEncounter &&
                 </template>
 
                 <p v-else-if="decentralizedLeadOutcome.status === 'RESOLVED'" class="world-encounter-lead-resolved">
-                    Location: {{ describeDecentralizedLeadUriLabel(decentralizedLeadOutcome.resolvedLead.uri) }}
+                    {{ t('worldEncounterCanvas.location', { location: describeDecentralizedLeadUriLabel(decentralizedLeadOutcome.resolvedLead.uri) }) }}
                 </p>
             </div>
 
@@ -53,9 +53,9 @@ export const outcomeAndMaterialPanelsTemplate = `<div v-if="selectedEncounter &&
                 trust, when it only means identity correspondence to the selection.
             -->
             <div v-if="selectedEncounter && materialInspection" class="world-encounter-material-panel">
-                <h4 class="world-encounter-material-title">Material</h4>
+                <h4 class="world-encounter-material-title">{{ t('worldEncounterCanvas.material') }}</h4>
                 <dl class="world-encounter-material-detail">
-                    <dt>Status</dt>
+                    <dt>{{ t('worldEncounterCanvas.status') }}</dt>
                     <dd>{{ describeMaterialLoadStatusLabel(materialInspection.loading.status) }}</dd>
                 </dl>
 
@@ -64,13 +64,13 @@ export const outcomeAndMaterialPanelsTemplate = `<div v-if="selectedEncounter &&
                     application/publication/distribution/PublicationMaterialProvenance.js).
                 -->
                 <dl v-if="materialProvenance" class="world-encounter-provenance-detail">
-                    <dt>Source</dt>
+                    <dt>{{ t('worldEncounterCanvas.source') }}</dt>
                     <dd>{{ materialProvenance.origin }}</dd>
                 </dl>
 
-                <h4 class="world-encounter-verification-title">Verification</h4>
+                <h4 class="world-encounter-verification-title">{{ t('worldEncounterCanvas.verification') }}</h4>
                 <dl class="world-encounter-verification-detail">
-                    <dt>Status</dt>
+                    <dt>{{ t('worldEncounterCanvas.status') }}</dt>
                     <dd>{{ describeMaterialVerificationStatusLabel(materialInspection.verification.status) }}</dd>
                 </dl>
             </div>
@@ -85,7 +85,7 @@ export const outcomeAndMaterialPanelsTemplate = `<div v-if="selectedEncounter &&
                 class="action-btn world-encounter-distribution-trigger-action"
                 :disabled="!distributablePublication"
                 @click="distributionDialogOpen = true"
-            >Distribute</button>
+            >{{ t('worldEncounterCanvas.distribute') }}</button>
 
             <WorldDistributionDialog
                 v-if="distributionDialogOpen"

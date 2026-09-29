@@ -17,6 +17,7 @@ import { peopleSectionTemplate } from './peerConnections/templates/peopleSection
 import { connectSectionTemplate } from './peerConnections/templates/connectSection.js';
 import PublicLobbyPanel from '../components/PublicLobbyPanel.js';
 import { PUBLIC_LOBBY } from '../../core/LobbyCard.js';
+import { t } from '../i18n/i18n.js';
 
 const GUIDE_URL = 'https://github.com/bowo-prasetyo/forkbuild/blob/main/docs/user/07-PeerConnectionsAndFriends.md';
 
@@ -377,6 +378,7 @@ export default {
         });
 
         return {
+            t,
             GUIDE_URL, CONNECT_TABS, PEOPLE_FILTERS, PUBLIC_LOBBY,
             isAuthenticated, isIdentityLocked, myIdentityId, peers, PeerLifecycleState, LIFECYCLE_LABELS, LIFECYCLE_CLASSES, PROGRESSION_STEPS,
             connectedFor, shortId,

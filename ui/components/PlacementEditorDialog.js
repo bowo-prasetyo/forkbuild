@@ -33,6 +33,7 @@
 // Emits move({ x, y, z }) — plain numbers, not a Position instance,
 // since the caller (WorldNavigationSession.movePlacement) constructs
 // whatever position type MoveWorldPlacementUseCase expects.
+import { t } from '../i18n/i18n.js';
 const STEP_PRESETS = [1, 10, 100];
 
 export default {
@@ -66,6 +67,7 @@ export default {
         }
     },
     methods: {
+        t,
         nudge(axis, sign) {
             const delta = sign * (Number(this.step) || 0);
             this[axis] = (Number(this[axis]) || 0) + delta;
@@ -83,34 +85,33 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="Move placement"
+            :aria-label="t('placementEditorDialog.movePlacement')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel placement-editor">
-                <h3>Move Placement</h3>
+                <h3>{{ t('placementEditorDialog.movePlacement2') }}</h3>
                 <p class="form-hint form-hint--neutral">
-                    This moves where the world sits in shared space. It does not
-                    edit the document, and does not create a fork.
+                    {{ t('placementEditorDialog.thisMovesWhereTheWorld') }}
                 </p>
 
                 <label class="form-field">
-                    <span class="form-label">X (World Units)</span>
+                    <span class="form-label">{{ t('placementEditorDialog.xWorldUnits') }}</span>
                     <input v-model.number="x" type="number" step="1" class="form-input" />
                 </label>
                 <label class="form-field">
-                    <span class="form-label">Y (World Units)</span>
+                    <span class="form-label">{{ t('placementEditorDialog.yWorldUnits') }}</span>
                     <input v-model.number="y" type="number" step="1" class="form-input" />
                 </label>
                 <label class="form-field">
-                    <span class="form-label">Z (World Units)</span>
+                    <span class="form-label">{{ t('placementEditorDialog.zWorldUnits') }}</span>
                     <input v-model.number="z" type="number" step="1" class="form-input" />
                 </label>
 
                 <div class="placement-nudge">
                     <div class="placement-nudge-step">
-                        <span class="form-label">Nudge by</span>
+                        <span class="form-label">{{ t('placementEditorDialog.nudgeBy') }}</span>
                         <div class="placement-nudge-step-options">
                             <button
                                 v-for="preset in stepPresets"
@@ -141,9 +142,7 @@ export default {
 
                 <div v-if="warningIsCurrent" class="placement-overlap-warning" role="alert">
                     <p class="placement-overlap-warning-text">
-                        ⚠ {{ overlapWarning.occupants.length }}
-                        {{ overlapWarning.occupants.length === 1 ? 'other document is' : 'other documents are' }}
-                        already located here.
+                        {{ t('placementEditorDialog.overlap', { count: overlapWarning.occupants.length }) }}
                     </p>
                     <ul class="placement-overlap-warning-list">
                         <li v-for="occupant in overlapWarning.occupants" :key="occupant.publicationId">
@@ -153,8 +152,8 @@ export default {
                 </div>
 
                 <div class="modal-actions">
-                    <button class="action-btn" @click="$emit('cancel')">Cancel</button>
-                    <button class="action-btn action-btn--primary" @click="onMove">{{ warningIsCurrent ? 'Place Anyway' : 'Move' }}</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('placementEditorDialog.cancel') }}</button>
+                    <button class="action-btn action-btn--primary" @click="onMove">{{ warningIsCurrent ? t('placementEditorDialog.placeAnyway') : t('placementEditorDialog.move') }}</button>
                 </div>
             </div>
         </div>

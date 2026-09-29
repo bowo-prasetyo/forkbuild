@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue';
+import { errorText, t } from '../../i18n/i18n.js';
 
 // The Place Naming panel: a region's naming claims and community view, this
 // replica's preferred name, claim publish/retract/export/import, and publishing
@@ -71,7 +72,7 @@ export function usePlaceNamingPanel({
     function publishNamingClaim(name) {
         guarded(() => {
             session.publishPlaceNamingClaim(namingPanelRegionId.value, name);
-            feedback.show(`Published "${name}"`);
+            feedback.show(t('placeNaming.published', { name }));
         });
         refreshNamingPanel();
     }
@@ -79,7 +80,7 @@ export function usePlaceNamingPanel({
     function retractNamingClaim(claimId) {
         guarded(() => {
             session.retractPlaceNamingClaim(namingPanelRegionId.value, claimId);
-            feedback.show('Claim retracted');
+            feedback.show(t('placeNaming.retracted'));
         });
         refreshNamingPanel();
     }
@@ -107,7 +108,7 @@ export function usePlaceNamingPanel({
         link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
         link.download = `forkbuild-place-naming-claim-${slug}.json`;
         link.click();
-        feedback.show(`Exported "${pkg.claim.name}"`);
+        feedback.show(t('placeNaming.exported', { name: pkg.claim.name }));
     }
 
     // `rawText` is untrusted; parsing and import (validation plus signature
@@ -118,21 +119,21 @@ export function usePlaceNamingPanel({
         try {
             parsed = JSON.parse(rawText);
         } catch (e) {
-            feedback.show('That is not valid JSON — choose a file exported with "Export Claim."');
+            feedback.show(t('placeNaming.invalidJson'));
             return;
         }
         const result = guarded(() => session.importPlaceNamingClaim(parsed));
         if (!result) return;
         const { claim, isNew } = result;
         if (!isNew) {
-            feedback.show(`"${claim.name}" was already known — nothing changed`);
+            feedback.show(t('placeNaming.alreadyKnown', { name: claim.name }));
             return;
         }
         if (claim.regionId === namingPanelRegionId.value) {
             refreshNamingPanel();
-            feedback.show(`Imported "${claim.name}"`);
+            feedback.show(t('placeNaming.imported', { name: claim.name }));
         } else {
-            feedback.show(`Imported "${claim.name}" for a different place — open its Names panel to see it`);
+            feedback.show(t('placeNaming.importedElsewhere', { name: claim.name }));
         }
     }
 
@@ -163,7 +164,7 @@ export function usePlaceNamingPanel({
             .catch((error) => {
                 if (namingPanelPublishToNostrRequestId.value !== requestId) return;
                 namingPanelPublishToNostrExecuting.value = false;
-                namingPanelPublishToNostrError.value = (error && error.message) ? error.message : 'Publish to Nostr failed.';
+                namingPanelPublishToNostrError.value = (error && error.message) ? errorText(error) : t('placeNaming.publishFailed');
             });
     }
 

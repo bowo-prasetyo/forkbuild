@@ -27,6 +27,7 @@
 // already uses, addressed by this place's own derived
 // `place:<fingerprintKey>` id (see core/GeographicPlaceNavigation.js)
 // — never a second camera mechanism, never a `focusGeographicPlace()`.
+import { t } from '../i18n/i18n.js';
 export default {
     name: 'GeographicPlacePanel',
     props: {
@@ -38,16 +39,18 @@ export default {
     },
     emits: ['focus-region', 'open-names', 'show-on-map', 'go-to-place', 'cancel'],
     methods: {
+        t,
         formatRegionLabel(region) {
             const kind = region.kind ? `${region.kind.charAt(0).toUpperCase()}${region.kind.slice(1)}` : 'Place';
             return region.name ? `${kind} · ${region.name}` : kind;
         },
         formatSummary() {
             if (!this.place) return '';
-            const descriptions = this.place.descriptionCount === 1 ? '1 description' : `${this.place.descriptionCount} descriptions`;
-            const worlds = this.place.worldCount === 1 ? '1 World' : `${this.place.worldCount} Worlds`;
-            const contributors = this.place.authorCount === 1 ? '1 contributor' : `${this.place.authorCount} contributors`;
-            return `${descriptions} · ${worlds} · ${contributors}`;
+            return t('geographicPlace.summary', {
+                descriptions: t('geographicPlace.descriptions', { count: this.place.descriptionCount }),
+                worlds: t('geographicPlace.worlds', { count: this.place.worldCount }),
+                contributors: t('geographicPlace.contributors', { count: this.place.authorCount })
+            });
         },
         regionKey(region) {
             return `${region.worldId}:${region.id}`;
@@ -63,7 +66,7 @@ export default {
         <div
             v-if="place"
             role="dialog"
-            aria-label="Geographic Place"
+            :aria-label="t('geographicPlacePanel.geographicPlace')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
@@ -73,9 +76,9 @@ export default {
                 <p class="locations-panel-hint">{{ formatSummary() }}</p>
 
                 <section class="naming-panel-section">
-                    <h4 class="locations-panel-section-title">Community Names</h4>
+                    <h4 class="locations-panel-section-title">{{ t('geographicPlacePanel.communityNames') }}</h4>
                     <p v-if="place.names.length === 0" class="locations-panel-empty">
-                        Nobody has published a naming claim for this place yet.
+                        {{ t('geographicPlacePanel.nobodyHasPublishedANaming') }}
                     </p>
                     <ul v-else class="naming-panel-list">
                         <li v-for="entry in place.names" :key="entry.name" class="naming-panel-item">
@@ -88,10 +91,9 @@ export default {
                 </section>
 
                 <section class="naming-panel-section">
-                    <h4 class="locations-panel-section-title">Described By</h4>
+                    <h4 class="locations-panel-section-title">{{ t('geographicPlacePanel.describedBy') }}</h4>
                     <p class="form-hint form-hint--neutral">
-                        Other descriptions of this place — each one stays
-                        its own separate region; nothing here merges them.
+                        {{ t('geographicPlacePanel.otherDescriptionsOfThisPlace') }}
                     </p>
                     <ul class="naming-panel-list">
                         <li v-for="region in place.regions" :key="regionKey(region)" class="naming-panel-item">
@@ -99,15 +101,15 @@ export default {
                                 <span class="naming-panel-item-name">{{ formatRegionLabel(region) }}</span>
                             </div>
                             <div class="naming-panel-item-actions">
-                                <button class="action-btn" @click="$emit('focus-region', region.id)">Focus</button>
-                                <button class="action-btn" @click="$emit('open-names', region.id)">Names</button>
+                                <button class="action-btn" @click="$emit('focus-region', region.id)">{{ t('geographicPlacePanel.focus') }}</button>
+                                <button class="action-btn" @click="$emit('open-names', region.id)">{{ t('geographicPlacePanel.names') }}</button>
                             </div>
                         </li>
                     </ul>
                 </section>
 
                 <section v-if="place.reasons.length > 0" class="naming-panel-section geographic-place-reasons">
-                    <h4 class="locations-panel-section-title">Why Grouped Together?</h4>
+                    <h4 class="locations-panel-section-title">{{ t('geographicPlacePanel.whyGroupedTogether') }}</h4>
                     <ul class="geographic-place-reasons-list">
                         <li v-for="reason in place.reasons" :key="reason">✓ {{ reason }}</li>
                     </ul>
@@ -115,8 +117,8 @@ export default {
                 </section>
 
                 <div class="modal-actions">
-                    <button class="action-btn action-btn--primary" @click="$emit('go-to-place')">Go to Place</button>
-                    <button class="action-btn" @click="$emit('show-on-map')">Show on Map</button>
+                    <button class="action-btn action-btn--primary" @click="$emit('go-to-place')">{{ t('geographicPlacePanel.goToPlace') }}</button>
+                    <button class="action-btn" @click="$emit('show-on-map')">{{ t('geographicPlacePanel.showOnMap') }}</button>
                     <!-- 0.5.7 — reached only from
                          GeographicPlaceDirectoryPanel's own row click
                          (see this component's own header), so "cancel"
@@ -124,7 +126,7 @@ export default {
                          from," never "close World View's Places
                          surface entirely" — the host wires this to
                          goBackInPlaces(), not a full close. -->
-                    <button class="action-btn" @click="$emit('cancel')">← Back</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('geographicPlacePanel.back') }}</button>
                 </div>
             </div>
         </div>

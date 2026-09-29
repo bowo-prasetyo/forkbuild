@@ -309,8 +309,8 @@ async function run() {
             '35. an unreachable network is named alongside the result from the other');
         assert(status({ newCount: 0, checked: ['Nostr', 'Arweave'], failed: ['Nostr', 'Arweave'] }) === 'Couldn\'t reach Nostr or Arweave — showing comments stored on this device.',
             '36. when no network answers, the status says so and points at the local comments still shown');
-        assert(status({ newCount: 0, checked: ['Nostr', 'Arweave', 'Steem'], failed: ['Nostr', 'Arweave', 'Steem'] }) === 'Couldn\'t reach Nostr, Arweave or Steem — showing comments stored on this device.',
-            '36b. three unreachable networks read as a list');
+        assert(status({ newCount: 0, checked: ['Nostr', 'Arweave', 'Steem'], failed: ['Nostr', 'Arweave', 'Steem'] }) === 'Couldn\'t reach Nostr, Arweave, or Steem — showing comments stored on this device.',
+            '36b. three unreachable networks read as a list, joined the language\'s way (Intl.ListFormat)');
 
         console.log('✓ Section G: the status line describes every outcome honestly');
     }

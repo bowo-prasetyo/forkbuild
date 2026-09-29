@@ -1,5 +1,6 @@
 import { WorldSpatialActivity } from '../../core/WorldSpatialActivity.js';
-import { describeSpatialActivity } from '../../core/WorldSpatialAnchor.js';
+import { t } from '../i18n/i18n.js';
+import { spatialActivityText } from '../i18n/worldText.js';
 
 // 0.3.0 — Collaborative Spatial Presence. 0.3.1 — Collaborative Spatial
 // Awareness adds the contextual activity text and the Follow action; see
@@ -79,7 +80,8 @@ export function buildSpatialCollaboratorRows(spatialRoster, { resolveDisplayName
                 displayName: typeof resolveDisplayName === 'function' ? resolveDisplayName(group.identityId) : group.identityId,
                 deviceCount: group.devices.length,
                 activity: device.activity,
-                activityLabel: describeSpatialActivity(device.activity, contextualLabel),
+                // The 3D marker's wording, in the chosen language.
+                activityLabel: spatialActivityText(device.activity, contextualLabel),
                 primaryDeviceId: device.deviceId
             };
         })
@@ -108,6 +110,7 @@ export default {
     // Shared Camera (0.3.1)."
     emits: ['follow'],
     methods: {
+        t,
         // A stable, deterministic identityId -> color, the SAME hue
         // formula renderer/RemoteSpatialPresenceRenderer.js's own
         // hashHue() uses, so a row's dot and that identity's in-scene
@@ -126,7 +129,7 @@ export default {
         }
     },
     template: `
-        <ul v-if="rows.length" class="world-collaborator-indicator" aria-label="Who else is here">
+        <ul v-if="rows.length" class="world-collaborator-indicator" :aria-label="t('worldCollaboratorIndicator.whoElseIsHere')">
             <li
                 v-for="row in rows"
                 :key="row.identityId"
@@ -135,14 +138,14 @@ export default {
                 <span class="world-collaborator-indicator-dot" :style="{ background: dotColor(row.identityId) }" aria-hidden="true"></span>
                 <span class="world-collaborator-indicator-name">{{ row.displayName }}</span>
                 <span class="world-collaborator-indicator-activity">{{ row.activityLabel }}</span>
-                <span v-if="row.deviceCount > 1" class="world-collaborator-indicator-devices">· {{ row.deviceCount }} devices</span>
+                <span v-if="row.deviceCount > 1" class="world-collaborator-indicator-devices">· {{ t('units.devices', { count: row.deviceCount }) }}</span>
                 <button
                     v-if="row.primaryDeviceId"
                     type="button"
                     class="world-collaborator-indicator-follow"
-                    :aria-label="'Follow ' + row.displayName"
+                    :aria-label="t('worldCollaboratorIndicator.followName', { name: row.displayName })"
                     @click="$emit('follow', row.primaryDeviceId)"
-                >Follow</button>
+                >{{ t('worldCollaboratorIndicator.follow') }}</button>
             </li>
         </ul>
     `

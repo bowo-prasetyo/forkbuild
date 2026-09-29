@@ -359,8 +359,9 @@ async function run() {
     {
         for (const path of ['../ui/components/WorldEncounterMarker.js', '../ui/components/WandererMarker.js']) {
             const source = await readFile(new URL(path, import.meta.url), 'utf8');
-            const importLines = source.split('\n').filter((line) => line.trim().startsWith('import '));
-            assert(importLines.length === 0, `36. ${path} imports nothing — no application/, no core/, not even vue`);
+            // The translator (ui/i18n/i18n.js) is the one import allowed: it gives text, never data.
+            const importLines = source.split('\n').filter((line) => line.trim().startsWith('import ') && !line.includes("from '../i18n/i18n.js'"));
+            assert(importLines.length === 0, `36. ${path} imports nothing but the translator — no application/, no core/, not even vue`);
         }
 
         console.log('✓ Section I: WorldEncounterMarker.js and WandererMarker.js import nothing — they consume props alone');

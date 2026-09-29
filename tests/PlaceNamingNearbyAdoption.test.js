@@ -25,6 +25,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.263 — Nearby Place Naming Claim Adoption UI.
 //
@@ -271,7 +272,7 @@ async function runTests() {
     // Section B — Adopt button exists for nearby claims.
     // -------------------------------------------------------------
     {
-        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
+        const worldViewCode = codeOnlyLines(withEnglish((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')));
         assert(worldViewCode.includes('function adoptNearbyPlaceNamingClaim(row) {'),
             '6. ui/views/WorldView.js defines a real adoptNearbyPlaceNamingClaim(row) function.');
         assert(worldViewCode.includes('adoptNearbyPlaceNamingClaim,'),
@@ -335,7 +336,7 @@ async function runTests() {
         // 16. Structural proof this isn't a lucky accident of these two
         // identities: adoptNearbyPlaceNamingClaim() itself never reads any
         // "current identity"/"my identity" concept at all.
-        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
+        const worldViewCode = codeOnlyLines(withEnglish((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')));
         const adoptBlock = extractBetween(worldViewCode, 'function adoptNearbyPlaceNamingClaim(row) {', '\n        }');
         assert(!/myIdentityId|currentUser|getSigningIdentity|resolveSigningIdentityId/.test(adoptBlock),
             '16. adoptNearbyPlaceNamingClaim() never references any "current identity"/"my identity" concept — the authorIdentityId it forwards can only ever be the row\'s own.');
@@ -534,7 +535,7 @@ async function runTests() {
 
         // 34. Structural proof, direct from real source: neither function
         // references the other's own machinery at all.
-        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
+        const worldViewCode = codeOnlyLines(withEnglish((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')));
         const adoptBlock = extractBetween(worldViewCode, 'function adoptNearbyPlaceNamingClaim(row) {', '\n        }');
         const navigateBlock = extractBetween(worldViewCode, 'function navigateToNearbyPlaceNamingClaim(row) {', '\n        }');
         assert(!/focusLocation|refreshSpatialUI/.test(adoptBlock),
@@ -708,7 +709,7 @@ async function runTests() {
         assert(codeOnly.includes('onExportClaim(claimId)') && codeOnly.includes("$emit('export-claim'"),
             '51. the manual panel\'s own "copy/share (export)" capability is untouched.');
 
-        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
+        const worldViewCode = codeOnlyLines(withEnglish((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')));
         assert(worldViewCode.includes('function importNamingClaim(rawText)') && worldViewCode.includes('session.importPlaceNamingClaim(parsed)'),
             '52. ui/views/WorldView.js still wires the manual panel\'s Import Claim action through to the real session.importPlaceNamingClaim(), byte-for-byte unmodified.');
 

@@ -1,5 +1,6 @@
 import { inspectWorldEncounterMaterial } from '../../../application/worldEncounter/WorldEncounterMaterialInspection.js';
 import { createId } from '../../../core/createId.js';
+import { errorText, t } from '../../i18n/i18n.js';
 
 // WorldEncounterCanvas methods: observer-local ("Discovered here") encounters, their inspection and commentary.
 // Spread into the component's `methods`, so `this` is the component instance.
@@ -114,7 +115,7 @@ export const observerLocalEncounterMethods = {
             this.observerLocalEncounterCommentaries = Array.isArray(result) ? result : [];
             this.observerLocalEncounterCommentaryError = null;
         } catch (error) {
-            this.observerLocalEncounterCommentaryError = 'Commentary could not be loaded.';
+            this.observerLocalEncounterCommentaryError = t('failure.commentaryLoaded');
         }
     },
     submitObserverLocalEncounterCommentary() {
@@ -135,7 +136,7 @@ export const observerLocalEncounterMethods = {
             this.pendingObserverLocalEncounterCommentaryDraft = null;
             this.refreshObserverLocalEncounterCommentaries();
         } catch (error) {
-            this.observerLocalEncounterCommentaryError = (error && error.message) ? error.message : 'Commentary could not be created.';
+            this.observerLocalEncounterCommentaryError = (error && error.message) ? errorText(error) : t('failure.commentaryCreated');
         } finally {
             this.observerLocalEncounterCommentarySubmitting = false;
         }

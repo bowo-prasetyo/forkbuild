@@ -1,4 +1,6 @@
 import { RegionKind } from '../../core/RegionKind.js';
+import { t } from '../i18n/i18n.js';
+import { regionKindText } from '../i18n/worldText.js';
 
 // 0.5.0 — World Regions & Decentralized Place Naming.
 //
@@ -27,17 +29,6 @@ import { RegionKind } from '../../core/RegionKind.js';
 // (informational grouping only, never required — see that class's own
 // header), but a UI to browse/pick an existing region as a parent is
 // future work, not attempted here.
-const REGION_KIND_LABELS = {
-    [RegionKind.CONTINENT]: 'Continent',
-    [RegionKind.COUNTRY]: 'Country',
-    [RegionKind.REGION]: 'Region',
-    [RegionKind.CITY]: 'City',
-    [RegionKind.TOWN]: 'Town',
-    [RegionKind.VILLAGE]: 'Village',
-    [RegionKind.DISTRICT]: 'District',
-    [RegionKind.NEIGHBORHOOD]: 'Neighborhood',
-    [RegionKind.PLACE]: 'Place'
-};
 
 export default {
     name: 'RegionFormModal',
@@ -62,13 +53,14 @@ export default {
             return !!this.region;
         },
         kindOptions() {
-            return Object.values(RegionKind).map((kind) => ({ value: kind, label: REGION_KIND_LABELS[kind] || kind }));
+            return Object.values(RegionKind).map((kind) => ({ value: kind, label: regionKindText(kind) }));
         },
         radiusIsValid() {
             return Number.isFinite(Number(this.radius)) && Number(this.radius) > 0;
         }
     },
     methods: {
+        t,
         onSave() {
             const trimmedName = this.name.trim();
             if (!trimmedName || !this.radiusIsValid) {
@@ -91,39 +83,38 @@ export default {
     template: `
         <div
             role="dialog"
-            :aria-label="isEditing ? 'Edit region' : 'Name this area'"
+            :aria-label="isEditing ? t('regionFormModal.editRegion2') : t('regionFormModal.nameThisArea2')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel region-form">
-                <h3>{{ isEditing ? 'Edit Region' : 'Name This Area' }}</h3>
+                <h3>{{ isEditing ? t('regionFormModal.editRegion') : t('regionFormModal.nameThisArea') }}</h3>
                 <p v-if="!isEditing" class="form-hint form-hint--neutral">
-                    Centered on your avatar's current position — anyone
-                    standing inside the radius will see this name.
+                    {{ t('regionFormModal.centeredOnYourAvatarS') }}
                 </p>
 
                 <label class="form-field">
-                    <span class="form-label">Name</span>
+                    <span class="form-label">{{ t('regionFormModal.name') }}</span>
                     <input
                         v-model="name"
                         type="text"
                         class="form-input"
-                        placeholder="Willow Village"
+                        :placeholder="t('regionFormModal.willowVillage')"
                         maxlength="200"
                         autofocus
                     />
                 </label>
 
                 <label class="form-field">
-                    <span class="form-label">Kind</span>
+                    <span class="form-label">{{ t('regionFormModal.kind') }}</span>
                     <select v-model="kind" class="form-input">
                         <option v-for="option in kindOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                     </select>
                 </label>
 
                 <label class="form-field">
-                    <span class="form-label">Radius (meters)</span>
+                    <span class="form-label">{{ t('regionFormModal.radiusMeters') }}</span>
                     <input
                         v-model.number="radius"
                         type="number"
@@ -134,22 +125,22 @@ export default {
                 </label>
 
                 <label class="form-field">
-                    <span class="form-label">Description</span>
+                    <span class="form-label">{{ t('regionFormModal.description') }}</span>
                     <textarea
                         v-model="description"
                         class="form-textarea"
                         rows="3"
-                        placeholder="A quiet farming settlement by the river"
+                        :placeholder="t('regionFormModal.aQuietFarmingSettlementBy')"
                     ></textarea>
                 </label>
 
                 <div class="modal-actions">
-                    <button class="action-btn" @click="$emit('cancel')">Cancel</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('regionFormModal.cancel') }}</button>
                     <button
                         class="action-btn action-btn--primary"
                         :disabled="!name.trim() || !radiusIsValid"
                         @click="onSave"
-                    >{{ isEditing ? 'Save' : 'Name This Area' }}</button>
+                    >{{ isEditing ? t('regionFormModal.save') : t('regionFormModal.nameThisArea') }}</button>
                 </div>
             </div>
         </div>

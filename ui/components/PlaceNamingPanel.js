@@ -19,6 +19,7 @@
 // Emits publish-name/retract-name/set-preferred-name/clear-preferred-name
 // with the raw arguments the host's session calls need — never calls
 // the session directly.
+import { formatDate, t } from '../i18n/i18n.js';
 export default {
     name: 'PlaceNamingPanel',
     props: {
@@ -204,8 +205,9 @@ export default {
         }
     },
     methods: {
+        t,
         formatAuthor(identityId) {
-            if (!identityId) return 'unknown';
+            if (!identityId) return t('placeNamingPanel.unknown');
             return identityId.length > 16 ? `${identityId.slice(0, 12)}…` : identityId;
         },
         // 0.5.4 — a short label for one of otherGeographicRegions'
@@ -219,7 +221,7 @@ export default {
         },
         formatWhen(createdAt) {
             const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
-            return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString();
+            return Number.isNaN(date.getTime()) ? '' : formatDate(date);
         },
         onPublish() {
             const trimmed = this.newName.trim();
@@ -275,65 +277,61 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="Naming claims"
+            :aria-label="t('placeNamingPanel.namingClaims')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
             @keydown="onKeydown"
         >
             <div class="modal-panel naming-panel">
-                <h3>Names For This Place</h3>
+                <h3>{{ t('placeNamingPanel.namesForThisPlace') }}</h3>
                 <p class="form-hint form-hint--neutral">
-                    This region's own name is "{{ regionName }}." Anyone may
-                    publish their own opinion below — publishing never
-                    changes the region itself, and no name here is more
-                    "official" than another.
+                    {{ t('placeNamingPanel.regionName', { name: regionName }) }}
                 </p>
 
                 <section class="naming-panel-section">
-                    <h4 class="locations-panel-section-title">Community Names</h4>
+                    <h4 class="locations-panel-section-title">{{ t('placeNamingPanel.communityNames') }}</h4>
                     <p v-if="namingView.length === 0" class="locations-panel-empty">
-                        Nobody has published a naming claim for this place yet.
+                        {{ t('placeNamingPanel.nobodyHasPublishedANaming') }}
                     </p>
                     <ul v-else class="naming-panel-list">
                         <li v-for="entry in visibleNamingView" :key="entry.name" class="naming-panel-item">
                             <div class="naming-panel-item-info">
                                 <span class="naming-panel-item-name">{{ entry.name }}</span>
-                                <span class="naming-panel-item-score">{{ entry.score }} {{ entry.score === 1 ? 'person' : 'people' }}</span>
+                                <span class="naming-panel-item-score">{{ t('placeNamingPanel.people', { count: entry.score }) }}</span>
                             </div>
                             <button
                                 class="action-btn"
                                 :disabled="preferredName === entry.name"
                                 @click="onPreferEntry(entry.name)"
-                            >{{ preferredName === entry.name ? 'Your preference' : 'Prefer this' }}</button>
+                            >{{ preferredName === entry.name ? t('placeNamingPanel.yourPreference') : t('placeNamingPanel.preferThis') }}</button>
                         </li>
                     </ul>
                     <!-- 0.5.7 — progressive disclosure: the full ranked
                          list only appears once asked for. -->
                     <button v-if="hasMoreNames" class="action-btn" @click="namesExpanded = !namesExpanded">
-                        {{ namesExpanded ? 'Show fewer names' : 'More names (' + namingView.length + ')' }}
+                        {{ namesExpanded ? t('placeNamingPanel.fewerNames') : t('placeNamingPanel.moreNames', { count: namingView.length }) }}
                     </button>
                     <button v-if="preferredName" class="action-btn" @click="$emit('clear-preferred-name')">
-                        Clear my preference
+                        {{ t('placeNamingPanel.clearMyPreference') }}
                     </button>
                 </section>
 
                 <section class="naming-panel-section">
-                    <h4 class="locations-panel-section-title">Publish A Name</h4>
+                    <h4 class="locations-panel-section-title">{{ t('placeNamingPanel.publishAName') }}</h4>
                     <p class="form-hint form-hint--neutral">
-                        Signed under your own identity — a public, retractable
-                        claim, not a vote or a request.
+                        {{ t('placeNamingPanel.signedUnderYourOwnIdentity') }}
                     </p>
                     <div class="form-field-row">
                         <input
                             v-model="newName"
                             type="text"
                             class="form-input"
-                            placeholder="What do you call this place?"
+                            :placeholder="t('placeNamingPanel.whatDoYouCallThis')"
                             maxlength="200"
                             @keydown.enter="onPublish"
                         />
                         <button class="action-btn action-btn--primary" :disabled="!canPublish" @click="onPublish">
-                            Publish
+                            {{ t('placeNamingPanel.publish') }}
                         </button>
                     </div>
                 </section>
@@ -349,18 +347,14 @@ export default {
                     :aria-expanded="advancedExpanded"
                     @click="advancedExpanded = !advancedExpanded"
                 >
-                    {{ advancedExpanded ? '▾' : '▸' }} More — other descriptions, claim history, import/export
+                    {{ advancedExpanded ? '▾' : '▸' }} {{ t('placeNamingPanel.more') }}
                 </button>
 
                 <template v-if="advancedExpanded">
                     <section v-if="otherGeographicRegions.length > 0" class="naming-panel-section">
-                        <h4 class="locations-panel-section-title">Other Geographic Descriptions</h4>
+                        <h4 class="locations-panel-section-title">{{ t('placeNamingPanel.otherGeographicDescriptions') }}</h4>
                         <p class="form-hint form-hint--neutral">
-                            These regions were authored independently, but
-                            their geometry looks similar enough to describe
-                            the same ground. This is only a suggestion —
-                            each stays its own separate region, and nothing
-                            here merges them.
+                            {{ t('placeNamingPanel.theseRegionsWereAuthoredIndependently') }}
                         </p>
                         <ul class="naming-panel-list">
                             <li v-for="region in otherGeographicRegions" :key="region.worldId + ':' + region.id" class="naming-panel-item">
@@ -371,16 +365,15 @@ export default {
                         </ul>
 
                         <div v-if="geographicNamingView.length > 0">
-                            <h4 class="locations-panel-section-title">Community Names Across These Places</h4>
+                            <h4 class="locations-panel-section-title">{{ t('placeNamingPanel.communityNamesAcrossThesePlaces') }}</h4>
                             <p class="form-hint form-hint--neutral">
-                                Combines every claim published for this
-                                place's geometry, wherever it was described.
+                                {{ t('placeNamingPanel.combinesEveryClaimPublishedFor') }}
                             </p>
                             <ul class="naming-panel-list">
                                 <li v-for="entry in geographicNamingView" :key="entry.name" class="naming-panel-item">
                                     <div class="naming-panel-item-info">
                                         <span class="naming-panel-item-name">{{ entry.name }}</span>
-                                        <span class="naming-panel-item-score">{{ entry.score }} {{ entry.score === 1 ? 'person' : 'people' }}</span>
+                                        <span class="naming-panel-item-score">{{ t('placeNamingPanel.people', { count: entry.score }) }}</span>
                                     </div>
                                 </li>
                             </ul>
@@ -388,13 +381,9 @@ export default {
                     </section>
 
                     <section v-if="claims.length > 0" class="naming-panel-section">
-                        <h4 class="locations-panel-section-title">All Claims</h4>
+                        <h4 class="locations-panel-section-title">{{ t('placeNamingPanel.allClaims') }}</h4>
                         <p class="form-hint form-hint--neutral">
-                            "Export Claim" hands a claim to one person by
-                            file. "Publish to Nostr" announces it publicly
-                            instead — either way, the claim itself never
-                            changes, and neither action is more official
-                            than the other.
+                            {{ t('placeNamingPanel.exportOrPublish') }}
                         </p>
                         <ul class="naming-panel-list">
                             <li v-for="claim in claims" :key="claim.id" class="naming-panel-item">
@@ -403,18 +392,18 @@ export default {
                                     <span class="naming-panel-item-meta">{{ formatAuthor(claim.authorIdentityId) }} · {{ formatWhen(claim.createdAt) }}</span>
                                 </div>
                                 <div class="naming-panel-item-actions">
-                                    <button class="action-btn" @click="onExportClaim(claim.id)">Export</button>
+                                    <button class="action-btn" @click="onExportClaim(claim.id)">{{ t('placeNamingPanel.export') }}</button>
                                     <button
                                         v-if="canPublishToNostr"
                                         class="action-btn"
                                         :disabled="publishToNostrExecuting"
                                         @click="onPublishToNostr(claim.id)"
-                                    >{{ publishToNostrExecuting && publishToNostrClaimId === claim.id ? 'Publishing…' : 'Publish to Nostr' }}</button>
+                                    >{{ publishToNostrExecuting && publishToNostrClaimId === claim.id ? t('placeNamingPanel.publishing') : t('placeNamingPanel.publishToNostr') }}</button>
                                     <button
                                         v-if="claim.authorIdentityId === myIdentityId"
                                         class="action-btn action-btn--danger"
                                         @click="$emit('retract-name', claim.id)"
-                                    >Retract</button>
+                                    >{{ t('placeNamingPanel.retract') }}</button>
                                 </div>
                                 <p
                                     v-if="publishToNostrClaimId === claim.id && publishToNostrError"
@@ -423,21 +412,17 @@ export default {
                                 <p
                                     v-else-if="publishToNostrClaimId === claim.id && publishToNostrResult"
                                     class="form-hint form-hint--neutral"
-                                >Published to Nostr ({{ publishToNostrResult.relayUrl }}).</p>
+                                >{{ t('placeNamingPanel.publishedToNostr', { relay: publishToNostrResult.relayUrl }) }}</p>
                             </li>
                         </ul>
                     </section>
 
                     <section class="naming-panel-section">
-                        <h4 class="locations-panel-section-title">Exchange</h4>
+                        <h4 class="locations-panel-section-title">{{ t('placeNamingPanel.exchange') }}</h4>
                         <p class="form-hint form-hint--neutral">
-                            Names are published locally first — share a claim
-                            by exporting it, or bring in someone else's by
-                            importing what they exported. Importing never
-                            overwrites anything; it only adds one more signed
-                            opinion to the community list above.
+                            {{ t('placeNamingPanel.namesArePublishedLocallyFirst') }}
                         </p>
-                        <button class="action-btn" @click="triggerImportClaim">Import Claim</button>
+                        <button class="action-btn" @click="triggerImportClaim">{{ t('placeNamingPanel.importClaim') }}</button>
                         <input
                             ref="importClaimFileInput"
                             type="file"
@@ -449,7 +434,7 @@ export default {
                 </template>
 
                 <div class="modal-actions">
-                    <button class="action-btn" @click="$emit('cancel')">Close</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('placeNamingPanel.close') }}</button>
                 </div>
             </div>
         </div>

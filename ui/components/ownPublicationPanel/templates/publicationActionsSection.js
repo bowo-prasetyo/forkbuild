@@ -10,7 +10,7 @@ export const publicationActionsSectionTemplate = `<!-- Distribute acts as the pu
                     class="action-btn own-publication-distribution-trigger-action"
                     :disabled="!publication"
                     @click="distributionDialogOpen = true"
-                >Distribute</button>
+                >{{ t('ownPublicationPanel.distribute') }}</button>
             </template>
 
             <!-- The less frequent actions, one click away; still on the primary screen. -->
@@ -20,7 +20,7 @@ export const publicationActionsSectionTemplate = `<!-- Distribute acts as the pu
                 class="action-btn own-publication-more-trigger"
                 :aria-expanded="moreActionsOpen ? 'true' : 'false'"
                 @click="moreActionsOpen = !moreActionsOpen"
-            >More {{ moreActionsOpen ? '▴' : '▾' }}</button>
+            >{{ t('ownPublicationPanel.more') }} {{ moreActionsOpen ? '▴' : '▾' }}</button>
 
             <div v-if="moreActionsOpen" class="own-publication-more-actions">
                 <!-- Shows the exported package's identity facts only. Deliberately no file save, download, or copy-to-clipboard. -->
@@ -30,7 +30,7 @@ export const publicationActionsSectionTemplate = `<!-- Distribute acts as the pu
                     class="action-btn own-publication-export-action"
                     :disabled="!publication || snapshotExportExecuting"
                     @click="exportOwnSnapshot"
-                >{{ snapshotExportExecuting ? 'Exporting…' : 'Export Snapshot' }}</button>
+                >{{ snapshotExportExecuting ? t('ownPublicationPanel.exporting') : t('ownPublicationPanel.exportSnapshot') }}</button>
 
                 <!-- Checks whether this Publication's own contentHash resolves. -->
                 <button
@@ -39,7 +39,7 @@ export const publicationActionsSectionTemplate = `<!-- Distribute acts as the pu
                     class="action-btn own-publication-discovery-action"
                     :disabled="!publication || !publication.contentReference || snapshotDiscoveryExecuting"
                     @click="discoverOwnSnapshot"
-                >{{ snapshotDiscoveryExecuting ? 'Checking…' : 'Check Snapshot Match' }}</button>
+                >{{ snapshotDiscoveryExecuting ? t('ownPublicationPanel.checking') : t('ownPublicationPanel.checkSnapshotMatch') }}</button>
 
                 <!-- Opens the manual diagnostic pipeline's popup (./diagnosticToolsSection.js). -->
                 <button
@@ -47,7 +47,7 @@ export const publicationActionsSectionTemplate = `<!-- Distribute acts as the pu
                     type="button"
                     class="action-btn own-publication-diagnostic-trigger"
                     @click="diagnosticToolsOpen = true"
-                >Diagnostic Tools</button>
+                >{{ t('ownPublicationPanel.diagnosticTools') }}</button>
 
                 <!--
                     Retracts the Publication from the catalog only; never a placement, the
@@ -61,23 +61,22 @@ export const publicationActionsSectionTemplate = `<!-- Distribute acts as the pu
                         class="action-btn own-publication-unpublish-request-action"
                         :disabled="!publication"
                         @click="unpublishConfirming = true"
-                    >Unpublish…</button>
-                    <div v-else class="own-publication-unpublish-confirm" role="alertdialog" aria-label="Confirm unpublish">
+                    >{{ t('ownPublicationPanel.unpublish') }}</button>
+                    <div v-else class="own-publication-unpublish-confirm" role="alertdialog" :aria-label="t('ownPublicationPanel.confirmUnpublish')">
                         <p class="own-publication-unpublish-confirm-text">
-                            Remove this World from the catalog? Its placements, the Document and any
-                            distributed copies stay.
+                            {{ t('ownPublicationPanel.removeThisWorldFromThe') }}
                         </p>
                         <button
                             type="button"
                             class="action-btn own-publication-unpublish-action"
                             :disabled="!publication"
                             @click="unpublishConfirming = false; unpublishOwnPublication()"
-                        >Unpublish</button>
+                        >{{ t('ownPublicationPanel.unpublish2') }}</button>
                         <button
                             type="button"
                             class="action-btn own-publication-unpublish-cancel-action"
                             @click="unpublishConfirming = false"
-                        >Cancel</button>
+                        >{{ t('ownPublicationPanel.cancel') }}</button>
                     </div>
                 </template>
             </div>
@@ -111,28 +110,28 @@ export const publicationActionsSectionTemplate = `<!-- Distribute acts as the pu
             <!-- Results stay here, outside the More menu, so closing it never hides one. -->
             <p v-if="snapshotExportError" class="own-publication-export-error">{{ snapshotExportError }}</p>
             <dl v-else-if="snapshotExportResult" class="own-publication-export-detail">
-                <dt>Publication</dt>
+                <dt>{{ t('ownPublicationPanel.publication') }}</dt>
                 <dd>{{ snapshotExportResult.publicationId }}</dd>
-                <dt>Content hash</dt>
+                <dt>{{ t('ownPublicationPanel.contentHash') }}</dt>
                 <dd>{{ snapshotExportResult.contentHash }}</dd>
             </dl>
 
             <p v-if="snapshotDiscoveryError" class="own-publication-discovery-error">{{ snapshotDiscoveryError }}</p>
             <dl v-else-if="snapshotDiscoveryResult" class="own-publication-discovery-detail">
-                <dt>Outcome</dt>
+                <dt>{{ t('ownPublicationPanel.outcome') }}</dt>
                 <dd>{{ describeSnapshotResolutionLabel(snapshotDiscoveryResult.outcome) }}</dd>
                 <template v-if="snapshotDiscoveryResult.reason">
-                    <dt>Reason</dt>
+                    <dt>{{ t('ownPublicationPanel.reason') }}</dt>
                     <dd>{{ snapshotDiscoveryResult.reason }}</dd>
                 </template>
                 <template v-if="snapshotDiscoveryResult.locator">
-                    <dt>Locator</dt>
+                    <dt>{{ t('ownPublicationPanel.locator') }}</dt>
                     <dd>{{ snapshotDiscoveryResult.locator }}</dd>
                 </template>
             </dl>
 
             <!-- "Confirmed to match" means two hashes correspond, never authorship or trust. -->
             <dl v-if="snapshotAttributionResult" class="own-publication-attribution-detail">
-                <dt>Snapshot Attribution</dt>
+                <dt>{{ t('ownPublicationPanel.snapshotAttribution') }}</dt>
                 <dd>{{ describeSnapshotAttributionLabel(snapshotAttributionResult.outcome) }}</dd>
             </dl>`;

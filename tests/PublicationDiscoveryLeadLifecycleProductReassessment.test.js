@@ -24,6 +24,7 @@ import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as rawSource } from './support/SourceText.js';
 import { stripHtmlComments } from './support/StripHtmlComments.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.538 — Publication Discovery Lead Lifecycle Product Reassessment.
 //
@@ -153,7 +154,7 @@ function makeNostrQueryImpl(events) {
 }
 
 async function codeOnlySource(relativePath) {
-    const text = await rawSource(relativePath);
+    const text = withEnglish(await rawSource(relativePath));
     const withoutHtmlComments = stripHtmlComments(text);
     return withoutHtmlComments.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -699,7 +700,7 @@ async function run() {
         const forbiddenPattern = /\btrusted\b|\bauthentic\b|\bofficial\b|\bowned\b|\brecommended\b|\bbest snapshot\b|\bpreferred\b/i;
 
         for (const file of ['ui/components/OwnPublicationPanel.js', 'ui/components/WorldEncounterCanvas.js']) {
-            const raw = await rawSource(file);
+            const raw = withEnglish(await rawSource(file));
             const templateMatch = raw.match(/template: `([\s\S]*)`\s*};?\s*$/);
             assert(templateMatch, `I1. ${file} exposes a single template literal this section can inspect`);
             // HTML comments (`<!-- ... -->`) inside the template literal are
@@ -717,7 +718,7 @@ async function run() {
         // through, confirmed to match the Discovered -> Selected ->
         // Retrieved -> Confirmed-to-match progression, never a stronger
         // claim.
-        assert(/Discovered Snapshots/i.test((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')), 'I4. the candidate list is headed "Discovered," matching the first stage of the requested progression');
+        assert(/Discovered Snapshots/i.test(withEnglish((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n'))), 'I4. the candidate list is headed "Discovered," matching the first stage of the requested progression');
         assert(describeSnapshotResolutionOutcomeLabel(DecentralizedSnapshotResolutionOutcome.RESOLVED).toLowerCase().includes('retrieved'), 'I5. a successful resolution is labeled "Retrieved," matching the third stage');
         assert(describeSnapshotAttributionOutcomeLabel('match').toLowerCase().includes('confirmed to match'), 'I6. a hash match is labeled "Confirmed to match," matching the fourth stage — never "verified," "authentic," or "owned"');
 
