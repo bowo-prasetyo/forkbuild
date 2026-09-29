@@ -8,6 +8,7 @@ import { inspectionPanelsTemplate } from '../ui/views/worldView/templates/inspec
 import { hoverCardTemplate } from '../ui/views/worldView/templates/hoverCard.js';
 import { avatarSectionTemplate } from '../ui/views/worldView/templates/avatarSection.js';
 import { residentRefusalLabel } from '../ui/components/avatarInteractionLabels.js';
+import ResidentSpeechActions from '../ui/components/ResidentSpeechActions.js';
 import { CameraPerspective } from '../core/CameraPerspective.js';
 import { WorldViewPrimaryMode } from '../application/world/WorldViewNavigationState.js';
 import { assert } from './support/Assert.js';
@@ -209,6 +210,32 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     assert(!row(), 'without a state (no avatar) the row is gone');
     unmount();
     console.log('✓ Avatar offers one usable Residents action, or says why not');
+}
+
+// What a resident just mentioned: one Focus button each, nothing when empty.
+{
+    const focused = [];
+    const { host, vm, unmount } = mount({
+        components: { ResidentSpeechActions },
+        data: () => ({ targets: [] }),
+        methods: { onFocus(index) { focused.push(index); } },
+        template: '<div style="position: relative; width: 800px; height: 600px"><ResidentSpeechActions :targets="targets" @focus="onFocus" /></div>'
+    });
+    assert(!host.querySelector('.resident-speech-actions'), 'with nothing mentioned, no Focus buttons');
+    vm.targets = [
+        { kind: 'STRUCTURE', label: 'Old Mill', position: { x: 0, z: 30 } },
+        { kind: 'BUILD', label: '<b>Hill Fort</b>', position: { x: 0, z: 3000 } }
+    ];
+    await nextTick();
+    const row = host.querySelector('.resident-speech-actions');
+    assert(JSON.stringify(buttonLabels(row)) === JSON.stringify(['Focus: Old Mill', 'Focus: <b>Hill Fort</b>']),
+        `one Focus button per mentioned thing, labels as plain text — got ${buttonLabels(row).join(', ')}`);
+    assert(!row.querySelector('b'), 'a label is never markup');
+    row.querySelectorAll('button')[1].click();
+    assert(focused.length === 1 && focused[0] === 1, 'Focus emits which one');
+    assert(getComputedStyle(row).position === 'absolute', 'the row floats over the view, from the real stylesheet');
+    unmount();
+    console.log('✓ A resident\'s mentions get Focus buttons');
 }
 
 // Worlds in View is hidden while it would only repeat the header's World.

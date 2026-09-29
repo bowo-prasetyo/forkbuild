@@ -42,6 +42,7 @@ import OwnPublicationPanel from '../components/OwnPublicationPanel.js';
 import VehicleInteractionPrompt from '../components/VehicleInteractionPrompt.js';
 import AnimalInteractionPrompt from '../components/AnimalInteractionPrompt.js';
 import ResidentInteractionPrompt from '../components/ResidentInteractionPrompt.js';
+import ResidentSpeechActions from '../components/ResidentSpeechActions.js';
 import { residentRefusalLabel } from '../components/avatarInteractionLabels.js';
 import HistoryTimelinePanel from '../components/HistoryTimelinePanel.js';
 import TouchMovementPad from '../components/TouchMovementPad.js';
@@ -100,7 +101,7 @@ export default {
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator, PublicLobbyPanel,
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
-        WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt, AnimalInteractionPrompt, ResidentInteractionPrompt,
+        WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt, AnimalInteractionPrompt, ResidentInteractionPrompt, ResidentSpeechActions,
         HistoryTimelinePanel, TouchMovementPad
     },
     setup() {
@@ -340,6 +341,10 @@ export default {
         // screen-reader announcement; the words themselves are drawn in a bubble
         // over the resident's head.
         const residentSpeech = ref(null);
+        // Focus buttons for what that resident mentioned: shown while its words
+        // are up (the same time its bubble stays) and the viewer is still
+        // beside it; empty otherwise.
+        const residentFocusTargets = ref([]);
         const cruiseState = ref(null);
         // null means the free orbit camera.
         const cameraPerspective = ref(null);
@@ -956,6 +961,24 @@ export default {
         function talkToResident() {
             guarded(() => session.talkToNearestResident());
             residentSpeech.value = session.lastResidentSpeech();
+            refreshResidentFocusTargets();
+        }
+
+        function refreshResidentFocusTargets() {
+            const speech = residentSpeech.value;
+            const state = residentInteractionState.value;
+            const current = speech
+                && Date.now() - speech.spokenAt < speech.seconds * 1000
+                && state && state.targetResidentId === speech.residentId;
+            const next = current ? speech.focusTargets : [];
+            if (next !== residentFocusTargets.value && !(next.length === 0 && residentFocusTargets.value.length === 0)) {
+                residentFocusTargets.value = next;
+            }
+        }
+
+        // A Focus button: a camera-only look at what the resident mentioned.
+        function focusResidentMention(index) {
+            guarded(() => session.focusResidentMention(index));
         }
 
         function toggleResidentHere() {
@@ -1042,6 +1065,7 @@ export default {
                 if (speech !== residentSpeech.value) {
                     residentSpeech.value = speech;
                 }
+                refreshResidentFocusTargets();
                 cruiseState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.avatarContinuousMovementState()
                     : null;
@@ -1096,6 +1120,8 @@ export default {
             toggleResidentHere,
             residentSpeech,
             talkToResident,
+            residentFocusTargets,
+            focusResidentMention,
             residentRefusalLabel,
             cruiseState,
             cameraPerspective,

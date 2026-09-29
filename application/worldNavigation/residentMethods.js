@@ -14,7 +14,8 @@ import {
     RESIDENT_OBSTACLE_QUERY_RADIUS
 } from '../world/ResidentRuntime.js';
 import { gatherResidentFacts, RESIDENT_KNOWLEDGE_RADIUS } from '../world/ResidentSurroundings.js';
-import { composeResidentRemarks } from '../../core/ResidentTalk.js';
+import { pickResidentRemarkFacts, phraseFact, focusTargetsFor, speechSecondsFor, QUIET_REMARK } from '../../core/ResidentTalk.js';
+import { terrainHeightAt } from '../../core/TerrainHeightField.js';
 import { regionsContaining } from '../../core/WorldRegionGeography.js';
 
 // World Residents in World View: where they are drawn and collided with,
@@ -253,18 +254,65 @@ export const residentMethods = {
         }
         const turn = this._residentConversationTurns.get(nearest.id) || 0;
         this._residentConversationTurns.set(nearest.id, turn + 1);
-        const remarks = composeResidentRemarks(this._residentFactsAround(nearest, time), { turn });
-        this._lastResidentSpeech = { residentId: nearest.id, remarks };
+        const picked = pickResidentRemarkFacts(this._residentFactsAround(nearest, time), { turn });
+        const remarks = picked.length > 0 ? picked.map(phraseFact) : [QUIET_REMARK];
+        const speech = {
+            residentId: nearest.id,
+            remarks,
+            // What the viewer may choose to look at: see focusResidentMention().
+            focusTargets: focusTargetsFor(picked),
+            spokenAt: Date.now(),
+            seconds: speechSecondsFor(remarks)
+        };
+        this._lastResidentSpeech = speech;
         if (this._session && typeof this._session.showResidentSpeech === 'function') {
             this._session.showResidentSpeech(nearest.id, remarks);
         }
-        return { residentId: nearest.id, remarks };
+        return speech;
     },
 
-    // What the last conversation said ({ residentId, remarks }), or null:
-    // for the UI's screen-reader announcement.
+    // What the last conversation said, or null: { residentId, remarks,
+    // focusTargets, spokenAt (ms), seconds (how long it stays up) }. For the
+    // UI's Focus buttons and screen-reader announcement.
     lastResidentSpeech() {
         return this._lastResidentSpeech || null;
+    },
+
+    // Looks at the `index`th thing the last conversation mentioned
+    // (lastResidentSpeech().focusTargets): the same camera-only move the
+    // Locations panel's Focus makes (focusPosition()), framed on the ground
+    // there. Never moves the avatar, never changes the active World, and is
+    // only ever the viewer's own choice — a resident never moves anyone's
+    // camera by itself. Returns whether the camera moved.
+    focusResidentMention(index) {
+        const speech = this._lastResidentSpeech;
+        const target = speech && Array.isArray(speech.focusTargets) ? speech.focusTargets[index] : null;
+        if (!target) {
+            return false;
+        }
+        const { x, z } = target.position;
+        return this.focusPosition({ x, y: terrainHeightAt(this.getWorldSeed(), x, z), z });
+    },
+
+    // How a structure placed in a World is named when a resident mentions
+    // it: by the document it places — a known publication's title and author,
+    // else the title this device saved it under. Null when neither names it:
+    // a resident never speaks a bare document id.
+    _residentStructureName(documentId) {
+        const provider = this._publicationActionDiscoveryProvider;
+        if (provider && typeof provider.findByDocumentId === 'function') {
+            const publication = (provider.findByDocumentId(documentId) || []).find((candidate) => candidate && candidate.title);
+            if (publication) {
+                return { title: publication.title, author: publication.author || null };
+            }
+        }
+        if (this._loadDocumentUseCase && typeof this._loadDocumentUseCase.listSavedDocuments === 'function') {
+            const saved = this._loadDocumentUseCase.listSavedDocuments().find((entry) => entry.id === documentId);
+            if (saved && saved.title) {
+                return { title: saved.title, author: null };
+            }
+        }
+        return null;
     },
 
     // Everything gatherResidentFacts() needs, from this session, around a
@@ -272,6 +320,7 @@ export const residentMethods = {
     _residentFactsAround(pose, time) {
         const position = { x: pose.x, y: 0, z: pose.z };
         const landmarks = [];
+        const structures = [];
         for (const document of this.getLoadedDocuments()) {
             const offset = this.getDocumentPosition(document.world.id) || { x: 0, y: 0, z: 0 };
             for (const landmark of document.world.getWorldLandmarks()) {
@@ -279,6 +328,16 @@ export const residentMethods = {
                     id: landmark.id,
                     title: landmark.title,
                     position: { x: landmark.position.x + offset.x, z: landmark.position.z + offset.z }
+                });
+            }
+            for (const placement of document.world.getStructurePlacements()) {
+                const name = this._residentStructureName(placement.documentId);
+                if (!name) continue;
+                structures.push({
+                    id: placement.id,
+                    title: name.title,
+                    author: name.author,
+                    position: { x: placement.position.x + offset.x, z: placement.position.z + offset.z }
                 });
             }
         }
@@ -300,6 +359,7 @@ export const residentMethods = {
             mountedVehicleId: mount ? mount.vehicleId : null,
             animalRuntime: this._animalRuntimeInstances || null,
             landmarks,
+            structures,
             people,
             builds: this.searchWorldByLocation({ center: position, radius: RESIDENT_KNOWLEDGE_RADIUS.BUILD }),
             excludedDocumentIds,

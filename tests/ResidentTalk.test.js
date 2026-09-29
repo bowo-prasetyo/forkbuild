@@ -28,6 +28,11 @@ import { createSpeechBubble } from '../renderer/ResidentSpeechBubble.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { residentAppearanceFor, RESIDENT_TEMPLATE_ID } from '../core/ResidentAppearance.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { StructurePlacement } from '../core/StructurePlacement.js';
+import { terrainHeightAt } from '../core/TerrainHeightField.js';
+import {
+    pickResidentRemarkFacts, focusTargetsFor, speechSecondsFor as coreSpeechSecondsFor, FOCUSABLE_FACT_KINDS
+} from '../core/ResidentTalk.js';
 import { assert } from './support/Assert.js';
 
 // Talking to World Residents: they tell you what's around, never what to do.
@@ -40,6 +45,8 @@ import { assert } from './support/Assert.js';
 //              moves on each time, and hands the words to the renderer
 //   Section D: ResidentFieldRenderer — the bubble shows, times out, and goes
 //              when you walk away
+//   Section E: placed structures, named by the document they place (never a
+//              bare id), and Focus: a camera-only look at what was mentioned
 
 const SEED = DEFAULT_WORLD_SEED;
 const T = 1_759_000_000;
@@ -72,7 +79,7 @@ function runTests() {
         assert(compassWord('NE') === 'north-east' && compassWord(null) === null, '4. Compass sectors become words');
 
         assert(sanitizeSpokenText('  Old\n\tMill  ', 60) === 'Old Mill', '5. Whitespace collapses');
-        assert(sanitizeSpokenText('abc‮def\u0007', 60) === 'abc def', '6. Control and direction-override characters are removed');
+        assert(sanitizeSpokenText('abc\u202edef\u0007', 60) === 'abc def', '6. Control and direction-override characters are removed');
         assert(sanitizeSpokenText('<b>Hi</b>', 60) === '<b>Hi</b>', '7. Markup stays literal text (it is drawn as text, never interpreted)');
         const long = sanitizeSpokenText('x'.repeat(200), MAX_SPOKEN_TITLE_LENGTH);
         assert(Array.from(long).length === MAX_SPOKEN_TITLE_LENGTH && long.endsWith('…'), '8. Long titles are cut, marked with an ellipsis');
@@ -271,6 +278,105 @@ function runTests() {
         field.sync([]);
         assert(made[3].disposed, '58. A resident leaving view takes its bubble with it');
         assert(speechSecondsFor(['a']) >= 5 && speechSecondsFor(['word '.repeat(200)]) <= 14, '59. Bubbles last between 5 and 14 seconds');
+    }
+
+    // -------------------------------------------------------------
+    // Section E — placed structures and Focus
+    // -------------------------------------------------------------
+    {
+        const mill = { kind: RESIDENT_FACT_KIND.STRUCTURE, key: 'p1', title: 'Old Mill', author: 'carol', distance: 42, direction: 'N', position: { x: 1, z: 42 } };
+        assert(phraseFact(mill) === '“Old Mill” by carol stands about 40 m to the north.', '60. A placed structure, by its author');
+        assert(phraseFact({ ...mill, author: null }) === '“Old Mill” stands about 40 m to the north.', '61. ...or without one');
+        assert(phraseFact({ ...mill, title: '\u0007 ' }) === null, '62. An unnamed structure is never spoken');
+        const picked = pickResidentRemarkFacts([mill, { kind: RESIDENT_FACT_KIND.BUILD, key: 'b', title: 'Hill Fort', distance: 3000, direction: 'E', position: { x: 3000, z: 0 } }]);
+        assert(picked.length === 2 && picked[0] === mill, '63. Structures take their turn among the nearby things');
+        assert(JSON.stringify(composeResidentRemarks([mill])) === JSON.stringify(picked.slice(0, 1).map(phraseFact)), '64. The remarks are exactly the picked facts, spoken');
+
+        const targets = focusTargetsFor([
+            mill,
+            { kind: RESIDENT_FACT_KIND.VEHICLE, vehicleType: 'bicycle', distance: 80, direction: 'E', position: { x: 80, z: 0 } },
+            { kind: RESIDENT_FACT_KIND.LANDMARK, title: '  Old\nWell ', distance: 90, direction: 'S', position: { x: 0, z: -90 } },
+            { kind: RESIDENT_FACT_KIND.BUILD, title: 'Hill Fort', distance: 3000, direction: 'E', position: { x: 3000, z: 0 } },
+            { kind: RESIDENT_FACT_KIND.ANIMAL, species: 'DEER', distance: 20, direction: 'W', position: { x: -20, z: 0 } },
+            { kind: RESIDENT_FACT_KIND.PERSON, displayName: 'Alice', distance: 20, direction: 'W', position: { x: -20, z: 0 } },
+            { kind: RESIDENT_FACT_KIND.PLACE, name: 'Willow Village' },
+            { kind: RESIDENT_FACT_KIND.LANDMARK, title: 'Nowhere', distance: 1, direction: 'N' }
+        ]);
+        assert(JSON.stringify(targets.map((t) => t.label)) === JSON.stringify(['Old Mill', 'bicycle', 'Old Well', 'Hill Fort']),
+            '65. Focus is offered for what stays put — structures, vehicles, landmarks, builds — with plain labels');
+        assert(!FOCUSABLE_FACT_KINDS.includes(RESIDENT_FACT_KIND.ANIMAL) && !FOCUSABLE_FACT_KINDS.includes(RESIDENT_FACT_KIND.PERSON),
+            '66. ...never for animals or people, who move on, or anything without a position');
+        assert(targets[0].position.x === 1 && targets[0].position.z === 42, '67. ...each with where it is');
+        assert(coreSpeechSecondsFor === speechSecondsFor, '68. The bubble and the Focus buttons stay up for the same time');
+
+        // The gatherer: structures within reach, and a position on every fact.
+        const gathered = gatherResidentFacts({
+            position: home, seed: SEED, timeSeconds: T,
+            structures: [
+                { id: 'near', title: 'Old Mill', author: 'carol', position: { x: home.x, z: home.z + 40 } },
+                { id: 'far', title: 'Far Barn', author: null, position: { x: home.x, z: home.z + RESIDENT_KNOWLEDGE_RADIUS.STRUCTURE + 1 } }
+            ]
+        });
+        const structureFacts = gathered.filter((f) => f.kind === RESIDENT_FACT_KIND.STRUCTURE);
+        assert(structureFacts.length === 1 && structureFacts[0].title === 'Old Mill' && structureFacts[0].direction === 'N',
+            '69. Placed structures within reach are known, with their direction');
+        assert(gathered.every((f) => f.position && Number.isFinite(f.position.x)), '70. Every gathered fact says where the thing is');
+
+        // The session: names structures by their document, never by a bare id.
+        const identity = new LocalIdentityProvider(new InMemoryStorageProvider());
+        identity.login('alice');
+        const avatar = new AvatarPresenceSession({ avatarId: 'alice-avatar', ownerIdentity: 'alice' }, { position: new Position(home.x, 0, home.z) });
+        const session = new WorldNavigationSession({
+            registry: new CreateBrickRegistryUseCase().execute(), loadPublicationDocumentUseCase: null,
+            worldLayoutProvider: { getPosition: () => null },
+            publicationActionDiscoveryProvider: {
+                findByDocumentId: (documentId) => (documentId === 'mill-doc' ? [{ id: 'pub-mill', documentId, title: 'Old Mill', author: 'carol' }] : [])
+            },
+            loadDocumentUseCase: { listSavedDocuments: () => [{ id: 'shed-doc', title: 'Tool Shed' }] },
+            identityProvider: identity, avatarPresenceSession: avatar, wildlifeClock: () => T
+        });
+        session._session = { onAnimationFrame: () => () => {}, showResidentSpeech: () => true };
+        const world = new World({ id: 'w-village' });
+        world.addStructurePlacement(new StructurePlacement({ id: 'p-mill', documentId: 'mill-doc', position: new Position(0, 0, 30) }));
+        world.addStructurePlacement(new StructurePlacement({ id: 'p-shed', documentId: 'shed-doc', position: new Position(-25, 0, 0) }));
+        world.addStructurePlacement(new StructurePlacement({ id: 'p-mystery', documentId: 'mystery-doc-id', position: new Position(5, 0, 5) }));
+        session._loadedDocuments.set('w-village', new Document({ world, metadata: new DocumentMetadata({ title: 'Village' }) }));
+        session._localPositions.set('w-village', { x: home.x, y: 0, z: home.z });
+        session._registerCommandHistory('w-village', new CommandHistory({ world }));
+        session._activeDocumentId = 'w-village';
+        session.addResidentHere();
+
+        const heard = [];
+        const offered = [];
+        for (let i = 0; i < 40; i++) {
+            const speech = session.talkToNearestResident();
+            heard.push(...speech.remarks);
+            offered.push(...speech.focusTargets.map((t) => t.label));
+        }
+        assert(heard.some((r) => r.startsWith('“Old Mill” by carol stands')), '71. A placed structure is named by its publication, with its author');
+        assert(heard.some((r) => r.startsWith('“Tool Shed” stands')), '72. ...or by the title this device saved it under');
+        assert(!heard.some((r) => r.includes('mystery-doc-id')), '73. A structure nobody named is never spoken as a bare id');
+        assert(offered.includes('Old Mill'), '74. Focus is offered on a mentioned structure');
+
+        let millSpeech = session.lastResidentSpeech();
+        for (let i = 0; i < 40 && !millSpeech.focusTargets.some((t) => t.label === 'Old Mill'); i++) {
+            millSpeech = session.talkToNearestResident();
+        }
+        assert(millSpeech.spokenAt > 0 && millSpeech.seconds === coreSpeechSecondsFor(millSpeech.remarks), '75. What was said carries when, and for how long');
+        const focused = [];
+        session.focusPosition = (position) => { focused.push(position); return true; };
+        const index = millSpeech.focusTargets.findIndex((t) => t.label === 'Old Mill');
+        const avatarBefore = { ...session.getAvatarPosition() };
+        assert(session.focusResidentMention(index) === true, '76. Focus looks at what was mentioned');
+        const mx = home.x;
+        const mz = home.z + 30;
+        assert(focused.length === 1 && Math.abs(focused[0].x - mx) < 1e-9 && Math.abs(focused[0].z - mz) < 1e-9
+            && Math.abs(focused[0].y - terrainHeightAt(SEED, mx, mz)) < 1e-9,
+            '77. ...through the camera-only focusPosition(), framed on the ground there');
+        const avatarAfter = session.getAvatarPosition();
+        assert(avatarAfter.x === avatarBefore.x && avatarAfter.z === avatarBefore.z, '78. The avatar stays where it is');
+        assert(session.focusResidentMention(99) === false && focused.length === 1, '79. A Focus on nothing does nothing');
+        assert(world.getStructurePlacements().length === 3 && world.getResidents().length === 1, '80. Talking and looking never change the World');
     }
 
     console.log('✅ All Resident Talk tests passed.');

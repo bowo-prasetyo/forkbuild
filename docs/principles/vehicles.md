@@ -50,9 +50,10 @@ never a person: no identity, presence or People listing, and no quests.
 ### A Resident Tells You What's Around, Never What To Do (2026-09-29)
 
 Asked, a resident says one or two things about its surroundings (vehicles,
-animals, landmarks, people, other builds, its place) with a rounded
+animals, landmarks, placed structures, people, other builds, its place) with a rounded
 distance and direction from where it stands. It points at what exists and
-never sets a goal or a quest. What it says comes from the viewer's own
+never sets a goal or a quest. The viewer may choose Focus on a mentioned
+thing that stays put: a camera-only look, never moving the avatar. What it says comes from the viewer's own
 replica and stays on the viewer's screen, so two viewers may hear different
 things; it never mentions a vehicle they stored or ride, or an animal they
 caught.

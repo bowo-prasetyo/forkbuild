@@ -524,6 +524,28 @@
     margin-top: 0.5rem;
 }
 
+/* World Residents: Focus buttons for what a resident just mentioned, floating
+   bottom-center above the key prompts while its words are up. */
+.resident-speech-actions {
+    position: absolute;
+    left: 50%;
+    bottom: 236px;
+    transform: translateX(-50%);
+    z-index: 35;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem;
+    max-width: calc(100% - 32px);
+}
+
+.resident-speech-actions-btn {
+    max-width: 18rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Read out to screen readers, never drawn: e.g. what a World Resident just
    said, which is drawn as a bubble over its head instead. */
 .visually-hidden {

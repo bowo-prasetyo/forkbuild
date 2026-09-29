@@ -307,12 +307,20 @@ Residents also know their neighbourhood. Stand beside one and press **T**
 (a prompt shows **[T] Talk**; the Avatar section and the touch pad have a
 **Talk** button too), and it tells you a thing or two about what's around,
 in a speech bubble over its head: a bicycle or a deer nearby, a landmark,
-someone who's around, the place it lives in, or another build some way
+a structure placed in the World (by its title and author), someone who's
+around, the place it lives in, or another build some way
 off — for example *"About 3.6 km to the north-east, there's a build called
 “Hill Fort” by bob."* Distances are rounded and directions are seen from
 where the resident stands (north is the way the compass points). Talk to it
 again and it mentions something else. The bubble goes after a few seconds,
 or as soon as you walk away.
+
+While the bubble is up, a **Focus** button appears at the bottom of the
+view for each thing it mentioned that stays put — a landmark, a structure,
+a build or a vehicle (animals and people move on, so they don't get one).
+Click it to swing the camera over for a look, the same as **Focus** in the
+Locations panel: your avatar stays beside the resident, and walking again
+brings the camera back if Follow Avatar is on.
 
 What a resident says is what *your* copy of ForkBuild knows: the builds in
 your catalog, the people present with you, the vehicles and animals you

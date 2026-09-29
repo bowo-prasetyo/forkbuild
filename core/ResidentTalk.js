@@ -22,8 +22,21 @@ export const RESIDENT_FACT_KIND = Object.freeze({
     LANDMARK: 'LANDMARK',
     PERSON: 'PERSON',
     BUILD: 'BUILD',
+    // A structure placed in a loaded World: nearby, named by the document
+    // it places.
+    STRUCTURE: 'STRUCTURE',
     PLACE: 'PLACE'
 });
+
+// Which kinds of thing stay where they are, so the viewer can be offered a
+// Focus on them (a camera-only look, see focusTargetsFor()). Animals and
+// people move, so a look at where they were would miss them.
+export const FOCUSABLE_FACT_KINDS = Object.freeze([
+    RESIDENT_FACT_KIND.VEHICLE,
+    RESIDENT_FACT_KIND.LANDMARK,
+    RESIDENT_FACT_KIND.STRUCTURE,
+    RESIDENT_FACT_KIND.BUILD
+]);
 
 // Longest title or name spoken in full.
 export const MAX_SPOKEN_TITLE_LENGTH = 60;
@@ -41,6 +54,11 @@ const VEHICLE_WORDS = Object.freeze({
     bicycle: 'a bicycle', motorcycle: 'a motorcycle', car: 'a car', drone: 'a drone'
 });
 
+// A vehicle's name on its own, for a Focus button.
+const VEHICLE_NAMES = Object.freeze({
+    bicycle: 'bicycle', motorcycle: 'motorcycle', car: 'car', drone: 'drone'
+});
+
 const ANIMAL_WORDS = Object.freeze({
     DEER: 'a deer', RABBIT: 'a rabbit'
 });
@@ -50,7 +68,7 @@ const A_FEW_STEPS = 15;
 
 // Control characters, and the bidirectional overrides and isolates that
 // could make a title read differently from what it is.
-const UNSPEAKABLE = /[\u0000-\u001f\u007f-\u009f‎‏‪-‮⁦-⁩]/g;
+const UNSPEAKABLE = /[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/g;
 
 // `text` as plain, speakable text of at most `maxLength` characters (an
 // ellipsis marks a cut), or null when nothing speakable is left.
@@ -119,6 +137,13 @@ export function phraseFact(fact) {
         const byline = author ? ` by ${author}` : '';
         return `${capitalize(where(fact))}, there's a build called “${title}”${byline}.`;
     }
+    case RESIDENT_FACT_KIND.STRUCTURE: {
+        const title = sanitizeSpokenText(fact.title, MAX_SPOKEN_TITLE_LENGTH);
+        if (!title) return null;
+        const author = sanitizeSpokenText(fact.author, MAX_SPOKEN_NAME_LENGTH);
+        const byline = author ? ` by ${author}` : '';
+        return `“${title}”${byline} stands ${where(fact)}.`;
+    }
     case RESIDENT_FACT_KIND.PLACE: {
         const name = sanitizeSpokenText(fact.name, MAX_SPOKEN_TITLE_LENGTH);
         return name ? `This is ${name}.` : null;
@@ -132,6 +157,7 @@ const NEARBY_KINDS = Object.freeze([
     RESIDENT_FACT_KIND.VEHICLE,
     RESIDENT_FACT_KIND.ANIMAL,
     RESIDENT_FACT_KIND.LANDMARK,
+    RESIDENT_FACT_KIND.STRUCTURE,
     RESIDENT_FACT_KIND.PERSON
 ]);
 
@@ -143,14 +169,14 @@ function byDistance(a, b) {
 // mentioning: the nearest few.
 const MENTIONED_PER_KIND = 3;
 
-// What a resident says on the `turn`th conversation (0, 1, 2, ...) given
-// `facts` ({ kind, distance, direction, ... } each): an array of one or two
-// sentences. The first is about something nearby: the kinds take turns
-// (nearest kind first, then the next, and the place it lives in last), and
-// each time a kind comes round again it names its next-nearest thing, so
-// talking again always moves on. The second is about another build, the
-// nearest few taking turns. With nothing speakable at all, QUIET_REMARK.
-export function composeResidentRemarks(facts, { turn = 0 } = {}) {
+// Which facts a resident mentions on the `turn`th conversation (0, 1, 2,
+// ...) given `facts` ({ kind, distance, direction, ... } each): at most two.
+// The first is something nearby: the kinds take turns (nearest kind first,
+// then the next, and the place it lives in last), and each time a kind comes
+// round again it names its next-nearest thing, so talking again always
+// moves on. The second is another build, the nearest few taking turns.
+// Only facts with something speakable are ever picked.
+export function pickResidentRemarkFacts(facts, { turn = 0 } = {}) {
     const speakable = (facts || []).filter((fact) => phraseFact(fact) !== null);
     const index = Math.max(0, Math.floor(Number.isFinite(turn) ? turn : 0));
 
@@ -163,13 +189,51 @@ export function composeResidentRemarks(facts, { turn = 0 } = {}) {
     if (place) groups.push([place]);
     const builds = speakable.filter((fact) => fact.kind === RESIDENT_FACT_KIND.BUILD).sort(byDistance).slice(0, MENTIONED_PER_KIND);
 
-    const remarks = [];
+    const picked = [];
     if (groups.length > 0) {
         const group = groups[index % groups.length];
-        remarks.push(phraseFact(group[Math.floor(index / groups.length) % group.length]));
+        picked.push(group[Math.floor(index / groups.length) % group.length]);
     }
     if (builds.length > 0) {
-        remarks.push(phraseFact(builds[index % builds.length]));
+        picked.push(builds[index % builds.length]);
     }
+    return picked;
+}
+
+// What a resident says on the `turn`th conversation: the picked facts
+// (pickResidentRemarkFacts()) as sentences, or QUIET_REMARK when there is
+// nothing to say.
+export function composeResidentRemarks(facts, { turn = 0 } = {}) {
+    const remarks = pickResidentRemarkFacts(facts, { turn }).map(phraseFact);
     return remarks.length > 0 ? remarks : [QUIET_REMARK];
+}
+
+// What the viewer may choose to look at after hearing about `facts` (as
+// picked): one { kind, label, position } per mentioned thing that stays put
+// (FOCUSABLE_FACT_KINDS) and has a position. `label` is plain text for a
+// Focus button — the title as spoken, or the vehicle's name.
+export function focusTargetsFor(facts) {
+    const targets = [];
+    for (const fact of facts || []) {
+        if (!FOCUSABLE_FACT_KINDS.includes(fact.kind) || !fact.position) continue;
+        if (!Number.isFinite(fact.position.x) || !Number.isFinite(fact.position.z)) continue;
+        const label = fact.kind === RESIDENT_FACT_KIND.VEHICLE
+            ? (VEHICLE_NAMES[fact.vehicleType] || null)
+            : sanitizeSpokenText(fact.title, MAX_SPOKEN_TITLE_LENGTH);
+        if (!label) continue;
+        targets.push({ kind: fact.kind, label, position: { x: fact.position.x, z: fact.position.z } });
+    }
+    return targets;
+}
+
+// How long what a resident said stays up (its bubble, and the Focus buttons
+// beside it): long enough to read at an easy pace, between
+// SPEECH_MIN_SECONDS and SPEECH_MAX_SECONDS.
+export const SPEECH_MIN_SECONDS = 5;
+export const SPEECH_MAX_SECONDS = 14;
+const SPEECH_SECONDS_PER_WORD = 0.4;
+
+export function speechSecondsFor(remarks) {
+    const words = (remarks || []).join(' ').split(/\s+/).filter(Boolean).length;
+    return Math.min(SPEECH_MAX_SECONDS, Math.max(SPEECH_MIN_SECONDS, 2 + words * SPEECH_SECONDS_PER_WORD));
 }
