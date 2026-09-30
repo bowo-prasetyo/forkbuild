@@ -9,8 +9,11 @@ answers and pointers to where the details live. For using the app, see
 ### Why is there no build step? Can I add an npm package or TypeScript?
 
 The browser loads the source files as they are, as ES modules, through the
-import map in `index.html`. There is no bundler or compiler, so TypeScript
-and packages that need bundling won't work. A browser library can be added
+import map in `index.html`. Working on ForkBuild needs no bundler or
+compiler, so TypeScript and packages that need bundling won't work. (GitHub
+Pages publishes a bundled copy, built by `scripts/build.mjs` from these same
+files; see [Deployment](Deployment.md), "GitHub Pages". The source must keep
+running unbundled.) A browser library can be added
 only as an ES module copied into `vendor/`: pin its exact version in
 `package.json`, extend `scripts/vendor.mjs`, run `node scripts/vendor.mjs`,
 add it to the import map, and update the map's hash in the Content Security

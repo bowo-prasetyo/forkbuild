@@ -3363,3 +3363,32 @@ voice call and every peer connection, so ForkBuild does not reload on its own he
   2.5 s and stayed on Home; Dismiss hid it; opening About worked and cleared it; Reload opened the Editor. A deep link to
   the Editor showed the header and the notice, and a dropped service-group module (the Publications page's anchoring)
   showed it too. Every page still opens with no Vue warnings under Vue's development build.
+
+## Loading: GitHub Pages publishes a bundled copy (unnumbered, 2026-09-30)
+
+Even with preload hints, the first load was about 600 separate modules (1.6 MB compressed), each its own request, and a
+return visit after GitHub Pages' ten-minute cache checked every one of them again. Working on ForkBuild still needs no
+build step; only what GitHub Pages publishes is now bundled.
+
+- `scripts/build.mjs` (`npm run build`) writes `dist/`: the repository's files as they are (without `tests/`, `server/`
+  and `.github/`, so `scripts/steem-threads/` and everything else keep working), plus the app bundled by esbuild
+  (0.28.2, a pinned dev dependency) into `bundle/`, and an `index.html` that loads it. Every `import()` stays its own
+  file (each page, service group, translation and the thumbnail renderer), bare imports resolve through `index.html`'s
+  import map so the bundle runs the same vendored files, and names are kept (`Command` reads `constructor.name`).
+  File names carry a content hash, source maps sit beside them, and the published `index.html` has no import map, so its
+  Content Security Policy has no hash for one. No application source changed.
+- `.github/workflows/pages.yml` builds, opens the result in Chromium, and publishes `dist/` on every push to `main`;
+  it needs Settings → Pages → Source set to GitHub Actions (`docs/Deployment.md`, "GitHub Pages", including how to go
+  back to publishing the repository as it is).
+- `tests/run-bundle.mjs` (`npm run test:bundle`, part of `npm test` and a CI job on every pull request) builds the site
+  and opens every page the router defines, with other hosts unreachable: no page error, Home loads no other page, no Vue
+  warning (production Vue prints none, so one would mean a second copy of Vue), and with Vue's development build no Vue
+  warning either. A chat page opened while nobody is signed in logs an error in the unbundled app too; that one message
+  on that page is allowed. Two tests that search the whole repository skip a local `dist/`.
+- Measured in headless Chromium over HTTP/2 with gzip (median time until Home is shown): 1.05 s to 0.42 s with 60 ms
+  per response and 1.70 s to 0.56 s with 150 ms (delay made on the server), and 3.1 s to 1.3 s with Chrome's throttling
+  of a 150 ms, 9 Mbit/s link and the CPU slowed four times. Home makes 80 requests instead of 617 and transfers 0.4 MB
+  instead of 1.6 MB; opening the Editor directly takes 3.3 s instead of 6.2 s on the slow link.
+- Checked on the bundle: every page renders the same text as the unbundled app; dropping a startup file still reloads
+  once and dropping it every time still shows the message; a page whose file is dropped still shows the notice. Only
+  the entry point, the recovery code and esbuild's 138-byte naming helper must arrive for that recovery to run.

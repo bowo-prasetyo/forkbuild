@@ -2,7 +2,9 @@
 
 ForkBuild is a static site: serve the repository folder (or a copy of it
 without `node_modules/`, `tests/` and `server/`) from any static web host.
-There is no build step and no application server. The rendezvous server in
+It needs no build step and no application server. GitHub Pages publishes a
+bundled copy that loads faster (see "GitHub Pages" below); any host can do
+the same with `npm run build`. The rendezvous server in
 `server/rendezvous-worker/` is deployed separately; see its README.
 
 ## Requirements
@@ -15,10 +17,41 @@ There is no build step and no application server. The rendezvous server in
 - **A current browser** with import maps, ES modules and WebCrypto: recent
   Chrome, Edge, Firefox or Safari.
 
-**GitHub Pages:** the repository's empty `.nojekyll` file must be published
-with it. Without it, Pages runs Jekyll, which leaves out every file whose
-name starts with `_` (such as `vendor/noble-hashes/_md.js`), and the app
-shows a blank page.
+## GitHub Pages
+
+`.github/workflows/pages.yml` publishes the site on every push to `main`. It
+needs the repository's **Settings → Pages → Build and deployment → Source**
+set to **GitHub Actions**. The workflow builds with `npm run build`
+(`scripts/build.mjs`), opens every page of the result in Chromium
+(`npm run test:bundle`, which also runs on every pull request), and publishes
+`dist/` only if that passes. It can also be run by hand from the Actions tab
+("Deploy to GitHub Pages", Run workflow).
+
+`dist/` is the repository's files as they are (without `tests/`, `server/`
+and `.github/`), plus the app bundled by esbuild into `bundle/` and an
+`index.html` that loads it:
+
+- The first load is about 80 minified files instead of about 600 modules;
+  every page, service group, translation and the thumbnail renderer is still
+  its own file, loaded when first needed.
+- Bare imports resolve through `index.html`'s import map, so the bundle runs
+  the same vendored files. The published `index.html` has no import map, so
+  its Content Security Policy has no hash for one; `'unsafe-eval'` stays, for
+  Vue's template compiler.
+- File names carry a content hash, so a page opened after a new deployment
+  never mixes old and new files. Someone with the old version open who then
+  opens a page whose files are gone gets the "This page couldn't load" notice
+  and reloads onto the new version.
+- Everything else is served unchanged, including `scripts/steem-threads/`.
+- Source maps (`.map`) sit beside the bundled files, so the browser's
+  developer tools show the original source.
+
+To go back to publishing the repository as it is, set the Source to
+**Deploy from a branch** (`main`, `/ (root)`). The repository's empty
+`.nojekyll` file must be published then: without it, Pages runs Jekyll,
+which leaves out every file whose name starts with `_` (such as
+`vendor/noble-hashes/_md.js`), and the app shows a blank page. A deployment
+from the workflow runs no Jekyll.
 
 **Many requests at once.** There is no bundler, so the browser fetches
 about 600 module files when the page opens, and a few to a few hundred more

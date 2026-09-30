@@ -19,10 +19,12 @@ npm install
 npm test
 ```
 
-`npm test` runs the Node tests, the rendezvous worker's tests, and the few
+`npm test` runs the Node tests, the rendezvous worker's tests, the few
 tests that need a browser in headless Chromium (install it once with
-`npx playwright-core install chromium`, or set `CHROMIUM_PATH`). Pass a filter
-to run matching files only: `npm run test:node -- Avatar`.
+`npx playwright-core install chromium`, or set `CHROMIUM_PATH`), and a check
+that the bundled site GitHub Pages publishes opens every page
+(`npm run test:bundle`; `npm run build` writes that site to `dist/`). Pass a
+filter to run matching files only: `npm run test:node -- Avatar`.
 
 ## Making a change
 

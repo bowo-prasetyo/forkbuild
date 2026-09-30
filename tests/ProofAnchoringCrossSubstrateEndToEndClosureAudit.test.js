@@ -687,7 +687,7 @@ async function run() {
         const arweaveSrc = await source('anchoring/ArweaveAnchorPublisher.js');
         assert(/signer\.sign\(contentHash\)/.test(codeOnly(arweaveSrc)), n('H1. ArweaveAnchorPublisher hands its signer a bare contentHash and awaits ONE resolved value — no second call for review'));
         assert(/NO WALLET MANAGEMENT/.test(arweaveSrc), n('H2. its own header states this is deliberate'));
-        const arweaveReviewFiles = execSync("grep -rli 'arweave' --include='*.js' . 2>/dev/null | grep -i review | grep -v node_modules | grep -v tests/ || true", { cwd: SOURCE_ROOT }).toString().trim();
+        const arweaveReviewFiles = execSync("grep -rli 'arweave' --include='*.js' . 2>/dev/null | grep -i review | grep -v node_modules | grep -v tests/ | grep -v '^./dist/' || true", { cwd: SOURCE_ROOT }).toString().trim();
         assert(arweaveReviewFiles === '', n('H3. no production file anywhere pairs "arweave" with "review" — re-confirmed fresh, no review-gated Arweave signing concept exists'));
 
         // H4: live — in Section A above, minting the Arweave anchor
