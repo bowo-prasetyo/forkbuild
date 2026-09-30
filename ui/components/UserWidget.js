@@ -1,5 +1,6 @@
 import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
 import LoginModal from './LoginModal.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.2.46: reads the same AuthenticationSession every other subsystem
 // can now ask about, rather than inferring "logged in" from currentUser()
@@ -70,23 +71,23 @@ export default {
             }
         });
 
-        return { user, logout, showModal, lockedIdentityId, openLoginOrUnlock };
+        return { t, user, logout, showModal, lockedIdentityId, openLoginOrUnlock };
     },
     template: `
         <div class="user-widget">
             <template v-if="user && lockedIdentityId">
-                <span class="user-name user-name--locked" title="This identity's vault is locked — sign-in works, but signing requires the passphrase again">
+                <span class="user-name user-name--locked" :title="t('userWidget.thisIdentitySVaultIs')">
                     🔒 {{ user.displayName }}
                 </span>
-                <button class="user-btn user-btn--login" @click="openLoginOrUnlock">Unlock</button>
-                <button class="user-btn user-btn--logout" @click="logout">Logout</button>
+                <button class="user-btn user-btn--login" @click="openLoginOrUnlock">{{ t('userWidget.unlock') }}</button>
+                <button class="user-btn user-btn--logout" @click="logout">{{ t('userWidget.logout') }}</button>
             </template>
             <template v-else-if="user">
                 <span class="user-name">{{ user.displayName }}</span>
-                <button class="user-btn user-btn--logout" @click="logout">Logout</button>
+                <button class="user-btn user-btn--logout" @click="logout">{{ t('userWidget.logout') }}</button>
             </template>
             <template v-else>
-                <button class="user-btn user-btn--login" @click="openLoginOrUnlock">Login</button>
+                <button class="user-btn user-btn--login" @click="openLoginOrUnlock">{{ t('userWidget.login') }}</button>
             </template>
             <LoginModal v-if="showModal" :unlock-identity-id="lockedIdentityId" @close="showModal = false" />
         </div>

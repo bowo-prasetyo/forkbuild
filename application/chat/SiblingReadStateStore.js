@@ -1,4 +1,6 @@
 import { SiblingReadMarker } from '../../core/SiblingReadMarker.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const STORAGE_KEY_PREFIX = 'sibling-read-state:';
 
@@ -93,7 +95,7 @@ export class SiblingReadStateStore {
     _requireOwner() {
         const owner = this._currentOwnerOrNull();
         if (!owner) {
-            throw new Error('SiblingReadStateStore: no user is currently logged in');
+            throw new UserFacingError(message('refusal.noUserIsCurrentlyLogged'), { detail: 'SiblingReadStateStore: no user is currently logged in' });
         }
         return owner;
     }

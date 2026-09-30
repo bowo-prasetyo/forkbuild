@@ -17,6 +17,7 @@ import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as source } from './support/SourceText.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.371 — Nostr Relay Settings UI.
 //
@@ -146,11 +147,11 @@ async function run() {
 
         const appSource = await source('ui/App.js');
         assert(/router-link to="\/settings"/.test(appSource), '8a. a real top-nav link reaches the Network Settings hub');
-        const networkSettingsSource = await source('ui/views/NetworkSettingsView.js');
+        const networkSettingsSource = withEnglish(await source('ui/views/NetworkSettingsView.js'));
         assert(/router-link to="\/settings\/nostr-relay"/.test(networkSettingsSource),
             '8b. the Network Settings hub links to the settings entry point — reachable one hop further, not a URL-only capability');
 
-        const viewSource = await source('ui/views/NostrRelaySettingsView.js');
+        const viewSource = withEnglish(await source('ui/views/NostrRelaySettingsView.js'));
         const viewExecutable = viewSource.replace(/\/\/.*$/gm, '');
         assert(/inject\('nostrRelayConfigurationStore',\s*null\)/.test(viewExecutable),
             '9. the view reads the configuration through the injected store, never a store it constructs itself');
@@ -448,7 +449,7 @@ async function run() {
     // deliberately-excluded feature list.
     // ===============================================================
     {
-        const viewSource = await source('ui/views/NostrRelaySettingsView.js');
+        const viewSource = withEnglish(await source('ui/views/NostrRelaySettingsView.js'));
         const viewExecutable = viewSource.replace(/\/\/.*$/gm, '');
 
         // Display state.

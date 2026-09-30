@@ -1,6 +1,7 @@
 import { inject } from 'vue';
 import { useEndpointListSettings } from '../composables/useEndpointListSettings.js';
 import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../../core/BitcoinEsploraConfiguration.js';
+import { t } from '../i18n/i18n.js';
 
 // Bitcoin Esplora Endpoint Settings UI.
 //
@@ -42,17 +43,17 @@ export default {
             entriesOf: (configuration) => configuration.apiUrls,
             toRequest: (apiUrls) => ({ apiUrls })
         });
-        return { ...settings, apiUrlInput: settings.input };
+        return { t, ...settings, apiUrlInput: settings.input };
     },
     template: `
         <section class="bitcoin-esplora-settings-view">
-            <h1>Bitcoin Endpoint</h1>
+            <h1>{{ t('bitcoinEsploraSettingsView.bitcoinEndpoint') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Esplora-compatible endpoint(s) used for Bitcoin anchor broadcasting, confirmation observation, wallet-funding lookups, and OP_RETURN proof verification. One per line, in the order they should be tried — if the first does not respond, the next one is used. This setting affects Bitcoin anchoring only; it never changes any other substrate's configuration.
+                {{ t('bitcoinEsploraSettingsView.esploraCompatibleEndpointSUsed') }}
             </p>
 
-            <p v-if="hasOverride" class="form-hint form-hint--neutral">Using your saved endpoints:</p>
-            <p v-else class="form-hint form-hint--neutral">Using the default endpoints:</p>
+            <p v-if="hasOverride" class="form-hint form-hint--neutral">{{ t('bitcoinEsploraSettingsView.usingYourSavedEndpoints') }}</p>
+            <p v-else class="form-hint form-hint--neutral">{{ t('bitcoinEsploraSettingsView.usingTheDefaultEndpoints') }}</p>
             <ul class="endpoint-settings-list">
                 <li v-for="url in effectiveEntries" :key="url">{{ url }}</li>
             </ul>
@@ -66,11 +67,11 @@ export default {
                 ></textarea>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
-                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
-                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Reset — now using the default endpoints.</p>
+                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('bitcoinEsploraSettingsView.saved') }}</p>
+                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">{{ t('bitcoinEsploraSettingsView.resetNowUsingTheDefault') }}</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">Save</button>
-                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">Reset to Defaults</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">{{ t('bitcoinEsploraSettingsView.save') }}</button>
+                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">{{ t('bitcoinEsploraSettingsView.resetToDefaults') }}</button>
             </div>
         </section>
     `

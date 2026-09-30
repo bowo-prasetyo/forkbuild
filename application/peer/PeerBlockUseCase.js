@@ -1,5 +1,7 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { PeerBlockRecord } from '../../core/PeerBlockRecord.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const BLOCKS_CHANGED_EVENT = 'PeerBlocksChanged';
 const STORAGE_KEY_PREFIX = 'peer-blocks:';
@@ -98,7 +100,7 @@ export class PeerBlockUseCase {
         const owner = this._requireCurrentUsername();
         const all = this._loadAll();
         if (!all.some((b) => b.identityId === identityId)) {
-            throw new Error('PeerBlockUseCase: this identity is not blocked');
+            throw new UserFacingError(message('refusal.thisIdentityIsNotBlocked'), { detail: 'PeerBlockUseCase: this identity is not blocked' });
         }
         this._saveAll(owner, all.filter((b) => b.identityId !== identityId));
         this._publishChange();
@@ -135,7 +137,7 @@ export class PeerBlockUseCase {
     _requireCurrentUsername() {
         const owner = this._currentUsernameOrNull();
         if (!owner) {
-            throw new Error('PeerBlockUseCase: no user is currently logged in');
+            throw new UserFacingError(message('refusal.noUserIsCurrentlyLogged'), { detail: 'PeerBlockUseCase: no user is currently logged in' });
         }
         return owner;
     }

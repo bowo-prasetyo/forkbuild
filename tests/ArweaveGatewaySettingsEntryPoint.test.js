@@ -12,6 +12,7 @@ import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as source } from './support/SourceText.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.366 — Arweave Gateway Settings UI.
 //
@@ -115,11 +116,11 @@ async function run() {
 
         const appSource = await source('ui/App.js');
         assert(/router-link to="\/settings"/.test(appSource), '8a. a real top-nav link reaches the Network Settings hub');
-        const networkSettingsSource = await source('ui/views/NetworkSettingsView.js');
+        const networkSettingsSource = withEnglish(await source('ui/views/NetworkSettingsView.js'));
         assert(/router-link to="\/settings\/arweave-gateway"/.test(networkSettingsSource),
             '8b. the Network Settings hub links to the settings entry point — reachable one hop further, not a URL-only capability');
 
-        const viewSource = await source('ui/views/ArweaveGatewaySettingsView.js');
+        const viewSource = withEnglish(await source('ui/views/ArweaveGatewaySettingsView.js'));
         const viewExecutable = viewSource.replace(/\/\/.*$/gm, '');
         assert(/inject\('arweaveGatewayConfigurationStore',\s*null\)/.test(viewExecutable),
             '9. the view reads the configuration through the injected store, never a store it constructs itself');
@@ -354,7 +355,7 @@ async function run() {
     // Default wiring, and the deliberately-excluded feature list.
     // ===============================================================
     {
-        const viewSource = await source('ui/views/ArweaveGatewaySettingsView.js');
+        const viewSource = withEnglish(await source('ui/views/ArweaveGatewaySettingsView.js'));
 
         // Display state.
         assert(/v-if="hasOverride"/.test(viewSource), '46. the template branches on whether an override is on file');

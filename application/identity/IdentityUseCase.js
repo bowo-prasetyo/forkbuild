@@ -1,4 +1,6 @@
 import { EventBus } from '../../core/events/EventBus.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const IDENTITY_EVENT = 'IdentityChanged';
 const SESSION_EVENT = 'AuthenticationSessionChanged';
@@ -197,7 +199,7 @@ export class IdentityUseCase {
         const identity = this._identityProvider.getLocalIdentity(identityId);
         if (identity && identity.isProtected && !this._identityProvider.isUnlocked(identityId)) {
             if (!passphrase) {
-                throw new Error('This identity is protected — enter its passphrase to continue');
+                throw new UserFacingError(message('refusal.thisIdentityIsProtectedEnter'), { detail: 'This identity is protected — enter its passphrase to continue' });
             }
             // The calling action publishes the resulting lock state once.
             await this._identityProvider.unlock(identityId, passphrase);

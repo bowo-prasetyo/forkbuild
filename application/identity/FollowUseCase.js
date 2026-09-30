@@ -1,6 +1,8 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { FollowRecord, isFollowableIdentityId } from '../../core/FollowRecord.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const FOLLOWING_CHANGED_EVENT = 'FollowingChanged';
 const STORAGE_KEY_PREFIX = 'follows:';
@@ -53,10 +55,10 @@ export class FollowUseCase {
     follow(identityId, { name = null } = {}) {
         const owner = this._requireOwner();
         if (!isFollowableIdentityId(identityId)) {
-            throw new Error('FollowUseCase: only a did:key identity can be followed');
+            throw new UserFacingError(message('refusal.onlyADidKeyIdentity'), { detail: 'FollowUseCase: only a did:key identity can be followed' });
         }
         if (identityId === owner) {
-            throw new Error('FollowUseCase: you cannot follow yourself');
+            throw new UserFacingError(message('refusal.youCannotFollowYourself'), { detail: 'FollowUseCase: you cannot follow yourself' });
         }
         const all = this._loadAll();
         const existing = all.find((record) => record.identityId === identityId);
@@ -120,7 +122,7 @@ export class FollowUseCase {
     _requireOwner() {
         const owner = resolveSigningIdentityId(this._identityProvider);
         if (!owner) {
-            throw new Error('FollowUseCase: sign in to follow people');
+            throw new UserFacingError(message('refusal.signInToFollowPeople'), { detail: 'FollowUseCase: sign in to follow people' });
         }
         return owner;
     }

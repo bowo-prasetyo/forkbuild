@@ -2,13 +2,15 @@ import { ref, computed, inject, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import PublicationCard from '../components/PublicationCard.js';
 import { buildFollowedPeople } from './following/followedPeople.js';
+import { errorText, t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
 // The people you follow and their newest work that has reached this device.
 // Following is local: this page shows what this device has already admitted
 // (from World discovery, shared Worlds, links), and never fetches by itself.
 export default {
     name: 'FollowingView',
-    components: { PublicationCard },
+    components: { I18nText, PublicationCard },
     setup() {
         const router = useRouter();
         const followUseCase = inject('followUseCase', null);
@@ -55,7 +57,7 @@ export default {
             try {
                 followUseCase.unfollow(identityId);
             } catch (e) {
-                error.value = String(e.message || e).replace(/^FollowUseCase:\s*/, '');
+                error.value = errorText(e, String(e)).replace(/^FollowUseCase:\s*/, '');
             }
         }
         function openPublication(pub) {
@@ -72,44 +74,42 @@ export default {
         }
 
         return {
+            t,
             signedIn, people, visiblePublications, selectedIdentityId, error,
             select, unfollow, openPublication, forkPublication, viewWorld, viewAuthor
         };
     },
     template: `
         <section class="following-view">
-            <h1>Following</h1>
+            <h1>{{ t('followingView.following') }}</h1>
             <p class="form-hint form-hint--neutral">
-                New work from people you follow. Following is private: it is kept on this device only, and the
-                people you follow are never told. Only work that has already reached this device shows here,
-                from World View, Worlds shared by connected peers, and links you open.
+                {{ t('followingView.newWorkFromPeopleYou') }}
             </p>
 
             <p v-if="!signedIn" class="form-hint form-hint--neutral">
-                Sign in on <router-link to="/identity">My Identities</router-link> to follow people.
+                <I18nText keypath="followingView.signInOn"><template #myIdentities><router-link to="/identity">{{ t('followingView.myIdentities') }}</router-link></template></I18nText>
             </p>
 
             <template v-else>
                 <p v-if="error" class="identity-unlock-error">{{ error }}</p>
                 <p v-if="!people.length" class="empty-state">
-                    You don't follow anyone yet. Use <strong>Follow</strong> on an author's page, a publication,
-                    a person on the Peers page, or an avatar in World View.
+                    <I18nText keypath="followingView.youDonTFollowAnyone"><template #follow><strong>{{ t('followingView.follow') }}</strong></template></I18nText>
                 </p>
 
-                <ul v-else class="following-people" aria-label="People you follow">
+                <ul v-else class="following-people" :aria-label="t('followingView.peopleYouFollow')">
                     <li v-for="person in people" :key="person.identityId"
                         :class="['following-person', { 'following-person--selected': selectedIdentityId === person.identityId }]">
                         <button type="button" class="following-person-name"
                                 :aria-pressed="selectedIdentityId === person.identityId ? 'true' : 'false'"
                                 :title="person.identityId"
                                 @click="select(person.identityId)">{{ person.name }}</button>
-                        <span class="following-person-count">{{ person.publicationCount }} here</span>
-                        <button type="button" class="action-btn action-btn--secondary" @click="unfollow(person.identityId)">Unfollow</button>
+                        <span class="following-person-count">{{ t('followingView.here', { publicationCount: person.publicationCount }) }}</span>
+                        <button type="button" class="action-btn action-btn--secondary" @click="unfollow(person.identityId)">{{ t('followingView.unfollow') }}</button>
                     </li>
                 </ul>
 
                 <div v-if="people.length && !visiblePublications.length" class="empty-state">
-                    Nothing from {{ selectedIdentityId ? 'them' : 'the people you follow' }} has reached this device yet.
+                    Nothing from {{ selectedIdentityId ? 'them' : t('followingView.thePeopleYouFollow') }} has reached this device yet.
                 </div>
                 <ul v-else-if="visiblePublications.length" class="publication-list">
                     <PublicationCard

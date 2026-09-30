@@ -1,6 +1,8 @@
 import { ref, computed, inject } from 'vue';
 import NewPassphraseFields from './NewPassphraseFields.js';
 import { evaluateNewPassphrase } from '../../application/identity/NewPassphrasePolicy.js';
+import { errorText, t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
 // 0.2.46: identity-first login. Previously this modal took a typed
 // username and silently derived a signing key from it — "logging back
@@ -31,7 +33,7 @@ export default {
         unlockIdentityId: { type: String, default: null }
     },
     emits: ['close'],
-    components: { NewPassphraseFields },
+    components: { I18nText, NewPassphraseFields },
     setup(props, { emit }) {
         const identityUseCase = inject('identityUseCase');
         const identities = ref(identityUseCase.listIdentities());
@@ -83,7 +85,7 @@ export default {
                 await identityUseCase.authenticate(unlockingId.value, unlockPassphrase.value);
                 emit('close');
             } catch (e) {
-                unlockError.value = e.message.replace(/^LocalIdentityProvider:\s*/, '');
+                unlockError.value = errorText(e).replace(/^LocalIdentityProvider:\s*/, '');
             } finally {
                 unlocking.value = false;
             }
@@ -108,13 +110,14 @@ export default {
                 await identityUseCase.authenticate(identity.identityId, passphrase);
                 emit('close');
             } catch (e) {
-                createError.value = e.message.replace(/^LocalIdentityProvider:\s*/, '');
+                createError.value = errorText(e).replace(/^LocalIdentityProvider:\s*/, '');
             } finally {
                 creating.value = false;
             }
         }
 
         return {
+            t,
             sortedIdentities, newLabel, newPassphrase, newPassphraseConfirmation, allowUnprotected,
             createAttempted, creating, createError, shortId, logInAs, createAndLogIn,
             unlockingId, unlockPassphrase, unlockError, unlocking, cancelUnlock, confirmUnlock
@@ -123,11 +126,9 @@ export default {
     template: `
         <div class="modal-overlay" @click.self="$emit('close')">
             <div class="modal-content">
-                <h3>Log In</h3>
+                <h3>{{ t('loginModal.logIn') }}</h3>
                 <p class="modal-subtitle">
-                    Unlock an identity this device already holds, or create a new one.
-                    There is no password and no central account — the private key
-                    stored on this device IS the identity.
+                    {{ t('loginModal.unlockAnIdentityThisDevice') }}
                 </p>
 
                 <div v-if="sortedIdentities.length" class="identity-list">
@@ -138,19 +139,18 @@ export default {
                             @click="logInAs(identity)"
                         >
                             <span class="identity-list-item-label">
-                                <span v-if="identity.isProtected" class="identity-lock-icon" title="Protected with a passphrase">🔒</span>
+                                <span v-if="identity.isProtected" class="identity-lock-icon" :title="t('loginModal.protectedWithAPassphrase')">🔒</span>
                                 {{ identity.label }}
                             </span>
                             <span class="identity-list-item-id">…{{ shortId(identity.identityId) }}</span>
                         </button>
                         <div v-else class="identity-unlock-form">
                             <p class="identity-unlock-label">
-                                🔒 Enter the passphrase for <strong>{{ identity.label }}</strong>
-                            </p>
+                                <I18nText keypath="loginModal.enterThePassphraseFor"><template #name><strong>{{ identity.label }}</strong></template></I18nText></p>
                             <input
                                 v-model="unlockPassphrase"
                                 type="password"
-                                placeholder="Passphrase"
+                                :placeholder="t('loginModal.passphrase')"
                                 class="modal-input"
                                 autofocus
                                 @keydown.enter="confirmUnlock"
@@ -158,24 +158,24 @@ export default {
                             />
                             <p v-if="unlockError" class="identity-unlock-error">{{ unlockError }}</p>
                             <div class="modal-actions">
-                                <button class="modal-btn modal-btn--secondary" @click="cancelUnlock">Cancel</button>
+                                <button class="modal-btn modal-btn--secondary" @click="cancelUnlock">{{ t('loginModal.cancel') }}</button>
                                 <button class="modal-btn modal-btn--primary" :disabled="unlocking" @click="confirmUnlock">
-                                    {{ unlocking ? 'Unlocking…' : 'Unlock & Log In' }}
+                                    {{ unlocking ? t('loginModal.unlocking') : t('loginModal.unlockLogIn') }}
                                 </button>
                             </div>
                         </div>
                     </template>
                 </div>
-                <p v-else class="modal-subtitle">No identities on this device yet.</p>
+                <p v-else class="modal-subtitle">{{ t('loginModal.noIdentitiesOnThisDevice') }}</p>
 
                 <div class="identity-divider">
-                    <span>Create New Identity</span>
+                    <span>{{ t('loginModal.createNewIdentity') }}</span>
                 </div>
 
                 <input
                     v-model="newLabel"
                     type="text"
-                    placeholder="Display name for the new identity"
+                    :placeholder="t('loginModal.displayNameForTheNew')"
                     class="modal-input"
                     @keydown.enter="createAndLogIn"
                 />
@@ -188,9 +188,9 @@ export default {
                 />
                 <p v-if="createError" class="identity-unlock-error">{{ createError }}</p>
                 <div class="modal-actions">
-                    <button class="modal-btn modal-btn--secondary" @click="$emit('close')">Cancel</button>
+                    <button class="modal-btn modal-btn--secondary" @click="$emit('close')">{{ t('loginModal.cancel') }}</button>
                     <button class="modal-btn modal-btn--primary" :disabled="creating" @click="createAndLogIn">
-                        {{ creating ? 'Creating…' : 'Create & Log In' }}
+                        {{ creating ? t('loginModal.creating') : t('loginModal.createLogIn') }}
                     </button>
                 </div>
             </div>

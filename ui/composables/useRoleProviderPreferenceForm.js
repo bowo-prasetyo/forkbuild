@@ -1,4 +1,5 @@
 import { ref, onMounted } from 'vue';
+import { errorText } from '../i18n/i18n.js';
 
 // The shared load / Save lifecycle behind the three role-provider settings
 // pages (Content, Announcement / Discovery, Proof / Anchoring). Each page
@@ -39,7 +40,7 @@ export function useRoleProviderPreferenceForm({ role, preferenceStore, setUseCas
             saveStatus.value = 'saved';
         } catch (error) {
             saveStatus.value = 'idle';
-            saveError.value = error.message;
+            saveError.value = errorText(error);
         }
     }
 

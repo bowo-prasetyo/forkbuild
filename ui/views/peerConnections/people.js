@@ -1,5 +1,6 @@
 import { FriendshipState } from '../../../core/FriendshipState.js';
 import { shortId } from './presentation.js';
+import { t } from '../../i18n/i18n.js';
 
 // The Peers page's one People list: a card per identity, merging Known
 // Peers, current friends and live authenticated connections. The records
@@ -69,10 +70,10 @@ function comparePeople(a, b) {
 }
 
 export const PEOPLE_FILTERS = [
-    { key: 'all', label: 'All' },
-    { key: 'friends', label: 'Friends' },
-    { key: 'following', label: 'Following' },
-    { key: 'online', label: 'Online' }
+    { key: 'all', label: t('peerConnections.all') },
+    { key: 'friends', label: t('peerConnections.friends') },
+    { key: 'following', label: t('peerConnections.following') },
+    { key: 'online', label: t('peerConnections.online') }
 ];
 
 export function filterPeople(people, filter) {

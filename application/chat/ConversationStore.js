@@ -1,4 +1,6 @@
 import { ConversationEntry, isValidChatMessageDirection } from '../../core/ConversationEntry.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const STORAGE_KEY_PREFIX = 'conversation-history:';
 
@@ -170,7 +172,7 @@ export class ConversationStore {
     _requireOwner() {
         const owner = this._currentOwnerOrNull();
         if (!owner) {
-            throw new Error('ConversationStore: no user is currently logged in');
+            throw new UserFacingError(message('refusal.noUserIsCurrentlyLogged'), { detail: 'ConversationStore: no user is currently logged in' });
         }
         return owner;
     }

@@ -3,6 +3,7 @@ import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPre
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/settings/RoleProviderPreferenceSettingsView.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
+import { displayText, t } from '../i18n/i18n.js';
 
 // Proof & Anchoring Provider Preference Settings Entry Point.
 //
@@ -48,7 +49,7 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 // never offered (see above).
 const ANCHOR_PROVIDER_OPTION_LABELS = {
     'bitcoin-op-return': 'Bitcoin',
-    steem: 'Steem (Experimental; attested by Steem witnesses, weaker than Bitcoin)'
+    steem: t('anchorProviderSettingsView.steemExperimentalAttestedBySteem')
 };
 
 export default {
@@ -73,33 +74,35 @@ export default {
         }).options.map((option) => ({ ...option, label: ANCHOR_PROVIDER_OPTION_LABELS[option.providerKey] || option.label }))));
 
         return {
+            t,
+            displayText,
             settings, selectedProviderKey: form.selectedProviderKey,
             saveError: form.saveError, saveStatus: form.saveStatus, save: form.save
         };
     },
     template: `
         <section class="anchor-provider-settings-view">
-            <h1>Proof / Anchoring Provider</h1>
+            <h1>{{ t('anchorProviderSettingsView.proofAnchoringProvider') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Choose which decentralized substrate "Use Preferred Provider" anchors new Proof/Anchoring evidence onto in the Publication Center. This never changes what the explicit per-substrate anchor buttons there do, and never affects Base's own separate wallet-guided anchoring flow.
+                {{ t('anchorProviderSettingsView.chooseWhichDecentralizedSubstrateUse') }}
             </p>
             <p class="form-hint form-hint--neutral">
-                Base isn't offered here because every Base anchor requires reviewing and signing a wallet transaction at the moment it's created — it can't fire silently in the background the way a preferred provider does. Use Base's own anchor button in the Publication Center instead.
+                {{ t('anchorProviderSettingsView.baseIsnTOfferedHere') }}
             </p>
 
             <div v-if="settings.length" class="anchor-provider-settings-form">
                 <label v-for="opt in settings" :key="opt.providerKey" class="anchor-provider-option">
                     <input type="radio" name="anchor-provider-preference" :value="opt.providerKey" v-model="selectedProviderKey" />
-                    {{ opt.label }}
+                    {{ displayText(opt.label) }}
                 </label>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
-                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
+                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('anchorProviderSettingsView.saved') }}</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="!selectedProviderKey">Save</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!selectedProviderKey">{{ t('anchorProviderSettingsView.save') }}</button>
             </div>
             <p v-else class="form-hint form-hint--neutral">
-                No Proof/Anchoring providers are currently registered on this replica.
+                {{ t('anchorProviderSettingsView.noProofAnchoringProvidersAre') }}
             </p>
         </section>
     `

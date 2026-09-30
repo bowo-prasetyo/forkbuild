@@ -1,6 +1,7 @@
 import { ref, inject } from 'vue';
 import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
 import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.9.456 — TURN Server Settings UI.
 //
@@ -147,6 +148,7 @@ export default {
         });
 
         return {
+            t,
             hasConfiguration: form.hasConfiguration, configuration: form.configuration,
             urlsInput, usernameInput, credentialInput,
             saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
@@ -155,19 +157,19 @@ export default {
     },
     template: `
         <section class="turn-server-settings-view">
-            <h1>TURN Server</h1>
+            <h1>{{ t('turnServerSettingsView.turnServer') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Your own TURN relay, used for peer connections that can't establish a direct or STUN-negotiated path. This setting affects connection setup only; it does not change peer identity, authentication, or any existing connection.
+                {{ t('turnServerSettingsView.yourOwnTurnRelayUsed') }}
             </p>
             <p class="form-hint form-hint--neutral">
-                You don't need to fill this in to get a relay: when a connection starts, ForkBuild already asks your rendezvous servers (see Rendezvous Servers) for a short-lived TURN relay and uses it when they offer one. Add a relay here only if you run or pay for one yourself; it is used alongside theirs, never instead of it.
+                {{ t('turnServerSettingsView.youDonTNeedTo') }}
             </p>
 
             <p v-if="hasConfiguration" class="form-hint form-hint--neutral">
-                Current TURN relay ({{ configuration.urls.length }} url(s)): {{ configuration.urls.join(', ') }} — username: {{ configuration.username }}
+                {{ t('turnServerSettingsView.currentTurnRelayUrlS', { count: configuration.urls.length, urls: configuration.urls.join(', '), username: configuration.username }) }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
-                No TURN server of your own configured.
+                {{ t('turnServerSettingsView.noTurnServerOfYour') }}
             </p>
 
             <div class="turn-server-settings-form">
@@ -177,28 +179,28 @@ export default {
                     rows="5"
                     class="turn-server-settings-urls-input form-textarea"
                 ></textarea>
-                <p class="form-hint form-hint--neutral">One turn:/turns: URL per line (e.g. turn:relay.example:3478).</p>
+                <p class="form-hint form-hint--neutral">{{ t('turnServerSettingsView.oneTurnTurnsUrlPer') }}</p>
 
                 <input
                     v-model="usernameInput"
                     type="text"
-                    placeholder="Username"
+                    :placeholder="t('turnServerSettingsView.username')"
                     class="turn-server-settings-username-input form-input"
                 />
 
                 <input
                     v-model="credentialInput"
                     type="password"
-                    placeholder="Credential"
+                    :placeholder="t('turnServerSettingsView.credential')"
                     class="turn-server-settings-credential-input form-input"
                 />
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
-                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
-                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — no TURN server configured.</p>
+                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('turnServerSettingsView.saved') }}</p>
+                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">{{ t('turnServerSettingsView.clearedNoTurnServerConfigured') }}</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="!urlsInput.trim() || !usernameInput.trim() || !credentialInput.trim()">Save</button>
-                <button class="action-btn" @click="clear">Clear</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!urlsInput.trim() || !usernameInput.trim() || !credentialInput.trim()">{{ t('turnServerSettingsView.save') }}</button>
+                <button class="action-btn" @click="clear">{{ t('turnServerSettingsView.clear') }}</button>
             </div>
         </section>
     `

@@ -6,6 +6,7 @@ import {
     DEFAULT_STEEM_EARLIEST_PERIOD,
     DEFAULT_STEEM_THREAD_ACCOUNTS
 } from '../../core/SteemReadingConfiguration.js';
+import { t } from '../i18n/i18n.js';
 
 // Where Steem announcements are read from (applies on the next load, like
 // the other network settings), and the account this device posts as
@@ -65,6 +66,7 @@ export default {
         });
 
         return {
+            t,
             hasOverride: form.hasConfiguration, configuration: form.configuration, unchanged,
             apiNodesInput, threadAccountsInput, earliestPeriodInput,
             defaultApiNodes: DEFAULT_STEEM_API_NODES.join(', '),
@@ -81,55 +83,51 @@ export default {
         <section class="steem-reading-settings-view">
             <h1>Steem</h1>
             <p class="form-hint form-hint--neutral">
-                Where this replica reads Steem announcements: Publications, Snapshots, Place Naming and Commentary posted
-                as replies to monthly discovery threads. Every announcement is verified before it is used. Reading needs
-                no Steem account. Changes apply the next time the app loads.
+                {{ t('steemReadingSettingsView.whereThisReplicaReadsSteem') }}
             </p>
 
             <p v-if="hasOverride" class="form-hint form-hint--neutral">
-                Saved: {{ configuration.apiNodes.join(', ') }} · threads by {{ configuration.threadAccounts.map((a) => '@' + a).join(', ') }} · from {{ configuration.earliestPeriod }}
+                {{ t('steemReadingSettingsView.savedThreadsBy', { apiNodes: configuration.apiNodes.join(', '), threadAccounts: configuration.threadAccounts.map((a) => '@' + a).join(', '), earliestPeriod: configuration.earliestPeriod }) }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
-                Using the defaults: {{ defaultApiNodes }} · threads by {{ defaultThreadAccounts }} · from {{ defaultEarliestPeriod }}
+                {{ t('steemReadingSettingsView.usingTheDefaultsThreadsBy', { defaultApiNodes: defaultApiNodes, defaultThreadAccounts: defaultThreadAccounts, defaultEarliestPeriod: defaultEarliestPeriod }) }}
             </p>
 
             <div class="steem-reading-settings-form">
-                <label class="form-label" for="steem-api-nodes">API nodes, one per line, tried in order</label>
+                <label class="form-label" for="steem-api-nodes">{{ t('steemReadingSettingsView.apiNodesOnePerLine') }}</label>
                 <textarea id="steem-api-nodes" v-model="apiNodesInput" rows="3" class="form-textarea" placeholder="https://api.steemit.com"></textarea>
 
-                <label class="form-label" for="steem-thread-accounts">Thread accounts, one per line</label>
+                <label class="form-label" for="steem-thread-accounts">{{ t('steemReadingSettingsView.threadAccountsOnePerLine') }}</label>
                 <textarea id="steem-thread-accounts" v-model="threadAccountsInput" rows="2" class="form-textarea" placeholder="forkbuild"></textarea>
 
-                <label class="form-label" for="steem-earliest-period">First month to read</label>
+                <label class="form-label" for="steem-earliest-period">{{ t('steemReadingSettingsView.firstMonthToRead') }}</label>
                 <input id="steem-earliest-period" v-model="earliestPeriodInput" type="month" class="form-input">
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
-                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved. Reload the app to use it.</p>
-                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Reset. The defaults apply after a reload.</p>
+                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('steemReadingSettingsView.savedReloadTheAppTo') }}</p>
+                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">{{ t('steemReadingSettingsView.resetTheDefaultsApplyAfter') }}</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="unchanged">Save</button>
-                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">Reset to Defaults</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="unchanged">{{ t('steemReadingSettingsView.save') }}</button>
+                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">{{ t('steemReadingSettingsView.resetToDefaults') }}</button>
             </div>
 
-            <h2>Posting</h2>
+            <h2>{{ t('steemReadingSettingsView.posting') }}</h2>
             <p class="form-hint form-hint--neutral">
-                To announce on Steem, choose Steem in a Distribute dialog or when posting a comment. Posts are replies
-                to this month's discovery thread, signed by Steem Keychain with your account's posting key; ForkBuild
-                never sees the key. Payout is declined on every post.
+                {{ t('steemReadingSettingsView.toAnnounceOnSteemChoose') }}
             </p>
-            <p v-if="savedAccount" class="form-hint form-hint--neutral">Posting as @{{ savedAccount.account }}.</p>
-            <p v-else class="form-hint form-hint--neutral">No account set, so nothing can be posted to Steem.</p>
+            <p v-if="savedAccount" class="form-hint form-hint--neutral">{{ t('steemReadingSettingsView.postingAs', { account: savedAccount.account }) }}</p>
+            <p v-else class="form-hint form-hint--neutral">{{ t('steemReadingSettingsView.noAccountSetSoNothing') }}</p>
 
             <div class="steem-reading-settings-form">
-                <label class="form-label" for="steem-account">Your Steem account</label>
+                <label class="form-label" for="steem-account">{{ t('steemReadingSettingsView.yourSteemAccount') }}</label>
                 <input id="steem-account" v-model="accountInput" type="text" class="form-input" placeholder="yourname" autocomplete="off" spellcheck="false">
 
                 <p v-if="accountSaveError" class="form-hint">{{ accountSaveError }}</p>
-                <p v-if="accountSaveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
-                <p v-if="accountClearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared.</p>
+                <p v-if="accountSaveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('steemReadingSettingsView.saved') }}</p>
+                <p v-if="accountClearStatus === 'cleared'" class="form-hint form-hint--neutral">{{ t('steemReadingSettingsView.cleared') }}</p>
 
-                <button class="action-btn action-btn--primary" @click="saveAccount" :disabled="!accountInput.trim()">Save Account</button>
-                <button class="action-btn" @click="clearAccount">Clear</button>
+                <button class="action-btn action-btn--primary" @click="saveAccount" :disabled="!accountInput.trim()">{{ t('steemReadingSettingsView.saveAccount') }}</button>
+                <button class="action-btn" @click="clearAccount">{{ t('steemReadingSettingsView.clear') }}</button>
             </div>
         </section>
     `

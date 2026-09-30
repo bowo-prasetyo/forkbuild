@@ -5,11 +5,12 @@ import { RestoreMode } from '../../application/backup/DeviceBackupUseCase.js';
 import { BackupDestination, REMINDER_INTERVAL_OPTIONS_DAYS } from '../../application/backup/BackupStatusStore.js';
 import { backupFileName } from '../../application/backup/BackupFolder.js';
 import { evaluateNewPassphrase } from '../../application/identity/NewPassphrasePolicy.js';
-import { displayText } from '../i18n/i18n.js';
 import { formatByteSize } from '../../utils/formatByteSize.js';
 import { formatRelativeVisit } from '../../utils/formatRelativeVisit.js';
+import { displayText, errorText, hasMessage, t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
-const REMINDER_LABELS = { 7: 'Every week', 14: 'Every 2 weeks', 30: 'Every month', 90: 'Every 3 months', 0: 'Never' };
+const REMINDER_LABELS = { 7: t('yourDataView.everyWeek'), 14: t('yourDataView.every2Weeks'), 30: t('yourDataView.everyMonth'), 90: t('yourDataView.every3Months'), 0: t('yourDataView.never') };
 const DESTINATION_LABELS = {
     [BackupDestination.FILE]: 'to a downloaded file',
     [BackupDestination.SHARE]: 'shared to another app',
@@ -20,8 +21,16 @@ const DESTINATION_LABELS = {
 // Backs up everything ForkBuild keeps in this browser to one encrypted
 // file, and restores it here or on another device. Clearing the browser's
 // site data deletes all of it, so this page is the one place to keep a copy.
+// A backup group's name by its id ('avatar-and-worlds' → backupGroup.avatarAndWorlds),
+// or application/backup's English for a group without a message.
+function backupGroupLabel(group) {
+    const key = `backupGroup.${group.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase())}`;
+    return hasMessage(key) ? t(key) : BACKUP_ENTRY_GROUP_LABELS[group];
+}
+
 export default {
     name: 'YourDataView',
+    components: { I18nText },
     setup() {
         const deviceBackup = inject('deviceBackupUseCase', null);
         const navigatorStorage = inject('navigatorStorage', globalThis.navigator ? globalThis.navigator.storage : null);
@@ -74,7 +83,7 @@ export default {
                 await action();
                 destinationForm.message = done;
             } catch (e) {
-                destinationForm.error = e.message;
+                destinationForm.error = errorText(e);
             } finally {
                 destinationForm.busy = false;
                 await refreshDestinations();
@@ -83,8 +92,8 @@ export default {
         }
 
         const chooseFolder = () => runDestinationAction(() => destinations.chooseFolder());
-        const forgetFolder = () => runDestinationAction(() => destinations.forgetFolder(), 'ForkBuild no longer saves to that folder. The backups already in it stay.');
-        const forgetKey = () => runDestinationAction(() => destinations.forgetKey(), 'The backup key is forgotten. Backups need the passphrase again.');
+        const forgetFolder = () => runDestinationAction(() => destinations.forgetFolder(), t('yourDataView.folderForgotten'));
+        const forgetKey = () => runDestinationAction(() => destinations.forgetKey(), t('yourDataView.keyForgotten'));
 
         // --- what is stored ------------------------------------------------
         const groups = ref({});
@@ -96,7 +105,7 @@ export default {
         function groupRows(counts) {
             return Object.keys(BACKUP_ENTRY_GROUP_LABELS)
                 .filter((group) => counts[group])
-                .map((group) => ({ group, label: BACKUP_ENTRY_GROUP_LABELS[group], count: counts[group] }));
+                .map((group) => ({ group, label: backupGroupLabel(group), count: counts[group] }));
         }
         const storedRows = computed(() => groupRows(groups.value));
 
@@ -169,7 +178,7 @@ export default {
                     // so the key is derived afterwards.
                     const written = await destinations.backUpToFolder(passphrase ? { passphrase } : {});
                     if (remember) await destinations.rememberKey(passphrase);
-                    result = { rows: groupRows(written.groups), where: `Saved as "${written.fileName}" in "${written.folderName}".` };
+                    result = { rows: groupRows(written.groups), where: t('yourDataView.savedAsIn', { file: written.fileName, folder: written.folderName }) };
                 } else {
                     let created = destination === BackupDestination.SHARE ? preparedShare : null;
                     if (!created) {
@@ -190,7 +199,7 @@ export default {
                             // encrypting can take longer than that: keep the file for the next tap.
                             if (error && error.name === 'NotAllowedError') {
                                 preparedShare = created;
-                                backupForm.error = 'The backup is ready: tap Share Backup again to send it.';
+                                backupForm.error = t('yourDataView.backupReadyShareAgain');
                                 return;
                             }
                             throw error;
@@ -202,7 +211,7 @@ export default {
                     statusStore && statusStore.recordBackup(destination, created.createdAt);
                     result = {
                         rows: groupRows(created.groups), size: created.bytes.length, leftOutContentCount: created.leftOutContentCount,
-                        where: destination === BackupDestination.SHARE ? 'Shared.' : 'Downloaded.'
+                        where: destination === BackupDestination.SHARE ? t('yourDataView.shared') : t('yourDataView.downloaded')
                     };
                 }
                 backupForm.result = result;
@@ -210,7 +219,7 @@ export default {
                 backupForm.confirmation = '';
                 backupForm.attempted = false;
             } catch (e) {
-                backupForm.error = e.message;
+                backupForm.error = errorText(e);
             } finally {
                 backupForm.busy = false;
                 pendingDestination = null;
@@ -239,7 +248,7 @@ export default {
             restoreForm.fileName = file.name;
             const reader = new FileReader();
             reader.onload = () => { restoreForm.bytes = new Uint8Array(reader.result); };
-            reader.onerror = () => { restoreForm.error = 'That file could not be read.'; };
+            reader.onerror = () => { restoreForm.error = t('yourDataView.fileCouldNotBeRead'); };
             reader.readAsArrayBuffer(file);
         }
 
@@ -253,8 +262,8 @@ export default {
                 restoreForm.passphrase = '';
             } catch (e) {
                 restoreForm.error = e instanceof IncorrectBackupPassphraseError || e instanceof BackupFileError
-                    ? e.message
-                    : 'That file could not be opened: ' + e.message;
+                    ? errorText(e)
+                    : t('yourDataView.fileCouldNotBeOpened', { error: errorText(e) });
             } finally {
                 restoreForm.busy = false;
             }
@@ -275,7 +284,7 @@ export default {
                 // with those copies could write old data over the restore.
                 reloadPage();
             } catch (e) {
-                restoreForm.error = 'The restore did not finish: ' + e.message;
+                restoreForm.error = t('yourDataView.restoreDidNotFinish', { error: errorText(e) });
             } finally {
                 restoreForm.busy = false;
             }
@@ -294,6 +303,7 @@ export default {
         }
 
         return {
+            t,
             available: Boolean(deviceBackup), storedRows, usage, quota, persisted, persistRefused,
             canPersist: Boolean(navigatorStorage && typeof navigatorStorage.persist === 'function'),
             requestPersistence, formatByteSize, formatDate,
@@ -307,192 +317,186 @@ export default {
     },
     template: `
         <section class="your-data-view">
-            <h1>Your Data</h1>
+            <h1>{{ t('yourDataView.yourData') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Everything ForkBuild keeps lives only in this browser, on this device. Clearing this site's data
-                in the browser deletes all of it for good. Back it up to a file to keep a copy, or to move it to
-                another device.
+                {{ t('yourDataView.everythingForkbuildKeepsLivesOnly') }}
             </p>
 
-            <p v-if="!available" class="form-hint">Backups are not available in this copy of ForkBuild.</p>
+            <p v-if="!available" class="form-hint">{{ t('yourDataView.backupsAreNotAvailableIn') }}</p>
 
             <div class="your-data-section">
-                <h2>On this device</h2>
+                <h2>{{ t('yourDataView.onThisDevice') }}</h2>
                 <table v-if="storedRows.length" class="your-data-table">
                     <tbody>
                         <tr v-for="row in storedRows" :key="row.group">
                             <td>{{ row.label }}</td>
-                            <td class="your-data-count">{{ row.count }} {{ row.count === 1 ? 'entry' : 'entries' }}</td>
+                            <td class="your-data-count">{{ t('yourDataView.entryCount', { count: row.count }) }}</td>
                         </tr>
                     </tbody>
                 </table>
-                <p v-else class="form-hint form-hint--neutral">Nothing is stored yet.</p>
+                <p v-else class="form-hint form-hint--neutral">{{ t('yourDataView.nothingIsStoredYet') }}</p>
                 <p v-if="usage !== null" class="form-hint form-hint--neutral">
-                    Using {{ formatByteSize(usage) }}<template v-if="quota"> of the {{ formatByteSize(quota) }} this browser allows</template>.
+                    {{ t('yourDataView.using', { usage: formatByteSize(usage) }) }}<template v-if="quota"> {{ t('yourDataView.ofTheThisBrowserAllows', { quota: formatByteSize(quota) }) }}</template>.
                 </p>
                 <p v-if="persisted === true" class="form-hint form-hint--neutral">
-                    The browser has agreed not to remove this data when the disk is low. Clearing site data still deletes it.
+                    {{ t('yourDataView.theBrowserHasAgreedNot') }}
                 </p>
                 <template v-else-if="persisted === false && canPersist">
                     <p class="form-hint form-hint--neutral">
-                        The browser may remove this data when the disk is low.
+                        {{ t('yourDataView.theBrowserMayRemoveThis') }}
                     </p>
-                    <button type="button" class="action-btn action-btn--secondary your-data-persist" @click="requestPersistence">Ask the Browser to Keep It</button>
+                    <button type="button" class="action-btn action-btn--secondary your-data-persist" @click="requestPersistence">{{ t('yourDataView.askTheBrowserToKeep') }}</button>
                     <p v-if="persistRefused" class="form-hint">
-                        The browser said no. Browsers usually agree once the site is bookmarked, installed or used often.
+                        {{ t('yourDataView.theBrowserSaidNoBrowsers') }}
                     </p>
                 </template>
             </div>
 
             <div v-if="available" class="your-data-section">
-                <h2>Back up</h2>
+                <h2>{{ t('yourDataView.backUp') }}</h2>
                 <p class="form-hint form-hint--neutral">
-                    The backup holds your documents, identities and their private keys, structures, publications,
-                    peers, friends, chat history and settings. It is encrypted with the passphrase you choose here,
-                    which is needed to restore it. There is no way to open it without that passphrase.
+                    {{ t('yourDataView.theBackupHoldsYourDocuments') }}
                 </p>
                 <input v-model="backupForm.passphrase" type="password" class="modal-input your-data-backup-passphrase"
-                       autocomplete="new-password" placeholder="Backup passphrase" @keydown.enter="createBackup" />
+                       autocomplete="new-password" :placeholder="t('yourDataView.backupPassphrase')" @keydown.enter="createBackup" />
                 <input v-if="backupForm.passphrase" v-model="backupForm.confirmation" type="password" class="modal-input your-data-backup-confirmation"
-                       autocomplete="new-password" placeholder="Repeat the passphrase" @keydown.enter="createBackup" />
+                       autocomplete="new-password" :placeholder="t('yourDataView.repeatThePassphrase')" @keydown.enter="createBackup" />
                 <label class="your-data-checkbox">
                     <input type="checkbox" v-model="backupForm.includeDownloadedContent" class="your-data-include-downloaded" />
-                    Include builds downloaded from other people (can be large; they can usually be fetched again)
+                    {{ t('yourDataView.includeBuildsDownloadedFromOther') }}
                 </label>
                 <label v-if="destinationsAvailable && backupForm.passphrase" class="your-data-checkbox">
                     <input type="checkbox" v-model="backupForm.rememberKey" class="your-data-remember-key" />
-                    Remember the backup key on this device, for one-click and automatic backups (the passphrase itself isn't kept, and the key can only make backups, not open them)
+                    {{ t('yourDataView.rememberTheBackupKeyOn') }}
                 </label>
                 <p v-if="backupPassphraseHint" class="identity-unlock-error">{{ backupPassphraseHint }}</p>
                 <p v-if="backupForm.error" class="identity-unlock-error">{{ backupForm.error }}</p>
                 <div class="your-data-buttons">
                     <button type="button" class="action-btn action-btn--primary your-data-backup" :disabled="backupForm.busy" @click="createBackup">
-                        {{ backupForm.busy ? 'Backing up…' : 'Back Up to a File' }}
+                        {{ backupForm.busy ? t('yourDataView.backingUp') : t('yourDataView.backUpToAFile') }}
                     </button>
                     <button v-if="canShareFiles" type="button" class="action-btn action-btn--secondary your-data-share" :disabled="backupForm.busy" @click="shareBackup">
-                        Share Backup…
+                        {{ t('yourDataView.shareBackup') }}
                     </button>
                     <button v-if="destinationState.folder" type="button" class="action-btn action-btn--secondary your-data-backup-folder" :disabled="backupForm.busy" @click="backUpToFolder">
-                        Back Up to "{{ destinationState.folder.name }}"
+                        {{ t('yourDataView.backUpTo', { name: destinationState.folder.name }) }}
                     </button>
                 </div>
                 <p v-if="destinationState.folder && destinationState.keyRemembered" class="form-hint form-hint--neutral">
-                    The backup key is remembered: Back Up to "{{ destinationState.folder.name }}" works without the passphrase.
+                    {{ t('yourDataView.theBackupKeyIsRemembered', { name: destinationState.folder.name }) }}
                 </p>
                 <div v-if="backupForm.result" class="identity-import-result your-data-backup-result">
-                    <p>{{ backupForm.result.where }}<template v-if="backupForm.result.size"> ({{ formatByteSize(backupForm.result.size) }})</template> Keep the backup and its passphrase somewhere safe.</p>
+                    <p>{{ backupForm.result.where }}<template v-if="backupForm.result.size"> ({{ formatByteSize(backupForm.result.size) }})</template> {{ t('yourDataView.keepTheBackupAndIts') }}</p>
                     <ul>
                         <li v-for="row in backupForm.result.rows" :key="row.group">{{ row.label }}: {{ row.count }}</li>
                     </ul>
                     <p v-if="backupForm.result.leftOutContentCount">
-                        Left out {{ backupForm.result.leftOutContentCount }} downloaded {{ backupForm.result.leftOutContentCount === 1 ? 'build' : 'builds' }}.
+                        {{ t('yourDataView.leftOutBuilds', { count: backupForm.result.leftOutContentCount }) }}
                     </p>
                 </div>
             </div>
 
             <div v-if="available && statusAvailable" class="your-data-section your-data-reminders">
-                <h2>Reminders and automatic backups</h2>
+                <h2>{{ t('yourDataView.remindersAndAutomaticBackups') }}</h2>
                 <p class="form-hint form-hint--neutral your-data-last-backup">
-                    <template v-if="lastBackupText">Last backup: {{ lastBackupText }}.</template>
-                    <template v-else>This device hasn't been backed up yet.</template>
+                    <template v-if="lastBackupText">{{ t('yourDataView.lastBackup', { lastBackupText: lastBackupText }) }}</template>
+                    <template v-else>{{ t('yourDataView.thisDeviceHasnTBeen') }}</template>
                 </p>
                 <label class="form-field">
-                    <span class="form-label">Remind me to back up</span>
+                    <span class="form-label">{{ t('yourDataView.remindMeToBackUp') }}</span>
                     <select class="form-input your-data-reminder-interval" :value="status.reminderIntervalDays" @change="setReminderInterval">
                         <option v-for="option in reminderOptions" :key="option.days" :value="option.days">{{ option.label }}</option>
                     </select>
                 </label>
 
-                <h3>Backup folder</h3>
+                <h3>{{ t('yourDataView.backupFolder') }}</h3>
                 <template v-if="folderSupported">
                     <p class="form-hint form-hint--neutral">
-                        Choose a folder your cloud storage syncs (Dropbox, OneDrive, iCloud Drive, Google Drive) or a USB drive, and
-                        backups go there too, one file a day, keeping the newest ten.
+                        {{ t('yourDataView.chooseAFolderYourCloud') }}
                     </p>
                     <p v-if="destinationState.folder" class="your-data-folder">
-                        Folder: <strong>{{ destinationState.folder.name }}</strong>
-                        <template v-if="destinationState.folder.permission !== 'granted'"> (the browser asks again before the next backup)</template>
+                        <I18nText keypath="yourDataView.folder"><template #folder><strong>{{ destinationState.folder.name }}</strong></template></I18nText>
+                        <template v-if="destinationState.folder.permission !== 'granted'"> {{ t('yourDataView.theBrowserAsksAgainBefore') }}</template>
                     </p>
                     <div class="your-data-buttons">
                         <button type="button" class="action-btn action-btn--secondary your-data-choose-folder" :disabled="destinationForm.busy" @click="chooseFolder">
-                            {{ destinationState.folder ? 'Choose Another Folder' : 'Choose Folder…' }}
+                            {{ destinationState.folder ? t('yourDataView.chooseAnotherFolder') : t('yourDataView.chooseFolder') }}
                         </button>
-                        <button v-if="destinationState.folder" type="button" class="action-btn action-btn--secondary your-data-forget-folder" :disabled="destinationForm.busy" @click="forgetFolder">Stop Using This Folder</button>
-                        <button v-if="destinationState.keyRemembered" type="button" class="action-btn action-btn--secondary your-data-forget-key" :disabled="destinationForm.busy" @click="forgetKey">Forget Backup Key</button>
+                        <button v-if="destinationState.folder" type="button" class="action-btn action-btn--secondary your-data-forget-folder" :disabled="destinationForm.busy" @click="forgetFolder">{{ t('yourDataView.stopUsingThisFolder') }}</button>
+                        <button v-if="destinationState.keyRemembered" type="button" class="action-btn action-btn--secondary your-data-forget-key" :disabled="destinationForm.busy" @click="forgetKey">{{ t('yourDataView.forgetBackupKey') }}</button>
                     </div>
                     <label class="your-data-checkbox">
                         <input type="checkbox" class="your-data-automatic" :checked="status.automaticFolderBackup"
                                :disabled="!destinationState.folder || !destinationState.keyRemembered" @change="setAutomatic" />
-                        Back up to the folder automatically once a day while ForkBuild is open
+                        {{ t('yourDataView.backUpToTheFolder') }}
                     </label>
                     <p v-if="!destinationState.folder || !destinationState.keyRemembered" class="form-hint form-hint--neutral">
-                        Needs a folder, and the backup key remembered: tick "Remember the backup key" when you back up.
+                        {{ t('yourDataView.needsAFolderAndThe') }}
                     </p>
                     <p v-if="status.automaticFolderBackup && destinationState.folder && destinationState.folder.permission !== 'granted'" class="form-hint">
-                        Automatic backups wait until you back up to the folder once in this session and allow it when the browser asks.
+                        {{ t('yourDataView.automaticBackupsWaitUntilYou') }}
                     </p>
-                    <p v-if="status.lastAutomaticBackupError" class="identity-unlock-error">The last automatic backup failed: {{ status.lastAutomaticBackupError }}</p>
+                    <p v-if="status.lastAutomaticBackupError" class="identity-unlock-error">{{ t('yourDataView.theLastAutomaticBackupFailed', { lastAutomaticBackupError: status.lastAutomaticBackupError }) }}</p>
                 </template>
                 <p v-else class="form-hint form-hint--neutral">
-                    This browser can't save to a folder (Chrome and Edge on computers can).
-                    <template v-if="canShareFiles"> Share Backup sends the file to another app, such as a cloud drive or email.</template>
-                    Download the file and move it to cloud storage or another disk yourself.
+                    {{ t('yourDataView.thisBrowserCanTSave') }}
+                    <template v-if="canShareFiles"> {{ t('yourDataView.shareBackupSendsTheFile') }}</template>
+                    {{ t('yourDataView.downloadTheFileAndMove') }}
                 </p>
                 <p v-if="destinationForm.error" class="identity-unlock-error">{{ destinationForm.error }}</p>
                 <p v-if="destinationForm.message" class="form-hint form-hint--neutral">{{ destinationForm.message }}</p>
             </div>
 
             <div v-if="available" class="your-data-section">
-                <h2>Restore</h2>
+                <h2>{{ t('yourDataView.restore') }}</h2>
                 <p class="form-hint form-hint--neutral">
-                    Close ForkBuild in any other tab first: a tab left open can write its older data back.
-                    The page reloads when the restore is done.
+                    {{ t('yourDataView.closeForkbuildInAnyOther') }}
                 </p>
 
                 <div v-if="restoreForm.result" class="identity-import-result your-data-restore-result">
                     <p>
-                        Restored {{ restoreForm.result.written }} {{ restoreForm.result.written === 1 ? 'entry' : 'entries' }}.
-                        <template v-if="restoreForm.result.kept"> Kept this device's version of {{ restoreForm.result.kept }}.</template>
-                        <template v-if="restoreForm.result.skipped"> Skipped {{ restoreForm.result.skipped }} this version of ForkBuild doesn't know.</template>
+                        {{ t('yourDataView.restoredEntries', { count: restoreForm.result.written }) }}
+                        <template v-if="restoreForm.result.kept"> {{ t('yourDataView.keptThisDeviceSVersion', { kept: restoreForm.result.kept }) }}</template>
+                        <template v-if="restoreForm.result.skipped"> {{ t('yourDataView.skippedThisVersionOfForkbuild', { skipped: restoreForm.result.skipped }) }}</template>
                     </p>
-                    <p>Reloading…</p>
+                    <p>{{ t('yourDataView.reloading') }}</p>
                 </div>
 
                 <template v-else-if="!restoreForm.preview">
                     <label class="form-field">
-                        <span class="form-label">Backup file</span>
+                        <span class="form-label">{{ t('yourDataView.backupFile') }}</span>
                         <input type="file" :accept="backupFileExtension" class="your-data-restore-file" @change="onRestoreFileChosen" />
                     </label>
                     <template v-if="restoreForm.bytes">
                         <input v-model="restoreForm.passphrase" type="password" class="modal-input your-data-restore-passphrase"
-                               autocomplete="off" placeholder="Backup passphrase" @keydown.enter="openBackup" />
+                               autocomplete="off" :placeholder="t('yourDataView.backupPassphrase')" @keydown.enter="openBackup" />
                         <button type="button" class="action-btn action-btn--secondary your-data-open" :disabled="restoreForm.busy" @click="openBackup">
-                            {{ restoreForm.busy ? 'Opening…' : 'Open Backup' }}
+                            {{ restoreForm.busy ? t('yourDataView.opening') : t('yourDataView.openBackup') }}
                         </button>
                     </template>
                 </template>
 
                 <div v-else class="identity-import-preview your-data-restore-preview">
-                    <p><strong>{{ restoreForm.fileName }}</strong>, made {{ formatDate(restoreForm.preview.createdAt) }}, holds:</p>
+                    <p><I18nText keypath="yourDataView.madeHolds" :params="{ createdAt: formatDate(restoreForm.preview.createdAt) }"><template #file><strong>{{ restoreForm.fileName }}</strong></template></I18nText></p>
                     <ul>
                         <li v-for="row in restoreForm.preview.rows" :key="row.group">{{ row.label }}: {{ row.count }}</li>
                     </ul>
                     <label class="your-data-radio">
                         <input type="radio" v-model="restoreForm.mode" :value="RestoreMode.MERGE" class="your-data-mode-merge" />
-                        Add what this device doesn't have (where both have something, this device's version is kept)
+                        {{ t('yourDataView.addWhatThisDeviceDoesn') }}
                     </label>
                     <label class="your-data-radio">
                         <input type="radio" v-model="restoreForm.mode" :value="RestoreMode.REPLACE" class="your-data-mode-replace" />
-                        Replace everything on this device with the backup
+                        {{ t('yourDataView.replaceEverythingOnThisDevice') }}
                     </label>
                     <label v-if="restoreForm.mode === RestoreMode.REPLACE" class="your-data-checkbox your-data-confirm-replace">
                         <input type="checkbox" v-model="restoreForm.confirmReplace" />
-                        I understand this deletes everything ForkBuild has stored on this device first
+                        {{ t('yourDataView.iUnderstandThisDeletesEverything') }}
                     </label>
                     <div class="modal-actions">
-                        <button type="button" class="modal-btn modal-btn--secondary" @click="cancelRestore">Cancel</button>
+                        <button type="button" class="modal-btn modal-btn--secondary" @click="cancelRestore">{{ t('yourDataView.cancel') }}</button>
                         <button type="button" class="modal-btn modal-btn--primary your-data-restore" :disabled="!canRestore" @click="restoreBackup">
-                            {{ restoreForm.busy ? 'Restoring…' : 'Restore' }}
+                            {{ restoreForm.busy ? t('yourDataView.restoring') : t('yourDataView.restore2') }}
                         </button>
                     </div>
                 </div>
@@ -524,7 +528,7 @@ function safeCanShare(sharing, files) {
 async function shareBytes(sharing, bytes, filename) {
     const file = new File([bytes], filename, { type: 'application/octet-stream' });
     try {
-        await sharing.share({ files: [file], title: 'ForkBuild backup' });
+        await sharing.share({ files: [file], title: t('yourDataView.forkbuildBackup') });
         return true;
     } catch (error) {
         if (error && error.name === 'AbortError') return false;

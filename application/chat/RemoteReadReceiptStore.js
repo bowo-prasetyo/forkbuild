@@ -1,4 +1,6 @@
 import { RemoteReadReceipt } from '../../core/RemoteReadReceipt.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const STORAGE_KEY_PREFIX = 'chat-remote-read-receipts:';
 
@@ -86,7 +88,7 @@ export class RemoteReadReceiptStore {
     _requireOwner() {
         const owner = this._currentOwnerOrNull();
         if (!owner) {
-            throw new Error('RemoteReadReceiptStore: no user is currently logged in');
+            throw new UserFacingError(message('refusal.noUserIsCurrentlyLogged'), { detail: 'RemoteReadReceiptStore: no user is currently logged in' });
         }
         return owner;
     }

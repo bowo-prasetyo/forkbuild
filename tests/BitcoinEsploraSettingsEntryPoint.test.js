@@ -8,6 +8,7 @@ import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as source } from './support/SourceText.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // Bitcoin Endpoint Settings UI.
 //
@@ -96,11 +97,11 @@ async function run() {
         assert(routerSource.includes("import BitcoinEsploraSettingsView from '../views/BitcoinEsploraSettingsView.js';"),
             '8. the router imports the real view component, never a stub');
 
-        const networkSettingsSource = await source('ui/views/NetworkSettingsView.js');
+        const networkSettingsSource = withEnglish(await source('ui/views/NetworkSettingsView.js'));
         assert(/router-link to="\/settings\/bitcoin-esplora"/.test(networkSettingsSource),
             '9. the Network Settings hub links to the settings entry point');
 
-        const viewSource = await source('ui/views/BitcoinEsploraSettingsView.js');
+        const viewSource = withEnglish(await source('ui/views/BitcoinEsploraSettingsView.js'));
         const viewExecutable = viewSource.replace(/\/\/.*$/gm, '');
         assert(/inject\('bitcoinEsploraConfigurationStore',\s*null\)/.test(viewExecutable),
             '10. the view reads the configuration through the injected store, never a store it constructs itself');
@@ -244,7 +245,7 @@ async function run() {
     // Section G — view template sweep.
     // ===============================================================
     {
-        const viewSource = await source('ui/views/BitcoinEsploraSettingsView.js');
+        const viewSource = withEnglish(await source('ui/views/BitcoinEsploraSettingsView.js'));
 
         assert(/v-if="hasOverride"/.test(viewSource), '36. the template branches on whether an override is on file');
         assert(/Using the default/.test(viewSource) && /effectiveEntries/.test(viewSource),

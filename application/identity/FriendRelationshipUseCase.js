@@ -10,6 +10,8 @@ import {
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { resolveDirectSocialIdentity } from './SocialIdentityResolver.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const RELATIONSHIPS_CHANGED_EVENT = 'FriendRelationshipsChanged';
 const STORAGE_KEY_PREFIX = 'friend-relationships:';
@@ -180,10 +182,10 @@ export class FriendRelationshipUseCase {
         const all = this._loadAll();
         const existing = all.find((r) => r.identityId === social.identityId);
         if (existing && existing.status === FriendshipState.FRIEND) {
-            throw new Error('FriendRelationshipUseCase: already friends with this identity');
+            throw new UserFacingError(message('refusal.alreadyFriendsWithThisIdentity'), { detail: 'FriendRelationshipUseCase: already friends with this identity' });
         }
         if (existing && existing.outgoingAction) {
-            throw new Error('FriendRelationshipUseCase: a friend request has already been sent to this identity');
+            throw new UserFacingError(message('refusal.aFriendRequestHasAlready'), { detail: 'FriendRelationshipUseCase: a friend request has already been sent to this identity' });
         }
         // 0.2.79 — `subjectIdentity` is a WIRE field, addressed to the RAW
         // identity the live connection actually proved — the recipient's
@@ -218,10 +220,10 @@ export class FriendRelationshipUseCase {
         const all = this._loadAll();
         const existing = all.find((r) => r.identityId === social.identityId);
         if (!existing || !existing.incomingAction || existing.incomingAction.action !== FriendshipAction.REQUEST) {
-            throw new Error('FriendRelationshipUseCase: no pending friend request from this identity');
+            throw new UserFacingError(message('refusal.noPendingFriendRequestFrom'), { detail: 'FriendRelationshipUseCase: no pending friend request from this identity' });
         }
         if (existing.outgoingAction) {
-            throw new Error('FriendRelationshipUseCase: already responded to this identity');
+            throw new UserFacingError(message('refusal.alreadyRespondedToThisIdentity'), { detail: 'FriendRelationshipUseCase: already responded to this identity' });
         }
         // 0.2.79 — RAW wire address, same reasoning as sendFriendRequest()
         // above.
@@ -250,10 +252,10 @@ export class FriendRelationshipUseCase {
         const all = this._loadAll();
         const existing = all.find((r) => r.identityId === social.identityId);
         if (!existing || !existing.incomingAction || existing.incomingAction.action !== FriendshipAction.REQUEST) {
-            throw new Error('FriendRelationshipUseCase: no pending friend request from this identity');
+            throw new UserFacingError(message('refusal.noPendingFriendRequestFrom'), { detail: 'FriendRelationshipUseCase: no pending friend request from this identity' });
         }
         if (existing.outgoingAction) {
-            throw new Error('FriendRelationshipUseCase: already responded to this identity');
+            throw new UserFacingError(message('refusal.alreadyRespondedToThisIdentity'), { detail: 'FriendRelationshipUseCase: already responded to this identity' });
         }
         // 0.2.79 — RAW wire address, same reasoning as sendFriendRequest()
         // above.
@@ -277,10 +279,10 @@ export class FriendRelationshipUseCase {
         const all = this._loadAll();
         const existing = all.find((r) => r.identityId === social.identityId);
         if (!existing || !existing.outgoingAction || existing.outgoingAction.action !== FriendshipAction.REQUEST) {
-            throw new Error('FriendRelationshipUseCase: no pending friend request to cancel');
+            throw new UserFacingError(message('refusal.noPendingFriendRequestTo'), { detail: 'FriendRelationshipUseCase: no pending friend request to cancel' });
         }
         if (existing.incomingAction) {
-            throw new Error('FriendRelationshipUseCase: this identity has already responded — cancel is no longer possible');
+            throw new UserFacingError(message('refusal.thisIdentityHasAlreadyResponded'), { detail: 'FriendRelationshipUseCase: this identity has already responded — cancel is no longer possible' });
         }
         // 0.2.79 — RAW wire address, same reasoning as sendFriendRequest()
         // above.
@@ -305,7 +307,7 @@ export class FriendRelationshipUseCase {
         const all = this._loadAll();
         const existing = all.find((r) => r.identityId === social.identityId);
         if (!existing || existing.status !== FriendshipState.FRIEND) {
-            throw new Error('FriendRelationshipUseCase: not currently friends with this identity');
+            throw new UserFacingError(message('refusal.notCurrentlyFriendsWithThis'), { detail: 'FriendRelationshipUseCase: not currently friends with this identity' });
         }
         const originatingRequest = existing.outgoingAction.action === FriendshipAction.REQUEST
             ? existing.outgoingAction
@@ -456,7 +458,7 @@ export class FriendRelationshipUseCase {
     // safe to let those through regardless of block state).
     _requireNotBlocked(identityId) {
         if (this._isBlocked(identityId)) {
-            throw new Error('FriendRelationshipUseCase: this identity is blocked — unblock first');
+            throw new UserFacingError(message('refusal.thisIdentityIsBlockedUnblock'), { detail: 'FriendRelationshipUseCase: this identity is blocked — unblock first' });
         }
     }
 
@@ -480,7 +482,7 @@ export class FriendRelationshipUseCase {
     _requireCurrentUsername() {
         const owner = this._currentUsernameOrNull();
         if (!owner) {
-            throw new Error('FriendRelationshipUseCase: no user is currently logged in');
+            throw new UserFacingError(message('refusal.noUserIsCurrentlyLogged'), { detail: 'FriendRelationshipUseCase: no user is currently logged in' });
         }
         return owner;
     }

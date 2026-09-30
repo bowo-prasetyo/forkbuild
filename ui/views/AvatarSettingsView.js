@@ -4,6 +4,7 @@ import { CreatePresenceVisibilityUseCase } from '../../application/presence/Crea
 import { CreateAvatarProfileVisibilityUseCase } from '../../application/avatar/CreateAvatarProfileVisibilityUseCase.js';
 import { sortOptionsByLabel, sortLabels } from '../../utils/sortOptionsByLabel.js';
 import VisibilityPolicyForm from '../components/VisibilityPolicyForm.js';
+import { errorText, hasMessage, t } from '../i18n/i18n.js';
 
 // 0.2.34 — the first VISIBLE avatar feature: an editor over the
 // persistent AvatarProfile core/application built in 0.2.33/0.2.34.
@@ -140,7 +141,7 @@ export default {
                 saveStatus.value = 'saved';
             } catch (error) {
                 saveStatus.value = 'idle';
-                saveError.value = error.message;
+                saveError.value = errorText(error);
             }
         }
 
@@ -158,7 +159,15 @@ export default {
             }
         });
 
+        // A template's component names ('skin', 'hair') are ids; the built-in
+        // ones are translated, a template's own new one is shown as named.
+        function componentLabel(name) {
+            return hasMessage(`avatarComponent.${name}`) ? t(`avatarComponent.${name}`) : name;
+        }
+
         return {
+            componentLabel,
+            t,
             user,
             templates,
             loaded,
@@ -180,15 +189,15 @@ export default {
     },
     template: `
         <section class="avatar-settings-view">
-            <h1>My Avatar</h1>
+            <h1>{{ t('avatarSettingsView.myAvatar') }}</h1>
 
             <p v-if="!user" class="form-hint form-hint--neutral">
-                Log in to create and customize your avatar.
+                {{ t('avatarSettingsView.logInToCreateAnd') }}
             </p>
 
             <div v-else-if="loaded && selectedTemplate" class="avatar-settings-layout">
                 <div class="avatar-preview-panel">
-                    <svg viewBox="0 0 100 140" class="avatar-preview-figure" role="img" aria-label="Avatar preview">
+                    <svg viewBox="0 0 100 140" class="avatar-preview-figure" role="img" :aria-label="t('avatarSettingsView.avatarPreview')">
                         <rect x="30" y="70" width="40" height="45" rx="6" :fill="appearance.pantsColor" />
                         <rect x="25" y="40" width="50" height="38" rx="8" :fill="appearance.shirtColor" />
                         <circle cx="50" cy="24" r="20" :fill="skinSwatch(appearance.skin)" />
@@ -202,7 +211,7 @@ export default {
 
                 <div class="avatar-settings-form">
                     <label class="form-field">
-                        <span class="form-label">Template</span>
+                        <span class="form-label">{{ t('avatarSettingsView.template') }}</span>
                         <select v-model="selectedTemplateId" @change="onTemplateChange" class="form-select">
                             <option v-for="t in templates" :key="t.templateId" :value="t.templateId">{{ t.displayLabel }}</option>
                         </select>
@@ -210,7 +219,7 @@ export default {
 
                     <template v-for="name in selectedTemplate.componentNames" :key="name">
                         <div v-if="selectedTemplate.getComponent(name).multiple" class="form-field avatar-component-field">
-                            <span class="form-label">{{ name }}</span>
+                            <span class="form-label">{{ componentLabel(name) }}</span>
                             <span class="avatar-component-controls">
                                 <span class="avatar-accessory-list">
                                     <label v-for="opt in componentOptions(name)" :key="opt" class="avatar-accessory-option">
@@ -227,12 +236,12 @@ export default {
                                     type="color"
                                     v-model="appearance[name + 'Color']"
                                     class="avatar-color-swatch"
-                                    :aria-label="name + ' color'"
+                                    :aria-label="t('avatarSettingsView.componentColor', { component: componentLabel(name) })"
                                 />
                             </span>
                         </div>
                         <label v-else class="form-field avatar-component-field">
-                            <span class="form-label">{{ name }}</span>
+                            <span class="form-label">{{ componentLabel(name) }}</span>
                             <span class="avatar-component-controls">
                                 <select v-model="appearance[name]" class="form-select">
                                     <option v-for="opt in componentOptions(name)" :key="opt" :value="opt">{{ opt }}</option>
@@ -242,21 +251,21 @@ export default {
                                     type="color"
                                     v-model="appearance[name + 'Color']"
                                     class="avatar-color-swatch"
-                                    :aria-label="name + ' color'"
+                                    :aria-label="t('avatarSettingsView.componentColor', { component: componentLabel(name) })"
                                 />
                             </span>
                         </label>
                     </template>
 
                     <label class="form-field">
-                        <span class="form-label">Display name</span>
+                        <span class="form-label">{{ t('avatarSettingsView.displayName') }}</span>
                         <input v-model="displayName" type="text" class="form-input" maxlength="60" />
                     </label>
 
                     <p v-if="saveError" class="form-hint">{{ saveError }}</p>
-                    <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
+                    <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('avatarSettingsView.saved') }}</p>
 
-                    <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving'">Save</button>
+                    <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving'">{{ t('avatarSettingsView.save') }}</button>
                 </div>
             </div>
 
@@ -269,11 +278,11 @@ export default {
             <VisibilityPolicyForm
                 v-if="loaded"
                 :use-case="presenceVisibilityUseCase"
-                title="Presence Visibility"
-                description="Controls who may receive your live position while you're in World View — never your avatar's appearance."
-                public-label="Public — anyone connected can see you"
-                hidden-label="Hidden — never advertise your presence"
-                save-label="Save Visibility"
+                :title="t('avatarSettingsView.presenceVisibility')"
+                :description="t('avatarSettingsView.presenceDescription')"
+                :public-label="t('avatarSettingsView.presencePublic')"
+                :hidden-label="t('avatarSettingsView.presenceHidden')"
+                :save-label="t('avatarSettingsView.saveVisibility')"
             />
 
             <!-- 0.2.58: a deliberately SEPARATE form/save action from
@@ -284,15 +293,15 @@ export default {
             <VisibilityPolicyForm
                 v-if="loaded"
                 :use-case="avatarProfileVisibilityUseCase"
-                title="Profile Visibility"
-                description="Your avatar appearance may be shared independently of presence — controls who may receive your template, colors, and display name."
-                public-label="Public — anyone connected can see your appearance"
-                hidden-label="Hidden — never advertise your appearance"
-                save-label="Save Profile Visibility"
+                :title="t('avatarSettingsView.profileVisibility')"
+                :description="t('avatarSettingsView.profileDescription')"
+                :public-label="t('avatarSettingsView.profilePublic')"
+                :hidden-label="t('avatarSettingsView.profileHidden')"
+                :save-label="t('avatarSettingsView.saveProfileVisibility')"
             />
 
             <p v-if="loaded" class="form-hint form-hint--neutral">
-                Friendship and visibility are separate. Being friends does not automatically reveal your avatar — your visibility policies above decide what is shared, and with whom. Withholding a future update is also not the same as remote deletion: a peer who already received your presence or appearance keeps whatever they last received.
+                {{ t('avatarSettingsView.friendshipAndVisibilityAreSeparate') }}
             </p>
         </section>
     `

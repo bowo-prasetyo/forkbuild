@@ -1,5 +1,7 @@
 import { AvatarProfileVisibilityPolicy } from '../../core/AvatarProfileVisibilityPolicy.js';
 import { isValidPresenceVisibility } from '../../core/PresenceVisibility.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const STORAGE_KEY_PREFIX = 'profile-visibility:';
 
@@ -64,7 +66,7 @@ export class AvatarProfileVisibilityUseCase {
     _requireCurrentUsername() {
         const user = this._identityProvider.currentUser();
         if (!user) {
-            throw new Error('AvatarProfileVisibilityUseCase: no user is currently logged in');
+            throw new UserFacingError(message('refusal.noUserIsCurrentlyLogged'), { detail: 'AvatarProfileVisibilityUseCase: no user is currently logged in' });
         }
         return user.username;
     }

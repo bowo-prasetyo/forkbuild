@@ -18,6 +18,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { errorText } from '../ui/i18n/i18n.js';
 
 // NotificationHistoryAccess backs the Notifications panel in the app's top
 // navigation bar. It reads through its own NotificationEventStore over the
@@ -72,8 +73,10 @@ function accessFor(identityProvider, lookupProviders = [discoveryProvider]) {
     } catch (error) {
         signedOutError = error;
     }
-    assert(signedOutError && /sign in/i.test(signedOutError.message) && !/UseCase/.test(signedOutError.message),
-        `signed out, it asks you to sign in, without the use case's class name — got ${signedOutError && signedOutError.message}`);
+    // What the panel shows (errorText): the refusal in the person's language.
+    const shown = errorText(signedOutError);
+    assert(signedOutError && /sign in/i.test(shown) && !/UseCase/.test(shown),
+        `signed out, it asks you to sign in, without the use case's class name — got ${shown}`);
     console.log('✓ reads the signed-in identity\'s notifications from shared storage');
 }
 

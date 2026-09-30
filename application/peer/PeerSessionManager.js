@@ -5,6 +5,8 @@ import { PeerConnectionState } from '../../peer/PeerConnectionState.js';
 import { ConnectToPeerUseCase } from './ConnectToPeerUseCase.js';
 import { DiscoverPeersUseCase } from './DiscoverPeersUseCase.js';
 import { signingIdentityId } from '../../peer/RendezvousPublicationSigning.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const DEFAULT_INVITATION_TTL_MS = 10 * 60 * 1000; // 10 minutes — matches peer/PeerInvitation.js's own default
 const SIGNAL_TIMEOUT_MS = 30 * 1000; // ICE gathering ordinarily resolves in well under this on a working network
@@ -162,13 +164,13 @@ export class PeerSessionManager {
     async completeConnection(connectionId, replyInput) {
         const connectedPeer = this.registry.get(connectionId);
         if (!connectedPeer) {
-            throw new Error('PeerSessionManager: no pending connection with that id — it may have already closed or expired');
+            throw new UserFacingError(message('refusal.noPendingConnectionWithThat'), { detail: 'PeerSessionManager: no pending connection with that id — it may have already closed or expired' });
         }
         let answer;
         try {
             answer = typeof replyInput === 'string' ? JSON.parse(replyInput) : replyInput;
         } catch {
-            throw new Error('PeerSessionManager: that reply is not valid JSON — paste it exactly as it was copied');
+            throw new UserFacingError(message('refusal.thatReplyIsNotValid'), { detail: 'PeerSessionManager: that reply is not valid JSON — paste it exactly as it was copied' });
         }
         await connectedPeer.connection.acceptRemoteAnswer(answer);
         return connectedPeer;
@@ -240,7 +242,7 @@ export class PeerSessionManager {
     // a pending "Unknown peer" nobody can ever answer.
     async publishSelf({ ttlMs = DEFAULT_INVITATION_TTL_MS, prepareRelay = true } = {}) {
         if (!signingIdentityId(this._identityProvider)) {
-            throw new Error('PeerSessionManager: unlock your identity to be discoverable — a locked or signed-out identity cannot sign a publication');
+            throw new UserFacingError(message('refusal.unlockYourIdentityToBe'), { detail: 'PeerSessionManager: unlock your identity to be discoverable — a locked or signed-out identity cannot sign a publication' });
         }
         const { invitation, connectedPeer } = await this.createInvitation({ ttlMs, prepareRelay });
         let publication;
@@ -445,7 +447,7 @@ function parseInvitation(invitationInput) {
         try {
             json = JSON.parse(invitationInput);
         } catch {
-            throw new Error('PeerSessionManager: that invitation is not valid JSON — paste it exactly as it was copied');
+            throw new UserFacingError(message('refusal.thatInvitationIsNotValid'), { detail: 'PeerSessionManager: that invitation is not valid JSON — paste it exactly as it was copied' });
         }
     }
     return PeerInvitation.fromJSON(json);

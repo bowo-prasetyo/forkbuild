@@ -9,6 +9,8 @@ import { LocalAudioTrackProvider } from './LocalAudioTrackProvider.js';
 import { createId } from '../../core/createId.js';
 import { resolveDirectSocialIdentity } from '../identity/SocialIdentityResolver.js';
 import { findLiveConnectedPeers } from '../peer/ConnectedIdentityPeers.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const CALL_STATE_EVENT = 'VoiceCallStateChanged';
 const INCOMING_CALL_EVENT = 'VoiceIncomingCall';
@@ -228,7 +230,7 @@ export class VoiceUseCase {
         this._requireIdle();
         const candidates = this._liveVoiceCandidates(identityId);
         if (candidates.length === 0) {
-            throw new Error('VoiceUseCase: no reachable device for this identity');
+            throw new UserFacingError(message('refusal.noReachableDeviceForThis'), { detail: 'VoiceUseCase: no reachable device for this identity' });
         }
 
         const callId = createId();
@@ -254,7 +256,7 @@ export class VoiceUseCase {
 
     async acceptCall(callId) {
         if (!this._call || this._call.callId !== callId || this._call.state !== VoiceSessionState.RINGING) {
-            throw new Error('VoiceUseCase: no incoming call with that id is waiting to be accepted');
+            throw new UserFacingError(message('refusal.noIncomingCallWithThat'), { detail: 'VoiceUseCase: no incoming call with that id is waiting to be accepted' });
         }
         // Eligibility at INVITE time does not guarantee it at ACCEPT time.
         this._requireEligible(this._call.peerIdentityId);
@@ -275,7 +277,7 @@ export class VoiceUseCase {
 
     rejectCall(callId) {
         if (!this._call || this._call.callId !== callId || this._call.state !== VoiceSessionState.RINGING) {
-            throw new Error('VoiceUseCase: no incoming call with that id is waiting to be rejected');
+            throw new UserFacingError(message('refusal.noIncomingCallWithThat2'), { detail: 'VoiceUseCase: no incoming call with that id is waiting to be rejected' });
         }
         const call = this._call;
         const myIdentityId = this._identityProvider.getSigningIdentity().id;
@@ -823,7 +825,7 @@ export class VoiceUseCase {
 
     _requireEligible(identityId) {
         if (this._isBlocked(identityId)) {
-            throw new Error('VoiceUseCase: this identity is blocked');
+            throw new UserFacingError(message('refusal.thisIdentityIsBlocked'), { detail: 'VoiceUseCase: this identity is blocked' });
         }
         if (this._friends.getState(identityId) !== FriendshipState.FRIEND) {
             throw new Error('VoiceUseCase: voice requires a mutual friendship');
@@ -839,7 +841,7 @@ export class VoiceUseCase {
 
     _requireIdle() {
         if (this._call) {
-            throw new Error('VoiceUseCase: this device is already in a call');
+            throw new UserFacingError(message('refusal.thisDeviceIsAlreadyIn'), { detail: 'VoiceUseCase: this device is already in a call' });
         }
     }
 

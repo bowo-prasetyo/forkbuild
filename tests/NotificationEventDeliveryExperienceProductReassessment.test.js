@@ -26,6 +26,7 @@ import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.530 — Notification Event & Delivery Experience Product Reassessment.
 //
@@ -396,7 +397,7 @@ async function runTests() {
     // Section F — Trust-language review.
     // ===============================================================
     {
-        const panelSource = await rawSource('ui/components/NotificationHistoryPanel.js');
+        const panelSource = withEnglish(await rawSource('ui/components/NotificationHistoryPanel.js'));
         const templateMatch = panelSource.match(/template: `([\s\S]*)`\s*\};?\s*$/);
         assert(templateMatch, 'F0. NotificationHistoryPanel.js\'s own template literal is extractable for a user-facing-text sweep.');
         const userFacingText = templateMatch[1];

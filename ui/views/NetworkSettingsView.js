@@ -4,38 +4,41 @@
 // Gateway, Bitcoin Endpoint, Nostr Relays, STUN, TURN, Rendezvous) — so the
 // top nav only needs one "Network Settings" entry instead of ten. Each
 // linked page keeps its own route, component, and Save logic unchanged.
+import { t } from '../i18n/i18n.js';
+
 export default {
     name: 'NetworkSettingsView',
+    methods: { t },
     template: `
         <section class="network-settings-view">
-            <h1>Network Settings</h1>
+            <h1>{{ t('networkSettingsView.networkSettings') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Endpoint servers ForkBuild uses to publish, retrieve, and discover content across decentralized substrates.
+                {{ t('networkSettingsView.endpointServersForkbuildUsesTo') }}
             </p>
 
             <ul class="network-settings-list">
                 <li>
                     <router-link to="/settings/content-provider" class="network-settings-link">
-                        <span class="network-settings-link-title">Content Provider</span>
-                        <span class="form-hint form-hint--neutral">Preferred storage provider for publishing content.</span>
+                        <span class="network-settings-link-title">{{ t('networkSettingsView.contentProvider') }}</span>
+                        <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.preferredStorageProviderForPublishing') }}</span>
                     </router-link>
                 </li>
                 <li>
                     <router-link to="/settings/announcement-discovery-provider" class="network-settings-link">
-                        <span class="network-settings-link-title">Announcement / Discovery Provider</span>
-                        <span class="form-hint form-hint--neutral">Preferred substrate — Nostr or Arweave — for announcing and discovering Publications, Snapshots, Place Naming, and Commentary.</span>
+                        <span class="network-settings-link-title">{{ t('networkSettingsView.announcementDiscoveryProvider') }}</span>
+                        <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.preferredSubstrateNostrOrArweave') }}</span>
                     </router-link>
                 </li>
                 <li>
                     <router-link to="/settings/anchor-provider" class="network-settings-link">
-                        <span class="network-settings-link-title">Proof / Anchoring Provider <span class="experimental-badge">Experimental</span></span>
-                        <span class="form-hint form-hint--neutral">Preferred substrate — Bitcoin or Arweave — "Use Preferred Provider" anchors new evidence onto. Base keeps its own separate wallet-guided anchoring flow.</span>
+                        <span class="network-settings-link-title">{{ t('networkSettingsView.proofAnchoringProvider') }} <span class="experimental-badge">{{ t('networkSettingsView.experimental') }}</span></span>
+                        <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.preferredSubstrateBitcoinOrArweave') }}</span>
                     </router-link>
                 </li>
                 <li>
                     <router-link to="/settings/arweave-gateway" class="network-settings-link">
-                        <span class="network-settings-link-title">Arweave Gateway</span>
-                        <span class="form-hint form-hint--neutral">Gateway used for retrieving Arweave content.</span>
+                        <span class="network-settings-link-title">{{ t('networkSettingsView.arweaveGateway') }}</span>
+                        <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.gatewayUsedForRetrievingArweave') }}</span>
                     </router-link>
                 </li>
                 <li>
@@ -43,14 +46,14 @@ export default {
                          IPFS Gateway configurability (see core/
                          IpfsGatewayConfiguration.js's own header). -->
                     <router-link to="/settings/ipfs-gateway" class="network-settings-link">
-                        <span class="network-settings-link-title">IPFS Gateway</span>
-                        <span class="form-hint form-hint--neutral">Gateway used for retrieving IPFS content.</span>
+                        <span class="network-settings-link-title">{{ t('networkSettingsView.ipfsGateway') }}</span>
+                        <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.gatewayUsedForRetrievingIpfs') }}</span>
                     </router-link>
                 </li>
                 <li>
                     <router-link to="/settings/bitcoin-esplora" class="network-settings-link">
-                        <span class="network-settings-link-title">Bitcoin Endpoint <span class="experimental-badge">Experimental</span></span>
-                        <span class="form-hint form-hint--neutral">Esplora-compatible endpoint used for Bitcoin anchor broadcasting, confirmation, funding lookups, and proof verification.</span>
+                        <span class="network-settings-link-title">{{ t('networkSettingsView.bitcoinEndpoint') }} <span class="experimental-badge">{{ t('networkSettingsView.experimental') }}</span></span>
+                        <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.esploraCompatibleEndpointUsedFor') }}</span>
                     </router-link>
                 </li>
                 <li>
@@ -64,20 +67,20 @@ export default {
                          everywhere Nostr is used (Publications, Snapshots,
                          Place Naming, Commentary). -->
                     <router-link to="/settings/nostr-relay" class="network-settings-link">
-                        <span class="network-settings-link-title">Nostr Relays</span>
-                        <span class="form-hint form-hint--neutral">Relays used everywhere this replica publishes and discovers over Nostr — Publications, Snapshots, Place Naming, and Commentary.</span>
+                        <span class="network-settings-link-title">{{ t('networkSettingsView.nostrRelays') }}</span>
+                        <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.relaysUsedEverywhereThisReplica') }}</span>
                     </router-link>
                 </li>
                 <li>
                     <router-link to="/settings/steem" class="network-settings-link">
                         <span class="network-settings-link-title">Steem</span>
-                        <span class="form-hint form-hint--neutral">Where this replica reads Steem announcements from, and the account it posts as.</span>
+                        <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.whereThisReplicaReadsSteem') }}</span>
                     </router-link>
                 </li>
                 <li>
                     <router-link to="/settings/stun" class="network-settings-link">
-                        <span class="network-settings-link-title">STUN Servers</span>
-                        <span class="form-hint form-hint--neutral">Servers used for peer-to-peer connection negotiation.</span>
+                        <span class="network-settings-link-title">{{ t('networkSettingsView.stunServers') }}</span>
+                        <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.serversUsedForPeerTo') }}</span>
                     </router-link>
                 </li>
                 <li>
@@ -90,14 +93,14 @@ export default {
                          deliberately never folded into the STUN row — see
                          ui/views/TurnServerSettingsView.js's own header. -->
                     <router-link to="/settings/turn-server" class="network-settings-link">
-                        <span class="network-settings-link-title">TURN Server</span>
-                        <span class="form-hint form-hint--neutral">Your own TURN relay for peer connections that need one.</span>
+                        <span class="network-settings-link-title">{{ t('networkSettingsView.turnServer') }}</span>
+                        <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.yourOwnTurnRelayFor') }}</span>
                     </router-link>
                 </li>
                 <li>
                     <router-link to="/settings/rendezvous" class="network-settings-link">
-                        <span class="network-settings-link-title">Rendezvous Servers</span>
-                        <span class="form-hint form-hint--neutral">Servers used to help peers find each other.</span>
+                        <span class="network-settings-link-title">{{ t('networkSettingsView.rendezvousServers') }}</span>
+                        <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.serversUsedToHelpPeers') }}</span>
                     </router-link>
                 </li>
             </ul>

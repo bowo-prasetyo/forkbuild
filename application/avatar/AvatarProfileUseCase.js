@@ -1,6 +1,8 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { AvatarProfile, DEFAULT_AVATAR_TEMPLATE_ID } from '../../core/AvatarProfile.js';
 import { validateAvatarAppearance } from '../../core/AvatarAppearanceValidator.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const AVATAR_PROFILE_EVENT = 'AvatarProfileChanged';
 const STORAGE_KEY_PREFIX = 'avatar-profile:';
@@ -142,7 +144,7 @@ export class AvatarProfileUseCase {
     _requireCurrentUsername() {
         const user = this._identityProvider.currentUser();
         if (!user) {
-            throw new Error('AvatarProfileUseCase: no user is currently logged in');
+            throw new UserFacingError(message('refusal.noUserIsCurrentlyLogged'), { detail: 'AvatarProfileUseCase: no user is currently logged in' });
         }
         return user.username;
     }

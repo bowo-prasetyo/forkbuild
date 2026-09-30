@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue';
 import { stripPrefix } from './presentation.js';
+import { errorText } from '../../i18n/i18n.js';
 
 // Blocking is entirely local and never needs a live connection (see
 // core/PeerBlockRecord.js). `identity` is duck-typed (identityId,
@@ -19,7 +20,7 @@ export function useBlockedPeers({ peerBlockUseCase }) {
         try {
             peerBlockUseCase.block(identity);
         } catch (e) {
-            blockError.value = stripPrefix(e.message);
+            blockError.value = stripPrefix(errorText(e));
         }
     }
 
@@ -28,7 +29,7 @@ export function useBlockedPeers({ peerBlockUseCase }) {
         try {
             peerBlockUseCase.unblock(identityId);
         } catch (e) {
-            blockError.value = stripPrefix(e.message);
+            blockError.value = stripPrefix(errorText(e));
         }
     }
 

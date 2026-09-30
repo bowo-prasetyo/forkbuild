@@ -1,4 +1,5 @@
 import { ref, computed, onMounted } from 'vue';
+import { errorText } from '../i18n/i18n.js';
 
 // The shared read / Save / clear lifecycle behind every Network Settings
 // endpoint page (Arweave Gateway, IPFS Gateway, IPFS Node, Bitcoin Endpoint,
@@ -58,7 +59,7 @@ export function useEndpointSettingsForm({ store, useCase, buildRequest, fillInpu
             // The use case threw before anything was persisted — whatever
             // was previously on file (if anything) remains untouched.
             saveStatus.value = 'idle';
-            saveError.value = error.message;
+            saveError.value = errorText(error);
         }
     }
 

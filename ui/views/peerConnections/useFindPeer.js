@@ -1,5 +1,6 @@
 import { ref, reactive, computed } from 'vue';
 import { formatDuration, stripPrefix, shortId } from './presentation.js';
+import { errorText, t } from '../../i18n/i18n.js';
 
 // Find by ID and Be Discoverable. A found candidate is as untrusted as
 // any imported invitation (see application/peer/FindPeerUseCase.js):
@@ -18,11 +19,11 @@ export function useFindPeer({ findPeerUseCase, peers, now }) {
         try {
             const record = findPeerUseCase.importCandidate(findImportText.value.trim());
             findImportSuccess.value = record.identityHint
-                ? `Candidate added — claims to be ${shortId(record.identityHint)}.`
-                : 'Candidate added — no identity hint was included.';
+                ? t('peerConnections.candidateAddedClaims', { id: shortId(record.identityHint) })
+                : t('peerConnections.candidateAddedNoIdentityHint');
             findImportText.value = '';
         } catch (e) {
-            findImportError.value = stripPrefix(e.message);
+            findImportError.value = stripPrefix(errorText(e));
         }
     }
 
@@ -47,7 +48,7 @@ export function useFindPeer({ findPeerUseCase, peers, now }) {
             findCandidates.value = await findPeerUseCase.search(identityId);
             findSearched.value = true;
         } catch (e) {
-            findError.value = stripPrefix(e.message);
+            findError.value = stripPrefix(errorText(e));
         }
     }
 
@@ -82,11 +83,11 @@ export function useFindPeer({ findPeerUseCase, peers, now }) {
             } else {
                 const publication = await findPeerUseCase.publishSelf();
                 if (!publication) {
-                    publishError.value = 'No rendezvous server is configured on this device. Add one under Network Settings → Rendezvous Servers.';
+                    publishError.value = t('peerConnections.noRendezvousServer');
                 }
             }
         } catch (e) {
-            publishError.value = stripPrefix(e.message);
+            publishError.value = stripPrefix(errorText(e));
         } finally {
             publishRevision.value++;
             publishPending.value = false;
@@ -108,7 +109,7 @@ export function useFindPeer({ findPeerUseCase, peers, now }) {
                 findReplies[record.peerDiscoveryId] = reply;
             }
         } catch (e) {
-            findError.value = stripPrefix(e.message);
+            findError.value = stripPrefix(errorText(e));
         } finally {
             findConnectingId.value = null;
         }

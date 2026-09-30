@@ -1,5 +1,7 @@
 import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
 import { FriendshipState } from '../../core/FriendshipState.js';
+import { t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
 // 0.2.70 — Presence & Conversation Lifecycle.
 //
@@ -28,6 +30,7 @@ import { FriendshipState } from '../../core/FriendshipState.js';
 // happens in ui/views/ChatView.js, not here.
 export default {
     name: 'ConversationsView',
+    components: { I18nText },
     setup() {
         const identityUseCase = inject('identityUseCase');
         const peerPresenceUseCase = inject('peerPresenceUseCase');
@@ -51,9 +54,9 @@ export default {
 
         function friendshipLabel(summary) {
             switch (summary.friendshipState) {
-                case FriendshipState.FRIEND: return 'Friend';
-                case FriendshipState.REQUESTED: return 'Friend request pending';
-                default: return summary.relationship ? 'Known peer' : 'Not connected before';
+                case FriendshipState.FRIEND: return t('conversationsView.friend');
+                case FriendshipState.REQUESTED: return t('conversationsView.friendRequestPending');
+                default: return summary.relationship ? t('conversationsView.knownPeer') : t('conversationsView.notConnectedBefore');
             }
         }
 
@@ -110,21 +113,20 @@ export default {
         });
 
         return {
+            t,
             isAuthenticated, conversations,
             shortId, displayName, friendshipLabel, formatWhen, canOpenChat, isBlocked
         };
     },
     template: `
         <section class="conversations-view">
-            <h1>Conversations</h1>
+            <h1>{{ t('conversationsView.conversations') }}</h1>
             <p class="form-hint form-hint--neutral">
-                A peer being offline never hides their identity, relationship, friendship, or
-                conversation history — only whether they're connected right now, shown below
-                independently of everything else this device already knows about them.
+                {{ t('conversationsView.aPeerBeingOfflineNever') }}
             </p>
 
             <p v-if="!isAuthenticated" class="form-hint form-hint--neutral">
-                Sign in to an identity (see <router-link to="/identity">My Identities</router-link>) to see your conversations.
+                <I18nText keypath="conversationsView.signInToAnIdentity"><template #myIdentities><router-link to="/identity">{{ t('conversationsView.myIdentities') }}</router-link></template></I18nText>
             </p>
 
             <template v-else>
@@ -133,7 +135,7 @@ export default {
                         <div class="identity-mgmt-card-header">
                             <span class="identity-mgmt-name">{{ displayName(summary) }}</span>
                             <span class="peer-badge" :class="summary.isConnectedNow ? 'peer-badge--authenticated' : 'peer-badge--pending'">
-                                {{ summary.isConnectedNow ? 'Online' : 'Offline' }}
+                                {{ summary.isConnectedNow ? t('conversationsView.online') : t('conversationsView.offline') }}
                             </span>
                         </div>
                         <p class="identity-mgmt-status">
@@ -141,35 +143,34 @@ export default {
                         </p>
                         <p class="conversation-summary-line">
                             <span v-if="summary.conversation.unreadCount > 0" class="conversation-unread-badge">
-                                {{ summary.conversation.unreadCount }} unread
+                                {{ t('conversationsView.unread', { unreadCount: summary.conversation.unreadCount }) }}
                             </span>
                             <span v-if="summary.conversation.pendingOutboxCount > 0" class="form-hint form-hint--neutral">
-                                {{ summary.conversation.pendingOutboxCount }} message{{ summary.conversation.pendingOutboxCount === 1 ? '' : 's' }} waiting to send
+                                {{ t('conversationsView.waitingToSend', { count: summary.conversation.pendingOutboxCount }) }}
                             </span>
                             <span v-if="summary.conversation.messageCount === 0" class="form-hint form-hint--neutral">
-                                {{ canOpenChat(summary) ? 'Conversation available — no messages yet' : 'No conversation yet' }}
+                                {{ canOpenChat(summary) ? t('conversationsView.conversationAvailableNoMessagesYet') : t('conversationsView.noConversationYet') }}
                             </span>
                         </p>
                         <p v-if="summary.conversation.lastActivityAt" class="form-hint form-hint--neutral">
-                            Last activity {{ formatWhen(summary.conversation.lastActivityAt) }}
+                            {{ t('conversationsView.lastActivity', { lastActivityAt: formatWhen(summary.conversation.lastActivityAt) }) }}
                         </p>
 
                         <div class="identity-mgmt-actions">
                             <router-link v-if="canOpenChat(summary)" :to="'/chat/' + summary.identityId" class="action-btn action-btn--primary">
-                                Open Chat
+                                {{ t('conversationsView.openChat') }}
                             </router-link>
                             <span v-else-if="isBlocked(summary)" class="form-hint form-hint--neutral">
-                                ⛔ Blocked — unblock from <router-link to="/peers">Peers</router-link> to chat again.
+                                <I18nText keypath="conversationsView.blockedUnblockFrom"><template #peers><router-link to="/peers">{{ t('conversationsView.peers') }}</router-link></template></I18nText>
                             </span>
                             <span v-else class="form-hint form-hint--neutral">
-                                Chat requires a mutual friendship — see <router-link to="/peers">Peers</router-link>.
+                                <I18nText keypath="conversationsView.chatRequiresAMutualFriendship"><template #peers><router-link to="/peers">{{ t('conversationsView.peers') }}</router-link></template></I18nText>
                             </span>
                         </div>
                     </div>
                 </div>
                 <p v-else class="form-hint form-hint--neutral">
-                    No conversations yet. Send or accept a friend request from
-                    <router-link to="/peers">Peers</router-link>, then start chatting.
+                    <I18nText keypath="conversationsView.noConversationsYetSendOr"><template #peers><router-link to="/peers">{{ t('conversationsView.peers') }}</router-link></template></I18nText>
                 </p>
             </template>
         </section>

@@ -8,6 +8,7 @@ import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as source } from './support/SourceText.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.665 — IPFS Gateway Settings UI.
 //
@@ -76,11 +77,11 @@ async function run() {
         assert(routerSource.includes("import IpfsGatewaySettingsView from '../views/IpfsGatewaySettingsView.js';"),
             '7. the router imports the real view component, never a stub');
 
-        const networkSettingsSource = await source('ui/views/NetworkSettingsView.js');
+        const networkSettingsSource = withEnglish(await source('ui/views/NetworkSettingsView.js'));
         assert(/router-link to="\/settings\/ipfs-gateway"/.test(networkSettingsSource),
             '8. the Network Settings hub links to the settings entry point — reachable one hop further, not a URL-only capability');
 
-        const viewSource = await source('ui/views/IpfsGatewaySettingsView.js');
+        const viewSource = withEnglish(await source('ui/views/IpfsGatewaySettingsView.js'));
         const viewExecutable = viewSource.replace(/\/\/.*$/gm, '');
         assert(/inject\('ipfsGatewayConfigurationStore',\s*null\)/.test(viewExecutable),
             '9. the view reads the configuration through the injected store, never a store it constructs itself');
@@ -272,7 +273,7 @@ async function run() {
     // Default wiring, and the deliberately-excluded feature list.
     // ===============================================================
     {
-        const viewSource = await source('ui/views/IpfsGatewaySettingsView.js');
+        const viewSource = withEnglish(await source('ui/views/IpfsGatewaySettingsView.js'));
 
         assert(/v-if="hasOverride"/.test(viewSource), '39. the template branches on whether an override is on file');
         assert(/Using the default/.test(viewSource) && /effectiveEntries/.test(viewSource),

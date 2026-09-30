@@ -9,6 +9,7 @@ import { IceServerConfigurationStore } from '../storage/IceServerConfigurationSt
 import { mainFiles } from './support/SourceFileGroups.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as source } from './support/SourceText.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.456 — TURN Server Settings UI.
 //
@@ -105,7 +106,7 @@ async function run() {
         assert(view.saveError.value === null && view.saveStatus.value === 'idle' && view.clearStatus.value === 'idle',
             n('A4. REAL COMPONENT: no error/save/clear status is shown on an empty first mount'));
 
-        const viewSource = await source('ui/views/TurnServerSettingsView.js');
+        const viewSource = withEnglish(await source('ui/views/TurnServerSettingsView.js'));
         assert(/No TURN server of your own configured\./.test(viewSource), n('A5. the template carries real "no configuration" copy, never a blank/broken section'));
     }
     console.log('✓ Section A: an empty TURN configuration renders correctly — every field empty, no error, no fabricated default');
@@ -190,7 +191,7 @@ async function run() {
 
         // Structural confirmation: the rejection is TurnServerConfiguration's
         // own boundary, never a second, view-level scheme check.
-        const viewExecutable = (await source('ui/views/TurnServerSettingsView.js')).replace(/\/\/.*$/gm, '');
+        const viewExecutable = (withEnglish(await source('ui/views/TurnServerSettingsView.js'))).replace(/\/\/.*$/gm, '');
         assert(!/new TurnServerConfiguration\(/.test(viewExecutable), n('E4. the view never constructs a TurnServerConfiguration itself — validation stays inside the use case/value object'));
     }
     console.log('✓ Section E: a stun: URL is rejected by the real TURN configuration boundary, through the real view, leaving any previously-saved valid TURN configuration untouched');
@@ -266,7 +267,7 @@ async function run() {
         assert(!configuration.toString().includes('super-secret-credential'), n('H3. TurnServerConfiguration#toString() never includes the real credential'));
         assert(!util.inspect(configuration).includes('super-secret-credential'), n('H4. util.inspect()/console.log() of the configuration never includes the real credential'));
 
-        const viewSource = await source('ui/views/TurnServerSettingsView.js');
+        const viewSource = withEnglish(await source('ui/views/TurnServerSettingsView.js'));
         const templateMatch = viewSource.match(/template: `([\s\S]*)`\n\};/);
         assert(templateMatch, n('H5. the real template literal is located'));
         assert(!/\{\{\s*configuration\.credential\s*\}\}/.test(templateMatch[1]), n('H6. the real template never interpolates configuration.credential as text anywhere'));
@@ -300,7 +301,7 @@ async function run() {
 
         // Never bypasses the use case: the view holds no reference capable
         // of calling TurnServerConfigurationStore.save() directly.
-        const viewExecutable = (await source('ui/views/TurnServerSettingsView.js')).replace(/\/\/.*$/gm, '');
+        const viewExecutable = (withEnglish(await source('ui/views/TurnServerSettingsView.js'))).replace(/\/\/.*$/gm, '');
         assert(!/\.save\(/.test(viewExecutable), n('I4. the view never calls store.save() directly — only setTurnServerConfigurationUseCase.execute()'));
         assert(useCase instanceof SetTurnServerConfigurationUseCase, n('I5. sanity — the injected use case really is a SetTurnServerConfigurationUseCase instance'));
     }
@@ -331,7 +332,7 @@ async function run() {
         // clear() directly, never execute({...}) with empty values.
         // The view's Clear action is the shared endpoint-settings form's
         // own clear() (ui/composables/useEndpointSettingsForm.js).
-        const viewExecutable = (await source('ui/views/TurnServerSettingsView.js')).replace(/\/\/.*$/gm, '');
+        const viewExecutable = (withEnglish(await source('ui/views/TurnServerSettingsView.js'))).replace(/\/\/.*$/gm, '');
         assert(/\bclear: form\.clear\b/.test(viewExecutable) && /store,\s*\n\s*useCase: setTurnServerConfigurationUseCase/.test(viewExecutable),
             n('J6a. the view wires its Clear action to the shared form, over its own injected store and use case'));
         const formExecutable = (await source('ui/composables/useEndpointSettingsForm.js')).replace(/\/\/.*$/gm, '');
@@ -382,7 +383,7 @@ async function run() {
         assert(routerSource.includes("import TurnServerSettingsView from '../views/TurnServerSettingsView.js';"),
             n('L2. the router imports the real view component, never a stub'));
 
-        const hubSource = await source('ui/views/NetworkSettingsView.js');
+        const hubSource = withEnglish(await source('ui/views/NetworkSettingsView.js'));
         assert(/router-link to="\/settings\/turn-server"/.test(hubSource), n('L3. the Network Settings hub links to the TURN settings page — reachable one hop further, not a URL-only capability'));
 
         const appSource = await source('ui/App.js');
@@ -400,7 +401,7 @@ async function run() {
         const storeConstructions = (mainSource.match(/new TurnServerConfigurationStore\(/g) || []).length;
         assert(storeConstructions === 1, n(`L9. ui/main.js constructs exactly one TurnServerConfigurationStore instance — found ${storeConstructions}`));
 
-        const viewExecutable = (await source('ui/views/TurnServerSettingsView.js')).replace(/\/\/.*$/gm, '');
+        const viewExecutable = (withEnglish(await source('ui/views/TurnServerSettingsView.js'))).replace(/\/\/.*$/gm, '');
         assert(/inject\('turnServerConfigurationStore',\s*null\)/.test(viewExecutable), n('L10. the view reads the configuration through the injected store, never a store it constructs itself'));
         assert(/inject\('setTurnServerConfigurationUseCase',\s*null\)/.test(viewExecutable), n('L11. the view writes the configuration through the injected use case'));
     }
@@ -410,15 +411,15 @@ async function run() {
     // Section M — Existing STUN Settings remain independent.
     // ===============================================================
     {
-        const stunSource = await source('ui/views/StunSettingsView.js');
+        const stunSource = withEnglish(await source('ui/views/StunSettingsView.js'));
         assert(!/TurnServerConfiguration|turnServerConfigurationStore|setTurnServerConfigurationUseCase/.test(stunSource),
             n('M1. ui/views/StunSettingsView.js references none of this milestone\'s TURN configuration concepts'));
 
-        const turnViewExecutable = (await source('ui/views/TurnServerSettingsView.js')).replace(/\/\/.*$/gm, '');
+        const turnViewExecutable = (withEnglish(await source('ui/views/TurnServerSettingsView.js'))).replace(/\/\/.*$/gm, '');
         assert(!/iceServerConfigurationStore|setIceServerConfigurationUseCase|IceServerConfiguration/.test(turnViewExecutable),
             n('M2. ui/views/TurnServerSettingsView.js references none of the existing STUN configuration concepts — genuinely separate stores/use cases, never a shared one'));
 
-        const networkHubSource = await source('ui/views/NetworkSettingsView.js');
+        const networkHubSource = withEnglish(await source('ui/views/NetworkSettingsView.js'));
         assert(/router-link to="\/settings\/stun"/.test(networkHubSource) && /router-link to="\/settings\/turn-server"/.test(networkHubSource),
             n('M3. the Network Settings hub links to both pages independently, as two separate rows'));
 
@@ -437,7 +438,7 @@ async function run() {
     // reimplemented by the view.
     // ===============================================================
     {
-        const viewExecutable = (await source('ui/views/TurnServerSettingsView.js')).replace(/\/\/.*$/gm, '');
+        const viewExecutable = (withEnglish(await source('ui/views/TurnServerSettingsView.js'))).replace(/\/\/.*$/gm, '');
         assert(!/WebRtcPeerConnectionProvider|RTCPeerConnection|setIceServers\(|resolvedIceServers|peer\//.test(viewExecutable),
             n('N1. the view never imports, constructs, or references the WebRTC peer connection machinery in any way'));
         assert(!/toIceServerEntry|resolveTurnServerConfiguration/.test(viewExecutable),
@@ -459,7 +460,7 @@ async function run() {
         // design-rationale comments, which legitimately name these as
         // deliberately excluded) — the actual user-facing surface a
         // Wanderer would see or click.
-        const viewSource = await source('ui/views/TurnServerSettingsView.js');
+        const viewSource = withEnglish(await source('ui/views/TurnServerSettingsView.js'));
         const templateMatchForPhrases = viewSource.match(/template: `([\s\S]*)`\n\};/);
         assert(templateMatchForPhrases, n('O0. the real template literal is located'));
         const templateBody = templateMatchForPhrases[1];
@@ -493,7 +494,7 @@ async function run() {
     // Section P — No default TURN server is introduced.
     // ===============================================================
     {
-        const viewSource = await source('ui/views/TurnServerSettingsView.js');
+        const viewSource = withEnglish(await source('ui/views/TurnServerSettingsView.js'));
         const viewExecutableForDefaults = viewSource.replace(/\/\/.*$/gm, '');
         assert(!/DEFAULT_TURN/.test(viewExecutableForDefaults), n('P1. the view references no DEFAULT_TURN* constant of any kind — TURN has no deployment-wide default (see storage/TurnServerConfigurationStore.js\'s own header)'));
         const templateMatchForDefaults = viewSource.match(/template: `([\s\S]*)`\n\};/);

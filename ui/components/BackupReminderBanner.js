@@ -1,5 +1,6 @@
 import { inject, onMounted, ref, watch } from 'vue';
 import { BackupReminderReason } from '../../application/backup/BackupReminder.js';
+import { t } from '../i18n/i18n.js';
 
 export const YOUR_DATA_PATH = '/settings/data';
 
@@ -53,7 +54,7 @@ export default {
             busy.value = true;
             try {
                 const { folderName } = await backupDestinations.backUpToFolder();
-                message.value = `Backed up to "${folderName}".`;
+                message.value = t('backupReminderBanner.backedUpTo', { folder: folderName });
                 hideTimer = setTimeout(() => { message.value = ''; check(); }, 4000);
             } catch {
                 emit('open-your-data');
@@ -74,24 +75,24 @@ export default {
             check();
         });
 
-        return { reminder, busy, message, backUpNow, snooze, BackupReminderReason };
+        return { t, reminder, busy, message, backUpNow, snooze, BackupReminderReason };
     },
     template: `
         <div v-if="message" class="backup-reminder-banner backup-reminder-banner--done" role="status">{{ message }}</div>
         <div v-else-if="reminder" class="backup-reminder-banner" role="note">
             <span class="backup-reminder-text">
                 <template v-if="reminder.reason === BackupReminderReason.NEVER">
-                    <strong>Your work isn't backed up.</strong> It lives only in this browser; clearing the browser's data would delete it.
+                    <strong>{{ t('backupReminderBanner.yourWorkIsnTBacked') }}</strong> {{ t('backupReminderBanner.itLivesOnlyInThis') }}
                 </template>
                 <template v-else>
-                    <strong>Last backup {{ reminder.daysSinceBackup }} days ago.</strong> Changes since then live only in this browser.
+                    <strong>{{ t('backupReminderBanner.lastBackupDaysAgo', { count: reminder.daysSinceBackup }) }}</strong> {{ t('backupReminderBanner.changesSinceThenLiveOnly') }}
                 </template>
             </span>
             <span class="backup-reminder-actions">
                 <button type="button" class="action-btn action-btn--primary backup-reminder-now" :disabled="busy" @click="backUpNow">
-                    {{ busy ? 'Backing up…' : 'Back Up Now' }}
+                    {{ busy ? t('backupReminderBanner.backingUp') : t('backupReminderBanner.backUpNow') }}
                 </button>
-                <button type="button" class="action-btn action-btn--secondary backup-reminder-snooze" @click="snooze">Remind Me in a Week</button>
+                <button type="button" class="action-btn action-btn--secondary backup-reminder-snooze" @click="snooze">{{ t('backupReminderBanner.remindMeInAWeek') }}</button>
             </span>
         </div>
     `

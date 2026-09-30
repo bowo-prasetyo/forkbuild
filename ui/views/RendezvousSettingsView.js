@@ -1,6 +1,7 @@
 import { inject } from 'vue';
 import { useEndpointListSettings } from '../composables/useEndpointListSettings.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../../peer/RendezvousConfig.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.9.388 — Rendezvous Settings UI.
 //
@@ -100,17 +101,17 @@ export default {
             entriesOf: (configuration) => configuration.urls,
             toRequest: (urls) => ({ urls })
         });
-        return { ...settings, urlsInput: settings.input };
+        return { t, ...settings, urlsInput: settings.input };
     },
     template: `
         <section class="rendezvous-settings-view">
-            <h1>Rendezvous Servers</h1>
+            <h1>{{ t('rendezvousSettingsView.rendezvousServers') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Rendezvous servers used to discover peers over the network. This setting affects peer discovery only; it does not change peer identity, authentication, or any existing connection.
+                {{ t('rendezvousSettingsView.rendezvousServersUsedToDiscover') }}
             </p>
 
-            <p v-if="hasOverride" class="form-hint form-hint--neutral">Using your saved servers:</p>
-            <p v-else class="form-hint form-hint--neutral">Using the default servers:</p>
+            <p v-if="hasOverride" class="form-hint form-hint--neutral">{{ t('rendezvousSettingsView.usingYourSavedServers') }}</p>
+            <p v-else class="form-hint form-hint--neutral">{{ t('rendezvousSettingsView.usingTheDefaultServers') }}</p>
             <ul class="endpoint-settings-list">
                 <li v-for="url in effectiveEntries" :key="url">{{ url }}</li>
             </ul>
@@ -122,14 +123,14 @@ export default {
                     rows="5"
                     class="rendezvous-settings-input form-textarea"
                 ></textarea>
-                <p class="form-hint form-hint--neutral">One rendezvous server URL per line (e.g. wss://rendezvous.example).</p>
+                <p class="form-hint form-hint--neutral">{{ t('rendezvousSettingsView.oneRendezvousServerUrlPer') }}</p>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
-                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
-                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Reset — now using the default servers.</p>
+                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('rendezvousSettingsView.saved') }}</p>
+                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">{{ t('rendezvousSettingsView.resetNowUsingTheDefault') }}</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">Save</button>
-                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">Reset to Defaults</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">{{ t('rendezvousSettingsView.save') }}</button>
+                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">{{ t('rendezvousSettingsView.resetToDefaults') }}</button>
             </div>
         </section>
     `

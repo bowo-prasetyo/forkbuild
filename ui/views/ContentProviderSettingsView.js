@@ -5,6 +5,7 @@ import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/settings/RoleProviderPreferenceSettingsView.js';
 import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
+import { displayText, t } from '../i18n/i18n.js';
 
 // 0.9.302 — Content Provider Preference Settings Entry Point.
 //
@@ -155,6 +156,8 @@ export default {
         ));
 
         return {
+            t,
+            displayText,
             settings, selectedProviderKey: preferenceForm.selectedProviderKey, hasUnofferedPreference,
             saveError: preferenceForm.saveError, saveStatus: preferenceForm.saveStatus, save: preferenceForm.save,
             hasIpfsNodeOverride: ipfsNodeForm.hasConfiguration, effectiveIpfsNodeApiUrl, ipfsNodeApiUrlInput,
@@ -165,41 +168,39 @@ export default {
     },
     template: `
         <section class="content-provider-settings-view">
-            <h1>Content Provider</h1>
+            <h1>{{ t('contentProviderSettingsView.contentProvider') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Choose which storage backend "Use Preferred Provider" places new Content onto in the Publication Center. Content is always kept on this device first, so only decentralized backends are listed here. This never changes what the explicit placement buttons there do.
+                {{ t('contentProviderSettingsView.chooseWhichStorageBackendUse') }}
             </p>
             <p v-if="hasUnofferedPreference" class="form-hint form-hint--neutral">
-                Your previously saved "Local" preference no longer applies — Content is already stored on this device. Choose a backend below and save.
+                {{ t('contentProviderSettingsView.yourPreviouslySavedLocalPreference') }}
             </p>
 
             <div v-if="settings.options.length" class="content-provider-settings-form">
                 <label v-for="opt in settings.options" :key="opt.providerKey" class="content-provider-option">
                     <input type="radio" name="content-provider-preference" :value="opt.providerKey" v-model="selectedProviderKey" />
-                    {{ opt.label }}
+                    {{ displayText(opt.label) }}
                 </label>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
-                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
+                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('contentProviderSettingsView.saved') }}</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="!selectedProviderKey">Save</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!selectedProviderKey">{{ t('contentProviderSettingsView.save') }}</button>
             </div>
             <p v-else class="form-hint form-hint--neutral">
-                No content providers are currently registered on this replica.
+                {{ t('contentProviderSettingsView.noContentProvidersAreCurrently') }}
             </p>
 
-            <h2>IPFS Node</h2>
+            <h2>{{ t('contentProviderSettingsView.ipfsNode') }}</h2>
             <p class="form-hint form-hint--neutral">
-                The node the 'IPFS' backend places new Content onto — your own local Kubo node, or a remote one you
-                point it at instead. This never changes which backend "Use Preferred Provider" selects above, and
-                never changes the separate IPFS Gateway setting used for reading already-placed IPFS content.
+                {{ t('contentProviderSettingsView.theNodeTheIpfsBackend') }}
             </p>
 
             <p v-if="hasIpfsNodeOverride" class="form-hint form-hint--neutral">
-                Current override: {{ effectiveIpfsNodeApiUrl }}
+                {{ t('contentProviderSettingsView.currentOverride', { effectiveIpfsNodeApiUrl: effectiveIpfsNodeApiUrl }) }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
-                No override configured. Currently using the deployment default: {{ effectiveIpfsNodeApiUrl }}
+                {{ t('contentProviderSettingsView.noOverrideConfiguredCurrentlyUsing', { effectiveIpfsNodeApiUrl: effectiveIpfsNodeApiUrl }) }}
             </p>
 
             <div class="ipfs-node-settings-form">
@@ -211,11 +212,11 @@ export default {
                 />
 
                 <p v-if="ipfsNodeSaveError" class="form-hint">{{ ipfsNodeSaveError }}</p>
-                <p v-if="ipfsNodeSaveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
-                <p v-if="ipfsNodeClearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — now using the deployment default.</p>
+                <p v-if="ipfsNodeSaveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('contentProviderSettingsView.saved') }}</p>
+                <p v-if="ipfsNodeClearStatus === 'cleared'" class="form-hint form-hint--neutral">{{ t('contentProviderSettingsView.clearedNowUsingTheDeployment') }}</p>
 
-                <button class="action-btn action-btn--primary" @click="saveIpfsNodeConfiguration" :disabled="!ipfsNodeApiUrlInput.trim()">Save</button>
-                <button class="action-btn" @click="useIpfsNodeDeploymentDefault">Use Deployment Default</button>
+                <button class="action-btn action-btn--primary" @click="saveIpfsNodeConfiguration" :disabled="!ipfsNodeApiUrlInput.trim()">{{ t('contentProviderSettingsView.save') }}</button>
+                <button class="action-btn" @click="useIpfsNodeDeploymentDefault">{{ t('contentProviderSettingsView.useDeploymentDefault') }}</button>
             </div>
         </section>
     `

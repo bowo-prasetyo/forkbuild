@@ -1,13 +1,14 @@
 import { PeerLifecycleState } from '../../../peer/PeerLifecycleState.js';
+import { t } from '../../i18n/i18n.js';
 
 // Labels, badge classes and small formatters for the Peers page.
 
 export const LIFECYCLE_LABELS = {
-    [PeerLifecycleState.CONNECTING]: 'Connecting…',
-    [PeerLifecycleState.CONNECTED]: 'Connected — not yet authenticated',
-    [PeerLifecycleState.AUTHENTICATING]: 'Authenticating…',
-    [PeerLifecycleState.AUTHENTICATED]: 'Authenticated',
-    [PeerLifecycleState.FAILED]: 'Failed'
+    [PeerLifecycleState.CONNECTING]: t('peerConnections.connecting'),
+    [PeerLifecycleState.CONNECTED]: t('peerConnections.connectedNotYetAuthenticated'),
+    [PeerLifecycleState.AUTHENTICATING]: t('peerConnections.authenticating'),
+    [PeerLifecycleState.AUTHENTICATED]: t('peerConnections.authenticated'),
+    [PeerLifecycleState.FAILED]: t('peerConnections.failed')
 };
 
 export const LIFECYCLE_CLASSES = {
@@ -23,11 +24,11 @@ export const LIFECYCLE_CLASSES = {
 // exists once an invitation was imported and its WebRtcPeerConnection
 // created, so neither has an observable "not yet" moment.
 export const PROGRESSION_STEPS = [
-    { label: 'Rendezvous discovered', reached: () => true },
-    { label: 'WebRTC connecting', reached: () => true },
-    { label: 'Peer connected', reached: (state) => state !== PeerLifecycleState.CONNECTING && state !== PeerLifecycleState.FAILED },
-    { label: 'Authenticating identity', reached: (state) => state === PeerLifecycleState.AUTHENTICATING || state === PeerLifecycleState.AUTHENTICATED },
-    { label: 'Authenticated', reached: (state) => state === PeerLifecycleState.AUTHENTICATED }
+    { label: t('peerConnections.rendezvousDiscovered'), reached: () => true },
+    { label: t('peerConnections.webrtcConnecting'), reached: () => true },
+    { label: t('peerConnections.peerConnected'), reached: (state) => state !== PeerLifecycleState.CONNECTING && state !== PeerLifecycleState.FAILED },
+    { label: t('peerConnections.authenticatingIdentity'), reached: (state) => state === PeerLifecycleState.AUTHENTICATING || state === PeerLifecycleState.AUTHENTICATED },
+    { label: t('peerConnections.authenticated'), reached: (state) => state === PeerLifecycleState.AUTHENTICATED }
 ];
 
 export function formatDuration(ms) {

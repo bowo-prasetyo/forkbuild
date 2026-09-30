@@ -1,3 +1,5 @@
+import { isUserFacingError } from '../../core/UserFacingError.js';
+
 // App-wide access to the signed-in identity's Notification History, for the
 // Notifications panel in the app's header, which is open on every page
 // rather than only inside World View.
@@ -18,8 +20,9 @@ export class NotificationHistoryAccess {
     }
 
     // NotificationEvent[] in the use case's own order. Rethrows the use case's
-    // error (no authenticated identity) for the panel to show, without its
-    // class-name prefix: this panel is reachable from every page.
+    // error (no authenticated identity) for the panel to show: a UserFacingError
+    // as it is, anything else without its class-name prefix, since this panel
+    // is reachable from every page.
     getRecipientNotificationEvents() {
         if (!this._getRecipientNotificationEventsUseCase) {
             return [];
@@ -27,6 +30,9 @@ export class NotificationHistoryAccess {
         try {
             return this._getRecipientNotificationEventsUseCase.execute();
         } catch (error) {
+            if (isUserFacingError(error)) {
+                throw error;
+            }
             const message = (error && typeof error.message === 'string') ? error.message.replace(/^\w+UseCase:\s*/, '') : '';
             throw new Error(message ? message.charAt(0).toUpperCase() + message.slice(1) : 'Notifications could not be loaded.');
         }

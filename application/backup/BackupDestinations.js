@@ -2,6 +2,8 @@ import { BackupFolder } from './BackupFolder.js';
 import { BackupDestination } from './BackupStatusStore.js';
 import { holdsUserData } from './BackupReminder.js';
 import { deriveBackupEncryptionKey } from './DeviceBackupFile.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const FOLDER_VALUE = 'folder';
 const KEY_VALUE = 'backup-key';
@@ -59,7 +61,7 @@ export class BackupDestinations {
     // Opens the browser's folder picker; resolves to state(), unchanged if
     // the person cancels.
     async chooseFolder() {
-        if (!this.folderSupported) throw new Error('This browser can\'t save backups to a folder.');
+        if (!this.folderSupported) throw new UserFacingError(message('refusal.thisBrowserCanTSave'), { detail: 'This browser can\'t save backups to a folder.' });
         let handle;
         try {
             handle = await this._showDirectoryPicker({ id: 'forkbuild-backup', mode: 'readwrite', startIn: 'documents' });
@@ -101,11 +103,11 @@ export class BackupDestinations {
     async backUpToFolder({ passphrase = null } = {}) {
         await this._load();
         const folder = this._folder;
-        if (!folder) throw new Error('Choose a backup folder first.');
+        if (!folder) throw new UserFacingError(message('refusal.chooseABackupFolderFirst'), { detail: 'Choose a backup folder first.' });
         if (await folder.permission() !== 'granted' && await folder.requestPermission() !== 'granted') {
-            throw new Error(`ForkBuild isn't allowed to save in "${folder.name}". Allow it when the browser asks, or choose the folder again.`);
+            throw new UserFacingError(message('refusal.folderNotAllowed', { folder: folder.name }), { detail: `ForkBuild isn't allowed to save in "${folder.name}".` });
         }
-        if (!passphrase && !this._key) throw new Error('Enter the backup passphrase.');
+        if (!passphrase && !this._key) throw new UserFacingError(message('refusal.enterTheBackupPassphrase'), { detail: 'Enter the backup passphrase.' });
         const { bytes, createdAt, groups } = await this._deviceBackup.createBackupFile({ ...(passphrase ? { passphrase } : { key: this._key }), createdAt: this._now() });
         const fileName = await folder.write(bytes, createdAt);
         this._statusStore.recordBackup(BackupDestination.FOLDER, createdAt);

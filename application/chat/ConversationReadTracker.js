@@ -1,4 +1,6 @@
 import { ConversationReadMarker } from '../../core/ConversationReadMarker.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const STORAGE_KEY_PREFIX = 'conversation-read-state:';
 
@@ -100,7 +102,7 @@ export class ConversationReadTracker {
     _requireOwner() {
         const owner = this._currentOwnerOrNull();
         if (!owner) {
-            throw new Error('ConversationReadTracker: no user is currently logged in');
+            throw new UserFacingError(message('refusal.noUserIsCurrentlyLogged'), { detail: 'ConversationReadTracker: no user is currently logged in' });
         }
         return owner;
     }

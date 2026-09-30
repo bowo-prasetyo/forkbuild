@@ -54,10 +54,13 @@
 // (local or remote) can save it as their preferred Content default. This
 // label exists only so that option renders as "IPFS (Remote Pinning)"
 // instead of the raw-key fallback's "Remote-pinning".
+import { message } from '../../core/Message.js';
+
 const PROVIDER_OPTION_LABELS = {
     ipfs: 'IPFS',
     ar: 'Arweave',
-    'remote-pinning': 'IPFS (Remote Pinning)'
+    // Words, unlike the network names, so a message (core/Message.js).
+    'remote-pinning': message('providerOption.remotePinning')
 };
 
 function providerOptionLabel(providerKey) {

@@ -12,6 +12,8 @@ import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVer
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import * as Ed25519 from '../../identity/Ed25519.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const GRANT_CHANGED_EVENT = 'WorldEditGrantChanged';
 const STORAGE_KEY_PREFIX = 'world-membership:';
@@ -196,7 +198,7 @@ export class WorldMembershipUseCase {
             throw new Error('WorldMembershipUseCase: subjectIdentityId must be a valid did:key identity');
         }
         if (subjectIdentityId === grantingIdentityId) {
-            throw new Error('WorldMembershipUseCase: the World\'s own owner already holds EDIT — a grant is unnecessary');
+            throw new UserFacingError(message('refusal.theWorldSOwnOwner'), { detail: 'WorldMembershipUseCase: the World\'s own owner already holds EDIT — a grant is unnecessary' });
         }
         const record = toWorldEditAuthorizationGrant({ worldDocumentId, subjectIdentityId, grantingIdentityId });
         const signature = this._identityProvider.signCanonical(getWorldEditAuthorizationGrantSigningDescriptor(record));
@@ -214,7 +216,7 @@ export class WorldMembershipUseCase {
         const ownerIdentityId = document.metadata.authorIdentityId || null;
         const myIdentityId = resolveSigningIdentityId(this._identityProvider);
         if (!ownerIdentityId || !myIdentityId || ownerIdentityId !== myIdentityId) {
-            throw new Error('WorldMembershipUseCase: only this World\'s own cryptographic owner may grant or revoke membership');
+            throw new UserFacingError(message('refusal.onlyThisWorldSOwn'), { detail: 'WorldMembershipUseCase: only this World\'s own cryptographic owner may grant or revoke membership' });
         }
         return ownerIdentityId;
     }

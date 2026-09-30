@@ -1,5 +1,6 @@
 import { ref, watch } from 'vue';
 import { PresenceVisibility } from '../../core/PresenceVisibility.js';
+import { errorText, t } from '../i18n/i18n.js';
 
 // One visibility-policy form: a Public → Hidden select, an optional
 // allow-list for Friends, and its own Save action. Used twice by
@@ -60,11 +61,12 @@ export default {
                 saveStatus.value = 'saved';
             } catch (error) {
                 saveStatus.value = 'idle';
-                saveError.value = error.message;
+                saveError.value = errorText(error);
             }
         }
 
         return {
+            t,
             PresenceVisibility,
             visibility,
             authorizedPeerIdentitiesText,
@@ -79,30 +81,30 @@ export default {
             <p class="form-hint form-hint--neutral">{{ description }}</p>
 
             <label class="form-field">
-                <span class="form-label">Visibility</span>
+                <span class="form-label">{{ t('visibilityPolicyForm.visibility') }}</span>
                 <select v-model="visibility" class="form-select">
                     <option :value="PresenceVisibility.PUBLIC">{{ publicLabel }}</option>
-                    <option :value="PresenceVisibility.FRIENDS">Friends — your mutual friends, plus any identities you authorize below</option>
-                    <option :value="PresenceVisibility.LOCAL">Local — this session's transport scope only</option>
+                    <option :value="PresenceVisibility.FRIENDS">{{ t('visibilityPolicyForm.friendsYourMutualFriendsPlus') }}</option>
+                    <option :value="PresenceVisibility.LOCAL">{{ t('visibilityPolicyForm.localThisSessionSTransport') }}</option>
                     <option :value="PresenceVisibility.HIDDEN">{{ hiddenLabel }}</option>
                 </select>
             </label>
 
             <label class="form-field" v-if="visibility === PresenceVisibility.FRIENDS">
-                <span class="form-label">Additional authorized identities</span>
+                <span class="form-label">{{ t('visibilityPolicyForm.additionalAuthorizedIdentities') }}</span>
                 <textarea
                     v-model="authorizedPeerIdentitiesText"
                     class="form-input avatar-visibility-peers"
                     rows="3"
-                    placeholder="One identity per line"
+                    :placeholder="t('visibilityPolicyForm.oneIdentityPerLine')"
                 ></textarea>
                 <span class="form-hint form-hint--neutral">
-                    Optional. A manually-typed allow-list, on top of your real friends — for someone you trust without a mutual friend request. With no mutual friends AND nothing listed here, Friends currently behaves like Hidden.
+                    {{ t('visibilityPolicyForm.optionalAManuallyTypedAllow') }}
                 </span>
             </label>
 
             <p v-if="saveError" class="form-hint">{{ saveError }}</p>
-            <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
+            <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('visibilityPolicyForm.saved') }}</p>
 
             <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving'">{{ saveLabel }}</button>
         </div>
