@@ -1,6 +1,7 @@
 import { ref, watch, onMounted, onBeforeUnmount, inject } from 'vue';
 import { MAX_DISPLAY_NAME_LENGTH } from '../../core/LobbyCard.js';
 import { t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
 const REFRESH_INTERVAL_MS = 30 * 1000;
 
@@ -19,6 +20,7 @@ function stripPrefix(message) {
 // application/peer/PublicLobbyUseCase.js, which verifies each card.
 export default {
     name: 'PublicLobbyPanel',
+    components: { I18nText },
     props: {
         // 'public', or a `world:<documentId>` lobby (core/LobbyCard.js).
         lobby: { type: String, required: true },
@@ -152,7 +154,7 @@ export default {
         <div class="peer-signal-box public-lobby-panel">
             <h3>{{ title || t('publicLobbyPanel.title') }}</h3>
             <p v-if="!available" class="form-hint form-hint--neutral">
-                {{ t('publicLobbyPanel.theLobbyNeedsARendezvous') }} <strong>{{ t('publicLobbyPanel.networkSettings') }}</strong>.
+                <I18nText keypath="publicLobbyPanel.theLobbyNeedsARendezvous"><template #settings><strong>{{ t('publicLobbyPanel.networkSettings') }}</strong></template></I18nText>
             </p>
             <template v-else>
                 <p class="form-hint form-hint--neutral">
@@ -167,7 +169,8 @@ export default {
                     <p class="form-hint form-hint--neutral">{{ t('publicLobbyPanel.anyoneCanChooseAnyName') }}</p>
                 </div>
                 <p v-if="joined" class="form-hint form-hint--neutral">
-                    {{ t('publicLobbyPanel.youReInThisLobby') }}<template v-if="joinedName">{{ ' ' + t('publicLobbyPanel.as') }} <strong>{{ joinedName }}</strong></template>.
+                    <I18nText v-if="joinedName" keypath="publicLobbyPanel.inLobbyAs"><template #name><strong>{{ joinedName }}</strong></template></I18nText>
+                    <template v-else>{{ t('publicLobbyPanel.youReInThisLobby') }}</template>
                 </p>
                 <p v-if="joinError" class="identity-unlock-error">{{ joinError }}</p>
                 <div class="modal-actions">

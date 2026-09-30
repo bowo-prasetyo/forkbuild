@@ -225,6 +225,8 @@
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
+    /* A one-word label: without it, Japanese breaks "ログイン" in two. */
+    white-space: nowrap;
 }
 
 .user-btn--login {
