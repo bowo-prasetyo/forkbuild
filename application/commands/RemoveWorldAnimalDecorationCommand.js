@@ -1,5 +1,6 @@
 import { AnimalDecoration } from '../../core/AnimalDecoration.js';
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // 0.9.703 — World Animal Decorations: Removal. The direct structural
 // twin of RemoveWorldLandmarkCommand.js — removes an existing
@@ -62,7 +63,7 @@ export class RemoveWorldAnimalDecorationCommand extends Command {
     }
 
     describe() {
-        return `Remove Animal Decoration "${this._decorationId}"`;
+        return message('history.removeAnimalDecoration');
     }
 
     toJSON() {

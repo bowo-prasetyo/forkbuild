@@ -27,6 +27,7 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // ---------------------------------------------------------------------
 // Test helpers & stubs
@@ -263,7 +264,7 @@ function createSession(storage, { replay = true } = {}) {
     // Serialized roundtrip through the registry preserves identities.
     const restored = registry.fromJSON(command.toJSON());
     assert(restored.type === 'paste-bricks', 'registered command type');
-    assert(restored.describe() === 'Paste 2 Bricks', 'description survives serialization');
+    assert(displayText(restored.describe()) === 'Paste 2 Bricks', 'description survives serialization');
     command.undo({ world });
     restored.execute({ world });
     assert(JSON.stringify(restored.executedBrickIds) === JSON.stringify(ids), 'restored command recreates the same identities');
@@ -305,7 +306,7 @@ function createSession(storage, { replay = true } = {}) {
     });
     assert(command !== null, 'command produced');
     assert(command.type === 'paste-bricks', 'paste command type');
-    assert(command.describe() === 'Paste 1 Brick', 'singular description');
+    assert(displayText(command.describe()) === 'Paste Brick', 'singular description');
     const item = command.items[0];
     assert(item.position.x === 9 && item.position.z === 10, 'relative geometry re-anchored at the paste position');
     assert(item.rotation === 45, 'rotation carried through');

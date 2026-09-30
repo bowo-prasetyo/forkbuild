@@ -2,6 +2,8 @@ import { Brick } from '../../core/Brick.js';
 import { Group } from '../../core/Group.js';
 import { Position } from '../../core/Position.js';
 import { Command } from './Command.js';
+import { descriptionFromJSON, descriptionToJSON } from './HistoryDescription.js';
+import { message } from '../../core/Message.js';
 
 // Duplicates a group: fresh brick identities (definitionId/rotation
 // copied, position shifted by the intent offset) plus a fresh group
@@ -104,7 +106,7 @@ export class DuplicateGroupCommand extends Command {
     }
 
     describe() {
-        return this._description || 'Duplicate Group';
+        return this._description || message('history.duplicateGroup');
     }
 
     toJSON() {
@@ -115,7 +117,7 @@ export class DuplicateGroupCommand extends Command {
             worldId: this._worldId,
             groupId: this._groupId,
             offset: { ...this._offset },
-            description: this._description,
+            ...descriptionToJSON(this._description),
             executedBrickIds: this._executedBrickIds.length > 0 ? [...this._executedBrickIds] : null,
             executedGroupId: this._executedGroupId
         };
@@ -126,7 +128,7 @@ export class DuplicateGroupCommand extends Command {
             worldId: json.worldId,
             groupId: json.groupId,
             offset: json.offset || { x: 2, y: 0, z: 2 },
-            description: json.description || null,
+            description: descriptionFromJSON(json),
             id: json.id,
             timestamp: new Date(json.timestamp)
         });

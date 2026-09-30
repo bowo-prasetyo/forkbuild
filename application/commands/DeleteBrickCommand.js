@@ -1,5 +1,6 @@
 import { Brick } from '../../core/Brick.js';
 import { Command } from './Command.js';
+import { bricksMessage } from './HistoryDescription.js';
 
 // Mirrors PlaceBrickCommand's shape closely, as expected — placement and
 // deletion are near-inverses. Constructor fields (worldId, buildingId,
@@ -71,7 +72,7 @@ export class DeleteBrickCommand extends Command {
     }
 
     describe() {
-        return 'Delete Brick';
+        return bricksMessage('history.deleteBricks', 1);
     }
 
     toJSON() {

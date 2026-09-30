@@ -1,5 +1,6 @@
 import { Group } from '../../core/Group.js';
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // Intent: worldId, groupId. execute() snapshots the group (id, name,
 // members) before removing it; undo() recreates the group with its
@@ -45,7 +46,7 @@ export class DeleteGroupCommand extends Command {
     }
 
     describe() {
-        return 'Delete Group';
+        return message('history.deleteGroup');
     }
 
     toJSON() {

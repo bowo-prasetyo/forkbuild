@@ -5,6 +5,7 @@ import { CompositeCommand } from '../commands/CompositeCommand.js';
 import { ToolId } from '../editor-state/ToolId.js';
 import { Position } from '../../core/Position.js';
 import { CameraState } from '../../renderer/CameraState.js';
+import { message } from '../../core/Message.js';
 
 // EditorSession selection editing: select all or none, marquee selection,
 // framing the camera, entry contexts, delete, recolor, and align, distribute
@@ -122,7 +123,7 @@ export const selectionEditingMethods = {
         const command = commands.length === 1
             ? commands[0]
             : commands.reduce((composite, child) => composite.add(child),
-                new CompositeCommand({ description: `Delete ${commands.length} Bricks` }));
+                new CompositeCommand({ description: message('history.deleteBricks', { count: commands.length }) }));
         this._commandHistory.execute(command);
         this._editorContext.clearSelection();
         return true;
@@ -149,7 +150,7 @@ export const selectionEditingMethods = {
         const command = commands.length === 1
             ? commands[0]
             : commands.reduce((composite, child) => composite.add(child),
-                new CompositeCommand({ description: `Recolor ${commands.length} Bricks` }));
+                new CompositeCommand({ description: message('history.recolorBricks', { count: commands.length }) }));
         this._commandHistory.execute(command);
         return true;
     },

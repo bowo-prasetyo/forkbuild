@@ -1,4 +1,6 @@
 import { Command } from './Command.js';
+import { descriptionFromJSON, descriptionToJSON } from './HistoryDescription.js';
+import { isMessage, message } from '../../core/Message.js';
 
 // A Command made of other Commands, treated as one atomic unit by
 // CommandHistory — one undo step regardless of how many child commands
@@ -48,22 +50,30 @@ export class CompositeCommand extends Command {
         return this._commands.length > 0 && this._commands.every((command) => command.canUndo());
     }
 
+    // Its own description when it was given one; otherwise named after its
+    // children: one child names it, children of one kind add their counts up
+    // ("Place Brick" three times is "Place 3 Bricks"), and a mix is "3 actions".
     describe() {
         if (this._description) {
             return this._description;
         }
         if (this._commands.length === 0) {
-            return 'Empty Action';
+            return message('history.emptyAction');
         }
         if (this._commands.length === 1) {
             return this._commands[0].describe();
         }
-        const descriptions = new Set(this._commands.map((command) => command.describe()));
-        if (descriptions.size === 1) {
-            const description = descriptions.values().next().value;
-            return `${description.replace(' Brick', ` ${this._commands.length} Bricks`)}`;
+        const descriptions = this._commands.map((command) => command.describe());
+        const first = descriptions[0];
+        if (isMessage(first) && descriptions.every((d) => isMessage(d) && d.key === first.key)) {
+            if (descriptions.every((d) => Number.isFinite(d.params.count))) {
+                return message(first.key, { ...first.params, count: descriptions.reduce((sum, d) => sum + d.params.count, 0) });
+            }
+            if (descriptions.every((d) => JSON.stringify(d.params) === JSON.stringify(first.params))) {
+                return first;
+            }
         }
-        return `${this._commands.length} actions`;
+        return message('history.actions', { count: this._commands.length });
     }
 
     // The Operation Timeline shows a composite as ONE entry; this is how
@@ -77,7 +87,7 @@ export class CompositeCommand extends Command {
             type: this.type,
             id: this._id,
             timestamp: this._timestamp.toISOString(),
-            description: this._description,
+            ...descriptionToJSON(this._description),
             commands: this._commands.map((command) => command.toJSON())
         };
     }
@@ -86,7 +96,7 @@ export class CompositeCommand extends Command {
         const cmd = new CompositeCommand({
             id: json.id,
             timestamp: new Date(json.timestamp),
-            description: json.description || null
+            description: descriptionFromJSON(json)
         });
         if (json.commands && json.commands.length > 0) {
             if (!registry) {

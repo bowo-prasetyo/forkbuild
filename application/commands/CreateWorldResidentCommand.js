@@ -2,6 +2,7 @@ import { WorldResident } from '../../core/WorldResident.js';
 import { Position } from '../../core/Position.js';
 import { createSecureId } from '../../core/createId.js';
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // World Residents: adds an ambient resident whose home is `position`
 // (World-local). The resident counterpart of
@@ -58,7 +59,7 @@ export class CreateWorldResidentCommand extends Command {
     }
 
     describe() {
-        return 'Add a resident';
+        return message('history.addResident');
     }
 
     toJSON() {

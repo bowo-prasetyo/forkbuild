@@ -3,6 +3,7 @@ import { Position } from '../../core/Position.js';
 import { RegionKind } from '../../core/RegionKind.js';
 import { createId } from '../../core/createId.js';
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // 0.5.0 — World Regions & Decentralized Place Naming.
 //
@@ -79,7 +80,7 @@ export class CreateWorldRegionCommand extends Command {
     }
 
     describe() {
-        return `Create Region "${this._name}"`;
+        return message('history.createRegion', { name: this._name });
     }
 
     toJSON() {

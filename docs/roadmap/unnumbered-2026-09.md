@@ -3136,3 +3136,24 @@ What a World Resident says can now be shown in another language, the first of th
 - Next: history labels, then a new World's default title (and a fork's "Fork of …" title), set in the creator's
   language when the World is made.
 
+## Internationalization: undo/redo and history labels (unnumbered, 2026-09-30)
+
+Undo/redo labels and the History panel can now be shown in another language, the second of the three gaps left
+after phase 3.
+
+- Every command's `describe()` returns a message (`history.*`): "Place 3 Bricks" is one plural message with a
+  `{count}`, a landmark's or region's own title is a parameter, and a decoration names its animal. "Undo {action}"
+  and "Redo {action}" wrap it, so a language can put the verb where it needs to. A composite of one kind of command
+  adds its children's counts; a mix is "{count} actions".
+- Four commands carry a label chosen when they were made (align, distribute, move or rotate a selection, repeat,
+  paste, delete or recolor several bricks, copy a structure in). It travels to peers and into recovery as
+  `descriptionMessage: { key, params }` (`application/commands/HistoryDescription.js`), with no English
+  `description`. An older peer, finding none, shows its own label for the command ("Transform Selection");
+  a label an older version saved is English text and is shown as written.
+- The History panel's times follow the chosen language.
+- English wording changes: one pasted brick is "Paste Brick" (was "Paste 1 Brick"), like "Place Brick"; removing a
+  landmark, region or animal decoration no longer names it by its internal id.
+- Checked in the real app in the pseudo-locale: the Editor's command palette before and after an undo, and World
+  View's Undo/Redo buttons and History panel after adding a resident; no warnings.
+- Next: a new World's default title and a fork's "Fork of …" title, set in the creator's language.
+

@@ -1,4 +1,5 @@
 import { PasteBricksCommand } from '../commands/PasteBricksCommand.js';
+import { message } from '../../core/Message.js';
 
 // Successive pastes cascade by this offset (× paste count) so repeated
 // pastes don't stack exactly on top of each other. Defined once here and
@@ -34,7 +35,7 @@ export class PasteClipboardUseCase {
             buildingId,
             items,
             groups: clipboard.groups,
-            description: `Paste ${items.length} ${items.length === 1 ? 'Brick' : 'Bricks'}`
+            description: message('history.pasteBricks', { count: items.length })
         });
     }
 }

@@ -3,6 +3,7 @@ import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { CompositeCommand } from '../commands/CompositeCommand.js';
 import { RepetitionMath } from './RepetitionMath.js';
 import { SelectionTransformValidator } from '../../core/SelectionTransformValidator.js';
+import { message } from '../../core/Message.js';
 
 // 0.4.9 — Alignment, Snapping & Repetition. "Repeat" is duplication
 // generalized from one offset copy to N — see
@@ -97,7 +98,7 @@ export class RepeatSelectionUseCase {
         }
 
         const composite = new CompositeCommand({
-            description: `Repeat ${count} ${count === 1 ? 'Copy' : 'Copies'}`
+            description: message('history.repeatCopies', { count })
         });
         for (const anchor of anchors) {
             const command = this._pasteClipboardUseCase.execute(clipboard, {

@@ -1,4 +1,5 @@
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // 0.3.7 — World Landmarks & Personal Waypoints.
 //
@@ -61,7 +62,7 @@ export class UpdateWorldLandmarkCommand extends Command {
     }
 
     describe() {
-        return `Update Landmark "${this._title || this._landmarkId}"`;
+        return this._title ? message('history.updateLandmark', { title: this._title }) : message('history.updateLandmarkUntitled');
     }
 
     toJSON() {

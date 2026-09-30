@@ -1,5 +1,6 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
+import { message } from '../../core/Message.js';
 
 const COMMAND_HISTORY_SCHEMA_VERSION = 1;
 
@@ -163,14 +164,14 @@ export class CommandHistory {
         if (!this.canUndo()) {
             return null;
         }
-        return `Undo ${this._undoStack[this._undoStack.length - 1].describe()}`;
+        return message('history.undo', { action: this._undoStack[this._undoStack.length - 1].describe() });
     }
 
     getRedoLabel() {
         if (!this.canRedo()) {
             return null;
         }
-        return `Redo ${this._redoStack[this._redoStack.length - 1].describe()}`;
+        return message('history.redo', { action: this._redoStack[this._redoStack.length - 1].describe() });
     }
 
     // Operation Timeline projection (0.1.40). One entry per top-level

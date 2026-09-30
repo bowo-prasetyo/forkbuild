@@ -1,4 +1,5 @@
 import { Command } from './Command.js';
+import { bricksMessage } from './HistoryDescription.js';
 
 // Mirror of AddToGroupCommand: records which ids were ACTUALLY removed
 // (non-members are skipped), and undo re-adds exactly those. Bricks are
@@ -49,7 +50,7 @@ export class RemoveFromGroupCommand extends Command {
     }
 
     describe() {
-        return `Remove ${this._brickIds.length} ${this._brickIds.length === 1 ? 'Brick' : 'Bricks'} from Group`;
+        return bricksMessage('history.removeFromGroup', this._brickIds.length);
     }
 
     toJSON() {

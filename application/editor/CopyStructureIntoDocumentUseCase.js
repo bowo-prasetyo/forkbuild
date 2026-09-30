@@ -1,6 +1,7 @@
 import { PasteBricksCommand } from '../commands/PasteBricksCommand.js';
 import { SpatialBounds } from '../../core/SpatialBounds.js';
 import { transformStructureBricks } from './StructureCompositionTransform.js';
+import { message } from '../../core/Message.js';
 
 // Composition margin between successively copied structures along X, in
 // the same units as Position — the whole-structure equivalent of
@@ -67,7 +68,7 @@ export class CopyStructureIntoDocumentUseCase {
             worldId,
             buildingId,
             items,
-            description: `Copy ${structure.name} Into Document`
+            description: message('history.copyStructureIntoDocument', { name: structure.name })
         });
     }
 

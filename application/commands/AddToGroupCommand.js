@@ -1,4 +1,5 @@
 import { Command } from './Command.js';
+import { bricksMessage } from './HistoryDescription.js';
 
 // Intent: worldId, groupId, brickIds. Records which ids were ACTUALLY
 // added — bricks already in the group are skipped — so undo removes
@@ -50,7 +51,7 @@ export class AddToGroupCommand extends Command {
     }
 
     describe() {
-        return `Add ${this._brickIds.length} ${this._brickIds.length === 1 ? 'Brick' : 'Bricks'} to Group`;
+        return bricksMessage('history.addToGroup', this._brickIds.length);
     }
 
     toJSON() {

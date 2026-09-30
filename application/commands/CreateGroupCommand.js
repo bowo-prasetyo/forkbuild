@@ -1,5 +1,6 @@
 import { Group } from '../../core/Group.js';
 import { Command } from './Command.js';
+import { bricksMessage } from './HistoryDescription.js';
 
 // Creates a flat, named group over existing bricks. Intent: worldId,
 // brickIds, name — never a group id: the group's identity is created at
@@ -53,7 +54,7 @@ export class CreateGroupCommand extends Command {
     }
 
     describe() {
-        return `Group ${this._brickIds.length} ${this._brickIds.length === 1 ? 'Brick' : 'Bricks'}`;
+        return bricksMessage('history.groupBricks', this._brickIds.length);
     }
 
     toJSON() {

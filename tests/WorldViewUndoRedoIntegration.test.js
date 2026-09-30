@@ -23,6 +23,7 @@ import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSessi
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.9.210 — World View Undo/Redo UI Integration.
 //
@@ -184,8 +185,8 @@ async function run() {
         assert(session.canUndo() === history.canUndo() && session.canUndo() === true, '19. canUndo mirrors history.canUndo() (both true)');
         session.undo();
         assert(session.canRedo() === history.canRedo() && session.canRedo() === true, '20. canRedo mirrors history.canRedo() (both true)');
-        assert(session.getUndoLabel() === history.getUndoLabel(), '21. getUndoLabel() is exactly CommandHistory\'s own label');
-        assert(session.getRedoLabel() === history.getRedoLabel(), '22. getRedoLabel() is exactly CommandHistory\'s own label');
+        assert(displayText(session.getUndoLabel()) === displayText(history.getUndoLabel()), '21. getUndoLabel() is exactly CommandHistory\'s own label');
+        assert(displayText(session.getRedoLabel()) === displayText(history.getRedoLabel()), '22. getRedoLabel() is exactly CommandHistory\'s own label');
 
         console.log('✓ B. canUndo/canRedo/getUndoLabel/getRedoLabel are direct CommandHistory mirrors');
     }

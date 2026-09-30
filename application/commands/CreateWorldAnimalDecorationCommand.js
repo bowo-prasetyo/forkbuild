@@ -2,6 +2,7 @@ import { AnimalDecoration } from '../../core/AnimalDecoration.js';
 import { Position } from '../../core/Position.js';
 import { createId } from '../../core/createId.js';
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // 0.9.702 — World Animal Decorations.
 //
@@ -16,6 +17,9 @@ import { Command } from './Command.js';
 // AND is included in toJSON(), the same "redo() must recreate the SAME
 // identity" precedent every sibling Create*Command in this directory
 // already establishes.
+// Each species' name, for the history label.
+const ANIMAL_NAME_KEYS = Object.freeze({ DEER: 'animal.deer', RABBIT: 'animal.rabbit' });
+
 export class CreateWorldAnimalDecorationCommand extends Command {
     constructor({ worldId, authorIdentityId, species, position, id, timestamp } = {}) {
         super({ id, timestamp });
@@ -66,7 +70,7 @@ export class CreateWorldAnimalDecorationCommand extends Command {
     }
 
     describe() {
-        return `Decorate World with ${this._species}`;
+        return message('history.decorateWorld', { animal: message(ANIMAL_NAME_KEYS[this._species] || 'animal.other') });
     }
 
     toJSON() {
