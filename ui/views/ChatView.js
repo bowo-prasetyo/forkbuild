@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount, inject, nextTick } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, inject, nextTick, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { FriendshipState } from '../../core/FriendshipState.js';
 import { VoiceSessionState } from '../../core/VoiceSessionState.js';
@@ -271,9 +271,13 @@ export default {
         // same moment `application/presence/PeerPresenceUseCase.js#markRead()`'s
         // own header describes. Harmless to call repeatedly — marking
         // read is a monotonic high-water mark (core/
-        // ConversationReadMarker.js), never a toggle.
+        // ConversationReadMarker.js), never a toggle. With nobody signed
+        // in there is no owner to have looked, and the read tracker refuses
+        // to record one, so nothing is marked until someone signs in.
         function refreshPresence() {
-            peerPresenceUseCase.markRead(peerIdentityId);
+            if (identityUseCase.isAuthenticated()) {
+                peerPresenceUseCase.markRead(peerIdentityId);
+            }
             presence.value = peerPresenceUseCase.getSummary(peerIdentityId);
             // 0.2.85 — refreshed alongside presence itself, from the
             // same SocialIdentity-resolved lookup.
@@ -473,6 +477,14 @@ export default {
         let unsubscribeVoiceState = null;
         let unsubscribeIncomingCall = null;
         let unsubscribeMicrophoneUnavailable = null;
+        // Signing in with this conversation open is the owner looking at it:
+        // re-read it and mark it read. Watched rather than done in the
+        // session listener, which only records the new state (the sign-in
+        // itself runs that listener, and must not fail because of it).
+        watch(isAuthenticated, (signedIn) => {
+            if (signedIn) refreshMessages();
+        });
+
         onMounted(() => {
             refreshPeers();
             refreshMessages();

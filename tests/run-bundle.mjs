@@ -30,16 +30,6 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const MIME_TYPES = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.svg': 'image/svg+xml', '.json': 'application/json', '.map': 'application/json' };
 // Console errors from the network features failing offline, not from the page.
 const NETWORK_NOISE = /net::|WebSocket|Failed to load resource|ERR_NAME_NOT_RESOLVED|Failed to fetch|NetworkError/i;
-// Errors the unbundled app logs on these pages too, so they are not the
-// bundle's doing. Each is exact to one page and one message, so any other
-// error still fails.
-const KNOWN_APP_ERRORS = [
-    // A chat page opened while nobody is signed in: its read tracker refuses.
-    { path: /^\/chat\//, text: /ConversationReadTracker: no user is currently logged in/ },
-    // Vue's development build reporting that same error from the page's mounted hook.
-    { path: /^\/chat\//, text: /^\[Vue warn\]: Unhandled error during execution of mounted hook/ }
-];
-const isKnownAppError = (path, text) => KNOWN_APP_ERRORS.some((known) => known.path.test(path) && known.text.test(text));
 
 function serve(dir) {
     const server = createServer(async (request, response) => {
@@ -71,10 +61,10 @@ async function openEveryPage(browser, base, paths) {
     const warnings = [];
     const requested = [];
     let current = '/';
-    page.on('pageerror', (error) => { if (!isKnownAppError(current, error.message)) problems.push(`${current}: ${error.message}`); });
+    page.on('pageerror', (error) => problems.push(`${current}: ${error.message}`));
     page.on('console', (message) => {
-        if (message.type() === 'error' && !NETWORK_NOISE.test(message.text()) && !isKnownAppError(current, message.text())) problems.push(`${current}: ${message.text()}`);
-        if (message.type() === 'warning' && message.text().includes('[Vue warn]') && !isKnownAppError(current, message.text())) warnings.push(`${current}: ${message.text().split('\n')[0]}`);
+        if (message.type() === 'error' && !NETWORK_NOISE.test(message.text())) problems.push(`${current}: ${message.text()}`);
+        if (message.type() === 'warning' && message.text().includes('[Vue warn]')) warnings.push(`${current}: ${message.text().split('\n')[0]}`);
     });
     page.on('request', (request) => requested.push(request.url()));
 
