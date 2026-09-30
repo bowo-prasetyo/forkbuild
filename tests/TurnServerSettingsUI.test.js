@@ -380,8 +380,8 @@ async function run() {
     {
         const routerSource = await source('ui/router/index.js');
         assert(/path:\s*'\/settings\/turn-server'/.test(routerSource), n('L1. a real route exists for /settings/turn-server'));
-        assert(routerSource.includes("import TurnServerSettingsView from '../views/TurnServerSettingsView.js';"),
-            n('L2. the router imports the real view component, never a stub'));
+        assert(routerSource.includes("import('../views/TurnServerSettingsView.js')"),
+            n('L2. the router loads the real view component, never a stub'));
 
         const hubSource = withEnglish(await source('ui/views/NetworkSettingsView.js'));
         assert(/router-link to="\/settings\/turn-server"/.test(hubSource), n('L3. the Network Settings hub links to the TURN settings page — reachable one hop further, not a URL-only capability'));

@@ -3219,3 +3219,31 @@ automatically for a browser set to Japanese.
   scanned for English words (only product names, key names and hashes remain, no missing-message warnings); Home, the
   Editor and Your Data at phone width.
 
+
+## Loading: pages load when first opened (unnumbered, 2026-09-30)
+
+Opening ForkBuild downloaded every module of every page before showing anything: 1,739 modules, 4.4 MB compressed
+(14.5 MB uncompressed), for a Home page of a few lines. An audit of the static import graph from `ui/main.js` found
+that the 35 pages other than Home brought in about half of it (the World View alone about 300 modules, the Editor and
+the Publications page about 150 each), and that Three.js (1.2 MB) was in the first load only because the Repository's
+thumbnail renderer was imported by the app shell, although it was already constructed on first use.
+
+- `ui/router/index.js` imports each page but Home with `import()`, so a page's modules load the first time it is
+  opened. `ui/importWithRetry.js` retries a failed load with backoff, as `ui/boot.js` already did for the app: a host
+  that drops one request under a burst would otherwise leave the page blank.
+- The thumbnail renderer is imported on its first use (`application/editor/CreatePreviewUseCase.js`,
+  `application/steem/SteemPublicationNoticeComposition.js`); `PreviewService` accepts a renderer factory that returns
+  a promise and still runs one render at a time.
+- The first load is now 840 modules, 2.1 MB compressed, without Three.js. Measured in headless Chromium over HTTP/2
+  with gzip (median of runs, until Home is shown): 2.4 s to 0.9 s unthrottled, 2.6 s to 1.3 s on a 40 ms, 50 Mbit/s
+  link, and 8.6 s to 4.9 s on a 150 ms, 9 Mbit/s link with the CPU slowed four times. Opening the Editor directly:
+  3.2 s to 1.7 s and 9.9 s to 7.6 s.
+- Tests: `tests/InitialLoadModuleGraph.test.js` walks the static imports from `ui/main.js` (resolving the import map)
+  and fails if a page other than Home, or Three.js, is reachable; `tests/PreviewService.test.js` covers a renderer
+  that loads asynchronously. Ten tests that read the router's source now look for `import('../views/….js')`.
+- Checked in the real app: Home, the Editor, the Repository, the Publications, Peers and settings pages open with no
+  console errors, and Three.js is not requested until a page draws in 3D.
+- Not done, for later: the shell itself is still 840 modules, most of them services `ui/main.js` builds at startup for
+  anchoring, wallets, distribution and discovery. Building those that no startup work needs on first use would be the
+  next step; `<link rel="modulepreload">` hints would shorten the 20-level chain of imports the browser discovers one
+  level at a time.

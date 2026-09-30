@@ -149,8 +149,8 @@ async function run() {
 
         const routerSource = await source('ui/router/index.js');
         assert(/path:\s*'\/settings\/stun'/.test(routerSource), '11. a real route exists for the settings entry point');
-        assert(routerSource.includes("import StunSettingsView from '../views/StunSettingsView.js';"),
-            '12. the router imports the real view component, never a stub');
+        assert(routerSource.includes("import('../views/StunSettingsView.js')"),
+            '12. the router loads the real view component, never a stub');
 
         const appSource = await source('ui/App.js');
         assert(/router-link to="\/settings"/.test(appSource), '13a. a real top-nav link reaches the Network Settings hub');

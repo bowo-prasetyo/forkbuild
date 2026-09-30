@@ -155,8 +155,8 @@ async function run() {
             n('A1. /publisher-leaderboard is a real, registered route, pointed at PublisherPerformanceLeaderboardView')
         );
         assert(
-            /import\s+PublisherPerformanceLeaderboardView\s+from\s+'[^']+'/.test(routerSource),
-            n('A2. the router genuinely default-imports PublisherPerformanceLeaderboardView, never merely names it')
+            routerSource.includes("import('../views/PublisherPerformanceLeaderboardView.js')"),
+            n('A2. the router genuinely loads PublisherPerformanceLeaderboardView, never merely names it')
         );
         assert(
             typeof PublisherPerformanceLeaderboardView === 'object' && PublisherPerformanceLeaderboardView !== null,
