@@ -4,12 +4,13 @@ import UserWidget from './components/UserWidget.js';
 import ExperimentalBanner from './components/ExperimentalBanner.js';
 import BackupReminderBanner from './components/BackupReminderBanner.js';
 import NotificationHistoryPanel from './components/NotificationHistoryPanel.js';
+import PageLoadFailureNotice from './components/PageLoadFailureNotice.js';
 import { CreatePreviewUseCase } from '../application/editor/CreatePreviewUseCase.js';
 import { t } from './i18n/i18n.js';
 
 export default {
     name: 'App',
-    components: { UserWidget, ExperimentalBanner, BackupReminderBanner, NotificationHistoryPanel },
+    components: { UserWidget, ExperimentalBanner, BackupReminderBanner, NotificationHistoryPanel, PageLoadFailureNotice },
     // 0.2.32: one app-wide PreviewService, provided here (same
     // provide/inject convention LoginModal's identityUseCase already
     // uses) so its cache and generation queue survive navigating
@@ -119,6 +120,7 @@ export default {
 
             <BackupReminderBanner :path="$route.path" @open-your-data="$router.push('/settings/data')" />
             <ExperimentalBanner v-if="$route.meta.experimental" />
+            <PageLoadFailureNotice />
             <main class="app-content">
                 <router-view />
             </main>

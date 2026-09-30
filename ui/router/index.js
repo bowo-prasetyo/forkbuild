@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import { importWithRetry } from '../importWithRetry.js';
 import { loadServiceGroups } from '../serviceGroups.js';
 import { PAGE_SERVICE_GROUPS } from './pageServiceGroups.js';
+import { watchPageLoads } from '../pageLoadFailure.js';
 import HomeView from '../views/HomeView.js';
 
 // Each page but Home (a few lines, and the page most visits open) loads its
@@ -11,10 +12,12 @@ import HomeView from '../views/HomeView.js';
 // imported statically again.
 //
 // A page's service groups (ui/router/pageServiceGroups.js) load beside its
-// modules, so the services it injects are provided before it renders.
+// modules, so the services it injects are provided before it renders. A
+// failed load is tried again briefly, for browsers that fetch a failed module
+// again; if it still fails, the page says so (ui/pageLoadFailure.js).
 function page(name, load) {
     const serviceGroups = PAGE_SERVICE_GROUPS[name] || [];
-    return () => importWithRetry(() => Promise.all([load(), loadServiceGroups(serviceGroups)]).then(([module]) => module));
+    return () => importWithRetry(() => Promise.all([load(), loadServiceGroups(serviceGroups)]).then(([module]) => module), [500, 1500]);
 }
 const EditorView = page('EditorView', () => import('../views/EditorView.js'));
 const RepositoryView = page('RepositoryView', () => import('../views/RepositoryView.js'));
@@ -309,3 +312,6 @@ export const router = createRouter({
     history: createWebHashHistory(),
     routes
 });
+
+// A page that fails to download shows a notice instead of doing nothing.
+watchPageLoads(router);

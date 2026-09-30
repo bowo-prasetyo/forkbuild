@@ -25,6 +25,10 @@ export default Object.freeze({
     // (ui/loadRecovery.js).
     'app.loadFailed': 'ForkBuild couldn\'t finish loading. Check your connection, then reload the page.',
     'app.loadFailedReload': 'Reload',
+    // Shown when a page opened later could not load (ui/components/PageLoadFailureNotice.js).
+    'app.pageLoadFailed': 'This page couldn\'t load. Check your connection, then reload ForkBuild to open it.',
+    'app.pageLoadFailedEndsCall': 'Reloading ends your voice call.',
+    'app.pageLoadFailedDismiss': 'Dismiss',
 
     // The sound button and volume slider (ui/components/SoundControl.js).
     'sound.group': 'Sound',

@@ -184,6 +184,28 @@ html, body {
     gap: 0.5rem;
 }
 
+/* A page that could not load (ui/components/PageLoadFailureNotice.js). */
+.page-load-failure {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding: 0.55rem 0.9rem;
+    border-bottom: 1px solid #a05a3a;
+    background: #2d1c15;
+    color: #f0dcd0;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.page-load-failure-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
 .app-nav {
     flex-wrap: wrap;
 }
