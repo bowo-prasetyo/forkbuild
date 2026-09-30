@@ -40,7 +40,7 @@ export const archiveToolsTabTemplate = `<div v-show="publicationsToolsTab === 'a
                             <p class="form-hint form-hint--neutral">
                                 {{ displayText(item.label) }}
                                 <template v-if="item.domain === PublicationObservationTimelineDomain.IPFS"> — {{ item.locator }}</template>
-                                <template v-else-if="item.txid"> {{ t('publications.txid2', { txid: item.txid }) }}</template>
+                                <template v-else-if="item.txid">{{ ' ' + t('publications.txid2', { txid: item.txid }) }}</template>
                             </p>
                             <p v-if="item.kind === PublicationObservationTimelineEntryKind.BITCOIN_CONFIRMATION && item.blockHeight != null" class="form-hint form-hint--neutral">
                                 {{ t('publications.blockHeight3', { blockHeight: item.blockHeight }) }}

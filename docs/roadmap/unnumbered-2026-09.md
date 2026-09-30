@@ -3176,3 +3176,26 @@ have had to handle).
   "Untitled Landmark", "Untitled Location"); titles are never empty in practice, since a new World gets one and
   the metadata editor won't save an empty one.
 
+## Internationalization: Bahasa Indonesia (unnumbered, 2026-09-30)
+
+The first translation. ForkBuild can now be shown in Bahasa Indonesia, chosen on the Language page or picked
+automatically for a browser set to Indonesian.
+
+- `ui/i18n/messages/id.js` translates all 3,622 messages, in the same order and groups as English. It uses the formal
+  "Anda"; network and product names and protocol words with no settled Indonesian form stay as they are. The words it
+  uses for ForkBuild's own ideas are listed in `docs/Translating.md`, "Indonesian".
+- Found in the real app on the way:
+  - The storage line on Your Data was two messages around a conditional part and lost the space between them
+    ("1.6 KBof the …"); it is one message with two forms now, and sizes follow the language ("1,6 KB",
+    `ui/i18n/sizeText.js`).
+  - The same lost space came from 17 other places where a conditional template began with a space
+    (World View's "Editing fork — forked from …", the History panel, the lobby, publication cards):
+    Vue drops a whitespace-only text node at a template's edge. The space now goes inside the expression, and
+    `tests/TemplateConditionalSpacing.test.js` fails if one comes back.
+- Tests: `tests/IndonesianLocale.test.js` (complete, chosen from the browser, one plural form, decimal comma, a
+  resident's sentence, undo labels, a fork's title); `tests/I18n.test.js` checks every key and placeholder against
+  English for every locale.
+- Checked in the real app in Indonesian with an identity signed in: every page and settings page, their folded panels
+  and non-destructive buttons, scanned for English words (none found, no warnings); World View with a resident
+  talking, the undo button and the History panel; the Editor; and Home, the Editor and Your Data at phone width.
+

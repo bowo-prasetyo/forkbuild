@@ -167,7 +167,7 @@ export default {
                     <p class="form-hint form-hint--neutral">{{ t('publicLobbyPanel.anyoneCanChooseAnyName') }}</p>
                 </div>
                 <p v-if="joined" class="form-hint form-hint--neutral">
-                    {{ t('publicLobbyPanel.youReInThisLobby') }}<template v-if="joinedName"> {{ t('publicLobbyPanel.as') }} <strong>{{ joinedName }}</strong></template>.
+                    {{ t('publicLobbyPanel.youReInThisLobby') }}<template v-if="joinedName">{{ ' ' + t('publicLobbyPanel.as') }} <strong>{{ joinedName }}</strong></template>.
                 </p>
                 <p v-if="joinError" class="identity-unlock-error">{{ joinError }}</p>
                 <div class="modal-actions">

@@ -44,7 +44,7 @@ export default Object.freeze({
     'language.reloadNote': 'The page reloads to show the new language. Save your work in the Editor first.',
     'language.current': 'Showing: {language}',
     'language.pseudoNote': 'The pseudo-locale is English with accented letters, padded and bracketed. Text that still appears plain has not been prepared for translation yet.',
-    'language.helpTranslate': 'ForkBuild is being prepared for translation. To help translate it, see docs/Translating.md in the source code.',
+    'language.helpTranslate': 'To help translate ForkBuild into another language, see docs/Translating.md in the source code.',
     'language.unavailable': 'The language setting is unavailable here.',
 
     // World View (ui/views/WorldView.js).
@@ -1707,6 +1707,7 @@ export default Object.freeze({
     'units.meters': '{distance}m',
     'units.metersToward': '{distance}m {direction}',
     'units.metersSpaced': '{distance} m',
+    'units.bytes': { one: '{count} byte', other: '{count} bytes' },
 
     // World View: assorted panels, continued.
     'avatarInfoPanel.followWork': 'Follow Their Work',
@@ -3938,8 +3939,8 @@ export default Object.freeze({
     'turnServerSettingsView.currentTurnRelayUrlS': { one: 'Current TURN relay ({count} url): {urls} — username: {username}', other: 'Current TURN relay ({count} urls): {urls} — username: {username}' },
 
     // yourDataView: text with values.
-    'yourDataView.using': 'Using {usage}',
-    'yourDataView.ofTheThisBrowserAllows': 'of the {quota} this browser allows',
+    'yourDataView.usage': 'Using {usage}.',
+    'yourDataView.usageOfQuota': 'Using {usage} of the {quota} this browser allows.',
     'yourDataView.backUpTo': 'Back Up to "{name}"',
     'yourDataView.theBackupKeyIsRemembered': 'The backup key is remembered: Back Up to "{name}" works without the passphrase.',
     'yourDataView.lastBackup': 'Last backup: {lastBackupText}.',

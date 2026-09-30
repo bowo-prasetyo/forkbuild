@@ -1,11 +1,17 @@
 # Translating ForkBuild
 
-ForkBuild is being prepared for translation. The pieces that make it
-possible are in place: a translator in `ui/i18n/`, a **Language** page, and
-a pseudo-locale for finding text that isn't ready yet. Most of the app's text
-is still written straight into its components, and is moved over area by
-area. Until an area is moved, it shows in English whatever language is
-chosen.
+ForkBuild can be shown in another language: every page's text is a message
+(`ui/i18n/`), chosen on the **Language** page, with a pseudo-locale for
+finding text that isn't ready. It ships in English and Bahasa Indonesia; the
+table below lists the few things that stay in the language they were written
+in.
+
+## Languages
+
+| Language | Code | Messages |
+|---|---|---|
+| English (source) | `en` | `ui/i18n/messages/en.js` |
+| Bahasa Indonesia | `id` | `ui/i18n/messages/id.js`, complete (see "Indonesian" below) |
 
 ## What is ready
 
@@ -69,6 +75,35 @@ translated pieces: word order and grammar differ between languages.
 
 What people write themselves is never translated: publication titles, names,
 chat messages, and anything signed or published.
+
+## Indonesian
+
+`ui/i18n/messages/id.js` translates every key. It uses the formal "Anda",
+and keeps network and product names (ForkBuild, Arweave, Nostr, IPFS, Steem,
+Bitcoin, Base, Kubo, WebRTC, STUN, TURN) and protocol words with no settled
+Indonesian form (gateway, relay, endpoint, snapshot, hash, nonce, txid) as
+they are. The words it uses for ForkBuild's own ideas:
+
+| English | Indonesian |
+|---|---|
+| World | Dunia |
+| brick | balok |
+| build (a creation) | bangunan |
+| structure / blueprint | struktur / cetak biru |
+| Publication / publish | Publikasi / terbitkan |
+| fork | fork (di-fork, Fork dari …) |
+| peer | rekan |
+| identity / passphrase | identitas / frasa sandi |
+| landmark / region / resident | penanda / wilayah / penghuni |
+| placement / place | penempatan / tempatkan |
+| anchor / anchoring | jangkar / penjangkaran |
+| undo / redo | urungkan / ulangi |
+| sign in / sign out | masuk / keluar |
+
+Indonesian has one plural form, so plural messages give only `other`; the
+undo labels also give `=1` ("Tempatkan Balok" rather than "Tempatkan 1
+Balok"). Numbers and dates follow `id` (`3,2 km`). Compass points are U, TL,
+T, TG, S, BD, B, BL.
 
 ## Adding a language
 

@@ -130,11 +130,11 @@ export default {
             </p>
             <p v-if="distribution && distribution.recorded" class="publication-distribution">
                 <template v-if="distribution.stored.length">{{ t('publicationCard.storedOn') }}
-                    <template v-for="(entry, index) in distribution.stored" :key="'s' + entry.label"><template v-if="index"> {{ t('publicationCard.and') }} </template><span class="publication-distribution-item" :title="entry.detail">{{ entry.label }}</span></template>
+                    <template v-for="(entry, index) in distribution.stored" :key="'s' + entry.label"><template v-if="index">{{ ' ' + t('publicationCard.and') + ' ' }}</template><span class="publication-distribution-item" :title="entry.detail">{{ entry.label }}</span></template>
                 </template>
                 <template v-if="distribution.stored.length && distribution.announced.length"> · </template>
                 <template v-if="distribution.announced.length">{{ t('publicationCard.announcedOn') }}
-                    <template v-for="(entry, index) in distribution.announced" :key="'a' + entry.label"><template v-if="index"> {{ t('publicationCard.and') }} </template><span class="publication-distribution-item" :title="entry.detail">{{ entry.label }}</span></template>
+                    <template v-for="(entry, index) in distribution.announced" :key="'a' + entry.label"><template v-if="index">{{ ' ' + t('publicationCard.and') + ' ' }}</template><span class="publication-distribution-item" :title="entry.detail">{{ entry.label }}</span></template>
                 </template>
             </p>
             <p v-else-if="distribution" class="publication-distribution publication-distribution--none">

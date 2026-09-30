@@ -14,7 +14,7 @@ export const anchoringToolsTabTemplate = `<div v-show="publicationsToolsTab === 
                 </div>
                 <p class="form-hint form-hint--neutral">
                     <template v-if="batchType.maxBatchSize">{{ t('publications.pickPublicationsToAnchorTogetherAtMost', { count: batchType.maxBatchSize }) }}</template><template v-else>{{ t('publications.pickPublicationsToAnchorTogether') }}</template>
-                    <template v-if="batchType.anchorType === 'steem'"> {{ t('publications.steemAnchorsAreAttestedBy') }}</template>
+                    <template v-if="batchType.anchorType === 'steem'">{{ ' ' + t('publications.steemAnchorsAreAttestedBy') }}</template>
                 </p>
                 <p v-if="usableEntries.length === 0" class="form-hint form-hint--neutral">
                     <template v-if="failedEntries.length > 0">{{ t('publications.noPublicationHereCanBeFailed', { count: failedEntries.length }) }}</template><template v-else>{{ t('publications.noPublicationHereCanBe') }}</template>
@@ -483,7 +483,7 @@ export const anchoringToolsTabTemplate = `<div v-show="publicationsToolsTab === 
                                     <ul v-else class="replica-knowledge-claim-list">
                                         <li v-for="item in historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).broadcastObservations.observations" :key="item.index" class="replica-knowledge-claim">
                                             {{ displayText(item.stateLabel) }} — {{ item.broadcastedAt ? formatWhen(item.broadcastedAt) : t('publications.noTimestampRecorded') }}
-                                            <template v-if="item.txid"> {{ t('publications.txid2', { txid: item.txid }) }}</template>
+                                            <template v-if="item.txid">{{ ' ' + t('publications.txid2', { txid: item.txid }) }}</template>
                                         </li>
                                     </ul>
                                 </div>
@@ -494,7 +494,7 @@ export const anchoringToolsTabTemplate = `<div v-show="publicationsToolsTab === 
                                     <ul v-else class="replica-knowledge-claim-list">
                                         <li v-for="item in historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).confirmationObservations.observations" :key="item.index" class="replica-knowledge-claim">
                                             {{ t('publications.confirmationObservation', { number: item.index, observedAt: formatWhen(item.observedAt), stateLabel: displayText(item.stateLabel) }) }}
-                                            <template v-if="item.blockHeight !== null && item.blockHeight !== undefined"> {{ t('publications.height', { blockHeight: item.blockHeight }) }}</template>
+                                            <template v-if="item.blockHeight !== null && item.blockHeight !== undefined">{{ ' ' + t('publications.height', { blockHeight: item.blockHeight }) }}</template>
                                         </li>
                                     </ul>
                                 </div>
