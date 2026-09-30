@@ -524,7 +524,8 @@ async function run() {
             `grep -rlE "new DecentralizedPublicationDiscoveryProvider\\(" --include="*.js" . || true`,
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim().split('\n').filter(Boolean)
-            .filter((f) => !f.includes('/tests/') && !f.endsWith('.test.js') && !f.includes('node_modules'));
+            // dist/ is the built site (npm run build), a copy of these files, not more of them.
+            .filter((f) => !f.includes('/tests/') && !f.endsWith('.test.js') && !f.includes('node_modules') && !f.startsWith('./dist/'));
         assert(productionConstructors.length === 1 && productionConstructors[0] === './ui/main.js',
             `1. exactly one production file constructs DecentralizedPublicationDiscoveryProvider, and it is ui/main.js (found: ${productionConstructors.join(', ') || 'none'}) — no other production file (a view, a use case, a coordinator) can silently create a second, isolated Repository catalog.`);
     }

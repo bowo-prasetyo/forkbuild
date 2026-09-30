@@ -1578,7 +1578,12 @@ them all at once rather than one import level at a time; a preload fetches
 and parses a module without running it, so ui/main.js still runs only after
 storage is open. scripts/modulepreload.mjs writes the list and
 tests/ModulePreload.test.js fails when it is out of date; both use the
-static import walk in scripts/moduleGraph.mjs. The import map
+static import walk in scripts/moduleGraph.mjs. GitHub Pages publishes a
+bundled copy instead (scripts/build.mjs, .github/workflows/pages.yml): esbuild
+joins the first load into about 80 minified files and turns every import()
+into its own file, resolving bare imports through the import map below;
+tests/run-bundle.mjs opens every page of it (docs/Deployment.md, "GitHub
+Pages"). The import map
 resolves `vue`, `vue-router`, `@vue/devtools-api`, `three` and
 `three/addons/` to copies in vendor/, which scripts/vendor.mjs makes from
 the exact versions pinned in package.json (tests/VendoredLibraries.test.js
