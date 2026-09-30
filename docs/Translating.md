@@ -21,7 +21,7 @@ chosen.
 | Refusals from `application/` (sign in first, already friends, wrong passphrase …) | Translated (`UserFacingError`) |
 | Resident speech in World View | Translated |
 | Undo/redo and history labels | Translated (a label saved by an older version stays in its English) |
-| A new document's default title, a fork's "Fork of …" title | English (stored in documents; needs its own change) |
+| A new World's title, a fork's "Fork of …" and a copy's "Copy of …" | In the language of whoever made it, saved like any title |
 
 ## How it works
 
@@ -145,6 +145,12 @@ it:
   shown, on this device or a peer's. `description` is left out, so an
   older version falls back to its own label; a `description` an older
   version wrote is English text and is shown as written.
+- **Titles the app gives a new document** (a new World, a fork, a copy) are
+  saved with it, so they are written once, in the language of whoever made
+  it, and read the same for everyone after: they are the document's title
+  now, like one a person typed. `application/document/DocumentTitles.js`
+  makes them; `ui/main.js` points it at the `document.*` messages at
+  start-up.
 - **Enum-to-label modules** (`application/document/LicenseLabels.js`,
   `application/avatar/AvatarPresenceLabels.js`) map each value to a key, with
   a message for anything unrecognized.

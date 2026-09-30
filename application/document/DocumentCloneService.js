@@ -2,6 +2,7 @@ import { Document } from '../../core/Document.js';
 import { DocumentMetadata } from '../../core/DocumentMetadata.js';
 import { World } from '../../core/World.js';
 import { createBrickId } from '../../core/createId.js';
+import { copyTitle } from './DocumentTitles.js';
 
 // The single cloning mechanism for Documents (0.1.42). Deep-clones with
 // fresh identities throughout: a new world.id (the document identity),
@@ -72,13 +73,12 @@ export class DocumentCloneService {
             groupJson.brickIds = (groupJson.brickIds || []).map((brickId) => brickIdMap.get(brickId) || brickId);
         }
         const clonedWorld = World.fromJSON(worldJson, eventBus);
-        const sourceTitle = sourceDocument.metadata.title || 'Untitled';
 
         // Determine license: explicit option > source license > default
         const nextLicense = license !== undefined ? license : sourceDocument.metadata.license;
 
         const metadata = new DocumentMetadata({
-            title: title !== null ? title : `Copy of ${sourceTitle}`,
+            title: title !== null ? title : copyTitle(sourceDocument.metadata.title),
             // 0.2.21: a description is part of what "the same content,
             // fresh identity" means — carried through exactly like
             // license, not reset to empty just because the ids are new.

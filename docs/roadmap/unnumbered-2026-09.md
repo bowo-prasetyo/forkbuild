@@ -3157,3 +3157,22 @@ after phase 3.
   View's Undo/Redo buttons and History panel after adding a resident; no warnings.
 - Next: a new World's default title and a fork's "Fork of …" title, set in the creator's language.
 
+## Internationalization: a new World's title in its creator's language (unnumbered, 2026-09-30)
+
+The last of the three gaps left after phase 3. A title the app gives a document is saved with it, so it is set
+once, in the language of whoever made the document, and saved like any other title (rather than stored empty and
+shown in each viewer's language, which every place that shows or publishes a title, and older versions, would
+have had to handle).
+
+- `application/document/DocumentTitles.js` makes the three such titles: a new World ("Untitled ForkBuild World"),
+  a fork ("Fork of {title}", from the Editor, World View's edit-to-fork and a published World) and a copy ("Copy of
+  {title}"). `ui/main.js` sets them from the `document.*` messages at start-up; until then (tests, no UI) they are
+  the English they have always been, which `tests/DocumentTitles.test.js` keeps equal to the English messages.
+- A fork's license attribution names an untitled source the same way.
+- English change: a fork of a World with no title is "Fork of Untitled ForkBuild World" (was "Fork of Untitled").
+- Checked in the real app in the pseudo-locale: a new World in the Editor and the fork World View made of it on
+  first edit are titled in that language; no warnings.
+- Not done: when a title is somehow empty, a few places show an English stand-in ("Untitled Structure",
+  "Untitled Landmark", "Untitled Location"); titles are never empty in practice, since a new World gets one and
+  the metadata editor won't save an empty one.
+

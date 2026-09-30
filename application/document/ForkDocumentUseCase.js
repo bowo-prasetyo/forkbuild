@@ -3,6 +3,7 @@ import { DocumentCloneService } from './DocumentCloneService.js';
 import { License } from '../../core/License.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { ForkFailureReason } from './ForkFailureReason.js';
+import { forkTitle, untitledWorldTitle } from './DocumentTitles.js';
 
 // Creates a new Document derived from an existing one. The source is
 // loaded from storage by its world id (publication.documentId), then
@@ -51,7 +52,7 @@ export class ForkDocumentUseCase {
         
         const sourceDocument = this._documentSerializer.deserialize(json);
         const currentUser = identityProvider ? identityProvider.currentUser() : null;
-        const sourceTitle = sourceDocument.metadata.title || 'Untitled';
+        const sourceTitle = sourceDocument.metadata.title || untitledWorldTitle();
 
         // 2. ATTRIBUTION: Stamp derivative license if source is known.
         let derivativeLicense = null;
@@ -83,7 +84,7 @@ export class ForkDocumentUseCase {
         }
 
         return this._documentCloneService.execute(sourceDocument, {
-            title: `Fork of ${sourceTitle}`,
+            title: forkTitle(sourceTitle),
             author: currentUser ? currentUser.username : null,
             // 0.2.95 — see core/DocumentMetadata.js's own comment: the
             // FORKER becomes the new owner, never the source document's
