@@ -30,9 +30,13 @@ over HTTP/2 or later so they share one connection. If the
 host drops or refuses even one of them (GitHub Pages has been seen doing
 this in Firefox), the browser aborts that import. The console then fills
 with "Loading failed for the module with source" errors, each naming a
-module that was still in flight. `ui/importWithRetry.js` retries the app's
-load, and each page's, a few times with backoff. Files that already loaded
-come back from the HTTP cache, so each retry requests fewer of them.
+module that was still in flight. `ui/importWithRetry.js` retries a page's
+load a few times with backoff, which helps in browsers that fetch a failed
+module again. Chromium does not, for the life of the page, so when the app's
+first load fails to download `ui/boot.js` reloads the page once
+(`ui/loadRecovery.js`); files that already loaded come back from the HTTP
+cache, so the reload requests only what is missing. If that fails too, the
+page shows a message with a Reload button rather than a blank page.
 
 ## Everything is served from your own origin
 

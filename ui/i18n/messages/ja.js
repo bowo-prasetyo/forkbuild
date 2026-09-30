@@ -22,6 +22,8 @@ export default Object.freeze({
     'app.nav.language': '言語',
     'app.nav.about': 'ForkBuildについて',
     'app.notifications': '通知',
+    'app.loadFailed': 'ForkBuild の読み込みを完了できませんでした。接続を確認してから、ページを再読み込みしてください。',
+    'app.loadFailedReload': '再読み込み',
 
     // The sound button and volume slider (ui/components/SoundControl.js).
     'sound.group': 'サウンド',
