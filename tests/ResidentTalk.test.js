@@ -1,8 +1,10 @@
 import * as THREE from 'three';
-import {
-    composeResidentRemarks, phraseFact, describeDistance, compassWord, sanitizeSpokenText,
-    RESIDENT_FACT_KIND, QUIET_REMARK, MAX_SPOKEN_TITLE_LENGTH
-} from '../core/ResidentTalk.js';
+import * as ResidentTalk from '../core/ResidentTalk.js';
+import { sanitizeSpokenText, RESIDENT_FACT_KIND, MAX_SPOKEN_TITLE_LENGTH } from '../core/ResidentTalk.js';
+import { isMessage } from '../core/Message.js';
+import { displayText, errorText } from '../ui/i18n/i18n.js';
+import { Translator } from '../ui/i18n/Translator.js';
+import en from '../ui/i18n/messages/en.js';
 import { gatherResidentFacts, RESIDENT_KNOWLEDGE_RADIUS } from '../application/world/ResidentSurroundings.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { wildlifeInRegionAt } from '../core/WildlifeMotion.js';
@@ -48,6 +50,14 @@ import { assert } from './support/Assert.js';
 //   Section E: placed structures, named by the document they place (never a
 //              bare id), and Focus: a camera-only look at what was mentioned
 
+// core/ResidentTalk.js speaks in messages; these read them in English, the
+// words a person sees with the app in English.
+const english = (remark) => (remark === null ? null : displayText(remark));
+const phraseFact = (fact) => english(ResidentTalk.phraseFact(fact));
+const describeDistance = (meters) => english(ResidentTalk.describeDistance(meters));
+const composeResidentRemarks = (facts, options) => ResidentTalk.composeResidentRemarks(facts, options).map(english);
+const QUIET_REMARK = english(ResidentTalk.QUIET_REMARK);
+
 const SEED = DEFAULT_WORLD_SEED;
 const T = 1_759_000_000;
 
@@ -76,7 +86,9 @@ function runTests() {
         assert(describeDistance(4) === 'just a few steps' && describeDistance(NaN) === 'just a few steps', '1. Very close is "just a few steps"');
         assert(describeDistance(83) === 'about 80 m' && describeDistance(340) === 'about 350 m', '2. Metres are rounded, never falsely precise');
         assert(describeDistance(3240) === 'about 3.2 km' && describeDistance(12600) === 'about 13 km', '3. Kilometres too');
-        assert(compassWord('NE') === 'north-east' && compassWord(null) === null, '4. Compass sectors become words');
+        assert(phraseFact({ kind: RESIDENT_FACT_KIND.VEHICLE, vehicleType: 'car', distance: 200, direction: 'NE' }) === "There's a car about 200 m to the north-east."
+            && phraseFact({ kind: RESIDENT_FACT_KIND.VEHICLE, vehicleType: 'car', distance: 200, direction: null }) === "There's a car about 200 m away.",
+            '4. Compass sectors become words; with no direction, just how far');
 
         assert(sanitizeSpokenText('  Old\n\tMill  ', 60) === 'Old Mill', '5. Whitespace collapses');
         assert(sanitizeSpokenText('abc\u202edef\u0007', 60) === 'abc def', '6. Control and direction-override characters are removed');
@@ -91,8 +103,8 @@ function runTests() {
         assert(phraseFact({ kind: RESIDENT_FACT_KIND.LANDMARK, title: 'Old Well', distance: 120, direction: 'SW' }) === 'The landmark “Old Well” is about 100 m to the south-west.', '12. A landmark');
         assert(phraseFact({ kind: RESIDENT_FACT_KIND.PERSON, displayName: 'Alice', distance: 30, direction: 'W' }) === 'Alice is about 30 m to the west.', '13. A person');
         const build = { kind: RESIDENT_FACT_KIND.BUILD, title: 'Hill Fort', author: 'bob', distance: 3100, direction: 'N' };
-        assert(phraseFact(build) === 'About 3.1 km to the north, there\'s a build called “Hill Fort” by bob.', '14. Another build, with its author');
-        assert(phraseFact({ ...build, author: '  ' }) === 'About 3.1 km to the north, there\'s a build called “Hill Fort”.', '15. ...or without one when it has none');
+        assert(phraseFact(build) === 'There\'s a build called “Hill Fort” by bob, about 3.1 km to the north.', '14. Another build, with its author');
+        assert(phraseFact({ ...build, author: '  ' }) === 'There\'s a build called “Hill Fort” about 3.1 km to the north.', '15. ...or without one when it has none');
         assert(phraseFact({ ...build, title: '' }) === null && phraseFact({ ...bike, vehicleType: 'none' }) === null, '16. Nothing speakable, no sentence');
         assert(phraseFact({ kind: RESIDENT_FACT_KIND.PLACE, name: 'Willow Village' }) === 'This is Willow Village.', '17. The place itself');
 
@@ -210,6 +222,7 @@ function runTests() {
         });
         const said = [];
         session._session = { onAnimationFrame: () => () => {}, showResidentSpeech: (id, remarks) => said.push({ id, remarks }) };
+        session.setResidentSpeechTranslator(displayText);
         const world = new World({ id: 'w-home' });
         world.addWorldLandmark(new WorldLandmark({ id: 'l1', worldId: 'w-home', authorIdentityId: 'alice', title: 'Old Well', position: new Position(10, 0, 40) }));
         session._loadedDocuments.set('w-home', new Document({ world, metadata: new DocumentMetadata({ title: 'Home Village' }) }));
@@ -238,6 +251,13 @@ function runTests() {
         assert(session._processResidentTalkInput('T', 'keydown') === true && said.length === 1, '46. The T key talks');
         session._processResidentTalkInput('t', 'keydown');
         assert(said.length === 1, '47. ...once per press, however long it is held');
+        const canEdit = session.canEditDocument;
+        session.canEditDocument = () => false;
+        let refused = null;
+        try { session.addResidentHere(); } catch (e) { refused = e; }
+        session.canEditDocument = canEdit;
+        assert(refused && errorText(refused) === "You can't change this World." && refused.message.includes('not authorized'),
+            '47b. A refused add reads as a message for the person, keeping the developer detail');
         session._processResidentTalkInput('t', 'keyup');
         assert(session._processResidentTalkInput('x', 'keydown') === false, '48. Other keys are not T');
         const residentsBefore = world.getResidents().length;
@@ -304,7 +324,7 @@ function runTests() {
             { kind: RESIDENT_FACT_KIND.PLACE, name: 'Willow Village' },
             { kind: RESIDENT_FACT_KIND.LANDMARK, title: 'Nowhere', distance: 1, direction: 'N' }
         ]);
-        assert(JSON.stringify(targets.map((t) => t.label)) === JSON.stringify(['Old Mill', 'bicycle', 'Old Well', 'Hill Fort']),
+        assert(JSON.stringify(targets.map((t) => english(t.label))) === JSON.stringify(['Old Mill', 'bicycle', 'Old Well', 'Hill Fort']),
             '65. Focus is offered for what stays put — structures, vehicles, landmarks, builds — with plain labels');
         assert(!FOCUSABLE_FACT_KINDS.includes(RESIDENT_FACT_KIND.ANIMAL) && !FOCUSABLE_FACT_KINDS.includes(RESIDENT_FACT_KIND.PERSON),
             '66. ...never for animals or people, who move on, or anything without a position');
@@ -338,6 +358,7 @@ function runTests() {
             identityProvider: identity, avatarPresenceSession: avatar, wildlifeClock: () => T
         });
         session._session = { onAnimationFrame: () => () => {}, showResidentSpeech: () => true };
+        session.setResidentSpeechTranslator(displayText);
         const world = new World({ id: 'w-village' });
         world.addStructurePlacement(new StructurePlacement({ id: 'p-mill', documentId: 'mill-doc', position: new Position(0, 0, 30) }));
         world.addStructurePlacement(new StructurePlacement({ id: 'p-shed', documentId: 'shed-doc', position: new Position(-25, 0, 0) }));
@@ -353,7 +374,7 @@ function runTests() {
         for (let i = 0; i < 40; i++) {
             const speech = session.talkToNearestResident();
             heard.push(...speech.remarks);
-            offered.push(...speech.focusTargets.map((t) => t.label));
+            offered.push(...speech.focusTargets.map((t) => english(t.label)));
         }
         assert(heard.some((r) => r.startsWith('“Old Mill” by carol stands')), '71. A placed structure is named by its publication, with its author');
         assert(heard.some((r) => r.startsWith('“Tool Shed” stands')), '72. ...or by the title this device saved it under');
@@ -379,6 +400,30 @@ function runTests() {
         assert(avatarAfter.x === avatarBefore.x && avatarAfter.z === avatarBefore.z, '78. The avatar stays where it is');
         assert(session.focusResidentMention(99) === false && focused.length === 1, '79. A Focus on nothing does nothing');
         assert(world.getStructurePlacements().length === 3 && world.getResidents().length === 1, '80. Talking and looking never change the World');
+    }
+
+    // -------------------------------------------------------------
+    // Section F — in another language
+    // -------------------------------------------------------------
+    {
+        const build = { kind: RESIDENT_FACT_KIND.BUILD, title: 'Hill Fort', author: 'bob', distance: 3240, direction: 'N' };
+        const remark = ResidentTalk.phraseFact(build);
+        assert(isMessage(remark) && remark.params.title === 'Hill Fort' && remark.params.author === 'bob',
+            '81. A remark is a message; titles and names are parameters, never translated');
+        const german = new Translator({
+            locale: 'de',
+            fallbackMessages: en,
+            messages: {
+                'resident.buildBy': '„{title}“ von {author} steht {where}.',
+                'resident.where.north': '{distance} nördlich',
+                'resident.distance.kilometers': 'etwa {kilometers} km'
+            }
+        });
+        assert(german.translate(remark.key, remark.params) === '„Hill Fort“ von bob steht etwa 3,2 km nördlich.',
+            '82. Each part is translated, and the distance is written the language\'s way');
+        const bike = { kind: RESIDENT_FACT_KIND.VEHICLE, vehicleType: 'bicycle', distance: 80, direction: 'E', position: { x: 80, z: 0 } };
+        const [target] = ResidentTalk.focusTargetsFor([bike]);
+        assert(isMessage(target.label) && english(target.label) === 'bicycle', '83. A vehicle\'s Focus label is a message too');
     }
 
     console.log('✅ All Resident Talk tests passed.');

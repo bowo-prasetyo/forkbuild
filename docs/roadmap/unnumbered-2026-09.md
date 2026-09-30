@@ -3112,3 +3112,27 @@ history and the visibility form. With it every page of the app can be shown in a
   used but was not given.
 - Not done: resident speech in World View, a publication check's technical detail, and history labels and a new
   document's default title (stored in documents) stay English.
+
+## Internationalization: resident speech (unnumbered, 2026-09-30)
+
+What a World Resident says can now be shown in another language, the first of the three gaps left after phase 3.
+
+- `core/ResidentTalk.js` returns messages, not English sentences: one message per kind of thing (a vehicle, an animal,
+  a landmark, a person, a build, a placed structure, the place itself), with `{where}` ("about 3.2 km to the north")
+  and `{distance}` as messages of their own, one per compass direction, so a language can word and order each part.
+  Distances are numbers written the language's way ("3,2 km"). Titles and names stay as written. A vehicle's Focus
+  button label is a message too.
+- The renderer draws the bubble and cannot translate, so World View gives the session a translator
+  (`setResidentSpeechTranslator(displayText)`); the remarks the bubble, the screen-reader line and the speech
+  timing get are already in the chosen language.
+- English wording change: a build now reads "There's a build called “Hill Fort” by bob, about 3.1 km to the north."
+  instead of starting with the distance, so no translation has to capitalize a parameter.
+- Found on the way: adding a resident, landmark, decoration or region where it isn't allowed showed the developer
+  message ("WorldNavigationSession: a resident can't be added here (water)"). Those refusals are `UserFacingError`s
+  now, with the existing `residentRefusal.*` messages and new shared `worldRefusal.*` ones. The welcome panel's
+  "this World" fallback and the "↳ Fork of …" line on publication cards and lists were English too.
+- Checked in the real app, in English and the pseudo-locale: a resident added to a World and talked to four times,
+  with the bubble, the announcement and the Focus button all translated, and no warnings.
+- Next: history labels, then a new World's default title (and a fork's "Fork of …" title), set in the creator's
+  language when the World is made.
+

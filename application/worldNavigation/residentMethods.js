@@ -17,6 +17,8 @@ import { gatherResidentFacts, RESIDENT_KNOWLEDGE_RADIUS } from '../world/Residen
 import { pickResidentRemarkFacts, phraseFact, focusTargetsFor, speechSecondsFor, QUIET_REMARK } from '../../core/ResidentTalk.js';
 import { terrainHeightAt } from '../../core/TerrainHeightField.js';
 import { regionsContaining } from '../../core/WorldRegionGeography.js';
+import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
 
 // World Residents in World View: where they are drawn and collided with,
 // and how a World's author adds and removes them (the 'R' key).
@@ -43,6 +45,13 @@ export const RESIDENT_REFUSAL = Object.freeze({
     NOT_ON_GROUND: 'not-on-ground',
     RIDING: 'riding',
     WATER: 'water'
+});
+
+// Each refusal as a message for the person (ui/i18n/messages/en.js).
+const RESIDENT_REFUSAL_MESSAGE_KEYS = Object.freeze({
+    [RESIDENT_REFUSAL.NOT_ON_GROUND]: 'residentRefusal.notOnGround',
+    [RESIDENT_REFUSAL.RIDING]: 'residentRefusal.riding',
+    [RESIDENT_REFUSAL.WATER]: 'residentRefusal.water'
 });
 
 export const residentMethods = {
@@ -133,20 +142,22 @@ export const residentMethods = {
         }
         const refusal = this._residentRefusalAt(avatarPos);
         if (refusal) {
-            throw new Error(`WorldNavigationSession: a resident can't be added here (${refusal})`);
+            throw new UserFacingError(message(RESIDENT_REFUSAL_MESSAGE_KEYS[refusal]), {
+                detail: `WorldNavigationSession: a resident can't be added here (${refusal})`
+            });
         }
         this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
         const doc = this.getDocument(this._activeDocumentId);
         if (!doc) {
-            throw new Error('WorldNavigationSession: no active World to add a resident to');
+            throw new UserFacingError(message('worldRefusal.noWorld'), { detail: 'WorldNavigationSession: no active World to add a resident to' });
         }
         const worldId = doc.world.id;
         if (!this.canEditDocument(worldId)) {
-            throw new Error('WorldNavigationSession: not authorized to add a resident to this World');
+            throw new UserFacingError(message('worldRefusal.notAuthorized'), { detail: 'WorldNavigationSession: not authorized to add a resident to this World' });
         }
         const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
         if (!authorIdentityId) {
-            throw new Error('WorldNavigationSession: sign in to add a resident');
+            throw new UserFacingError(message('worldRefusal.signIn'), { detail: 'WorldNavigationSession: sign in to add a resident' });
         }
         const layoutPosition = this.getDocumentPosition(worldId);
         const cmd = new CreateWorldResidentCommand({
@@ -176,7 +187,7 @@ export const residentMethods = {
         }
         const worldId = this._ensureEditableDocumentId(nearest.documentId);
         if (!this.canEditDocument(worldId)) {
-            throw new Error('WorldNavigationSession: not authorized to remove a resident from this World');
+            throw new UserFacingError(message('worldRefusal.notAuthorized'), { detail: 'WorldNavigationSession: not authorized to remove a resident from this World' });
         }
         this._commandHistories.get(worldId).execute(
             new RemoveWorldResidentCommand({ worldId, residentId: nearest.id })
@@ -233,10 +244,19 @@ export const residentMethods = {
         this._residentDisplayNameResolver = typeof resolveDisplayName === 'function' ? resolveDisplayName : null;
     },
 
+    // `(message) => string`: how a remark (a core/Message.js message) becomes
+    // words in the viewer's language. The UI passes its displayText(). The
+    // renderer draws text, so remarks are translated here, before it gets
+    // them. Without one, a remark reads as its message key.
+    setResidentSpeechTranslator(translate) {
+        this._residentSpeechTranslator = typeof translate === 'function' ? translate : null;
+    },
+
     // Talks to the resident nearest the avatar (within
     // RESIDENT_INTERACTION_RADIUS of where it is now): gathers what it knows
     // about its surroundings and returns { residentId, remarks } — one or two
-    // sentences (core/ResidentTalk.js), which the facade also shows over the
+    // sentences (core/ResidentTalk.js, translated by
+    // setResidentSpeechTranslator()), which the facade also shows over the
     // resident's head. Each conversation with the same resident moves on to
     // other things. Null when nobody is close enough.
     talkToNearestResident() {
@@ -255,7 +275,8 @@ export const residentMethods = {
         const turn = this._residentConversationTurns.get(nearest.id) || 0;
         this._residentConversationTurns.set(nearest.id, turn + 1);
         const picked = pickResidentRemarkFacts(this._residentFactsAround(nearest, time), { turn });
-        const remarks = picked.length > 0 ? picked.map(phraseFact) : [QUIET_REMARK];
+        const translate = this._residentSpeechTranslator || String;
+        const remarks = (picked.length > 0 ? picked.map(phraseFact) : [QUIET_REMARK]).map((remark) => translate(remark));
         const speech = {
             residentId: nearest.id,
             remarks,

@@ -119,7 +119,7 @@ export default {
             return parts;
         },
         worldTitle() {
-            return (this.context && this.context.world && this.context.world.title) || 'this World';
+            return (this.context && this.context.world && this.context.world.title) || t('worldWelcomePanel.thisWorld');
         }
     },
     methods: {

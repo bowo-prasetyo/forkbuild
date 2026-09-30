@@ -110,7 +110,7 @@ export default {
             <PublicationPreview :publication="publication" size="card" />
             <h3>{{ publication.title }}</h3>
             <p v-if="publication.parentDocumentId" class="publication-fork-of">
-                ↳ Fork of {{ parentTitle || t('publicationCard.unknown') }}
+                {{ t('publicationCard.forkOf', { title: parentTitle || t('publicationCard.unknown') }) }}
             </p>
             <p v-if="description" class="publication-description">{{ description }}</p>
             <p class="publication-meta">

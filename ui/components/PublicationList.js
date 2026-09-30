@@ -95,7 +95,7 @@ export default {
                             <td class="publication-table-title-col">
                                 <span class="publication-table-title">{{ pub.title }}</span>
                                 <span v-if="pub.parentDocumentId" class="publication-fork-of">
-                                    ↳ Fork of {{ parentTitles[pub.documentId] || t('publicationList.unknown') }}
+                                    {{ t('publicationList.forkOf', { title: parentTitles[pub.documentId] || t('publicationList.unknown') }) }}
                                 </span>
                                 <span v-if="descriptions[pub.documentId]" class="publication-description publication-description--list">
                                     {{ descriptions[pub.documentId] }}

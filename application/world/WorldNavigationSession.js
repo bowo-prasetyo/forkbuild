@@ -259,6 +259,7 @@ export class WorldNavigationSession {
         this._residentConversationTurns = new Map();
         this._lastResidentSpeech = null;
         this._residentDisplayNameResolver = null;
+        this._residentSpeechTranslator = null;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;
         // `null` means off (the free/orbit camera). Local UI state only: never
