@@ -21,7 +21,7 @@ name starts with `_` (such as `vendor/noble-hashes/_md.js`), and the app
 shows a blank page.
 
 **Many requests at once.** There is no bundler, so the browser fetches
-about 850 module files when the page opens, and a few to a few hundred more
+about 600 module files when the page opens, and a few to a few hundred more
 the first time each page is opened (the World View and the Editor are the
 largest). Serve over HTTP/2 or later so they share one connection. If the
 host drops or refuses even one of them (GitHub Pages has been seen doing

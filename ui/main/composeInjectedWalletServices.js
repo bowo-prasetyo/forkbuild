@@ -1,19 +1,14 @@
-import { CreateArweaveAnchorPublisherUseCase } from '../../application/anchoring/CreateArweaveAnchorPublisherUseCase.js';
-import { CreateArweaveAnchorProofVerifierUseCase } from '../../application/anchoring/CreateArweaveAnchorProofVerifierUseCase.js';
-import { CreateArweaveAnchorEvidenceViewUseCase } from '../../application/anchoring/CreateArweaveAnchorEvidenceViewUseCase.js';
-import { CreateBaseAnchorEvidenceViewUseCase } from '../../application/anchoring/base/CreateBaseAnchorEvidenceViewUseCase.js';
-import { CreateBaseAnchorProofVerifierUseCase } from '../../application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js';
 import { ArweaveContentStore } from '../../content/ArweaveContentStore.js';
 import { createNostrPublicationDistributionRuntimeAdapter } from '../../application/nostr/NostrPublicationDistributionRuntimeAdapter.js';
 import { createArweaveInjectedProviderSigner } from '../../arweave/ArweaveInjectedProviderSigner.js';
 import { createNostrInjectedProviderPublisher } from '../../nostr/NostrInjectedProviderPublisher.js';
 
 // Composition root: the injected-wallet Arweave signer and Nostr publisher,
-// and the Arweave content store and Arweave/Base anchor services built on them.
+// and the Arweave content store built on them. The Arweave and Base anchor
+// services built on the signer are in composeAnchoring.js, which loads with
+// the pages that anchor.
 export function composeInjectedWalletServices({
-    publicationSnapshotPlacementResolutionStoreRegistry, snapshotPlacementStoreRegistry,
-    externalAnchorProofVerifierRegistry, externalAnchorPublisherRegistry, externalAnchorEvidenceViewRegistry,
-    resolvedArweaveGatewayUrl
+    publicationSnapshotPlacementResolutionStoreRegistry, snapshotPlacementStoreRegistry, resolvedArweaveGatewayUrl
 }) {
     // arweaveHostSigner and nostrHostPublisher resolve window.arweaveWallet and
     // window.nostr lazily, on each sign()/publish(), never once at boot: an
@@ -43,31 +38,6 @@ export function composeInjectedWalletServices({
     });
     snapshotPlacementStoreRegistry.register(arweaveSnapshotPlacementContentStore);
     publicationSnapshotPlacementResolutionStoreRegistry.register(arweaveSnapshotPlacementContentStore);
-
-    // Registered into the same registries as Bitcoin. With no wallet installed,
-    // the lazy signer rejects honestly, so "Create Arweave Anchor" reports
-    // PUBLISH_UNAVAILABLE rather than disappearing.
-    const { arweaveAnchorPublisher } = new CreateArweaveAnchorPublisherUseCase().execute({
-        signer: arweaveHostSigner,
-        gatewayUrl: resolvedArweaveGatewayUrl
-    });
-    externalAnchorPublisherRegistry.register(arweaveAnchorPublisher);
-
-    const { arweaveProofVerifier } = new CreateArweaveAnchorProofVerifierUseCase().execute({
-        gatewayUrl: resolvedArweaveGatewayUrl
-    });
-    externalAnchorProofVerifierRegistry.register(arweaveProofVerifier);
-
-    // Uses its own BaseJsonRpcClient (the default endpoint), kept separate from
-    // baseJsonRpcClient above, as Bitcoin's verifier is.
-    const { baseProofVerifier } = new CreateBaseAnchorProofVerifierUseCase().execute();
-    externalAnchorProofVerifierRegistry.register(baseProofVerifier);
-
-    const { arweaveAnchorEvidenceView } = new CreateArweaveAnchorEvidenceViewUseCase().execute();
-    externalAnchorEvidenceViewRegistry.register(arweaveAnchorEvidenceView);
-
-    const { baseAnchorEvidenceView } = new CreateBaseAnchorEvidenceViewUseCase().execute();
-    externalAnchorEvidenceViewRegistry.register(baseAnchorEvidenceView);
 
     // Same lazy resolution as arweaveHostSigner. A plain function, matching what
     // createNostrInjectedProviderPublisher() returns, so `typeof publishImpl ===

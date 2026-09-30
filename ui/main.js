@@ -30,10 +30,6 @@ import { CreatePublicationAnchorPeerExchangeUseCase } from '../application/ancho
 import { CreatePublicationAnchorDiscoveryCoordinatorUseCase } from '../application/anchoring/CreatePublicationAnchorDiscoveryCoordinatorUseCase.js';
 import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
 import { CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase.js';
-import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/ipfs/CreateIpfsRemotePublicationCoordinatorUseCase.js';
-import { CreateIpfsPublicationContentVerifierUseCase } from '../application/ipfs/CreateIpfsPublicationContentVerifierUseCase.js';
-import { CreateIpfsPublicationContentVerificationCoordinatorUseCase } from '../application/ipfs/CreateIpfsPublicationContentVerificationCoordinatorUseCase.js';
-import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import { LocalStorageProvider, flushLocalStorage } from '../storage/LocalStorageProvider.js';
 import { DeviceBackupUseCase } from '../application/backup/DeviceBackupUseCase.js';
 import { BackupStatusStore } from '../application/backup/BackupStatusStore.js';
@@ -54,20 +50,13 @@ import { composeRefreshPublicationCommentaryCommand } from '../application/publi
 // they are called below.
 import { composeIdentityAndPeers } from './main/composeIdentityAndPeers.js';
 import { composeContentAndSnapshots } from './main/composeContentAndSnapshots.js';
-import { composeAnchoring } from './main/composeAnchoring.js';
 import { composeWorldDiscovery } from './main/composeWorldDiscovery.js';
 import { composeInjectedWalletServices } from './main/composeInjectedWalletServices.js';
-import { composePublicationDistribution } from './main/composePublicationDistribution.js';
-import { composeSnapshotDiscovery } from './main/composeSnapshotDiscovery.js';
-import { openPublicationLink } from '../application/publication/OpenPublicationLink.js';
-import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.js';
 import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
-import { WorldSoundscapeService } from '../application/world/WorldSoundscapeService.js';
-import { WebAudioSoundscapeProvider } from '../audio/WebAudioSoundscapeProvider.js';
-import { EditorSoundService } from '../application/editor/EditorSoundService.js';
 import { verifyClaimedBuildPublication } from '../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
 import { setDocumentTitles } from '../application/document/DocumentTitles.js';
 import { t } from './i18n/i18n.js';
+import { defineServiceGroup } from './serviceGroups.js';
 
 // A new World, a fork or a copy gets its title in the chosen language, saved
 // like any other title (application/document/DocumentTitles.js).
@@ -291,33 +280,6 @@ const autoRetrieveSharedPublicationsUseCase = new AutoRetrieveSharedPublications
             || followUseCase.isFollowing(identityId))
 });
 
-const {
-    externalAnchorProofVerifierRegistry, publicationEvidenceCoordinator, externalAnchorPublisherRegistry,
-    publicationAnchorCreationCoordinator, preferredPublicationAnchorCreationCoordinator,
-    externalAnchorEvidenceViewRegistry, bitcoinAnchorProofReconciliationView, bitcoinWalletConnection,
-    bitcoinWalletFundingObserver, baseWalletConnection, baseNetworkObserver,
-    basePublicationTransactionPlanCoordinator, baseInjectedProviderWalletTransactionSigner,
-    baseReviewedSigningCoordinator, baseSignedTransactionFinalizationCoordinator,
-    baseTransactionBroadcastCoordinator, baseAnchorPublisher, baseTransactionInclusionObservationCoordinator,
-    bitcoinAnchorTransactionConstructionCoordinator, bitcoinAnchorTransactionReviewCoordinator,
-    bitcoinAnchorReviewedSigningCoordinator, bitcoinAnchorSignedPsbtFinalizationCoordinator,
-    bitcoinAnchorBroadcastCoordinator, bitcoinAnchorPublicationCoordinator,
-    bitcoinAnchorConfirmationCoordinator
-} = composeAnchoring({
-    identityProvider, resolvedBitcoinEsploraApiUrls, publicationCatalog, publicationAnchorCatalog,
-    anchorKnowledgeStore, roleProviderPreferenceStore
-});
-
-// Holds no credential between calls: it builds a fresh pinning provider from
-// the configuration supplied on each explicit publish.
-const { coordinator: ipfsRemotePublicationCoordinator } = new CreateIpfsRemotePublicationCoordinatorUseCase().execute();
-
-const { ipfsPublicationContentVerifier } = new CreateIpfsPublicationContentVerifierUseCase().execute({
-    contentStore: composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls)
-});
-const { coordinator: ipfsPublicationContentVerificationCoordinator } =
-    new CreateIpfsPublicationContentVerificationCoordinatorUseCase().execute({ ipfsPublicationContentVerifier });
-
 const app = createApp(App);
 const backupStatusStore = new BackupStatusStore(new LocalStorageProvider());
 const deviceBackupUseCase = new DeviceBackupUseCase({ storageProvider: new LocalStorageProvider(), flush: flushLocalStorage, statusStore: backupStatusStore });
@@ -377,34 +339,11 @@ app.provide('notificationHistoryAccess', new NotificationHistoryAccess({
 app.provide('getPublicationCommentariesCommand', getPublicationCommentariesCommand);
 app.provide('addPublicationCommentaryCommand', addPublicationCommentaryCommand);
 app.provide('publicationAnchorCatalog', publicationAnchorCatalog);
-app.provide('publicationEvidenceCoordinator', publicationEvidenceCoordinator);
-app.provide('publicationAnchorCreationCoordinator', publicationAnchorCreationCoordinator);
-app.provide('preferredPublicationAnchorCreationCoordinator', preferredPublicationAnchorCreationCoordinator);
 app.provide('publicationAnchorPeerExchange', publicationAnchorPeerExchange);
 app.provide('publicationAnchorDiscoveryCoordinator', publicationAnchorDiscoveryCoordinator);
 app.provide('publicationEvidenceDiscoveryCoordinator', publicationEvidenceDiscoveryCoordinator);
 app.provide('publicationKnowledgeSynchronizationCoordinator', publicationKnowledgeSynchronizationCoordinator);
 app.provide('anchorKnowledgeStore', anchorKnowledgeStore);
-app.provide('externalAnchorEvidenceViewRegistry', externalAnchorEvidenceViewRegistry);
-app.provide('bitcoinAnchorProofReconciliationView', bitcoinAnchorProofReconciliationView);
-app.provide('bitcoinWalletConnection', bitcoinWalletConnection);
-app.provide('bitcoinWalletFundingObserver', bitcoinWalletFundingObserver);
-app.provide('baseWalletConnection', baseWalletConnection);
-app.provide('baseNetworkObserver', baseNetworkObserver);
-app.provide('basePublicationTransactionPlanCoordinator', basePublicationTransactionPlanCoordinator);
-app.provide('baseInjectedProviderWalletTransactionSigner', baseInjectedProviderWalletTransactionSigner);
-app.provide('baseReviewedSigningCoordinator', baseReviewedSigningCoordinator);
-app.provide('baseSignedTransactionFinalizationCoordinator', baseSignedTransactionFinalizationCoordinator);
-app.provide('baseTransactionBroadcastCoordinator', baseTransactionBroadcastCoordinator);
-app.provide('baseTransactionInclusionObservationCoordinator', baseTransactionInclusionObservationCoordinator);
-app.provide('baseAnchorPublisher', baseAnchorPublisher);
-app.provide('bitcoinAnchorTransactionConstructionCoordinator', bitcoinAnchorTransactionConstructionCoordinator);
-app.provide('bitcoinAnchorTransactionReviewCoordinator', bitcoinAnchorTransactionReviewCoordinator);
-app.provide('bitcoinAnchorReviewedSigningCoordinator', bitcoinAnchorReviewedSigningCoordinator);
-app.provide('bitcoinAnchorSignedPsbtFinalizationCoordinator', bitcoinAnchorSignedPsbtFinalizationCoordinator);
-app.provide('bitcoinAnchorBroadcastCoordinator', bitcoinAnchorBroadcastCoordinator);
-app.provide('bitcoinAnchorPublicationCoordinator', bitcoinAnchorPublicationCoordinator);
-app.provide('bitcoinAnchorConfirmationCoordinator', bitcoinAnchorConfirmationCoordinator);
 app.provide('publicationCatalogContentResolver', publicationCatalogContentResolver);
 // World Publications' bytes live in publicationContentStore, not in
 // publicationCatalog (which only holds peer-announced envelopes), so readers
@@ -419,11 +358,6 @@ app.provide('findOwnSharedPublicationUseCase', new CreateFindOwnSharedPublicatio
 app.provide('publisherPlacementClaimLookup', new CreatePublisherPlacementClaimLookupUseCase().execute());
 app.provide('retrieveSharedPublicationUseCase', retrieveSharedPublicationUseCase);
 app.provide('autoRetrieveSharedPublicationsUseCase', autoRetrieveSharedPublicationsUseCase);
-app.provide('ipfsRemotePublicationCoordinator', ipfsRemotePublicationCoordinator);
-app.provide('ipfsPublicationContentVerificationCoordinator', ipfsPublicationContentVerificationCoordinator);
-// The view falls back to its own instance if this is missing; providing one
-// keeps a single shared instance app-wide.
-app.provide('publicationObservationArchiveStorage', new LocalStoragePublicationObservationArchive());
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
 const ownSnapshotDistributionLog = new OwnSnapshotDistributionLog(new LocalStorageProvider());
 app.provide('publicationDistributionRecord', new OwnPublicationDistributionRecord({
@@ -441,20 +375,6 @@ app.provide('preferredSnapshotPlacementCreationCoordinator', preferredSnapshotPl
 app.provide('roleProviderPreferenceStore', roleProviderPreferenceStore);
 // Read once by ui/boot.js before the app loads; the Language page saves to it.
 app.provide('languageSettingsStore', new LanguageSettingsStore({ storageProvider: new LocalStorageProvider() }));
-// World View's sound; one per visit, sharing this device's sound
-// preference.
-const soundSettingsStore = new SoundSettingsStore({ storageProvider: new LocalStorageProvider() });
-app.provide('createWorldSoundscape', (options) => new WorldSoundscapeService({
-    ...options,
-    provider: new WebAudioSoundscapeProvider(),
-    settingsStore: soundSettingsStore
-}));
-// The Editor's edit sounds, one per Editor visit, with the same preference.
-app.provide('createEditorSound', ({ editorSession }) => new EditorSoundService({
-    provider: new WebAudioSoundscapeProvider({ ambience: false }),
-    settingsStore: soundSettingsStore,
-    editorSession
-}));
 app.provide('setRoleProviderPreferenceUseCase', setRoleProviderPreferenceUseCase);
 // Only a seed for each Announcement/Discovery picker's own selection, never
 // read again after the picker mounts.
@@ -493,14 +413,11 @@ const {
 });
 // Small Snapshots stored in a Steem post, created and resolved like the
 // Arweave store (docs/Protocol.md, "Proposed: Steem Content Storage").
-// Steem anchors are created, verified and described like Arweave ones
-// ("Proposed: Steem Anchoring").
+// Steem anchors are registered with the other anchor services, in the
+// 'anchoring' service group below.
 if (steemRuntime) {
     snapshotPlacementStoreRegistry.register(steemRuntime.contentStore);
     publicationSnapshotPlacementResolutionStoreRegistry.register(steemRuntime.contentStore);
-    externalAnchorPublisherRegistry.register(steemRuntime.anchorPublisher);
-    externalAnchorProofVerifierRegistry.register(steemRuntime.proofVerifier);
-    externalAnchorEvidenceViewRegistry.register(steemRuntime.anchorEvidenceView);
 }
 // Watches a newly created anchor until its block is final, by anchorType;
 // only Steem has one.
@@ -557,9 +474,7 @@ app.provide('publicationDistributionLifecycleRestorer', publicationDistributionL
 const {
     arweaveHostSigner, nostrHostPublisher, nostrPublicationRuntimeCapabilities
 } = composeInjectedWalletServices({
-    publicationSnapshotPlacementResolutionStoreRegistry, snapshotPlacementStoreRegistry,
-    externalAnchorProofVerifierRegistry, externalAnchorPublisherRegistry, externalAnchorEvidenceViewRegistry,
-    resolvedArweaveGatewayUrl
+    publicationSnapshotPlacementResolutionStoreRegistry, snapshotPlacementStoreRegistry, resolvedArweaveGatewayUrl
 });
 
 // Assigning this turns on the Nostr publish inside
@@ -655,64 +570,178 @@ const { backgroundAnnouncementSync, announcementIndexChanges } = composeAnnounce
 backgroundAnnouncementSync.start();
 app.provide('announcementIndexChanges', announcementIndexChanges);
 
-const {
-    arweaveAnnouncementUploadTaggedTransaction, publicationDistributionCommand,
-    multiRelayNostrPublicationDistributionCommand, resolveSnapshotDiscoveryPublisher,
-    snapshotDistributionCommand, snapshotDiscoveryPublisher, snapshotDistributionAvailableStorageTypes
-} = composePublicationDistribution({
-    resolvedIpfsNodeApiUrl, snapshotPlacementStoreRegistry, resolvedAnnouncementDiscoveryProvider,
-    resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, PUBLICATION_DISCOVERY_TAG,
-    publicationDistributionLifecycleStore, arweaveHostSigner, nostrHostPublisher,
-    nostrPublicationRuntimeCapabilities, steemRuntime, snapshotDistributionLog: ownSnapshotDistributionLog
-});
-app.provide('publicationDistributionCommand', publicationDistributionCommand);
-app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPublicationDistributionCommand);
-app.provide('resolveSnapshotDiscoveryPublisher', resolveSnapshotDiscoveryPublisher);
-app.provide('snapshotDistributionCommand', snapshotDistributionCommand);
-app.provide('snapshotDiscoveryPublisher', snapshotDiscoveryPublisher);
-app.provide('snapshotDistributionAvailableStorageTypes', snapshotDistributionAvailableStorageTypes);
+// Services only some pages use are built the first time one of those pages
+// opens, not with the app (ui/serviceGroups.js); ui/router/index.js names the
+// groups each page needs. Everything above runs at startup: the stores and
+// peer exchanges that must listen from the start, and what the header shows
+// on every page.
 
-const {
-    resolvedContentDistributionProvider, publishPlaceNamingClaimToNostrCommand, discoverSnapshotCommand,
-    snapshotCandidateDiscoveryQueryService, discoverSnapshotCandidatesCommand,
-    discoverSnapshotCandidatesWithOutcomeCommand, worldSnapshotDiscoveryMonitor,
-    placeNamingDiscoveryQueryService, resolveSelectedSnapshotCommand, materializeSelectedSnapshotCommand,
-    discoverIndexedSnapshotCandidatesCommand, indexedPlaceNamingDiscoveryQueryService
-} = composeSnapshotDiscovery({
-    publicationSnapshotPlacementCatalog, publicationSnapshotPlacementResolutionStoreRegistry,
-    roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
-    resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
-    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime,
-    announcementIndex, publicationContentStore
-});
-app.provide('defaultContentDistributionProvider', resolvedContentDistributionProvider);
-app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNostrCommand);
-app.provide('discoverSnapshotCommand', discoverSnapshotCommand);
-app.provide('snapshotCandidateDiscoveryQueryService', snapshotCandidateDiscoveryQueryService);
-app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesCommand);
-app.provide('discoverSnapshotCandidatesWithOutcomeCommand', discoverSnapshotCandidatesWithOutcomeCommand);
-app.provide('worldSnapshotDiscoveryMonitor', worldSnapshotDiscoveryMonitor);
-app.provide('placeNamingDiscoveryQueryService', placeNamingDiscoveryQueryService);
-app.provide('discoverIndexedSnapshotCandidatesCommand', discoverIndexedSnapshotCandidatesCommand);
-app.provide('indexedPlaceNamingDiscoveryQueryService', indexedPlaceNamingDiscoveryQueryService);
-app.provide('resolveSelectedSnapshotCommand', resolveSelectedSnapshotCommand);
-app.provide('materializeSelectedSnapshotCommand', materializeSelectedSnapshotCommand);
+// Publication evidence and external anchoring (Bitcoin, Base, Arweave, Steem)
+// and their wallets, for the Publications page and the Proof & Anchoring
+// settings.
+defineServiceGroup('anchoring', async () => {
+    const { composeAnchoring } = await import('./main/composeAnchoring.js');
+    const {
+        publicationEvidenceCoordinator,
+        publicationAnchorCreationCoordinator, preferredPublicationAnchorCreationCoordinator,
+        externalAnchorEvidenceViewRegistry, bitcoinAnchorProofReconciliationView, bitcoinWalletConnection,
+        bitcoinWalletFundingObserver, baseWalletConnection, baseNetworkObserver,
+        basePublicationTransactionPlanCoordinator, baseInjectedProviderWalletTransactionSigner,
+        baseReviewedSigningCoordinator, baseSignedTransactionFinalizationCoordinator,
+        baseTransactionBroadcastCoordinator, baseAnchorPublisher, baseTransactionInclusionObservationCoordinator,
+        bitcoinAnchorTransactionConstructionCoordinator, bitcoinAnchorTransactionReviewCoordinator,
+        bitcoinAnchorReviewedSigningCoordinator, bitcoinAnchorSignedPsbtFinalizationCoordinator,
+        bitcoinAnchorBroadcastCoordinator, bitcoinAnchorPublicationCoordinator,
+        bitcoinAnchorConfirmationCoordinator
+    } = composeAnchoring({
+        identityProvider, resolvedBitcoinEsploraApiUrls, publicationCatalog, publicationAnchorCatalog,
+        anchorKnowledgeStore, roleProviderPreferenceStore, arweaveHostSigner, resolvedArweaveGatewayUrl, steemRuntime
+    });
 
-// A link to a Publication (ui/views/PublicationLinkView.js: the "see
-// it in 3D" link on a Steem post, or one shared with Share): the Signed Claim
-// is read from Steem, Arweave or IPFS and verified, its build found by content
-// hash, and the Publication admitted as World discovery admits one.
-app.provide('openPublicationLink', ({ locator }) => openPublicationLink({
-    locator,
-    retrieveClaim: retrievePublicationClaim,
-    verifier: worldEncounterMaterialVerifier,
-    hasLocalContent: async (reference) => publicationContentStore.has(reference),
-    findSnapshotCandidates: discoverSnapshotCandidatesWithOutcomeCommand,
-    resolveSnapshotCandidate: resolveSelectedSnapshotCommand,
-    storeSnapshotContent: (request) => storeSnapshotContentUseCase.execute(request),
-    discoveryProvider: decentralizedPublicationDiscoveryProvider,
-    admissionLog: worldEncounterPublicationAdmissionLog
-}));
+    app.provide('publicationEvidenceCoordinator', publicationEvidenceCoordinator);
+    app.provide('publicationAnchorCreationCoordinator', publicationAnchorCreationCoordinator);
+    app.provide('preferredPublicationAnchorCreationCoordinator', preferredPublicationAnchorCreationCoordinator);
+    app.provide('externalAnchorEvidenceViewRegistry', externalAnchorEvidenceViewRegistry);
+    app.provide('bitcoinAnchorProofReconciliationView', bitcoinAnchorProofReconciliationView);
+    app.provide('bitcoinWalletConnection', bitcoinWalletConnection);
+    app.provide('bitcoinWalletFundingObserver', bitcoinWalletFundingObserver);
+    app.provide('baseWalletConnection', baseWalletConnection);
+    app.provide('baseNetworkObserver', baseNetworkObserver);
+    app.provide('basePublicationTransactionPlanCoordinator', basePublicationTransactionPlanCoordinator);
+    app.provide('baseInjectedProviderWalletTransactionSigner', baseInjectedProviderWalletTransactionSigner);
+    app.provide('baseReviewedSigningCoordinator', baseReviewedSigningCoordinator);
+    app.provide('baseSignedTransactionFinalizationCoordinator', baseSignedTransactionFinalizationCoordinator);
+    app.provide('baseTransactionBroadcastCoordinator', baseTransactionBroadcastCoordinator);
+    app.provide('baseTransactionInclusionObservationCoordinator', baseTransactionInclusionObservationCoordinator);
+    app.provide('baseAnchorPublisher', baseAnchorPublisher);
+    app.provide('bitcoinAnchorTransactionConstructionCoordinator', bitcoinAnchorTransactionConstructionCoordinator);
+    app.provide('bitcoinAnchorTransactionReviewCoordinator', bitcoinAnchorTransactionReviewCoordinator);
+    app.provide('bitcoinAnchorReviewedSigningCoordinator', bitcoinAnchorReviewedSigningCoordinator);
+    app.provide('bitcoinAnchorSignedPsbtFinalizationCoordinator', bitcoinAnchorSignedPsbtFinalizationCoordinator);
+    app.provide('bitcoinAnchorBroadcastCoordinator', bitcoinAnchorBroadcastCoordinator);
+    app.provide('bitcoinAnchorPublicationCoordinator', bitcoinAnchorPublicationCoordinator);
+    app.provide('bitcoinAnchorConfirmationCoordinator', bitcoinAnchorConfirmationCoordinator);
+});
+
+// Distributing publications and Snapshots (Arweave, Nostr, IPFS, Steem),
+// finding Snapshots and place names, remote IPFS pinning and IPFS content
+// checks, and opening a Publication link: what the Editor, World View and the
+// Publications page publish and search with.
+defineServiceGroup('distribution', async () => {
+    const [
+        { composePublicationDistribution }, { composeSnapshotDiscovery }, { openPublicationLink },
+        { CreateIpfsRemotePublicationCoordinatorUseCase }, { CreateIpfsPublicationContentVerifierUseCase },
+        { CreateIpfsPublicationContentVerificationCoordinatorUseCase }
+    ] = await Promise.all([
+        import('./main/composePublicationDistribution.js'),
+        import('./main/composeSnapshotDiscovery.js'),
+        import('../application/publication/OpenPublicationLink.js'),
+        import('../application/ipfs/CreateIpfsRemotePublicationCoordinatorUseCase.js'),
+        import('../application/ipfs/CreateIpfsPublicationContentVerifierUseCase.js'),
+        import('../application/ipfs/CreateIpfsPublicationContentVerificationCoordinatorUseCase.js')
+    ]);
+
+    // Holds no credential between calls: it builds a fresh pinning provider from
+    // the configuration supplied on each explicit publish.
+    const { coordinator: ipfsRemotePublicationCoordinator } = new CreateIpfsRemotePublicationCoordinatorUseCase().execute();
+
+    const { ipfsPublicationContentVerifier } = new CreateIpfsPublicationContentVerifierUseCase().execute({
+        contentStore: composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls)
+    });
+    const { coordinator: ipfsPublicationContentVerificationCoordinator } =
+        new CreateIpfsPublicationContentVerificationCoordinatorUseCase().execute({ ipfsPublicationContentVerifier });
+    app.provide('ipfsRemotePublicationCoordinator', ipfsRemotePublicationCoordinator);
+    app.provide('ipfsPublicationContentVerificationCoordinator', ipfsPublicationContentVerificationCoordinator);
+
+    const {
+        arweaveAnnouncementUploadTaggedTransaction, publicationDistributionCommand,
+        multiRelayNostrPublicationDistributionCommand, resolveSnapshotDiscoveryPublisher,
+        snapshotDistributionCommand, snapshotDiscoveryPublisher, snapshotDistributionAvailableStorageTypes
+    } = composePublicationDistribution({
+        resolvedIpfsNodeApiUrl, snapshotPlacementStoreRegistry, resolvedAnnouncementDiscoveryProvider,
+        resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, PUBLICATION_DISCOVERY_TAG,
+        publicationDistributionLifecycleStore, arweaveHostSigner, nostrHostPublisher,
+        nostrPublicationRuntimeCapabilities, steemRuntime, snapshotDistributionLog: ownSnapshotDistributionLog
+    });
+    app.provide('publicationDistributionCommand', publicationDistributionCommand);
+    app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPublicationDistributionCommand);
+    app.provide('resolveSnapshotDiscoveryPublisher', resolveSnapshotDiscoveryPublisher);
+    app.provide('snapshotDistributionCommand', snapshotDistributionCommand);
+    app.provide('snapshotDiscoveryPublisher', snapshotDiscoveryPublisher);
+    app.provide('snapshotDistributionAvailableStorageTypes', snapshotDistributionAvailableStorageTypes);
+
+    const {
+        resolvedContentDistributionProvider, publishPlaceNamingClaimToNostrCommand, discoverSnapshotCommand,
+        snapshotCandidateDiscoveryQueryService, discoverSnapshotCandidatesCommand,
+        discoverSnapshotCandidatesWithOutcomeCommand, worldSnapshotDiscoveryMonitor,
+        placeNamingDiscoveryQueryService, resolveSelectedSnapshotCommand, materializeSelectedSnapshotCommand,
+        discoverIndexedSnapshotCandidatesCommand, indexedPlaceNamingDiscoveryQueryService
+    } = composeSnapshotDiscovery({
+        publicationSnapshotPlacementCatalog, publicationSnapshotPlacementResolutionStoreRegistry,
+        roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
+        resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
+        arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime,
+        announcementIndex, publicationContentStore
+    });
+    app.provide('defaultContentDistributionProvider', resolvedContentDistributionProvider);
+    app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNostrCommand);
+    app.provide('discoverSnapshotCommand', discoverSnapshotCommand);
+    app.provide('snapshotCandidateDiscoveryQueryService', snapshotCandidateDiscoveryQueryService);
+    app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesCommand);
+    app.provide('discoverSnapshotCandidatesWithOutcomeCommand', discoverSnapshotCandidatesWithOutcomeCommand);
+    app.provide('worldSnapshotDiscoveryMonitor', worldSnapshotDiscoveryMonitor);
+    app.provide('placeNamingDiscoveryQueryService', placeNamingDiscoveryQueryService);
+    app.provide('discoverIndexedSnapshotCandidatesCommand', discoverIndexedSnapshotCandidatesCommand);
+    app.provide('indexedPlaceNamingDiscoveryQueryService', indexedPlaceNamingDiscoveryQueryService);
+    app.provide('resolveSelectedSnapshotCommand', resolveSelectedSnapshotCommand);
+    app.provide('materializeSelectedSnapshotCommand', materializeSelectedSnapshotCommand);
+
+    // A link to a Publication (ui/views/PublicationLinkView.js: the "see
+    // it in 3D" link on a Steem post, or one shared with Share): the Signed Claim
+    // is read from Steem, Arweave or IPFS and verified, its build found by content
+    // hash, and the Publication admitted as World discovery admits one.
+    app.provide('openPublicationLink', ({ locator }) => openPublicationLink({
+        locator,
+        retrieveClaim: retrievePublicationClaim,
+        verifier: worldEncounterMaterialVerifier,
+        hasLocalContent: async (reference) => publicationContentStore.has(reference),
+        findSnapshotCandidates: discoverSnapshotCandidatesWithOutcomeCommand,
+        resolveSnapshotCandidate: resolveSelectedSnapshotCommand,
+        storeSnapshotContent: (request) => storeSnapshotContentUseCase.execute(request),
+        discoveryProvider: decentralizedPublicationDiscoveryProvider,
+        admissionLog: worldEncounterPublicationAdmissionLog
+    }));
+});
+
+// Every observation of a publication this device has recorded, for the
+// Publications page's history and the leaderboards; a single shared instance
+// app-wide.
+defineServiceGroup('observationArchive', async () => {
+    const { LocalStoragePublicationObservationArchive } = await import('../storage/LocalStoragePublicationObservationArchive.js');
+    app.provide('publicationObservationArchiveStorage', new LocalStoragePublicationObservationArchive());
+});
+
+// World View's sound, one per visit, and the Editor's edit sounds, one per
+// Editor visit, sharing this device's sound preference.
+defineServiceGroup('sound', async () => {
+    const [{ SoundSettingsStore }, { WorldSoundscapeService }, { EditorSoundService }, { WebAudioSoundscapeProvider }] = await Promise.all([
+        import('../application/settings/SoundSettingsStore.js'),
+        import('../application/world/WorldSoundscapeService.js'),
+        import('../application/editor/EditorSoundService.js'),
+        import('../audio/WebAudioSoundscapeProvider.js')
+    ]);
+    const soundSettingsStore = new SoundSettingsStore({ storageProvider: new LocalStorageProvider() });
+    app.provide('createWorldSoundscape', (options) => new WorldSoundscapeService({
+        ...options,
+        provider: new WebAudioSoundscapeProvider(),
+        settingsStore: soundSettingsStore
+    }));
+    app.provide('createEditorSound', ({ editorSession }) => new EditorSoundService({
+        provider: new WebAudioSoundscapeProvider({ ambience: false }),
+        settingsStore: soundSettingsStore,
+        editorSession
+    }));
+});
 
 app.use(router);
 app.mount('#app');

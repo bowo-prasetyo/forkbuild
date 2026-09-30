@@ -1,5 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import { importWithRetry } from '../importWithRetry.js';
+import { loadServiceGroups } from '../serviceGroups.js';
+import { PAGE_SERVICE_GROUPS } from './pageServiceGroups.js';
 import HomeView from '../views/HomeView.js';
 
 // Each page but Home (a few lines, and the page most visits open) loads its
@@ -7,41 +9,48 @@ import HomeView from '../views/HomeView.js';
 // about half of the app's code, and the World View and Editor bring in
 // Three.js. tests/InitialLoadModuleGraph.test.js fails if another page is
 // imported statically again.
-const EditorView = () => importWithRetry(() => import('../views/EditorView.js'));
-const RepositoryView = () => importWithRetry(() => import('../views/RepositoryView.js'));
-const RecentWorldsView = () => importWithRetry(() => import('../views/RecentWorldsView.js'));
-const AboutView = () => importWithRetry(() => import('../views/AboutView.js'));
-const PublicationLinkView = () => importWithRetry(() => import('../views/PublicationLinkView.js'));
-const AuthorView = () => importWithRetry(() => import('../views/AuthorView.js'));
-const WorldView = () => importWithRetry(() => import('../views/WorldView.js'));
-const LiveWorldView = () => importWithRetry(() => import('../views/LiveWorldView.js'));
-const AvatarSettingsView = () => importWithRetry(() => import('../views/AvatarSettingsView.js'));
-const IdentityManagementView = () => importWithRetry(() => import('../views/IdentityManagementView.js'));
-const PeerConnectionsView = () => importWithRetry(() => import('../views/PeerConnectionsView.js'));
-const FollowingView = () => importWithRetry(() => import('../views/FollowingView.js'));
-const ChatView = () => importWithRetry(() => import('../views/ChatView.js'));
-const ConversationsView = () => importWithRetry(() => import('../views/ConversationsView.js'));
-const DecentralizedPublicationsView = () => importWithRetry(() => import('../views/DecentralizedPublicationsView.js'));
-const NetworkSettingsView = () => importWithRetry(() => import('../views/NetworkSettingsView.js'));
-const ContentProviderSettingsView = () => importWithRetry(() => import('../views/ContentProviderSettingsView.js'));
-const AnnouncementDiscoveryProviderSettingsView = () => importWithRetry(() => import('../views/AnnouncementDiscoveryProviderSettingsView.js'));
-const AnchorProviderSettingsView = () => importWithRetry(() => import('../views/AnchorProviderSettingsView.js'));
-const ArweaveGatewaySettingsView = () => importWithRetry(() => import('../views/ArweaveGatewaySettingsView.js'));
-const IpfsGatewaySettingsView = () => importWithRetry(() => import('../views/IpfsGatewaySettingsView.js'));
-const BitcoinEsploraSettingsView = () => importWithRetry(() => import('../views/BitcoinEsploraSettingsView.js'));
-const NostrRelaySettingsView = () => importWithRetry(() => import('../views/NostrRelaySettingsView.js'));
-const SteemReadingSettingsView = () => importWithRetry(() => import('../views/SteemReadingSettingsView.js'));
-const StunSettingsView = () => importWithRetry(() => import('../views/StunSettingsView.js'));
-const TurnServerSettingsView = () => importWithRetry(() => import('../views/TurnServerSettingsView.js'));
-const RendezvousSettingsView = () => importWithRetry(() => import('../views/RendezvousSettingsView.js'));
-const ReconciliationCandidateLeaderboardView = () => importWithRetry(() => import('../views/ReconciliationCandidateLeaderboardView.js'));
-const ReconciliationCandidateLeaderboardEvidenceExportComparisonView = () => importWithRetry(() => import('../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js'));
-const ReconciliationWorkspaceView = () => importWithRetry(() => import('../views/ReconciliationWorkspaceView.js'));
-const PublisherLeaderboardSnapshotClaimAuthoringView = () => importWithRetry(() => import('../views/PublisherLeaderboardSnapshotClaimAuthoringView.js'));
-const PublisherPerformanceLeaderboardView = () => importWithRetry(() => import('../views/PublisherPerformanceLeaderboardView.js'));
-const LeaderboardHubView = () => importWithRetry(() => import('../views/LeaderboardHubView.js'));
-const YourDataView = () => importWithRetry(() => import('../views/YourDataView.js'));
-const LanguageSettingsView = () => importWithRetry(() => import('../views/LanguageSettingsView.js'));
+//
+// A page's service groups (ui/router/pageServiceGroups.js) load beside its
+// modules, so the services it injects are provided before it renders.
+function page(name, load) {
+    const serviceGroups = PAGE_SERVICE_GROUPS[name] || [];
+    return () => importWithRetry(() => Promise.all([load(), loadServiceGroups(serviceGroups)]).then(([module]) => module));
+}
+const EditorView = page('EditorView', () => import('../views/EditorView.js'));
+const RepositoryView = page('RepositoryView', () => import('../views/RepositoryView.js'));
+const RecentWorldsView = page('RecentWorldsView', () => import('../views/RecentWorldsView.js'));
+const AboutView = page('AboutView', () => import('../views/AboutView.js'));
+const PublicationLinkView = page('PublicationLinkView', () => import('../views/PublicationLinkView.js'));
+const AuthorView = page('AuthorView', () => import('../views/AuthorView.js'));
+const WorldView = page('WorldView', () => import('../views/WorldView.js'));
+const LiveWorldView = page('LiveWorldView', () => import('../views/LiveWorldView.js'));
+const AvatarSettingsView = page('AvatarSettingsView', () => import('../views/AvatarSettingsView.js'));
+const IdentityManagementView = page('IdentityManagementView', () => import('../views/IdentityManagementView.js'));
+const PeerConnectionsView = page('PeerConnectionsView', () => import('../views/PeerConnectionsView.js'));
+const FollowingView = page('FollowingView', () => import('../views/FollowingView.js'));
+const ChatView = page('ChatView', () => import('../views/ChatView.js'));
+const ConversationsView = page('ConversationsView', () => import('../views/ConversationsView.js'));
+const DecentralizedPublicationsView = page('DecentralizedPublicationsView', () => import('../views/DecentralizedPublicationsView.js'));
+const NetworkSettingsView = page('NetworkSettingsView', () => import('../views/NetworkSettingsView.js'));
+const ContentProviderSettingsView = page('ContentProviderSettingsView', () => import('../views/ContentProviderSettingsView.js'));
+const AnnouncementDiscoveryProviderSettingsView = page('AnnouncementDiscoveryProviderSettingsView', () => import('../views/AnnouncementDiscoveryProviderSettingsView.js'));
+const AnchorProviderSettingsView = page('AnchorProviderSettingsView', () => import('../views/AnchorProviderSettingsView.js'));
+const ArweaveGatewaySettingsView = page('ArweaveGatewaySettingsView', () => import('../views/ArweaveGatewaySettingsView.js'));
+const IpfsGatewaySettingsView = page('IpfsGatewaySettingsView', () => import('../views/IpfsGatewaySettingsView.js'));
+const BitcoinEsploraSettingsView = page('BitcoinEsploraSettingsView', () => import('../views/BitcoinEsploraSettingsView.js'));
+const NostrRelaySettingsView = page('NostrRelaySettingsView', () => import('../views/NostrRelaySettingsView.js'));
+const SteemReadingSettingsView = page('SteemReadingSettingsView', () => import('../views/SteemReadingSettingsView.js'));
+const StunSettingsView = page('StunSettingsView', () => import('../views/StunSettingsView.js'));
+const TurnServerSettingsView = page('TurnServerSettingsView', () => import('../views/TurnServerSettingsView.js'));
+const RendezvousSettingsView = page('RendezvousSettingsView', () => import('../views/RendezvousSettingsView.js'));
+const ReconciliationCandidateLeaderboardView = page('ReconciliationCandidateLeaderboardView', () => import('../views/ReconciliationCandidateLeaderboardView.js'));
+const ReconciliationCandidateLeaderboardEvidenceExportComparisonView = page('ReconciliationCandidateLeaderboardEvidenceExportComparisonView', () => import('../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js'));
+const ReconciliationWorkspaceView = page('ReconciliationWorkspaceView', () => import('../views/ReconciliationWorkspaceView.js'));
+const PublisherLeaderboardSnapshotClaimAuthoringView = page('PublisherLeaderboardSnapshotClaimAuthoringView', () => import('../views/PublisherLeaderboardSnapshotClaimAuthoringView.js'));
+const PublisherPerformanceLeaderboardView = page('PublisherPerformanceLeaderboardView', () => import('../views/PublisherPerformanceLeaderboardView.js'));
+const LeaderboardHubView = page('LeaderboardHubView', () => import('../views/LeaderboardHubView.js'));
+const YourDataView = page('YourDataView', () => import('../views/YourDataView.js'));
+const LanguageSettingsView = page('LanguageSettingsView', () => import('../views/LanguageSettingsView.js'));
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },

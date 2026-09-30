@@ -69,7 +69,9 @@ there is no render(world) sweep. See "Renderer" below.
 **ui/** is Vue 3 with no build step: components are plain objects with a
 template string. ui/main.js is the composition root that constructs and
 wires every adapter; its larger subsystems are built by the compose
-functions in ui/main/, which it calls in order.
+functions in ui/main/, which it calls in order, and what only some pages
+use is built in service groups when the first of those pages opens (see
+"UI" below).
 
 **Adapters** sit around the layers: storage/ (StorageProvider and the
 local stores), serializer/, publisher/, discovery/, identity/, peer/,
@@ -1484,7 +1486,29 @@ saved settings, and provides them to the Vue app. The compose functions in
 ui/main/ build the larger subsystems (identity and peers, content and
 Snapshots, anchoring, World discovery, injected-wallet services, publication
 distribution, Snapshot discovery) and return what ui/main.js provides; every
-app.provide() call stays in ui/main.js. ui/router/index.js
+app.provide() call stays in ui/main.js.
+
+Services that only some pages inject are built in service groups
+(ui/serviceGroups.js) rather than at startup. ui/main.js defines each group
+as a function that imports its modules, builds its services from the ones
+already running and provides them; ui/router/pageServiceGroups.js lists the
+groups each page needs, and the router loads them beside the page's own
+modules, so they are provided before it renders (a provide added after the
+app mounted reaches every component created later). There are four:
+`anchoring` (publication evidence, and Bitcoin, Base, Arweave and Steem
+anchoring with their wallets: the Publications page and the Proof &
+Anchoring settings), `distribution` (publication and Snapshot distribution,
+Snapshot and place-name discovery, remote IPFS pinning, IPFS content checks
+and Publication links: the Editor, World View, the Publications page and a
+Publication link), `observationArchive` (the Publications page and the
+leaderboards) and `sound` (World View and the Editor). What must run from
+the start stays at startup: the stores, the peer exchanges that listen for
+peers' messages, background announcement sync, backups, and everything the
+header shows. tests/ServiceGroupCoverage.test.js fails if a page injects a
+service from a group not listed for it, if a listed group goes unused, or if
+the header injects a group's service.
+
+ui/router/index.js
 defines the routes: Home, Editor (`/editor`), Repository, Recent Worlds,
 Author, World View (`/world/:documentId`), Live World, Avatar, Identity,
 Peers, Chat and Conversations, Publications (`/publications`), the
@@ -1527,10 +1551,11 @@ index.html loads the app as ES modules with no build step. ui/boot.js
 imports ui/main.js, the shell every page shares; each page but Home is
 imported the first time it is opened (ui/router/index.js), and so is the
 thumbnail renderer, which brings in Three.js
-(application/editor/CreatePreviewUseCase.js). Both go through
-ui/importWithRetry.js, which tries a failed import again with backoff.
-tests/InitialLoadModuleGraph.test.js fails if a page or Three.js is
-statically reachable from ui/main.js again. Its import map
+(application/editor/CreatePreviewUseCase.js), and so is each service group
+(see "UI"). All of these go through ui/importWithRetry.js, which tries a
+failed import again with backoff. tests/InitialLoadModuleGraph.test.js fails
+if a page, Three.js or a service group's modules are statically reachable
+from ui/main.js again. Its import map
 resolves `vue`, `vue-router`, `@vue/devtools-api`, `three` and
 `three/addons/` to copies in vendor/, which scripts/vendor.mjs makes from
 the exact versions pinned in package.json (tests/VendoredLibraries.test.js
