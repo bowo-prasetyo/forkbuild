@@ -23,7 +23,10 @@ shows a blank page.
 **Many requests at once.** There is no bundler, so the browser fetches
 about 600 module files when the page opens, and a few to a few hundred more
 the first time each page is opened (the World View and the Editor are the
-largest). Serve over HTTP/2 or later so they share one connection. If the
+largest). `index.html` lists the first load's modules as
+`<link rel="modulepreload">` hints, so the browser requests them all as soon
+as it reads the page instead of discovering them one import at a time. Serve
+over HTTP/2 or later so they share one connection. If the
 host drops or refuses even one of them (GitHub Pages has been seen doing
 this in Firefox), the browser aborts that import. The console then fills
 with "Loading failed for the module with source" errors, each naming a

@@ -1555,7 +1555,14 @@ thumbnail renderer, which brings in Three.js
 (see "UI"). All of these go through ui/importWithRetry.js, which tries a
 failed import again with backoff. tests/InitialLoadModuleGraph.test.js fails
 if a page, Three.js or a service group's modules are statically reachable
-from ui/main.js again. Its import map
+from ui/main.js again. index.html lists every module of the first load (ui/boot.js,
+ui/main.js and what they statically import, breadth first) as a
+`<link rel="modulepreload">` after the import map, so the browser requests
+them all at once rather than one import level at a time; a preload fetches
+and parses a module without running it, so ui/main.js still runs only after
+storage is open. scripts/modulepreload.mjs writes the list and
+tests/ModulePreload.test.js fails when it is out of date; both use the
+static import walk in scripts/moduleGraph.mjs. The import map
 resolves `vue`, `vue-router`, `@vue/devtools-api`, `three` and
 `three/addons/` to copies in vendor/, which scripts/vendor.mjs makes from
 the exact versions pinned in package.json (tests/VendoredLibraries.test.js
