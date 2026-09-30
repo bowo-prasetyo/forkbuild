@@ -168,7 +168,7 @@ async function run() {
         const routerSource = await readSource('ui/router/index.js');
         assert(routerSource.includes("path: '/publisher-snapshot-claim'"), n('A3. /publisher-snapshot-claim is registered in ui/router/index.js'));
         assert(routerSource.includes('PublisherLeaderboardSnapshotClaimAuthoringView'), n('A4. the registered route points at PublisherLeaderboardSnapshotClaimAuthoringView'));
-        assert(/import\s+PublisherLeaderboardSnapshotClaimAuthoringView\s+from\s+'[^']+'/.test(routerSource), n('A5. the router genuinely default-imports PublisherLeaderboardSnapshotClaimAuthoringView, never merely names it'));
+        assert(routerSource.includes("import('../views/PublisherLeaderboardSnapshotClaimAuthoringView.js')"), n('A5. the router genuinely loads PublisherLeaderboardSnapshotClaimAuthoringView, never merely names it'));
 
         const publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED — Leaderboard Hub Consolidation. The link moved one hop

@@ -1523,7 +1523,14 @@ way; built-in library items are translated by id (ui/i18n/libraryText.js).
 Many components still write English directly and are moved over area by
 area.
 
-index.html loads the app as ES modules with no build step. Its import map
+index.html loads the app as ES modules with no build step. ui/boot.js
+imports ui/main.js, the shell every page shares; each page but Home is
+imported the first time it is opened (ui/router/index.js), and so is the
+thumbnail renderer, which brings in Three.js
+(application/editor/CreatePreviewUseCase.js). Both go through
+ui/importWithRetry.js, which tries a failed import again with backoff.
+tests/InitialLoadModuleGraph.test.js fails if a page or Three.js is
+statically reachable from ui/main.js again. Its import map
 resolves `vue`, `vue-router`, `@vue/devtools-api`, `three` and
 `three/addons/` to copies in vendor/, which scripts/vendor.mjs makes from
 the exact versions pinned in package.json (tests/VendoredLibraries.test.js

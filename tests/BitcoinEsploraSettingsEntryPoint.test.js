@@ -94,8 +94,8 @@ async function run() {
 
         const routerSource = await source('ui/router/index.js');
         assert(/path:\s*'\/settings\/bitcoin-esplora'/.test(routerSource), '7. a real route exists for the settings entry point');
-        assert(routerSource.includes("import BitcoinEsploraSettingsView from '../views/BitcoinEsploraSettingsView.js';"),
-            '8. the router imports the real view component, never a stub');
+        assert(routerSource.includes("import('../views/BitcoinEsploraSettingsView.js')"),
+            '8. the router loads the real view component, never a stub');
 
         const networkSettingsSource = withEnglish(await source('ui/views/NetworkSettingsView.js'));
         assert(/router-link to="\/settings\/bitcoin-esplora"/.test(networkSettingsSource),

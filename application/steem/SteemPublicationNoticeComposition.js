@@ -1,6 +1,5 @@
 import { createSteemPublicationNoticeDescriber } from './SteemPublicationNoticeCard.js';
 import { CreateBrickRegistryUseCase } from '../editor/CreateBrickRegistryUseCase.js';
-import { DocumentThumbnailRenderer } from '../../renderer/DocumentThumbnailRenderer.js';
 import { createSteemKeychainImageSigner, uploadSteemImage } from '../../steem/SteemImageUpload.js';
 
 // The describer for Signed Claim notices on Steem, in the browser: the build
@@ -16,7 +15,11 @@ export function composeSteemPublicationNoticeDescriber({ contentStore, getAccoun
             return typeof bytes === 'string' ? bytes : (bytes ? new TextDecoder().decode(bytes) : null);
         },
         renderThumbnail: async (document) => {
-            renderer ??= new DocumentThumbnailRenderer(new CreateBrickRegistryUseCase().execute());
+            if (!renderer) {
+                // Imported here, not at the top, so Three.js loads only when a notice needs a picture.
+                const { DocumentThumbnailRenderer } = await import('../../renderer/DocumentThumbnailRenderer.js');
+                renderer ??= new DocumentThumbnailRenderer(new CreateBrickRegistryUseCase().execute());
+            }
             return dataUrlBytes(renderer.renderDocument(document));
         },
         uploadImage: async (bytes) => {

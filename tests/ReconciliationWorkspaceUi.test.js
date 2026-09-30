@@ -136,7 +136,7 @@ async function run() {
         const routerSource = await readSource('ui/router/index.js');
         assert(routerSource.includes("path: '/reconciliation-workspace'"), n('A3. /reconciliation-workspace is registered in ui/router/index.js'));
         assert(routerSource.includes('ReconciliationWorkspaceView'), n('A4. the registered route points at ReconciliationWorkspaceView'));
-        assert(/import\s+ReconciliationWorkspaceView\s+from\s+'[^']+'/.test(routerSource), n('A5. the router genuinely default-imports ReconciliationWorkspaceView, never merely names it'));
+        assert(routerSource.includes("import('../views/ReconciliationWorkspaceView.js')"), n('A5. the router genuinely loads ReconciliationWorkspaceView, never merely names it'));
 
         const publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED — Leaderboard Hub Consolidation. The link moved one hop

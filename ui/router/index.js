@@ -1,40 +1,47 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
+import { importWithRetry } from '../importWithRetry.js';
 import HomeView from '../views/HomeView.js';
-import EditorView from '../views/EditorView.js';
-import RepositoryView from '../views/RepositoryView.js';
-import RecentWorldsView from '../views/RecentWorldsView.js';
-import AboutView from '../views/AboutView.js';
-import PublicationLinkView from '../views/PublicationLinkView.js';
-import AuthorView from '../views/AuthorView.js';
-import WorldView from '../views/WorldView.js';
-import LiveWorldView from '../views/LiveWorldView.js';
-import AvatarSettingsView from '../views/AvatarSettingsView.js';
-import IdentityManagementView from '../views/IdentityManagementView.js';
-import PeerConnectionsView from '../views/PeerConnectionsView.js';
-import FollowingView from '../views/FollowingView.js';
-import ChatView from '../views/ChatView.js';
-import ConversationsView from '../views/ConversationsView.js';
-import DecentralizedPublicationsView from '../views/DecentralizedPublicationsView.js';
-import NetworkSettingsView from '../views/NetworkSettingsView.js';
-import ContentProviderSettingsView from '../views/ContentProviderSettingsView.js';
-import AnnouncementDiscoveryProviderSettingsView from '../views/AnnouncementDiscoveryProviderSettingsView.js';
-import AnchorProviderSettingsView from '../views/AnchorProviderSettingsView.js';
-import ArweaveGatewaySettingsView from '../views/ArweaveGatewaySettingsView.js';
-import IpfsGatewaySettingsView from '../views/IpfsGatewaySettingsView.js';
-import BitcoinEsploraSettingsView from '../views/BitcoinEsploraSettingsView.js';
-import NostrRelaySettingsView from '../views/NostrRelaySettingsView.js';
-import SteemReadingSettingsView from '../views/SteemReadingSettingsView.js';
-import StunSettingsView from '../views/StunSettingsView.js';
-import TurnServerSettingsView from '../views/TurnServerSettingsView.js';
-import RendezvousSettingsView from '../views/RendezvousSettingsView.js';
-import ReconciliationCandidateLeaderboardView from '../views/ReconciliationCandidateLeaderboardView.js';
-import ReconciliationCandidateLeaderboardEvidenceExportComparisonView from '../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js';
-import ReconciliationWorkspaceView from '../views/ReconciliationWorkspaceView.js';
-import PublisherLeaderboardSnapshotClaimAuthoringView from '../views/PublisherLeaderboardSnapshotClaimAuthoringView.js';
-import PublisherPerformanceLeaderboardView from '../views/PublisherPerformanceLeaderboardView.js';
-import LeaderboardHubView from '../views/LeaderboardHubView.js';
-import YourDataView from '../views/YourDataView.js';
-import LanguageSettingsView from '../views/LanguageSettingsView.js';
+
+// Each page but Home (a few lines, and the page most visits open) loads its
+// modules the first time it is opened, not with the app: together they are
+// about half of the app's code, and the World View and Editor bring in
+// Three.js. tests/InitialLoadModuleGraph.test.js fails if another page is
+// imported statically again.
+const EditorView = () => importWithRetry(() => import('../views/EditorView.js'));
+const RepositoryView = () => importWithRetry(() => import('../views/RepositoryView.js'));
+const RecentWorldsView = () => importWithRetry(() => import('../views/RecentWorldsView.js'));
+const AboutView = () => importWithRetry(() => import('../views/AboutView.js'));
+const PublicationLinkView = () => importWithRetry(() => import('../views/PublicationLinkView.js'));
+const AuthorView = () => importWithRetry(() => import('../views/AuthorView.js'));
+const WorldView = () => importWithRetry(() => import('../views/WorldView.js'));
+const LiveWorldView = () => importWithRetry(() => import('../views/LiveWorldView.js'));
+const AvatarSettingsView = () => importWithRetry(() => import('../views/AvatarSettingsView.js'));
+const IdentityManagementView = () => importWithRetry(() => import('../views/IdentityManagementView.js'));
+const PeerConnectionsView = () => importWithRetry(() => import('../views/PeerConnectionsView.js'));
+const FollowingView = () => importWithRetry(() => import('../views/FollowingView.js'));
+const ChatView = () => importWithRetry(() => import('../views/ChatView.js'));
+const ConversationsView = () => importWithRetry(() => import('../views/ConversationsView.js'));
+const DecentralizedPublicationsView = () => importWithRetry(() => import('../views/DecentralizedPublicationsView.js'));
+const NetworkSettingsView = () => importWithRetry(() => import('../views/NetworkSettingsView.js'));
+const ContentProviderSettingsView = () => importWithRetry(() => import('../views/ContentProviderSettingsView.js'));
+const AnnouncementDiscoveryProviderSettingsView = () => importWithRetry(() => import('../views/AnnouncementDiscoveryProviderSettingsView.js'));
+const AnchorProviderSettingsView = () => importWithRetry(() => import('../views/AnchorProviderSettingsView.js'));
+const ArweaveGatewaySettingsView = () => importWithRetry(() => import('../views/ArweaveGatewaySettingsView.js'));
+const IpfsGatewaySettingsView = () => importWithRetry(() => import('../views/IpfsGatewaySettingsView.js'));
+const BitcoinEsploraSettingsView = () => importWithRetry(() => import('../views/BitcoinEsploraSettingsView.js'));
+const NostrRelaySettingsView = () => importWithRetry(() => import('../views/NostrRelaySettingsView.js'));
+const SteemReadingSettingsView = () => importWithRetry(() => import('../views/SteemReadingSettingsView.js'));
+const StunSettingsView = () => importWithRetry(() => import('../views/StunSettingsView.js'));
+const TurnServerSettingsView = () => importWithRetry(() => import('../views/TurnServerSettingsView.js'));
+const RendezvousSettingsView = () => importWithRetry(() => import('../views/RendezvousSettingsView.js'));
+const ReconciliationCandidateLeaderboardView = () => importWithRetry(() => import('../views/ReconciliationCandidateLeaderboardView.js'));
+const ReconciliationCandidateLeaderboardEvidenceExportComparisonView = () => importWithRetry(() => import('../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js'));
+const ReconciliationWorkspaceView = () => importWithRetry(() => import('../views/ReconciliationWorkspaceView.js'));
+const PublisherLeaderboardSnapshotClaimAuthoringView = () => importWithRetry(() => import('../views/PublisherLeaderboardSnapshotClaimAuthoringView.js'));
+const PublisherPerformanceLeaderboardView = () => importWithRetry(() => import('../views/PublisherPerformanceLeaderboardView.js'));
+const LeaderboardHubView = () => importWithRetry(() => import('../views/LeaderboardHubView.js'));
+const YourDataView = () => importWithRetry(() => import('../views/YourDataView.js'));
+const LanguageSettingsView = () => importWithRetry(() => import('../views/LanguageSettingsView.js'));
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },

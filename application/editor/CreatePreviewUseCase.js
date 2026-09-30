@@ -2,7 +2,6 @@ import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
 import { LoadPublicationDocumentUseCase } from '../publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from './CreateBrickRegistryUseCase.js';
 import { PreviewService } from './PreviewService.js';
-import { DocumentThumbnailRenderer } from '../../renderer/DocumentThumbnailRenderer.js';
 
 // Builds the app-wide preview generation service — a local rendering
 // cache, not publication data (see docs/Principles.md, "Previews Are
@@ -27,8 +26,12 @@ export class CreatePreviewUseCase {
             loadPublicationDocumentUseCase,
             // Lazy — see PreviewService's own comment. The actual
             // WebGL context/canvas is only created on the FIRST real
-            // preview request, not merely because the app booted.
-            createRenderer: () => new DocumentThumbnailRenderer(registry)
+            // preview request, not merely because the app booted, and
+            // the renderer's module (with Three.js) is only imported then.
+            createRenderer: async () => {
+                const { DocumentThumbnailRenderer } = await import('../../renderer/DocumentThumbnailRenderer.js');
+                return new DocumentThumbnailRenderer(registry);
+            }
         });
 
         return { previewService };

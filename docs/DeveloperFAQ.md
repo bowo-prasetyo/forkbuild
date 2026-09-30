@@ -31,8 +31,9 @@ has to allow `'unsafe-eval'`. Removing it would need a build step.
 - On GitHub Pages, the empty `.nojekyll` file must be published, or files
   whose names start with `_` (such as `vendor/noble-hashes/_md.js`) are
   left out.
-- The page fetches over a thousand module files. If the host drops one,
-  the whole load fails; `ui/boot.js` retries it five times, with backoff.
+- The page fetches about 850 module files, and more the first time each
+  page is opened. If the host drops one, that load fails;
+  `ui/importWithRetry.js` retries it five times, with backoff.
 
 ### Peers can't find each other when I run the app locally
 

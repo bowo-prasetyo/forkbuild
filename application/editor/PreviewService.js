@@ -29,7 +29,9 @@ function scheduleIdle(fn) {
 //   - LAZY: the actual renderer (a real WebGL context) is constructed
 //     from a thunk on the FIRST real request, never at construction
 //     time — a person who never opens the Repository never pays for a
-//     WebGL context they'll never use.
+//     WebGL context they'll never use. The thunk may return a promise,
+//     so the renderer's module (and Three.js with it) is also only
+//     downloaded then (application/editor/CreatePreviewUseCase.js).
 //   - CACHED: keyed by contentHash, not documentId or publicationId —
 //     the SAME immutable content (a fork that hasn't touched geometry,
 //     or the same publication found twice) reuses one cached image;
@@ -131,14 +133,16 @@ export class PreviewService {
         scheduleIdle(() => this._drainOne());
     }
 
-    _drainOne() {
+    async _drainOne() {
         const job = this._nextJob();
         if (!job) {
             this._draining = false;
             return;
         }
         this._jobs.delete(job.contentHash);
-        this._runJob(job);
+        // Awaited, so the next job starts only after this one, even while
+        // the first one waits for the renderer to load.
+        await this._runJob(job);
         // Keep draining — more jobs may already be queued, or may be
         // added by the time this one finishes.
         scheduleIdle(() => this._drainOne());
@@ -158,11 +162,11 @@ export class PreviewService {
         return best;
     }
 
-    _runJob(job) {
+    async _runJob(job) {
         let preview = null;
         try {
             const document = this._loadPublicationDocumentUseCase.execute(job.documentId);
-            const renderer = this._ensureRenderer();
+            const renderer = await this._ensureRenderer();
             if (renderer) {
                 const image = renderer.renderDocument(document);
                 preview = thumbnailPreview(image);
@@ -182,13 +186,13 @@ export class PreviewService {
         }
     }
 
-    _ensureRenderer() {
+    async _ensureRenderer() {
         if (this._renderer === false) {
             return null; // construction already failed once; don't keep retrying it
         }
         if (!this._renderer) {
             try {
-                this._renderer = this._createRenderer();
+                this._renderer = await this._createRenderer();
             } catch (err) {
                 this._renderer = false;
                 return null;

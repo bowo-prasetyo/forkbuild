@@ -292,6 +292,48 @@ async function runTests() {
         assert(calls.length === 5, '18b. but all five eventually complete once the queue actually drains');
     }
 
+    // -------------------------------------------------------------
+    // 19-20. A renderer that loads asynchronously (its module is
+    //        imported on first use): queued requests wait for it, it is
+    //        constructed once, and renders still run one at a time.
+    // -------------------------------------------------------------
+    {
+        const calls = [];
+        let constructCalls = 0;
+        let rendering = 0;
+        let overlapped = false;
+        let finishLoading;
+        const loaded = new Promise((resolve) => { finishLoading = resolve; });
+        const documents = new Map([['doc-1', { marker: '1' }], ['doc-2', { marker: '2' }], ['doc-3', { marker: '3' }]]);
+        const service = new PreviewService({
+            loadPublicationDocumentUseCase: makeFakeLoader(documents),
+            createRenderer: async () => {
+                constructCalls++;
+                await loaded;
+                const renderer = makeFakeRenderer(calls);
+                return {
+                    renderDocument(document) {
+                        if (rendering > 0) overlapped = true;
+                        rendering++;
+                        try { return renderer.renderDocument(document); } finally { rendering--; }
+                    }
+                };
+            }
+        });
+
+        const promises = [1, 2, 3].map((i) =>
+            service.request(makePublication({ documentId: `doc-${i}`, contentHash: `hash-${i}` })).promise);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        assert(calls.length === 0, '19. nothing renders while the renderer is still loading');
+
+        finishLoading();
+        const results = await Promise.all(promises);
+        assert(results.map((r) => r && r.image).join() === 'fake-image:1,fake-image:2,fake-image:3',
+            '19b. every queued request renders once the renderer has loaded');
+        assert(constructCalls === 1, '20. the renderer is constructed once, not once per queued request');
+        assert(!overlapped, '20b. renders never overlap');
+    }
+
     console.log('✅ All Preview Service tests passed.');
 }
 
