@@ -4,6 +4,7 @@ import { SpatialSelectionState } from '../spatial-state/SpatialSelectionState.js
 import { SpatialHoverState } from '../spatial-state/SpatialHoverState.js';
 import { message } from '../../core/Message.js';
 import { UserFacingError } from '../../core/UserFacingError.js';
+import { forkTitle, untitledWorldTitle } from '../document/DocumentTitles.js';
 
 // WorldNavigationSession fork-on-write: a published snapshot is never edited
 // in place; its first mutation forks a new Document and remaps selection,
@@ -95,7 +96,7 @@ export const forkOnWriteMethods = {
 
         const user = this._identityProvider ? this._identityProvider.currentUser() : null;
         const fork = this._documentCloneService.execute(sourceDoc, {
-            title: `Fork of ${sourceDoc.metadata.title || 'Untitled'}`,
+            title: forkTitle(sourceDoc.metadata.title),
             author: user ? user.username : null,
             parentDocumentId: sourceDoc.world.id,
             // Without the eventBus the fork's later mutations update the model but never
@@ -138,7 +139,7 @@ export const forkOnWriteMethods = {
         // changing; see consumeForkNotice() / WorldView's guarded().
         this._pendingForkNotice = {
             sourceDocumentId,
-            sourceTitle: sourceDoc.metadata.title || 'Untitled',
+            sourceTitle: sourceDoc.metadata.title || untitledWorldTitle(),
             forkId,
             forkTitle: fork.metadata.title
         };

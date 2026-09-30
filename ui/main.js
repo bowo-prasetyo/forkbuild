@@ -66,6 +66,16 @@ import { WorldSoundscapeService } from '../application/world/WorldSoundscapeServ
 import { WebAudioSoundscapeProvider } from '../audio/WebAudioSoundscapeProvider.js';
 import { EditorSoundService } from '../application/editor/EditorSoundService.js';
 import { verifyClaimedBuildPublication } from '../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
+import { setDocumentTitles } from '../application/document/DocumentTitles.js';
+import { t } from './i18n/i18n.js';
+
+// A new World, a fork or a copy gets its title in the chosen language, saved
+// like any other title (application/document/DocumentTitles.js).
+setDocumentTitles({
+    untitledWorld: () => t('document.untitledWorld'),
+    forkOf: (title) => t('document.forkOf', { title }),
+    copyOf: (title) => t('document.copyOf', { title })
+});
 
 const {
     identityProvider, identityUseCase, createPublicationCommentaryCommand, getPublicationCommentariesCommand,

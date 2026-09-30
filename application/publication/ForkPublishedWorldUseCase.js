@@ -2,6 +2,7 @@ import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 import { DocumentCloneService } from '../document/DocumentCloneService.js';
 import { LoadPublishedSnapshotUseCase } from '../snapshot/LoadPublishedSnapshotUseCase.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
+import { forkTitle } from '../document/DocumentTitles.js';
 
 // Forks a Published World into a new editable Document (0.2.8).
 //
@@ -73,9 +74,8 @@ export class ForkPublishedWorldUseCase {
 
         // 3. Clone with fresh identities, preserving lineage.
         const currentUser = identityProvider ? identityProvider.currentUser() : null;
-        const sourceTitle = sourceDocument.metadata.title || 'Untitled';
         return this._documentCloneService.execute(sourceDocument, {
-            title: `Fork of ${sourceTitle}`,
+            title: forkTitle(sourceDocument.metadata.title),
             author: currentUser ? currentUser.username : null,
             // 0.2.95 — see ForkDocumentUseCase.js's own comment: the
             // forker becomes the new owner.

@@ -1621,6 +1621,13 @@ export default Object.freeze({
     'worldView.none': 'None',
     'worldView.nothingToUndo': 'Nothing to undo',
 
+    // Titles the app gives a document it makes (application/document/DocumentTitles.js).
+    // Saved with the document in the language of whoever made it; {title} is
+    // the source World's own title.
+    'document.untitledWorld': 'Untitled ForkBuild World',
+    'document.forkOf': 'Fork of {title}',
+    'document.copyOf': 'Copy of {title}',
+
     // How an edit is named in undo/redo and the history timeline
     // (application/commands/, application/commands/HistoryDescription.js).
     // {action} is one of the other history.* messages; a {title} or {name} is

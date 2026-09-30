@@ -1,4 +1,5 @@
 import { CommandHistory } from '../editor/CommandHistory.js';
+import { forkTitle } from '../document/DocumentTitles.js';
 
 // WorldNavigationSession document operations: undo and redo on the document
 // the next mutation would land on, and saving, publishing, cloning and forking
@@ -132,7 +133,7 @@ export const documentOperationMethods = {
         if (!doc) throw new Error('no loaded document');
         const user = this._identityProvider ? this._identityProvider.currentUser() : null;
         const fork = this._documentCloneService.execute(doc, {
-            title: `Fork of ${doc.metadata.title || 'Untitled'}`,
+            title: forkTitle(doc.metadata.title),
             author: user ? user.username : null,
             parentDocumentId: doc.world.id,
             eventBus: this._eventBus

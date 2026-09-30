@@ -2,6 +2,7 @@ import { Document } from '../../core/Document.js';
 import { DocumentMetadata } from '../../core/DocumentMetadata.js';
 import { DocumentManager } from './DocumentManager.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
+import { untitledWorldTitle } from './DocumentTitles.js';
 
 // application/ constructs Document/DocumentMetadata (both core/ classes)
 // so ui/ never has to import core/Document directly just to get a
@@ -36,6 +37,7 @@ export class CreateDocumentManagerUseCase {
     attachWorld(documentManager, world, identityProvider = null) {
         const currentUser = identityProvider ? identityProvider.currentUser() : null;
         const metadata = new DocumentMetadata({
+            title: untitledWorldTitle(),
             created: new Date(),
             author: currentUser ? currentUser.username : null,
             authorIdentityId: resolveSigningIdentityId(identityProvider)
