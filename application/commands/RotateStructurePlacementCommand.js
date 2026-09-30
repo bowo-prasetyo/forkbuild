@@ -1,4 +1,5 @@
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // 0.2.91 — World Instance Editing & Placement Management. The
 // StructurePlacement counterpart to RotateBrickCommand.js, one rung up.
@@ -56,7 +57,7 @@ export class RotateStructurePlacementCommand extends Command {
     }
 
     describe() {
-        return 'Rotate Structure Placement';
+        return message('history.rotateStructurePlacement');
     }
 
     toJSON() {

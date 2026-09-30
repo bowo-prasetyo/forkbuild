@@ -1,4 +1,5 @@
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // Intent: worldId, groupId, name. Snapshots the previous name so undo()
 // restores it exactly. Membership and identity are untouched.
@@ -43,7 +44,7 @@ export class RenameGroupCommand extends Command {
     }
 
     describe() {
-        return 'Rename Group';
+        return message('history.renameGroup');
     }
 
     toJSON() {

@@ -1,5 +1,6 @@
 import { WorldLandmark } from '../../core/WorldLandmark.js';
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // 0.3.7 — World Landmarks & Personal Waypoints.
 //
@@ -51,7 +52,7 @@ export class RemoveWorldLandmarkCommand extends Command {
     }
 
     describe() {
-        return `Remove Landmark "${this._landmarkId}"`;
+        return message('history.removeLandmark');
     }
 
     toJSON() {

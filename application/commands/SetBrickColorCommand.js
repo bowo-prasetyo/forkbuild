@@ -1,4 +1,5 @@
 import { Command } from './Command.js';
+import { bricksMessage } from './HistoryDescription.js';
 
 // Undoable per-instance recolor — "Choose Your Brick Color." Mirrors
 // RotateBrickCommand's own shape exactly: remembers the brick's previous
@@ -50,7 +51,7 @@ export class SetBrickColorCommand extends Command {
     }
 
     describe() {
-        return 'Recolor Brick';
+        return bricksMessage('history.recolorBricks', 1);
     }
 
     toJSON() {

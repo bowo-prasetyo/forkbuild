@@ -3,6 +3,7 @@ import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CommandRegistry } from '../application/commands/CommandRegistry.js';
 import { CompositeCommand } from '../application/commands/CompositeCommand.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 class IncrementCommand extends Command {
     constructor({ delta = 1, id, timestamp, executed = false } = {}) {
@@ -120,8 +121,8 @@ function runTests() {
         assert(json.cursor === 1, 'undo position cursor preserved');
         assert(json.commands.map((cmd) => cmd.delta).join(',') === '1,2', 'linear command order preserved');
         const restored = CommandHistory.fromJSON(json, context, registry);
-        assert(restored.getUndoLabel() === 'Undo Increment 1', 'undo label restored at cursor');
-        assert(restored.getRedoLabel() === 'Redo Increment 2', 'redo label restored at cursor');
+        assert(displayText(restored.getUndoLabel()) === 'Undo Increment 1', 'undo label restored at cursor');
+        assert(displayText(restored.getRedoLabel()) === 'Redo Increment 2', 'redo label restored at cursor');
         restored.redo();
         assert(context.value === 3, 'redo position restored');
         console.log('✓ undo and redo cursor persistence');
@@ -139,7 +140,7 @@ function runTests() {
         assert(json.commands[0].description === 'Move 2 Bricks', 'composite description serialized');
         assert(json.commands[0].commands.length === 2, 'composite children serialized');
         const restored = CommandHistory.fromJSON(json, context, registry);
-        assert(restored.getUndoLabel() === 'Undo Move 2 Bricks', 'composite description restored');
+        assert(displayText(restored.getUndoLabel()) === 'Undo Move 2 Bricks', 'composite description restored');
         restored.undo();
         assert(context.value === 0, 'composite undo restored');
         console.log('✓ composite persistence with descriptions');

@@ -20,7 +20,8 @@ chosen.
 | Identity, Peers, Chat, Conversations, Following, Your Data, About, settings pages, the sign-in dialog, banners, notifications | Translated |
 | Refusals from `application/` (sign in first, already friends, wrong passphrase …) | Translated (`UserFacingError`) |
 | Resident speech in World View | Translated |
-| Undo/redo and history labels, a new document's default title | English (stored in documents; needs its own change) |
+| Undo/redo and history labels | Translated (a label saved by an older version stays in its English) |
+| A new document's default title, a fork's "Fork of …" title | English (stored in documents; needs its own change) |
 
 ## How it works
 
@@ -138,6 +139,12 @@ it:
   turned into text before the renderer gets them. Each sentence is one
   message with its parts as parameters (`{where}`, itself a message holding
   `{distance}`), so a language can reorder them.
+- **A label saved with a command** (undo/redo, the history timeline) is
+  written as `descriptionMessage: { key, params }`
+  (`application/commands/HistoryDescription.js`), so it is translated when
+  shown, on this device or a peer's. `description` is left out, so an
+  older version falls back to its own label; a `description` an older
+  version wrote is English text and is shown as written.
 - **Enum-to-label modules** (`application/document/LicenseLabels.js`,
   `application/avatar/AvatarPresenceLabels.js`) map each value to a key, with
   a message for anything unrecognized.

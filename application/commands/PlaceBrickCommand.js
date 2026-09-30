@@ -1,6 +1,7 @@
 import { Brick } from '../../core/Brick.js';
 import { Position } from '../../core/Position.js';
 import { Command } from './Command.js';
+import { bricksMessage } from './HistoryDescription.js';
 
 // Immutable in the sense that matters: worldId, buildingId, definitionId,
 // position, and rotation are set once at construction and never
@@ -84,7 +85,7 @@ export class PlaceBrickCommand extends Command {
     }
 
     describe() {
-        return 'Place Brick';
+        return bricksMessage('history.placeBricks', 1);
     }
 
     toJSON() {

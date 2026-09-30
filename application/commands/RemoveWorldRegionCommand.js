@@ -1,5 +1,6 @@
 import { WorldRegion } from '../../core/WorldRegion.js';
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // 0.5.0 — World Regions & Decentralized Place Naming.
 //
@@ -54,7 +55,7 @@ export class RemoveWorldRegionCommand extends Command {
     }
 
     describe() {
-        return `Remove Region "${this._regionId}"`;
+        return message('history.removeRegion');
     }
 
     toJSON() {

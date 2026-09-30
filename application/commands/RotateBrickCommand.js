@@ -1,4 +1,5 @@
 import { Command } from './Command.js';
+import { bricksMessage } from './HistoryDescription.js';
 
 // Undoable rotation in degrees. The domain stores degrees; the renderer
 // converts to radians at the Three.js boundary. deltaRotation is added
@@ -46,7 +47,7 @@ export class RotateBrickCommand extends Command {
     }
 
     describe() {
-        return 'Rotate Brick';
+        return bricksMessage('history.rotateBricks', 1);
     }
 
     toJSON() {

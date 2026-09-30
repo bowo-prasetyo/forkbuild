@@ -1,5 +1,6 @@
 import { WorldResident } from '../../core/WorldResident.js';
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // World Residents: removes a resident from its World. Undo restores the
 // exact resident (same id, same home), so it walks exactly as it did.
@@ -39,7 +40,7 @@ export class RemoveWorldResidentCommand extends Command {
     }
 
     describe() {
-        return 'Remove a resident';
+        return message('history.removeResident');
     }
 
     toJSON() {

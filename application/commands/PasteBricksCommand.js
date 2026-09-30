@@ -2,6 +2,7 @@ import { Brick } from '../../core/Brick.js';
 import { Group } from '../../core/Group.js';
 import { Position } from '../../core/Position.js';
 import { Command } from './Command.js';
+import { descriptionFromJSON, descriptionToJSON, bricksMessage } from './HistoryDescription.js';
 
 // Pastes a set of bricks as ONE atomic history entry (0.1.42), creating
 // any groups carried by the clipboard intent (0.1.43).
@@ -140,7 +141,7 @@ export class PasteBricksCommand extends Command {
         if (this._description) {
             return this._description;
         }
-        return `Paste ${this._items.length} ${this._items.length === 1 ? 'Brick' : 'Bricks'}`;
+        return bricksMessage('history.pasteBricks', this._items.length);
     }
 
     toJSON() {
@@ -150,7 +151,7 @@ export class PasteBricksCommand extends Command {
             timestamp: this._timestamp.toISOString(),
             worldId: this._worldId,
             buildingId: this._buildingId,
-            description: this._description,
+            ...descriptionToJSON(this._description),
             items: this._items.map((item) => ({
                 definitionId: item.definitionId,
                 position: item.position.toJSON(),
@@ -173,7 +174,7 @@ export class PasteBricksCommand extends Command {
             buildingId: json.buildingId,
             items: json.items || [],
             groups: json.groups || [],
-            description: json.description || null,
+            description: descriptionFromJSON(json),
             id: json.id,
             timestamp: new Date(json.timestamp)
         });

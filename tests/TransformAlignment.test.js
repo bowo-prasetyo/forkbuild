@@ -11,6 +11,7 @@ import { SpatialSelectionState } from '../application/spatial-state/SpatialSelec
 import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { TransformAlignment } from '../application/editor/TransformAlignment.js';
 import { assert } from './support/Assert.js';
+import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.1.48 — Alignment & Distribution tests.
 //
@@ -377,7 +378,7 @@ function selectionBoundsOf(entries) {
     assert(history.getCursor() === 1, 'alignment cursor +1');
     const alignCommand = history.getExecutedCommands()[0];
     assert(alignCommand.type === 'transform-selection', 'alignment emits transform-selection');
-    assert(alignCommand.describe() === 'Align 3 Bricks', 'alignment description');
+    assert(displayText(alignCommand.describe()) === 'Align 3 Bricks', 'alignment description');
     // Change 'z' to 'x'
     service.distributeSelection(worldViewSelection(), 'x');
     assert(history.getCursor() === 2, 'distribution cursor +1');
@@ -456,7 +457,7 @@ function selectionBoundsOf(entries) {
         'both surfaces emit transform-selection');
     assert(JSON.stringify(worldCommand.transforms) === JSON.stringify(editorCommand.transforms),
         'identical absolute transform arrays across surfaces');
-    assert(worldCommand.description === editorCommand.description, 'identical descriptions');
+    assert(JSON.stringify(worldCommand.descriptionMessage) === JSON.stringify(editorCommand.descriptionMessage) && worldCommand.descriptionMessage.key === 'history.alignBricks', 'identical descriptions');
     assert(JSON.stringify(brickPositions(worldFixture.world)) === JSON.stringify(brickPositions(editorFixture.world)),
         'identical world state across surfaces');
 

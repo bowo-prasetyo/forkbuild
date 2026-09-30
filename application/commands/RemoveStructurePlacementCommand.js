@@ -1,5 +1,6 @@
 import { StructurePlacement } from '../../core/StructurePlacement.js';
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // Mirrors application/commands/DeleteBrickCommand.js exactly, one rung
 // up — placement and removal are near-inverses here too. Constructor
@@ -72,7 +73,7 @@ export class RemoveStructurePlacementCommand extends Command {
     }
 
     describe() {
-        return 'Remove Structure Placement';
+        return message('history.removeStructurePlacement');
     }
 
     toJSON() {

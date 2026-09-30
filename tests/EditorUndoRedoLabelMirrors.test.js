@@ -159,19 +159,19 @@ async function run() {
 
         const history = session._commandHistory;
         const expectedLabel = history.getUndoLabel();
-        assert(expectedLabel === 'Undo Delete Brick', '2. sanity: CommandHistory produces the expected authoritative label');
-        assert(session.getUndoLabel() === expectedLabel, '3. EditorSession.getUndoLabel() mirrors CommandHistory exactly');
+        assert(displayText(expectedLabel) === 'Undo Delete Brick', '2. sanity: CommandHistory produces the expected authoritative label');
+        assert(displayText(session.getUndoLabel()) === displayText(expectedLabel), '3. EditorSession.getUndoLabel() mirrors CommandHistory exactly');
 
         const ctx = ctxFor(session);
-        assert(ctx.undoLabel === expectedLabel, '4. EditorActionContext.capture() mirrors it into ctx.undoLabel, unchanged by this milestone');
+        assert(displayText(ctx.undoLabel) === displayText(expectedLabel), '4. EditorActionContext.capture() mirrors it into ctx.undoLabel, unchanged by this milestone');
 
         const undoAction = registry.get('history.undo');
-        assert(undoAction.contextualLabel(ctx) === expectedLabel, '5. history.undo\'s contextualLabel(ctx) is exactly the authoritative label — no reconstruction');
+        assert(displayText(undoAction.contextualLabel(ctx)) === displayText(expectedLabel), '5. history.undo\'s contextualLabel(ctx) is exactly the authoritative label — no reconstruction');
 
         // The real component, not a regex proxy: mount its own class and
         // call its own displayLabel() the same way its template does.
         const paletteInstance = { context: ctx, ...CommandPalette.methods };
-        assert(paletteInstance.displayLabel(undoAction) === expectedLabel,
+        assert(paletteInstance.displayLabel(undoAction) === displayText(expectedLabel),
             '6. CommandPalette.displayLabel() renders the authoritative label VERBATIM — the exact string CommandHistory produced, not a re-derived one');
         assert(t(undoAction.label) === 'Undo', '7. the static action.label is untouched — search/KeyboardShortcutsOverlay still see a stable, context-free "Undo"');
 
@@ -195,13 +195,13 @@ async function run() {
         selectBricks(editorContext, building, [ids[0]]);
         session.deleteSelection();
         ctx = ctxFor(session);
-        assert(registry.get('history.undo').contextualLabel(ctx) === 'Undo Delete Brick', '2. after Delete, the mirror reads "Undo Delete Brick"');
+        assert(displayText(registry.get('history.undo').contextualLabel(ctx)) === 'Undo Delete Brick', '2. after Delete, the mirror reads "Undo Delete Brick"');
         assert(registry.get('history.redo').contextualLabel(ctx) === null, '3. nothing to redo yet');
 
         session.undo();
         ctx = ctxFor(session);
         assert(registry.get('history.undo').contextualLabel(ctx) === null, '4. after Undo, the undo mirror goes neutral');
-        assert(registry.get('history.redo').contextualLabel(ctx) === 'Redo Delete Brick', '5. ...and the redo mirror now names exactly the operation just undone');
+        assert(displayText(registry.get('history.redo').contextualLabel(ctx)) === 'Redo Delete Brick', '5. ...and the redo mirror now names exactly the operation just undone');
 
         console.log('✓ B. Undo transition: "Undo Delete Brick" -> Undo -> "Redo Delete Brick"');
     }
@@ -226,12 +226,12 @@ async function run() {
 
         session.undo(); // undoes #2
         let ctx = ctxFor(session);
-        assert(registry.get('history.undo').contextualLabel(ctx) === 'Undo Delete Brick', '1. undo label names the REMAINING command (#1), not the undone one');
-        assert(registry.get('history.redo').contextualLabel(ctx) === 'Redo Delete Brick', '2. redo label names the just-undone command (#2)');
+        assert(displayText(registry.get('history.undo').contextualLabel(ctx)) === 'Undo Delete Brick', '1. undo label names the REMAINING command (#1), not the undone one');
+        assert(displayText(registry.get('history.redo').contextualLabel(ctx)) === 'Redo Delete Brick', '2. redo label names the just-undone command (#2)');
 
         session.redo();
         ctx = ctxFor(session);
-        assert(registry.get('history.undo').contextualLabel(ctx) === 'Undo Delete Brick', '3. after Redo, the undo mirror again names the top of the stack (#2 again)');
+        assert(displayText(registry.get('history.undo').contextualLabel(ctx)) === 'Undo Delete Brick', '3. after Redo, the undo mirror again names the top of the stack (#2 again)');
         assert(registry.get('history.redo').contextualLabel(ctx) === null, '4. nothing left to redo');
 
         console.log('✓ C. Redo transition: the undo mirror always tracks the true top of CommandHistory\'s own stack');
@@ -258,7 +258,7 @@ async function run() {
         session.undo(); // undo B
 
         let ctx = ctxFor(session);
-        assert(registry.get('history.redo').contextualLabel(ctx) === 'Redo Delete Brick', '1. sanity: B is redoable before C runs');
+        assert(displayText(registry.get('history.redo').contextualLabel(ctx)) === 'Redo Delete Brick', '1. sanity: B is redoable before C runs');
 
         selectBricks(editorContext, building, [ids[2]]);
         session.deleteSelection(); // C — a fresh command after an undo
@@ -266,7 +266,7 @@ async function run() {
         ctx = ctxFor(session);
         assert(registry.get('history.redo').contextualLabel(ctx) === null, '2. the old B redo branch is gone — the mirror reflects it correctly, not a stale label');
         assert(t(registry.get('history.redo').disabledReason(ctx)) === 'Nothing to redo', '3. disabledReason still carries the generic text once nothing is there to name');
-        assert(registry.get('history.undo').contextualLabel(ctx) === 'Undo Delete Brick', '4. undo mirror correctly names C, the real top of the stack');
+        assert(displayText(registry.get('history.undo').contextualLabel(ctx)) === 'Undo Delete Brick', '4. undo mirror correctly names C, the real top of the stack');
 
         console.log('✓ D. Branch invalidation: an invalidated redo branch takes its mirrored label down with it');
     }
@@ -315,7 +315,7 @@ async function run() {
 
         const registry = registryFor(session);
         let ctx = ctxFor(session);
-        assert(registry.get('history.undo').contextualLabel(ctx) === 'Undo Delete Brick', '1. Document A shows its own real undo label');
+        assert(displayText(registry.get('history.undo').contextualLabel(ctx)) === 'Undo Delete Brick', '1. Document A shows its own real undo label');
 
         // Switch to Document B — a brand-new World/CommandHistory, the
         // same swap _rebuild() performs internally.
@@ -335,7 +335,7 @@ async function run() {
         selectBricks(editorContext, docB.building, [docB.ids[0]]);
         session.deleteSelection();
         ctx = ctxFor(session);
-        assert(registry.get('history.undo').contextualLabel(ctx) === 'Undo Delete Brick', '4. Document B now shows ITS OWN real label, produced by ITS OWN CommandHistory');
+        assert(displayText(registry.get('history.undo').contextualLabel(ctx)) === 'Undo Delete Brick', '4. Document B now shows ITS OWN real label, produced by ITS OWN CommandHistory');
 
         console.log('✓ F. Document-switch isolation: the mirrors always reflect whichever CommandHistory is currently active, never a stale one');
     }

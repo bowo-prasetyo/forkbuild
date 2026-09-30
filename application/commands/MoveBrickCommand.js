@@ -1,5 +1,6 @@
 import { Command } from './Command.js';
 import { Position } from '../../core/Position.js';
+import { bricksMessage } from './HistoryDescription.js';
 
 // Undoable spatial translation. Remembers the original position so
 // undo() can restore it exactly. delta is a plain {x,y,z} offset.
@@ -50,7 +51,7 @@ export class MoveBrickCommand extends Command {
     }
 
     describe() {
-        return 'Move Brick';
+        return bricksMessage('history.moveBricks', 1);
     }
 
     toJSON() {

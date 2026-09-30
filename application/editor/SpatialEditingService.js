@@ -13,6 +13,7 @@ import { TransformSettings } from './TransformSettings.js';
 import { TransformAlignment } from './TransformAlignment.js';
 import { SelectionTransformValidator } from '../../core/SelectionTransformValidator.js';
 import { SnapMath } from '../../core/SnapMath.js';
+import { message } from '../../core/Message.js';
 
 // Translates spatial editing intent into domain mutations via CommandHistory.
 // The UI calls this; it never touches Brick directly.
@@ -288,7 +289,7 @@ export class SpatialEditingService {
     deleteSelection(selection) {
         return this._executeForSelection(selection, (world, item) => new DeleteBrickCommand({
             worldId: world.id, buildingId: item.buildingId, brickId: item.brickId
-        }), `Delete ${selection.items.length} Bricks`);
+        }), message('history.deleteBricks', { count: selection.items.length }));
     }
 
     // ----------------------------------------- alignment & distribution
@@ -305,7 +306,7 @@ export class SpatialEditingService {
             selection,
             (entries, selectionBounds) =>
                 TransformAlignment.calculateAlignmentTransforms(entries, selectionBounds, mode),
-            'Align'
+            'history.alignBricks'
         );
     }
 
@@ -318,7 +319,7 @@ export class SpatialEditingService {
             selection,
             (entries) =>
                 TransformAlignment.calculateDistributionTransforms(entries, axis),
-            'Distribute'
+            'history.distributeBricks'
         );
     }
 
@@ -364,7 +365,7 @@ export class SpatialEditingService {
     //   resolve selection -> capture transforms -> generate exact
     //   absolute targets -> compare before/after -> exactly one
     //   TransformSelectionCommand (or zero history entries on no-op).
-    _executeLayoutOperation(selection, calculate, verb) {
+    _executeLayoutOperation(selection, calculate, verbKey) {
         if (!selection || selection.isEmpty || selection.type === 'ground') return false;
         if (this._gizmoState.active) return false;
         const document = this._session.getDocument(selection.documentId);
@@ -386,7 +387,7 @@ export class SpatialEditingService {
         history.execute(new TransformSelectionCommand({
             worldId: world.id,
             transforms: after,
-            description: `${verb} ${after.length} ${after.length === 1 ? 'Brick' : 'Bricks'}`
+            description: message(verbKey, { count: after.length })
         }));
         return true;
     }
@@ -542,7 +543,7 @@ export class SpatialEditingService {
         history.execute(new TransformSelectionCommand({
             worldId: world.id,
             transforms: after,
-            description: `${applied.transform.rotation !== undefined ? 'Rotate' : 'Move'} ${after.length} ${after.length === 1 ? 'Brick' : 'Bricks'}`
+            description: message(applied.transform.rotation !== undefined ? 'history.rotateBricks' : 'history.moveBricks', { count: after.length })
         }));
         return true;
     }

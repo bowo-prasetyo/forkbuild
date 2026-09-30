@@ -1,4 +1,5 @@
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // 0.5.0 — World Regions & Decentralized Place Naming.
 //
@@ -77,7 +78,7 @@ export class UpdateWorldRegionCommand extends Command {
     }
 
     describe() {
-        return `Update Region "${this._name || this._regionId}"`;
+        return this._name ? message('history.updateRegion', { name: this._name }) : message('history.updateRegionUnnamed');
     }
 
     toJSON() {

@@ -1,5 +1,6 @@
 import { Command } from './Command.js';
 import { Position } from '../../core/Position.js';
+import { message } from '../../core/Message.js';
 
 // 0.2.91 — World Instance Editing & Placement Management. The
 // StructurePlacement counterpart to MoveBrickCommand.js, one rung up:
@@ -67,7 +68,7 @@ export class MoveStructurePlacementCommand extends Command {
     }
 
     describe() {
-        return 'Move Structure Placement';
+        return message('history.moveStructurePlacement');
     }
 
     toJSON() {

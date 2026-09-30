@@ -1,6 +1,7 @@
 import { StructurePlacement } from '../../core/StructurePlacement.js';
 import { Position } from '../../core/Position.js';
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // 0.2.91 — World Instance Editing & Placement Management. "Duplicate"
 // for a StructurePlacement creates a new StructurePlacement referencing
@@ -85,7 +86,7 @@ export class DuplicateStructurePlacementCommand extends Command {
     }
 
     describe() {
-        return 'Duplicate Structure Placement';
+        return message('history.duplicateStructurePlacement');
     }
 
     toJSON() {

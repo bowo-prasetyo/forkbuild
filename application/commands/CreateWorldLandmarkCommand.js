@@ -2,6 +2,7 @@ import { WorldLandmark } from '../../core/WorldLandmark.js';
 import { Position } from '../../core/Position.js';
 import { createId } from '../../core/createId.js';
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // 0.3.7 — World Landmarks & Personal Waypoints.
 //
@@ -69,7 +70,7 @@ export class CreateWorldLandmarkCommand extends Command {
     }
 
     describe() {
-        return `Create Landmark "${this._title}"`;
+        return message('history.createLandmark', { title: this._title });
     }
 
     toJSON() {

@@ -8,6 +8,7 @@ import { StructurePlacementValidator } from '../editor/StructurePlacementValidat
 import { PlacementPositionService } from '../editor/PlacementPositionService.js';
 import { SpatialBounds } from '../../core/SpatialBounds.js';
 import { Position } from '../../core/Position.js';
+import { message } from '../../core/Message.js';
 
 const DELETE_KEYS = new Set(['Delete', 'Backspace']);
 
@@ -206,7 +207,7 @@ export class SelectionTool extends Tool {
         }));
         const command = commands.length === 1
             ? commands[0]
-            : commands.reduce((composite, child) => composite.add(child), new CompositeCommand({ description: `Delete ${commands.length} Bricks` }));
+            : commands.reduce((composite, child) => composite.add(child), new CompositeCommand({ description: message('history.deleteBricks', { count: commands.length }) }));
         this.context.commandHistory.execute(command);
         this.context.selectionUseCase.clear();
     }

@@ -27,7 +27,7 @@
 // on this same id immediately before Preview/Restore actually run, so a
 // selection made before an intervening edit changed the history can never
 // silently act on whatever now happens to sit at the old index.
-import { t } from '../i18n/i18n.js';
+import { displayText, formatDate, t } from '../i18n/i18n.js';
 export default {
     name: 'HistoryTimelinePanel',
     props: {
@@ -74,9 +74,10 @@ export default {
     },
     methods: {
         t,
+        displayText,
         formatTimestamp(timestamp) {
             const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
-            return Number.isNaN(date.getTime()) ? '' : date.toLocaleString();
+            return Number.isNaN(date.getTime()) ? '' : formatDate(date, { dateStyle: 'short', timeStyle: 'medium' });
         },
         onKeydown(event) {
             if (event.key === 'Escape') {
@@ -115,7 +116,7 @@ export default {
                         @click="$emit('select', entry.id)"
                     >
                         <div class="locations-panel-item-info">
-                            <span class="locations-panel-item-title">{{ entry.index + 1 }}. {{ entry.description }}</span>
+                            <span class="locations-panel-item-title">{{ entry.index + 1 }}. {{ displayText(entry.description) }}</span>
                             <span class="locations-panel-item-position">
                                 {{ formatTimestamp(entry.timestamp) }}<template v-if="!entry.applied"> {{ t('historyTimelinePanel.undone') }}</template><template v-if="entry.index + 1 === previewCursor"> {{ t('historyTimelinePanel.previewing') }}</template>
                             </span>

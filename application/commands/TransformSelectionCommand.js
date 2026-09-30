@@ -1,11 +1,13 @@
 import { Command } from './Command.js';
 import { Position } from '../../core/Position.js';
+import { descriptionFromJSON, descriptionToJSON } from './HistoryDescription.js';
+import { message } from '../../core/Message.js';
 
 // Applies absolute post-gesture transforms for a selection as one atomic
 // history entry. Unlike incremental move/rotate commands, this preserves
 // exact pre/post transforms for group-pivot operations and command replay.
 export class TransformSelectionCommand extends Command {
-    constructor({ worldId, transforms = [], description = 'Transform Selection', id, timestamp } = {}) {
+    constructor({ worldId, transforms = [], description = null, id, timestamp } = {}) {
         super({ id, timestamp });
         this._worldId = worldId;
         this._transforms = transforms.map(TransformSelectionCommand._cloneTransform);
@@ -43,7 +45,7 @@ export class TransformSelectionCommand extends Command {
     }
 
     canUndo() { return this._before !== null; }
-    describe() { return this._description; }
+    describe() { return this._description || message('history.transformSelection'); }
 
     toJSON() {
         return {
@@ -51,7 +53,7 @@ export class TransformSelectionCommand extends Command {
             id: this._id,
             timestamp: this._timestamp.toISOString(),
             worldId: this._worldId,
-            description: this._description,
+            ...descriptionToJSON(this._description),
             transforms: this._transforms,
             before: this._before ? this._before.map(TransformSelectionCommand._cloneTransform) : null
         };
@@ -61,7 +63,7 @@ export class TransformSelectionCommand extends Command {
         const cmd = new TransformSelectionCommand({
             worldId: json.worldId,
             transforms: json.transforms || [],
-            description: json.description || 'Transform Selection',
+            description: descriptionFromJSON(json),
             id: json.id,
             timestamp: new Date(json.timestamp)
         });

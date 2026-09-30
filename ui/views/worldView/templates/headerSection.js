@@ -32,13 +32,13 @@ export const headerSectionTemplate = `<h2>{{ title }}</h2>
                     <button
                         class="action-btn"
                         :disabled="!canUndo"
-                        :title="undoLabel || t('worldView.nothingToUndo')"
+                        :title="undoLabel ? displayText(undoLabel) : t('worldView.nothingToUndo')"
                         @click="undoAction"
                     >{{ t('worldView.undo') }}</button>
                     <button
                         class="action-btn"
                         :disabled="!canRedo"
-                        :title="redoLabel || t('worldView.nothingToRedo')"
+                        :title="redoLabel ? displayText(redoLabel) : t('worldView.nothingToRedo')"
                         @click="redoAction"
                     >{{ t('worldView.redo') }}</button>
                     <button

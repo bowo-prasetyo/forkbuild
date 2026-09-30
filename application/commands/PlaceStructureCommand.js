@@ -1,6 +1,7 @@
 import { StructurePlacement } from '../../core/StructurePlacement.js';
 import { Position } from '../../core/Position.js';
 import { Command } from './Command.js';
+import { message } from '../../core/Message.js';
 
 // Mirrors application/commands/PlaceBrickCommand.js exactly, one rung
 // up: worldId, documentId (what to place — a REFERENCE, never bricks),
@@ -63,7 +64,7 @@ export class PlaceStructureCommand extends Command {
     }
 
     describe() {
-        return 'Place Structure';
+        return message('history.placeStructure');
     }
 
     toJSON() {

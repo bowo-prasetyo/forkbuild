@@ -1,5 +1,6 @@
 import { Command } from './Command.js';
 import { Position } from '../../core/Position.js';
+import { message } from '../../core/Message.js';
 
 // 0.2.97 — Shared World Ordering & Conflict Resolution.
 //
@@ -79,7 +80,7 @@ export class SetStructurePlacementTransformCommand extends Command {
     }
 
     describe() {
-        return 'Set Structure Placement Transform';
+        return message('history.setStructurePlacementTransform');
     }
 
     toJSON() {
