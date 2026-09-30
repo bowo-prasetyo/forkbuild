@@ -32,8 +32,11 @@ has to allow `'unsafe-eval'`. Removing it would need a build step.
   whose names start with `_` (such as `vendor/noble-hashes/_md.js`) are
   left out.
 - The page fetches about 600 module files, and more the first time each
-  page is opened. If the host drops one, that load fails;
-  `ui/importWithRetry.js` retries it five times, with backoff.
+  page is opened. If the host drops one, that load fails; the app's first
+  load is tried again briefly, then the page reloads once to fetch what is
+  missing (`ui/loadRecovery.js`). If it fails again, the page says so and
+  offers a Reload button instead of staying blank; the console names the
+  module that did not arrive.
 
 ### Peers can't find each other when I run the app locally
 
@@ -160,7 +163,7 @@ IndexedDB can't be opened within 10 seconds, the session falls back to
 `localStorage` under keys starting with `forkbuild:`.
 
 Code never touches either directly. It uses a `StorageProvider`, whose
-`save`/`load`/`remove`/`list` are synchronous: `ui/boot.js` opens the
+`save`/`load`/`remove`/`list` are synchronous: `ui/start.js` opens the
 database and reads every entry into memory before the app starts, and
 writes reach disk in the background. The exception is cold entries
 (`content:` and `snapshot:`), which are read from disk on demand. A

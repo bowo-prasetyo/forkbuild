@@ -7,18 +7,19 @@
 //   node scripts/modulepreload.mjs          rewrite the hints in index.html
 //   node scripts/modulepreload.mjs --check  exit 1 if they are out of date
 //
-// The first load is ui/boot.js and ui/main.js, which boot.js imports once
-// storage is open, with every module they reach through static imports.
+// The first load is ui/boot.js, ui/start.js (which boot.js imports) and
+// ui/main.js (which start.js imports once storage is open), with every module
+// they reach through static imports.
 // Pages and service groups are left out: they are imported with import()
 // when first needed (ui/router/index.js, ui/main.js), and preloading them
 // would load them with the app again. A preload fetches and parses a module
-// without running it, so ui/boot.js still runs ui/main.js only after storage
+// without running it, so ui/start.js still runs ui/main.js only after storage
 // is open. tests/ModulePreload.test.js fails when the hints are out of date.
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { ROOT, staticGraph } from './moduleGraph.mjs';
 
-export const FIRST_LOAD_ENTRIES = ['ui/boot.js', 'ui/main.js'];
+export const FIRST_LOAD_ENTRIES = ['ui/boot.js', 'ui/start.js', 'ui/main.js'];
 const START = '<!-- modulepreload:start';
 const END = '<!-- modulepreload:end -->';
 const INDENT = '    ';

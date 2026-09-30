@@ -286,7 +286,7 @@ Every store reaches this device's storage through StorageProvider, whose
 save/load/remove/list are synchronous, and in the browser through
 storage/LocalStorageProvider.js. That provider keeps JSON strings in a
 backend: window.localStorage by default, or the IndexedDB backend
-(storage/IndexedDbStorageBackend.js) that ui/boot.js opens before it
+(storage/IndexedDbStorageBackend.js) that ui/start.js opens before it
 imports ui/main.js, so nothing reads storage before it is ready.
 
 The IndexedDB backend reads every entry into memory when it opens and
@@ -1530,7 +1530,7 @@ parameters, and Intl number and date formatting); components import t()
 from it and expose it to their template. ui/i18n/locales.js lists the
 shipped locales and picks one: the saved choice
 (LanguageSettingsStore, 'language-settings', core/LanguageSettings.js),
-else the browser's languages, else English. ui/boot.js sets it, and the
+else the browser's languages, else English. ui/start.js sets it, and the
 page's `lang` and `dir`, after opening storage and before importing the
 app, so text is in that language from the first render. The locale never
 changes while the app runs: the Language page (`/settings/language`)
@@ -1547,16 +1547,26 @@ way; built-in library items are translated by id (ui/i18n/libraryText.js).
 Many components still write English directly and are moved over area by
 area.
 
-index.html loads the app as ES modules with no build step. ui/boot.js
-imports ui/main.js, the shell every page shares; each page but Home is
+index.html loads the app as ES modules with no build step. ui/boot.js, the
+entry point, imports ui/start.js, which opens storage, chooses the language
+and imports ui/main.js, the shell every page shares; each page but Home is
 imported the first time it is opened (ui/router/index.js), and so is the
 thumbnail renderer, which brings in Three.js
 (application/editor/CreatePreviewUseCase.js), and so is each service group
 (see "UI"). All of these go through ui/importWithRetry.js, which tries a
-failed import again with backoff. tests/InitialLoadModuleGraph.test.js fails
+failed import again with backoff. That helps only where the browser fetches
+a failed module again; Chromium keeps the failure for the life of the page.
+So when the first load still fails to download, ui/boot.js reloads the page
+once (ui/loadRecovery.js): the new page fetches what is missing, and what did
+arrive comes from the HTTP cache. A second failure within a minute of that
+reload, or one where sessionStorage cannot record it, shows a translated
+message with a Reload button in place of the app instead of reloading again;
+an error that is not a failed download is thrown as before. boot.js imports
+only loadRecovery.js, so those two small files are the only ones whose loss
+still leaves the page blank. tests/InitialLoadModuleGraph.test.js fails
 if a page, Three.js or a service group's modules are statically reachable
 from ui/main.js again. index.html lists every module of the first load (ui/boot.js,
-ui/main.js and what they statically import, breadth first) as a
+ui/start.js, ui/main.js and what they statically import, breadth first) as a
 `<link rel="modulepreload">` after the import map, so the browser requests
 them all at once rather than one import level at a time; a preload fetches
 and parses a module without running it, so ui/main.js still runs only after

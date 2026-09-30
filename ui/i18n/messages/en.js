@@ -21,6 +21,10 @@ export default Object.freeze({
     'app.nav.language': 'Language',
     'app.nav.about': 'About',
     'app.notifications': 'Notifications',
+    // Shown instead of a blank page when the app's files did not download
+    // (ui/loadRecovery.js).
+    'app.loadFailed': 'ForkBuild couldn\'t finish loading. Check your connection, then reload the page.',
+    'app.loadFailedReload': 'Reload',
 
     // The sound button and volume slider (ui/components/SoundControl.js).
     'sound.group': 'Sound',

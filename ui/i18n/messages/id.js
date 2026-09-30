@@ -22,6 +22,8 @@ export default Object.freeze({
     'app.nav.language': 'Bahasa',
     'app.nav.about': 'Tentang',
     'app.notifications': 'Notifikasi',
+    'app.loadFailed': 'ForkBuild tidak dapat selesai dimuat. Periksa koneksi Anda, lalu muat ulang halaman.',
+    'app.loadFailedReload': 'Muat ulang',
 
     // The sound button and volume slider (ui/components/SoundControl.js).
     'sound.group': 'Suara',

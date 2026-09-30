@@ -3310,3 +3310,33 @@ On a slow link every level costs a full round trip, however fast the connection 
 - Found on the way, not changed here: in Chromium a module request that fails is not requested again for the life of
   the page, so `ui/importWithRetry.js` cannot recover from a dropped request; the page stays blank, with or without the
   preloads.
+
+## Loading: a dropped request no longer leaves the page blank (unnumbered, 2026-09-30)
+
+When the host dropped a single module request while the app was starting, the page stayed blank. `ui/boot.js` retried
+the import with backoff, but Chromium keeps a failed module request's failure for the life of the page: importing again
+hands back the same error without asking the server, so every retry failed at once, and the retries only delayed the
+blank page by about 15 s.
+
+- `ui/boot.js` is now the entry point and nothing else: it imports only `ui/loadRecovery.js` and runs `ui/start.js`
+  (what `boot.js` did before: open storage, choose the language, import the app) through its `loadApp()`. When the load
+  fails to download, `loadApp()` reloads the page once: the new page fetches what is missing, and what did arrive comes
+  back from the HTTP cache. The reload's time is kept in `sessionStorage`; a second failure within a minute of it, or a
+  failure where `sessionStorage` cannot be used, shows a message with a Reload button in place of the app instead of
+  reloading again, in the chosen language when the translations loaded and in English when they did not
+  (`app.loadFailed`, `app.loadFailedReload`, translated into Indonesian and Japanese). An error that is not a failed
+  download (a bug in a module, storage that will not open) is thrown as before.
+- `ui/start.js` still retries the app's import, twice over 2 s rather than five times over 15 s, for browsers that do
+  fetch a failed module again. Pages opened later keep their retries; a page that still fails to load is not handled
+  here.
+- `boot.js` and `loadRecovery.js` are the only files whose loss still leaves the page blank: nothing can run to recover
+  without them. Both are small and among the first requested.
+- Tests: `tests/LoadRecovery.test.js` (the browsers' download errors told apart from others, one reload, the message on
+  a second failure within a minute, another reload after that, the message when nothing can record a reload, other
+  errors thrown); `tests/LoadFailureNoticeBrowser.test.js` (the message and Reload button in a real DOM, in English and
+  Japanese). `scripts/modulepreload.mjs` now also preloads from `ui/start.js`.
+- Checked in the real app in Chromium by dropping one request for each of `ui/App.js`, `ui/components/UserWidget.js`,
+  Vue, `ui/i18n/messages/en.js`, `ui/start.js` and `storage/openBrowserStorage.js`: each time the page reloaded once
+  and Home appeared, with the reload record cleared afterwards. Dropping every request for `ui/App.js` showed the message
+  after one reload, in Japanese when Japanese was chosen; dropping every request for `en.js` showed it in English. An
+  ordinary load is as fast as before.
