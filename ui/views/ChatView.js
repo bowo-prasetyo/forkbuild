@@ -3,6 +3,8 @@ import { useRoute } from 'vue-router';
 import { FriendshipState } from '../../core/FriendshipState.js';
 import { VoiceSessionState } from '../../core/VoiceSessionState.js';
 import { VoiceCallEndReason } from '../../core/VoiceCallEndReason.js';
+import { errorText, t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
 // 0.2.74 — a call that ends for a reason the person placing/receiving it
 // would not otherwise notice (BUSY/TIMEOUT/REJECTED/a media or
@@ -16,11 +18,11 @@ import { VoiceCallEndReason } from '../../core/VoiceCallEndReason.js';
 // docs/Roadmap.md's own 0.2.75 "Voice UX / Device Controls" milestone;
 // this stays exactly as small as reusing the existing `voiceError` line.
 const VOICE_END_REASON_MESSAGE = Object.freeze({
-    [VoiceCallEndReason.REJECTED]: 'Call declined.',
-    [VoiceCallEndReason.BUSY]: 'They’re already on another call.',
-    [VoiceCallEndReason.TIMEOUT]: 'No answer.',
-    [VoiceCallEndReason.MEDIA_FAILED]: 'Couldn’t access your microphone.',
-    [VoiceCallEndReason.NEGOTIATION_FAILED]: 'Call failed to connect.'
+    [VoiceCallEndReason.REJECTED]: t('chatView.callDeclined'),
+    [VoiceCallEndReason.BUSY]: t('chatView.theyReAlreadyOnAnother'),
+    [VoiceCallEndReason.TIMEOUT]: t('chatView.noAnswer'),
+    [VoiceCallEndReason.MEDIA_FAILED]: t('chatView.couldnTAccessYourMicrophone'),
+    [VoiceCallEndReason.NEGOTIATION_FAILED]: t('chatView.callFailedToConnect')
 });
 
 // 0.2.61 — Direct Peer Messaging & Live Chat.
@@ -122,8 +124,21 @@ const VOICE_END_REASON_MESSAGE = Object.freeze({
 // to any other call once it reaches CONNECTING/ACTIVE — see
 // application/chat/VoiceUseCase.js's own 0.2.86 header, "Do Not Create A
 // Multi-Device VoiceSession."
+// The relationship's state (core/FriendshipState.js) in words.
+const FRIENDSHIP_STATE_KEYS = Object.freeze({
+    [FriendshipState.NONE]: 'friendshipState.none',
+    [FriendshipState.REQUESTED]: 'friendshipState.requested',
+    [FriendshipState.FRIEND]: 'friendshipState.friend'
+});
+
+function friendshipStateText(state) {
+    const key = FRIENDSHIP_STATE_KEYS[state];
+    return key ? t(key) : state;
+}
+
 export default {
     name: 'ChatView',
+    components: { I18nText },
     setup() {
         const route = useRoute();
         const peerIdentityId = route.params.identityId;
@@ -228,18 +243,18 @@ export default {
         const callStatusLabel = computed(() => {
             if (!callForThisPeer.value) return '';
             switch (callForThisPeer.value.state) {
-                case VoiceSessionState.CALLING: return 'Calling…';
-                case VoiceSessionState.RINGING: return 'Incoming call';
-                case VoiceSessionState.CONNECTING: return 'Connecting…';
-                case VoiceSessionState.ACTIVE: return 'On call';
+                case VoiceSessionState.CALLING: return t('chatView.calling');
+                case VoiceSessionState.RINGING: return t('chatView.incomingCall');
+                case VoiceSessionState.CONNECTING: return t('chatView.connecting');
+                case VoiceSessionState.ACTIVE: return t('chatView.onCall');
                 default: return '';
             }
         });
 
         const statusLabel = computed(() => {
-            if (isBlocked.value) return 'Blocked';
-            if (!isFriend.value) return 'Not friends';
-            return isConnected.value ? 'Online · Friend' : 'Offline · Friend';
+            if (isBlocked.value) return t('chatView.blocked');
+            if (!isFriend.value) return t('chatView.notFriends');
+            return isConnected.value ? t('chatView.onlineFriend') : t('chatView.offlineFriend');
         });
 
         // 0.2.85 — no longer stores the raw peer list itself (nothing
@@ -296,7 +311,7 @@ export default {
                 chatUseCase.sendOrQueue(peerIdentityId, draft.value);
                 draft.value = '';
             } catch (e) {
-                sendError.value = e.message.replace(/^ChatUseCase:\s*/, '');
+                sendError.value = errorText(e).replace(/^ChatUseCase:\s*/, '');
             }
         }
 
@@ -307,14 +322,14 @@ export default {
             // evidence than the transport-level delivery ack alone, and
             // is only ever reachable once DELIVERED already happened.
             if (message.deliveryState === 'DELIVERED' && message.sequence <= peerReadThroughSequence.value) {
-                return 'Seen';
+                return t('chatView.seen');
             }
             switch (message.deliveryState) {
-                case 'QUEUED': return 'Queued — will send once they reconnect';
-                case 'SENT': return 'Sent';
-                case 'DELIVERED': return 'Delivered';
-                case 'EXPIRED': return 'Undelivered — expired';
-                case 'CANCELLED': return 'Undelivered — cancelled';
+                case 'QUEUED': return t('chatView.queuedWillSendOnceThey');
+                case 'SENT': return t('chatView.sent');
+                case 'DELIVERED': return t('chatView.delivered');
+                case 'EXPIRED': return t('chatView.undeliveredExpired');
+                case 'CANCELLED': return t('chatView.undeliveredCancelled');
                 default: return '';
             }
         }
@@ -360,7 +375,7 @@ export default {
                 voiceUseCase.startCallToIdentity(peerIdentityId);
                 refreshVoice();
             } catch (e) {
-                voiceError.value = e.message.replace(/^VoiceUseCase:\s*/, '');
+                voiceError.value = errorText(e).replace(/^VoiceUseCase:\s*/, '');
             }
         }
 
@@ -373,7 +388,7 @@ export default {
                 // would show a picker with nothing yet to act on.
                 await Promise.all([refreshInputDevices(), refreshOutputDevices()]);
             } catch (e) {
-                voiceError.value = e.message.replace(/^(VoiceUseCase|LocalAudioTrackProvider):\s*/, '');
+                voiceError.value = errorText(e).replace(/^(VoiceUseCase|LocalAudioTrackProvider):\s*/, '');
             }
             refreshVoice();
         }
@@ -422,7 +437,7 @@ export default {
             try {
                 await voiceUseCase.setInputDevice(deviceId);
             } catch (e) {
-                voiceError.value = e.message.replace(/^(VoiceUseCase|LocalAudioTrackProvider):\s*/, '');
+                voiceError.value = errorText(e).replace(/^(VoiceUseCase|LocalAudioTrackProvider):\s*/, '');
             }
             // Re-reads the STANDING preference regardless of success —
             // on failure this restores the dropdown to whatever device is
@@ -446,7 +461,7 @@ export default {
                 await remoteAudioEl.value.setSinkId(deviceId);
                 selectedOutputDeviceId.value = deviceId;
             } catch {
-                voiceError.value = 'Could not switch to that speaker.';
+                voiceError.value = t('chatView.couldNotSwitchSpeaker');
             }
         }
 
@@ -516,7 +531,7 @@ export default {
                 // 0.2.75 — see this view's own header, item (3).
                 unsubscribeMicrophoneUnavailable = voiceUseCase.onMicrophoneUnavailable((callId, peerId) => {
                     if (callForThisPeer.value && callForThisPeer.value.callId === callId && peerId === peerIdentityId) {
-                        micProblem.value = 'Your microphone disappeared — the call continues without your audio.';
+                        micProblem.value = t('chatView.microphoneDisappeared');
                     }
                 });
             }
@@ -534,6 +549,7 @@ export default {
         });
 
         return {
+            t, friendshipStateText,
             peerIdentityId, isAuthenticated, messages, draft, sendError, messageListEl,
             displayName, shortId, isConnected, isBlocked, isFriend, canChat, statusLabel,
             send, formatTime, deliveryLabel, presence, showDetail,
@@ -550,7 +566,7 @@ export default {
     template: `
         <section class="chat-view">
             <p v-if="!isAuthenticated" class="form-hint form-hint--neutral">
-                Sign in to an identity (see <router-link to="/identity">My Identities</router-link>) to chat.
+                <I18nText keypath="chatView.signInToAnIdentity"><template #myIdentities><router-link to="/identity">{{ t('chatView.myIdentities') }}</router-link></template></I18nText>
             </p>
             <template v-else>
                 <header class="chat-header">
@@ -560,14 +576,14 @@ export default {
                     </span>
                     <!-- 0.2.73 -->
                     <button v-if="!callForThisPeer" type="button" class="action-btn call-btn"
-                            :disabled="!canCall" @click="call" title="Start a voice call">
-                        📞 Call
+                            :disabled="!canCall" @click="call" :title="t('chatView.startAVoiceCall')">
+                        {{ t('chatView.call') }}
                     </button>
                 </header>
                 <p class="identity-mgmt-status">
                     {{ shortId(peerIdentityId) }}
                     <button type="button" class="chat-detail-toggle" @click="showDetail = !showDetail">
-                        {{ showDetail ? 'Hide details' : 'Show details' }}
+                        {{ showDetail ? t('chatView.hideDetails') : t('chatView.showDetails') }}
                     </button>
                 </p>
 
@@ -577,26 +593,26 @@ export default {
                 <div v-if="callForThisPeer" class="call-bar">
                     <span class="call-bar-status">{{ callStatusLabel }}</span>
                     <template v-if="isRinging">
-                        <button type="button" class="action-btn action-btn--primary" @click="acceptIncomingCall">Accept</button>
-                        <button type="button" class="action-btn" @click="rejectIncomingCall">Decline</button>
+                        <button type="button" class="action-btn action-btn--primary" @click="acceptIncomingCall">{{ t('chatView.accept') }}</button>
+                        <button type="button" class="action-btn" @click="rejectIncomingCall">{{ t('chatView.decline') }}</button>
                     </template>
                     <template v-else-if="isInCallWithThisPeer">
                         <!-- 0.2.75 — device pickers only once media is
                              actually attached; see this view's own header. -->
                         <template v-if="hasMediaAttached">
                             <select v-if="inputDevices.length" class="call-device-select" v-model="selectedInputDeviceId"
-                                    @change="changeInputDevice" title="Microphone">
-                                <option value="">System default mic</option>
-                                <option v-for="d in inputDevices" :key="d.deviceId" :value="d.deviceId">{{ d.label || 'Microphone' }}</option>
+                                    @change="changeInputDevice" :title="t('chatView.microphone')">
+                                <option value="">{{ t('chatView.systemDefaultMic') }}</option>
+                                <option v-for="d in inputDevices" :key="d.deviceId" :value="d.deviceId">{{ d.label || t('chatView.microphone2') }}</option>
                             </select>
                             <select v-if="outputDevices.length" class="call-device-select" v-model="selectedOutputDeviceId"
-                                    @change="changeOutputDevice" title="Speaker">
-                                <option value="">System default speaker</option>
-                                <option v-for="d in outputDevices" :key="d.deviceId" :value="d.deviceId">{{ d.label || 'Speaker' }}</option>
+                                    @change="changeOutputDevice" :title="t('chatView.speaker')">
+                                <option value="">{{ t('chatView.systemDefaultSpeaker') }}</option>
+                                <option v-for="d in outputDevices" :key="d.deviceId" :value="d.deviceId">{{ d.label || t('chatView.speaker2') }}</option>
                             </select>
-                            <button type="button" class="action-btn" @click="toggleMute">{{ isMuted ? 'Unmute' : 'Mute' }}</button>
+                            <button type="button" class="action-btn" @click="toggleMute">{{ isMuted ? t('chatView.unmute') : t('chatView.mute') }}</button>
                         </template>
-                        <button type="button" class="action-btn call-btn--end" @click="hangUp">{{ isOutgoingRinging ? 'Cancel' : 'Hang Up' }}</button>
+                        <button type="button" class="action-btn call-btn--end" @click="hangUp">{{ isOutgoingRinging ? t('chatView.cancel') : t('chatView.hangUp') }}</button>
                     </template>
                     <audio ref="remoteAudioEl" autoplay></audio>
                 </div>
@@ -611,35 +627,33 @@ export default {
                      own header on why offline never implies any of the
                      other four are also gone. -->
                 <div v-if="showDetail" class="peer-detail-row chat-detail-panel">
-                    <p class="identity-mgmt-status">Identity: known ({{ shortId(peerIdentityId) }})</p>
-                    <p class="identity-mgmt-status">Relationship: {{ presence.relationship ? 'remembered' : 'not remembered' }}</p>
-                    <p class="identity-mgmt-status">Friendship: {{ presence.friendshipState }}</p>
-                    <p class="identity-mgmt-status">Connection: {{ presence.isConnectedNow ? 'CONNECTED' : 'DISCONNECTED' }}</p>
+                    <p class="identity-mgmt-status">{{ t('chatView.identityKnown', { peerIdentityId: shortId(peerIdentityId) }) }}</p>
+                    <p class="identity-mgmt-status">{{ t('chatView.relationship', { relationship: presence.relationship ? t('chatView.remembered') : t('chatView.notRemembered') }) }}</p>
+                    <p class="identity-mgmt-status">{{ t('chatView.friendship', { friendshipState: friendshipStateText(presence.friendshipState) }) }}</p>
+                    <p class="identity-mgmt-status">{{ t('chatView.connection', { state: presence.isConnectedNow ? t('chatView.connected') : t('chatView.disconnected') }) }}</p>
                     <p class="identity-mgmt-status">
-                        Conversation: {{ presence.conversation.messageCount }} message{{ presence.conversation.messageCount === 1 ? '' : 's' }}
+                        {{ t('chatView.conversationMessages', { count: presence.conversation.messageCount }) }}
                         <template v-if="presence.conversation.pendingOutboxCount > 0">
-                            · {{ presence.conversation.pendingOutboxCount }} waiting to send
+                            {{ t('chatView.waitingToSend', { pendingOutboxCount: presence.conversation.pendingOutboxCount }) }}
                         </template>
                     </p>
                 </div>
 
                 <p v-if="isBlocked" class="form-hint form-hint--neutral">
-                    ⛔ This identity is blocked — unblock it from <router-link to="/peers">Peers</router-link> to chat again.
+                    <I18nText keypath="chatView.thisIdentityIsBlockedUnblock"><template #peers><router-link to="/peers">{{ t('chatView.peers') }}</router-link></template></I18nText>
                 </p>
                 <p v-else-if="!isFriend" class="form-hint form-hint--neutral">
-                    Chat requires a mutual friendship — send or accept a friend request from
-                    <router-link to="/peers">Peers</router-link> first.
+                    <I18nText keypath="chatView.chatRequiresAMutualFriendship"><template #peers><router-link to="/peers">{{ t('chatView.peers') }}</router-link></template></I18nText>
                 </p>
                 <p v-else-if="!isConnected" class="form-hint form-hint--neutral">
-                    Not connected right now — a message you send will be queued locally and
-                    delivered once they reconnect.
+                    {{ t('chatView.notConnectedRightNowA') }}
                 </p>
 
                 <div ref="messageListEl" class="chat-message-list">
-                    <p v-if="!messages.length" class="form-hint form-hint--neutral">No messages yet.</p>
+                    <p v-if="!messages.length" class="form-hint form-hint--neutral">{{ t('chatView.noMessagesYet') }}</p>
                     <div v-for="message in messages" :key="message.messageId"
                          class="chat-message" :class="'chat-message--' + message.direction">
-                        <span class="chat-message-author">{{ message.direction === 'outgoing' ? 'You' : displayName() }}</span>
+                        <span class="chat-message-author">{{ message.direction === 'outgoing' ? t('chatView.you') : displayName() }}</span>
                         <span class="chat-message-body">{{ message.body }}</span>
                         <span class="chat-message-time">{{ formatTime(message.timestamp) }}</span>
                         <span v-if="deliveryLabel(message)" class="chat-message-delivery">{{ deliveryLabel(message) }}</span>
@@ -651,10 +665,10 @@ export default {
                 <form class="chat-compose" @submit.prevent="send">
                     <input type="text" class="form-input chat-compose-input" v-model="draft"
                            :disabled="!canChat"
-                           placeholder="Type a message…" maxlength="4000" />
+                           :placeholder="t('chatView.typeAMessage')" maxlength="4000" />
                     <button type="submit" class="action-btn action-btn--primary"
                             :disabled="!canChat || !draft.trim()">
-                        Send
+                        {{ t('chatView.send') }}
                     </button>
                 </form>
             </template>

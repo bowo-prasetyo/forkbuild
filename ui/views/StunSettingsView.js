@@ -1,6 +1,7 @@
 import { inject } from 'vue';
 import { useEndpointListSettings } from '../composables/useEndpointListSettings.js';
 import { DEFAULT_ICE_SERVERS } from '../../peer/IceServerConfig.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.9.386 — STUN Settings UI.
 //
@@ -96,17 +97,17 @@ export default {
             entriesOf: (configuration) => configuration.servers.map((server) => server.urls),
             toRequest: (urls) => ({ servers: urls.map((url) => ({ urls: url })) })
         });
-        return { ...settings, serversInput: settings.input };
+        return { t, ...settings, serversInput: settings.input };
     },
     template: `
         <section class="stun-settings-view">
-            <h1>STUN Servers</h1>
+            <h1>{{ t('stunSettingsView.stunServers') }}</h1>
             <p class="form-hint form-hint--neutral">
-                STUN servers used for NAT traversal when establishing peer connections. This setting affects connection setup only; it does not change peer identity, authentication, or any existing connection.
+                {{ t('stunSettingsView.stunServersUsedForNat') }}
             </p>
 
-            <p v-if="hasOverride" class="form-hint form-hint--neutral">Using your saved servers:</p>
-            <p v-else class="form-hint form-hint--neutral">Using the default servers:</p>
+            <p v-if="hasOverride" class="form-hint form-hint--neutral">{{ t('stunSettingsView.usingYourSavedServers') }}</p>
+            <p v-else class="form-hint form-hint--neutral">{{ t('stunSettingsView.usingTheDefaultServers') }}</p>
             <ul class="endpoint-settings-list">
                 <li v-for="url in effectiveEntries" :key="url">{{ url }}</li>
             </ul>
@@ -118,14 +119,14 @@ export default {
                     rows="5"
                     class="stun-settings-input form-textarea"
                 ></textarea>
-                <p class="form-hint form-hint--neutral">One STUN server URL per line (e.g. stun:stun.l.google.com:19302).</p>
+                <p class="form-hint form-hint--neutral">{{ t('stunSettingsView.oneStunServerUrlPer') }}</p>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
-                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
-                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Reset — now using the default servers.</p>
+                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('stunSettingsView.saved') }}</p>
+                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">{{ t('stunSettingsView.resetNowUsingTheDefault') }}</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">Save</button>
-                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">Reset to Defaults</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">{{ t('stunSettingsView.save') }}</button>
+                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">{{ t('stunSettingsView.resetToDefaults') }}</button>
             </div>
         </section>
     `

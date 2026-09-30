@@ -21,29 +21,27 @@ export default {
     emits: ['update:passphrase', 'update:confirmation', 'update:allowUnprotected', 'submit'],
     setup(props) {
         const evaluation = computed(() => evaluateNewPassphrase(props));
-        return { evaluation, t };
+        return { t, evaluation, t };
     },
     template: `
         <div class="new-passphrase-fields">
             <input :value="passphrase" type="password" class="modal-input" autocomplete="new-password"
-                   placeholder="Passphrase (recommended)"
+                   :placeholder="t('newPassphraseFields.passphraseRecommended')"
                    @input="$emit('update:passphrase', $event.target.value)" @keydown.enter="$emit('submit')" />
             <input v-if="passphrase" :value="confirmation" type="password" class="modal-input" autocomplete="new-password"
-                   placeholder="Repeat the passphrase"
+                   :placeholder="t('newPassphraseFields.repeatThePassphrase')"
                    @input="$emit('update:confirmation', $event.target.value)" @keydown.enter="$emit('submit')" />
             <p class="form-hint form-hint--neutral">
-                At least 8 characters. The passphrase encrypts this identity's private key on this device.
-                There is no reset: if you forget it, the key cannot be recovered.
+                {{ t('newPassphraseFields.atLeast8CharactersThe') }}
             </p>
             <template v-if="offerUnprotected && !passphrase">
                 <p class="form-hint">
-                    Without a passphrase the private key is stored unencrypted in this browser, and anything
-                    that can read this site's storage can sign as this identity.
+                    {{ t('newPassphraseFields.withoutAPassphraseThePrivate') }}
                 </p>
                 <label class="new-passphrase-optout">
                     <input type="checkbox" :checked="allowUnprotected"
                            @change="$emit('update:allowUnprotected', $event.target.checked)" />
-                    Create without a passphrase
+                    {{ t('newPassphraseFields.createWithoutAPassphrase') }}
                 </label>
             </template>
             <p v-if="showHint && evaluation.message" class="identity-unlock-error">{{ t(evaluation.message) }}</p>

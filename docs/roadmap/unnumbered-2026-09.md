@@ -3087,3 +3087,28 @@ pages can now be shown in another language. Identity, Peers, Chat, Following and
   them with real Vue.
 - Not done: the technical reason a publication failed its check (the checker's own detail) stays English, as does
   a new document's default title.
+
+## Internationalization, phase 3: Identity, Peers, Chat and settings (unnumbered, 2026-09-30)
+
+The last area moved to `t()`: Identity, Peers, Chat, Conversations, Following, Your Data, About, the avatar page and
+every settings page, with the sign-in dialog, the user menu, the backup and experimental banners, the notification
+history and the visibility form. With it every page of the app can be shown in another language.
+
+- Components: `ui/App.js`, `LoginModal`, `UserWidget`, `NewPassphraseFields`, `NotificationHistoryPanel`,
+  `VisibilityPolicyForm`, `BackupReminderBanner`, `ExperimentalBanner`, `IdentityManagementView`,
+  `PeerConnectionsView` with `ui/views/peerConnections/`, `ChatView`, `ConversationsView`, `FollowingView`,
+  `YourDataView`, `AboutView`, `AvatarSettingsView`, `NetworkSettingsView` and each endpoint and provider settings
+  page, and the composables `useEndpointSettingsForm` and `useRoleProviderPreferenceForm`. Counts use plural forms
+  and dates follow the chosen language; a sentence with a link, button or bold name inside is one `I18nText`
+  message. A friendship's state, an avatar part, a backup group and a provider option read as words, not codes.
+- Below the UI: refusals a person reads from `application/avatar/`, `backup/`, `chat/`, `identity/`, `peer/`,
+  `presence/` and `identity/LocalIdentityProvider.js` (sign in first, already friends, wrong passphrase with the
+  attempts left, a folder the browser won't allow …) are `UserFacingError`s with `refusal.*` messages; each keeps
+  its old English as the developer detail. `NotificationHistoryAccess` passes such an error on unchanged instead
+  of wrapping it. Every view shows errors with `errorText()`.
+- Tests: the older tests that read this area's wording from its source read through `withEnglish()`. Checked in
+  the real app in the pseudo-locale on every page named above, with an identity signed in: no plain English but
+  names, addresses and data, and no warnings. `PeersPageLayoutBrowser` caught a date helper the Peers template
+  used but was not given.
+- Not done: resident speech in World View, a publication check's technical detail, and history labels and a new
+  document's default title (stored in documents) stay English.

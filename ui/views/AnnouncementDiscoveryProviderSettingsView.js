@@ -3,6 +3,7 @@ import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPre
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/settings/RoleProviderPreferenceSettingsView.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
+import { displayText, t } from '../i18n/i18n.js';
 
 // Mirrors ui/views/ContentProviderSettingsView.js's own shape, one role
 // over — the same small, dedicated settings page, the same
@@ -57,33 +58,35 @@ export default {
         }).options));
 
         return {
+            t,
+            displayText,
             settings, selectedProviderKey: form.selectedProviderKey,
             saveError: form.saveError, saveStatus: form.saveStatus, save: form.save
         };
     },
     template: `
         <section class="announcement-discovery-provider-settings-view">
-            <h1>Announcement / Discovery Provider</h1>
+            <h1>{{ t('announcementDiscoveryProviderSettingsView.announcementDiscoveryProvider') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Choose the default decentralized substrate — Nostr, Arweave or Steem — your Publications, Snapshots, Place Naming claims, and Commentary are announced on. A page or control offering its own explicit choice still overrides this default for that one action.
+                {{ t('announcementDiscoveryProviderSettingsView.chooseTheDefaultDecentralizedSubstrate') }}
             </p>
             <p class="form-hint form-hint--neutral">
-                This choice never narrows discovery: finding other people's content always searches Nostr, Arweave and Steem together.
+                {{ t('announcementDiscoveryProviderSettingsView.thisChoiceNeverNarrowsDiscovery') }}
             </p>
             <p class="form-hint form-hint--neutral">
-                Saving here takes effect the next time this app loads — it never changes an announcement already in flight.
+                {{ t('announcementDiscoveryProviderSettingsView.savingHereTakesEffectThe') }}
             </p>
 
             <div class="announcement-discovery-provider-settings-form">
                 <label v-for="opt in settings" :key="opt.providerKey" class="announcement-discovery-provider-option">
                     <input type="radio" name="announcement-discovery-provider-preference" :value="opt.providerKey" v-model="selectedProviderKey" />
-                    {{ opt.label }}
+                    {{ displayText(opt.label) }}
                 </label>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
-                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
+                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('announcementDiscoveryProviderSettingsView.saved') }}</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="!selectedProviderKey">Save</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!selectedProviderKey">{{ t('announcementDiscoveryProviderSettingsView.save') }}</button>
             </div>
         </section>
     `

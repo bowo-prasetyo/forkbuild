@@ -1,6 +1,8 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { PeerIdentity } from '../../peer/PeerIdentity.js';
 import { PeerRelationship } from '../../core/PeerRelationship.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const RELATIONSHIPS_CHANGED_EVENT = 'PeerRelationshipsChanged';
 const STORAGE_KEY_PREFIX = 'peer-relationships:';
@@ -120,7 +122,7 @@ export class PeerRelationshipUseCase {
         const all = this._loadAll();
         const existing = all.find((r) => r.identityId === identityId);
         if (!existing) {
-            throw new Error('PeerRelationshipUseCase: no known peer with that identity — remember them first');
+            throw new UserFacingError(message('refusal.noKnownPeerWithThat'), { detail: 'PeerRelationshipUseCase: no known peer with that identity — remember them first' });
         }
         const updated = existing.withAlias(alias);
         this._saveAll(owner, replaceById(all, updated));
@@ -141,7 +143,7 @@ export class PeerRelationshipUseCase {
         const owner = this._requireCurrentUsername();
         const all = this._loadAll();
         if (!all.some((r) => r.identityId === identityId)) {
-            throw new Error('PeerRelationshipUseCase: no known peer with that identity');
+            throw new UserFacingError(message('refusal.noKnownPeerWithThat2'), { detail: 'PeerRelationshipUseCase: no known peer with that identity' });
         }
         this._saveAll(owner, all.filter((r) => r.identityId !== identityId));
         this._publishChange();
@@ -179,7 +181,7 @@ export class PeerRelationshipUseCase {
     _requireCurrentUsername() {
         const owner = this._currentUsernameOrNull();
         if (!owner) {
-            throw new Error('PeerRelationshipUseCase: no user is currently logged in');
+            throw new UserFacingError(message('refusal.noUserIsCurrentlyLogged'), { detail: 'PeerRelationshipUseCase: no user is currently logged in' });
         }
         return owner;
     }

@@ -28,6 +28,9 @@
 // microphone provider — or application/chat/VoiceUseCase.js, one layer up —
 // has any business deciding; see that file's own header on why output
 // selection stays entirely a UI/platform concern.
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
+
 export class LocalAudioTrackProvider {
     constructor({ mediaDevices = (typeof navigator !== 'undefined' ? navigator.mediaDevices : null) } = {}) {
         this._mediaDevices = mediaDevices;
@@ -46,13 +49,13 @@ export class LocalAudioTrackProvider {
     // fails peer/PeerAuthenticationSession.js#start().
     async getLocalAudioTrack(deviceId = null) {
         if (!this._mediaDevices || typeof this._mediaDevices.getUserMedia !== 'function') {
-            throw new Error('LocalAudioTrackProvider: no microphone access is available in this environment');
+            throw new UserFacingError(message('refusal.noMicrophoneAccessIsAvailable'), { detail: 'LocalAudioTrackProvider: no microphone access is available in this environment' });
         }
         const audioConstraint = deviceId ? { deviceId: { exact: deviceId } } : true;
         const stream = await this._mediaDevices.getUserMedia({ audio: audioConstraint, video: false });
         const [track] = stream.getAudioTracks();
         if (!track) {
-            throw new Error('LocalAudioTrackProvider: no audio track was returned by getUserMedia');
+            throw new UserFacingError(message('refusal.noAudioTrackWasReturned'), { detail: 'LocalAudioTrackProvider: no audio track was returned by getUserMedia' });
         }
         this._streamsByTrack.set(track, stream);
         return track;

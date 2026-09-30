@@ -1,5 +1,7 @@
 import { PresenceVisibilityPolicy } from '../../core/PresenceVisibilityPolicy.js';
 import { isValidPresenceVisibility } from '../../core/PresenceVisibility.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const STORAGE_KEY_PREFIX = 'presence-visibility:';
 
@@ -62,7 +64,7 @@ export class PresenceVisibilityUseCase {
     _requireCurrentUsername() {
         const user = this._identityProvider.currentUser();
         if (!user) {
-            throw new Error('PresenceVisibilityUseCase: no user is currently logged in');
+            throw new UserFacingError(message('refusal.noUserIsCurrentlyLogged'), { detail: 'PresenceVisibilityUseCase: no user is currently logged in' });
         }
         return user.username;
     }

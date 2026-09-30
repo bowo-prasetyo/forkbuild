@@ -92,6 +92,8 @@
 // restraint `refreshPublicationCommentaries()` already uses. This is the
 // one deliberate distinction this panel draws: "no notifications" and
 // "notifications could not be loaded" are never the same rendered state.
+import { errorText, t } from '../i18n/i18n.js';
+
 export default {
     name: 'NotificationHistoryPanel',
     props: {
@@ -125,6 +127,7 @@ export default {
         this.refreshNotificationHistory();
     },
     methods: {
+        t,
         // The only writer of `notifications`/`notificationHistoryError`,
         // and the only call site of `getRecipientNotificationEventsCommand`
         // in this file. No capability wired -> empty state, no error.
@@ -148,7 +151,7 @@ export default {
                 this.notifications = Array.isArray(events) ? events : [];
                 this.notificationHistoryError = null;
             } catch (error) {
-                this.notificationHistoryError = (error && error.message) ? error.message : 'Notifications could not be loaded.';
+                this.notificationHistoryError = errorText(error, t('notificationHistoryPanel.notificationsCouldNotBeLoaded'));
             }
         },
         // 0.9.530 — the one payload field this panel treats as
@@ -203,15 +206,14 @@ export default {
     template: `
         <div
             role="dialog"
-            aria-label="Notification History"
+            :aria-label="t('notificationHistoryPanel.notificationHistory')"
             class="modal-overlay"
             @click.self="$emit('cancel')"
         >
             <div class="modal-panel notification-history-panel">
-                <h3>Notification History</h3>
+                <h3>{{ t('notificationHistoryPanel.notificationHistory') }}</h3>
                 <p class="locations-panel-hint">
-                    A durable record of notification facts addressed to you —
-                    not an inbox. There is no read/unread state here.
+                    {{ t('notificationHistoryPanel.aDurableRecordOfNotification') }}
                 </p>
 
                 <p v-if="notificationHistoryError" class="notification-history-panel-error">
@@ -219,7 +221,7 @@ export default {
                 </p>
 
                 <p v-else-if="notifications.length === 0" class="locations-panel-empty">
-                    No notifications yet.
+                    {{ t('notificationHistoryPanel.noNotificationsYet') }}
                 </p>
 
                 <ul v-else class="locations-panel-list notification-history-list">
@@ -247,15 +249,15 @@ export default {
                                 v-if="!unavailablePublicationNotificationIds.has(event.notificationId)"
                                 class="action-btn action-btn--explore"
                                 @click="viewNotificationPublication(event)"
-                            >Explore</button>
-                            <span v-else class="notification-history-item-unavailable">No longer available</span>
+                            >{{ t('notificationHistoryPanel.explore') }}</button>
+                            <span v-else class="notification-history-item-unavailable">{{ t('notificationHistoryPanel.noLongerAvailable') }}</span>
                         </div>
                     </li>
                 </ul>
 
                 <div class="modal-actions notification-history-actions">
-                    <button class="action-btn" @click="refreshNotificationHistory">Refresh</button>
-                    <button class="action-btn" @click="$emit('cancel')">Close</button>
+                    <button class="action-btn" @click="refreshNotificationHistory">{{ t('notificationHistoryPanel.refresh') }}</button>
+                    <button class="action-btn" @click="$emit('cancel')">{{ t('notificationHistoryPanel.close') }}</button>
                 </div>
             </div>
         </div>

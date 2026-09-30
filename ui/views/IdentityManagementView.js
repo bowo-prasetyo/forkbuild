@@ -1,6 +1,8 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import NewPassphraseFields from '../components/NewPassphraseFields.js';
 import { evaluateNewPassphrase } from '../../application/identity/NewPassphrasePolicy.js';
+import { errorText, t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
 // 0.2.48 — Identity Management: a dedicated view for what LoginModal was
 // deliberately never meant to grow into. LoginModal answers "which
@@ -29,7 +31,7 @@ import { evaluateNewPassphrase } from '../../application/identity/NewPassphraseP
 // validation needs no secret" property.
 export default {
     name: 'IdentityManagementView',
-    components: { NewPassphraseFields },
+    components: { I18nText, NewPassphraseFields },
     // A plain `autofocus` attribute only works on page load, not on an
     // input Vue inserts later, which is how every form here appears.
     directives: {
@@ -74,7 +76,7 @@ export default {
         // name ("LocalIdentityProvider: incorrect passphrase…"), which
         // means nothing to the person reading it.
         function displayError(e) {
-            return e.message.replace(/^[A-Za-z.]+:\s*/, '');
+            return errorText(e).replace(/^[A-Za-z.]+:\s*/, '');
         }
 
         // --- per-identity action forms -----------------------------------------
@@ -287,7 +289,7 @@ export default {
             importResult.value = null;
             const pkg = parsedImport.value;
             if (pkg === undefined) {
-                importError.value = 'That is not valid JSON — paste the exported identity file\'s contents exactly.';
+                importError.value = t('identityManagementView.notValidJson');
                 return;
             }
             importing.value = true;
@@ -380,6 +382,7 @@ export default {
         });
 
         return {
+            t,
             sortedIdentities, shortId, isCurrentSession, isUnlocked,
             form, isFormOpen, openFormFor, closeForm,
             confirmUnlock, lockIdentity,
@@ -393,15 +396,9 @@ export default {
     },
     template: `
         <section class="identity-management-view">
-            <h1>My Identities</h1>
+            <h1>{{ t('identityManagementView.myIdentities') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Every identity listed here is a keypair THIS device holds. Export
-                a protected copy to move an identity to another device;
-                import a copy exported from this device (or another one) to
-                bring an identity here. There is no password reset — the
-                export passphrase protects the private key, and losing both
-                the exported file and its passphrase means the identity
-                cannot be recovered by anyone, including its owner.
+                {{ t('identityManagementView.everyIdentityListedHereIs') }}
             </p>
 
             <div v-if="sortedIdentities.length" class="identity-mgmt-list">
@@ -409,7 +406,7 @@ export default {
                     <div class="identity-mgmt-card-header">
                         <span class="identity-mgmt-name">
                             <span v-if="identity.isProtected" class="identity-lock-icon"
-                                  :title="isUnlocked(identity) ? 'Protected — currently unlocked' : 'Protected — currently locked'">
+                                  :title="isUnlocked(identity) ? t('identityManagementView.protectedCurrentlyUnlocked') : t('identityManagementView.protectedCurrentlyLocked')">
                                 {{ isUnlocked(identity) ? '🔓' : '🔒' }}
                             </span>
                             {{ identity.label }}
@@ -417,173 +414,168 @@ export default {
                         <span class="identity-list-item-id">…{{ shortId(identity.identityId) }}</span>
                     </div>
                     <p class="identity-mgmt-status">
-                        {{ isCurrentSession(identity) ? 'Authenticated' : 'Not signed in' }}
-                        <template v-if="identity.isProtected"> · {{ isUnlocked(identity) ? 'Unlocked' : 'Locked' }}</template>
-                        <template v-else> · <span class="identity-unprotected-badge" title="The private key is stored unencrypted in this browser">⚠ Unprotected</span></template>
-                        <template v-if="identity.lifecycleState === 'REVOKED'"> · <span class="identity-revoked-badge">⚠ Revoked</span></template>
+                        {{ isCurrentSession(identity) ? t('identityManagementView.authenticated') : t('identityManagementView.notSignedIn') }}
+                        <template v-if="identity.isProtected"> · {{ isUnlocked(identity) ? t('identityManagementView.unlocked') : t('identityManagementView.locked') }}</template>
+                        <template v-else> · <span class="identity-unprotected-badge" :title="t('identityManagementView.thePrivateKeyIsStored')">{{ t('identityManagementView.unprotected') }}</span></template>
+                        <template v-if="identity.lifecycleState === 'REVOKED'"> · <span class="identity-revoked-badge">{{ t('identityManagementView.revoked') }}</span></template>
                     </p>
                     <p v-if="identity.successorIdentityId" class="form-hint form-hint--neutral">
-                        Successor: …{{ shortId(identity.successorIdentityId) }}
+                        {{ t('identityManagementView.successor', { successorIdentityId: shortId(identity.successorIdentityId) }) }}
                     </p>
 
                     <div v-if="isFormOpen('unlock', identity)" class="identity-unlock-form">
-                        <p class="identity-unlock-label">🔒 Enter the passphrase for <strong>{{ identity.label }}</strong></p>
-                        <input v-model="form.passphrase" type="password" placeholder="Passphrase" class="modal-input"
+                        <p class="identity-unlock-label"><I18nText keypath="identityManagementView.enterThePassphraseFor"><template #name><strong>{{ identity.label }}</strong></template></I18nText></p>
+                        <input v-model="form.passphrase" type="password" :placeholder="t('identityManagementView.passphrase')" class="modal-input"
                                autocomplete="new-password" v-focus @keydown.enter="confirmUnlock" @keydown.escape="closeForm" />
                         <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                         <div class="modal-actions">
-                            <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
-                            <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmUnlock">{{ form.busy ? 'Unlocking…' : 'Unlock' }}</button>
+                            <button class="modal-btn modal-btn--secondary" @click="closeForm">{{ t('identityManagementView.cancel') }}</button>
+                            <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmUnlock">{{ form.busy ? t('identityManagementView.unlocking') : t('identityManagementView.unlock2') }}</button>
                         </div>
                     </div>
 
                     <div v-else-if="isFormOpen('export', identity)" class="identity-unlock-form">
                         <p class="identity-unlock-label">
-                            Exporting requires the passphrase again, even if this identity is currently unlocked.
+                            {{ t('identityManagementView.exportingRequiresThePassphraseAgain') }}
                         </p>
                         <template v-if="!exportedJson">
                             <input v-model="form.passphrase" type="password"
-                                   :placeholder="identity.isProtected ? 'Current passphrase' : 'Choose a passphrase to protect the export'"
+                                   :placeholder="identity.isProtected ? t('identityManagementView.currentPassphrase2') : t('identityManagementView.chooseAPassphraseToProtect')"
                                    class="modal-input" autocomplete="new-password" v-focus @keydown.enter="confirmExport" @keydown.escape="closeForm" />
                             <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                             <div class="modal-actions">
-                                <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
-                                <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmExport">{{ form.busy ? 'Encrypting…' : 'Export' }}</button>
+                                <button class="modal-btn modal-btn--secondary" @click="closeForm">{{ t('identityManagementView.cancel') }}</button>
+                                <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmExport">{{ form.busy ? t('identityManagementView.encrypting') : t('identityManagementView.export') }}</button>
                             </div>
                         </template>
                         <template v-else>
                             <p class="form-hint form-hint--neutral">
-                                Save this file somewhere safe. Anyone with BOTH this file and its
-                                passphrase can act as {{ identity.label }} — treat it like the private key it contains.
+                                {{ t('identityManagementView.saveThisFileSomewhereSafe', { label: identity.label }) }}
                             </p>
                             <textarea class="form-input identity-export-json" rows="6" readonly :value="exportedJson"></textarea>
                             <div class="modal-actions">
-                                <button class="modal-btn modal-btn--secondary" @click="closeForm">Close</button>
-                                <a class="modal-btn modal-btn--primary" :href="exportDownloadHref" :download="exportFileName(identity)">Download</a>
+                                <button class="modal-btn modal-btn--secondary" @click="closeForm">{{ t('identityManagementView.close') }}</button>
+                                <a class="modal-btn modal-btn--primary" :href="exportDownloadHref" :download="exportFileName(identity)">{{ t('identityManagementView.download') }}</a>
                             </div>
                         </template>
                     </div>
 
                     <div v-else-if="isFormOpen('changePassphrase', identity)" class="identity-unlock-form">
-                        <p class="identity-unlock-label">Changing the passphrase never changes the identity itself — its identityId, public key, and every signature it has ever produced stay exactly as valid as before.</p>
-                        <input v-model="form.passphrase" type="password" placeholder="Current passphrase" class="modal-input" autocomplete="new-password" v-focus />
+                        <p class="identity-unlock-label">{{ t('identityManagementView.changingThePassphraseNeverChanges') }}</p>
+                        <input v-model="form.passphrase" type="password" :placeholder="t('identityManagementView.currentPassphrase')" class="modal-input" autocomplete="new-password" v-focus />
                         <NewPassphraseFields v-model:passphrase="form.newPassphrase" v-model:confirmation="form.newPassphraseConfirmation"
                                              :offer-unprotected="false" :show-hint="form.attempted" @submit="confirmChangePassphrase" />
                         <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                         <div class="modal-actions">
-                            <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
-                            <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmChangePassphrase">{{ form.busy ? 'Changing…' : 'Change Passphrase' }}</button>
+                            <button class="modal-btn modal-btn--secondary" @click="closeForm">{{ t('identityManagementView.cancel') }}</button>
+                            <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmChangePassphrase">{{ form.busy ? t('identityManagementView.changing') : t('identityManagementView.changePassphrase2') }}</button>
                         </div>
                     </div>
 
                     <div v-else-if="isFormOpen('protect', identity)" class="identity-unlock-form">
                         <p class="identity-unlock-label">
-                            Protecting {{ identity.label }} encrypts its private key with a passphrase. The identity itself —
-                            its identityId, public key and signatures — does not change. It will be locked until you unlock it.
+                            {{ t('identityManagementView.protectingEncryptsItsPrivateKey', { label: identity.label }) }}
                         </p>
                         <NewPassphraseFields v-model:passphrase="form.newPassphrase" v-model:confirmation="form.newPassphraseConfirmation"
                                              :offer-unprotected="false" :show-hint="form.attempted" @submit="confirmProtect" />
                         <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                         <div class="modal-actions">
-                            <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
-                            <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmProtect">{{ form.busy ? 'Protecting…' : 'Protect Identity' }}</button>
+                            <button class="modal-btn modal-btn--secondary" @click="closeForm">{{ t('identityManagementView.cancel') }}</button>
+                            <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmProtect">{{ form.busy ? t('identityManagementView.protecting') : t('identityManagementView.protectIdentity') }}</button>
                         </div>
                     </div>
 
                     <div v-else-if="isFormOpen('declareSuccessor', identity)" class="identity-unlock-form">
                         <p class="identity-unlock-label">
-                            Declaring a successor signs a statement that another identity replaces this one. It does NOT revoke this identity — do that separately, below, when the rotation should actually take effect.
+                            {{ t('identityManagementView.declaringASuccessorSignsA') }}
                         </p>
-                        <input v-model="form.successorIdentityId" type="text" placeholder="Successor identity (did:key:z…)" class="modal-input" autocomplete="off" v-focus />
-                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="form.passphrase" type="password" placeholder="Passphrase" class="modal-input" autocomplete="new-password" @keydown.enter="confirmDeclareSuccessor" @keydown.escape="closeForm" />
+                        <input v-model="form.successorIdentityId" type="text" :placeholder="t('identityManagementView.successorIdentityDidKeyZ')" class="modal-input" autocomplete="off" v-focus />
+                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="form.passphrase" type="password" :placeholder="t('identityManagementView.passphrase')" class="modal-input" autocomplete="new-password" @keydown.enter="confirmDeclareSuccessor" @keydown.escape="closeForm" />
                         <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                         <div class="modal-actions">
-                            <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
-                            <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmDeclareSuccessor">Declare Successor</button>
+                            <button class="modal-btn modal-btn--secondary" @click="closeForm">{{ t('identityManagementView.cancel') }}</button>
+                            <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmDeclareSuccessor">{{ t('identityManagementView.declareSuccessor') }}</button>
                         </div>
                     </div>
 
                     <div v-else-if="isFormOpen('revoke', identity)" class="identity-unlock-form">
                         <p class="identity-unlock-label">
-                            Revoking {{ identity.label }} is permanent. It can never sign anything new again, on this
-                            device or any device that already holds its key. This does not affect anything already
-                            established with it — only new activity going forward.
+                            {{ t('identityManagementView.revokingIsPermanentItCan', { label: identity.label }) }}
                         </p>
-                        <input v-model="form.reason" type="text" placeholder="Reason (optional, shown only to you)" class="modal-input" autocomplete="off" v-focus />
-                        <input v-model="form.successorIdentityId" type="text" placeholder="Successor identity (optional, did:key:z…)" class="modal-input" autocomplete="off" />
-                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="form.passphrase" type="password" placeholder="Passphrase" class="modal-input" autocomplete="new-password" @keydown.enter="confirmRevoke" @keydown.escape="closeForm" />
+                        <input v-model="form.reason" type="text" :placeholder="t('identityManagementView.reasonOptionalShownOnlyTo')" class="modal-input" autocomplete="off" v-focus />
+                        <input v-model="form.successorIdentityId" type="text" :placeholder="t('identityManagementView.successorIdentityOptionalDidKey')" class="modal-input" autocomplete="off" />
+                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="form.passphrase" type="password" :placeholder="t('identityManagementView.passphrase')" class="modal-input" autocomplete="new-password" @keydown.enter="confirmRevoke" @keydown.escape="closeForm" />
                         <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                         <div class="modal-actions">
-                            <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
-                            <button class="modal-btn modal-btn--danger" :disabled="form.busy" @click="confirmRevoke">Revoke Identity</button>
+                            <button class="modal-btn modal-btn--secondary" @click="closeForm">{{ t('identityManagementView.cancel') }}</button>
+                            <button class="modal-btn modal-btn--danger" :disabled="form.busy" @click="confirmRevoke">{{ t('identityManagementView.revokeIdentity') }}</button>
                         </div>
                     </div>
 
                     <div v-else class="identity-mgmt-actions">
-                        <button v-if="identity.isProtected && isUnlocked(identity)" class="action-btn action-btn--secondary" @click="lockIdentity(identity)">Lock</button>
-                        <button v-else-if="identity.isProtected" class="action-btn action-btn--secondary" @click="openFormFor('unlock', identity)">Unlock</button>
-                        <button class="action-btn action-btn--secondary" @click="openFormFor('export', identity)">Export Identity</button>
-                        <button v-if="identity.isProtected" class="action-btn action-btn--secondary" @click="openFormFor('changePassphrase', identity)">Change Passphrase</button>
-                        <button v-else-if="identity.lifecycleState !== 'REVOKED'" class="action-btn action-btn--primary" @click="openFormFor('protect', identity)">Protect with Passphrase</button>
+                        <button v-if="identity.isProtected && isUnlocked(identity)" class="action-btn action-btn--secondary" @click="lockIdentity(identity)">{{ t('identityManagementView.lock') }}</button>
+                        <button v-else-if="identity.isProtected" class="action-btn action-btn--secondary" @click="openFormFor('unlock', identity)">{{ t('identityManagementView.unlock') }}</button>
+                        <button class="action-btn action-btn--secondary" @click="openFormFor('export', identity)">{{ t('identityManagementView.exportIdentity') }}</button>
+                        <button v-if="identity.isProtected" class="action-btn action-btn--secondary" @click="openFormFor('changePassphrase', identity)">{{ t('identityManagementView.changePassphrase') }}</button>
+                        <button v-else-if="identity.lifecycleState !== 'REVOKED'" class="action-btn action-btn--primary" @click="openFormFor('protect', identity)">{{ t('identityManagementView.protectWithPassphrase') }}</button>
                         <template v-if="identity.lifecycleState !== 'REVOKED'">
-                            <button class="action-btn action-btn--secondary" @click="openFormFor('declareSuccessor', identity)">Declare Successor</button>
-                            <button class="action-btn action-btn--danger" @click="openFormFor('revoke', identity)">Revoke</button>
+                            <button class="action-btn action-btn--secondary" @click="openFormFor('declareSuccessor', identity)">{{ t('identityManagementView.declareSuccessor') }}</button>
+                            <button class="action-btn action-btn--danger" @click="openFormFor('revoke', identity)">{{ t('identityManagementView.revoke') }}</button>
                         </template>
                     </div>
                 </div>
             </div>
-            <p v-else class="form-hint form-hint--neutral">No identities on this device yet.</p>
+            <p v-else class="form-hint form-hint--neutral">{{ t('identityManagementView.noIdentitiesOnThisDevice') }}</p>
 
             <div class="identity-mgmt-form">
-                <h2>Create New Identity</h2>
-                <input v-model="newLabel" type="text" placeholder="Display name" class="modal-input" autocomplete="off" @keydown.enter="createIdentity" />
+                <h2>{{ t('identityManagementView.createNewIdentity') }}</h2>
+                <input v-model="newLabel" type="text" :placeholder="t('identityManagementView.displayName')" class="modal-input" autocomplete="off" @keydown.enter="createIdentity" />
                 <NewPassphraseFields v-model:passphrase="newPassphrase" v-model:confirmation="newPassphraseConfirmation"
                                      v-model:allow-unprotected="allowUnprotected" :show-hint="createAttempted" @submit="createIdentity" />
                 <p v-if="createError" class="identity-unlock-error">{{ createError }}</p>
-                <button class="action-btn action-btn--primary" :disabled="creating" @click="createIdentity">{{ creating ? 'Creating…' : 'Create Identity' }}</button>
+                <button class="action-btn action-btn--primary" :disabled="creating" @click="createIdentity">{{ creating ? t('identityManagementView.creating') : t('identityManagementView.createIdentity') }}</button>
             </div>
 
             <div class="identity-mgmt-form">
-                <h2>Import Identity</h2>
-                <button v-if="!showImportForm" class="action-btn action-btn--secondary" @click="showImportForm = true">Import Identity</button>
+                <h2>{{ t('identityManagementView.importIdentity') }}</h2>
+                <button v-if="!showImportForm" class="action-btn action-btn--secondary" @click="showImportForm = true">{{ t('identityManagementView.importIdentity') }}</button>
                 <template v-else>
                     <label class="form-field">
-                        <span class="form-label">Exported identity file</span>
+                        <span class="form-label">{{ t('identityManagementView.exportedIdentityFile') }}</span>
                         <input type="file" accept="application/json" @change="onImportFileChosen" class="form-input" />
                     </label>
                     <textarea v-model="importText" class="form-input identity-export-json" rows="6"
-                              placeholder="…or paste the exported identity JSON here"></textarea>
+                              :placeholder="t('identityManagementView.orPasteTheExportedIdentity')"></textarea>
 
                     <div v-if="importPreview" class="identity-import-preview">
-                        <p><strong>Identity:</strong> {{ importPreview.label || '(no name given)' }}</p>
-                        <p><strong>Identity ID:</strong> {{ importPreview.identityId }}</p>
-                        <p><strong>Algorithm:</strong> {{ importPreview.algorithm || 'unknown' }}</p>
+                        <p><strong>{{ t('identityManagementView.identity') }}</strong> {{ importPreview.label || t('identityManagementView.noNameGiven') }}</p>
+                        <p><strong>{{ t('identityManagementView.identityId') }}</strong> {{ importPreview.identityId }}</p>
+                        <p><strong>{{ t('identityManagementView.algorithm') }}</strong> {{ importPreview.algorithm || 'unknown' }}</p>
                         <p v-if="importPreview.alreadyExists" class="form-hint form-hint--neutral">
-                            This identity already exists on this device as "{{ importPreview.existingLabel }}".
-                            Importing it again will not create a second copy.
+                            {{ t('identityManagementView.thisIdentityAlreadyExistsOn', { existingLabel: importPreview.existingLabel }) }}
                         </p>
                     </div>
 
-                    <input v-model="importLabel" type="text" placeholder="Display name (only used for a new identity)" class="modal-input" autocomplete="off" />
-                    <input v-model="importPassphrase" type="password" placeholder="Passphrase this file was exported with" class="modal-input" autocomplete="new-password" @keydown.enter="confirmImport" />
+                    <input v-model="importLabel" type="text" :placeholder="t('identityManagementView.displayNameOnlyUsedFor')" class="modal-input" autocomplete="off" />
+                    <input v-model="importPassphrase" type="password" :placeholder="t('identityManagementView.passphraseThisFileWasExported')" class="modal-input" autocomplete="new-password" @keydown.enter="confirmImport" />
 
                     <p v-if="importError" class="identity-unlock-error">{{ importError }}</p>
 
                     <div v-if="importResult" class="identity-import-result">
                         <p v-if="importResult.status === 'ALREADY_EXISTS'">
-                            This identity already exists on this device as "{{ importResult.identity.label }}".
-                            <template v-if="!restoredLifecycleSummary(importResult)">Nothing was changed.</template>
+                            {{ t('identityManagementView.thisIdentityAlreadyExistsOn2', { label: importResult.identity.label }) }}
+                            <template v-if="!restoredLifecycleSummary(importResult)">{{ t('identityManagementView.nothingWasChanged') }}</template>
                         </p>
                         <p v-else>
-                            Identity imported successfully. The identity is currently locked — unlock it when you're ready to use it.
+                            {{ t('identityManagementView.identityImportedSuccessfullyTheIdentity') }}
                         </p>
                         <p v-if="restoredLifecycleSummary(importResult)">{{ restoredLifecycleSummary(importResult) }}</p>
-                        <button class="modal-btn modal-btn--secondary" @click="dismissImportResult">Dismiss</button>
+                        <button class="modal-btn modal-btn--secondary" @click="dismissImportResult">{{ t('identityManagementView.dismiss') }}</button>
                     </div>
 
                     <div class="modal-actions">
-                        <button class="modal-btn modal-btn--secondary" @click="showImportForm = false">Cancel</button>
-                        <button class="modal-btn modal-btn--primary" :disabled="importing" @click="confirmImport">{{ importing ? 'Importing…' : 'Import' }}</button>
+                        <button class="modal-btn modal-btn--secondary" @click="showImportForm = false">{{ t('identityManagementView.cancel') }}</button>
+                        <button class="modal-btn modal-btn--primary" :disabled="importing" @click="confirmImport">{{ importing ? t('identityManagementView.importing') : t('identityManagementView.import') }}</button>
                     </div>
                 </template>
             </div>

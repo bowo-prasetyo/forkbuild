@@ -2,6 +2,7 @@ import { ref, computed } from 'vue';
 import { FriendshipState } from '../../../core/FriendshipState.js';
 import { FriendshipAction } from '../../../core/FriendshipAdvertisement.js';
 import { stripPrefix, shortId } from './presentation.js';
+import { errorText } from '../../i18n/i18n.js';
 
 // Friends (0.2.57), friendship revocation (0.2.60), and the remote
 // identity lifecycle shown beside Known Peers and Friends (0.2.68).
@@ -59,7 +60,7 @@ export function useFriendships({ friendRelationshipUseCase, identityLifecyclePro
         try {
             friendRelationshipUseCase.sendFriendRequest(peer);
         } catch (e) {
-            friendshipError.value = stripPrefix(e.message);
+            friendshipError.value = stripPrefix(errorText(e));
         }
     }
 
@@ -68,7 +69,7 @@ export function useFriendships({ friendRelationshipUseCase, identityLifecyclePro
         try {
             friendRelationshipUseCase.acceptFriendRequest(peer);
         } catch (e) {
-            friendshipError.value = stripPrefix(e.message);
+            friendshipError.value = stripPrefix(errorText(e));
         }
     }
 
@@ -79,7 +80,7 @@ export function useFriendships({ friendRelationshipUseCase, identityLifecyclePro
         try {
             friendRelationshipUseCase.rejectFriendRequest(peer);
         } catch (e) {
-            friendshipError.value = stripPrefix(e.message);
+            friendshipError.value = stripPrefix(errorText(e));
         }
     }
 
@@ -89,7 +90,7 @@ export function useFriendships({ friendRelationshipUseCase, identityLifecyclePro
         try {
             friendRelationshipUseCase.cancelFriendRequest(peer);
         } catch (e) {
-            friendshipError.value = stripPrefix(e.message);
+            friendshipError.value = stripPrefix(errorText(e));
         }
     }
 
@@ -104,7 +105,7 @@ export function useFriendships({ friendRelationshipUseCase, identityLifecyclePro
         try {
             friendRelationshipUseCase.unfriend(peer);
         } catch (e) {
-            friendshipError.value = stripPrefix(e.message);
+            friendshipError.value = stripPrefix(errorText(e));
         }
     }
 

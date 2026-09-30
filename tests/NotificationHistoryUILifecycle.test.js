@@ -22,6 +22,7 @@ import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.284 — Notification History UI Boundary.
 //
@@ -205,7 +206,7 @@ async function runTests() {
         assert(Array.isArray(ctx.notifications) && ctx.notifications.length === 0, '7. an authenticated identity with no history resolves to an empty array');
         assert(ctx.notificationHistoryError === null, '8. an empty result is never reported as an error');
 
-        const panelCode = await codeOnlySource('ui/components/NotificationHistoryPanel.js');
+        const panelCode = withEnglish(await codeOnlySource('ui/components/NotificationHistoryPanel.js'));
         assert(panelCode.includes('No notifications yet.'), '9. the template renders a dedicated empty-state message');
 
         console.log('✓ Section C: no notifications yet renders an intentional empty state, never an error');
@@ -274,7 +275,7 @@ async function runTests() {
         const commentaryOrder = ctx.notifications.map((e) => e.payload.commentaryId).join(',');
         assert(commentaryOrder === 'c-e1,c-e2,c-e3', '14. results render in exactly the store\'s own save order, never re-sorted by the panel');
 
-        const panelCode = await codeOnlySource('ui/components/NotificationHistoryPanel.js');
+        const panelCode = withEnglish(await codeOnlySource('ui/components/NotificationHistoryPanel.js'));
         assert(!/\.sort\(/.test(panelCode), '15. NotificationHistoryPanel.js contains no .sort() call of its own');
 
         console.log('✓ Section E: notification order is preserved exactly as returned, with no UI-side sorting');
@@ -445,7 +446,7 @@ async function runTests() {
         assert(beforeCount === afterCount, '29. opening, refreshing, and reopening the panel never changes the number of persisted notifications');
         assert(ctx.notifications.length === 1 && secondCtx.notifications.length === 1, '30. every open/reopen still observes the same one real notification');
 
-        const panelCode = await codeOnlySource('ui/components/NotificationHistoryPanel.js');
+        const panelCode = withEnglish(await codeOnlySource('ui/components/NotificationHistoryPanel.js'));
         assert(!/\.save\(|\.remove\(/.test(panelCode), '31. NotificationHistoryPanel.js\'s own code never calls a store-shaped save()/remove() of any kind');
 
         console.log('✓ Section J: opening, refreshing, and reopening the notification history surface never mutates the underlying persisted history');
@@ -455,12 +456,14 @@ async function runTests() {
     // Section K — Architectural boundary.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/NotificationHistoryPanel.js');
+        const panelCode = withEnglish(await codeOnlySource('ui/components/NotificationHistoryPanel.js'));
 
         // K1. The panel imports nothing from storage/, core/NotificationEvent.js,
         // or application/chat/GetRecipientNotificationEventsUseCase.js — only Vue.
-        const panelRawImports = (await rawSource('ui/components/NotificationHistoryPanel.js')).match(/^import .*/gm) || [];
-        assert(panelRawImports.length === 0, `32. ui/components/NotificationHistoryPanel.js imports nothing at all (found: ${JSON.stringify(panelRawImports)}) — it is a pure options object over injected props/data.`);
+        // The translator (ui/i18n/i18n.js) is the one import allowed: it gives text, never data.
+        const panelRawImports = ((await rawSource('ui/components/NotificationHistoryPanel.js')).match(/^import .*/gm) || [])
+            .filter((line) => !line.includes("from '../i18n/i18n.js'"));
+        assert(panelRawImports.length === 0, `32. ui/components/NotificationHistoryPanel.js imports nothing but the translator (found: ${JSON.stringify(panelRawImports)}) — it is a pure options object over injected props/data.`);
 
         // K2. No storage access, no NotificationEvent construction, no
         // deduplication logic, of any kind.

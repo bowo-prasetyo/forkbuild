@@ -1,6 +1,7 @@
 import { inject } from 'vue';
 import { useEndpointListSettings } from '../composables/useEndpointListSettings.js';
 import { DEFAULT_NOSTR_RELAY_URLS } from '../../core/NostrRelayConfiguration.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.9.371 — Nostr Relay Settings UI.
 //
@@ -125,17 +126,17 @@ export default {
             // constructor, reached through the use case.
             toRequest: (relayUrls) => ({ relayUrls })
         });
-        return { ...settings, relayUrlInput: settings.input };
+        return { t, ...settings, relayUrlInput: settings.input };
     },
     template: `
         <section class="nostr-relay-settings-view">
-            <h1>Nostr Relays</h1>
+            <h1>{{ t('nostrRelaySettingsView.nostrRelays') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Relay(s) used everywhere this replica publishes or discovers over Nostr — Publications, Snapshots, Place Naming, and Commentary. One per line — every configured relay is queried and announced to independently, so a second relay stays useful even while the first is unreachable, and a Publication announced to more than one relay is discoverable by more people.
+                {{ t('nostrRelaySettingsView.relaySUsedEverywhereThis') }}
             </p>
 
-            <p v-if="hasOverride" class="form-hint form-hint--neutral">Using your saved relays:</p>
-            <p v-else class="form-hint form-hint--neutral">Using the default relays:</p>
+            <p v-if="hasOverride" class="form-hint form-hint--neutral">{{ t('nostrRelaySettingsView.usingYourSavedRelays') }}</p>
+            <p v-else class="form-hint form-hint--neutral">{{ t('nostrRelaySettingsView.usingTheDefaultRelays') }}</p>
             <ul class="endpoint-settings-list">
                 <li v-for="url in effectiveEntries" :key="url">{{ url }}</li>
             </ul>
@@ -149,11 +150,11 @@ export default {
                 ></textarea>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
-                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
-                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Reset — now using the default relays.</p>
+                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('nostrRelaySettingsView.saved') }}</p>
+                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">{{ t('nostrRelaySettingsView.resetNowUsingTheDefault') }}</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">Save</button>
-                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">Reset to Defaults</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">{{ t('nostrRelaySettingsView.save') }}</button>
+                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">{{ t('nostrRelaySettingsView.resetToDefaults') }}</button>
             </div>
         </section>
     `

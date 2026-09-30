@@ -146,7 +146,7 @@ async function run() {
         const toolbar = withEnglish(await source('ui/components/PublicationCatalogToolbar.js'));
         assert(/<option :value="groupOptions\.NONE">None<\/option>\s*<option :value="groupOptions\.AUTHOR">Author<\/option>\s*<option :value="groupOptions\.DATE">Date<\/option>\s*<option :value="groupOptions\.LICENSE">License<\/option>/.test(toolbar),
             'Group by: "None" first, then alphabetical');
-        const chat = await source('ui/views/ChatView.js');
+        const chat = withEnglish(await source('ui/views/ChatView.js'));
         assert(!/sortOptionsByLabel/.test(chat) && /<option value="">System default mic<\/option>/.test(chat),
             'audio devices keep the OS order with the system default first');
         const pairSelector = await source('ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js');

@@ -1,6 +1,7 @@
 import { inject } from 'vue';
 import { useEndpointListSettings } from '../composables/useEndpointListSettings.js';
 import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../../core/ArweaveGatewayConfiguration.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.9.366 — Arweave Gateway Settings UI.
 //
@@ -99,17 +100,17 @@ export default {
             // constructor, reached through the use case.
             toRequest: (gatewayUrls) => ({ gatewayUrls })
         });
-        return { ...settings, gatewayUrlInput: settings.input };
+        return { t, ...settings, gatewayUrlInput: settings.input };
     },
     template: `
         <section class="arweave-gateway-settings-view">
-            <h1>Arweave Gateway</h1>
+            <h1>{{ t('arweaveGatewaySettingsView.arweaveGateway') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Gateway(s) used for retrieving Arweave content. One per line, in the order they should be tried — if the first does not respond, the next one is used. This setting affects retrieval only; it does not change where your publications are uploaded.
+                {{ t('arweaveGatewaySettingsView.gatewaySUsedForRetrieving') }}
             </p>
 
-            <p v-if="hasOverride" class="form-hint form-hint--neutral">Using your saved gateways:</p>
-            <p v-else class="form-hint form-hint--neutral">Using the default gateways:</p>
+            <p v-if="hasOverride" class="form-hint form-hint--neutral">{{ t('arweaveGatewaySettingsView.usingYourSavedGateways') }}</p>
+            <p v-else class="form-hint form-hint--neutral">{{ t('arweaveGatewaySettingsView.usingTheDefaultGateways') }}</p>
             <ul class="endpoint-settings-list">
                 <li v-for="url in effectiveEntries" :key="url">{{ url }}</li>
             </ul>
@@ -123,11 +124,11 @@ export default {
                 ></textarea>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
-                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
-                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Reset — now using the default gateways.</p>
+                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('arweaveGatewaySettingsView.saved') }}</p>
+                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">{{ t('arweaveGatewaySettingsView.resetNowUsingTheDefault') }}</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">Save</button>
-                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">Reset to Defaults</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">{{ t('arweaveGatewaySettingsView.save') }}</button>
+                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">{{ t('arweaveGatewaySettingsView.resetToDefaults') }}</button>
             </div>
         </section>
     `

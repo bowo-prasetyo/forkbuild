@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue';
 import { PeerIdentity } from '../../../peer/PeerIdentity.js';
 import { stripPrefix } from './presentation.js';
+import { errorText } from '../../i18n/i18n.js';
 
 // Known Peers (local notes about an identity, with an alias) and
 // Reconnect, which works for a Known Peer or a current friend.
@@ -34,7 +35,7 @@ export function useKnownPeers({ peerRelationshipUseCase, peerReconnectionUseCase
                 : new PeerIdentity({ identityId: identity.identityId, publicKey: identity.publicKey, algorithm: identity.algorithm });
             peerRelationshipUseCase.rememberPeer(peerIdentity, alias !== undefined ? { alias } : {});
         } catch (e) {
-            relationshipError.value = stripPrefix(e.message);
+            relationshipError.value = stripPrefix(errorText(e));
         }
     }
 
@@ -43,7 +44,7 @@ export function useKnownPeers({ peerRelationshipUseCase, peerReconnectionUseCase
         try {
             peerRelationshipUseCase.forgetPeer(identityId);
         } catch (e) {
-            relationshipError.value = stripPrefix(e.message);
+            relationshipError.value = stripPrefix(errorText(e));
         }
     }
 
@@ -52,7 +53,7 @@ export function useKnownPeers({ peerRelationshipUseCase, peerReconnectionUseCase
         try {
             peerRelationshipUseCase.updateAlias(identityId, alias);
         } catch (e) {
-            relationshipError.value = stripPrefix(e.message);
+            relationshipError.value = stripPrefix(errorText(e));
         }
     }
 

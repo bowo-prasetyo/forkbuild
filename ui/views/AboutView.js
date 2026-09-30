@@ -1,27 +1,26 @@
 import { VERSION } from '../../core/version.js';
+import { t } from '../i18n/i18n.js';
 
 export default {
     name: 'AboutView',
     setup() {
         const versionString = `${VERSION.major}.${VERSION.minor}.${VERSION.patch}`;
-        return { versionString };
+        return { t, versionString };
     },
     template: `
         <section class="about-view">
-            <h1>About ForkBuild</h1>
-            <p>Version {{ versionString }}</p>
+            <h1>{{ t('aboutView.aboutForkbuild') }}</h1>
+            <p>{{ t('aboutView.version', { versionString: versionString }) }}</p>
             <p>
-                ForkBuild is an open construction platform where digital creations
-                can be built, forked, shared, and preserved across decentralized
-                publishing systems.
+                {{ t('aboutView.forkbuildIsAnOpenConstruction') }}
             </p>
             <p>
-                <a href="https://github.com/bowo-prasetyo/forkbuild/blob/main/README.md" target="_blank" rel="noopener">Project README</a>
-                — architecture, milestone history, and what's shipped so far.
+                <a href="https://github.com/bowo-prasetyo/forkbuild/blob/main/README.md" target="_blank" rel="noopener">{{ t('aboutView.projectReadme') }}</a>
+                {{ t('aboutView.architectureMilestoneHistoryAndWhat') }}
             </p>
             <p>
-                <a href="https://github.com/bowo-prasetyo/forkbuild/blob/main/docs/user/README.md" target="_blank" rel="noopener">User Guide</a>
-                — how to build, publish, fork, and explore in ForkBuild.
+                <a href="https://github.com/bowo-prasetyo/forkbuild/blob/main/docs/user/README.md" target="_blank" rel="noopener">{{ t('aboutView.userGuide') }}</a>
+                {{ t('aboutView.howToBuildPublishFork') }}
             </p>
         </section>
     `

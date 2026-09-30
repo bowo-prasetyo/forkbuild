@@ -1,4 +1,6 @@
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 // 0.9.283 — Recipient Notification Query Boundary.
 //
@@ -100,7 +102,7 @@ export class GetRecipientNotificationEventsUseCase {
     execute() {
         const recipientIdentityId = resolveSigningIdentityId(this._identityProvider);
         if (!recipientIdentityId) {
-            throw new Error('GetRecipientNotificationEventsUseCase: sign in to view your notifications');
+            throw new UserFacingError(message('refusal.signInToViewYour'), { detail: 'GetRecipientNotificationEventsUseCase: sign in to view your notifications' });
         }
         return this._notificationEventStore.loadAll()
             .filter((event) => event.recipientIdentityId === recipientIdentityId);

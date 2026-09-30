@@ -5,6 +5,8 @@ import { signLobbyCard, signLobbyLeave } from '../../peer/LobbyCardSigning.js';
 import { signingIdentityId } from '../../peer/RendezvousPublicationSigning.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 import * as Ed25519 from '../../identity/Ed25519.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const CHANGED_EVENT = 'PublicLobbyChanged';
 const DISPLAY_NAME_KEY = 'public-lobby-display-name';
@@ -118,14 +120,14 @@ export class PublicLobbyUseCase {
     // accepts the card.
     async join(lobby, { displayName = '' } = {}) {
         if (!isValidLobby(lobby)) {
-            throw new Error('PublicLobbyUseCase: that is not a lobby');
+            throw new UserFacingError(message('refusal.thatIsNotALobby'), { detail: 'PublicLobbyUseCase: that is not a lobby' });
         }
         if (!this.isAvailable()) {
-            throw new Error('PublicLobbyUseCase: no rendezvous server is configured; add one under Network Settings');
+            throw new UserFacingError(message('refusal.noRendezvousServerIsConfigured'), { detail: 'PublicLobbyUseCase: no rendezvous server is configured; add one under Network Settings' });
         }
         const identityId = signingIdentityId(this._identityProvider);
         if (!identityId) {
-            throw new Error('PublicLobbyUseCase: sign in and unlock your identity to join the lobby');
+            throw new UserFacingError(message('refusal.signInAndUnlockYour'), { detail: 'PublicLobbyUseCase: sign in and unlock your identity to join the lobby' });
         }
         const name = normalizeDisplayName(displayName);
         const card = await this._sendCard(LobbyCard.create({ identityId, lobby, displayName: name, ttlMs: this._cardTtlMs, now: this._now() }));
@@ -170,7 +172,7 @@ export class PublicLobbyUseCase {
     // server reported, which can exceed the sample a server returns.
     async list(lobby) {
         if (!isValidLobby(lobby)) {
-            throw new Error('PublicLobbyUseCase: that is not a lobby');
+            throw new UserFacingError(message('refusal.thatIsNotALobby'), { detail: 'PublicLobbyUseCase: that is not a lobby' });
         }
         const now = this._now();
         const self = signingIdentityId(this._identityProvider);
@@ -194,9 +196,9 @@ export class PublicLobbyUseCase {
         }
         if (reachable === 0 && this._transports.length > 0) {
             if (settled.some((outcome) => isUnsupported(outcome.reason))) {
-                throw new Error(`PublicLobbyUseCase: ${UNSUPPORTED_MESSAGE}`);
+                throw new UserFacingError(message('refusal.lobbyUnsupported'), { detail: `PublicLobbyUseCase: ${UNSUPPORTED_MESSAGE}` });
             }
-            throw new Error('PublicLobbyUseCase: no rendezvous server answered; try again in a moment');
+            throw new UserFacingError(message('refusal.noRendezvousServerAnsweredTry'), { detail: 'PublicLobbyUseCase: no rendezvous server answered; try again in a moment' });
         }
         const connected = this.connectedIdentityIds();
         const members = Array.from(newest.values())
@@ -219,7 +221,7 @@ export class PublicLobbyUseCase {
             throw new Error('PublicLobbyUseCase: identityId is required');
         }
         if (this._peerBlockUseCase && this._peerBlockUseCase.isBlocked(identityId)) {
-            throw new Error('PublicLobbyUseCase: you have blocked this identity');
+            throw new UserFacingError(message('refusal.youHaveBlockedThisIdentity'), { detail: 'PublicLobbyUseCase: you have blocked this identity' });
         }
         const existing = this._peerSessionManager.listPeers().find((peer) => isAuthenticatedAs(peer, identityId));
         if (existing) {
@@ -227,12 +229,12 @@ export class PublicLobbyUseCase {
         }
         const candidates = await this._findPeerUseCase.search(identityId);
         if (!candidates.length) {
-            throw new Error('PublicLobbyUseCase: they are not reachable right now (they may be connecting with someone else); try again in a moment');
+            throw new UserFacingError(message('refusal.theyAreNotReachableRight'), { detail: 'PublicLobbyUseCase: they are not reachable right now (they may be connecting with someone else); try again in a moment' });
         }
         const { connectedPeer, delivered } = await this._findPeerUseCase.connect(candidates[0], identityId);
         if (!delivered) {
             connectedPeer.close();
-            throw new Error('PublicLobbyUseCase: the rendezvous server could not pass your reply on; unlock your identity and try again');
+            throw new UserFacingError(message('refusal.theRendezvousServerCouldNot'), { detail: 'PublicLobbyUseCase: the rendezvous server could not pass your reply on; unlock your identity and try again' });
         }
         return { connectedPeer, alreadyConnected: false };
     }
@@ -242,11 +244,11 @@ export class PublicLobbyUseCase {
     // with.
     block(identityId) {
         if (!this._peerBlockUseCase) {
-            throw new Error('PublicLobbyUseCase: blocking is not available');
+            throw new UserFacingError(message('refusal.blockingIsNotAvailable'), { detail: 'PublicLobbyUseCase: blocking is not available' });
         }
         const publicKeyBytes = Ed25519.didKeyToPublicKey(identityId);
         if (!publicKeyBytes) {
-            throw new Error('PublicLobbyUseCase: that is not a did:key identity');
+            throw new UserFacingError(message('refusal.thatIsNotADid'), { detail: 'PublicLobbyUseCase: that is not a did:key identity' });
         }
         return this._peerBlockUseCase.block({ identityId, publicKey: Ed25519.bytesToHex(publicKeyBytes), algorithm: 'Ed25519' });
     }
@@ -286,14 +288,14 @@ export class PublicLobbyUseCase {
     async _sendCard(unsigned) {
         const card = signLobbyCard(unsigned, this._identityProvider);
         if (!card) {
-            throw new Error('PublicLobbyUseCase: sign in and unlock your identity to join the lobby');
+            throw new UserFacingError(message('refusal.signInAndUnlockYour'), { detail: 'PublicLobbyUseCase: sign in and unlock your identity to join the lobby' });
         }
         const settled = await Promise.allSettled(this._transports.map((transport) => transport.joinLobby(card)));
         if (!settled.some((outcome) => outcome.status === 'fulfilled')) {
             const failure = settled.find((outcome) => outcome.status === 'rejected' && !isUnsupported(outcome.reason))
                 || settled.find((outcome) => outcome.status === 'rejected');
             if (failure && isUnsupported(failure.reason)) {
-                throw new Error(`PublicLobbyUseCase: ${UNSUPPORTED_MESSAGE}`);
+                throw new UserFacingError(message('refusal.lobbyUnsupported'), { detail: `PublicLobbyUseCase: ${UNSUPPORTED_MESSAGE}` });
             }
             throw new Error('PublicLobbyUseCase: ' + stripTransportPrefix(failure && failure.reason && failure.reason.message));
         }

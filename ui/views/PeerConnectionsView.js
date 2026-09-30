@@ -17,15 +17,16 @@ import { peopleSectionTemplate } from './peerConnections/templates/peopleSection
 import { connectSectionTemplate } from './peerConnections/templates/connectSection.js';
 import PublicLobbyPanel from '../components/PublicLobbyPanel.js';
 import { PUBLIC_LOBBY } from '../../core/LobbyCard.js';
-import { t } from '../i18n/i18n.js';
+import { errorText, formatDate as formatLocaleDate, t } from '../i18n/i18n.js';
+import I18nText from '../i18n/I18nText.js';
 
 const GUIDE_URL = 'https://github.com/bowo-prasetyo/forkbuild/blob/main/docs/user/07-PeerConnectionsAndFriends.md';
 
 const CONNECT_TABS = [
-    { key: 'invite', label: 'Invite' },
-    { key: 'paste', label: 'Paste an invitation' },
-    { key: 'find', label: 'Find by ID' },
-    { key: 'lobby', label: 'Public lobby' }
+    { key: 'invite', label: t('peerConnections.invite') },
+    { key: 'paste', label: t('peerConnections.pasteAnInvitation') },
+    { key: 'find', label: t('peerConnections.findById') },
+    { key: 'lobby', label: t('peerConnections.publicLobby') }
 ];
 
 // The Peers page: time-sensitive items first (connections in progress,
@@ -40,7 +41,7 @@ const CONNECT_TABS = [
 // also closes the connection if it proves a different identity.
 export default {
     name: 'PeerConnectionsView',
-    components: { PublicLobbyPanel, InvitationExchange },
+    components: { I18nText, PublicLobbyPanel, InvitationExchange },
     setup() {
         const identityUseCase = inject('identityUseCase');
         const peerSessionManager = inject('peerSessionManager');
@@ -125,12 +126,12 @@ export default {
             && hasPendingIncomingRequest(peer) && !isBlockedIdentity(peer.remoteIdentity.identityId)));
         const attentionHeading = computed(() => (
             requestPeers.value.length || pendingPeers.value.some((peer) => awaitingReply(peer) || peer.getLifecycleState() === PeerLifecycleState.FAILED)
-                ? 'Needs your attention'
-                : 'Connecting'
+                ? t('peerConnections.needsYourAttention')
+                : t('peerConnections.connecting2')
         ));
         function peerName(peer) {
             const relationship = peer.remoteIdentity ? relationshipsById.value.get(peer.remoteIdentity.identityId) : null;
-            return (relationship && relationship.alias) || peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : 'Unknown');
+            return (relationship && relationship.alias) || peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : t('peerConnections.unknown'));
         }
         function progressStep(peer) {
             const state = peer.getLifecycleState();
@@ -160,7 +161,7 @@ export default {
                     followUseCase.follow(person.identityId, { name: person.alias || null });
                 }
             } catch (e) {
-                relationshipError.value = e.message.replace(/^FollowUseCase:\s*/, '');
+                relationshipError.value = errorText(e).replace(/^FollowUseCase:\s*/, '');
             }
         }
         const people = computed(() => buildPeople({
@@ -181,17 +182,17 @@ export default {
             // An unnamed person's title is already their short ID.
             const parts = person.name === shortId(person.identityId) ? [] : ['…' + shortId(person.identityId)];
             if (person.isOnline) {
-                parts.push('online for ' + connectedFor(person.connectedPeer));
+                parts.push(t('peerConnections.onlineFor', { elapsed: connectedFor(person.connectedPeer) }));
             } else if (person.relationship && person.relationship.lastAuthenticatedAt) {
-                parts.push('last connected ' + formatDate(person.relationship.lastAuthenticatedAt));
+                parts.push(t('peerConnections.lastConnected', { date: formatDate(person.relationship.lastAuthenticatedAt) }));
             } else if (person.friendship) {
-                parts.push('friends since ' + formatDate(person.friendship.updatedAt));
+                parts.push(t('peerConnections.friendsSince', { date: formatDate(person.friendship.updatedAt) }));
             }
             const meta = parts.join(' · ');
             return meta.charAt(0).toUpperCase() + meta.slice(1);
         }
         function formatDate(date) {
-            return date instanceof Date ? date.toLocaleDateString() : '';
+            return date instanceof Date ? formatLocaleDate(date) : '';
         }
         function canAddFriend(person) {
             const peer = person.connectedPeer;
@@ -213,9 +214,9 @@ export default {
         function lifecycleTitle(person) {
             const successor = successorOf(person);
             const base = isRevoked(person)
-                ? 'This identity was revoked (a signed revocation was verified). Nothing here changed automatically.'
-                : 'A signed successor declaration was verified.';
-            return successor ? base + ' Successor: …' + shortId(successor) : base;
+                ? t('peerConnections.thisIdentityWasRevokedA')
+                : t('peerConnections.aSignedSuccessorDeclarationWas');
+            return successor ? t('peerConnections.withSuccessor', { base, successor: shortId(successor) }) : base;
         }
 
         // An action's error shows on the card it came from, or above the
@@ -356,7 +357,7 @@ export default {
                 reconnectRejectedError.value = `Reconnect stopped: whoever answered wasn't ${label}, so the connection was closed.`;
             });
             unsubscribeFindRejected = findPeerUseCase.onCandidateRejected(({ expectedIdentityId }) => {
-                findRejectedError.value = `Connection stopped: whoever answered wasn't …${shortId(expectedIdentityId)}, so the connection was closed.`;
+                findRejectedError.value = t('peerConnections.connectionStoppedWrongIdentity', { id: shortId(expectedIdentityId) });
             });
             tickInterval = setInterval(() => { now.value = Date.now(); }, 1000);
             document.addEventListener('click', onDocumentClick);
@@ -378,6 +379,7 @@ export default {
         });
 
         return {
+            formatDate,
             t,
             GUIDE_URL, CONNECT_TABS, PEOPLE_FILTERS, PUBLIC_LOBBY,
             isAuthenticated, isIdentityLocked, myIdentityId, peers, PeerLifecycleState, LIFECYCLE_LABELS, LIFECYCLE_CLASSES, PROGRESSION_STEPS,
@@ -404,28 +406,26 @@ export default {
         <section class="peer-connections-view">
             <header class="peers-header">
                 <div>
-                    <h1>Peers</h1>
+                    <h1>{{ t('peerConnections.peers') }}</h1>
                     <p class="form-hint form-hint--neutral peers-intro">
-                        Everyone you're connected to, have remembered, or are friends with. A connection always
-                        proves who's on the other end before anything is shared.
-                        <a :href="GUIDE_URL" target="_blank" rel="noopener">How this works</a>
+                        {{ t('peerConnections.everyoneYouReConnectedTo') }}
+                        <a :href="GUIDE_URL" target="_blank" rel="noopener">{{ t('peerConnections.howThisWorks') }}</a>
                     </p>
                 </div>
                 <div v-if="myIdentityId" class="peers-my-id">
-                    <span class="form-label">Your ID</span>
+                    <span class="form-label">{{ t('peerConnections.yourId') }}</span>
                     <code :title="myIdentityId">…{{ shortId(myIdentityId) }}</code>
                     <button class="action-btn action-btn--secondary" @click="copyText(myIdentityId, 'my-identity')">
-                        {{ copiedKey === 'my-identity' ? 'Copied!' : 'Copy full ID' }}
+                        {{ copiedKey === 'my-identity' ? t('peerConnections.copied') : t('peerConnections.copyFullId') }}
                     </button>
                 </div>
             </header>
 
             <p v-if="!isAuthenticated" class="form-hint form-hint--neutral">
-                Sign in on <router-link to="/identity">My Identities</router-link> to connect with people.
+                <I18nText keypath="peerConnections.signInOn"><template #myIdentities><router-link to="/identity">{{ t('peerConnections.myIdentities') }}</router-link></template></I18nText>
             </p>
             <p v-else-if="isIdentityLocked" class="identity-unlock-error">
-                Your identity is locked. Unlock it on <router-link to="/identity">My Identities</router-link>
-                before connecting: a connection has to be signed.
+                <I18nText keypath="peerConnections.yourIdentityIsLockedUnlock"><template #myIdentities><router-link to="/identity">{{ t('peerConnections.myIdentities') }}</router-link></template></I18nText>
             </p>
 
             ${attentionSectionTemplate}
@@ -437,56 +437,55 @@ export default {
             </template>
 
             <details v-if="blocked.length" class="peers-section peers-blocked">
-                <summary class="peers-section-heading">Blocked <span class="peers-count">{{ blocked.length }}</span></summary>
+                <summary class="peers-section-heading">{{ t('peerConnections.blocked') }} <span class="peers-count">{{ blocked.length }}</span></summary>
                 <p class="form-hint form-hint--neutral">
-                    They aren't told. This device stops sending them updates and ignores what they send.
-                    Unblocking doesn't restore a friendship.
+                    {{ t('peerConnections.theyArenTToldThis') }}
                 </p>
                 <ul class="peers-rows">
                     <li v-for="block in blocked" :key="block.identityId" class="peers-row">
                         <div class="peers-row-main">
                             <span class="peers-row-title">{{ friendDisplayName(block.identityId) }}</span>
                             <div class="peers-row-actions">
-                                <button class="action-btn action-btn--secondary" @click="unblockIdentity(block.identityId)">Unblock</button>
+                                <button class="action-btn action-btn--secondary" @click="unblockIdentity(block.identityId)">{{ t('peerConnections.unblock') }}</button>
                             </div>
                         </div>
-                        <p class="peers-row-meta">…{{ shortId(block.identityId) }} · blocked {{ block.createdAt instanceof Date ? block.createdAt.toLocaleDateString() : '' }}</p>
+                        <p class="peers-row-meta">…{{ shortId(block.identityId) }} · {{ t('peerConnections.blockedOn', { date: formatDate(block.createdAt) }) }}</p>
                     </li>
                 </ul>
             </details>
 
-            <div v-if="selectedPeer" role="dialog" aria-label="Peer identity" class="modal-overlay" @click.self="closeDetail">
+            <div v-if="selectedPeer" role="dialog" :aria-label="t('peerConnections.peerIdentity')" class="modal-overlay" @click.self="closeDetail">
                 <div class="modal-panel peer-detail-panel">
-                    <h3>Peer Identity</h3>
+                    <h3>{{ t('peerConnections.peerIdentity2') }}</h3>
 
                     <div class="peer-detail-row">
-                        <span class="form-label">Identity</span>
-                        <code class="peer-detail-value">{{ selectedPeer.remoteIdentity ? selectedPeer.remoteIdentity.identityId : 'Not yet authenticated' }}</code>
+                        <span class="form-label">{{ t('peerConnections.identity') }}</span>
+                        <code class="peer-detail-value">{{ selectedPeer.remoteIdentity ? selectedPeer.remoteIdentity.identityId : t('peerConnections.notYetAuthenticated') }}</code>
                     </div>
                     <div class="peer-detail-row" v-if="selectedPeer.remoteIdentity">
-                        <span class="form-label">Public Key</span>
+                        <span class="form-label">{{ t('peerConnections.publicKey') }}</span>
                         <code class="peer-detail-value">{{ selectedPeer.remoteIdentity.publicKey }}</code>
                     </div>
                     <div class="peer-detail-row" v-if="selectedPeer.remoteIdentity">
-                        <span class="form-label">Authentication</span>
+                        <span class="form-label">{{ t('peerConnections.authentication') }}</span>
                         <span class="peer-detail-value">{{ selectedPeer.remoteIdentity.algorithm }}</span>
                     </div>
                     <div class="peer-detail-row">
-                        <span class="form-label">Connection</span>
-                        <span class="peer-detail-value">WebRTC</span>
+                        <span class="form-label">{{ t('peerConnections.connection') }}</span>
+                        <span class="peer-detail-value">{{ t('peerConnections.webrtc') }}</span>
                     </div>
                     <div class="peer-detail-row">
-                        <span class="form-label">Authenticated</span>
-                        <span class="peer-detail-value">{{ selectedPeer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED ? 'Yes' : 'No' }}</span>
+                        <span class="form-label">{{ t('peerConnections.authenticated') }}</span>
+                        <span class="peer-detail-value">{{ selectedPeer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED ? t('peerConnections.yes') : t('peerConnections.no') }}</span>
                     </div>
                     <div class="peer-detail-row">
-                        <span class="form-label">Session</span>
-                        <span class="peer-detail-value">Ephemeral — gone when this connection closes</span>
+                        <span class="form-label">{{ t('peerConnections.session') }}</span>
+                        <span class="peer-detail-value">{{ t('peerConnections.ephemeralGoneWhenThisConnection') }}</span>
                     </div>
 
                     <div class="modal-actions">
-                        <button class="modal-btn modal-btn--secondary" @click="closeDetail">Close</button>
-                        <button class="modal-btn modal-btn--primary" @click="disconnectPeer(selectedPeer)">Disconnect</button>
+                        <button class="modal-btn modal-btn--secondary" @click="closeDetail">{{ t('peerConnections.close') }}</button>
+                        <button class="modal-btn modal-btn--primary" @click="disconnectPeer(selectedPeer)">{{ t('peerConnections.disconnect') }}</button>
                     </div>
                 </div>
             </div>

@@ -16,6 +16,8 @@ import { ConversationStore } from './ConversationStore.js';
 import { ConversationReadOutbox } from './ConversationReadOutbox.js';
 import { RemoteReadReceiptStore } from './RemoteReadReceiptStore.js';
 import { resolveDirectSocialIdentity } from '../identity/SocialIdentityResolver.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const MESSAGE_EVENT = 'ChatMessage';
 const READ_RECEIPT_EVENT = 'ChatReadReceipt';
@@ -176,10 +178,10 @@ export class ChatUseCase {
         this._requireEligible(social.identityId);
         const trimmed = typeof body === 'string' ? body.trim() : '';
         if (!trimmed) {
-            throw new Error('ChatUseCase: message body must not be empty');
+            throw new UserFacingError(message('refusal.messageBodyMustNotBe'), { detail: 'ChatUseCase: message body must not be empty' });
         }
         if (trimmed.length > MAX_CHAT_BODY_LENGTH) {
-            throw new Error('ChatUseCase: message body exceeds maximum length');
+            throw new UserFacingError(message('refusal.messageBodyExceedsMaximumLength'), { detail: 'ChatUseCase: message body exceeds maximum length' });
         }
         const myIdentityId = this._identityProvider.getSigningIdentity().id;
         const conversationId = deriveConversationId(myIdentityId, peerIdentity.identityId);
@@ -197,10 +199,10 @@ export class ChatUseCase {
         this._requireEligible(peerIdentityId);
         const trimmed = typeof body === 'string' ? body.trim() : '';
         if (!trimmed) {
-            throw new Error('ChatUseCase: message body must not be empty');
+            throw new UserFacingError(message('refusal.messageBodyMustNotBe'), { detail: 'ChatUseCase: message body must not be empty' });
         }
         if (trimmed.length > MAX_CHAT_BODY_LENGTH) {
-            throw new Error('ChatUseCase: message body exceeds maximum length');
+            throw new UserFacingError(message('refusal.messageBodyExceedsMaximumLength'), { detail: 'ChatUseCase: message body exceeds maximum length' });
         }
         const myIdentityId = this._identityProvider.getSigningIdentity().id;
         const conversationId = deriveConversationId(myIdentityId, peerIdentityId);
@@ -610,7 +612,7 @@ export class ChatUseCase {
     // silently instead.
     _requireEligible(identityId) {
         if (this._isBlocked(identityId)) {
-            throw new Error('ChatUseCase: this identity is blocked');
+            throw new UserFacingError(message('refusal.thisIdentityIsBlocked'), { detail: 'ChatUseCase: this identity is blocked' });
         }
         if (this._friends.getState(identityId) !== FriendshipState.FRIEND) {
             throw new Error('ChatUseCase: chat requires a mutual friendship');

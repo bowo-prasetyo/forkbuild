@@ -1,6 +1,7 @@
 import { inject } from 'vue';
 import { useEndpointListSettings } from '../composables/useEndpointListSettings.js';
 import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/IpfsGatewayConfiguration.js';
+import { t } from '../i18n/i18n.js';
 
 // 0.9.665 — IPFS Gateway Settings UI.
 //
@@ -45,22 +46,17 @@ export default {
             // IpfsGatewayConfiguration.js's own constructor.
             toRequest: (gatewayUrls) => ({ gatewayUrls })
         });
-        return { ...settings, gatewayUrlInput: settings.input };
+        return { t, ...settings, gatewayUrlInput: settings.input };
     },
     template: `
         <section class="ipfs-gateway-settings-view">
-            <h1>IPFS Gateway</h1>
+            <h1>{{ t('ipfsGatewaySettingsView.ipfsGateway') }}</h1>
             <p class="form-hint form-hint--neutral">
-                Gateway(s) used for retrieving IPFS content — resolving an ipfs:// Snapshot Placement, and the
-                "Verify IPFS Content" check on the Publications page. One per line, in the order they should be
-                tried — if the first does not respond, the next one is used. This setting affects retrieval only;
-                it never changes where your own content gets pinned or published. If your content resolves through
-                your pinning provider's own gateway (for example https://gateway.pinata.cloud) but not through the
-                ones below, add that gateway here, ahead of the others.
+                {{ t('ipfsGatewaySettingsView.gatewaySUsedForRetrieving') }}
             </p>
 
-            <p v-if="hasOverride" class="form-hint form-hint--neutral">Using your saved gateways:</p>
-            <p v-else class="form-hint form-hint--neutral">Using the default gateways:</p>
+            <p v-if="hasOverride" class="form-hint form-hint--neutral">{{ t('ipfsGatewaySettingsView.usingYourSavedGateways') }}</p>
+            <p v-else class="form-hint form-hint--neutral">{{ t('ipfsGatewaySettingsView.usingTheDefaultGateways') }}</p>
             <ul class="endpoint-settings-list">
                 <li v-for="url in effectiveEntries" :key="url">{{ url }}</li>
             </ul>
@@ -74,11 +70,11 @@ export default {
                 ></textarea>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
-                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
-                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Reset — now using the default gateways.</p>
+                <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('ipfsGatewaySettingsView.saved') }}</p>
+                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">{{ t('ipfsGatewaySettingsView.resetNowUsingTheDefault') }}</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">Save</button>
-                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">Reset to Defaults</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">{{ t('ipfsGatewaySettingsView.save') }}</button>
+                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">{{ t('ipfsGatewaySettingsView.resetToDefaults') }}</button>
             </div>
         </section>
     `

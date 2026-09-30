@@ -22,6 +22,8 @@ import {
     toDeviceAuthorizationRevocation,
     getDeviceAuthorizationRevocationSigningDescriptor
 } from '../core/DeviceAuthorizationEnvelope.js';
+import { UserFacingError } from '../core/UserFacingError.js';
+import { message } from '../core/Message.js';
 
 const IDENTITIES_INDEX_KEY = 'local-identities';
 const IDENTITY_KEY_PREFIX = 'local-identity-key:';
@@ -132,7 +134,7 @@ export const MIN_PASSPHRASE_LENGTH = 8;
 
 function requireNewPassphrase(passphrase) {
     if (!passphrase || typeof passphrase !== 'string' || !passphrase.trim()) {
-        throw new Error('LocalIdentityProvider: a passphrase is required');
+        throw new UserFacingError(message('refusal.aPassphraseIsRequired'), { detail: 'LocalIdentityProvider: a passphrase is required' });
     }
     if (passphrase.length < MIN_PASSPHRASE_LENGTH) {
         throw new Error(`LocalIdentityProvider: a passphrase must be at least ${MIN_PASSPHRASE_LENGTH} characters`);
@@ -201,7 +203,7 @@ export class LocalIdentityProvider extends IdentityProvider {
 
     _newKeyPair(label) {
         if (!label || typeof label !== 'string' || !label.trim()) {
-            throw new Error('LocalIdentityProvider: label is required to create a local identity');
+            throw new UserFacingError(message('refusal.labelIsRequiredToCreate'), { detail: 'LocalIdentityProvider: label is required to create a local identity' });
         }
         const seed = Ed25519.randomSeed();
         const { publicKey } = Ed25519.seedToKeyPair(seed);
@@ -253,7 +255,7 @@ export class LocalIdentityProvider extends IdentityProvider {
             throw new Error('LocalIdentityProvider: cannot protect, no local identity with id ' + identityId);
         }
         if (identity.isProtected) {
-            throw new Error('LocalIdentityProvider: identity is already protected');
+            throw new UserFacingError(message('refusal.identityIsAlreadyProtected'), { detail: 'LocalIdentityProvider: identity is already protected' });
         }
         const stored = this._storageProvider.load(IDENTITY_KEY_PREFIX + identityId);
         if (!stored || !stored.seed) {
@@ -303,7 +305,7 @@ export class LocalIdentityProvider extends IdentityProvider {
             throw new Error('LocalIdentityProvider: cannot lock, no local identity with id ' + identityId);
         }
         if (!identity.isProtected) {
-            throw new Error('LocalIdentityProvider: identity has no passphrase set, there is nothing to lock');
+            throw new UserFacingError(message('refusal.identityHasNoPassphraseSet'), { detail: 'LocalIdentityProvider: identity has no passphrase set, there is nothing to lock' });
         }
         this._vaultCache.delete(identityId);
         return VaultLock.locked(identityId);
@@ -354,7 +356,7 @@ export class LocalIdentityProvider extends IdentityProvider {
     async _decryptWithAttemptLimit(identityId, encryption, passphrase) {
         if (this._failedUnlocks.isLockedOut(identityId)) {
             const seconds = Math.ceil(this._failedUnlocks.remainingCooldownMs(identityId) / 1000);
-            throw new Error('LocalIdentityProvider: too many failed unlock attempts, try again in ' + seconds + 's');
+            throw new UserFacingError(message('refusal.tooManyUnlockAttempts', { seconds }), { detail: 'LocalIdentityProvider: too many failed unlock attempts, try again in ' + seconds + 's' });
         }
         let seedBytes;
         try {
@@ -364,7 +366,9 @@ export class LocalIdentityProvider extends IdentityProvider {
             const suffix = remaining > 0
                 ? remaining + ' attempt(s) remaining before a temporary lockout'
                 : 'temporarily locked out after too many failed attempts';
-            throw new Error('LocalIdentityProvider: incorrect passphrase (' + suffix + ')');
+            throw new UserFacingError(remaining > 0
+                ? message('refusal.incorrectPassphraseRemaining', { count: remaining })
+                : message('refusal.incorrectPassphraseLockedOut'), { detail: 'LocalIdentityProvider: incorrect passphrase (' + suffix + ')' });
         }
         this._failedUnlocks.recordSuccess(identityId);
         return seedBytes;
@@ -427,7 +431,7 @@ export class LocalIdentityProvider extends IdentityProvider {
     // An unprotected identity decrypts nothing, so it is never counted.
     async exportLocalIdentity(identityId, passphrase) {
         if (!passphrase || typeof passphrase !== 'string' || !passphrase.trim()) {
-            throw new Error('LocalIdentityProvider: a passphrase is required to export an identity');
+            throw new UserFacingError(message('refusal.aPassphraseIsRequiredTo'), { detail: 'LocalIdentityProvider: a passphrase is required to export an identity' });
         }
         const identity = this.getLocalIdentity(identityId);
         if (!identity) {
@@ -601,7 +605,7 @@ export class LocalIdentityProvider extends IdentityProvider {
     // one that never had one.
     async changePassphrase(identityId, oldPassphrase, newPassphrase) {
         if (!oldPassphrase || typeof oldPassphrase !== 'string') {
-            throw new Error('LocalIdentityProvider: the current passphrase is required to change it');
+            throw new UserFacingError(message('refusal.theCurrentPassphraseIsRequired'), { detail: 'LocalIdentityProvider: the current passphrase is required to change it' });
         }
         requireNewPassphrase(newPassphrase);
         const identity = this.getLocalIdentity(identityId);
@@ -613,7 +617,7 @@ export class LocalIdentityProvider extends IdentityProvider {
         }
         if (this._failedUnlocks.isLockedOut(identityId)) {
             const seconds = Math.ceil(this._failedUnlocks.remainingCooldownMs(identityId) / 1000);
-            throw new Error('LocalIdentityProvider: too many failed unlock attempts, try again in ' + seconds + 's');
+            throw new UserFacingError(message('refusal.tooManyUnlockAttempts', { seconds }), { detail: 'LocalIdentityProvider: too many failed unlock attempts, try again in ' + seconds + 's' });
         }
         const stored = this._storageProvider.load(IDENTITY_KEY_PREFIX + identityId);
         if (!stored || !stored.encryption) {
@@ -702,7 +706,7 @@ export class LocalIdentityProvider extends IdentityProvider {
             throw new Error('LocalIdentityProvider: cannot revoke, no local identity with id ' + identityId);
         }
         if (identity.isRevoked) {
-            throw new Error('LocalIdentityProvider: identity is already revoked');
+            throw new UserFacingError(message('refusal.identityIsAlreadyRevoked'), { detail: 'LocalIdentityProvider: identity is already revoked' });
         }
         if (successorIdentityId) {
             this._signSuccession(identity, successorIdentityId);

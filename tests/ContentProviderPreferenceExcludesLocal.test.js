@@ -9,6 +9,7 @@ import {
     NON_PREFERABLE_CONTENT_STORAGE_TYPES
 } from '../application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { withEnglish } from './support/EnglishSource.js';
 
 // Content Provider settings no longer offer "Local".
 //
@@ -92,7 +93,7 @@ async function run() {
 
     // Section D
     {
-        const source = await readFile(new URL('../ui/views/ContentProviderSettingsView.js', import.meta.url), 'utf8');
+        const source = withEnglish(await readFile(new URL('../ui/views/ContentProviderSettingsView.js', import.meta.url), 'utf8'));
         assert(/preferredPlacementCreationCoordinator\.preferableStorageTypes\(\)/.test(source),
             'the settings view lists preferableStorageTypes()');
         assert(!/availableStorageTypes\(\)\s*:\s*\[\]/.test(source),

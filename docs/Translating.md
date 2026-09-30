@@ -17,7 +17,8 @@ chosen.
 | World View: panels, dialogs, prompts, the Explore sidebar, the map, the compass, feedback | Translated |
 | Publications page, Repository, Recent Worlds, an author's page, leaderboards and reconciliation | Translated |
 | Why a publication's check failed (the checker's technical detail) | English |
-| Identity, Peers, Chat, Following, settings pages | English |
+| Identity, Peers, Chat, Conversations, Following, Your Data, About, settings pages, the sign-in dialog, banners, notifications | Translated |
+| Refusals from `application/` (sign in first, already friends, wrong passphrase …) | Translated (`UserFacingError`) |
 | Resident speech in World View | English |
 | Undo/redo and history labels, a new document's default title | English (stored in documents; needs its own change) |
 

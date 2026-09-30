@@ -1,6 +1,8 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { FriendshipState } from '../../core/FriendshipState.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 
 const REJECTED_EVENT = 'PeerReconnectionRejected';
 
@@ -193,7 +195,7 @@ export class PeerReconnectionUseCase {
     _requireTarget(identityId) {
         const target = this._findTarget(identityId);
         if (!target) {
-            throw new Error('PeerReconnectionUseCase: no known peer or friend with that identity — remember them first');
+            throw new UserFacingError(message('refusal.noKnownPeerOrFriend'), { detail: 'PeerReconnectionUseCase: no known peer or friend with that identity — remember them first' });
         }
         return target;
     }

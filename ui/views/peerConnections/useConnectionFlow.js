@@ -1,6 +1,7 @@
 import { reactive } from 'vue';
 import { PeerLifecycleState } from '../../../peer/PeerLifecycleState.js';
 import { stripPrefix } from './presentation.js';
+import { errorText } from '../../i18n/i18n.js';
 
 // First-time connections: the create/accept calls InvitationExchange runs,
 // and completing an invitation you created by pasting the other side's
@@ -29,7 +30,7 @@ export function useConnectionFlow({ peerSessionManager }) {
             await peerSessionManager.completeConnection(peer.connectionId, text);
             delete replyTexts[peer.connectionId];
         } catch (e) {
-            completeErrors[peer.connectionId] = stripPrefix(e.message);
+            completeErrors[peer.connectionId] = stripPrefix(errorText(e));
         }
     }
     // The offering side of a manual exchange, still waiting for the reply.
