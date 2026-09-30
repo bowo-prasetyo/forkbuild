@@ -5,56 +5,8 @@
 // application/editor/CreatePreviewUseCase.js); a static import of one of
 // them puts its whole graph back into the first load, about half the app
 // for the pages and Three.js for the renderer.
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { assert } from './support/Assert.js';
-
-const ROOT = fileURLToPath(new URL('../', import.meta.url));
-
-// Static `import ... from '...'`, side-effect `import '...'` and
-// `export ... from '...'`, anchored to a statement position and limited to
-// what an import clause can hold, so text that merely starts with the word
-// is not mistaken for one; import() is left out on purpose.
-const STATIC_IMPORT_PATTERNS = [
-    /^\s*(?:import|export)\s[\w$\s{},*]*?\sfrom\s*['"]([^'"\n]+)['"]/gm,
-    /^\s*import\s*['"]([^'"]+)['"]/gm
-];
-
-function stripComments(text) {
-    return text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
-}
-
-function staticImportSpecifiers(text) {
-    const code = stripComments(text);
-    return STATIC_IMPORT_PATTERNS.flatMap((pattern) => [...code.matchAll(pattern)].map((m) => m[1]));
-}
-
-const importMap = JSON.parse(
-    readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/<script type="importmap">([\s\S]*?)<\/script>/)[1]
-).imports;
-
-function resolveSpecifier(specifier, fromFile) {
-    if (specifier.startsWith('.')) return path.relative(ROOT, path.resolve(ROOT, path.dirname(fromFile), specifier));
-    if (importMap[specifier]) return path.normalize(importMap[specifier]);
-    const prefix = Object.keys(importMap).find((key) => key.endsWith('/') && specifier.startsWith(key));
-    if (prefix) return path.normalize(importMap[prefix] + specifier.slice(prefix.length));
-    throw new Error(`${fromFile} imports ${specifier}, which neither a relative path nor the import map resolves`);
-}
-
-function staticGraph(entry) {
-    const reached = new Set();
-    const pending = [entry];
-    while (pending.length > 0) {
-        const file = pending.pop();
-        if (reached.has(file)) continue;
-        reached.add(file);
-        for (const specifier of staticImportSpecifiers(readFileSync(path.join(ROOT, file), 'utf8'))) {
-            pending.push(resolveSpecifier(specifier, file));
-        }
-    }
-    return reached;
-}
+import { staticGraph, staticImportSpecifiers } from './support/StaticImportGraph.js';
 
 // The scanner itself: static imports are found, import() and comments are not.
 {
@@ -86,5 +38,21 @@ console.log('✓ no page but Home is in the first load');
 const eagerThree = [...initialLoad].filter((file) => file.startsWith('vendor/three/'));
 assert(eagerThree.length === 0, `Three.js loads with the first page that draws in 3D, not with the app; statically reached:\n  ${eagerThree.join('\n  ')}`);
 console.log('✓ Three.js is not in the first load');
+
+// Services only some pages use are built in service groups that load with
+// those pages (ui/main.js, ui/serviceGroups.js); a static import of one of
+// their modules puts it back into the first load.
+const serviceGroupModules = [
+    'ui/main/composeAnchoring.js',
+    'ui/main/composePublicationDistribution.js',
+    'ui/main/composeSnapshotDiscovery.js',
+    'application/publication/OpenPublicationLink.js',
+    'application/ipfs/CreateIpfsRemotePublicationCoordinatorUseCase.js',
+    'storage/LocalStoragePublicationObservationArchive.js',
+    'audio/WebAudioSoundscapeProvider.js'
+];
+const eagerGroups = serviceGroupModules.filter((file) => initialLoad.has(file));
+assert(eagerGroups.length === 0, `service-group modules load with the pages that use them, not with the app; statically reached:\n  ${eagerGroups.join('\n  ')}`);
+console.log('✓ no service group\'s modules are in the first load');
 
 console.log('\n✅ All InitialLoadModuleGraph tests passed.');

@@ -31,7 +31,7 @@ has to allow `'unsafe-eval'`. Removing it would need a build step.
 - On GitHub Pages, the empty `.nojekyll` file must be published, or files
   whose names start with `_` (such as `vendor/noble-hashes/_md.js`) are
   left out.
-- The page fetches about 850 module files, and more the first time each
+- The page fetches about 600 module files, and more the first time each
   page is opened. If the host drops one, that load fails;
   `ui/importWithRetry.js` retries it five times, with backoff.
 
@@ -117,6 +117,15 @@ compose functions in `ui/main/` (`composeIdentityAndPeers.js`,
 `composeWorldDiscovery.js` and so on), which return what `ui/main.js` then
 provides; every `app.provide()` call stays in `ui/main.js`. Views get
 services with `inject`.
+
+If only some pages use the service and nothing needs it running before they
+open, build it in a service group instead, so the app doesn't load it at
+startup: add it to an existing `defineServiceGroup(...)` in `ui/main.js` (or
+define a new one), and list the group for each page that injects it in
+`ui/router/pageServiceGroups.js`. `tests/ServiceGroupCoverage.test.js` names
+any page that injects a group's service without listing the group. A
+service that listens for peers' messages, runs in the background, or is used
+by the header belongs at startup.
 
 ### Is all of this code actually used?
 

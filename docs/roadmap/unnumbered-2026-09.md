@@ -3247,3 +3247,39 @@ thumbnail renderer was imported by the app shell, although it was already constr
   anchoring, wallets, distribution and discovery. Building those that no startup work needs on first use would be the
   next step; `<link rel="modulepreload">` hints would shorten the 20-level chain of imports the browser discovers one
   level at a time.
+
+## Loading: services build with the pages that use them (unnumbered, 2026-09-30)
+
+With pages loading when first opened, the app shell was still 840 modules (2.1 MB compressed), most of them services
+`ui/main.js` built at startup and provided to every page. Mapping each of its 148 provided services to the pages that
+inject them showed that 47 are used by only a few pages and do nothing until one opens: the Bitcoin, Base, Arweave and
+Steem anchoring pipelines and their wallets (only the Publications page and the Proof & Anchoring settings), publication
+and Snapshot distribution and discovery (the Editor, World View, the Publications page and a Publication link), the
+publication observation archive (the Publications page and the leaderboards), and World View's and the Editor's sound.
+
+- `ui/serviceGroups.js` holds service groups: `ui/main.js` defines each as a function that imports its modules, builds
+  its services from the ones already running and provides them. Each is built once; a build that fails (a module that
+  did not download) is tried again on the next navigation.
+- `ui/router/pageServiceGroups.js` lists the groups each page needs, and the router loads them beside the page's own
+  modules, so every service a page injects is provided before it renders.
+- Four groups: `anchoring`, `distribution`, `observationArchive` and `sound`. The Arweave and Base anchor services moved
+  from `composeInjectedWalletServices.js` into `composeAnchoring.js`, and so did Steem's anchor registrations, still
+  ahead of Arweave's and Base's, so all of anchoring loads together and registers in the same order; the injected-wallet signers stay at startup, since comment
+  distribution uses them. Everything that has to run from the start stays: the stores, the peer exchanges that listen
+  for peers' messages, background announcement sync, backups, and what the header shows.
+- The content-provider default the Editor, World View and the Publications page start from is now read from the saved
+  preference when the `distribution` group first loads, rather than when the app starts, so a preference saved earlier
+  in the same visit is picked up.
+- The first load is now 592 modules, 1.5 MB compressed. Measured in headless Chromium over HTTP/2 with gzip (median of
+  runs, until Home is shown): 0.89 s to 0.76 s unthrottled, and 4.95 s to 4.12 s on a 150 ms, 9 Mbit/s link with the
+  CPU slowed four times. Opening the Editor directly is no slower (7.4 s to 7.0 s on that link), since it no longer
+  downloads the anchoring services it never used.
+- Tests: `tests/ServiceGroupCoverage.test.js` reads the modules each page and the header statically reach and the keys
+  they inject, and fails if a page injects a group's service without listing the group, lists a group it does not use,
+  or if the header injects a group's service; `tests/ServiceGroups.test.js` covers building once, concurrent requests
+  and retrying a failed build; `tests/InitialLoadModuleGraph.test.js` also fails if a group's modules are statically
+  reachable from `ui/main.js`. The static import walk those tests share is `tests/support/StaticImportGraph.js`.
+- Checked in the real app with Vue's development build, which warns about every injection it cannot resolve: the
+  Editor, World View, the Publications page, every leaderboard and reconciliation page, a Publication link, the settings
+  pages, the Repository, Peers and Following open with no Vue warnings, as on the previous version, and render the same
+  text; the Proof & Anchoring settings still list Arweave, Bitcoin and Steem.

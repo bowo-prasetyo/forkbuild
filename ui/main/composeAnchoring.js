@@ -41,13 +41,20 @@ import { CreateBitcoinAnchorBroadcastCoordinatorUseCase } from '../../applicatio
 import { CreateBitcoinAnchorPublicationCoordinatorUseCase } from '../../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationCoordinatorUseCase.js';
 import { CreateBitcoinAnchorConfirmationCoordinatorUseCase } from '../../application/anchoring/bitcoin/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js';
 import { CreatePreferredPublicationAnchorCreationCoordinatorUseCase } from '../../application/anchoring/CreatePreferredPublicationAnchorCreationCoordinatorUseCase.js';
+import { CreateArweaveAnchorPublisherUseCase } from '../../application/anchoring/CreateArweaveAnchorPublisherUseCase.js';
+import { CreateArweaveAnchorProofVerifierUseCase } from '../../application/anchoring/CreateArweaveAnchorProofVerifierUseCase.js';
+import { CreateArweaveAnchorEvidenceViewUseCase } from '../../application/anchoring/CreateArweaveAnchorEvidenceViewUseCase.js';
+import { CreateBaseAnchorEvidenceViewUseCase } from '../../application/anchoring/base/CreateBaseAnchorEvidenceViewUseCase.js';
+import { CreateBaseAnchorProofVerifierUseCase } from '../../application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js';
 
 // Composition root: publication evidence and external anchoring, with the
 // Bitcoin (PSBT build, review, sign, finalize, broadcast, confirm) and Base
-// (plan, sign, finalize, broadcast, inclusion) pipelines and their wallets.
+// (plan, sign, finalize, broadcast, inclusion) pipelines and their wallets,
+// and the Arweave and Base anchor services. Built the first time a page that
+// anchors opens (ui/main.js, the 'anchoring' service group).
 export function composeAnchoring({
     identityProvider, resolvedBitcoinEsploraApiUrls, publicationCatalog, publicationAnchorCatalog,
-    anchorKnowledgeStore, roleProviderPreferenceStore
+    anchorKnowledgeStore, roleProviderPreferenceStore, arweaveHostSigner, resolvedArweaveGatewayUrl, steemRuntime = null
 }) {
     const { bitcoinProofVerifier } = new CreateBitcoinAnchorProofVerifierUseCase().execute({ apiUrls: resolvedBitcoinEsploraApiUrls });
     // Captured so the Arweave wiring below can register a second proof verifier
@@ -103,6 +110,40 @@ export function composeAnchoring({
     const { evidenceViewRegistry: externalAnchorEvidenceViewRegistry } = new CreateExternalAnchorEvidenceViewRegistryUseCase().execute({
         evidenceViews: [bitcoinAnchorEvidenceView]
     });
+
+    // Steem anchors are created, verified and described like Arweave ones
+    // (docs/Protocol.md, "Proposed: Steem Anchoring"). Registered before
+    // Arweave and Base, the order the registries have always listed them in.
+    if (steemRuntime) {
+        externalAnchorPublisherRegistry.register(steemRuntime.anchorPublisher);
+        externalAnchorProofVerifierRegistry.register(steemRuntime.proofVerifier);
+        externalAnchorEvidenceViewRegistry.register(steemRuntime.anchorEvidenceView);
+    }
+
+    // Registered into the same registries as Bitcoin. With no wallet installed,
+    // the lazy signer rejects honestly, so "Create Arweave Anchor" reports
+    // PUBLISH_UNAVAILABLE rather than disappearing.
+    const { arweaveAnchorPublisher } = new CreateArweaveAnchorPublisherUseCase().execute({
+        signer: arweaveHostSigner,
+        gatewayUrl: resolvedArweaveGatewayUrl
+    });
+    externalAnchorPublisherRegistry.register(arweaveAnchorPublisher);
+
+    const { arweaveProofVerifier } = new CreateArweaveAnchorProofVerifierUseCase().execute({
+        gatewayUrl: resolvedArweaveGatewayUrl
+    });
+    externalAnchorProofVerifierRegistry.register(arweaveProofVerifier);
+
+    // Uses its own BaseJsonRpcClient (the default endpoint), kept separate from
+    // baseJsonRpcClient below, as Bitcoin's verifier is.
+    const { baseProofVerifier } = new CreateBaseAnchorProofVerifierUseCase().execute();
+    externalAnchorProofVerifierRegistry.register(baseProofVerifier);
+
+    const { arweaveAnchorEvidenceView } = new CreateArweaveAnchorEvidenceViewUseCase().execute();
+    externalAnchorEvidenceViewRegistry.register(arweaveAnchorEvidenceView);
+
+    const { baseAnchorEvidenceView } = new CreateBaseAnchorEvidenceViewUseCase().execute();
+    externalAnchorEvidenceViewRegistry.register(baseAnchorEvidenceView);
 
     const { bitcoinEsploraTransactionConfirmationObserver } = new CreateBitcoinEsploraTransactionConfirmationObserverUseCase().execute({ apiUrls: resolvedBitcoinEsploraApiUrls });
     const { bitcoinAnchorConfirmationObserver } = new CreateBitcoinAnchorConfirmationObserverUseCase().execute({
