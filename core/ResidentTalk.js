@@ -14,6 +14,12 @@
 // control and bidirectional-override characters removed, whitespace
 // collapsed, length capped. Nothing here produces markup, and callers draw
 // the words as text.
+//
+// Every remark is a message (core/Message.js), not an English sentence: the
+// caller turns it into the viewer's language (setResidentSpeechTranslator()
+// in application/worldNavigation/residentMethods.js) before the renderer
+// draws it. A title or name is a parameter and is never translated.
+import { message } from './Message.js';
 
 // What a fact is about.
 export const RESIDENT_FACT_KIND = Object.freeze({
@@ -43,25 +49,20 @@ export const MAX_SPOKEN_TITLE_LENGTH = 60;
 export const MAX_SPOKEN_NAME_LENGTH = 40;
 
 // Said when a resident knows of nothing around.
-export const QUIET_REMARK = "It's quiet around here. I don't know of anything nearby.";
+export const QUIET_REMARK = message('resident.quiet');
 
-const COMPASS_WORDS = Object.freeze({
-    N: 'north', NE: 'north-east', E: 'east', SE: 'south-east',
-    S: 'south', SW: 'south-west', W: 'west', NW: 'north-west'
+// Compass sectors a direction can be given in, and each one's "{distance}
+// to the north" message, so a language can word each one its own way.
+const WHERE_KEYS = Object.freeze({
+    N: 'resident.where.north', NE: 'resident.where.northEast', E: 'resident.where.east', SE: 'resident.where.southEast',
+    S: 'resident.where.south', SW: 'resident.where.southWest', W: 'resident.where.west', NW: 'resident.where.northWest'
 });
 
-const VEHICLE_WORDS = Object.freeze({
-    bicycle: 'a bicycle', motorcycle: 'a motorcycle', car: 'a car', drone: 'a drone'
-});
-
-// A vehicle's name on its own, for a Focus button.
-const VEHICLE_NAMES = Object.freeze({
-    bicycle: 'bicycle', motorcycle: 'motorcycle', car: 'car', drone: 'drone'
-});
-
-const ANIMAL_WORDS = Object.freeze({
-    DEER: 'a deer', RABBIT: 'a rabbit'
-});
+// Vehicles and animals a resident can mention: each has a whole-sentence
+// message ("There's a bicycle {where}.") and a name for a Focus button, so a
+// language can make the article and sentence agree with the thing.
+const VEHICLE_TYPES = Object.freeze(['bicycle', 'motorcycle', 'car', 'drone']);
+const ANIMAL_SPECIES = Object.freeze({ DEER: 'deer', RABBIT: 'rabbit' });
 
 // Things close enough that a number would be fussy.
 const A_FEW_STEPS = 15;
@@ -82,71 +83,67 @@ export function sanitizeSpokenText(text, maxLength) {
 }
 
 // "about 80 m", "about 350 m", "about 3.2 km", "about 12 km", or "just a
-// few steps" — never falsely precise.
+// few steps" — never falsely precise. A message; the number is a parameter,
+// so it is written the viewer's way ("3,2 km").
 export function describeDistance(meters) {
-    if (!Number.isFinite(meters) || meters < A_FEW_STEPS) return 'just a few steps';
-    if (meters < 100) return `about ${Math.round(meters / 10) * 10} m`;
-    if (meters < 950) return `about ${Math.round(meters / 50) * 50} m`;
+    if (!Number.isFinite(meters) || meters < A_FEW_STEPS) return message('resident.distance.fewSteps');
+    if (meters < 100) return message('resident.distance.meters', { meters: Math.round(meters / 10) * 10 });
+    if (meters < 950) return message('resident.distance.meters', { meters: Math.round(meters / 50) * 50 });
     const km = meters / 1000;
-    if (km < 9.95) return `about ${Math.round(km * 10) / 10} km`;
-    return `about ${Math.round(km)} km`;
-}
-
-// A compass sector label (N, NE, ...) as words, or null.
-export function compassWord(label) {
-    return COMPASS_WORDS[label] || null;
+    if (km < 9.95) return message('resident.distance.kilometers', { kilometers: Math.round(km * 10) / 10 });
+    return message('resident.distance.kilometers', { kilometers: Math.round(km) });
 }
 
 // "about 80 m to the east", "about 80 m away" (no direction known), or
 // "just a few steps away".
 function where(fact) {
-    if (!(fact.distance >= A_FEW_STEPS)) return 'just a few steps away';
-    const direction = compassWord(fact.direction);
+    if (!(fact.distance >= A_FEW_STEPS)) return message('resident.where.fewSteps');
     const distance = describeDistance(fact.distance);
-    return direction ? `${distance} to the ${direction}` : `${distance} away`;
+    return Object.hasOwn(WHERE_KEYS, fact.direction)
+        ? message(WHERE_KEYS[fact.direction], { distance })
+        : message('resident.where.away', { distance });
 }
 
-function capitalize(text) {
-    return text.charAt(0).toUpperCase() + text.slice(1);
-}
-
-// One fact as one sentence, or null when it has nothing speakable.
+// One fact as one sentence (a message), or null when it has nothing
+// speakable.
 export function phraseFact(fact) {
     if (!fact) return null;
     switch (fact.kind) {
-    case RESIDENT_FACT_KIND.VEHICLE: {
-        const thing = VEHICLE_WORDS[fact.vehicleType];
-        return thing ? `There's ${thing} ${where(fact)}.` : null;
-    }
+    case RESIDENT_FACT_KIND.VEHICLE:
+        return VEHICLE_TYPES.includes(fact.vehicleType)
+            ? message(`resident.vehicleNearby.${fact.vehicleType}`, { where: where(fact) })
+            : null;
     case RESIDENT_FACT_KIND.ANIMAL: {
-        const thing = ANIMAL_WORDS[fact.species];
-        return thing ? `There's ${thing} ${where(fact)}.` : null;
+        const species = ANIMAL_SPECIES[fact.species];
+        return species ? message(`resident.animalNearby.${species}`, { where: where(fact) }) : null;
     }
     case RESIDENT_FACT_KIND.LANDMARK: {
         const title = sanitizeSpokenText(fact.title, MAX_SPOKEN_TITLE_LENGTH);
-        return title ? `The landmark “${title}” is ${where(fact)}.` : null;
+        return title ? message('resident.landmark', { title, where: where(fact) }) : null;
     }
     case RESIDENT_FACT_KIND.PERSON: {
         const name = sanitizeSpokenText(fact.displayName, MAX_SPOKEN_NAME_LENGTH);
-        return name ? `${name} is ${where(fact)}.` : null;
+        return name ? message('resident.person', { name, where: where(fact) }) : null;
     }
     case RESIDENT_FACT_KIND.BUILD: {
         const title = sanitizeSpokenText(fact.title, MAX_SPOKEN_TITLE_LENGTH);
         if (!title) return null;
         const author = sanitizeSpokenText(fact.author, MAX_SPOKEN_NAME_LENGTH);
-        const byline = author ? ` by ${author}` : '';
-        return `${capitalize(where(fact))}, there's a build called “${title}”${byline}.`;
+        return author
+            ? message('resident.buildBy', { title, author, where: where(fact) })
+            : message('resident.build', { title, where: where(fact) });
     }
     case RESIDENT_FACT_KIND.STRUCTURE: {
         const title = sanitizeSpokenText(fact.title, MAX_SPOKEN_TITLE_LENGTH);
         if (!title) return null;
         const author = sanitizeSpokenText(fact.author, MAX_SPOKEN_NAME_LENGTH);
-        const byline = author ? ` by ${author}` : '';
-        return `“${title}”${byline} stands ${where(fact)}.`;
+        return author
+            ? message('resident.structureBy', { title, author, where: where(fact) })
+            : message('resident.structure', { title, where: where(fact) });
     }
     case RESIDENT_FACT_KIND.PLACE: {
         const name = sanitizeSpokenText(fact.name, MAX_SPOKEN_TITLE_LENGTH);
-        return name ? `This is ${name}.` : null;
+        return name ? message('resident.place', { name }) : null;
     }
     default:
         return null;
@@ -201,7 +198,7 @@ export function pickResidentRemarkFacts(facts, { turn = 0 } = {}) {
 }
 
 // What a resident says on the `turn`th conversation: the picked facts
-// (pickResidentRemarkFacts()) as sentences, or QUIET_REMARK when there is
+// (pickResidentRemarkFacts()) as messages, or QUIET_REMARK when there is
 // nothing to say.
 export function composeResidentRemarks(facts, { turn = 0 } = {}) {
     const remarks = pickResidentRemarkFacts(facts, { turn }).map(phraseFact);
@@ -210,15 +207,15 @@ export function composeResidentRemarks(facts, { turn = 0 } = {}) {
 
 // What the viewer may choose to look at after hearing about `facts` (as
 // picked): one { kind, label, position } per mentioned thing that stays put
-// (FOCUSABLE_FACT_KINDS) and has a position. `label` is plain text for a
-// Focus button — the title as spoken, or the vehicle's name.
+// (FOCUSABLE_FACT_KINDS) and has a position. `label` is for a Focus button:
+// the title as spoken (plain text), or the vehicle's name (a message).
 export function focusTargetsFor(facts) {
     const targets = [];
     for (const fact of facts || []) {
         if (!FOCUSABLE_FACT_KINDS.includes(fact.kind) || !fact.position) continue;
         if (!Number.isFinite(fact.position.x) || !Number.isFinite(fact.position.z)) continue;
         const label = fact.kind === RESIDENT_FACT_KIND.VEHICLE
-            ? (VEHICLE_NAMES[fact.vehicleType] || null)
+            ? (VEHICLE_TYPES.includes(fact.vehicleType) ? message(`resident.vehicleName.${fact.vehicleType}`) : null)
             : sanitizeSpokenText(fact.title, MAX_SPOKEN_TITLE_LENGTH);
         if (!label) continue;
         targets.push({ kind: fact.kind, label, position: { x: fact.position.x, z: fact.position.z } });
@@ -228,7 +225,8 @@ export function focusTargetsFor(facts) {
 
 // How long what a resident said stays up (its bubble, and the Focus buttons
 // beside it): long enough to read at an easy pace, between
-// SPEECH_MIN_SECONDS and SPEECH_MAX_SECONDS.
+// SPEECH_MIN_SECONDS and SPEECH_MAX_SECONDS. `remarks` are the words as
+// shown, in whatever language they were translated into.
 export const SPEECH_MIN_SECONDS = 5;
 export const SPEECH_MAX_SECONDS = 14;
 const SPEECH_SECONDS_PER_WORD = 0.4;

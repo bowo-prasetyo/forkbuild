@@ -1055,6 +1055,8 @@ export default {
             // nothing.
             // Residents name people the way the People lists do.
             session.setResidentDisplayNameResolver((identityId) => resolveIdentityDisplayName(identityId));
+            // ...and speak in the chosen language.
+            session.setResidentSpeechTranslator((remark) => displayText(remark));
             vehicleInteractionInterval = setInterval(() => {
                 vehicleInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.avatarVehicleInteractionState()

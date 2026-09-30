@@ -12,6 +12,8 @@ import { RegionKind } from '../../core/RegionKind.js';
 import { CreateWorldRegionCommand } from '../commands/CreateWorldRegionCommand.js';
 import { UpdateWorldRegionCommand } from '../commands/UpdateWorldRegionCommand.js';
 import { RemoveWorldRegionCommand } from '../commands/RemoveWorldRegionCommand.js';
+import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
 
 // WorldNavigationSession methods for explicit World content: landmarks,
 // animal decorations and regions, each an ordinary Command on the World.
@@ -71,15 +73,15 @@ export const worldContentMethods = {
         this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
         const doc = this.getDocument(this._activeDocumentId);
         if (!doc) {
-            throw new Error('WorldNavigationSession: no active World to add a landmark to');
+            throw new UserFacingError(message('worldRefusal.noWorld'), { detail: 'WorldNavigationSession: no active World to add a landmark to' });
         }
         const worldId = doc.world.id;
         if (!this.canEditDocument(worldId)) {
-            throw new Error('WorldNavigationSession: not authorized to add landmarks to this World');
+            throw new UserFacingError(message('worldRefusal.notAuthorized'), { detail: 'WorldNavigationSession: not authorized to add landmarks to this World' });
         }
         const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
         if (!authorIdentityId) {
-            throw new Error('WorldNavigationSession: sign in to add a landmark');
+            throw new UserFacingError(message('worldRefusal.signIn'), { detail: 'WorldNavigationSession: sign in to add a landmark' });
         }
         const layoutPosition = this.getDocumentPosition(worldId);
         const cmd = new CreateWorldLandmarkCommand({
@@ -104,7 +106,7 @@ export const worldContentMethods = {
         }
         const worldId = this._ensureEditableDocumentId(owner.world.id);
         if (!this.canEditDocument(worldId)) {
-            throw new Error('WorldNavigationSession: not authorized to edit landmarks in this World');
+            throw new UserFacingError(message('worldRefusal.notAuthorized'), { detail: 'WorldNavigationSession: not authorized to edit landmarks in this World' });
         }
         this._commandHistories.get(worldId).execute(
             new UpdateWorldLandmarkCommand({ worldId, landmarkId, title, description })
@@ -119,7 +121,7 @@ export const worldContentMethods = {
         }
         const worldId = this._ensureEditableDocumentId(owner.world.id);
         if (!this.canEditDocument(worldId)) {
-            throw new Error('WorldNavigationSession: not authorized to remove landmarks from this World');
+            throw new UserFacingError(message('worldRefusal.notAuthorized'), { detail: 'WorldNavigationSession: not authorized to remove landmarks from this World' });
         }
         this._commandHistories.get(worldId).execute(
             new RemoveWorldLandmarkCommand({ worldId, landmarkId })
@@ -159,15 +161,15 @@ export const worldContentMethods = {
         this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
         const doc = this.getDocument(this._activeDocumentId);
         if (!doc) {
-            throw new Error('WorldNavigationSession: no active World to add a decoration to');
+            throw new UserFacingError(message('worldRefusal.noWorld'), { detail: 'WorldNavigationSession: no active World to add a decoration to' });
         }
         const worldId = doc.world.id;
         if (!this.canEditDocument(worldId)) {
-            throw new Error('WorldNavigationSession: not authorized to decorate this World');
+            throw new UserFacingError(message('worldRefusal.notAuthorized'), { detail: 'WorldNavigationSession: not authorized to decorate this World' });
         }
         const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
         if (!authorIdentityId) {
-            throw new Error('WorldNavigationSession: sign in to decorate a World');
+            throw new UserFacingError(message('worldRefusal.signIn'), { detail: 'WorldNavigationSession: sign in to decorate a World' });
         }
         const layoutPosition = this.getDocumentPosition(worldId);
         const cmd = new CreateWorldAnimalDecorationCommand({
@@ -252,7 +254,7 @@ export const worldContentMethods = {
         const { decoration, doc, globalPosition } = found;
         const worldId = this._ensureEditableDocumentId(doc.world.id);
         if (!this.canEditDocument(worldId)) {
-            throw new Error('WorldNavigationSession: not authorized to remove a decoration from this World');
+            throw new UserFacingError(message('worldRefusal.notAuthorized'), { detail: 'WorldNavigationSession: not authorized to remove a decoration from this World' });
         }
         this._commandHistories.get(worldId).execute(
             new RemoveWorldAnimalDecorationCommand({ worldId, decorationId: decoration.id })
@@ -304,15 +306,15 @@ export const worldContentMethods = {
         this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
         const doc = this.getDocument(this._activeDocumentId);
         if (!doc) {
-            throw new Error('WorldNavigationSession: no active World to add a region to');
+            throw new UserFacingError(message('worldRefusal.noWorld'), { detail: 'WorldNavigationSession: no active World to add a region to' });
         }
         const worldId = doc.world.id;
         if (!this.canEditDocument(worldId)) {
-            throw new Error('WorldNavigationSession: not authorized to add regions to this World');
+            throw new UserFacingError(message('worldRefusal.notAuthorized'), { detail: 'WorldNavigationSession: not authorized to add regions to this World' });
         }
         const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
         if (!authorIdentityId) {
-            throw new Error('WorldNavigationSession: sign in to add a region');
+            throw new UserFacingError(message('worldRefusal.signIn'), { detail: 'WorldNavigationSession: sign in to add a region' });
         }
         const layoutPosition = this.getDocumentPosition(worldId);
         const cmd = new CreateWorldRegionCommand({
@@ -340,7 +342,7 @@ export const worldContentMethods = {
         }
         const worldId = this._ensureEditableDocumentId(owner.world.id);
         if (!this.canEditDocument(worldId)) {
-            throw new Error('WorldNavigationSession: not authorized to edit regions in this World');
+            throw new UserFacingError(message('worldRefusal.notAuthorized'), { detail: 'WorldNavigationSession: not authorized to edit regions in this World' });
         }
         this._commandHistories.get(worldId).execute(
             new UpdateWorldRegionCommand({ worldId, regionId, name, description, kind, radius })
@@ -355,7 +357,7 @@ export const worldContentMethods = {
         }
         const worldId = this._ensureEditableDocumentId(owner.world.id);
         if (!this.canEditDocument(worldId)) {
-            throw new Error('WorldNavigationSession: not authorized to remove regions from this World');
+            throw new UserFacingError(message('worldRefusal.notAuthorized'), { detail: 'WorldNavigationSession: not authorized to remove regions from this World' });
         }
         this._commandHistories.get(worldId).execute(
             new RemoveWorldRegionCommand({ worldId, regionId })

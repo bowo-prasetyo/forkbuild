@@ -19,7 +19,7 @@ chosen.
 | Why a publication's check failed (the checker's technical detail) | English |
 | Identity, Peers, Chat, Conversations, Following, Your Data, About, settings pages, the sign-in dialog, banners, notifications | Translated |
 | Refusals from `application/` (sign in first, already friends, wrong passphrase …) | Translated (`UserFacingError`) |
-| Resident speech in World View | English |
+| Resident speech in World View | Translated |
 | Undo/redo and history labels, a new document's default title | English (stored in documents; needs its own change) |
 
 ## How it works
@@ -131,6 +131,13 @@ it:
   descriptor when there is one. Programmer errors (a missing collaborator, a
   broken invariant) stay plain English `Error`s: nobody using the app reads
   them.
+- **Text the 3D view draws** (a resident's speech bubble) can't be translated
+  by the renderer, which never imports the UI. The code that makes it returns
+  messages (`core/ResidentTalk.js`), and World View hands the session a
+  translator (`setResidentSpeechTranslator(displayText)`) so the words are
+  turned into text before the renderer gets them. Each sentence is one
+  message with its parts as parameters (`{where}`, itself a message holding
+  `{distance}`), so a language can reorder them.
 - **Enum-to-label modules** (`application/document/LicenseLabels.js`,
   `application/avatar/AvatarPresenceLabels.js`) map each value to a key, with
   a message for anything unrecognized.
