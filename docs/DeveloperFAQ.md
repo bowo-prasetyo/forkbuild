@@ -127,6 +127,10 @@ any page that injects a group's service without listing the group. A
 service that listens for peers' messages, runs in the background, or is used
 by the header belongs at startup.
 
+A new static import in `ui/main.js` (or anything it loads at startup) also
+needs `node scripts/modulepreload.mjs`, which updates `index.html`'s list of
+modules to preload; `tests/ModulePreload.test.js` fails until it is run.
+
 ### Is all of this code actually used?
 
 Not all of it. Some subsystems are built and tested but not wired into the

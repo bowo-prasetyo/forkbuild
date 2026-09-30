@@ -3283,3 +3283,30 @@ publication observation archive (the Publications page and the leaderboards), an
   Editor, World View, the Publications page, every leaderboard and reconciliation page, a Publication link, the settings
   pages, the Repository, Peers and Following open with no Vue warnings, as on the previous version, and render the same
   text; the Proof & Anchoring settings still list Arweave, Bitcoin and Steem.
+
+## Loading: the first load's modules are preloaded (unnumbered, 2026-09-30)
+
+With no bundler, the browser found the app's modules one import at a time: it fetched `ui/boot.js`, read its imports,
+fetched those, read theirs, and so on, twenty levels deep before the last module of the first load was even requested.
+On a slow link every level costs a full round trip, however fast the connection is otherwise.
+
+- `index.html` now lists all 595 modules of the first load (`ui/boot.js`, `ui/main.js` and everything they reach through
+  static imports) as `<link rel="modulepreload">`, breadth first, right after the import map, so the browser requests
+  them all as soon as it reads the page. Pages and service groups are left out, since they load when first needed. A
+  preload fetches and parses a module without running it, so `ui/boot.js` still runs `ui/main.js` only after storage is
+  open. The list adds about 6 KB to the compressed page.
+- `scripts/modulepreload.mjs` writes the list (`--check` reports whether it is current), from the static import walk now
+  in `scripts/moduleGraph.mjs`, which the loading tests also use. `tests/ModulePreload.test.js` fails when the list is
+  out of date, lists a module the first load doesn't need, or comes before the import map.
+- Measured in headless Chromium over HTTP/2 with gzip, with each response delayed on the server (median time until Home
+  is shown): 1.44 s to 0.97 s at 60 ms, and 3.03 s to 1.56 s at 150 ms. With Chrome's own throttling of a 150 ms,
+  9 Mbit/s link and the CPU slowed four times: 4.1 s to 2.9 s. The number of requests is unchanged: each module is
+  fetched once, by its preload.
+- Chrome's DevTools throttling at 40 ms and 50 Mbit/s held the largest responses for about 80 s in most runs with the
+  preloads, and once before them when opening the Editor; the same page with the delay made on the server instead loaded
+  normally every time, so this is taken to be the throttling, not the page.
+- Checked in the real app: a language saved before a reload is applied on the next load (storage is still read only
+  after it opens), and every page opens with no Vue warnings under Vue's development build.
+- Found on the way, not changed here: in Chromium a module request that fails is not requested again for the life of
+  the page, so `ui/importWithRetry.js` cannot recover from a dropped request; the page stays blank, with or without the
+  preloads.

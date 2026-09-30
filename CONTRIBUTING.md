@@ -41,6 +41,9 @@ to run matching files only: `npm run test:node -- Avatar`.
      or WebCrypto.
    - No scripts from other origins and no inline scripts: libraries go through
      `vendor/` (`scripts/vendor.mjs`).
+   - After adding, removing or moving a static import in code the app loads at
+     startup, run `node scripts/modulepreload.mjs` to update `index.html`'s
+     preload list; `tests/ModulePreload.test.js` fails until you do.
    - Tests don't use the internet; inject a fake when a test needs a server.
    - Text the app shows goes through `t()` so it can be translated; see
      [docs/Translating.md](docs/Translating.md), which also covers adding
