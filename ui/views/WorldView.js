@@ -1435,10 +1435,10 @@ export default {
                 </div>
                 <template v-if="cameraPosition && controlsHintOpen">
                     <p v-if="touchInput" class="world-view-hint world-view-hint--controls">
-                        {{ t('worldView.dragToOrbitPinchTo') }}<template v-if="avatarControlMode"> {{ t('worldView.joystickToWalkPushTo') }}</template>
+                        {{ t('worldView.dragToOrbitPinchTo') }}<template v-if="avatarControlMode">{{ ' ' + t('worldView.joystickToWalkPushTo') }}</template>
                     </p>
                     <p v-else class="world-view-hint world-view-hint--controls">
-                        {{ t('worldView.dragToOrbitScrollTo') }}<template v-if="avatarControlMode"> {{ t('worldView.wasdToWalkShiftTo') }}</template>
+                        {{ t('worldView.dragToOrbitScrollTo') }}<template v-if="avatarControlMode">{{ ' ' + t('worldView.wasdToWalkShiftTo') }}</template>
                     </p>
                 </template>
                 <WorldCollaboratorIndicator v-if="activeDocumentInfo" :rows="spatialCollaboratorRows" @follow="followCollaborator" />

@@ -82,7 +82,7 @@ export default {
                 <input class="publication-share-link-url" readonly :value="share.url" :aria-label="t('share.linkLabel')" @focus="$event.target.select()">
                 <p class="form-hint form-hint--neutral">
                     {{ t('share.hint') }}
-                    <template v-if="share.note"> {{ share.note }}</template>
+                    <template v-if="share.note">{{ ' ' + share.note }}</template>
                 </p>
             </template>
             <p v-else class="form-hint form-hint--neutral">{{ share.reason }}</p>

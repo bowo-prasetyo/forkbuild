@@ -118,7 +118,7 @@ export default {
                         <div class="locations-panel-item-info">
                             <span class="locations-panel-item-title">{{ entry.index + 1 }}. {{ displayText(entry.description) }}</span>
                             <span class="locations-panel-item-position">
-                                {{ formatTimestamp(entry.timestamp) }}<template v-if="!entry.applied"> {{ t('historyTimelinePanel.undone') }}</template><template v-if="entry.index + 1 === previewCursor"> {{ t('historyTimelinePanel.previewing') }}</template>
+                                {{ formatTimestamp(entry.timestamp) }}<template v-if="!entry.applied">{{ ' ' + t('historyTimelinePanel.undone') }}</template><template v-if="entry.index + 1 === previewCursor">{{ ' ' + t('historyTimelinePanel.previewing') }}</template>
                             </span>
                         </div>
                     </li>

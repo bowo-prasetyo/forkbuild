@@ -9,7 +9,7 @@ export const headerSectionTemplate = `<h2>{{ title }}</h2>
                 >
                     <span v-if="activeDocumentInfo.status === 'published'">{{ t('worldView.published') }}</span>
                     <span v-else-if="activeDocumentInfo.parentDocumentId">
-                        {{ t('worldView.editingFork') }}<template v-if="parentTitle(activeDocumentInfo.parentDocumentId)"> {{ t('worldView.forkedFrom', { title: parentTitle(activeDocumentInfo.parentDocumentId) }) }}</template>
+                        {{ t('worldView.editingFork') }}<template v-if="parentTitle(activeDocumentInfo.parentDocumentId)">{{ ' ' + t('worldView.forkedFrom', { title: parentTitle(activeDocumentInfo.parentDocumentId) }) }}</template>
                     </span>
                     <span v-else>✎ {{ displayText(activeDocumentInfo.statusLabel) }}</span>
                 </p>

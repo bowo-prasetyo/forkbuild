@@ -5,7 +5,7 @@ import { RestoreMode } from '../../application/backup/DeviceBackupUseCase.js';
 import { BackupDestination, REMINDER_INTERVAL_OPTIONS_DAYS } from '../../application/backup/BackupStatusStore.js';
 import { backupFileName } from '../../application/backup/BackupFolder.js';
 import { evaluateNewPassphrase } from '../../application/identity/NewPassphrasePolicy.js';
-import { formatByteSize } from '../../utils/formatByteSize.js';
+import { byteSizeText } from '../i18n/sizeText.js';
 import { formatRelativeVisit } from '../../utils/formatRelativeVisit.js';
 import { displayText, errorText, hasMessage, t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
@@ -306,7 +306,7 @@ export default {
             t,
             available: Boolean(deviceBackup), storedRows, usage, quota, persisted, persistRefused,
             canPersist: Boolean(navigatorStorage && typeof navigatorStorage.persist === 'function'),
-            requestPersistence, formatByteSize, formatDate,
+            requestPersistence, byteSizeText, formatDate,
             backupForm, backupPassphraseHint, createBackup, shareBackup, backUpToFolder, canShareFiles,
             status, lastBackupText, reminderOptions, setReminderInterval, setAutomatic,
             destinationsAvailable: Boolean(destinations), folderSupported, destinationState, destinationForm,
@@ -336,7 +336,7 @@ export default {
                 </table>
                 <p v-else class="form-hint form-hint--neutral">{{ t('yourDataView.nothingIsStoredYet') }}</p>
                 <p v-if="usage !== null" class="form-hint form-hint--neutral">
-                    {{ t('yourDataView.using', { usage: formatByteSize(usage) }) }}<template v-if="quota"> {{ t('yourDataView.ofTheThisBrowserAllows', { quota: formatByteSize(quota) }) }}</template>.
+                    {{ quota ? t('yourDataView.usageOfQuota', { usage: byteSizeText(usage), quota: byteSizeText(quota) }) : t('yourDataView.usage', { usage: byteSizeText(usage) }) }}
                 </p>
                 <p v-if="persisted === true" class="form-hint form-hint--neutral">
                     {{ t('yourDataView.theBrowserHasAgreedNot') }}
@@ -386,7 +386,7 @@ export default {
                     {{ t('yourDataView.theBackupKeyIsRemembered', { name: destinationState.folder.name }) }}
                 </p>
                 <div v-if="backupForm.result" class="identity-import-result your-data-backup-result">
-                    <p>{{ backupForm.result.where }}<template v-if="backupForm.result.size"> ({{ formatByteSize(backupForm.result.size) }})</template> {{ t('yourDataView.keepTheBackupAndIts') }}</p>
+                    <p>{{ backupForm.result.where }}<template v-if="backupForm.result.size"> ({{ byteSizeText(backupForm.result.size) }})</template> {{ t('yourDataView.keepTheBackupAndIts') }}</p>
                     <ul>
                         <li v-for="row in backupForm.result.rows" :key="row.group">{{ row.label }}: {{ row.count }}</li>
                     </ul>
@@ -416,7 +416,7 @@ export default {
                     </p>
                     <p v-if="destinationState.folder" class="your-data-folder">
                         <I18nText keypath="yourDataView.folder"><template #folder><strong>{{ destinationState.folder.name }}</strong></template></I18nText>
-                        <template v-if="destinationState.folder.permission !== 'granted'"> {{ t('yourDataView.theBrowserAsksAgainBefore') }}</template>
+                        <template v-if="destinationState.folder.permission !== 'granted'">{{ ' ' + t('yourDataView.theBrowserAsksAgainBefore') }}</template>
                     </p>
                     <div class="your-data-buttons">
                         <button type="button" class="action-btn action-btn--secondary your-data-choose-folder" :disabled="destinationForm.busy" @click="chooseFolder">
@@ -440,7 +440,7 @@ export default {
                 </template>
                 <p v-else class="form-hint form-hint--neutral">
                     {{ t('yourDataView.thisBrowserCanTSave') }}
-                    <template v-if="canShareFiles"> {{ t('yourDataView.shareBackupSendsTheFile') }}</template>
+                    <template v-if="canShareFiles">{{ ' ' + t('yourDataView.shareBackupSendsTheFile') }}</template>
                     {{ t('yourDataView.downloadTheFileAndMove') }}
                 </p>
                 <p v-if="destinationForm.error" class="identity-unlock-error">{{ destinationForm.error }}</p>
@@ -456,8 +456,8 @@ export default {
                 <div v-if="restoreForm.result" class="identity-import-result your-data-restore-result">
                     <p>
                         {{ t('yourDataView.restoredEntries', { count: restoreForm.result.written }) }}
-                        <template v-if="restoreForm.result.kept"> {{ t('yourDataView.keptThisDeviceSVersion', { kept: restoreForm.result.kept }) }}</template>
-                        <template v-if="restoreForm.result.skipped"> {{ t('yourDataView.skippedThisVersionOfForkbuild', { skipped: restoreForm.result.skipped }) }}</template>
+                        <template v-if="restoreForm.result.kept">{{ ' ' + t('yourDataView.keptThisDeviceSVersion', { kept: restoreForm.result.kept }) }}</template>
+                        <template v-if="restoreForm.result.skipped">{{ ' ' + t('yourDataView.skippedThisVersionOfForkbuild', { skipped: restoreForm.result.skipped }) }}</template>
                     </p>
                     <p>{{ t('yourDataView.reloading') }}</p>
                 </div>
