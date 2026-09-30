@@ -1249,7 +1249,7 @@ export default {
             <!-- The page is a regular feature; only the parts marked with an
                  Experimental badge may change or be removed. -->
             <p class="form-hint form-hint--neutral">
-                {{ t('publications.partsMarked') }} <span class="experimental-badge">{{ t('publications.experimental') }}</span> {{ t('publications.anchoringWalletsSteemRemoteIpfs') }}
+                <I18nText keypath="publications.partsMarked"><template #badge><span class="experimental-badge">{{ t('publications.experimental') }}</span></template></I18nText>
             </p>
             <p v-if="retrievalPeers.length === 0 && anyRetrievable" class="form-hint form-hint--neutral">
                 <I18nText keypath="publications.noPeerIsConnectedSo2"><template #peers><router-link to="/peers">{{ t('publications.peers') }}</router-link></template></I18nText>

@@ -2,7 +2,8 @@
 
 ForkBuild can be shown in another language: every page's text is a message
 (`ui/i18n/`), chosen on the **Language** page, with a pseudo-locale for
-finding text that isn't ready. It ships in English and Bahasa Indonesia; the
+finding text that isn't ready. It ships in English, Bahasa Indonesia and
+Japanese; the
 table below lists the few things that stay in the language they were written
 in.
 
@@ -12,6 +13,7 @@ in.
 |---|---|---|
 | English (source) | `en` | `ui/i18n/messages/en.js` |
 | Bahasa Indonesia | `id` | `ui/i18n/messages/id.js`, complete (see "Indonesian" below) |
+| 日本語 (Japanese) | `ja` | `ui/i18n/messages/ja.js`, complete (see "Japanese" below) |
 
 ## What is ready
 
@@ -104,6 +106,40 @@ Indonesian has one plural form, so plural messages give only `other`; the
 undo labels also give `=1` ("Tempatkan Balok" rather than "Tempatkan 1
 Balok"). Numbers and dates follow `id` (`3,2 km`). Compass points are U, TL,
 T, TG, S, BD, B, BL.
+
+## Japanese
+
+`ui/i18n/messages/ja.js` translates every key. It uses polite です/ます
+sentences and plain noun phrases for buttons and labels, 「」 for quoted
+titles, and keeps network and product names (ForkBuild, Arweave, Nostr, IPFS,
+Steem, Bitcoin, Base, Kubo, WebRTC, STUN, TURN) in Latin letters. Protocol
+words use their usual katakana (ゲートウェイ, リレー, エンドポイント,
+スナップショット, ハッシュ); nonce and txid stay as they are. The words it uses
+for ForkBuild's own ideas:
+
+| English | Japanese |
+|---|---|
+| World | ワールド |
+| brick | ブロック |
+| build (a creation) | 作品 |
+| structure / blueprint | 構造物 / ブループリント |
+| Publication / publish | 公開物 / 公開する |
+| fork | フォーク (…のフォーク) |
+| peer | ピア |
+| identity / passphrase | アイデンティティ / パスフレーズ |
+| landmark / region / resident | ランドマーク / 地域 / 住人 |
+| placement / place | 配置 / 配置する |
+| anchor / anchoring | アンカー / アンカリング |
+| undo / redo | 元に戻す / やり直す |
+| sign in / sign out | サインイン / サインアウト |
+
+Japanese has one plural form, so plural messages give only `other`, with a
+counter word (`{count}個のブロック`, `{count}件`, `{count}人`); the undo labels
+also give `=1` ("ブロックを配置" rather than "1個のブロックを配置"). Another
+person's name takes さん where a sentence talks about them. A place comes
+before what is there, so a resident's `{where}` reads "北へ約3.2 km行ったところ"
+("3.2 km to the north"). Compass points are 北, 北東, 東, 南東, 南, 南西, 西,
+北西.
 
 ## Adding a language
 

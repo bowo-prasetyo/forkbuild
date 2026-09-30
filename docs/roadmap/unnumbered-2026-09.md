@@ -3199,3 +3199,23 @@ automatically for a browser set to Indonesian.
   and non-destructive buttons, scanned for English words (none found, no warnings); World View with a resident
   talking, the undo button and the History panel; the Editor; and Home, the Editor and Your Data at phone width.
 
+## Internationalization: Japanese (unnumbered, 2026-09-30)
+
+The second translation. ForkBuild can now be shown in Japanese (日本語), chosen on the Language page or picked
+automatically for a browser set to Japanese.
+
+- `ui/i18n/messages/ja.js` translates all 3,622 messages, in the same order and groups as English. It uses polite
+  です/ます sentences, 「」 around quoted titles, and keeps network and product names in Latin letters. The words it
+  uses for ForkBuild's own ideas are listed in `docs/Translating.md`, "Japanese".
+- Found on the way: six sentences were still built from pieces around a link, a badge or a name, which fixes the
+  English word order (Japanese puts the name before the verb). Each is one message now, with the part as a
+  placeholder: the lobby's "You're in this lobby as {name}." and its rendezvous-server note, a publication card's
+  "{backItUp}, or Explore it…", the Publications page's "Parts marked {badge} …", and the Peers page's
+  "Connecting to {name}" and "More actions for {name}". English and Indonesian say the same as before.
+- The header's Log In button no longer wraps: Japanese can break between any two characters, so "ログイン" split in two.
+- Tests: `tests/JapaneseLocale.test.js` (complete, chosen from the browser, one plural form, a resident's sentence,
+  undo labels, a fork's title, a name before the verb, compass points).
+- Checked in the real app in Japanese, not signed in: every page and settings page with their folded panels opened,
+  scanned for English words (only product names, key names and hashes remain, no missing-message warnings); Home, the
+  Editor and Your Data at phone width.
+

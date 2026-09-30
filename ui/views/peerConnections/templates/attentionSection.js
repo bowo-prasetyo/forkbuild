@@ -15,7 +15,7 @@ export const attentionSectionTemplate = `<section v-if="pendingPeers.length || r
                     </li>
                     <li v-for="peer in pendingPeers" :key="peer.connectionId" class="peers-row">
                         <div class="peers-row-main">
-                            <span class="peers-row-title">{{ peer.alias ? t('peerConnections.connectingTo') + peer.alias : t('peerConnections.newConnection') }}</span>
+                            <span class="peers-row-title">{{ peer.alias ? t('peerConnections.connectingTo', { name: peer.alias }) : t('peerConnections.newConnection') }}</span>
                             <span class="peer-badge" :class="LIFECYCLE_CLASSES[peer.getLifecycleState()]">
                                 {{ LIFECYCLE_LABELS[peer.getLifecycleState()] || peer.getLifecycleState() }}
                             </span>

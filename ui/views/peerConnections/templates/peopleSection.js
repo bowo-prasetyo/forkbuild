@@ -52,7 +52,7 @@ export const peopleSectionTemplate = `<section class="peers-section" aria-labell
                                 <button v-if="canAddFriend(person)" class="action-btn action-btn--primary"
                                         @click="act(person.identityId, () => sendFriendRequest(person.connectedPeer))">{{ t('peerConnections.addFriend') }}</button>
                                 <details class="peers-menu" @toggle="onMenuToggle">
-                                    <summary class="peers-menu-trigger" :aria-label="t('peerConnections.moreActionsFor') + person.name">⋯</summary>
+                                    <summary class="peers-menu-trigger" :aria-label="t('peerConnections.moreActionsFor', { name: person.name })">⋯</summary>
                                     <div class="peers-menu-list">
                                         <button type="button" class="peers-menu-item" @click="menuAction($event, () => startRename(person))">
                                             {{ person.isKnown ? t('peerConnections.rename') : t('peerConnections.nameRemember') }}

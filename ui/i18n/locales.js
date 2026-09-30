@@ -16,6 +16,7 @@ export const PSEUDO_LOCALE = 'en-XA';
 export const LOCALES = Object.freeze([
     Object.freeze({ code: 'en', name: 'English', dir: 'ltr', loadMessages: async () => en }),
     Object.freeze({ code: 'id', name: 'Bahasa Indonesia', dir: 'ltr', loadMessages: async () => (await import('./messages/id.js')).default }),
+    Object.freeze({ code: 'ja', name: '日本語', dir: 'ltr', loadMessages: async () => (await import('./messages/ja.js')).default }),
     // Never chosen automatically: only for checking the app is ready for
     // translation (see pseudoLocalize.js). Intl formats it as English.
     Object.freeze({

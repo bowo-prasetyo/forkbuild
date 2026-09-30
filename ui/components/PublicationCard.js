@@ -139,7 +139,7 @@ export default {
             </p>
             <p v-else-if="distribution" class="publication-distribution publication-distribution--none">
                 {{ t('publicationCard.noDistributionRecordedOnThis') }}
-                <router-link to="/settings/data">{{ t('publicationCard.backItUp') }}</router-link>{{ t('publicationCard.orExploreItAndUse') }}
+                <I18nText keypath="publicationCard.backItUpOrExplore"><template #backItUp><router-link to="/settings/data">{{ t('publicationCard.backItUp') }}</router-link></template></I18nText>
             </p>
             <div class="publication-actions">
                 <button class="action-btn action-btn--open" @click="$emit('open', publication)">{{ t('publicationCard.open') }}</button>
