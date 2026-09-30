@@ -24,6 +24,9 @@ export default Object.freeze({
     'app.notifications': '通知',
     'app.loadFailed': 'ForkBuild の読み込みを完了できませんでした。接続を確認してから、ページを再読み込みしてください。',
     'app.loadFailedReload': '再読み込み',
+    'app.pageLoadFailed': 'このページを読み込めませんでした。接続を確認してから、ForkBuild を再読み込みして開いてください。',
+    'app.pageLoadFailedEndsCall': '再読み込みすると音声通話が終了します。',
+    'app.pageLoadFailedDismiss': '閉じる',
 
     // The sound button and volume slider (ui/components/SoundControl.js).
     'sound.group': 'サウンド',

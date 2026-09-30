@@ -1563,7 +1563,13 @@ reload, or one where sessionStorage cannot record it, shows a translated
 message with a Reload button in place of the app instead of reloading again;
 an error that is not a failed download is thrown as before. boot.js imports
 only loadRecovery.js, so those two small files are the only ones whose loss
-still leaves the page blank. tests/InitialLoadModuleGraph.test.js fails
+still leaves the page blank. A page opened later (or its service groups)
+that still fails to download after a brief retry is not reloaded
+automatically, since a new page ends a voice call and every peer connection:
+ui/pageLoadFailure.js catches the router's error and
+ui/components/PageLoadFailureNotice.js, under the header, says the page could
+not load and offers Reload (onto that page) or Dismiss, warning when a voice
+call would end; the next navigation that completes clears it. tests/InitialLoadModuleGraph.test.js fails
 if a page, Three.js or a service group's modules are statically reachable
 from ui/main.js again. index.html lists every module of the first load (ui/boot.js,
 ui/start.js, ui/main.js and what they statically import, breadth first) as a

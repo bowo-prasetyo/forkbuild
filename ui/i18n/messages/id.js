@@ -24,6 +24,9 @@ export default Object.freeze({
     'app.notifications': 'Notifikasi',
     'app.loadFailed': 'ForkBuild tidak dapat selesai dimuat. Periksa koneksi Anda, lalu muat ulang halaman.',
     'app.loadFailedReload': 'Muat ulang',
+    'app.pageLoadFailed': 'Halaman ini tidak dapat dimuat. Periksa koneksi Anda, lalu muat ulang ForkBuild untuk membukanya.',
+    'app.pageLoadFailedEndsCall': 'Memuat ulang akan mengakhiri panggilan suara Anda.',
+    'app.pageLoadFailedDismiss': 'Tutup',
 
     // The sound button and volume slider (ui/components/SoundControl.js).
     'sound.group': 'Suara',

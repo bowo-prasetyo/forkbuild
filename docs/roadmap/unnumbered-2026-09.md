@@ -3340,3 +3340,26 @@ blank page by about 15 s.
   and Home appeared, with the reload record cleared afterwards. Dropping every request for `ui/App.js` showed the message
   after one reload, in Japanese when Japanese was chosen; dropping every request for `en.js` showed it in English. An
   ordinary load is as fast as before.
+
+## Loading: a page that fails to download says so (unnumbered, 2026-09-30)
+
+A page opened after the app started (or a service group it needs) that failed to download did nothing: the click was
+retried for about 15 s, then silently dropped, leaving the person on the page they were on with no word of why. A deep
+link to such a page showed the header over an empty page. Retrying in the same page could not help in Chromium, which
+keeps a failed module request's failure for the life of the page; only a new page fetches it again, and a new page ends a
+voice call and every peer connection, so ForkBuild does not reload on its own here.
+
+- `ui/pageLoadFailure.js` catches the router's error when it is a failed download (the same test
+  `ui/loadRecovery.js` uses) and remembers the page that could not load; the next navigation that completes forgets it.
+  Other router errors are logged as before.
+- `ui/components/PageLoadFailureNotice.js`, under the header, says "This page couldn't load. Check your connection, then
+  reload ForkBuild to open it." with Reload, which loads ForkBuild again on that page, and Dismiss. With a voice call in
+  progress it adds "Reloading ends your voice call." (`app.pageLoadFailed`, `app.pageLoadFailedEndsCall`,
+  `app.pageLoadFailedDismiss`, in English, Indonesian and Japanese.)
+- A page's load is retried for 2 s instead of 15 s before the notice shows.
+- Tests: `tests/PageLoadFailure.test.js` (a failed download shows the notice and other errors do not, a completed
+  navigation clears it and an aborted one does not, Reload opens the failed page, the call warning, Dismiss).
+- Checked in the real app in Chromium: with the Editor's module dropped, clicking Editor showed the notice after about
+  2.5 s and stayed on Home; Dismiss hid it; opening About worked and cleared it; Reload opened the Editor. A deep link to
+  the Editor showed the header and the notice, and a dropped service-group module (the Publications page's anchoring)
+  showed it too. Every page still opens with no Vue warnings under Vue's development build.

@@ -36,7 +36,9 @@ has to allow `'unsafe-eval'`. Removing it would need a build step.
   load is tried again briefly, then the page reloads once to fetch what is
   missing (`ui/loadRecovery.js`). If it fails again, the page says so and
   offers a Reload button instead of staying blank; the console names the
-  module that did not arrive.
+  module that did not arrive. A page opened later that fails the same way
+  shows a notice under the header with a Reload button, rather than
+  reloading on its own.
 
 ### Peers can't find each other when I run the app locally
 
