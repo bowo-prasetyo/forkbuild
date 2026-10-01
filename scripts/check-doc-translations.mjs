@@ -80,13 +80,24 @@ function withoutCode(markdown) {
         .replace(/`[^`\n]*`/g, (span) => span.replace(/[^`]/g, ' '));
 }
 
+// Text with its HTML tags left out, as GitHub shows it. A '<' never
+// survives, even in a malformed tag.
+function withoutTags(text) {
+    let result = '';
+    let inTag = false;
+    for (const character of text) {
+        if (character === '<') inTag = true;
+        else if (character === '>' && inTag) inTag = false;
+        else if (!inTag) result += character;
+    }
+    return result;
+}
+
 // The anchor GitHub gives a heading: its text, lowercased, without
 // punctuation or symbols, with spaces turned into hyphens.
 export function githubSlug(heading) {
-    const text = heading
-        .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-        .replace(/<[^>]*>/g, '')
-        .replace(/[<>`*]/g, '')
+    const text = withoutTags(heading.replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1'))
+        .replace(/[`*]/g, '')
         .replace(/(^|\s)_+|_+(\s|$)/g, '$1$2');
     return text.trim().toLowerCase().replace(/[^\p{L}\p{M}\p{N}\p{Pc} -]/gu, '').replace(/ /g, '-');
 }
