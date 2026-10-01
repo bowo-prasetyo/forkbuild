@@ -126,5 +126,4 @@ tidak memerlukan langkah "putuskan" terpisah.
 
 Kembali ke **[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)**
 untuk menemukan lebih banyak orang untuk membangun dan mengobrol bersama,
-atau kunjungi lagi **[Tampilan Dunia](../03-WorldView.md)** (bahasa
-Inggris) untuk melihat di mana karya semua orang berada.
+atau kunjungi lagi **[Tampilan Dunia](03-WorldView.md)** untuk melihat di mana karya semua orang berada.

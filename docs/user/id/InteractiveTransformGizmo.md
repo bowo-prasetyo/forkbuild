@@ -15,8 +15,7 @@ pegangan sumbu Y yang hijau tidak aktif. Ketinggian sebuah penempatan selalu
 mengikuti medan di bawahnya — tidak pernah menjadi pegangan yang Anda seret
 atau nilai yang Anda ketik.
 
-Gizmo hanya ada di Editor. [Tampilan Dunia](../03-WorldView.md) (bahasa
-Inggris) adalah ruang jelajah yang hanya dapat dilihat; untuk
+Gizmo hanya ada di Editor. [Tampilan Dunia](03-WorldView.md) adalah ruang jelajah yang hanya dapat dilihat; untuk
 mengembangkan sesuatu yang Anda temukan di sana, gunakan tombol **Edit
 Salinan** untuk membukanya di sini, di Editor.
 

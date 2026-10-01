@@ -30,7 +30,7 @@ Anda sebagai pembuatnya. Orang lain baru melihatnya setelah Anda
 membagikan atau mendistribusikannya (lihat catatan di bawah). Karya itu
 juga otomatis diberi posisi di dunia bersama, sehingga **Jelajahi** selalu
 punya tempat untuk dituju — lihat
-[Finding worlds](../03-WorldView.md#finding-worlds) (bahasa Inggris).
+[Menemukan dunia](03-WorldView.md#menemukan-dunia).
 
 > **Catatan:** Menerbitkan hanya menyimpan Dokumen/Dunia Anda di perangkat
 > ini. Kartunya di Repositori menyebutkan di mana perangkat ini mencatat
@@ -62,8 +62,7 @@ Dialog ini sama dengan yang dipakai Tampilan Dunia — pengaturan
 **Distribusikan**, serta tombol terpisah **Distribusikan Snapshot saja** /
 **Distribusikan Klaim Bertanda Tangan saja** semuanya bekerja seperti
 dijelaskan di
-[World Encounters](../03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
-(bahasa Inggris). Ada dua perbedaan di sini: dialog ini selalu bekerja pada
+[Perjumpaan Dunia](03-WorldView.md#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda). Ada dua perbedaan di sini: dialog ini selalu bekerja pada
 Dunia Bersama yang baru saja dihasilkan oleh klik Terbitkan Anda, dan
 bagian **Snapshot** muncul lebih dulu, sehingga tombol gabungan menjalankan
 Snapshot terlebih dahulu, lalu Klaim Bertanda Tangan.
@@ -152,10 +151,8 @@ lisensi yang mengizinkannya.
 Orang lain biasanya dapat menempatkan karya terbitan Anda di Dunia mereka
 sendiri. Itu menambahkan penempatan bangunan Anda, tidak pernah salinannya,
 dan tidak pernah memindahkan atau mengubah milik Anda (lihat
-[Why can I place other people's builds?](../03-WorldView.md#why-can-i-place-other-peoples-builds),
-bahasa Inggris). Fork adalah hal terpisah dan diatur oleh lisensi (lihat
-[Placing vs forking](../03-WorldView.md#placing-vs-forking), bahasa
-Inggris). Jika Anda lebih suka mereka tidak menempatkannya, buka **Properti
+[Mengapa saya bisa menempatkan bangunan orang lain?](03-WorldView.md#mengapa-saya-bisa-menempatkan-bangunan-orang-lain)). Fork adalah hal terpisah dan diatur oleh lisensi (lihat
+[Menempatkan vs mem-fork](03-WorldView.md#menempatkan-vs-mem-fork)). Jika Anda lebih suka mereka tidak menempatkannya, buka **Properti
 Dokumen** dan atur **Siapa yang dapat menempatkannya di Dunia**:
 
 | Pengaturan | Arti |
@@ -192,8 +189,7 @@ atau nama wilayah, atau hiasan hewan — otomatis membuat salinan Anda
 sendiri, berjudul *"Fork dari &lt;nama asli&gt;"*, dengan konfirmasi
 singkat ("Salinan Anda sendiri yang dapat diedit telah dibuat — "…" tidak
 berubah"); lihat
-[Save and publish here, too](../03-WorldView.md#save-and-publish-here-too)
-(bahasa Inggris).
+[Menyimpan dan menerbitkan di sini juga](03-WorldView.md#menyimpan-dan-menerbitkan-di-sini-juga).
 
 Yang asli tidak pernah tersentuh, seberapa banyak pun Anda mengubah
 salinan Anda.
@@ -250,8 +246,7 @@ Setiap karya menawarkan tiga tindakan:
 | **Jelajahi** | Terbang ke sana di Tampilan Dunia |
 
 (Tombol **Lanjutkan Menjelajah** milik **Dunia Saya** — lihat
-[My Worlds](../03-WorldView.md#my-worlds--worlds-youve-actually-been-to),
-bahasa Inggris — melakukan hal yang sama dengan **Jelajahi** di sini, hanya
+[Dunia Saya](03-WorldView.md#dunia-saya--dunia-yang-benar-benar-pernah-anda-kunjungi) — melakukan hal yang sama dengan **Jelajahi** di sini, hanya
 dengan kata-kata untuk Dunia yang sudah pernah Anda kunjungi, bukan yang
 baru pertama kali Anda temukan.)
 
@@ -271,8 +266,7 @@ notifikasi Anda; lihat
 Repositori juga tidak terbatas pada apa yang diterbitkan dari perangkat ini
 atau ditemukan secara langsung: karya Repositori terdesentralisasi yang
 ditunjukkan seorang rekan kepada Anda di peta
-[World Encounters](../03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
-(bahasa Inggris) di Tampilan Dunia, begitu kontennya benar-benar
+[Perjumpaan Dunia](03-WorldView.md#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda) di Tampilan Dunia, begitu kontennya benar-benar
 terselesaikan, juga bergabung ke pencarian yang sama ini dan ke Halaman
 pembuatnya, dan tetap di sana setelah dimuat ulang. Karya itu ditampilkan
 tidak berbeda dengan hal lain di sini.
@@ -298,8 +292,7 @@ di atas.)
 > sama di baliknya, dengan aturan lisensi yang sama dan penanganan
 > [Fork Tidak Tersedia](#saat-fork-tidak-dapat-diselesaikan) yang sama.
 > Lihat
-> [Edit a Copy](../03-WorldView.md#edit-a-copy--taking-something-into-the-editor)
-> (bahasa Inggris) untuk panduan Tampilan Dunia sendiri.
+> [Edit Salinan](03-WorldView.md#edit-salinan--membawa-sesuatu-ke-editor) untuk panduan Tampilan Dunia sendiri.
 
 ### Cara mem-fork
 
@@ -367,4 +360,4 @@ Itulah ekosistem konstruksi terbuka yang menjadi tujuan ForkBuild.
 
 Simpan [Referensi Kontrol](ControlsReference.md) di dekat Anda saat
 membangun, atau kembali dan jelajahi
-[Tampilan Dunia](../03-WorldView.md) (bahasa Inggris) lebih dalam.
+[Tampilan Dunia](03-WorldView.md) lebih dalam.

@@ -70,7 +70,7 @@ bangunan Anda; bangunan Anda tetap di tempat yang Anda tentukan, dan tetap
 membawa nama serta riwayat Anda. Jika Anda tidak menginginkannya, pilih
 **Hanya saya yang boleh menempatkannya** di bawah **Siapa yang dapat
 menempatkannya di Dunia** sebelum Anda menerbitkan. Lihat
-[Why can I place other people's builds?](../03-WorldView.md#why-can-i-place-other-peoples-builds) (bahasa Inggris).
+[Mengapa saya bisa menempatkan bangunan orang lain?](03-WorldView.md#mengapa-saya-bisa-menempatkan-bangunan-orang-lain).
 
 ### Mengapa ada dua bangunan di tempat yang sama?
 
@@ -78,7 +78,7 @@ Penempatan tidak mengklaim lahan, dan tidak ada server pusat yang
 menentukan siapa yang lebih dulu mendapatkan suatu tempat, jadi dua
 penempatan bisa menunjuk titik yang sama. Anda diperingatkan sebelum
 memindahkan salah satu bangunan Anda ke tempat yang sudah terisi. Lihat
-[Why can two builds sit in the same spot?](../03-WorldView.md#why-can-two-builds-sit-in-the-same-spot) (bahasa Inggris).
+[Mengapa dua bangunan bisa berada di tempat yang sama?](03-WorldView.md#mengapa-dua-bangunan-bisa-berada-di-tempat-yang-sama).
 
 ## Identitas dan data Anda
 
@@ -173,7 +173,7 @@ sebelum mengerem.
 Hanya anotasi: penanda, nama wilayah, dan hiasan hewan. Membangun
 dilakukan di Editor; gunakan **Edit Salinan** untuk membawa apa yang
 sedang Anda lihat ke sana. Lihat
-[Tampilan Dunia](../03-WorldView.md#edit-a-copy--taking-something-into-the-editor) (bahasa Inggris).
+[Tampilan Dunia](03-WorldView.md#edit-salinan--membawa-sesuatu-ke-editor).
 
 ## Rekan, teman, dan obrolan
 

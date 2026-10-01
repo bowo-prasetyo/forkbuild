@@ -91,7 +91,7 @@ merupakan jenis publikasi, dan hanya publikasi itu sendiri yang wajib:
 | **Publikasi** | Bukunya sendiri | Catatan bertanda tangan: Dunia Bersama, Atribusi Cetak Biru, atau Klaim Nama Tempat. Membawa hash kontennya dan tanda tangan penerbitnya. |
 | **Konten** | Tempat salinan cetak disimpan | Byte yang menjadi isi publikasi, seperti balok sebuah Dunia. Selalu disimpan di perangkat ini terlebih dahulu; **Simpan di …** menaruh salinannya di IPFS, Arweave, atau Steem agar orang lain dapat mengambilnya. Lihat [Penyedia Konten](10-NetworkSettings.md#penyedia-konten). |
 | **Snapshot** | Satu salinan cetak | Satu salinan tersimpan dari konten publikasi, seperti balok sebuah Dunia, yang dapat diambil orang lain dan dicocokkan dengan hash-nya. Lihat [Snapshot Lokal](#snapshot-lokal). |
-| **Penempatan** | Rak tempat salinan itu ditaruh | Catatan bertanda tangan tentang di mana sebuah bangunan berdiri di Dunia. Satu Dunia Bersama dapat memiliki beberapa penempatan. Lihat [Placing vs forking](../03-WorldView.md#placing-vs-forking) (bahasa Inggris). |
+| **Penempatan** | Rak tempat salinan itu ditaruh | Catatan bertanda tangan tentang di mana sebuah bangunan berdiri di Dunia. Satu Dunia Bersama dapat memiliki beberapa penempatan. Lihat [Menempatkan vs mem-fork](03-WorldView.md#menempatkan-vs-mem-fork). |
 | **Pengumuman / Penemuan** | Entri katalog perpustakaan | Pemberitahuan kecil bertanda tangan di Nostr, Arweave, atau Steem yang menyatakan bahwa publikasi atau Snapshot itu ada dan di mana salinannya, agar orang yang tidak terhubung dengan Anda dapat menemukannya. Lihat [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan). |
 | **Bukti / Penjangkaran** *(Eksperimental)* | Cap notaris | Hash konten yang ditulis ke dalam transaksi blockchain (Bitcoin, Base, Arweave, atau Steem), sebagai bukti bahwa konten itu sudah ada pada waktu tersebut. Tidak menyimpan atau mengumumkan apa pun. Lihat [Bukti & Penyimpanan](11-EvidenceAndStorage.md). |
 | **Komentar** | Ulasan pembaca | Komentar yang dapat dilekatkan siapa pun yang sudah masuk pada sebuah publikasi, masing-masing ditandatangani oleh pemberi komentar, bukan oleh penerbit. Lihat [Komentar](#komentar). |
@@ -107,8 +107,7 @@ ini mencantumkan klaim yang Anda buat di tempat lain, yang dikirim rekan
 kepada Anda, dan karya Repositori yang datang dalam bentuk
 terdesentralisasi. Klaim nama tempat juga dapat ditemukan langsung dari
 Nostr, tanpa melibatkan rekan; lihat
-[Nearby Place Names](../03-WorldView.md#nearby-place-names--discovering-claims-from-anyone)
-(bahasa Inggris).
+[Nama Tempat di Sekitar](03-WorldView.md#nama-tempat-di-sekitar--menemukan-klaim-dari-siapa-pun).
 
 ### Mengklaim kepengarangan sebuah struktur
 
@@ -130,13 +129,11 @@ menawarkan:
 
 Di Tampilan Dunia, buka panel penamaan untuk sebuah Wilayah atau Penanda
 dan gunakan **Terbitkan Sebuah Nama** (lihat
-[Geographic places](../03-WorldView.md#geographic-places), bahasa
-Inggris). Ini mengumumkan klaim bertanda tangan kepada rekan yang
+[Tempat geografis](03-WorldView.md#tempat-geografis)). Ini mengumumkan klaim bertanda tangan kepada rekan yang
 terhubung dengan Anda.
 
 Agar nama itu juga dapat ditemukan melalui
-[Nearby Place Names](../03-WorldView.md#nearby-place-names--discovering-claims-from-anyone)
-(bahasa Inggris), buka **Lainnya** di panel penamaan, temukan klaimnya di
+[Nama Tempat di Sekitar](03-WorldView.md#nama-tempat-di-sekitar--menemukan-klaim-dari-siapa-pun), buka **Lainnya** di panel penamaan, temukan klaimnya di
 **Semua Klaim**, dan klik **Terbitkan ke Nostr**. Ini langkah terpisah:
 tidak ada tindakan yang melakukan tindakan lainnya. Keberhasilan
 menyebutkan relay yang dicapainya; kegagalan, paling sering karena tidak
@@ -302,8 +299,7 @@ Anda akan menemukan komentar:
 - di **Repositori** dan di halaman pembuat: tombol **Komentar** di setiap
   kartu dan baris daftar;
 - di panel
-  [My Shared World](../03-WorldView.md#my-shared-world--distributing-your-own-snapshot-no-peers-required)
-  (bahasa Inggris) di Tampilan Dunia, di bagian **Komentar**-nya;
+  [Dunia Bersama Saya](03-WorldView.md#dunia-bersama-saya--mendistribusikan-snapshot-anda-sendiri-tanpa-rekan) di Tampilan Dunia, di bagian **Komentar**-nya;
 - pada **Perjumpaan Dunia** yang dipilih: tombol **Komentar**-nya.
 
 Masing-masing menampilkan komentar, dari yang terlama, dengan identitas
@@ -344,8 +340,7 @@ diambil diperiksa, dan tidak ada yang dihitung dua kali.
 
 Saat seseorang mengomentari publikasi yang Anda terbitkan, entri
 **Publication commented** (publikasi Anda dikomentari) muncul di
-[Notification History](../03-WorldView.md#orientation-and-locations)
-(bahasa Inggris) Anda (tombol 🔔 di kepala halaman). Itulah satu-satunya
+[Riwayat Notifikasi](03-WorldView.md#orientasi-dan-lokasi) Anda (tombol 🔔 di kepala halaman). Itulah satu-satunya
 jenis notifikasi yang dimiliki ForkBuild saat ini.
 
 ## Snapshot Lokal

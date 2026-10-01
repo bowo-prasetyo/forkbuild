@@ -10,9 +10,6 @@ menjelaskan produk sebagaimana cara kerjanya saat ini; bagian dalam mesin
 dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
 [docs/](../..) tingkat atas (hanya dalam bahasa Inggris).
 
-Panduan yang belum diterjemahkan ke bahasa Indonesia ditandai
-"(bahasa Inggris)", dan tautannya membuka versi bahasa Inggris.
-
 ## Mulai dari sini (baca berurutan)
 
 1. **[Memulai](01-GettingStarted.md)** — membuka aplikasi, masuk, dan
@@ -21,7 +18,7 @@ Panduan yang belum diterjemahkan ke bahasa Indonesia ditandai
    membangun: alat, pemilihan, transformasi, warna balok, grup, struktur di
    Pustaka Bangunan dan cetak biru Anda sendiri, instans struktur, serta
    judul/deskripsi/lisensi sebuah karya.
-3. **[Tampilan Dunia](../03-WorldView.md)** (bahasa Inggris) — ruang 3D
+3. **[Tampilan Dunia](03-WorldView.md)** — ruang 3D
    bersama yang hanya dapat dilihat, tempat setiap karya yang diterbitkan
    berada: terbang berkeliling, menemukan dan memeriksa sesuatu,
    **Edit Salinan** untuk membawa sesuatu ke Editor, Perjumpaan Dunia yang
@@ -36,12 +33,10 @@ Panduan yang belum diterjemahkan ke bahasa Indonesia ditandai
 6. **[Avatar & Kehadiran](06-AvatarsAndPresence.md)** —
    menyesuaikan avatar, siapa yang dapat melihat Anda, berjalan, sudut
    pandang kamera, kendaraan, hewan, dan inventaris Anda.
-7. **[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)** (bahasa
-   Inggris) — terhubung langsung dengan orang lain, mengingat, berteman,
+7. **[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)** — terhubung langsung dengan orang lain, mengingat, berteman,
    mengikuti, memblokir, menghubungkan kembali secara otomatis, dan relay
    TURN Anda sendiri.
-8. **[Obrolan & Percakapan](08-ChatAndConversations.md)** (bahasa
-   Inggris) — pesan langsung khusus teman, pengiriman saat luring, tanda
+8. **[Obrolan & Percakapan](08-ChatAndConversations.md)** — pesan langsung khusus teman, pengiriman saat luring, tanda
    sudah dibaca, dan panggilan suara.
 9. **[Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md)** — lapisan teknis yang opsional: klaim kepengarangan dan
    nama tempat yang ditandatangani, halaman Publikasi, komentar, dan apa
@@ -54,8 +49,7 @@ Panduan yang belum diterjemahkan ke bahasa Indonesia ditandai
     — menyimpan konten di IPFS atau Arweave, dan yang *eksperimental*:
     bukti eksternal, alur dompet Bitcoin dan Base, penempatan snapshot,
     pinning IPFS jarak jauh, dan Steem.
-12. **[Arsip & Papan Peringkat](12-ArchiveAndLeaderboards.md)** (bahasa
-    Inggris) — *eksperimental*. Arsip pengamatan, referensi publikasi,
+12. **[Arsip & Papan Peringkat](12-ArchiveAndLeaderboards.md)** — *eksperimental*. Arsip pengamatan, referensi publikasi,
     pencapaian, label penerbit, dan halaman Papan Peringkat.
 13. **[Data Anda](13-YourData.md)** — mencadangkan semua yang disimpan
     browser ini ke satu file terenkripsi dan memulihkannya, ekspor yang

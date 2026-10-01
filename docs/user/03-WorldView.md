@@ -1,5 +1,9 @@
 # 03 — World View
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/03-WorldView.md) · [日本語](ja/03-WorldView.md)
+<!-- /languages -->
+
 World View is the shared 3D space where **every published creation exists side
 by side**. Fly around, search for what you're looking for, discover what
 others have built nearby, and inspect their bricks — World View is a

@@ -30,7 +30,7 @@ Bilah di bagian atas selalu terlihat:
 - **Repositori** — telusuri karya yang diterbitkan semua orang
 - **Dunia Saya** — Dunia yang benar-benar pernah Anda kunjungi di
   perangkat ini, lihat
-  [Dunia Saya](../03-WorldView.md#my-worlds--worlds-youve-actually-been-to) (bahasa Inggris)
+  [Dunia Saya](03-WorldView.md#dunia-saya--dunia-yang-benar-benar-pernah-anda-kunjungi)
 - **Avatar Saya** — bagaimana Anda terlihat oleh orang lain di Tampilan
   Dunia, lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md)
 - **Identitas Saya** — identitas kriptografis yang tersimpan di perangkat
