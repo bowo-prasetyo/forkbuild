@@ -154,6 +154,6 @@ that an upload is still available (an IPFS copy lasts only while someone
 keeps it pinned), and a distribution made from another device isn't known
 here. With no record, the card says **No distribution recorded on this
 device**: back it up, or open it in World View with **Explore** and use
-**Distribute** under **My Publication**. Sharing it with connected peers
+**Distribute** under **My Shared World**. Sharing it with connected peers
 isn't recorded as a distribution: they keep a copy only as long as they
 choose to.

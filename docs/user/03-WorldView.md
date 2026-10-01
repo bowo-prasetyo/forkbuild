@@ -29,7 +29,7 @@ world's URL directly. You'll appear next to that creation in the shared world.
 As you move, nearby worlds **stream in and out** automatically. The panel on
 the left reads top to bottom: what you're looking at (the header), where you
 can go (Home, Locations, and the Explore / Map / Places tabs), what's around
-you (Nearby), then your own tools — Search, Avatar, and My Publication. At the
+you (Nearby), then your own tools — Search, Avatar, and My Shared World. At the
 bottom it shows:
 
 - **Worlds in View** — the other worlds currently loaded around you (hidden
@@ -245,7 +245,7 @@ If more than one connected peer offers the same encounter, a
 inspect. Like everything else in World View, this is purely for
 looking — nothing here moves your camera or edits anything.
 
-If you've run **Discover Publication** (below) and it turned up a
+If you've run **Discover Shared World** (below) and it turned up a
 decentralized lead — an Arweave or Nostr location — for the publication
 you've selected, a **Location** line shows which one will be used. When
 more than one lead matches, a **Choose Location** list appears instead:
@@ -259,7 +259,7 @@ content and check it cryptographically against what was claimed for
 it. For content this device already holds itself that works directly;
 for anything a peer has shown you it normally reads **Unavailable** /
 **Unverifiable** instead — unless you've separately run **Discover
-Publication** (below) for that same publication, in which case a
+Shared World** (below) for that same publication, in which case a
 resolved decentralized lead it found is reused here too, and Material /
 Verification can come back **Available** / **Verified** the same way a
 direct discovery does. Either way, a **Source** line beneath Material
@@ -287,20 +287,20 @@ that would only fail halfway through.
 
 If both protocols below are available, a combined **Distribute** button
 sits right under those settings — the main action, which distributes the
-Publication and its Snapshot together with the settings above. It changes
+Signed Claim and the Snapshot together with the settings above. It changes
 nothing about either protocol: each still runs independently, each still
 reports into its own section below, and a failure in one is never hidden
 by, or blocks, the other — it does run the two one after another, though,
 never at the same time, since both can end up asking the same connected
 wallet extension to sign, and two signing requests fired at once is a
 real extension failure mode. Each section below also has its own smaller
-**Distribute Publication only** / **Distribute Snapshot only** button,
+**Distribute Signed Claim only** / **Distribute Snapshot only** button,
 using the same settings — useful if you only want one of the two, or want
 to retry just the half that failed. (If only one protocol is available,
-its section's button is simply **Distribute Publication** or **Distribute
+its section's button is simply **Distribute Signed Claim** or **Distribute
 Snapshot**.)
 
-The **Publication** section tracks whether the publication has
+The **Signed Claim** section tracks whether the publication has
 separately been pushed through Arweave/Nostr distribution, reading
 **Absent** for both **Material** and **Discovery** until it has.
 Distributing it uploads the material and announces it. Both steps are
@@ -318,7 +318,7 @@ protocol: Snapshots (see
 [Publications & External Evidence](09-PublicationsAndEvidence.md#local-snapshot))
 are placed and discovered independently of Signed Claim distribution, so
 this section never shares state, history, or a result with the
-Publication section above it — only the settings. Clicking it shows exactly what came back: a **Content hash**, a
+Signed Claim section above it — only the settings. Clicking it shows exactly what came back: a **Content hash**, a
 **Locator**, and an **Announcement** id — or "No announcement" if the
 placement succeeded but the Nostr announcement didn't, which is reported
 as a partial result, never an error. A genuine failure instead shows a
@@ -339,16 +339,16 @@ it's in — a Repository card or Author-page listing looks identical either
 way, since by that point your own device has independently verified the
 content itself; only *how you first heard about it* differed.
 
-### Discover Publication — searching decentralized networks directly
+### Discover Shared World — searching decentralized networks directly
 
 Still inside the World Encounters group, but needing no marker click and
-no connected peer at all, is a **Publication Discovery** button that opens
-a small popup of its own. Inside sits the **Discover Publication** panel:
-enter a **Publication id** and the **discovery tag** it was distributed
-under, then click **Discover Publication** to query Arweave and Nostr
+no connected peer at all, is a **Shared World Discovery** button that opens
+a small popup of its own. Inside sits the **Discover Shared World** panel:
+enter a **Shared World id** and the **discovery tag** it was distributed
+under, then click **Discover Shared World** to query Arweave and Nostr
 directly for it. The discovery tag field starts prefilled with ForkBuild's own shared campaign tag — the
 one a publication distributed from inside this app would have used — so
-in the common case you only need to type the Publication id; it stays a
+in the common case you only need to type the Shared World id; it stays a
 plain, freely editable field if you need to point it at a different tag.
 The result shows a **Discovery** line (**Unavailable**, **Resolved**, or
 **Ambiguous** when more than one independent lead turns up for the same
@@ -363,7 +363,7 @@ picks up right where you left off, until you search again or leave the
 page.
 
 Once a discovered result comes back **Verified**, a **Select
-Publication** button appears; clicking it records that result as "the
+Shared World** button appears; clicking it records that result as "the
 publication you're currently working with," shown afterward in its own
 small notice underneath. Selecting is just that explicit pick — it
 never distributes, re-verifies, or feeds into your local selection above
@@ -375,7 +375,7 @@ never offers the button.
 World Encounters' marker-driven panels only ever show what a currently
 or recently connected peer has actually told you about; the group
 itself reads **Nothing encounterable here yet** until at least one has.
-Discover Publication is the one exception — it works even with no
+Discover Shared World is the one exception — it works even with no
 connected peer at all, since it queries a decentralized network
 directly. See [Peer Connections & Friends](07-PeerConnectionsAndFriends.md)
 for connecting to someone.
@@ -384,7 +384,7 @@ for connecting to someone.
 
 **Place Names**, the fourth Nearby group, shows signed place-naming
 claims for the World Regions currently around you — without needing a
-connected peer at all. Like Discover Publication above, it searches a
+connected peer at all. Like Discover Shared World above, it searches a
 decentralized network (Nostr) directly for claims tagged to a region you're
 near; unlike anything else in Nearby, it starts collapsed by default, since
 a discovered, unverified claim is a new and unfamiliar kind of thing to see
@@ -414,7 +414,7 @@ claim gets published in the first place.
 ### Claimed Builds — other people's builds, where their publishers say they stand
 
 As you walk, ForkBuild downloads Snapshots announced near you (see
-[My Publication](#my-publication--distributing-your-own-snapshot-no-peers-required)'s
+[My Shared World](#my-shared-world--distributing-your-own-snapshot-no-peers-required)'s
 automatic path). A Snapshot's announcement may say where its publisher
 placed it, but that is only a **claim**: nobody has checked it, and
 trusting it blindly would let anyone put a build on top of yours. So a
@@ -423,9 +423,9 @@ the claimed position — and never becomes a real placement on its own.
 
 There's one exception, and it needs no click. When a publisher distributes
 their Snapshot, the announcement also carries their own **signed
-placement**. Once this device knows that build's Publication (it's in your
+placement**. Once this device knows that build's Shared World (it's in your
 Repository, or you **Verify** it), ForkBuild checks the placement is signed
-with that Publication's own key and, if it is, shows the build solid,
+with that Shared World's own key and, if it is, shows the build solid,
 exactly where its publisher put it. It's still their placement, not yours:
 you can't move or remove it. If they later move it and distribute again,
 it moves for you too. A position signed by anyone else stays a ghost.
@@ -451,14 +451,14 @@ position. Each row has:
 - **Navigate** — moves the camera to look at the claimed spot. Nothing
   else changes.
 - **Verify** — shown while this device doesn't have the build's signed
-  Publication record yet. It looks the record up on Nostr and Arweave,
-  checks its signature, and checks it's exactly this build's Publication
+  Shared World record yet. It looks the record up on Nostr and Arweave,
+  checks its signature, and checks it's exactly this build's Shared World
   and names exactly the content the ghost shows. If everything checks
-  out, the Publication is added to your Repository and the row changes to
+  out, the Shared World is added to your Repository and the row changes to
   "signed by *name* (key did:key:…)". If not, the row says why: nothing
   was announced (the publisher may have distributed only the Snapshot —
   the combined **Distribute** button announces both), no copy was validly
-  signed, or the signed Publication names different content. Verify never
+  signed, or the signed Shared World names different content. Verify never
   accepts a claim by itself; but if the announcement carried the
   publisher's signed placement, the build now appears solid where they
   put it (see above), and the ghost goes away.
@@ -466,19 +466,19 @@ position. Each row has:
   at the claimed position with a placement of *your own*, signed by you like
   any other placement, and from then on it's a normal build in your World. It's only
   enabled once this device holds the publisher's signed, verified
-  Publication record — through **Verify**, when they share the World with
+  Shared World record — through **Verify**, when they share the World with
   you (see
   [Sharing with connected peers](04-PublishingAndForking.md#sharing-with-connected-peers);
   it then shows in your Repository), or when a connected peer's
   [World Encounter](#world-encounters--publications-and-avatars-your-peers-are-sharing)
-  for it reaches **Available** — and only if that Publication names
+  for it reaches **Available** — and only if that Shared World names
   exactly the content the ghost shows. It also stays disabled when that
-  Publication's publisher chose **Only I may place it** (see
+  Shared World's publisher chose **Only I may place it** (see
   [Choosing who can place it](04-PublishingAndForking.md#choosing-who-can-place-it)).
   Whenever it's disabled, the row says why.
 
   **What verified means.** It proves the build is exactly the content of a
-  Publication signed by the key shown. It doesn't prove who holds that key
+  Shared World signed by the key shown. It doesn't prove who holds that key
   — anyone can make one and call themselves "bob" — and it doesn't prove
   the position, which is still only claimed. Accept Position works for
   keys you don't know too; whether to trust one is your call.
@@ -520,10 +520,10 @@ button, either way you got there.
 The original is never touched — ForkBuild tells you the moment your copy
 is ready, exactly like any other fork (see
 [Publishing & Forking](04-PublishingAndForking.md)). If the copy can't be
-made — most often because the source is a Publication found through a
+made — most often because the source is a Shared World found through a
 peer or decentralized network whose material isn't available yet, or
 whose license denies forking — a **Fork Unavailable** dialog says exactly
-why and offers **Back to Publication** to return you to where you started,
+why and offers **Back to Shared World** to return you to where you started,
 rather than leaving you in a blank Editor document (see
 [When a fork can't complete](04-PublishingAndForking.md#when-a-fork-cant-complete)).
 A **geographic place** and a **collaborator** never offer Edit a Copy — a
@@ -878,11 +878,11 @@ different things:
 | | Placing | Forking (Fork, or Edit a Copy) |
 |---|---|---|
 | What's created | A placement: a small signed record of where to show the build | A new document, with new ids, that belongs to you |
-| The build | The same Publication, shown as published | Your own copy, with a note linking back to the original |
+| The build | The same Shared World, shown as published | Your own copy, with a note linking back to the original |
 | Can you change the bricks? | No | Yes, in the Editor |
 | Who's the author | The original publisher | You, with the original recorded as its parent |
 | Controlled by | The publisher's **Who can place it** setting | The license |
-| Publishing it | Nothing new is published | Creates a new Publication under your name |
+| Publishing it | Nothing new is published | Creates a new Shared World under your name |
 
 Placing is like linking to the same file from another page; forking is like
 cloning a repository to work on your own copy. So only a fork is a real
@@ -929,21 +929,21 @@ name&gt;"*, and a short notice ("Created your own editable copy — … is
 unchanged") tells you so. It follows the same license rules as any other
 fork (see [Publishing & Forking](04-PublishingAndForking.md#forking-make-it-your-own)).
 
-### My Publication — distributing your own Snapshot, no peers required
+### My Shared World — distributing your own Snapshot, no peers required
 
-Further down the panel, below Search and Avatar, sits a **My Publication** panel, showing your
+Further down the panel, below Search and Avatar, sits a **My Shared World** panel, showing your
 current world's title and author once it's actually published, plus its
 own **Distribute** button, which opens the exact same kind of
 **Distribute** dialog described above for World Encounters — sharing the
 identical component, so everything about its layout, its combined
 **Distribute** button, its shared Storage/substrate settings, its
-**Publication**/**Snapshot** sections, and their "closing never loses
+**Signed Claim**/**Snapshot** sections, and their "closing never loses
 a result" behavior is exactly as described in
 [World Encounters](#world-encounters--publications-and-avatars-your-peers-are-sharing)
 above. The one difference is *what* it distributes: World Encounters'
 dialog always acts on whichever encountered publication you've selected;
 this one always acts on *your own current world*, and neither shares
-state, history, or a result with the other — **Distribute Publication
+state, history, or a result with the other — **Distribute Signed Claim
 only** here distributes the Signed Claim behind your world the same way
 World Encounters' own button does; **Distribute Snapshot only**
 distributes it under
@@ -956,10 +956,10 @@ in the Publications page's own Publication Center (see
 both need an account or a connected wallet first, so neither is a
 one-click button here.
 
-The point of My Publication is that it never depends on World Encounters
+The point of My Shared World is that it never depends on World Encounters
 having anything to show. World Encounters only ever displays what a
 currently or recently connected peer has told you about — with nobody
-else around, it stays empty. My Publication needs none of that: it's
+else around, it stays empty. My Shared World needs none of that: it's
 always here whenever you have a world open, whether or not anyone else is nearby, and
 whether or not it's currently published (until you publish it, the button
 is simply disabled, with a note that there's nothing to distribute yet).
@@ -972,7 +972,7 @@ Document and any distributed copies stay — and **Cancel** backs out. Results
 from Export and Check stay on the panel after you close the menu.
 
 When the World you have open was published by someone else (one a peer
-shared with you, say), the panel is titled **Publication** instead, and
+shared with you, say), the panel is titled **Shared World** instead, and
 leaves out **Unpublish** and **Distribute**: only a World's own publisher
 can retract or distribute it. Its placements, Snapshot tools, share link
 and **Commentary** stay, so you can still read and post comments on
@@ -987,17 +987,17 @@ picture of who can comment and what happens when they do. Like Distribute
 Snapshot, actually posting a comment needs your world published first;
 until then the compose box stays disabled.
 
-A **Placements (N)** list shows every location this Publication is
+A **Placements (N)** list shows every location this Shared World is
 actually placed at, in whatever order they were found — position,
 revision, and (when known) owner, one row per placement. Nothing here is
-reduced to "the latest one": a Publication can genuinely sit in more than
+reduced to "the latest one": a Shared World can genuinely sit in more than
 one place, and every placement this device can discover is listed, never
 just a single, most-recently-updated stand-in for the rest.
 
 Each row has its own **Move…** and **Remove…**, acting on exactly that
 placement and no other. **Move…** opens the same X/Y/Z Move Placement dialog
 (with its overlap warning) for that placement. **Remove…** asks once before
-taking that placement out of the World; the Publication, its Document and
+taking that placement out of the World; the Shared World, its Document and
 the other placements stay, and removing the last placement only means the
 build no longer appears anywhere until you place it again. Both are disabled
 on a placement someone else made: only its owner can move or remove it.
@@ -1005,13 +1005,13 @@ on a placement someone else made: only its owner can move or remove it.
 **Add Placement Here**, under the list, places the same build *again* at
 your avatar's (or, without one, the camera's) position — it never moves
 an existing placement; use that placement's **Move…** for that. It adds a
-placement, not a copy: the build stays one Publication (see
+placement, not a copy: the build stays one Shared World (see
 [Placing vs forking](#placing-vs-forking)). The confirmation names where it
-was placed and how many placements the Publication now has. If a placement
+was placed and how many placements the Shared World now has. If a placement
 already sits exactly where you are, the button refuses and asks you to move
 first, so repeated clicks can't pile invisible
 duplicates onto one spot. An empty list
-just means this Publication hasn't been placed anywhere yet; a read
+just means this Shared World hasn't been placed anywhere yet; a read
 failure shows its own plain error instead.
 
 Inside **More**, a **Diagnostic Tools** button — present only when at least
@@ -1020,9 +1020,9 @@ manual, step-by-step recovery tools for when automatic Snapshot discovery
 or placement doesn't produce what you expect: **Discover Snapshots**
 browses everything announced under the shared campaign discovery tag —
 reachable even with no connected peers, no World Encounters, and no
-Publication of your own yet; selecting one and clicking **Resolve Selected
+Shared World of your own yet; selecting one and clicking **Resolve Selected
 Snapshot** checks whether it can actually be retrieved; from there you can
-**Attribute Selected Snapshot** (does it match this Publication's content
+**Attribute Selected Snapshot** (does it match this Shared World's content
 hash?) and, independently, **Materialize Selected Snapshot** (store its
 bytes on this device) — and, at any point once you've selected a
 candidate, **Use Claimed Position** adopts the position the Snapshot

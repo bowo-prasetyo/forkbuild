@@ -413,7 +413,7 @@ async function runTests() {
         const renderedText = renderedTextNodes.join(' ');
         assert(!/publicationId|contentHash|\bdocumentId\b|\blocator\b/i.test(renderedText),
             'I2. No publicationId/contentHash/documentId/locator field is ever RENDERED as text in the actions block — only plain verbs and the resolved Publication\'s own .title.');
-        assert(actionsBlock.includes("{{ observerLocalEncounterActionablePublication.title || 'This publication' }}"), 'I3. The block heading reads the resolved Publication\'s own .title in ordinary language, falling back to plain prose ("This publication") rather than ever falling back to an id.');
+        assert(actionsBlock.includes("{{ observerLocalEncounterActionablePublication.title || 'This Shared World' }}"), 'I3. The block heading reads the resolved Publication\'s own .title in ordinary language, falling back to plain prose ("This Shared World") rather than ever falling back to an id.');
 
         const commentaryBlockStart = canvasSource.indexOf('world-encounter-observer-local-commentary-panel');
         const commentaryBlockEnd = canvasSource.indexOf('world-encounter-observer-local-inspection-close');

@@ -17,7 +17,7 @@ top-level [docs/](..) folder.
    every published creation lives in: flying around, finding and
    inspecting things, **Edit a Copy** to take something into the Editor,
    World Encounters shared by your peers, distributing your own
-   publication from **My Publication**, commentary and notifications.
+   publication from **My Shared World**, commentary and notifications.
 4. **[Publishing & Forking](04-PublishingAndForking.md)** — publishing,
    licenses, forking, the Repository catalog, and distributing a
    publication straight from the Editor.

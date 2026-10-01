@@ -232,7 +232,7 @@ export default {
                 </div>
 
                 <div v-if="canDistributePublication" class="editor-distribution-dialog-section editor-distribution-dialog-publication-section">
-                    <h4 class="editor-distribution-dialog-section-title">{{ t('distribution.publication') }}</h4>
+                    <h4 class="editor-distribution-dialog-section-title">{{ t('distribution.signedClaim') }}</h4>
 
                     <button
                         type="button"

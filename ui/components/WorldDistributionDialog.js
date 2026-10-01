@@ -237,7 +237,7 @@ export default {
                 </div>
 
                 <div v-if="canDistributePublication" class="world-distribution-dialog-section world-distribution-dialog-publication-section">
-                    <h4 class="world-distribution-dialog-section-title">{{ t('worldDistributionDialog.publication') }}</h4>
+                    <h4 class="world-distribution-dialog-section-title">{{ t('worldDistributionDialog.signedClaim') }}</h4>
 
                     <dl v-if="showDistributionLifecycle" class="world-distribution-dialog-lifecycle-detail">
                         <dt>{{ t('worldDistributionDialog.material') }}</dt>

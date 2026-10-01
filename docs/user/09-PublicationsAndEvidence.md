@@ -48,6 +48,19 @@ A Document you publish with the ordinary **Publish** button doesn't appear
 on the Publications page, and nothing on the Publications page is a Document
 you can open or fork.
 
+Every entry on the Publications page is a *publication*, and each is one of
+three kinds:
+
+| Kind | What it is |
+|---|---|
+| **Shared World** | A published World, as a signed record that can travel between peers and networks |
+| **Blueprint Attribution** | A claim that you designed a structure |
+| **Place Naming Claim** | A name for a Region or Landmark |
+
+World View, the Editor and the Repository call a World's signed record a
+**Shared World** too, as in **My Shared World**, **Discover Shared World**
+and **Back to Shared World**.
+
 ## Where a publication comes from
 
 You never create a claim on the Publications page itself. It lists claims
@@ -93,7 +106,7 @@ content isn't on your device until you fetch it with **Retrieve from Peers**
 
 ### A Repository creation, decentralized
 
-A card can also hold a signed **Publication** — the same kind of object as a
+A card can also hold a **Shared World** — the same kind of object as a
 Repository listing, wrapped for decentralized travel. **Share with Peers** in
 the Repository creates one for your own Worlds (see
 [Sharing with connected peers](04-PublishingAndForking.md#sharing-with-connected-peers)).
@@ -113,7 +126,7 @@ in any step that needs a wallet observed first, opens it for you.
 
 Each publication card shows:
 
-- Its name, once its content has been checked: a Publication's title or a
+- Its name, once its content has been checked: a Shared World's title or a
   place name. Otherwise, or for an authorship claim, the kind of
   publication.
 - The kind of publication (under the name, when there is one) and who
@@ -177,13 +190,13 @@ badge. Instead of "its author needs to publish it again", it tells you how:
 
 | Kind | How to publish it again |
 |---|---|
-| **Publication** (a World) | Publish the World again from the Editor, then **Share with Peers** under it in the Repository (**Open Repository**). |
+| **Shared World** | Publish the World again from the Editor, then **Share with Peers** under it in the Repository (**Open Repository**). |
 | **Blueprint Attribution** | In the Editor, open the structure's **Info** panel, **Re-sign for this design**, then **Publish to Network** (**Open Editor**). |
 | **Place Naming Claim** | In World View, open the place's naming panel and **Publish A Name** again. |
 
 For a World, the card goes one step further when this device still has its
 own record of what you published: it's named for the World (**My Castle**
-instead of **Publication**) and **Open in Editor** opens that World, ready to
+instead of **Shared World**) and **Open in Editor** opens that World, ready to
 publish again. The name and the link come from your own record, never from
 the old entry's content, which nobody can check. If the record is gone (you
 unpublished that World since), the card shows **Open Repository** as above.
@@ -230,7 +243,7 @@ You'll find comments:
 - in the **Repository** and on author pages: the **Comment** button on
   every card and list row;
 - in World View's
-  [My Publication](03-WorldView.md#my-publication--distributing-your-own-snapshot-no-peers-required)
+  [My Shared World](03-WorldView.md#my-shared-world--distributing-your-own-snapshot-no-peers-required)
   panel, in its **Commentary** section;
 - on a selected **World Encounter**: its **Comment** button.
 
@@ -247,7 +260,7 @@ peers you're connected to, and published to the network chosen next to
 [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider)),
 so people who weren't connected can find it. Closing the section (**Hide
 Comments**) discards anything you'd typed but not posted. Comments posted
-from World View's **My Publication** or **World Encounters** are, for now,
+from World View's **My Shared World** or **World Encounters** are, for now,
 only saved on your device.
 
 Other people's comments reach you:

@@ -724,7 +724,7 @@ async function main() {
         assert(loadCatchMatch !== null, 'J3a. EditorView.js\'s own route.query.load catch block located.');
         // The sentence is a message now: check the key it names reads as that sentence.
         const unavailableKey = (loadCatchMatch[0].match(/'(editor\.materialUnavailable)'/) || [])[1];
-        assert(unavailableKey && t(unavailableKey) === "This Publication's material is currently unavailable.",
+        assert(unavailableKey && t(unavailableKey) === "This Shared World's material is currently unavailable.",
             'J3b. A MATERIAL_UNAVAILABLE load failure shows a plain, safe, Wanderer-facing sentence — never a raw class name or storage key (the exact leak 0.9.559/0.9.574 named and this same file already fixed, reconfirmed still true here).');
         const feedbackShowCallMatch = loadCatchMatch[0].match(/feedback\.show\([\s\S]*?\)\);/);
         assert(feedbackShowCallMatch !== null && !/LoadDocumentUseCase:/.test(feedbackShowCallMatch[0]) && !/err\.message/.test(feedbackShowCallMatch[0]),

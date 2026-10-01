@@ -190,7 +190,7 @@ assert(mineCard.textContent.includes('Yours') && mineCard.textContent.includes('
     'your own old publication is listed first, saying how to publish it again');
 assert(!mineCard.textContent.includes(LEGACY_HASH_REASON), "instead of telling you to ask its author");
 assert(mineCard.querySelector('.identity-mgmt-name').textContent.trim() === 'My Castle'
-    && mineCard.querySelector('.identity-mgmt-status').textContent.trim().startsWith('Publication ·'),
+    && mineCard.querySelector('.identity-mgmt-status').textContent.trim().startsWith('Shared World ·'),
     "it is named by your own record's title, its kind moved to the line below");
 const mineLink = [...mineCard.querySelectorAll('a')].find((link) => link.textContent.trim() === 'Open in Editor');
 assert(mineLink && mineLink.getAttribute('href') === '/editor?load=doc-castle', 'with a link that opens that World in the Editor');
@@ -347,7 +347,7 @@ console.log('✓ the Publications page separates usable publications from failed
     await settle();
 
     const card = [...thirdHost.querySelectorAll('.identity-mgmt-card')].find((candidate) => candidate.textContent.includes('Yours'));
-    assert(card && card.querySelector('.identity-mgmt-name').textContent.trim() === 'Publication', 'without a record, the card keeps its kind as its name');
+    assert(card && card.querySelector('.identity-mgmt-name').textContent.trim() === 'Shared World', 'without a record, the card keeps its kind as its name');
     assert(card.textContent.includes('Share with Peers under it in the Repository'), "and the kind's own advice");
     const link = [...card.querySelectorAll('a')].find((candidate) => candidate.textContent.trim() === 'Open Repository');
     assert(link && link.getAttribute('href') === '/repository' && !card.textContent.includes('Open in Editor'), 'with a link to the Repository, not the Editor');

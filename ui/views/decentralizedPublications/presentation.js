@@ -100,8 +100,18 @@ export const SYNCHRONIZATION_BADGE_CLASSES = {
     [PublicationKnowledgeSynchronizationUiState.UNAVAILABLE]: 'peer-badge--pending'
 };
 
+// The kinds this version knows get their translated name ("forkbuild.publication"
+// is a Shared World, not a "Publication": every entry on the page is one);
+// any other kind is title-cased from its own string.
+const CONTENT_KIND_MESSAGES = {
+    'forkbuild.publication': 'publicationKind.publication.label',
+    'forkbuild.blueprint-attribution': 'publicationKind.blueprintAttribution.label',
+    'forkbuild.place-naming-claim': 'publicationKind.placeNamingClaim.label'
+};
+
 export function humanizeContentKind(contentKind) {
     if (!contentKind) return t('publications.unknownContent');
+    if (CONTENT_KIND_MESSAGES[contentKind]) return t(CONTENT_KIND_MESSAGES[contentKind]);
     return contentKind
         .replace(/^forkbuild\./, '')
         .replace(/[-.]/g, ' ')

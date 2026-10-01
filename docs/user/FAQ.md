@@ -45,7 +45,7 @@ before you publish.
 
 ### Can I unpublish something?
 
-Yes: open the World in World View, then in **My Publication** choose
+Yes: open the World in World View, then in **My Shared World** choose
 **More ▾ → Unpublish…**. That removes it from your Repository. It can't
 recall copies other people already received or anything you distributed to
 Arweave, IPFS, Nostr or Steem.
