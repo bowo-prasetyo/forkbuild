@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: 295058efc7bb2769 -->
+<!-- translation-of: docs/user/README.md source-hash: 26ea018db8723ef6 -->
 # Documentación para usuarios de ForkBuild
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · **Español** · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../README.md).
-<!-- /stale -->
 
 Guías prácticas para usar ForkBuild en el navegador. Todo lo que hay aquí
 describe el producto tal como funciona hoy; el funcionamiento interno del
@@ -32,6 +28,8 @@ de la carpeta [docs/](../..) de nivel superior (en inglés).
 4. **[Publicar y bifurcar](04-PublishingAndForking.md)**: publicar,
    licencias, bifurcar, el catálogo del Repositorio y distribuir una
    publicación directamente desde el Editor.
+   Para todo lo que puede distribuir y adónde puede ir, consulte
+   [Distributing Your Work](../Distribution.md) (en inglés).
 5. **[Identidad e inicio de sesión](05-IdentityAndLogin.md)**: su
    identidad criptográfica, la bóveda (bloquear y desbloquear), hacer una
    copia de seguridad con exportar/importar y administrar identidades
@@ -54,10 +52,15 @@ de la carpeta [docs/](../..) de nivel superior (en inglés).
 10. **[Configuración de red](10-NetworkSettings.md)**: gateways, relays,
     proveedores de almacenamiento y de anuncios, y servidores de conexión
     entre pares.
+    Lo que necesita cada red se resume en
+    [Distributing Your Work](../Distribution.md#what-each-network-needs) (en
+    inglés).
 11. **[Evidencia y almacenamiento](11-EvidenceAndStorage.md)**: guardar
     contenido en IPFS o Arweave y, de forma *experimental*, la evidencia
     externa, los flujos de billetera de Bitcoin y Base, las ubicaciones de
     Snapshots, el pinning remoto de IPFS y Steem.
+    [Distributing Your Work](../Distribution.md) (en inglés) muestra cómo
+    encaja todo esto.
 12. **[Archivo y clasificaciones](12-ArchiveAndLeaderboards.md)**:
     *experimental*. El archivo de observaciones, las referencias entre
     publicaciones, los logros, las etiquetas de editor y las páginas de
@@ -69,6 +72,11 @@ de la carpeta [docs/](../..) de nivel superior (en inglés).
 
 ## Referencia
 
+- **[Distributing Your Work](../Distribution.md)** (en inglés): todo lo que
+  puede poner en redes descentralizadas (sus Mundos, declaraciones de
+  autoría y de nombres de lugares, comentarios, anclajes), los tres papeles
+  que cumple una red (Contenido, Anuncio / descubrimiento, Prueba /
+  anclaje), qué necesita cada red y enlaces a las guías con los detalles.
 - **[Preguntas frecuentes](FAQ.md)**: respuestas breves a las preguntas
   con las que más se encuentra la gente: compartir, licencias, frases de
   contraseña perdidas, mudarse a otro dispositivo, caminar con su avatar y

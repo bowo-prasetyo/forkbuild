@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: 295058efc7bb2769 -->
+<!-- translation-of: docs/user/README.md source-hash: 26ea018db8723ef6 -->
 # Documentação do ForkBuild para usuários
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../README.md).
-<!-- /stale -->
 
 Guias práticos para usar o ForkBuild no navegador. Tudo aqui descreve o
 produto como ele funciona hoje; os detalhes internos do motor estão em
@@ -31,6 +27,8 @@ pasta [docs/](../..) de nível superior.
 4. **[Publicar e bifurcar](04-PublishingAndForking.md)** — publicação,
    licenças, bifurcação, o catálogo do Repositório e a distribuição de uma
    publicação direto do Editor.
+   Para tudo o que você pode distribuir e para onde pode ir, veja
+   [Distributing Your Work](../Distribution.md) (em inglês).
 5. **[Identidade e login](05-IdentityAndLogin.md)** — sua identidade
    criptográfica, o cofre (bloquear/desbloquear), o backup dela com
    exportação/importação e o gerenciamento de identidades em **Minhas
@@ -51,10 +49,15 @@ pasta [docs/](../..) de nível superior.
 10. **[Configurações de rede](10-NetworkSettings.md)** — gateways, relays,
     provedores de armazenamento e de anúncio, e servidores de conexão entre
     pares.
+    Do que cada rede precisa está resumido em
+    [Distributing Your Work](../Distribution.md#what-each-network-needs) (em
+    inglês).
 11. **[Evidências e armazenamento](11-EvidenceAndStorage.md)** — guardar
     conteúdo no IPFS ou no Arweave e, de forma *experimental*, evidências
     externas, os fluxos de carteira do Bitcoin e da Base, posicionamentos de
     snapshot, pinning remoto no IPFS e o Steem.
+    [Distributing Your Work](../Distribution.md) (em inglês) mostra como
+    tudo isso se encaixa.
 12. **[Arquivo e classificações](12-ArchiveAndLeaderboards.md)** —
     *experimental*. O arquivo de observações, referências entre publicações,
     conquistas, rótulos de editores e as páginas de classificação.
@@ -65,6 +68,11 @@ pasta [docs/](../..) de nível superior.
 
 ## Referência
 
+- **[Distributing Your Work](../Distribution.md)** (em inglês) — tudo o que
+  você pode colocar em redes descentralizadas (seus Mundos, declarações de
+  autoria e de nomes de lugares, comentários, âncoras), os três papéis que
+  uma rede cumpre (Conteúdo, Anúncio / descoberta, Prova / ancoragem), do
+  que cada rede precisa e links para os guias com os detalhes.
 - **[Perguntas frequentes](FAQ.md)** — respostas curtas às dúvidas mais
   comuns: compartilhamento, licenças, frases secretas perdidas, mudar para
   outro dispositivo, caminhar com seu avatar e reconectar-se com amigos.
