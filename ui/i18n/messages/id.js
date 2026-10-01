@@ -3574,7 +3574,7 @@ export default Object.freeze({
     'followingView.youDonTFollowAnyone': 'Anda belum mengikuti siapa pun. Gunakan {follow} di halaman pembuat, sebuah publikasi, seseorang di halaman Rekan, atau avatar di Tampilan Dunia.',
     'followingView.follow': 'Ikuti',
     'followingView.unfollow': 'Berhenti Mengikuti',
-    'followingView.thePeopleYouFollow': 'orang yang Anda ikuti',
+    'followingView.nothingFromThePeopleYouFollow': 'Belum ada karya dari orang yang Anda ikuti yang sampai di perangkat ini.',
 
     // Identity, Peers, Chat and settings: identityManagementView.
     'identityManagementView.thePrivateKeyIsStored': 'Kunci privat disimpan tanpa enkripsi di browser ini',
@@ -3931,6 +3931,7 @@ export default Object.freeze({
 
     // followingView: text with values.
     'followingView.here': '{publicationCount} di sini',
+    'followingView.nothingFromPerson': 'Belum ada karya dari {name} yang sampai di perangkat ini.',
 
     // identityManagementView: text with values.
     'identityManagementView.successor': 'Pengganti: …{successorIdentityId}',

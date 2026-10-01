@@ -3574,7 +3574,7 @@ export default Object.freeze({
     'followingView.youDonTFollowAnyone': 'まだ誰もフォローしていません。作者のページ、公開物、ピアページの人、ワールドビューのアバターで{follow}を使ってください。',
     'followingView.follow': 'フォロー',
     'followingView.unfollow': 'フォロー解除',
-    'followingView.thePeopleYouFollow': 'フォローしている人',
+    'followingView.nothingFromThePeopleYouFollow': 'フォローしている人の作品は、まだこのデバイスに届いていません。',
 
     // Identity, Peers, Chat and settings: identityManagementView.
     'identityManagementView.thePrivateKeyIsStored': '秘密鍵は暗号化されずにこのブラウザーに保存されています',
@@ -3931,6 +3931,7 @@ export default Object.freeze({
 
     // followingView: text with values.
     'followingView.here': 'ここに{publicationCount}件',
+    'followingView.nothingFromPerson': '{name}さんの作品は、まだこのデバイスに届いていません。',
 
     // identityManagementView: text with values.
     'identityManagementView.successor': '後継: …{successorIdentityId}',
