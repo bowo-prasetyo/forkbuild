@@ -2,7 +2,7 @@
 # 11 — 証拠とストレージ
 
 <!-- languages -->
-[English](../11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · **日本語**
+[English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · **日本語**
 <!-- /languages -->
 
 > **ほとんどが試験的です。** カードの **配信 → 内容** ブロックから

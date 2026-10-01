@@ -2,7 +2,7 @@
 # 01 — Memulai
 
 <!-- languages -->
-[English](../01-GettingStarted.md) · **Bahasa Indonesia** · [日本語](../ja/01-GettingStarted.md)
+[English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · **Bahasa Indonesia** · [日本語](../ja/01-GettingStarted.md)
 <!-- /languages -->
 
 Selamat datang! Panduan ini membawa Anda dari "baru membuka aplikasi"

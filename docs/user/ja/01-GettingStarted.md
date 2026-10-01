@@ -2,7 +2,7 @@
 # 01 — はじめに
 
 <!-- languages -->
-[English](../01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · **日本語**
+[English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · **日本語**
 <!-- /languages -->
 
 ようこそ！このガイドでは、「アプリを開いたところ」から「何か作れた」

@@ -2,7 +2,7 @@
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
-[English](../11-EvidenceAndStorage.md) · **Bahasa Indonesia** · [日本語](../ja/11-EvidenceAndStorage.md)
+[English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · **Bahasa Indonesia** · [日本語](../ja/11-EvidenceAndStorage.md)
 <!-- /languages -->
 
 > **Sebagian besar eksperimental.** Menyimpan konten di IPFS atau Arweave

@@ -1,7 +1,7 @@
 # 01 — Getting Started
 
 <!-- languages -->
-**English** · [Bahasa Indonesia](id/01-GettingStarted.md) · [日本語](ja/01-GettingStarted.md)
+**English** · [Deutsch](de/01-GettingStarted.md) · [Bahasa Indonesia](id/01-GettingStarted.md) · [日本語](ja/01-GettingStarted.md)
 <!-- /languages -->
 
 Welcome! This guide gets you from "just opened the app" to "I built something"

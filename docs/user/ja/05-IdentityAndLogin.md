@@ -2,7 +2,7 @@
 # 05 — アイデンティティとログイン
 
 <!-- languages -->
-[English](../05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · **日本語**
+[English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · **日本語**
 <!-- /languages -->
 
 ForkBuild にはパスワードも中央のアカウントサーバーもありません。

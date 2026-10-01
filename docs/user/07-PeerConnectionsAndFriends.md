@@ -1,7 +1,7 @@
 # 07 — Peer Connections & Friends
 
 <!-- languages -->
-**English** · [Bahasa Indonesia](id/07-PeerConnectionsAndFriends.md) · [日本語](ja/07-PeerConnectionsAndFriends.md)
+**English** · [Deutsch](de/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](id/07-PeerConnectionsAndFriends.md) · [日本語](ja/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
 ForkBuild connects you directly to other people's browsers — there's no
