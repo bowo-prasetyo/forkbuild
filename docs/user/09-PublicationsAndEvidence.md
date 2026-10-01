@@ -40,13 +40,22 @@ X", and about the optional depth you can add to a claim:
 
 | | **Publish** (Repository) | **Publications page** |
 |---|---|---|
-| What it shares | A Document or World | A signed *claim* — authorship of a structure, or a place name |
+| What it shares | A Document or World | A signed record: a Shared World, authorship of a structure, or a place name |
 | Where you see it | Repository, Author view, World View | The **Publications** page |
+| What you do with it | Open, explore, fork | Check it, fetch its content, distribute and anchor it |
 | Guide | [Publishing & Forking](04-PublishingAndForking.md) | This one |
 
-A Document you publish with the ordinary **Publish** button doesn't appear
-on the Publications page, and nothing on the Publications page is a Document
-you can open or fork.
+**Publish** alone doesn't put a World on the Publications page. **Share
+with Peers** does: it signs the World as a **Shared World** that can travel
+to peers (see [A Repository creation, decentralized](#a-repository-creation-decentralized)).
+
+The Publications page has no **Open**, **Explore** or **Fork**, not even for
+a Shared World. It shows the signed record, not the World. To open, explore
+or fork a Shared World, find it in the Repository, on its author's page or
+in World View. One you received from a peer appears there once its content
+is on this device. (The one exception is **Open in Editor** on your own
+Shared World that needs publishing again; see
+[Status meanings](#status-meanings).)
 
 Every entry on the Publications page is a *publication*, and each is one of
 three kinds:
