@@ -17,7 +17,7 @@ Panduan yang belum diterjemahkan ke bahasa Indonesia ditandai
 
 1. **[Memulai](01-GettingStarted.md)** — membuka aplikasi, masuk, dan
    menempatkan balok pertama Anda.
-2. **[Editor](../02-TheEditor.md)** (bahasa Inggris) — perangkat untuk
+2. **[Editor](02-TheEditor.md)** — perangkat untuk
    membangun: alat, pemilihan, transformasi, warna balok, grup, struktur di
    Pustaka Bangunan dan cetak biru Anda sendiri, instans struktur, serta
    judul/deskripsi/lisensi sebuah karya.
@@ -27,35 +27,34 @@ Panduan yang belum diterjemahkan ke bahasa Indonesia ditandai
    **Edit Salinan** untuk membawa sesuatu ke Editor, Perjumpaan Dunia yang
    dibagikan rekan Anda, mendistribusikan publikasi Anda sendiri dari
    **Dunia Bersama Saya**, komentar dan notifikasi.
-4. **[Penerbitan & Fork](../04-PublishingAndForking.md)** (bahasa Inggris)
+4. **[Penerbitan & Fork](04-PublishingAndForking.md)**
    — menerbitkan, lisensi, fork, katalog Repositori, dan mendistribusikan
    publikasi langsung dari Editor.
-5. **[Identitas & Masuk](../05-IdentityAndLogin.md)** (bahasa Inggris) —
+5. **[Identitas & Masuk](05-IdentityAndLogin.md)** —
    identitas kriptografis Anda, brankas (mengunci/membuka), mencadangkannya
    dengan ekspor/impor, dan mengelola identitas dari **Identitas Saya**.
-6. **[Avatar & Kehadiran](../06-AvatarsAndPresence.md)** (bahasa Inggris) —
+6. **[Avatar & Kehadiran](06-AvatarsAndPresence.md)** —
    menyesuaikan avatar, siapa yang dapat melihat Anda, berjalan, sudut
    pandang kamera, kendaraan, hewan, dan inventaris Anda.
-7. **[Koneksi Rekan & Teman](../07-PeerConnectionsAndFriends.md)** (bahasa
+7. **[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)** (bahasa
    Inggris) — terhubung langsung dengan orang lain, mengingat, berteman,
    mengikuti, memblokir, menghubungkan kembali secara otomatis, dan relay
    TURN Anda sendiri.
-8. **[Obrolan & Percakapan](../08-ChatAndConversations.md)** (bahasa
+8. **[Obrolan & Percakapan](08-ChatAndConversations.md)** (bahasa
    Inggris) — pesan langsung khusus teman, pengiriman saat luring, tanda
    sudah dibaca, dan panggilan suara.
-9. **[Publikasi & Bukti Eksternal](../09-PublicationsAndEvidence.md)**
-   (bahasa Inggris) — lapisan teknis yang opsional: klaim kepengarangan dan
+9. **[Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md)** — lapisan teknis yang opsional: klaim kepengarangan dan
    nama tempat yang ditandatangani, halaman Publikasi, komentar, dan apa
    yang disimpan perangkat Anda (Snapshot Lokal). Sebagian halamannya
    *eksperimental*, dan ditandai demikian.
-10. **[Pengaturan Jaringan](../10-NetworkSettings.md)** (bahasa Inggris) —
+10. **[Pengaturan Jaringan](10-NetworkSettings.md)** —
     gateway, relay, penyedia penyimpanan dan pengumuman, serta server untuk
     koneksi rekan.
-11. **[Bukti & Penyimpanan](../11-EvidenceAndStorage.md)** (bahasa Inggris)
+11. **[Bukti & Penyimpanan](11-EvidenceAndStorage.md)**
     — menyimpan konten di IPFS atau Arweave, dan yang *eksperimental*:
     bukti eksternal, alur dompet Bitcoin dan Base, penempatan snapshot,
     pinning IPFS jarak jauh, dan Steem.
-12. **[Arsip & Papan Peringkat](../12-ArchiveAndLeaderboards.md)** (bahasa
+12. **[Arsip & Papan Peringkat](12-ArchiveAndLeaderboards.md)** (bahasa
     Inggris) — *eksperimental*. Arsip pengamatan, referensi publikasi,
     pencapaian, label penerbit, dan halaman Papan Peringkat.
 13. **[Data Anda](13-YourData.md)** — mencadangkan semua yang disimpan
@@ -72,8 +71,7 @@ Panduan yang belum diterjemahkan ke bahasa Indonesia ditandai
   dan keyboard di Editor dan Tampilan Dunia, dalam satu tabel. Jika halaman
   ini dan Palet Perintah di aplikasi (`Ctrl/Cmd+K`) berbeda, Palet yang
   benar dan halaman ini mengandung kesalahan — mohon laporkan.
-- **[Gizmo Transformasi Interaktif](../InteractiveTransformGizmo.md)**
-  (bahasa Inggris) — cara memindahkan dan memutar pilihan Anda dengan
+- **[Gizmo Transformasi Interaktif](InteractiveTransformGizmo.md)** — cara memindahkan dan memutar pilihan Anda dengan
   menyeret langsung di viewport: pegangan, titik poros, snapping,
   menerapkan, membatalkan, mengurungkan, dan perilaku grup.
 
@@ -129,5 +127,4 @@ dalam lima kategori, ditambah apa pun yang Anda simpan sendiri:
 - **Ekspor dan impor** cetak biru sebagai file portabel untuk dibagikan
   kepada orang lain, atau dibawa ke perangkat lain.
 
-Lihat [Editor](../02-TheEditor.md#structures-composing-forking-and-your-personal-library)
-(bahasa Inggris) untuk penjelasan lengkapnya.
+Lihat [Editor](02-TheEditor.md#struktur-menyusun-mem-fork-dan-pustaka-pribadi-anda) untuk penjelasan lengkapnya.

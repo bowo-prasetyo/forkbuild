@@ -1,5 +1,9 @@
 # 06 — Avatars & Presence
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/06-AvatarsAndPresence.md) · [日本語](ja/06-AvatarsAndPresence.md)
+<!-- /languages -->
+
 Your **avatar** is how other people see you in World View — its appearance,
 its position, and how it moves. This guide covers customizing it, controlling
 who can see it, and interacting with everyone else's.

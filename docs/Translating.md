@@ -155,10 +155,8 @@ lives in `docs/user/<code>/` under the English page's file name
 is translated there as well (`docs/user/ja/Privacy.md`). The rest of
 `docs/` is for developers and stays in English.
 
-Translated so far, in Indonesian and Japanese: the guide's `README.md`,
-`01-GettingStarted.md`, `13-YourData.md`, `ControlsReference.md`,
-`FAQ.md`, and `Privacy.md`. The other guides are next, longest last
-(`03-WorldView.md`, `11-EvidenceAndStorage.md`).
+Translated so far, in Indonesian and Japanese: every page of the user
+guide and `Privacy.md`, except `03-WorldView.md`, which is next.
 
 Writing a translation:
 

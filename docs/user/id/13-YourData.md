@@ -159,7 +159,7 @@ Mengimpor semua dokumen mengembalikan dokumen yang tidak dimiliki
 perangkat ini, membiarkan yang sudah ada tanpa perubahan, dan menyimpan
 salinan di samping dokumen yang ada dalam versi berbeda. Mengimpor semua
 struktur melewati desain yang sudah ada di Struktur Saya. Identitas yang
-diekspor juga membawa pencabutan, penerus, dan otorisasi perangkatnya,
+diekspor juga membawa pencabutan, pengganti, dan otorisasi perangkatnya,
 sehingga identitas yang dicabut kembali dalam keadaan dicabut.
 
 Riwayat obrolan, teman, orang yang diikuti, dan pengaturan hanya ikut
@@ -169,7 +169,7 @@ pindah dengan cadangan penuh.
 
 Karya yang Anda **Terbitkan** hanya disimpan di perangkat ini, sampai Anda
 mendistribusikannya (lihat
-[Penerbitan & Fork](../04-PublishingAndForking.md), bahasa Inggris).
+[Penerbitan & Fork](04-PublishingAndForking.md)).
 Kartunya di Repositori menyebutkan di mana perangkat ini mencatat
 distribusinya, misalnya **Disimpan di IPFS · Diumumkan di Nostr**: tempat
 bangunan atau Klaim Bertanda Tangannya diunggah (IPFS, Arweave, atau

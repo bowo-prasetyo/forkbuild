@@ -1,5 +1,9 @@
 # 08 — Chat & Conversations
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/08-ChatAndConversations.md) · [日本語](ja/08-ChatAndConversations.md)
+<!-- /languages -->
+
 Direct messaging in ForkBuild is peer-to-peer and **friends-only** — see
 [Peer Connections & Friends](07-PeerConnectionsAndFriends.md) for how to
 become friends with someone first.

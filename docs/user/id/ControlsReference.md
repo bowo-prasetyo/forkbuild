@@ -61,7 +61,7 @@ atau mengedit apa pun. Lihat
 | **Lokasi** | Membuka daftar Dunia, strukturnya, penanda, dan tempat-tempatnya, masing-masing dengan tombol **Fokus** |
 | **?** | Menampilkan atau menyembunyikan kontrol kamera dan berjalan |
 | 🔔 **Notifikasi** (kepala aplikasi, setiap halaman) | Membuka **Riwayat Notifikasi** Anda — catatan baca-saja, bukan tindakan kamera; lihat [Tampilan Dunia](../03-WorldView.md#orientation-and-locations) (bahasa Inggris) |
-| **Kamera**: Bebas / Orang Pertama / Orang Ketiga / Pandangan Burung | Mengunci kamera pada jarak tetap dari avatar Anda sendiri alih-alih menerbangkannya sendiri; klik yang aktif sekali lagi untuk kembali ke Bebas — lihat [Avatar & Kehadiran](../06-AvatarsAndPresence.md#camera-perspective) (bahasa Inggris) |
+| **Kamera**: Bebas / Orang Pertama / Orang Ketiga / Pandangan Burung | Mengunci kamera pada jarak tetap dari avatar Anda sendiri alih-alih menerbangkannya sendiri; klik yang aktif sekali lagi untuk kembali ke Bebas — lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#sudut-pandang-kamera) |
 
 ### Deskripsi lokasi kontekstual
 
@@ -81,12 +81,12 @@ penempatan struktur — tidak ada yang disimpan di dunia.
 
 | Masukan | Tindakan | Catatan |
 |---|---|---|
-| `M` | Mematikan atau menyalakan suara | Sama dengan tombol **Suara**; satu pengaturan untuk kedua tampilan, diingat di perangkat ini. Lihat [Tampilan Dunia](../03-WorldView.md#sound) dan [Editor](../02-TheEditor.md#sound) (bahasa Inggris) |
+| `M` | Mematikan atau menyalakan suara | Sama dengan tombol **Suara**; satu pengaturan untuk kedua tampilan, diingat di perangkat ini. Lihat [Tampilan Dunia](../03-WorldView.md#sound) dan [Editor](02-TheEditor.md#suara) |
 
 ## Gerakan Avatar (Tampilan Dunia)
 
 Menjalankan avatar Anda secara langsung, alih-alih menerbangkan kamera —
-lihat [Avatar & Kehadiran](../06-AvatarsAndPresence.md#walking-your-avatar) (bahasa Inggris).
+lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#menjalankan-avatar-anda).
 
 | Masukan | Tindakan | Catatan |
 |---|---|---|
@@ -98,7 +98,7 @@ lihat [Avatar & Kehadiran](../06-AvatarsAndPresence.md#walking-your-avatar) (bah
 
 ## Kendaraan (Tampilan Dunia)
 
-Lihat [Avatar & Kehadiran](../06-AvatarsAndPresence.md#vehicles) (bahasa
+Lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#kendaraan) (bahasa
 Inggris). Memerlukan Mode Kendali Avatar (**Kendalikan Avatar Saya**);
 petunjuk muncul otomatis saat Anda cukup dekat dengan kendaraan untuk
 menaikinya.
@@ -116,7 +116,7 @@ menaikinya.
 
 ## Hewan (Tampilan Dunia)
 
-Lihat [Avatar & Kehadiran](../06-AvatarsAndPresence.md#animals) (bahasa
+Lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#hewan) (bahasa
 Inggris). Memerlukan Mode Kendali Avatar; petunjuk muncul otomatis saat ada
 hewan yang dapat ditangkap di dekat Anda atau Anda sedang membawanya.
 
@@ -129,7 +129,7 @@ hewan yang dapat ditangkap di dekat Anda atau Anda sedang membawanya.
 
 ## Penghuni (Tampilan Dunia)
 
-Lihat [Avatar & Kehadiran](../06-AvatarsAndPresence.md#residents) (bahasa
+Lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#penghuni) (bahasa
 Inggris). Memerlukan Mode Kendali Avatar; tombol **Tambahkan Penghuni di
 Sini** / **Hapus Penghuni** dan **Bicara** di bagian Avatar melakukan hal
 yang sama tanpanya.
@@ -143,7 +143,7 @@ yang sama tanpanya.
 
 Inventaris Anda, kendaraan yang ditempatkan, dan hewan yang dilepaskan
 disimpan di perangkat ini dan tetap ada setelah dimuat ulang — lihat
-[Avatar & Kehadiran](../06-AvatarsAndPresence.md#what-survives-a-reload) (bahasa Inggris).
+[Avatar & Kehadiran](06-AvatarsAndPresence.md#apa-yang-tetap-ada-setelah-dimuat-ulang).
 
 ## Pemilihan (Editor; mengeklik balok di Tampilan Dunia hanya memeriksanya)
 
@@ -221,7 +221,7 @@ memblokir seluruh pengulangan alih-alih membuat sebagian salinan saja.
 ## Struktur (Pustaka Bangunan) — hanya Editor
 
 Menyusun, mem-fork, dan pustaka pribadi Anda — lihat
-[Editor](../02-TheEditor.md#structures-composing-forking-and-your-personal-library) (bahasa Inggris).
+[Editor](02-TheEditor.md#struktur-menyusun-mem-fork-dan-pustaka-pribadi-anda).
 
 | Masukan | Tindakan | Catatan |
 |---|---|---|
@@ -242,7 +242,7 @@ Menyusun, mem-fork, dan pustaka pribadi Anda — lihat
 
 **Instans struktur** menempatkan seluruh dokumen tersimpan sebagai satu
 unit yang dapat dipilih — referensi hidup, bukan salinan — lihat
-[Editor](../02-TheEditor.md#structure-instances-a-live-reference) (bahasa Inggris).
+[Editor](02-TheEditor.md#instans-struktur-referensi-hidup).
 
 | Masukan | Tindakan | Catatan |
 |---|---|---|
@@ -318,7 +318,7 @@ sekali tidak memiliki alat Tempatkan.
 | `R` | Memutar pratinjau yang tertunda +90° | tetap berlaku saat berganti balok; diatur ulang saat Anda keluar dari mode Tempatkan. Jika ditekan sebelum ada yang ditunjuk, memutar pratinjau berikutnya |
 | `Shift+R` | Memutar pratinjau yang tertunda −90° | |
 | Klik | Menerapkan pratinjau sebagai Balok sungguhan | ditolak di posisi yang terisi (merah) |
-| Contoh warna **Warna** di Pustaka Bangunan | Memilih warna untuk balok berikutnya yang Anda tempatkan | kembali ke warna bawaan jenis balok saat Anda memilih jenis lain — lihat [Brick colors](../02-TheEditor.md#brick-colors) (bahasa Inggris) |
+| Contoh warna **Warna** di Pustaka Bangunan | Memilih warna untuk balok berikutnya yang Anda tempatkan | kembali ke warna bawaan jenis balok saat Anda memilih jenis lain — lihat [Brick colors](02-TheEditor.md#warna-balok) |
 
 Untuk mewarnai ulang balok yang sudah ditempatkan, pilih balok-balok itu
 dan gunakan contoh warna **Warna** di bagian Pilihan — satu langkah urung

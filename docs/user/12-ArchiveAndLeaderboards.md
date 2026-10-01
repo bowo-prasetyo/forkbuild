@@ -1,5 +1,9 @@
 # 12 — Archive & Leaderboards
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/12-ArchiveAndLeaderboards.md) · [日本語](ja/12-ArchiveAndLeaderboards.md)
+<!-- /languages -->
+
 > **Experimental.** Everything here may change or be removed in a later
 > version, and what it produces may not carry over. On the Publications
 > page, the **Wallet, Archive & Publisher Tools** panel is marked with an
