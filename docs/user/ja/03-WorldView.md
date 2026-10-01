@@ -2,7 +2,7 @@
 # 03 — ワールドビュー
 
 <!-- languages -->
-[English](../03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · **日本語**
+[English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · **日本語**
 <!-- /languages -->
 
 ワールドビューは、**公開されたすべての作品が並んで存在する** 共有の 3D

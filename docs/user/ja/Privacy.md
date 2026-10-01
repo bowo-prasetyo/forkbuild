@@ -2,7 +2,7 @@
 # プライバシー
 
 <!-- languages -->
-[English](../../Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · **日本語**
+[English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · **日本語**
 <!-- /languages -->
 
 ForkBuild にはアカウントもアクセス解析もありません。作業はあなた自身の

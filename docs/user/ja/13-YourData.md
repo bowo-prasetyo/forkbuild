@@ -2,7 +2,7 @@
 # 13 — あなたのデータ: バックアップと復元
 
 <!-- languages -->
-[English](../13-YourData.md) · [Bahasa Indonesia](../id/13-YourData.md) · **日本語**
+[English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Bahasa Indonesia](../id/13-YourData.md) · **日本語**
 <!-- /languages -->
 
 ForkBuild にはアカウントも、作品を保管するサーバーもありません。

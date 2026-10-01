@@ -1,8 +1,8 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3541cf9cccd1dd06 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: fac4b21886fe78f8 -->
 # 01 — はじめに
 
 <!-- languages -->
-[English](../01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · **日本語**
+[English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · **日本語**
 <!-- /languages -->
 
 ようこそ！このガイドでは、「アプリを開いたところ」から「何か作れた」
@@ -45,8 +45,8 @@ URL を開くと **ホーム** 画面が表示されます。自分でコピー�
   サーバー。[ネットワーク設定](10-NetworkSettings.md)を参照
 - **言語** — このデバイスで ForkBuild が表示する言語。自分で選ぶまでは
   ブラウザーの言語設定に従います。保存するとページが再読み込みされる
-  ので、先に作業を保存してください。ForkBuild は英語、インドネシア語、
-  日本語で使えます（[Translating ForkBuild](../../Translating.md)（英語）を参照）。
+  ので、先に作業を保存してください。ForkBuild は英語、ドイツ語、
+  インドネシア語、日本語で使えます（[Translating ForkBuild](../../Translating.md)（英語）を参照）。
 - **ForkBuildについて** — バージョン情報
 
 ## ログインする

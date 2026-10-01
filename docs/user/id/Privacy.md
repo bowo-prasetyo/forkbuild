@@ -2,7 +2,7 @@
 # Privasi
 
 <!-- languages -->
-[English](../../Privacy.md) · **Bahasa Indonesia** · [日本語](../ja/Privacy.md)
+[English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · **Bahasa Indonesia** · [日本語](../ja/Privacy.md)
 <!-- /languages -->
 
 ForkBuild tidak memiliki akun dan tidak memakai analitik. ForkBuild

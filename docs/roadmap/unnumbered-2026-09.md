@@ -3447,3 +3447,19 @@ and which are done with one, so they read like more kinds.
   "Publications, Snapshots, Place Naming and Commentary", which used "Publication" in its old narrow sense and
   counted place names apart from publications. They now say "publications (Shared Worlds, Blueprint Attributions and
   place names), Snapshots and comments", in English, Indonesian and Japanese. Guides 10 and 11 say the same.
+
+## Internationalization: German (unnumbered, 2026-10-01)
+
+The third translation. ForkBuild can now be shown in German (Deutsch), chosen on the Language page or picked
+automatically for a browser set to German (`de`, `de-DE`, `de-AT`, `de-CH` …).
+
+- `ui/i18n/messages/de.js` translates all 3,632 messages, in the same order and groups as English. It uses the formal
+  "Sie", infinitives for buttons, „…“ around quoted titles, and keeps network and product names and the protocol words
+  German uses as they are (Gateway, Relay, Snapshot, Hash, Wallet, Peer). The words it uses for ForkBuild's own ideas
+  are listed in `docs/Translating.md`, "German".
+- German has `one` and `other` plural forms, and numbers follow `de` (`3,2 km`, `1.200 Steine`).
+- The user guide and `Privacy.md` are translated in `docs/user/de/`; `scripts/check-doc-translations.mjs` knows the
+  language and its out-of-date banner.
+- Tests: `tests/GermanLocale.test.js` (complete, chosen from the browser, plural forms, a resident's sentence with a
+  decimal comma, undo labels with digit grouping, a fork's title, compass points). `tests/I18n.test.js` used German as
+  its example of a language ForkBuild doesn't ship; it uses Swedish now, and checks that a German browser gets German.

@@ -2,7 +2,7 @@
 # 02 — エディター
 
 <!-- languages -->
-[English](../02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · **日本語**
+[English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · **日本語**
 <!-- /languages -->
 
 エディターは作品を作る場所です。このガイドでは、ツール、ブロックの選択と

@@ -2,7 +2,7 @@
 # 02 — Editor
 
 <!-- languages -->
-[English](../02-TheEditor.md) · **Bahasa Indonesia** · [日本語](../ja/02-TheEditor.md)
+[English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · **Bahasa Indonesia** · [日本語](../ja/02-TheEditor.md)
 <!-- /languages -->
 
 Editor adalah tempat Anda membangun. Panduan ini membahas alat-alatnya,

@@ -2,7 +2,7 @@
 # ForkBuild ユーザードキュメント
 
 <!-- languages -->
-[English](../README.md) · [Bahasa Indonesia](../id/README.md) · **日本語**
+[English](../README.md) · [Deutsch](../de/README.md) · [Bahasa Indonesia](../id/README.md) · **日本語**
 <!-- /languages -->
 
 ブラウザーで ForkBuild を使うためのガイドです。ここに書かれているのは

@@ -1,7 +1,7 @@
 # 05 — Identity & Login
 
 <!-- languages -->
-**English** · [Bahasa Indonesia](id/05-IdentityAndLogin.md) · [日本語](ja/05-IdentityAndLogin.md)
+**English** · [Deutsch](de/05-IdentityAndLogin.md) · [Bahasa Indonesia](id/05-IdentityAndLogin.md) · [日本語](ja/05-IdentityAndLogin.md)
 <!-- /languages -->
 
 ForkBuild has no passwords and no central account server. **Your identity is
