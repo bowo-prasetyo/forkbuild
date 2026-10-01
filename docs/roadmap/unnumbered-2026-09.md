@@ -3497,3 +3497,16 @@ shipped, so a European Portuguese browser gets it too.
 - Tests: `tests/BrazilianPortugueseLocale.test.js` (complete, chosen from Brazilian and European Portuguese browsers,
   plural forms, a resident's sentence with a decimal comma, undo labels with digit grouping, a fork's title, compass
   points).
+
+## Release 1.2.0 (unnumbered, 2026-10-01)
+
+**Version 1.2.0 is released.** Everything since 1.1.0 ships under its own version number. It is a minor release:
+it adds features (five translations and the Language page, Following, Your Data and backups, World Residents, sound,
+wildlife animation, other players' vehicles, loading on demand and the bundled GitHub Pages copy) and fixes, with no
+security fix and no protocol change.
+
+- `package.json`, `package-lock.json` and `core/version.js` (shown on the About page and stamped into new documents
+  as `engineVersion`) say 1.2.0. `PROTOCOL_VERSION` is unchanged.
+- `docs/ReleaseNotes-1.2.md` is new: what's new, fixes, upgrading from 1.1.0 (what 1.1.0 does with residents and
+  riders, and switching GitHub Pages to GitHub Actions) and known limitations. `docs/ReleaseNotes-1.1.md` points to
+  it, and the README names 1.2.0 and links all three.
