@@ -1,7 +1,8 @@
 # ForkBuild 1.1 release notes
 
 *Released 2026-09-28 as version 1.1.0.* For 1.0, see
-[ReleaseNotes-1.0.md](ReleaseNotes-1.0.md).
+[ReleaseNotes-1.0.md](ReleaseNotes-1.0.md); for what came after, see
+[ReleaseNotes-1.2.md](ReleaseNotes-1.2.md).
 
 1.1 fixes two security problems in 1.0.0, so update. It also moves storage
 to IndexedDB, adds a compact document format, touch controls, a public
