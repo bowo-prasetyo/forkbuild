@@ -15,6 +15,10 @@ const SURFACE_VOICE = Object.freeze({
     structure: { type: 'bandpass', frequency: 520, q: 1.1, seconds: 0.07, gain: 0.7, knock: 130 }
 });
 
+// Footsteps sit at half the level the surface voices above were first tuned
+// to, so walking stays in the background of the soundscape.
+const FOOTSTEP_GAIN = 0.5;
+
 // Short-lived nodes are released once `last` has finished.
 function releaseAfter(last, nodes) {
     last.onended = () => {
@@ -62,7 +66,7 @@ function toneDrop(context, destination, from, to, seconds, gain, start) {
 
 export function playFootstep(context, destination, noise, surface, intensity, random = Math.random) {
     const voice = SURFACE_VOICE[surface] || SURFACE_VOICE.grass;
-    const level = Math.min(1, Math.max(0, intensity)) * (0.85 + random() * 0.3);
+    const level = FOOTSTEP_GAIN * Math.min(1, Math.max(0, intensity)) * (0.85 + random() * 0.3);
     const start = context.currentTime + 0.005;
     noiseBurst(context, destination, noise, { ...voice, gain: voice.gain * level }, start, random);
     if (voice.crunch) {
