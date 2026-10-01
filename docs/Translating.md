@@ -30,6 +30,8 @@ in.
 | Resident speech in World View | Translated |
 | Undo/redo and history labels | Translated (a label saved by an older version stays in its English) |
 | A new World's title, a fork's "Fork of …" and a copy's "Copy of …" | In the language of whoever made it, saved like any title |
+| User guide (`docs/user/`) | Partly: see "Translating the user guide" below |
+| Developer documentation (the rest of `docs/`) | English only |
 
 ## How it works
 
@@ -144,6 +146,70 @@ person's name takes さん where a sentence talks about them. A place comes
 before what is there, so a resident's `{where}` reads "北へ約3.2 km行ったところ"
 ("3.2 km to the north"). Compass points are 北, 北東, 東, 南東, 南, 南西, 西,
 北西.
+
+## Translating the user guide
+
+The user guide in `docs/user/` is translated page by page. A translation
+lives in `docs/user/<code>/` under the English page's file name
+(`docs/user/ja/FAQ.md`); `docs/Privacy.md`, which is written for users too,
+is translated there as well (`docs/user/ja/Privacy.md`). The rest of
+`docs/` is for developers and stays in English.
+
+Translated so far, in Indonesian and Japanese: the guide's `README.md`,
+`01-GettingStarted.md`, `13-YourData.md`, `ControlsReference.md`,
+`FAQ.md`, and `Privacy.md`. The other guides are next, longest last
+(`03-WorldView.md`, `11-EvidenceAndStorage.md`).
+
+Writing a translation:
+
+- Use the app's own words for everything on screen. A bold label in the
+  English (**Back Up to a File**) is the text of a button or heading; find
+  it in `ui/i18n/messages/en.js` and use the same key's text from your
+  language's file (`id.js`: **Cadangkan ke File**, `ja.js`:
+  **ファイルにバックアップ**). The word lists under "Indonesian" and
+  "Japanese" above apply here too.
+- Text the app shows only in English (a publish error from `application/`,
+  say) stays in English, with a translation beside it.
+- Link to the translated page when there is one (`FAQ.md`), and to the
+  English otherwise (`../02-TheEditor.md`), marked as English: "(bahasa
+  Inggris)", "（英語）". An anchor into a translated page is made from its
+  translated heading, the way GitHub makes it: `ControlsReference.md#タッチ画面`.
+- Start the page with the line that names its English original. The hash
+  is filled in by `--stamp`:
+  ```
+  <!-- translation-of: docs/user/FAQ.md source-hash: 0000000000000000 -->
+  ```
+
+Then run:
+
+```
+node scripts/check-doc-translations.mjs --stamp docs/user/ja/FAQ.md
+```
+
+That records which English the translation matches, and adds the line of
+language links (`**English** · [Bahasa Indonesia](id/FAQ.md) · [日本語](ja/FAQ.md)`) to the
+translation, its English page and the page's other translations.
+
+**Keeping translations in step.** When an English page changes, every
+translation of it is out of date. `tests/DocTranslations.test.js` (part of
+`npm run test:node`) then fails until each one carries a banner telling
+readers so and pointing to the English. After changing an English page,
+run:
+
+```
+node scripts/check-doc-translations.mjs --update
+```
+
+and commit the banners it adds. You don't need to read the language to do
+this. For a translator, the same command without `--update` lists the pages
+that are out of date and the `git diff` that shows what changed in the
+English. Bring the translation up to date, then `--stamp` it, which takes
+the banner away. The check also fails on a link in a translation that
+leads to a missing page or heading.
+
+Adding a language to the user guide: add it to `LANGUAGES` in
+`scripts/check-doc-translations.mjs`, with its out-of-date banner, and
+create its folder.
 
 ## Adding a language
 

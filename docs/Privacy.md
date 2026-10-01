@@ -1,5 +1,9 @@
 # Privacy
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](user/id/Privacy.md) · [日本語](user/ja/Privacy.md)
+<!-- /languages -->
+
 ForkBuild has no accounts and no analytics. It stores your work in your own
 browser and talks to other computers only for the features that need them.
 This page lists what it stores, and every server it can contact and when.
