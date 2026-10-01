@@ -1,5 +1,9 @@
 # Distributing Your Work
 
+<!-- languages -->
+**English** · [Deutsch](de/Distribution.md) · [Español](es/Distribution.md) · [Bahasa Indonesia](id/Distribution.md) · [日本語](ja/Distribution.md) · [Português (Brasil)](pt-BR/Distribution.md)
+<!-- /languages -->
+
 Everything ForkBuild makes starts on your own device. **Distributing** is
 the separate, optional step that puts your work on decentralized networks,
 so people who aren't connected to you can find it, fetch it and check it.

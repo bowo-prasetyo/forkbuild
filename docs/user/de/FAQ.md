@@ -35,9 +35,9 @@ Steem) an, sodass jeder sie finden und prüfen kann, ohne mit Ihnen verbunden
 zu sein. Klicken Sie direkt nach dem Veröffentlichen auf **Verteilen** oder
 in der Weltansicht unter **Meine Geteilte Welt**. Für die gewählten
 Netzwerke brauchen Sie eine signierende Browsererweiterung, etwa Wander für
-Arweave oder nos2x für Nostr. [Distributing Your Work](../Distribution.md)
-(auf Englisch) listet alles auf, was Sie verteilen können, wohin es gehen
-kann und was jedes Netzwerk braucht.
+Arweave oder nos2x für Nostr. [Ihre Arbeit verteilen](Distribution.md)
+listet alles auf, was Sie verteilen können, wohin es gehen kann und was
+jedes Netzwerk braucht.
 
 ### Warum kann niemand meine Kreation forken?
 

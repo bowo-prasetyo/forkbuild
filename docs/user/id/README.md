@@ -28,8 +28,7 @@ dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
    — menerbitkan, lisensi, fork, katalog Repositori, dan mendistribusikan
    publikasi langsung dari Editor.
    Untuk semua yang dapat Anda distribusikan dan ke mana semuanya dapat
-   dikirim, lihat [Distributing Your Work](../Distribution.md) (bahasa
-   Inggris).
+   dikirim, lihat [Mendistribusikan Karya Anda](Distribution.md).
 5. **[Identitas & Masuk](05-IdentityAndLogin.md)** —
    identitas kriptografis Anda, brankas (mengunci/membuka), mencadangkannya
    dengan ekspor/impor, dan mengelola identitas dari **Identitas Saya**.
@@ -49,13 +48,12 @@ dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
     gateway, relay, penyedia penyimpanan dan pengumuman, serta server untuk
     koneksi rekan.
     Apa yang dibutuhkan setiap jaringan dirangkum di
-    [Distributing Your Work](../Distribution.md#what-each-network-needs)
-    (bahasa Inggris).
+    [Mendistribusikan Karya Anda](Distribution.md#apa-yang-dibutuhkan-setiap-jaringan).
 11. **[Bukti & Penyimpanan](11-EvidenceAndStorage.md)**
     — menyimpan konten di IPFS atau Arweave, dan yang *eksperimental*:
     bukti eksternal, alur dompet Bitcoin dan Base, penempatan snapshot,
     pinning IPFS jarak jauh, dan Steem.
-    [Distributing Your Work](../Distribution.md) (bahasa Inggris)
+    [Mendistribusikan Karya Anda](Distribution.md)
     menunjukkan bagaimana semuanya saling terkait.
 12. **[Arsip & Papan Peringkat](12-ArchiveAndLeaderboards.md)** — *eksperimental*. Arsip pengamatan, referensi publikasi,
     pencapaian, label penerbit, dan halaman Papan Peringkat.
@@ -66,7 +64,7 @@ dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
 
 ## Referensi
 
-- **[Distributing Your Work](../Distribution.md)** (bahasa Inggris) — semua
+- **[Mendistribusikan Karya Anda](Distribution.md)** — semua
   yang dapat Anda simpan di jaringan terdesentralisasi (Dunia Anda, klaim
   kepengarangan dan nama tempat, komentar, jangkar), tiga peran yang
   dimainkan sebuah jaringan (Konten, Pengumuman / Penemuan, Bukti /

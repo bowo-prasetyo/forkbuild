@@ -28,7 +28,7 @@ in [docs/Architecture.md](../../Architecture.md) und im übrigen
    Veröffentlichen, Lizenzen, Forken, der Katalog im Repository und das
    Verteilen einer Veröffentlichung direkt aus dem Editor.
    Alles, was Sie verteilen können, und wohin es gehen kann, steht in
-   [Distributing Your Work](../Distribution.md) (auf Englisch).
+   [Ihre Arbeit verteilen](Distribution.md).
 5. **[Identität & Anmeldung](05-IdentityAndLogin.md)** — Ihre
    kryptografische Identität, der Tresor (Sperren/Entsperren), das Sichern
    per Export/Import und das Verwalten von Identitäten unter **Meine
@@ -51,13 +51,13 @@ in [docs/Architecture.md](../../Architecture.md) und im übrigen
 10. **[Netzwerkeinstellungen](10-NetworkSettings.md)** — Gateways, Relays,
     Speicher- und Ankündigungsanbieter sowie Server für Peer-Verbindungen.
     Was jedes Netzwerk braucht, fasst
-    [Distributing Your Work](../Distribution.md#what-each-network-needs)
-    (auf Englisch) zusammen.
+    [Ihre Arbeit verteilen](Distribution.md#was-jedes-netzwerk-braucht)
+    zusammen.
 11. **[Nachweise & Speicher](11-EvidenceAndStorage.md)** — Inhalte auf IPFS
     oder Arweave speichern und, *experimentell*, externe Nachweise, die
     Wallet-Abläufe für Bitcoin und Base, Snapshot-Platzierungen, entferntes
     IPFS-Pinning und Steem.
-    [Distributing Your Work](../Distribution.md) (auf Englisch) zeigt, wie
+    [Ihre Arbeit verteilen](Distribution.md) zeigt, wie
     das zusammenpasst.
 12. **[Archiv & Bestenlisten](12-ArchiveAndLeaderboards.md)** —
     *experimentell*. Das Beobachtungsarchiv, Veröffentlichungsverweise,
@@ -69,7 +69,7 @@ in [docs/Architecture.md](../../Architecture.md) und im übrigen
 
 ## Nachschlagen
 
-- **[Distributing Your Work](../Distribution.md)** (auf Englisch) — alles,
+- **[Ihre Arbeit verteilen](Distribution.md)** — alles,
   was Sie in dezentralen Netzwerken ablegen können (Ihre Welten,
   Urheberschafts- und Ortsnamensansprüche, Kommentare, Anker), die drei
   Rollen, die ein Netzwerk spielt (Inhalt, Ankündigung / Entdeckung,
