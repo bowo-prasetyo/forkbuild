@@ -1,5 +1,9 @@
 # Frequently Asked Questions
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/FAQ.md) · [日本語](ja/FAQ.md)
+<!-- /languages -->
+
 Short answers to the questions people most often run into, each linking to
 the guide that explains it in full.
 

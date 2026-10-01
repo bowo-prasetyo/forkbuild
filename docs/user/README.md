@@ -1,5 +1,9 @@
 # ForkBuild User Documentation
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/README.md) · [日本語](ja/README.md)
+<!-- /languages -->
+
 How-to guides for using ForkBuild in the browser. Everything here
 describes the product as it works today; engine internals live in
 [docs/Architecture.md](../Architecture.md) and the rest of the

@@ -1,5 +1,9 @@
 # Controls Reference
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/ControlsReference.md) · [日本語](ja/ControlsReference.md)
+<!-- /languages -->
+
 Every mouse and keyboard interaction in ForkBuild; phones and tablets are
 covered in [Touch screens](#touch-screens). World View is for
 looking around and navigating; every building control (selection for

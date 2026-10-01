@@ -1,5 +1,9 @@
 # 13 — Your Data: backing up and restoring
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/13-YourData.md) · [日本語](ja/13-YourData.md)
+<!-- /languages -->
+
 ForkBuild has no accounts and no server that keeps your work. Everything it
 stores lives in this browser, on this device: your documents, identities
 and their private keys, structures, publications, peers and friends, chat

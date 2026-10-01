@@ -1,5 +1,9 @@
 # 01 — Getting Started
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/01-GettingStarted.md) · [日本語](ja/01-GettingStarted.md)
+<!-- /languages -->
+
 Welcome! This guide gets you from "just opened the app" to "I built something"
 in about five minutes.
 
@@ -40,9 +44,8 @@ The bar at the top is always visible:
   [Network Settings](10-NetworkSettings.md)
 - **Language** — the language ForkBuild shows on this device. It follows
   your browser's languages until you choose one; saving reloads the page, so
-  save your work first. English is the only language so far: the rest of
-  the app is being prepared for translation
-  (see [Translating ForkBuild](../Translating.md)).
+  save your work first. ForkBuild comes in English, Bahasa Indonesia and
+  Japanese (see [Translating ForkBuild](../Translating.md)).
 - **About** — version info
 
 ## Logging in
