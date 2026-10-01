@@ -50,7 +50,7 @@ sends anything.
 | **Your World's Snapshot** (its bricks), with where you placed it | Arweave, IPFS or Steem | Nostr, Arweave or Steem | — | The same **Distribute** dialogs (**Distribute Snapshot only** for just this half) |
 | **Any publication's content hash** (a World, an authorship claim or a place name) | — | — | Bitcoin, Arweave, Base or Steem | The publication's card on the **Publications** page |
 | **Authorship of a structure** (Blueprint Attribution) | Arweave, IPFS or Steem | Nostr, Arweave or Steem | — | Claim it in the Editor's **My Structures**, then distribute it from the **Publications** page |
-| **A place name** (Place Naming Claim) | — | Nostr | — | **Publish to Nostr** in World View's naming panel |
+| **A place name** (Place Naming Claim) | Arweave, IPFS or Steem | Nostr, Arweave or Steem | — | **Publish to Nostr** in World View's naming panel for a quick Nostr announcement; the **Publications** page for any of these |
 | **A comment** on a publication | — | Nostr, Arweave or Steem | — | **Post Comment** in the Repository (comments posted from World View stay on this device for now) |
 
 A World's Snapshot carries your signed placement with it, so people who
@@ -73,6 +73,22 @@ Details:
 - Authorship: [Claiming authorship of a structure](09-PublicationsAndEvidence.md#claiming-authorship-of-a-structure).
 - Place names: [Naming a place](09-PublicationsAndEvidence.md#naming-a-place).
 - Comments: [How comments travel](09-PublicationsAndEvidence.md#how-comments-travel).
+
+## What stays with you or your peers
+
+Not everything you make is distributed. These never go to the networks
+above:
+
+| What | Where it goes | Guide |
+|---|---|---|
+| A World you **Share with Peers** | Your connected peers only | [Sharing with connected peers](04-PublishingAndForking.md#sharing-with-connected-peers) |
+| Your avatar's live position and appearance | Connected peers, as your visibility settings allow | [Who can see you](06-AvatarsAndPresence.md#who-can-see-you-two-independent-settings) |
+| Chat messages and voice calls | The friend you're talking to, directly | [Chat & Conversations](08-ChatAndConversations.md) |
+| Anchors and placements you exchange with **Synchronize with Peers** | Your connected peers only | [Decentralization at a glance](09-PublicationsAndEvidence.md#decentralization-at-a-glance) |
+| Your identity, saved structures, vehicles and animals you carry, friends, settings | This device, unless you export or back them up | [Your Data](13-YourData.md) |
+
+To move these to another device, or hand them to someone, use the exports
+and full backup on [Your Data](13-YourData.md).
 
 ## What each network needs
 
