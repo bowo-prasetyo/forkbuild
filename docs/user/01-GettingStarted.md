@@ -44,8 +44,8 @@ The bar at the top is always visible:
   [Network Settings](10-NetworkSettings.md)
 - **Language** — the language ForkBuild shows on this device. It follows
   your browser's languages until you choose one; saving reloads the page, so
-  save your work first. ForkBuild comes in English, Bahasa Indonesia and
-  Japanese (see [Translating ForkBuild](../Translating.md)).
+  save your work first. ForkBuild comes in English, German, Bahasa
+  Indonesia and Japanese (see [Translating ForkBuild](../Translating.md)).
 - **About** — version info
 
 ## Logging in

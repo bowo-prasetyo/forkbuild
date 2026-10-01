@@ -38,6 +38,11 @@ export const SOURCE_LANGUAGE = Object.freeze({ code: 'en', name: 'English' });
 // is the link to the English page.
 export const LANGUAGES = Object.freeze([
     Object.freeze({
+        code: 'de',
+        name: 'Deutsch',
+        staleBanner: '> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung]({source}).'
+    }),
+    Object.freeze({
         code: 'id',
         name: 'Bahasa Indonesia',
         staleBanner: '> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris]({source}).'

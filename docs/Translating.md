@@ -2,9 +2,8 @@
 
 ForkBuild can be shown in another language: every page's text is a message
 (`ui/i18n/`), chosen on the **Language** page, with a pseudo-locale for
-finding text that isn't ready. It ships in English, Bahasa Indonesia and
-Japanese; the
-table below lists the few things that stay in the language they were written
+finding text that isn't ready. It ships in English, German, Bahasa
+Indonesia and Japanese; the table below lists the few things that stay in the language they were written
 in.
 
 ## Languages
@@ -12,6 +11,7 @@ in.
 | Language | Code | Messages |
 |---|---|---|
 | English (source) | `en` | `ui/i18n/messages/en.js` |
+| Deutsch (German) | `de` | `ui/i18n/messages/de.js`, complete (see "German" below) |
 | Bahasa Indonesia | `id` | `ui/i18n/messages/id.js`, complete (see "Indonesian" below) |
 | 日本語 (Japanese) | `ja` | `ui/i18n/messages/ja.js`, complete (see "Japanese" below) |
 
@@ -111,6 +111,40 @@ undo labels also give `=1` ("Tempatkan Balok" rather than "Tempatkan 1
 Balok"). Numbers and dates follow `id` (`3,2 km`). Compass points are U, TL,
 T, TG, S, BD, B, BL.
 
+## German
+
+`ui/i18n/messages/de.js` translates every key. It uses the formal "Sie",
+infinitives for buttons and menu entries ("Speichern", "Bauplan
+exportieren"), „…“ for quoted titles, and keeps network and product names
+(ForkBuild, Arweave, Nostr, IPFS, Steem, Bitcoin, Base, Kubo, WebRTC, STUN,
+TURN) and the protocol words German uses as they are (Gateway, Relay,
+Snapshot, Hash, Nonce, txid, Wallet, Peer); endpoint is Endpunkt. The words
+it uses for ForkBuild's own ideas:
+
+| English | German |
+|---|---|
+| World | Welt |
+| brick | Stein |
+| build (a creation) | Bauwerk |
+| structure / blueprint | Struktur / Bauplan |
+| Publication / publish | Veröffentlichung / veröffentlichen |
+| Shared World (a World's signed record) | Geteilte Welt |
+| Signed Claim | Signierter Anspruch |
+| fork | Fork (forken, geforkt, „Fork von …“) |
+| peer | Peer |
+| identity / passphrase | Identität / Passphrase |
+| landmark / region / resident | Wahrzeichen / Region / Bewohner |
+| placement / place | Platzierung / platzieren |
+| anchor / anchoring | Anker / Verankerung |
+| undo / redo | Rückgängig / Wiederholen |
+| sign in / sign out | anmelden / abmelden |
+
+German has two plural forms, `one` and `other`; the undo labels say "Stein
+platzieren" for one brick and "3 Steine platzieren" otherwise. Numbers
+follow `de` (`3,2 km`, `1.200`). A resident's `{where}` comes after the
+verb: "Ein Fahrrad steht etwa 3,2 km nördlich von hier." Compass points are
+N, NO, O, SO, S, SW, W, NW.
+
 ## Japanese
 
 `ui/i18n/messages/ja.js` translates every key. It uses polite です/ます
@@ -155,22 +189,22 @@ lives in `docs/user/<code>/` under the English page's file name
 is translated there as well (`docs/user/ja/Privacy.md`). The rest of
 `docs/` is for developers and stays in English.
 
-Translated so far, in Indonesian and Japanese: every page of the user
-guide, and `Privacy.md`.
+Translated so far, in German, Indonesian and Japanese: every page of the
+user guide, and `Privacy.md`.
 
 Writing a translation:
 
 - Use the app's own words for everything on screen. A bold label in the
   English (**Back Up to a File**) is the text of a button or heading; find
   it in `ui/i18n/messages/en.js` and use the same key's text from your
-  language's file (`id.js`: **Cadangkan ke File**, `ja.js`:
-  **ファイルにバックアップ**). The word lists under "Indonesian" and
-  "Japanese" above apply here too.
+  language's file (`de.js`: **In eine Datei sichern**, `id.js`:
+  **Cadangkan ke File**, `ja.js`: **ファイルにバックアップ**). The word lists
+  under "German", "Indonesian" and "Japanese" above apply here too.
 - Text the app shows only in English (a publish error from `application/`,
   say) stays in English, with a translation beside it.
 - Link to the translated page when there is one (`FAQ.md`), and to the
-  English otherwise (`../02-TheEditor.md`), marked as English: "(bahasa
-  Inggris)", "（英語）". An anchor into a translated page is made from its
+  English otherwise (`../02-TheEditor.md`), marked as English: "(Englisch)",
+  "(bahasa Inggris)", "（英語）". An anchor into a translated page is made from its
   translated heading, the way GitHub makes it: `ControlsReference.md#タッチ画面`.
 - Start the page with the line that names its English original. The hash
   is filled in by `--stamp`:

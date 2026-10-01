@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3541cf9cccd1dd06 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: fac4b21886fe78f8 -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -48,8 +48,8 @@ Bilah di bagian atas selalu terlihat:
 - **Bahasa** — bahasa yang ditampilkan ForkBuild di perangkat ini. Bahasa
   mengikuti pengaturan bahasa browser Anda sampai Anda memilihnya sendiri;
   menyimpan akan memuat ulang halaman, jadi simpan pekerjaan Anda dulu.
-  ForkBuild tersedia dalam bahasa Inggris, Bahasa Indonesia, dan bahasa
-  Jepang (lihat [Translating ForkBuild](../../Translating.md), bahasa Inggris).
+  ForkBuild tersedia dalam bahasa Inggris, bahasa Jerman, Bahasa Indonesia,
+  dan bahasa Jepang (lihat [Translating ForkBuild](../../Translating.md), bahasa Inggris).
 - **Tentang** — informasi versi
 
 ## Masuk
