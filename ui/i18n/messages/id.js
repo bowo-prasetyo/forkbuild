@@ -3471,7 +3471,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: announcementDiscoveryProviderSettingsView.
     'announcementDiscoveryProviderSettingsView.announcementDiscoveryProvider': 'Penyedia Pengumuman / Penemuan',
-    'announcementDiscoveryProviderSettingsView.chooseTheDefaultDecentralizedSubstrate': 'Pilih substrat terdesentralisasi bawaan — Nostr, Arweave, atau Steem — tempat Publikasi, Snapshot, klaim Penamaan Tempat, dan Komentar Anda diumumkan. Halaman atau kontrol yang menawarkan pilihan eksplisitnya sendiri tetap mengesampingkan bawaan ini untuk tindakan itu.',
+    'announcementDiscoveryProviderSettingsView.chooseTheDefaultDecentralizedSubstrate': 'Pilih substrat terdesentralisasi bawaan — Nostr, Arweave, atau Steem — tempat publikasi (Dunia Bersama, Atribusi Cetak Biru, dan nama tempat), Snapshot, dan komentar Anda diumumkan. Halaman atau kontrol yang menawarkan pilihan eksplisitnya sendiri tetap mengesampingkan bawaan ini untuk tindakan itu.',
     'announcementDiscoveryProviderSettingsView.thisChoiceNeverNarrowsDiscovery': 'Pilihan ini tidak pernah mempersempit penemuan: mencari konten orang lain selalu mencari di Nostr, Arweave, dan Steem sekaligus.',
     'announcementDiscoveryProviderSettingsView.savingHereTakesEffectThe': 'Menyimpan di sini berlaku saat aplikasi ini dimuat berikutnya — tidak pernah mengubah pengumuman yang sedang berjalan.',
     'announcementDiscoveryProviderSettingsView.saved': 'Tersimpan.',
@@ -3654,7 +3654,7 @@ export default Object.freeze({
     'networkSettingsView.contentProvider': 'Penyedia Konten',
     'networkSettingsView.preferredStorageProviderForPublishing': 'Penyedia penyimpanan pilihan untuk menerbitkan konten.',
     'networkSettingsView.announcementDiscoveryProvider': 'Penyedia Pengumuman / Penemuan',
-    'networkSettingsView.preferredSubstrateNostrOrArweave': 'Substrat pilihan — Nostr atau Arweave — untuk mengumumkan dan menemukan Publikasi, Snapshot, Penamaan Tempat, dan Komentar.',
+    'networkSettingsView.preferredSubstrateNostrOrArweave': 'Substrat pilihan — Nostr atau Arweave — untuk mengumumkan dan menemukan publikasi (Dunia Bersama, Atribusi Cetak Biru, dan nama tempat), Snapshot, dan komentar.',
     'networkSettingsView.proofAnchoringProvider': 'Penyedia Bukti / Penjangkaran',
     'networkSettingsView.experimental': 'Eksperimental',
     'networkSettingsView.arweaveGateway': 'Gateway Arweave',
@@ -3664,7 +3664,7 @@ export default Object.freeze({
     'networkSettingsView.bitcoinEndpoint': 'Endpoint Bitcoin',
     'networkSettingsView.esploraCompatibleEndpointUsedFor': 'Endpoint yang kompatibel dengan Esplora, digunakan untuk menyiarkan jangkar Bitcoin, konfirmasi, pencarian dana, dan verifikasi bukti.',
     'networkSettingsView.nostrRelays': 'Relay Nostr',
-    'networkSettingsView.relaysUsedEverywhereThisReplica': 'Relay yang digunakan di mana pun replika ini menerbitkan dan menemukan melalui Nostr — Publikasi, Snapshot, Penamaan Tempat, dan Komentar.',
+    'networkSettingsView.relaysUsedEverywhereThisReplica': 'Relay yang digunakan di mana pun replika ini menerbitkan dan menemukan melalui Nostr — publikasi (Dunia Bersama, Atribusi Cetak Biru, dan nama tempat), Snapshot, dan komentar.',
     'networkSettingsView.whereThisReplicaReadsSteem': 'Tempat replika ini membaca pengumuman Steem, dan akun yang digunakannya untuk memposting.',
     'networkSettingsView.stunServers': 'Server STUN',
     'networkSettingsView.serversUsedForPeerTo': 'Server yang digunakan untuk negosiasi koneksi peer-to-peer.',
@@ -3676,7 +3676,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: nostrRelaySettingsView.
     'nostrRelaySettingsView.nostrRelays': 'Relay Nostr',
-    'nostrRelaySettingsView.relaySUsedEverywhereThis': 'Relay yang digunakan di mana pun replika ini menerbitkan atau menemukan melalui Nostr — Publikasi, Snapshot, Penamaan Tempat, dan Komentar. Satu per baris — setiap relay yang dikonfigurasi ditanyai dan diberi pengumuman secara terpisah, sehingga relay kedua tetap berguna meskipun yang pertama tidak dapat dijangkau, dan Publikasi yang diumumkan ke lebih dari satu relay dapat ditemukan oleh lebih banyak orang.',
+    'nostrRelaySettingsView.relaySUsedEverywhereThis': 'Relay yang digunakan di mana pun replika ini menerbitkan atau menemukan melalui Nostr — publikasi (Dunia Bersama, Atribusi Cetak Biru, dan nama tempat), Snapshot, dan komentar. Satu per baris — setiap relay yang dikonfigurasi ditanyai dan diberi pengumuman secara terpisah, sehingga relay kedua tetap berguna meskipun yang pertama tidak dapat dijangkau, dan publikasi yang diumumkan ke lebih dari satu relay dapat ditemukan oleh lebih banyak orang.',
     'nostrRelaySettingsView.usingYourSavedRelays': 'Menggunakan relay yang Anda simpan:',
     'nostrRelaySettingsView.usingTheDefaultRelays': 'Menggunakan relay bawaan:',
     'nostrRelaySettingsView.saved': 'Tersimpan.',
@@ -3814,7 +3814,7 @@ export default Object.freeze({
     'rendezvousSettingsView.resetToDefaults': 'Kembalikan ke Bawaan',
 
     // Identity, Peers, Chat and settings: steemReadingSettingsView.
-    'steemReadingSettingsView.whereThisReplicaReadsSteem': 'Tempat replika ini membaca pengumuman Steem: Publikasi, Snapshot, Penamaan Tempat, dan Komentar yang diposting sebagai balasan di utas penemuan bulanan. Setiap pengumuman diverifikasi sebelum digunakan. Membaca tidak memerlukan akun Steem. Perubahan berlaku saat aplikasi dimuat berikutnya.',
+    'steemReadingSettingsView.whereThisReplicaReadsSteem': 'Tempat replika ini membaca pengumuman Steem: publikasi (Dunia Bersama, Atribusi Cetak Biru, dan nama tempat), Snapshot, dan komentar yang diposting sebagai balasan di utas penemuan bulanan. Setiap pengumuman diverifikasi sebelum digunakan. Membaca tidak memerlukan akun Steem. Perubahan berlaku saat aplikasi dimuat berikutnya.',
     'steemReadingSettingsView.apiNodesOnePerLine': 'Node API, satu per baris, dicoba secara berurutan',
     'steemReadingSettingsView.threadAccountsOnePerLine': 'Akun utas, satu per baris',
     'steemReadingSettingsView.firstMonthToRead': 'Bulan pertama yang dibaca',

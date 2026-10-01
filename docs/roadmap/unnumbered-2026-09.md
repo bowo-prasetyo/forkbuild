@@ -3434,3 +3434,16 @@ by a capital P, and Japanese, where the page and the kind were both 公開物, c
   so nothing changes for peers on an older version.
 - User guides 03, 04, 09, 11, 13, the FAQ and the guide index use the new names; guide 09 lists the three kinds.
   Eight tests that checked the old English text now check the new text.
+
+## What surrounds a publication (unnumbered, 2026-10-01)
+
+Guide 09 listed the three kinds of publication, but a card also shows Content, Announcement / Discovery, Proof /
+Anchoring and Commentary, and World View adds Snapshots and Placements. Nothing said which of these are publications
+and which are done with one, so they read like more kinds.
+
+- Guide 09 has a new section, "What surrounds a publication": one table naming each term, what it is, and where it is
+  set or explained. Only the publication is required; the rest are optional steps or attachments.
+- The Network Settings, Nostr relay, announcement provider and Steem reading pages listed what they announce as
+  "Publications, Snapshots, Place Naming and Commentary", which used "Publication" in its old narrow sense and
+  counted place names apart from publications. They now say "publications (Shared Worlds, Blueprint Attributions and
+  place names), Snapshots and comments", in English, Indonesian and Japanese. Guides 10 and 11 say the same.

@@ -3471,7 +3471,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: announcementDiscoveryProviderSettingsView.
     'announcementDiscoveryProviderSettingsView.announcementDiscoveryProvider': '告知 / 発見サービス',
-    'announcementDiscoveryProviderSettingsView.chooseTheDefaultDecentralizedSubstrate': '公開物、スナップショット、地名の主張、コメントを告知する既定の分散基盤を、Nostr、Arweave、Steemから選びます。独自の明示的な選択肢があるページや操作では、その操作に限りそちらが優先されます。',
+    'announcementDiscoveryProviderSettingsView.chooseTheDefaultDecentralizedSubstrate': '公開物（共有ワールド、ブループリントの作者情報、地名）、スナップショット、コメントを告知する既定の分散基盤を、Nostr、Arweave、Steemから選びます。独自の明示的な選択肢があるページや操作では、その操作に限りそちらが優先されます。',
     'announcementDiscoveryProviderSettingsView.thisChoiceNeverNarrowsDiscovery': 'この選択で発見の範囲が狭まることはありません: 他の人のコンテンツを探すときは、常にNostr、Arweave、Steemをまとめて検索します。',
     'announcementDiscoveryProviderSettingsView.savingHereTakesEffectThe': 'ここでの保存は、次にアプリを読み込んだときに反映されます — すでに進行中の告知は変わりません。',
     'announcementDiscoveryProviderSettingsView.saved': '保存しました。',
@@ -3654,7 +3654,7 @@ export default Object.freeze({
     'networkSettingsView.contentProvider': 'コンテンツサービス',
     'networkSettingsView.preferredStorageProviderForPublishing': 'コンテンツの公開に優先して使うストレージサービス。',
     'networkSettingsView.announcementDiscoveryProvider': '告知 / 発見サービス',
-    'networkSettingsView.preferredSubstrateNostrOrArweave': '公開物、スナップショット、地名、コメントの告知と発見に優先して使う基盤（NostrまたはArweave）。',
+    'networkSettingsView.preferredSubstrateNostrOrArweave': '公開物（共有ワールド、ブループリントの作者情報、地名）、スナップショット、コメントの告知と発見に優先して使う基盤（NostrまたはArweave）。',
     'networkSettingsView.proofAnchoringProvider': '証明 / アンカリングサービス',
     'networkSettingsView.experimental': '実験的',
     'networkSettingsView.arweaveGateway': 'Arweaveゲートウェイ',
@@ -3664,7 +3664,7 @@ export default Object.freeze({
     'networkSettingsView.bitcoinEndpoint': 'Bitcoinエンドポイント',
     'networkSettingsView.esploraCompatibleEndpointUsedFor': 'Bitcoinアンカーのブロードキャスト、承認、資金の照会、証明の検証に使うEsplora互換のエンドポイント。',
     'networkSettingsView.nostrRelays': 'Nostrリレー',
-    'networkSettingsView.relaysUsedEverywhereThisReplica': 'このレプリカがNostrで公開・発見するすべての場面（公開物、スナップショット、地名、コメント）で使うリレー。',
+    'networkSettingsView.relaysUsedEverywhereThisReplica': 'このレプリカがNostrで公開・発見するすべての場面（公開物（共有ワールド、ブループリントの作者情報、地名）、スナップショット、コメント）で使うリレー。',
     'networkSettingsView.whereThisReplicaReadsSteem': 'このレプリカがSteemの告知を読む場所と、投稿に使うアカウント。',
     'networkSettingsView.stunServers': 'STUNサーバー',
     'networkSettingsView.serversUsedForPeerTo': 'ピア間の接続のネゴシエーションに使うサーバー。',
@@ -3676,7 +3676,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: nostrRelaySettingsView.
     'nostrRelaySettingsView.nostrRelays': 'Nostrリレー',
-    'nostrRelaySettingsView.relaySUsedEverywhereThis': 'このレプリカがNostrで公開・発見するすべての場面（公開物、スナップショット、地名、コメント）で使うリレーです。1行に1つ書いてください — 設定したリレーにはそれぞれ独立して問い合わせと告知を行うので、1つ目のリレーに接続できない間も2つ目のリレーが役立ちます。また、複数のリレーに告知した公開物は、より多くの人に見つけてもらえます。',
+    'nostrRelaySettingsView.relaySUsedEverywhereThis': 'このレプリカがNostrで公開・発見するすべての場面（公開物（共有ワールド、ブループリントの作者情報、地名）、スナップショット、コメント）で使うリレーです。1行に1つ書いてください — 設定したリレーにはそれぞれ独立して問い合わせと告知を行うので、1つ目のリレーに接続できない間も2つ目のリレーが役立ちます。また、複数のリレーに告知した公開物は、より多くの人に見つけてもらえます。',
     'nostrRelaySettingsView.usingYourSavedRelays': '保存したリレーを使用中:',
     'nostrRelaySettingsView.usingTheDefaultRelays': '既定のリレーを使用中:',
     'nostrRelaySettingsView.saved': '保存しました。',
@@ -3814,7 +3814,7 @@ export default Object.freeze({
     'rendezvousSettingsView.resetToDefaults': '既定に戻す',
 
     // Identity, Peers, Chat and settings: steemReadingSettingsView.
-    'steemReadingSettingsView.whereThisReplicaReadsSteem': 'このレプリカがSteemの告知を読む場所です: 毎月の発見用スレッドへの返信として投稿された公開物、スナップショット、地名、コメント。すべての告知は使う前に検証されます。読むだけならSteemアカウントは不要です。変更は次にアプリを読み込んだときに反映されます。',
+    'steemReadingSettingsView.whereThisReplicaReadsSteem': 'このレプリカがSteemの告知を読む場所です: 毎月の発見用スレッドへの返信として投稿された公開物（共有ワールド、ブループリントの作者情報、地名）、スナップショット、コメント。すべての告知は使う前に検証されます。読むだけならSteemアカウントは不要です。変更は次にアプリを読み込んだときに反映されます。',
     'steemReadingSettingsView.apiNodesOnePerLine': 'APIノード（1行に1つ、順に試します）',
     'steemReadingSettingsView.threadAccountsOnePerLine': 'スレッドのアカウント（1行に1つ）',
     'steemReadingSettingsView.firstMonthToRead': '読み始める月',
