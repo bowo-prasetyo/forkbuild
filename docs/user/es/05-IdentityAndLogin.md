@@ -2,7 +2,7 @@
 # 05 — Identidad e inicio de sesión
 
 <!-- languages -->
-[English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · **Español** · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md)
+[English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · **Español** · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
 ForkBuild no tiene contraseñas ni un servidor central de cuentas. **Su

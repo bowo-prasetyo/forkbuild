@@ -2,7 +2,7 @@
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
-[English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · **Bahasa Indonesia** · [日本語](../ja/10-NetworkSettings.md)
+[English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · **Bahasa Indonesia** · [日本語](../ja/10-NetworkSettings.md) · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
 
 **Pengaturan Jaringan**, di bilah atas, menautkan setiap halaman yang

@@ -2,7 +2,7 @@
 # 08 — Chat y conversaciones
 
 <!-- languages -->
-[English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · **Español** · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md)
+[English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · **Español** · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
 
 Los mensajes directos en ForkBuild van de par a par y son **solo entre

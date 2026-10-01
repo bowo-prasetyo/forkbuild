@@ -1,8 +1,8 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 757dbcb5067716b0 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8947d6e44d3663f9 -->
 # 01 — はじめに
 
 <!-- languages -->
-[English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · **日本語**
+[English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · **日本語** · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
 
 ようこそ！このガイドでは、「アプリを開いたところ」から「何か作れた」
@@ -46,7 +46,7 @@ URL を開くと **ホーム** 画面が表示されます。自分でコピー�
 - **言語** — このデバイスで ForkBuild が表示する言語。自分で選ぶまでは
   ブラウザーの言語設定に従います。保存するとページが再読み込みされる
   ので、先に作業を保存してください。ForkBuild は英語、ドイツ語、
-  スペイン語、インドネシア語、日本語で使えます（[Translating ForkBuild](../../Translating.md)（英語）を参照）。
+  スペイン語、インドネシア語、日本語、ブラジルポルトガル語で使えます（[Translating ForkBuild](../../Translating.md)（英語）を参照）。
 - **ForkBuildについて** — バージョン情報
 
 ## ログインする

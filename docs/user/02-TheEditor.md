@@ -1,7 +1,7 @@
 # 02 — The Editor
 
 <!-- languages -->
-**English** · [Deutsch](de/02-TheEditor.md) · [Español](es/02-TheEditor.md) · [Bahasa Indonesia](id/02-TheEditor.md) · [日本語](ja/02-TheEditor.md)
+**English** · [Deutsch](de/02-TheEditor.md) · [Español](es/02-TheEditor.md) · [Bahasa Indonesia](id/02-TheEditor.md) · [日本語](ja/02-TheEditor.md) · [Português (Brasil)](pt-BR/02-TheEditor.md)
 <!-- /languages -->
 
 The Editor is where you build. This guide covers the tools, how to select and
