@@ -212,7 +212,7 @@ async function runTests() {
         assert(ctx.publicationPlacementsError === null, '17. zero placements is never reported as an error');
 
         const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
-        assert(panelCode.includes('This Publication has not been placed anywhere yet.'),
+        assert(panelCode.includes('This Shared World has not been placed anywhere yet.'),
             '18. the template renders a dedicated, honest empty-state message');
 
         console.log('✓ Section F: zero placements renders an honest empty state, never an error');

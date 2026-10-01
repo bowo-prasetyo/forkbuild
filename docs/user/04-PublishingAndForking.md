@@ -39,7 +39,7 @@ below). It's also automatically given a position in the shared world, so
 ## Distributing straight from the Editor
 
 The moment **Publish** succeeds, the Editor shows a small notice right
-there — "Publication published successfully." — with a **Distribute**
+there — "Shared World published successfully." — with a **Distribute**
 button beside it, and a **Dismiss** to make it go away without doing
 anything. Clicking **Distribute** opens a **Distribute** dialog rather
 than cluttering the overlay with pickers and results you only need once
@@ -50,17 +50,17 @@ result, error, or in-flight state you left it in.
 The dialog is the same one World View uses — its **Storage** and
 **Announcement / Discovery substrate** settings, the combined
 **Distribute** button, and the separate **Distribute Snapshot only** /
-**Distribute Publication only** buttons all work as described in
+**Distribute Signed Claim only** buttons all work as described in
 [World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing).
-Two things differ here: it always acts on the exact Publication your
+Two things differ here: it always acts on the exact Shared World your
 Publish click just produced, and the **Snapshot** section comes first,
-so the combined button runs the Snapshot first, then the Publication.
+so the combined button runs the Snapshot first, then the Signed Claim.
 
-The Publication's result appears in its own section:
+The Signed Claim's result appears in its own section:
 
 | Field | Meaning |
 |---|---|
-| **Publication** | The publication's own id — confirms which publication this result is about. |
+| **Shared World** | The Shared World's own id — confirms which Shared World this result is about. |
 | **Material** | The location the upload produced, or "Not yet uploaded" if it didn't complete. |
 | **Discovery** | The announcement id, or "Not yet announced" if it didn't complete — one row per relay when several are configured. |
 | **Repository** | An **Explore** button that jumps straight to this publication's page in World View — shown whenever the publication carries somewhere to explore, which in practice is always. |
@@ -162,7 +162,7 @@ chose it.
 Either way, other people see your build where *you* put it once you
 **Distribute** its Snapshot from World View: the announcement carries your
 signed placement, and their ForkBuild shows the build there as soon as it
-knows your Publication. Move it and distribute again, and it moves for them
+knows your Shared World. Move it and distribute again, and it moves for them
 too.
 
 ## Editing a published creation
@@ -280,22 +280,22 @@ the original.
 
 ### When a fork can't complete
 
-Occasionally a fork can't go through — most often when forking a Publication
+Occasionally a fork can't go through — most often when forking a Shared World
 found through a peer or a decentralized network (see
 [Publications & External Evidence](09-PublicationsAndEvidence.md)) rather
 than an ordinary Repository entry. Instead of dropping you into a blank,
 unrelated Editor document, ForkBuild shows a **Fork Unavailable** dialog
 naming exactly what went wrong:
 
-- **This Publication cannot be forked under its license** — the license
+- **This Shared World cannot be forked under its license** — the license
   attached to what you were trying to fork doesn't allow it (see
   [Choosing a license](#choosing-a-license) above).
-- **This Publication's material is currently unavailable** — the license
+- **This Shared World's material is currently unavailable** — the license
   allows forking, but the actual content isn't on this device (or
   reachable through a connected peer) yet.
 
-Either way, the dialog's one button, **Back to Publication**, takes you back
-to wherever you found it — the World it was placed in, or the Publication
+Either way, the dialog's one button, **Back to Shared World**, takes you back
+to wherever you found it — the World it was placed in, or the Shared World
 itself — rather than leaving you stranded in the Editor with nothing to
 build on.
 

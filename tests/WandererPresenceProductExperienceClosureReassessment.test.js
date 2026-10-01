@@ -360,7 +360,7 @@ async function main() {
         // Title/Publisher/Signed/Anchors/Placements, confirmed directly
         // from that file's own template.
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
-        assert(/<dd>Avatar<\/dd>[\s\S]{0,400}<dt>Name<\/dt>/.test(canvasSource) && /<dd>Publication<\/dd>[\s\S]{0,900}<dt>Title<\/dt>/.test(canvasSource),
+        assert(/<dd>Avatar<\/dd>[\s\S]{0,400}<dt>Name<\/dt>/.test(canvasSource) && /<dd>Shared World<\/dd>[\s\S]{0,900}<dt>Title<\/dt>/.test(canvasSource),
             "C2. WorldEncounterCanvas.js's own inspection panel renders AVATAR and PUBLICATION encounters with genuinely different field sets (Name/Owner vs. Title/Publisher/Signed/Anchors/Placements) — a Wanderer can never mistake one kind's detail sheet for the other's.");
 
         // C3 — DEFERRED, named precisely rather than silently folded in:

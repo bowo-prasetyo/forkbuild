@@ -195,7 +195,7 @@ async function run() {
         assert(flagshipView.resolved === true, `4. the decentralized-origin Publication resolves through the Publications Center's own view path (${flagshipView.reason})`);
         assert(flagshipView.outcome === PublicationResolutionOutcome.RESOLVED, '5. outcome is RESOLVED, not merely truthy');
         assert(flagshipView.content instanceof Publication, '6. resolved content handed to the view is a real Publication instance');
-        assert(typeof displayText(flagshipView.contentSummary) === 'string' && displayText(flagshipView.contentSummary).startsWith('Publication —'),
+        assert(typeof displayText(flagshipView.contentSummary) === 'string' && displayText(flagshipView.contentSummary).startsWith('Shared World —'),
             `7. the view carries a real contentSummary produced by the newly-registered describe() (got: ${JSON.stringify(flagshipView.contentSummary)})`);
         assert(displayText(flagshipView.contentSummary).includes('The Farmstead') && displayText(flagshipView.contentSummary).includes('alice'),
             '8. the summary actually reflects this publication\'s own title and author, not a generic placeholder');
@@ -285,7 +285,7 @@ async function run() {
             content: makePublication({}, alice), contentKind: PUBLICATION_CONTENT_KIND, identityProvider: alice
         });
         const publicationView = await resolvePublicationView(publicationEnvelope, { coordinator, kindPlugins });
-        assert(publicationView.resolved && displayText(publicationView.contentSummary).startsWith('Publication —'),
+        assert(publicationView.resolved && displayText(publicationView.contentSummary).startsWith('Shared World —'),
             `1. a forkbuild.publication envelope dispatches to the Publication describe() (${publicationView.contentSummary})`);
 
         // D2. forkbuild.blueprint-attribution — real, signed, self-describing.

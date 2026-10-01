@@ -93,6 +93,8 @@ they are. The words it uses for ForkBuild's own ideas:
 | build (a creation) | bangunan |
 | structure / blueprint | struktur / cetak biru |
 | Publication / publish | Publikasi / terbitkan |
+| Shared World (a World's signed record) | Dunia Bersama |
+| Signed Claim | Klaim Bertanda Tangan |
 | fork | fork (di-fork, Fork dari …) |
 | peer | rekan |
 | identity / passphrase | identitas / frasa sandi |
@@ -124,6 +126,8 @@ for ForkBuild's own ideas:
 | build (a creation) | 作品 |
 | structure / blueprint | 構造物 / ブループリント |
 | Publication / publish | 公開物 / 公開する |
+| Shared World (a World's signed record) | 共有ワールド |
+| Signed Claim | 署名済みクレーム |
 | fork | フォーク (…のフォーク) |
 | peer | ピア |
 | identity / passphrase | アイデンティティ / パスフレーズ |

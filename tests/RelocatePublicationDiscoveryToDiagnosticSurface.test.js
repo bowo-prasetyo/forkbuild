@@ -125,11 +125,11 @@ async function run() {
     // Section B — Secondary reachability.
     // ===============================================================
     {
-        // B1. A trigger button, labeled "Publication Discovery", gated on
+        // B1. A trigger button, labeled "Shared World Discovery", gated on
         // the SAME discoveryCommand prop the panel itself already gates on
         // — mirroring, never replacing, the panel's own v-if.
-        assert(/<button\s+v-if="discoveryCommand"[\s\S]{0,200}@click="publicationDiscoveryOpen = true"[\s\S]{0,50}>Publication Discovery<\/button>/.test(canvasSource),
-            'B1. a trigger button gated on discoveryCommand sets publicationDiscoveryOpen = true and is labeled "Publication Discovery"');
+        assert(/<button\s+v-if="discoveryCommand"[\s\S]{0,200}@click="publicationDiscoveryOpen = true"[\s\S]{0,50}>Shared World Discovery<\/button>/.test(canvasSource),
+            'B1. a trigger button gated on discoveryCommand sets publicationDiscoveryOpen = true and is labeled "Shared World Discovery"');
 
         // B2. Live proof: clicking the trigger (simulated by invoking the
         // same assignment the template's own @click performs) reaches a
@@ -170,7 +170,7 @@ async function run() {
         // discoverPublication()/"Discover Publication" text of its own; the
         // capability was never duplicated into a second component.
         assert(!ownPanelSource.includes('discoveryCommand'), 'C3. OwnPublicationPanel.js declares no discoveryCommand prop — no duplicate collaborator');
-        assert(!ownPanelSource.includes('>Discover Publication<'), 'C3. OwnPublicationPanel.js renders no "Discover Publication" button of its own');
+        assert(!ownPanelSource.includes('>Discover Shared World<'), 'C3. OwnPublicationPanel.js renders no "Discover Shared World" button of its own');
 
         console.log('✓ Section C: exactly one discovery command path exists, bound from exactly one place — no duplicate command appeared merely because the UI moved');
     }
@@ -371,8 +371,8 @@ async function run() {
     // UI/command path, never two independent implementations.
     // ===============================================================
     {
-        const discoverButtonTextCount = (canvasSource.match(/>Discover Publication</g) || []).length;
-        assert(discoverButtonTextCount === 1, `I1. "Discover Publication" appears exactly once — found ${discoverButtonTextCount}`);
+        const discoverButtonTextCount = (canvasSource.match(/>Discover Shared World</g) || []).length;
+        assert(discoverButtonTextCount === 1, `I1. "Discover Shared World" appears exactly once — found ${discoverButtonTextCount}`);
 
         const discoveryPanelCount = (canvasSource.match(/class="world-encounter-discovery-panel"/g) || []).length;
         assert(discoveryPanelCount === 1, `I2. the discovery panel itself appears exactly once — found ${discoveryPanelCount}`);
@@ -384,7 +384,7 @@ async function run() {
         // the existing Diagnostic Tools Surface").
         assert(ownPanelSource.includes('diagnosticToolsOpen'), 'I3. OwnPublicationPanel still carries its own, untouched 0.9.324 Diagnostic Tools popup');
         assert(!ownPanelSource.includes('publicationDiscoveryOpen'), 'I3. OwnPublicationPanel never gained a publicationDiscoveryOpen field of its own — the two popups remain independent');
-        assert(!ownPanelSource.includes('Publication Discovery'), 'I3. OwnPublicationPanel\'s own popup carries no "Publication Discovery" vocabulary — no cross-component merge occurred');
+        assert(!ownPanelSource.includes('Shared World Discovery'), 'I3. OwnPublicationPanel\'s own popup carries no "Shared World Discovery" vocabulary — no cross-component merge occurred');
 
         console.log('✓ Section I: exactly one production Discovery UI/command path exists — no duplicate main-screen Discovery and diagnostic Discovery with two independent implementations');
     }
@@ -412,13 +412,13 @@ async function run() {
         // checks was already true before relocation; only the wrapper is
         // new.
         const innerFacts = [
-            '<h4 class="world-encounter-discovery-title">Discover Publication</h4>',
-            'v-model="discoveryObjectId" placeholder="Publication id"',
+            '<h4 class="world-encounter-discovery-title">Discover Shared World</h4>',
+            'v-model="discoveryObjectId" placeholder="Shared World id"',
             'v-model="discoveryTag" placeholder="Discovery tag"',
             '<dt>Discovery</dt>',
             '<dd>{{ discoveryResult.resolution.status }}</dd>',
             'v-if="isDiscoveredPublicationSelectable"',
-            '>Select Publication</button>',
+            '>Select Shared World</button>',
             'class="world-encounter-discovered-selection-panel"'
         ];
         for (const fact of innerFacts) {

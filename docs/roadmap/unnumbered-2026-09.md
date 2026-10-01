@@ -3409,3 +3409,28 @@ signing in with the page open left it showing "Sign in to an identity" until you
 - Checked in the real app: opening a chat page signed out logs nothing and asks to sign in; signing in on that page shows
   the conversation and marks it read once. Before the change, the same steps logged the error and the page stayed on
   the sign-in prompt.
+
+## Shared World: one name for a World's signed record (unnumbered, 2026-10-01)
+
+"Publication" meant two things. It is the word for every entry on the Publications page (a Blueprint Attribution, a
+Place Naming Claim, or a World's signed record), and it was also the name of that third kind on its own. So the
+Publications page showed cards titled **Publication** next to other publications, the guides told the two apart only
+by a capital P, and Japanese, where the page and the kind were both 公開物, could not tell them apart at all.
+
+- A World's signed record (`forkbuild.publication`) is now called a **Shared World** wherever the app shows it: the
+  kind under a card's name and its summary on the Publications page, **My Shared World** in World View, **Discover
+  Shared World** and **Shared World Discovery**, a World Encounter's kind, Claimed Builds, a shared link that can't be
+  opened, a fork that can't complete (**Back to Shared World**), and "Shared World published successfully." in the
+  Editor. "Publication" keeps its general meaning: the Publications page, its statuses, anchoring and the archive.
+- In the **Distribute** dialogs (Editor and World View), the section that distributes the signed record is titled
+  **Signed Claim**, and its button is **Distribute Signed Claim only**: the dialog's own hint already said it
+  "distributes the Signed Claim and the Snapshot", and "Distribute Shared World only" would wrongly suggest the Snapshot
+  is not part of it. The id row in its result reads **Shared World**.
+- `humanizeContentKind()` (`ui/views/decentralizedPublications/presentation.js`) gives the three known kinds a
+  translated name (it title-cased the kind string before, in English only); any other kind is still named from its
+  string. `tests/PublicationKindLabels.test.js` covers it.
+- English, Indonesian (Dunia Bersama) and Japanese (共有ワールド) changed together, and `docs/Translating.md` lists
+  the term. Only text people see changed: kind strings, message keys, the protocol and stored data are as they were,
+  so nothing changes for peers on an older version.
+- User guides 03, 04, 09, 11, 13, the FAQ and the guide index use the new names; guide 09 lists the three kinds.
+  Eight tests that checked the old English text now check the new text.

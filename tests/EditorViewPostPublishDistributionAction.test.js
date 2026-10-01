@@ -380,7 +380,7 @@ async function run() {
             harness.distributePublishedDocument();
             await flushMicrotasks();
 
-            assert(harness.distributionError.value === 'Publication distribution could not be completed.',
+            assert(harness.distributionError.value === 'Signed Claim distribution could not be completed.',
                 '24b. a rejection message that sanitizes down to nothing falls back to the SAME one fixed, generic notice OwnPublicationPanel.js\'s own distributeOwnPublication() already uses');
         }
 

@@ -715,7 +715,7 @@ host at no Resource Credit cost; if you decline or it can't be made, the
 post goes out without it. Mentions, tags and links in your title or
 description are shown as plain text, so they notify no one. Anyone who
 clicks the link, even without using ForkBuild before, lands in World View on
-your build, after ForkBuild checks the Publication's signature and that the
+your build, after ForkBuild checks the Shared World's signature and that the
 build matches its announcement (if not, the page says why). The build is
 then kept in their browser. The link needs the build announced as well as
 stored, which Distribute does.
