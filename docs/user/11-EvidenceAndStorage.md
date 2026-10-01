@@ -658,7 +658,7 @@ check for that record.
 ## Steem
 
 *Experimental.* ForkBuild can announce, store and share over the Steem
-blockchain. Announcements (Publications, Snapshots, place-name claims and
+blockchain. Announcements (of publications, Snapshots and
 comments) are replies to monthly discovery threads such as
 [`@forkbuild/forkbuild-snapshot-2026-09`](https://steemit.com/forkbuild/@forkbuild/forkbuild-snapshot-2026-09).
 Reading needs no account. Whatever is found is verified like an

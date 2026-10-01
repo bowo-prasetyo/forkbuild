@@ -3473,7 +3473,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: announcementDiscoveryProviderSettingsView.
     'announcementDiscoveryProviderSettingsView.announcementDiscoveryProvider': 'Announcement / Discovery Provider',
-    'announcementDiscoveryProviderSettingsView.chooseTheDefaultDecentralizedSubstrate': 'Choose the default decentralized substrate — Nostr, Arweave or Steem — your Publications, Snapshots, Place Naming claims, and Commentary are announced on. A page or control offering its own explicit choice still overrides this default for that one action.',
+    'announcementDiscoveryProviderSettingsView.chooseTheDefaultDecentralizedSubstrate': 'Choose the default decentralized substrate — Nostr, Arweave or Steem — your publications (Shared Worlds, Blueprint Attributions and place names), Snapshots and comments are announced on. A page or control offering its own explicit choice still overrides this default for that one action.',
     'announcementDiscoveryProviderSettingsView.thisChoiceNeverNarrowsDiscovery': 'This choice never narrows discovery: finding other people\'s content always searches Nostr, Arweave and Steem together.',
     'announcementDiscoveryProviderSettingsView.savingHereTakesEffectThe': 'Saving here takes effect the next time this app loads — it never changes an announcement already in flight.',
     'announcementDiscoveryProviderSettingsView.saved': 'Saved.',
@@ -3656,7 +3656,7 @@ export default Object.freeze({
     'networkSettingsView.contentProvider': 'Content Provider',
     'networkSettingsView.preferredStorageProviderForPublishing': 'Preferred storage provider for publishing content.',
     'networkSettingsView.announcementDiscoveryProvider': 'Announcement / Discovery Provider',
-    'networkSettingsView.preferredSubstrateNostrOrArweave': 'Preferred substrate — Nostr or Arweave — for announcing and discovering Publications, Snapshots, Place Naming, and Commentary.',
+    'networkSettingsView.preferredSubstrateNostrOrArweave': 'Preferred substrate — Nostr or Arweave — for announcing and discovering publications (Shared Worlds, Blueprint Attributions and place names), Snapshots and comments.',
     'networkSettingsView.proofAnchoringProvider': 'Proof / Anchoring Provider',
     'networkSettingsView.experimental': 'Experimental',
     'networkSettingsView.arweaveGateway': 'Arweave Gateway',
@@ -3666,7 +3666,7 @@ export default Object.freeze({
     'networkSettingsView.bitcoinEndpoint': 'Bitcoin Endpoint',
     'networkSettingsView.esploraCompatibleEndpointUsedFor': 'Esplora-compatible endpoint used for Bitcoin anchor broadcasting, confirmation, funding lookups, and proof verification.',
     'networkSettingsView.nostrRelays': 'Nostr Relays',
-    'networkSettingsView.relaysUsedEverywhereThisReplica': 'Relays used everywhere this replica publishes and discovers over Nostr — Publications, Snapshots, Place Naming, and Commentary.',
+    'networkSettingsView.relaysUsedEverywhereThisReplica': 'Relays used everywhere this replica publishes and discovers over Nostr — publications (Shared Worlds, Blueprint Attributions and place names), Snapshots and comments.',
     'networkSettingsView.whereThisReplicaReadsSteem': 'Where this replica reads Steem announcements from, and the account it posts as.',
     'networkSettingsView.stunServers': 'STUN Servers',
     'networkSettingsView.serversUsedForPeerTo': 'Servers used for peer-to-peer connection negotiation.',
@@ -3678,7 +3678,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: nostrRelaySettingsView.
     'nostrRelaySettingsView.nostrRelays': 'Nostr Relays',
-    'nostrRelaySettingsView.relaySUsedEverywhereThis': 'Relay(s) used everywhere this replica publishes or discovers over Nostr — Publications, Snapshots, Place Naming, and Commentary. One per line — every configured relay is queried and announced to independently, so a second relay stays useful even while the first is unreachable, and a Publication announced to more than one relay is discoverable by more people.',
+    'nostrRelaySettingsView.relaySUsedEverywhereThis': 'Relay(s) used everywhere this replica publishes or discovers over Nostr — publications (Shared Worlds, Blueprint Attributions and place names), Snapshots and comments. One per line — every configured relay is queried and announced to independently, so a second relay stays useful even while the first is unreachable, and a publication announced to more than one relay is discoverable by more people.',
     'nostrRelaySettingsView.usingYourSavedRelays': 'Using your saved relays:',
     'nostrRelaySettingsView.usingTheDefaultRelays': 'Using the default relays:',
     'nostrRelaySettingsView.saved': 'Saved.',
@@ -3816,7 +3816,7 @@ export default Object.freeze({
     'rendezvousSettingsView.resetToDefaults': 'Reset to Defaults',
 
     // Identity, Peers, Chat and settings: steemReadingSettingsView.
-    'steemReadingSettingsView.whereThisReplicaReadsSteem': 'Where this replica reads Steem announcements: Publications, Snapshots, Place Naming and Commentary posted as replies to monthly discovery threads. Every announcement is verified before it is used. Reading needs no Steem account. Changes apply the next time the app loads.',
+    'steemReadingSettingsView.whereThisReplicaReadsSteem': 'Where this replica reads Steem announcements: publications (Shared Worlds, Blueprint Attributions and place names), Snapshots and comments, posted as replies to monthly discovery threads. Every announcement is verified before it is used. Reading needs no Steem account. Changes apply the next time the app loads.',
     'steemReadingSettingsView.apiNodesOnePerLine': 'API nodes, one per line, tried in order',
     'steemReadingSettingsView.threadAccountsOnePerLine': 'Thread accounts, one per line',
     'steemReadingSettingsView.firstMonthToRead': 'First month to read',

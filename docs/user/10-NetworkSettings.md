@@ -71,10 +71,11 @@ back. It doesn't affect reading IPFS content, which uses the
 ## Announcement / Discovery Provider
 
 Choose **Arweave**, **Nostr** or **Steem** (experimental) as the default
-place your Publications, Snapshots, place-name claims and comments are
-announced. It's only a default: every **Distribute** dialog, the
-Repository's per-card Distribution picker and the network picker next to
-**Post Comment** start on it, and you can switch them for one action.
+place your publications (Shared Worlds, Blueprint Attributions and
+place-name claims), Snapshots and comments are announced. It's only a
+default: every **Distribute** dialog, the Repository's per-card
+Distribution picker and the network picker next to **Post Comment** start
+on it, and you can switch them for one action.
 Finding other people's content always searches all three.
 
 ## Proof / Anchoring Provider
@@ -135,8 +136,8 @@ rejected the transaction.
 ## Nostr Relays
 
 Relays for everything ForkBuild publishes or discovers over Nostr:
-Publications, Snapshots, place-name claims and comments. One `ws://` or
-`wss://` URL per line; the defaults are `wss://relay.damus.io`,
+publications (Shared Worlds, Blueprint Attributions and place-name
+claims), Snapshots and comments. One `ws://` or `wss://` URL per line; the defaults are `wss://relay.damus.io`,
 `wss://nos.lol` and `wss://relay.primal.net`. **Save** replaces the whole
 list, and rejects it if any line isn't a valid URL.
 

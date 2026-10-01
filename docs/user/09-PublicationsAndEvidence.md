@@ -70,6 +70,27 @@ World View, the Editor and the Repository call a World's signed record a
 **Shared World** too, as in **My Shared World**, **Discover Shared World**
 and **Back to Shared World**.
 
+## What surrounds a publication
+
+A publication is only the signed record. Everything else you'll see on its
+card, and around it in World View, is something done with it or attached
+to it. None of these is a kind of publication, and only the publication
+itself is required:
+
+| Term | Like… | What it is |
+|---|---|---|
+| **Publication** | The book itself | A signed record: a Shared World, a Blueprint Attribution or a Place Naming Claim. It carries the hash of its content and its publisher's signature. |
+| **Content** | Where printed copies are kept | The bytes the publication is about, such as a World's bricks. They're always kept on this device first; **Store on …** puts a copy on IPFS, Arweave or Steem so others can fetch it. See [Content Provider](10-NetworkSettings.md#content-provider). |
+| **Snapshot** | A printed copy | One stored copy of a publication's content, such as a World's bricks, which others can fetch and check against its hash. See [Local Snapshot](#local-snapshot). |
+| **Placement** | Where the copy is shelved | A signed record of where a build stands in the World. One Shared World can have several. See [Placing vs forking](03-WorldView.md#placing-vs-forking). |
+| **Announcement / Discovery** | A library catalogue entry | A small signed notice on Nostr, Arweave or Steem saying the publication or Snapshot exists and where its copy is, so people who aren't connected to you can find it. See [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider). |
+| **Proof / Anchoring** *(Experimental)* | A notary's stamp | The content's hash written into a blockchain transaction (Bitcoin, Base, Arweave or Steem), as evidence it existed by that time. It stores and announces nothing. See [Evidence & Storage](11-EvidenceAndStorage.md). |
+| **Commentary** | Readers' reviews | Comments anyone signed in can attach to a publication, each signed by its commenter, not the publisher. See [Commentary](#commentary). |
+
+So you make a publication; then, if you like, store its content, announce
+it, anchor it, and place it (for a Shared World); and anyone can comment on
+it.
+
 ## Where a publication comes from
 
 You never create a claim on the Publications page itself. It lists claims
