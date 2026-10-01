@@ -5,6 +5,10 @@
 [English](../README.md) · **Deutsch** · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../README.md).
+<!-- /stale -->
+
 Anleitungen zur Nutzung von ForkBuild im Browser. Alles hier beschreibt
 das Produkt so, wie es heute funktioniert; die Interna der Engine stehen
 in [docs/Architecture.md](../../Architecture.md) und im übrigen

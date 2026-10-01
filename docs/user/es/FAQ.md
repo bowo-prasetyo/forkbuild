@@ -5,6 +5,10 @@
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · **Español** · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../FAQ.md).
+<!-- /stale -->
+
 Respuestas breves a las preguntas con las que más se encuentra la gente,
 cada una con un enlace a la guía que la explica por completo.
 

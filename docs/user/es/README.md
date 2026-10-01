@@ -5,6 +5,10 @@
 [English](../README.md) · [Deutsch](../de/README.md) · **Español** · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../README.md).
+<!-- /stale -->
+
 Guías prácticas para usar ForkBuild en el navegador. Todo lo que hay aquí
 describe el producto tal como funciona hoy; el funcionamiento interno del
 motor está en [docs/Architecture.md](../../Architecture.md) y en el resto

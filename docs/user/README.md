@@ -24,7 +24,8 @@ top-level [docs/](..) folder.
    publication from **My Shared World**, commentary and notifications.
 4. **[Publishing & Forking](04-PublishingAndForking.md)** — publishing,
    licenses, forking, the Repository catalog, and distributing a
-   publication straight from the Editor.
+   publication straight from the Editor. For everything you can distribute
+   and where it can go, see [Distributing Your Work](Distribution.md).
 5. **[Identity & Login](05-IdentityAndLogin.md)** — your cryptographic
    identity, the vault (locking/unlocking), backing it up with
    export/import, and managing identities from **My Identities**.
@@ -43,10 +44,13 @@ top-level [docs/](..) folder.
    Snapshot). Parts of the page are *experimental*, and marked so.
 10. **[Network Settings](10-NetworkSettings.md)** — gateways, relays,
     storage and announcement providers, and peer-connection servers.
+    What each network needs is summed up in
+    [Distributing Your Work](Distribution.md#what-each-network-needs).
 11. **[Evidence & Storage](11-EvidenceAndStorage.md)** — storing content
     on IPFS or Arweave, and, *experimental*, external evidence, the Bitcoin
     and Base wallet pipelines, snapshot placements, remote IPFS pinning, and
-    Steem.
+    Steem. [Distributing Your Work](Distribution.md) shows how these fit
+    together.
 12. **[Archive & Leaderboards](12-ArchiveAndLeaderboards.md)** —
     *experimental*. The observation archive, publication references,
     achievements, publisher labels, and the Leaderboard pages.
@@ -56,6 +60,11 @@ top-level [docs/](..) folder.
 
 ## Reference
 
+- **[Distributing Your Work](Distribution.md)** — everything you can
+  put on decentralized networks (your Worlds, authorship and place-name
+  claims, comments, anchors), the three roles a network plays (Content,
+  Announcement / Discovery, Proof / Anchoring), what each network needs,
+  and links to the guides with the details.
 - **[FAQ](FAQ.md)** — short answers to the questions people most often
   run into: sharing, licenses, lost passphrases, moving to another
   device, walking your avatar, and reconnecting with friends.
