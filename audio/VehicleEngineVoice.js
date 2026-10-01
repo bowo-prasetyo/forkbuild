@@ -5,6 +5,9 @@
 
 const RAMP_TIME_CONSTANT = 0.15;
 const FADE_SECONDS = 0.4;
+// Engines sit at half the level the profiles below were first tuned to, so a
+// ride stays in the background of the soundscape.
+const ENGINE_GAIN = 0.5;
 
 // Oscillator partials (frequency at load 0 and at load 1, gain), noise
 // (filter frequency at load 0 and 1, gain), overall gain at load 0 and 1.
@@ -125,7 +128,7 @@ export class VehicleEngineVoice {
         if (this._tick) {
             this._tick.frequency.setTargetAtTime(lerp(profile.tick.from, profile.tick.to, t), now, RAMP_TIME_CONSTANT);
         }
-        this._output.gain.setTargetAtTime(lerp(profile.gain[0], profile.gain[1], t), now, RAMP_TIME_CONSTANT);
+        this._output.gain.setTargetAtTime(ENGINE_GAIN * lerp(profile.gain[0], profile.gain[1], t), now, RAMP_TIME_CONSTANT);
     }
 
     stop() {
