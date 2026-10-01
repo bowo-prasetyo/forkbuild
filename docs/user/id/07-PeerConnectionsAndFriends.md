@@ -2,7 +2,7 @@
 # 07 — Koneksi Rekan & Teman
 
 <!-- languages -->
-[English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · **Bahasa Indonesia** · [日本語](../ja/07-PeerConnectionsAndFriends.md)
+[English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · **Bahasa Indonesia** · [日本語](../ja/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
 ForkBuild menghubungkan Anda langsung ke browser orang lain — tidak ada

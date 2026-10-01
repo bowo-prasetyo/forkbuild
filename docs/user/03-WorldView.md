@@ -1,7 +1,7 @@
 # 03 — World View
 
 <!-- languages -->
-**English** · [Deutsch](de/03-WorldView.md) · [Bahasa Indonesia](id/03-WorldView.md) · [日本語](ja/03-WorldView.md)
+**English** · [Deutsch](de/03-WorldView.md) · [Español](es/03-WorldView.md) · [Bahasa Indonesia](id/03-WorldView.md) · [日本語](ja/03-WorldView.md)
 <!-- /languages -->
 
 World View is the shared 3D space where **every published creation exists side

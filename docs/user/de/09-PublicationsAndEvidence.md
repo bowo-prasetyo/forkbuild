@@ -2,7 +2,7 @@
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
-[English](../09-PublicationsAndEvidence.md) · **Deutsch** · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md)
+[English](../09-PublicationsAndEvidence.md) · **Deutsch** · [Español](../es/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md)
 <!-- /languages -->
 
 > **Teilweise experimentell.** Die Seite Veröffentlichungen ist eine
