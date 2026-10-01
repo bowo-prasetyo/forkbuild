@@ -5,6 +5,10 @@
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · **日本語** · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../Distribution.md)も参照してください。
+<!-- /stale -->
+
 ForkBuild で作るものは、すべて自分のデバイスから始まります。**配信** は、
 作品を分散型ネットワークに載せるための、別の任意の手順です。これにより、
 あなたと接続していない人も作品を見つけ、取得し、確かめられるように

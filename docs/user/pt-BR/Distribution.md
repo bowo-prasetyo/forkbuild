@@ -5,6 +5,10 @@
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · **Português (Brasil)**
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../Distribution.md).
+<!-- /stale -->
+
 Tudo o que o ForkBuild cria começa no seu próprio dispositivo.
 **Distribuir** é o passo separado e opcional que coloca seu trabalho em
 redes descentralizadas, para que pessoas que não estão conectadas a você
