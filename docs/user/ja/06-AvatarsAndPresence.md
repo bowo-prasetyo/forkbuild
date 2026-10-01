@@ -2,7 +2,7 @@
 # 06 — アバターと在席状況
 
 <!-- languages -->
-[English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · [Español](../es/06-AvatarsAndPresence.md) · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · **日本語**
+[English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · [Español](../es/06-AvatarsAndPresence.md) · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · **日本語** · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md)
 <!-- /languages -->
 
 **アバター** は、ワールドビューで他の人からあなたがどう見えるかです。

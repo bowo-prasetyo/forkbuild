@@ -2,7 +2,7 @@
 # 13 — Ihre Daten
 
 <!-- languages -->
-[English](../13-YourData.md) · **Deutsch** · [Español](../es/13-YourData.md) · [Bahasa Indonesia](../id/13-YourData.md) · [日本語](../ja/13-YourData.md)
+[English](../13-YourData.md) · **Deutsch** · [Español](../es/13-YourData.md) · [Bahasa Indonesia](../id/13-YourData.md) · [日本語](../ja/13-YourData.md) · [Português (Brasil)](../pt-BR/13-YourData.md)
 <!-- /languages -->
 
 ForkBuild hat keine Konten und keinen Server, der Ihre Arbeit aufbewahrt.

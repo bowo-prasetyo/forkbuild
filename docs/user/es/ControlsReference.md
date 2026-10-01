@@ -2,7 +2,7 @@
 # Referencia de controles
 
 <!-- languages -->
-[English](../ControlsReference.md) · [Deutsch](../de/ControlsReference.md) · **Español** · [Bahasa Indonesia](../id/ControlsReference.md) · [日本語](../ja/ControlsReference.md)
+[English](../ControlsReference.md) · [Deutsch](../de/ControlsReference.md) · **Español** · [Bahasa Indonesia](../id/ControlsReference.md) · [日本語](../ja/ControlsReference.md) · [Português (Brasil)](../pt-BR/ControlsReference.md)
 <!-- /languages -->
 
 Todas las interacciones con el mouse y el teclado en ForkBuild; los

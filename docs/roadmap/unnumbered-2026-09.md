@@ -3480,3 +3480,20 @@ automatically for any browser set to Spanish (`es`, `es-MX`, `es-419`, `es-AR`, 
   language and its out-of-date banner.
 - Tests: `tests/SpanishLocale.test.js` (complete, chosen from Latin American and European Spanish browsers, plural
   forms, a resident's sentence with a decimal comma, undo labels with digit grouping, a fork's title, compass points).
+
+## Internationalization: Brazilian Portuguese (unnumbered, 2026-10-01)
+
+The fifth translation. ForkBuild can now be shown in Brazilian Portuguese (Português (Brasil)), chosen on the Language
+page or picked automatically for any browser set to Portuguese (`pt-BR`, `pt-PT`, `pt`): it is the only Portuguese
+shipped, so a European Portuguese browser gets it too.
+
+- `ui/i18n/messages/pt-BR.js` translates all 3,632 messages, in the same order and groups as English. It addresses the
+  reader as "você", uses infinitives for buttons, “…” around quoted titles, and keeps network and product names and the
+  protocol words Brazilian developers use as they are (Snapshot, gateway, relay, endpoint, backend, hash). The words it
+  uses for ForkBuild's own ideas are listed in `docs/Translating.md`, "Brazilian Portuguese".
+- Brazilian Portuguese has `one` and `other` plural forms, and numbers follow `pt-BR` (`3,2 km`, `12.000 blocos`).
+- The user guide and `Privacy.md` are translated in `docs/user/pt-BR/`; `scripts/check-doc-translations.mjs` knows the
+  language and its out-of-date banner.
+- Tests: `tests/BrazilianPortugueseLocale.test.js` (complete, chosen from Brazilian and European Portuguese browsers,
+  plural forms, a resident's sentence with a decimal comma, undo labels with digit grouping, a fork's title, compass
+  points).

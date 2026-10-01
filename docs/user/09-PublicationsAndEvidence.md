@@ -1,7 +1,7 @@
 # 09 — Publications & External Evidence
 
 <!-- languages -->
-**English** · [Deutsch](de/09-PublicationsAndEvidence.md) · [Español](es/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](id/09-PublicationsAndEvidence.md) · [日本語](ja/09-PublicationsAndEvidence.md)
+**English** · [Deutsch](de/09-PublicationsAndEvidence.md) · [Español](es/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](id/09-PublicationsAndEvidence.md) · [日本語](ja/09-PublicationsAndEvidence.md) · [Português (Brasil)](pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
 
 > **Partly experimental.** The Publications page is a regular feature: its

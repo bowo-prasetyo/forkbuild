@@ -2,7 +2,7 @@
 # 10 — ネットワーク設定
 
 <!-- languages -->
-[English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · **日本語**
+[English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · **日本語** · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
 
 上部のバーの **ネットワーク設定** には、ForkBuild がどのサーバーと

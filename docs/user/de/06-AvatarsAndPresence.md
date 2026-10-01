@@ -2,7 +2,7 @@
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
-[English](../06-AvatarsAndPresence.md) · **Deutsch** · [Español](../es/06-AvatarsAndPresence.md) · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · [日本語](../ja/06-AvatarsAndPresence.md)
+[English](../06-AvatarsAndPresence.md) · **Deutsch** · [Español](../es/06-AvatarsAndPresence.md) · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · [日本語](../ja/06-AvatarsAndPresence.md) · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md)
 <!-- /languages -->
 
 Ihr **Avatar** ist, wie andere Sie in der Weltansicht sehen — sein

@@ -2,7 +2,7 @@
 # Interaktives Transformations-Gizmo
 
 <!-- languages -->
-[English](../InteractiveTransformGizmo.md) · **Deutsch** · [Español](../es/InteractiveTransformGizmo.md) · [Bahasa Indonesia](../id/InteractiveTransformGizmo.md) · [日本語](../ja/InteractiveTransformGizmo.md)
+[English](../InteractiveTransformGizmo.md) · **Deutsch** · [Español](../es/InteractiveTransformGizmo.md) · [Bahasa Indonesia](../id/InteractiveTransformGizmo.md) · [日本語](../ja/InteractiveTransformGizmo.md) · [Português (Brasil)](../pt-BR/InteractiveTransformGizmo.md)
 <!-- /languages -->
 
 Sobald im Editor Steine ausgewählt sind, erscheint am Drehpunkt der
