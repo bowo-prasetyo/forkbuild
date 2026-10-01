@@ -3576,7 +3576,7 @@ export default Object.freeze({
     'followingView.youDonTFollowAnyone': 'You don\'t follow anyone yet. Use {follow} on an author\'s page, a publication, a person on the Peers page, or an avatar in World View.',
     'followingView.follow': 'Follow',
     'followingView.unfollow': 'Unfollow',
-    'followingView.thePeopleYouFollow': 'the people you follow',
+    'followingView.nothingFromThePeopleYouFollow': 'Nothing from the people you follow has reached this device yet.',
 
     // Identity, Peers, Chat and settings: identityManagementView.
     'identityManagementView.thePrivateKeyIsStored': 'The private key is stored unencrypted in this browser',
@@ -3933,6 +3933,7 @@ export default Object.freeze({
 
     // followingView: text with values.
     'followingView.here': '{publicationCount} here',
+    'followingView.nothingFromPerson': 'Nothing from {name} has reached this device yet.',
 
     // identityManagementView: text with values.
     'identityManagementView.successor': 'Successor: …{successorIdentityId}',

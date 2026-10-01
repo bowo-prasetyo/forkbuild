@@ -49,6 +49,8 @@ export default {
             ? publications.value.filter((p) => followingFeed.verifiedPublisherOf(p) === selectedIdentityId.value)
             : publications.value));
 
+        const selectedPerson = computed(() => people.value.find((person) => person.identityId === selectedIdentityId.value) || null);
+
         function select(identityId) {
             selectedIdentityId.value = selectedIdentityId.value === identityId ? null : identityId;
         }
@@ -75,7 +77,7 @@ export default {
 
         return {
             t,
-            signedIn, people, visiblePublications, selectedIdentityId, error,
+            signedIn, people, visiblePublications, selectedIdentityId, selectedPerson, error,
             select, unfollow, openPublication, forkPublication, viewWorld, viewAuthor
         };
     },
@@ -109,7 +111,9 @@ export default {
                 </ul>
 
                 <div v-if="people.length && !visiblePublications.length" class="empty-state">
-                    Nothing from {{ selectedIdentityId ? 'them' : t('followingView.thePeopleYouFollow') }} has reached this device yet.
+                    {{ selectedPerson
+                        ? t('followingView.nothingFromPerson', { name: selectedPerson.name })
+                        : t('followingView.nothingFromThePeopleYouFollow') }}
                 </div>
                 <ul v-else-if="visiblePublications.length" class="publication-list">
                     <PublicationCard

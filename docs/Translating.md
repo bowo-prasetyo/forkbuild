@@ -342,7 +342,11 @@ create its folder.
 3. Run `npm run test:node -- I18n`. `tests/I18n.test.js` checks that every
    key exists in English, that every placeholder matches English's, and that
    every plural message has an `other` form.
-4. Choose the language on the **Language** page and look around the app.
+4. Translate at least the user guide's front page, `docs/user/<code>/README.md`
+   (see "Translating the user guide" above): the About page links people to
+   the guide in the language they chose. `tests/UserGuideLink.test.js` checks
+   that every shipped language has one.
+5. Choose the language on the **Language** page and look around the app.
 
 Right-to-left languages also need the stylesheet moved to logical
 properties (`margin-inline-start` rather than `margin-left`), which isn't

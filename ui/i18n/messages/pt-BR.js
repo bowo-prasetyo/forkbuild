@@ -3576,7 +3576,7 @@ export default Object.freeze({
     'followingView.youDonTFollowAnyone': 'Você ainda não segue ninguém. Use {follow} na página de um autor, em uma publicação, em uma pessoa na página Pares ou em um avatar na Visão do mundo.',
     'followingView.follow': 'Seguir',
     'followingView.unfollow': 'Deixar de seguir',
-    'followingView.thePeopleYouFollow': 'as pessoas que você segue',
+    'followingView.nothingFromThePeopleYouFollow': 'Nada das pessoas que você segue chegou a este dispositivo ainda.',
 
     // Identity, Peers, Chat and settings: identityManagementView.
     'identityManagementView.thePrivateKeyIsStored': 'A chave privada está guardada sem criptografia neste navegador',
@@ -3933,6 +3933,7 @@ export default Object.freeze({
 
     // followingView: text with values.
     'followingView.here': '{publicationCount} aqui',
+    'followingView.nothingFromPerson': 'Nada de {name} chegou a este dispositivo ainda.',
 
     // identityManagementView: text with values.
     'identityManagementView.successor': 'Sucessora: …{successorIdentityId}',

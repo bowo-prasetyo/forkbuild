@@ -1,11 +1,16 @@
 import { VERSION } from '../../core/version.js';
-import { t } from '../i18n/i18n.js';
+import { currentLocale, t } from '../i18n/i18n.js';
+import { REPOSITORY_URL, userGuideUrl } from '../i18n/userGuide.js';
 
 export default {
     name: 'AboutView',
     setup() {
         const versionString = `${VERSION.major}.${VERSION.minor}.${VERSION.patch}`;
-        return { t, versionString };
+        // The user guide in the language the app is showing; the project
+        // README is English only.
+        const readmeUrl = `${REPOSITORY_URL}/README.md`;
+        const guideUrl = userGuideUrl(currentLocale().code);
+        return { t, versionString, readmeUrl, guideUrl };
     },
     template: `
         <section class="about-view">
@@ -15,11 +20,11 @@ export default {
                 {{ t('aboutView.forkbuildIsAnOpenConstruction') }}
             </p>
             <p>
-                <a href="https://github.com/bowo-prasetyo/forkbuild/blob/main/README.md" target="_blank" rel="noopener">{{ t('aboutView.projectReadme') }}</a>
+                <a :href="readmeUrl" target="_blank" rel="noopener">{{ t('aboutView.projectReadme') }}</a>
                 {{ t('aboutView.architectureMilestoneHistoryAndWhat') }}
             </p>
             <p>
-                <a href="https://github.com/bowo-prasetyo/forkbuild/blob/main/docs/user/README.md" target="_blank" rel="noopener">{{ t('aboutView.userGuide') }}</a>
+                <a :href="guideUrl" target="_blank" rel="noopener">{{ t('aboutView.userGuide') }}</a>
                 {{ t('aboutView.howToBuildPublishFork') }}
             </p>
         </section>

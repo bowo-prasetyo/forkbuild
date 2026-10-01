@@ -9,7 +9,6 @@
    needing its own layout logic. */
 .repository-view,
 .author-view,
-.following-view,
 .recent-worlds-view {
     padding: 2rem 2.5rem 3rem;
     max-width: 1400px;
@@ -19,7 +18,6 @@
 
 .repository-view h1,
 .author-view h1,
-.following-view h1,
 .recent-worlds-view h1 {
     margin: 0 0 1.5rem;
 }
@@ -123,6 +121,21 @@
     gap: 0.5rem;
     color: #909090;
     font-size: 0.85rem;
+}
+
+/* The Following page (ui/views/FollowingView.js). A feed with prose
+   above it, not a catalog: it takes the Publications page's reading
+   width rather than the 1400px card grid above, so its notice and the
+   row of people stay readable on wide screens. */
+.following-view {
+    padding: 2rem 2.5rem 3rem;
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.following-view h1 {
+    margin: 0 0 1.5rem;
 }
 
 /* The Following page (ui/views/FollowingView.js). */
