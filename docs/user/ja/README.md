@@ -27,7 +27,7 @@
    ライセンス、フォーク、リポジトリのカタログ、エディターから直接
    公開物を配信する方法。
    配信できるものとその行き先の全体は
-   [Distributing Your Work](../Distribution.md)（英語）を参照してください。
+   [作品を配信する](Distribution.md)を参照してください。
 5. **[アイデンティティとログイン](05-IdentityAndLogin.md)** —
    暗号学的なアイデンティティ、保管庫（ロックとロック解除）、
    エクスポートとインポートによるバックアップ、**マイアイデンティティ**
@@ -48,13 +48,13 @@
     ゲートウェイ、リレー、ストレージと告知のプロバイダー、ピア接続用の
     サーバー。
     各ネットワークに必要なものは
-    [Distributing Your Work](../Distribution.md#what-each-network-needs)（英語）
+    [作品を配信する](Distribution.md#各ネットワークに必要なもの)
     にまとめてあります。
 11. **[証拠とストレージ](11-EvidenceAndStorage.md)** — IPFS
     や Arweave へのコンテンツの保存と、*試験的* な外部証拠、Bitcoin と
     Base のウォレットパイプライン、スナップショットの配置、リモート IPFS
     ピン留め、Steem。
-    これらの関係は [Distributing Your Work](../Distribution.md)（英語）で
+    これらの関係は [作品を配信する](Distribution.md)で
     説明しています。
 12. **[アーカイブとリーダーボード](12-ArchiveAndLeaderboards.md)**
     — *試験的*。観測アーカイブ、公開物の参照、実績、公開者ラベル、
@@ -65,7 +65,7 @@
 
 ## リファレンス
 
-- **[Distributing Your Work](../Distribution.md)**（英語） —
+- **[作品を配信する](Distribution.md)** —
   分散型ネットワークに置けるものすべて（ワールド、作者情報と地名のクレーム、
   コメント、アンカー）、ネットワークが担う 3 つの役割（内容、告知 / 発見、
   証明 / アンカリング）、各ネットワークに必要なもの、詳しいガイドへの

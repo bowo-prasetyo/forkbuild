@@ -35,9 +35,9 @@ dapat menemukan dan memeriksanya tanpa terhubung dengan Anda. Klik
 **Distribusikan** tepat setelah menerbitkan, atau di bawah
 **Dunia Bersama Saya** di Tampilan Dunia. Anda memerlukan ekstensi browser
 penanda tangan untuk jaringan yang Anda pilih, seperti Wander untuk Arweave
-atau nos2x untuk Nostr. [Distributing Your Work](../Distribution.md) (bahasa
-Inggris) mencantumkan semua yang dapat Anda distribusikan, ke mana semuanya
-dapat dikirim, dan apa yang dibutuhkan setiap jaringan.
+atau nos2x untuk Nostr. [Mendistribusikan Karya Anda](Distribution.md)
+mencantumkan semua yang dapat Anda distribusikan, ke mana semuanya dapat
+dikirim, dan apa yang dibutuhkan setiap jaringan.
 
 ### Mengapa tidak ada yang bisa mem-fork karya saya?
 

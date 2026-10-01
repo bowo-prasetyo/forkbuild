@@ -29,7 +29,7 @@ de la carpeta [docs/](../..) de nivel superior (en inglés).
    licencias, bifurcar, el catálogo del Repositorio y distribuir una
    publicación directamente desde el Editor.
    Para todo lo que puede distribuir y adónde puede ir, consulte
-   [Distributing Your Work](../Distribution.md) (en inglés).
+   [Distribuir su trabajo](Distribution.md).
 5. **[Identidad e inicio de sesión](05-IdentityAndLogin.md)**: su
    identidad criptográfica, la bóveda (bloquear y desbloquear), hacer una
    copia de seguridad con exportar/importar y administrar identidades
@@ -53,13 +53,12 @@ de la carpeta [docs/](../..) de nivel superior (en inglés).
     proveedores de almacenamiento y de anuncios, y servidores de conexión
     entre pares.
     Lo que necesita cada red se resume en
-    [Distributing Your Work](../Distribution.md#what-each-network-needs) (en
-    inglés).
+    [Distribuir su trabajo](Distribution.md#lo-que-necesita-cada-red).
 11. **[Evidencia y almacenamiento](11-EvidenceAndStorage.md)**: guardar
     contenido en IPFS o Arweave y, de forma *experimental*, la evidencia
     externa, los flujos de billetera de Bitcoin y Base, las ubicaciones de
     Snapshots, el pinning remoto de IPFS y Steem.
-    [Distributing Your Work](../Distribution.md) (en inglés) muestra cómo
+    [Distribuir su trabajo](Distribution.md) muestra cómo
     encaja todo esto.
 12. **[Archivo y clasificaciones](12-ArchiveAndLeaderboards.md)**:
     *experimental*. El archivo de observaciones, las referencias entre
@@ -72,7 +71,7 @@ de la carpeta [docs/](../..) de nivel superior (en inglés).
 
 ## Referencia
 
-- **[Distributing Your Work](../Distribution.md)** (en inglés): todo lo que
+- **[Distribuir su trabajo](Distribution.md)**: todo lo que
   puede poner en redes descentralizadas (sus Mundos, declaraciones de
   autoría y de nombres de lugares, comentarios, anclajes), los tres papeles
   que cumple una red (Contenido, Anuncio / descubrimiento, Prueba /

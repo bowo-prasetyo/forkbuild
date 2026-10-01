@@ -35,7 +35,7 @@ encontrarlo y comprobarlo sin estar conectado con usted. Haga clic en
 **Distribuir** justo después de publicar, o en **Mi Mundo compartido** en la
 Vista del mundo. Necesita una extensión del navegador que firme para las
 redes que elija, como Wander para Arweave o nos2x para Nostr.
-[Distributing Your Work](../Distribution.md) (en inglés) enumera todo lo que
+[Distribuir su trabajo](Distribution.md) enumera todo lo que
 puede distribuir, adónde puede ir y qué necesita cada red.
 
 ### ¿Por qué nadie puede bifurcar mi creación?

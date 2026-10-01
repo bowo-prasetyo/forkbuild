@@ -28,7 +28,7 @@ pasta [docs/](../..) de nível superior.
    licenças, bifurcação, o catálogo do Repositório e a distribuição de uma
    publicação direto do Editor.
    Para tudo o que você pode distribuir e para onde pode ir, veja
-   [Distributing Your Work](../Distribution.md) (em inglês).
+   [Distribuindo seu trabalho](Distribution.md).
 5. **[Identidade e login](05-IdentityAndLogin.md)** — sua identidade
    criptográfica, o cofre (bloquear/desbloquear), o backup dela com
    exportação/importação e o gerenciamento de identidades em **Minhas
@@ -50,13 +50,12 @@ pasta [docs/](../..) de nível superior.
     provedores de armazenamento e de anúncio, e servidores de conexão entre
     pares.
     Do que cada rede precisa está resumido em
-    [Distributing Your Work](../Distribution.md#what-each-network-needs) (em
-    inglês).
+    [Distribuindo seu trabalho](Distribution.md#do-que-cada-rede-precisa).
 11. **[Evidências e armazenamento](11-EvidenceAndStorage.md)** — guardar
     conteúdo no IPFS ou no Arweave e, de forma *experimental*, evidências
     externas, os fluxos de carteira do Bitcoin e da Base, posicionamentos de
     snapshot, pinning remoto no IPFS e o Steem.
-    [Distributing Your Work](../Distribution.md) (em inglês) mostra como
+    [Distribuindo seu trabalho](Distribution.md) mostra como
     tudo isso se encaixa.
 12. **[Arquivo e classificações](12-ArchiveAndLeaderboards.md)** —
     *experimental*. O arquivo de observações, referências entre publicações,
@@ -68,7 +67,7 @@ pasta [docs/](../..) de nível superior.
 
 ## Referência
 
-- **[Distributing Your Work](../Distribution.md)** (em inglês) — tudo o que
+- **[Distribuindo seu trabalho](Distribution.md)** — tudo o que
   você pode colocar em redes descentralizadas (seus Mundos, declarações de
   autoria e de nomes de lugares, comentários, âncoras), os três papéis que
   uma rede cumpre (Conteúdo, Anúncio / descoberta, Prova / ancoragem), do
