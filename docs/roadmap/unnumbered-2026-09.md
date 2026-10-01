@@ -3392,3 +3392,20 @@ build step; only what GitHub Pages publishes is now bundled.
 - Checked on the bundle: every page renders the same text as the unbundled app; dropping a startup file still reloads
   once and dropping it every time still shows the message; a page whose file is dropped still shows the notice. Only
   the entry point, the recovery code and esbuild's 138-byte naming helper must arrive for that recovery to run.
+
+## Chat: opening a conversation while signed out (unnumbered, 2026-09-30)
+
+Opening a chat page while nobody was signed in logged "ConversationReadTracker: no user is currently logged in": the
+page marks the conversation read when it opens, and the read tracker refuses to record a read with no owner. The error
+also stopped the page from finishing its setup, so it never listened for new messages, connections, calls or sign-ins:
+signing in with the page open left it showing "Sign in to an identity" until you left and came back.
+
+- `ui/views/ChatView.js` marks the conversation read only while someone is signed in, and when someone signs in with it
+  open, re-reads it and marks it read. That happens in a watcher on the page's own sign-in state, not in the session
+  listener, which still only records the state (`tests/IdentityEventErrorBoundaryAudit.test.js`: the sign-in itself
+  runs that listener and must not fail because of it).
+- `tests/run-bundle.mjs` no longer allows that error on the chat page, so opening every page without errors covers it
+  again.
+- Checked in the real app: opening a chat page signed out logs nothing and asks to sign in; signing in on that page shows
+  the conversation and marks it read once. Before the change, the same steps logged the error and the page stayed on
+  the sign-in prompt.
