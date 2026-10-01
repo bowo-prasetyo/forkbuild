@@ -56,6 +56,11 @@ export const LANGUAGES = Object.freeze([
         code: 'ja',
         name: '日本語',
         staleBanner: '> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版]({source})も参照してください。'
+    }),
+    Object.freeze({
+        code: 'pt-BR',
+        name: 'Português (Brasil)',
+        staleBanner: '> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês]({source}).'
     })
 ]);
 

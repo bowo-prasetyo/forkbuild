@@ -3,7 +3,7 @@
 ForkBuild can be shown in another language: every page's text is a message
 (`ui/i18n/`), chosen on the **Language** page, with a pseudo-locale for
 finding text that isn't ready. It ships in English, German, Spanish,
-Bahasa Indonesia and Japanese; the table below lists the few things that stay in the language they were written
+Bahasa Indonesia, Japanese and Brazilian Portuguese; the table below lists the few things that stay in the language they were written
 in.
 
 ## Languages
@@ -15,6 +15,7 @@ in.
 | Español (Spanish) | `es` | `ui/i18n/messages/es.js`, complete (see "Spanish" below) |
 | Bahasa Indonesia | `id` | `ui/i18n/messages/id.js`, complete (see "Indonesian" below) |
 | 日本語 (Japanese) | `ja` | `ui/i18n/messages/ja.js`, complete (see "Japanese" below) |
+| Português (Brasil) (Brazilian Portuguese) | `pt-BR` | `ui/i18n/messages/pt-BR.js`, complete (see "Brazilian Portuguese" below) |
 
 ## What is ready
 
@@ -186,6 +187,45 @@ separator, as Spanish groups only from five digits). A resident's `{where}`
 reads "a unos 3,2 km al norte". Keyboard keys are Mayús, Supr, RePág and
 AvPág. Compass points are N, NE, E, SE, S, SO, O, NO.
 
+## Brazilian Portuguese
+
+`ui/i18n/messages/pt-BR.js` translates every key into Brazilian Portuguese,
+and is chosen for every Portuguese-speaking browser (`pt-BR`, `pt-PT`, `pt`),
+since it is the only Portuguese shipped. It addresses the reader as "você",
+uses infinitives for buttons and menu entries ("Salvar", "Exportar planta"),
+“…” for quoted titles, and keeps network and product names (ForkBuild,
+Arweave, Nostr, IPFS, Steem, Bitcoin, Base, Kubo, WebRTC, STUN, TURN) and the
+protocol words Brazilian developers use as they are (Snapshot, gateway,
+relay, endpoint, backend, hash, nonce, txid, pinning). The words it uses for
+ForkBuild's own ideas:
+
+| English | Brazilian Portuguese |
+|---|---|
+| World | Mundo |
+| brick | bloco |
+| build (a creation) | construção |
+| structure / blueprint | estrutura / planta |
+| Publication / publish / unpublish | publicação / publicar / despublicar |
+| Shared World (a World's signed record) | Mundo compartilhado |
+| Signed Claim | Declaração assinada |
+| fork | bifurcar, bifurcação (“Bifurcação de …”) |
+| peer | par |
+| identity / passphrase | identidade / frase secreta |
+| landmark / region / resident | marco / região / morador |
+| placement / place | posicionamento / colocar (a brick), posicionar |
+| anchor / anchoring | âncora / ancoragem, ancorar |
+| wallet | carteira |
+| leaderboard / achievement / badge | classificação / conquista / emblema |
+| undo / redo | Desfazer / Refazer |
+| sign in / sign out | Entrar / Sair |
+
+Brazilian Portuguese has two plural forms here, `one` and `other`; the undo
+labels say "Colocar bloco" for one brick and "Colocar 3 blocos" otherwise,
+after "Desfazer: ". Numbers follow `pt-BR` (`3,2 km`, `1.200`, `12.000`). A
+resident's `{where}` reads "a uns 3,2 km ao norte". Keyboard keys keep their
+English names (Shift, Delete, PgUp, PgDn, Esc), except Espaço. Compass
+points are N, NE, L, SE, S, SO, O, NO.
+
 ## Japanese
 
 `ui/i18n/messages/ja.js` translates every key. It uses polite です/ます
@@ -230,7 +270,8 @@ lives in `docs/user/<code>/` under the English page's file name
 is translated there as well (`docs/user/ja/Privacy.md`). The rest of
 `docs/` is for developers and stays in English.
 
-Translated so far, in German, Spanish, Indonesian and Japanese: every page of the
+Translated so far, in German, Spanish, Indonesian, Japanese and Brazilian
+Portuguese: every page of the
 user guide, and `Privacy.md`.
 
 Writing a translation:
@@ -240,14 +281,15 @@ Writing a translation:
   it in `ui/i18n/messages/en.js` and use the same key's text from your
   language's file (`de.js`: **In eine Datei sichern**, `es.js`:
   **Hacer copia de seguridad en un archivo**, `id.js`:
-  **Cadangkan ke File**, `ja.js`: **ファイルにバックアップ**). The word lists
-  under "German", "Spanish", "Indonesian" and "Japanese" above apply here
-  too.
+  **Cadangkan ke File**, `ja.js`: **ファイルにバックアップ**, `pt-BR.js`:
+  **Fazer backup em um arquivo**). The word lists under "German",
+  "Spanish", "Indonesian", "Japanese" and "Brazilian Portuguese" above
+  apply here too.
 - Text the app shows only in English (a publish error from `application/`,
   say) stays in English, with a translation beside it.
 - Link to the translated page when there is one (`FAQ.md`), and to the
   English otherwise (`../02-TheEditor.md`), marked as English: "(Englisch)",
-  "(en inglés)", "(bahasa Inggris)", "（英語）". An anchor into a translated page is made from its
+  "(en inglés)", "(bahasa Inggris)", "（英語）", "(em inglês)". An anchor into a translated page is made from its
   translated heading, the way GitHub makes it: `ControlsReference.md#タッチ画面`.
 - Start the page with the line that names its English original. The hash
   is filled in by `--stamp`:
