@@ -24,6 +24,16 @@ Publishing only stores the creation on your own device and lists it in
 
 See [Publishing & Forking](04-PublishingAndForking.md#sharing-with-connected-peers).
 
+### How do I make my work available to everyone?
+
+Distribute it: store it on Arweave or IPFS (or, experimentally, Steem)
+and announce it on Nostr or Arweave (or Steem), so anyone can find and
+check it without being connected to you. Click **Distribute** right after
+publishing, or under **My Shared World** in World View. You need a signing
+browser extension for the networks you pick, such as Wander for Arweave or
+nos2x for Nostr. [Distributing Your Work](Distribution.md) lists everything
+you can distribute, where it can go and what each network needs.
+
 ### Why can't anyone fork my creation?
 
 A new document has no license, and an unlicensed creation can't be forked.

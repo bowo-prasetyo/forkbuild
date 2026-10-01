@@ -5,6 +5,10 @@
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · **Bahasa Indonesia** · [日本語](../ja/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../FAQ.md).
+<!-- /stale -->
+
 Jawaban singkat atas pertanyaan yang paling sering muncul, masing-masing
 dengan tautan ke panduan yang menjelaskannya secara lengkap.
 
