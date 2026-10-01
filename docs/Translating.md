@@ -187,7 +187,7 @@ node scripts/check-doc-translations.mjs --stamp docs/user/ja/FAQ.md
 ```
 
 That records which English the translation matches, and adds the line of
-language links (**English** · [Bahasa Indonesia](…) · [日本語](…)) to the
+language links (`**English** · [Bahasa Indonesia](id/FAQ.md) · [日本語](ja/FAQ.md)`) to the
 translation, its English page and the page's other translations.
 
 **Keeping translations in step.** When an English page changes, every

@@ -85,8 +85,8 @@ function withoutCode(markdown) {
 export function githubSlug(heading) {
     const text = heading
         .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-        .replace(/<[^>]+>/g, '')
-        .replace(/[`*]/g, '')
+        .replace(/<[^>]*>/g, '')
+        .replace(/[<>`*]/g, '')
         .replace(/(^|\s)_+|_+(\s|$)/g, '$1$2');
     return text.trim().toLowerCase().replace(/[^\p{L}\p{M}\p{N}\p{Pc} -]/gu, '').replace(/ /g, '-');
 }
