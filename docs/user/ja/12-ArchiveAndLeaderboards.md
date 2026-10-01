@@ -2,7 +2,7 @@
 # 12 — アーカイブとリーダーボード
 
 <!-- languages -->
-[English](../12-ArchiveAndLeaderboards.md) · [Deutsch](../de/12-ArchiveAndLeaderboards.md) · [Bahasa Indonesia](../id/12-ArchiveAndLeaderboards.md) · **日本語**
+[English](../12-ArchiveAndLeaderboards.md) · [Deutsch](../de/12-ArchiveAndLeaderboards.md) · [Español](../es/12-ArchiveAndLeaderboards.md) · [Bahasa Indonesia](../id/12-ArchiveAndLeaderboards.md) · **日本語**
 <!-- /languages -->
 
 > **実験的です。** ここにあるものはすべて、今後のバージョンで変わったり

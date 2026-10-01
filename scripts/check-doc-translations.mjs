@@ -43,6 +43,11 @@ export const LANGUAGES = Object.freeze([
         staleBanner: '> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung]({source}).'
     }),
     Object.freeze({
+        code: 'es',
+        name: 'Español',
+        staleBanner: '> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés]({source}).'
+    }),
+    Object.freeze({
         code: 'id',
         name: 'Bahasa Indonesia',
         staleBanner: '> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris]({source}).'

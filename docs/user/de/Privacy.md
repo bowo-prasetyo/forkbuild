@@ -2,7 +2,7 @@
 # Datenschutz
 
 <!-- languages -->
-[English](../../Privacy.md) · **Deutsch** · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md)
+[English](../../Privacy.md) · **Deutsch** · [Español](../es/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md)
 <!-- /languages -->
 
 ForkBuild hat keine Konten und keine Analyse. Es speichert Ihre Arbeit in

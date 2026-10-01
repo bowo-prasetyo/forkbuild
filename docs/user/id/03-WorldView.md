@@ -2,7 +2,7 @@
 # 03 — Tampilan Dunia
 
 <!-- languages -->
-[English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · **Bahasa Indonesia** · [日本語](../ja/03-WorldView.md)
+[English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · **Bahasa Indonesia** · [日本語](../ja/03-WorldView.md)
 <!-- /languages -->
 
 Tampilan Dunia adalah ruang 3D bersama tempat **setiap karya yang

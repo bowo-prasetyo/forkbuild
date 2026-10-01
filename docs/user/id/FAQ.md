@@ -2,7 +2,7 @@
 # Pertanyaan Umum
 
 <!-- languages -->
-[English](../FAQ.md) · [Deutsch](../de/FAQ.md) · **Bahasa Indonesia** · [日本語](../ja/FAQ.md)
+[English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · **Bahasa Indonesia** · [日本語](../ja/FAQ.md)
 <!-- /languages -->
 
 Jawaban singkat atas pertanyaan yang paling sering muncul, masing-masing

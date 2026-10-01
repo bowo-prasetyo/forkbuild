@@ -2,7 +2,7 @@
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
-[English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · **Bahasa Indonesia** · [日本語](../ja/09-PublicationsAndEvidence.md)
+[English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · **Bahasa Indonesia** · [日本語](../ja/09-PublicationsAndEvidence.md)
 <!-- /languages -->
 
 > **Sebagian eksperimental.** Halaman Publikasi adalah fitur biasa: daftar

@@ -2,7 +2,7 @@
 # 操作リファレンス
 
 <!-- languages -->
-[English](../ControlsReference.md) · [Deutsch](../de/ControlsReference.md) · [Bahasa Indonesia](../id/ControlsReference.md) · **日本語**
+[English](../ControlsReference.md) · [Deutsch](../de/ControlsReference.md) · [Español](../es/ControlsReference.md) · [Bahasa Indonesia](../id/ControlsReference.md) · **日本語**
 <!-- /languages -->
 
 ForkBuild のマウスとキーボードの操作をすべてまとめています。

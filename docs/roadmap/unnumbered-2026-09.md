@@ -3463,3 +3463,20 @@ automatically for a browser set to German (`de`, `de-DE`, `de-AT`, `de-CH` …).
 - Tests: `tests/GermanLocale.test.js` (complete, chosen from the browser, plural forms, a resident's sentence with a
   decimal comma, undo labels with digit grouping, a fork's title, compass points). `tests/I18n.test.js` used German as
   its example of a language ForkBuild doesn't ship; it uses Swedish now, and checks that a German browser gets German.
+
+## Internationalization: Spanish (unnumbered, 2026-10-01)
+
+The fourth translation. ForkBuild can now be shown in Spanish (Español), chosen on the Language page or picked
+automatically for any browser set to Spanish (`es`, `es-MX`, `es-419`, `es-AR`, `es-ES` …).
+
+- `ui/i18n/messages/es.js` translates all 3,632 messages into neutral Latin American Spanish, in the same order and
+  groups as English, so one translation serves every Spanish-speaking country. It uses the formal "usted" (never
+  "vos" or "vosotros"), words understood across Latin America (computadora, agregar, billetera), infinitives for
+  buttons, “…” around quoted titles, and keeps network and product names and the protocol words Spanish-speaking
+  developers use as they are (Snapshot, gateway, relay, endpoint, hash). The words it uses for ForkBuild's own ideas
+  are listed in `docs/Translating.md`, "Spanish".
+- Spanish has `one` and `other` plural forms, and numbers follow `es` (`3,2 km`, `12.000 bloques`).
+- The user guide and `Privacy.md` are translated in `docs/user/es/`; `scripts/check-doc-translations.mjs` knows the
+  language and its out-of-date banner.
+- Tests: `tests/SpanishLocale.test.js` (complete, chosen from Latin American and European Spanish browsers, plural
+  forms, a resident's sentence with a decimal comma, undo labels with digit grouping, a fork's title, compass points).

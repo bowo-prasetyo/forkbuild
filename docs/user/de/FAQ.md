@@ -2,7 +2,7 @@
 # Häufige Fragen
 
 <!-- languages -->
-[English](../FAQ.md) · **Deutsch** · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md)
+[English](../FAQ.md) · **Deutsch** · [Español](../es/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md)
 <!-- /languages -->
 
 Kurze Antworten auf die Fragen, auf die man am häufigsten stößt, jeweils

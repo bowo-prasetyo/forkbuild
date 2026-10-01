@@ -1,7 +1,7 @@
 # Interactive Transform Gizmo
 
 <!-- languages -->
-**English** · [Deutsch](de/InteractiveTransformGizmo.md) · [Bahasa Indonesia](id/InteractiveTransformGizmo.md) · [日本語](ja/InteractiveTransformGizmo.md)
+**English** · [Deutsch](de/InteractiveTransformGizmo.md) · [Español](es/InteractiveTransformGizmo.md) · [Bahasa Indonesia](id/InteractiveTransformGizmo.md) · [日本語](ja/InteractiveTransformGizmo.md)
 <!-- /languages -->
 
 Whenever bricks are selected in the Editor, a gizmo

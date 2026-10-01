@@ -2,7 +2,7 @@
 # 05 — Identitas & Masuk
 
 <!-- languages -->
-[English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · **Bahasa Indonesia** · [日本語](../ja/05-IdentityAndLogin.md)
+[English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · **Bahasa Indonesia** · [日本語](../ja/05-IdentityAndLogin.md)
 <!-- /languages -->
 
 ForkBuild tidak memiliki kata sandi dan tidak ada server akun pusat.
