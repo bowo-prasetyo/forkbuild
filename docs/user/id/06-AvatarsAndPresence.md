@@ -112,8 +112,7 @@ mereka muncul lagi.
 
 ## Menjalankan avatar Anda
 
-Menerbangkan kamera ([Tampilan Dunia](../03-WorldView.md#flying-around),
-bahasa Inggris) adalah salah satu cara bergerak, tetapi Anda juga dapat
+Menerbangkan kamera ([Tampilan Dunia](03-WorldView.md#terbang-berkeliling)) adalah salah satu cara bergerak, tetapi Anda juga dapat
 menjalankan avatar Anda secara langsung dengan **Mode Kendali Avatar**.
 Untuk menyalakannya, Anda harus masuk dengan avatar yang tersimpan di
 **Avatar Saya**; lalu centang **Kendalikan Avatar Saya (WASD, Shift,
@@ -138,8 +137,7 @@ Berjalan memperhatikan tabrakan dengan bangunan, pohon, dan satwa liar di
 dekatnya yang sudah dimuat — Anda tidak dapat berjalan menembus struktur
 yang dimuat di sekitar Anda, menembus pohon yang dihasilkan sebagai bagian
 dari medan, atau menembus rusa atau kelinci yang sedang merumput di dekat
-Anda (lihat [Tampilan Dunia](../03-WorldView.md#flying-around), bahasa
-Inggris). Satwa liar hanya menghalangi jalan Anda seperti pohon, di mana
+Anda (lihat [Tampilan Dunia](03-WorldView.md#terbang-berkeliling)). Satwa liar hanya menghalangi jalan Anda seperti pohon, di mana
 pun hewan itu berkeliaran — ia mungkin menoleh untuk memperhatikan Anda,
 tetapi tidak pernah menyingkir atau terluka, dan kendaraan melaju
 menembusnya begitu saja; hanya berjalan kaki yang terhenti. Hewan yang
@@ -268,7 +266,7 @@ Orang yang dapat melihat avatar Anda juga melihat apa yang Anda naiki:
 sepeda, sepeda motor, mobil, atau drone Anda digambar di bawah Anda di
 layar mereka, menghadap ke arah Anda melaju, dan mereka mendengar suara
 mesinnya, saat Anda naik dan turun, serta pengereman Anda (lihat "Sound" di
-[03 — World View](../03-WorldView.md), bahasa Inggris). Anda melihat dan
+[03 — World View](03-WorldView.md)). Anda melihat dan
 mendengar milik mereka dengan cara yang sama. Ini mengikuti pengaturan
 kehadiran Anda: siapa pun yang tidak dapat melihat Anda juga tidak tahu apa
 yang Anda naiki.
@@ -325,8 +323,7 @@ yang baru dilepaskan, sama seperti **F** lebih memilih menangkap daripada
 melepaskan. Hanya hewan yang Anda lepaskan yang dapat dijadikan hiasan —
 satwa liar yang ditempatkan dunia sendiri tidak bisa. Petunjuk muncul saat
 **G** dapat menghiasi atau mengurungkan sesuatu di dekat Anda. Seperti
-menambahkan [penanda](../03-WorldView.md#landmarks--marking-a-place-worth-remembering)
-(bahasa Inggris), menghiasi memerlukan Anda masuk dengan akses EDIT ke
+menambahkan [penanda](03-WorldView.md#penanda--menandai-tempat-yang-layak-diingat), menghiasi memerlukan Anda masuk dengan akses EDIT ke
 Dunia tempat Anda berada. Di Dunia terbitan orang lain, hiasannya masuk ke
 salinan Anda sendiri — selama lisensinya mengizinkan fork. Jika semua itu
 tidak berlaku, **G** tidak melakukan apa-apa; tombol **Hiasi** di pad
@@ -341,8 +338,7 @@ tempat Anda ingin mereka tinggal dan tekan **R** (atau klik **Tambahkan
 Penghuni di Sini** di bagian **Avatar**). Penghuni muncul tepat di samping
 Anda, dan sejak itu menjadi bagian dari konten Dunia itu sendiri —
 disimpan, diterbitkan, dan di-fork bersamanya, seperti
-[penanda](../03-WorldView.md#landmarks--marking-a-place-worth-remembering)
-(bahasa Inggris). Menambahkannya memerlukan Anda masuk dengan akses EDIT ke
+[penanda](03-WorldView.md#penanda--menandai-tempat-yang-layak-diingat). Menambahkannya memerlukan Anda masuk dengan akses EDIT ke
 Dunia tempat Anda berada; di Dunia terbitan orang lain, penghuninya masuk
 ke salinan Anda sendiri. Berubah pikiran? Berdirilah di samping penghuni
 dan tekan **R** lagi (petunjuk menampilkan **[R] Hapus Penghuni**), atau
@@ -426,8 +422,7 @@ eksplisit.
 
 Penanda aktivitas hanya menggambarkan apa yang sedang dilakukan seseorang;
 penanda itu tidak pernah mengubah apa pun — lihat
-[Seeing other collaborators](../03-WorldView.md#seeing-other-collaborators)
-(bahasa Inggris).
+[Melihat kolaborator lain](03-WorldView.md#melihat-kolaborator-lain).
 
 ## Apa selanjutnya?
 

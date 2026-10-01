@@ -156,7 +156,7 @@ is translated there as well (`docs/user/ja/Privacy.md`). The rest of
 `docs/` is for developers and stays in English.
 
 Translated so far, in Indonesian and Japanese: every page of the user
-guide and `Privacy.md`, except `03-WorldView.md`, which is next.
+guide, and `Privacy.md`.
 
 Writing a translation:
 

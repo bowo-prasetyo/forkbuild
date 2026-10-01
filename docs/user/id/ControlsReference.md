@@ -23,7 +23,7 @@ operasi pengeditan di bawah ini berdasarkan nama.
 | Seret kiri di ruang kosong | Orbit |
 | Seret kanan | Geser (pan) |
 | Roda gulir | Zoom |
-| `Home` | Editor: atur ulang kamera (diabaikan selama gizmo sedang diseret). Tampilan Dunia: kembalikan kamera dan avatar ke dunia Anda sendiri saat ini — lihat [Tampilan Dunia](../03-WorldView.md#orientation-and-locations) (bahasa Inggris) |
+| `Home` | Editor: atur ulang kamera (diabaikan selama gizmo sedang diseret). Tampilan Dunia: kembalikan kamera dan avatar ke dunia Anda sendiri saat ini — lihat [Tampilan Dunia](03-WorldView.md#orientasi-dan-lokasi) |
 
 ## Perintah (hanya Editor)
 
@@ -36,7 +36,7 @@ operasi pengeditan di bawah ini berdasarkan nama.
 
 Bukan pintasan keyboard, melainkan cara Tampilan Dunia sendiri untuk
 menemukan sesuatu — lihat
-[Tampilan Dunia](../03-WorldView.md#finding-worlds) (bahasa Inggris) untuk
+[Tampilan Dunia](03-WorldView.md#menemukan-dunia) untuk
 penjelasan lengkapnya.
 
 | Kontrol | Tindakan |
@@ -52,15 +52,15 @@ penjelasan lengkapnya.
 
 Murni navigasi kamera — tidak satu pun memuat dokumen, mengubah pilihan,
 atau mengedit apa pun. Lihat
-[Tampilan Dunia](../03-WorldView.md#orientation-and-locations) (bahasa Inggris).
+[Tampilan Dunia](03-WorldView.md#orientasi-dan-lokasi).
 
 | Kontrol | Tindakan |
 |---|---|
 | Indikator kompas | Arah hadap baca-saja dengan penanda kontekstual untuk struktur dan bentang alam di dekat Anda |
-| **Beranda** | Mengembalikan kamera dan avatar ke dunia Anda sendiri saat ini (kembali ke titik asal bersama jika Anda belum memfokuskan salah satu dunia Anda di sesi ini) — lihat [Tampilan Dunia](../03-WorldView.md#orientation-and-locations) (bahasa Inggris) |
+| **Beranda** | Mengembalikan kamera dan avatar ke dunia Anda sendiri saat ini (kembali ke titik asal bersama jika Anda belum memfokuskan salah satu dunia Anda di sesi ini) — lihat [Tampilan Dunia](03-WorldView.md#orientasi-dan-lokasi) |
 | **Lokasi** | Membuka daftar Dunia, strukturnya, penanda, dan tempat-tempatnya, masing-masing dengan tombol **Fokus** |
 | **?** | Menampilkan atau menyembunyikan kontrol kamera dan berjalan |
-| 🔔 **Notifikasi** (kepala aplikasi, setiap halaman) | Membuka **Riwayat Notifikasi** Anda — catatan baca-saja, bukan tindakan kamera; lihat [Tampilan Dunia](../03-WorldView.md#orientation-and-locations) (bahasa Inggris) |
+| 🔔 **Notifikasi** (kepala aplikasi, setiap halaman) | Membuka **Riwayat Notifikasi** Anda — catatan baca-saja, bukan tindakan kamera; lihat [Tampilan Dunia](03-WorldView.md#orientasi-dan-lokasi) |
 | **Kamera**: Bebas / Orang Pertama / Orang Ketiga / Pandangan Burung | Mengunci kamera pada jarak tetap dari avatar Anda sendiri alih-alih menerbangkannya sendiri; klik yang aktif sekali lagi untuk kembali ke Bebas — lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#sudut-pandang-kamera) |
 
 ### Deskripsi lokasi kontekstual
@@ -81,7 +81,7 @@ penempatan struktur — tidak ada yang disimpan di dunia.
 
 | Masukan | Tindakan | Catatan |
 |---|---|---|
-| `M` | Mematikan atau menyalakan suara | Sama dengan tombol **Suara**; satu pengaturan untuk kedua tampilan, diingat di perangkat ini. Lihat [Tampilan Dunia](../03-WorldView.md#sound) dan [Editor](02-TheEditor.md#suara) |
+| `M` | Mematikan atau menyalakan suara | Sama dengan tombol **Suara**; satu pengaturan untuk kedua tampilan, diingat di perangkat ini. Lihat [Tampilan Dunia](03-WorldView.md#suara) dan [Editor](02-TheEditor.md#suara) |
 
 ## Gerakan Avatar (Tampilan Dunia)
 
@@ -98,8 +98,7 @@ lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#menjalankan-avatar-anda).
 
 ## Kendaraan (Tampilan Dunia)
 
-Lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#kendaraan) (bahasa
-Inggris). Memerlukan Mode Kendali Avatar (**Kendalikan Avatar Saya**);
+Lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#kendaraan). Memerlukan Mode Kendali Avatar (**Kendalikan Avatar Saya**);
 petunjuk muncul otomatis saat Anda cukup dekat dengan kendaraan untuk
 menaikinya.
 
@@ -116,8 +115,7 @@ menaikinya.
 
 ## Hewan (Tampilan Dunia)
 
-Lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#hewan) (bahasa
-Inggris). Memerlukan Mode Kendali Avatar; petunjuk muncul otomatis saat ada
+Lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#hewan). Memerlukan Mode Kendali Avatar; petunjuk muncul otomatis saat ada
 hewan yang dapat ditangkap di dekat Anda atau Anda sedang membawanya.
 
 | Masukan | Tindakan | Catatan |
@@ -129,8 +127,7 @@ hewan yang dapat ditangkap di dekat Anda atau Anda sedang membawanya.
 
 ## Penghuni (Tampilan Dunia)
 
-Lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#penghuni) (bahasa
-Inggris). Memerlukan Mode Kendali Avatar; tombol **Tambahkan Penghuni di
+Lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#penghuni). Memerlukan Mode Kendali Avatar; tombol **Tambahkan Penghuni di
 Sini** / **Hapus Penghuni** dan **Bicara** di bagian Avatar melakukan hal
 yang sama tanpanya.
 
@@ -149,7 +146,7 @@ disimpan di perangkat ini dan tetap ada setelah dimuat ulang — lihat
 
 | Masukan | Tindakan | Catatan |
 |---|---|---|
-| Klik sebuah balok | Memilihnya (menggantikan pilihan) | di Tampilan Dunia ini hanya membuka panel Pemeriksaan — lihat [Tampilan Dunia](../03-WorldView.md#world-view-is-read-only--building-happens-in-the-editor) (bahasa Inggris) |
+| Klik sebuah balok | Memilihnya (menggantikan pilihan) | di Tampilan Dunia ini hanya membuka panel Pemeriksaan — lihat [Tampilan Dunia](03-WorldView.md#tampilan-dunia-hanya-dapat-dilihat--membangun-dilakukan-di-editor) |
 | `Shift`-klik | Menambahkan balok ke pilihan | |
 | `Ctrl/Cmd`-klik | Memasukkan/mengeluarkan balok dari pilihan | |
 | `Shift`-seret | Pilih dengan kotak (menggantikan pilihan) | `Ctrl/Cmd+Shift`-seret menambah ke pilihan; seret biasa mengorbit kamera |
@@ -296,7 +293,7 @@ didorong.
 
 Di Tampilan Dunia, urungkan dan ulangi berlaku untuk suntingan anotasinya:
 penanda, nama wilayah, dan hiasan hewan. Panel Riwayatnya (lihat
-[Tampilan Dunia](../03-WorldView.md#history--previewing-and-restoring-earlier-states), bahasa Inggris)
+[Tampilan Dunia](03-WorldView.md#riwayat--melihat-pratinjau-dan-memulihkan-keadaan-sebelumnya))
 juga dapat menampilkan pratinjau dan memulihkannya.
 
 ## Khusus Editor
