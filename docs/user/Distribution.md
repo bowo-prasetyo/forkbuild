@@ -60,6 +60,31 @@ sends anything.
 A World's Snapshot carries your signed placement with it, so people who
 fetch it see the build exactly where you put it.
 
+### Signed Claim and Snapshot: two halves of one World
+
+A published World is distributed in two separate pieces:
+
+| | Signed Claim | Snapshot |
+|---|---|---|
+| **Like…** | A notarised catalogue card | The printed copy on the shelf, labelled with where it stands |
+| **What it holds** | The World's title, you as its author, its license, the World it was forked from (if any) and its **content hash**, a fingerprint of the bricks, all signed with your identity | Every brick of the World, plus your signed placement: where you put it in World View |
+| **Size** | A few kilobytes | As large as the build: up to 256 KB on Arweave, no limit on IPFS |
+| **What it proves** | That you published this World, with exactly this fingerprint | Nothing by itself; anyone who fetches it checks the bricks against the content hash |
+| **What it's used for** | Share links, and **Discover Shared World** looking your World up and checking it | Showing your build in World View, where you placed it, to people walking nearby |
+
+The content hash ties the two together: anyone holding the bricks can
+check that they match the fingerprint on your signed record.
+
+Each half is useful on its own, which is why the **Distribute** dialogs
+report them separately and let you retry one with **Distribute Snapshot
+only** or **Distribute Signed Claim only**:
+
+- **Snapshot only:** your build appears in World View for people nearby,
+  but no signed record of the publication stands behind it.
+- **Signed Claim only:** people can find your World and confirm it's
+  yours, but can't fetch its bricks from the networks. Peers you're
+  connected to can still get them straight from you while you're online.
+
 Details:
 
 - Signed Claim and Snapshot:
