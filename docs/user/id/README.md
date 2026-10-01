@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: 295058efc7bb2769 -->
+<!-- translation-of: docs/user/README.md source-hash: 26ea018db8723ef6 -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · **Bahasa Indonesia** · [日本語](../ja/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../README.md).
-<!-- /stale -->
 
 Panduan cara menggunakan ForkBuild di browser. Semua yang ada di sini
 menjelaskan produk sebagaimana cara kerjanya saat ini; bagian dalam mesin
@@ -31,6 +27,9 @@ dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
 4. **[Penerbitan & Fork](04-PublishingAndForking.md)**
    — menerbitkan, lisensi, fork, katalog Repositori, dan mendistribusikan
    publikasi langsung dari Editor.
+   Untuk semua yang dapat Anda distribusikan dan ke mana semuanya dapat
+   dikirim, lihat [Distributing Your Work](../Distribution.md) (bahasa
+   Inggris).
 5. **[Identitas & Masuk](05-IdentityAndLogin.md)** —
    identitas kriptografis Anda, brankas (mengunci/membuka), mencadangkannya
    dengan ekspor/impor, dan mengelola identitas dari **Identitas Saya**.
@@ -49,10 +48,15 @@ dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
 10. **[Pengaturan Jaringan](10-NetworkSettings.md)** —
     gateway, relay, penyedia penyimpanan dan pengumuman, serta server untuk
     koneksi rekan.
+    Apa yang dibutuhkan setiap jaringan dirangkum di
+    [Distributing Your Work](../Distribution.md#what-each-network-needs)
+    (bahasa Inggris).
 11. **[Bukti & Penyimpanan](11-EvidenceAndStorage.md)**
     — menyimpan konten di IPFS atau Arweave, dan yang *eksperimental*:
     bukti eksternal, alur dompet Bitcoin dan Base, penempatan snapshot,
     pinning IPFS jarak jauh, dan Steem.
+    [Distributing Your Work](../Distribution.md) (bahasa Inggris)
+    menunjukkan bagaimana semuanya saling terkait.
 12. **[Arsip & Papan Peringkat](12-ArchiveAndLeaderboards.md)** — *eksperimental*. Arsip pengamatan, referensi publikasi,
     pencapaian, label penerbit, dan halaman Papan Peringkat.
 13. **[Data Anda](13-YourData.md)** — mencadangkan semua yang disimpan
@@ -62,6 +66,12 @@ dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
 
 ## Referensi
 
+- **[Distributing Your Work](../Distribution.md)** (bahasa Inggris) — semua
+  yang dapat Anda simpan di jaringan terdesentralisasi (Dunia Anda, klaim
+  kepengarangan dan nama tempat, komentar, jangkar), tiga peran yang
+  dimainkan sebuah jaringan (Konten, Pengumuman / Penemuan, Bukti /
+  Penjangkaran), apa yang dibutuhkan setiap jaringan, dan tautan ke panduan
+  yang menjelaskan detailnya.
 - **[Pertanyaan Umum](FAQ.md)** — jawaban singkat atas pertanyaan yang
   paling sering muncul: berbagi, lisensi, frasa sandi yang terlupa, pindah
   ke perangkat lain, menjalankan avatar, dan terhubung kembali dengan teman.

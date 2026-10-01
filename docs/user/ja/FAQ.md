@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2dc3cd04edd66d93 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 66a180a29276c694 -->
 # よくある質問
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · **日本語** · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../FAQ.md)も参照してください。
-<!-- /stale -->
 
 よく出会う疑問への短い答えです。それぞれ、詳しく説明しているガイドに
 リンクしています。
@@ -27,6 +23,17 @@
   告知するので、あなたと接続していなくても見つけてもらえます。
 
 [公開とフォーク](04-PublishingAndForking.md#接続中のピアと共有する)を参照してください。
+
+### 自分の作品を誰でも見られるようにするには？
+
+配信します。作品を Arweave や IPFS（試験的には Steem）に保存し、Nostr や
+Arweave（または Steem）で告知すれば、あなたと接続していなくても、誰でも
+見つけて確かめられます。公開した直後に **配信** をクリックするか、
+ワールドビューの **自分の共有ワールド** から配信します。選んだ
+ネットワークに対応した署名用のブラウザー拡張機能が必要です（Arweave なら
+Wander、Nostr なら nos2x など）。配信できるもの、その行き先、各ネットワーク
+に必要なものは [Distributing Your Work](../Distribution.md)（英語）に
+まとめてあります。
 
 ### 自分の作品を誰もフォークできないのはなぜですか？
 

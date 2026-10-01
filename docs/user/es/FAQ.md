@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2dc3cd04edd66d93 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 66a180a29276c694 -->
 # Preguntas frecuentes
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · **Español** · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../FAQ.md).
-<!-- /stale -->
 
 Respuestas breves a las preguntas con las que más se encuentra la gente,
 cada una con un enlace a la guía que la explica por completo.
@@ -30,6 +26,17 @@ decida:
   conectada con usted.
 
 Consulte [Publicar y bifurcar](04-PublishingAndForking.md#compartir-con-pares-conectados).
+
+### ¿Cómo hago que mi trabajo esté disponible para todos?
+
+Distribúyalo: guárdelo en Arweave o IPFS (o, de forma experimental, en
+Steem) y anúncielo en Nostr o Arweave (o Steem), para que cualquiera pueda
+encontrarlo y comprobarlo sin estar conectado con usted. Haga clic en
+**Distribuir** justo después de publicar, o en **Mi Mundo compartido** en la
+Vista del mundo. Necesita una extensión del navegador que firme para las
+redes que elija, como Wander para Arweave o nos2x para Nostr.
+[Distributing Your Work](../Distribution.md) (en inglés) enumera todo lo que
+puede distribuir, adónde puede ir y qué necesita cada red.
 
 ### ¿Por qué nadie puede bifurcar mi creación?
 

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: 295058efc7bb2769 -->
+<!-- translation-of: docs/user/README.md source-hash: 26ea018db8723ef6 -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
 [English](../README.md) · **Deutsch** · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../README.md).
-<!-- /stale -->
 
 Anleitungen zur Nutzung von ForkBuild im Browser. Alles hier beschreibt
 das Produkt so, wie es heute funktioniert; die Interna der Engine stehen
@@ -31,6 +27,8 @@ in [docs/Architecture.md](../../Architecture.md) und im übrigen
 4. **[Veröffentlichen & Forken](04-PublishingAndForking.md)** —
    Veröffentlichen, Lizenzen, Forken, der Katalog im Repository und das
    Verteilen einer Veröffentlichung direkt aus dem Editor.
+   Alles, was Sie verteilen können, und wohin es gehen kann, steht in
+   [Distributing Your Work](../Distribution.md) (auf Englisch).
 5. **[Identität & Anmeldung](05-IdentityAndLogin.md)** — Ihre
    kryptografische Identität, der Tresor (Sperren/Entsperren), das Sichern
    per Export/Import und das Verwalten von Identitäten unter **Meine
@@ -52,10 +50,15 @@ in [docs/Architecture.md](../../Architecture.md) und im übrigen
    *experimentell* und so gekennzeichnet.
 10. **[Netzwerkeinstellungen](10-NetworkSettings.md)** — Gateways, Relays,
     Speicher- und Ankündigungsanbieter sowie Server für Peer-Verbindungen.
+    Was jedes Netzwerk braucht, fasst
+    [Distributing Your Work](../Distribution.md#what-each-network-needs)
+    (auf Englisch) zusammen.
 11. **[Nachweise & Speicher](11-EvidenceAndStorage.md)** — Inhalte auf IPFS
     oder Arweave speichern und, *experimentell*, externe Nachweise, die
     Wallet-Abläufe für Bitcoin und Base, Snapshot-Platzierungen, entferntes
     IPFS-Pinning und Steem.
+    [Distributing Your Work](../Distribution.md) (auf Englisch) zeigt, wie
+    das zusammenpasst.
 12. **[Archiv & Bestenlisten](12-ArchiveAndLeaderboards.md)** —
     *experimentell*. Das Beobachtungsarchiv, Veröffentlichungsverweise,
     Erfolge, Herausgeberkennungen und die Bestenlisten-Seiten.
@@ -66,6 +69,12 @@ in [docs/Architecture.md](../../Architecture.md) und im übrigen
 
 ## Nachschlagen
 
+- **[Distributing Your Work](../Distribution.md)** (auf Englisch) — alles,
+  was Sie in dezentralen Netzwerken ablegen können (Ihre Welten,
+  Urheberschafts- und Ortsnamensansprüche, Kommentare, Anker), die drei
+  Rollen, die ein Netzwerk spielt (Inhalt, Ankündigung / Entdeckung,
+  Nachweis / Verankerung), was jedes Netzwerk braucht, und Links zu den
+  Anleitungen mit den Einzelheiten.
 - **[FAQ](FAQ.md)** — kurze Antworten auf die Fragen, auf die man am
   häufigsten stößt: Teilen, Lizenzen, vergessene Passphrasen, Umzug auf
   ein anderes Gerät, mit dem Avatar gehen und sich wieder mit Freunden

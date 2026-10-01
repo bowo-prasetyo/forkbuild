@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2dc3cd04edd66d93 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 66a180a29276c694 -->
 # Häufige Fragen
 
 <!-- languages -->
 [English](../FAQ.md) · **Deutsch** · [Español](../es/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../FAQ.md).
-<!-- /stale -->
 
 Kurze Antworten auf die Fragen, auf die man am häufigsten stößt, jeweils
 mit einem Link zur Anleitung, die es ausführlich erklärt.
@@ -30,6 +26,18 @@ bis Sie es so entscheiden:
   mit Ihnen verbunden zu sein.
 
 Siehe [Veröffentlichen & Forken](04-PublishingAndForking.md#mit-verbundenen-peers-teilen).
+
+### Wie mache ich meine Arbeit für alle zugänglich?
+
+Verteilen Sie sie: Speichern Sie sie auf Arweave oder IPFS (oder,
+experimentell, auf Steem) und kündigen Sie sie auf Nostr oder Arweave (oder
+Steem) an, sodass jeder sie finden und prüfen kann, ohne mit Ihnen verbunden
+zu sein. Klicken Sie direkt nach dem Veröffentlichen auf **Verteilen** oder
+in der Weltansicht unter **Meine Geteilte Welt**. Für die gewählten
+Netzwerke brauchen Sie eine signierende Browsererweiterung, etwa Wander für
+Arweave oder nos2x für Nostr. [Distributing Your Work](../Distribution.md)
+(auf Englisch) listet alles auf, was Sie verteilen können, wohin es gehen
+kann und was jedes Netzwerk braucht.
 
 ### Warum kann niemand meine Kreation forken?
 

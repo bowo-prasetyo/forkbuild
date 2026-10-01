@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: 295058efc7bb2769 -->
+<!-- translation-of: docs/user/README.md source-hash: 26ea018db8723ef6 -->
 # ForkBuild ユーザードキュメント
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · **日本語** · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../README.md)も参照してください。
-<!-- /stale -->
 
 ブラウザーで ForkBuild を使うためのガイドです。ここに書かれているのは
 現在の製品の動作です。エンジン内部の説明は
@@ -30,6 +26,8 @@
 4. **[公開とフォーク](04-PublishingAndForking.md)** — 公開、
    ライセンス、フォーク、リポジトリのカタログ、エディターから直接
    公開物を配信する方法。
+   配信できるものとその行き先の全体は
+   [Distributing Your Work](../Distribution.md)（英語）を参照してください。
 5. **[アイデンティティとログイン](05-IdentityAndLogin.md)** —
    暗号学的なアイデンティティ、保管庫（ロックとロック解除）、
    エクスポートとインポートによるバックアップ、**マイアイデンティティ**
@@ -49,10 +47,15 @@
 10. **[ネットワーク設定](10-NetworkSettings.md)** —
     ゲートウェイ、リレー、ストレージと告知のプロバイダー、ピア接続用の
     サーバー。
+    各ネットワークに必要なものは
+    [Distributing Your Work](../Distribution.md#what-each-network-needs)（英語）
+    にまとめてあります。
 11. **[証拠とストレージ](11-EvidenceAndStorage.md)** — IPFS
     や Arweave へのコンテンツの保存と、*試験的* な外部証拠、Bitcoin と
     Base のウォレットパイプライン、スナップショットの配置、リモート IPFS
     ピン留め、Steem。
+    これらの関係は [Distributing Your Work](../Distribution.md)（英語）で
+    説明しています。
 12. **[アーカイブとリーダーボード](12-ArchiveAndLeaderboards.md)**
     — *試験的*。観測アーカイブ、公開物の参照、実績、公開者ラベル、
     リーダーボードのページ。
@@ -62,6 +65,11 @@
 
 ## リファレンス
 
+- **[Distributing Your Work](../Distribution.md)**（英語） —
+  分散型ネットワークに置けるものすべて（ワールド、作者情報と地名のクレーム、
+  コメント、アンカー）、ネットワークが担う 3 つの役割（内容、告知 / 発見、
+  証明 / アンカリング）、各ネットワークに必要なもの、詳しいガイドへの
+  リンク。
 - **[よくある質問](FAQ.md)** — よく出会う疑問への短い答え: 共有、
   ライセンス、パスフレーズを忘れたとき、別のデバイスへの移行、アバターを
   歩かせる、友達との再接続。

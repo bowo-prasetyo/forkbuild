@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2dc3cd04edd66d93 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 66a180a29276c694 -->
 # Pertanyaan Umum
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · **Bahasa Indonesia** · [日本語](../ja/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../FAQ.md).
-<!-- /stale -->
 
 Jawaban singkat atas pertanyaan yang paling sering muncul, masing-masing
 dengan tautan ke panduan yang menjelaskannya secara lengkap.
@@ -30,6 +26,18 @@ sampai Anda memilihnya:
   menemukannya tanpa terhubung dengan Anda.
 
 Lihat [Penerbitan & Fork](04-PublishingAndForking.md#berbagi-dengan-rekan-yang-terhubung).
+
+### Bagaimana cara membuat karya saya tersedia untuk semua orang?
+
+Distribusikan: simpan di Arweave atau IPFS (atau, secara eksperimental,
+Steem) dan umumkan di Nostr atau Arweave (atau Steem), sehingga siapa pun
+dapat menemukan dan memeriksanya tanpa terhubung dengan Anda. Klik
+**Distribusikan** tepat setelah menerbitkan, atau di bawah
+**Dunia Bersama Saya** di Tampilan Dunia. Anda memerlukan ekstensi browser
+penanda tangan untuk jaringan yang Anda pilih, seperti Wander untuk Arweave
+atau nos2x untuk Nostr. [Distributing Your Work](../Distribution.md) (bahasa
+Inggris) mencantumkan semua yang dapat Anda distribusikan, ke mana semuanya
+dapat dikirim, dan apa yang dibutuhkan setiap jaringan.
 
 ### Mengapa tidak ada yang bisa mem-fork karya saya?
 
