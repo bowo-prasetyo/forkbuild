@@ -19,7 +19,7 @@ tidak mau memuat modulnya dari halaman `file://`. Server rendezvous bawaan
 hanya melayani situs yang di-host, jadi salinan Anda sendiri tidak dapat
 memakainya untuk menemukan orang; terhubunglah dengan undangan, atau
 siapkan server rendezvous Anda sendiri (lihat
-[Koneksi Rekan & Teman](../07-PeerConnectionsAndFriends.md), bahasa Inggris).
+[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)).
 
 Bilah di bagian atas selalu terlihat:
 
@@ -32,19 +32,19 @@ Bilah di bagian atas selalu terlihat:
   perangkat ini, lihat
   [Dunia Saya](../03-WorldView.md#my-worlds--worlds-youve-actually-been-to) (bahasa Inggris)
 - **Avatar Saya** — bagaimana Anda terlihat oleh orang lain di Tampilan
-  Dunia, lihat [Avatar & Kehadiran](../06-AvatarsAndPresence.md) (bahasa Inggris)
+  Dunia, lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md)
 - **Identitas Saya** — identitas kriptografis yang tersimpan di perangkat
-  ini, lihat [Identitas & Masuk](../05-IdentityAndLogin.md) (bahasa Inggris)
+  ini, lihat [Identitas & Masuk](05-IdentityAndLogin.md)
 - **Rekan** — orang yang terhubung, Anda kenal, atau berteman dengan Anda,
-  lihat [Koneksi Rekan & Teman](../07-PeerConnectionsAndFriends.md) (bahasa Inggris)
+  lihat [Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)
 - **Percakapan** — pesan langsung Anda, lihat
-  [Obrolan & Percakapan](../08-ChatAndConversations.md) (bahasa Inggris)
+  [Obrolan & Percakapan](08-ChatAndConversations.md)
 - **Publikasi** — klaim kepengarangan/nama tempat yang ditandatangani, tempat
   menyimpan dan mengumumkannya, dan (*eksperimental*) bukti eksternalnya,
-  lihat [Publikasi & Bukti Eksternal](../09-PublicationsAndEvidence.md) (bahasa Inggris)
+  lihat [Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md)
 - **Pengaturan Jaringan** — gateway, relay, penyedia, dan server untuk
   koneksi rekan, lihat
-  [Pengaturan Jaringan](../10-NetworkSettings.md) (bahasa Inggris)
+  [Pengaturan Jaringan](10-NetworkSettings.md)
 - **Bahasa** — bahasa yang ditampilkan ForkBuild di perangkat ini. Bahasa
   mengikuti pengaturan bahasa browser Anda sampai Anda memilihnya sendiri;
   menyimpan akan memuat ulang halaman, jadi simpan pekerjaan Anda dulu.
@@ -72,7 +72,7 @@ kirim ditandatangani dengan identitas ini.
 
 Apa yang dilindungi frasa sandi, mengunci dan membuka kunci, serta
 mencadangkan identitas Anda dijelaskan di
-[Identitas & Masuk](../05-IdentityAndLogin.md) (bahasa Inggris).
+[Identitas & Masuk](05-IdentityAndLogin.md).
 
 ## Berkeliling
 
@@ -133,10 +133,10 @@ terbitkan.
 ## Apa selanjutnya?
 
 - Pelajari perangkat membangun selengkapnya di
-  **[Editor](../02-TheEditor.md)** (bahasa Inggris).
+  **[Editor](02-TheEditor.md)**.
 - Siap berbagi? Lanjut ke
-  **[Penerbitan & Fork](../04-PublishingAndForking.md)** (bahasa Inggris).
+  **[Penerbitan & Fork](04-PublishingAndForking.md)**.
 - Siapkan identitas, avatar, dan koneksi Anda di
-  **[Identitas & Masuk](../05-IdentityAndLogin.md)**,
-  **[Avatar & Kehadiran](../06-AvatarsAndPresence.md)**, dan
-  **[Koneksi Rekan & Teman](../07-PeerConnectionsAndFriends.md)** (semuanya bahasa Inggris).
+  **[Identitas & Masuk](05-IdentityAndLogin.md)**,
+  **[Avatar & Kehadiran](06-AvatarsAndPresence.md)**, dan
+  **[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)**.

@@ -1,5 +1,9 @@
 # 10 — Network Settings
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/10-NetworkSettings.md) · [日本語](ja/10-NetworkSettings.md)
+<!-- /languages -->
+
 **Network Settings**, in the top bar, links every page that controls which
 servers ForkBuild talks to. Most people never need to change anything
 here: the defaults work out of the box. Come here when a server is down,

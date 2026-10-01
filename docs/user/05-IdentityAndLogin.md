@@ -1,5 +1,9 @@
 # 05 — Identity & Login
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/05-IdentityAndLogin.md) · [日本語](ja/05-IdentityAndLogin.md)
+<!-- /languages -->
+
 ForkBuild has no passwords and no central account server. **Your identity is
 a cryptographic key pair stored in this browser** — the same key that signs
 everything you build, publish, message, or move. This guide covers creating,

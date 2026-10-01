@@ -19,7 +19,7 @@ URL を開くと **ホーム** 画面が表示されます。自分でコピー�
 既定のランデブーサーバーは公開サイトにしか応答しないので、自分のコピー
 ではそれを使って人を見つけることはできません。代わりに招待で接続するか、
 自分のランデブーサーバーを用意してください
-（[ピア接続と友達](../07-PeerConnectionsAndFriends.md)（英語）を参照）。
+（[ピア接続と友達](07-PeerConnectionsAndFriends.md)を参照）。
 
 上部のバーは常に表示されています。
 
@@ -31,18 +31,18 @@ URL を開くと **ホーム** 画面が表示されます。自分でコピー�
 - **マイワールド** — このデバイスで実際に訪れたワールド。
   [マイワールド](../03-WorldView.md#my-worlds--worlds-youve-actually-been-to)（英語）を参照
 - **マイアバター** — ワールドビューで他の人からどう見えるか。
-  [アバターと在席状況](../06-AvatarsAndPresence.md)（英語）を参照
+  [アバターと在席状況](06-AvatarsAndPresence.md)を参照
 - **マイアイデンティティ** — このデバイスに保存されている暗号学的な
-  アイデンティティ。[アイデンティティとログイン](../05-IdentityAndLogin.md)（英語）を参照
+  アイデンティティ。[アイデンティティとログイン](05-IdentityAndLogin.md)を参照
 - **ピア** — 接続中の人、記憶している人、友達。
-  [ピア接続と友達](../07-PeerConnectionsAndFriends.md)（英語）を参照
+  [ピア接続と友達](07-PeerConnectionsAndFriends.md)を参照
 - **会話** — 直接メッセージ。
-  [チャットと会話](../08-ChatAndConversations.md)（英語）を参照
+  [チャットと会話](08-ChatAndConversations.md)を参照
 - **公開物** — 署名された作者情報や地名のクレーム、それらを保存・告知する
   場所、そして（*試験的*）外部証拠。
-  [公開物と外部証拠](../09-PublicationsAndEvidence.md)（英語）を参照
+  [公開物と外部証拠](09-PublicationsAndEvidence.md)を参照
 - **ネットワーク設定** — ゲートウェイ、リレー、プロバイダー、ピア接続用の
-  サーバー。[ネットワーク設定](../10-NetworkSettings.md)（英語）を参照
+  サーバー。[ネットワーク設定](10-NetworkSettings.md)を参照
 - **言語** — このデバイスで ForkBuild が表示する言語。自分で選ぶまでは
   ブラウザーの言語設定に従います。保存するとページが再読み込みされる
   ので、先に作業を保存してください。ForkBuild は英語、インドネシア語、
@@ -69,7 +69,7 @@ URL を開くと **ホーム** 画面が表示されます。自分でコピー�
 
 パスフレーズが何を守るのか、ロックとロック解除、アイデンティティの
 バックアップについては、
-[アイデンティティとログイン](../05-IdentityAndLogin.md)（英語）で説明しています。
+[アイデンティティとログイン](05-IdentityAndLogin.md)で説明しています。
 
 ## ひと回りしてみる
 
@@ -127,9 +127,9 @@ ForkBuild には主に次の場所があります。
 
 ## 次は？
 
-- 作品づくりの道具一式は **[エディター](../02-TheEditor.md)**（英語）で。
-- 共有したくなったら **[公開とフォーク](../04-PublishingAndForking.md)**（英語）へ。
+- 作品づくりの道具一式は **[エディター](02-TheEditor.md)**で。
+- 共有したくなったら **[公開とフォーク](04-PublishingAndForking.md)**へ。
 - アイデンティティ、アバター、接続の設定は
-  **[アイデンティティとログイン](../05-IdentityAndLogin.md)**（英語）、
-  **[アバターと在席状況](../06-AvatarsAndPresence.md)**（英語）、
-  **[ピア接続と友達](../07-PeerConnectionsAndFriends.md)**（英語）で。
+  **[アイデンティティとログイン](05-IdentityAndLogin.md)**、
+  **[アバターと在席状況](06-AvatarsAndPresence.md)**、
+  **[ピア接続と友達](07-PeerConnectionsAndFriends.md)**で。

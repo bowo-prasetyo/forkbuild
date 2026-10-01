@@ -1,5 +1,9 @@
 # 04 — Publishing & Forking
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/04-PublishingAndForking.md) · [日本語](ja/04-PublishingAndForking.md)
+<!-- /languages -->
+
 This is the heart of ForkBuild. **Publishing** shares your creation with the
 world. **Forking** lets anyone copy a creation and evolve it — with the whole
 history preserved.

@@ -1,5 +1,9 @@
 # 09 — Publications & External Evidence
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/09-PublicationsAndEvidence.md) · [日本語](ja/09-PublicationsAndEvidence.md)
+<!-- /languages -->
+
 > **Partly experimental.** The Publications page is a regular feature: its
 > list and statuses, removing publications that can't be used, announcing on
 > Nostr or Arweave, storing on IPFS or Arweave, and checking, importing or

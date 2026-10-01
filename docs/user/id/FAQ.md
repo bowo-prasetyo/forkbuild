@@ -25,7 +25,7 @@ sampai Anda memilihnya:
   eksperimental, Steem) dan mengumumkannya, sehingga orang dapat
   menemukannya tanpa terhubung dengan Anda.
 
-Lihat [Penerbitan & Fork](../04-PublishingAndForking.md#sharing-with-connected-peers) (bahasa Inggris).
+Lihat [Penerbitan & Fork](04-PublishingAndForking.md#berbagi-dengan-rekan-yang-terhubung).
 
 ### Mengapa tidak ada yang bisa mem-fork karya saya?
 
@@ -35,7 +35,7 @@ di Editor), pilih lisensi yang mengizinkan fork (lisensi CC apa pun kecuali
 CC BY-ND), lalu terbitkan lagi. Pengaturan ini termasuk bagian dari apa
 yang diterbitkan, jadi karya yang sudah Anda terbitkan tetap memakai
 lisensinya yang lama. Lihat
-[Choosing a license](../04-PublishingAndForking.md#choosing-a-license) (bahasa Inggris).
+[Choosing a license](04-PublishingAndForking.md#memilih-lisensi).
 
 ### Penerbitan gagal. Apa arti pesannya?
 
@@ -88,7 +88,7 @@ Tidak. Frasa sandi adalah satu-satunya cara untuk mendekripsi kunci
 identitas itu, dan tidak ada server yang menyimpan salinannya. Jika Anda
 pernah mengekspor identitas itu, Anda tetap memerlukan frasa sandi yang
 Anda pilih untuk ekspornya. Jika tidak, buat identitas baru. Lihat
-[Identitas & Masuk](../05-IdentityAndLogin.md) (bahasa Inggris).
+[Identitas & Masuk](05-IdentityAndLogin.md).
 
 ### Mengapa identitas saya terus terkunci sendiri?
 
@@ -130,7 +130,7 @@ setiap hari ke folder yang disinkronkan oleh penyimpanan cloud Anda. Lihat
 ### Bisakah saya mengganti nama atau menghapus identitas?
 
 Tidak. Identitas dimaksudkan untuk bertahan lama. Untuk berhenti
-memakainya, nyatakan penerusnya atau cabut identitas itu di **Identitas
+memakainya, nyatakan penggantinya atau cabut identitas itu di **Identitas
 Saya**.
 
 ### Mengapa salinan ForkBuild yang lebih lama tidak bisa membuka dokumen yang saya ekspor?
@@ -152,7 +152,7 @@ Berjalan nonaktif sampai Anda menyalakannya:
 3. Klik tampilan 3D, agar tombol yang ditekan tidak masuk ke kolom teks.
 
 Di layar sentuh, ketuk **Jalan** di atas joystick sebagai gantinya. Lihat
-[Walking your avatar](../06-AvatarsAndPresence.md#walking-your-avatar) (bahasa Inggris).
+[Walking your avatar](06-AvatarsAndPresence.md#menjalankan-avatar-anda).
 
 ### Siapa yang bisa melihat avatar saya?
 
@@ -160,7 +160,7 @@ Secara bawaan, siapa pun yang terhubung dengan Anda: **Visibilitas
 Kehadiran** dan **Visibilitas Profil** sama-sama dimulai dari **Publik**.
 Ubah keduanya di **Avatar Saya**; **Tersembunyi** membuat Anda tidak
 terlihat. Lihat
-[Who can see you](../06-AvatarsAndPresence.md#who-can-see-you-two-independent-settings) (bahasa Inggris).
+[Who can see you](06-AvatarsAndPresence.md#siapa-yang-dapat-melihat-anda-dua-pengaturan-terpisah).
 
 ### Tab browser tertutup saat saya mengemudikan kendaraan
 
@@ -184,7 +184,7 @@ yang disajikan dari alamat Anda sendiri (termasuk `localhost`) tidak dapat
 memakainya. Terhubunglah dengan undangan (**Rekan → Terhubung dengan
 orang baru → Undang**), atau tambahkan server rendezvous Anda sendiri di
 **Pengaturan Jaringan → Server Rendezvous**. Lihat
-[Koneksi Rekan & Teman](../07-PeerConnectionsAndFriends.md) (bahasa Inggris).
+[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md).
 
 ### Teman saya tidak terhubung kembali secara otomatis
 
@@ -200,7 +200,7 @@ Pesan menunggu di perangkat Anda, bukan di server, jadi hanya terkirim
 selama ForkBuild terbuka di kedua sisi dan kalian terhubung. Pesan yang
 tidak terkirim dalam 7 hari dibuang dan ditandai **Tidak terkirim —
 kedaluwarsa**. Lihat
-[Sending while someone's offline](../08-ChatAndConversations.md#sending-while-someones-offline) (bahasa Inggris).
+[Sending while someone's offline](08-ChatAndConversations.md#mengirim-saat-seseorang-luring).
 
 ### Mengapa saya tidak bisa mengobrol dengan seseorang yang terhubung dengan saya?
 
@@ -212,7 +212,7 @@ muncul.
 
 Pengaturan jaringan (server, relay, gateway) dibaca saat aplikasi dimulai.
 Muat ulang halaman setelah menyimpan. Lihat
-[Pengaturan Jaringan](../10-NetworkSettings.md) (bahasa Inggris).
+[Pengaturan Jaringan](10-NetworkSettings.md).
 
 ## Perangkat dan browser
 
@@ -227,4 +227,4 @@ serta panel samping terlipat. Lihat
 Tidak. Membangun, menyimpan, menerbitkan, mem-fork, rekan, dan obrolan
 tidak memerlukannya. Dompet atau ekstensi penanda tangan hanya diperlukan
 untuk fitur distribusi dan penjangkaran eksperimental di
-[Bukti & Penyimpanan](../11-EvidenceAndStorage.md) (bahasa Inggris).
+[Bukti & Penyimpanan](11-EvidenceAndStorage.md).

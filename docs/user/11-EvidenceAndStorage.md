@@ -1,5 +1,9 @@
 # 11 — Evidence & Storage
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/11-EvidenceAndStorage.md) · [日本語](ja/11-EvidenceAndStorage.md)
+<!-- /languages -->
+
 > **Mostly experimental.** Storing content on IPFS or Arweave from a card's
 > **Distribution → Content** block ([Creating a placement](#creating-a-placement)
 > and [Using a preferred provider](#using-a-preferred-provider)) is a regular

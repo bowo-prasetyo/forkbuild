@@ -1,5 +1,9 @@
 # 02 — The Editor
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/02-TheEditor.md) · [日本語](ja/02-TheEditor.md)
+<!-- /languages -->
+
 The Editor is where you build. This guide covers the tools, how to select and
 transform bricks, and how to organize your build with groups.
 

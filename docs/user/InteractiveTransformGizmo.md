@@ -1,5 +1,9 @@
 # Interactive Transform Gizmo
 
+<!-- languages -->
+**English** · [Bahasa Indonesia](id/InteractiveTransformGizmo.md) · [日本語](ja/InteractiveTransformGizmo.md)
+<!-- /languages -->
+
 Whenever bricks are selected in the Editor, a gizmo
 appears at the selection's pivot. Dragging its handles moves or rotates
 the selection with a live preview; releasing commits the change as
