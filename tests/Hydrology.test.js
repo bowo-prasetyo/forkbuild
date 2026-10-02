@@ -63,7 +63,7 @@ async function runTests() {
             const distance = riverChannelDistanceAt(DEFAULT_WORLD_SEED, x, z);
             assert(Number.isFinite(distance) && distance >= 0 && distance <= 1, `5. riverChannelDistanceAt(${x}, ${z}) stays in [0, 1]`);
         }
-        assert(seenFeatures.size === 3, `6. A wide coordinate scan reaches all 3 declared HYDROLOGY_FEATURE values (found ${seenFeatures.size}) — the classification is not degenerate`);
+        assert(seenFeatures.size === 4, `6. A wide coordinate scan reaches all 4 declared HYDROLOGY_FEATURE values (found ${seenFeatures.size}) — the classification is not degenerate`);
     }
 
     // -------------------------------------------------------------
@@ -79,10 +79,12 @@ async function runTests() {
             const feature = hydrologyFeatureAt(DEFAULT_WORLD_SEED, x, z);
 
             if (surface === SURFACE_CATEGORY.WATER) {
-                assert(feature === HYDROLOGY_FEATURE.LAKE, `7. Every WATER surface coordinate is HYDROLOGY_FEATURE.LAKE (got ${feature} at ${x},${z})`);
+                assert(feature === HYDROLOGY_FEATURE.LAKE || feature === HYDROLOGY_FEATURE.SEA,
+                    `7. Every WATER surface coordinate is HYDROLOGY_FEATURE.LAKE or SEA (got ${feature} at ${x},${z})`);
                 checkedLake++;
             } else {
-                assert(feature !== HYDROLOGY_FEATURE.LAKE, `8. No non-WATER surface coordinate is ever classified LAKE (${x},${z})`);
+                assert(feature !== HYDROLOGY_FEATURE.LAKE && feature !== HYDROLOGY_FEATURE.SEA,
+                    `8. No non-WATER surface coordinate is ever classified LAKE or SEA (${x},${z})`);
             }
 
             if (feature === HYDROLOGY_FEATURE.RIVER) {

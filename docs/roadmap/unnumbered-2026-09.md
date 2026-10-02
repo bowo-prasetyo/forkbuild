@@ -3606,3 +3606,24 @@ on the privacy page instead of "no analytics".
   none of which uses up the day, and storage or send failures never escaping) and
   `tests/VisitorCountSettingBrowser.test.js` (the switch saves as it changes, shows a saved choice, is locked off by
   either signal, and links to the dashboard and privacy page); `tests/ContentSecurityPolicy.test.js` pins `img-src`.
+
+## Sea terrain (unnumbered, 2026-10-02)
+
+World View had lakes and rivers but no sea. It now has open sea, generated like every other terrain layer: a pure
+function of the world seed and world coordinates, never stored.
+
+- `core/TerrainHeightField.js` gains `seaBasinAt(seed, x, z)`, a very slow noise field (1/2400) that eases from 0 on
+  land to 1 over open sea across a continental shelf. `terrainHeightAt()` subtracts `seaBasinAt() * SEA_BASIN_DEPTH`
+  (14, deep enough that full-depth sea never breaks the surface). No basin forms within 900 units of the origin, fading
+  in by 1600, so the land under existing structures is unchanged. `TERRAIN_HEIGHT_BOUND` stays the land bound, so
+  `WATER_LEVEL` and `HIGHLAND_ELEVATION` do not move; the new `TERRAIN_DEPTH_BOUND` names the deepest sea floor.
+- `core/Hydrology.js` gains `HYDROLOGY_FEATURE.SEA`: water whose ground lies at least `SEA_BASIN_MIN` (0.25) into a
+  basin; every other water is still `LAKE`. Sea and lake share one water line. `waterSurfaceColorAt()` eases from the
+  lake tone to the deeper `SEA_SURFACE_COLOR` across the shelf, and `renderer/WaterTileMesh.js` now colors water per
+  vertex so a coast shows no seam.
+- The location description says "sea" (`hydrologyFeature.sea`, translated into every shipped language). Avatars wade
+  the shallows and are stopped by deep sea through the existing water-depth rule; nothing else changes.
+- Tests: `tests/SeaTerrain.test.js` (purity and range, a dry origin, SEA exactly where basin water is, no island in
+  open sea, a smooth descent, colors and description). `tests/Hydrology.test.js` and `tests/WorldGroundTerrain.test.js`
+  allow for the fourth feature and the deeper floor; `tests/AvatarVehicleMovementControllerIntegration.test.js` moves
+  a far-away on-foot fixture off what is now sea.

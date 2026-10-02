@@ -50,8 +50,11 @@ bottom-right corner of the view, so the panel itself never jumps as you move
 the mouse.
 
 The ground itself is generated the same way for everyone from a shared seed
-— grass, beach, rock, forest and farmland, lakes and winding rivers all
-follow the terrain's own elevation and moisture, not a random placement.
+— grass, beach, rock, forest and farmland, lakes, winding rivers and the
+open sea all follow the terrain's own elevation and moisture, not a random
+placement. The land around the origin is always dry; travel a thousand or so
+units out and you will reach a coast, where the ground slopes down a shelf
+into deep, darker-blue sea too deep to wade.
 It's scenery: nothing about it is editable, and it looks identical no matter
 who's looking at it or when.
 

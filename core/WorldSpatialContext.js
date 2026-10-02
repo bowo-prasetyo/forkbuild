@@ -92,7 +92,7 @@ export class WorldSpatialContext {
     // Derived from TerrainEcology.ecologyZoneAt(seed, x, z)
     get terrainZone() { return this._terrainZone; }
 
-    // The hydrology feature at this position (LAKE, RIVER, NONE)
+    // The hydrology feature at this position (SEA, LAKE, RIVER, NONE)
     // Derived from Hydrology.hydrologyFeatureAt(seed, x, z)
     get hydrologyFeature() { return this._hydrologyFeature; }
 
@@ -168,6 +168,7 @@ export class WorldSpatialContext {
     }
 
     _formatHydrology(feature) {
+        if (feature === HYDROLOGY_FEATURE.SEA) return 'sea';
         if (feature === HYDROLOGY_FEATURE.LAKE) return 'lake';
         if (feature === HYDROLOGY_FEATURE.RIVER) return 'river';
         return '';

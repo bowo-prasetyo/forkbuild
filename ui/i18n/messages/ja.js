@@ -1878,6 +1878,7 @@ export default Object.freeze({
     'terrainZone.forest': '森',
     'terrainZone.field': '野原',
     'terrainZone.grassland': '草原',
+    'hydrologyFeature.sea': '海',
     'hydrologyFeature.lake': '湖',
     'hydrologyFeature.river': '川',
     'worldSpatialContext.nearStructure': '{title}の近く',
