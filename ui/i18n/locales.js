@@ -20,6 +20,7 @@ export const LOCALES = Object.freeze([
     Object.freeze({ code: 'fr', name: 'Français', dir: 'ltr', loadMessages: async () => (await import('./messages/fr.js')).default }),
     Object.freeze({ code: 'id', name: 'Bahasa Indonesia', dir: 'ltr', loadMessages: async () => (await import('./messages/id.js')).default }),
     Object.freeze({ code: 'ja', name: '日本語', dir: 'ltr', loadMessages: async () => (await import('./messages/ja.js')).default }),
+    Object.freeze({ code: 'ko', name: '한국어', dir: 'ltr', loadMessages: async () => (await import('./messages/ko.js')).default }),
     Object.freeze({ code: 'pt-BR', name: 'Português (Brasil)', dir: 'ltr', loadMessages: async () => (await import('./messages/pt-BR.js')).default }),
     // Never chosen automatically: only for checking the app is ready for
     // translation (see pseudoLocalize.js). Intl formats it as English.
