@@ -485,6 +485,12 @@ regardless of which peer relayed them.
 
 - `animation` is IDLE, WALKING, RUNNING or JUMPING; gesture `kind` is
   GREET, WAVE or POINT and never appears in `animation`.
+- On foot, `position.y` is measured from the terrain under the avatar
+  (0 is standing on the ground or a lake or sea bed). A swimming or
+  diving avatar sends its ordinary animation with a `position.y` above
+  the bed; receivers work out that it is swimming from the position, so
+  there is no swim field. Older clients, which floored avatars at the
+  water surface beyond wading depth, draw such an avatar above the water.
 - Presence, profile and interaction messages are signed when the
   sender's identity provider can sign. A receiver binds each claim to
   the connection it arrived on and rejects replays by `sequence`.

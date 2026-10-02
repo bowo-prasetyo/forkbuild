@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 14214dca588aad38 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 15773095004fb495 -->
 # Référence des commandes
 
 <!-- languages -->
@@ -100,7 +100,8 @@ caméra — voir
 |---|---|---|
 | `W` / `A` / `S` / `D` | Avancer / tourner | Bloqué par les bâtiments, arbres, animaux et habitants proches, comme par un mur. Ce sont les lettres imprimées sur les touches, y compris sur un clavier AZERTY |
 | `Maj` (maintenu) | Courir | |
-| `Espace` | Sauter | |
+| `Espace` | Sauter | En eau profonde : remonter |
+| `C` (maintenue) | Plonger | Seulement dans une eau assez profonde pour nager |
 | `Alt` + `W` / `S` | Démarrer une marche continue vers l’avant / l’arrière | Continue après avoir relâché les touches ; un simple appui sur `W`/`S` sans Alt l’annule |
 | `Alt` + `Maj` + `W` / `S` | Démarrer une course continue vers l’avant / l’arrière | Même règle d’annulation que ci-dessus |
 
@@ -365,7 +366,8 @@ et avec lui le pavé.
 |---|---|---|
 | Joystick | `W` / `A` / `S` / `D` | Poussez vers le haut pour avancer, sur le côté pour tourner ; les diagonales pressent les deux touches |
 | Joystick poussé jusqu’au bord | `Maj` | Courir |
-| **Sauter** | `Espace` | |
+| **Sauter** | `Espace` | Devient **Remonter** en eau profonde |
+| **Plonger** | `C` | Affiché pendant la nage |
 | **Croisière** | `Alt` + `W`, puis `Alt` + `Maj` + `W`, puis `W` | Chaque appui : marcher vers l’avant sans les mains, puis courir, puis s’arrêter. Affiche **Croisière : marche** / **Croisière : course** quand il est actif. Pousser le joystick vers l’avant ou l’arrière l’arrête aussi ; sur le côté, il ne fait que diriger |
 | **Monter** / **Descendre** | `E` | Affiché quand un véhicule est à portée, ou à bord |
 | **Ranger** / **Sortir** | `Q` | Affiché quand vous pouvez ranger le véhicule où vous êtes, ou en sortir un rangé. Sortir nomme le véhicule, et sa place dans la liste (comme 2/3) quand vous en transportez plusieurs |

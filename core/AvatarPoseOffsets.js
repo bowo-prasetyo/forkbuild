@@ -1,4 +1,5 @@
 import { AvatarAnimationState } from './AvatarAnimationState.js';
+import { AvatarSwimMode } from './AvatarSwimming.js';
 
 // 0.2.35 — a deterministic, Three.js-free mapping from an animation
 // STATE to a POSE. No Three.js, no rendering — same "pure geometry,
@@ -85,7 +86,15 @@ function withGaitCycle(basePose, cycleHz, animationTimeSeconds) {
 // core/AvatarMovementSimulation.js computes (0.2.36) — hopHeight here
 // stays a small fixed local flourish (knees tucked), not a second,
 // competing source of vertical motion.
-export function getAvatarPoseOffsets(animation, animationTimeSeconds = 0) {
+//
+// `swimMode` (core/AvatarSwimming.js) swaps the land poses for swimming ones,
+// which add `bodyPitchDegrees`: the whole body leaning forward about the hips,
+// upright while treading water, nearly flat while swimming underwater. Land
+// poses leave it out (read as 0).
+export function getAvatarPoseOffsets(animation, animationTimeSeconds = 0, swimMode = AvatarSwimMode.NONE) {
+    if (swimMode === AvatarSwimMode.SURFACE || swimMode === AvatarSwimMode.DIVING) {
+        return swimPoseOffsets(animation, animationTimeSeconds, swimMode);
+    }
     const basePose = POSE_BY_ANIMATION[animation] || NEUTRAL_POSE;
     if (animation === AvatarAnimationState.WALKING) {
         return withGaitCycle(basePose, WALK_CYCLE_HZ, animationTimeSeconds);
@@ -94,4 +103,33 @@ export function getAvatarPoseOffsets(animation, animationTimeSeconds = 0) {
         return withGaitCycle(basePose, RUN_CYCLE_HZ, animationTimeSeconds);
     }
     return basePose;
+}
+
+// Leg kick and bob layered over a lean that depends on how the avatar swims.
+const SWIM_POSES = Object.freeze({
+    [AvatarSwimMode.SURFACE]: Object.freeze({
+        still: Object.freeze({ bodyPitchDegrees: 0, bodyTiltDegrees: 6, headTiltDegrees: 0, kickDegrees: 10, kickHz: 1.2, bob: 0.04 }),
+        moving: Object.freeze({ bodyPitchDegrees: 20, bodyTiltDegrees: 10, headTiltDegrees: -15, kickDegrees: 22, kickHz: 2.4, bob: 0.03 })
+    }),
+    [AvatarSwimMode.DIVING]: Object.freeze({
+        still: Object.freeze({ bodyPitchDegrees: 25, bodyTiltDegrees: 5, headTiltDegrees: -15, kickDegrees: 10, kickHz: 0.9, bob: 0 }),
+        moving: Object.freeze({ bodyPitchDegrees: 75, bodyTiltDegrees: 0, headTiltDegrees: -45, kickDegrees: 25, kickHz: 2.2, bob: 0 })
+    })
+});
+const FAST_SWIM_KICK_MULTIPLIER = 1.4;
+
+function swimPoseOffsets(animation, animationTimeSeconds, swimMode) {
+    const moving = animation === AvatarAnimationState.WALKING || animation === AvatarAnimationState.RUNNING;
+    const pose = SWIM_POSES[swimMode][moving ? 'moving' : 'still'];
+    const kickHz = animation === AvatarAnimationState.RUNNING ? pose.kickHz * FAST_SWIM_KICK_MULTIPLIER : pose.kickHz;
+    const t = Number.isFinite(animationTimeSeconds) ? animationTimeSeconds : 0;
+    const phase = t * kickHz * Math.PI * 2;
+    return Object.freeze({
+        legSplayDegrees: pose.kickDegrees * Math.sin(phase),
+        armSwingDegrees: 0,
+        bodyTiltDegrees: pose.bodyTiltDegrees,
+        headTiltDegrees: pose.headTiltDegrees,
+        hopHeight: pose.bob * Math.sin(phase / 2),
+        bodyPitchDegrees: pose.bodyPitchDegrees
+    });
 }

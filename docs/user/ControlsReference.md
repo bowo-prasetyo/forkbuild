@@ -87,7 +87,8 @@ Walking your avatar directly, instead of flying the camera — see
 |---|---|---|
 | `W` / `A` / `S` / `D` | Move / turn | Blocked by nearby buildings, trees, wildlife and residents, same as a wall |
 | `Shift` (held) | Run | |
-| `Space` | Jump | |
+| `Space` | Jump | In deep water: swim up |
+| `C` (held) | Dive | Only in water deep enough to swim |
 | `Alt` + `W` / `S` | Start continuous walk forward/backward | Keeps moving after keys are released; an ordinary `W`/`S` tap without Alt cancels it |
 | `Alt` + `Shift` + `W` / `S` | Start continuous run forward/backward | Same cancellation rule as above |
 
@@ -342,7 +343,8 @@ above the joystick turns the mode, and with it the pad, on and off.
 |---|---|---|
 | Joystick | `W` / `A` / `S` / `D` | Push up to walk forward, sideways to turn; diagonals press both keys |
 | Joystick pushed to the rim | `Shift` | Run |
-| **Jump** | `Space` | |
+| **Jump** | `Space` | Reads **Swim Up** in deep water |
+| **Dive** | `C` | Shown while swimming |
 | **Cruise** | `Alt` + `W`, then `Alt` + `Shift` + `W`, then `W` | Each tap: walk forward hands-free, then run, then stop. Shows **Cruise: Walk** / **Cruise: Run** while active. Pushing the joystick forward or back also stops it; sideways only steers |
 | **Ride** / **Get Off** | `E` | Shown when a vehicle is in range, or while riding |
 | **Store** / **Deploy** | `Q` | Shown when you can store the vehicle you're on, or deploy a stored one. Deploy names the vehicle, and its place in the list (such as 2/3) when you carry more than one |

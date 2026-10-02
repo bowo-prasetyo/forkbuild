@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5914df7d440551c6 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 67d735c25cb2e640 -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -123,7 +123,8 @@ clic en la vista 3D.
 |---|---|
 | **W / A / S / D** | Moverse / girar |
 | **Mayús** | Correr (movimiento más rápido) |
-| **Espacio** | Saltar |
+| **Espacio** | Saltar; en aguas profundas, subir nadando |
+| **C** (mantenida, en aguas profundas) | Bucear |
 | **Alt + W / S** | Caminata continua sin manos hacia adelante/atrás: sigue avanzando después de soltar las teclas |
 | **Alt + Mayús + W / S** | Lo mismo, pero corriendo en lugar de caminar |
 
@@ -148,6 +149,24 @@ naturalidad mientras se mueve.
 **Seguir avatar** mantiene la cámara fija en su avatar mientras se mueve,
 en lugar de orbitar libremente. También puede seguir los avatares de otros
 jugadores para ver adónde van.
+
+### Nadar y bucear
+
+El agua de hasta la mitad de la altura de su avatar se cruza vadeando, más
+despacio cuanto más honda es. Si es más profunda, su avatar nada: flota con
+la cabeza sobre la superficie y se mueve como en tierra, solo que más
+despacio. Mantenga **C** para bucear y **Espacio** para volver a subir; si
+suelta ambas, sube despacio hasta la superficie. En primera persona ve el
+mundo sobre el agua mientras flota, y el mundo bajo ella cuando bucea.
+
+Bajo el agua su avatar contiene la respiración. Una barra de **Aire** en la
+parte superior de la vista muestra cuánto le queda: dos minutos y medio con
+los pulmones llenos. Cuando se acaba, su avatar sube a la superficie y se
+queda allí unos segundos para recuperar el aliento antes de poder bucear de
+nuevo. Nade hasta la orilla y se pondrá de pie y saldrá caminando.
+
+Los demás también lo ven nadar y bucear: cómo se mueve su avatar en el agua
+se deduce de dónde está, así que no se envía nada más.
 
 ### Perspectiva de la cámara
 
@@ -235,6 +254,11 @@ suelo; soltarlas lo hace bajar. Una vez en el aire, vuela por encima de los
 árboles, pero un edificio alto lo bloquea igual que a un auto, así que
 volar no significa ignorar la geometría del mundo. No puede bajarse de un
 dron en el aire: primero tráigalo de vuelta al suelo.
+
+Las bicicletas, motocicletas y coches se detienen en la orilla. Un dron
+sigue volando sobre lagos y el mar, y lo deja sobre el agua: aterrícelo,
+bájese y su avatar estará nadando. No puede sacar un vehículo con ruedas
+de su inventario mientras está en el agua.
 
 #### Llevar un vehículo
 

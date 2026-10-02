@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 704178c6cb15b587 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3833a37ca4181e18 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -57,10 +57,12 @@ compartilhada — grama, praia, rocha, floresta e lavoura, lagos, rios
 sinuosos e o mar aberto seguem a altitude e a umidade do terreno, não uma
 distribuição aleatória. A terra ao redor da origem é sempre seca; afaste-se
 umas mil unidades e você chegará a um litoral, onde o chão desce por uma
-plataforma até um mar profundo, de um azul mais escuro, fundo demais para
-atravessar a pé. Seu avatar pode entrar num lago ou no mar, cada vez mais
-devagar à medida que a água sobe, e para quando ela chega ao pescoço, então
-a cabeça sempre fica fora d’água. É cenário: nada nele pode ser editado, e ele parece
+plataforma até um mar profundo, de um azul mais escuro. Seu avatar entra
+num lago ou no mar, cada vez mais devagar à medida que a água sobe, e
+quando a água passa da metade da altura dele, ele nada (veja [Nadar e
+mergulhar](06-AvatarsAndPresence.md#nadar-e-mergulhar)). Mergulhe e a vista
+vira uma água verde-azulada: algas balançam no fundo e pequenos cardumes
+circulam em águas abertas, os mesmos peixes nos mesmos lugares para todos. É cenário: nada nele pode ser editado, e ele parece
 idêntico não importa quem olhe nem quando.
 
 O chão de floresta tem sua própria mistura de espécies de árvores, vinda da

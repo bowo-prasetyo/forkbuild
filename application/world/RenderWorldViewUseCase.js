@@ -23,6 +23,7 @@ import { surfaceCategoryAt, SURFACE_CATEGORY } from '../../core/TerrainSurface.j
 import { LAKE_SURFACE_HEIGHT } from '../../core/Hydrology.js';
 import { DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
 import { DEFAULT_MAX_WALKING_DEPTH } from '../../core/AvatarWaterWalkability.js';
+import { deriveAvatarSwimMode, AvatarSwimMode } from '../../core/AvatarSwimming.js';
 
 // World View's render wiring. Exposes the same narrow gizmo surface
 // RenderWorldUseCase does — one shared TransformGizmoController design,
@@ -276,8 +277,28 @@ export class RenderWorldViewUseCase {
         // opinion on WHY) skips the lift entirely in exactly that one case,
         // rendering the already-elevated position verbatim — never a second
         // formula, just the one lift, applied once.
+        //
+        // An avatar on foot is lifted by the terrain alone, at any water depth: it
+        // can swim and dive, so its presence Y already says where it is in the
+        // water. (withGroundElevation()'s surface floor is for bodies that can't.)
         function resolveAvatarRenderPosition(position, ridingVehicle) {
-            return ridingVehicle ? position : withGroundElevation(position);
+            if (ridingVehicle) {
+                return position;
+            }
+            return { x: position.x, y: position.y + renderer.terrainHeightAt(position.x, position.z), z: position.z };
+        }
+
+        // How an avatar on foot is in the water, worked out from its position alone
+        // (core/AvatarSwimming.js), so remote swimmers swim without any presence
+        // field for it.
+        function avatarSwimModeFor(position, ridingVehicle) {
+            if (ridingVehicle || surfaceCategoryAt(DEFAULT_WORLD_SEED, position.x, position.z) !== SURFACE_CATEGORY.WATER) {
+                return AvatarSwimMode.NONE;
+            }
+            return deriveAvatarSwimMode({
+                feetHeight: position.y,
+                waterSurfaceHeight: LAKE_SURFACE_HEIGHT - renderer.terrainHeightAt(position.x, position.z)
+            });
         }
 
         // Another player's avatar where it is drawn: a rider sits on its vehicle,
@@ -285,6 +306,7 @@ export class RenderWorldViewUseCase {
         function placeRemoteAvatar(avatarId, visual, presenceLike) {
             const riding = remoteRiderVehicles.isRiding(avatarId);
             visual.setPose(resolveAvatarRenderPosition(presenceLike.position, riding), presenceLike.rotation);
+            visual.setSwimMode(avatarSwimModeFor(presenceLike.position, riding));
             if (riding) {
                 remoteRiderVehicles.place(avatarId, presenceLike.position, presenceLike.rotation ? presenceLike.rotation.y : 0);
             }
@@ -380,6 +402,7 @@ export class RenderWorldViewUseCase {
                 localAvatarId = presence.avatarId;
                 visual.setAppearance(template, appearance);
                 visual.setPose(resolveAvatarRenderPosition(presence.position, ridingVehicle), presence.rotation);
+                visual.setSwimMode(avatarSwimModeFor(presence.position, ridingVehicle));
                 visual.setAnimation(presence.animation);
                 if (localAvatarVisible) {
                     renderer.add(visual.root);
@@ -396,6 +419,7 @@ export class RenderWorldViewUseCase {
                     return;
                 }
                 localAvatarVisual.setPose(resolveAvatarRenderPosition(presence.position, ridingVehicle), presence.rotation);
+                localAvatarVisual.setSwimMode(avatarSwimModeFor(presence.position, ridingVehicle));
                 localAvatarVisual.setAnimation(presence.animation);
             },
             // 0.2.44 — see renderer/AvatarVisual.js's own header: a

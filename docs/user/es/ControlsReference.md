@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 14214dca588aad38 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 15773095004fb495 -->
 # Referencia de controles
 
 <!-- languages -->
@@ -95,7 +95,8 @@ consulte [Avatares y presencia](06-AvatarsAndPresence.md#caminar-con-su-avatar).
 |---|---|---|
 | `W` / `A` / `S` / `D` | Moverse / girar | Lo bloquean los edificios, árboles, animales y habitantes cercanos, igual que una pared |
 | `Mayús` (mantener) | Correr | |
-| `Espacio` | Saltar | |
+| `Espacio` | Saltar | En aguas profundas: subir nadando |
+| `C` (mantenida) | Bucear | Solo en agua lo bastante honda para nadar |
 | `Alt` + `W` / `S` | Empezar a caminar de forma continua hacia adelante/atrás | Sigue avanzando después de soltar las teclas; un toque normal de `W`/`S` sin Alt lo cancela |
 | `Alt` + `Mayús` + `W` / `S` | Empezar a correr de forma continua hacia adelante/atrás | La misma regla de cancelación de arriba |
 
@@ -358,7 +359,8 @@ modo y, con él, el panel.
 |---|---|---|
 | Joystick | `W` / `A` / `S` / `D` | Empuje hacia arriba para caminar hacia adelante, hacia los costados para girar; las diagonales presionan ambas teclas |
 | Joystick empujado hasta el borde | `Mayús` | Correr |
-| **Saltar** | `Espacio` | |
+| **Saltar** | `Espacio` | En aguas profundas dice **Subir** |
+| **Bucear** | `C` | Aparece mientras nada |
 | **Crucero** | `Alt` + `W`, luego `Alt` + `Mayús` + `W`, luego `W` | Cada toque: caminar hacia adelante sin manos, luego correr, luego detenerse. Muestra **Crucero: caminar** / **Crucero: correr** mientras está activo. Empujar el joystick hacia adelante o hacia atrás también lo detiene; hacia los costados solo dirige |
 | **Subirse** / **Bajarse** | `E` | Aparece cuando hay un vehículo al alcance, o mientras conduce |
 | **Guardar** / **Sacar** | `Q` | Aparece cuando puede guardar el vehículo que conduce, o sacar uno guardado. Sacar nombra el vehículo, y su lugar en la lista (como 2/3) cuando lleva más de uno |

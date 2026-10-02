@@ -1132,6 +1132,8 @@ export default Object.freeze({
     'touchMovementPad.talk': 'Bicara',
     'touchMovementPad.brake': 'Rem',
     'touchMovementPad.jump': 'Lompat',
+    'touchMovementPad.swimUp': 'Berenang Naik',
+    'touchMovementPad.dive': 'Menyelam',
 
     // World View: vehicleInteractionPrompt.
     'vehicleInteractionPrompt.cycle': '[ [ / ] ] Ganti',
@@ -1325,6 +1327,12 @@ export default Object.freeze({
     'worldView.joystickToWalkPushTo': '• Joystick untuk berjalan, dorong ke tepi untuk berlari',
     'worldView.dragToOrbitScrollTo': 'Seret untuk orbit • Gulir untuk zoom • Home untuk mengatur ulang • Klik untuk memeriksa',
     'worldView.wasdToWalkShiftTo': '• WASD untuk berjalan • Shift untuk berlari • Spasi untuk melompat',
+    'worldView.swimKeysHint': '• Di air dalam: Spasi untuk naik • C untuk menyelam',
+    // World View: breathMeter.
+    'breathMeter.air': 'Udara',
+    'breathMeter.airLeft': 'Sisa udara',
+    'breathMeter.secondsLeft': 'sisa {seconds} dtk',
+    'breathMeter.outOfAir': 'Kehabisan udara, naik ke permukaan',
     'worldView.explore': 'Jelajahi',
     'worldView.map': 'Peta',
     'worldView.places': 'Tempat',

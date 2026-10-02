@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5914df7d440551c6 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 67d735c25cb2e640 -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -125,7 +125,8 @@ solange ein Textfeld den Fokus hat — klicken Sie zuerst in die 3D-Ansicht.
 |---|---|
 | **W / A / S / D** | Bewegen / drehen |
 | **Umschalt** | Rennen (schnellere Bewegung) |
-| **Leertaste** | Springen |
+| **Leertaste** | Springen; im tiefen Wasser nach oben schwimmen |
+| **C** (gedrückt, im tiefen Wasser) | Tauchen |
 | **Alt + W / S** | Freihändiges dauerhaftes Gehen vorwärts/rückwärts — läuft weiter, nachdem Sie die Tasten loslassen |
 | **Alt + Umschalt + W / S** | Dasselbe, aber rennend statt gehend |
 
@@ -151,6 +152,26 @@ bewegen.
 **Avatar folgen** hält die Kamera an Ihren Avatar gekoppelt, während er
 sich bewegt, statt frei zu kreisen. Sie können auch den Avataren anderer
 Spieler folgen, um zu sehen, wohin sie gehen.
+
+### Schwimmen und Tauchen
+
+Wasser bis zur halben Größe Ihres Avatars wird durchwatet, umso langsamer,
+je tiefer es ist. Ist es tiefer, schwimmt Ihr Avatar: Er treibt mit dem Kopf
+über der Oberfläche, und die Bewegung funktioniert wie an Land, nur
+langsamer. Halten Sie **C** gedrückt, um zu tauchen, und **Leertaste**, um
+wieder nach oben zu schwimmen; lassen Sie beide los, treibt er langsam an
+die Oberfläche. In der Ich-Perspektive sehen Sie beim Treiben die Welt über
+dem Wasser und nach dem Abtauchen die Welt darunter.
+
+Unter Wasser hält Ihr Avatar die Luft an. Ein **Luft**-Balken oben in der
+Ansicht zeigt, wie viel noch übrig ist: zweieinhalb Minuten mit vollem
+Atem. Geht sie aus, wird Ihr Avatar an die Oberfläche gedrückt und bleibt
+dort einige Sekunden, um Luft zu holen, bevor er wieder tauchen kann.
+Schwimmen Sie ans Ufer, steht er auf und geht hinaus.
+
+Andere sehen Sie ebenfalls schwimmen und tauchen: Wie sich Ihr Avatar im
+Wasser bewegt, ergibt sich aus seiner Position, daher wird nichts
+zusätzlich gesendet.
 
 ### Kameraperspektive
 
@@ -240,6 +261,11 @@ Bäume, aber ein hohes Gebäude blockiert sie genauso wie ein Auto; Fliegen
 heißt also nicht, die Geometrie der Welt zu ignorieren. Mitten in der Luft
 können Sie nicht von einer Drohne absteigen — bringen Sie sie zuerst
 zurück auf den Boden.
+
+Fahrräder, Motorräder und Autos halten am Ufer an. Eine Drohne fliegt über
+Seen und das Meer weiter und setzt Sie auf dem Wasser ab: Landen Sie sie und
+steigen Sie ab, und Ihr Avatar schwimmt. Ein Fahrzeug mit Rädern können Sie
+nicht aus Ihrem Inventar holen, solange Sie im Wasser sind.
 
 #### Ein Fahrzeug mitnehmen
 

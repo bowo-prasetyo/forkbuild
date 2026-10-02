@@ -5,13 +5,17 @@ import { AvatarContinuousMovementIntent, isValidAvatarContinuousMovementIntent }
 import { AvatarContinuousMovementMode, isValidAvatarContinuousMovementMode } from '../../core/AvatarContinuousMovementMode.js';
 import { AvatarMovementCapabilityKind, isValidAvatarVehicleMovementCapability } from '../../core/AvatarVehicleMovementCapability.js';
 import { AvatarVehicleBrakingIntent, isValidAvatarVehicleBrakingIntent } from '../../core/AvatarVehicleBrakingIntent.js';
+import {
+    AvatarSwimMode, deriveAvatarSwimMode, isSwimmableDepth, surfaceSwimFeetHeight, isHeadUnderwater,
+    stepSwimFeetHeight, createAvatarBreathState, stepAvatarBreath, SWIM_SPEED_FACTOR, BREATH_CAPACITY_SECONDS
+} from '../../core/AvatarSwimming.js';
 
 // The one place raw input becomes an AvatarPresence update, and the one
 // movement executor for walking and every vehicle. It never touches Three.js;
 // it and renderer/AvatarVisual.js meet only through AvatarPresenceSession (see
 // docs/Principles.md, "Input Changes Presence; Presence Changes The Renderer").
 //
-//   keyDown/keyUp      raw W/A/S/D/Shift/Space, while Avatar Control Mode is on
+//   keyDown/keyUp      raw W/A/S/D/Shift/Space/C, while Avatar Control Mode is on
 //   tick(deltaSeconds) once per frame: simulate, constrain, and publish a new
 //                      AvatarPresence only if something changed
 //
@@ -20,6 +24,14 @@ import { AvatarVehicleBrakingIntent, isValidAvatarVehicleBrakingIntent } from '.
 // tree, wildlife) adjusts it in that order. Constraints that can revert X/Z run
 // before step height, which settles the final Y; tree and wildlife only touch
 // X/Z, so they run last.
+//
+// On foot in water deeper than core/AvatarSwimming.js's swim depth the avatar
+// swims instead: the simulation still steers and moves it (at swimming speed),
+// but its height comes from the swim rules (Space rises, C dives, otherwise it
+// drifts up) and terrain slope and step height no longer apply. Breath runs
+// down while the head is under water; when it runs out the avatar is pushed to
+// the surface. None of this is part of AvatarPresence: peers derive swimming
+// from the position alone.
 //
 // Vehicles never branch this class: it reads plain numbers (speed, collision
 // radius, directions, acceleration, braking, steering) off the active
@@ -46,7 +58,7 @@ export class AvatarMovementController {
         // World Residents (application/avatar/AvatarResidentConstraint.js), last:
         // a resident blocks the avatar where it is drawn.
         this._residentConstraint = residentConstraint;
-        this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false };
+        this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false, diveHeld: false };
         this._verticalVelocity = 0;
         this._grounded = true;
         // Signed current speed (negative while reversing), fed to and returned by the
@@ -62,9 +74,9 @@ export class AvatarMovementController {
         this._blockedBySlope = false;
         this._blockedByStepHeight = false;
         this._collidedWithTree = false;
-        this._blockedByWaterDepth = false;
         this._collidedWithWildlife = false;
         this._collidedWithResident = false;
+        this._breath = createAvatarBreathState();
     }
 
     // Returns whether `key` is handled, so the caller knows to swallow the event.
@@ -81,7 +93,7 @@ export class AvatarMovementController {
     // so a missed keyup can never leave the avatar walking. Continuous intent and
     // mode are deliberately kept: releasing keys must not cancel them.
     releaseAll() {
-        this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false };
+        this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false, diveHeld: false };
     }
 
     // Callers pass an already-resolved intent; invalid input degrades to NONE.
@@ -185,18 +197,54 @@ export class AvatarMovementController {
 
         // Water depth at the current position decides this tick's speed, not the depth
         // of the step about to be taken.
-        const currentWaterSpeedFactor = this._waterConstraint
+        let currentWaterSpeedFactor = this._waterConstraint
             ? this._waterConstraint.speedFactorAt(currentPosition.x, currentPosition.z)
             : undefined;
+
+        // Swimming: only on foot, and only where the water is deeper than swim depth
+        // over whatever the avatar would stand on here.
+        const currentWaterSurface = this._waterConstraint
+            ? this._waterConstraint.waterSurfaceAt(currentPosition.x, currentPosition.z)
+            : null;
+        const supportHere = Number.isFinite(currentSupportHeight) ? currentSupportHeight : 0;
+        const swimming = this._movementCapability === null && isSwimmableDepth(currentWaterSurface, supportHere);
+        let simulationGroundHeight = currentSupportHeight;
+        let simulationState = movementState;
+        let simulationGrounded = this._grounded;
+        let simulationVerticalVelocity = this._verticalVelocity;
+        // True once the avatar is in the water rather than still falling into it.
+        let swimmingInWater = false;
+        if (swimming) {
+            currentWaterSpeedFactor = SWIM_SPEED_FACTOR;
+            // No jumping out of deep water: Space means "swim up" here.
+            simulationState = new AvatarMovementState({
+                forwardAxis: movementState.forwardAxis,
+                turnAxis: movementState.turnAxis,
+                running: movementState.running,
+                jumpRequested: false,
+                brakingRequested: movementState.brakingRequested
+            });
+            const floatingFeet = Math.max(supportHere, surfaceSwimFeetHeight(currentWaterSurface));
+            if (currentPosition.y > floatingFeet + EPSILON) {
+                // Still above the water (jumped or fell in): gravity lands it on the surface.
+                simulationGroundHeight = floatingFeet;
+            } else {
+                // In the water: the simulation only moves it across; height comes below.
+                swimmingInWater = true;
+                simulationGroundHeight = currentPosition.y;
+                simulationGrounded = true;
+                simulationVerticalVelocity = 0;
+            }
+        }
 
         const result = simulateAvatarMovement({
             position: currentPosition,
             rotationY: currentRotationY,
-            verticalVelocity: this._verticalVelocity,
-            grounded: this._grounded,
-            movementState,
+            verticalVelocity: simulationVerticalVelocity,
+            grounded: simulationGrounded,
+            movementState: simulationState,
             deltaSeconds,
-            groundHeight: currentSupportHeight,
+            groundHeight: simulationGroundHeight,
             movementSpeed: this._resolvedMovementSpeed(),
             acceleration: this._resolvedAcceleration(),
             braking: this._resolvedBraking(),
@@ -219,21 +267,14 @@ export class AvatarMovementController {
         }
 
         this._blockedBySlope = false;
-        if (this._terrainConstraint) {
+        if (this._terrainConstraint && !swimming) {
             const terrainResult = this._terrainConstraint.apply(currentPosition, finalPosition);
             finalPosition = terrainResult.position;
             this._blockedBySlope = terrainResult.blocked;
         }
 
-        this._blockedByWaterDepth = false;
-        if (this._waterConstraint) {
-            const waterResult = this._waterConstraint.apply(currentPosition, finalPosition);
-            finalPosition = waterResult.position;
-            this._blockedByWaterDepth = waterResult.blocked;
-        }
-
         this._blockedByStepHeight = false;
-        if (this._stepConstraint) {
+        if (this._stepConstraint && !swimming) {
             const stepResult = this._stepConstraint.apply(currentPosition, finalPosition, {
                 grounded: result.grounded
             });
@@ -273,6 +314,13 @@ export class AvatarMovementController {
             this._collidedWithResident = residentResult.collided;
         }
 
+        if (swimmingInWater) {
+            finalPosition = this._swimHeightFor(currentPosition, finalPosition, currentWaterSurface, supportHere, deltaSeconds);
+        } else if (!swimming && this._movementCapability === null) {
+            finalPosition = this._enteredWaterHeightFor(currentPosition, finalPosition);
+        }
+        this._advanceBreath(finalPosition, deltaSeconds);
+
         const positionChanged = !samePosition(finalPosition, current.position);
         const rotationChanged = Math.abs(result.rotationY - currentRotationY) > EPSILON;
         const animationChanged = result.animation !== current.animation;
@@ -299,10 +347,6 @@ export class AvatarMovementController {
         return this._blockedByStepHeight;
     }
 
-    isBlockedByWaterDepth() {
-        return this._blockedByWaterDepth;
-    }
-
     isCollidedWithWildlife() {
         return this._collidedWithWildlife;
     }
@@ -315,6 +359,24 @@ export class AvatarMovementController {
         return this._collidedWithTree;
     }
 
+    // How the avatar is in the water now: its swim mode (core/AvatarSwimming.js),
+    // the air it has left, and whether it is being pushed up for lack of air.
+    swimState() {
+        const current = this._avatarPresenceSession ? this._avatarPresenceSession.current : null;
+        const surface = current && this._waterConstraint
+            ? this._waterConstraint.waterSurfaceAt(current.position.x, current.position.z)
+            : null;
+        const mode = current && this._movementCapability === null
+            ? deriveAvatarSwimMode({ feetHeight: current.position.y, waterSurfaceHeight: surface })
+            : AvatarSwimMode.NONE;
+        return Object.freeze({
+            mode,
+            breathSeconds: this._breath.breathSeconds,
+            breathCapacitySeconds: BREATH_CAPACITY_SECONDS,
+            forcedAscent: this._breath.forcedAscent
+        });
+    }
+
     verticalState() {
         return deriveAvatarVerticalState({ grounded: this._grounded, verticalVelocity: this._verticalVelocity });
     }
@@ -324,6 +386,72 @@ export class AvatarMovementController {
     // facing.
     hasMovementInput() {
         return this._keys.forward || this._keys.backward || this._keys.left || this._keys.right;
+    }
+
+    // Steps the swimmer's height in its current column, then carries that world
+    // height into the column it moved to, kept between what it would stand on there
+    // and the floating height. Leaving deep water, it settles onto the ground and
+    // walks from the next tick.
+    _swimHeightFor(currentPosition, desiredPosition, waterSurface, supportHere, deltaSeconds) {
+        const verticalInput = (this._keys.jumpHeld ? 1 : 0) - (this._keys.diveHeld ? 1 : 0);
+        const feetHere = stepSwimFeetHeight({
+            feetHeight: currentPosition.y,
+            floorHeight: supportHere,
+            waterSurfaceHeight: waterSurface,
+            verticalInput,
+            forcedAscent: this._breath.forcedAscent,
+            deltaSeconds
+        });
+        const worldFeet = feetHere + this._waterConstraint.groundHeightAt(currentPosition.x, currentPosition.z);
+        let y = worldFeet - this._waterConstraint.groundHeightAt(desiredPosition.x, desiredPosition.z);
+        const support = this._stepConstraint
+            ? this._stepConstraint.supportHeightAt(desiredPosition.x, desiredPosition.z, y)
+            : 0;
+        const destinationSurface = this._waterConstraint.waterSurfaceAt(desiredPosition.x, desiredPosition.z);
+        if (destinationSurface !== null) {
+            y = Math.min(y, Math.max(support, surfaceSwimFeetHeight(destinationSurface)));
+        }
+        y = Math.max(y, support);
+        this._verticalVelocity = 0;
+        this._grounded = y <= support + EPSILON || isSwimmableDepth(destinationSurface, support);
+        return { x: desiredPosition.x, y, z: desiredPosition.z };
+    }
+
+    // Stepping from shallow water (or a jump) into water deep enough to swim: the
+    // avatar keeps its world height instead of dropping onto the new, deeper bed,
+    // never ending up above the floating height unless it is still in the air.
+    _enteredWaterHeightFor(currentPosition, desiredPosition) {
+        if (!this._waterConstraint) {
+            return desiredPosition;
+        }
+        const destinationSurface = this._waterConstraint.waterSurfaceAt(desiredPosition.x, desiredPosition.z);
+        if (destinationSurface === null) {
+            return desiredPosition;
+        }
+        const worldFeet = desiredPosition.y + this._waterConstraint.groundHeightAt(currentPosition.x, currentPosition.z);
+        const y = worldFeet - this._waterConstraint.groundHeightAt(desiredPosition.x, desiredPosition.z);
+        const support = this._stepConstraint
+            ? this._stepConstraint.supportHeightAt(desiredPosition.x, desiredPosition.z, y)
+            : 0;
+        if (!isSwimmableDepth(destinationSurface, support) || y <= desiredPosition.y) {
+            return desiredPosition;
+        }
+        const floatingFeet = Math.max(support, surfaceSwimFeetHeight(destinationSurface));
+        if (y <= floatingFeet) {
+            this._grounded = true;
+            this._verticalVelocity = 0;
+        }
+        return { x: desiredPosition.x, y: Math.max(y, support), z: desiredPosition.z };
+    }
+
+    _advanceBreath(position, deltaSeconds) {
+        const surface = this._waterConstraint && this._movementCapability === null
+            ? this._waterConstraint.waterSurfaceAt(position.x, position.z)
+            : null;
+        this._breath = stepAvatarBreath(this._breath, {
+            submerged: isHeadUnderwater(position.y, surface),
+            deltaSeconds
+        });
     }
 
     _currentMovementState() {
@@ -411,6 +539,7 @@ export class AvatarMovementController {
             case 'd': this._keys.right = isDown; return true;
             case 'shift': this._keys.running = isDown; return true;
             case ' ': case 'space': case 'spacebar': this._keys.jumpHeld = isDown; return true;
+            case 'c': this._keys.diveHeld = isDown; return true;
             default: return false;
         }
     }

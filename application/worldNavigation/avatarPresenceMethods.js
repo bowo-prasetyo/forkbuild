@@ -21,6 +21,7 @@ import { toAvatarProfileAdvertisement } from '../../core/AvatarProfileAdvertisem
 import { signAvatarProfileAdvertisement } from '../avatar/AvatarProfileSigning.js';
 import { computeCameraFraming, isValidCameraPerspective } from '../../core/CameraPerspective.js';
 import { computeFacingYawDegrees } from '../../core/AvatarFacing.js';
+import { terrainHeightAt } from '../../core/TerrainHeightField.js';
 
 // Default radius for getNearbyAvatars(). Separate from NEARBY_RADIUS: that
 // asks "is a document at this camera position", this asks "who is close
@@ -371,8 +372,19 @@ export const avatarPresenceMethods = {
 
     // Applied instantly each update rather than through _beginCameraFocus()'s
     // one-shot glide; per-update framing is already smooth tracking.
+    //
+    // On foot, presence Y is measured from the ground under the avatar, so it is
+    // lifted by the terrain height first, as the renderer lifts the avatar itself;
+    // a ridden vehicle's position already carries it. Without this the eye sits
+    // inside a hill, or far above a swimmer's head out at sea.
     _applyCameraPerspectiveFraming(position, headingDegrees) {
-        const framing = computeCameraFraming(this._cameraPerspective, position, headingDegrees);
+        const riding = typeof this._isRidingMovableVehicle === 'function' && this._isRidingMovableVehicle();
+        const groundY = riding ? 0 : terrainHeightAt(this.getWorldSeed(), position.x, position.z);
+        const framing = computeCameraFraming(
+            this._cameraPerspective,
+            { x: position.x, y: position.y + groundY, z: position.z },
+            headingDegrees
+        );
         if (framing) {
             this._spatialCameraController.applyFraming(framing);
         }

@@ -54,9 +54,12 @@ The ground itself is generated the same way for everyone from a shared seed
 open sea all follow the terrain's own elevation and moisture, not a random
 placement. The land around the origin is always dry; travel a thousand or so
 units out and you will reach a coast, where the ground slopes down a shelf
-into deep, darker-blue sea too deep to wade. Your avatar can wade into a lake
-or the sea, slowing as the water rises, and stops once it reaches its neck,
-so its head always stays above water.
+into deep, darker-blue sea. Your avatar wades into a lake or the sea,
+slowing as the water rises, and once the water is deeper than half its
+height it swims (see [Swimming and diving](06-AvatarsAndPresence.md#swimming-and-diving)).
+Dive under and the view turns to blue-green water: seaweed sways on the
+bottom and small schools of fish circle in open water, the same fish in the
+same places for everyone.
 It's scenery: nothing about it is editable, and it looks identical no matter
 who's looking at it or when.
 

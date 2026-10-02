@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5914df7d440551c6 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 67d735c25cb2e640 -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -124,7 +124,8 @@ fokus — klik tampilan 3D terlebih dahulu.
 |---|---|
 | **W / A / S / D** | Bergerak / berbelok |
 | **Shift** | Berlari (bergerak lebih cepat) |
-| **Space** | Melompat |
+| **Space** | Melompat; di air dalam, berenang naik |
+| **C** (ditahan, di air dalam) | Menyelam |
 | **Alt + W / S** | Berjalan terus maju/mundur tanpa menyentuh — tetap bergerak setelah Anda melepas tombol |
 | **Alt + Shift + W / S** | Sama, tetapi berlari alih-alih berjalan |
 
@@ -149,6 +150,26 @@ saat Anda bergerak.
 **Ikuti Avatar** menjaga kamera tetap terkunci pada avatar Anda saat
 bergerak, alih-alih mengorbit bebas. Anda juga dapat mengikuti avatar
 pemain lain untuk melihat ke mana mereka pergi.
+
+### Berenang dan menyelam
+
+Air setinggi paling banyak setengah tinggi avatar Anda dilalui dengan
+berjalan, makin lambat makin dalam airnya. Lebih dalam dari itu, avatar
+Anda berenang: ia mengapung dengan kepala di atas permukaan, dan bergerak
+seperti di darat, hanya lebih lambat. Tahan **C** untuk menyelam dan
+**Space** untuk berenang naik kembali; lepaskan keduanya dan ia perlahan
+naik ke permukaan. Dalam sudut pandang orang pertama Anda melihat dunia di
+atas air saat mengapung, dan dunia di bawahnya saat menyelam.
+
+Di dalam air avatar Anda menahan napas. Bilah **Udara** di bagian atas
+tampilan menunjukkan sisanya: dua setengah menit dari napas penuh. Saat
+habis, avatar Anda didorong naik ke permukaan dan tetap di sana beberapa
+detik untuk mengambil napas sebelum dapat menyelam lagi. Berenanglah ke
+tepi dan ia akan berdiri lalu berjalan keluar.
+
+Orang lain juga melihat Anda berenang dan menyelam: cara avatar Anda
+bergerak di air ditentukan dari posisinya, jadi tidak ada yang dikirim
+tambahan.
 
 ### Sudut Pandang Kamera
 
@@ -239,6 +260,11 @@ pepohonan, tetapi bangunan tinggi tetap menghalanginya persis seperti
 menghalangi mobil, jadi terbang tidak berarti mengabaikan bentuk dunia itu
 sendiri. Anda tidak dapat turun dari drone di udara — bawa kembali ke tanah
 terlebih dahulu.
+
+Sepeda, sepeda motor, dan mobil berhenti di tepi air. Drone terus terbang
+di atas danau dan laut, dan menurunkan Anda di atas air: daratkan, turun,
+dan avatar Anda pun berenang. Anda tidak dapat mengeluarkan kendaraan
+beroda dari inventaris saat berada di air.
 
 #### Membawa kendaraan
 

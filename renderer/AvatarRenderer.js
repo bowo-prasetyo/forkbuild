@@ -125,6 +125,8 @@ const ACCESSORY_BUILDERS = {
     'scarf-01': buildScarfAccessory
 };
 
+const SWIM_PITCH_PIVOT_HEIGHT = 0.9; // hips, half the avatar's height
+
 export class AvatarRenderer {
     // Builds a fresh avatar object graph. Returns:
     //   root      — the object a caller adds to/removes from the
@@ -211,8 +213,8 @@ export class AvatarRenderer {
     // before — a gesture is upper-body-only, layered on top of
     // whatever the avatar's legs are already doing, never a second,
     // competing full-body pose.
-    applyPose(poseGroup, animation, animationTimeSeconds = 0, gestureOverride = null) {
-        const offsets = getAvatarPoseOffsets(animation, animationTimeSeconds);
+    applyPose(poseGroup, animation, animationTimeSeconds = 0, gestureOverride = null, swimMode = undefined) {
+        const offsets = getAvatarPoseOffsets(animation, animationTimeSeconds, swimMode);
         const parts = poseGroup.userData.avatarParts || {};
         const bodyTiltDegrees = gestureOverride ? gestureOverride.bodyTiltDegrees : offsets.bodyTiltDegrees;
         const headTiltDegrees = gestureOverride ? gestureOverride.headTiltDegrees : offsets.headTiltDegrees;
@@ -225,7 +227,12 @@ export class AvatarRenderer {
         if (parts.head) {
             parts.head.rotation.x = THREE.MathUtils.degToRad(headTiltDegrees);
         }
-        poseGroup.position.y = offsets.hopHeight;
+        // Swimming leans the whole body about the hips, so the pivot is put back
+        // where it was after rotating about the feet.
+        const pitch = THREE.MathUtils.degToRad(offsets.bodyPitchDegrees || 0);
+        poseGroup.rotation.x = pitch;
+        poseGroup.position.y = offsets.hopHeight + SWIM_PITCH_PIVOT_HEIGHT * (1 - Math.cos(pitch));
+        poseGroup.position.z = -SWIM_PITCH_PIVOT_HEIGHT * Math.sin(pitch);
     }
 
     dispose(root) {

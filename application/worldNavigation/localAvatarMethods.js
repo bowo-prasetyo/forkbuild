@@ -14,6 +14,8 @@ import { AvatarTerrainConstraint } from '../avatar/AvatarTerrainConstraint.js';
 import { AvatarStepConstraint } from '../avatar/AvatarStepConstraint.js';
 import { AvatarTreeConstraint } from '../avatar/AvatarTreeConstraint.js';
 import { AvatarWaterConstraint } from '../avatar/AvatarWaterConstraint.js';
+import { VehicleWaterConstraint } from '../avatar/VehicleWaterConstraint.js';
+import { AvatarSwimMode } from '../../core/AvatarSwimming.js';
 import { AvatarWildlifeConstraint } from '../avatar/AvatarWildlifeConstraint.js';
 import { ANIMAL_INTERACTION_RADIUS } from '../../core/AvatarAnimalCatchTarget.js';
 import { AvatarVehicleBrakingIntent, deriveAvatarVehicleBrakingIntent } from '../../core/AvatarVehicleBrakingIntent.js';
@@ -139,7 +141,8 @@ export const localAvatarMethods = {
             this._buildAvatarTerrainConstraint(),
             this._buildAvatarStepConstraint(),
             treeConstraint,
-            // Avatar-only: water depth never affects a mounted vehicle.
+            // Wading and swimming are on foot only; vehicles get their own waterline
+            // check in AvatarVehicleMovementController.
             this._buildAvatarWaterConstraint(),
             // Avatar-only, same posture as terrainConstraint/stepConstraint/
             // waterConstraint above — see
@@ -180,7 +183,8 @@ export const localAvatarMethods = {
         this._avatarVehicleMovementController = new AvatarVehicleMovementController(
             this._vehicleRuntimeInstances,
             movementConstraint,
-            treeConstraint
+            treeConstraint,
+            new VehicleWaterConstraint({ seed: this.getWorldSeed() })
         );
         this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
         if (typeof this._session.onAnimationFrame === 'function') {
@@ -769,8 +773,15 @@ export const localAvatarMethods = {
             animation: current.animation,
             verticalState: this._avatarMovementController ? this._avatarMovementController.verticalState() : null,
             vehicleType: vehicle ? vehicle.type : null,
-            braking: this._avatarMovementController ? this._avatarMovementController.movementState().brakingRequested : false
+            braking: this._avatarMovementController ? this._avatarMovementController.movementState().brakingRequested : false,
+            swimMode: this._avatarMovementController ? this._avatarMovementController.swimState().mode : AvatarSwimMode.NONE
         };
+    },
+
+    // The local avatar's swim mode and air (see AvatarMovementController#swimState()),
+    // or null without a local avatar.
+    avatarSwimState() {
+        return this._avatarMovementController ? this._avatarMovementController.swimState() : null;
     },
 
     // Moves a never-moved local avatar (sequence 0) near where the camera is

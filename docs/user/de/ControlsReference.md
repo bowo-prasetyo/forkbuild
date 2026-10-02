@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 14214dca588aad38 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 15773095004fb495 -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -93,7 +93,8 @@ Mit Ihrem Avatar direkt gehen, statt die Kamera zu fliegen — siehe
 |---|---|---|
 | `W` / `A` / `S` / `D` | Bewegen / drehen | Gebäude, Bäume, Wildtiere und Bewohner in der Nähe blockieren wie eine Wand |
 | `Umschalt` (gehalten) | Rennen | |
-| `Leertaste` | Springen | |
+| `Leertaste` | Springen | Im tiefen Wasser: nach oben schwimmen |
+| `C` (gedrückt) | Tauchen | Nur in Wasser, das tief genug zum Schwimmen ist |
 | `Alt` + `W` / `S` | Dauerhaftes Gehen vorwärts/rückwärts starten | Geht nach dem Loslassen der Tasten weiter; ein gewöhnliches Tippen auf `W`/`S` ohne Alt beendet es |
 | `Alt` + `Umschalt` + `W` / `S` | Dauerhaftes Rennen vorwärts/rückwärts starten | Gleiche Regel zum Beenden wie oben |
 
@@ -357,7 +358,8 @@ Pad ein und aus.
 |---|---|---|
 | Joystick | `W` / `A` / `S` / `D` | Nach oben schieben zum Vorwärtsgehen, seitwärts zum Drehen; Diagonalen drücken beide Tasten |
 | Joystick bis zum Rand geschoben | `Umschalt` | Rennen |
-| **Springen** | `Leertaste` | |
+| **Springen** | `Leertaste` | Heißt im tiefen Wasser **Hochschwimmen** |
+| **Tauchen** | `C` | Beim Schwimmen sichtbar |
 | **Automatisch** | `Alt` + `W`, dann `Alt` + `Umschalt` + `W`, dann `W` | Jedes Tippen: freihändig vorwärts gehen, dann rennen, dann anhalten. Zeigt **Automatisch: Gehen** / **Automatisch: Rennen**, solange es aktiv ist. Den Joystick vor oder zurück zu schieben hält es ebenfalls an; seitwärts lenkt nur |
 | **Aufsteigen** / **Absteigen** | `E` | Sichtbar, wenn ein Fahrzeug in Reichweite ist oder Sie fahren |
 | **Wegstellen** / **… hervorholen** | `Q` | Sichtbar, wenn Sie das Fahrzeug, auf dem Sie sind, wegstellen oder ein abgestelltes hervorholen können. Hervorholen nennt das Fahrzeug und, wenn Sie mehr als eines tragen, seinen Platz in der Liste (etwa 2/3) |

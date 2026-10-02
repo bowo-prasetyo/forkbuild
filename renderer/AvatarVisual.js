@@ -48,6 +48,7 @@ export class AvatarVisual {
         this._poseGroup = null;
         this._appearanceKey = null;
         this._lastAnimation = null;
+        this._swimMode = null;
         this._animationTime = 0;
         // 0.2.44 — see this file's own header above. `_lastRotationY`
         // is what setFacingOverride(null) restores to: the real,
@@ -118,6 +119,17 @@ export class AvatarVisual {
     // A fresh gesture always restarts its own elapsed-time clock from
     // zero, the same "no visible pop, no mid-cycle jump" reasoning
     // setAnimation above already follows for a locomotion change.
+    // How the avatar is in the water (core/AvatarSwimming.js's AvatarSwimMode, or
+    // null on land), worked out by the caller from its position.
+    setSwimMode(swimMode) {
+        const normalized = swimMode || null;
+        if (normalized === this._swimMode) {
+            return;
+        }
+        this._swimMode = normalized;
+        this._applyPose();
+    }
+
     setGesture(interactionKind) {
         const normalized = interactionKind && interactionKind !== 'none' ? interactionKind : null;
         if (normalized === this._gestureKind) {
@@ -153,7 +165,7 @@ export class AvatarVisual {
         const gestureOverride = this._gestureKind
             ? getGesturePoseOverride(this._gestureKind, this._gestureTime)
             : null;
-        this._avatarRenderer.applyPose(this._poseGroup, this._lastAnimation, this._animationTime, gestureOverride);
+        this._avatarRenderer.applyPose(this._poseGroup, this._lastAnimation, this._animationTime, gestureOverride, this._swimMode || undefined);
     }
 
     // Called once per render frame (see renderer/Renderer.js's
@@ -182,6 +194,7 @@ export class AvatarVisual {
         }
         this._appearanceKey = null;
         this._lastAnimation = null;
+        this._swimMode = null;
         this._animationTime = 0;
         this._gestureKind = null;
         this._gestureTime = 0;

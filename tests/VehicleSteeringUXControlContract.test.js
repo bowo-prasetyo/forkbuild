@@ -199,7 +199,7 @@ function injectMountedVehicle(session, vehicleId, spawnPosition, heading = 0) {
 // discipline that file's own header already documents, for the identical
 // reason: this file's own SEQUENCE section makes several precise, chained
 // heading assertions sensitive to a stray natural tree brushing the ride.
-const SPAWN = { x: 70000, y: 0, z: 70000 };
+const SPAWN = { x: -77500, y: 0, z: -77500 };
 
 async function runTests() {
     // ===============================================================

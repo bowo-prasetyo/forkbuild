@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 704178c6cb15b587 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3833a37ca4181e18 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -59,10 +59,12 @@ danau, sungai yang berkelok, dan laut lepas semuanya mengikuti ketinggian
 dan kelembapan medan itu sendiri, bukan penempatan acak. Daratan di sekitar
 titik asal selalu kering; berjalanlah sekitar seribu unit dan Anda akan
 tiba di pesisir, tempat tanah menurun melalui landas kontinen ke laut yang
-dalam dan berwarna biru lebih gelap, terlalu dalam untuk diseberangi dengan
-berjalan. Avatar Anda dapat masuk ke danau atau laut, makin lambat saat
-air makin tinggi, dan berhenti begitu air mencapai lehernya, sehingga
-kepalanya selalu tetap di atas air. Itu pemandangan: tidak ada yang dapat diedit, dan tampak sama
+dalam dan berwarna biru lebih gelap. Avatar Anda dapat masuk ke danau atau
+laut, makin lambat saat air makin tinggi, dan begitu air lebih dalam dari
+setengah tingginya, ia berenang (lihat [Berenang dan menyelam](06-AvatarsAndPresence.md#berenang-dan-menyelam)).
+Menyelamlah dan pandangan berubah menjadi air biru kehijauan: rumput laut
+bergoyang di dasar dan kawanan ikan kecil berputar di perairan terbuka,
+ikan yang sama di tempat yang sama bagi semua orang. Itu pemandangan: tidak ada yang dapat diedit, dan tampak sama
 persis siapa pun yang melihatnya dan kapan pun.
 
 Tanah hutan membawa campuran jenis pohonnya sendiri dari benih yang sama —
