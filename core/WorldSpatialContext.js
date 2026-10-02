@@ -26,6 +26,7 @@ import { ecologyZoneAt, ECOLOGY_ZONE } from './TerrainEcology.js';
 import { hydrologyFeatureAt, HYDROLOGY_FEATURE } from './Hydrology.js';
 import { Position } from './Position.js';
 import { regionsContaining, describePlace } from './WorldRegionGeography.js';
+import { compassLabelBetween } from './CompassHeading.js';
 
 export class WorldSpatialContext {
     constructor({
@@ -150,16 +151,10 @@ export class WorldSpatialContext {
 
     // Compass-style directional label for a structure/collaborator
     // Returns N, NE, E, SE, S, SW, W, NW based on relative position
+    // (core/CompassHeading.js: North is +Z, East is -X). A target right here
+    // reads as N, as it always has.
     directionLabel(targetPosition) {
-        const dx = targetPosition.x - this._position.x;
-        const dz = targetPosition.z - this._position.z;
-        
-        const angle = Math.atan2(dx, dz) * (180 / Math.PI);
-        const normalized = ((angle % 360) + 360) % 360;
-        
-        const labels = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-        const index = Math.round(normalized / 45) % 8;
-        return labels[index];
+        return compassLabelBetween(this._position, targetPosition) ?? 'N';
     }
 
     _formatZone(zone) {

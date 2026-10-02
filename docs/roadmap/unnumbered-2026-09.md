@@ -3715,3 +3715,16 @@ turn (`RIGHT_TURN_SIGN`), on foot and riding, and `resolveVehicleMovementDirecti
 `tests/TurnDirectionOnScreen.test.js` projects each turn through a real Three.js camera framed by
 `computeCameraFraming()`, in third and first person, and checks it lands on the side of the screen it names; the
 steering tests that asserted the old direction are mirrored.
+
+## East is on your right (unnumbered, 2026-10-02)
+
+The compass, the world map and every spoken direction were mirrored: facing North, East was on your left. They
+treated the facing yaw (0° = +Z, growing toward +X) as a compass bearing, but +X is on the left of someone facing +Z,
+so a yaw grows anticlockwise. `core/CompassHeading.js` now converts with `compassBearingFromYaw()` (360° − yaw), so
+North stays +Z and East is −X; `computeCompassHeading()` adds `bearing`, which the compass needle and number show,
+while `degrees` stays the raw yaw that spatial presence carries and saved visits store, so nothing on the wire
+changes. New `compassLabelBetween()` names the direction between two points for place navigation, residents and
+the Nearby lists (`directionLabelBetween()`, `WorldSpatialContext#directionLabel()`). `core/WorldMapProjection.js`
+draws −X (East) on the right, so the map is the World seen from above rather than its mirror. New
+`tests/CompassDirectionOnScreen.test.js` starts from a real Three.js camera behind the avatar and checks the
+compass, the map and spoken directions all agree with it.

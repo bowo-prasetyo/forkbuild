@@ -1,4 +1,4 @@
-import { resolveCompassLabel } from './CompassHeading.js';
+import { compassLabelBetween } from './CompassHeading.js';
 
 // 0.5.6 — Geographic Place Navigation & Arrival.
 //
@@ -168,13 +168,7 @@ export function directionLabelBetween(fromPosition, toPosition) {
     if (!fromPosition || !toPosition) {
         return null;
     }
-    const dx = toPosition.x - fromPosition.x;
-    const dz = toPosition.z - fromPosition.z;
-    if (dx === 0 && dz === 0) {
-        return null;
-    }
-    const angle = Math.atan2(dx, dz) * (180 / Math.PI);
-    return resolveCompassLabel(angle);
+    return compassLabelBetween(fromPosition, toPosition);
 }
 
 // -----------------------------------------------------------------

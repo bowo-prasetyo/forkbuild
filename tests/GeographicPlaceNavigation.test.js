@@ -160,9 +160,9 @@ async function run() {
 
         // directionLabelBetween()
         assert(directionLabelBetween({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 10 }) === 'N', '19. due +Z is North, matching core/CompassHeading.js\'s own convention');
-        assert(directionLabelBetween({ x: 0, y: 0, z: 0 }, { x: 10, y: 0, z: 0 }) === 'E', '20. due +X is East');
+        assert(directionLabelBetween({ x: 0, y: 0, z: 0 }, { x: 10, y: 0, z: 0 }) === 'W', '20. due +X is West (on your left facing North)');
         assert(directionLabelBetween({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: -10 }) === 'S', '21. due -Z is South');
-        assert(directionLabelBetween({ x: 0, y: 0, z: 0 }, { x: -10, y: 0, z: 0 }) === 'W', '22. due -X is West');
+        assert(directionLabelBetween({ x: 0, y: 0, z: 0 }, { x: -10, y: 0, z: 0 }) === 'E', '22. due -X is East (on your right facing North)');
         assert(directionLabelBetween({ x: 5, y: 0, z: 5 }, { x: 5, y: 0, z: 5 }) === null, '23. the exact same position has no meaningful direction — null, never a fabricated one');
         assert(directionLabelBetween(null, { x: 1, y: 0, z: 1 }) === null && directionLabelBetween({ x: 0, y: 0, z: 0 }, null) === null,
             '24. a missing endpoint is null, never a throw');

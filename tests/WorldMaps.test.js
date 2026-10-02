@@ -77,8 +77,11 @@ async function run() {
         assert(north.y < center.y, '6. +Z (north) projects to a SMALLER map y (drawn up)');
         assert(Math.abs(north.x - center.x) < 1e-9, '7. moving only in Z does not move map x');
 
-        const east = projectPosition({ x: 50, z: 0 }, viewport);
-        assert(east.x > center.x, '8. +X (east) projects to a LARGER map x (drawn right)');
+        // East is -X (core/CompassHeading.js): the map is the World seen
+        // from above, so what is on your right facing North is drawn right.
+        const east = projectPosition({ x: -50, z: 0 }, viewport);
+        assert(east.x > center.x, '8. -X (east) projects to a LARGER map x (drawn right)');
+        assert(projectPosition({ x: 50, z: 0 }, viewport).x < center.x, '8b. +X (west) projects to a SMALLER map x (drawn left)');
 
         const offMap = projectPosition({ x: 5000, z: 0 }, viewport);
         assert(offMap.visible === false, '9. a position far outside the viewport is not visible');

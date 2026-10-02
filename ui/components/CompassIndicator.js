@@ -49,7 +49,7 @@ export default {
     },
     computed: {
         needleStyle() {
-            const degrees = this.heading ? this.heading.degrees : 0;
+            const degrees = this.heading ? this.heading.bearing : 0;
             // The needle points toward the heading; N is drawn at the
             // top (rotate(0)) so a heading of 0° (facing +Z / "N")
             // needs no rotation, matching core/CompassHeading.js's own
@@ -86,7 +86,7 @@ export default {
                 ></span>
             </div>
             <span class="compass-indicator-label">
-                {{ heading ? t('compassIndicator.heading', { direction: compassText(heading.label), degrees: Math.round(heading.degrees) }) : '—' }}
+                {{ heading ? t('compassIndicator.heading', { direction: compassText(heading.label), degrees: Math.round(heading.bearing) % 360 }) : '—' }}
             </span>
         </div>
     `

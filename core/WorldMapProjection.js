@@ -30,7 +30,10 @@ import { RegionKind } from './RegionKind.js';
 // circle, never an ellipse, regardless of the viewport's own aspect
 // ratio. North (+Z — exactly core/CompassHeading.js's own "0° faces
 // +Z" convention, the same fixed reference direction, not a real-world
-// bearing) is drawn UP, meaning increasing Z maps to DECREASING map Y.
+// bearing) is drawn UP, meaning increasing Z maps to DECREASING map Y,
+// and East (-X, see core/CompassHeading.js) is drawn RIGHT, meaning
+// increasing X maps to DECREASING map X. That makes the map look like the
+// World seen from above, never its mirror image.
 export function createMapViewport({ centerX = 0, centerZ = 0, span, width, height } = {}) {
     if (!Number.isFinite(span) || span <= 0) {
         throw new Error('createMapViewport requires a positive, finite span');
@@ -47,7 +50,7 @@ export function createMapViewport({ centerX = 0, centerZ = 0, span, width, heigh
 // test, never clipped to a margin or a circle — a caller decides what
 // "off map" means to it (skip rendering, clamp to the edge, etc.).
 export function projectPosition(position, viewport) {
-    const x = (position.x - viewport.centerX) * viewport.scale + viewport.width / 2;
+    const x = viewport.width / 2 - (position.x - viewport.centerX) * viewport.scale;
     const y = viewport.height / 2 - (position.z - viewport.centerZ) * viewport.scale;
     const visible = x >= 0 && x <= viewport.width && y >= 0 && y <= viewport.height;
     return { x, y, visible };
@@ -59,7 +62,7 @@ export function projectPosition(position, viewport) {
 // time) — a caller that needs a full ground position resolves Y itself.
 export function unprojectPoint(mapX, mapY, viewport) {
     return {
-        x: viewport.centerX + (mapX - viewport.width / 2) / viewport.scale,
+        x: viewport.centerX - (mapX - viewport.width / 2) / viewport.scale,
         z: viewport.centerZ - (mapY - viewport.height / 2) / viewport.scale
     };
 }
