@@ -3728,3 +3728,12 @@ the Nearby lists (`directionLabelBetween()`, `WorldSpatialContext#directionLabel
 draws −X (East) on the right, so the map is the World seen from above rather than its mirror. New
 `tests/CompassDirectionOnScreen.test.js` starts from a real Three.js camera behind the avatar and checks the
 compass, the map and spoken directions all agree with it.
+
+## Wheels roll the way the vehicle goes (unnumbered, 2026-10-02)
+
+Every bicycle, motorcycle and car wheel stood sideways, so vehicles drove perpendicular to their tyres. Each model
+faces local +X, and a `TorusGeometry` is built in its XY plane with its axle along Z, which is already an upright wheel
+rolling along X; the wheel builders in `renderer/VehicleRenderer.js` turned it a further quarter turn around Y,
+believing the torus lay flat. That rotation is gone. New `tests/VehicleWheelAlignment.test.js` draws each wheeled
+vehicle through `VehicleVisual` at several headings and checks every wheel is upright with its axle across the
+direction of travel, and the body faces that way too.

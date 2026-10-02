@@ -88,10 +88,10 @@ function buildWheel() {
         new THREE.TorusGeometry(WHEEL_RADIUS, WHEEL_TUBE_RADIUS, WHEEL_RADIAL_SEGMENTS, WHEEL_TUBULAR_SEGMENTS),
         new THREE.MeshStandardMaterial({ color: WHEEL_COLOR })
     );
-    // A torus is built flat in its own XY plane by default; standing it
-    // upright so it reads as a wheel facing along Z means rotating it a
-    // quarter turn around Y.
-    wheel.rotation.y = Math.PI / 2;
+    // A torus is built in its own XY plane, axle along Z: with Y up that is
+    // already an upright wheel rolling along X, the way every model here
+    // faces, so it needs no rotation. (A quarter turn around Y once stood
+    // every wheel sideways to the direction of travel.)
     return wheel;
 }
 
@@ -155,7 +155,7 @@ function buildMotorcycleWheel() {
         new THREE.TorusGeometry(MOTORCYCLE_WHEEL_RADIUS, MOTORCYCLE_WHEEL_TUBE_RADIUS, WHEEL_RADIAL_SEGMENTS, WHEEL_TUBULAR_SEGMENTS),
         new THREE.MeshStandardMaterial({ color: WHEEL_COLOR })
     );
-    wheel.rotation.y = Math.PI / 2;
+    // Upright and rolling along X as built; see buildWheel().
     return wheel;
 }
 
@@ -217,7 +217,7 @@ function buildCarWheel() {
         new THREE.TorusGeometry(CAR_WHEEL_RADIUS, CAR_WHEEL_TUBE_RADIUS, WHEEL_RADIAL_SEGMENTS, WHEEL_TUBULAR_SEGMENTS),
         new THREE.MeshStandardMaterial({ color: WHEEL_COLOR })
     );
-    wheel.rotation.y = Math.PI / 2;
+    // Upright and rolling along X as built; see buildWheel().
     return wheel;
 }
 
