@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 3fe6977b0afb8c98 -->
+<!-- translation-of: docs/Privacy.md source-hash: 44d0a17739347ec8 -->
 # Confidentialité
 
 <!-- languages -->
@@ -110,11 +110,13 @@ envoie.
   page, aucun document, aucun Monde, aucune identité, aucun référent ni rien
   de ce que ForkBuild stocke n’est inclus ; il ne peut donc pas savoir ce
   que vous faites dans l’application, ni même quelle page vous avez ouverte.
-- **Ce qu’il conserve :** des totaux, c’est-à-dire les visiteurs par jour,
-  et de quels navigateurs, systèmes et pays ils venaient. Sa propre
-  politique de confidentialité indique qu’il ne conserve pas les adresses
-  IP ; il utilise l’adresse et le User-Agent uniquement pour distinguer
-  les visiteurs de la journée, sans cookie.
+- **Ce qu’il conserve :** uniquement des totaux, c’est-à-dire les visiteurs
+  par heure et par jour, et de quels navigateurs, systèmes, pays et langues
+  ils venaient, chacun compté séparément, sans lien possible entre eux. Sa
+  politique de confidentialité (<https://www.goatcounter.com/help/privacy>)
+  indique qu’il ne conserve jamais les adresses IP ni le User-Agent
+  complet : il les garde en mémoire jusqu’à 8 heures, uniquement pour
+  reconnaître une visite répétée, sans cookie.
 - **Tout le monde peut consulter les totaux** sur le tableau de bord
   public, <https://forkbuild.goatcounter.com/>.
 

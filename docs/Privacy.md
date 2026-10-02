@@ -92,10 +92,12 @@ sets no cookies. That request is all it sends:
   number that stops the image being cached. No page, document, World,
   identity, referrer or anything ForkBuild stores is included, so it cannot
   tell what you do in the app, or even which page you opened.
-- **What it keeps:** totals: visitors per day, and which browsers, systems
-  and countries they came from. Its own privacy policy says it does not
-  store IP addresses; it uses the address and User-Agent only to tell
-  visitors apart for the day, without cookies.
+- **What it keeps:** totals only: visitors per hour and per day, and which
+  browsers, systems, countries and languages they came from, each counted
+  separately so they can't be linked to each other. Its privacy policy
+  (<https://www.goatcounter.com/help/privacy>) says it never stores IP
+  addresses or the full User-Agent: it holds them in memory for up to 8
+  hours, only to recognize a repeat visit, without cookies.
 - **Anyone can see the totals** on the public dashboard,
   <https://forkbuild.goatcounter.com/>.
 
