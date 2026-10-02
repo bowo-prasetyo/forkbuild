@@ -7,8 +7,9 @@ built from bricks, forked like source code, published through interchangeable
 storage and announcement providers, and explored in a shared 3D world. There are
 no accounts: identities are key pairs held on your device, and people connect to
 each other directly over authenticated peer connections. The only server the
-default setup uses is a rendezvous server that helps peers find each other; see
-[docs/Privacy.md](docs/Privacy.md) for everything the app contacts.
+default setup uses is a rendezvous server that helps peers find each other,
+plus an anonymous, cookie-free visitor count once a day that you can turn off;
+see [docs/Privacy.md](docs/Privacy.md) for everything the app contacts.
 
 **Version 1.2.0**, released 2026-10-01: see the
 [release notes](docs/ReleaseNotes-1.2.md). It adds five languages, sound,

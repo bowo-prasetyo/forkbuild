@@ -161,3 +161,14 @@ device**: back it up, or open it in World View with **Explore** and use
 **Distribute** under **My Shared World**. Sharing it with connected peers
 isn't recorded as a distribution: they keep a copy only as long as they
 choose to.
+
+## Daily visitor count
+
+At the bottom of the page, **Daily visitor count** controls the one thing
+ForkBuild sends that no feature needs. Once a day, the official site tells
+GoatCounter that one more browser opened it. The request names no page,
+build or person and sets no cookie, and anyone can see the totals on the
+public dashboard. Untick **Count this browser** to stop it; the choice is
+saved at once, in this browser only. A browser that sends Global Privacy
+Control or Do Not Track is never counted, and the switch says so. See
+[Privacy](../Privacy.md#visitor-count) for exactly what is sent.

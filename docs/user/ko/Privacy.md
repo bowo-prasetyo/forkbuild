@@ -1,16 +1,16 @@
-<!-- translation-of: docs/Privacy.md source-hash: 91943196a1dbc4fd -->
+<!-- translation-of: docs/Privacy.md source-hash: 3fe6977b0afb8c98 -->
 # 개인정보 보호
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · **한국어** · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
 
-<!-- languages -->
-<!-- /languages -->
-
-ForkBuild에는 계정도 분석 도구도 없습니다. 작업은 내 브라우저에 저장되며, 다른
-컴퓨터와는 그것이 필요한 기능에서만 통신합니다. 이 페이지는 무엇을 저장하는지,
-그리고 연락할 수 있는 모든 서버와 그 시점을 나열합니다.
+ForkBuild에는 계정이 없고 나를 추적하지 않습니다. 작업은 내 브라우저에
+저장되며, 다른 컴퓨터와는 그것이 필요한 기능에서만 통신합니다. 예외는 만든
+사람들이 대략 몇 명이 사용하는지 알 수 있도록 하루에 한 번 보내는 익명 방문자
+집계뿐입니다(아래 “방문자 수 집계”에서 끄는 방법과 함께 설명합니다). 이
+페이지는 무엇을 저장하는지, 그리고 연락할 수 있는 모든 서버와 그 시점을
+나열합니다.
 
 ## 내 기기에 남는 것
 
@@ -27,6 +27,7 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
   언어 포함. 언어를 고르지 않았다면 ForkBuild는 기기에서 브라우저의 선호 언어를
   읽기만 하고 아무 데도 보내지 않음), 그리고 **네트워크 설정**에서 입력했다면
   TURN 서버의 사용자 이름과 자격 증명.
+- 이 브라우저가 일일 방문자 수 집계에 참여하는지 여부와 마지막으로 집계된 날.
 
 브라우저에서 이 사이트의 데이터를 지우면 모두 삭제되며, 다른 사본도 복구할 방법도
 없습니다. 먼저 **내 데이터 → 파일로 백업**으로 백업하세요: 파일에는 어느 신원으로
@@ -68,6 +69,35 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
   필요합니다. 로비의 **차단**은 그 사람을 내 로비 목록에서 숨기고, 피어 페이지와
   똑같이 차단합니다(접속 상태, 프로필, 채팅, 친구 요청).
 
+## 방문자 수 집계
+
+하루에 한 번, 그날 이 기기에서 ForkBuild를 처음 열 때 공식 사이트
+(`https://bowo-prasetyo.github.io/forkbuild/`)는 쿠키를 쓰지 않는 집계
+서비스인 GoatCounter(`forkbuild.goatcounter.com`)에서 아주 작은 이미지 하나를
+불러옵니다. 보내는 것은 이 요청뿐입니다.
+
+- **GoatCounter가 받는 것:** 여느 웹 요청처럼 내 IP 주소와 브라우저의
+  User-Agent, 그리고 고정된 경로(`/`)와 이미지가 캐시되지 않게 하는 난수.
+  페이지, 문서, 월드, 신원, 리퍼러, ForkBuild가 저장한 어떤 것도 포함되지
+  않으므로, 앱에서 무엇을 하는지는 물론 어떤 페이지를 열었는지도 알 수
+  없습니다.
+- **보관하는 것:** 합계, 곧 하루 방문자 수와 어떤 브라우저, 시스템, 국가에서
+  왔는지입니다. GoatCounter의 개인정보 처리방침에 따르면 IP 주소는 저장하지
+  않으며, 주소와 User-Agent는 쿠키 없이 그날의 방문자를 구별하는 데에만
+  씁니다.
+- **합계는 누구나 볼 수 있습니다.** 공개 대시보드
+  <https://forkbuild.goatcounter.com/>에서 확인하세요.
+
+다음 경우에는 보내지 않습니다.
+
+- 브라우저가 Global Privacy Control 또는 Do Not Track을 보낼 때
+- **내 데이터 → 일일 방문자 수 → 이 브라우저 집계하기**를 끈 때(이 선택은 이
+  브라우저에만 저장됨)
+- `localhost`를 포함해 공식 사이트가 아닌 곳에서 제공되는 ForkBuild 사본
+
+코드는 `core/VisitorCount.js`, `application/settings/CountDailyVisit.js`,
+`ui/start.js`에 있습니다.
+
 ## ForkBuild가 연락하는 서버
 
 모든 스크립트, 스타일, 글꼴은 앱을 제공하는 사이트에서 옵니다
@@ -81,6 +111,7 @@ Nostr 릴레이, Arweave 게이트웨이, Steem 노드에서 새 공지를 읽�
 
 | 언제 | 서버 (기본값) | 받는 것 |
 | --- | --- | --- |
+| 공식 사이트에서 앱을 열 때, 하루에 최대 한 번(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정된 경로로, 리퍼러와 쿠키 없이 보내는 이미지 요청 하나 |
 | **피어**에서 나를 검색 가능하게 하거나 누군가를 찾을 때 | 랑데부 서버(`forkbuild-rendezvous.prazjp.workers.dev`) | 내 신원의 공개 키와 연결 제안(최대 15분 보관), 내가 찾는 신원, 찾은 사람과 연결할 때 내 연결 응답(내 네트워크 주소가 나열됨, 그 사람만 가져갈 수 있음) |
 | 공개 로비에 참가하거나 들여다볼 때 | 같은 랑데부 서버 | 내 서명된 로비 카드(공개 키, 표시 이름, 어느 로비인지. 최대 15분 보관되며 머무는 동안 갱신), 내가 들여다보는 로비 |
 | 피어 연결이 시작될 때 | STUN 서버(`stun.l.google.com`) | 내 공개 IP 주소 요청 외에는 없음 |
@@ -114,3 +145,7 @@ TURN 릴레이를 제공하는지(`server/rendezvous-worker/README.md`), 그리�
 받아들이므로, 다른 곳에서 호스팅하는 사본에는 자체 서버가 필요합니다
 ([docs/Deployment.md](../../Deployment.md)(영어) 참고). 다른 사람을 위해 ForkBuild를
 호스팅한다면, 이 페이지를 고쳐 내 서버들의 이름을 적으세요.
+
+방문자 수 집계는 공식 사이트에서만 동작하므로 다른 곳에서 호스팅한 사본은
+아무것도 집계하지 않습니다. 내 방문자를 집계하려면 `core/VisitorCount.js`의
+주소와 `index.html` Content Security Policy의 `img-src` 항목을 바꾸세요.

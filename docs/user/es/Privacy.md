@@ -1,14 +1,17 @@
-<!-- translation-of: docs/Privacy.md source-hash: 91943196a1dbc4fd -->
+<!-- translation-of: docs/Privacy.md source-hash: 3fe6977b0afb8c98 -->
 # Privacidad
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · **Español** · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
 
-ForkBuild no tiene cuentas ni analíticas. Guarda su trabajo en su propio
+ForkBuild no tiene cuentas y no lo rastrea. Guarda su trabajo en su propio
 navegador y habla con otras computadoras solo para las funciones que lo
-necesitan. Esta página muestra lo que guarda, y cada servidor con el que
-puede comunicarse y cuándo.
+necesitan, además de un recuento anónimo de visitantes una vez al día para
+que sus creadores sepan aproximadamente cuántas personas lo usan (consulte
+«Recuento de visitantes» más abajo, y cómo desactivarlo). Esta página
+muestra lo que guarda, y cada servidor con el que puede comunicarse y
+cuándo.
 
 ## Lo que se queda en su dispositivo
 
@@ -30,7 +33,9 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
   si no eligió ninguno, ForkBuild lee en el dispositivo los idiomas
   preferidos del navegador y no los envía a ningún lugar), y el nombre de
   usuario y la credencial de un servidor TURN si ingresa uno en
-  **Configuración de red**.
+  **Configuración de red**;
+- si este navegador participa en el recuento diario de visitantes, y el
+  último día en que lo hizo.
 
 Borrar los datos de este sitio en el navegador lo elimina todo, y no hay
 ninguna otra copia ni forma de recuperarlo. Haga primero una copia de
@@ -87,6 +92,38 @@ fuera de las copias.
   bloquea igual que en la página Pares (presencia, perfil, chat y
   solicitudes de amistad).
 
+## Recuento de visitantes
+
+Una vez al día, la primera vez que ForkBuild se abre en este dispositivo ese
+día del calendario, el sitio oficial
+(`https://bowo-prasetyo.github.io/forkbuild/`) carga una imagen diminuta de
+GoatCounter (`forkbuild.goatcounter.com`), un contador que no usa cookies.
+Esa solicitud es todo lo que envía:
+
+- **Lo que recibe GoatCounter:** su dirección IP y el User-Agent de su
+  navegador, como en cualquier solicitud web, más una ruta fija (`/`) y un
+  número aleatorio que evita que la imagen quede en caché. No incluye
+  ninguna página, documento, mundo, identidad, referente ni nada que
+  ForkBuild guarde, así que no puede saber qué hace en la aplicación, ni
+  siquiera qué página abrió.
+- **Lo que conserva:** totales: visitantes por día, y de qué navegadores,
+  sistemas y países llegaron. Su propia política de privacidad dice que no
+  guarda direcciones IP; usa la dirección y el User-Agent solo para
+  distinguir a los visitantes de ese día, sin cookies.
+- **Cualquiera puede ver los totales** en el panel público,
+  <https://forkbuild.goatcounter.com/>.
+
+Nunca se envía:
+
+- cuando su navegador envía Global Privacy Control o Do Not Track;
+- cuando desactiva **Sus datos → Recuento diario de visitantes → Contar
+  este navegador** (la elección se guarda solo en este navegador);
+- desde ninguna copia de ForkBuild servida desde otro lugar que no sea el
+  sitio oficial, incluido `localhost`.
+
+El código está en `core/VisitorCount.js`,
+`application/settings/CountDailyVisit.js` y `ui/start.js`.
+
 ## Servidores con los que se comunica ForkBuild
 
 Cada script, estilo y fuente proviene del sitio desde el que se sirve la
@@ -102,6 +139,7 @@ dirección IP y lo que usted le pide.
 
 | Cuándo | Servidor (predeterminado) | Qué recibe |
 | --- | --- | --- |
+| La aplicación se abre en el sitio oficial, como mucho una vez al día (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con una ruta fija, sin referente y sin cookie |
 | Se vuelve descubrible, o busca a alguien, en **Pares** | el servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | la clave pública de su identidad y una oferta de conexión, que se guardan como máximo 15 minutos; la identidad que busca; cuando se conecta con alguien que encontró, su respuesta de conexión (que muestra sus direcciones de red), que solo esa persona puede recoger |
 | Se une a una sala pública, o mira una | el mismo servidor de encuentro | su tarjeta de sala firmada (clave pública, nombre visible, qué sala), que se guarda como máximo 15 minutos y se renueva mientras se queda; qué sala mira |
 | Se inicia una conexión entre pares | servidores STUN (`stun.l.google.com`) | nada más que una solicitud de su dirección IP pública |
@@ -139,3 +177,8 @@ predeterminado solo acepta el origen del sitio oficial, así que una copia
 alojada en otro lugar necesita el suyo (consulte
 [docs/Deployment.md](../../Deployment.md), en inglés). Si aloja ForkBuild
 para otras personas, actualice esta página para nombrar sus servidores.
+
+El recuento de visitantes solo funciona en el sitio oficial, así que una
+copia alojada en otro lugar no cuenta nada. Para contar sus propios
+visitantes, cambie las direcciones de `core/VisitorCount.js` y la entrada
+`img-src` de la Content Security Policy de `index.html`.

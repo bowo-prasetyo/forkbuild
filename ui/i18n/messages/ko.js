@@ -56,6 +56,15 @@ export default Object.freeze({
     'language.helpTranslate': 'ForkBuild를 다른 언어로 번역하는 데 도움을 주려면 소스 코드의 docs/Translating.md를 참고하세요.',
     'language.unavailable': '여기서는 언어 설정을 사용할 수 없습니다.',
 
+    // 내 데이터 페이지의 일일 방문자 수(ui/components/VisitorCountSetting.js).
+    'visitorCount.title': '일일 방문자 수',
+    'visitorCount.intro': 'ForkBuild는 하루에 한 번 브라우저 하나가 더 열었다는 사실을 GoatCounter에 알려, 만든 사람들이 대략 몇 명이 사용하는지 알 수 있게 합니다. 이 요청에는 페이지, 작품, 사람에 대한 정보가 없고 쿠키도 설정하지 않으며, GoatCounter는 합계만 보관합니다.',
+    'visitorCount.label': '이 브라우저 집계하기',
+    'visitorCount.browserAsksNotToTrack': '이 브라우저는 사이트에 추적하지 말라고 요청하므로(Global Privacy Control 또는 Do Not Track) 집계되지 않습니다.',
+    'visitorCount.details': '합계는 누구나 {dashboard}에서 볼 수 있습니다. 무엇을 언제 보내는지는 {privacy}에 설명되어 있습니다.',
+    'visitorCount.dashboard': '공개 대시보드',
+    'visitorCount.privacy': '개인정보 보호 페이지',
+
     // World View (ui/views/WorldView.js).
     'worldView.forkCreated': '수정 가능한 내 사본을 만들었습니다. “{title}”은(는) 그대로입니다',
 

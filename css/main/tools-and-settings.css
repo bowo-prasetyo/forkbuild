@@ -747,6 +747,15 @@
     }
 }
 
+.visitor-count-setting a {
+    color: #4caf7d;
+    text-decoration: none;
+}
+
+.visitor-count-setting a:hover {
+    text-decoration: underline;
+}
+
 .your-data-section h3 {
     margin: 1rem 0 0.4rem;
     font-size: 0.95rem;

@@ -54,6 +54,7 @@ import { composeContentAndSnapshots } from './main/composeContentAndSnapshots.js
 import { composeWorldDiscovery } from './main/composeWorldDiscovery.js';
 import { composeInjectedWalletServices } from './main/composeInjectedWalletServices.js';
 import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
+import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
 import { verifyClaimedBuildPublication } from '../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
 import { setDocumentTitles } from '../application/document/DocumentTitles.js';
 import { t } from './i18n/i18n.js';
@@ -371,6 +372,8 @@ app.provide('preferredSnapshotPlacementCreationCoordinator', preferredSnapshotPl
 app.provide('roleProviderPreferenceStore', roleProviderPreferenceStore);
 // Read once by ui/boot.js before the app loads; the Language page saves to it.
 app.provide('languageSettingsStore', new LanguageSettingsStore({ storageProvider: new LocalStorageProvider() }));
+// Counted once a day by ui/start.js; Your Data turns it off.
+app.provide('visitorCountSettingsStore', new VisitorCountSettingsStore({ storageProvider: new LocalStorageProvider() }));
 app.provide('setRoleProviderPreferenceUseCase', setRoleProviderPreferenceUseCase);
 // Only a seed for each Announcement/Discovery picker's own selection, never
 // read again after the picker mounts.

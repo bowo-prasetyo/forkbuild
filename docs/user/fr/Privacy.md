@@ -1,14 +1,17 @@
-<!-- translation-of: docs/Privacy.md source-hash: 91943196a1dbc4fd -->
+<!-- translation-of: docs/Privacy.md source-hash: 3fe6977b0afb8c98 -->
 # Confidentialité
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · **Français** · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
 
-ForkBuild n’a ni comptes ni outils de mesure d’audience. Il stocke votre
-travail dans votre propre navigateur et ne communique avec d’autres
-ordinateurs que pour les fonctionnalités qui en ont besoin. Cette page
-liste ce qu’il stocke, et chaque serveur qu’il peut contacter, et quand.
+ForkBuild n’a pas de comptes et ne vous suit pas. Il stocke votre travail
+dans votre propre navigateur et ne communique avec d’autres ordinateurs que
+pour les fonctions qui en ont besoin, plus un comptage anonyme des visiteurs
+une fois par jour, afin que ses créateurs sachent à peu près combien de
+personnes l’utilisent (voir « Comptage des visiteurs » plus bas, et
+comment le désactiver). Cette page indique ce qu’il stocke, et chaque
+serveur qu’il peut contacter et quand.
 
 ## Ce qui reste sur votre appareil
 
@@ -30,7 +33,9 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   choisie ; quand vous n’en avez pas choisi, ForkBuild lit les langues
   préférées du navigateur sur l’appareil et ne les envoie nulle part), et
   le nom d’utilisateur et l’identifiant d’un serveur TURN si vous en
-  saisissez un sous **Paramètres réseau**.
+  saisissez un sous **Paramètres réseau**;
+- si ce navigateur participe au comptage quotidien des visiteurs, et le
+  dernier jour où il l’a fait.
 
 Effacer les données de ce site dans le navigateur supprime tout cela, et
 il n’existe aucune autre copie ni aucun moyen de le récupérer.
@@ -91,6 +96,40 @@ exclus des sauvegardes.
   bloque comme sur la page Pairs (présence, profil, chat et demandes
   d’ami).
 
+## Comptage des visiteurs
+
+Une fois par jour, la première fois que ForkBuild s’ouvre sur cet appareil
+ce jour-là, le site officiel (`https://bowo-prasetyo.github.io/forkbuild/`)
+charge une minuscule image depuis GoatCounter (`forkbuild.goatcounter.com`),
+un compteur qui ne dépose aucun cookie. Cette requête est tout ce qu’il
+envoie.
+
+- **Ce que reçoit GoatCounter :** votre adresse IP et le User-Agent de
+  votre navigateur, comme pour toute requête web, plus un chemin fixe (`/`)
+  et un nombre aléatoire qui empêche l’image d’être mise en cache. Aucune
+  page, aucun document, aucun Monde, aucune identité, aucun référent ni rien
+  de ce que ForkBuild stocke n’est inclus ; il ne peut donc pas savoir ce
+  que vous faites dans l’application, ni même quelle page vous avez ouverte.
+- **Ce qu’il conserve :** des totaux, c’est-à-dire les visiteurs par jour,
+  et de quels navigateurs, systèmes et pays ils venaient. Sa propre
+  politique de confidentialité indique qu’il ne conserve pas les adresses
+  IP ; il utilise l’adresse et le User-Agent uniquement pour distinguer
+  les visiteurs de la journée, sans cookie.
+- **Tout le monde peut consulter les totaux** sur le tableau de bord
+  public, <https://forkbuild.goatcounter.com/>.
+
+Il n’est jamais envoyé :
+
+- quand votre navigateur envoie Global Privacy Control ou Do Not Track ;
+- quand vous désactivez **Vos données → Comptage quotidien des visiteurs →
+  Compter ce navigateur** (le choix est gardé dans ce navigateur
+  uniquement) ;
+- depuis une copie de ForkBuild servie ailleurs que sur le site officiel, y
+  compris `localhost`.
+
+Le code se trouve dans `core/VisitorCount.js`,
+`application/settings/CountDailyVisit.js` et `ui/start.js`.
+
 ## Les serveurs que ForkBuild contacte
 
 Chaque script, feuille de style et police vient du site depuis lequel
@@ -108,6 +147,7 @@ demandez.
 
 | Quand | Serveur (par défaut) | Ce qu’il reçoit |
 | --- | --- | --- |
+| L’application s’ouvre sur le site officiel, au plus une fois par jour (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe, sans référent et sans cookie |
 | Vous vous rendez découvrable, ou cherchez quelqu’un, dans **Pairs** | le serveur de rendez-vous (`forkbuild-rendezvous.prazjp.workers.dev`) | la clé publique de votre identité et une offre de connexion, conservées au plus 15 minutes ; l’identité que vous recherchez ; quand vous vous connectez à quelqu’un que vous avez trouvé, votre réponse de connexion (elle liste vos adresses réseau), que seule cette personne peut récupérer |
 | Vous rejoignez un salon public, ou y jetez un œil | le même serveur de rendez-vous | votre carte de salon signée (clé publique, nom affiché, quel salon), conservée au plus 15 minutes et renouvelée tant que vous restez ; le salon que vous consultez |
 | Une connexion entre pairs démarre | des serveurs STUN (`stun.l.google.com`) | rien d’autre qu’une demande de votre adresse IP publique |
@@ -147,3 +187,8 @@ ailleurs a donc besoin du sien (voir
 [docs/Deployment.md](../../Deployment.md), en anglais). Si vous hébergez
 ForkBuild pour d’autres, mettez à jour cette page pour nommer vos
 serveurs.
+
+Le comptage des visiteurs ne fonctionne que sur le site officiel, donc une
+copie hébergée ailleurs ne compte rien. Pour compter vos propres visiteurs,
+changez les adresses dans `core/VisitorCount.js` et l’entrée `img-src` de la
+Content Security Policy de `index.html`.

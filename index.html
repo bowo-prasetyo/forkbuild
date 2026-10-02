@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Content Security Policy: see docs/Deployment.md. The sha256 value is the hash of the
          import map below; tests/ContentSecurityPolicy.test.js fails if they drift apart. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-1Yauk+MBJJXMGtEunLNkm2IMuBHncM/1loYKdwVuAa4='; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob:; connect-src 'self' https: wss: http://127.0.0.1:* http://localhost:*; worker-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-1Yauk+MBJJXMGtEunLNkm2IMuBHncM/1loYKdwVuAa4='; style-src 'self'; img-src 'self' data: blob: https://forkbuild.goatcounter.com; font-src 'self'; media-src 'self' blob:; connect-src 'self' https: wss: http://127.0.0.1:* http://localhost:*; worker-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
     <title>ForkBuild</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -33,6 +33,8 @@
     <link rel="modulepreload" href="storage/openBrowserStorage.js">
     <link rel="modulepreload" href="storage/LocalStorageProvider.js">
     <link rel="modulepreload" href="application/settings/LanguageSettingsStore.js">
+    <link rel="modulepreload" href="application/settings/VisitorCountSettingsStore.js">
+    <link rel="modulepreload" href="application/settings/CountDailyVisit.js">
     <link rel="modulepreload" href="ui/i18n/i18n.js">
     <link rel="modulepreload" href="ui/i18n/locales.js">
     <link rel="modulepreload" href="ui/importWithRetry.js">
@@ -96,6 +98,7 @@
     <link rel="modulepreload" href="storage/StorageFullError.js">
     <link rel="modulepreload" href="storage/StorageEntryNotLoadedError.js">
     <link rel="modulepreload" href="core/LanguageSettings.js">
+    <link rel="modulepreload" href="core/VisitorCount.js">
     <link rel="modulepreload" href="ui/i18n/Translator.js">
     <link rel="modulepreload" href="core/Message.js">
     <link rel="modulepreload" href="core/UserFacingError.js">
