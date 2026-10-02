@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 3fe6977b0afb8c98 -->
+<!-- translation-of: docs/Privacy.md source-hash: 44d0a17739347ec8 -->
 # Privacidad
 
 <!-- languages -->
@@ -106,10 +106,12 @@ Esa solicitud es todo lo que envía:
   ninguna página, documento, mundo, identidad, referente ni nada que
   ForkBuild guarde, así que no puede saber qué hace en la aplicación, ni
   siquiera qué página abrió.
-- **Lo que conserva:** totales: visitantes por día, y de qué navegadores,
-  sistemas y países llegaron. Su propia política de privacidad dice que no
-  guarda direcciones IP; usa la dirección y el User-Agent solo para
-  distinguir a los visitantes de ese día, sin cookies.
+- **Lo que conserva:** solo totales: visitantes por hora y por día, y de qué
+  navegadores, sistemas, países e idiomas llegaron, cada cosa contada por
+  separado, de modo que no se pueden relacionar entre sí. Su política de
+  privacidad (<https://www.goatcounter.com/help/privacy>) dice que nunca
+  guarda direcciones IP ni el User-Agent completo: los mantiene en memoria
+  hasta 8 horas, solo para reconocer una visita repetida, sin cookies.
 - **Cualquiera puede ver los totales** en el panel público,
   <https://forkbuild.goatcounter.com/>.
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 3fe6977b0afb8c98 -->
+<!-- translation-of: docs/Privacy.md source-hash: 44d0a17739347ec8 -->
 # プライバシー
 
 <!-- languages -->
@@ -101,11 +101,12 @@ ForkBuild にはアカウントがなく、あなたを追跡しません。作�
   ドキュメント、ワールド、ID、リファラー、ForkBuild が保存しているものは
   何も含まれないため、アプリで何をしているかはもちろん、どのページを
   開いたかもわかりません。
-- **保存するもの：** 合計だけです。1 日あたりの訪問者数と、どの
-  ブラウザー・システム・国からのものかの集計です。GoatCounter 自身の
-  プライバシーポリシーによれば IP アドレスは保存せず、アドレスと
-  User-Agent は、Cookie を使わずにその日の訪問者を区別するためだけに
-  使います。
+- **保存するもの：** 合計だけです。1 時間ごと・1 日ごとの訪問者数と、どの
+  ブラウザー・システム・国・言語からのものかを、互いに結び付けられない
+  よう別々に集計します。GoatCounter のプライバシーポリシー
+  （<https://www.goatcounter.com/help/privacy>）によれば、IP アドレスや
+  User-Agent 全体は保存せず、Cookie を使わずに再訪問を見分けるためだけに、
+  最大 8 時間メモリー上に保持します。
 - **合計は誰でも見られます。** 公開ダッシュボード
   <https://forkbuild.goatcounter.com/> をご覧ください。
 

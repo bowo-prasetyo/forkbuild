@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 3fe6977b0afb8c98 -->
+<!-- translation-of: docs/Privacy.md source-hash: 44d0a17739347ec8 -->
 # Privasi
 
 <!-- languages -->
@@ -109,11 +109,13 @@ penghitung yang tidak memasang cookie. Hanya permintaan itu yang dikirim:
   dokumen, Dunia, identitas, perujuk, atau apa pun yang disimpan ForkBuild
   yang ikut dikirim, jadi GoatCounter tidak dapat tahu apa yang Anda
   lakukan di aplikasi, bahkan halaman mana yang Anda buka.
-- **Yang disimpannya:** jumlah total, yaitu pengunjung per hari, serta dari
-  browser, sistem, dan negara mana mereka datang. Kebijakan privasinya
-  sendiri menyatakan bahwa ia tidak menyimpan alamat IP; alamat dan
-  User-Agent hanya dipakai untuk membedakan pengunjung pada hari itu, tanpa
-  cookie.
+- **Yang disimpannya:** hanya jumlah total, yaitu pengunjung per jam dan per
+  hari, serta dari browser, sistem, negara, dan bahasa mana mereka datang,
+  masing-masing dihitung terpisah sehingga tidak dapat dikaitkan satu sama
+  lain. Kebijakan privasinya (<https://www.goatcounter.com/help/privacy>)
+  menyatakan bahwa ia tidak pernah menyimpan alamat IP atau User-Agent
+  lengkap: keduanya hanya disimpan di memori hingga 8 jam untuk mengenali
+  kunjungan berulang, tanpa cookie.
 - **Siapa pun dapat melihat jumlah totalnya** di dasbor publik,
   <https://forkbuild.goatcounter.com/>.
 

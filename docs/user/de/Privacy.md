@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 3fe6977b0afb8c98 -->
+<!-- translation-of: docs/Privacy.md source-hash: 44d0a17739347ec8 -->
 # Datenschutz
 
 <!-- languages -->
@@ -109,10 +109,14 @@ setzt. Mehr sendet sie nicht:
   nichts, was ForkBuild speichert, ist enthalten; GoatCounter erfährt also
   nicht, was Sie in der App tun, nicht einmal, welche Seite Sie geöffnet
   haben.
-- **Was es behält:** Summen: Besucher pro Tag und aus welchen Browsern,
-  Systemen und Ländern sie kamen. Laut seiner eigenen Datenschutzerklärung
-  speichert es keine IP-Adressen; es nutzt Adresse und User-Agent nur, um
-  Besucher eines Tages ohne Cookies auseinanderzuhalten.
+- **Was es behält:** nur Summen: Besucher pro Stunde und pro Tag und aus
+  welchen Browsern, Systemen, Ländern und Sprachen sie kamen, jeweils
+  getrennt gezählt, sodass sie sich nicht miteinander verknüpfen lassen.
+  Laut seiner Datenschutzerklärung
+  (<https://www.goatcounter.com/help/privacy>) speichert es nie IP-Adressen
+  oder den vollständigen User-Agent: Es hält sie bis zu 8 Stunden im
+  Arbeitsspeicher, nur um einen wiederholten Besuch zu erkennen, ohne
+  Cookies.
 - **Die Summen kann jeder sehen**, im öffentlichen Dashboard unter
   <https://forkbuild.goatcounter.com/>.
 

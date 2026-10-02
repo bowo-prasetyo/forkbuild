@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 3fe6977b0afb8c98 -->
+<!-- translation-of: docs/Privacy.md source-hash: 44d0a17739347ec8 -->
 # 개인정보 보호
 
 <!-- languages -->
@@ -81,10 +81,11 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
   페이지, 문서, 월드, 신원, 리퍼러, ForkBuild가 저장한 어떤 것도 포함되지
   않으므로, 앱에서 무엇을 하는지는 물론 어떤 페이지를 열었는지도 알 수
   없습니다.
-- **보관하는 것:** 합계, 곧 하루 방문자 수와 어떤 브라우저, 시스템, 국가에서
-  왔는지입니다. GoatCounter의 개인정보 처리방침에 따르면 IP 주소는 저장하지
-  않으며, 주소와 User-Agent는 쿠키 없이 그날의 방문자를 구별하는 데에만
-  씁니다.
+- **보관하는 것:** 합계뿐입니다. 시간별·일별 방문자 수와 어떤 브라우저, 시스템,
+  국가, 언어에서 왔는지를 서로 연결할 수 없도록 각각 따로 집계합니다.
+  GoatCounter의 개인정보 처리방침(<https://www.goatcounter.com/help/privacy>)에
+  따르면 IP 주소나 전체 User-Agent는 저장하지 않으며, 쿠키 없이 재방문을
+  알아보기 위해서만 최대 8시간 동안 메모리에 둡니다.
 - **합계는 누구나 볼 수 있습니다.** 공개 대시보드
   <https://forkbuild.goatcounter.com/>에서 확인하세요.
 
