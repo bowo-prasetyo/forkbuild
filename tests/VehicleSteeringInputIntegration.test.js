@@ -36,7 +36,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // tested steering/movement/collision/heading pipeline, without ever
 // re-implementing any part of that pipeline itself.
 //
-//   Keyboard input (ArrowLeft/ArrowRight)
+//   Keyboard input (ArrowRight/ArrowLeft)
 //           |
 //           v
 //   core/VehicleSteeringInputAdapter.js        <- "what happened"
@@ -50,11 +50,11 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //           v
 //   attempted movement -> collision -> realized position -> heading
 //
-//   Section A: Left mapping — a real ArrowLeft press reaches
-//              setVehicleSteeringIntent() as LEFT, and holding the key
+//   Section A: Right mapping — a real ArrowRight press reaches
+//              setVehicleSteeringIntent() as RIGHT, and holding the key
 //              (repeated keydown, no keyup between) never compounds a
 //              further turn beyond the one discrete pulse
-//   Section B: Right mapping — the mirror of A
+//   Section B: Left mapping — the mirror of A
 //   Section C: Neutral mapping — NONE is a real, explicit
 //              VehicleSteeringIntent once steering has engaged, never
 //              null/undefined; a fresh, never-steered session reports no
@@ -67,9 +67,9 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //              VehicleSteeringSimulation directly; their only job is
 //              input -> VehicleSteeringIntent
 //   Section F: FLAGSHIP — the real pipeline, driven by real keys: mount,
-//              forward, a real ArrowLeft press realizes a genuine LEFT
-//              turn end to end, then the mirror for ArrowRight
-//   Section G: blocked steering — a real ArrowLeft press against an
+//              forward, a real ArrowRight press realizes a genuine RIGHT
+//              turn end to end, then the mirror for ArrowLeft
+//   Section G: blocked steering — a real ArrowRight press against an
 //              already-flush obstacle leaves position AND heading
 //              completely unchanged
 //   Section H: structural exclusion audit — no steering angle, wheel
@@ -187,7 +187,7 @@ const { BRAKE } = AvatarVehicleBrakingIntent;
 
 async function runTests() {
     // -------------------------------------------------------------
-    // Section A — Left mapping.
+    // Section A — Right mapping.
     // -------------------------------------------------------------
     {
         const registry = buildRegistry();
@@ -197,15 +197,15 @@ async function runTests() {
 
         assert(session.vehicleSteeringIntent() === null, '1. a fresh session reports no active steering request before any steer key is ever pressed');
 
-        const consumed = session.avatarKeyDown('ArrowLeft');
-        assert(consumed === true, '2. avatarKeyDown("ArrowLeft") reports the event as consumed while Avatar Control Mode is on');
+        const consumed = session.avatarKeyDown('ArrowRight');
+        assert(consumed === true, '2. avatarKeyDown("ArrowRight") reports the event as consumed while Avatar Control Mode is on');
         const intent = session.vehicleSteeringIntent();
-        assert(intent !== null && intent !== undefined, '3. pressing ArrowLeft genuinely reaches setVehicleSteeringIntent() — no longer null/undefined');
+        assert(intent !== null && intent !== undefined, '3. pressing ArrowRight genuinely reaches setVehicleSteeringIntent() — no longer null/undefined');
         assert(intent instanceof VehicleSteeringIntent, '4. ...and it is a real VehicleSteeringIntent instance, never a bare string');
-        assert(intent.isLeft === true, '5. ...specifically LEFT');
+        assert(intent.isRight === true, '5. ...specifically RIGHT');
 
-        session.avatarKeyUp('ArrowLeft');
-        assert(session.vehicleSteeringIntent().isLeft === true, '6. releasing ArrowLeft is never itself a signal — the held request survives a key-up untouched, matching every other transition in this codebase');
+        session.avatarKeyUp('ArrowRight');
+        assert(session.vehicleSteeringIntent().isRight === true, '6. releasing ArrowRight is never itself a signal — the held request survives a key-up untouched, matching every other transition in this codebase');
     }
     {
         // Case-insensitivity, matching every other raw-key comparison
@@ -216,13 +216,13 @@ async function runTests() {
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'steer-a2');
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
         session.setAvatarControlMode(true);
-        session.avatarKeyDown('arrowleft');
-        assert(session.vehicleSteeringIntent().isLeft === true, '7. lowercase "arrowleft" engages LEFT steering too');
+        session.avatarKeyDown('arrowright');
+        assert(session.vehicleSteeringIntent().isRight === true, '7. lowercase "arrowright" engages RIGHT steering too');
     }
     {
         // A3 — THE CENTRAL SEMANTIC CLAIM this milestone exists to prove:
-        // holding ArrowLeft down — a real browser's own key-repeat firing
-        // keydown('ArrowLeft') over and over with no keyup in between —
+        // holding ArrowRight down — a real browser's own key-repeat firing
+        // keydown('ArrowRight') over and over with no keyup in between —
         // turns the vehicle exactly ONCE, never a further compounding turn
         // on every repeated keydown. See
         // core/VehicleSteeringInputAdapter.js's own header for exactly why
@@ -236,16 +236,16 @@ async function runTests() {
         injectMountedVehicle(session, VEHICLE_ID, spawnPosition);
 
         session.avatarKeyDown('w');
-        for (let i = 0; i < 5; i++) session.avatarKeyDown('ArrowLeft');
+        for (let i = 0; i < 5; i++) session.avatarKeyDown('ArrowRight');
         for (let i = 0; i < 20; i++) fireFrame(session, 0.05);
         const headingAfterHold = session._vehicleRuntimeInstances.get(VEHICLE_ID).heading;
-        assertClose(headingAfterHold, 315, '8. holding ArrowLeft (5 repeated keydown events, no keyup between them) turns exactly once, to 315 — never 5x45 degrees further');
-        session.avatarKeyUp('ArrowLeft');
+        assertClose(headingAfterHold, 315, '8. holding ArrowRight (5 repeated keydown events, no keyup between them) turns exactly once, to 315 — never 5x45 degrees further');
+        session.avatarKeyUp('ArrowRight');
         session.avatarKeyUp('w');
     }
 
     // -------------------------------------------------------------
-    // Section B — Right mapping (the mirror of Section A).
+    // Section B — Left mapping (the mirror of Section A).
     // -------------------------------------------------------------
     {
         const registry = buildRegistry();
@@ -253,13 +253,13 @@ async function runTests() {
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
         session.setAvatarControlMode(true);
 
-        const consumed = session.avatarKeyDown('ArrowRight');
-        assert(consumed === true, '9. avatarKeyDown("ArrowRight") reports the event as consumed');
+        const consumed = session.avatarKeyDown('ArrowLeft');
+        assert(consumed === true, '9. avatarKeyDown("ArrowLeft") reports the event as consumed');
         const intent = session.vehicleSteeringIntent();
-        assert(intent instanceof VehicleSteeringIntent && intent.isRight === true, '10. pressing ArrowRight genuinely reaches setVehicleSteeringIntent() as RIGHT');
+        assert(intent instanceof VehicleSteeringIntent && intent.isLeft === true, '10. pressing ArrowLeft genuinely reaches setVehicleSteeringIntent() as LEFT');
 
-        session.avatarKeyUp('ArrowRight');
-        assert(session.vehicleSteeringIntent().isRight === true, '11. releasing ArrowRight does not itself alter the held request');
+        session.avatarKeyUp('ArrowLeft');
+        assert(session.vehicleSteeringIntent().isLeft === true, '11. releasing ArrowLeft does not itself alter the held request');
     }
     {
         const registry = buildRegistry();
@@ -271,11 +271,11 @@ async function runTests() {
         injectMountedVehicle(session, VEHICLE_ID, spawnPosition);
 
         session.avatarKeyDown('w');
-        for (let i = 0; i < 5; i++) session.avatarKeyDown('ArrowRight');
+        for (let i = 0; i < 5; i++) session.avatarKeyDown('ArrowLeft');
         for (let i = 0; i < 20; i++) fireFrame(session, 0.05);
         const headingAfterHold = session._vehicleRuntimeInstances.get(VEHICLE_ID).heading;
-        assertClose(headingAfterHold, 45, '12. holding ArrowRight turns exactly once, to 45 — the mirror of Section A3');
-        session.avatarKeyUp('ArrowRight');
+        assertClose(headingAfterHold, 45, '12. holding ArrowLeft turns exactly once, to 45 — the mirror of Section A3');
+        session.avatarKeyUp('ArrowLeft');
         session.avatarKeyUp('w');
     }
 
@@ -303,16 +303,16 @@ async function runTests() {
         injectMountedVehicle(session, VEHICLE_ID, spawnPosition);
 
         session.avatarKeyDown('w');
-        session.avatarKeyDown('ArrowLeft');
-        session.avatarKeyUp('ArrowLeft');
-        assert(session.vehicleSteeringIntent().isLeft === true, 'setup: a real LEFT request is pending before the first tick consumes it');
+        session.avatarKeyDown('ArrowRight');
+        session.avatarKeyUp('ArrowRight');
+        assert(session.vehicleSteeringIntent().isRight === true, 'setup: a real RIGHT request is pending before the first tick consumes it');
 
         for (let i = 0; i < 10; i++) {
             fireFrame(session, 0.05);
             const intent = session.vehicleSteeringIntent();
             assert(intent !== null && intent !== undefined, `15.${i} never null/undefined once steering has genuinely engaged`);
             assert(intent instanceof VehicleSteeringIntent, `16.${i} always a real VehicleSteeringIntent`);
-            assert(intent.isNone === true, `17.${i} no new steer-key edge since the one LEFT press -> an explicit NONE ("neither direction currently requested"), consumed within the SAME tick that used it — never a lingering LEFT/RIGHT, never null`);
+            assert(intent.isNone === true, `17.${i} no new steer-key edge since the one RIGHT press -> an explicit NONE ("neither direction currently requested"), consumed within the SAME tick that used it — never a lingering RIGHT/LEFT, never null`);
         }
         session.avatarKeyUp('w');
     }
@@ -354,9 +354,9 @@ async function runTests() {
         session.setAvatarControlMode(true);
         const frameCallback = session._session.calls.onAnimationFrameCallbacks[0];
 
-        session.avatarKeyDown('ArrowLeft');
-        session.avatarKeyUp('ArrowLeft');
-        assert(session.vehicleSteeringIntent().isLeft === true, 'setup: a steering request can be armed even while unmounted, same as braking (0.9.96)');
+        session.avatarKeyDown('ArrowRight');
+        session.avatarKeyUp('ArrowRight');
+        assert(session.vehicleSteeringIntent().isRight === true, 'setup: a steering request can be armed even while unmounted, same as braking (0.9.96)');
 
         session.avatarKeyDown('e');
         frameCallback(0.016);
@@ -387,8 +387,8 @@ async function runTests() {
         for (let i = 0; i < 60; i++) fireFrame(session, 0.05);
         const beforeTurn = session._vehicleRuntimeInstances.get(VEHICLE_ID).position;
 
-        session.avatarKeyDown('ArrowLeft');
-        session.avatarKeyUp('ArrowLeft');
+        session.avatarKeyDown('ArrowRight');
+        session.avatarKeyUp('ArrowRight');
         fireFrame(session, 0.05);
         const afterTurn = session._vehicleRuntimeInstances.get(VEHICLE_ID).position;
         const cruiseDelta = Math.hypot(afterTurn.x - beforeTurn.x, afterTurn.z - beforeTurn.z);
@@ -436,7 +436,7 @@ async function runTests() {
         for (const term of forbidden) {
             assert(!methodBody.includes(term), `28. _processVehicleSteeringInput() never references "${term}" either — a thin translation, never a new decision layer`);
         }
-        assert(methodBody.includes('VEHICLE_STEER_LEFT_KEY') && methodBody.includes('VEHICLE_STEER_RIGHT_KEY')
+        assert(methodBody.includes('VEHICLE_STEER_RIGHT_KEY') && methodBody.includes('VEHICLE_STEER_LEFT_KEY')
             && methodBody.includes('deriveVehicleSteeringInputEvent') && methodBody.includes('createVehicleSteeringIntent') && methodBody.includes('setVehicleSteeringIntent'),
             '29. sanity: the method genuinely calls through this milestone\'s own adapter into setVehicleSteeringIntent()');
         assert(!/VehicleType|VehiclePresence|AvatarVehicleMount|BICYCLE|MOTORCYCLE|\bCAR\b|DRONE|movementCapability|isMounted|avatarVehicleMount\(\)|GROUND_VEHICLE|AERIAL_VEHICLE/.test(methodBody),
@@ -448,15 +448,15 @@ async function runTests() {
 
         // Exactly the two arrow keys, no other existing movement/
         // interaction key repurposed for steering.
-        assert(/const VEHICLE_STEER_LEFT_KEY = 'arrowleft';/.test(rawSessionSource) && /const VEHICLE_STEER_RIGHT_KEY = 'arrowright';/.test(rawSessionSource),
-            '32. sanity: exactly two physical keys, ArrowLeft/ArrowRight, are bound to steering');
+        assert(/const VEHICLE_STEER_RIGHT_KEY = 'arrowright';/.test(rawSessionSource) && /const VEHICLE_STEER_LEFT_KEY = 'arrowleft';/.test(rawSessionSource),
+            '32. sanity: exactly two physical keys, ArrowRight/ArrowLeft, are bound to steering');
     }
 
     // -------------------------------------------------------------
     // Section F — FLAGSHIP: the real pipeline, driven by real keys.
-    // mount -> forward -> left input -> LEFT intent -> steering
+    // mount -> forward -> right input -> RIGHT intent -> steering
     // simulation -> movement -> collision -> realized heading, then the
-    // mirror for RIGHT.
+    // mirror for LEFT.
     // -------------------------------------------------------------
     {
         const registry = buildRegistry();
@@ -474,34 +474,34 @@ async function runTests() {
         const headingBeforeTurn = session._vehicleRuntimeInstances.get(VEHICLE_ID).heading;
         assertClose(headingBeforeTurn, 0, '33. sanity: a straight, un-steered ride north before any steering input at all');
 
-        // left input -> LEFT intent -> steering simulation -> movement ->
+        // right input -> RIGHT intent -> steering simulation -> movement ->
         // collision -> realized heading
-        assert(session.avatarKeyDown('ArrowLeft') === true, '34. ArrowLeft is consumed by the real key binding');
-        assert(session.vehicleSteeringIntent().isLeft === true, '35. the real key press reached setVehicleSteeringIntent() as LEFT');
-        session.avatarKeyUp('ArrowLeft');
-        for (let i = 0; i < 20; i++) fireFrame(session, 0.05);
-        const headingAfterLeft = session._vehicleRuntimeInstances.get(VEHICLE_ID).heading;
-        assertClose(headingAfterLeft, 315, '36. FLAGSHIP: a single real ArrowLeft press, through the real key binding, realizes a genuine LEFT turn end to end through the real controller and real collision constraints');
-
-        // ...then the mirror for RIGHT, from the vehicle's own new heading.
-        assert(session.avatarKeyDown('ArrowRight') === true, '37. ArrowRight is consumed by the real key binding too');
-        assert(session.vehicleSteeringIntent().isRight === true, '38. the real key press reached setVehicleSteeringIntent() as RIGHT');
+        assert(session.avatarKeyDown('ArrowRight') === true, '34. ArrowRight is consumed by the real key binding');
+        assert(session.vehicleSteeringIntent().isRight === true, '35. the real key press reached setVehicleSteeringIntent() as RIGHT');
         session.avatarKeyUp('ArrowRight');
         for (let i = 0; i < 20; i++) fireFrame(session, 0.05);
         const headingAfterRight = session._vehicleRuntimeInstances.get(VEHICLE_ID).heading;
-        assertClose(headingAfterRight, 0, '39. a single real ArrowRight press turns the vehicle back, the mirror of the LEFT turn above');
+        assertClose(headingAfterRight, 315, '36. FLAGSHIP: a single real ArrowRight press, through the real key binding, realizes a genuine RIGHT turn end to end through the real controller and real collision constraints');
+
+        // ...then the mirror for LEFT, from the vehicle's own new heading.
+        assert(session.avatarKeyDown('ArrowLeft') === true, '37. ArrowLeft is consumed by the real key binding too');
+        assert(session.vehicleSteeringIntent().isLeft === true, '38. the real key press reached setVehicleSteeringIntent() as LEFT');
+        session.avatarKeyUp('ArrowLeft');
+        for (let i = 0; i < 20; i++) fireFrame(session, 0.05);
+        const headingAfterLeft = session._vehicleRuntimeInstances.get(VEHICLE_ID).heading;
+        assertClose(headingAfterLeft, 0, '39. a single real ArrowLeft press turns the vehicle back, the mirror of the RIGHT turn above');
         session.avatarKeyUp('w');
     }
 
     // -------------------------------------------------------------
-    // Section G — blocked steering: a real ArrowLeft press against an
+    // Section G — blocked steering: a real ArrowRight press against an
     // already-flush obstacle leaves position AND heading completely
     // unchanged.
     // -------------------------------------------------------------
     {
         const registry = buildRegistry();
         const VEHICLE_ID = 'vehicle:steer-g-blocked';
-        // Pre-existing heading 45 — LEFT from 45 attempts due north (0),
+        // Pre-existing heading 45 — RIGHT from 45 attempts due north (0),
         // directly at a brick placed EXACTLY `0.5 + BICYCLE_RADIUS` north
         // of spawn (the identical "already flush against the obstacle"
         // technique tests/VehicleSteeringIntegrationAudit.test.js's own
@@ -520,21 +520,21 @@ async function runTests() {
         assert(session._vehicleRuntimeInstances.get(VEHICLE_ID).heading === 45, '40. sanity: the vehicle starts at a real, pre-existing heading of 45, never the default 0');
 
         session.avatarKeyDown('w');
-        session.avatarKeyDown('ArrowLeft');
-        session.avatarKeyUp('ArrowLeft');
-        assert(session.vehicleSteeringIntent().isLeft === true, 'setup: a real LEFT request is pending — attempts due north, directly at the flush obstacle');
+        session.avatarKeyDown('ArrowRight');
+        session.avatarKeyUp('ArrowRight');
+        assert(session.vehicleSteeringIntent().isRight === true, 'setup: a real RIGHT request is pending — attempts due north, directly at the flush obstacle');
 
         const before = session._vehicleRuntimeInstances.get(VEHICLE_ID);
         fireFrame(session, 0.05);
         const after = session._vehicleRuntimeInstances.get(VEHICLE_ID);
         assert(after.position.x === before.position.x && after.position.z === before.position.z,
-            '41. position unchanged: the entire attempted step, redirected by a real LEFT press, was fully absorbed by collision');
+            '41. position unchanged: the entire attempted step, redirected by a real RIGHT press, was fully absorbed by collision');
         assert(after.heading === 45,
             '42. heading unchanged: the blocked steering request never once reaches heading, because it never once reaches realized movement');
         assert(session._avatarVehicleMovementController.isCollided() === true,
             '43. sanity: this was genuinely registered as a real collision, not merely "no movement intent"');
         assert(session.vehicleSteeringIntent().isNone === true,
-            '44. the one-shot LEFT request already decayed to NONE after being consumed this tick — blocked or not, it is never reissued');
+            '44. the one-shot RIGHT request already decayed to NONE after being consumed this tick — blocked or not, it is never reissued');
         session.avatarKeyUp('w');
     }
 
@@ -561,7 +561,7 @@ async function runTests() {
         }
 
         // No PERSISTENT steering state of its own: the adapter carries no
-        // module-level mutable state — `leftHeld`/`rightHeld` are plain
+        // module-level mutable state — `rightHeld`/`leftHeld` are plain
         // function parameters, fed back in by the caller every time, never
         // a variable this module remembers between calls itself.
         assert(!adapterCode.includes('let ') && !adapterCode.includes('var ') && !/^\s*class\s/m.test(adapterCode),
@@ -570,7 +570,7 @@ async function runTests() {
             '48. core/VehicleSteeringInputAdapter.js exports exactly one function — no class, no hidden singleton, no second entry point');
 
         // core/VehicleSteeringIntent.js and core/VehicleSteeringSimulation.js
-        // remain exactly as 0.9.126/0.9.127 left them — untouched by this
+        // remain exactly as 0.9.126/0.9.127 right them — untouched by this
         // milestone's own input layer.
         const intentSource = await sourceOf('../core/VehicleSteeringIntent.js');
         assert(!intentSource.includes('key') && !intentSource.includes('KeyboardEvent') && !intentSource.includes('Arrow'),

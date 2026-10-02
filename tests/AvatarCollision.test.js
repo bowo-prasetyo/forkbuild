@@ -527,12 +527,12 @@ async function runTests() {
         assert(stoppedZ > worldPos.z - 1, '48. FLAGSHIP: ...specifically AT the collision boundary, not somewhere well short of it');
         assert(aliceSession._avatarMovementController.isCollided() === true, '49. FLAGSHIP: the controller reports the collision');
 
-        // 3-4. Turn 90 degrees, then slide along the wall.
-        aliceSession.avatarKeyDown('d');
+        // 3-4. Turn 90 degrees left (toward +X), then slide along the wall.
+        aliceSession.avatarKeyDown('a');
         for (let i = 0; i < 12; i++) { // 150 deg/s * 0.6s = 90 degrees
             aliceSession._avatarMovementController.tick(0.05);
         }
-        aliceSession.avatarKeyUp('d');
+        aliceSession.avatarKeyUp('a');
         assert(Math.abs(aliceAvatarPresenceSession.current.rotation.y - 90) < 1,
             '50. FLAGSHIP: Alice has turned approximately 90 degrees');
         const zAfterTurn = aliceAvatarPresenceSession.current.position.z;

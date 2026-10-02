@@ -34,7 +34,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // real player's own session actually takes, never a sequence of isolated
 // programmatic snapshots.
 //
-//   ArrowLeft / ArrowRight
+//   ArrowRight / ArrowLeft
 //             |
 //             v
 //   VehicleSteeringInputAdapter      (core/VehicleSteeringInputAdapter.js)
@@ -68,7 +68,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // (drive a real session and observe) or structurally (sweep the source of
 // the file that owns the claim):
 //
-//   1. ArrowLeft/ArrowRight are discrete steering PULSES, not a held rate.
+//   1. ArrowRight/ArrowLeft are discrete steering PULSES, not a held rate.
 //   2. Browser key-repeat does not generate repeated turns.
 //   3. A steering pulse rotates the attempted travel direction by 45
 //      degrees (`DEFAULT_VEHICLE_STEERING_TURN_DEGREES`,
@@ -101,7 +101,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //   Section CONTRACT — one direct check per numbered statement above.
 //   Section SEQUENCE — the flagship control-sequence contract test: a
 //     SINGLE continuous ride (never reset mid-scenario) through
-//     mount -> ride forward -> LEFT -> ride -> LEFT -> ride -> RIGHT ->
+//     mount -> ride forward -> RIGHT -> ride -> RIGHT -> ride -> LEFT ->
 //     ride -> blocked -> heading unchanged -> NONE -> continue attempting
 //     the same heading. This is the shape 0.9.129's own Sections A-H
 //     already proved piece by piece; this section is the one place all of
@@ -223,14 +223,14 @@ async function runTests() {
 
         // One deliberate press, held with real browser-style key-repeat
         // (four repeated keydown events, no keyup between them).
-        for (let i = 0; i < 4; i++) session.avatarKeyDown('ArrowLeft');
+        for (let i = 0; i < 4; i++) session.avatarKeyDown('ArrowRight');
         fireFrame(session, 0.05);
         assertClose(session._vehicleRuntimeInstances.get(vehicleId).heading, 315,
-            '1/2. one deliberate ArrowLeft press, even with real key-repeat behind it, turns the vehicle exactly once (0 -> 315) — a discrete pulse, never a held rate');
+            '1/2. one deliberate ArrowRight press, even with real key-repeat behind it, turns the vehicle exactly once (0 -> 315) — a discrete pulse, never a held rate');
         for (let i = 0; i < 10; i++) fireFrame(session, 0.05);
         assertClose(session._vehicleRuntimeInstances.get(vehicleId).heading, 315,
             '2b. ...and stays at exactly 315 across many further frames with the key still (physically) down but no new edge — key-repeat never compounds further turns');
-        session.avatarKeyUp('ArrowLeft');
+        session.avatarKeyUp('ArrowRight');
         session.avatarKeyUp('w');
     }
 
@@ -239,7 +239,7 @@ async function runTests() {
     // buried literal.
     {
         assert(DEFAULT_VEHICLE_STEERING_TURN_DEGREES === 45,
-            '3. the steering turn increment is exactly 45 degrees, and is the one named constant every LEFT/RIGHT pulse in this contract uses');
+            '3. the steering turn increment is exactly 45 degrees, and is the one named constant every RIGHT/LEFT pulse in this contract uses');
     }
 
     // 4 — NONE means no new steering operation: it never itself rotates
@@ -254,12 +254,12 @@ async function runTests() {
         session.setAvatarControlMode(true);
         injectMountedVehicle(session, vehicleId, { x: SPAWN.x + 500, y: 0, z: SPAWN.z + 500 });
         session.avatarKeyDown('w');
-        session.avatarKeyDown('ArrowLeft');
-        session.avatarKeyUp('ArrowLeft');
+        session.avatarKeyDown('ArrowRight');
+        session.avatarKeyUp('ArrowRight');
         fireFrame(session, 0.05);
         const consumed = session.vehicleSteeringIntent();
         assert(consumed instanceof VehicleSteeringIntent && consumed.isNone === true,
-            '4b. immediately after a pulse is applied, steering intent reports an explicit NONE — never null/undefined, never a lingering LEFT/RIGHT');
+            '4b. immediately after a pulse is applied, steering intent reports an explicit NONE — never null/undefined, never a lingering RIGHT/LEFT');
         const headingAfterPulse = session._vehicleRuntimeInstances.get(vehicleId).heading;
         for (let i = 0; i < 10; i++) fireFrame(session, 0.05);
         assertClose(session._vehicleRuntimeInstances.get(vehicleId).heading, headingAfterPulse,
@@ -285,11 +285,11 @@ async function runTests() {
 
         assert(session._vehicleRuntimeInstances.get(vehicleId).heading === 45, 'CONTRACT setup: a real, pre-existing heading of 45');
         session.avatarKeyDown('w');
-        session.avatarKeyDown('ArrowLeft');
-        session.avatarKeyUp('ArrowLeft');
-        // Heading 45, turned LEFT by 45, attempts due north (0) — directly
+        session.avatarKeyDown('ArrowRight');
+        session.avatarKeyUp('ArrowRight');
+        // Heading 45, turned RIGHT by 45, attempts due north (0) — directly
         // at the flush obstacle.
-        assert(session.vehicleSteeringIntent().isLeft === true, 'CONTRACT setup: a real LEFT request pending, aimed straight at the obstacle');
+        assert(session.vehicleSteeringIntent().isRight === true, 'CONTRACT setup: a real RIGHT request pending, aimed straight at the obstacle');
 
         const before = session._vehicleRuntimeInstances.get(vehicleId);
         fireFrame(session, 0.05);
@@ -302,7 +302,7 @@ async function runTests() {
     }
 
     // 8 — A/D remains avatar rotation, never vehicle steering: pressing
-    // 'a'/'d' never changes vehicleSteeringIntent(), and ArrowLeft/ArrowRight
+    // 'a'/'d' never changes vehicleSteeringIntent(), and ArrowRight/ArrowLeft
     // never change the avatar's own rotationY directly (only as a side
     // effect of the vehicle's own heading changing, which VehicleVisual —
     // not the avatar mesh — observes).
@@ -320,12 +320,12 @@ async function runTests() {
         session.avatarKeyDown('a');
         fireFrame(session, 0.05);
         assert(session.vehicleSteeringIntent() === null || session.vehicleSteeringIntent().isNone === true,
-            "8a. holding 'a' (avatar rotation) never itself produces a LEFT/RIGHT vehicle steering intent");
+            "8a. holding 'a' (avatar rotation) never itself produces a RIGHT/LEFT vehicle steering intent");
         session.avatarKeyUp('a');
 
-        session.avatarKeyDown('ArrowLeft');
-        assert(session.vehicleSteeringIntent().isLeft === true, '8b. ArrowLeft genuinely does produce vehicle steering intent, confirming this is a real distinction, not an untested one');
-        session.avatarKeyUp('ArrowLeft');
+        session.avatarKeyDown('ArrowRight');
+        assert(session.vehicleSteeringIntent().isRight === true, '8b. ArrowRight genuinely does produce vehicle steering intent, confirming this is a real distinction, not an untested one');
+        session.avatarKeyUp('ArrowRight');
         session.avatarKeyUp('w');
     }
 
@@ -355,7 +355,7 @@ async function runTests() {
         const result = controller.tick({
             seed: DEFAULT_WORLD_SEED, vehicleId: motorcycleInstance.id, capability,
             movementIntent: { direction: 1, turnAxis: 0, running: false, brakingRequested: false },
-            currentRotationY: 0, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.left()
+            currentRotationY: 0, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.right()
         });
         assert(result !== null, '9e. a genuinely TRACKED, movable motorcycle simulates a real tick, steering intent included');
 
@@ -373,7 +373,7 @@ async function runTests() {
         const carResult = carController.tick({
             seed: DEFAULT_WORLD_SEED, vehicleId: carInstance.id, capability: resolveAvatarVehicleMovementCapability(VehicleType.CAR),
             movementIntent: { direction: 1, turnAxis: 0, running: false, brakingRequested: false },
-            currentRotationY: 0, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.left()
+            currentRotationY: 0, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.right()
         });
         assert(carResult !== null, '9f. a genuinely TRACKED, movable car simulates a real tick too, steering intent included, as of 0.9.669');
 
@@ -392,7 +392,7 @@ async function runTests() {
         const droneResult = droneController.tick({
             seed: DEFAULT_WORLD_SEED, vehicleId: droneInstance.id, capability: resolveAvatarVehicleMovementCapability(VehicleType.DRONE),
             movementIntent: { direction: 1, turnAxis: 0, running: false, brakingRequested: false },
-            currentRotationY: 0, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.left()
+            currentRotationY: 0, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.right()
         });
         assert(droneResult !== null, '9g. a genuinely TRACKED, movable drone simulates a real tick too, steering intent included');
     }
@@ -400,8 +400,8 @@ async function runTests() {
     // ===============================================================
     // Section SEQUENCE — the flagship control-sequence contract test.
     //
-    //   mount bicycle -> ride forward -> LEFT -> ride -> LEFT -> ride ->
-    //   RIGHT -> ride -> blocked -> heading remains unchanged -> NONE ->
+    //   mount bicycle -> ride forward -> RIGHT -> ride -> RIGHT -> ride ->
+    //   LEFT -> ride -> blocked -> heading remains unchanged -> NONE ->
     //   continue along current heading
     //
     // One single session, one single mount, 'w' held continuously start
@@ -426,11 +426,11 @@ async function runTests() {
         assertClose(session._vehicleRuntimeInstances.get(vehicleId).heading, 0, 'SEQ. ride forward establishes a stable heading of 0 before any steering input');
         let previousPosition = session._vehicleRuntimeInstances.get(vehicleId).position;
 
-        // LEFT
-        session.avatarKeyDown('ArrowLeft');
-        session.avatarKeyUp('ArrowLeft');
+        // RIGHT
+        session.avatarKeyDown('ArrowRight');
+        session.avatarKeyUp('ArrowRight');
         fireFrame(session, 0.05);
-        assertClose(session._vehicleRuntimeInstances.get(vehicleId).heading, 315, 'SEQ. LEFT: 0 -> 315, one discrete pulse');
+        assertClose(session._vehicleRuntimeInstances.get(vehicleId).heading, 315, 'SEQ. RIGHT: 0 -> 315, one discrete pulse');
         assertClose(avatarPresenceSession.current.rotation.y, 315, 'SEQ. the rider turned with the vehicle: it faces 315 too');
 
         // ride in new direction
@@ -443,11 +443,11 @@ async function runTests() {
         assert(dx < -0.01 && dz > 0.01, 'SEQ. ...and the ride genuinely moved in the 315-degree direction (-X, +Z), never merely relabeled heading with no real displacement');
         previousPosition = currentPosition;
 
-        // LEFT
-        session.avatarKeyDown('ArrowLeft');
-        session.avatarKeyUp('ArrowLeft');
+        // RIGHT
+        session.avatarKeyDown('ArrowRight');
+        session.avatarKeyUp('ArrowRight');
         fireFrame(session, 0.05);
-        assertClose(session._vehicleRuntimeInstances.get(vehicleId).heading, 270, 'SEQ. LEFT again: 315 -> 270, the second independent pulse');
+        assertClose(session._vehicleRuntimeInstances.get(vehicleId).heading, 270, 'SEQ. RIGHT again: 315 -> 270, the second independent pulse');
 
         // ride in another direction
         for (let i = 0; i < 15; i++) fireFrame(session, 0.05);
@@ -457,11 +457,11 @@ async function runTests() {
         assert(dx < -0.01 && Math.abs(currentPosition.z - previousPosition.z) < 0.01, 'SEQ. ...moving due -X (270 degrees), genuinely a different direction than the previous leg');
         previousPosition = currentPosition;
 
-        // RIGHT
-        session.avatarKeyDown('ArrowRight');
-        session.avatarKeyUp('ArrowRight');
+        // LEFT
+        session.avatarKeyDown('ArrowLeft');
+        session.avatarKeyUp('ArrowLeft');
         fireFrame(session, 0.05);
-        assertClose(session._vehicleRuntimeInstances.get(vehicleId).heading, 315, 'SEQ. RIGHT: 270 -> 315, the third independent pulse — back to 315, but via a genuinely new, independent turn, not a no-op');
+        assertClose(session._vehicleRuntimeInstances.get(vehicleId).heading, 315, 'SEQ. LEFT: 270 -> 315, the third independent pulse — back to 315, but via a genuinely new, independent turn, not a no-op');
 
         // ride in resulting direction
         for (let i = 0; i < 15; i++) fireFrame(session, 0.05);
@@ -475,10 +475,10 @@ async function runTests() {
         // flush against a fresh obstacle placed directly ahead along its
         // own current (315-degree) heading, via the same public
         // setPosition() the real movement controller itself uses (never a
-        // direct field write) — heading is left completely untouched, so
+        // direct field write) — heading is right completely untouched, so
         // the vehicle arrives at the wall still genuinely heading 315,
         // exactly as if it had ridden there. The obstacle itself
-        // (installSyntheticWallCorner(), below) is a right-angle CORNER of
+        // (installSyntheticWallCorner(), below) is a left-angle CORNER of
         // bricks, not a single flat wall: a flat wall approached at a
         // diagonal (non-axis-aligned) heading like 315 would let the
         // vehicle clip and slide laterally along it, the way
@@ -532,7 +532,7 @@ async function runTests() {
     console.log('✅ All Vehicle Steering UX / Control Contract tests passed.');
 }
 
-// A small corner obstacle — two bricks meeting at a right angle, both
+// A small corner obstacle — two bricks meeting at a left angle, both
 // adjacent to `cornerCenter` — rather than a single flat wall, so that a
 // vehicle approaching along a diagonal (non-axis-aligned) heading is
 // blocked on both the X and Z components of its attempted step at once,

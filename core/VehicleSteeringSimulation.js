@@ -72,14 +72,11 @@ import { VehicleSteeringIntent, isValidVehicleSteeringIntent } from './VehicleSt
 // exact representation `core/VehicleMovementHeading.js`'s own header
 // already establishes (0 = facing +Z, 90 = facing +X) — the same
 // representation `VehicleInstance.heading` already stores, so a caller can
-// feed that field straight into this function with no conversion. RIGHT
-// increases heading, LEFT decreases it — the identical sign convention
-// `application/avatar/AvatarMovementController.js`'s own `turnAxis` already
-// establishes (`turnAxis = right(1) - left(1)`, and increasing `turnAxis`
-// increases `rotationY` in `core/AvatarMovementSimulation.js`) and
-// `core/VehicleMovementHeading.js`'s own degrees convention already
-// implies (0 -> +Z, 90 -> +X is a clockwise turn when viewed from above,
-// i.e. a RIGHT turn).
+// feed that field straight into this function with no conversion. LEFT
+// increases heading, RIGHT decreases it: with the camera behind the rider
+// (core/CameraPerspective.js), +X is on the screen's left of a rider facing
+// +Z, so 0 -> 90 is a LEFT turn. core/AvatarMovementSimulation.js turns
+// `turnAxis` (right(1) - left(1)) the same way.
 //
 // PURITY. `resolveVehicleMovementDirectionFromSteering()` reads only its
 // own arguments and returns a plain number — no runtime store access, no
@@ -129,11 +126,14 @@ export function resolveVehicleMovementDirectionFromSteering({ previousHeading, s
     const heading = normalizeDegrees(sanitizeNumber(previousHeading, 0));
     const turnDegrees = sanitizeTurnDegrees(steeringTurnDegrees);
 
+    // Heading grows from +Z toward +X, which is the screen's left with the
+    // camera behind the rider (core/CameraPerspective.js): LEFT adds, RIGHT
+    // subtracts.
     if (steeringIntent.isLeft) {
-        return normalizeDegrees(heading - turnDegrees);
+        return normalizeDegrees(heading + turnDegrees);
     }
     if (steeringIntent.isRight) {
-        return normalizeDegrees(heading + turnDegrees);
+        return normalizeDegrees(heading - turnDegrees);
     }
     // NONE — the current travel direction, unchanged. Deliberately
     // returned from the ALREADY-normalized `heading`, not the raw
