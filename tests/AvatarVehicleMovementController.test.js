@@ -485,15 +485,15 @@ async function runTests() {
             rotationY = controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:g3d', capability: bicycleCapability, movementIntent: FORWARD_INTENT, currentRotationY: rotationY, deltaSeconds: 0.05 }).rotationY;
         }
         const pulse = controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:g3d', capability: bicycleCapability, movementIntent: FORWARD_INTENT, currentRotationY: rotationY, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.right() });
-        assert(Math.abs(pulse.vehicleInstance.heading - 45) < 1e-6 && pulse.rotationY === pulse.vehicleInstance.heading,
-            '28f. a RIGHT pulse turns the vehicle to 45 and the rider with it');
+        assert(Math.abs(pulse.vehicleInstance.heading - 315) < 1e-6 && pulse.rotationY === pulse.vehicleInstance.heading,
+            '28f. a RIGHT pulse turns the vehicle to 315 and the rider with it');
         rotationY = pulse.rotationY;
         for (let i = 0; i < 10; i++) {
             const result = controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:g3d', capability: bicycleCapability, movementIntent: TURN_RIGHT_FORWARD, currentRotationY: rotationY, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.none() });
             assert(result.rotationY === result.vehicleInstance.heading, `28g.${i} after a pulse, A/D still turn rider and vehicle together`);
             rotationY = result.rotationY;
         }
-        assert(facingDifference(rotationY, 45) > 10, '28h. sanity: A/D really turned the vehicle after the pulse');
+        assert(facingDifference(rotationY, 315) > 10, '28h. sanity: A/D really turned the vehicle after the pulse');
     }
     {
         // E. Sliding along a wall (a constraint that cancels the X part of

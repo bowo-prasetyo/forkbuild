@@ -37,6 +37,10 @@ const RUN_SPEED = 6;
 // see this file's own 0.9.86 header.
 const RUN_SPEED_MULTIPLIER = RUN_SPEED / WALK_SPEED;
 const TURN_RATE_DEGREES_PER_SECOND = 150;
+// Which way a turn goes. rotationY grows from +Z toward +X, and with the
+// camera behind the avatar (core/CameraPerspective.js) +X is on the screen's
+// LEFT, so turning right (turnAxis +1) makes rotationY smaller.
+const RIGHT_TURN_SIGN = -1;
 const JUMP_IMPULSE = 5; // world units / second, initial vertical speed
 const GRAVITY = 14; // world units / second^2
 const GROUND_Y = 0;
@@ -263,7 +267,7 @@ export function simulateAvatarMovement({
     if (resolvedSteeringRate > 0) {
         const currentHeadingRadians = sanitizeNumber(rotationY, 0) * (Math.PI / 180);
         const requestedHeadingRadians = currentHeadingRadians
-            + movementState.turnAxis * STEERING_TARGET_HEADING_OFFSET_RADIANS;
+            + RIGHT_TURN_SIGN * movementState.turnAxis * STEERING_TARGET_HEADING_OFFSET_RADIANS;
         const resolvedHeadingRadians = resolveMovementHeading({
             currentHeading: currentHeadingRadians,
             targetHeading: requestedHeadingRadians,
@@ -273,7 +277,7 @@ export function simulateAvatarMovement({
         nextRotationY = normalizeDegrees(resolvedHeadingRadians * (180 / Math.PI));
     } else {
         nextRotationY = normalizeDegrees(
-            sanitizeNumber(rotationY, 0) + movementState.turnAxis * TURN_RATE_DEGREES_PER_SECOND * dt
+            sanitizeNumber(rotationY, 0) + RIGHT_TURN_SIGN * movementState.turnAxis * TURN_RATE_DEGREES_PER_SECOND * dt
         );
     }
 

@@ -3704,3 +3704,14 @@ stopped or blocked vehicle doesn't turn, so a rider can no longer spin on the sp
 vehicle without turning it. `renderer/RemoteRiderVehicles.js` draws another player's vehicle facing that rider's
 facing instead of guessing from movement. `core/VehicleMovementHeading.js` stays only as the reference for the
 degrees convention.
+
+## Left and right turns go the right way (unnumbered, 2026-10-02)
+
+D turned the avatar left and A turned it right, and the ←/→ steering pulses (and the touch pad's ↶/↷) were swapped
+the same way. `rotationY` grows from +Z toward +X, and with the camera behind the avatar (`core/CameraPerspective.js`)
++X is on the screen's left, but a right turn added to it. `core/AvatarMovementSimulation.js` now subtracts for a right
+turn (`RIGHT_TURN_SIGN`), on foot and riding, and `resolveVehicleMovementDirectionFromSteering()` turns RIGHT by
+-45° and LEFT by +45°; the keys, the touch joystick and the touch buttons all go through these two. New
+`tests/TurnDirectionOnScreen.test.js` projects each turn through a real Three.js camera framed by
+`computeCameraFraming()`, in third and first person, and checks it lands on the side of the screen it names; the
+steering tests that asserted the old direction are mirrored.

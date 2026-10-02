@@ -13,9 +13,9 @@ import { assert } from './support/Assert.js';
 // 0.9.126 — Vehicle Steering Simulation, core/VehicleSteeringSimulation.js.
 //
 //   Section A: NONE preserves the current travel direction
-//   Section B: LEFT — deterministic leftward directional transformation
-//   Section C: RIGHT — deterministic rightward directional transformation
-//   Section D: LEFT/RIGHT symmetry
+//   Section B: RIGHT — deterministic rightward directional transformation
+//   Section C: LEFT — deterministic leftward directional transformation
+//   Section D: RIGHT/LEFT symmetry
 //   Section E: purity — no runtime access, mutation, hidden state, or
 //              time dependence
 //   Section F: heading separation — the result is an attempted direction,
@@ -58,10 +58,10 @@ function stepFromDirection(directionDegrees, stepDistance = 1) {
 }
 
 async function runTests() {
-    const { NONE, LEFT, RIGHT } = VehicleSteeringDirection;
+    const { NONE, RIGHT, LEFT } = VehicleSteeringDirection;
     const none = VehicleSteeringIntent.none();
-    const left = VehicleSteeringIntent.left();
     const right = VehicleSteeringIntent.right();
+    const left = VehicleSteeringIntent.left();
 
     // -------------------------------------------------------------
     // Section A — NONE preserves the current travel direction
@@ -74,7 +74,7 @@ async function runTests() {
         assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 271.5, steeringIntent: none }), 271.5,
             '3. NONE preserves a non-cardinal heading exactly');
         assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 359.999, steeringIntent: none }), 359.999,
-            '4. NONE preserves a heading right at the wrap boundary exactly');
+            '4. NONE preserves a heading left at the wrap boundary exactly');
     }
     {
         // "existing bicycle movement + NONE steering = existing movement
@@ -89,110 +89,110 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — LEFT: deterministic leftward directional transformation
+    // Section B — RIGHT: deterministic rightward directional transformation
     // -------------------------------------------------------------
     {
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 0, steeringIntent: left }), 315,
-            '6. LEFT at heading 0 (facing +Z) rotates to 315');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 90, steeringIntent: left }), 45,
-            '7. LEFT at heading 90 (facing +X) rotates to 45');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 180, steeringIntent: left }), 135,
-            '8. LEFT at heading 180 (facing -Z) rotates to 135');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 270, steeringIntent: left }), 225,
-            '9. LEFT at heading 270 (facing -X) rotates to 225');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 0, steeringIntent: right }), 315,
+            '6. RIGHT at heading 0 (facing +Z) rotates to 315');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 90, steeringIntent: right }), 45,
+            '7. RIGHT at heading 90 (facing +X) rotates to 45');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 180, steeringIntent: right }), 135,
+            '8. RIGHT at heading 180 (facing -Z) rotates to 135');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 270, steeringIntent: right }), 225,
+            '9. RIGHT at heading 270 (facing -X) rotates to 225');
     }
     {
         // Diagonal headings.
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 45, steeringIntent: left }), 0,
-            '10. LEFT at heading 45 rotates to 0');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 315, steeringIntent: left }), 270,
-            '11. LEFT at heading 315 rotates to 270');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 45, steeringIntent: right }), 0,
+            '10. RIGHT at heading 45 rotates to 0');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 315, steeringIntent: right }), 270,
+            '11. RIGHT at heading 315 rotates to 270');
     }
     {
-        // Boundary angles around 0/360 — LEFT must wrap forward through
+        // Boundary angles around 0/360 — RIGHT must wrap forward through
         // 360 back toward 0, never go negative or throw.
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 10, steeringIntent: left }), 325,
-            '12. LEFT at heading 10 wraps to 325, not -35');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 0, steeringIntent: left }), 315,
-            '13. LEFT at heading 0 wraps to 315, not -45');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 44, steeringIntent: left }), 359,
-            '14. LEFT at heading 44 wraps to 359, not -1');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 10, steeringIntent: right }), 325,
+            '12. RIGHT at heading 10 wraps to 325, not -35');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 0, steeringIntent: right }), 315,
+            '13. RIGHT at heading 0 wraps to 315, not -45');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 44, steeringIntent: right }), 359,
+            '14. RIGHT at heading 44 wraps to 359, not -1');
     }
     {
         // A custom steeringTurnDegrees is honored exactly.
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 100, steeringIntent: left, steeringTurnDegrees: 10 }), 90,
-            '15. LEFT honors a caller-supplied steeringTurnDegrees');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 5, steeringIntent: left, steeringTurnDegrees: 30 }), 335,
-            '16. LEFT with a custom steeringTurnDegrees still wraps correctly');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 100, steeringIntent: right, steeringTurnDegrees: 10 }), 90,
+            '15. RIGHT honors a caller-supplied steeringTurnDegrees');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 5, steeringIntent: right, steeringTurnDegrees: 30 }), 335,
+            '16. RIGHT with a custom steeringTurnDegrees still wraps correctly');
     }
 
     // -------------------------------------------------------------
-    // Section C — RIGHT: mirror of Section B
+    // Section C — LEFT: mirror of Section B
     // -------------------------------------------------------------
     {
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 0, steeringIntent: right }), 45,
-            '17. RIGHT at heading 0 (facing +Z) rotates to 45');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 90, steeringIntent: right }), 135,
-            '18. RIGHT at heading 90 (facing +X) rotates to 135');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 180, steeringIntent: right }), 225,
-            '19. RIGHT at heading 180 (facing -Z) rotates to 225');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 270, steeringIntent: right }), 315,
-            '20. RIGHT at heading 270 (facing -X) rotates to 315');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 0, steeringIntent: left }), 45,
+            '17. LEFT at heading 0 (facing +Z) rotates to 45');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 90, steeringIntent: left }), 135,
+            '18. LEFT at heading 90 (facing +X) rotates to 135');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 180, steeringIntent: left }), 225,
+            '19. LEFT at heading 180 (facing -Z) rotates to 225');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 270, steeringIntent: left }), 315,
+            '20. LEFT at heading 270 (facing -X) rotates to 315');
     }
     {
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 45, steeringIntent: right }), 90,
-            '21. RIGHT at heading 45 rotates to 90');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 315, steeringIntent: right }), 0,
-            '22. RIGHT at heading 315 rotates to 0');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 45, steeringIntent: left }), 90,
+            '21. LEFT at heading 45 rotates to 90');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 315, steeringIntent: left }), 0,
+            '22. LEFT at heading 315 rotates to 0');
     }
     {
-        // Boundary angles around 0/360 — RIGHT must wrap backward through
+        // Boundary angles around 0/360 — LEFT must wrap backward through
         // 0 back toward 360, never overshoot past 360.
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 350, steeringIntent: right }), 35,
-            '23. RIGHT at heading 350 wraps to 35, not 395');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 359, steeringIntent: right }), 44,
-            '24. RIGHT at heading 359 wraps to 44, not 404');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 315, steeringIntent: right }), 0,
-            '25. RIGHT at heading 315 wraps exactly to 0, not 360');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 350, steeringIntent: left }), 35,
+            '23. LEFT at heading 350 wraps to 35, not 395');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 359, steeringIntent: left }), 44,
+            '24. LEFT at heading 359 wraps to 44, not 404');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 315, steeringIntent: left }), 0,
+            '25. LEFT at heading 315 wraps exactly to 0, not 360');
     }
     {
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 100, steeringIntent: right, steeringTurnDegrees: 10 }), 110,
-            '26. RIGHT honors a caller-supplied steeringTurnDegrees');
-        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 355, steeringIntent: right, steeringTurnDegrees: 30 }), 25,
-            '27. RIGHT with a custom steeringTurnDegrees still wraps correctly');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 100, steeringIntent: left, steeringTurnDegrees: 10 }), 110,
+            '26. LEFT honors a caller-supplied steeringTurnDegrees');
+        assertClose(resolveVehicleMovementDirectionFromSteering({ previousHeading: 355, steeringIntent: left, steeringTurnDegrees: 30 }), 25,
+            '27. LEFT with a custom steeringTurnDegrees still wraps correctly');
     }
 
     // -------------------------------------------------------------
-    // Section D — LEFT/RIGHT symmetry
+    // Section D — RIGHT/LEFT symmetry
     // -------------------------------------------------------------
     {
         for (const heading of [0, 17, 45, 90, 179, 270, 330, 359]) {
-            const leftResult = resolveVehicleMovementDirectionFromSteering({ previousHeading: heading, steeringIntent: left });
             const rightResult = resolveVehicleMovementDirectionFromSteering({ previousHeading: heading, steeringIntent: right });
+            const leftResult = resolveVehicleMovementDirectionFromSteering({ previousHeading: heading, steeringIntent: left });
             // Both rotate away from `heading` by exactly the same
             // magnitude, in opposite directions — the shortest signed gap
             // from `heading` to each result has equal absolute value.
-            const leftGap = shortestSignedGap(heading, leftResult);
             const rightGap = shortestSignedGap(heading, rightResult);
-            assertClose(Math.abs(leftGap), DEFAULT_VEHICLE_STEERING_TURN_DEGREES, `28. LEFT at heading ${heading} rotates by exactly steeringTurnDegrees`);
-            assertClose(Math.abs(rightGap), DEFAULT_VEHICLE_STEERING_TURN_DEGREES, `29. RIGHT at heading ${heading} rotates by exactly steeringTurnDegrees`);
-            assertClose(leftGap, -rightGap, `30. LEFT and RIGHT at heading ${heading} are symmetric, opposite-sign rotations`);
+            const leftGap = shortestSignedGap(heading, leftResult);
+            assertClose(Math.abs(rightGap), DEFAULT_VEHICLE_STEERING_TURN_DEGREES, `28. RIGHT at heading ${heading} rotates by exactly steeringTurnDegrees`);
+            assertClose(Math.abs(leftGap), DEFAULT_VEHICLE_STEERING_TURN_DEGREES, `29. LEFT at heading ${heading} rotates by exactly steeringTurnDegrees`);
+            assertClose(rightGap, -leftGap, `30. RIGHT and LEFT at heading ${heading} are symmetric, opposite-sign rotations`);
         }
     }
     {
-        // Applying LEFT then RIGHT (or RIGHT then LEFT) of the identical
+        // Applying RIGHT then LEFT (or LEFT then RIGHT) of the identical
         // magnitude returns to the original heading.
         for (const heading of [0, 60, 200, 340]) {
-            const afterLeftThenRight = resolveVehicleMovementDirectionFromSteering({
-                previousHeading: resolveVehicleMovementDirectionFromSteering({ previousHeading: heading, steeringIntent: left }),
-                steeringIntent: right
-            });
             const afterRightThenLeft = resolveVehicleMovementDirectionFromSteering({
                 previousHeading: resolveVehicleMovementDirectionFromSteering({ previousHeading: heading, steeringIntent: right }),
                 steeringIntent: left
             });
-            assertClose(afterLeftThenRight, heading, `31. LEFT then RIGHT from heading ${heading} returns to the original heading`);
-            assertClose(afterRightThenLeft, heading, `32. RIGHT then LEFT from heading ${heading} returns to the original heading`);
+            const afterLeftThenRight = resolveVehicleMovementDirectionFromSteering({
+                previousHeading: resolveVehicleMovementDirectionFromSteering({ previousHeading: heading, steeringIntent: left }),
+                steeringIntent: right
+            });
+            assertClose(afterRightThenLeft, heading, `31. RIGHT then LEFT from heading ${heading} returns to the original heading`);
+            assertClose(afterLeftThenRight, heading, `32. LEFT then RIGHT from heading ${heading} returns to the original heading`);
         }
     }
 
@@ -202,12 +202,12 @@ async function runTests() {
     {
         const results = new Set();
         for (let i = 0; i < 20; i++) {
-            results.add(resolveVehicleMovementDirectionFromSteering({ previousHeading: 123.5, steeringIntent: left, steeringTurnDegrees: 17 }));
+            results.add(resolveVehicleMovementDirectionFromSteering({ previousHeading: 123.5, steeringIntent: right, steeringTurnDegrees: 17 }));
         }
         assert(results.size === 1, '33. repeated calls with identical inputs produce identical results — no randomness, no time dependence, no hidden state');
     }
     {
-        const intent = VehicleSteeringIntent.left();
+        const intent = VehicleSteeringIntent.right();
         const beforeDirection = intent.direction;
         const beforeFrozen = Object.isFrozen(intent);
         resolveVehicleMovementDirectionFromSteering({ previousHeading: 10, steeringIntent: intent });
@@ -220,8 +220,8 @@ async function runTests() {
         // (previousHeading, direction, steeringTurnDegrees) values,
         // produces the identical result — the function reads only the
         // intent's own `direction`, never object identity.
-        const a = resolveVehicleMovementDirectionFromSteering({ previousHeading: 200, steeringIntent: VehicleSteeringIntent.right() });
-        const b = resolveVehicleMovementDirectionFromSteering({ previousHeading: 200, steeringIntent: VehicleSteeringIntent.right() });
+        const a = resolveVehicleMovementDirectionFromSteering({ previousHeading: 200, steeringIntent: VehicleSteeringIntent.left() });
+        const b = resolveVehicleMovementDirectionFromSteering({ previousHeading: 200, steeringIntent: VehicleSteeringIntent.left() });
         assertClose(a, b, '36. two independently constructed but equivalent steering intents produce the identical result');
     }
     {
@@ -243,7 +243,7 @@ async function runTests() {
         const vehicle = vehicleInstanceFromPresence(presence).withHeading(10);
         const beforeHeading = vehicle.heading;
 
-        const attemptedDirection = resolveVehicleMovementDirectionFromSteering({ previousHeading: vehicle.heading, steeringIntent: left });
+        const attemptedDirection = resolveVehicleMovementDirectionFromSteering({ previousHeading: vehicle.heading, steeringIntent: right });
 
         assert(attemptedDirection !== beforeHeading, '38. the attempted direction genuinely differs from the vehicle\'s own current heading, for this test\'s own chosen heading/intent');
         assert(vehicle.heading === beforeHeading && vehicle.heading === 10, '39. the vehicle\'s own heading is completely unchanged by calling this function — it returns a value, it does not set one');
@@ -270,7 +270,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         assert(resolveVehicleMovementDirectionFromSteering.length === 0, '46. the function takes a single options object, not separate positional collision-shaped parameters — its arity reveals no collision-related parameter exists');
-        const options = { previousHeading: 90, steeringIntent: left };
+        const options = { previousHeading: 90, steeringIntent: right };
         assert(!('collisionRadius' in options), '47. sanity: this test\'s own call never supplies a collision parameter either, because none exists to supply');
     }
     {
@@ -292,8 +292,8 @@ async function runTests() {
         // The same attempted direction is returned whether or not the
         // caller happens to be mid-collision-resolution elsewhere — this
         // function is never even given the information needed to know.
-        const inTheOpen = resolveVehicleMovementDirectionFromSteering({ previousHeading: 60, steeringIntent: right });
-        const nearAWall = resolveVehicleMovementDirectionFromSteering({ previousHeading: 60, steeringIntent: right });
+        const inTheOpen = resolveVehicleMovementDirectionFromSteering({ previousHeading: 60, steeringIntent: left });
+        const nearAWall = resolveVehicleMovementDirectionFromSteering({ previousHeading: 60, steeringIntent: left });
         assertClose(inTheOpen, nearAWall, '49. the attempted direction is identical regardless of any collision context a caller might separately be tracking — this function cannot see it');
     }
 
@@ -311,24 +311,24 @@ async function runTests() {
         heading = resolveVehicleHeadingFromMovement({ dx, dz, previousHeading: heading });
         assertClose(heading, 0, '50. riding forward with NONE keeps heading at 0');
 
-        // LEFT steering, open path: the vehicle attempts a changed
+        // RIGHT steering, open path: the vehicle attempts a changed
         // direction, nothing blocks it, and the realized movement
         // determines the new heading.
-        const attemptedLeft = resolveVehicleMovementDirectionFromSteering({ previousHeading: heading, steeringIntent: VehicleSteeringIntent.left() });
-        assertClose(attemptedLeft, 315, '51. LEFT steering from heading 0 attempts direction 315');
-        const openStep = stepFromDirection(attemptedLeft);
-        heading = resolveVehicleHeadingFromMovement({ dx: openStep.dx, dz: openStep.dz, previousHeading: heading });
-        assertClose(heading, 315, '52. an unobstructed LEFT turn realizes the attempted direction as the new heading');
-
-        // RIGHT steering, open path: same story, mirrored.
         const attemptedRight = resolveVehicleMovementDirectionFromSteering({ previousHeading: heading, steeringIntent: VehicleSteeringIntent.right() });
-        assertClose(attemptedRight, 0, '53. RIGHT steering from heading 315 attempts direction 0');
-        const openStep2 = stepFromDirection(attemptedRight);
+        assertClose(attemptedRight, 315, '51. RIGHT steering from heading 0 attempts direction 315');
+        const openStep = stepFromDirection(attemptedRight);
+        heading = resolveVehicleHeadingFromMovement({ dx: openStep.dx, dz: openStep.dz, previousHeading: heading });
+        assertClose(heading, 315, '52. an unobstructed RIGHT turn realizes the attempted direction as the new heading');
+
+        // LEFT steering, open path: same story, mirrored.
+        const attemptedLeft = resolveVehicleMovementDirectionFromSteering({ previousHeading: heading, steeringIntent: VehicleSteeringIntent.left() });
+        assertClose(attemptedLeft, 0, '53. LEFT steering from heading 315 attempts direction 0');
+        const openStep2 = stepFromDirection(attemptedLeft);
         heading = resolveVehicleHeadingFromMovement({ dx: openStep2.dx, dz: openStep2.dz, previousHeading: heading });
-        assertClose(heading, 0, '54. an unobstructed RIGHT turn realizes the attempted direction as the new heading');
+        assertClose(heading, 0, '54. an unobstructed LEFT turn realizes the attempted direction as the new heading');
     }
     {
-        // The most important regression case: LEFT steering while
+        // The most important regression case: RIGHT steering while
         // completely blocked. The vehicle still ATTEMPTS a changed
         // direction — this file's own output is identical whether or not
         // anything downstream will honor it — but a collision constraint
@@ -338,15 +338,15 @@ async function runTests() {
         // therefore unchanged too. Steering never becomes a disguised
         // heading setter.
         const startingHeading = 200;
-        const attempted = resolveVehicleMovementDirectionFromSteering({ previousHeading: startingHeading, steeringIntent: VehicleSteeringIntent.left() });
-        assertClose(attempted, 155, '55. LEFT steering from heading 200 attempts direction 155, regardless of what happens next');
+        const attempted = resolveVehicleMovementDirectionFromSteering({ previousHeading: startingHeading, steeringIntent: VehicleSteeringIntent.right() });
+        assertClose(attempted, 155, '55. RIGHT steering from heading 200 attempts direction 155, regardless of what happens next');
 
         // A fully-blocked tick: the collision constraint (not this file)
         // absorbs the entire attempted step, so realized displacement is
         // (0, 0) — exactly the "no genuine horizontal movement" case
         // core/VehicleMovementHeading.js's own header already documents.
         const blockedHeading = resolveVehicleHeadingFromMovement({ dx: 0, dz: 0, previousHeading: startingHeading });
-        assertClose(blockedHeading, startingHeading, '56. a fully-blocked LEFT turn leaves heading completely unchanged, even though the attempted direction (155) differed from it');
+        assertClose(blockedHeading, startingHeading, '56. a fully-blocked RIGHT turn leaves heading completely unchanged, even though the attempted direction (155) differed from it');
         assert(blockedHeading !== attempted, '57. the vehicle\'s own realized heading and this file\'s own attempted direction are two genuinely different numbers here — the flagship proof that steering never becomes a disguised heading setter');
     }
 
@@ -354,9 +354,9 @@ async function runTests() {
 }
 
 // The shortest signed gap, in degrees, from `from` to `to` — positive
-// means "to" is reached by increasing angle (a RIGHT-style rotation),
-// negative means decreasing angle (a LEFT-style rotation). Used only by
-// this test's own Section D to compare LEFT/RIGHT rotations without
+// means "to" is reached by increasing angle (a LEFT-style rotation),
+// negative means decreasing angle (a RIGHT-style rotation). Used only by
+// this test's own Section D to compare RIGHT/LEFT rotations without
 // duplicating core/VehicleSteeringSimulation.js's own normalization.
 function shortestSignedGap(from, to) {
     let diff = (to - from) % 360;

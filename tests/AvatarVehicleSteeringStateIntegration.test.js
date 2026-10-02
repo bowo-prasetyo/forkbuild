@@ -132,8 +132,8 @@ async function runTests() {
         const walkController = new AvatarMovementController(walkSession);
         const walkCapability = resolveAvatarVehicleMovementCapability(VehicleType.NONE);
 
-        defaultController.keyDown('d');
-        walkController.keyDown('d');
+        defaultController.keyDown('a');
+        walkController.keyDown('a');
         for (let i = 0; i < 40; i++) {
             defaultController.tick(DT);
             walkController.setMovementCapability(walkCapability);
@@ -148,23 +148,23 @@ async function runTests() {
         const { avatarPresenceSession } = buildAvatarStack(registry, 'steer-a2');
         const controller = new AvatarMovementController(avatarPresenceSession);
         controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.NONE));
-        const [firstTickHeading] = tickHeadingsDegrees(controller, avatarPresenceSession, 'd', 1, DT);
+        const [firstTickHeading] = tickHeadingsDegrees(controller, avatarPresenceSession, 'a', 1, DT);
         assert(Math.abs(firstTickHeading - 150 * DT) < 1e-9,
             '2. WALK: the very first tick already turns by the existing fixed TURN_RATE_DEGREES_PER_SECOND (150) * dt — this milestone never touches that formula');
     }
     {
-        // Releasing D under WALK still stops turning outright, exactly
+        // Releasing A under WALK still stops turning outright, exactly
         // as it always has.
         const { avatarPresenceSession } = buildAvatarStack(registry, 'steer-a3');
         const controller = new AvatarMovementController(avatarPresenceSession);
         controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.NONE));
-        controller.keyDown('d');
+        controller.keyDown('a');
         controller.tick(DT);
-        controller.keyUp('d');
+        controller.keyUp('a');
         const headingBeforeRelease = avatarPresenceSession.current.rotation.y;
         controller.tick(DT);
         assert(avatarPresenceSession.current.rotation.y === headingBeforeRelease,
-            '3. WALK: releasing D stops turning outright on the very next tick, exactly as before this milestone');
+            '3. WALK: releasing A stops turning outright on the very next tick, exactly as before this milestone');
     }
 
     // -------------------------------------------------------------
@@ -177,7 +177,7 @@ async function runTests() {
         controller.setMovementCapability(bicycle);
 
         const ticks = 10; // well under the ~35.8 ticks a full 360° would take at this rate/dt
-        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'd', ticks, DT);
+        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'a', ticks, DT);
         const perTick = degreesPerHeldTick(bicycle.steering.steeringRate, DT);
 
         for (let i = 0; i < ticks; i++) {
@@ -199,7 +199,7 @@ async function runTests() {
         controller.setMovementCapability(motorcycle);
 
         const ticks = 10;
-        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'd', ticks, DT);
+        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'a', ticks, DT);
         const perTick = degreesPerHeldTick(motorcycle.steering.steeringRate, DT);
 
         for (let i = 0; i < ticks; i++) {
@@ -213,7 +213,7 @@ async function runTests() {
         const { avatarPresenceSession: bicycleSession } = buildAvatarStack(registry, 'steer-c2-bicycle');
         const bicycleController = new AvatarMovementController(bicycleSession);
         bicycleController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE));
-        tickHeadingsDegrees(bicycleController, bicycleSession, 'd', ticks, DT);
+        tickHeadingsDegrees(bicycleController, bicycleSession, 'a', ticks, DT);
         assert(avatarPresenceSession.current.rotation.y > bicycleSession.current.rotation.y,
             '7. MOTORCYCLE (faster steeringRate) turns further than BICYCLE over the identical held duration');
     }
@@ -229,7 +229,7 @@ async function runTests() {
         controller.setMovementCapability(car);
 
         const ticks = 10;
-        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'd', ticks, DT);
+        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'a', ticks, DT);
         const perTick = degreesPerHeldTick(car.steering.steeringRate, DT);
 
         for (let i = 0; i < ticks; i++) {
@@ -246,11 +246,11 @@ async function runTests() {
         const { avatarPresenceSession: motorcycleSession } = buildAvatarStack(registry, 'steer-d2-motorcycle');
         const motorcycleController = new AvatarMovementController(motorcycleSession);
         motorcycleController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.MOTORCYCLE));
-        tickHeadingsDegrees(motorcycleController, motorcycleSession, 'd', ticks, DT);
+        tickHeadingsDegrees(motorcycleController, motorcycleSession, 'a', ticks, DT);
         const { avatarPresenceSession: bicycleSession } = buildAvatarStack(registry, 'steer-d3-bicycle');
         const bicycleController = new AvatarMovementController(bicycleSession);
         bicycleController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE));
-        tickHeadingsDegrees(bicycleController, bicycleSession, 'd', ticks, DT);
+        tickHeadingsDegrees(bicycleController, bicycleSession, 'a', ticks, DT);
 
         assert(avatarPresenceSession.current.rotation.y < bicycleSession.current.rotation.y
             && bicycleSession.current.rotation.y < motorcycleSession.current.rotation.y,
@@ -268,7 +268,7 @@ async function runTests() {
         controller.setMovementCapability(car);
 
         const ticks = 20;
-        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'd', ticks, DT);
+        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'a', ticks, DT);
         const perTick = degreesPerHeldTick(car.steering.steeringRate, DT);
         let previous = 0;
         for (let i = 0; i < ticks; i++) {
@@ -283,7 +283,7 @@ async function runTests() {
     // Section F — angular wraparound: shortest path preserved
     // -------------------------------------------------------------
     {
-        // Seed the avatar facing 350°, then hold D (turning toward
+        // Seed the avatar facing 350°, then hold A (turning toward
         // increasing degrees) — the heading must cross 350° -> 360°/0° ->
         // upward smoothly, with no jump or reversal at the boundary,
         // exactly like core/AvatarMovementSteeringSimulation.js's own
@@ -295,7 +295,7 @@ async function runTests() {
         controller.setMovementCapability(bicycle);
 
         const ticks = 6; // ~60° of total turn — comfortably crosses the 0/360 boundary
-        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'd', ticks, DT);
+        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'a', ticks, DT);
         const perTick = degreesPerHeldTick(bicycle.steering.steeringRate, DT);
         for (let i = 0; i < ticks; i++) {
             const expected = normalizeExpectedDegrees(350 + perTick * (i + 1));
@@ -304,13 +304,13 @@ async function runTests() {
         }
         assert(observed.some((h) => h < 10), '12. wraparound: the heading actually lands below 10° at some point, proving it crossed through 0° rather than stalling at 359°');
 
-        // The reverse: seeded near 10°, holding A (decreasing degrees)
+        // The reverse: seeded near 10°, holding D (decreasing degrees)
         // crosses 10° -> 0°/360° -> downward smoothly.
         const { avatarPresenceSession: reverseSession } = buildAvatarStack(registry, 'steer-f2');
         reverseSession.update({ rotation: { y: 10 } });
         const reverseController = new AvatarMovementController(reverseSession);
         reverseController.setMovementCapability(bicycle);
-        const reverseObserved = tickHeadingsDegrees(reverseController, reverseSession, 'a', ticks, DT);
+        const reverseObserved = tickHeadingsDegrees(reverseController, reverseSession, 'd', ticks, DT);
         for (let i = 0; i < ticks; i++) {
             const expected = normalizeExpectedDegrees(10 - perTick * (i + 1));
             assert(Math.abs(reverseObserved[i] - expected) < 1e-6,
@@ -328,14 +328,14 @@ async function runTests() {
         const controller = new AvatarMovementController(avatarPresenceSession);
         controller.setMovementCapability(car);
 
-        controller.keyDown('d');
+        controller.keyDown('a');
         for (let i = 0; i < 5; i++) controller.tick(DT);
-        controller.keyUp('d');
+        controller.keyUp('a');
         const headingAfterRelease = avatarPresenceSession.current.rotation.y;
 
         for (let i = 0; i < 10; i++) controller.tick(DT);
         assert(avatarPresenceSession.current.rotation.y === headingAfterRelease,
-            '15. CAR: releasing D stops heading change outright — no residual "coasting" turn of any kind, exactly like an ordinary key release');
+            '15. CAR: releasing A stops heading change outright — no residual "coasting" turn of any kind, exactly like an ordinary key release');
     }
 
     // -------------------------------------------------------------
@@ -348,10 +348,10 @@ async function runTests() {
         controller.setMovementCapability(motorcycle);
 
         const ticks = 15;
-        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'd', ticks, DT);
+        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'a', ticks, DT);
         for (let i = 1; i < ticks; i++) {
             assert(observed[i] > observed[i - 1],
-                `16.${i} MOTORCYCLE: heading strictly increases tick over tick for as long as D stays held — turning genuinely continues, never stalling after the first tick`);
+                `16.${i} MOTORCYCLE: heading strictly increases tick over tick for as long as A stays held — turning genuinely continues, never stalling after the first tick`);
         }
     }
 
@@ -367,9 +367,9 @@ async function runTests() {
         const { avatarPresenceSession } = buildAvatarStack(registry, 'steer-i1');
         const controller = new AvatarMovementController(avatarPresenceSession);
         controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.NONE));
-        controller.keyDown('d');
+        controller.keyDown('a');
         controller.tick(DT); // WALK: turns by the fixed 150°/s rate
-        controller.keyUp('d');
+        controller.keyUp('a');
         const headingAfterWalk = avatarPresenceSession.current.rotation.y;
         assert(headingAfterWalk > 0, 'pre-17. sanity: WALK turned the avatar to a non-zero heading');
 
@@ -391,9 +391,9 @@ async function runTests() {
         // Now that CAR is active, turning resumes at CAR's own rate,
         // continuing from the preserved heading rather than from 0.
         const car = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
-        controller.keyDown('d');
+        controller.keyDown('a');
         controller.tick(DT);
-        controller.keyUp('d');
+        controller.keyUp('a');
         const expectedNextHeading = normalizeExpectedDegrees(headingAfterWalk + degreesPerHeldTick(car.steering.steeringRate, DT));
         assert(Math.abs(avatarPresenceSession.current.rotation.y - expectedNextHeading) < 1e-6,
             '20. turning resumes from the PRESERVED heading at CAR\'s own steeringRate — the switch never silently reset the starting point for further turning');
@@ -406,9 +406,9 @@ async function runTests() {
         const { avatarPresenceSession } = buildAvatarStack(registry, 'steer-i2');
         const controller = new AvatarMovementController(avatarPresenceSession);
         controller.setMovementCapability(car);
-        controller.keyDown('d');
+        controller.keyDown('a');
         for (let i = 0; i < 5; i++) controller.tick(DT);
-        controller.keyUp('d');
+        controller.keyUp('a');
         const headingBeforeDismount = avatarPresenceSession.current.rotation.y;
 
         controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.NONE));
@@ -423,8 +423,8 @@ async function runTests() {
     {
         const car = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
 
-        // Turning while running (Shift+D) produces the IDENTICAL heading
-        // change as turning while walking (D alone) — running only ever
+        // Turning while running (Shift+A) produces the IDENTICAL heading
+        // change as turning while walking (A alone) — running only ever
         // doubles the TARGET forward speed (0.9.86/0.9.91's own domain),
         // never the steering rate.
         const { avatarPresenceSession: walkingSession } = buildAvatarStack(registry, 'steer-j1-walking');
@@ -435,8 +435,8 @@ async function runTests() {
         runningController.setMovementCapability(car);
         runningController.keyDown('shift');
         const ticks = 10;
-        const walkingHeadings = tickHeadingsDegrees(walkingController, walkingSession, 'd', ticks, DT);
-        const runningHeadings = tickHeadingsDegrees(runningController, runningSession, 'd', ticks, DT);
+        const walkingHeadings = tickHeadingsDegrees(walkingController, walkingSession, 'a', ticks, DT);
+        const runningHeadings = tickHeadingsDegrees(runningController, runningSession, 'a', ticks, DT);
         runningController.keyUp('shift');
         for (let i = 0; i < ticks; i++) {
             assert(Math.abs(walkingHeadings[i] - runningHeadings[i]) < 1e-9,
@@ -452,15 +452,15 @@ async function runTests() {
         const turningWhileMovingController = new AvatarMovementController(turningWhileMovingSession);
         turningAloneController.setMovementCapability(car);
         turningWhileMovingController.setMovementCapability(car);
-        turningAloneController.keyDown('d');
-        turningWhileMovingController.keyDown('d');
+        turningAloneController.keyDown('a');
+        turningWhileMovingController.keyDown('a');
         turningWhileMovingController.keyDown('w');
         for (let i = 0; i < ticks; i++) {
             turningAloneController.tick(DT);
             turningWhileMovingController.tick(DT);
         }
-        turningAloneController.keyUp('d');
-        turningWhileMovingController.keyUp('d');
+        turningAloneController.keyUp('a');
+        turningWhileMovingController.keyUp('a');
         turningWhileMovingController.keyUp('w');
         assert(Math.abs(turningAloneSession.current.rotation.y - turningWhileMovingSession.current.rotation.y) < 1e-6,
             '23. CAR: turning while also moving forward (accelerating toward movementSpeed) produces the IDENTICAL heading to turning alone — steeringRate is never diminished or boosted by concurrent longitudinal motion');
@@ -479,7 +479,7 @@ async function runTests() {
         controller.setMovementCapability(drone);
 
         const ticks = 10;
-        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'd', ticks, DT);
+        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'a', ticks, DT);
         const perTick = degreesPerHeldTick(drone.steering.steeringRate, DT);
         for (let i = 0; i < ticks; i++) {
             const expected = normalizeExpectedDegrees(perTick * (i + 1));
@@ -492,9 +492,9 @@ async function runTests() {
         const controller = new AvatarMovementController(avatarPresenceSession);
         controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.DRONE));
         const before = avatarPresenceSession.current.rotation.y;
-        controller.keyDown('d');
+        controller.keyDown('a');
         for (let i = 0; i < 50; i++) controller.tick(DT);
-        controller.keyUp('d');
+        controller.keyUp('a');
         assert(avatarPresenceSession.current.rotation.y !== before,
             '24a. DRONE: over many held-turn ticks, heading genuinely changes — steering is real, not merely stored inertly on the capability object');
     }
