@@ -944,7 +944,8 @@ who you are, what your avatar looks like, and where it is right now.
   blocking, the PresenceAuthorityRegistry binding, replay, equivocation,
   order), forgets avatars no longer present and tells the renderer
   (`setRemoteAvatarVehicle()`). renderer/RemoteRiderVehicles.js draws the
-  vehicle under the rider, heading from its movement; the rider isn't
+  vehicle under the rider, facing the rider's own facing (a rider always
+  faces its vehicle, see AvatarVehicleMovementController); the rider isn't
   lifted by the ground height again, because a rider's position already
   includes it. `_remotelyRiddenVehicleIds()` hides this replica's copy of a
   ridden vehicle from `syncVehicles()` and from

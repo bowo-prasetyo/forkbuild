@@ -102,8 +102,8 @@ vehicle to mount it.
 |---|---|---|
 | `E` | Mount the nearby vehicle, or dismount the one you're on | Only shown/active when a vehicle is in range or you're mounted |
 | `W` / `S` | Accelerate / reverse | Replaces on-foot walking while mounted |
-| `A` / `D` | Turn your avatar's own facing | Same turn as on foot — not vehicle steering |
-| `←` / `→` (press) | Turn the vehicle's own attempted travel direction left/right | A single 45° turn per press — holding the key does not keep turning |
+| `A` / `D` | Turn the vehicle, with you on it | A smooth, continuous turn; only while the vehicle is moving |
+| `←` / `→` (press) | Turn the vehicle left/right, with you on it | A single 45° turn per press — holding the key does not keep turning |
 | `Ctrl` (held) | Brake | |
 | `Q` (while mounted) | Store the vehicle you're on in your inventory | Removes it from the world; dismounts you at the same time |
 | `Q` (not mounted, carrying a vehicle) | Deploy the currently selected stored vehicle | Spawns and mounts it at your current position; defaults to the most recently stored one |

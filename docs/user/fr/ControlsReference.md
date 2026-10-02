@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 15773095004fb495 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 10c15eb5d27a8961 -->
 # Référence des commandes
 
 <!-- languages -->
@@ -115,8 +115,8 @@ vous êtes assez près d’un véhicule pour y monter.
 |---|---|---|
 | `E` | Monter sur le véhicule proche, ou descendre de celui où vous êtes | Affiché / actif seulement quand un véhicule est à portée ou que vous êtes à bord |
 | `W` / `S` | Accélérer / reculer | Remplace la marche à pied pendant que vous êtes à bord |
-| `A` / `D` | Tourner l’orientation de votre avatar | Même rotation qu’à pied — pas la direction du véhicule |
-| `←` / `→` (appui) | Tourner vers la gauche / la droite la direction visée par le véhicule | Un seul virage de 45° par appui — maintenir la touche ne continue pas de tourner |
+| `A` / `D` | Tourner le véhicule, avec vous dessus | Un virage doux et continu ; seulement quand le véhicule avance |
+| `←` / `→` (appui) | Tourner le véhicule vers la gauche / la droite, avec vous dessus | Un seul virage de 45° par appui — maintenir la touche ne continue pas de tourner |
 | `Ctrl` (maintenu) | Freiner | |
 | `Q` (à bord) | Ranger le véhicule où vous êtes dans votre inventaire | Le retire du monde ; vous fait descendre en même temps |
 | `Q` (à pied, avec un véhicule rangé) | Sortir le véhicule rangé sélectionné | Le fait apparaître et vous met à bord à votre position actuelle ; par défaut, le dernier rangé |

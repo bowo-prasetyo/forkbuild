@@ -29,20 +29,15 @@ import { VehicleSteeringIntent, isValidVehicleSteeringIntent } from './VehicleSt
 //   realized position
 //              │
 //              ▼
-//   VehicleMovementHeading.resolveVehicleHeadingFromMovement()
-//              │
-//              ▼
-//   final heading
+//   moved? -> heading = the attempted direction (and the rider faces it);
+//   blocked -> heading unchanged
+//   (application/avatar/AvatarVehicleMovementController.js)
 //
 // THE MOST IMPORTANT INVARIANT THIS FILE ENFORCES BY CONSTRUCTION: this
 // file produces an ATTEMPTED direction, never a vehicle FACT. It has no
 // notion of "the vehicle's heading is now X" — only
-// `core/VehicleMovementHeading.js`'s own `resolveVehicleHeadingFromMovement()`,
-// fed REALIZED displacement, ever gets to say that (see that file's own
-// header, "heading comes from where the vehicle actually went, never from
-// steering intent" — this milestone does not weaken that claim, it merely
-// gives the "where the vehicle actually went" step something steering-
-// aware to work from). This file never imports `core/VehicleInstance.js`,
+// application/avatar/AvatarVehicleMovementController.js says that, and only
+// on a tick the vehicle really moved (a blocked turn turns nothing). This file never imports `core/VehicleInstance.js`,
 // `core/VehicleMovementHeading.js`, or `application/world/VehicleRuntimeInstances.js`,
 // and none of them import this file — the identical boundary
 // `core/VehicleSteeringIntent.js`'s own 0.9.125 header already drew stays
@@ -172,9 +167,9 @@ function sanitizeTurnDegrees(value) {
 // banking, drifting, momentum, or any other vehicle physics; reading or
 // mutating a `VehicleInstance` or `VehicleRuntimeInstances` (this file
 // imports neither); collision detection or world/terrain awareness of any
-// kind; updating `heading` (only `core/VehicleMovementHeading.js`'s own
-// `resolveVehicleHeadingFromMovement()`, fed REALIZED displacement, ever
-// does that); Three.js or any rendering concern; keyboard, gamepad, or any
+// kind; updating `heading` (only
+// application/avatar/AvatarVehicleMovementController.js does that, on a tick
+// the vehicle really moved); Three.js or any rendering concern; keyboard, gamepad, or any
 // other raw input handling — translating a held turn key into a
 // `VehicleSteeringIntent` stays `core/VehicleSteeringIntent.js`'s own
 // already-settled boundary, and wiring THAT into a real controller is a

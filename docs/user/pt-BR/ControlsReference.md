@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 15773095004fb495 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 10c15eb5d27a8961 -->
 # Referência de controles
 
 <!-- languages -->
@@ -108,8 +108,8 @@ perto o bastante de um veículo para montar nele.
 |---|---|---|
 | `E` | Montar no veículo próximo, ou descer daquele em que está | Só aparece/funciona quando há um veículo ao alcance ou você está montado |
 | `W` / `S` | Acelerar / dar ré | Substitui a caminhada a pé enquanto montado |
-| `A` / `D` | Virar o próprio corpo do avatar | O mesmo giro de quando está a pé — não é a direção do veículo |
-| `←` / `→` (pressionar) | Virar a direção pretendida do veículo para a esquerda/direita | Uma única virada de 45° por toque — segurar a tecla não continua virando |
+| `A` / `D` | Virar o veículo, com você em cima | Um giro suave e contínuo; só enquanto o veículo se move |
+| `←` / `→` (pressionar) | Virar o veículo para a esquerda/direita, com você em cima | Uma única virada de 45° por toque — segurar a tecla não continua virando |
 | `Ctrl` (segurado) | Frear | |
 | `Q` (montado) | Guardar no inventário o veículo em que você está | Tira-o do mundo; você desce ao mesmo tempo |
 | `Q` (a pé, carregando um veículo) | Tirar o veículo guardado selecionado | Cria-o e monta nele na sua posição atual; por padrão, o guardado por último |

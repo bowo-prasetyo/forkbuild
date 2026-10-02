@@ -20,9 +20,8 @@
 // a later steering SIMULATION milestone (0.9.126, per docs/Roadmap.md,
 // 0.9.124's own recommendation) — one that reads a VehicleSteeringIntent
 // alongside movement intent, feeds both into vehicle movement realization,
-// and only ever lets REALIZED displacement (not the intent itself) resolve
-// a new heading, exactly as core/VehicleMovementHeading.js already does
-// today. This file never imports core/VehicleMovementHeading.js,
+// and only ever lets a vehicle that really moved take a new heading
+// (application/avatar/AvatarVehicleMovementController.js). This file never imports core/VehicleMovementHeading.js,
 // core/VehicleInstance.js, or application/world/VehicleRuntimeInstances.js, and
 // none of them import this file — the boundary 0.9.124's own audit proved
 // clean stays exactly that clean after this milestone, not narrower.

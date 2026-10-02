@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 15773095004fb495 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 10c15eb5d27a8961 -->
 # Referencia de controles
 
 <!-- languages -->
@@ -110,8 +110,8 @@ cuando está lo bastante cerca de un vehículo como para subirse.
 |---|---|---|
 | `E` | Subirse al vehículo cercano, o bajarse del que conduce | Solo se muestra o funciona cuando hay un vehículo al alcance o usted está arriba de uno |
 | `W` / `S` | Acelerar / marcha atrás | Reemplaza la caminata a pie mientras conduce |
-| `A` / `D` | Girar la orientación de su propio avatar | El mismo giro que a pie, no la dirección del vehículo |
-| `←` / `→` (presionar) | Girar a la izquierda/derecha la dirección en la que intenta avanzar el vehículo | Un solo giro de 45° por pulsación: mantener presionada la tecla no sigue girando |
+| `A` / `D` | Girar el vehículo, con usted encima | Un giro suave y continuo; solo mientras el vehículo se mueve |
+| `←` / `→` (presionar) | Girar el vehículo a la izquierda/derecha, con usted encima | Un solo giro de 45° por pulsación: mantener presionada la tecla no sigue girando |
 | `Ctrl` (mantener) | Frenar | |
 | `Q` (mientras conduce) | Guardar en su inventario el vehículo que conduce | Lo quita del mundo; al mismo tiempo, usted se baja |
 | `Q` (sin conducir, llevando un vehículo) | Sacar el vehículo guardado seleccionado | Aparece en su posición actual con usted arriba; de forma predeterminada, el guardado más recientemente |

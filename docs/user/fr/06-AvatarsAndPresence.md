@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 67d735c25cb2e640 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 115a0e070d0fa0c2 -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -246,14 +246,16 @@ monter :
 | **E** (près d’un véhicule) | Monter |
 | **E** (à bord) | Descendre |
 | **W / S** | Accélérer / reculer |
-| **A / D** | Tourner l’orientation de votre avatar — la même rotation continue qu’à pied, pas la direction du véhicule |
-| **← / →** (appui) | Diriger — un seul virage de 45° de la direction visée par le véhicule à chaque appui ; maintenir la touche ne continue pas de tourner, il faut un nouvel appui pour chaque virage |
+| **A / D** | Tourner — un virage doux et continu du véhicule, avec vous dessus |
+| **← / →** (appui) | Diriger — un seul virage de 45° du véhicule à chaque appui ; maintenir la touche ne continue pas de tourner, il faut un nouvel appui pour chaque virage |
 | **Ctrl** (maintenu) | Freiner |
 
 Une fois à bord, **W/S** et **Ctrl** pilotent le véhicule, tandis que
-**←/→** le dirigent — il n’y a pas de « mode conduite » séparé à activer.
-**A/D** font toujours tourner le corps de votre avatar, exactement comme à
-pied, indépendamment de la direction. Descendre remet votre avatar à pied
+**A/D** et **←/→** le font tourner — il n’y a pas de « mode conduite »
+séparé à activer. Vous faites toujours face à la direction de votre
+véhicule, et les autres joueurs vous voient de même. Un véhicule ne
+tourne que lorsqu’il avance : tourner à l’arrêt ne fait rien, et en
+marche arrière il recule sans faire demi-tour. Descendre remet votre avatar à pied
 à un endroit dégagé à côté du véhicule. La vitesse maximale,
 l’accélération, le freinage et la manœuvrabilité d’un véhicule dépendent
 de son type, et son encombrement pour les collisions est dimensionné en

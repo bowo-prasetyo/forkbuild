@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 67d735c25cb2e640 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 115a0e070d0fa0c2 -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -236,14 +236,16 @@ untuk menaikinya:
 | **E** (dekat kendaraan) | Naik |
 | **E** (saat menaiki) | Turun |
 | **W / S** | Mempercepat / mundur |
-| **A / D** | Memutar arah hadap avatar Anda sendiri — belokan berkelanjutan yang sama seperti saat berjalan kaki, bukan kemudi kendaraan |
-| **← / →** (tekan) | Mengemudi — satu belokan 45° pada arah tujuan kendaraan per tekan; menahan tombol tidak membuatnya terus berbelok, dan setiap belokan memerlukan tekanan baru |
+| **A / D** | Berbelok — belokan kendaraan yang halus dan berkelanjutan, bersama Anda di atasnya |
+| **← / →** (tekan) | Mengemudi — satu belokan 45° kendaraan per tekan; menahan tombol tidak membuatnya terus berbelok, dan setiap belokan memerlukan tekanan baru |
 | **Ctrl** (ditahan) | Mengerem |
 
 Setelah naik, **W/S** dan **Ctrl** mengendarai kendaraan, sedangkan
-**←/→** mengemudikannya — tidak ada "mode mengemudi" terpisah yang perlu
-dinyalakan. **A/D** tetap memutar tubuh avatar Anda sendiri, persis seperti
-saat berjalan kaki, dan terpisah dari kemudi. Turun dari kendaraan
+**A/D** dan **←/→** membelokkannya — tidak ada "mode mengemudi" terpisah
+yang perlu dinyalakan. Anda selalu menghadap ke arah kendaraan Anda, dan
+pemain lain juga melihat Anda begitu. Kendaraan hanya berbelok saat
+bergerak, jadi berbelok saat berhenti tidak berpengaruh; saat mundur,
+kendaraan bergerak ke belakang tanpa berputar balik. Turun dari kendaraan
 mengembalikan avatar Anda berjalan kaki di tempat kosong di samping
 kendaraan. Kecepatan tertinggi, percepatan, pengereman, dan belokan sebuah
 kendaraan semuanya bergantung pada jenisnya, dan jejak tabrakannya

@@ -3691,3 +3691,16 @@ Swimming never switched on in World View: `AvatarMovementController` only treate
 foot, but the session sets the WALK capability every frame while nothing is ridden, so Space jumped and C did
 nothing in deep water. It now asks `movementCapability() === WALK`. `tests/AvatarSwimmingSession.test.js` swims,
 dives and rises through a real `WorldNavigationSession`, wired as the app wires it.
+
+## Riders face their vehicle (unnumbered, 2026-10-02)
+
+A rider and its vehicle could point different ways. The ←/→ steering pulse turned only the vehicle, and after a
+pulse the steering intent stayed NONE, so from then on A/D turned only the rider while the vehicle drove straight.
+The vehicle's heading was also re-derived from its displacement, so reversing spun it 180° under a rider still facing
+forward, and sliding along a wall or coasting skewed it. `AvatarVehicleMovementController#tick()` now keeps one
+facing for both: a new ride starts from the vehicle's heading, A/D and steering pulses turn the vehicle, which takes
+the facing it was driven along on a tick it really moved, and the returned `rotationY` is always that heading. A
+stopped or blocked vehicle doesn't turn, so a rider can no longer spin on the spot; reversing and sliding move the
+vehicle without turning it. `renderer/RemoteRiderVehicles.js` draws another player's vehicle facing that rider's
+facing instead of guessing from movement. `core/VehicleMovementHeading.js` stays only as the reference for the
+degrees convention.

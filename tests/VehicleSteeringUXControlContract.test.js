@@ -431,9 +431,11 @@ async function runTests() {
         session.avatarKeyUp('ArrowLeft');
         fireFrame(session, 0.05);
         assertClose(session._vehicleRuntimeInstances.get(vehicleId).heading, 315, 'SEQ. LEFT: 0 -> 315, one discrete pulse');
+        assertClose(avatarPresenceSession.current.rotation.y, 315, 'SEQ. the rider turned with the vehicle: it faces 315 too');
 
         // ride in new direction
         for (let i = 0; i < 15; i++) fireFrame(session, 0.05);
+        assertClose(avatarPresenceSession.current.rotation.y, session._vehicleRuntimeInstances.get(vehicleId).heading, 'SEQ. riding on, the rider still faces the way the vehicle points');
         assertClose(session._vehicleRuntimeInstances.get(vehicleId).heading, 315, 'SEQ. riding with no further steering input holds heading exactly at 315 — NONE invents no rotation');
         let currentPosition = session._vehicleRuntimeInstances.get(vehicleId).position;
         let dx = currentPosition.x - previousPosition.x;
