@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 199c95a8b1ff2992 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 704178c6cb15b587 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -62,7 +62,10 @@ Flüsse und das offene Meer folgen alle der Höhe und Feuchtigkeit des
 Geländes, nicht einer zufälligen Verteilung. Das Land rund um den Ursprung
 ist immer trocken; wer etwa tausend Einheiten hinauswandert, erreicht eine
 Küste, an der der Boden über einen Schelf in tiefes, dunkleres blaues Meer
-abfällt, zu tief, um hindurchzuwaten. Es ist Kulisse: Nichts daran lässt
+abfällt, zu tief, um hindurchzuwaten. Ihr Avatar kann in einen
+See oder ins Meer waten, wird langsamer, je höher das Wasser steigt, und
+bleibt stehen, sobald es ihm bis zum Hals reicht, sodass sein Kopf immer
+über Wasser bleibt. Es ist Kulisse: Nichts daran lässt
 sich bearbeiten, und es sieht gleich aus, egal wer es wann ansieht.
 
 Waldboden trägt aus demselben Seed seine eigene Mischung von Baumarten —
