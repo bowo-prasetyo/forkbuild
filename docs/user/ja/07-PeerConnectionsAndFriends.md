@@ -2,7 +2,7 @@
 # 07 — ピア接続と友達
 
 <!-- languages -->
-[English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · **日本語** · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
+[English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · **日本語** · [한국어](../ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
 ForkBuild は、あなたを他の人のブラウザーに直接つなぎます。友達リストを

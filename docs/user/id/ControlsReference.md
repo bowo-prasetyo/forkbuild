@@ -2,7 +2,7 @@
 # Referensi Kontrol
 
 <!-- languages -->
-[English](../ControlsReference.md) · [Deutsch](../de/ControlsReference.md) · [Español](../es/ControlsReference.md) · [Français](../fr/ControlsReference.md) · **Bahasa Indonesia** · [日本語](../ja/ControlsReference.md) · [Português (Brasil)](../pt-BR/ControlsReference.md)
+[English](../ControlsReference.md) · [Deutsch](../de/ControlsReference.md) · [Español](../es/ControlsReference.md) · [Français](../fr/ControlsReference.md) · **Bahasa Indonesia** · [日本語](../ja/ControlsReference.md) · [한국어](../ko/ControlsReference.md) · [Português (Brasil)](../pt-BR/ControlsReference.md)
 <!-- /languages -->
 
 Setiap interaksi mouse dan keyboard di ForkBuild; ponsel dan tablet

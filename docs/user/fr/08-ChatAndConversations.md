@@ -2,7 +2,7 @@
 # 08 — Chat et conversations
 
 <!-- languages -->
-[English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · **Français** · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
+[English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · **Français** · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · [한국어](../ko/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
 
 La messagerie directe de ForkBuild fonctionne de pair à pair et est

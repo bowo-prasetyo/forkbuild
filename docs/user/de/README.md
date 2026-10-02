@@ -2,7 +2,7 @@
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
-[English](../README.md) · **Deutsch** · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [Português (Brasil)](../pt-BR/README.md)
+[English](../README.md) · **Deutsch** · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [한국어](../ko/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
 
 Anleitungen zur Nutzung von ForkBuild im Browser. Alles hier beschreibt

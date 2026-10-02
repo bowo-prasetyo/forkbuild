@@ -1,7 +1,7 @@
 # Controls Reference
 
 <!-- languages -->
-**English** · [Deutsch](de/ControlsReference.md) · [Español](es/ControlsReference.md) · [Français](fr/ControlsReference.md) · [Bahasa Indonesia](id/ControlsReference.md) · [日本語](ja/ControlsReference.md) · [Português (Brasil)](pt-BR/ControlsReference.md)
+**English** · [Deutsch](de/ControlsReference.md) · [Español](es/ControlsReference.md) · [Français](fr/ControlsReference.md) · [Bahasa Indonesia](id/ControlsReference.md) · [日本語](ja/ControlsReference.md) · [한국어](ko/ControlsReference.md) · [Português (Brasil)](pt-BR/ControlsReference.md)
 <!-- /languages -->
 
 Every mouse and keyboard interaction in ForkBuild; phones and tablets are

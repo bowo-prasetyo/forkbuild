@@ -2,7 +2,7 @@
 # 08 — Conversas
 
 <!-- languages -->
-[English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · **Português (Brasil)**
+[English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · [한국어](../ko/08-ChatAndConversations.md) · **Português (Brasil)**
 <!-- /languages -->
 
 As mensagens diretas no ForkBuild são entre pares e **só entre amigos** —

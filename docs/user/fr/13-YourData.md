@@ -2,7 +2,7 @@
 # 13 — Vos données : sauvegarder et restaurer
 
 <!-- languages -->
-[English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Español](../es/13-YourData.md) · **Français** · [Bahasa Indonesia](../id/13-YourData.md) · [日本語](../ja/13-YourData.md) · [Português (Brasil)](../pt-BR/13-YourData.md)
+[English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Español](../es/13-YourData.md) · **Français** · [Bahasa Indonesia](../id/13-YourData.md) · [日本語](../ja/13-YourData.md) · [한국어](../ko/13-YourData.md) · [Português (Brasil)](../pt-BR/13-YourData.md)
 <!-- /languages -->
 
 ForkBuild n’a ni comptes ni serveur qui garde votre travail. Tout ce qu’il

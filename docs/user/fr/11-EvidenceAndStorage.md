@@ -2,7 +2,7 @@
 # 11 — Preuves et stockage
 
 <!-- languages -->
-[English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · **Français** · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
+[English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · **Français** · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
 
 > **Surtout expérimental.** Stocker du contenu sur IPFS ou Arweave depuis

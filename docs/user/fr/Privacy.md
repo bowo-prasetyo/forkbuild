@@ -2,7 +2,7 @@
 # Confidentialité
 
 <!-- languages -->
-[English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · **Français** · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
+[English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · **Français** · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
 
 ForkBuild n’a ni comptes ni outils de mesure d’audience. Il stocke votre

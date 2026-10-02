@@ -2,7 +2,7 @@
 # Häufige Fragen
 
 <!-- languages -->
-[English](../FAQ.md) · **Deutsch** · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
+[English](../FAQ.md) · **Deutsch** · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
 
 Kurze Antworten auf die Fragen, auf die man am häufigsten stößt, jeweils

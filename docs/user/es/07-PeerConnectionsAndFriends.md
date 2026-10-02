@@ -2,7 +2,7 @@
 # 07 — Conexiones entre pares y amigos
 
 <!-- languages -->
-[English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · **Español** · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · [日本語](../ja/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
+[English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · **Español** · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · [日本語](../ja/07-PeerConnectionsAndFriends.md) · [한국어](../ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
 ForkBuild lo conecta directamente con los navegadores de otras personas:

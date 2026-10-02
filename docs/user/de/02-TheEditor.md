@@ -2,7 +2,7 @@
 # 02 — Der Editor
 
 <!-- languages -->
-[English](../02-TheEditor.md) · **Deutsch** · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
+[English](../02-TheEditor.md) · **Deutsch** · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
 
 Im Editor wird gebaut. Diese Anleitung behandelt die Werkzeuge, wie Sie

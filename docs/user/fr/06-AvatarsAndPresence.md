@@ -2,7 +2,7 @@
 # 06 — Avatars et présence
 
 <!-- languages -->
-[English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · [Español](../es/06-AvatarsAndPresence.md) · **Français** · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · [日本語](../ja/06-AvatarsAndPresence.md) · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md)
+[English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · [Español](../es/06-AvatarsAndPresence.md) · **Français** · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · [日本語](../ja/06-AvatarsAndPresence.md) · [한국어](../ko/06-AvatarsAndPresence.md) · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md)
 <!-- /languages -->
 
 Votre **avatar** est la façon dont les autres vous voient dans la Vue du

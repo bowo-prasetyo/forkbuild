@@ -2,7 +2,7 @@
 # インタラクティブ変形ギズモ
 
 <!-- languages -->
-[English](../InteractiveTransformGizmo.md) · [Deutsch](../de/InteractiveTransformGizmo.md) · [Español](../es/InteractiveTransformGizmo.md) · [Français](../fr/InteractiveTransformGizmo.md) · [Bahasa Indonesia](../id/InteractiveTransformGizmo.md) · **日本語** · [Português (Brasil)](../pt-BR/InteractiveTransformGizmo.md)
+[English](../InteractiveTransformGizmo.md) · [Deutsch](../de/InteractiveTransformGizmo.md) · [Español](../es/InteractiveTransformGizmo.md) · [Français](../fr/InteractiveTransformGizmo.md) · [Bahasa Indonesia](../id/InteractiveTransformGizmo.md) · **日本語** · [한국어](../ko/InteractiveTransformGizmo.md) · [Português (Brasil)](../pt-BR/InteractiveTransformGizmo.md)
 <!-- /languages -->
 
 エディターでブロックを選択すると、選択の回転軸の位置にギズモが表示
