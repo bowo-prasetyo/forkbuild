@@ -75,6 +75,12 @@ A published World is distributed in two separate pieces:
 The content hash ties the two together: anyone holding the bricks can
 check that they match the fingerprint on your signed record.
 
+Both halves use both roles: each one is stored on the Content network
+you choose and announced on the Announcement / Discovery network you
+choose. With IPFS and Nostr, for example, **Distribute** stores the
+Snapshot on IPFS and announces it on Nostr, then stores the Signed Claim
+on IPFS and announces that on Nostr too.
+
 Each half is useful on its own, which is why the **Distribute** dialogs
 report them separately and let you retry one with **Distribute Snapshot
 only** or **Distribute Signed Claim only**:
