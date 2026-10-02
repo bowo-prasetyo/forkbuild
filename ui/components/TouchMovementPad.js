@@ -5,6 +5,7 @@ import { AvatarContinuousMovementMode } from '../../core/AvatarContinuousMovemen
 import { clampTouchJoystickOffset } from '../../core/TouchJoystickKeys.js';
 import { describeAnimalDecorationAction, describeVehicleStoreAction } from './avatarInteractionLabels.js';
 import { t } from '../i18n/i18n.js';
+import { AvatarSwimMode } from '../../core/AvatarSwimming.js';
 
 // World View's on-screen controls for touch screens: a joystick for W/A/S/D
 // (pushed to the rim, it runs) and buttons for the other avatar keys. It only
@@ -27,7 +28,10 @@ export default {
         cruiseState: { type: Object, default: null },
         // The session's residentInteractionState(), or null: Talk shows when a
         // resident is close enough to talk to (it presses 'T').
-        residentState: { type: Object, default: null }
+        residentState: { type: Object, default: null },
+        // The session's avatarSwimState(), or null: in deep water Jump becomes
+        // Swim Up (Space) and a Dive button (C) appears.
+        swimState: { type: Object, default: null }
     },
     emits: ['key-down', 'key-up', 'decorate'],
     setup(props, { emit }) {
@@ -90,6 +94,7 @@ export default {
             && (props.vehicleState.mounted || Boolean(props.vehicleState.targetVehicleId)));
         const store = computed(() => describeVehicleStoreAction(props.storeState));
         const decoration = computed(() => describeAnimalDecorationAction(props.decorationState));
+        const swimming = computed(() => Boolean(props.swimState) && props.swimState.mode !== AvatarSwimMode.NONE);
         const animalVisible = computed(() => Boolean(props.animalState)
             && (props.animalState.canCatch || props.animalState.canRelease));
 
@@ -115,7 +120,7 @@ export default {
 
         return {
             t,
-            thumb, mounted, mountVisible, store, animalVisible, decoration,
+            thumb, mounted, mountVisible, store, animalVisible, decoration, swimming,
             cruise, tapCruise,
             onStickDown, onStickMove, onStickUp, holdButton, releaseButton, tapButton
         };
@@ -212,13 +217,22 @@ export default {
                     @click="tapCruise"
                 >{{ cruise.label }}</button>
                 <button
+                    v-if="swimming"
+                    type="button"
+                    class="touch-pad-btn"
+                    @pointerdown.prevent="holdButton($event, 'c')"
+                    @pointerup="releaseButton('c')"
+                    @pointercancel="releaseButton('c')"
+                    @lostpointercapture="releaseButton('c')"
+                >{{ t('touchMovementPad.dive') }}</button>
+                <button
                     type="button"
                     class="touch-pad-btn touch-pad-btn--primary"
                     @pointerdown.prevent="holdButton($event, ' ')"
                     @pointerup="releaseButton(' ')"
                     @pointercancel="releaseButton(' ')"
                     @lostpointercapture="releaseButton(' ')"
-                >{{ t('touchMovementPad.jump') }}</button>
+                >{{ swimming ? t('touchMovementPad.swimUp') : t('touchMovementPad.jump') }}</button>
             </div>
         </div>
     `

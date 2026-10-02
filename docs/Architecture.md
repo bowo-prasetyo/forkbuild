@@ -960,26 +960,42 @@ who you are, what your avatar looks like, and where it is right now.
 
 ## Avatar movement constraint pipeline
 
-`application/avatar/AvatarMovementController.js` runs the simulated move through up to six optional constraints, in this
-order. Each is a separate class with a `{ position, blocked | collided }` result, and each can be left out:
+`application/avatar/AvatarMovementController.js` runs the simulated move through up to seven optional constraints, in
+this order. Each is a separate class, and each can be left out:
 
     simulateAvatarMovement()        speed x run multiplier x water speed factor
       -> AvatarMovementConstraint   bricks of loaded Buildings and StructurePlacements
-      -> AvatarTerrainConstraint    slope
-      -> AvatarWaterConstraint      too-deep water blocks; depth slows (0.9.634)
-      -> AvatarStepConstraint       step-up / walkable surfaces; ignores bricks whose base is out of reach
+      -> AvatarTerrainConstraint    slope (not while swimming)
+      -> AvatarStepConstraint       step-up / walkable surfaces; ignores bricks whose base is out of reach (not while swimming)
       -> AvatarTreeConstraint       slide around trunks
-      -> AvatarWildlifeConstraint   slide around deer/rabbits (2026-09-21)
+      -> AvatarWildlifeConstraint   slide around deer/rabbits
+      -> AvatarResidentConstraint   slide around World Residents
+
+`AvatarWaterConstraint` is not a step in that chain. It supplies water to the controller: the depth that slows wading
+(`core/AvatarWaterWalkability.js`), and where the surface lies in the presence frame. On foot, water deeper than half
+the avatar's height over whatever it would stand on (`core/AvatarSwimming.js#isSwimmableDepth()`) makes the avatar
+swim: the simulation still steers and moves it, at `SWIM_SPEED_FACTOR`, but its height comes from
+`stepSwimFeetHeight()` (Space rises, C dives, otherwise it drifts up) between the bed and the floating height, carried
+from column to column at a constant world height. Breath (`stepAvatarBreath()`, 150 s) drains while the mouth is under
+water; at zero the avatar is pushed up and held at the surface until its breath is full. Swim mode and breath are
+transient controller state, read through `swimState()`; none of it is in `AvatarPresence`.
 
 `WorldNavigationSession#_setupLocalAvatar()` builds all six. Placed `StructurePlacement`s collide because the
 brick constraints take the session's `structureResolver`. Documents farther than `MAX_DOCUMENT_SPAN_MARGIN` (200) are
 culled before any brick test.
 
-`AvatarPresence.position.y` is still a flat simulated plane (step height, jump and gravity only). Terrain height,
-lake floors and the lake-surface clamp are applied only when rendering, in
-`RenderWorldViewUseCase#resolveAvatarRenderPosition()`/`withGroundElevation()`. The exception is a rider on a
-movable vehicle: the vehicle's position already includes real terrain height, so neither the vehicle nor the rider
-is lifted a second time. Released animals get the same lift as remote avatars.
+`AvatarPresence.position.y` is measured from the terrain under the avatar: 0 is standing on the ground (or the lake
+or sea bed), and step height, jumping, gravity and swimming move it from there. The terrain height is added only
+when rendering, in `RenderWorldViewUseCase#resolveAvatarRenderPosition()`, and when framing a camera perspective
+(`avatarPresenceMethods#_applyCameraPerspectiveFraming()`), so a first-person eye sits at the real head height,
+including just above the water while swimming. The exception is a rider on a movable vehicle: the vehicle's position
+already includes real terrain height, so neither the vehicle nor the rider is lifted a second time. Residents and
+released animals use `withGroundElevation()`, which also floors them at the lake surface beyond wading depth.
+
+Swimming is derived, not sent: `deriveAvatarSwimMode()` answers NONE, SURFACE or DIVING from a position and the water
+surface above its column, so `RenderWorldViewUseCase` poses local and remote avatars alike
+(`AvatarVisual#setSwimMode()`, swim poses in `core/AvatarPoseOffsets.js`) and `core/AvatarSoundCues.js` splashes at the
+surface and stays silent under water. Presence keeps its existing `animation` values.
 
 ## Vehicles, inventory and animals
 
@@ -998,8 +1014,10 @@ is lifted a second time. Released animals get the same lift as remote avatars.
                             every read and cycle scoped by kind)
 
 - **Movement.** `AvatarVehicleMovementController` moves every vehicle type in `MOVABLE_VEHICLE_TYPES` (all four).
-  Drone altitude comes from `core/AvatarDroneVerticalState.js`, and `AvatarVehicleInteractionController` refuses
-  to dismount a drone in mid-air.
+  Drone altitude comes from `core/AvatarDroneVerticalState.js`, measured from the water surface over water
+  (`core/VehicleWaterline.js#droneFloorHeight()`), and `AvatarVehicleInteractionController` refuses to dismount a
+  drone in mid-air; getting off one on the water leaves the avatar floating. Wheeled vehicles stop at the waterline
+  (`application/avatar/VehicleWaterConstraint.js`, `VEHICLE_MAX_WATER_DEPTH`), and can't be deployed in water.
 - **Persistence (0.9.701).** The inventory and both runtime stores persist through optional stores
   (`storage/*PersistenceStore.js`). Runtime positions are written at most once a second. Only released animals are
   saved; wild ones are recomputed.
@@ -1089,8 +1107,8 @@ is lifted a second time. Released animals get the same lift as remote avatars.
 
 ## Terrain layers
 
-`renderer/Renderer.js` runs four `TerrainStreamingController`s: terrain, vegetation, water and wildlife. Each is a
-pure function of `(seed, x, z)`:
+`renderer/Renderer.js` runs five `TerrainStreamingController`s: terrain, vegetation, water, underwater life and
+wildlife. Each is a pure function of `(seed, x, z)`:
 
 - `TerrainHeightField`: how high
 - `TerrainSurface`: what it looks like
@@ -1098,11 +1116,17 @@ pure function of `(seed, x, z)`:
 - `Hydrology`: lakes and river color
 - `NaturalFeatureField`: trees, with CONIFER, BROADLEAF or SCRUB chosen by moisture
 - `WildlifeField`: animals, where they were placed (`WildlifeMotion` adds time: where they have wandered to)
+- `UnderwaterLifeField`: seaweed rooted on lake and sea beds, and fish schools circling where the water is deep over
+  their whole circle (`fishPoseAt()` adds time)
+
+Each frame the renderer also asks `core/UnderwaterView.js` whether the camera is under a lake or the sea, and if so
+swaps the sky for a blue-green background and fog. Water tiles carry a back-face-only underside, so a diver looking
+up sees a bright surface.
 
 None of it is stored, so a tile that streams out and back in is identical. An unloaded tile is disposed through the
 `disposeTile` hook its controller was built with (`renderer/TileDisposal.js`): terrain and water tiles free their own
-geometry and material, vegetation and wildlife tiles only their instance buffers, since their geometry and materials
-are shared by every tile.
+geometry and material, vegetation, wildlife and underwater life tiles only their instance buffers, since their
+geometry and materials are shared by every tile.
 
 ## Sound
 

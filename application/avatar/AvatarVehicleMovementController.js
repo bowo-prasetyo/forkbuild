@@ -23,7 +23,8 @@ import { AvatarDroneVerticalStateKind, deriveAvatarDroneVerticalState, stepDrone
 // visual never starts moving by accident.
 //
 // A drone additionally steps its own altitude (core/AvatarDroneVerticalState.js)
-// on top of the same horizontal pipeline.
+// on top of the same horizontal pipeline, measured from the water surface where
+// there is water. Wheeled vehicles stop at the waterline (VehicleWaterConstraint).
 //
 // An optional steeringIntent redirects the already-resolved step along the
 // steered direction without recomputing its length.
@@ -37,12 +38,14 @@ export function isMovableVehicleType(type) {
 export class AvatarVehicleMovementController {
     // All three collaborators are shared with the caller; this class never builds
     // its own store or constraints.
-    constructor(vehicleRuntimeInstances, movementConstraint = null, treeConstraint = null) {
+    constructor(vehicleRuntimeInstances, movementConstraint = null, treeConstraint = null, waterConstraint = null) {
         this._vehicleRuntimeInstances = vehicleRuntimeInstances;
         this._movementConstraint = movementConstraint;
         this._treeConstraint = treeConstraint;
+        this._waterConstraint = waterConstraint;
         this._collided = false;
         this._collidedWithTree = false;
+        this._blockedByWater = false;
         // Used only to detect a new ride so transient state can be reset; never the
         // source of truth for what is mounted.
         this._activeVehicleId = null;
@@ -90,7 +93,10 @@ export class AvatarVehicleMovementController {
         const currentPosition = vehicleInstance.position;
         // Ground vehicles follow raw terrain height, as at spawn, never the avatar's
         // brick-aware support height. Sampled before stepping.
-        const groundHeight = terrainHeightAt(seed, currentPosition.x, currentPosition.z);
+        const isDrone = vehicleInstance.type === VehicleType.DRONE;
+        const groundHeight = isDrone && this._waterConstraint
+            ? this._waterConstraint.droneFloorAt(currentPosition.x, currentPosition.z)
+            : terrainHeightAt(seed, currentPosition.x, currentPosition.z);
 
         const movementState = new AvatarMovementState({
             forwardAxis: movementIntent.direction,
@@ -143,7 +149,7 @@ export class AvatarVehicleMovementController {
         // Drone only: the altitude rises toward hover while moving and settles when
         // idle, layered on top of the terrain-height Y.
         this._droneVerticalStateKind = null;
-        if (vehicleInstance.type === VehicleType.DRONE) {
+        if (isDrone) {
             const ascending = movementIntent.direction !== 0;
             this._droneAltitude = stepDroneAltitude({ altitude: this._droneAltitude, ascending, deltaSeconds });
             this._droneVerticalStateKind = deriveAvatarDroneVerticalState({ altitude: this._droneAltitude, ascending });
@@ -176,6 +182,13 @@ export class AvatarVehicleMovementController {
 
         // Commits the constrained position, so the avatar that follows can never end
         // up inside an obstacle the vehicle stopped short of.
+        this._blockedByWater = false;
+        if (this._waterConstraint && !isDrone) {
+            const waterResult = this._waterConstraint.apply(currentPosition, finalPosition);
+            finalPosition = waterResult.position;
+            this._blockedByWater = waterResult.blocked;
+        }
+
         let nextVehicleInstance = this._vehicleRuntimeInstances.setPosition(vehicleId, finalPosition);
 
         // Heading changes only on real horizontal movement after collision, so a fully
@@ -200,6 +213,10 @@ export class AvatarVehicleMovementController {
         return this._collidedWithTree;
     }
 
+    isBlockedByWater() {
+        return this._blockedByWater;
+    }
+
     // Called by the caller whenever intent is not routed here (unmounted, or an
     // immovable vehicle), so every later ride starts from rest.
     reset() {
@@ -209,6 +226,7 @@ export class AvatarVehicleMovementController {
         this._currentMovementSpeed = 0;
         this._collided = false;
         this._collidedWithTree = false;
+        this._blockedByWater = false;
         this._droneAltitude = 0;
         this._droneVerticalStateKind = null;
     }

@@ -32,6 +32,10 @@ import { deriveAvatarVehicleStoreTransition } from '../../core/AvatarVehicleStor
 import { deriveAvatarVehicleDeployTransition } from '../../core/AvatarVehicleDeployTransition.js';
 import { VehicleInstance } from '../../core/VehicleInstance.js';
 import { createId } from '../../core/createId.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY } from '../../core/TerrainSurface.js';
+import { LAKE_SURFACE_HEIGHT } from '../../core/Hydrology.js';
+import { droneFloorHeight, VEHICLE_MAX_WATER_DEPTH } from '../../core/VehicleWaterline.js';
+import { isSwimmableDepth, surfaceSwimFeetHeight } from '../../core/AvatarSwimming.js';
 
 // Runs the core mount/dismount (and store/deploy) chain at runtime. It holds no
 // policy of its own: every decision is made by the pure core/ functions it
@@ -244,11 +248,11 @@ export class AvatarVehicleInteractionController {
         const vehicle = this._currentMountedVehicle(currentPosition);
 
         // A drone in the air cannot be dismounted. Decided here from the vehicle's
-        // committed Y vs. terrain height, so the core dismount transition stays
-        // vehicle-agnostic.
+        // committed Y vs. the ground it would land on (the water surface over water),
+        // so the core dismount transition stays vehicle-agnostic.
         const airborne = vehicle !== null
             && vehicle.type === VehicleType.DRONE
-            && vehicle.position.y > terrainHeightAt(this._seed, vehicle.position.x, vehicle.position.z) + 0.5;
+            && vehicle.position.y > this._droneFloorAt(vehicle.position.x, vehicle.position.z) + 0.5;
 
         const dismountIntent = deriveAvatarVehicleDismountIntent({
             dismountRequested: airborne ? false : requested
@@ -281,7 +285,7 @@ export class AvatarVehicleInteractionController {
         if (transition.position !== currentPosition) {
             const current = this._avatarPresenceSession.current;
             this._avatarPresenceSession.update({
-                position: transition.position,
+                position: this._floatedInWater(transition.position),
                 rotation: current.rotation,
                 animation: current.animation
             });
@@ -327,6 +331,12 @@ export class AvatarVehicleInteractionController {
             deployIntent,
             selectedEntryId: this._selectedEntryId
         });
+        // A wheeled vehicle can't be put down in water; a drone floats on it.
+        if (transition.entry !== null
+            && transition.entry.type !== VehicleType.DRONE
+            && this._waterRelativeSurfaceAt(this._avatarPresenceSession.current.position) > VEHICLE_MAX_WATER_DEPTH) {
+            return;
+        }
         this._inventoryStore.set(transition.inventory);
         if (transition.entry === null) {
             return;
@@ -342,6 +352,30 @@ export class AvatarVehicleInteractionController {
         });
         this._vehicleRuntimeInstances.add(instance);
         this._mount = createAvatarVehicleMount(instance.id);
+    }
+
+    _droneFloorAt(x, z) {
+        const water = surfaceCategoryAt(this._seed, x, z) === SURFACE_CATEGORY.WATER;
+        return droneFloorHeight(terrainHeightAt(this._seed, x, z), water ? LAKE_SURFACE_HEIGHT : null);
+    }
+
+    // The water surface above the ground at `position`, in the terrain-relative
+    // frame AvatarPresence uses (so also the depth), or 0 on dry ground.
+    _waterRelativeSurfaceAt(position) {
+        if (surfaceCategoryAt(this._seed, position.x, position.z) !== SURFACE_CATEGORY.WATER) {
+            return 0;
+        }
+        return Math.max(0, LAKE_SURFACE_HEIGHT - terrainHeightAt(this._seed, position.x, position.z));
+    }
+
+    // Getting off over deep water leaves the avatar floating at the surface, not
+    // standing on the bed.
+    _floatedInWater(position) {
+        const surface = this._waterRelativeSurfaceAt(position);
+        if (!isSwimmableDepth(surface, position.y)) {
+            return position;
+        }
+        return { x: position.x, y: Math.max(position.y, surfaceSwimFeetHeight(surface)), z: position.z };
     }
 
     // Steps the selection through VEHICLE entries only; changes which entry a

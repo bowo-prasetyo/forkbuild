@@ -1135,6 +1135,8 @@ export default Object.freeze({
     'touchMovementPad.talk': 'Parler',
     'touchMovementPad.brake': 'Freiner',
     'touchMovementPad.jump': 'Sauter',
+    'touchMovementPad.swimUp': 'Remonter',
+    'touchMovementPad.dive': 'Plonger',
 
     // World View: vehicleInteractionPrompt.
     'vehicleInteractionPrompt.cycle': '[ [ / ] ] Changer',
@@ -1328,6 +1330,12 @@ export default Object.freeze({
     'worldView.joystickToWalkPushTo': '• Joystick pour marcher, poussez jusqu’au bord pour courir',
     'worldView.dragToOrbitScrollTo': 'Glissez pour orbiter • Molette pour zoomer • Origine pour réinitialiser • Cliquez pour inspecter',
     'worldView.wasdToWalkShiftTo': '• WASD pour marcher • Maj pour courir • Espace pour sauter',
+    'worldView.swimKeysHint': '• En eau profonde : Espace pour remonter • C pour plonger',
+    // World View: breathMeter.
+    'breathMeter.air': 'Air',
+    'breathMeter.airLeft': 'Air restant',
+    'breathMeter.secondsLeft': 'encore {seconds} s',
+    'breathMeter.outOfAir': 'Plus d’air, remontée',
     'worldView.explore': 'Explorer',
     'worldView.map': 'Carte',
     'worldView.places': 'Lieux',

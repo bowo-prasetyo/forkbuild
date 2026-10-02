@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 14214dca588aad38 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 15773095004fb495 -->
 # Referência de controles
 
 <!-- languages -->
@@ -93,7 +93,8 @@ Caminhar diretamente com seu avatar, em vez de voar com a câmera — veja
 |---|---|---|
 | `W` / `A` / `S` / `D` | Mover / virar | Barrado por construções, árvores, vida selvagem e moradores próximos, como por uma parede |
 | `Shift` (segurado) | Correr | |
-| `Espaço` | Pular | |
+| `Espaço` | Pular | Em águas profundas: subir nadando |
+| `C` (segurada) | Mergulhar | Só em água funda o bastante para nadar |
 | `Alt` + `W` / `S` | Começar a andar sem parar para a frente/para trás | Continua se movendo depois de soltar as teclas; um toque comum em `W`/`S` sem Alt cancela |
 | `Alt` + `Shift` + `W` / `S` | Começar a correr sem parar para a frente/para trás | Mesma regra de cancelamento de cima |
 
@@ -350,7 +351,8 @@ O painel de toque aparece enquanto você controla seu avatar; o botão
 |---|---|---|
 | Joystick | `W` / `A` / `S` / `D` | Empurre para cima para andar para a frente, para o lado para virar; as diagonais pressionam as duas teclas |
 | Joystick empurrado até a borda | `Shift` | Correr |
-| **Pular** | `Espaço` | |
+| **Pular** | `Espaço` | Vira **Subir** em águas profundas |
+| **Mergulhar** | `C` | Aparece enquanto você nada |
 | **Piloto automático** | `Alt` + `W`, depois `Alt` + `Shift` + `W`, depois `W` | Cada toque: andar para a frente sem as mãos, depois correr, depois parar. Mostra **Piloto automático: andar** / **Piloto automático: correr** enquanto ativo. Empurrar o joystick para a frente ou para trás também para; para o lado, só manobra |
 | **Montar** / **Descer** | `E` | Aparece quando há um veículo ao alcance, ou enquanto você está montado |
 | **Guardar** / **Tirar** | `Q` | Aparece quando você pode guardar o veículo em que está, ou tirar um guardado. Tirar diz o nome do veículo, e o lugar dele na lista (como 2/3) quando você carrega mais de um |

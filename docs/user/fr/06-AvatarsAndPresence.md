@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5914df7d440551c6 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 67d735c25cb2e640 -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -127,7 +127,8 @@ focus — cliquez d’abord dans la vue 3D.
 |---|---|
 | **W / A / S / D** | Avancer / tourner |
 | **Maj** | Courir (déplacement plus rapide) |
-| **Espace** | Sauter |
+| **Espace** | Sauter ; en eau profonde, remonter |
+| **C** (maintenue, en eau profonde) | Plonger |
 | **Alt + W / S** | Marche continue sans les mains, vers l’avant ou l’arrière — continue après avoir relâché les touches |
 | **Alt + Maj + W / S** | Pareil, mais en courant |
 
@@ -156,6 +157,26 @@ naturellement votre avatar pendant que vous vous déplacez.
 **Suivre l’avatar** garde la caméra verrouillée sur votre avatar pendant
 qu’il se déplace, au lieu d’orbiter librement. Vous pouvez aussi suivre
 les avatars d’autres joueurs pour voir où ils vont.
+
+### Nager et plonger
+
+Votre avatar traverse à pied une eau qui ne dépasse pas la moitié de sa
+taille, d’autant plus lentement qu’elle est profonde. Au-delà, il nage : il
+flotte la tête hors de l’eau et se déplace comme sur la terre ferme, en
+plus lent. Maintenez **C** pour plonger et **Espace** pour remonter ;
+relâchez les deux et il remonte doucement à la surface. En vue à la
+première personne, vous voyez le monde au-dessus de l’eau quand il flotte,
+et le monde sous l’eau une fois qu’il plonge.
+
+Sous l’eau, votre avatar retient son souffle. Une barre **Air** en haut de
+la vue indique ce qu’il en reste : deux minutes et demie avec une
+respiration pleine. Quand il n’y en a plus, votre avatar est ramené à la
+surface et y reste quelques secondes pour reprendre son souffle avant de
+pouvoir replonger. Nagez jusqu’au rivage et il se relève pour sortir de
+l’eau.
+
+Les autres vous voient aussi nager et plonger : la façon dont votre avatar
+se déplace dans l’eau découle de sa position, rien de plus n’est envoyé.
 
 ### Perspective de la caméra
 
@@ -249,6 +270,11 @@ l’air, il vole au-dessus des arbres, mais un grand bâtiment le bloque
 toujours exactement comme il bloquerait une voiture : voler ne veut pas
 dire ignorer la géométrie du monde. Vous ne pouvez pas descendre d’un
 drone en plein vol — ramenez-le d’abord au sol.
+
+Les vélos, motos et voitures s’arrêtent au bord de l’eau. Un drone continue
+au-dessus des lacs et de la mer, et vous dépose sur l’eau : posez-le,
+descendez, et votre avatar nage. Vous ne pouvez pas sortir un véhicule à
+roues de votre inventaire tant que vous êtes dans l’eau.
 
 #### Emporter un véhicule
 

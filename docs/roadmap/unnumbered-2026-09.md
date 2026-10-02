@@ -3642,3 +3642,45 @@ An avatar used to keep wading until the water reached the top of its head: `DEFA
 - Tests: `tests/AvatarShallowWaterTraversal.test.js` checks the limit is neck height, between shoulders and chin, and
   that water over the face blocks a step; its synthetic underwater shelf now scales with the limit, and its real-lake
   "comfortably shallow" fixture walks a shorter way in so it stays under the lower limit.
+
+## Swimming, diving and underwater life (unnumbered, 2026-10-02)
+
+An avatar used to stop wading once the water reached its neck. It now swims in water deeper than half its height,
+can dive, and holds its breath under water; the water has fish and seaweed to dive for; and vehicles stop at the
+waterline.
+
+- `core/AvatarSwimming.js` holds the pure rules: `AVATAR_SWIM_DEPTH` (half of `AVATAR_COLLISION_HEIGHT`), the floating
+  height (feet 1.4 below the surface, mouth above it), `deriveAvatarSwimMode()` (NONE / SURFACE / DIVING from a
+  position and a water surface), `stepSwimFeetHeight()` (Space rises, C dives, no input drifts up, out of air rises
+  regardless) and `stepAvatarBreath()` (150 s of air, refilled in 5 s; out of air, the avatar is pushed up and held at
+  the surface until its breath is full). Swimming moves at the speed of wading at swim depth, so stepping off the
+  shelf never jolts the pace.
+- `application/avatar/AvatarMovementController.js` swims instead of walking where the water is deeper than swim depth
+  over whatever the avatar would stand on, skipping the slope and step constraints, and carries a swimmer's world
+  height from column to column. `AvatarWaterConstraint` no longer blocks; it supplies depth, the surface and terrain
+  height. Falling or jumping into deep water lands on the surface. `swimState()` exposes the mode and air.
+- Swimming is derived from the position, never sent: presence keeps its wire shape and `animation` values, so peers
+  pose remote swimmers through `RenderWorldViewUseCase` (`AvatarVisual#setSwimMode()`, swim poses with a hip pitch in
+  `core/AvatarPoseOffsets.js`). Avatars on foot are now lifted by the terrain alone at any depth; residents and
+  released animals keep `withGroundElevation()`'s surface floor.
+- Camera perspectives are framed from the avatar's real height (terrain added), so first person sees the world above
+  the water while floating and below it once diving. `core/UnderwaterView.js` tells the renderer when the camera is
+  under a lake or the sea; it then uses a blue-green background and fog (deeper blue at sea). Water tiles gain a
+  back-face-only underside so the surface reads as bright daylight from below.
+- `core/UnderwaterLifeField.js` places seaweed on lake and sea beds and fish schools where the water is deep over the
+  school's whole circle, deterministically from the seed; `renderer/UnderwaterLifeTileMesh.js` streams them as a fifth
+  tile layer, swaying the seaweed and moving the fish every frame.
+- Vehicles: `core/VehicleWaterline.js` and `application/avatar/VehicleWaterConstraint.js` stop bicycles, motorcycles and
+  cars at 0.3 units of water (they can always drive out toward shallower water). A drone's floor over water is the
+  surface, so it flies over lakes and the sea and can be landed on the water; getting off there leaves the avatar
+  floating. Wheeled vehicles can't be deployed in water.
+- UI: an **Air** meter (`ui/components/BreathMeter.js`) while diving and until the breath refills; on touch screens a
+  **Dive** button and **Swim Up** in place of **Jump**; the keyboard hint mentions Space and C. Sounds: strokes at the
+  surface splash, divers are silent. New messages in all eight languages.
+- Docs: the World View, Avatars & Presence and Controls guides (and their seven translations), `docs/Architecture.md`
+  and `docs/Protocol.md` (presence `position.y` above the bed while swimming; older clients draw such an avatar above
+  the water).
+- Tests: `tests/AvatarSwimming.test.js` covers the rules, swimming and diving through the controller, running out of
+  air, jumping in, sloping beds, poses, sounds, vehicles at the waterline and a drone over the sea, the underwater view
+  and underwater life. `tests/AvatarShallowWaterTraversal.test.js` keeps its wading checks and now expects the avatar
+  to swim on past a drop-off instead of being blocked. Two steering test fixtures that sat at sea move to dry land.

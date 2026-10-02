@@ -1134,6 +1134,8 @@ export default Object.freeze({
     'touchMovementPad.talk': 'Talk',
     'touchMovementPad.brake': 'Brake',
     'touchMovementPad.jump': 'Jump',
+    'touchMovementPad.swimUp': 'Swim Up',
+    'touchMovementPad.dive': 'Dive',
 
     // World View: vehicleInteractionPrompt.
     'vehicleInteractionPrompt.cycle': '[ [ / ] ] Cycle',
@@ -1327,6 +1329,12 @@ export default Object.freeze({
     'worldView.joystickToWalkPushTo': '• Joystick to walk, push to the edge to run',
     'worldView.dragToOrbitScrollTo': 'Drag to orbit • Scroll to zoom • Home to reset • Click to inspect',
     'worldView.wasdToWalkShiftTo': '• WASD to walk • Shift to run • Space to jump',
+    'worldView.swimKeysHint': '• In deep water: Space to swim up • C to dive',
+    // World View: breathMeter.
+    'breathMeter.air': 'Air',
+    'breathMeter.airLeft': 'Air left',
+    'breathMeter.secondsLeft': '{seconds} s left',
+    'breathMeter.outOfAir': 'Out of air, surfacing',
     'worldView.explore': 'Explore',
     'worldView.map': 'Map',
     'worldView.places': 'Places',

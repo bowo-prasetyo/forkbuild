@@ -9,6 +9,7 @@ import { ecologyZoneAt, ECOLOGY_ZONE } from './TerrainEcology.js';
 import { isRiverAt } from './Hydrology.js';
 import { VehicleType } from './VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from './AvatarVehicleMovementCapability.js';
+import { AvatarSwimMode } from './AvatarSwimming.js';
 
 export const FOOTSTEP_SURFACE = Object.freeze({
     GRASS: 'grass',
@@ -148,9 +149,16 @@ export function advanceAvatarSound(state, observation, deltaSeconds, seed) {
         return { state: Object.freeze(next), cues, engine };
     }
 
-    const surface = () => footstepSurfaceAt(seed, position.x, position.z, {
+    // Under water the avatar makes no sound of its own; at the surface each
+    // stroke splashes like a step in water, however high it floats above the bed.
+    if (observation.swimMode === AvatarSwimMode.DIVING) {
+        next.strideDistance = WALK_STRIDE * FIRST_STEP_FRACTION;
+        return { state: Object.freeze(next), cues, engine: null };
+    }
+    const swimming = observation.swimMode === AvatarSwimMode.SURFACE;
+    const surface = () => (swimming ? FOOTSTEP_SURFACE.WATER : footstepSurfaceAt(seed, position.x, position.z, {
         onStructure: position.y > ON_STRUCTURE_HEIGHT
-    });
+    }));
     const wasSupported = state.verticalState === AvatarVerticalState.SUPPORTED;
     const isSupported = verticalState === AvatarVerticalState.SUPPORTED;
 

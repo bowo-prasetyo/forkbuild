@@ -30,6 +30,8 @@ import { TILE_SEGMENTS } from './TerrainTileMesh.js';
 // y for it, water or not.
 const SINK_DEPTH = 4; // world units below the actual ground — comfortably occludes even this world's steepest 1-tile relief
 
+const UNDERSIDE_COLOR = 0x9fd8e8;
+const UNDERSIDE_OPACITY = 0.7;
 const WATER_OPACITY = 0.78; // translucent, not a mirror — see core/TerrainSurface.js's own "buildings and avatars remain the visual focus" restraint, extended here to water
 
 // Deliberately untested directly, same posture as renderer/TerrainTileMesh.js
@@ -87,5 +89,16 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
     // renderer/TerrainTileMesh.js's own header documents — so the mesh's
     // own position.y stays 0; only x/z place the tile.
     mesh.position.set(center.x, 0, center.z);
+    // The underside, seen only by a diver looking up: a bright, unlit sheet, as
+    // daylight through the surface looks from below. Back faces only, so it is
+    // never drawn from above.
+    const underside = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
+        color: UNDERSIDE_COLOR,
+        transparent: true,
+        opacity: UNDERSIDE_OPACITY,
+        depthWrite: false,
+        side: THREE.BackSide
+    }));
+    mesh.add(underside);
     return mesh;
 }

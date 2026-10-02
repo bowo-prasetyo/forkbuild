@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 14214dca588aad38 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 15773095004fb495 -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -92,7 +92,8 @@ lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md#menjalankan-avatar-anda).
 |---|---|---|
 | `W` / `A` / `S` / `D` | Bergerak / berbelok | Terhalang oleh bangunan, pohon, satwa liar, dan penghuni di dekatnya, sama seperti dinding |
 | `Shift` (ditahan) | Berlari | |
-| `Space` | Melompat | |
+| `Space` | Melompat | Di air dalam: berenang naik |
+| `C` (ditahan) | Menyelam | Hanya di air yang cukup dalam untuk berenang |
 | `Alt` + `W` / `S` | Mulai berjalan terus maju/mundur | Tetap bergerak setelah tombol dilepas; ketukan `W`/`S` biasa tanpa Alt membatalkannya |
 | `Alt` + `Shift` + `W` / `S` | Mulai berlari terus maju/mundur | Aturan pembatalan sama seperti di atas |
 
@@ -349,7 +350,8 @@ atas joystick menyalakan dan mematikan mode itu, beserta pad-nya.
 |---|---|---|
 | Joystick | `W` / `A` / `S` / `D` | Dorong ke atas untuk berjalan maju, ke samping untuk berbelok; arah diagonal menekan kedua tombol |
 | Joystick didorong sampai ke tepi | `Shift` | Berlari |
-| **Lompat** | `Space` | |
+| **Lompat** | `Space` | Menjadi **Berenang Naik** di air dalam |
+| **Menyelam** | `C` | Muncul saat berenang |
 | **Jelajah Otomatis** | `Alt` + `W`, lalu `Alt` + `Shift` + `W`, lalu `W` | Setiap ketukan: berjalan maju tanpa menyentuh, lalu berlari, lalu berhenti. Menampilkan **Jelajah Otomatis: Jalan** / **Jelajah Otomatis: Lari** selama aktif. Mendorong joystick ke depan atau ke belakang juga menghentikannya; ke samping hanya mengemudi |
 | **Naik** / **Turun** | `E` | Ditampilkan saat ada kendaraan dalam jangkauan, atau selama berkendara |
 | **Simpan** / **Keluarkan** | `Q` | Ditampilkan saat Anda dapat menyimpan kendaraan yang dinaiki, atau mengeluarkan yang tersimpan. Tombol Keluarkan menyebut nama kendaraannya, dan urutannya dalam daftar (seperti 2/3) saat Anda membawa lebih dari satu |

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 704178c6cb15b587 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3833a37ca4181e18 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -61,10 +61,12 @@ ríos sinuosos y el mar abierto siguen la elevación y la humedad propias del
 terreno, no una ubicación al azar. La tierra alrededor del origen siempre
 está seca; si se aleja unas mil unidades llegará a una costa, donde el
 suelo desciende por una plataforma hacia un mar profundo, de un azul más
-oscuro, demasiado hondo para vadearlo. Su avatar puede adentrarse en un
-lago o en el mar, cada vez más despacio a medida que sube el agua, y se
-detiene cuando el agua le llega al cuello, así que su cabeza siempre queda
-fuera del agua. Es escenografía: nada de ella se
+oscuro. Su avatar se adentra en un lago o en el mar, cada vez más despacio
+a medida que sube el agua, y cuando el agua supera la mitad de su altura,
+nada (vea [Nadar y bucear](06-AvatarsAndPresence.md#nadar-y-bucear)).
+Sumérjase y la vista se vuelve de un agua verde azulada: las algas se mecen
+en el fondo y pequeños bancos de peces dan vueltas en aguas abiertas, los
+mismos peces en los mismos lugares para todos. Es escenografía: nada de ella se
 puede editar, y se ve idéntica sin importar quién la mire ni cuándo.
 
 El suelo del bosque tiene su propia mezcla de especies de árboles, a

@@ -264,7 +264,7 @@ async function runTests() {
     {
         const registry = buildRegistry();
         const VEHICLE_ID = 'vehicle:steer-b2-hold';
-        const spawnPosition = { x: 90500, y: 0, z: 90500 };
+        const spawnPosition = { x: -93500, y: 0, z: -93500 };
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'steer-b2', new Position(spawnPosition.x, 0, spawnPosition.z));
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
         session.setAvatarControlMode(true);
@@ -296,7 +296,7 @@ async function runTests() {
     {
         const registry = buildRegistry();
         const VEHICLE_ID = 'vehicle:steer-c1';
-        const spawnPosition = { x: 91000, y: 0, z: 91000 };
+        const spawnPosition = { x: -92500, y: 0, z: -92500 };
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'steer-c1', new Position(spawnPosition.x, 0, spawnPosition.z));
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
         session.setAvatarControlMode(true);
@@ -376,7 +376,7 @@ async function runTests() {
         // committed position throughout a real, key-driven steered ride.
         const registry = buildRegistry();
         const VEHICLE_ID = 'vehicle:steer-d3';
-        const spawnPosition = { x: 92000, y: 0, z: 92000 };
+        const spawnPosition = { x: -86500, y: 0, z: -86500 };
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'steer-d3', new Position(spawnPosition.x, 0, spawnPosition.z));
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
         session.setAvatarControlMode(true);
@@ -461,7 +461,7 @@ async function runTests() {
     {
         const registry = buildRegistry();
         const VEHICLE_ID = 'vehicle:steer-f-flagship';
-        const spawnPosition = { x: 93000, y: 0, z: 93000 };
+        const spawnPosition = { x: -85000, y: 0, z: -85000 };
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'steer-f1', new Position(spawnPosition.x, 0, spawnPosition.z));
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
         session.setAvatarControlMode(true);
@@ -509,7 +509,7 @@ async function runTests() {
         // realizes zero net horizontal movement — no approach phase
         // required, and no risk of the vehicle drifting off the flush
         // line before steering is ever applied.
-        const brickCenter = groundedBrickCenter(95000, 95005);
+        const brickCenter = groundedBrickCenter(-79000, -78995);
         const spawnPosition = { x: brickCenter.x, y: brickCenter.y, z: brickCenter.z - 0.5 - BICYCLE_RADIUS };
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'steer-g1', new Position(spawnPosition.x, 0, spawnPosition.z));
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);

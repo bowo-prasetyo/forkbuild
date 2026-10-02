@@ -47,6 +47,7 @@ import ResidentSpeechActions from '../components/ResidentSpeechActions.js';
 import { residentRefusalLabel } from '../components/avatarInteractionLabels.js';
 import HistoryTimelinePanel from '../components/HistoryTimelinePanel.js';
 import TouchMovementPad from '../components/TouchMovementPad.js';
+import BreathMeter from '../components/BreathMeter.js';
 import { useMediaQuery, COMPACT_LAYOUT_QUERY, TOUCH_INPUT_QUERY } from '../composables/useMediaQuery.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../../application/world/WorldViewNavigationState.js';
@@ -106,7 +107,7 @@ export default {
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
         WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt, AnimalInteractionPrompt, ResidentInteractionPrompt, ResidentSpeechActions,
-        HistoryTimelinePanel, TouchMovementPad, SoundControl
+        HistoryTimelinePanel, TouchMovementPad, BreathMeter, SoundControl
     },
     setup() {
         const route = useRoute();
@@ -350,6 +351,8 @@ export default {
         // beside it; empty otherwise.
         const residentFocusTargets = ref([]);
         const cruiseState = ref(null);
+        // The local avatar's swim mode and air, for the air meter and touch pad.
+        const swimState = ref(null);
         // null means the free orbit camera.
         const cameraPerspective = ref(null);
         // Not gated on having an avatar (docs/Principles.md, "Watching Presence Never
@@ -1084,6 +1087,8 @@ export default {
                 cruiseState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.avatarContinuousMovementState()
                     : null;
+                // Not gated on control mode: air runs out whether or not keys are held.
+                swimState.value = hasLocalAvatar.value ? session.avatarSwimState() : null;
             }, 150);
         });
 
@@ -1144,6 +1149,7 @@ export default {
             focusResidentMention,
             residentRefusalLabel,
             cruiseState,
+            swimState,
             cameraPerspective,
             CameraPerspective,
             setCameraPerspective,
@@ -1442,7 +1448,7 @@ export default {
                         {{ t('worldView.dragToOrbitPinchTo') }}<template v-if="avatarControlMode">{{ ' ' + t('worldView.joystickToWalkPushTo') }}</template>
                     </p>
                     <p v-else class="world-view-hint world-view-hint--controls">
-                        {{ t('worldView.dragToOrbitScrollTo') }}<template v-if="avatarControlMode">{{ ' ' + t('worldView.wasdToWalkShiftTo') }}</template>
+                        {{ t('worldView.dragToOrbitScrollTo') }}<template v-if="avatarControlMode">{{ ' ' + t('worldView.wasdToWalkShiftTo') + ' ' + t('worldView.swimKeysHint') }}</template>
                     </p>
                 </template>
                 <WorldCollaboratorIndicator v-if="activeDocumentInfo" :rows="spatialCollaboratorRows" @follow="followCollaborator" />
@@ -1496,10 +1502,12 @@ export default {
                 :decoration-state="decorationInteractionState"
                 :cruise-state="cruiseState"
                 :resident-state="residentInteractionState"
+                :swim-state="swimState"
                 @key-down="pressAvatarKey"
                 @key-up="releaseAvatarKey"
                 @decorate="toggleAnimalDecoration"
             />
+            <BreathMeter :swim-state="swimState" />
             <SoundControl
                 v-if="soundAvailable"
                 :muted="soundMuted"

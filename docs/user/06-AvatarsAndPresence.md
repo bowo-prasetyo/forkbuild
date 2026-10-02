@@ -112,7 +112,8 @@ first.
 |---|---|
 | **W / A / S / D** | Move / turn |
 | **Shift** | Run (faster movement) |
-| **Space** | Jump |
+| **Space** | Jump; in deep water, swim up |
+| **C** (held, in deep water) | Dive |
 | **Alt + W / S** | Hands-free continuous walk forward/backward — keeps moving after you let go of the keys |
 | **Alt + Shift + W / S** | Same, but running instead of walking |
 
@@ -135,6 +136,24 @@ your avatar naturally as you move.
 **Follow Avatar** keeps the camera locked to your avatar as it moves, instead
 of orbiting freely. You can also follow other players' avatars to see where
 they're going.
+
+### Swimming and diving
+
+Water up to half your avatar's height is waded through, more slowly the
+deeper it gets. Deeper than that, your avatar swims: it floats with its head
+above the surface, and moving works as on land, only slower. Hold **C** to
+dive and **Space** to swim back up; let go of both and it drifts slowly up
+to the surface. In first person you see the world above the water while you
+float, and the world under it once you dive.
+
+Under water your avatar holds its breath. An **Air** bar at the top of the
+view shows how much is left: two and a half minutes from a full breath.
+When it runs out, your avatar is pushed up to the surface and stays there
+for a few seconds to catch its breath before it can dive again. Swim to the
+shore and it stands up and walks out.
+
+Other people see you swimming and diving too: how your avatar moves in the
+water follows from where it is, so nothing extra is sent.
 
 ### Camera Perspective
 
@@ -217,6 +236,11 @@ ground; letting go brings it back down. Once airborne it flies above
 trees, but a tall building still blocks it exactly as it would a car, so
 flying doesn't mean ignoring the world's own geometry. You can't
 dismount a drone in mid-air — bring it back to the ground first.
+
+Bicycles, motorcycles and cars stop at the water's edge. A drone flies on
+over lakes and the sea, and lets you down on the water: land it and get
+off, and your avatar is swimming. You can't take a wheeled vehicle out of
+your inventory while you are in the water.
 
 #### Carrying a vehicle
 

@@ -12,8 +12,17 @@ import { buildWildlifeTileMesh, updateWildlifeTileMesh } from './WildlifeTileMes
 import { disposeOwnedTile, disposeInstancedTile } from './TileDisposal.js';
 import { terrainHeightAt as computeTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+import { underwaterViewAt, UNDERWATER_VIEW } from '../core/UnderwaterView.js';
+import { buildUnderwaterLifeTileMesh, updateUnderwaterLifeTileMesh } from './UnderwaterLifeTileMesh.js';
 
 const SKY_COLOR = 0x87ceeb;
+
+// Under water the view closes in to a blue-green haze: murkier and greener in a
+// lake, deeper blue at sea.
+const UNDERWATER_LOOK = Object.freeze({
+    [UNDERWATER_VIEW.LAKE]: Object.freeze({ color: 0x2f6f6a, near: 0.5, far: 18 }),
+    [UNDERWATER_VIEW.SEA]: Object.freeze({ color: 0x135a8c, near: 1, far: 30 })
+});
 
 // Renderer owns the visualization pipeline only: scene, camera, lights, grid,
 // and the render loop. It never owns game state (bricks, buildings, worlds).
@@ -136,6 +145,19 @@ export class Renderer {
         // Animals wander (core/WildlifeMotion.js): a tile is built already
         // posed at the current wildlife time, and _renderFrame() moves every
         // loaded tile's animals on from there.
+        // Fish and seaweed (core/UnderwaterLifeField.js); fish swim every frame.
+        this._underwaterLifeStreaming = new TerrainStreamingController(
+            this._sceneManager,
+            (tx, tz) => buildUnderwaterLifeTileMesh(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._wildlifeClock()),
+            { disposeTile: disposeInstancedTile }
+        );
+        this._underwaterLifeStreaming.update(
+            this._cameraController.camera.position.x,
+            this._cameraController.camera.position.z,
+            true
+        );
+        this._underwaterView = UNDERWATER_VIEW.NONE;
+
         this._caughtAnimalIds = new Set();
         this._wildlifeStreaming = new TerrainStreamingController(
             this._sceneManager,
@@ -261,6 +283,7 @@ export class Renderer {
         this._terrainStreaming.dispose();
         this._vegetationStreaming.dispose();
         this._waterStreaming.dispose();
+        this._underwaterLifeStreaming.dispose();
         this._wildlifeStreaming.dispose();
         window.removeEventListener('resize', this._onResize);
         this._cameraController.dispose();
@@ -277,10 +300,29 @@ export class Renderer {
         const wildlifeTime = this._wildlifeClock();
         const observer = this.wildlifeObserver();
         this._wildlifeStreaming.forEachLoadedTile((tile) => updateWildlifeTileMesh(tile, wildlifeTime, observer));
+        this._underwaterLifeStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
+        this._underwaterLifeStreaming.forEachLoadedTile((tile) => updateUnderwaterLifeTileMesh(tile, wildlifeTime));
+        this._applyUnderwaterView(underwaterViewAt(DEFAULT_WORLD_SEED, this._cameraController.camera.position));
         for (const listener of this._frameListeners) {
             listener(deltaSeconds);
         }
         this._webglRenderer.render(this._sceneManager.scene, this._cameraController.camera);
+    }
+
+    _applyUnderwaterView(view) {
+        if (view === this._underwaterView) {
+            return;
+        }
+        this._underwaterView = view;
+        const look = UNDERWATER_LOOK[view];
+        const scene = this._sceneManager.scene;
+        if (look) {
+            scene.background = new THREE.Color(look.color);
+            scene.fog = new THREE.Fog(look.color, look.near, look.far);
+        } else {
+            scene.background = new THREE.Color(SKY_COLOR);
+            scene.fog = null;
+        }
     }
 
     _onResize() {
