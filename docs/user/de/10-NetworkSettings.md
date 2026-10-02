@@ -2,7 +2,7 @@
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
-[English](../10-NetworkSettings.md) · **Deutsch** · [Español](../es/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · [日本語](../ja/10-NetworkSettings.md) · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
+[English](../10-NetworkSettings.md) · **Deutsch** · [Español](../es/10-NetworkSettings.md) · [Français](../fr/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · [日本語](../ja/10-NetworkSettings.md) · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
 
 **Netzwerkeinstellungen** in der oberen Leiste verlinkt jede Seite, die

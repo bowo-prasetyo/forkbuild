@@ -1,7 +1,7 @@
 # Privacy
 
 <!-- languages -->
-**English** · [Deutsch](user/de/Privacy.md) · [Español](user/es/Privacy.md) · [Bahasa Indonesia](user/id/Privacy.md) · [日本語](user/ja/Privacy.md) · [Português (Brasil)](user/pt-BR/Privacy.md)
+**English** · [Deutsch](user/de/Privacy.md) · [Español](user/es/Privacy.md) · [Français](user/fr/Privacy.md) · [Bahasa Indonesia](user/id/Privacy.md) · [日本語](user/ja/Privacy.md) · [Português (Brasil)](user/pt-BR/Privacy.md)
 <!-- /languages -->
 
 ForkBuild has no accounts and no analytics. It stores your work in your own

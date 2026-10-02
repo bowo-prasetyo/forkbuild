@@ -2,7 +2,7 @@
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
-[English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · [Español](../es/06-AvatarsAndPresence.md) · **Bahasa Indonesia** · [日本語](../ja/06-AvatarsAndPresence.md) · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md)
+[English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · [Español](../es/06-AvatarsAndPresence.md) · [Français](../fr/06-AvatarsAndPresence.md) · **Bahasa Indonesia** · [日本語](../ja/06-AvatarsAndPresence.md) · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md)
 <!-- /languages -->
 
 **Avatar** Anda adalah cara orang lain melihat Anda di Tampilan Dunia —

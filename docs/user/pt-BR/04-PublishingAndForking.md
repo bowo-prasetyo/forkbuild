@@ -2,7 +2,7 @@
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
-[English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · **Português (Brasil)**
+[English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · **Português (Brasil)**
 <!-- /languages -->
 
 Este é o coração do ForkBuild. **Publicar** compartilha sua criação com o

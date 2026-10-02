@@ -2,7 +2,7 @@
 # Privacidad
 
 <!-- languages -->
-[English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · **Español** · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
+[English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · **Español** · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
 
 ForkBuild no tiene cuentas ni analíticas. Guarda su trabajo en su propio

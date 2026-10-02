@@ -158,8 +158,8 @@ function placeholders(text) {
     assert(negotiateLocale(PSEUDO_LOCALE, ['en']) === PSEUDO_LOCALE, 'the pseudo-locale can be chosen');
     assert(negotiateLocale('xx', ['en-GB']) === 'en', 'an unshipped saved choice falls back to the browser');
     assert(negotiateLocale(null, ['en-GB', 'fr']) === 'en', 'a regional variant matches its language');
-    assert(negotiateLocale(null, ['fr', 'sv']) === SOURCE_LOCALE, 'no shipped match shows English');
-    assert(negotiateLocale(null, ['fr', 'de-CH']) === 'de', 'the first shipped language in the list wins');
+    assert(negotiateLocale(null, ['ko', 'sv']) === SOURCE_LOCALE, 'no shipped match shows English');
+    assert(negotiateLocale(null, ['ko', 'de-CH']) === 'de', 'the first shipped language in the list wins');
     assert(negotiateLocale(null, undefined) === SOURCE_LOCALE, 'no browser languages shows English');
     assert(negotiateLocale(null, ['EN-xa']) === 'en', 'the pseudo-locale is never chosen from the browser');
     assert(findLocale('EN').code === 'en' && findLocale('zz') === null && findLocale(7) === null, 'codes match case-insensitively');

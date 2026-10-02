@@ -2,7 +2,7 @@
 # 08 — Chat & Unterhaltungen
 
 <!-- languages -->
-[English](../08-ChatAndConversations.md) · **Deutsch** · [Español](../es/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
+[English](../08-ChatAndConversations.md) · **Deutsch** · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
 
 Direktnachrichten in ForkBuild laufen Peer-to-Peer und **nur unter

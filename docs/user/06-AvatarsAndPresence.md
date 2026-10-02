@@ -1,7 +1,7 @@
 # 06 — Avatars & Presence
 
 <!-- languages -->
-**English** · [Deutsch](de/06-AvatarsAndPresence.md) · [Español](es/06-AvatarsAndPresence.md) · [Bahasa Indonesia](id/06-AvatarsAndPresence.md) · [日本語](ja/06-AvatarsAndPresence.md) · [Português (Brasil)](pt-BR/06-AvatarsAndPresence.md)
+**English** · [Deutsch](de/06-AvatarsAndPresence.md) · [Español](es/06-AvatarsAndPresence.md) · [Français](fr/06-AvatarsAndPresence.md) · [Bahasa Indonesia](id/06-AvatarsAndPresence.md) · [日本語](ja/06-AvatarsAndPresence.md) · [Português (Brasil)](pt-BR/06-AvatarsAndPresence.md)
 <!-- /languages -->
 
 Your **avatar** is how other people see you in World View — its appearance,

@@ -2,7 +2,7 @@
 # Gizmo Transformasi Interaktif
 
 <!-- languages -->
-[English](../InteractiveTransformGizmo.md) · [Deutsch](../de/InteractiveTransformGizmo.md) · [Español](../es/InteractiveTransformGizmo.md) · **Bahasa Indonesia** · [日本語](../ja/InteractiveTransformGizmo.md) · [Português (Brasil)](../pt-BR/InteractiveTransformGizmo.md)
+[English](../InteractiveTransformGizmo.md) · [Deutsch](../de/InteractiveTransformGizmo.md) · [Español](../es/InteractiveTransformGizmo.md) · [Français](../fr/InteractiveTransformGizmo.md) · **Bahasa Indonesia** · [日本語](../ja/InteractiveTransformGizmo.md) · [Português (Brasil)](../pt-BR/InteractiveTransformGizmo.md)
 <!-- /languages -->
 
 Setiap kali ada balok yang dipilih di Editor, sebuah gizmo muncul di poros

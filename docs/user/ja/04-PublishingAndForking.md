@@ -2,7 +2,7 @@
 # 04 — 公開とフォーク
 
 <!-- languages -->
-[English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · **日本語** · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
+[English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · **日本語** · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
 
 ここが ForkBuild の中心です。**公開** は、あなたの作品を世界と共有

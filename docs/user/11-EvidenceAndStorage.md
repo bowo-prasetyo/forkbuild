@@ -1,7 +1,7 @@
 # 11 — Evidence & Storage
 
 <!-- languages -->
-**English** · [Deutsch](de/11-EvidenceAndStorage.md) · [Español](es/11-EvidenceAndStorage.md) · [Bahasa Indonesia](id/11-EvidenceAndStorage.md) · [日本語](ja/11-EvidenceAndStorage.md) · [Português (Brasil)](pt-BR/11-EvidenceAndStorage.md)
+**English** · [Deutsch](de/11-EvidenceAndStorage.md) · [Español](es/11-EvidenceAndStorage.md) · [Français](fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](id/11-EvidenceAndStorage.md) · [日本語](ja/11-EvidenceAndStorage.md) · [Português (Brasil)](pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
 
 > **Mostly experimental.** Storing content on IPFS or Arweave from a card's

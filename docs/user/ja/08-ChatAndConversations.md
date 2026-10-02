@@ -2,7 +2,7 @@
 # 08 — チャットと会話
 
 <!-- languages -->
-[English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · **日本語** · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
+[English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · **日本語** · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
 
 ForkBuild の直接メッセージはピアツーピアで、**友達どうしだけ** のもの

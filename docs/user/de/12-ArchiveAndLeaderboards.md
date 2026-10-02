@@ -2,7 +2,7 @@
 # 12 — Archiv & Bestenlisten
 
 <!-- languages -->
-[English](../12-ArchiveAndLeaderboards.md) · **Deutsch** · [Español](../es/12-ArchiveAndLeaderboards.md) · [Bahasa Indonesia](../id/12-ArchiveAndLeaderboards.md) · [日本語](../ja/12-ArchiveAndLeaderboards.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndLeaderboards.md)
+[English](../12-ArchiveAndLeaderboards.md) · **Deutsch** · [Español](../es/12-ArchiveAndLeaderboards.md) · [Français](../fr/12-ArchiveAndLeaderboards.md) · [Bahasa Indonesia](../id/12-ArchiveAndLeaderboards.md) · [日本語](../ja/12-ArchiveAndLeaderboards.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndLeaderboards.md)
 <!-- /languages -->
 
 > **Experimentell.** Alles hier kann sich in einer späteren Version ändern

@@ -2,7 +2,7 @@
 # 13 — Data Anda: mencadangkan dan memulihkan
 
 <!-- languages -->
-[English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Español](../es/13-YourData.md) · **Bahasa Indonesia** · [日本語](../ja/13-YourData.md) · [Português (Brasil)](../pt-BR/13-YourData.md)
+[English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Español](../es/13-YourData.md) · [Français](../fr/13-YourData.md) · **Bahasa Indonesia** · [日本語](../ja/13-YourData.md) · [Português (Brasil)](../pt-BR/13-YourData.md)
 <!-- /languages -->
 
 ForkBuild tidak memiliki akun dan tidak ada server yang menyimpan pekerjaan

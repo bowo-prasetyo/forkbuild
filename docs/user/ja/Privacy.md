@@ -2,7 +2,7 @@
 # プライバシー
 
 <!-- languages -->
-[English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · **日本語** · [Português (Brasil)](../pt-BR/Privacy.md)
+[English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · **日本語** · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
 
 ForkBuild にはアカウントもアクセス解析もありません。作業はあなた自身の

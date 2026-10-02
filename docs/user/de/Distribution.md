@@ -2,7 +2,7 @@
 # Ihre Arbeit verteilen
 
 <!-- languages -->
-[English](../Distribution.md) · **Deutsch** · [Español](../es/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
+[English](../Distribution.md) · **Deutsch** · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
 
 Alles, was ForkBuild erstellt, beginnt auf Ihrem eigenen Gerät. **Verteilen**
