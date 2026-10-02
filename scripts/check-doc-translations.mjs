@@ -48,6 +48,11 @@ export const LANGUAGES = Object.freeze([
         staleBanner: '> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés]({source}).'
     }),
     Object.freeze({
+        code: 'fr',
+        name: 'Français',
+        staleBanner: '> **Remarque\u00a0:** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise]({source}).'
+    }),
+    Object.freeze({
         code: 'id',
         name: 'Bahasa Indonesia',
         staleBanner: '> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris]({source}).'

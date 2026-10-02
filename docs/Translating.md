@@ -3,7 +3,7 @@
 ForkBuild can be shown in another language: every page's text is a message
 (`ui/i18n/`), chosen on the **Language** page, with a pseudo-locale for
 finding text that isn't ready. It ships in English, German, Spanish,
-Bahasa Indonesia, Japanese and Brazilian Portuguese; the table below lists the few things that stay in the language they were written
+French, Bahasa Indonesia, Japanese and Brazilian Portuguese; the table below lists the few things that stay in the language they were written
 in.
 
 ## Languages
@@ -13,6 +13,7 @@ in.
 | English (source) | `en` | `ui/i18n/messages/en.js` |
 | Deutsch (German) | `de` | `ui/i18n/messages/de.js`, complete (see "German" below) |
 | Español (Spanish) | `es` | `ui/i18n/messages/es.js`, complete (see "Spanish" below) |
+| Français (French) | `fr` | `ui/i18n/messages/fr.js`, complete (see "French" below) |
 | Bahasa Indonesia | `id` | `ui/i18n/messages/id.js`, complete (see "Indonesian" below) |
 | 日本語 (Japanese) | `ja` | `ui/i18n/messages/ja.js`, complete (see "Japanese" below) |
 | Português (Brasil) (Brazilian Portuguese) | `pt-BR` | `ui/i18n/messages/pt-BR.js`, complete (see "Brazilian Portuguese" below) |
@@ -187,6 +188,55 @@ separator, as Spanish groups only from five digits). A resident's `{where}`
 reads "a unos 3,2 km al norte". Keyboard keys are Mayús, Supr, RePág and
 AvPág. Compass points are N, NE, E, SE, S, SO, O, NO.
 
+## French
+
+`ui/i18n/messages/fr.js` translates every key into French, for every
+French-speaking browser (`fr`, `fr-FR`, `fr-CA`, `fr-BE`, `fr-CH` …). It
+uses the formal "vous", infinitives for buttons and menu entries
+("Enregistrer", "Exporter le plan"), « … » for quoted titles, and the
+typographic apostrophe ’ throughout. Following French typography, a
+no-break space (U+00A0) goes inside « » and before `:` and `%`, and a
+narrow no-break space (U+202F) before `;`, `?` and `!`;
+`tests/FrenchLocale.test.js` checks that no plain space is left there. It
+keeps network and product names (ForkBuild, Arweave, Nostr, IPFS, Steem,
+Bitcoin, Base, Kubo, WebRTC, STUN, TURN) and the protocol words French
+developers use as they are (Snapshot, endpoint, backend, hash, nonce,
+txid, gas); gateway and relay are passerelle and relais. The words it uses
+for ForkBuild's own ideas:
+
+| English | French |
+|---|---|
+| World | Monde |
+| brick | brique |
+| build (a creation) | construction |
+| structure / blueprint | structure / plan |
+| Publication / publish / unpublish | publication / publier / dépublier |
+| Shared World (a World's signed record) | Monde partagé |
+| Signed Claim | Déclaration signée |
+| fork | fork, forker (« Fork de … ») |
+| peer | pair |
+| identity / passphrase | identité / phrase secrète |
+| landmark / region / resident | point de repère / région / habitant |
+| placement / place | placement / placer |
+| anchor / anchoring | ancre / ancrage, ancrer |
+| wallet | portefeuille |
+| leaderboard / achievement / badge | classement / succès / badge |
+| naming claim (a place name) | proposition de nom |
+| authorship / lineage claim | revendication de paternité / de filiation |
+| undo / redo | Annuler / Rétablir |
+| sign in / sign out | Se connecter / Se déconnecter |
+
+French has three plural forms here, `one`, `many` and `other`. `one` covers
+0 and 1 ("0 brique sélectionnée"), and `many` is for round millions, which
+take "de": "Déplacer 1 000 000 de briques". Only messages that count bricks
+give `many`; elsewhere it falls back to `other`. The undo labels say
+"Placer la brique" for one brick and "Placer 3 briques" otherwise, after
+"Annuler : ". Numbers follow `fr` (`3,2 km`, `12 000` with a narrow
+no-break space). A resident's `{where}` reads "à environ 3,2 km au nord".
+Keyboard keys are Maj, Suppr, Échap, Espace, Pg préc and Pg suiv; WASD
+stays WASD, since movement follows the letters typed, not their place on
+the keyboard. Compass points are N, NE, E, SE, S, SO, O, NO.
+
 ## Brazilian Portuguese
 
 `ui/i18n/messages/pt-BR.js` translates every key into Brazilian Portuguese,
@@ -270,8 +320,8 @@ lives in `docs/user/<code>/` under the English page's file name
 is translated there as well (`docs/user/ja/Privacy.md`). The rest of
 `docs/` is for developers and stays in English.
 
-Translated so far, in German, Spanish, Indonesian, Japanese and Brazilian
-Portuguese: every page of the
+Translated so far, in German, Spanish, French, Indonesian, Japanese and
+Brazilian Portuguese: every page of the
 user guide, and `Privacy.md`.
 
 Writing a translation:
@@ -280,16 +330,17 @@ Writing a translation:
   English (**Back Up to a File**) is the text of a button or heading; find
   it in `ui/i18n/messages/en.js` and use the same key's text from your
   language's file (`de.js`: **In eine Datei sichern**, `es.js`:
-  **Hacer copia de seguridad en un archivo**, `id.js`:
+  **Hacer copia de seguridad en un archivo**, `fr.js`:
+  **Sauvegarder dans un fichier**, `id.js`:
   **Cadangkan ke File**, `ja.js`: **ファイルにバックアップ**, `pt-BR.js`:
   **Fazer backup em um arquivo**). The word lists under "German",
-  "Spanish", "Indonesian", "Japanese" and "Brazilian Portuguese" above
+  "Spanish", "French", "Indonesian", "Japanese" and "Brazilian Portuguese" above
   apply here too.
 - Text the app shows only in English (a publish error from `application/`,
   say) stays in English, with a translation beside it.
 - Link to the translated page when there is one (`FAQ.md`), and to the
   English otherwise (`../02-TheEditor.md`), marked as English: "(Englisch)",
-  "(en inglés)", "(bahasa Inggris)", "（英語）", "(em inglês)". An anchor into a translated page is made from its
+  "(en inglés)", "(en anglais)", "(bahasa Inggris)", "（英語）", "(em inglês)". An anchor into a translated page is made from its
   translated heading, the way GitHub makes it: `ControlsReference.md#タッチ画面`.
 - Start the page with the line that names its English original. The hash
   is filled in by `--stamp`:

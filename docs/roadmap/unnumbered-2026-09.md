@@ -3537,3 +3537,23 @@ comment posted from World View never left the device. Each now gets the step whe
   `tests/PlaceNamingClaimPublicationAction.test.js` rewritten to drive the real `usePlaceNamingPanel()`. Older tests
   that pulled `ui/main.js`'s comment wrapper or EditorView's distribution block out of the source now run the real
   modules.
+
+## Internationalization: French (unnumbered, 2026-10-02)
+
+The sixth translation. ForkBuild can now be shown in French (Français), chosen on the Language page or picked
+automatically for any browser set to French (`fr`, `fr-FR`, `fr-CA`, `fr-BE`, `fr-CH` …).
+
+- `ui/i18n/messages/fr.js` translates all 3,642 messages, in the same order and groups as English. It uses the formal
+  "vous", infinitives for buttons, « … » around quoted titles, the typographic apostrophe, and French spacing: a
+  no-break space inside « » and before `:` and `%`, a narrow one before `;`, `?` and `!`. It keeps network and product
+  names and the protocol words French developers use as they are (Snapshot, endpoint, hash). The words it uses for
+  ForkBuild's own ideas are listed in `docs/Translating.md`, "French".
+- French is the first shipped language with a third plural form, `many`, for round millions ("1 000 000 de briques");
+  the brick-count messages give it, and the rest fall back to `other`, as `Translator` already did. `one` covers 0 too.
+  Numbers follow `fr` (`3,2 km`, `12 000`).
+- The user guide and `Privacy.md` are translated in `docs/user/fr/`; `scripts/check-doc-translations.mjs` knows the
+  language and its out-of-date banner.
+- `tests/I18n.test.js` used French as its example of a language ForkBuild doesn't ship; it now uses Korean.
+- Tests: `tests/FrenchLocale.test.js` (complete, chosen from French browsers in France, Canada, Belgium and
+  Switzerland, plural forms including zero and a million, a resident's sentence with a decimal comma and guillemets,
+  undo labels with French digit grouping, a fork's title, compass points, and French typography throughout).
