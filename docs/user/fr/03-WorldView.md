@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a305d87e70a12de2 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 199c95a8b1ff2992 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -57,9 +57,13 @@ saute jamais quand vous bougez la souris.
 
 Le sol lui-même est généré de la même façon pour tout le monde à partir
 d’une graine commune — herbe, plage, rochers, forêt et terres agricoles,
-lacs et rivières sinueuses suivent l’altitude et l’humidité propres du
-terrain, et non un placement aléatoire. C’est un décor : rien n’y est
-modifiable, et il est identique quel que soit l’observateur et le moment.
+lacs, rivières sinueuses et pleine mer suivent l’altitude et l’humidité
+propres du terrain, et non un placement aléatoire. Les terres autour de
+l’origine restent toujours sèches ; à un millier d’unités environ, vous
+atteindrez une côte où le sol descend le long d’un plateau vers une mer
+profonde, d’un bleu plus sombre, trop profonde pour y marcher. C’est un
+décor : rien n’y est modifiable, et il est identique quel que soit
+l’observateur et le moment.
 
 Le sol forestier porte son propre mélange d’essences d’arbres, issu de
 cette même graine — des conifères là où l’humidité est plus forte, des

@@ -234,8 +234,9 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         // Deliberately far from the fixture vehicle, so it never falls
-        // within mount/render range at all.
-        const farPosition = new Position(realVehicle.position.x + 5000, 0, realVehicle.position.z + 5000);
+        // within mount/render range at all, and on dry land: +5000 on
+        // both axes lies out at sea, where deep water rightly blocks walking.
+        const farPosition = new Position(realVehicle.position.x + 5000, 0, realVehicle.position.z - 5000);
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'move-d1', farPosition);
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
         session.setAvatarControlMode(true);

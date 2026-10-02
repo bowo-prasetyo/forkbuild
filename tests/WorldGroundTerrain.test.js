@@ -1,5 +1,5 @@
 import {
-    terrainHeightAt, DEFAULT_WORLD_SEED, TERRAIN_HEIGHT_BOUND
+    terrainHeightAt, DEFAULT_WORLD_SEED, TERRAIN_HEIGHT_BOUND, TERRAIN_DEPTH_BOUND
 } from '../core/TerrainHeightField.js';
 import {
     tileCoordinateForPosition, tileKey, tileCenter, tilesWithinRadius,
@@ -48,17 +48,20 @@ async function runTests() {
         const hOrigin2 = terrainHeightAt(DEFAULT_WORLD_SEED, 0, 0);
         assert(hOrigin1 === hOrigin2, '2. Determinism holds at the origin too, not just an arbitrary point');
 
-        // Boundedness: no sample anywhere exceeds the sum of the
-        // octaves' own amplitudes — a real vertical bound, never NaN/Infinity.
-        let maxAbs = 0;
+        // Boundedness: no sample rises above the sum of the octaves' own
+        // amplitudes, or sinks below the deepest sea floor
+        // (TERRAIN_DEPTH_BOUND) — a real vertical bound, never NaN/Infinity.
+        let maxHeight = 0, minHeight = 0;
         for (let i = 0; i < 200; i++) {
             const x = (i - 100) * 37.3;
             const z = (i - 100) * -19.7;
             const h = terrainHeightAt(DEFAULT_WORLD_SEED, x, z);
             assert(Number.isFinite(h), `3. terrainHeightAt(${x}, ${z}) is a finite number, never NaN/Infinity`);
-            maxAbs = Math.max(maxAbs, Math.abs(h));
+            maxHeight = Math.max(maxHeight, h);
+            minHeight = Math.min(minHeight, h);
         }
-        assert(maxAbs <= TERRAIN_HEIGHT_BOUND + 1e-9, '4. Every sampled elevation stays within TERRAIN_HEIGHT_BOUND');
+        assert(maxHeight <= TERRAIN_HEIGHT_BOUND + 1e-9 && minHeight >= -TERRAIN_DEPTH_BOUND - 1e-9,
+            '4. Every sampled elevation stays within [-TERRAIN_DEPTH_BOUND, TERRAIN_HEIGHT_BOUND]');
 
         // Large-scale continuity: a 1-unit step never produces a wild
         // jump — "geography, not noise" (docs/Roadmap.md, 0.2.76).

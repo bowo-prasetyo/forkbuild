@@ -47,16 +47,22 @@
 // accumulation has) — it exists as its own honest, bounded, local
 // primitive for tests and future work to build on.
 
-import { terrainHeightAt } from './TerrainHeightField.js';
+import { terrainHeightAt, seaBasinAt } from './TerrainHeightField.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL, HIGHLAND_ELEVATION, SURFACE_PALETTE } from './TerrainSurface.js';
 import { ecologyGroundColorAt } from './TerrainEcology.js';
 import { lerp, smoothstep } from '../utils/interpolation.js';
 
 export const HYDROLOGY_FEATURE = Object.freeze({
-    NONE: 'NONE',   // dry ground — no lake, no river
-    LAKE: 'LAKE',   // mirrors SURFACE_CATEGORY.WATER exactly — a still-water depression
+    NONE: 'NONE',   // dry ground — no sea, no lake, no river
+    SEA: 'SEA',     // SURFACE_CATEGORY.WATER inside a sea basin (see seaBasinAt())
+    LAKE: 'LAKE',   // every other SURFACE_CATEGORY.WATER — a still-water depression
     RIVER: 'RIVER'  // a flowing channel threaded through lowland ground
 });
+
+// Water counts as sea once the ground under it lies at least this far
+// into a sea basin — past the shallow edge of the shelf, so a pond that
+// merely happens to sit near a coast still reads as a lake.
+export const SEA_BASIN_MIN = 0.25;
 
 function clamp01(v) {
     return v < 0 ? 0 : v > 1 ? 1 : v;
@@ -264,10 +270,12 @@ export function isRiverAt(seed, x, z) {
 
 // The one public classification entry point — mirrors
 // core/TerrainEcology.js#ecologyZoneAt()'s own "fixed evaluation order"
-// discipline: LAKE (an existing WATER depression) always wins over
-// RIVER, so a coordinate is never ambiguous between the two.
+// discipline: standing water (SEA, else LAKE) always wins over RIVER,
+// so a coordinate is never ambiguous between them.
 export function hydrologyFeatureAt(seed, x, z) {
-    if (surfaceCategoryAt(seed, x, z) === SURFACE_CATEGORY.WATER) return HYDROLOGY_FEATURE.LAKE;
+    if (surfaceCategoryAt(seed, x, z) === SURFACE_CATEGORY.WATER) {
+        return seaBasinAt(seed, x, z) >= SEA_BASIN_MIN ? HYDROLOGY_FEATURE.SEA : HYDROLOGY_FEATURE.LAKE;
+    }
     if (isRiverAt(seed, x, z)) return HYDROLOGY_FEATURE.RIVER;
     return HYDROLOGY_FEATURE.NONE;
 }
@@ -315,6 +323,22 @@ export function hydrologyGroundColorAt(seed, x, z) {
 export const LAKE_SURFACE_HEIGHT = WATER_LEVEL;
 export const LAKE_SURFACE_COLOR = SURFACE_PALETTE[SURFACE_CATEGORY.WATER];
 
+// The sea shares the lake's water line (one WATER_LEVEL for all still
+// water, so a coast never steps) but reads a deeper, still soft blue.
+export const SEA_SURFACE_COLOR = Object.freeze({ r: 0.40, g: 0.55, b: 0.68 });
+
+// Surface color of standing water at (x, z): the lake tone inland,
+// easing to SEA_SURFACE_COLOR across the shelf so a coast never shows a
+// hard color seam. Meaningful only where SURFACE_CATEGORY.WATER holds.
+export function waterSurfaceColorAt(seed, x, z) {
+    const t = clamp01(seaBasinAt(seed, x, z) / SEA_BASIN_MIN);
+    return {
+        r: lerp(LAKE_SURFACE_COLOR.r, SEA_SURFACE_COLOR.r, t),
+        g: lerp(LAKE_SURFACE_COLOR.g, SEA_SURFACE_COLOR.g, t),
+        b: lerp(LAKE_SURFACE_COLOR.b, SEA_SURFACE_COLOR.b, t)
+    };
+}
+
 // Deliberately not yet: real flow-ACCUMULATION hydrology (how much
 // upstream area drains through a point) — see this file's own header
 // for why that cannot be a bounded local function of (seed, x, z) at
@@ -322,7 +346,7 @@ export const LAKE_SURFACE_COLOR = SURFACE_PALETTE[SURFACE_CATEGORY.WATER];
 // connectivity (today's channel bands and lake depressions are two
 // independently-generated fields that often coincide but are never
 // forced to); rainfall simulation, fluid particles, real-time water
-// physics, erosion, or seasonal flooding (see docs/Roadmap.md, 0.2.89's
+// physics, tides, waves, erosion, or seasonal flooding (see docs/Roadmap.md, 0.2.89's
 // own non-goals); swimming or any avatar movement state tied to water
 // (core/TerrainWalkability.js and application/avatar/AvatarTerrainConstraint.js
 // stay exactly the slope-only decision 0.2.77 established — no

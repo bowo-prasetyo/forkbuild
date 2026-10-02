@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { terrainHeightAt } from '../core/TerrainHeightField.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/TerrainSurface.js';
-import { LAKE_SURFACE_HEIGHT, LAKE_SURFACE_COLOR } from '../core/Hydrology.js';
+import { LAKE_SURFACE_HEIGHT, waterSurfaceColorAt } from '../core/Hydrology.js';
 import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
 import { TILE_SEGMENTS } from './TerrainTileMesh.js';
 
@@ -32,8 +32,6 @@ const SINK_DEPTH = 4; // world units below the actual ground — comfortably occ
 
 const WATER_OPACITY = 0.78; // translucent, not a mirror — see core/TerrainSurface.js's own "buildings and avatars remain the visual focus" restraint, extended here to water
 
-const WATER_COLOR = new THREE.Color(LAKE_SURFACE_COLOR.r, LAKE_SURFACE_COLOR.g, LAKE_SURFACE_COLOR.b);
-
 // Deliberately untested directly, same posture as renderer/TerrainTileMesh.js
 // and renderer/NaturalFeatureTileMesh.js — see
 // renderer/TerrainStreamingController.js's own header for why load/unload
@@ -46,6 +44,9 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
 
     const center = tileCenter(tx, tz, tileSize);
     const position = geometry.attributes.position;
+    // Per-vertex color, so one tile can run from lake tone to sea tone
+    // across a shelf (core/Hydrology.js#waterSurfaceColorAt()).
+    const colors = new Float32Array(position.count * 3);
     let hasWater = false;
     for (let i = 0; i < position.count; i++) {
         const worldX = center.x + position.getX(i);
@@ -54,6 +55,10 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
         if (isLake) {
             hasWater = true;
             position.setY(i, LAKE_SURFACE_HEIGHT);
+            const color = waterSurfaceColorAt(seed, worldX, worldZ);
+            colors[i * 3] = color.r;
+            colors[i * 3 + 1] = color.g;
+            colors[i * 3 + 2] = color.b;
         } else {
             position.setY(i, terrainHeightAt(seed, worldX, worldZ) - SINK_DEPTH);
         }
@@ -67,10 +72,11 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
     if (!hasWater) return new THREE.Group();
 
     position.needsUpdate = true;
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geometry.computeVertexNormals();
 
     const material = new THREE.MeshStandardMaterial({
-        color: WATER_COLOR,
+        vertexColors: true,
         transparent: true,
         opacity: WATER_OPACITY,
         depthWrite: false // standard transparent-water convention — avoids self-sorting artifacts between overlapping lake tiles

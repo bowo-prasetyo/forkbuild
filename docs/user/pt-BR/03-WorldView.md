@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a305d87e70a12de2 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 199c95a8b1ff2992 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -53,10 +53,13 @@ cartão no canto inferior direito da visualização, para que o painel em si
 nunca pule enquanto você mexe o mouse.
 
 O próprio chão é gerado do mesmo jeito para todos a partir de uma semente
-compartilhada — grama, praia, rocha, floresta e lavoura, lagos e rios
-sinuosos seguem a altitude e a umidade do terreno, não uma distribuição
-aleatória. É cenário: nada nele pode ser editado, e ele parece idêntico não
-importa quem olhe nem quando.
+compartilhada — grama, praia, rocha, floresta e lavoura, lagos, rios
+sinuosos e o mar aberto seguem a altitude e a umidade do terreno, não uma
+distribuição aleatória. A terra ao redor da origem é sempre seca; afaste-se
+umas mil unidades e você chegará a um litoral, onde o chão desce por uma
+plataforma até um mar profundo, de um azul mais escuro, fundo demais para
+atravessar a pé. É cenário: nada nele pode ser editado, e ele parece
+idêntico não importa quem olhe nem quando.
 
 O chão de floresta tem sua própria mistura de espécies de árvores, vinda da
 mesma semente — coníferas onde a umidade é maior, árvores de folhas largas

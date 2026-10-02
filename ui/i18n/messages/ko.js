@@ -1881,6 +1881,7 @@ export default Object.freeze({
     'terrainZone.forest': '숲',
     'terrainZone.field': '밭',
     'terrainZone.grassland': '초원',
+    'hydrologyFeature.sea': '바다',
     'hydrologyFeature.lake': '호수',
     'hydrologyFeature.river': '강',
     'worldSpatialContext.nearStructure': '{title} 근처',

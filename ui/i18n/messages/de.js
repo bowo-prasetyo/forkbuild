@@ -1881,6 +1881,7 @@ export default Object.freeze({
     'terrainZone.forest': 'Wald',
     'terrainZone.field': 'Feld',
     'terrainZone.grassland': 'Grasland',
+    'hydrologyFeature.sea': 'Meer',
     'hydrologyFeature.lake': 'See',
     'hydrologyFeature.river': 'Fluss',
     'worldSpatialContext.nearStructure': 'nahe {title}',

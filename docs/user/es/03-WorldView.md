@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a305d87e70a12de2 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 199c95a8b1ff2992 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -56,10 +56,13 @@ una pequeña tarjeta en la esquina inferior derecha de la vista, así que el
 panel en sí nunca salta mientras mueve el mouse.
 
 El suelo en sí se genera de la misma forma para todos a partir de una
-semilla compartida: pasto, playa, roca, bosque y tierras de cultivo, lagos
-y ríos sinuosos siguen la elevación y la humedad propias del terreno, no
-una ubicación al azar. Es escenografía: nada de ella se puede editar, y se
-ve idéntica sin importar quién la mire ni cuándo.
+semilla compartida: pasto, playa, roca, bosque y tierras de cultivo, lagos,
+ríos sinuosos y el mar abierto siguen la elevación y la humedad propias del
+terreno, no una ubicación al azar. La tierra alrededor del origen siempre
+está seca; si se aleja unas mil unidades llegará a una costa, donde el
+suelo desciende por una plataforma hacia un mar profundo, de un azul más
+oscuro, demasiado hondo para vadearlo. Es escenografía: nada de ella se
+puede editar, y se ve idéntica sin importar quién la mire ni cuándo.
 
 El suelo del bosque tiene su propia mezcla de especies de árboles, a
 partir de esa misma semilla: coníferas donde hay más humedad, árboles de

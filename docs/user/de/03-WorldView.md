@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a305d87e70a12de2 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 199c95a8b1ff2992 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -57,10 +57,13 @@ Ansicht, was unter dem Zeiger ist, sodass das Feld selbst nie springt,
 während Sie die Maus bewegen.
 
 Der Boden selbst wird für alle auf dieselbe Weise aus einem gemeinsamen
-Seed erzeugt — Gras, Strand, Fels, Wald und Ackerland, Seen und gewundene
-Flüsse folgen alle der Höhe und Feuchtigkeit des Geländes, nicht einer
-zufälligen Verteilung. Es ist Kulisse: Nichts daran lässt sich bearbeiten,
-und es sieht gleich aus, egal wer es wann ansieht.
+Seed erzeugt — Gras, Strand, Fels, Wald und Ackerland, Seen, gewundene
+Flüsse und das offene Meer folgen alle der Höhe und Feuchtigkeit des
+Geländes, nicht einer zufälligen Verteilung. Das Land rund um den Ursprung
+ist immer trocken; wer etwa tausend Einheiten hinauswandert, erreicht eine
+Küste, an der der Boden über einen Schelf in tiefes, dunkleres blaues Meer
+abfällt, zu tief, um hindurchzuwaten. Es ist Kulisse: Nichts daran lässt
+sich bearbeiten, und es sieht gleich aus, egal wer es wann ansieht.
 
 Waldboden trägt aus demselben Seed seine eigene Mischung von Baumarten —
 Nadelbäume, wo es feuchter ist, Laubbäume, wo es trockener ist, und

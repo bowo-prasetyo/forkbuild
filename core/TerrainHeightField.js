@@ -45,6 +45,27 @@ const OCTAVES = [
 // this number.
 export const TERRAIN_HEIGHT_BOUND = OCTAVES.reduce((sum, octave) => sum + octave.amplitude, 0);
 
+// Sea basins — a fourth, much slower field that, where it rises above
+// SEA_BASIN_THRESHOLD, presses the ground well below the water line so
+// whole regions read as open sea rather than a scattered lake. Kept
+// OUT of TERRAIN_HEIGHT_BOUND on purpose: core/TerrainSurface.js derives
+// WATER_LEVEL and HIGHLAND_ELEVATION from that bound, and a sea must
+// never shift where an inland lake or a highland begins. The deepest
+// sea floor is TERRAIN_HEIGHT_BOUND + SEA_BASIN_DEPTH below zero, and
+// TERRAIN_DEPTH_BOUND names it so no caller re-derives it.
+const SEA_BASIN_FREQUENCY = 1 / 2400;  // a basin spans thousands of units, never one tile
+const SEA_BASIN_SEED_OFFSET = 0x53454121; // 'SEA!' as bytes
+const SEA_BASIN_THRESHOLD = 0.58;     // basin noise above this begins to sink
+const SEA_BASIN_RAMP = 0.12;          // how much basin noise it takes to reach full depth: the width of the continental shelf
+export const SEA_BASIN_DEPTH = 14; // > 1.5 × TERRAIN_HEIGHT_BOUND (the highest land minus WATER_LEVEL), so full-depth sea never breaks the surface
+export const TERRAIN_DEPTH_BOUND = TERRAIN_HEIGHT_BOUND + SEA_BASIN_DEPTH;
+
+// Every already-built structure sits near the origin, so the land
+// around it stays land: no basin within SEA_ORIGIN_CLEAR_RADIUS, a
+// full-strength one only past SEA_ORIGIN_CLEAR_RADIUS + SEA_ORIGIN_FADE.
+const SEA_ORIGIN_CLEAR_RADIUS = 900;
+const SEA_ORIGIN_FADE = 700;
+
 // A small, fast, deterministic 32-bit integer hash (a Squirrel3/xxhash-
 // style avalanche) turning a (seed, latticeX, latticeZ) integer triple
 // into a pseudo-random value in [0, 1). Uses only Math.imul/bitwise ops,
@@ -94,12 +115,28 @@ export function terrainHeightAt(seed, x, z) {
         const n = valueNoise2D(seed + octave.seedOffset, x * octave.frequency, z * octave.frequency);
         height += (n - 0.5) * 2 * octave.amplitude;
     }
-    return height;
+    return height - seaBasinAt(seed, x, z) * SEA_BASIN_DEPTH;
+}
+
+// How far (x, z) lies into a sea basin: 0 on ordinary land, 1 over open
+// sea, easing between the two across the shelf. Pure, like everything
+// here; core/Hydrology.js reads it to tell a sea from a lake.
+export function seaBasinAt(seed, x, z) {
+    const n = valueNoise2D(seed + SEA_BASIN_SEED_OFFSET, x * SEA_BASIN_FREQUENCY, z * SEA_BASIN_FREQUENCY);
+    const basin = smoothstep(clamp01((n - SEA_BASIN_THRESHOLD) / SEA_BASIN_RAMP));
+    if (basin === 0) return 0;
+    const fromOrigin = Math.hypot(x, z);
+    return basin * smoothstep(clamp01((fromOrigin - SEA_ORIGIN_CLEAR_RADIUS) / SEA_ORIGIN_FADE));
+}
+
+function clamp01(v) {
+    return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
 // Deliberately not yet: a per-World/per-Document terrain seed (today's
 // DEFAULT_WORLD_SEED is the one shared ground every document sits on);
-// biomes, vegetation, water, or any visual layer beyond bare elevation;
+// biomes, vegetation, or any visual layer beyond bare elevation (sea
+// basins shape elevation only; core/Hydrology.js names them);
 // erosion/hydraulic simulation or any non-closed-form generation method;
 // and persisting so much as one sampled height anywhere — every value
 // this file ever produces is recomputed, never stored. See

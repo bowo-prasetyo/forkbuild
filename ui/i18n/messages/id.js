@@ -1878,6 +1878,7 @@ export default Object.freeze({
     'terrainZone.forest': 'Hutan',
     'terrainZone.field': 'Ladang',
     'terrainZone.grassland': 'Padang Rumput',
+    'hydrologyFeature.sea': 'laut',
     'hydrologyFeature.lake': 'danau',
     'hydrologyFeature.river': 'sungai',
     'worldSpatialContext.nearStructure': 'dekat {title}',
