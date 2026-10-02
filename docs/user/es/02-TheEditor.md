@@ -2,7 +2,7 @@
 # 02 — El Editor
 
 <!-- languages -->
-[English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · **Español** · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
+[English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · **Español** · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
 
 El Editor es donde construye. Esta guía cubre las herramientas, cómo

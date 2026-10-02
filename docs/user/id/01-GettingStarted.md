@@ -1,8 +1,8 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8947d6e44d3663f9 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: e7382e7fe8af5794 -->
 # 01 — Memulai
 
 <!-- languages -->
-[English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · **Bahasa Indonesia** · [日本語](../ja/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
+[English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · **Bahasa Indonesia** · [日本語](../ja/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
 
 Selamat datang! Panduan ini membawa Anda dari "baru membuka aplikasi"
@@ -48,7 +48,7 @@ Bilah di bagian atas selalu terlihat:
 - **Bahasa** — bahasa yang ditampilkan ForkBuild di perangkat ini. Bahasa
   mengikuti pengaturan bahasa browser Anda sampai Anda memilihnya sendiri;
   menyimpan akan memuat ulang halaman, jadi simpan pekerjaan Anda dulu.
-  ForkBuild tersedia dalam bahasa Inggris, bahasa Jerman, bahasa Spanyol, Bahasa Indonesia,
+  ForkBuild tersedia dalam bahasa Inggris, bahasa Jerman, bahasa Spanyol, bahasa Prancis, Bahasa Indonesia,
   bahasa Jepang, dan bahasa Portugis Brasil (lihat [Translating ForkBuild](../../Translating.md), bahasa Inggris).
 - **Tentang** — informasi versi
 

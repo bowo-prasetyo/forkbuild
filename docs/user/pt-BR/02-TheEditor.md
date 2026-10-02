@@ -2,7 +2,7 @@
 # 02 — O Editor
 
 <!-- languages -->
-[English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · **Português (Brasil)**
+[English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · **Português (Brasil)**
 <!-- /languages -->
 
 O Editor é onde você constrói. Este guia mostra as ferramentas, como

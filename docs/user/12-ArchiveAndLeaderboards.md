@@ -1,7 +1,7 @@
 # 12 — Archive & Leaderboards
 
 <!-- languages -->
-**English** · [Deutsch](de/12-ArchiveAndLeaderboards.md) · [Español](es/12-ArchiveAndLeaderboards.md) · [Bahasa Indonesia](id/12-ArchiveAndLeaderboards.md) · [日本語](ja/12-ArchiveAndLeaderboards.md) · [Português (Brasil)](pt-BR/12-ArchiveAndLeaderboards.md)
+**English** · [Deutsch](de/12-ArchiveAndLeaderboards.md) · [Español](es/12-ArchiveAndLeaderboards.md) · [Français](fr/12-ArchiveAndLeaderboards.md) · [Bahasa Indonesia](id/12-ArchiveAndLeaderboards.md) · [日本語](ja/12-ArchiveAndLeaderboards.md) · [Português (Brasil)](pt-BR/12-ArchiveAndLeaderboards.md)
 <!-- /languages -->
 
 > **Experimental.** Everything here may change or be removed in a later

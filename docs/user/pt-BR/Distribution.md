@@ -2,7 +2,7 @@
 # Distribuindo seu trabalho
 
 <!-- languages -->
-[English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · **Português (Brasil)**
+[English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · **Português (Brasil)**
 <!-- /languages -->
 
 Tudo o que o ForkBuild cria começa no seu próprio dispositivo.

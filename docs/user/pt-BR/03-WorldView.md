@@ -2,7 +2,7 @@
 # 03 — Visão do mundo
 
 <!-- languages -->
-[English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · **Português (Brasil)**
+[English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · **Português (Brasil)**
 <!-- /languages -->
 
 A Visão do mundo é o espaço 3D compartilhado onde **todas as criações

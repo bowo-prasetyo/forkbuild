@@ -2,7 +2,7 @@
 # 10 — Configuración de red
 
 <!-- languages -->
-[English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · **Español** · [Bahasa Indonesia](../id/10-NetworkSettings.md) · [日本語](../ja/10-NetworkSettings.md) · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
+[English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · **Español** · [Français](../fr/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · [日本語](../ja/10-NetworkSettings.md) · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
 
 **Configuración de red**, en la barra superior, enlaza todas las páginas

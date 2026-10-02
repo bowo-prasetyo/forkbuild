@@ -2,7 +2,7 @@
 # よくある質問
 
 <!-- languages -->
-[English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · **日本語** · [Português (Brasil)](../pt-BR/FAQ.md)
+[English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · **日本語** · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
 
 よく出会う疑問への短い答えです。それぞれ、詳しく説明しているガイドに
