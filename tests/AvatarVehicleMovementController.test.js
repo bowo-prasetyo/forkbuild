@@ -5,6 +5,7 @@ import {
 } from '../application/avatar/AvatarVehicleMovementController.js';
 import { VehicleInstance } from '../core/VehicleInstance.js';
 import { VehicleType } from '../core/VehicleType.js';
+import { VehicleSteeringIntent } from '../core/VehicleSteeringIntent.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
@@ -29,10 +30,13 @@ import { assert } from './support/Assert.js';
 //              superseded by the Aerial Movement Pipeline milestone —
 //              see Section A4, above, and this section's own current
 //              note
-//   Section G2 (0.9.123): heading tracks realized movement direction —
-//              forward, reverse, blocked (unchanged), and idle
-//              (unchanged) — never core/AvatarMovementSimulation.js's own
-//              steering-derived rotationY
+//   Section G2: heading is the facing the vehicle was driven along —
+//              forward, reverse (never flipped), blocked (unchanged), and
+//              idle (unchanged)
+//   Section G3: the rider always faces the vehicle — returned rotationY is
+//              the heading; a new ride starts from the vehicle's heading;
+//              no turning on the spot; steering pulses and A/D turn both;
+//              sliding along a wall never turns either
 //   Section H: architectural regression — no duplicated movement math,
 //              no AvatarPresenceSession/rendering coupling
 //
@@ -345,19 +349,15 @@ async function runTests() {
     // a future, not-yet-movable vehicle type.
 
     // -------------------------------------------------------------
-    // Section G2 (0.9.123) — heading tracks realized movement direction.
+    // Section G2 — heading is the facing the vehicle was driven along.
     // -------------------------------------------------------------
     {
-        // A. Eastward (+X) movement: heading resolves to 90, matching
-        // core/VehicleMovementHeading.js's own convention — never
-        // rotationY itself, which tracks steering intent instead.
+        // A. Driven facing +X: heading becomes 90 (0 = facing +Z). The
+        // vehicle starts at heading 0, so the first tick of the ride faces 0;
+        // from then on the caller's facing of 90 steers it.
         const spawn = { x: 0, y: 0, z: 0 };
         const store = fakeVehicleStore([bicycle('vehicle:h1', spawn)]);
         const controller = new AvatarVehicleMovementController(store);
-        // currentRotationY: 90 drives the simulated STEP direction (+X);
-        // this deliberately differs from what heading is asserted to
-        // become, to prove heading is read from the vehicle's own
-        // realized position change, not merely echoed from rotationY.
         let lastResult = null;
         for (let i = 0; i < 20; i++) {
             lastResult = controller.tick({
@@ -370,9 +370,8 @@ async function runTests() {
         assert(store.get('vehicle:h1').heading === lastResult.vehicleInstance.heading, '25c. the committed store entry carries the same heading returned from tick()');
     }
     {
-        // B. Reversing direction: heading changes to reflect the new
-        // realized direction once the vehicle actually starts moving the
-        // other way.
+        // B. Reversing: the vehicle moves backwards, still pointing forward,
+        // and the rider keeps facing forward with it.
         const spawn = { x: 0, y: 0, z: 0 };
         const store = fakeVehicleStore([bicycle('vehicle:h2', spawn)]);
         const controller = new AvatarVehicleMovementController(store);
@@ -383,17 +382,18 @@ async function runTests() {
         assert(Math.abs(forwardHeading - 0) < 1e-6, '26a. sanity: forward (+Z) travel resolved to heading 0');
 
         let lastZ = store.get('vehicle:h2').position.z;
-        let reversedHeading = null;
+        let reversedResult = null;
         for (let i = 0; i < 200; i++) {
             const result = controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:h2', capability: bicycleCapability, movementIntent: BACKWARD_INTENT, currentRotationY: 0, deltaSeconds: 0.05 });
             if (result.vehicleInstance.position.z < lastZ) {
-                reversedHeading = result.vehicleInstance.heading;
+                reversedResult = result;
                 break;
             }
             lastZ = result.vehicleInstance.position.z;
         }
-        assert(reversedHeading !== null, '26b. sanity: the vehicle genuinely reversed at some point');
-        assert(Math.abs(reversedHeading - 180) < 1e-6, '26c. heading flips to 180 (facing -Z) once the vehicle actually reverses');
+        assert(reversedResult !== null, '26b. sanity: the vehicle genuinely reversed at some point');
+        assert(Math.abs(reversedResult.vehicleInstance.heading) < 1e-6, '26c. reversing never turns the vehicle around: it still points forward (0)');
+        assert(reversedResult.rotationY === reversedResult.vehicleInstance.heading, '26d. the reversing rider faces the way the vehicle points');
     }
     {
         // C. Blocked movement: a movementConstraint that clamps every
@@ -424,6 +424,91 @@ async function runTests() {
             controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:h4', capability: bicycleCapability, movementIntent: IDLE_INTENT, currentRotationY: 0, deltaSeconds: 0.05 });
         }
         assert(store.get('vehicle:h4').heading === before, '28. repeated zero-intent ticks never alter heading');
+    }
+
+    // -------------------------------------------------------------
+    // Section G3 — the rider always faces the vehicle.
+    // -------------------------------------------------------------
+    const TURN_RIGHT_FORWARD = Object.freeze({ direction: 1, turnAxis: 1, running: false, brakingRequested: false });
+    const TURN_RIGHT_IDLE = Object.freeze({ direction: 0, turnAxis: 1, running: false, brakingRequested: false });
+    const facingDifference = (a, b) => Math.abs(((a - b) % 360 + 540) % 360 - 180);
+    {
+        // A. Getting on a vehicle pointing 120 turns the rider to 120 even
+        // though the avatar was facing 0, and the vehicle does not turn.
+        const spawn = { x: 0, y: 0, z: 0 };
+        const store = fakeVehicleStore([new VehicleInstance({ id: 'vehicle:g3a', type: VehicleType.BICYCLE, spawnPosition: spawn, position: spawn, heading: 120 })]);
+        const controller = new AvatarVehicleMovementController(store);
+        const first = controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:g3a', capability: bicycleCapability, movementIntent: IDLE_INTENT, currentRotationY: 0, deltaSeconds: 0.05 });
+        assert(first.rotationY === 120 && store.get('vehicle:g3a').heading === 120, '28a. a new ride starts facing the way the vehicle points; the vehicle keeps its heading');
+        let result = first;
+        for (let i = 0; i < 20; i++) {
+            result = controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:g3a', capability: bicycleCapability, movementIntent: FORWARD_INTENT, currentRotationY: result.rotationY, deltaSeconds: 0.05 });
+        }
+        const moved = store.get('vehicle:g3a').position;
+        const travel = Math.atan2(moved.x, moved.z) * (180 / Math.PI);
+        assert(facingDifference(travel, 120) < 1e-6, '28b. riding forward then goes the way the vehicle pointed');
+    }
+    {
+        // B. Steering with A/D while moving turns rider and vehicle together.
+        const spawn = { x: 0, y: 0, z: 0 };
+        const store = fakeVehicleStore([bicycle('vehicle:g3b', spawn)]);
+        const controller = new AvatarVehicleMovementController(store);
+        let rotationY = 0;
+        for (let i = 0; i < 30; i++) {
+            const result = controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:g3b', capability: bicycleCapability, movementIntent: TURN_RIGHT_FORWARD, currentRotationY: rotationY, deltaSeconds: 0.05 });
+            assert(result.rotationY === store.get('vehicle:g3b').heading, `28c.${i} every tick the rider faces the vehicle's heading`);
+            rotationY = result.rotationY;
+        }
+        assert(facingDifference(rotationY, 0) > 10, '28d. sanity: the turn really happened');
+    }
+    {
+        // C. No turning on the spot: holding a turn while stopped turns
+        // neither the vehicle nor the rider.
+        const spawn = { x: 0, y: 0, z: 0 };
+        const store = fakeVehicleStore([new VehicleInstance({ id: 'vehicle:g3c', type: VehicleType.CAR, spawnPosition: spawn, position: spawn, heading: 30 })]);
+        const carCapability = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
+        const controller = new AvatarVehicleMovementController(store);
+        let rotationY = 30;
+        for (let i = 0; i < 20; i++) {
+            rotationY = controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:g3c', capability: carCapability, movementIntent: TURN_RIGHT_IDLE, currentRotationY: rotationY, deltaSeconds: 0.05 }).rotationY;
+        }
+        assert(rotationY === 30 && store.get('vehicle:g3c').heading === 30, '28e. a stopped vehicle does not turn, and neither does its rider');
+    }
+    {
+        // D. A steering pulse turns the rider with the vehicle, and after the
+        // pulse (intent NONE) A/D still turn the vehicle, not just the rider.
+        const spawn = { x: 0, y: 0, z: 0 };
+        const store = fakeVehicleStore([bicycle('vehicle:g3d', spawn)]);
+        const controller = new AvatarVehicleMovementController(store);
+        let rotationY = 0;
+        for (let i = 0; i < 10; i++) {
+            rotationY = controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:g3d', capability: bicycleCapability, movementIntent: FORWARD_INTENT, currentRotationY: rotationY, deltaSeconds: 0.05 }).rotationY;
+        }
+        const pulse = controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:g3d', capability: bicycleCapability, movementIntent: FORWARD_INTENT, currentRotationY: rotationY, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.right() });
+        assert(Math.abs(pulse.vehicleInstance.heading - 45) < 1e-6 && pulse.rotationY === pulse.vehicleInstance.heading,
+            '28f. a RIGHT pulse turns the vehicle to 45 and the rider with it');
+        rotationY = pulse.rotationY;
+        for (let i = 0; i < 10; i++) {
+            const result = controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:g3d', capability: bicycleCapability, movementIntent: TURN_RIGHT_FORWARD, currentRotationY: rotationY, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.none() });
+            assert(result.rotationY === result.vehicleInstance.heading, `28g.${i} after a pulse, A/D still turn rider and vehicle together`);
+            rotationY = result.rotationY;
+        }
+        assert(facingDifference(rotationY, 45) > 10, '28h. sanity: A/D really turned the vehicle after the pulse');
+    }
+    {
+        // E. Sliding along a wall (a constraint that cancels the X part of
+        // every step) moves the vehicle without turning it.
+        const slidingConstraint = { apply(from, to) { return { position: { x: from.x, y: to.y, z: to.z }, collided: true }; } };
+        const spawn = { x: 0, y: 0, z: 0 };
+        const store = fakeVehicleStore([new VehicleInstance({ id: 'vehicle:g3e', type: VehicleType.BICYCLE, spawnPosition: spawn, position: spawn, heading: 45 })]);
+        const controller = new AvatarVehicleMovementController(store, slidingConstraint, null);
+        let rotationY = 45;
+        for (let i = 0; i < 20; i++) {
+            rotationY = controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:g3e', capability: bicycleCapability, movementIntent: FORWARD_INTENT, currentRotationY: rotationY, deltaSeconds: 0.05 }).rotationY;
+        }
+        assert(store.get('vehicle:g3e').position.z > 0 && store.get('vehicle:g3e').position.x === 0, '28i. sanity: the vehicle slid along +Z only');
+        assert(Math.abs(store.get('vehicle:g3e').heading - 45) < 1e-6 && rotationY === store.get('vehicle:g3e').heading,
+            '28j. sliding never turns the vehicle (still 45), and the rider still faces it');
     }
 
     // -------------------------------------------------------------

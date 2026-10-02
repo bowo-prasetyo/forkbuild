@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 67d735c25cb2e640 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 115a0e070d0fa0c2 -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -231,14 +231,16 @@ a uno y aparece un aviso que le indica con qué tecla subirse:
 | **E** (cerca de un vehículo) | Subirse |
 | **E** (mientras conduce) | Bajarse |
 | **W / S** | Acelerar / marcha atrás |
-| **A / D** | Girar la orientación de su propio avatar: el mismo giro continuo que a pie, no la dirección del vehículo |
-| **← / →** (presionar) | Dirigir: un solo giro de 45° de la dirección en la que intenta avanzar el vehículo por cada pulsación; mantener presionada la tecla no sigue girando, y cada giro necesita una pulsación nueva |
+| **A / D** | Girar: un giro suave y continuo del vehículo, con usted encima |
+| **← / →** (presionar) | Dirigir: un solo giro de 45° del vehículo por cada pulsación; mantener presionada la tecla no sigue girando, y cada giro necesita una pulsación nueva |
 | **Ctrl** (mantener) | Frenar |
 
 Una vez arriba, **W/S** y **Ctrl** manejan el vehículo, mientras que
-**←/→** lo dirigen: no hay un “modo de conducción” aparte que activar.
-**A/D** siguen girando el cuerpo de su avatar, exactamente como a pie, y
-son independientes de la dirección. Al bajarse, su avatar vuelve a estar a
+**A/D** y **←/→** lo giran: no hay un “modo de conducción” aparte que
+activar. Usted siempre mira hacia donde apunta su vehículo, y los demás
+jugadores lo ven igual. Un vehículo solo gira mientras se mueve, así que
+girar estando detenido no hace nada; al retroceder, se mueve hacia atrás
+sin darse la vuelta. Al bajarse, su avatar vuelve a estar a
 pie en un lugar despejado junto al vehículo. La velocidad máxima, la
 aceleración, el frenado y el giro de un vehículo dependen del tipo de
 vehículo, y su huella de colisión tiene el tamaño correspondiente: hoy son

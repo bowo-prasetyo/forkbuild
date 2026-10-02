@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 15773095004fb495 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 10c15eb5d27a8961 -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -107,8 +107,8 @@ menaikinya.
 |---|---|---|
 | `E` | Menaiki kendaraan terdekat, atau turun dari kendaraan yang sedang dinaiki | Hanya ditampilkan/aktif saat ada kendaraan dalam jangkauan atau Anda sedang menaikinya |
 | `W` / `S` | Mempercepat / mundur | Menggantikan berjalan kaki selama menaiki kendaraan |
-| `A` / `D` | Memutar arah hadap avatar Anda sendiri | Belokan yang sama seperti saat berjalan kaki — bukan kemudi kendaraan |
-| `←` / `→` (tekan) | Memutar arah tujuan kendaraan itu sendiri ke kiri/kanan | Satu belokan 45° per tekan — menahan tombol tidak membuatnya terus berbelok |
+| `A` / `D` | Membelokkan kendaraan, bersama Anda di atasnya | Belokan halus dan berkelanjutan; hanya saat kendaraan bergerak |
+| `←` / `→` (tekan) | Membelokkan kendaraan ke kiri/kanan, bersama Anda di atasnya | Satu belokan 45° per tekan — menahan tombol tidak membuatnya terus berbelok |
 | `Ctrl` (ditahan) | Mengerem | |
 | `Q` (saat menaiki) | Menyimpan kendaraan yang dinaiki ke inventaris | Menghapusnya dari dunia; sekaligus menurunkan Anda |
 | `Q` (tidak menaiki, membawa kendaraan) | Mengeluarkan kendaraan tersimpan yang sedang dipilih | Memunculkan dan menaikinya di posisi Anda saat ini; bawaannya yang terakhir disimpan |

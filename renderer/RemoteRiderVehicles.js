@@ -1,19 +1,17 @@
 // The vehicles other players ride, drawn under them. One visual per riding
 // avatar, created when it gets on and removed when it gets off or leaves.
 // Its position is the rider's own (a rider's position is the vehicle's, with
-// the ground already in it), and it faces the way it last moved: a rider can
-// turn to look around without turning the vehicle.
+// the ground already in it), and it faces the rider's own facing: a rider
+// always faces the way its vehicle points (see
+// application/avatar/AvatarVehicleMovementController.js), so the two are one
+// direction, and a reversing vehicle stays pointing forward.
 import { VehicleRenderer } from './VehicleRenderer.js';
 import { VehicleVisual } from './VehicleVisual.js';
-import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeading.js';
-
-// Smaller moves than this (interpolation settling) don't turn the vehicle.
-const MIN_TURNING_MOVE = 0.02;
 
 export class RemoteRiderVehicles {
     constructor(vehicleRenderer = new VehicleRenderer()) {
         this._vehicleRenderer = vehicleRenderer;
-        this._entries = new Map(); // avatarId -> { type, visual, last, heading }
+        this._entries = new Map(); // avatarId -> { type, visual, heading }
     }
 
     // Sets what `avatarId` rides (a vehicle type, or null). Returns the scene
@@ -32,7 +30,7 @@ export class RemoteRiderVehicles {
             visual.dispose();
             return { added: null, removed };
         }
-        this._entries.set(avatarId, { type: vehicleType, visual, last: null, heading: null });
+        this._entries.set(avatarId, { type: vehicleType, visual, heading: 0 });
         return { added: visual.root, removed };
     }
 
@@ -41,24 +39,14 @@ export class RemoteRiderVehicles {
     }
 
     // Moves the vehicle under a rider now at `position` (already where it is
-    // drawn). `fallbackHeading` (degrees) faces a vehicle that hasn't moved yet.
-    place(avatarId, position, fallbackHeading = 0) {
+    // drawn), facing `riderHeading` (degrees), the rider's own facing.
+    place(avatarId, position, riderHeading = 0) {
         const entry = this._entries.get(avatarId);
         if (!entry) {
             return;
         }
-        if (entry.heading === null) {
-            entry.heading = Number.isFinite(fallbackHeading) ? fallbackHeading : 0;
-        }
-        if (entry.last) {
-            const dx = position.x - entry.last.x;
-            const dz = position.z - entry.last.z;
-            if (Math.hypot(dx, dz) >= MIN_TURNING_MOVE) {
-                entry.heading = resolveVehicleHeadingFromMovement({ dx, dz, previousHeading: entry.heading });
-                entry.last = { x: position.x, z: position.z };
-            }
-        } else {
-            entry.last = { x: position.x, z: position.z };
+        if (Number.isFinite(riderHeading)) {
+            entry.heading = riderHeading;
         }
         entry.visual.setPosition(position);
         entry.visual.setHeading(entry.heading);

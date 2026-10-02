@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 15773095004fb495 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 10c15eb5d27a8961 -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -108,8 +108,8 @@ einem Fahrzeug nahe genug sind, um aufzusteigen.
 |---|---|---|
 | `E` | Auf das Fahrzeug in der Nähe aufsteigen oder von Ihrem absteigen | Nur sichtbar/aktiv, wenn ein Fahrzeug in Reichweite ist oder Sie fahren |
 | `W` / `S` | Beschleunigen / rückwärts | Ersetzt beim Fahren das Gehen zu Fuß |
-| `A` / `D` | Die Blickrichtung Ihres Avatars drehen | Dieselbe Drehung wie zu Fuß — nicht das Lenken des Fahrzeugs |
-| `←` / `→` (drücken) | Die angestrebte Fahrtrichtung des Fahrzeugs nach links/rechts drehen | Eine einzelne 45°-Drehung pro Druck — Gedrückthalten dreht nicht weiter |
+| `A` / `D` | Das Fahrzeug drehen, mit Ihnen darauf | Eine gleichmäßige, dauerhafte Drehung; nur während das Fahrzeug fährt |
+| `←` / `→` (drücken) | Das Fahrzeug nach links/rechts drehen, mit Ihnen darauf | Eine einzelne 45°-Drehung pro Druck — Gedrückthalten dreht nicht weiter |
 | `Strg` (gehalten) | Bremsen | |
 | `Q` (beim Fahren) | Das Fahrzeug, auf dem Sie sind, in Ihr Inventar stellen | Entfernt es aus der Welt; Sie steigen dabei ab |
 | `Q` (nicht fahrend, mit einem Fahrzeug im Inventar) | Das aktuell gewählte abgestellte Fahrzeug hervorholen | Erzeugt es an Ihrer aktuellen Position und lässt Sie aufsteigen; standardmäßig das zuletzt abgestellte |

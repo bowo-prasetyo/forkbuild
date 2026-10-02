@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 67d735c25cb2e640 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 115a0e070d0fa0c2 -->
 # 06 — Avatares e presença
 
 <!-- languages -->
@@ -223,14 +223,15 @@ dizendo qual tecla o monta:
 | **E** (perto de um veículo) | Montar |
 | **E** (montado) | Descer |
 | **W / S** | Acelerar / dar ré |
-| **A / D** | Virar o próprio corpo do avatar — o mesmo giro contínuo de quando está a pé, não a direção do veículo |
-| **← / →** (pressionar) | Manobrar — uma única virada de 45° na direção pretendida do veículo por toque; segurar a tecla não continua virando, e cada virada precisa de um toque novo |
+| **A / D** | Virar — um giro suave e contínuo do veículo, com você em cima |
+| **← / →** (pressionar) | Manobrar — uma única virada de 45° do veículo por toque; segurar a tecla não continua virando, e cada virada precisa de um toque novo |
 | **Ctrl** (segurado) | Frear |
 
-Depois de montado, **W/S** e **Ctrl** conduzem o veículo, enquanto **←/→**
-o manobram — não há um "modo de direção" separado para ligar. **A/D**
-continuam virando o corpo do seu avatar, exatamente como a pé, e são
-independentes da direção. Descer põe seu avatar a pé de novo, num ponto livre
+Depois de montado, **W/S** e **Ctrl** conduzem o veículo, enquanto **A/D**
+e **←/→** o viram — não há um "modo de direção" separado para ligar. Você
+sempre fica de frente para onde o veículo aponta, e os outros jogadores
+o veem assim também. Um veículo só vira enquanto se move, então virar
+parado não faz nada; de ré, ele anda para trás sem dar meia-volta. Descer põe seu avatar a pé de novo, num ponto livre
 ao lado do veículo. A velocidade máxima, a aceleração, a frenagem e a
 manobrabilidade de um veículo dependem do tipo dele, e a área de colisão tem
 o tamanho certo — hoje são a bicicleta, a moto, o carro e o drone, os quatro

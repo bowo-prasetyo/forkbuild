@@ -1,5 +1,11 @@
 // 0.9.123 — Vehicle Orientation.
 //
+// No longer how a ridden vehicle's heading is decided: since "Riders face
+// their vehicle" (docs/roadmap/unnumbered-2026-09.md) the vehicle turns to
+// the facing it was driven along, so reversing or sliding never turns it
+// (application/avatar/AvatarVehicleMovementController.js). This pure helper
+// stays as the reference for the degrees convention below.
+//
 // The pure geometry half of "which way is this vehicle actually facing":
 // given a horizontal displacement (dx, dz) a vehicle's position genuinely
 // moved by this tick, returns the heading, in DEGREES, that displacement

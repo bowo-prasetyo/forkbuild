@@ -2,7 +2,6 @@ import { VehicleType } from '../../core/VehicleType.js';
 import { AvatarMovementState } from '../../core/AvatarMovementState.js';
 import { simulateAvatarMovement } from '../../core/AvatarMovementSimulation.js';
 import { terrainHeightAt } from '../../core/TerrainHeightField.js';
-import { resolveVehicleHeadingFromMovement } from '../../core/VehicleMovementHeading.js';
 import { resolveVehicleMovementDirectionFromSteering } from '../../core/VehicleSteeringSimulation.js';
 import { AvatarDroneVerticalStateKind, deriveAvatarDroneVerticalState, stepDroneAltitude } from '../../core/AvatarDroneVerticalState.js';
 
@@ -28,6 +27,13 @@ import { AvatarDroneVerticalStateKind, deriveAvatarDroneVerticalState, stepDrone
 //
 // An optional steeringIntent redirects the already-resolved step along the
 // steered direction without recomputing its length.
+//
+// The rider faces the way the vehicle points. The vehicle's heading is the
+// one facing both share: tick() returns it as `rotationY` for the rider, and
+// a new ride starts from the vehicle's heading, not the avatar's. The facing
+// turns (A/D, or a steering pulse) only on a tick the vehicle really moves, so
+// a vehicle never spins on the spot and a blocked turn turns nothing.
+// Reversing or sliding along a wall moves the vehicle without turning it.
 
 const MOVABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]);
 
@@ -69,8 +75,9 @@ export class AvatarVehicleMovementController {
     // Returns `{ vehicleInstance, rotationY }` after committing the new position,
     // or null when `vehicleId` is not tracked. `movementIntent` is
     // AvatarMovementController#movementState(), reused verbatim; a mounted vehicle
-    // never jumps, so jumpRequested is always false. With no steeringIntent the
-    // step follows result.rotationY, the avatar's own facing.
+    // never jumps, so jumpRequested is always false. The step follows
+    // `currentRotationY` (the rider's facing) as turned this tick, then any
+    // steeringIntent. The returned `rotationY` is always the vehicle's heading.
     tick({ seed, vehicleId, capability, movementIntent, currentRotationY, deltaSeconds, steeringIntent = null }) {
         const vehicleInstance = this._vehicleRuntimeInstances.get(vehicleId);
         if (!vehicleInstance) {
@@ -82,7 +89,11 @@ export class AvatarVehicleMovementController {
             return null;
         }
 
-        if (vehicleId !== this._activeVehicleId) {
+        // A new ride starts facing the way the vehicle points, so getting on
+        // turns the rider, never the vehicle.
+        const newRide = vehicleId !== this._activeVehicleId;
+        const startingFacing = newRide ? vehicleInstance.heading : currentRotationY;
+        if (newRide) {
             this._activeVehicleId = vehicleId;
             this._verticalVelocity = 0;
             this._grounded = true;
@@ -108,7 +119,7 @@ export class AvatarVehicleMovementController {
 
         const result = simulateAvatarMovement({
             position: currentPosition,
-            rotationY: currentRotationY,
+            rotationY: startingFacing,
             verticalVelocity: this._verticalVelocity,
             grounded: this._grounded,
             movementState,
@@ -127,12 +138,13 @@ export class AvatarVehicleMovementController {
 
         // With a steeringIntent, re-project the step: recover the distance the
         // simulation already resolved from its own direction, then apply it along the
-        // steered direction. result.rotationY, the avatar's facing, is returned
-        // unchanged.
+        // steered direction. A pulse turns from this tick's facing, so A/D keep
+        // turning the vehicle after a pulse has been used.
         let candidatePosition = result.position;
+        let attemptedDirection = result.rotationY;
         if (steeringIntent) {
-            const attemptedDirection = resolveVehicleMovementDirectionFromSteering({
-                previousHeading: vehicleInstance.heading,
+            attemptedDirection = resolveVehicleMovementDirectionFromSteering({
+                previousHeading: result.rotationY,
                 steeringIntent
             });
             const travelRadians = result.rotationY * (Math.PI / 180);
@@ -191,18 +203,16 @@ export class AvatarVehicleMovementController {
 
         let nextVehicleInstance = this._vehicleRuntimeInstances.setPosition(vehicleId, finalPosition);
 
-        // Heading changes only on real horizontal movement after collision, so a fully
-        // blocked tick keeps the old heading.
-        if (finalPosition.x !== currentPosition.x || finalPosition.z !== currentPosition.z) {
-            const nextHeading = resolveVehicleHeadingFromMovement({
-                dx: finalPosition.x - currentPosition.x,
-                dz: finalPosition.z - currentPosition.z,
-                previousHeading: vehicleInstance.heading
-            });
-            nextVehicleInstance = this._vehicleRuntimeInstances.setHeading(vehicleId, nextHeading) || nextVehicleInstance;
+        // The vehicle turns only on real horizontal movement after collision, so a
+        // stopped or fully blocked vehicle keeps its heading. It turns to the facing
+        // it was driven along, never to the way it slid or the way it reversed.
+        const moved = finalPosition.x !== currentPosition.x || finalPosition.z !== currentPosition.z;
+        if (moved && attemptedDirection !== vehicleInstance.heading) {
+            nextVehicleInstance = this._vehicleRuntimeInstances.setHeading(vehicleId, attemptedDirection) || nextVehicleInstance;
         }
 
-        return { vehicleInstance: nextVehicleInstance, rotationY: result.rotationY };
+        // The rider faces the vehicle, always.
+        return { vehicleInstance: nextVehicleInstance, rotationY: nextVehicleInstance.heading };
     }
 
     isCollided() {
@@ -232,6 +242,6 @@ export class AvatarVehicleMovementController {
     }
 }
 
-// Heading comes from the realized, post-collision displacement
-// (core/VehicleMovementHeading.js) and snaps each tick; it is never smoothed
-// the way rotationY is.
+// Heading is the facing the vehicle was driven along on a tick it really
+// moved; it is turned at the simulation's own steering rate, plus any discrete
+// steering pulse.

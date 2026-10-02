@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 67d735c25cb2e640 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 115a0e070d0fa0c2 -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -237,14 +237,16 @@ und ein Hinweis sagt Ihnen, mit welcher Taste Sie aufsteigen:
 | **E** (nahe einem Fahrzeug) | Aufsteigen |
 | **E** (beim Fahren) | Absteigen |
 | **W / S** | Beschleunigen / rückwärts |
-| **A / D** | Die Blickrichtung Ihres Avatars drehen — dieselbe dauerhafte Drehung wie zu Fuß, nicht das Lenken des Fahrzeugs |
-| **← / →** (drücken) | Lenken — eine einzelne 45°-Drehung der angestrebten Fahrtrichtung pro Druck; Gedrückthalten dreht nicht weiter, für jede Drehung ist ein neuer Druck nötig |
+| **A / D** | Drehen — eine gleichmäßige, dauerhafte Drehung des Fahrzeugs, mit Ihnen darauf |
+| **← / →** (drücken) | Lenken — eine einzelne 45°-Drehung des Fahrzeugs pro Druck; Gedrückthalten dreht nicht weiter, für jede Drehung ist ein neuer Druck nötig |
 | **Strg** (gehalten) | Bremsen |
 
 Sobald Sie aufgestiegen sind, steuern **W/S** und **Strg** das Fahrzeug,
-während **←/→** es lenken — es gibt keinen eigenen „Fahrmodus“, den Sie
-einschalten müssten. **A/D** drehen weiterhin den Körper Ihres Avatars,
-genau wie zu Fuß, und sind unabhängig vom Lenken. Beim Absteigen steht Ihr
+während **A/D** und **←/→** es drehen — es gibt keinen eigenen „Fahrmodus“,
+den Sie einschalten müssten. Sie blicken immer in die Richtung, in die Ihr
+Fahrzeug zeigt, und andere Spieler sehen Sie genauso. Ein Fahrzeug dreht
+sich nur, während es fährt; im Stand zu drehen bewirkt also nichts, und
+beim Rückwärtsfahren fährt es rückwärts, ohne sich umzudrehen. Beim Absteigen steht Ihr
 Avatar an einer freien Stelle neben dem Fahrzeug wieder auf den Füßen.
 Höchstgeschwindigkeit, Beschleunigung, Bremsen und Lenken eines Fahrzeugs
 hängen davon ab, was für ein Fahrzeug es ist, und seine Kollisionsfläche
