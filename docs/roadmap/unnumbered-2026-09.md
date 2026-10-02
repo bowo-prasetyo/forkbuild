@@ -3684,3 +3684,10 @@ waterline.
   air, jumping in, sloping beds, poses, sounds, vehicles at the waterline and a drone over the sea, the underwater view
   and underwater life. `tests/AvatarShallowWaterTraversal.test.js` keeps its wading checks and now expects the avatar
   to swim on past a drop-off instead of being blocked. Two steering test fixtures that sat at sea move to dry land.
+
+## Swimming works in the app (unnumbered, 2026-10-02)
+
+Swimming never switched on in World View: `AvatarMovementController` only treated a null movement capability as on
+foot, but the session sets the WALK capability every frame while nothing is ridden, so Space jumped and C did
+nothing in deep water. It now asks `movementCapability() === WALK`. `tests/AvatarSwimmingSession.test.js` swims,
+dives and rises through a real `WorldNavigationSession`, wired as the app wires it.

@@ -207,7 +207,7 @@ export class AvatarMovementController {
             ? this._waterConstraint.waterSurfaceAt(currentPosition.x, currentPosition.z)
             : null;
         const supportHere = Number.isFinite(currentSupportHeight) ? currentSupportHeight : 0;
-        const swimming = this._movementCapability === null && isSwimmableDepth(currentWaterSurface, supportHere);
+        const swimming = this._isOnFoot() && isSwimmableDepth(currentWaterSurface, supportHere);
         let simulationGroundHeight = currentSupportHeight;
         let simulationState = movementState;
         let simulationGrounded = this._grounded;
@@ -316,7 +316,7 @@ export class AvatarMovementController {
 
         if (swimmingInWater) {
             finalPosition = this._swimHeightFor(currentPosition, finalPosition, currentWaterSurface, supportHere, deltaSeconds);
-        } else if (!swimming && this._movementCapability === null) {
+        } else if (!swimming && this._isOnFoot()) {
             finalPosition = this._enteredWaterHeightFor(currentPosition, finalPosition);
         }
         this._advanceBreath(finalPosition, deltaSeconds);
@@ -366,7 +366,7 @@ export class AvatarMovementController {
         const surface = current && this._waterConstraint
             ? this._waterConstraint.waterSurfaceAt(current.position.x, current.position.z)
             : null;
-        const mode = current && this._movementCapability === null
+        const mode = current && this._isOnFoot()
             ? deriveAvatarSwimMode({ feetHeight: current.position.y, waterSurfaceHeight: surface })
             : AvatarSwimMode.NONE;
         return Object.freeze({
@@ -417,6 +417,12 @@ export class AvatarMovementController {
         return { x: desiredPosition.x, y, z: desiredPosition.z };
     }
 
+    // On foot: no capability yet, or the WALK capability the session sets every
+    // frame while nothing is ridden. Only then can the avatar swim.
+    _isOnFoot() {
+        return this.movementCapability() === AvatarMovementCapabilityKind.WALK;
+    }
+
     // Stepping from shallow water (or a jump) into water deep enough to swim: the
     // avatar keeps its world height instead of dropping onto the new, deeper bed,
     // never ending up above the floating height unless it is still in the air.
@@ -445,7 +451,7 @@ export class AvatarMovementController {
     }
 
     _advanceBreath(position, deltaSeconds) {
-        const surface = this._waterConstraint && this._movementCapability === null
+        const surface = this._waterConstraint && this._isOnFoot()
             ? this._waterConstraint.waterSurfaceAt(position.x, position.z)
             : null;
         this._breath = stepAvatarBreath(this._breath, {
