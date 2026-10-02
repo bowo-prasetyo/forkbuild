@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a305d87e70a12de2 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 199c95a8b1ff2992 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -55,10 +55,13 @@ tidak pernah melompat saat Anda menggerakkan mouse.
 
 Tanahnya sendiri dihasilkan dengan cara yang sama untuk semua orang dari
 benih (seed) bersama — rumput, pantai, batu, hutan dan lahan pertanian,
-danau dan sungai yang berkelok semuanya mengikuti ketinggian dan
-kelembapan medan itu sendiri, bukan penempatan acak. Itu pemandangan:
-tidak ada yang dapat diedit, dan tampak sama persis siapa pun yang
-melihatnya dan kapan pun.
+danau, sungai yang berkelok, dan laut lepas semuanya mengikuti ketinggian
+dan kelembapan medan itu sendiri, bukan penempatan acak. Daratan di sekitar
+titik asal selalu kering; berjalanlah sekitar seribu unit dan Anda akan
+tiba di pesisir, tempat tanah menurun melalui landas kontinen ke laut yang
+dalam dan berwarna biru lebih gelap, terlalu dalam untuk diseberangi dengan
+berjalan. Itu pemandangan: tidak ada yang dapat diedit, dan tampak sama
+persis siapa pun yang melihatnya dan kapan pun.
 
 Tanah hutan membawa campuran jenis pohonnya sendiri dari benih yang sama —
 pohon jarum di tempat yang lebih lembap, pohon berdaun lebar di tempat yang
