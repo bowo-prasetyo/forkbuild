@@ -2,7 +2,7 @@
 # Steuerungsreferenz
 
 <!-- languages -->
-[English](../ControlsReference.md) · **Deutsch** · [Español](../es/ControlsReference.md) · [Français](../fr/ControlsReference.md) · [Bahasa Indonesia](../id/ControlsReference.md) · [日本語](../ja/ControlsReference.md) · [Português (Brasil)](../pt-BR/ControlsReference.md)
+[English](../ControlsReference.md) · **Deutsch** · [Español](../es/ControlsReference.md) · [Français](../fr/ControlsReference.md) · [Bahasa Indonesia](../id/ControlsReference.md) · [日本語](../ja/ControlsReference.md) · [한국어](../ko/ControlsReference.md) · [Português (Brasil)](../pt-BR/ControlsReference.md)
 <!-- /languages -->
 
 Jede Maus- und Tastaturbedienung in ForkBuild; Telefone und Tablets

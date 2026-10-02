@@ -63,6 +63,11 @@ export const LANGUAGES = Object.freeze([
         staleBanner: '> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版]({source})も参照してください。'
     }),
     Object.freeze({
+        code: 'ko',
+        name: '한국어',
+        staleBanner: '> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판]({source})을 참고하세요.'
+    }),
+    Object.freeze({
         code: 'pt-BR',
         name: 'Português (Brasil)',
         staleBanner: '> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês]({source}).'

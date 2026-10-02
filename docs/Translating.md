@@ -3,7 +3,7 @@
 ForkBuild can be shown in another language: every page's text is a message
 (`ui/i18n/`), chosen on the **Language** page, with a pseudo-locale for
 finding text that isn't ready. It ships in English, German, Spanish,
-French, Bahasa Indonesia, Japanese and Brazilian Portuguese; the table below lists the few things that stay in the language they were written
+French, Bahasa Indonesia, Japanese, Korean and Brazilian Portuguese; the table below lists the few things that stay in the language they were written
 in.
 
 ## Languages
@@ -16,6 +16,7 @@ in.
 | Français (French) | `fr` | `ui/i18n/messages/fr.js`, complete (see "French" below) |
 | Bahasa Indonesia | `id` | `ui/i18n/messages/id.js`, complete (see "Indonesian" below) |
 | 日本語 (Japanese) | `ja` | `ui/i18n/messages/ja.js`, complete (see "Japanese" below) |
+| 한국어 (Korean) | `ko` | `ui/i18n/messages/ko.js`, complete (see "Korean" below) |
 | Português (Brasil) (Brazilian Portuguese) | `pt-BR` | `ui/i18n/messages/pt-BR.js`, complete (see "Brazilian Portuguese" below) |
 
 ## What is ready
@@ -312,6 +313,52 @@ before what is there, so a resident's `{where}` reads "北へ約3.2 km行った�
 ("3.2 km to the north"). Compass points are 北, 北東, 東, 南東, 南, 南西, 西,
 北西.
 
+## Korean
+
+`ui/i18n/messages/ko.js` translates every key into Korean, for every
+Korean browser (`ko`, `ko-KR`, `ko-KP`). It uses the polite 합니다/하세요
+style for sentences and plain noun phrases for buttons and labels ("저장",
+"설계도 내보내기"), with “” for quoted titles and ‘’ inside them; a
+resident talks in the friendlier 해요 style. Network and product names
+(ForkBuild, Arweave, Nostr, IPFS, Steem, Bitcoin, Base, Kubo, WebRTC, STUN,
+TURN) stay in Latin letters, and protocol words use their usual loanwords
+(게이트웨이, 릴레이, 엔드포인트, 스냅샷, 해시, 트랜잭션, 컨펌). The words it
+uses for ForkBuild's own ideas:
+
+| English | Korean |
+|---|---|
+| World | 월드 |
+| brick | 블록 |
+| build (a creation) | 작품 |
+| structure / blueprint | 구조물 / 설계도 |
+| My Structures / Build Library | 내 구조물 / 빌드 라이브러리 |
+| Publication / publish | 게시물 / 게시 |
+| Shared World (a World's signed record) | 공유 월드 |
+| Signed Claim / claim | 서명 클레임 / 클레임 |
+| distribute / announce / discover | 배포 / 공지 / 발견 |
+| attribution / lineage | 저작자 표시 / 계보 |
+| fork | 포크 (…의 포크) |
+| peer | 피어 |
+| identity / passphrase | 신원 / 암호 문구 |
+| landmark / region / resident | 랜드마크 / 지역 / 주민 |
+| placement / place | 배치 / 배치 |
+| anchor / anchoring | 앵커 / 앵커링 |
+| undo / redo | 실행 취소 / 다시 실행 |
+| sign in / sign out | 로그인 / 로그아웃 |
+
+Korean has one plural form, so plural messages give only `other`, with a
+counter after the number (`블록 {count}개`, `{count}건`, `{count}명`); the
+undo labels also give `=1` ("블록 배치" rather than "블록 1개 배치"). The verb
+comes last, so an undo label reads "블록 12,000개 이동 실행 취소". Where a
+placeholder is followed by a particle whose form depends on the word before
+it, the message writes both forms, as Korean software usually does:
+`{name}을(를)`, `{name}은(는)`, `{name}이(가)`, `{name}(으)로`,
+`{name}와(과)`. Another person's name takes 님 where a sentence talks about
+them ("{name} 님과 연결 중"). A place comes before what is there, so a
+resident's `{where}` is a place phrase ("북쪽으로 약 3.2km 떨어진 곳") that the
+sentence follows with 에. Compass points are 북, 북동, 동, 남동, 남, 남서, 서,
+북서, and a direction before a distance takes 쪽 ("서쪽 40m").
+
 ## Translating the user guide
 
 The user guide in `docs/user/` is translated page by page. A translation
@@ -320,8 +367,8 @@ lives in `docs/user/<code>/` under the English page's file name
 is translated there as well (`docs/user/ja/Privacy.md`). The rest of
 `docs/` is for developers and stays in English.
 
-Translated so far, in German, Spanish, French, Indonesian, Japanese and
-Brazilian Portuguese: every page of the
+Translated so far, in German, Spanish, French, Indonesian, Japanese, Korean
+and Brazilian Portuguese: every page of the
 user guide, and `Privacy.md`.
 
 Writing a translation:
@@ -332,15 +379,16 @@ Writing a translation:
   language's file (`de.js`: **In eine Datei sichern**, `es.js`:
   **Hacer copia de seguridad en un archivo**, `fr.js`:
   **Sauvegarder dans un fichier**, `id.js`:
-  **Cadangkan ke File**, `ja.js`: **ファイルにバックアップ**, `pt-BR.js`:
+  **Cadangkan ke File**, `ja.js`: **ファイルにバックアップ**, `ko.js`:
+  **파일로 백업**, `pt-BR.js`:
   **Fazer backup em um arquivo**). The word lists under "German",
-  "Spanish", "French", "Indonesian", "Japanese" and "Brazilian Portuguese" above
+  "Spanish", "French", "Indonesian", "Japanese", "Korean" and "Brazilian Portuguese" above
   apply here too.
 - Text the app shows only in English (a publish error from `application/`,
   say) stays in English, with a translation beside it.
 - Link to the translated page when there is one (`FAQ.md`), and to the
   English otherwise (`../02-TheEditor.md`), marked as English: "(Englisch)",
-  "(en inglés)", "(en anglais)", "(bahasa Inggris)", "（英語）", "(em inglês)". An anchor into a translated page is made from its
+  "(en inglés)", "(en anglais)", "(bahasa Inggris)", "（英語）", "(영어)", "(em inglês)". An anchor into a translated page is made from its
   translated heading, the way GitHub makes it: `ControlsReference.md#タッチ画面`.
 - Start the page with the line that names its English original. The hash
   is filled in by `--stamp`:

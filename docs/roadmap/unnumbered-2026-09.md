@@ -3557,3 +3557,23 @@ automatically for any browser set to French (`fr`, `fr-FR`, `fr-CA`, `fr-BE`, `f
 - Tests: `tests/FrenchLocale.test.js` (complete, chosen from French browsers in France, Canada, Belgium and
   Switzerland, plural forms including zero and a million, a resident's sentence with a decimal comma and guillemets,
   undo labels with French digit grouping, a fork's title, compass points, and French typography throughout).
+
+## Internationalization: Korean (unnumbered, 2026-10-02)
+
+The seventh translation. ForkBuild can now be shown in Korean (한국어), chosen on the Language page or picked
+automatically for any browser set to Korean (`ko`, `ko-KR`, `ko-KP`).
+
+- `ui/i18n/messages/ko.js` translates all 3,642 messages, in the same order and groups as English. It uses the polite
+  합니다/하세요 style, noun phrases for buttons, “ … ” around quoted titles, and 님 after another person's name. It keeps
+  network and product names in Latin letters and protocol words as the usual loanwords (스냅샷, 해시, 엔드포인트). The
+  words it uses for ForkBuild's own ideas are listed in `docs/Translating.md`, "Korean".
+- Korean has one plural form, so messages give `other` with a counter (`블록 {count}개`), plus `=1` for the undo labels
+  that drop the number in English. A particle after a placeholder is written in both forms (`{name}을(를)`), since its
+  form depends on the name. A resident names the place first ("북쪽으로 약 3.2km 떨어진 곳에 …"). Numbers follow `ko`
+  (`3.2km`, `12,000`).
+- The user guide and `Privacy.md` are translated in `docs/user/ko/`; `scripts/check-doc-translations.mjs` knows the
+  language and its out-of-date banner, and every Getting Started page now lists Korean among the languages.
+- `tests/I18n.test.js` used Korean as its example of a language ForkBuild doesn't ship; it now uses Thai.
+- Tests: `tests/KoreanLocale.test.js` (complete, chosen from Korean browsers, the single plural form with the exact form
+  for one brick, undo labels with Korean digit grouping and the verb last, a resident's sentence, a fork's title, a name
+  with 님, compass points with 쪽, and no plain ASCII quotes).

@@ -1,7 +1,7 @@
 # 10 — Network Settings
 
 <!-- languages -->
-**English** · [Deutsch](de/10-NetworkSettings.md) · [Español](es/10-NetworkSettings.md) · [Français](fr/10-NetworkSettings.md) · [Bahasa Indonesia](id/10-NetworkSettings.md) · [日本語](ja/10-NetworkSettings.md) · [Português (Brasil)](pt-BR/10-NetworkSettings.md)
+**English** · [Deutsch](de/10-NetworkSettings.md) · [Español](es/10-NetworkSettings.md) · [Français](fr/10-NetworkSettings.md) · [Bahasa Indonesia](id/10-NetworkSettings.md) · [日本語](ja/10-NetworkSettings.md) · [한국어](ko/10-NetworkSettings.md) · [Português (Brasil)](pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
 
 **Network Settings**, in the top bar, links every page that controls which

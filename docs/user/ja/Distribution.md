@@ -2,7 +2,7 @@
 # 作品を配信する
 
 <!-- languages -->
-[English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · **日本語** · [Português (Brasil)](../pt-BR/Distribution.md)
+[English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · **日本語** · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
 
 ForkBuild で作るものは、すべて自分のデバイスから始まります。**配信** は、

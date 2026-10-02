@@ -2,7 +2,7 @@
 # Gizmo de transformação interativo
 
 <!-- languages -->
-[English](../InteractiveTransformGizmo.md) · [Deutsch](../de/InteractiveTransformGizmo.md) · [Español](../es/InteractiveTransformGizmo.md) · [Français](../fr/InteractiveTransformGizmo.md) · [Bahasa Indonesia](../id/InteractiveTransformGizmo.md) · [日本語](../ja/InteractiveTransformGizmo.md) · **Português (Brasil)**
+[English](../InteractiveTransformGizmo.md) · [Deutsch](../de/InteractiveTransformGizmo.md) · [Español](../es/InteractiveTransformGizmo.md) · [Français](../fr/InteractiveTransformGizmo.md) · [Bahasa Indonesia](../id/InteractiveTransformGizmo.md) · [日本語](../ja/InteractiveTransformGizmo.md) · [한국어](../ko/InteractiveTransformGizmo.md) · **Português (Brasil)**
 <!-- /languages -->
 
 Sempre que há blocos selecionados no Editor, aparece um gizmo no pivô da

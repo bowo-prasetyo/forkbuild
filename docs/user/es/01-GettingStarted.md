@@ -1,8 +1,8 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: e7382e7fe8af5794 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: e707978bda85f9b5 -->
 # 01 — Primeros pasos
 
 <!-- languages -->
-[English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · **Español** · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
+[English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · **Español** · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
 
 ¡Bienvenido! Esta guía lo lleva de “acabo de abrir la app” a “construí
@@ -51,7 +51,7 @@ La barra de arriba siempre está visible:
 - **Idioma**: el idioma en que ForkBuild se muestra en este dispositivo.
   Sigue los idiomas de su navegador hasta que usted elija uno; guardar
   recarga la página, así que primero guarde su trabajo. ForkBuild está
-  disponible en inglés, alemán, español, francés, bahasa indonesia, japonés y
+  disponible en inglés, alemán, español, francés, bahasa indonesia, japonés, coreano y
   portugués de Brasil
   (consulte [Translating ForkBuild](../../Translating.md), en inglés).
 - **Acerca de**: información de la versión
