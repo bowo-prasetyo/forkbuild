@@ -116,18 +116,32 @@ its **Community Attribution** section offers:
 - **Publish to Network** — announces your claim to every peer you're
   connected to, which puts it on their Publications page, and on yours.
 
+Once it's published, the panel offers to **Distribute** it, so people who
+aren't connected to you can find it too. **Distribute** opens the same
+dialog the Editor offers after you publish a World, with only the Signed
+Claim half (an authorship claim has no Snapshot): choose where its content
+is stored and where it's announced, then **Distribute Signed Claim**.
+**Not now** hides the offer; you can still distribute the claim later from
+its card on the Publications page (see
+[Distribution](Distribution.md)).
+
 ### Naming a place
 
 In World View, open the naming panel for a Region or Landmark and use
 **Publish A Name** (see [Geographic places](03-WorldView.md#geographic-places)).
 This announces a signed claim to your connected peers.
 
-To make a name findable through
-[Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone)
-too, open the naming panel's **More**, find the claim under **All Claims**,
-and click **Publish to Nostr**. This is a separate step: neither action does
-the other. A success names the relay it reached; a failure, most often
-because no Nostr browser extension is installed, shows the error.
+Right after you publish, the panel offers to **Distribute** the name, so
+people who aren't connected to you can find it too, for example through
+[Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone).
+Pick the **Network** (Arweave, Nostr or Steem; it starts on your
+[Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider))
+and click **Distribute**, or **Not now** to skip it. You can distribute any
+claim later too: open the naming panel's **More** and click **Distribute**
+beside it under **All Claims**. Publishing and distributing stay separate
+steps: neither does the other. A success says which network the name was
+announced on; a failure shows why, most often a missing Nostr browser
+extension or a network that isn't set up on this device.
 
 ### Receiving one from a peer
 
@@ -294,8 +308,8 @@ peers you're connected to, and published to the network chosen next to
 [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider)),
 so people who weren't connected can find it. Closing the section (**Hide
 Comments**) discards anything you'd typed but not posted. Comments posted
-from World View's **My Shared World** or **World Encounters** are, for now,
-only saved on your device.
+from World View's **My Shared World** or **World Encounters** travel the
+same way, with the same network choice beside **Post Comment**.
 
 Other people's comments reach you:
 

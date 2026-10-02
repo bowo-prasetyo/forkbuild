@@ -211,7 +211,8 @@ async function run() {
         assert(mainSource.includes("new CreatePublicationCommentaryUseCase().execute(identityProvider)"),
             n('the EXISTING commentary creation composition is still constructed the exact same way — this milestone changes no argument to it'));
         assert(mainSource.includes('function addPublicationCommentaryCommand(input) {') &&
-               mainSource.includes('publicationCommentaryDistributionPeerExchange.announce(result.commentary)'),
+               mainSource.includes('distributePublicationCommentaryCommand(result.commentary,') &&
+               mainSource.includes('peerExchange: publicationCommentaryDistributionPeerExchange,'),
             n('ui/main.js now defines addPublicationCommentaryCommand as a wrapper that announces the just-created commentary'));
         assert(mainSource.includes("app.provide('addPublicationCommentaryCommand', addPublicationCommentaryCommand)"),
             n('addPublicationCommentaryCommand is still provided app-wide under the identical name — every existing consumer (PublicationCard.js) needs no change'));

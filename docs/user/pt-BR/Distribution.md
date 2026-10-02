@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: d36fc419468d61d1 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 9c6ca1cfed3b4863 -->
 # Distribuindo seu trabalho
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../Distribution.md).
-<!-- /stale -->
 
 Tudo o que o ForkBuild cria começa no seu próprio dispositivo.
 **Distribuir** é o passo separado e opcional que coloca seu trabalho em
@@ -59,9 +55,9 @@ nada.
 | **A Declaração assinada do seu Mundo** (o registro assinado de um Mundo publicado, chamado Mundo compartilhado) | Arweave, IPFS ou Steem | Nostr, Arweave ou Steem | — | **Distribuir** depois de publicar no Editor; **Meu Mundo compartilhado** na Visão do mundo; a página **Publicações** |
 | **O Snapshot do seu Mundo** (os blocos dele), com o lugar onde você o posicionou | Arweave, IPFS ou Steem | Nostr, Arweave ou Steem | — | Os mesmos diálogos de **Distribuir** (**Distribuir só o Snapshot** para só esta metade) |
 | **O hash do conteúdo de qualquer publicação** (um Mundo, uma declaração de autoria ou um nome de lugar) | — | — | Bitcoin, Arweave, Base ou Steem | O card da publicação na página **Publicações** |
-| **A autoria de uma estrutura** (Atribuição de planta) | Arweave, IPFS ou Steem | Nostr, Arweave ou Steem | — | Declare-a em **Minhas estruturas** no Editor e depois distribua-a pela página **Publicações** |
-| **Um nome de lugar** (Declaração de nome de lugar) | Arweave, IPFS ou Steem | Nostr, Arweave ou Steem | — | **Publicar no Nostr** no painel de nomes da Visão do mundo para um anúncio rápido no Nostr; a página **Publicações** para qualquer uma dessas opções |
-| **Um comentário** sobre uma publicação | — | Nostr, Arweave ou Steem | — | **Publicar comentário** no Repositório (comentários feitos na Visão do mundo ficam neste dispositivo, por enquanto) |
+| **A autoria de uma estrutura** (Atribuição de planta) | Arweave, IPFS ou Steem | Nostr, Arweave ou Steem | — | **Distribuir** no painel **Informações** da estrutura, oferecido assim que você usa **Publicar na rede**; a página **Publicações** |
+| **Um nome de lugar** (Declaração de nome de lugar) | Arweave, IPFS ou Steem | Nostr, Arweave ou Steem | — | **Distribuir** no painel de nomes da Visão do mundo, oferecido assim que você usa **Publicar um nome** (anuncia o nome na rede que você escolher); a página **Publicações** para qualquer uma dessas opções |
+| **Um comentário** sobre uma publicação | — | Nostr, Arweave ou Steem | — | **Publicar comentário**, no Repositório ou na Visão do mundo, na rede escolhida ao lado |
 
 O Snapshot de um Mundo leva junto o seu posicionamento assinado, então quem o
 busca vê a construção exatamente onde você a colocou.

@@ -309,10 +309,28 @@ export default {
                 @claim-authorship="claimAuthorship"
                 @export-attribution="exportInspectedAttribution"
                 @publish-attribution="publishInspectedAttributionToNetwork"
+                :attribution-published="Boolean(publishedAttribution) && canDistributeAttribution"
+                @distribute-attribution="attributionDistributionDialogOpen = true"
+                @dismiss-distribute-attribution="dismissAttributionDistribution"
                 @resign-attribution="resignInspectedAttribution"
                 @claim-lineage="claimLineage"
                 @export-lineage-claim="exportBlueprintLineageClaim"
-                @close="inspectedStructure = null"
+                @close="closeStructureInspection"
+            />
+            <!-- After StructureInfoPanel, so it opens on top of it. Signed Claim only:
+                 an attribution has no Snapshot. -->
+            <EditorDistributionDialog
+                v-if="attributionDistributionDialogOpen"
+                :can-distribute-publication="canDistributeAttribution"
+                :distribution-executing="attributionDistributionExecuting"
+                :distribution-error="attributionDistributionError"
+                :distribution-result="attributionDistributionResult"
+                v-model:storage="selectedAttributionDistributionStorage"
+                v-model:discovery-provider="selectedAttributionDiscoveryProvider"
+                :remote-pinning-draft="attributionRemotePinningDraft"
+                :publication-id="publishedAttribution ? publishedAttribution.id : null"
+                @close="attributionDistributionDialogOpen = false"
+                @distribute-publication="distributePublishedAttribution"
             />
         </div>
     `,
@@ -508,6 +526,19 @@ export default {
             router
         });
 
+        // A second, independent offer for an authorship claim published from the
+        // structure panel; it never touches the World's own offer above.
+        const attributionDistribution = usePostPublishDistribution({ router, includeSnapshot: false });
+        const {
+            canDistributePublication: canDistributeAttribution, dismissPublishAction: dismissAttributionDistribution,
+            distributePublishedDocument: distributePublishedAttribution,
+            distributionDialogOpen: attributionDistributionDialogOpen, distributionError: attributionDistributionError,
+            distributionExecuting: attributionDistributionExecuting, distributionResult: attributionDistributionResult,
+            publishedPublication: publishedAttribution, remotePinningDraft: attributionRemotePinningDraft,
+            selectedDiscoveryProvider: selectedAttributionDiscoveryProvider,
+            selectedDistributionStorage: selectedAttributionDistributionStorage
+        } = attributionDistribution;
+
         const {
             closeCreateBlueprintDialog, copyStructureIntoDocument, createBlueprintPreview, forkStructure,
             forkStructureToLibrary, onCreateBlueprint, personalSavedAtById, personalStructureGroups, recentStructures,
@@ -530,12 +561,12 @@ export default {
         });
 
         const {
-            claimAuthorship, claimLineage, exportInspectedAttribution, exportInspectedStructure, inspectStructure,
+            claimAuthorship, claimLineage, closeStructureInspection, exportInspectedAttribution, exportInspectedStructure, inspectStructure,
             inspectedStructure, inspectedStructureAttribution, inspectedStructureLineage,
             inspectedStructureSimilarityCandidates, inspectedStructureSource, placeInspectedStructure,
             publishInspectedAttributionToNetwork, resignInspectedAttribution
         } = useStructureInspection({
-            blueprintAttributionUseCase, blueprintLineageUseCase, copyStructureIntoDocument,
+            attributionDistribution, blueprintAttributionUseCase, blueprintLineageUseCase, copyStructureIntoDocument,
             exportBlueprintAttribution, exportStructure, feedback, identityProvider, personalStructureLibraryStore,
             publicationCatalog, publicationPeerExchange, publicationResolver, structureRegistry
         });
@@ -1122,6 +1153,7 @@ export default {
             inspectedStructureLineage,
             inspectedStructureSimilarityCandidates,
             placeInspectedStructure,
+            closeStructureInspection,
             exportInspectedStructure,
             claimAuthorship,
             exportInspectedAttribution,
@@ -1177,6 +1209,17 @@ export default {
             distributePublishedDocumentAndSnapshot,
             dismissPublishAction,
             viewDistributedPublicationInRepository,
+            canDistributeAttribution,
+            dismissAttributionDistribution,
+            distributePublishedAttribution,
+            attributionDistributionDialogOpen,
+            attributionDistributionError,
+            attributionDistributionExecuting,
+            attributionDistributionResult,
+            publishedAttribution,
+            attributionRemotePinningDraft,
+            selectedAttributionDiscoveryProvider,
+            selectedAttributionDistributionStorage,
             documentInfo,
             showMetadataEditor,
             onSaveMetadata,

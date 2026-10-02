@@ -1,3 +1,4 @@
+import { createPublicationCommentaryDistributor } from '../application/publication/commentary/PublicationCommentaryDistributor.js';
 import { execSync } from 'node:child_process';
 
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -458,31 +459,29 @@ async function run() {
     // announce -> Nostr publish, source order and live instrumentation.
     // ===============================================================
     {
-        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
-        const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
-        assert(wrapperMatch !== null, n('ui/main.js\'s own addPublicationCommentaryCommand wrapper is found, source-level'));
-        const wrapperBody = wrapperMatch[1];
-        const createIndex = wrapperBody.indexOf('createPublicationCommentaryCommand(input)');
-        const announceIndex = wrapperBody.indexOf('.announce(');
-        const publishIndex = wrapperBody.indexOf('.publish(');
-        assert(createIndex >= 0 && announceIndex >= 0 && publishIndex >= 0 && createIndex < announceIndex && announceIndex < publishIndex,
-            n('source order inside the wrapper: local creation, then WebRTC announce, then Nostr publish — never a reordering that could make either distribution attempt precede local persistence'));
-        // AMENDED BY 0.9.631 — Publication Commentary Arweave Asynchronous
-        // Distribution added exactly-one-of-Nostr-or-Arweave SELECTION to
-        // this same wrapper (`asynchronousDistribution`, resolved from
-        // `input.discoveryProvider`, defaulting to Nostr — see that
-        // milestone's own header on `addPublicationCommentaryCommand`), so
-        // the publish call no longer names `publicationCommentaryNostrDistribution`
-        // literally. The invariant this assertion actually protects —
-        // fire-and-forget, with its own rejection handler, never awaited
-        // inline — still holds, on whichever substrate was selected.
-        assert(wrapperBody.includes('asynchronousDistribution.publish(envelopeJson).catch(() => {})'),
-            n('the asynchronous-substrate publish call (Nostr or Arweave, per 0.9.631\'s own selection) is fire-and-forget with its own rejection handler — never awaited inline, so a slow or unreachable relay/gateway can never block a Commentary submission'));
-        assert(wrapperBody.includes("? publicationCommentaryArweaveDistribution\n        : publicationCommentaryNostrDistribution;")
-            || /publicationCommentaryArweaveDistribution[\s\S]{0,160}publicationCommentaryNostrDistribution/.test(wrapperBody),
-            n('0.9.631: the wrapper selects one asynchronous substrate (Nostr, Arweave or Steem) rather than fanning out — the identical "selection, never fan-out" invariant application/publication/distribution/PublicationDistributionRuntimeComposition.js already holds, extended here to Commentary'));
+        // The real distributor ui/main.js's addPublicationCommentaryCommand
+        // calls once the comment is created and saved.
+        const order = [];
+        let settled = false;
+        const distribute = createPublicationCommentaryDistributor({
+            peerExchange: { announce: () => { order.push('announce'); } },
+            distributionExchange: { exportCommentary: () => '{}' },
+            substrateFor: (provider) => ({
+                publish: () => { order.push(`publish:${provider}`); return new Promise(() => {}).finally(() => { settled = true; }); }
+            }),
+            defaultProvider: () => 'nostr'
+        });
+        const returned = distribute({ commentaryId: 'c-order' });
+        assert(order.join(',') === 'announce,publish:nostr',
+            n('order: WebRTC announce, then the Nostr publish — the distributor only runs after the caller has created and saved the comment'));
+        assert(returned === undefined && settled === false,
+            n('the asynchronous-substrate publish call is fire-and-forget — never awaited inline, so a slow or unreachable relay/gateway can never block a Commentary submission'));
+        order.length = 0;
+        distribute({ commentaryId: 'c-arweave' }, 'arweave');
+        assert(order.join(',') === 'announce,publish:arweave',
+            n('0.9.631: one asynchronous substrate is selected per comment (Nostr, Arweave or Steem) rather than fanning out'));
 
-        console.log('✓ I (source): create → persist → announce → Nostr publish, confirmed by source order.');
+        console.log('✓ I (distributor): announce → Nostr publish, fire-and-forget, one substrate per comment.');
     }
     {
         // Live instrumentation: at the moment the Nostr publish is

@@ -1,3 +1,4 @@
+import { createPublicationCommentaryDistributor } from '../application/publication/commentary/PublicationCommentaryDistributor.js';
 import { execSync } from 'node:child_process';
 
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -669,13 +670,21 @@ async function run() {
         assert(mainSource.includes("app.provide('discoverPublicationCommentaryFromArweaveCommand', discoverPublicationCommentaryFromArweaveCommand)"),
             n('the Arweave discovery command is provided app-wide, mirroring discoverPublicationCommentaryFromNostrCommand exactly'));
 
-        const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
-        assert(wrapperMatch !== null, n('addPublicationCommentaryCommand is found, source-level'));
-        const wrapperBody = wrapperMatch[1];
-        assert(/discoveryProvider === 'arweave'\s*\?\s*publicationCommentaryArweaveDistribution\s*:\s*\(discoveryProvider === 'steem' \? publicationCommentarySteemDistribution : publicationCommentaryNostrDistribution\)/.test(wrapperBody),
+        // The real distributor addPublicationCommentaryCommand hands each
+        // saved comment to.
+        const publishes = [];
+        const distribute = createPublicationCommentaryDistributor({
+            peerExchange: { announce: () => {} },
+            distributionExchange: { exportCommentary: () => '{}' },
+            substrateFor: (provider) => ({ publish: () => { publishes.push(provider); return Promise.resolve(); } }),
+            defaultProvider: () => 'nostr'
+        });
+        distribute({ commentaryId: 'c-i' }, 'arweave');
+        assert(publishes.join(',') === 'arweave',
             n('SELECTION, NEVER FAN-OUT: exactly one asynchronous substrate is chosen per call — never both — mirroring application/publication/distribution/PublicationDistributionRuntimeComposition.js\'s own invariant of the same name'));
-        assert((wrapperBody.match(/\.publish\(envelopeJson\)\.catch\(\(\) => \{\}\)/g) || []).length === 1,
-            n('exactly one fire-and-forget publish call exists in the wrapper body — the selected substrate\'s own, never two parallel publish attempts'));
+        distribute({ commentaryId: 'c-i2' });
+        assert(publishes.join(',') === 'arweave,nostr',
+            n('with no choice, the saved preference is used — still exactly one publish call per comment'));
 
         console.log('✓ I: ui/main.js constructs PublicationCommentaryArweaveDistribution exactly once, reusing existing Arweave host/gateway collaborators, and addPublicationCommentaryCommand selects between Nostr and Arweave rather than fanning out to both.');
     }

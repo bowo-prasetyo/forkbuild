@@ -80,8 +80,8 @@ export const publicationDiscoveryMethods = {
             this.encounterCommentaryError = t('failure.commentaryLoaded');
         }
     },
-    // The only caller of addPublicationCommentaryCommand; sends only
-    // `{ publicationId, content }`. On success, clears the draft and re-queries
+    // The only caller of addPublicationCommentaryCommand; sends
+    // `{ publicationId, content, discoveryProvider }`. On success, clears the draft and re-queries
     // rather than appending, like PublicationCard.js/OwnPublicationPanel.js. On
     // failure, draft and list are unchanged. An unedited retry reuses the same
     // commentaryId/createdAt, so a write that actually persisted becomes an
@@ -97,9 +97,11 @@ export const publicationDiscoveryMethods = {
             this.pendingEncounterCommentaryDraft = { content, commentaryId: createId(), createdAt: new Date() };
         }
         const { commentaryId, createdAt } = this.pendingEncounterCommentaryDraft;
+        const discoveryProvider = this.commentaryDiscoveryProvider;
         this.encounterCommentarySubmitting = true;
         try {
-            this.addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt });
+            this.addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt, discoveryProvider });
+            this.encounterCommentaryDistributionProvider = discoveryProvider;
             this.newEncounterCommentaryText = '';
             this.encounterCommentaryError = null;
             this.pendingEncounterCommentaryDraft = null;

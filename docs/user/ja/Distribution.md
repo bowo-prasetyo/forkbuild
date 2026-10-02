@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: d36fc419468d61d1 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 9c6ca1cfed3b4863 -->
 # 作品を配信する
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · **日本語** · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../Distribution.md)も参照してください。
-<!-- /stale -->
 
 ForkBuild で作るものは、すべて自分のデバイスから始まります。**配信** は、
 作品を分散型ネットワークに載せるための、別の任意の手順です。これにより、
@@ -56,9 +52,9 @@ ForkBuild で作るものは、すべて自分のデバイスから始まりま�
 | **ワールドの署名済みクレーム**（公開したワールドの署名付き記録。共有ワールドと呼びます） | Arweave、IPFS、Steem | Nostr、Arweave、Steem | — | エディターで公開した後の **配信**、ワールドビューの **自分の共有ワールド**、**公開物** ページ |
 | **ワールドのスナップショット**（そのブロック）と、それを置いた場所 | Arweave、IPFS、Steem | Nostr、Arweave、Steem | — | 同じ **配信** ダイアログ（この半分だけなら **スナップショットのみ配信**） |
 | **任意の公開物の内容ハッシュ**（ワールド、作者情報のクレーム、地名） | — | — | Bitcoin、Arweave、Base、Steem | **公開物** ページにあるその公開物のカード |
-| **構造物の作者情報**（ブループリントの作者情報） | Arweave、IPFS、Steem | Nostr、Arweave、Steem | — | エディターの **マイ構造物** で主張し、**公開物** ページから配信 |
-| **地名**（地名の主張） | Arweave、IPFS、Steem | Nostr、Arweave、Steem | — | Nostr で手早く告知するならワールドビューの命名パネルの **Nostrに公開**、どれでも選べるのは **公開物** ページ |
-| 公開物への **コメント** | — | Nostr、Arweave、Steem | — | リポジトリの **コメントを投稿**（ワールドビューから投稿したコメントは、今のところこのデバイスに残ります） |
+| **構造物の作者情報**（ブループリントの作者情報） | Arweave、IPFS、Steem | Nostr、Arweave、Steem | — | **ネットワークに公開** すると構造物の **情報** パネルに表示される **配信**、**公開物** ページ |
+| **地名**（地名の主張） | Arweave、IPFS、Steem | Nostr、Arweave、Steem | — | **名前を公開** するとワールドビューの命名パネルに表示される **配信**（選んだネットワークで名前を告知します）、どれでも選べるのは **公開物** ページ |
+| 公開物への **コメント** | — | Nostr、Arweave、Steem | — | リポジトリまたはワールドビューの **コメントを投稿**（横で選んだネットワークへ） |
 
 ワールドのスナップショットには署名付きの配置が含まれるので、取得した人は
 あなたが置いたとおりの場所に作品を見ることができます。

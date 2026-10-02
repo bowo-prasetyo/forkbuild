@@ -17,7 +17,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { mainFiles } from './support/SourceFileGroups.js';
+import { createPublicationCommentaryDistributor } from '../application/publication/commentary/PublicationCommentaryDistributor.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as rawSource } from './support/SourceText.js';
@@ -113,40 +113,25 @@ async function codeOnlySource(relativePath) {
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 
-// The identical live-extraction technique 0.9.637's own Section D
-// flagship established: pull the REAL, current function body out of
-// ui/main.js's own source and execute it against fake collaborators,
-// rather than reimplementing its logic (which could silently drift
-// from production).
-async function extractPath1Wrapper() {
-    const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
-    const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
-    assert(wrapperMatch !== null, 'sanity: the real addPublicationCommentaryCommand wrapper is found in ui/main.js\'s current source');
-    // eslint-disable-next-line no-new-func
-    return new Function(
-        'input', 'createPublicationCommentaryCommand', 'publicationCommentaryDistributionPeerExchange',
-        'publicationCommentaryArweaveDistribution', 'publicationCommentaryNostrDistribution', 'publicationCommentaryDistributionExchange',
-        'resolvedAnnouncementDiscoveryProvider',
-        wrapperMatch[1]
-    );
-}
-
-// Wraps a real, local-only createPublicationCommentaryCommand with the
-// REAL, extracted ui/main.js distribution wrapper and fake WebRTC/
-// Nostr/Arweave collaborators, counting calls to each — the exact shape
+// The real distributor ui/main.js builds, with fake WebRTC/Nostr/Arweave
+// collaborators counting calls to each — the exact shape
 // PublicationCard.js/PublicationList.js actually inject in production.
-function makeDistributionWrappedCommand(path1Fn, createPublicationCommentaryCommand, calls) {
+function makeDistributionWrappedCommand(createPublicationCommentaryCommand, calls) {
+    const substrates = {
+        arweave: { publish: (json) => { calls.arweave += 1; return Promise.resolve({ published: true, locator: 'a', json }); } },
+        nostr: { publish: (json) => { calls.nostr += 1; return Promise.resolve({ published: true, locator: 'n', json }); } }
+    };
+    const distribute = createPublicationCommentaryDistributor({
+        peerExchange: { announce: () => { calls.peer += 1; } },
+        distributionExchange: { exportCommentary: (c) => ({ envelopeFor: c }) },
+        substrateFor: (provider) => (provider === 'arweave' ? substrates.arweave : substrates.nostr),
+        // What ui/main.js resolves when no Announcement/Discovery preference is saved.
+        defaultProvider: () => 'nostr'
+    });
     return function addPublicationCommentaryCommand(input) {
-        return path1Fn(
-            input,
-            createPublicationCommentaryCommand,
-            { announce: () => { calls.peer += 1; } },
-            { publish: (json) => { calls.arweave += 1; return Promise.resolve({ published: true, locator: 'a', json }); } },
-            { publish: (json) => { calls.nostr += 1; return Promise.resolve({ published: true, locator: 'n', json }); } },
-            { exportCommentary: (c) => ({ envelopeFor: c }) },
-            // What ui/main.js resolves when no Announcement/Discovery preference is saved.
-            'nostr'
-        );
+        const result = createPublicationCommentaryCommand(input);
+        distribute(result.commentary, input && input.discoveryProvider);
+        return result;
     };
 }
 
@@ -218,7 +203,6 @@ function listCtx(overrides = {}) {
 }
 
 async function runTests() {
-    const path1Fn = await extractPath1Wrapper();
 
     // ===============================================================
     // Section A — default regression: no explicit selection still
@@ -230,7 +214,7 @@ async function runTests() {
         const publication = backend.publisherProvider.publish(makeDocument('A', 'alice'), backend.identityProvider);
 
         const calls = { peer: 0, nostr: 0, arweave: 0 };
-        const addPublicationCommentaryCommand = makeDistributionWrappedCommand(path1Fn, backend.createPublicationCommentaryCommand, calls);
+        const addPublicationCommentaryCommand = makeDistributionWrappedCommand(backend.createPublicationCommentaryCommand, calls);
 
         const ctx = cardCtx({
             publication,
@@ -260,7 +244,7 @@ async function runTests() {
         const publication = backend.publisherProvider.publish(makeDocument('B', 'alice'), backend.identityProvider);
 
         const calls = { peer: 0, nostr: 0, arweave: 0 };
-        const addPublicationCommentaryCommand = makeDistributionWrappedCommand(path1Fn, backend.createPublicationCommentaryCommand, calls);
+        const addPublicationCommentaryCommand = makeDistributionWrappedCommand(backend.createPublicationCommentaryCommand, calls);
         const ctx = cardCtx({
             publication,
             getPublicationCommentariesCommand: backend.getPublicationCommentariesCommand,
@@ -288,7 +272,7 @@ async function runTests() {
         const publication = backend.publisherProvider.publish(makeDocument('C', 'alice'), backend.identityProvider);
 
         const calls = { peer: 0, nostr: 0, arweave: 0 };
-        const addPublicationCommentaryCommand = makeDistributionWrappedCommand(path1Fn, backend.createPublicationCommentaryCommand, calls);
+        const addPublicationCommentaryCommand = makeDistributionWrappedCommand(backend.createPublicationCommentaryCommand, calls);
         const ctx = cardCtx({
             publication,
             getPublicationCommentariesCommand: backend.getPublicationCommentariesCommand,
@@ -321,7 +305,7 @@ async function runTests() {
         const pubArweaveRow = backend.publisherProvider.publish(makeDocument('D-arweave', 'alice'), backend.identityProvider);
 
         const calls = { peer: 0, nostr: 0, arweave: 0 };
-        const addPublicationCommentaryCommand = makeDistributionWrappedCommand(path1Fn, backend.createPublicationCommentaryCommand, calls);
+        const addPublicationCommentaryCommand = makeDistributionWrappedCommand(backend.createPublicationCommentaryCommand, calls);
         const ctx = listCtx({
             getPublicationCommentariesCommand: backend.getPublicationCommentariesCommand,
             addPublicationCommentaryCommand
@@ -356,15 +340,18 @@ async function runTests() {
         // wired directly (not through makeDistributionWrappedCommand's
         // own always-resolving fakes) so this section proves the exact
         // failure path.
+        const distribute = createPublicationCommentaryDistributor({
+            peerExchange: { announce: () => { throw new Error('no peers connected'); } },
+            distributionExchange: { exportCommentary: (c) => ({ envelopeFor: c }) },
+            substrateFor: (provider) => (provider === 'arweave'
+                ? { publish: () => Promise.resolve({ published: true }) }
+                : { publish: () => Promise.reject(new Error('no Nostr relay reachable')) }),
+            defaultProvider: () => 'nostr'
+        });
         const addPublicationCommentaryCommand = function (input) {
-            return path1Fn(
-                input,
-                backend.createPublicationCommentaryCommand,
-                { announce: () => { throw new Error('no peers connected'); } },
-                { publish: () => Promise.resolve({ published: true }) },
-                { publish: () => Promise.reject(new Error('no Nostr relay reachable')) },
-                { exportCommentary: (c) => ({ envelopeFor: c }) }
-            );
+            const result = backend.createPublicationCommentaryCommand(input);
+            distribute(result.commentary, input.discoveryProvider);
+            return result;
         };
         const ctx = cardCtx({
             publication,
@@ -401,7 +388,7 @@ async function runTests() {
         const publication = backend.publisherProvider.publish(makeDocument('F', 'alice'), backend.identityProvider);
 
         const calls = { peer: 0, nostr: 0, arweave: 0 };
-        const rawWrapped = makeDistributionWrappedCommand(path1Fn, backend.createPublicationCommentaryCommand, calls);
+        const rawWrapped = makeDistributionWrappedCommand(backend.createPublicationCommentaryCommand, calls);
         // Simulates a caller that never populates discoveryProvider at
         // all (the shape every real call site sent before this
         // milestone, per 0.9.637's own Section B).

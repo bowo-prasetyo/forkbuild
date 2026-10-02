@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 651918b44bf2d435 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8966f8ede880a9e -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -375,6 +375,9 @@ estrutura pelo cartão e você vai encontrar:
   de outra pessoa.
 - **Exportar atribuição** / **Publicar na rede** — depois de declarar,
   compartilhe a declaração como arquivo ou anuncie-a aos pares conectados.
+  Depois de **Publicar na rede**, o painel oferece **Distribuir**, que leva
+  a declaração também a redes descentralizadas (veja
+  [Distribuição](Distribution.md)).
 - **Assinar de novo para este projeto** — declarações feitas antes de 28 de
   setembro de 2026 usavam um tipo antigo de impressão digital de projeto que
   um projeto diferente consegue copiar, então elas não contam mais, e o

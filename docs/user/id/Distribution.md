@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: d36fc419468d61d1 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 9c6ca1cfed3b4863 -->
 # Mendistribusikan Karya Anda
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · **Bahasa Indonesia** · [日本語](../ja/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../Distribution.md).
-<!-- /stale -->
 
 Semua yang dibuat ForkBuild dimulai di perangkat Anda sendiri.
 **Mendistribusikan** adalah langkah terpisah yang opsional untuk menaruh
@@ -61,9 +57,9 @@ tidak pernah mengirim apa pun.
 | **Klaim Bertanda Tangan Dunia Anda** (catatan bertanda tangan dari Dunia yang diterbitkan, disebut Dunia Bersama) | Arweave, IPFS, atau Steem | Nostr, Arweave, atau Steem | — | **Distribusikan** setelah menerbitkan di Editor; **Dunia Bersama Saya** di Tampilan Dunia; halaman **Publikasi** |
 | **Snapshot Dunia Anda** (balok-baloknya), beserta tempat Anda menempatkannya | Arweave, IPFS, atau Steem | Nostr, Arweave, atau Steem | — | Dialog **Distribusikan** yang sama (**Distribusikan Snapshot saja** untuk separuh ini saja) |
 | **Hash konten publikasi apa pun** (Dunia, klaim kepengarangan, atau nama tempat) | — | — | Bitcoin, Arweave, Base, atau Steem | Kartu publikasi itu di halaman **Publikasi** |
-| **Kepengarangan sebuah struktur** (Atribusi Cetak Biru) | Arweave, IPFS, atau Steem | Nostr, Arweave, atau Steem | — | Klaim di **Struktur Saya** di Editor, lalu distribusikan dari halaman **Publikasi** |
-| **Nama tempat** (Klaim Nama Tempat) | Arweave, IPFS, atau Steem | Nostr, Arweave, atau Steem | — | **Terbitkan ke Nostr** di panel penamaan Tampilan Dunia untuk pengumuman Nostr yang cepat; halaman **Publikasi** untuk pilihan mana pun |
-| **Komentar** pada sebuah publikasi | — | Nostr, Arweave, atau Steem | — | **Kirim Komentar** di Repositori (komentar yang dikirim dari Tampilan Dunia untuk sementara tetap di perangkat ini) |
+| **Kepengarangan sebuah struktur** (Atribusi Cetak Biru) | Arweave, IPFS, atau Steem | Nostr, Arweave, atau Steem | — | **Distribusikan** di panel **Info** struktur, yang ditawarkan begitu Anda **Terbitkan ke Jaringan**; halaman **Publikasi** |
+| **Nama tempat** (Klaim Nama Tempat) | Arweave, IPFS, atau Steem | Nostr, Arweave, atau Steem | — | **Distribusikan** di panel penamaan Tampilan Dunia, yang ditawarkan begitu Anda **Terbitkan Sebuah Nama** (mengumumkan nama itu di jaringan yang Anda pilih); halaman **Publikasi** untuk pilihan mana pun |
+| **Komentar** pada sebuah publikasi | — | Nostr, Arweave, atau Steem | — | **Kirim Komentar**, di Repositori atau Tampilan Dunia, di jaringan yang dipilih di sebelahnya |
 
 Snapshot sebuah Dunia membawa penempatan bertanda tangan Anda, sehingga
 orang yang mengambilnya melihat bangunan itu tepat di tempat Anda

@@ -97,6 +97,8 @@ function panelCtx(overrides = {}) {
         newCommentaryText: '',
         publicationCommentarySubmitting: false,
         publicationCommentaryError: null,
+        commentaryDiscoveryProvider: 'nostr',
+        lastCommentaryDistributionProvider: null,
         refreshPublicationCommentaries: OwnPublicationPanel.methods.refreshPublicationCommentaries,
         submitPublicationCommentary: OwnPublicationPanel.methods.submitPublicationCommentary,
         ...overrides
@@ -226,8 +228,10 @@ async function runTests() {
         // 0.9.542 comment on the identical assertion, one surface over:
         // commentaryId/createdAt are now wired through for idempotent
         // manual retry; authorIdentityId is still never among them.
-        assert(Object.keys(receivedInput).sort().join(',') === 'commentaryId,content,createdAt,publicationId',
-            '12. the command receives publicationId, content, commentaryId and createdAt — never authorIdentityId or any other field');
+        assert(Object.keys(receivedInput).sort().join(',') === 'commentaryId,content,createdAt,discoveryProvider,publicationId',
+            '12. the command receives publicationId, content, commentaryId, createdAt and the chosen network — never authorIdentityId or any other field');
+        assert(receivedInput.discoveryProvider === 'nostr' && ctx.lastCommentaryDistributionProvider === 'nostr',
+            '12a. the network chosen beside Post Comment is sent with the comment and reported back as requested');
         assert(!('authorIdentityId' in receivedInput), '12b. authorIdentityId is never among the fields sent');
         assert(receivedInput.publicationId === publication.id && receivedInput.content === 'through the use case',
             '13. the exact publicationId/content typed by the person reaches the command unmodified');

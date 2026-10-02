@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 651918b44bf2d435 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8966f8ede880a9e -->
 # 02 — Editor
 
 <!-- languages -->
@@ -381,6 +381,9 @@ panel **Info** struktur dari kartunya dan Anda akan menemukan:
 - **Ekspor Atribusi** / **Terbitkan ke Jaringan** — begitu Anda
   mengklaimnya, bagikan klaim itu sebagai file atau umumkan kepada rekan
   yang terhubung.
+  Setelah **Terbitkan ke Jaringan**, panel menawarkan **Distribusikan**,
+  yang membawa klaim itu ke jaringan terdesentralisasi juga (lihat
+  [Distribusi](Distribution.md)).
 - **Tandatangani ulang untuk desain ini** — klaim yang dibuat sebelum 28
   September 2026 memakai jenis sidik jari desain lama yang dapat ditiru
   oleh desain lain, jadi klaim itu tidak lagi dihitung dan panel

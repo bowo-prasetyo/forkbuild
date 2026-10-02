@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 324c4a96e01cda7a -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: e91d68029035ce8b -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -123,6 +123,15 @@ oferece:
 - **Publicar na rede** — anuncia sua declaração a todos os pares a que você
   está conectado, o que a põe na página Publicações deles, e na sua.
 
+Depois de publicada, o painel oferece **Distribuir**, para que quem não está
+conectado a você também possa encontrá-la. **Distribuir** abre o mesmo
+diálogo que o Editor oferece depois que você publica um Mundo, só com a
+metade da Declaração assinada (uma declaração de autoria não tem Snapshot):
+escolha onde o conteúdo dela fica guardado e onde ela é anunciada, depois
+clique em **Distribuir Declaração assinada**. **Agora não** esconde a
+oferta; você ainda pode distribuir a declaração depois pelo card dela na
+página Publicações (veja [Distribuição](Distribution.md)).
+
 ### Dando nome a um lugar
 
 Na Visão do mundo, abra o painel de nomes de uma Região ou Marco e use
@@ -130,13 +139,18 @@ Na Visão do mundo, abra o painel de nomes de uma Região ou Marco e use
 [Lugares geográficos](03-WorldView.md#lugares-geográficos)). Isso anuncia
 uma declaração assinada aos seus pares conectados.
 
-Para que um nome também possa ser encontrado em
-[Nomes de lugares por perto](03-WorldView.md#nomes-de-lugares-por-perto--descobrindo-declarações-de-qualquer-pessoa),
-abra **Mais** no painel de nomes, encontre a declaração em **Todas as
-declarações** e clique em **Publicar no Nostr**. É um passo separado:
-nenhuma das duas ações faz a outra. Um sucesso diz o relay a que chegou; uma
-falha, na maioria das vezes porque não há extensão Nostr instalada no
-navegador, mostra o erro.
+Logo depois de publicar, o painel oferece **Distribuir** o nome, para que
+quem não está conectado a você também possa encontrá-lo, por exemplo em
+[Nomes de lugares por perto](03-WorldView.md#nomes-de-lugares-por-perto--descobrindo-declarações-de-qualquer-pessoa).
+Escolha a **Rede** (Arweave, Nostr ou Steem; começa no seu
+[Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta))
+e clique em **Distribuir**, ou em **Agora não** para pular. Você também pode
+distribuir qualquer declaração depois: abra **Mais** no painel de nomes e
+clique em **Distribuir** ao lado dela em **Todas as declarações**. Publicar
+e distribuir continuam sendo passos separados: nenhum faz o outro. Um
+sucesso diz em qual rede o nome foi anunciado; uma falha mostra o motivo, na
+maioria das vezes a falta da extensão Nostr no navegador ou uma rede que não
+está configurada neste dispositivo.
 
 ### Recebendo uma de um par
 
@@ -308,8 +322,8 @@ lado de **Publicar comentário** (Nostr, Arweave ou Steem; começa no seu
 para que pessoas que não estavam conectadas possam encontrá-lo. Fechar a
 seção (**Ocultar comentários**) descarta o que você tinha digitado sem
 postar. Os comentários postados pelo **Meu Mundo compartilhado** ou por
-**Encontros no Mundo** da Visão do mundo, por enquanto, só ficam salvos no
-seu dispositivo.
+**Encontros no Mundo** da Visão do mundo viajam do mesmo jeito, com a mesma
+escolha de rede ao lado de **Publicar comentário**.
 
 Os comentários das outras pessoas chegam a você:
 

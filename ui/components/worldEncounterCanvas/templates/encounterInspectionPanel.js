@@ -93,12 +93,16 @@ export const encounterInspectionPanelTemplate = `<div v-if="selectedEncounter" c
                                 :disabled="encounterCommentarySubmitting"
                                 :placeholder="t('worldEncounterCanvas.addAComment')"
                             ></textarea>
+                            <CommentaryDistributionPicker v-model="commentaryDiscoveryProvider" :disabled="encounterCommentarySubmitting" />
                             <button
                                 type="submit"
                                 class="action-btn world-encounter-commentary-submit-action"
                                 :disabled="!newEncounterCommentaryText.trim() || encounterCommentarySubmitting"
                             >{{ encounterCommentarySubmitting ? t('worldEncounterCanvas.posting') : t('worldEncounterCanvas.postComment') }}</button>
                         </form>
+                        <p v-if="addPublicationCommentaryCommand && encounterCommentaryDistributionProvider" class="publication-commentary-distribution-status">
+                            {{ t('publicationCommentarySection.savedDistributionRequested', { provider: discoveryProviderLabel(encounterCommentaryDistributionProvider) }) }}
+                        </p>
                     </div>
                 </div>
             </div>`;

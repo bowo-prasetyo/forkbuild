@@ -2,6 +2,7 @@ import WorldEncounterMarker from './WorldEncounterMarker.js';
 import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';
 import WandererMarker from './WandererMarker.js';
 import WorldDistributionDialog from './WorldDistributionDialog.js';
+import CommentaryDistributionPicker, { commentaryDistributionProviderLabel } from './CommentaryDistributionPicker.js';
 import { describeWorldFromDiscoveryRegistry } from '../../application/discovery/WorldDiscoveryRegistryProjection.js';
 // Most computed properties and methods live in ./worldEncounterCanvas/,
 // grouped by concern.
@@ -217,7 +218,7 @@ import { formatDate, t } from '../i18n/i18n.js';
 
 export default {
     name: 'WorldEncounterCanvas',
-    components: { WorldEncounterMarker, WandererMarker, WorldDistributionDialog, PublicationCommentaryRemoteCheck },
+    components: { WorldEncounterMarker, WandererMarker, WorldDistributionDialog, PublicationCommentaryRemoteCheck, CommentaryDistributionPicker },
     props: {
         // Exactly `describeWorldEncounterView()`'s result shape.
         view: {
@@ -427,6 +428,11 @@ export default {
             observerLocalEncounterCommentarySubmitting: false,
             observerLocalEncounterCommentaryError: null,
             pendingObserverLocalEncounterCommentaryDraft: null,
+            // Which network the last observer-local comment asked for, or null.
+            observerLocalEncounterCommentaryDistributionProvider: null,
+            // Where the next comment from either form is distributed; opens on the
+            // saved preference.
+            commentaryDiscoveryProvider: this.defaultDiscoveryDistributionProvider || 'nostr',
             // Registry-derived classification of `selectedEncounter`; written only by
             // refreshSelectionOutcome().
             selectionOutcome: null,
@@ -524,7 +530,9 @@ export default {
             encounterCommentaryError: null,
             // `{ content, commentaryId, createdAt }` for the in-progress attempt, like
             // PublicationCard.js's/OwnPublicationPanel.js's `pendingCommentaryDraft`.
-            pendingEncounterCommentaryDraft: null
+            pendingEncounterCommentaryDraft: null,
+            // Which network the last comment on the selection asked for, or null.
+            encounterCommentaryDistributionProvider: null
         };
     },
     computed: {
@@ -536,6 +544,7 @@ export default {
     methods: {
         t,
         formatDate,
+        discoveryProviderLabel: commentaryDistributionProviderLabel,
         // The only writer of `selectedEncounter`: stores `{ kind, objectId }`
         // verbatim. While comparison is armed, the click goes to
         // selectComparisonEncounter() instead and none of the resets below run.
@@ -583,6 +592,7 @@ export default {
             // A retry draft's commentaryId is only valid for the publicationId it was
             // minted for.
             this.pendingEncounterCommentaryDraft = null;
+            this.encounterCommentaryDistributionProvider = null;
         },
         // The only writer of `worldView` and the only caller of
         // describeWorldFromDiscoveryRegistry(). No-op without a `registry`.

@@ -10,6 +10,7 @@ import { publicationActionsSectionTemplate } from './ownPublicationPanel/templat
 import { diagnosticToolsSectionTemplate } from './ownPublicationPanel/templates/diagnosticToolsSection.js';
 import { commentarySectionTemplate } from './ownPublicationPanel/templates/commentarySection.js';
 import PublicationShareLink from './PublicationShareLink.js';
+import CommentaryDistributionPicker, { commentaryDistributionProviderLabel } from './CommentaryDistributionPicker.js';
 import { errorText, t } from '../i18n/i18n.js';
 
 // Actions on the local user's own current Publication in World View:
@@ -51,7 +52,7 @@ import { errorText, t } from '../i18n/i18n.js';
 
 export default {
     name: 'OwnPublicationPanel',
-    components: { WorldDistributionDialog, PublicationCommentaryRemoteCheck, PublicationShareLink },
+    components: { WorldDistributionDialog, PublicationCommentaryRemoteCheck, PublicationShareLink, CommentaryDistributionPicker },
     inject: {
         identityUseCase: { default: null }
     },
@@ -248,6 +249,11 @@ export default {
             // same text reuses the id so the store's idempotent retry applies; editing
             // mints a new one.
             pendingCommentaryDraft: null,
+            // Where the next comment is distributed; opens on the saved preference.
+            commentaryDiscoveryProvider: this.defaultDiscoveryDistributionProvider || 'nostr',
+            // Which network the last posted comment asked for; never a delivery
+            // receipt (distribution reports nothing back).
+            lastCommentaryDistributionProvider: null,
             // PLACEMENT RECORDS, NEVER WORLD VISIBILITY OR OCCUPANCY: whether it has been
             // placed, not whether anyone can see it or something occupies the spot. In
             // the order returned, never sorted, deduplicated or reduced; [] is a real
@@ -396,6 +402,7 @@ export default {
     },
     methods: {
         t,
+        discoveryProviderLabel: commentaryDistributionProviderLabel,
         readSessionIdentity() {
             let identityId = null;
             try {
@@ -423,7 +430,7 @@ export default {
                 this.publicationCommentaryError = t('ownPublicationPanel.commentaryLoadFailed');
             }
         },
-        // Sends only { publicationId, content }. On success, clears the draft and
+        // Sends { publicationId, content, discoveryProvider }. On success, clears the draft and
         // re-reads (one source of truth) instead of appending. On failure, keeps the
         // text and the list. A retry of unchanged text reuses the same
         // commentaryId/createdAt, so it lands on the store's idempotent no-op instead
@@ -438,12 +445,14 @@ export default {
                 this.pendingCommentaryDraft = { content, commentaryId: createId(), createdAt: new Date() };
             }
             const { commentaryId, createdAt } = this.pendingCommentaryDraft;
+            const discoveryProvider = this.commentaryDiscoveryProvider;
             this.publicationCommentarySubmitting = true;
             try {
-                this.addPublicationCommentaryCommand({ publicationId: publication.id, content, commentaryId, createdAt });
+                this.addPublicationCommentaryCommand({ publicationId: publication.id, content, commentaryId, createdAt, discoveryProvider });
                 this.newCommentaryText = '';
                 this.publicationCommentaryError = null;
                 this.pendingCommentaryDraft = null;
+                this.lastCommentaryDistributionProvider = discoveryProvider;
                 this.refreshPublicationCommentaries();
             } catch (error) {
                 this.publicationCommentaryError = (error && error.message) ? errorText(error) : t('ownPublicationPanel.commentaryCreateFailed');

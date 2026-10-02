@@ -113,10 +113,14 @@ export default {
         // core/BlueprintSimilarity.js evidence, pre-filtered/sorted by
         // the caller — never computed in this panel (see this panel's
         // own 0.6.3 "Inspect ≠ edit" header).
-        similarityCandidates: { type: Array, default: () => [] }
+        similarityCandidates: { type: Array, default: () => [] },
+        // True once this identity's attribution was published and can still be
+        // distributed. The host owns distributing it; this only offers the step.
+        attributionPublished: { type: Boolean, default: false }
     },
     emits: [
         'place', 'export', 'close', 'claim-authorship', 'export-attribution', 'publish-attribution',
+        'distribute-attribution', 'dismiss-distribute-attribution',
         'claim-lineage', 'export-lineage-claim', 'resign-attribution'
     ],
     data() {
@@ -320,6 +324,13 @@ export default {
                         <button v-if="canClaimAuthorship" class="inline-link-btn" @click="$emit('claim-authorship')">{{ t('structureInfo.claimAuthorship') }}</button>
                         <button v-if="attribution.mine" class="inline-link-btn" @click="$emit('export-attribution')">{{ t('structureInfo.exportAttribution') }}</button>
                         <button v-if="attribution.mine" class="inline-link-btn" @click="$emit('publish-attribution')">{{ t('structureInfo.publishAttribution') }}</button>
+                    </div>
+                    <div v-if="attributionPublished" class="distribute-offer structure-info-distribute-offer" role="status">
+                        <p class="form-hint form-hint--neutral">{{ t('structureInfo.distributeOffer') }}</p>
+                        <div class="distribute-offer-actions">
+                            <button type="button" class="action-btn action-btn--primary structure-info-distribute-btn" @click="$emit('distribute-attribution')">{{ t('structureInfo.distribute') }}</button>
+                            <button type="button" class="action-btn action-btn--secondary structure-info-distribute-dismiss-btn" @click="$emit('dismiss-distribute-attribution')">{{ t('structureInfo.notNow') }}</button>
+                        </div>
                     </div>
                     <!-- Claims signed before fingerprints were SHA-256 can't be
                          tied to this design, so they never count as authors. -->

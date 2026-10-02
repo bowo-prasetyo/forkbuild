@@ -28,6 +28,7 @@ export const observerLocalEncounterMethods = {
         this.observerLocalEncounterCommentarySubmitting = false;
         this.observerLocalEncounterCommentaryError = null;
         this.pendingObserverLocalEncounterCommentaryDraft = null;
+        this.observerLocalEncounterCommentaryDistributionProvider = null;
     },
     // The only writer of `observerLocalEncounterInspection`: like
     // refreshMaterialInspection(), but reading
@@ -71,6 +72,7 @@ export const observerLocalEncounterMethods = {
         this.observerLocalEncounterCommentarySubmitting = false;
         this.observerLocalEncounterCommentaryError = null;
         this.pendingObserverLocalEncounterCommentaryDraft = null;
+        this.observerLocalEncounterCommentaryDistributionProvider = null;
     },
     // Hands `openPublicationCommand` the resolved Publication, never a bare id or
     // a second lookup. No-op without the command or before the inspection is
@@ -128,9 +130,11 @@ export const observerLocalEncounterMethods = {
             this.pendingObserverLocalEncounterCommentaryDraft = { content, commentaryId: createId(), createdAt: new Date() };
         }
         const { commentaryId, createdAt } = this.pendingObserverLocalEncounterCommentaryDraft;
+        const discoveryProvider = this.commentaryDiscoveryProvider;
         this.observerLocalEncounterCommentarySubmitting = true;
         try {
-            this.addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt });
+            this.addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt, discoveryProvider });
+            this.observerLocalEncounterCommentaryDistributionProvider = discoveryProvider;
             this.newObserverLocalEncounterCommentaryText = '';
             this.observerLocalEncounterCommentaryError = null;
             this.pendingObserverLocalEncounterCommentaryDraft = null;

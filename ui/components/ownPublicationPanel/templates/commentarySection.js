@@ -50,11 +50,15 @@ export const commentarySectionTemplate = `<div v-if="getPublicationCommentariesC
                         :disabled="!publication || publicationCommentarySubmitting"
                         :placeholder="t('ownPublicationPanel.addAComment')"
                     ></textarea>
+                    <CommentaryDistributionPicker v-model="commentaryDiscoveryProvider" :disabled="publicationCommentarySubmitting" />
                     <button
                         type="submit"
                         class="action-btn own-publication-commentary-submit-action"
                         :disabled="!publication || !newCommentaryText.trim() || publicationCommentarySubmitting"
                     >{{ publicationCommentarySubmitting ? t('ownPublicationPanel.posting') : t('ownPublicationPanel.postComment') }}</button>
                 </form>
+                <p v-if="addPublicationCommentaryCommand && lastCommentaryDistributionProvider" class="publication-commentary-distribution-status">
+                    {{ t('publicationCommentarySection.savedDistributionRequested', { provider: discoveryProviderLabel(lastCommentaryDistributionProvider) }) }}
+                </p>
                 </div>
             </div>`;

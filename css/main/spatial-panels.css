@@ -529,6 +529,28 @@
     margin-left: 0;
 }
 
+/* The "now distribute it" step offered after a claim or name is published on
+   this device, in the green of the Editor's post-publish bar. */
+.distribute-offer {
+    margin: 0.6rem 0 0;
+    padding: 0.6rem 0.75rem;
+    background: rgba(76, 175, 125, 0.12);
+    border: 1px solid rgba(76, 175, 125, 0.4);
+    border-radius: 4px;
+}
+
+.distribute-offer .form-hint {
+    margin-top: 0;
+}
+
+.distribute-offer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+}
+
 /* 0.2.24: relative nudge convenience on the Move Placement dialog —
    always adjusts the absolute X/Y/Z fields above; nothing relative is
    ever persisted (see ui/components/PlacementEditorDialog.js). */

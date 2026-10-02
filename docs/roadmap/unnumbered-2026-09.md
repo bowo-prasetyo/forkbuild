@@ -3510,3 +3510,30 @@ security fix and no protocol change.
 - `docs/ReleaseNotes-1.2.md` is new: what's new, fixes, upgrading from 1.1.0 (what 1.1.0 does with residents and
   riders, and switching GitHub Pages to GitHub Actions) and known limitations. `docs/ReleaseNotes-1.1.md` points to
   it, and the README names 1.2.0 and links all three.
+
+## Distribute after publishing, for claims, names and comments (unnumbered, 2026-10-02)
+
+The Distribution guide listed three more things that can go to decentralized networks (authorship of a structure,
+a place name, and a comment), but only a World's Signed Claim and Snapshot were offered a **Distribute** step right
+after publishing. The others had to be found on the Publications page, a place name could only go to Nostr, and a
+comment posted from World View never left the device. Each now gets the step where it is made.
+
+- **Authorship of a structure.** After **Publish to Network** in the Editor's structure **Info** panel, the panel
+  offers **Distribute** and **Not now**. **Distribute** opens `EditorDistributionDialog` with only the Signed Claim
+  half, from a second `usePostPublishDistribution({ includeSnapshot: false })`; the offer is dropped when the panel
+  closes or another structure is inspected.
+- **A place name.** After **Publish A Name**, World View's naming panel offers **Distribute** with a **Network**
+  picker (Arweave, Nostr or Steem, starting on the saved Announcement / Discovery preference), and every claim under
+  **All Claims** has **Distribute** in place of the old Nostr-only **Publish to Nostr**.
+  `distributePlaceNamingClaimCommand(claim, discoveryProvider)` replaces `publishPlaceNamingClaimToNostrCommand` and
+  builds the chosen substrate's publisher per click, so the choice is no longer fixed at startup.
+- **A comment.** A comment is distributed as it is posted, so it gets no separate button. Instead World View's three
+  comment forms (My Shared World and both World Encounter panels) get the Repository's network choice
+  (`CommentaryDistributionPicker`) and now travel like Repository comments: saved through the session first, then
+  announced to peers and the chosen network by `PublicationCommentaryDistributor`, which `ui/main.js` now builds and
+  shares with the Repository's `addPublicationCommentaryCommand`.
+- Publishing still never distributes by itself: every one of these is a separate click.
+- Tests: `tests/AttributionPostPublishDistribution.test.js`, `tests/WorldViewCommentaryDistribution.test.js`, and
+  `tests/PlaceNamingClaimPublicationAction.test.js` rewritten to drive the real `usePlaceNamingPanel()`. Older tests
+  that pulled `ui/main.js`'s comment wrapper or EditorView's distribution block out of the source now run the real
+  modules.

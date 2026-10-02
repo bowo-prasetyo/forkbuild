@@ -3,10 +3,10 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
-import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 import { worldEncounterCanvasFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { readSource } from './support/SourceText.js';
-import { t } from '../ui/i18n/i18n.js';
+import { usePostPublishDistribution } from '../ui/views/editorView/usePostPublishDistribution.js';
+import { mountComponent } from './support/MinimalVueCompositionApiShim.js';
 
 // UX-level distribution unification.
 //
@@ -107,28 +107,10 @@ async function codeOnlySource(relativePath) {
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 
-function extractRange(source, startMarker, endMarker, label) {
-    const start = source.indexOf(startMarker);
-    if (start === -1) throw new Error(`${label || startMarker}: start marker not found`);
-    const end = source.indexOf(endMarker, start);
-    if (end === -1) throw new Error(`${label || startMarker}: end marker not found after start`);
-    return source.slice(start, end);
-}
-
-// EditorView.js imports 'vue' at module top level, so this repo's plain
-// `node tests/*.test.js` runner cannot import it directly — the SAME
-// constraint tests/EditorViewPostPublishDistributionAction.test.js's own
-// buildHarness() already documents. This harness uses the identical
-// technique (marker-to-marker extraction of the REAL, CURRENT 0.9.377/
-// 0.9.450/0.9.502/0.9.671 post-publish distribution block, never hand-
-// retyped, executed via `new Function(...)` against fake `ref`/`inject`
-// implementations), but ALSO wires `snapshotDistributionCommand`/
-// `publicationContentStore` — the two collaborators
-// `EditorViewPostPublishDistributionAction.test.js`'s own harness leaves
-// unwired (leaving canDistributeSnapshot permanently false there) —
-// because this file's own Section F needs BOTH legs reachable to prove
-// the SAME sequential contract Sections A/D already prove for
-// WorldEncounterCanvas/OwnPublicationPanel.
+// EditorView's post-publish distribution, through the real
+// usePostPublishDistribution() composable it uses, so the SAME sequential
+// contract Sections A/D prove for WorldEncounterCanvas/OwnPublicationPanel is
+// checked against the code that actually runs.
 function buildEditorViewHarness(editorViewSource, {
     multiRelayNostrPublicationDistributionCommand = null,
     publicationDistributionCommand = null,
@@ -136,49 +118,15 @@ function buildEditorViewHarness(editorViewSource, {
     publicationContentStore = null,
     snapshotDistributionAvailableStorageTypes = null
 } = {}) {
-    const blockSource = extractRange(
-        editorViewSource,
-        "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '\n    return {',
-        '0.9.377/0.9.450/0.9.502/0.9.671 post-publish distribution block'
-    );
-
-    function ref(initial) { return { value: initial }; }
-    const injected = {
+    // The real composable EditorView uses; an absent command keeps its default.
+    const injected = Object.fromEntries(Object.entries({
         multiRelayNostrPublicationDistributionCommand,
         publicationDistributionCommand,
         snapshotDistributionCommand,
         publicationContentStore,
         snapshotDistributionAvailableStorageTypes
-    };
-    function inject(key, fallback) {
-        return Object.prototype.hasOwnProperty.call(injected, key) && injected[key] !== null
-            ? injected[key]
-            : fallback;
-    }
-
-    // eslint-disable-next-line no-new-func
-    const factory = new Function(
-        'inject', 'ref', 'sanitizeDistributionErrorMessage', 't',
-        `${blockSource}\nreturn {
-            publishedPublication,
-            distributionExecuting,
-            distributionError,
-            distributionResult,
-            snapshotDistributionExecuting,
-            snapshotDistributionError,
-            snapshotDistributionResult,
-            onDocumentPublished,
-            distributePublishedDocument,
-            distributePublishedSnapshot,
-            distributePublishedDocumentAndSnapshot,
-            selectedDistributionStorage,
-            selectedDiscoveryProvider,
-            remotePinningDraft,
-            snapshotDistributionStorageTypes
-        };`
-    );
-    return factory(inject, ref, sanitizeDistributionErrorMessage, t);
+    }).filter(([, value]) => value !== null));
+    return mountComponent({ setup: () => usePostPublishDistribution({ router: null }) }, injected);
 }
 
 async function runTests() {

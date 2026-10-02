@@ -3,6 +3,8 @@ import { snapshotCellTag, snapshotCellTagsAround } from '../../core/NarrowDiscov
 import { SNAPSHOT_DISCOVERY_TAG } from '../../application/announcementIndex/AnnouncementSyncTargets.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { composePlaceNamingPublicationRuntime } from '../../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
+import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/Message.js';
 import { composeDiscoverSnapshotRuntime } from '../../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCommand } from '../../application/snapshot/DiscoverSnapshotCommand.js';
 import { executeDiscoverSnapshotCandidatesCommand, executeDiscoverSnapshotCandidatesCommandWithOutcome } from '../../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
@@ -48,20 +50,23 @@ export function composeSnapshotDiscovery({
         null
     );
 
-    // Supplies no discoveryTag: the publisher derives it from the claim's
-    // worldId/regionId. A null publisher makes the command reject with a readable
-    // error.
-    const { discoveryPublisher: placeNamingDiscoveryPublisher } = composePlaceNamingPublicationRuntime({
-        discoveryProvider: resolvedAnnouncementDiscoveryProvider,
+    // Announces one signed claim on the substrate chosen for that click; the
+    // panel opens on the saved preference. Supplies no discoveryTag: the
+    // publisher derives it from the claim's worldId/regionId. A substrate this
+    // device can't sign for rejects with a readable error.
+    const placeNamingPublicationOptions = {
         nostrPlaceNamingDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher },
         arweavePlaceNamingDiscoveryPublisherOptions: { gatewayUrl: resolvedArweaveGatewayUrl, uploadTaggedTransaction: arweaveAnnouncementUploadTaggedTransaction },
         steemPlaceNamingDiscoveryPublisher: steemRuntime ? steemRuntime.placeNamingDiscoveryPublisher : null
-    });
-    const publishPlaceNamingClaimToNostrCommand = (claim) => Promise.resolve().then(() => {
-        if (!placeNamingDiscoveryPublisher) {
-            throw new Error('Nostr publishing is not available — no compatible browser extension was found');
+    };
+    const distributePlaceNamingClaimCommand = (claim, discoveryProvider = resolvedAnnouncementDiscoveryProvider) => Promise.resolve().then(() => {
+        const { discoveryPublisher } = composePlaceNamingPublicationRuntime({ discoveryProvider, ...placeNamingPublicationOptions });
+        if (!discoveryPublisher) {
+            throw new UserFacingError(message(discoveryProvider === 'nostr' ? 'placeNaming.nostrUnavailable' : 'placeNaming.networkUnavailable', {
+                provider: { arweave: 'Arweave', steem: 'Steem' }[discoveryProvider] || discoveryProvider
+            }));
         }
-        return placeNamingDiscoveryPublisher.publish(claim);
+        return discoveryPublisher.publish(claim);
     });
 
     // nostrRelayQueryClient only queries relays (REQ/EVENT/EOSE) and needs no
@@ -162,7 +167,7 @@ export function composeSnapshotDiscovery({
     });
 
     return {
-        resolvedContentDistributionProvider, publishPlaceNamingClaimToNostrCommand, discoverSnapshotCommand,
+        resolvedContentDistributionProvider, distributePlaceNamingClaimCommand, discoverSnapshotCommand,
         snapshotCandidateDiscoveryQueryService, discoverSnapshotCandidatesCommand,
         discoverSnapshotCandidatesWithOutcomeCommand, worldSnapshotDiscoveryMonitor,
         placeNamingDiscoveryQueryService, resolveSelectedSnapshotCommand, materializeSelectedSnapshotCommand,
