@@ -129,7 +129,7 @@ async function run() {
         assert(regionContext.source.kind === WorldFocusKind.REGION && regionContext.source.id === 'r-inner', '12. source carries kind+id for the host to act on');
         const expectedDistance = Math.round(Math.sqrt(10 * 10 + 10 * 10) * 10) / 10;
         assert(regionContext.distance === expectedDistance, '13. distance is the real XZ distance from the viewer, rounded to one decimal');
-        assert(regionContext.direction === 'NE', '14. direction is computed from the SAME directionLabelBetween() every other kind uses');
+        assert(regionContext.direction === 'NW', '14. direction is computed from the SAME directionLabelBetween() every other kind uses');
 
         // LANDMARK — never offers Map/Names; offers Edit a Copy (0.5.9);
         // carries its own description.

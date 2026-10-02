@@ -188,6 +188,12 @@ Document, placement or advertisement.
 presence; the heading label still stays local (see "A Compass Heading's
 LABEL Stays Local…" in Shared worlds and collaboration).
 
+*Changed by East Is On Your Right (2026-10-02):* that angle is a yaw, and
++X is on the left of someone facing +Z, so a yaw grows anticlockwise. The
+compass reads a bearing, 360° − yaw: North is +Z, East is −X. `degrees`
+stays the raw yaw that presence carries; `bearing` and the label are what
+a person sees, and the world map draws East on the right.
+
 [Full text](history/0.1-0.2.md#a-compass-heading-is-computed-from-camera-orientation-never-stored-or-broadcast-0294)
 
 ### World View Navigation Operates On Spatial Observation, Never On Document Mutation (0.2.94)

@@ -188,7 +188,7 @@ function runTests() {
         if (wild.length > 0) {
             assert(!of(RESIDENT_FACT_KIND.ANIMAL).some((f) => f.key === wild[0].id), '29. A caught animal is never mentioned');
         }
-        assert(of(RESIDENT_FACT_KIND.ANIMAL).some((f) => f.key === 'released-1' && f.direction === 'W'), '30. A released one is');
+        assert(of(RESIDENT_FACT_KIND.ANIMAL).some((f) => f.key === 'released-1' && f.direction === 'E'), '30. A released one is (at -X: east)');
         assert(of(RESIDENT_FACT_KIND.LANDMARK).map((f) => f.key).join() === 'l-near', '31. Landmarks within reach only');
         assert(of(RESIDENT_FACT_KIND.PERSON)[0].displayName === 'Alice', '32. People by their shown name');
         assert(of(RESIDENT_FACT_KIND.BUILD).map((f) => f.key).join() === 'fort',
@@ -310,17 +310,17 @@ function runTests() {
         assert(phraseFact(mill) === '“Old Mill” by carol stands about 40 m to the north.', '60. A placed structure, by its author');
         assert(phraseFact({ ...mill, author: null }) === '“Old Mill” stands about 40 m to the north.', '61. ...or without one');
         assert(phraseFact({ ...mill, title: '\u0007 ' }) === null, '62. An unnamed structure is never spoken');
-        const picked = pickResidentRemarkFacts([mill, { kind: RESIDENT_FACT_KIND.BUILD, key: 'b', title: 'Hill Fort', distance: 3000, direction: 'E', position: { x: 3000, z: 0 } }]);
+        const picked = pickResidentRemarkFacts([mill, { kind: RESIDENT_FACT_KIND.BUILD, key: 'b', title: 'Hill Fort', distance: 3000, direction: 'E', position: { x: -3000, z: 0 } }]);
         assert(picked.length === 2 && picked[0] === mill, '63. Structures take their turn among the nearby things');
         assert(JSON.stringify(composeResidentRemarks([mill])) === JSON.stringify(picked.slice(0, 1).map(phraseFact)), '64. The remarks are exactly the picked facts, spoken');
 
         const targets = focusTargetsFor([
             mill,
-            { kind: RESIDENT_FACT_KIND.VEHICLE, vehicleType: 'bicycle', distance: 80, direction: 'E', position: { x: 80, z: 0 } },
+            { kind: RESIDENT_FACT_KIND.VEHICLE, vehicleType: 'bicycle', distance: 80, direction: 'E', position: { x: -80, z: 0 } },
             { kind: RESIDENT_FACT_KIND.LANDMARK, title: '  Old\nWell ', distance: 90, direction: 'S', position: { x: 0, z: -90 } },
-            { kind: RESIDENT_FACT_KIND.BUILD, title: 'Hill Fort', distance: 3000, direction: 'E', position: { x: 3000, z: 0 } },
-            { kind: RESIDENT_FACT_KIND.ANIMAL, species: 'DEER', distance: 20, direction: 'W', position: { x: -20, z: 0 } },
-            { kind: RESIDENT_FACT_KIND.PERSON, displayName: 'Alice', distance: 20, direction: 'W', position: { x: -20, z: 0 } },
+            { kind: RESIDENT_FACT_KIND.BUILD, title: 'Hill Fort', distance: 3000, direction: 'E', position: { x: -3000, z: 0 } },
+            { kind: RESIDENT_FACT_KIND.ANIMAL, species: 'DEER', distance: 20, direction: 'W', position: { x: 20, z: 0 } },
+            { kind: RESIDENT_FACT_KIND.PERSON, displayName: 'Alice', distance: 20, direction: 'W', position: { x: 20, z: 0 } },
             { kind: RESIDENT_FACT_KIND.PLACE, name: 'Willow Village' },
             { kind: RESIDENT_FACT_KIND.LANDMARK, title: 'Nowhere', distance: 1, direction: 'N' }
         ]);
@@ -421,7 +421,7 @@ function runTests() {
         });
         assert(german.translate(remark.key, remark.params) === '„Hill Fort“ von bob steht etwa 3,2 km nördlich.',
             '82. Each part is translated, and the distance is written the language\'s way');
-        const bike = { kind: RESIDENT_FACT_KIND.VEHICLE, vehicleType: 'bicycle', distance: 80, direction: 'E', position: { x: 80, z: 0 } };
+        const bike = { kind: RESIDENT_FACT_KIND.VEHICLE, vehicleType: 'bicycle', distance: 80, direction: 'E', position: { x: -80, z: 0 } };
         const [target] = ResidentTalk.focusTargetsFor([bike]);
         assert(isMessage(target.label) && english(target.label) === 'bicycle', '83. A vehicle\'s Focus label is a message too');
     }

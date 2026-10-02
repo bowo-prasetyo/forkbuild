@@ -141,17 +141,20 @@ async function run() {
     // Section B: core/CompassHeading.js
     // -------------------------------------------------------------
     {
+        // `degrees` is the raw yaw (0 = +Z, 90 = +X); `bearing` and `label`
+        // are the compass reading. +X is on your left facing North, so it is
+        // West: bearing = 360 - yaw.
         const north = computeCompassHeading({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 5 });
-        assert(north.degrees === 0 && north.label === 'N', '13. facing +Z reads as North, 0 degrees');
+        assert(north.degrees === 0 && north.bearing === 0 && north.label === 'N', '13. facing +Z reads as North, bearing 0');
 
-        const east = computeCompassHeading({ x: 0, y: 0, z: 0 }, { x: 5, y: 0, z: 0 });
-        assert(east.degrees === 90 && east.label === 'E', '14. facing +X reads as East, 90 degrees');
+        const west = computeCompassHeading({ x: 0, y: 0, z: 0 }, { x: 5, y: 0, z: 0 });
+        assert(west.degrees === 90 && west.bearing === 270 && west.label === 'W', '14. facing +X (yaw 90) reads as West, bearing 270');
 
         const south = computeCompassHeading({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: -5 });
-        assert(south.degrees === 180 && south.label === 'S', '15. facing -Z reads as South, 180 degrees');
+        assert(south.degrees === 180 && south.bearing === 180 && south.label === 'S', '15. facing -Z reads as South, bearing 180');
 
-        const west = computeCompassHeading({ x: 0, y: 0, z: 0 }, { x: -5, y: 0, z: 0 });
-        assert(west.degrees === 270 && west.label === 'W', '16. facing -X reads as West, 270 degrees');
+        const east = computeCompassHeading({ x: 0, y: 0, z: 0 }, { x: -5, y: 0, z: 0 });
+        assert(east.degrees === 270 && east.bearing === 90 && east.label === 'E', '16. facing -X (yaw 270) reads as East, bearing 90');
 
         const same = computeCompassHeading({ x: 3, y: 0, z: 3 }, { x: 3, y: 9, z: 3 });
         assert(same === null, '17. position and target coinciding on X/Z (looking straight down) yields no meaningful heading — null, not a fabricated one');
@@ -377,8 +380,8 @@ async function run() {
         // "The compass reads a deterministic heading off the result."
         const heading = replicaA.getCompassHeading();
         assert(heading !== null, '48. flagship: after focusing, the compass has a meaningful heading');
-        assert(heading.label === 'SW',
-            '49. flagship: looking from (+12,+12,+12) offset back down at the target reads as Southwest — a fixed, reproducible reading');
+        assert(heading.label === 'SE',
+            '49. flagship: looking from (+12,+12,+12) offset back down at the target (toward -X, -Z) reads as Southeast — a fixed, reproducible reading');
 
         // "Home returns the camera (and, were one wired, the avatar) to
         // the USER'S OWN currently-focused world" — redefined away from
