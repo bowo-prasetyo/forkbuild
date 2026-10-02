@@ -1,4 +1,3 @@
-import { AVATAR_COLLISION_HEIGHT } from './AvatarCollision.js';
 
 // 0.9.634 — pure, Three.js-free shallow-water walking geometry. Direct
 // structural twin of core/TerrainWalkability.js: that file answers "is
@@ -19,13 +18,15 @@ import { AVATAR_COLLISION_HEIGHT } from './AvatarCollision.js';
 //      core/AvatarCollision.js's own AVATAR_COLLISION_HEIGHT (no NECK/
 //      TORSO/WAIST/CHEST constant anywhere) — so "how deep can an
 //      avatar wade before it should be considered swimming" cannot be
-//      DERIVED, only decided. DEFAULT_MAX_WALKING_DEPTH below anchors
-//      that decision on AVATAR_COLLISION_HEIGHT, the one whole-body
-//      extent this codebase already treats as authoritative elsewhere,
-//      named HONESTLY as a stand-in for "fully submerged," never
-//      presented as a resolved anatomical fact. It is an ordinary,
-//      overridable default, not a hardcoded architectural constant —
-//      every consumer below accepts it as a parameter.
+//      DERIVED, only decided. DEFAULT_MAX_WALKING_DEPTH below is neck
+//      depth, AVATAR_NECK_HEIGHT, set against AVATAR_COLLISION_HEIGHT
+//      (the one whole-body extent this codebase already treats as
+//      authoritative) so an avatar stops wading while its head is still
+//      above water rather than once it is fully submerged. It follows
+//      the proportions of a typical standing figure, not a measurement
+//      of the rendered model. It is an ordinary, overridable default,
+//      not a hardcoded architectural constant — every consumer below
+//      accepts it as a parameter.
 //
 //   2. The depth-to-speed CURVE itself (linear vs. any other shape) is
 //      a separate, genuinely open product decision. waterDepthSpeedFactor()
@@ -43,11 +44,17 @@ import { AVATAR_COLLISION_HEIGHT } from './AvatarCollision.js';
 // blocks the step outright; this file has no opinion about what happens
 // next.
 
-// See this file's own header, point 1, for why AVATAR_COLLISION_HEIGHT
-// (not a NECK/CHEST constant that does not exist) is the anchor, and why
-// that anchoring is an honest stand-in, never a resolved body-segment
-// fact.
-export const DEFAULT_MAX_WALKING_DEPTH = AVATAR_COLLISION_HEIGHT;
+// Where the neck sits on the avatar, in world units above its feet:
+// about 83% of AVATAR_COLLISION_HEIGHT (1.8), the proportion of an
+// adult's neck to their standing height, leaving the top 0.3 units,
+// the head, clear of the water. Exactly 1.5 so a depth computed as
+// `surface - (surface - 1.5)` lands on the limit without floating-point
+// drift. See this file's own header, point 1.
+export const AVATAR_NECK_HEIGHT = 1.5;
+
+// The deepest water an avatar wades into: up to its neck, so it can
+// still breathe.
+export const DEFAULT_MAX_WALKING_DEPTH = AVATAR_NECK_HEIGHT;
 
 // Whether a water depth stays within `maxWalkingDepth` — `<=` at the
 // boundary, the same inclusive convention

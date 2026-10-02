@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 199c95a8b1ff2992 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 704178c6cb15b587 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -58,7 +58,9 @@ sinuosos e o mar aberto seguem a altitude e a umidade do terreno, não uma
 distribuição aleatória. A terra ao redor da origem é sempre seca; afaste-se
 umas mil unidades e você chegará a um litoral, onde o chão desce por uma
 plataforma até um mar profundo, de um azul mais escuro, fundo demais para
-atravessar a pé. É cenário: nada nele pode ser editado, e ele parece
+atravessar a pé. Seu avatar pode entrar num lago ou no mar, cada vez mais
+devagar à medida que a água sobe, e para quando ela chega ao pescoço, então
+a cabeça sempre fica fora d’água. É cenário: nada nele pode ser editado, e ele parece
 idêntico não importa quem olhe nem quando.
 
 O chão de floresta tem sua própria mistura de espécies de árvores, vinda da

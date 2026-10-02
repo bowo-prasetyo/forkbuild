@@ -4,7 +4,7 @@ import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.
 import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/TerrainSurface.js';
 import { LAKE_SURFACE_HEIGHT, isRiverAt } from '../core/Hydrology.js';
 import { AVATAR_COLLISION_HEIGHT } from '../core/AvatarCollision.js';
-import { DEFAULT_MAX_WALKING_DEPTH, isWalkableWaterDepth, waterDepthSpeedFactor } from '../core/AvatarWaterWalkability.js';
+import { DEFAULT_MAX_WALKING_DEPTH, AVATAR_NECK_HEIGHT, isWalkableWaterDepth, waterDepthSpeedFactor } from '../core/AvatarWaterWalkability.js';
 import { AvatarWaterConstraint } from '../application/avatar/AvatarWaterConstraint.js';
 import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
@@ -456,7 +456,7 @@ async function run() {
         // margin rather than the shoreline's own barely-wet edge case
         // (already covered, with its own tiny divergence, by assertions
         // 8-9 above).
-        const midShallowPoint = walkInto(seed, dryPoint, shoreline.dirX, shoreline.dirZ, 0.3, 420);
+        const midShallowPoint = walkInto(seed, dryPoint, shoreline.dirX, shoreline.dirZ, 0.3, 350);
         const midShallowDepth = LAKE_SURFACE_HEIGHT - terrainHeightAt(seed, midShallowPoint.x, midShallowPoint.z);
         assert(midShallowDepth > 0 && midShallowDepth < DEFAULT_MAX_WALKING_DEPTH,
             `setup: the mid-shallow coordinate is genuinely wet and genuinely under DEFAULT_MAX_WALKING_DEPTH (depth ${midShallowDepth.toFixed(4)})`);
@@ -603,13 +603,13 @@ async function run() {
         registryL2.register(CoreAvatarTemplateLibrary);
         const { profile: profileL2 } = buildAvatarStack(registryL2, 'shallow-water-integration-l2');
         const sessionL2 = new AvatarPresenceSession(profileL2, { position: { x: -5, y: 0, z: 0 }, rotation: { x: 0, y: 90, z: 0 } });
-        // A shallow shelf from x=0 to x=10 (depth ramps 0 -> 1.7, staying
-        // strictly under DEFAULT_MAX_WALKING_DEPTH throughout, so speed
+        // A shallow shelf from x=0 to x=10 (depth ramps 0 -> 94% of
+        // DEFAULT_MAX_WALKING_DEPTH, staying strictly under it throughout, so speed
         // never reduces all the way to zero and the shelf is always
         // crossed in finite time), then a sharp drop at x=10 to a depth
         // (5) well beyond the limit — a real, physically ordinary
         // "shallow shelf, then it drops off" lake shape.
-        const shelfHeightAt = (x) => x < 10 ? LAKE_SURFACE_HEIGHT - (x / 10) * 1.7 : LAKE_SURFACE_HEIGHT - 5;
+        const shelfHeightAt = (x) => x < 10 ? LAKE_SURFACE_HEIGHT - (x / 10) * DEFAULT_MAX_WALKING_DEPTH * 0.94 : LAKE_SURFACE_HEIGHT - 5;
         const shelfIsWaterAt = (x) => x >= 0;
         const shelfWaterConstraint = new AvatarWaterConstraint({ heightAt: (x) => shelfHeightAt(x), isWaterAt: (x) => shelfIsWaterAt(x) });
         const controllerL2 = new AvatarMovementController(sessionL2, null, null, null, null, shelfWaterConstraint);
@@ -650,6 +650,22 @@ async function run() {
         controllerL2.keyUp('w');
         assert(blockedAgain === true && sessionL2.current.position.x <= 10 + 0.2,
             '50. re-approaching the same drop-off a second time reproduces the identical outcome — blocked at the identical edge, never carried further by having "already been blocked here once before"');
+    }
+
+    // -------------------------------------------------------------
+    // Neck depth: the deepest walkable water still leaves the head clear.
+    // -------------------------------------------------------------
+    {
+        assert(DEFAULT_MAX_WALKING_DEPTH === AVATAR_NECK_HEIGHT,
+            'N1. DEFAULT_MAX_WALKING_DEPTH is the avatar\'s neck height');
+        assert(DEFAULT_MAX_WALKING_DEPTH > AVATAR_COLLISION_HEIGHT * 0.75 && DEFAULT_MAX_WALKING_DEPTH < AVATAR_COLLISION_HEIGHT * 0.9,
+            `N2. the limit sits between the shoulders and the chin (got ${DEFAULT_MAX_WALKING_DEPTH.toFixed(3)} of ${AVATAR_COLLISION_HEIGHT})`);
+        const headClearance = AVATAR_COLLISION_HEIGHT - DEFAULT_MAX_WALKING_DEPTH;
+        assert(isWalkableWaterDepth(DEFAULT_MAX_WALKING_DEPTH) === true && isWalkableWaterDepth(DEFAULT_MAX_WALKING_DEPTH + headClearance / 2) === false,
+            'N3. water reaching the neck is walkable; water halfway up the head is not');
+        const blocker = new AvatarWaterConstraint({ heightAt: () => LAKE_SURFACE_HEIGHT - AVATAR_COLLISION_HEIGHT * 0.95, isWaterAt: () => true });
+        assert(blocker.apply({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }).blocked === true,
+            'N4. AvatarWaterConstraint blocks a step into water that would cover the avatar\'s face, even though it is still short of its full height');
     }
 
     console.log('✅ All Avatar Shallow-Water Traversal tests passed.');

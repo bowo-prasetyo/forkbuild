@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 199c95a8b1ff2992 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 704178c6cb15b587 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -61,7 +61,9 @@ lacs, rivières sinueuses et pleine mer suivent l’altitude et l’humidité
 propres du terrain, et non un placement aléatoire. Les terres autour de
 l’origine restent toujours sèches ; à un millier d’unités environ, vous
 atteindrez une côte où le sol descend le long d’un plateau vers une mer
-profonde, d’un bleu plus sombre, trop profonde pour y marcher. C’est un
+profonde, d’un bleu plus sombre, trop profonde pour y marcher. Votre avatar peut entrer dans un lac
+ou dans la mer en ralentissant à mesure que l’eau monte, et s’arrête dès
+qu’elle lui arrive au cou : sa tête reste toujours hors de l’eau. C’est un
 décor : rien n’y est modifiable, et il est identique quel que soit
 l’observateur et le moment.
 

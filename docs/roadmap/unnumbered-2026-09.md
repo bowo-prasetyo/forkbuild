@@ -3627,3 +3627,18 @@ function of the world seed and world coordinates, never stored.
   open sea, a smooth descent, colors and description). `tests/Hydrology.test.js` and `tests/WorldGroundTerrain.test.js`
   allow for the fourth feature and the deeper floor; `tests/AvatarVehicleMovementControllerIntegration.test.js` moves
   a far-away on-foot fixture off what is now sea.
+
+## Wading stops at the neck (unnumbered, 2026-10-02)
+
+An avatar used to keep wading until the water reached the top of its head: `DEFAULT_MAX_WALKING_DEPTH` was
+`AVATAR_COLLISION_HEIGHT` (1.8). It now stops at neck depth, so its head always stays above water.
+
+- `core/AvatarWaterWalkability.js` adds `AVATAR_NECK_HEIGHT` (1.5, about 83% of the avatar's 1.8 height, leaving the
+  0.3-unit head clear) and makes it `DEFAULT_MAX_WALKING_DEPTH`. Exactly 1.5 so a depth computed from the water line
+  lands on the limit without floating-point drift. The speed curve is unchanged in shape, so wading now slows to a
+  stop over 1.5 units instead of 1.8, and the wading render (feet on the lakebed) follows the same limit through
+  `application/world/RenderWorldViewUseCase.js`. Lakes and the sea behave alike; rivers are unaffected.
+- `docs/user/03-WorldView.md` and its seven translations say how deep an avatar can wade.
+- Tests: `tests/AvatarShallowWaterTraversal.test.js` checks the limit is neck height, between shoulders and chin, and
+  that water over the face blocks a step; its synthetic underwater shelf now scales with the limit, and its real-lake
+  "comfortably shallow" fixture walks a shorter way in so it stays under the lower limit.

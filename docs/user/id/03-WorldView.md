@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 199c95a8b1ff2992 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 704178c6cb15b587 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -60,7 +60,9 @@ dan kelembapan medan itu sendiri, bukan penempatan acak. Daratan di sekitar
 titik asal selalu kering; berjalanlah sekitar seribu unit dan Anda akan
 tiba di pesisir, tempat tanah menurun melalui landas kontinen ke laut yang
 dalam dan berwarna biru lebih gelap, terlalu dalam untuk diseberangi dengan
-berjalan. Itu pemandangan: tidak ada yang dapat diedit, dan tampak sama
+berjalan. Avatar Anda dapat masuk ke danau atau laut, makin lambat saat
+air makin tinggi, dan berhenti begitu air mencapai lehernya, sehingga
+kepalanya selalu tetap di atas air. Itu pemandangan: tidak ada yang dapat diedit, dan tampak sama
 persis siapa pun yang melihatnya dan kapan pun.
 
 Tanah hutan membawa campuran jenis pohonnya sendiri dari benih yang sama —
