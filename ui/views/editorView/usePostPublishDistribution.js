@@ -5,9 +5,11 @@ import { t } from '../../i18n/i18n.js';
 
 // Post-publish distribution: after a publish, the Editor offers to distribute that exact
 // Publication (announcement/discovery plus content) and its snapshot bytes. Page-local,
-// ephemeral state only.
+// ephemeral state only. `includeSnapshot: false` is for a Publication that has no
+// Snapshot of its own (an authorship claim): only its Signed Claim is offered.
 export function usePostPublishDistribution({
-    router
+    router,
+    includeSnapshot = true
 }) {
     // Toolbar forwards the exact just-published Publication; nothing here looks up
     // "the latest Publication". ActionFeedback stays passive: this view owns the
@@ -50,7 +52,8 @@ export function usePostPublishDistribution({
     // publicationContentStore is required either way: it turns "which Publication"
     // into "which bytes".
     const canDistributeSnapshot = Boolean(
-        publicationContentStore
+        includeSnapshot
+        && publicationContentStore
         && (snapshotDistributionCommand || (ipfsRemotePublicationCoordinator && resolveSnapshotDiscoveryPublisher))
     );
 

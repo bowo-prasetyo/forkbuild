@@ -20,6 +20,10 @@
 // with the raw arguments the host's session calls need — never calls
 // the session directly.
 import { formatDate, t } from '../i18n/i18n.js';
+import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
+
+// Network names, the same in every language.
+const DISCOVERY_PROVIDER_LABELS = { arweave: 'Arweave', nostr: 'Nostr', steem: 'Steem' };
 export default {
     name: 'PlaceNamingPanel',
     props: {
@@ -91,43 +95,41 @@ export default {
             type: Array,
             default: () => []
         },
-        // 0.9.320 — Explicit Place Naming Publication Action. Whether the
-        // host has an actual publishPlaceNamingClaimToNostrCommand to call
-        // at all — mirrors ui/components/OwnPublicationPanel.js's own
-        // `v-if="unpublishCommand"`-style gating one domain over: the
-        // "Publish to Nostr" button per claim below only renders when this
-        // is true, never a disabled-but-visible button with nothing behind
-        // it.
-        canPublishToNostr: {
+        // Whether the host can distribute a claim at all; without it no
+        // Distribute button renders.
+        canDistribute: {
             type: Boolean,
             default: false
         },
-        // The claimId the LAST "Publish to Nostr" click targeted — lets
-        // this panel show a result/error beside the specific "All Claims"
-        // row it describes, never ambiguously beside every row. `null`
-        // means nothing has been clicked yet (or the panel was just
-        // reopened — see ui/views/WorldView.js's own
-        // resetNamingPanelPublishToNostr()).
-        publishToNostrClaimId: {
+        // Where the next distribution goes: 'arweave', 'nostr' or 'steem'
+        // (v-model).
+        discoveryProvider: {
+            type: String,
+            default: 'nostr'
+        },
+        // The claim the last Distribute click targeted, so its result or error
+        // shows beside that claim only.
+        distributionClaimId: {
             type: String,
             default: null
         },
-        publishToNostrExecuting: {
+        distributionExecuting: {
             type: Boolean,
             default: false
         },
-        publishToNostrError: {
+        distributionError: {
             type: String,
             default: null
         },
-        // NostrPlaceNamingDiscoveryPublisher#publish()'s own shape —
-        // { published: true, relayUrl, id, discoveryTag } — rendered
-        // verbatim, never reinterpreted by this component. See
-        // application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js's own header,
-        // "a simple publication result, never trust, verification, or
-        // delivery semantics."
-        publishToNostrResult: {
+        // `{ discoveryProvider, ... }`, the substrate that attempt used. Says
+        // only that the announcement was sent, never that anyone received it.
+        distributionResult: {
             type: Object,
+            default: null
+        },
+        // The claim just made with Publish A Name, offered for distribution.
+        distributionOfferClaimId: {
+            type: String,
             default: null
         }
     },
@@ -138,19 +140,14 @@ export default {
     // read off whatever file the hidden input below picked, mirroring
     // ui/components/BuildLibraryPanel.js's own import-blueprint shape).
     //
-    // 0.9.320 — Explicit Place Naming Publication Action adds
-    // 'publish-to-nostr' (a claimId — the exact same "any claim, not only
-    // this viewer's own" reach 'export-claim' already has, since a signed
-    // claim remains a portable fact anyone holding it may forward,
-    // regardless of transport). Deliberately NEVER automatic: this panel's
-    // own "Publish A Name" section (onPublish(), below) only ever emits
-    // 'publish-name' — creating a local claim and announcing it to Nostr
-    // stay two separate, explicit actions, never one combined click. See
-    // docs/Roadmap.md's own 0.9.320 entry, "create claim... announce
-    // claim... two different actions."
+    //
+    // 'distribute-claim' (a claimId) reaches any claim, like 'export-claim'.
+    // It is never automatic: Publish A Name only emits 'publish-name', and
+    // distributing stays a separate, explicit click.
     emits: [
         'publish-name', 'retract-name', 'set-preferred-name', 'clear-preferred-name',
-        'export-claim', 'import-claim', 'publish-to-nostr', 'cancel'
+        'export-claim', 'import-claim', 'distribute-claim', 'dismiss-distribution-offer',
+        'update:discoveryProvider', 'cancel'
     ],
     data() {
         return {
@@ -202,6 +199,20 @@ export default {
         },
         hasMoreNames() {
             return this.namingView.length > 3;
+        },
+        discoveryProviderModel: {
+            get() { return this.discoveryProvider; },
+            set(value) { this.$emit('update:discoveryProvider', value); }
+        },
+        // The offered claim as the host currently lists it, or null once it is
+        // gone (retracted, or the panel reopened).
+        distributionOfferClaim() {
+            if (!this.canDistribute || !this.distributionOfferClaimId) return null;
+            return this.claims.find((claim) => claim.id === this.distributionOfferClaimId) || null;
+        },
+        // Display order only — see utils/sortOptionsByLabel.js.
+        discoveryProviderOptions() {
+            return sortOptionsByLabel(Object.keys(DISCOVERY_PROVIDER_LABELS), (key) => DISCOVERY_PROVIDER_LABELS[key]);
         }
     },
     methods: {
@@ -245,15 +256,18 @@ export default {
         onExportClaim(claimId) {
             this.$emit('export-claim', claimId);
         },
-        // 0.9.320 — Explicit Place Naming Publication Action. A dumb
-        // pass-through, exactly like onExportClaim() immediately above —
-        // this component never calls a Nostr publisher itself, never
-        // constructs an event, and never decides whether publishing is
-        // even possible (canPublishToNostr, gating the button's own
-        // visibility in the template below, is the host's own answer to
-        // that question).
-        onPublishToNostr(claimId) {
-            this.$emit('publish-to-nostr', claimId);
+        // A pass-through: the host decides whether distributing is possible
+        // and does it.
+        onDistributeClaim(claimId) {
+            this.$emit('distribute-claim', claimId);
+        },
+        discoveryProviderLabel(key) {
+            return DISCOVERY_PROVIDER_LABELS[key] || key;
+        },
+        distributeButtonLabel(claimId) {
+            return this.distributionExecuting && this.distributionClaimId === claimId
+                ? t('placeNamingPanel.distributing')
+                : t('placeNamingPanel.distribute');
         },
         triggerImportClaim() {
             this.$refs.importClaimFileInput.click();
@@ -334,6 +348,38 @@ export default {
                             {{ t('placeNamingPanel.publish') }}
                         </button>
                     </div>
+                    <div v-if="distributionOfferClaim" class="distribute-offer naming-panel-distribute-offer" role="status">
+                        <p class="form-hint form-hint--neutral">
+                            {{ t('placeNamingPanel.distributeOffer', { name: distributionOfferClaim.name }) }}
+                        </p>
+                        <div class="distribute-offer-actions">
+                            <label class="form-label naming-panel-provider-label">
+                                {{ t('placeNamingPanel.network') }}
+                                <select v-model="discoveryProviderModel" class="form-select naming-panel-provider-select" :disabled="distributionExecuting">
+                                    <option v-for="key in discoveryProviderOptions" :key="key" :value="key">{{ discoveryProviderLabel(key) }}</option>
+                                </select>
+                            </label>
+                            <button
+                                type="button"
+                                class="action-btn action-btn--primary naming-panel-distribute-offer-btn"
+                                :disabled="distributionExecuting"
+                                @click="onDistributeClaim(distributionOfferClaim.id)"
+                            >{{ distributeButtonLabel(distributionOfferClaim.id) }}</button>
+                            <button
+                                type="button"
+                                class="action-btn action-btn--secondary naming-panel-distribute-offer-dismiss-btn"
+                                @click="$emit('dismiss-distribution-offer')"
+                            >{{ t('placeNamingPanel.notNow') }}</button>
+                        </div>
+                        <p
+                            v-if="distributionClaimId === distributionOfferClaim.id && distributionError"
+                            class="world-view-place-naming-error"
+                        >{{ distributionError }}</p>
+                        <p
+                            v-else-if="distributionClaimId === distributionOfferClaim.id && distributionResult"
+                            class="form-hint form-hint--neutral"
+                        >{{ t('placeNamingPanel.distributedVia', { provider: discoveryProviderLabel(distributionResult.discoveryProvider) }) }}</p>
+                    </div>
                 </section>
 
                 <!-- 0.5.7 — everything below is secondary to "what do
@@ -383,8 +429,14 @@ export default {
                     <section v-if="claims.length > 0" class="naming-panel-section">
                         <h4 class="locations-panel-section-title">{{ t('placeNamingPanel.allClaims') }}</h4>
                         <p class="form-hint form-hint--neutral">
-                            {{ t('placeNamingPanel.exportOrPublish') }}
+                            {{ t('placeNamingPanel.exportOrDistribute') }}
                         </p>
+                        <label v-if="canDistribute" class="form-label naming-panel-provider-label">
+                            {{ t('placeNamingPanel.network') }}
+                            <select v-model="discoveryProviderModel" class="form-select naming-panel-provider-select" :disabled="distributionExecuting">
+                                <option v-for="key in discoveryProviderOptions" :key="key" :value="key">{{ discoveryProviderLabel(key) }}</option>
+                            </select>
+                        </label>
                         <ul class="naming-panel-list">
                             <li v-for="claim in claims" :key="claim.id" class="naming-panel-item">
                                 <div class="naming-panel-item-info">
@@ -394,11 +446,11 @@ export default {
                                 <div class="naming-panel-item-actions">
                                     <button class="action-btn" @click="onExportClaim(claim.id)">{{ t('placeNamingPanel.export') }}</button>
                                     <button
-                                        v-if="canPublishToNostr"
-                                        class="action-btn"
-                                        :disabled="publishToNostrExecuting"
-                                        @click="onPublishToNostr(claim.id)"
-                                    >{{ publishToNostrExecuting && publishToNostrClaimId === claim.id ? t('placeNamingPanel.publishing') : t('placeNamingPanel.publishToNostr') }}</button>
+                                        v-if="canDistribute"
+                                        class="action-btn naming-panel-distribute-btn"
+                                        :disabled="distributionExecuting"
+                                        @click="onDistributeClaim(claim.id)"
+                                    >{{ distributeButtonLabel(claim.id) }}</button>
                                     <button
                                         v-if="claim.authorIdentityId === myIdentityId"
                                         class="action-btn action-btn--danger"
@@ -406,13 +458,13 @@ export default {
                                     >{{ t('placeNamingPanel.retract') }}</button>
                                 </div>
                                 <p
-                                    v-if="publishToNostrClaimId === claim.id && publishToNostrError"
+                                    v-if="distributionClaimId === claim.id && distributionError"
                                     class="world-view-place-naming-error"
-                                >{{ publishToNostrError }}</p>
+                                >{{ distributionError }}</p>
                                 <p
-                                    v-else-if="publishToNostrClaimId === claim.id && publishToNostrResult"
+                                    v-else-if="distributionClaimId === claim.id && distributionResult"
                                     class="form-hint form-hint--neutral"
-                                >{{ t('placeNamingPanel.publishedToNostr', { relay: publishToNostrResult.relayUrl }) }}</p>
+                                >{{ t('placeNamingPanel.distributedVia', { provider: discoveryProviderLabel(distributionResult.discoveryProvider) }) }}</p>
                             </li>
                         </ul>
                     </section>

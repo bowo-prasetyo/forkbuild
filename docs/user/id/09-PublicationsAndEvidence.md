@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 324c4a96e01cda7a -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: e91d68029035ce8b -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -125,6 +125,16 @@ menawarkan:
   yang terhubung dengan Anda, sehingga klaim itu masuk ke halaman Publikasi
   mereka, dan milik Anda.
 
+Setelah diterbitkan, panel menawarkan **Distribusikan**, agar orang yang
+tidak terhubung dengan Anda juga dapat menemukannya. **Distribusikan**
+membuka dialog yang sama dengan yang ditawarkan Editor setelah Anda
+menerbitkan Dunia, hanya dengan separuh Klaim Bertanda Tangan (klaim
+kepengarangan tidak punya Snapshot): pilih tempat kontennya disimpan dan
+tempat klaim itu diumumkan, lalu klik **Distribusikan Klaim Bertanda
+Tangan**. **Nanti saja** menyembunyikan tawaran itu; Anda tetap dapat
+mendistribusikan klaim itu nanti dari kartunya di halaman Publikasi (lihat
+[Distribusi](Distribution.md)).
+
 ### Memberi nama tempat
 
 Di Tampilan Dunia, buka panel penamaan untuk sebuah Wilayah atau Penanda
@@ -132,12 +142,19 @@ dan gunakan **Terbitkan Sebuah Nama** (lihat
 [Tempat geografis](03-WorldView.md#tempat-geografis)). Ini mengumumkan klaim bertanda tangan kepada rekan yang
 terhubung dengan Anda.
 
-Agar nama itu juga dapat ditemukan melalui
-[Nama Tempat di Sekitar](03-WorldView.md#nama-tempat-di-sekitar--menemukan-klaim-dari-siapa-pun), buka **Lainnya** di panel penamaan, temukan klaimnya di
-**Semua Klaim**, dan klik **Terbitkan ke Nostr**. Ini langkah terpisah:
-tidak ada tindakan yang melakukan tindakan lainnya. Keberhasilan
-menyebutkan relay yang dicapainya; kegagalan, paling sering karena tidak
-ada ekstensi browser Nostr yang terpasang, menampilkan kesalahannya.
+Tepat setelah Anda menerbitkan, panel menawarkan untuk **Distribusikan**
+nama itu, agar orang yang tidak terhubung dengan Anda juga dapat
+menemukannya, misalnya melalui
+[Nama Tempat di Sekitar](03-WorldView.md#nama-tempat-di-sekitar--menemukan-klaim-dari-siapa-pun).
+Pilih **Jaringan** (Arweave, Nostr, atau Steem; dimulai dari
+[Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan)
+Anda) lalu klik **Distribusikan**, atau **Nanti saja** untuk melewatinya.
+Anda juga dapat mendistribusikan klaim mana pun nanti: buka **Lainnya** di
+panel penamaan dan klik **Distribusikan** di sebelahnya di **Semua Klaim**.
+Menerbitkan dan mendistribusikan tetap langkah terpisah: tidak ada yang
+melakukan yang lain. Keberhasilan menyebutkan jaringan tempat nama itu
+diumumkan; kegagalan menunjukkan alasannya, paling sering karena ekstensi
+browser Nostr tidak ada atau jaringan itu belum disiapkan di perangkat ini.
 
 ### Menerima dari rekan
 
@@ -319,8 +336,8 @@ dimulai dari
 Anda), sehingga orang yang tidak terhubung dapat menemukannya. Menutup
 bagian itu (**Sembunyikan Komentar**) membuang apa pun yang sudah Anda
 ketik tetapi belum dikirim. Komentar yang dikirim dari **Dunia Bersama
-Saya** atau **Perjumpaan Dunia** di Tampilan Dunia, untuk saat ini, hanya
-disimpan di perangkat Anda.
+Saya** atau **Perjumpaan Dunia** di Tampilan Dunia menempuh jalan yang
+sama, dengan pilihan jaringan yang sama di sebelah **Kirim Komentar**.
 
 Komentar orang lain sampai kepada Anda:
 

@@ -195,7 +195,7 @@ async function runTests() {
         // commentary mechanism.
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(canvasSource.includes('this.getPublicationCommentariesCommand(this.observerLocalEncounterCommentaryPublicationId)'), 'C7. refreshObserverLocalEncounterCommentaries() calls the SAME injected getPublicationCommentariesCommand prop the primary panel\'s own refreshEncounterCommentaries() already calls.');
-        assert(canvasSource.includes('this.addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt });') && (canvasSource.match(/this\.addPublicationCommentaryCommand\(/g) || []).length === 2, 'C8. addPublicationCommentaryCommand is called with the identical shape, from exactly two call sites (primary + observer-local) — never a third, divergent commentary implementation.');
+        assert(canvasSource.includes('this.addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt, discoveryProvider });') && (canvasSource.match(/this\.addPublicationCommentaryCommand\(/g) || []).length === 2, 'C8. addPublicationCommentaryCommand is called with the identical shape, from exactly two call sites (primary + observer-local) — never a third, divergent commentary implementation.');
 
         console.log('✓ C — all four continuation actions invoke existing production paths (PublicationCatalog.js\'s own route shapes, WorldView.js\'s own focusWorld(), and the 0.9.291 commentary commands) — never a parallel implementation.');
     }

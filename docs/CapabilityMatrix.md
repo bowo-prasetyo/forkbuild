@@ -74,13 +74,13 @@ and `tests/WorldViewReadOnlyFork.test.js`.
 - Document management (new, load, save, publish, export/import a document file)
 - Full sidebar with all panels — selection, transform, groups, clipboard, brick color
 - Toolbar with save/export/import/publish/new
-- Post-publish Distribute dialog
+- Post-publish Distribute dialog (a World; or an authorship claim, from a structure's Info panel)
 - The ONLY surface with brick/structure/group content mutation
 
 ### World View
 - Spatial navigation and streaming
 - Explore / Map / Places browsing, Focus (0.5.7/0.5.8)
-- World Region/Landmark naming (avatar-position-driven annotation)
+- World Region/Landmark naming (avatar-position-driven annotation), and distributing a name claim
 - World Animal Decorations (bake a released animal into the World, or undo it)
 - World Residents (add one where the avatar stands, or remove the one beside it)
 - Moving or removing a world's placement (WorldPlacement; where a published world sits)

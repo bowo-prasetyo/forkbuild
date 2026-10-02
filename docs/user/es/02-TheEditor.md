@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 651918b44bf2d435 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8966f8ede880a9e -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -401,6 +401,9 @@ registro firmado de quién afirma haberla diseñado. Abra el panel
 - **Exportar atribución** / **Publicar en la red**: una vez que la haya
   declarado, comparta esa declaración como archivo o anúnciela a sus pares
   conectados.
+  Después de **Publicar en la red**, el panel ofrece **Distribuir**, que
+  lleva la declaración también a redes descentralizadas (consulte
+  [Distribución](Distribution.md)).
 - **Volver a firmar para este diseño**: las declaraciones hechas antes del
   28 de septiembre de 2026 usaban un tipo más antiguo de huella de diseño
   que otro diseño puede copiar, así que ya no cuentan, y el panel dice

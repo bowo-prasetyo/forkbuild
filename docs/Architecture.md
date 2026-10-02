@@ -1328,7 +1328,12 @@ ordered failover instead, because any gateway can serve the same content-address
 described in docs/Protocol.md's three "Proposed: Steem …" sections, which are built and Experimental.
 
 In the UI, every distribution control sits in `ui/components/WorldDistributionDialog.js` (World Encounters and My
-Publication) or `ui/components/EditorDistributionDialog.js` (the Editor's post-publish overlay). One settings block
+Publication) or `ui/components/EditorDistributionDialog.js` (the Editor's post-publish overlay, and the Signed Claim
+of an authorship claim just published from `StructureInfoPanel`, through a second `usePostPublishDistribution({
+includeSnapshot: false })`). A place name is the exception: it has no Signed Claim of its own to store, so World View's
+naming panel announces the claim itself through `distributePlaceNamingClaimCommand(claim, discoveryProvider)`, which
+builds the chosen substrate's publisher per click. Each of these is offered right after the local publish and never
+runs on its own. One settings block
 (Storage, Remote Pinning draft, Announcement/Discovery) feeds both legs. The combined "Distribute" action runs
 Snapshot and Publication one after the other, because both may sign through the same wallet extension. Every
 injected-wallet adapter (Nostr NIP-07, Arweave, UniSat, EIP-1193, Steem Keychain) has a 120-second approval timeout.
@@ -1371,8 +1376,9 @@ Credentials are never stored. The remote-pinning credential is kept only in tab 
 
 ## Publication Commentary
 
-    addPublicationCommentaryCommand
+    addPublicationCommentaryCommand (Repository) / WorldNavigationSession#addPublicationCommentary (World View)
       1. PublicationCommentaryStore.add()            local, authoritative
+      then distributePublicationCommentaryCommand (PublicationCommentaryDistributor):
       2. PublicationCommentaryDistributionPeerExchange.announce()   WebRTC, best effort
       3. Nostr (NostrMultiRelayPublicationCommentaryDistribution) OR Arweave OR Steem — one, best effort
 
@@ -1382,7 +1388,9 @@ Credentials are never stored. The remote-pinning credential is kept only in tab 
         -> PublicationCommentaryRemoteNotificationBridge                          notify the publisher only
 
 `ui/components/PublicationCommentarySection.js` is the Repository's single Commentary component (card and list).
-World View's Commentary panels still post only locally.
+World View's Commentary panels (My Shared World and both World Encounter panels) save through their session, then
+hand the saved comment to the same `distributePublicationCommentaryCommand`; all of them pick the substrate with
+`ui/components/CommentaryDistributionPicker.js`.
 
 ## Decentralized publications, anchoring and evidence
 

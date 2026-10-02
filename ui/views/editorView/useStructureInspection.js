@@ -6,10 +6,12 @@ import { libraryItemName } from '../../i18n/libraryText.js';
 
 // The structure inspection panel: what a Structure is and where it came from (attribution,
 // lineage, similar designs), plus claiming, publishing and exporting that evidence.
+// `attributionDistribution` (optional) is a usePostPublishDistribution() instance: a
+// published attribution is handed to it, so the panel can offer to distribute it.
 export function useStructureInspection({
-    blueprintAttributionUseCase, blueprintLineageUseCase, copyStructureIntoDocument, exportBlueprintAttribution,
-    exportStructure, feedback, identityProvider, personalStructureLibraryStore, publicationCatalog,
-    publicationPeerExchange, publicationResolver, structureRegistry
+    attributionDistribution = null, blueprintAttributionUseCase, blueprintLineageUseCase, copyStructureIntoDocument,
+    exportBlueprintAttribution, exportStructure, feedback, identityProvider, personalStructureLibraryStore,
+    publicationCatalog, publicationPeerExchange, publicationResolver, structureRegistry
 }) {
     // The source ('built-in' | 'personal') is derived here, so the panel never
     // reaches into the libraries.
@@ -40,7 +42,15 @@ export function useStructureInspection({
         candidates.sort((a, b) => b.evidence.similarity - a.evidence.similarity);
         return candidates.slice(0, 3);
     }
+    // The distribution offer belongs to the structure it was published for, so it
+    // never carries over to another one.
+    function forgetPublishedAttribution() {
+        if (attributionDistribution) {
+            attributionDistribution.dismissPublishAction();
+        }
+    }
     function inspectStructure(structure) {
+        forgetPublishedAttribution();
         inspectedStructure.value = structure;
         inspectedStructureSource.value = personalStructureLibraryStore.hasStructure(structure.id) ? 'personal' : 'built-in';
         inspectedStructureAttribution.value = blueprintAttributionUseCase.communityView(structure);
@@ -49,14 +59,18 @@ export function useStructureInspection({
     }
     // Inspect only offers another way to reach Place/Export, never another way to
     // do them.
+    function closeStructureInspection() {
+        forgetPublishedAttribution();
+        inspectedStructure.value = null;
+    }
     function placeInspectedStructure() {
         const structure = inspectedStructure.value;
-        inspectedStructure.value = null;
+        closeStructureInspection();
         copyStructureIntoDocument(structure);
     }
     function exportInspectedStructure() {
         const structure = inspectedStructure.value;
-        inspectedStructure.value = null;
+        closeStructureInspection();
         exportStructure(structure);
     }
     // Refreshes the attribution afterwards so the panel shows "You" immediately.
@@ -100,7 +114,8 @@ export function useStructureInspection({
 
     // Wraps the signed attribution in a signed DecentralizedPublication, catalogs
     // it and announces it to connected peers. No peers is not an error: it stays
-    // cataloged. Announcing again is always a deliberate act.
+    // cataloged. Announcing again is always a deliberate act, and so is
+    // distributing it: this only offers that next step.
     async function publishInspectedAttributionToNetwork() {
         const attribution = inspectedStructureAttribution.value && inspectedStructureAttribution.value.mine;
         if (!attribution) {
@@ -114,6 +129,9 @@ export function useStructureInspection({
             });
             publicationCatalog.add(publication);
             const peerCount = publicationPeerExchange.announce(publication);
+            if (attributionDistribution) {
+                attributionDistribution.onDocumentPublished(publication);
+            }
             feedback.show(peerCount > 0
                 ? t('editor.attributionAnnounced', { count: peerCount })
                 : t('editor.attributionCataloged'));
@@ -141,7 +159,7 @@ export function useStructureInspection({
     }
 
     return {
-        claimAuthorship, claimLineage, exportInspectedAttribution, exportInspectedStructure, inspectStructure,
+        claimAuthorship, claimLineage, closeStructureInspection, exportInspectedAttribution, exportInspectedStructure, inspectStructure,
         inspectedStructure, inspectedStructureAttribution, inspectedStructureLineage,
         inspectedStructureSimilarityCandidates, inspectedStructureSource, placeInspectedStructure,
         publishInspectedAttributionToNetwork, resignInspectedAttribution

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 651918b44bf2d435 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8966f8ede880a9e -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -400,6 +400,9 @@ Sie das Feld **Info** der Struktur über ihre Karte, und Sie finden:
 - **Zuschreibung exportieren** / **Im Netzwerk veröffentlichen** — sobald
   Sie es beansprucht haben, teilen Sie diesen Anspruch als Datei oder
   kündigen Sie ihn Ihren verbundenen Peers an.
+  Nach **Im Netzwerk veröffentlichen** bietet das Feld **Verteilen** an,
+  das den Anspruch auch in dezentrale Netzwerke bringt (siehe
+  [Verteilung](Distribution.md)).
 - **Für dieses Design erneut signieren** — Ansprüche, die vor dem 28.
   September 2026 erstellt wurden, nutzten eine ältere Art von
   Design-Fingerabdruck, die ein anderes Design kopieren kann; sie zählen

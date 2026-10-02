@@ -2,6 +2,7 @@ import { createApp } from 'vue';
 import App from './App.js';
 import { router } from './router/index.js';
 import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
+import { createPublicationCommentaryDistributor } from '../application/publication/commentary/PublicationCommentaryDistributor.js';
 import { PublicationCommentaryRemoteNotificationBridge } from '../application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js';
 import { NostrMultiRelayPublicationCommentaryDistribution } from '../application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js';
 import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js';
@@ -160,30 +161,24 @@ let publicationCommentaryArweaveDistribution = null;
 // Same, for Steem.
 let publicationCommentarySteemDistribution = null;
 
-// Creates the comment locally first, then distributes it: a WebRTC announce,
-// plus at most one asynchronous substrate (Nostr, Arweave or Steem, from
-// input.discoveryProvider or the saved preference), never several.
-// Distribution failures are swallowed; they never undo or fail the local
-// create.
+// Sends a saved comment to connected peers and at most one network, chosen per
+// comment or else the saved preference. Read on each call: the networks are set
+// up later in this file. World View saves its comments through its own session
+// and hands them here.
+const distributePublicationCommentaryCommand = createPublicationCommentaryDistributor({
+    peerExchange: publicationCommentaryDistributionPeerExchange,
+    distributionExchange: publicationCommentaryDistributionExchange,
+    substrateFor: (provider) => (provider === 'arweave'
+        ? publicationCommentaryArweaveDistribution
+        : (provider === 'steem' ? publicationCommentarySteemDistribution : publicationCommentaryNostrDistribution)),
+    defaultProvider: () => resolvedAnnouncementDiscoveryProvider
+});
+
+// Creates the comment locally first, then distributes it; distribution never
+// undoes or fails the local create.
 function addPublicationCommentaryCommand(input) {
     const result = createPublicationCommentaryCommand(input);
-    try {
-        publicationCommentaryDistributionPeerExchange.announce(result.commentary);
-    } catch {
-    }
-    // Declared later in this file; read only when called.
-    const discoveryProvider = (input && input.discoveryProvider) || resolvedAnnouncementDiscoveryProvider;
-    const asynchronousDistribution = discoveryProvider === 'arweave'
-        ? publicationCommentaryArweaveDistribution
-        : (discoveryProvider === 'steem' ? publicationCommentarySteemDistribution : publicationCommentaryNostrDistribution);
-    if (asynchronousDistribution) {
-        try {
-            const envelopeJson = publicationCommentaryDistributionExchange.exportCommentary(result.commentary);
-            // Not awaited; a rejection is swallowed like the announce failure above.
-            asynchronousDistribution.publish(envelopeJson).catch(() => {});
-        } catch {
-        }
-    }
+    distributePublicationCommentaryCommand(result.commentary, input && input.discoveryProvider);
     return result;
 }
 
@@ -338,6 +333,7 @@ app.provide('notificationHistoryAccess', new NotificationHistoryAccess({
 }));
 app.provide('getPublicationCommentariesCommand', getPublicationCommentariesCommand);
 app.provide('addPublicationCommentaryCommand', addPublicationCommentaryCommand);
+app.provide('distributePublicationCommentaryCommand', distributePublicationCommentaryCommand);
 app.provide('publicationAnchorCatalog', publicationAnchorCatalog);
 app.provide('publicationAnchorPeerExchange', publicationAnchorPeerExchange);
 app.provide('publicationAnchorDiscoveryCoordinator', publicationAnchorDiscoveryCoordinator);
@@ -671,7 +667,7 @@ defineServiceGroup('distribution', async () => {
     app.provide('snapshotDistributionAvailableStorageTypes', snapshotDistributionAvailableStorageTypes);
 
     const {
-        resolvedContentDistributionProvider, publishPlaceNamingClaimToNostrCommand, discoverSnapshotCommand,
+        resolvedContentDistributionProvider, distributePlaceNamingClaimCommand, discoverSnapshotCommand,
         snapshotCandidateDiscoveryQueryService, discoverSnapshotCandidatesCommand,
         discoverSnapshotCandidatesWithOutcomeCommand, worldSnapshotDiscoveryMonitor,
         placeNamingDiscoveryQueryService, resolveSelectedSnapshotCommand, materializeSelectedSnapshotCommand,
@@ -684,7 +680,7 @@ defineServiceGroup('distribution', async () => {
         announcementIndex, publicationContentStore
     });
     app.provide('defaultContentDistributionProvider', resolvedContentDistributionProvider);
-    app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNostrCommand);
+    app.provide('distributePlaceNamingClaimCommand', distributePlaceNamingClaimCommand);
     app.provide('discoverSnapshotCommand', discoverSnapshotCommand);
     app.provide('snapshotCandidateDiscoveryQueryService', snapshotCandidateDiscoveryQueryService);
     app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesCommand);

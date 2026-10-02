@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 324c4a96e01cda7a -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: e91d68029035ce8b -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -129,6 +129,16 @@ durch die Gemeinschaft**:
   mit dem Sie verbunden sind, was ihn auf dessen Seite Veröffentlichungen
   bringt, und auf Ihre.
 
+Sobald er veröffentlicht ist, bietet das Feld an, ihn zu **Verteilen**,
+damit auch Personen, die nicht mit Ihnen verbunden sind, ihn finden können.
+**Verteilen** öffnet denselben Dialog, den der Editor nach dem
+Veröffentlichen einer Welt anbietet, nur mit der Hälfte für den Signierten
+Anspruch (ein Urheberschaftsanspruch hat keinen Snapshot): Wählen Sie, wo
+sein Inhalt gespeichert und wo er angekündigt wird, und klicken Sie dann auf
+**Signierten Anspruch verteilen**. **Nicht jetzt** blendet das Angebot aus;
+Sie können den Anspruch später immer noch über seine Karte auf der Seite
+Veröffentlichungen verteilen (siehe [Verteilung](Distribution.md)).
+
 ### Einen Ort benennen
 
 Öffnen Sie in der Weltansicht das Namensfeld einer Region oder eines
@@ -136,13 +146,20 @@ Wahrzeichens und nutzen Sie **Einen Namen veröffentlichen** (siehe
 [Geografische Orte](03-WorldView.md#geografische-orte)). Das kündigt Ihren
 verbundenen Peers einen signierten Anspruch an.
 
-Damit ein Name auch über
-[Ortsnamen in der Nähe](03-WorldView.md#ortsnamen-in-der-nähe--ansprüche-von-jedem-entdecken)
-auffindbar ist, öffnen Sie im Namensfeld **Mehr**, suchen den Anspruch
-unter **Alle Ansprüche** und klicken auf **Auf Nostr veröffentlichen**.
-Das ist ein eigener Schritt: Keine der beiden Aktionen tut die andere. Ein
-Erfolg nennt das erreichte Relay; ein Fehlschlag, meist weil keine
-Nostr-Browsererweiterung installiert ist, zeigt den Fehler.
+Direkt nach dem Veröffentlichen bietet das Feld an, den Namen zu
+**Verteilen**, damit auch Personen, die nicht mit Ihnen verbunden sind, ihn
+finden können, zum Beispiel über
+[Ortsnamen in der Nähe](03-WorldView.md#ortsnamen-in-der-nähe--ansprüche-von-jedem-entdecken).
+Wählen Sie das **Netzwerk** (Arweave, Nostr oder Steem; es beginnt mit Ihrem
+[Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung))
+und klicken Sie auf **Verteilen**, oder auf **Nicht jetzt**, um es zu
+überspringen. Sie können jeden Anspruch auch später verteilen: Öffnen Sie im
+Namensfeld **Mehr** und klicken Sie unter **Alle Ansprüche** daneben auf
+**Verteilen**. Veröffentlichen und Verteilen bleiben getrennte Schritte:
+Keiner tut den anderen. Ein Erfolg nennt das Netzwerk, in dem der Name
+angekündigt wurde; ein Fehlschlag zeigt den Grund, meist eine fehlende
+Nostr-Browsererweiterung oder ein Netzwerk, das auf diesem Gerät nicht
+eingerichtet ist.
 
 ### Eine von einem Peer empfangen
 
@@ -332,7 +349,8 @@ damit auch Menschen ihn finden, die nicht verbunden waren. Das Schließen
 des Abschnitts (**Kommentare ausblenden**) verwirft alles, was Sie
 eingegeben, aber nicht gesendet haben. In der Weltansicht unter **Meine
 Geteilte Welt** oder **Begegnungen in der Welt** gesendete Kommentare
-werden vorerst nur auf Ihrem Gerät gespeichert.
+reisen auf dieselbe Weise, mit derselben Netzwerkwahl neben **Kommentar
+senden**.
 
 Die Kommentare anderer erreichen Sie:
 

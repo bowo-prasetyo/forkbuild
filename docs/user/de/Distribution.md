@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: d36fc419468d61d1 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 9c6ca1cfed3b4863 -->
 # Ihre Arbeit verteilen
 
 <!-- languages -->
 [English](../Distribution.md) · **Deutsch** · [Español](../es/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../Distribution.md).
-<!-- /stale -->
 
 Alles, was ForkBuild erstellt, beginnt auf Ihrem eigenen Gerät. **Verteilen**
 ist der separate, optionale Schritt, der Ihre Arbeit in dezentrale Netzwerke
@@ -60,9 +56,9 @@ nie etwas.
 | **Der Signierte Anspruch Ihrer Welt** (der signierte Eintrag einer veröffentlichten Welt, genannt Geteilte Welt) | Arweave, IPFS oder Steem | Nostr, Arweave oder Steem | — | **Verteilen** nach dem Veröffentlichen im Editor; **Meine Geteilte Welt** in der Weltansicht; die Seite **Veröffentlichungen** |
 | **Der Snapshot Ihrer Welt** (ihre Steine), mit dem Ort, an dem Sie sie platziert haben | Arweave, IPFS oder Steem | Nostr, Arweave oder Steem | — | Dieselben **Verteilen**-Dialoge (**Nur Snapshot verteilen** für nur diese Hälfte) |
 | **Der Inhalts-Hash jeder Veröffentlichung** (eine Welt, ein Urheberschaftsanspruch oder ein Ortsname) | — | — | Bitcoin, Arweave, Base oder Steem | Die Karte der Veröffentlichung auf der Seite **Veröffentlichungen** |
-| **Die Urheberschaft einer Struktur** (Bauplan-Zuschreibung) | Arweave, IPFS oder Steem | Nostr, Arweave oder Steem | — | Beanspruchen Sie sie unter **Meine Strukturen** im Editor und verteilen Sie sie dann von der Seite **Veröffentlichungen** |
-| **Ein Ortsname** (Ortsnamensanspruch) | Arweave, IPFS oder Steem | Nostr, Arweave oder Steem | — | **Auf Nostr veröffentlichen** im Benennungsfeld der Weltansicht für eine schnelle Ankündigung auf Nostr; die Seite **Veröffentlichungen** für alle diese |
-| **Ein Kommentar** zu einer Veröffentlichung | — | Nostr, Arweave oder Steem | — | **Kommentar senden** im Repository (Kommentare aus der Weltansicht bleiben vorerst auf diesem Gerät) |
+| **Die Urheberschaft einer Struktur** (Bauplan-Zuschreibung) | Arweave, IPFS oder Steem | Nostr, Arweave oder Steem | — | **Verteilen** im **Info**-Feld der Struktur, angeboten, sobald Sie **Im Netzwerk veröffentlichen**; die Seite **Veröffentlichungen** |
+| **Ein Ortsname** (Ortsnamensanspruch) | Arweave, IPFS oder Steem | Nostr, Arweave oder Steem | — | **Verteilen** im Benennungsfeld der Weltansicht, angeboten, sobald Sie **Einen Namen veröffentlichen** (es kündigt den Namen im gewählten Netzwerk an); die Seite **Veröffentlichungen** für alle diese |
+| **Ein Kommentar** zu einer Veröffentlichung | — | Nostr, Arweave oder Steem | — | **Kommentar senden**, im Repository oder in der Weltansicht, im daneben gewählten Netzwerk |
 
 Der Snapshot einer Welt trägt Ihre signierte Platzierung mit sich, sodass
 Menschen, die ihn abrufen, den Bau genau dort sehen, wo Sie ihn hingestellt

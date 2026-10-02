@@ -361,6 +361,9 @@ you'll find:
   independently; nobody's claim ever overrides or replaces another's.
 - **Export Attribution** / **Publish to Network** — once you've claimed
   it, share that claim as a file or announce it to your connected peers.
+  After **Publish to Network**, the panel offers **Distribute**, which puts
+  the claim on decentralized networks too (see
+  [Distribution](Distribution.md)).
 - **Re-sign for this design** — claims made before 28 September 2026 used an
   older kind of design fingerprint that a different design can copy, so
   they no longer count and the panel says how many there are. If one of

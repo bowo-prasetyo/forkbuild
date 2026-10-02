@@ -116,12 +116,16 @@ export const observerLocalEncounterPanelTemplate = `<!--
                                 :disabled="observerLocalEncounterCommentarySubmitting"
                                 :placeholder="t('worldEncounterCanvas.addAComment')"
                             ></textarea>
+                            <CommentaryDistributionPicker v-model="commentaryDiscoveryProvider" :disabled="observerLocalEncounterCommentarySubmitting" />
                             <button
                                 type="submit"
                                 class="action-btn world-encounter-observer-local-commentary-submit-action"
                                 :disabled="!newObserverLocalEncounterCommentaryText.trim() || observerLocalEncounterCommentarySubmitting"
                             >{{ observerLocalEncounterCommentarySubmitting ? t('worldEncounterCanvas.posting') : t('worldEncounterCanvas.postComment') }}</button>
                         </form>
+                        <p v-if="addPublicationCommentaryCommand && observerLocalEncounterCommentaryDistributionProvider" class="publication-commentary-distribution-status">
+                            {{ t('publicationCommentarySection.savedDistributionRequested', { provider: discoveryProviderLabel(observerLocalEncounterCommentaryDistributionProvider) }) }}
+                        </p>
                     </div>
                 </div>
 

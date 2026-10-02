@@ -9,9 +9,11 @@ function formatPosition(position) {
 // The active World's own publication: the placement editor, unpublish/place,
 // and commentary and placement commands. (Notification History lives in the app's
 // header: ui/App.js.)
+// `distributePublicationCommentaryCommand(commentary, discoveryProvider)` (optional)
+// sends a comment saved here to connected peers and the chosen network.
 export function useOwnPublicationActions({
-    feedback, guarded, placementEditTarget, placementOverlapWarning, refreshSpatialUI, session,
-    showPlacementEditor
+    distributePublicationCommentaryCommand = null, feedback, guarded, placementEditTarget, placementOverlapWarning,
+    refreshSpatialUI, session, showPlacementEditor
 }) {
     // Bumped after every placement change made here, so OwnPublicationPanel
     // re-reads its Placements list (a move finishes in a dialog it never sees).
@@ -148,9 +150,18 @@ export function useOwnPublicationActions({
         return session.getPublicationCommentaries(publicationId);
     }
 
-    // Forwards commentaryId/createdAt for idempotent retries.
-    function addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt }) {
-        return session.addPublicationCommentary({ publicationId, content, commentaryId, createdAt });
+    // Forwards commentaryId/createdAt for idempotent retries. Saved first, then
+    // distributed like a Repository comment; a distribution failure never undoes
+    // or fails the save.
+    function addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt, discoveryProvider }) {
+        const result = session.addPublicationCommentary({ publicationId, content, commentaryId, createdAt });
+        if (distributePublicationCommentaryCommand && result && result.commentary) {
+            try {
+                distributePublicationCommentaryCommand(result.commentary, discoveryProvider);
+            } catch {
+            }
+        }
+        return result;
     }
 
     // Errors are left for OwnPublicationPanel to show, distinct from an empty [].

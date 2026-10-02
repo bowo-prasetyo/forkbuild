@@ -245,7 +245,7 @@ export default {
         const discoverIndexedSnapshotCandidatesCommand = inject('discoverIndexedSnapshotCandidatesCommand', null);
         const indexedPlaceNamingDiscoveryQueryService = inject('indexedPlaceNamingDiscoveryQueryService', null);
         const announcementIndexChanges = inject('announcementIndexChanges', null);
-        const publishPlaceNamingClaimToNostrCommand = inject('publishPlaceNamingClaimToNostrCommand', null);
+        const distributePlaceNamingClaimCommand = inject('distributePlaceNamingClaimCommand', null);
         const resolveSelectedSnapshotCommand = inject('resolveSelectedSnapshotCommand', null);
         const materializeSelectedSnapshotCommand = inject('materializeSelectedSnapshotCommand', null);
         const exportSnapshotCommand = inject('exportSnapshotCommand', null);
@@ -438,7 +438,7 @@ export default {
             removePublicationPlacement, placementsRevision, unpublishOwnPublication, placeOwnPublication, getPublicationCommentariesCommand,
             addPublicationCommentaryCommand, getPublicationPlacementsCommand
         } = useOwnPublicationActions({
-            feedback, guarded, placementEditTarget, placementOverlapWarning, refreshSpatialUI,
+            distributePublicationCommentaryCommand: inject('distributePublicationCommentaryCommand', null), feedback, guarded, placementEditTarget, placementOverlapWarning, refreshSpatialUI,
             session, showPlacementEditor
         });
 
@@ -795,14 +795,15 @@ export default {
 
         const {
             showNamingPanel, namingPanelRegionId, namingPanelClaims, namingPanelView, namingPanelPreferredName,
-            namingPanelGeographicRegions, namingPanelGeographicView, namingPanelPublishToNostrClaimId,
-            namingPanelPublishToNostrExecuting, namingPanelPublishToNostrError,
-            namingPanelPublishToNostrResult, namingPanelPublishToNostrRequestId, myIdentityId,
-            refreshNamingPanel, openNamingPanel, closeNamingPanel, resetNamingPanelPublishToNostr,
+            namingPanelGeographicRegions, namingPanelGeographicView, namingPanelDiscoveryProvider,
+            namingPanelDistributionClaimId, namingPanelDistributionExecuting, namingPanelDistributionError,
+            namingPanelDistributionResult, namingPanelDistributionOfferClaimId, myIdentityId,
+            refreshNamingPanel, openNamingPanel, closeNamingPanel,
             publishNamingClaim, retractNamingClaim, setPreferredNamingName, clearPreferredNamingName,
-            exportNamingClaim, importNamingClaim, publishNamingClaimToNostr
+            exportNamingClaim, importNamingClaim, distributeNamingClaim, dismissNamingClaimDistributionOffer
         } = usePlaceNamingPanel({
-            feedback, guarded, publishPlaceNamingClaimToNostrCommand, session
+            defaultDiscoveryProvider: defaultAnnouncementDiscoveryProvider, distributePlaceNamingClaimCommand,
+            feedback, guarded, session
         });
 
         // -----------------------------------------------------------------
@@ -1342,12 +1343,15 @@ export default {
             clearPreferredNamingName,
             exportNamingClaim,
             importNamingClaim,
-            publishNamingClaimToNostr,
-            canPublishPlaceNamingClaimToNostr: Boolean(publishPlaceNamingClaimToNostrCommand),
-            namingPanelPublishToNostrClaimId,
-            namingPanelPublishToNostrExecuting,
-            namingPanelPublishToNostrError,
-            namingPanelPublishToNostrResult,
+            distributeNamingClaim,
+            dismissNamingClaimDistributionOffer,
+            canDistributePlaceNamingClaim: Boolean(distributePlaceNamingClaimCommand),
+            namingPanelDiscoveryProvider,
+            namingPanelDistributionClaimId,
+            namingPanelDistributionExecuting,
+            namingPanelDistributionError,
+            namingPanelDistributionResult,
+            namingPanelDistributionOfferClaimId,
             myIdentityId,
             showMembersPanel,
             activeWorldLobby, showLobbyPanel, openLobbyPanel, closeLobbyPanel,

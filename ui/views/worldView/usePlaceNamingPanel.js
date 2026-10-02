@@ -2,10 +2,15 @@ import { ref, computed } from 'vue';
 import { errorText, t } from '../../i18n/i18n.js';
 
 // The Place Naming panel: a region's naming claims and community view, this
-// replica's preferred name, claim publish/retract/export/import, and publishing
-// a claim to Nostr.
+// replica's preferred name, claim publish/retract/export/import, and distributing
+// a claim to a decentralized network.
+//
+// `distributePlaceNamingClaimCommand(claim, discoveryProvider)` announces one
+// already-signed claim on 'arweave', 'nostr' or 'steem'; without it nothing is
+// offered. `defaultDiscoveryProvider` is the saved Announcement / Discovery
+// preference the picker opens on.
 export function usePlaceNamingPanel({
-    feedback, guarded, publishPlaceNamingClaimToNostrCommand, session
+    defaultDiscoveryProvider = 'nostr', distributePlaceNamingClaimCommand, feedback, guarded, session
 }) {
     // The panel's data is re-derived from the session on open and after every
     // action, never cached.
@@ -18,14 +23,21 @@ export function usePlaceNamingPanel({
     // combined naming view.
     const namingPanelGeographicRegions = ref([]);
     const namingPanelGeographicView = ref([]);
-    // Per-panel state for announcing a claim to Nostr. The claim id lets the result
-    // show beside the right row. Reset (and in-flight calls invalidated) when the
-    // panel opens or closes.
-    const namingPanelPublishToNostrClaimId = ref(null);
-    const namingPanelPublishToNostrExecuting = ref(false);
-    const namingPanelPublishToNostrError = ref(null);
-    const namingPanelPublishToNostrResult = ref(null);
-    const namingPanelPublishToNostrRequestId = ref(0);
+    // Where the next distribution goes. Page-local, never saved.
+    const namingPanelDiscoveryProvider = ref(defaultDiscoveryProvider || 'nostr');
+    // Per-panel state for distributing a claim. The claim id lets the result show
+    // beside the right row. Reset (and in-flight calls invalidated) when the panel
+    // opens or closes.
+    const namingPanelDistributionClaimId = ref(null);
+    const namingPanelDistributionExecuting = ref(false);
+    const namingPanelDistributionError = ref(null);
+    // `{ discoveryProvider, ...publisher result }`: the substrate is kept with the
+    // result because the picker may change afterwards.
+    const namingPanelDistributionResult = ref(null);
+    const namingPanelDistributionRequestId = ref(0);
+    // The claim just made with Publish A Name, which the panel offers to
+    // distribute. Publishing never distributes on its own.
+    const namingPanelDistributionOfferClaimId = ref(null);
     const myIdentityId = computed(() => session.getMyIdentityId());
 
     // -----------------------------------------------------------------
@@ -49,32 +61,41 @@ export function usePlaceNamingPanel({
     function openNamingPanel(regionId) {
         namingPanelRegionId.value = regionId;
         refreshNamingPanel();
-        resetNamingPanelPublishToNostr();
+        resetNamingPanelDistribution();
         showNamingPanel.value = true;
     }
 
     function closeNamingPanel() {
         showNamingPanel.value = false;
         namingPanelRegionId.value = null;
-        resetNamingPanelPublishToNostr();
+        resetNamingPanelDistribution();
     }
 
-    // Clears the last "Publish to Nostr" result and bumps the request id, so an
-    // in-flight call for a previous panel can never write into this one.
-    function resetNamingPanelPublishToNostr() {
-        namingPanelPublishToNostrRequestId.value += 1;
-        namingPanelPublishToNostrClaimId.value = null;
-        namingPanelPublishToNostrExecuting.value = false;
-        namingPanelPublishToNostrError.value = null;
-        namingPanelPublishToNostrResult.value = null;
+    // Clears the last distribution result and the offer, and bumps the request id,
+    // so an in-flight call for a previous panel can never write into this one.
+    function resetNamingPanelDistribution() {
+        namingPanelDistributionRequestId.value += 1;
+        namingPanelDistributionClaimId.value = null;
+        namingPanelDistributionExecuting.value = false;
+        namingPanelDistributionError.value = null;
+        namingPanelDistributionResult.value = null;
+        namingPanelDistributionOfferClaimId.value = null;
     }
 
     function publishNamingClaim(name) {
-        guarded(() => {
-            session.publishPlaceNamingClaim(namingPanelRegionId.value, name);
+        const claim = guarded(() => {
+            const published = session.publishPlaceNamingClaim(namingPanelRegionId.value, name);
             feedback.show(t('placeNaming.published', { name }));
+            return published;
         });
         refreshNamingPanel();
+        if (claim && distributePlaceNamingClaimCommand) {
+            namingPanelDistributionOfferClaimId.value = claim.id;
+        }
+    }
+
+    function dismissNamingClaimDistributionOffer() {
+        namingPanelDistributionOfferClaimId.value = null;
     }
 
     function retractNamingClaim(claimId) {
@@ -137,44 +158,50 @@ export function usePlaceNamingPanel({
         }
     }
 
-    // Announces an existing, already-signed claim; creating a claim is a separate
-    // step. Reads the claim through the session, not the panel's cached copy. A
-    // failed announcement never changes the local claim.
-    function publishNamingClaimToNostr(claimId) {
-        if (!publishPlaceNamingClaimToNostrCommand) return;
+    // Announces an existing, already-signed claim on the chosen substrate; creating
+    // a claim is a separate step. Reads the claim through the session, not the
+    // panel's cached copy. A failed announcement never changes the local claim.
+    function distributeNamingClaim(claimId) {
+        if (!distributePlaceNamingClaimCommand) return;
         const regionId = namingPanelRegionId.value;
         if (!regionId) return;
         const claim = session.getPlaceNamingClaims(regionId).find((c) => c.id === claimId);
         if (!claim) return;
+        const discoveryProvider = namingPanelDiscoveryProvider.value;
 
-        namingPanelPublishToNostrRequestId.value += 1;
-        const requestId = namingPanelPublishToNostrRequestId.value;
-        namingPanelPublishToNostrClaimId.value = claimId;
-        namingPanelPublishToNostrExecuting.value = true;
-        namingPanelPublishToNostrError.value = null;
-        namingPanelPublishToNostrResult.value = null;
+        namingPanelDistributionRequestId.value += 1;
+        const requestId = namingPanelDistributionRequestId.value;
+        namingPanelDistributionClaimId.value = claimId;
+        namingPanelDistributionExecuting.value = true;
+        namingPanelDistributionError.value = null;
+        namingPanelDistributionResult.value = null;
 
-        Promise.resolve()
-            .then(() => publishPlaceNamingClaimToNostrCommand(claim))
+        return Promise.resolve()
+            .then(() => distributePlaceNamingClaimCommand(claim, discoveryProvider))
             .then((result) => {
-                if (namingPanelPublishToNostrRequestId.value !== requestId) return;
-                namingPanelPublishToNostrExecuting.value = false;
-                namingPanelPublishToNostrResult.value = result;
+                if (namingPanelDistributionRequestId.value !== requestId) return;
+                namingPanelDistributionExecuting.value = false;
+                // A relay that declines resolves without `published`: not a success.
+                if (!result || result.published !== true) {
+                    namingPanelDistributionError.value = t('placeNaming.notAnnounced');
+                    return;
+                }
+                namingPanelDistributionResult.value = { ...result, discoveryProvider };
             })
             .catch((error) => {
-                if (namingPanelPublishToNostrRequestId.value !== requestId) return;
-                namingPanelPublishToNostrExecuting.value = false;
-                namingPanelPublishToNostrError.value = (error && error.message) ? errorText(error) : t('placeNaming.publishFailed');
+                if (namingPanelDistributionRequestId.value !== requestId) return;
+                namingPanelDistributionExecuting.value = false;
+                namingPanelDistributionError.value = (error && error.message) ? errorText(error) : t('placeNaming.distributionFailed');
             });
     }
 
     return {
         showNamingPanel, namingPanelRegionId, namingPanelClaims, namingPanelView, namingPanelPreferredName,
-        namingPanelGeographicRegions, namingPanelGeographicView, namingPanelPublishToNostrClaimId,
-        namingPanelPublishToNostrExecuting, namingPanelPublishToNostrError, namingPanelPublishToNostrResult,
-        namingPanelPublishToNostrRequestId, myIdentityId, refreshNamingPanel, openNamingPanel,
-        closeNamingPanel, resetNamingPanelPublishToNostr, publishNamingClaim, retractNamingClaim,
+        namingPanelGeographicRegions, namingPanelGeographicView, namingPanelDiscoveryProvider,
+        namingPanelDistributionClaimId, namingPanelDistributionExecuting, namingPanelDistributionError,
+        namingPanelDistributionResult, namingPanelDistributionOfferClaimId, myIdentityId, refreshNamingPanel,
+        openNamingPanel, closeNamingPanel, resetNamingPanelDistribution, publishNamingClaim, retractNamingClaim,
         setPreferredNamingName, clearPreferredNamingName, exportNamingClaim, importNamingClaim,
-        publishNamingClaimToNostr
+        distributeNamingClaim, dismissNamingClaimDistributionOffer
     };
 }

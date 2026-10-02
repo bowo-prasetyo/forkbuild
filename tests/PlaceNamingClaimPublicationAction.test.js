@@ -1,6 +1,5 @@
-import { readFile } from 'node:fs/promises';
-
 import PlaceNamingPanel from '../ui/components/PlaceNamingPanel.js';
+import { usePlaceNamingPanel } from '../ui/views/worldView/usePlaceNamingPanel.js';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import { composePlaceNamingPublicationRuntime } from '../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
@@ -11,64 +10,21 @@ import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlac
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { mountComponent } from './support/MinimalVueCompositionApiShim.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
-// 0.9.320 — Explicit Place Naming Publication Action.
-// See docs/Roadmap.md, "0.9.320 — Explicit Place Naming Publication
-// Action," for the full milestone story.
-//
-// 0.9.316 through 0.9.319 each proved `NostrPlaceNamingDiscoveryPublisher`
-// works, in isolation, from a test's own direct construction — never
-// reachable from anything a person could actually click. This milestone
-// wires it into `ui/main.js` (composition), `ui/views/WorldView.js` (the
-// session-aware command wrapper and ephemeral publish state), and
-// `ui/components/PlaceNamingPanel.js` (the "Publish to Nostr" action per
-// claim), and this file proves the result the same way
-// tests/PlaceNamingWorldViewPresentation.test.js already proved its own
-// 0.9.257 wiring — WITHOUT ever mounting a real Vue component:
-// `makeHost()`, below, reproduces `ui/views/WorldView.js`'s own
-// `publishNamingClaimToNostr()`/`resetNamingPanelPublishToNostr()` EXACTLY,
-// and Section I proves — via raw source-string assertions — that the
-// reproduction genuinely matches what that file contains.
-//
-//   Section A: PlaceNamingPanel's own contract — the new prop/emit/method
-//              surface exists with the right shapes and defaults
-//   Section B: PlaceNamingPanel — "Publish to Nostr" is a dumb
-//              pass-through emit, gated on canPublishToNostr, disabled
-//              while executing, never itself deciding whether publishing
-//              is possible
-//   Section C: host wiring — identifies the existing claim by id and hands
-//              it, unmodified, to the injected command; never creates or
-//              mutates a claim
-//   Section D: executing/result/error transitions mirror
-//              OwnPublicationPanel's own async-action shape
-//   Section E: staleness guard — a fresh publish attempt, or leaving the
-//              naming panel, invalidates a still-in-flight prior attempt
-//   Section F: FLAGSHIP — Device A creates and (through the reproduced UI
-//              wiring) explicitly publishes; Device B discovers through
-//              the unmodified existing discovery chain
-//   Section G: NEGATIVE — no command supplied: nothing renders, nothing
-//              mutates, calling the host function is a silent no-op
-//   Section H: creating a claim and publishing it to Nostr stay two
-//              separate, explicit actions — creating one never triggers
-//              the other
-//   Section I: architectural regression — ui/main.js/ui/views/WorldView.js/
-//              ui/components/PlaceNamingPanel.js actually contain the
-//              wiring every section above assumes
+// Distributing a place name from World View's naming panel: the real
+// usePlaceNamingPanel() composable WorldView uses, and PlaceNamingPanel's own
+// methods. Publishing a name only saves it here and offers the next step;
+// distributing is a separate click, on the network the person picks (Arweave,
+// Nostr or Steem), and a second device finds it through the unchanged
+// discovery chain.
 
 async function flushMicrotasks() {
     for (let i = 0; i < 10; i++) {
         await Promise.resolve();
     }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function codeOnlySource(relativePath) {
-    const text = await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-    return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 
 function makeIdentity(label) {
@@ -79,476 +35,287 @@ function makeIdentity(label) {
     return provider;
 }
 
-function makeReplica(identityProvider, { storage = new InMemoryStorageProvider() } = {}) {
-    const store = new LocalPlaceNamingClaimStore(storage);
-    const verifier = new LocalAuthorizationVerifier();
-    const useCase = new PlaceNamingClaimUseCase(store, identityProvider, verifier);
-    return { storage, store, verifier, useCase };
+function makeReplica(identityProvider) {
+    const store = new LocalPlaceNamingClaimStore(new InMemoryStorageProvider());
+    const useCase = new PlaceNamingClaimUseCase(store, identityProvider, new LocalAuthorizationVerifier());
+    return { store, useCase };
 }
 
-// ---------------------------------------------------------------------
-// A fake `application/world/WorldNavigationSession.js` stand-in exposing ONLY
-// `getPlaceNamingClaims()` — the ONE session method
-// `publishNamingClaimToNostr()` (per ui/views/WorldView.js's own 0.9.320
-// wiring) ever calls. Any other access throws, so a test failing this way
-// is proof the reproduction below (or the real wiring, should it regress)
-// reaches into `session` for something beyond this milestone's own
-// boundary — never a session mutation, never a second read.
-// ---------------------------------------------------------------------
-function makeSession(claimsForRegion) {
-    return new Proxy({ getPlaceNamingClaims: claimsForRegion }, {
-        get(target, prop) {
-            if (prop === 'getPlaceNamingClaims') return target.getPlaceNamingClaims;
-            if (prop === 'then' || typeof prop === 'symbol') return undefined;
-            throw new Error(`fake session: unexpected access to session.${String(prop)} — publishNamingClaimToNostr() must only ever call session.getPlaceNamingClaims()`);
-        }
-    });
-}
-
-// Reproduces EXACTLY ui/views/WorldView.js's own `publishNamingClaimToNostr()`/
-// `resetNamingPanelPublishToNostr()`/`openNamingPanel()`/`closeNamingPanel()`
-// naming-panel-publication slice (see that file's own "0.9.320" comments).
-// Section I proves this reproduction is not merely aspirational.
-function makeHost({ session, publishPlaceNamingClaimToNostrCommand }) {
-    const state = {
-        namingPanelRegionId: null,
-        namingPanelPublishToNostrClaimId: null,
-        namingPanelPublishToNostrExecuting: false,
-        namingPanelPublishToNostrError: null,
-        namingPanelPublishToNostrResult: null,
-        namingPanelPublishToNostrRequestId: 0
+// The slice of WorldNavigationSession the naming panel reads and writes, over a
+// real claim use case, for one World.
+function makeSession(replica, worldId) {
+    return {
+        getMyIdentityId: () => null,
+        getPlaceNamingClaims: (regionId) => replica.useCase.claimsForRegion(worldId, regionId),
+        getPlaceNamingView: () => [],
+        getPreferredPlaceName: () => null,
+        getGeographicNamingView: () => ({ regions: [], namingView: [] }),
+        publishPlaceNamingClaim: (regionId, name) => replica.useCase.publish(worldId, regionId, name)
     };
-
-    function resetNamingPanelPublishToNostr() {
-        state.namingPanelPublishToNostrRequestId += 1;
-        state.namingPanelPublishToNostrClaimId = null;
-        state.namingPanelPublishToNostrExecuting = false;
-        state.namingPanelPublishToNostrError = null;
-        state.namingPanelPublishToNostrResult = null;
-    }
-
-    function openNamingPanel(regionId) {
-        state.namingPanelRegionId = regionId;
-        resetNamingPanelPublishToNostr();
-    }
-
-    function closeNamingPanel() {
-        state.namingPanelRegionId = null;
-        resetNamingPanelPublishToNostr();
-    }
-
-    function publishNamingClaimToNostr(claimId) {
-        if (!publishPlaceNamingClaimToNostrCommand) return;
-        const regionId = state.namingPanelRegionId;
-        if (!regionId) return;
-        const claim = session.getPlaceNamingClaims(regionId).find((c) => c.id === claimId);
-        if (!claim) return;
-
-        state.namingPanelPublishToNostrRequestId += 1;
-        const requestId = state.namingPanelPublishToNostrRequestId;
-        state.namingPanelPublishToNostrClaimId = claimId;
-        state.namingPanelPublishToNostrExecuting = true;
-        state.namingPanelPublishToNostrError = null;
-        state.namingPanelPublishToNostrResult = null;
-
-        return Promise.resolve()
-            .then(() => publishPlaceNamingClaimToNostrCommand(claim))
-            .then((result) => {
-                if (state.namingPanelPublishToNostrRequestId !== requestId) return;
-                state.namingPanelPublishToNostrExecuting = false;
-                state.namingPanelPublishToNostrResult = result;
-            })
-            .catch((error) => {
-                if (state.namingPanelPublishToNostrRequestId !== requestId) return;
-                state.namingPanelPublishToNostrExecuting = false;
-                state.namingPanelPublishToNostrError = (error && error.message) ? error.message : 'Publish to Nostr failed.';
-            });
-    }
-
-    return { state, openNamingPanel, closeNamingPanel, publishNamingClaimToNostr, resetNamingPanelPublishToNostr };
 }
 
-// The SAME "call methods with a plain ctx object" discipline
-// tests/LiveWorldView.test.js/WorldViewPublicationDistributionRuntimeProviderIntegration.test.js
-// already establish — PlaceNamingPanel.js is a plain options-API object,
-// never mounted through a real Vue runtime in this suite.
+// WorldView's own guarded(): a thrown error becomes feedback and undefined.
+function mountPanel({ session, distributePlaceNamingClaimCommand = null, defaultDiscoveryProvider = 'nostr' }) {
+    const feedbackShown = [];
+    const feedback = { show: (text) => feedbackShown.push(text) };
+    const guarded = (fn) => {
+        try {
+            return fn();
+        } catch (error) {
+            feedback.show(error.message);
+            return undefined;
+        }
+    };
+    const host = mountComponent({
+        setup: () => usePlaceNamingPanel({ defaultDiscoveryProvider, distributePlaceNamingClaimCommand, feedback, guarded, session })
+    }, {});
+    return { host, feedbackShown };
+}
+
 function panelCtx(overrides = {}) {
     const emitted = [];
-    return {
-        newName: '',
-        namesExpanded: false,
-        advancedExpanded: false,
-        regionId: null,
-        regionName: '',
-        namingView: [],
+    const ctx = {
         claims: [],
-        preferredName: null,
-        myIdentityId: null,
-        geographicRegions: [],
-        geographicNamingView: [],
-        canPublishToNostr: false,
-        publishToNostrClaimId: null,
-        publishToNostrExecuting: false,
-        publishToNostrError: null,
-        publishToNostrResult: null,
+        canDistribute: false,
+        discoveryProvider: 'nostr',
+        distributionClaimId: null,
+        distributionExecuting: false,
+        distributionOfferClaimId: null,
         $emit: (event, ...args) => emitted.push({ event, args }),
         emitted,
         ...overrides
     };
+    for (const [name, method] of Object.entries(PlaceNamingPanel.methods)) {
+        ctx[name] = method.bind(ctx);
+    }
+    return ctx;
 }
 
+const announced = (provider) => ({ published: true, relayUrl: `wss://${provider}`, id: 'a'.repeat(64), discoveryTag: 'tag' });
+
 async function run() {
-    // ---------------------------------------------------------------
-    // Section A — PlaceNamingPanel's own contract.
-    // ---------------------------------------------------------------
+    // The panel only emits; the host decides whether and where to distribute.
     {
-        assert(PlaceNamingPanel.emits.includes('publish-to-nostr'), '1. PlaceNamingPanel declares a publish-to-nostr emit');
-        assert(typeof PlaceNamingPanel.methods.onPublishToNostr === 'function', '2. PlaceNamingPanel defines onPublishToNostr()');
-        assert(PlaceNamingPanel.props.canPublishToNostr.type === Boolean && PlaceNamingPanel.props.canPublishToNostr.default === false, '3. canPublishToNostr defaults to false — no button when the host supplied nothing');
-        assert(PlaceNamingPanel.props.publishToNostrClaimId.default === null, '4. publishToNostrClaimId defaults to null');
-        assert(PlaceNamingPanel.props.publishToNostrExecuting.default === false, '5. publishToNostrExecuting defaults to false');
-        assert(PlaceNamingPanel.props.publishToNostrError.default === null, '6. publishToNostrError defaults to null');
-        assert(PlaceNamingPanel.props.publishToNostrResult.default === null, '7. publishToNostrResult defaults to null');
-        // The pre-existing 'publish-name' emit (create a LOCAL claim) is
-        // completely unmodified by this milestone's own new
-        // 'publish-to-nostr' emit — the two stay separate emits.
-        assert(PlaceNamingPanel.emits.includes('publish-name'), '8. the pre-existing publish-name emit is unmodified/still present');
+        for (const event of ['publish-name', 'distribute-claim', 'dismiss-distribution-offer', 'update:discoveryProvider']) {
+            assert(PlaceNamingPanel.emits.includes(event), `PlaceNamingPanel declares ${event}`);
+        }
+        assert(PlaceNamingPanel.props.canDistribute.default === false, 'without a host command there is nothing to distribute with');
 
-        console.log('✓ Section A: PlaceNamingPanel declares the new publish-to-nostr contract without touching the pre-existing publish-name one');
+        const ctx = panelCtx({ canDistribute: true });
+        ctx.onDistributeClaim('claim-42');
+        assert(ctx.emitted.length === 1 && ctx.emitted[0].event === 'distribute-claim' && ctx.emitted[0].args[0] === 'claim-42',
+            'Distribute hands the claim id up unchanged');
+
+        const options = PlaceNamingPanel.computed.discoveryProviderOptions.call(ctx);
+        assert(options.join(',') === 'arweave,nostr,steem', `the networks are listed alphabetically (got ${options})`);
+
+        const claim = { id: 'c1', name: 'Hollow' };
+        assert(PlaceNamingPanel.computed.distributionOfferClaim.call(panelCtx({ canDistribute: true, claims: [claim], distributionOfferClaimId: 'c1' })) === claim,
+            'the offer names the claim just published');
+        assert(PlaceNamingPanel.computed.distributionOfferClaim.call(panelCtx({ canDistribute: false, claims: [claim], distributionOfferClaimId: 'c1' })) === null,
+            'no offer without a way to distribute');
+        assert(PlaceNamingPanel.computed.distributionOfferClaim.call(panelCtx({ canDistribute: true, claims: [], distributionOfferClaimId: 'c1' })) === null,
+            'no offer for a claim the panel no longer lists');
+        console.log('✓ the panel offers and emits; it never distributes on its own');
     }
 
-    // ---------------------------------------------------------------
-    // Section B — "Publish to Nostr" is a dumb pass-through emit.
-    // ---------------------------------------------------------------
+    // Publishing a name offers to distribute it, and does nothing more.
     {
-        const ctx = panelCtx({ canPublishToNostr: true });
-        PlaceNamingPanel.methods.onPublishToNostr.call(ctx, 'claim-42');
-
-        assert(ctx.emitted.length === 1, '9. exactly one event was emitted');
-        assert(ctx.emitted[0].event === 'publish-to-nostr' && ctx.emitted[0].args[0] === 'claim-42', '10. the emitted event carries exactly the claimId handed in, unmodified');
-
-        console.log('✓ Section B: onPublishToNostr() is a dumb pass-through — it emits the claimId verbatim and decides nothing itself');
-    }
-
-    // ---------------------------------------------------------------
-    // Section C — host wiring identifies the existing claim by id and
-    // hands it, unmodified, to the injected command.
-    // ---------------------------------------------------------------
-    {
-        const alice = makeIdentity('Alice');
-        const replica = makeReplica(alice);
-        const claim = replica.useCase.publish('world-c', 'region-c', 'Hostwired Hollow');
-
+        const replica = makeReplica(makeIdentity('Alice'));
         const calls = [];
-        const command = (handedClaim) => { calls.push(handedClaim); return Promise.resolve({ published: true, relayUrl: 'wss://x', id: 'c'.repeat(64), discoveryTag: 'x' }); };
-
-        const session = makeSession((regionId) => replica.useCase.claimsForRegion('world-c', regionId));
-        const host = makeHost({ session, publishPlaceNamingClaimToNostrCommand: command });
-
-        host.openNamingPanel('region-c');
-        host.publishNamingClaimToNostr(claim.id);
+        const { host, feedbackShown } = mountPanel({
+            session: makeSession(replica, 'world-o'),
+            distributePlaceNamingClaimCommand: (claim, provider) => { calls.push({ claim, provider }); return Promise.resolve(announced(provider)); }
+        });
+        host.openNamingPanel('region-o');
+        host.publishNamingClaim('Offered Oasis');
         await flushMicrotasks();
 
-        assert(calls.length === 1, '11. the injected command was called exactly once');
-        // The claim handed to the command comes back through
-        // session.getPlaceNamingClaims() -> LocalPlaceNamingClaimStore#list()
-        // -> PlaceNamingClaim.fromJSON() — a freshly reconstructed instance
-        // by design (see that store's own header, "returns PlaceNamingClaim
-        // instances, never raw JSON"), so this checks the SAME claim by its
-        // own identity/fields/signature rather than object reference.
-        assert(calls[0] instanceof PlaceNamingClaim, '12a. the handed value is a real PlaceNamingClaim instance, never a plain object this function assembled itself');
-        assert(calls[0].id === claim.id && calls[0].name === claim.name && calls[0].authorIdentityId === claim.authorIdentityId, '12b. the handed claim is the EXACT existing claim by identity/fields — never a copy with different content, never a re-derived one');
-        assert(JSON.stringify(calls[0].signature) === JSON.stringify(claim.signature), '12c. the handed claim carries the exact same signature — never re-signed or stripped');
-        assert(replica.store.list('world-c').length === 1, '13. publishing to Nostr never creates a second local claim');
-        assert(replica.store.list('world-c')[0].id === claim.id, '14. the one local claim on file is still the exact same claim, unchanged');
+        const [claim] = replica.store.list('world-o');
+        assert(claim && claim.name === 'Offered Oasis', 'the name is saved on this device');
+        assert(host.namingPanelDistributionOfferClaimId.value === claim.id, 'the panel offers to distribute the claim just published');
+        assert(calls.length === 0, 'publishing never distributes by itself');
+        assert(feedbackShown.length === 1, 'publishing still confirms the local save');
 
-        console.log('✓ Section C: the host wiring identifies the existing, already-signed claim by id and hands it unmodified to the injected command — never a second producer, never a mutation');
+        host.dismissNamingClaimDistributionOffer();
+        assert(host.namingPanelDistributionOfferClaimId.value === null, 'Not now dismisses the offer');
+
+        host.publishNamingClaim('Second Spring');
+        assert(host.namingPanelDistributionOfferClaimId.value !== null, 'a new name brings a new offer');
+        host.closeNamingPanel();
+        host.openNamingPanel('region-o');
+        assert(host.namingPanelDistributionOfferClaimId.value === null, 'the offer never survives closing the panel');
+
+        const failing = mountPanel({
+            session: { ...makeSession(replica, 'world-o'), publishPlaceNamingClaim: () => { throw new Error('signed out'); } },
+            distributePlaceNamingClaimCommand: () => Promise.resolve(null)
+        });
+        failing.host.openNamingPanel('region-o');
+        failing.host.publishNamingClaim('Never Saved');
+        assert(failing.host.namingPanelDistributionOfferClaimId.value === null, 'a failed publish offers nothing');
+
+        const withoutCommand = mountPanel({ session: makeSession(replica, 'world-o') });
+        withoutCommand.host.openNamingPanel('region-o');
+        withoutCommand.host.publishNamingClaim('Offline Only');
+        assert(withoutCommand.host.namingPanelDistributionOfferClaimId.value === null, 'no offer without a distribution command');
+        assert(withoutCommand.host.distributeNamingClaim(claim.id) === undefined, 'distributing without a command is a silent no-op');
+        console.log('✓ Publish A Name saves locally and offers distribution as a separate step');
     }
 
-    // ---------------------------------------------------------------
-    // Section D — executing/result/error transitions.
-    // ---------------------------------------------------------------
+    // Distributing hands the exact stored claim to the command, on the chosen network.
     {
-        const alice = makeIdentity('Alice');
-        const replica = makeReplica(alice);
+        const replica = makeReplica(makeIdentity('Alice'));
+        const claim = replica.useCase.publish('world-c', 'region-c', 'Hostwired Hollow');
+        const calls = [];
+        const { host } = mountPanel({
+            session: makeSession(replica, 'world-c'),
+            defaultDiscoveryProvider: 'steem',
+            distributePlaceNamingClaimCommand: (handed, provider) => { calls.push({ handed, provider }); return Promise.resolve(announced(provider)); }
+        });
+        host.openNamingPanel('region-c');
+        assert(host.namingPanelDiscoveryProvider.value === 'steem', 'the picker opens on the saved Announcement / Discovery preference');
+
+        host.namingPanelDiscoveryProvider.value = 'arweave';
+        await host.distributeNamingClaim(claim.id);
+
+        assert(calls.length === 1 && calls[0].provider === 'arweave', 'the network chosen in the panel is the one used');
+        assert(calls[0].handed instanceof PlaceNamingClaim && calls[0].handed.id === claim.id
+            && JSON.stringify(calls[0].handed.signature) === JSON.stringify(claim.signature),
+            'the exact signed claim is handed over, never a re-signed copy');
+        assert(host.namingPanelDistributionResult.value.discoveryProvider === 'arweave',
+            'the result remembers which network this attempt used');
+        assert(replica.store.list('world-c').length === 1, 'distributing never creates another local claim');
+        console.log('✓ Distribute sends the stored claim to the network chosen for that click');
+    }
+
+    // Executing, result and error, and a failure never touches the local claim.
+    {
+        const replica = makeReplica(makeIdentity('Alice'));
         const claim = replica.useCase.publish('world-d', 'region-d', 'Transition Terrace');
-        const session = makeSession((regionId) => replica.useCase.claimsForRegion('world-d', regionId));
 
-        // D1 — success.
-        {
-            let resolvePublish;
-            const command = () => new Promise((resolve) => { resolvePublish = resolve; });
-            const host = makeHost({ session, publishPlaceNamingClaimToNostrCommand: command });
-            host.openNamingPanel('region-d');
+        let resolvePublish;
+        const pending = mountPanel({
+            session: makeSession(replica, 'world-d'),
+            distributePlaceNamingClaimCommand: () => new Promise((resolve) => { resolvePublish = resolve; })
+        }).host;
+        pending.openNamingPanel('region-d');
+        pending.distributeNamingClaim(claim.id);
+        assert(pending.namingPanelDistributionExecuting.value === true && pending.namingPanelDistributionClaimId.value === claim.id,
+            'the click shows as in progress beside its claim at once');
+        await flushMicrotasks();
+        resolvePublish(announced('nostr'));
+        await flushMicrotasks();
+        assert(pending.namingPanelDistributionExecuting.value === false && pending.namingPanelDistributionResult.value.published === true
+            && pending.namingPanelDistributionError.value === null, 'a success is recorded');
 
-            host.publishNamingClaimToNostr(claim.id);
-            assert(host.state.namingPanelPublishToNostrExecuting === true, '15. executing becomes true immediately on click');
-            assert(host.state.namingPanelPublishToNostrClaimId === claim.id, '16. the target claimId is recorded immediately');
-            assert(host.state.namingPanelPublishToNostrResult === null && host.state.namingPanelPublishToNostrError === null, '17. no stale result/error is shown while a call is in flight');
+        const rejected = mountPanel({
+            session: makeSession(replica, 'world-d'),
+            distributePlaceNamingClaimCommand: () => Promise.reject(new Error('relay unreachable'))
+        }).host;
+        rejected.openNamingPanel('region-d');
+        await rejected.distributeNamingClaim(claim.id);
+        assert(rejected.namingPanelDistributionError.value === 'relay unreachable' && rejected.namingPanelDistributionResult.value === null,
+            'a rejection shows its message');
 
-            // The command itself is invoked one microtask later (`Promise.resolve().then(() => command(...))`,
-            // mirroring OwnPublicationPanel.js's own distributeOwnSnapshot()) — resolvePublish is not assigned until then.
-            await flushMicrotasks();
-            resolvePublish({ published: true, relayUrl: 'wss://relay.example', id: 'd'.repeat(64), discoveryTag: 'tag-d' });
-            await flushMicrotasks();
-
-            assert(host.state.namingPanelPublishToNostrExecuting === false, '18. executing returns to false once the call settles');
-            assert(host.state.namingPanelPublishToNostrResult && host.state.namingPanelPublishToNostrResult.relayUrl === 'wss://relay.example', '19. a successful result is recorded verbatim');
-            assert(host.state.namingPanelPublishToNostrError === null, '20. no error is recorded alongside a success');
-        }
-
-        // D2 — failure.
-        {
-            const command = () => Promise.reject(new Error('relay unreachable'));
-            const host = makeHost({ session, publishPlaceNamingClaimToNostrCommand: command });
-            host.openNamingPanel('region-d');
-
-            host.publishNamingClaimToNostr(claim.id);
-            await flushMicrotasks();
-
-            assert(host.state.namingPanelPublishToNostrExecuting === false, '21. executing returns to false after a failure');
-            assert(host.state.namingPanelPublishToNostrError === 'relay unreachable', '22. the rejection\'s own message is surfaced verbatim');
-            assert(host.state.namingPanelPublishToNostrResult === null, '23. no result is recorded alongside a failure');
-            assert(replica.store.list('world-d').length === 1, '24. a failed publication never retracts or otherwise mutates the local claim');
-        }
-
-        // D3 — a synchronous throw from the composed command (mirroring
-        // ui/main.js's own `publishPlaceNamingClaimToNostrCommand`, which
-        // rejects — never throws synchronously — when no discoveryPublisher
-        // is composed; this proves the host tolerates either shape).
-        {
-            const command = () => { throw new Error('no compatible browser extension was found'); };
-            const host = makeHost({ session, publishPlaceNamingClaimToNostrCommand: command });
-            host.openNamingPanel('region-d');
-
-            host.publishNamingClaimToNostr(claim.id);
-            await flushMicrotasks();
-
-            assert(host.state.namingPanelPublishToNostrError === 'no compatible browser extension was found', '25. a synchronous throw from the command is caught and surfaced the same way a rejection is');
-        }
-
-        console.log('✓ Section D: executing/result/error transitions mirror OwnPublicationPanel\'s own async-action shape, and a failure never mutates local state');
+        const thrown = mountPanel({
+            session: makeSession(replica, 'world-d'),
+            distributePlaceNamingClaimCommand: () => { throw new Error('no compatible browser extension was found'); }
+        }).host;
+        thrown.openNamingPanel('region-d');
+        await thrown.distributeNamingClaim(claim.id);
+        assert(thrown.namingPanelDistributionError.value === 'no compatible browser extension was found', 'a synchronous throw is shown the same way');
+        const declined = mountPanel({
+            session: makeSession(replica, 'world-d'),
+            distributePlaceNamingClaimCommand: () => Promise.resolve(null)
+        }).host;
+        declined.openNamingPanel('region-d');
+        await declined.distributeNamingClaim(claim.id);
+        assert(declined.namingPanelDistributionResult.value === null && typeof declined.namingPanelDistributionError.value === 'string',
+            'a relay that declines the announcement is shown as a failure, never as announced');
+        assert(replica.store.list('world-d').length === 1, 'a failed distribution never changes the local claim');
+        console.log('✓ in progress, success and failure are each shown, and failures stay local to the attempt');
     }
 
-    // ---------------------------------------------------------------
-    // Section E — staleness guard.
-    // ---------------------------------------------------------------
+    // A newer click, or closing the panel, makes an older attempt's result stale.
     {
-        const alice = makeIdentity('Alice');
-        const replica = makeReplica(alice);
-        const claimOne = replica.useCase.publish('world-e', 'region-e', 'First Attempt Falls');
-        const claimTwo = replica.useCase.publish('world-e', 'region-e', 'Second Attempt Springs');
-        const session = makeSession((regionId) => replica.useCase.claimsForRegion('world-e', regionId));
+        const replica = makeReplica(makeIdentity('Alice'));
+        const first = replica.useCase.publish('world-e', 'region-e', 'First Falls');
+        const second = replica.useCase.publish('world-e', 'region-e', 'Second Springs');
+        let resolveFirst;
+        let count = 0;
+        const { host } = mountPanel({
+            session: makeSession(replica, 'world-e'),
+            distributePlaceNamingClaimCommand: () => {
+                count += 1;
+                return count === 1 ? new Promise((resolve) => { resolveFirst = resolve; }) : Promise.resolve(announced('second'));
+            }
+        });
+        host.openNamingPanel('region-e');
+        host.distributeNamingClaim(first.id);
+        host.distributeNamingClaim(second.id);
+        await flushMicrotasks();
+        resolveFirst(announced('first-stale'));
+        await flushMicrotasks();
+        assert(host.namingPanelDistributionClaimId.value === second.id && host.namingPanelDistributionResult.value.relayUrl === 'wss://second',
+            'a late answer to the first click never overwrites the second');
 
-        // E1 — a second click before the first settles: only the SECOND
-        // attempt's own result is ever recorded.
-        {
-            let resolveFirst;
-            let callCount = 0;
-            const command = () => {
-                callCount += 1;
-                if (callCount === 1) return new Promise((resolve) => { resolveFirst = resolve; });
-                return Promise.resolve({ published: true, relayUrl: 'wss://second', id: 'e'.repeat(64), discoveryTag: 'tag-e2' });
-            };
-            const host = makeHost({ session, publishPlaceNamingClaimToNostrCommand: command });
-            host.openNamingPanel('region-e');
-
-            host.publishNamingClaimToNostr(claimOne.id);
-            host.publishNamingClaimToNostr(claimTwo.id);
-            await flushMicrotasks();
-
-            assert(host.state.namingPanelPublishToNostrClaimId === claimTwo.id, '26. the second, more recent click is the one reflected in the panel\'s own state');
-            assert(host.state.namingPanelPublishToNostrResult.relayUrl === 'wss://second', '27. the second attempt\'s own result is recorded');
-
-            resolveFirst({ published: true, relayUrl: 'wss://first-STALE', id: 'f'.repeat(64), discoveryTag: 'tag-e1' });
-            await flushMicrotasks();
-
-            assert(host.state.namingPanelPublishToNostrResult.relayUrl === 'wss://second', '28. the first attempt\'s late-arriving result never overwrites the second, more recent one');
-            assert(host.state.namingPanelPublishToNostrClaimId === claimTwo.id, '29. the stale first attempt never rewrites which claimId the panel describes either');
-        }
-
-        // E2 — closing the naming panel invalidates a still-in-flight call.
-        {
-            let resolvePublish;
-            const command = () => new Promise((resolve) => { resolvePublish = resolve; });
-            const host = makeHost({ session, publishPlaceNamingClaimToNostrCommand: command });
-            host.openNamingPanel('region-e');
-
-            host.publishNamingClaimToNostr(claimOne.id);
-            assert(host.state.namingPanelPublishToNostrExecuting === true, '30. sanity: the call is in flight');
-
-            // Let the deferred command() actually run (assigning
-            // resolvePublish) before closing the panel.
-            await flushMicrotasks();
-            assert(host.state.namingPanelPublishToNostrExecuting === true, '30b. sanity: still in flight — the fake command has not settled yet');
-
-            host.closeNamingPanel();
-            assert(host.state.namingPanelPublishToNostrExecuting === false, '31. closing the panel immediately clears the executing flag');
-
-            resolvePublish({ published: true, relayUrl: 'wss://after-close', id: 'a'.repeat(64), discoveryTag: 'tag-e3' });
-            await flushMicrotasks();
-
-            assert(host.state.namingPanelPublishToNostrResult === null, '32. a call that settles after the panel closed never writes a result into the (now-closed) panel\'s state');
-        }
-
-        console.log('✓ Section E: a fresh publish attempt, or leaving the naming panel, invalidates a still-in-flight prior attempt — never a stale write');
+        let resolveAfterClose;
+        const closing = mountPanel({
+            session: makeSession(replica, 'world-e'),
+            distributePlaceNamingClaimCommand: () => new Promise((resolve) => { resolveAfterClose = resolve; })
+        }).host;
+        closing.openNamingPanel('region-e');
+        closing.distributeNamingClaim(first.id);
+        await flushMicrotasks();
+        closing.closeNamingPanel();
+        resolveAfterClose(announced('after-close'));
+        await flushMicrotasks();
+        assert(closing.namingPanelDistributionExecuting.value === false && closing.namingPanelDistributionResult.value === null,
+            'an answer arriving after the panel closed is ignored');
+        console.log('✓ stale attempts never write into the panel');
     }
 
-    // ---------------------------------------------------------------
-    // Section F — FLAGSHIP: Device A creates and explicitly publishes
-    // through the reproduced UI wiring; Device B discovers through the
-    // unmodified existing discovery chain.
-    // ---------------------------------------------------------------
+    // End to end: Device A publishes, takes the offer, and Device B discovers the name.
     {
         const relayEvents = [];
-        async function fakePublishImpl(relayUrl, eventTemplate) {
-            relayEvents.push({ kind: eventTemplate.kind, tags: eventTemplate.tags, content: eventTemplate.content });
-            return { published: true, id: 'f'.repeat(64) };
-        }
-        function fakeQueryImpl(relayUrl, filter) {
-            const wantedTags = filter['#t'] || [];
-            return Promise.resolve(relayEvents.filter((event) => event.tags.some((t) => t[0] === 't' && wantedTags.includes(t[1]))));
-        }
-
-        // Composition root — exactly ui/main.js's own call.
         const { discoveryPublisher } = composePlaceNamingPublicationRuntime({
-            nostrPlaceNamingDiscoveryPublisherOptions: { publishImpl: fakePublishImpl }
+            nostrPlaceNamingDiscoveryPublisherOptions: {
+                publishImpl: async (relayUrl, eventTemplate) => {
+                    relayEvents.push({ kind: eventTemplate.kind, tags: eventTemplate.tags, content: eventTemplate.content });
+                    return { published: true, id: 'f'.repeat(64) };
+                }
+            }
         });
-        const publishPlaceNamingClaimToNostrCommand = (claim) => Promise.resolve().then(() => {
-            if (!discoveryPublisher) throw new Error('Nostr publishing is not available — no compatible browser extension was found');
-            return discoveryPublisher.publish(claim);
-        });
-
-        const alice = makeIdentity('Alice');    // Device A
-        const bob = makeIdentity('Bob');        // Device B — independent replica, no shared storage.
-        const deviceA = makeReplica(alice);
-        const deviceB = makeReplica(bob);
         const worldId = 'world-flagship-ui';
         const regionId = 'region-flagship-ui';
+        const deviceA = makeReplica(makeIdentity('Alice'));
+        const deviceB = makeReplica(makeIdentity('Bob'));
+        const { host } = mountPanel({
+            session: makeSession(deviceA, worldId),
+            distributePlaceNamingClaimCommand: (claim) => discoveryPublisher.publish(claim)
+        });
 
-        // Device A: create locally (session.publishPlaceNamingClaim(), per
-        // ui/views/WorldView.js's own unmodified publishNamingClaim()) —
-        // NEVER automatically announced.
-        const claim = deviceA.useCase.publish(worldId, regionId, 'Flagship Fen');
-        assert(relayEvents.length === 0, 'F1. creating a claim locally never announces it — the relay has nothing yet');
-
-        // Device A: through the ACTUAL UI-shaped path this milestone adds —
-        // PlaceNamingPanel emits 'publish-to-nostr', the host wiring
-        // resolves it into the existing claim and calls the composed
-        // command.
-        const session = makeSession((rid) => deviceA.useCase.claimsForRegion(worldId, rid));
-        const host = makeHost({ session, publishPlaceNamingClaimToNostrCommand });
         host.openNamingPanel(regionId);
+        host.publishNamingClaim('Flagship Fen');
+        assert(relayEvents.length === 0, 'publishing a name sends nothing to a relay');
 
-        const ctx = panelCtx({ canPublishToNostr: true, claims: [claim] });
-        // Simulate the actual click a person makes on the rendered "All
-        // Claims" row — PlaceNamingPanel's own onPublishToNostr(), feeding
-        // straight into the host's own handler, exactly as
-        // @publish-to-nostr="publishNamingClaimToNostr" wires them in
-        // ui/views/WorldView.js's own template.
-        PlaceNamingPanel.methods.onPublishToNostr.call(ctx, claim.id);
-        assert(ctx.emitted[0].event === 'publish-to-nostr', 'F2. the panel emitted publish-to-nostr for the clicked claim');
-        host.publishNamingClaimToNostr(ctx.emitted[0].args[0]);
-        await flushMicrotasks();
+        const ctx = panelCtx({ canDistribute: true });
+        ctx.onDistributeClaim(host.namingPanelDistributionOfferClaimId.value);
+        await host.distributeNamingClaim(ctx.emitted[0].args[0]);
+        assert(relayEvents.length === 1, 'taking the offer announces the claim once');
 
-        assert(host.state.namingPanelPublishToNostrResult !== null && host.state.namingPanelPublishToNostrResult.published === true, 'F3. the explicit UI action succeeded');
-        assert(relayEvents.length === 1, 'F4. FLAGSHIP — exactly one event reached the fake relay, through the full UI-shaped path (panel click -> host wiring -> composed runtime -> publisher)');
-
-        // Device B: discover through the EXACT, unmodified, already-shipped
-        // chain — no shared local storage with Device A at all.
-        const bobsDiscoverySource = new NostrPlaceNamingDiscoverySource({ queryImpl: fakeQueryImpl });
-        const bobsQueryService = new PlaceNamingDiscoveryQueryService([bobsDiscoverySource]);
-        const discoveryTag = derivePlaceNamingDiscoveryTag(worldId, regionId);
-        const discovered = await executeDiscoverPlaceNamingClaimsCommand({ discoveryTag, discoveryQueryService: bobsQueryService });
-
-        assert(discovered.length === 1, 'F5. FLAGSHIP — Device B discovers exactly one claim through the unmodified existing discovery path');
-        assert(discovered[0].claim.name === 'Flagship Fen' && discovered[0].claim.id === claim.id, 'F6. FLAGSHIP — the discovered claim is genuinely Device A\'s own, published only through the new explicit UI action');
-        assert(deviceB.store.list(worldId).length === 0, 'F7. discovery alone still never writes into Device B\'s own local store — adoption remains its own, separate, unbuilt step, exactly as before this milestone');
-
-        console.log('✓ Section F: FLAGSHIP — Device A creates a claim, explicitly publishes it through the new PlaceNamingPanel action -> WorldView host wiring -> composed runtime -> publisher, and Device B discovers it through the completely unmodified existing discovery chain');
+        const discovered = await executeDiscoverPlaceNamingClaimsCommand({
+            discoveryTag: derivePlaceNamingDiscoveryTag(worldId, regionId),
+            discoveryQueryService: new PlaceNamingDiscoveryQueryService([new NostrPlaceNamingDiscoverySource({
+                queryImpl: (relayUrl, filter) => Promise.resolve(relayEvents.filter((event) => event.tags.some((tag) => tag[0] === 't' && (filter['#t'] || []).includes(tag[1]))))
+            })])
+        });
+        assert(discovered.length === 1 && discovered[0].claim.name === 'Flagship Fen', 'Device B discovers Device A\'s name');
+        assert(deviceB.store.list(worldId).length === 0, 'discovery alone never writes into Device B\'s own claims');
+        console.log('✓ publish, take the offer, and another device discovers the name');
     }
 
-    // ---------------------------------------------------------------
-    // Section G — NEGATIVE: no command supplied.
-    // ---------------------------------------------------------------
-    {
-        const alice = makeIdentity('Alice');
-        const replica = makeReplica(alice);
-        const claim = replica.useCase.publish('world-g', 'region-g', 'Untouched Terrace');
-        const session = makeSession((regionId) => replica.useCase.claimsForRegion('world-g', regionId));
-
-        const host = makeHost({ session, publishPlaceNamingClaimToNostrCommand: null });
-        host.openNamingPanel('region-g');
-        const returned = host.publishNamingClaimToNostr(claim.id);
-
-        assert(returned === undefined, '33. calling the host function with no command supplied is a silent, synchronous no-op');
-        assert(host.state.namingPanelPublishToNostrExecuting === false, '34. no executing state is ever entered');
-        assert(host.state.namingPanelPublishToNostrClaimId === null, '35. no claimId is ever recorded');
-        assert(replica.store.list('world-g').length === 1, '36. the local claim is completely untouched');
-
-        // The panel itself never renders the action at all when the host
-        // supplied nothing — canPublishToNostr stays false, its own
-        // default (Section A).
-        const ctx = panelCtx();
-        assert(ctx.canPublishToNostr === false, '37. sanity: the panel\'s own default communicates "no command available" with no host wiring needed');
-
-        console.log('✓ Section G: NEGATIVE — with no command supplied, nothing renders, nothing mutates, and calling the host function directly is a silent no-op');
-    }
-
-    // ---------------------------------------------------------------
-    // Section H — creating a claim and publishing it to Nostr stay two
-    // separate, explicit actions.
-    // ---------------------------------------------------------------
-    {
-        const alice = makeIdentity('Alice');
-        const replica = makeReplica(alice);
-
-        let nostrCalls = 0;
-        const command = () => { nostrCalls += 1; return Promise.resolve({ published: true, relayUrl: 'wss://x', id: 'h'.repeat(64), discoveryTag: 'tag-h' }); };
-        const session = makeSession((regionId) => replica.useCase.claimsForRegion('world-h', regionId));
-        const host = makeHost({ session, publishPlaceNamingClaimToNostrCommand: command });
-        host.openNamingPanel('region-h');
-
-        // The exact call ui/views/WorldView.js's own unmodified
-        // publishNamingClaim() makes — creating a claim locally.
-        replica.useCase.publish('world-h', 'region-h', 'Independently Created Isle');
-        await flushMicrotasks();
-
-        assert(nostrCalls === 0, '38. creating a local claim never, by itself, triggers a Nostr publication — the two remain separate, explicit actions');
-
-        console.log('✓ Section H: creating a claim and publishing it to Nostr stay two separate, explicit actions — creating one never triggers the other');
-    }
-
-    // ---------------------------------------------------------------
-    // Section I — architectural regression.
-    // ---------------------------------------------------------------
-    {
-        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
-        assert(worldViewCode.includes("inject('publishPlaceNamingClaimToNostrCommand'"), '39. ui/views/WorldView.js injects the app-wide publishPlaceNamingClaimToNostrCommand');
-        assert(worldViewCode.includes('function publishNamingClaimToNostr('), '40. ui/views/WorldView.js defines publishNamingClaimToNostr()');
-        assert(worldViewCode.includes('session.getPlaceNamingClaims(regionId)'), '41. publishNamingClaimToNostr() reads the claim back through session.getPlaceNamingClaims(), the same reproduction Section C relies on');
-        assert(worldViewCode.includes('@publish-to-nostr="publishNamingClaimToNostr"'), '42. the PlaceNamingPanel template wires publish-to-nostr to publishNamingClaimToNostr');
-        assert(worldViewCode.includes(':can-publish-to-nostr="canPublishPlaceNamingClaimToNostr"'), '43. the PlaceNamingPanel template forwards a canPublishToNostr gate to the panel');
-        // The pre-existing, unmodified local-creation path stays untouched.
-        assert(worldViewCode.includes('session.publishPlaceNamingClaim(namingPanelRegionId.value, name)'), '44. publishNamingClaim() (LOCAL creation) is completely unmodified by this milestone');
-
-        const panelCode = await codeOnlySource('ui/components/PlaceNamingPanel.js');
-        assert(panelCode.includes("'publish-to-nostr'"), "45. ui/components/PlaceNamingPanel.js declares the publish-to-nostr emit");
-        assert(panelCode.includes('onPublishToNostr(claimId)'), '46. ui/components/PlaceNamingPanel.js defines onPublishToNostr(claimId)');
-
-        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
-        assert(mainCode.includes("app.provide('publishPlaceNamingClaimToNostrCommand'"), '47. ui/main.js provides publishPlaceNamingClaimToNostrCommand app-wide');
-
-        // The use case this whole family rests on is untouched — publish()
-        // still has no idea a Nostr publisher exists (0.9.316's own
-        // "never automatic" decision, preserved unchanged).
-        const useCaseCode = await codeOnlySource('application/placeNaming/PlaceNamingClaimUseCase.js');
-        assert(!useCaseCode.includes('Nostr') && !useCaseCode.includes('DiscoveryPublisher'), '48. application/placeNaming/PlaceNamingClaimUseCase.js remains completely unaware of Nostr publication — publish() stays local-only and synchronous');
-
-        console.log('✓ Section I: architectural regression — ui/main.js/ui/views/WorldView.js/ui/components/PlaceNamingPanel.js actually contain the wiring every section above assumes, and PlaceNamingClaimUseCase.js remains untouched');
-    }
-
-    console.log('\n✅ All Explicit Place Naming Publication Action tests passed.');
+    console.log('\n✅ All place name distribution action tests passed.');
 }
 
 await run();

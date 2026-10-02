@@ -53,9 +53,9 @@ sends anything.
 | **Your World's Signed Claim** (the signed record of a published World, called a Shared World) | Arweave, IPFS or Steem | Nostr, Arweave or Steem | — | **Distribute** after publishing in the Editor; **My Shared World** in World View; the **Publications** page |
 | **Your World's Snapshot** (its bricks), with where you placed it | Arweave, IPFS or Steem | Nostr, Arweave or Steem | — | The same **Distribute** dialogs (**Distribute Snapshot only** for just this half) |
 | **Any publication's content hash** (a World, an authorship claim or a place name) | — | — | Bitcoin, Arweave, Base or Steem | The publication's card on the **Publications** page |
-| **Authorship of a structure** (Blueprint Attribution) | Arweave, IPFS or Steem | Nostr, Arweave or Steem | — | Claim it in the Editor's **My Structures**, then distribute it from the **Publications** page |
-| **A place name** (Place Naming Claim) | Arweave, IPFS or Steem | Nostr, Arweave or Steem | — | **Publish to Nostr** in World View's naming panel for a quick Nostr announcement; the **Publications** page for any of these |
-| **A comment** on a publication | — | Nostr, Arweave or Steem | — | **Post Comment** in the Repository (comments posted from World View stay on this device for now) |
+| **Authorship of a structure** (Blueprint Attribution) | Arweave, IPFS or Steem | Nostr, Arweave or Steem | — | **Distribute** in the structure's **Info** panel, offered once you **Publish to Network**; the **Publications** page |
+| **A place name** (Place Naming Claim) | Arweave, IPFS or Steem | Nostr, Arweave or Steem | — | **Distribute** in World View's naming panel, offered once you **Publish A Name** (it announces the name on the network you pick); the **Publications** page for any of these |
+| **A comment** on a publication | — | Nostr, Arweave or Steem | — | **Post Comment**, in the Repository or World View, on the network chosen beside it |
 
 A World's Snapshot carries your signed placement with it, so people who
 fetch it see the build exactly where you put it.

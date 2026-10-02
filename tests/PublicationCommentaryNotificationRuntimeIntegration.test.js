@@ -303,8 +303,8 @@ async function runTests() {
         // 0.9.542 — this command's own signature grew commentaryId/createdAt
         // passthrough (see WorldView.js's own 0.9.542 comment); it still
         // forwards, unmodified otherwise, to the real session.
-        assert(worldViewCode.includes('function addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt }) {') &&
-            worldViewCode.includes('return session.addPublicationCommentary({ publicationId, content, commentaryId, createdAt });'),
+        assert(worldViewCode.includes('function addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt, discoveryProvider }) {') &&
+            worldViewCode.includes('const result = session.addPublicationCommentary({ publicationId, content, commentaryId, createdAt });'),
             'A6. ui/views/WorldView.js\'s own addPublicationCommentaryCommand still forwards {publicationId, content, commentaryId, createdAt} to session.addPublicationCommentary() — unmodified by this milestone.');
 
         // A7. WorldNavigationSession.js itself is unmodified — it already
