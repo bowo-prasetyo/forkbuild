@@ -4,8 +4,10 @@
 **English** · [Deutsch](user/de/Privacy.md) · [Español](user/es/Privacy.md) · [Français](user/fr/Privacy.md) · [Bahasa Indonesia](user/id/Privacy.md) · [日本語](user/ja/Privacy.md) · [한국어](user/ko/Privacy.md) · [Português (Brasil)](user/pt-BR/Privacy.md)
 <!-- /languages -->
 
-ForkBuild has no accounts and no analytics. It stores your work in your own
-browser and talks to other computers only for the features that need them.
+ForkBuild has no accounts and does not track you. It stores your work in
+your own browser and talks to other computers only for the features that
+need them, plus one anonymous visitor count a day so its makers know roughly
+how many people use it (see "Visitor count" below, and how to turn it off).
 This page lists what it stores, and every server it can contact and when.
 
 ## What stays on your device
@@ -26,7 +28,9 @@ send it:
   how loud, and in 3D or stereo, and the language you chose; when you
   haven't chosen one, ForkBuild reads the browser's preferred languages on
   the device and sends them nowhere), and a TURN server's username and credential
-  if you enter one under **Network Settings**.
+  if you enter one under **Network Settings**;
+- whether this browser takes part in the daily visitor count, and the last
+  day it did.
 
 Clearing this site's data in the browser deletes all of it, and there is no
 other copy and no way to recover it. Back it up first with **Your Data →
@@ -76,10 +80,41 @@ of backups.
   lobby lists and blocks them as it does on the Peers page (presence,
   profile, chat and friend requests).
 
+## Visitor count
+
+Once a day, the first time ForkBuild opens on this device that calendar day,
+the official site (`https://bowo-prasetyo.github.io/forkbuild/`) loads one
+tiny image from GoatCounter (`forkbuild.goatcounter.com`), a counter that
+sets no cookies. That request is all it sends:
+
+- **What GoatCounter receives:** your IP address and your browser's
+  User-Agent, as with any web request, plus a fixed path (`/`) and a random
+  number that stops the image being cached. No page, document, World,
+  identity, referrer or anything ForkBuild stores is included, so it cannot
+  tell what you do in the app, or even which page you opened.
+- **What it keeps:** totals: visitors per day, and which browsers, systems
+  and countries they came from. Its own privacy policy says it does not
+  store IP addresses; it uses the address and User-Agent only to tell
+  visitors apart for the day, without cookies.
+- **Anyone can see the totals** on the public dashboard,
+  <https://forkbuild.goatcounter.com/>.
+
+It is never sent:
+
+- when your browser sends Global Privacy Control or Do Not Track;
+- when you turn off **Your Data → Daily visitor count → Count this
+  browser** (the choice is kept in this browser only);
+- from any copy of ForkBuild served from somewhere other than the official
+  site, including `localhost`.
+
+The code is `core/VisitorCount.js`, `application/settings/CountDailyVisit.js`
+and `ui/start.js`.
+
 ## Servers ForkBuild contacts
 
 Every script, style and font comes from the site the app is served from
-(see [docs/Deployment.md](Deployment.md)). One thing starts on its own: about
+(see [docs/Deployment.md](Deployment.md)), apart from the visitor count's one
+image a day described above. One more thing starts on its own: about
 10 seconds after the app opens, and every few minutes while its tab is
 visible, it reads new announcements from the Nostr relays, the Arweave
 gateway and the Steem nodes configured under **Network Settings**
@@ -90,6 +125,7 @@ only when you use the feature, and each server can be changed under
 
 | When | Server (default) | What it receives |
 | --- | --- | --- |
+| The app opens on the official site, at most once a day (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path, no referrer and no cookie |
 | You make yourself discoverable, or look someone up, in **Peers** | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | your identity's public key and a connection offer, kept for at most 15 minutes; the identity you look up; when you connect to someone you found, your connection reply (it lists your network addresses), which only they can collect |
 | You join, or look into, a public lobby | the same rendezvous server | your signed lobby card (public key, display name, which lobby), kept for at most 15 minutes and renewed while you stay; which lobby you look into |
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |
@@ -121,7 +157,11 @@ who connects to you asks for one, if they need it.
 A deployment decides the defaults above: its rendezvous server
 (`peer/RendezvousConfig.js`), whether that server offers a TURN relay
 (`server/rendezvous-worker/README.md`), and the other defaults under
-**Network Settings**. The default rendezvous server accepts only the
-official site's origin, so a copy hosted elsewhere needs its own (see
+**Network Settings**. The visitor count only runs on the official site, so
+a copy hosted elsewhere counts nothing; to count your own visitors, change
+the addresses in `core/VisitorCount.js` and the `img-src` entry in
+`index.html`'s Content Security Policy. The default rendezvous server
+accepts only the official site's origin, so a copy hosted elsewhere needs
+its own (see
 [docs/Deployment.md](Deployment.md)). If you host ForkBuild for others,
 update this page to name your servers.

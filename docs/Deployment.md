@@ -94,8 +94,10 @@ use: Nostr relays, Arweave and IPFS gateways, an IPFS node (by default
 a build is posted to Steem, the Steem image host), the rendezvous server, and
 STUN servers. About 10 seconds after the app opens it starts reading
 announcements from the relays, the Arweave gateway and the Steem nodes in
-the background (docs/AnnouncementIndex.md, "Phase 4"); everything else
-waits for a feature to be used. docs/Privacy.md lists each server. When a peer connection starts (and only then), it asks the
+the background (docs/AnnouncementIndex.md, "Phase 4"). On the official site
+only, it also loads one image a day from GoatCounter for the daily visitor
+count (`core/VisitorCount.js`); a copy served from anywhere else never
+sends it. Everything else waits for a feature to be used. docs/Privacy.md lists each server. When a peer connection starts (and only then), it asks the
 rendezvous server for TURN relay credentials; the TURN provider's key lives
 only on that server (see `server/rendezvous-worker/README.md`). Most of these
 can be changed under **Network Settings**.
@@ -119,7 +121,7 @@ applies on any host:
 | `script-src` | `'self' 'unsafe-eval'` and the import map's hash | Scripts come only from this origin. No inline script runs except the import map. |
 | `style-src` | `'self'` | Only the app's own stylesheets. |
 | `font-src` | `'self'` | Only the app's own fonts. |
-| `img-src` | `'self' data: blob:` | Thumbnails are rendered to `data:` images. |
+| `img-src` | `'self' data: blob: https://forkbuild.goatcounter.com` | Thumbnails are rendered to `data:` images; the daily visitor count is one image from GoatCounter (docs/Privacy.md, "Visitor count"). |
 | `media-src` | `'self' blob:` | Voice call audio. |
 | `connect-src` | `'self' https: wss: http://127.0.0.1:* http://localhost:*` | Relays, gateways and APIs are user-configurable, so any HTTPS/WSS endpoint is allowed; plain HTTP only to a local IPFS node. |
 | `object-src`, `frame-src`, `worker-src` | `'none'` | Not used. |

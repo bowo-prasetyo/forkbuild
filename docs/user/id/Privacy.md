@@ -1,15 +1,17 @@
-<!-- translation-of: docs/Privacy.md source-hash: 91943196a1dbc4fd -->
+<!-- translation-of: docs/Privacy.md source-hash: 3fe6977b0afb8c98 -->
 # Privasi
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · **Bahasa Indonesia** · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
 
-ForkBuild tidak memiliki akun dan tidak memakai analitik. ForkBuild
-menyimpan pekerjaan Anda di browser Anda sendiri dan berkomunikasi dengan
-komputer lain hanya untuk fitur yang memerlukannya. Halaman ini mencantumkan
-apa yang disimpannya, serta setiap server yang dapat dihubunginya dan
-kapan.
+ForkBuild tidak memiliki akun dan tidak melacak Anda. ForkBuild menyimpan
+pekerjaan Anda di browser Anda sendiri dan berkomunikasi dengan komputer
+lain hanya untuk fitur yang membutuhkannya, ditambah satu hitungan
+pengunjung anonim sehari agar pembuatnya tahu kira-kira berapa banyak orang
+yang menggunakannya (lihat "Hitungan pengunjung" di bawah, juga cara
+mematikannya). Halaman ini mencantumkan apa yang disimpannya, serta setiap
+server yang dapat dihubunginya dan kapan.
 
 ## Apa yang tetap di perangkat Anda
 
@@ -32,7 +34,9 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
   Anda pilih; jika Anda belum memilih, ForkBuild membaca bahasa pilihan
   browser di perangkat dan tidak mengirimnya ke mana pun), serta nama
   pengguna dan kredensial server TURN jika Anda memasukkannya di
-  **Pengaturan Jaringan**.
+  **Pengaturan Jaringan**;
+- apakah browser ini ikut dalam hitungan pengunjung harian, dan hari
+  terakhir browser ini dihitung.
 
 Menghapus data situs ini di browser akan menghapus semuanya, dan tidak ada
 salinan lain maupun cara untuk memulihkannya. Cadangkan terlebih dahulu
@@ -92,6 +96,38 @@ bersama data lainnya tetapi tidak disertakan dalam cadangan.
   Anda dan memblokirnya seperti di halaman Rekan (kehadiran, profil,
   obrolan, dan permintaan pertemanan).
 
+## Hitungan pengunjung
+
+Sekali sehari, saat ForkBuild pertama kali dibuka di perangkat ini pada hari
+kalender itu, situs resmi (`https://bowo-prasetyo.github.io/forkbuild/`)
+memuat satu gambar kecil dari GoatCounter (`forkbuild.goatcounter.com`),
+penghitung yang tidak memasang cookie. Hanya permintaan itu yang dikirim:
+
+- **Yang diterima GoatCounter:** alamat IP Anda dan User-Agent browser
+  Anda, seperti pada permintaan web mana pun, ditambah jalur tetap (`/`)
+  dan angka acak yang mencegah gambar disimpan di cache. Tidak ada halaman,
+  dokumen, Dunia, identitas, perujuk, atau apa pun yang disimpan ForkBuild
+  yang ikut dikirim, jadi GoatCounter tidak dapat tahu apa yang Anda
+  lakukan di aplikasi, bahkan halaman mana yang Anda buka.
+- **Yang disimpannya:** jumlah total, yaitu pengunjung per hari, serta dari
+  browser, sistem, dan negara mana mereka datang. Kebijakan privasinya
+  sendiri menyatakan bahwa ia tidak menyimpan alamat IP; alamat dan
+  User-Agent hanya dipakai untuk membedakan pengunjung pada hari itu, tanpa
+  cookie.
+- **Siapa pun dapat melihat jumlah totalnya** di dasbor publik,
+  <https://forkbuild.goatcounter.com/>.
+
+Hitungan ini tidak pernah dikirim:
+
+- saat browser Anda mengirim Global Privacy Control atau Do Not Track;
+- saat Anda mematikan **Data Anda → Hitungan pengunjung harian → Hitung
+  browser ini** (pilihan itu hanya disimpan di browser ini);
+- dari salinan ForkBuild yang disajikan di tempat lain selain situs resmi,
+  termasuk `localhost`.
+
+Kodenya ada di `core/VisitorCount.js`,
+`application/settings/CountDailyVisit.js`, dan `ui/start.js`.
+
 ## Server yang dihubungi ForkBuild
 
 Setiap skrip, gaya, dan font berasal dari situs tempat aplikasi disajikan
@@ -108,6 +144,7 @@ Anda dan apa yang Anda minta darinya.
 
 | Kapan | Server (bawaan) | Apa yang diterimanya |
 | --- | --- | --- |
+| Aplikasi dibuka di situs resmi, paling banyak sekali sehari (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap, tanpa perujuk dan tanpa cookie |
 | Anda menjadikan diri dapat ditemukan, atau mencari seseorang, di **Rekan** | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | kunci publik identitas Anda dan tawaran koneksi, disimpan paling lama 15 menit; identitas yang Anda cari; saat Anda terhubung dengan seseorang yang Anda temukan, balasan koneksi Anda (berisi alamat jaringan Anda), yang hanya dapat diambil oleh orang itu |
 | Anda bergabung ke, atau melihat ke dalam, lobi publik | server rendezvous yang sama | kartu lobi Anda yang ditandatangani (kunci publik, nama tampilan, lobi mana), disimpan paling lama 15 menit dan diperbarui selama Anda tetap di sana; lobi mana yang Anda lihat |
 | Koneksi rekan dimulai | server STUN (`stun.l.google.com`) | hanya permintaan alamat IP publik Anda |
@@ -145,3 +182,8 @@ situs resmi, jadi salinan yang di-host di tempat lain memerlukan server
 sendiri (lihat [docs/Deployment.md](../../Deployment.md), bahasa Inggris).
 Jika Anda meng-host ForkBuild untuk orang lain, perbarui halaman ini
 (termasuk versi bahasa Inggrisnya) agar menyebutkan server Anda.
+
+Hitungan pengunjung hanya berjalan di situs resmi, jadi salinan yang
+di-host di tempat lain tidak menghitung apa pun. Untuk menghitung pengunjung
+Anda sendiri, ubah alamat di `core/VisitorCount.js` dan entri `img-src` di
+Content Security Policy `index.html`.

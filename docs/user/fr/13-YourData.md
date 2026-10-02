@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 5f33407334bd55c8 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 8347bc85df3e2e3a -->
 # 13 — Vos données : sauvegarder et restaurer
 
 <!-- languages -->
@@ -190,3 +190,17 @@ sauvegardez-la, ou ouvrez-la dans la Vue du Monde avec **Explorer** et
 utilisez **Distribuer** sous **Mon Monde partagé**. La partager avec des
 pairs connectés n’est pas enregistré comme une distribution : ils n’en
 gardent une copie qu’aussi longtemps qu’ils le choisissent.
+
+## Comptage quotidien des visiteurs
+
+En bas de la page, **Comptage quotidien des visiteurs** contrôle la seule
+chose que ForkBuild envoie sans qu’aucune fonction en ait besoin. Une fois
+par jour, le site officiel signale à GoatCounter qu’un navigateur de plus
+l’a ouvert. La requête ne nomme aucune page, aucune construction ni aucune
+personne et ne dépose aucun cookie, et tout le monde peut consulter les
+totaux sur le tableau de bord public. Décochez **Compter ce navigateur**
+pour l’arrêter ; le choix est enregistré aussitôt, dans ce navigateur
+uniquement. Un navigateur qui envoie Global Privacy Control ou Do Not Track
+n’est jamais compté, et l’interrupteur l’indique. Voir
+[Confidentialité](Privacy.md#comptage-des-visiteurs) pour savoir
+exactement ce qui est envoyé.

@@ -53,6 +53,15 @@ export default Object.freeze({
     'language.helpTranslate': 'Untuk membantu menerjemahkan ForkBuild ke bahasa lain, lihat docs/Translating.md di kode sumber.',
     'language.unavailable': 'Pengaturan bahasa tidak tersedia di sini.',
 
+    // Hitungan pengunjung harian di halaman Data Anda (ui/components/VisitorCountSetting.js).
+    'visitorCount.title': 'Hitungan pengunjung harian',
+    'visitorCount.intro': 'Sekali sehari, ForkBuild memberi tahu GoatCounter bahwa satu browser lagi membukanya, agar pembuatnya tahu kira-kira berapa banyak orang yang menggunakannya. Permintaan itu tidak menyebut halaman, bangunan, atau orang apa pun, tidak memasang cookie, dan GoatCounter hanya menyimpan jumlah total.',
+    'visitorCount.label': 'Hitung browser ini',
+    'visitorCount.browserAsksNotToTrack': 'Browser ini meminta situs untuk tidak melacaknya (Global Privacy Control atau Do Not Track), jadi browser ini tidak pernah dihitung.',
+    'visitorCount.details': 'Siapa pun dapat melihat jumlah totalnya di {dashboard}. Apa yang dikirim, dan kapan, dijelaskan di {privacy}.',
+    'visitorCount.dashboard': 'dasbor publik',
+    'visitorCount.privacy': 'halaman privasi',
+
     // World View (ui/views/WorldView.js).
     'worldView.forkCreated': 'Salinan Anda sendiri yang dapat diedit telah dibuat — "{title}" tidak berubah',
 

@@ -1,14 +1,17 @@
-<!-- translation-of: docs/Privacy.md source-hash: 91943196a1dbc4fd -->
+<!-- translation-of: docs/Privacy.md source-hash: 3fe6977b0afb8c98 -->
 # Datenschutz
 
 <!-- languages -->
 [English](../../Privacy.md) · **Deutsch** · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
 
-ForkBuild hat keine Konten und keine Analyse. Es speichert Ihre Arbeit in
-Ihrem eigenen Browser und spricht nur für die Funktionen mit anderen
-Computern, die das brauchen. Diese Seite listet auf, was es speichert, und
-jeden Server, den es kontaktieren kann, und wann.
+ForkBuild hat keine Konten und verfolgt Sie nicht. Es speichert Ihre
+Arbeit in Ihrem eigenen Browser und spricht nur für die Funktionen mit
+anderen Computern, die das brauchen, dazu einmal am Tag eine anonyme
+Besucherzählung, damit seine Entwickler ungefähr wissen, wie viele Menschen
+es nutzen (siehe „Besucherzählung“ unten, auch dazu, wie Sie sie
+abschalten). Diese Seite listet auf, was es speichert, und jeden Server,
+den es kontaktieren kann, und wann.
 
 ## Was auf Ihrem Gerät bleibt
 
@@ -30,7 +33,9 @@ veröffentlichen, exportieren oder senden es:
   Sprache; haben Sie keine gewählt, liest ForkBuild die bevorzugten Sprachen
   des Browsers auf dem Gerät und sendet sie nirgendwohin) sowie Benutzername
   und Zugangsdaten eines TURN-Servers, falls Sie sie unter
-  **Netzwerkeinstellungen** eingeben.
+  **Netzwerkeinstellungen** eingeben;
+- ob dieser Browser an der täglichen Besucherzählung teilnimmt, und an
+  welchem Tag zuletzt.
 
 Das Löschen der Daten dieser Website im Browser löscht all das, und es gibt
 keine andere Kopie und keinen Weg, sie wiederherzustellen. Sichern Sie es
@@ -89,6 +94,39 @@ den übrigen Daten aufbewahrt, aber nicht in Sicherungen aufgenommen.
   Lobby blendet jemanden in Ihren Lobby-Listen aus und blockiert ihn wie auf
   der Seite Peers (Anwesenheit, Profil, Chat und Freundschaftsanfragen).
 
+## Besucherzählung
+
+Einmal am Tag, wenn ForkBuild an diesem Kalendertag zum ersten Mal auf
+diesem Gerät geöffnet wird, lädt die offizielle Website
+(`https://bowo-prasetyo.github.io/forkbuild/`) ein winziges Bild von
+GoatCounter (`forkbuild.goatcounter.com`), einem Zähler, der keine Cookies
+setzt. Mehr sendet sie nicht:
+
+- **Was GoatCounter erhält:** Ihre IP-Adresse und den User-Agent Ihres
+  Browsers, wie bei jeder Webanfrage, dazu einen festen Pfad (`/`) und eine
+  Zufallszahl, die verhindert, dass das Bild zwischengespeichert wird. Keine
+  Seite, kein Dokument, keine Welt, keine Identität, kein Referrer und
+  nichts, was ForkBuild speichert, ist enthalten; GoatCounter erfährt also
+  nicht, was Sie in der App tun, nicht einmal, welche Seite Sie geöffnet
+  haben.
+- **Was es behält:** Summen: Besucher pro Tag und aus welchen Browsern,
+  Systemen und Ländern sie kamen. Laut seiner eigenen Datenschutzerklärung
+  speichert es keine IP-Adressen; es nutzt Adresse und User-Agent nur, um
+  Besucher eines Tages ohne Cookies auseinanderzuhalten.
+- **Die Summen kann jeder sehen**, im öffentlichen Dashboard unter
+  <https://forkbuild.goatcounter.com/>.
+
+Sie wird nie gesendet:
+
+- wenn Ihr Browser Global Privacy Control oder Do Not Track sendet;
+- wenn Sie **Ihre Daten → Tägliche Besucherzählung → Diesen Browser
+  mitzählen** abschalten (die Wahl bleibt nur in diesem Browser);
+- von einer Kopie von ForkBuild, die anderswo als auf der offiziellen
+  Website bereitgestellt wird, auch nicht von `localhost`.
+
+Der Code steht in `core/VisitorCount.js`,
+`application/settings/CountDailyVisit.js` und `ui/start.js`.
+
 ## Server, die ForkBuild kontaktiert
 
 Jedes Skript, jeder Stil und jede Schrift stammt von der Website, von der
@@ -106,6 +144,7 @@ was Sie bei ihm anfragen.
 
 | Wann | Server (Standard) | Was er erhält |
 | --- | --- | --- |
+| Die App öffnet sich auf der offiziellen Website, höchstens einmal am Tag (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit festem Pfad, ohne Referrer und ohne Cookie |
 | Sie machen sich unter **Peers** auffindbar oder suchen jemanden | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | den öffentlichen Schlüssel Ihrer Identität und ein Verbindungsangebot, höchstens 15 Minuten aufbewahrt; die Identität, die Sie suchen; wenn Sie sich mit jemandem verbinden, den Sie gefunden haben, Ihre Verbindungsantwort (sie listet Ihre Netzwerkadressen auf), die nur diese Person abholen kann |
 | Sie treten einer öffentlichen Lobby bei oder sehen in eine hinein | derselbe Rendezvous-Server | Ihre signierte Lobby-Karte (öffentlicher Schlüssel, Anzeigename, welche Lobby), höchstens 15 Minuten aufbewahrt und erneuert, solange Sie bleiben; in welche Lobby Sie hineinsehen |
 | Eine Peer-Verbindung beginnt | STUN-Server (`stun.l.google.com`) | nichts außer einer Anfrage nach Ihrer öffentlichen IP-Adresse |
@@ -143,3 +182,8 @@ akzeptiert nur den Ursprung der offiziellen Website, daher braucht eine
 anderswo gehostete Kopie einen eigenen (siehe
 [docs/Deployment.md](../../Deployment.md) (Englisch)). Wenn Sie ForkBuild
 für andere hosten, passen Sie diese Seite an und nennen Sie Ihre Server.
+
+Die Besucherzählung läuft nur auf der offiziellen Website, eine anderswo
+gehostete Kopie zählt also nichts. Um Ihre eigenen Besucher zu zählen,
+ändern Sie die Adressen in `core/VisitorCount.js` und den `img-src`-Eintrag
+in der Content Security Policy von `index.html`.

@@ -57,6 +57,15 @@ export default Object.freeze({
     'language.helpTranslate': 'Para ayudar a traducir ForkBuild a otro idioma, consulte docs/Translating.md en el código fuente.',
     'language.unavailable': 'La configuración de idioma no está disponible aquí.',
 
+    // El recuento diario de visitantes en la página Sus datos (ui/components/VisitorCountSetting.js).
+    'visitorCount.title': 'Recuento diario de visitantes',
+    'visitorCount.intro': 'Una vez al día, ForkBuild avisa a GoatCounter de que un navegador más lo ha abierto, para que sus creadores sepan aproximadamente cuántas personas lo usan. La solicitud no nombra ninguna página, construcción ni persona, no guarda cookies y GoatCounter solo conserva totales.',
+    'visitorCount.label': 'Contar este navegador',
+    'visitorCount.browserAsksNotToTrack': 'Este navegador pide a los sitios que no lo rastreen (Global Privacy Control o Do Not Track), así que nunca se cuenta.',
+    'visitorCount.details': 'Cualquiera puede ver los totales en el {dashboard}. Qué se envía y cuándo se describe en {privacy}.',
+    'visitorCount.dashboard': 'panel público',
+    'visitorCount.privacy': 'la página de privacidad',
+
     // World View (ui/views/WorldView.js).
     'worldView.forkCreated': 'Se creó su propia copia editable; “{title}” no cambia',
 

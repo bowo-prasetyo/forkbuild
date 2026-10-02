@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 5f33407334bd55c8 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 8347bc85df3e2e3a -->
 # 13 — Ihre Daten
 
 <!-- languages -->
@@ -190,3 +190,16 @@ keine Verteilung verzeichnet.**: Sichern Sie es, oder öffnen Sie es mit
 **Erkunden** in der Weltansicht und nutzen Sie **Verteilen** unter **Meine
 Geteilte Welt**. Das Teilen mit verbundenen Peers wird nicht als Verteilen
 festgehalten: Sie behalten eine Kopie nur so lange, wie sie möchten.
+
+## Tägliche Besucherzählung
+
+Ganz unten auf der Seite steuert **Tägliche Besucherzählung** das Einzige,
+was ForkBuild sendet, ohne dass eine Funktion es braucht. Einmal am Tag
+teilt die offizielle Website GoatCounter mit, dass ein weiterer Browser sie
+geöffnet hat. Die Anfrage nennt keine Seite, kein Bauwerk und keine Person
+und setzt kein Cookie, und die Summen kann jeder im öffentlichen Dashboard
+sehen. Entfernen Sie das Häkchen bei **Diesen Browser mitzählen**, um sie
+abzuschalten; die Wahl wird sofort gespeichert, nur in diesem Browser. Ein
+Browser, der Global Privacy Control oder Do Not Track sendet, wird nie
+gezählt, und der Schalter sagt das. Was genau gesendet wird, steht unter
+[Datenschutz](Privacy.md#besucherzählung).

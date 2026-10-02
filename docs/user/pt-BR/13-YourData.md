@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 5f33407334bd55c8 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 8347bc85df3e2e3a -->
 # 13 — Seus dados
 
 <!-- languages -->
@@ -177,3 +177,16 @@ neste dispositivo.**: faça um backup, ou abra a criação na Visão do mundo co
 **Explorar** e use **Distribuir** em **Meu Mundo compartilhado**.
 Compartilhá-la com pares conectados não é registrado como distribuição: eles
 só mantêm uma cópia enquanto quiserem.
+
+## Contagem diária de visitantes
+
+No fim da página, **Contagem diária de visitantes** controla a única coisa
+que o ForkBuild envia sem que nenhum recurso precise dela. Uma vez por dia, o
+site oficial avisa o GoatCounter de que mais um navegador o abriu. A
+solicitação não identifica nenhuma página, construção ou pessoa e não grava
+cookies, e qualquer pessoa pode ver os totais no painel público. Desmarque
+**Contar este navegador** para interromper; a escolha é salva na hora, só
+neste navegador. Um navegador que envia Global Privacy Control ou Do Not
+Track nunca é contado, e o interruptor avisa isso. Veja
+[Privacidade](Privacy.md#contagem-de-visitantes) para saber exatamente o
+que é enviado.

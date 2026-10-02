@@ -9,6 +9,7 @@ import { byteSizeText } from '../i18n/sizeText.js';
 import { formatRelativeVisit } from '../../utils/formatRelativeVisit.js';
 import { displayText, errorText, hasMessage, t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
+import VisitorCountSetting from '../components/VisitorCountSetting.js';
 
 const REMINDER_LABELS = { 7: t('yourDataView.everyWeek'), 14: t('yourDataView.every2Weeks'), 30: t('yourDataView.everyMonth'), 90: t('yourDataView.every3Months'), 0: t('yourDataView.never') };
 const DESTINATION_LABELS = {
@@ -30,7 +31,7 @@ function backupGroupLabel(group) {
 
 export default {
     name: 'YourDataView',
-    components: { I18nText },
+    components: { I18nText, VisitorCountSetting },
     setup() {
         const deviceBackup = inject('deviceBackupUseCase', null);
         const navigatorStorage = inject('navigatorStorage', globalThis.navigator ? globalThis.navigator.storage : null);
@@ -502,6 +503,8 @@ export default {
                 </div>
                 <p v-if="restoreForm.error" class="identity-unlock-error">{{ restoreForm.error }}</p>
             </div>
+
+            <VisitorCountSetting />
         </section>
     `
 };

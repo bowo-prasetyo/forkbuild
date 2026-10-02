@@ -3577,3 +3577,32 @@ automatically for any browser set to Korean (`ko`, `ko-KR`, `ko-KP`).
 - Tests: `tests/KoreanLocale.test.js` (complete, chosen from Korean browsers, the single plural form with the exact form
   for one brick, undo labels with Korean digit grouping and the verb last, a resident's sentence, a fork's title, a name
   with 님, compass points with 쪽, and no plain ASCII quotes).
+
+## Daily visitor count (unnumbered, 2026-10-02)
+
+ForkBuild had no way to know how many people use it: GitHub Pages reports no visitor numbers. The official site now
+counts visitors once a day with GoatCounter, in the least revealing way that still gives a daily number, and says so
+on the privacy page instead of "no analytics".
+
+- `core/VisitorCount.js` decides whether to count: only on the official origin (`https://bowo-prasetyo.github.io`, so
+  copies hosted elsewhere and `localhost` never count), only when this browser hasn't turned it off, never when the
+  browser sends Global Privacy Control or Do Not Track, and at most once per calendar day on the device. The hit is
+  one image request to `forkbuild.goatcounter.com/count` with a fixed path (`/`) and a cache-buster, no referrer and
+  no cookie: no page, document, identity or stored data is sent.
+- `application/settings/CountDailyVisit.js` records the day, then sends the hit; any failure is swallowed so the
+  counter can't stop the app opening. `ui/start.js` calls it once at startup, as an `<img>` with
+  `referrerPolicy = 'no-referrer'`; no script from another origin is loaded, and `index.html`'s Content Security
+  Policy allows only that one image origin beyond its own (`img-src`).
+- `application/settings/VisitorCountSettingsStore.js` keeps the choice and the last day counted, in this browser only.
+  **Your Data → Daily visitor count** (`ui/components/VisitorCountSetting.js`) turns it off or on, saved at once; with
+  Global Privacy Control or Do Not Track the switch is shown off and locked, saying why. It links to the public
+  dashboard (<https://forkbuild.goatcounter.com/>) and the privacy page in the language being shown.
+- `docs/Privacy.md` gains a "Visitor count" section (what GoatCounter receives and keeps, when nothing is sent, how to
+  count a self-hosted copy) and a row in the server table; its translations, `docs/user/13-YourData.md` and its
+  translations, the README and `docs/Deployment.md` follow. The new messages are translated into every shipped
+  language.
+- Tests: `tests/VisitorCount.test.js` (defaults and lenient reading, the privacy signals, the hit carrying only a fixed
+  path, once a day across reloads and again the next day, never from other origins or when turned off or signalled,
+  none of which uses up the day, and storage or send failures never escaping) and
+  `tests/VisitorCountSettingBrowser.test.js` (the switch saves as it changes, shows a saved choice, is locked off by
+  either signal, and links to the dashboard and privacy page); `tests/ContentSecurityPolicy.test.js` pins `img-src`.
