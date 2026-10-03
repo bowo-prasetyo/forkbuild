@@ -24,7 +24,7 @@ import {
 import { VEHICLE_INTERACTION_RADIUS } from '../../core/AvatarVehicleProximity.js';
 import { vehiclePresenceInRegion } from '../../core/VehiclePlacement.js';
 import { treeCollisionCandidatesForMovement } from '../../core/AvatarTreeCollisionQuery.js';
-import { InventoryEntryKind } from '../../core/AvatarInventory.js';
+import { InventoryEntryKind, withEntryRemoved } from '../../core/AvatarInventory.js';
 import { AvatarInventoryStore } from './AvatarInventoryStore.js';
 import { deriveAvatarVehicleStoreIntent } from '../../core/AvatarVehicleStoreIntent.js';
 import { deriveAvatarVehicleDeployIntent } from '../../core/AvatarVehicleDeployIntent.js';
@@ -294,22 +294,31 @@ export class AvatarVehicleInteractionController {
 
     // Removes the stored vehicle from the world via VehicleRuntimeInstances#discard(),
     // the effect the pure transition does not perform.
+    //
+    // The ridden vehicle's id can already be carried: its exclusion was lost
+    // (saved on a throttle, so a reload can drop it) or the entry came from a
+    // peer, so the world still shows a copy. Storing that copy re-files the
+    // existing entry instead of adding a second one, which withEntryAdded()
+    // would reject with a throw that stops the render loop.
     _tickStore(requested) {
         const avatarPosition = this._avatarPresenceSession.current.position;
         const vehicle = this._currentMountedVehicle(avatarPosition);
         const storeIntent = deriveAvatarVehicleStoreIntent({ storeRequested: requested });
+        const currentInventory = this._inventoryStore.get();
+        const alreadyCarried = vehicle !== null && currentInventory.has(vehicle.id);
         const transition = deriveAvatarVehicleStoreTransition({
             currentMount: this._mount,
-            currentInventory: this._inventoryStore.get(),
+            currentInventory: alreadyCarried ? withEntryRemoved(currentInventory, vehicle.id) : currentInventory,
             storeIntent,
             vehicleId: vehicle ? vehicle.id : null,
             vehicleType: vehicle ? vehicle.type : null
         });
-        if (transition.mount !== this._mount) {
-            this._storeKeyConsumed = true;
-            if (this._vehicleRuntimeInstances && vehicle) {
-                this._vehicleRuntimeInstances.discard(vehicle.id);
-            }
+        if (transition.mount === this._mount) {
+            return;
+        }
+        this._storeKeyConsumed = true;
+        if (this._vehicleRuntimeInstances && vehicle) {
+            this._vehicleRuntimeInstances.discard(vehicle.id);
         }
         this._mount = transition.mount;
         this._inventoryStore.set(transition.inventory);

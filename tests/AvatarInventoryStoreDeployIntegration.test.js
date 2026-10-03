@@ -4,6 +4,8 @@ import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInst
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { Position } from '../core/Position.js';
 import { VehicleType } from '../core/VehicleType.js';
+import { AvatarInventoryStore } from '../application/avatar/AvatarInventoryStore.js';
+import { InventoryEntryKind, createAvatarInventoryEntry, emptyAvatarInventory, withEntryAdded } from '../core/AvatarInventory.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.670 — Avatar Inventory (store/deploy) Runtime Integration.
@@ -31,6 +33,12 @@ import { assert } from './support/Assert.js';
 //              press E again WITHOUT MOVING: the deterministic query
 //              must never re-offer the just-stored vehicle as a mount
 //              target, or a second store would crash on a duplicate id
+//   Section H: Stale exclusion — the inventory already carries the
+//              ridden bicycle's id (an exclusion lost on reload, or the
+//              entry received from a peer) while the world still shows
+//              that bicycle. Pressing Q must store it without throwing:
+//              a throw inside tick() stops the render loop and freezes
+//              World View
 
 function buildAvatarPresenceSession(startPosition) {
     return new AvatarPresenceSession(
@@ -262,6 +270,38 @@ function runTests() {
         c.keyDown('e'); c.tick(); c.keyUp('e');
         assert(c.mount() === null, '39. pressing E again in place does nothing — there is genuinely nothing left here to mount');
         assert(c.inventory().size === 1, '40. FLAGSHIP: inventory is untouched — a second store attempt was never even possible, so withEntryAdded()\'s own duplicate-id guard is never reached');
+    }
+
+    // -------------------------------------------------------------
+    // Section H — stale exclusion: the ridden vehicle's id is already
+    // carried
+    // -------------------------------------------------------------
+    {
+        const secondVehicle = findVehicle(SECOND_VEHICLE_ID);
+        const startPosition = new Position(clearVehicle.position.x - 0.5, 0, clearVehicle.position.z);
+        const session = buildAvatarPresenceSession(startPosition);
+        const runtimeInstances = new VehicleRuntimeInstances();
+        let carried = emptyAvatarInventory();
+        carried = withEntryAdded(carried, createAvatarInventoryEntry({ id: SECOND_VEHICLE_ID, kind: InventoryEntryKind.VEHICLE, type: secondVehicle.type }));
+        carried = withEntryAdded(carried, createAvatarInventoryEntry({ id: CLEAR_VEHICLE_ID, kind: InventoryEntryKind.VEHICLE, type: clearVehicle.type }));
+        const inventoryStore = new AvatarInventoryStore();
+        inventoryStore.set(carried);
+        const c = new AvatarVehicleInteractionController(session, { seed: SEED, vehicleRuntimeInstances: runtimeInstances, avatarInventoryStore: inventoryStore });
+
+        c.keyDown('e'); c.tick(); c.keyUp('e');
+        assert(c.mount() !== null && c.mount().vehicleId === CLEAR_VEHICLE_ID, '41. mounted the bicycle whose id is already carried');
+
+        let threw = null;
+        try {
+            c.keyDown('q'); c.tick(); c.keyUp('q');
+        } catch (e) {
+            threw = e;
+        }
+        assert(threw === null, `42. FLAGSHIP: storing a vehicle whose id is already carried never throws (got ${threw && threw.message})`);
+        assert(c.mount() === null, '43. the mount still ends');
+        assert(c.inventory().size === 2, '44. no second entry is added for the already-carried id');
+        assert(runtimeInstances.get(CLEAR_VEHICLE_ID) === null && runtimeInstances.isExcluded(CLEAR_VEHICLE_ID),
+            '45. the duplicate leaves the world and is excluded again');
     }
 
     console.log('✅ All Avatar Inventory Store/Deploy Integration tests passed.');
