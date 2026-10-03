@@ -701,7 +701,7 @@ export default {
             _syncWorldExperience, _syncWorldPresence, _syncWorldSpatialPresence, disposeWorldPresence,
             refreshCollaborationRoster, syncCurrentWorldSpatialPresence
         } = useWorldPresenceSync({
-            openWelcomePanel, refreshWelcomeContext, resolveIdentityDisplayName, session, showWelcomePanel,
+            cameraPerspective, openWelcomePanel, refreshWelcomeContext, resolveIdentityDisplayName, session, showWelcomePanel,
             spatialCollaboratorRows, worldMembers, worldPresenceRoster, worldReturnInfo
         });
 

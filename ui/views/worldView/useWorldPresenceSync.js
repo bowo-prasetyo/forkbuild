@@ -3,7 +3,7 @@ import { buildSpatialCollaboratorRows } from '../../components/WorldCollaborator
 // Keeps this replica's World presence, spatial presence and per-World experience
 // (camera framing) in step with the ACTIVE document.
 export function useWorldPresenceSync({
-    openWelcomePanel, refreshWelcomeContext, resolveIdentityDisplayName, session, showWelcomePanel,
+    cameraPerspective, openWelcomePanel, refreshWelcomeContext, resolveIdentityDisplayName, session, showWelcomePanel,
     spatialCollaboratorRows, worldMembers, worldPresenceRoster, worldReturnInfo
 }) {
     // Non-reactive bookkeeping; the template never reads these.
@@ -79,6 +79,10 @@ export function useWorldPresenceSync({
         // restoreWorldExperience() only reads, and returns null on a first visit.
         const priorExperience = session.restoreWorldExperience(presentExperienceWorldDocumentId);
         worldReturnInfo.value = priorExperience ? { lastVisitedAt: priorExperience.lastVisitedAt } : null;
+        // The restore can re-apply the Camera Perspective last used in this World;
+        // the perspective buttons must show it, or "Free" stays lit over a
+        // Third Person camera.
+        cameraPerspective.value = session.getCameraPerspective();
     }
 
     function refreshCollaborationRoster(documentId) {
