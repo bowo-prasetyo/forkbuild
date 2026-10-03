@@ -65,6 +65,10 @@ export function useWorldPresenceSync({
     // broadcast. worldReturnInfo is captured from the prior record before this
     // visit's restore/save.
     function _syncWorldExperience(activeId) {
+        // Every refresh, so leaving has the framing from while the camera was
+        // still here: by the time the active document changes, the camera has
+        // usually moved on already.
+        session.noteWorldExperienceCamera(presentExperienceWorldDocumentId);
         if (activeId === presentExperienceWorldDocumentId) {
             return;
         }
