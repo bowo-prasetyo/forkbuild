@@ -116,8 +116,20 @@ export const LIMITS = Object.freeze({
     maxDisplayNameLength: 40,
     maxLobbyCards: 20000,
     lobbyListSize: 50,
-    lobbyListScan: 1000
+    lobbyListScan: 1000,
+    // Steem image uploads (POST /steem-image/...): the largest image
+    // forwarded (the app's are 320×200 PNGs, a few tens of kilobytes), and
+    // how long the image host may take to answer.
+    maxSteemImageBytes: 1024 * 1024,
+    steemImageTimeoutMs: 30 * 1000
 });
+
+// Where POST /steem-image/<account>/<signature> forwards to, unless the
+// STEEM_IMAGE_HOST variable names another host.
+const DEFAULT_STEEM_IMAGE_HOST = 'https://steemitimages.com';
+// A Steem account name, then a hex signature (130 characters for Steem's
+// 65-byte signatures).
+const STEEM_IMAGE_PATH = /^\/steem-image\/([a-z0-9][a-z0-9.-]{2,15})\/([0-9a-f]{130})$/;
 
 // Mirrors core/LobbyCard.js: the global lobby, or one per World.
 const LOBBY_PATTERN = /^(public|world:[A-Za-z0-9._-]{1,128})$/;
@@ -994,15 +1006,72 @@ function parseAllowedOrigins(raw) {
     return raw.split(',').map((origin) => origin.trim()).filter(Boolean);
 }
 
-// The app runs on another origin, so /turn-credentials needs CORS. Allowed
-// origins are ALLOWED_ORIGINS when set, otherwise any.
-function corsHeaders(request, env) {
+// The app runs on another origin, so /turn-credentials and /steem-image need
+// CORS. Allowed origins are ALLOWED_ORIGINS when set, otherwise any.
+function corsHeaders(request, env, methods = 'GET, OPTIONS') {
     const allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
     const origin = request.headers.get('Origin');
     const allowed = allowedOrigins ? (allowedOrigins.includes(origin) ? origin : null) : '*';
     return allowed
-        ? { 'access-control-allow-origin': allowed, 'access-control-allow-methods': 'GET, OPTIONS', vary: 'Origin' }
+        ? { 'access-control-allow-origin': allowed, 'access-control-allow-methods': methods, vary: 'Origin' }
         : {};
+}
+
+// POST /steem-image/<account>/<signature>: forwards an image upload to the
+// Steem image host and returns its answer with CORS headers, which the host
+// itself stopped sending (steemitimages.com, 2026-09-29), so browsers on
+// other sites can read it. The body (the multipart form with the image) goes
+// on unchanged. The host checks that <signature> is <account>'s posting key
+// over these exact image bytes, so the relay can neither change the image nor
+// upload as anyone; it keeps no state.
+export async function handleSteemImageUpload(request, env, { fetchImpl = globalThis.fetch } = {}) {
+    const headers = { 'content-type': 'application/json', 'cache-control': 'no-store', ...corsHeaders(request, env, 'POST, OPTIONS') };
+    const reply = (status, body) => new Response(JSON.stringify(body), { status, headers });
+    if (request.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: { ...headers, 'access-control-allow-headers': 'content-type' } });
+    }
+    const allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
+    if (allowedOrigins && !allowedOrigins.includes(request.headers.get('Origin') || '')) {
+        return reply(403, { error: 'origin not allowed' });
+    }
+    if (request.method !== 'POST') {
+        return reply(405, { error: 'use POST' });
+    }
+    const match = STEEM_IMAGE_PATH.exec(new URL(request.url).pathname);
+    if (!match) {
+        return reply(404, { error: 'expected /steem-image/<account>/<signature>' });
+    }
+    const contentType = request.headers.get('content-type') || '';
+    if (!contentType.startsWith('multipart/form-data')) {
+        return reply(415, { error: 'expected a multipart/form-data upload' });
+    }
+    if (Number(request.headers.get('content-length')) > LIMITS.maxSteemImageBytes) {
+        return reply(413, { error: `the image is larger than ${LIMITS.maxSteemImageBytes} bytes` });
+    }
+    const body = await request.arrayBuffer();
+    if (body.byteLength > LIMITS.maxSteemImageBytes) {
+        return reply(413, { error: `the image is larger than ${LIMITS.maxSteemImageBytes} bytes` });
+    }
+    const host = (env.STEEM_IMAGE_HOST || DEFAULT_STEEM_IMAGE_HOST).replace(/\/+$/, '');
+    let upstream;
+    try {
+        upstream = await fetchImpl(`${host}/${match[1]}/${match[2]}`, {
+            method: 'POST',
+            headers: { 'content-type': contentType },
+            body,
+            signal: AbortSignal.timeout(LIMITS.steemImageTimeoutMs)
+        });
+    } catch (err) {
+        console.error('steem-image:', String((err && err.message) || err));
+        return reply(502, { error: 'the image host did not answer' });
+    }
+    // The host's own answer, whatever it is: `{ url }`, or `{ error }` with
+    // its status.
+    const text = await upstream.text().catch(() => '');
+    return new Response(text, {
+        status: upstream.status,
+        headers: { ...headers, 'content-type': upstream.headers.get('content-type') || 'application/json' }
+    });
 }
 
 // The Worker entry point: answers a plain GET so an operator can check the
@@ -1014,6 +1083,11 @@ export default {
         // open it in a browser; it only shows counts.
         if (pathname === '/turn-stats' && env.RENDEZVOUS_NODE) {
             return env.RENDEZVOUS_NODE.get(env.RENDEZVOUS_NODE.idFromName('global')).fetch(request);
+        }
+        // Stateless, so it needs no Durable Object; it checks the origin
+        // itself so its refusals carry CORS headers the app can read.
+        if (pathname.startsWith('/steem-image/')) {
+            return handleSteemImageUpload(request, env);
         }
         const isTurnRequest = pathname === '/turn-credentials';
         if (!isTurnRequest && request.headers.get('Upgrade') !== 'websocket') {

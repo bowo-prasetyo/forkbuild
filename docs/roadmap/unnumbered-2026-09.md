@@ -3773,3 +3773,21 @@ signed placement that publishing had just made, so there was nothing to adopt. I
 `publisherPlacementClaimLookup`, as the Publications page and World View do, and announces `publicationId`,
 `claimedPosition` and `placementRecord` beside the Snapshot, for Arweave, IPFS and Steem storage and for remote
 pinning alike. New `tests/EditorSnapshotDistributionCarriesPlacement.test.js`.
+
+## Steem notices get their picture again, through the rendezvous worker (unnumbered, 2026-10-03)
+
+Steem notices for Signed Claims went out without the build's picture from 2026-09-29 on, with only a console warning.
+steemitimages.com deployed a new version that day and has since answered uploads without CORS headers, so the
+browser blocks the response on any other site ("Failed to fetch"); Keychain still signed, and drawing the thumbnail
+still worked. The rendezvous worker gained `POST /steem-image/<account>/<signature>`
+(`handleSteemImageUpload()`), which forwards the signed multipart upload unchanged to steemitimages.com and returns
+its answer with CORS headers; it keeps no state, needs no Durable Object, accepts images up to 1 MB from
+`ALLOWED_ORIGINS` only, and the host still verifies the signature. `uploadSteemImage()` tries the host first and,
+when the browser can't reach it, sends the same signed image through `relay` (`DEFAULT_STEEM_IMAGE_RELAY`); it
+resolves with `via: 'host' | 'relay'`. The image upload check on `content-check.html` uses the relay for
+steemitimages.com and says when it did. A notice that still goes without its picture now says so, with the reason, in
+both Distribute dialogs and on the Publications page: `createSteemPublicationNoticeDescriber()` takes
+`onPictureMissing`, `ui/main/composeWorldDiscovery.js` keeps the latest problem in `steemNoticePictureProblem`, and
+`describeSteemNoticePictureProblem()` words it (`steemUpload.noPicture`, in every locale). The relay needs the worker
+redeployed (`wrangler deploy`). New cases in `server/rendezvous-worker/worker.test.js`,
+`tests/SteemImageUpload.test.js` and `tests/SteemPublicationNotice.test.js`.

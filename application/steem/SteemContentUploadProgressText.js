@@ -17,3 +17,15 @@ export function describeSteemContentUploadProgress(state) {
     const variant = `${state.resumed ? 'Resumed' : ''}${credits ? 'WithCredits' : ''}`;
     return message(`steemUpload.posting${variant}`, credits ? { ...params, ...credits } : params);
 }
+
+// The warning shown when a Steem notice went without its build's picture,
+// from `{ title, reason, at }` (ui/main/composeWorldDiscovery.js), as a
+// message, or null. Only a problem from `since` (ms) on is shown, so a
+// dialog or page never shows one from before it opened.
+export function describeSteemNoticePictureProblem(problem, since = 0) {
+    if (!problem || typeof problem.at !== 'number' || problem.at < since) return null;
+    const reason = typeof problem.reason === 'string' && problem.reason.trim() ? problem.reason.trim() : '?';
+    return problem.title
+        ? message('steemUpload.noPicture', { title: problem.title, reason })
+        : message('steemUpload.noPictureUntitled', { reason });
+}

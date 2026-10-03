@@ -1,5 +1,5 @@
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
-import { describeSteemContentUploadProgress } from '../../application/steem/SteemContentUploadProgressText.js';
+import { describeSteemContentUploadProgress, describeSteemNoticePictureProblem } from '../../application/steem/SteemContentUploadProgressText.js';
 import PublicationShareLink from './PublicationShareLink.js';
 import { displayText, t } from '../i18n/i18n.js';
 
@@ -93,7 +93,11 @@ export default {
     name: 'WorldDistributionDialog',
     components: { PublicationShareLink },
     // Steem storage reports each post while it stores a Snapshot.
-    inject: { steemContentUploadProgress: { default: null } },
+    inject: { steemContentUploadProgress: { default: null }, steemNoticePictureProblem: { default: null } },
+    // Only a picture problem from after the dialog opened is shown.
+    data() {
+        return { openedAt: Date.now() };
+    },
     props: {
         // The Publication being distributed, for its share link; the id also
         // comes from a distribution result.
@@ -138,6 +142,10 @@ export default {
             // Options API injections arrive with the ref already unwrapped.
             if (!this.snapshotDistributionExecuting) return null;
             return displayText(describeSteemContentUploadProgress(this.steemContentUploadProgress));
+        },
+        // A Steem notice posted from this dialog without its build's picture.
+        steemNoticePictureText() {
+            return displayText(describeSteemNoticePictureProblem(this.steemNoticePictureProblem, this.openedAt));
         },
         storageModel: {
             get() { return this.storage; },
@@ -290,6 +298,7 @@ export default {
                     >{{ snapshotDistributionExecuting ? t('distribution.distributing') : t(canDistributePublication ? 'distribution.snapshotOnly' : 'distribution.distributeSnapshot') }}</button>
 
                     <p v-if="steemUploadProgressText" class="form-hint form-hint--neutral world-distribution-dialog-steem-progress" role="status">{{ steemUploadProgressText }}</p>
+                    <p v-if="steemNoticePictureText" class="form-hint steem-notice-picture-warning world-distribution-dialog-steem-picture" role="status">{{ steemNoticePictureText }}</p>
                     <p v-if="snapshotDistributionError" class="world-distribution-dialog-snapshot-error">{{ snapshotDistributionError }}</p>
                     <dl v-else-if="snapshotDistributionResult" class="world-distribution-dialog-snapshot-detail">
                         <dt>{{ t('worldDistributionDialog.contentHash') }}</dt>

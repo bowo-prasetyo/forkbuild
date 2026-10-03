@@ -790,6 +790,8 @@ export default Object.freeze({
     'steemUpload.postingResumed': { one: 'Speichern auf Steem: {done} von {count} Beitrag erstellt. Bestätigen Sie jeden Beitrag in Steem Keychain. Ein früherer Upload dieses Bauwerks wird fortgesetzt.', other: 'Speichern auf Steem: {done} von {count} Beiträgen erstellt. Bestätigen Sie jeden Beitrag in Steem Keychain. Ein früherer Upload dieses Bauwerks wird fortgesetzt.' },
     'steemUpload.postingWithCredits': { one: 'Speichern auf Steem: {done} von {count} Beitrag erstellt. Bestätigen Sie jeden Beitrag in Steem Keychain. Verbraucht etwa {needed} % Ihrer Resource Credits ({available} % verfügbar).', other: 'Speichern auf Steem: {done} von {count} Beiträgen erstellt. Bestätigen Sie jeden Beitrag in Steem Keychain. Verbraucht etwa {needed} % Ihrer Resource Credits ({available} % verfügbar).' },
     'steemUpload.postingResumedWithCredits': { one: 'Speichern auf Steem: {done} von {count} Beitrag erstellt. Bestätigen Sie jeden Beitrag in Steem Keychain. Ein früherer Upload dieses Bauwerks wird fortgesetzt. Verbraucht etwa {needed} % Ihrer Resource Credits ({available} % verfügbar).', other: 'Speichern auf Steem: {done} von {count} Beiträgen erstellt. Bestätigen Sie jeden Beitrag in Steem Keychain. Ein früherer Upload dieses Bauwerks wird fortgesetzt. Verbraucht etwa {needed} % Ihrer Resource Credits ({available} % verfügbar).' },
+    'steemUpload.noPicture': 'Der Steem-Hinweis zu „{title}“ wurde ohne Bild des Bauwerks veröffentlicht: {reason}',
+    'steemUpload.noPictureUntitled': 'Der Steem-Hinweis wurde ohne Bild des Bauwerks veröffentlicht: {reason}',
 
     // Storage names shared by the distribution dialogs.
     'storage.ipfsLocal': 'IPFS (lokales Kubo)',

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 44d0a17739347ec8 -->
+<!-- translation-of: docs/Privacy.md source-hash: ef02c2b3f84b697d -->
 # Privasi
 
 <!-- languages -->
@@ -157,7 +157,7 @@ Anda dan apa yang Anda minta darinya.
 | Anda mengambil konten dari IPFS | gateway IPFS (`ipfs.io`), atau node IPFS Anda sendiri (`127.0.0.1:5001`) | apa yang Anda ambil atau tambahkan |
 | Anda mem-pin konten dengan layanan pinning jarak jauh (*eksperimental*) | layanan yang Anda masukkan | kontennya, dan token yang Anda ketik untuk satu unggahan itu (tidak pernah disimpan) |
 | Anda menyimpan, mengumumkan, atau menjangkarkan di Steem, atau menemukan pengumuman Steem (*eksperimental*) | node API Steem (`api.steemit.com`, lalu `api.justyy.com`); penandatanganan melalui ekstensi Steem Keychain | nama akun Steem Anda; apa yang Anda posting (pengumuman, konten tersimpan, jangkar) bersifat publik di rantai untuk selamanya, dan suntingan meninggalkan versi sebelumnya dalam riwayatnya |
-| Anda mendistribusikan Klaim Bertanda Tangan sebuah Publikasi di Steem (*eksperimental*) | host gambar Steem (`steemitimages.com`) | gambar bangunan berukuran 320×200 untuk pratinjau postingan, ditandatangani dengan kunci posting Steem Anda |
+| Anda mendistribusikan Klaim Bertanda Tangan sebuah Publikasi di Steem (*eksperimental*) | host gambar Steem (`steemitimages.com`), secara langsung atau, bila peramban tidak dapat menjangkaunya, melalui relai `/steem-image` milik server rendezvous, yang tidak menyimpan apa pun | gambar bangunan berukuran 320×200 untuk pratinjau postingan, ditandatangani dengan kunci posting Steem Anda |
 | Anda membuka tautan bersama ke sebuah Publikasi (`#/view/…`) | node Steem, gateway Arweave, atau gateway IPFS yang disebut tautan itu, lalu substrat pengumuman untuk menemukan bangunannya | postingan, transaksi, atau CID mana yang Anda buka |
 | Anda menjangkarkan atau memverifikasi bukti di Bitcoin (*eksperimental*) | API Esplora (`blockstream.info`) | transaksi yang Anda siarkan atau cari |
 | Anda memverifikasi bukti di Base (*eksperimental*) | endpoint JSON-RPC Base (`mainnet.base.org`) | transaksi yang Anda cari |

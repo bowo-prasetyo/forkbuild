@@ -7,7 +7,7 @@ import { createSteemAnnouncer } from '../../application/steem/SteemAnnouncer.js'
 import { createSteemResourceCreditEstimator } from '../../application/steem/SteemResourceCreditEstimator.js';
 import { describeSteemContentUploadProgress } from '../../application/steem/SteemContentUploadProgressText.js';
 import { readSteemContentCheck, steemContentCheckText, storeSteemContentCheck } from './SteemContentCheck.js';
-import { DEFAULT_STEEM_IMAGE_HOST, createSteemKeychainImageSigner } from '../../steem/SteemImageUpload.js';
+import { DEFAULT_STEEM_IMAGE_HOST, DEFAULT_STEEM_IMAGE_RELAY, createSteemKeychainImageSigner } from '../../steem/SteemImageUpload.js';
 import { runSteemImageUploadCheck, steemImageCheckPicture } from './SteemImageUploadCheck.js';
 
 const $ = (id) => document.getElementById(id);
@@ -96,7 +96,8 @@ $('imageSettings').addEventListener('submit', async (event) => {
         show('Drawing a test image…');
         const bytes = await steemImageCheckPicture();
         const result = await runSteemImageUploadCheck({
-            account, host, signer, bytes,
+            // The relay forwards to steemitimages.com only, so it backs that host alone.
+            account, host, relay: host.replace(/\/+$/, '') === DEFAULT_STEEM_IMAGE_HOST ? DEFAULT_STEEM_IMAGE_RELAY : null, signer, bytes,
             loadImage: (url) => new Promise((resolve) => {
                 const image = $('imagePreview').querySelector('img');
                 image.onload = () => resolve(true);

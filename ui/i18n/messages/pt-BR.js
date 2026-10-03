@@ -791,6 +791,8 @@ export default Object.freeze({
     'steemUpload.postingResumed': { one: 'Guardando no Steem: {done} de {count} postagem feita. Aprove cada postagem no Steem Keychain. Retomando um envio anterior desta construção.', other: 'Guardando no Steem: {done} de {count} postagens feitas. Aprove cada postagem no Steem Keychain. Retomando um envio anterior desta construção.' },
     'steemUpload.postingWithCredits': { one: 'Guardando no Steem: {done} de {count} postagem feita. Aprove cada postagem no Steem Keychain. Usa cerca de {needed}% dos seus Resource Credits ({available}% disponíveis).', other: 'Guardando no Steem: {done} de {count} postagens feitas. Aprove cada postagem no Steem Keychain. Usa cerca de {needed}% dos seus Resource Credits ({available}% disponíveis).' },
     'steemUpload.postingResumedWithCredits': { one: 'Guardando no Steem: {done} de {count} postagem feita. Aprove cada postagem no Steem Keychain. Retomando um envio anterior desta construção. Usa cerca de {needed}% dos seus Resource Credits ({available}% disponíveis).', other: 'Guardando no Steem: {done} de {count} postagens feitas. Aprove cada postagem no Steem Keychain. Retomando um envio anterior desta construção. Usa cerca de {needed}% dos seus Resource Credits ({available}% disponíveis).' },
+    'steemUpload.noPicture': 'O aviso no Steem de “{title}” foi publicado sem uma imagem da construção: {reason}',
+    'steemUpload.noPictureUntitled': 'O aviso no Steem foi publicado sem uma imagem da construção: {reason}',
 
     // Storage names shared by the distribution dialogs.
     'storage.ipfsLocal': 'IPFS (Kubo local)',

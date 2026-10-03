@@ -46,8 +46,9 @@ function defaultCanvas(width, height) {
 // Signs, uploads and loads the image back. Resolves to `{ ok, message, rows }`
 // (rows: [label, value] pairs describing each step); never rejects.
 // `loadImage(url)` resolves to whether the returned address loads as an image.
-export async function runSteemImageUploadCheck({ account, host, signer, bytes, loadImage, fetchImpl = globalThis.fetch, onStep = () => {} }) {
+export async function runSteemImageUploadCheck({ account, host, relay = null, signer, bytes, loadImage, fetchImpl = globalThis.fetch, onStep = () => {} }) {
     const rows = [['Test image', `${bytes.length} bytes, PNG, ${WIDTH}×${HEIGHT}`], ['Image host', host]];
+    if (relay) rows.push(['Relay', `${relay} (when the browser can't reach the image host)`]);
     let signature = null;
     const watchedSigner = {
         async sign(signingAccount, payload) {
@@ -59,7 +60,7 @@ export async function runSteemImageUploadCheck({ account, host, signer, bytes, l
     };
     let uploaded;
     try {
-        uploaded = await uploadSteemImage({ account, bytes, signer: watchedSigner, host, fetchImpl, fileName: 'forkbuild-image-check.png' });
+        uploaded = await uploadSteemImage({ account, bytes, signer: watchedSigner, host, relay, fetchImpl, fileName: 'forkbuild-image-check.png' });
     } catch (error) {
         if (signature !== null) rows.push(['Signature', describeSignature(signature)]);
         const stage = error.stage === 'signing' ? 'Signing' : 'Upload';
@@ -73,7 +74,7 @@ export async function runSteemImageUploadCheck({ account, host, signer, bytes, l
                 : `Signed, but the upload failed: ${error.message}`
         };
     }
-    rows.push(['Signature', describeSignature(uploaded.signature)], ['Upload', 'accepted'], ['Image address', uploaded.url]);
+    rows.push(['Signature', describeSignature(uploaded.signature)], ['Upload', uploaded.via === 'relay' ? 'accepted, through the relay (the browser could not reach the image host)' : 'accepted'], ['Image address', uploaded.url]);
     onStep('Uploaded. Loading the image from its new address…');
     const loads = await loadImage(uploaded.url);
     rows.push(['Loads as an image', loads ? 'yes' : 'no']);

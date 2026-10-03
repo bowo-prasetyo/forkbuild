@@ -787,6 +787,8 @@ export default Object.freeze({
     'steemUpload.postingResumed': { other: 'Steemに保存中: {count}件中{done}件を投稿しました。Steem Keychainで各投稿を承認してください。この作品の以前のアップロードを再開しています。' },
     'steemUpload.postingWithCredits': { other: 'Steemに保存中: {count}件中{done}件を投稿しました。Steem Keychainで各投稿を承認してください。リソースクレジットの約{needed}%を使用します（利用可能: {available}%）。' },
     'steemUpload.postingResumedWithCredits': { other: 'Steemに保存中: {count}件中{done}件を投稿しました。Steem Keychainで各投稿を承認してください。この作品の以前のアップロードを再開しています。リソースクレジットの約{needed}%を使用します（利用可能: {available}%）。' },
+    'steemUpload.noPicture': '「{title}」のSteem告知は作品の画像なしで投稿されました: {reason}',
+    'steemUpload.noPictureUntitled': 'Steem告知は作品の画像なしで投稿されました: {reason}',
 
     // Storage names shared by the distribution dialogs.
     'storage.ipfsLocal': 'IPFS（ローカルKubo）',

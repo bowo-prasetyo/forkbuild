@@ -3,7 +3,7 @@ import {
     isSteemNoticeImageUrl, steemContentManifestOperations, steemContentNotice, steemNoticeText
 } from '../core/SteemContentManifest.js';
 import { createSteemPublicationNoticeDescriber } from '../application/steem/SteemPublicationNoticeCard.js';
-import { describeSteemContentUploadProgress as describeSteemContentUploadProgressMessage } from '../application/steem/SteemContentUploadProgressText.js';
+import { describeSteemContentUploadProgress as describeSteemContentUploadProgressMessage, describeSteemNoticePictureProblem } from '../application/steem/SteemContentUploadProgressText.js';
 import { displayText } from '../ui/i18n/i18n.js';
 
 // The progress line as the UI shows it, in English.
@@ -129,6 +129,21 @@ const IMAGE_URL = 'https://cdn.steemitimages.com/DQmTest/forkbuild-build.png';
     const textOnly = await createSteemPublicationNoticeDescriber({ loadSnapshotText: async () => snapshotText })(claim);
     assert(textOnly.description === 'A tall tower.' && textOnly.imageUrl === null, 'without a renderer or uploader there is no picture');
     console.log('✓ finding the card');
+
+    // The app hears why a picture is missing, so it can say so.
+    const heard = [];
+    const onPictureMissing = (problem) => heard.push(problem);
+    await make({ onPictureMissing })(claim);
+    assert(heard.length === 0, 'nothing is heard when the picture is there');
+    await make({ onPictureMissing, uploadImage: async () => { throw new Error('The browser could not reach the image host'); } })(claim);
+    assert(heard.length === 1 && heard[0].title === 'Tower' && heard[0].reason === 'The browser could not reach the image host', `a failed upload is heard with its reason (got ${JSON.stringify(heard)})`);
+    await make({ onPictureMissing })({ ...claim, contentReference: { hash: 'other' }, contentHash: 'other' });
+    assert(heard.length === 2 && heard[1].reason.includes('could not be read'), 'a build not on this device is heard too');
+    const throwing = await make({ onPictureMissing: () => { throw new Error('listener broke'); }, uploadImage: async () => { throw new Error('refused'); } })(claim);
+    assert(throwing.description === 'A tall tower.', 'a listener that throws never stops the card');
+    await createSteemPublicationNoticeDescriber({ loadSnapshotText: async () => snapshotText, onPictureMissing })(claim);
+    assert(heard.length === 2, 'without a renderer or uploader no picture was wanted, so nothing is heard');
+    console.log('✓ a missing picture is heard');
 }
 
 // The store asks for the card before posting a Signed Claim, and only then.
@@ -172,6 +187,16 @@ const IMAGE_URL = 'https://cdn.steemitimages.com/DQmTest/forkbuild-build.png';
 {
     assert(describeSteemContentUploadProgress({ phase: 'describing', done: 0, total: 1 }) === 'Storing on Steem: adding a picture of the build. Approve signing the picture in Steem Keychain.', 'the progress line');
     console.log('✓ the progress line');
+}
+
+// The warning for a notice posted without its picture.
+{
+    const text = (problem, since) => displayText(describeSteemNoticePictureProblem(problem, since));
+    assert(text({ title: 'Tower', reason: 'refused', at: 2000 }, 1000) === 'The Steem notice for “Tower” was posted without a picture of the build: refused', 'the warning names the build and the reason');
+    assert(text({ title: null, reason: 'refused', at: 2000 }, 1000) === 'The Steem notice was posted without a picture of the build: refused', 'an untitled build');
+    assert(describeSteemNoticePictureProblem({ title: 'Tower', reason: 'refused', at: 500 }, 1000) === null, 'a problem from before the dialog opened is not shown');
+    assert(describeSteemNoticePictureProblem(null) === null, 'no problem, no warning');
+    console.log('✓ the missing picture warning');
 }
 
 console.log('\n✅ All SteemPublicationNotice tests passed.');

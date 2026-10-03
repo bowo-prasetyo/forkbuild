@@ -790,6 +790,8 @@ export default Object.freeze({
     'steemUpload.postingResumed': { other: 'Steem에 저장 중: 게시물 {count}개 중 {done}개 작성. Steem Keychain에서 각 게시물을 승인하세요. 이 작품의 이전 업로드를 이어서 진행합니다.' },
     'steemUpload.postingWithCredits': { other: 'Steem에 저장 중: 게시물 {count}개 중 {done}개 작성. Steem Keychain에서 각 게시물을 승인하세요. 리소스 크레딧의 약 {needed}%를 사용합니다(사용 가능 {available}%).' },
     'steemUpload.postingResumedWithCredits': { other: 'Steem에 저장 중: 게시물 {count}개 중 {done}개 작성. Steem Keychain에서 각 게시물을 승인하세요. 이 작품의 이전 업로드를 이어서 진행합니다. 리소스 크레딧의 약 {needed}%를 사용합니다(사용 가능 {available}%).' },
+    'steemUpload.noPicture': '“{title}”의 Steem 알림이 작품 사진 없이 게시되었습니다: {reason}',
+    'steemUpload.noPictureUntitled': 'Steem 알림이 작품 사진 없이 게시되었습니다: {reason}',
 
     // Storage names shared by the distribution dialogs.
     'storage.ipfsLocal': 'IPFS (로컬 Kubo)',

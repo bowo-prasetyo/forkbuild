@@ -99,6 +99,10 @@ export function composeWorldDiscovery({
     // Distribute dialogs and the Publications page while it stores a
     // Snapshot; unfinished uploads are remembered so a retry resumes them.
     const steemContentUploadProgress = shallowRef(null);
+    // The latest Steem notice that went without its build's picture,
+    // `{ title, reason, at }`, so the Distribute dialogs and the
+    // Publications page can say so (application/steem/SteemContentUploadProgressText.js).
+    const steemNoticePictureProblem = shallowRef(null);
     const steemRuntime = composeSteemRuntime({
         configuration: steemReadingConfigurationStore.get() || new SteemReadingConfiguration(),
         getAccount: () => steemAnnouncingConfigurationStore.get()?.account ?? null,
@@ -110,7 +114,8 @@ export function composeWorldDiscovery({
         describePublication: publicationContentStore
             ? composeSteemPublicationNoticeDescriber({
                 contentStore: publicationContentStore,
-                getAccount: () => steemAnnouncingConfigurationStore.get()?.account ?? null
+                getAccount: () => steemAnnouncingConfigurationStore.get()?.account ?? null,
+                onPictureMissing: ({ title, reason }) => { steemNoticePictureProblem.value = { title, reason, at: Date.now() }; }
             })
             : null
     });
@@ -204,6 +209,6 @@ export function composeWorldDiscovery({
         worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
         steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
         steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress,
-        publicationDistributionLifecycleRestorer, retrievePublicationClaim
+        steemNoticePictureProblem, publicationDistributionLifecycleRestorer, retrievePublicationClaim
     };
 }

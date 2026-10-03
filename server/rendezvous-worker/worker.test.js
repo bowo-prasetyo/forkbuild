@@ -1,4 +1,4 @@
-import worker, { RendezvousNode, LIMITS } from './worker.js';
+import worker, { RendezvousNode, LIMITS, handleSteemImageUpload } from './worker.js';
 
 // Runs RendezvousNode against small fakes of the two Cloudflare surfaces it
 // uses: Durable Object storage and hibernatable WebSockets. Identities and
@@ -657,6 +657,61 @@ async function lobbyLeave(identity, card, signer = identity) {
     const credentials = await worker.fetch(new Request('https://rendezvous.test/turn-credentials'), workerEnv);
     assert(credentials.status === 403, 'relay credentials still require an allowed origin');
     console.log('✓ /turn-stats reports the monthly count, and the allowance logs warnings');
+}
+
+// POST /steem-image/<account>/<signature> forwards a signed image upload to
+// the Steem image host and returns its answer with CORS headers.
+{
+    const SIGNATURE = '1f' + 'ab'.repeat(64);
+    const ORIGIN = 'https://bowo-prasetyo.github.io';
+    const env = { ALLOWED_ORIGINS: ORIGIN };
+    const forwarded = [];
+    const fetchImpl = async (url, options) => {
+        forwarded.push({ url, options });
+        return new Response(JSON.stringify({ url: 'https://cdn.steemitimages.com/DQmTest/forkbuild-build.png' }), { status: 200, headers: { 'content-type': 'application/json' } });
+    };
+    const upload = (path = `/steem-image/alice/${SIGNATURE}`, { origin = ORIGIN, method = 'POST', body } = {}) => {
+        const form = new FormData();
+        form.append('file', new Blob([new Uint8Array([137, 80, 78, 71])], { type: 'image/png' }), 'forkbuild-build.png');
+        const headers = origin ? { Origin: origin } : {};
+        return new Request(`https://rendezvous.test${path}`, method === 'POST' ? { method, headers, body: body ?? form } : { method, headers });
+    };
+
+    const ok = await handleSteemImageUpload(upload(), env, { fetchImpl });
+    assert(ok.status === 200 && (await ok.json()).url.startsWith('https://cdn.steemitimages.com/'), 'the host\'s answer comes back');
+    assert(ok.headers.get('access-control-allow-origin') === ORIGIN, '...readable by the app');
+    assert(forwarded.length === 1 && forwarded[0].url === `https://steemitimages.com/alice/${SIGNATURE}` && forwarded[0].options.method === 'POST', `it forwards to the host's own path (got ${forwarded[0]?.url})`);
+    assert(forwarded[0].options.headers['content-type'].startsWith('multipart/form-data; boundary='), 'the multipart form goes on unchanged, boundary included');
+    assert(new TextDecoder().decode(forwarded[0].options.body).includes('forkbuild-build.png'), '...with the image in it');
+
+    const refusedByHost = await handleSteemImageUpload(upload(), env, {
+        fetchImpl: async () => new Response(JSON.stringify({ error: 'Signature did not verify' }), { status: 400 })
+    });
+    assert(refusedByHost.status === 400 && (await refusedByHost.json()).error === 'Signature did not verify' && refusedByHost.headers.get('access-control-allow-origin') === ORIGIN,
+        'a refusal by the host comes back as it is, readable by the app');
+    const down = await handleSteemImageUpload(upload(), env, { fetchImpl: async () => { throw new TypeError('network down'); } });
+    assert(down.status === 502, 'an unreachable host is a 502');
+
+    const before = forwarded.length;
+    assert((await handleSteemImageUpload(upload(undefined, { origin: 'https://elsewhere.example' }), env, { fetchImpl })).status === 403, 'another origin is refused');
+    assert((await handleSteemImageUpload(upload('/steem-image/alice/not-a-signature'), env, { fetchImpl })).status === 404, 'a path that isn\'t <account>/<signature> is refused');
+    assert((await handleSteemImageUpload(upload('/steem-image/alice/../x/' + SIGNATURE), env, { fetchImpl })).status === 404, '...including one reaching for another path on the host');
+    assert((await handleSteemImageUpload(upload(undefined, { method: 'GET' }), env, { fetchImpl })).status === 405, 'only POST uploads');
+    assert((await handleSteemImageUpload(upload(undefined, { body: 'plain text' }), env, { fetchImpl })).status === 415, 'only a multipart upload');
+    const big = new FormData();
+    big.append('file', new Blob([new Uint8Array(LIMITS.maxSteemImageBytes + 1)], { type: 'image/png' }), 'big.png');
+    assert((await handleSteemImageUpload(upload(undefined, { body: big }), env, { fetchImpl })).status === 413, 'an image over the limit is refused');
+    assert(forwarded.length === before, 'nothing refused reaches the host');
+
+    const preflight = await handleSteemImageUpload(upload(undefined, { method: 'OPTIONS' }), env, { fetchImpl });
+    assert(preflight.status === 204 && preflight.headers.get('access-control-allow-methods').includes('POST'), 'a preflight is answered');
+    const elsewhere = await handleSteemImageUpload(upload(), { ...env, STEEM_IMAGE_HOST: 'https://images.example/' }, { fetchImpl });
+    assert(elsewhere.status === 200 && forwarded.at(-1).url === `https://images.example/alice/${SIGNATURE}`, 'STEEM_IMAGE_HOST names another host');
+
+    // The Worker entry point routes it without the Durable Object.
+    const routed = await worker.fetch(new Request(`https://rendezvous.test/steem-image/alice/${SIGNATURE}`, { method: 'OPTIONS', headers: { Origin: ORIGIN } }), env);
+    assert(routed.status === 204, 'the Worker routes /steem-image/ without a Durable Object');
+    console.log('✓ /steem-image forwards signed uploads to the image host with CORS headers');
 }
 
 console.log('✅ All ForkBuild Rendezvous Worker tests passed.');
