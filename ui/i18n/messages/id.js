@@ -787,6 +787,8 @@ export default Object.freeze({
     'steemUpload.postingResumed': { other: 'Menyimpan di Steem: {done} dari {count} postingan dibuat. Setujui setiap postingan di Steem Keychain. Melanjutkan unggahan bangunan ini yang sebelumnya.' },
     'steemUpload.postingWithCredits': { other: 'Menyimpan di Steem: {done} dari {count} postingan dibuat. Setujui setiap postingan di Steem Keychain. Menggunakan sekitar {needed}% Resource Credits Anda ({available}% tersedia).' },
     'steemUpload.postingResumedWithCredits': { other: 'Menyimpan di Steem: {done} dari {count} postingan dibuat. Setujui setiap postingan di Steem Keychain. Melanjutkan unggahan bangunan ini yang sebelumnya. Menggunakan sekitar {needed}% Resource Credits Anda ({available}% tersedia).' },
+    'steemUpload.noPicture': 'Pemberitahuan Steem untuk “{title}” dipasang tanpa gambar bangunan: {reason}',
+    'steemUpload.noPictureUntitled': 'Pemberitahuan Steem dipasang tanpa gambar bangunan: {reason}',
 
     // Storage names shared by the distribution dialogs.
     'storage.ipfsLocal': 'IPFS (Kubo Lokal)',

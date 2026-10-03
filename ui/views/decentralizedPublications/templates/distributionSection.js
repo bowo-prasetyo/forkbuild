@@ -47,6 +47,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                     <p v-if="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.error" class="form-hint form-hint--neutral">
                                         {{ entry.discoveryDistributionAttempt.error }}
                                     </p>
+                                    <p v-if="steemNoticePictureText(entry)" class="form-hint steem-notice-picture-warning" role="status">{{ steemNoticePictureText(entry) }}</p>
                                     <!-- One row per substrate, never collapsed
                                          into one status. -->
                                     <dl v-if="discoveryObservationsView(entry).length > 0" class="evidence-fields">

@@ -789,6 +789,8 @@ export default Object.freeze({
     'steemUpload.postingResumed': { one: 'Storing on Steem: {done} of {count} post made. Approve each post in Steem Keychain. Resuming an earlier upload of this build.', other: 'Storing on Steem: {done} of {count} posts made. Approve each post in Steem Keychain. Resuming an earlier upload of this build.' },
     'steemUpload.postingWithCredits': { one: 'Storing on Steem: {done} of {count} post made. Approve each post in Steem Keychain. Uses about {needed}% of your Resource Credits ({available}% available).', other: 'Storing on Steem: {done} of {count} posts made. Approve each post in Steem Keychain. Uses about {needed}% of your Resource Credits ({available}% available).' },
     'steemUpload.postingResumedWithCredits': { one: 'Storing on Steem: {done} of {count} post made. Approve each post in Steem Keychain. Resuming an earlier upload of this build. Uses about {needed}% of your Resource Credits ({available}% available).', other: 'Storing on Steem: {done} of {count} posts made. Approve each post in Steem Keychain. Resuming an earlier upload of this build. Uses about {needed}% of your Resource Credits ({available}% available).' },
+    'steemUpload.noPicture': 'The Steem notice for “{title}” was posted without a picture of the build: {reason}',
+    'steemUpload.noPictureUntitled': 'The Steem notice was posted without a picture of the build: {reason}',
 
     // Storage names shared by the distribution dialogs.
     'storage.ipfsLocal': 'IPFS (Local Kubo)',

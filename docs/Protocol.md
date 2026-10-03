@@ -1157,6 +1157,15 @@ which answers `{ url }`. The same operator page's image upload check (`SteemImag
 test image, signs and uploads it, and checks that the returned address loads, to confirm this works from ForkBuild's
 own site before notices use it.
 
+Since its deployment of 2026-09-29, steemitimages.com answers uploads without CORS headers, so a browser on any other
+site gets no answer and the fetch fails. When the browser can't reach the host, the same signed upload goes to the
+rendezvous worker's relay, `POST <worker>/steem-image/<account>/<signature>` (`server/rendezvous-worker/README.md`),
+which forwards the multipart body unchanged to steemitimages.com and returns its answer with CORS headers. The host
+still checks the signature against the account's posting key over these exact bytes, so the relay can neither change
+the image nor upload as anyone, and it keeps nothing. A refusal by the host itself is final: the relay would forward
+to the same host. A notice that goes without its picture says so in the Distribute dialogs and on the Publications
+page, with the reason.
+
 ### Scope
 
 Steem storage holds a Snapshot's bytes and a Publication's Signed Claim (the material the Arweave and IPFS uploaders

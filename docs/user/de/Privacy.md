@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 44d0a17739347ec8 -->
+<!-- translation-of: docs/Privacy.md source-hash: ef02c2b3f84b697d -->
 # Datenschutz
 
 <!-- languages -->
@@ -159,7 +159,7 @@ was Sie bei ihm anfragen.
 | Sie holen Inhalte von IPFS | ein IPFS-Gateway (`ipfs.io`) oder Ihr eigener IPFS-Knoten (`127.0.0.1:5001`) | was Sie abrufen oder hinzufügen |
 | Sie pinnen Inhalte bei einem entfernten Pinning-Dienst (*experimentell*) | der Dienst, den Sie eingeben | den Inhalt und das Token, das Sie für diesen einen Upload eingeben (nie gespeichert) |
 | Sie speichern, kündigen an oder verankern auf Steem, oder entdecken Steem-Ankündigungen (*experimentell*) | Steem-API-Knoten (`api.steemit.com`, dann `api.justyy.com`); das Signieren läuft über die Erweiterung Steem Keychain | Ihren Steem-Kontonamen; was Sie posten (Ankündigungen, gespeicherte Inhalte, Anker), ist dauerhaft öffentlich auf der Chain, und Bearbeitungen lassen die frühere Version in ihrem Verlauf |
-| Sie verteilen den Signierten Anspruch einer Veröffentlichung auf Steem (*experimentell*) | der Steem-Bildhoster (`steemitimages.com`) | ein 320×200-Bild des Bauwerks für die Vorschau des Beitrags, signiert mit Ihrem Steem-Posting-Schlüssel |
+| Sie verteilen den Signierten Anspruch einer Veröffentlichung auf Steem (*experimentell*) | der Steem-Bildhoster (`steemitimages.com`), direkt oder, wenn der Browser ihn nicht erreicht, über das `/steem-image`-Relay des Rendezvous-Servers, das nichts speichert | ein 320×200-Bild des Bauwerks für die Vorschau des Beitrags, signiert mit Ihrem Steem-Posting-Schlüssel |
 | Sie öffnen einen geteilten Link zu einer Veröffentlichung (`#/view/…`) | der Steem-Knoten, das Arweave-Gateway oder das IPFS-Gateway, das der Link nennt, dann die Ankündigungssubstrate, um sein Bauwerk zu finden | welchen Beitrag, welche Transaktion oder welche CID Sie öffnen |
 | Sie verankern oder überprüfen Nachweise auf Bitcoin (*experimentell*) | eine Esplora-API (`blockstream.info`) | die Transaktion, die Sie senden oder nachschlagen |
 | Sie überprüfen Nachweise auf Base (*experimentell*) | ein Base-JSON-RPC-Endpunkt (`mainnet.base.org`) | die Transaktion, die Sie nachschlagen |

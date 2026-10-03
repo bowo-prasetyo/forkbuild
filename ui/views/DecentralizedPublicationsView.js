@@ -885,7 +885,7 @@ export default {
             distributePublicationForEntry, discoveryDistributionButtonLabel, distributeSnapshot,
             snapshotDistributionButtonLabel, discoveryObservationsView,
             discoveryDistributionConfigurationRoute, snapshotDistributionConfigurationRoute,
-            snapshotDiscoveryConfigurationRoute, steemUploadProgressText, entryWorld
+            snapshotDiscoveryConfigurationRoute, steemUploadProgressText, steemNoticePictureText, entryWorld
         } = usePublicationDistribution({
             publicationContentStore
         });
@@ -1079,7 +1079,7 @@ export default {
             discoveryObservationsView, discoveryDistributionConfigurationRoute, snapshotDistributionConfigurationRoute,
             snapshotDiscoveryConfigurationRoute, entryWorld, oneClickAnchorTypes: oneClickAnchorTypes(availableAnchorTypes),
             humanizeDiscoveryProvider, storageTypeOptionLabel, isExperimentalStorageType, describeClaimRelationship,
-            steemUploadProgressText, toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific, inspectionKnowledge,
+            steemUploadProgressText, steemNoticePictureText, toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific, inspectionKnowledge,
             evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel,
             describeKnownPlacementCount, togglePlacements, resolvePlacement, placementBadgeClass, placementLifecycleNote,
             togglePlacementInspect, placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific,

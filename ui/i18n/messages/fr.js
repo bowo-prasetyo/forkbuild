@@ -790,6 +790,8 @@ export default Object.freeze({
     'steemUpload.postingResumed': { one: 'Stockage sur Steem : {done} article sur {count} publié. Approuvez chaque article dans Steem Keychain. Reprise d’un envoi précédent de cette construction.', other: 'Stockage sur Steem : {done} articles sur {count} publiés. Approuvez chaque article dans Steem Keychain. Reprise d’un envoi précédent de cette construction.' },
     'steemUpload.postingWithCredits': { one: 'Stockage sur Steem : {done} article sur {count} publié. Approuvez chaque article dans Steem Keychain. Utilise environ {needed} % de vos Resource Credits ({available} % disponibles).', other: 'Stockage sur Steem : {done} articles sur {count} publiés. Approuvez chaque article dans Steem Keychain. Utilise environ {needed} % de vos Resource Credits ({available} % disponibles).' },
     'steemUpload.postingResumedWithCredits': { one: 'Stockage sur Steem : {done} article sur {count} publié. Approuvez chaque article dans Steem Keychain. Reprise d’un envoi précédent de cette construction. Utilise environ {needed} % de vos Resource Credits ({available} % disponibles).', other: 'Stockage sur Steem : {done} articles sur {count} publiés. Approuvez chaque article dans Steem Keychain. Reprise d’un envoi précédent de cette construction. Utilise environ {needed} % de vos Resource Credits ({available} % disponibles).' },
+    'steemUpload.noPicture': 'L’avis Steem de « {title} » a été publié sans image de la construction : {reason}',
+    'steemUpload.noPictureUntitled': 'L’avis Steem a été publié sans image de la construction : {reason}',
 
     // Storage names shared by the distribution dialogs.
     'storage.ipfsLocal': 'IPFS (Kubo local)',

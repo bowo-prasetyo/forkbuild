@@ -1,5 +1,5 @@
 import {
-    DEFAULT_STEEM_IMAGE_HOST, STEEM_IMAGE_SIGNING_PREFIX, SteemImageUploadError,
+    DEFAULT_STEEM_IMAGE_HOST, DEFAULT_STEEM_IMAGE_RELAY, STEEM_IMAGE_SIGNING_PREFIX, SteemImageUploadError,
     createSteemKeychainImageSigner, steemImageSigningPayload, uploadSteemImage
 } from '../steem/SteemImageUpload.js';
 import { runSteemImageUploadCheck } from '../scripts/steem-threads/SteemImageUploadCheck.js';
@@ -67,7 +67,7 @@ const json = (body, status = 200) => new Response(JSON.stringify(body), { status
     const [request] = host.requests;
     assert(request.url === `${DEFAULT_STEEM_IMAGE_HOST}/alice/${SIGNATURE}` && request.method === 'POST', `it posts to <host>/<account>/<signature> (got ${request.url})`);
     assert(request.file.type === 'image/png' && request.file.name === 'forkbuild.png' && JSON.stringify([...request.bytes]) === JSON.stringify([...BYTES]), 'the image goes as the "file" field, unchanged');
-    assert(result.url === 'https://steemitimages.com/DQmTest/forkbuild.png' && result.signature === SIGNATURE, 'it resolves to the address the host returns');
+    assert(result.url === 'https://steemitimages.com/DQmTest/forkbuild.png' && result.signature === SIGNATURE && result.via === 'host', 'it resolves to the address the host returns');
 
     const cases = [
         [fakeHost(() => json({ error: 'Signature did not verify' }, 400)), 'refused the upload: Signature did not verify'],
@@ -83,6 +83,38 @@ const json = (body, status = 200) => new Response(JSON.stringify(body), { status
     assert(odd?.stage === 'signing' && host.requests.length === 1, 'a signature that isn\'t hex never reaches the host');
     assert((await rejection(uploadSteemImage({ account: 'alice', bytes: BYTES, signer: null })))?.stage === 'signing', 'no signer, no upload');
     console.log('✓ uploading');
+}
+
+// The relay, for a host the browser can't reach (steemitimages.com sends no
+// CORS headers since 2026-09-29).
+{
+    let signings = 0;
+    const signer = { sign: async () => { signings++; return SIGNATURE; } };
+    const blocked = (relayAnswer) => fakeHost((request) => {
+        if (request.url.startsWith(DEFAULT_STEEM_IMAGE_HOST)) throw new TypeError('Failed to fetch');
+        return relayAnswer(request);
+    });
+    const relayed = blocked(() => json({ url: 'https://cdn.steemitimages.com/DQmTest/forkbuild.png' }));
+    const result = await uploadSteemImage({ account: 'alice', bytes: BYTES, signer, relay: DEFAULT_STEEM_IMAGE_RELAY, fetchImpl: relayed.fetchImpl });
+    const [direct, viaRelay] = relayed.requests;
+    assert(direct.url === `${DEFAULT_STEEM_IMAGE_HOST}/alice/${SIGNATURE}` && viaRelay.url === `${DEFAULT_STEEM_IMAGE_RELAY}/alice/${SIGNATURE}`, `the host first, then the relay (got ${relayed.requests.map((r) => r.url)})`);
+    assert(JSON.stringify([...viaRelay.bytes]) === JSON.stringify([...BYTES]) && signings === 1, 'the same signed image goes to the relay, signed once');
+    assert(result.url === 'https://cdn.steemitimages.com/DQmTest/forkbuild.png' && result.via === 'relay', 'it resolves to the address the relay returns');
+
+    const hostAnswers = fakeHost(() => json({ url: 'https://steemitimages.com/DQmTest/x.png' }));
+    assert((await uploadSteemImage({ account: 'alice', bytes: BYTES, signer, relay: DEFAULT_STEEM_IMAGE_RELAY, fetchImpl: hostAnswers.fetchImpl })).via === 'host' && hostAnswers.requests.length === 1,
+        'a host that answers is used directly');
+    const hostRefuses = fakeHost(() => json({ error: 'Signature did not verify' }, 400));
+    const refusal = await rejection(uploadSteemImage({ account: 'alice', bytes: BYTES, signer, relay: DEFAULT_STEEM_IMAGE_RELAY, fetchImpl: hostRefuses.fetchImpl }));
+    assert(refusal?.message.includes('Signature did not verify') && hostRefuses.requests.length === 1, 'a refusal by the host is final: the relay would forward to the same host');
+
+    const relayRefuses = blocked(() => json({ error: 'Signature did not verify' }, 400));
+    const both = await rejection(uploadSteemImage({ account: 'alice', bytes: BYTES, signer, relay: DEFAULT_STEEM_IMAGE_RELAY, fetchImpl: relayRefuses.fetchImpl }));
+    assert(both?.stage === 'upload' && both.message.includes('(Failed to fetch)') && both.message.includes('The ForkBuild relay failed too: The image host refused the upload: Signature did not verify'),
+        `when both fail, both reasons are given (got ${both?.message})`);
+    const relayDown = await rejection(uploadSteemImage({ account: 'alice', bytes: BYTES, signer, relay: DEFAULT_STEEM_IMAGE_RELAY, fetchImpl: async () => { throw new TypeError('Failed to fetch'); } }));
+    assert(relayDown?.message.includes('could not reach the ForkBuild relay'), `an unreachable relay is named (got ${relayDown?.message})`);
+    console.log('✓ the relay');
 }
 
 // The check.

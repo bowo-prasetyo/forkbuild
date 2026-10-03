@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 44d0a17739347ec8 -->
+<!-- translation-of: docs/Privacy.md source-hash: ef02c2b3f84b697d -->
 # 개인정보 보호
 
 <!-- languages -->
@@ -123,7 +123,7 @@ Nostr 릴레이, Arweave 게이트웨이, Steem 노드에서 새 공지를 읽�
 | IPFS에서 콘텐츠를 가져올 때 | IPFS 게이트웨이(`ipfs.io`), 또는 내 IPFS 노드(`127.0.0.1:5001`) | 내가 가져오거나 추가하는 것 |
 | 원격 피닝 서비스로 콘텐츠를 피닝할 때(*실험적*) | 내가 입력한 서비스 | 콘텐츠와, 그 업로드 한 번을 위해 입력한 토큰(절대 저장되지 않음) |
 | Steem에 저장, 공지, 앵커링하거나 Steem 공지를 발견할 때(*실험적*) | Steem API 노드(`api.steemit.com`, 그다음 `api.justyy.com`). 서명은 Steem Keychain 확장 프로그램을 거침 | 내 Steem 계정 이름. 내가 게시하는 것(공지, 저장한 콘텐츠, 앵커)은 체인에 영구히 공개되며, 수정해도 이전 버전이 기록에 남음 |
-| 게시물의 서명 클레임을 Steem에 배포할 때(*실험적*) | Steem 이미지 호스트(`steemitimages.com`) | 게시물 미리보기용 320×200 작품 사진, 내 Steem 게시 키로 서명됨 |
+| 게시물의 서명 클레임을 Steem에 배포할 때(*실험적*) | Steem 이미지 호스트(`steemitimages.com`). 브라우저가 직접 닿지 못하면 아무것도 저장하지 않는 랑데부 서버의 `/steem-image` 중계를 거침 | 게시물 미리보기용 320×200 작품 사진, 내 Steem 게시 키로 서명됨 |
 | 게시물의 공유 링크(`#/view/…`)를 열 때 | 링크가 가리키는 Steem 노드, Arweave 게이트웨이, IPFS 게이트웨이, 그다음 작품을 찾기 위한 공지 기반 | 내가 여는 게시물, 트랜잭션, CID |
 | Bitcoin에서 증거를 앵커링하거나 검증할 때(*실험적*) | Esplora API(`blockstream.info`) | 내가 브로드캐스트하거나 조회하는 트랜잭션 |
 | Base에서 증거를 검증할 때(*실험적*) | Base JSON-RPC 엔드포인트(`mainnet.base.org`) | 내가 조회하는 트랜잭션 |

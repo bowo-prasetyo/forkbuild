@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 44d0a17739347ec8 -->
+<!-- translation-of: docs/Privacy.md source-hash: ef02c2b3f84b697d -->
 # Privacidad
 
 <!-- languages -->
@@ -152,7 +152,7 @@ dirección IP y lo que usted le pide.
 | Obtiene contenido de IPFS | un gateway de IPFS (`ipfs.io`), o su propio nodo IPFS (`127.0.0.1:5001`) | lo que obtiene o agrega |
 | Fija contenido con un servicio de pinning remoto (*experimental*) | el servicio que ingresa | el contenido, y el token que escribe para esa subida (nunca se guarda) |
 | Guarda, anuncia o ancla en Steem, o descubre anuncios de Steem (*experimental*) | nodos de la API de Steem (`api.steemit.com`, luego `api.justyy.com`); la firma pasa por la extensión Steem Keychain | el nombre de su cuenta de Steem; lo que publica (anuncios, contenido guardado, anclajes) es público en la cadena para siempre, y las ediciones dejan la versión anterior en su historial |
-| Distribuye en Steem la Declaración firmada de una publicación (*experimental*) | el alojamiento de imágenes de Steem (`steemitimages.com`) | una imagen de 320×200 de la construcción para la vista previa de la publicación, firmada con su clave de publicación de Steem |
+| Distribuye en Steem la Declaración firmada de una publicación (*experimental*) | el alojamiento de imágenes de Steem (`steemitimages.com`), directamente o, cuando el navegador no puede alcanzarlo, a través del relé `/steem-image` del servidor de encuentro, que no guarda nada | una imagen de 320×200 de la construcción para la vista previa de la publicación, firmada con su clave de publicación de Steem |
 | Abre un enlace compartido a una publicación (`#/view/…`) | el nodo de Steem, el gateway de Arweave o el gateway de IPFS que indica el enlace, y luego los sustratos de anuncio para encontrar su construcción | qué publicación, transacción o CID abre |
 | Ancla o verifica evidencia en Bitcoin (*experimental*) | una API Esplora (`blockstream.info`) | la transacción que transmite o consulta |
 | Verifica evidencia en Base (*experimental*) | un endpoint JSON-RPC de Base (`mainnet.base.org`) | la transacción que consulta |

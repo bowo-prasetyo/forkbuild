@@ -365,6 +365,12 @@
     color: #909090;
 }
 
+/* A Steem notice posted without its build's picture: an amber .form-hint,
+   standing on its own line rather than under a form field. */
+.steem-notice-picture-warning {
+    margin: 0 0 0.85rem;
+}
+
 /* ui/components/PublicationCommentaryRemoteCheck.js — the "Check for new
    comments" row inside every Commentary section. */
 .commentary-remote-check {

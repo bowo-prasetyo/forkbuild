@@ -2,7 +2,7 @@ import { inject } from 'vue';
 import { sortOptionsByLabel } from '../../../utils/sortOptionsByLabel.js';
 import { humanizeStorageType, discoveryProviderConfigurationRoute } from './presentation.js';
 import { Publication } from '../../../publisher/Publication.js';
-import { describeSteemContentUploadProgress } from '../../../application/steem/SteemContentUploadProgressText.js';
+import { describeSteemContentUploadProgress, describeSteemNoticePictureProblem } from '../../../application/steem/SteemContentUploadProgressText.js';
 import { displayText, t } from '../../i18n/i18n.js';
 
 // Distributing an entry's publication and snapshot with the same app-wide
@@ -19,6 +19,10 @@ export function usePublicationDistribution({
     const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
     // Steem storage reports each post while it stores a Snapshot.
     const steemContentUploadProgress = inject('steemContentUploadProgress', null);
+    // A Steem notice that went without its build's picture; only one from
+    // after this page opened is shown.
+    const steemNoticePictureProblem = inject('steemNoticePictureProblem', null);
+    const openedAt = Date.now();
     // Eligible, registered Content backends for snapshot distribution
     // ('ipfs'/'ar'; 'local' is never eligible, see
     // application/snapshot/SnapshotDistributionContentBackendSelection.js). Read
@@ -170,6 +174,15 @@ export function usePublicationDistribution({
         return displayText(describeSteemContentUploadProgress(steemContentUploadProgress.value));
     }
 
+    // Why the Steem notice of an entry's Signed Claim, distributed from this
+    // page, went without its picture, or null. The notice is matched by the
+    // entry's title, the one thing it carries.
+    function steemNoticePictureText(entry) {
+        const problem = steemNoticePictureProblem ? steemNoticePictureProblem.value : null;
+        if (!problem || !entry.discoveryDistributionAttempt || (problem.title ?? null) !== (entry.publication?.title || null)) return null;
+        return displayText(describeSteemNoticePictureProblem(problem, openedAt));
+    }
+
     // The Settings route for the entry's chosen Content backend; IPFS uses
     // /settings/content-provider (there is no IPFS-only settings view).
     function snapshotDistributionConfigurationRoute(entry) {
@@ -187,6 +200,6 @@ export function usePublicationDistribution({
         distributePublicationForEntry, discoveryDistributionButtonLabel, distributeSnapshot,
         snapshotDistributionButtonLabel, discoveryObservationsView, discoveryDistributionConfigurationRoute,
         snapshotDistributionConfigurationRoute, snapshotDiscoveryConfigurationRoute, steemUploadProgressText,
-        entryWorld
+        steemNoticePictureText, entryWorld
     };
 }

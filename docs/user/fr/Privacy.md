@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 44d0a17739347ec8 -->
+<!-- translation-of: docs/Privacy.md source-hash: ef02c2b3f84b697d -->
 # Confidentialité
 
 <!-- languages -->
@@ -160,7 +160,7 @@ demandez.
 | Vous récupérez du contenu depuis IPFS | une passerelle IPFS (`ipfs.io`), ou votre propre nœud IPFS (`127.0.0.1:5001`) | ce que vous récupérez ou ajoutez |
 | Vous épinglez du contenu chez un service d’épinglage distant (*expérimental*) | le service que vous saisissez | le contenu, et le jeton que vous saisissez pour cet envoi (jamais stocké) |
 | Vous stockez, annoncez ou ancrez sur Steem, ou découvrez des annonces Steem (*expérimental*) | des nœuds API Steem (`api.steemit.com`, puis `api.justyy.com`) ; la signature passe par l’extension Steem Keychain | le nom de votre compte Steem ; ce que vous publiez (annonces, contenu stocké, ancres) est public sur la chaîne pour toujours, et les modifications laissent la version précédente dans son historique |
-| Vous distribuez la Déclaration signée d’une Publication sur Steem (*expérimental*) | l’hébergeur d’images de Steem (`steemitimages.com`) | une image 320×200 de la construction pour l’aperçu de l’article, signée avec votre clé de publication Steem |
+| Vous distribuez la Déclaration signée d’une Publication sur Steem (*expérimental*) | l’hébergeur d’images de Steem (`steemitimages.com`), directement ou, quand le navigateur ne peut pas l’atteindre, par le relais `/steem-image` du serveur de rendez-vous, qui ne garde rien | une image 320×200 de la construction pour l’aperçu de l’article, signée avec votre clé de publication Steem |
 | Vous ouvrez un lien partagé vers une Publication (`#/view/…`) | le nœud Steem, la passerelle Arweave ou la passerelle IPFS que le lien désigne, puis les supports d’annonce pour trouver sa construction | l’article, la transaction ou le CID que vous ouvrez |
 | Vous ancrez ou vérifiez des preuves sur Bitcoin (*expérimental*) | une API Esplora (`blockstream.info`) | la transaction que vous diffusez ou consultez |
 | Vous vérifiez des preuves sur Base (*expérimental*) | un endpoint JSON-RPC Base (`mainnet.base.org`) | la transaction que vous consultez |

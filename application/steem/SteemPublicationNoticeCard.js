@@ -9,9 +9,20 @@ import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 //   loadSnapshotText(contentHash) -> the build's JSON text, or null
 //   renderThumbnail(document)     -> Promise<Uint8Array> (a PNG)
 //   uploadImage(bytes)            -> Promise<string> (its https address)
-export function createSteemPublicationNoticeDescriber({ loadSnapshotText, renderThumbnail = null, uploadImage = null, documentSerializer = new DocumentSerializer(), warn = (...args) => console.warn(...args) }) {
+//   onPictureMissing({ title, reason }) hears why a card that should have had
+//                                 a picture has none, so the app can say so
+export function createSteemPublicationNoticeDescriber({ loadSnapshotText, renderThumbnail = null, uploadImage = null, onPictureMissing = null, documentSerializer = new DocumentSerializer(), warn = (...args) => console.warn(...args) }) {
     return async function describePublication(claim) {
         const card = { title: stringOrNull(claim?.title), author: stringOrNull(claim?.author), description: null, imageUrl: null };
+        const pictureWanted = typeof renderThumbnail === 'function' && typeof uploadImage === 'function';
+        const pictureMissing = (reason) => {
+            if (!pictureWanted || typeof onPictureMissing !== 'function') return;
+            try {
+                onPictureMissing({ title: card.title, reason });
+            } catch {
+                // Hearing about it never stops the notice.
+            }
+        };
         const contentHash = claim?.contentReference?.hash ?? claim?.contentHash ?? null;
         let document = null;
         try {
@@ -20,14 +31,18 @@ export function createSteemPublicationNoticeDescriber({ loadSnapshotText, render
         } catch (error) {
             warn('The Steem notice has no description or picture: the build could not be read.', error?.message ?? error);
         }
-        if (!document) return card;
+        if (!document) {
+            pictureMissing('the build could not be read on this device');
+            return card;
+        }
         card.description = stringOrNull(document.metadata?.description);
-        if (typeof renderThumbnail !== 'function' || typeof uploadImage !== 'function') return card;
+        if (!pictureWanted) return card;
         try {
             const bytes = await renderThumbnail(document);
             card.imageUrl = await uploadImage(bytes);
         } catch (error) {
             warn('The Steem notice has no picture:', error?.message ?? error);
+            pictureMissing(String(error?.message ?? error));
         }
         return card;
     };

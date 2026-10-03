@@ -1,13 +1,15 @@
 import { createSteemPublicationNoticeDescriber } from './SteemPublicationNoticeCard.js';
 import { CreateBrickRegistryUseCase } from '../editor/CreateBrickRegistryUseCase.js';
-import { createSteemKeychainImageSigner, uploadSteemImage } from '../../steem/SteemImageUpload.js';
+import { DEFAULT_STEEM_IMAGE_RELAY, createSteemKeychainImageSigner, uploadSteemImage } from '../../steem/SteemImageUpload.js';
 
 // The describer for Signed Claim notices on Steem, in the browser: the build
 // comes from the local content store, its thumbnail is drawn by the same
 // renderer as the Repository's (320×200, created on first use), and the
 // picture is signed through Steem Keychain as `getAccount()` and uploaded to
-// the Steem image host.
-export function composeSteemPublicationNoticeDescriber({ contentStore, getAccount, keychain = () => globalThis.steem_keychain }) {
+// the Steem image host, through ForkBuild's relay when the browser can't reach
+// the host directly. `onPictureMissing({ title, reason })` hears why a notice
+// goes without its picture.
+export function composeSteemPublicationNoticeDescriber({ contentStore, getAccount, keychain = () => globalThis.steem_keychain, onPictureMissing = null }) {
     let renderer = null;
     return createSteemPublicationNoticeDescriber({
         loadSnapshotText: async (hash) => {
@@ -26,8 +28,9 @@ export function composeSteemPublicationNoticeDescriber({ contentStore, getAccoun
             const account = getAccount();
             if (!account) throw new Error('no Steem account is set');
             const signer = createSteemKeychainImageSigner({ keychain: keychain() });
-            return (await uploadSteemImage({ account, bytes, signer, fileName: 'forkbuild-build.png' })).url;
-        }
+            return (await uploadSteemImage({ account, bytes, signer, relay: DEFAULT_STEEM_IMAGE_RELAY, fileName: 'forkbuild-build.png' })).url;
+        },
+        onPictureMissing
     });
 }
 

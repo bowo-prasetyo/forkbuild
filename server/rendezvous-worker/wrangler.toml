@@ -31,9 +31,9 @@ tag = "v1"
 new_sqlite_classes = ["RendezvousNode"]
 
 # ALLOWED_ORIGINS below restricts which web origins may open a rendezvous
-# connection or ask for TURN credentials (see README.md, "Restrict which
-# sites may use it"). Change it to your own site before deploying a copy,
-# or delete it to allow any origin.
+# connection, ask for TURN credentials or relay a Steem image upload (see
+# README.md, "Restrict which sites may use it"). Change it to your own site
+# before deploying a copy, or delete it to allow any origin.
 #
 # TURN relay credentials (see README.md) come from Cloudflare Realtime TURN,
 # whose key is stored as secrets, never in this file:

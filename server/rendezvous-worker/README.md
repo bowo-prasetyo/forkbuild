@@ -174,7 +174,8 @@ automatically (see that file's own comments).
 ## Restrict which sites may use it
 
 The `ALLOWED_ORIGINS` variable lists the web origins (comma-separated) whose
-pages may open a rendezvous connection or ask for TURN credentials; a
+pages may open a rendezvous connection, ask for TURN credentials or relay a
+Steem image upload; a
 request from any other origin gets `403 Origin not allowed`. `/turn-stats`
 and the plain status page skip the check. When the variable is unset or
 empty, any origin may connect.
@@ -193,6 +194,27 @@ development. Before you deploy your own copy:
 
 An origin is scheme, host and port, with no path or trailing slash
 (`https://bowo-prasetyo.github.io`, not `…github.io/forkbuild/`).
+
+## Steem image uploads
+
+`POST /steem-image/<account>/<signature>` forwards a picture for a Steem
+notice to the Steem image host, `https://steemitimages.com` (set the
+`STEEM_IMAGE_HOST` variable to use another), and returns the host's answer
+with CORS headers. The app uses it only when the browser can't reach the
+host itself: since its deployment of 2026-09-29, steemitimages.com sends no
+CORS headers, so browsers block uploads from every other site.
+
+The body is the multipart form the app would have sent the host, forwarded
+unchanged. The host checks that `<signature>` is `<account>`'s posting key
+signing these exact image bytes, so the relay can neither change a picture
+nor upload as anyone. It keeps no state and needs no Durable Object. It
+accepts images up to 1 MB (`LIMITS.maxSteemImageBytes`; the app's are
+320×200 PNGs of a few tens of kilobytes) from `ALLOWED_ORIGINS` only, and
+waits at most 30 seconds for the host.
+
+Check it from ForkBuild's site with the image upload check on
+`scripts/steem-threads/content-check.html`: when the browser can't reach
+steemitimages.com, its Upload row reads "accepted, through the relay".
 
 ## Cost
 
@@ -260,9 +282,11 @@ keep working until they expire (at most minutes). Clients older than
 this version of the app still publish signed entries, but their REMOVE
 is unsigned and is refused; their entries simply expire instead.
 
-The answer mailbox and the public lobby need this version of the worker.
-Against an older one, the app falls back to handing the connection reply
-over by hand, and the lobby says the server does not offer one yet.
+The answer mailbox, the public lobby and the Steem image relay need this
+version of the worker. Against an older one, the app falls back to handing
+the connection reply over by hand, the lobby says the server does not offer
+one yet, and a Steem notice goes without its picture (the Distribute dialog
+says why).
 
 ## If you ever need to change or remove it
 

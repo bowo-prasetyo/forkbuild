@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 44d0a17739347ec8 -->
+<!-- translation-of: docs/Privacy.md source-hash: ef02c2b3f84b697d -->
 # Privacidade
 
 <!-- languages -->
@@ -148,7 +148,7 @@ pede a ele.
 | Você busca conteúdo no IPFS | um gateway IPFS (`ipfs.io`), ou seu próprio nó IPFS (`127.0.0.1:5001`) | o que você busca ou adiciona |
 | Você fixa conteúdo num serviço de pinning remoto (*experimental*) | o serviço que você digitar | o conteúdo, e o token que você digita para aquele envio (nunca guardado) |
 | Você guarda, anuncia ou ancora no Steem, ou descobre anúncios do Steem (*experimental*) | nós de API do Steem (`api.steemit.com`, depois `api.justyy.com`); a assinatura passa pela extensão Steem Keychain | o nome da sua conta no Steem; o que você posta (anúncios, conteúdo guardado, âncoras) fica público na cadeia para sempre, e as edições deixam a versão anterior no histórico |
-| Você distribui a Declaração assinada de uma publicação no Steem (*experimental*) | o servidor de imagens do Steem (`steemitimages.com`) | uma imagem de 320×200 da construção para a prévia da postagem, assinada com sua chave de postagem do Steem |
+| Você distribui a Declaração assinada de uma publicação no Steem (*experimental*) | o servidor de imagens do Steem (`steemitimages.com`), diretamente ou, quando o navegador não consegue alcançá-lo, pelo relé `/steem-image` do servidor de encontro, que não guarda nada | uma imagem de 320×200 da construção para a prévia da postagem, assinada com sua chave de postagem do Steem |
 | Você abre um link compartilhado de uma publicação (`#/view/…`) | o nó do Steem, o gateway do Arweave ou o gateway IPFS que o link indica, e depois os substratos de anúncio para encontrar a construção | qual postagem, transação ou CID você abre |
 | Você ancora ou verifica evidências no Bitcoin (*experimental*) | uma API Esplora (`blockstream.info`) | a transação que você transmite ou consulta |
 | Você verifica evidências na Base (*experimental*) | um endpoint JSON-RPC da Base (`mainnet.base.org`) | a transação que você consulta |
