@@ -252,3 +252,13 @@ function placeholders(text) {
     assert(t('app.nav.home') === 'Home', 'back to English');
     console.log('✓ the app-wide translator switches locale and marks the page');
 }
+
+// The compass's place reading names every water feature, the sea included.
+{
+    const { spatialContextDescription } = await import('../ui/i18n/worldText.js');
+    assert(spatialContextDescription({ terrainZone: 'WATER', hydrologyFeature: 'SEA' }) === 'Water · sea', 'the sea is named');
+    assert(spatialContextDescription({ terrainZone: 'WATER', hydrologyFeature: 'LAKE' }) === 'Water · lake', 'a lake is named');
+    assert(spatialContextDescription({ terrainZone: 'GRASSLAND', hydrologyFeature: 'RIVER' }) === 'Grassland · river', 'a river is named');
+    assert(spatialContextDescription({ terrainZone: 'ROCK', hydrologyFeature: 'NONE' }) === 'Rock', 'no water feature adds nothing');
+    console.log('✓ the place reading names the sea, lakes and rivers');
+}

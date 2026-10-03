@@ -20,8 +20,8 @@ export function spatialContextDescription(context) {
     if (context.terrainZone) {
         parts.push(textFor(`terrainZone.${context.terrainZone.toLowerCase()}`, context.terrainZone));
     }
-    if (context.hydrologyFeature === 'LAKE' || context.hydrologyFeature === 'RIVER') {
-        parts.push(t(`hydrologyFeature.${context.hydrologyFeature.toLowerCase()}`));
+    if (context.hydrologyFeature && context.hydrologyFeature !== 'NONE') {
+        parts.push(textFor(`hydrologyFeature.${context.hydrologyFeature.toLowerCase()}`, context.hydrologyFeature));
     }
     const nearest = (context.nearbyStructures || [])[0];
     if (nearest && nearest.distance < 50) {
