@@ -655,6 +655,10 @@ export default {
             if (activeDoc) {
                 title.value = activeDoc.metadata.title || t('worldView.untitled');
                 author.value = activeDoc.metadata.author;
+            } else if (!activeId) {
+                // No active World (it streamed out): don't keep the last one's title.
+                title.value = t('worldView.world2');
+                author.value = null;
             }
             activeDocumentInfo.value = activeId ? session.getDocumentInfo(activeId) : null;
             activeWorldLobby.value = activeId ? worldLobby(activeId) : null;

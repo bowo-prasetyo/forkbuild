@@ -10,6 +10,7 @@ import { assert } from './support/Assert.js';
 function stubSession(storedPerspectives) {
     let perspective = null;
     return {
+        noteWorldExperienceCamera() {},
         saveWorldExperience() {},
         restoreWorldExperience(documentId) {
             if (!(documentId in storedPerspectives)) {

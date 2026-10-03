@@ -382,6 +382,9 @@ export class WorldNavigationSession {
         this._spatialPresenceRenderedDevices = new Map();
 
         this._localWorldExperienceStore = localWorldExperienceStore;
+        // The last camera framing seen near the World being visited:
+        // { documentId, framing } (see noteWorldExperienceCamera()).
+        this._lastWorldExperienceFraming = null;
 
         this._placeNamingClaimUseCase = placeNamingClaimUseCase;
         this._localNamePreferenceStore = localNamePreferenceStore;

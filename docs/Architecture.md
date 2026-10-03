@@ -1310,7 +1310,12 @@ in the app; the design notes are in docs/ArchitectureHistory.md.
   from PlaceNamingPanel.
 - **Personal state.** LocalWorldExperienceStore remembers where you were
   in each World you visited. It is local, never World content, and feeds
-  the Recent Worlds page.
+  the Recent Worlds page. A World's saved camera framing is always one
+  taken near it (within the streaming radius): World View notes the
+  framing on every refresh and saves the last one seen there when you
+  leave, and a restore ignores a framing, or a Camera Perspective whose
+  avatar stands elsewhere, that would leave the camera away from the
+  World.
 
 ## Publication presence across restarts
 

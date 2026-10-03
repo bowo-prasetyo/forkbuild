@@ -3737,3 +3737,17 @@ rolling along X; the wheel builders in `renderer/VehicleRenderer.js` turned it a
 believing the torus lay flat. That rotation is gone. New `tests/VehicleWheelAlignment.test.js` draws each wheeled
 vehicle through `VehicleVisual` at several headings and checks every wheel is upright with its axle across the
 direction of travel, and the body faces that way too.
+
+## Explore lands on the World you asked for (unnumbered, 2026-10-03)
+
+Exploring a World you had visited before could show nothing: a 1:6 Great Pyramid opened with "Camera: World ·
+Editing: None", Home went to a neighbouring build, and selecting the pyramid's bricks jumped the camera away again.
+World View saves the camera framing of the World it is leaving only once the active document has changed, and by then
+the camera has already moved on, to the next World (Search → Focus) or so far that the World streamed out. That
+framing was stored as the old World's, so the next visit restored a camera somewhere else; the World never streamed
+in, or streamed back out, and a neighbour became active instead. `noteWorldExperienceCamera()` now remembers the
+framing on every refresh while the camera is within the streaming radius of the World, and `saveWorldExperience()`
+saves that one once the camera has left (or keeps the previous framing). `restoreWorldExperience()` ignores a stored
+framing away from the World, which also repairs framings saved before this fix, and re-applies a stored Camera
+Perspective only while the avatar stands at the World. The header no longer keeps the last World's title while no
+World is active. New `tests/WorldExperienceFramingStaysAtItsWorld.test.js`.
