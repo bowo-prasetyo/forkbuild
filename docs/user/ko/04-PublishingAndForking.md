@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 83735d230212d194 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 31b37f7993e1c8cc -->
 # 04 — 게시와 포크
 
 <!-- languages -->
@@ -148,7 +148,7 @@ Arweave 지갑(예: Wander) 또는 Nostr 확장 프로그램(예: nos2x) — 이
 존중하지만, 자물쇠는 아닙니다. 앱의 코드를 바꾼 사람은 무시할 수 있으며, 이
 설정을 고르기 전에 누군가 만든 배치를 되돌릴 수는 없습니다.
 
-어느 쪽이든, 월드 보기에서 스냅샷을 **배포**하면 다른 사람은 *내가* 놓은
+어느 쪽이든, 월드 보기에서 또는 게시 직후 편집기에서 스냅샷을 **배포**하면 다른 사람은 *내가* 놓은
 곳에서 내 작품을 봅니다: 공지에 내 서명된 배치가 담기고, 상대의 ForkBuild는
 내 공유 월드를 알게 되자마자 그곳에 작품을 보여 줍니다. 옮기고 다시
 배포하면 상대 화면에서도 옮겨집니다.

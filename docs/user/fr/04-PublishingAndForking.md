@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 83735d230212d194 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 31b37f7993e1c8cc -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -179,7 +179,7 @@ annuler un placement fait avant que vous le choisissiez.
 
 Dans tous les cas, les autres voient votre construction là où *vous*
 l’avez mise dès que vous **Distribuez** son Snapshot depuis la Vue du
-Monde : l’annonce porte votre placement signé, et leur ForkBuild affiche
+Monde ou juste après la publication dans l’Éditeur : l’annonce porte votre placement signé, et leur ForkBuild affiche
 la construction à cet endroit dès qu’il connaît votre Monde partagé.
 Déplacez-la et distribuez de nouveau, et elle se déplace aussi chez eux.
 

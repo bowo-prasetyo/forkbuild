@@ -3763,3 +3763,13 @@ placement (new `application/placement/LinkedPublisherPlacement.js`, through `Ado
 the publisher's own signature, newest revision wins), and while the device holds none it searches the announcements
 for one even when the build is already here, so devices that opened the link before this fix pick it up too. New
 cases in `tests/SteemPublicationLink.test.js`.
+
+## The Editor's Distribute announces the publisher's placement (unnumbered, 2026-10-03)
+
+A build distributed with the Distribute offered right after publishing in the Editor still opened on other devices at
+its stand-in position with "Placements (0)", even after links began adopting placements: the Editor's Snapshot
+distribution (`ui/views/editorView/usePostPublishDistribution.js`) announced the Snapshot without the publisher's
+signed placement that publishing had just made, so there was nothing to adopt. It now looks the placement up with
+`publisherPlacementClaimLookup`, as the Publications page and World View do, and announces `publicationId`,
+`claimedPosition` and `placementRecord` beside the Snapshot, for Arweave, IPFS and Steem storage and for remote
+pinning alike. New `tests/EditorSnapshotDistributionCarriesPlacement.test.js`.

@@ -27,6 +27,10 @@ export function usePostPublishDistribution({
     const publicationContentStore = inject('publicationContentStore', null);
     const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
     const resolveSnapshotDiscoveryPublisher = inject('resolveSnapshotDiscoveryPublisher', null);
+    // The publisher's own signed placement, made when publishing, announced beside
+    // the Snapshot as the Publications page and World View do, so other devices
+    // (a link, a nearby visitor) show the build where it was placed.
+    const publisherPlacementClaimLookup = inject('publisherPlacementClaimLookup', null);
 
     // Substrate choice shared by both actions: page-local, never persisted.
     // Opens on the saved preference, else 'nostr'.
@@ -102,12 +106,14 @@ export function usePostPublishDistribution({
         });
     }
 
-    // Sends the Publication's raw snapshot bytes. Like WorldView's version, but
-    // with no placement here, claimedPosition and publicationId stay undefined.
+    // Sends the Publication's raw snapshot bytes, with its publisher's signed
+    // placement when this device holds one (`{}` otherwise: publicationId,
+    // claimedPosition and placementRecord travel together or not at all).
     async function distributeEditorSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) {
         if (!publicationContentStore || !publication.contentReference) {
             return Promise.reject(new Error(t('distribution.snapshotUnavailable')));
         }
+        const claim = publisherPlacementClaimLookup ? publisherPlacementClaimLookup.claimFor(publication) : {};
         const snapshotBytes = await publicationContentStore.get(publication.contentReference);
         if (snapshotBytes === null || snapshotBytes === undefined) {
             return Promise.reject(new Error(t('distribution.snapshotUnavailable')));
@@ -126,7 +132,7 @@ export function usePostPublishDistribution({
                     if (!discoveryPublisher) {
                         return { contentReference, announcement: null, announcementError: t('distribution.snapshotUnavailable') };
                     }
-                    return discoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs' })
+                    return discoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs', ...claim })
                         .then((announcement) => ({ contentReference, announcement }))
                         .catch((error) => {
                             // The content is already pinned, so an announcement failure surfaces as
@@ -143,7 +149,7 @@ export function usePostPublishDistribution({
         if (!snapshotDistributionCommand) {
             return Promise.reject(new Error(t('distribution.snapshotUnavailable')));
         }
-        return snapshotDistributionCommand(snapshotBytes, storage, undefined, undefined, discoveryProvider);
+        return snapshotDistributionCommand(snapshotBytes, storage, claim.publicationId, claim.claimedPosition, discoveryProvider, claim.placementRecord);
     }
 
     // Replaced by each successful publish: "Publish A, Publish B, click" must

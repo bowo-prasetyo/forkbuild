@@ -164,7 +164,8 @@ could ignore it, and it can't take back a placement someone made before you
 chose it.
 
 Either way, other people see your build where *you* put it once you
-**Distribute** its Snapshot from World View: the announcement carries your
+**Distribute** its Snapshot, from World View or right after publishing in the
+Editor: the announcement carries your
 signed placement, and their ForkBuild shows the build there as soon as it
 knows your Shared World. Move it and distribute again, and it moves for them
 too.

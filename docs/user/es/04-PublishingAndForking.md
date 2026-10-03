@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 83735d230212d194 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 31b37f7993e1c8cc -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -175,7 +175,7 @@ código de la app podría ignorarlo, y no puede deshacer una colocación que
 alguien hizo antes de que usted lo eligiera.
 
 En cualquier caso, otras personas ven su construcción donde *usted* la
-puso una vez que **distribuye** su Snapshot desde la Vista del mundo: el
+puso una vez que **distribuye** su Snapshot desde la Vista del mundo o justo después de publicar en el Editor: el
 anuncio lleva su colocación firmada, y su ForkBuild muestra la construcción
 allí en cuanto conoce su Mundo compartido. Muévala y vuelva a distribuirla,
 y también se moverá para ellos.

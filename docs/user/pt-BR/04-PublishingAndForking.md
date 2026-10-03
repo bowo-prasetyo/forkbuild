@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 83735d230212d194 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 31b37f7993e1c8cc -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -169,7 +169,7 @@ código do app poderia ignorá-la, e ela não desfaz um posicionamento que
 alguém fez antes de você escolhê-la.
 
 De todo modo, as outras pessoas veem sua construção onde *você* a pôs depois
-que você usa **Distribuir** com o Snapshot dela na Visão do mundo: o anúncio
+que você usa **Distribuir** com o Snapshot dela na Visão do mundo ou logo depois de publicar no Editor: o anúncio
 leva seu posicionamento assinado, e o ForkBuild delas mostra a construção ali
 assim que conhece seu Mundo compartilhado. Mova-a e distribua de novo, e ela
 se move para elas também.
