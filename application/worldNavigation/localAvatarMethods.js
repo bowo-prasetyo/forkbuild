@@ -794,11 +794,39 @@ export const localAvatarMethods = {
     // about to focus, instead of world origin. Fires at most once per session,
     // on the first focusDocument(). After the avatar has moved, navigating the
     // camera never teleports it.
+    //
+    // Called after focusDocument() has streamed the document in. If its content
+    // is still being read from disk, the spawn uses the fixed offset for now and
+    // _settlePendingAvatarSpawn() moves it clear once _loadWorld() has it.
     _spawnAvatarNear(documentId, position) {
         if (!this._avatarPresenceSession || this._avatarPresenceSession.current.sequence !== 0) {
             return;
         }
-        this._avatarPresenceSession.update({ position: this._safeSpawnPosition(documentId, position) });
+        const spawn = this._safeSpawnPosition(documentId, position);
+        this._avatarPresenceSession.update({ position: spawn });
+        this._pendingAvatarSpawn = this._loadedDocuments.has(documentId)
+            ? null
+            : { documentId, position, spawn };
+    },
+
+    // Finishes a spawn made before `documentId` was loaded: moves the avatar from
+    // the fixed offset to just past the document's real bounds. Leaves it alone
+    // once the player has walked off the spawn point. Only x/z are compared,
+    // since terrain and gravity settle y without the player doing anything.
+    _settlePendingAvatarSpawn(documentId) {
+        const pending = this._pendingAvatarSpawn;
+        if (!pending || pending.documentId !== documentId) {
+            return;
+        }
+        this._pendingAvatarSpawn = null;
+        if (!this._avatarPresenceSession) {
+            return;
+        }
+        const current = this._avatarPresenceSession.current.position;
+        if (current.x !== pending.spawn.x || current.z !== pending.spawn.z) {
+            return;
+        }
+        this._avatarPresenceSession.update({ position: this._safeSpawnPosition(documentId, pending.position) });
     },
 
     // A spawn point must clear the document's real content. The fixed

@@ -28,6 +28,9 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { License, LicenseId } from '../core/License.js';
+import { Position } from '../core/Position.js';
+import { SpatialBounds } from '../core/SpatialBounds.js';
+import { StorageEntryNotLoadedError } from '../storage/StorageEntryNotLoadedError.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -443,10 +446,11 @@ async function runTests() {
         session.focusDocument(publication.documentId); // the same call navigateToDocument() makes
 
         assert(avatarPresenceSession.current.sequence === 1, '42. the first focusDocument() call repositions the (still-untouched) avatar exactly once');
+        const lighthouseBounds = SpatialBounds.fromWorld(world, brickRegistry);
         assert(
-            avatarPresenceSession.current.position.x === documentPos.x + 3
-            && avatarPresenceSession.current.position.z === documentPos.z + 3,
-            '43. the avatar spawns at the focused document\'s own position, offset so it doesn\'t sit inside the document\'s geometry'
+            avatarPresenceSession.current.position.x === documentPos.x + lighthouseBounds.max.x + 3
+            && avatarPresenceSession.current.position.z === documentPos.z + lighthouseBounds.max.z + 3,
+            '43. the avatar spawns just past the focused document\'s measured bounds, so it doesn\'t sit inside the document\'s geometry'
         );
         const presenceCallsAfterFirstFocus = session._session.calls.updateLocalAvatarPresence.length;
         assert(presenceCallsAfterFirstFocus >= 1, '44. the reposition actually propagated to the render facade');
@@ -458,6 +462,101 @@ async function runTests() {
         assert(avatarPresenceSession.current.sequence === 1, '45. a second focusDocument() call does not move an already-spawned avatar');
         assert(session._session.calls.updateLocalAvatarPresence.length === presenceCallsAfterFirstFocus,
             '46. ...and does not send a redundant presence update to the facade either');
+    }
+
+    // -------------------------------------------------------------
+    // Section F — the first spawn after a reload clears a large build.
+    // focusDocument() used to spawn before streaming the document in, so
+    // the spawn never saw the build's bounds and used the fixed 3 m
+    // offset, inside anything bigger. When the document is still being
+    // read from disk, the spawn is corrected once it loads, unless the
+    // player has already walked away.
+    // -------------------------------------------------------------
+    {
+        function spawnScenario() {
+            const storage = new InMemoryStorageProvider();
+            const alice = new LocalIdentityProvider(storage);
+            alice.login('alice');
+            const avatarProfileUseCase = new AvatarProfileUseCase(storage, alice, registry);
+            const avatarPresenceSession = new AvatarPresenceSession(avatarProfileUseCase.getProfile());
+            const brickRegistry = new CreateBrickRegistryUseCase().execute();
+            const contentStore = new LocalContentStore(storage);
+            const publisher = new LocalPublisherProvider(storage, contentStore);
+            const discoveryProvider = new LocalDiscoveryProvider(storage);
+            const spatialIndexProvider = new LocalSpatialIndexProvider(storage);
+            const placementRegistry = new LocalPlacementRegistry(storage, spatialIndexProvider);
+            const worldLayoutProvider = new LocalWorldLayoutProvider(spatialIndexProvider, discoveryProvider);
+            const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(storage);
+            const placePublicationUseCase = new PlacePublicationUseCase(
+                spatialIndexProvider, discoveryProvider, loadPublicationDocumentUseCase, brickRegistry, placementRegistry, alice
+            );
+            const publishDocumentUseCase = new PublishDocumentUseCase(publisher, alice, placePublicationUseCase, new GridPlacementStrategy());
+
+            // A 13 m square build around its own origin: the fixed 3 m offset is inside it.
+            const world = new World();
+            const building = new Building({ creator: 'alice' });
+            for (const [x, z] of [[0, 0], [12, 0], [0, 12], [12, 12]]) {
+                building.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(x, 0, z) }));
+            }
+            world.addBuilding(building);
+            const document = new Document({ world, metadata: new DocumentMetadata({ title: 'Castle', author: 'alice', license: new License({ id: LicenseId.CC0_1_0 }) }) });
+            const publication = publishDocumentUseCase.execute({ document });
+
+            const session = new WorldNavigationSession({
+                registry: brickRegistry, loadPublicationDocumentUseCase, worldLayoutProvider,
+                identityProvider: alice, discoveryProvider, placementRegistry,
+                avatarProfileUseCase, avatarPresenceSession
+            });
+            session._session = spyFacade();
+            session._spatialCameraController = new SpatialCameraController(session._session);
+            session._setupLocalAvatar();
+            return {
+                session, avatarPresenceSession, documentId: publication.documentId,
+                documentPos: worldLayoutProvider.getPosition(publication.documentId),
+                bounds: SpatialBounds.fromWorld(world, brickRegistry)
+            };
+        }
+        // Makes the next _resolveWorldDocument() call behave as if the content were still on disk.
+        function stillOnDiskOnce(session) {
+            const resolve = session._resolveWorldDocument;
+            session._resolveWorldDocument = function (documentId) {
+                session._resolveWorldDocument = resolve;
+                throw new StorageEntryNotLoadedError(documentId);
+            };
+        }
+        const outside = (position, documentPos, bounds) =>
+            position.x > documentPos.x + bounds.max.x && position.z > documentPos.z + bounds.max.z;
+
+        {
+            const { session, avatarPresenceSession, documentId, documentPos, bounds } = spawnScenario();
+            session.navigateToDocument(documentId);
+            assert(bounds.max.x >= 12 && bounds.max.z >= 12, '47. the test build really is larger than the fixed spawn offset');
+            assert(outside(avatarPresenceSession.current.position, documentPos, bounds),
+                '48. the first spawn after a reload lands outside a large build, not inside it');
+        }
+
+        {
+            const { session, avatarPresenceSession, documentId, documentPos, bounds } = spawnScenario();
+            stillOnDiskOnce(session);
+            session.navigateToDocument(documentId);
+            const first = avatarPresenceSession.current.position;
+            assert(first.x === documentPos.x + 3 && first.z === documentPos.z + 3,
+                '49. while the build is still on disk, the spawn falls back to the fixed offset');
+            session.updateSpatialView(); // WorldView's periodic refresh, once the read has finished
+            assert(outside(avatarPresenceSession.current.position, documentPos, bounds),
+                '50. once the build loads, the avatar is moved from the fixed offset to outside it');
+        }
+
+        {
+            const { session, avatarPresenceSession, documentId, documentPos } = spawnScenario();
+            stillOnDiskOnce(session);
+            session.navigateToDocument(documentId);
+            const walkedTo = { x: documentPos.x - 20, y: 0, z: documentPos.z - 20 };
+            avatarPresenceSession.update({ position: walkedTo });
+            session.updateSpatialView();
+            assert(avatarPresenceSession.current.position.x === walkedTo.x && avatarPresenceSession.current.position.z === walkedTo.z,
+                '51. a player who already walked off the spawn point is not moved when the build loads');
+        }
     }
 
     console.log('✅ All Avatar Rendering tests passed.');
