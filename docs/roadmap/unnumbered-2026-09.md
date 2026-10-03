@@ -3751,3 +3751,15 @@ saves that one once the camera has left (or keeps the previous framing). `restor
 framing away from the World, which also repairs framings saved before this fix, and re-applies a stored Camera
 Perspective only while the avatar stands at the World. The header no longer keeps the last World's title while no
 World is active. New `tests/WorldExperienceFramingStaysAtItsWorld.test.js`.
+
+## A link shows the build where its publisher placed it (unnumbered, 2026-10-03)
+
+Opening a Publication's link (`#/view/steem|ar|ipfs/…`) in another browser showed the build at a stand-in position,
+by the water rather than where its publisher put it, and its panel read "Placements (0)". The publisher's signed
+placement travels beside the Snapshot announcement, and `OpenPublicationLink` already downloaded those announcements
+to find the build, but never adopted the placement; World View only adopts one for Snapshots it finds near the
+viewer, and the link had put the camera at the stand-in position instead. The link now adopts the publisher's signed
+placement (new `application/placement/LinkedPublisherPlacement.js`, through `AdoptPublisherPlacementUseCase`: only
+the publisher's own signature, newest revision wins), and while the device holds none it searches the announcements
+for one even when the build is already here, so devices that opened the link before this fix pick it up too. New
+cases in `tests/SteemPublicationLink.test.js`.

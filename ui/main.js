@@ -630,14 +630,15 @@ defineServiceGroup('distribution', async () => {
     const [
         { composePublicationDistribution }, { composeSnapshotDiscovery }, { openPublicationLink },
         { CreateIpfsRemotePublicationCoordinatorUseCase }, { CreateIpfsPublicationContentVerifierUseCase },
-        { CreateIpfsPublicationContentVerificationCoordinatorUseCase }
+        { CreateIpfsPublicationContentVerificationCoordinatorUseCase }, { createLinkedPublisherPlacement }
     ] = await Promise.all([
         import('./main/composePublicationDistribution.js'),
         import('./main/composeSnapshotDiscovery.js'),
         import('../application/publication/OpenPublicationLink.js'),
         import('../application/ipfs/CreateIpfsRemotePublicationCoordinatorUseCase.js'),
         import('../application/ipfs/CreateIpfsPublicationContentVerifierUseCase.js'),
-        import('../application/ipfs/CreateIpfsPublicationContentVerificationCoordinatorUseCase.js')
+        import('../application/ipfs/CreateIpfsPublicationContentVerificationCoordinatorUseCase.js'),
+        import('../application/placement/LinkedPublisherPlacement.js')
     ]);
 
     // Holds no credential between calls: it builds a fresh pinning provider from
@@ -699,6 +700,12 @@ defineServiceGroup('distribution', async () => {
     // it in 3D" link on a Steem post, or one shared with Share): the Signed Claim
     // is read from Steem, Arweave or IPFS and verified, its build found by content
     // hash, and the Publication admitted as World discovery admits one.
+    // The publisher's signed placement for a linked Publication, kept where World
+    // View reads placements, so the build stands where its publisher put it.
+    const linkedPublisherPlacement = createLinkedPublisherPlacement({
+        storageProvider: new LocalStorageProvider(),
+        findPublicationById: (id) => decentralizedPublicationDiscoveryProvider.findById(id) || new LocalDiscoveryProvider(new LocalStorageProvider()).findById(id)
+    });
     app.provide('openPublicationLink', ({ locator }) => openPublicationLink({
         locator,
         retrieveClaim: retrievePublicationClaim,
@@ -708,7 +715,8 @@ defineServiceGroup('distribution', async () => {
         resolveSnapshotCandidate: resolveSelectedSnapshotCommand,
         storeSnapshotContent: (request) => storeSnapshotContentUseCase.execute(request),
         discoveryProvider: decentralizedPublicationDiscoveryProvider,
-        admissionLog: worldEncounterPublicationAdmissionLog
+        admissionLog: worldEncounterPublicationAdmissionLog,
+        publisherPlacement: linkedPublisherPlacement
     }));
 });
 

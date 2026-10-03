@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: fe92a9427ac32e6f -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 263581397a33de10 -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
@@ -818,7 +818,7 @@ résultat de la boîte de dialogue Distribuer, et sur la page Publications.
 **Partager…** ouvre la feuille de partage de votre appareil quand elle
 existe ; **Copier le lien** copie le lien, qui est aussi affiché pour une
 copie à la main. Le lien s’ouvre sur n’importe quel appareil, à condition
-que le Snapshot ait aussi été distribué. L’adresse `#/world/…` de votre
+que le Snapshot ait aussi été distribué, et montre la construction là où vous l’avez placée : votre placement signé voyage avec le Snapshot, et le lien le reprend. L’adresse `#/world/…` de votre
 barre d’adresse ne fonctionne que dans votre propre navigateur.
 
 - **Arweave :** juste après la distribution, le lien peut mettre quelques

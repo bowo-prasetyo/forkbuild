@@ -27,6 +27,11 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { License, LicenseId } from '../core/License.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { createLinkedPublisherPlacement } from '../application/placement/LinkedPublisherPlacement.js';
+import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
+import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
+import { WorldPosition } from '../core/WorldPosition.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 import { displayText } from '../ui/i18n/i18n.js';
@@ -92,17 +97,20 @@ function publishBuild(title = 'A small tower') {
     const manager = new DocumentManager();
     manager.load(new Document({ world, metadata: new DocumentMetadata({ title, author: 'alice', license: new License({ id: LicenseId.CC_BY_4_0 }) }) }), 'doc-tower');
     const publication = new PublishDocumentUseCase(publisher, identity).execute(manager);
-    return { publication, snapshotText: contentStore.getSync(publication.contentReference) };
+    return { publication, identity, snapshotText: contentStore.getSync(publication.contentReference) };
 }
 
 // Distributes as the app does with Steem storage and Steem announcements:
 // the Snapshot (stored, then announced), then the Signed Claim.
-async function distribute(chain, { publication, snapshotText }, { claimJson = publication.toJSON(), announceSnapshot = true } = {}) {
+async function distribute(chain, { publication, snapshotText }, { claimJson = publication.toJSON(), announceSnapshot = true, placementRecord = null } = {}) {
     const announcer = announcerFor(chain);
     const store = new SteemContentStore({ rpc: chain.rpc, announcer, threadAccounts: ['forkbuild'] });
     const snapshotReference = await store.put(snapshotText);
     if (announceSnapshot) {
-        await new SteemSnapshotDiscoveryPublisher({ announcer }).publish({ contentHash: snapshotReference.hash, locator: snapshotReference.uri, storage: 'steem' });
+        const placement = placementRecord
+            ? { publicationId: placementRecord.publicationId, claimedPosition: { ...placementRecord.position }, placementRecord }
+            : {};
+        await new SteemSnapshotDiscoveryPublisher({ announcer }).publish({ contentHash: snapshotReference.hash, locator: snapshotReference.uri, storage: 'steem', ...placement });
     }
     const uploader = composePublicationMaterialUploader({ materialStorage: 'steem', steemMaterialStore: store });
     const claimUri = await uploader.upload(JSON.stringify(claimJson));
@@ -137,7 +145,7 @@ function visitor(chain) {
         admissionLog,
         ...overrides
     });
-    return { open, localContentStore, discoveryProvider, admissionLog, searches };
+    return { open, storage, localContentStore, discoveryProvider, admissionLog, searches };
 }
 
 // The link, and the notice that carries it.
@@ -224,6 +232,76 @@ function visitor(chain) {
     assert(mismatch.outcome === Outcome.BUILD_NOT_FOUND && displayText(mismatch.message).includes('does not match'), `a build that doesn't match the Publication is not kept (got ${mismatch.message})`);
     assert(!wrongGuest.localContentStore.has(other.publication.contentReference), 'the mismatched build is not stored');
     console.log('✓ what stops a link from opening');
+}
+
+// The publisher's own signed placement, as PlacePublicationUseCase makes it on
+// publishing, in JSON as it rides beside the Snapshot announcement.
+function signedPlacement(publication, identity, position) {
+    const storage = new InMemoryStorageProvider();
+    const spatialIndexProvider = new LocalSpatialIndexProvider(storage);
+    const registry = new LocalPlacementRegistry(storage, spatialIndexProvider);
+    const discovery = { findById: (id) => (id === publication.id ? publication : null) };
+    const loader = { execute: () => { throw new Error('unused'); } };
+    new PlacePublicationUseCase(spatialIndexProvider, discovery, loader, null, registry, identity).execute(publication.id, new WorldPosition(position.x, position.y, position.z));
+    return registry.findByPublicationId(publication.id)[0].toJSON();
+}
+
+function withPlacement(guest) {
+    return {
+        publisherPlacement: createLinkedPublisherPlacement({
+            storageProvider: guest.storage,
+            findPublicationById: (id) => guest.discoveryProvider.findById(id)
+        })
+    };
+}
+
+function placedAt(guest, publicationId) {
+    return new LocalSpatialIndexProvider(guest.storage).findByPublicationId(publicationId).map((p) => p.position);
+}
+
+// The link puts the build where its publisher placed it.
+{
+    const chain = fakeChain();
+    const build = publishBuild('A placed tower');
+    const placementRecord = signedPlacement(build.publication, build.identity, { x: 1960, y: 0, z: 920 });
+    const { author, permlink } = await distribute(chain, build, { placementRecord });
+
+    const guest = visitor(chain);
+    const opened = await guest.open(author, permlink, withPlacement(guest));
+    assert(opened.outcome === Outcome.OPENED && opened.placementAdopted === true, `the link adopts the publisher's signed placement (got ${opened.outcome}, ${opened.placementAdopted})`);
+    const [position] = placedAt(guest, build.publication.id);
+    assert(position && position.x === 1960 && position.z === 920, `the build stands where its publisher put it (got ${JSON.stringify(position)})`);
+
+    const searched = guest.searches.length;
+    const again = await guest.open(author, permlink, withPlacement(guest));
+    assert(again.outcome === Outcome.OPENED && again.placementAdopted === false && guest.searches.length === searched,
+        'opening it again, with the build and its placement here, searches nothing');
+    console.log('✓ the link adopts the publisher\'s placement');
+
+    // A device that already had the build, from before placements came with
+    // links, still picks the placement up.
+    const earlier = visitor(chain);
+    await earlier.open(author, permlink);
+    assert(placedAt(earlier, build.publication.id).length === 0, 'without publisherPlacement nothing is placed');
+    const later = await earlier.open(author, permlink, withPlacement(earlier));
+    assert(later.outcome === Outcome.OPENED && later.placementAdopted === true && placedAt(earlier, build.publication.id)[0]?.x === 1960,
+        'with the build already here, the link still looks for and adopts the placement');
+    console.log('✓ a build already here still gets its placement');
+}
+
+// Only the publisher's own signature places the build.
+{
+    const chain = fakeChain();
+    const build = publishBuild('A tower someone else placed');
+    const mallory = new LocalIdentityProvider(new InMemoryStorageProvider());
+    mallory.login('steem-link-mallory');
+    const forged = signedPlacement(build.publication, mallory, { x: 5, y: 0, z: 5 });
+    const { author, permlink } = await distribute(chain, build, { placementRecord: forged });
+    const guest = visitor(chain);
+    const opened = await guest.open(author, permlink, withPlacement(guest));
+    assert(opened.outcome === Outcome.OPENED && opened.placementAdopted === false && placedAt(guest, build.publication.id).length === 0,
+        'a placement signed by anyone but the publisher is not adopted, and the link still opens');
+    console.log('✓ only the publisher\'s placement is adopted');
 }
 
 console.log('\n✅ All SteemPublicationLink tests passed.');

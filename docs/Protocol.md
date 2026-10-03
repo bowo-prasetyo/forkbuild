@@ -1200,8 +1200,15 @@ ForkBuild's on their device:
 4. The bytes are kept locally through `StoreSnapshotContentUseCase`, which refuses bytes that don't hash to the
    Publication's content hash.
 5. The Publication is admitted as World discovery admits a verified one, to the in-memory discovery provider and the
-   durable World Encounter admission log, and the view opens `/world/<documentId>`. World View then loads it like
-   any discovered Publication, at its placement or deterministic grid position.
+   durable World Encounter admission log.
+6. Its publisher's signed placement, announced beside the Snapshot (`placementRecord`), is adopted through
+   `AdoptPublisherPlacementUseCase` (`application/placement/LinkedPublisherPlacement.js`) into the device's
+   placement registry and spatial index: only a record signed with the Publication's own publisher key, newest
+   revision winning. While the device holds no such placement, the announcements are searched for one even when the
+   build was already here. A missing or rejected placement never stops the link from opening.
+
+The view then opens `/world/<documentId>`, and World View loads it like any discovered Publication, at its placement,
+or at its deterministic grid position when it has none.
 
 Sharing. The same link is what the app offers to share (`core/ForkBuildAppLinks.js` `publicationShareUrl()`,
 `application/publication/PublicationShareLink.js`, `ui/components/PublicationShareLink.js`): it is derived from a
