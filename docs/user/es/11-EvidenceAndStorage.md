@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: fe92a9427ac32e6f -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 263581397a33de10 -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
@@ -800,7 +800,7 @@ resultado del diálogo Distribuir y en la página Publicaciones.
 **Compartir…** abre el menú para compartir de su dispositivo, cuando está
 disponible; **Copiar enlace** copia el enlace, que también se muestra para
 copiarlo a mano. El enlace se abre en cualquier dispositivo, siempre que
-el Snapshot también se haya distribuido. La dirección `#/world/…` de su
+el Snapshot también se haya distribuido, y muestra la construcción donde usted la colocó: su colocación firmada viaja con el Snapshot y el enlace la recoge. La dirección `#/world/…` de su
 barra de direcciones solo funciona en su propio navegador.
 
 - **Arweave:** justo después de distribuir, el enlace puede tardar unos

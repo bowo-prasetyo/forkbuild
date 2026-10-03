@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: fe92a9427ac32e6f -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 263581397a33de10 -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
@@ -810,7 +810,7 @@ im Veröffentlichungsfeld der Weltansicht, im Ergebnis des
 Verteilen-Dialogs und auf der Seite Veröffentlichungen. **Teilen …**
 öffnet, wo verfügbar, das Teilen-Menü Ihres Geräts; **Link kopieren**
 kopiert den Link, der auch zum Kopieren von Hand angezeigt wird. Der Link
-öffnet sich auf jedem Gerät, sofern auch der Snapshot verteilt wurde. Die
+öffnet sich auf jedem Gerät, sofern auch der Snapshot verteilt wurde, und zeigt den Bau dort, wo Sie ihn platziert haben: Ihre signierte Platzierung reist mit dem Snapshot, und der Link nimmt sie mit. Die
 Adresse `#/world/…` in Ihrer Adressleiste funktioniert nur in Ihrem
 eigenen Browser.
 

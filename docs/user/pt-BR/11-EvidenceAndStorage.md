@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: fe92a9427ac32e6f -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 263581397a33de10 -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
@@ -774,7 +774,7 @@ abaixo dela: no painel de publicação da Visão do mundo, no resultado da caixa
 de diálogo Distribuir e na página Publicações. **Compartilhar…** abre o menu
 de compartilhamento do seu dispositivo, onde houver; **Copiar link** copia o
 link, que também aparece para copiar à mão. O link abre em qualquer
-dispositivo, desde que o Snapshot também tenha sido distribuído. O endereço
+dispositivo, desde que o Snapshot também tenha sido distribuído, e mostra a construção onde você a colocou: seu posicionamento assinado viaja com o Snapshot, e o link o traz junto. O endereço
 `#/world/…` na sua barra de endereços só funciona no seu próprio navegador.
 
 - **Arweave:** logo depois de distribuir, o link pode levar alguns minutos

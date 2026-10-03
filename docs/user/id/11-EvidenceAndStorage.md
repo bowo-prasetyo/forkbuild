@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: fe92a9427ac32e6f -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 263581397a33de10 -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
@@ -793,7 +793,7 @@ publikasi Tampilan Dunia, di hasil dialog Distribusikan, dan di halaman
 Publikasi. **Bagikan…** membuka lembar berbagi perangkat Anda jika
 tersedia; **Salin tautan** menyalin tautannya, yang juga ditampilkan untuk
 disalin secara manual. Tautan itu dapat dibuka di perangkat mana pun,
-asalkan Snapshot-nya juga sudah didistribusikan. Alamat `#/world/…` di
+asalkan Snapshot-nya juga sudah didistribusikan, dan menampilkan bangunan di tempat Anda menempatkannya: penempatan bertanda tangan Anda ikut bersama Snapshot, dan tautan itu membawanya. Alamat `#/world/…` di
 bilah alamat Anda hanya berfungsi di browser Anda sendiri.
 
 - **Arweave:** tepat setelah didistribusikan, tautan dapat memerlukan
