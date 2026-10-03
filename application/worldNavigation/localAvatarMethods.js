@@ -25,6 +25,7 @@ import { deriveAvatarContinuousMovementMode } from '../../core/AvatarContinuousM
 import { deriveAvatarVehicleBrakingInputFact } from '../../core/AvatarVehicleBrakingInputAdapter.js';
 import { deriveVehicleSteeringInputEvent } from '../../core/VehicleSteeringInputAdapter.js';
 import { SpatialBounds } from '../../core/SpatialBounds.js';
+import { AvatarAnimationState } from '../../core/AvatarAnimationState.js';
 
 // How often the local avatar's profile re-advertises even when unchanged.
 // Appearance is low-frequency state; this only lets a replica that joined
@@ -236,19 +237,24 @@ export const localAvatarMethods = {
                     if (this._vehicleSteeringIntent && !this._vehicleSteeringIntent.isNone) {
                         this.setVehicleSteeringIntent(VehicleSteeringIntent.none());
                     }
-                    if (moved) {
-                        const positionChanged = moved.vehicleInstance.position.x !== current.position.x
-                            || moved.vehicleInstance.position.y !== current.position.y
-                            || moved.vehicleInstance.position.z !== current.position.z;
-                        const rotationChanged = Math.abs(moved.rotationY - (current.rotation.y || 0)) > 1e-6;
-                        // "No movement, no sequence advancement, no network traffic" applies to a
-                        // stationary mounted vehicle as to an idle avatar.
-                        if (positionChanged || rotationChanged) {
-                            this._avatarPresenceSession.update({
-                                position: moved.vehicleInstance.position,
-                                rotation: { y: moved.rotationY }
-                            });
-                        }
+                    // A rider sits still. Without this the animation from the moment of
+                    // mounting would stick: getting on mid-walk (Q during an Alt+W walk,
+                    // or E with W held) kept the body bobbing for the whole ride.
+                    const animationChanged = current.animation !== AvatarAnimationState.IDLE;
+                    const position = moved ? moved.vehicleInstance.position : current.position;
+                    const rotationY = moved ? moved.rotationY : (current.rotation.y || 0);
+                    const positionChanged = position.x !== current.position.x
+                        || position.y !== current.position.y
+                        || position.z !== current.position.z;
+                    const rotationChanged = Math.abs(rotationY - (current.rotation.y || 0)) > 1e-6;
+                    // "No movement, no sequence advancement, no network traffic" applies to a
+                    // stationary mounted vehicle as to an idle avatar.
+                    if (positionChanged || rotationChanged || animationChanged) {
+                        this._avatarPresenceSession.update({
+                            position,
+                            rotation: { y: rotationY },
+                            animation: AvatarAnimationState.IDLE
+                        });
                     }
                 } else {
                     // Not moving a vehicle: clear the controller's per-ride state so a later
