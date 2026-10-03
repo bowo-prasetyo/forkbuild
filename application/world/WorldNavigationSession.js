@@ -415,6 +415,9 @@ export class WorldNavigationSession {
         // streams out of range, but wandering far away is exactly when Home is
         // needed. Set once by _loadWorld() and cleared only by dispose().
         this._homeDocumentId = null;
+        // The first spawn made before its document was read from disk; see
+        // _spawnAvatarNear().
+        this._pendingAvatarSpawn = null;
         this._eventBus = null;
         this._discoveryProvider = discoveryProvider;
         // Falls back to `discoveryProvider` when no separate provider is supplied.
@@ -872,6 +875,7 @@ export class WorldNavigationSession {
         this._focusedDocumentId = null;
         this._activeDocumentId = null;
         this._homeDocumentId = null;
+        this._pendingAvatarSpawn = null;
         // Reset so a fresh start() behaves like a new session. A leftover
         // `active: true` preview would permanently block undo()/redo(). Retired
         // histories belong to the disposed session too.

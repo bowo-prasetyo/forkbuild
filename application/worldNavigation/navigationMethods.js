@@ -81,9 +81,12 @@ export const navigationMethods = {
             this.setActiveDocument(documentId);
         }
         const layoutPos = this._getWorldPosition(documentId);
-        this._spawnAvatarNear(documentId, layoutPos);
         this._spatialCameraController.focusDocument(documentId, layoutPos);
-        return this.updateSpatialView();
+        // Streams the document in before the first spawn, so the spawn can clear its
+        // real bounds rather than a fixed offset that lands inside a large build.
+        const result = this.updateSpatialView();
+        this._spawnAvatarNear(documentId, layoutPos);
+        return result;
     },
 
     // Makes `documentId` active without moving the camera (e.g. two

@@ -156,6 +156,7 @@ export const worldStreamingMethods = {
         if (!this._commandHistories.has(document.world.id)) {
             this._registerCommandHistory(document.world.id, new CommandHistory({ world: document.world }));
         }
+        this._settlePendingAvatarSpawn(documentId);
     },
 
     _unloadWorld(documentId) {
