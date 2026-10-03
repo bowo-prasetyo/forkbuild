@@ -245,8 +245,9 @@ through the shared world. A link to a Publication (routes
 `/view/steem/:author/:permlink`, `/view/ar/:id`, `/view/ipfs/:cid`,
 ui/views/PublicationLinkView.js), from a Steem post or shared with
 Share, lands a first-time visitor here: it verifies the Publication's
-Signed Claim read from Steem, Arweave or IPFS, keeps its build locally
-and admits it as World discovery does
+Signed Claim read from Steem, Arweave or IPFS, keeps its build locally,
+admits it as World discovery does, and adopts its publisher's signed
+placement announced beside the Snapshot
 (application/publication/OpenPublicationLink.js). WorldNavigationSession owns its runtime:
 camera positioning (SpatialCameraController), which documents are
 loaded near the camera (through WorldLayoutProvider and the spatial

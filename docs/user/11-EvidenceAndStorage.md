@@ -729,7 +729,9 @@ stored, which Distribute does.
 panel, in the Distribute dialog's result, and on the Publications page.
 **Share…** opens your device's share sheet where available; **Copy link**
 copies the link, also shown for copying by hand. The link opens on any
-device, as long as the Snapshot has been distributed too. The `#/world/…`
+device, as long as the Snapshot has been distributed too, and shows the
+build where you placed it: your signed placement travels with the
+Snapshot, and the link takes it along. The `#/world/…`
 address in your address bar only works in your own browser.
 
 - **Arweave:** right after distributing, the link can take a few minutes
