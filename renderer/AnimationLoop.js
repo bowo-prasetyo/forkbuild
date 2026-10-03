@@ -44,7 +44,15 @@ export class AnimationLoop {
             deltaSeconds = Math.min((timestamp - this._lastTimestamp) / 1000, MAX_DELTA_SECONDS);
         }
         this._lastTimestamp = timestamp;
-        this._onFrame(deltaSeconds);
-        this._frameId = requestAnimationFrame(this._tick);
+        // Rescheduled even when a frame throws: otherwise one bad frame would
+        // stop the loop and freeze the view for good. The error still reaches
+        // the console; stop() called from within the frame is still honoured.
+        try {
+            this._onFrame(deltaSeconds);
+        } finally {
+            if (this._running) {
+                this._frameId = requestAnimationFrame(this._tick);
+            }
+        }
     }
 }
