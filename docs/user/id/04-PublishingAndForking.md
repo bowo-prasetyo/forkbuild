@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 83735d230212d194 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 31b37f7993e1c8cc -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -173,7 +173,7 @@ dapat mengabaikannya, dan pengaturan ini tidak dapat menarik kembali
 penempatan yang dibuat seseorang sebelum Anda memilihnya.
 
 Bagaimanapun juga, orang lain melihat bangunan Anda di tempat *Anda*
-menaruhnya begitu Anda **Distribusikan** Snapshot-nya dari Tampilan Dunia:
+menaruhnya begitu Anda **Distribusikan** Snapshot-nya dari Tampilan Dunia atau langsung setelah menerbitkan di Editor:
 pengumumannya membawa penempatan Anda yang ditandatangani, dan ForkBuild
 mereka menampilkan bangunan di sana begitu mengenali Dunia Bersama Anda.
 Pindahkan dan distribusikan lagi, dan bangunan itu juga berpindah bagi

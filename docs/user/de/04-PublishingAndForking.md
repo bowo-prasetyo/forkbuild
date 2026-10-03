@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 83735d230212d194 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 31b37f7993e1c8cc -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -180,7 +180,7 @@ ForkBuild hält sich daran, aber sie ist kein Schloss. Wer den Code der App
 die jemand vor Ihrer Wahl gemacht hat.
 
 So oder so sehen andere Ihr Bauwerk dort, wo *Sie* es hingestellt haben,
-sobald Sie seinen Snapshot aus der Weltansicht **verteilen**: Die
+sobald Sie seinen Snapshot aus der Weltansicht oder direkt nach dem Veröffentlichen im Editor **verteilen**: Die
 Ankündigung trägt Ihre signierte Platzierung, und ihr ForkBuild zeigt das
 Bauwerk dort, sobald es Ihre Geteilte Welt kennt. Verschieben Sie es und
 verteilen Sie erneut, und es verschiebt sich auch bei ihnen.
