@@ -2613,6 +2613,7 @@ export default Object.freeze({
     'sharedWithYouPanel.snapshotMismatch': 'O Mundo foi adicionado ao seu Repositório, mas o snapshot enviado por quem o compartilhou não corresponde ao Mundo, então não foi mantido.',
     'sharedWithYouPanel.publishedWithOldHash': 'Este Mundo foi publicado antes de os hashes de conteúdo passarem a ser SHA-256, então o snapshot não pode ser verificado e não foi mantido. Peça a quem o compartilhou que o abra no Editor, publique de novo e compartilhe a nova cópia.',
     'sharedWithYouPanel.sharedBeforeSha256': 'Este compartilhamento foi feito antes de os hashes de conteúdo passarem a ser SHA-256, então não pode ser verificado nem obtido. Peça a quem o compartilhou que publique o Mundo de novo e compartilhe a nova cópia.',
+    'sharedWithYouPanel.worldBeforeSha256': 'Este Mundo foi publicado antes de os hashes de conteúdo passarem a ser SHA-256, então não pode ser verificado nem obtido. Peça a quem o compartilhou que o abra no Editor, publique de novo e compartilhe a nova cópia.',
     'sharedWithYouPanel.shareUnavailable': 'A pessoa que compartilhou este Mundo não o enviou. O dispositivo de onde ela está conectada pode não tê-lo mais; peça que o compartilhe de novo.',
     'candidateLeaderboardTable.hideEvidence': 'Ocultar evidências',
     'candidateLeaderboardTable.inspectEvidence': 'Inspecionar evidências',

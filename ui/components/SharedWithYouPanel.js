@@ -78,6 +78,9 @@ export default {
             refresh();
             if (publicationPeerExchange) unsubscribes.push(publicationPeerExchange.onPublicationReceived(refresh));
             if (peerSessionManager) unsubscribes.push(peerSessionManager.onPeersChanged(refresh));
+            if (retrieveUseCase && typeof retrieveUseCase.onPendingChanged === 'function') {
+                unsubscribes.push(retrieveUseCase.onPendingChanged(refresh));
+            }
             if (autoRetrieveUseCase) {
                 unsubscribes.push(autoRetrieveUseCase.onRetrieved(({ publication }) => {
                     refresh();
@@ -106,7 +109,8 @@ export default {
                     </div>
                     <p v-if="item.title" class="identity-mgmt-status">{{ t('sharedWithYouPanel.sharedByLine', { sharer: sharerLabel(item) }) }}</p>
                     <p v-if="receivedLabel(item)" class="identity-mgmt-status">{{ t('sharedWithYouPanel.received', { when: receivedLabel(item) }) }}</p>
-                    <p v-if="item.legacy" class="form-hint form-hint--neutral">{{ t('sharedWithYouPanel.sharedBeforeSha256') }}</p>
+                    <p v-if="item.legacy === 'share'" class="form-hint form-hint--neutral">{{ t('sharedWithYouPanel.sharedBeforeSha256') }}</p>
+                    <p v-else-if="item.legacy === 'world'" class="form-hint form-hint--neutral">{{ t('sharedWithYouPanel.worldBeforeSha256') }}</p>
                     <div v-else class="identity-mgmt-actions">
                         <button class="action-btn action-btn--primary"
                                 :disabled="!item.sharerConnected || retrievingId === item.envelopeId"

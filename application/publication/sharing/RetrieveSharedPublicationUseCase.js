@@ -71,16 +71,22 @@ export class RetrieveSharedPublicationUseCase {
         this._identityProvider = identityProvider || null;
         this._identityOfConnection = identityOfConnection;
         this._timeoutMs = timeoutMs;
+        this._pendingChangedListeners = new Set();
+        // Hashes of shared content being loaded from disk for listPending().
+        this._loading = new Set();
     }
 
     // Worlds others shared that this device has not fully retrieved yet
     // (its Publication or its snapshot is missing), newest first:
     // [{ envelopeId, sharerId, title, legacy, receivedAt, sharerConnected }].
     // `title` is the one the sharer signed into the envelope, or null for an
-    // envelope from before envelopes carried one. `legacy` marks a share made
-    // before content hashes became SHA-256, which can never be retrieved. Several envelopes from the
-    // same sharer for the same bytes (a World shared again under a titled
-    // envelope) are one entry: the newest titled one, else the newest.
+    // envelope from before envelopes carried one. `legacy` says why a share
+    // can never be retrieved: 'share' when it was made before content hashes
+    // became SHA-256, 'world' when the World inside was (known once its
+    // Publication is on this device, as it is after one Retrieve), else
+    // null. Several envelopes from the same sharer for the same bytes (a
+    // World shared again under a titled envelope) are one entry: the newest
+    // titled one, else the newest.
     listPending() {
         const self = this._selfId();
         const byWorld = new Map();
@@ -93,7 +99,7 @@ export class RetrieveSharedPublicationUseCase {
                 envelopeId: envelope.id,
                 sharerId,
                 title: envelope.contentTitle || null,
-                legacy: isLegacyContentHash(envelope.contentReference.hash),
+                legacy: this._legacyReason(envelope),
                 receivedAt: typeof this._catalog.getReceivedAt === 'function' ? this._catalog.getReceivedAt(envelope.id) : null,
                 sharerConnected: this._sourcesFor(sharerId).length > 0
             };
@@ -104,6 +110,14 @@ export class RetrieveSharedPublicationUseCase {
             }
         }
         return [...byWorld.values()].sort((a, b) => String(b.receivedAt || '').localeCompare(String(a.receivedAt || '')));
+    }
+
+    // Calls `callback()` when listPending() may answer differently because
+    // shared content it needed finished loading from disk. Returns an
+    // unsubscribe function.
+    onPendingChanged(callback) {
+        this._pendingChangedListeners.add(callback);
+        return () => this._pendingChangedListeners.delete(callback);
     }
 
     // Whether the shared World behind `envelopeId` is in the Repository and
@@ -223,6 +237,51 @@ export class RetrieveSharedPublicationUseCase {
         } catch {
             return null;
         }
+    }
+
+    // 'share', 'world' or null, as listPending() documents. The Publication
+    // inside is read only when it is already on this device; content still
+    // on disk is loaded, and onPendingChanged() listeners are told once it is.
+    _legacyReason(envelope) {
+        if (isLegacyContentHash(envelope.contentReference.hash)) {
+            return 'share';
+        }
+        if (!this._contentStore.has(envelope.contentReference) || typeof this._contentStore.getSync !== 'function') {
+            return null;
+        }
+        let bytes;
+        try {
+            bytes = this._contentStore.getSync(envelope.contentReference);
+        } catch (error) {
+            if (isStorageEntryNotLoadedError(error)) {
+                this._notifyWhenLoaded(envelope.contentReference.hash, error.ready);
+            }
+            return null;
+        }
+        try {
+            const json = typeof bytes === 'string' ? JSON.parse(bytes) : null;
+            const hash = json && json.contentReference && json.contentReference.hash;
+            return isLegacyContentHash(hash) ? 'world' : null;
+        } catch {
+            return null;
+        }
+    }
+
+    _notifyWhenLoaded(hash, ready) {
+        if (!ready || this._loading.has(hash)) {
+            return;
+        }
+        this._loading.add(hash);
+        Promise.resolve(ready).catch(() => {}).then(() => {
+            this._loading.delete(hash);
+            for (const listener of this._pendingChangedListeners) {
+                try {
+                    listener();
+                } catch {
+                    // One listener failing must not keep the others from refreshing.
+                }
+            }
+        });
     }
 
     _sourcesFor(sharerId) {
