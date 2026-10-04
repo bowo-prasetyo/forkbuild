@@ -39,6 +39,9 @@ transform bricks, and how to organize your build with groups.
     Click one to select it (and switch to the Place tool); a
     **Color** swatch then appears for choosing its color — see
     [Brick colors](#brick-colors) below.
+    **Slope 45°**, **Stair** and **Diagonal Brace 2x2** rise toward one
+    side; rotate one twice (**R**, **R**) to turn it the other way. A
+    Diagonal Brace and a copy turned 180° make a cross.
   - **Structures** — twenty ready-made structures across five categories
     (residential, agricultural, commercial, community, infrastructure),
     plus your own **My Structures**. Click a card to place it — see

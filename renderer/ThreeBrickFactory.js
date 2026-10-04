@@ -92,6 +92,49 @@ function stairGeometry(width, height, depth, steps = DEFAULT_STAIR_STEP_COUNT) {
     };
 }
 
+// A right-triangle profile extruded along depth — core:slope_45. Rises
+// along local +X, from nothing at the front face to the full height at the
+// back, the same direction core/WalkableSurface.js's SLOPE profile climbs
+// and core:stair rises, so what is drawn is what an avatar walks on.
+function wedgeGeometry(width, height, depth) {
+    return () => {
+        const shape = new THREE.Shape();
+        shape.moveTo(0, 0);
+        shape.lineTo(width, 0);
+        shape.lineTo(width, height);
+        shape.lineTo(0, 0);
+
+        const geometry = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
+        geometry.translate(-width / 2, -height / 2, -depth / 2);
+        return geometry;
+    };
+}
+
+// A straight bar from the bottom-left to the top-right corner of its
+// width x height face, clipped flush to that box, extruded along depth —
+// core:brace_2x2. Rises along local +X like the slope and stair; turning
+// it 180° gives the opposite diagonal, so two make a cross. `barWidth` is
+// measured across the bar, not along an edge.
+function braceGeometry(width, height, depth, barWidth) {
+    return () => {
+        const length = Math.hypot(width, height);
+        const cutX = (barWidth * length) / height;
+        const cutY = (barWidth * length) / width;
+        const shape = new THREE.Shape();
+        shape.moveTo(0, 0);
+        shape.lineTo(cutX, 0);
+        shape.lineTo(width, height - cutY);
+        shape.lineTo(width, height);
+        shape.lineTo(width - cutX, height);
+        shape.lineTo(0, cutY);
+        shape.lineTo(0, 0);
+
+        const geometry = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
+        geometry.translate(-width / 2, -height / 2, -depth / 2);
+        return geometry;
+    };
+}
+
 // A rectangular frame with a semicircular-topped passage cut through its
 // center, extruded along depth — core:arch. The opening is a
 // THREE.Path hole on the outer THREE.Shape, faceted (straight segments)
@@ -134,9 +177,9 @@ function archGeometry(width, height, depth) {
 }
 
 const GEOMETRIES = new Map([
-    // Original four (0.1.5) — unchanged.
+    // Original four (0.1.5).
     ['core:cube', boxGeometry([1, 1, 1])],
-    ['core:slope_45', boxGeometry([1, 1, 1])],
+    ['core:slope_45', wedgeGeometry(1, 1, 1)],
     ['core:plate_2x4', boxGeometry([2, 0.25, 4])],
     ['core:window_small', boxGeometry([1, 1, 0.25])],
 
@@ -151,7 +194,9 @@ const GEOMETRIES = new Map([
     ['core:arch', archGeometry(2, 2, 0.5)],
     ['core:window_large', boxGeometry([2, 1.5, 0.25])],
     ['core:door', boxGeometry([1, 2, 0.1])],
-    ['core:trim', boxGeometry([1, 0.25, 0.25])]
+    ['core:trim', boxGeometry([1, 0.25, 0.25])],
+    ['core:post', boxGeometry([0.25, 3, 0.25])],
+    ['core:brace_2x2', braceGeometry(2, 2, 0.25, 0.25)]
 ]);
 
 const FALLBACK_GEOMETRY = boxGeometry([1, 1, 1]);

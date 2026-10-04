@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8966f8ede880a9e -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: f3f56bd4d4861d88 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -44,6 +44,10 @@ ordnen.
     (und zum Platzierwerkzeug zu wechseln); dann erscheint ein Farbfeld
     **Farbe** zum Wählen ihrer Farbe — siehe [Steinfarben](#steinfarben)
     unten.
+    **Schräge 45°**, **Treppe** und **Diagonalstrebe 2x2** steigen zu einer
+    Seite hin an; drehen Sie einen Stein zweimal (**R**, **R**), damit er in
+    die andere Richtung zeigt. Eine Diagonalstrebe und eine um 180° gedrehte
+    Kopie ergeben ein Kreuz.
   - **Strukturen** — zwanzig fertige Strukturen in fünf Kategorien
     (Wohnen, Landwirtschaft, Gewerbe, Gemeinschaft, Infrastruktur) sowie
     Ihre eigenen **Meine Strukturen**. Klicken Sie auf eine Karte, um sie

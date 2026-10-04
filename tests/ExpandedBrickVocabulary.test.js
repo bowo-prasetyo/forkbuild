@@ -36,7 +36,7 @@ import { assert } from './support/Assert.js';
 // never a hidden composite of smaller bricks — per docs/Principles.md,
 // "A Brick Is A Primitive, Never A Preassembled Structure."
 //
-//   Section A: registry contents — 15 definitions, the original 4 unchanged
+//   Section A: registry contents — every definition, the original 4 unchanged
 //   Section B: groupByCategory() — palette grouping
 //   Section C: ThreeBrickFactory / BrickRenderer — every id builds a real,
 //              distinctly-sized mesh, never silently falling back
@@ -56,7 +56,10 @@ const NEW_DEFINITION_IDS = [
 const ORIGINAL_DEFINITION_IDS = [
     'core:cube', 'core:slope_45', 'core:plate_2x4', 'core:window_small'
 ];
-const ALL_DEFINITION_IDS = [...ORIGINAL_DEFINITION_IDS, ...NEW_DEFINITION_IDS];
+// Added after this milestone (tests/TimberBricksAndWedgeSlope.test.js).
+const LATER_DEFINITION_IDS = ['core:post', 'core:brace_2x2'];
+const ALL_DEFINITION_IDS = [...ORIGINAL_DEFINITION_IDS, ...NEW_DEFINITION_IDS, ...LATER_DEFINITION_IDS];
+const TOTAL = ALL_DEFINITION_IDS.length;
 
 function boundingBoxSize(mesh) {
     mesh.geometry.computeBoundingBox();
@@ -78,7 +81,7 @@ function assertApprox(actual, expected, tolerance, message) {
 {
     const registry = new CreateBrickRegistryUseCase().execute();
     const all = registry.getAll();
-    assert(all.length === 15, `registry has 15 definitions (got ${all.length})`);
+    assert(all.length === TOTAL, `registry has ${TOTAL} definitions (got ${all.length})`);
 
     for (const id of ALL_DEFINITION_IDS) {
         assert(registry.has(id), `registry has ${id}`);
@@ -129,7 +132,7 @@ function assertApprox(actual, expected, tolerance, message) {
             `${id} has a description`);
     }
 
-    console.log('✓ Section A: registry contents — 15 definitions, original 4 unchanged');
+    console.log(`✓ Section A: registry contents — ${TOTAL} definitions, original 4 unchanged`);
 }
 
 // -----------------------------------------------------------------------
@@ -141,7 +144,7 @@ function assertApprox(actual, expected, tolerance, message) {
     const groups = registry.groupByCategory();
 
     const totalGrouped = groups.reduce((sum, g) => sum + g.definitions.length, 0);
-    assert(totalGrouped === 15, 'grouping loses no definitions');
+    assert(totalGrouped === TOTAL, 'grouping loses no definitions');
 
     const categories = groups.map((g) => g.category);
     assert(new Set(categories).size === categories.length, 'each category appears in exactly one group');
@@ -159,7 +162,7 @@ function assertApprox(actual, expected, tolerance, message) {
     assert(primitiveGroup.definitions.length === 4, 'primitive group has the original 4 definitions');
 
     // getAll()/getByCategory()/search() stay exactly as they were.
-    assert(registry.getAll().length === 15, 'getAll() unchanged');
+    assert(registry.getAll().length === TOTAL, 'getAll() unchanged');
     assert(registry.getByCategory('primitive').length === 4, 'getByCategory() unchanged');
     assert(registry.search('roof').some((d) => d.id === 'core:roof_hip'), 'search() finds core:roof_hip by tag');
     assert(registry.search('roof').some((d) => d.id === 'core:slope_45'), 'search() still finds core:slope_45 by tag');
@@ -169,9 +172,9 @@ function assertApprox(actual, expected, tolerance, message) {
     const paletteUseCase = new PaletteUseCase(registry, editorContext);
     const paletteGroups = paletteUseCase.getGroupedDefinitions();
     assert(paletteGroups.length === groups.length, 'PaletteUseCase.getGroupedDefinitions() matches the registry');
-    assert(paletteGroups.reduce((total, group) => total + group.definitions.length, 0) === 15, 'PaletteUseCase.getGroupedDefinitions() covers everything');
+    assert(paletteGroups.reduce((total, group) => total + group.definitions.length, 0) === TOTAL, 'PaletteUseCase.getGroupedDefinitions() covers everything');
 
-    console.log('✓ Section B: groupByCategory() groups all 15 definitions correctly');
+    console.log(`✓ Section B: groupByCategory() groups all ${TOTAL} definitions correctly`);
 }
 
 async function runRendererTests() {
@@ -183,7 +186,7 @@ async function runRendererTests() {
         const factory = new ThreeBrickFactory();
         const renderer = new BrickRenderer(registry, factory);
 
-        // Every one of the 15 ids builds a real mesh whose bounding box
+        // Every id builds a real mesh whose bounding box
         // approximately matches its BrickDefinition's own width/height/depth
         // — the same AABB approximation core/AvatarCollision.js and
         // application/editor/SelectionBoundsService.js already rely on for every
@@ -322,7 +325,7 @@ async function runRendererTests() {
         const world = new World();
         const building = new Building({ creator: 'flagship-tester' });
         // Positions are spaced 5 units apart along X — trivially
-        // non-overlapping, so every one of the 15 placements is legal.
+        // non-overlapping, so every placement is legal.
         ALL_DEFINITION_IDS.forEach((definitionId, index) => {
             building.addBrick(new Brick({
                 definitionId,
@@ -337,17 +340,17 @@ async function runRendererTests() {
                 `flagship: ${brick.definitionId}'s own already-occupied position correctly reports unplaceable`);
         }
         assert(validator.canPlace(world, building.id, new Position(9999, 0, 0)) === true,
-            'flagship: an untouched position among the 15 stays placeable');
+            'flagship: an untouched position among them stays placeable');
         const doc = new Document({
             world,
             metadata: new DocumentMetadata({ title: 'Expanded Vocabulary Flagship', author: 'flagship-tester' })
         });
-        assert(building.getBricks().length === 15, 'every brick type was placed exactly once');
+        assert(building.getBricks().length === TOTAL, 'every brick type was placed exactly once');
 
         // 2. Render before saving — every placed brick builds a real mesh
         //    with no exceptions.
         const meshesBeforeSave = building.getBricks().map((brick) => renderer.createMesh(brick));
-        assert(meshesBeforeSave.length === 15, 'every placed brick renders before save');
+        assert(meshesBeforeSave.length === TOTAL, 'every placed brick renders before save');
         meshesBeforeSave.forEach((mesh) => assert(mesh instanceof THREE.Mesh, 'rendered object is a THREE.Mesh'));
 
         // 3. Save (serialize).
@@ -364,7 +367,7 @@ async function runRendererTests() {
         const originalIds = building.getBricks().map((b) => b.definitionId).sort();
         const reloadedIds = reloadedBuilding.getBricks().map((b) => b.definitionId).sort();
         assert(JSON.stringify(originalIds) === JSON.stringify(reloadedIds),
-            'flagship: same 15 brick types survive save -> reload');
+            `flagship: same ${TOTAL} brick types survive save -> reload`);
 
         // 6. Render after reload — same geometry: each reloaded brick's
         //    mesh has the identical bounding box as its pre-save mesh
@@ -406,7 +409,7 @@ async function runRendererTests() {
             assertApprox(size.z, definition.depth, 0.001, `flagship: ${id} depth matches its unchanged definition`);
         }
 
-        console.log('✓ Section F: FLAGSHIP — create -> place all 15 types -> save -> reload -> render, ' +
+        console.log(`✓ Section F: FLAGSHIP — create -> place all ${TOTAL} types -> save -> reload -> render, ` +
             'identical geometry, identical types, byte-identical document semantics');
     }
 

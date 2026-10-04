@@ -3792,6 +3792,27 @@ both Distribute dialogs and on the Publications page: `createSteemPublicationNot
 redeployed (`wrangler deploy`). New cases in `server/rendezvous-worker/worker.test.js`,
 `tests/SteemImageUpload.test.js` and `tests/SteemPublicationNotice.test.js`.
 
+## Timber framing bricks, and the slope drawn as a wedge (unnumbered, 2026-10-04)
+
+Building a German half-timbered house showed what the core bricks lacked. Bricks only turn about the vertical axis,
+so nothing could lean: diagonal braces had to be faked from overlapping trims. The only thin upright was the round
+column, and `core:slope_45` was drawn as a plain cube (`boxGeometry` in `renderer/ThreeBrickFactory.js`), although
+`core/WalkableSurface.js` has always let an avatar walk up it as a ramp. The slope is now a wedge
+(`wedgeGeometry()`), rising along its local +X like the stair and like the walked surface, so what is drawn is what
+is walked on. Two primitives join `CoreLibrary`: `core:post`, a square 0.25 × 3 × 0.25 upright (column category), and
+`core:brace_2x2`, a 0.25-thick bar corner to corner across a 2 × 2 panel (beam category, `braceGeometry()`). A brace
+turned 180° gives the other diagonal, so a pair makes a cross. Both are named in every locale. A build that uses them
+can't be drawn by an older copy of the app, as with any new brick; existing builds are unchanged apart from slopes
+now showing as wedges.
+
+The Village library's slope roofs had been laid out while the slope looked like a cube, so their rotations never
+showed and several would have come out wrong as wedges. Cottage and Small Chapel now rise toward the ridge (rotations
+0 and 180 instead of 90 and 270). Tool Shed and Stable now have one continuous pitch from the open front to the back
+wall, each row back a step higher on cubes in the roof's color, instead of rows of separate ramps (a sawtooth). Dock
+gains X-braces between its stilts and two posts under the far end of the plank, so every core brick is still used
+somewhere in the library. New `tests/TimberBricksAndWedgeSlope.test.js`: the drawn wedge meets a downward ray at the
+walked height at every rotation, the brace and its 180° turn cover opposite diagonals, and the Village roofs climb
+without dropping or stepping.
 ## The Repository finds what others distributed (unnumbered, 2026-10-04)
 
 A World distributed on Nostr, Arweave or Steem never reached anyone else's Repository: the Repository listed this

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8966f8ede880a9e -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: f3f56bd4d4861d88 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -40,6 +40,9 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
     Aberturas, Detalhes). Clique em um para selecioná-lo (e passar para a
     ferramenta Colocar); aparece então uma amostra **Cor** para escolher a
     cor dele — veja [Cores dos blocos](#cores-dos-blocos) abaixo.
+    **Rampa 45°**, **Escada** e **Escora diagonal 2x2** sobem para um lado;
+    gire um duas vezes (**R**, **R**) para virá-lo para o outro lado. Uma
+    escora diagonal e uma cópia girada 180° formam um X.
   - **Estruturas** — vinte estruturas prontas em cinco categorias
     (residencial, agrícola, comercial, comunitária, infraestrutura), mais as
     suas em **Minhas estruturas**. Clique em um cartão para posicioná-la —
