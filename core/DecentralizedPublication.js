@@ -67,12 +67,42 @@ import { Signature, SignatureType } from './Signature.js';
 export const DECENTRALIZED_PUBLICATION_KIND = 'forkbuild.decentralized-publication';
 export const CURRENT_SCHEMA_VERSION = 1;
 
+// `contentTitle` (optional): a short title the publisher gives the wrapped
+// content, so a receiver can tell envelopes apart before retrieving
+// anything (Shared with you lists them by it). It is part of the signed
+// payload only when present, so an envelope signed before it existed still
+// verifies. Like the rest of the envelope it is the publisher's claim, not
+// a fact about the bytes: a resolver that cares compares it with the
+// wrapped content's own title once that content arrives
+// (application/publication/sharing/RetrieveSharedPublicationUseCase.js).
+export const MAX_CONTENT_TITLE_LENGTH = 120;
+
+// Control characters and bidirectional overrides could make a stranger's
+// title render as something else; whitespace runs collapse to one space.
+const UNSAFE_TITLE_CHARACTERS = /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g;
+
+// The canonical form of a title for `contentTitle`, or null when nothing
+// displayable is left. Publishers write this form and validators accept
+// only this form, so a receiver can compare it with
+// normalizeContentTitle(content.title) exactly.
+export function normalizeContentTitle(title) {
+    if (typeof title !== 'string') {
+        return null;
+    }
+    const normalized = Array.from(title.replace(UNSAFE_TITLE_CHARACTERS, ' ').replace(/\s+/g, ' ').trim())
+        .slice(0, MAX_CONTENT_TITLE_LENGTH)
+        .join('')
+        .trim();
+    return normalized || null;
+}
+
 export class DecentralizedPublication {
     constructor({
         id = createId(),
         contentKind,
         contentSchemaVersion = 1,
         contentReference,
+        contentTitle = null,
         publisherIdentity = null,
         publishedAt = new Date(),
         signature = null
@@ -94,6 +124,7 @@ export class DecentralizedPublication {
         this._contentKind = contentKind;
         this._contentSchemaVersion = contentSchemaVersion;
         this._contentReference = reference;
+        this._contentTitle = contentTitle == null ? null : normalizeContentTitle(contentTitle);
         this._publisherIdentity = publisherIdentity ? { ...publisherIdentity } : null;
         this._publishedAt = publishedAtDate;
         this._signature = signature instanceof Signature ? signature : Signature.fromJSON(signature);
@@ -103,6 +134,7 @@ export class DecentralizedPublication {
     get contentKind() { return this._contentKind; }
     get contentSchemaVersion() { return this._contentSchemaVersion; }
     get contentReference() { return this._contentReference; }
+    get contentTitle() { return this._contentTitle; }
     get publisherIdentity() { return this._publisherIdentity ? { ...this._publisherIdentity } : null; }
     get publishedAt() { return this._publishedAt; }
     get signature() { return this._signature; }
@@ -116,6 +148,7 @@ export class DecentralizedPublication {
             contentKind: this._contentKind,
             contentSchemaVersion: this._contentSchemaVersion,
             contentReference: this._contentReference,
+            contentTitle: this._contentTitle,
             publisherIdentity: this._publisherIdentity,
             publishedAt: this._publishedAt,
             signature
@@ -139,6 +172,7 @@ export class DecentralizedPublication {
             contentKind: this._contentKind,
             contentSchemaVersion: this._contentSchemaVersion,
             contentReference: this._contentReference.toJSON(),
+            ...(this._contentTitle ? { contentTitle: this._contentTitle } : {}),
             publisherIdentity: this._publisherIdentity ? { ...this._publisherIdentity } : null,
             publishedAt: this._publishedAt.toISOString(),
             signature: this._signature ? this._signature.toJSON() : null
@@ -152,6 +186,7 @@ export class DecentralizedPublication {
             contentKind: json.contentKind,
             contentSchemaVersion: json.contentSchemaVersion,
             contentReference: json.contentReference,
+            contentTitle: json.contentTitle ?? null,
             publisherIdentity: json.publisherIdentity || null,
             publishedAt: json.publishedAt ? new Date(json.publishedAt) : new Date(),
             signature: json.signature || null
@@ -177,6 +212,7 @@ export function getDecentralizedPublicationSigningDescriptor(record) {
             contentKind: record.contentKind,
             contentSchemaVersion: record.contentSchemaVersion,
             contentReference: record.contentReference,
+            ...(record.contentTitle != null ? { contentTitle: record.contentTitle } : {}),
             publisherIdentity: record.publisherIdentity,
             publishedAt: record.publishedAt instanceof Date ? record.publishedAt.toISOString() : record.publishedAt
         }

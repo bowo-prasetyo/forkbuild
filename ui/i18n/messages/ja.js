@@ -2757,6 +2757,7 @@ export default Object.freeze({
     'sharePublicationButton.sharedWith': { other: '接続中の{count}人のピアと、後から接続するピアに共有しました。' },
     'sharePublicationButton.sharedNoPeers': '共有しました。現在接続中のピアはいません。後から接続するピアが受け取ります。',
     'sharedWithYouPanel.sharedBy': '{sharer}さんが共有したワールド',
+    'sharedWithYouPanel.sharedByLine': '{sharer}さんが共有',
     'sharedWithYouPanel.received': '受信: {when}',
 
     // Publications: publications, text with quotes.

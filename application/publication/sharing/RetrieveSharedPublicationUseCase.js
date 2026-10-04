@@ -1,5 +1,6 @@
 import { resolvePublicationView } from '../PublicationResolutionView.js';
 import { Publication } from '../../../publisher/Publication.js';
+import { normalizeContentTitle } from '../../../core/DecentralizedPublication.js';
 import { PeerLifecycleState } from '../../../peer/PeerLifecycleState.js';
 import { PeerSnapshotMaterializationOutcome } from '../../snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 
@@ -12,9 +13,10 @@ import { PeerSnapshotMaterializationOutcome } from '../../snapshot/materializati
 // addresses here are 32-bit FNV-1a hashes, which a determined peer can
 // collide, so "any connected peer that answers" is not a safe source; the
 // sharer holds the bytes anyway. The Publication inside must also be
-// signed by the sharer, which Ed25519 makes impossible to forge. Nothing
-// is added to the Repository unless the full PublicationResolver checks
-// pass.
+// signed by the sharer, which Ed25519 makes impossible to forge, and carry
+// the title the envelope announced, if it announced one, so the World a
+// person chose by its title is the World they get. Nothing is added to the
+// Repository unless the full PublicationResolver checks pass.
 //
 // The same routine serves the automatic path (AutoRetrieveSharedPublicationsUseCase,
 // for Friends and Known Peers) and a person's own Retrieve click for
@@ -65,23 +67,33 @@ export class RetrieveSharedPublicationUseCase {
 
     // Worlds others shared that this device has not fully retrieved yet
     // (its Publication or its snapshot is missing), newest first:
-    // [{ envelopeId, sharerId, receivedAt, sharerConnected }].
+    // [{ envelopeId, sharerId, title, receivedAt, sharerConnected }].
+    // `title` is the one the sharer signed into the envelope, or null for an
+    // envelope from before envelopes carried one. Several envelopes from the
+    // same sharer for the same bytes (a World shared again under a titled
+    // envelope) are one entry: the newest titled one, else the newest.
     listPending() {
         const self = this._selfId();
-        const pending = [];
+        const byWorld = new Map();
         for (const envelope of this._catalog.findByContentKind(this._contentKind)) {
             const sharerId = envelope.publisherIdentity ? envelope.publisherIdentity.id : null;
             if (!sharerId || sharerId === self || this.isRetrieved(envelope.id)) {
                 continue;
             }
-            pending.push({
+            const item = {
                 envelopeId: envelope.id,
                 sharerId,
+                title: envelope.contentTitle || null,
                 receivedAt: typeof this._catalog.getReceivedAt === 'function' ? this._catalog.getReceivedAt(envelope.id) : null,
                 sharerConnected: this._sourcesFor(sharerId).length > 0
-            });
+            };
+            const key = `${sharerId}\n${envelope.contentReference.hash}`;
+            const kept = byWorld.get(key);
+            if (!kept || preferred(item, kept)) {
+                byWorld.set(key, item);
+            }
         }
-        return pending.sort((a, b) => String(b.receivedAt || '').localeCompare(String(a.receivedAt || '')));
+        return [...byWorld.values()].sort((a, b) => String(b.receivedAt || '').localeCompare(String(a.receivedAt || '')));
     }
 
     // Whether the shared World behind `envelopeId` is in the Repository and
@@ -124,6 +136,9 @@ export class RetrieveSharedPublicationUseCase {
         const publication = view.content;
         if (!publication.signature || !publication.publisherIdentity || publication.publisherIdentity.id !== sharerId) {
             throw new Error('RetrieveSharedPublicationUseCase: the shared World is not signed by the person who shared it, so it was not added');
+        }
+        if (envelope.contentTitle && envelope.contentTitle !== normalizeContentTitle(publication.title)) {
+            throw new Error('RetrieveSharedPublicationUseCase: the shared World is not the one its title announced, so it was not added');
         }
         if (!this._discoveryProvider.findById(publication.id)) {
             this._discoveryProvider.add(publication);
@@ -196,4 +211,13 @@ export class RetrieveSharedPublicationUseCase {
             return null;
         }
     }
+}
+
+// Whether `item` should stand for its World in listPending() over `kept`:
+// a titled envelope over an untitled one, then the newer one.
+function preferred(item, kept) {
+    if (Boolean(item.title) !== Boolean(kept.title)) {
+        return Boolean(item.title);
+    }
+    return String(item.receivedAt || '') > String(kept.receivedAt || '');
 }

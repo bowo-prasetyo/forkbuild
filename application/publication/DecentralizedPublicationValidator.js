@@ -1,4 +1,4 @@
-import { DECENTRALIZED_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION } from '../../core/DecentralizedPublication.js';
+import { DECENTRALIZED_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION, normalizeContentTitle } from '../../core/DecentralizedPublication.js';
 import { isNonBlankString } from '../../utils/typeGuards.js';
 
 // 0.7.0 — Decentralized Publication Protocol & Content Addressing.
@@ -80,6 +80,11 @@ export function validateDecentralizedPublication(pkg) {
         throw new DecentralizedPublicationError('DecentralizedPublication: contentSchemaVersion is missing or not a number');
     }
     validateContentReference(pkg.contentReference, 'DecentralizedPublication');
+    // Optional, but only in its canonical form: the signature covers the
+    // exact string, and a receiver shows it before anything is retrieved.
+    if (pkg.contentTitle !== undefined && normalizeContentTitle(pkg.contentTitle) !== pkg.contentTitle) {
+        throw new DecentralizedPublicationError('DecentralizedPublication: contentTitle is not a short, plain, single-line title');
+    }
     validatePublisherIdentity(pkg.publisherIdentity, 'DecentralizedPublication');
     validateSignature(pkg.signature, 'DecentralizedPublication');
 }

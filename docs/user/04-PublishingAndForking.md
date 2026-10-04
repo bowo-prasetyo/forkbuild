@@ -112,7 +112,10 @@ your own published Worlds.
   needed to **Explore** it. A World shared by anyone else waits under
   **Shared with you** at the top of their Repository until they click
   **Retrieve**. Nobody's device downloads a stranger's World without
-  being asked.
+  being asked. Each one is listed by its title, so they can choose; their
+  device makes sure the World they retrieve is the one that title names.
+  A World you shared before titles were included is listed as "A World
+  shared by …" until you click **Share Again**.
 - The World is fetched only from you, and only while you're connected: if
   you're offline, **Retrieve** waits until you're back, and a Friend or
   Known Peer gets it as soon as you reconnect. Your device checks that the

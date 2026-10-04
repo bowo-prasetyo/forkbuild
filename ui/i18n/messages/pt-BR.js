@@ -2761,6 +2761,7 @@ export default Object.freeze({
     'sharePublicationButton.sharedWith': { one: 'Compartilhado com {count} par conectado e com os pares que se conectarem depois.', other: 'Compartilhado com {count} pares conectados e com os pares que se conectarem depois.' },
     'sharePublicationButton.sharedNoPeers': 'Compartilhado. Nenhum par está conectado agora; os pares que se conectarem depois vão recebê-lo.',
     'sharedWithYouPanel.sharedBy': 'Um Mundo compartilhado por {sharer}',
+    'sharedWithYouPanel.sharedByLine': 'compartilhado por {sharer}',
     'sharedWithYouPanel.received': 'recebido {when}',
 
     // Publications: publications, text with quotes.

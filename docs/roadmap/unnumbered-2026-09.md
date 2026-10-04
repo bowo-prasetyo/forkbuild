@@ -3812,3 +3812,28 @@ and checks the build and then opens World View; where each record was read is ke
 `application/publication/NetworkPublicationLocatorStore.js`. Opening a link no longer lists a Publication the
 Repository already has a second time. New `tests/RepositoryNetworkDiscovery.test.js`; two older tests that read
 `PublicationCatalog.js`'s source for the Explore route now check `exploreRouteFor()` instead.
+
+## Shared with you names each World (unnumbered, 2026-10-04)
+
+**Shared with you lists each World by its title.** Reported from a Repository showing eighteen identical rows, "A World
+shared by …G4u2HmQ2JN6KbN", with nothing to choose by: a share's envelope (`core/DecentralizedPublication.js`) carried
+only a content reference, and the title lives in the Publication, which arrives only on Retrieve, from a sharer who
+must be connected.
+
+- `DecentralizedPublication` takes an optional `contentTitle`, in its signed payload only when present, so envelopes
+  signed before it still verify. `normalizeContentTitle()` gives its one canonical form (control characters and
+  bidirectional overrides removed, whitespace collapsed, at most 120 characters); the validator accepts only that form.
+  `PublicationResolver#publish()` takes it.
+- `SharePublicationWithPeersUseCase` signs the World's title into the share. Sharing a World again that was shared
+  under an untitled envelope makes a titled one; the titled one is reused from then on.
+- `RetrieveSharedPublicationUseCase#listPending()` returns each share's `title`, and lists the envelopes one sharer
+  made for the same bytes as one entry (the newest titled one). `retrieve()` refuses, adding nothing, a World whose
+  Publication's title is not the one its envelope announced, so a stranger can't bait a Retrieve with a false title.
+  The automatic path for Friends and Known Peers goes through the same check.
+- `SharedWithYouPanel` shows the title, with "shared by …" under it, and keeps "A World shared by …" for an untitled
+  share. Long titles wrap. New `sharedWithYouPanel.sharedByLine` in every locale.
+- Principle "A Share Names Its World, And Must Be That World" in `docs/principles/publication.md`.
+- Tests: `tests/SharePublicationWithPeers.test.js` (the title listed before retrieval; canonical form; a changed or
+  removed title breaking the signature; an untitled envelope still verifying; sharing again after an untitled share,
+  listed once and settled by one Retrieve; a false title refused on retrieval, which fails the test when the check is
+  removed). `index.html`'s module preload hints regenerated.
