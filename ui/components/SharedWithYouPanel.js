@@ -10,8 +10,11 @@ function stripPrefix(message) {
 // (application/publication/sharing/RetrieveSharedPublicationUseCase.js).
 // Shares from Friends and Known Peers are retrieved on their own; anyone
 // else's wait here for a Retrieve click, which fetches the World only from
-// the person who shared it, while they are connected. Emits `retrieved`
-// whenever a World joins the Repository, by hand or automatically.
+// the person who shared it, while they are connected. Each is named by the
+// title its sharer signed into the share, so a person can choose; a share
+// from before shares carried titles falls back to "A World shared by …".
+// Emits `retrieved` whenever a World joins the Repository, by hand or
+// automatically.
 export default {
     name: 'SharedWithYouPanel',
     components: { I18nText },
@@ -80,11 +83,12 @@ export default {
             <div class="identity-mgmt-list">
                 <div v-for="item in pending" :key="item.envelopeId" class="identity-mgmt-card">
                     <div class="identity-mgmt-card-header">
-                        <span class="identity-mgmt-name">{{ t('sharedWithYouPanel.sharedBy', { sharer: sharerLabel(item) }) }}</span>
+                        <span class="identity-mgmt-name">{{ item.title || t('sharedWithYouPanel.sharedBy', { sharer: sharerLabel(item) }) }}</span>
                         <span class="peer-badge" :class="item.sharerConnected ? 'peer-badge--authenticated' : 'peer-badge--pending'">
                             {{ item.sharerConnected ? t('sharedWithYouPanel.connected') : t('sharedWithYouPanel.notConnected') }}
                         </span>
                     </div>
+                    <p v-if="item.title" class="identity-mgmt-status">{{ t('sharedWithYouPanel.sharedByLine', { sharer: sharerLabel(item) }) }}</p>
                     <p v-if="receivedLabel(item)" class="identity-mgmt-status">{{ t('sharedWithYouPanel.received', { when: receivedLabel(item) }) }}</p>
                     <div class="identity-mgmt-actions">
                         <button class="action-btn action-btn--primary"

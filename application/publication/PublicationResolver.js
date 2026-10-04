@@ -120,8 +120,9 @@ export class PublicationResolver {
     // failure, unlike resolve() below: publishing has no "unavailable"
     // dimension of its own to distinguish — a store that cannot be
     // written to right now is simply a failed publish, for the caller to
-    // retry.
-    async publish({ content, contentKind, contentSchemaVersion = 1, identityProvider }) {
+    // retry. `contentTitle` (optional) is signed into the envelope so a
+    // receiver can list it before retrieving the content.
+    async publish({ content, contentKind, contentSchemaVersion = 1, contentTitle = null, identityProvider }) {
         if (!content) {
             throw new Error('PublicationResolver: content is required');
         }
@@ -140,6 +141,7 @@ export class PublicationResolver {
             contentKind,
             contentSchemaVersion,
             contentReference,
+            contentTitle,
             publisherIdentity
         });
         const signature = identityProvider.signCanonical(publication.getSigningDescriptor());

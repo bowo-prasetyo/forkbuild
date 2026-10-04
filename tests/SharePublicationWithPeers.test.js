@@ -20,6 +20,8 @@ import { StoreSnapshotContentUseCase } from '../application/snapshot/materializa
 import { MaterializeSnapshotFromPeerUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromPeerUseCase.js';
 import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
+import { DecentralizedPublication, MAX_CONTENT_TITLE_LENGTH, normalizeContentTitle } from '../core/DecentralizedPublication.js';
+import { validateDecentralizedPublication } from '../application/publication/DecentralizedPublicationValidator.js';
 import { SharePublicationWithPeersUseCase } from '../application/publication/sharing/SharePublicationWithPeersUseCase.js';
 import { RetrieveSharedPublicationUseCase } from '../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
 import { AutoRetrieveSharedPublicationsUseCase } from '../application/publication/sharing/AutoRetrieveSharedPublicationsUseCase.js';
@@ -147,6 +149,8 @@ function authenticated(peer) {
     const [pending] = edge.retrieve.listPending();
     assert(pending && pending.envelopeId === first.envelope.id && pending.sharerId === chrome.id && pending.sharerConnected,
         'Edge lists it as shared with it, from Chrome, who is connected');
+    assert(first.envelope.contentTitle === 'Stair in Half' && pending.title === 'Stair in Half',
+        'the share carries the World\'s title, so Edge can tell what it is before retrieving it');
     assert(edge.repository.list().length === 0, 'an untrusted share is not retrieved on its own');
     console.log('✓ only your own World can be shared; a share reaches peers, including later ones');
 
@@ -244,6 +248,104 @@ function authenticated(peer) {
 
     chrome.dispose();
     mallory.dispose();
+    edge.dispose();
+}
+
+// The title in a share: canonical, signed, and checked on retrieval.
+{
+    assert(normalizeContentTitle('  Stair \n in\tHalf  ') === 'Stair in Half', 'whitespace runs collapse to one space');
+    assert(normalizeContentTitle('Evil\u202eflipped') === 'Evil flipped' && normalizeContentTitle('a\u0000b') === 'a b',
+        'control characters and bidirectional overrides are removed');
+    assert(normalizeContentTitle('x'.repeat(500)).length === MAX_CONTENT_TITLE_LENGTH, 'a title is capped');
+    assert(normalizeContentTitle('   ') === null && normalizeContentTitle(42) === null, 'nothing displayable means no title');
+
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('title-chrome', network);
+    const world = await publishWorld(chrome, 'Titled Tower');
+    const { envelope } = await chrome.share.share(world);
+    const record = envelope.toJSON();
+    const verifier = new LocalAuthorizationVerifier();
+    assert(verifier.verifyDecentralizedPublication(record).valid, 'a titled share verifies');
+    assert(!verifier.verifyDecentralizedPublication({ ...record, contentTitle: 'Something Else' }).valid, 'a changed title breaks the signature');
+    const { contentTitle: _dropped, ...stripped } = record;
+    assert(!verifier.verifyDecentralizedPublication(stripped).valid, 'so does a removed one');
+    validateDecentralizedPublication(record);
+    for (const bad of ['', '  padded ', 'two\nlines', 'x'.repeat(MAX_CONTENT_TITLE_LENGTH + 1), 7]) {
+        let refused = false;
+        try {
+            validateDecentralizedPublication({ ...record, contentTitle: bad });
+        } catch {
+            refused = true;
+        }
+        assert(refused, `a title that is not canonical is refused (${JSON.stringify(bad).slice(0, 20)})`);
+    }
+    const untitled = await new PublicationResolver(chrome.contentStore, verifier).publish({
+        content: world, contentKind: PUBLICATION_CONTENT_KIND, identityProvider: chrome.identityProvider
+    });
+    assert(!('contentTitle' in untitled.toJSON()) && verifier.verifyDecentralizedPublication(untitled.toJSON()).valid
+        && DecentralizedPublication.fromJSON(untitled.toJSON()).contentTitle === null,
+        'an envelope without a title, as before titles existed, still verifies');
+    console.log('✓ a share\'s title is canonical and covered by the sharer\'s signature');
+    chrome.dispose();
+}
+
+// A share from before titles: listed untitled, and replaced by a titled one
+// when shared again, as one entry.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('legacy-chrome', network);
+    const edge = makeDevice('legacy-edge', network);
+    const world = await publishWorld(chrome, 'Old Share');
+    const resolver = new PublicationResolver(chrome.contentStore, new LocalAuthorizationVerifier());
+    const legacy = await resolver.publish({ content: world, contentKind: PUBLICATION_CONTENT_KIND, identityProvider: chrome.identityProvider });
+    chrome.catalog.add(legacy);
+    assert(chrome.share.isShared(world), 'the untitled envelope counts as shared');
+
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    await waitFor(() => edge.catalog.get(legacy.id) !== null, 'the untitled share arrives');
+    await wait(50);
+    let pending = edge.retrieve.listPending();
+    assert(pending.length === 1 && pending[0].title === null, 'it is listed without a title, as before');
+
+    const again = await chrome.share.share(world);
+    assert(!again.alreadyShared && again.envelope.id !== legacy.id && again.envelope.contentTitle === 'Old Share',
+        'sharing it again makes a titled envelope');
+    assert((await chrome.share.share(world)).envelope.id === again.envelope.id, 'which is reused from then on');
+    await waitFor(() => edge.catalog.get(again.envelope.id) !== null, 'the titled share arrives');
+    pending = edge.retrieve.listPending();
+    assert(pending.length === 1 && pending[0].envelopeId === again.envelope.id && pending[0].title === 'Old Share',
+        'Edge lists the World once, by its title');
+    await edge.retrieve.retrieve(pending[0].envelopeId);
+    assert(edge.retrieve.listPending().length === 0 && edge.retrieve.isRetrieved(legacy.id), 'retrieving it settles both envelopes');
+    console.log('✓ a World shared before titles is shared again with one, and listed once');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// A sharer who signs a title that is not the World's own: refused on
+// retrieval, nothing added.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('lie-chrome', network);
+    const edge = makeDevice('lie-edge', network);
+    const world = await publishWorld(chrome, 'Actual Name');
+    const resolver = new PublicationResolver(chrome.contentStore, new LocalAuthorizationVerifier());
+    const lying = await resolver.publish({
+        content: world, contentKind: PUBLICATION_CONTENT_KIND, contentTitle: 'Free Prize Inside', identityProvider: chrome.identityProvider
+    });
+    chrome.catalog.add(lying);
+
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    await waitFor(() => edge.catalog.get(lying.id) !== null, 'the share arrives');
+    assert(edge.retrieve.listPending()[0].title === 'Free Prize Inside', 'it is listed by the title it was signed with');
+    await rejects(edge.retrieve.retrieve(lying.id), /not the one its title announced/, 'retrieving a World under someone else\'s title is refused');
+    assert(edge.repository.list().length === 0 && !edge.contentStore.has(world.contentReference), 'and nothing is added');
+    console.log('✓ a share whose title is not its World\'s is refused on retrieval');
+
+    chrome.dispose();
     edge.dispose();
 }
 

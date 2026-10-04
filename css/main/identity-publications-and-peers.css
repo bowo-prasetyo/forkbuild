@@ -300,6 +300,12 @@
     max-width: 480px;
 }
 
+/* A shared World's title comes from its sharer: wrap it whatever it holds. */
+.shared-with-you .identity-mgmt-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
 .peer-signal-box h2 {
     margin: 0 0 0.5rem;
     font-size: 1.05rem;

@@ -2760,6 +2760,7 @@ export default Object.freeze({
     'sharePublicationButton.sharedWith': { other: '연결된 피어 {count}명, 그리고 나중에 연결하는 피어와 공유했습니다.' },
     'sharePublicationButton.sharedNoPeers': '공유했습니다. 지금은 연결된 피어가 없으며, 나중에 연결하는 피어가 받게 됩니다.',
     'sharedWithYouPanel.sharedBy': '{sharer} 님이 공유한 월드',
+    'sharedWithYouPanel.sharedByLine': '{sharer} 님이 공유함',
     'sharedWithYouPanel.received': '{when}에 받음',
 
     // Publications: publications, text with quotes.

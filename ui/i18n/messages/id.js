@@ -2757,6 +2757,7 @@ export default Object.freeze({
     'sharePublicationButton.sharedWith': { other: 'Dibagikan dengan {count} rekan yang terhubung, dan dengan rekan yang terhubung nanti.' },
     'sharePublicationButton.sharedNoPeers': 'Dibagikan. Saat ini tidak ada rekan yang terhubung; rekan yang terhubung nanti akan menerimanya.',
     'sharedWithYouPanel.sharedBy': 'Dunia yang dibagikan oleh {sharer}',
+    'sharedWithYouPanel.sharedByLine': 'dibagikan oleh {sharer}',
     'sharedWithYouPanel.received': 'diterima {when}',
 
     // Publications: publications, text with quotes.
