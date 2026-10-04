@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 25e078a7afa72b20 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 19e30fff7ffaefab -->
 # 07 — Peer-Verbindungen & Freunde
 
 <!-- languages -->
@@ -131,7 +131,9 @@ Welt, unter **Lobby** in der Weltansicht.
   wie Über ID suchen, ohne dass etwas zu kopieren ist. Seine Karte zeigt
   **Verbinde …** und dann **Verbunden**, sobald der Handshake nachweist,
   wer er ist. Jemanden in der Lobby zu sehen verbindet nie von selbst mit
-  ihm.
+  ihm. Der Beitritt verbindet Sie aber mit Ihren bekannten Peers, die
+  gerade auffindbar sind, wo auch immer sie sind (siehe
+  [Neu verbinden](#neu-verbinden)).
 - **Blockieren** blendet jemanden in Ihren Lobby-Listen aus und blockiert
   ihn wie überall sonst auf dieser Seite.
 - **Lobby verlassen** nimmt Sie sofort heraus. Der Beitritt gilt nur für
@@ -317,11 +319,14 @@ stillschweigend demjenigen zu vertrauen, der geantwortet hat.
 ForkBuild versucht das auch automatisch für Sie, für jede Identität unter
 den bekannten Peers: sobald die App startet, jedes Mal, wenn Sie sich
 jemanden merken, ihn vergessen oder eine Beziehung zu einem bekannten Peer
-anders ändern, und jedes Mal, wenn Sie selbst auf **Auffindbar sein**
-klicken, prüft es still, ob jeder davon gerade **Auffindbar sein**
-eingeschaltet hat, und verbindet sich in diesem Fall, ohne dass Sie selbst
-auf Neu verbinden klicken müssen. Zwei Freunde, die beide auf **Auffindbar
-sein** klicken, verbinden sich also: Der zweite Klick findet den ersten.
+anders ändern, jedes Mal, wenn Sie selbst auf **Auffindbar sein**
+klicken, und jedes Mal, wenn Sie auf **Lobby beitreten** klicken, prüft es
+still, ob jeder davon gerade auffindbar ist, und verbindet sich in diesem
+Fall, ohne dass Sie selbst auf Neu verbinden klicken müssen. Zwei Freunde,
+die beide auf **Auffindbar sein** klicken oder beide einer Lobby beitreten
+(derselben oder nicht), verbinden sich also: Der zweite Klick findet den
+ersten. Solange Sie in einer Lobby bleiben, wiederholt sich die Prüfung
+nicht von selbst.
 Ein bekannter Peer, der gerade nicht auffindbar ist oder nicht erreicht
 werden kann, wird einfach in Ruhe gelassen — es gibt keine
 Wiederholungsschleife, die ihm nachjagt, keine Benachrichtigung über den

@@ -9,6 +9,7 @@ import { UserFacingError } from '../../core/UserFacingError.js';
 import { message } from '../../core/Message.js';
 
 const CHANGED_EVENT = 'PublicLobbyChanged';
+const JOINED_EVENT = 'PublicLobbyJoined';
 const DISPLAY_NAME_KEY = 'public-lobby-display-name';
 const DEFAULT_TICK_INTERVAL_MS = 30 * 1000;
 // A card is renewed once it has less than this left, so it never lapses
@@ -28,7 +29,11 @@ const RENEW_MARGIN_MS = 3 * 60 * 1000;
 // PeerSessionManager#createInvitation's `prepareRelay`).
 //
 // Nothing here is automatic beyond that: listing never connects, and
-// connect() is one person's click. A lobby connection is an ordinary
+// connect() is one person's click. A join is announced through onJoined()
+// so AutoConnectKnownPeersUseCase can make one pass over Known Peers, as it
+// does for Be Discoverable; that pass looks people up by identity and never
+// reads the lobby listing, so strangers here are still never connected
+// automatically. A lobby connection is an ordinary
 // authenticated peer; friendship still gates chat and voice, the presence
 // and profile visibility settings still apply, and blocked identities are
 // never listed.
@@ -136,6 +141,7 @@ export class PublicLobbyUseCase {
         this._start();
         await this._ensureDiscoverable();
         this._emit();
+        this._eventBus.publish(JOINED_EVENT, { lobby });
         return card;
     }
 
@@ -257,6 +263,14 @@ export class PublicLobbyUseCase {
     // lobbies changes.
     onChange(callback) {
         const subscription = this._eventBus.subscribe(CHANGED_EVENT, () => callback(this.joinedLobbies()));
+        return () => subscription.unsubscribe();
+    }
+
+    // Returns an unsubscribe function. Fires once after each successful
+    // join() (a person's Join Lobby click), never for renewing a card or
+    // republishing a spent offer.
+    onJoined(callback) {
+        const subscription = this._eventBus.subscribe(JOINED_EVENT, () => callback());
         return () => subscription.unsubscribe();
     }
 

@@ -44,7 +44,10 @@ import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 // PeerRelationshipUseCase.js#onRelationshipsChanged() fires (the "a
 // relationship was remembered/updated/forgotten" case), and once more each
 // time this person clicks Be Discoverable (FindPeerUseCase#onPublished(),
-// the "I am reachable now; is anyone I know?" case). A run already in
+// the "I am reachable now; is anyone I know?" case) or joins a public lobby
+// (PublicLobbyUseCase#onJoined(), the same case: joining makes this device
+// discoverable too). The lobby's own renewals and republishing never
+// trigger a pass. A run already in
 // flight coalesces a change that arrives mid-run into exactly one more
 // full pass afterward, rather than overlapping two concurrent passes that
 // could each decide, correctly at the time, that the same identity is not
@@ -61,7 +64,7 @@ import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 // deliberately separate concern, to be justified later only if real usage
 // shows an actual gap.
 export class AutoConnectKnownPeersUseCase {
-    constructor({ findPeerUseCase, peerRelationshipUseCase, connectedPeerRegistry } = {}) {
+    constructor({ findPeerUseCase, peerRelationshipUseCase, connectedPeerRegistry, publicLobbyUseCase = null } = {}) {
         if (!findPeerUseCase || typeof findPeerUseCase.search !== 'function' || typeof findPeerUseCase.connect !== 'function') {
             throw new Error('AutoConnectKnownPeersUseCase: a FindPeerUseCase is required');
         }
@@ -84,6 +87,10 @@ export class AutoConnectKnownPeersUseCase {
         this._unsubscribePublished = typeof findPeerUseCase.onPublished === 'function'
             ? findPeerUseCase.onPublished(() => this._scheduleRun())
             : null;
+        // Joining a lobby is the same "I am reachable now" click.
+        this._unsubscribeJoined = publicLobbyUseCase && typeof publicLobbyUseCase.onJoined === 'function'
+            ? publicLobbyUseCase.onJoined(() => this._scheduleRun())
+            : null;
         this._scheduleRun();
     }
 
@@ -96,8 +103,12 @@ export class AutoConnectKnownPeersUseCase {
             this._unsubscribePublished();
             this._unsubscribePublished = null;
         }
+        if (this._unsubscribeJoined) {
+            this._unsubscribeJoined();
+            this._unsubscribeJoined = null;
+        }
         // Deliberately does NOT dispose the injected findPeerUseCase,
-        // peerRelationshipUseCase, or connectedPeerRegistry — all three are
+        // peerRelationshipUseCase, connectedPeerRegistry, or publicLobbyUseCase — all are
         // shared, app-wide collaborators this class never owns, the same
         // restraint application/publication/PublicationPeerConnectionSync.js#dispose()
         // already documents for the identical reason.
