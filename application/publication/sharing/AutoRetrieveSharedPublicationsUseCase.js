@@ -102,7 +102,9 @@ export class AutoRetrieveSharedPublicationsUseCase {
         } catch {
             trusted = false;
         }
-        if (!trusted || this._retrieve.isRetrieved(envelopeId)) {
+        // A share dismissed on this device stays dismissed.
+        if (!trusted || this._retrieve.isRetrieved(envelopeId)
+            || (typeof this._retrieve.isDismissed === 'function' && this._retrieve.isDismissed(envelopeId))) {
             return;
         }
         this._inFlight.add(envelopeId);

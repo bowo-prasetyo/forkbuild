@@ -77,8 +77,9 @@ function makeDevice(label, network, { trusted = () => false } = {}) {
     const snapshotExchange = new PublicationSnapshotContentPeerExchange(contentStore, bus, registry);
     const materialize = new MaterializeSnapshotFromPeerUseCase(snapshotExchange, new StoreSnapshotContentUseCase(contentStore), catalog, { timeoutMs: 1000 });
     const repository = new DecentralizedPublicationDiscoveryProvider();
+    const dismissedStorage = new InMemoryStorageProvider();
     const share = new SharePublicationWithPeersUseCase({ publicationResolver: resolver, publicationCatalog: catalog, publicationPeerExchange: peerExchange, identityProvider, publicationKindPlugin });
-    const retrieve = new RetrieveSharedPublicationUseCase({
+    const makeRetrieve = () => new RetrieveSharedPublicationUseCase({
         publicationCatalog: catalog,
         resolutionCoordinator: coordinator,
         publicationKindPlugin,
@@ -87,8 +88,10 @@ function makeDevice(label, network, { trusted = () => false } = {}) {
         materializeSnapshotFromPeer: materialize,
         connectedPeerRegistry: registry,
         identityProvider,
-        timeoutMs: 1000
+        timeoutMs: 1000,
+        storageProvider: dismissedStorage
     });
+    const retrieve = makeRetrieve();
     const auto = new AutoRetrieveSharedPublicationsUseCase({
         retrieveSharedPublicationUseCase: retrieve,
         publicationPeerExchange: peerExchange,
@@ -97,7 +100,7 @@ function makeDevice(label, network, { trusted = () => false } = {}) {
         isTrustedSharer: trusted
     });
     return {
-        label, identityProvider, connect, registry, contentStore, catalog, peerExchange, repository, share, retrieve, auto,
+        label, identityProvider, connect, registry, contentStore, catalog, peerExchange, repository, share, retrieve, auto, makeRetrieve,
         id: identityProvider.getSigningIdentity().id,
         dispose() { auto.dispose(); sync.dispose(); stopListening(); }
     };
@@ -511,6 +514,79 @@ function authenticated(peer) {
     try { await edge.retrieve.retrieve(envelope.id); } catch (e) { error = e; }
     assert(error && error.code === SHARE_UNAVAILABLE && edge.repository.list().length === 0, 'retrieving it is refused as not sent, adding nothing');
     console.log('✓ a share its sharer no longer holds is reported as not sent');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// Dismissing: a share is hidden on this device for good, including when it
+// is announced again or the device reloads; a World published again is a
+// new share and is listed.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('dismiss-chrome', network);
+    const edge = makeDevice('dismiss-edge', network);
+    const unwanted = await publishWorld(chrome, 'Unwanted');
+    const wanted = await publishWorld(chrome, 'Wanted');
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    const first = await chrome.share.share(unwanted);
+    const second = await chrome.share.share(wanted);
+    await waitFor(() => edge.catalog.get(first.envelope.id) && edge.catalog.get(second.envelope.id), 'both shares arrive');
+
+    let changes = 0;
+    const stopListening = edge.retrieve.onPendingChanged(() => { changes += 1; });
+    assert(edge.retrieve.dismiss(first.envelope.id) && changes === 1, 'dismissing tells listeners');
+    stopListening();
+    let pending = edge.retrieve.listPending();
+    assert(pending.length === 1 && pending[0].envelopeId === second.envelope.id && edge.retrieve.isDismissed(first.envelope.id),
+        'a dismissed share is no longer pending');
+    assert(edge.catalog.get(first.envelope.id) !== null, 'the share itself is kept, so it is not fetched again');
+    assert(!edge.retrieve.dismiss('no-such-share'), 'dismissing an unknown share does nothing');
+
+    await chrome.share.share(unwanted);
+    await wait(50);
+    assert(edge.retrieve.listPending().length === 1, 'announcing it again does not bring it back');
+    assert(edge.makeRetrieve().listPending().length === 1, 'nor does a reload');
+
+    const republished = await publishWorld(chrome, 'Unwanted');
+    const again = await chrome.share.share(republished);
+    await waitFor(() => edge.catalog.get(again.envelope.id) !== null, 'the World published again is shared');
+    pending = edge.retrieve.listPending();
+    assert(pending.some((item) => item.envelopeId === again.envelope.id), 'and, being new, it is listed');
+    console.log('✓ a dismissed share stays hidden; a World published again is listed');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// Dismissing every share that can't be retrieved, and only those.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('dismissall-chrome', network);
+    const edge = makeDevice('dismissall-edge', network);
+    const world = await publishWorld(chrome, 'Still Fine');
+    const bytes = JSON.stringify(world.toJSON());
+    const hash = computeFnv1a32(bytes);
+    chrome.contentStore._storageProvider.save(`content:${hash}`, bytes);
+    let old = new DecentralizedPublication({
+        contentKind: PUBLICATION_CONTENT_KIND,
+        contentSchemaVersion: 1,
+        contentReference: new ContentReference({ hash, algorithm: 'fnv1a-32' }),
+        publisherIdentity: chrome.identityProvider.getSigningIdentity().toJSON()
+    });
+    old = old.withSignature(chrome.identityProvider.signCanonical(old.getSigningDescriptor()));
+    chrome.catalog.add(old);
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    const fine = await chrome.share.share(world);
+    await waitFor(() => edge.catalog.get(old.id) && edge.catalog.get(fine.envelope.id), 'both shares arrive');
+    assert(edge.retrieve.listPending().length === 2, 'both are pending');
+    assert(edge.retrieve.dismissUnretrievable() === 1, 'one share can\'t be retrieved and is dismissed');
+    const pending = edge.retrieve.listPending();
+    assert(pending.length === 1 && pending[0].envelopeId === fine.envelope.id, 'the share that can be retrieved stays');
+    assert(edge.retrieve.dismissUnretrievable() === 0, 'dismissing again finds nothing');
+    console.log('✓ every share that can\'t be retrieved is dismissed at once, and only those');
 
     chrome.dispose();
     edge.dispose();

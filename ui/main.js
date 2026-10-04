@@ -264,7 +264,8 @@ const retrieveSharedPublicationUseCase = new RetrieveSharedPublicationUseCase({
     materializeSnapshotFromPeer: materializeSnapshotFromPeerUseCase,
     connectedPeerRegistry: peerSessionManager.registry,
     identityProvider,
-    identityOfConnection
+    identityOfConnection,
+    storageProvider: new LocalStorageProvider()
 });
 const autoRetrieveSharedPublicationsUseCase = new AutoRetrieveSharedPublicationsUseCase({
     retrieveSharedPublicationUseCase,

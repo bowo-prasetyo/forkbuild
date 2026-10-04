@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { errorText, t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
 import { LEGACY_CONTENT_HASH } from '../../application/publication/sharing/SharePublicationWithPeersUseCase.js';
@@ -73,6 +73,22 @@ export default {
             }
         }
 
+        // Hides a share on this device for good; the use case tells
+        // onPendingChanged() listeners, which refreshes the list.
+        function dismiss(item) {
+            error.value = '';
+            retrieveUseCase.dismiss(item.envelopeId);
+            refresh();
+        }
+
+        function dismissUnretrievable() {
+            error.value = '';
+            retrieveUseCase.dismissUnretrievable();
+            refresh();
+        }
+
+        const unretrievableCount = computed(() => pending.value.filter((item) => item.legacy).length);
+
         const unsubscribes = [];
         onMounted(() => {
             refresh();
@@ -90,7 +106,10 @@ export default {
         });
         onBeforeUnmount(() => { for (const unsubscribe of unsubscribes) unsubscribe(); });
 
-        return { t, pending, retrievingId, error, retrieve, sharerLabel, receivedLabel, available: Boolean(retrieveUseCase) };
+        return {
+            t, pending, retrievingId, error, retrieve, dismiss, dismissUnretrievable, unretrievableCount,
+            sharerLabel, receivedLabel, available: Boolean(retrieveUseCase)
+        };
     },
     template: `
         <div v-if="available && pending.length" class="peer-signal-box shared-with-you">
@@ -99,6 +118,12 @@ export default {
                 <I18nText keypath="sharedWithYouPanel.worldsPeersOfferedToYou"><template #retrieve><strong>{{ t('sharedWithYouPanel.retrieve') }}</strong></template></I18nText>
             </p>
             <p v-if="error" class="identity-unlock-error">{{ error }}</p>
+            <div v-if="unretrievableCount > 1" class="identity-mgmt-actions">
+                <button class="action-btn action-btn--secondary" @click="dismissUnretrievable"
+                        :title="t('sharedWithYouPanel.dismissHint')">
+                    {{ t('sharedWithYouPanel.dismissAllUnretrievable', { count: unretrievableCount }) }}
+                </button>
+            </div>
             <div class="identity-mgmt-list">
                 <div v-for="item in pending" :key="item.envelopeId" class="identity-mgmt-card">
                     <div class="identity-mgmt-card-header">
@@ -111,12 +136,18 @@ export default {
                     <p v-if="receivedLabel(item)" class="identity-mgmt-status">{{ t('sharedWithYouPanel.received', { when: receivedLabel(item) }) }}</p>
                     <p v-if="item.legacy === 'share'" class="form-hint form-hint--neutral">{{ t('sharedWithYouPanel.sharedBeforeSha256') }}</p>
                     <p v-else-if="item.legacy === 'world'" class="form-hint form-hint--neutral">{{ t('sharedWithYouPanel.worldBeforeSha256') }}</p>
-                    <div v-else class="identity-mgmt-actions">
-                        <button class="action-btn action-btn--primary"
+                    <div class="identity-mgmt-actions">
+                        <button v-if="!item.legacy" class="action-btn action-btn--primary"
                                 :disabled="!item.sharerConnected || retrievingId === item.envelopeId"
                                 :title="item.sharerConnected ? '' : t('sharedWithYouPanel.theyNeedToBeConnected')"
                                 @click="retrieve(item)">
                             {{ retrievingId === item.envelopeId ? t('sharedWithYouPanel.retrieving') : t('sharedWithYouPanel.retrieve2') }}
+                        </button>
+                        <button class="action-btn action-btn--secondary"
+                                :disabled="retrievingId === item.envelopeId"
+                                :title="t('sharedWithYouPanel.dismissHint')"
+                                @click="dismiss(item)">
+                            {{ t('sharedWithYouPanel.dismiss') }}
                         </button>
                     </div>
                 </div>
