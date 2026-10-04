@@ -48,8 +48,8 @@ top-level [docs/](..) folder.
     [Distributing Your Work](Distribution.md#what-each-network-needs).
 11. **[Evidence & Storage](11-EvidenceAndStorage.md)** — storing content
     on IPFS or Arweave, and, *experimental*, external evidence, the Bitcoin
-    and Base wallet pipelines, snapshot placements, remote IPFS pinning, and
-    Steem. [Distributing Your Work](Distribution.md) shows how these fit
+    and Base wallet pipelines, snapshot placements, remote IPFS pinning,
+    Steem and Blurt. [Distributing Your Work](Distribution.md) shows how these fit
     together.
 12. **[Archive & Leaderboards](12-ArchiveAndLeaderboards.md)** —
     *experimental*. The observation archive, publication references,

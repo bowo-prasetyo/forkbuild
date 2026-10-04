@@ -29,7 +29,7 @@ export function composeSnapshotDiscovery({
     publicationSnapshotPlacementCatalog, publicationSnapshotPlacementResolutionStoreRegistry,
     roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
-    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime = null,
+    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime = null, blurtRuntime = null,
     announcementIndex = null, publicationContentStore = null
 }) {
     // Every network discovery result is recorded in the Announcement Index, and
@@ -57,13 +57,14 @@ export function composeSnapshotDiscovery({
     const placeNamingPublicationOptions = {
         nostrPlaceNamingDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher },
         arweavePlaceNamingDiscoveryPublisherOptions: { gatewayUrl: resolvedArweaveGatewayUrl, uploadTaggedTransaction: arweaveAnnouncementUploadTaggedTransaction },
-        steemPlaceNamingDiscoveryPublisher: steemRuntime ? steemRuntime.placeNamingDiscoveryPublisher : null
+        steemPlaceNamingDiscoveryPublisher: steemRuntime ? steemRuntime.placeNamingDiscoveryPublisher : null,
+        blurtPlaceNamingDiscoveryPublisher: blurtRuntime ? blurtRuntime.placeNamingDiscoveryPublisher : null
     };
     const distributePlaceNamingClaimCommand = (claim, discoveryProvider = resolvedAnnouncementDiscoveryProvider) => Promise.resolve().then(() => {
         const { discoveryPublisher } = composePlaceNamingPublicationRuntime({ discoveryProvider, ...placeNamingPublicationOptions });
         if (!discoveryPublisher) {
             throw new UserFacingError(message(discoveryProvider === 'nostr' ? 'placeNaming.nostrUnavailable' : 'placeNaming.networkUnavailable', {
-                provider: { arweave: 'Arweave', steem: 'Steem' }[discoveryProvider] || discoveryProvider
+                provider: { arweave: 'Arweave', steem: 'Steem', blurt: 'Blurt' }[discoveryProvider] || discoveryProvider
             }));
         }
         return discoveryPublisher.publish(claim);
@@ -91,6 +92,7 @@ export function composeSnapshotDiscovery({
         nostrSnapshotDiscoveryQueryService: recording(snapshotDiscoveryQueryService, AnnouncementKind.SNAPSHOT, 'nostr'),
         arweaveSnapshotDiscoveryQueryService: recording(arweaveSnapshotDiscoveryQueryService, AnnouncementKind.SNAPSHOT, 'arweave'),
         steemSnapshotDiscoveryQueryService: recording(steemRuntime ? steemRuntime.snapshotDiscoveryQueryService : null, AnnouncementKind.SNAPSHOT, 'steem'),
+        blurtSnapshotDiscoveryQueryService: recording(blurtRuntime ? blurtRuntime.snapshotDiscoveryQueryService : null, AnnouncementKind.SNAPSHOT, 'blurt'),
         announcementIndexSource: indexedSource(AnnouncementKind.SNAPSHOT),
         placementCatalog: publicationSnapshotPlacementCatalog
     });
@@ -143,6 +145,7 @@ export function composeSnapshotDiscovery({
             : []),
         recording(new ArweavePlaceNamingDiscoverySource({ gatewayUrl: resolvedArweaveGatewayUrl }), AnnouncementKind.PLACE_NAMING, 'arweave'),
         ...(steemRuntime ? [recording(steemRuntime.placeNamingDiscoverySource, AnnouncementKind.PLACE_NAMING, 'steem')] : []),
+        ...(blurtRuntime ? [recording(blurtRuntime.placeNamingDiscoverySource, AnnouncementKind.PLACE_NAMING, 'blurt')] : []),
         ...(announcementIndex ? [indexedSource(AnnouncementKind.PLACE_NAMING)] : [])
     ];
     const { queryService: placeNamingDiscoveryQueryService } = composePlaceNamingDiscoveryRuntime({ sources: placeNamingDiscoverySources });

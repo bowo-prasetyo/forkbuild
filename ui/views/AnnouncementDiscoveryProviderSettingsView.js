@@ -39,7 +39,7 @@ import { displayText, t } from '../i18n/i18n.js';
 // Both keys already title-case to "Nostr"/"Arweave" through
 // describeRoleProviderPreferenceSettings()'s own label fallback, so no
 // label map is needed here.
-const AVAILABLE_PROVIDER_KEYS = ['nostr', 'arweave', 'steem'];
+const AVAILABLE_PROVIDER_KEYS = ['nostr', 'arweave', 'steem', 'blurt'];
 
 export default {
     name: 'AnnouncementDiscoveryProviderSettingsView',

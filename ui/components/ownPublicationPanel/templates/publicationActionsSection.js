@@ -81,7 +81,7 @@ export const publicationActionsSectionTemplate = `<!-- Distribute acts as the pu
                 </template>
             </div>
 
-            <!-- The link friends can open on any device, once the Signed Claim is on Steem. -->
+            <!-- The link friends can open on any device, once the Signed Claim is on Steem or Blurt. -->
             <PublicationShareLink v-if="publication" :publication-id="publication.id" :title="publication.title" />
 
             <WorldDistributionDialog

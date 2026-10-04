@@ -6,7 +6,7 @@ import { errorText, t } from '../../i18n/i18n.js';
 // a claim to a decentralized network.
 //
 // `distributePlaceNamingClaimCommand(claim, discoveryProvider)` announces one
-// already-signed claim on 'arweave', 'nostr' or 'steem'; without it nothing is
+// already-signed claim on 'arweave', 'nostr', 'steem' or 'blurt'; without it nothing is
 // offered. `defaultDiscoveryProvider` is the saved Announcement / Discovery
 // preference the picker opens on.
 export function usePlaceNamingPanel({

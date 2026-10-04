@@ -83,7 +83,7 @@ export function usePostPublishDistribution({
             }
             : undefined;
 
-        if (discoveryProvider === 'arweave' || discoveryProvider === 'steem') {
+        if (['arweave', 'steem', 'blurt'].includes(discoveryProvider)) {
             if (!publicationDistributionCommand) {
                 return Promise.reject(new Error(t('distribution.publicationUnavailable')));
             }

@@ -17,26 +17,27 @@ For what each server learns about you, see [Privacy](../Privacy.md).
 | Page | Route | What it sets |
 |---|---|---|
 | **Content Provider** | `/settings/content-provider` | Where **Store on …** and **Use Preferred Provider** store new content, and which IPFS node it goes to — see [below](#content-provider) |
-| **Announcement / Discovery Provider** | `/settings/announcement-discovery-provider` | Where your announcements go by default: Nostr, Arweave or Steem — see [below](#announcement--discovery-provider) |
+| **Announcement / Discovery Provider** | `/settings/announcement-discovery-provider` | Where your announcements go by default: Nostr, Arweave, Steem or Blurt — see [below](#announcement--discovery-provider) |
 | **Proof / Anchoring Provider** *(experimental)* | `/settings/anchor-provider` | Where **Anchor on …** anchors — see [below](#proof--anchoring-provider) |
 | **Arweave Gateway** | `/settings/arweave-gateway` | Gateways for reading Arweave content — see [below](#arweave-gateway) |
 | **IPFS Gateway** | `/settings/ipfs-gateway` | Gateways for reading IPFS content — see [below](#ipfs-gateway) |
 | **Bitcoin Endpoint** *(experimental)* | `/settings/bitcoin-esplora` | The service Bitcoin anchoring uses — see [below](#bitcoin-endpoint) |
 | **Nostr Relays** | `/settings/nostr-relay` | Relays for publishing and discovery over Nostr — see [below](#nostr-relays) |
 | **Steem** *(experimental)* | `/settings/steem` | Your Steem account, and where Steem is read from — see [below](#steem) |
+| **Blurt** *(experimental)* | `/settings/blurt` | Your Blurt account, and where Blurt is read from — see [below](#blurt) |
 | **STUN Servers** / **TURN Server** | `/settings/stun`, `/settings/turn-server` | Help for peer connections — see [TURN](07-PeerConnectionsAndFriends.md#turn-relaying-peer-connections-that-cant-find-a-direct-path) |
 | **Rendezvous Servers** | `/settings/rendezvous` | How peers find each other — see [Peer Connections & Friends](07-PeerConnectionsAndFriends.md) |
 
 ## How every page behaves
 
 - **Reload after saving.** Changes take effect the next time the app loads
-  (the Steem account is the one exception). An open World View or Editor
+  (the Steem and Blurt accounts are the exceptions). An open World View or Editor
   keeps using the old settings until you reload.
 - Each page has its own **Save**. A save that fails shows the reason and
   leaves the previous setting as it was; a successful one shows "Saved."
 - Lists of choices are shown in alphabetical order.
 - **Server lists come with defaults.** The Arweave Gateway, IPFS Gateway,
-  Bitcoin Endpoint, Nostr Relays, Steem, STUN and Rendezvous pages start
+  Bitcoin Endpoint, Nostr Relays, Steem, Blurt, STUN and Rendezvous pages start
   with several free public servers, so things keep working when one is
   down. The page says whether it's "Using the default …" or "Using your
   saved …". With nothing saved, the text box holds the defaults, one per
@@ -74,18 +75,18 @@ back. It doesn't affect reading IPFS content, which uses the
 
 ## Announcement / Discovery Provider
 
-Choose **Arweave**, **Nostr** or **Steem** (experimental) as the default
+Choose **Arweave**, **Blurt** (experimental), **Nostr** or **Steem** (experimental) as the default
 place your publications (Shared Worlds, Blueprint Attributions and
 place-name claims), Snapshots and comments are announced. It's only a
 default: every **Distribute** dialog, the Repository's per-card
 Distribution picker and the network picker next to **Post Comment** start
 on it, and you can switch them for one action.
-Finding other people's content always searches all three.
+Finding other people's content always searches all of them.
 
 ## Proof / Anchoring Provider
 
 *Experimental.* Choose where **Anchor on …** (the first button in a
-publication's **Proof / Anchoring** block) creates external evidence: **Arweave**, **Bitcoin** or **Steem**, whichever this device has
+publication's **Proof / Anchoring** block) creates external evidence: **Arweave**, **Bitcoin**, **Blurt** or **Steem**, whichever this device has
 registered. Base is never offered, because every Base anchor needs you to
 review and sign a wallet transaction. With Bitcoin chosen there's no
 **Anchor on …** button: the block shows every option and points to the
@@ -168,4 +169,25 @@ account. The rest of the page sets where Steem is read from:
 
 When no Steem node can be reached, **Check for new comments** and Snapshot
 discovery name Steem as unavailable rather than reporting that nothing was
+found.
+
+## Blurt
+
+*Experimental.* Set **Your Blurt account** under **Posting** (this applies
+immediately, without a reload), needed to post, store or anchor on Blurt —
+see [Blurt](11-EvidenceAndStorage.md#blurt). Reading from Blurt needs no
+account. The rest of the page sets where Blurt is read from:
+
+- **API nodes**, one `https://` URL per line (defaults
+  `https://rpc.blurt.blog` and `https://rpc.beblurt.com`), tried in order.
+- **Accounts to follow**, one per line (none by default). Blurt lists a
+  post under its tag only until it pays out, after seven days; after that,
+  ForkBuild finds older posts in their authors' histories. It does this for
+  every account it has seen post under the tag on this device, and for the
+  accounts you list here, so you can follow people whose builds you missed.
+- **First month to read** (default October 2026): older posts in an
+  author's history aren't read.
+
+When no Blurt node can be reached, **Check for new comments** and Snapshot
+discovery name Blurt as unavailable rather than reporting that nothing was
 found.

@@ -13,7 +13,7 @@ export function composePublicationDistribution({
     resolvedIpfsNodeApiUrl, snapshotPlacementStoreRegistry, resolvedAnnouncementDiscoveryProvider,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, PUBLICATION_DISCOVERY_TAG,
     publicationDistributionLifecycleStore, arweaveHostSigner, nostrHostPublisher,
-    nostrPublicationRuntimeCapabilities, steemRuntime = null, snapshotDistributionLog = null
+    nostrPublicationRuntimeCapabilities, steemRuntime = null, blurtRuntime = null, snapshotDistributionLog = null
 }) {
     const arweavePublicationRuntimeCapabilities = createArweavePublicationDistributionRuntimeAdapter({ signer: arweaveHostSigner });
     const arweaveAnnouncementUploadTaggedTransaction = createArweaveTaggedTransactionUpload({
@@ -37,7 +37,9 @@ export function composePublicationDistribution({
         nostrPublisherOptions,
         arweaveAnnouncementPublisherOptions,
         steemPublicationDiscoveryPublisher: steemRuntime ? steemRuntime.publicationDiscoveryPublisher : null,
-        steemMaterialStore: steemRuntime ? steemRuntime.contentStore : null
+        steemMaterialStore: steemRuntime ? steemRuntime.contentStore : null,
+        blurtPublicationDiscoveryPublisher: blurtRuntime ? blurtRuntime.publicationDiscoveryPublisher : null,
+        blurtMaterialStore: blurtRuntime ? blurtRuntime.contentStore : null
     });
 
     const multiRelayNostrPublicationDistributionCommand = composeMultiRelayNostrPublicationDistributionCommand({
@@ -46,7 +48,8 @@ export function composePublicationDistribution({
         ipfsNodeOptions,
         nostrRelayUrls: resolvedNostrRelayUrls,
         nostrPublisherOptions,
-        steemMaterialStore: steemRuntime ? steemRuntime.contentStore : null
+        steemMaterialStore: steemRuntime ? steemRuntime.contentStore : null,
+        blurtMaterialStore: blurtRuntime ? blurtRuntime.contentStore : null
     });
 
     // Snapshots use their own 'forkbuild-snapshot' tag, a separate discovery
@@ -65,9 +68,11 @@ export function composePublicationDistribution({
     });
     // Picks one of the two instances above, defaulting to the saved preference.
     const steemSnapshotDiscoveryPublisher = steemRuntime ? steemRuntime.snapshotDiscoveryPublisher : null;
+    const blurtSnapshotDiscoveryPublisher = blurtRuntime ? blurtRuntime.snapshotDiscoveryPublisher : null;
     const resolveSnapshotDiscoveryPublisher = (discoveryProvider = resolvedAnnouncementDiscoveryProvider) => {
         if (discoveryProvider === 'arweave') return arweaveSnapshotDiscoveryPublisher;
         if (discoveryProvider === 'steem') return steemSnapshotDiscoveryPublisher;
+        if (discoveryProvider === 'blurt') return blurtSnapshotDiscoveryPublisher;
         return nostrSnapshotDiscoveryPublisher;
     };
     // Every completed distribution is logged (application/snapshot/OwnSnapshotDistributionLog.js),

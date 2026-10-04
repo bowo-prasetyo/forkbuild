@@ -78,6 +78,12 @@ export default {
                     </router-link>
                 </li>
                 <li>
+                    <router-link to="/settings/blurt" class="network-settings-link">
+                        <span class="network-settings-link-title">Blurt</span>
+                        <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.whereThisReplicaReadsBlurt') }}</span>
+                    </router-link>
+                </li>
+                <li>
                     <router-link to="/settings/stun" class="network-settings-link">
                         <span class="network-settings-link-title">{{ t('networkSettingsView.stunServers') }}</span>
                         <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.serversUsedForPeerTo') }}</span>

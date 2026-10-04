@@ -20,11 +20,12 @@ import { HttpPinningProvider } from '../../../content/HttpPinningProvider.js';
 // `materialStorage` value means.
 //
 //   composePublicationMaterialUploader({
-//       materialStorage,             // 'ar' (default) | 'ipfs' | 'remote-pinning' | 'steem'
+//       materialStorage,             // 'ar' (default) | 'ipfs' | 'remote-pinning' | 'steem' | 'blurt'
 //       arweaveUploaderOptions,
 //       ipfsNodeOptions,
 //       remotePinningProviderOptions,
-//       steemMaterialStore           // the Steem runtime's content store, or null
+//       steemMaterialStore,          // the Steem runtime's content store, or null
+//       blurtMaterialStore           // the Blurt runtime's content store, or null
 //   })
 //        │
 //        ├──► 'ar'             → new ArweavePublicationMaterialUploader(arweaveUploaderOptions)               (0.9.45, unmodified)
@@ -33,9 +34,10 @@ import { HttpPinningProvider } from '../../../content/HttpPinningProvider.js';
 //        ├──► 'remote-pinning' → new ContentStorePublicationMaterialUploader({                                (0.9.670)
 //        │                          contentStore: new IpfsRemotePinningContentStore({                          (content/IpfsRemotePinningContentStore.js, 0.8.67, unmodified)
 //        │                              provider: new HttpPinningProvider(remotePinningProviderOptions) }) })  (content/HttpPinningProvider.js, 0.8.67, unmodified)
-//        └──► 'steem'          → new ContentStorePublicationMaterialUploader({
-//                                   contentStore: steemMaterialStore })                                (content/SteemContentStore.js, injected;
-//                                                                                                       throws when none was given)
+//        ├──► 'steem'          → new ContentStorePublicationMaterialUploader({
+//        │                          contentStore: steemMaterialStore })                                (content/SteemContentStore.js, injected;
+//        │                                                                                              throws when none was given)
+//        └──► 'blurt'          → the same, with blurtMaterialStore                                      (content/BlurtContentStore.js)
 //        │
 //        ▼
 //   materialUploader   ({ upload(material) -> Promise<uri|null>, storage })
@@ -89,7 +91,8 @@ import { HttpPinningProvider } from '../../../content/HttpPinningProvider.js';
 //   unmodified.
 
 // composePublicationMaterialUploader({ materialStorage, arweaveUploaderOptions,
-//   ipfsNodeOptions, remotePinningProviderOptions, steemMaterialStore }) -> materialUploader.
+//   ipfsNodeOptions, remotePinningProviderOptions, steemMaterialStore, blurtMaterialStore })
+//   -> materialUploader.
 // See this file's own header for the full contract. Throws synchronously for
 // an unrecognized `materialStorage`, or for a malformed option bag the
 // selected concrete constructor already rejects.
@@ -98,7 +101,8 @@ export function composePublicationMaterialUploader({
     arweaveUploaderOptions = {},
     ipfsNodeOptions = {},
     remotePinningProviderOptions = {},
-    steemMaterialStore = null
+    steemMaterialStore = null,
+    blurtMaterialStore = null
 } = {}) {
     if (materialStorage === 'ar') {
         return new ArweavePublicationMaterialUploader(arweaveUploaderOptions);
@@ -124,5 +128,14 @@ export function composePublicationMaterialUploader({
         }
         return new ContentStorePublicationMaterialUploader({ contentStore: steemMaterialStore });
     }
-    throw new Error(`PublicationMaterialUploaderComposition: unrecognized materialStorage "${materialStorage}" — expected "ar", "ipfs", "remote-pinning" or "steem"`);
+    if (materialStorage === 'blurt') {
+        // The Blurt content store Snapshots use (docs/Protocol.md, "Proposed:
+        // Blurt Substrate", "Content"): the Signed Claim is one manifest reply
+        // under the poster's build post.
+        if (!blurtMaterialStore) {
+            throw new Error('Blurt storage is not available. Choose Arweave or IPFS storage to distribute the Signed Claim.');
+        }
+        return new ContentStorePublicationMaterialUploader({ contentStore: blurtMaterialStore });
+    }
+    throw new Error(`PublicationMaterialUploaderComposition: unrecognized materialStorage "${materialStorage}" — expected "ar", "ipfs", "remote-pinning", "steem" or "blurt"`);
 }

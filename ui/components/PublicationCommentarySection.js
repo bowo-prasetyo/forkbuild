@@ -2,6 +2,7 @@ import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { createId } from '../../core/createId.js';
 import { describeSteemAnnouncingUnreadiness } from '../../application/steem/SteemAnnouncingReadiness.js';
+import { describeBlurtAnnouncingUnreadiness } from '../../application/blurt/BlurtAnnouncingReadiness.js';
 import { errorText, t } from '../i18n/i18n.js';
 
 // The Repository catalog's Commentary section for ONE Publication — the
@@ -59,8 +60,9 @@ export default {
         // preference, resolved once at boot by ui/main.js; seeds
         // `selectedDiscoveryProvider` below.
         defaultAnnouncementDiscoveryProvider: { default: null },
-        // The account this device posts to Steem as, when set.
-        steemAnnouncingConfigurationStore: { default: null }
+        // The accounts this device posts to Steem and Blurt as, when set.
+        steemAnnouncingConfigurationStore: { default: null },
+        blurtAnnouncingConfigurationStore: { default: null }
     },
     props: {
         publication: { type: Object, required: true }
@@ -95,7 +97,7 @@ export default {
         },
         // Human-friendly label only — never the value sent to the command.
         lastCommentaryDistributionProviderLabel() {
-            return { arweave: 'Arweave', steem: 'Steem' }[this.lastCommentaryDistributionProvider] || 'Nostr';
+            return { arweave: 'Arweave', blurt: 'Blurt', steem: 'Steem' }[this.lastCommentaryDistributionProvider] || 'Nostr';
         }
     },
     mounted() {
@@ -111,6 +113,13 @@ export default {
             return describeSteemAnnouncingUnreadiness({
                 account: this.steemAnnouncingConfigurationStore?.get()?.account ?? null,
                 keychain: globalThis.steem_keychain
+            });
+        },
+        blurtUnreadiness() {
+            if (this.selectedDiscoveryProvider !== 'blurt') return null;
+            return describeBlurtAnnouncingUnreadiness({
+                account: this.blurtAnnouncingConfigurationStore?.get()?.account ?? null,
+                keychain: globalThis.blurt_keychain
             });
         },
         // The only writer of `commentaries`/`commentaryError` from a
@@ -205,11 +214,13 @@ export default {
                         class="form-select publication-commentary-provider-select"
                     >
                         <option value="arweave">Arweave</option>
+                        <option value="blurt">Blurt</option>
                         <option value="nostr">Nostr</option>
                         <option value="steem">Steem</option>
                     </select>
                 </label>
                 <p v-if="steemUnreadiness()" class="form-hint publication-commentary-steem-hint">{{ steemUnreadiness() }}</p>
+                <p v-if="blurtUnreadiness()" class="form-hint publication-commentary-blurt-hint">{{ blurtUnreadiness() }}</p>
                 <button
                     type="submit"
                     class="action-btn publication-commentary-submit-action"

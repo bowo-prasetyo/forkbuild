@@ -331,14 +331,17 @@ export function composePublicationDistributionRuntime({
     nostrPublisherOptions = {},
     arweaveAnnouncementPublisherOptions = {},
     steemPublicationDiscoveryPublisher = null,
-    steemMaterialStore = null
+    steemMaterialStore = null,
+    blurtPublicationDiscoveryPublisher = null,
+    blurtMaterialStore = null
 } = {}) {
     const uploader = composePublicationMaterialUploader({
         materialStorage,
         arweaveUploaderOptions,
         ipfsNodeOptions,
         remotePinningProviderOptions,
-        steemMaterialStore
+        steemMaterialStore,
+        blurtMaterialStore
     });
 
     let publisher;
@@ -351,8 +354,13 @@ export function composePublicationDistributionRuntime({
             throw new Error('PublicationDistributionRuntimeComposition: announcing on Steem is not available');
         }
         publisher = steemPublicationDiscoveryPublisher;
+    } else if (discoveryProvider === 'blurt') {
+        if (!blurtPublicationDiscoveryPublisher) {
+            throw new Error('PublicationDistributionRuntimeComposition: announcing on Blurt is not available');
+        }
+        publisher = blurtPublicationDiscoveryPublisher;
     } else {
-        throw new Error(`PublicationDistributionRuntimeComposition: unrecognized discoveryProvider "${discoveryProvider}" — expected "nostr", "arweave" or "steem"`);
+        throw new Error(`PublicationDistributionRuntimeComposition: unrecognized discoveryProvider "${discoveryProvider}" — expected "nostr", "arweave", "steem" or "blurt"`);
     }
 
     return Object.freeze({

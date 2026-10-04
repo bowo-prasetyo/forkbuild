@@ -5,6 +5,10 @@
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · **Français** · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../FAQ.md).
+<!-- /stale -->
+
 Des réponses courtes aux questions les plus fréquentes, chacune renvoyant
 vers le guide qui l’explique en détail.
 

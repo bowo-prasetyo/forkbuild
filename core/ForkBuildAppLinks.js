@@ -1,10 +1,11 @@
 import { isSteemAccountName } from './SteemDiscoveryThread.js';
 import { message } from './Message.js';
 import { parseSteemContentLocator, steemContentLocator } from './SteemContentManifest.js';
+import { blurtContentLocator, isBlurtAccountName, parseBlurtContentLocator } from './BlurtPost.js';
 
 // Links into the published ForkBuild app, for text written where ForkBuild
-// isn't running, such as the notice on a Steem post or a link shared with a
-// friend. Written into posts that stay on the chain, so it changes only if
+// isn't running, such as the notice on a Steem or Blurt post or a link
+// shared with a friend. Written into posts that stay on the chain, so it changes only if
 // the app moves.
 export const FORKBUILD_APP_URL = 'https://bowo-prasetyo.github.io/forkbuild/';
 
@@ -27,13 +28,26 @@ export function steemPublicationViewUrl(author, permlink, appUrl = FORKBUILD_APP
     return `${appUrl}#${steemPublicationViewPath(author, permlink)}`;
 }
 
+// The same, for a Signed Claim stored on Blurt.
+export function blurtPublicationViewPath(author, permlink) {
+    if (!isBlurtAccountName(author)) throw new TypeError(`not a Blurt account name: ${author}`);
+    if (!PERMLINK_PATTERN.test(permlink ?? '')) throw new TypeError(`not a Blurt permlink: ${permlink}`);
+    return `/view/blurt/${author}/${permlink}`;
+}
+
+export function blurtPublicationViewUrl(author, permlink, appUrl = FORKBUILD_APP_URL) {
+    return `${appUrl}#${blurtPublicationViewPath(author, permlink)}`;
+}
+
 // Where a Signed Claim is stored, as `{ network, locator }`, from its
-// locator (`steem://author/permlink`, `ar://<id>` or `ipfs://<cid>`); null
-// for anything the view can't open.
+// locator (`steem://author/permlink`, `blurt://author/permlink`, `ar://<id>`
+// or `ipfs://<cid>`); null for anything the view can't open.
 export function describePublicationClaimLocator(locator) {
     if (typeof locator !== 'string') return null;
     const steem = parseSteemContentLocator(locator);
     if (steem) return Object.freeze({ network: 'steem', locator, path: steemPublicationViewPath(steem.author, steem.permlink), label: message('publicationLink.label.steem', { author: steem.author, permlink: steem.permlink }) });
+    const blurt = parseBlurtContentLocator(locator);
+    if (blurt) return Object.freeze({ network: 'blurt', locator, path: blurtPublicationViewPath(blurt.author, blurt.permlink), label: message('publicationLink.label.blurt', { author: blurt.author, permlink: blurt.permlink }) });
     if (locator.startsWith('ar://')) {
         const id = locator.slice('ar://'.length);
         return ARWEAVE_ID_PATTERN.test(id) ? Object.freeze({ network: 'arweave', locator, path: `/view/ar/${id}`, label: message('publicationLink.label.arweave', { id }) }) : null;
@@ -46,7 +60,8 @@ export function describePublicationClaimLocator(locator) {
 }
 
 // The Signed Claim's locator named by an app route (`/view/steem/<author>/
-// <permlink>`, `/view/ar/<id>`, `/view/ipfs/<cid>`), or null.
+// <permlink>`, `/view/blurt/<author>/<permlink>`, `/view/ar/<id>`,
+// `/view/ipfs/<cid>`), or null.
 export function publicationClaimLocatorFromViewPath(path) {
     if (typeof path !== 'string') return null;
     const parts = path.split('/');
@@ -55,6 +70,12 @@ export function publicationClaimLocatorFromViewPath(path) {
     if (parts[2] === 'steem' && parts.length === 5) {
         try {
             locator = steemContentLocator(parts[3], parts[4]);
+        } catch {
+            return null;
+        }
+    } else if (parts[2] === 'blurt' && parts.length === 5) {
+        try {
+            locator = blurtContentLocator(parts[3], parts[4]);
         } catch {
             return null;
         }

@@ -29,7 +29,8 @@ export function resolvedEncounterSelectionsEqual(previousResolvedSelection, next
 const CONTENT_URI_SCHEME_LABELS = {
     ar: 'Arweave',
     ipfs: 'IPFS',
-    steem: 'Steem'
+    steem: 'Steem',
+    blurt: 'Blurt'
 };
 
 function shortIdentityId(identityId) {

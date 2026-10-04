@@ -3921,3 +3921,49 @@ admitted it again like anyone else's World.
   test when the log is removed; the log is in the publications backup group);
   `tests/WorldViewPanelLayoutBrowser.test.js` checks the new confirmation. The confirmation names no network, as
   the panel's template never does. `index.html`'s module preload hints regenerated.
+
+## Blurt joins as a substrate, posted from each person's own account (unnumbered, 2026-10-04)
+
+**Blurt is a fifth decentralized substrate, Experimental, for all three roles: Announcement/Discovery, Content and
+Proof/Anchoring.** Blurt forked from Steem in 2020 and has no downvotes, which removes the reason Steem posts decline
+their payout and go through `@forkbuild`'s monthly threads. So on Blurt there is no ForkBuild account: each person
+posts from their own account, as top-level posts in the `forkbuild` category that keep their payout and earn BLURT
+when upvoted. The design is docs/Protocol.md, "Proposed: Blurt Substrate", checked against Blurt's own source.
+
+- **One Distribute, one post.** The chain accepts one top-level post per account every five minutes, and Distribute
+  makes up to four posts (Snapshot data, its announcement, the Signed Claim, the Publication's announcement). The
+  poster (`application/blurt/BlurtPoster.js`) makes one build post and, for 30 minutes, adds later announcements
+  and anchors to it by editing it (edits aren't held to the interval), while stored content goes in replies under
+  it. The post's body shows the build's card and lists what it carries. A full post (16 announcements or anchors, or
+  56 KiB) starts a new one, after the interval if needed, and the dialogs say when a post is waiting.
+- **Reading by tag and by author.** Readers list `forkbuild-<family>` with `get_discussions_by_created`. Blurt's tags
+  plugin drops a post from its tag index when it pays out, after seven days, so readers also read the post histories
+  (`get_discussions_by_author_before_date`) of followed accounts (Network Settings → Blurt) and of every account the
+  device has seen post under the tag (`blurt-known-authors`).
+- **The announcement post is the anchor.** A post whose metadata carries a Snapshot's content hash (its announcement,
+  its stored data, or an explicit anchor) commits to it, so anchoring a build already distributed on Blurt reuses
+  that transaction and posts nothing (`blurt-post-record:`). Otherwise the hash is added to the build post. Batches
+  are one `forkbuild-anchor` custom_json, as on Steem. Verification, finality and kept block evidence work as for
+  Steem.
+- **Fees.** Every Blurt transaction burns `operation_flat_fee` per operation plus `bandwidth_kbytes_fee` per KiB.
+  `core/BlurtFees.js` computes it exactly from the packed transaction, and the content store refuses before posting
+  when the account's balance is short. In the tests the estimate equals what the fake chain charges.
+- **Shared with Steem.** Steem's binary serialization and block evidence became `core/GrapheneBinary.js` and
+  `core/GrapheneBlockEvidence.js`, with Steem's and Blurt's operation tables on top (Blurt renumbers its
+  operations). `core/BlurtBinary.js` matches `@beblurt/dblurt` 0.17.0 byte for byte; the test keeps its transaction
+  ids. Blurt Keychain (and WhaleVault) offers Steem Keychain's interface, so signing and the image upload reuse
+  `steem/` with Blurt's names. Content encoding, part splitting and decoding reuse Steem's.
+- **In the app.** Blurt appears wherever Steem does: the Distribute dialogs, the Publications page, the comment and
+  place naming pickers, the Announcement/Discovery and Proof/Anchoring settings, a new Network Settings → Blurt page
+  (`ui/views/BlurtSettingsView.js`), links (`#/view/blurt/<author>/<permlink>`), the background announcement sync and
+  backups. All new text is translated into every language. User guides (Network Settings, Evidence & Storage,
+  Distribution and the pages that list the networks), `docs/Architecture.md` and `docs/Privacy.md` updated; the
+  translated user guides are marked out of date until they catch up. `scripts/check-network-defaults.mjs` checks the
+  default Blurt nodes.
+- **Not yet tried** against a live Blurt node or a real Blurt Keychain; neither is reachable from the development
+  environment. The default nodes (`rpc.blurt.blog`, `rpc.beblurt.com`) and image host (`images.blurt.blog`) need
+  checking from a browser.
+- Tests: new `tests/BlurtPoster.test.js`, `BlurtDiscoveryReader.test.js`, `BlurtContentStore.test.js`,
+  `BlurtAnchoring.test.js` and `BlurtSettings.test.js`, over `tests/support/FakeBlurtChain.js`, a fake chain with
+  real block hashes and signatures that enforces Blurt's posting intervals, edits and fees and lists posts by tag and
+  author. Tests that pin the list of networks now include Blurt. `index.html`'s module preload hints regenerated.

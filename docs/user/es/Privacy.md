@@ -5,6 +5,10 @@
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · **Español** · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../../Privacy.md).
+<!-- /stale -->
+
 ForkBuild no tiene cuentas y no lo rastrea. Guarda su trabajo en su propio
 navegador y habla con otras computadoras solo para las funciones que lo
 necesitan, además de un recuento anónimo de visitantes una vez al día para

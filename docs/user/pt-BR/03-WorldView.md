@@ -5,6 +5,10 @@
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · **Português (Brasil)**
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../03-WorldView.md).
+<!-- /stale -->
+
 A Visão do mundo é o espaço 3D compartilhado onde **todas as criações
 publicadas existem lado a lado**. Voe por ele, procure o que você quer,
 descubra o que outras pessoas construíram por perto e inspecione os blocos

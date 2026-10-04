@@ -79,7 +79,8 @@ presence/, collaboration/, replication/, placement/, spatial/,
 world-layout/, content/ (content stores), anchoring/ (Bitcoin, Arweave
 and Base anchoring), base/ (Base/EVM transactions), nostr/ and arweave/
 (injected-wallet signers and the relay client), steem/ (the Steem API
-client and Keychain broadcaster), audio/ (World View's synthesized sound),
+client and Keychain broadcaster), blurt/ (the Blurt API client and its
+Keychain), audio/ (World View's synthesized sound),
 and server/ (the reference rendezvous worker).
 
 ## Dependency direction
@@ -242,10 +243,11 @@ the detailed references; in short:
 
 World View (ui/views/WorldView.js, route `/world/:documentId`) walks
 through the shared world. A link to a Publication (routes
-`/view/steem/:author/:permlink`, `/view/ar/:id`, `/view/ipfs/:cid`,
-ui/views/PublicationLinkView.js), from a Steem post or shared with
-Share, lands a first-time visitor here: it verifies the Publication's
-Signed Claim read from Steem, Arweave or IPFS, keeps its build locally,
+`/view/steem/:author/:permlink`, `/view/blurt/:author/:permlink`,
+`/view/ar/:id`, `/view/ipfs/:cid`, ui/views/PublicationLinkView.js), from
+a Steem or Blurt post or shared with Share, lands a first-time visitor
+here: it verifies the Publication's Signed Claim read from Steem, Blurt,
+Arweave or IPFS, keeps its build locally,
 admits it as World discovery does, and adopts its publisher's signed
 placement announced beside the Snapshot
 (application/publication/OpenPublicationLink.js). WorldNavigationSession owns its runtime:
@@ -369,7 +371,8 @@ distributing them (application/publication/OwnPublicationDistributionRecord.js):
 storage from the Signed Claim's distribution lifecycle, signed snapshot
 placements and application/snapshot/OwnSnapshotDistributionLog.js, and
 announcements from the lifecycle's origin (a `ws:`/`wss:` relay is Nostr, a
-steemit.com thread Steem, another URL the Arweave gateway) and the log. The
+steemit.com thread Steem, a blurt.blog tag page Blurt, another URL the Arweave
+gateway) and the log. The
 log (`own-snapshot-distributions`) is written by the `snapshotDistributionCommand`
 ui/main/composePublicationDistribution.js provides, so every Distribute
 Snapshot is kept past a reload. With no record the card says so, rather
@@ -513,7 +516,7 @@ publications with the application-wide decentralized discovery provider
   application/publication/RepositoryNetworkDiscovery.js (composed once in
   ui/main.js, through ui/components/publicationCatalog/useRepositoryNetworkDiscovery.js).
   It reads `searchEnvelopes('forkbuild-publication')` from the Nostr relay
-  set, the Arweave GraphQL query and Steem, fetches each new record through
+  set, the Arweave GraphQL query, Steem and Blurt, fetches each new record through
   the World Encounter material sources, and admits it to the decentralized
   discovery provider and the World Encounter admission log only when the
   verifier returns VERIFIED and it is exactly the Publication announced.
@@ -521,7 +524,7 @@ publications with the application-wide decentralized discovery provider
   again; a Publication already listed, or one this device unpublished
   (publisher/UnpublishedPublicationLog.js), is never fetched. Where each record
   was read is kept by NetworkPublicationLocatorStore, and Explore on such a
-  card opens that record's link view (`/view/ar|steem|ipfs/…`), which
+  card opens that record's link view (`/view/ar|steem|blurt|ipfs/…`), which
   fetches and checks the build before opening World View.
 - Previews are derived client state, never part of a Publication.
   PublicationPreview asks application/editor/PreviewService.js for a thumbnail
@@ -1360,9 +1363,9 @@ Distributing a Publication or a Snapshot involves separate choices, each with it
 
 | Choice | Values | Seam |
 |--------|--------|------|
-| Where the bytes go | Arweave, IPFS (Local Kubo), IPFS (Remote Pinning, Experimental), Steem (Experimental, small builds) | `PublicationMaterialUploaderComposition` (Publication material); `SnapshotPlacementStoreRegistry` + `ipfsRemotePublicationCoordinator` (Snapshot) |
-| Where it is announced | Nostr (fan-out to every configured relay), Arweave (tagged transaction) or Steem (Experimental; a reply to a monthly discovery thread) | `*RuntimeComposition` `discoveryProvider` for Publication, Snapshot, Place Naming and Commentary; `resolveSnapshotDiscoveryPublisher()` |
-| Proof / anchoring (Experimental) | Bitcoin, Arweave, Steem (Bitcoin and Base only through their wallet steps) | `PreferredPublicationAnchorCreationCoordinator` |
+| Where the bytes go | Arweave, IPFS (Local Kubo), IPFS (Remote Pinning, Experimental), Steem and Blurt (Experimental, small builds) | `PublicationMaterialUploaderComposition` (Publication material); `SnapshotPlacementStoreRegistry` + `ipfsRemotePublicationCoordinator` (Snapshot) |
+| Where it is announced | Nostr (fan-out to every configured relay), Arweave (tagged transaction), Steem (Experimental; a reply to a monthly discovery thread) or Blurt (Experimental; the poster's own top-level build post, found by tag and by authors' histories) | `*RuntimeComposition` `discoveryProvider` for Publication, Snapshot, Place Naming and Commentary; `resolveSnapshotDiscoveryPublisher()` |
+| Proof / anchoring (Experimental) | Bitcoin, Arweave, Steem, Blurt (Bitcoin and Base only through their wallet steps) | `PreferredPublicationAnchorCreationCoordinator` |
 
 The saved preferences live in `RoleProviderPreferenceStore` (`CONTENT`, `ANNOUNCEMENT_AND_DISCOVERY`,
 `PROOF_AND_ANCHORING`). They drive the preferred-provider buttons (on the Publications page, "Store on …" and
@@ -1378,7 +1381,8 @@ Publications page, Distribute Snapshot on a World distributes the World's own sn
 picks), on the substrate chosen on that card. Distribution uses selection,
 never fan-out, across substrates. Fan-out happens only across relays within Nostr. Arweave and IPFS gateways use
 ordered failover instead, because any gateway can serve the same content-addressed bytes. The Steem choices are
-described in docs/Protocol.md's three "Proposed: Steem …" sections, which are built and Experimental.
+described in docs/Protocol.md's three "Proposed: Steem …" sections, and the Blurt ones in "Proposed: Blurt
+Substrate"; all are built and Experimental.
 
 In the UI, every distribution control sits in `ui/components/WorldDistributionDialog.js` (World Encounters and My
 Publication) or `ui/components/EditorDistributionDialog.js` (the Editor's post-publish overlay, and the Signed Claim
@@ -1389,7 +1393,7 @@ builds the chosen substrate's publisher per click. Each of these is offered righ
 runs on its own. One settings block
 (Storage, Remote Pinning draft, Announcement/Discovery) feeds both legs. The combined "Distribute" action runs
 Snapshot and Publication one after the other, because both may sign through the same wallet extension. Every
-injected-wallet adapter (Nostr NIP-07, Arweave, UniSat, EIP-1193, Steem Keychain) has a 120-second approval timeout.
+injected-wallet adapter (Nostr NIP-07, Arweave, UniSat, EIP-1193, Steem Keychain, Blurt Keychain) has a 120-second approval timeout.
 
 A store may limit how large one item can be (`ContentStore#maxContentBytes`, Infinity unless set). The Arweave stores
 take it from the signer's `maxDataBytes`: the injected wallet signs single-chunk transactions, 256 KiB. Snapshot
@@ -1406,7 +1410,7 @@ startup and falls back to the deployment default.
 
 The list-shaped settings default to several free public servers, declared next to their value object
 (`DEFAULT_ARWEAVE_GATEWAY_URLS`, `DEFAULT_IPFS_GATEWAY_URLS`, `DEFAULT_BITCOIN_ESPLORA_API_URLS`,
-`DEFAULT_NOSTR_RELAY_URLS`, `DEFAULT_STEEM_API_NODES`; `DEFAULT_ICE_SERVERS` and `DEFAULT_RENDEZVOUS_URLS` in `peer/`).
+`DEFAULT_NOSTR_RELAY_URLS`, `DEFAULT_STEEM_API_NODES`, `DEFAULT_BLURT_API_NODES`; `DEFAULT_ICE_SERVERS` and `DEFAULT_RENDEZVOUS_URLS` in `peer/`).
 The singular `DEFAULT_*_URL` constants are each list's first entry, used by the paths that take one endpoint. A saved
 list replaces the defaults; it is never merged with them. Their pages use `ui/composables/useEndpointListSettings.js`:
 the textarea starts from the list in effect, Save is disabled while it is unchanged (so the defaults are never saved
@@ -1423,6 +1427,7 @@ default still answers and allows CORS.
 | STUN / TURN / Rendezvous | `/settings/stun`, `/settings/turn-server`, `/settings/rendezvous` | `ice-server-configuration`, `turn-server-configuration`, `rendezvous-configuration` | as before |
 | Content / Announcement / Proof preferences | `/settings/content-provider`, `/settings/announcement-discovery-provider`, `/settings/anchor-provider` | `role-provider-preference:by-role` | one provider key per role |
 | Steem | `/settings/steem` | `steem-reading-configuration`, `steem-announcing-configuration` | ordered `apiNodes` (read failover; anchor verification asks the first three), thread accounts and first month to read; this device's Steem account for posting. Reading changes apply on the next load |
+| Blurt | `/settings/blurt` | `blurt-reading-configuration`, `blurt-announcing-configuration`, `blurt-known-authors` | ordered `apiNodes` (read failover; anchor verification asks the first three), followed accounts and first month for authors' histories; the accounts seen posting under ForkBuild's tags; this device's Blurt account for posting. Reading changes apply on the next load |
 
 Credentials are never stored. The remote-pinning credential is kept only in tab memory
 (`IpfsRemotePublishingCredentialMemory`).
@@ -1433,10 +1438,10 @@ Credentials are never stored. The remote-pinning credential is kept only in tab 
       1. PublicationCommentaryStore.add()            local, authoritative
       then distributePublicationCommentaryCommand (PublicationCommentaryDistributor):
       2. PublicationCommentaryDistributionPeerExchange.announce()   WebRTC, best effort
-      3. Nostr (NostrMultiRelayPublicationCommentaryDistribution) OR Arweave OR Steem — one, best effort
+      3. Nostr (NostrMultiRelayPublicationCommentaryDistribution) OR Arweave OR Steem OR Blurt — one, best effort
 
     refreshPublicationCommentaryCommand (on open / "Check for new comments")
-      Discover...FromNostrUseCase + Discover...FromArweaveUseCase + Discover...FromSteemUseCase
+      Discover...FromNostrUseCase + ...FromArweaveUseCase + ...FromSteemUseCase + ...FromBlurtUseCase
         -> PublicationCommentaryDistributionExchange.importCommentaryEnvelope()   one verifier, one store
         -> PublicationCommentaryRemoteNotificationBridge                          notify the publisher only
 
@@ -1556,8 +1561,8 @@ already running and provides them; ui/router/pageServiceGroups.js lists the
 groups each page needs, and the router loads them beside the page's own
 modules, so they are provided before it renders (a provide added after the
 app mounted reaches every component created later). There are four:
-`anchoring` (publication evidence, and Bitcoin, Base, Arweave and Steem
-anchoring with their wallets: the Publications page and the Proof &
+`anchoring` (publication evidence, and Bitcoin, Base, Arweave, Steem and
+Blurt anchoring with their wallets: the Publications page and the Proof &
 Anchoring settings), `distribution` (publication and Snapshot distribution,
 Snapshot and place-name discovery, remote IPFS pinning, IPFS content checks
 and Publication links: the Editor, World View, the Publications page and a
@@ -1660,11 +1665,12 @@ the policy and the headers a host should add.
 
 | Directory | What it holds | Where it is explained |
 |-----------|---------------|------------------------|
-| `anchoring/` | Anchor publishers, evidence views and proof verifiers for Bitcoin (PSBT build/sign/broadcast, confirmation and funding observers, Esplora adapters), Arweave and Base | `docs/Roadmap.md` 0.8.0 onward; `docs/Principles.md` from "External Anchoring Provides Evidence; It Does Not Establish Authority (0.8.0)" |
+| `anchoring/` | Anchor publishers, evidence views and proof verifiers for Bitcoin (PSBT build/sign/broadcast, confirmation and funding observers, Esplora adapters), Arweave, Base, Steem and Blurt | `docs/Roadmap.md` 0.8.0 onward; `docs/Principles.md` from "External Anchoring Provides Evidence; It Does Not Establish Authority (0.8.0)" |
 | `base/` | Base (EVM) wallet connection, transaction planning, signing, broadcast and inclusion observation | `docs/Roadmap.md`, the Base milestones from "0.8.90 — Explicit Base Network & Account Observation" through 0.8.101 |
-| `content/` | `ContentStore` implementations: local, Arweave, IPFS (Kubo, gateway, remote pinning), Steem (`SteemContentStore`: Snapshots and Signed Claims in a manifest post and up to 20 part posts) and the gateway-failover wrappers | `docs/Roadmap.md` 0.7.0 onward; "Distribution" and "Network endpoint configuration" above |
+| `content/` | `ContentStore` implementations: local, Arweave, IPFS (Kubo, gateway, remote pinning), Steem (`SteemContentStore`: Snapshots and Signed Claims in a manifest post and up to 20 part posts), Blurt (`BlurtContentStore`: the same format, in replies under the poster's own build post) and the gateway-failover wrappers | `docs/Roadmap.md` 0.7.0 onward; "Distribution" and "Network endpoint configuration" above |
 | `nostr/`, `arweave/` | Injected-wallet signers (NIP-07, Arweave) and the Nostr relay query client | "Distribution: independent choices, one dialog" above |
 | `steem/` | The Steem JSON-RPC client (API node failover) and the Steem Keychain broadcaster. The app reads and announces on Steem through `application/steem/` (a discovery thread reader, an announcer that also posts stored content and its parts, a reader and publisher per announcement family, a Resource Credits estimator, and `content/SteemContentStore.js`, composed by `SteemRuntimeComposition.js` in `ui/main/composeWorldDiscovery.js`; `ui/main.js` registers the content store for Snapshot storage, and Publication distribution stores Signed Claims through it; `application/worldEncounter/SteemWorldEncounterMaterialResolver.js` reads Signed Claims back for World discovery); `scripts/steem-threads/` uses the same client and broadcaster to create the threads | `docs/Protocol.md`, "Proposed: Steem Announcement Substrate" and "Proposed: Steem Content Storage" |
+| `blurt/` | The Blurt JSON-RPC client (API node failover, tag listings and authors' histories) and Blurt Keychain, which offers Steem Keychain's interface, so signing and image uploads reuse `steem/`. The app reads, posts, stores and anchors on Blurt through `application/blurt/` (a reader over the tag and authors' histories, a poster that groups everything one Distribute makes into one build post, a reader and publisher per announcement family and a fee estimator), `content/BlurtContentStore.js` and `anchoring/Blurt*.js`, composed by `BlurtRuntimeComposition.js` in `ui/main/composeWorldDiscovery.js`. Steem's and Blurt's binary serialization and kept block evidence share `core/GrapheneBinary.js` and `core/GrapheneBlockEvidence.js` | `docs/Protocol.md`, "Proposed: Blurt Substrate" |
 | `scripts/steem-threads/` | Operator pages, not part of the app: one creates the monthly Steem discovery threads, and `content-check.html` checks that API nodes return content stored on Steem in full, and that an image can be uploaded to a Steem image host from this site | `docs/Protocol.md`, "Proposed: Steem Announcement Substrate" |
 | `server/rendezvous-worker/` | Reference rendezvous server (Cloudflare Worker) for `peer/WebSocketRendezvousTransport.js` | `server/rendezvous-worker/README.md` |
 | `utils/` | Small shared helpers (e.g. `sortOptionsByLabel.js`) | `docs/CodingConventions.md` |

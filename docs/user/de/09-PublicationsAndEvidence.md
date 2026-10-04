@@ -5,6 +5,10 @@
 [English](../09-PublicationsAndEvidence.md) · **Deutsch** · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../09-PublicationsAndEvidence.md).
+<!-- /stale -->
+
 > **Teilweise experimentell.** Die Seite Veröffentlichungen ist eine
 > reguläre Funktion: ihre Liste und Status, das Entfernen unbrauchbarer
 > Veröffentlichungen, das Ankündigen auf Nostr oder Arweave, das Speichern

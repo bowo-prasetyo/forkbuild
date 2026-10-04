@@ -5,6 +5,10 @@
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · **Bahasa Indonesia** · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../Distribution.md).
+<!-- /stale -->
+
 Semua yang dibuat ForkBuild dimulai di perangkat Anda sendiri.
 **Mendistribusikan** adalah langkah terpisah yang opsional untuk menaruh
 karya Anda di jaringan terdesentralisasi, sehingga orang yang tidak

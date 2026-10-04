@@ -5,6 +5,10 @@
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · **日本語** · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../04-PublishingAndForking.md)も参照してください。
+<!-- /stale -->
+
 ここが ForkBuild の中心です。**公開** は、あなたの作品を世界と共有
 します。**フォーク** は、誰でも作品をコピーして発展させられるように
 します。履歴はすべて保たれます。

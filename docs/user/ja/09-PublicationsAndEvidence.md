@@ -5,6 +5,10 @@
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · **日本語** · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../09-PublicationsAndEvidence.md)も参照してください。
+<!-- /stale -->
+
 > **一部は試験的です。** 公開物ページは通常の機能です。一覧と状態、
 > 使えない公開物の削除、Nostr や Arweave での告知、IPFS や Arweave への
 > 保存、カードのスナップショットの確認・インポート・取得がそれにあたり

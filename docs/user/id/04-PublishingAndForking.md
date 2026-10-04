@@ -5,6 +5,10 @@
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · **Bahasa Indonesia** · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../04-PublishingAndForking.md).
+<!-- /stale -->
+
 Inilah inti ForkBuild. **Menerbitkan** membagikan karya Anda kepada dunia.
 **Fork** memungkinkan siapa pun menyalin sebuah karya dan
 mengembangkannya — dengan seluruh riwayatnya tetap terjaga.

@@ -262,7 +262,9 @@ export function orchestratePublicationDistribution({
     nostrPublisherOptions,
     arweaveAnnouncementPublisherOptions,
     steemPublicationDiscoveryPublisher,
-    steemMaterialStore
+    steemMaterialStore,
+    blurtPublicationDiscoveryPublisher,
+    blurtMaterialStore
 } = {}) {
     const runtime = composePublicationDistributionRuntime({
         arweaveUploaderOptions,
@@ -273,7 +275,9 @@ export function orchestratePublicationDistribution({
         nostrPublisherOptions,
         arweaveAnnouncementPublisherOptions,
         steemPublicationDiscoveryPublisher,
-        steemMaterialStore
+        steemMaterialStore,
+        blurtPublicationDiscoveryPublisher,
+        blurtMaterialStore
     });
 
     return executePublicationDistribution({

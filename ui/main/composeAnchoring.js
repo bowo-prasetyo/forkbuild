@@ -54,7 +54,7 @@ import { CreateBaseAnchorProofVerifierUseCase } from '../../application/anchorin
 // anchors opens (ui/main.js, the 'anchoring' service group).
 export function composeAnchoring({
     identityProvider, resolvedBitcoinEsploraApiUrls, publicationCatalog, publicationAnchorCatalog,
-    anchorKnowledgeStore, roleProviderPreferenceStore, arweaveHostSigner, resolvedArweaveGatewayUrl, steemRuntime = null
+    anchorKnowledgeStore, roleProviderPreferenceStore, arweaveHostSigner, resolvedArweaveGatewayUrl, steemRuntime = null, blurtRuntime = null
 }) {
     const { bitcoinProofVerifier } = new CreateBitcoinAnchorProofVerifierUseCase().execute({ apiUrls: resolvedBitcoinEsploraApiUrls });
     // Captured so the Arweave wiring below can register a second proof verifier
@@ -118,6 +118,12 @@ export function composeAnchoring({
         externalAnchorPublisherRegistry.register(steemRuntime.anchorPublisher);
         externalAnchorProofVerifierRegistry.register(steemRuntime.proofVerifier);
         externalAnchorEvidenceViewRegistry.register(steemRuntime.anchorEvidenceView);
+    }
+    // Blurt anchors likewise (docs/Protocol.md, "Proposed: Blurt Substrate").
+    if (blurtRuntime) {
+        externalAnchorPublisherRegistry.register(blurtRuntime.anchorPublisher);
+        externalAnchorProofVerifierRegistry.register(blurtRuntime.proofVerifier);
+        externalAnchorEvidenceViewRegistry.register(blurtRuntime.anchorEvidenceView);
     }
 
     // Registered into the same registries as Bitcoin. With no wallet installed,

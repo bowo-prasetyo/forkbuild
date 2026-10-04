@@ -2,9 +2,9 @@ import { syncNostrTag } from './NostrTagSync.js';
 import { syncArweaveTag } from './ArweaveTagSync.js';
 
 // Brings one sync target up to date on every substrate at once: each Nostr
-// relay and the Arweave gateway page with their own cursor, and Steem, whose
-// reader already reads every month back to its configured start, is read
-// whole (docs/AnnouncementIndex.md, "Phase 3"). One substrate failing never
+// relay and the Arweave gateway page with their own cursor, and Steem and
+// Blurt, whose readers already read back to their configured start, are
+// read whole (docs/AnnouncementIndex.md, "Phase 3"). One substrate failing never
 // stops the others; each reports its own outcome.
 export class AnnouncementSync {
     // nostr: { queryImpl, relayUrls } or null. arweave: { fetchImpl?,
@@ -32,11 +32,12 @@ export class AnnouncementSync {
                 ...this._arweave, target, cursorStore: this._cursorStore, ...this._limits
             })]);
         }
-        if (typeof target.steem === 'function') {
-            runs.push(['steem', null, async () => {
-                const results = await target.steem();
+        for (const chain of ['steem', 'blurt']) {
+            if (typeof target[chain] !== 'function') continue;
+            runs.push([chain, null, async () => {
+                const results = await target[chain]();
                 const list = Array.isArray(results) ? results : [];
-                if (list.length > 0) target.consume(list, 'steem');
+                if (list.length > 0) target.consume(list, chain);
                 return { pages: 1, received: list.length, caughtUp: true, backfillDone: true };
             }]);
         }

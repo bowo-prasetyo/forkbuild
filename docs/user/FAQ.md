@@ -19,15 +19,15 @@ Publishing only stores the creation on your own device and lists it in
   by itself; anyone else sees it under **Shared with you** and clicks
   **Retrieve**. You need to be connected at the same time for it to arrive.
 - **Distribute** uploads it to Arweave or IPFS (or, experimentally,
-  Steem) and announces it, so people can find it without being connected
-  to you.
+  Steem or Blurt) and announces it, so people can find it without being
+  connected to you.
 
 See [Publishing & Forking](04-PublishingAndForking.md#sharing-with-connected-peers).
 
 ### How do I make my work available to everyone?
 
-Distribute it: store it on Arweave or IPFS (or, experimentally, Steem)
-and announce it on Nostr or Arweave (or Steem), so anyone can find and
+Distribute it: store it on Arweave or IPFS (or, experimentally, Steem or
+Blurt) and announce it on Nostr or Arweave (or Steem or Blurt), so anyone can find and
 check it without being connected to you. Click **Distribute** right after
 publishing, or under **My Shared World** in World View. You need a signing
 browser extension for the networks you pick, such as Wander for Arweave or
@@ -62,7 +62,7 @@ before you publish.
 Yes: open the World in World View, then in **My Shared World** choose
 **More ▾ → Unpublish…**. That removes it from your Repository. It can't
 recall copies other people already received or anything you distributed to
-Arweave, IPFS, Nostr or Steem. This device does remember what you
+Arweave, IPFS, Nostr, Steem or Blurt. This device does remember what you
 unpublished, so the Repository's search of the networks won't list those
 copies again here; other devices and other people can still find them.
 

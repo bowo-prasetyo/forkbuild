@@ -3,7 +3,7 @@
 export const anchoringToolsTabTemplate = `<div v-show="publicationsToolsTab === 'anchoring'">
             <!-- Batch anchoring: one external recording (one wallet
                  approval) for several publications, for each anchorType
-                 whose publisher can (Steem). Each publication still gets its
+                 whose publisher can (Steem, Blurt). Each publication still gets its
                  own signed anchor. -->
             <div v-for="batchType in batchAnchorTypes" :key="'batch-' + batchType.anchorType" class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
@@ -15,6 +15,7 @@ export const anchoringToolsTabTemplate = `<div v-show="publicationsToolsTab === 
                 <p class="form-hint form-hint--neutral">
                     <template v-if="batchType.maxBatchSize">{{ t('publications.pickPublicationsToAnchorTogetherAtMost', { count: batchType.maxBatchSize }) }}</template><template v-else>{{ t('publications.pickPublicationsToAnchorTogether') }}</template>
                     <template v-if="batchType.anchorType === 'steem'">{{ ' ' + t('publications.steemAnchorsAreAttestedBy') }}</template>
+                    <template v-if="batchType.anchorType === 'blurt'">{{ ' ' + t('publications.blurtAnchorsAreAttestedBy') }}</template>
                 </p>
                 <p v-if="usableEntries.length === 0" class="form-hint form-hint--neutral">
                     <template v-if="failedEntries.length > 0">{{ t('publications.noPublicationHereCanBeFailed', { count: failedEntries.length }) }}</template><template v-else>{{ t('publications.noPublicationHereCanBe') }}</template>

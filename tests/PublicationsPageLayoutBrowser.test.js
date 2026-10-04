@@ -422,7 +422,7 @@ console.log('✓ the Publications page separates usable publications from failed
     const optionTexts = (select) => [...select.options].map((option) => option.textContent.trim());
     const [storageSelect, substrateSelect] = worldSnapshot.querySelectorAll('select');
     assert(optionTexts(storageSelect).includes('Steem (Experimental)') && optionTexts(storageSelect).includes('IPFS'), 'Steem storage is labelled Experimental');
-    assert(optionTexts(substrateSelect).join() === 'Arweave,Nostr,Steem (Experimental)', 'and so is the Steem substrate');
+    assert(optionTexts(substrateSelect).join() === 'Arweave,Blurt (Experimental),Nostr,Steem (Experimental)', 'and so are the Steem and Blurt substrates');
     assert(substrateSelect.value === 'steem', 'the substrate starts on the saved preference');
     assert([...worldSnapshot.querySelectorAll('a')].some((link) => link.textContent.trim() === 'Configure Steem'), 'with its own Configure link');
     assert(!worldSnapshot.textContent.includes('Configure Nostr'), 'not always Nostr');

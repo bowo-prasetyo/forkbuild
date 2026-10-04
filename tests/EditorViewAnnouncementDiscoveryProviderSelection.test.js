@@ -223,8 +223,8 @@ async function run() {
         const discoveryProviderSelectMatch = dialogSource.match(/<select\s+v-model="discoveryProviderModel"[\s\S]*?<\/select>/);
         assert(discoveryProviderSelectMatch !== null, n('A4a. the discoveryProviderModel <select> element is isolable'));
         const optionMatches = (discoveryProviderSelectMatch ? discoveryProviderSelectMatch[0] : '').match(/<option value="[^"]*">/g) || [];
-        assert(optionMatches.length === 3,
-            n(`A4. exactly three <option> elements (Arweave, Nostr, Steem) exist inside the selectedDiscoveryProvider <select> (found ${optionMatches.length}) — the currently supported choices, no more, no fewer`));
+        assert(optionMatches.length === 4,
+            n(`A4. exactly four <option> elements (Arweave, Blurt, Nostr, Steem) exist inside the selectedDiscoveryProvider <select> (found ${optionMatches.length}) — the currently supported choices, no more, no fewer`));
 
         // AMENDED BY 0.9.667 — Role Provider Preference As Dropdown
         // Default. selectedDiscoveryProvider no longer hardcodes 'nostr'

@@ -11,8 +11,8 @@ import { PublicationCommentaryArweaveDistribution } from '../publication/comment
 // taken from its own reader or publisher.
 //
 // A target is { id, tag, nostr: { tagName, kinds, parse(event) }, arweave:
-// { tagName, parse(text) }, steem?: () => Promise<results>, consume(results,
-// origin) }. parse() returns null for anything that is not this kind's
+// { tagName, parse(text) }, steem?: () => Promise<results>, blurt?: () =>
+// Promise<results>, consume(results, origin) }. parse() returns null for anything that is not this kind's
 // announcement. consume() never throws: a storage failure must not stop a
 // sync that other results can still benefit from.
 
@@ -52,41 +52,45 @@ function jsonObjectOf(text) {
 
 const contentOf = (event) => (typeof event.content === 'string' && event.content.length > 0 ? event.content : null);
 
-// `steemSource`: the Steem snapshot discovery query service, or null.
-export function snapshotSyncTarget({ index, steemSource = null, tag = SNAPSHOT_DISCOVERY_TAG }) {
+// `steemSource`, `blurtSource`: those chains' snapshot discovery query
+// services, or null.
+export function snapshotSyncTarget({ index, steemSource = null, blurtSource = null, tag = SNAPSHOT_DISCOVERY_TAG }) {
     return Object.freeze({
         id: `${AnnouncementKind.SNAPSHOT}:${tag}`,
         tag,
         nostr: { ...NOSTR, parse: (event) => (contentOf(event) === null ? null : snapshotCandidateOf(event.content)) },
         arweave: { tagName: ARWEAVE_TAG_NAMES.snapshot, parse: snapshotCandidateOf },
         steem: steemSource ? () => steemSource.search(tag) : null,
+        blurt: blurtSource ? () => blurtSource.search(tag) : null,
         consume: recordInto(index, AnnouncementKind.SNAPSHOT, tag)
     });
 }
 
 // Raw payloads: the index parses them and checks each belongs to `tag`.
-export function placeNamingSyncTarget({ index, tag, steemSource = null }) {
+export function placeNamingSyncTarget({ index, tag, steemSource = null, blurtSource = null }) {
     return Object.freeze({
         id: `${AnnouncementKind.PLACE_NAMING}:${tag}`,
         tag,
         nostr: { ...NOSTR, parse: contentOf },
         arweave: { tagName: ARWEAVE_TAG_NAMES.placeNaming, parse: (text) => text },
         steem: steemSource ? () => steemSource.search(tag) : null,
+        blurt: blurtSource ? () => blurtSource.search(tag) : null,
         consume: recordInto(index, AnnouncementKind.PLACE_NAMING, tag)
     });
 }
 
 // Commentary goes straight into the Commentary store, which is its index.
 // `importCommentaryEnvelope` verifies each signature and throws for one that
-// fails; those are skipped. `steemDistribution`: its discover() lists every
-// Steem commentary envelope.
-export function commentarySyncTarget({ importCommentaryEnvelope, steemDistribution = null, tag = COMMENTARY_DISCOVERY_TAG }) {
+// fails; those are skipped. `steemDistribution`, `blurtDistribution`: their
+// discover() lists every commentary envelope on that chain.
+export function commentarySyncTarget({ importCommentaryEnvelope, steemDistribution = null, blurtDistribution = null, tag = COMMENTARY_DISCOVERY_TAG }) {
     return Object.freeze({
         id: `commentary:${tag}`,
         tag,
         nostr: { ...NOSTR, parse: (event) => (contentOf(event) === null ? null : jsonObjectOf(event.content)) },
         arweave: { tagName: ARWEAVE_TAG_NAMES.commentary, parse: jsonObjectOf },
         steem: steemDistribution ? () => steemDistribution.discover() : null,
+        blurt: blurtDistribution ? () => blurtDistribution.discover() : null,
         consume: (envelopes) => {
             for (const envelope of envelopes) {
                 try {

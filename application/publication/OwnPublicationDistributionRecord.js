@@ -7,6 +7,7 @@ export const DistributionKind = Object.freeze({
     IPFS: 'ipfs',
     ARWEAVE: 'arweave',
     STEEM: 'steem',
+    BLURT: 'blurt',
     NOSTR: 'nostr'
 });
 
@@ -14,11 +15,12 @@ export const DISTRIBUTION_KIND_LABELS = Object.freeze({
     [DistributionKind.IPFS]: 'IPFS',
     [DistributionKind.ARWEAVE]: 'Arweave',
     [DistributionKind.STEEM]: 'Steem',
+    [DistributionKind.BLURT]: 'Blurt',
     [DistributionKind.NOSTR]: 'Nostr'
 });
 
-const STORAGE_KINDS = Object.freeze({ ipfs: DistributionKind.IPFS, ar: DistributionKind.ARWEAVE, arweave: DistributionKind.ARWEAVE, steem: DistributionKind.STEEM });
-const SUBSTRATE_KINDS = Object.freeze({ nostr: DistributionKind.NOSTR, arweave: DistributionKind.ARWEAVE, steem: DistributionKind.STEEM });
+const STORAGE_KINDS = Object.freeze({ ipfs: DistributionKind.IPFS, ar: DistributionKind.ARWEAVE, arweave: DistributionKind.ARWEAVE, steem: DistributionKind.STEEM, blurt: DistributionKind.BLURT });
+const SUBSTRATE_KINDS = Object.freeze({ nostr: DistributionKind.NOSTR, arweave: DistributionKind.ARWEAVE, steem: DistributionKind.STEEM, blurt: DistributionKind.BLURT });
 
 // Where this device has a record of distributing one of your own
 // publications: storage its build or Signed Claim was uploaded to, and
@@ -88,12 +90,13 @@ function storageOfUri(uri) {
     if (uri.startsWith('ipfs://')) return 'ipfs';
     if (uri.startsWith('ar://')) return 'ar';
     if (uri.startsWith('steem://')) return 'steem';
+    if (uri.startsWith('blurt://')) return 'blurt';
     return null;
 }
 
 // A lifecycle names where an announcement went by URL: a Nostr relay
-// (ws: or wss:), a Steem discovery thread (steemit.com), or else the
-// Arweave gateway it was uploaded through.
+// (ws: or wss:), a Steem discovery thread (steemit.com), a Blurt tag page
+// (blurt.blog), or else the Arweave gateway it was uploaded through.
 export function substrateOfOrigin(origin) {
     if (typeof origin !== 'string' || !origin) return null;
     let url;
@@ -104,6 +107,7 @@ export function substrateOfOrigin(origin) {
     }
     if (url.protocol === 'ws:' || url.protocol === 'wss:') return DistributionKind.NOSTR;
     if (url.hostname === 'steemit.com' || url.hostname.endsWith('.steemit.com')) return DistributionKind.STEEM;
+    if (url.hostname === 'blurt.blog' || url.hostname.endsWith('.blurt.blog')) return DistributionKind.BLURT;
     if (url.protocol === 'https:' || url.protocol === 'http:') return DistributionKind.ARWEAVE;
     return null;
 }

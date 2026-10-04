@@ -79,7 +79,7 @@ export function useAnchorEvidence({
     }
 
     // What the proof verifier reported about the external record (for
-    // Steem: when and by which witness the block was recorded), or null.
+    // Steem and Blurt: when and by which witness the block was recorded), or null.
     function verificationNote(entry, anchorView) {
         const verification = entry.verifications[anchorView.anchorId];
         const view = evidenceViewFor(anchorView.anchorType);

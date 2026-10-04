@@ -16,7 +16,8 @@ export class OwnSnapshotDistributionLog {
     }
 
     // `result` is executeSnapshotDistributionCommand()'s { contentReference,
-    // announcement }; `substrate` is 'nostr', 'arweave' or 'steem'.
+    // announcement }; `substrate` is 'nostr', 'arweave', 'steem' or
+    // 'blurt'.
     record({ result, substrate, publicationId = null }) {
         const reference = result && result.contentReference;
         if (!reference || typeof reference.hash !== 'string' || !reference.storage || reference.storage === 'local') return;

@@ -5,6 +5,10 @@
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · **Bahasa Indonesia** · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../09-PublicationsAndEvidence.md).
+<!-- /stale -->
+
 > **Sebagian eksperimental.** Halaman Publikasi adalah fitur biasa: daftar
 > dan statusnya, menghapus publikasi yang tidak dapat dipakai, mengumumkan
 > di Nostr atau Arweave, menyimpan di IPFS atau Arweave, serta memeriksa,

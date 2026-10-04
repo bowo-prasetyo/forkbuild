@@ -24,7 +24,10 @@ export class SteemAnchorFinalityObserver {
         sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
         clock = () => Date.now(),
         intervalMs = DEFAULT_INTERVAL_MS,
-        maxWaitMs = DEFAULT_MAX_WAIT_MS
+        maxWaitMs = DEFAULT_MAX_WAIT_MS,
+        // A fork of Steem with the same blocks (anchoring/BlurtAnchorFinalityObserver.js).
+        anchorType = STEEM_ANCHOR_TYPE,
+        parseProof = parseSteemAnchorProof
     } = {}) {
         if (!rpc || typeof rpc.getDynamicGlobalProperties !== 'function' || typeof rpc.getBlock !== 'function') {
             throw new TypeError('SteemAnchorFinalityObserver: a Steem RPC client with getDynamicGlobalProperties() and getBlock() is required');
@@ -34,13 +37,15 @@ export class SteemAnchorFinalityObserver {
         this._clock = clock;
         this._intervalMs = intervalMs;
         this._maxWaitMs = maxWaitMs;
+        this._anchorType = anchorType;
+        this._parseProof = parseProof;
     }
 
-    get anchorType() { return STEEM_ANCHOR_TYPE; }
+    get anchorType() { return this._anchorType; }
 
     // One look: `{ state, blockNum, lastIrreversible, reason }`.
     async check(proof) {
-        const parsed = parseSteemAnchorProof(proof);
+        const parsed = this._parseProof(proof);
         if (parsed.error) return { state: 'unknown', blockNum: null, lastIrreversible: null, reason: parsed.error };
         const { blockNum, trxId } = parsed;
         let lastIrreversible;

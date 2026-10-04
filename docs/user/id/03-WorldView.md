@@ -5,6 +5,10 @@
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · **Bahasa Indonesia** · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../03-WorldView.md).
+<!-- /stale -->
+
 Tampilan Dunia adalah ruang 3D bersama tempat **setiap karya yang
 diterbitkan berada berdampingan**. Terbanglah berkeliling, cari apa yang
 Anda cari, temukan apa yang dibangun orang lain di dekat Anda, dan periksa

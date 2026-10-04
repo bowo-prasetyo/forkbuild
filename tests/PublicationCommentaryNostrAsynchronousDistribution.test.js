@@ -562,8 +562,8 @@ async function run() {
         // becomes three, never a fixed "two" that this milestone's own
         // brief never actually required.
         assert(mainSource.includes('publicationCommentaryRemoteNotificationBridge.handleCommentaryReceived(result)') &&
-            (mainSource.match(/publicationCommentaryRemoteNotificationBridge\.handleCommentaryReceived\(/g) || []).length === 5,
-            n('exactly five production call sites feed publicationCommentaryRemoteNotificationBridge.handleCommentaryReceived() — the WebRTC onCommentaryReceived() subscription, the Nostr, Arweave and Steem discovery commands, and the Announcement Index background sync — all funneling into the SAME bridge instance, never a second, transport-specific notification path'));
+            (mainSource.match(/publicationCommentaryRemoteNotificationBridge\.handleCommentaryReceived\(/g) || []).length === 6,
+            n('exactly six production call sites feed publicationCommentaryRemoteNotificationBridge.handleCommentaryReceived() — the WebRTC onCommentaryReceived() subscription, the Nostr, Arweave, Steem and Blurt discovery commands, and the Announcement Index background sync — all funneling into the SAME bridge instance, never a second, transport-specific notification path'));
 
         console.log('✓ K: a newly-admitted Nostr Commentary reaches the identical local-notification boundary the WebRTC path already uses — no duplicate notification mechanism was built.');
     }

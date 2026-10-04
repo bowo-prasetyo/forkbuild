@@ -44,17 +44,17 @@ export function steemImageSigningPayload(bytes) {
 // A signer over Steem Keychain's requestSignBuffer(), or undefined when no
 // Keychain is injected. sign(account, payload) resolves to the signature, as
 // hex.
-export function createSteemKeychainImageSigner({ keychain = globalThis.steem_keychain, signingTimeoutMs = DEFAULT_SIGNING_TIMEOUT_MS } = {}) {
+export function createSteemKeychainImageSigner({ keychain = globalThis.steem_keychain, signingTimeoutMs = DEFAULT_SIGNING_TIMEOUT_MS, walletName = 'Steem Keychain' } = {}) {
     if (!keychain || typeof keychain.requestSignBuffer !== 'function') return undefined;
     function sign(account, payload) {
         return new Promise((resolve, reject) => {
             const timer = setTimeout(() => {
-                reject(new SteemImageUploadError(`Steem Keychain did not answer within ${signingTimeoutMs / 1000} s`, { stage: 'signing' }));
+                reject(new SteemImageUploadError(`${walletName} did not answer within ${signingTimeoutMs / 1000} s`, { stage: 'signing' }));
             }, signingTimeoutMs);
             keychain.requestSignBuffer(account, payload, 'Posting', (response) => {
                 clearTimeout(timer);
                 if (!response?.success || typeof response.result !== 'string') {
-                    reject(new SteemImageUploadError(response?.message || response?.error || 'Steem Keychain refused to sign the image', { stage: 'signing', response }));
+                    reject(new SteemImageUploadError(response?.message || response?.error || `${walletName} refused to sign the image`, { stage: 'signing', response }));
                     return;
                 }
                 resolve(response.result);
@@ -72,15 +72,16 @@ export function createSteemKeychainImageSigner({ keychain = globalThis.steem_key
 // forwards it to its own image host (steemitimages.com for ForkBuild's).
 export async function uploadSteemImage({
     account, bytes, mediaType = 'image/png', fileName = 'forkbuild.png',
-    signer, host = DEFAULT_STEEM_IMAGE_HOST, relay = null, fetchImpl = globalThis.fetch, timeoutMs = DEFAULT_UPLOAD_TIMEOUT_MS
+    signer, host = DEFAULT_STEEM_IMAGE_HOST, relay = null, fetchImpl = globalThis.fetch, timeoutMs = DEFAULT_UPLOAD_TIMEOUT_MS,
+    walletName = 'Steem Keychain'
 }) {
-    if (!signer || typeof signer.sign !== 'function') throw new SteemImageUploadError('Steem Keychain is needed to sign the image upload.', { stage: 'signing' });
+    if (!signer || typeof signer.sign !== 'function') throw new SteemImageUploadError(`${walletName} is needed to sign the image upload.`, { stage: 'signing' });
     if (!(bytes instanceof Uint8Array) || bytes.length === 0) throw new TypeError('uploadSteemImage: bytes must be a non-empty Uint8Array');
     const signature = await signer.sign(account, steemImageSigningPayload(bytes));
     // Hex, as it goes into the upload URL (130 characters for Steem's
     // 65-byte signatures).
     if (typeof signature !== 'string' || !/^[0-9a-f]+$/i.test(signature)) {
-        throw new SteemImageUploadError(`Steem Keychain returned a signature ForkBuild doesn't recognize (${String(signature).slice(0, 20)}…)`, { stage: 'signing' });
+        throw new SteemImageUploadError(`${walletName} returned a signature ForkBuild doesn't recognize (${String(signature).slice(0, 20)}…)`, { stage: 'signing' });
     }
     const post = { account, signature, bytes, mediaType, fileName, fetchImpl, timeoutMs };
     let response;

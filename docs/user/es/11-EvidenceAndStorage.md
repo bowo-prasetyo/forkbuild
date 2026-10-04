@@ -5,6 +5,10 @@
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · **Español** · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../11-EvidenceAndStorage.md).
+<!-- /stale -->
+
 > **En su mayor parte experimental.** Guardar contenido en IPFS o Arweave
 > desde el bloque **Distribución → Contenido** de una tarjeta
 > ([Crear una ubicación](#crear-una-ubicación) y

@@ -44,7 +44,7 @@ export default {
         // absent (e.g. a mounted test harness) degrades to exactly the
         // pre-0.9.339 local-only behavior.
         const decentralizedDiscoveryProvider = inject('decentralizedPublicationDiscoveryProvider', null);
-        // Finds what others distributed on Nostr, Arweave and Steem; null
+        // Finds what others distributed on Nostr, Arweave, Steem and Blurt; null
         // where it isn't composed (a mounted test harness).
         const repositoryNetworkDiscovery = inject('repositoryNetworkDiscovery', null);
         const networkPublicationLocatorStore = inject('networkPublicationLocatorStore', null);

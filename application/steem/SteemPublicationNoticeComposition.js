@@ -8,8 +8,9 @@ import { DEFAULT_STEEM_IMAGE_RELAY, createSteemKeychainImageSigner, uploadSteemI
 // picture is signed through Steem Keychain as `getAccount()` and uploaded to
 // the Steem image host, through ForkBuild's relay when the browser can't reach
 // the host directly. `onPictureMissing({ title, reason })` hears why a notice
-// goes without its picture.
-export function composeSteemPublicationNoticeDescriber({ contentStore, getAccount, keychain = () => globalThis.steem_keychain, onPictureMissing = null }) {
+// goes without its picture. `upload({ account, bytes })`, resolving to the
+// picture's address, replaces the Steem upload (Blurt has its own host).
+export function composeSteemPublicationNoticeDescriber({ contentStore, getAccount, keychain = () => globalThis.steem_keychain, onPictureMissing = null, upload = null, chainName = 'Steem' }) {
     let renderer = null;
     return createSteemPublicationNoticeDescriber({
         loadSnapshotText: async (hash) => {
@@ -26,7 +27,8 @@ export function composeSteemPublicationNoticeDescriber({ contentStore, getAccoun
         },
         uploadImage: async (bytes) => {
             const account = getAccount();
-            if (!account) throw new Error('no Steem account is set');
+            if (!account) throw new Error(`no ${chainName} account is set`);
+            if (typeof upload === 'function') return upload({ account, bytes });
             const signer = createSteemKeychainImageSigner({ keychain: keychain() });
             return (await uploadSteemImage({ account, bytes, signer, relay: DEFAULT_STEEM_IMAGE_RELAY, fileName: 'forkbuild-build.png' })).url;
         },
