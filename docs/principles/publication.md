@@ -466,3 +466,11 @@ else's wait for a Retrieve click, so a stranger's connection can never fill
 someone's storage.
 
 [Full text](history/0.9.md#only-a-trusted-sharers-world-is-retrieved-without-asking-2026-09-27)
+
+### A Share Names Its World, And Must Be That World (2026-10-04)
+
+A share carries the World's title, signed by the sharer, so it can be chosen
+before retrieval; retrieval accepts only the World whose Publication carries
+that same title.
+
+[Full text](history/0.9.md#a-share-names-its-world-and-must-be-that-world-2026-10-04)

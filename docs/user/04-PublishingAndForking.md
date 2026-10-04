@@ -95,7 +95,10 @@ either section's result is remembered anywhere.
 
 ## Sharing with connected peers
 
-A World you publish is listed in *your* Repository only. To put it in the
+A World you publish is listed in *your* Repository only, until you
+distribute it on Nostr, Arweave or Steem (see [Distribution](Distribution.md)):
+then anyone's Repository finds it (see
+[Creations others distributed](#creations-others-distributed)). To put it in the
 Repository of someone you're connected to (see
 [Peer Connections & Friends](07-PeerConnectionsAndFriends.md)), click
 **Share with Peers** under it in the Repository. The button appears only on
@@ -109,7 +112,10 @@ your own published Worlds.
   needed to **Explore** it. A World shared by anyone else waits under
   **Shared with you** at the top of their Repository until they click
   **Retrieve**. Nobody's device downloads a stranger's World without
-  being asked.
+  being asked. Each one is listed by its title, so they can choose; their
+  device makes sure the World they retrieve is the one that title names.
+  A World you shared before titles were included is listed as "A World
+  shared by …" until you click **Share Again**.
 - The World is fetched only from you, and only while you're connected: if
   you're offline, **Retrieve** waits until you're back, and a Friend or
   Known Peer gets it as soon as you reconnect. Your device checks that the
@@ -189,6 +195,23 @@ The **Repository** is the searchable catalog of every published creation
 this device knows about: your own, ones peers have shared with you, and
 ones found on decentralized networks. It's built to stay usable whether it
 holds ten creations or ten thousand.
+
+### Creations others distributed
+
+Each time you open the Repository (or an author's page), it looks on Nostr,
+Arweave and Steem for creations other people distributed there, and adds
+the ones it can verify. A line above the list says what it's doing, then
+how many new creations it found; **Check again** looks once more.
+
+- Only a creation whose signed record checks out is added: signed by the key
+  it names and exactly the creation that was announced. Anything else is
+  skipped, and a record that failed isn't fetched again.
+- It checks up to 20 new creations at a time. If there are more, the line
+  says how many are left for next time.
+- A creation found this way stays in your Repository after a reload.
+- Its build isn't on your device yet. **Explore** fetches it from where it
+  was stored and checks it, then opens it in World View, just like opening
+  a shared link.
 
 ```
 Search [________________]  ☐ Include descriptions  [Search]

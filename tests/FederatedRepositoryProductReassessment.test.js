@@ -24,6 +24,7 @@ import { LocalPublicationCatalog } from '../application/publication/LocalPublica
 import { worldViewFiles, editorViewFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { exploreRouteFor } from '../ui/components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -217,12 +218,14 @@ async function run() {
             createDiscoverySource.includes('CompositeDiscoveryProvider'),
             '7. application/discovery/CreateDiscoveryUseCase.js composes the decentralized provider into Repository search.');
 
-        // 8. Explore — PublicationCatalog.js's own viewWorld() routes by
-        // documentId, a field every resolved decentralized Publication
-        // carries (Section 3/4 above prove it is a genuine Publication
-        // instance, not a bespoke shape).
+        // 8. Explore — the catalog's Explore route is by documentId, a
+        // field every resolved decentralized Publication carries (Section
+        // 3/4 above prove it is a genuine Publication instance, not a
+        // bespoke shape). Only one found on the networks, with a record
+        // locator kept, goes through its link view instead.
         const catalogSource = await readSource('ui/components/PublicationCatalog.js');
-        assert(/function viewWorld\(pub\)\s*\{\s*router\.push\(\{ path: `\/world\/\$\{pub\.documentId\}` \}\);/.test(catalogSource),
+        assert(exploreRouteFor({ id: 'p', documentId: 'doc-p' }, null).path === '/world/doc-p'
+            && exploreRouteFor({ id: 'p', documentId: 'doc-p' }, { viewPath: () => null }).path === '/world/doc-p',
             '8. Explore routes by pub.documentId — the same field a resolved decentralized Publication carries.');
 
         // 9. Fork — PublicationCatalog.js's own forkPublication() and

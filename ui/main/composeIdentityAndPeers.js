@@ -104,9 +104,6 @@ export function composeIdentityAndPeers() {
         getFriendship: (identityId) => friendRelationshipUseCase.getRelationship(identityId)
     });
     const findPeerUseCase = new FindPeerUseCase({ peerSessionManager });
-    // Needs no binding: it tries every eligible Known Peer on construction and on
-    // each relationship change, never by polling.
-    new AutoConnectKnownPeersUseCase({ findPeerUseCase, peerRelationshipUseCase, connectedPeerRegistry: peerSessionManager.registry });
     const peerMessageBus = new PeerMessageBus();
     // Built before friendRelationshipUseCase so its isBlocked predicate can gate
     // the friendship protocol.
@@ -119,6 +116,12 @@ export function composeIdentityAndPeers() {
         findPeerUseCase,
         peerBlockUseCase,
         storageProvider: new LocalStorageProvider()
+    });
+    // Needs no binding: it tries every eligible Known Peer on construction, on
+    // each relationship change, on Be Discoverable and on joining a lobby,
+    // never by polling.
+    new AutoConnectKnownPeersUseCase({
+        findPeerUseCase, peerRelationshipUseCase, connectedPeerRegistry: peerSessionManager.registry, publicLobbyUseCase
     });
     // Forward reference: its knowsIdentity gate consults friendRelationshipUseCase,
     // which is built below. resolveSocialIdentity is only called at runtime, after

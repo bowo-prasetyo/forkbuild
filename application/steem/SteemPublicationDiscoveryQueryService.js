@@ -33,4 +33,24 @@ export class SteemPublicationDiscoveryQueryService extends DecentralizedDiscover
         }
         return candidates;
     }
+
+    // Like search(), but each result is the whole announcement envelope
+    // ({ kind, objectId, uri }) plus `origin`, as the Nostr and Arweave
+    // services give it. `objectId` is only what the announcer claimed.
+    async searchEnvelopes(discoveryTag) {
+        if (discoveryTag !== this._discoveryTag) return [];
+        let announcements;
+        try {
+            ({ announcements } = await this._reader.read('publication'));
+        } catch {
+            return [];
+        }
+        const envelopes = [];
+        for (const { envelope } of announcements) {
+            const parsed = parseDecentralizedDiscoveryEnvelope(envelope);
+            if (parsed === null) continue;
+            envelopes.push({ origin: this.origin, kind: parsed.kind, objectId: parsed.objectId, uri: parsed.uri });
+        }
+        return envelopes;
+    }
 }

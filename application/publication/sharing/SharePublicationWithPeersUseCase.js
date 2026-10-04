@@ -1,4 +1,10 @@
-import { computeContentHash } from '../../../serializer/contentHash.js';
+import { computeContentHash, isLegacyContentHash } from '../../../serializer/contentHash.js';
+import { normalizeContentTitle } from '../../../core/DecentralizedPublication.js';
+
+// The `code` of the error share() and RetrieveSharedPublicationUseCase#retrieve()
+// reject with for a World published with a legacy content hash, so a view
+// can explain it.
+export const LEGACY_CONTENT_HASH = 'legacy-content-hash';
 
 // "Share with Peers": offers one of this identity's own published Worlds to
 // connected peers.
@@ -16,7 +22,9 @@ import { computeContentHash } from '../../../serializer/contentHash.js';
 //
 // Only the identity's own signed Publications can be shared, so a receiver
 // can require the Publication inside to be signed by whoever shared it
-// (RetrieveSharedPublicationUseCase). Sharing is announcing: like any
+// (RetrieveSharedPublicationUseCase). The envelope also carries the World's
+// title, signed, so the receiver's Shared with you can name it before
+// anything is retrieved; retrieval checks it against the Publication. Sharing is announcing: like any
 // announcement it cannot be taken back from peers that already received it.
 export class SharePublicationWithPeersUseCase {
     // publicationKindPlugin: the Publication content kind from
@@ -65,7 +73,9 @@ export class SharePublicationWithPeersUseCase {
     // Shares `publication`, or announces it again when it was shared before.
     // Resolves to { envelope, announcedTo, alreadyShared }; announcedTo is
     // how many peers were connected to receive it now (0 is not an error:
-    // peers that connect later still receive it).
+    // peers that connect later still receive it). A World shared before
+    // envelopes carried titles is shared again under a titled envelope;
+    // receivers list both as one, since they wrap the same bytes.
     async share(publication) {
         if (!this._selfId()) {
             throw new Error('SharePublicationWithPeersUseCase: sign in and unlock your identity to share');
@@ -73,10 +83,21 @@ export class SharePublicationWithPeersUseCase {
         if (!this.canShare(publication)) {
             throw new Error('SharePublicationWithPeersUseCase: only your own signed publications can be shared');
         }
-        const existing = this._existingEnvelope(publication);
+        // Peers check a shared World's snapshot against its content hash, and
+        // a legacy 32-bit FNV-1a hash can't be checked, so they could never
+        // keep it.
+        if (isLegacyContentHash(publication.contentReference.hash)) {
+            const error = new Error('SharePublicationWithPeersUseCase: this World was published with an old content hash that peers cannot check; open it in the Editor, publish it again, and share the new copy');
+            error.code = LEGACY_CONTENT_HASH;
+            throw error;
+        }
+        const contentTitle = normalizeContentTitle(publication.title);
+        const found = this._existingEnvelope(publication);
+        const existing = found && (found.contentTitle || !contentTitle) ? found : null;
         const envelope = existing || await this._resolver.publish({
             content: publication,
             contentKind: this._contentKind,
+            contentTitle,
             identityProvider: this._identityProvider
         });
         if (!existing) {
@@ -86,6 +107,7 @@ export class SharePublicationWithPeersUseCase {
         return { envelope, announcedTo, alreadyShared: Boolean(existing) };
     }
 
+    // This identity's envelope for `publication`, preferring a titled one.
     _existingEnvelope(publication) {
         const self = this._selfId();
         if (!self || !publication || typeof publication.toJSON !== 'function') {
@@ -93,10 +115,11 @@ export class SharePublicationWithPeersUseCase {
         }
         // The same bytes PublicationResolver#publish() stores, so the same hash.
         const hash = computeContentHash(JSON.stringify(publication.toJSON()));
-        return this._catalog.findByContentHash(hash).find((envelope) =>
+        const own = this._catalog.findByContentHash(hash).filter((envelope) =>
             envelope.contentKind === this._contentKind
             && envelope.publisherIdentity
-            && envelope.publisherIdentity.id === self) || null;
+            && envelope.publisherIdentity.id === self);
+        return own.find((envelope) => envelope.contentTitle) || own[0] || null;
     }
 
     _selfId() {

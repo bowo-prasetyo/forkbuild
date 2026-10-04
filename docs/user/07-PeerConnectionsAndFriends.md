@@ -111,7 +111,9 @@ one for each World, under **Lobby** in World View.
 - **Connect** on someone in the list connects to them the same way Find
   by ID does, with nothing to copy. Their card shows **Connecting…**, then
   **Connected** once the handshake proves who they are. Seeing someone in the
-  lobby never connects to them on its own.
+  lobby never connects to them on its own. Joining does connect you to your
+  Known Peers who are discoverable, wherever they are (see
+  [Reconnecting](#reconnecting)).
 - **Block** hides someone from your lobby lists and blocks them as it does
   everywhere else on this page.
 - **Leave Lobby** takes you out at once. Joining lasts for this visit only:
@@ -272,11 +274,13 @@ answered.
 
 ForkBuild also tries this for you, automatically, for every identity in
 Known Peers: as soon as the app starts, any time you Remember, Forget, or
-otherwise change a Known Peer relationship, and each time you click **Be
-Discoverable** yourself, it quietly checks whether each one is currently
-**Be Discoverable** and, if so, connects without you having to click
-Reconnect yourself. So two friends who both click **Be Discoverable**
-connect: the second click finds the first. A Known Peer who isn't
+otherwise change a Known Peer relationship, each time you click **Be
+Discoverable** yourself, and each time you click **Join Lobby**, it quietly
+checks whether each one is currently discoverable and, if so, connects
+without you having to click Reconnect yourself. So two friends who both
+click **Be Discoverable**, or both join a lobby (the same one or not),
+connect: the second click finds the first. Keeping a lobby joined never
+repeats the check on its own. A Known Peer who isn't
 discoverable right now, or who can't be reached, is simply left alone —
 there's no retry loop chasing them, no notification about the attempt, and
 one identity failing never affects another. Use **Reconnect** when you

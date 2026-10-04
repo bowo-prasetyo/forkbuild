@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 25e078a7afa72b20 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 19e30fff7ffaefab -->
 # 07 — Connexions entre pairs et amis
 
 <!-- languages -->
@@ -132,7 +132,9 @@ avec quelqu’un de nouveau → Salon public**, et un pour chaque Monde, sous
 - **Se connecter** sur quelqu’un de la liste s’y connecte comme le fait
   Chercher par ID, sans rien à copier. Sa carte affiche **Connexion…**,
   puis **Connecté** une fois que l’échange a prouvé qui il est. Voir
-  quelqu’un dans le salon ne s’y connecte jamais tout seul.
+  quelqu’un dans le salon ne s’y connecte jamais tout seul. Rejoindre un
+  salon vous connecte en revanche à vos Pairs connus qui sont découvrables,
+  où qu’ils soient (voir [Se reconnecter](#se-reconnecter)).
 - **Bloquer** masque quelqu’un de vos listes de salon et le bloque comme
   partout ailleurs sur cette page.
 - **Quitter le salon** vous en retire immédiatement. Rejoindre ne vaut
@@ -318,11 +320,13 @@ plutôt que de faire confiance en silence à la personne qui a répondu.
 ForkBuild le tente aussi pour vous, automatiquement, pour chaque identité
 de vos Pairs connus : dès le démarrage de l’application, chaque fois que
 vous Mémorisez, Oubliez ou modifiez autrement une relation de Pair connu,
-et chaque fois que vous cliquez vous-même sur **Être découvrable**, il
-vérifie discrètement si chacun est actuellement **découvrable** et, si
-c’est le cas, se connecte sans que vous ayez à cliquer sur Se reconnecter.
-Ainsi, deux amis qui cliquent tous deux sur **Être découvrable** se
-connectent : le second clic trouve le premier. Un Pair connu qui n’est pas
+chaque fois que vous cliquez vous-même sur **Être découvrable** et chaque
+fois que vous cliquez sur **Rejoindre le salon**, il vérifie discrètement
+si chacun est actuellement découvrable et, si c’est le cas, se connecte
+sans que vous ayez à cliquer sur Se reconnecter. Ainsi, deux amis qui
+cliquent tous deux sur **Être découvrable**, ou qui rejoignent tous deux un
+salon (le même ou non), se connectent : le second clic trouve le premier.
+Rester dans un salon ne répète jamais la vérification de lui-même. Un Pair connu qui n’est pas
 découvrable en ce moment, ou qui est injoignable, est simplement laissé
 tranquille — pas de boucle de nouvelles tentatives à sa poursuite, pas de
 notification sur la tentative, et l’échec d’une identité n’en affecte

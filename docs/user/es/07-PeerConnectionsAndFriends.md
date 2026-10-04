@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 25e078a7afa72b20 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 19e30fff7ffaefab -->
 # 07 — Conexiones entre pares y amigos
 
 <!-- languages -->
@@ -127,7 +127,9 @@ pública**, y una para cada Mundo, en **Sala** en la Vista del mundo.
   que Buscar por ID, sin nada que copiar. Su tarjeta muestra
   **Conectando…** y luego **Conectado** cuando el intercambio inicial
   demuestra quién es. Ver a alguien en la sala nunca lo conecta con esa
-  persona por sí solo.
+  persona por sí solo. Unirse sí lo conecta con sus Pares conocidos que
+  sean descubribles, estén donde estén (vea
+  [Volver a conectarse](#volver-a-conectarse)).
 - **Bloquear** oculta a alguien de sus listas de la sala y lo bloquea como
   en el resto de esta página.
 - **Salir de la sala** lo saca de inmediato. Unirse dura solo esta visita:
@@ -304,12 +306,14 @@ de confiar en silencio en quien haya respondido.
 
 ForkBuild también intenta esto por usted, automáticamente, para cada
 identidad de Pares conocidos: en cuanto se inicia la app, cada vez que
-Recuerda, Olvida o cambia de otra forma una relación de Par conocido, y
-cada vez que usted mismo hace clic en **Ser descubrible**, comprueba en
-silencio si cada uno de ellos es **descubrible** en ese momento y, si lo
-es, se conecta sin que usted tenga que hacer clic en Volver a conectar.
-Así, dos amigos que hacen clic en **Ser descubrible** se conectan: el
-segundo clic encuentra al primero. Un Par conocido que no es descubrible
+Recuerda, Olvida o cambia de otra forma una relación de Par conocido,
+cada vez que usted mismo hace clic en **Ser descubrible** y cada vez que
+hace clic en **Unirse a la sala**, comprueba en silencio si cada uno de
+ellos es descubrible en ese momento y, si lo es, se conecta sin que usted
+tenga que hacer clic en Volver a conectar. Así, dos amigos que hacen clic
+en **Ser descubrible**, o que se unen a una sala (la misma o no), se
+conectan: el segundo clic encuentra al primero. Permanecer en una sala
+nunca repite la comprobación por sí solo. Un Par conocido que no es descubrible
 en ese momento, o que no se puede alcanzar, simplemente se deja en paz: no
 hay ningún ciclo de reintentos que lo persiga, ninguna notificación sobre
 el intento, y que una identidad falle nunca afecta a otra. Use **Volver a

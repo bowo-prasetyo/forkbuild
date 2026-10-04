@@ -505,6 +505,19 @@ publications with the application-wide decentralized discovery provider
 - Grouping (core/PublicationGrouping.js) only regroups the current page.
 - Pagination is explicit (PublicationPagination.js); there is no
   infinite scroll.
+- Repository network discovery: when the catalog mounts, it runs
+  application/publication/RepositoryNetworkDiscovery.js (composed once in
+  ui/main.js, through ui/components/publicationCatalog/useRepositoryNetworkDiscovery.js).
+  It reads `searchEnvelopes('forkbuild-publication')` from the Nostr relay
+  set, the Arweave GraphQL query and Steem, fetches each new record through
+  the World Encounter material sources, and admits it to the decentralized
+  discovery provider and the World Encounter admission log only when the
+  verifier returns VERIFIED and it is exactly the Publication announced.
+  Each run checks at most 20 new records; refused records are not fetched
+  again; a Publication already listed is never fetched. Where each record
+  was read is kept by NetworkPublicationLocatorStore, and Explore on such a
+  card opens that record's link view (`/view/ar|steem|ipfs/…`), which
+  fetches and checks the build before opening World View.
 - Previews are derived client state, never part of a Publication.
   PublicationPreview asks application/editor/PreviewService.js for a thumbnail
   only while the card is visible; PreviewService queues, deduplicates,
@@ -776,7 +789,11 @@ withdrawn on leave and on `pagehide`; joining is never restored at
 startup. list() keeps only cards that verify by their own signature (the
 server's listing is untrusted), drops this identity and blocked ones, and
 marks who is connected. connect() is FindPeerUseCase#search() and
-#connect() by exact identity. A lobby connection is an ordinary
+#connect() by exact identity. Each successful join() fires onJoined(), on
+which AutoConnectKnownPeersUseCase makes one pass over Known Peers, as it
+does for Be Discoverable (FindPeerUseCase#onPublished()); renewals and
+republishing never fire it, and the pass never reads the lobby listing, so
+lobby strangers are never connected without a click. A lobby connection is an ordinary
 authenticated peer: publication sync and the announcement index run as for
 any peer, and friendship still gates chat and voice. The UI is
 ui/components/PublicLobbyPanel.js, on the Peers page and behind World

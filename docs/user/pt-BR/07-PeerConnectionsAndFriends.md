@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 25e078a7afa72b20 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 19e30fff7ffaefab -->
 # 07 — Conexões entre pares e amigos
 
 <!-- languages -->
@@ -120,7 +120,9 @@ pública**, e uma para cada Mundo, em **Sala** na Visão do mundo.
 - **Conectar** em alguém da lista conecta a essa pessoa do mesmo jeito que
   Encontrar por ID, sem nada para copiar. O cartão dela mostra
   **Conectando…** e depois **Conectado** quando a troca inicial prova quem
-  ela é. Ver alguém na sala nunca conecta você sozinho a essa pessoa.
+  ela é. Ver alguém na sala nunca conecta você sozinho a essa pessoa. Já
+  entrar numa sala conecta você aos seus Pares conhecidos que estão
+  visíveis, onde quer que estejam (veja [Reconectando](#reconectando)).
 - **Bloquear** oculta alguém das suas listas de sala e o bloqueia como em
   todo o resto desta página.
 - **Sair da sala** tira você na hora. Entrar vale só para esta visita: fechar
@@ -287,11 +289,13 @@ silêncio em quem respondeu.
 
 O ForkBuild também tenta isso por você, automaticamente, para cada
 identidade em Pares conhecidos: assim que o app começa, sempre que você
-Lembra, Esquece ou muda de outra forma uma relação de Par conhecido, e cada
-vez que você mesmo clica em **Ficar visível**, ele confere em silêncio se
-cada um está com **Ficar visível** ativo no momento e, se estiver, conecta
-sem você precisar clicar em Reconectar. Então dois amigos que clicam os dois
-em **Ficar visível** se conectam: o segundo clique encontra o primeiro. Um
+Lembra, Esquece ou muda de outra forma uma relação de Par conhecido, cada
+vez que você mesmo clica em **Ficar visível** e cada vez que clica em
+**Entrar na sala**, ele confere em silêncio se cada um está visível no
+momento e, se estiver, conecta sem você precisar clicar em Reconectar.
+Então dois amigos que clicam os dois em **Ficar visível**, ou que entram os
+dois numa sala (a mesma ou não), se conectam: o segundo clique encontra o
+primeiro. Continuar numa sala nunca repete a verificação sozinho. Um
 Par conhecido que não está visível agora, ou que não pode ser alcançado, é
 simplesmente deixado em paz — não há laço de novas tentativas atrás dele,
 nem notificação sobre a tentativa, e uma identidade que falha nunca afeta

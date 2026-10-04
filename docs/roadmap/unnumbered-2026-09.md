@@ -3813,3 +3813,69 @@ gains X-braces between its stilts and two posts under the far end of the plank, 
 somewhere in the library. New `tests/TimberBricksAndWedgeSlope.test.js`: the drawn wedge meets a downward ray at the
 walked height at every rotation, the brace and its 180° turn cover opposite diagonals, and the Village roofs climb
 without dropping or stepping.
+## The Repository finds what others distributed (unnumbered, 2026-10-04)
+
+A World distributed on Nostr, Arweave or Steem never reached anyone else's Repository: the Repository listed this
+device's publications and the decentralized ones something else had already admitted (Share with Peers, a link,
+World Encounters, the Publications page), and nothing searched the substrates for it. Someone who distributes a World
+means it to be found, so opening the Repository (or an author's page) now searches every substrate's announcements
+under the shared Publication tag, `forkbuild-publication`, and admits what verifies. New
+`application/publication/RepositoryNetworkDiscovery.js` reads `searchEnvelopes()` from the Nostr relay set, the
+Arweave GraphQL query and Steem (`SteemPublicationDiscoveryQueryService#searchEnvelopes()`, new). It fetches each new
+record through the World Encounter material sources and admits it only when the composed verifier returns VERIFIED
+and it is exactly the Publication announced, the bar `VerifyClaimedBuildPublication.js` already holds. Admitted
+Publications go to the shared discovery provider and the durable admission log, so they stay after a reload. Each
+run checks at most 20 new records, a refused record is not fetched again, an unavailable one is retried, and a
+Publication the device already lists is never fetched. The catalog says what it is doing and found, with
+**Check again** (`ui/components/publicationCatalog/useRepositoryNetworkDiscovery.js`). A found Publication has no
+build on the device yet, so its Explore opens its signed record's link view (`#/view/ar|steem|ipfs/…`), which fetches
+and checks the build and then opens World View; where each record was read is kept by new
+`application/publication/NetworkPublicationLocatorStore.js`. Opening a link no longer lists a Publication the
+Repository already has a second time. New `tests/RepositoryNetworkDiscovery.test.js`; two older tests that read
+`PublicationCatalog.js`'s source for the Explore route now check `exploreRouteFor()` instead.
+
+## Shared with you names each World (unnumbered, 2026-10-04)
+
+**Shared with you lists each World by its title.** Reported from a Repository showing eighteen identical rows, "A World
+shared by …G4u2HmQ2JN6KbN", with nothing to choose by: a share's envelope (`core/DecentralizedPublication.js`) carried
+only a content reference, and the title lives in the Publication, which arrives only on Retrieve, from a sharer who
+must be connected.
+
+- `DecentralizedPublication` takes an optional `contentTitle`, in its signed payload only when present, so envelopes
+  signed before it still verify. `normalizeContentTitle()` gives its one canonical form (control characters and
+  bidirectional overrides removed, whitespace collapsed, at most 120 characters); the validator accepts only that form.
+  `PublicationResolver#publish()` takes it.
+- `SharePublicationWithPeersUseCase` signs the World's title into the share. Sharing a World again that was shared
+  under an untitled envelope makes a titled one; the titled one is reused from then on.
+- `RetrieveSharedPublicationUseCase#listPending()` returns each share's `title`, and lists the envelopes one sharer
+  made for the same bytes as one entry (the newest titled one). `retrieve()` refuses, adding nothing, a World whose
+  Publication's title is not the one its envelope announced, so a stranger can't bait a Retrieve with a false title.
+  The automatic path for Friends and Known Peers goes through the same check.
+- `SharedWithYouPanel` shows the title, with "shared by …" under it, and keeps "A World shared by …" for an untitled
+  share. Long titles wrap. New `sharedWithYouPanel.sharedByLine` in every locale.
+- Principle "A Share Names Its World, And Must Be That World" in `docs/principles/publication.md`.
+- Tests: `tests/SharePublicationWithPeers.test.js` (the title listed before retrieval; canonical form; a changed or
+  removed title breaking the signature; an untitled envelope still verifying; sharing again after an untitled share,
+  listed once and settled by one Retrieve; a false title refused on retrieval, which fails the test when the check is
+  removed). `index.html`'s module preload hints regenerated.
+
+## Joining a lobby connects Known Peers, as Be Discoverable does (unnumbered, 2026-10-04)
+
+**Joining a lobby now gives Known Peers one automatic connection attempt.** Reported from two friends who joined a
+lobby together and still had to click Connect: joining makes a device discoverable through
+`PeerSessionManager#publishSelf()` directly, so `FindPeerUseCase#onPublished()`, the signal on which
+`AutoConnectKnownPeersUseCase` makes its Be Discoverable pass, never fired. Joining a lobby says the same "I am
+reachable now", and is also one click.
+
+- `PublicLobbyUseCase#onJoined()` fires once after each successful `join()`. Renewing a card and replacing a spent
+  offer never fire it, so staying in a lobby never turns into a polling loop of Known Peer lookups.
+- `AutoConnectKnownPeersUseCase` takes an optional `publicLobbyUseCase` and makes one pass on each join.
+  `ui/main/composeIdentityAndPeers.js` now builds it after the lobby use case to pass it in.
+- The pass looks Known Peers up by identity and never reads the lobby listing, so "seeing someone in the lobby never
+  connects to them on its own" still holds for strangers. A Known Peer is reached wherever they are discoverable, in
+  the same lobby, another one, or through Be Discoverable.
+- User guide "Reconnecting" and the lobby's Connect bullet updated in every language; `docs/Architecture.md`'s
+  "Public lobby" updated.
+- Tests in `tests/PublicLobby.test.js`: a join is announced once, not on renewal, a replaced offer, a refused join
+  or after unsubscribing (fails when the announcement is removed); over real WebRTC, joining a lobby connects Alice
+  to Bob, a discoverable Known Peer in another lobby, while Carol, a stranger in Alice's lobby, stays unconnected.

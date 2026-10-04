@@ -170,6 +170,10 @@ connected to can still fetch builds of up to 64 MB straight from you.
   distributing it, for example **Stored on IPFS · Announced on Nostr**,
   or **No distribution recorded on this device**. See
   [Your publications](13-YourData.md#your-publications).
+- Other people's Repository finds your Publication on Nostr, Arweave or
+  Steem the next time they open it, as long as it was announced under the
+  usual discovery tag, `forkbuild-publication`. See
+  [Creations others distributed](04-PublishingAndForking.md#creations-others-distributed).
 - **Discover Shared World** in World View looks your Shared World up on
   Arweave and Nostr directly and checks it, answering "is my publication
   really out there, intact?" See

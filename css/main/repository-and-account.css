@@ -621,6 +621,16 @@
     font-size: 0.85rem;
 }
 
+.publication-catalog-network {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+    color: #a0a0a0;
+    font-size: 0.85rem;
+}
+
 .publication-catalog-group {
     margin-bottom: 1.5rem;
 }

@@ -20,10 +20,15 @@ import { StoreSnapshotContentUseCase } from '../application/snapshot/materializa
 import { MaterializeSnapshotFromPeerUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromPeerUseCase.js';
 import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { SharePublicationWithPeersUseCase } from '../application/publication/sharing/SharePublicationWithPeersUseCase.js';
-import { RetrieveSharedPublicationUseCase } from '../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
+import { DecentralizedPublication, MAX_CONTENT_TITLE_LENGTH, normalizeContentTitle } from '../core/DecentralizedPublication.js';
+import { validateDecentralizedPublication } from '../application/publication/DecentralizedPublicationValidator.js';
+import { SharePublicationWithPeersUseCase, LEGACY_CONTENT_HASH } from '../application/publication/sharing/SharePublicationWithPeersUseCase.js';
+import { RetrieveSharedPublicationUseCase, SHARE_UNAVAILABLE } from '../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
 import { AutoRetrieveSharedPublicationsUseCase } from '../application/publication/sharing/AutoRetrieveSharedPublicationsUseCase.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { StorageEntryNotLoadedError } from '../storage/StorageEntryNotLoadedError.js';
+import { ContentReference } from '../core/ContentReference.js';
+import { computeFnv1a32 } from '../serializer/contentHash.js';
 import { assert } from './support/Assert.js';
 
 // "Share with Peers": a World published on one device reaches another
@@ -72,8 +77,9 @@ function makeDevice(label, network, { trusted = () => false } = {}) {
     const snapshotExchange = new PublicationSnapshotContentPeerExchange(contentStore, bus, registry);
     const materialize = new MaterializeSnapshotFromPeerUseCase(snapshotExchange, new StoreSnapshotContentUseCase(contentStore), catalog, { timeoutMs: 1000 });
     const repository = new DecentralizedPublicationDiscoveryProvider();
+    const dismissedStorage = new InMemoryStorageProvider();
     const share = new SharePublicationWithPeersUseCase({ publicationResolver: resolver, publicationCatalog: catalog, publicationPeerExchange: peerExchange, identityProvider, publicationKindPlugin });
-    const retrieve = new RetrieveSharedPublicationUseCase({
+    const makeRetrieve = () => new RetrieveSharedPublicationUseCase({
         publicationCatalog: catalog,
         resolutionCoordinator: coordinator,
         publicationKindPlugin,
@@ -82,8 +88,10 @@ function makeDevice(label, network, { trusted = () => false } = {}) {
         materializeSnapshotFromPeer: materialize,
         connectedPeerRegistry: registry,
         identityProvider,
-        timeoutMs: 1000
+        timeoutMs: 1000,
+        storageProvider: dismissedStorage
     });
+    const retrieve = makeRetrieve();
     const auto = new AutoRetrieveSharedPublicationsUseCase({
         retrieveSharedPublicationUseCase: retrieve,
         publicationPeerExchange: peerExchange,
@@ -92,7 +100,7 @@ function makeDevice(label, network, { trusted = () => false } = {}) {
         isTrustedSharer: trusted
     });
     return {
-        label, identityProvider, connect, registry, contentStore, catalog, peerExchange, repository, share, retrieve, auto,
+        label, identityProvider, connect, registry, contentStore, catalog, peerExchange, repository, share, retrieve, auto, makeRetrieve,
         id: identityProvider.getSigningIdentity().id,
         dispose() { auto.dispose(); sync.dispose(); stopListening(); }
     };
@@ -147,6 +155,8 @@ function authenticated(peer) {
     const [pending] = edge.retrieve.listPending();
     assert(pending && pending.envelopeId === first.envelope.id && pending.sharerId === chrome.id && pending.sharerConnected,
         'Edge lists it as shared with it, from Chrome, who is connected');
+    assert(first.envelope.contentTitle === 'Stair in Half' && pending.title === 'Stair in Half',
+        'the share carries the World\'s title, so Edge can tell what it is before retrieving it');
     assert(edge.repository.list().length === 0, 'an untrusted share is not retrieved on its own');
     console.log('✓ only your own World can be shared; a share reaches peers, including later ones');
 
@@ -244,6 +254,341 @@ function authenticated(peer) {
 
     chrome.dispose();
     mallory.dispose();
+    edge.dispose();
+}
+
+// The title in a share: canonical, signed, and checked on retrieval.
+{
+    assert(normalizeContentTitle('  Stair \n in\tHalf  ') === 'Stair in Half', 'whitespace runs collapse to one space');
+    assert(normalizeContentTitle('Evil\u202eflipped') === 'Evil flipped' && normalizeContentTitle('a\u0000b') === 'a b',
+        'control characters and bidirectional overrides are removed');
+    assert(normalizeContentTitle('x'.repeat(500)).length === MAX_CONTENT_TITLE_LENGTH, 'a title is capped');
+    assert(normalizeContentTitle('   ') === null && normalizeContentTitle(42) === null, 'nothing displayable means no title');
+
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('title-chrome', network);
+    const world = await publishWorld(chrome, 'Titled Tower');
+    const { envelope } = await chrome.share.share(world);
+    const record = envelope.toJSON();
+    const verifier = new LocalAuthorizationVerifier();
+    assert(verifier.verifyDecentralizedPublication(record).valid, 'a titled share verifies');
+    assert(!verifier.verifyDecentralizedPublication({ ...record, contentTitle: 'Something Else' }).valid, 'a changed title breaks the signature');
+    const { contentTitle: _dropped, ...stripped } = record;
+    assert(!verifier.verifyDecentralizedPublication(stripped).valid, 'so does a removed one');
+    validateDecentralizedPublication(record);
+    for (const bad of ['', '  padded ', 'two\nlines', 'x'.repeat(MAX_CONTENT_TITLE_LENGTH + 1), 7]) {
+        let refused = false;
+        try {
+            validateDecentralizedPublication({ ...record, contentTitle: bad });
+        } catch {
+            refused = true;
+        }
+        assert(refused, `a title that is not canonical is refused (${JSON.stringify(bad).slice(0, 20)})`);
+    }
+    const untitled = await new PublicationResolver(chrome.contentStore, verifier).publish({
+        content: world, contentKind: PUBLICATION_CONTENT_KIND, identityProvider: chrome.identityProvider
+    });
+    assert(!('contentTitle' in untitled.toJSON()) && verifier.verifyDecentralizedPublication(untitled.toJSON()).valid
+        && DecentralizedPublication.fromJSON(untitled.toJSON()).contentTitle === null,
+        'an envelope without a title, as before titles existed, still verifies');
+    console.log('✓ a share\'s title is canonical and covered by the sharer\'s signature');
+    chrome.dispose();
+}
+
+// A share from before titles: listed untitled, and replaced by a titled one
+// when shared again, as one entry.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('legacy-chrome', network);
+    const edge = makeDevice('legacy-edge', network);
+    const world = await publishWorld(chrome, 'Old Share');
+    const resolver = new PublicationResolver(chrome.contentStore, new LocalAuthorizationVerifier());
+    const legacy = await resolver.publish({ content: world, contentKind: PUBLICATION_CONTENT_KIND, identityProvider: chrome.identityProvider });
+    chrome.catalog.add(legacy);
+    assert(chrome.share.isShared(world), 'the untitled envelope counts as shared');
+
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    await waitFor(() => edge.catalog.get(legacy.id) !== null, 'the untitled share arrives');
+    await wait(50);
+    let pending = edge.retrieve.listPending();
+    assert(pending.length === 1 && pending[0].title === null, 'it is listed without a title, as before');
+
+    const again = await chrome.share.share(world);
+    assert(!again.alreadyShared && again.envelope.id !== legacy.id && again.envelope.contentTitle === 'Old Share',
+        'sharing it again makes a titled envelope');
+    assert((await chrome.share.share(world)).envelope.id === again.envelope.id, 'which is reused from then on');
+    await waitFor(() => edge.catalog.get(again.envelope.id) !== null, 'the titled share arrives');
+    pending = edge.retrieve.listPending();
+    assert(pending.length === 1 && pending[0].envelopeId === again.envelope.id && pending[0].title === 'Old Share',
+        'Edge lists the World once, by its title');
+    await edge.retrieve.retrieve(pending[0].envelopeId);
+    assert(edge.retrieve.listPending().length === 0 && edge.retrieve.isRetrieved(legacy.id), 'retrieving it settles both envelopes');
+    console.log('✓ a World shared before titles is shared again with one, and listed once');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// A sharer who signs a title that is not the World's own: refused on
+// retrieval, nothing added.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('lie-chrome', network);
+    const edge = makeDevice('lie-edge', network);
+    const world = await publishWorld(chrome, 'Actual Name');
+    const resolver = new PublicationResolver(chrome.contentStore, new LocalAuthorizationVerifier());
+    const lying = await resolver.publish({
+        content: world, contentKind: PUBLICATION_CONTENT_KIND, contentTitle: 'Free Prize Inside', identityProvider: chrome.identityProvider
+    });
+    chrome.catalog.add(lying);
+
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    await waitFor(() => edge.catalog.get(lying.id) !== null, 'the share arrives');
+    assert(edge.retrieve.listPending()[0].title === 'Free Prize Inside', 'it is listed by the title it was signed with');
+    await rejects(edge.retrieve.retrieve(lying.id), /not the one its title announced/, 'retrieving a World under someone else\'s title is refused');
+    assert(edge.repository.list().length === 0 && !edge.contentStore.has(world.contentReference), 'and nothing is added');
+    console.log('✓ a share whose title is not its World\'s is refused on retrieval');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// Content kept on disk and not yet loaded (IndexedDB after a reload): reading
+// it synchronously throws, and the pending list must still be answered.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('cold-chrome', network);
+    const edge = makeDevice('cold-edge', network);
+    const retrieved = await publishWorld(chrome, 'Already Here');
+    const waiting = await publishWorld(chrome, 'Still Waiting');
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    const done = await chrome.share.share(retrieved);
+    const open = await chrome.share.share(waiting);
+    await waitFor(() => edge.catalog.get(done.envelope.id) && edge.catalog.get(open.envelope.id), 'both shares arrive');
+    await edge.retrieve.retrieve(done.envelope.id);
+
+    edge.contentStore.getSync = (reference) => { throw new StorageEntryNotLoadedError(`content:${reference.hash}`); };
+    assert(edge.retrieve.isRetrieved(done.envelope.id), 'a retrieved World is still known as retrieved while its content is on disk');
+    const pending = edge.retrieve.listPending();
+    assert(pending.length === 1 && pending[0].envelopeId === open.envelope.id, 'and only the World not retrieved yet is pending');
+    console.log('✓ the pending list is answered while shared content is on disk and not loaded');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// A sharer that no longer holds the snapshot: the Publication is added, the
+// snapshot is reported unavailable, and the share stays pending.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('nosnap-chrome', network);
+    const edge = makeDevice('nosnap-edge', network);
+    const world = await publishWorld(chrome, 'Snapshot Gone');
+    chrome.contentStore._storageProvider.remove(`content:${world.contentReference.hash}`);
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    const { envelope } = await chrome.share.share(world);
+    await waitFor(() => edge.catalog.get(envelope.id) !== null, 'the share arrives');
+    const { publication, snapshot } = await edge.retrieve.retrieve(envelope.id);
+    assert(publication.id === world.id && snapshot === PeerSnapshotMaterializationOutcome.UNAVAILABLE,
+        'Retrieve resolves with the snapshot reported unavailable, for the panel to say so');
+    assert(edge.retrieve.listPending().length === 1, 'and the share stays pending, to retry');
+    console.log('✓ a snapshot that does not arrive is reported, and the share stays pending');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// A World published before content hashes became SHA-256: its FNV-1a hash
+// can't vouch for a peer's bytes, so it is neither shared nor retrieved.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('legacy-chrome', network);
+    const edge = makeDevice('legacy-edge', network);
+    const snapshot = JSON.stringify({ schemaVersion: 2, world: { name: 'Old World', bricks: [] } });
+    const hash = computeFnv1a32(snapshot);
+    chrome.contentStore._storageProvider.save(`content:${hash}`, snapshot);
+    const signing = chrome.identityProvider.getSigningIdentity();
+    const unsigned = new Publication({
+        documentId: 'doc-old', title: 'Old World', author: chrome.label, contentHash: hash,
+        contentReference: new ContentReference({ hash, algorithm: 'fnv1a-32' }), publisherIdentity: signing.toJSON()
+    });
+    const world = unsigned.withSignature(chrome.identityProvider.signCanonical(unsigned.getSigningDescriptor()));
+
+    let shareError = null;
+    try { await chrome.share.share(world); } catch (e) { shareError = e; }
+    assert(shareError && shareError.code === LEGACY_CONTENT_HASH && chrome.catalog.list().length === 0,
+        'sharing a World with a legacy content hash is refused, with a code the view explains');
+
+    // One shared anyway, by a device from before this check.
+    const resolver = new PublicationResolver(chrome.contentStore, new LocalAuthorizationVerifier());
+    const envelope = await resolver.publish({
+        content: world, contentKind: PUBLICATION_CONTENT_KIND, contentTitle: 'Old World', identityProvider: chrome.identityProvider
+    });
+    chrome.catalog.add(envelope);
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    await waitFor(() => edge.catalog.get(envelope.id) !== null, 'the share arrives');
+    assert(edge.retrieve.listPending()[0].legacy === null, 'before Retrieve, nothing tells that the World inside is old');
+    let retrieveError = null;
+    try { await edge.retrieve.retrieve(envelope.id); } catch (e) { retrieveError = e; }
+    assert(retrieveError && retrieveError.code === LEGACY_CONTENT_HASH, 'retrieving it is refused with the same code');
+    assert(edge.repository.list().length === 0 && !edge.contentStore.has(world.contentReference), 'and nothing is added');
+    assert(edge.retrieve.listPending()[0].legacy === 'world', 'from then on it is listed as a World that can\'t be retrieved');
+    console.log('✓ a World with a legacy content hash is neither shared nor retrieved, and is flagged once known');
+
+    // After a reload the Publication is on disk until read: not flagged yet,
+    // and listeners hear once it has loaded.
+    const getSync = edge.contentStore.getSync.bind(edge.contentStore);
+    let release;
+    const ready = new Promise((resolve) => { release = resolve; });
+    let loaded = false;
+    edge.contentStore.getSync = (reference) => {
+        if (!loaded) throw new StorageEntryNotLoadedError(`content:${reference.hash}`, ready);
+        return getSync(reference);
+    };
+    let changes = 0;
+    const stopListening = edge.retrieve.onPendingChanged(() => { changes += 1; });
+    assert(edge.retrieve.listPending()[0].legacy === null && edge.retrieve.listPending()[0].legacy === null, 'not flagged while its Publication is still on disk');
+    loaded = true;
+    release();
+    await waitFor(() => changes === 1, 'listeners hear once the Publication has loaded');
+    assert(edge.retrieve.listPending()[0].legacy === 'world', 'and it is then flagged');
+    stopListening();
+    console.log('✓ a World whose Publication is still on disk is flagged once it loads');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// A share made before content hashes became SHA-256 (its own content hash is
+// FNV-1a): flagged in the pending list and refused without asking anyone.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('oldshare-chrome', network);
+    const edge = makeDevice('oldshare-edge', network);
+    const world = await publishWorld(chrome, 'Old Hash Share');
+    const bytes = JSON.stringify(world.toJSON());
+    const hash = computeFnv1a32(bytes);
+    chrome.contentStore._storageProvider.save(`content:${hash}`, bytes);
+    let envelope = new DecentralizedPublication({
+        contentKind: PUBLICATION_CONTENT_KIND,
+        contentSchemaVersion: 1,
+        contentReference: new ContentReference({ hash, algorithm: 'fnv1a-32' }),
+        publisherIdentity: chrome.identityProvider.getSigningIdentity().toJSON()
+    });
+    envelope = envelope.withSignature(chrome.identityProvider.signCanonical(envelope.getSigningDescriptor()));
+    chrome.catalog.add(envelope);
+
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    await waitFor(() => edge.catalog.get(envelope.id) !== null, 'the old share arrives');
+    const [pending] = edge.retrieve.listPending();
+    assert(pending && pending.envelopeId === envelope.id && pending.legacy === 'share', 'it is listed as a share that can\'t be retrieved');
+    let error = null;
+    try { await edge.retrieve.retrieve(envelope.id); } catch (e) { error = e; }
+    assert(error && error.code === LEGACY_CONTENT_HASH && edge.repository.list().length === 0, 'retrieving it is refused, adding nothing');
+    console.log('✓ a share made with a legacy content hash is flagged and refused');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// A sharer whose device no longer holds the shared Publication: refused with
+// a code the view explains, not the resolver's internal reason.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('gone-chrome', network);
+    const edge = makeDevice('gone-edge', network);
+    const world = await publishWorld(chrome, 'Gone Away');
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    const { envelope } = await chrome.share.share(world);
+    await waitFor(() => edge.catalog.get(envelope.id) !== null, 'the share arrives');
+    chrome.contentStore._storageProvider.remove(`content:${envelope.contentReference.hash}`);
+    assert(!edge.retrieve.listPending()[0].legacy, 'a SHA-256 share is not flagged');
+    let error = null;
+    try { await edge.retrieve.retrieve(envelope.id); } catch (e) { error = e; }
+    assert(error && error.code === SHARE_UNAVAILABLE && edge.repository.list().length === 0, 'retrieving it is refused as not sent, adding nothing');
+    console.log('✓ a share its sharer no longer holds is reported as not sent');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// Dismissing: a share is hidden on this device for good, including when it
+// is announced again or the device reloads; a World published again is a
+// new share and is listed.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('dismiss-chrome', network);
+    const edge = makeDevice('dismiss-edge', network);
+    const unwanted = await publishWorld(chrome, 'Unwanted');
+    const wanted = await publishWorld(chrome, 'Wanted');
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    const first = await chrome.share.share(unwanted);
+    const second = await chrome.share.share(wanted);
+    await waitFor(() => edge.catalog.get(first.envelope.id) && edge.catalog.get(second.envelope.id), 'both shares arrive');
+
+    let changes = 0;
+    const stopListening = edge.retrieve.onPendingChanged(() => { changes += 1; });
+    assert(edge.retrieve.dismiss(first.envelope.id) && changes === 1, 'dismissing tells listeners');
+    stopListening();
+    let pending = edge.retrieve.listPending();
+    assert(pending.length === 1 && pending[0].envelopeId === second.envelope.id && edge.retrieve.isDismissed(first.envelope.id),
+        'a dismissed share is no longer pending');
+    assert(edge.catalog.get(first.envelope.id) !== null, 'the share itself is kept, so it is not fetched again');
+    assert(!edge.retrieve.dismiss('no-such-share'), 'dismissing an unknown share does nothing');
+
+    await chrome.share.share(unwanted);
+    await wait(50);
+    assert(edge.retrieve.listPending().length === 1, 'announcing it again does not bring it back');
+    assert(edge.makeRetrieve().listPending().length === 1, 'nor does a reload');
+
+    const republished = await publishWorld(chrome, 'Unwanted');
+    const again = await chrome.share.share(republished);
+    await waitFor(() => edge.catalog.get(again.envelope.id) !== null, 'the World published again is shared');
+    pending = edge.retrieve.listPending();
+    assert(pending.some((item) => item.envelopeId === again.envelope.id), 'and, being new, it is listed');
+    console.log('✓ a dismissed share stays hidden; a World published again is listed');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// Dismissing every share that can't be retrieved, and only those.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('dismissall-chrome', network);
+    const edge = makeDevice('dismissall-edge', network);
+    const world = await publishWorld(chrome, 'Still Fine');
+    const bytes = JSON.stringify(world.toJSON());
+    const hash = computeFnv1a32(bytes);
+    chrome.contentStore._storageProvider.save(`content:${hash}`, bytes);
+    let old = new DecentralizedPublication({
+        contentKind: PUBLICATION_CONTENT_KIND,
+        contentSchemaVersion: 1,
+        contentReference: new ContentReference({ hash, algorithm: 'fnv1a-32' }),
+        publisherIdentity: chrome.identityProvider.getSigningIdentity().toJSON()
+    });
+    old = old.withSignature(chrome.identityProvider.signCanonical(old.getSigningDescriptor()));
+    chrome.catalog.add(old);
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    const fine = await chrome.share.share(world);
+    await waitFor(() => edge.catalog.get(old.id) && edge.catalog.get(fine.envelope.id), 'both shares arrive');
+    assert(edge.retrieve.listPending().length === 2, 'both are pending');
+    assert(edge.retrieve.dismissUnretrievable() === 1, 'one share can\'t be retrieved and is dismissed');
+    const pending = edge.retrieve.listPending();
+    assert(pending.length === 1 && pending[0].envelopeId === fine.envelope.id, 'the share that can be retrieved stays');
+    assert(edge.retrieve.dismissUnretrievable() === 0, 'dismissing again finds nothing');
+    console.log('✓ every share that can\'t be retrieved is dismissed at once, and only those');
+
+    chrome.dispose();
     edge.dispose();
 }
 

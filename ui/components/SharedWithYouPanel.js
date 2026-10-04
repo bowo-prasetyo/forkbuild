@@ -1,6 +1,9 @@
-import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { errorText, t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
+import { LEGACY_CONTENT_HASH } from '../../application/publication/sharing/SharePublicationWithPeersUseCase.js';
+import { SHARE_UNAVAILABLE } from '../../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
+import { PeerSnapshotMaterializationOutcome } from '../../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 
 function stripPrefix(message) {
     return String(message || '').replace(/^\w+UseCase:\s*/, '');
@@ -10,8 +13,11 @@ function stripPrefix(message) {
 // (application/publication/sharing/RetrieveSharedPublicationUseCase.js).
 // Shares from Friends and Known Peers are retrieved on their own; anyone
 // else's wait here for a Retrieve click, which fetches the World only from
-// the person who shared it, while they are connected. Emits `retrieved`
-// whenever a World joins the Repository, by hand or automatically.
+// the person who shared it, while they are connected. Each is named by the
+// title its sharer signed into the share, so a person can choose; a share
+// from before shares carried titles falls back to "A World shared by …".
+// Emits `retrieved` whenever a World joins the Repository, by hand or
+// automatically.
 export default {
     name: 'SharedWithYouPanel',
     components: { I18nText },
@@ -44,21 +50,53 @@ export default {
             error.value = '';
             retrievingId.value = item.envelopeId;
             try {
-                const { publication } = await retrieveUseCase.retrieve(item.envelopeId);
+                const { publication, snapshot } = await retrieveUseCase.retrieve(item.envelopeId);
                 emit('retrieved', publication);
+                // The Publication is in the Repository, but the World cannot
+                // be explored without its snapshot, so the share stays listed.
+                if (snapshot === PeerSnapshotMaterializationOutcome.UNAVAILABLE) {
+                    error.value = t('sharedWithYouPanel.snapshotUnavailable');
+                } else if (snapshot === PeerSnapshotMaterializationOutcome.HASH_MISMATCH) {
+                    error.value = t('sharedWithYouPanel.snapshotMismatch');
+                }
             } catch (e) {
-                error.value = stripPrefix(errorText(e));
+                if (e && e.code === LEGACY_CONTENT_HASH) {
+                    error.value = t('sharedWithYouPanel.publishedWithOldHash');
+                } else if (e && e.code === SHARE_UNAVAILABLE) {
+                    error.value = t('sharedWithYouPanel.shareUnavailable');
+                } else {
+                    error.value = stripPrefix(errorText(e));
+                }
             } finally {
                 retrievingId.value = null;
                 refresh();
             }
         }
 
+        // Hides a share on this device for good; the use case tells
+        // onPendingChanged() listeners, which refreshes the list.
+        function dismiss(item) {
+            error.value = '';
+            retrieveUseCase.dismiss(item.envelopeId);
+            refresh();
+        }
+
+        function dismissUnretrievable() {
+            error.value = '';
+            retrieveUseCase.dismissUnretrievable();
+            refresh();
+        }
+
+        const unretrievableCount = computed(() => pending.value.filter((item) => item.legacy).length);
+
         const unsubscribes = [];
         onMounted(() => {
             refresh();
             if (publicationPeerExchange) unsubscribes.push(publicationPeerExchange.onPublicationReceived(refresh));
             if (peerSessionManager) unsubscribes.push(peerSessionManager.onPeersChanged(refresh));
+            if (retrieveUseCase && typeof retrieveUseCase.onPendingChanged === 'function') {
+                unsubscribes.push(retrieveUseCase.onPendingChanged(refresh));
+            }
             if (autoRetrieveUseCase) {
                 unsubscribes.push(autoRetrieveUseCase.onRetrieved(({ publication }) => {
                     refresh();
@@ -68,7 +106,10 @@ export default {
         });
         onBeforeUnmount(() => { for (const unsubscribe of unsubscribes) unsubscribe(); });
 
-        return { t, pending, retrievingId, error, retrieve, sharerLabel, receivedLabel, available: Boolean(retrieveUseCase) };
+        return {
+            t, pending, retrievingId, error, retrieve, dismiss, dismissUnretrievable, unretrievableCount,
+            sharerLabel, receivedLabel, available: Boolean(retrieveUseCase)
+        };
     },
     template: `
         <div v-if="available && pending.length" class="peer-signal-box shared-with-you">
@@ -77,21 +118,36 @@ export default {
                 <I18nText keypath="sharedWithYouPanel.worldsPeersOfferedToYou"><template #retrieve><strong>{{ t('sharedWithYouPanel.retrieve') }}</strong></template></I18nText>
             </p>
             <p v-if="error" class="identity-unlock-error">{{ error }}</p>
+            <div v-if="unretrievableCount > 1" class="identity-mgmt-actions">
+                <button class="action-btn action-btn--secondary" @click="dismissUnretrievable"
+                        :title="t('sharedWithYouPanel.dismissHint')">
+                    {{ t('sharedWithYouPanel.dismissAllUnretrievable', { count: unretrievableCount }) }}
+                </button>
+            </div>
             <div class="identity-mgmt-list">
                 <div v-for="item in pending" :key="item.envelopeId" class="identity-mgmt-card">
                     <div class="identity-mgmt-card-header">
-                        <span class="identity-mgmt-name">{{ t('sharedWithYouPanel.sharedBy', { sharer: sharerLabel(item) }) }}</span>
+                        <span class="identity-mgmt-name">{{ item.title || t('sharedWithYouPanel.sharedBy', { sharer: sharerLabel(item) }) }}</span>
                         <span class="peer-badge" :class="item.sharerConnected ? 'peer-badge--authenticated' : 'peer-badge--pending'">
                             {{ item.sharerConnected ? t('sharedWithYouPanel.connected') : t('sharedWithYouPanel.notConnected') }}
                         </span>
                     </div>
+                    <p v-if="item.title" class="identity-mgmt-status">{{ t('sharedWithYouPanel.sharedByLine', { sharer: sharerLabel(item) }) }}</p>
                     <p v-if="receivedLabel(item)" class="identity-mgmt-status">{{ t('sharedWithYouPanel.received', { when: receivedLabel(item) }) }}</p>
+                    <p v-if="item.legacy === 'share'" class="form-hint form-hint--neutral">{{ t('sharedWithYouPanel.sharedBeforeSha256') }}</p>
+                    <p v-else-if="item.legacy === 'world'" class="form-hint form-hint--neutral">{{ t('sharedWithYouPanel.worldBeforeSha256') }}</p>
                     <div class="identity-mgmt-actions">
-                        <button class="action-btn action-btn--primary"
+                        <button v-if="!item.legacy" class="action-btn action-btn--primary"
                                 :disabled="!item.sharerConnected || retrievingId === item.envelopeId"
                                 :title="item.sharerConnected ? '' : t('sharedWithYouPanel.theyNeedToBeConnected')"
                                 @click="retrieve(item)">
                             {{ retrievingId === item.envelopeId ? t('sharedWithYouPanel.retrieving') : t('sharedWithYouPanel.retrieve2') }}
+                        </button>
+                        <button class="action-btn action-btn--secondary"
+                                :disabled="retrievingId === item.envelopeId"
+                                :title="t('sharedWithYouPanel.dismissHint')"
+                                @click="dismiss(item)">
+                            {{ t('sharedWithYouPanel.dismiss') }}
                         </button>
                     </div>
                 </div>
