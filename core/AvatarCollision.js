@@ -43,24 +43,38 @@ export function avatarAabbAt(position) {
 // A brick's own axis-aligned bounds, in whatever coordinate space
 // `center` is given in — LOCAL (document) space if `center` is the
 // brick's own position, WORLD space once translateAabb() below has
-// added a WorldPlacement offset. Deliberately axis-aligned regardless
-// of `Brick.rotation` — a small, honestly documented simplification
-// for this first collision milestone, exactly the same one
-// application/editor/SelectionBoundsService.js already makes for gizmo
-// bounds (see its own header) — reused here as the same idea, not the
-// same code, since that class lives in application/ and is bound to a
-// BrickRegistry instance, while this stays a pure function over
-// already-resolved dimensions.
-export function brickAabb(center, definition) {
+// added a WorldPlacement offset. The footprint turns with the brick
+// (`rotationDegrees`, about the vertical axis, as BrickRenderer draws
+// it): a quarter turn swaps width and depth exactly, and any other angle
+// gets the box that encloses the turned footprint.
+export function brickAabb(center, definition, rotationDegrees = 0) {
     const width = definition ? definition.width : 1;
     const height = definition ? definition.height : 1;
     const depth = definition ? definition.depth : 1;
-    const halfX = width / 2;
+    const { halfX, halfZ } = footprintHalfExtents(width, depth, rotationDegrees);
     const halfY = height / 2;
-    const halfZ = depth / 2;
     return {
         min: { x: center.x - halfX, y: center.y - halfY, z: center.z - halfZ },
         max: { x: center.x + halfX, y: center.y + halfY, z: center.z + halfZ }
+    };
+}
+
+// Half the world-axis extents of a width x depth footprint turned by
+// `rotationDegrees`. Quarter turns are exact (no cos/sin rounding), so a
+// turned wall's faces land exactly where an unturned one's would.
+export function footprintHalfExtents(width, depth, rotationDegrees = 0) {
+    const turn = Number.isFinite(rotationDegrees) ? ((rotationDegrees % 360) + 360) % 360 : 0;
+    if (turn % 90 === 0) {
+        return turn % 180 === 0
+            ? { halfX: width / 2, halfZ: depth / 2 }
+            : { halfX: depth / 2, halfZ: width / 2 };
+    }
+    const rad = turn * (Math.PI / 180);
+    const cos = Math.abs(Math.cos(rad));
+    const sin = Math.abs(Math.sin(rad));
+    return {
+        halfX: (cos * width + sin * depth) / 2,
+        halfZ: (sin * width + cos * depth) / 2
     };
 }
 

@@ -3879,3 +3879,18 @@ reachable now", and is also one click.
 - Tests in `tests/PublicLobby.test.js`: a join is announced once, not on renewal, a replaced offer, a refused join
   or after unsubscribing (fails when the announcement is removed); over real WebRTC, joining a lobby connects Alice
   to Bob, a discoverable Known Peer in another lobby, while Carol, a stranger in Alice's lobby, stays unconnected.
+
+## Bricks collide and are walked on where they are drawn, turned (unnumbered, 2026-10-04)
+
+Avatar collision and flat walking surfaces ignored `Brick.rotation`: every brick was its unturned box. A wall built
+from `core:wall_1x3` segments turned to run along Z therefore blocked as a row of 1 × 0.25 slabs across X, with 0.75
+gaps between them that the 0.7-wide avatar walked straight through, and the same segments stuck 0.5 into the room
+on either side. A turned door leaf blocked a doorway it was drawn beside, and a turned floor plate was walked on
+where it wasn't drawn, so an avatar fell through floors that looked solid. Found by walking a half-timbered house
+built with the app's own movement code. `core/AvatarCollision.js#brickAabb()` now takes the rotation (new
+`footprintHalfExtents()`): a quarter turn swaps width and depth exactly, any other angle gets the box enclosing the
+turned footprint. `AvatarMovementConstraint` passes `brick.rotation` for building bricks and `brick.rotation +
+placement.rotation` for bricks of placed Structures, and `core/WalkableSurface.js`'s flat surfaces use the turned box
+at quarter turns and the exact turned rectangle at other angles, as stairs and slopes already did. The principle
+"Start Simple: A Box Is A Good Enough Capsule" is updated to match. Editor bounds (selection, stacking, document
+bounds) are unchanged. New `tests/RotatedBrickCollision.test.js`.
