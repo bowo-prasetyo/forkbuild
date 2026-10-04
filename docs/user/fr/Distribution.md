@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 9c6ca1cfed3b4863 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: be51a110c624bf19 -->
 # Distribuer votre travail
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · **Français** · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../Distribution.md).
-<!-- /stale -->
 
 Tout ce que crée ForkBuild commence sur votre propre appareil.
 **Distribuer** est l’étape distincte et facultative qui place votre
@@ -191,6 +187,10 @@ directement chez vous des constructions jusqu’à 64 Mo.
   enregistré sa distribution, par exemple **Stocké sur IPFS · Annoncé sur
   Nostr**, ou **Aucune distribution enregistrée sur cet appareil**. Voir
   [Vos publications](13-YourData.md#vos-publications).
+- Le Dépôt des autres trouve votre publication sur Nostr, Arweave ou Steem
+  la prochaine fois qu’ils l’ouvrent, à condition qu’elle ait été annoncée
+  sous le tag de découverte habituel, `forkbuild-publication`. Voir
+  [Créations distribuées par d’autres](04-PublishingAndForking.md#créations-distribuées-par-dautres).
 - **Découvrir un Monde partagé**, dans la Vue du Monde, recherche
   directement votre Monde partagé sur Arweave et Nostr et le vérifie, pour
   répondre à « ma publication est-elle vraiment là-bas, intacte ? ». Voir
@@ -201,4 +201,6 @@ directement chez vous des constructions jusqu’à 64 Mo.
 
 Une distribution ne peut pas être reprise : une fois quelque chose annoncé
 ou stocké, d’autres personnes en détiennent peut-être déjà une copie.
-**Dépublier** ne retire un Monde que de votre propre catalogue.
+**Dépublier** ne retire un Monde que de votre propre catalogue, et cet
+appareil retient alors de ne plus lister les copies distribuées quand le
+Dépôt cherche sur les réseaux.

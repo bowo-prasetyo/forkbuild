@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 31b37f7993e1c8cc -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1855909b2b8b1dec -->
 # 04 — Publier et forker
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · **Français** · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 C’est le cœur de ForkBuild. **Publier** partage votre création avec le
 monde. **Forker** permet à n’importe qui de copier une création et de la
@@ -110,7 +106,11 @@ l’une ou l’autre section ne sont mémorisés nulle part.
 
 ## Partager avec les pairs connectés
 
-Un Monde que vous publiez n’est listé que dans *votre* Dépôt. Pour le
+Un Monde que vous publiez n’est listé que dans *votre* Dépôt, jusqu’à ce
+que vous le distribuiez sur Nostr, Arweave ou Steem (voir
+[Distribution](Distribution.md)) : le Dépôt de chacun le trouve alors (voir
+[Créations distribuées par d’autres](#créations-distribuées-par-dautres)).
+Pour le
 mettre dans le Dépôt de quelqu’un à qui vous êtes connecté (voir
 [Connexions entre pairs et amis](07-PeerConnectionsAndFriends.md)),
 cliquez sur **Partager avec les pairs** sous ce Monde dans le Dépôt. Le
@@ -125,7 +125,11 @@ bouton n’apparaît que sur vos propres Mondes publiés.
   pour l’**Explorer**. Un Monde partagé par quelqu’un d’autre attend sous
   **Partagés avec vous** en haut de leur Dépôt jusqu’à ce qu’ils cliquent
   sur **Récupérer**. Aucun appareil ne télécharge le Monde d’un inconnu
-  sans qu’on le lui demande.
+  sans qu’on le lui demande. Chacun est listé sous son titre, pour qu’ils
+  puissent choisir ; leur appareil s’assure que le Monde qu’ils récupèrent
+  est bien celui que ce titre désigne. Un Monde que vous avez partagé avant
+  que les titres soient inclus est listé comme « Un Monde partagé par … »
+  jusqu’à ce que vous cliquiez sur **Partager de nouveau**.
 - Le Monde n’est récupéré qu’auprès de vous, et seulement pendant que
   vous êtes connecté : si vous êtes hors ligne, **Récupérer** attend votre
   retour, et un Ami ou Pair connu le reçoit dès que vous vous reconnectez.
@@ -208,6 +212,26 @@ publiées que cet appareil connaît : les vôtres, celles que des pairs ont
 partagées avec vous, et celles trouvées sur des réseaux décentralisés. Il
 est conçu pour rester utilisable qu’il contienne dix créations ou dix
 mille.
+
+### Créations distribuées par d’autres
+
+Chaque fois que vous ouvrez le Dépôt (ou une page d’auteur), il cherche sur
+Nostr, Arweave et Steem les créations que d’autres personnes y ont
+distribuées, et ajoute celles qu’il peut vérifier. Une ligne au-dessus de
+la liste indique ce qu’il fait, puis combien de nouvelles créations il a
+trouvées ; **Vérifier à nouveau** cherche encore une fois.
+
+- Seule une création dont l’enregistrement signé est vérifié est ajoutée :
+  signé par la clé qu’il nomme, et exactement la création annoncée. Tout le
+  reste est ignoré, et un enregistrement qui a échoué n’est pas récupéré de
+  nouveau.
+- Il vérifie jusqu’à 20 nouvelles créations à la fois. S’il y en a plus,
+  la ligne indique combien il en reste pour la prochaine fois.
+- Une création trouvée ainsi reste dans votre Dépôt après un
+  rechargement.
+- Son build n’est pas encore sur votre appareil. **Explorer** le récupère
+  là où il a été stocké, le vérifie, puis l’ouvre dans la Vue du Monde,
+  exactement comme l’ouverture d’un lien partagé.
 
 ```
 Rechercher [________________]  ☐ Inclure les descriptions  [Rechercher]

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/Privacy.md source-hash: ef02c2b3f84b697d -->
+<!-- translation-of: docs/Privacy.md source-hash: 9cb6f05e34121fa7 -->
 # Datenschutz
 
 <!-- languages -->
 [English](../../Privacy.md) · **Deutsch** · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../../Privacy.md).
-<!-- /stale -->
 
 ForkBuild hat keine Konten und verfolgt Sie nicht. Es speichert Ihre
 Arbeit in Ihrem eigenen Browser und spricht nur für die Funktionen mit
@@ -39,7 +35,14 @@ veröffentlichen, exportieren oder senden es:
   und Zugangsdaten eines TURN-Servers, falls Sie sie unter
   **Netzwerkeinstellungen** eingeben;
 - ob dieser Browser an der täglichen Besucherzählung teilnimmt, und an
-  welchem Tag zuletzt.
+  welchem Tag zuletzt;
+- Veröffentlichungen anderer Leute, die dieses Gerät gefunden und geprüft
+  hat, von Peers, aus Links, aus der Weltansicht oder aus der Suche des
+  Repositorys in den Netzwerken, und bei den in den Netzwerken gefundenen,
+  wo der signierte Eintrag jeder einzelnen gelesen wurde;
+- die IDs der Veröffentlichungen, die Sie auf diesem Gerät zurückgezogen
+  haben, damit die Suche des Repositorys in den Netzwerken Kopien, die Sie
+  früher verteilt haben, nicht wieder auflistet.
 
 Das Löschen der Daten dieser Website im Browser löscht all das, und es gibt
 keine andere Kopie und keinen Weg, sie wiederherzustellen. Sichern Sie es
@@ -158,6 +161,7 @@ was Sie bei ihm anfragen.
 | Eine Peer-Verbindung beginnt | STUN-Server (`stun.l.google.com`) | nichts außer einer Anfrage nach Ihrer öffentlichen IP-Adresse |
 | Sie beginnen eine Peer-Verbindung, wenn der Rendezvous-Server ein Relay anbietet | `/turn-credentials` des Rendezvous-Servers, dann sein TURN-Relay (Cloudflare) | eine Anfrage nach kurzlebigen Relay-Zugangsdaten, höchstens etwa einmal pro Stunde; weitergeleiteter Verkehr ist durch WebRTC Ende-zu-Ende-verschlüsselt |
 | Die App ist geöffnet und ihr Tab sichtbar (Synchronisierung der Ankündigungen im Hintergrund) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`) | Abfragen nach den Entdeckungs-Tags von ForkBuild: den gemeinsamen Tags für Snapshots und Kommentare sowie den Ortsnamen-Regionen und Kartenzellen, die Sie besucht haben |
+| Sie öffnen das Repository oder eine Autorenseite | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`) | eine Abfrage nach dem gemeinsamen Veröffentlichungs-Tag (`forkbuild-publication`); dann eine Anfrage nach dem signierten Eintrag jeder neu angekündigten Veröffentlichung, höchstens 20 pro Besuch oder **Erneut prüfen** |
 | Sie verteilen oder entdecken Veröffentlichungen über Nostr | Nostr-Relays (`relay.damus.io`) | signierte Ankündigungen, die Sie veröffentlichen; Ihre Abfragen |
 | Sie speichern oder holen Inhalte auf Arweave | ein Arweave-Gateway (`arweave.net`) | die Inhalte, die Sie veröffentlichen; was Sie abrufen |
 | Sie holen Inhalte von IPFS | ein IPFS-Gateway (`ipfs.io`) oder Ihr eigener IPFS-Knoten (`127.0.0.1:5001`) | was Sie abrufen oder hinzufügen |

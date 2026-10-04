@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 31b37f7993e1c8cc -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1855909b2b8b1dec -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · **Bahasa Indonesia** · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Inilah inti ForkBuild. **Menerbitkan** membagikan karya Anda kepada dunia.
 **Fork** memungkinkan siapa pun menyalin sebuah karya dan
@@ -107,7 +103,12 @@ maupun hasil kedua bagian tidak diingat di mana pun.
 
 ## Berbagi dengan rekan yang terhubung
 
-Dunia yang Anda terbitkan hanya tercantum di Repositori *Anda*. Untuk
+Dunia yang Anda terbitkan hanya tercantum di Repositori *Anda*, sampai Anda
+mendistribusikannya di Nostr, Arweave, atau Steem (lihat
+[Distribusi](Distribution.md)): setelah itu Repositori siapa pun dapat
+menemukannya (lihat
+[Karya yang didistribusikan orang lain](#karya-yang-didistribusikan-orang-lain)).
+Untuk
 memasukkannya ke Repositori orang yang terhubung dengan Anda (lihat
 [Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)), klik
 **Bagikan dengan Rekan** di bawahnya di Repositori. Tombol ini hanya muncul
@@ -121,7 +122,11 @@ pada Dunia terbitan Anda sendiri.
   sendirinya, beserta semua yang diperlukan untuk **Jelajahi**. Dunia yang
   dibagikan orang lain menunggu di **Dibagikan kepada Anda** di bagian atas
   Repositori mereka sampai mereka mengeklik **Ambil**. Tidak ada perangkat
-  yang mengunduh Dunia orang asing tanpa diminta.
+  yang mengunduh Dunia orang asing tanpa diminta. Masing-masing tercantum
+  dengan judulnya, jadi mereka dapat memilih; perangkat mereka memastikan
+  bahwa Dunia yang mereka ambil adalah Dunia yang disebut judul itu. Dunia
+  yang Anda bagikan sebelum judul disertakan tercantum sebagai "Dunia yang
+  dibagikan oleh …" sampai Anda mengeklik **Bagikan Lagi**.
 - Dunia itu hanya diambil dari Anda, dan hanya selama Anda terhubung: jika
   Anda luring, **Ambil** menunggu sampai Anda kembali, dan Teman atau Rekan
   yang Dikenal menerimanya begitu Anda terhubung kembali. Perangkat Anda
@@ -205,6 +210,26 @@ terbitan yang diketahui perangkat ini: milik Anda sendiri, yang dibagikan
 rekan kepada Anda, dan yang ditemukan di jaringan terdesentralisasi.
 Repositori dibuat agar tetap mudah dipakai baik berisi sepuluh karya
 maupun sepuluh ribu.
+
+### Karya yang didistribusikan orang lain
+
+Setiap kali Anda membuka Repositori (atau halaman pembuat), Repositori
+mencari di Nostr, Arweave, dan Steem karya yang didistribusikan orang lain
+di sana, lalu menambahkan yang dapat diverifikasinya. Sebuah baris di atas
+daftar menjelaskan apa yang sedang dilakukannya, lalu berapa banyak karya
+baru yang ditemukannya; **Periksa lagi** mencari sekali lagi.
+
+- Hanya karya yang catatan bertandatangannya lolos pemeriksaan yang
+  ditambahkan: ditandatangani dengan kunci yang disebutkannya, dan persis
+  karya yang diumumkan. Selebihnya dilewati, dan catatan yang gagal tidak
+  diambil lagi.
+- Repositori memeriksa hingga 20 karya baru sekaligus. Jika ada lebih
+  banyak, baris itu menyebutkan berapa yang tersisa untuk lain kali.
+- Karya yang ditemukan dengan cara ini tetap ada di Repositori Anda setelah
+  dimuat ulang.
+- Build-nya belum ada di perangkat Anda. **Jelajahi** mengambilnya dari
+  tempat penyimpanannya dan memeriksanya, lalu membukanya di Tampilan
+  Dunia, sama seperti membuka tautan yang dibagikan.
 
 ```
 Cari [________________]  ☐ Sertakan deskripsi  [Cari]

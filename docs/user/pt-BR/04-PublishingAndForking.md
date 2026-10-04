@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 31b37f7993e1c8cc -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1855909b2b8b1dec -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Este é o coração do ForkBuild. **Publicar** compartilha sua criação com o
 mundo. **Bifurcar** deixa qualquer pessoa copiar uma criação e fazê-la
@@ -103,7 +99,12 @@ resultado de nenhuma das seções é lembrado em lugar nenhum.
 
 ## Compartilhando com pares conectados
 
-Um Mundo que você publica aparece só no *seu* Repositório. Para colocá-lo no
+Um Mundo que você publica aparece só no *seu* Repositório, até você
+distribuí-lo no Nostr, no Arweave ou no Steem (veja
+[Distribuição](Distribution.md)): aí o Repositório de qualquer pessoa o
+encontra (veja
+[Criações que outras pessoas distribuíram](#criações-que-outras-pessoas-distribuíram)).
+Para colocá-lo no
 Repositório de alguém com quem você está conectado (veja
 [Conexões entre pares e amigos](07-PeerConnectionsAndFriends.md)), clique em
 **Compartilhar com pares** abaixo dele no Repositório. O botão só aparece nos
@@ -117,7 +118,11 @@ Mundos que você mesmo publicou.
   que é preciso para **Explorar**. Um Mundo compartilhado por qualquer outra
   pessoa espera em **Compartilhado com você**, no topo do Repositório, até
   elas clicarem em **Recuperar**. Nenhum dispositivo baixa o Mundo de um
-  desconhecido sem que peçam.
+  desconhecido sem que peçam. Cada um aparece com o título, para que
+  possam escolher; o dispositivo delas garante que o Mundo que recuperam é
+  o que esse título indica. Um Mundo que você compartilhou antes de os
+  títulos serem incluídos aparece como "Um Mundo compartilhado por …" até
+  você clicar em **Compartilhar de novo**.
 - O Mundo é buscado só com você, e só enquanto você estiver conectado: se
   você estiver offline, **Recuperar** espera você voltar, e um Amigo ou Par
   conhecido o recebe assim que você se reconectar. O dispositivo da pessoa
@@ -197,6 +202,25 @@ O **Repositório** é o catálogo pesquisável de todas as criações publicadas
 que este dispositivo conhece: as suas, as que pares compartilharam com você
 e as encontradas em redes descentralizadas. Ele foi feito para continuar
 prático tenha dez criações ou dez mil.
+
+### Criações que outras pessoas distribuíram
+
+Toda vez que você abre o Repositório (ou a página de um autor), ele procura
+no Nostr, no Arweave e no Steem criações que outras pessoas distribuíram lá
+e adiciona as que consegue verificar. Uma linha acima da lista diz o que
+ele está fazendo e depois quantas criações novas encontrou; **Verificar de
+novo** procura mais uma vez.
+
+- Só é adicionada uma criação cujo registro assinado confere: assinado pela
+  chave que ele indica e exatamente a criação que foi anunciada. Qualquer
+  outra coisa é ignorada, e um registro que falhou não é buscado de novo.
+- Ele verifica até 20 criações novas por vez. Se houver mais, a linha diz
+  quantas ficaram para a próxima vez.
+- Uma criação encontrada assim continua no seu Repositório depois de
+  recarregar a página.
+- O build dela ainda não está no seu dispositivo. **Explorar** busca o build
+  de onde ele foi armazenado e o confere, depois o abre na Visão do mundo,
+  como ao abrir um link compartilhado.
 
 ```
 Buscar [________________]  ☐ Incluir descrições  [Buscar]

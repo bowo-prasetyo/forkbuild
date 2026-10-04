@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 31b37f7993e1c8cc -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1855909b2b8b1dec -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · **Deutsch** · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Das ist das Herz von ForkBuild. **Veröffentlichen** teilt Ihre Kreation mit
 der Welt. **Forken** erlaubt jedem, eine Kreation zu kopieren und
@@ -112,7 +108,10 @@ gespeichert.
 
 ## Mit verbundenen Peers teilen
 
-Eine Welt, die Sie veröffentlichen, steht nur in *Ihrem* Repository. Um
+Eine Welt, die Sie veröffentlichen, steht nur in *Ihrem* Repository, bis
+Sie sie auf Nostr, Arweave oder Steem verteilen (siehe
+[Verteilung](Distribution.md)): Dann findet sie das Repository aller (siehe
+[Von anderen verteilte Kreationen](#von-anderen-verteilte-kreationen)). Um
 sie in das Repository von jemandem zu bringen, mit dem Sie verbunden sind
 (siehe [Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)),
 klicken Sie im Repository darunter auf **Mit Peers teilen**. Die
@@ -126,7 +125,11 @@ Schaltfläche erscheint nur bei Ihren eigenen veröffentlichten Welten.
   hinzugefügt, samt allem, was zum **Erkunden** nötig ist. Eine Welt, die
   jemand anderes geteilt hat, wartet unter **Mit Ihnen geteilt** oben in
   ihrem Repository, bis sie auf **Abrufen** klicken. Kein Gerät lädt
-  ungefragt die Welt eines Fremden herunter.
+  ungefragt die Welt eines Fremden herunter. Jede steht dort mit ihrem
+  Titel, damit sie wählen können; ihr Gerät stellt sicher, dass die Welt,
+  die sie abrufen, die ist, die dieser Titel nennt. Eine Welt, die Sie
+  geteilt haben, bevor Titel mitgeschickt wurden, steht dort als „Eine von
+  … geteilte Welt“, bis Sie auf **Erneut teilen** klicken.
 - Die Welt wird nur von Ihnen geholt, und nur solange Sie verbunden sind:
   Sind Sie offline, wartet **Abrufen**, bis Sie zurück sind, und ein Freund
   oder bekannter Peer erhält sie, sobald Sie sich wieder verbinden. Das
@@ -210,6 +213,26 @@ Kreationen, die dieses Gerät kennt: Ihrer eigenen, solcher, die Peers mit
 Ihnen geteilt haben, und solcher, die in dezentralen Netzwerken gefunden
 wurden. Es ist so gebaut, dass es benutzbar bleibt, ob es zehn Kreationen
 enthält oder zehntausend.
+
+### Von anderen verteilte Kreationen
+
+Jedes Mal, wenn Sie das Repository (oder eine Autorenseite) öffnen, sucht es
+auf Nostr, Arweave und Steem nach Kreationen, die andere dort verteilt
+haben, und fügt die hinzu, die es überprüfen kann. Eine Zeile über der Liste
+sagt, was es gerade tut, und dann, wie viele neue Kreationen es gefunden
+hat; **Erneut prüfen** sucht noch einmal.
+
+- Hinzugefügt wird nur eine Kreation, deren signierter Eintrag die Prüfung
+  besteht: signiert mit dem Schlüssel, den er nennt, und genau die
+  Kreation, die angekündigt wurde. Alles andere wird übersprungen, und ein
+  Eintrag, der durchgefallen ist, wird nicht noch einmal abgerufen.
+- Es prüft bis zu 20 neue Kreationen auf einmal. Gibt es mehr, sagt die
+  Zeile, wie viele für das nächste Mal übrig sind.
+- Eine so gefundene Kreation bleibt auch nach dem Neuladen in Ihrem
+  Repository.
+- Ihr Build ist noch nicht auf Ihrem Gerät. **Erkunden** holt ihn von dort,
+  wo er gespeichert wurde, prüft ihn und öffnet ihn dann in der
+  Weltansicht, genau wie beim Öffnen eines geteilten Links.
 
 ```
 Suche [_________________________]  ☐ Beschreibungen einbeziehen  [Suchen]

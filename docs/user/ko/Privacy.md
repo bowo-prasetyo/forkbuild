@@ -1,13 +1,9 @@
-<!-- translation-of: docs/Privacy.md source-hash: ef02c2b3f84b697d -->
+<!-- translation-of: docs/Privacy.md source-hash: 9cb6f05e34121fa7 -->
 # 개인정보 보호
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · **한국어** · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../../Privacy.md)을 참고하세요.
-<!-- /stale -->
 
 ForkBuild에는 계정이 없고 나를 추적하지 않습니다. 작업은 내 브라우저에
 저장되며, 다른 컴퓨터와는 그것이 필요한 기능에서만 통신합니다. 예외는 만든
@@ -32,6 +28,11 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
   읽기만 하고 아무 데도 보내지 않음), 그리고 **네트워크 설정**에서 입력했다면
   TURN 서버의 사용자 이름과 자격 증명.
 - 이 브라우저가 일일 방문자 수 집계에 참여하는지 여부와 마지막으로 집계된 날.
+- 이 기기가 피어, 링크, 월드 보기, 또는 저장소의 네트워크 검색에서 찾아 검증한
+  다른 사람의 게시물과, 네트워크에서 찾은 게시물이라면 각각의 서명된 기록을
+  어디에서 읽었는지.
+- 이 기기에서 게시 취소한 게시물의 ID. 저장소가 네트워크를 검색할 때 예전에
+  배포한 사본을 다시 나열하지 않도록 하기 위한 것입니다.
 
 브라우저에서 이 사이트의 데이터를 지우면 모두 삭제되며, 다른 사본도 복구할 방법도
 없습니다. 먼저 **내 데이터 → 파일로 백업**으로 백업하세요: 파일에는 어느 신원으로
@@ -122,6 +123,7 @@ Nostr 릴레이, Arweave 게이트웨이, Steem 노드에서 새 공지를 읽�
 | 피어 연결이 시작될 때 | STUN 서버(`stun.l.google.com`) | 내 공개 IP 주소 요청 외에는 없음 |
 | 피어 연결을 시작할 때, 랑데부 서버가 릴레이를 제공하면 | 랑데부 서버의 `/turn-credentials`, 그다음 그 TURN 릴레이(Cloudflare) | 단기 릴레이 자격 증명 요청(많아야 약 1시간에 한 번). 중계되는 트래픽은 WebRTC로 종단 간 암호화됨 |
 | 앱이 열려 있고 탭이 보일 때(백그라운드 공지 동기화) | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`) | ForkBuild 발견 태그에 대한 조회: 공유 스냅샷과 댓글 태그, 내가 방문한 장소 이름 지역과 지도 칸 |
+| 저장소나 작성자 페이지를 열 때 | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`) | 공유 게시물 태그(`forkbuild-publication`)에 대한 조회, 그다음 새로 공지된 게시물마다 서명된 기록 요청(방문 또는 **다시 확인** 한 번에 최대 20개) |
 | Nostr로 게시물을 배포하거나 발견할 때 | Nostr 릴레이(`relay.damus.io`) | 내가 게시하는 서명된 공지, 내 조회 |
 | Arweave에 콘텐츠를 저장하거나 가져올 때 | Arweave 게이트웨이(`arweave.net`) | 내가 게시하는 콘텐츠, 내가 가져오는 것 |
 | IPFS에서 콘텐츠를 가져올 때 | IPFS 게이트웨이(`ipfs.io`), 또는 내 IPFS 노드(`127.0.0.1:5001`) | 내가 가져오거나 추가하는 것 |

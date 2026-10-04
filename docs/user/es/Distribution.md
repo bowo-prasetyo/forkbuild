@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 9c6ca1cfed3b4863 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: be51a110c624bf19 -->
 # Distribuir su trabajo
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · **Español** · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../Distribution.md).
-<!-- /stale -->
 
 Todo lo que crea ForkBuild empieza en su propio dispositivo. **Distribuir**
 es el paso aparte y opcional que lleva su trabajo a redes descentralizadas,
@@ -145,6 +141,11 @@ con los que está conectado pueden seguir recuperando construcciones de hasta
   dispositivo su distribución, por ejemplo **Guardado en IPFS · Anunciado en
   Nostr**, o **No hay ninguna distribución registrada en este
   dispositivo.** Consulte [Sus publicaciones](13-YourData.md#sus-publicaciones).
+- El Repositorio de otras personas encuentra su publicación en Nostr,
+  Arweave o Steem la próxima vez que lo abren, siempre que se haya
+  anunciado con la etiqueta de descubrimiento habitual,
+  `forkbuild-publication`. Consulte
+  [Creaciones que otros distribuyeron](04-PublishingAndForking.md#creaciones-que-otros-distribuyeron).
 - **Descubrir Mundo compartido** en la Vista del mundo busca su Mundo
   compartido directamente en Arweave y Nostr y lo comprueba, respondiendo a
   «¿mi publicación está realmente ahí fuera, intacta?». Consulte
@@ -155,4 +156,6 @@ con los que está conectado pueden seguir recuperando construcciones de hasta
 
 La distribución no se puede deshacer: una vez que algo se anuncia o se
 guarda, otras personas quizá ya tengan una copia. **Retirar publicación**
-quita un Mundo solo de su propio catálogo.
+quita un Mundo solo de su propio catálogo, y este dispositivo recuerda
+entonces no volver a listar las copias distribuidas cuando el Repositorio
+busca en las redes.

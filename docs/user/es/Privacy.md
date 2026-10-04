@@ -1,13 +1,9 @@
-<!-- translation-of: docs/Privacy.md source-hash: ef02c2b3f84b697d -->
+<!-- translation-of: docs/Privacy.md source-hash: 9cb6f05e34121fa7 -->
 # Privacidad
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · **Español** · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../../Privacy.md).
-<!-- /stale -->
 
 ForkBuild no tiene cuentas y no lo rastrea. Guarda su trabajo en su propio
 navegador y habla con otras computadoras solo para las funciones que lo
@@ -39,7 +35,14 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
   usuario y la credencial de un servidor TURN si ingresa uno en
   **Configuración de red**;
 - si este navegador participa en el recuento diario de visitantes, y el
-  último día en que lo hizo.
+  último día en que lo hizo;
+- las publicaciones de otras personas que este dispositivo encontró y
+  verificó, desde pares, enlaces, la Vista del mundo o la búsqueda del
+  Repositorio en las redes, y, para las encontradas en las redes, dónde se
+  leyó el registro firmado de cada una;
+- los identificadores de las publicaciones que retiró en este dispositivo,
+  para que la búsqueda del Repositorio en las redes no vuelva a listar
+  copias que distribuyó antes.
 
 Borrar los datos de este sitio en el navegador lo elimina todo, y no hay
 ninguna otra copia ni forma de recuperarlo. Haga primero una copia de
@@ -151,6 +154,7 @@ dirección IP y lo que usted le pide.
 | Se inicia una conexión entre pares | servidores STUN (`stun.l.google.com`) | nada más que una solicitud de su dirección IP pública |
 | Inicia una conexión entre pares, si el servidor de encuentro ofrece un relay | `/turn-credentials` del servidor de encuentro, y luego su relay TURN (Cloudflare) | una solicitud de credenciales de relay de corta duración, como máximo una vez por hora aproximadamente; el tráfico retransmitido está cifrado de extremo a extremo por WebRTC |
 | La app está abierta y su pestaña visible (sincronización de anuncios en segundo plano) | relays de Nostr (`relay.damus.io`), un gateway de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`) | consultas por las etiquetas de descubrimiento de ForkBuild: las etiquetas compartidas de Snapshots y de comentarios, y las regiones de nombres de lugares y las celdas del mapa que visitó |
+| Abre el Repositorio o la página de un autor | relays de Nostr (`relay.damus.io`), un gateway de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`) | una consulta por la etiqueta compartida de publicaciones (`forkbuild-publication`); luego una solicitud del registro firmado de cada publicación recién anunciada, como máximo 20 por visita o por **Volver a buscar** |
 | Distribuye o descubre publicaciones a través de Nostr | relays de Nostr (`relay.damus.io`) | los anuncios firmados que publica; sus consultas |
 | Guarda u obtiene contenido en Arweave | un gateway de Arweave (`arweave.net`) | el contenido que publica; lo que obtiene |
 | Obtiene contenido de IPFS | un gateway de IPFS (`ipfs.io`), o su propio nodo IPFS (`127.0.0.1:5001`) | lo que obtiene o agrega |

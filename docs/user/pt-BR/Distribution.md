@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 9c6ca1cfed3b4863 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: be51a110c624bf19 -->
 # Distribuindo seu trabalho
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../Distribution.md).
-<!-- /stale -->
 
 Tudo o que o ForkBuild cria começa no seu próprio dispositivo.
 **Distribuir** é o passo separado e opcional que coloca seu trabalho em
@@ -146,6 +142,11 @@ você.
   registrou a distribuição, por exemplo **Guardado no IPFS · Anunciado no
   Nostr**, ou **Nenhuma distribuição registrada neste dispositivo.** Veja
   [Suas publicações](13-YourData.md#suas-publicações).
+- O Repositório de outras pessoas encontra sua publicação no Nostr, no
+  Arweave ou no Steem na próxima vez que elas o abrirem, desde que ela
+  tenha sido anunciada com a tag de descoberta de sempre,
+  `forkbuild-publication`. Veja
+  [Criações que outras pessoas distribuíram](04-PublishingAndForking.md#criações-que-outras-pessoas-distribuíram).
 - **Descobrir Mundo compartilhado** na Visão do mundo procura seu Mundo
   compartilhado direto no Arweave e no Nostr e o confere, respondendo à
   pergunta "minha publicação está mesmo lá fora, intacta?". Veja
@@ -156,4 +157,6 @@ você.
 
 A distribuição não pode ser desfeita: depois que algo é anunciado ou
 guardado, outras pessoas podem já ter uma cópia. **Despublicar** remove um
-Mundo só do seu próprio catálogo.
+Mundo só do seu próprio catálogo, e este dispositivo passa a lembrar de não
+listar de novo as cópias distribuídas quando o Repositório pesquisa nas
+redes.
