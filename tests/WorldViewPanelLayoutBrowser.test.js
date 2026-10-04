@@ -386,7 +386,7 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     more.querySelector('.own-publication-unpublish-request-action').click();
     await nextTick();
     assert(unpublished.length === 0, 'the first Unpublish click only asks');
-    assert(more.textContent.includes('Remove this World from the catalog?'), 'and says what unpublishing does');
+    assert(more.textContent.includes('Remove this World from your Repository on this device?'), 'and says what unpublishing does');
     more.querySelector('.own-publication-unpublish-cancel-action').click();
     await nextTick();
     assert(unpublished.length === 0 && more.querySelector('.own-publication-unpublish-request-action'), 'Cancel backs out without unpublishing');

@@ -67,6 +67,7 @@ const EXACT_NAMES = new Map([
     ['publication-observation-archive', BackupEntryGroup.PUBLICATIONS],
     ['publication-commentary:entries', BackupEntryGroup.PUBLICATIONS],
     ['own-snapshot-distributions', BackupEntryGroup.PUBLICATIONS],
+    ['forkbuild-unpublished-publications', BackupEntryGroup.PUBLICATIONS],
 
     ['public-lobby-display-name', BackupEntryGroup.PEOPLE],
 

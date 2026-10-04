@@ -1056,7 +1056,7 @@ export default Object.freeze({
     'ownPublicationPanel.confirmUnpublish': 'Confirm unpublish',
     'ownPublicationPanel.distribute': 'Distribute',
     'ownPublicationPanel.unpublish': 'Unpublish…',
-    'ownPublicationPanel.removeThisWorldFromThe': 'Remove this World from the catalog? Its placements, the Document and any distributed copies stay.',
+    'ownPublicationPanel.removeThisWorldFromThe': "Remove this World from your Repository on this device? Its placements and the Document stay. Copies you already distributed stay on the networks, where other people can still find them, but this device won't list them again.",
     'ownPublicationPanel.unpublish2': 'Unpublish',
     'ownPublicationPanel.publication': 'Shared World',
     'ownPublicationPanel.outcome': 'Outcome',

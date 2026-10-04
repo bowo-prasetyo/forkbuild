@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 66a180a29276c694 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: b5cf5faa75241d15 -->
 # Perguntas frequentes
 
 <!-- languages -->
@@ -71,7 +71,10 @@ distribuí-lo depois. Entre antes de publicar.
 Sim: abra o Mundo na Visão do mundo e, em **Meu Mundo compartilhado**,
 escolha **Mais ▾ → Despublicar…**. Isso o tira do seu Repositório. Não
 recupera as cópias que outras pessoas já receberam nem nada que você tenha
-distribuído no Arweave, no IPFS, no Nostr ou no Steem.
+distribuído no Arweave, no IPFS, no Nostr ou no Steem. Este dispositivo
+lembra o que você despublicou, então a busca do Repositório nas redes não
+volta a listar essas cópias aqui; outros dispositivos e outras pessoas ainda
+podem encontrá-las.
 
 ### Alguém posicionou minha construção no Mundo dela. Ela moveu a minha?
 

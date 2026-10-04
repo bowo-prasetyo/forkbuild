@@ -1054,7 +1054,7 @@ export default Object.freeze({
     'ownPublicationPanel.confirmUnpublish': '公開の取り消しを確認',
     'ownPublicationPanel.distribute': '配信',
     'ownPublicationPanel.unpublish': '公開を取り消す…',
-    'ownPublicationPanel.removeThisWorldFromThe': 'このワールドをカタログから削除しますか？配置、ドキュメント、配信済みのコピーは残ります。',
+    'ownPublicationPanel.removeThisWorldFromThe': 'このデバイスのリポジトリからこのワールドを削除しますか？配置とドキュメントは残ります。配信済みのコピーは ネットワーク上に残り、ほかの人は引き続き見つけられますが、このデバイスには再び表示されません。',
     'ownPublicationPanel.unpublish2': '公開を取り消す',
     'ownPublicationPanel.publication': '共有ワールド',
     'ownPublicationPanel.outcome': '結果',

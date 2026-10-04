@@ -1057,7 +1057,7 @@ export default Object.freeze({
     'ownPublicationPanel.confirmUnpublish': '게시 취소 확인',
     'ownPublicationPanel.distribute': '배포',
     'ownPublicationPanel.unpublish': '게시 취소…',
-    'ownPublicationPanel.removeThisWorldFromThe': '카탈로그에서 이 월드를 제거할까요? 배치, 문서, 배포된 사본은 그대로 남습니다.',
+    'ownPublicationPanel.removeThisWorldFromThe': '이 기기의 저장소에서 이 월드를 제거할까요? 배치와 문서는 그대로 남습니다. 이미 배포한 사본은 네트워크에 남아 다른 사람이 계속 찾을 수 있지만, 이 기기에는 다시 표시되지 않습니다.',
     'ownPublicationPanel.unpublish2': '게시 취소',
     'ownPublicationPanel.publication': '공유 월드',
     'ownPublicationPanel.outcome': '결과',

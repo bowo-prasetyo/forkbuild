@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3833a37ca4181e18 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 0a129e40e9aeb884 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -1100,7 +1100,10 @@ warten hinter **Mehr ▾**: **Snapshot exportieren**,
 **Veröffentlichung zurückziehen …**. Zurückziehen fragt einmal, bevor es
 handelt — es entfernt die Welt aus dem Katalog, während ihre
 Platzierungen, das Dokument und alle verteilten Kopien bleiben —, und
-**Abbrechen** macht einen Rückzieher. Ergebnisse von Exportieren und Prüfen
+**Abbrechen** macht einen Rückzieher.
+Bereits verteilte Kopien lassen sich nicht zurückholen, aber dieses Gerät
+merkt sich, was Sie zurückgezogen haben, sodass die Suche des Repository in
+den Netzwerken sie nicht wieder auflistet. Ergebnisse von Exportieren und Prüfen
 bleiben im Feld, nachdem Sie das Menü schließen.
 
 Wurde die geöffnete Welt von jemand anderem veröffentlicht (etwa eine, die

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3833a37ca4181e18 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 0a129e40e9aeb884 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -1022,7 +1022,10 @@ usadas esperam atrás de **Mais ▾**: **Exportar Snapshot**, **Verificar
 correspondência do Snapshot**, **Ferramentas de diagnóstico** (abaixo) e
 **Despublicar…**. Despublicar pergunta uma vez antes de agir — tira o Mundo
 do catálogo, enquanto os posicionamentos dele, o Documento e as cópias
-distribuídas ficam — e **Cancelar** desiste. Os resultados de Exportar e
+distribuídas ficam — e **Cancelar** desiste.
+As cópias que você já distribuiu não podem ser recolhidas, mas este
+dispositivo lembra o que você despublicou, então a busca do Repositório nas
+redes não volta a listá-las. Os resultados de Exportar e
 Verificar continuam no painel depois que você fecha o menu.
 
 Quando o Mundo que você tem aberto foi publicado por outra pessoa (um que um

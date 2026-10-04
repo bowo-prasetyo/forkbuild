@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3833a37ca4181e18 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 0a129e40e9aeb884 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -1113,7 +1113,9 @@ fréquentes attendent derrière **Plus ▾** : **Exporter le Snapshot**,
 (ci-dessous) et **Dépublier…**. Dépublier demande une confirmation avant
 d’agir — cela retire le Monde du catalogue, tandis que ses placements, le
 Document et toutes les copies distribuées restent — et **Annuler** fait
-marche arrière. Les résultats d’Exporter et de Vérifier restent sur le
+marche arrière. Les copies déjà distribuées ne peuvent pas être rappelées,
+mais cet appareil se souvient de ce que vous avez dépublié, si bien que la
+recherche du Dépôt sur les réseaux ne les affiche plus. Les résultats d’Exporter et de Vérifier restent sur le
 panneau après la fermeture du menu.
 
 Quand le Monde que vous avez ouvert a été publié par quelqu’un d’autre

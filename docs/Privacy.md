@@ -34,6 +34,8 @@ send it:
 - other people's Publications this device has found and verified, from
   peers, links, World View or the Repository's search of the networks, and,
   for those found on the networks, where each one's signed record was read.
+- the ids of Publications you unpublished on this device, so the Repository's
+  search of the networks doesn't list copies you distributed earlier again.
 
 Clearing this site's data in the browser deletes all of it, and there is no
 other copy and no way to recover it. Back it up first with **Your Data →

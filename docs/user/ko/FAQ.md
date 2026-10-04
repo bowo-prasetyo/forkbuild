@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 66a180a29276c694 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: b5cf5faa75241d15 -->
 # 자주 묻는 질문
 
 <!-- languages -->
@@ -61,7 +61,9 @@ Nostr는 nos2x)이 필요합니다. [작품 배포하기](Distribution.md)에 �
 
 네: 월드 보기에서 월드를 연 다음, **내 공유 월드**에서 **더 보기 ▾ → 게시
 취소…**를 고르세요. 내 저장소에서 제거됩니다. 다른 사람이 이미 받은 사본이나,
-Arweave, IPFS, Nostr, Steem에 배포한 것은 되돌릴 수 없습니다.
+Arweave, IPFS, Nostr, Steem에 배포한 것은 되돌릴 수 없습니다. 다만 이 기기는
+게시 취소한 것을 기억하므로, 저장소의 네트워크 검색이 그 사본을 여기에 다시
+표시하지 않습니다. 다른 기기와 다른 사람은 계속 찾을 수 있습니다.
 
 ### 누군가 내 작품을 자기 월드에 배치했어요. 내 것이 옮겨진 건가요?
 

@@ -980,7 +980,10 @@ is simply disabled, with a note that there's nothing to distribute yet).
 wait behind **More ▾**: **Export Snapshot**, **Check Snapshot Match**,
 **Diagnostic Tools** (below), and **Unpublish…**. Unpublish asks once before
 acting — it removes the World from the catalog, while its placements, the
-Document and any distributed copies stay — and **Cancel** backs out. Results
+Document and any distributed copies stay — and **Cancel** backs out.
+Copies you already distributed can't be recalled, but this device remembers
+what you unpublished, so the Repository's search of the networks doesn't
+list them again. Results
 from Export and Check stay on the panel after you close the menu.
 
 When the World you have open was published by someone else (one a peer

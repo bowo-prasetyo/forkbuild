@@ -1057,7 +1057,7 @@ export default Object.freeze({
     'ownPublicationPanel.confirmUnpublish': 'Zurückziehen bestätigen',
     'ownPublicationPanel.distribute': 'Verteilen',
     'ownPublicationPanel.unpublish': 'Veröffentlichung zurückziehen …',
-    'ownPublicationPanel.removeThisWorldFromThe': 'Diese Welt aus dem Katalog entfernen? Ihre Platzierungen, das Dokument und alle verteilten Kopien bleiben erhalten.',
+    'ownPublicationPanel.removeThisWorldFromThe': 'Diese Welt auf diesem Gerät aus Ihrem Repository entfernen? Ihre Platzierungen und das Dokument bleiben erhalten. Bereits verteilte Kopien bleiben in den Netzwerken, wo andere sie weiterhin finden können, aber dieses Gerät listet sie nicht wieder auf.',
     'ownPublicationPanel.unpublish2': 'Zurückziehen',
     'ownPublicationPanel.publication': 'Geteilte Welt',
     'ownPublicationPanel.outcome': 'Ergebnis',

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3833a37ca4181e18 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 0a129e40e9aeb884 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -1074,7 +1074,9 @@ Kecocokan Snapshot**, **Alat Diagnostik** (di bawah), dan **Batalkan
 Penerbitan…**. Batalkan Penerbitan meminta konfirmasi sekali sebelum
 bertindak — menghapus Dunia dari katalog, sementara penempatannya,
 Dokumennya, dan salinan yang telah didistribusikan tetap ada — dan **Batal**
-membatalkannya. Hasil dari Ekspor dan Periksa tetap ada di panel setelah
+membatalkannya. Salinan yang sudah Anda distribusikan tidak bisa ditarik
+kembali, tetapi perangkat ini mengingat apa yang Anda batalkan penerbitannya,
+sehingga pencarian Repositori di jaringan tidak menampilkannya lagi. Hasil dari Ekspor dan Periksa tetap ada di panel setelah
 Anda menutup menu.
 
 Jika Dunia yang Anda buka diterbitkan oleh orang lain (misalnya yang

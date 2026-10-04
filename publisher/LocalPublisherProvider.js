@@ -6,6 +6,7 @@ import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js'
 import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { PlacementPolicy } from '../core/PlacementPolicy.js';
+import { UnpublishedPublicationLog } from './UnpublishedPublicationLog.js';
 
 const PUBLICATIONS_KEY = 'forkbuild-publications';
 const SNAPSHOT_KEY_PREFIX = 'snapshot:';
@@ -113,6 +114,9 @@ export class LocalPublisherProvider extends PublisherProvider {
         existing.splice(index, 1);
         this._storageProvider.save(PUBLICATIONS_KEY, existing);
         this._storageProvider.remove(SNAPSHOT_KEY_PREFIX + publicationId);
+        // Remembered so the Repository's search of the networks doesn't list
+        // a copy distributed earlier as a new creation (UnpublishedPublicationLog.js).
+        new UnpublishedPublicationLog(this._storageProvider).add(publicationId);
         return true;
     }
 
