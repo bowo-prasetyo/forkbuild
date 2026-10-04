@@ -2610,6 +2610,8 @@ export default Object.freeze({
     'sharedWithYouPanel.snapshotUnavailable': 'The World was added to your Repository, but its snapshot did not arrive from the person who shared it, so it cannot be explored yet. Try Retrieve again while they are connected.',
     'sharedWithYouPanel.snapshotMismatch': 'The World was added to your Repository, but the snapshot its sharer sent does not match the World, so it was not kept.',
     'sharedWithYouPanel.publishedWithOldHash': 'This World was published before content hashes became SHA-256, so its snapshot can\'t be checked and was not kept. Ask the person who shared it to open it in the Editor, publish it again and share the new copy.',
+    'sharedWithYouPanel.sharedBeforeSha256': 'This share was made before content hashes became SHA-256, so it can\'t be checked or retrieved. Ask the person who shared it to publish the World again and share the new copy.',
+    'sharedWithYouPanel.shareUnavailable': 'The person who shared this World didn\'t send it. The device they\'re connected from may no longer have it; ask them to share it again.',
     'candidateLeaderboardTable.hideEvidence': 'Hide Evidence',
     'candidateLeaderboardTable.inspectEvidence': 'Inspect Evidence',
     'evidenceExportComparisonRecordPairSelector.noDifferences': 'No differences',

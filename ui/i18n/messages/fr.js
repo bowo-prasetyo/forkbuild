@@ -2611,6 +2611,8 @@ export default Object.freeze({
     'sharedWithYouPanel.snapshotUnavailable': 'Le Monde a été ajouté à votre Dépôt, mais son instantané n’est pas arrivé de la personne qui l’a partagé ; il ne peut donc pas encore être exploré. Réessayez Récupérer pendant qu’elle est connectée.',
     'sharedWithYouPanel.snapshotMismatch': 'Le Monde a été ajouté à votre Dépôt, mais l’instantané envoyé par la personne qui l’a partagé ne correspond pas au Monde ; il n’a donc pas été conservé.',
     'sharedWithYouPanel.publishedWithOldHash': 'Ce Monde a été publié avant que les hachages de contenu passent à SHA-256 ; son instantané ne peut donc pas être vérifié et n’a pas été conservé. Demandez à la personne qui l’a partagé de l’ouvrir dans l’Éditeur, de le publier à nouveau et de partager la nouvelle copie.',
+    'sharedWithYouPanel.sharedBeforeSha256': 'Ce partage date d’avant le passage des hachages de contenu à SHA-256 ; il ne peut donc être ni vérifié ni récupéré. Demandez à la personne qui l’a partagé de publier à nouveau le Monde et de partager la nouvelle copie.',
+    'sharedWithYouPanel.shareUnavailable': 'La personne qui a partagé ce Monde ne l’a pas envoyé. L’appareil depuis lequel elle est connectée ne l’a peut-être plus ; demandez-lui de le partager à nouveau.',
     'candidateLeaderboardTable.hideEvidence': 'Masquer les preuves',
     'candidateLeaderboardTable.inspectEvidence': 'Inspecter les preuves',
     'evidenceExportComparisonRecordPairSelector.noDifferences': 'Aucune différence',
