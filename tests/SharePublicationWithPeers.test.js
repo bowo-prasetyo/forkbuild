@@ -429,11 +429,33 @@ function authenticated(peer) {
     const peer = linkTo(edge, chrome);
     await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
     await waitFor(() => edge.catalog.get(envelope.id) !== null, 'the share arrives');
+    assert(edge.retrieve.listPending()[0].legacy === null, 'before Retrieve, nothing tells that the World inside is old');
     let retrieveError = null;
     try { await edge.retrieve.retrieve(envelope.id); } catch (e) { retrieveError = e; }
     assert(retrieveError && retrieveError.code === LEGACY_CONTENT_HASH, 'retrieving it is refused with the same code');
     assert(edge.repository.list().length === 0 && !edge.contentStore.has(world.contentReference), 'and nothing is added');
-    console.log('✓ a World with a legacy content hash is neither shared nor retrieved');
+    assert(edge.retrieve.listPending()[0].legacy === 'world', 'from then on it is listed as a World that can\'t be retrieved');
+    console.log('✓ a World with a legacy content hash is neither shared nor retrieved, and is flagged once known');
+
+    // After a reload the Publication is on disk until read: not flagged yet,
+    // and listeners hear once it has loaded.
+    const getSync = edge.contentStore.getSync.bind(edge.contentStore);
+    let release;
+    const ready = new Promise((resolve) => { release = resolve; });
+    let loaded = false;
+    edge.contentStore.getSync = (reference) => {
+        if (!loaded) throw new StorageEntryNotLoadedError(`content:${reference.hash}`, ready);
+        return getSync(reference);
+    };
+    let changes = 0;
+    const stopListening = edge.retrieve.onPendingChanged(() => { changes += 1; });
+    assert(edge.retrieve.listPending()[0].legacy === null && edge.retrieve.listPending()[0].legacy === null, 'not flagged while its Publication is still on disk');
+    loaded = true;
+    release();
+    await waitFor(() => changes === 1, 'listeners hear once the Publication has loaded');
+    assert(edge.retrieve.listPending()[0].legacy === 'world', 'and it is then flagged');
+    stopListening();
+    console.log('✓ a World whose Publication is still on disk is flagged once it loads');
 
     chrome.dispose();
     edge.dispose();
@@ -462,7 +484,7 @@ function authenticated(peer) {
     await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
     await waitFor(() => edge.catalog.get(envelope.id) !== null, 'the old share arrives');
     const [pending] = edge.retrieve.listPending();
-    assert(pending && pending.envelopeId === envelope.id && pending.legacy, 'it is listed as a share that can\'t be retrieved');
+    assert(pending && pending.envelopeId === envelope.id && pending.legacy === 'share', 'it is listed as a share that can\'t be retrieved');
     let error = null;
     try { await edge.retrieve.retrieve(envelope.id); } catch (e) { error = e; }
     assert(error && error.code === LEGACY_CONTENT_HASH && edge.repository.list().length === 0, 'retrieving it is refused, adding nothing');

@@ -2612,6 +2612,7 @@ export default Object.freeze({
     'sharedWithYouPanel.snapshotMismatch': '월드가 저장소에 추가되었지만 공유한 사람이 보낸 스냅샷이 월드와 일치하지 않아 보관하지 않았습니다.',
     'sharedWithYouPanel.publishedWithOldHash': '이 월드는 콘텐츠 해시가 SHA-256으로 바뀌기 전에 게시되어 스냅샷을 확인할 수 없으므로 보관하지 않았습니다. 공유한 사람에게 편집기에서 열어 다시 게시하고 새 사본을 공유해 달라고 요청하세요.',
     'sharedWithYouPanel.sharedBeforeSha256': '이 공유는 콘텐츠 해시가 SHA-256으로 바뀌기 전에 만들어져 확인하거나 가져올 수 없습니다. 공유한 사람에게 월드를 다시 게시하고 새 사본을 공유해 달라고 요청하세요.',
+    'sharedWithYouPanel.worldBeforeSha256': '이 월드는 콘텐츠 해시가 SHA-256으로 바뀌기 전에 게시되어 확인하거나 가져올 수 없습니다. 공유한 사람에게 편집기에서 열어 다시 게시하고 새 사본을 공유해 달라고 요청하세요.',
     'sharedWithYouPanel.shareUnavailable': '이 월드를 공유한 사람이 보내 주지 않았습니다. 연결된 기기에 더 이상 없을 수 있으니 다시 공유해 달라고 요청하세요.',
     'candidateLeaderboardTable.hideEvidence': '증거 숨기기',
     'candidateLeaderboardTable.inspectEvidence': '증거 살펴보기',
