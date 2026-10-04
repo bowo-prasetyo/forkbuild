@@ -1,6 +1,7 @@
 import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
 import { errorText, t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
+import { LEGACY_CONTENT_HASH } from '../../application/publication/sharing/SharePublicationWithPeersUseCase.js';
 import { PeerSnapshotMaterializationOutcome } from '../../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 
 function stripPrefix(message) {
@@ -58,7 +59,9 @@ export default {
                     error.value = t('sharedWithYouPanel.snapshotMismatch');
                 }
             } catch (e) {
-                error.value = stripPrefix(errorText(e));
+                error.value = e && e.code === LEGACY_CONTENT_HASH
+                    ? t('sharedWithYouPanel.publishedWithOldHash')
+                    : stripPrefix(errorText(e));
             } finally {
                 retrievingId.value = null;
                 refresh();

@@ -3,6 +3,7 @@
 // Sharing offers the World to every connected peer and to peers that
 // connect later; it cannot be taken back from those that received it.
 import { errorText, t } from '../i18n/i18n.js';
+import { LEGACY_CONTENT_HASH } from '../../application/publication/sharing/SharePublicationWithPeersUseCase.js';
 
 export default {
     name: 'SharePublicationButton',
@@ -36,7 +37,9 @@ export default {
                     ? t('sharePublicationButton.sharedWith', { count: announcedTo })
                     : t('sharePublicationButton.sharedNoPeers');
             } catch (e) {
-                this.error = errorText(e, String(e)).replace(/^\w+UseCase:\s*/, '');
+                this.error = e && e.code === LEGACY_CONTENT_HASH
+                    ? t('sharePublicationButton.publishedWithOldHash')
+                    : errorText(e, String(e)).replace(/^\w+UseCase:\s*/, '');
             } finally {
                 this.pending = false;
             }
