@@ -22,11 +22,13 @@ import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/mate
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { DecentralizedPublication, MAX_CONTENT_TITLE_LENGTH, normalizeContentTitle } from '../core/DecentralizedPublication.js';
 import { validateDecentralizedPublication } from '../application/publication/DecentralizedPublicationValidator.js';
-import { SharePublicationWithPeersUseCase } from '../application/publication/sharing/SharePublicationWithPeersUseCase.js';
+import { SharePublicationWithPeersUseCase, LEGACY_CONTENT_HASH } from '../application/publication/sharing/SharePublicationWithPeersUseCase.js';
 import { RetrieveSharedPublicationUseCase } from '../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
 import { AutoRetrieveSharedPublicationsUseCase } from '../application/publication/sharing/AutoRetrieveSharedPublicationsUseCase.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { StorageEntryNotLoadedError } from '../storage/StorageEntryNotLoadedError.js';
+import { ContentReference } from '../core/ContentReference.js';
+import { computeFnv1a32 } from '../serializer/contentHash.js';
 import { assert } from './support/Assert.js';
 
 // "Share with Peers": a World published on one device reaches another
@@ -392,6 +394,46 @@ function authenticated(peer) {
         'Retrieve resolves with the snapshot reported unavailable, for the panel to say so');
     assert(edge.retrieve.listPending().length === 1, 'and the share stays pending, to retry');
     console.log('✓ a snapshot that does not arrive is reported, and the share stays pending');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// A World published before content hashes became SHA-256: its FNV-1a hash
+// can't vouch for a peer's bytes, so it is neither shared nor retrieved.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('legacy-chrome', network);
+    const edge = makeDevice('legacy-edge', network);
+    const snapshot = JSON.stringify({ schemaVersion: 2, world: { name: 'Old World', bricks: [] } });
+    const hash = computeFnv1a32(snapshot);
+    chrome.contentStore._storageProvider.save(`content:${hash}`, snapshot);
+    const signing = chrome.identityProvider.getSigningIdentity();
+    const unsigned = new Publication({
+        documentId: 'doc-old', title: 'Old World', author: chrome.label, contentHash: hash,
+        contentReference: new ContentReference({ hash, algorithm: 'fnv1a-32' }), publisherIdentity: signing.toJSON()
+    });
+    const world = unsigned.withSignature(chrome.identityProvider.signCanonical(unsigned.getSigningDescriptor()));
+
+    let shareError = null;
+    try { await chrome.share.share(world); } catch (e) { shareError = e; }
+    assert(shareError && shareError.code === LEGACY_CONTENT_HASH && chrome.catalog.list().length === 0,
+        'sharing a World with a legacy content hash is refused, with a code the view explains');
+
+    // One shared anyway, by a device from before this check.
+    const resolver = new PublicationResolver(chrome.contentStore, new LocalAuthorizationVerifier());
+    const envelope = await resolver.publish({
+        content: world, contentKind: PUBLICATION_CONTENT_KIND, contentTitle: 'Old World', identityProvider: chrome.identityProvider
+    });
+    chrome.catalog.add(envelope);
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    await waitFor(() => edge.catalog.get(envelope.id) !== null, 'the share arrives');
+    let retrieveError = null;
+    try { await edge.retrieve.retrieve(envelope.id); } catch (e) { retrieveError = e; }
+    assert(retrieveError && retrieveError.code === LEGACY_CONTENT_HASH, 'retrieving it is refused with the same code');
+    assert(edge.repository.list().length === 0 && !edge.contentStore.has(world.contentReference), 'and nothing is added');
+    console.log('✓ a World with a legacy content hash is neither shared nor retrieved');
 
     chrome.dispose();
     edge.dispose();

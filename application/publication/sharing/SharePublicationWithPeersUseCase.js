@@ -1,5 +1,10 @@
-import { computeContentHash } from '../../../serializer/contentHash.js';
+import { computeContentHash, isLegacyContentHash } from '../../../serializer/contentHash.js';
 import { normalizeContentTitle } from '../../../core/DecentralizedPublication.js';
+
+// The `code` of the error share() and RetrieveSharedPublicationUseCase#retrieve()
+// reject with for a World published with a legacy content hash, so a view
+// can explain it.
+export const LEGACY_CONTENT_HASH = 'legacy-content-hash';
 
 // "Share with Peers": offers one of this identity's own published Worlds to
 // connected peers.
@@ -77,6 +82,14 @@ export class SharePublicationWithPeersUseCase {
         }
         if (!this.canShare(publication)) {
             throw new Error('SharePublicationWithPeersUseCase: only your own signed publications can be shared');
+        }
+        // Peers check a shared World's snapshot against its content hash, and
+        // a legacy 32-bit FNV-1a hash can't be checked, so they could never
+        // keep it.
+        if (isLegacyContentHash(publication.contentReference.hash)) {
+            const error = new Error('SharePublicationWithPeersUseCase: this World was published with an old content hash that peers cannot check; open it in the Editor, publish it again, and share the new copy');
+            error.code = LEGACY_CONTENT_HASH;
+            throw error;
         }
         const contentTitle = normalizeContentTitle(publication.title);
         const found = this._existingEnvelope(publication);

@@ -4,7 +4,8 @@ import { normalizeContentTitle } from '../../../core/DecentralizedPublication.js
 import { PeerLifecycleState } from '../../../peer/PeerLifecycleState.js';
 import { PeerSnapshotMaterializationOutcome } from '../../snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 import { isStorageEntryNotLoadedError } from '../../../storage/StorageEntryNotLoadedError.js';
-import { computeContentHash } from '../../../serializer/contentHash.js';
+import { computeContentHash, isLegacyContentHash } from '../../../serializer/contentHash.js';
+import { LEGACY_CONTENT_HASH } from './SharePublicationWithPeersUseCase.js';
 
 // Retrieves a World another identity shared with peers
 // (SharePublicationWithPeersUseCase): its Publication, which joins this
@@ -141,6 +142,14 @@ export class RetrieveSharedPublicationUseCase {
         }
         if (envelope.contentTitle && envelope.contentTitle !== normalizeContentTitle(publication.title)) {
             throw new Error('RetrieveSharedPublicationUseCase: the shared World is not the one its title announced, so it was not added');
+        }
+        // A World published before content hashes became SHA-256 names its
+        // snapshot by a 32-bit FNV-1a hash, which bytes from a peer can never
+        // be checked against, so its snapshot could never be kept.
+        if (publication.contentReference && isLegacyContentHash(publication.contentReference.hash)) {
+            const error = new Error('RetrieveSharedPublicationUseCase: the shared World was published with an old content hash that cannot be checked; the person who shared it needs to publish it again and share the new copy');
+            error.code = LEGACY_CONTENT_HASH;
+            throw error;
         }
         if (!this._discoveryProvider.findById(publication.id)) {
             this._discoveryProvider.add(publication);
