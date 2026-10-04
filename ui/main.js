@@ -56,6 +56,8 @@ import { composeInjectedWalletServices } from './main/composeInjectedWalletServi
 import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
 import { verifyClaimedBuildPublication } from '../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
+import { RepositoryNetworkDiscovery } from '../application/publication/RepositoryNetworkDiscovery.js';
+import { NetworkPublicationLocatorStore } from '../application/publication/NetworkPublicationLocatorStore.js';
 import { setDocumentTitles } from '../application/document/DocumentTitles.js';
 import { t } from './i18n/i18n.js';
 import { defineServiceGroup } from './serviceGroups.js';
@@ -402,7 +404,7 @@ const {
     setIpfsNodeConfigurationUseCase, nostrRelayConfigurationStore, resolvedNostrRelayUrls,
     setNostrRelayConfigurationUseCase, nostrRelayQueryClient, worldDiscoveryLeadRegistry,
     worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand, publicationRecordQueryServices,
-    worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
+    repositoryNetworkDiscoveryServices, worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
     steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
     steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress,
     steemNoticePictureProblem, publicationDistributionLifecycleRestorer, retrievePublicationClaim
@@ -464,6 +466,27 @@ app.provide('verifyClaimedBuildPublicationCommand', ({ publicationId, contentHas
         try { worldEncounterPublicationAdmissionLog.add(publication); } catch { /* see above */ }
     }
 }));
+// Finds the Publications others distributed on Nostr, Arweave and Steem and
+// admits the verified ones to the Repository, as World Encounters do. Run
+// when the Repository opens (ui/components/PublicationCatalog.js), never at
+// startup: it fetches each new signed record (docs/Privacy.md).
+const networkPublicationLocatorStore = new NetworkPublicationLocatorStore(new LocalStorageProvider());
+const repositoryNetworkDiscovery = new RepositoryNetworkDiscovery({
+    services: repositoryNetworkDiscoveryServices,
+    discoveryTag: PUBLICATION_DISCOVERY_TAG,
+    materialSources: worldEncounterMaterialSources,
+    verifier: worldEncounterMaterialVerifier,
+    isKnown: (publicationId) => Boolean(decentralizedPublicationDiscoveryProvider.findById(publicationId)
+        || new LocalDiscoveryProvider(new LocalStorageProvider()).findById(publicationId)),
+    // Each sink isolated, as WorldEncounterCanvas's admitToRepositoryDiscovery() does.
+    admit: (publication, { locator }) => {
+        try { networkPublicationLocatorStore.set(publication.id, locator); } catch { /* see above */ }
+        try { worldEncounterPublicationAdmissionLog.add(publication); } catch { /* see above */ }
+        decentralizedPublicationDiscoveryProvider.add(publication);
+    }
+});
+app.provide('repositoryNetworkDiscovery', repositoryNetworkDiscovery);
+app.provide('networkPublicationLocatorStore', networkPublicationLocatorStore);
 app.provide('worldEncounterLeadAssociationsQuery', worldEncounterLeadAssociationsQuery);
 app.provide('publicationDiscoveryTag', PUBLICATION_DISCOVERY_TAG);
 app.provide('publicationDistributionLifecycleStore', publicationDistributionLifecycleStore);
@@ -715,7 +738,13 @@ defineServiceGroup('distribution', async () => {
         findSnapshotCandidates: discoverSnapshotCandidatesWithOutcomeCommand,
         resolveSnapshotCandidate: resolveSelectedSnapshotCommand,
         storeSnapshotContent: (request) => storeSnapshotContentUseCase.execute(request),
-        discoveryProvider: decentralizedPublicationDiscoveryProvider,
+        // A Publication the Repository already lists (one network discovery
+        // found, then Explore opened here) is not listed a second time.
+        discoveryProvider: {
+            add: (publication) => {
+                if (!decentralizedPublicationDiscoveryProvider.findById(publication.id)) decentralizedPublicationDiscoveryProvider.add(publication);
+            }
+        },
         admissionLog: worldEncounterPublicationAdmissionLog,
         publisherPlacement: linkedPublisherPlacement
     }));

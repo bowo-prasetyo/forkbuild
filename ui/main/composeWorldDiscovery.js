@@ -206,6 +206,11 @@ export function composeWorldDiscovery({
         // The unwrapped Nostr/Arweave announcement queries, for looking up one
         // Publication's signed record (application/snapshot/claimed/VerifyClaimedBuildPublication.js).
         publicationRecordQueryServices: [networkWorldDiscoveryServices.nostr, networkWorldDiscoveryServices.arweave],
+        // Every substrate's unwrapped announcement query, for finding the
+        // Publications others distributed (application/publication/RepositoryNetworkDiscovery.js).
+        repositoryNetworkDiscoveryServices: [
+            networkWorldDiscoveryServices.nostr, networkWorldDiscoveryServices.arweave, networkWorldDiscoveryServices.steem
+        ],
         worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
         steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
         steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress,

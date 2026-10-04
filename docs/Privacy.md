@@ -30,7 +30,10 @@ send it:
   the device and sends them nowhere), and a TURN server's username and credential
   if you enter one under **Network Settings**;
 - whether this browser takes part in the daily visitor count, and the last
-  day it did.
+  day it did;
+- other people's Publications this device has found and verified, from
+  peers, links, World View or the Repository's search of the networks, and,
+  for those found on the networks, where each one's signed record was read.
 
 Clearing this site's data in the browser deletes all of it, and there is no
 other copy and no way to recover it. Back it up first with **Your Data →
@@ -133,6 +136,7 @@ only when you use the feature, and each server can be changed under
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |
 | You start a peer connection, if the rendezvous server offers a relay | the rendezvous server's `/turn-credentials`, then its TURN relay (Cloudflare) | a request for short-lived relay credentials, at most about once an hour; relayed traffic is end-to-end encrypted by WebRTC |
 | The app is open and its tab visible (background announcement sync) | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`) | queries for ForkBuild's discovery tags: the shared Snapshot and Commentary tags, and the Place Naming regions and map cells you have visited |
+| You open the Repository or an author's page | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`) | a query for the shared Publication tag (`forkbuild-publication`); then a request for each newly announced Publication's signed record, at most 20 per visit or **Check again** |
 | You distribute or discover publications over Nostr | Nostr relays (`relay.damus.io`) | signed announcements you publish; your queries |
 | You store or fetch content on Arweave | an Arweave gateway (`arweave.net`) | the content you publish; what you fetch |
 | You fetch content from IPFS | an IPFS gateway (`ipfs.io`), or your own IPFS node (`127.0.0.1:5001`) | what you fetch or add |

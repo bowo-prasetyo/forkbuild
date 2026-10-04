@@ -5,6 +5,10 @@
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · **한국어** · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../../Privacy.md)을 참고하세요.
+<!-- /stale -->
+
 ForkBuild에는 계정이 없고 나를 추적하지 않습니다. 작업은 내 브라우저에
 저장되며, 다른 컴퓨터와는 그것이 필요한 기능에서만 통신합니다. 예외는 만든
 사람들이 대략 몇 명이 사용하는지 알 수 있도록 하루에 한 번 보내는 익명 방문자

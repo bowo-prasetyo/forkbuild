@@ -28,6 +28,7 @@ import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase
 import { ForkFailureReason } from '../application/document/ForkFailureReason.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import ForkFailureDialog from '../ui/components/ForkFailureDialog.js';
+import { exploreRouteFor } from '../ui/components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
@@ -482,8 +483,7 @@ async function run() {
         const routerSource = await readSource('ui/router/index.js');
         assert(/path: '\/world\/:documentId'[\s\S]{0,80}component: WorldView/.test(routerSource),
             '9. the /world/:documentId route names its own param `documentId` and resolves it via WorldView.');
-        const publicationCatalogSource = await readSource('ui/components/PublicationCatalog.js');
-        assert(publicationCatalogSource.includes("router.push({ path: `/world/${pub.documentId}` });"),
+        assert(exploreRouteFor(publication, null).path === `/world/${publication.documentId}`,
             '10. PublicationCatalog.js\'s own Explore action — for the SAME Publication a fork targets — already navigates to exactly this id, proving the fallback lands the viewer on the identical, already-proven-correct route, never a merely-plausible one.');
     }
     console.log('✓ Section E: "Edit a Copy" prefers its own returnWorldId; no-entry-context falls back to Publication.documentId; and that fallback is proven valid LIVE (documentId === document.world.id, the one and only Publication-from-Document constructor site) and structurally (the same id PublicationCatalog\'s own Explore action already routes to for this Publication) — not merely syntactically constructible.');
