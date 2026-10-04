@@ -12,6 +12,9 @@ import { PublicationResolutionOutcome } from '../PublicationResolutionOutcome.js
 // a World did not send the shared Publication, so a view can explain it.
 export const SHARE_UNAVAILABLE = 'share-unavailable';
 
+// Where dismissed shares are remembered: a list of `${sharerId}\n${hash}`.
+const DISMISSED_SHARES_KEY = 'forkbuild-dismissed-shares';
+
 // Retrieves a World another identity shared with peers
 // (SharePublicationWithPeersUseCase): its Publication, which joins this
 // device's Repository, and its snapshot, so the World can be explored.
@@ -40,7 +43,8 @@ export class RetrieveSharedPublicationUseCase {
         connectedPeerRegistry,
         identityProvider,
         identityOfConnection = (peer) => (peer.remoteIdentity ? peer.remoteIdentity.identityId : null),
-        timeoutMs
+        timeoutMs,
+        storageProvider = null
     } = {}) {
         if (!publicationCatalog || typeof publicationCatalog.findByContentKind !== 'function') {
             throw new Error('RetrieveSharedPublicationUseCase: a publication catalog is required');
@@ -74,6 +78,11 @@ export class RetrieveSharedPublicationUseCase {
         this._pendingChangedListeners = new Set();
         // Hashes of shared content being loaded from disk for listPending().
         this._loading = new Set();
+        // Shares a person dismissed, by sharer and content, so the same
+        // share announced again stays hidden while a World published again
+        // (new content) is listed. Kept in memory without a storageProvider.
+        this._storageProvider = storageProvider;
+        this._dismissed = new Set(this._loadDismissed());
     }
 
     // Worlds others shared that this device has not fully retrieved yet
@@ -92,7 +101,7 @@ export class RetrieveSharedPublicationUseCase {
         const byWorld = new Map();
         for (const envelope of this._catalog.findByContentKind(this._contentKind)) {
             const sharerId = envelope.publisherIdentity ? envelope.publisherIdentity.id : null;
-            if (!sharerId || sharerId === self || this.isRetrieved(envelope.id)) {
+            if (!sharerId || sharerId === self || this._dismissed.has(shareKey(envelope)) || this.isRetrieved(envelope.id)) {
                 continue;
             }
             const item = {
@@ -103,7 +112,7 @@ export class RetrieveSharedPublicationUseCase {
                 receivedAt: typeof this._catalog.getReceivedAt === 'function' ? this._catalog.getReceivedAt(envelope.id) : null,
                 sharerConnected: this._sourcesFor(sharerId).length > 0
             };
-            const key = `${sharerId}\n${envelope.contentReference.hash}`;
+            const key = shareKey(envelope);
             const kept = byWorld.get(key);
             if (!kept || preferred(item, kept)) {
                 byWorld.set(key, item);
@@ -112,9 +121,46 @@ export class RetrieveSharedPublicationUseCase {
         return [...byWorld.values()].sort((a, b) => String(b.receivedAt || '').localeCompare(String(a.receivedAt || '')));
     }
 
-    // Calls `callback()` when listPending() may answer differently because
-    // shared content it needed finished loading from disk. Returns an
-    // unsubscribe function.
+    // Hides a share from listPending() on this device, for good: the share is
+    // kept, so a peer announcing it again does not bring it back. Every
+    // envelope for the same World from the same sharer goes with it.
+    dismiss(envelopeId) {
+        const envelope = this._catalog.get(envelopeId);
+        if (!envelope || !envelope.publisherIdentity) {
+            return false;
+        }
+        this._dismissed.add(shareKey(envelope));
+        this._saveDismissed();
+        this._notifyPendingChanged();
+        return true;
+    }
+
+    // Dismisses every pending share that can never be retrieved (`legacy`).
+    // Returns how many were dismissed.
+    dismissUnretrievable() {
+        const unretrievable = this.listPending().filter((item) => item.legacy);
+        for (const item of unretrievable) {
+            const envelope = this._catalog.get(item.envelopeId);
+            if (envelope) {
+                this._dismissed.add(shareKey(envelope));
+            }
+        }
+        if (unretrievable.length) {
+            this._saveDismissed();
+            this._notifyPendingChanged();
+        }
+        return unretrievable.length;
+    }
+
+    // Whether the share behind `envelopeId` was dismissed on this device.
+    isDismissed(envelopeId) {
+        const envelope = this._catalog.get(envelopeId);
+        return Boolean(envelope && envelope.publisherIdentity && this._dismissed.has(shareKey(envelope)));
+    }
+
+    // Calls `callback()` when listPending() may answer differently: shared
+    // content it needed finished loading from disk, or a share was
+    // dismissed. Returns an unsubscribe function.
     onPendingChanged(callback) {
         this._pendingChangedListeners.add(callback);
         return () => this._pendingChangedListeners.delete(callback);
@@ -274,14 +320,36 @@ export class RetrieveSharedPublicationUseCase {
         this._loading.add(hash);
         Promise.resolve(ready).catch(() => {}).then(() => {
             this._loading.delete(hash);
-            for (const listener of this._pendingChangedListeners) {
-                try {
-                    listener();
-                } catch {
-                    // One listener failing must not keep the others from refreshing.
-                }
-            }
+            this._notifyPendingChanged();
         });
+    }
+
+    _notifyPendingChanged() {
+        for (const listener of this._pendingChangedListeners) {
+            try {
+                listener();
+            } catch {
+                // One listener failing must not keep the others from refreshing.
+            }
+        }
+    }
+
+    _loadDismissed() {
+        if (!this._storageProvider) {
+            return [];
+        }
+        try {
+            const stored = this._storageProvider.load(DISMISSED_SHARES_KEY);
+            return Array.isArray(stored) ? stored.filter((key) => typeof key === 'string') : [];
+        } catch {
+            return [];
+        }
+    }
+
+    _saveDismissed() {
+        if (this._storageProvider) {
+            this._storageProvider.save(DISMISSED_SHARES_KEY, [...this._dismissed]);
+        }
     }
 
     _sourcesFor(sharerId) {
@@ -312,6 +380,11 @@ export class RetrieveSharedPublicationUseCase {
             return null;
         }
     }
+}
+
+// One World from one sharer: every envelope for the same bytes shares it.
+function shareKey(envelope) {
+    return `${envelope.publisherIdentity.id}\n${envelope.contentReference.hash}`;
 }
 
 // Whether `item` should stand for its World in listPending() over `kept`:
