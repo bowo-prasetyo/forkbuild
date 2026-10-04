@@ -83,9 +83,8 @@ export function walkableSurfaceKindFor(definitionId) {
 //                         Brick.position PLUS the document's own world
 //                         offset — see application/avatar/AvatarStepConstraint.js)
 //   width/height/depth — the brick's own BrickDefinition dimensions
-//   rotationDegrees    — the brick's own Brick.rotation, honored ONLY
-//                         for a directional shape (STEP/SLOPE) — see
-//                         below
+//   rotationDegrees    — the brick's own Brick.rotation (plus any
+//                         placement rotation), about the vertical axis
 //   steps              — STEP only; defaults to DEFAULT_STAIR_STEP_COUNT
 //
 // Returns `{ height, normal, kind }` when (x, z) falls within the
@@ -93,15 +92,11 @@ export function walkableSurfaceKindFor(definitionId) {
 // never a surface at height zero, the same convention
 // core/BrickWalkability.js#walkableTopAt() already established.
 //
-// FLAT footprint containment stays deliberately rotation-agnostic —
-// the exact same "ignoring Brick.rotation" simplification
-// core/AvatarCollision.js#brickAabb() already documents for collision,
-// reused here rather than reinvented, by delegating straight to
-// walkableTopAt() over the brick's own axis-aligned bounds. A
-// DIRECTIONAL shape cannot make that same simplification — which way
-// a stair climbs or a slope rises is the entire reason it's a stair or
-// a slope, not a box — so STEP/SLOPE profiles are evaluated in the
-// brick's own LOCAL space, rotated back out of `rotationDegrees` first.
+// Every shape honors rotation: a flat top's footprint turns with the
+// brick, and STEP/SLOPE profiles are evaluated in the brick's own LOCAL
+// space, rotated back out of `rotationDegrees` first, because which way
+// a stair climbs or a slope rises is the entire reason it's a stair or a
+// slope, not a box.
 export function resolveWalkableSurfaceAt(brickGeometry, x, z) {
     const { shapeKind, center, width, height, depth, rotationDegrees = 0, steps = DEFAULT_STAIR_STEP_COUNT } = brickGeometry || {};
     if (!center || !Number.isFinite(width) || !Number.isFinite(height) || !Number.isFinite(depth)) {
@@ -114,14 +109,22 @@ export function resolveWalkableSurfaceAt(brickGeometry, x, z) {
     if (shapeKind === WalkableSurfaceKind.SLOPE) {
         return slopeSurfaceAt(center, width, height, depth, rotationDegrees, x, z);
     }
-    return flatSurfaceAt(center, width, height, depth, x, z);
+    return flatSurfaceAt(center, width, height, depth, rotationDegrees, x, z);
 }
 
-function flatSurfaceAt(center, width, height, depth, x, z) {
-    const worldAabb = brickAabb(center, { width, height, depth });
-    const top = walkableTopAt(worldAabb, x, z);
-    if (top === null) return null;
-    return { height: top, normal: UP_NORMAL, kind: WalkableSurfaceKind.FLAT };
+// A flat top covers the brick's footprint as drawn: turned with the
+// brick, the same box core/AvatarCollision.js#brickAabb() collides with
+// at a quarter turn, and the exact turned rectangle at any other angle.
+function flatSurfaceAt(center, width, height, depth, rotationDegrees, x, z) {
+    const quarterTurn = !Number.isFinite(rotationDegrees) || rotationDegrees % 90 === 0;
+    if (quarterTurn) {
+        const top = walkableTopAt(brickAabb(center, { width, height, depth }, rotationDegrees), x, z);
+        if (top === null) return null;
+        return { height: top, normal: UP_NORMAL, kind: WalkableSurfaceKind.FLAT };
+    }
+    const { localX, localZ } = toLocal(center, rotationDegrees, x, z);
+    if (!withinFootprint(localX, localZ, width, depth)) return null;
+    return { height: center.y + height / 2, normal: UP_NORMAL, kind: WalkableSurfaceKind.FLAT };
 }
 
 // Ascends along the brick's own LOCAL +X axis, in `steps` discrete

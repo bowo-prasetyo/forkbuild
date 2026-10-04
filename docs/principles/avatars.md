@@ -377,9 +377,11 @@ animation stays IDLE, WALKING, RUNNING and JUMPING.
 
 ### Start Simple: A Box Is A Good Enough Capsule (0.2.42)
 
-The avatar is an upright axis-aligned box, and each brick's collision
-box ignores rotation. Full mesh collision was deliberately out of scope,
-and rendered meshes are never the authoritative collision model.
+The avatar is an upright axis-aligned box, and each brick collides as a
+box that turns with the brick: a quarter turn swaps width and depth, and
+any other angle uses the box around the turned footprint. Full mesh
+collision was deliberately out of scope, and rendered meshes are never
+the authoritative collision model.
 
 [Full text](history/0.1-0.2.md#start-simple-a-box-is-a-good-enough-capsule-0242)
 
