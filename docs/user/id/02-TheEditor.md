@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8966f8ede880a9e -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: f3f56bd4d4861d88 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -42,6 +42,9 @@ dengan grup.
     Bukaan, Detail). Klik salah satunya untuk memilihnya (dan beralih ke
     alat Tempatkan); contoh warna **Warna** lalu muncul untuk memilih
     warnanya — lihat [Warna balok](#warna-balok) di bawah.
+    **Lereng 45°**, **Tangga**, dan **Penguat Diagonal 2x2** naik ke satu
+    sisi; putar dua kali (**R**, **R**) untuk membaliknya ke arah lain.
+    Penguat Diagonal dan salinannya yang diputar 180° membentuk silang.
   - **Struktur** — dua puluh struktur siap pakai dalam lima kategori
     (hunian, pertanian, komersial, komunitas, infrastruktur), ditambah
     **Struktur Saya** milik Anda sendiri. Klik sebuah kartu untuk

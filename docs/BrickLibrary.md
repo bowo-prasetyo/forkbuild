@@ -35,7 +35,7 @@ mesh for that same definitionId. A new brick type therefore needs:
 2. an entry in the `GEOMETRIES` map in renderer/ThreeBrickFactory.js, built
    centered at the origin with the same dimensions. That map has no
    registration API; an id missing from it renders as a 1×1×1 box
-   (`FALLBACK_GEOMETRY`), which is also how `core:slope_45` is drawn today;
+   (`FALLBACK_GEOMETRY`);
 3. only if it should be walked on as a slope or steps rather than a flat top,
    an entry in `SHAPE_KIND_BY_DEFINITION_ID` in core/WalkableSurface.js.
 
@@ -49,6 +49,20 @@ works for people running a version that has it.
 
 core:cube, core:slope_45, core:plate_2x4, and core:window_small are the
 original built-in library — see docs/BrickIDs.md for the namespace rules.
+
+Directional bricks share one convention: core:stair, core:slope_45 and
+core:brace_2x2 all rise along their local +X, so at rotation 0 they climb
+toward +x, at 90 toward −z, at 180 toward −x and at 270 toward +z. The
+slope is drawn as a wedge (a right triangle extruded along depth), the
+same profile core/WalkableSurface.js lets an avatar walk up.
+
+Timber framing (2026-10-04) adds two more: core:post, a square
+0.25 × 3 × 0.25 upright (as thick as core:trim, as tall as core:wall_1x3),
+in the column category; and core:brace_2x2, a 0.25-thick bar running
+corner to corner across a 2 × 2 panel, in the beam category. Turning a
+brace 180° gives the other diagonal, so two make a cross. Bricks only turn
+about the vertical axis, so a fixed-angle brace is how a diagonal timber is
+built at all.
 
 0.2.80 (Expanded Brick Vocabulary) added eleven more: core:block_2x2,
 core:wall_1x3, core:slab_4x4, core:roof_hip, core:stair, core:column,

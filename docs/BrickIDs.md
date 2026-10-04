@@ -17,6 +17,11 @@ core:window_large
 core:door
 core:trim
 
+Timber framing (2026-10-04):
+
+core:post
+core:brace_2x2
+
 Namespace:
 
 library:brick

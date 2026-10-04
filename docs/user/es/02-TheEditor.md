@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8966f8ede880a9e -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: f3f56bd4d4861d88 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -44,6 +44,9 @@ grupos.
     (y pasar a la herramienta Colocar); aparece entonces una muestra de
     **Color** para elegir su color: consulte
     [Colores de los bloques](#colores-de-los-bloques) más abajo.
+    **Pendiente 45°**, **Escalera** y **Riostra diagonal 2x2** suben hacia
+    un lado; gire uno dos veces (**R**, **R**) para orientarlo al revés. Una
+    riostra diagonal y una copia girada 180° forman una cruz.
   - **Estructuras**: veinte estructuras ya hechas en cinco categorías
     (residencial, agrícola, comercial, comunitaria, infraestructura), más
     sus propias **Mis estructuras**. Haga clic en una tarjeta para

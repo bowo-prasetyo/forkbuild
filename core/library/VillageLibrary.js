@@ -46,9 +46,13 @@ import { Position } from '../Position.js';
 // idiom core:mill's own windows already established: it sits flush
 // against (or, on a segmented wall, entirely inside an otherwise-empty
 // slot of) the surface it opens, never floating free of it.
-function b(definitionId, x, y, z, rotation = 0) {
-    return new Brick({ definitionId, position: new Position(x, y, z), rotation });
+function b(definitionId, x, y, z, rotation = 0, color = null) {
+    return new Brick({ definitionId, position: new Position(x, y, z), rotation, color });
 }
+
+// core:slope_45's own color, for the cubes that raise a stepped roof row so
+// they read as part of the roof.
+const ROOF_COLOR = 0xd08a3e;
 
 const houseBricks = [
     // Floor — one slab_4x4, top surface at y = 0.25.
@@ -219,16 +223,16 @@ const cottageBricks = [
     b('core:wall_1x3', -1, 1.75, 0.5, 90),
     b('core:wall_1x3', -1, 1.75, 1.5, 90),
 
-    // Gable roof — a west-facing row and an east-facing row of
-    // slope_45, ridge running along Z.
-    b('core:slope_45', -0.5, 3.75, -1.5, 90),
-    b('core:slope_45', -0.5, 3.75, -0.5, 90),
-    b('core:slope_45', -0.5, 3.75, 0.5, 90),
-    b('core:slope_45', -0.5, 3.75, 1.5, 90),
-    b('core:slope_45', 0.5, 3.75, -1.5, 270),
-    b('core:slope_45', 0.5, 3.75, -0.5, 270),
-    b('core:slope_45', 0.5, 3.75, 0.5, 270),
-    b('core:slope_45', 0.5, 3.75, 1.5, 270)
+    // Gable roof — a west row and an east row of slope_45, each rising
+    // toward the ridge along Z (slope_45 rises along its local +X).
+    b('core:slope_45', -0.5, 3.75, -1.5),
+    b('core:slope_45', -0.5, 3.75, -0.5),
+    b('core:slope_45', -0.5, 3.75, 0.5),
+    b('core:slope_45', -0.5, 3.75, 1.5),
+    b('core:slope_45', 0.5, 3.75, -1.5, 180),
+    b('core:slope_45', 0.5, 3.75, -0.5, 180),
+    b('core:slope_45', 0.5, 3.75, 0.5, 180),
+    b('core:slope_45', 0.5, 3.75, 1.5, 180)
 ];
 
 // Large House — a 6x4 two-story residential footprint, genuinely bigger
@@ -323,10 +327,14 @@ const toolShedBricks = [
     b('core:wall_1x3', -1, 1.5, -0.5, 90),
     b('core:wall_1x3', -1, 1.5, 0.5, 90),
 
-    b('core:slope_45', -0.5, 3.5, -0.5),
-    b('core:slope_45', -0.5, 3.5, 0.5),
-    b('core:slope_45', 0.5, 3.5, -0.5),
-    b('core:slope_45', 0.5, 3.5, 0.5)
+    // One pitch rising from the open front to the back wall: each row
+    // back sits a step higher on a roof-colored cube.
+    b('core:slope_45', -0.5, 3.5, -0.5, 270),
+    b('core:slope_45', 0.5, 3.5, -0.5, 270),
+    b('core:cube', -0.5, 3.5, 0.5, 0, ROOF_COLOR),
+    b('core:cube', 0.5, 3.5, 0.5, 0, ROOF_COLOR),
+    b('core:slope_45', -0.5, 4.5, 0.5, 270),
+    b('core:slope_45', 0.5, 4.5, 0.5, 270)
 ];
 
 // Stable — a long, low agricultural building with open stall fronts
@@ -342,24 +350,44 @@ const stableBricks = [
     b('core:arch', 0, 1, -1.25),
     b('core:arch', 2, 1, -1.25),
 
-    b('core:slope_45', -2.5, 2.5, -1),
-    b('core:slope_45', -1.5, 2.5, -1),
-    b('core:slope_45', -0.5, 2.5, -1),
-    b('core:slope_45', 0.5, 2.5, -1),
-    b('core:slope_45', 1.5, 2.5, -1),
-    b('core:slope_45', 2.5, 2.5, -1),
-    b('core:slope_45', -2.5, 2.5, 0),
-    b('core:slope_45', -1.5, 2.5, 0),
-    b('core:slope_45', -0.5, 2.5, 0),
-    b('core:slope_45', 0.5, 2.5, 0),
-    b('core:slope_45', 1.5, 2.5, 0),
-    b('core:slope_45', 2.5, 2.5, 0),
-    b('core:slope_45', -2.5, 2.5, 1),
-    b('core:slope_45', -1.5, 2.5, 1),
-    b('core:slope_45', -0.5, 2.5, 1),
-    b('core:slope_45', 0.5, 2.5, 1),
-    b('core:slope_45', 1.5, 2.5, 1),
-    b('core:slope_45', 2.5, 2.5, 1)
+    // One pitch rising from the open stalls to the rear wall, each row
+    // back a step higher on roof-colored cubes.
+    b('core:slope_45', -2.5, 2.5, -1, 270),
+    b('core:slope_45', -1.5, 2.5, -1, 270),
+    b('core:slope_45', -0.5, 2.5, -1, 270),
+    b('core:slope_45', 0.5, 2.5, -1, 270),
+    b('core:slope_45', 1.5, 2.5, -1, 270),
+    b('core:slope_45', 2.5, 2.5, -1, 270),
+    b('core:cube', -2.5, 2.5, 0, 0, ROOF_COLOR),
+    b('core:slope_45', -2.5, 3.5, 0, 270),
+    b('core:cube', -1.5, 2.5, 0, 0, ROOF_COLOR),
+    b('core:slope_45', -1.5, 3.5, 0, 270),
+    b('core:cube', -0.5, 2.5, 0, 0, ROOF_COLOR),
+    b('core:slope_45', -0.5, 3.5, 0, 270),
+    b('core:cube', 0.5, 2.5, 0, 0, ROOF_COLOR),
+    b('core:slope_45', 0.5, 3.5, 0, 270),
+    b('core:cube', 1.5, 2.5, 0, 0, ROOF_COLOR),
+    b('core:slope_45', 1.5, 3.5, 0, 270),
+    b('core:cube', 2.5, 2.5, 0, 0, ROOF_COLOR),
+    b('core:slope_45', 2.5, 3.5, 0, 270),
+    b('core:cube', -2.5, 2.5, 1, 0, ROOF_COLOR),
+    b('core:cube', -2.5, 3.5, 1, 0, ROOF_COLOR),
+    b('core:slope_45', -2.5, 4.5, 1, 270),
+    b('core:cube', -1.5, 2.5, 1, 0, ROOF_COLOR),
+    b('core:cube', -1.5, 3.5, 1, 0, ROOF_COLOR),
+    b('core:slope_45', -1.5, 4.5, 1, 270),
+    b('core:cube', -0.5, 2.5, 1, 0, ROOF_COLOR),
+    b('core:cube', -0.5, 3.5, 1, 0, ROOF_COLOR),
+    b('core:slope_45', -0.5, 4.5, 1, 270),
+    b('core:cube', 0.5, 2.5, 1, 0, ROOF_COLOR),
+    b('core:cube', 0.5, 3.5, 1, 0, ROOF_COLOR),
+    b('core:slope_45', 0.5, 4.5, 1, 270),
+    b('core:cube', 1.5, 2.5, 1, 0, ROOF_COLOR),
+    b('core:cube', 1.5, 3.5, 1, 0, ROOF_COLOR),
+    b('core:slope_45', 1.5, 4.5, 1, 270),
+    b('core:cube', 2.5, 2.5, 1, 0, ROOF_COLOR),
+    b('core:cube', 2.5, 3.5, 1, 0, ROOF_COLOR),
+    b('core:slope_45', 2.5, 4.5, 1, 270)
 ];
 
 // Granary — a storage building raised on four column stilts, keeping
@@ -515,14 +543,14 @@ const smallChapelBricks = [
     b('core:wall_1x3', -1, 1.75, 0.5, 90),
     b('core:wall_1x3', -1, 1.75, 1.5, 90),
 
-    b('core:slope_45', -0.5, 3.75, -1.5, 90),
-    b('core:slope_45', -0.5, 3.75, -0.5, 90),
-    b('core:slope_45', -0.5, 3.75, 0.5, 90),
-    b('core:slope_45', -0.5, 3.75, 1.5, 90),
-    b('core:slope_45', 0.5, 3.75, -1.5, 270),
-    b('core:slope_45', 0.5, 3.75, -0.5, 270),
-    b('core:slope_45', 0.5, 3.75, 0.5, 270),
-    b('core:slope_45', 0.5, 3.75, 1.5, 270),
+    b('core:slope_45', -0.5, 3.75, -1.5),
+    b('core:slope_45', -0.5, 3.75, -0.5),
+    b('core:slope_45', -0.5, 3.75, 0.5),
+    b('core:slope_45', -0.5, 3.75, 1.5),
+    b('core:slope_45', 0.5, 3.75, -1.5, 180),
+    b('core:slope_45', 0.5, 3.75, -0.5, 180),
+    b('core:slope_45', 0.5, 3.75, 0.5, 180),
+    b('core:slope_45', 0.5, 3.75, 1.5, 180),
 
     b('core:column', 0, 5.75, 0)
 ];
@@ -585,6 +613,15 @@ const dockBricks = [
     b('core:column', 1, 1.5, 1),
     b('core:column', -1, 1.5, 4),
     b('core:column', 1, 1.5, 4),
+
+    // Cross-braced stilts on both long sides, and two square posts under
+    // the plank's far end, past the last stilts.
+    b('core:brace_2x2', -1, 1.75, 0, 90),
+    b('core:brace_2x2', -1, 1.75, 0, 270),
+    b('core:brace_2x2', 1, 1.75, 0, 90),
+    b('core:brace_2x2', 1, 1.75, 0, 270),
+    b('core:post', -0.75, 1.5, 5.75),
+    b('core:post', 0.75, 1.5, 5.75),
 
     b('core:slab_4x4', 0, 3.125, 0),
     b('core:plate_2x4', 0, 3.125, 4)

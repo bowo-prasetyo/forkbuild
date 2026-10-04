@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8966f8ede880a9e -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: f3f56bd4d4861d88 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -46,6 +46,10 @@ organiser votre construction avec des groupes.
     pour la sélectionner (et passer à l’outil Placement) ; un nuancier
     **Couleur** apparaît alors pour choisir sa couleur — voir
     [Couleurs des briques](#couleurs-des-briques) ci-dessous.
+    **Pente 45°**, **Escalier** et **Contreventement diagonal 2x2** montent
+    vers un côté ; tournez-en un deux fois (**R**, **R**) pour l’orienter
+    dans l’autre sens. Un contreventement diagonal et une copie tournée de
+    180° forment une croix.
   - **Structures** — vingt structures prêtes à l’emploi dans cinq
     catégories (résidentiel, agricole, commercial, collectif,
     infrastructure), plus vos propres **Mes structures**. Cliquez sur une

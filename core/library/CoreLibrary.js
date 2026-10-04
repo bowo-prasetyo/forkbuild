@@ -185,6 +185,28 @@ export const CoreLibrary = {
             height: 0.25,
             depth: 0.25,
             color: 0xe8e2d0
+        }),
+        new BrickDefinition({
+            id: 'core:post',
+            name: 'Post',
+            category: 'column',
+            tags: ['column', 'post', 'timber', 'structural'],
+            description: 'A square upright timber, as thick as trim and as tall as a wall.',
+            width: 0.25,
+            height: 3,
+            depth: 0.25,
+            color: 0x5a3a22
+        }),
+        new BrickDefinition({
+            id: 'core:brace_2x2',
+            name: 'Diagonal Brace 2x2',
+            category: 'beam',
+            tags: ['beam', 'brace', 'diagonal', 'timber', 'structural'],
+            description: 'A timber running corner to corner across a 2x2 panel. Turn it 180° for the other diagonal.',
+            width: 2,
+            height: 2,
+            depth: 0.25,
+            color: 0x5a3a22
         })
     ]
 };

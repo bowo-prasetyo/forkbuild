@@ -289,12 +289,12 @@ async function run() {
             }
         }
         const allDefinitionIds = brickRegistry.getAll().map((def) => def.id);
-        assert(allDefinitionIds.length === 15, `sanity: BrickRegistry still has 15 core definitions (got ${allDefinitionIds.length})`);
+        assert(allDefinitionIds.length === 17, `sanity: BrickRegistry still has 17 core definitions (got ${allDefinitionIds.length})`);
         for (const definitionId of allDefinitionIds) {
             assert(usedDefinitionIds.has(definitionId),
                 `vocabulary: ${definitionId} is used by at least one Village structure`);
         }
-        console.log('✓ Section I: every one of the 15 core:* primitives is used somewhere in the Village library');
+        console.log('✓ Section I: every one of the 17 core:* primitives is used somewhere in the Village library');
     }
 
     // ---------------------------------------------------------------
