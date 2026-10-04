@@ -2607,6 +2607,8 @@ export default Object.freeze({
     'sharedWithYouPanel.retrieving': 'Wird abgerufen …',
     'sharedWithYouPanel.retrieve2': 'Abrufen',
     'sharedWithYouPanel.theyNeedToBeConnected': 'Die Person muss verbunden sein',
+    'sharedWithYouPanel.snapshotUnavailable': 'Die Welt wurde deinem Repository hinzugefügt, aber ihr Snapshot ist von der Person, die sie geteilt hat, nicht angekommen, daher kann sie noch nicht erkundet werden. Versuche Abrufen erneut, solange die Person verbunden ist.',
+    'sharedWithYouPanel.snapshotMismatch': 'Die Welt wurde deinem Repository hinzugefügt, aber der gesendete Snapshot passt nicht zur Welt und wurde daher nicht behalten.',
     'candidateLeaderboardTable.hideEvidence': 'Nachweise ausblenden',
     'candidateLeaderboardTable.inspectEvidence': 'Nachweise untersuchen',
     'evidenceExportComparisonRecordPairSelector.noDifferences': 'Keine Unterschiede',

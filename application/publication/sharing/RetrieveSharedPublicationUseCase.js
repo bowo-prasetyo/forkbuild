@@ -3,6 +3,8 @@ import { Publication } from '../../../publisher/Publication.js';
 import { normalizeContentTitle } from '../../../core/DecentralizedPublication.js';
 import { PeerLifecycleState } from '../../../peer/PeerLifecycleState.js';
 import { PeerSnapshotMaterializationOutcome } from '../../snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
+import { isStorageEntryNotLoadedError } from '../../../storage/StorageEntryNotLoadedError.js';
+import { computeContentHash } from '../../../serializer/contentHash.js';
 
 // Retrieves a World another identity shared with peers
 // (SharePublicationWithPeersUseCase): its Publication, which joins this
@@ -170,8 +172,24 @@ export class RetrieveSharedPublicationUseCase {
 
     // The Repository's copy of the Publication `envelope` wraps, found by
     // reading the wrapped JSON already on this device.
+    // Over IndexedDB, content stays on disk until read, and reading it
+    // synchronously throws StorageEntryNotLoadedError (which also starts
+    // loading it). Until it is loaded, the Repository is searched for the
+    // Publication whose JSON hashes to the envelope's content instead, as
+    // SharePublicationWithPeersUseCase finds its own envelopes.
     _listedPublicationFor(envelope) {
-        const bytes = typeof this._contentStore.getSync === 'function' ? this._contentStore.getSync(envelope.contentReference) : null;
+        let bytes;
+        try {
+            bytes = typeof this._contentStore.getSync === 'function' ? this._contentStore.getSync(envelope.contentReference) : null;
+        } catch (error) {
+            if (!isStorageEntryNotLoadedError(error) || typeof this._discoveryProvider.list !== 'function') {
+                return null;
+            }
+            const hash = envelope.contentReference.hash;
+            return this._discoveryProvider.list().find((publication) =>
+                typeof publication.toJSON === 'function'
+                && computeContentHash(JSON.stringify(publication.toJSON())) === hash) || null;
+        }
         if (typeof bytes !== 'string') {
             return null;
         }

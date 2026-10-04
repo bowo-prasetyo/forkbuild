@@ -1,6 +1,7 @@
 import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
 import { errorText, t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
+import { PeerSnapshotMaterializationOutcome } from '../../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 
 function stripPrefix(message) {
     return String(message || '').replace(/^\w+UseCase:\s*/, '');
@@ -47,8 +48,15 @@ export default {
             error.value = '';
             retrievingId.value = item.envelopeId;
             try {
-                const { publication } = await retrieveUseCase.retrieve(item.envelopeId);
+                const { publication, snapshot } = await retrieveUseCase.retrieve(item.envelopeId);
                 emit('retrieved', publication);
+                // The Publication is in the Repository, but the World cannot
+                // be explored without its snapshot, so the share stays listed.
+                if (snapshot === PeerSnapshotMaterializationOutcome.UNAVAILABLE) {
+                    error.value = t('sharedWithYouPanel.snapshotUnavailable');
+                } else if (snapshot === PeerSnapshotMaterializationOutcome.HASH_MISMATCH) {
+                    error.value = t('sharedWithYouPanel.snapshotMismatch');
+                }
             } catch (e) {
                 error.value = stripPrefix(errorText(e));
             } finally {

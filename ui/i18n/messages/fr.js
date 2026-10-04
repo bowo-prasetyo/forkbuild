@@ -2607,6 +2607,8 @@ export default Object.freeze({
     'sharedWithYouPanel.retrieving': 'Récupération…',
     'sharedWithYouPanel.retrieve2': 'Récupérer',
     'sharedWithYouPanel.theyNeedToBeConnected': 'Cette personne doit être connectée',
+    'sharedWithYouPanel.snapshotUnavailable': 'Le Monde a été ajouté à votre Dépôt, mais son instantané n’est pas arrivé de la personne qui l’a partagé ; il ne peut donc pas encore être exploré. Réessayez Récupérer pendant qu’elle est connectée.',
+    'sharedWithYouPanel.snapshotMismatch': 'Le Monde a été ajouté à votre Dépôt, mais l’instantané envoyé par la personne qui l’a partagé ne correspond pas au Monde ; il n’a donc pas été conservé.',
     'candidateLeaderboardTable.hideEvidence': 'Masquer les preuves',
     'candidateLeaderboardTable.inspectEvidence': 'Inspecter les preuves',
     'evidenceExportComparisonRecordPairSelector.noDifferences': 'Aucune différence',

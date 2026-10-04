@@ -2608,6 +2608,8 @@ export default Object.freeze({
     'sharedWithYouPanel.retrieving': 'Recuperando…',
     'sharedWithYouPanel.retrieve2': 'Recuperar',
     'sharedWithYouPanel.theyNeedToBeConnected': 'Esa persona tiene que estar conectada',
+    'sharedWithYouPanel.snapshotUnavailable': 'El Mundo se añadió a tu Repositorio, pero su instantánea no llegó de la persona que lo compartió, así que aún no se puede explorar. Vuelve a intentar Recuperar mientras esté conectada.',
+    'sharedWithYouPanel.snapshotMismatch': 'El Mundo se añadió a tu Repositorio, pero la instantánea que envió quien lo compartió no coincide con el Mundo, así que no se guardó.',
     'candidateLeaderboardTable.hideEvidence': 'Ocultar evidencia',
     'candidateLeaderboardTable.inspectEvidence': 'Inspeccionar evidencia',
     'evidenceExportComparisonRecordPairSelector.noDifferences': 'Sin diferencias',

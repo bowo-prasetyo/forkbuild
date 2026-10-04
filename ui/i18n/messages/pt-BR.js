@@ -2608,6 +2608,8 @@ export default Object.freeze({
     'sharedWithYouPanel.retrieving': 'Recuperando…',
     'sharedWithYouPanel.retrieve2': 'Recuperar',
     'sharedWithYouPanel.theyNeedToBeConnected': 'Essa pessoa precisa estar conectada',
+    'sharedWithYouPanel.snapshotUnavailable': 'O Mundo foi adicionado ao seu Repositório, mas o snapshot não chegou da pessoa que o compartilhou, então ainda não pode ser explorado. Tente Recuperar de novo enquanto ela estiver conectada.',
+    'sharedWithYouPanel.snapshotMismatch': 'O Mundo foi adicionado ao seu Repositório, mas o snapshot enviado por quem o compartilhou não corresponde ao Mundo, então não foi mantido.',
     'candidateLeaderboardTable.hideEvidence': 'Ocultar evidências',
     'candidateLeaderboardTable.inspectEvidence': 'Inspecionar evidências',
     'evidenceExportComparisonRecordPairSelector.noDifferences': 'Sem diferenças',
