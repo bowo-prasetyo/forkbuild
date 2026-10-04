@@ -6,10 +6,10 @@ format changes. docs/ProtocolHistory.md keeps the milestone-by-milestone
 protocol notes for 0.1.x–0.2.45; docs/Architecture.md describes the code
 that produces these formats.
 
-The three sections titled "Proposed: Steem …" were written as proposals
-and have since been built; each opens with its status (built,
-Experimental). Their titles stay as they are because code comments cite
-them by title.
+The sections titled "Proposed: Steem …" and "Proposed: Blurt
+Substrate" were written as proposals and have since been built; each
+opens with its status (built, Experimental). Their titles stay as they
+are because code comments cite them by title.
 
 ## Versions and identifiers
 
@@ -1437,6 +1437,216 @@ person who clicked; it proves nothing to anyone else, and verifying is still wha
 3. Done: finality after publishing, the block's time in the app, kept block evidence, and batches.
 4. Still open: trying it against a live node and a real Keychain (neither is reachable from the development
    environment), and checking a kept signing key against the witness's key history.
+
+## Proposed: Blurt Substrate
+
+**Status: built, Experimental.** Code: `core/BlurtPost.js` (posts, tags, metadata, the content manifest, locators and
+what a post anchors), `core/BlurtBinary.js` (Blurt's binary serialization), `core/BlurtFees.js` (the fee formula),
+`blurt/BlurtRpcClient.js`, `application/blurt/` (the poster, the reader, one adapter per family, the fee estimator
+and `BlurtRuntimeComposition.js`), `content/BlurtContentStore.js`, and `anchoring/Blurt*.js`. Not yet tried against
+a live node or a real Blurt Keychain (neither is reachable from the development environment).
+
+Blurt is a fork of Steem (2020) with the same accounts, keys, posts, `custom_json` and `condenser_api`, so it can
+fill all three roles, Announcement/Discovery, Content and Proof/Anchoring, as Steem does. It differs from Steem in
+the ways that shape this design:
+
+- **No downvotes.** Nobody can push a post's payout down or hide it by voting, so ForkBuild posts on Blurt keep
+  their payout and earn rewards when people upvote them. Readers still ignore votes, payout and reputation.
+- **No central account.** There are no discovery threads. Each person posts from their own Blurt account, as
+  top-level posts under the `forkbuild` category, and readers find them by tag. Nothing depends on an account
+  ForkBuild runs.
+- **Fees instead of Resource Credits.** Every transaction pays `operation_flat_fee` per operation plus
+  `bandwidth_kbytes_fee` per KiB of the signed transaction, both chosen by the witnesses (see "Fees").
+- **Its own chain.** Chain id `cd8d90f2…6381f` (SHA-256 of `blurt`), key prefix `BLT`, the asset `BLURT` (3
+  decimals), and operation numbers that differ from Steem's (see "Keeping evidence"). Results are never mixed with
+  Steem's: Blurt is its own substrate, storage type `blurt` and anchor type `blurt`.
+
+As on Steem, the chain is only a carrier. Every envelope goes through its family's existing verifier, content is
+checked against `contentHash`, and a Blurt account never becomes a publisher identity.
+
+The chain rules this design follows (from Blurt's source, `blurt/blurt` on GitLab): one top-level post per account
+every 5 minutes (`BLURT_MIN_ROOT_COMMENT_INTERVAL`), one comment every 3 seconds (`BLURT_MIN_REPLY_INTERVAL_HF20`),
+at most 64 KiB per transaction, a post pays out after 7 days, payout is on unless `comment_options` turns it off
+(the default `max_accepted_payout` is 1,000,000 BLURT), and an edit (a `comment` with an existing permlink) is not
+held to either interval, only to one edit per account per block.
+
+### Build posts
+
+Everything ForkBuild posts on Blurt hangs off a **build post**: a top-level post by the poster's own account.
+
+    ['comment', {
+      parent_author: '', parent_permlink: 'forkbuild',              // category, the first tag
+      author: <poster's Blurt account>,
+      permlink: 'forkbuild-<base36 ms timestamp>-<8 random [a-z0-9]>',
+      title: <what the post carries, see below>,
+      body: <for people: the build's card when there is one, and what the post carries>,
+      json_metadata: JSON.stringify({ app: 'forkbuild/<app version>',
+        tags: ['forkbuild', 'forkbuild-snapshot', 'forkbuild-publication'],   // forkbuild, then one per family
+        image: [<the build's picture>],                                       // only when there is one
+        forkbuild: { version: 1,
+          announcements: [ { family: 'snapshot', envelope: <the family's envelope object> }, … ],
+          anchors: [ <contentHash>, … ] } })
+    }]
+
+- No `comment_options` is sent, so payout, votes and curation stay at the chain's defaults (on). One operation per
+  transaction also keeps the flat fee to one.
+- Tags: `forkbuild`, then `forkbuild-<family>` for each family the post announces, in the order first announced.
+  The family tags are the same strings as the Nostr `t` tags (`forkbuild-publication`, `forkbuild-snapshot`,
+  `forkbuild-place-naming`, `forkbuild-commentary`). The chain's tags plugin indexes at most five tags, which is
+  exactly `forkbuild` and the four families.
+- `announcements` holds at most 16 entries and `anchors` at most 16 contentHashes. Either may be empty.
+- Title: the build's title when the post announces a Publication whose card is known, otherwise a fixed phrase for
+  what it carries ("ForkBuild build", "ForkBuild place name", "ForkBuild comment", "ForkBuild anchor", "ForkBuild
+  data"). Text a user wrote goes through the same sanitizing as Steem notices (`steemNoticeText()`), at most 100
+  characters.
+- Body: the build's card (picture linking to the app's view, title, author, description, "See it in 3D") when the
+  post announces a Publication, then a list of what the post carries, then one paragraph saying that the ForkBuild
+  app reads the post's `json_metadata` and checks every content hash and signature, that the Blurt account that
+  posted it is not treated as the author, and a link to this section.
+
+**Grouping.** The poster keeps the build post it made most recently. Until that post is 30 minutes old
+(`BLURT_BUILD_POST_GROUPING_MS`), and while it is the same account and the same app session, anything else posted
+joins it instead of starting a new top-level post:
+
+- an announcement or a single anchor **edits** the build post: the same `comment` with the same permlink, its
+  `announcements` or `anchors` extended, the family tag added, and the title and body redrawn;
+- stored content is a **reply** to it (see "Content").
+
+So one Distribute (Snapshot data, Snapshot announcement, Signed Claim, Publication announcement) makes one
+top-level post, with edits and replies, and never waits out the 5-minute interval. An edit that would exceed 16
+announcements, 16 anchors or 56 KiB of operations starts a new build post instead. When a new build post is needed
+and the account's `last_root_post` (another device or app) is less than 5 minutes old, the poster waits until it
+isn't, says so in the progress line, and posts. If the chain still refuses for that reason, it waits once more and
+retries once. Edits re-send the whole post, so each costs its own fee.
+
+All posts from one app go through one queue, one at a time, each at least 4.5 seconds after the account's previous
+post (`last_post` on the chain, and this poster's own record), as on Steem. Every transaction is signed with the
+posting key through Blurt Keychain (`blurt_keychain.requestBroadcast(account, operations, 'Posting', callback)`, the
+same interface Steem Keychain offers; WhaleVault offers it too). ForkBuild never holds a Blurt key. The account is
+a per-device setting, `blurt-announcing-configuration`, looked up each time something is posted.
+
+### Announcing
+
+An announcement is an entry `{ family, envelope }` in a build post's `announcements`, added by a new build post or
+by an edit (see "Grouping"). The envelopes are each family's existing ones, unchanged (see "Decentralized
+publications and discovery" and "Publication Commentary Distribution"). The publishers resolve to
+`{ published: true, id: '@author/permlink', url: 'https://blurt.blog/@author/permlink', relayUrl:
+'https://blurt.blog/created/forkbuild-<family>' }`. Status is "accepted": the block becomes irreversible about a
+minute later.
+
+The one-substrate rule holds: each action announces on exactly one of Nostr, Arweave, Steem or Blurt.
+
+### Reading
+
+For a family, a reader combines two sources:
+
+1. **The tag.** `condenser_api.get_discussions_by_created([{ tag: 'forkbuild-<family>', limit: 100,
+   truncate_body: 1 }])`, paging with `start_author` and `start_permlink`, at most 10 pages. The chain's tags plugin
+   drops a post from its tag index when the post pays out, so this finds the last 7 days.
+2. **Authors' histories.** For each followed account (Network Settings → Blurt, none by default) and each account
+   the reader has seen a ForkBuild build post from in a tag listing (remembered on the device, the 200 most recent,
+   `blurt-known-authors`), `condenser_api.get_discussions_by_author_before_date([author, startPermlink,
+   '1970-01-01T00:00:00', 100])`, which lists an account's top-level posts newest first for as long as the chain
+   exists, paging until a post is older than the configured first month (default `2026-10`) or 5 pages are read.
+
+A post counts when it is a top-level post (`parent_author` empty) in the `forkbuild` category whose
+`json_metadata.forkbuild` has `version: 1` and an `announcements` list; each entry whose `family` is the requested
+one and whose `envelope` is an object is a candidate. Anything else is skipped as noise, never an error. Posts are
+deduplicated by author and permlink; the reader takes the version the node returns (edits only ever add
+announcements). Candidates go through the family's verifier exactly as on Steem ("Reading", step 6), with origin
+`dweb:blurt`.
+
+The tag listing is cached for 30 seconds and an author's history for 10 minutes. When every source fails, the read
+is "unavailable": the snapshot search reports unavailable, place naming and commentary reject so the caller names
+Blurt as unreachable, and publication discovery finds no leads. Nodes may also drop posts by accounts the node
+operator lists as spam (the tags plugin's spam filter); an author's history is not filtered that way.
+
+Reading needs no account. API nodes: Network Settings → Blurt (`blurt-reading-configuration`), tried in order;
+defaults `https://rpc.blurt.blog`, then `https://rpc.beblurt.com` (two operators).
+
+### Content
+
+`BlurtContentStore` (storage `blurt`) stores a Snapshot's bytes or a Publication's Signed Claim in the same
+manifest-and-parts format as Steem v2 ("Proposed: Steem Content Storage", "Format"), with these differences:
+
+- The **manifest** is a reply to the poster's current build post (a new build post is made first when there is
+  none to group with), with permlink `forkbuild-c-<base36 ms timestamp>-<8 random>`, and
+  `json_metadata.forkbuild` = `{ version: 1, content: { contentHash, algorithm, mediaType, size, encoding,
+  encodedLength, parts }, data? }`.
+- A **part** is a reply to the manifest, `<manifest permlink>-p<index>`, with `forkbuild` = `{ version: 1, part: {
+  index, count }, data }`.
+- Payout stays on; there are no `comment_options`.
+- The manifest's notice links to the app's view (`#/view/blurt/<author>/<permlink>`) for a Signed Claim, with the
+  build's card when one is drawn (picture uploaded to `https://images.blurt.blog` the Steem way, signed through
+  Blurt Keychain's `requestSignBuffer`; there is no relay, so a picture the browser can't upload is left out), and
+  the build post's body shows the same card.
+- Readers accept a manifest wherever it is (any post by its author with a well-formed `content`); integrity comes
+  from `contentHash`, as everywhere. Parts must be the manifest author's replies to the manifest, at the listed
+  permlinks, lengths and SHA-256s.
+- Locator: `blurt://<author>/<manifest permlink>`.
+- Limits, encoding, decoding, resuming (`blurt-content-upload:<author>:<contentHash>`) and progress are Steem's,
+  with "Blurt" in the messages.
+
+Before posting, the store estimates the fees of every transaction it will make and refuses with
+`BlurtFeeError` ("Storing this build on Blurt costs about 1.234 BLURT in fees, and your account has 0.500 BLURT")
+when the account's liquid balance is short. If the node can't say, the upload goes ahead; a chain refusal
+("sufficient funds for transaction fee") is reported in those words.
+
+### Fees
+
+From `process_tx_fee()` in Blurt's `database.cpp`:
+
+    fee = max(operation_flat_fee × operations, 0.001) + max(floor(size × bandwidth_kbytes_fee / 1024), 0.001)
+
+in BLURT's smallest unit (0.001 BLURT), where `size` is the packed size of the signed transaction and the fees are
+the witnesses' median (`condenser_api.get_chain_properties`). The fee is burned and paid by each account whose
+authority the transaction needs. `core/BlurtFees.js` computes it from the operations packed by `core/BlurtBinary.js`
+with one signature, which is exact for a single-signature transaction. A build post with a Signed Claim's card is
+about 3 KiB, a full content part about 49 KiB.
+
+### Anchoring
+
+A `blurt` anchor's evidence is a transaction in an irreversible Blurt block that commits to the Publication's
+`contentHash`. Two kinds of operation commit:
+
+- a `comment` (a build post, an edit of one, or a content manifest) by the anchoring account whose
+  `json_metadata.forkbuild` has `version: 1` and lists the contentHash in `anchors`, or has a `snapshot`
+  announcement whose envelope's `contentHash` is it, or is a content manifest whose `content.contentHash` is it;
+- a `custom_json` with `id: 'forkbuild-anchor'` and `json` `{ version: 1, contentHash }` or, for a batch,
+  `{ version: 1, merkleRoot, count }`, exactly as on Steem ("Proposed: Steem Anchoring", "Batches").
+
+**The announcement post is the anchor.** `BlurtAnchorPublisher#publish(contentHash)` first looks for a post this
+device already made with the current account that commits to the contentHash (recorded locally after each accepted
+post, `blurt-post-record:<account>:<contentHash>` = `{ author, permlink, trxId, blockNum }`), and, when it finds
+one, anchors to that transaction without posting anything. A Distributed Snapshot's announcement and its stored
+data both commit to its contentHash, so anchoring a Publication distributed on Blurt costs nothing. Otherwise it adds
+the contentHash to `anchors` of the current build post (an edit) or posts a new build post titled "ForkBuild
+anchor", and anchors to that transaction.
+
+**Batches** (`publishBatch()`, at most 64) are one `custom_json` from the anchoring account, since a build post
+can't commit to a Merkle root on behalf of others' builds. That is the only `custom_json` ForkBuild sends on Blurt.
+
+The proof is `{ blockNum, trxId, chain: 'blurt', batch?: { path }, evidence?, post?: { author, permlink } }` and the
+locator `blurt:<trxId>`. `post` names the build post for people; the verifier never relies on it. Finding the block
+(Keychain's result, else scanning from just before the broadcast), verifying (every configured node up to three,
+asked separately, must agree; not yet irreversible is "unavailable"), finality (`BlurtAnchorFinalityObserver`) and
+the evidence view work as on Steem, with "Blurt witnesses (elected by stake, not proof of work)". A post can be
+edited later, but the verifier reads the operation from its block, so an edit never changes what was anchored.
+
+### Keeping evidence
+
+As on Steem ("Keeping evidence"), the publisher keeps the block header, the anchor transaction and its Merkle path,
+and `checkBlurtBlockEvidence()` checks them offline. `core/BlurtBinary.js` serializes Blurt's operations 0–36
+(`blurt/protocol/operations.hpp`: Steem's list without the market, SBD and feed operations, so the numbers differ;
+`comment_options` is 13 and `custom_json` 12, and `comment_options` has no `percent_steem_dollars`), the
+`legacy_chain_properties` of `witness_update`, the header extension `fee_info` (variant 3, two `int64`s), and keys
+with the `BLT` prefix. Block ids, transaction ids and the Merkle tree are computed as on Steem.
+
+### Status
+
+Not yet tried against a live node or a real Blurt Keychain: the development environment can reach neither. The
+default API nodes, the image host and `get_discussions_by_author_before_date` on public nodes still need checking
+with `node scripts/check-network-defaults.mjs` and in a browser.
 
 ## Vehicles, animals and inventory
 

@@ -14,19 +14,20 @@ export class SteemBroadcastError extends Error {
 }
 
 // Returns undefined when no Keychain is injected, so a caller can say
-// "install Steem Keychain" rather than fail later.
-export function createSteemKeychainBroadcaster({ keychain = globalThis.steem_keychain, signingTimeoutMs = DEFAULT_SIGNING_TIMEOUT_MS } = {}) {
+// "install Steem Keychain" rather than fail later. Blurt Keychain offers the
+// same interface (blurt/BlurtKeychain.js), named by `walletName`.
+export function createSteemKeychainBroadcaster({ keychain = globalThis.steem_keychain, signingTimeoutMs = DEFAULT_SIGNING_TIMEOUT_MS, walletName = 'Steem Keychain' } = {}) {
     if (!keychain || typeof keychain.requestBroadcast !== 'function') return undefined;
 
     function broadcast(account, operations, keyType = 'Posting') {
         return new Promise((resolve, reject) => {
             const timer = setTimeout(() => {
-                reject(new SteemBroadcastError(`Steem Keychain did not answer within ${signingTimeoutMs / 1000} s`));
+                reject(new SteemBroadcastError(`${walletName} did not answer within ${signingTimeoutMs / 1000} s`));
             }, signingTimeoutMs);
             keychain.requestBroadcast(account, operations, keyType, (response) => {
                 clearTimeout(timer);
                 if (!response?.success) {
-                    reject(new SteemBroadcastError(response?.message || response?.error || 'Steem Keychain refused the broadcast', response));
+                    reject(new SteemBroadcastError(response?.message || response?.error || `${walletName} refused the broadcast`, response));
                     return;
                 }
                 resolve(Object.freeze({
