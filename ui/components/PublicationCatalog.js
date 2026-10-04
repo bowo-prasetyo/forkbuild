@@ -9,6 +9,7 @@ import PublicationCatalogToolbar from './PublicationCatalogToolbar.js';
 import PublicationCard from './PublicationCard.js';
 import PublicationList from './PublicationList.js';
 import PublicationPagination from './PublicationPagination.js';
+import { useRepositoryNetworkDiscovery, exploreRouteFor } from './publicationCatalog/useRepositoryNetworkDiscovery.js';
 import { t } from '../i18n/i18n.js';
 
 const DESCRIPTION_SNIPPET_LENGTH = 160;
@@ -43,6 +44,10 @@ export default {
         // absent (e.g. a mounted test harness) degrades to exactly the
         // pre-0.9.339 local-only behavior.
         const decentralizedDiscoveryProvider = inject('decentralizedPublicationDiscoveryProvider', null);
+        // Finds what others distributed on Nostr, Arweave and Steem; null
+        // where it isn't composed (a mounted test harness).
+        const repositoryNetworkDiscovery = inject('repositoryNetworkDiscovery', null);
+        const networkPublicationLocatorStore = inject('networkPublicationLocatorStore', null);
         const {
             discoveryProvider,
             loadPublicationDocumentUseCase,
@@ -135,6 +140,14 @@ export default {
             resolveEnrichment(result.items);
         }
 
+        const { networkDiscovery, networkDiscoveryText, searchNetworks } = useRepositoryNetworkDiscovery({
+            repositoryNetworkDiscovery,
+            onAdmitted: () => {
+                runQuery(pageResult.value ? pageResult.value.page : 1);
+                catalogHasAnyPublications.value = catalogHasAnyPublications.value || pageResult.value.totalCount > 0;
+            }
+        });
+
         onMounted(() => {
             runQuery(1);
             // Recorded once, from the first, unfiltered query (no search
@@ -143,6 +156,7 @@ export default {
             // nothing" in the empty-state message — same distinction
             // WorldSearchPanel's catalogEmpty makes.
             catalogHasAnyPublications.value = pageResult.value.totalCount > 0;
+            searchNetworks();
         });
 
         function onSearch({ text, includeDescriptions: withDescriptions }) {
@@ -190,7 +204,7 @@ export default {
             router.push({ path: '/editor', query: { fork: pub.documentId, publication: pub.id } });
         }
         function viewWorld(pub) {
-            router.push({ path: `/world/${pub.documentId}` });
+            router.push(exploreRouteFor(pub, networkPublicationLocatorStore));
         }
         function viewAuthor(author) {
             if (!author) return;
@@ -202,6 +216,7 @@ export default {
             sort, view, groupBy, pageResult, groups, emptyMessage,
             descriptions, parentTitles, forkCounts, preciseDateIds,
             onSearch, onChangeSort, onChangeView, onChangeGroupBy, onGoPage,
+            networkDiscovery, networkDiscoveryText, searchNetworks,
             openPublication, forkPublication, viewWorld, viewAuthor
         };
     },
@@ -217,6 +232,16 @@ export default {
                 @change-view="onChangeView"
                 @change-group-by="onChangeGroupBy"
             />
+
+            <p v-if="networkDiscovery" class="publication-catalog-network" role="status">
+                <span>{{ networkDiscoveryText }}</span>
+                <button
+                    v-if="!networkDiscovery.searching"
+                    type="button"
+                    class="publication-catalog-network-again"
+                    @click="searchNetworks"
+                >{{ t('publicationCatalog.network.searchAgain') }}</button>
+            </p>
 
             <div v-if="pageResult && pageResult.items.length === 0" class="empty-state">
                 {{ emptyMessage }}
