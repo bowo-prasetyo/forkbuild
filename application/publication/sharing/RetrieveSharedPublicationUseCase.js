@@ -6,6 +6,11 @@ import { PeerSnapshotMaterializationOutcome } from '../../snapshot/materializati
 import { isStorageEntryNotLoadedError } from '../../../storage/StorageEntryNotLoadedError.js';
 import { computeContentHash, isLegacyContentHash } from '../../../serializer/contentHash.js';
 import { LEGACY_CONTENT_HASH } from './SharePublicationWithPeersUseCase.js';
+import { PublicationResolutionOutcome } from '../PublicationResolutionOutcome.js';
+
+// The `code` of the error retrieve() rejects with when the person who shared
+// a World did not send the shared Publication, so a view can explain it.
+export const SHARE_UNAVAILABLE = 'share-unavailable';
 
 // Retrieves a World another identity shared with peers
 // (SharePublicationWithPeersUseCase): its Publication, which joins this
@@ -70,9 +75,10 @@ export class RetrieveSharedPublicationUseCase {
 
     // Worlds others shared that this device has not fully retrieved yet
     // (its Publication or its snapshot is missing), newest first:
-    // [{ envelopeId, sharerId, title, receivedAt, sharerConnected }].
+    // [{ envelopeId, sharerId, title, legacy, receivedAt, sharerConnected }].
     // `title` is the one the sharer signed into the envelope, or null for an
-    // envelope from before envelopes carried one. Several envelopes from the
+    // envelope from before envelopes carried one. `legacy` marks a share made
+    // before content hashes became SHA-256, which can never be retrieved. Several envelopes from the
     // same sharer for the same bytes (a World shared again under a titled
     // envelope) are one entry: the newest titled one, else the newest.
     listPending() {
@@ -87,6 +93,7 @@ export class RetrieveSharedPublicationUseCase {
                 envelopeId: envelope.id,
                 sharerId,
                 title: envelope.contentTitle || null,
+                legacy: isLegacyContentHash(envelope.contentReference.hash),
                 receivedAt: typeof this._catalog.getReceivedAt === 'function' ? this._catalog.getReceivedAt(envelope.id) : null,
                 sharerConnected: this._sourcesFor(sharerId).length > 0
             };
@@ -121,6 +128,11 @@ export class RetrieveSharedPublicationUseCase {
         if (!envelope || envelope.contentKind !== this._contentKind) {
             throw new Error('RetrieveSharedPublicationUseCase: no shared World with that id');
         }
+        // A share whose own content hash is a legacy FNV-1a one can't vouch
+        // for bytes from a peer, so asking the sharer would be pointless.
+        if (isLegacyContentHash(envelope.contentReference.hash)) {
+            throw legacyContentHashError('the share was made with an old content hash that cannot be checked; the person who shared it needs to publish the World again and share the new copy');
+        }
         const sharerId = envelope.publisherIdentity ? envelope.publisherIdentity.id : null;
         const sources = this._sourcesFor(sharerId);
         if (!sources.length) {
@@ -133,6 +145,11 @@ export class RetrieveSharedPublicationUseCase {
             peers: sources,
             ...(this._timeoutMs ? { timeoutMs: this._timeoutMs } : {})
         });
+        if (view.outcome === PublicationResolutionOutcome.CONTENT_UNAVAILABLE) {
+            const error = new Error('RetrieveSharedPublicationUseCase: the person who shared this World did not send it; the device they are connected from may no longer have it');
+            error.code = SHARE_UNAVAILABLE;
+            throw error;
+        }
         if (!view.resolved || !(view.content instanceof Publication)) {
             throw new Error(`RetrieveSharedPublicationUseCase: the shared World could not be retrieved (${view.reason || view.outcome || 'no answer'})`);
         }
@@ -147,9 +164,7 @@ export class RetrieveSharedPublicationUseCase {
         // snapshot by a 32-bit FNV-1a hash, which bytes from a peer can never
         // be checked against, so its snapshot could never be kept.
         if (publication.contentReference && isLegacyContentHash(publication.contentReference.hash)) {
-            const error = new Error('RetrieveSharedPublicationUseCase: the shared World was published with an old content hash that cannot be checked; the person who shared it needs to publish it again and share the new copy');
-            error.code = LEGACY_CONTENT_HASH;
-            throw error;
+            throw legacyContentHashError('the shared World was published with an old content hash that cannot be checked; the person who shared it needs to publish it again and share the new copy');
         }
         if (!this._discoveryProvider.findById(publication.id)) {
             this._discoveryProvider.add(publication);
@@ -247,4 +262,10 @@ function preferred(item, kept) {
         return Boolean(item.title);
     }
     return String(item.receivedAt || '') > String(kept.receivedAt || '');
+}
+
+function legacyContentHashError(reason) {
+    const error = new Error(`RetrieveSharedPublicationUseCase: ${reason}`);
+    error.code = LEGACY_CONTENT_HASH;
+    return error;
 }

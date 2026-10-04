@@ -2608,6 +2608,8 @@ export default Object.freeze({
     'sharedWithYouPanel.snapshotUnavailable': 'ワールドはリポジトリに追加されましたが、共有した人からスナップショットが届かなかったため、まだ探索できません。相手が接続している間にもう一度取得してください。',
     'sharedWithYouPanel.snapshotMismatch': 'ワールドはリポジトリに追加されましたが、共有した人が送ったスナップショットがワールドと一致しないため、保存されませんでした。',
     'sharedWithYouPanel.publishedWithOldHash': 'このワールドはコンテンツハッシュが SHA-256 になる前に公開されたため、スナップショットを検証できず、保存されませんでした。共有した人にエディターで開いて再公開し、新しいコピーを共有するよう依頼してください。',
+    'sharedWithYouPanel.sharedBeforeSha256': 'この共有はコンテンツハッシュが SHA-256 になる前に作成されたため、検証も取得もできません。共有した人にワールドを再公開し、新しいコピーを共有するよう依頼してください。',
+    'sharedWithYouPanel.shareUnavailable': 'このワールドを共有した人から送られてきませんでした。接続中のデバイスにはもう無いのかもしれません。もう一度共有するよう依頼してください。',
     'candidateLeaderboardTable.hideEvidence': '証拠を隠す',
     'candidateLeaderboardTable.inspectEvidence': '証拠を調べる',
     'evidenceExportComparisonRecordPairSelector.noDifferences': '違いはありません',

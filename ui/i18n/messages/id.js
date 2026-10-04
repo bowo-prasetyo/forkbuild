@@ -2608,6 +2608,8 @@ export default Object.freeze({
     'sharedWithYouPanel.snapshotUnavailable': 'Dunia sudah ditambahkan ke Repositori Anda, tetapi snapshot-nya tidak datang dari orang yang membagikannya, jadi belum bisa dijelajahi. Coba Ambil lagi selagi mereka terhubung.',
     'sharedWithYouPanel.snapshotMismatch': 'Dunia sudah ditambahkan ke Repositori Anda, tetapi snapshot yang dikirim pembagi tidak cocok dengan Dunia tersebut, jadi tidak disimpan.',
     'sharedWithYouPanel.publishedWithOldHash': 'Dunia ini diterbitkan sebelum hash konten beralih ke SHA-256, jadi snapshot-nya tidak bisa diperiksa dan tidak disimpan. Minta orang yang membagikannya untuk membukanya di Editor, menerbitkannya lagi, lalu membagikan salinan baru.',
+    'sharedWithYouPanel.sharedBeforeSha256': 'Berbagi ini dibuat sebelum hash konten beralih ke SHA-256, jadi tidak bisa diperiksa atau diambil. Minta orang yang membagikannya untuk menerbitkan Dunia itu lagi dan membagikan salinan baru.',
+    'sharedWithYouPanel.shareUnavailable': 'Orang yang membagikan Dunia ini tidak mengirimkannya. Perangkat yang mereka gunakan untuk terhubung mungkin sudah tidak memilikinya; minta mereka membagikannya lagi.',
     'candidateLeaderboardTable.hideEvidence': 'Sembunyikan Bukti',
     'candidateLeaderboardTable.inspectEvidence': 'Periksa Bukti',
     'evidenceExportComparisonRecordPairSelector.noDifferences': 'Tidak ada perbedaan',

@@ -23,7 +23,7 @@ import { DecentralizedPublicationDiscoveryProvider } from '../discovery/Decentra
 import { DecentralizedPublication, MAX_CONTENT_TITLE_LENGTH, normalizeContentTitle } from '../core/DecentralizedPublication.js';
 import { validateDecentralizedPublication } from '../application/publication/DecentralizedPublicationValidator.js';
 import { SharePublicationWithPeersUseCase, LEGACY_CONTENT_HASH } from '../application/publication/sharing/SharePublicationWithPeersUseCase.js';
-import { RetrieveSharedPublicationUseCase } from '../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
+import { RetrieveSharedPublicationUseCase, SHARE_UNAVAILABLE } from '../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
 import { AutoRetrieveSharedPublicationsUseCase } from '../application/publication/sharing/AutoRetrieveSharedPublicationsUseCase.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { StorageEntryNotLoadedError } from '../storage/StorageEntryNotLoadedError.js';
@@ -434,6 +434,61 @@ function authenticated(peer) {
     assert(retrieveError && retrieveError.code === LEGACY_CONTENT_HASH, 'retrieving it is refused with the same code');
     assert(edge.repository.list().length === 0 && !edge.contentStore.has(world.contentReference), 'and nothing is added');
     console.log('✓ a World with a legacy content hash is neither shared nor retrieved');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// A share made before content hashes became SHA-256 (its own content hash is
+// FNV-1a): flagged in the pending list and refused without asking anyone.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('oldshare-chrome', network);
+    const edge = makeDevice('oldshare-edge', network);
+    const world = await publishWorld(chrome, 'Old Hash Share');
+    const bytes = JSON.stringify(world.toJSON());
+    const hash = computeFnv1a32(bytes);
+    chrome.contentStore._storageProvider.save(`content:${hash}`, bytes);
+    let envelope = new DecentralizedPublication({
+        contentKind: PUBLICATION_CONTENT_KIND,
+        contentSchemaVersion: 1,
+        contentReference: new ContentReference({ hash, algorithm: 'fnv1a-32' }),
+        publisherIdentity: chrome.identityProvider.getSigningIdentity().toJSON()
+    });
+    envelope = envelope.withSignature(chrome.identityProvider.signCanonical(envelope.getSigningDescriptor()));
+    chrome.catalog.add(envelope);
+
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    await waitFor(() => edge.catalog.get(envelope.id) !== null, 'the old share arrives');
+    const [pending] = edge.retrieve.listPending();
+    assert(pending && pending.envelopeId === envelope.id && pending.legacy, 'it is listed as a share that can\'t be retrieved');
+    let error = null;
+    try { await edge.retrieve.retrieve(envelope.id); } catch (e) { error = e; }
+    assert(error && error.code === LEGACY_CONTENT_HASH && edge.repository.list().length === 0, 'retrieving it is refused, adding nothing');
+    console.log('✓ a share made with a legacy content hash is flagged and refused');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// A sharer whose device no longer holds the shared Publication: refused with
+// a code the view explains, not the resolver's internal reason.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('gone-chrome', network);
+    const edge = makeDevice('gone-edge', network);
+    const world = await publishWorld(chrome, 'Gone Away');
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    const { envelope } = await chrome.share.share(world);
+    await waitFor(() => edge.catalog.get(envelope.id) !== null, 'the share arrives');
+    chrome.contentStore._storageProvider.remove(`content:${envelope.contentReference.hash}`);
+    assert(!edge.retrieve.listPending()[0].legacy, 'a SHA-256 share is not flagged');
+    let error = null;
+    try { await edge.retrieve.retrieve(envelope.id); } catch (e) { error = e; }
+    assert(error && error.code === SHARE_UNAVAILABLE && edge.repository.list().length === 0, 'retrieving it is refused as not sent, adding nothing');
+    console.log('✓ a share its sharer no longer holds is reported as not sent');
 
     chrome.dispose();
     edge.dispose();

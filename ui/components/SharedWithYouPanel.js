@@ -2,6 +2,7 @@ import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
 import { errorText, t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
 import { LEGACY_CONTENT_HASH } from '../../application/publication/sharing/SharePublicationWithPeersUseCase.js';
+import { SHARE_UNAVAILABLE } from '../../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
 import { PeerSnapshotMaterializationOutcome } from '../../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 
 function stripPrefix(message) {
@@ -59,9 +60,13 @@ export default {
                     error.value = t('sharedWithYouPanel.snapshotMismatch');
                 }
             } catch (e) {
-                error.value = e && e.code === LEGACY_CONTENT_HASH
-                    ? t('sharedWithYouPanel.publishedWithOldHash')
-                    : stripPrefix(errorText(e));
+                if (e && e.code === LEGACY_CONTENT_HASH) {
+                    error.value = t('sharedWithYouPanel.publishedWithOldHash');
+                } else if (e && e.code === SHARE_UNAVAILABLE) {
+                    error.value = t('sharedWithYouPanel.shareUnavailable');
+                } else {
+                    error.value = stripPrefix(errorText(e));
+                }
             } finally {
                 retrievingId.value = null;
                 refresh();
@@ -101,7 +106,8 @@ export default {
                     </div>
                     <p v-if="item.title" class="identity-mgmt-status">{{ t('sharedWithYouPanel.sharedByLine', { sharer: sharerLabel(item) }) }}</p>
                     <p v-if="receivedLabel(item)" class="identity-mgmt-status">{{ t('sharedWithYouPanel.received', { when: receivedLabel(item) }) }}</p>
-                    <div class="identity-mgmt-actions">
+                    <p v-if="item.legacy" class="form-hint form-hint--neutral">{{ t('sharedWithYouPanel.sharedBeforeSha256') }}</p>
+                    <div v-else class="identity-mgmt-actions">
                         <button class="action-btn action-btn--primary"
                                 :disabled="!item.sharerConnected || retrievingId === item.envelopeId"
                                 :title="item.sharerConnected ? '' : t('sharedWithYouPanel.theyNeedToBeConnected')"
