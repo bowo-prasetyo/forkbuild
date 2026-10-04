@@ -789,7 +789,11 @@ withdrawn on leave and on `pagehide`; joining is never restored at
 startup. list() keeps only cards that verify by their own signature (the
 server's listing is untrusted), drops this identity and blocked ones, and
 marks who is connected. connect() is FindPeerUseCase#search() and
-#connect() by exact identity. A lobby connection is an ordinary
+#connect() by exact identity. Each successful join() fires onJoined(), on
+which AutoConnectKnownPeersUseCase makes one pass over Known Peers, as it
+does for Be Discoverable (FindPeerUseCase#onPublished()); renewals and
+republishing never fire it, and the pass never reads the lobby listing, so
+lobby strangers are never connected without a click. A lobby connection is an ordinary
 authenticated peer: publication sync and the announcement index run as for
 any peer, and friendship still gates chat and voice. The UI is
 ui/components/PublicLobbyPanel.js, on the Peers page and behind World

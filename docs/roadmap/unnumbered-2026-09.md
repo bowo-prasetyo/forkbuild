@@ -3837,3 +3837,24 @@ must be connected.
   removed title breaking the signature; an untitled envelope still verifying; sharing again after an untitled share,
   listed once and settled by one Retrieve; a false title refused on retrieval, which fails the test when the check is
   removed). `index.html`'s module preload hints regenerated.
+
+## Joining a lobby connects Known Peers, as Be Discoverable does (unnumbered, 2026-10-04)
+
+**Joining a lobby now gives Known Peers one automatic connection attempt.** Reported from two friends who joined a
+lobby together and still had to click Connect: joining makes a device discoverable through
+`PeerSessionManager#publishSelf()` directly, so `FindPeerUseCase#onPublished()`, the signal on which
+`AutoConnectKnownPeersUseCase` makes its Be Discoverable pass, never fired. Joining a lobby says the same "I am
+reachable now", and is also one click.
+
+- `PublicLobbyUseCase#onJoined()` fires once after each successful `join()`. Renewing a card and replacing a spent
+  offer never fire it, so staying in a lobby never turns into a polling loop of Known Peer lookups.
+- `AutoConnectKnownPeersUseCase` takes an optional `publicLobbyUseCase` and makes one pass on each join.
+  `ui/main/composeIdentityAndPeers.js` now builds it after the lobby use case to pass it in.
+- The pass looks Known Peers up by identity and never reads the lobby listing, so "seeing someone in the lobby never
+  connects to them on its own" still holds for strangers. A Known Peer is reached wherever they are discoverable, in
+  the same lobby, another one, or through Be Discoverable.
+- User guide "Reconnecting" and the lobby's Connect bullet updated in every language; `docs/Architecture.md`'s
+  "Public lobby" updated.
+- Tests in `tests/PublicLobby.test.js`: a join is announced once, not on renewal, a replaced offer, a refused join
+  or after unsubscribing (fails when the announcement is removed); over real WebRTC, joining a lobby connects Alice
+  to Bob, a discoverable Known Peer in another lobby, while Carol, a stranger in Alice's lobby, stays unconnected.

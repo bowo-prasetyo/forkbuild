@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 25e078a7afa72b20 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 19e30fff7ffaefab -->
 # 07 — Koneksi Rekan & Teman
 
 <!-- languages -->
@@ -128,7 +128,10 @@ di Tampilan Dunia.
   dengan cara yang sama seperti Cari berdasarkan ID, tanpa ada yang perlu
   disalin. Kartu mereka menampilkan **Menghubungkan…**, lalu **Terhubung**
   begitu jabat tangannya membuktikan siapa mereka. Melihat seseorang di
-  lobi tidak pernah menghubungkan Anda dengannya dengan sendirinya.
+  lobi tidak pernah menghubungkan Anda dengannya dengan sendirinya. Namun
+  bergabung ke lobi menghubungkan Anda dengan Rekan yang Dikenal yang
+  sedang dapat ditemukan, di mana pun mereka berada (lihat
+  [Menghubungkan kembali](#menghubungkan-kembali)).
 - **Blokir** menyembunyikan seseorang dari daftar lobi Anda dan
   memblokirnya seperti di bagian lain halaman ini.
 - **Keluar dari Lobi** langsung mengeluarkan Anda. Bergabung hanya
@@ -307,11 +310,14 @@ menjawab.
 ForkBuild juga mencobanya untuk Anda, secara otomatis, untuk setiap
 identitas di Rekan yang Dikenal: begitu aplikasi dimulai, setiap kali Anda
 Mengingat, Melupakan, atau mengubah hubungan Rekan yang Dikenal dengan cara
-lain, dan setiap kali Anda sendiri mengeklik **Jadikan Dapat Ditemukan**,
-ForkBuild diam-diam memeriksa apakah masing-masing saat ini **Dapat
-ditemukan** dan, jika ya, menghubungkan tanpa Anda perlu mengeklik Hubungkan
-Kembali. Jadi dua teman yang sama-sama mengeklik **Jadikan Dapat
-Ditemukan** akan terhubung: klik kedua menemukan yang pertama. Rekan yang
+lain, setiap kali Anda sendiri mengeklik **Jadikan Dapat Ditemukan**, dan
+setiap kali Anda mengeklik **Gabung ke Lobi**, ForkBuild diam-diam
+memeriksa apakah masing-masing saat ini dapat ditemukan dan, jika ya,
+menghubungkan tanpa Anda perlu mengeklik Hubungkan Kembali. Jadi dua teman
+yang sama-sama mengeklik **Jadikan Dapat Ditemukan**, atau sama-sama
+bergabung ke lobi (lobi yang sama atau tidak), akan terhubung: klik kedua
+menemukan yang pertama. Tetap berada di lobi tidak pernah mengulangi
+pemeriksaan ini dengan sendirinya. Rekan yang
 Dikenal yang saat ini tidak dapat ditemukan, atau tidak dapat dijangkau,
 dibiarkan saja — tidak ada perulangan yang terus mengejarnya, tidak ada
 notifikasi tentang upayanya, dan kegagalan satu identitas tidak pernah

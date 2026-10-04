@@ -9,6 +9,9 @@ import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
 import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
 import { PeerBlockUseCase } from '../application/peer/PeerBlockUseCase.js';
 import { PublicLobbyUseCase } from '../application/peer/PublicLobbyUseCase.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { AutoConnectKnownPeersUseCase } from '../application/peer/AutoConnectKnownPeersUseCase.js';
+import { PeerIdentity } from '../peer/PeerIdentity.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -17,7 +20,7 @@ import { assert } from './support/Assert.js';
 // standing in for the server (tests/RendezvousWorkerInterop.test.js checks
 // the same cards against the real worker).
 
-function makeDevice(label, network, { turnRequests = null } = {}) {
+function makeDevice(label, network, { turnRequests = null, cardTtlMs } = {}) {
     const identityProvider = new LocalIdentityProvider(new InMemoryStorageProvider());
     identityProvider.login(label);
     const discovery = new DiscoveryBootstrap({
@@ -39,7 +42,8 @@ function makeDevice(label, network, { turnRequests = null } = {}) {
         findPeerUseCase: new FindPeerUseCase({ peerSessionManager: sessions }),
         peerBlockUseCase: blocks,
         storageProvider: storage,
-        tickIntervalMs: 100
+        tickIntervalMs: 100,
+        ...(cardTtlMs ? { cardTtlMs } : {})
     });
     return { identityProvider, sessions, blocks, lobby, storage, id: identityProvider.getSigningIdentity().id };
 }
@@ -176,6 +180,82 @@ async function rejects(promise, pattern, message) {
     console.log('✓ World lobbies are separate, and blocked, forged or expired cards are never listed');
 
     for (const device of [alice, bob, mallory]) { device.lobby.dispose(); device.sessions.dispose(); }
+}
+
+// Joining is announced once per Join click, never for a renewed card or a
+// replaced offer.
+{
+    const network = new LocalRendezvousNetwork();
+    // A one-minute card is inside the renewal margin, so every tick renews it.
+    const alice = makeDevice('lobby-joined-alice', network, { cardTtlMs: 60 * 1000 });
+    const bob = makeDevice('lobby-joined-bob', network);
+    const joins = [];
+    const unsubscribe = alice.lobby.onJoined(() => joins.push(Date.now()));
+
+    await alice.lobby.join(PUBLIC_LOBBY, { displayName: 'Alice' });
+    assert(joins.length === 1, 'joining is announced once');
+    const firstCard = (await bob.lobby.list(PUBLIC_LOBBY)).members[0];
+    await bob.lobby.connect(alice.id);
+    await waitFor(() => authenticatedTo(alice.sessions, bob.id), 'Bob connects, spending Alice\'s offer');
+    await waitFor(() => alice.sessions.isPublishing(), 'Alice\'s spent offer is replaced');
+    let renewed = false;
+    const started = Date.now();
+    while (!renewed && Date.now() - started < 5000) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        const [member] = (await bob.lobby.list(PUBLIC_LOBBY)).members;
+        renewed = Boolean(member) && member.publishedAt.getTime() > firstCard.publishedAt.getTime();
+    }
+    assert(renewed, 'setup: Alice\'s card was renewed');
+    assert(joins.length === 1, 'renewing the card and replacing the offer are not announced as joins');
+
+    await alice.lobby.join(worldLobby('w-joined'), { displayName: 'Alice' });
+    assert(joins.length === 2, 'joining another lobby is announced again');
+    await rejects(alice.lobby.join('not a lobby'), /not a lobby/, 'setup: an invalid join is refused');
+    assert(joins.length === 2, '...and a refused join is not announced');
+    unsubscribe();
+    await alice.lobby.leave(PUBLIC_LOBBY);
+    await alice.lobby.join(PUBLIC_LOBBY, { displayName: 'Alice' });
+    assert(joins.length === 2, 'an unsubscribed listener hears nothing');
+    console.log('✓ a join is announced once per Join click, never for renewals or replaced offers');
+    for (const device of [alice, bob]) { device.lobby.dispose(); device.sessions.dispose(); }
+}
+
+// Joining a lobby gives Known Peers one automatic connection attempt, as Be
+// Discoverable does, while a stranger in the same lobby is never connected.
+{
+    const network = new LocalRendezvousNetwork();
+    const alice = makeDevice('lobby-auto-alice', network);
+    const bob = makeDevice('lobby-auto-bob', network);
+    const carol = makeDevice('lobby-auto-carol', network);
+    const relationships = new PeerRelationshipUseCase(new InMemoryStorageProvider(), alice.identityProvider);
+    const bobSigning = bob.identityProvider.getSigningIdentity();
+    relationships.rememberPeer(new PeerIdentity({ identityId: bob.id, publicKey: bobSigning.publicKey, algorithm: bobSigning.algorithm }));
+    const autoConnect = new AutoConnectKnownPeersUseCase({
+        findPeerUseCase: new FindPeerUseCase({ peerSessionManager: alice.sessions }),
+        peerRelationshipUseCase: relationships,
+        connectedPeerRegistry: alice.sessions.registry,
+        publicLobbyUseCase: alice.lobby
+    });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    assert(!authenticatedTo(alice.sessions, bob.id), 'setup: Bob was not discoverable when the app started');
+
+    // Bob becomes discoverable from a different lobby; Carol, a stranger,
+    // waits in the one Alice is about to join.
+    await bob.lobby.join(worldLobby('w-bob'), { displayName: 'Bob' });
+    await carol.lobby.join(PUBLIC_LOBBY, { displayName: 'Carol' });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    assert(!authenticatedTo(alice.sessions, bob.id), 'nothing connects before Alice does anything');
+
+    await alice.lobby.join(PUBLIC_LOBBY, { displayName: 'Alice' });
+    await waitFor(() => authenticatedTo(alice.sessions, bob.id) && authenticatedTo(bob.sessions, alice.id),
+        'joining a lobby connects Alice to Bob, a discoverable Known Peer, with no click on him');
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    assert(!authenticatedTo(alice.sessions, carol.id) && !authenticatedTo(carol.sessions, alice.id),
+        'Carol, a stranger in the same lobby, is still never connected automatically');
+    console.log('✓ joining a lobby connects discoverable Known Peers automatically, never lobby strangers');
+
+    autoConnect.dispose();
+    for (const device of [alice, bob, carol]) { device.lobby.dispose(); device.sessions.dispose(); }
 }
 
 // Joining needs a signing identity and a rendezvous server.
