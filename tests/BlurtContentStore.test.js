@@ -68,7 +68,7 @@ function randomText(bytes) {
     const text = JSON.stringify({ bricks: [1, 2, 3], name: 'tiny' });
     const reference = await store.put(text);
     assert(reference.storage === 'blurt' && reference.uri.startsWith('blurt://alice/forkbuild-c-') && reference.hash === computeContentHash(text), 'a blurt:// locator and the content hash');
-    const manifest = chain.posts.get(reference.uri.slice('blurt://'.length).replace('/', '/'));
+    const manifest = chain.posts.get(reference.uri.slice('blurt://'.length));
     const root = chain.posts.get(`alice/${manifest.parent_permlink}`);
     assert(root && root.parent_author === '' && root.parent_permlink === 'forkbuild', 'the manifest replies to a build post');
     assert(await store.get(reference) === text, 'the content reads back');
