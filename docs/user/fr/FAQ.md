@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 66a180a29276c694 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: b5cf5faa75241d15 -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -71,7 +71,10 @@ ni le distribuer plus tard. Connectez-vous avant de publier.
 Oui : ouvrez le Monde dans la Vue du Monde, puis dans **Mon Monde
 partagé** choisissez **Plus ▾ → Dépublier…**. Cela le retire de votre
 Dépôt. Cela ne peut pas rappeler les copies que d’autres ont déjà reçues
-ni ce que vous avez distribué sur Arweave, IPFS, Nostr ou Steem.
+ni ce que vous avez distribué sur Arweave, IPFS, Nostr ou Steem. Cet appareil se souvient toutefois de ce que
+vous avez dépublié : la recherche du Dépôt sur les réseaux n’affichera plus
+ces copies ici ; d’autres appareils et d’autres personnes peuvent encore les
+trouver.
 
 ### Quelqu’un a placé ma construction dans son Monde. A-t-il déplacé la mienne ?
 

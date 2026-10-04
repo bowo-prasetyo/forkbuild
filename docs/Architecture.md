@@ -464,6 +464,10 @@ schemaVersion, license, contentReference, publisher identity and
 signature. Publishing the same document again adds a new Publication
 for the same documentId. UnpublishDocumentUseCase removes the
 Publication and its snapshot and never touches the editable document.
+LocalPublisherProvider also adds the id to publisher/UnpublishedPublicationLog.js,
+a per-device list (never a tombstone: nothing is announced) that Repository
+network discovery counts as known, so a copy distributed earlier isn't
+listed again.
 World View can publish too (WorldNavigationSession#publishDocument()),
 but refuses a document that is itself a published snapshot. Everything
 that leaves the device after publishing is a separate distribution step;
@@ -514,7 +518,8 @@ publications with the application-wide decentralized discovery provider
   discovery provider and the World Encounter admission log only when the
   verifier returns VERIFIED and it is exactly the Publication announced.
   Each run checks at most 20 new records; refused records are not fetched
-  again; a Publication already listed is never fetched. Where each record
+  again; a Publication already listed, or one this device unpublished
+  (publisher/UnpublishedPublicationLog.js), is never fetched. Where each record
   was read is kept by NetworkPublicationLocatorStore, and Explore on such a
   card opens that record's link view (`/view/ar|steem|ipfs/…`), which
   fetches and checks the build before opening World View.

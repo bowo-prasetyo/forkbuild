@@ -1058,7 +1058,7 @@ export default Object.freeze({
     'ownPublicationPanel.confirmUnpublish': 'Confirmar el retiro de la publicación',
     'ownPublicationPanel.distribute': 'Distribuir',
     'ownPublicationPanel.unpublish': 'Retirar publicación…',
-    'ownPublicationPanel.removeThisWorldFromThe': '¿Quitar este Mundo del catálogo? Sus colocaciones, el documento y las copias distribuidas se conservan.',
+    'ownPublicationPanel.removeThisWorldFromThe': '¿Quitar este Mundo de su Repositorio en este dispositivo? Sus colocaciones y el documento se conservan. Las copias que ya distribuyó siguen en las redes, donde otras personas aún pueden encontrarlas, pero este dispositivo no volverá a mostrarlas.',
     'ownPublicationPanel.unpublish2': 'Retirar publicación',
     'ownPublicationPanel.publication': 'Mundo compartido',
     'ownPublicationPanel.outcome': 'Resultado',

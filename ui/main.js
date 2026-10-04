@@ -45,6 +45,7 @@ import { FollowingFeed } from '../application/publication/FollowingFeed.js';
 import { FollowedAuthorPublicationNotifier } from '../application/publication/FollowedAuthorPublicationNotifier.js';
 import { composeAnnouncementSync } from './main/composeAnnouncementSync.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
+import { UnpublishedPublicationLog } from '../publisher/UnpublishedPublicationLog.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { composeRefreshPublicationCommentaryCommand } from '../application/publication/commentary/RefreshPublicationCommentaryCommandComposition.js';
 // The composition root's larger subsystems are built in ./main/, in the order
@@ -477,8 +478,11 @@ const repositoryNetworkDiscovery = new RepositoryNetworkDiscovery({
     discoveryTag: PUBLICATION_DISCOVERY_TAG,
     materialSources: worldEncounterMaterialSources,
     verifier: worldEncounterMaterialVerifier,
+    // A Publication this device unpublished counts as known, so a copy it
+    // distributed earlier is never listed again (publisher/UnpublishedPublicationLog.js).
     isKnown: (publicationId) => Boolean(decentralizedPublicationDiscoveryProvider.findById(publicationId)
-        || new LocalDiscoveryProvider(new LocalStorageProvider()).findById(publicationId)),
+        || new LocalDiscoveryProvider(new LocalStorageProvider()).findById(publicationId)
+        || new UnpublishedPublicationLog(new LocalStorageProvider()).has(publicationId)),
     // Each sink isolated, as WorldEncounterCanvas's admitToRepositoryDiscovery() does.
     admit: (publication, { locator }) => {
         try { networkPublicationLocatorStore.set(publication.id, locator); } catch { /* see above */ }

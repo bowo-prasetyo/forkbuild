@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 66a180a29276c694 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: b5cf5faa75241d15 -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -73,7 +73,10 @@ Bisa: buka Dunia itu di Tampilan Dunia, lalu di **Dunia Bersama Saya**
 pilih **Lainnya ▾ → Batalkan Penerbitan…**. Dunia itu dihapus dari
 Repositori Anda. Salinan yang sudah diterima orang lain atau apa pun yang
 sudah Anda distribusikan ke Arweave, IPFS, Nostr, atau Steem tidak dapat
-ditarik kembali.
+ditarik kembali. Perangkat ini tetap mengingat apa yang Anda batalkan
+penerbitannya, sehingga pencarian Repositori di jaringan tidak akan
+menampilkan salinan itu lagi di sini; perangkat lain dan orang lain masih
+bisa menemukannya.
 
 ### Seseorang menempatkan bangunan saya di Dunia mereka. Apakah bangunan saya dipindahkan?
 

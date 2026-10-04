@@ -184,4 +184,5 @@ connected to can still fetch builds of up to 64 MB straight from you.
 
 Distribution can't be taken back: once something is announced or stored,
 other people may already hold a copy. **Unpublish** removes a World from
-your own catalog only.
+your own catalog only, and this device then remembers not to list the
+distributed copies again when the Repository searches the networks.

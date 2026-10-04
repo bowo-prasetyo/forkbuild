@@ -62,7 +62,9 @@ before you publish.
 Yes: open the World in World View, then in **My Shared World** choose
 **More ▾ → Unpublish…**. That removes it from your Repository. It can't
 recall copies other people already received or anything you distributed to
-Arweave, IPFS, Nostr or Steem.
+Arweave, IPFS, Nostr or Steem. This device does remember what you
+unpublished, so the Repository's search of the networks won't list those
+copies again here; other devices and other people can still find them.
 
 ### Someone placed my build in their World. Did they move mine?
 

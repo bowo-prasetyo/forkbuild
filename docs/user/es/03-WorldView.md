@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3833a37ca4181e18 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 0a129e40e9aeb884 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -1074,7 +1074,10 @@ menos frecuentes esperan detrás de **Más ▾**: **Exportar Snapshot**,
 (abajo) y **Retirar publicación…**. Retirar publicación pregunta una vez
 antes de actuar (quita el Mundo del catálogo, mientras que sus
 colocaciones, el documento y las copias distribuidas se conservan) y
-**Cancelar** da marcha atrás. Los resultados de Exportar y Comprobar siguen
+**Cancelar** da marcha atrás.
+Las copias que ya distribuyó no se pueden recuperar, pero este dispositivo
+recuerda lo que retiró, así que la búsqueda del Repositorio en las redes no
+vuelve a mostrarlas. Los resultados de Exportar y Comprobar siguen
 en el panel después de cerrar el menú.
 
 Cuando el Mundo que tiene abierto lo publicó otra persona (uno que un par

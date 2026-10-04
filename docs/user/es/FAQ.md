@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 66a180a29276c694 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: b5cf5faa75241d15 -->
 # Preguntas frecuentes
 
 <!-- languages -->
@@ -73,7 +73,9 @@ después. Inicie sesión antes de publicar.
 Sí: abra el Mundo en la Vista del mundo y luego, en **Mi Mundo
 compartido**, elija **Más ▾ → Retirar publicación…**. Eso lo quita de su
 Repositorio. No puede recuperar las copias que otras personas ya
-recibieron ni nada de lo que distribuyó a Arweave, IPFS, Nostr o Steem.
+recibieron ni nada de lo que distribuyó a Arweave, IPFS, Nostr o Steem. Este dispositivo sí recuerda lo que retiró,
+así que la búsqueda del Repositorio en las redes no volverá a mostrar esas
+copias aquí; otros dispositivos y otras personas aún pueden encontrarlas.
 
 ### Alguien colocó mi construcción en su Mundo. ¿Movió la mía?
 

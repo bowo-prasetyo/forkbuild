@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 66a180a29276c694 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: b5cf5faa75241d15 -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -75,7 +75,10 @@ Ja: Öffnen Sie die Welt in der Weltansicht und wählen Sie dann unter
 **Meine Geteilte Welt** **Mehr ▾ → Veröffentlichung zurückziehen …**. Das
 entfernt sie aus Ihrem Repository. Kopien, die andere bereits erhalten
 haben, oder was Sie auf Arweave, IPFS, Nostr oder Steem verteilt haben,
-lassen sich damit nicht zurückholen.
+lassen sich damit nicht zurückholen. Dieses Gerät merkt sich aber, was Sie
+zurückgezogen haben, sodass die Suche des Repository in den Netzwerken diese
+Kopien hier nicht wieder auflistet; andere Geräte und andere Menschen können
+sie weiterhin finden.
 
 ### Jemand hat mein Bauwerk in seiner Welt platziert. Hat er meines verschoben?
 

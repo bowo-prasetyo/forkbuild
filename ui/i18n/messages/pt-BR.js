@@ -1058,7 +1058,7 @@ export default Object.freeze({
     'ownPublicationPanel.confirmUnpublish': 'Confirmar a despublicação',
     'ownPublicationPanel.distribute': 'Distribuir',
     'ownPublicationPanel.unpublish': 'Despublicar…',
-    'ownPublicationPanel.removeThisWorldFromThe': 'Remover este Mundo do catálogo? Os posicionamentos dele, o documento e as cópias distribuídas continuam.',
+    'ownPublicationPanel.removeThisWorldFromThe': 'Remover este Mundo do seu Repositório neste dispositivo? Os posicionamentos dele e o documento continuam. As cópias que você já distribuiu continuam nas redes, onde outras pessoas ainda podem encontrá-las, mas este dispositivo não vai listá-las de novo.',
     'ownPublicationPanel.unpublish2': 'Despublicar',
     'ownPublicationPanel.publication': 'Mundo compartilhado',
     'ownPublicationPanel.outcome': 'Resultado',

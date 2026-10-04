@@ -1054,7 +1054,7 @@ export default Object.freeze({
     'ownPublicationPanel.confirmUnpublish': 'Konfirmasi pembatalan penerbitan',
     'ownPublicationPanel.distribute': 'Distribusikan',
     'ownPublicationPanel.unpublish': 'Batalkan Penerbitan…',
-    'ownPublicationPanel.removeThisWorldFromThe': 'Hapus Dunia ini dari katalog? Penempatannya, Dokumennya, dan salinan yang sudah didistribusikan tetap ada.',
+    'ownPublicationPanel.removeThisWorldFromThe': 'Hapus Dunia ini dari Repositori Anda di perangkat ini? Penempatannya dan Dokumennya tetap ada. Salinan yang sudah Anda distribusikan tetap ada di jaringan, tempat orang lain masih bisa menemukannya, tetapi perangkat ini tidak akan menampilkannya lagi.',
     'ownPublicationPanel.unpublish2': 'Batalkan Penerbitan',
     'ownPublicationPanel.publication': 'Dunia Bersama',
     'ownPublicationPanel.outcome': 'Hasil',

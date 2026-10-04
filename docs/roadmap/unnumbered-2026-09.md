@@ -3894,3 +3894,30 @@ placement.rotation` for bricks of placed Structures, and `core/WalkableSurface.j
 at quarter turns and the exact turned rectangle at other angles, as stairs and slopes already did. The principle
 "Start Simple: A Box Is A Good Enough Capsule" is updated to match. Editor bounds (selection, stacking, document
 bounds) are unchanged. New `tests/RotatedBrickCollision.test.js`.
+
+## Unpublishing keeps a distributed World off the Repository (unnumbered, 2026-10-04)
+
+**A Publication unpublished on this device no longer comes back from the networks.** Reported after unpublishing a
+World already distributed to Steem: it left the Repository, then reappeared as "1 new creation found on the
+networks". Unpublish only removes the local record, while the signed record stays announced and validly signed on
+Nostr, Arweave or Steem for good, so Repository network discovery's `isKnown` no longer recognised the id and
+admitted it again like anyone else's World.
+
+- New `publisher/UnpublishedPublicationLog.js` (`forkbuild-unpublished-publications`): the ids this device
+  unpublished. `LocalPublisherProvider#unpublish()` adds the id after removing the record and snapshot.
+- `ui/main.js` composes Repository network discovery's `isKnown` to also count those ids as known, so the record is
+  not even fetched. It is a per-device memory, never a tombstone: nothing is announced, other devices and people
+  still find the World, and explicit actions (opening a shared link, a peer sharing it, a World Encounter) are not
+  affected. Publishing again makes a new id, which the log never names.
+- The log is backed up and restored with your publications (`application/backup/BackupEntryGroups.js`).
+- Unpublish's confirmation now says that distributed copies stay on the networks, where other people can still find
+  them, and that this device won't list them again; updated in every language. User guide (World View's My Shared
+  World, FAQ "Can I unpublish something?", Distribution), `docs/Architecture.md` and `docs/Privacy.md` updated.
+- A World unpublished before this change, and already found again, stays listed: the log only covers unpublishes
+  made from now on.
+- Tests: new `tests/UnpublishedPublicationLog.test.js` (the log keeps each id once and ignores malformed entries;
+  unpublish records the id, publishing again doesn't inherit it; with `isKnown` composed as `ui/main.js` does, a
+  still-announced signed copy is neither fetched nor admitted, while without the log it is admitted, which fails the
+  test when the log is removed; the log is in the publications backup group);
+  `tests/WorldViewPanelLayoutBrowser.test.js` checks the new confirmation. The confirmation names no network, as
+  the panel's template never does. `index.html`'s module preload hints regenerated.
