@@ -26,6 +26,7 @@ import { SharePublicationWithPeersUseCase } from '../application/publication/sha
 import { RetrieveSharedPublicationUseCase } from '../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
 import { AutoRetrieveSharedPublicationsUseCase } from '../application/publication/sharing/AutoRetrieveSharedPublicationsUseCase.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { StorageEntryNotLoadedError } from '../storage/StorageEntryNotLoadedError.js';
 import { assert } from './support/Assert.js';
 
 // "Share with Peers": a World published on one device reaches another
@@ -344,6 +345,53 @@ function authenticated(peer) {
     await rejects(edge.retrieve.retrieve(lying.id), /not the one its title announced/, 'retrieving a World under someone else\'s title is refused');
     assert(edge.repository.list().length === 0 && !edge.contentStore.has(world.contentReference), 'and nothing is added');
     console.log('✓ a share whose title is not its World\'s is refused on retrieval');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// Content kept on disk and not yet loaded (IndexedDB after a reload): reading
+// it synchronously throws, and the pending list must still be answered.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('cold-chrome', network);
+    const edge = makeDevice('cold-edge', network);
+    const retrieved = await publishWorld(chrome, 'Already Here');
+    const waiting = await publishWorld(chrome, 'Still Waiting');
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    const done = await chrome.share.share(retrieved);
+    const open = await chrome.share.share(waiting);
+    await waitFor(() => edge.catalog.get(done.envelope.id) && edge.catalog.get(open.envelope.id), 'both shares arrive');
+    await edge.retrieve.retrieve(done.envelope.id);
+
+    edge.contentStore.getSync = (reference) => { throw new StorageEntryNotLoadedError(`content:${reference.hash}`); };
+    assert(edge.retrieve.isRetrieved(done.envelope.id), 'a retrieved World is still known as retrieved while its content is on disk');
+    const pending = edge.retrieve.listPending();
+    assert(pending.length === 1 && pending[0].envelopeId === open.envelope.id, 'and only the World not retrieved yet is pending');
+    console.log('✓ the pending list is answered while shared content is on disk and not loaded');
+
+    chrome.dispose();
+    edge.dispose();
+}
+
+// A sharer that no longer holds the snapshot: the Publication is added, the
+// snapshot is reported unavailable, and the share stays pending.
+{
+    const network = new LocalPeerNetwork();
+    const chrome = makeDevice('nosnap-chrome', network);
+    const edge = makeDevice('nosnap-edge', network);
+    const world = await publishWorld(chrome, 'Snapshot Gone');
+    chrome.contentStore._storageProvider.remove(`content:${world.contentReference.hash}`);
+    const peer = linkTo(edge, chrome);
+    await waitFor(() => authenticated(peer), 'Edge connects to Chrome');
+    const { envelope } = await chrome.share.share(world);
+    await waitFor(() => edge.catalog.get(envelope.id) !== null, 'the share arrives');
+    const { publication, snapshot } = await edge.retrieve.retrieve(envelope.id);
+    assert(publication.id === world.id && snapshot === PeerSnapshotMaterializationOutcome.UNAVAILABLE,
+        'Retrieve resolves with the snapshot reported unavailable, for the panel to say so');
+    assert(edge.retrieve.listPending().length === 1, 'and the share stays pending, to retry');
+    console.log('✓ a snapshot that does not arrive is reported, and the share stays pending');
 
     chrome.dispose();
     edge.dispose();

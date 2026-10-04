@@ -2604,6 +2604,8 @@ export default Object.freeze({
     'sharedWithYouPanel.retrieving': 'Mengambil…',
     'sharedWithYouPanel.retrieve2': 'Ambil',
     'sharedWithYouPanel.theyNeedToBeConnected': 'Mereka perlu terhubung',
+    'sharedWithYouPanel.snapshotUnavailable': 'Dunia sudah ditambahkan ke Repositori Anda, tetapi snapshot-nya tidak datang dari orang yang membagikannya, jadi belum bisa dijelajahi. Coba Ambil lagi selagi mereka terhubung.',
+    'sharedWithYouPanel.snapshotMismatch': 'Dunia sudah ditambahkan ke Repositori Anda, tetapi snapshot yang dikirim pembagi tidak cocok dengan Dunia tersebut, jadi tidak disimpan.',
     'candidateLeaderboardTable.hideEvidence': 'Sembunyikan Bukti',
     'candidateLeaderboardTable.inspectEvidence': 'Periksa Bukti',
     'evidenceExportComparisonRecordPairSelector.noDifferences': 'Tidak ada perbedaan',

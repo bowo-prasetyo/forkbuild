@@ -2607,6 +2607,8 @@ export default Object.freeze({
     'sharedWithYouPanel.retrieving': '가져오는 중…',
     'sharedWithYouPanel.retrieve2': '가져오기',
     'sharedWithYouPanel.theyNeedToBeConnected': '상대가 연결되어 있어야 합니다',
+    'sharedWithYouPanel.snapshotUnavailable': '월드가 저장소에 추가되었지만 공유한 사람으로부터 스냅샷이 도착하지 않아 아직 탐험할 수 없습니다. 상대가 연결되어 있을 때 다시 가져오기를 시도하세요.',
+    'sharedWithYouPanel.snapshotMismatch': '월드가 저장소에 추가되었지만 공유한 사람이 보낸 스냅샷이 월드와 일치하지 않아 보관하지 않았습니다.',
     'candidateLeaderboardTable.hideEvidence': '증거 숨기기',
     'candidateLeaderboardTable.inspectEvidence': '증거 살펴보기',
     'evidenceExportComparisonRecordPairSelector.noDifferences': '차이 없음',

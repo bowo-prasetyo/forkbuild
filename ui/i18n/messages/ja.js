@@ -2604,6 +2604,8 @@ export default Object.freeze({
     'sharedWithYouPanel.retrieving': '取得中…',
     'sharedWithYouPanel.retrieve2': '取得',
     'sharedWithYouPanel.theyNeedToBeConnected': '相手が接続している必要があります',
+    'sharedWithYouPanel.snapshotUnavailable': 'ワールドはリポジトリに追加されましたが、共有した人からスナップショットが届かなかったため、まだ探索できません。相手が接続している間にもう一度取得してください。',
+    'sharedWithYouPanel.snapshotMismatch': 'ワールドはリポジトリに追加されましたが、共有した人が送ったスナップショットがワールドと一致しないため、保存されませんでした。',
     'candidateLeaderboardTable.hideEvidence': '証拠を隠す',
     'candidateLeaderboardTable.inspectEvidence': '証拠を調べる',
     'evidenceExportComparisonRecordPairSelector.noDifferences': '違いはありません',
