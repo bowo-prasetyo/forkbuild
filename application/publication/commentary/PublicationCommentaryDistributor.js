@@ -1,5 +1,5 @@
 // Sends a comment that is already saved on this device onward: an announce to
-// connected peers, then at most one network (Nostr, Arweave or Steem), never
+// connected peers, then at most one network (Nostr, Arweave, Steem or Blurt), never
 // several. Every failure is swallowed: a comment stays saved whether or not it
 // travels, and posting never waits for a network.
 //

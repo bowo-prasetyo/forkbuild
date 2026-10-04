@@ -5,6 +5,10 @@
 [English](../11-EvidenceAndStorage.md) · **Deutsch** · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../11-EvidenceAndStorage.md).
+<!-- /stale -->
+
 > **Größtenteils experimentell.** Das Speichern von Inhalten auf IPFS oder
 > Arweave über den Block **Verteilung → Inhalt** einer Karte
 > ([Eine Platzierung erstellen](#eine-platzierung-erstellen) und

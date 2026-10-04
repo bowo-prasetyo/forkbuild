@@ -1544,7 +1544,7 @@ For a family, a reader combines two sources:
    truncate_body: 1 }])`, paging with `start_author` and `start_permlink`, at most 10 pages. The chain's tags plugin
    drops a post from its tag index when the post pays out, so this finds the last 7 days.
 2. **Authors' histories.** For each followed account (Network Settings → Blurt, none by default) and each account
-   the reader has seen a ForkBuild build post from in a tag listing (remembered on the device, the 200 most recent,
+   the reader has seen a ForkBuild build post from in a tag listing (remembered on the device, the 100 most recent,
    `blurt-known-authors`), `condenser_api.get_discussions_by_author_before_date([author, startPermlink,
    '1970-01-01T00:00:00', 100])`, which lists an account's top-level posts newest first for as long as the chain
    exists, paging until a post is older than the configured first month (default `2026-10`) or 5 pages are read.

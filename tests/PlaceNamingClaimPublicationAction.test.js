@@ -107,7 +107,7 @@ async function run() {
             'Distribute hands the claim id up unchanged');
 
         const options = PlaceNamingPanel.computed.discoveryProviderOptions.call(ctx);
-        assert(options.join(',') === 'arweave,nostr,steem', `the networks are listed alphabetically (got ${options})`);
+        assert(options.join(',') === 'arweave,blurt,nostr,steem', `the networks are listed alphabetically (got ${options})`);
 
         const claim = { id: 'c1', name: 'Hollow' };
         assert(PlaceNamingPanel.computed.distributionOfferClaim.call(panelCtx({ canDistribute: true, claims: [claim], distributionOfferClaimId: 'c1' })) === claim,

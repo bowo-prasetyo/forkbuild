@@ -5,6 +5,10 @@
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · **Bahasa Indonesia** · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../11-EvidenceAndStorage.md).
+<!-- /stale -->
+
 > **Sebagian besar eksperimental.** Menyimpan konten di IPFS atau Arweave
 > dari blok **Distribusi → Konten** pada sebuah kartu
 > ([Membuat penempatan](#membuat-penempatan) dan

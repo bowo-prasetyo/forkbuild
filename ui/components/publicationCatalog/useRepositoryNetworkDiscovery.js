@@ -1,7 +1,7 @@
 import { ref, computed, onBeforeUnmount } from 'vue';
 import { t } from '../../i18n/i18n.js';
 
-// The catalog's search of Nostr, Arweave and Steem for what others
+// The catalog's search of Nostr, Arweave, Steem and Blurt for what others
 // distributed (application/publication/RepositoryNetworkDiscovery.js).
 // `repositoryNetworkDiscovery` may be null, where it isn't composed; nothing
 // is searched then. `onAdmitted()` runs after a search that admitted any.

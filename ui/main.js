@@ -164,6 +164,8 @@ let publicationCommentaryNostrDistribution = null;
 let publicationCommentaryArweaveDistribution = null;
 // Same, for Steem.
 let publicationCommentarySteemDistribution = null;
+// Same, for Blurt.
+let publicationCommentaryBlurtDistribution = null;
 
 // Sends a saved comment to connected peers and at most one network, chosen per
 // comment or else the saved preference. Read on each call: the networks are set
@@ -172,9 +174,11 @@ let publicationCommentarySteemDistribution = null;
 const distributePublicationCommentaryCommand = createPublicationCommentaryDistributor({
     peerExchange: publicationCommentaryDistributionPeerExchange,
     distributionExchange: publicationCommentaryDistributionExchange,
-    substrateFor: (provider) => (provider === 'arweave'
-        ? publicationCommentaryArweaveDistribution
-        : (provider === 'steem' ? publicationCommentarySteemDistribution : publicationCommentaryNostrDistribution)),
+    substrateFor: (provider) => ({
+        arweave: publicationCommentaryArweaveDistribution,
+        steem: publicationCommentarySteemDistribution,
+        blurt: publicationCommentaryBlurtDistribution
+    }[provider] ?? publicationCommentaryNostrDistribution),
     defaultProvider: () => resolvedAnnouncementDiscoveryProvider
 });
 
@@ -409,7 +413,10 @@ const {
     repositoryNetworkDiscoveryServices, worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
     steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
     steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress,
-    steemNoticePictureProblem, publicationDistributionLifecycleRestorer, retrievePublicationClaim
+    steemNoticePictureProblem, publicationDistributionLifecycleRestorer, retrievePublicationClaim,
+    blurtReadingConfigurationStore, setBlurtReadingConfigurationUseCase, blurtRuntime,
+    blurtAnnouncingConfigurationStore, setBlurtAnnouncingConfigurationUseCase, blurtContentUploadProgress,
+    blurtNoticePictureProblem
 } = composeWorldDiscovery({
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
     ipfsNodeConfigurationStore, publicationContentStore, announcementIndex
@@ -422,12 +429,21 @@ if (steemRuntime) {
     snapshotPlacementStoreRegistry.register(steemRuntime.contentStore);
     publicationSnapshotPlacementResolutionStoreRegistry.register(steemRuntime.contentStore);
 }
+// Blurt's store likewise (docs/Protocol.md, "Proposed: Blurt Substrate").
+if (blurtRuntime) {
+    snapshotPlacementStoreRegistry.register(blurtRuntime.contentStore);
+    publicationSnapshotPlacementResolutionStoreRegistry.register(blurtRuntime.contentStore);
+}
 // Watches a newly created anchor until its block is final, by anchorType;
-// only Steem has one.
-app.provide('anchorFinalityObservers', new Map(steemRuntime ? [[steemRuntime.anchorFinalityObserver.anchorType, steemRuntime.anchorFinalityObserver]] : []));
+// Steem and Blurt have one.
+app.provide('anchorFinalityObservers', new Map([steemRuntime, blurtRuntime]
+    .filter(Boolean)
+    .map((runtime) => [runtime.anchorFinalityObserver.anchorType, runtime.anchorFinalityObserver])));
 app.provide('worldDiscoverySourceRegistry', worldDiscoveryRuntime.registry);
 app.provide('steemContentUploadProgress', steemContentUploadProgress);
 app.provide('steemNoticePictureProblem', steemNoticePictureProblem);
+app.provide('blurtContentUploadProgress', blurtContentUploadProgress);
+app.provide('blurtNoticePictureProblem', blurtNoticePictureProblem);
 app.provide('arweaveGatewayConfigurationStore', arweaveGatewayConfigurationStore);
 app.provide('setArweaveGatewayConfigurationUseCase', setArweaveGatewayConfigurationUseCase);
 app.provide('ipfsGatewayConfigurationStore', ipfsGatewayConfigurationStore);
@@ -440,6 +456,10 @@ app.provide('steemReadingConfigurationStore', steemReadingConfigurationStore);
 app.provide('setSteemReadingConfigurationUseCase', setSteemReadingConfigurationUseCase);
 app.provide('steemAnnouncingConfigurationStore', steemAnnouncingConfigurationStore);
 app.provide('setSteemAnnouncingConfigurationUseCase', setSteemAnnouncingConfigurationUseCase);
+app.provide('blurtReadingConfigurationStore', blurtReadingConfigurationStore);
+app.provide('setBlurtReadingConfigurationUseCase', setBlurtReadingConfigurationUseCase);
+app.provide('blurtAnnouncingConfigurationStore', blurtAnnouncingConfigurationStore);
+app.provide('setBlurtAnnouncingConfigurationUseCase', setBlurtAnnouncingConfigurationUseCase);
 app.provide('iceServerConfigurationStore', iceServerConfigurationStore);
 app.provide('setIceServerConfigurationUseCase', setIceServerConfigurationUseCase);
 app.provide('turnServerConfigurationStore', turnServerConfigurationStore);
@@ -579,17 +599,35 @@ function discoverPublicationCommentaryFromSteemCommand(publicationId) {
     });
 }
 
+// The same for Blurt.
+publicationCommentaryBlurtDistribution = blurtRuntime ? blurtRuntime.commentaryDistribution : null;
+const discoverPublicationCommentaryFromBlurtUseCase = blurtRuntime
+    ? new DiscoverPublicationCommentaryUseCase(blurtRuntime.commentaryDistribution, publicationCommentaryDistributionExchange)
+    : null;
+function discoverPublicationCommentaryFromBlurtCommand(publicationId) {
+    return discoverPublicationCommentaryFromBlurtUseCase.execute({ publicationId }).then((results) => {
+        for (const result of results) {
+            try {
+                publicationCommentaryRemoteNotificationBridge.handleCommentaryReceived(result);
+            } catch {
+            }
+        }
+        return results;
+    });
+}
+
 const refreshPublicationCommentaryCommand = composeRefreshPublicationCommentaryCommand({
     sources: [
         { name: 'Nostr', discover: discoverPublicationCommentaryFromNostrCommand },
         { name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand },
-        ...(discoverPublicationCommentaryFromSteemUseCase ? [{ name: 'Steem', discover: discoverPublicationCommentaryFromSteemCommand }] : [])
+        ...(discoverPublicationCommentaryFromSteemUseCase ? [{ name: 'Steem', discover: discoverPublicationCommentaryFromSteemCommand }] : []),
+        ...(discoverPublicationCommentaryFromBlurtUseCase ? [{ name: 'Blurt', discover: discoverPublicationCommentaryFromBlurtCommand }] : [])
     ]
 });
 app.provide('refreshPublicationCommentaryCommand', refreshPublicationCommentaryCommand);
 
 const { backgroundAnnouncementSync, announcementIndexChanges } = composeAnnouncementSync({
-    announcementIndex, nostrRelayQueryClient, resolvedNostrRelayUrls, resolvedArweaveGatewayUrl, steemRuntime,
+    announcementIndex, nostrRelayQueryClient, resolvedNostrRelayUrls, resolvedArweaveGatewayUrl, steemRuntime, blurtRuntime,
     publicationCommentaryDistributionExchange, publicationCommentaryRemoteNotificationBridge,
     peerMessageBus, connectedPeerRegistry: peerSessionManager.registry
 });
@@ -604,7 +642,7 @@ app.provide('announcementIndexChanges', announcementIndexChanges);
 // peer exchanges that must listen from the start, and what the header shows
 // on every page.
 
-// Publication evidence and external anchoring (Bitcoin, Base, Arweave, Steem)
+// Publication evidence and external anchoring (Bitcoin, Base, Arweave, Steem, Blurt)
 // and their wallets, for the Publications page and the Proof & Anchoring
 // settings.
 defineServiceGroup('anchoring', async () => {
@@ -623,7 +661,7 @@ defineServiceGroup('anchoring', async () => {
         bitcoinAnchorConfirmationCoordinator
     } = composeAnchoring({
         identityProvider, resolvedBitcoinEsploraApiUrls, publicationCatalog, publicationAnchorCatalog,
-        anchorKnowledgeStore, roleProviderPreferenceStore, arweaveHostSigner, resolvedArweaveGatewayUrl, steemRuntime
+        anchorKnowledgeStore, roleProviderPreferenceStore, arweaveHostSigner, resolvedArweaveGatewayUrl, steemRuntime, blurtRuntime
     });
 
     app.provide('publicationEvidenceCoordinator', publicationEvidenceCoordinator);
@@ -651,7 +689,7 @@ defineServiceGroup('anchoring', async () => {
     app.provide('bitcoinAnchorConfirmationCoordinator', bitcoinAnchorConfirmationCoordinator);
 });
 
-// Distributing publications and Snapshots (Arweave, Nostr, IPFS, Steem),
+// Distributing publications and Snapshots (Arweave, Nostr, IPFS, Steem, Blurt),
 // finding Snapshots and place names, remote IPFS pinning and IPFS content
 // checks, and opening a Publication link: what the Editor, World View and the
 // Publications page publish and search with.
@@ -690,7 +728,7 @@ defineServiceGroup('distribution', async () => {
         resolvedIpfsNodeApiUrl, snapshotPlacementStoreRegistry, resolvedAnnouncementDiscoveryProvider,
         resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, PUBLICATION_DISCOVERY_TAG,
         publicationDistributionLifecycleStore, arweaveHostSigner, nostrHostPublisher,
-        nostrPublicationRuntimeCapabilities, steemRuntime, snapshotDistributionLog: ownSnapshotDistributionLog
+        nostrPublicationRuntimeCapabilities, steemRuntime, blurtRuntime, snapshotDistributionLog: ownSnapshotDistributionLog
     });
     app.provide('publicationDistributionCommand', publicationDistributionCommand);
     app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPublicationDistributionCommand);
@@ -709,7 +747,7 @@ defineServiceGroup('distribution', async () => {
         publicationSnapshotPlacementCatalog, publicationSnapshotPlacementResolutionStoreRegistry,
         roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
         resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
-        arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime,
+        arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime, blurtRuntime,
         announcementIndex, publicationContentStore
     });
     app.provide('defaultContentDistributionProvider', resolvedContentDistributionProvider);
@@ -726,8 +764,8 @@ defineServiceGroup('distribution', async () => {
     app.provide('materializeSelectedSnapshotCommand', materializeSelectedSnapshotCommand);
 
     // A link to a Publication (ui/views/PublicationLinkView.js: the "see
-    // it in 3D" link on a Steem post, or one shared with Share): the Signed Claim
-    // is read from Steem, Arweave or IPFS and verified, its build found by content
+    // it in 3D" link on a Steem or Blurt post, or one shared with Share): the Signed Claim
+    // is read from Steem, Blurt, Arweave or IPFS and verified, its build found by content
     // hash, and the Publication admitted as World discovery admits one.
     // The publisher's signed placement for a linked Publication, kept where World
     // View reads placements, so the build stands where its publisher put it.

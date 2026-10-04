@@ -3,6 +3,7 @@ import { sortOptionsByLabel } from '../../../utils/sortOptionsByLabel.js';
 import { humanizeStorageType, discoveryProviderConfigurationRoute } from './presentation.js';
 import { Publication } from '../../../publisher/Publication.js';
 import { describeSteemContentUploadProgress, describeSteemNoticePictureProblem } from '../../../application/steem/SteemContentUploadProgressText.js';
+import { describeBlurtContentUploadProgress, describeBlurtNoticePictureProblem } from '../../../application/blurt/BlurtContentUploadProgressText.js';
 import { displayText, t } from '../../i18n/i18n.js';
 
 // Distributing an entry's publication and snapshot with the same app-wide
@@ -22,6 +23,9 @@ export function usePublicationDistribution({
     // A Steem notice that went without its build's picture; only one from
     // after this page opened is shown.
     const steemNoticePictureProblem = inject('steemNoticePictureProblem', null);
+    // The same for Blurt.
+    const blurtContentUploadProgress = inject('blurtContentUploadProgress', null);
+    const blurtNoticePictureProblem = inject('blurtNoticePictureProblem', null);
     const openedAt = Date.now();
     // Eligible, registered Content backends for snapshot distribution
     // ('ipfs'/'ar'; 'local' is never eligible, see
@@ -49,8 +53,8 @@ export function usePublicationDistribution({
     // multi-relay command, which resolves to one result per relay (the
     // result isn't rendered here).
     function distributeEntryPublication(entry, discoveryProviderChoice) {
-        // Nostr fans out to every relay; Arweave and Steem each have one publisher.
-        if (discoveryProviderChoice === 'arweave' || discoveryProviderChoice === 'steem') {
+        // Nostr fans out to every relay; Arweave, Steem and Blurt each have one publisher.
+        if (['arweave', 'steem', 'blurt'].includes(discoveryProviderChoice)) {
             if (!publicationDistributionCommand) {
                 return Promise.reject(new Error(t('publications.publicationDistributionUnavailable')));
             }
@@ -166,21 +170,32 @@ export function usePublicationDistribution({
         return discoveryProviderConfigurationRoute(entry.snapshotDiscoveryProvider);
     }
 
-    // The Steem upload line for an entry whose Snapshot is being stored on
-    // Steem right now, or null.
+    // The Steem or Blurt upload line for an entry whose Snapshot is being
+    // stored there right now, or null. Blurt also says when a post waits for
+    // its interval between top-level posts.
     function steemUploadProgressText(entry) {
         const attempt = entry.snapshotDistributionAttempt;
-        if (!attempt || !attempt.distributing || entry.snapshotDistributionStorage !== 'steem' || !steemContentUploadProgress) return null;
-        return displayText(describeSteemContentUploadProgress(steemContentUploadProgress.value));
+        if (!attempt || !attempt.distributing) return null;
+        if (entry.snapshotDistributionStorage === 'steem' && steemContentUploadProgress) {
+            return displayText(describeSteemContentUploadProgress(steemContentUploadProgress.value));
+        }
+        if ((entry.snapshotDistributionStorage === 'blurt' || entry.snapshotDiscoveryProvider === 'blurt') && blurtContentUploadProgress) {
+            return displayText(describeBlurtContentUploadProgress(blurtContentUploadProgress.value));
+        }
+        return null;
     }
 
     // Why the Steem notice of an entry's Signed Claim, distributed from this
     // page, went without its picture, or null. The notice is matched by the
     // entry's title, the one thing it carries.
     function steemNoticePictureText(entry) {
-        const problem = steemNoticePictureProblem ? steemNoticePictureProblem.value : null;
-        if (!problem || !entry.discoveryDistributionAttempt || (problem.title ?? null) !== (entry.publication?.title || null)) return null;
-        return displayText(describeSteemNoticePictureProblem(problem, openedAt));
+        if (!entry.discoveryDistributionAttempt) return null;
+        const title = entry.publication?.title || null;
+        const steem = steemNoticePictureProblem ? steemNoticePictureProblem.value : null;
+        if (steem && (steem.title ?? null) === title) return displayText(describeSteemNoticePictureProblem(steem, openedAt));
+        const blurt = blurtNoticePictureProblem ? blurtNoticePictureProblem.value : null;
+        if (blurt && (blurt.title ?? null) === title) return displayText(describeBlurtNoticePictureProblem(blurt, openedAt));
+        return null;
     }
 
     // The Settings route for the entry's chosen Content backend; IPFS uses
@@ -188,6 +203,7 @@ export function usePublicationDistribution({
     function snapshotDistributionConfigurationRoute(entry) {
         if (entry.snapshotDistributionStorage === 'ar') return '/settings/arweave-gateway';
         if (entry.snapshotDistributionStorage === 'steem') return '/settings/steem';
+        if (entry.snapshotDistributionStorage === 'blurt') return '/settings/blurt';
         return '/settings/content-provider';
     }
 

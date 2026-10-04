@@ -5,6 +5,10 @@
 [English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · [Français](../fr/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · **日本語** · [한국어](../ko/10-NetworkSettings.md) · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../10-NetworkSettings.md)も参照してください。
+<!-- /stale -->
+
 上部のバーの **ネットワーク設定** には、ForkBuild がどのサーバーと
 通信するかを決めるページがすべてまとまっています。ほとんどの人は、
 ここで何も変える必要はありません。既定の設定でそのまま動きます。

@@ -5,6 +5,10 @@
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · **Português (Brasil)**
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../04-PublishingAndForking.md).
+<!-- /stale -->
+
 Este é o coração do ForkBuild. **Publicar** compartilha sua criação com o
 mundo. **Bifurcar** deixa qualquer pessoa copiar uma criação e fazê-la
 evoluir — com todo o histórico preservado.

@@ -5,6 +5,10 @@
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · **Français** · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../11-EvidenceAndStorage.md).
+<!-- /stale -->
+
 > **Surtout expérimental.** Stocker du contenu sur IPFS ou Arweave depuis
 > le bloc **Distribution → Contenu** d’une carte
 > ([Créer un placement](#créer-un-placement) et

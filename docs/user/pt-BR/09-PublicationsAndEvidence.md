@@ -5,6 +5,10 @@
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · **Português (Brasil)**
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../09-PublicationsAndEvidence.md).
+<!-- /stale -->
+
 > **Em parte experimental.** A página Publicações é um recurso comum: a
 > lista e os status, remover publicações que não podem ser usadas, anunciar
 > no Nostr ou no Arweave, guardar no IPFS ou no Arweave, e verificar,

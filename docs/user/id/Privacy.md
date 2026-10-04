@@ -5,6 +5,10 @@
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · **Bahasa Indonesia** · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../../Privacy.md).
+<!-- /stale -->
+
 ForkBuild tidak memiliki akun dan tidak melacak Anda. ForkBuild menyimpan
 pekerjaan Anda di browser Anda sendiri dan berkomunikasi dengan komputer
 lain hanya untuk fitur yang membutuhkannya, ditambah satu hitungan

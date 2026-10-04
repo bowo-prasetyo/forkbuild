@@ -541,14 +541,14 @@ export default {
                 // objects; the durable record is
                 // publicationDistributionLifecycleStore's.
                 discoveryDistributionProvider: resolveSavedProviderDefault(
-                    defaultAnnouncementDiscoveryProvider, ['nostr', 'arweave', 'steem'], 'nostr'
+                    defaultAnnouncementDiscoveryProvider, ['nostr', 'arweave', 'steem', 'blurt'], 'nostr'
                 ),
                 discoveryDistributionAttempt: null,
                 // Where Distribute Snapshot announces: seeded the same way,
                 // chosen separately, so the result can name the substrate it
                 // actually used.
                 snapshotDiscoveryProvider: resolveSavedProviderDefault(
-                    defaultAnnouncementDiscoveryProvider, ['nostr', 'arweave', 'steem'], 'nostr'
+                    defaultAnnouncementDiscoveryProvider, ['nostr', 'arweave', 'steem', 'blurt'], 'nostr'
                 ),
                 // The entry's own Content backend. Seeded from the saved
                 // Content preference when it is currently eligible, else the

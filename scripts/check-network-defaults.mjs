@@ -16,6 +16,8 @@
 //             so that stays a manual check.
 //   Steem     condenser_api.get_dynamic_global_properties returns a head
 //             block number.
+//   Blurt     the same, on the Blurt API nodes, and an author's post
+//             listing, which needs the node's tags plugin.
 // STUN (UDP) and Rendezvous (our own server) are not checked here.
 //
 // The HTTP checks send an Origin header and report whether the response
@@ -26,6 +28,7 @@ import { DEFAULT_IPFS_GATEWAY_URLS } from '../core/IpfsGatewayConfiguration.js';
 import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../core/BitcoinEsploraConfiguration.js';
 import { DEFAULT_NOSTR_RELAY_URLS } from '../core/NostrRelayConfiguration.js';
 import { DEFAULT_STEEM_API_NODES } from '../core/SteemReadingConfiguration.js';
+import { DEFAULT_BLURT_API_NODES } from '../core/BlurtReadingConfiguration.js';
 
 const ORIGIN = 'https://bowo-prasetyo.github.io';
 const TIMEOUT_MS = 15000;
@@ -100,6 +103,18 @@ const checks = [
         method: 'POST',
         body: JSON.stringify({ jsonrpc: '2.0', method: 'condenser_api.get_dynamic_global_properties', params: [], id: 1 }),
         accept: (text) => isJson(text) && Number.isInteger(JSON.parse(text)?.result?.head_block_number)
+    })]),
+    ...DEFAULT_BLURT_API_NODES.map((url) => ['Blurt', url, () => httpCheck(url, {
+        method: 'POST',
+        body: JSON.stringify({ jsonrpc: '2.0', method: 'condenser_api.get_dynamic_global_properties', params: [], id: 1 }),
+        accept: (text) => isJson(text) && Number.isInteger(JSON.parse(text)?.result?.head_block_number)
+    })]),
+    // Readers list top-level posts by tag and by author; a node without the
+    // tags plugin answers both with an error.
+    ...DEFAULT_BLURT_API_NODES.map((url) => ['Blurt', `${url} (tags)`, () => httpCheck(url, {
+        method: 'POST',
+        body: JSON.stringify({ jsonrpc: '2.0', method: 'condenser_api.get_discussions_by_author_before_date', params: ['blurtbook', '', '1970-01-01T00:00:00', 1], id: 1 }),
+        accept: (text) => isJson(text) && Array.isArray(JSON.parse(text)?.result)
     })])
 ];
 

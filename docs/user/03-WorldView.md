@@ -290,9 +290,10 @@ to whether it happens to be open.
 The dialog opens with one set of settings, used for everything it
 distributes: a **Storage** — **Arweave**, **IPFS (Local Kubo)**, **IPFS
 (Remote Pinning)** (which needs a fresh Endpoint and Credential typed in
-every time; nothing about it is ever saved), or **Steem** (experimental,
-see [Steem](11-EvidenceAndStorage.md#steem)) — and an **Announcement /
-Discovery substrate** (**Arweave**, **Nostr** or **Steem**). Both open on your saved
+every time; nothing about it is ever saved), **Steem** or **Blurt**
+(experimental, see [Steem](11-EvidenceAndStorage.md#steem) and
+[Blurt](11-EvidenceAndStorage.md#blurt)) — and an **Announcement /
+Discovery substrate** (**Arweave**, **Blurt**, **Nostr** or **Steem**). Both open on your saved
 provider preferences. Storage only lists the backends this device can
 actually place a Snapshot on (plus Remote Pinning), so you can't pick one
 that would only fail halfway through.

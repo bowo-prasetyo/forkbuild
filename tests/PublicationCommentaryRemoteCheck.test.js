@@ -321,8 +321,8 @@ async function run() {
     {
         const read = (path) => readFile(new URL('../' + path, import.meta.url), 'utf8');
         const mainSource = (await Promise.all(mainFiles().map((file) => read(file)))).join('\n');
-        assert(/composeRefreshPublicationCommentaryCommand\(\{\s*sources: \[\s*\{ name: 'Nostr', discover: discoverPublicationCommentaryFromNostrCommand \},\s*\{ name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand \},\s*\.\.\.\(discoverPublicationCommentaryFromSteemUseCase \? \[\{ name: 'Steem', discover: discoverPublicationCommentaryFromSteemCommand \}\] : \[\]\)\s*\]\s*\}\)/.test(mainSource),
-            '37. main.js composes the refresh command from the Nostr, Arweave and (when reading is available) Steem discovery commands');
+        assert(/composeRefreshPublicationCommentaryCommand\(\{\s*sources: \[\s*\{ name: 'Nostr', discover: discoverPublicationCommentaryFromNostrCommand \},\s*\{ name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand \},\s*\.\.\.\(discoverPublicationCommentaryFromSteemUseCase \? \[\{ name: 'Steem', discover: discoverPublicationCommentaryFromSteemCommand \}\] : \[\]\),\s*\.\.\.\(discoverPublicationCommentaryFromBlurtUseCase \? \[\{ name: 'Blurt', discover: discoverPublicationCommentaryFromBlurtCommand \}\] : \[\]\)\s*\]\s*\}\)/.test(mainSource),
+            '37. main.js composes the refresh command from the Nostr, Arweave and (when reading is available) Steem and Blurt discovery commands');
         assert(mainSource.includes("app.provide('refreshPublicationCommentaryCommand', refreshPublicationCommentaryCommand);"), '38. main.js provides it app-wide');
 
         const sections = [

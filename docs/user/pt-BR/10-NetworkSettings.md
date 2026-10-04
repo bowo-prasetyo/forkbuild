@@ -5,6 +5,10 @@
 [English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · [Français](../fr/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · [日本語](../ja/10-NetworkSettings.md) · [한국어](../ko/10-NetworkSettings.md) · **Português (Brasil)**
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../10-NetworkSettings.md).
+<!-- /stale -->
+
 **Configurações de rede**, na barra superior, reúne links para todas as
 páginas que controlam com quais servidores o ForkBuild conversa. A maioria
 das pessoas nunca precisa mudar nada aqui: os padrões já funcionam. Venha

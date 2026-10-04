@@ -2,6 +2,7 @@ import { ArweaveWorldEncounterMaterialResolver } from './ArweaveWorldEncounterMa
 import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from './ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
 import { DecentralizedWorldEncounterMaterialSource } from './DecentralizedWorldEncounterMaterialSource.js';
 import { STEEM_CONTENT_URI_PREFIX } from '../../core/SteemContentManifest.js';
+import { BLURT_CONTENT_URI_PREFIX } from '../../core/BlurtPost.js';
 
 // 0.9.36 — Decentralized World Encounter Material Runtime Composition.
 //
@@ -229,17 +230,21 @@ export function buildArweaveWorldEncounterMaterialResolver({ gatewayUrls, ...opt
 // "local and peer are forwarded verbatim, never constructed here";
 // `arweaveResolverOptions` is forwarded to
 // `composeArweaveDecentralizedWorldEncounterMaterialSource()` unchanged to
-// build the `decentralized` slot. `steemMaterialResolver` (a
-// SteemWorldEncounterMaterialResolver, or null) adds Signed Claims stored on
-// Steem: a `steem://` uri goes to it, and every other uri to Arweave.
-export function composeWorldEncounterMaterialSources({ local, peer, arweaveResolverOptions, steemMaterialResolver = null } = {}) {
-    if (!steemMaterialResolver) {
+// build the `decentralized` slot. `steemMaterialResolver` and
+// `blurtMaterialResolver` (a SteemWorldEncounterMaterialResolver or
+// BlurtWorldEncounterMaterialResolver, or null) add Signed Claims stored on
+// those chains: a `steem://` or `blurt://` uri goes to its resolver, and
+// every other uri to Arweave.
+export function composeWorldEncounterMaterialSources({ local, peer, arweaveResolverOptions, steemMaterialResolver = null, blurtMaterialResolver = null } = {}) {
+    if (!steemMaterialResolver && !blurtMaterialResolver) {
         const { decentralized } = composeArweaveDecentralizedWorldEncounterMaterialSource(arweaveResolverOptions);
         return Object.freeze({ local, peer, decentralized });
     }
     const arweaveResolver = buildArweaveWorldEncounterMaterialResolver(arweaveResolverOptions ?? {});
-    const retrieveByUri = (uri) => (typeof uri === 'string' && uri.startsWith(STEEM_CONTENT_URI_PREFIX)
-        ? steemMaterialResolver.retrieveByUri(uri)
-        : arweaveResolver.retrieveByUri(uri));
+    const retrieveByUri = (uri) => {
+        if (steemMaterialResolver && typeof uri === 'string' && uri.startsWith(STEEM_CONTENT_URI_PREFIX)) return steemMaterialResolver.retrieveByUri(uri);
+        if (blurtMaterialResolver && typeof uri === 'string' && uri.startsWith(BLURT_CONTENT_URI_PREFIX)) return blurtMaterialResolver.retrieveByUri(uri);
+        return arweaveResolver.retrieveByUri(uri);
+    };
     return Object.freeze({ local, peer, decentralized: new DecentralizedWorldEncounterMaterialSource(retrieveByUri) });
 }

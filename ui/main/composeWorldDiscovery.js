@@ -19,6 +19,16 @@ import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncing
 import { SetSteemAnnouncingConfigurationUseCase } from '../../application/settings/SetSteemAnnouncingConfigurationUseCase.js';
 import { createSteemKeychainBroadcaster } from '../../steem/SteemKeychainBroadcaster.js';
 import { SteemContentUploadStore } from '../../storage/SteemContentUploadStore.js';
+import { BlurtReadingConfiguration } from '../../core/BlurtReadingConfiguration.js';
+import { BlurtReadingConfigurationStore } from '../../storage/BlurtReadingConfigurationStore.js';
+import { BlurtAnnouncingConfigurationStore } from '../../storage/BlurtAnnouncingConfigurationStore.js';
+import { BlurtContentUploadStore } from '../../storage/BlurtContentUploadStore.js';
+import { BlurtKnownAuthorStore } from '../../storage/BlurtKnownAuthorStore.js';
+import { BlurtPostRecordStore } from '../../storage/BlurtPostRecordStore.js';
+import { SetBlurtReadingConfigurationUseCase } from '../../application/settings/SetBlurtReadingConfigurationUseCase.js';
+import { SetBlurtAnnouncingConfigurationUseCase } from '../../application/settings/SetBlurtAnnouncingConfigurationUseCase.js';
+import { composeBlurtRuntime } from '../../application/blurt/BlurtRuntimeComposition.js';
+import { createBlurtKeychainBroadcaster, uploadBlurtImage } from '../../blurt/BlurtKeychain.js';
 import { shallowRef } from 'vue';
 import { LocalWorldEncounterMaterialSource } from '../../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { PeerWorldEncounterMaterialSource } from '../../application/worldEncounter/PeerWorldEncounterMaterialSource.js';
@@ -120,6 +130,38 @@ export function composeWorldDiscovery({
             : null
     });
 
+    // Blurt, the same way (docs/Protocol.md, "Proposed: Blurt Substrate"):
+    // read with the saved settings or the defaults, posted from the saved
+    // account through Blurt Keychain, looked up each time. Its uploads, and
+    // its waits for the chain's interval between top-level posts, are
+    // reported like Steem's.
+    const blurtReadingConfigurationStore = new BlurtReadingConfigurationStore(new LocalStorageProvider());
+    const setBlurtReadingConfigurationUseCase = new SetBlurtReadingConfigurationUseCase({ blurtReadingConfigurationStore });
+    const blurtAnnouncingConfigurationStore = new BlurtAnnouncingConfigurationStore(new LocalStorageProvider());
+    const setBlurtAnnouncingConfigurationUseCase = new SetBlurtAnnouncingConfigurationUseCase({ blurtAnnouncingConfigurationStore });
+    const blurtAccount = () => blurtAnnouncingConfigurationStore.get()?.account ?? null;
+    const blurtContentUploadProgress = shallowRef(null);
+    const blurtNoticePictureProblem = shallowRef(null);
+    const blurtRuntime = composeBlurtRuntime({
+        configuration: blurtReadingConfigurationStore.get() || new BlurtReadingConfiguration(),
+        getAccount: blurtAccount,
+        getBroadcaster: () => createBlurtKeychainBroadcaster(),
+        knownAuthors: new BlurtKnownAuthorStore(new LocalStorageProvider()),
+        postRecords: new BlurtPostRecordStore(new LocalStorageProvider()),
+        contentUploads: new BlurtContentUploadStore(new LocalStorageProvider()),
+        contentUploadProgress: { report: (state) => { blurtContentUploadProgress.value = state; } },
+        onWaiting: ({ untilMs }) => { blurtContentUploadProgress.value = { phase: 'waiting', untilMs }; },
+        describePublication: publicationContentStore
+            ? composeSteemPublicationNoticeDescriber({
+                contentStore: publicationContentStore,
+                getAccount: blurtAccount,
+                chainName: 'Blurt',
+                upload: async ({ account, bytes }) => (await uploadBlurtImage({ account, bytes, fileName: 'forkbuild-build.png' })).url,
+                onPictureMissing: ({ title, reason }) => { blurtNoticePictureProblem.value = { title, reason, at: Date.now() }; }
+            })
+            : null
+    });
+
     const nostrRelayQueryClient = createNostrRelayQueryClient({});
     // Each service records the leads it finds in the Announcement Index and
     // returns the ones it found before (docs/AnnouncementIndex.md).
@@ -128,7 +170,8 @@ export function composeWorldDiscovery({
             nostrQueryImpl: nostrRelayQueryClient,
             nostrRelayUrls: resolvedNostrRelayUrls
         }),
-        steem: steemRuntime ? steemRuntime.publicationDiscoveryQueryService : null
+        steem: steemRuntime ? steemRuntime.publicationDiscoveryQueryService : null,
+        blurt: blurtRuntime ? blurtRuntime.publicationDiscoveryQueryService : null
     };
     const decentralizedWorldDiscoveryServices = Object.fromEntries(Object.entries(networkWorldDiscoveryServices).map(([name, service]) => [
         name,
@@ -142,7 +185,8 @@ export function composeWorldDiscovery({
         peer: worldEncounterMaterialPeerSource,
         verifier: worldEncounterMaterialVerifier,
         arweaveResolverOptions: { gatewayUrls: resolvedArweaveGatewayUrls },
-        steemMaterialResolver: steemRuntime ? steemRuntime.publicationMaterialResolver : null
+        steemMaterialResolver: steemRuntime ? steemRuntime.publicationMaterialResolver : null,
+        blurtMaterialResolver: blurtRuntime ? blurtRuntime.publicationMaterialResolver : null
     });
     const worldDiscoveryLeadRegistry = decentralizedWorldEncounterMaterialDiscoveryRuntime.registry;
     const worldEncounterMaterialSources = decentralizedWorldEncounterMaterialDiscoveryRuntime.materialSources;
@@ -164,11 +208,12 @@ export function composeWorldDiscovery({
     // Shared with createPublicationDistributionRuntimeProvider() below. Passed to
     // the canvas as the Discovery-tag field's initial value, never baked into the
     // command, so the field stays editable per call.
-    // Reads a Signed Claim named by a link (#/view/steem|ar|ipfs/…) from where
+    // Reads a Signed Claim named by a link (#/view/steem|blurt|ar|ipfs/…) from where
     // it is stored, through the configured Arweave and IPFS gateways.
     const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: DEFAULT_IPFS_GATEWAY_URLS }).gatewayUrls;
     const retrievePublicationClaim = composePublicationClaimRetriever({
         steemResolver: steemRuntime ? steemRuntime.publicationMaterialResolver : null,
+        blurtResolver: blurtRuntime ? blurtRuntime.publicationMaterialResolver : null,
         arweaveGatewayUrls: resolvedArweaveGatewayUrls,
         ipfsGatewayUrls: resolvedIpfsGatewayUrls
     });
@@ -209,11 +254,15 @@ export function composeWorldDiscovery({
         // Every substrate's unwrapped announcement query, for finding the
         // Publications others distributed (application/publication/RepositoryNetworkDiscovery.js).
         repositoryNetworkDiscoveryServices: [
-            networkWorldDiscoveryServices.nostr, networkWorldDiscoveryServices.arweave, networkWorldDiscoveryServices.steem
+            networkWorldDiscoveryServices.nostr, networkWorldDiscoveryServices.arweave, networkWorldDiscoveryServices.steem,
+            networkWorldDiscoveryServices.blurt
         ],
         worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
         steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
         steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress,
-        steemNoticePictureProblem, publicationDistributionLifecycleRestorer, retrievePublicationClaim
+        steemNoticePictureProblem, publicationDistributionLifecycleRestorer, retrievePublicationClaim,
+        blurtReadingConfigurationStore, setBlurtReadingConfigurationUseCase, blurtRuntime,
+        blurtAnnouncingConfigurationStore, setBlurtAnnouncingConfigurationUseCase, blurtContentUploadProgress,
+        blurtNoticePictureProblem
     };
 }

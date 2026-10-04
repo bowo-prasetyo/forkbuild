@@ -180,7 +180,8 @@ export function composePlaceNamingPublicationRuntime({
     discoveryProvider = 'nostr',
     nostrPlaceNamingDiscoveryPublisherOptions = {},
     arweavePlaceNamingDiscoveryPublisherOptions = {},
-    steemPlaceNamingDiscoveryPublisher = null
+    steemPlaceNamingDiscoveryPublisher = null,
+    blurtPlaceNamingDiscoveryPublisher = null
 } = {}) {
     let discoveryPublisher = null;
     if (discoveryProvider === 'nostr') {
@@ -193,8 +194,10 @@ export function composePlaceNamingPublicationRuntime({
             : null;
     } else if (discoveryProvider === 'steem') {
         discoveryPublisher = steemPlaceNamingDiscoveryPublisher;
+    } else if (discoveryProvider === 'blurt') {
+        discoveryPublisher = blurtPlaceNamingDiscoveryPublisher;
     } else {
-        throw new Error(`PlaceNamingPublicationRuntimeComposition: unrecognized discoveryProvider "${discoveryProvider}" — expected "nostr", "arweave" or "steem"`);
+        throw new Error(`PlaceNamingPublicationRuntimeComposition: unrecognized discoveryProvider "${discoveryProvider}" — expected "nostr", "arweave", "steem" or "blurt"`);
     }
 
     return Object.freeze({ discoveryPublisher });

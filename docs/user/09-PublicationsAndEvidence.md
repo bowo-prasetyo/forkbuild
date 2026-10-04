@@ -10,7 +10,7 @@
 > getting a card's snapshot. The rest is **Experimental**: it works, but may
 > change or be removed in a later version, and what it produces may not
 > carry over. The page marks each such part with an **Experimental** badge
-> (**Exp.** on a tab): every kind of anchoring, the wallets, Steem, remote
+> (**Exp.** on a tab): every kind of anchoring, the wallets, Steem, Blurt, remote
 > IPFS pinning, the **Decentralization & Evidence**, **Placements & IPFS**
 > and **History** tabs, the peer possession and summary sections of the
 > **Snapshot** tab, and the whole **Wallet, Archive & Publisher Tools**
@@ -34,8 +34,8 @@ X", and about the optional depth you can add to a claim:
   providers and peer-connection servers. Not experimental, and useful to
   everyone.
 - **[Evidence & Storage](11-EvidenceAndStorage.md)** — external evidence
-  (Bitcoin, Base, Arweave, Steem), the wallet pipelines, Snapshot
-  Placements, IPFS publishing, and Steem.
+  (Bitcoin, Base, Arweave, Steem, Blurt), the wallet pipelines, Snapshot
+  Placements, IPFS publishing, Steem and Blurt.
 - **[Archive & Leaderboards](12-ArchiveAndLeaderboards.md)** — the durable
   observation archive, references, achievements, publisher labels and the
   Leaderboard pages.
@@ -84,11 +84,11 @@ itself is required:
 | Term | Like… | What it is |
 |---|---|---|
 | **Publication** | The book itself | A signed record: a Shared World, a Blueprint Attribution or a Place Naming Claim. It carries the hash of its content and its publisher's signature. |
-| **Content** | Where printed copies are kept | The bytes the publication is about, such as a World's bricks. They're always kept on this device first; **Store on …** puts a copy on IPFS, Arweave or Steem so others can fetch it. See [Content Provider](10-NetworkSettings.md#content-provider). |
+| **Content** | Where printed copies are kept | The bytes the publication is about, such as a World's bricks. They're always kept on this device first; **Store on …** puts a copy on IPFS, Arweave, Steem or Blurt so others can fetch it. See [Content Provider](10-NetworkSettings.md#content-provider). |
 | **Snapshot** | A printed copy | One stored copy of a publication's content, such as a World's bricks, which others can fetch and check against its hash. See [Local Snapshot](#local-snapshot). |
 | **Placement** | Where the copy is shelved | A signed record of where a build stands in the World. One Shared World can have several. See [Placing vs forking](03-WorldView.md#placing-vs-forking). |
-| **Announcement / Discovery** | A library catalogue entry | A small signed notice on Nostr, Arweave or Steem saying the publication or Snapshot exists and where its copy is, so people who aren't connected to you can find it. See [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider). |
-| **Proof / Anchoring** *(Experimental)* | A notary's stamp | The content's hash written into a blockchain transaction (Bitcoin, Base, Arweave or Steem), as evidence it existed by that time. It stores and announces nothing. See [Evidence & Storage](11-EvidenceAndStorage.md). |
+| **Announcement / Discovery** | A library catalogue entry | A small signed notice on Nostr, Arweave, Steem or Blurt saying the publication or Snapshot exists and where its copy is, so people who aren't connected to you can find it. See [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider). |
+| **Proof / Anchoring** *(Experimental)* | A notary's stamp | The content's hash written into a blockchain transaction (Bitcoin, Base, Arweave, Steem or Blurt), as evidence it existed by that time. It stores and announces nothing. See [Evidence & Storage](11-EvidenceAndStorage.md). |
 | **Commentary** | Readers' reviews | Comments anyone signed in can attach to a publication, each signed by its commenter, not the publisher. See [Commentary](#commentary). |
 
 So you make a publication; then, if you like, store its content, announce
@@ -134,7 +134,7 @@ This announces a signed claim to your connected peers.
 Right after you publish, the panel offers to **Distribute** the name, so
 people who aren't connected to you can find it too, for example through
 [Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone).
-Pick the **Network** (Arweave, Nostr or Steem; it starts on your
+Pick the **Network** (Arweave, Blurt, Nostr or Steem; it starts on your
 [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider))
 and click **Distribute**, or **Not now** to skip it. You can distribute any
 claim later too: open the naming panel's **More** and click **Distribute**
@@ -195,7 +195,7 @@ Below that, two folded sections:
   it. Storing and anchoring each lead with one button for the provider you
   saved under **Configure** (**Store on IPFS**, **Anchor on Steem**), with
   every other provider folded under **Other … options**. Without a saved
-  provider it can use, all the options show instead. Steem and remote IPFS
+  provider it can use, all the options show instead. Steem, Blurt and remote IPFS
   pinning are marked **Experimental** wherever they're offered, and so is
   the whole **Proof / Anchoring** block. See
   [Distributing from the Publications page](#distributing-from-the-publications-page)
@@ -265,7 +265,7 @@ this group can be removed.
 **Distribution → Announcement / Discovery** has two cards:
 
 - **Publication** announces the signed publication itself on the
-  **Substrate** you choose (Arweave, Nostr, or Steem, which is
+  **Substrate** you choose (Arweave, Nostr, or Steem or Blurt, which are
   Experimental). It starts on your
   [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider).
 - **Snapshot** stores content under **Content** and announces it on its
@@ -304,7 +304,7 @@ Comments are permanent: no editing, deleting or replies.
 
 A comment posted from the **Repository** is saved on your device, sent to
 peers you're connected to, and published to the network chosen next to
-**Post Comment** (Nostr, Arweave or Steem; it starts on your
+**Post Comment** (Nostr, Arweave, Steem or Blurt; it starts on your
 [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider)),
 so people who weren't connected can find it. Closing the section (**Hide
 Comments**) discards anything you'd typed but not posted. Comments posted

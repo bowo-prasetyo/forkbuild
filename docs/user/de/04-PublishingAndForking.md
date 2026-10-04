@@ -5,6 +5,10 @@
 [English](../04-PublishingAndForking.md) · **Deutsch** · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../04-PublishingAndForking.md).
+<!-- /stale -->
+
 Das ist das Herz von ForkBuild. **Veröffentlichen** teilt Ihre Kreation mit
 der Welt. **Forken** erlaubt jedem, eine Kreation zu kopieren und
 weiterzuentwickeln — wobei der ganze Verlauf erhalten bleibt.

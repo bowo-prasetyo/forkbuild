@@ -138,6 +138,7 @@ export const STORAGE_TYPE_LABELS = {
     ipfs: 'IPFS',
     ar: 'Arweave',
     steem: 'Steem',
+    blurt: 'Blurt',
     'remote-pinning': 'IPFS (Remote Pinning)'
 };
 
@@ -157,7 +158,8 @@ export const ANCHOR_TYPE_LABELS = {
     'bitcoin-op-return': 'Bitcoin',
     base: 'Base',
     arweave: 'Arweave',
-    steem: 'Steem'
+    steem: 'Steem',
+    blurt: 'Blurt'
 };
 
 // Anchor types made through their own wallet steps (transaction plan, review,
@@ -182,7 +184,8 @@ export function preferredDistributionChoice(savedKey, availableKeys, { walletGui
 export const DISCOVERY_PROVIDER_LABELS = {
     nostr: 'Nostr',
     arweave: 'Arweave',
-    steem: 'Steem'
+    steem: 'Steem',
+    blurt: 'Blurt'
 };
 
 export function humanizeDiscoveryProvider(provider) {
@@ -193,14 +196,15 @@ export function humanizeDiscoveryProvider(provider) {
 export function discoveryProviderConfigurationRoute(provider) {
     if (provider === 'arweave') return '/settings/arweave-gateway';
     if (provider === 'steem') return '/settings/steem';
+    if (provider === 'blurt') return '/settings/blurt';
     return '/settings/nostr-relay';
 }
 
 // The parts of the Publications page that stay Experimental while the rest of
-// it is a regular feature: these storage types, Steem as a substrate (its
-// <option> says so in the templates), every anchor type, and the sections
+// it is a regular feature: these storage types, Steem and Blurt as substrates
+// (their <option>s say so in the templates), every anchor type, and the sections
 // that carry an Experimental badge. See docs/user/09-PublicationsAndEvidence.md.
-export const EXPERIMENTAL_STORAGE_TYPES = Object.freeze(['steem', 'remote-pinning']);
+export const EXPERIMENTAL_STORAGE_TYPES = Object.freeze(['steem', 'blurt', 'remote-pinning']);
 
 export function isExperimentalStorageType(storage) {
     return EXPERIMENTAL_STORAGE_TYPES.includes(storage);

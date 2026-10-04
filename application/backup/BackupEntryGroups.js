@@ -86,6 +86,9 @@ const EXACT_NAMES = new Map([
     ['nostr-relay-configuration', BackupEntryGroup.SETTINGS],
     ['steem-reading-configuration', BackupEntryGroup.SETTINGS],
     ['steem-announcing-configuration', BackupEntryGroup.SETTINGS],
+    ['blurt-reading-configuration', BackupEntryGroup.SETTINGS],
+    ['blurt-announcing-configuration', BackupEntryGroup.SETTINGS],
+    ['blurt-known-authors', BackupEntryGroup.SETTINGS],
     ['bitcoin-esplora-configuration', BackupEntryGroup.SETTINGS],
     ['role-provider-preference:by-role', BackupEntryGroup.SETTINGS],
 
@@ -113,6 +116,8 @@ const PREFIXES = [
     ['snapshot:', BackupEntryGroup.PUBLICATIONS],
     ['publication-distribution-lifecycle:', BackupEntryGroup.PUBLICATIONS],
     ['steem-content-upload:', BackupEntryGroup.PUBLICATIONS],
+    ['blurt-content-upload:', BackupEntryGroup.PUBLICATIONS],
+    ['blurt-post-record:', BackupEntryGroup.PUBLICATIONS],
 
     ['peer-relationships:', BackupEntryGroup.PEOPLE],
     ['friend-relationships:', BackupEntryGroup.PEOPLE],

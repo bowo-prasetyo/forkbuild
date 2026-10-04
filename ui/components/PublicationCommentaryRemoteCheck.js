@@ -23,7 +23,7 @@
 // on this device stay on screen either way.
 import { currentLocale, t } from '../i18n/i18n.js';
 
-// "Nostr", "Nostr and Arweave", "Nostr, Arweave and Steem", the chosen
+// "Nostr", "Nostr and Arweave", "Nostr, Arweave, Steem and Blurt", the chosen
 // language's way.
 function joinNames(names, conjunction) {
     const locale = currentLocale();

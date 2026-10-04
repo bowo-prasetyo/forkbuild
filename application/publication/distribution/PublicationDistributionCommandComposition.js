@@ -110,7 +110,7 @@ import { executePublicationDistributionCommand, executeMultiRelayNostrPublicatio
 // so it can only ever come from a caller's own `request`, never from this
 // composition root. Both therefore reach `executePublicationDistributionCommand()`
 // purely through `...request`'s own existing, unmodified spread.
-export function composePublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions, steemPublicationDiscoveryPublisher = null, steemMaterialStore = null } = {}) {
+export function composePublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions, steemPublicationDiscoveryPublisher = null, steemMaterialStore = null, blurtPublicationDiscoveryPublisher = null, blurtMaterialStore = null } = {}) {
     return (request) => executePublicationDistributionCommand({
         ...request,
         arweaveUploaderOptions,
@@ -119,6 +119,8 @@ export function composePublicationDistributionCommand({ lifecycleStore, arweaveU
         arweaveAnnouncementPublisherOptions,
         steemPublicationDiscoveryPublisher,
         steemMaterialStore,
+        blurtPublicationDiscoveryPublisher,
+        blurtMaterialStore,
         lifecycleStore
     });
 }
@@ -168,7 +170,7 @@ export function composePublicationDistributionCommand({ lifecycleStore, arweaveU
 // `remotePinningProviderOptions` are, for the identical reasons documented
 // there, left to reach `executeMultiRelayNostrPublicationDistributionCommand()`
 // purely through `...request`.
-export function composeMultiRelayNostrPublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrRelayUrls, nostrPublisherOptions, steemMaterialStore = null } = {}) {
+export function composeMultiRelayNostrPublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrRelayUrls, nostrPublisherOptions, steemMaterialStore = null, blurtMaterialStore = null } = {}) {
     return (request) => executeMultiRelayNostrPublicationDistributionCommand({
         ...request,
         arweaveUploaderOptions,
@@ -176,6 +178,7 @@ export function composeMultiRelayNostrPublicationDistributionCommand({ lifecycle
         nostrRelayUrls,
         nostrPublisherOptions,
         steemMaterialStore,
+        blurtMaterialStore,
         lifecycleStore
     });
 }

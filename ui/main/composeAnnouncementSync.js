@@ -19,7 +19,7 @@ const PEER_CHANGE_DEBOUNCE_MS = 1000;
 // whichever way it arrived.
 export function composeAnnouncementSync({
     announcementIndex, nostrRelayQueryClient, resolvedNostrRelayUrls, resolvedArweaveGatewayUrl,
-    steemRuntime = null, publicationCommentaryDistributionExchange, publicationCommentaryRemoteNotificationBridge,
+    steemRuntime = null, blurtRuntime = null, publicationCommentaryDistributionExchange, publicationCommentaryRemoteNotificationBridge,
     peerMessageBus, connectedPeerRegistry
 }) {
     const sync = new AnnouncementSync({
@@ -38,8 +38,16 @@ export function composeAnnouncementSync({
         return result;
     };
     const coreTargets = [
-        snapshotSyncTarget({ index: announcementIndex, steemSource: steemRuntime ? steemRuntime.snapshotDiscoveryQueryService : null }),
-        commentarySyncTarget({ importCommentaryEnvelope, steemDistribution: steemRuntime ? steemRuntime.commentaryDistribution : null })
+        snapshotSyncTarget({
+            index: announcementIndex,
+            steemSource: steemRuntime ? steemRuntime.snapshotDiscoveryQueryService : null,
+            blurtSource: blurtRuntime ? blurtRuntime.snapshotDiscoveryQueryService : null
+        }),
+        commentarySyncTarget({
+            importCommentaryEnvelope,
+            steemDistribution: steemRuntime ? steemRuntime.commentaryDistribution : null,
+            blurtDistribution: blurtRuntime ? blurtRuntime.commentaryDistribution : null
+        })
     ];
 
     const backgroundAnnouncementSync = new BackgroundAnnouncementSync({
@@ -47,12 +55,15 @@ export function composeAnnouncementSync({
         targets: () => ({
             core: coreTargets,
             rotating: [
-                // Map cells World View has searched. Steem reads threads whole, not by tag.
+                // Map cells World View has searched. Steem and Blurt are read whole, not by cell tag.
                 ...announcementIndex.watchedTags(AnnouncementKind.SNAPSHOT)
                     .filter((tag) => tag.startsWith(SNAPSHOT_CELL_TAG_PREFIX))
                     .map((tag) => snapshotSyncTarget({ index: announcementIndex, tag })),
                 ...announcementIndex.watchedTags(AnnouncementKind.PLACE_NAMING).map((tag) => placeNamingSyncTarget({
-                    index: announcementIndex, tag, steemSource: steemRuntime ? steemRuntime.placeNamingDiscoverySource : null
+                    index: announcementIndex,
+                    tag,
+                    steemSource: steemRuntime ? steemRuntime.placeNamingDiscoverySource : null,
+                    blurtSource: blurtRuntime ? blurtRuntime.placeNamingDiscoverySource : null
                 }))
             ]
         }),

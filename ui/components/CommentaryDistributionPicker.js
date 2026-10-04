@@ -1,8 +1,9 @@
 import { describeSteemAnnouncingUnreadiness } from '../../application/steem/SteemAnnouncingReadiness.js';
+import { describeBlurtAnnouncingUnreadiness } from '../../application/blurt/BlurtAnnouncingReadiness.js';
 import { t } from '../i18n/i18n.js';
 
 // Network names, the same in every language.
-const PROVIDER_LABELS = { arweave: 'Arweave', nostr: 'Nostr', steem: 'Steem' };
+const PROVIDER_LABELS = { arweave: 'Arweave', blurt: 'Blurt', nostr: 'Nostr', steem: 'Steem' };
 
 export function commentaryDistributionProviderLabel(provider) {
     return PROVIDER_LABELS[provider] || 'Nostr';
@@ -13,8 +14,8 @@ export function commentaryDistributionProviderLabel(provider) {
 // (v-model) and sends it as `discoveryProvider` with the comment.
 export default {
     name: 'CommentaryDistributionPicker',
-    // The account this device posts to Steem as, when set.
-    inject: { steemAnnouncingConfigurationStore: { default: null } },
+    // The accounts this device posts to Steem and Blurt as, when set.
+    inject: { steemAnnouncingConfigurationStore: { default: null }, blurtAnnouncingConfigurationStore: { default: null } },
     props: {
         modelValue: { type: String, default: 'nostr' },
         disabled: { type: Boolean, default: false }
@@ -37,6 +38,13 @@ export default {
                 account: this.steemAnnouncingConfigurationStore?.get()?.account ?? null,
                 keychain: globalThis.steem_keychain
             });
+        },
+        blurtUnreadiness() {
+            if (this.modelValue !== 'blurt') return null;
+            return describeBlurtAnnouncingUnreadiness({
+                account: this.blurtAnnouncingConfigurationStore?.get()?.account ?? null,
+                keychain: globalThis.blurt_keychain
+            });
         }
     },
     template: `
@@ -45,11 +53,13 @@ export default {
                 {{ t('publicationCommentarySection.distribution') }}
                 <select v-model="model" class="form-select commentary-distribution-picker-select" :disabled="disabled">
                     <option value="arweave">Arweave</option>
+                    <option value="blurt">Blurt</option>
                     <option value="nostr">Nostr</option>
                     <option value="steem">Steem</option>
                 </select>
             </label>
             <p v-if="steemUnreadiness()" class="form-hint publication-commentary-steem-hint">{{ steemUnreadiness() }}</p>
+            <p v-if="blurtUnreadiness()" class="form-hint publication-commentary-blurt-hint">{{ blurtUnreadiness() }}</p>
         </div>
     `
 };

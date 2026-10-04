@@ -23,7 +23,7 @@ import { formatDate, t } from '../i18n/i18n.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 
 // Network names, the same in every language.
-const DISCOVERY_PROVIDER_LABELS = { arweave: 'Arweave', nostr: 'Nostr', steem: 'Steem' };
+const DISCOVERY_PROVIDER_LABELS = { arweave: 'Arweave', blurt: 'Blurt', nostr: 'Nostr', steem: 'Steem' };
 export default {
     name: 'PlaceNamingPanel',
     props: {
@@ -101,7 +101,7 @@ export default {
             type: Boolean,
             default: false
         },
-        // Where the next distribution goes: 'arweave', 'nostr' or 'steem'
+        // Where the next distribution goes: 'arweave', 'blurt', 'nostr' or 'steem'
         // (v-model).
         discoveryProvider: {
             type: String,

@@ -366,6 +366,8 @@ export function executePublicationDistributionCommand({
     arweaveAnnouncementPublisherOptions,
     steemPublicationDiscoveryPublisher,
     steemMaterialStore,
+    blurtPublicationDiscoveryPublisher,
+    blurtMaterialStore,
     lifecycleStore
 } = {}) {
     if (!lifecycleStore || typeof lifecycleStore.get !== 'function' || typeof lifecycleStore.set !== 'function') {
@@ -383,7 +385,9 @@ export function executePublicationDistributionCommand({
         nostrPublisherOptions,
         arweaveAnnouncementPublisherOptions,
         steemPublicationDiscoveryPublisher,
-        steemMaterialStore
+        steemMaterialStore,
+        blurtPublicationDiscoveryPublisher,
+        blurtMaterialStore
     });
 
     return distribution.then((result) => {
@@ -426,6 +430,7 @@ export function executeMultiRelayNostrPublicationDistributionCommand({
     nostrRelayUrls,
     nostrPublisherOptions,
     steemMaterialStore,
+    blurtMaterialStore,
     lifecycleStore
 } = {}) {
     if (!lifecycleStore || typeof lifecycleStore.get !== 'function' || typeof lifecycleStore.set !== 'function') {
@@ -441,7 +446,8 @@ export function executeMultiRelayNostrPublicationDistributionCommand({
         arweaveUploaderOptions,
         nostrRelayUrls,
         nostrPublisherOptions,
-        steemMaterialStore
+        steemMaterialStore,
+        blurtMaterialStore
     });
 
     return distribution.then((results) => {

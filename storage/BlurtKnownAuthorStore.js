@@ -7,7 +7,7 @@ import { LocalStorageProvider } from './LocalStorageProvider.js';
 // leave the tag listing. Only names are kept, at most `limit`.
 
 const BLURT_KNOWN_AUTHORS_KEY = 'blurt-known-authors';
-export const DEFAULT_BLURT_KNOWN_AUTHOR_LIMIT = 200;
+export const DEFAULT_BLURT_KNOWN_AUTHOR_LIMIT = 100;
 
 export class BlurtKnownAuthorStore {
     constructor(storageProvider = new LocalStorageProvider(), { limit = DEFAULT_BLURT_KNOWN_AUTHOR_LIMIT } = {}) {

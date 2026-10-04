@@ -22,10 +22,10 @@ function throwsMatching(fn, pattern) {
     return false;
 }
 
-// Only IPFS, Arweave and Steem are eligible, in that order, and only when
-// registered.
+// Only IPFS, Arweave, Steem and Blurt are eligible, in that order, and only
+// when registered.
 {
-    assert(JSON.stringify(SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES) === JSON.stringify(['ipfs', 'ar', 'steem']), 'IPFS, Arweave and Steem are the eligible backends');
+    assert(JSON.stringify(SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES) === JSON.stringify(['ipfs', 'ar', 'steem', 'blurt']), 'IPFS, Arweave, Steem and Blurt are the eligible backends');
     const ipfs = { name: 'ipfs-store' };
     const ar = { name: 'ar-store' };
     const steem = { name: 'steem-store' };

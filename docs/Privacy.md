@@ -124,7 +124,7 @@ Every script, style and font comes from the site the app is served from
 image a day described above. One more thing starts on its own: about
 10 seconds after the app opens, and every few minutes while its tab is
 visible, it reads new announcements from the Nostr relays, the Arweave
-gateway and the Steem nodes configured under **Network Settings**
+gateway, and the Steem and Blurt nodes configured under **Network Settings**
 (docs/AnnouncementIndex.md). It reads only announcements (small pointers and
 signed claims), never content, and publishes nothing. Everything else happens
 only when you use the feature, and each server can be changed under
@@ -137,15 +137,17 @@ only when you use the feature, and each server can be changed under
 | You join, or look into, a public lobby | the same rendezvous server | your signed lobby card (public key, display name, which lobby), kept for at most 15 minutes and renewed while you stay; which lobby you look into |
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |
 | You start a peer connection, if the rendezvous server offers a relay | the rendezvous server's `/turn-credentials`, then its TURN relay (Cloudflare) | a request for short-lived relay credentials, at most about once an hour; relayed traffic is end-to-end encrypted by WebRTC |
-| The app is open and its tab visible (background announcement sync) | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`) | queries for ForkBuild's discovery tags: the shared Snapshot and Commentary tags, and the Place Naming regions and map cells you have visited |
-| You open the Repository or an author's page | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`) | a query for the shared Publication tag (`forkbuild-publication`); then a request for each newly announced Publication's signed record, at most 20 per visit or **Check again** |
+| The app is open and its tab visible (background announcement sync) | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`), Blurt nodes (`rpc.blurt.blog`) | queries for ForkBuild's discovery tags: the shared Snapshot and Commentary tags, and the Place Naming regions and map cells you have visited |
+| You open the Repository or an author's page | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`), Blurt nodes (`rpc.blurt.blog`) | a query for the shared Publication tag (`forkbuild-publication`); then a request for each newly announced Publication's signed record, at most 20 per visit or **Check again** |
 | You distribute or discover publications over Nostr | Nostr relays (`relay.damus.io`) | signed announcements you publish; your queries |
 | You store or fetch content on Arweave | an Arweave gateway (`arweave.net`) | the content you publish; what you fetch |
 | You fetch content from IPFS | an IPFS gateway (`ipfs.io`), or your own IPFS node (`127.0.0.1:5001`) | what you fetch or add |
 | You pin content with a remote pinning service (*experimental*) | the service you enter | the content, and the token you type for that one upload (never stored) |
 | You store, announce or anchor on Steem, or discover Steem announcements (*experimental*) | Steem API nodes (`api.steemit.com`, then `api.justyy.com`); signing goes through the Steem Keychain extension | your Steem account name; what you post (announcements, stored content, anchors) is public on the chain for good, and edits leave the earlier version in its history |
+| You store, announce or anchor on Blurt, or discover Blurt posts (*experimental*) | Blurt API nodes (`rpc.blurt.blog`, then `rpc.beblurt.com`); signing goes through the Blurt Keychain extension (or WhaleVault) | your Blurt account name, and the accounts whose post histories are read (the ones you follow, and every account this device has seen post under ForkBuild's tags, remembered on this device); what you post is public on the chain for good, under your own account, and edits leave the earlier version in its history. Every transaction pays a small fee in BLURT from your account |
+| You distribute a Publication's Signed Claim on Blurt (*experimental*) | Blurt's image host (`images.blurt.blog`), directly | a 320×200 picture of the build for the post's preview, signed with your Blurt posting key |
 | You distribute a Publication's Signed Claim on Steem (*experimental*) | the Steem image host (`steemitimages.com`), directly or, when the browser can't reach it, through the rendezvous server's `/steem-image` relay, which keeps nothing | a 320×200 picture of the build for the post's preview, signed with your Steem posting key |
-| You open a shared link to a Publication (`#/view/…`) | the Steem node, Arweave gateway or IPFS gateway the link names, then the announcement substrates to find its build | which post, transaction or CID you open |
+| You open a shared link to a Publication (`#/view/…`) | the Steem or Blurt node, Arweave gateway or IPFS gateway the link names, then the announcement substrates to find its build | which post, transaction or CID you open |
 | You anchor or verify evidence on Bitcoin (*experimental*) | an Esplora API (`blockstream.info`) | the transaction you broadcast or look up |
 | You verify evidence on Base (*experimental*) | a Base JSON-RPC endpoint (`mainnet.base.org`) | the transaction you look up |
 | You connect a browser wallet (*experimental*) | the wallet extension you choose | whatever it asks you to approve |

@@ -17,7 +17,7 @@ details.
 |---|---|---|---|
 | **Publish** | This device only | Nobody else, yet | [Publishing your creation](04-PublishingAndForking.md#publishing-your-creation) |
 | **Share with Peers** | Straight to the people you're connected to | Your connected peers, while you're online | [Sharing with connected peers](04-PublishingAndForking.md#sharing-with-connected-peers) |
-| **Distribute** | Decentralized networks (IPFS, Arweave, Nostr, Steem) | Anyone, with no connection to you needed | This page |
+| **Distribute** | Decentralized networks (IPFS, Arweave, Nostr, Steem, Blurt) | Anyone, with no connection to you needed | This page |
 
 Publishing never sends anything anywhere by itself, and sharing with peers
 isn't distribution: peers keep a copy only as long as they choose to, and
@@ -29,9 +29,9 @@ Distributing uses up to three kinds of network, each chosen separately:
 
 | Role | Like… | What it does | Choices |
 |---|---|---|---|
-| **Content** (Storage) | Where printed copies are kept | Holds the bytes, such as your World's bricks, so others can fetch them | **Arweave**, **IPFS (Local Kubo)**, **IPFS (Remote Pinning)**, **Steem** *(experimental)* |
-| **Announcement / Discovery** | A library catalogue entry | Publishes a small signed notice saying your work exists and where its copy is, so others can find it | **Nostr**, **Arweave**, **Steem** *(experimental)* |
-| **Proof / Anchoring** *(experimental, optional)* | A notary's stamp | Writes your content's hash into a blockchain, as evidence it existed by that time. It stores and announces nothing. | **Bitcoin**, **Arweave**, **Base**, **Steem** |
+| **Content** (Storage) | Where printed copies are kept | Holds the bytes, such as your World's bricks, so others can fetch them | **Arweave**, **Blurt** *(experimental)*, **IPFS (Local Kubo)**, **IPFS (Remote Pinning)**, **Steem** *(experimental)* |
+| **Announcement / Discovery** | A library catalogue entry | Publishes a small signed notice saying your work exists and where its copy is, so others can find it | **Nostr**, **Arweave**, **Steem** *(experimental)*, **Blurt** *(experimental)* |
+| **Proof / Anchoring** *(experimental, optional)* | A notary's stamp | Writes your content's hash into a blockchain, as evidence it existed by that time. It stores and announces nothing. | **Bitcoin**, **Arweave**, **Base**, **Steem**, **Blurt** |
 
 Storage without an announcement means nobody knows where to look; an
 announcement without storage points at nothing. **Distribute** does both in
@@ -50,12 +50,12 @@ sends anything.
 
 | What | Content | Announcement / Discovery | Proof / Anchoring | Where you do it |
 |---|---|---|---|---|
-| **Your World's Signed Claim** (the signed record of a published World, called a Shared World) | Arweave, IPFS or Steem | Nostr, Arweave or Steem | — | **Distribute** after publishing in the Editor; **My Shared World** in World View; the **Publications** page |
-| **Your World's Snapshot** (its bricks), with where you placed it | Arweave, IPFS or Steem | Nostr, Arweave or Steem | — | The same **Distribute** dialogs (**Distribute Snapshot only** for just this half) |
-| **Any publication's content hash** (a World, an authorship claim or a place name) | — | — | Bitcoin, Arweave, Base or Steem | The publication's card on the **Publications** page |
-| **Authorship of a structure** (Blueprint Attribution) | Arweave, IPFS or Steem | Nostr, Arweave or Steem | — | **Distribute** in the structure's **Info** panel, offered once you **Publish to Network**; the **Publications** page |
-| **A place name** (Place Naming Claim) | Arweave, IPFS or Steem | Nostr, Arweave or Steem | — | **Distribute** in World View's naming panel, offered once you **Publish A Name** (it announces the name on the network you pick); the **Publications** page for any of these |
-| **A comment** on a publication | — | Nostr, Arweave or Steem | — | **Post Comment**, in the Repository or World View, on the network chosen beside it |
+| **Your World's Signed Claim** (the signed record of a published World, called a Shared World) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** after publishing in the Editor; **My Shared World** in World View; the **Publications** page |
+| **Your World's Snapshot** (its bricks), with where you placed it | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | The same **Distribute** dialogs (**Distribute Snapshot only** for just this half) |
+| **Any publication's content hash** (a World, an authorship claim or a place name) | — | — | Bitcoin, Arweave, Base, Steem or Blurt | The publication's card on the **Publications** page |
+| **Authorship of a structure** (Blueprint Attribution) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** in the structure's **Info** panel, offered once you **Publish to Network**; the **Publications** page |
+| **A place name** (Place Naming Claim) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** in World View's naming panel, offered once you **Publish A Name** (it announces the name on the network you pick); the **Publications** page for any of these |
+| **A comment** on a publication | — | Nostr, Arweave, Steem or Blurt | — | **Post Comment**, in the Repository or World View, on the network chosen beside it |
 
 A World's Snapshot carries your signed placement with it, so people who
 fetch it see the build exactly where you put it.
@@ -138,12 +138,15 @@ the attempt ends with a notice saying it couldn't be completed.
 | **IPFS (Local Kubo)** | Content | Your own IPFS node, by default at `http://127.0.0.1:5001` | No size limit. Available only while your node is online, unless someone else pins it. |
 | **IPFS (Remote Pinning)** *(experimental)* | Content | An account with a Pinata-compatible pinning service | No size limit. Type the endpoint and credential each time; they're never saved. |
 | **Steem** *(experimental)* | Content, Announcement / Discovery, Proof / Anchoring | The Steem Keychain extension with your posting key, and your account under [Network Settings → Steem](10-NetworkSettings.md#steem) | Posts are replies to ForkBuild's monthly threads; one approval per post. Stores about 2,500 bricks per post, up to about 30,000 bricks in 20 posts. Uses Resource Credits, which refill. |
+| **Blurt** *(experimental)* | Content, Announcement / Discovery, Proof / Anchoring | The Blurt Keychain extension (or WhaleVault) with your posting key, and your account under [Network Settings → Blurt](10-NetworkSettings.md#blurt) | One top-level post from your own account per build, which keeps its payout; stored data goes in replies under it. Stores about 2,500 bricks per reply, up to about 30,000 bricks. Each transaction costs a small fee in BLURT. |
 | **Bitcoin** *(experimental)* | Proof / Anchoring | The UniSat extension, with bitcoin at a native SegWit (`bc1q…`) address for the fee | Made through the wallet steps on the Publications page |
 | **Base** *(experimental)* | Proof / Anchoring | A browser wallet such as MetaMask or Coinbase Wallet, on Base | Every anchor is a transaction you review and sign |
 
 A Steem anchor is quick and free but attested by Steem's witnesses rather
 than proof of work: use it alongside a Bitcoin anchor, not instead of it.
-See [Steem](11-EvidenceAndStorage.md#steem).
+See [Steem](11-EvidenceAndStorage.md#steem). The same holds for a Blurt
+anchor, which costs nothing when your build's Blurt post already carries its
+content hash; see [Blurt](11-EvidenceAndStorage.md#blurt).
 
 ## A typical route
 
@@ -170,8 +173,8 @@ connected to can still fetch builds of up to 64 MB straight from you.
   distributing it, for example **Stored on IPFS · Announced on Nostr**,
   or **No distribution recorded on this device**. See
   [Your publications](13-YourData.md#your-publications).
-- Other people's Repository finds your Publication on Nostr, Arweave or
-  Steem the next time they open it, as long as it was announced under the
+- Other people's Repository finds your Publication on Nostr, Arweave,
+  Steem or Blurt the next time they open it, as long as it was announced under the
   usual discovery tag, `forkbuild-publication`. See
   [Creations others distributed](04-PublishingAndForking.md#creations-others-distributed).
 - **Discover Shared World** in World View looks your Shared World up on

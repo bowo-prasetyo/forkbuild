@@ -19,8 +19,8 @@ sections for proving *when* a publication existed and for putting its
 content somewhere others can fetch it:
 
 - **[External Evidence](#external-evidence)** — records on Bitcoin, Base,
-  Arweave or Steem that a publication's content hash existed at a certain
-  time.
+  Arweave, Steem or Blurt that a publication's content hash existed at a
+  certain time.
 - **[The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline)** and
   **[The Base Anchor Pipeline](#the-base-anchor-pipeline)** — step-by-step
   flows that use your own wallet to write a real transaction.
@@ -29,6 +29,8 @@ content somewhere others can fetch it:
 - **[IPFS Publishing](#ipfs-publishing)** — uploading to a remote pinning
   service.
 - **[Steem](#steem)** — posting, storing, and sharing links on Steem.
+- **[Blurt](#blurt)** — posting, storing and anchoring on Blurt, from your
+  own account, with rewards.
 
 Evidence and placements answer different questions. An anchor shows a hash
 was recorded at some time; it says nothing about whether the bytes can
@@ -71,6 +73,9 @@ network, with one of three outcomes:
 - **Create Steem Anchor** needs the Steem Keychain extension, and your
   Steem account set under
   [Network Settings → Steem](10-NetworkSettings.md#steem).
+- **Create Blurt Anchor** needs the Blurt Keychain extension (or WhaleVault),
+  and your Blurt account set under
+  [Network Settings → Blurt](10-NetworkSettings.md#blurt).
 
 A publication made before content hashes became SHA-256 is never anchored,
 by these buttons, the Bitcoin or Base steps, or **Anchor Several
@@ -97,12 +102,21 @@ so enough of them together could rewrite history; the card says "Attested
 by Steem witnesses". Use a Steem anchor as quick, free evidence alongside a
 Bitcoin one, not instead of it.
 
+**Blurt anchors** are attested by Blurt's witnesses in the same way, and
+are just as much weaker than Bitcoin ones. When this device already posted
+your build's Snapshot on Blurt (announced it, or stored it there), that post
+is the anchor: **Create Blurt Anchor** posts nothing and costs nothing.
+Otherwise it adds the build's content hash to your current Blurt post, or
+makes a new one, for a small fee in BLURT. Finality, **Verify Evidence** and
+**Inspect Evidence** work as for Steem, and the card links to the post.
+
 **Anchoring several publications at once on Steem.** Under **Wallet, Archive
 & Publisher Tools → Blockchain Anchoring**, **Anchor Several Publications on
 Steem** lists your cataloged publications. Tick the ones you want (or
 **Select Unanchored**) and click **Anchor N Publications on Steem**. One
 Keychain approval anchors up to 64. Each publication still gets its own
-anchor, verified on its own.
+anchor, verified on its own. **Anchor Several Publications on Blurt** works
+the same way, with one Blurt Keychain approval.
 
 ### Anchoring on a preferred provider
 
@@ -742,3 +756,55 @@ address in your address bar only works in your own browser.
   available when your computer is off.
 - Friends read through the gateways in their own Network Settings. An IPFS
   gateway gets up to 30 seconds to find the claim.
+
+## Blurt
+
+*Experimental.* Blurt is a blockchain that grew out of Steem, without
+downvotes. ForkBuild can announce, store and anchor on it, and everything
+goes out from **your own account** as ordinary Blurt posts that keep their
+payout: when people upvote your build's post, you earn BLURT. There is no
+ForkBuild account and no shared thread. Settings are under
+[Network Settings → Blurt](10-NetworkSettings.md#blurt).
+
+### Posting to Blurt
+
+Choose **Blurt** in a Distribute dialog, on the Publications page, next to
+**Post Comment** or in the naming panel, or make it your default under
+[Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider).
+You need the Blurt Keychain extension (or WhaleVault) holding your
+account's **posting** key, and your account name saved on the Blurt settings
+page. ForkBuild never sees the key, and Keychain asks you to approve every
+post.
+
+- **One post per build.** A Distribute makes one top-level post from your
+  account, tagged `forkbuild` and `forkbuild-snapshot` or
+  `forkbuild-publication`, with a picture of your build, its title, your
+  name and description, and a "See it in 3D" link. What follows in the next
+  half hour (the Publication's announcement, a comment, an anchor) is added
+  to the same post by editing it, so your followers see one post, not
+  several.
+- **Five minutes between posts.** Blurt accepts one top-level post per
+  account every five minutes. If your account posted one recently (from
+  another app, say), ForkBuild waits, and the dialog says how long.
+- **Fees.** Every Blurt transaction costs a small fee in BLURT, set by
+  Blurt's witnesses. If your account can't pay it, nothing is posted and
+  you're told.
+- **Others find it** by the tag for a week, and after that through your
+  account's history: once someone's ForkBuild has seen one of your posts,
+  it keeps reading your later and earlier ones.
+
+### Storing on Blurt
+
+Choose **Blurt** as the storage in a Distribute dialog or on the
+Publications page. The build is stored the way it is on Steem, in replies
+under your build's post: up to about 2,500 bricks in one reply, or up to 20
+more replies for up to about 30,000 bricks. Before posting, ForkBuild works
+out the fees and refuses if your balance is short ("Storing this build on
+Blurt costs about 0.632 BLURT in fees, and your account has 0.100 BLURT").
+The dialog shows progress and the fees. If it stops part-way, distribute
+again with the same account and only the missing replies are made.
+
+The Signed Claim can be stored on Blurt too, as one more reply. Its link
+works like a Steem one: anyone who clicks "See it in 3D" lands in World
+View on your build, after ForkBuild checks it. **Share…** and **Copy link**
+appear once it's stored.

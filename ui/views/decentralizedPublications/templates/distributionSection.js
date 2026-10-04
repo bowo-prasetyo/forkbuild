@@ -27,6 +27,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                         <select v-model="entry.discoveryDistributionProvider" class="form-select"
                                                 :disabled="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.distributing">
                                             <option value="arweave">Arweave</option>
+                                            <option value="blurt">{{ t('publications.blurtExperimental') }}</option>
                                             <option value="nostr">Nostr</option>
                                             <option value="steem">{{ t('publications.steemExperimental') }}</option>
                                         </select>
@@ -87,6 +88,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                         <select v-model="entry.snapshotDiscoveryProvider" class="form-select"
                                                 :disabled="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing">
                                             <option value="arweave">Arweave</option>
+                                            <option value="blurt">{{ t('publications.blurtExperimental') }}</option>
                                             <option value="nostr">Nostr</option>
                                             <option value="steem">{{ t('publications.steemExperimental') }}</option>
                                         </select>

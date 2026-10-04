@@ -4,13 +4,14 @@ import { OpenPublicationLinkOutcome } from '../../application/publication/OpenPu
 import { describePublicationClaimLocator, publicationClaimLocatorFromViewPath } from '../../core/ForkBuildAppLinks.js';
 import { errorText, t } from '../i18n/i18n.js';
 
-const NETWORK_NAMES = Object.freeze({ steem: 'Steem', arweave: 'Arweave', ipfs: 'IPFS' });
+const NETWORK_NAMES = Object.freeze({ steem: 'Steem', blurt: 'Blurt', arweave: 'Arweave', ipfs: 'IPFS' });
 // Worth trying again: the network or search couldn't be reached, the build
-// wasn't found yet, or (off Steem) the claim may not have arrived yet.
+// wasn't found yet, or (off Steem and Blurt) the claim may not have arrived yet.
 const RETRY_OUTCOMES = new Set([OpenPublicationLinkOutcome.UNREACHABLE, OpenPublicationLinkOutcome.BUILD_NOT_FOUND]);
 
-// Where a link to a Publication lands: `#/view/steem/<author>/<permlink>`
-// (the "see it in 3D" link on a Steem post), `#/view/ar/<id>` or
+// Where a link to a Publication lands: `#/view/steem/<author>/<permlink>` or
+// `#/view/blurt/<author>/<permlink>` (the "see it in 3D" link on a Steem or
+// Blurt post), `#/view/ar/<id>` or
 // `#/view/ipfs/<cid>` (links shared with Share) name its Signed Claim.
 // `openPublicationLink` (ui/main.js) reads and verifies it, fetches and
 // checks its build, and admits it as World discovery does; this view then
@@ -52,7 +53,7 @@ export default {
                 : null;
             message.value = typeof result.message === 'string' ? result.message : t(result.message);
             const retry = RETRY_OUTCOMES.has(result.outcome)
-                || (result.outcome === OpenPublicationLinkOutcome.CLAIM_UNAVAILABLE && where?.network !== 'steem');
+                || (result.outcome === OpenPublicationLinkOutcome.CLAIM_UNAVAILABLE && !['steem', 'blurt'].includes(where?.network));
             state.value = retry ? 'retry' : 'failed';
         }
 

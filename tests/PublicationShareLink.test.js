@@ -44,7 +44,7 @@ const onSteem = { material: { state: 'PRESENT', uri: 'steem://forkbuild/forkbuil
     assert(share.available && share.url === URL && share.title === 'Twin House With Rabbits' && share.text === 'Twin House With Rabbits, built with ForkBuild', `a Steem claim can be shared (got ${JSON.stringify(share)})`);
     assert(describePublicationShare({ lifecycle: onSteem }).text === 'A build, built with ForkBuild', 'an untitled build still reads');
     const elsewhere = describePublicationShare({ lifecycle: { material: { state: 'PRESENT', uri: 'ar://TX1', storage: 'ar' } } });
-    assert(elsewhere.available === false && elsewhere.reason.includes('Steem, Arweave or IPFS storage'), 'a claim no link can reach says how to get one');
+    assert(elsewhere.available === false && elsewhere.reason.includes('Steem, Blurt, Arweave or IPFS storage'), 'a claim no link can reach says how to get one');
     assert(share.note === null, 'a Steem claim needs no note');
     console.log('✓ what to offer');
 }

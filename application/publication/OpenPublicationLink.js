@@ -11,17 +11,17 @@ import { message } from '../../core/Message.js';
 import { isUserFacingError } from '../../core/UserFacingError.js';
 
 // Opening a Publication from a link (`#/view/steem/<author>/<permlink>`,
-// `#/view/ar/<id>` or `#/view/ipfs/<cid>`: the notice on a Steem post, or a
-// link shared with Share; docs/Protocol.md, "Proposed: Steem Content
-// Storage"). World View shows only Publications whose signature checks out,
+// `#/view/blurt/<author>/<permlink>`, `#/view/ar/<id>` or `#/view/ipfs/<cid>`:
+// the notice on a Steem or Blurt post, or a link shared with Share;
+// docs/Protocol.md, "Proposed: Steem Content Storage"). World View shows only Publications whose signature checks out,
 // so the link names the Signed Claim, and the build is found from it:
 //
 //   1. read the claim where it is stored (`retrieveClaim(locator)`: Steem,
-//      Arweave or IPFS);
+//      Blurt, Arweave or IPFS);
 //   2. verify it with the same verifier World discovery uses;
 //   3. find its Snapshot: already on this device, at the claim's own
 //      locator, or among announced Snapshot candidates (Nostr, Arweave,
-//      Steem) with the claim's content hash;
+//      Steem, Blurt) with the claim's content hash;
 //   4. check and keep the Snapshot locally (StoreSnapshotContentUseCase);
 //   5. admit the Publication as World discovery does (the discovery
 //      provider and the durable admission log);
@@ -47,7 +47,7 @@ const Outcome = OpenPublicationLinkOutcome;
 // Every result's `message` is a descriptor (core/Message.js), with a message
 // per network where what to say differs (publicationLink.<outcome>.<network>).
 // `detail` is the network's own error text, which is not translated.
-const CANDIDATE_STORAGE_ORDER = ['steem', 'ar', 'ipfs'];
+const CANDIDATE_STORAGE_ORDER = ['steem', 'blurt', 'ar', 'ipfs'];
 
 // `locator` is where the Signed Claim is stored; `retrieveClaim(locator)`
 // resolves to its JSON, null when it isn't there, or rejects when the

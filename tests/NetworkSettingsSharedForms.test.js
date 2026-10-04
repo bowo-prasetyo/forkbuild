@@ -276,7 +276,7 @@ async function run() {
         {
             label: 'Announcement / Discovery', view: 'AnnouncementDiscoveryProviderSettingsView.js',
             role: RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY, extra: {}, choice: 'nostr',
-            expectedOptions: 'Arweave,Nostr,Steem'
+            expectedOptions: 'Arweave,Blurt,Nostr,Steem'
         },
         {
             label: 'Proof / Anchoring', view: 'AnchorProviderSettingsView.js',

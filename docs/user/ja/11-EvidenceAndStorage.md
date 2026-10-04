@@ -5,6 +5,10 @@
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · **日本語** · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../11-EvidenceAndStorage.md)も参照してください。
+<!-- /stale -->
+
 > **ほとんどが試験的です。** カードの **配信 → 内容** ブロックから
 > IPFS や Arweave にコンテンツを保存すること（[配置を作成する](#配置を作成する)
 > と [優先するサービスを使う](#優先するサービスを使う)）は通常の機能

@@ -5,7 +5,7 @@ import { CREATION_BADGE_CLASSES, humanizeAnchorType } from './presentation.js';
 import { t } from '../../i18n/i18n.js';
 
 // Anchoring several publications with one external recording (one wallet
-// approval), for each anchorType whose publisher can (Steem today). The
+// approval), for each anchorType whose publisher can (Steem and Blurt). The
 // person picks the publications; one click anchors them all, each gets its
 // own signed anchor, and the shared block is watched until it is final.
 // `isAnchorable` leaves out publications whose last check failed: their

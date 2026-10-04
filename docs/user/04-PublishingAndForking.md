@@ -96,7 +96,7 @@ either section's result is remembered anywhere.
 ## Sharing with connected peers
 
 A World you publish is listed in *your* Repository only, until you
-distribute it on Nostr, Arweave or Steem (see [Distribution](Distribution.md)):
+distribute it on Nostr, Arweave, Steem or Blurt (see [Distribution](Distribution.md)):
 then anyone's Repository finds it (see
 [Creations others distributed](#creations-others-distributed)). To put it in the
 Repository of someone you're connected to (see
@@ -199,8 +199,8 @@ holds ten creations or ten thousand.
 ### Creations others distributed
 
 Each time you open the Repository (or an author's page), it looks on Nostr,
-Arweave and Steem for creations other people distributed there, and adds
-the ones it can verify. A line above the list says what it's doing, then
+Arweave, Steem and Blurt for creations other people distributed there, and
+adds the ones it can verify. A line above the list says what it's doing, then
 how many new creations it found; **Check again** looks once more.
 
 - Only a creation whose signed record checks out is added: signed by the key

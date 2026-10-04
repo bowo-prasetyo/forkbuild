@@ -5,6 +5,10 @@
 [English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · [Français](../fr/10-NetworkSettings.md) · **Bahasa Indonesia** · [日本語](../ja/10-NetworkSettings.md) · [한국어](../ko/10-NetworkSettings.md) · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../10-NetworkSettings.md).
+<!-- /stale -->
+
 **Pengaturan Jaringan**, di bilah atas, menautkan setiap halaman yang
 mengatur server mana yang dihubungi ForkBuild. Kebanyakan orang tidak
 pernah perlu mengubah apa pun di sini: nilai bawaannya langsung berfungsi.

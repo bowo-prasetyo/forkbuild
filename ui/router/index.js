@@ -43,6 +43,7 @@ const IpfsGatewaySettingsView = page('IpfsGatewaySettingsView', () => import('..
 const BitcoinEsploraSettingsView = page('BitcoinEsploraSettingsView', () => import('../views/BitcoinEsploraSettingsView.js'));
 const NostrRelaySettingsView = page('NostrRelaySettingsView', () => import('../views/NostrRelaySettingsView.js'));
 const SteemReadingSettingsView = page('SteemReadingSettingsView', () => import('../views/SteemReadingSettingsView.js'));
+const BlurtSettingsView = page('BlurtSettingsView', () => import('../views/BlurtSettingsView.js'));
 const StunSettingsView = page('StunSettingsView', () => import('../views/StunSettingsView.js'));
 const TurnServerSettingsView = page('TurnServerSettingsView', () => import('../views/TurnServerSettingsView.js'));
 const RendezvousSettingsView = page('RendezvousSettingsView', () => import('../views/RendezvousSettingsView.js'));
@@ -74,9 +75,10 @@ const routes = [
     // milestone forward.
     { path: '/world/:documentId', name: 'world', component: WorldView },
     // A link to a Publication, naming where its Signed Claim is stored: the
-    // "see it in 3D" link on a Steem post, or one shared with Share. Opens
-    // World View on that Publication once it checks out.
+    // "see it in 3D" link on a Steem or Blurt post, or one shared with Share.
+    // Opens World View on that Publication once it checks out.
     { path: '/view/steem/:author/:permlink', name: 'steem-publication-link', component: PublicationLinkView },
+    { path: '/view/blurt/:author/:permlink', name: 'blurt-publication-link', component: PublicationLinkView },
     { path: '/view/ar/:id', name: 'arweave-publication-link', component: PublicationLinkView },
     { path: '/view/ipfs/:cid', name: 'ipfs-publication-link', component: PublicationLinkView },
     // 0.9.15 — Mount Live World View. Superseded as a top-nav, user-
@@ -189,6 +191,7 @@ const routes = [
     // "unified," for the full rationale and what changed.
     { path: '/settings/nostr-relay', name: 'nostr-relay-settings', component: NostrRelaySettingsView },
     { path: '/settings/steem', name: 'steem-reading-settings', component: SteemReadingSettingsView },
+    { path: '/settings/blurt', name: 'blurt-settings', component: BlurtSettingsView },
     // 0.9.386 — STUN Settings UI. The one ordinary product path to
     // create/change/clear the persisted STUN server configuration
     // override (core/IceServerConfiguration.js, storage/

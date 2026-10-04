@@ -53,7 +53,8 @@ function plantPost(chain, { author, permlink, json_metadata, parent_permlink = '
     assert(result.outcome === 'found' && result.announcements.length === 130, `every build post across two pages (got ${result.announcements.length})`);
     assert(new Set(result.announcements.map((a) => a.envelope.n)).size === 130, 'none twice where pages meet');
     assert(!result.announcements.some((a) => a.author === 'spammer' || a.author === 'other'), 'noise and posts outside the category are skipped');
-    assert(known.list().length === 130 && !known.list().includes('spammer'), 'authors of build posts are remembered, not of noise');
+    assert(!known.list().includes('spammer') && known.list().includes('user129'), 'authors of build posts are remembered, not of noise');
+    assert(known.list().length === 100 && known.list()[0] === 'user129' && !known.list().includes('user000'), `the 100 most recently seen are kept (got ${known.list().length})`);
     assert(result.announcements[0].envelope.n === 0, 'reported oldest first');
     console.log('✓ the tag listing');
 }

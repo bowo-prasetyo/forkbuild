@@ -9,11 +9,12 @@ import { IpfsGatewayFailoverContentStore } from '../../content/IpfsGatewayFailov
 // Reads a Signed Claim from wherever its locator says it is stored, for
 // opening a Publication from a link. Each reader is a material resolver
 // (`retrieveByUri(uri)`): SteemWorldEncounterMaterialResolver,
+// BlurtWorldEncounterMaterialResolver,
 // ArweaveWorldEncounterMaterialResolver (or its gateway failover) and
 // IpfsWorldEncounterMaterialResolver. A network with no reader rejects, so the
 // link says that network can't be reached rather than that nothing is there.
-export function createPublicationClaimRetriever({ steem = null, arweave = null, ipfs = null } = {}) {
-    const readers = { steem, arweave, ipfs };
+export function createPublicationClaimRetriever({ steem = null, blurt = null, arweave = null, ipfs = null } = {}) {
+    const readers = { steem, blurt, arweave, ipfs };
     return async function retrieveClaim(locator) {
         const where = describePublicationClaimLocator(locator);
         if (!where) return null;
@@ -30,12 +31,13 @@ export function createPublicationClaimRetriever({ steem = null, arweave = null, 
 // found through the IPFS network first, which often takes tens of seconds.
 export const PUBLICATION_CLAIM_IPFS_TIMEOUT_MS = 30000;
 
-// The retriever for the app: Steem through the Steem runtime's resolver (null
-// when there is none), Arweave through the configured gateways (failing over
-// in order) and IPFS through the configured gateways.
-export function composePublicationClaimRetriever({ steemResolver = null, arweaveGatewayUrls, ipfsGatewayUrls, ipfsTimeoutMs = PUBLICATION_CLAIM_IPFS_TIMEOUT_MS }) {
+// The retriever for the app: Steem and Blurt through their runtimes'
+// resolvers (null when there is none), Arweave through the configured
+// gateways (failing over in order) and IPFS through the configured gateways.
+export function composePublicationClaimRetriever({ steemResolver = null, blurtResolver = null, arweaveGatewayUrls, ipfsGatewayUrls, ipfsTimeoutMs = PUBLICATION_CLAIM_IPFS_TIMEOUT_MS }) {
     return createPublicationClaimRetriever({
         steem: steemResolver,
+        blurt: blurtResolver,
         arweave: buildArweaveWorldEncounterMaterialResolver({ gatewayUrls: arweaveGatewayUrls }),
         ipfs: new IpfsWorldEncounterMaterialResolver({
             gatewayStore: ipfsGatewayUrls.length > 1
