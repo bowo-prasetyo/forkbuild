@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 9c6ca1cfed3b4863 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: be51a110c624bf19 -->
 # Mendistribusikan Karya Anda
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · **Bahasa Indonesia** · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../Distribution.md).
-<!-- /stale -->
 
 Semua yang dibuat ForkBuild dimulai di perangkat Anda sendiri.
 **Mendistribusikan** adalah langkah terpisah yang opsional untuk menaruh
@@ -152,6 +148,10 @@ langsung dari Anda.
   distribusinya, misalnya **Disimpan di IPFS · Diumumkan di Nostr**, atau
   **Tidak ada distribusi yang tercatat di perangkat ini.** Lihat
   [Publikasi Anda](13-YourData.md#publikasi-anda).
+- Repositori orang lain menemukan publikasi Anda di Nostr, Arweave, atau
+  Steem saat mereka membukanya lagi, asalkan publikasi itu diumumkan dengan
+  tag penemuan yang biasa, `forkbuild-publication`. Lihat
+  [Karya yang didistribusikan orang lain](04-PublishingAndForking.md#karya-yang-didistribusikan-orang-lain).
 - **Temukan Dunia Bersama** di Tampilan Dunia mencari Dunia Bersama Anda
   langsung di Arweave dan Nostr lalu memeriksanya, sehingga menjawab
   pertanyaan "apakah publikasi saya benar-benar ada di luar sana, dan
@@ -163,4 +163,6 @@ langsung dari Anda.
 
 Distribusi tidak dapat ditarik kembali: begitu sesuatu diumumkan atau
 disimpan, orang lain mungkin sudah memiliki salinannya.
-**Batalkan Penerbitan** hanya menghapus Dunia dari katalog Anda sendiri.
+**Batalkan Penerbitan** hanya menghapus Dunia dari katalog Anda sendiri,
+dan perangkat ini lalu ingat untuk tidak mencantumkan lagi salinan yang
+sudah didistribusikan saat Repositori mencari di jaringan.

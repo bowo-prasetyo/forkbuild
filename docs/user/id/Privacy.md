@@ -1,13 +1,9 @@
-<!-- translation-of: docs/Privacy.md source-hash: ef02c2b3f84b697d -->
+<!-- translation-of: docs/Privacy.md source-hash: 9cb6f05e34121fa7 -->
 # Privasi
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · **Bahasa Indonesia** · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../../Privacy.md).
-<!-- /stale -->
 
 ForkBuild tidak memiliki akun dan tidak melacak Anda. ForkBuild menyimpan
 pekerjaan Anda di browser Anda sendiri dan berkomunikasi dengan komputer
@@ -40,7 +36,14 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
   pengguna dan kredensial server TURN jika Anda memasukkannya di
   **Pengaturan Jaringan**;
 - apakah browser ini ikut dalam hitungan pengunjung harian, dan hari
-  terakhir browser ini dihitung.
+  terakhir browser ini dihitung;
+- publikasi orang lain yang telah ditemukan dan diverifikasi perangkat ini,
+  dari rekan, tautan, Tampilan Dunia, atau pencarian Repositori di
+  jaringan, dan, untuk yang ditemukan di jaringan, tempat catatan
+  bertandatangan masing-masing dibaca;
+- ID publikasi yang Anda batalkan penerbitannya di perangkat ini, agar
+  pencarian Repositori di jaringan tidak mencantumkan lagi salinan yang
+  pernah Anda distribusikan.
 
 Menghapus data situs ini di browser akan menghapus semuanya, dan tidak ada
 salinan lain maupun cara untuk memulihkannya. Cadangkan terlebih dahulu
@@ -156,6 +159,7 @@ Anda dan apa yang Anda minta darinya.
 | Koneksi rekan dimulai | server STUN (`stun.l.google.com`) | hanya permintaan alamat IP publik Anda |
 | Anda memulai koneksi rekan, jika server rendezvous menawarkan relay | `/turn-credentials` pada server rendezvous, lalu relay TURN-nya (Cloudflare) | permintaan kredensial relay berumur pendek, paling sering sekitar sekali sejam; lalu lintas yang direlay dienkripsi ujung ke ujung oleh WebRTC |
 | Aplikasi terbuka dan tabnya terlihat (sinkronisasi pengumuman di latar belakang) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`) | kueri untuk tag penemuan ForkBuild: tag Snapshot dan Komentar bersama, serta wilayah Penamaan Tempat dan sel peta yang pernah Anda kunjungi |
+| Anda membuka Repositori atau halaman pembuat | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`) | kueri untuk tag Publikasi bersama (`forkbuild-publication`); lalu permintaan catatan bertandatangan untuk setiap publikasi yang baru diumumkan, paling banyak 20 per kunjungan atau per **Periksa lagi** |
 | Anda mendistribusikan atau menemukan publikasi melalui Nostr | relay Nostr (`relay.damus.io`) | pengumuman bertanda tangan yang Anda terbitkan; kueri Anda |
 | Anda menyimpan atau mengambil konten di Arweave | gateway Arweave (`arweave.net`) | konten yang Anda terbitkan; apa yang Anda ambil |
 | Anda mengambil konten dari IPFS | gateway IPFS (`ipfs.io`), atau node IPFS Anda sendiri (`127.0.0.1:5001`) | apa yang Anda ambil atau tambahkan |

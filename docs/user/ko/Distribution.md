@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 9c6ca1cfed3b4863 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: be51a110c624bf19 -->
 # 작품 배포하기
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · **한국어** · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../Distribution.md)을 참고하세요.
-<!-- /stale -->
 
 <!-- languages -->
 <!-- /languages -->
@@ -170,6 +166,10 @@ Arweave의 256KB보다 큰 작품이라면 IPFS를 고르세요. 연결된 피�
 - 작품의 저장소 카드에 이 기기가 배포를 어디에 기록했는지 표시됩니다. 예를 들어
   **저장 위치 IPFS · 공지 위치 Nostr**, 또는 **이 기기에 기록된 배포가
   없습니다**. [내 게시물](13-YourData.md#내-게시물)을 보세요.
+- 다른 사람의 저장소는 다음에 열 때 Nostr, Arweave, Steem에서 내 게시물을
+  찾습니다. 단, 평소의 발견 태그 `forkbuild-publication`으로 공지된 경우에
+  한합니다. [다른 사람이 배포한 작품](04-PublishingAndForking.md#다른-사람이-배포한-작품)을
+  보세요.
 - 월드 보기의 **공유 월드 찾기**는 Arweave와 Nostr에서 내 공유 월드를 직접 찾아
   확인해서, “내 게시물이 정말 손상 없이 저기 있나?”에 답합니다.
   [공유 월드 찾기](03-WorldView.md#공유-월드-찾기--탈중앙-네트워크-직접-검색하기)를
@@ -179,4 +179,5 @@ Arweave의 256KB보다 큰 작품이라면 IPFS를 고르세요. 연결된 피�
 
 배포는 되돌릴 수 없습니다: 무언가를 공지하거나 저장하고 나면, 다른 사람이 이미
 사본을 가지고 있을 수 있습니다. **게시 취소**는 내 카탈로그에서만 월드를
-제거합니다.
+제거하며, 그 뒤 이 기기는 저장소가 네트워크를 검색할 때 배포된 사본을 다시
+나열하지 않도록 기억합니다.

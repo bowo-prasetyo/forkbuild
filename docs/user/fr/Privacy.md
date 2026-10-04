@@ -1,13 +1,9 @@
-<!-- translation-of: docs/Privacy.md source-hash: ef02c2b3f84b697d -->
+<!-- translation-of: docs/Privacy.md source-hash: 9cb6f05e34121fa7 -->
 # Confidentialité
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · **Français** · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../../Privacy.md).
-<!-- /stale -->
 
 ForkBuild n’a pas de comptes et ne vous suit pas. Il stocke votre travail
 dans votre propre navigateur et ne communique avec d’autres ordinateurs que
@@ -39,7 +35,14 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   le nom d’utilisateur et l’identifiant d’un serveur TURN si vous en
   saisissez un sous **Paramètres réseau**;
 - si ce navigateur participe au comptage quotidien des visiteurs, et le
-  dernier jour où il l’a fait.
+  dernier jour où il l’a fait ;
+- les publications d’autres personnes que cet appareil a trouvées et
+  vérifiées, auprès de pairs, par des liens, dans la Vue du Monde ou par la
+  recherche du Dépôt sur les réseaux, et, pour celles trouvées sur les
+  réseaux, l’endroit où l’enregistrement signé de chacune a été lu ;
+- les identifiants des publications que vous avez dépubliées sur cet
+  appareil, pour que la recherche du Dépôt sur les réseaux ne liste plus
+  les copies que vous aviez distribuées.
 
 Effacer les données de ce site dans le navigateur supprime tout cela, et
 il n’existe aucune autre copie ni aucun moyen de le récupérer.
@@ -159,6 +162,7 @@ demandez.
 | Une connexion entre pairs démarre | des serveurs STUN (`stun.l.google.com`) | rien d’autre qu’une demande de votre adresse IP publique |
 | Vous démarrez une connexion entre pairs, si le serveur de rendez-vous propose un relais | le `/turn-credentials` du serveur de rendez-vous, puis son relais TURN (Cloudflare) | une demande d’identifiants de relais de courte durée, au plus environ une fois par heure ; le trafic relayé est chiffré de bout en bout par WebRTC |
 | L’application est ouverte et son onglet visible (synchronisation des annonces en arrière-plan) | des relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`), des nœuds Steem (`api.steemit.com`) | des requêtes pour les tags de découverte de ForkBuild : les tags communs des Snapshots et des Commentaires, et les régions de Noms de lieux et cases de carte que vous avez visitées |
+| Vous ouvrez le Dépôt ou une page d’auteur | des relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`), des nœuds Steem (`api.steemit.com`) | une requête pour le tag commun des publications (`forkbuild-publication`) ; puis une demande de l’enregistrement signé de chaque publication nouvellement annoncée, au plus 20 par visite ou par **Vérifier à nouveau** |
 | Vous distribuez ou découvrez des publications via Nostr | des relais Nostr (`relay.damus.io`) | les annonces signées que vous publiez ; vos requêtes |
 | Vous stockez ou récupérez du contenu sur Arweave | une passerelle Arweave (`arweave.net`) | le contenu que vous publiez ; ce que vous récupérez |
 | Vous récupérez du contenu depuis IPFS | une passerelle IPFS (`ipfs.io`), ou votre propre nœud IPFS (`127.0.0.1:5001`) | ce que vous récupérez ou ajoutez |

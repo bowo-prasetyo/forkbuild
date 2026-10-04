@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 9c6ca1cfed3b4863 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: be51a110c624bf19 -->
 # Ihre Arbeit verteilen
 
 <!-- languages -->
 [English](../Distribution.md) · **Deutsch** · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../Distribution.md).
-<!-- /stale -->
 
 Alles, was ForkBuild erstellt, beginnt auf Ihrem eigenen Gerät. **Verteilen**
 ist der separate, optionale Schritt, der Ihre Arbeit in dezentrale Netzwerke
@@ -152,6 +148,11 @@ direkt von Ihnen abrufen.
   festgehalten hat, zum Beispiel **Gespeichert auf IPFS · Angekündigt auf
   Nostr** oder **Auf diesem Gerät ist keine Verteilung verzeichnet.** Siehe
   [Ihre Veröffentlichungen](13-YourData.md#ihre-veröffentlichungen).
+- Das Repository anderer Leute findet Ihre Veröffentlichung auf Nostr,
+  Arweave oder Steem, sobald sie es das nächste Mal öffnen, sofern sie
+  unter dem üblichen Entdeckungs-Tag `forkbuild-publication` angekündigt
+  wurde. Siehe
+  [Von anderen verteilte Kreationen](04-PublishingAndForking.md#von-anderen-verteilte-kreationen).
 - **Geteilte Welt entdecken** in der Weltansicht sucht Ihre Geteilte Welt
   direkt auf Arweave und Nostr und prüft sie; so beantwortet es die Frage
   „Ist meine Veröffentlichung wirklich da draußen, und zwar unversehrt?“.
@@ -163,4 +164,6 @@ direkt von Ihnen abrufen.
 
 Verteilen lässt sich nicht rückgängig machen: Sobald etwas angekündigt oder
 gespeichert ist, haben andere vielleicht schon eine Kopie. **Zurückziehen**
-entfernt eine Welt nur aus Ihrem eigenen Katalog.
+entfernt eine Welt nur aus Ihrem eigenen Katalog, und dieses Gerät merkt
+sich dann, die verteilten Kopien nicht wieder aufzulisten, wenn das
+Repository die Netzwerke durchsucht.

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 9c6ca1cfed3b4863 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: be51a110c624bf19 -->
 # 作品を配信する
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · **日本語** · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../Distribution.md)も参照してください。
-<!-- /stale -->
 
 ForkBuild で作るものは、すべて自分のデバイスから始まります。**配信** は、
 作品を分散型ネットワークに載せるための、別の任意の手順です。これにより、
@@ -144,6 +140,11 @@ Arweave の 256 KB を超える作品には IPFS を選んでください。接�
   表示されます（たとえば **保存先: IPFS · 告知先: Nostr**、または
   **このデバイスには配信の記録がありません。**）。
   [あなたの公開物](13-YourData.md#あなたの公開物)を参照してください。
+- ほかの人のリポジトリは、次に開いたときに Nostr、Arweave、Steem で
+  あなたの公開物を見つけます。ただし、いつもの発見用タグ
+  `forkbuild-publication` で告知されている場合に限ります。
+  [ほかの人が配信した作品](04-PublishingAndForking.md#ほかの人が配信した作品)を
+  参照してください。
 - ワールドビューの **共有ワールドを発見** は、共有ワールドを Arweave と
   Nostr で直接探して確かめ、「自分の公開物は本当に、無傷で
   公開されているか」に答えます。
@@ -154,4 +155,5 @@ Arweave の 256 KB を超える作品には IPFS を選んでください。接�
 
 配信は取り消せません。告知や保存をした時点で、他の人がすでにコピーを
 持っているかもしれません。**公開を取り消す** は、自分のカタログから
-ワールドを外すだけです。
+ワールドを外すだけです。そのあとこのデバイスは、リポジトリがネットワークを
+検索するときに、配信済みのコピーをもう一度表示しないよう覚えておきます。
