@@ -8,8 +8,13 @@ import { createSteemKeychainImageSigner, uploadSteemImage } from '../steem/Steem
 
 export const BLURT_WALLET_NAME = 'Blurt Keychain';
 // The image host Blurt's own front end uploads to, with Steem's signed
-// upload. There is no ForkBuild relay for it.
+// upload. It doesn't accept uploads from other sites, so when the browser
+// can't reach it the same signed upload goes through the relay (the
+// rendezvous worker's /blurt-image route, server/rendezvous-worker/README.md),
+// which can neither change the image nor upload as anyone.
 export const DEFAULT_BLURT_IMAGE_HOST = 'https://images.blurt.blog';
+// The same worker as peer/RendezvousConfig.js's DEFAULT_RENDEZVOUS_URLS.
+export const DEFAULT_BLURT_IMAGE_RELAY = 'https://forkbuild-rendezvous.prazjp.workers.dev/blurt-image';
 
 export function currentBlurtKeychain() {
     return globalThis.blurt_keychain;
@@ -21,8 +26,9 @@ export function createBlurtKeychainBroadcaster({ keychain = currentBlurtKeychain
 }
 
 // Signs `bytes` through Blurt Keychain as `account` and uploads them to
-// the Blurt image host; resolves to `{ url, signature, via }`.
-export async function uploadBlurtImage({ account, bytes, keychain = currentBlurtKeychain(), host = DEFAULT_BLURT_IMAGE_HOST, fetchImpl, fileName }) {
+// the Blurt image host, or through the relay when the browser can't reach
+// it; resolves to `{ url, signature, via }`.
+export async function uploadBlurtImage({ account, bytes, keychain = currentBlurtKeychain(), host = DEFAULT_BLURT_IMAGE_HOST, relay = DEFAULT_BLURT_IMAGE_RELAY, fetchImpl, fileName }) {
     const signer = createSteemKeychainImageSigner({ keychain, walletName: BLURT_WALLET_NAME });
-    return uploadSteemImage({ account, bytes, signer, host, relay: null, fetchImpl, fileName, walletName: BLURT_WALLET_NAME });
+    return uploadSteemImage({ account, bytes, signer, host, relay, fetchImpl, fileName, walletName: BLURT_WALLET_NAME });
 }

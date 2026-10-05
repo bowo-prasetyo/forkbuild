@@ -4004,3 +4004,23 @@ without following anyone, so the two settings that only served the fallback are 
   updated.
 - Tests: `tests/BlurtSettings.test.js` reads an older saved configuration; `tests/BlurtDiscoveryReader.test.js` reads
   remembered authors' histories in the fallback.
+
+## Blurt pictures go through the rendezvous worker's relay (unnumbered, 2026-10-05)
+
+The first real Signed Claim distributed on Blurt was posted without its picture: the browser's upload to
+`images.blurt.blog` failed with "Failed to fetch", as Steem's did once steemitimages.com stopped sending CORS headers.
+Blurt had no relay to fall back on.
+
+- The rendezvous worker gains `POST /blurt-image/<account>/<signature>`, the `/steem-image` relay pointed at
+  `https://images.blurt.blog` (`BLURT_IMAGE_HOST` names another). Both routes share one handler, checks and limits
+  (`LIMITS.maxImageBytes`, `LIMITS.imageTimeoutMs`, renamed from the Steem-only names). The worker must be redeployed
+  (`wrangler deploy`) for the route to exist.
+- `uploadBlurtImage()` (`blurt/BlurtKeychain.js`) tries the host, then `DEFAULT_BLURT_IMAGE_RELAY` when the browser
+  can't reach it, as Steem's upload does.
+- The same distribution also timed out because Keychain's second window (signing the picture) opened behind the
+  browser; the Blurt user guide now says a Signed Claim asks for two approvals and that the second may be hidden.
+  Its "Others find it" bullet now describes Nexus.
+- docs/Protocol.md, docs/Privacy.md and the worker's README updated.
+- Tests: `server/rendezvous-worker/worker.test.js` forwards a Blurt upload to images.blurt.blog with CORS headers,
+  refuses a Steem path and another origin, and honours `BLURT_IMAGE_HOST`; `tests/BlurtImageUpload.test.js` uploads
+  through the relay when the host can't be reached and names both failures when neither can.
