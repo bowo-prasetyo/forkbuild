@@ -3,6 +3,7 @@ import { t } from '../i18n/i18n.js';
 import { License, LicenseId } from '../../core/License.js';
 import { PLACEMENT_POLICY_OPTIONS } from '../../application/document/PlacementPolicyLabels.js';
 import { PlacementPolicy } from '../../core/PlacementPolicy.js';
+import { BUILD_TAG_MAX_COUNT, normalizeBuildTags, suggestBuildTags } from '../../core/BuildTags.js';
 
 // 0.2.21: the Document Properties editor — title/description/license,
 // the "New Document dialog" and "Document Properties" surfaces from
@@ -12,7 +13,11 @@ import { PlacementPolicy } from '../../core/PlacementPolicy.js';
 // CommandPalette's existing convention (fixed inset, click-outside/
 // Escape to cancel) rather than inventing a second dialog pattern.
 //
-// Emits save({ title, description, license: License, placementPolicy }) — a License
+// A build's tags start as suggestions from its title and description when it
+// has none, shown in the field so they are seen, and changed or cleared
+// like any other field; nothing becomes a tag without passing through it.
+//
+// Emits save({ title, description, tags, license: License, placementPolicy }) — a License
 // instance, not a bare id, so callers (UpdateDocumentMetadataUseCase /
 // WorldNavigationSession.updateDocumentMetadata) can pass it straight
 // through to DocumentMetadata's license setter unchanged. Emits cancel
@@ -30,14 +35,33 @@ export default {
         return {
             title: this.info ? this.info.title : '',
             description: this.info ? this.info.description : '',
+            tagsText: initialTags(this.info).join(' '),
+            tagsSuggested: !(this.info && this.info.tags && this.info.tags.length > 0),
             licenseId: this.info && this.info.license ? this.info.license.id : LicenseId.UNSPECIFIED,
             licenseOptions: LICENSE_OPTIONS,
             placementPolicy: this.info && this.info.placementPolicy ? this.info.placementPolicy : PlacementPolicy.ANYONE,
             placementPolicyOptions: PLACEMENT_POLICY_OPTIONS
         };
     },
+    computed: {
+        // What Save will keep, so the field shows it as it is typed.
+        tagsPreview() {
+            return normalizeBuildTags(this.tagsText);
+        },
+        suggestions() {
+            return suggestBuildTags({ title: this.title, description: this.description })
+                .filter((tag) => !this.tagsPreview.includes(tag));
+        },
+        maxTags() {
+            return BUILD_TAG_MAX_COUNT;
+        }
+    },
     methods: {
         t,
+        addTag(tag) {
+            this.tagsText = [...this.tagsPreview, tag].join(' ');
+            this.tagsSuggested = false;
+        },
         onSave() {
             const trimmedTitle = this.title.trim();
             if (!trimmedTitle) {
@@ -55,6 +79,7 @@ export default {
             this.$emit('save', {
                 title: trimmedTitle,
                 description: this.description,
+                tags: this.tagsPreview,
                 license: new License({ id: this.licenseId, attribution }),
                 placementPolicy: this.placementPolicy
             });
@@ -100,6 +125,32 @@ export default {
                 </label>
 
                 <label class="form-field">
+                    <span class="form-label">{{ t('metadataEditor.tags') }}</span>
+                    <input
+                        v-model="tagsText"
+                        type="text"
+                        class="form-input metadata-editor-tags"
+                        :placeholder="t('metadataEditor.tagsPlaceholder')"
+                        autocomplete="off"
+                        spellcheck="false"
+                        @input="tagsSuggested = false"
+                    />
+                    <span class="form-hint form-hint--neutral">
+                        {{ tagsSuggested && tagsPreview.length > 0 ? t('metadataEditor.tagsSuggestedHint', { count: maxTags }) : t('metadataEditor.tagsHint', { count: maxTags }) }}
+                    </span>
+                </label>
+                <div v-if="suggestions.length > 0 && tagsPreview.length < maxTags" class="metadata-editor-tag-suggestions">
+                    <span class="form-hint form-hint--neutral">{{ t('metadataEditor.tagSuggestions') }}</span>
+                    <button
+                        v-for="tag in suggestions"
+                        :key="tag"
+                        type="button"
+                        class="action-btn metadata-editor-tag-suggestion"
+                        @click="addTag(tag)"
+                    >#{{ tag }}</button>
+                </div>
+
+                <label class="form-field">
                     <span class="form-label">{{ t('metadataEditor.license') }}</span>
                     <select v-model="licenseId" class="form-select">
                         <option v-for="opt in licenseOptions" :key="opt.id" :value="opt.id">
@@ -131,3 +182,11 @@ export default {
         </div>
     `
 };
+
+// The tags a build has, or, when it has none, suggestions from its title
+// and description.
+function initialTags(info) {
+    if (!info) return [];
+    if (Array.isArray(info.tags) && info.tags.length > 0) return [...info.tags];
+    return suggestBuildTags({ title: info.title, description: info.description });
+}

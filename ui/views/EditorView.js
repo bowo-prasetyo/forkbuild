@@ -620,6 +620,7 @@ export default {
             documentInfo.value = {
                 title: document.metadata.title || 'Untitled',
                 description: document.metadata.description || '',
+                tags: document.metadata.tags,
                 author: document.metadata.author,
                 license: document.metadata.license,
                 placementPolicy: document.metadata.placementPolicy,
@@ -694,8 +695,8 @@ export default {
             });
         }
 
-        function onSaveMetadata({ title, description, license, placementPolicy }) {
-            updateDocumentMetadataUseCase.execute(documentManager, { title, description, license, placementPolicy });
+        function onSaveMetadata({ title, description, tags, license, placementPolicy }) {
+            updateDocumentMetadataUseCase.execute(documentManager, { title, description, tags, license, placementPolicy });
             showMetadataEditor.value = false;
             feedback.show(t('editor.propertiesUpdated'));
         }

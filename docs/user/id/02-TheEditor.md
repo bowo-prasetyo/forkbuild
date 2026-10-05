@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1238c1e7cb84a4db -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 86f52e38bf5e7dd9 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -468,6 +468,15 @@ Dunia, serta postingan Steem dan Blurt:
 
 Selain itu bukan format: tautan, gambar, dan HTML tetap teks biasa. Kartu
 Repositori menampilkan kata-kata deskripsi dalam satu baris, tanpa format.
+
+**Tag** menyebut apa bangunan ini, misalnya `jepang kuil taman`: hingga 5,
+dipisahkan spasi atau koma, masing-masing dari huruf kecil, angka, dan tanda
+hubung (aksen dihapus, jadi `café` menjadi `cafe`). Bila bangunan belum
+punya, dialog mengisi kolom dengan saran dari judul dan deskripsi, yang bisa
+Anda simpan, ubah, atau hapus; tombol di bawah kolom menambahkan saran lain.
+Fork tetap membawa tagnya. Postingan Blurt mencantumkannya setelah tag
+ForkBuild sendiri, sehingga orang yang menjelajah Blurt lewat tag bisa
+menemukan bangunan Anda.
 
 ## Suara
 

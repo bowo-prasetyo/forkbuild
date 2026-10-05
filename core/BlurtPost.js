@@ -1,6 +1,7 @@
 import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 import { STEEM_NOTICE_AUTHOR_MAX, STEEM_NOTICE_DESCRIPTION_MAX, STEEM_NOTICE_TITLE_MAX, isSteemNoticeImageUrl, steemNoticeDescription, steemNoticeText } from './SteemContentManifest.js';
 import { descriptionPlainText } from './DescriptionMarkup.js';
+import { normalizeBuildTags } from './BuildTags.js';
 
 // What ForkBuild posts on Blurt (docs/Protocol.md, "Proposed: Blurt
 // Substrate"): build posts, top-level posts by the poster's own account that
@@ -135,7 +136,10 @@ export function blurtBuildPostOperation({ author, permlink, state, appVersion = 
     const card = cardFor(state);
     const metadata = {
         ...(isNonEmptyString(appVersion) ? { app: `forkbuild/${appVersion}` } : {}),
-        tags: [BLURT_CATEGORY, ...families.map(blurtFamilyTag)],
+        // ForkBuild's own tags first: the chain's tag listing, the fallback
+        // when no node serves Nexus, indexes only a post's first five. The
+        // build's own tags (core/BuildTags.js) follow, for people browsing.
+        tags: [BLURT_CATEGORY, ...families.map(blurtFamilyTag), ...normalizeBuildTags(card?.tags)],
         ...(card && isSteemNoticeImageUrl(card.imageUrl) ? { image: [card.imageUrl] } : {}),
         forkbuild: { version: BLURT_POST_VERSION, announcements, anchors: [...state.anchors] }
     };

@@ -108,7 +108,7 @@ const IMAGE_URL = 'https://cdn.steemitimages.com/DQmTest/forkbuild-build.png';
     const building = new Building({ creator: 'alice' });
     building.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(0, 0.5, 0) }));
     world.addBuilding(building);
-    const snapshotText = JSON.stringify(new DocumentSerializer().serialize(new Document({ world, metadata: new DocumentMetadata({ title: 'Tower', author: 'alice', description: 'A tall tower.' }) })));
+    const snapshotText = JSON.stringify(new DocumentSerializer().serialize(new Document({ world, metadata: new DocumentMetadata({ title: 'Tower', author: 'alice', description: 'A tall tower.', tags: ['tower', 'stone'] }) })));
     const claim = { title: 'Tower', author: 'alice', contentHash: 'h1', contentReference: { hash: 'h1' } };
     const warnings = [];
     const png = new Uint8Array([137, 80, 78, 71]);
@@ -122,6 +122,7 @@ const IMAGE_URL = 'https://cdn.steemitimages.com/DQmTest/forkbuild-build.png';
 
     const card = await make()(claim);
     assert(card.title === 'Tower' && card.author === 'alice' && card.description === 'A tall tower.' && card.imageUrl === IMAGE_URL, `the full card (got ${JSON.stringify(card)})`);
+    assert(card.tags.join() === 'tower,stone', 'the build\'s tags come with its card');
     const declined = await make({ uploadImage: async () => { throw new Error('Request was canceled by the user.'); } })(claim);
     assert(declined.imageUrl === null && declined.description === 'A tall tower.' && warnings.at(-1).includes('canceled'), 'declining the picture keeps the rest');
     const noGl = await make({ renderThumbnail: async () => { throw new Error('WebGL is not available'); } })(claim);

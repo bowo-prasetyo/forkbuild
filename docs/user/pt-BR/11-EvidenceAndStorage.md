@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5cb6eb582b1b2bc -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0433c4a8b0746f12 -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
@@ -825,7 +825,7 @@ que você aprove cada postagem.
 
 - **Uma postagem por construção.** Distribuir cria uma postagem principal
   da sua conta, com as tags `forkbuild` e `forkbuild-snapshot` ou
-  `forkbuild-publication`, com uma imagem da sua construção, o título,
+  `forkbuild-publication`, depois as [tags](02-TheEditor.md) da própria construção, com uma imagem da sua construção, o título,
   seu nome e a descrição (completa, até 2.000 caracteres, com sua [formatação](02-TheEditor.md)), e um link "See it in 3D" (veja em 3D). O que vier
   na meia hora seguinte (o anúncio da Publicação, um comentário, uma
   âncora) é acrescentado à mesma postagem editando-a, para que seus

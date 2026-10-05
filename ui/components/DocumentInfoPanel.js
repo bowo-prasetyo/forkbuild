@@ -90,6 +90,10 @@ export default {
                 <span class="info-label">{{ t('documentInfo.description') }}</span>
                 <div class="info-value info-value--wrap"><formatted-description :text="info.description" /></div>
             </div>
+            <div class="info-row" v-if="info.tags && info.tags.length > 0">
+                <span class="info-label">{{ t('documentInfo.tags') }}</span>
+                <span class="info-value">{{ info.tags.map((tag) => '#' + tag).join(' ') }}</span>
+            </div>
             <div class="info-row">
                 <span class="info-label">{{ t('documentInfo.license') }}</span>
                 <span class="info-value">{{ licenseLabel(info.license) }}</span>

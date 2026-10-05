@@ -448,6 +448,14 @@ Nothing else is formatting: links, pictures and HTML stay as plain text.
 Repository cards show the description's words on one line, without the
 formatting.
 
+**Tags** say what the build is, like `japanese temple garden`: up to 5,
+separated by spaces or commas, each made of lowercase letters, digits and
+hyphens (accents are dropped, so `café` becomes `cafe`). When a build has
+none, the dialog fills the field with suggestions from its title and
+description, which you can keep, change or clear; the buttons under the
+field add other suggestions. A fork keeps its tags. A Blurt post lists them
+after ForkBuild's own, so people browsing Blurt by tag can find your build.
+
 ## Sound
 
 Each change you make has its own short sound, so you can hear what happened

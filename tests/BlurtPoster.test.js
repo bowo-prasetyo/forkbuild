@@ -100,6 +100,13 @@ async function rejection(promise) {
     assert(Array.from(long).length === BLURT_POST_DESCRIPTION_MAX && long.endsWith('…'), `cut with "…" at ${BLURT_POST_DESCRIPTION_MAX} characters (got ${Array.from(long).length})`);
     const exact = described(`${'a'.repeat(BLURT_POST_DESCRIPTION_MAX - 10)}\n\n**${'b'.repeat(10)}**\n\nmore`);
     assert(exact.includes(`**${'b'.repeat(10)}**…`) && !exact.includes('more'), `text past the limit is marked as cut even between blocks (got ${JSON.stringify(exact.slice(2, 5))})`);
+    // The build's own tags follow ForkBuild's, which stay first for the
+    // chain's tag listing; they can't pass as ForkBuild's own.
+    const tagged = blurtBuildPostOperation({ author: 'alice', permlink: 'p-1', state: { ...state, viewUrl: 'https://example.org/#/view/blurt/alice/x', card: { title: 'Temple', tags: ['japan', 'forkbuild-publication', 'Temple', 'garden'] } } })[1];
+    const tags = JSON.parse(tagged.json_metadata).tags;
+    assert(tags[0] === 'forkbuild' && tags.slice(-3).join() === 'japan,temple,garden' && tags.filter((tag) => tag.startsWith('forkbuild')).length === tags.length - 3, `ForkBuild's tags first, then the build's (got ${tags})`);
+    const untagged = JSON.parse(blurtBuildPostOperation({ author: 'alice', permlink: 'p-1', state })[1].json_metadata).tags;
+    assert(untagged.every((tag) => tag.startsWith('forkbuild')), 'no card, no build tags');
     const plain = described('Just one plain sentence.');
     assert(plain.includes('Just one plain sentence.'), 'a plain description reads as before');
     console.log('✓ build post operations');

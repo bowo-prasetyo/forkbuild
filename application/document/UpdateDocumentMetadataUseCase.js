@@ -11,7 +11,7 @@
 // dirty" exactly the way SaveDocumentUseCase orchestrates
 // documentManager.markSaved() rather than folding it into a setter.
 export class UpdateDocumentMetadataUseCase {
-    execute(documentManager, { title, description, license, placementPolicy } = {}) {
+    execute(documentManager, { title, description, license, placementPolicy, tags } = {}) {
         const document = documentManager.document;
         if (!document) {
             throw new Error('UpdateDocumentMetadataUseCase: no document is currently open');
@@ -21,6 +21,7 @@ export class UpdateDocumentMetadataUseCase {
         if (description !== undefined) metadata.description = description;
         if (license !== undefined) metadata.license = license;
         if (placementPolicy !== undefined) metadata.placementPolicy = placementPolicy;
+        if (tags !== undefined) metadata.tags = tags;
         metadata.touch();
         documentManager.markDirty();
         return metadata;

@@ -780,7 +780,8 @@ post.
 
 - **One post per build.** A Distribute makes one top-level post from your
   account, tagged `forkbuild` and `forkbuild-snapshot` or
-  `forkbuild-publication`, with a picture of your build, its title, your
+  `forkbuild-publication`, then your build's own
+  [tags](02-TheEditor.md#document-properties), with a picture of your build, its title, your
   name and description (whole, up to 2,000 characters, with its
   [formatting](02-TheEditor.md#document-properties)), and a "See it in 3D"
   link. What follows in the next

@@ -224,3 +224,13 @@ html, body {
 .formatted-description-list { margin: 0 0 0.5em; }
 .formatted-description-heading { font-weight: 600; }
 .formatted-description-list { padding-left: 1.25em; }
+
+/* Tag suggestions in Document Properties (ui/components/MetadataEditorDialog.js). */
+.metadata-editor-tag-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin: -0.25rem 0 0.75rem;
+}
+.metadata-editor-tag-suggestion { padding: 0.15rem 0.5rem; font-size: 0.8rem; }

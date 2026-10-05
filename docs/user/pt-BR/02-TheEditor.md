@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1238c1e7cb84a4db -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 86f52e38bf5e7dd9 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -463,6 +463,15 @@ e as postagens no Steem e no Blurt mostram:
 Nada mais é formatação: links, imagens e HTML continuam como texto simples.
 Os cartões do Repositório mostram as palavras da descrição em uma linha, sem
 formatação.
+
+As **tags** dizem o que é a construção, como `japones templo jardim`: até 5,
+separadas por espaços ou vírgulas, feitas de letras minúsculas, dígitos e
+hífens (os acentos são removidos, então `café` vira `cafe`). Se a construção
+não tiver nenhuma, o diálogo preenche o campo com sugestões a partir do
+título e da descrição, que você pode manter, mudar ou apagar; os botões
+abaixo do campo acrescentam outras sugestões. Um fork mantém suas tags. Uma
+postagem no Blurt as lista depois das tags do próprio ForkBuild, para que
+quem navega pelo Blurt por tag encontre sua construção.
 
 ## Som
 

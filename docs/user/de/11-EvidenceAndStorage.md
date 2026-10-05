@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5cb6eb582b1b2bc -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0433c4a8b0746f12 -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
@@ -864,7 +864,7 @@ den Schlüssel nie, und Keychain bittet Sie, jeden Beitrag zu bestätigen.
 
 - **Ein Beitrag pro Bauwerk.** Verteilen erstellt einen Hauptbeitrag von
   Ihrem Konto, mit den Tags `forkbuild` und `forkbuild-snapshot` oder
-  `forkbuild-publication`, mit einem Bild Ihres Bauwerks, seinem Titel,
+  `forkbuild-publication`, dann den eigenen [Tags](02-TheEditor.md) Ihres Bauwerks, mit einem Bild Ihres Bauwerks, seinem Titel,
   Ihrem Namen und der Beschreibung (vollständig, bis 2.000 Zeichen, mit ihrer [Formatierung](02-TheEditor.md)) sowie einem Link „See it in 3D“ (in 3D
   ansehen). Was in der folgenden halben Stunde dazukommt (die Ankündigung
   der Veröffentlichung, ein Kommentar, ein Anker), wird demselben Beitrag
