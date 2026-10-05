@@ -10,8 +10,8 @@ export class SetBlurtReadingConfigurationUseCase {
     }
 
     // Throws with a readable message when a field doesn't validate.
-    execute({ apiNodes, followedAccounts, earliestPeriod } = {}) {
-        const configuration = new BlurtReadingConfiguration({ apiNodes, followedAccounts, earliestPeriod });
+    execute({ apiNodes } = {}) {
+        const configuration = new BlurtReadingConfiguration({ apiNodes });
         this._store.save(configuration);
         return configuration;
     }

@@ -32,6 +32,12 @@ function readerFor(chain, options = {}) {
     return createBlurtDiscoveryReader({ rpc: rpcFor(chain), clock: () => chain.time, ...options });
 }
 
+function knownAuthorsOf(authors) {
+    const known = new BlurtKnownAuthorStore(new InMemoryStorageProvider());
+    known.remember(authors);
+    return known;
+}
+
 // Puts a post straight on the fake chain, as someone else's app might.
 function plantPost(chain, { author, permlink, json_metadata, parent_permlink = 'forkbuild', ageMs = 0 }) {
     const created = blurtChainTime(chain.time - ageMs);
@@ -59,8 +65,8 @@ function plantPost(chain, { author, permlink, json_metadata, parent_permlink = '
     console.log('✓ the tag listing');
 }
 
-// After payout a post leaves the tag listing; its author's history still
-// has it, for followed and remembered accounts alike.
+// Without Nexus, a post leaves the tag listing after payout; its author's
+// history still has it, for every remembered account.
 {
     const chain = fakeBlurtChain();
     const known = new BlurtKnownAuthorStore(new InMemoryStorageProvider());
@@ -73,10 +79,11 @@ function plantPost(chain, { author, permlink, json_metadata, parent_permlink = '
     plantPost(chain, { author: 'bob', permlink: 'forkbuild-bob-1', json_metadata: bobOp.json_metadata, ageMs: 30 * DAY });
     const tagOnly = await readerFor(chain).read('snapshot');
     assert(tagOnly.outcome === 'empty', 'paid-out posts are gone from the tag');
-    const result = await readerFor(chain, { knownAuthors: known, followedAccounts: ['bob'] }).read('snapshot');
+    known.remember(['bob']);
+    const result = await readerFor(chain, { knownAuthors: known }).read('snapshot');
     const hashes = result.announcements.map((a) => a.envelope.contentHash).sort();
-    assert(hashes.join() === 'h-bob,h-old', `a remembered author's and a followed author's older posts are found (got ${hashes})`);
-    const snapshots = await new BlurtSnapshotDiscoveryQueryService({ reader: readerFor(chain, { followedAccounts: ['bob'] }) }).searchWithOutcome('forkbuild-snapshot');
+    assert(hashes.join() === 'h-bob,h-old', `remembered authors' older posts are found (got ${hashes})`);
+    const snapshots = await new BlurtSnapshotDiscoveryQueryService({ reader: readerFor(chain, { knownAuthors: known }) }).searchWithOutcome('forkbuild-snapshot');
     assert(snapshots.outcome === 'empty', 'an envelope that isn\'t a Snapshot envelope yields no candidate');
     console.log('✓ authors\' histories');
 }
@@ -85,7 +92,7 @@ function plantPost(chain, { author, permlink, json_metadata, parent_permlink = '
 {
     const chain = fakeBlurtChain();
     for (let i = 0; i < 250; i += 1) plantPost(chain, { author: 'carol', permlink: `misc-${i}`, parent_permlink: 'life', json_metadata: '{}', ageMs: (i + 1) * DAY });
-    const reader = readerFor(chain, { followedAccounts: ['carol'], earliestPeriod: '2026-09' });
+    const reader = readerFor(chain, { knownAuthors: knownAuthorsOf(['carol']), earliestPeriod: '2026-09' });
     await reader.read('snapshot');
     const pages = chain.calls.filter((call) => call.method === 'condenser_api.get_discussions_by_author_before_date').length;
     assert(pages === 1, `stops paging once posts are older than the first month (pages ${pages})`);
@@ -97,7 +104,7 @@ function plantPost(chain, { author, permlink, json_metadata, parent_permlink = '
 // Nothing readable is "unavailable", never "nothing announced".
 {
     const chain = fakeBlurtChain({ overrides: { 'https://a': new Error('offline') } });
-    const result = await readerFor(chain, { followedAccounts: ['bob'] }).read('publication');
+    const result = await readerFor(chain, { knownAuthors: knownAuthorsOf(['bob']) }).read('publication');
     assert(result.outcome === 'unavailable' && result.sourcesUnavailable.length === 3, 'Nexus, the tag and the history all count as unavailable');
     const snapshots = await new BlurtSnapshotDiscoveryQueryService({ reader: readerFor(chain) }).searchWithOutcome('forkbuild-snapshot');
     assert(snapshots.outcome === 'unavailable', 'the snapshot search reports unavailable');
@@ -105,7 +112,7 @@ function plantPost(chain, { author, permlink, json_metadata, parent_permlink = '
     assert(new BlurtPublicationDiscoveryQueryService({ reader: readerFor(chain) }).origin === 'dweb:blurt', 'its origin names Blurt');
 
     const partly = fakeBlurtChain({ overrides: { 'https://a': { 'condenser_api.get_discussions_by_created': () => { throw new Error('no tags plugin'); } } } });
-    const answered = await readerFor(partly, { followedAccounts: ['bob'] }).read('publication');
+    const answered = await readerFor(partly, { knownAuthors: knownAuthorsOf(['bob']) }).read('publication');
     assert(answered.outcome === 'empty' && answered.sourcesRead === 1, 'one source that answers is enough to say nothing was found');
     console.log('✓ unavailability');
 }

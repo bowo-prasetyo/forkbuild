@@ -1,5 +1,4 @@
 import { BLURT_CATEGORY, blurtFamilyTag, isBlurtFamily, parseBlurtBuildPost } from '../../core/BlurtPost.js';
-import { DEFAULT_BLURT_EARLIEST_PERIOD, isBlurtPeriod } from '../../core/BlurtReadingConfiguration.js';
 import { parseBlurtTime } from '../../blurt/BlurtRpcClient.js';
 
 // Reads one family's announcements from Blurt build posts (docs/Protocol.md,
@@ -7,9 +6,9 @@ import { parseBlurtTime } from '../../blurt/BlurtRpcClient.js';
 // every post under the family's tag, paid out or not, so when a node serves
 // it nothing else is read. Otherwise the reader falls back to the chain's
 // own tag listing, which keeps a post only until it pays out (7 days), and
-// the post histories of followed accounts and of every account seen posting
-// a build post. It returns candidates only: each envelope still goes through
-// its family's own parser and verifier.
+// the post histories of every account seen posting a build post. It
+// returns candidates only: each envelope still goes through its family's own
+// parser and verifier.
 
 export const BlurtDiscoveryReadOutcome = Object.freeze({
     FOUND: 'found',
@@ -21,18 +20,20 @@ const PAGE_SIZE = 100;
 export const DEFAULT_BLURT_MAX_TAG_PAGES = 10;
 export const DEFAULT_BLURT_MAX_AUTHOR_PAGES = 5;
 export const DEFAULT_BLURT_MAX_NEXUS_PAGES = 20;
+// The first month ForkBuild posted on Blurt: nothing older is read.
+export const BLURT_EARLIEST_PERIOD = '2026-10';
 const DEFAULT_CONCURRENCY = 4;
 // A tag listing changes as people post; an author's history rarely does.
 const DEFAULT_TAG_CACHE_MS = 30 * 1000;
 const DEFAULT_AUTHOR_CACHE_MS = 10 * 60 * 1000;
 
 // `knownAuthors` (storage/BlurtKnownAuthorStore.js), when given, remembers
-// the accounts seen in tag listings.
+// the accounts seen posting build posts, whose histories the fallback reads.
+// `earliestPeriod` (YYYY-MM) is for tests.
 export function createBlurtDiscoveryReader({
     rpc,
-    followedAccounts = [],
     knownAuthors = null,
-    earliestPeriod = DEFAULT_BLURT_EARLIEST_PERIOD,
+    earliestPeriod = BLURT_EARLIEST_PERIOD,
     clock = () => Date.now(),
     maxTagPages = DEFAULT_BLURT_MAX_TAG_PAGES,
     maxAuthorPages = DEFAULT_BLURT_MAX_AUTHOR_PAGES,
@@ -44,8 +45,7 @@ export function createBlurtDiscoveryReader({
     if (!rpc || typeof rpc.getDiscussionsByCreated !== 'function' || typeof rpc.getDiscussionsByAuthorBeforeDate !== 'function') {
         throw new TypeError('a Blurt RPC client with getDiscussionsByCreated() and getDiscussionsByAuthorBeforeDate() is required');
     }
-    const followed = Object.freeze([...new Set(Array.isArray(followedAccounts) ? followedAccounts : [])]);
-    const earliestMs = isBlurtPeriod(earliestPeriod) ? Date.parse(`${earliestPeriod}-01T00:00:00Z`) : -Infinity;
+    const earliestMs = /^\d{4}-(0[1-9]|1[0-2])$/.test(earliestPeriod) ? Date.parse(`${earliestPeriod}-01T00:00:00Z`) : -Infinity;
     const cache = new Map();
 
     async function cached(key, maxAgeMs, load) {
@@ -145,7 +145,7 @@ export function createBlurtDiscoveryReader({
                 unavailable.push({ source: `#${tag}`, reason: error?.message ?? String(error) });
             }
 
-            const authors = [...new Set([...followed, ...(knownAuthors?.list() ?? [])])];
+            const authors = knownAuthors?.list() ?? [];
             await forEachLimited(authors, concurrency, async (author) => {
                 try {
                     (await authorPosts(author)).forEach(keep);
@@ -178,7 +178,7 @@ export function createBlurtDiscoveryReader({
         });
     }
 
-    return Object.freeze({ read, followedAccounts: followed, earliestPeriod });
+    return Object.freeze({ read });
 }
 
 // Nexus leaves a top-level post's parent empty; its depth and category say

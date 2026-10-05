@@ -19,18 +19,20 @@ function throws(fn) {
     return null;
 }
 
-// Reading settings: nodes, followed accounts and the first month, validated.
+// Reading settings: the nodes, validated.
 {
     const defaults = new BlurtReadingConfiguration();
-    assert(defaults.apiNodes.join() === DEFAULT_BLURT_API_NODES.join() && defaults.followedAccounts.length === 0 && defaults.earliestPeriod === '2026-10', 'the defaults');
-    const configured = new BlurtReadingConfiguration({ apiNodes: ['https://node.example/ ', 'https://node.example'], followedAccounts: ['@Alice'.toLowerCase(), 'bob'], earliestPeriod: '2026-11' });
-    assert(configured.apiNodes.join() === 'https://node.example' && configured.followedAccounts.join() === 'alice,bob', 'trimmed and deduplicated');
+    assert(defaults.apiNodes.join() === DEFAULT_BLURT_API_NODES.join(), 'the defaults');
+    const configured = new BlurtReadingConfiguration({ apiNodes: ['https://node.example/ ', 'https://node.example'] });
+    assert(configured.apiNodes.join() === 'https://node.example', 'trimmed and deduplicated');
     assert(throws(() => new BlurtReadingConfiguration({ apiNodes: ['http://insecure'] }))?.message.includes('https://'), 'only https nodes');
-    assert(throws(() => new BlurtReadingConfiguration({ followedAccounts: ['No Spaces'] }))?.message.includes('Blurt account'), 'only account names');
-    assert(BlurtReadingConfiguration.fromJSON({ earliestPeriod: 'soon' }) === null, 'a bad saved value reads as none');
+    assert(BlurtReadingConfiguration.fromJSON({ apiNodes: [] }) === null, 'a bad saved value reads as none');
+    // Saved before the followed accounts and the first month were dropped.
+    const older = BlurtReadingConfiguration.fromJSON({ apiNodes: ['https://old.example'], followedAccounts: ['bob'], earliestPeriod: '2026-10' });
+    assert(older?.apiNodes.join() === 'https://old.example' && JSON.stringify(older) === '{"apiNodes":["https://old.example"]}', 'an older saved configuration keeps its nodes');
 
     const store = new BlurtReadingConfigurationStore(new InMemoryStorageProvider());
-    new SetBlurtReadingConfigurationUseCase({ blurtReadingConfigurationStore: store }).execute({ apiNodes: ['https://n.example'], followedAccounts: [], earliestPeriod: '2026-10' });
+    new SetBlurtReadingConfigurationUseCase({ blurtReadingConfigurationStore: store }).execute({ apiNodes: ['https://n.example'] });
     assert(store.get().apiNodes[0] === 'https://n.example', 'saved and read back');
     console.log('✓ reading settings');
 }

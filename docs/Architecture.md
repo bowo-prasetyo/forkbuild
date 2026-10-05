@@ -1427,7 +1427,7 @@ default still answers and allows CORS.
 | STUN / TURN / Rendezvous | `/settings/stun`, `/settings/turn-server`, `/settings/rendezvous` | `ice-server-configuration`, `turn-server-configuration`, `rendezvous-configuration` | as before |
 | Content / Announcement / Proof preferences | `/settings/content-provider`, `/settings/announcement-discovery-provider`, `/settings/anchor-provider` | `role-provider-preference:by-role` | one provider key per role |
 | Steem | `/settings/steem` | `steem-reading-configuration`, `steem-announcing-configuration` | ordered `apiNodes` (read failover; anchor verification asks the first three), thread accounts and first month to read; this device's Steem account for posting. Reading changes apply on the next load |
-| Blurt | `/settings/blurt` | `blurt-reading-configuration`, `blurt-announcing-configuration`, `blurt-known-authors` | ordered `apiNodes` (read failover; anchor verification asks the first three), followed accounts and first month for authors' histories; the accounts seen posting under ForkBuild's tags; this device's Blurt account for posting. Reading changes apply on the next load |
+| Blurt | `/settings/blurt` | `blurt-reading-configuration`, `blurt-announcing-configuration`, `blurt-known-authors` | ordered `apiNodes` (read failover; anchor verification asks the first three; a configuration saved with the dropped followed accounts and first month still reads); the accounts seen posting under ForkBuild's tags, whose histories are read when no node serves Nexus; this device's Blurt account for posting. Reading changes apply on the next load |
 
 Credentials are never stored. The remote-pinning credential is kept only in tab memory
 (`IpfsRemotePublishingCredentialMemory`).
