@@ -8,9 +8,8 @@ function render(text) {
     document.body.appendChild(host);
     const app = createApp(FormattedDescription, { text });
     app.mount(host);
-    const html = host.innerHTML.replace(/<!--[\s\S]*?-->/g, '');
     const root = host.firstElementChild;
-    return { root, html, done: () => { app.unmount(); host.remove(); } };
+    return { root, done: () => { app.unmount(); host.remove(); } };
 }
 
 async function runTests() {
