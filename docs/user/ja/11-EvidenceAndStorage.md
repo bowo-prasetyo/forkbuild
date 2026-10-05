@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 44b0d63b84daefad -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5cb6eb582b1b2bc -->
 # 11 — 証拠とストレージ
 
 <!-- languages -->
@@ -760,7 +760,7 @@ Arweave のものと同じように読み戻され、署名が確認されます
 ### リンクを共有する
 
 **Steem 上で。** 署名済みクレームの投稿には、作品の画像、タイトル、
-あなたの名前と説明、そして「See it in 3D」（3D で見る）というリンクが
+あなたの名前と説明（2,000 文字まで全文、[書式](02-TheEditor.md)付き）、そして「See it in 3D」（3D で見る）というリンクが
 表示されます。Keychain が画像への署名の承認を求め、画像はリソース
 クレジットを使わずに Steemit の画像ホストにアップロードされます。断ったり
 作れなかったりした場合は、画像なしで投稿されます。タイトルや説明の

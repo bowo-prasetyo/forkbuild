@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7e98ffcd0485a36b -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1238c1e7cb84a4db -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -477,7 +477,7 @@ cada licencia.
 
 Una descripción larga se lee mejor con un poco de formato, que muestran el
 panel de información del documento, el explorador de lugares de la Vista del
-mundo y una publicación en Blurt:
+mundo y las publicaciones en Steem y Blurt:
 
 | Escriba | Para obtener |
 |---|---|
@@ -489,8 +489,8 @@ mundo y una publicación en Blurt:
 | `\*`, `\#`, `\-` | el carácter mismo |
 
 Nada más es formato: los enlaces, las imágenes y el HTML quedan como texto
-simple. Las tarjetas del Repositorio y las publicaciones en Steem muestran
-las palabras de la descripción en una línea, sin formato.
+simple. Las tarjetas del Repositorio muestran las palabras de la descripción en una
+línea, sin formato.
 
 ## Sonido
 

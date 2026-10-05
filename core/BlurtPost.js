@@ -1,6 +1,6 @@
 import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
-import { STEEM_NOTICE_AUTHOR_MAX, STEEM_NOTICE_TITLE_MAX, isSteemNoticeImageUrl, steemNoticeClean, steemNoticeEscape, steemNoticeText } from './SteemContentManifest.js';
-import { descriptionPlainText, parseDescription } from './DescriptionMarkup.js';
+import { STEEM_NOTICE_AUTHOR_MAX, STEEM_NOTICE_DESCRIPTION_MAX, STEEM_NOTICE_TITLE_MAX, isSteemNoticeImageUrl, steemNoticeDescription, steemNoticeText } from './SteemContentManifest.js';
+import { descriptionPlainText } from './DescriptionMarkup.js';
 
 // What ForkBuild posts on Blurt (docs/Protocol.md, "Proposed: Blurt
 // Substrate"): build posts, top-level posts by the poster's own account that
@@ -201,92 +201,19 @@ export function blurtBuildPostBody(state) {
     return sections.join('\n\n');
 }
 
-// The longest description a Blurt post shows, in characters.
-export const BLURT_POST_DESCRIPTION_MAX = 2000;
+// The longest description a Blurt post shows, in characters: as on Steem.
+export const BLURT_POST_DESCRIPTION_MAX = STEEM_NOTICE_DESCRIPTION_MAX;
 
 function cardLines(viewUrl, { title = null, author = null, description = null, imageUrl = null }) {
     const safeTitle = steemNoticeText(title, STEEM_NOTICE_TITLE_MAX) || 'An untitled build';
     const safeAuthor = steemNoticeText(author, STEEM_NOTICE_AUTHOR_MAX);
-    const paragraphs = sameWords(descriptionPlainText(description), title) ? [] : descriptionMarkdown(description, BLURT_POST_DESCRIPTION_MAX);
+    const paragraphs = sameWords(descriptionPlainText(description), title) ? [] : steemNoticeDescription(description, BLURT_POST_DESCRIPTION_MAX);
     return [
         ...(isSteemNoticeImageUrl(imageUrl) ? [`[![${safeTitle}](${imageUrl})](${viewUrl})`] : []),
         `**${safeTitle}**${safeAuthor ? ` by ${safeAuthor}` : ''}`,
         ...paragraphs,
         `[See it in 3D](${viewUrl})`
     ];
-}
-
-// The build's description in a Blurt post: unlike Steem's one-line preview,
-// the post is its author's own, so the description is shown whole, with
-// the formatting it may use (core/DescriptionMarkup.js: paragraphs,
-// headings, bullet lists, bold, italic) written back as Markdown and
-// everything else made safe as on Steem: no links or HTML, other Markdown
-// escaped, mentions and tags broken. It is cut with "…" only past
-// `maxLength` characters of text (every byte is paid for, on every edit too).
-// Returns its blocks, each one Markdown paragraph.
-function descriptionMarkdown(description, maxLength) {
-    if (typeof description !== 'string') return [];
-    const cleaned = description.replace(/\r\n?/g, '\n').split('\n').map(steemNoticeClean).join('\n');
-    let left = maxLength;
-    let cut = false;
-    // The runs' Markdown, within what is left of `maxLength`.
-    const write = (runs) => {
-        let markdown = '';
-        for (const run of runs) {
-            if (cut) break;
-            let text = run.text;
-            const length = Array.from(text).length;
-            if (length > left) {
-                text = `${Array.from(text).slice(0, Math.max(0, left - 1)).join('').trimEnd()}…`;
-                cut = true;
-            }
-            left -= Math.min(length, left);
-            markdown += styled(steemNoticeEscape(text), run);
-        }
-        return markdown;
-    };
-    const markdownBlocks = [];
-    for (const block of parseDescription(cleaned)) {
-        if (cut) break;
-        if (left <= 0) {
-            // Text left over after the last block shown is marked as cut.
-            markdownBlocks[markdownBlocks.length - 1] += '…';
-            break;
-        }
-        if (block.type === 'heading') {
-            markdownBlocks.push(`### ${write(block.runs)}`);
-        } else if (block.type === 'list') {
-            const items = [];
-            for (const item of block.items) {
-                if (cut || left <= 0) break;
-                items.push(`- ${write(item)}`);
-            }
-            markdownBlocks.push(items.join('\n'));
-        } else {
-            const lines = [];
-            for (const line of block.lines) {
-                if (cut || left <= 0) break;
-                lines.push(lineStart(write(line)));
-            }
-            // A line break within a paragraph: two spaces, then the next line.
-            markdownBlocks.push(lines.join('  \n'));
-        }
-    }
-    return markdownBlocks.filter((block) => block.trim() !== '');
-}
-
-// Bold and italic around text that is already escaped. Markers may not sit
-// next to spaces, so those stay outside them.
-function styled(escaped, { bold, italic }) {
-    const marker = `${bold ? '**' : ''}${italic ? '*' : ''}`;
-    if (!marker) return escaped;
-    const [, before, inner, after] = /^(\s*)([\s\S]*?)(\s*)$/.exec(escaped);
-    return inner ? `${before}${marker}${inner}${[...marker].reverse().join('')}${after}` : escaped;
-}
-
-// A paragraph line that would read as an ordered list item stays text.
-function lineStart(markdown) {
-    return markdown.replace(/^(\d+)([.)])/, '$1\\$2');
 }
 
 // Whether two texts say the same, ignoring case, spacing and punctuation.

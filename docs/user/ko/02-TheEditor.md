@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7e98ffcd0485a36b -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1238c1e7cb84a4db -->
 # 02 — 에디터
 
 <!-- languages -->
@@ -407,7 +407,7 @@ ForkBuild에서는 선택을 정밀하게 다룰 수 있습니다:
 [게시와 포크](04-PublishingAndForking.md)를 보세요.
 
 긴 설명은 약간의 서식을 쓰면 읽기 쉬워집니다. 서식은 문서 정보 패널, 월드
-보기의 위치 탐색기, Blurt 게시물에 표시됩니다.
+보기의 위치 탐색기, Steem과 Blurt 게시물에 표시됩니다.
 
 | 이렇게 쓰면 | 결과 |
 |---|---|
@@ -419,7 +419,7 @@ ForkBuild에서는 선택을 정밀하게 다룰 수 있습니다:
 | `\*`, `\#`, `\-` | 그 문자 자체 |
 
 그 밖의 것은 서식이 아닙니다. 링크, 그림, HTML은 일반 텍스트로 남습니다.
-저장소 카드와 Steem 게시물에는 설명의 낱말이 서식 없이 한 줄로 표시됩니다.
+저장소 카드에는 설명의 낱말이 서식 없이 한 줄로 표시됩니다.
 
 ## 소리
 

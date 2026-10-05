@@ -4071,3 +4071,17 @@ long description read as one block of text everywhere.
   `tests/FormattedDescriptionBrowser.test.js` (elements, and HTML and links staying text);
   `tests/BlurtPoster.test.js` (the Markdown, safety and the cut); `tests/SteemPublicationNotice.test.js` (the
   one-line preview).
+
+## Steem notices show the formatted description too (unnumbered, 2026-10-05)
+
+After descriptions gained their formatting, a Signed Claim's Steem notice still showed the 300-character one-line
+preview, while the same build's Blurt post showed the whole formatted description.
+
+- The description writer moved from `core/BlurtPost.js` to `core/SteemContentManifest.js` as
+  `steemNoticeDescription()`, and Steem's card uses it too: the description whole, with its formatting, cut with "…"
+  only past `STEEM_NOTICE_DESCRIPTION_MAX`, now 2,000 characters (`BLURT_POST_DESCRIPTION_MAX` is the same limit).
+  Steem charges Resource Credits rather than fees, and the reply already carries the build's data.
+- docs/Protocol.md (the Steem card and the Blurt body), the Editor guide and the Steem part of the Evidence & Storage
+  guide updated, in every language.
+- Tests: `tests/SteemPublicationNotice.test.js` keeps a formatted description's Markdown and cuts at 2,000
+  characters.

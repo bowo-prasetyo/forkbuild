@@ -432,8 +432,8 @@ controls whether — and how — other people are allowed to fork it. See
 means.
 
 A long description reads better with a little formatting, which the
-Document Information panel, World View's location browser and a Blurt post
-all show:
+Document Information panel, World View's location browser and Steem and
+Blurt posts all show:
 
 | Write | To get |
 |---|---|
@@ -445,8 +445,8 @@ all show:
 | `\*`, `\#`, `\-` | the character itself |
 
 Nothing else is formatting: links, pictures and HTML stay as plain text.
-Repository cards and Steem posts show the description's words on one line,
-without the formatting.
+Repository cards show the description's words on one line, without the
+formatting.
 
 ## Sound
 

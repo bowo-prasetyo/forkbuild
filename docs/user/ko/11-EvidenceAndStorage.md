@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 44b0d63b84daefad -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5cb6eb582b1b2bc -->
 # 11 — 증거와 저장소
 
 <!-- languages -->
@@ -684,7 +684,7 @@ ForkBuild에는 기본 피닝 제공자가 없습니다. **원격 게시 설정*
 
 ### 링크 공유하기
 
-**Steem에서.** 서명 클레임의 게시물에는 작품 사진, 제목, 내 이름과 설명, “3D로
+**Steem에서.** 서명 클레임의 게시물에는 작품 사진, 제목, 내 이름과 설명(2,000자까지 전문, [서식](02-TheEditor.md) 포함), “3D로
 보기” 링크가 표시됩니다. Keychain이 사진 서명 승인을 요청하며, 사진은 리소스
 크레딧 비용 없이 Steemit의 이미지 호스트에 올라갑니다. 거절하거나 만들 수 없으면
 사진 없이 게시됩니다. 제목이나 설명의 멘션, 태그, 링크는 일반 텍스트로 표시되므로

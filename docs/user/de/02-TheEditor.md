@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7e98ffcd0485a36b -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1238c1e7cb84a4db -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -477,7 +477,7 @@ dürfen. Was jede Lizenz bedeutet, steht unter
 
 Eine lange Beschreibung liest sich mit etwas Formatierung besser. Das
 Dokumentinformationsfeld, der Ortsbrowser in der Weltansicht und ein
-Blurt-Beitrag zeigen sie an:
+Steem- und Blurt-Beiträge zeigen sie an:
 
 | Schreiben Sie | Ergebnis |
 |---|---|
@@ -489,8 +489,8 @@ Blurt-Beitrag zeigen sie an:
 | `\*`, `\#`, `\-` | das Zeichen selbst |
 
 Alles andere ist keine Formatierung: Links, Bilder und HTML bleiben
-einfacher Text. Repository-Karten und Steem-Beiträge zeigen die Wörter der
-Beschreibung in einer Zeile, ohne Formatierung.
+einfacher Text. Repository-Karten zeigen die Wörter der Beschreibung in einer Zeile, ohne
+Formatierung.
 
 ## Ton
 

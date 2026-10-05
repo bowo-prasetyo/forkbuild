@@ -1,6 +1,6 @@
 import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 import { STEEM_CONTENT_FAMILY, isSteemAccountName, steemDeclinedPayoutOptions } from './SteemDiscoveryThread.js';
-import { descriptionPlainText } from './DescriptionMarkup.js';
+import { descriptionPlainText, parseDescription } from './DescriptionMarkup.js';
 
 // Content stored on Steem: a manifest, a direct reply to a monthly content
 // thread, which holds the encoded content or, when that doesn't fit one
@@ -34,7 +34,8 @@ const NOTICE_END = `It is read by the ForkBuild app, not meant to be read here, 
 
 export const STEEM_NOTICE_TITLE_MAX = 100;
 export const STEEM_NOTICE_AUTHOR_MAX = 40;
-export const STEEM_NOTICE_DESCRIPTION_MAX = 300;
+// The longest description a notice shows, in characters of text.
+export const STEEM_NOTICE_DESCRIPTION_MAX = 2000;
 const NOTICE_IMAGE_URL = /^https:\/\/[^\s()<>[\]"'\\]{1,500}$/;
 const ZERO_WIDTH_SPACE = '\u200b';
 
@@ -146,14 +147,12 @@ export function steemContentEncodedByteLength(text) {
 function publicationCardNotice(viewUrl, { title = null, author = null, description = null, imageUrl = null }) {
     const safeTitle = steemNoticeText(title, STEEM_NOTICE_TITLE_MAX) || 'An untitled build';
     const safeAuthor = steemNoticeText(author, STEEM_NOTICE_AUTHOR_MAX);
-    // The words of a formatted description (core/DescriptionMarkup.js), on
-    // one line; one that only repeats the title adds nothing.
-    const plainDescription = descriptionPlainText(description);
-    const safeDescription = sameWords(plainDescription, title) ? '' : steemNoticeText(plainDescription, STEEM_NOTICE_DESCRIPTION_MAX);
+    // A description that only repeats the title adds nothing.
+    const paragraphs = sameWords(descriptionPlainText(description), title) ? [] : steemNoticeDescription(description, STEEM_NOTICE_DESCRIPTION_MAX);
     return [
         ...(isSteemNoticeImageUrl(imageUrl) ? [`[![${safeTitle}](${imageUrl})](${viewUrl})`] : []),
         `**${safeTitle}**${safeAuthor ? ` by ${safeAuthor}` : ''}`,
-        ...(safeDescription ? [safeDescription] : []),
+        ...paragraphs,
         `[See it in 3D](${viewUrl}) · A build published with ForkBuild. This reply holds its signed record for the ForkBuild app, and its payout is declined. [What this is](${ABOUT_URL})`
     ].join('\n\n');
 }
@@ -338,4 +337,76 @@ function parseJsonObject(text) {
     } catch {
         return null;
     }
+}
+
+// A build's description in a notice (a Steem reply or a Blurt post): shown
+// whole, with the formatting it may use (core/DescriptionMarkup.js: paragraphs,
+// headings, bullet lists, bold, italic) written back as Markdown and
+// everything else made safe as on Steem: no links or HTML, other Markdown
+// escaped, mentions and tags broken. It is cut with "…" only past
+// `maxLength` characters of text (every byte is paid for, on every edit too).
+// Returns its blocks, each one Markdown paragraph.
+export function steemNoticeDescription(description, maxLength) {
+    if (typeof description !== 'string') return [];
+    const cleaned = description.replace(/\r\n?/g, '\n').split('\n').map(steemNoticeClean).join('\n');
+    let left = maxLength;
+    let cut = false;
+    // The runs' Markdown, within what is left of `maxLength`.
+    const write = (runs) => {
+        let markdown = '';
+        for (const run of runs) {
+            if (cut) break;
+            let text = run.text;
+            const length = Array.from(text).length;
+            if (length > left) {
+                text = `${Array.from(text).slice(0, Math.max(0, left - 1)).join('').trimEnd()}…`;
+                cut = true;
+            }
+            left -= Math.min(length, left);
+            markdown += styled(steemNoticeEscape(text), run);
+        }
+        return markdown;
+    };
+    const markdownBlocks = [];
+    for (const block of parseDescription(cleaned)) {
+        if (cut) break;
+        if (left <= 0) {
+            // Text left over after the last block shown is marked as cut.
+            markdownBlocks[markdownBlocks.length - 1] += '…';
+            break;
+        }
+        if (block.type === 'heading') {
+            markdownBlocks.push(`### ${write(block.runs)}`);
+        } else if (block.type === 'list') {
+            const items = [];
+            for (const item of block.items) {
+                if (cut || left <= 0) break;
+                items.push(`- ${write(item)}`);
+            }
+            markdownBlocks.push(items.join('\n'));
+        } else {
+            const lines = [];
+            for (const line of block.lines) {
+                if (cut || left <= 0) break;
+                lines.push(lineStart(write(line)));
+            }
+            // A line break within a paragraph: two spaces, then the next line.
+            markdownBlocks.push(lines.join('  \n'));
+        }
+    }
+    return markdownBlocks.filter((block) => block.trim() !== '');
+}
+
+// Bold and italic around text that is already escaped. Markers may not sit
+// next to spaces, so those stay outside them.
+function styled(escaped, { bold, italic }) {
+    const marker = `${bold ? '**' : ''}${italic ? '*' : ''}`;
+    if (!marker) return escaped;
+    const [, before, inner, after] = /^(\s*)([\s\S]*?)(\s*)$/.exec(escaped);
+    return inner ? `${before}${marker}${inner}${[...marker].reverse().join('')}${after}` : escaped;
+}
+
+// A paragraph line that would read as an ordered list item stays text.
+function lineStart(markdown) {
+    return markdown.replace(/^(\d+)([.)])/, '$1\\$2');
 }

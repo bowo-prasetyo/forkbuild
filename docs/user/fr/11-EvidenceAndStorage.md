@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 44b0d63b84daefad -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5cb6eb582b1b2bc -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
@@ -814,8 +814,8 @@ comme celle d’une déclaration provenant d’Arweave.
 ### Partager un lien
 
 **Sur Steem.** L’article d’une Déclaration signée affiche une image de
-votre construction, son titre, votre nom et sa description, et un lien
-« Voir en 3D ». Keychain vous demande d’approuver la signature de l’image,
+votre construction, son titre, votre nom et sa description (entière, jusqu’à 2 000 caractères, avec sa
+[mise en forme](02-TheEditor.md)), et un lien « Voir en 3D ». Keychain vous demande d’approuver la signature de l’image,
 qui est envoyée sur l’hébergeur d’images de Steemit sans coût en Resource
 Credits ; si vous refusez ou qu’elle ne peut pas être créée, l’article
 part sans elle. Les mentions, tags et liens de votre titre ou de votre

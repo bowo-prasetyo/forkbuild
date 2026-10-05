@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 44b0d63b84daefad -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5cb6eb582b1b2bc -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
@@ -796,7 +796,7 @@ Arweave.
 ### Compartir un enlace
 
 **En Steem.** La publicación de una Declaración firmada muestra una imagen
-de su construcción, su título, su nombre y su descripción, y un enlace
+de su construcción, su título, su nombre y su descripción (completa, hasta 2000 caracteres, con su [formato](02-TheEditor.md)), y un enlace
 “See it in 3D” (verla en 3D). Keychain le pide que apruebe firmar la
 imagen, que se sube al alojamiento de imágenes de Steemit sin costo de
 Resource Credits; si lo rechaza o no se puede crear, la publicación sale

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 44b0d63b84daefad -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5cb6eb582b1b2bc -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
@@ -807,7 +807,7 @@ zurückgelesen und auf seine Signatur geprüft.
 ### Einen Link teilen
 
 **Auf Steem.** Der Beitrag eines Signierten Anspruchs zeigt ein Bild Ihres
-Bauwerks, seinen Titel, Ihren Namen und die Beschreibung sowie einen Link
+Bauwerks, seinen Titel, Ihren Namen und die Beschreibung (vollständig, bis 2.000 Zeichen, mit ihrer [Formatierung](02-TheEditor.md)) sowie einen Link
 „See it in 3D“ (in 3D ansehen). Keychain bittet Sie, das Signieren des
 Bildes zu bestätigen, das ohne Kosten an Resource Credits zum Bildhoster
 von Steemit hochgeladen wird; lehnen Sie ab oder lässt es sich nicht

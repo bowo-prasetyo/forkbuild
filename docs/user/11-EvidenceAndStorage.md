@@ -727,7 +727,9 @@ back and signature-checked like one from Arweave.
 ### Sharing a link
 
 **On Steem.** A Signed Claim's post shows a picture of your build, its
-title, your name and description, and a "See it in 3D" link. Keychain asks
+title, your name and description (whole, up to 2,000 characters, with its
+[formatting](02-TheEditor.md#document-properties)), and a "See it in 3D"
+link. Keychain asks
 you to approve signing the picture, which is uploaded to Steemit's image
 host at no Resource Credit cost; if you decline or it can't be made, the
 post goes out without it. Mentions, tags and links in your title or
