@@ -4044,3 +4044,16 @@ error"). It was never checked, since the development environment can't reach Blu
 - docs/Protocol.md, docs/Privacy.md (and its translations' host name) and the worker's README updated.
 - Tests: `tests/BlurtImageUpload.test.js` checks the host; `server/rendezvous-worker/worker.test.js` forwards to
   `https://img-upload.blurt.blog/<account>/<signature>`.
+
+## Blurt posts show the whole description (unnumbered, 2026-10-05)
+
+A build's description was cut to 300 characters and squashed into one line in its Blurt post, a limit inherited from
+Steem's notices, which are short previews in replies. On Blurt the post is its author's own, rewarded post.
+
+- `core/BlurtPost.js` shows the description whole, one paragraph per line, cut with "…" only past
+  `BLURT_POST_DESCRIPTION_MAX` (2,000 characters), since every byte costs a bandwidth fee, on every edit of the build
+  post too. Each paragraph is made safe as before (`steemNoticeText`: no links or HTML, Markdown escaped, mentions
+  and tags broken). Titles and authors keep their limits.
+- docs/Protocol.md ("Proposed: Blurt Substrate") and the Blurt user guide updated.
+- Tests: `tests/BlurtPoster.test.js` keeps paragraphs, makes them safe, and cuts at the limit, also between
+  paragraphs.

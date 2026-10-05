@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: ebb2f824912e0429 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: e1a0025c62a961df -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
@@ -853,7 +853,7 @@ le pide que apruebe cada publicación.
 - **Una publicación por construcción.** Distribuir crea una publicación
   principal desde su cuenta, con las etiquetas `forkbuild` y
   `forkbuild-snapshot` o `forkbuild-publication`, con una imagen de su
-  construcción, su título, su nombre y descripción, y un enlace “See it in
+  construcción, su título, su nombre y descripción (completa, hasta 2000 caracteres), y un enlace “See it in
   3D” (verla en 3D). Lo que sigue en la próxima media hora (el anuncio de
   la publicación, un comentario, un anclaje) se agrega a la misma
   publicación editándola, para que sus seguidores vean una publicación, no

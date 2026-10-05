@@ -1,5 +1,5 @@
 import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
-import { STEEM_NOTICE_AUTHOR_MAX, STEEM_NOTICE_DESCRIPTION_MAX, STEEM_NOTICE_TITLE_MAX, isSteemNoticeImageUrl, steemNoticeText } from './SteemContentManifest.js';
+import { STEEM_NOTICE_AUTHOR_MAX, STEEM_NOTICE_TITLE_MAX, isSteemNoticeImageUrl, steemNoticeText } from './SteemContentManifest.js';
 
 // What ForkBuild posts on Blurt (docs/Protocol.md, "Proposed: Blurt
 // Substrate"): build posts, top-level posts by the poster's own account that
@@ -200,16 +200,40 @@ export function blurtBuildPostBody(state) {
     return sections.join('\n\n');
 }
 
+// The longest description a Blurt post shows, in characters.
+export const BLURT_POST_DESCRIPTION_MAX = 2000;
+
 function cardLines(viewUrl, { title = null, author = null, description = null, imageUrl = null }) {
     const safeTitle = steemNoticeText(title, STEEM_NOTICE_TITLE_MAX) || 'An untitled build';
     const safeAuthor = steemNoticeText(author, STEEM_NOTICE_AUTHOR_MAX);
-    const safeDescription = sameWords(description, title) ? '' : steemNoticeText(description, STEEM_NOTICE_DESCRIPTION_MAX);
+    const paragraphs = sameWords(description, title) ? [] : descriptionParagraphs(description, BLURT_POST_DESCRIPTION_MAX);
     return [
         ...(isSteemNoticeImageUrl(imageUrl) ? [`[![${safeTitle}](${imageUrl})](${viewUrl})`] : []),
         `**${safeTitle}**${safeAuthor ? ` by ${safeAuthor}` : ''}`,
-        ...(safeDescription ? [safeDescription] : []),
+        ...paragraphs,
         `[See it in 3D](${viewUrl})`
     ];
+}
+
+// The build's description in a Blurt post: unlike Steem's one-line preview,
+// the post is its author's own, so the description is shown whole, one
+// paragraph per line, made safe the same way, and cut with "…" only past
+// `maxLength` characters (every byte is paid for, on every edit too).
+function descriptionParagraphs(description, maxLength) {
+    if (typeof description !== 'string') return [];
+    const lines = description.split(/\r?\n/).filter((line) => line.trim() !== '');
+    const paragraphs = [];
+    let left = maxLength;
+    for (const [index, line] of lines.entries()) {
+        const length = Array.from(line.replace(/\s+/g, ' ').trim()).length;
+        // Text left over after the last paragraph shown is marked as cut.
+        const cut = length > left || (length === left && index < lines.length - 1);
+        const text = steemNoticeText(line, cut ? left : length);
+        if (text) paragraphs.push(cut && !text.endsWith('…') ? `${text}…` : text);
+        if (cut) break;
+        left -= length;
+    }
+    return paragraphs;
 }
 
 // Whether two texts say the same, ignoring case, spacing and punctuation.

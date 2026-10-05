@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: ebb2f824912e0429 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: e1a0025c62a961df -->
 # 11 — 증거와 저장소
 
 <!-- languages -->
@@ -727,7 +727,7 @@ WhaleVault)과, Blurt 설정 페이지에 저장한 계정 이름이 필요합�
 
 - **작품마다 게시물 하나.** 배포하면 내 계정에서 `forkbuild`와
   `forkbuild-snapshot` 또는 `forkbuild-publication` 태그가 달린 최상위 게시물
-  하나가 만들어지고, 작품 사진, 제목, 내 이름과 설명, “3D로 보기” 링크가
+  하나가 만들어지고, 작품 사진, 제목, 내 이름과 설명(2,000자까지 전문), “3D로 보기” 링크가
   들어갑니다. 이후 30분 안에 이어지는 것(게시물 공지, 댓글, 앵커)은 같은
   게시물을 수정해 추가되므로, 팔로워에게는 여러 개가 아니라 게시물 하나로
   보입니다.

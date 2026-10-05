@@ -11,6 +11,7 @@ import { PublicationCommentaryBlurtDistribution } from '../application/blurt/Pub
 import { describeBlurtAnnouncingUnreadiness } from '../application/blurt/BlurtAnnouncingReadiness.js';
 import {
     BLURT_BUILD_POST_MAX_ANNOUNCEMENTS,
+    BLURT_POST_DESCRIPTION_MAX,
     blurtBuildPostOperation,
     blurtPostCommitments,
     emptyBlurtBuildPost,
@@ -87,6 +88,15 @@ async function rejection(promise) {
     assert(carded.title === 'Tower @bob #tag', 'the build\'s own title, as plain text');
     assert(carded.body.startsWith('[![Tower') && carded.body.includes('See it in 3D') && carded.body.includes('@​bob'), 'the card leads the body, with mentions broken');
     assert(JSON.parse(carded.json_metadata).image[0] === 'https://images.blurt.blog/x.png', 'the picture is listed for front ends');
+
+    // The description is shown whole, a paragraph per line, up to the limit.
+    const described = (description) => blurtBuildPostOperation({ author: 'alice', permlink: 'p-1', state: { ...state, viewUrl: 'https://example.org/#/view/blurt/alice/x', card: { title: 'Tower', description } } })[1].body.split('\n\n');
+    const paragraphs = described('Raised plinth (kiso-ishi).\n\nShoji screens, @bob https://evil.example\nTatami rooms.');
+    assert(paragraphs.includes('Raised plinth \\(kiso\\-ishi\\).') && paragraphs.includes('Shoji screens, @\u200bbob') && paragraphs.includes('Tatami rooms.'), `each line is its own paragraph, made safe (got ${JSON.stringify(paragraphs)})`);
+    const long = described('x'.repeat(BLURT_POST_DESCRIPTION_MAX + 500)).find((paragraph) => paragraph.startsWith('x'));
+    assert(Array.from(long).length === BLURT_POST_DESCRIPTION_MAX && long.endsWith('…'), `cut with "…" at ${BLURT_POST_DESCRIPTION_MAX} characters (got ${Array.from(long).length})`);
+    const exact = described(`${'a'.repeat(BLURT_POST_DESCRIPTION_MAX - 10)}\n${'b'.repeat(10)}\nmore`);
+    assert(exact.some((paragraph) => paragraph === `${'b'.repeat(10)}…`) && !exact.includes('more'), 'text past the limit is marked as cut even between paragraphs');
     console.log('✓ build post operations');
 }
 
