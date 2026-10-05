@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 0a129e40e9aeb884 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 60040bc00f156b0b -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · **Français** · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../03-WorldView.md).
-<!-- /stale -->
 
 La Vue du Monde est l’espace 3D partagé où **toutes les créations publiées
 existent côte à côte**. Déplacez-vous, cherchez ce que vous voulez,
@@ -331,10 +327,11 @@ dépend du fait qu’elle soit ouverte.
 La boîte de dialogue s’ouvre avec un seul jeu de réglages, utilisé pour
 tout ce qu’elle distribue : un **Stockage** — **Arweave**, **IPFS (Kubo
 local)**, **IPFS (épinglage distant)** (qui demande un Endpoint et un
-Identifiant saisis à chaque fois ; rien n’en est jamais enregistré) ou
-**Steem** (expérimental, voir [Steem](11-EvidenceAndStorage.md#steem)) —
-et un **Support d’annonce / de découverte** (**Arweave**, **Nostr** ou
-**Steem**). Les deux s’ouvrent sur vos préférences de fournisseur
+Identifiant saisis à chaque fois ; rien n’en est jamais enregistré),
+**Steem** ou **Blurt** (expérimentaux, voir
+[Steem](11-EvidenceAndStorage.md#steem) et
+[Blurt](11-EvidenceAndStorage.md#blurt)) — et un **Support d’annonce / de
+découverte** (**Arweave**, **Blurt**, **Nostr** ou **Steem**). Les deux s’ouvrent sur vos préférences de fournisseur
 enregistrées. Stockage ne liste que les backends sur lesquels cet appareil
 peut réellement placer un Snapshot (plus l’épinglage distant), pour que
 vous ne puissiez pas en choisir un qui échouerait à mi-chemin.

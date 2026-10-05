@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: 26ea018db8723ef6 -->
+<!-- translation-of: docs/user/README.md source-hash: 0137e01d1cbcedd8 -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
 [English](../README.md) · **Deutsch** · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [한국어](../ko/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../README.md).
-<!-- /stale -->
 
 Anleitungen zur Nutzung von ForkBuild im Browser. Alles hier beschreibt
 das Produkt so, wie es heute funktioniert; die Interna der Engine stehen
@@ -60,7 +56,7 @@ in [docs/Architecture.md](../../Architecture.md) und im übrigen
 11. **[Nachweise & Speicher](11-EvidenceAndStorage.md)** — Inhalte auf IPFS
     oder Arweave speichern und, *experimentell*, externe Nachweise, die
     Wallet-Abläufe für Bitcoin und Base, Snapshot-Platzierungen, entferntes
-    IPFS-Pinning und Steem.
+    IPFS-Pinning, Steem und Blurt.
     [Ihre Arbeit verteilen](Distribution.md) zeigt, wie
     das zusammenpasst.
 12. **[Archiv & Bestenlisten](12-ArchiveAndLeaderboards.md)** —

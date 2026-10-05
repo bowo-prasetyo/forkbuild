@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 263581397a33de10 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: ebb2f824912e0429 -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · **Français** · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../11-EvidenceAndStorage.md).
-<!-- /stale -->
 
 > **Surtout expérimental.** Stocker du contenu sur IPFS ou Arweave depuis
 > le bloc **Distribution → Contenu** d’une carte
@@ -26,7 +22,7 @@ sections pour prouver *quand* une publication existait et pour placer son
 contenu là où d’autres peuvent le récupérer :
 
 - **[Preuves externes](#preuves-externes)** — des enregistrements sur
-  Bitcoin, Base, Arweave ou Steem attestant que le hash de contenu d’une
+  Bitcoin, Base, Arweave, Steem ou Blurt attestant que le hash de contenu d’une
   publication existait à un moment donné.
 - **[Le parcours d’ancrage Bitcoin](#le-parcours-dancrage-bitcoin)** et
   **[Le parcours d’ancrage Base](#le-parcours-dancrage-base)** — des
@@ -38,6 +34,8 @@ contenu là où d’autres peuvent le récupérer :
 - **[Publication IPFS](#publication-ipfs)** — l’envoi vers un service
   d’épinglage distant.
 - **[Steem](#steem)** — publier, stocker et partager des liens sur Steem.
+- **[Blurt](#blurt)** — publier, stocker et ancrer sur Blurt, depuis votre
+  propre compte, avec des récompenses.
 
 Les preuves et les placements répondent à des questions différentes. Une
 ancre montre qu’un hash a été enregistré à un moment donné ; elle ne dit
@@ -85,6 +83,9 @@ transaction sur ce réseau, avec l’un de trois résultats :
 - **Créer une ancre Steem** nécessite l’extension Steem Keychain, et votre
   compte Steem défini dans
   [Paramètres réseau → Steem](10-NetworkSettings.md#steem).
+- **Créer une ancre Blurt** nécessite l’extension Blurt Keychain (ou
+  WhaleVault), et votre compte Blurt défini dans
+  [Paramètres réseau → Blurt](10-NetworkSettings.md#blurt).
 
 Une publication faite avant le passage des hashs de contenu en SHA-256
 n’est jamais ancrée, ni par ces boutons, ni par les étapes Bitcoin ou
@@ -117,13 +118,25 @@ carte indique « Attesté par les témoins de Steem ». Utilisez une ancre
 Steem comme preuve rapide et gratuite en complément d’une ancre Bitcoin,
 pas à sa place.
 
+**Les ancres Blurt** sont attestées par les témoins de Blurt de la même
+façon, et sont tout aussi plus faibles que celles de Bitcoin. Quand cet
+appareil a déjà publié le Snapshot de votre construction sur Blurt (en
+l’annonçant ou en l’y stockant), cet article est l’ancre : **Créer une
+ancre Blurt** ne publie rien et ne coûte rien. Sinon, elle ajoute le hash
+de contenu de la construction à votre article Blurt actuel, ou en crée un
+nouveau, pour de petits frais en BLURT. La finalité, **Vérifier les
+preuves** et **Inspecter les preuves** fonctionnent comme pour Steem, et
+la carte renvoie vers l’article.
+
 **Ancrer plusieurs publications à la fois sur Steem.** Sous
 **Portefeuille, archives et outils d’éditeur → Ancrage sur blockchain**,
 **Ancrer plusieurs publications sur Steem** liste vos publications
 cataloguées. Cochez celles que vous voulez (ou **Sélectionner les non
 ancrées**) et cliquez sur **Ancrer N publications sur Steem**. Une seule
 approbation dans Keychain en ancre jusqu’à 64. Chaque publication obtient
-toujours sa propre ancre, vérifiée séparément.
+toujours sa propre ancre, vérifiée séparément. **Ancrer plusieurs
+publications sur Blurt** fonctionne de la même façon, avec une seule
+approbation dans Blurt Keychain.
 
 ### Ancrer chez un fournisseur préféré
 
@@ -834,3 +847,72 @@ barre d’adresse ne fonctionne que dans votre propre navigateur.
   éteint.
 - Vos amis lisent via les passerelles de leurs propres Paramètres réseau.
   Une passerelle IPFS a jusqu’à 30 secondes pour trouver la déclaration.
+
+## Blurt
+
+*Expérimental.* Blurt est une blockchain issue de Steem, sans votes
+négatifs. ForkBuild peut y annoncer, stocker et ancrer, et tout part de
+**votre propre compte** sous forme d’articles Blurt ordinaires qui gardent
+leur paiement : quand des gens votent pour l’article de votre
+construction, vous gagnez des BLURT. Il n’y a ni compte ForkBuild ni fil
+commun. Les réglages se trouvent sous
+[Paramètres réseau → Blurt](10-NetworkSettings.md#blurt).
+
+### Publier sur Blurt
+
+Choisissez **Blurt** dans une boîte de dialogue Distribuer, sur la page
+Publications, à côté de **Publier le commentaire** ou dans le panneau de
+nommage, ou faites-en votre choix par défaut sous
+[Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte).
+Il vous faut l’extension Blurt Keychain (ou WhaleVault) contenant la clé
+de **publication** de votre compte, et le nom de votre compte enregistré
+sur la page de réglages Blurt. ForkBuild ne voit jamais la clé, et
+Keychain vous demande d’approuver chaque article.
+
+- **Un article par construction.** Distribuer crée un article principal
+  depuis votre compte, avec les tags `forkbuild` et `forkbuild-snapshot`
+  ou `forkbuild-publication`, avec une image de votre construction, son
+  titre, votre nom et sa description, et un lien « Voir en 3D ». Ce qui
+  suit dans la demi-heure (l’annonce de la Publication, un commentaire,
+  une ancre) est ajouté au même article en le modifiant, pour que vos
+  abonnés voient un seul article, pas plusieurs.
+- **L’image demande sa propre approbation.** Pour une Déclaration signée,
+  Keychain vous demande d’abord de signer l’image de la construction, puis
+  d’approuver l’article. Sa seconde fenêtre peut s’ouvrir derrière votre
+  navigateur ; ForkBuild attend jusqu’à deux minutes pour chacune.
+  L’image va chez l’hébergeur d’images de Blurt, par le serveur de
+  rendez-vous de ForkBuild quand le navigateur ne peut pas joindre
+  l’hébergeur directement ; si elle ne peut pas être envoyée, l’article
+  part sans elle.
+- **Cinq minutes entre deux articles.** Blurt accepte un article principal
+  par compte toutes les cinq minutes. Si votre compte en a publié un
+  récemment (depuis une autre application, par exemple), ForkBuild
+  attend, et la boîte de dialogue indique combien de temps.
+- **Frais.** Chaque transaction Blurt coûte de petits frais en BLURT, fixés
+  par les témoins de Blurt. Si votre compte ne peut pas les payer, rien
+  n’est publié et vous en êtes averti.
+- **Les autres le trouvent** par Nexus, l’index de recherche de Blurt, qui
+  liste chaque article sous les tags de ForkBuild, quel que soit son âge.
+  Si aucun nœud Blurt ne propose Nexus, ForkBuild lit le tag, qui liste un
+  article pendant une semaine, puis l’historique de votre compte : une
+  fois que le ForkBuild de quelqu’un a vu l’un de vos articles, il
+  continue de lire les suivants et les précédents.
+
+### Stocker sur Blurt
+
+Choisissez **Blurt** comme stockage dans une boîte de dialogue Distribuer
+ou sur la page Publications. La construction est stockée comme sur Steem,
+dans des réponses sous l’article de votre construction : jusqu’à environ
+2 500 briques dans une réponse, ou jusqu’à 20 réponses de plus pour
+jusqu’à environ 30 000 briques. Avant de publier, ForkBuild calcule les
+frais et refuse si votre solde ne suffit pas (« Stocker cette construction
+sur Blurt coûte environ 0,632 BLURT de frais, et votre compte a
+0,100 BLURT »). La boîte de dialogue affiche la progression et les frais.
+Si cela s’arrête en cours de route, distribuez de nouveau avec le même
+compte, et seules les réponses manquantes sont créées.
+
+La Déclaration signée peut aussi être stockée sur Blurt, sous forme d’une
+réponse de plus. Son lien fonctionne comme un lien Steem : quiconque clique
+sur « Voir en 3D » arrive dans la Vue du Monde sur votre construction,
+après que ForkBuild l’a vérifiée. **Partager…** et **Copier le lien**
+apparaissent une fois qu’elle est stockée.

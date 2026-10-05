@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 263581397a33de10 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: ebb2f824912e0429 -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · **Bahasa Indonesia** · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../11-EvidenceAndStorage.md).
-<!-- /stale -->
 
 > **Sebagian besar eksperimental.** Menyimpan konten di IPFS atau Arweave
 > dari blok **Distribusi → Konten** pada sebuah kartu
@@ -25,7 +21,7 @@ bagian untuk membuktikan *kapan* sebuah publikasi ada dan untuk menaruh
 kontennya di tempat yang dapat diambil orang lain:
 
 - **[Bukti Eksternal](#bukti-eksternal)** — catatan di Bitcoin, Base,
-  Arweave, atau Steem bahwa hash konten sebuah publikasi sudah ada pada
+  Arweave, Steem, atau Blurt bahwa hash konten sebuah publikasi sudah ada pada
   waktu tertentu.
 - **[Alur Jangkar Bitcoin](#alur-jangkar-bitcoin)** dan
   **[Alur Jangkar Base](#alur-jangkar-base)** — alur langkah demi langkah
@@ -36,6 +32,8 @@ kontennya di tempat yang dapat diambil orang lain:
   jarak jauh.
 - **[Steem](#steem)** — memposting, menyimpan, dan membagikan tautan di
   Steem.
+- **[Blurt](#blurt)** — memposting, menyimpan, dan menjangkarkan di Blurt,
+  dari akun Anda sendiri, dengan imbalan.
 
 Bukti dan penempatan menjawab pertanyaan yang berbeda. Jangkar menunjukkan
 bahwa sebuah hash dicatat pada suatu waktu; jangkar tidak mengatakan apa pun
@@ -82,6 +80,9 @@ jaringan itu, dengan salah satu dari tiga hasil:
 - **Buat Jangkar Steem** memerlukan ekstensi Steem Keychain, dan akun Steem
   Anda yang diatur di
   [Pengaturan Jaringan → Steem](10-NetworkSettings.md#steem).
+- **Buat Jangkar Blurt** memerlukan ekstensi Blurt Keychain (atau
+  WhaleVault), dan akun Blurt Anda yang diatur di
+  [Pengaturan Jaringan → Blurt](10-NetworkSettings.md#blurt).
 
 Publikasi yang dibuat sebelum hash konten menjadi SHA-256 tidak pernah
 dijangkarkan, baik oleh tombol-tombol ini, langkah Bitcoin atau Base,
@@ -113,13 +114,25 @@ ulang riwayat; kartunya menyatakan "Dibuktikan oleh saksi Steem". Gunakan
 jangkar Steem sebagai bukti cepat dan gratis di samping jangkar Bitcoin,
 bukan sebagai penggantinya.
 
+**Jangkar Blurt** dibuktikan oleh saksi Blurt dengan cara yang sama, dan
+sama lemahnya dibandingkan jangkar Bitcoin. Bila perangkat ini sudah
+memposting Snapshot bangunan Anda di Blurt (mengumumkannya, atau
+menyimpannya di sana), postingan itulah jangkarnya: **Buat Jangkar Blurt**
+tidak memposting apa pun dan tidak memakan biaya. Jika tidak, ia
+menambahkan hash konten bangunan ke postingan Blurt Anda saat ini, atau
+membuat yang baru, dengan biaya kecil dalam BLURT. Finalitas,
+**Verifikasi Bukti**, dan **Periksa Bukti** bekerja seperti pada Steem,
+dan kartunya menautkan ke postingan tersebut.
+
 **Menjangkarkan beberapa publikasi sekaligus di Steem.** Di bawah **Dompet,
 Arsip & Alat Penerbit → Penjangkaran Blockchain**, **Jangkarkan Beberapa
 Publikasi di Steem** mencantumkan publikasi yang sudah Anda katalogkan.
 Centang yang Anda inginkan (atau **Pilih yang Belum Dijangkarkan**) dan klik
 **Jangkarkan N Publikasi di Steem**. Satu persetujuan Keychain
 menjangkarkan hingga 64. Setiap publikasi tetap mendapat jangkarnya
-sendiri, yang diverifikasi secara terpisah.
+sendiri, yang diverifikasi secara terpisah. **Jangkarkan Beberapa Publikasi
+di Blurt** bekerja dengan cara yang sama, dengan satu persetujuan Blurt
+Keychain.
 
 ### Menjangkarkan di penyedia pilihan
 
@@ -808,3 +821,73 @@ bilah alamat Anda hanya berfungsi di browser Anda sendiri.
   Arweave membuatnya tetap tersedia saat komputer Anda mati.
 - Teman membaca melalui gateway di Pengaturan Jaringan mereka sendiri.
   Gateway IPFS diberi waktu hingga 30 detik untuk menemukan klaimnya.
+
+## Blurt
+
+*Eksperimental.* Blurt adalah blockchain yang berasal dari Steem, tanpa
+downvote. ForkBuild dapat mengumumkan, menyimpan, dan menjangkarkan di
+sana, dan semuanya dikirim dari **akun Anda sendiri** sebagai postingan
+Blurt biasa yang tetap menerima pembayarannya: saat orang memberi upvote
+pada postingan bangunan Anda, Anda mendapatkan BLURT. Tidak ada akun
+ForkBuild dan tidak ada utas bersama. Pengaturannya ada di
+[Pengaturan Jaringan → Blurt](10-NetworkSettings.md#blurt).
+
+### Memposting ke Blurt
+
+Pilih **Blurt** di dialog Distribusikan, di halaman Publikasi, di samping
+**Kirim Komentar**, atau di panel penamaan, atau jadikan pilihan bawaan
+Anda di
+[Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan).
+Anda memerlukan ekstensi Blurt Keychain (atau WhaleVault) yang menyimpan
+kunci **posting** akun Anda, dan nama akun Anda yang disimpan di halaman
+pengaturan Blurt. ForkBuild tidak pernah melihat kunci itu, dan Keychain
+meminta Anda menyetujui setiap postingan.
+
+- **Satu postingan per bangunan.** Distribusikan membuat satu postingan
+  utama dari akun Anda, bertag `forkbuild` dan `forkbuild-snapshot` atau
+  `forkbuild-publication`, dengan gambar bangunan Anda, judulnya, nama dan
+  deskripsi Anda, serta tautan "See it in 3D" (lihat dalam 3D). Apa yang
+  menyusul dalam setengah jam berikutnya (pengumuman Publikasi, komentar,
+  jangkar) ditambahkan ke postingan yang sama dengan menyuntingnya,
+  sehingga pengikut Anda melihat satu postingan, bukan beberapa.
+- **Gambarnya memerlukan persetujuan tersendiri.** Untuk Klaim Bertanda
+  Tangan, Keychain lebih dulu meminta Anda menandatangani gambar
+  bangunan, lalu menyetujui postingan. Jendela keduanya dapat terbuka di
+  belakang peramban Anda; ForkBuild menunggu hingga dua menit untuk
+  masing-masing. Gambar dikirim ke host gambar Blurt, melalui server
+  rendezvous ForkBuild bila peramban tidak dapat menjangkau host itu
+  secara langsung; jika tidak dapat diunggah, postingan dikirim tanpa
+  gambar.
+- **Lima menit antarpostingan.** Blurt menerima satu postingan utama per
+  akun setiap lima menit. Jika akun Anda baru saja memposting (dari
+  aplikasi lain, misalnya), ForkBuild menunggu, dan dialognya
+  memberitahukan berapa lama.
+- **Biaya.** Setiap transaksi Blurt dikenai biaya kecil dalam BLURT, yang
+  ditetapkan oleh saksi Blurt. Jika akun Anda tidak dapat membayarnya,
+  tidak ada yang diposting, dan Anda diberi tahu.
+- **Orang lain menemukannya** melalui Nexus, indeks pencarian Blurt, yang
+  mencantumkan setiap postingan di bawah tag ForkBuild setua apa pun. Jika
+  tidak ada node Blurt yang menyediakan Nexus, ForkBuild membaca tagnya,
+  yang mencantumkan sebuah postingan selama seminggu, lalu riwayat akun
+  Anda: begitu ForkBuild milik seseorang pernah melihat salah satu
+  postingan Anda, ia terus membaca postingan Anda yang lebih baru maupun
+  yang lebih lama.
+
+### Menyimpan di Blurt
+
+Pilih **Blurt** sebagai penyimpanan di dialog Distribusikan atau di
+halaman Publikasi. Bangunan disimpan dengan cara yang sama seperti di
+Steem, dalam balasan di bawah postingan bangunan Anda: hingga sekitar
+2.500 balok dalam satu balasan, atau hingga 20 balasan tambahan untuk
+hingga sekitar 30.000 balok. Sebelum memposting, ForkBuild menghitung
+biayanya dan menolak jika saldo Anda kurang ("Menyimpan bangunan ini di
+Blurt memakan biaya sekitar 0,632 BLURT, dan akun Anda memiliki
+0,100 BLURT"). Dialognya menampilkan kemajuan dan biayanya. Jika terhenti
+di tengah jalan, distribusikan lagi dengan akun yang sama, dan hanya
+balasan yang belum ada yang dibuat.
+
+Klaim Bertanda Tangan juga dapat disimpan di Blurt, sebagai satu balasan
+lagi. Tautannya bekerja seperti tautan Steem: siapa pun yang mengeklik
+"See it in 3D" akan tiba di Tampilan Dunia pada bangunan Anda, setelah
+ForkBuild memeriksanya. **Bagikan…** dan **Salin tautan** muncul begitu
+klaim itu tersimpan.

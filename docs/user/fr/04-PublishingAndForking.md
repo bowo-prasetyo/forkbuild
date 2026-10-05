@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1855909b2b8b1dec -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9a754ee94fee1ff -->
 # 04 — Publier et forker
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · **Français** · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 C’est le cœur de ForkBuild. **Publier** partage votre création avec le
 monde. **Forker** permet à n’importe qui de copier une création et de la
@@ -111,7 +107,7 @@ l’une ou l’autre section ne sont mémorisés nulle part.
 ## Partager avec les pairs connectés
 
 Un Monde que vous publiez n’est listé que dans *votre* Dépôt, jusqu’à ce
-que vous le distribuiez sur Nostr, Arweave ou Steem (voir
+que vous le distribuiez sur Nostr, Arweave, Steem ou Blurt (voir
 [Distribution](Distribution.md)) : le Dépôt de chacun le trouve alors (voir
 [Créations distribuées par d’autres](#créations-distribuées-par-dautres)).
 Pour le
@@ -220,7 +216,7 @@ mille.
 ### Créations distribuées par d’autres
 
 Chaque fois que vous ouvrez le Dépôt (ou une page d’auteur), il cherche sur
-Nostr, Arweave et Steem les créations que d’autres personnes y ont
+Nostr, Arweave, Steem et Blurt les créations que d’autres personnes y ont
 distribuées, et ajoute celles qu’il peut vérifier. Une ligne au-dessus de
 la liste indique ce qu’il fait, puis combien de nouvelles créations il a
 trouvées ; **Vérifier à nouveau** cherche encore une fois.

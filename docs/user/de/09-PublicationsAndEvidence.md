@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: e91d68029035ce8b -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: b3097401f11e7bba -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · **Deutsch** · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../09-PublicationsAndEvidence.md).
-<!-- /stale -->
 
 > **Teilweise experimentell.** Die Seite Veröffentlichungen ist eine
 > reguläre Funktion: ihre Liste und Status, das Entfernen unbrauchbarer
@@ -18,7 +14,7 @@
 > was er erzeugt, wird möglicherweise nicht übernommen. Die Seite
 > kennzeichnet jeden solchen Teil mit einem Abzeichen **Experimentell**
 > (**Exp.** auf einem Reiter): jede Art der Verankerung, die Wallets,
-> Steem, entferntes IPFS-Pinning, die Reiter **Dezentralisierung &
+> Steem, Blurt, entferntes IPFS-Pinning, die Reiter **Dezentralisierung &
 > Nachweise**, **Platzierungen & IPFS** und **Verlauf**, die Abschnitte zu
 > Besitz bei Peers und zur Zusammenfassung im Reiter **Snapshot** sowie den
 > ganzen Bereich **Wallet, Archiv & Herausgeberwerkzeuge**. Die Anleitungen
@@ -43,8 +39,8 @@ Tiefe, die Sie einem Anspruch geben können:
   Anbieter und Server für Peer-Verbindungen. Nicht experimentell und für
   alle nützlich.
 - **[Nachweise & Speicher](11-EvidenceAndStorage.md)** — externe Nachweise
-  (Bitcoin, Base, Arweave, Steem), die Wallet-Abläufe,
-  Snapshot-Platzierungen, Veröffentlichen auf IPFS und Steem.
+  (Bitcoin, Base, Arweave, Steem, Blurt), die Wallet-Abläufe,
+  Snapshot-Platzierungen, Veröffentlichen auf IPFS, Steem und Blurt.
 - **[Archiv & Bestenlisten](12-ArchiveAndLeaderboards.md)** — das
   dauerhafte Beobachtungsarchiv, Verweise, Erfolge, Herausgeberkennungen
   und die Bestenlisten-Seiten.
@@ -97,11 +93,11 @@ erforderlich:
 | Begriff | Wie … | Was es ist |
 |---|---|---|
 | **Veröffentlichung** | das Buch selbst | Ein signierter Datensatz: eine Geteilte Welt, eine Bauplan-Zuschreibung oder ein Ortsnamensanspruch. Sie trägt den Hash ihres Inhalts und die Signatur ihres Herausgebers. |
-| **Inhalt** | der Ort, an dem gedruckte Exemplare lagern | Die Bytes, um die es in der Veröffentlichung geht, etwa die Steine einer Welt. Sie liegen immer zuerst auf diesem Gerät; **Auf … speichern** legt eine Kopie auf IPFS, Arweave oder Steem ab, damit andere sie holen können. Siehe [Inhaltsanbieter](10-NetworkSettings.md#inhaltsanbieter). |
+| **Inhalt** | der Ort, an dem gedruckte Exemplare lagern | Die Bytes, um die es in der Veröffentlichung geht, etwa die Steine einer Welt. Sie liegen immer zuerst auf diesem Gerät; **Auf … speichern** legt eine Kopie auf IPFS, Arweave, Steem oder Blurt ab, damit andere sie holen können. Siehe [Inhaltsanbieter](10-NetworkSettings.md#inhaltsanbieter). |
 | **Snapshot** | ein gedrucktes Exemplar | Eine gespeicherte Kopie des Inhalts einer Veröffentlichung, etwa der Steine einer Welt, die andere holen und gegen ihren Hash prüfen können. Siehe [Lokaler Snapshot](#lokaler-snapshot). |
 | **Platzierung** | das Regal, in dem das Exemplar steht | Ein signierter Nachweis, wo ein Bauwerk in der Welt steht. Eine Geteilte Welt kann mehrere haben. Siehe [Platzieren oder forken](03-WorldView.md#platzieren-oder-forken). |
-| **Ankündigung / Entdeckung** | ein Eintrag im Bibliothekskatalog | Ein kleiner signierter Hinweis auf Nostr, Arweave oder Steem, dass die Veröffentlichung oder der Snapshot existiert und wo die Kopie ist, damit Menschen, die nicht mit Ihnen verbunden sind, sie finden können. Siehe [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung). |
-| **Nachweis / Verankerung** *(experimentell)* | ein Notarstempel | Der Hash des Inhalts, in eine Blockchain-Transaktion geschrieben (Bitcoin, Base, Arweave oder Steem), als Nachweis, dass er zu diesem Zeitpunkt existierte. Sie speichert und kündigt nichts an. Siehe [Nachweise & Speicher](11-EvidenceAndStorage.md). |
+| **Ankündigung / Entdeckung** | ein Eintrag im Bibliothekskatalog | Ein kleiner signierter Hinweis auf Nostr, Arweave, Steem oder Blurt, dass die Veröffentlichung oder der Snapshot existiert und wo die Kopie ist, damit Menschen, die nicht mit Ihnen verbunden sind, sie finden können. Siehe [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung). |
+| **Nachweis / Verankerung** *(experimentell)* | ein Notarstempel | Der Hash des Inhalts, in eine Blockchain-Transaktion geschrieben (Bitcoin, Base, Arweave, Steem oder Blurt), als Nachweis, dass er zu diesem Zeitpunkt existierte. Sie speichert und kündigt nichts an. Siehe [Nachweise & Speicher](11-EvidenceAndStorage.md). |
 | **Kommentare** | Leserrezensionen | Kommentare, die jeder Angemeldete an eine Veröffentlichung hängen kann, jeweils vom Kommentierenden signiert, nicht vom Herausgeber. Siehe [Kommentare](#kommentare). |
 
 Sie erstellen also eine Veröffentlichung; dann können Sie, wenn Sie
@@ -154,7 +150,7 @@ Direkt nach dem Veröffentlichen bietet das Feld an, den Namen zu
 **Verteilen**, damit auch Personen, die nicht mit Ihnen verbunden sind, ihn
 finden können, zum Beispiel über
 [Ortsnamen in der Nähe](03-WorldView.md#ortsnamen-in-der-nähe--ansprüche-von-jedem-entdecken).
-Wählen Sie das **Netzwerk** (Arweave, Nostr oder Steem; es beginnt mit Ihrem
+Wählen Sie das **Netzwerk** (Arweave, Blurt, Nostr oder Steem; es beginnt mit Ihrem
 [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung))
 und klicken Sie auf **Verteilen**, oder auf **Nicht jetzt**, um es zu
 überspringen. Sie können jeden Anspruch auch später verteilen: Öffnen Sie im
@@ -225,7 +221,7 @@ Darunter zwei eingeklappte Abschnitte:
   gespeichert haben (**Auf IPFS speichern**, **Auf Steem verankern**),
   während jeder andere Anbieter unter **Weitere …optionen** eingeklappt
   ist. Ohne gespeicherten Anbieter, den sie nutzen kann, erscheinen
-  stattdessen alle Optionen. Steem und entferntes IPFS-Pinning sind
+  stattdessen alle Optionen. Steem, Blurt und entferntes IPFS-Pinning sind
   überall, wo sie angeboten werden, als **Experimentell** gekennzeichnet,
   ebenso der ganze Block **Nachweis / Verankerung**. Siehe
   [Von der Seite Veröffentlichungen verteilen](#von-der-seite-veröffentlichungen-verteilen)
@@ -301,8 +297,8 @@ sich entfernen.
 **Verteilung → Ankündigung / Entdeckung** hat zwei Karten:
 
 - **Veröffentlichung** kündigt die signierte Veröffentlichung selbst auf
-  dem gewählten **Substrat** an (Arweave, Nostr oder Steem, das
-  experimentell ist). Sie beginnt mit Ihrem
+  dem gewählten **Substrat** an (Arweave, Nostr, Steem oder Blurt; die
+  letzten beiden sind experimentell). Sie beginnt mit Ihrem
   [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung).
 - **Snapshot** speichert den Inhalt unter **Inhalt** und kündigt ihn auf
   seinem eigenen **Substrat** an, das ebenfalls mit diesem Anbieter
@@ -347,7 +343,7 @@ Kommentare sind dauerhaft: kein Bearbeiten, Löschen oder Antworten.
 Ein im **Repository** gesendeter Kommentar wird auf Ihrem Gerät
 gespeichert, an die Peers gesendet, mit denen Sie verbunden sind, und im
 neben **Kommentar senden** gewählten Netzwerk veröffentlicht (Nostr,
-Arweave oder Steem; es beginnt mit Ihrem
+Arweave, Steem oder Blurt; es beginnt mit Ihrem
 [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung)),
 damit auch Menschen ihn finden, die nicht verbunden waren. Das Schließen
 des Abschnitts (**Kommentare ausblenden**) verwirft alles, was Sie

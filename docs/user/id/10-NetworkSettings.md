@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 16855c5d4fae8108 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 3a000cc71ab8702b -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
 [English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · [Français](../fr/10-NetworkSettings.md) · **Bahasa Indonesia** · [日本語](../ja/10-NetworkSettings.md) · [한국어](../ko/10-NetworkSettings.md) · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../10-NetworkSettings.md).
-<!-- /stale -->
 
 **Pengaturan Jaringan**, di bilah atas, menautkan setiap halaman yang
 mengatur server mana yang dihubungi ForkBuild. Kebanyakan orang tidak
@@ -24,20 +20,21 @@ Untuk apa yang diketahui setiap server tentang Anda, lihat
 | Halaman | Rute | Apa yang diaturnya |
 |---|---|---|
 | **Penyedia Konten** | `/settings/content-provider` | Tempat **Simpan di …** dan **Gunakan Penyedia Pilihan** menyimpan konten baru, dan node IPFS tujuannya — lihat [di bawah](#penyedia-konten) |
-| **Penyedia Pengumuman / Penemuan** | `/settings/announcement-discovery-provider` | Ke mana pengumuman Anda dikirim secara bawaan: Nostr, Arweave, atau Steem — lihat [di bawah](#penyedia-pengumuman--penemuan) |
+| **Penyedia Pengumuman / Penemuan** | `/settings/announcement-discovery-provider` | Ke mana pengumuman Anda dikirim secara bawaan: Nostr, Arweave, Steem, atau Blurt — lihat [di bawah](#penyedia-pengumuman--penemuan) |
 | **Penyedia Bukti / Penjangkaran** *(eksperimental)* | `/settings/anchor-provider` | Tempat **Jangkarkan di …** menjangkarkan — lihat [di bawah](#penyedia-bukti--penjangkaran) |
 | **Gateway Arweave** | `/settings/arweave-gateway` | Gateway untuk membaca konten Arweave — lihat [di bawah](#gateway-arweave) |
 | **Gateway IPFS** | `/settings/ipfs-gateway` | Gateway untuk membaca konten IPFS — lihat [di bawah](#gateway-ipfs) |
 | **Endpoint Bitcoin** *(eksperimental)* | `/settings/bitcoin-esplora` | Layanan yang dipakai penjangkaran Bitcoin — lihat [di bawah](#endpoint-bitcoin) |
 | **Relay Nostr** | `/settings/nostr-relay` | Relay untuk menerbitkan dan menemukan melalui Nostr — lihat [di bawah](#relay-nostr) |
 | **Steem** *(eksperimental)* | `/settings/steem` | Akun Steem Anda, dan dari mana Steem dibaca — lihat [di bawah](#steem) |
+| **Blurt** *(eksperimental)* | `/settings/blurt` | Akun Blurt Anda, dan dari mana Blurt dibaca — lihat [di bawah](#blurt) |
 | **Server STUN** / **Server TURN** | `/settings/stun`, `/settings/turn-server` | Bantuan untuk koneksi rekan — lihat [TURN](07-PeerConnectionsAndFriends.md#turn-me-relay-koneksi-rekan-yang-tidak-menemukan-jalur-langsung) |
 | **Server Rendezvous** | `/settings/rendezvous` | Cara rekan saling menemukan — lihat [Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md) |
 
 ## Perilaku setiap halaman
 
 - **Muat ulang setelah menyimpan.** Perubahan berlaku saat aplikasi dimuat
-  berikutnya (akun Steem adalah satu-satunya pengecualian). Tampilan Dunia
+  berikutnya (akun Steem dan Blurt adalah pengecualiannya). Tampilan Dunia
   atau Editor yang sedang terbuka tetap memakai pengaturan lama sampai
   Anda memuat ulang.
 - Setiap halaman memiliki tombol **Simpan** sendiri. Penyimpanan yang gagal
@@ -45,7 +42,7 @@ Untuk apa yang diketahui setiap server tentang Anda, lihat
   semula; yang berhasil menampilkan "Tersimpan."
 - Daftar pilihan ditampilkan dalam urutan abjad.
 - **Daftar server dilengkapi nilai bawaan.** Halaman Gateway Arweave,
-  Gateway IPFS, Endpoint Bitcoin, Relay Nostr, Steem, STUN, dan Rendezvous
+  Gateway IPFS, Endpoint Bitcoin, Relay Nostr, Steem, Blurt, STUN, dan Rendezvous
   dimulai dengan beberapa server publik gratis, sehingga semuanya tetap
   berfungsi saat salah satunya mati. Halaman itu menyebutkan apakah sedang
   "Menggunakan … bawaan" atau "Menggunakan … yang Anda simpan". Jika belum
@@ -88,19 +85,19 @@ memakai daftar [Gateway IPFS](#gateway-ipfs).
 
 ## Penyedia Pengumuman / Penemuan
 
-Pilih **Arweave**, **Nostr**, atau **Steem** (eksperimental) sebagai tempat
+Pilih **Arweave**, **Blurt** (eksperimental), **Nostr**, atau **Steem** (eksperimental) sebagai tempat
 bawaan untuk mengumumkan publikasi Anda (Dunia Bersama, Atribusi Cetak
 Biru, dan klaim nama tempat), Snapshot, dan komentar. Ini hanya bawaan:
 setiap dialog **Distribusikan**, pemilih Distribusi per kartu di
 Repositori, dan pemilih jaringan di samping **Kirim Komentar** dimulai
 dari pilihan ini, dan Anda dapat menggantinya untuk satu tindakan.
-Mencari konten orang lain selalu menelusuri ketiganya.
+Mencari konten orang lain selalu menelusuri semuanya.
 
 ## Penyedia Bukti / Penjangkaran
 
 *Eksperimental.* Pilih tempat **Jangkarkan di …** (tombol pertama di blok
 **Bukti / Penjangkaran** sebuah publikasi) membuat bukti eksternal:
-**Arweave**, **Bitcoin**, atau **Steem**, mana pun yang terdaftar di
+**Arweave**, **Bitcoin**, **Blurt**, atau **Steem**, mana pun yang terdaftar di
 perangkat ini. Base tidak pernah ditawarkan, karena setiap jangkar Base
 mengharuskan Anda meninjau dan menandatangani transaksi dompet. Jika
 Bitcoin yang dipilih, tidak ada tombol **Jangkarkan di …**: blok itu
@@ -191,4 +188,26 @@ memerlukan akun. Sisa halamannya mengatur dari mana Steem dibaca:
 
 Saat tidak ada node Steem yang dapat dijangkau, **Periksa komentar baru**
 dan penemuan Snapshot menyebutkan Steem tidak tersedia, alih-alih
+melaporkan bahwa tidak ada yang ditemukan.
+
+## Blurt
+
+*Eksperimental.* Atur **Akun Blurt Anda** di bawah **Memposting** (ini
+langsung berlaku, tanpa memuat ulang), yang diperlukan untuk memposting,
+menyimpan, atau menjangkarkan di Blurt — lihat
+[Blurt](11-EvidenceAndStorage.md#blurt). Membaca dari Blurt tidak
+memerlukan akun. Sisa halamannya mengatur dari mana Blurt dibaca:
+
+**Node API**, satu URL `https://` per baris (bawaan
+`https://rpc.blurt.blog` dan `https://rpc.beblurt.com`), dicoba secara
+berurutan. ForkBuild menemukan postingan melalui Nexus, indeks pencarian
+Blurt, yang menyimpan setiap postingan setua apa pun, dan melewati node
+yang tidak menyediakannya. Bila tidak ada node yang menyediakan Nexus,
+ForkBuild beralih ke daftar tag milik Blurt sendiri, yang menyimpan sebuah
+postingan hanya sampai pembayarannya, setelah tujuh hari, dan menemukan
+postingan yang lebih lama di riwayat akun-akun yang pernah dilihatnya
+memposting di bawah tag itu di perangkat ini.
+
+Saat tidak ada node Blurt yang dapat dijangkau, **Periksa komentar baru**
+dan penemuan Snapshot menyebutkan Blurt tidak tersedia, alih-alih
 melaporkan bahwa tidak ada yang ditemukan.

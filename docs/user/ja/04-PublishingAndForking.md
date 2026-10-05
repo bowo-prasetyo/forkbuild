@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1855909b2b8b1dec -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9a754ee94fee1ff -->
 # 04 — 公開とフォーク
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · **日本語** · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../04-PublishingAndForking.md)も参照してください。
-<!-- /stale -->
 
 ここが ForkBuild の中心です。**公開** は、あなたの作品を世界と共有
 します。**フォーク** は、誰でも作品をコピーして発展させられるように
@@ -104,7 +100,7 @@
 
 ## 接続中のピアと共有する
 
-公開したワールドが表示されるのは、Nostr、Arweave、Steem で配信する
+公開したワールドが表示されるのは、Nostr、Arweave、Steem、Blurt で配信する
 （[配信](Distribution.md) を参照）までは *あなたの* リポジトリだけです。
 配信すると、誰のリポジトリでも見つかるようになります
 （[ほかの人が配信した作品](#ほかの人が配信した作品) を参照）。接続
@@ -207,7 +203,7 @@
 ### ほかの人が配信した作品
 
 リポジトリ（または作者ページ）を開くたびに、ほかの人が Nostr、Arweave、
-Steem に配信した作品を探し、検証できたものを追加します。リストの上の
+Steem、Blurt に配信した作品を探し、検証できたものを追加します。リストの上の
 1 行に、何をしているところか、そして見つかった新しい作品の数が表示
 されます。**もう一度確認** でもう一度探します。
 

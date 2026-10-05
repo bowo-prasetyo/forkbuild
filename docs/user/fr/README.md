@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: 26ea018db8723ef6 -->
+<!-- translation-of: docs/user/README.md source-hash: 0137e01d1cbcedd8 -->
 # Documentation utilisateur de ForkBuild
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · **Français** · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [한국어](../ko/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../README.md).
-<!-- /stale -->
 
 Guides pratiques pour utiliser ForkBuild dans le navigateur. Tout ce qui
 se trouve ici décrit le produit tel qu’il fonctionne aujourd’hui ; le
@@ -60,7 +56,7 @@ reste du dossier [docs/](../..) de premier niveau.
 11. **[Preuves et stockage](11-EvidenceAndStorage.md)** — stocker du
     contenu sur IPFS ou Arweave et, de façon *expérimentale*, les preuves
     externes, les parcours de portefeuille Bitcoin et Base, les placements
-    de snapshot, l’épinglage IPFS distant et Steem.
+    de snapshot, l’épinglage IPFS distant, Steem et Blurt.
     [Distribuer votre travail](Distribution.md) montre comment tout cela
     s’articule.
 12. **[Archive et classements](12-ArchiveAndLeaderboards.md)** —

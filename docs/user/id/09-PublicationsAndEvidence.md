@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: e91d68029035ce8b -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: b3097401f11e7bba -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · **Bahasa Indonesia** · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../09-PublicationsAndEvidence.md).
-<!-- /stale -->
 
 > **Sebagian eksperimental.** Halaman Publikasi adalah fitur biasa: daftar
 > dan statusnya, menghapus publikasi yang tidak dapat dipakai, mengumumkan
@@ -16,7 +12,7 @@
 > **Eksperimental**: berfungsi, tetapi dapat berubah atau dihapus di versi
 > berikutnya, dan apa yang dihasilkannya mungkin tidak terbawa. Halaman ini
 > menandai setiap bagian seperti itu dengan lencana **Eksperimental**
-> (**Eksp.** pada tab): setiap jenis penjangkaran, dompet, Steem, pinning
+> (**Eksp.** pada tab): setiap jenis penjangkaran, dompet, Steem, Blurt, pinning
 > IPFS jarak jauh, tab **Desentralisasi & Bukti**, **Penempatan & IPFS**,
 > dan **Riwayat**, bagian kepemilikan rekan dan ringkasan di tab
 > **Snapshot**, serta seluruh panel **Dompet, Arsip & Alat Penerbit**.
@@ -41,8 +37,8 @@ tambahkan pada sebuah klaim:
   penyedia, dan server koneksi rekan. Tidak eksperimental, dan berguna bagi
   semua orang.
 - **[Bukti & Penyimpanan](11-EvidenceAndStorage.md)** — bukti eksternal
-  (Bitcoin, Base, Arweave, Steem), alur dompet, Penempatan Snapshot,
-  penerbitan IPFS, dan Steem.
+  (Bitcoin, Base, Arweave, Steem, Blurt), alur dompet, Penempatan Snapshot,
+  penerbitan IPFS, Steem, dan Blurt.
 - **[Arsip & Papan Peringkat](12-ArchiveAndLeaderboards.md)** — arsip
   pengamatan yang tahan lama, referensi, pencapaian, label penerbit, dan
   halaman Papan Peringkat.
@@ -93,11 +89,11 @@ merupakan jenis publikasi, dan hanya publikasi itu sendiri yang wajib:
 | Istilah | Seperti… | Apa itu |
 |---|---|---|
 | **Publikasi** | Bukunya sendiri | Catatan bertanda tangan: Dunia Bersama, Atribusi Cetak Biru, atau Klaim Nama Tempat. Membawa hash kontennya dan tanda tangan penerbitnya. |
-| **Konten** | Tempat salinan cetak disimpan | Byte yang menjadi isi publikasi, seperti balok sebuah Dunia. Selalu disimpan di perangkat ini terlebih dahulu; **Simpan di …** menaruh salinannya di IPFS, Arweave, atau Steem agar orang lain dapat mengambilnya. Lihat [Penyedia Konten](10-NetworkSettings.md#penyedia-konten). |
+| **Konten** | Tempat salinan cetak disimpan | Byte yang menjadi isi publikasi, seperti balok sebuah Dunia. Selalu disimpan di perangkat ini terlebih dahulu; **Simpan di …** menaruh salinannya di IPFS, Arweave, Steem, atau Blurt agar orang lain dapat mengambilnya. Lihat [Penyedia Konten](10-NetworkSettings.md#penyedia-konten). |
 | **Snapshot** | Satu salinan cetak | Satu salinan tersimpan dari konten publikasi, seperti balok sebuah Dunia, yang dapat diambil orang lain dan dicocokkan dengan hash-nya. Lihat [Snapshot Lokal](#snapshot-lokal). |
 | **Penempatan** | Rak tempat salinan itu ditaruh | Catatan bertanda tangan tentang di mana sebuah bangunan berdiri di Dunia. Satu Dunia Bersama dapat memiliki beberapa penempatan. Lihat [Menempatkan vs mem-fork](03-WorldView.md#menempatkan-vs-mem-fork). |
-| **Pengumuman / Penemuan** | Entri katalog perpustakaan | Pemberitahuan kecil bertanda tangan di Nostr, Arweave, atau Steem yang menyatakan bahwa publikasi atau Snapshot itu ada dan di mana salinannya, agar orang yang tidak terhubung dengan Anda dapat menemukannya. Lihat [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan). |
-| **Bukti / Penjangkaran** *(Eksperimental)* | Cap notaris | Hash konten yang ditulis ke dalam transaksi blockchain (Bitcoin, Base, Arweave, atau Steem), sebagai bukti bahwa konten itu sudah ada pada waktu tersebut. Tidak menyimpan atau mengumumkan apa pun. Lihat [Bukti & Penyimpanan](11-EvidenceAndStorage.md). |
+| **Pengumuman / Penemuan** | Entri katalog perpustakaan | Pemberitahuan kecil bertanda tangan di Nostr, Arweave, Steem, atau Blurt yang menyatakan bahwa publikasi atau Snapshot itu ada dan di mana salinannya, agar orang yang tidak terhubung dengan Anda dapat menemukannya. Lihat [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan). |
+| **Bukti / Penjangkaran** *(Eksperimental)* | Cap notaris | Hash konten yang ditulis ke dalam transaksi blockchain (Bitcoin, Base, Arweave, Steem, atau Blurt), sebagai bukti bahwa konten itu sudah ada pada waktu tersebut. Tidak menyimpan atau mengumumkan apa pun. Lihat [Bukti & Penyimpanan](11-EvidenceAndStorage.md). |
 | **Komentar** | Ulasan pembaca | Komentar yang dapat dilekatkan siapa pun yang sudah masuk pada sebuah publikasi, masing-masing ditandatangani oleh pemberi komentar, bukan oleh penerbit. Lihat [Komentar](#komentar). |
 
 Jadi Anda membuat publikasi; lalu, jika mau, menyimpan kontennya,
@@ -150,7 +146,7 @@ Tepat setelah Anda menerbitkan, panel menawarkan untuk **Distribusikan**
 nama itu, agar orang yang tidak terhubung dengan Anda juga dapat
 menemukannya, misalnya melalui
 [Nama Tempat di Sekitar](03-WorldView.md#nama-tempat-di-sekitar--menemukan-klaim-dari-siapa-pun).
-Pilih **Jaringan** (Arweave, Nostr, atau Steem; dimulai dari
+Pilih **Jaringan** (Arweave, Blurt, Nostr, atau Steem; dimulai dari
 [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan)
 Anda) lalu klik **Distribusikan**, atau **Nanti saja** untuk melewatinya.
 Anda juga dapat mendistribusikan klaim mana pun nanti: buka **Lainnya** di
@@ -215,7 +211,7 @@ Di bawahnya, dua bagian terlipat:
   tombol untuk penyedia yang Anda simpan di **Konfigurasi** (**Simpan di
   IPFS**, **Jangkarkan di Steem**), dengan setiap penyedia lain terlipat di
   bawah **Opsi … lain**. Tanpa penyedia tersimpan yang dapat dipakai,
-  semua opsi ditampilkan. Steem dan pinning IPFS jarak jauh ditandai
+  semua opsi ditampilkan. Steem, Blurt, dan pinning IPFS jarak jauh ditandai
   **Eksperimental** di mana pun ditawarkan, begitu pula seluruh blok
   **Bukti / Penjangkaran**. Lihat
   [Mendistribusikan dari halaman Publikasi](#mendistribusikan-dari-halaman-publikasi)
@@ -289,8 +285,8 @@ mengumumkannya lagi. Hanya publikasi di kelompok ini yang dapat dihapus.
 **Distribusi → Pengumuman / Penemuan** memiliki dua kartu:
 
 - **Publikasi** mengumumkan publikasi bertanda tangan itu sendiri di
-  **Substrat** yang Anda pilih (Arweave, Nostr, atau Steem, yang
-  Eksperimental). Pilihan awalnya adalah
+  **Substrat** yang Anda pilih (Arweave, Nostr, Steem, atau Blurt;
+  dua yang terakhir Eksperimental). Pilihan awalnya adalah
   [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan)
   Anda.
 - **Snapshot** menyimpan konten di bawah **Konten** dan mengumumkannya di
@@ -334,7 +330,7 @@ balasan.
 
 Komentar yang dikirim dari **Repositori** disimpan di perangkat Anda,
 dikirim ke rekan yang terhubung dengan Anda, dan diterbitkan ke jaringan
-yang dipilih di samping **Kirim Komentar** (Nostr, Arweave, atau Steem;
+yang dipilih di samping **Kirim Komentar** (Nostr, Arweave, Steem, atau Blurt;
 dimulai dari
 [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan)
 Anda), sehingga orang yang tidak terhubung dapat menemukannya. Menutup

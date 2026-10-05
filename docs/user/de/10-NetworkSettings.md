@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 16855c5d4fae8108 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 3a000cc71ab8702b -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
 [English](../10-NetworkSettings.md) · **Deutsch** · [Español](../es/10-NetworkSettings.md) · [Français](../fr/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · [日本語](../ja/10-NetworkSettings.md) · [한국어](../ko/10-NetworkSettings.md) · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../10-NetworkSettings.md).
-<!-- /stale -->
 
 **Netzwerkeinstellungen** in der oberen Leiste verlinkt jede Seite, die
 festlegt, mit welchen Servern ForkBuild spricht. Die meisten Menschen
@@ -23,20 +19,21 @@ Was jeder Server über Sie erfährt, steht unter [Datenschutz](Privacy.md).
 | Seite | Route | Was sie festlegt |
 |---|---|---|
 | **Inhaltsanbieter** | `/settings/content-provider` | Wo **Auf … speichern** und **Bevorzugten Anbieter verwenden** neue Inhalte speichern und an welchen IPFS-Knoten sie gehen — siehe [unten](#inhaltsanbieter) |
-| **Anbieter für Ankündigung / Entdeckung** | `/settings/announcement-discovery-provider` | Wohin Ihre Ankündigungen standardmäßig gehen: Nostr, Arweave oder Steem — siehe [unten](#anbieter-für-ankündigung--entdeckung) |
+| **Anbieter für Ankündigung / Entdeckung** | `/settings/announcement-discovery-provider` | Wohin Ihre Ankündigungen standardmäßig gehen: Nostr, Arweave, Steem oder Blurt — siehe [unten](#anbieter-für-ankündigung--entdeckung) |
 | **Nachweis-/Verankerungsanbieter** *(experimentell)* | `/settings/anchor-provider` | Wo **Auf … verankern** verankert — siehe [unten](#nachweis-verankerungsanbieter) |
 | **Arweave-Gateway** | `/settings/arweave-gateway` | Gateways zum Lesen von Arweave-Inhalten — siehe [unten](#arweave-gateway) |
 | **IPFS-Gateway** | `/settings/ipfs-gateway` | Gateways zum Lesen von IPFS-Inhalten — siehe [unten](#ipfs-gateway) |
 | **Bitcoin-Endpunkt** *(experimentell)* | `/settings/bitcoin-esplora` | Der Dienst, den die Bitcoin-Verankerung nutzt — siehe [unten](#bitcoin-endpunkt) |
 | **Nostr-Relays** | `/settings/nostr-relay` | Relays zum Veröffentlichen und Entdecken über Nostr — siehe [unten](#nostr-relays) |
 | **Steem** *(experimentell)* | `/settings/steem` | Ihr Steem-Konto und woher Steem gelesen wird — siehe [unten](#steem) |
+| **Blurt** *(experimentell)* | `/settings/blurt` | Ihr Blurt-Konto und woher Blurt gelesen wird — siehe [unten](#blurt) |
 | **STUN-Server** / **TURN-Server** | `/settings/stun`, `/settings/turn-server` | Hilfe für Peer-Verbindungen — siehe [TURN](07-PeerConnectionsAndFriends.md#turn-peer-verbindungen-weiterleiten-die-keinen-direkten-weg-finden) |
 | **Rendezvous-Server** | `/settings/rendezvous` | Wie Peers einander finden — siehe [Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md) |
 
 ## Wie sich jede Seite verhält
 
 - **Nach dem Speichern neu laden.** Änderungen wirken beim nächsten Laden
-  der App (das Steem-Konto ist die einzige Ausnahme). Eine geöffnete
+  der App (die Steem- und Blurt-Konten sind die Ausnahmen). Eine geöffnete
   Weltansicht oder ein geöffneter Editor nutzt die alten Einstellungen
   weiter, bis Sie neu laden.
 - Jede Seite hat ihre eigene Schaltfläche **Speichern**. Ein
@@ -44,7 +41,7 @@ Was jeder Server über Sie erfährt, steht unter [Datenschutz](Privacy.md).
   Einstellung, wie sie war; ein erfolgreiches zeigt „Gespeichert.“.
 - Auswahllisten werden alphabetisch geordnet angezeigt.
 - **Serverlisten kommen mit Standardwerten.** Die Seiten Arweave-Gateway,
-  IPFS-Gateway, Bitcoin-Endpunkt, Nostr-Relays, Steem, STUN und Rendezvous
+  IPFS-Gateway, Bitcoin-Endpunkt, Nostr-Relays, Steem, Blurt, STUN und Rendezvous
   beginnen mit mehreren kostenlosen öffentlichen Servern, damit alles
   weiterläuft, wenn einer ausfällt. Die Seite sagt, ob die Standardwerte
   oder Ihre gespeicherten verwendet werden. Ist nichts gespeichert, enthält
@@ -89,20 +86,20 @@ betrifft es nicht; dafür gilt die Liste unter
 
 ## Anbieter für Ankündigung / Entdeckung
 
-Wählen Sie **Arweave**, **Nostr** oder **Steem** (experimentell) als
+Wählen Sie **Arweave**, **Blurt** (experimentell), **Nostr** oder **Steem** (experimentell) als
 Standardort, an dem Ihre Veröffentlichungen (Geteilte Welten,
 Bauplan-Zuschreibungen und Ortsnamensansprüche), Snapshots und Kommentare
 angekündigt werden. Es ist nur ein Standard: Jeder Dialog **Verteilen**,
 die Verteilungsauswahl auf jeder Karte im Repository und die
 Netzwerkauswahl neben **Kommentar senden** beginnen damit, und Sie können
 sie für eine Aktion umstellen. Die Suche nach Inhalten anderer Personen
-durchsucht immer alle drei.
+durchsucht immer alle.
 
 ## Nachweis-/Verankerungsanbieter
 
 *Experimentell.* Wählen Sie, wo **Auf … verankern** (die erste
 Schaltfläche im Block **Nachweis / Verankerung** einer Veröffentlichung)
-externe Nachweise erstellt: **Arweave**, **Bitcoin** oder **Steem**, je
+externe Nachweise erstellt: **Arweave**, **Bitcoin**, **Blurt** oder **Steem**, je
 nachdem, was dieses Gerät registriert hat. Base wird nie angeboten, weil
 jeder Base-Anker erfordert, dass Sie eine Wallet-Transaktion prüfen und
 signieren. Mit Bitcoin gibt es keine Schaltfläche **Auf … verankern**: Der
@@ -194,4 +191,25 @@ gelesen wird:
 
 Ist kein Steem-Knoten erreichbar, nennen **Nach neuen Kommentaren suchen**
 und die Snapshot-Entdeckung Steem als nicht verfügbar, statt zu melden,
+dass nichts gefunden wurde.
+
+## Blurt
+
+*Experimentell.* Legen Sie unter **Veröffentlichen** **Ihr Blurt-Konto**
+fest (das gilt sofort, ohne Neuladen); es wird zum Posten, Speichern oder
+Verankern auf Blurt gebraucht — siehe [Blurt](11-EvidenceAndStorage.md#blurt).
+Zum Lesen von Blurt ist kein Konto nötig. Der Rest der Seite legt fest,
+woher Blurt gelesen wird:
+
+**API-Knoten**, eine `https://`-URL pro Zeile (Standard
+`https://rpc.blurt.blog` und `https://rpc.beblurt.com`), der Reihe nach
+versucht. ForkBuild findet Beiträge über Nexus, den Suchindex von Blurt,
+der jeden Beitrag behält, egal wie alt, und überspringt einen Knoten, der
+ihn nicht anbietet. Bietet kein Knoten Nexus an, greift es auf die eigene
+Tag-Liste von Blurt zurück, die einen Beitrag nur bis zu seiner Auszahlung
+nach sieben Tagen behält, und findet ältere Beiträge im Verlauf der Konten,
+die es auf diesem Gerät unter dem Tag posten gesehen hat.
+
+Ist kein Blurt-Knoten erreichbar, nennen **Nach neuen Kommentaren suchen**
+und die Snapshot-Entdeckung Blurt als nicht verfügbar, statt zu melden,
 dass nichts gefunden wurde.

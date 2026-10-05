@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: be51a110c624bf19 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 7758b3ce677273e3 -->
 # Ihre Arbeit verteilen
 
 <!-- languages -->
 [English](../Distribution.md) · **Deutsch** · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../Distribution.md).
-<!-- /stale -->
 
 Alles, was ForkBuild erstellt, beginnt auf Ihrem eigenen Gerät. **Verteilen**
 ist der separate, optionale Schritt, der Ihre Arbeit in dezentrale Netzwerke
@@ -22,7 +18,7 @@ Abschnitt verweist auf die Anleitung, die die Einzelheiten erklärt.
 |---|---|---|---|
 | **Veröffentlichen** | Nur auf dieses Gerät | Noch niemand sonst | [Ihre Kreation veröffentlichen](04-PublishingAndForking.md#ihre-kreation-veröffentlichen) |
 | **Mit Peers teilen** | Direkt zu den Menschen, mit denen Sie verbunden sind | Ihre verbundenen Peers, solange Sie online sind | [Mit verbundenen Peers teilen](04-PublishingAndForking.md#mit-verbundenen-peers-teilen) |
-| **Verteilen** | Dezentrale Netzwerke (IPFS, Arweave, Nostr, Steem) | Jeder, ganz ohne Verbindung zu Ihnen | Diese Seite |
+| **Verteilen** | Dezentrale Netzwerke (IPFS, Arweave, Nostr, Steem, Blurt) | Jeder, ganz ohne Verbindung zu Ihnen | Diese Seite |
 
 Veröffentlichen sendet von sich aus nie etwas irgendwohin, und das Teilen mit
 Peers ist kein Verteilen: Peers behalten eine Kopie nur, solange sie wollen,
@@ -36,9 +32,9 @@ getrennt gewählt:
 
 | Rolle | Wie … | Was sie tut | Auswahl |
 |---|---|---|---|
-| **Inhalt** (Speicher) | Der Ort, an dem gedruckte Exemplare aufbewahrt werden | Hält die Bytes, etwa die Steine Ihrer Welt, damit andere sie abrufen können | **Arweave**, **IPFS (Local Kubo)**, **IPFS (Remote Pinning)**, **Steem** *(experimentell)* |
-| **Ankündigung / Entdeckung** | Ein Eintrag im Bibliothekskatalog | Veröffentlicht einen kleinen signierten Hinweis, dass Ihre Arbeit existiert und wo ihre Kopie liegt, damit andere sie finden können | **Nostr**, **Arweave**, **Steem** *(experimentell)* |
-| **Nachweis / Verankerung** *(experimentell, optional)* | Der Stempel eines Notars | Schreibt den Hash Ihres Inhalts in eine Blockchain, als Nachweis, dass er zu diesem Zeitpunkt existierte. Er speichert und kündigt nichts an. | **Bitcoin**, **Arweave**, **Base**, **Steem** |
+| **Inhalt** (Speicher) | Der Ort, an dem gedruckte Exemplare aufbewahrt werden | Hält die Bytes, etwa die Steine Ihrer Welt, damit andere sie abrufen können | **Arweave**, **Blurt** *(experimentell)*, **IPFS (Local Kubo)**, **IPFS (Remote Pinning)**, **Steem** *(experimentell)* |
+| **Ankündigung / Entdeckung** | Ein Eintrag im Bibliothekskatalog | Veröffentlicht einen kleinen signierten Hinweis, dass Ihre Arbeit existiert und wo ihre Kopie liegt, damit andere sie finden können | **Nostr**, **Arweave**, **Steem** *(experimentell)*, **Blurt** *(experimentell)* |
+| **Nachweis / Verankerung** *(experimentell, optional)* | Der Stempel eines Notars | Schreibt den Hash Ihres Inhalts in eine Blockchain, als Nachweis, dass er zu diesem Zeitpunkt existierte. Er speichert und kündigt nichts an. | **Bitcoin**, **Arweave**, **Base**, **Steem**, **Blurt** |
 
 Speichern ohne Ankündigung heißt, dass niemand weiß, wo er suchen soll; eine
 Ankündigung ohne Speicher verweist auf nichts. **Verteilen** erledigt beides
@@ -57,12 +53,12 @@ nie etwas.
 
 | Was | Inhalt | Ankündigung / Entdeckung | Nachweis / Verankerung | Wo Sie es tun |
 |---|---|---|---|---|
-| **Der Signierte Anspruch Ihrer Welt** (der signierte Eintrag einer veröffentlichten Welt, genannt Geteilte Welt) | Arweave, IPFS oder Steem | Nostr, Arweave oder Steem | — | **Verteilen** nach dem Veröffentlichen im Editor; **Meine Geteilte Welt** in der Weltansicht; die Seite **Veröffentlichungen** |
-| **Der Snapshot Ihrer Welt** (ihre Steine), mit dem Ort, an dem Sie sie platziert haben | Arweave, IPFS oder Steem | Nostr, Arweave oder Steem | — | Dieselben **Verteilen**-Dialoge (**Nur Snapshot verteilen** für nur diese Hälfte) |
-| **Der Inhalts-Hash jeder Veröffentlichung** (eine Welt, ein Urheberschaftsanspruch oder ein Ortsname) | — | — | Bitcoin, Arweave, Base oder Steem | Die Karte der Veröffentlichung auf der Seite **Veröffentlichungen** |
-| **Die Urheberschaft einer Struktur** (Bauplan-Zuschreibung) | Arweave, IPFS oder Steem | Nostr, Arweave oder Steem | — | **Verteilen** im **Info**-Feld der Struktur, angeboten, sobald Sie **Im Netzwerk veröffentlichen**; die Seite **Veröffentlichungen** |
-| **Ein Ortsname** (Ortsnamensanspruch) | Arweave, IPFS oder Steem | Nostr, Arweave oder Steem | — | **Verteilen** im Benennungsfeld der Weltansicht, angeboten, sobald Sie **Einen Namen veröffentlichen** (es kündigt den Namen im gewählten Netzwerk an); die Seite **Veröffentlichungen** für alle diese |
-| **Ein Kommentar** zu einer Veröffentlichung | — | Nostr, Arweave oder Steem | — | **Kommentar senden**, im Repository oder in der Weltansicht, im daneben gewählten Netzwerk |
+| **Der Signierte Anspruch Ihrer Welt** (der signierte Eintrag einer veröffentlichten Welt, genannt Geteilte Welt) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** nach dem Veröffentlichen im Editor; **Meine Geteilte Welt** in der Weltansicht; die Seite **Veröffentlichungen** |
+| **Der Snapshot Ihrer Welt** (ihre Steine), mit dem Ort, an dem Sie sie platziert haben | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | Dieselben **Verteilen**-Dialoge (**Nur Snapshot verteilen** für nur diese Hälfte) |
+| **Der Inhalts-Hash jeder Veröffentlichung** (eine Welt, ein Urheberschaftsanspruch oder ein Ortsname) | — | — | Bitcoin, Arweave, Base, Steem oder Blurt | Die Karte der Veröffentlichung auf der Seite **Veröffentlichungen** |
+| **Die Urheberschaft einer Struktur** (Bauplan-Zuschreibung) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** im **Info**-Feld der Struktur, angeboten, sobald Sie **Im Netzwerk veröffentlichen**; die Seite **Veröffentlichungen** |
+| **Ein Ortsname** (Ortsnamensanspruch) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** im Benennungsfeld der Weltansicht, angeboten, sobald Sie **Einen Namen veröffentlichen** (es kündigt den Namen im gewählten Netzwerk an); die Seite **Veröffentlichungen** für alle diese |
+| **Ein Kommentar** zu einer Veröffentlichung | — | Nostr, Arweave, Steem oder Blurt | — | **Kommentar senden**, im Repository oder in der Weltansicht, im daneben gewählten Netzwerk |
 
 Der Snapshot einer Welt trägt Ihre signierte Platzierung mit sich, sodass
 Menschen, die ihn abrufen, den Bau genau dort sehen, wo Sie ihn hingestellt
@@ -116,12 +112,15 @@ werden konnte.
 | **IPFS (Local Kubo)** | Inhalt | Ihr eigener IPFS-Knoten, standardmäßig unter `http://127.0.0.1:5001` | Keine Größenbegrenzung. Nur verfügbar, solange Ihr Knoten online ist, es sei denn, jemand anderes pinnt es. |
 | **IPFS (Remote Pinning)** *(experimentell)* | Inhalt | Ein Konto bei einem Pinata-kompatiblen Pinning-Dienst | Keine Größenbegrenzung. Geben Sie Endpunkt und Zugangsdaten jedes Mal ein; sie werden nie gespeichert. |
 | **Steem** *(experimentell)* | Inhalt, Ankündigung / Entdeckung, Nachweis / Verankerung | Die Erweiterung Steem Keychain mit Ihrem Posting-Schlüssel und Ihr Konto unter [Netzwerkeinstellungen → Steem](10-NetworkSettings.md#steem) | Beiträge sind Antworten auf die monatlichen Threads von ForkBuild; eine Bestätigung pro Beitrag. Speichert etwa 2.500 Steine pro Beitrag, bis zu etwa 30.000 Steine in 20 Beiträgen. Verbraucht Resource Credits, die sich wieder auffüllen. |
+| **Blurt** *(experimentell)* | Inhalt, Ankündigung / Entdeckung, Nachweis / Verankerung | Die Erweiterung Blurt Keychain (oder WhaleVault) mit Ihrem Posting-Schlüssel und Ihr Konto unter [Netzwerkeinstellungen → Blurt](10-NetworkSettings.md#blurt) | Ein Hauptbeitrag von Ihrem eigenen Konto pro Bauwerk, der seine Auszahlung behält; gespeicherte Daten stehen in Antworten darunter. Speichert etwa 2.500 Steine pro Antwort, bis zu etwa 30.000 Steine. Jede Transaktion kostet eine kleine Gebühr in BLURT. |
 | **Bitcoin** *(experimentell)* | Nachweis / Verankerung | Die Erweiterung UniSat, mit Bitcoin auf einer nativen SegWit-Adresse (`bc1q…`) für die Gebühr | Erstellt über die Wallet-Schritte auf der Seite Veröffentlichungen |
 | **Base** *(experimentell)* | Nachweis / Verankerung | Eine Browser-Wallet wie MetaMask oder Coinbase Wallet, im Netzwerk Base | Jeder Anker ist eine Transaktion, die Sie prüfen und signieren |
 
 Ein Steem-Anker ist schnell und kostenlos, wird aber von den Witnesses von
 Steem bezeugt statt durch Proof of Work: Nutzen Sie ihn zusätzlich zu einem
-Bitcoin-Anker, nicht stattdessen. Siehe [Steem](11-EvidenceAndStorage.md#steem).
+Bitcoin-Anker, nicht stattdessen. Siehe [Steem](11-EvidenceAndStorage.md#steem). Dasselbe gilt für
+einen Blurt-Anker, der nichts kostet, wenn der Blurt-Beitrag Ihres Bauwerks
+bereits dessen Inhalts-Hash trägt; siehe [Blurt](11-EvidenceAndStorage.md#blurt).
 
 ## Ein typischer Weg
 
@@ -153,7 +152,7 @@ direkt von Ihnen abrufen.
   Nostr** oder **Auf diesem Gerät ist keine Verteilung verzeichnet.** Siehe
   [Ihre Veröffentlichungen](13-YourData.md#ihre-veröffentlichungen).
 - Das Repository anderer Leute findet Ihre Veröffentlichung auf Nostr,
-  Arweave oder Steem, sobald sie es das nächste Mal öffnen, sofern sie
+  Arweave, Steem oder Blurt, sobald sie es das nächste Mal öffnen, sofern sie
   unter dem üblichen Entdeckungs-Tag `forkbuild-publication` angekündigt
   wurde. Siehe
   [Von anderen verteilte Kreationen](04-PublishingAndForking.md#von-anderen-verteilte-kreationen).

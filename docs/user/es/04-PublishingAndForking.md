@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1855909b2b8b1dec -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9a754ee94fee1ff -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · **Español** · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Este es el corazón de ForkBuild. **Publicar** comparte su creación con el
 mundo. **Bifurcar** permite que cualquiera copie una creación y la haga
@@ -109,7 +105,7 @@ recuerdan en ningún lugar.
 ## Compartir con pares conectados
 
 Un Mundo que publica aparece solo en *su* Repositorio, hasta que lo
-distribuye en Nostr, Arweave o Steem (consulte
+distribuye en Nostr, Arweave, Steem o Blurt (consulte
 [Distribución](Distribution.md)): entonces el Repositorio de cualquiera lo
 encuentra (consulte
 [Creaciones que otros distribuyeron](#creaciones-que-otros-distribuyeron)).
@@ -216,7 +212,7 @@ para seguir siendo útil tanto si tiene diez creaciones como diez mil.
 ### Creaciones que otros distribuyeron
 
 Cada vez que abre el Repositorio (o la página de un autor), busca en Nostr,
-Arweave y Steem creaciones que otras personas distribuyeron allí, y agrega
+Arweave, Steem y Blurt creaciones que otras personas distribuyeron allí, y agrega
 las que puede verificar. Una línea encima de la lista dice lo que está
 haciendo y luego cuántas creaciones nuevas encontró; **Volver a buscar**
 busca una vez más.

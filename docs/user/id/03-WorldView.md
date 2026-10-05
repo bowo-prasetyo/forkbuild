@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 0a129e40e9aeb884 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 60040bc00f156b0b -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · **Bahasa Indonesia** · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../03-WorldView.md).
-<!-- /stale -->
 
 Tampilan Dunia adalah ruang 3D bersama tempat **setiap karya yang
 diterbitkan berada berdampingan**. Terbanglah berkeliling, cari apa yang
@@ -317,9 +313,10 @@ murni tampilan, tidak ada yang terikat pada apakah ia sedang terbuka.
 Dialog terbuka dengan satu set pengaturan, yang dipakai untuk semua yang
 didistribusikannya: **Penyimpanan** — **Arweave**, **IPFS (Kubo Lokal)**,
 **IPFS (Pinning Jarak Jauh)** (yang memerlukan Endpoint dan Kredensial
-diketik baru setiap kali; tidak ada yang pernah disimpan), atau **Steem**
-(eksperimental, lihat [Steem](11-EvidenceAndStorage.md#steem)) — dan
-**Substrat Pengumuman / Penemuan** (**Arweave**, **Nostr**, atau
+diketik baru setiap kali; tidak ada yang pernah disimpan), **Steem**, atau
+**Blurt** (eksperimental, lihat [Steem](11-EvidenceAndStorage.md#steem) dan
+[Blurt](11-EvidenceAndStorage.md#blurt)) — dan
+**Substrat Pengumuman / Penemuan** (**Arweave**, **Blurt**, **Nostr**, atau
 **Steem**). Keduanya dibuka dengan preferensi penyedia yang Anda simpan.
 Penyimpanan hanya mencantumkan backend tempat perangkat ini benar-benar
 dapat menempatkan Snapshot (ditambah Pinning Jarak Jauh), jadi Anda tidak

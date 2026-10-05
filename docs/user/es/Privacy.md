@@ -1,13 +1,9 @@
-<!-- translation-of: docs/Privacy.md source-hash: 9cb6f05e34121fa7 -->
+<!-- translation-of: docs/Privacy.md source-hash: 2613ec8e89de381d -->
 # Privacidad
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · **Español** · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../../Privacy.md).
-<!-- /stale -->
 
 ForkBuild no tiene cuentas y no lo rastrea. Guarda su trabajo en su propio
 navegador y habla con otras computadoras solo para las funciones que lo
@@ -143,7 +139,7 @@ Cada script, estilo y fuente proviene del sitio desde el que se sirve la
 app (consulte [docs/Deployment.md](../../Deployment.md), en inglés). Una
 sola cosa empieza por su cuenta: unos 10 segundos después de abrir la app,
 y cada pocos minutos mientras su pestaña está visible, lee los anuncios
-nuevos de los relays de Nostr, el gateway de Arweave y los nodos de Steem
+nuevos de los relays de Nostr, el gateway de Arweave y los nodos de Steem y Blurt
 configurados en **Configuración de red** (docs/AnnouncementIndex.md). Solo
 lee anuncios (pequeños punteros y declaraciones firmadas), nunca contenido,
 y no publica nada. Todo lo demás ocurre solo cuando usa la función, y cada
@@ -157,15 +153,17 @@ dirección IP y lo que usted le pide.
 | Se une a una sala pública, o mira una | el mismo servidor de encuentro | su tarjeta de sala firmada (clave pública, nombre visible, qué sala), que se guarda como máximo 15 minutos y se renueva mientras se queda; qué sala mira |
 | Se inicia una conexión entre pares | servidores STUN (`stun.l.google.com`) | nada más que una solicitud de su dirección IP pública |
 | Inicia una conexión entre pares, si el servidor de encuentro ofrece un relay | `/turn-credentials` del servidor de encuentro, y luego su relay TURN (Cloudflare) | una solicitud de credenciales de relay de corta duración, como máximo una vez por hora aproximadamente; el tráfico retransmitido está cifrado de extremo a extremo por WebRTC |
-| La app está abierta y su pestaña visible (sincronización de anuncios en segundo plano) | relays de Nostr (`relay.damus.io`), un gateway de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`) | consultas por las etiquetas de descubrimiento de ForkBuild: las etiquetas compartidas de Snapshots y de comentarios, y las regiones de nombres de lugares y las celdas del mapa que visitó |
-| Abre el Repositorio o la página de un autor | relays de Nostr (`relay.damus.io`), un gateway de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`) | una consulta por la etiqueta compartida de publicaciones (`forkbuild-publication`); luego una solicitud del registro firmado de cada publicación recién anunciada, como máximo 20 por visita o por **Volver a buscar** |
+| La app está abierta y su pestaña visible (sincronización de anuncios en segundo plano) | relays de Nostr (`relay.damus.io`), un gateway de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`), nodos de Blurt (`rpc.blurt.blog`) | consultas por las etiquetas de descubrimiento de ForkBuild: las etiquetas compartidas de Snapshots y de comentarios, y las regiones de nombres de lugares y las celdas del mapa que visitó |
+| Abre el Repositorio o la página de un autor | relays de Nostr (`relay.damus.io`), un gateway de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`), nodos de Blurt (`rpc.blurt.blog`) | una consulta por la etiqueta compartida de publicaciones (`forkbuild-publication`); luego una solicitud del registro firmado de cada publicación recién anunciada, como máximo 20 por visita o por **Volver a buscar** |
 | Distribuye o descubre publicaciones a través de Nostr | relays de Nostr (`relay.damus.io`) | los anuncios firmados que publica; sus consultas |
 | Guarda u obtiene contenido en Arweave | un gateway de Arweave (`arweave.net`) | el contenido que publica; lo que obtiene |
 | Obtiene contenido de IPFS | un gateway de IPFS (`ipfs.io`), o su propio nodo IPFS (`127.0.0.1:5001`) | lo que obtiene o agrega |
 | Fija contenido con un servicio de pinning remoto (*experimental*) | el servicio que ingresa | el contenido, y el token que escribe para esa subida (nunca se guarda) |
 | Guarda, anuncia o ancla en Steem, o descubre anuncios de Steem (*experimental*) | nodos de la API de Steem (`api.steemit.com`, luego `api.justyy.com`); la firma pasa por la extensión Steem Keychain | el nombre de su cuenta de Steem; lo que publica (anuncios, contenido guardado, anclajes) es público en la cadena para siempre, y las ediciones dejan la versión anterior en su historial |
+| Guarda, anuncia o ancla en Blurt, o descubre publicaciones de Blurt (*experimental*) | nodos de la API de Blurt (`rpc.blurt.blog`, luego `rpc.beblurt.com`); la firma pasa por la extensión Blurt Keychain (o WhaleVault) | el nombre de su cuenta de Blurt, y las cuentas cuyo historial de publicaciones se lee (las que sigue, y cada cuenta que este dispositivo vio publicar con las etiquetas de ForkBuild, recordadas en este dispositivo); lo que publica es público en la cadena para siempre, con su propia cuenta, y las ediciones dejan la versión anterior en su historial. Cada transacción paga una pequeña comisión en BLURT desde su cuenta |
+| Distribuye en Blurt la Declaración firmada de una publicación (*experimental*) | el alojamiento de imágenes de Blurt (`images.blurt.blog`), directamente o, cuando el navegador no puede alcanzarlo, a través del relé `/blurt-image` del servidor de encuentro, que no guarda nada | una imagen de 320×200 de la construcción para la vista previa de la publicación, firmada con su clave de publicación de Blurt |
 | Distribuye en Steem la Declaración firmada de una publicación (*experimental*) | el alojamiento de imágenes de Steem (`steemitimages.com`), directamente o, cuando el navegador no puede alcanzarlo, a través del relé `/steem-image` del servidor de encuentro, que no guarda nada | una imagen de 320×200 de la construcción para la vista previa de la publicación, firmada con su clave de publicación de Steem |
-| Abre un enlace compartido a una publicación (`#/view/…`) | el nodo de Steem, el gateway de Arweave o el gateway de IPFS que indica el enlace, y luego los sustratos de anuncio para encontrar su construcción | qué publicación, transacción o CID abre |
+| Abre un enlace compartido a una publicación (`#/view/…`) | el nodo de Steem o Blurt, el gateway de Arweave o el gateway de IPFS que indica el enlace, y luego los sustratos de anuncio para encontrar su construcción | qué publicación, transacción o CID abre |
 | Ancla o verifica evidencia en Bitcoin (*experimental*) | una API Esplora (`blockstream.info`) | la transacción que transmite o consulta |
 | Verifica evidencia en Base (*experimental*) | un endpoint JSON-RPC de Base (`mainnet.base.org`) | la transacción que consulta |
 | Conecta una billetera del navegador (*experimental*) | la extensión de billetera que elija | lo que le pida aprobar |

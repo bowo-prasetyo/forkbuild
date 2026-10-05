@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: b5cf5faa75241d15 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: d6122c9368a1f486 -->
 # Questions fréquentes
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · **Français** · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../FAQ.md).
-<!-- /stale -->
 
 Des réponses courtes aux questions les plus fréquentes, chacune renvoyant
 vers le guide qui l’explique en détail.
@@ -26,7 +22,7 @@ le choisissez pas :
   **Partagés avec vous** et cliquent sur **Récupérer**. Vous devez être
   connectés en même temps pour qu’elle arrive.
 - **Distribuer** l’envoie sur Arweave ou IPFS (ou, de façon
-  expérimentale, sur Steem) et l’annonce, pour qu’on puisse la trouver
+  expérimentale, sur Steem ou Blurt) et l’annonce, pour qu’on puisse la trouver
   sans être connecté à vous.
 
 Voir [Publier et forker](04-PublishingAndForking.md#partager-avec-les-pairs-connectés).
@@ -34,7 +30,7 @@ Voir [Publier et forker](04-PublishingAndForking.md#partager-avec-les-pairs-conn
 ### Comment rendre mon travail accessible à tous ?
 
 Distribuez-le : stockez-le sur Arweave ou IPFS (ou, de façon
-expérimentale, sur Steem) et annoncez-le sur Nostr ou Arweave (ou Steem),
+expérimentale, sur Steem ou Blurt) et annoncez-le sur Nostr ou Arweave (ou Steem ou Blurt),
 pour que n’importe qui puisse le trouver et le vérifier sans être
 connecté à vous. Cliquez sur **Distribuer** juste après la publication, ou
 sous **Mon Monde partagé** dans la Vue du Monde. Il vous faut une
@@ -75,7 +71,7 @@ ni le distribuer plus tard. Connectez-vous avant de publier.
 Oui : ouvrez le Monde dans la Vue du Monde, puis dans **Mon Monde
 partagé** choisissez **Plus ▾ → Dépublier…**. Cela le retire de votre
 Dépôt. Cela ne peut pas rappeler les copies que d’autres ont déjà reçues
-ni ce que vous avez distribué sur Arweave, IPFS, Nostr ou Steem. Cet appareil se souvient toutefois de ce que
+ni ce que vous avez distribué sur Arweave, IPFS, Nostr, Steem ou Blurt. Cet appareil se souvient toutefois de ce que
 vous avez dépublié : la recherche du Dépôt sur les réseaux n’affichera plus
 ces copies ici ; d’autres appareils et d’autres personnes peuvent encore les
 trouver.

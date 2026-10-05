@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 0a129e40e9aeb884 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 60040bc00f156b0b -->
 # 03 — Weltansicht
 
 <!-- languages -->
 [English](../03-WorldView.md) · **Deutsch** · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../03-WorldView.md).
-<!-- /stale -->
 
 Die Weltansicht ist der geteilte 3D-Raum, in dem **jede veröffentlichte
 Kreation Seite an Seite existiert**. Fliegen Sie herum, suchen Sie, was Sie
@@ -325,9 +321,10 @@ Der Dialog öffnet sich mit einem Satz Einstellungen, der für alles gilt,
 was er verteilt: einem **Speicher** — **Arweave**, **IPFS (lokales
 Kubo)**, **IPFS (entferntes Pinning)** (das jedes Mal einen frisch
 eingegebenen Endpunkt und Zugangsdaten braucht; nichts davon wird je
-gespeichert) oder **Steem** (experimentell, siehe
-[Steem](11-EvidenceAndStorage.md#steem)) — und einem **Substrat für
-Ankündigung / Entdeckung** (**Arweave**, **Nostr** oder **Steem**). Beide
+gespeichert), **Steem** oder **Blurt** (experimentell, siehe
+[Steem](11-EvidenceAndStorage.md#steem) und
+[Blurt](11-EvidenceAndStorage.md#blurt)) — und einem **Substrat für
+Ankündigung / Entdeckung** (**Arweave**, **Blurt**, **Nostr** oder **Steem**). Beide
 beginnen mit Ihren gespeicherten Anbieterpräferenzen. Speicher listet nur
 die Backends, auf denen dieses Gerät tatsächlich einen Snapshot platzieren
 kann (plus entferntes Pinning), sodass Sie keines wählen können, das nur

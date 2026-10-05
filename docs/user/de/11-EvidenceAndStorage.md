@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 263581397a33de10 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: ebb2f824912e0429 -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
 [English](../11-EvidenceAndStorage.md) · **Deutsch** · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../11-EvidenceAndStorage.md).
-<!-- /stale -->
 
 > **Größtenteils experimentell.** Das Speichern von Inhalten auf IPFS oder
 > Arweave über den Block **Verteilung → Inhalt** einer Karte
@@ -26,7 +22,7 @@ hat Abschnitte, um nachzuweisen, *wann* eine Veröffentlichung existierte,
 und um ihren Inhalt irgendwo abzulegen, wo andere ihn holen können:
 
 - **[Externe Nachweise](#externe-nachweise)** — Datensätze auf Bitcoin,
-  Base, Arweave oder Steem, dass der Inhalts-Hash einer Veröffentlichung zu
+  Base, Arweave, Steem oder Blurt, dass der Inhalts-Hash einer Veröffentlichung zu
   einem bestimmten Zeitpunkt existierte.
 - **[Der Ablauf für Bitcoin-Anker](#der-ablauf-für-bitcoin-anker)** und
   **[Der Ablauf für Base-Anker](#der-ablauf-für-base-anker)** —
@@ -38,6 +34,8 @@ und um ihren Inhalt irgendwo abzulegen, wo andere ihn holen können:
 - **[Veröffentlichen auf IPFS](#veröffentlichen-auf-ipfs)** — Hochladen zu
   einem entfernten Pinning-Dienst.
 - **[Steem](#steem)** — Posten, Speichern und Teilen von Links auf Steem.
+- **[Blurt](#blurt)** — Posten, Speichern und Verankern auf Blurt, von Ihrem
+  eigenen Konto, mit Belohnungen.
 
 Nachweise und Platzierungen beantworten verschiedene Fragen. Ein Anker
 zeigt, dass ein Hash zu einem Zeitpunkt erfasst wurde; er sagt nichts
@@ -86,6 +84,9 @@ diesem Netzwerk, mit einem von drei Ergebnissen:
 - **Steem-Anker erstellen** braucht die Erweiterung Steem Keychain und Ihr
   Steem-Konto, festgelegt unter
   [Netzwerkeinstellungen → Steem](10-NetworkSettings.md#steem).
+- **Blurt-Anker erstellen** braucht die Erweiterung Blurt Keychain (oder
+  WhaleVault) und Ihr Blurt-Konto, festgelegt unter
+  [Netzwerkeinstellungen → Blurt](10-NetworkSettings.md#blurt).
 
 Eine Veröffentlichung, die erstellt wurde, bevor Inhalts-Hashes zu SHA-256
 wurden, wird nie verankert, weder mit diesen Schaltflächen noch mit den
@@ -119,6 +120,16 @@ Steem-Witnesses bestätigt). Nutzen Sie einen Steem-Anker als schnellen,
 kostenlosen Nachweis zusätzlich zu einem Bitcoin-Anker, nicht
 stattdessen.
 
+**Blurt-Anker** werden auf dieselbe Weise von den Witnesses von Blurt
+bestätigt und sind ebenso schwächer als Bitcoin-Anker. Hat dieses Gerät den
+Snapshot Ihres Bauwerks bereits auf Blurt gepostet (angekündigt oder dort
+gespeichert), ist dieser Beitrag der Anker: **Blurt-Anker erstellen** postet
+nichts und kostet nichts. Andernfalls fügt es den Inhalts-Hash des Bauwerks
+Ihrem aktuellen Blurt-Beitrag hinzu oder erstellt einen neuen, gegen eine
+kleine Gebühr in BLURT. Endgültigkeit, **Nachweise überprüfen** und
+**Nachweise untersuchen** funktionieren wie bei Steem, und die Karte verlinkt
+den Beitrag.
+
 **Mehrere Veröffentlichungen auf einmal auf Steem verankern.** Unter
 **Wallet, Archiv & Herausgeberwerkzeuge → Blockchain-Verankerung** listet
 **Mehrere Veröffentlichungen auf Steem verankern** Ihre erfassten
@@ -126,7 +137,8 @@ Veröffentlichungen auf. Setzen Sie Häkchen bei denen, die Sie möchten
 (oder **Nicht verankerte auswählen**), und klicken Sie auf **N
 Veröffentlichungen auf Steem verankern**. Eine Bestätigung in Keychain
 verankert bis zu 64. Jede Veröffentlichung bekommt trotzdem ihren eigenen
-Anker, der einzeln überprüft wird.
+Anker, der einzeln überprüft wird. **Mehrere Veröffentlichungen auf Blurt
+verankern** funktioniert genauso, mit einer Bestätigung in Blurt Keychain.
 
 ### Bei einem bevorzugten Anbieter verankern
 
@@ -828,3 +840,72 @@ eigenen Browser.
 - Freunde lesen über die Gateways in ihren eigenen
   Netzwerkeinstellungen. Ein IPFS-Gateway hat bis zu 30 Sekunden Zeit, den
   Anspruch zu finden.
+
+## Blurt
+
+*Experimentell.* Blurt ist eine Blockchain, die aus Steem hervorgegangen
+ist, ohne Downvotes. ForkBuild kann darauf ankündigen, speichern und
+verankern, und alles geht von **Ihrem eigenen Konto** als gewöhnliche
+Blurt-Beiträge hinaus, die ihre Auszahlung behalten: Wenn Leute den Beitrag
+Ihres Bauwerks upvoten, verdienen Sie BLURT. Es gibt kein ForkBuild-Konto
+und keinen gemeinsamen Thread. Die Einstellungen liegen unter
+[Netzwerkeinstellungen → Blurt](10-NetworkSettings.md#blurt).
+
+### Auf Blurt posten
+
+Wählen Sie **Blurt** in einem Verteilen-Dialog, auf der Seite
+Veröffentlichungen, neben **Kommentar senden** oder im Benennungsfeld, oder
+machen Sie es unter
+[Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung)
+zu Ihrem Standard. Sie brauchen die Erweiterung Blurt Keychain (oder
+WhaleVault) mit dem **Posting**-Schlüssel Ihres Kontos und Ihren
+Kontonamen, gespeichert auf der Blurt-Einstellungsseite. ForkBuild sieht
+den Schlüssel nie, und Keychain bittet Sie, jeden Beitrag zu bestätigen.
+
+- **Ein Beitrag pro Bauwerk.** Verteilen erstellt einen Hauptbeitrag von
+  Ihrem Konto, mit den Tags `forkbuild` und `forkbuild-snapshot` oder
+  `forkbuild-publication`, mit einem Bild Ihres Bauwerks, seinem Titel,
+  Ihrem Namen und der Beschreibung sowie einem Link „See it in 3D“ (in 3D
+  ansehen). Was in der folgenden halben Stunde dazukommt (die Ankündigung
+  der Veröffentlichung, ein Kommentar, ein Anker), wird demselben Beitrag
+  durch Bearbeiten hinzugefügt, sodass Ihre Follower einen Beitrag sehen,
+  nicht mehrere.
+- **Das Bild braucht eine eigene Bestätigung.** Bei einem Signierten
+  Anspruch bittet Keychain Sie zuerst, das Bild des Bauwerks zu signieren,
+  dann, den Beitrag zu bestätigen. Sein zweites Fenster kann sich hinter
+  Ihrem Browser öffnen; ForkBuild wartet auf jedes bis zu zwei Minuten. Das
+  Bild geht zum Bildhoster von Blurt, über den Rendezvous-Server von
+  ForkBuild, wenn der Browser den Hoster nicht direkt erreicht; lässt es
+  sich nicht hochladen, geht der Beitrag ohne Bild hinaus.
+- **Fünf Minuten zwischen Beiträgen.** Blurt nimmt pro Konto alle fünf
+  Minuten einen Hauptbeitrag an. Hat Ihr Konto kürzlich einen gepostet
+  (etwa aus einer anderen App), wartet ForkBuild, und der Dialog sagt, wie
+  lange.
+- **Gebühren.** Jede Blurt-Transaktion kostet eine kleine Gebühr in BLURT,
+  festgelegt von den Witnesses von Blurt. Kann Ihr Konto sie nicht zahlen,
+  wird nichts gepostet, und Sie erfahren es.
+- **Andere finden ihn** über Nexus, den Suchindex von Blurt, der jeden
+  Beitrag unter den Tags von ForkBuild auflistet, egal wie alt. Bietet kein
+  Blurt-Knoten Nexus an, liest ForkBuild den Tag, der einen Beitrag eine
+  Woche lang auflistet, und dann den Verlauf Ihres Kontos: Hat das ForkBuild
+  einer Person einmal einen Ihrer Beiträge gesehen, liest es auch Ihre
+  späteren und früheren.
+
+### Auf Blurt speichern
+
+Wählen Sie **Blurt** als Speicher in einem Verteilen-Dialog oder auf der
+Seite Veröffentlichungen. Das Bauwerk wird so gespeichert wie auf Steem, in
+Antworten unter dem Beitrag Ihres Bauwerks: bis zu etwa 2.500 Steine in
+einer Antwort oder bis zu 20 weitere Antworten für bis zu etwa 30.000
+Steine. Vor dem Posten berechnet ForkBuild die Gebühren und lehnt ab, wenn
+Ihr Guthaben nicht reicht („Das Speichern dieses Bauwerks auf Blurt kostet
+etwa 0,632 BLURT an Gebühren, und Ihr Konto hat 0,100 BLURT“). Der Dialog
+zeigt den Fortschritt und die Gebühren. Bricht es mittendrin ab, verteilen
+Sie erneut mit demselben Konto, und nur die fehlenden Antworten werden
+erstellt.
+
+Auch der Signierte Anspruch kann auf Blurt gespeichert werden, als eine
+weitere Antwort. Sein Link funktioniert wie einer von Steem: Wer auf „See
+it in 3D“ klickt, landet in der Weltansicht bei Ihrem Bauwerk, nachdem
+ForkBuild es geprüft hat. **Teilen …** und **Link kopieren** erscheinen,
+sobald er gespeichert ist.

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/Privacy.md source-hash: 9cb6f05e34121fa7 -->
+<!-- translation-of: docs/Privacy.md source-hash: 2613ec8e89de381d -->
 # 개인정보 보호
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · **한국어** · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../../Privacy.md)을 참고하세요.
-<!-- /stale -->
 
 ForkBuild에는 계정이 없고 나를 추적하지 않습니다. 작업은 내 브라우저에
 저장되며, 다른 컴퓨터와는 그것이 필요한 기능에서만 통신합니다. 예외는 만든
@@ -113,7 +109,7 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 모든 스크립트, 스타일, 글꼴은 앱을 제공하는 사이트에서 옵니다
 ([docs/Deployment.md](../../Deployment.md)(영어) 참고). 스스로 시작하는 것은 하나뿐입니다:
 앱을 열고 약 10초 뒤, 그리고 탭이 보이는 동안 몇 분마다, **네트워크 설정**에 설정된
-Nostr 릴레이, Arweave 게이트웨이, Steem 노드에서 새 공지를 읽습니다
+Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지를 읽습니다
 (docs/AnnouncementIndex.md). 공지(작은 포인터와 서명된 클레임)만 읽고 콘텐츠는
 절대 읽지 않으며, 아무것도 게시하지 않습니다. 나머지는 모두 기능을 쓸 때만
 일어나며, 각 서버는 **네트워크 설정**에서 바꿀 수 있습니다. 각 서버는 내 IP 주소와
@@ -126,15 +122,17 @@ Nostr 릴레이, Arweave 게이트웨이, Steem 노드에서 새 공지를 읽�
 | 공개 로비에 참가하거나 들여다볼 때 | 같은 랑데부 서버 | 내 서명된 로비 카드(공개 키, 표시 이름, 어느 로비인지. 최대 15분 보관되며 머무는 동안 갱신), 내가 들여다보는 로비 |
 | 피어 연결이 시작될 때 | STUN 서버(`stun.l.google.com`) | 내 공개 IP 주소 요청 외에는 없음 |
 | 피어 연결을 시작할 때, 랑데부 서버가 릴레이를 제공하면 | 랑데부 서버의 `/turn-credentials`, 그다음 그 TURN 릴레이(Cloudflare) | 단기 릴레이 자격 증명 요청(많아야 약 1시간에 한 번). 중계되는 트래픽은 WebRTC로 종단 간 암호화됨 |
-| 앱이 열려 있고 탭이 보일 때(백그라운드 공지 동기화) | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`) | ForkBuild 발견 태그에 대한 조회: 공유 스냅샷과 댓글 태그, 내가 방문한 장소 이름 지역과 지도 칸 |
-| 저장소나 작성자 페이지를 열 때 | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`) | 공유 게시물 태그(`forkbuild-publication`)에 대한 조회, 그다음 새로 공지된 게시물마다 서명된 기록 요청(방문 또는 **다시 확인** 한 번에 최대 20개) |
+| 앱이 열려 있고 탭이 보일 때(백그라운드 공지 동기화) | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`), Blurt 노드(`rpc.blurt.blog`) | ForkBuild 발견 태그에 대한 조회: 공유 스냅샷과 댓글 태그, 내가 방문한 장소 이름 지역과 지도 칸 |
+| 저장소나 작성자 페이지를 열 때 | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`), Blurt 노드(`rpc.blurt.blog`) | 공유 게시물 태그(`forkbuild-publication`)에 대한 조회, 그다음 새로 공지된 게시물마다 서명된 기록 요청(방문 또는 **다시 확인** 한 번에 최대 20개) |
 | Nostr로 게시물을 배포하거나 발견할 때 | Nostr 릴레이(`relay.damus.io`) | 내가 게시하는 서명된 공지, 내 조회 |
 | Arweave에 콘텐츠를 저장하거나 가져올 때 | Arweave 게이트웨이(`arweave.net`) | 내가 게시하는 콘텐츠, 내가 가져오는 것 |
 | IPFS에서 콘텐츠를 가져올 때 | IPFS 게이트웨이(`ipfs.io`), 또는 내 IPFS 노드(`127.0.0.1:5001`) | 내가 가져오거나 추가하는 것 |
 | 원격 피닝 서비스로 콘텐츠를 피닝할 때(*실험적*) | 내가 입력한 서비스 | 콘텐츠와, 그 업로드 한 번을 위해 입력한 토큰(절대 저장되지 않음) |
 | Steem에 저장, 공지, 앵커링하거나 Steem 공지를 발견할 때(*실험적*) | Steem API 노드(`api.steemit.com`, 그다음 `api.justyy.com`). 서명은 Steem Keychain 확장 프로그램을 거침 | 내 Steem 계정 이름. 내가 게시하는 것(공지, 저장한 콘텐츠, 앵커)은 체인에 영구히 공개되며, 수정해도 이전 버전이 기록에 남음 |
+| Blurt에 저장, 공지, 앵커링하거나 Blurt 게시물을 발견할 때(*실험적*) | Blurt API 노드(`rpc.blurt.blog`, 그다음 `rpc.beblurt.com`). 서명은 Blurt Keychain 확장 프로그램(또는 WhaleVault)을 거침 | 내 Blurt 계정 이름, 그리고 게시 기록을 읽는 계정(내가 팔로우하는 계정과, 이 기기가 ForkBuild 태그로 게시하는 것을 본 모든 계정. 이 기기에 기억됨). 내가 게시하는 것은 내 계정으로 체인에 영구히 공개되며, 수정해도 이전 버전이 기록에 남음. 트랜잭션마다 내 계정에서 BLURT로 작은 수수료가 나감 |
+| 게시물의 서명 클레임을 Blurt에 배포할 때(*실험적*) | Blurt 이미지 호스트(`images.blurt.blog`). 브라우저가 직접 닿지 못하면 아무것도 저장하지 않는 랑데부 서버의 `/blurt-image` 중계를 거침 | 게시물 미리보기용 320×200 작품 사진, 내 Blurt 게시 키로 서명됨 |
 | 게시물의 서명 클레임을 Steem에 배포할 때(*실험적*) | Steem 이미지 호스트(`steemitimages.com`). 브라우저가 직접 닿지 못하면 아무것도 저장하지 않는 랑데부 서버의 `/steem-image` 중계를 거침 | 게시물 미리보기용 320×200 작품 사진, 내 Steem 게시 키로 서명됨 |
-| 게시물의 공유 링크(`#/view/…`)를 열 때 | 링크가 가리키는 Steem 노드, Arweave 게이트웨이, IPFS 게이트웨이, 그다음 작품을 찾기 위한 공지 기반 | 내가 여는 게시물, 트랜잭션, CID |
+| 게시물의 공유 링크(`#/view/…`)를 열 때 | 링크가 가리키는 Steem이나 Blurt 노드, Arweave 게이트웨이, IPFS 게이트웨이, 그다음 작품을 찾기 위한 공지 기반 | 내가 여는 게시물, 트랜잭션, CID |
 | Bitcoin에서 증거를 앵커링하거나 검증할 때(*실험적*) | Esplora API(`blockstream.info`) | 내가 브로드캐스트하거나 조회하는 트랜잭션 |
 | Base에서 증거를 검증할 때(*실험적*) | Base JSON-RPC 엔드포인트(`mainnet.base.org`) | 내가 조회하는 트랜잭션 |
 | 브라우저 지갑을 연결할 때(*실험적*) | 내가 고른 지갑 확장 프로그램 | 지갑이 승인을 요청하는 모든 것 |

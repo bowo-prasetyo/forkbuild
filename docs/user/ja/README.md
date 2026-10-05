@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: 26ea018db8723ef6 -->
+<!-- translation-of: docs/user/README.md source-hash: 0137e01d1cbcedd8 -->
 # ForkBuild ユーザードキュメント
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · **日本語** · [한국어](../ko/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../README.md)も参照してください。
-<!-- /stale -->
 
 ブラウザーで ForkBuild を使うためのガイドです。ここに書かれているのは
 現在の製品の動作です。エンジン内部の説明は
@@ -57,7 +53,7 @@
 11. **[証拠とストレージ](11-EvidenceAndStorage.md)** — IPFS
     や Arweave へのコンテンツの保存と、*試験的* な外部証拠、Bitcoin と
     Base のウォレットパイプライン、スナップショットの配置、リモート IPFS
-    ピン留め、Steem。
+    ピン留め、Steem、Blurt。
     これらの関係は [作品を配信する](Distribution.md)で
     説明しています。
 12. **[アーカイブとリーダーボード](12-ArchiveAndLeaderboards.md)**
