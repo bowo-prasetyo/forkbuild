@@ -37,6 +37,8 @@ export function createSteemPublicationNoticeDescriber({ loadSnapshotText, render
             return card;
         }
         card.description = stringOrNull(document.metadata?.description);
+        // The build's own tags, which a Blurt post lists after ForkBuild's.
+        if (Array.isArray(document.metadata?.tags) && document.metadata.tags.length > 0) card.tags = [...document.metadata.tags];
         if (!pictureWanted) return card;
         try {
             const bytes = await renderThumbnail(document);

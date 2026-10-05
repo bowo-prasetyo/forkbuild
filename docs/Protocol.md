@@ -1496,7 +1496,11 @@ Everything ForkBuild posts on Blurt hangs off a **build post**: a top-level post
 - Tags: `forkbuild`, then `forkbuild-<family>` for each family the post announces, in the order first announced.
   The family tags are the same strings as the Nostr `t` tags (`forkbuild-publication`, `forkbuild-snapshot`,
   `forkbuild-place-naming`, `forkbuild-commentary`). The chain's tags plugin indexes at most five tags, which is
-  exactly `forkbuild` and the four families.
+  exactly `forkbuild` and the four families. After them come the build's own tags, when the post announces a
+  Publication whose card is known: at most five, from `DocumentMetadata.tags`, which its author sets (with
+  suggestions from the title and description) in Document Properties (`core/BuildTags.js`: lowercase `a–z`, `0–9`
+  and inner hyphens, 2 to 24 characters, starting with a letter, never starting with `forkbuild`, so none can pass
+  as a family tag). Nexus indexes every tag; readers only ever look for ForkBuild's own.
 - `announcements` holds at most 16 entries and `anchors` at most 16 contentHashes. Either may be empty.
 - Title: the build's title when the post announces a Publication whose card is known, otherwise a fixed phrase for
   what it carries ("ForkBuild build", "ForkBuild place name", "ForkBuild comment", "ForkBuild anchor", "ForkBuild

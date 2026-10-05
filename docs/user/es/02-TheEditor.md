@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1238c1e7cb84a4db -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 86f52e38bf5e7dd9 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -491,6 +491,15 @@ mundo y las publicaciones en Steem y Blurt:
 Nada más es formato: los enlaces, las imágenes y el HTML quedan como texto
 simple. Las tarjetas del Repositorio muestran las palabras de la descripción en una
 línea, sin formato.
+
+Las **etiquetas** dicen qué es la construcción, como `japones templo
+jardin`: hasta 5, separadas por espacios o comas, hechas de minúsculas,
+dígitos y guiones (los acentos se quitan, así `café` queda `cafe`). Si una
+construcción no tiene, el diálogo llena el campo con sugerencias a partir
+del título y la descripción, que puede conservar, cambiar o borrar; los
+botones bajo el campo añaden otras sugerencias. Una bifurcación conserva sus
+etiquetas. Una publicación en Blurt las muestra después de las de ForkBuild,
+para que quien explore Blurt por etiquetas encuentre su construcción.
 
 ## Sonido
 

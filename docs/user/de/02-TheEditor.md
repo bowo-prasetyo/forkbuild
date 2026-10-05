@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1238c1e7cb84a4db -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 86f52e38bf5e7dd9 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -491,6 +491,15 @@ Steem- und Blurt-Beiträge zeigen sie an:
 Alles andere ist keine Formatierung: Links, Bilder und HTML bleiben
 einfacher Text. Repository-Karten zeigen die Wörter der Beschreibung in einer Zeile, ohne
 Formatierung.
+
+**Tags** sagen, was das Bauwerk ist, etwa `japanisch tempel garten`: bis zu
+5, durch Leerzeichen oder Kommas getrennt, jeweils aus Kleinbuchstaben,
+Ziffern und Bindestrichen (Akzente fallen weg, aus `café` wird `cafe`). Hat
+ein Bauwerk keine, füllt der Dialog das Feld mit Vorschlägen aus Titel und
+Beschreibung, die Sie behalten, ändern oder löschen können; die Schaltflächen
+unter dem Feld fügen weitere Vorschläge hinzu. Eine Abspaltung behält ihre
+Tags. Ein Blurt-Beitrag listet sie nach denen von ForkBuild, sodass Leute,
+die auf Blurt nach Tags stöbern, Ihr Bauwerk finden.
 
 ## Ton
 

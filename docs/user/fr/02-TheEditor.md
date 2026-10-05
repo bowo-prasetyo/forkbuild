@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1238c1e7cb84a4db -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 86f52e38bf5e7dd9 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -499,6 +499,16 @@ Vue du monde et les articles Steem et Blurt :
 Rien d’autre n’est de la mise en forme : liens, images et HTML restent du
 texte simple. Les cartes du Dépôt montrent les mots de la description sur une ligne, sans
 mise en forme.
+
+Les **étiquettes** disent ce qu’est la construction, comme `japonais temple
+jardin` : jusqu’à 5, séparées par des espaces ou des virgules, faites de
+minuscules, de chiffres et de tirets (les accents sont retirés, `café` devient
+`cafe`). Si une construction n’en a pas, la boîte de dialogue remplit le champ
+avec des suggestions tirées du titre et de la description, que vous pouvez
+garder, modifier ou effacer ; les boutons sous le champ ajoutent d’autres
+suggestions. Une bifurcation garde ses étiquettes. Un article Blurt les affiche
+après celles de ForkBuild, pour que ceux qui parcourent Blurt par étiquette
+trouvent votre construction.
 
 ## Son
 

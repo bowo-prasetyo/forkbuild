@@ -4085,3 +4085,26 @@ preview, while the same build's Blurt post showed the whole formatted descriptio
   guide updated, in every language.
 - Tests: `tests/SteemPublicationNotice.test.js` keeps a formatted description's Markdown and cuts at 2,000
   characters.
+
+## Builds have tags, which their Blurt posts list (unnumbered, 2026-10-05)
+
+A build post on Blurt carried only ForkBuild's own tags (`forkbuild`, `forkbuild-<family>`), so people browsing Blurt
+by tag never came across builds.
+
+- A build may have up to five tags of its own (`DocumentMetadata.tags`), saved only when it has some so older
+  documents keep their content hash, kept by forks like the description, and set in Document Properties.
+- `core/BuildTags.js` makes a tag (lowercase `a–z`, `0–9` and inner hyphens, 2 to 24 characters, starting with a
+  letter, accents dropped) and refuses any starting with `forkbuild`, so none can pass as a family tag. It also
+  suggests tags: the title's words, then the description's most frequent, without common words in the app's
+  Latin-script languages; other scripts give none.
+- When a build has no tags, Document Properties fills its Tags field with suggestions, so they are seen and kept,
+  changed or cleared before anything is posted; buttons add the suggestions not yet used. The Document Information
+  panel lists the tags. Text in all eight languages.
+- Blurt build posts list the build's tags after ForkBuild's own, which stay first because the chain's tag listing
+  (the fallback when no node serves Nexus) indexes only a post's first five. The tags come with a Signed Claim's
+  card (`SteemPublicationNoticeCard.js`), so a post with only a Snapshot has none.
+- docs/Protocol.md ("Proposed: Blurt Substrate"), the Editor guide and the Blurt user guide updated, in every
+  language.
+- Tests: `tests/BuildTags.test.js` (tags, suggestions, the metadata field, forks); `tests/BlurtPoster.test.js`
+  (order, and refusing ForkBuild's own); `tests/SteemPublicationNotice.test.js` (the card carries them);
+  `tests/MetadataEditorTagsBrowser.test.js` (the dialog fills, shows, adds and saves them).

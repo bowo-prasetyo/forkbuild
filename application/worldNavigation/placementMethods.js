@@ -42,6 +42,7 @@ export const placementMethods = {
             documentId: id,
             title: doc.metadata.title || 'Untitled',
             description: doc.metadata.description || '',
+            tags: doc.metadata.tags,
             author: doc.metadata.author,
             // The ownership fact WorldAuthorizationService/WorldMembershipUseCase use,
             // so a Members panel can label the owner's row. Null for older documents.

@@ -12,10 +12,10 @@ export function useDocumentActions({
         showMetadataEditor.value = true;
     }
 
-    function onSaveMetadata({ title, description, license, placementPolicy }) {
+    function onSaveMetadata({ title, description, tags, license, placementPolicy }) {
         const info = metadataEditTarget.value;
         if (!info) return;
-        guarded(() => session.updateDocumentMetadata(info.documentId, { title, description, license, placementPolicy }));
+        guarded(() => session.updateDocumentMetadata(info.documentId, { title, description, tags, license, placementPolicy }));
         showMetadataEditor.value = false;
         metadataEditTarget.value = null;
         refreshSpatialUI();

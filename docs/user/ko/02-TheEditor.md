@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1238c1e7cb84a4db -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 86f52e38bf5e7dd9 -->
 # 02 — 에디터
 
 <!-- languages -->
@@ -420,6 +420,14 @@ ForkBuild에서는 선택을 정밀하게 다룰 수 있습니다:
 
 그 밖의 것은 서식이 아닙니다. 링크, 그림, HTML은 일반 텍스트로 남습니다.
 저장소 카드에는 설명의 낱말이 서식 없이 한 줄로 표시됩니다.
+
+**태그**는 `japanese temple garden`처럼 작품이 무엇인지 나타냅니다. 최대
+5개를 공백이나 쉼표로 구분하며, 영문 소문자, 숫자, 하이픈으로 씁니다(악센트는
+빠져서 `café`는 `cafe`가 됩니다). 태그가 없는 작품이면 대화 상자가 제목과
+설명에서 제안한 태그로 칸을 채웁니다. 그대로 두거나 바꾸거나 지우면 되고,
+칸 아래 버튼으로 다른 제안을 더할 수 있습니다. 포크해도 태그는 유지됩니다.
+Blurt 게시물에는 ForkBuild 자체 태그 뒤에 표시되므로, Blurt를 태그로 둘러보는
+사람이 작품을 찾을 수 있습니다.
 
 ## 소리
 

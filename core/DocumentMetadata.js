@@ -2,6 +2,7 @@ import { VERSION } from './version.js';
 import { PROTOCOL_VERSION } from './protocolVersion.js';
 import { License } from './License.js';
 import { PlacementPolicy } from './PlacementPolicy.js';
+import { normalizeBuildTags } from './BuildTags.js';
 
 const DEFAULT_ENGINE_VERSION = `${VERSION.major}.${VERSION.minor}.${VERSION.patch}`;
 
@@ -65,7 +66,11 @@ export class DocumentMetadata {
         license = null,
         // Copied onto the signed Publication at publish time. Stored only when
         // it isn't the default, so older documents keep their content hash.
-        placementPolicy = PlacementPolicy.ANYONE
+        placementPolicy = PlacementPolicy.ANYONE,
+        // Words that say what the build is (core/BuildTags.js), which a
+        // Blurt post lists. Stored only when there are some, so older
+        // documents keep their content hash.
+        tags = []
     } = {}) {
         this._title = title;
         this._description = description;
@@ -79,6 +84,7 @@ export class DocumentMetadata {
         this._authorIdentityId = authorIdentityId || null;
         this._license = license instanceof License ? license : (license ? License.fromJSON(license) : new License());
         this._placementPolicy = placementPolicy || PlacementPolicy.ANYONE;
+        this._tags = Object.freeze(normalizeBuildTags(tags));
     }
 
     get title() { return this._title; }
@@ -93,6 +99,7 @@ export class DocumentMetadata {
     get parentStructureId() { return this._parentStructureId; }
     get license() { return this._license; }
     get placementPolicy() { return this._placementPolicy; }
+    get tags() { return this._tags; }
 
     // 0.2.21: title/description become directly editable (Document
     // Properties UI) — same "value object with a few narrow, explicit
@@ -106,6 +113,7 @@ export class DocumentMetadata {
     set description(d) { this._description = d; }
     set license(l) { this._license = l instanceof License ? l : new License(); }
     set placementPolicy(p) { this._placementPolicy = p || PlacementPolicy.ANYONE; }
+    set tags(t) { this._tags = Object.freeze(normalizeBuildTags(t)); }
 
     touch() {
         this._modified = new Date();
@@ -124,7 +132,8 @@ export class DocumentMetadata {
             parentStructureId: this._parentStructureId,
             authorIdentityId: this._authorIdentityId,
             license: this._license.toJSON(),
-            ...(this._placementPolicy !== PlacementPolicy.ANYONE ? { placementPolicy: this._placementPolicy } : {})
+            ...(this._placementPolicy !== PlacementPolicy.ANYONE ? { placementPolicy: this._placementPolicy } : {}),
+            ...(this._tags.length > 0 ? { tags: [...this._tags] } : {})
         };
     }
 
@@ -152,7 +161,8 @@ export class DocumentMetadata {
             // own 0.2.95 comment for what reading `null` here means.
             authorIdentityId: json.authorIdentityId || null,
             license: json.license ? License.fromJSON(json.license) : null,
-            placementPolicy: json.placementPolicy || PlacementPolicy.ANYONE
+            placementPolicy: json.placementPolicy || PlacementPolicy.ANYONE,
+            tags: Array.isArray(json.tags) ? json.tags : []
         });
     }
 }

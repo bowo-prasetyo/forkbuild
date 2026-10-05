@@ -852,9 +852,9 @@ async function main() {
         const documentMetadataSource = await readSource('core/DocumentMetadata.js');
         const metadataFieldMatches = documentMetadataSource.match(/this\._(\w+)\s*=/g) || [];
         const metadataFields = new Set(metadataFieldMatches.map((m) => m.replace(/this\.|\s*=/g, '')));
-        const expectedMetadataFields = ['_title', '_description', '_author', '_created', '_modified', '_protocolVersion', '_engineVersion', '_parentDocumentId', '_parentStructureId', '_authorIdentityId', '_license', '_placementPolicy'];
+        const expectedMetadataFields = ['_title', '_description', '_author', '_created', '_modified', '_protocolVersion', '_engineVersion', '_parentDocumentId', '_parentStructureId', '_authorIdentityId', '_license', '_placementPolicy', '_tags'];
         assert(expectedMetadataFields.every((field) => metadataFields.has(field)) && metadataFields.size === expectedMetadataFields.length,
-            'M1. DocumentMetadata\'s own field set is exactly this milestone\'s own starting inventory (title/description/author/created/modified/protocolVersion/engineVersion/parentDocumentId/parentStructureId/authorIdentityId/license, plus the publisher\'s placementPolicy) — no new World-versioning field, and nothing else, was added.');
+            'M1. DocumentMetadata\'s own field set is exactly this milestone\'s own starting inventory (title/description/author/created/modified/protocolVersion/engineVersion/parentDocumentId/parentStructureId/authorIdentityId/license, plus the publisher\'s placementPolicy and the build\'s own tags) — no new World-versioning field, and nothing else, was added.');
 
         const discoverySource = await readSource('discovery/LocalDiscoveryProvider.js');
         assert(!/dedup|dedupe|merge\(/i.test(discoverySource), 'M2. No publication deduplication logic exists anywhere in LocalDiscoveryProvider.js — Section D/E\'s "twin" Publications prove this live, and static inspection confirms no dedup code was added to find or hide.');

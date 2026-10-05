@@ -83,6 +83,8 @@ export class DocumentCloneService {
             // fresh identity" means — carried through exactly like
             // license, not reset to empty just because the ids are new.
             description: description === undefined ? sourceDocument.metadata.description : description,
+            // Tags say what the build is, so a fork keeps them like its description.
+            tags: sourceDocument.metadata.tags,
             author: author === undefined ? sourceDocument.metadata.author : author,
             authorIdentityId: authorIdentityId === undefined ? sourceDocument.metadata.authorIdentityId : authorIdentityId,
             created: new Date(),
