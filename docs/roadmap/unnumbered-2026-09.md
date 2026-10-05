@@ -4108,3 +4108,15 @@ by tag never came across builds.
 - Tests: `tests/BuildTags.test.js` (tags, suggestions, the metadata field, forks); `tests/BlurtPoster.test.js`
   (order, and refusing ForkBuild's own); `tests/SteemPublicationNotice.test.js` (the card carries them);
   `tests/MetadataEditorTagsBrowser.test.js` (the dialog fills, shows, adds and saves them).
+
+## A Signed Claim's Blurt reply no longer repeats its card (unnumbered, 2026-10-05)
+
+The reply holding a Signed Claim on Blurt showed the same card as the build post right above it, picture and whole
+description included, so the description was paid for twice. That card comes from Steem, where the claim's reply
+stands alone in a content thread.
+
+- `blurtContentNotice()` (`core/BlurtPost.js`) now writes one line for a Signed Claim's manifest: the build's title
+  and the "see it in 3D" link. The build post keeps the card.
+- docs/Protocol.md ("Proposed: Blurt Substrate", content) updated.
+- Tests: `tests/BlurtContentStore.test.js` checks the reply names the build and links to it without the card, and
+  the build post shows the card.
