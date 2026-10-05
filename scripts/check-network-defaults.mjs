@@ -16,8 +16,11 @@
 //             so that stays a manual check.
 //   Steem     condenser_api.get_dynamic_global_properties returns a head
 //             block number.
-//   Blurt     the same, on the Blurt API nodes, and an author's post
-//             listing, which needs the node's tags plugin.
+//   Blurt     the same, on the Blurt API nodes; an author's post listing,
+//             which needs the node's tags plugin; and Nexus: newest posts
+//             under a busy tag (`blurt`) from bridge.get_ranked_posts,
+//             paged back until one is paid out, which shows Nexus keeps
+//             posts the chain's own tag listing has dropped.
 // STUN (UDP) and Rendezvous (our own server) are not checked here.
 //
 // The HTTP checks send an Origin header and report whether the response
@@ -54,6 +57,37 @@ async function httpCheck(url, { method = 'GET', body = null, accept } = {}) {
             detail: `${response.status}${answered ? '' : ' unexpected answer'}${cors ? '' : ', no CORS'}`,
             ms: Date.now() - started
         };
+    } catch (error) {
+        return { ok: false, detail: error.name === 'TimeoutError' ? 'timed out' : error.message, ms: Date.now() - started };
+    }
+}
+
+// Pages Nexus's `created` listing for `tag` until a paid-out post turns up.
+async function nexusCheck(url, tag = 'blurt', maxPages = 10) {
+    const started = Date.now();
+    let start = null;
+    let seen = 0;
+    try {
+        for (let page = 0; page < maxPages; page += 1) {
+            const params = { sort: 'created', tag, limit: 100, observer: '', ...(start ? { start_author: start.author, start_permlink: start.permlink } : {}) };
+            const response = await fetch(url, {
+                method: 'POST',
+                body: JSON.stringify({ jsonrpc: '2.0', method: 'bridge.get_ranked_posts', params, id: 1 }),
+                headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
+                signal: AbortSignal.timeout(TIMEOUT_MS)
+            });
+            const allowOrigin = response.headers.get('access-control-allow-origin');
+            if (allowOrigin !== '*' && allowOrigin !== ORIGIN) return { ok: false, detail: `${response.status}, no CORS`, ms: Date.now() - started };
+            const reply = await response.json();
+            if (reply.error || !Array.isArray(reply.result)) return { ok: false, detail: `no Nexus (${reply.error?.message ?? 'not a list'})`, ms: Date.now() - started };
+            seen += reply.result.length;
+            const paidOut = reply.result.find((post) => post.is_paidout === true);
+            if (paidOut) return { ok: true, detail: `keeps paid-out posts (one from ${paidOut.created}, after ${seen} posts)`, ms: Date.now() - started };
+            if (reply.result.length < 100) break;
+            const last = reply.result[reply.result.length - 1];
+            start = { author: last.author, permlink: last.permlink };
+        }
+        return { ok: false, detail: `no paid-out post among the ${seen} newest`, ms: Date.now() - started };
     } catch (error) {
         return { ok: false, detail: error.name === 'TimeoutError' ? 'timed out' : error.message, ms: Date.now() - started };
     }
@@ -115,7 +149,8 @@ const checks = [
         method: 'POST',
         body: JSON.stringify({ jsonrpc: '2.0', method: 'condenser_api.get_discussions_by_author_before_date', params: ['blurtbook', '', '1970-01-01T00:00:00', 1], id: 1 }),
         accept: (text) => isJson(text) && Array.isArray(JSON.parse(text)?.result)
-    })])
+    })]),
+    ...DEFAULT_BLURT_API_NODES.map((url) => ['Blurt', `${url} (Nexus)`, () => nexusCheck(url)])
 ];
 
 const results = await Promise.all(checks.map(async ([kind, url, check]) => ({ kind, url, ...(await check()) })));

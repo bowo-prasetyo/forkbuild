@@ -6,7 +6,9 @@
 // comment per 3 seconds, a parent that exists, an edit that keeps its
 // parent), charges the fee, and serves the condenser_api calls ForkBuild
 // makes, including the tag listing (top-level posts until they pay out) and
-// authors' histories. `chain.time` is the chain's clock in ms; tests move it.
+// authors' histories. With `nexus: true` it also answers Nexus's
+// bridge.get_ranked_posts, which keeps posts after payout, in Nexus's post
+// shape. `chain.time` is the chain's clock in ms; tests move it.
 // `overrides[node]` replaces one node's answers (a function per method, or
 // an Error to be unreachable).
 import { secp256k1 } from '../../vendor/noble-curves/secp256k1.js';
@@ -38,7 +40,7 @@ function signHeader(header) {
     return bytesToHex(signature);
 }
 
-export function fakeBlurtChain({ head = 5000, irreversibleLag = 20, balances = {}, overrides = {}, reportBlockNum = true, payoutAfterMs = 7 * 24 * 3600 * 1000 } = {}) {
+export function fakeBlurtChain({ head = 5000, irreversibleLag = 20, balances = {}, overrides = {}, reportBlockNum = true, payoutAfterMs = 7 * 24 * 3600 * 1000, nexus = false } = {}) {
     const chain = {
         head,
         time: START,
@@ -143,9 +145,9 @@ export function fakeBlurtChain({ head = 5000, irreversibleLag = 20, balances = {
         }
     };
 
-    function tagged(tag) {
+    function tagged(tag, { paidOut = false } = {}) {
         return [...chain.posts.values()]
-            .filter((post) => post.parent_author === '' && chain.time - Date.parse(`${post.created}Z`) < chain.payoutAfterMs)
+            .filter((post) => post.parent_author === '' && (paidOut || chain.time - Date.parse(`${post.created}Z`) < chain.payoutAfterMs))
             .filter((post) => {
                 try {
                     return (JSON.parse(post.json_metadata).tags ?? []).slice(0, 5).includes(tag);
@@ -189,6 +191,15 @@ export function fakeBlurtChain({ head = 5000, irreversibleLag = 20, balances = {
             const list = tagged(tag);
             const startIndex = startAuthor ? list.findIndex((post) => post.author === startAuthor && post.permlink === startPermlink) : 0;
             result = page(list, startIndex, limit);
+        } else if (method === 'bridge.get_ranked_posts' && nexus) {
+            const { sort, tag, limit, start_author: startAuthor, start_permlink: startPermlink } = params;
+            if (sort !== 'created') throw new Error('the fake serves only created');
+            const list = tagged(tag, { paidOut: true });
+            const startIndex = startAuthor ? list.findIndex((post) => post.author === startAuthor && post.permlink === startPermlink) + 1 : 0;
+            // Nexus's shape: parsed metadata, the parent left empty, depth and category set.
+            result = page(list, startIndex, limit).map((post) => ({
+                ...post, category: post.parent_permlink, parent_author: '', parent_permlink: '', depth: 0, json_metadata: JSON.parse(post.json_metadata)
+            }));
         } else if (method === 'condenser_api.get_discussions_by_author_before_date') {
             const [author, startPermlink, , limit] = params;
             const list = [...chain.posts.values()]

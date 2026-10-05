@@ -1538,16 +1538,24 @@ The one-substrate rule holds: each action announces on exactly one of Nostr, Arw
 
 ### Reading
 
-For a family, a reader combines two sources:
+For a family, a reader asks Nexus first and falls back to the chain's own indexes:
 
-1. **The tag.** `condenser_api.get_discussions_by_created([{ tag: 'forkbuild-<family>', limit: 100,
-   truncate_body: 1 }])`, paging with `start_author` and `start_permlink`, at most 10 pages. The chain's tags plugin
-   drops a post from its tag index when the post pays out, so this finds the last 7 days.
-2. **Authors' histories.** For each followed account (Network Settings → Blurt, none by default) and each account
-   the reader has seen a ForkBuild build post from in a tag listing (remembered on the device, the 100 most recent,
-   `blurt-known-authors`), `condenser_api.get_discussions_by_author_before_date([author, startPermlink,
-   '1970-01-01T00:00:00', 100])`, which lists an account's top-level posts newest first for as long as the chain
-   exists, paging until a post is older than the configured first month (default `2026-10`) or 5 pages are read.
+1. **Nexus.** Nexus (`blurt/nexus-go`) is Blurt's indexer, in the role Hivemind plays on Hive, served through the
+   `bridge` API. `bridge.get_ranked_posts({ sort: 'created', tag: 'forkbuild-<family>', limit: 100, observer: '' })`,
+   paging with `start_author` and `start_permlink` (the page starts after that post), lists every top-level post
+   carrying the tag in its category or `json_metadata.tags`, newest first, paid out or not, as long as it isn't
+   deleted, muted or grayed. The reader pages until a post is older than the configured first month (default
+   `2026-10`), at most 20 pages. A node that doesn't serve `bridge` is skipped for the next one. Nexus returns
+   `json_metadata` parsed and leaves a top-level post's parent empty, so the reader takes `depth: 0` and `category`
+   as the parent. When a node answers, nothing below is read.
+2. **The tag, when no node serves Nexus.** `condenser_api.get_discussions_by_created([{ tag: 'forkbuild-<family>',
+   limit: 100, truncate_body: 1 }])`, paging with `start_author` and `start_permlink`, at most 10 pages. The chain's
+   tags plugin drops a post from its tag index when the post pays out, so this finds the last 7 days.
+3. **Authors' histories, with the tag.** For each followed account (Network Settings → Blurt, none by default) and
+   each account the reader has seen a ForkBuild build post from (remembered on the device, the 100 most recent,
+   `blurt-known-authors`; Nexus results add to it too), `condenser_api.get_discussions_by_author_before_date([author,
+   startPermlink, '1970-01-01T00:00:00', 100])`, which lists an account's top-level posts newest first for as long as
+   the chain exists, paging until a post is older than the first month or 5 pages are read.
 
 A post counts when it is a top-level post (`parent_author` empty) in the `forkbuild` category whose
 `json_metadata.forkbuild` has `version: 1` and an `announcements` list; each entry whose `family` is the requested
@@ -1556,7 +1564,7 @@ deduplicated by author and permlink; the reader takes the version the node retur
 announcements). Candidates go through the family's verifier exactly as on Steem ("Reading", step 6), with origin
 `dweb:blurt`.
 
-The tag listing is cached for 30 seconds and an author's history for 10 minutes. When every source fails, the read
+The Nexus and tag listings are cached for 30 seconds and an author's history for 10 minutes. When every source fails, the read
 is "unavailable": the snapshot search reports unavailable, place naming and commentary reject so the caller names
 Blurt as unreachable, and publication discovery finds no leads. Nodes may also drop posts by accounts the node
 operator lists as spam (the tags plugin's spam filter); an author's history is not filtered that way.

@@ -98,7 +98,7 @@ function plantPost(chain, { author, permlink, json_metadata, parent_permlink = '
 {
     const chain = fakeBlurtChain({ overrides: { 'https://a': new Error('offline') } });
     const result = await readerFor(chain, { followedAccounts: ['bob'] }).read('publication');
-    assert(result.outcome === 'unavailable' && result.sourcesUnavailable.length === 2, 'the tag and the history both count as unavailable');
+    assert(result.outcome === 'unavailable' && result.sourcesUnavailable.length === 3, 'Nexus, the tag and the history all count as unavailable');
     const snapshots = await new BlurtSnapshotDiscoveryQueryService({ reader: readerFor(chain) }).searchWithOutcome('forkbuild-snapshot');
     assert(snapshots.outcome === 'unavailable', 'the snapshot search reports unavailable');
     assert((await new BlurtPublicationDiscoveryQueryService({ reader: readerFor(chain) }).search('forkbuild-publication')).length === 0, 'publication discovery finds no leads');
@@ -108,4 +108,31 @@ function plantPost(chain, { author, permlink, json_metadata, parent_permlink = '
     const answered = await readerFor(partly, { followedAccounts: ['bob'] }).read('publication');
     assert(answered.outcome === 'empty' && answered.sourcesRead === 1, 'one source that answers is enough to say nothing was found');
     console.log('✓ unavailability');
+}
+
+// Nexus lists every post under the tag, paid out or not, so a fresh device
+// finds old builds without following anyone, and nothing else is read.
+{
+    const chain = fakeBlurtChain({ nexus: true });
+    // A month on, so every post is paid out but after the first month read.
+    chain.time += 31 * DAY;
+    for (let i = 0; i < 150; i += 1) {
+        const [, op] = blurtBuildPostOperation({ author: `old${String(i).padStart(3, '0')}`, permlink: `forkbuild-o${i}`, state: { ...emptyBlurtBuildPost(), announcements: [{ family: 'publication', envelope: { n: i } }] } });
+        plantPost(chain, { author: op.author, permlink: op.permlink, json_metadata: op.json_metadata, ageMs: (8 + i / 10) * DAY });
+    }
+    plantPost(chain, { author: 'noise', permlink: 'p', json_metadata: JSON.stringify({ tags: ['forkbuild-publication'] }) });
+    const result = await readerFor(chain).read('publication');
+    assert(result.nexus && result.outcome === 'found' && result.announcements.length === 150, `every paid-out build post is found through Nexus, across pages (got ${result.announcements.length})`);
+    assert(new Set(result.announcements.map((a) => a.envelope.n)).size === 150, 'none twice where pages meet');
+    const methods = new Set(chain.calls.map((call) => call.method));
+    assert(!methods.has('condenser_api.get_discussions_by_created') && !methods.has('condenser_api.get_discussions_by_author_before_date'), 'nothing else is read when Nexus answers');
+
+    // A node without Nexus is skipped for one that has it.
+    const plain = fakeBlurtChain();
+    const both = createBlurtDiscoveryReader({
+        rpc: createBlurtRpcClient({ nodes: ['https://plain', 'https://a'], fetchImpl: (url, init) => (url === 'https://plain' ? plain.fetchImpl(url, init) : chain.fetchImpl(url, init)) }),
+        clock: () => chain.time
+    });
+    assert((await both.read('publication')).announcements.length === 150, 'the next node that serves Nexus answers');
+    console.log('✓ Nexus');
 }
