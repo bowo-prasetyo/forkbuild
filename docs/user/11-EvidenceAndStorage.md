@@ -783,13 +783,21 @@ post.
   half hour (the Publication's announcement, a comment, an anchor) is added
   to the same post by editing it, so your followers see one post, not
   several.
+- **The picture needs its own approval.** For a Signed Claim, Keychain
+  first asks you to sign the build's picture, then to approve the post. Its
+  second window can open behind your browser; ForkBuild waits up to two
+  minutes for each. The picture goes to Blurt's image host, through
+  ForkBuild's rendezvous server when the browser can't reach the host
+  directly; if it can't be uploaded, the post goes out without it.
 - **Five minutes between posts.** Blurt accepts one top-level post per
   account every five minutes. If your account posted one recently (from
   another app, say), ForkBuild waits, and the dialog says how long.
 - **Fees.** Every Blurt transaction costs a small fee in BLURT, set by
   Blurt's witnesses. If your account can't pay it, nothing is posted and
   you're told.
-- **Others find it** by the tag for a week, and after that through your
+- **Others find it** through Nexus, Blurt's search index, which lists every
+  post under ForkBuild's tags however old. If no Blurt node offers Nexus,
+  ForkBuild reads the tag, which lists a post for a week, and then your
   account's history: once someone's ForkBuild has seen one of your posts,
   it keeps reading your later and earlier ones.
 

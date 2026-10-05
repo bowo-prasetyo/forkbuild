@@ -1585,7 +1585,9 @@ manifest-and-parts format as Steem v2 ("Proposed: Steem Content Storage", "Forma
 - Payout stays on; there are no `comment_options`.
 - The manifest's notice links to the app's view (`#/view/blurt/<author>/<permlink>`) for a Signed Claim, with the
   build's card when one is drawn (picture uploaded to `https://images.blurt.blog` the Steem way, signed through
-  Blurt Keychain's `requestSignBuffer`; there is no relay, so a picture the browser can't upload is left out), and
+  Blurt Keychain's `requestSignBuffer`; `images.blurt.blog` doesn't accept uploads from other sites, so when the
+  browser can't reach it the same signed upload goes through the rendezvous worker's relay,
+  `POST <worker>/blurt-image/<account>/<signature>`, and a picture neither can take is left out), and
   the build post's body shows the same card.
 - Readers accept a manifest wherever it is (any post by its author with a well-formed `content`); integrity comes
   from `contentHash`, as everywhere. Parts must be the manifest author's replies to the manifest, at the listed

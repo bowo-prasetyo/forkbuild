@@ -1,4 +1,4 @@
-import worker, { RendezvousNode, LIMITS, handleSteemImageUpload } from './worker.js';
+import worker, { RendezvousNode, LIMITS, handleBlurtImageUpload, handleSteemImageUpload } from './worker.js';
 
 // Runs RendezvousNode against small fakes of the two Cloudflare surfaces it
 // uses: Durable Object storage and hibernatable WebSockets. Identities and
@@ -699,7 +699,7 @@ async function lobbyLeave(identity, card, signer = identity) {
     assert((await handleSteemImageUpload(upload(undefined, { method: 'GET' }), env, { fetchImpl })).status === 405, 'only POST uploads');
     assert((await handleSteemImageUpload(upload(undefined, { body: 'plain text' }), env, { fetchImpl })).status === 415, 'only a multipart upload');
     const big = new FormData();
-    big.append('file', new Blob([new Uint8Array(LIMITS.maxSteemImageBytes + 1)], { type: 'image/png' }), 'big.png');
+    big.append('file', new Blob([new Uint8Array(LIMITS.maxImageBytes + 1)], { type: 'image/png' }), 'big.png');
     assert((await handleSteemImageUpload(upload(undefined, { body: big }), env, { fetchImpl })).status === 413, 'an image over the limit is refused');
     assert(forwarded.length === before, 'nothing refused reaches the host');
 
@@ -712,6 +712,37 @@ async function lobbyLeave(identity, card, signer = identity) {
     const routed = await worker.fetch(new Request(`https://rendezvous.test/steem-image/alice/${SIGNATURE}`, { method: 'OPTIONS', headers: { Origin: ORIGIN } }), env);
     assert(routed.status === 204, 'the Worker routes /steem-image/ without a Durable Object');
     console.log('✓ /steem-image forwards signed uploads to the image host with CORS headers');
+}
+
+// POST /blurt-image/<account>/<signature> does the same for Blurt's image
+// host, through the same checks.
+{
+    const SIGNATURE = '20' + 'cd'.repeat(64);
+    const ORIGIN = 'https://bowo-prasetyo.github.io';
+    const env = { ALLOWED_ORIGINS: ORIGIN };
+    const forwarded = [];
+    const fetchImpl = async (url, options) => {
+        forwarded.push({ url, options });
+        return new Response(JSON.stringify({ url: 'https://images.blurt.blog/DQmTest/forkbuild-build.png' }), { status: 200, headers: { 'content-type': 'application/json' } });
+    };
+    const upload = (path = `/blurt-image/forkbuild/${SIGNATURE}`, { origin = ORIGIN } = {}) => {
+        const form = new FormData();
+        form.append('file', new Blob([new Uint8Array([137, 80, 78, 71])], { type: 'image/png' }), 'forkbuild-build.png');
+        return new Request(`https://rendezvous.test${path}`, { method: 'POST', headers: { Origin: origin }, body: form });
+    };
+
+    const ok = await handleBlurtImageUpload(upload(), env, { fetchImpl });
+    assert(ok.status === 200 && (await ok.json()).url.startsWith('https://images.blurt.blog/') && ok.headers.get('access-control-allow-origin') === ORIGIN, 'the host\'s answer comes back, readable by the app');
+    assert(forwarded.length === 1 && forwarded[0].url === `https://images.blurt.blog/forkbuild/${SIGNATURE}`, `it forwards to images.blurt.blog (got ${forwarded[0]?.url})`);
+    assert((await handleBlurtImageUpload(upload(`/steem-image/forkbuild/${SIGNATURE}`), env, { fetchImpl })).status === 404, 'a Steem path is not a Blurt one');
+    assert((await handleBlurtImageUpload(upload(undefined, { origin: 'https://elsewhere.example' }), env, { fetchImpl })).status === 403, 'another origin is refused');
+    assert(forwarded.length === 1, 'nothing refused reaches the host');
+    const elsewhere = await handleBlurtImageUpload(upload(), { ...env, BLURT_IMAGE_HOST: 'https://img.example/', STEEM_IMAGE_HOST: 'https://wrong.example' }, { fetchImpl });
+    assert(elsewhere.status === 200 && forwarded.at(-1).url === `https://img.example/forkbuild/${SIGNATURE}`, 'BLURT_IMAGE_HOST names another host');
+
+    const routed = await worker.fetch(new Request(`https://rendezvous.test/blurt-image/forkbuild/${SIGNATURE}`, { method: 'OPTIONS', headers: { Origin: ORIGIN } }), env);
+    assert(routed.status === 204, 'the Worker routes /blurt-image/ without a Durable Object');
+    console.log('✓ /blurt-image forwards signed uploads to Blurt\'s image host with CORS headers');
 }
 
 console.log('✅ All ForkBuild Rendezvous Worker tests passed.');

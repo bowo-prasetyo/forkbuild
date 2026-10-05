@@ -195,7 +195,7 @@ development. Before you deploy your own copy:
 An origin is scheme, host and port, with no path or trailing slash
 (`https://bowo-prasetyo.github.io`, not `…github.io/forkbuild/`).
 
-## Steem image uploads
+## Steem and Blurt image uploads
 
 `POST /steem-image/<account>/<signature>` forwards a picture for a Steem
 notice to the Steem image host, `https://steemitimages.com` (set the
@@ -208,13 +208,19 @@ The body is the multipart form the app would have sent the host, forwarded
 unchanged. The host checks that `<signature>` is `<account>`'s posting key
 signing these exact image bytes, so the relay can neither change a picture
 nor upload as anyone. It keeps no state and needs no Durable Object. It
-accepts images up to 1 MB (`LIMITS.maxSteemImageBytes`; the app's are
+accepts images up to 1 MB (`LIMITS.maxImageBytes`; the app's are
 320×200 PNGs of a few tens of kilobytes) from `ALLOWED_ORIGINS` only, and
 waits at most 30 seconds for the host.
 
 Check it from ForkBuild's site with the image upload check on
 `scripts/steem-threads/content-check.html`: when the browser can't reach
 steemitimages.com, its Upload row reads "accepted, through the relay".
+
+`POST /blurt-image/<account>/<signature>` does the same for a Blurt post's
+picture, forwarding to Blurt's image host, `https://images.blurt.blog` (set
+`BLURT_IMAGE_HOST` to use another), which doesn't accept uploads from other
+sites either. The same checks and limits apply; the host checks the
+signature against the account's Blurt posting key.
 
 ## Cost
 

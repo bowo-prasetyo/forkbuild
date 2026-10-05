@@ -117,19 +117,30 @@ export const LIMITS = Object.freeze({
     maxLobbyCards: 20000,
     lobbyListSize: 50,
     lobbyListScan: 1000,
-    // Steem image uploads (POST /steem-image/...): the largest image
-    // forwarded (the app's are 320×200 PNGs, a few tens of kilobytes), and
-    // how long the image host may take to answer.
-    maxSteemImageBytes: 1024 * 1024,
-    steemImageTimeoutMs: 30 * 1000
+    // Steem and Blurt image uploads (POST /steem-image/..., /blurt-image/...):
+    // the largest image forwarded (the app's are 320×200 PNGs, a few tens of
+    // kilobytes), and how long the image host may take to answer.
+    maxImageBytes: 1024 * 1024,
+    imageTimeoutMs: 30 * 1000
 });
 
-// Where POST /steem-image/<account>/<signature> forwards to, unless the
-// STEEM_IMAGE_HOST variable names another host.
-const DEFAULT_STEEM_IMAGE_HOST = 'https://steemitimages.com';
-// A Steem account name, then a hex signature (130 characters for Steem's
-// 65-byte signatures).
-const STEEM_IMAGE_PATH = /^\/steem-image\/([a-z0-9][a-z0-9.-]{2,15})\/([0-9a-f]{130})$/;
+// Where POST /<chain>-image/<account>/<signature> forwards to, unless the
+// variable named here names another host. Each path is an account name, then
+// a hex signature (130 characters for the chains' 65-byte signatures).
+const IMAGE_RELAYS = Object.freeze({
+    steem: Object.freeze({
+        chain: 'Steem',
+        path: /^\/steem-image\/([a-z0-9][a-z0-9.-]{2,15})\/([0-9a-f]{130})$/,
+        hostVariable: 'STEEM_IMAGE_HOST',
+        defaultHost: 'https://steemitimages.com'
+    }),
+    blurt: Object.freeze({
+        chain: 'Blurt',
+        path: /^\/blurt-image\/([a-z0-9][a-z0-9.-]{2,15})\/([0-9a-f]{130})$/,
+        hostVariable: 'BLURT_IMAGE_HOST',
+        defaultHost: 'https://images.blurt.blog'
+    })
+});
 
 // Mirrors core/LobbyCard.js: the global lobby, or one per World.
 const LOBBY_PATTERN = /^(public|world:[A-Za-z0-9._-]{1,128})$/;
@@ -1006,7 +1017,7 @@ function parseAllowedOrigins(raw) {
     return raw.split(',').map((origin) => origin.trim()).filter(Boolean);
 }
 
-// The app runs on another origin, so /turn-credentials and /steem-image need
+// The app runs on another origin, so /turn-credentials and the image routes need
 // CORS. Allowed origins are ALLOWED_ORIGINS when set, otherwise any.
 function corsHeaders(request, env, methods = 'GET, OPTIONS') {
     const allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
@@ -1020,11 +1031,21 @@ function corsHeaders(request, env, methods = 'GET, OPTIONS') {
 // POST /steem-image/<account>/<signature>: forwards an image upload to the
 // Steem image host and returns its answer with CORS headers, which the host
 // itself stopped sending (steemitimages.com, 2026-09-29), so browsers on
-// other sites can read it. The body (the multipart form with the image) goes
-// on unchanged. The host checks that <signature> is <account>'s posting key
-// over these exact image bytes, so the relay can neither change the image nor
+// other sites can read it. POST /blurt-image/... does the same for Blurt's
+// image host (images.blurt.blog), which doesn't accept uploads from other
+// sites either. The body (the multipart form with the image) goes on
+// unchanged. The host checks that <signature> is <account>'s posting key over
+// these exact image bytes, so the relay can neither change the image nor
 // upload as anyone; it keeps no state.
-export async function handleSteemImageUpload(request, env, { fetchImpl = globalThis.fetch } = {}) {
+export function handleSteemImageUpload(request, env, options) {
+    return handleImageUpload(request, env, IMAGE_RELAYS.steem, options);
+}
+
+export function handleBlurtImageUpload(request, env, options) {
+    return handleImageUpload(request, env, IMAGE_RELAYS.blurt, options);
+}
+
+async function handleImageUpload(request, env, relay, { fetchImpl = globalThis.fetch } = {}) {
     const headers = { 'content-type': 'application/json', 'cache-control': 'no-store', ...corsHeaders(request, env, 'POST, OPTIONS') };
     const reply = (status, body) => new Response(JSON.stringify(body), { status, headers });
     if (request.method === 'OPTIONS') {
@@ -1037,32 +1058,32 @@ export async function handleSteemImageUpload(request, env, { fetchImpl = globalT
     if (request.method !== 'POST') {
         return reply(405, { error: 'use POST' });
     }
-    const match = STEEM_IMAGE_PATH.exec(new URL(request.url).pathname);
+    const match = relay.path.exec(new URL(request.url).pathname);
     if (!match) {
-        return reply(404, { error: 'expected /steem-image/<account>/<signature>' });
+        return reply(404, { error: `expected /${relay.chain.toLowerCase()}-image/<account>/<signature>` });
     }
     const contentType = request.headers.get('content-type') || '';
     if (!contentType.startsWith('multipart/form-data')) {
         return reply(415, { error: 'expected a multipart/form-data upload' });
     }
-    if (Number(request.headers.get('content-length')) > LIMITS.maxSteemImageBytes) {
-        return reply(413, { error: `the image is larger than ${LIMITS.maxSteemImageBytes} bytes` });
+    if (Number(request.headers.get('content-length')) > LIMITS.maxImageBytes) {
+        return reply(413, { error: `the image is larger than ${LIMITS.maxImageBytes} bytes` });
     }
     const body = await request.arrayBuffer();
-    if (body.byteLength > LIMITS.maxSteemImageBytes) {
-        return reply(413, { error: `the image is larger than ${LIMITS.maxSteemImageBytes} bytes` });
+    if (body.byteLength > LIMITS.maxImageBytes) {
+        return reply(413, { error: `the image is larger than ${LIMITS.maxImageBytes} bytes` });
     }
-    const host = (env.STEEM_IMAGE_HOST || DEFAULT_STEEM_IMAGE_HOST).replace(/\/+$/, '');
+    const host = (env[relay.hostVariable] || relay.defaultHost).replace(/\/+$/, '');
     let upstream;
     try {
         upstream = await fetchImpl(`${host}/${match[1]}/${match[2]}`, {
             method: 'POST',
             headers: { 'content-type': contentType },
             body,
-            signal: AbortSignal.timeout(LIMITS.steemImageTimeoutMs)
+            signal: AbortSignal.timeout(LIMITS.imageTimeoutMs)
         });
     } catch (err) {
-        console.error('steem-image:', String((err && err.message) || err));
+        console.error(`${relay.chain.toLowerCase()}-image:`, String((err && err.message) || err));
         return reply(502, { error: 'the image host did not answer' });
     }
     // The host's own answer, whatever it is: `{ url }`, or `{ error }` with
@@ -1088,6 +1109,9 @@ export default {
         // itself so its refusals carry CORS headers the app can read.
         if (pathname.startsWith('/steem-image/')) {
             return handleSteemImageUpload(request, env);
+        }
+        if (pathname.startsWith('/blurt-image/')) {
+            return handleBlurtImageUpload(request, env);
         }
         const isTurnRequest = pathname === '/turn-credentials';
         if (!isTurnRequest && request.headers.get('Upgrade') !== 'websocket') {
