@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 16855c5d4fae8108 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 3a000cc71ab8702b -->
 # 10 — ネットワーク設定
 
 <!-- languages -->
 [English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · [Français](../fr/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · **日本語** · [한국어](../ko/10-NetworkSettings.md) · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../10-NetworkSettings.md)も参照してください。
-<!-- /stale -->
 
 上部のバーの **ネットワーク設定** には、ForkBuild がどのサーバーと
 通信するかを決めるページがすべてまとまっています。ほとんどの人は、
@@ -23,20 +19,21 @@
 | ページ | ルート | 設定する内容 |
 |---|---|---|
 | **コンテンツサービス** | `/settings/content-provider` | **…に保存** と **優先するサービスを使う** が新しいコンテンツを保存する場所と、送り先の IPFS ノード — [下記](#コンテンツサービス) を参照 |
-| **告知 / 発見サービス** | `/settings/announcement-discovery-provider` | 告知の既定の送り先: Nostr、Arweave、Steem — [下記](#告知--発見サービス) を参照 |
+| **告知 / 発見サービス** | `/settings/announcement-discovery-provider` | 告知の既定の送り先: Nostr、Arweave、Steem、Blurt — [下記](#告知--発見サービス) を参照 |
 | **証明 / アンカリングサービス** *（試験的）* | `/settings/anchor-provider` | **…にアンカー** がアンカーする場所 — [下記](#証明--アンカリングサービス) を参照 |
 | **Arweaveゲートウェイ** | `/settings/arweave-gateway` | Arweave のコンテンツを読むためのゲートウェイ — [下記](#arweaveゲートウェイ) を参照 |
 | **IPFSゲートウェイ** | `/settings/ipfs-gateway` | IPFS のコンテンツを読むためのゲートウェイ — [下記](#ipfsゲートウェイ) を参照 |
 | **Bitcoinエンドポイント** *（試験的）* | `/settings/bitcoin-esplora` | Bitcoin のアンカリングが使うサービス — [下記](#bitcoinエンドポイント) を参照 |
 | **Nostrリレー** | `/settings/nostr-relay` | Nostr での公開と発見に使うリレー — [下記](#nostrリレー) を参照 |
 | **Steem** *（試験的）* | `/settings/steem` | あなたの Steem アカウントと、Steem を読む場所 — [下記](#steem) を参照 |
+| **Blurt** *（試験的）* | `/settings/blurt` | あなたの Blurt アカウントと、Blurt を読む場所 — [下記](#blurt) を参照 |
 | **STUNサーバー** / **TURNサーバー** | `/settings/stun`、`/settings/turn-server` | ピア接続の補助 — [TURN](07-PeerConnectionsAndFriends.md#turn-直接の経路が見つからないピア接続を中継する) を参照 |
 | **ランデブーサーバー** | `/settings/rendezvous` | ピアどうしが互いを見つける方法 — [ピア接続と友達](07-PeerConnectionsAndFriends.md) を参照 |
 
 ## すべてのページに共通する動作
 
 - **保存したら再読み込みしてください。** 変更は、次にアプリを読み込んだ
-  ときに反映されます（Steem アカウントだけは例外です）。開いている
+  ときに反映されます（Steem と Blurt のアカウントは例外です）。開いている
   ワールドビューやエディターは、再読み込みするまで古い設定を使い続け
   ます。
 - 各ページにはそれぞれ **保存** があります。保存に失敗すると理由が
@@ -44,7 +41,7 @@
   と表示されます。
 - 選択肢の一覧はアルファベット順に表示されます。
 - **サーバーの一覧には既定値があります。** Arweaveゲートウェイ、
-  IPFSゲートウェイ、Bitcoinエンドポイント、Nostrリレー、Steem、STUN、
+  IPFSゲートウェイ、Bitcoinエンドポイント、Nostrリレー、Steem、Blurt、STUN、
   ランデブーのページには、最初から無料の公開サーバーがいくつか入って
   いるので、1 つが止まっていても動き続けます。ページには「既定の…を
   使用中」か「保存した…を使用中」かが表示されます。何も保存していない
@@ -88,17 +85,17 @@
 
 公開物（共有ワールド、ブループリントの作者情報、地名のクレーム）、
 スナップショット、コメントを告知する既定の場所として、**Arweave**、
-**Nostr**、**Steem**（試験的）のいずれかを選びます。これは既定値に
+**Blurt**（試験的）、**Nostr**、**Steem**（試験的）のいずれかを選びます。これは既定値に
 すぎません。すべての **配信** ダイアログ、リポジトリのカードごとの
 配信の選択、**コメントを投稿** の横のネットワークの選択は、最初はこれに
 なっていて、1 回の操作に限って切り替えられます。
-他の人のコンテンツを見つけるときは、常に 3 つすべてを検索します。
+他の人のコンテンツを見つけるときは、常にそのすべてを検索します。
 
 ## 証明 / アンカリングサービス
 
 *試験的。* **…にアンカー**（公開物の **証明 / アンカリング** ブロックの
 最初のボタン）が外部証拠を作る場所を、このデバイスに登録されている
-**Arweave**、**Bitcoin**、**Steem** から選びます。Base のアンカーには
+**Arweave**、**Bitcoin**、**Blurt**、**Steem** から選びます。Base のアンカーには
 必ずウォレットのトランザクションを確認して署名する必要があるので、Base は
 選択肢に出ません。Bitcoin を選ぶと **…にアンカー** ボタンはなく、
 ブロックにはすべての選択肢が表示され、ウォレットの手順が案内されます。
@@ -189,3 +186,24 @@ URL でない行が 1 つでもあれば拒否します。
 どの Steem ノードにも到達できないときは、**新しいコメントを確認** と
 スナップショットの発見は、何も見つからなかったと報告するのではなく、
 Steem が利用できないことを示します。
+
+## Blurt
+
+*試験的。* **投稿** の下で **あなたのBlurtアカウント** を設定します
+（再読み込みなしですぐに反映されます）。Blurt に投稿、保存、アンカー
+するのに必要です — [Blurt](11-EvidenceAndStorage.md#blurt) を参照して
+ください。Blurt から読むだけならアカウントは不要です。ページの残りの
+部分では、Blurt をどこから読むかを設定します。
+
+**APIノード** — `https://` の URL を 1 行に 1 つ（既定は
+`https://rpc.blurt.blog` と `https://rpc.beblurt.com`）。順番に試され
+ます。ForkBuild は、どれほど古い投稿も保持している Blurt の検索
+インデックス Nexus を通して投稿を見つけ、Nexus を提供しないノードは
+飛ばします。Nexus を提供するノードがない場合は、Blurt 自身のタグ一覧に
+切り替えます。タグ一覧は投稿を報酬が支払われる 7 日後までしか保持しない
+ので、それより古い投稿は、このデバイスでそのタグで投稿したのを見た
+アカウントの履歴から見つけます。
+
+どの Blurt ノードにも到達できないときは、**新しいコメントを確認** と
+スナップショットの発見は、何も見つからなかったと報告するのではなく、
+Blurt が利用できないことを示します。

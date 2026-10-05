@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: b5cf5faa75241d15 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: d6122c9368a1f486 -->
 # Preguntas frecuentes
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · **Español** · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../FAQ.md).
-<!-- /stale -->
 
 Respuestas breves a las preguntas con las que más se encuentra la gente,
 cada una con un enlace a la guía que la explica por completo.
@@ -26,7 +22,7 @@ decida:
   en **Compartido con usted** y hace clic en **Recuperar**. Tienen que
   estar conectados al mismo tiempo para que llegue.
 - **Distribuir** la sube a Arweave o IPFS (o, de forma experimental, a
-  Steem) y la anuncia, para que la gente pueda encontrarla sin estar
+  Steem o Blurt) y la anuncia, para que la gente pueda encontrarla sin estar
   conectada con usted.
 
 Consulte [Publicar y bifurcar](04-PublishingAndForking.md#compartir-con-pares-conectados).
@@ -34,7 +30,7 @@ Consulte [Publicar y bifurcar](04-PublishingAndForking.md#compartir-con-pares-co
 ### ¿Cómo hago que mi trabajo esté disponible para todos?
 
 Distribúyalo: guárdelo en Arweave o IPFS (o, de forma experimental, en
-Steem) y anúncielo en Nostr o Arweave (o Steem), para que cualquiera pueda
+Steem o Blurt) y anúncielo en Nostr o Arweave (o Steem o Blurt), para que cualquiera pueda
 encontrarlo y comprobarlo sin estar conectado con usted. Haga clic en
 **Distribuir** justo después de publicar, o en **Mi Mundo compartido** en la
 Vista del mundo. Necesita una extensión del navegador que firme para las
@@ -77,7 +73,7 @@ después. Inicie sesión antes de publicar.
 Sí: abra el Mundo en la Vista del mundo y luego, en **Mi Mundo
 compartido**, elija **Más ▾ → Retirar publicación…**. Eso lo quita de su
 Repositorio. No puede recuperar las copias que otras personas ya
-recibieron ni nada de lo que distribuyó a Arweave, IPFS, Nostr o Steem. Este dispositivo sí recuerda lo que retiró,
+recibieron ni nada de lo que distribuyó a Arweave, IPFS, Nostr, Steem o Blurt. Este dispositivo sí recuerda lo que retiró,
 así que la búsqueda del Repositorio en las redes no volverá a mostrar esas
 copias aquí; otros dispositivos y otras personas aún pueden encontrarlas.
 

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: b5cf5faa75241d15 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: d6122c9368a1f486 -->
 # Perguntas frequentes
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../FAQ.md).
-<!-- /stale -->
 
 Respostas curtas às dúvidas mais comuns, cada uma com um link para o guia
 que explica o assunto por inteiro.
@@ -25,7 +21,7 @@ Repositório. Nada é enviado a lugar nenhum até você escolher:
   **Compartilhado com você** e clica em **Recuperar**. Vocês precisam estar
   conectados ao mesmo tempo para ela chegar.
 - **Distribuir** a envia para o Arweave ou o IPFS (ou, de forma
-  experimental, para o Steem) e a anuncia, para que as pessoas possam
+  experimental, para o Steem ou o Blurt) e a anuncia, para que as pessoas possam
   encontrá-la sem estar conectadas a você.
 
 Veja
@@ -34,7 +30,7 @@ Veja
 ### Como deixo meu trabalho disponível para todos?
 
 Distribua-o: guarde-o no Arweave ou no IPFS (ou, de forma experimental, no
-Steem) e anuncie-o no Nostr ou no Arweave (ou no Steem), para que qualquer
+Steem ou no Blurt) e anuncie-o no Nostr ou no Arweave (ou no Steem ou no Blurt), para que qualquer
 pessoa possa encontrá-lo e conferi-lo sem estar conectada a você. Clique em
 **Distribuir** logo depois de publicar, ou em **Meu Mundo compartilhado** na
 Visão do mundo. Você precisa de uma extensão de navegador que assine para as
@@ -75,7 +71,7 @@ distribuí-lo depois. Entre antes de publicar.
 Sim: abra o Mundo na Visão do mundo e, em **Meu Mundo compartilhado**,
 escolha **Mais ▾ → Despublicar…**. Isso o tira do seu Repositório. Não
 recupera as cópias que outras pessoas já receberam nem nada que você tenha
-distribuído no Arweave, no IPFS, no Nostr ou no Steem. Este dispositivo
+distribuído no Arweave, no IPFS, no Nostr, no Steem ou no Blurt. Este dispositivo
 lembra o que você despublicou, então a busca do Repositório nas redes não
 volta a listar essas cópias aqui; outros dispositivos e outras pessoas ainda
 podem encontrá-las.

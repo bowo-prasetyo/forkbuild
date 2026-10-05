@@ -1,13 +1,9 @@
-<!-- translation-of: docs/Privacy.md source-hash: 9cb6f05e34121fa7 -->
+<!-- translation-of: docs/Privacy.md source-hash: 2613ec8e89de381d -->
 # Datenschutz
 
 <!-- languages -->
 [English](../../Privacy.md) · **Deutsch** · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../../Privacy.md).
-<!-- /stale -->
 
 ForkBuild hat keine Konten und verfolgt Sie nicht. Es speichert Ihre
 Arbeit in Ihrem eigenen Browser und spricht nur für die Funktionen mit
@@ -149,7 +145,7 @@ die App ausgeliefert wird (siehe
 [docs/Deployment.md](../../Deployment.md) (Englisch)). Eines beginnt von
 selbst: etwa 10 Sekunden nach dem Öffnen der App und danach alle paar
 Minuten, solange ihr Tab sichtbar ist, liest sie neue Ankündigungen von den
-Nostr-Relays, dem Arweave-Gateway und den Steem-Knoten, die unter
+Nostr-Relays, dem Arweave-Gateway sowie den Steem- und Blurt-Knoten, die unter
 **Netzwerkeinstellungen** konfiguriert sind (docs/AnnouncementIndex.md). Sie
 liest nur Ankündigungen (kleine Verweise und signierte Ansprüche), nie
 Inhalte, und veröffentlicht nichts. Alles andere geschieht nur, wenn Sie die
@@ -164,15 +160,17 @@ was Sie bei ihm anfragen.
 | Sie treten einer öffentlichen Lobby bei oder sehen in eine hinein | derselbe Rendezvous-Server | Ihre signierte Lobby-Karte (öffentlicher Schlüssel, Anzeigename, welche Lobby), höchstens 15 Minuten aufbewahrt und erneuert, solange Sie bleiben; in welche Lobby Sie hineinsehen |
 | Eine Peer-Verbindung beginnt | STUN-Server (`stun.l.google.com`) | nichts außer einer Anfrage nach Ihrer öffentlichen IP-Adresse |
 | Sie beginnen eine Peer-Verbindung, wenn der Rendezvous-Server ein Relay anbietet | `/turn-credentials` des Rendezvous-Servers, dann sein TURN-Relay (Cloudflare) | eine Anfrage nach kurzlebigen Relay-Zugangsdaten, höchstens etwa einmal pro Stunde; weitergeleiteter Verkehr ist durch WebRTC Ende-zu-Ende-verschlüsselt |
-| Die App ist geöffnet und ihr Tab sichtbar (Synchronisierung der Ankündigungen im Hintergrund) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`) | Abfragen nach den Entdeckungs-Tags von ForkBuild: den gemeinsamen Tags für Snapshots und Kommentare sowie den Ortsnamen-Regionen und Kartenzellen, die Sie besucht haben |
-| Sie öffnen das Repository oder eine Autorenseite | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`) | eine Abfrage nach dem gemeinsamen Veröffentlichungs-Tag (`forkbuild-publication`); dann eine Anfrage nach dem signierten Eintrag jeder neu angekündigten Veröffentlichung, höchstens 20 pro Besuch oder **Erneut prüfen** |
+| Die App ist geöffnet und ihr Tab sichtbar (Synchronisierung der Ankündigungen im Hintergrund) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | Abfragen nach den Entdeckungs-Tags von ForkBuild: den gemeinsamen Tags für Snapshots und Kommentare sowie den Ortsnamen-Regionen und Kartenzellen, die Sie besucht haben |
+| Sie öffnen das Repository oder eine Autorenseite | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | eine Abfrage nach dem gemeinsamen Veröffentlichungs-Tag (`forkbuild-publication`); dann eine Anfrage nach dem signierten Eintrag jeder neu angekündigten Veröffentlichung, höchstens 20 pro Besuch oder **Erneut prüfen** |
 | Sie verteilen oder entdecken Veröffentlichungen über Nostr | Nostr-Relays (`relay.damus.io`) | signierte Ankündigungen, die Sie veröffentlichen; Ihre Abfragen |
 | Sie speichern oder holen Inhalte auf Arweave | ein Arweave-Gateway (`arweave.net`) | die Inhalte, die Sie veröffentlichen; was Sie abrufen |
 | Sie holen Inhalte von IPFS | ein IPFS-Gateway (`ipfs.io`) oder Ihr eigener IPFS-Knoten (`127.0.0.1:5001`) | was Sie abrufen oder hinzufügen |
 | Sie pinnen Inhalte bei einem entfernten Pinning-Dienst (*experimentell*) | der Dienst, den Sie eingeben | den Inhalt und das Token, das Sie für diesen einen Upload eingeben (nie gespeichert) |
 | Sie speichern, kündigen an oder verankern auf Steem, oder entdecken Steem-Ankündigungen (*experimentell*) | Steem-API-Knoten (`api.steemit.com`, dann `api.justyy.com`); das Signieren läuft über die Erweiterung Steem Keychain | Ihren Steem-Kontonamen; was Sie posten (Ankündigungen, gespeicherte Inhalte, Anker), ist dauerhaft öffentlich auf der Chain, und Bearbeitungen lassen die frühere Version in ihrem Verlauf |
+| Sie speichern, kündigen an oder verankern auf Blurt, oder entdecken Blurt-Beiträge (*experimentell*) | Blurt-API-Knoten (`rpc.blurt.blog`, dann `rpc.beblurt.com`); das Signieren läuft über die Erweiterung Blurt Keychain (oder WhaleVault) | Ihren Blurt-Kontonamen und die Konten, deren Beitragsverlauf gelesen wird (die, denen Sie folgen, und jedes Konto, das dieses Gerät unter den Tags von ForkBuild posten gesehen hat, auf diesem Gerät gemerkt); was Sie posten, ist dauerhaft öffentlich auf der Chain, unter Ihrem eigenen Konto, und Bearbeitungen lassen die frühere Fassung in seinem Verlauf. Jede Transaktion kostet Ihr Konto eine kleine Gebühr in BLURT |
+| Sie verteilen den Signierten Anspruch einer Veröffentlichung auf Blurt (*experimentell*) | der Bildhoster von Blurt (`images.blurt.blog`), direkt oder, wenn der Browser ihn nicht erreicht, über das `/blurt-image`-Relay des Rendezvous-Servers, das nichts speichert | ein 320×200-Bild des Bauwerks für die Vorschau des Beitrags, signiert mit Ihrem Blurt-Posting-Schlüssel |
 | Sie verteilen den Signierten Anspruch einer Veröffentlichung auf Steem (*experimentell*) | der Steem-Bildhoster (`steemitimages.com`), direkt oder, wenn der Browser ihn nicht erreicht, über das `/steem-image`-Relay des Rendezvous-Servers, das nichts speichert | ein 320×200-Bild des Bauwerks für die Vorschau des Beitrags, signiert mit Ihrem Steem-Posting-Schlüssel |
-| Sie öffnen einen geteilten Link zu einer Veröffentlichung (`#/view/…`) | der Steem-Knoten, das Arweave-Gateway oder das IPFS-Gateway, das der Link nennt, dann die Ankündigungssubstrate, um sein Bauwerk zu finden | welchen Beitrag, welche Transaktion oder welche CID Sie öffnen |
+| Sie öffnen einen geteilten Link zu einer Veröffentlichung (`#/view/…`) | der Steem- oder Blurt-Knoten, das Arweave-Gateway oder das IPFS-Gateway, das der Link nennt, dann die Ankündigungssubstrate, um sein Bauwerk zu finden | welchen Beitrag, welche Transaktion oder welche CID Sie öffnen |
 | Sie verankern oder überprüfen Nachweise auf Bitcoin (*experimentell*) | eine Esplora-API (`blockstream.info`) | die Transaktion, die Sie senden oder nachschlagen |
 | Sie überprüfen Nachweise auf Base (*experimentell*) | ein Base-JSON-RPC-Endpunkt (`mainnet.base.org`) | die Transaktion, die Sie nachschlagen |
 | Sie verbinden eine Browser-Wallet (*experimentell*) | die Wallet-Erweiterung, die Sie wählen | was immer sie Sie bestätigen lässt |

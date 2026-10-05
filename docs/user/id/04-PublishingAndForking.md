@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1855909b2b8b1dec -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9a754ee94fee1ff -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · **Bahasa Indonesia** · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Inilah inti ForkBuild. **Menerbitkan** membagikan karya Anda kepada dunia.
 **Fork** memungkinkan siapa pun menyalin sebuah karya dan
@@ -108,7 +104,7 @@ maupun hasil kedua bagian tidak diingat di mana pun.
 ## Berbagi dengan rekan yang terhubung
 
 Dunia yang Anda terbitkan hanya tercantum di Repositori *Anda*, sampai Anda
-mendistribusikannya di Nostr, Arweave, atau Steem (lihat
+mendistribusikannya di Nostr, Arweave, Steem, atau Blurt (lihat
 [Distribusi](Distribution.md)): setelah itu Repositori siapa pun dapat
 menemukannya (lihat
 [Karya yang didistribusikan orang lain](#karya-yang-didistribusikan-orang-lain)).
@@ -218,7 +214,7 @@ maupun sepuluh ribu.
 ### Karya yang didistribusikan orang lain
 
 Setiap kali Anda membuka Repositori (atau halaman pembuat), Repositori
-mencari di Nostr, Arweave, dan Steem karya yang didistribusikan orang lain
+mencari di Nostr, Arweave, Steem, dan Blurt karya yang didistribusikan orang lain
 di sana, lalu menambahkan yang dapat diverifikasinya. Sebuah baris di atas
 daftar menjelaskan apa yang sedang dilakukannya, lalu berapa banyak karya
 baru yang ditemukannya; **Periksa lagi** mencari sekali lagi.

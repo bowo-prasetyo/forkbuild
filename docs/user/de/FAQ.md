@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: b5cf5faa75241d15 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: d6122c9368a1f486 -->
 # Häufige Fragen
 
 <!-- languages -->
 [English](../FAQ.md) · **Deutsch** · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../FAQ.md).
-<!-- /stale -->
 
 Kurze Antworten auf die Fragen, auf die man am häufigsten stößt, jeweils
 mit einem Link zur Anleitung, die es ausführlich erklärt.
@@ -26,7 +22,7 @@ bis Sie es so entscheiden:
   **Mit Ihnen geteilt** und klicken auf **Abrufen**. Sie müssen
   gleichzeitig verbunden sein, damit sie ankommt.
 - **Verteilen** lädt sie auf Arweave oder IPFS (oder, experimentell,
-  Steem) hoch und kündigt sie an, sodass andere sie finden können, ohne
+  Steem oder Blurt) hoch und kündigt sie an, sodass andere sie finden können, ohne
   mit Ihnen verbunden zu sein.
 
 Siehe [Veröffentlichen & Forken](04-PublishingAndForking.md#mit-verbundenen-peers-teilen).
@@ -34,8 +30,8 @@ Siehe [Veröffentlichen & Forken](04-PublishingAndForking.md#mit-verbundenen-pee
 ### Wie mache ich meine Arbeit für alle zugänglich?
 
 Verteilen Sie sie: Speichern Sie sie auf Arweave oder IPFS (oder,
-experimentell, auf Steem) und kündigen Sie sie auf Nostr oder Arweave (oder
-Steem) an, sodass jeder sie finden und prüfen kann, ohne mit Ihnen verbunden
+experimentell, auf Steem oder Blurt) und kündigen Sie sie auf Nostr oder Arweave (oder
+Steem oder Blurt) an, sodass jeder sie finden und prüfen kann, ohne mit Ihnen verbunden
 zu sein. Klicken Sie direkt nach dem Veröffentlichen auf **Verteilen** oder
 in der Weltansicht unter **Meine Geteilte Welt**. Für die gewählten
 Netzwerke brauchen Sie eine signierende Browsererweiterung, etwa Wander für
@@ -78,7 +74,7 @@ teilen noch verteilen können. Melden Sie sich vor dem Veröffentlichen an.
 Ja: Öffnen Sie die Welt in der Weltansicht und wählen Sie dann unter
 **Meine Geteilte Welt** **Mehr ▾ → Veröffentlichung zurückziehen …**. Das
 entfernt sie aus Ihrem Repository. Kopien, die andere bereits erhalten
-haben, oder was Sie auf Arweave, IPFS, Nostr oder Steem verteilt haben,
+haben, oder was Sie auf Arweave, IPFS, Nostr, Steem oder Blurt verteilt haben,
 lassen sich damit nicht zurückholen. Dieses Gerät merkt sich aber, was Sie
 zurückgezogen haben, sodass die Suche des Repository in den Netzwerken diese
 Kopien hier nicht wieder auflistet; andere Geräte und andere Menschen können

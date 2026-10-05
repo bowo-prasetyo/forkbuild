@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 263581397a33de10 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: ebb2f824912e0429 -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · **Español** · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../11-EvidenceAndStorage.md).
-<!-- /stale -->
 
 > **En su mayor parte experimental.** Guardar contenido en IPFS o Arweave
 > desde el bloque **Distribución → Contenido** de una tarjeta
@@ -25,7 +21,7 @@ secciones para demostrar *cuándo* existía una publicación y para poner su
 contenido en algún lugar donde otras personas puedan obtenerlo:
 
 - **[Evidencia externa](#evidencia-externa)**: registros en Bitcoin, Base,
-  Arweave o Steem de que el hash de contenido de una publicación existía en
+  Arweave, Steem o Blurt de que el hash de contenido de una publicación existía en
   cierto momento.
 - **[El flujo de anclaje en Bitcoin](#el-flujo-de-anclaje-en-bitcoin)** y
   **[El flujo de anclaje en Base](#el-flujo-de-anclaje-en-base)**: flujos
@@ -37,6 +33,8 @@ contenido en algún lugar donde otras personas puedan obtenerlo:
 - **[Publicación en IPFS](#publicación-en-ipfs)**: subir a un servicio de
   pinning remoto.
 - **[Steem](#steem)**: publicar, guardar y compartir enlaces en Steem.
+- **[Blurt](#blurt)**: publicar, guardar y anclar en Blurt, desde su propia
+  cuenta, con recompensas.
 
 La evidencia y las ubicaciones responden a preguntas distintas. Un anclaje
 muestra que un hash se registró en algún momento; no dice nada sobre si
@@ -85,6 +83,9 @@ transacción en esa red, con uno de tres resultados:
 - **Crear anclaje en Steem** necesita la extensión Steem Keychain, y su
   cuenta de Steem configurada en
   [Configuración de red → Steem](10-NetworkSettings.md#steem).
+- **Crear anclaje en Blurt** necesita la extensión Blurt Keychain (o
+  WhaleVault), y su cuenta de Blurt configurada en
+  [Configuración de red → Blurt](10-NetworkSettings.md#blurt).
 
 Una publicación hecha antes de que los hashes de contenido pasaran a ser
 SHA-256 nunca se ancla, ni con estos botones, ni con los pasos de Bitcoin o
@@ -117,13 +118,24 @@ Steem witnesses” (certificado por testigos de Steem). Use un anclaje en
 Steem como evidencia rápida y gratuita junto a uno en Bitcoin, no en su
 lugar.
 
+**Los anclajes en Blurt** los certifican los testigos de Blurt de la misma
+manera, y son igual de más débiles que los de Bitcoin. Cuando este
+dispositivo ya publicó el Snapshot de su construcción en Blurt (lo anunció
+o lo guardó allí), esa publicación es el anclaje: **Crear anclaje en
+Blurt** no publica nada y no cuesta nada. Si no, agrega el hash de
+contenido de la construcción a su publicación actual en Blurt, o crea una
+nueva, por una pequeña comisión en BLURT. La finalidad, **Verificar
+evidencia** e **Inspeccionar evidencia** funcionan como en Steem, y la
+tarjeta enlaza a la publicación.
+
 **Anclar varias publicaciones a la vez en Steem.** En **Herramientas de
 billetera, archivo y editor → Anclaje en blockchain**, **Anclar varias
 publicaciones en Steem** muestra sus publicaciones catalogadas. Marque las
 que quiera (o use **Seleccionar las no ancladas**) y haga clic en **Anclar
 N publicaciones en Steem**. Una sola aprobación de Keychain ancla hasta 64.
 Cada publicación igual recibe su propio anclaje, que se verifica por
-separado.
+separado. **Anclar varias publicaciones en Blurt** funciona igual, con una
+sola aprobación de Blurt Keychain.
 
 ### Anclar en un proveedor preferido
 
@@ -816,3 +828,72 @@ barra de direcciones solo funciona en su propio navegador.
 - Sus amigos leen a través de los gateways de su propia Configuración de
   red. Un gateway de IPFS tiene hasta 30 segundos para encontrar la
   declaración.
+
+## Blurt
+
+*Experimental.* Blurt es una blockchain que surgió de Steem, sin votos
+negativos. ForkBuild puede anunciar, guardar y anclar en ella, y todo sale
+desde **su propia cuenta** como publicaciones normales de Blurt que
+conservan su pago: cuando la gente vota a favor de la publicación de su
+construcción, usted gana BLURT. No hay ninguna cuenta de ForkBuild ni
+ningún hilo compartido. La configuración está en
+[Configuración de red → Blurt](10-NetworkSettings.md#blurt).
+
+### Publicar en Blurt
+
+Elija **Blurt** en un diálogo de Distribuir, en la página Publicaciones,
+junto a **Publicar comentario** o en el panel de nombres, o conviértalo en
+su opción predeterminada en
+[Proveedor de anuncio / descubrimiento](10-NetworkSettings.md#proveedor-de-anuncio--descubrimiento).
+Necesita la extensión Blurt Keychain (o WhaleVault) con la clave de
+**publicación** de su cuenta, y el nombre de su cuenta guardado en la
+página de configuración de Blurt. ForkBuild nunca ve la clave, y Keychain
+le pide que apruebe cada publicación.
+
+- **Una publicación por construcción.** Distribuir crea una publicación
+  principal desde su cuenta, con las etiquetas `forkbuild` y
+  `forkbuild-snapshot` o `forkbuild-publication`, con una imagen de su
+  construcción, su título, su nombre y descripción, y un enlace “See it in
+  3D” (verla en 3D). Lo que sigue en la próxima media hora (el anuncio de
+  la publicación, un comentario, un anclaje) se agrega a la misma
+  publicación editándola, para que sus seguidores vean una publicación, no
+  varias.
+- **La imagen necesita su propia aprobación.** Para una Declaración
+  firmada, Keychain primero le pide que firme la imagen de la
+  construcción y luego que apruebe la publicación. Su segunda ventana
+  puede abrirse detrás del navegador; ForkBuild espera hasta dos minutos
+  por cada una. La imagen va al alojamiento de imágenes de Blurt, a través
+  del servidor de encuentro de ForkBuild cuando el navegador no puede
+  alcanzarlo directamente; si no se puede subir, la publicación sale sin
+  ella.
+- **Cinco minutos entre publicaciones.** Blurt acepta una publicación
+  principal por cuenta cada cinco minutos. Si su cuenta publicó una hace
+  poco (desde otra app, por ejemplo), ForkBuild espera, y el diálogo dice
+  cuánto tiempo.
+- **Comisiones.** Cada transacción de Blurt cuesta una pequeña comisión en
+  BLURT, fijada por los testigos de Blurt. Si su cuenta no puede pagarla,
+  no se publica nada y se le avisa.
+- **Otros la encuentran** a través de Nexus, el índice de búsqueda de
+  Blurt, que lista cada publicación con las etiquetas de ForkBuild, por
+  antigua que sea. Si ningún nodo de Blurt ofrece Nexus, ForkBuild lee la
+  etiqueta, que lista una publicación durante una semana, y luego el
+  historial de su cuenta: una vez que el ForkBuild de alguien vio una de
+  sus publicaciones, sigue leyendo las posteriores y las anteriores.
+
+### Guardar en Blurt
+
+Elija **Blurt** como almacenamiento en un diálogo de Distribuir o en la
+página Publicaciones. La construcción se guarda como en Steem, en
+respuestas debajo de la publicación de su construcción: hasta unos 2.500
+bloques en una respuesta, o hasta 20 respuestas más para hasta unos 30.000
+bloques. Antes de publicar, ForkBuild calcula las comisiones y se niega si
+su saldo no alcanza (“Guardar esta construcción en Blurt cuesta unos 0,632
+BLURT en comisiones, y su cuenta tiene 0,100 BLURT”). El diálogo muestra
+el progreso y las comisiones. Si se detiene a mitad de camino, vuelva a
+distribuir con la misma cuenta y solo se crean las respuestas que faltan.
+
+La Declaración firmada también se puede guardar en Blurt, como una
+respuesta más. Su enlace funciona como uno de Steem: quien haga clic en
+“See it in 3D” llega a la Vista del mundo en su construcción, después de
+que ForkBuild la compruebe. **Compartir…** y **Copiar enlace** aparecen
+una vez que está guardada.

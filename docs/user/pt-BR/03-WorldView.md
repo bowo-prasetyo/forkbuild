@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 0a129e40e9aeb884 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 60040bc00f156b0b -->
 # 03 — Visão do mundo
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../03-WorldView.md).
-<!-- /stale -->
 
 A Visão do mundo é o espaço 3D compartilhado onde **todas as criações
 publicadas existem lado a lado**. Voe por ele, procure o que você quer,
@@ -304,9 +300,10 @@ aberta.
 A caixa de diálogo abre com um conjunto de configurações, usado em tudo o
 que ela distribui: um **Armazenamento** — **Arweave**, **IPFS (Kubo
 local)**, **IPFS (pinning remoto)** (que exige digitar um Endpoint e uma
-Credencial novos toda vez; nada disso é salvo) ou **Steem** (experimental,
-veja [Steem](11-EvidenceAndStorage.md#steem)) — e um **Substrato de
-anúncio / descoberta** (**Arweave**, **Nostr** ou **Steem**). Os dois abrem
+Credencial novos toda vez; nada disso é salvo), **Steem** ou **Blurt**
+(experimentais, veja [Steem](11-EvidenceAndStorage.md#steem) e
+[Blurt](11-EvidenceAndStorage.md#blurt)) — e um **Substrato de
+anúncio / descoberta** (**Arweave**, **Blurt**, **Nostr** ou **Steem**). Os dois abrem
 com as preferências de provedor que você salvou. Armazenamento só lista os
 backends em que este dispositivo consegue de fato posicionar um Snapshot
 (mais o pinning remoto), então você não consegue escolher um que só

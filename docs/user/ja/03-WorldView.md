@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 0a129e40e9aeb884 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 60040bc00f156b0b -->
 # 03 — ワールドビュー
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · **日本語** · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../03-WorldView.md)も参照してください。
-<!-- /stale -->
 
 ワールドビューは、**公開されたすべての作品が並んで存在する** 共有の 3D
 空間です。飛び回り、探しているものを検索し、ほかの人が近くに作った
@@ -283,9 +279,10 @@ ForkBuild で作品を作るのはエディターだけです。下の
 ダイアログは、配信するものすべてに使う 1 組の設定で開きます。
 **ストレージ**（**Arweave**、**IPFS（ローカルKubo）**、
 **IPFS（リモートピン留め）**（毎回エンドポイントと認証情報の入力が必要で、
-何も保存されません）、または **Steem**（実験的。
-[Steem](11-EvidenceAndStorage.md#steem) を参照））と、
-**告知 / 発見の基盤**（**Arweave**、**Nostr**、**Steem**）です。どちらも
+何も保存されません）、**Steem**、または **Blurt**（実験的。
+[Steem](11-EvidenceAndStorage.md#steem) と
+[Blurt](11-EvidenceAndStorage.md#blurt) を参照））と、
+**告知 / 発見の基盤**（**Arweave**、**Blurt**、**Nostr**、**Steem**）です。どちらも
 保存したサービスの設定で開きます。ストレージには、このデバイスが実際に
 スナップショットを配置できるバックエンド（とリモートピン留め）だけが
 並ぶので、途中で失敗するだけのものを選んでしまうことはありません。

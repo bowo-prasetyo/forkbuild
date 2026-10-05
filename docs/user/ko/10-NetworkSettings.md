@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 16855c5d4fae8108 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 3a000cc71ab8702b -->
 # 10 — 네트워크 설정
 
 <!-- languages -->
 [English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · [Français](../fr/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · [日本語](../ja/10-NetworkSettings.md) · **한국어** · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../10-NetworkSettings.md)을 참고하세요.
-<!-- /stale -->
 
 <!-- languages -->
 <!-- /languages -->
@@ -24,26 +20,27 @@
 | 페이지 | 경로 | 정하는 것 |
 |---|---|---|
 | **콘텐츠 제공자** | `/settings/content-provider` | **…에 저장**과 **선호 제공자 사용**이 새 콘텐츠를 저장하는 곳과, 그것을 보낼 IPFS 노드 — [아래](#콘텐츠-제공자) 참고 |
-| **공지 / 발견 제공자** | `/settings/announcement-discovery-provider` | 공지를 기본으로 보낼 곳: Nostr, Arweave, Steem — [아래](#공지--발견-제공자) 참고 |
+| **공지 / 발견 제공자** | `/settings/announcement-discovery-provider` | 공지를 기본으로 보낼 곳: Nostr, Arweave, Steem, Blurt — [아래](#공지--발견-제공자) 참고 |
 | **증명 / 앵커링 제공자** *(실험적)* | `/settings/anchor-provider` | **…에 앵커링**이 앵커링하는 곳 — [아래](#증명--앵커링-제공자) 참고 |
 | **Arweave 게이트웨이** | `/settings/arweave-gateway` | Arweave 콘텐츠를 읽는 게이트웨이 — [아래](#arweave-게이트웨이) 참고 |
 | **IPFS 게이트웨이** | `/settings/ipfs-gateway` | IPFS 콘텐츠를 읽는 게이트웨이 — [아래](#ipfs-게이트웨이) 참고 |
 | **Bitcoin 엔드포인트** *(실험적)* | `/settings/bitcoin-esplora` | Bitcoin 앵커링이 쓰는 서비스 — [아래](#bitcoin-엔드포인트) 참고 |
 | **Nostr 릴레이** | `/settings/nostr-relay` | Nostr로 게시하고 발견할 때 쓰는 릴레이 — [아래](#nostr-릴레이) 참고 |
 | **Steem** *(실험적)* | `/settings/steem` | 내 Steem 계정과 Steem을 읽는 곳 — [아래](#steem) 참고 |
+| **Blurt** *(실험적)* | `/settings/blurt` | 내 Blurt 계정과 Blurt를 읽는 곳 — [아래](#blurt) 참고 |
 | **STUN 서버** / **TURN 서버** | `/settings/stun`, `/settings/turn-server` | 피어 연결을 돕는 서버 — [TURN](07-PeerConnectionsAndFriends.md#turn-직접-경로를-찾지-못하는-피어-연결-중계하기) 참고 |
 | **랑데부 서버** | `/settings/rendezvous` | 피어끼리 서로 찾는 방법 — [피어 연결과 친구](07-PeerConnectionsAndFriends.md) 참고 |
 
 ## 모든 페이지의 공통 동작
 
-- **저장한 뒤 새로 고치기.** 변경 사항은 다음에 앱을 불러올 때 적용됩니다(Steem
-  계정만 예외). 열려 있는 월드 보기나 에디터는 새로 고칠 때까지 이전 설정을 계속
+- **저장한 뒤 새로 고치기.** 변경 사항은 다음에 앱을 불러올 때 적용됩니다(Steem과
+  Blurt 계정은 예외). 열려 있는 월드 보기나 에디터는 새로 고칠 때까지 이전 설정을 계속
   씁니다.
 - 각 페이지에는 자체 **저장**이 있습니다. 저장에 실패하면 이유를 보여 주고 이전
   설정을 그대로 두며, 성공하면 “저장했습니다.”가 표시됩니다.
 - 선택지 목록은 알파벳 순으로 표시됩니다.
 - **서버 목록에는 기본값이 있습니다.** Arweave 게이트웨이, IPFS 게이트웨이,
-  Bitcoin 엔드포인트, Nostr 릴레이, Steem, STUN, 랑데부 페이지는 무료 공개 서버
+  Bitcoin 엔드포인트, Nostr 릴레이, Steem, Blurt, STUN, 랑데부 페이지는 무료 공개 서버
   여러 개로 시작하므로, 하나가 멈춰도 계속 동작합니다. 페이지에는 “기본 … 사용
   중”인지 “저장한 … 사용 중”인지 표시됩니다. 저장한 것이 없으면 텍스트 상자에
   기본값이 한 줄에 하나씩 들어 있어 바로 편집할 수 있습니다. **저장**은 무언가를
@@ -78,15 +75,15 @@
 ## 공지 / 발견 제공자
 
 게시물(공유 월드, 설계도 저작자 표시, 장소 이름 클레임), 스냅샷, 댓글을 공지할
-기본 위치로 **Arweave**, **Nostr**, **Steem**(실험적) 중 하나를 고르세요. 기본값일
+기본 위치로 **Arweave**, **Blurt**(실험적), **Nostr**, **Steem**(실험적) 중 하나를 고르세요. 기본값일
 뿐입니다: 모든 **배포** 대화 상자, 저장소의 카드별 배포 선택기, **댓글 게시** 옆의
 네트워크 선택기가 이것으로 시작하며, 작업 하나에 한해 바꿀 수 있습니다. 다른
-사람의 콘텐츠를 찾을 때는 항상 셋 모두를 검색합니다.
+사람의 콘텐츠를 찾을 때는 항상 그 모두를 검색합니다.
 
 ## 증명 / 앵커링 제공자
 
 *실험적.* **…에 앵커링**(게시물 **증명 / 앵커링** 블록의 첫 번째 버튼)이 외부
-증거를 만들 곳을 이 기기에 등록된 **Arweave**, **Bitcoin**, **Steem** 중에서
+증거를 만들 곳을 이 기기에 등록된 **Arweave**, **Bitcoin**, **Blurt**, **Steem** 중에서
 고르세요. Base 앵커는 매번 지갑 트랜잭션을 검토하고 서명해야 하므로 Base는 제공되지
 않습니다. Bitcoin을 고르면 **…에 앵커링** 버튼이 없습니다: 블록에 모든 옵션이
 표시되고 지갑 단계를 안내합니다. 실제 Bitcoin 앵커는
@@ -162,3 +159,21 @@ ForkBuild가 Nostr로 게시하거나 발견하는 모든 것 — 게시물(공�
 
 연결할 수 있는 Steem 노드가 없으면, **새 댓글 확인**과 스냅샷 발견은 찾은 것이
 없다고 보고하는 대신 Steem을 사용할 수 없다고 알려 줍니다.
+
+## Blurt
+
+*실험적.* **게시** 아래에서 **내 Blurt 계정**을 정하세요(새로 고치지 않아도 바로
+적용). Blurt에 게시하거나 저장하거나 앵커링하려면 필요합니다 —
+[Blurt](11-EvidenceAndStorage.md#blurt)를 보세요. Blurt에서 읽는 데는 계정이
+필요 없습니다. 페이지의 나머지는 Blurt를 읽는 곳을 정합니다:
+
+**API 노드**, 한 줄에 `https://` URL 하나(기본값 `https://rpc.blurt.blog`와
+`https://rpc.beblurt.com`), 순서대로 시도합니다. ForkBuild는 게시물을 아무리
+오래되었어도 모두 보관하는 Blurt의 검색 색인 Nexus로 게시물을 찾으며, Nexus를
+제공하지 않는 노드는 건너뜁니다. Nexus를 제공하는 노드가 없으면 Blurt 자체의
+태그 목록으로 넘어가는데, 이 목록은 게시물을 보상이 지급되는 7일 뒤까지만
+보관하므로, 더 오래된 게시물은 이 기기에서 그 태그로 게시하는 것을 본 계정들의
+기록에서 찾습니다.
+
+연결할 수 있는 Blurt 노드가 없으면, **새 댓글 확인**과 스냅샷 발견은 찾은 것이
+없다고 보고하는 대신 Blurt를 사용할 수 없다고 알려 줍니다.

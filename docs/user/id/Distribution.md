@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: be51a110c624bf19 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 7758b3ce677273e3 -->
 # Mendistribusikan Karya Anda
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · **Bahasa Indonesia** · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../Distribution.md).
-<!-- /stale -->
 
 Semua yang dibuat ForkBuild dimulai di perangkat Anda sendiri.
 **Mendistribusikan** adalah langkah terpisah yang opsional untuk menaruh
@@ -23,7 +19,7 @@ menautkan ke panduan yang menjelaskan detailnya.
 |---|---|---|---|
 | **Terbitkan** | Hanya perangkat ini | Belum ada orang lain | [Menerbitkan karya Anda](04-PublishingAndForking.md#menerbitkan-karya-anda) |
 | **Bagikan dengan Rekan** | Langsung ke orang-orang yang terhubung dengan Anda | Rekan yang terhubung, selama Anda daring | [Berbagi dengan rekan yang terhubung](04-PublishingAndForking.md#berbagi-dengan-rekan-yang-terhubung) |
-| **Distribusikan** | Jaringan terdesentralisasi (IPFS, Arweave, Nostr, Steem) | Siapa pun, tanpa perlu terhubung dengan Anda | Halaman ini |
+| **Distribusikan** | Jaringan terdesentralisasi (IPFS, Arweave, Nostr, Steem, Blurt) | Siapa pun, tanpa perlu terhubung dengan Anda | Halaman ini |
 
 Menerbitkan tidak pernah mengirim apa pun ke mana pun dengan sendirinya, dan
 berbagi dengan rekan bukanlah distribusi: rekan menyimpan salinan hanya
@@ -37,9 +33,9 @@ terpisah:
 
 | Peran | Seperti… | Apa yang dilakukannya | Pilihan |
 |---|---|---|---|
-| **Konten** (Penyimpanan) | Tempat salinan cetak disimpan | Menyimpan byte, seperti balok-balok Dunia Anda, agar orang lain dapat mengambilnya | **Arweave**, **IPFS (Local Kubo)**, **IPFS (Remote Pinning)**, **Steem** *(eksperimental)* |
-| **Pengumuman / Penemuan** | Entri di katalog perpustakaan | Menerbitkan pemberitahuan kecil bertanda tangan bahwa karya Anda ada dan di mana salinannya, agar orang lain dapat menemukannya | **Nostr**, **Arweave**, **Steem** *(eksperimental)* |
-| **Bukti / Penjangkaran** *(eksperimental, opsional)* | Stempel notaris | Menuliskan hash konten Anda ke blockchain, sebagai bukti bahwa konten itu sudah ada pada waktu tersebut. Peran ini tidak menyimpan atau mengumumkan apa pun. | **Bitcoin**, **Arweave**, **Base**, **Steem** |
+| **Konten** (Penyimpanan) | Tempat salinan cetak disimpan | Menyimpan byte, seperti balok-balok Dunia Anda, agar orang lain dapat mengambilnya | **Arweave**, **Blurt** *(eksperimental)*, **IPFS (Local Kubo)**, **IPFS (Remote Pinning)**, **Steem** *(eksperimental)* |
+| **Pengumuman / Penemuan** | Entri di katalog perpustakaan | Menerbitkan pemberitahuan kecil bertanda tangan bahwa karya Anda ada dan di mana salinannya, agar orang lain dapat menemukannya | **Nostr**, **Arweave**, **Steem** *(eksperimental)*, **Blurt** *(eksperimental)* |
+| **Bukti / Penjangkaran** *(eksperimental, opsional)* | Stempel notaris | Menuliskan hash konten Anda ke blockchain, sebagai bukti bahwa konten itu sudah ada pada waktu tersebut. Peran ini tidak menyimpan atau mengumumkan apa pun. | **Bitcoin**, **Arweave**, **Base**, **Steem**, **Blurt** |
 
 Penyimpanan tanpa pengumuman berarti tidak ada yang tahu harus mencari di
 mana; pengumuman tanpa penyimpanan menunjuk ke kekosongan.
@@ -58,12 +54,12 @@ tidak pernah mengirim apa pun.
 
 | Apa | Konten | Pengumuman / Penemuan | Bukti / Penjangkaran | Di mana Anda melakukannya |
 |---|---|---|---|---|
-| **Klaim Bertanda Tangan Dunia Anda** (catatan bertanda tangan dari Dunia yang diterbitkan, disebut Dunia Bersama) | Arweave, IPFS, atau Steem | Nostr, Arweave, atau Steem | — | **Distribusikan** setelah menerbitkan di Editor; **Dunia Bersama Saya** di Tampilan Dunia; halaman **Publikasi** |
-| **Snapshot Dunia Anda** (balok-baloknya), beserta tempat Anda menempatkannya | Arweave, IPFS, atau Steem | Nostr, Arweave, atau Steem | — | Dialog **Distribusikan** yang sama (**Distribusikan Snapshot saja** untuk separuh ini saja) |
-| **Hash konten publikasi apa pun** (Dunia, klaim kepengarangan, atau nama tempat) | — | — | Bitcoin, Arweave, Base, atau Steem | Kartu publikasi itu di halaman **Publikasi** |
-| **Kepengarangan sebuah struktur** (Atribusi Cetak Biru) | Arweave, IPFS, atau Steem | Nostr, Arweave, atau Steem | — | **Distribusikan** di panel **Info** struktur, yang ditawarkan begitu Anda **Terbitkan ke Jaringan**; halaman **Publikasi** |
-| **Nama tempat** (Klaim Nama Tempat) | Arweave, IPFS, atau Steem | Nostr, Arweave, atau Steem | — | **Distribusikan** di panel penamaan Tampilan Dunia, yang ditawarkan begitu Anda **Terbitkan Sebuah Nama** (mengumumkan nama itu di jaringan yang Anda pilih); halaman **Publikasi** untuk pilihan mana pun |
-| **Komentar** pada sebuah publikasi | — | Nostr, Arweave, atau Steem | — | **Kirim Komentar**, di Repositori atau Tampilan Dunia, di jaringan yang dipilih di sebelahnya |
+| **Klaim Bertanda Tangan Dunia Anda** (catatan bertanda tangan dari Dunia yang diterbitkan, disebut Dunia Bersama) | Arweave, IPFS, Steem, atau Blurt | Nostr, Arweave, Steem, atau Blurt | — | **Distribusikan** setelah menerbitkan di Editor; **Dunia Bersama Saya** di Tampilan Dunia; halaman **Publikasi** |
+| **Snapshot Dunia Anda** (balok-baloknya), beserta tempat Anda menempatkannya | Arweave, IPFS, Steem, atau Blurt | Nostr, Arweave, Steem, atau Blurt | — | Dialog **Distribusikan** yang sama (**Distribusikan Snapshot saja** untuk separuh ini saja) |
+| **Hash konten publikasi apa pun** (Dunia, klaim kepengarangan, atau nama tempat) | — | — | Bitcoin, Arweave, Base, Steem, atau Blurt | Kartu publikasi itu di halaman **Publikasi** |
+| **Kepengarangan sebuah struktur** (Atribusi Cetak Biru) | Arweave, IPFS, Steem, atau Blurt | Nostr, Arweave, Steem, atau Blurt | — | **Distribusikan** di panel **Info** struktur, yang ditawarkan begitu Anda **Terbitkan ke Jaringan**; halaman **Publikasi** |
+| **Nama tempat** (Klaim Nama Tempat) | Arweave, IPFS, Steem, atau Blurt | Nostr, Arweave, Steem, atau Blurt | — | **Distribusikan** di panel penamaan Tampilan Dunia, yang ditawarkan begitu Anda **Terbitkan Sebuah Nama** (mengumumkan nama itu di jaringan yang Anda pilih); halaman **Publikasi** untuk pilihan mana pun |
+| **Komentar** pada sebuah publikasi | — | Nostr, Arweave, Steem, atau Blurt | — | **Kirim Komentar**, di Repositori atau Tampilan Dunia, di jaringan yang dipilih di sebelahnya |
 
 Snapshot sebuah Dunia membawa penempatan bertanda tangan Anda, sehingga
 orang yang mengambilnya melihat bangunan itu tepat di tempat Anda
@@ -118,12 +114,15 @@ diselesaikan.
 | **IPFS (Local Kubo)** | Konten | Node IPFS Anda sendiri, secara bawaan di `http://127.0.0.1:5001` | Tanpa batas ukuran. Hanya tersedia selama node Anda daring, kecuali ada orang lain yang mem-pin-nya. |
 | **IPFS (Remote Pinning)** *(eksperimental)* | Konten | Akun di layanan pinning yang kompatibel dengan Pinata | Tanpa batas ukuran. Ketik endpoint dan kredensial setiap kali; keduanya tidak pernah disimpan. |
 | **Steem** *(eksperimental)* | Konten, Pengumuman / Penemuan, Bukti / Penjangkaran | Ekstensi Steem Keychain dengan kunci posting Anda, dan akun Anda di [Pengaturan Jaringan → Steem](10-NetworkSettings.md#steem) | Postingan berupa balasan pada utas bulanan ForkBuild; satu persetujuan per postingan. Menyimpan sekitar 2.500 balok per postingan, hingga sekitar 30.000 balok dalam 20 postingan. Memakai Resource Credits, yang terisi kembali. |
+| **Blurt** *(eksperimental)* | Konten, Pengumuman / Penemuan, Bukti / Penjangkaran | Ekstensi Blurt Keychain (atau WhaleVault) dengan kunci posting Anda, dan akun Anda di [Pengaturan Jaringan → Blurt](10-NetworkSettings.md#blurt) | Satu postingan utama dari akun Anda sendiri per bangunan, yang tetap menerima pembayarannya; data yang disimpan ada di balasan di bawahnya. Menyimpan sekitar 2.500 balok per balasan, hingga sekitar 30.000 balok. Setiap transaksi dikenai biaya kecil dalam BLURT. |
 | **Bitcoin** *(eksperimental)* | Bukti / Penjangkaran | Ekstensi UniSat, dengan bitcoin di alamat native SegWit (`bc1q…`) untuk biayanya | Dibuat melalui langkah-langkah dompet di halaman Publikasi |
 | **Base** *(eksperimental)* | Bukti / Penjangkaran | Dompet browser seperti MetaMask atau Coinbase Wallet, di jaringan Base | Setiap jangkar adalah transaksi yang Anda periksa dan tanda tangani |
 
 Jangkar Steem cepat dan gratis, tetapi dibuktikan oleh witness Steem, bukan
 oleh proof of work: gunakan bersama jangkar Bitcoin, bukan sebagai
-penggantinya. Lihat [Steem](11-EvidenceAndStorage.md#steem).
+penggantinya. Lihat [Steem](11-EvidenceAndStorage.md#steem). Hal yang sama berlaku
+untuk jangkar Blurt, yang tidak memakan biaya apa pun bila postingan Blurt
+bangunan Anda sudah memuat hash kontennya; lihat [Blurt](11-EvidenceAndStorage.md#blurt).
 
 ## Alur yang umum
 
@@ -152,8 +151,8 @@ langsung dari Anda.
   distribusinya, misalnya **Disimpan di IPFS · Diumumkan di Nostr**, atau
   **Tidak ada distribusi yang tercatat di perangkat ini.** Lihat
   [Publikasi Anda](13-YourData.md#publikasi-anda).
-- Repositori orang lain menemukan publikasi Anda di Nostr, Arweave, atau
-  Steem saat mereka membukanya lagi, asalkan publikasi itu diumumkan dengan
+- Repositori orang lain menemukan publikasi Anda di Nostr, Arweave, Steem,
+  atau Blurt saat mereka membukanya lagi, asalkan publikasi itu diumumkan dengan
   tag penemuan yang biasa, `forkbuild-publication`. Lihat
   [Karya yang didistribusikan orang lain](04-PublishingAndForking.md#karya-yang-didistribusikan-orang-lain).
 - **Temukan Dunia Bersama** di Tampilan Dunia mencari Dunia Bersama Anda

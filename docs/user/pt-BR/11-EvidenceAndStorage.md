@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 263581397a33de10 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: ebb2f824912e0429 -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../11-EvidenceAndStorage.md).
-<!-- /stale -->
 
 > **Em grande parte experimental.** Guardar conteúdo no IPFS ou no Arweave
 > pelo bloco **Distribuição → Conteúdo** de um cartão
@@ -25,7 +21,7 @@ seções para provar *quando* uma publicação existia e para pôr o conteúdo
 dela num lugar de onde outros possam buscá-lo:
 
 - **[Evidências externas](#evidências-externas)** — registros no Bitcoin,
-  na Base, no Arweave ou no Steem de que o hash do conteúdo de uma
+  na Base, no Arweave, no Steem ou no Blurt de que o hash do conteúdo de uma
   publicação existia num certo momento.
 - **[O fluxo de âncora no Bitcoin](#o-fluxo-de-âncora-no-bitcoin)** e
   **[O fluxo de âncora na Base](#o-fluxo-de-âncora-na-base)** — fluxos passo a
@@ -36,6 +32,8 @@ dela num lugar de onde outros possam buscá-lo:
 - **[Publicação no IPFS](#publicação-no-ipfs)** — envio para um serviço de
   pinning remoto.
 - **[Steem](#steem)** — postar, guardar e compartilhar links no Steem.
+- **[Blurt](#blurt)** — postar, guardar e ancorar no Blurt, a partir da sua
+  própria conta, com recompensas.
 
 Evidências e posicionamentos respondem a perguntas diferentes. Uma âncora
 mostra que um hash foi registrado num certo momento; não diz nada sobre se
@@ -81,6 +79,9 @@ com um de três resultados:
 - **Criar âncora Steem** precisa da extensão Steem Keychain e da sua conta
   no Steem definida em
   [Configurações de rede → Steem](10-NetworkSettings.md#steem).
+- **Criar âncora Blurt** precisa da extensão Blurt Keychain (ou WhaleVault)
+  e da sua conta no Blurt definida em
+  [Configurações de rede → Blurt](10-NetworkSettings.md#blurt).
 
 Uma publicação feita antes de os hashes de conteúdo passarem a ser SHA-256
 nunca é ancorada, nem por estes botões, nem pelos passos do Bitcoin ou da
@@ -112,13 +113,24 @@ número suficiente delas juntas poderia reescrever o histórico; o cartão diz
 âncora no Steem como evidência rápida e gratuita junto com uma no Bitcoin,
 não no lugar dela.
 
+**As âncoras no Blurt** são atestadas pelas testemunhas do Blurt da mesma
+forma, e são igualmente mais fracas que as do Bitcoin. Quando este
+dispositivo já postou o Snapshot da sua construção no Blurt (anunciou-o ou
+guardou-o lá), essa postagem é a âncora: **Criar âncora Blurt** não posta
+nada e não custa nada. Caso contrário, ela acrescenta o hash do conteúdo
+da construção à sua postagem atual no Blurt, ou cria uma nova, por uma
+pequena taxa em BLURT. A finalidade, **Verificar evidências** e
+**Inspecionar evidências** funcionam como no Steem, e o card tem um link
+para a postagem.
+
 **Ancorando várias publicações de uma vez no Steem.** Em **Ferramentas de
 carteira, arquivo e editor → Ancoragem em blockchain**, **Ancorar várias
 publicações em Steem** lista suas publicações catalogadas. Marque as que
 quiser (ou **Selecionar as não ancoradas**) e clique em **Ancorar N
 publicações em Steem**. Uma única aprovação no Keychain ancora até 64. Cada
 publicação continua recebendo sua própria âncora, verificada por conta
-própria.
+própria. **Ancorar várias publicações em Blurt** funciona do mesmo jeito,
+com uma única aprovação no Blurt Keychain.
 
 ### Ancorando num provedor preferido
 
@@ -789,3 +801,70 @@ dispositivo, desde que o Snapshot também tenha sido distribuído, e mostra a co
   mantêm disponível quando seu computador está desligado.
 - Os amigos leem pelos gateways das Configurações de rede deles. Um gateway
   IPFS tem até 30 segundos para encontrar a declaração.
+
+## Blurt
+
+*Experimental.* O Blurt é uma blockchain que surgiu do Steem, sem votos
+negativos. O ForkBuild pode anunciar, guardar e ancorar nele, e tudo sai
+da **sua própria conta** como postagens comuns do Blurt que mantêm seu
+pagamento: quando as pessoas votam a favor da postagem da sua construção,
+você ganha BLURT. Não há conta do ForkBuild nem thread compartilhada. As
+configurações ficam em
+[Configurações de rede → Blurt](10-NetworkSettings.md#blurt).
+
+### Postando no Blurt
+
+Escolha **Blurt** em um diálogo de Distribuir, na página Publicações, ao
+lado de **Publicar comentário** ou no painel de nomes, ou torne-o seu
+padrão em
+[Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta).
+Você precisa da extensão Blurt Keychain (ou WhaleVault) com a chave de
+**postagem** da sua conta, e do nome da sua conta salvo na página de
+configurações do Blurt. O ForkBuild nunca vê a chave, e o Keychain pede
+que você aprove cada postagem.
+
+- **Uma postagem por construção.** Distribuir cria uma postagem principal
+  da sua conta, com as tags `forkbuild` e `forkbuild-snapshot` ou
+  `forkbuild-publication`, com uma imagem da sua construção, o título,
+  seu nome e a descrição, e um link "See it in 3D" (veja em 3D). O que vier
+  na meia hora seguinte (o anúncio da Publicação, um comentário, uma
+  âncora) é acrescentado à mesma postagem editando-a, para que seus
+  seguidores vejam uma postagem, não várias.
+- **A imagem precisa de uma aprovação própria.** Para uma Declaração
+  assinada, o Keychain primeiro pede que você assine a imagem da
+  construção e depois que aprove a postagem. A segunda janela dele pode
+  abrir atrás do navegador; o ForkBuild espera até dois minutos por cada
+  uma. A imagem vai para o servidor de imagens do Blurt, pelo servidor de
+  encontro do ForkBuild quando o navegador não consegue alcançá-lo
+  diretamente; se não puder ser enviada, a postagem sai sem ela.
+- **Cinco minutos entre postagens.** O Blurt aceita uma postagem
+  principal por conta a cada cinco minutos. Se a sua conta postou uma há
+  pouco (de outro app, por exemplo), o ForkBuild espera, e o diálogo diz
+  quanto tempo.
+- **Taxas.** Cada transação no Blurt custa uma pequena taxa em BLURT,
+  definida pelas testemunhas do Blurt. Se a sua conta não puder pagá-la,
+  nada é postado e você é avisado.
+- **Os outros a encontram** pelo Nexus, o índice de busca do Blurt, que
+  lista toda postagem com as tags do ForkBuild, por mais antiga que seja.
+  Se nenhum nó do Blurt oferecer o Nexus, o ForkBuild lê a tag, que lista
+  uma postagem por uma semana, e depois o histórico da sua conta: depois
+  que o ForkBuild de alguém vê uma das suas postagens, ele continua lendo
+  as mais novas e as mais antigas.
+
+### Guardando no Blurt
+
+Escolha **Blurt** como armazenamento em um diálogo de Distribuir ou na
+página Publicações. A construção é guardada como no Steem, em respostas
+abaixo da postagem da sua construção: até cerca de 2.500 blocos em uma
+resposta, ou até 20 respostas a mais para até cerca de 30.000 blocos.
+Antes de postar, o ForkBuild calcula as taxas e se recusa se o seu saldo
+não bastar ("Guardar esta construção no Blurt custa cerca de 0,632 BLURT
+em taxas, e sua conta tem 0,100 BLURT"). O diálogo mostra o progresso e as
+taxas. Se parar no meio do caminho, distribua de novo com a mesma conta, e
+só as respostas que faltam são criadas.
+
+A Declaração assinada também pode ser guardada no Blurt, como mais uma
+resposta. O link dela funciona como um do Steem: quem clicar em "See it in
+3D" chega à Visão do mundo na sua construção, depois que o ForkBuild a
+confere. **Compartilhar…** e **Copiar link** aparecem assim que ela é
+guardada.

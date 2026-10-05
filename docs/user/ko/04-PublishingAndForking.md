@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1855909b2b8b1dec -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9a754ee94fee1ff -->
 # 04 — 게시와 포크
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · **한국어** · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../04-PublishingAndForking.md)을 참고하세요.
-<!-- /stale -->
 
 <!-- languages -->
 <!-- /languages -->
@@ -92,7 +88,7 @@ Arweave 지갑(예: Wander) 또는 Nostr 확장 프로그램(예: nos2x) — 이
 
 ## 연결된 피어와 공유하기
 
-내가 게시한 월드는 Nostr, Arweave, Steem에 배포하기 전까지는 *내* 저장소에만
+내가 게시한 월드는 Nostr, Arweave, Steem, Blurt에 배포하기 전까지는 *내* 저장소에만
 나열됩니다([작품 배포하기](Distribution.md) 참고). 배포하면 누구의 저장소든
 그 월드를 찾습니다([다른 사람이 배포한 작품](#다른-사람이-배포한-작품) 참고). 연결된 사람
 ([피어 연결과 친구](07-PeerConnectionsAndFriends.md) 참고)의 저장소에 넣으려면,
@@ -183,7 +179,7 @@ Arweave 지갑(예: Wander) 또는 Nostr 확장 프로그램(예: nos2x) — 이
 
 ### 다른 사람이 배포한 작품
 
-저장소(또는 작성자 페이지)를 열 때마다, 다른 사람이 Nostr, Arweave, Steem에
+저장소(또는 작성자 페이지)를 열 때마다, 다른 사람이 Nostr, Arweave, Steem, Blurt에
 배포한 작품을 찾아 검증할 수 있는 것을 추가합니다. 목록 위의 한 줄이 지금
 하는 일과, 찾은 새 작품의 수를 알려 줍니다. **다시 확인**을 누르면 한 번 더
 찾습니다.

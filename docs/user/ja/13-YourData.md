@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 8347bc85df3e2e3a -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 01cc1df409866b2e -->
 # 13 — あなたのデータ: バックアップと復元
 
 <!-- languages -->
 [English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Español](../es/13-YourData.md) · [Français](../fr/13-YourData.md) · [Bahasa Indonesia](../id/13-YourData.md) · **日本語** · [한국어](../ko/13-YourData.md) · [Português (Brasil)](../pt-BR/13-YourData.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../13-YourData.md)も参照してください。
-<!-- /stale -->
 
 ForkBuild にはアカウントも、作品を保管するサーバーもありません。
 ForkBuild が保存するものはすべて、このデバイスのこのブラウザーの中に
@@ -180,7 +176,7 @@ Drive、Google Drive）が同期するフォルダーや USB ドライブを選�
 リポジトリのカードには、このデバイスがその作品をどこに配信したと記録
 しているかが表示されます。たとえば **保存先: IPFS · 告知先: Nostr**
 です。作品やその署名済みクレームをアップロードした場所（IPFS、Arweave、
-Steem）と、告知した場所（Nostr、Arweave、Steem）です。名前にポインターを
+Steem、Blurt）と、告知した場所（Nostr、Arweave、Steem、Blurt）です。名前にポインターを
 合わせると、そのアドレスや告知 ID が表示されます。
 
 この行は、このデバイスに記録があることだけを示します。アップロード

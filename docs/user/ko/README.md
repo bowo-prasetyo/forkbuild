@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: 26ea018db8723ef6 -->
+<!-- translation-of: docs/user/README.md source-hash: 0137e01d1cbcedd8 -->
 # ForkBuild 사용자 문서
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · **한국어** · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../README.md)을 참고하세요.
-<!-- /stale -->
 
 <!-- languages -->
 <!-- /languages -->
@@ -51,7 +47,7 @@
     있습니다.
 11. **[증거와 저장소](11-EvidenceAndStorage.md)** — IPFS나 Arweave에
     콘텐츠 저장하기, 그리고 *실험적* 기능인 외부 증거, Bitcoin과 Base
-    지갑 절차, 스냅샷 배치, 원격 IPFS 피닝, Steem.
+    지갑 절차, 스냅샷 배치, 원격 IPFS 피닝, Steem과 Blurt.
     [작품 배포하기](Distribution.md)에서 이것들이 어떻게 맞물리는지
     볼 수 있습니다.
 12. **[아카이브와 리더보드](12-ArchiveAndLeaderboards.md)** —

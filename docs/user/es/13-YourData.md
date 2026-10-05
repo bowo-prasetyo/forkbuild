@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 8347bc85df3e2e3a -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 01cc1df409866b2e -->
 # 13 — Sus datos
 
 <!-- languages -->
 [English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · **Español** · [Français](../fr/13-YourData.md) · [Bahasa Indonesia](../id/13-YourData.md) · [日本語](../ja/13-YourData.md) · [한국어](../ko/13-YourData.md) · [Português (Brasil)](../pt-BR/13-YourData.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../13-YourData.md).
-<!-- /stale -->
 
 ForkBuild no tiene cuentas ni un servidor que guarde su trabajo. Todo lo
 que guarda vive en este navegador, en este dispositivo: sus documentos, sus
@@ -182,8 +178,8 @@ Una creación que **publica** se guarda solo en este dispositivo, hasta que
 la distribuya (consulte [Publicar y bifurcar](04-PublishingAndForking.md)).
 Su tarjeta del Repositorio indica dónde registró este dispositivo su
 distribución, por ejemplo **Guardado en IPFS · Anunciado en Nostr**: dónde
-se subió la construcción o su Declaración firmada (IPFS, Arweave o Steem) y
-dónde se anunció (Nostr, Arweave o Steem). Pase el puntero sobre un nombre
+se subió la construcción o su Declaración firmada (IPFS, Arweave, Steem o
+Blurt) y dónde se anunció (Nostr, Arweave, Steem o Blurt). Pase el puntero sobre un nombre
 para ver su dirección o el id del anuncio.
 
 La línea solo dice de qué tiene registro este dispositivo. No comprueba que

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1855909b2b8b1dec -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9a754ee94fee1ff -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · **Deutsch** · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Das ist das Herz von ForkBuild. **Veröffentlichen** teilt Ihre Kreation mit
 der Welt. **Forken** erlaubt jedem, eine Kreation zu kopieren und
@@ -113,7 +109,7 @@ gespeichert.
 ## Mit verbundenen Peers teilen
 
 Eine Welt, die Sie veröffentlichen, steht nur in *Ihrem* Repository, bis
-Sie sie auf Nostr, Arweave oder Steem verteilen (siehe
+Sie sie auf Nostr, Arweave, Steem oder Blurt verteilen (siehe
 [Verteilung](Distribution.md)): Dann findet sie das Repository aller (siehe
 [Von anderen verteilte Kreationen](#von-anderen-verteilte-kreationen)). Um
 sie in das Repository von jemandem zu bringen, mit dem Sie verbunden sind
@@ -221,7 +217,7 @@ enthält oder zehntausend.
 ### Von anderen verteilte Kreationen
 
 Jedes Mal, wenn Sie das Repository (oder eine Autorenseite) öffnen, sucht es
-auf Nostr, Arweave und Steem nach Kreationen, die andere dort verteilt
+auf Nostr, Arweave, Steem und Blurt nach Kreationen, die andere dort verteilt
 haben, und fügt die hinzu, die es überprüfen kann. Eine Zeile über der Liste
 sagt, was es gerade tut, und dann, wie viele neue Kreationen es gefunden
 hat; **Erneut prüfen** sucht noch einmal.

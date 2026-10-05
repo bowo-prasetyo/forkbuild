@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: e91d68029035ce8b -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: b3097401f11e7bba -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../09-PublicationsAndEvidence.md).
-<!-- /stale -->
 
 > **Em parte experimental.** A página Publicações é um recurso comum: a
 > lista e os status, remover publicações que não podem ser usadas, anunciar
@@ -16,7 +12,7 @@
 > funciona, mas pode mudar ou ser removido numa versão futura, e o que
 > produz pode não ser aproveitado depois. A página marca cada uma dessas
 > partes com um selo **Experimental** (**Exp.** numa guia): todo tipo de
-> ancoragem, as carteiras, o Steem, o pinning remoto no IPFS, as guias
+> ancoragem, as carteiras, o Steem, o Blurt, o pinning remoto no IPFS, as guias
 > **Descentralização e evidências**, **Posicionamentos e IPFS** e
 > **Histórico**, as seções de posse pelos pares e de resumos da guia
 > **Snapshot**, e o painel inteiro **Ferramentas de carteira, arquivo e
@@ -41,8 +37,8 @@ declaração:
   provedores e servidores de conexão entre pares. Não é experimental, e é
   útil para todos.
 - **[Evidências e armazenamento](11-EvidenceAndStorage.md)** — evidências
-  externas (Bitcoin, Base, Arweave, Steem), os fluxos de carteira, os
-  Posicionamentos de Snapshot, a publicação no IPFS e o Steem.
+  externas (Bitcoin, Base, Arweave, Steem, Blurt), os fluxos de carteira, os
+  Posicionamentos de Snapshot, a publicação no IPFS, o Steem e o Blurt.
 - **[Arquivo e classificações](12-ArchiveAndLeaderboards.md)** — o arquivo
   durável de observações, as referências, as conquistas, os rótulos de
   editores e as páginas de classificação.
@@ -93,11 +89,11 @@ obrigatória:
 | Termo | Como… | O que é |
 |---|---|---|
 | **Publicação** | O livro em si | Um registro assinado: um Mundo compartilhado, uma Atribuição de planta ou uma Declaração de nome de lugar. Leva o hash do conteúdo e a assinatura do editor. |
-| **Conteúdo** | Onde ficam os exemplares impressos | Os bytes de que trata a publicação, como os blocos de um Mundo. Sempre ficam primeiro neste dispositivo; **Armazenar em …** põe uma cópia no IPFS, no Arweave ou no Steem para que outros possam buscá-la. Veja [Provedor de conteúdo](10-NetworkSettings.md#provedor-de-conteúdo). |
+| **Conteúdo** | Onde ficam os exemplares impressos | Os bytes de que trata a publicação, como os blocos de um Mundo. Sempre ficam primeiro neste dispositivo; **Armazenar em …** põe uma cópia no IPFS, no Arweave, no Steem ou no Blurt para que outros possam buscá-la. Veja [Provedor de conteúdo](10-NetworkSettings.md#provedor-de-conteúdo). |
 | **Snapshot** | Um exemplar impresso | Uma cópia guardada do conteúdo de uma publicação, como os blocos de um Mundo, que outros podem buscar e conferir com o hash. Veja [Snapshot local](#snapshot-local). |
 | **Posicionamento** | Em que estante o exemplar fica | Um registro assinado de onde uma construção fica no Mundo. Um Mundo compartilhado pode ter vários. Veja [Posicionar ou bifurcar](03-WorldView.md#posicionar-ou-bifurcar). |
-| **Anúncio / descoberta** | Uma ficha no catálogo da biblioteca | Um pequeno aviso assinado no Nostr, no Arweave ou no Steem dizendo que a publicação ou o Snapshot existe e onde está a cópia, para que pessoas não conectadas a você possam encontrá-lo. Veja [Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta). |
-| **Prova / ancoragem** *(Experimental)* | O carimbo de um cartório | O hash do conteúdo gravado numa transação de blockchain (Bitcoin, Base, Arweave ou Steem), como evidência de que ele existia naquele momento. Não guarda nem anuncia nada. Veja [Evidências e armazenamento](11-EvidenceAndStorage.md). |
+| **Anúncio / descoberta** | Uma ficha no catálogo da biblioteca | Um pequeno aviso assinado no Nostr, no Arweave, no Steem ou no Blurt dizendo que a publicação ou o Snapshot existe e onde está a cópia, para que pessoas não conectadas a você possam encontrá-lo. Veja [Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta). |
+| **Prova / ancoragem** *(Experimental)* | O carimbo de um cartório | O hash do conteúdo gravado numa transação de blockchain (Bitcoin, Base, Arweave, Steem ou Blurt), como evidência de que ele existia naquele momento. Não guarda nem anuncia nada. Veja [Evidências e armazenamento](11-EvidenceAndStorage.md). |
 | **Comentários** | As resenhas dos leitores | Comentários que qualquer pessoa que entrou pode anexar a uma publicação, cada um assinado por quem comentou, não pelo editor. Veja [Comentários](#comentários). |
 
 Então você faz uma publicação; depois, se quiser, guarda o conteúdo dela, a
@@ -146,7 +142,7 @@ uma declaração assinada aos seus pares conectados.
 Logo depois de publicar, o painel oferece **Distribuir** o nome, para que
 quem não está conectado a você também possa encontrá-lo, por exemplo em
 [Nomes de lugares por perto](03-WorldView.md#nomes-de-lugares-por-perto--descobrindo-declarações-de-qualquer-pessoa).
-Escolha a **Rede** (Arweave, Nostr ou Steem; começa no seu
+Escolha a **Rede** (Arweave, Blurt, Nostr ou Steem; começa no seu
 [Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta))
 e clique em **Distribuir**, ou em **Agora não** para pular. Você também pode
 distribuir qualquer declaração depois: abra **Mais** no painel de nomes e
@@ -212,7 +208,7 @@ Abaixo disso, duas seções recolhidas:
   provedor que você salvou em **Configurar** (**Armazenar em IPFS**,
   **Ancorar em Steem**), com todos os outros provedores recolhidos em
   **Outras opções de …**. Sem um provedor salvo que ela possa usar, todas as
-  opções aparecem. O Steem e o pinning remoto no IPFS são marcados como
+  opções aparecem. O Steem, o Blurt e o pinning remoto no IPFS são marcados como
   **Experimental** onde quer que apareçam, assim como o bloco inteiro
   **Prova / ancoragem**. Veja
   [Distribuindo pela página Publicações](#distribuindo-pela-página-publicações)
@@ -281,7 +277,8 @@ publicações deste grupo podem ser removidas.
 **Distribuição → Anúncio / descoberta** tem dois cartões:
 
 - **Publicação** anuncia a própria publicação assinada no **Substrato** que
-  você escolher (Arweave, Nostr, ou Steem, que é experimental). Começa no seu
+  você escolher (Arweave, Nostr, Steem ou Blurt; estes dois últimos são
+  experimentais). Começa no seu
   [Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta).
 - **Snapshot** guarda o conteúdo em **Conteúdo** e o anuncia no próprio
   **Substrato**, que também começa nesse provedor. Para um Mundo, é o
@@ -321,7 +318,7 @@ Os comentários são permanentes: nada de editar, excluir ou responder.
 
 Um comentário postado pelo **Repositório** é salvo no seu dispositivo,
 enviado aos pares a que você está conectado e publicado na rede escolhida ao
-lado de **Publicar comentário** (Nostr, Arweave ou Steem; começa no seu
+lado de **Publicar comentário** (Nostr, Arweave, Steem ou Blurt; começa no seu
 [Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta)),
 para que pessoas que não estavam conectadas possam encontrá-lo. Fechar a
 seção (**Ocultar comentários**) descarta o que você tinha digitado sem

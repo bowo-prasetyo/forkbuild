@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: e91d68029035ce8b -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: b3097401f11e7bba -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · **Français** · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../09-PublicationsAndEvidence.md).
-<!-- /stale -->
 
 > **En partie expérimental.** La page Publications est une fonctionnalité
 > ordinaire : sa liste et ses statuts, le retrait des publications
@@ -17,7 +13,7 @@
 > changer ou être retiré dans une version ultérieure, et ce que cela
 > produit pourrait ne pas être conservé. La page marque chacune de ces
 > parties d’un badge **Expérimental** (**Exp.** sur un onglet) : tous les
-> types d’ancrage, les portefeuilles, Steem, l’épinglage IPFS distant, les
+> types d’ancrage, les portefeuilles, Steem, Blurt, l’épinglage IPFS distant, les
 > onglets **Décentralisation et preuves**, **Placements et IPFS** et
 > **Historique**, les sections de possession par les pairs et de résumé
 > de l’onglet **Snapshot**, et tout le panneau **Portefeuille, archives et
@@ -42,8 +38,8 @@ vous pouvez ajouter à une revendication :
   fournisseurs et serveurs de connexion entre pairs. Pas expérimental, et
   utile à tout le monde.
 - **[Preuves et stockage](11-EvidenceAndStorage.md)** — preuves externes
-  (Bitcoin, Base, Arweave, Steem), les parcours de portefeuille, les
-  Placements de Snapshot, la publication IPFS et Steem.
+  (Bitcoin, Base, Arweave, Steem, Blurt), les parcours de portefeuille, les
+  Placements de Snapshot, la publication IPFS, Steem et Blurt.
 - **[Archive et classements](12-ArchiveAndLeaderboards.md)** — l’archive
   durable des observations, les références, les succès, les étiquettes
   d’éditeur et les pages de Classement.
@@ -95,11 +91,11 @@ type de publication, et seule la publication elle-même est obligatoire :
 | Terme | Comme… | Ce que c’est |
 |---|---|---|
 | **Publication** | Le livre lui-même | Un enregistrement signé : un Monde partagé, une Attribution de plan ou une Proposition de nom de lieu. Il porte le hash de son contenu et la signature de son éditeur. |
-| **Contenu** | L’endroit où sont gardés les exemplaires imprimés | Les octets dont parle la publication, comme les briques d’un Monde. Ils sont toujours d’abord conservés sur cet appareil ; **Stocker sur …** en place une copie sur IPFS, Arweave ou Steem pour que d’autres puissent la récupérer. Voir [Fournisseur de contenu](10-NetworkSettings.md#fournisseur-de-contenu). |
+| **Contenu** | L’endroit où sont gardés les exemplaires imprimés | Les octets dont parle la publication, comme les briques d’un Monde. Ils sont toujours d’abord conservés sur cet appareil ; **Stocker sur …** en place une copie sur IPFS, Arweave, Steem ou Blurt pour que d’autres puissent la récupérer. Voir [Fournisseur de contenu](10-NetworkSettings.md#fournisseur-de-contenu). |
 | **Snapshot** | Un exemplaire imprimé | Une copie stockée du contenu d’une publication, comme les briques d’un Monde, que d’autres peuvent récupérer et vérifier par rapport à son hash. Voir [Snapshot local](#snapshot-local). |
 | **Placement** | Le rayon où l’exemplaire est rangé | Un enregistrement signé de l’endroit où se tient une construction dans le Monde. Un Monde partagé peut en avoir plusieurs. Voir [Placer ou forker](03-WorldView.md#placer-ou-forker). |
-| **Annonce / Découverte** | Une fiche du catalogue de la bibliothèque | Un petit avis signé sur Nostr, Arweave ou Steem indiquant que la publication ou le Snapshot existe et où se trouve sa copie, pour que des personnes non connectées à vous puissent la trouver. Voir [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte). |
-| **Preuve / Ancrage** *(Expérimental)* | Le tampon d’un notaire | Le hash du contenu inscrit dans une transaction blockchain (Bitcoin, Base, Arweave ou Steem), comme preuve qu’il existait à ce moment-là. Il ne stocke ni n’annonce rien. Voir [Preuves et stockage](11-EvidenceAndStorage.md). |
+| **Annonce / Découverte** | Une fiche du catalogue de la bibliothèque | Un petit avis signé sur Nostr, Arweave, Steem ou Blurt indiquant que la publication ou le Snapshot existe et où se trouve sa copie, pour que des personnes non connectées à vous puissent la trouver. Voir [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte). |
+| **Preuve / Ancrage** *(Expérimental)* | Le tampon d’un notaire | Le hash du contenu inscrit dans une transaction blockchain (Bitcoin, Base, Arweave, Steem ou Blurt), comme preuve qu’il existait à ce moment-là. Il ne stocke ni n’annonce rien. Voir [Preuves et stockage](11-EvidenceAndStorage.md). |
 | **Commentaires** | Les critiques des lecteurs | Des commentaires que toute personne connectée peut joindre à une publication, chacun signé par son auteur, pas par l’éditeur. Voir [Commentaires](#commentaires). |
 
 Vous faites donc une publication ; puis, si vous le souhaitez, vous
@@ -152,7 +148,7 @@ Juste après la publication, le panneau propose de **Distribuer** le nom,
 pour que les personnes non connectées à vous puissent aussi le trouver,
 par exemple via
 [Noms de lieux à proximité](03-WorldView.md#noms-de-lieux-à-proximité--découvrir-les-propositions-de-nimporte-qui).
-Choisissez le **Réseau** (Arweave, Nostr ou Steem ; il démarre sur votre
+Choisissez le **Réseau** (Arweave, Blurt, Nostr ou Steem ; il démarre sur votre
 [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte))
 et cliquez sur **Distribuer**, ou sur **Pas maintenant** pour passer. Vous
 pouvez aussi distribuer n’importe quelle proposition plus tard : ouvrez
@@ -220,7 +216,7 @@ En dessous, deux sections repliées :
   le fournisseur enregistré sous **Configurer** (**Stocker sur IPFS**,
   **Ancrer sur Steem**), avec tous les autres fournisseurs repliés sous
   **Autres options de …**. Sans fournisseur enregistré utilisable, toutes
-  les options s’affichent à la place. Steem et l’épinglage IPFS distant
+  les options s’affichent à la place. Steem, Blurt et l’épinglage IPFS distant
   sont marqués **Expérimental** partout où ils sont proposés, tout comme
   tout le bloc **Preuve / Ancrage**. Voir
   [Distribuer depuis la page Publications](#distribuer-depuis-la-page-publications)
@@ -294,8 +290,8 @@ publications de ce groupe peuvent être retirées.
 **Distribution → Annonce / Découverte** contient deux cartes :
 
 - **Publication** annonce la publication signée elle-même sur le
-  **Support** de votre choix (Arweave, Nostr, ou Steem, qui est
-  Expérimental). Elle démarre sur votre
+  **Support** de votre choix (Arweave, Nostr, Steem ou Blurt ; ces deux
+  derniers sont Expérimentaux). Elle démarre sur votre
   [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte).
 - **Snapshot** stocke le contenu sous **Contenu** et l’annonce sur son
   propre **Support**, qui démarre aussi sur ce fournisseur. Pour un Monde,
@@ -339,8 +335,8 @@ réponses.
 
 Un commentaire publié depuis le **Dépôt** est enregistré sur votre
 appareil, envoyé aux pairs auxquels vous êtes connecté, et publié sur le
-réseau choisi à côté de **Publier le commentaire** (Nostr, Arweave ou
-Steem ; il démarre sur votre
+réseau choisi à côté de **Publier le commentaire** (Nostr, Arweave,
+Steem ou Blurt ; il démarre sur votre
 [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte)),
 pour que des personnes qui n’étaient pas connectées puissent le trouver.
 Fermer la section (**Masquer les commentaires**) abandonne tout ce que

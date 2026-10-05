@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: b5cf5faa75241d15 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: d6122c9368a1f486 -->
 # 자주 묻는 질문
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · **한국어** · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../FAQ.md)을 참고하세요.
-<!-- /stale -->
 
 <!-- languages -->
 <!-- /languages -->
@@ -26,15 +22,15 @@
   친구나 알려진 피어의 기기는 저절로 추가하고, 다른 사람은 **나에게 공유됨**
   아래에서 보고 **가져오기**를 클릭합니다. 도착하려면 동시에 연결되어 있어야
   합니다.
-- **배포**는 Arweave나 IPFS(또는 실험적으로 Steem)에 업로드하고 공지해서,
+- **배포**는 Arweave나 IPFS(또는 실험적으로 Steem이나 Blurt)에 업로드하고 공지해서,
   나와 연결되지 않아도 찾을 수 있게 합니다.
 
 [게시와 포크](04-PublishingAndForking.md#연결된-피어와-공유하기)를 보세요.
 
 ### 내 작품을 모두가 쓸 수 있게 하려면 어떻게 하나요?
 
-배포하세요: Arweave나 IPFS(또는 실험적으로 Steem)에 저장하고 Nostr나
-Arweave(또는 Steem)에 공지하면, 나와 연결되지 않아도 누구나 찾고 확인할 수
+배포하세요: Arweave나 IPFS(또는 실험적으로 Steem이나 Blurt)에 저장하고 Nostr나
+Arweave(또는 Steem이나 Blurt)에 공지하면, 나와 연결되지 않아도 누구나 찾고 확인할 수
 있습니다. 게시한 직후, 또는 월드 보기의 **내 공유 월드** 아래에서 **배포**를
 클릭하세요. 고른 네트워크용 서명 브라우저 확장 프로그램(예: Arweave는 Wander,
 Nostr는 nos2x)이 필요합니다. [작품 배포하기](Distribution.md)에 배포할 수 있는 모든
@@ -65,7 +61,7 @@ Nostr는 nos2x)이 필요합니다. [작품 배포하기](Distribution.md)에 �
 
 네: 월드 보기에서 월드를 연 다음, **내 공유 월드**에서 **더 보기 ▾ → 게시
 취소…**를 고르세요. 내 저장소에서 제거됩니다. 다른 사람이 이미 받은 사본이나,
-Arweave, IPFS, Nostr, Steem에 배포한 것은 되돌릴 수 없습니다. 다만 이 기기는
+Arweave, IPFS, Nostr, Steem, Blurt에 배포한 것은 되돌릴 수 없습니다. 다만 이 기기는
 게시 취소한 것을 기억하므로, 저장소의 네트워크 검색이 그 사본을 여기에 다시
 표시하지 않습니다. 다른 기기와 다른 사람은 계속 찾을 수 있습니다.
 

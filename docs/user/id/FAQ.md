@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: b5cf5faa75241d15 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: d6122c9368a1f486 -->
 # Pertanyaan Umum
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · **Bahasa Indonesia** · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../FAQ.md).
-<!-- /stale -->
 
 Jawaban singkat atas pertanyaan yang paling sering muncul, masing-masing
 dengan tautan ke panduan yang menjelaskannya secara lengkap.
@@ -26,7 +22,7 @@ sampai Anda memilihnya:
   melihatnya di **Dibagikan kepada Anda** dan mengeklik **Ambil**. Anda
   perlu terhubung pada saat yang sama agar karya itu sampai.
 - **Distribusikan** mengunggahnya ke Arweave atau IPFS (atau, secara
-  eksperimental, Steem) dan mengumumkannya, sehingga orang dapat
+  eksperimental, Steem atau Blurt) dan mengumumkannya, sehingga orang dapat
   menemukannya tanpa terhubung dengan Anda.
 
 Lihat [Penerbitan & Fork](04-PublishingAndForking.md#berbagi-dengan-rekan-yang-terhubung).
@@ -34,7 +30,7 @@ Lihat [Penerbitan & Fork](04-PublishingAndForking.md#berbagi-dengan-rekan-yang-t
 ### Bagaimana cara membuat karya saya tersedia untuk semua orang?
 
 Distribusikan: simpan di Arweave atau IPFS (atau, secara eksperimental,
-Steem) dan umumkan di Nostr atau Arweave (atau Steem), sehingga siapa pun
+Steem atau Blurt) dan umumkan di Nostr atau Arweave (atau Steem atau Blurt), sehingga siapa pun
 dapat menemukan dan memeriksanya tanpa terhubung dengan Anda. Klik
 **Distribusikan** tepat setelah menerbitkan, atau di bawah
 **Dunia Bersama Saya** di Tampilan Dunia. Anda memerlukan ekstensi browser
@@ -76,7 +72,7 @@ rekan atau distribusikan nanti. Masuklah sebelum menerbitkan.
 Bisa: buka Dunia itu di Tampilan Dunia, lalu di **Dunia Bersama Saya**
 pilih **Lainnya ▾ → Batalkan Penerbitan…**. Dunia itu dihapus dari
 Repositori Anda. Salinan yang sudah diterima orang lain atau apa pun yang
-sudah Anda distribusikan ke Arweave, IPFS, Nostr, atau Steem tidak dapat
+sudah Anda distribusikan ke Arweave, IPFS, Nostr, Steem, atau Blurt tidak dapat
 ditarik kembali. Perangkat ini tetap mengingat apa yang Anda batalkan
 penerbitannya, sehingga pencarian Repositori di jaringan tidak akan
 menampilkan salinan itu lagi di sini; perangkat lain dan orang lain masih

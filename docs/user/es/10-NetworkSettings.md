@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 16855c5d4fae8108 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 3a000cc71ab8702b -->
 # 10 — Configuración de red
 
 <!-- languages -->
 [English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · **Español** · [Français](../fr/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · [日本語](../ja/10-NetworkSettings.md) · [한국어](../ko/10-NetworkSettings.md) · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../10-NetworkSettings.md).
-<!-- /stale -->
 
 **Configuración de red**, en la barra superior, enlaza todas las páginas
 que controlan con qué servidores habla ForkBuild. La mayoría de las
@@ -24,20 +20,21 @@ Para saber qué averigua cada servidor sobre usted, consulte
 | Página | Ruta | Qué configura |
 |---|---|---|
 | **Proveedor de contenido** | `/settings/content-provider` | Dónde guardan contenido nuevo **Guardar en …** y **Usar el proveedor preferido**, y a qué nodo IPFS va: consulte [más abajo](#proveedor-de-contenido) |
-| **Proveedor de anuncio / descubrimiento** | `/settings/announcement-discovery-provider` | Adónde van sus anuncios de forma predeterminada: Nostr, Arweave o Steem; consulte [más abajo](#proveedor-de-anuncio--descubrimiento) |
+| **Proveedor de anuncio / descubrimiento** | `/settings/announcement-discovery-provider` | Adónde van sus anuncios de forma predeterminada: Nostr, Arweave, Steem o Blurt; consulte [más abajo](#proveedor-de-anuncio--descubrimiento) |
 | **Proveedor de prueba / anclaje** *(experimental)* | `/settings/anchor-provider` | Dónde ancla **Anclar en …**: consulte [más abajo](#proveedor-de-prueba--anclaje) |
 | **Gateway de Arweave** | `/settings/arweave-gateway` | Gateways para leer contenido de Arweave: consulte [más abajo](#gateway-de-arweave) |
 | **Gateway de IPFS** | `/settings/ipfs-gateway` | Gateways para leer contenido de IPFS: consulte [más abajo](#gateway-de-ipfs) |
 | **Endpoint de Bitcoin** *(experimental)* | `/settings/bitcoin-esplora` | El servicio que usa el anclaje en Bitcoin: consulte [más abajo](#endpoint-de-bitcoin) |
 | **Relays de Nostr** | `/settings/nostr-relay` | Relays para publicar y descubrir a través de Nostr: consulte [más abajo](#relays-de-nostr) |
 | **Steem** *(experimental)* | `/settings/steem` | Su cuenta de Steem, y de dónde se lee Steem: consulte [más abajo](#steem) |
+| **Blurt** *(experimental)* | `/settings/blurt` | Su cuenta de Blurt, y de dónde se lee Blurt: consulte [más abajo](#blurt) |
 | **Servidores STUN** / **Servidor TURN** | `/settings/stun`, `/settings/turn-server` | Ayuda para las conexiones entre pares: consulte [TURN](07-PeerConnectionsAndFriends.md#turn-retransmitir-conexiones-entre-pares-que-no-encuentran-un-camino-directo) |
 | **Servidores de encuentro** | `/settings/rendezvous` | Cómo se encuentran los pares: consulte [Conexiones entre pares y amigos](07-PeerConnectionsAndFriends.md) |
 
 ## Cómo se comporta cada página
 
 - **Recargue después de guardar.** Los cambios tienen efecto la próxima vez
-  que se carga la app (la cuenta de Steem es la única excepción). Una
+  que se carga la app (las cuentas de Steem y Blurt son las excepciones). Una
   Vista del mundo o un Editor abiertos siguen usando la configuración
   anterior hasta que recargue.
 - Cada página tiene su propio **Guardar**. Un guardado que falla muestra el
@@ -46,7 +43,7 @@ Para saber qué averigua cada servidor sobre usted, consulte
 - Las listas de opciones se muestran en orden alfabético.
 - **Las listas de servidores vienen con valores predeterminados.** Las
   páginas Gateway de Arweave, Gateway de IPFS, Endpoint de Bitcoin, Relays
-  de Nostr, Steem, STUN y Servidores de encuentro empiezan con varios
+  de Nostr, Steem, Blurt, STUN y Servidores de encuentro empiezan con varios
   servidores públicos gratuitos, para que todo siga funcionando cuando uno
   falla. La página dice si “Se usan los … predeterminados” o “Se usan sus
   … guardados”. Sin nada guardado, el cuadro de texto contiene los valores
@@ -90,20 +87,20 @@ volver. No afecta la lectura de contenido de IPFS, que usa la lista de
 
 ## Proveedor de anuncio / descubrimiento
 
-Elija **Arweave**, **Nostr** o **Steem** (experimental) como el lugar
+Elija **Arweave**, **Blurt** (experimental), **Nostr** o **Steem** (experimental) como el lugar
 predeterminado donde se anuncian sus publicaciones (Mundos compartidos,
 Atribuciones de plano y declaraciones de nombres de lugares), Snapshots y
 comentarios. Es solo un valor predeterminado: todos los diálogos
 **Distribuir**, el selector de Distribución de cada tarjeta del Repositorio
 y el selector de red junto a **Publicar comentario** empiezan en él, y
 puede cambiarlos para una acción concreta.
-Para encontrar contenido de otras personas siempre se busca en los tres.
+Para encontrar contenido de otras personas siempre se busca en todos.
 
 ## Proveedor de prueba / anclaje
 
 *Experimental.* Elija dónde crea evidencia externa **Anclar en …** (el
 primer botón del bloque **Prueba / anclaje** de una publicación):
-**Arweave**, **Bitcoin** o **Steem**, según los que haya registrado este
+**Arweave**, **Bitcoin**, **Blurt** o **Steem**, según los que haya registrado este
 dispositivo. Base nunca se ofrece, porque cada anclaje en Base requiere que
 usted revise y firme una transacción de billetera. Con Bitcoin elegido no
 hay botón **Anclar en …**: el bloque muestra todas las opciones y remite a
@@ -193,4 +190,26 @@ Steem:
 
 Cuando no se puede alcanzar ningún nodo de Steem, **Buscar comentarios
 nuevos** y el descubrimiento de Snapshots indican que Steem no está
+disponible, en lugar de informar que no se encontró nada.
+
+## Blurt
+
+*Experimental.* Configure **Su cuenta de Blurt** en **Publicar** (se aplica
+de inmediato, sin recargar); se necesita para publicar, guardar o anclar
+en Blurt: consulte [Blurt](11-EvidenceAndStorage.md#blurt). Leer de Blurt
+no requiere ninguna cuenta. El resto de la página configura de dónde se
+lee Blurt:
+
+**Nodos de API**, una URL `https://` por línea (predeterminados
+`https://rpc.blurt.blog` y `https://rpc.beblurt.com`), que se prueban en
+orden. ForkBuild encuentra las publicaciones a través de Nexus, el índice
+de búsqueda de Blurt, que conserva cada publicación por antigua que sea, y
+omite un nodo que no lo ofrece. Cuando ningún nodo ofrece Nexus, recurre a
+la lista de etiquetas propia de Blurt, que conserva una publicación solo
+hasta que paga, a los siete días, y encuentra las publicaciones más
+antiguas en el historial de las cuentas que vio publicar con la etiqueta
+en este dispositivo.
+
+Cuando no se puede alcanzar ningún nodo de Blurt, **Buscar comentarios
+nuevos** y el descubrimiento de Snapshots indican que Blurt no está
 disponible, en lugar de informar que no se encontró nada.

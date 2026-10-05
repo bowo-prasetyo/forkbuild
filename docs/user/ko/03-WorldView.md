@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 0a129e40e9aeb884 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 60040bc00f156b0b -->
 # 03 — 월드 보기
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · **한국어** · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../03-WorldView.md)을 참고하세요.
-<!-- /stale -->
 
 <!-- languages -->
 <!-- /languages -->
@@ -258,9 +254,10 @@ Arweave나 Nostr 위치 — 를 찾았다면, **위치** 줄에 어느 것을 �
 
 대화 상자에는 배포하는 모든 것에 쓰이는 설정이 한 벌 있습니다: **저장소** —
 **Arweave**, **IPFS (로컬 Kubo)**, **IPFS (원격 피닝)**(매번 엔드포인트와
-자격 증명을 새로 입력해야 하며, 어떤 것도 저장되지 않음), **Steem**(실험적,
-[Steem](11-EvidenceAndStorage.md#steem) 참고) — 그리고 **공지 / 발견
-기반**(**Arweave**, **Nostr**, **Steem**). 둘 다 저장된 제공자 선호
+자격 증명을 새로 입력해야 하며, 어떤 것도 저장되지 않음), **Steem** 또는
+**Blurt**(실험적, [Steem](11-EvidenceAndStorage.md#steem)과
+[Blurt](11-EvidenceAndStorage.md#blurt) 참고) — 그리고 **공지 / 발견
+기반**(**Arweave**, **Blurt**, **Nostr**, **Steem**). 둘 다 저장된 제공자 선호
 설정으로 열립니다. 저장소에는 이 기기가 실제로 스냅샷을 배치할 수 있는
 백엔드(와 원격 피닝)만 나열되므로, 중간에 실패할 수밖에 없는 것은 고를 수
 없습니다.

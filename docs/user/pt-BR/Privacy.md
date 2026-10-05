@@ -1,13 +1,9 @@
-<!-- translation-of: docs/Privacy.md source-hash: 9cb6f05e34121fa7 -->
+<!-- translation-of: docs/Privacy.md source-hash: 2613ec8e89de381d -->
 # Privacidade
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../../Privacy.md).
-<!-- /stale -->
 
 O ForkBuild não tem contas e não rastreia você. Ele guarda seu trabalho no
 seu próprio navegador e só conversa com outros computadores nos recursos que
@@ -139,7 +135,7 @@ Todo script, estilo e fonte vem do site de onde o app é servido (veja
 [docs/Deployment.md](../../Deployment.md), em inglês). Uma coisa começa
 sozinha: uns 10 segundos depois de o app abrir, e a cada poucos minutos
 enquanto a aba dele está visível, ele lê anúncios novos dos relays do Nostr,
-do gateway do Arweave e dos nós do Steem configurados em **Configurações de
+do gateway do Arweave e dos nós do Steem e do Blurt configurados em **Configurações de
 rede** (docs/AnnouncementIndex.md). Ele só lê anúncios (pequenos ponteiros e
 declarações assinadas), nunca conteúdo, e não publica nada. Todo o resto só
 acontece quando você usa o recurso, e cada servidor pode ser trocado em
@@ -153,15 +149,17 @@ pede a ele.
 | Você entra numa sala pública, ou olha uma | o mesmo servidor de encontro | seu cartão de sala assinado (chave pública, nome de exibição, qual sala), guardado por no máximo 15 minutos e renovado enquanto você fica; qual sala você olha |
 | Uma conexão entre pares começa | servidores STUN (`stun.l.google.com`) | nada além de um pedido do seu endereço IP público |
 | Você começa uma conexão entre pares, se o servidor de encontro oferece um relay | o `/turn-credentials` do servidor de encontro, e depois o relay TURN dele (Cloudflare) | um pedido de credenciais de relay de curta duração, no máximo cerca de uma vez por hora; o tráfego retransmitido é criptografado de ponta a ponta pelo WebRTC |
-| O app está aberto e a aba visível (sincronização de anúncios em segundo plano) | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`) | consultas pelas etiquetas de descoberta do ForkBuild: as etiquetas compartilhadas de Snapshot e de Comentários, e as regiões de nomes de lugares e células do mapa que você visitou |
-| Você abre o Repositório ou a página de um autor | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`) | uma consulta pela etiqueta compartilhada de publicações (`forkbuild-publication`); depois um pedido do registro assinado de cada publicação recém-anunciada, no máximo 20 por visita ou por **Verificar de novo** |
+| O app está aberto e a aba visível (sincronização de anúncios em segundo plano) | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | consultas pelas etiquetas de descoberta do ForkBuild: as etiquetas compartilhadas de Snapshot e de Comentários, e as regiões de nomes de lugares e células do mapa que você visitou |
+| Você abre o Repositório ou a página de um autor | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | uma consulta pela etiqueta compartilhada de publicações (`forkbuild-publication`); depois um pedido do registro assinado de cada publicação recém-anunciada, no máximo 20 por visita ou por **Verificar de novo** |
 | Você distribui ou descobre publicações pelo Nostr | relays do Nostr (`relay.damus.io`) | os anúncios assinados que você publica; suas consultas |
 | Você guarda ou busca conteúdo no Arweave | um gateway do Arweave (`arweave.net`) | o conteúdo que você publica; o que você busca |
 | Você busca conteúdo no IPFS | um gateway IPFS (`ipfs.io`), ou seu próprio nó IPFS (`127.0.0.1:5001`) | o que você busca ou adiciona |
 | Você fixa conteúdo num serviço de pinning remoto (*experimental*) | o serviço que você digitar | o conteúdo, e o token que você digita para aquele envio (nunca guardado) |
 | Você guarda, anuncia ou ancora no Steem, ou descobre anúncios do Steem (*experimental*) | nós de API do Steem (`api.steemit.com`, depois `api.justyy.com`); a assinatura passa pela extensão Steem Keychain | o nome da sua conta no Steem; o que você posta (anúncios, conteúdo guardado, âncoras) fica público na cadeia para sempre, e as edições deixam a versão anterior no histórico |
+| Você guarda, anuncia ou ancora no Blurt, ou descobre postagens do Blurt (*experimental*) | nós de API do Blurt (`rpc.blurt.blog`, depois `rpc.beblurt.com`); a assinatura passa pela extensão Blurt Keychain (ou WhaleVault) | o nome da sua conta no Blurt, e as contas cujo histórico de postagens é lido (as que você segue, e todas as contas que este dispositivo viu postar com as tags do ForkBuild, lembradas neste dispositivo); o que você posta fica público na blockchain para sempre, na sua própria conta, e as edições deixam a versão anterior no histórico. Cada transação paga uma pequena taxa em BLURT da sua conta |
+| Você distribui a Declaração assinada de uma publicação no Blurt (*experimental*) | o servidor de imagens do Blurt (`images.blurt.blog`), diretamente ou, quando o navegador não consegue alcançá-lo, pelo relay `/blurt-image` do servidor de encontro, que não guarda nada | uma imagem 320×200 da construção para a prévia da postagem, assinada com sua chave de postagem do Blurt |
 | Você distribui a Declaração assinada de uma publicação no Steem (*experimental*) | o servidor de imagens do Steem (`steemitimages.com`), diretamente ou, quando o navegador não consegue alcançá-lo, pelo relé `/steem-image` do servidor de encontro, que não guarda nada | uma imagem de 320×200 da construção para a prévia da postagem, assinada com sua chave de postagem do Steem |
-| Você abre um link compartilhado de uma publicação (`#/view/…`) | o nó do Steem, o gateway do Arweave ou o gateway IPFS que o link indica, e depois os substratos de anúncio para encontrar a construção | qual postagem, transação ou CID você abre |
+| Você abre um link compartilhado de uma publicação (`#/view/…`) | o nó do Steem ou do Blurt, o gateway do Arweave ou o gateway IPFS que o link indica, e depois os substratos de anúncio para encontrar a construção | qual postagem, transação ou CID você abre |
 | Você ancora ou verifica evidências no Bitcoin (*experimental*) | uma API Esplora (`blockstream.info`) | a transação que você transmite ou consulta |
 | Você verifica evidências na Base (*experimental*) | um endpoint JSON-RPC da Base (`mainnet.base.org`) | a transação que você consulta |
 | Você conecta uma carteira de navegador (*experimental*) | a extensão de carteira que você escolher | o que ela pedir para você aprovar |

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 8347bc85df3e2e3a -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 01cc1df409866b2e -->
 # 13 — Vos données : sauvegarder et restaurer
 
 <!-- languages -->
 [English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Español](../es/13-YourData.md) · **Français** · [Bahasa Indonesia](../id/13-YourData.md) · [日本語](../ja/13-YourData.md) · [한국어](../ko/13-YourData.md) · [Português (Brasil)](../pt-BR/13-YourData.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../13-YourData.md).
-<!-- /stale -->
 
 ForkBuild n’a ni comptes ni serveur qui garde votre travail. Tout ce qu’il
 stocke se trouve dans ce navigateur, sur cet appareil : vos documents, vos
@@ -181,8 +177,8 @@ jusqu’à ce que vous la distribuiez (voir
 [Publier et forker](04-PublishingAndForking.md)). Sa carte dans le Dépôt
 indique où cet appareil a enregistré sa distribution, par exemple
 **Stocké sur IPFS · Annoncé sur Nostr** : où la construction ou sa
-Déclaration signée a été envoyée (IPFS, Arweave ou Steem) et où elle a été
-annoncée (Nostr, Arweave ou Steem). Laissez le pointeur sur un nom pour
+Déclaration signée a été envoyée (IPFS, Arweave, Steem ou Blurt) et où elle
+a été annoncée (Nostr, Arweave, Steem ou Blurt). Laissez le pointeur sur un nom pour
 voir son adresse ou l’id de l’annonce.
 
 La ligne indique seulement ce dont cet appareil a une trace. Elle ne

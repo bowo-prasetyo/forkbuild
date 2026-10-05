@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: 26ea018db8723ef6 -->
+<!-- translation-of: docs/user/README.md source-hash: 0137e01d1cbcedd8 -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Français](../fr/README.md) · **Bahasa Indonesia** · [日本語](../ja/README.md) · [한국어](../ko/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../README.md).
-<!-- /stale -->
 
 Panduan cara menggunakan ForkBuild di browser. Semua yang ada di sini
 menjelaskan produk sebagaimana cara kerjanya saat ini; bagian dalam mesin
@@ -56,7 +52,7 @@ dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
 11. **[Bukti & Penyimpanan](11-EvidenceAndStorage.md)**
     — menyimpan konten di IPFS atau Arweave, dan yang *eksperimental*:
     bukti eksternal, alur dompet Bitcoin dan Base, penempatan snapshot,
-    pinning IPFS jarak jauh, dan Steem.
+    pinning IPFS jarak jauh, Steem, dan Blurt.
     [Mendistribusikan Karya Anda](Distribution.md)
     menunjukkan bagaimana semuanya saling terkait.
 12. **[Arsip & Papan Peringkat](12-ArchiveAndLeaderboards.md)** — *eksperimental*. Arsip pengamatan, referensi publikasi,
