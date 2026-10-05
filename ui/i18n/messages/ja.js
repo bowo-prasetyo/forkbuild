@@ -503,6 +503,7 @@ export default Object.freeze({
     'metadataEditor.untitled': '無題',
     'metadataEditor.description': '説明',
     'metadataEditor.descriptionPlaceholder': 'これはどんなワールドですか？',
+    'metadataEditor.descriptionFormattingHint': '書式: 空行で新しい段落、## で見出し、- で箇条書き、**太字**、*斜体*。',
     'metadataEditor.license': 'ライセンス',
     'metadataEditor.noLicenseHint': 'ライセンスがない場合、設定されるまでフォークは許可されません。',
     'metadataEditor.placement': 'ワールドに配置できる人',

@@ -506,6 +506,7 @@ export default Object.freeze({
     'metadataEditor.untitled': 'Ohne Titel',
     'metadataEditor.description': 'Beschreibung',
     'metadataEditor.descriptionPlaceholder': 'Was ist diese Welt?',
+    'metadataEditor.descriptionFormattingHint': 'Formatierung: Eine Leerzeile beginnt einen neuen Absatz, ## eine Überschrift, - einen Listenpunkt; **fett**, *kursiv*.',
     'metadataEditor.license': 'Lizenz',
     'metadataEditor.noLicenseHint': 'Ohne Lizenz ist das Forken nicht erlaubt, bis eine festgelegt wird.',
     'metadataEditor.placement': 'Wer es in der Welt platzieren darf',

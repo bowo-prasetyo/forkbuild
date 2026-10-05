@@ -1,6 +1,7 @@
 import { ref, computed, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
+import { descriptionPlainText } from '../../core/DescriptionMarkup.js';
 import { PublicationQuery } from '../../core/PublicationQuery.js';
 import { PublicationSort } from '../../core/PublicationSort.js';
 import { GroupBy, groupPublications } from '../../core/PublicationGrouping.js';
@@ -85,9 +86,10 @@ export default {
             });
         }
 
+        // A snippet: the description's words, without its formatting.
         function truncate(text) {
-            if (!text) return '';
-            const trimmed = text.trim();
+            const trimmed = descriptionPlainText(text);
+            if (!trimmed) return '';
             if (trimmed.length <= DESCRIPTION_SNIPPET_LENGTH) return trimmed;
             return trimmed.slice(0, DESCRIPTION_SNIPPET_LENGTH).trim() + '…';
         }

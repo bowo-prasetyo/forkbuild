@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: ebb2f824912e0429 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 44b0d63b84daefad -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
@@ -872,7 +872,7 @@ Keychain vous demande d’approuver chaque article.
 - **Un article par construction.** Distribuer crée un article principal
   depuis votre compte, avec les tags `forkbuild` et `forkbuild-snapshot`
   ou `forkbuild-publication`, avec une image de votre construction, son
-  titre, votre nom et sa description, et un lien « Voir en 3D ». Ce qui
+  titre, votre nom et sa description (entière, jusqu’à 2 000 caractères, avec sa [mise en forme](02-TheEditor.md)), et un lien « Voir en 3D ». Ce qui
   suit dans la demi-heure (l’annonce de la Publication, un commentaire,
   une ancre) est ajouté au même article en le modifiant, pour que vos
   abonnés voient un seul article, pas plusieurs.

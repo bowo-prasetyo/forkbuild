@@ -1,5 +1,6 @@
 import { TrustStatus } from '../../core/TrustObservation.js';
 import { displayText, formatNumber, t } from '../i18n/i18n.js';
+import FormattedDescription from './FormattedDescription.js';
 
 // 0.9.521 — Close Remaining Raw Status Rendering Boundaries.
 //
@@ -146,6 +147,7 @@ function round1(value) {
 
 export default {
     name: 'WorldLocationBrowser',
+    components: { FormattedDescription },
     props: {
         center: {
             type: Object,
@@ -334,7 +336,7 @@ export default {
                                     </div>
                                     <div v-if="inspected.documentInfo.description" class="inspection-row">
                                         <span class="inspection-label">{{ t('worldLocationBrowser.description') }}</span>
-                                        <span class="inspection-value">{{ inspected.documentInfo.description }}</span>
+                                        <div class="inspection-value"><formatted-description :text="inspected.documentInfo.description" /></div>
                                     </div>
                                 </template>
                                 <p v-else class="world-location-browser-inspect-note">

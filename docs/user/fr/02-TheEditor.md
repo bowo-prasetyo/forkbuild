@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: f3f56bd4d4861d88 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7e98ffcd0485a36b -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -482,6 +482,23 @@ est aussi consultable par recherche ; la licence détermine si — et
 comment — d’autres personnes peuvent la forker. Voir
 [Publier et forker](04-PublishingAndForking.md) pour la signification de
 chaque licence.
+
+Une longue description se lit mieux avec un peu de mise en forme, que
+montrent le panneau d’informations du document, le navigateur de lieux de la
+Vue du monde et un article Blurt :
+
+| Écrivez | Pour obtenir |
+|---|---|
+| une ligne vide | un nouveau paragraphe (un simple retour à la ligne reste un retour à la ligne) |
+| `## Matériaux` en début de ligne | un titre |
+| `- ` (ou `* `) en début de ligne | un élément de liste |
+| `**mot**` | **gras** |
+| `*mot*` | *italique* |
+| `\*`, `\#`, `\-` | le caractère lui-même |
+
+Rien d’autre n’est de la mise en forme : liens, images et HTML restent du
+texte simple. Les cartes du Dépôt et les articles Steem montrent les mots de
+la description sur une ligne, sans mise en forme.
 
 ## Son
 

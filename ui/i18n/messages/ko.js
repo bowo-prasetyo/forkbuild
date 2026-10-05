@@ -506,6 +506,7 @@ export default Object.freeze({
     'metadataEditor.untitled': '제목 없음',
     'metadataEditor.description': '설명',
     'metadataEditor.descriptionPlaceholder': '어떤 월드인가요?',
+    'metadataEditor.descriptionFormattingHint': '서식: 빈 줄은 새 문단, ##는 제목, -는 목록 항목, **굵게**, *기울임*.',
     'metadataEditor.license': '라이선스',
     'metadataEditor.noLicenseHint': '라이선스가 없으면 라이선스를 정할 때까지 포크가 허용되지 않습니다.',
     'metadataEditor.placement': '월드에 배치할 수 있는 사람',

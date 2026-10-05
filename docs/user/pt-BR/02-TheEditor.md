@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: f3f56bd4d4861d88 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7e98ffcd0485a36b -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -446,6 +446,23 @@ descrição aparece como trecho no cartão dele no Repositório e também pode
 ser pesquisada lá; a licença controla se — e como — outras pessoas podem
 bifurcá-lo. Veja [Publicar e bifurcar](04-PublishingAndForking.md) para o
 que significa cada licença.
+
+Uma descrição longa fica mais legível com um pouco de formatação, que o
+painel de Informações do documento, o navegador de locais da Visão do Mundo
+e uma postagem no Blurt mostram:
+
+| Escreva | Para ter |
+|---|---|
+| uma linha em branco | um novo parágrafo (uma quebra de linha simples continua sendo quebra de linha) |
+| `## Materiais` no início de uma linha | um título |
+| `- ` (ou `* `) no início de uma linha | um item de lista |
+| `**palavra**` | **negrito** |
+| `*palavra*` | *itálico* |
+| `\*`, `\#`, `\-` | o próprio caractere |
+
+Nada mais é formatação: links, imagens e HTML continuam como texto simples.
+Os cartões do Repositório e as postagens no Steem mostram as palavras da
+descrição em uma linha, sem formatação.
 
 ## Som
 

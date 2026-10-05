@@ -1500,7 +1500,11 @@ Everything ForkBuild posts on Blurt hangs off a **build post**: a top-level post
   data"). Text a user wrote goes through the same sanitizing as Steem notices (`steemNoticeText()`), at most 100
   characters.
 - Body: the build's card (picture linking to the app's view, title, author, description, "See it in 3D") when the
-  post announces a Publication, then a list of what the post carries, then one paragraph saying that the ForkBuild
+  post announces a Publication (the description whole, cut with "…" only past 2,000 characters of text, unlike
+  Steem's 300-character one-line preview, with the formatting a description may use written as Markdown:
+  paragraphs, line breaks, `### ` headings, `- ` lists, `**bold**`, `*italic*`, as `core/DescriptionMarkup.js`
+  reads them; all other text is made safe as on Steem, with links and HTML removed or neutralized, other Markdown
+  escaped and mentions and tags broken), then a list of what the post carries, then one paragraph saying that the ForkBuild
   app reads the post's `json_metadata` and checks every content hash and signature, that the Blurt account that
   posted it is not treated as the author, and a link to this section.
 

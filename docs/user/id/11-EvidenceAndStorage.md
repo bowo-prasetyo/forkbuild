@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: ebb2f824912e0429 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 44b0d63b84daefad -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
@@ -846,7 +846,7 @@ meminta Anda menyetujui setiap postingan.
 - **Satu postingan per bangunan.** Distribusikan membuat satu postingan
   utama dari akun Anda, bertag `forkbuild` dan `forkbuild-snapshot` atau
   `forkbuild-publication`, dengan gambar bangunan Anda, judulnya, nama dan
-  deskripsi Anda, serta tautan "See it in 3D" (lihat dalam 3D). Apa yang
+  deskripsi Anda (utuh, hingga 2.000 karakter, dengan [formatnya](02-TheEditor.md)), serta tautan "See it in 3D" (lihat dalam 3D). Apa yang
   menyusul dalam setengah jam berikutnya (pengumuman Publikasi, komentar,
   jangkar) ditambahkan ke postingan yang sama dengan menyuntingnya,
   sehingga pengikut Anda melihat satu postingan, bukan beberapa.

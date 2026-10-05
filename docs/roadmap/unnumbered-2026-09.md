@@ -4044,3 +4044,30 @@ error"). It was never checked, since the development environment can't reach Blu
 - docs/Protocol.md, docs/Privacy.md (and its translations' host name) and the worker's README updated.
 - Tests: `tests/BlurtImageUpload.test.js` checks the host; `server/rendezvous-worker/worker.test.js` forwards to
   `https://img-upload.blurt.blog/<account>/<signature>`.
+
+## Descriptions may be formatted, and Blurt posts show them whole (unnumbered, 2026-10-05)
+
+A build's description was cut to 300 characters and squashed into one line in its Blurt post, a limit inherited from
+Steem's notices, which are short previews in replies. On Blurt the post is its author's own, rewarded post, and a
+long description read as one block of text everywhere.
+
+- A description may use a small part of Markdown (`core/DescriptionMarkup.js`): blank lines between paragraphs, a
+  line break within one, `#`–`###` headings, `- ` or `* ` bullet lists, `**bold**` and `*italic*`, with `\` escaping
+  a mark. Nothing else is markup; a description without any reads as before.
+- The app shows the formatting in the Document Information panel and World View's location browser, through
+  `ui/components/FormattedDescription.js`, which draws elements around plain text and never inserts HTML.
+  Repository card snippets, the compact panel's tooltip and Steem's one-line preview show the words only
+  (`descriptionPlainText()`).
+- Blurt posts (`core/BlurtPost.js`) show the description whole, cut with "…" only past
+  `BLURT_POST_DESCRIPTION_MAX` (2,000 characters of text), since every byte costs a bandwidth fee, on every edit of
+  the build post too. The formatting is written as Markdown (`###` for headings); every piece of text is made safe as
+  before, through `steemNoticeClean()` and `steemNoticeEscape()`, split out of `steemNoticeText()` in
+  `core/SteemContentManifest.js` so text can be escaped without being trimmed. A line that would read as a numbered
+  list stays text.
+- The Document Properties dialog says which formatting a description can use, in every language.
+- docs/Protocol.md ("Proposed: Blurt Substrate"), the Editor guide (Document Properties) and the Blurt user guide
+  updated.
+- Tests: `tests/DescriptionMarkup.test.js` (blocks, bold and italic, escapes, plain text);
+  `tests/FormattedDescriptionBrowser.test.js` (elements, and HTML and links staying text);
+  `tests/BlurtPoster.test.js` (the Markdown, safety and the cut); `tests/SteemPublicationNotice.test.js` (the
+  one-line preview).
