@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7e98ffcd0485a36b -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1238c1e7cb84a4db -->
 # 02 — Editor
 
 <!-- languages -->
@@ -455,7 +455,7 @@ orang lain boleh mem-fork-nya. Lihat
 
 Deskripsi yang panjang lebih mudah dibaca dengan sedikit format, yang
 ditampilkan oleh panel Informasi Dokumen, penjelajah lokasi di Tampilan
-Dunia, dan postingan Blurt:
+Dunia, serta postingan Steem dan Blurt:
 
 | Tulis | Hasilnya |
 |---|---|
@@ -467,8 +467,7 @@ Dunia, dan postingan Blurt:
 | `\*`, `\#`, `\-` | karakter itu sendiri |
 
 Selain itu bukan format: tautan, gambar, dan HTML tetap teks biasa. Kartu
-Repositori dan postingan Steem menampilkan kata-kata deskripsi dalam satu
-baris, tanpa format.
+Repositori menampilkan kata-kata deskripsi dalam satu baris, tanpa format.
 
 ## Suara
 

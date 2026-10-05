@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7e98ffcd0485a36b -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1238c1e7cb84a4db -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -449,7 +449,7 @@ que significa cada licença.
 
 Uma descrição longa fica mais legível com um pouco de formatação, que o
 painel de Informações do documento, o navegador de locais da Visão do Mundo
-e uma postagem no Blurt mostram:
+e as postagens no Steem e no Blurt mostram:
 
 | Escreva | Para ter |
 |---|---|
@@ -461,8 +461,8 @@ e uma postagem no Blurt mostram:
 | `\*`, `\#`, `\-` | o próprio caractere |
 
 Nada mais é formatação: links, imagens e HTML continuam como texto simples.
-Os cartões do Repositório e as postagens no Steem mostram as palavras da
-descrição em uma linha, sem formatação.
+Os cartões do Repositório mostram as palavras da descrição em uma linha, sem
+formatação.
 
 ## Som
 

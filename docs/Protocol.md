@@ -989,8 +989,11 @@ notice then reads:
 and `json_metadata.image` lists the picture, so front ends can show a preview. Text the user wrote goes through
 `steemNoticeText()` first: one line; links, control and direction-override characters removed; HTML and Markdown
 characters escaped; `@` and `#` followed by a zero-width space so they neither notify an account nor add a tag; at
-most 100 characters for the title, 40 for the author and 300 for the description. A description that says the same
-as the title (ignoring case, spacing and punctuation) is left out. A picture address must be an https
+most 100 characters for the title and 40 for the author. The description is shown whole, with the formatting it may
+use (`core/DescriptionMarkup.js`: paragraphs, line breaks, headings, bullet lists, bold, italic) written as Markdown
+(`### ` headings) and every piece of its text made safe the same way (`steemNoticeDescription()`), cut with "…" only
+past 2,000 characters of text (`STEEM_NOTICE_DESCRIPTION_MAX`); a line that would read as a numbered list stays text.
+A description that says the same as the title (ignoring case, spacing and punctuation) is left out. A picture address must be an https
 URL with nothing that could end the Markdown early. Every part is optional and found on its own: a build not on this
 device leaves the title and author; a picture that can't be drawn or uploaded, or whose signing is declined, leaves
 the words; a hook that fails leaves the plain link notice. The claim is posted in every case. The picture costs one
@@ -1500,11 +1503,8 @@ Everything ForkBuild posts on Blurt hangs off a **build post**: a top-level post
   data"). Text a user wrote goes through the same sanitizing as Steem notices (`steemNoticeText()`), at most 100
   characters.
 - Body: the build's card (picture linking to the app's view, title, author, description, "See it in 3D") when the
-  post announces a Publication (the description whole, cut with "…" only past 2,000 characters of text, unlike
-  Steem's 300-character one-line preview, with the formatting a description may use written as Markdown:
-  paragraphs, line breaks, `### ` headings, `- ` lists, `**bold**`, `*italic*`, as `core/DescriptionMarkup.js`
-  reads them; all other text is made safe as on Steem, with links and HTML removed or neutralized, other Markdown
-  escaped and mentions and tags broken), then a list of what the post carries, then one paragraph saying that the ForkBuild
+  post announces a Publication (the description whole and formatted, cut with "…" only past 2,000 characters
+  of text, exactly as in a Steem notice: `steemNoticeDescription()`), then a list of what the post carries, then one paragraph saying that the ForkBuild
   app reads the post's `json_metadata` and checks every content hash and signature, that the Blurt account that
   posted it is not treated as the author, and a link to this section.
 

@@ -82,7 +82,9 @@ const IMAGE_URL = 'https://cdn.steemitimages.com/DQmTest/forkbuild-build.png';
     const different = steemContentNotice({ viewUrl: VIEW_URL, card: { title: 'Twin House', description: 'Twin House With Rabbits' } });
     assert(different.split('\n\n')[1] === 'Twin House With Rabbits', 'a description that says more is kept');
     const formatted = steemContentNotice({ viewUrl: VIEW_URL, card: { title: 'House', description: 'A house.\n\n## Materials\n- **Plinth:** stone' } });
-    assert(formatted.split('\n\n')[1] === 'A house. Materials Plinth: stone', `a formatted description is previewed as its words on one line (got ${formatted.split('\n\n')[1]})`);
+    assert(formatted.split('\n\n').slice(1, 4).join('|') === 'A house.|### Materials|- **Plinth:** stone', `a formatted description keeps its formatting, as on Blurt (got ${formatted.split('\n\n').slice(1, 4)})`);
+    const long = steemContentNotice({ viewUrl: VIEW_URL, card: { title: 'House', description: 'y'.repeat(STEEM_NOTICE_DESCRIPTION_MAX + 100) } }).split('\n\n')[1];
+    assert(STEEM_NOTICE_DESCRIPTION_MAX === 2000 && Array.from(long).length === STEEM_NOTICE_DESCRIPTION_MAX && long.endsWith('…'), 'a long description is cut with "…" at 2,000 characters');
     const noCard = steemContentNotice({ viewUrl: VIEW_URL });
     assert(noCard.startsWith('A build published with ForkBuild: [see it in 3D]'), 'without a card the notice is the plain link');
 

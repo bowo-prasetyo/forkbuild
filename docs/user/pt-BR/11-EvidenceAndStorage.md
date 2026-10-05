@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 44b0d63b84daefad -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5cb6eb582b1b2bc -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
@@ -772,7 +772,7 @@ dois. Ela é lida de volta e tem a assinatura conferida como uma do Arweave.
 ### Compartilhando um link
 
 **No Steem.** A postagem de uma Declaração assinada mostra uma imagem da sua
-construção, o título, seu nome e a descrição, e um link "See it in 3D" (veja
+construção, o título, seu nome e a descrição (completa, até 2.000 caracteres, com sua [formatação](02-TheEditor.md)), e um link "See it in 3D" (veja
 em 3D). O Keychain pede que você aprove a assinatura da imagem, que é
 enviada para o servidor de imagens do Steemit sem custo de Resource Credits;
 se você recusar ou ela não puder ser feita, a postagem sai sem ela. Menções,

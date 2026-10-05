@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 44b0d63b84daefad -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5cb6eb582b1b2bc -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
@@ -791,7 +791,7 @@ tangannya seperti yang dari Arweave.
 ### Membagikan tautan
 
 **Di Steem.** Postingan Klaim Bertanda Tangan menampilkan gambar bangunan
-Anda, judulnya, nama dan deskripsi Anda, serta tautan "See it in 3D"
+Anda, judulnya, nama dan deskripsi Anda (utuh, hingga 2.000 karakter, dengan [formatnya](02-TheEditor.md)), serta tautan "See it in 3D"
 (lihat dalam 3D). Keychain meminta Anda menyetujui penandatanganan gambar,
 yang diunggah ke host gambar Steemit tanpa biaya Resource Credit; jika Anda
 menolak atau gambar tidak dapat dibuat, postingan dikirim tanpanya.

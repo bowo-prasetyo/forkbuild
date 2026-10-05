@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7e98ffcd0485a36b -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1238c1e7cb84a4db -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -485,7 +485,7 @@ chaque licence.
 
 Une longue description se lit mieux avec un peu de mise en forme, que
 montrent le panneau d’informations du document, le navigateur de lieux de la
-Vue du monde et un article Blurt :
+Vue du monde et les articles Steem et Blurt :
 
 | Écrivez | Pour obtenir |
 |---|---|
@@ -497,8 +497,8 @@ Vue du monde et un article Blurt :
 | `\*`, `\#`, `\-` | le caractère lui-même |
 
 Rien d’autre n’est de la mise en forme : liens, images et HTML restent du
-texte simple. Les cartes du Dépôt et les articles Steem montrent les mots de
-la description sur une ligne, sans mise en forme.
+texte simple. Les cartes du Dépôt montrent les mots de la description sur une ligne, sans
+mise en forme.
 
 ## Son
 
