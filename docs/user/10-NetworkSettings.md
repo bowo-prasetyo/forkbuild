@@ -180,11 +180,12 @@ account. The rest of the page sets where Blurt is read from:
 
 - **API nodes**, one `https://` URL per line (defaults
   `https://rpc.blurt.blog` and `https://rpc.beblurt.com`), tried in order.
-- **Accounts to follow**, one per line (none by default). Blurt lists a
-  post under its tag only until it pays out, after seven days; after that,
-  ForkBuild finds older posts in their authors' histories. It does this for
-  every account it has seen post under the tag on this device, and for the
-  accounts you list here, so you can follow people whose builds you missed.
+- **Accounts to follow**, one per line (none by default). ForkBuild finds
+  posts through Nexus, Blurt's search index, which keeps every post. When
+  no node offers Nexus, it falls back to Blurt's own tag list, which keeps a
+  post only until it pays out, after seven days, and then finds older posts
+  in their authors' histories: every account it has seen post under the
+  tag on this device, and the accounts you list here.
 - **First month to read** (default October 2026): older posts in an
   author's history aren't read.
 

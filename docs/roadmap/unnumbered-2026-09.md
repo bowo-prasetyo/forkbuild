@@ -3967,3 +3967,23 @@ when upvoted. The design is docs/Protocol.md, "Proposed: Blurt Substrate", check
   `BlurtAnchoring.test.js` and `BlurtSettings.test.js`, over `tests/support/FakeBlurtChain.js`, a fake chain with
   real block hashes and signatures that enforces Blurt's posting intervals, edits and fees and lists posts by tag and
   author. Tests that pin the list of networks now include Blurt. `index.html`'s module preload hints regenerated.
+
+## Blurt posts are read through Nexus, which keeps them after payout (unnumbered, 2026-10-05)
+
+Blurt readers found posts by tag only for their first 7 days: the chain's tags plugin, inherited from Steem, drops a
+post from its tag index when it pays out, and readers made up for it by reading the histories of known and followed
+authors. A fresh device therefore saw only last week's builds unless someone was followed.
+
+- Readers now ask Nexus first (`blurt/nexus-go`, Blurt's indexer in the role Hivemind plays on Hive):
+  `bridge.get_ranked_posts` sorted by `created` with the family's tag. Its source shows it matches every top-level
+  post carrying the tag, paid out or not, and pages to older posts. When a node answers, nothing else is read; a node
+  without `bridge` is skipped for the next (`callAnyNode()` in `blurt/BlurtRpcClient.js`), and with none the reader
+  falls back to the tag listing and authors' histories as before.
+- Nexus returns `json_metadata` parsed and leaves a top-level post's parent empty; the reader takes `depth` and
+  `category` instead.
+- `scripts/check-network-defaults.mjs` now pages each default Blurt node's Nexus listing until it finds a paid-out
+  post, which shows that node keeps them. Not yet run: the development environment can't reach Blurt nodes.
+- docs/Protocol.md ("Proposed: Blurt Substrate", "Reading") and the Network Settings guide updated.
+- Tests: `tests/BlurtDiscoveryReader.test.js` reads 150 paid-out posts through a fake Nexus across pages with no
+  account followed and no other source read, and skips a node without Nexus for one with it;
+  `tests/support/FakeBlurtChain.js` answers `bridge.get_ranked_posts` in Nexus's post shape.

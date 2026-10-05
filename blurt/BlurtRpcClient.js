@@ -47,8 +47,26 @@ export function createBlurtRpcClient({ nodes = DEFAULT_BLURT_API_NODES, fetchImp
         throw new BlurtNodesUnreachableError(method, failures);
     }
 
+    // For APIs not every node serves, such as Nexus's `bridge`: a node that
+    // refuses the call is skipped like one that can't be reached, and the
+    // next is asked.
+    async function callAnyNode(method, params) {
+        const failures = [];
+        for (const node of nodes) {
+            try {
+                const reply = await postJson(fetchImpl, node, { jsonrpc: '2.0', method, params, id: nextId++ }, timeoutMs);
+                if (!reply.error) return reply.result;
+                failures.push({ node, reason: reply.error?.message ?? 'error' });
+            } catch (error) {
+                failures.push({ node, reason: error.message });
+            }
+        }
+        throw new BlurtNodesUnreachableError(method, failures);
+    }
+
     return Object.freeze({
         call,
+        callAnyNode,
         getContent: (author, permlink) => call('condenser_api.get_content', [author, permlink]),
         // Every direct reply at once; the API has no paging.
         getContentReplies: (author, permlink) => call('condenser_api.get_content_replies', [author, permlink]),
@@ -66,6 +84,12 @@ export function createBlurtRpcClient({ nodes = DEFAULT_BLURT_API_NODES, fetchImp
         getDiscussionsByCreated: ({ tag, limit = 100, start = null, truncateBody = 1 }) => call('condenser_api.get_discussions_by_created', [{
             tag, limit, truncate_body: truncateBody, ...(start ? { start_author: start.author, start_permlink: start.permlink } : {})
         }]),
+        // Top-level posts with `tag`, newest first, from Nexus, Blurt's
+        // indexer, which keeps them after payout. `start` pages on, and is
+        // not returned again. Nodes without Nexus are skipped.
+        getRankedPosts: ({ tag, limit = 100, start = null }) => callAnyNode('bridge.get_ranked_posts', {
+            sort: 'created', tag, limit, observer: '', ...(start ? { start_author: start.author, start_permlink: start.permlink } : {})
+        }),
         // An account's top-level posts, newest first, for as long as the
         // chain exists. `startPermlink` pages on, and is returned again.
         getDiscussionsByAuthorBeforeDate: (author, { startPermlink = '', beforeDate = '1970-01-01T00:00:00', limit = 100 } = {}) => (
