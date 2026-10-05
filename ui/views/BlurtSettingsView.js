@@ -1,11 +1,7 @@
 import { ref, computed, inject } from 'vue';
 import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
 import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
-import {
-    DEFAULT_BLURT_API_NODES,
-    DEFAULT_BLURT_EARLIEST_PERIOD,
-    DEFAULT_BLURT_FOLLOWED_ACCOUNTS
-} from '../../core/BlurtReadingConfiguration.js';
+import { DEFAULT_BLURT_API_NODES } from '../../core/BlurtReadingConfiguration.js';
 import { t } from '../i18n/i18n.js';
 
 // Where Blurt posts are read from (applies on the next load, like the other
@@ -31,8 +27,6 @@ export default {
         });
 
         const apiNodesInput = ref('');
-        const followedAccountsInput = ref('');
-        const earliestPeriodInput = ref('');
 
         const form = useEndpointSettingsForm({
             store,
@@ -40,37 +34,24 @@ export default {
             buildRequest: () => {
                 if (unchanged.value) return null;
                 const apiNodes = splitNonEmptyLines(apiNodesInput.value);
-                return {
-                    apiNodes: apiNodes.length > 0 ? apiNodes : [...DEFAULT_BLURT_API_NODES],
-                    followedAccounts: splitNonEmptyLines(followedAccountsInput.value),
-                    earliestPeriod: earliestPeriodInput.value || DEFAULT_BLURT_EARLIEST_PERIOD
-                };
+                return { apiNodes: apiNodes.length > 0 ? apiNodes : [...DEFAULT_BLURT_API_NODES] };
             },
             fillInputs: (configuration) => {
                 apiNodesInput.value = (configuration ? configuration.apiNodes : DEFAULT_BLURT_API_NODES).join('\n');
-                followedAccountsInput.value = (configuration ? configuration.followedAccounts : DEFAULT_BLURT_FOLLOWED_ACCOUNTS).join('\n');
-                earliestPeriodInput.value = configuration ? configuration.earliestPeriod : DEFAULT_BLURT_EARLIEST_PERIOD;
             }
         });
 
         // The fields still hold exactly what is in effect.
         const unchanged = computed(() => {
-            const effective = form.configuration.value || {
-                apiNodes: DEFAULT_BLURT_API_NODES, followedAccounts: DEFAULT_BLURT_FOLLOWED_ACCOUNTS, earliestPeriod: DEFAULT_BLURT_EARLIEST_PERIOD
-            };
-            return splitNonEmptyLines(apiNodesInput.value).join('\n') === effective.apiNodes.join('\n')
-                && splitNonEmptyLines(followedAccountsInput.value).join('\n') === effective.followedAccounts.join('\n')
-                && (earliestPeriodInput.value || DEFAULT_BLURT_EARLIEST_PERIOD) === effective.earliestPeriod;
+            const effective = form.configuration.value?.apiNodes ?? DEFAULT_BLURT_API_NODES;
+            return splitNonEmptyLines(apiNodesInput.value).join('\n') === effective.join('\n');
         });
-
-        const followedText = (accounts) => (accounts.length > 0 ? accounts.map((account) => `@${account}`).join(', ') : t('blurtSettingsView.nobody'));
 
         return {
             t,
-            hasOverride: form.hasConfiguration, configuration: form.configuration, unchanged, followedText,
-            apiNodesInput, followedAccountsInput, earliestPeriodInput,
+            hasOverride: form.hasConfiguration, configuration: form.configuration, unchanged,
+            apiNodesInput,
             defaultApiNodes: DEFAULT_BLURT_API_NODES.join(', '),
-            defaultEarliestPeriod: DEFAULT_BLURT_EARLIEST_PERIOD,
             saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
             save: form.save, resetToDefaults: form.clear,
             accountInput, savedAccount: accountForm.configuration, accountSaveError: accountForm.saveError,
@@ -86,22 +67,15 @@ export default {
             </p>
 
             <p v-if="hasOverride" class="form-hint form-hint--neutral">
-                {{ t('blurtSettingsView.saved', { apiNodes: configuration.apiNodes.join(', '), followed: followedText(configuration.followedAccounts), earliestPeriod: configuration.earliestPeriod }) }}
+                {{ t('blurtSettingsView.saved', { apiNodes: configuration.apiNodes.join(', ') }) }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
-                {{ t('blurtSettingsView.usingTheDefaults', { apiNodes: defaultApiNodes, earliestPeriod: defaultEarliestPeriod }) }}
+                {{ t('blurtSettingsView.usingTheDefaults', { apiNodes: defaultApiNodes }) }}
             </p>
 
             <div class="steem-reading-settings-form">
                 <label class="form-label" for="blurt-api-nodes">{{ t('blurtSettingsView.apiNodesOnePerLine') }}</label>
                 <textarea id="blurt-api-nodes" v-model="apiNodesInput" rows="3" class="form-textarea" placeholder="https://rpc.blurt.blog"></textarea>
-
-                <label class="form-label" for="blurt-followed-accounts">{{ t('blurtSettingsView.followedAccountsOnePerLine') }}</label>
-                <textarea id="blurt-followed-accounts" v-model="followedAccountsInput" rows="3" class="form-textarea" placeholder="someone"></textarea>
-                <p class="form-hint form-hint--neutral">{{ t('blurtSettingsView.followedAccountsHint') }}</p>
-
-                <label class="form-label" for="blurt-earliest-period">{{ t('blurtSettingsView.firstMonthToRead') }}</label>
-                <input id="blurt-earliest-period" v-model="earliestPeriodInput" type="month" class="form-input">
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('blurtSettingsView.savedReloadTheAppTo') }}</p>

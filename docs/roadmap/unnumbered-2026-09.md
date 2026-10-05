@@ -3987,3 +3987,20 @@ authors. A fresh device therefore saw only last week's builds unless someone was
 - Tests: `tests/BlurtDiscoveryReader.test.js` reads 150 paid-out posts through a fake Nexus across pages with no
   account followed and no other source read, and skips a node without Nexus for one with it;
   `tests/support/FakeBlurtChain.js` answers `bridge.get_ranked_posts` in Nexus's post shape.
+
+## Blurt settings drop the followed accounts and the first month (unnumbered, 2026-10-05)
+
+A query from a browser confirmed what Nexus's source showed: `bridge.get_ranked_posts` sorted by `created` under a tag
+returns paid-out posts on both default nodes, `https://rpc.blurt.blog` and `https://rpc.beblurt.com` (and on
+`https://rpc.drakernoise.com`), each reaching a post over a week old within 700 posts. Nexus finds every build post
+without following anyone, so the two settings that only served the fallback are gone.
+
+- Network Settings → Blurt keeps only the API nodes. **Accounts to follow** and **First month to read** are removed,
+  with their messages in every language; the page's introduction now says posts are read through Nexus.
+- `BlurtReadingConfiguration` holds only `apiNodes`; a configuration saved with the old fields still reads, keeping its
+  nodes. The reader's earliest month is fixed at `2026-10` (`BLURT_EARLIEST_PERIOD`), when ForkBuild first posted on
+  Blurt, and its fallback reads the histories of the accounts this device has seen post.
+- docs/Protocol.md ("Proposed: Blurt Substrate", "Reading"), docs/Architecture.md and the Network Settings guide
+  updated.
+- Tests: `tests/BlurtSettings.test.js` reads an older saved configuration; `tests/BlurtDiscoveryReader.test.js` reads
+  remembered authors' histories in the fallback.

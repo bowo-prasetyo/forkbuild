@@ -178,16 +178,14 @@ immediately, without a reload), needed to post, store or anchor on Blurt —
 see [Blurt](11-EvidenceAndStorage.md#blurt). Reading from Blurt needs no
 account. The rest of the page sets where Blurt is read from:
 
-- **API nodes**, one `https://` URL per line (defaults
-  `https://rpc.blurt.blog` and `https://rpc.beblurt.com`), tried in order.
-- **Accounts to follow**, one per line (none by default). ForkBuild finds
-  posts through Nexus, Blurt's search index, which keeps every post. When
-  no node offers Nexus, it falls back to Blurt's own tag list, which keeps a
-  post only until it pays out, after seven days, and then finds older posts
-  in their authors' histories: every account it has seen post under the
-  tag on this device, and the accounts you list here.
-- **First month to read** (default October 2026): older posts in an
-  author's history aren't read.
+**API nodes**, one `https://` URL per line (defaults
+`https://rpc.blurt.blog` and `https://rpc.beblurt.com`), tried in order.
+ForkBuild finds posts through Nexus, Blurt's search index, which keeps
+every post however old, and skips a node that doesn't offer it. When no
+node offers Nexus, it falls back to Blurt's own tag list, which keeps a
+post only until it pays out, after seven days, and finds older posts in
+the histories of the accounts it has seen post under the tag on this
+device.
 
 When no Blurt node can be reached, **Check for new comments** and Snapshot
 discovery name Blurt as unavailable rather than reporting that nothing was

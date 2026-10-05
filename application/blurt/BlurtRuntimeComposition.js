@@ -41,12 +41,7 @@ export function composeBlurtRuntime({
 } = {}) {
     if (typeof fetchImpl !== 'function') return null;
     const rpc = createBlurtRpcClient({ nodes: [...configuration.apiNodes], fetchImpl });
-    const reader = createBlurtDiscoveryReader({
-        rpc,
-        followedAccounts: [...configuration.followedAccounts],
-        knownAuthors,
-        earliestPeriod: configuration.earliestPeriod
-    });
+    const reader = createBlurtDiscoveryReader({ rpc, knownAuthors });
     const poster = createBlurtPoster({ rpc, getAccount, getBroadcaster, appVersion, records: postRecords, onWaiting });
     return Object.freeze({
         configuration,
