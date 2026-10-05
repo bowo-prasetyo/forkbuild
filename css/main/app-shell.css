@@ -214,3 +214,13 @@ html, body {
     white-space: nowrap;
 }
 
+
+/* A build's description with its formatting (ui/components/FormattedDescription.js). */
+.formatted-description { white-space: normal; text-align: left; }
+.formatted-description > :first-child { margin-top: 0; }
+.formatted-description > :last-child { margin-bottom: 0; }
+.formatted-description-paragraph,
+.formatted-description-heading,
+.formatted-description-list { margin: 0 0 0.5em; }
+.formatted-description-heading { font-weight: 600; }
+.formatted-description-list { padding-left: 1.25em; }

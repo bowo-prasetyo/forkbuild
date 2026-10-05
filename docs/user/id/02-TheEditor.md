@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: f3f56bd4d4861d88 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7e98ffcd0485a36b -->
 # 02 — Editor
 
 <!-- languages -->
@@ -452,6 +452,23 @@ lisensi. Deskripsinya muncul sebagai cuplikan di kartu Repositori-nya dan
 juga dapat dicari di sana; lisensi menentukan apakah — dan bagaimana —
 orang lain boleh mem-fork-nya. Lihat
 [Penerbitan & Fork](04-PublishingAndForking.md) untuk arti setiap lisensi.
+
+Deskripsi yang panjang lebih mudah dibaca dengan sedikit format, yang
+ditampilkan oleh panel Informasi Dokumen, penjelajah lokasi di Tampilan
+Dunia, dan postingan Blurt:
+
+| Tulis | Hasilnya |
+|---|---|
+| satu baris kosong | paragraf baru (satu pindah baris tetap pindah baris) |
+| `## Bahan` di awal baris | judul |
+| `- ` (atau `* `) di awal baris | butir daftar |
+| `**kata**` | **tebal** |
+| `*kata*` | *miring* |
+| `\*`, `\#`, `\-` | karakter itu sendiri |
+
+Selain itu bukan format: tautan, gambar, dan HTML tetap teks biasa. Kartu
+Repositori dan postingan Steem menampilkan kata-kata deskripsi dalam satu
+baris, tanpa format.
 
 ## Suara
 

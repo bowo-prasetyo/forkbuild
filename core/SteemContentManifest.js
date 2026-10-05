@@ -1,5 +1,6 @@
 import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 import { STEEM_CONTENT_FAMILY, isSteemAccountName, steemDeclinedPayoutOptions } from './SteemDiscoveryThread.js';
+import { descriptionPlainText } from './DescriptionMarkup.js';
 
 // Content stored on Steem: a manifest, a direct reply to a monthly content
 // thread, which holds the encoded content or, when that doesn't fit one
@@ -44,20 +45,33 @@ const ZERO_WIDTH_SPACE = '\u200b';
 // At most `maxLength` characters (before escaping), ending in "…" when cut.
 export function steemNoticeText(value, maxLength) {
     if (typeof value !== 'string') return '';
-    let text = value.normalize('NFC')
+    let text = steemNoticeClean(value);
+    const characters = Array.from(text);
+    if (characters.length > maxLength) text = `${characters.slice(0, maxLength - 1).join('').trimEnd()}…`;
+    return steemNoticeEscape(text).replace(/^(\d+)\./, '$1\\.');
+}
+
+// The first half of steemNoticeText(): one line of text, without control
+// characters or links, its spaces collapsed.
+export function steemNoticeClean(value) {
+    if (typeof value !== 'string') return '';
+    return value.normalize('NFC')
         .replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, ' ')
         .replace(/\b[a-z][a-z0-9+.-]*:\/\/\S*/gi, ' ')
         .replace(/\bwww\.\S*/gi, ' ')
         .replace(/\s+/g, ' ')
         .trim();
-    const characters = Array.from(text);
-    if (characters.length > maxLength) text = `${characters.slice(0, maxLength - 1).join('').trimEnd()}…`;
+}
+
+// The second half: `text` as literal Markdown, with nothing that renders as
+// HTML or markup, notifies an account or adds a tag. Spaces are kept, so
+// pieces escaped apart can be joined with markup of the caller's own.
+export function steemNoticeEscape(text) {
     return text
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/[\\`*_[\](){}!|~+=-]/g, (character) => `\\${character}`)
         .replace(/#/g, `\\#${ZERO_WIDTH_SPACE}`)
-        .replace(/@/g, `@${ZERO_WIDTH_SPACE}`)
-        .replace(/^(\d+)\./, '$1\\.');
+        .replace(/@/g, `@${ZERO_WIDTH_SPACE}`);
 }
 
 // Whether `url` can be shown as a notice's picture: an https address with
@@ -132,8 +146,10 @@ export function steemContentEncodedByteLength(text) {
 function publicationCardNotice(viewUrl, { title = null, author = null, description = null, imageUrl = null }) {
     const safeTitle = steemNoticeText(title, STEEM_NOTICE_TITLE_MAX) || 'An untitled build';
     const safeAuthor = steemNoticeText(author, STEEM_NOTICE_AUTHOR_MAX);
-    // A description that only repeats the title adds nothing.
-    const safeDescription = sameWords(description, title) ? '' : steemNoticeText(description, STEEM_NOTICE_DESCRIPTION_MAX);
+    // The words of a formatted description (core/DescriptionMarkup.js), on
+    // one line; one that only repeats the title adds nothing.
+    const plainDescription = descriptionPlainText(description);
+    const safeDescription = sameWords(plainDescription, title) ? '' : steemNoticeText(plainDescription, STEEM_NOTICE_DESCRIPTION_MAX);
     return [
         ...(isSteemNoticeImageUrl(imageUrl) ? [`[![${safeTitle}](${imageUrl})](${viewUrl})`] : []),
         `**${safeTitle}**${safeAuthor ? ` by ${safeAuthor}` : ''}`,

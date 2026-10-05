@@ -89,14 +89,19 @@ async function rejection(promise) {
     assert(carded.body.startsWith('[![Tower') && carded.body.includes('See it in 3D') && carded.body.includes('@​bob'), 'the card leads the body, with mentions broken');
     assert(JSON.parse(carded.json_metadata).image[0] === 'https://images.blurt.blog/x.png', 'the picture is listed for front ends');
 
-    // The description is shown whole, a paragraph per line, up to the limit.
+    // The description is shown whole, with its formatting, up to the limit;
+    // everything else in it is made safe.
     const described = (description) => blurtBuildPostOperation({ author: 'alice', permlink: 'p-1', state: { ...state, viewUrl: 'https://example.org/#/view/blurt/alice/x', card: { title: 'Tower', description } } })[1].body.split('\n\n');
-    const paragraphs = described('Raised plinth (kiso-ishi).\n\nShoji screens, @bob https://evil.example\nTatami rooms.');
-    assert(paragraphs.includes('Raised plinth \\(kiso\\-ishi\\).') && paragraphs.includes('Shoji screens, @\u200bbob') && paragraphs.includes('Tatami rooms.'), `each line is its own paragraph, made safe (got ${JSON.stringify(paragraphs)})`);
-    const long = described('x'.repeat(BLURT_POST_DESCRIPTION_MAX + 500)).find((paragraph) => paragraph.startsWith('x'));
+    const blocks = described('A house on a plinth (kiso-ishi).\nSecond line, @bob #tag https://evil.example <b>x</b>\n\n## Materials\n- **Plinth:** grey *stone*\n- Posts\n\n1. not a list');
+    assert(blocks.includes('A house on a plinth \\(kiso\\-ishi\\).  \nSecond line, @\u200bbob \\#\u200btag &lt;b&gt;x&lt;/b&gt;'), `a paragraph keeps its line break, with links gone and mentions, tags and HTML neutralized (got ${JSON.stringify(blocks)})`);
+    assert(blocks.includes('### Materials') && blocks.includes('- **Plinth:** grey *stone*\n- Posts'), 'headings, lists, bold and italic come through');
+    assert(blocks.includes('1\\. not a list'), 'a line that would read as a numbered list stays text');
+    const long = described('x'.repeat(BLURT_POST_DESCRIPTION_MAX + 500)).find((block) => block.startsWith('x'));
     assert(Array.from(long).length === BLURT_POST_DESCRIPTION_MAX && long.endsWith('…'), `cut with "…" at ${BLURT_POST_DESCRIPTION_MAX} characters (got ${Array.from(long).length})`);
-    const exact = described(`${'a'.repeat(BLURT_POST_DESCRIPTION_MAX - 10)}\n${'b'.repeat(10)}\nmore`);
-    assert(exact.some((paragraph) => paragraph === `${'b'.repeat(10)}…`) && !exact.includes('more'), 'text past the limit is marked as cut even between paragraphs');
+    const exact = described(`${'a'.repeat(BLURT_POST_DESCRIPTION_MAX - 10)}\n\n**${'b'.repeat(10)}**\n\nmore`);
+    assert(exact.includes(`**${'b'.repeat(10)}**…`) && !exact.includes('more'), `text past the limit is marked as cut even between blocks (got ${JSON.stringify(exact.slice(2, 5))})`);
+    const plain = described('Just one plain sentence.');
+    assert(plain.includes('Just one plain sentence.'), 'a plain description reads as before');
     console.log('✓ build post operations');
 }
 

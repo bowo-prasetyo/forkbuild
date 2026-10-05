@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: f3f56bd4d4861d88 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7e98ffcd0485a36b -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -474,6 +474,23 @@ erscheint als Auszug auf seiner Karte im Repository und ist dort auch
 durchsuchbar; die Lizenz legt fest, ob — und wie — andere es forken
 dürfen. Was jede Lizenz bedeutet, steht unter
 [Veröffentlichen & Forken](04-PublishingAndForking.md).
+
+Eine lange Beschreibung liest sich mit etwas Formatierung besser. Das
+Dokumentinformationsfeld, der Ortsbrowser in der Weltansicht und ein
+Blurt-Beitrag zeigen sie an:
+
+| Schreiben Sie | Ergebnis |
+|---|---|
+| eine Leerzeile | einen neuen Absatz (ein einfacher Zeilenumbruch bleibt ein Zeilenumbruch) |
+| `## Materialien` am Zeilenanfang | eine Überschrift |
+| `- ` (oder `* `) am Zeilenanfang | einen Listenpunkt |
+| `**Wort**` | **fett** |
+| `*Wort*` | *kursiv* |
+| `\*`, `\#`, `\-` | das Zeichen selbst |
+
+Alles andere ist keine Formatierung: Links, Bilder und HTML bleiben
+einfacher Text. Repository-Karten und Steem-Beiträge zeigen die Wörter der
+Beschreibung in einer Zeile, ohne Formatierung.
 
 ## Ton
 

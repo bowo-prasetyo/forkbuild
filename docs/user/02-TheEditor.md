@@ -431,6 +431,23 @@ controls whether — and how — other people are allowed to fork it. See
 [Publishing & Forking](04-PublishingAndForking.md) for what each license
 means.
 
+A long description reads better with a little formatting, which the
+Document Information panel, World View's location browser and a Blurt post
+all show:
+
+| Write | To get |
+|---|---|
+| a blank line | a new paragraph (a single line break stays a line break) |
+| `## Materials` at the start of a line | a heading |
+| `- ` (or `* `) at the start of a line | a bullet list item |
+| `**word**` | **bold** |
+| `*word*` | *italic* |
+| `\*`, `\#`, `\-` | the character itself |
+
+Nothing else is formatting: links, pictures and HTML stay as plain text.
+Repository cards and Steem posts show the description's words on one line,
+without the formatting.
+
 ## Sound
 
 Each change you make has its own short sound, so you can hear what happened

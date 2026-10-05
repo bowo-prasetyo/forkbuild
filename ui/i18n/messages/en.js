@@ -505,6 +505,7 @@ export default Object.freeze({
     'metadataEditor.untitled': 'Untitled',
     'metadataEditor.description': 'Description',
     'metadataEditor.descriptionPlaceholder': 'What is this world?',
+    'metadataEditor.descriptionFormattingHint': 'Formatting: a blank line starts a new paragraph, ## a heading, - a list item; **bold**, *italic*.',
     'metadataEditor.license': 'License',
     'metadataEditor.noLicenseHint': 'No license means forking is not permitted until one is set.',
     'metadataEditor.placement': 'Who can place it in the World',

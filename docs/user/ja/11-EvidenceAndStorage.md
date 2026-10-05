@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: e1a0025c62a961df -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 44b0d63b84daefad -->
 # 11 — 証拠とストレージ
 
 <!-- languages -->
@@ -812,7 +812,7 @@ ForkBuild のアカウントも共有スレッドもありません。設定は
 - **作品ごとに 1 つの投稿。** 配信すると、あなたのアカウントから
   トップレベル投稿が 1 つ作られます。タグは `forkbuild` と、
   `forkbuild-snapshot` または `forkbuild-publication` で、作品の画像、
-  タイトル、あなたの名前と説明（2,000 文字まで全文）、そして「See it in 3D」（3D で見る）という
+  タイトル、あなたの名前と説明（2,000 文字まで全文、[書式](02-TheEditor.md)付き）、そして「See it in 3D」（3D で見る）という
   リンクが入ります。その後 30 分以内に続くもの（公開物の告知、コメント、
   アンカー）は、同じ投稿を編集して追加されるので、フォロワーには複数では
   なく 1 つの投稿として見えます。

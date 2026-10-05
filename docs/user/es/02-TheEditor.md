@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: f3f56bd4d4861d88 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7e98ffcd0485a36b -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -474,6 +474,23 @@ fragmento en su tarjeta del Repositorio y también se puede buscar allí; la
 licencia controla si otras personas pueden bifurcarlo, y cómo. Consulte
 [Publicar y bifurcar](04-PublishingAndForking.md) para saber qué significa
 cada licencia.
+
+Una descripción larga se lee mejor con un poco de formato, que muestran el
+panel de información del documento, el explorador de lugares de la Vista del
+mundo y una publicación en Blurt:
+
+| Escriba | Para obtener |
+|---|---|
+| una línea en blanco | un párrafo nuevo (un salto de línea simple sigue siendo un salto de línea) |
+| `## Materiales` al principio de una línea | un título |
+| `- ` (o `* `) al principio de una línea | un elemento de lista |
+| `**palabra**` | **negrita** |
+| `*palabra*` | *cursiva* |
+| `\*`, `\#`, `\-` | el carácter mismo |
+
+Nada más es formato: los enlaces, las imágenes y el HTML quedan como texto
+simple. Las tarjetas del Repositorio y las publicaciones en Steem muestran
+las palabras de la descripción en una línea, sin formato.
 
 ## Sonido
 

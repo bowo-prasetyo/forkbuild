@@ -81,6 +81,8 @@ const IMAGE_URL = 'https://cdn.steemitimages.com/DQmTest/forkbuild-build.png';
     assert(repeated.split('\n\n').length === 2 && repeated.startsWith('**Twin House With Rabbits,** by forkbuild\n\n[See it in 3D]'), `a description that only repeats the title is left out (got ${repeated})`);
     const different = steemContentNotice({ viewUrl: VIEW_URL, card: { title: 'Twin House', description: 'Twin House With Rabbits' } });
     assert(different.split('\n\n')[1] === 'Twin House With Rabbits', 'a description that says more is kept');
+    const formatted = steemContentNotice({ viewUrl: VIEW_URL, card: { title: 'House', description: 'A house.\n\n## Materials\n- **Plinth:** stone' } });
+    assert(formatted.split('\n\n')[1] === 'A house. Materials Plinth: stone', `a formatted description is previewed as its words on one line (got ${formatted.split('\n\n')[1]})`);
     const noCard = steemContentNotice({ viewUrl: VIEW_URL });
     assert(noCard.startsWith('A build published with ForkBuild: [see it in 3D]'), 'without a card the notice is the plain link');
 

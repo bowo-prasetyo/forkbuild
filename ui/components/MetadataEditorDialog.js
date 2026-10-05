@@ -93,9 +93,10 @@ export default {
                     <textarea
                         v-model="description"
                         class="form-textarea"
-                        rows="3"
+                        rows="5"
                         :placeholder="t('metadataEditor.descriptionPlaceholder')"
                     ></textarea>
+                    <span class="form-hint form-hint--neutral">{{ t('metadataEditor.descriptionFormattingHint') }}</span>
                 </label>
 
                 <label class="form-field">

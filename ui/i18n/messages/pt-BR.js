@@ -507,6 +507,7 @@ export default Object.freeze({
     'metadataEditor.untitled': 'Sem título',
     'metadataEditor.description': 'Descrição',
     'metadataEditor.descriptionPlaceholder': 'O que é este mundo?',
+    'metadataEditor.descriptionFormattingHint': 'Formatação: uma linha em branco começa um novo parágrafo, ## um título, - um item de lista; **negrito**, *itálico*.',
     'metadataEditor.license': 'Licença',
     'metadataEditor.noLicenseHint': 'Sem licença, bifurcar não é permitido até que uma seja definida.',
     'metadataEditor.placement': 'Quem pode posicioná-lo no Mundo',

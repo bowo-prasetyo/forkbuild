@@ -503,6 +503,7 @@ export default Object.freeze({
     'metadataEditor.untitled': 'Tanpa Judul',
     'metadataEditor.description': 'Deskripsi',
     'metadataEditor.descriptionPlaceholder': 'Dunia apa ini?',
+    'metadataEditor.descriptionFormattingHint': 'Format: baris kosong memulai paragraf baru, ## judul, - butir daftar; **tebal**, *miring*.',
     'metadataEditor.license': 'Lisensi',
     'metadataEditor.noLicenseHint': 'Tanpa lisensi berarti fork tidak diizinkan sampai lisensi ditetapkan.',
     'metadataEditor.placement': 'Siapa yang dapat menempatkannya di Dunia',

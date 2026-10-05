@@ -2,6 +2,8 @@ import { describeLicense } from '../../application/document/LicenseLabels.js';
 import { describePlacementPolicy } from '../../application/document/PlacementPolicyLabels.js';
 import { LifecycleStatus } from '../../application/document/DocumentLifecycleStatus.js';
 import { displayText, t } from '../i18n/i18n.js';
+import { descriptionPlainText } from '../../core/DescriptionMarkup.js';
+import FormattedDescription from './FormattedDescription.js';
 
 // 0.2.21: the "Document Information" panel from the milestone design
 // — one component, shared by the Editor sidebar and World View's
@@ -24,6 +26,7 @@ import { displayText, t } from '../i18n/i18n.js';
 // but it also says "Saved" for a document that was never saved.
 export default {
     name: 'DocumentInfoPanel',
+    components: { FormattedDescription },
     props: {
         info: {
             type: Object,
@@ -36,6 +39,7 @@ export default {
     },
     emits: ['edit-metadata'],
     methods: {
+        descriptionPlainText,
         t,
         displayText,
         placementPolicyLabel(policy) {
@@ -54,7 +58,7 @@ export default {
     template: `
         <div v-if="info && compact" class="document-info-panel document-info-panel--compact">
             <div class="document-info-compact-row">
-                <span class="document-info-compact-title" :title="info.description || info.title">{{ info.title }}</span>
+                <span class="document-info-compact-title" :title="descriptionPlainText(info.description) || info.title">{{ info.title }}</span>
                 <span v-if="isDraft(info)" class="document-info-compact-draft" :title="displayText(info.statusLabel)">{{ t('documentInfo.draft') }}</span>
                 <button
                     v-if="info.editable !== false"
@@ -84,7 +88,7 @@ export default {
             </div>
             <div class="info-row" v-if="info.description">
                 <span class="info-label">{{ t('documentInfo.description') }}</span>
-                <span class="info-value info-value--wrap">{{ info.description }}</span>
+                <div class="info-value info-value--wrap"><formatted-description :text="info.description" /></div>
             </div>
             <div class="info-row">
                 <span class="info-label">{{ t('documentInfo.license') }}</span>

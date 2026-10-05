@@ -506,6 +506,7 @@ export default Object.freeze({
     'metadataEditor.untitled': 'Sans titre',
     'metadataEditor.description': 'Description',
     'metadataEditor.descriptionPlaceholder': 'Qu’est-ce que ce monde ?',
+    'metadataEditor.descriptionFormattingHint': 'Mise en forme : une ligne vide commence un nouveau paragraphe, ## un titre, - un élément de liste ; **gras**, *italique*.',
     'metadataEditor.license': 'Licence',
     'metadataEditor.noLicenseHint': 'Sans licence, les forks ne sont pas autorisés tant qu’aucune n’est définie.',
     'metadataEditor.placement': 'Qui peut le placer dans le Monde',
