@@ -733,7 +733,7 @@ async function lobbyLeave(identity, card, signer = identity) {
 
     const ok = await handleBlurtImageUpload(upload(), env, { fetchImpl });
     assert(ok.status === 200 && (await ok.json()).url.startsWith('https://img.example/') && ok.headers.get('access-control-allow-origin') === ORIGIN, 'the host\'s answer comes back, readable by the app');
-    assert(forwarded.length === 1 && forwarded[0].url === `https://blurt.blog/imagesup/forkbuild/${SIGNATURE}`, `it forwards to blurt.blog's image upload (got ${forwarded[0]?.url})`);
+    assert(forwarded.length === 1 && forwarded[0].url === `https://img-upload.blurt.blog/forkbuild/${SIGNATURE}`, `it forwards to blurt.blog's image upload (got ${forwarded[0]?.url})`);
     assert((await handleBlurtImageUpload(upload(`/steem-image/forkbuild/${SIGNATURE}`), env, { fetchImpl })).status === 404, 'a Steem path is not a Blurt one');
     assert((await handleBlurtImageUpload(upload(undefined, { origin: 'https://elsewhere.example' }), env, { fetchImpl })).status === 403, 'another origin is refused');
     assert(forwarded.length === 1, 'nothing refused reaches the host');

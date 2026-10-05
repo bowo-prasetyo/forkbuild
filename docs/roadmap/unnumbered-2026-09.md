@@ -4025,17 +4025,20 @@ Blurt had no relay to fall back on.
   refuses a Steem path and another origin, and honours `BLURT_IMAGE_HOST`; `tests/BlurtImageUpload.test.js` uploads
   through the relay when the host can't be reached and names both failures when neither can.
 
-## Blurt pictures go to blurt.blog/imagesup (unnumbered, 2026-10-05)
+## Blurt pictures go to img-upload.blurt.blog (unnumbered, 2026-10-05)
 
 Blurt posts still went without their picture after the relay was deployed: `images.blurt.blog`, the host ForkBuild
 uploaded to, doesn't exist (the browser couldn't resolve it, and the relay got Cloudflare's error 1016, "origin DNS
 error"). It was never checked, since the development environment can't reach Blurt hosts.
 
-- Uploads now go to `https://blurt.blog/imagesup`, blurt.blog's own `SDC_UPLOAD_IMAGE_URL` in the Blurt repository's
-  deployment (gitlab.com/blurt/blurt, `.gitlab-ci.yml`), with the same request Blurt's front end makes
-  (`<host>/<account>/<signature>`, a `file` field, `{ url }` back): `DEFAULT_BLURT_IMAGE_HOST` in
-  `blurt/BlurtKeychain.js`, and the worker's `/blurt-image` default host. The worker must be redeployed.
+- Uploads now go to `https://img-upload.blurt.blog`, blurt.blog's own `$STM_Config.upload_image` as read from its
+  front end on 2026-10-05, with the same request Blurt's front end makes (`<host>/<account>/<signature>`, a `file`
+  field, `{ url }` back): `DEFAULT_BLURT_IMAGE_HOST` in `blurt/BlurtKeychain.js`, and the worker's `/blurt-image`
+  default host. The worker must be redeployed.
+- The Blurt repository's deployment config (`SDC_UPLOAD_IMAGE_URL=https://blurt.blog/imagesup`) is out of date:
+  that address answers 404, and allows only `https://blurt.blog` as an origin. Uploads the browser can't make
+  directly go through the relay.
 - The console warning for a notice without its picture names the chain it was for, not always Steem.
 - docs/Protocol.md, docs/Privacy.md (and its translations' host name) and the worker's README updated.
 - Tests: `tests/BlurtImageUpload.test.js` checks the host; `server/rendezvous-worker/worker.test.js` forwards to
-  `https://blurt.blog/imagesup/<account>/<signature>`.
+  `https://img-upload.blurt.blog/<account>/<signature>`.

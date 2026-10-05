@@ -34,7 +34,7 @@ async function rejection(promise) {
     assert(result.via === 'relay' && result.url === 'https://img.example/DQmTest/forkbuild-build.png', `stored through the relay (got ${result.via} ${result.url})`);
     assert(requests.join() === [`${DEFAULT_BLURT_IMAGE_HOST}/forkbuild/${SIGNATURE}`, `${DEFAULT_BLURT_IMAGE_RELAY}/forkbuild/${SIGNATURE}`].join(), `the host first, then the relay (got ${requests})`);
     assert(DEFAULT_BLURT_IMAGE_RELAY.endsWith('/blurt-image'), 'the relay is the worker\'s Blurt route');
-    assert(DEFAULT_BLURT_IMAGE_HOST === 'https://blurt.blog/imagesup', 'the host is where blurt.blog uploads');
+    assert(DEFAULT_BLURT_IMAGE_HOST === 'https://img-upload.blurt.blog', 'the host is where blurt.blog uploads');
 
     const both = await rejection(uploadBlurtImage({ account: 'forkbuild', bytes: BYTES, keychain, fetchImpl: async () => { throw new TypeError('Failed to fetch'); } }));
     assert(both?.message.includes('The ForkBuild relay failed too'), `when the relay fails too, both are named (got ${both?.message})`);

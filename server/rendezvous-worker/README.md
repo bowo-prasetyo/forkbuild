@@ -218,8 +218,8 @@ steemitimages.com, its Upload row reads "accepted, through the relay".
 
 `POST /blurt-image/<account>/<signature>` does the same for a Blurt post's
 picture, forwarding to the image host blurt.blog's front end uploads to,
-`https://blurt.blog/imagesup` (set `BLURT_IMAGE_HOST` to use another), for
-when the browser can't reach it itself. The same checks and limits apply; the host checks the
+`https://img-upload.blurt.blog` (set `BLURT_IMAGE_HOST` to use another),
+for when the browser can't upload there itself. The same checks and limits apply; the host checks the
 signature against the account's Blurt posting key.
 
 ## Cost

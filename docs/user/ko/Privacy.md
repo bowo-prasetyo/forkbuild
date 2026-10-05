@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 6ba1078c140fb786 -->
+<!-- translation-of: docs/Privacy.md source-hash: eac2cc58e3fb338f -->
 # 개인정보 보호
 
 <!-- languages -->
@@ -130,7 +130,7 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 | 원격 피닝 서비스로 콘텐츠를 피닝할 때(*실험적*) | 내가 입력한 서비스 | 콘텐츠와, 그 업로드 한 번을 위해 입력한 토큰(절대 저장되지 않음) |
 | Steem에 저장, 공지, 앵커링하거나 Steem 공지를 발견할 때(*실험적*) | Steem API 노드(`api.steemit.com`, 그다음 `api.justyy.com`). 서명은 Steem Keychain 확장 프로그램을 거침 | 내 Steem 계정 이름. 내가 게시하는 것(공지, 저장한 콘텐츠, 앵커)은 체인에 영구히 공개되며, 수정해도 이전 버전이 기록에 남음 |
 | Blurt에 저장, 공지, 앵커링하거나 Blurt 게시물을 발견할 때(*실험적*) | Blurt API 노드(`rpc.blurt.blog`, 그다음 `rpc.beblurt.com`). 서명은 Blurt Keychain 확장 프로그램(또는 WhaleVault)을 거침 | 내 Blurt 계정 이름, 그리고 게시 기록을 읽는 계정(내가 팔로우하는 계정과, 이 기기가 ForkBuild 태그로 게시하는 것을 본 모든 계정. 이 기기에 기억됨). 내가 게시하는 것은 내 계정으로 체인에 영구히 공개되며, 수정해도 이전 버전이 기록에 남음. 트랜잭션마다 내 계정에서 BLURT로 작은 수수료가 나감 |
-| 게시물의 서명 클레임을 Blurt에 배포할 때(*실험적*) | Blurt 이미지 호스트(`blurt.blog/imagesup`). 브라우저가 직접 닿지 못하면 아무것도 저장하지 않는 랑데부 서버의 `/blurt-image` 중계를 거침 | 게시물 미리보기용 320×200 작품 사진, 내 Blurt 게시 키로 서명됨 |
+| 게시물의 서명 클레임을 Blurt에 배포할 때(*실험적*) | Blurt 이미지 호스트(`img-upload.blurt.blog`). 브라우저가 직접 닿지 못하면 아무것도 저장하지 않는 랑데부 서버의 `/blurt-image` 중계를 거침 | 게시물 미리보기용 320×200 작품 사진, 내 Blurt 게시 키로 서명됨 |
 | 게시물의 서명 클레임을 Steem에 배포할 때(*실험적*) | Steem 이미지 호스트(`steemitimages.com`). 브라우저가 직접 닿지 못하면 아무것도 저장하지 않는 랑데부 서버의 `/steem-image` 중계를 거침 | 게시물 미리보기용 320×200 작품 사진, 내 Steem 게시 키로 서명됨 |
 | 게시물의 공유 링크(`#/view/…`)를 열 때 | 링크가 가리키는 Steem이나 Blurt 노드, Arweave 게이트웨이, IPFS 게이트웨이, 그다음 작품을 찾기 위한 공지 기반 | 내가 여는 게시물, 트랜잭션, CID |
 | Bitcoin에서 증거를 앵커링하거나 검증할 때(*실험적*) | Esplora API(`blockstream.info`) | 내가 브로드캐스트하거나 조회하는 트랜잭션 |

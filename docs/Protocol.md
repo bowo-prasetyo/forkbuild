@@ -1584,7 +1584,7 @@ manifest-and-parts format as Steem v2 ("Proposed: Steem Content Storage", "Forma
   index, count }, data }`.
 - Payout stays on; there are no `comment_options`.
 - The manifest's notice links to the app's view (`#/view/blurt/<author>/<permlink>`) for a Signed Claim, with the
-  build's card when one is drawn (picture uploaded the Steem way to `https://blurt.blog/imagesup`, where
+  build's card when one is drawn (picture uploaded the Steem way to `https://img-upload.blurt.blog`, where
   blurt.blog's own front end uploads, signed through Blurt Keychain's `requestSignBuffer`; when the browser can't
   reach it the same signed upload goes through the rendezvous worker's relay,
   `POST <worker>/blurt-image/<account>/<signature>`, and a picture neither can take is left out), and the build
