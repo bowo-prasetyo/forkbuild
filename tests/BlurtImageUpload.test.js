@@ -21,19 +21,20 @@ async function rejection(promise) {
     }
 }
 
-// images.blurt.blog doesn't accept uploads from other sites, so when the
-// browser can't reach it the same signed upload goes through the relay.
+// Uploads go to blurt.blog's image host; when the browser can't reach it,
+// the same signed upload goes through the relay.
 {
     const requests = [];
     const fetchImpl = async (url) => {
         requests.push(url);
         if (url.startsWith(DEFAULT_BLURT_IMAGE_HOST)) throw new TypeError('Failed to fetch');
-        return new Response(JSON.stringify({ url: 'https://images.blurt.blog/DQmTest/forkbuild-build.png' }), { status: 200 });
+        return new Response(JSON.stringify({ url: 'https://img.example/DQmTest/forkbuild-build.png' }), { status: 200 });
     };
     const result = await uploadBlurtImage({ account: 'forkbuild', bytes: BYTES, keychain, fetchImpl });
-    assert(result.via === 'relay' && result.url === 'https://images.blurt.blog/DQmTest/forkbuild-build.png', `stored through the relay (got ${result.via} ${result.url})`);
+    assert(result.via === 'relay' && result.url === 'https://img.example/DQmTest/forkbuild-build.png', `stored through the relay (got ${result.via} ${result.url})`);
     assert(requests.join() === [`${DEFAULT_BLURT_IMAGE_HOST}/forkbuild/${SIGNATURE}`, `${DEFAULT_BLURT_IMAGE_RELAY}/forkbuild/${SIGNATURE}`].join(), `the host first, then the relay (got ${requests})`);
     assert(DEFAULT_BLURT_IMAGE_RELAY.endsWith('/blurt-image'), 'the relay is the worker\'s Blurt route');
+    assert(DEFAULT_BLURT_IMAGE_HOST === 'https://img-upload.blurt.blog', 'the host is where blurt.blog uploads');
 
     const both = await rejection(uploadBlurtImage({ account: 'forkbuild', bytes: BYTES, keychain, fetchImpl: async () => { throw new TypeError('Failed to fetch'); } }));
     assert(both?.message.includes('The ForkBuild relay failed too'), `when the relay fails too, both are named (got ${both?.message})`);

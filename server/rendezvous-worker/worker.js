@@ -138,7 +138,7 @@ const IMAGE_RELAYS = Object.freeze({
         chain: 'Blurt',
         path: /^\/blurt-image\/([a-z0-9][a-z0-9.-]{2,15})\/([0-9a-f]{130})$/,
         hostVariable: 'BLURT_IMAGE_HOST',
-        defaultHost: 'https://images.blurt.blog'
+        defaultHost: 'https://img-upload.blurt.blog'
     })
 });
 
@@ -1031,10 +1031,10 @@ function corsHeaders(request, env, methods = 'GET, OPTIONS') {
 // POST /steem-image/<account>/<signature>: forwards an image upload to the
 // Steem image host and returns its answer with CORS headers, which the host
 // itself stopped sending (steemitimages.com, 2026-09-29), so browsers on
-// other sites can read it. POST /blurt-image/... does the same for Blurt's
-// image host (images.blurt.blog), which doesn't accept uploads from other
-// sites either. The body (the multipart form with the image) goes on
-// unchanged. The host checks that <signature> is <account>'s posting key over
+// other sites can read it. POST /blurt-image/... does the same for the image
+// host blurt.blog's front end uploads to (https://img-upload.blurt.blog),
+// for browsers it doesn't accept uploads from. The body (the multipart form
+// with the image) goes on unchanged. The host checks that <signature> is <account>'s posting key over
 // these exact image bytes, so the relay can neither change the image nor
 // upload as anyone; it keeps no state.
 export function handleSteemImageUpload(request, env, options) {

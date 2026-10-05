@@ -7,12 +7,13 @@ import { createSteemKeychainImageSigner, uploadSteemImage } from '../steem/Steem
 // ForkBuild never sees a Blurt key.
 
 export const BLURT_WALLET_NAME = 'Blurt Keychain';
-// The image host Blurt's own front end uploads to, with Steem's signed
-// upload. It doesn't accept uploads from other sites, so when the browser
-// can't reach it the same signed upload goes through the relay (the
-// rendezvous worker's /blurt-image route, server/rendezvous-worker/README.md),
-// which can neither change the image nor upload as anyone.
-export const DEFAULT_BLURT_IMAGE_HOST = 'https://images.blurt.blog';
+// Where blurt.blog's own front end uploads images (its $STM_Config.upload_image,
+// 2026-10-05), with Steem's signed upload. When the browser can't reach it, as
+// when it accepts uploads only from blurt.blog, the same signed upload goes
+// through the relay (the rendezvous worker's /blurt-image route,
+// server/rendezvous-worker/README.md), which can neither change the image nor
+// upload as anyone.
+export const DEFAULT_BLURT_IMAGE_HOST = 'https://img-upload.blurt.blog';
 // The same worker as peer/RendezvousConfig.js's DEFAULT_RENDEZVOUS_URLS.
 export const DEFAULT_BLURT_IMAGE_RELAY = 'https://forkbuild-rendezvous.prazjp.workers.dev/blurt-image';
 
