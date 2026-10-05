@@ -4036,8 +4036,10 @@ error"). It was never checked, since the development environment can't reach Blu
   field, `{ url }` back): `DEFAULT_BLURT_IMAGE_HOST` in `blurt/BlurtKeychain.js`, and the worker's `/blurt-image`
   default host. The worker must be redeployed.
 - The Blurt repository's deployment config (`SDC_UPLOAD_IMAGE_URL=https://blurt.blog/imagesup`) is out of date:
-  that address answers 404, and allows only `https://blurt.blog` as an origin. Uploads the browser can't make
-  directly go through the relay.
+  that address answers 404, and allows only `https://blurt.blog` as an origin.
+- Checked from ForkBuild's site on 2026-10-05: `img-upload.blurt.blog` accepts the upload straight from the browser
+  (`via: 'host'`) and answers `{ ok, message, url }`, the picture at `https://img.blurt.blog/blurtimage/<account>/…`.
+  The relay stays as the fallback for browsers that can't reach it.
 - The console warning for a notice without its picture names the chain it was for, not always Steem.
 - docs/Protocol.md, docs/Privacy.md (and its translations' host name) and the worker's README updated.
 - Tests: `tests/BlurtImageUpload.test.js` checks the host; `server/rendezvous-worker/worker.test.js` forwards to
