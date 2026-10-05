@@ -32,7 +32,8 @@ export function composeSteemPublicationNoticeDescriber({ contentStore, getAccoun
             const signer = createSteemKeychainImageSigner({ keychain: keychain() });
             return (await uploadSteemImage({ account, bytes, signer, relay: DEFAULT_STEEM_IMAGE_RELAY, fileName: 'forkbuild-build.png' })).url;
         },
-        onPictureMissing
+        onPictureMissing,
+        chainName
     });
 }
 

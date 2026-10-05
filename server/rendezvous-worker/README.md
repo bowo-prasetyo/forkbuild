@@ -217,9 +217,9 @@ Check it from ForkBuild's site with the image upload check on
 steemitimages.com, its Upload row reads "accepted, through the relay".
 
 `POST /blurt-image/<account>/<signature>` does the same for a Blurt post's
-picture, forwarding to Blurt's image host, `https://images.blurt.blog` (set
-`BLURT_IMAGE_HOST` to use another), which doesn't accept uploads from other
-sites either. The same checks and limits apply; the host checks the
+picture, forwarding to the image host blurt.blog's front end uploads to,
+`https://blurt.blog/imagesup` (set `BLURT_IMAGE_HOST` to use another), for
+when the browser can't reach it itself. The same checks and limits apply; the host checks the
 signature against the account's Blurt posting key.
 
 ## Cost
