@@ -84,6 +84,39 @@ translated pieces: word order and grammar differ between languages.
 What people write themselves is never translated: publication titles, names,
 chat messages, and anything signed or published.
 
+## Keeping translations in step
+
+When an English message changes, its translations still say what the old
+English said. `ui/i18n/translation-status.json` keeps track of that: it
+holds a short hash of every English message, and for each language the
+messages whose English has changed since they were translated.
+`tests/MessageTranslations.test.js` (part of `npm run test:node`) fails
+when an English message no longer matches its hash. After adding, changing
+or removing English messages, run:
+
+```
+node scripts/check-message-translations.mjs --update
+```
+
+and commit `ui/i18n/translation-status.json`. A changed message is marked
+out of date in every language whose translation of it you didn't change at
+the same time (since that file was last committed), and a new message in
+every language that doesn't have it yet. You don't need to read the
+language to do this: an out-of-date translation still shows, and passes the
+check, until a translator gets to it.
+
+For a translator, the same command without `--update` lists the messages
+that are out of date in each language, with their English now;
+`git log -p -G"'<key>':" -- ui/i18n/messages/en.js` shows how one changed.
+Bring the translation up to date, then mark it so:
+
+```
+node scripts/check-message-translations.mjs --stamp de app.nav.home
+```
+
+`--stamp de` with no keys marks every out-of-date German message as up to
+date.
+
 ## Indonesian
 
 `ui/i18n/messages/id.js` translates every key. It uses the formal "Anda",
@@ -441,6 +474,10 @@ create its folder.
 3. Run `npm run test:node -- I18n`. `tests/I18n.test.js` checks that every
    key exists in English, that every placeholder matches English's, and that
    every plural message has an `other` form.
+   Then run `node scripts/check-message-translations.mjs --update` to give
+   the language its list of out-of-date messages in
+   `ui/i18n/translation-status.json` (see "Keeping translations in step"
+   above).
 4. Translate at least the user guide's front page, `docs/user/<code>/README.md`
    (see "Translating the user guide" above): the About page links people to
    the guide in the language they chose. `tests/UserGuideLink.test.js` checks
