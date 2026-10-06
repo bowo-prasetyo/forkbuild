@@ -1591,12 +1591,14 @@ manifest-and-parts format as Steem v2 ("Proposed: Steem Content Storage", "Forma
 - A **part** is a reply to the manifest, `<manifest permlink>-p<index>`, with `forkbuild` = `{ version: 1, part: {
   index, count }, data }`.
 - Payout stays on; there are no `comment_options`.
-- The manifest's notice links to the app's view (`#/view/blurt/<author>/<permlink>`) for a Signed Claim, with the
-  build's card when one is drawn (picture uploaded the Steem way to `https://img-upload.blurt.blog`, where
+- The manifest's notice links to the app's view (`#/view/blurt/<author>/<permlink>`) for a Signed Claim, in one
+  line naming the build's title when its card is known. Unlike a Steem notice it doesn't repeat the card: the
+  manifest is always a reply to its build post, whose body shows it, and every byte costs a fee. The card is drawn
+  as on Steem (picture uploaded the Steem way to `https://img-upload.blurt.blog`, where
   blurt.blog's own front end uploads, signed through Blurt Keychain's `requestSignBuffer`; when the browser can't
   reach it the same signed upload goes through the rendezvous worker's relay,
-  `POST <worker>/blurt-image/<account>/<signature>`, and a picture neither can take is left out), and the build
-  post's body shows the same card.
+  `POST <worker>/blurt-image/<account>/<signature>`, and a picture neither can take is left out) and shown in the
+  build post's body.
 - Readers accept a manifest wherever it is (any post by its author with a well-formed `content`); integrity comes
   from `contentHash`, as everywhere. Parts must be the manifest author's replies to the manifest, at the listed
   permlinks, lengths and SHA-256s.

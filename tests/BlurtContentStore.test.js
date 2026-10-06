@@ -141,7 +141,10 @@ function randomText(bytes) {
     const reference = await store.put(JSON.stringify({ kind: 'claim', title: 'Tower' }), { kind: 'publication' });
     const [author, permlink] = reference.uri.slice('blurt://'.length).split('/');
     const manifest = chain.posts.get(`${author}/${permlink}`);
-    assert(manifest.body.includes(`#/view/blurt/${author}/${permlink}`) && manifest.body.includes('**Tower** by Ann'), 'the notice links to the app and shows the card');
+    assert(manifest.body.includes(`#/view/blurt/${author}/${permlink}`) && manifest.body.includes('**Tower**'), `the notice names the build and links to the app (got ${manifest.body})`);
+    assert(!manifest.body.includes('Tall') && !manifest.body.includes('![') && manifest.body.split('\n').length === 1, 'without repeating the card, which the build post shows');
+    const buildPost = chain.posts.get(`${author}/${manifest.parent_permlink}`);
+    assert(buildPost.body.includes('**Tower** by Ann') && buildPost.body.includes('Tall') && buildPost.body.includes('!['), 'the build post shows the card');
     const resolver = new BlurtWorldEncounterMaterialResolver({ rpc: createBlurtRpcClient({ nodes: ['https://a'], fetchImpl: chain.fetchImpl }) });
     const material = await resolver.retrieveByUri(reference.uri);
     assert(material?.kind === 'claim', 'the material resolver reads the claim back');

@@ -287,12 +287,15 @@ export function parseBlurtContentLocator(uri) {
 }
 
 // The body of a manifest or part: what the post is, for people. A Signed
-// Claim's manifest links to the app's view of it, with the build's card
-// when there is one.
+// Claim's manifest links to the app's view of it, naming the build when its
+// card is known. Unlike Steem's, it doesn't repeat the card: a manifest is
+// always a reply to its build post, whose body shows the card, and every
+// byte is paid for.
 export function blurtContentNotice({ parts = 0, part = null, viewUrl = null, card = null } = {}) {
     const end = `It is read by the ForkBuild app, not meant to be read here. [What this is](${ABOUT_URL})`;
     if (part) return `Part ${part.index + 1} of ${part.count} of data stored by ForkBuild. ${end}`;
-    if (viewUrl && card) return [...cardLines(viewUrl, card).slice(0, -1), `[See it in 3D](${viewUrl}) · This reply holds the build's signed record for the ForkBuild app. [What this is](${ABOUT_URL})`].join('\n\n');
+    const title = card ? steemNoticeText(card.title, STEEM_NOTICE_TITLE_MAX) : '';
+    if (viewUrl && title) return `The signed record of **${title}** for the ForkBuild app: [see it in 3D](${viewUrl}). [What this is](${ABOUT_URL})`;
     if (viewUrl) return `A build made with ForkBuild: [see it in 3D](${viewUrl}). This reply holds its signed record for the ForkBuild app. [What this is](${ABOUT_URL})`;
     if (parts > 0) return `Data stored by ForkBuild, continued in ${parts} ${parts === 1 ? 'reply' : 'replies'} below. ${end}`;
     return `Data stored by ForkBuild. ${end}`;
