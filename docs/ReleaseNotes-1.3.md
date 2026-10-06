@@ -92,6 +92,8 @@ optional fields, all described in [Protocol.md](Protocol.md);
 - The location reading names the sea.
 - The animation loop keeps running after an error in one frame.
 - Document Properties is wider, with a larger description field.
+- The app now runs on Vue 3.5.43 (from 3.4.31), the library its whole
+  interface is built on.
 
 ## Privacy
 

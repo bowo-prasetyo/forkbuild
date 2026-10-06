@@ -4134,6 +4134,8 @@ the protocol gains additive parts (the Blurt substrate, `contentTitle` in shares
   `/blurt-image` relay, and `scripts/check-network-defaults.mjs` was run from outside the development environment.
   docs/Protocol.md's "Proposed: Blurt Substrate" now says so; Blurt stays Experimental.
 - `package.json`, `package-lock.json` and `core/version.js` say 1.3.0.
+- The release tag `v1.3.0` is on the merge of #1367, so 1.3.0 also ships Vue 3.5.43 (from 3.4.31, vendored by
+  `scripts/vendor.mjs`); the release notes say so under Fixes.
 - `docs/ReleaseNotes-1.3.md` is new: what's new, fixes, privacy (the visitor count), upgrading from 1.2.0 (what
   1.2.0 does with the new bricks, tags, formatted descriptions, titled shares and swimmers, and redeploying a
   self-hosted worker) and known limitations. `docs/ReleaseNotes-1.2.md` points to it, and the README names 1.3.0
