@@ -1446,8 +1446,8 @@ person who clicked; it proves nothing to anyone else, and verifying is still wha
 **Status: built, Experimental.** Code: `core/BlurtPost.js` (posts, tags, metadata, the content manifest, locators and
 what a post anchors), `core/BlurtBinary.js` (Blurt's binary serialization), `core/BlurtFees.js` (the fee formula),
 `blurt/BlurtRpcClient.js`, `application/blurt/` (the poster, the reader, one adapter per family, the fee estimator
-and `BlurtRuntimeComposition.js`), `content/BlurtContentStore.js`, and `anchoring/Blurt*.js`. Not yet tried against
-a live node or a real Blurt Keychain (neither is reachable from the development environment).
+and `BlurtRuntimeComposition.js`), `content/BlurtContentStore.js`, and `anchoring/Blurt*.js`. Tried against live
+nodes and a real Blurt Keychain before release 1.3.0.
 
 Blurt is a fork of Steem (2020) with the same accounts, keys, posts, `custom_json` and `condenser_api`, so it can
 fill all three roles, Announcement/Discovery, Content and Proof/Anchoring, as Steem does. It differs from Steem in
@@ -1663,9 +1663,10 @@ with the `BLT` prefix. Block ids, transaction ids and the Merkle tree are comput
 
 ### Status
 
-Not yet tried against a live node or a real Blurt Keychain: the development environment can reach neither. The
-default API nodes, the image host and `get_discussions_by_author_before_date` on public nodes still need checking
-with `node scripts/check-network-defaults.mjs` and in a browser.
+Tried for real before release 1.3.0: builds distributed from a browser through a real Blurt
+Keychain, pictures uploaded to `img-upload.blurt.blog`, and the default API nodes checked with
+`node scripts/check-network-defaults.mjs` from outside the development environment, which can reach no Blurt host.
+Blurt stays Experimental, as Steem does.
 
 ## Vehicles, animals and inventory
 
