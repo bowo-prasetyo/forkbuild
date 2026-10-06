@@ -365,6 +365,21 @@
     color: #909090;
 }
 
+/* Document Properties (ui/components/MetadataEditorDialog.js) is wider than
+   the other dialogs, and its description field taller and monospaced, since a
+   description is formatted text (paragraphs, ## headings, - lists) composed
+   there; .modal-panel's max-width still keeps it inside a phone's screen.
+   After .form-textarea above, so its font-family: inherit does not win. */
+.modal-panel.metadata-editor {
+    width: 640px;
+}
+
+.metadata-editor-description {
+    min-height: 16rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    line-height: 1.45;
+}
+
 /* A Steem notice posted without its build's picture: an amber .form-hint,
    standing on its own line rather than under a form field. */
 .steem-notice-picture-warning {
