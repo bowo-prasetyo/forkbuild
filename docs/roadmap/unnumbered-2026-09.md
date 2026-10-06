@@ -4120,3 +4120,21 @@ stands alone in a content thread.
 - docs/Protocol.md ("Proposed: Blurt Substrate", content) updated.
 - Tests: `tests/BlurtContentStore.test.js` checks the reply names the build and links to it without the card, and
   the build post shows the card.
+
+## Release 1.3.0 (unnumbered, 2026-10-06)
+
+**Version 1.3.0 is released.** Everything since 1.2.0 ships under its own version number. It is a minor release: it
+adds features (Blurt as an Experimental substrate, French and Korean, sea, swimming and underwater life, Repository
+network discovery, titled shares, Distribute for claims, names and comments, timber-framing bricks, build tags and
+formatted descriptions, and the daily visitor count) and fixes (mirrored compass and turns, vehicle wheels and
+riders, rotated brick collision, Explore's camera framing), with no security fix. `PROTOCOL_VERSION` is unchanged;
+the protocol gains additive parts (the Blurt substrate, `contentTitle` in shares, `DocumentMetadata.tags`).
+
+- Blurt was tried against live nodes and a real Blurt Keychain, the rendezvous worker was redeployed with the
+  `/blurt-image` relay, and `scripts/check-network-defaults.mjs` was run from outside the development environment.
+  docs/Protocol.md's "Proposed: Blurt Substrate" now says so; Blurt stays Experimental.
+- `package.json`, `package-lock.json` and `core/version.js` say 1.3.0.
+- `docs/ReleaseNotes-1.3.md` is new: what's new, fixes, privacy (the visitor count), upgrading from 1.2.0 (what
+  1.2.0 does with the new bricks, tags, formatted descriptions, titled shares and swimmers, and redeploying a
+  self-hosted worker) and known limitations. `docs/ReleaseNotes-1.2.md` points to it, and the README names 1.3.0
+  and links all four.

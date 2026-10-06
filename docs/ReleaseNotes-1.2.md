@@ -1,7 +1,8 @@
 # ForkBuild 1.2 release notes
 
 *Released 2026-10-01 as version 1.2.0.* For 1.1, see
-[ReleaseNotes-1.1.md](ReleaseNotes-1.1.md).
+[ReleaseNotes-1.1.md](ReleaseNotes-1.1.md); for what came after, see
+[ReleaseNotes-1.3.md](ReleaseNotes-1.3.md).
 
 1.2 speaks five more languages, gives World View sound and living
 residents, lets you follow people and back up everything this browser
