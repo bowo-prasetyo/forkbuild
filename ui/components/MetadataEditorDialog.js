@@ -117,8 +117,8 @@ export default {
                     <span class="form-label">{{ t('metadataEditor.description') }}</span>
                     <textarea
                         v-model="description"
-                        class="form-textarea"
-                        rows="5"
+                        class="form-textarea metadata-editor-description"
+                        rows="12"
                         :placeholder="t('metadataEditor.descriptionPlaceholder')"
                     ></textarea>
                     <span class="form-hint form-hint--neutral">{{ t('metadataEditor.descriptionFormattingHint') }}</span>
