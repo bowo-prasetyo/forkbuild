@@ -21,7 +21,7 @@ export default {
     emits: ['update:passphrase', 'update:confirmation', 'update:allowUnprotected', 'submit'],
     setup(props) {
         const evaluation = computed(() => evaluateNewPassphrase(props));
-        return { t, evaluation, t };
+        return { t, evaluation };
     },
     template: `
         <div class="new-passphrase-fields">
