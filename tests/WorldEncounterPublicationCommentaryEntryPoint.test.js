@@ -665,8 +665,8 @@ async function runTests() {
             '52. CreateWorldViewUseCase.js still composes its own, independent commentary path, unmodified by this milestone');
 
         const appWideCompositionCode = await codeOnlySource('application/publication/commentary/CreatePublicationCommentaryUseCase.js');
-        assert(appWideCompositionCode.includes('new CanCommentOnPublicationUseCase(discoveryProvider)'),
-            '53. application/publication/commentary/CreatePublicationCommentaryUseCase.js (0.9.289\'s own app-wide root) stays unmodified by this milestone');
+        assert(appWideCompositionCode.includes('new CanCommentOnPublicationUseCase(commentableDiscoveryProvider)'),
+            '53. application/publication/commentary/CreatePublicationCommentaryUseCase.js (0.9.289\'s own app-wide root) still authorizes through CanCommentOnPublicationUseCase');
 
         const stillUnwiredSurfaces = [
             'ui/components/PublicationCatalog.js',

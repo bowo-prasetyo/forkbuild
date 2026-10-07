@@ -4212,3 +4212,22 @@ account on a network, had no way to put the comment there, and nothing said wher
   every language; docs/Architecture.md; docs/Privacy.md (the new record on the device).
 - Tests: `tests/CommentaryNetworkDistribution.test.js` (the log, posting's record, Distribute with the real
   exchange signing, including refusing someone else's comment, and the component).
+
+## Comments on other people's publications (unnumbered, 2026-10-07)
+
+Commenting on a publication someone else published failed with "AddPublicationCommentaryUseCase: not authorized to
+comment on publication …", whatever network was chosen. The Repository and World View list publications found from
+peers, links and the networks next to this device's own, but `CanCommentOnPublicationUseCase` was given
+`LocalDiscoveryProvider`, which holds only this device's own publications (`forkbuild-publications`). The user guide
+already said any signed-in identity can comment on any publication that resolves.
+
+- `CreatePublicationCommentaryUseCase.execute(identityProvider, { decentralizedDiscoveryProvider })` authorizes
+  against `CompositeDiscoveryProvider([LocalDiscoveryProvider, decentralizedDiscoveryProvider])`. `ui/main.js` now
+  creates `decentralizedPublicationDiscoveryProvider` before `composeIdentityAndPeers()` and passes it in; its index
+  is still rebuilt from the catalog right after, and the check reads it on each comment.
+- `CreateWorldViewUseCase` authorizes comments against `publicationActionDiscoveryProvider`, the merged provider its
+  other publication actions already use. Fork-policy checks keep the narrower provider.
+- The `publication.commented` notification still reads only this device's own publications: it tells their
+  publisher, and someone else's publisher is on another device.
+- Tests: `tests/CommentOnDiscoveredPublication.test.js` runs the real composition (fails before this change). Five
+  older tests that read the composition's source now expect the merged provider.

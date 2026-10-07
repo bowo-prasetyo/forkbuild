@@ -1,5 +1,6 @@
 import { LocalStorageProvider } from '../../../storage/LocalStorageProvider.js';
 import { LocalDiscoveryProvider } from '../../../discovery/LocalDiscoveryProvider.js';
+import { CompositeDiscoveryProvider } from '../../../discovery/CompositeDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../../../storage/PublicationCommentaryStore.js';
 import { NotificationEventStore } from '../../../storage/NotificationEventStore.js';
 import { CanCommentOnPublicationUseCase } from '../CanCommentOnPublicationUseCase.js';
@@ -74,13 +75,21 @@ import { PublicationCommentaryNotificationProducer } from './PublicationCommenta
 // ui/components/OwnPublicationPanel.js's own 0.9.248 header) can accept
 // either this file's commands or WorldView's own, unmodified.
 export class CreatePublicationCommentaryUseCase {
-    execute(identityProvider) {
+    // `decentralizedDiscoveryProvider` holds the publications this device found
+    // from peers, links and the networks: the Repository lists them, so they
+    // can be commented on too. Without it, only this device's own publications
+    // can be.
+    execute(identityProvider, { decentralizedDiscoveryProvider = null } = {}) {
         const storageProvider = new LocalStorageProvider();
         const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
+        // Any publication this device knows may be commented on. The
+        // notification below still reads only this device's own publications:
+        // it tells their publisher, who is this device's user.
+        const commentableDiscoveryProvider = new CompositeDiscoveryProvider([discoveryProvider, decentralizedDiscoveryProvider]);
         const publicationCommentaryStore = new PublicationCommentaryStore(storageProvider);
         const notificationEventStore = new NotificationEventStore(storageProvider);
 
-        const canCommentOnPublicationUseCase = new CanCommentOnPublicationUseCase(discoveryProvider);
+        const canCommentOnPublicationUseCase = new CanCommentOnPublicationUseCase(commentableDiscoveryProvider);
         const getPublicationCommentariesUseCase = new GetPublicationCommentariesUseCase(publicationCommentaryStore);
         const addPublicationCommentaryUseCase = new AddPublicationCommentaryUseCase(
             publicationCommentaryStore,

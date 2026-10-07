@@ -481,14 +481,14 @@ async function runTests() {
             '40. PublicationCard.js (for its toggle) and the PublicationCommentarySection.js it mounts inject the commentary commands as OPTIONAL collaborators — feature hidden when absent');
 
         const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
-        assert(mainCode.includes("new CreatePublicationCommentaryUseCase().execute(identityProvider)"),
+        assert(mainCode.includes("new CreatePublicationCommentaryUseCase().execute(identityProvider"),
             '41. ui/main.js composes the commentary commands through the new, dedicated composition root, sharing the SAME app-wide identityProvider');
         assert(mainCode.includes("app.provide('getPublicationCommentariesCommand', getPublicationCommentariesCommand)") &&
                mainCode.includes("app.provide('addPublicationCommentaryCommand', addPublicationCommentaryCommand)"),
             '42. ui/main.js provides both commands app-wide, the same way every other cross-view capability already is');
 
         const compositionCode = await codeOnlySource('application/publication/commentary/CreatePublicationCommentaryUseCase.js');
-        assert(compositionCode.includes('new CanCommentOnPublicationUseCase(discoveryProvider)'),
+        assert(compositionCode.includes('new CanCommentOnPublicationUseCase(commentableDiscoveryProvider)'),
             '43. the new composition reuses the SAME, unmodified CanCommentOnPublicationUseCase');
         assert(compositionCode.includes('new GetPublicationCommentariesUseCase(publicationCommentaryStore)'),
             '44. the new composition reuses the SAME, unmodified GetPublicationCommentariesUseCase');
