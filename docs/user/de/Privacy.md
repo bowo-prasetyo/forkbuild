@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: eac2cc58e3fb338f -->
+<!-- translation-of: docs/Privacy.md source-hash: 21e6aad444ba5278 -->
 # Datenschutz
 
 <!-- languages -->
@@ -43,6 +43,8 @@ veröffentlichen, exportieren oder senden es:
 - die IDs der Veröffentlichungen, die Sie auf diesem Gerät zurückgezogen
   haben, damit die Suche des Repositorys in den Netzwerken Kopien, die Sie
   früher verteilt haben, nicht wieder auflistet.
+- an welche Netzwerke dieses Gerät jeden Ihrer Kommentare gesendet hat, und
+  wann, damit jeder Kommentar zeigen kann, wohin er ging.
 
 Das Löschen der Daten dieser Website im Browser löscht all das, und es gibt
 keine andere Kopie und keinen Weg, sie wiederherzustellen. Sichern Sie es

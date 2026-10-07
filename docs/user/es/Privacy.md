@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: eac2cc58e3fb338f -->
+<!-- translation-of: docs/Privacy.md source-hash: 21e6aad444ba5278 -->
 # Privacidad
 
 <!-- languages -->
@@ -43,6 +43,8 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
 - los identificadores de las publicaciones que retiró en este dispositivo,
   para que la búsqueda del Repositorio en las redes no vuelva a listar
   copias que distribuyó antes.
+- a qué redes envió este dispositivo cada uno de sus comentarios, y cuándo,
+  para que cada comentario pueda indicar adónde fue.
 
 Borrar los datos de este sitio en el navegador lo elimina todo, y no hay
 ninguna otra copia ni forma de recuperarlo. Haga primero una copia de

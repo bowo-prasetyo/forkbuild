@@ -319,6 +319,14 @@ To start every comment form on it, choose it under **Comments** on the
 [Announcement / Discovery
 Provider](10-NetworkSettings.md#announcement--discovery-provider) page.
 
+Made a network account since, or want a comment on another network too?
+Under each of your own comments, a line says which networks this device has
+sent it to, or *Not sent to any network from this device yet*.
+**Distribute** there sends it to the network you pick and says whether it
+worked; a network it already went to is marked and can't be sent to again.
+Only the comment's author, signed in, sees it, since only they can sign the
+comment for a network, and the line knows only what this device sent.
+
 Other people's comments reach you:
 
 - from connected peers, as they're posted;

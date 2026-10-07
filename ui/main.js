@@ -2,7 +2,8 @@ import { createApp } from 'vue';
 import App from './App.js';
 import { router } from './router/index.js';
 import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
-import { createPublicationCommentaryDistributor } from '../application/publication/commentary/PublicationCommentaryDistributor.js';
+import { createPublicationCommentaryDistributor, createSavedPublicationCommentaryDistributor } from '../application/publication/commentary/PublicationCommentaryDistributor.js';
+import { PublicationCommentaryDistributionLog } from '../application/publication/commentary/PublicationCommentaryDistributionLog.js';
 import { PublicationCommentaryRemoteNotificationBridge } from '../application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js';
 import { NostrMultiRelayPublicationCommentaryDistribution } from '../application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js';
 import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js';
@@ -167,20 +168,42 @@ let publicationCommentarySteemDistribution = null;
 // Same, for Blurt.
 let publicationCommentaryBlurtDistribution = null;
 
-// Sends a saved comment to connected peers and at most one network, chosen per
-// comment or else the saved comment default (which falls back to the
-// Announcement / Discovery preference). Read on each call: the networks are set
-// up later in this file. World View saves its comments through its own session
-// and hands them here.
-const distributePublicationCommentaryCommand = createPublicationCommentaryDistributor({
-    peerExchange: publicationCommentaryDistributionPeerExchange,
-    distributionExchange: publicationCommentaryDistributionExchange,
-    substrateFor: (provider) => ({
+// A network's comment distribution, or null when that network isn't set up on
+// this device (Steem and Blurt without a runtime). Never another network in its
+// place: the distribution log records the network that was asked. An unknown
+// value means Nostr. Read on each call: the networks are set up later in this
+// file.
+function publicationCommentarySubstrateFor(provider) {
+    const substrates = {
+        nostr: publicationCommentaryNostrDistribution,
         arweave: publicationCommentaryArweaveDistribution,
         steem: publicationCommentarySteemDistribution,
         blurt: publicationCommentaryBlurtDistribution
-    }[provider] ?? publicationCommentaryNostrDistribution),
-    defaultProvider: () => resolvedCommentaryDistributionProvider
+    };
+    return provider in substrates ? substrates[provider] : substrates.nostr;
+}
+
+// Which networks this device has sent each of its comments to.
+const publicationCommentaryDistributionLog = new PublicationCommentaryDistributionLog(new LocalStorageProvider());
+
+// Sends a saved comment to connected peers and at most one network, chosen per
+// comment or else the saved comment default (which falls back to the
+// Announcement / Discovery preference). World View saves its comments through
+// its own session and hands them here.
+const distributePublicationCommentaryCommand = createPublicationCommentaryDistributor({
+    peerExchange: publicationCommentaryDistributionPeerExchange,
+    distributionExchange: publicationCommentaryDistributionExchange,
+    substrateFor: publicationCommentarySubstrateFor,
+    defaultProvider: () => resolvedCommentaryDistributionProvider,
+    distributionLog: publicationCommentaryDistributionLog
+});
+
+// Distribute, on one of your own comments: sends it to one network later and
+// reports the outcome.
+const distributeSavedPublicationCommentaryCommand = createSavedPublicationCommentaryDistributor({
+    distributionExchange: publicationCommentaryDistributionExchange,
+    substrateFor: publicationCommentarySubstrateFor,
+    distributionLog: publicationCommentaryDistributionLog
 });
 
 // Creates the comment locally first, then distributes it; distribution never
@@ -345,6 +368,8 @@ app.provide('notificationHistoryAccess', new NotificationHistoryAccess({
 app.provide('getPublicationCommentariesCommand', getPublicationCommentariesCommand);
 app.provide('addPublicationCommentaryCommand', addPublicationCommentaryCommand);
 app.provide('distributePublicationCommentaryCommand', distributePublicationCommentaryCommand);
+app.provide('distributeSavedPublicationCommentaryCommand', distributeSavedPublicationCommentaryCommand);
+app.provide('publicationCommentaryDistributionLog', publicationCommentaryDistributionLog);
 app.provide('publicationAnchorCatalog', publicationAnchorCatalog);
 app.provide('publicationAnchorPeerExchange', publicationAnchorPeerExchange);
 app.provide('publicationAnchorDiscoveryCoordinator', publicationAnchorDiscoveryCoordinator);

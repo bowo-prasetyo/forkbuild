@@ -3,6 +3,7 @@ import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck
 import WandererMarker from './WandererMarker.js';
 import WorldDistributionDialog from './WorldDistributionDialog.js';
 import CommentaryDistributionPicker, { commentarySavedText } from './CommentaryDistributionPicker.js';
+import CommentaryNetworkDistribution from './CommentaryNetworkDistribution.js';
 import { describeWorldFromDiscoveryRegistry } from '../../application/discovery/WorldDiscoveryRegistryProjection.js';
 // Most computed properties and methods live in ./worldEncounterCanvas/,
 // grouped by concern.
@@ -218,7 +219,7 @@ import { formatDate, t } from '../i18n/i18n.js';
 
 export default {
     name: 'WorldEncounterCanvas',
-    components: { WorldEncounterMarker, WandererMarker, WorldDistributionDialog, PublicationCommentaryRemoteCheck, CommentaryDistributionPicker },
+    components: { WorldEncounterMarker, WandererMarker, WorldDistributionDialog, PublicationCommentaryRemoteCheck, CommentaryDistributionPicker, CommentaryNetworkDistribution },
     props: {
         // Exactly `describeWorldEncounterView()`'s result shape.
         view: {

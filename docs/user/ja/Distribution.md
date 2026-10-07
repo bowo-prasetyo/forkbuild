@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 58b14791cd9c7c74 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 2b55b8fafeab85c5 -->
 # 作品を配信する
 
 <!-- languages -->
@@ -54,7 +54,7 @@ ForkBuild で作るものは、すべて自分のデバイスから始まりま�
 | **任意の公開物の内容ハッシュ**（ワールド、作者情報のクレーム、地名） | — | — | Bitcoin、Arweave、Base、Steem、Blurt | **公開物** ページにあるその公開物のカード |
 | **構造物の作者情報**（ブループリントの作者情報） | Arweave、IPFS、Steem、Blurt | Nostr、Arweave、Steem、Blurt | — | **ネットワークに公開** すると構造物の **情報** パネルに表示される **配信**、**公開物** ページ |
 | **地名**（地名の主張） | Arweave、IPFS、Steem、Blurt | Nostr、Arweave、Steem、Blurt | — | **名前を公開** するとワールドビューの命名パネルに表示される **配信**（選んだネットワークで名前を告知します）、どれでも選べるのは **公開物** ページ |
-| 公開物への **コメント** | — | Nostr、Arweave、Steem、Blurt、またはなし（**ローカルとピアのみ**） | — | リポジトリまたはワールドビューの **コメントを投稿**（横で選んだネットワークへ） |
+| 公開物への **コメント** | — | Nostr、Arweave、Steem、Blurt、またはなし（**ローカルとピアのみ**） | — | リポジトリまたはワールドビューの **コメントを投稿**（横で選んだネットワークへ）。あとからは自分のコメントの下の **配信** |
 
 ワールドのスナップショットには署名付きの配置が含まれるので、取得した人は
 あなたが置いたとおりの場所に作品を見ることができます。

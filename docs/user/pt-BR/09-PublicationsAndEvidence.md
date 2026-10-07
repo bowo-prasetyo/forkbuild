@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 61f5896ed45c5ccc -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 01594ad476095742 -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -334,6 +334,15 @@ depois em uma rede.
 Para que todo formulário de comentário comece nela, escolha-a em
 **Comentários** na página [Provedor de anúncio /
 descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta).
+
+Criou depois uma conta em uma rede, ou quer o comentário em outra rede
+também? Embaixo de cada comentário seu, uma linha diz para quais redes este
+dispositivo o enviou, ou *Ainda não enviado a nenhuma rede a partir deste
+dispositivo.* **Distribuir** ali o envia para a rede escolhida e diz se deu
+certo; uma rede para a qual ele já foi aparece marcada e não pode ser
+escolhida de novo. Só o autor do comentário, conectado, vê isso, porque só
+ele pode assinar o comentário para uma rede, e a linha só sabe o que este
+dispositivo enviou.
 
 Os comentários das outras pessoas chegam a você:
 

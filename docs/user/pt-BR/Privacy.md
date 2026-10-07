@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: eac2cc58e3fb338f -->
+<!-- translation-of: docs/Privacy.md source-hash: 21e6aad444ba5278 -->
 # Privacidade
 
 <!-- languages -->
@@ -42,6 +42,8 @@ que você publique, exporte ou envie:
 - os ids das publicações que você despublicou neste dispositivo, para que a
   pesquisa do Repositório nas redes não liste de novo cópias que você
   distribuiu antes.
+- para quais redes este dispositivo enviou cada comentário seu, e quando,
+  para que cada comentário possa dizer para onde foi.
 
 Limpar os dados deste site no navegador apaga tudo isso, e não há outra
 cópia nem como recuperar. Faça antes um backup com **Seus dados → Fazer

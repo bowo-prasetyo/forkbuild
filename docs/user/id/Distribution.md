@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 58b14791cd9c7c74 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 2b55b8fafeab85c5 -->
 # Mendistribusikan Karya Anda
 
 <!-- languages -->
@@ -59,7 +59,7 @@ tidak pernah mengirim apa pun.
 | **Hash konten publikasi apa pun** (Dunia, klaim kepengarangan, atau nama tempat) | — | — | Bitcoin, Arweave, Base, Steem, atau Blurt | Kartu publikasi itu di halaman **Publikasi** |
 | **Kepengarangan sebuah struktur** (Atribusi Cetak Biru) | Arweave, IPFS, Steem, atau Blurt | Nostr, Arweave, Steem, atau Blurt | — | **Distribusikan** di panel **Info** struktur, yang ditawarkan begitu Anda **Terbitkan ke Jaringan**; halaman **Publikasi** |
 | **Nama tempat** (Klaim Nama Tempat) | Arweave, IPFS, Steem, atau Blurt | Nostr, Arweave, Steem, atau Blurt | — | **Distribusikan** di panel penamaan Tampilan Dunia, yang ditawarkan begitu Anda **Terbitkan Sebuah Nama** (mengumumkan nama itu di jaringan yang Anda pilih); halaman **Publikasi** untuk pilihan mana pun |
-| **Komentar** pada sebuah publikasi | — | Nostr, Arweave, Steem, atau Blurt, atau tidak ada (**Lokal & rekan saja**) | — | **Kirim Komentar**, di Repositori atau Tampilan Dunia, di jaringan yang dipilih di sebelahnya |
+| **Komentar** pada sebuah publikasi | — | Nostr, Arweave, Steem, atau Blurt, atau tidak ada (**Lokal & rekan saja**) | — | **Kirim Komentar**, di Repositori atau Tampilan Dunia, di jaringan yang dipilih di sebelahnya; nanti, **Distribusikan** di bawah komentar Anda sendiri |
 
 Snapshot sebuah Dunia membawa penempatan bertanda tangan Anda, sehingga
 orang yang mengambilnya melihat bangunan itu tepat di tempat Anda

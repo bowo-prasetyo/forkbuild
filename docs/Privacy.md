@@ -36,6 +36,8 @@ send it:
   for those found on the networks, where each one's signed record was read.
 - the ids of Publications you unpublished on this device, so the Repository's
   search of the networks doesn't list copies you distributed earlier again.
+- which networks this device sent each of your comments to, and when, so
+  each comment can say where it went.
 
 Clearing this site's data in the browser deletes all of it, and there is no
 other copy and no way to recover it. Back it up first with **Your Data →

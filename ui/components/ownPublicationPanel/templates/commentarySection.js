@@ -33,6 +33,7 @@ export const commentarySectionTemplate = `<div v-if="getPublicationCommentariesC
                     >
                         <span class="own-publication-commentary-author">{{ commentary.authorIdentityId }}</span>
                         <p class="own-publication-commentary-content">{{ commentary.content }}</p>
+                        <CommentaryNetworkDistribution :commentary="commentary" />
                     </li>
                 </ul>
 
