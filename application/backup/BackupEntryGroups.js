@@ -91,6 +91,7 @@ const EXACT_NAMES = new Map([
     ['blurt-known-authors', BackupEntryGroup.SETTINGS],
     ['bitcoin-esplora-configuration', BackupEntryGroup.SETTINGS],
     ['role-provider-preference:by-role', BackupEntryGroup.SETTINGS],
+    ['commentary-distribution-preference', BackupEntryGroup.SETTINGS],
 
     ['publication-catalog:entries', BackupEntryGroup.DOWNLOADED],
     ['world-encounter-publication-admission-log:entries', BackupEntryGroup.DOWNLOADED],

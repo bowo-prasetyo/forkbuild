@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 548f42ada7a113cb -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 61f5896ed45c5ccc -->
 # 09 — 公開物と外部証拠
 
 <!-- languages -->
@@ -324,6 +324,7 @@ Nostr、Steem。最初は
 接続しているピアにだけ送られるので、ネットワークのアカウントは不要です。
 投稿したときに接続していない人には届かず、後からネットワークで
 見つけることもできません。
+すべてのコメント欄で最初からこれを選んでおくには、[告知 / 発見サービス](10-NetworkSettings.md#告知--発見サービス) ページの **コメント** で選びます。
 
 ほかの人のコメントは、次のようにして届きます。
 

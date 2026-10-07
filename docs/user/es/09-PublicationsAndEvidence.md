@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 548f42ada7a113cb -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 61f5896ed45c5ccc -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -344,6 +344,9 @@ pares**. Se guarda en su dispositivo y se envía solo a los pares conectados
 en ese momento, así que no necesita cuenta en ninguna red. Quien no esté
 conectado cuando lo publique no lo recibirá, y nadie podrá encontrarlo
 después en una red.
+Para que todos los formularios de comentarios empiecen con ella, elíjala en
+**Comentarios** en la página [Proveedor de anuncio /
+descubrimiento](10-NetworkSettings.md#proveedor-de-anuncio--descubrimiento).
 
 Los comentarios de otras personas le llegan:
 

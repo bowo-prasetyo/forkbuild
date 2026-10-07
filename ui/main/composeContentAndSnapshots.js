@@ -12,6 +12,8 @@ import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../../applica
 import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../../application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
 import { SetRoleProviderPreferenceUseCase } from '../../application/settings/SetRoleProviderPreferenceUseCase.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
+import { resolveCommentaryDistributionProvider } from '../../core/CommentaryDistributionProvider.js';
+import { CommentaryDistributionPreferenceStore } from '../../storage/CommentaryDistributionPreferenceStore.js';
 import { PublicationCatalogDiscoveryProvider } from '../../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../../discovery/PublicationCatalogContentResolver.js';
 import { CheckLocalSnapshotContentAvailabilityUseCase } from '../../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
@@ -114,6 +116,14 @@ export function composeContentAndSnapshots({
         ? announcementDiscoveryProviderPreference.providerKey
         : 'nostr';
 
+    // The default network for comments, read once at boot: the saved comment
+    // default, else the Announcement / Discovery substrate above.
+    const commentaryDistributionPreferenceStore = new CommentaryDistributionPreferenceStore(new LocalStorageProvider());
+    const resolvedCommentaryDistributionProvider = resolveCommentaryDistributionProvider({
+        commentaryPreference: commentaryDistributionPreferenceStore.get(),
+        announcementDiscoveryProvider: resolvedAnnouncementDiscoveryProvider
+    });
+
     // Checks local possession only: no registry, placement or network.
     const localSnapshotContentAvailabilityUseCase = new CheckLocalSnapshotContentAvailabilityUseCase(publicationContentStore);
 
@@ -185,7 +195,8 @@ export function composeContentAndSnapshots({
         snapshotPlacementViewRegistry, publicationCatalogContentResolver, snapshotPlacementStoreRegistry,
         snapshotPlacementCreationCoordinator, roleProviderPreferenceStore,
         preferredSnapshotPlacementCreationCoordinator, setRoleProviderPreferenceUseCase,
-        resolvedAnnouncementDiscoveryProvider, localSnapshotContentAvailabilityUseCase,
+        resolvedAnnouncementDiscoveryProvider, commentaryDistributionPreferenceStore, resolvedCommentaryDistributionProvider,
+        localSnapshotContentAvailabilityUseCase,
         storeSnapshotContentUseCase, snapshotContentMaterializationCoordinator, exportSnapshotCommand,
         snapshotPlacementMaterializationCoordinator, snapshotPeerMaterializationCoordinator,
         snapshotPeerPossessionCoordinator, snapshotMaterializationSelectionCoordinator,

@@ -3551,6 +3551,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.savingHereTakesEffectThe': 'Menyimpan di sini berlaku saat aplikasi ini dimuat berikutnya — tidak pernah mengubah pengumuman yang sedang berjalan.',
     'announcementDiscoveryProviderSettingsView.saved': 'Tersimpan.',
     'announcementDiscoveryProviderSettingsView.save': 'Simpan',
+    'announcementDiscoveryProviderSettingsView.comments': 'Komentar',
+    'announcementDiscoveryProviderSettingsView.commentsFollow': 'Sama dengan Penyedia Pengumuman / Penemuan di atas',
+    'announcementDiscoveryProviderSettingsView.commentsHint': 'Jaringan awal setiap formulir komentar. Anda tetap bisa mengubahnya di samping Kirim Komentar untuk komentar mana pun. Lokal & rekan saja menjaga komentar Anda tidak masuk ke jaringan mana pun, jadi tidak perlu akun jaringan. Seperti pilihan di atas, menyimpan berlaku saat aplikasi ini dimuat berikutnya.',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Gateway Arweave',

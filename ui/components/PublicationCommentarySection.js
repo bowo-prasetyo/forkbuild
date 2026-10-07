@@ -27,7 +27,7 @@ import { errorText, t } from '../i18n/i18n.js';
 // Commands come from the SAME app-wide provide/inject keys ui/main.js
 // provides (`getPublicationCommentariesCommand`,
 // `addPublicationCommentaryCommand`, `identityUseCase`,
-// `defaultAnnouncementDiscoveryProvider`) — never a prop the catalog has
+// `defaultCommentaryDistributionProvider`) — never a prop the catalog has
 // to thread through. This file never imports a Commentary store, use
 // case, or distribution class itself.
 //
@@ -55,10 +55,10 @@ export default {
         // Read only to decide between the compose form and a sign-in
         // hint — this component never authenticates anyone itself.
         identityUseCase: { default: null },
-        // 0.9.667 — this replica's saved ANNOUNCEMENT_AND_DISCOVERY
-        // preference, resolved once at boot by ui/main.js; seeds
-        // `selectedDiscoveryProvider` below.
-        defaultAnnouncementDiscoveryProvider: { default: null }
+        // This replica's comment default (the saved comment network, else
+        // the ANNOUNCEMENT_AND_DISCOVERY preference), resolved once at boot
+        // by ui/main.js; seeds `selectedDiscoveryProvider` below.
+        defaultCommentaryDistributionProvider: { default: null }
     },
     props: {
         publication: { type: Object, required: true }
@@ -75,7 +75,7 @@ export default {
             pendingCommentaryDraft: null,
             // 0.9.638 — the substrate for the NEXT submission. Never
             // persisted; opens on the saved preference, else 'nostr'.
-            selectedDiscoveryProvider: this.defaultAnnouncementDiscoveryProvider || 'nostr',
+            selectedDiscoveryProvider: this.defaultCommentaryDistributionProvider || 'nostr',
             // 0.9.638 — which substrate the most recent successful
             // submission requested; `null` until one succeeds.
             lastCommentaryDistributionProvider: null

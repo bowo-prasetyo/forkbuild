@@ -89,6 +89,13 @@ export default {
             type: String,
             default: 'nostr'
         },
+        // The comment default (ui/main.js's defaultCommentaryDistributionProvider):
+        // seeds the comment network picker once and never overrides a pick.
+        // Unset, comments start on defaultDiscoveryDistributionProvider.
+        defaultCommentaryDistributionProvider: {
+            type: String,
+            default: null
+        },
         // `(publication) -> Promise<PublicationDistributionResult | null>`.
         publicationDistributionCommand: {
             type: Function,
@@ -250,7 +257,7 @@ export default {
             // mints a new one.
             pendingCommentaryDraft: null,
             // Where the next comment is distributed; opens on the saved preference.
-            commentaryDiscoveryProvider: this.defaultDiscoveryDistributionProvider || 'nostr',
+            commentaryDiscoveryProvider: this.defaultCommentaryDistributionProvider || this.defaultDiscoveryDistributionProvider || 'nostr',
             // Which network the last posted comment asked for; never a delivery
             // receipt (distribution reports nothing back).
             lastCommentaryDistributionProvider: null,

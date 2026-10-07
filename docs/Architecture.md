@@ -1426,6 +1426,7 @@ default still answers and allows CORS.
 | Nostr Relays | `/settings/nostr-relay` | `nostr-relay-configuration` | `relayUrls`, one set for every Nostr feature, fan-out |
 | STUN / TURN / Rendezvous | `/settings/stun`, `/settings/turn-server`, `/settings/rendezvous` | `ice-server-configuration`, `turn-server-configuration`, `rendezvous-configuration` | as before |
 | Content / Announcement / Proof preferences | `/settings/content-provider`, `/settings/announcement-discovery-provider`, `/settings/anchor-provider` | `role-provider-preference:by-role` | one provider key per role |
+| Comment default | `/settings/announcement-discovery-provider` (its Comments section) | `commentary-distribution-preference` | `{ providerKey }`: a network or `peers` (Local & peers only); absent means comments follow the Announcement / Discovery preference |
 | Steem | `/settings/steem` | `steem-reading-configuration`, `steem-announcing-configuration` | ordered `apiNodes` (read failover; anchor verification asks the first three), thread accounts and first month to read; this device's Steem account for posting. Reading changes apply on the next load |
 | Blurt | `/settings/blurt` | `blurt-reading-configuration`, `blurt-announcing-configuration`, `blurt-known-authors` | ordered `apiNodes` (read failover; anchor verification asks the first three; a configuration saved with the dropped followed accounts and first month still reads); the accounts seen posting under ForkBuild's tags, whose histories are read when no node serves Nexus; this device's Blurt account for posting. Reading changes apply on the next load |
 
@@ -1452,6 +1453,13 @@ hand the saved comment to the same `distributePublicationCommentaryCommand`; all
 pick the substrate with `ui/components/CommentaryDistributionPicker.js`, which also offers "Local & peers only" for
 commenters with no network account. A peers-only comment reaches only the peers connected when it is posted: the peer
 exchange is announce-only, with no catch-up for peers that connect later.
+
+Every comment form starts on `defaultCommentaryDistributionProvider`, and the distributor falls back to it when a
+comment carries no choice. `ui/main/composeContentAndSnapshots.js` resolves it once at boot with
+`resolveCommentaryDistributionProvider()` (`core/CommentaryDistributionProvider.js`): the saved comment default from
+`CommentaryDistributionPreferenceStore`, else the Announcement / Discovery preference. It is kept apart from
+`RoleProviderPreferenceStore` because Local & peers only is a choice only comments have: Snapshots, claims and place
+names are always announced on a network.
 
 ## Decentralized publications, anchoring and evidence
 

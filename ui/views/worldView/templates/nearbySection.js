@@ -185,6 +185,7 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                         :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
                         :snapshotDistributionStorageTypes="snapshotDistributionStorageTypes"
                         :defaultDiscoveryDistributionProvider="defaultAnnouncementDiscoveryProvider"
+                        :defaultCommentaryDistributionProvider="defaultCommentaryDistributionProvider"
                         :defaultContentDistributionProvider="defaultContentDistributionProvider"
                         :discoverSnapshotCommand="discoverOwnSnapshot"
                         :worldDiscoveryLeadRegistry="worldDiscoveryLeadRegistry"

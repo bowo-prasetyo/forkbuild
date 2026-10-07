@@ -315,6 +315,9 @@ To keep a comment off every network, choose **Local & peers only** instead.
 It's saved on your device and sent only to the peers connected right now, so
 it needs no network account. Anyone not connected when you post won't
 receive it, and nobody can find it on a network later.
+To start every comment form on it, choose it under **Comments** on the
+[Announcement / Discovery
+Provider](10-NetworkSettings.md#announcement--discovery-provider) page.
 
 Other people's comments reach you:
 

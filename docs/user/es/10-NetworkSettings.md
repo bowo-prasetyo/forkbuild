@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 3a000cc71ab8702b -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 6e7a59baf45b6d4f -->
 # 10 — Configuración de red
 
 <!-- languages -->
@@ -95,6 +95,14 @@ comentarios. Es solo un valor predeterminado: todos los diálogos
 y el selector de red junto a **Publicar comentario** empiezan en él, y
 puede cambiarlos para una acción concreta.
 Para encontrar contenido de otras personas siempre se busca en todos.
+
+Una segunda sección, **Comentarios**, da a los comentarios un valor
+predeterminado propio. **Igual que el proveedor de anuncio / descubrimiento
+de arriba**, la opción inicial, los mantiene en la elección de arriba. Elija
+en su lugar una red, o **Solo local y pares** para que los comentarios no
+lleguen a ninguna red, sin necesitar cuenta en ninguna. Todos los
+formularios de comentarios empiezan con ella, y puede cambiarla en un
+comentario junto a **Publicar comentario**.
 
 ## Proveedor de prueba / anclaje
 

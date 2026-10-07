@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 548f42ada7a113cb -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 61f5896ed45c5ccc -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -344,6 +344,9 @@ saja**. Komentar disimpan di perangkat Anda dan hanya dikirim ke rekan yang
 terhubung saat itu, jadi tidak perlu akun jaringan. Siapa pun yang tidak
 terhubung saat Anda mengirimnya tidak akan menerimanya, dan tidak ada yang
 bisa menemukannya di jaringan nanti.
+Agar setiap formulir komentar dimulai dengan pilihan itu, pilih di bawah
+**Komentar** pada halaman [Penyedia Pengumuman /
+Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan).
 
 Komentar orang lain sampai kepada Anda:
 

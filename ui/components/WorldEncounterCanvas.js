@@ -339,6 +339,13 @@ export default {
             type: String,
             default: 'nostr'
         },
+        // The comment default (ui/main.js's defaultCommentaryDistributionProvider):
+        // seeds the comment network picker once and never overrides a pick.
+        // Unset, comments start on defaultDiscoveryDistributionProvider.
+        defaultCommentaryDistributionProvider: {
+            type: String,
+            default: null
+        },
         defaultContentDistributionProvider: {
             type: String,
             default: null
@@ -432,7 +439,7 @@ export default {
             observerLocalEncounterCommentaryDistributionProvider: null,
             // Where the next comment from either form is distributed; opens on the
             // saved preference.
-            commentaryDiscoveryProvider: this.defaultDiscoveryDistributionProvider || 'nostr',
+            commentaryDiscoveryProvider: this.defaultCommentaryDistributionProvider || this.defaultDiscoveryDistributionProvider || 'nostr',
             // Registry-derived classification of `selectedEncounter`; written only by
             // refreshSelectionOutcome().
             selectionOutcome: null,

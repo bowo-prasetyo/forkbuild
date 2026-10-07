@@ -3553,6 +3553,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.savingHereTakesEffectThe': 'Das Speichern hier wirkt beim nächsten Laden dieser App — es ändert nie eine bereits laufende Ankündigung.',
     'announcementDiscoveryProviderSettingsView.saved': 'Gespeichert.',
     'announcementDiscoveryProviderSettingsView.save': 'Speichern',
+    'announcementDiscoveryProviderSettingsView.comments': 'Kommentare',
+    'announcementDiscoveryProviderSettingsView.commentsFollow': 'Wie der Anbieter für Ankündigung / Entdeckung oben',
+    'announcementDiscoveryProviderSettingsView.commentsHint': 'Das Netzwerk, mit dem jedes Kommentarformular beginnt. Neben „Kommentar senden“ können Sie es für jeden Kommentar weiterhin ändern. „Nur lokal & Peers“ hält Ihre Kommentare aus allen Netzwerken heraus, daher brauchen Sie kein Netzwerkkonto. Wie bei der Auswahl oben wirkt das Speichern beim nächsten Laden dieser App.',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Arweave-Gateway',

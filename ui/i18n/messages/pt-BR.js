@@ -3553,6 +3553,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.savingHereTakesEffectThe': 'Salvar aqui passa a valer na próxima vez que este app carregar — nunca muda um anúncio que já está em andamento.',
     'announcementDiscoveryProviderSettingsView.saved': 'Salvo.',
     'announcementDiscoveryProviderSettingsView.save': 'Salvar',
+    'announcementDiscoveryProviderSettingsView.comments': 'Comentários',
+    'announcementDiscoveryProviderSettingsView.commentsFollow': 'Igual ao provedor de anúncio / descoberta acima',
+    'announcementDiscoveryProviderSettingsView.commentsHint': 'A rede em que cada formulário de comentário começa. Você ainda pode mudá-la ao lado de “Publicar comentário” em qualquer comentário. “Somente local e pares” mantém seus comentários fora de qualquer rede, então não é preciso conta em nenhuma rede. Como a escolha acima, salvar passa a valer na próxima vez que este app carregar.',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Gateway do Arweave',

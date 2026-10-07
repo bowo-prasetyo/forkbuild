@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 3a000cc71ab8702b -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 6e7a59baf45b6d4f -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
@@ -92,6 +92,13 @@ setiap dialog **Distribusikan**, pemilih Distribusi per kartu di
 Repositori, dan pemilih jaringan di samping **Kirim Komentar** dimulai
 dari pilihan ini, dan Anda dapat menggantinya untuk satu tindakan.
 Mencari konten orang lain selalu menelusuri semuanya.
+
+Bagian kedua, **Komentar**, memberi komentar bawaan sendiri. **Sama dengan
+Penyedia Pengumuman / Penemuan di atas**, pilihan awalnya, membuat komentar
+mengikuti pilihan di atas. Pilih jaringan lain, atau **Lokal & rekan saja**
+agar komentar tidak masuk ke jaringan mana pun, tanpa perlu akun jaringan.
+Setiap formulir komentar dimulai dengan pilihan ini, dan Anda tetap bisa
+mengubahnya untuk satu komentar di samping **Kirim Komentar**.
 
 ## Penyedia Bukti / Penjangkaran
 

@@ -222,6 +222,7 @@ export default {
         const snapshotDistributionAvailableStorageTypesCommand = inject('snapshotDistributionAvailableStorageTypes', null);
         // Seeds the pickers' initial choices only.
         const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
+        const defaultCommentaryDistributionProvider = inject('defaultCommentaryDistributionProvider', null);
         const defaultContentDistributionProvider = inject('defaultContentDistributionProvider', null);
         const snapshotDistributionStorageTypes = snapshotDistributionAvailableStorageTypesCommand
             ? snapshotDistributionAvailableStorageTypesCommand()
@@ -1391,6 +1392,7 @@ export default {
             distributeWorldEncounterSnapshot,
             snapshotDistributionStorageTypes,
             defaultAnnouncementDiscoveryProvider,
+            defaultCommentaryDistributionProvider,
             defaultContentDistributionProvider,
             discoverOwnSnapshot,
             exportOwnSnapshot,

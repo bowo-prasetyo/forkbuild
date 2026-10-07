@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 548f42ada7a113cb -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 61f5896ed45c5ccc -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -350,6 +350,9 @@ uniquement**. Il est enregistré sur votre appareil et envoyé seulement aux
 pairs connectés à ce moment-là, sans compte réseau nécessaire. Qui n’est pas
 connecté au moment de la publication ne le reçoit pas, et personne ne pourra
 le trouver plus tard sur un réseau.
+Pour que chaque formulaire de commentaire démarre dessus, choisissez-le sous
+**Commentaires** sur la page [Fournisseur d’annonce / de
+découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte).
 
 Les commentaires des autres vous parviennent :
 

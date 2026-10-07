@@ -3553,6 +3553,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.savingHereTakesEffectThe': 'Saving here takes effect the next time this app loads — it never changes an announcement already in flight.',
     'announcementDiscoveryProviderSettingsView.saved': 'Saved.',
     'announcementDiscoveryProviderSettingsView.save': 'Save',
+    'announcementDiscoveryProviderSettingsView.comments': 'Comments',
+    'announcementDiscoveryProviderSettingsView.commentsFollow': 'Same as the Announcement / Discovery provider above',
+    'announcementDiscoveryProviderSettingsView.commentsHint': 'The network each comment form starts on. You can still change it beside Post Comment for any comment. Local & peers only keeps your comments off every network, so it needs no network account. Like the choice above, saving takes effect the next time this app loads.',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Arweave Gateway',

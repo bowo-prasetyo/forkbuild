@@ -1,6 +1,6 @@
 import { describeSteemAnnouncingUnreadiness } from '../../application/steem/SteemAnnouncingReadiness.js';
 import { describeBlurtAnnouncingUnreadiness } from '../../application/blurt/BlurtAnnouncingReadiness.js';
-import { LOCAL_AND_PEERS_ONLY } from '../../application/publication/commentary/PublicationCommentaryDistributor.js';
+import { LOCAL_AND_PEERS_ONLY } from '../../core/CommentaryDistributionProvider.js';
 import { t } from '../i18n/i18n.js';
 
 // Network names, the same in every language.
