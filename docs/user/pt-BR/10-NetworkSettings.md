@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 6e7a59baf45b6d4f -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: cb23254b3ae5523e -->
 # 10 — Configurações de rede
 
 <!-- languages -->
@@ -204,7 +204,10 @@ que guarda toda postagem por mais antiga que seja, e pula um nó que não o
 ofereça. Quando nenhum nó oferece o Nexus, ele recorre à própria lista de
 tags do Blurt, que guarda uma postagem só até ela ser paga, depois de sete
 dias, e encontra as postagens mais antigas no histórico das contas que viu
-postar com a tag neste dispositivo.
+postar com a tag neste dispositivo. Mesmo quando o Nexus responde, o
+ForkBuild lê também a lista de tags, caso o Nexus deixe uma postagem de
+fora; se deixar, ele lê também o histórico dessa conta, para que as
+postagens mais antigas dela também não fiquem de fora.
 
 Quando nenhum nó do Blurt pode ser alcançado, **Procurar comentários novos**
 e a descoberta de Snapshots dizem que o Blurt está indisponível, em vez de

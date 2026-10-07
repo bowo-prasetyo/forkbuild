@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 6e7a59baf45b6d4f -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: cb23254b3ae5523e -->
 # 10 — Configuración de red
 
 <!-- languages -->
@@ -216,7 +216,10 @@ omite un nodo que no lo ofrece. Cuando ningún nodo ofrece Nexus, recurre a
 la lista de etiquetas propia de Blurt, que conserva una publicación solo
 hasta que paga, a los siete días, y encuentra las publicaciones más
 antiguas en el historial de las cuentas que vio publicar con la etiqueta
-en este dispositivo.
+en este dispositivo. Aunque Nexus responda, ForkBuild lee también la lista
+de etiquetas, por si Nexus omite una publicación; si la omite, lee además
+el historial de esa cuenta, para que tampoco falten sus publicaciones más
+antiguas.
 
 Cuando no se puede alcanzar ningún nodo de Blurt, **Buscar comentarios
 nuevos** y el descubrimiento de Snapshots indican que Blurt no está

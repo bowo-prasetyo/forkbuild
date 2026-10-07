@@ -192,7 +192,9 @@ every post however old, and skips a node that doesn't offer it. When no
 node offers Nexus, it falls back to Blurt's own tag list, which keeps a
 post only until it pays out, after seven days, and finds older posts in
 the histories of the accounts it has seen post under the tag on this
-device.
+device. Even when Nexus answers, ForkBuild reads the tag list beside it,
+in case Nexus leaves a post out; if it has, ForkBuild also reads that
+account's history, so its older posts aren't missed either.
 
 When no Blurt node can be reached, **Check for new comments** and Snapshot
 discovery name Blurt as unavailable rather than reporting that nothing was

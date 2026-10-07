@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 6e7a59baf45b6d4f -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: cb23254b3ae5523e -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
@@ -216,7 +216,10 @@ der jeden Beitrag behält, egal wie alt, und überspringt einen Knoten, der
 ihn nicht anbietet. Bietet kein Knoten Nexus an, greift es auf die eigene
 Tag-Liste von Blurt zurück, die einen Beitrag nur bis zu seiner Auszahlung
 nach sieben Tagen behält, und findet ältere Beiträge im Verlauf der Konten,
-die es auf diesem Gerät unter dem Tag posten gesehen hat.
+die es auf diesem Gerät unter dem Tag posten gesehen hat. Auch wenn Nexus
+antwortet, liest ForkBuild die Tag-Liste daneben, falls Nexus einen Beitrag
+auslässt; ist das so, liest es auch den Verlauf dieses Kontos, damit
+dessen ältere Beiträge ebenfalls nicht fehlen.
 
 Ist kein Blurt-Knoten erreichbar, nennen **Nach neuen Kommentaren suchen**
 und die Snapshot-Entdeckung Blurt als nicht verfügbar, statt zu melden,

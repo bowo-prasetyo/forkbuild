@@ -1546,7 +1546,7 @@ The one-substrate rule holds: each action announces on exactly one of Nostr, Arw
 
 ### Reading
 
-For a family, a reader asks Nexus first and falls back to the chain's own indexes:
+For a family, a reader asks Nexus and cross-checks it against the chain's own indexes:
 
 1. **Nexus.** Nexus (`blurt/nexus-go`) is Blurt's indexer, in the role Hivemind plays on Hive, served through the
    `bridge` API. `bridge.get_ranked_posts({ sort: 'created', tag: 'forkbuild-<family>', limit: 100, observer: '' })`,
@@ -1555,14 +1555,20 @@ For a family, a reader asks Nexus first and falls back to the chain's own indexe
    deleted, muted or grayed. The reader pages until a post is older than `2026-10`, the first month ForkBuild
    posted on Blurt, at most 20 pages. A node that doesn't serve `bridge` is skipped for the next one. Nexus returns
    `json_metadata` parsed and leaves a top-level post's parent empty, so the reader takes `depth: 0` and `category`
-   as the parent. When a node answers, nothing below is read.
-2. **The tag, when no node serves Nexus.** `condenser_api.get_discussions_by_created([{ tag: 'forkbuild-<family>',
+   as the parent.
+2. **The tag, always.** `condenser_api.get_discussions_by_created([{ tag: 'forkbuild-<family>',
    limit: 100, truncate_body: 1 }])`, paging with `start_author` and `start_permlink`, at most 10 pages. The chain's
-   tags plugin drops a post from its tag index when the post pays out, so this finds the last 7 days.
-3. **Authors' histories, with the tag.** For each account the reader has seen a ForkBuild build post from
-   (remembered on the device, the 100 most recent, `blurt-known-authors`; Nexus results add to it too), `condenser_api.get_discussions_by_author_before_date([author,
-   startPermlink, '1970-01-01T00:00:00', 100])`, which lists an account's top-level posts newest first for as long as
-   the chain exists, paging until a post is older than `2026-10` or 5 pages are read.
+   tags plugin drops a post from its tag index when the post pays out, so this finds the last 7 days. It is read
+   whether or not Nexus answered, as a cross-check: Nexus is one indexer, and a node's Nexus can lag, leave out what
+   it counts as muted or grayed, or be filtered by its operator. A build post the tag lists and Nexus doesn't is
+   reported in the read's `nexusMissed` (a post a few seconds old may only not be indexed yet).
+3. **Authors' histories.** `condenser_api.get_discussions_by_author_before_date([author, startPermlink,
+   '1970-01-01T00:00:00', 100])`, which lists an account's top-level posts newest first for as long as the chain
+   exists, paging until a post is older than `2026-10` or 5 pages are read. When Nexus answered, only the authors of
+   the posts it missed are read, since it may have missed their older, paid-out posts too: usually none, at most
+   100, newest post first.
+   When no node serves Nexus, every account the reader has seen a ForkBuild build post from is read (remembered on
+   the device, the 100 most recent, `blurt-known-authors`; Nexus and tag results add to it).
 
 A post counts when it is a top-level post (`parent_author` empty) in the `forkbuild` category whose
 `json_metadata.forkbuild` has `version: 1` and an `announcements` list; each entry whose `family` is the requested

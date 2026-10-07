@@ -4231,3 +4231,24 @@ already said any signed-in identity can comment on any publication that resolves
   publisher, and someone else's publisher is on another device.
 - Tests: `tests/CommentOnDiscoveredPublication.test.js` runs the real composition (fails before this change). Five
   older tests that read the composition's source now expect the merged provider.
+
+## Cross-check Blurt's Nexus against the tag (unnumbered, 2026-10-07)
+
+When a node served Nexus, Blurt discovery read nothing else, so one indexer alone decided what was found. Nexus
+leaves out posts it counts as muted or grayed, and a node's Nexus can lag or be filtered by its operator; a build
+post it left out was never seen, and nothing said so.
+
+- `application/blurt/BlurtDiscoveryReader.js` now reads the chain's own tag listing (the tags plugin, last 7 days)
+  on every read, beside Nexus. A build post the tag lists and Nexus doesn't is reported in the read's new
+  `nexusMissed`, and its author's history is read, since Nexus may have missed their older, paid-out posts too
+  (at most 100 authors, newest post first, so a Nexus that lists nothing costs no more than reading without it).
+  Authors the tag shows are remembered, as Nexus results already were.
+- Usually Nexus misses nothing, so the cost is the tag listing alone: one or two requests, cached for 30 seconds as
+  before. Without Nexus, reading is unchanged (the tag, then every remembered author's history).
+- A read where Nexus answers and the tag listing can't be read still counts as read; the tag is listed in
+  `sourcesUnavailable`.
+- docs/Protocol.md ("Proposed: Blurt Substrate", "Reading"); "Blurt" in Network Settings in the user guide, in
+  every language.
+- Tests: `tests/BlurtDiscoveryReader.test.js` (a Nexus that never lists one author: that author's recent and
+  paid-out posts are both found, the missed post is reported, and only that history is read; the cap on missed
+  authors; Nexus answering while the tag can't be read). The existing Nexus test now expects the tag listing to be read and no history.
