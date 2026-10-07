@@ -130,7 +130,9 @@ export class CreateWorldViewUseCase {
         const unpublishDocumentUseCase = new UnpublishDocumentUseCase(publisherProvider);
 
         const publicationCommentaryStore = new PublicationCommentaryStore(storageProvider);
-        const canCommentOnPublicationUseCase = new CanCommentOnPublicationUseCase(discoveryProvider);
+        // Any publication World View can show may be commented on, not only
+        // this device's own (the fork-policy reason above doesn't apply).
+        const canCommentOnPublicationUseCase = new CanCommentOnPublicationUseCase(publicationActionDiscoveryProvider);
         const getPublicationCommentariesUseCase = new GetPublicationCommentariesUseCase(publicationCommentaryStore);
         const addPublicationCommentaryUseCase = new AddPublicationCommentaryUseCase(
             publicationCommentaryStore,

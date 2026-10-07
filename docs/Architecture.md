@@ -1451,6 +1451,11 @@ Credentials are never stored. The remote-pinning credential is kept only in tab 
         -> PublicationCommentaryDistributionExchange.importCommentaryEnvelope()   one verifier, one store
         -> PublicationCommentaryRemoteNotificationBridge                          notify the publisher only
 
+`CanCommentOnPublicationUseCase` allows a comment on any publication this device knows: its own
+(`LocalDiscoveryProvider`) and those found from peers, links and the networks (`DecentralizedPublicationDiscoveryProvider`,
+merged with `CompositeDiscoveryProvider` in both `CreatePublicationCommentaryUseCase` and `CreateWorldViewUseCase`). The
+`publication.commented` notification still reads only this device's own publications, since it tells their publisher.
+
 `ui/components/PublicationCommentarySection.js` is the Repository's single Commentary component (card and list).
 World View's Commentary panels (My Shared World and both World Encounter panels) save through their session, then
 hand the saved comment to the same `distributePublicationCommentaryCommand`; all of them, the Repository's included,

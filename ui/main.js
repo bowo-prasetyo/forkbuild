@@ -72,6 +72,12 @@ setDocumentTitles({
     copyOf: (title) => t('document.copyOf', { title })
 });
 
+// One app-wide instance: a per-view accumulator would lose admitted candidates
+// whenever a person navigated away. Created before the identity composition
+// because comments may be posted on any publication it holds; its index is
+// rebuilt from the durable catalog below.
+const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();
+
 const {
     identityProvider, identityUseCase, createPublicationCommentaryCommand, getPublicationCommentariesCommand,
     iceServerConfigurationStore, turnServerConfigurationStore, setTurnServerConfigurationUseCase,
@@ -81,7 +87,7 @@ const {
     peerBlockUseCase, deviceAuthorizationUseCase, friendRelationshipUseCase,
     identityLifecyclePropagationUseCase, chatUseCase, peerPresenceUseCase, deviceConversationSyncUseCase,
     voiceUseCase, publicLobbyUseCase, followUseCase
-} = composeIdentityAndPeers();
+} = composeIdentityAndPeers({ decentralizedPublicationDiscoveryProvider });
 
 // The one LocalPublicationCatalog instance; every collaborator below shares it.
 const { publicationResolver, contentStore: publicationContentStore } = new CreatePublicationResolverUseCase().execute();
@@ -105,10 +111,6 @@ const { coordinator: publicationResolutionCoordinator } = new CreatePublicationR
 // Kept separate from the durable stores: checking what a publication resolves
 // to must never import it into them.
 const { kindPlugins: publicationDisplayKindPlugins, publicationKindPlugin } = new CreatePublicationDisplayKindRegistryUseCase().execute();
-
-// One app-wide instance: a per-view accumulator would lose admitted candidates
-// whenever a person navigated away.
-const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();
 
 // Rebuilds the in-memory discovery index from the durable catalog before the
 // provider is handed out. Performs no network retrieval.

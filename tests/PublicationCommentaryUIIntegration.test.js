@@ -452,8 +452,8 @@ async function runTests() {
         const compositionCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
         assert(compositionCode.includes('new PublicationCommentaryStore(storageProvider)'),
             '47. the composition root reuses the SAME storageProvider every other local store already uses');
-        assert(compositionCode.includes('new CanCommentOnPublicationUseCase(discoveryProvider)'),
-            '48. the composition root reuses the SAME discoveryProvider every other Publication-resolving use case already uses');
+        assert(compositionCode.includes('new CanCommentOnPublicationUseCase(publicationActionDiscoveryProvider)'),
+            '48. the composition root authorizes comments against the SAME merged provider World View\'s publication actions use');
 
         console.log('✓ Section K: the UI reaches the application layer through one composed path — WorldNavigationSession — never a duplicate one');
     }

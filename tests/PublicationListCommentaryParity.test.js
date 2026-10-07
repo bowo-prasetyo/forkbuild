@@ -468,7 +468,7 @@ async function runTests() {
             '42. the shared section carries the 0.9.289 read/submit methods and the 0.9.542 stable-retry-identity pattern');
 
         const compositionCode = await codeOnlySource('application/publication/commentary/CreatePublicationCommentaryUseCase.js');
-        assert(compositionCode.includes('new CanCommentOnPublicationUseCase(discoveryProvider)') &&
+        assert(compositionCode.includes('new CanCommentOnPublicationUseCase(commentableDiscoveryProvider)') &&
                compositionCode.includes('new GetPublicationCommentariesUseCase(publicationCommentaryStore)') &&
                compositionCode.includes('new AddPublicationCommentaryUseCase(') &&
                compositionCode.includes('new PublicationCommentaryNotificationProducer('),

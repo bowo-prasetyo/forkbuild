@@ -44,13 +44,13 @@ import { SetBitcoinEsploraConfigurationUseCase } from '../../application/setting
 // Composition root, part 1: the local identity, the saved network settings
 // (STUN, TURN, rendezvous, Bitcoin Esplora), peer sessions and discovery,
 // relationships, follows, blocking, device authorization, chat, presence and voice.
-export function composeIdentityAndPeers() {
+export function composeIdentityAndPeers({ decentralizedPublicationDiscoveryProvider = null } = {}) {
     const identityProvider = new CreateIdentityProviderUseCase().execute();
     const identityUseCase = new IdentityUseCase(identityProvider);
     // Bound as createPublicationCommentaryCommand: addPublicationCommentaryCommand,
     // below, wraps it with distribution.
     const { getPublicationCommentariesCommand, addPublicationCommentaryCommand: createPublicationCommentaryCommand } =
-        new CreatePublicationCommentaryUseCase().execute(identityProvider);
+        new CreatePublicationCommentaryUseCase().execute(identityProvider, { decentralizedDiscoveryProvider: decentralizedPublicationDiscoveryProvider });
     // A saved STUN list overrides DEFAULT_ICE_SERVERS; the default is never saved
     // as if it were a preference. Resolved early because peerConnectionProvider
     // needs it at construction.

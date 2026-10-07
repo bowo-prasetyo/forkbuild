@@ -208,8 +208,8 @@ async function run() {
         assert(mainSource.includes('new CreatePublicationCommentaryDistributionPeerExchangeUseCase().execute({') &&
                /identityProvider,\s*\n\s*peerMessageBus,\s*\n\s*connectedPeerRegistry: peerSessionManager\.registry/.test(mainSource),
             n('ui/main.js constructs it with the SAME app-wide identityProvider/peerMessageBus/peerSessionManager.registry every sibling capability already rides — never a second identity or transport'));
-        assert(mainSource.includes("new CreatePublicationCommentaryUseCase().execute(identityProvider)"),
-            n('the EXISTING commentary creation composition is still constructed the exact same way — this milestone changes no argument to it'));
+        assert(mainSource.includes("new CreatePublicationCommentaryUseCase().execute(identityProvider"),
+            n('the EXISTING commentary creation composition is still constructed with the SAME app-wide identityProvider'));
         assert(mainSource.includes('function addPublicationCommentaryCommand(input) {') &&
                mainSource.includes('distributePublicationCommentaryCommand(result.commentary,') &&
                mainSource.includes('peerExchange: publicationCommentaryDistributionPeerExchange,'),
