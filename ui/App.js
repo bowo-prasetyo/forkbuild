@@ -74,7 +74,6 @@ export default {
         }
 
         return {
-            t,
             t, menuOpen, notificationsOpen, openNotifications,
             getRecipientNotificationEventsCommand, viewNotificationPublication
         };

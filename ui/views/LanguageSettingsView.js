@@ -36,7 +36,6 @@ export default {
         }
 
         return {
-            t,
             t, AUTOMATIC, selected, languages, translatorLocales, browserLocale, showsPseudo, changed, save,
             available: Boolean(languageSettingsStore),
             currentName: currentLocale().name

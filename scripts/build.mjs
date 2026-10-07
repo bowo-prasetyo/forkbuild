@@ -107,6 +107,11 @@ export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue =
         plugins: [importMapPlugin(imports)]
     });
     const css = await esbuild.build({ ...shared, entryPoints: ['css/main.css'], entryNames: '[name]-[hash]' });
+    // esbuild has printed each warning above. A warning is usually a mistake in
+    // the code (a duplicate key, an import that doesn't exist), so the build,
+    // and with it tests/run-bundle.mjs, fails rather than publishing it.
+    const warnings = js.warnings.length + css.warnings.length;
+    if (warnings > 0) throw new Error(`esbuild reported ${warnings} warning${warnings === 1 ? '' : 's'}; fix ${warnings === 1 ? 'it' : 'them'} before building`);
 
     const relative = (file) => path.relative(outdir, path.resolve(ROOT, file)).split(path.sep).join('/');
     const outputs = js.metafile.outputs;

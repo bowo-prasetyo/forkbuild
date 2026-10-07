@@ -4308,3 +4308,14 @@ error ("a discoveryPublisher with a publish() method is required").
 - Tests: `tests/AnnouncementDiscoveryProviderRegistry.test.js` (the keys, registering kind by kind, "not set up",
   the role resolver, and the real `composePublicationDistribution()`/`composeSnapshotDiscovery()` filling one
   registry and announcing through it).
+
+## The build fails on esbuild warnings (unnumbered, 2026-10-07)
+
+Three components returned `t` twice from `setup()`: `ui/components/NewPassphraseFields.js`, `ui/App.js` and
+`ui/views/LanguageSettingsView.js`. The duplicate keys did no harm, but esbuild warned about each on every
+`npm run build`, and nothing noticed: the build printed the warnings and published anyway.
+
+- The three components return `t` once.
+- `scripts/build.mjs` throws when esbuild reports any warning for the JavaScript or the stylesheet, after esbuild
+  has printed them. `npm run test:bundle` builds the site, so CI now fails on a new warning instead of letting it
+  through.
