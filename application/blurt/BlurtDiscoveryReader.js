@@ -3,12 +3,14 @@ import { parseBlurtTime } from '../../blurt/BlurtRpcClient.js';
 
 // Reads one family's announcements from Blurt build posts (docs/Protocol.md,
 // "Proposed: Blurt Substrate", "Reading"). Nexus, Blurt's indexer, lists
-// every post under the family's tag, paid out or not, so when a node serves
-// it nothing else is read. Otherwise the reader falls back to the chain's
-// own tag listing, which keeps a post only until it pays out (7 days), and
-// the post histories of every account seen posting a build post. It
-// returns candidates only: each envelope still goes through its family's own
-// parser and verifier.
+// every post under the family's tag, paid out or not, but leaves out posts
+// it counts as muted or grayed, and an operator's Nexus can lag or be
+// filtered. So the chain's own tag listing, which keeps a post only until it
+// pays out (7 days), is always read too: an author it shows that Nexus
+// missed has their history read, since Nexus may have missed their older
+// posts as well. When no node serves Nexus, every account seen posting a
+// build post has their history read instead. It returns candidates only:
+// each envelope still goes through its family's own parser and verifier.
 
 export const BlurtDiscoveryReadOutcome = Object.freeze({
     FOUND: 'found',
@@ -20,6 +22,10 @@ const PAGE_SIZE = 100;
 export const DEFAULT_BLURT_MAX_TAG_PAGES = 10;
 export const DEFAULT_BLURT_MAX_AUTHOR_PAGES = 5;
 export const DEFAULT_BLURT_MAX_NEXUS_PAGES = 20;
+// Authors read because Nexus missed their post, newest post first; as many
+// as the device remembers, so a Nexus that lists nothing costs no more than
+// reading without it.
+export const DEFAULT_BLURT_MAX_MISSED_AUTHORS = 100;
 // The first month ForkBuild posted on Blurt: nothing older is read.
 export const BLURT_EARLIEST_PERIOD = '2026-10';
 const DEFAULT_CONCURRENCY = 4;
@@ -38,6 +44,7 @@ export function createBlurtDiscoveryReader({
     maxTagPages = DEFAULT_BLURT_MAX_TAG_PAGES,
     maxAuthorPages = DEFAULT_BLURT_MAX_AUTHOR_PAGES,
     maxNexusPages = DEFAULT_BLURT_MAX_NEXUS_PAGES,
+    maxMissedAuthors = DEFAULT_BLURT_MAX_MISSED_AUTHORS,
     concurrency = DEFAULT_CONCURRENCY,
     tagCacheMs = DEFAULT_TAG_CACHE_MS,
     authorCacheMs = DEFAULT_AUTHOR_CACHE_MS
@@ -127,34 +134,45 @@ export function createBlurtDiscoveryReader({
         let nexusRead = false;
         let tagRead = false;
         let authorsRead = 0;
+        const nexusKeys = new Set();
         try {
-            const seen = (await nexusPosts(tag)).map(keep).filter(Boolean).map(({ author }) => author);
+            const parsed = (await nexusPosts(tag)).map(keep).filter(Boolean);
             nexusRead = true;
+            parsed.forEach(({ author, permlink }) => nexusKeys.add(`${author}/${permlink}`));
             // Kept for the fallback, should Nexus be unavailable later.
-            if (seen.length > 0) knownAuthors?.remember(seen);
+            if (parsed.length > 0) knownAuthors?.remember(parsed.map(({ author }) => author));
         } catch (error) {
             unavailable.push({ source: `nexus #${tag}`, reason: error?.message ?? String(error) });
         }
 
-        if (!nexusRead) {
-            try {
-                const seen = (await tagPosts(tag)).map(keep).filter(Boolean).map(({ author }) => author);
-                tagRead = true;
-                if (seen.length > 0) knownAuthors?.remember(seen);
-            } catch (error) {
-                unavailable.push({ source: `#${tag}`, reason: error?.message ?? String(error) });
-            }
-
-            const authors = knownAuthors?.list() ?? [];
-            await forEachLimited(authors, concurrency, async (author) => {
-                try {
-                    (await authorPosts(author)).forEach(keep);
-                    authorsRead += 1;
-                } catch (error) {
-                    unavailable.push({ source: `@${author}`, reason: error?.message ?? String(error) });
+        // Read whether or not Nexus answered: what it shows that Nexus
+        // doesn't is the cross-check.
+        const nexusMissed = [];
+        try {
+            const parsed = (await tagPosts(tag)).map(keep).filter(Boolean);
+            tagRead = true;
+            if (parsed.length > 0) knownAuthors?.remember(parsed.map(({ author }) => author));
+            if (nexusRead) {
+                for (const { author, permlink } of parsed) {
+                    if (!nexusKeys.has(`${author}/${permlink}`)) nexusMissed.push(Object.freeze({ author, permlink }));
                 }
-            });
+            }
+        } catch (error) {
+            unavailable.push({ source: `#${tag}`, reason: error?.message ?? String(error) });
         }
+
+        // With Nexus, only the authors it missed; without, everyone known.
+        const authors = nexusRead
+            ? [...new Set(nexusMissed.map(({ author }) => author))].slice(0, maxMissedAuthors)
+            : (knownAuthors?.list() ?? []);
+        await forEachLimited(authors, concurrency, async (author) => {
+            try {
+                (await authorPosts(author)).forEach(keep);
+                authorsRead += 1;
+            } catch (error) {
+                unavailable.push({ source: `@${author}`, reason: error?.message ?? String(error) });
+            }
+        });
 
         const announcements = [];
         for (const post of buildPosts.values()) {
@@ -172,8 +190,12 @@ export function createBlurtDiscoveryReader({
                 : (announcements.length > 0 ? BlurtDiscoveryReadOutcome.FOUND : BlurtDiscoveryReadOutcome.EMPTY),
             announcements: Object.freeze(announcements),
             sourcesRead,
-            // Whether Nexus answered; when it did, nothing else was read.
+            // Whether Nexus answered.
             nexus: nexusRead,
+            // Build posts the tag listing showed and Nexus didn't, in the
+            // tag listing's order. A post a few seconds old may simply not
+            // be indexed yet.
+            nexusMissed: Object.freeze(nexusMissed),
             sourcesUnavailable: Object.freeze(unavailable)
         });
     }

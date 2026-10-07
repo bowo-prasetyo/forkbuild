@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 6e7a59baf45b6d4f -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: cb23254b3ae5523e -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
@@ -213,7 +213,10 @@ yang tidak menyediakannya. Bila tidak ada node yang menyediakan Nexus,
 ForkBuild beralih ke daftar tag milik Blurt sendiri, yang menyimpan sebuah
 postingan hanya sampai pembayarannya, setelah tujuh hari, dan menemukan
 postingan yang lebih lama di riwayat akun-akun yang pernah dilihatnya
-memposting di bawah tag itu di perangkat ini.
+memposting di bawah tag itu di perangkat ini. Meskipun Nexus menjawab,
+ForkBuild tetap membaca daftar tag di sampingnya, berjaga-jaga bila Nexus
+melewatkan sebuah postingan; bila demikian, ForkBuild juga membaca riwayat
+akun itu, agar postingan lamanya pun tidak terlewat.
 
 Saat tidak ada node Blurt yang dapat dijangkau, **Periksa komentar baru**
 dan penemuan Snapshot menyebutkan Blurt tidak tersedia, alih-alih

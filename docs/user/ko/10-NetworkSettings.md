@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 6e7a59baf45b6d4f -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: cb23254b3ae5523e -->
 # 10 — 네트워크 설정
 
 <!-- languages -->
@@ -179,7 +179,9 @@ ForkBuild가 Nostr로 게시하거나 발견하는 모든 것 — 게시물(공�
 제공하지 않는 노드는 건너뜁니다. Nexus를 제공하는 노드가 없으면 Blurt 자체의
 태그 목록으로 넘어가는데, 이 목록은 게시물을 보상이 지급되는 7일 뒤까지만
 보관하므로, 더 오래된 게시물은 이 기기에서 그 태그로 게시하는 것을 본 계정들의
-기록에서 찾습니다.
+기록에서 찾습니다. Nexus가 응답할 때도, Nexus가 게시물을 빠뜨렸을 경우에
+대비해 태그 목록을 함께 읽습니다. 빠뜨린 게시물이 있으면 그 계정의 기록도 읽어
+더 오래된 게시물까지 놓치지 않습니다.
 
 연결할 수 있는 Blurt 노드가 없으면, **새 댓글 확인**과 스냅샷 발견은 찾은 것이
 없다고 보고하는 대신 Blurt를 사용할 수 없다고 알려 줍니다.

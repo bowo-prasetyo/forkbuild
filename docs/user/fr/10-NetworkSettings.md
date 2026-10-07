@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 6e7a59baf45b6d4f -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: cb23254b3ae5523e -->
 # 10 — Paramètres réseau
 
 <!-- languages -->
@@ -220,7 +220,10 @@ qui ne le propose pas. Quand aucun nœud ne propose Nexus, il se rabat sur
 la liste de tags de Blurt elle-même, qui ne garde un article que jusqu’à
 son paiement, au bout de sept jours, et trouve les articles plus anciens
 dans l’historique des comptes qu’il a vus publier sous le tag sur cet
-appareil.
+appareil. Même quand Nexus répond, ForkBuild lit aussi la liste de tags,
+au cas où Nexus omettrait un article ; si c’est le cas, il lit aussi
+l’historique de ce compte, pour que ses articles plus anciens ne manquent
+pas non plus.
 
 Quand aucun nœud Blurt n’est joignable, **Rechercher de nouveaux
 commentaires** et la découverte de Snapshots indiquent que Blurt est

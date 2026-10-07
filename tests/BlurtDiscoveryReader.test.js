@@ -118,7 +118,8 @@ function plantPost(chain, { author, permlink, json_metadata, parent_permlink = '
 }
 
 // Nexus lists every post under the tag, paid out or not, so a fresh device
-// finds old builds without following anyone, and nothing else is read.
+// finds old builds without following anyone. The tag listing is read beside
+// it; when it shows nothing Nexus missed, no history is read.
 {
     const chain = fakeBlurtChain({ nexus: true });
     // A month on, so every post is paid out but after the first month read.
@@ -132,7 +133,9 @@ function plantPost(chain, { author, permlink, json_metadata, parent_permlink = '
     assert(result.nexus && result.outcome === 'found' && result.announcements.length === 150, `every paid-out build post is found through Nexus, across pages (got ${result.announcements.length})`);
     assert(new Set(result.announcements.map((a) => a.envelope.n)).size === 150, 'none twice where pages meet');
     const methods = new Set(chain.calls.map((call) => call.method));
-    assert(!methods.has('condenser_api.get_discussions_by_created') && !methods.has('condenser_api.get_discussions_by_author_before_date'), 'nothing else is read when Nexus answers');
+    assert(methods.has('condenser_api.get_discussions_by_created'), 'the tag listing is read beside Nexus');
+    assert(!methods.has('condenser_api.get_discussions_by_author_before_date'), 'no history is read when Nexus missed nothing');
+    assert(result.nexusMissed.length === 0 && result.sourcesRead === 2, 'Nexus and the tag both count as read');
 
     // A node without Nexus is skipped for one that has it.
     const plain = fakeBlurtChain();
@@ -142,4 +145,59 @@ function plantPost(chain, { author, permlink, json_metadata, parent_permlink = '
     });
     assert((await both.read('publication')).announcements.length === 150, 'the next node that serves Nexus answers');
     console.log('✓ Nexus');
+}
+
+// Nexus leaves out posts it counts as muted or grayed, and an operator's
+// Nexus can lag or filter. The tag listing shows a recent post it missed,
+// and that author's history brings back their older, paid-out posts too.
+{
+    const chain = fakeBlurtChain({ nexus: true });
+    chain.time += 31 * DAY;
+    const plantBuild = (author, permlink, n, ageMs) => {
+        const [, op] = blurtBuildPostOperation({ author, permlink, state: { ...emptyBlurtBuildPost(), announcements: [{ family: 'publication', envelope: { n } }] } });
+        plantPost(chain, { author, permlink, json_metadata: op.json_metadata, ageMs });
+    };
+    plantBuild('dave', 'forkbuild-dave-old', 1, 20 * DAY);
+    plantBuild('dave', 'forkbuild-dave-new', 2, 1 * DAY);
+    plantBuild('erin', 'forkbuild-erin-old', 3, 20 * DAY);
+    plantBuild('erin', 'forkbuild-erin-new', 4, 2 * DAY);
+    // This Nexus never lists dave.
+    const filtering = async (url, init) => {
+        const response = await chain.fetchImpl(url, init);
+        if (JSON.parse(init.body).method !== 'bridge.get_ranked_posts') return response;
+        const reply = await response.json();
+        return { ok: true, status: 200, json: async () => ({ ...reply, result: reply.result.filter((post) => post.author !== 'dave') }) };
+    };
+    const known = new BlurtKnownAuthorStore(new InMemoryStorageProvider());
+    const reader = createBlurtDiscoveryReader({ rpc: createBlurtRpcClient({ nodes: ['https://a'], fetchImpl: filtering }), knownAuthors: known, clock: () => chain.time });
+    const result = await reader.read('publication');
+    const found = result.announcements.map((a) => a.envelope.n).sort();
+    assert(result.nexus && found.join() === '1,2,3,4', `the missed author's recent and paid-out posts are found (got ${found})`);
+    assert(result.nexusMissed.length === 1 && result.nexusMissed[0].author === 'dave' && result.nexusMissed[0].permlink === 'forkbuild-dave-new', 'the post Nexus missed is reported');
+    const histories = chain.calls.filter((call) => call.method === 'condenser_api.get_discussions_by_author_before_date').map((call) => call.params[0]);
+    assert(histories.join() === 'dave', `only the missed author's history is read (got ${histories})`);
+    assert(result.sourcesRead === 3 && known.list().includes('dave'), 'Nexus, the tag and one history are read, and the missed author is remembered');
+
+    // A Nexus that lists nothing reads at most as many histories as are remembered.
+    const empty = async (url, init) => {
+        if (JSON.parse(init.body).method !== 'bridge.get_ranked_posts') return chain.fetchImpl(url, init);
+        return { ok: true, status: 200, json: async () => ({ jsonrpc: '2.0', id: 1, result: [] }) };
+    };
+    const before = chain.calls.length;
+    const capped = await createBlurtDiscoveryReader({ rpc: createBlurtRpcClient({ nodes: ['https://a'], fetchImpl: empty }), clock: () => chain.time, maxMissedAuthors: 1 }).read('publication');
+    const read = chain.calls.slice(before).filter((call) => call.method === 'condenser_api.get_discussions_by_author_before_date').map((call) => call.params[0]);
+    assert(capped.nexusMissed.length === 2 && read.join() === 'dave', `missed authors are read newest post first, up to the cap (got ${read})`);
+    console.log('✓ Nexus cross-checked against the tag');
+}
+
+// Nexus answering is enough when the tag listing can't be read.
+{
+    const chain = fakeBlurtChain({ nexus: true, overrides: { 'https://a': { 'condenser_api.get_discussions_by_created': () => { throw new Error('no tags plugin'); } } } });
+    const [, op] = blurtBuildPostOperation({ author: 'frank', permlink: 'forkbuild-f', state: { ...emptyBlurtBuildPost(), announcements: [{ family: 'snapshot', envelope: { n: 1 } }] } });
+    plantPost(chain, { author: 'frank', permlink: 'forkbuild-f', json_metadata: op.json_metadata });
+    const result = await readerFor(chain).read('snapshot');
+    assert(result.outcome === 'found' && result.nexus && result.sourcesRead === 1, 'Nexus\'s answer still counts');
+    assert(result.sourcesUnavailable.length === 1 && result.sourcesUnavailable[0].source === '#forkbuild-snapshot', 'the tag is reported unavailable');
+    assert(result.nexusMissed.length === 0, 'nothing is reported missed without the tag');
+    console.log('✓ Nexus without the tag');
 }
