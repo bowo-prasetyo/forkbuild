@@ -55,7 +55,7 @@ sends anything.
 | **Any publication's content hash** (a World, an authorship claim or a place name) | — | — | Bitcoin, Arweave, Base, Steem or Blurt | The publication's card on the **Publications** page |
 | **Authorship of a structure** (Blueprint Attribution) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** in the structure's **Info** panel, offered once you **Publish to Network**; the **Publications** page |
 | **A place name** (Place Naming Claim) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** in World View's naming panel, offered once you **Publish A Name** (it announces the name on the network you pick); the **Publications** page for any of these |
-| **A comment** on a publication | — | Nostr, Arweave, Steem or Blurt, or none (**Local & peers only**) | — | **Post Comment**, in the Repository or World View, on the network chosen beside it |
+| **A comment** on a publication | — | Nostr, Arweave, Steem or Blurt, or none (**Local & peers only**) | — | **Post Comment**, in the Repository or World View, on the network chosen beside it; later, **Distribute** under your own comment |
 
 A World's Snapshot carries your signed placement with it, so people who
 fetch it see the build exactly where you put it.

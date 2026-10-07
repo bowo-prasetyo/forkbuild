@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: eac2cc58e3fb338f -->
+<!-- translation-of: docs/Privacy.md source-hash: 21e6aad444ba5278 -->
 # Confidentialité
 
 <!-- languages -->
@@ -43,6 +43,8 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
 - les identifiants des publications que vous avez dépubliées sur cet
   appareil, pour que la recherche du Dépôt sur les réseaux ne liste plus
   les copies que vous aviez distribuées.
+- à quels réseaux cet appareil a envoyé chacun de vos commentaires, et
+  quand, pour que chaque commentaire puisse indiquer où il est allé.
 
 Effacer les données de ce site dans le navigateur supprime tout cela, et
 il n’existe aucune autre copie ni aucun moyen de le récupérer.

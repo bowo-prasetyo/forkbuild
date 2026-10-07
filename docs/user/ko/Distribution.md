@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 58b14791cd9c7c74 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 2b55b8fafeab85c5 -->
 # 작품 배포하기
 
 <!-- languages -->
@@ -56,7 +56,7 @@ ForkBuild가 만드는 모든 것은 내 기기에서 시작합니다. **배포*
 | **모든 게시물의 콘텐츠 해시**(월드, 저작자 클레임, 장소 이름) | — | — | Bitcoin, Arweave, Base, Steem, Blurt | **게시물** 페이지의 그 게시물 카드 |
 | **구조물의 저작자**(설계도 저작자 표시) | Arweave, IPFS, Steem, Blurt | Nostr, Arweave, Steem, Blurt | — | 구조물 **정보** 패널의 **배포**(**네트워크에 게시**하면 제공됨), **게시물** 페이지 |
 | **장소 이름**(장소 이름 클레임) | Arweave, IPFS, Steem, Blurt | Nostr, Arweave, Steem, Blurt | — | 월드 보기 이름 패널의 **배포**(**이름 게시**하면 제공되며, 고른 네트워크에 이름을 공지함), 이 모든 것에 대해 **게시물** 페이지 |
-| 게시물에 단 **댓글** | — | Nostr, Arweave, Steem, Blurt, 또는 없음(**로컬 및 피어만**) | — | 저장소나 월드 보기의 **댓글 게시**, 그 옆에서 고른 네트워크로 |
+| 게시물에 단 **댓글** | — | Nostr, Arweave, Steem, Blurt, 또는 없음(**로컬 및 피어만**) | — | 저장소나 월드 보기의 **댓글 게시**, 그 옆에서 고른 네트워크로. 나중에는 내 댓글 아래의 **배포** |
 
 월드의 스냅샷에는 내 서명된 배치가 함께 담기므로, 가져간 사람은 내가 놓은 그
 자리에서 작품을 봅니다.

@@ -1,5 +1,6 @@
 import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';
 import CommentaryDistributionPicker, { commentarySavedText } from './CommentaryDistributionPicker.js';
+import CommentaryNetworkDistribution from './CommentaryNetworkDistribution.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { createId } from '../../core/createId.js';
 import { errorText, t } from '../i18n/i18n.js';
@@ -48,7 +49,7 @@ import { errorText, t } from '../i18n/i18n.js';
 // delivery/receipt claim.
 export default {
     name: 'PublicationCommentarySection',
-    components: { PublicationCommentaryRemoteCheck, CommentaryDistributionPicker },
+    components: { PublicationCommentaryRemoteCheck, CommentaryDistributionPicker, CommentaryNetworkDistribution },
     inject: {
         getPublicationCommentariesCommand: { default: null },
         addPublicationCommentaryCommand: { default: null },
@@ -167,6 +168,7 @@ export default {
                 >
                     <span class="publication-commentary-author">{{ commentary.authorIdentityId }}</span>
                     <p class="publication-commentary-content">{{ commentary.content }}</p>
+                    <CommentaryNetworkDistribution :commentary="commentary" />
                 </li>
             </ul>
 

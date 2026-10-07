@@ -76,6 +76,7 @@ export const encounterInspectionPanelTemplate = `<div v-if="selectedEncounter" c
                             >
                                 <span class="world-encounter-commentary-author">{{ commentary.authorIdentityId }}</span>
                                 <p class="world-encounter-commentary-content">{{ commentary.content }}</p>
+                                <CommentaryNetworkDistribution :commentary="commentary" />
                             </li>
                         </ul>
 

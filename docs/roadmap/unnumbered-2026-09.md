@@ -4186,3 +4186,29 @@ someone with no network account had to switch the picker on every comment.
 - Tests: `tests/CommentaryDistributionDefault.test.js` (the fallback, the store, the distributor's fallback, the
   settings section, and each comment form's starting choice). Four older Repository comment tests now seed the form
   through the renamed injection.
+
+## Distribute a comment after posting it (unnumbered, 2026-10-07)
+
+A comment went to a network only when it was posted. Someone who posted with **Local & peers only**, then made an
+account on a network, had no way to put the comment there, and nothing said where a comment had gone.
+
+- **Under each of your own comments**, in all four comment lists (the Repository's, My Shared World's and both World
+  Encounter panels'), `ui/components/CommentaryNetworkDistribution.js` says which networks this device sent it to, or
+  that it hasn't sent it to any yet, and offers **Distribute**: a network picker (the shared picker without Local &
+  peers only, Steem and Blurt account hints included), **Send** and **Cancel**. It shows only for the signed-in
+  author, because only the author can sign the comment for a network. A network the comment already went to from
+  this device is marked and can't be sent to again. The result is shown: "Sent to Arweave.", the app's own refusal,
+  or the network's error with server names removed (`sanitizeDistributionErrorMessage()`).
+- `createSavedPublicationCommentaryDistributor()` (`PublicationCommentaryDistributor.js`) sends one saved comment to
+  one network and waits: it resolves the logged entry, and rejects with a `UserFacingError` naming the network when
+  it isn't set up on this device or declines. Posting still never waits.
+- `PublicationCommentaryDistributionLog` (`own-commentary-distributions`, backed up with your publications) keeps
+  one entry per comment and network. Posting now records the network once it accepts the comment, and the component
+  listens, so a network that answers late still shows.
+- `ui/main.js` gains `publicationCommentarySubstrateFor()`, shared by posting and Distribute. A known network that
+  isn't set up on this device (Steem or Blurt without a runtime) now gets nothing instead of silently going to Nostr,
+  so the log never names a network the comment didn't go to. An unknown value still means Nostr.
+- Thirteen new messages, in every language; "How comments travel" and the Distribution table in the user guide, in
+  every language; docs/Architecture.md; docs/Privacy.md (the new record on the device).
+- Tests: `tests/CommentaryNetworkDistribution.test.js` (the log, posting's record, Distribute with the real
+  exchange signing, including refusing someone else's comment, and the component).

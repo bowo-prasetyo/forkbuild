@@ -11,6 +11,7 @@ import { diagnosticToolsSectionTemplate } from './ownPublicationPanel/templates/
 import { commentarySectionTemplate } from './ownPublicationPanel/templates/commentarySection.js';
 import PublicationShareLink from './PublicationShareLink.js';
 import CommentaryDistributionPicker, { commentarySavedText } from './CommentaryDistributionPicker.js';
+import CommentaryNetworkDistribution from './CommentaryNetworkDistribution.js';
 import { errorText, t } from '../i18n/i18n.js';
 
 // Actions on the local user's own current Publication in World View:
@@ -52,7 +53,7 @@ import { errorText, t } from '../i18n/i18n.js';
 
 export default {
     name: 'OwnPublicationPanel',
-    components: { WorldDistributionDialog, PublicationCommentaryRemoteCheck, PublicationShareLink, CommentaryDistributionPicker },
+    components: { WorldDistributionDialog, PublicationCommentaryRemoteCheck, PublicationShareLink, CommentaryDistributionPicker, CommentaryNetworkDistribution },
     inject: {
         identityUseCase: { default: null }
     },

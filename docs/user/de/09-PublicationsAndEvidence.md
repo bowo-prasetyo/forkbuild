@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 61f5896ed45c5ccc -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 01594ad476095742 -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -360,6 +360,16 @@ einem Netzwerk finden.
 Damit jedes Kommentarformular damit beginnt, wählen Sie es unter
 **Kommentare** auf der Seite [Anbieter für Ankündigung /
 Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung).
+
+Inzwischen ein Netzwerkkonto angelegt, oder soll ein Kommentar auch in ein
+anderes Netzwerk? Unter jedem Ihrer eigenen Kommentare steht, an welche
+Netzwerke dieses Gerät ihn gesendet hat, oder *Von diesem Gerät noch an kein
+Netzwerk gesendet.* **Verteilen** sendet ihn dort an das gewählte Netzwerk
+und meldet, ob es geklappt hat; ein Netzwerk, an das er schon ging, ist
+markiert und kann nicht erneut gewählt werden. Nur die angemeldete Autorin
+oder der angemeldete Autor sieht das, denn nur sie können den Kommentar für
+ein Netzwerk signieren, und die Zeile kennt nur, was dieses Gerät gesendet
+hat.
 
 Die Kommentare anderer erreichen Sie:
 

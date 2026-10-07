@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 61f5896ed45c5ccc -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 01594ad476095742 -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -347,6 +347,14 @@ después en una red.
 Para que todos los formularios de comentarios empiecen con ella, elíjala en
 **Comentarios** en la página [Proveedor de anuncio /
 descubrimiento](10-NetworkSettings.md#proveedor-de-anuncio--descubrimiento).
+
+¿Creó después una cuenta en una red, o quiere un comentario también en otra
+red? Bajo cada uno de sus comentarios, una línea indica a qué redes lo envió
+este dispositivo, o *Aún no se envió a ninguna red desde este dispositivo.*
+**Distribuir** ahí lo envía a la red que elija e indica si funcionó; una red
+a la que ya se envió aparece marcada y no se puede volver a elegir. Solo lo
+ve el autor del comentario con la sesión iniciada, porque solo él puede
+firmarlo para una red, y la línea solo sabe lo que envió este dispositivo.
 
 Los comentarios de otras personas le llegan:
 

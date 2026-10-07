@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 61f5896ed45c5ccc -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 01594ad476095742 -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -353,6 +353,15 @@ le trouver plus tard sur un réseau.
 Pour que chaque formulaire de commentaire démarre dessus, choisissez-le sous
 **Commentaires** sur la page [Fournisseur d’annonce / de
 découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte).
+
+Vous avez créé un compte réseau depuis, ou voulez un commentaire sur un
+autre réseau aussi ? Sous chacun de vos commentaires, une ligne indique à
+quels réseaux cet appareil l’a envoyé, ou *Pas encore envoyé à un réseau
+depuis cet appareil.* **Distribuer** l’envoie alors au réseau choisi et
+indique si cela a fonctionné ; un réseau où il est déjà allé est signalé et
+ne peut pas être choisi à nouveau. Seul l’auteur du commentaire, connecté,
+le voit, car lui seul peut signer le commentaire pour un réseau, et la ligne
+ne connaît que ce que cet appareil a envoyé.
 
 Les commentaires des autres vous parviennent :
 

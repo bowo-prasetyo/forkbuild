@@ -28,7 +28,9 @@ export default {
     inject: { steemAnnouncingConfigurationStore: { default: null }, blurtAnnouncingConfigurationStore: { default: null } },
     props: {
         modelValue: { type: String, default: 'nostr' },
-        disabled: { type: Boolean, default: false }
+        disabled: { type: Boolean, default: false },
+        // Distribute, on a saved comment, sends to a network: no "Local & peers only".
+        networksOnly: { type: Boolean, default: false }
     },
     emits: ['update:modelValue'],
     computed: {
@@ -69,7 +71,7 @@ export default {
                     <option value="blurt">Blurt</option>
                     <option value="nostr">Nostr</option>
                     <option value="steem">Steem</option>
-                    <option value="${LOCAL_AND_PEERS_ONLY}">{{ t('publicationCommentarySection.localAndPeersOnly') }}</option>
+                    <option v-if="!networksOnly" value="${LOCAL_AND_PEERS_ONLY}">{{ t('publicationCommentarySection.localAndPeersOnly') }}</option>
                 </select>
             </label>
             <p v-if="steemUnreadiness()" class="form-hint publication-commentary-steem-hint">{{ steemUnreadiness() }}</p>

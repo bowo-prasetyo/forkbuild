@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 61f5896ed45c5ccc -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 01594ad476095742 -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -347,6 +347,16 @@ bisa menemukannya di jaringan nanti.
 Agar setiap formulir komentar dimulai dengan pilihan itu, pilih di bawah
 **Komentar** pada halaman [Penyedia Pengumuman /
 Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan).
+
+Sudah membuat akun jaringan, atau ingin komentar ada di jaringan lain juga?
+Di bawah setiap komentar Anda sendiri, sebuah baris menyebut jaringan mana
+saja yang sudah menerima komentar itu dari perangkat ini, atau *Belum
+dikirim ke jaringan mana pun dari perangkat ini.* **Distribusikan** di sana
+mengirimnya ke jaringan yang Anda pilih dan memberi tahu apakah berhasil;
+jaringan yang sudah menerimanya ditandai dan tidak bisa dipilih lagi. Hanya
+penulis komentar yang sedang masuk yang melihatnya, karena hanya dia yang
+bisa menandatangani komentar untuk jaringan, dan baris itu hanya tahu apa
+yang dikirim perangkat ini.
 
 Komentar orang lain sampai kepada Anda:
 

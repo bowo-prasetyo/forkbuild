@@ -1441,6 +1441,10 @@ Credentials are never stored. The remote-pinning credential is kept only in tab 
       2. PublicationCommentaryDistributionPeerExchange.announce()   WebRTC, best effort
       3. Nostr (NostrMultiRelayPublicationCommentaryDistribution) OR Arweave OR Steem OR Blurt — one, best effort;
          none for LOCAL_AND_PEERS_ONLY ('peers', "Local & peers only")
+         an accepted publish is recorded in PublicationCommentaryDistributionLog
+
+    distributeSavedPublicationCommentaryCommand (Distribute, under your own comment)
+      exportCommentary() (author only) -> one network's publish(), awaited -> PublicationCommentaryDistributionLog
 
     refreshPublicationCommentaryCommand (on open / "Check for new comments")
       Discover...FromNostrUseCase + ...FromArweaveUseCase + ...FromSteemUseCase + ...FromBlurtUseCase
@@ -1460,6 +1464,14 @@ comment carries no choice. `ui/main/composeContentAndSnapshots.js` resolves it o
 `CommentaryDistributionPreferenceStore`, else the Announcement / Discovery preference. It is kept apart from
 `RoleProviderPreferenceStore` because Local & peers only is a choice only comments have: Snapshots, claims and place
 names are always announced on a network.
+
+`ui/components/CommentaryNetworkDistribution.js` sits under every comment in all four lists and shows only for the
+signed-in author: the networks `PublicationCommentaryDistributionLog` (`own-commentary-distributions`) recorded for
+that comment, and **Distribute**, which sends it to one network with `createSavedPublicationCommentaryDistributor()`.
+That call waits for the network and rejects with a `UserFacingError` when the network isn't set up or declines;
+posting still never waits. Both share `publicationCommentarySubstrateFor()` in `ui/main.js`, which returns null for a
+network that isn't set up rather than another network, so the log names the network that was asked. The log only
+knows what this device sent.
 
 ## Decentralized publications, anchoring and evidence
 

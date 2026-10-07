@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: eac2cc58e3fb338f -->
+<!-- translation-of: docs/Privacy.md source-hash: 21e6aad444ba5278 -->
 # Privasi
 
 <!-- languages -->
@@ -44,6 +44,8 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
 - ID publikasi yang Anda batalkan penerbitannya di perangkat ini, agar
   pencarian Repositori di jaringan tidak mencantumkan lagi salinan yang
   pernah Anda distribusikan.
+- jaringan mana saja yang menerima setiap komentar Anda dari perangkat ini,
+  dan kapan, agar setiap komentar bisa menunjukkan ke mana ia dikirim.
 
 Menghapus data situs ini di browser akan menghapus semuanya, dan tidak ada
 salinan lain maupun cara untuk memulihkannya. Cadangkan terlebih dahulu
