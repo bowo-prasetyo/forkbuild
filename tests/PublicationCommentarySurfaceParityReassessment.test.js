@@ -227,7 +227,7 @@ function cardCtx(overrides = {}) {
 function listCtx(overrides = {}) {
     const ctx = {
         getPublicationCommentariesCommand: null, addPublicationCommentaryCommand: null,
-        identityUseCase: null, defaultAnnouncementDiscoveryProvider: null,
+        identityUseCase: null, defaultCommentaryDistributionProvider: null,
         openCommentaryIds: {},
         isCommentaryOpen: PublicationList.methods.isCommentaryOpen,
         ...overrides
@@ -240,7 +240,7 @@ function listCtx(overrides = {}) {
                 getPublicationCommentariesCommand: ctx.getPublicationCommentariesCommand,
                 addPublicationCommentaryCommand: ctx.addPublicationCommentaryCommand,
                 identityUseCase: ctx.identityUseCase,
-                defaultAnnouncementDiscoveryProvider: ctx.defaultAnnouncementDiscoveryProvider,
+                defaultCommentaryDistributionProvider: ctx.defaultCommentaryDistributionProvider,
                 refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
                 submitCommentary: PublicationCommentarySection.methods.submitCommentary
             };

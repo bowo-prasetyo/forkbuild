@@ -16,6 +16,7 @@ export const publicationSectionTemplate = `<!--
                         :defaultContentDistributionProvider="defaultContentDistributionProvider"
                         :publicationDistributionCommand="distributeWorldEncounterPublication"
                         :defaultDiscoveryDistributionProvider="defaultAnnouncementDiscoveryProvider"
+                        :defaultCommentaryDistributionProvider="defaultCommentaryDistributionProvider"
                         :discoverSnapshotCommand="discoverOwnSnapshot"
                         :exportSnapshotCommand="exportOwnSnapshot"
                         :discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"

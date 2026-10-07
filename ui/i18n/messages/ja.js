@@ -3551,6 +3551,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.savingHereTakesEffectThe': 'ここでの保存は、次にアプリを読み込んだときに反映されます — すでに進行中の告知は変わりません。',
     'announcementDiscoveryProviderSettingsView.saved': '保存しました。',
     'announcementDiscoveryProviderSettingsView.save': '保存',
+    'announcementDiscoveryProviderSettingsView.comments': 'コメント',
+    'announcementDiscoveryProviderSettingsView.commentsFollow': '上の告知 / 発見サービスと同じ',
+    'announcementDiscoveryProviderSettingsView.commentsHint': '各コメント欄で最初に選ばれているネットワークです。コメントごとに コメントを投稿 の横で変更できます。「ローカルとピアのみ」を選ぶと、コメントはどのネットワークにも載らないため、ネットワークのアカウントは不要です。上の選択と同じく、保存は次にアプリを読み込んだときに反映されます。',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Arweaveゲートウェイ',

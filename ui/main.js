@@ -168,7 +168,8 @@ let publicationCommentarySteemDistribution = null;
 let publicationCommentaryBlurtDistribution = null;
 
 // Sends a saved comment to connected peers and at most one network, chosen per
-// comment or else the saved preference. Read on each call: the networks are set
+// comment or else the saved comment default (which falls back to the
+// Announcement / Discovery preference). Read on each call: the networks are set
 // up later in this file. World View saves its comments through its own session
 // and hands them here.
 const distributePublicationCommentaryCommand = createPublicationCommentaryDistributor({
@@ -179,7 +180,7 @@ const distributePublicationCommentaryCommand = createPublicationCommentaryDistri
         steem: publicationCommentarySteemDistribution,
         blurt: publicationCommentaryBlurtDistribution
     }[provider] ?? publicationCommentaryNostrDistribution),
-    defaultProvider: () => resolvedAnnouncementDiscoveryProvider
+    defaultProvider: () => resolvedCommentaryDistributionProvider
 });
 
 // Creates the comment locally first, then distributes it; distribution never
@@ -238,6 +239,7 @@ const {
     publicationCatalogContentResolver, snapshotPlacementStoreRegistry, snapshotPlacementCreationCoordinator,
     roleProviderPreferenceStore, preferredSnapshotPlacementCreationCoordinator,
     setRoleProviderPreferenceUseCase, resolvedAnnouncementDiscoveryProvider,
+    commentaryDistributionPreferenceStore, resolvedCommentaryDistributionProvider,
     localSnapshotContentAvailabilityUseCase, storeSnapshotContentUseCase,
     snapshotContentMaterializationCoordinator, exportSnapshotCommand,
     snapshotPlacementMaterializationCoordinator, snapshotPeerMaterializationCoordinator,
@@ -386,6 +388,10 @@ app.provide('setRoleProviderPreferenceUseCase', setRoleProviderPreferenceUseCase
 // Only a seed for each Announcement/Discovery picker's own selection, never
 // read again after the picker mounts.
 app.provide('defaultAnnouncementDiscoveryProvider', resolvedAnnouncementDiscoveryProvider);
+// The same, for each comment form's network picker.
+app.provide('defaultCommentaryDistributionProvider', resolvedCommentaryDistributionProvider);
+// The Announcement / Discovery settings page saves the comment default here.
+app.provide('commentaryDistributionPreferenceStore', commentaryDistributionPreferenceStore);
 app.provide('localSnapshotContentAvailabilityUseCase', localSnapshotContentAvailabilityUseCase);
 app.provide('snapshotContentMaterializationCoordinator', snapshotContentMaterializationCoordinator);
 app.provide('exportSnapshotCommand', exportSnapshotCommand);

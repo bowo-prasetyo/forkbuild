@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 3a000cc71ab8702b -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 6e7a59baf45b6d4f -->
 # 10 — Configurações de rede
 
 <!-- languages -->
@@ -88,6 +88,13 @@ só um padrão: toda caixa de diálogo **Distribuir**, o seletor de Distribuiç�
 de cada cartão no Repositório e o seletor de rede ao lado de **Publicar
 comentário** começam nele, e você pode trocá-los para uma ação.
 Encontrar o conteúdo de outras pessoas sempre pesquisa todos eles.
+
+Uma segunda seção, **Comentários**, dá aos comentários um padrão próprio.
+**Igual ao provedor de anúncio / descoberta acima**, a opção inicial, os
+mantém na escolha acima. Escolha uma rede, ou **Somente local e pares** para
+manter os comentários fora de qualquer rede, sem precisar de conta em
+nenhuma. Todo formulário de comentário começa nela, e você ainda pode
+trocá-la em um comentário ao lado de **Publicar comentário**.
 
 ## Provedor de prova / ancoragem
 

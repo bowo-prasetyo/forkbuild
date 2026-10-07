@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 3a000cc71ab8702b -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 6e7a59baf45b6d4f -->
 # 10 — Paramètres réseau
 
 <!-- languages -->
@@ -96,6 +96,14 @@ dialogue **Distribuer**, le sélecteur de Distribution de chaque carte du
 Dépôt et le sélecteur de réseau à côté de **Publier le commentaire**
 démarrent dessus, et vous pouvez en changer pour une action. Chercher le
 contenu des autres les interroge toujours tous.
+
+Une seconde section, **Commentaires**, donne aux commentaires leur propre
+choix par défaut. **Comme le fournisseur d’annonce / de découverte
+ci-dessus**, le réglage initial, les garde sur le choix ci-dessus.
+Choisissez plutôt un réseau, ou **Local et pairs uniquement** pour garder
+les commentaires hors de tout réseau, sans compte réseau nécessaire. Chaque
+formulaire de commentaire démarre dessus, et vous pouvez toujours changer un
+commentaire à côté de **Publier le commentaire**.
 
 ## Fournisseur de Preuve / Ancrage
 

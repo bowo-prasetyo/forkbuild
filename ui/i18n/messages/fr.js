@@ -3554,6 +3554,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.savingHereTakesEffectThe': 'L’enregistrement ici prend effet au prochain chargement de l’application — il ne change jamais une annonce déjà en cours.',
     'announcementDiscoveryProviderSettingsView.saved': 'Enregistré.',
     'announcementDiscoveryProviderSettingsView.save': 'Enregistrer',
+    'announcementDiscoveryProviderSettingsView.comments': 'Commentaires',
+    'announcementDiscoveryProviderSettingsView.commentsFollow': 'Comme le fournisseur d’annonce / de découverte ci-dessus',
+    'announcementDiscoveryProviderSettingsView.commentsHint': 'Le réseau sur lequel démarre chaque formulaire de commentaire. Vous pouvez toujours le changer à côté de « Publier le commentaire » pour n’importe quel commentaire. « Local et pairs uniquement » garde vos commentaires hors de tout réseau, sans compte réseau nécessaire. Comme pour le choix ci-dessus, l’enregistrement prend effet au prochain chargement de l’application.',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Passerelle Arweave',

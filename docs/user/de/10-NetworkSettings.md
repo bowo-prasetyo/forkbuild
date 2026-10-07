@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 3a000cc71ab8702b -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 6e7a59baf45b6d4f -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
@@ -94,6 +94,14 @@ die Verteilungsauswahl auf jeder Karte im Repository und die
 Netzwerkauswahl neben **Kommentar senden** beginnen damit, und Sie können
 sie für eine Aktion umstellen. Die Suche nach Inhalten anderer Personen
 durchsucht immer alle.
+
+Ein zweiter Abschnitt, **Kommentare**, gibt Kommentaren einen eigenen
+Standard. **Wie der Anbieter für Ankündigung / Entdeckung oben**, die
+Voreinstellung, behält die Auswahl oben bei. Wählen Sie stattdessen ein
+Netzwerk oder **Nur lokal & Peers**, damit Kommentare in keinem Netzwerk
+landen; dafür brauchen Sie kein Netzwerkkonto. Jedes Kommentarformular
+beginnt damit, und neben **Kommentar senden** können Sie es für einen
+Kommentar weiterhin ändern.
 
 ## Nachweis-/Verankerungsanbieter
 

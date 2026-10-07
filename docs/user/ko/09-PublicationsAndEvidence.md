@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 548f42ada7a113cb -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 61f5896ed45c5ccc -->
 # 09 — 게시물과 외부 증거
 
 <!-- languages -->
@@ -282,6 +282,9 @@ X라고 부른다” 같은 **서명된 클레임**과, 클레임에 더할 수 
 기기에 저장되고 지금 연결된 피어에게만 보내지므로 네트워크 계정이 필요 없습니다.
 게시할 때 연결되어 있지 않은 사람은 받지 못하며, 나중에 네트워크에서 찾을 수도
 없습니다.
+모든 댓글 양식이 처음부터 이것을 고르게 하려면 [공지 / 발견
+제공자](10-NetworkSettings.md#공지--발견-제공자) 페이지의
+**댓글**에서 고르세요.
 
 다른 사람의 댓글은 이렇게 도착합니다:
 

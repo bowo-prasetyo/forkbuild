@@ -4161,3 +4161,28 @@ the comment is saved on this device and announced to connected peers, and publis
 - Tests: `tests/WorldViewCommentaryDistribution.test.js` (peers-only announces and publishes nowhere, picked or
   saved; the hint; the label and status line); `tests/PublicationCommentaryDistributionProviderSelector.test.js`
   follows the Repository form to the shared picker.
+
+## A default network for comments (unnumbered, 2026-10-07)
+
+**Local & peers only** could only be picked per comment: every comment form started on the Announcement / Discovery
+provider, which can't be "none" because Snapshots, claims and place names are always announced on a network. So
+someone with no network account had to switch the picker on every comment.
+
+- The Announcement / Discovery Provider page gains a **Comments** section: **Same as the Announcement / Discovery
+  provider above** (the default, nothing saved), a network, or **Local & peers only**, with its own Save. Like the
+  rest of the page, it takes effect the next time the app loads.
+- `core/CommentaryDistributionProvider.js` holds the comment vocabulary (`LOCAL_AND_PEERS_ONLY` moves here from
+  `PublicationCommentaryDistributor.js`, which re-exports it) and `resolveCommentaryDistributionProvider()`: the
+  comment default when one is saved, else the Announcement / Discovery preference.
+- `storage/CommentaryDistributionPreferenceStore.js` keeps it under `commentary-distribution-preference`, separate
+  from the role preferences; device backups restore it with the network settings. An unknown stored value reads as
+  nothing saved.
+- `ui/main.js` provides `defaultCommentaryDistributionProvider` and uses it as the distributor's fallback. The
+  Repository's comment form injects it; World View passes it to My Shared World and the World Encounter panels as a
+  new `defaultCommentaryDistributionProvider` prop, so their publication distribution pickers still start on
+  Announcement / Discovery.
+- Three new messages in every language; "Announcement / Discovery Provider" (Network Settings) and "How comments
+  travel" in the user guide, in every language; docs/Architecture.md.
+- Tests: `tests/CommentaryDistributionDefault.test.js` (the fallback, the store, the distributor's fallback, the
+  settings section, and each comment form's starting choice). Four older Repository comment tests now seed the form
+  through the renamed injection.

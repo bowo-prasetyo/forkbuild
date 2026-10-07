@@ -115,7 +115,7 @@ function listCtx(overrides = {}) {
         getPublicationCommentariesCommand: null,
         addPublicationCommentaryCommand: null,
         identityUseCase: null,
-        defaultAnnouncementDiscoveryProvider: null,
+        defaultCommentaryDistributionProvider: null,
         openCommentaryIds: {},
         isCommentaryOpen: PublicationList.methods.isCommentaryOpen,
         ...overrides
@@ -128,7 +128,7 @@ function listCtx(overrides = {}) {
                 getPublicationCommentariesCommand: ctx.getPublicationCommentariesCommand,
                 addPublicationCommentaryCommand: ctx.addPublicationCommentaryCommand,
                 identityUseCase: ctx.identityUseCase,
-                defaultAnnouncementDiscoveryProvider: ctx.defaultAnnouncementDiscoveryProvider,
+                defaultCommentaryDistributionProvider: ctx.defaultCommentaryDistributionProvider,
                 refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
                 submitCommentary: PublicationCommentarySection.methods.submitCommentary
             };
@@ -532,7 +532,7 @@ async function runTests() {
 
     // ---------------------------------------------------------------
     // Section K — each row's Distribution provider opens on the SAME
-    // injected defaultAnnouncementDiscoveryProvider PublicationCard.js
+    // injected defaultCommentaryDistributionProvider PublicationCard.js
     // reads, and that choice is what submitCommentary() forwards.
     // ---------------------------------------------------------------
     {
@@ -544,7 +544,7 @@ async function runTests() {
 
         const sent = [];
         const saved = listCtx({
-            defaultAnnouncementDiscoveryProvider: 'arweave',
+            defaultCommentaryDistributionProvider: 'arweave',
             addPublicationCommentaryCommand: (input) => { sent.push(input); return { commentary: {}, isNew: true }; }
         });
         assert(saved.rowSection(pub).selectedDiscoveryProvider === 'arweave',
@@ -555,10 +555,10 @@ async function runTests() {
             '51. submitCommentary() forwards the row\'s saved-preference default as discoveryProvider');
 
         const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
-        assert(sectionCode.includes('defaultAnnouncementDiscoveryProvider: { default: null }'),
-            '52. the shared PublicationCommentarySection.js — mounted by both the card and the list — injects defaultAnnouncementDiscoveryProvider');
+        assert(sectionCode.includes('defaultCommentaryDistributionProvider: { default: null }'),
+            '52. the shared PublicationCommentarySection.js — mounted by both the card and the list — injects defaultCommentaryDistributionProvider');
 
-        console.log('✓ Section K: list rows default to the saved Announcement/Discovery provider, like cards');
+        console.log('✓ Section K: list rows default to the saved comment provider, like cards');
     }
 
     console.log('\n✅ All Publication List Commentary Parity tests passed.');

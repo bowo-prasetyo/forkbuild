@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 548f42ada7a113cb -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 61f5896ed45c5ccc -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -357,6 +357,9 @@ lokal & Peers**. Er wird auf Ihrem Gerät gespeichert und nur an die gerade
 verbundenen Peers gesendet, daher brauchen Sie kein Netzwerkkonto. Wer beim
 Senden nicht verbunden ist, erhält ihn nicht, und später kann ihn niemand in
 einem Netzwerk finden.
+Damit jedes Kommentarformular damit beginnt, wählen Sie es unter
+**Kommentare** auf der Seite [Anbieter für Ankündigung /
+Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung).
 
 Die Kommentare anderer erreichen Sie:
 

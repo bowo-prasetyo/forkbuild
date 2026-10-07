@@ -83,6 +83,13 @@ Distribution picker and the network picker next to **Post Comment** start
 on it, and you can switch them for one action.
 Finding other people's content always searches all of them.
 
+A second section, **Comments**, gives comments a default of their own.
+**Same as the Announcement / Discovery provider above**, the default, keeps
+them on the choice above. Choose a network instead, or **Local & peers
+only** to keep comments off every network, which needs no network account.
+Every comment form starts on it, and you can still switch a comment beside
+**Post Comment**.
+
 ## Proof / Anchoring Provider
 
 *Experimental.* Choose where **Anchor on …** (the first button in a

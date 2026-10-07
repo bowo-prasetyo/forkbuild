@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 548f42ada7a113cb -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 61f5896ed45c5ccc -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -331,6 +331,9 @@ pares**. Ele é salvo no seu dispositivo e enviado só aos pares conectados
 naquele momento, então não é preciso conta em nenhuma rede. Quem não estiver
 conectado quando você postar não o recebe, e ninguém poderá encontrá-lo
 depois em uma rede.
+Para que todo formulário de comentário comece nela, escolha-a em
+**Comentários** na página [Provedor de anúncio /
+descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta).
 
 Os comentários das outras pessoas chegam a você:
 

@@ -3554,6 +3554,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.savingHereTakesEffectThe': '여기서 저장한 내용은 다음에 앱을 불러올 때 적용됩니다 — 이미 진행 중인 공지는 바뀌지 않습니다.',
     'announcementDiscoveryProviderSettingsView.saved': '저장했습니다.',
     'announcementDiscoveryProviderSettingsView.save': '저장',
+    'announcementDiscoveryProviderSettingsView.comments': '댓글',
+    'announcementDiscoveryProviderSettingsView.commentsFollow': '위의 공지 / 발견 제공자와 같음',
+    'announcementDiscoveryProviderSettingsView.commentsHint': '각 댓글 양식이 처음 선택하는 네트워크입니다. 댓글마다 ‘댓글 게시’ 옆에서 계속 바꿀 수 있습니다. ‘로컬 및 피어만’을 고르면 댓글이 어떤 네트워크에도 올라가지 않으므로 네트워크 계정이 필요 없습니다. 위의 선택처럼, 저장한 내용은 다음에 앱을 불러올 때 적용됩니다.',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Arweave 게이트웨이',

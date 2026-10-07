@@ -3553,6 +3553,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.savingHereTakesEffectThe': 'Lo que guarde aquí tendrá efecto la próxima vez que se cargue la app; nunca cambia un anuncio que ya está en curso.',
     'announcementDiscoveryProviderSettingsView.saved': 'Guardado.',
     'announcementDiscoveryProviderSettingsView.save': 'Guardar',
+    'announcementDiscoveryProviderSettingsView.comments': 'Comentarios',
+    'announcementDiscoveryProviderSettingsView.commentsFollow': 'Igual que el proveedor de anuncio / descubrimiento de arriba',
+    'announcementDiscoveryProviderSettingsView.commentsHint': 'La red con la que empieza cada formulario de comentarios. Puede cambiarla junto a «Publicar comentario» en cualquier comentario. «Solo local y pares» mantiene sus comentarios fuera de toda red, así que no necesita cuenta en ninguna red. Igual que la opción de arriba, lo que guarde tendrá efecto la próxima vez que se cargue la app.',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Gateway de Arweave',
