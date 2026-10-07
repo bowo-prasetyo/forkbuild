@@ -4,15 +4,23 @@ import { STEEM_DISCOVERY_THREAD_ACCOUNT, isSteemAccountName, isSteemDiscoveryPer
 // first answer wins), the accounts whose discovery threads are read, and
 // the first month read.
 
-// api.steemit.com first, then a long-running community node run by a
-// different operator: reads fall over to it when api.steemit.com doesn't
-// answer. Kept to two because anchoring/SteemProofVerifier.js asks every
-// node and needs all that answer to agree, so each extra node is one more
-// that can report a block as missing.
+// api.steemit.com first, then two long-running community nodes, each run by
+// a different operator: reads fall over to the next when one doesn't answer.
 export const DEFAULT_STEEM_API_NODES = Object.freeze([
     'https://api.steemit.com',
-    'https://api.justyy.com'
+    'https://api.justyy.com',
+    'https://steemd.steemworld.org'
 ]);
+// anchoring/SteemProofVerifier.js asks every node it is given and needs all
+// that answer to agree, so each extra node is one more that can report a
+// block as missing. With the defaults it asks the first two; any other list,
+// such as one someone saved, is asked as it is.
+export const DEFAULT_STEEM_PROOF_NODES = Object.freeze(DEFAULT_STEEM_API_NODES.slice(0, 2));
+
+export function steemProofNodesFor(apiNodes) {
+    const isDefault = apiNodes.length === DEFAULT_STEEM_API_NODES.length && apiNodes.every((node, i) => node === DEFAULT_STEEM_API_NODES[i]);
+    return isDefault ? [...DEFAULT_STEEM_PROOF_NODES] : [...apiNodes];
+}
 export const DEFAULT_STEEM_THREAD_ACCOUNTS = Object.freeze([STEEM_DISCOVERY_THREAD_ACCOUNT]);
 // The first month with discovery threads on the chain.
 export const DEFAULT_STEEM_EARLIEST_PERIOD = '2026-09';

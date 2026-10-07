@@ -4252,3 +4252,30 @@ post it left out was never seen, and nothing said so.
 - Tests: `tests/BlurtDiscoveryReader.test.js` (a Nexus that never lists one author: that author's recent and
   paid-out posts are both found, the missed post is reported, and only that history is read; the cap on missed
   authors; Nexus answering while the tag can't be read). The existing Nexus test now expects the tag listing to be read and no history.
+
+## A third default node for Steem and Blurt, and a substrate/role matrix test (unnumbered, 2026-10-07)
+
+Steem and Blurt each defaulted to two API nodes, so reading had nothing left to fall over to when both were down.
+Nothing checked which substrate serves which of the three roles either: the capability matrix 0.9.292 drew was a
+test removed with the other source-text audits, and the table people quote has only been written from memory since.
+
+- Defaults: Steem adds `https://steemd.steemworld.org`, Blurt adds `https://rpc.drakernoise.com` (seen serving
+  Nexus with paid-out posts, 2026-10-05). Each list is now three operators, tried in order. Neither new node could be
+  reached from the development environment; run `node scripts/check-network-defaults.mjs` before a release.
+- Reading only. The anchor verifiers ask every node they are given and need all that answer to agree, which is why
+  Steem was kept at two nodes (2026-09-26). With nothing saved they now ask only the first two defaults
+  (`DEFAULT_STEEM_PROOF_NODES`, `DEFAULT_BLURT_PROOF_NODES`, through `steemProofNodesFor()`/`blurtProofNodesFor()`
+  in each reading configuration); any other list, such as one someone saved, even the defaults reordered, is asked
+  as it is, as before.
+- `tests/SubstrateRoleMatrix.test.js` builds the matrix from the real providers: Proof & Anchoring from the
+  registries `ui/main/composeAnchoring.js` fills (verifier and evidence view for Bitcoin, Base, Arweave, Steem and
+  Blurt; the shared publisher registry for all but Base, which has its own wallet pipeline), Content from a
+  `SnapshotPlacementStoreRegistry` holding each substrate's `ContentStore`, and Announcement & Discovery, which has
+  no keyed registry, by publishing a Snapshot announcement on Nostr, Arweave, Steem and Blurt and finding it again
+  through that substrate's query service. It then checks the expected table (Arweave, Steem and Blurt serve all
+  three roles; Nostr discovery; IPFS content; Bitcoin and Base anchoring) and that every role has at least three
+  substrates.
+- `tests/DefaultApiNodes.test.js`: three default operators per chain, reading falls over through all three, the
+  verifier asks two with the defaults and any other list as it is.
+- docs/Protocol.md (Steem "Reading" and "Verifying", Blurt "Reading" and "Anchoring"), docs/Privacy.md, and Network
+  Settings and the privacy page in the user guide, in every language.

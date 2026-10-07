@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: cb23254b3ae5523e -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
 # 10 — 네트워크 설정
 
 <!-- languages -->
@@ -156,8 +156,8 @@ ForkBuild가 Nostr로 게시하거나 발견하는 모든 것 — 게시물(공�
 [Steem](11-EvidenceAndStorage.md#steem)을 보세요. Steem에서 읽는 데는 계정이 필요
 없습니다. 페이지의 나머지는 Steem을 읽는 곳을 정합니다:
 
-- **API 노드**, 한 줄에 `https://` URL 하나씩(기본값 `https://api.steemit.com`과
-  `https://api.justyy.com`), 순서대로 시도.
+- **API 노드**, 한 줄에 `https://` URL 하나씩(기본값 `https://api.steemit.com`,
+  `https://api.justyy.com`, `https://steemd.steemworld.org`), 순서대로 시도.
 - **스레드 계정**, 한 줄에 하나씩(기본값 `forkbuild`): 누구의 월간 발견 스레드를
   읽을지. 커뮤니티가 자체 스레드를 운영한다면 추가하세요.
 - **읽기 시작할 달**(기본값 2026년 9월): ForkBuild는 그달부터 지금까지 매달을
@@ -173,8 +173,8 @@ ForkBuild가 Nostr로 게시하거나 발견하는 모든 것 — 게시물(공�
 [Blurt](11-EvidenceAndStorage.md#blurt)를 보세요. Blurt에서 읽는 데는 계정이
 필요 없습니다. 페이지의 나머지는 Blurt를 읽는 곳을 정합니다:
 
-**API 노드**, 한 줄에 `https://` URL 하나(기본값 `https://rpc.blurt.blog`와
-`https://rpc.beblurt.com`), 순서대로 시도합니다. ForkBuild는 게시물을 아무리
+**API 노드**, 한 줄에 `https://` URL 하나(기본값 `https://rpc.blurt.blog`,
+`https://rpc.beblurt.com`, `https://rpc.drakernoise.com`), 순서대로 시도합니다. ForkBuild는 게시물을 아무리
 오래되었어도 모두 보관하는 Blurt의 검색 색인 Nexus로 게시물을 찾으며, Nexus를
 제공하지 않는 노드는 건너뜁니다. Nexus를 제공하는 노드가 없으면 Blurt 자체의
 태그 목록으로 넘어가는데, 이 목록은 게시물을 보상이 지급되는 7일 뒤까지만

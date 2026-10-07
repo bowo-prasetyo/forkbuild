@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: cb23254b3ae5523e -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
 # 10 — ネットワーク設定
 
 <!-- languages -->
@@ -181,7 +181,7 @@ URL でない行が 1 つでもあれば拒否します。
 部分では、Steem をどこから読むかを設定します。
 
 - **APIノード** — `https://` の URL を 1 行に 1 つ（既定は
-  `https://api.steemit.com` と `https://api.justyy.com`）。順番に試され
+  `https://api.steemit.com`、`https://api.justyy.com` と `https://steemd.steemworld.org`）。順番に試され
   ます。
 - **スレッドのアカウント** — 1 行に 1 つ（既定は `forkbuild`）。誰の
   毎月の発見用スレッドを読むかです。コミュニティが独自のスレッドを
@@ -202,7 +202,7 @@ Steem が利用できないことを示します。
 部分では、Blurt をどこから読むかを設定します。
 
 **APIノード** — `https://` の URL を 1 行に 1 つ（既定は
-`https://rpc.blurt.blog` と `https://rpc.beblurt.com`）。順番に試され
+`https://rpc.blurt.blog`、`https://rpc.beblurt.com` と `https://rpc.drakernoise.com`）。順番に試され
 ます。ForkBuild は、どれほど古い投稿も保持している Blurt の検索
 インデックス Nexus を通して投稿を見つけ、Nexus を提供しないノードは
 飛ばします。Nexus を提供するノードがない場合は、Blurt 自身のタグ一覧に

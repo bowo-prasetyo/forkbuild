@@ -853,7 +853,7 @@ its options:
    cached for 10 minutes, since announcers only reply to the current month's thread; the current month is cached
    for 30 seconds, enough to absorb a burst such as place naming asking region by region.
 2. **API nodes.** Readers use a configured list of API nodes (default `https://api.steemit.com`, then
-   `https://api.justyy.com`) and try them in order. Every node serves the same chain, so the first node that answers is enough.
+   `https://api.justyy.com`, then `https://steemd.steemworld.org`, three operators) and try them in order. Every node serves the same chain, so the first node that answers is enough.
 3. **Fetch.** `condenser_api.get_content_replies(threadAccount, threadPermlink)`. A thread that doesn't exist yields
    nothing. A thread whose author isn't a configured thread account is ignored.
 4. **Direct replies only.** Readers accept a reply only when its `parent_author` and `parent_permlink` name the
@@ -1359,13 +1359,14 @@ anchor, against `{ contentHash }`:
 4. The transaction at that position must contain a `custom_json` with `id` `'forkbuild-anchor'`, whose `json` parses
    to `version: 1` and whose `contentHash` equals the anchor's (for a batch anchor: whose `merkleRoot` equals the root
    the path leads to from the anchor's contentHash). Anything else is a definite rejection.
-5. The verifier asks the configured API nodes (Network Settings → Steem, the first three) separately, and every node
+5. The verifier asks the configured API nodes (Network Settings → Steem, the first three of any list but the defaults) separately, and every node
    that answers must agree on the block's id, whether it holds the transaction, and whether that carries the anchor.
    If they disagree, the result is unavailable and names each node's answer. If any answering node doesn't see the
    block as irreversible yet, the result is unavailable. A node that returns a block whose id doesn't start with the
-   requested block number is treated as not answering. The default configuration has two nodes
-   (`https://api.steemit.com` and `https://api.justyy.com`, `DEFAULT_STEEM_API_NODES`), so the default check
-   already compares two independent operators; with only one node configured, nothing is compared.
+   requested block number is treated as not answering. With nothing saved, it asks only the first two default nodes
+   (`https://api.steemit.com` and `https://api.justyy.com`, `DEFAULT_STEEM_PROOF_NODES`), not the third used for
+   reading: the check already compares two independent operators, and each extra node is one more that can hold a
+   valid proof back as unavailable. With only one node configured, nothing is compared.
 6. Every result carries `details`: the block number, whether it is a batch anchor, and the kept evidence checked
    offline (`evidence: { ok, … }` or null); a valid result adds the block's id, `timestamp` (UTC) and `witness`, and
    how many nodes agreed out of how many were asked; a not-yet-final one adds the last irreversible block.
@@ -1583,7 +1584,8 @@ Blurt as unreachable, and publication discovery finds no leads. Nodes may also d
 operator lists as spam (the tags plugin's spam filter); an author's history is not filtered that way.
 
 Reading needs no account. API nodes: Network Settings → Blurt (`blurt-reading-configuration`), tried in order;
-defaults `https://rpc.blurt.blog`, then `https://rpc.beblurt.com` (two operators).
+defaults `https://rpc.blurt.blog`, then `https://rpc.beblurt.com`, then `https://rpc.drakernoise.com` (three
+operators, all serving Nexus).
 
 ### Content
 
@@ -1653,8 +1655,8 @@ can't commit to a Merkle root on behalf of others' builds. That is the only `cus
 
 The proof is `{ blockNum, trxId, chain: 'blurt', batch?: { path }, evidence?, post?: { author, permlink } }` and the
 locator `blurt:<trxId>`. `post` names the build post for people; the verifier never relies on it. Finding the block
-(Keychain's result, else scanning from just before the broadcast), verifying (every configured node up to three,
-asked separately, must agree; not yet irreversible is "unavailable"), finality (`BlurtAnchorFinalityObserver`) and
+(Keychain's result, else scanning from just before the broadcast), verifying (every configured node up to three, or with the
+defaults only the first two, `DEFAULT_BLURT_PROOF_NODES`, asked separately, must agree; not yet irreversible is "unavailable"), finality (`BlurtAnchorFinalityObserver`) and
 the evidence view work as on Steem, with "Blurt witnesses (elected by stake, not proof of work)". A post can be
 edited later, but the verifier reads the operation from its block, so an edit never changes what was anchored.
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: cb23254b3ae5523e -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
 # 10 — Configuración de red
 
 <!-- languages -->
@@ -188,7 +188,7 @@ requiere ninguna cuenta. El resto de la página configura de dónde se lee
 Steem:
 
 - **Nodos de API**, una URL `https://` por línea (predeterminados
-  `https://api.steemit.com` y `https://api.justyy.com`), que se prueban en
+  `https://api.steemit.com`, `https://api.justyy.com` y `https://steemd.steemworld.org`), que se prueban en
   orden.
 - **Cuentas de los hilos**, una por línea (predeterminada `forkbuild`): de
   quién son los hilos de descubrimiento mensuales que se leen. Agregue otra
@@ -209,7 +209,7 @@ no requiere ninguna cuenta. El resto de la página configura de dónde se
 lee Blurt:
 
 **Nodos de API**, una URL `https://` por línea (predeterminados
-`https://rpc.blurt.blog` y `https://rpc.beblurt.com`), que se prueban en
+`https://rpc.blurt.blog`, `https://rpc.beblurt.com` y `https://rpc.drakernoise.com`), que se prueban en
 orden. ForkBuild encuentra las publicaciones a través de Nexus, el índice
 de búsqueda de Blurt, que conserva cada publicación por antigua que sea, y
 omite un nodo que no lo ofrece. Cuando ningún nodo ofrece Nexus, recurre a

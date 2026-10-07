@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: cb23254b3ae5523e -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
 # 10 — Paramètres réseau
 
 <!-- languages -->
@@ -191,7 +191,7 @@ publier ou stocker sur Steem — voir
 aucun compte. Le reste de la page règle d’où Steem est lu :
 
 - **Nœuds API**, une URL `https://` par ligne (valeurs par défaut
-  `https://api.steemit.com` et `https://api.justyy.com`), essayés dans
+  `https://api.steemit.com`, `https://api.justyy.com` et `https://steemd.steemworld.org`), essayés dans
   l’ordre.
 - **Comptes des fils**, un par ligne (par défaut `forkbuild`) : les
   comptes dont les fils de découverte mensuels sont lus. Ajoutez-en un
@@ -213,7 +213,7 @@ publier, stocker ou ancrer sur Blurt — voir
 aucun compte. Le reste de la page règle d’où Blurt est lu :
 
 **Nœuds API**, une URL `https://` par ligne (valeurs par défaut
-`https://rpc.blurt.blog` et `https://rpc.beblurt.com`), essayés dans
+`https://rpc.blurt.blog`, `https://rpc.beblurt.com` et `https://rpc.drakernoise.com`), essayés dans
 l’ordre. ForkBuild trouve les articles par Nexus, l’index de recherche de
 Blurt, qui garde chaque article quel que soit son âge, et ignore un nœud
 qui ne le propose pas. Quand aucun nœud ne propose Nexus, il se rabat sur

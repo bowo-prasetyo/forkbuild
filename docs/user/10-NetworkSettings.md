@@ -167,7 +167,7 @@ immediately, without a reload), needed to post or store on Steem — see
 account. The rest of the page sets where Steem is read from:
 
 - **API nodes**, one `https://` URL per line (defaults
-  `https://api.steemit.com` and `https://api.justyy.com`), tried in order.
+  `https://api.steemit.com`, `https://api.justyy.com` and `https://steemd.steemworld.org`), tried in order.
 - **Thread accounts**, one per line (default `forkbuild`): whose monthly
   discovery threads are read. Add another if a community runs its own
   threads.
@@ -186,7 +186,7 @@ see [Blurt](11-EvidenceAndStorage.md#blurt). Reading from Blurt needs no
 account. The rest of the page sets where Blurt is read from:
 
 **API nodes**, one `https://` URL per line (defaults
-`https://rpc.blurt.blog` and `https://rpc.beblurt.com`), tried in order.
+`https://rpc.blurt.blog`, `https://rpc.beblurt.com` and `https://rpc.drakernoise.com`), tried in order.
 ForkBuild finds posts through Nexus, Blurt's search index, which keeps
 every post however old, and skips a node that doesn't offer it. When no
 node offers Nexus, it falls back to Blurt's own tag list, which keeps a

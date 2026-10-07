@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: cb23254b3ae5523e -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
@@ -189,7 +189,7 @@ Steem ist kein Konto nötig. Der Rest der Seite legt fest, woher Steem
 gelesen wird:
 
 - **API-Knoten**, eine `https://`-URL pro Zeile (Standard
-  `https://api.steemit.com` und `https://api.justyy.com`), der Reihe nach
+  `https://api.steemit.com`, `https://api.justyy.com` und `https://steemd.steemworld.org`), der Reihe nach
   versucht.
 - **Thread-Konten**, eines pro Zeile (Standard `forkbuild`): wessen
   monatliche Entdeckungs-Threads gelesen werden. Fügen Sie ein weiteres
@@ -210,7 +210,7 @@ Zum Lesen von Blurt ist kein Konto nötig. Der Rest der Seite legt fest,
 woher Blurt gelesen wird:
 
 **API-Knoten**, eine `https://`-URL pro Zeile (Standard
-`https://rpc.blurt.blog` und `https://rpc.beblurt.com`), der Reihe nach
+`https://rpc.blurt.blog`, `https://rpc.beblurt.com` und `https://rpc.drakernoise.com`), der Reihe nach
 versucht. ForkBuild findet Beiträge über Nexus, den Suchindex von Blurt,
 der jeden Beitrag behält, egal wie alt, und überspringt einen Knoten, der
 ihn nicht anbietet. Bietet kein Knoten Nexus an, greift es auf die eigene

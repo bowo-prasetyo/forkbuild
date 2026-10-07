@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: cb23254b3ae5523e -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
@@ -185,7 +185,7 @@ atau menyimpan di Steem — lihat
 memerlukan akun. Sisa halamannya mengatur dari mana Steem dibaca:
 
 - **Node API**, satu URL `https://` per baris (bawaan
-  `https://api.steemit.com` dan `https://api.justyy.com`), dicoba secara
+  `https://api.steemit.com`, `https://api.justyy.com` dan `https://steemd.steemworld.org`), dicoba secara
   berurutan.
 - **Akun utas**, satu per baris (bawaan `forkbuild`): utas penemuan
   bulanan milik siapa yang dibaca. Tambahkan yang lain jika sebuah
@@ -206,7 +206,7 @@ menyimpan, atau menjangkarkan di Blurt — lihat
 memerlukan akun. Sisa halamannya mengatur dari mana Blurt dibaca:
 
 **Node API**, satu URL `https://` per baris (bawaan
-`https://rpc.blurt.blog` dan `https://rpc.beblurt.com`), dicoba secara
+`https://rpc.blurt.blog`, `https://rpc.beblurt.com` dan `https://rpc.drakernoise.com`), dicoba secara
 berurutan. ForkBuild menemukan postingan melalui Nexus, indeks pencarian
 Blurt, yang menyimpan setiap postingan setua apa pun, dan melewati node
 yang tidak menyediakannya. Bila tidak ada node yang menyediakan Nexus,

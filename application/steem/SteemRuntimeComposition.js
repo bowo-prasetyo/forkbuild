@@ -1,4 +1,4 @@
-import { SteemReadingConfiguration } from '../../core/SteemReadingConfiguration.js';
+import { SteemReadingConfiguration, steemProofNodesFor } from '../../core/SteemReadingConfiguration.js';
 import { createSteemRpcClient } from '../../steem/SteemRpcClient.js';
 import { createSteemDiscoveryThreadReader } from './SteemDiscoveryThreadReader.js';
 import { createSteemAnnouncer } from './SteemAnnouncer.js';
@@ -70,7 +70,7 @@ export function composeSteemRuntime({
         }),
         publicationMaterialResolver: new SteemWorldEncounterMaterialResolver({ rpc, threadAccounts: [...configuration.threadAccounts] }),
         anchorPublisher: new SteemAnchorPublisher({ poster: announcer, rpc }),
-        proofVerifier: new SteemProofVerifier({ nodes: [...configuration.apiNodes], fetchImpl }),
+        proofVerifier: new SteemProofVerifier({ nodes: steemProofNodesFor(configuration.apiNodes), fetchImpl }),
         anchorEvidenceView: new SteemAnchorEvidenceView(),
         anchorFinalityObserver: new SteemAnchorFinalityObserver({ rpc })
     });
