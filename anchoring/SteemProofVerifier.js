@@ -1,7 +1,8 @@
 import { ProofVerifier } from './ProofVerifier.js';
 import { STEEM_ANCHOR_TYPE, parseSteemAnchorProof, steemAnchorTarget, steemBlockNumberOfId, steemTransactionAnchors } from '../core/SteemAnchor.js';
 import { checkSteemBlockEvidence } from '../core/SteemBlockEvidence.js';
-import { DEFAULT_STEEM_API_NODES, createSteemRpcClient } from '../steem/SteemRpcClient.js';
+import { createSteemRpcClient } from '../steem/SteemRpcClient.js';
+import { DEFAULT_STEEM_PROOF_NODES } from '../core/SteemReadingConfiguration.js';
 
 // Checks a `steem` PublicationAnchor's proof, `{ blockNum, trxId, chain }`,
 // against the chain (docs/Protocol.md, "Proposed: Steem Anchoring",
@@ -29,7 +30,7 @@ import { DEFAULT_STEEM_API_NODES, createSteemRpcClient } from '../steem/SteemRpc
 const DEFAULT_MAX_NODES = 3;
 
 export class SteemProofVerifier extends ProofVerifier {
-    constructor({ nodes = DEFAULT_STEEM_API_NODES, fetchImpl = globalThis.fetch, timeoutMs, maxNodes = DEFAULT_MAX_NODES } = {}) {
+    constructor({ nodes = DEFAULT_STEEM_PROOF_NODES, fetchImpl = globalThis.fetch, timeoutMs, maxNodes = DEFAULT_MAX_NODES } = {}) {
         super();
         if (!Array.isArray(nodes) || nodes.length === 0) throw new TypeError('SteemProofVerifier: at least one Steem API node is required');
         this._nodes = Object.freeze(nodes.slice(0, Math.max(1, maxNodes)));

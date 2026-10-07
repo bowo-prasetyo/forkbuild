@@ -2,12 +2,24 @@
 // "Proposed: Blurt Substrate", "Reading"): the API nodes asked, in order,
 // first answer wins.
 
-// Two operators, so the anchor verifier, which asks every node and needs all
-// that answer to agree, compares independent nodes by default.
+// Three operators; reads fall over to the next when one doesn't answer.
+// All three serve Nexus.
 export const DEFAULT_BLURT_API_NODES = Object.freeze([
     'https://rpc.blurt.blog',
-    'https://rpc.beblurt.com'
+    'https://rpc.beblurt.com',
+    'https://rpc.drakernoise.com'
 ]);
+// anchoring/BlurtProofVerifier.js asks every node it is given and needs all
+// that answer to agree, so each extra node is one more that can report a
+// block as missing. With the defaults it compares the first two, run by
+// different operators; any other list, such as one someone saved, is asked
+// as it is.
+export const DEFAULT_BLURT_PROOF_NODES = Object.freeze(DEFAULT_BLURT_API_NODES.slice(0, 2));
+
+export function blurtProofNodesFor(apiNodes) {
+    const isDefault = apiNodes.length === DEFAULT_BLURT_API_NODES.length && apiNodes.every((node, i) => node === DEFAULT_BLURT_API_NODES[i]);
+    return isDefault ? [...DEFAULT_BLURT_PROOF_NODES] : [...apiNodes];
+}
 const MAX_NODES = 8;
 
 export function isValidBlurtApiNodeUrl(value) {

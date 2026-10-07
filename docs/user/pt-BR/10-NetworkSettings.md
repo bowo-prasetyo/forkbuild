@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: cb23254b3ae5523e -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
 # 10 — Configurações de rede
 
 <!-- languages -->
@@ -179,7 +179,7 @@ hora, sem recarregar), necessária para postar ou guardar no Steem — veja
 resto da página define de onde o Steem é lido:
 
 - **Nós de API**, uma URL `https://` por linha (padrões
-  `https://api.steemit.com` e `https://api.justyy.com`), tentados em ordem.
+  `https://api.steemit.com`, `https://api.justyy.com` e `https://steemd.steemworld.org`), tentados em ordem.
 - **Contas dos tópicos**, uma por linha (padrão `forkbuild`): de quem são os
   tópicos mensais de descoberta lidos. Adicione outra se uma comunidade
   mantiver seus próprios tópicos.
@@ -198,7 +198,7 @@ Blurt — veja [Blurt](11-EvidenceAndStorage.md#blurt). Ler do Blurt não
 exige conta. O resto da página define de onde o Blurt é lido:
 
 **Nós de API**, uma URL `https://` por linha (padrões
-`https://rpc.blurt.blog` e `https://rpc.beblurt.com`), tentados em ordem.
+`https://rpc.blurt.blog`, `https://rpc.beblurt.com` e `https://rpc.drakernoise.com`), tentados em ordem.
 O ForkBuild encontra as postagens pelo Nexus, o índice de busca do Blurt,
 que guarda toda postagem por mais antiga que seja, e pula um nó que não o
 ofereça. Quando nenhum nó oferece o Nexus, ele recorre à própria lista de

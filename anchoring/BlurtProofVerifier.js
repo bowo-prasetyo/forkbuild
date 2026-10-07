@@ -1,7 +1,8 @@
 import { ProofVerifier } from './ProofVerifier.js';
 import { BLURT_ANCHOR_TYPE, blurtAnchorTarget, blurtBlockNumberOfId, blurtTransactionAnchors, parseBlurtAnchorProof } from '../core/BlurtAnchor.js';
 import { checkBlurtBlockEvidence } from '../core/BlurtBlockEvidence.js';
-import { DEFAULT_BLURT_API_NODES, createBlurtRpcClient } from '../blurt/BlurtRpcClient.js';
+import { createBlurtRpcClient } from '../blurt/BlurtRpcClient.js';
+import { DEFAULT_BLURT_PROOF_NODES } from '../core/BlurtReadingConfiguration.js';
 
 // Checks a `blurt` PublicationAnchor's proof, `{ blockNum, trxId, chain }`,
 // against the chain (docs/Protocol.md, "Proposed: Blurt Substrate",
@@ -20,7 +21,7 @@ import { DEFAULT_BLURT_API_NODES, createBlurtRpcClient } from '../blurt/BlurtRpc
 const DEFAULT_MAX_NODES = 3;
 
 export class BlurtProofVerifier extends ProofVerifier {
-    constructor({ nodes = DEFAULT_BLURT_API_NODES, fetchImpl = globalThis.fetch, timeoutMs, maxNodes = DEFAULT_MAX_NODES } = {}) {
+    constructor({ nodes = DEFAULT_BLURT_PROOF_NODES, fetchImpl = globalThis.fetch, timeoutMs, maxNodes = DEFAULT_MAX_NODES } = {}) {
         super();
         if (!Array.isArray(nodes) || nodes.length === 0) throw new TypeError('BlurtProofVerifier: at least one Blurt API node is required');
         this._nodes = Object.freeze(nodes.slice(0, Math.max(1, maxNodes)));

@@ -1,4 +1,4 @@
-import { BlurtReadingConfiguration } from '../../core/BlurtReadingConfiguration.js';
+import { BlurtReadingConfiguration, blurtProofNodesFor } from '../../core/BlurtReadingConfiguration.js';
 import { createBlurtRpcClient } from '../../blurt/BlurtRpcClient.js';
 import { createBlurtDiscoveryReader } from './BlurtDiscoveryReader.js';
 import { createBlurtPoster } from './BlurtPoster.js';
@@ -64,7 +64,7 @@ export function composeBlurtRuntime({
         }),
         publicationMaterialResolver: new BlurtWorldEncounterMaterialResolver({ rpc }),
         anchorPublisher: new BlurtAnchorPublisher({ poster, rpc }),
-        proofVerifier: new BlurtProofVerifier({ nodes: [...configuration.apiNodes], fetchImpl }),
+        proofVerifier: new BlurtProofVerifier({ nodes: blurtProofNodesFor(configuration.apiNodes), fetchImpl }),
         anchorEvidenceView: new BlurtAnchorEvidenceView(),
         anchorFinalityObserver: new BlurtAnchorFinalityObserver({ rpc })
     });
