@@ -25,8 +25,8 @@ import { RoleProviderPreferenceStore } from '../../storage/RoleProviderPreferenc
 // answers for every role, which is false today (content/ContentStore.js's
 // registry and anchoring/ProofVerifier.js's registry are two independent
 // Maps, keyed by two independently-chosen vocabularies — 'ar'/'ipfs'/
-// 'local' versus 'bitcoin-op-return' — and Discovery has no keyed registry
-// at all; see "three registries, never one," below). `resolve(role)` reads
+// 'local' versus 'bitcoin-op-return', and Discovery's keyed by
+// 'nostr'/'arweave'/'steem'/'blurt'; see "three registries, never one," below). `resolve(role)` reads
 // ROLE's own preference and consults ROLE's own registry, full stop; the
 // same providerKey string resolved for a different role would consult a
 // completely different registry and could resolve to a completely
@@ -45,19 +45,10 @@ import { RoleProviderPreferenceStore } from '../../storage/RoleProviderPreferenc
 // ProofVerifier's own `anchorType`) — this file hands `contentRegistry`/
 // `proofRegistry` straight to whichever of those a caller passes in, and
 // never re-implements, wraps, or second-guesses either one's own `get()`.
-// Discovery has NO such registry yet (0.9.292 Section F's own gap #3, still
-// open, still unscheduled, still NOT this milestone's job to fill) — so
-// `discoveryRegistry` here is deliberately the same minimal shape as the
-// other two (anything exposing `get(providerKey)`), satisfied for real
-// Discovery capability by wrapping application/
-// DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js's own
-// `composeDecentralizedWorldEncounterMaterialDiscoveryServices()` — see
-// this file's own tests, Section B, for exactly that adapter, built ONLY in
-// the test file, never shipped here as a new
-// `DiscoveryProviderRegistry` production class. That keeps Discovery's own
-// "different provider/query shapes, not yet a keyed registry" reality
-// visible instead of papering over it with a fake uniform abstraction this
-// codebase does not actually have yet.
+// Discovery's is application/discovery/AnnouncementDiscoveryProviderRegistry.js,
+// keyed by provider key (core/AnnouncementDiscoveryProvider.js), whose get()
+// has the same "null for an unregistered key" shape, so it can be passed as
+// `discoveryRegistry` as is.
 //
 // RESOLUTION OUTCOMES: EXACTLY THE DISTINCTIONS THE REAL REGISTRIES CAN
 // ACTUALLY MAKE, NEVER MORE. Three statuses, not four:

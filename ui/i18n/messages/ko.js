@@ -1555,8 +1555,8 @@ export default Object.freeze({
     'placeNaming.importedElsewhere': '다른 장소에 대한 “{name}”을(를) 가져왔습니다 — 그 장소의 이름 패널을 열어 확인하세요',
     'placeNaming.distributionFailed': '이름 배포에 실패했습니다.',
     'placeNaming.notAnnounced': '네트워크가 공지를 받아들이지 않았습니다. 다시 시도하거나 다른 네트워크를 선택하세요.',
-    'placeNaming.nostrUnavailable': 'Nostr를 사용할 수 없습니다: 호환되는 브라우저 확장 프로그램을 찾지 못했습니다.',
-    'placeNaming.networkUnavailable': '이 기기에는 {provider}이(가) 설정되어 있지 않습니다. 설정을 확인하거나 다른 네트워크를 선택하세요.',
+    'announcementDiscovery.nostrUnavailable': 'Nostr를 사용할 수 없습니다: 호환되는 브라우저 확장 프로그램을 찾지 못했습니다.',
+    'announcementDiscovery.networkUnavailable': '이 기기에는 {provider}이(가) 설정되어 있지 않습니다. 설정을 확인하거나 다른 네트워크를 선택하세요.',
 
     // World View: snapshot commands (ui/views/worldView/useWorldEncounterCommands.js).
     'distribution.snapshotDiscoveryUnavailable': '스냅샷 발견을 사용할 수 없습니다.',

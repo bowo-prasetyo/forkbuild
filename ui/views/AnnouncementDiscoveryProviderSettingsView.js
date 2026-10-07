@@ -1,6 +1,7 @@
 import { computed, inject, ref } from 'vue';
 import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPreferenceForm.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
+import { ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS } from '../../core/AnnouncementDiscoveryProvider.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/settings/RoleProviderPreferenceSettingsView.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 import { LOCAL_AND_PEERS_ONLY } from '../../core/CommentaryDistributionProvider.js';
@@ -30,18 +31,15 @@ import { displayText, errorText, t } from '../i18n/i18n.js';
 // regardless (see ui/main/composeSnapshotDiscovery.js, ui/main/
 // composeWorldDiscovery.js and ui/main.js's own refreshPublicationCommentaryCommand).
 //
-// UNLIKE CONTENT, THE PROVIDER LIST IS HARDCODED HERE, NOT READ FROM A
-// REGISTRY. Announcement & Discovery has no keyed registry the way
-// content/ContentStore.js's own SnapshotPlacementStoreRegistry does (see
-// application/settings/RoleAwareProviderResolver.js's own header, "Discovery has NO
-// such registry yet") — 'nostr'/'arweave' are this codebase's only two
-// real Announcement/Discovery substrates today, named here the same way
-// every composition root above already names them as literal strings.
+// Every Announcement & Discovery provider key is offered, not only the ones
+// application/discovery/AnnouncementDiscoveryProviderRegistry.js has
+// services for on this device: a network can be chosen before it is set up,
+// and announcing there says it isn't set up yet.
 //
-// Both keys already title-case to "Nostr"/"Arweave" through
+// Each key title-cases to its name ("Nostr", "Arweave", …) through
 // describeRoleProviderPreferenceSettings()'s own label fallback, so no
 // label map is needed here.
-const AVAILABLE_PROVIDER_KEYS = ['nostr', 'arweave', 'steem', 'blurt'];
+const AVAILABLE_PROVIDER_KEYS = ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS;
 
 // The Comments section's "same as above" choice: nothing saved, so comments
 // follow the Announcement / Discovery provider.
