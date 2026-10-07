@@ -1,7 +1,12 @@
+// The discovery-provider value that keeps a comment off every network: it is
+// saved on this device and announced to connected peers, nothing more. For
+// commenters with no network account, or who don't want the comment published.
+export const LOCAL_AND_PEERS_ONLY = 'peers';
+
 // Sends a comment that is already saved on this device onward: an announce to
 // connected peers, then at most one network (Nostr, Arweave, Steem or Blurt), never
-// several. Every failure is swallowed: a comment stays saved whether or not it
-// travels, and posting never waits for a network.
+// several, or none for LOCAL_AND_PEERS_ONLY. Every failure is swallowed: a comment
+// stays saved whether or not it travels, and posting never waits for a network.
 //
 // `substrateFor(provider)` returns that network's distribution (anything with
 // `publish(envelopeJson) -> Promise`) or null when it isn't set up;
@@ -13,7 +18,11 @@ export function createPublicationCommentaryDistributor({ peerExchange, distribut
             peerExchange.announce(commentary);
         } catch {
         }
-        const distribution = substrateFor(discoveryProvider || defaultProvider());
+        const provider = discoveryProvider || defaultProvider();
+        if (provider === LOCAL_AND_PEERS_ONLY) {
+            return;
+        }
+        const distribution = substrateFor(provider);
         if (!distribution) {
             return;
         }

@@ -2,7 +2,7 @@ import WorldEncounterMarker from './WorldEncounterMarker.js';
 import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';
 import WandererMarker from './WandererMarker.js';
 import WorldDistributionDialog from './WorldDistributionDialog.js';
-import CommentaryDistributionPicker, { commentaryDistributionProviderLabel } from './CommentaryDistributionPicker.js';
+import CommentaryDistributionPicker, { commentarySavedText } from './CommentaryDistributionPicker.js';
 import { describeWorldFromDiscoveryRegistry } from '../../application/discovery/WorldDiscoveryRegistryProjection.js';
 // Most computed properties and methods live in ./worldEncounterCanvas/,
 // grouped by concern.
@@ -544,7 +544,7 @@ export default {
     methods: {
         t,
         formatDate,
-        discoveryProviderLabel: commentaryDistributionProviderLabel,
+        commentarySavedText,
         // The only writer of `selectedEncounter`: stores `{ kind, objectId }`
         // verbatim. While comparison is armed, the click goes to
         // selectComparisonEncounter() instead and none of the resets below run.

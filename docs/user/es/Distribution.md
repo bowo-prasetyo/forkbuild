@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 7758b3ce677273e3 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 58b14791cd9c7c74 -->
 # Distribuir su trabajo
 
 <!-- languages -->
@@ -56,7 +56,7 @@ nada.
 | **El hash del contenido de cualquier publicación** (un Mundo, una declaración de autoría o un nombre de lugar) | — | — | Bitcoin, Arweave, Base, Steem o Blurt | La tarjeta de la publicación en la página **Publicaciones** |
 | **La autoría de una estructura** (Atribución de plano) | Arweave, IPFS, Steem o Blurt | Nostr, Arweave, Steem o Blurt | — | **Distribuir** en el panel **Información** de la estructura, que se ofrece en cuanto usa **Publicar en la red**; la página **Publicaciones** |
 | **Un nombre de lugar** (Declaración de nombre de lugar) | Arweave, IPFS, Steem o Blurt | Nostr, Arweave, Steem o Blurt | — | **Distribuir** en el panel de nombres de la Vista del mundo, que se ofrece en cuanto usa **Publicar un nombre** (anuncia el nombre en la red que elija); la página **Publicaciones** para cualquiera de estas opciones |
-| **Un comentario** sobre una publicación | — | Nostr, Arweave, Steem o Blurt | — | **Publicar comentario**, en el Repositorio o en la Vista del mundo, en la red elegida junto al botón |
+| **Un comentario** sobre una publicación | — | Nostr, Arweave, Steem o Blurt, o ninguna (**Solo local y pares**) | — | **Publicar comentario**, en el Repositorio o en la Vista del mundo, en la red elegida junto al botón |
 
 El Snapshot de un Mundo lleva consigo su ubicación firmada, así que quienes
 lo recuperan ven la construcción exactamente donde usted la puso.

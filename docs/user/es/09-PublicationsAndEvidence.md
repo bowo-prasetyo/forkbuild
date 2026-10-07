@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: b3097401f11e7bba -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 548f42ada7a113cb -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -338,6 +338,12 @@ sección (**Ocultar comentarios**) descarta todo lo que haya escrito sin
 publicar. Los comentarios publicados desde **Mi Mundo compartido** o
 **Encuentros en el Mundo** de la Vista del mundo viajan de la misma manera,
 con la misma elección de red junto a **Publicar comentario**.
+
+Para que un comentario no llegue a ninguna red, elija **Solo local y
+pares**. Se guarda en su dispositivo y se envía solo a los pares conectados
+en ese momento, así que no necesita cuenta en ninguna red. Quien no esté
+conectado cuando lo publique no lo recibirá, y nadie podrá encontrarlo
+después en una red.
 
 Los comentarios de otras personas le llegan:
 

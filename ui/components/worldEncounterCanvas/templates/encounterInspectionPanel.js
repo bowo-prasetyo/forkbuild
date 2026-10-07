@@ -101,7 +101,7 @@ export const encounterInspectionPanelTemplate = `<div v-if="selectedEncounter" c
                             >{{ encounterCommentarySubmitting ? t('worldEncounterCanvas.posting') : t('worldEncounterCanvas.postComment') }}</button>
                         </form>
                         <p v-if="addPublicationCommentaryCommand && encounterCommentaryDistributionProvider" class="publication-commentary-distribution-status">
-                            {{ t('publicationCommentarySection.savedDistributionRequested', { provider: discoveryProviderLabel(encounterCommentaryDistributionProvider) }) }}
+                            {{ commentarySavedText(encounterCommentaryDistributionProvider) }}
                         </p>
                     </div>
                 </div>

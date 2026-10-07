@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 7758b3ce677273e3 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 58b14791cd9c7c74 -->
 # Distribuer votre travail
 
 <!-- languages -->
@@ -59,7 +59,7 @@ enregistrer n’envoie jamais rien.
 | **Le hash de contenu de n’importe quelle publication** (un Monde, une revendication de paternité ou un nom de lieu) | — | — | Bitcoin, Arweave, Base, Steem ou Blurt | La carte de la publication sur la page **Publications** |
 | **La paternité d’une structure** (Attribution de plan) | Arweave, IPFS, Steem ou Blurt | Nostr, Arweave, Steem ou Blurt | — | **Distribuer** dans le panneau **Infos** de la structure, proposé une fois que vous avez cliqué sur **Publier sur le réseau** ; la page **Publications** |
 | **Un nom de lieu** (Proposition de nom de lieu) | Arweave, IPFS, Steem ou Blurt | Nostr, Arweave, Steem ou Blurt | — | **Distribuer** dans le panneau de nommage de la Vue du Monde, proposé une fois que vous avez cliqué sur **Publier un nom** (il annonce le nom sur le réseau choisi) ; la page **Publications** pour n’importe lequel d’entre eux |
-| **Un commentaire** sur une publication | — | Nostr, Arweave, Steem ou Blurt | — | **Publier le commentaire**, dans le Dépôt ou la Vue du Monde, sur le réseau choisi à côté |
+| **Un commentaire** sur une publication | — | Nostr, Arweave, Steem ou Blurt, ou aucun (**Local et pairs uniquement**) | — | **Publier le commentaire**, dans le Dépôt ou la Vue du Monde, sur le réseau choisi à côté |
 
 Le Snapshot d’un Monde emporte votre placement signé, si bien que les
 personnes qui le récupèrent voient la construction exactement là où vous

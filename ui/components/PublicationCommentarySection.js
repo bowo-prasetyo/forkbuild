@@ -1,8 +1,7 @@
 import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';
+import CommentaryDistributionPicker, { commentarySavedText } from './CommentaryDistributionPicker.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { createId } from '../../core/createId.js';
-import { describeSteemAnnouncingUnreadiness } from '../../application/steem/SteemAnnouncingReadiness.js';
-import { describeBlurtAnnouncingUnreadiness } from '../../application/blurt/BlurtAnnouncingReadiness.js';
 import { errorText, t } from '../i18n/i18n.js';
 
 // The Repository catalog's Commentary section for ONE Publication — the
@@ -49,7 +48,7 @@ import { errorText, t } from '../i18n/i18n.js';
 // delivery/receipt claim.
 export default {
     name: 'PublicationCommentarySection',
-    components: { PublicationCommentaryRemoteCheck },
+    components: { PublicationCommentaryRemoteCheck, CommentaryDistributionPicker },
     inject: {
         getPublicationCommentariesCommand: { default: null },
         addPublicationCommentaryCommand: { default: null },
@@ -59,10 +58,7 @@ export default {
         // 0.9.667 — this replica's saved ANNOUNCEMENT_AND_DISCOVERY
         // preference, resolved once at boot by ui/main.js; seeds
         // `selectedDiscoveryProvider` below.
-        defaultAnnouncementDiscoveryProvider: { default: null },
-        // The accounts this device posts to Steem and Blurt as, when set.
-        steemAnnouncingConfigurationStore: { default: null },
-        blurtAnnouncingConfigurationStore: { default: null }
+        defaultAnnouncementDiscoveryProvider: { default: null }
     },
     props: {
         publication: { type: Object, required: true }
@@ -95,9 +91,9 @@ export default {
             }
             return resolveSigningIdentityId(this.identityUseCase.provider);
         },
-        // Human-friendly label only — never the value sent to the command.
-        lastCommentaryDistributionProviderLabel() {
-            return { arweave: 'Arweave', blurt: 'Blurt', steem: 'Steem' }[this.lastCommentaryDistributionProvider] || 'Nostr';
+        // Display text only — never the value sent to the command.
+        lastCommentaryDistributionStatus() {
+            return commentarySavedText(this.lastCommentaryDistributionProvider);
         }
     },
     mounted() {
@@ -105,23 +101,6 @@ export default {
     },
     methods: {
         t,
-        // A Steem post that can't be signed fails silently after the local
-        // save, so say why before posting. Checked on each render, since
-        // Keychain can appear after load.
-        steemUnreadiness() {
-            if (this.selectedDiscoveryProvider !== 'steem') return null;
-            return describeSteemAnnouncingUnreadiness({
-                account: this.steemAnnouncingConfigurationStore?.get()?.account ?? null,
-                keychain: globalThis.steem_keychain
-            });
-        },
-        blurtUnreadiness() {
-            if (this.selectedDiscoveryProvider !== 'blurt') return null;
-            return describeBlurtAnnouncingUnreadiness({
-                account: this.blurtAnnouncingConfigurationStore?.get()?.account ?? null,
-                keychain: globalThis.blurt_keychain
-            });
-        },
         // The only writer of `commentaries`/`commentaryError` from a
         // read. A FAILED read leaves `commentaries` exactly as it was and
         // only sets `commentaryError`.
@@ -204,23 +183,9 @@ export default {
                     class="publication-commentary-input"
                     :placeholder="t('publicationCommentarySection.addAComment')"
                 ></textarea>
-                <!-- 0.9.638 — the same two-option vocabulary as
-                     EditorView.js's own "Announcement / Discovery
-                     substrate" control. -->
-                <label class="publication-commentary-provider-label">
-                    {{ t('publicationCommentarySection.distribution') }}
-                    <select
-                        v-model="selectedDiscoveryProvider"
-                        class="form-select publication-commentary-provider-select"
-                    >
-                        <option value="arweave">Arweave</option>
-                        <option value="blurt">Blurt</option>
-                        <option value="nostr">Nostr</option>
-                        <option value="steem">Steem</option>
-                    </select>
-                </label>
-                <p v-if="steemUnreadiness()" class="form-hint publication-commentary-steem-hint">{{ steemUnreadiness() }}</p>
-                <p v-if="blurtUnreadiness()" class="form-hint publication-commentary-blurt-hint">{{ blurtUnreadiness() }}</p>
+                <!-- The same choice World View's comment forms offer: one
+                     network, or connected peers only. -->
+                <CommentaryDistributionPicker v-model="selectedDiscoveryProvider" />
                 <button
                     type="submit"
                     class="action-btn publication-commentary-submit-action"
@@ -229,7 +194,7 @@ export default {
             </form>
             <!-- Reports what was requested, never a success/receipt claim. -->
             <p v-if="addPublicationCommentaryCommand && lastCommentaryDistributionProvider" class="publication-commentary-distribution-status">
-                {{ t('publicationCommentarySection.savedDistributionRequested', { provider: lastCommentaryDistributionProviderLabel }) }}
+                {{ lastCommentaryDistributionStatus }}
             </p>
         </div>
     `

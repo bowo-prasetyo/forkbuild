@@ -124,7 +124,7 @@ export const observerLocalEncounterPanelTemplate = `<!--
                             >{{ observerLocalEncounterCommentarySubmitting ? t('worldEncounterCanvas.posting') : t('worldEncounterCanvas.postComment') }}</button>
                         </form>
                         <p v-if="addPublicationCommentaryCommand && observerLocalEncounterCommentaryDistributionProvider" class="publication-commentary-distribution-status">
-                            {{ t('publicationCommentarySection.savedDistributionRequested', { provider: discoveryProviderLabel(observerLocalEncounterCommentaryDistributionProvider) }) }}
+                            {{ commentarySavedText(observerLocalEncounterCommentaryDistributionProvider) }}
                         </p>
                     </div>
                 </div>

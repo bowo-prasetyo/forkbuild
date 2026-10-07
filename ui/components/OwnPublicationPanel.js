@@ -10,7 +10,7 @@ import { publicationActionsSectionTemplate } from './ownPublicationPanel/templat
 import { diagnosticToolsSectionTemplate } from './ownPublicationPanel/templates/diagnosticToolsSection.js';
 import { commentarySectionTemplate } from './ownPublicationPanel/templates/commentarySection.js';
 import PublicationShareLink from './PublicationShareLink.js';
-import CommentaryDistributionPicker, { commentaryDistributionProviderLabel } from './CommentaryDistributionPicker.js';
+import CommentaryDistributionPicker, { commentarySavedText } from './CommentaryDistributionPicker.js';
 import { errorText, t } from '../i18n/i18n.js';
 
 // Actions on the local user's own current Publication in World View:
@@ -402,7 +402,7 @@ export default {
     },
     methods: {
         t,
-        discoveryProviderLabel: commentaryDistributionProviderLabel,
+        commentarySavedText,
         readSessionIdentity() {
             let identityId = null;
             try {

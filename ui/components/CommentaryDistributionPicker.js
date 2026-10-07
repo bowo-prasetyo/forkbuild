@@ -1,17 +1,27 @@
 import { describeSteemAnnouncingUnreadiness } from '../../application/steem/SteemAnnouncingReadiness.js';
 import { describeBlurtAnnouncingUnreadiness } from '../../application/blurt/BlurtAnnouncingReadiness.js';
+import { LOCAL_AND_PEERS_ONLY } from '../../application/publication/commentary/PublicationCommentaryDistributor.js';
 import { t } from '../i18n/i18n.js';
 
 // Network names, the same in every language.
 const PROVIDER_LABELS = { arweave: 'Arweave', blurt: 'Blurt', nostr: 'Nostr', steem: 'Steem' };
 
 export function commentaryDistributionProviderLabel(provider) {
+    if (provider === LOCAL_AND_PEERS_ONLY) return t('publicationCommentarySection.localAndPeersOnly');
     return PROVIDER_LABELS[provider] || 'Nostr';
 }
 
-// The network a World View comment is distributed to when it's posted: the
-// same choice the Repository's comment form offers. The host keeps the value
-// (v-model) and sends it as `discoveryProvider` with the comment.
+// The line shown after a comment is saved. It names what was requested, never
+// a delivery: distribution reports nothing back.
+export function commentarySavedText(provider) {
+    if (provider === LOCAL_AND_PEERS_ONLY) return t('publicationCommentarySection.savedPeersOnly');
+    return t('publicationCommentarySection.savedDistributionRequested', { provider: commentaryDistributionProviderLabel(provider) });
+}
+
+// Where a comment goes when it's posted: one network, or none (connected peers
+// only). Every comment form uses it: the Repository's and World View's. The
+// host keeps the value (v-model) and sends it as `discoveryProvider` with the
+// comment.
 export default {
     name: 'CommentaryDistributionPicker',
     // The accounts this device posts to Steem and Blurt as, when set.
@@ -29,6 +39,9 @@ export default {
     },
     methods: {
         t,
+        peersOnly() {
+            return this.modelValue === LOCAL_AND_PEERS_ONLY;
+        },
         // A Steem post that can't be signed fails silently after the local
         // save, so say why before posting. Checked on each render, since
         // Keychain can appear after load.
@@ -56,10 +69,12 @@ export default {
                     <option value="blurt">Blurt</option>
                     <option value="nostr">Nostr</option>
                     <option value="steem">Steem</option>
+                    <option value="${LOCAL_AND_PEERS_ONLY}">{{ t('publicationCommentarySection.localAndPeersOnly') }}</option>
                 </select>
             </label>
             <p v-if="steemUnreadiness()" class="form-hint publication-commentary-steem-hint">{{ steemUnreadiness() }}</p>
             <p v-if="blurtUnreadiness()" class="form-hint publication-commentary-blurt-hint">{{ blurtUnreadiness() }}</p>
+            <p v-if="peersOnly()" class="form-hint publication-commentary-peers-hint">{{ t('publicationCommentarySection.peersOnlyHint') }}</p>
         </div>
     `
 };
