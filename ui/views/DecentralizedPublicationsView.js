@@ -77,6 +77,7 @@ import { snapshotTabTemplate } from './decentralizedPublications/templates/snaps
 import { evidenceTabTemplate } from './decentralizedPublications/templates/evidenceTab.js';
 import { placementsTabTemplate } from './decentralizedPublications/templates/placementsTab.js';
 import { displayText, t } from '../i18n/i18n.js';
+import { ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS, DEFAULT_ANNOUNCEMENT_DISCOVERY_PROVIDER } from '../../core/AnnouncementDiscoveryProvider.js';
 import I18nText from '../i18n/I18nText.js';
 
 // Publications page (/publications). Lists every DecentralizedPublication in
@@ -541,14 +542,14 @@ export default {
                 // objects; the durable record is
                 // publicationDistributionLifecycleStore's.
                 discoveryDistributionProvider: resolveSavedProviderDefault(
-                    defaultAnnouncementDiscoveryProvider, ['nostr', 'arweave', 'steem', 'blurt'], 'nostr'
+                    defaultAnnouncementDiscoveryProvider, ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS, DEFAULT_ANNOUNCEMENT_DISCOVERY_PROVIDER
                 ),
                 discoveryDistributionAttempt: null,
                 // Where Distribute Snapshot announces: seeded the same way,
                 // chosen separately, so the result can name the substrate it
                 // actually used.
                 snapshotDiscoveryProvider: resolveSavedProviderDefault(
-                    defaultAnnouncementDiscoveryProvider, ['nostr', 'arweave', 'steem', 'blurt'], 'nostr'
+                    defaultAnnouncementDiscoveryProvider, ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS, DEFAULT_ANNOUNCEMENT_DISCOVERY_PROVIDER
                 ),
                 // The entry's own Content backend. Seeded from the saved
                 // Content preference when it is currently eligible, else the

@@ -756,7 +756,8 @@ defineServiceGroup('distribution', async () => {
     const {
         arweaveAnnouncementUploadTaggedTransaction, publicationDistributionCommand,
         multiRelayNostrPublicationDistributionCommand, resolveSnapshotDiscoveryPublisher,
-        snapshotDistributionCommand, snapshotDiscoveryPublisher, snapshotDistributionAvailableStorageTypes
+        snapshotDistributionCommand, snapshotDiscoveryPublisher, snapshotDistributionAvailableStorageTypes,
+        announcementDiscoveryProviderRegistry
     } = composePublicationDistribution({
         resolvedIpfsNodeApiUrl, snapshotPlacementStoreRegistry, resolvedAnnouncementDiscoveryProvider,
         resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, PUBLICATION_DISCOVERY_TAG,
@@ -781,7 +782,7 @@ defineServiceGroup('distribution', async () => {
         roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
         resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
         arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime, blurtRuntime,
-        announcementIndex, publicationContentStore
+        announcementIndex, publicationContentStore, announcementDiscoveryProviderRegistry
     });
     app.provide('defaultContentDistributionProvider', resolvedContentDistributionProvider);
     app.provide('distributePlaceNamingClaimCommand', distributePlaceNamingClaimCommand);

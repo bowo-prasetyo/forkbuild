@@ -4,6 +4,8 @@ import { createPublicationDistributionRuntimeProvider } from '../../application/
 import { createArweavePublicationDistributionRuntimeAdapter } from '../../application/arweave/ArweavePublicationDistributionRuntimeAdapter.js';
 import { createArweaveTaggedTransactionUpload } from '../../application/arweave/ArweaveTaggedTransactionUpload.js';
 import { composeSnapshotDistributionRuntime } from '../../application/snapshot/SnapshotDistributionRuntimeComposition.js';
+import { AnnouncementDiscoveryProviderRegistry, AnnouncementDiscoveryServiceKind } from '../../application/discovery/AnnouncementDiscoveryProviderRegistry.js';
+import { announcementDiscoveryProviderOrDefault } from '../../core/AnnouncementDiscoveryProvider.js';
 import { executeSnapshotDistributionCommand } from '../../application/snapshot/SnapshotDistributionCommand.js';
 import { availableSnapshotDistributionStorageTypes, resolveSnapshotDistributionContentStore } from '../../application/snapshot/SnapshotDistributionContentBackendSelection.js';
 
@@ -66,21 +68,27 @@ export function composePublicationDistribution({
         discoveryProvider: 'arweave',
         arweaveSnapshotDiscoveryPublisherOptions: { discoveryTag: 'forkbuild-snapshot', gatewayUrl: resolvedArweaveGatewayUrl, uploadTaggedTransaction: arweaveAnnouncementUploadTaggedTransaction }
     });
-    // Picks one of the two instances above, defaulting to the saved preference.
-    const steemSnapshotDiscoveryPublisher = steemRuntime ? steemRuntime.snapshotDiscoveryPublisher : null;
-    const blurtSnapshotDiscoveryPublisher = blurtRuntime ? blurtRuntime.snapshotDiscoveryPublisher : null;
-    const resolveSnapshotDiscoveryPublisher = (discoveryProvider = resolvedAnnouncementDiscoveryProvider) => {
-        if (discoveryProvider === 'arweave') return arweaveSnapshotDiscoveryPublisher;
-        if (discoveryProvider === 'steem') return steemSnapshotDiscoveryPublisher;
-        if (discoveryProvider === 'blurt') return blurtSnapshotDiscoveryPublisher;
-        return nostrSnapshotDiscoveryPublisher;
-    };
+    // The Announcement & Discovery registry: each substrate's Snapshot
+    // publisher, when this device has one. composeSnapshotDiscovery() adds the
+    // place-naming publishers to the same registry.
+    const announcementDiscoveryProviderRegistry = new AnnouncementDiscoveryProviderRegistry()
+        .register({ providerKey: 'nostr', snapshotDiscoveryPublisher: nostrSnapshotDiscoveryPublisher })
+        .register({ providerKey: 'arweave', snapshotDiscoveryPublisher: arweaveSnapshotDiscoveryPublisher })
+        .register({ providerKey: 'steem', snapshotDiscoveryPublisher: steemRuntime ? steemRuntime.snapshotDiscoveryPublisher : null })
+        .register({ providerKey: 'blurt', snapshotDiscoveryPublisher: blurtRuntime ? blurtRuntime.snapshotDiscoveryPublisher : null });
+    // The publisher for a substrate, defaulting to the saved preference; null
+    // when this device can't announce there. An unknown key means the default.
+    const snapshotProviderKey = (discoveryProvider) => announcementDiscoveryProviderOrDefault(discoveryProvider || resolvedAnnouncementDiscoveryProvider);
+    const resolveSnapshotDiscoveryPublisher = (discoveryProvider) => (
+        announcementDiscoveryProviderRegistry.serviceFor(snapshotProviderKey(discoveryProvider), AnnouncementDiscoveryServiceKind.SNAPSHOT)
+    );
     // Every completed distribution is logged (application/snapshot/OwnSnapshotDistributionLog.js),
     // so the Repository can say where your publications went after a reload.
     const snapshotDistributionCommand = (bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider, placementRecord) => executeSnapshotDistributionCommand({
         bytes,
         contentStore: resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage),
-        discoveryPublisher: resolveSnapshotDiscoveryPublisher(discoveryProvider),
+        // A substrate not set up on this device is named as such.
+        discoveryPublisher: announcementDiscoveryProviderRegistry.requireServiceFor(snapshotProviderKey(discoveryProvider), AnnouncementDiscoveryServiceKind.SNAPSHOT),
         publicationId,
         claimedPosition,
         placementRecord
@@ -102,6 +110,7 @@ export function composePublicationDistribution({
     return {
         arweaveAnnouncementUploadTaggedTransaction, publicationDistributionCommand,
         multiRelayNostrPublicationDistributionCommand, resolveSnapshotDiscoveryPublisher,
-        snapshotDistributionCommand, snapshotDiscoveryPublisher, snapshotDistributionAvailableStorageTypes
+        snapshotDistributionCommand, snapshotDiscoveryPublisher, snapshotDistributionAvailableStorageTypes,
+        announcementDiscoveryProviderRegistry
     };
 }

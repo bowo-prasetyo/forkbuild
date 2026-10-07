@@ -1552,8 +1552,8 @@ export default Object.freeze({
     'placeNaming.importedElsewhere': '別の場所の「{name}」をインポートしました — その場所の名前パネルを開くと確認できます',
     'placeNaming.distributionFailed': '名前の配信に失敗しました。',
     'placeNaming.notAnnounced': 'ネットワークが告知を受け付けませんでした。もう一度試すか、別のネットワークを選んでください。',
-    'placeNaming.nostrUnavailable': 'Nostrを利用できません: 対応するブラウザー拡張機能が見つかりませんでした。',
-    'placeNaming.networkUnavailable': 'このデバイスでは{provider}が設定されていません。設定を確認するか、別のネットワークを選んでください。',
+    'announcementDiscovery.nostrUnavailable': 'Nostrを利用できません: 対応するブラウザー拡張機能が見つかりませんでした。',
+    'announcementDiscovery.networkUnavailable': 'このデバイスでは{provider}が設定されていません。設定を確認するか、別のネットワークを選んでください。',
 
     // World View: snapshot commands (ui/views/worldView/useWorldEncounterCommands.js).
     'distribution.snapshotDiscoveryUnavailable': 'スナップショットの発見は利用できません。',

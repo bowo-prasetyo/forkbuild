@@ -1555,8 +1555,8 @@ export default Object.freeze({
     'placeNaming.importedElsewhere': '« {name} » importé pour un autre lieu — ouvrez son panneau Noms pour le voir',
     'placeNaming.distributionFailed': 'La distribution du nom a échoué.',
     'placeNaming.notAnnounced': 'Le réseau n’a pas accepté l’annonce. Réessayez, ou choisissez un autre réseau.',
-    'placeNaming.nostrUnavailable': 'Nostr n’est pas disponible : aucune extension de navigateur compatible n’a été trouvée.',
-    'placeNaming.networkUnavailable': '{provider} n’est pas configuré sur cet appareil. Vérifiez ses réglages, ou choisissez un autre réseau.',
+    'announcementDiscovery.nostrUnavailable': 'Nostr n’est pas disponible : aucune extension de navigateur compatible n’a été trouvée.',
+    'announcementDiscovery.networkUnavailable': '{provider} n’est pas configuré sur cet appareil. Vérifiez ses réglages, ou choisissez un autre réseau.',
 
     // World View: snapshot commands (ui/views/worldView/useWorldEncounterCommands.js).
     'distribution.snapshotDiscoveryUnavailable': 'La découverte de Snapshots n’est pas disponible.',

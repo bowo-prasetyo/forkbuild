@@ -12,6 +12,7 @@ import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../../applica
 import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../../application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
 import { SetRoleProviderPreferenceUseCase } from '../../application/settings/SetRoleProviderPreferenceUseCase.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
+import { announcementDiscoveryProviderOrDefault } from '../../core/AnnouncementDiscoveryProvider.js';
 import { resolveCommentaryDistributionProvider } from '../../core/CommentaryDistributionProvider.js';
 import { CommentaryDistributionPreferenceStore } from '../../storage/CommentaryDistributionPreferenceStore.js';
 import { PublicationCatalogDiscoveryProvider } from '../../discovery/PublicationCatalogDiscoveryProvider.js';
@@ -110,11 +111,9 @@ export function composeContentAndSnapshots({
 
     // The default announcement/discovery substrate, read once at boot. Unset or
     // unknown values fall back to 'nostr'.
-    const announcementDiscoveryProviderPreference = roleProviderPreferenceStore.get(RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY);
-    const resolvedAnnouncementDiscoveryProvider = (announcementDiscoveryProviderPreference
-        && ['nostr', 'arweave', 'steem', 'blurt'].includes(announcementDiscoveryProviderPreference.providerKey))
-        ? announcementDiscoveryProviderPreference.providerKey
-        : 'nostr';
+    const resolvedAnnouncementDiscoveryProvider = announcementDiscoveryProviderOrDefault(
+        roleProviderPreferenceStore.get(RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY)?.providerKey
+    );
 
     // The default network for comments, read once at boot: the saved comment
     // default, else the Announcement / Discovery substrate above.

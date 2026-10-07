@@ -4279,3 +4279,32 @@ test removed with the other source-text audits, and the table people quote has o
   verifier asks two with the defaults and any other list as it is.
 - docs/Protocol.md (Steem "Reading" and "Verifying", Blurt "Reading" and "Anchoring"), docs/Privacy.md, and Network
   Settings and the privacy page in the user guide, in every language.
+
+## A keyed registry for Announcement & Discovery (unnumbered, 2026-10-07)
+
+Content and Proof & Anchoring each pick a provider through a keyed registry (`SnapshotPlacementStoreRegistry` by
+`storage`, `ExternalProofVerifierRegistry` by `anchorType`). Announcement & Discovery had none: the saved
+preference did choose the default network, but every place that announced picked its publisher with its own
+`if` chain, the four provider keys were written out in four places, and the role resolver's discovery slot was an
+inert placeholder. Announcing a Snapshot on Steem or Blurt on a device without that runtime failed with an internal
+error ("a discoveryPublisher with a publish() method is required").
+
+- `core/AnnouncementDiscoveryProvider.js`: the provider keys (`nostr`, `arweave`, `steem`, `blurt`), the default
+  (`nostr`) and `announcementDiscoveryProviderOrDefault()`. The boot-time preference, the Announcement / Discovery
+  settings page, the Publications page's two pickers and the comment networks
+  (`COMMENTARY_DISTRIBUTION_PROVIDER_KEYS`) all read it.
+- `application/discovery/AnnouncementDiscoveryProviderRegistry.js`, keyed by provider key. A substrate is registered
+  kind by kind (`snapshotDiscoveryPublisher`, `placeNamingDiscoveryPublisher`), a kind the device can't do is left
+  out, and `requireServiceFor()` names a substrate that isn't set up with a readable error. Its `get()` returns null
+  for an unregistered key, so `RoleAwareProviderResolver` takes it as its `discoveryRegistry` like the other two.
+- `composePublicationDistribution()` creates it with each substrate's Snapshot publisher and returns it;
+  `composeSnapshotDiscovery()` adds the place-naming publishers. `resolveSnapshotDiscoveryPublisher()` and
+  `distributePlaceNamingClaimCommand` read it instead of their `if` chains; a Snapshot distribution to a substrate
+  not set up now says "Steem isn't set up on this device…" as place naming already did. The two messages move from
+  `placeNaming.*` to `announcementDiscovery.*`, unchanged in every language.
+- Unchanged: publication and comment distribution, which choose through their own runtime compositions; and the
+  preferred-creation coordinators, which resolve only their own role and keep their inert discovery slot.
+- docs/Architecture.md ("Distribution: independent choices, one dialog").
+- Tests: `tests/AnnouncementDiscoveryProviderRegistry.test.js` (the keys, registering kind by kind, "not set up",
+  the role resolver, and the real `composePublicationDistribution()`/`composeSnapshotDiscovery()` filling one
+  registry and announcing through it).

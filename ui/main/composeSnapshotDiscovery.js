@@ -3,8 +3,8 @@ import { snapshotCellTag, snapshotCellTagsAround } from '../../core/NarrowDiscov
 import { SNAPSHOT_DISCOVERY_TAG } from '../../application/announcementIndex/AnnouncementSyncTargets.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { composePlaceNamingPublicationRuntime } from '../../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { AnnouncementDiscoveryServiceKind } from '../../application/discovery/AnnouncementDiscoveryProviderRegistry.js';
+import { ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS } from '../../core/AnnouncementDiscoveryProvider.js';
 import { composeDiscoverSnapshotRuntime } from '../../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCommand } from '../../application/snapshot/DiscoverSnapshotCommand.js';
 import { executeDiscoverSnapshotCandidatesCommand, executeDiscoverSnapshotCandidatesCommandWithOutcome } from '../../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
@@ -30,7 +30,7 @@ export function composeSnapshotDiscovery({
     roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
     arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime = null, blurtRuntime = null,
-    announcementIndex = null, publicationContentStore = null
+    announcementIndex = null, publicationContentStore = null, announcementDiscoveryProviderRegistry
 }) {
     // Every network discovery result is recorded in the Announcement Index, and
     // the index answers beside the network (docs/AnnouncementIndex.md).
@@ -60,15 +60,15 @@ export function composeSnapshotDiscovery({
         steemPlaceNamingDiscoveryPublisher: steemRuntime ? steemRuntime.placeNamingDiscoveryPublisher : null,
         blurtPlaceNamingDiscoveryPublisher: blurtRuntime ? blurtRuntime.placeNamingDiscoveryPublisher : null
     };
-    const distributePlaceNamingClaimCommand = (claim, discoveryProvider = resolvedAnnouncementDiscoveryProvider) => Promise.resolve().then(() => {
-        const { discoveryPublisher } = composePlaceNamingPublicationRuntime({ discoveryProvider, ...placeNamingPublicationOptions });
-        if (!discoveryPublisher) {
-            throw new UserFacingError(message(discoveryProvider === 'nostr' ? 'placeNaming.nostrUnavailable' : 'placeNaming.networkUnavailable', {
-                provider: { arweave: 'Arweave', steem: 'Steem', blurt: 'Blurt' }[discoveryProvider] || discoveryProvider
-            }));
-        }
-        return discoveryPublisher.publish(claim);
-    });
+    // Each substrate's place-naming publisher joins the Announcement &
+    // Discovery registry composePublicationDistribution() started.
+    for (const providerKey of ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS) {
+        const { discoveryPublisher } = composePlaceNamingPublicationRuntime({ discoveryProvider: providerKey, ...placeNamingPublicationOptions });
+        announcementDiscoveryProviderRegistry.register({ providerKey, placeNamingDiscoveryPublisher: discoveryPublisher });
+    }
+    const distributePlaceNamingClaimCommand = (claim, discoveryProvider = resolvedAnnouncementDiscoveryProvider) => Promise.resolve().then(() => (
+        announcementDiscoveryProviderRegistry.requireServiceFor(discoveryProvider, AnnouncementDiscoveryServiceKind.PLACE_NAMING).publish(claim)
+    ));
 
     // nostrRelayQueryClient only queries relays (REQ/EVENT/EOSE) and needs no
     // extension; publishing is the separate NIP-07 path. Where it is undefined the

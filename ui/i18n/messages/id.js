@@ -1552,8 +1552,8 @@ export default Object.freeze({
     'placeNaming.importedElsewhere': '"{name}" diimpor untuk tempat yang berbeda — buka panel Nama tempat itu untuk melihatnya',
     'placeNaming.distributionFailed': 'Gagal mendistribusikan nama.',
     'placeNaming.notAnnounced': 'Jaringan tidak menerima pengumuman itu. Coba lagi, atau pilih jaringan lain.',
-    'placeNaming.nostrUnavailable': 'Nostr tidak tersedia: tidak ditemukan ekstensi browser yang kompatibel.',
-    'placeNaming.networkUnavailable': '{provider} belum disiapkan di perangkat ini. Periksa pengaturannya, atau pilih jaringan lain.',
+    'announcementDiscovery.nostrUnavailable': 'Nostr tidak tersedia: tidak ditemukan ekstensi browser yang kompatibel.',
+    'announcementDiscovery.networkUnavailable': '{provider} belum disiapkan di perangkat ini. Periksa pengaturannya, atau pilih jaringan lain.',
 
     // World View: snapshot commands (ui/views/worldView/useWorldEncounterCommands.js).
     'distribution.snapshotDiscoveryUnavailable': 'Penemuan snapshot tidak tersedia.',

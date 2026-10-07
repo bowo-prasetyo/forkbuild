@@ -2,10 +2,11 @@
 // checked against the real providers rather than written down from memory.
 // Proof & Anchoring is read from the registries ui/main/composeAnchoring.js
 // actually fills. Content is read from a SnapshotPlacementStoreRegistry
-// holding each substrate's real ContentStore. Announcement & Discovery has
-// no keyed registry, so each substrate's Snapshot discovery publisher and
-// query service do a real round trip against a fake of that substrate: what
-// one publishes, the other finds. The matrix at the end is the expected one;
+// holding each substrate's real ContentStore. For Announcement & Discovery,
+// each substrate's Snapshot discovery publisher and query service do a real
+// round trip against a fake of that substrate: what one publishes, the
+// other finds (tests/AnnouncementDiscoveryProviderRegistry.test.js covers
+// the role's registry). The matrix at the end is the expected one;
 // changing what a substrate serves means changing it here on purpose.
 import { composeAnchoring } from '../ui/main/composeAnchoring.js';
 import { composeSteemRuntime } from '../application/steem/SteemRuntimeComposition.js';
