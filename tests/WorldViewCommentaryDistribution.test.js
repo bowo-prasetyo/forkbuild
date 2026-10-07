@@ -1,6 +1,6 @@
-import { createPublicationCommentaryDistributor } from '../application/publication/commentary/PublicationCommentaryDistributor.js';
+import { createPublicationCommentaryDistributor, LOCAL_AND_PEERS_ONLY } from '../application/publication/commentary/PublicationCommentaryDistributor.js';
 import { useOwnPublicationActions } from '../ui/views/worldView/useOwnPublicationActions.js';
-import CommentaryDistributionPicker, { commentaryDistributionProviderLabel } from '../ui/components/CommentaryDistributionPicker.js';
+import CommentaryDistributionPicker, { commentaryDistributionProviderLabel, commentarySavedText } from '../ui/components/CommentaryDistributionPicker.js';
 import { mountComponent } from './support/MinimalVueCompositionApiShim.js';
 import { assert } from './support/Assert.js';
 
@@ -12,14 +12,14 @@ async function settle() {
     await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-function makeDistributor(calls, { announce, publish } = {}) {
+function makeDistributor(calls, { announce, publish, defaultProvider = 'nostr' } = {}) {
     return createPublicationCommentaryDistributor({
         peerExchange: { announce: announce || ((commentary) => calls.push(`announce:${commentary.commentaryId}`)) },
         distributionExchange: { exportCommentary: (commentary) => `envelope:${commentary.commentaryId}` },
         substrateFor: (provider) => (provider === 'none' ? null : {
             publish: publish || ((json) => { calls.push(`${provider}:${json}`); return Promise.resolve(); })
         }),
-        defaultProvider: () => 'nostr'
+        defaultProvider: () => defaultProvider
     });
 }
 
@@ -51,6 +51,12 @@ async function run() {
         const noNetwork = [];
         makeDistributor(noNetwork)({ commentaryId: 'c3' }, 'none');
         assert(noNetwork.join('|') === 'announce:c3', 'a network that is not set up is skipped; peers still hear about it');
+
+        const peersOnly = [];
+        makeDistributor(peersOnly)({ commentaryId: 'c5' }, LOCAL_AND_PEERS_ONLY);
+        makeDistributor(peersOnly, { defaultProvider: LOCAL_AND_PEERS_ONLY })({ commentaryId: 'c6' });
+        assert(peersOnly.join('|') === 'announce:c5|announce:c6',
+            `local & peers only announces to peers and publishes to no network, chosen or saved (got ${peersOnly.join('|')})`);
 
         let rejected = false;
         const failing = makeDistributor([], {
@@ -121,7 +127,18 @@ async function run() {
             'choosing Steem without an account says why it would not post');
         assert(commentaryDistributionProviderLabel('arweave') === 'Arweave' && commentaryDistributionProviderLabel('steem') === 'Steem'
             && commentaryDistributionProviderLabel(undefined) === 'Nostr', 'network names for the status line');
-        console.log('✓ the picker reports the choice and warns before a Steem post that cannot be signed');
+
+        const peersCtx = { ...ctx, modelValue: LOCAL_AND_PEERS_ONLY };
+        assert(CommentaryDistributionPicker.methods.peersOnly.call(peersCtx) === true && CommentaryDistributionPicker.methods.peersOnly.call(ctx) === false,
+            'the peers-only hint shows only while local & peers only is chosen');
+        assert(CommentaryDistributionPicker.methods.steemUnreadiness.call(peersCtx) === null && CommentaryDistributionPicker.methods.blurtUnreadiness.call(peersCtx) === null,
+            'local & peers only asks for no network account');
+        assert(commentaryDistributionProviderLabel(LOCAL_AND_PEERS_ONLY) === 'Local & peers only', 'local & peers only has its own label, not Nostr');
+        assert(commentarySavedText('arweave') === 'Comment saved locally. Distribution requested via Arweave.',
+            'the status line names the network that was requested');
+        assert(commentarySavedText(LOCAL_AND_PEERS_ONLY) === 'Comment saved locally. Offered to connected peers only, not published to any network.',
+            'the status line never names a network for a peers-only comment');
+        console.log('✓ the picker reports the choice, offers local & peers only, and warns before a Steem post that cannot be signed');
     }
 
     console.log('\n✅ All World View comment distribution tests passed.');

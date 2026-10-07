@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: b3097401f11e7bba -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 548f42ada7a113cb -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -344,6 +344,12 @@ vous aviez saisi sans le publier. Les commentaires publiés depuis **Mon
 Monde partagé** ou les **Rencontres dans le Monde** de la Vue du Monde
 voyagent de la même façon, avec le même choix de réseau à côté de
 **Publier le commentaire**.
+
+Pour qu’un commentaire n’aille sur aucun réseau, choisissez **Local et pairs
+uniquement**. Il est enregistré sur votre appareil et envoyé seulement aux
+pairs connectés à ce moment-là, sans compte réseau nécessaire. Qui n’est pas
+connecté au moment de la publication ne le reçoit pas, et personne ne pourra
+le trouver plus tard sur un réseau.
 
 Les commentaires des autres vous parviennent :
 

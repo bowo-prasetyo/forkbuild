@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: b3097401f11e7bba -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 548f42ada7a113cb -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -325,6 +325,12 @@ seção (**Ocultar comentários**) descarta o que você tinha digitado sem
 postar. Os comentários postados pelo **Meu Mundo compartilhado** ou por
 **Encontros no Mundo** da Visão do mundo viajam do mesmo jeito, com a mesma
 escolha de rede ao lado de **Publicar comentário**.
+
+Para que um comentário não vá para nenhuma rede, escolha **Somente local e
+pares**. Ele é salvo no seu dispositivo e enviado só aos pares conectados
+naquele momento, então não é preciso conta em nenhuma rede. Quem não estiver
+conectado quando você postar não o recebe, e ninguém poderá encontrá-lo
+depois em uma rede.
 
 Os comentários das outras pessoas chegam a você:
 

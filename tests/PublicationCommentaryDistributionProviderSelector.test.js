@@ -428,14 +428,16 @@ async function runTests() {
         ctx.submitCommentary();
 
         assert(sentDiscoveryProvider === 'arweave', '24. the exact literal \'arweave\' is sent on the wire — never a presentational value like "Arweave Network"');
-        const label = PublicationCommentarySection.computed.lastCommentaryDistributionProviderLabel.call(ctx);
-        assert(label === 'Arweave', '25. the card\'s own human-friendly label reads "Arweave" for display purposes only');
+        const status = PublicationCommentarySection.computed.lastCommentaryDistributionStatus.call(ctx);
+        assert(status.includes('Arweave'), '25. the card\'s own status line names "Arweave" for display purposes only');
         assert(ctx.selectedDiscoveryProvider === 'arweave', '26. the selector\'s own bound value stays the literal application string, never translated for display');
 
-        const cardSource = (await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
+        // Both views mount PublicationCommentarySection, whose form uses the shared picker.
+        const pickerSource = await rawSource('ui/components/CommentaryDistributionPicker.js');
+        const cardSource = (await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js') + pickerSource);
         assert(/<option value="nostr">Nostr<\/option>/.test(cardSource) && /<option value="arweave">Arweave<\/option>/.test(cardSource),
             '27. PublicationCard.js\'s own <select> is valued exactly "nostr"/"arweave" — the application-layer vocabulary, human-readable labels only in the visible option TEXT');
-        const listSource = (await rawSource('ui/components/PublicationList.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
+        const listSource = (await rawSource('ui/components/PublicationList.js') + await rawSource('ui/components/PublicationCommentarySection.js') + pickerSource);
         assert(/<option value="nostr">Nostr<\/option>/.test(listSource) && /<option value="arweave">Arweave<\/option>/.test(listSource),
             '28. PublicationList.js\'s own per-row <select> carries the identical value vocabulary');
 

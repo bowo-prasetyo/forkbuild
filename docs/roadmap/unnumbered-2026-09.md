@@ -4140,3 +4140,24 @@ the protocol gains additive parts (the Blurt substrate, `contentTitle` in shares
   1.2.0 does with the new bricks, tags, formatted descriptions, titled shares and swimmers, and redeploying a
   self-hosted worker) and known limitations. `docs/ReleaseNotes-1.2.md` points to it, and the README names 1.3.0
   and links all four.
+
+## Comments can stay off every network (unnumbered, 2026-10-06)
+
+Every comment was published to one network (Nostr, Arweave, Steem or Blurt), so someone with no account on any of
+them had no way to comment without a network post. The comment network picker now offers **Local & peers only**:
+the comment is saved on this device and announced to connected peers, and published nowhere.
+
+- `LOCAL_AND_PEERS_ONLY` (`'peers'`) in `PublicationCommentaryDistributor.js`: the distributor still announces to
+  peers, then stops before choosing a network, whether the value was picked per comment or came from the default.
+  Unknown values still fall back to Nostr as before. The saved Announcement / Discovery preference is unchanged
+  and can't be set to it: that preference also decides where Snapshots, claims and place names go.
+- `CommentaryDistributionPicker.js` gains the option, a hint saying only peers connected right now receive the
+  comment (the peer exchange is announce-only), and `commentarySavedText()`, the line after posting,
+  which says a peers-only comment wasn't published to any network instead of naming one.
+- The Repository's comment form (`PublicationCommentarySection.js`) used its own copy of the picker's select and
+  hints; it now uses the picker, so every comment form offers the same choices.
+- Three new messages, in every language; "How comments travel" and the Distribution table in the user guide, in
+  every language; docs/Architecture.md ("Publication Commentary").
+- Tests: `tests/WorldViewCommentaryDistribution.test.js` (peers-only announces and publishes nowhere, picked or
+  saved; the hint; the label and status line); `tests/PublicationCommentaryDistributionProviderSelector.test.js`
+  follows the Repository form to the shared picker.

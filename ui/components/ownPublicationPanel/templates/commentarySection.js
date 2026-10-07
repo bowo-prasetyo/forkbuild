@@ -58,7 +58,7 @@ export const commentarySectionTemplate = `<div v-if="getPublicationCommentariesC
                     >{{ publicationCommentarySubmitting ? t('ownPublicationPanel.posting') : t('ownPublicationPanel.postComment') }}</button>
                 </form>
                 <p v-if="addPublicationCommentaryCommand && lastCommentaryDistributionProvider" class="publication-commentary-distribution-status">
-                    {{ t('publicationCommentarySection.savedDistributionRequested', { provider: discoveryProviderLabel(lastCommentaryDistributionProvider) }) }}
+                    {{ commentarySavedText(lastCommentaryDistributionProvider) }}
                 </p>
                 </div>
             </div>`;

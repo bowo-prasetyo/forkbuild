@@ -1438,7 +1438,8 @@ Credentials are never stored. The remote-pinning credential is kept only in tab 
       1. PublicationCommentaryStore.add()            local, authoritative
       then distributePublicationCommentaryCommand (PublicationCommentaryDistributor):
       2. PublicationCommentaryDistributionPeerExchange.announce()   WebRTC, best effort
-      3. Nostr (NostrMultiRelayPublicationCommentaryDistribution) OR Arweave OR Steem OR Blurt — one, best effort
+      3. Nostr (NostrMultiRelayPublicationCommentaryDistribution) OR Arweave OR Steem OR Blurt — one, best effort;
+         none for LOCAL_AND_PEERS_ONLY ('peers', "Local & peers only")
 
     refreshPublicationCommentaryCommand (on open / "Check for new comments")
       Discover...FromNostrUseCase + ...FromArweaveUseCase + ...FromSteemUseCase + ...FromBlurtUseCase
@@ -1447,8 +1448,10 @@ Credentials are never stored. The remote-pinning credential is kept only in tab 
 
 `ui/components/PublicationCommentarySection.js` is the Repository's single Commentary component (card and list).
 World View's Commentary panels (My Shared World and both World Encounter panels) save through their session, then
-hand the saved comment to the same `distributePublicationCommentaryCommand`; all of them pick the substrate with
-`ui/components/CommentaryDistributionPicker.js`.
+hand the saved comment to the same `distributePublicationCommentaryCommand`; all of them, the Repository's included,
+pick the substrate with `ui/components/CommentaryDistributionPicker.js`, which also offers "Local & peers only" for
+commenters with no network account. A peers-only comment reaches only the peers connected when it is posted: the peer
+exchange is announce-only, with no catch-up for peers that connect later.
 
 ## Decentralized publications, anchoring and evidence
 

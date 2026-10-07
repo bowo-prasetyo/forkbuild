@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: b3097401f11e7bba -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 548f42ada7a113cb -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -338,6 +338,12 @@ bagian itu (**Sembunyikan Komentar**) membuang apa pun yang sudah Anda
 ketik tetapi belum dikirim. Komentar yang dikirim dari **Dunia Bersama
 Saya** atau **Perjumpaan Dunia** di Tampilan Dunia menempuh jalan yang
 sama, dengan pilihan jaringan yang sama di sebelah **Kirim Komentar**.
+
+Agar komentar tidak masuk ke jaringan mana pun, pilih **Lokal & rekan
+saja**. Komentar disimpan di perangkat Anda dan hanya dikirim ke rekan yang
+terhubung saat itu, jadi tidak perlu akun jaringan. Siapa pun yang tidak
+terhubung saat Anda mengirimnya tidak akan menerimanya, dan tidak ada yang
+bisa menemukannya di jaringan nanti.
 
 Komentar orang lain sampai kepada Anda:
 

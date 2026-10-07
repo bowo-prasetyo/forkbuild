@@ -311,6 +311,11 @@ Comments**) discards anything you'd typed but not posted. Comments posted
 from World View's **My Shared World** or **World Encounters** travel the
 same way, with the same network choice beside **Post Comment**.
 
+To keep a comment off every network, choose **Local & peers only** instead.
+It's saved on your device and sent only to the peers connected right now, so
+it needs no network account. Anyone not connected when you post won't
+receive it, and nobody can find it on a network later.
+
 Other people's comments reach you:
 
 - from connected peers, as they're posted;

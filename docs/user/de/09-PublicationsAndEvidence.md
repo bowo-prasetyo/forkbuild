@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: b3097401f11e7bba -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 548f42ada7a113cb -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -351,6 +351,12 @@ eingegeben, aber nicht gesendet haben. In der Weltansicht unter **Meine
 Geteilte Welt** oder **Begegnungen in der Welt** gesendete Kommentare
 reisen auf dieselbe Weise, mit derselben Netzwerkwahl neben **Kommentar
 senden**.
+
+Soll ein Kommentar in keinem Netzwerk landen, wählen Sie stattdessen **Nur
+lokal & Peers**. Er wird auf Ihrem Gerät gespeichert und nur an die gerade
+verbundenen Peers gesendet, daher brauchen Sie kein Netzwerkkonto. Wer beim
+Senden nicht verbunden ist, erhält ihn nicht, und später kann ihn niemand in
+einem Netzwerk finden.
 
 Die Kommentare anderer erreichen Sie:
 
