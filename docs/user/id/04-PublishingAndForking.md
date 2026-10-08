@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 28974300f39be674 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4c0715a067f50e8b -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -53,8 +53,8 @@ punya tempat untuk dituju — lihat
 ## Membagikan tautan
 
 Begitu **Terbitkan** berhasil, pemberitahuan di Editor juga menampilkan
-**Bagikan…** (jika perangkat Anda punya menu berbagi), **Salin tautan**, dan
-**Simpan gambar**, dengan tautannya di bawahnya. Tombol yang sama ada di
+**Bagikan…** (jika perangkat Anda punya menu berbagi), **Salin tautan**,
+**Simpan gambar**, dan **Sematkan**, dengan tautannya di bawahnya. Tombol yang sama ada di
 bawah **Dunia Bersama Saya** di Tampilan Dunia.
 
 - **Bangunannya ikut di dalam tautan.** Tidak ada yang perlu
@@ -110,6 +110,39 @@ sebagai model 3D** (glTF, STL untuk cetak 3D, atau OBJ; lihat
 [Mengunduh model 3D](02-TheEditor.md#mengunduh-model-3d)). Jika lisensi bangunan itu tidak mengizinkan
 salinan, halamannya
 mengatakannya dan hanya menawarkan untuk mengelilinginya.
+
+### Menyematkan bangunan di halaman web
+
+Bangunan yang tautannya memuat bangunan itu juga dapat ditampilkan di dalam
+tulisan blog atau halaman web, tempat pembaca melihatnya berputar tanpa
+meninggalkan halaman:
+
+1. Di bawah tautan, pilih **Sematkan**. Kode untuk ditempel muncul di
+   bawahnya.
+2. Pilih **Salin kode sematan**, lalu tempelkan di bagian halaman yang
+   menerima HTML atau sematan (sebuah `<iframe>`).
+
+Di halaman itu, bangunan berputar perlahan, dan menyeret ke samping
+memutarnya dengan tangan. Judul dan pembuatnya ada di bagian bawah, di
+samping **Remix di ForkBuild** (**Buka di ForkBuild** jika lisensinya tidak
+mengizinkan salinan), yang membuka halaman bangunan itu sendiri di ForkBuild
+di tab baru (lihat
+[Apa yang dibuka sebuah tautan](#apa-yang-dibuka-sebuah-tautan)).
+
+- **Bangunan ikut di dalam kode**, seperti di tautannya: tidak ada yang
+  perlu didistribusikan, dan sematan memeriksa tanda tangan dan bangunannya
+  sebelum menampilkannya.
+- **Sematan tetap senyap.** Sematan tidak memulai satu pun koneksi ForkBuild
+  dan tidak menyimpan apa pun di browser pembaca; lihat
+  [Privasi](Privacy.md).
+- **Situs yang menyematkan tautan sendiri** (yang mendukung oEmbed, seperti
+  Notion dan Ghost) dapat diberi tautan dari **Salin tautan** saja: situs
+  itu meminta sematannya ke server tautan ForkBuild.
+- **Situs yang membuang kode `<iframe>`**, seperti kebanyakan jejaring
+  sosial, tidak dapat menampilkannya; bagikan tautan atau gambarnya di sana.
+
+Menyalin kode sematan, serta sematan yang ditampilkan atau dibuka di
+ForkBuild, juga dihitung secara anonim.
 
 ## Mendistribusikan langsung dari Editor
 

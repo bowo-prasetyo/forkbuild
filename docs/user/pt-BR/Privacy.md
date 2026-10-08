@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ddb447abdff42d17 -->
+<!-- translation-of: docs/Privacy.md source-hash: 14eb8e63d6c0263d -->
 # Privacidade
 
 <!-- languages -->
@@ -141,6 +141,15 @@ seu próprio caminho fixo:
 Ele também fica sabendo, do mesmo jeito, quando o ForkBuild é instalado
 como aplicativo (`/e/installed`).
 
+Ele também fica sabendo, do mesmo jeito, das construções incorporadas em
+páginas de outros sites (veja "Servidores que o ForkBuild contata" abaixo):
+
+- `/e/embed-code`: o código para incorporar de uma construção foi copiado
+  com **Incorporar → Copiar código para incorporar**;
+- `/e/embed-view`: uma construção incorporada foi mostrada em uma página;
+- `/e/embed-open`: uma construção incorporada foi aberta no ForkBuild a
+  partir dessa página.
+
 Cada uma envia só o caminho e o número aleatório: nunca o link, a
 construção, o título dela ou quem a fez. Quais construções foram abertas por
 um link fica só na memória da página aberta, e é esquecido quando ela fecha.
@@ -153,10 +162,17 @@ Nenhuma dessas solicitações é enviada:
 - de qualquer cópia do ForkBuild servida de outro lugar que não o site
   oficial, incluindo `localhost`.
 
+Uma construção incorporada não consegue ler a escolha **Contar este
+navegador**: ela não abre nenhum armazenamento, e os navegadores, de todo
+modo, separam o armazenamento de um site dentro das páginas de outros sites.
+Por isso `/e/embed-view` e `/e/embed-open` seguem só as outras duas regras:
+nunca com Global Privacy Control ou Do Not Track, e só a partir do site
+oficial.
+
 O código está em `core/VisitorCount.js`,
 `application/settings/CountDailyVisit.js`,
-`application/settings/FunnelEventCounter.js`, `ui/counterHit.js` e
-`ui/start.js`.
+`application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
+`ui/start.js` e `ui/embed/embedBoot.js`.
 
 ## Servidores com que o ForkBuild se comunica
 
@@ -176,6 +192,7 @@ pede a ele.
 | O aplicativo abre no site oficial, no máximo uma vez por dia (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com caminho fixo, sem referenciador e sem cookie |
 | No site oficial, você copia ou compartilha um link para uma construção, abre um link compartilhado ou copia para o Editor uma construção aberta por um link (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com caminho fixo que diz qual dos três momentos foi, sem referenciador e sem cookie |
 | Você instala o ForkBuild pelo site oficial (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com o caminho fixo `/e/installed`, sem referenciador e sem cookie |
+| No site oficial, você copia o código para incorporar de uma construção, ou uma construção incorporada é mostrada ou aberta no ForkBuild (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com um caminho fixo dizendo qual dos três casos foi, sem referenciador e sem cookie |
 | Você fica visível, ou procura alguém, em **Pares** | o servidor de encontro (`forkbuild-rendezvous.prazjp.workers.dev`) | a chave pública da sua identidade e uma oferta de conexão, guardadas por no máximo 15 minutos; a identidade que você procura; quando você se conecta a alguém que encontrou, sua resposta de conexão (que lista seus endereços de rede), que só essa pessoa pode buscar |
 | Você entra numa sala pública, ou olha uma | o mesmo servidor de encontro | seu cartão de sala assinado (chave pública, nome de exibição, qual sala), guardado por no máximo 15 minutos e renovado enquanto você fica; qual sala você olha |
 | Uma conexão entre pares começa | servidores STUN (`stun.l.google.com`) | nada além de um pedido do seu endereço IP público |
@@ -191,6 +208,8 @@ pede a ele.
 | Você distribui a Declaração assinada de uma publicação no Blurt (*experimental*) | o servidor de imagens do Blurt (`img-upload.blurt.blog`), diretamente ou, quando o navegador não consegue alcançá-lo, pelo relay `/blurt-image` do servidor de encontro, que não guarda nada | uma imagem 320×200 da construção para a prévia da postagem, assinada com sua chave de postagem do Blurt |
 | Você distribui a Declaração assinada de uma publicação no Steem (*experimental*) | o servidor de imagens do Steem (`steemitimages.com`), diretamente ou, quando o navegador não consegue alcançá-lo, pelo relé `/steem-image` do servidor de encontro, que não guarda nada | uma imagem de 320×200 da construção para a prévia da postagem, assinada com sua chave de postagem do Steem |
 | Alguém abre, ou um site mostra a prévia de, um link que leva a construção (`/b/…`) | o servidor de encontro (`forkbuild-rendezvous.prazjp.workers.dev`) | o link, que contém a construção e a Declaração assinada dela; ele não guarda nada |
+| Alguém abre uma página com uma construção incorporada (`embed.html#…`) | o site de onde o ForkBuild é servido (`bowo-prasetyo.github.io`) | solicitações dos arquivos da incorporação, sem referenciador; nunca a construção, que fica na parte do endereço que os navegadores não enviam |
+| Um site ou editor pergunta como incorporar um link `/b/…` (oEmbed) | o `/oembed` do servidor de encontro (`forkbuild-rendezvous.prazjp.workers.dev`) | o link, que contém a construção e sua Reivindicação assinada; ele não guarda nada |
 | Você abre um link compartilhado de uma publicação (`#/view/…`) | o nó do Steem ou do Blurt, o gateway do Arweave ou o gateway IPFS que o link indica, e depois os substratos de anúncio para encontrar a construção | qual postagem, transação ou CID você abre |
 | Você ancora ou verifica evidências no Bitcoin (*experimental*) | uma API Esplora (`blockstream.info`) | a transação que você transmite ou consulta |
 | Você verifica evidências na Base (*experimental*) | um endpoint JSON-RPC da Base (`mainnet.base.org`) | a transação que você consulta |
@@ -213,6 +232,17 @@ pedidos. Criar um link não contata nada. Quem tiver o link pode ver a
 construção, o título, a descrição e o nome do autor dela, e a chave pública
 da sua identidade, como em qualquer Mundo compartilhado que você
 distribuir.
+
+**Uma construção incorporada** (o código que **Incorporar** copia: um
+`<iframe>` de `embed.html#…` no site de onde o ForkBuild é servido) leva o
+mesmo: seu Mundo compartilhado assinado e a construção. A página onde ele é
+colado carrega a incorporação desse site, que não fica sabendo nem da
+construção (ela fica na parte do endereço que os navegadores nunca enviam a
+um servidor) nem da página ao redor (o quadro não envia referenciador). No
+navegador de quem lê, a incorporação confere a assinatura e a construção,
+mostra a construção e não guarda nada; ela não inicia nenhuma das conexões
+do aplicativo, então nenhum par, relay ou outra rede é contatado. Quem pode
+ver a página pode ver a construção, como acontece com o link.
 
 **Os relays só são usados quando precisa.** Uma conexão sempre tenta primeiro
 um caminho direto, depois um encontrado pelo STUN, e só recorre ao relay TURN

@@ -76,4 +76,32 @@ const policy = parsePolicy(metas[0][1]);
     console.log('✓ the import map points only at vendored files');
 }
 
+// embed.html, the page a build embedded on another site opens in: the same
+// import map (so the same hash), and nothing to connect to beyond this site.
+{
+    const embed = readFileSync(new URL('../embed.html', import.meta.url), 'utf8');
+    const embedMetas = [...embed.matchAll(/<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"\s*>/g)];
+    assert(embedMetas.length === 1, `embed.html declares exactly one Content-Security-Policy (found ${embedMetas.length})`);
+    const embedPolicy = parsePolicy(embedMetas[0][1]);
+    const inlineScripts = [...embed.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+    const importMapText = html.match(/<script type="importmap">([\s\S]*?)<\/script>/)[1];
+    assert(inlineScripts.length === 1 && inlineScripts[0] === importMapText, 'embed.html\'s only inline script is index.html\'s import map, word for word');
+    assert(JSON.stringify(embedPolicy.get('script-src')) === JSON.stringify(policy.get('script-src')), 'so it allows the same scripts');
+    const expect = {
+        'default-src': ["'self'"],
+        'style-src': ["'self'"],
+        'img-src': policy.get('img-src'),
+        'connect-src': ["'self'"],
+        'worker-src': ["'none'"],
+        'frame-src': ["'none'"],
+        'object-src': ["'none'"],
+        'base-uri': ["'none'"],
+        'form-action': ["'none'"]
+    };
+    for (const [name, values] of Object.entries(expect)) {
+        assert(JSON.stringify(embedPolicy.get(name)) === JSON.stringify(values), `embed.html: ${name} is ${values.join(' ')} (found ${JSON.stringify(embedPolicy.get(name))})`);
+    }
+    console.log('✓ embed.html: the same scripts, and no network beyond this site and the visitor count');
+}
+
 console.log('\n✅ All ContentSecurityPolicy tests passed.');

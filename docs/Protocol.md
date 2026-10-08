@@ -299,6 +299,28 @@ the link, so none is searched for: the build stands at its deterministic
 grid position. When the Publication has been distributed, Share offers the
 network link instead, as the shorter one.
 
+The same payload embeds the build in another site's page, as an `<iframe>`
+of the app's embed page (ui/embed/, core/ForkBuildAppLinks.js `embedCode()`):
+
+    <iframe src="https://bowo-prasetyo.github.io/forkbuild/embed.html#<payload>"
+            width="640" height="480" title="<title> on ForkBuild"
+            style="border:0;max-width:100%" loading="lazy"
+            referrerpolicy="no-referrer"></iframe>
+
+The embed page checks the claim and build as opening the link does
+(application/publication/sharing/OpenEmbeddedBuild.js) but keeps and admits
+nothing, and links to `#/s/<payload>`. The rendezvous worker answers oEmbed
+(https://oembed.com) for its `/b/` links:
+
+    https://forkbuild-rendezvous.prazjp.workers.dev/oembed?url=<a /b/<payload> link>[&maxwidth=…][&maxheight=…][&format=json]
+
+with a `rich` answer whose `html` is the same `<iframe>` (titled in English,
+sized within `maxwidth` and `maxheight` at 4:3), plus `title`, `author_name`
+and the `/b/<payload>/preview.png` thumbnail, only for a claim and build that
+check out as above; anything else is 404, and a `format` other than `json`
+is 501. The `/b/` page of such a build names it with
+`<link rel="alternate" type="application/json+oembed">`.
+
 ## Signatures
 
 Every signed object is signed over a canonical envelope built in fixed

@@ -37,7 +37,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { License, LicenseId } from '../core/License.js';
-import { payloadFromLinkPreviewUrl } from '../core/ForkBuildAppLinks.js';
+import { embedCode, payloadFromLinkPreviewUrl } from '../core/ForkBuildAppLinks.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -153,7 +153,7 @@ async function openLinkOnlyShare(browser, base) {
     const manager = new DocumentManager();
     manager.load(new Document({ world, metadata: new DocumentMetadata({ title: 'Linked castle', author: 'alice', license: new License({ id: LicenseId.CC_BY_4_0 }) }) }), 'doc-linked-castle');
     const publication = new PublishDocumentUseCase(new LocalPublisherProvider(storage, contentStore), identity).execute(manager);
-    const { url } = await prepareLinkOnlyShare({ publication, contentStore, appUrl: `${base}/`, previewUrl: null });
+    const { url, payload } = await prepareLinkOnlyShare({ publication, contentStore, appUrl: `${base}/`, previewUrl: null });
     assert(url, 'the castle gets a link-only share');
 
     const context = await browser.newContext();
@@ -194,6 +194,63 @@ async function openLinkOnlyShare(browser, base) {
         assert(width <= 390, `and the screen fits it (${width}px)`);
         const button = await small.$eval('.shared-build-edit-copy', (element) => element.getBoundingClientRect().width);
         assert(button >= 300, `with Edit a Copy across it (${button}px)`);
+    } finally {
+        await phone.close();
+    }
+
+    await openEmbed(browser, base, payload);
+}
+
+// The same castle embedded in another site's page, as Embed's code puts it
+// there: the published embed.html shows it turning, a drag turns it, and Remix
+// on ForkBuild opens its shared link's screen in a new tab. It fits a phone's
+// column too.
+async function openEmbed(browser, base, payload) {
+    const code = embedCode({ payload, frameTitle: 'Linked castle on ForkBuild', appUrl: `${base}/` });
+    const context = await browser.newContext({ viewport: { width: 1000, height: 800 } });
+    const page = await context.newPage();
+    const problems = [];
+    page.on('pageerror', (error) => problems.push(error.message));
+    page.on('console', (message) => {
+        if (message.type() === 'error' && !NETWORK_NOISE.test(message.text())) problems.push(message.text());
+    });
+    // Another origin's page: a server of its own, on another port.
+    const blog = createServer((request, response) => {
+        response.writeHead(200, { 'Content-Type': 'text/html' });
+        response.end(`<!doctype html><title>A blog</title><h1>My castle</h1>${code}`);
+    });
+    await new Promise((resolve) => blog.listen(0, '127.0.0.1', resolve));
+    try {
+        await page.goto(`http://127.0.0.1:${blog.address().port}/post`);
+        const frame = await (await page.waitForSelector('iframe')).contentFrame();
+        await frame.waitForSelector('.embed-open', { timeout: 60_000 });
+        assert((await frame.textContent('.embed-title')).trim() === 'Linked castle', 'the embed shows the castle');
+        await frame.waitForSelector('canvas.build-turntable-canvas--draggable', { timeout: 60_000 });
+        const box = await (await frame.$('canvas')).boundingBox();
+        assert(Math.round(box.width) === 640, `filling its frame (${box.width}px wide)`);
+        await page.mouse.move(box.x + 200, box.y + 150);
+        await page.mouse.down();
+        await page.mouse.move(box.x + 320, box.y + 150, { steps: 4 });
+        await page.mouse.up();
+        await frame.waitForSelector('.embed-hint', { state: 'detached', timeout: 10_000 });
+        const [tab] = await Promise.all([context.waitForEvent('page', { timeout: 30_000 }), frame.click('.embed-open')]);
+        await tab.waitForSelector('.shared-build-edit-copy', { timeout: 60_000 });
+        assert(tab.url() === `${base}/#/s/${payload}`, 'Remix on ForkBuild opens the castle\'s shared link in a new tab');
+        assert((await tab.textContent('.shared-build-title')).trim() === 'Linked castle', 'on its own screen, ready to copy');
+        assert(problems.length === 0, `the embed runs without errors (${problems.join('; ')})`);
+    } finally {
+        await context.close();
+        blog.close();
+    }
+
+    const phone = await browser.newContext({ viewport: { width: 320, height: 240 } });
+    const small = await phone.newPage();
+    try {
+        await small.goto(`${base}/embed.html#${payload}`);
+        await small.waitForSelector('.embed-open', { timeout: 60_000 });
+        const fits = await small.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth
+            && document.querySelector('.embed-open').getBoundingClientRect().right <= window.innerWidth);
+        assert(fits, 'a phone-sized frame fits the embed and its button');
     } finally {
         await phone.close();
     }
@@ -281,6 +338,9 @@ async function firstVisit(browser, base) {
         assert((await editor.textContent('.user-widget')).includes('Bundle builder'), 'and leaves the new identity logged in');
         await editor.click('.editor-post-publish-share .publication-share-link-actions button:has-text("Copy link")');
         await editor.waitForSelector('.first-build-step--done[data-step="share"]', { timeout: 10_000 });
+        await editor.click('.editor-post-publish-share .publication-share-link-embed');
+        const embed = await editor.$eval('.editor-post-publish-share .publication-share-embed-code', (area) => area.value);
+        assert(embed.startsWith('<iframe ') && embed.includes(`embed.html#${payloadFromLinkPreviewUrl(link)}"`), `Embed offers the same build as an <iframe> (${embed.slice(0, 60)})`);
 
         const friend = await browser.newContext({ viewport: { width: 1280, height: 800 } });
         try {
@@ -335,8 +395,13 @@ async function offlineAndNotifications(browser, base, precacheFiles, publishedDi
         });
         assert(kept >= precacheFiles, `the app's files are kept on the first visit (${kept} of at least ${precacheFiles})`);
 
+        // An embed opened on this site is kept as itself, never as the app's
+        // page: offline straight after, the app still opens.
+        await page.goto(`${base}/embed.html#1AAAAAAAA`);
+        await page.waitForSelector('.embed-status [role="alert"]', { timeout: 60_000 });
+
         await context.setOffline(true);
-        await page.reload();
+        await page.goto(`${base}/`);
         await page.waitForSelector('.home-view', { timeout: 60_000 });
         await page.evaluate(() => { location.hash = '#/editor?start=village:house'; });
         await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });

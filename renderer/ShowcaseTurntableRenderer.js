@@ -106,6 +106,16 @@ export class ShowcaseTurntableRenderer {
         this._lastTime = null;
     }
 
+    // Turns the camera by `radians` at once, for a person dragging the build
+    // round; the slow turn carries on from there.
+    turnBy(radians) {
+        if (!Number.isFinite(radians)) {
+            return;
+        }
+        this._azimuth += radians;
+        this._draw();
+    }
+
     // Matches the drawing buffer to the canvas's displayed size; call it
     // when that size changes.
     resize() {

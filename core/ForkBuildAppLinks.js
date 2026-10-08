@@ -136,3 +136,31 @@ export function payloadFromLinkPreviewUrl(url) {
     const match = typeof url === 'string' ? /\/b\/([A-Za-z0-9_-]+)(?:[?#].*)?$/.exec(url) : null;
     return match ? match[1] : null;
 }
+
+// The page that shows a build carried in a link on another site, inside an
+// <iframe> (ui/embed/): `embed.html#<payload>`, the payload in the fragment
+// as for #/s/<payload>, so the build never reaches a server.
+export const EMBED_PAGE = 'embed.html';
+// What Copy embed code sizes the frame at; the page fills whatever it is given.
+export const EMBED_WIDTH = 640;
+export const EMBED_HEIGHT = 480;
+
+export function embedUrl(payload, appUrl = FORKBUILD_APP_URL) {
+    if (!isLinkOnlyPublicationPayload(payload)) throw new TypeError('not a link payload');
+    return `${appUrl}${EMBED_PAGE}#${payload}`;
+}
+
+// The payload an embed page's fragment (`#<payload>`) carries, or null.
+export function payloadFromEmbedHash(hash) {
+    const payload = typeof hash === 'string' ? hash.replace(/^#/, '') : '';
+    return isLinkOnlyPublicationPayload(payload) ? payload : null;
+}
+
+// The HTML to paste where the build should appear: an <iframe> of embedUrl().
+// `frameTitle` names the frame for screen readers. The frame sends no
+// referrer, so the page it is pasted into isn't told to the embed.
+export function embedCode({ payload, frameTitle, appUrl = FORKBUILD_APP_URL, width = EMBED_WIDTH, height = EMBED_HEIGHT }) {
+    const title = String(frameTitle ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    return `<iframe src="${embedUrl(payload, appUrl)}" width="${width}" height="${height}" title="${title}" `
+        + 'style="border:0;max-width:100%" loading="lazy" referrerpolicy="no-referrer"></iframe>';
+}

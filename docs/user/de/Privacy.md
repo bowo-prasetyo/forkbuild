@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ddb447abdff42d17 -->
+<!-- translation-of: docs/Privacy.md source-hash: 14eb8e63d6c0263d -->
 # Datenschutz
 
 <!-- languages -->
@@ -151,6 +151,15 @@ eigenen festen Pfad:
 Ebenso erfährt er, wenn ForkBuild als App installiert wird
 (`/e/installed`).
 
+Ebenso erfährt er von Bauwerken, die in Seiten anderer Websites eingebettet
+sind (siehe „Server, die ForkBuild kontaktiert“ unten):
+
+- `/e/embed-code`: der Einbettungscode eines Bauwerks wurde mit
+  **Einbetten → Code zum Einbetten kopieren** kopiert;
+- `/e/embed-view`: ein eingebettetes Bauwerk wurde auf einer Seite gezeigt;
+- `/e/embed-open`: ein eingebettetes Bauwerk wurde von dieser Seite aus in
+  ForkBuild geöffnet.
+
 Jede sendet nur ihren Pfad und die Zufallszahl, nie den Link, das Bauwerk,
 seinen Titel oder wer es gemacht hat. Welche Bauwerke über einen Link
 geöffnet wurden, steht nur im Arbeitsspeicher der geöffneten Seite und ist
@@ -164,10 +173,17 @@ Keine davon wird je gesendet:
 - von einer Kopie von ForkBuild, die anderswo als auf der offiziellen
   Website bereitgestellt wird, auch nicht von `localhost`.
 
+Ein eingebettetes Bauwerk kann die Wahl **Diesen Browser mitzählen** nicht
+lesen: Es öffnet keinen Speicher, und Browser halten den Speicher einer
+Website innerhalb der Seiten anderer Websites ohnehin getrennt. Deshalb
+folgen `/e/embed-view` und `/e/embed-open` nur den anderen beiden Regeln:
+nie mit Global Privacy Control oder Do Not Track, und nur von der
+offiziellen Website.
+
 Der Code steht in `core/VisitorCount.js`,
 `application/settings/CountDailyVisit.js`,
-`application/settings/FunnelEventCounter.js`, `ui/counterHit.js` und
-`ui/start.js`.
+`application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
+`ui/start.js` und `ui/embed/embedBoot.js`.
 
 ## Server, die ForkBuild kontaktiert
 
@@ -189,6 +205,7 @@ was Sie bei ihm anfragen.
 | Die App öffnet sich auf der offiziellen Website, höchstens einmal am Tag (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit festem Pfad, ohne Referrer und ohne Cookie |
 | Sie kopieren oder teilen auf der offiziellen Website einen Link zu einem Bauwerk, öffnen einen geteilten Link oder kopieren ein darüber geöffnetes Bauwerk in den Editor (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit festem Pfad, der nennt, welcher der drei Momente es war, ohne Referrer und ohne Cookie |
 | Sie installieren ForkBuild von der offiziellen Seite (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/installed`, ohne Referrer und ohne Cookie |
+| Auf der offiziellen Website kopieren Sie den Einbettungscode eines Bauwerks, oder ein eingebettetes Bauwerk wird gezeigt oder in ForkBuild geöffnet (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit einem festen Pfad, der nennt, welcher der drei Fälle es war, ohne Referrer und ohne Cookie |
 | Sie machen sich unter **Peers** auffindbar oder suchen jemanden | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | den öffentlichen Schlüssel Ihrer Identität und ein Verbindungsangebot, höchstens 15 Minuten aufbewahrt; die Identität, die Sie suchen; wenn Sie sich mit jemandem verbinden, den Sie gefunden haben, Ihre Verbindungsantwort (sie listet Ihre Netzwerkadressen auf), die nur diese Person abholen kann |
 | Sie treten einer öffentlichen Lobby bei oder sehen in eine hinein | derselbe Rendezvous-Server | Ihre signierte Lobby-Karte (öffentlicher Schlüssel, Anzeigename, welche Lobby), höchstens 15 Minuten aufbewahrt und erneuert, solange Sie bleiben; in welche Lobby Sie hineinsehen |
 | Eine Peer-Verbindung beginnt | STUN-Server (`stun.l.google.com`) | nichts außer einer Anfrage nach Ihrer öffentlichen IP-Adresse |
@@ -204,6 +221,8 @@ was Sie bei ihm anfragen.
 | Sie verteilen den Signierten Anspruch einer Veröffentlichung auf Blurt (*experimentell*) | der Bildhoster von Blurt (`img-upload.blurt.blog`), direkt oder, wenn der Browser ihn nicht erreicht, über das `/blurt-image`-Relay des Rendezvous-Servers, das nichts speichert | ein 320×200-Bild des Bauwerks für die Vorschau des Beitrags, signiert mit Ihrem Blurt-Posting-Schlüssel |
 | Sie verteilen den Signierten Anspruch einer Veröffentlichung auf Steem (*experimentell*) | der Steem-Bildhoster (`steemitimages.com`), direkt oder, wenn der Browser ihn nicht erreicht, über das `/steem-image`-Relay des Rendezvous-Servers, das nichts speichert | ein 320×200-Bild des Bauwerks für die Vorschau des Beitrags, signiert mit Ihrem Steem-Posting-Schlüssel |
 | Jemand öffnet einen Link, der sein Bauwerk enthält (`/b/…`), oder eine Website zeigt eine Vorschau davon | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | den Link, der das Bauwerk und seinen Signierten Anspruch enthält; er speichert nichts |
+| Jemand öffnet eine Seite, in die ein Bauwerk eingebettet ist (`embed.html#…`) | die Website, von der ForkBuild bereitgestellt wird (`bowo-prasetyo.github.io`) | Anfragen nach den Dateien der Einbettung, ohne Referrer; nie das Bauwerk, das im Teil der Adresse steht, den Browser nicht senden |
+| Eine Website oder ein Editor fragt, wie ein `/b/…`-Link eingebettet wird (oEmbed) | `/oembed` des Rendezvous-Servers (`forkbuild-rendezvous.prazjp.workers.dev`) | den Link, der das Bauwerk und seinen Signierten Anspruch enthält; er speichert nichts |
 | Sie öffnen einen geteilten Link zu einer Veröffentlichung (`#/view/…`) | der Steem- oder Blurt-Knoten, das Arweave-Gateway oder das IPFS-Gateway, das der Link nennt, dann die Ankündigungssubstrate, um sein Bauwerk zu finden | welchen Beitrag, welche Transaktion oder welche CID Sie öffnen |
 | Sie verankern oder überprüfen Nachweise auf Bitcoin (*experimentell*) | eine Esplora-API (`blockstream.info`) | die Transaktion, die Sie senden oder nachschlagen |
 | Sie überprüfen Nachweise auf Base (*experimentell*) | ein Base-JSON-RPC-Endpunkt (`mainnet.base.org`) | die Transaktion, die Sie nachschlagen |
@@ -225,6 +244,18 @@ betreibt, kann die angefragten Adressen protokollieren. Einen Link zu
 erstellen kontaktiert nichts. Wer den Link hat, sieht das Bauwerk, seinen
 Titel, seine Beschreibung und den Namen des Autors sowie den öffentlichen
 Schlüssel Ihrer Identität, wie bei jeder Geteilten Welt, die Sie verteilen.
+
+**Ein eingebettetes Bauwerk** (der Code, den **Einbetten** kopiert: ein
+`<iframe>` von `embed.html#…` auf der Website, von der ForkBuild
+bereitgestellt wird) trägt dasselbe: Ihre signierte Geteilte Welt und das
+Bauwerk. Die Seite, in die es eingefügt wird, lädt die Einbettung von dieser
+Website, die weder das Bauwerk erfährt (es steht im Teil der Adresse, den
+Browser nie an einen Server senden) noch die Seite drumherum (der Rahmen
+sendet keinen Referrer). Im Browser des Lesers prüft die Einbettung die
+Signatur und das Bauwerk, zeigt es und speichert nichts; sie startet keine
+der Verbindungen der App, es werden also keine Peers, Relays oder anderen
+Netzwerke kontaktiert. Wer die Seite sehen kann, sieht das Bauwerk, wie bei
+seinem Link.
 
 **Relays werden nur bei Bedarf genutzt.** Eine Verbindung versucht immer
 zuerst einen direkten Weg, dann einen über STUN gefundenen, und weicht nur

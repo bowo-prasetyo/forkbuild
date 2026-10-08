@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 28974300f39be674 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4c0715a067f50e8b -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -52,7 +52,7 @@ gente: consulte [Encontrar mundos](03-WorldView.md#encontrar-mundos).
 
 En cuanto **Publicar** se completa, el aviso del Editor también muestra
 **Compartir…** (donde su dispositivo tiene un menú para compartir), **Copiar
-enlace** y **Guardar imagen**, con el enlace debajo. Los mismos botones
+enlace**, **Guardar imagen** e **Insertar**, con el enlace debajo. Los mismos botones
 están en **Mi Mundo compartido** en la Vista de mundo.
 
 - **La construcción viaja dentro del enlace.** No hace falta distribuir nada
@@ -109,6 +109,38 @@ como modelo 3D** (glTF, STL para impresión 3D u OBJ; consulte
 [Descargar un modelo 3D](02-TheEditor.md#descargar-un-modelo-3d)). Si la licencia de la construcción no permite
 copias, la página lo dice y
 solo ofrece recorrerla.
+
+### Insertar una construcción en una página web
+
+Una construcción cuyo enlace la lleva también se puede mostrar dentro de una
+entrada de blog o una página web, donde los lectores la ven girar sin salir
+de la página:
+
+1. Debajo del enlace, elija **Insertar**. El código para pegar aparece
+   debajo.
+2. Elija **Copiar código para insertar** y péguelo donde la página acepte
+   HTML o contenido insertado (un `<iframe>`).
+
+En la página, la construcción gira despacio, y arrastrar hacia los lados la
+gira a mano. Su título y quién la hizo aparecen abajo, junto a **Remezclar
+en ForkBuild** (**Abrir en ForkBuild** cuando su licencia no permite
+copias), que abre la página propia de la construcción en ForkBuild en una
+pestaña nueva (consulte [Lo que abre un enlace](#lo-que-abre-un-enlace)).
+
+- **La construcción viaja dentro del código**, como en su enlace: no hace
+  falta distribuir nada, y la inserción comprueba la firma y la construcción
+  antes de mostrarla.
+- **Es discreta.** La inserción no inicia ninguna de las conexiones de
+  ForkBuild y no guarda nada en el navegador del lector; consulte
+  [Privacidad](Privacy.md).
+- **Los sitios que insertan enlaces por sí mismos** (los que admiten
+  oEmbed, como Notion y Ghost) pueden recibir en su lugar el enlace de
+  **Copiar enlace**: piden la inserción al servidor de enlaces de ForkBuild.
+- **Los sitios que eliminan el código `<iframe>`**, como la mayoría de las
+  redes sociales, no pueden mostrarla; comparta allí el enlace o la imagen.
+
+Copiar el código, y que una inserción se muestre o se abra en ForkBuild,
+también se cuentan de forma anónima.
 
 ## Distribuir directamente desde el Editor
 

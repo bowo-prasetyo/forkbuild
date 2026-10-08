@@ -801,3 +801,19 @@
     padding: 0.35rem 0.5rem;
     margin-bottom: 0.35rem;
 }
+
+/* Embed's <iframe> code, below the link. */
+.publication-share-embed {
+    margin-top: 0.5rem;
+}
+
+.publication-share-embed-code {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8em;
+    padding: 0.35rem 0.5rem;
+    margin-bottom: 0.35rem;
+    resize: vertical;
+    word-break: break-all;
+}

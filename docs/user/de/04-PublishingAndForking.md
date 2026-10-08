@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 28974300f39be674 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4c0715a067f50e8b -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -53,8 +53,8 @@ geteilten Welt, sodass **Erkunden** immer ein Ziel hat — siehe
 ## Einen Link teilen
 
 Sobald **Veröffentlichen** gelingt, zeigt der Hinweis im Editor auch
-**Teilen …** (wo Ihr Gerät ein Teilen-Menü hat), **Link kopieren** und
-**Bild speichern**, darunter den Link. Dieselben Schaltflächen stehen in der
+**Teilen …** (wo Ihr Gerät ein Teilen-Menü hat), **Link kopieren**,
+**Bild speichern** und **Einbetten**, darunter den Link. Dieselben Schaltflächen stehen in der
 Weltansicht unter **Meine Geteilte Welt**.
 
 - **Das Bauwerk steckt im Link.** Vorher muss nichts verteilt werden, und
@@ -111,6 +111,38 @@ Erlaubt die Lizenz Kopien, bietet die Seite auch **Als 3D-Modell
 herunterladen** an (glTF, STL für den 3D-Druck oder OBJ; siehe
 [Ein 3D-Modell herunterladen](02-TheEditor.md#ein-3d-modell-herunterladen)). Erlaubt die Lizenz des Bauwerks keine Kopien, sagt die Seite das und
 bietet nur den Rundgang an.
+
+### Ein Bauwerk in eine Webseite einbetten
+
+Ein Bauwerk, dessen Link es enthält, kann auch in einem Blogbeitrag oder auf
+einer Webseite gezeigt werden, wo Leser es sich drehen sehen, ohne die Seite
+zu verlassen:
+
+1. Wählen Sie unter dem Link **Einbetten**. Darunter erscheint der Code zum
+   Einfügen.
+2. Wählen Sie **Code zum Einbetten kopieren** und fügen Sie ihn dort ein, wo
+   die Seite HTML oder eine Einbettung (ein `<iframe>`) annimmt.
+
+Auf der Seite dreht sich das Bauwerk langsam, und seitliches Ziehen dreht es
+von Hand. Titel und Ersteller stehen unten, neben **Auf ForkBuild remixen**
+(**In ForkBuild öffnen**, wenn seine Lizenz keine Kopien erlaubt), das die
+eigene Seite des Bauwerks in ForkBuild in einem neuen Tab öffnet (siehe
+[Was ein Link öffnet](#was-ein-link-öffnet)).
+
+- **Das Bauwerk steckt im Code**, wie in seinem Link: Es muss nichts
+  verteilt werden, und die Einbettung prüft Signatur und Bauwerk, bevor sie
+  es zeigt.
+- **Sie bleibt still.** Die Einbettung startet keine der Verbindungen von
+  ForkBuild und speichert nichts im Browser des Lesers; siehe
+  [Datenschutz](Privacy.md).
+- **Websites, die Links selbst einbetten** (solche mit oEmbed, etwa Notion
+  und Ghost), können stattdessen den Link von **Link kopieren** bekommen:
+  Sie fragen den Link-Server von ForkBuild nach der Einbettung.
+- **Websites, die `<iframe>`-Code entfernen**, wie die meisten sozialen
+  Netzwerke, können sie nicht zeigen; teilen Sie dort den Link oder das Bild.
+
+Auch das Kopieren des Codes und das Zeigen oder Öffnen einer Einbettung in
+ForkBuild werden anonym gezählt.
 
 ## Direkt aus dem Editor verteilen
 

@@ -130,6 +130,22 @@ Redeploy the worker before publishing an app that shares such links. A copy
 hosted elsewhere sets the worker's `APP_URL` to its own address and
 `FORKBUILD_LINK_PREVIEW_URL` in `core/ForkBuildAppLinks.js` to its worker.
 
+### Embeds
+
+**Embed** copies an `<iframe>` of `embed.html#<payload>`, which shows a
+build inside another site's page. `embed.html` sits beside `index.html`
+and loads `ui/embed/embedBoot.js` (bundled by `scripts/build.mjs` into its
+own entry, sharing the app's chunks) and `css/embed.css`. It has its own
+Content Security Policy: as `index.html`'s, with the same import map and
+hash, but `connect-src 'self'` and `worker-src 'none'`. It opens no
+storage and starts none of the app's connections, and the service worker
+keeps it as itself, never in place of the app's page. Other sites must be
+allowed to frame it: GitHub Pages sends no `X-Frame-Options`, and a host
+that sends `frame-ancestors` must leave `embed.html` out (see
+"Recommended HTTP headers"). The worker's `/oembed` (see the worker's
+README) lets sites that embed links themselves turn a `/b/` link into the
+same `<iframe>`; it is part of the same worker deployment.
+
 ## Everything is served from your own origin
 
 The page loads no scripts, styles or fonts from anywhere else. The
@@ -184,7 +200,7 @@ applies on any host:
 | `img-src` | `'self' data: blob: https://forkbuild.goatcounter.com` | Thumbnails are rendered to `data:` images; the visitor count's hits are images from GoatCounter (docs/Privacy.md, "Visitor count"). |
 | `media-src` | `'self' blob:` | Voice call audio. |
 | `connect-src` | `'self' https: wss: http://127.0.0.1:* http://localhost:*` | Relays, gateways and APIs are user-configurable, so any HTTPS/WSS endpoint is allowed; plain HTTP only to a local IPFS node. |
-| `worker-src` | `'self'` | The built site's service worker, `sw.js` (see "Installing and working offline"). |
+| `worker-src` | `'self'` | The built site's service worker, `sw.js` (see "Installing and working offline"). `embed.html` has `'none'`, and `connect-src 'self'` (see "Embeds"). |
 | `object-src`, `frame-src` | `'none'` | Not used. |
 | `base-uri`, `form-action` | `'none'` | Every form is handled in script. |
 
@@ -206,4 +222,7 @@ headers, also send:
 
 `frame-ancestors 'none'` stops other sites from embedding ForkBuild in a
 frame (clickjacking); it only works as a header. When a policy arrives both
-as a header and in the page, the browser enforces both.
+as a header and in the page, the browser enforces both. Send it for every
+page except `embed.html`, which exists to be framed by other sites (see
+"Embeds"); that page has nothing to click that changes anything, only a
+link that opens ForkBuild in a new tab.

@@ -1,9 +1,10 @@
 import { inflateSync } from 'node:zlib';
 import worker from '../server/rendezvous-worker/worker.js';
-import { BRICK_SHAPES, PREVIEW_HEIGHT, PREVIEW_WIDTH, bricksOf, renderPreviewPng } from '../server/rendezvous-worker/buildPreview.js';
+import { BRICK_SHAPES, EMBED_HEIGHT, EMBED_WIDTH, PREVIEW_HEIGHT, PREVIEW_WIDTH, bricksOf, renderPreviewPng } from '../server/rendezvous-worker/buildPreview.js';
+import { EMBED_HEIGHT as APP_EMBED_HEIGHT, EMBED_WIDTH as APP_EMBED_WIDTH } from '../core/ForkBuildAppLinks.js';
 import { CoreLibrary } from '../core/library/CoreLibrary.js';
 import { ShowcaseLibrary } from '../core/library/ShowcaseLibrary.js';
-import { FORKBUILD_APP_URL, FORKBUILD_LINK_PREVIEW_URL, payloadFromLinkPreviewUrl } from '../core/ForkBuildAppLinks.js';
+import { FORKBUILD_APP_URL, FORKBUILD_LINK_PREVIEW_URL, embedCode, payloadFromLinkPreviewUrl } from '../core/ForkBuildAppLinks.js';
 import { prepareLinkOnlyShare } from '../application/publication/PublicationShareLink.js';
 import { decodePublicationLinkPayload, encodePublicationLinkPayload } from '../application/publication/sharing/PublicationLinkPayload.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
@@ -146,6 +147,43 @@ function pixelAt(png, x, y) {
     const other = await get(`${FORKBUILD_LINK_PREVIEW_URL}b/bad/path/here`);
     assert(other.status === 200 && (await other.text()).includes('rendezvous worker is running'), 'other paths are left to the rendezvous worker');
     console.log('✓ a forged, changed, unsigned or damaged link gets the plain preview');
+}
+
+// oEmbed: a signed build's /b/ page names it, and it answers with the same
+// embed code the app copies, sized within what the consumer allows.
+{
+    const link = await shareUrl();
+    const payload = payloadFromLinkPreviewUrl(link);
+    const oembed = (query) => get(`${FORKBUILD_LINK_PREVIEW_URL}oembed?${query}`);
+    const discovery = /<link rel="alternate" type="application\/json\+oembed" href="([^"]+)"/.exec(await (await get(link)).text());
+    assert(discovery, 'the page of a signed build names its oEmbed');
+    const answer = await get(discovery[1].replace(/&amp;/g, '&'));
+    assert(answer.status === 200 && answer.headers.get('content-type').startsWith('application/json') && answer.headers.get('access-control-allow-origin') === '*', `which answers JSON (${answer.status})`);
+    const json = await answer.json();
+    assert(json.version === '1.0' && json.type === 'rich' && json.provider_name === 'ForkBuild' && json.provider_url === FORKBUILD_APP_URL, 'a rich oEmbed from ForkBuild');
+    assert(json.title === 'Castle on the hill' && json.author_name === 'alice', 'naming the build and its maker');
+    assert(EMBED_WIDTH === APP_EMBED_WIDTH && EMBED_HEIGHT === APP_EMBED_HEIGHT && json.width === EMBED_WIDTH && json.height === EMBED_HEIGHT, 'at the embed\'s size');
+    assert(json.html === embedCode({ payload, frameTitle: 'Castle on the hill on ForkBuild' }), `with the code the app's Embed copies (${json.html.slice(0, 80)})`);
+    assert(json.thumbnail_url === `${link}/preview.png` && json.thumbnail_width === PREVIEW_WIDTH, 'and its picture');
+
+    const small = await (await oembed(`url=${encodeURIComponent(link)}&maxwidth=320&maxheight=400`)).json();
+    assert(small.width === 320 && small.height === 240 && small.html.includes('width="320" height="240"'), `smaller when asked, keeping its shape (${small.width} × ${small.height})`);
+    const short = await (await oembed(`url=${encodeURIComponent(link)}&maxheight=120`)).json();
+    assert(short.width <= 160 && short.height <= 120, `never past maxheight (${short.width} × ${short.height})`);
+    const mustNotGrow = await (await oembed(`url=${encodeURIComponent(link)}&maxwidth=5000`)).json();
+    assert(mustNotGrow.width === EMBED_WIDTH, 'and never larger');
+
+    assert((await oembed(`url=${encodeURIComponent(link)}&format=xml`)).status === 501, 'XML is not offered');
+    const elsewhere = link.replace(new URL(FORKBUILD_LINK_PREVIEW_URL).origin, 'https://example.com');
+    for (const [label, query] of [['no url', ''], ['another site\'s link', `url=${encodeURIComponent(elsewhere)}`], ['a picture', `url=${encodeURIComponent(`${link}/preview.png`)}`], ['nonsense', 'url=%%%']]) {
+        assert((await oembed(query)).status === 404, `${label}: not found`);
+    }
+    const genuine = await decodePublicationLinkPayload(payload);
+    const forged = await encodePublicationLinkPayload({ claim: { ...genuine.claim, title: 'Free money, click here' }, snapshotText: genuine.snapshotText });
+    const forgedLink = `${FORKBUILD_LINK_PREVIEW_URL}b/${forged}`;
+    assert((await oembed(`url=${encodeURIComponent(forgedLink)}`)).status === 404, 'a forged build gets no embed');
+    assert(!(await (await get(forgedLink)).text()).includes('json+oembed'), 'and its page names none');
+    console.log('✓ oEmbed embeds a signed build with the app\'s own embed code');
 }
 
 // The picture: unknown bricks and old documents are drawn too; an empty build draws only the sky.

@@ -42,6 +42,18 @@ export class FunnelEventCounter {
         return this.count(FunnelEvent.INSTALLED);
     }
 
+    copiedEmbedCode() {
+        return this.count(FunnelEvent.EMBED_CODE);
+    }
+
+    embedViewed() {
+        return this.count(FunnelEvent.EMBED_VIEW);
+    }
+
+    openedFromEmbed() {
+        return this.count(FunnelEvent.EMBED_OPEN);
+    }
+
     // Counted once per build opened from a link.
     forked(sourceDocumentId) {
         if (!this._openedFromLink.delete(sourceDocumentId)) return false;

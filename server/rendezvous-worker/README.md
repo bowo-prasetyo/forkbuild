@@ -260,6 +260,20 @@ Check it by sharing a build from the app and opening the link, or by pasting
 it into a link-preview debugger (for example Facebook's Sharing Debugger or
 opengraph.xyz).
 
+### oEmbed
+
+`GET /oembed?url=<a /b/<payload> link of this worker>` answers oEmbed
+(https://oembed.com), so sites and editors that embed links themselves
+(Notion, Ghost, WordPress plugins and others that discover oEmbed) show the
+build itself, turning, rather than a card. The answer is `type: "rich"`, and
+its `html` is an `<iframe>` of the app's `APP_URL` + `embed.html#<payload>`,
+the same code the app's **Embed** copies, sized within `maxwidth` and
+`maxheight` (640 × 480 at most, keeping 4:3). It has the build's title,
+author and its `/preview.png` as a thumbnail. As above, only a build whose
+signature and hash check out gets one; anything else, and a link to another
+host, is 404, and `format=xml` is 501. The `/b/` page of a build that checks
+out names its oEmbed with a `<link rel="alternate">` tag. Nothing is kept.
+
 ## Cost
 
 Cloudflare Workers' free tier currently includes Durable Objects (on

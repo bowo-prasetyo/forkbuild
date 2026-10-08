@@ -49,9 +49,9 @@ below). It's also automatically given a position in the shared world, so
 ## Sharing a link
 
 The moment **Publish** succeeds, the notice in the Editor also shows
-**Share…** (where your device has a share sheet), **Copy link** and **Save
-picture**, with the link below them. The same buttons are under **My Shared
-World** in World View.
+**Share…** (where your device has a share sheet), **Copy link**, **Save
+picture** and **Embed**, with the link below them. The same buttons are under
+**My Shared World** in World View.
 
 - **The build travels inside the link.** Nothing has to be distributed
   first, and no wallet or account is involved: the link carries your signed
@@ -104,6 +104,35 @@ model** (glTF, STL for 3D printing, or OBJ; see
 [Downloading a 3D model](02-TheEditor.md#downloading-a-3d-model)). If the
 build's license doesn't allow copies, the page says so and offers only the
 walk around it.
+
+### Embedding a build in a web page
+
+A build whose link carries it can also be shown inside a blog post or a web
+page, where readers see it turning without leaving the page:
+
+1. Under the link, choose **Embed**. The code to paste appears below it.
+2. Choose **Copy embed code**, and paste it where the page accepts HTML or
+   an embed (an `<iframe>`).
+
+On the page, the build turns slowly, and dragging sideways turns it by hand.
+Its title and maker are along the bottom, beside **Remix on ForkBuild**
+(**Open in ForkBuild** when its license allows no copies), which opens the
+build's own page in ForkBuild in a new tab (see
+[What a link opens on](#what-a-link-opens-on)).
+
+- **The build travels inside the code**, as it does in its link: nothing
+  has to be distributed, and the embed checks the signature and the build
+  before showing it.
+- **It stays quiet.** The embed starts none of ForkBuild's connections and
+  stores nothing in the reader's browser; see [Privacy](../Privacy.md).
+- **Sites that embed links themselves** (those that support oEmbed, such as
+  Notion and Ghost) can be given the link from **Copy link** instead: they
+  ask ForkBuild's link server for the embed.
+- **Sites that remove `<iframe>` code**, as most social networks do, can't
+  show it; share the link or the picture there.
+
+Copying embed code, and an embed being shown or opened in ForkBuild, are
+counted anonymously too.
 
 ## Distributing straight from the Editor
 
