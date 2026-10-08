@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c477db500c6a8d08 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 54b42815b27a2697 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -22,8 +22,8 @@ weiterzuentwickeln — wobei der ganze Verlauf erhalten bleibt.
    ohne Titel oder eine leere — und, optional, eine Beschreibung und eine
    Lizenz: Klicken Sie in der Seitenleiste auf **✎** neben dem
    Dokumenttitel, um **Dokumenteigenschaften** zu öffnen. Ein neues
-   Dokument hat keine Lizenz, sodass niemand es forken kann, bis Sie eine
-   wählen.
+   Dokument hat keine Lizenz; beim ersten Veröffentlichen fragt ForkBuild,
+   ob andere es remixen dürfen (siehe [Andere remixen lassen](#andere-remixen-lassen)).
 4. Drücken Sie **Speichern**, damit sie gespeichert ist.
 5. Klicken Sie auf **Veröffentlichen**.
 
@@ -60,8 +60,8 @@ Weltansicht unter **Meine Geteilte Welt**.
 - **Das Bauwerk steckt im Link.** Vorher muss nichts verteilt werden, und
   keine Wallet und kein Konto ist beteiligt: Der Link trägt
   Ihre signierte Geteilte Welt und das Bauwerk selbst. Wer ihn öffnet, auf
-  jedem Gerät, landet in der Weltansicht bei Ihrem Bauwerk, und **Eine Kopie
-  bearbeiten** macht es zu seinem eigenen. ForkBuild prüft die Signatur und
+  jedem Gerät, landet bei Ihrem Bauwerk (siehe
+  [Was ein Link öffnet](#was-ein-link-öffnet)). ForkBuild prüft die Signatur und
   ob das Bauwerk dazu passt, bevor es etwas zeigt; ein veränderter oder
   abgeschnittener Link sagt das.
 - **Er zeigt, was er ist.** In eine Chat-App, eine E-Mail oder einen
@@ -90,6 +90,25 @@ Weltansicht unter **Meine Geteilte Welt**.
 Das Kopieren oder Teilen eines Links und das Öffnen eines Links werden
 anonym gezählt, wie der tägliche Besuch; siehe
 [Tägliche Besucherzählung](13-YourData.md#tägliche-besucherzählung).
+
+### Was ein Link öffnet
+
+Ein Link zu einem Bauwerk, ob er das Bauwerk trägt oder nennt, wo es
+gespeichert ist, öffnet die eigene Seite dieses Bauwerks:
+
+- das Bauwerk, langsam drehend;
+- sein Titel und wer es gemacht hat;
+- **Remix von „…“ von …**, wenn es ein Remix ist, und **N-mal geremixt**,
+  wenn dieses Gerät Remixe davon gefunden hat (siehe
+  [Remix-Zähler](#remix-zähler));
+- **Eine Kopie bearbeiten**, die große Schaltfläche: Ihre eigene Kopie
+  öffnet sich im Editor, bereit zum Ändern, ohne Konto. Sie hält fest,
+  woher sie stammt, so behält der Urheber die Anerkennung, und **Zurück
+  zur Welt** bringt Sie zum Original;
+- **In der Welt darum herumgehen**, um es in der Weltansicht zu sehen.
+
+Erlaubt die Lizenz des Bauwerks keine Kopien, sagt die Seite das und
+bietet nur den Rundgang an.
 
 ## Direkt aus dem Editor verteilen
 
@@ -184,6 +203,25 @@ Schaltfläche erscheint nur bei Ihren eigenen veröffentlichten Welten.
   erhalten haben, nicht zurücknehmen.
 
 ## Eine Lizenz wählen
+
+### Andere remixen lassen
+
+Wenn Sie ein Bauwerk ohne Lizenz zum ersten Mal veröffentlichen, fragt
+ForkBuild **Dürfen andere es remixen?**, bevor etwas veröffentlicht wird:
+
+- **Ja, Remixe erlauben** setzt **CC BY 4.0**: Jeder darf es kopieren und
+  ändern, solange Sie genannt werden, und jeder Remix zeigt, dass er von
+  Ihrem stammt.
+- **Nein, nur ansehen lassen** setzt **Alle Rechte vorbehalten**: Man kann
+  darum herumgehen, es aber nicht kopieren.
+- **Nicht jetzt** veröffentlicht nichts.
+
+Ihre Antwort wird als Lizenz des Bauwerks gespeichert, Sie werden also nur
+einmal gefragt; ändern können Sie sie jederzeit in den
+**Dokumenteigenschaften**. Ein Fork trägt bereits die Lizenz seines
+Originals, beim Veröffentlichen eines Forks wird also nie gefragt.
+
+### Alle Lizenzen
 
 Eine veröffentlichte Kreation wird immer mit einer Lizenz angezeigt,
 gewählt im Dialog **Dokumenteigenschaften**:
@@ -392,8 +430,18 @@ oben.)
 4. Bauen Sie darauf auf, speichern und veröffentlichen Sie sie dann als
    Ihre eigene.
 
-Ihr veröffentlichter Fork erscheint mit dem Vermerk **„↳ Fork von …“**,
+Ihr veröffentlichter Fork erscheint mit dem Vermerk **Remix von „…“ von …**,
 der auf das Original zurückverweist.
+
+### Remix-Zähler
+
+Die Seite eines Bauwerks und seine Repository-Karte sagen, wie oft es
+geremixt wurde (**3-mal geremixt**): wie viele verschiedene Bauwerke dieses
+Gerät gefunden hat, die davon geforkt und veröffentlicht wurden. Ein
+zweimal veröffentlichter Remix zählt einmal, und ein Bauwerk, das niemand
+geremixt hat, zeigt nichts. Der Zähler ist nur, was dieses Gerät kennt,
+ein anderes Gerät kann also eine andere Zahl zeigen, und er entscheidet
+nie, was zuerst gezeigt wird.
 
 ### Wenn ein Fork nicht möglich ist
 

@@ -74,7 +74,7 @@ await nextTick();
         'each card opens its own structure');
     assert(links.every((link) => link.getAttribute('aria-label') && link.querySelector('.featured-build-name').textContent.trim()),
         'each card is named, for screen readers too');
-    await until(() => host.querySelector('.home-showcase-canvas, .home-showcase-fallback'), 'the showcase');
+    await until(() => host.querySelector('.home-showcase .build-turntable-canvas, .home-showcase .build-turntable-fallback'), 'the showcase');
     const showcase = host.querySelector('.home-showcase');
     assert(showcase.getBoundingClientRect().height > 100, 'the showcase has room');
     console.log('✓ the ready-made builds and the 3D showcase load after the page');

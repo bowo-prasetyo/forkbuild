@@ -743,9 +743,11 @@ you to approve signing the picture, which is uploaded to Steemit's image
 host at no Resource Credit cost; if you decline or it can't be made, the
 post goes out without it. Mentions, tags and links in your title or
 description are shown as plain text, so they notify no one. Anyone who
-clicks the link, even without using ForkBuild before, lands in World View on
-your build, after ForkBuild checks the Shared World's signature and that the
-build matches its announcement (if not, the page says why). The build is
+clicks the link, even without using ForkBuild before, lands on your build's
+own page, with **Edit a Copy** and a walk around it in World View (see
+[What a link opens on](04-PublishingAndForking.md#what-a-link-opens-on)),
+after ForkBuild checks the Shared World's signature and that the build
+matches its announcement (if not, the page says why). The build is
 then kept in their browser. The link needs the build announced as well as
 stored, which Distribute does.
 
@@ -827,6 +829,6 @@ The dialog shows progress and the fees. If it stops part-way, distribute
 again with the same account and only the missing replies are made.
 
 The Signed Claim can be stored on Blurt too, as one more reply. Its link
-works like a Steem one: anyone who clicks "See it in 3D" lands in World
-View on your build, after ForkBuild checks it. **Share…** and **Copy link**
+works like a Steem one: anyone who clicks "See it in 3D" lands on your
+build's own page, after ForkBuild checks it. **Share…** and **Copy link**
 appear once it's stored.

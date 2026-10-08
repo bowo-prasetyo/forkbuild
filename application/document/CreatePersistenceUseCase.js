@@ -8,6 +8,7 @@ import { RecoverDocumentUseCase } from './RecoverDocumentUseCase.js';
 import { DiscardRecoveryUseCase } from './DiscardRecoveryUseCase.js';
 import { CheckRecoveryUseCase } from './CheckRecoveryUseCase.js';
 import { StructureDocumentResolver } from '../editor/StructureDocumentResolver.js';
+import { LocalContentStore } from '../../content/LocalContentStore.js';
 
 // Builds the concrete storage backend AND the recovery stack, so ui/
 // never imports storage/ or persistence/ directly. As of 0.2.6 the
@@ -25,7 +26,9 @@ export class CreatePersistenceUseCase {
                 storageProvider, undefined, undefined, recoveryStore
             ),
             loadDocumentUseCase: new LoadDocumentUseCase(storageProvider),
-            forkDocumentUseCase: new ForkDocumentUseCase(storageProvider),
+            // Reads someone else's published build from the content store
+            // World Publications are kept in, when there is no document of it.
+            forkDocumentUseCase: new ForkDocumentUseCase(storageProvider, undefined, undefined, new LocalContentStore(storageProvider)),
             autosaveDocumentUseCase: new AutosaveDocumentUseCase(recoveryStore, storageProvider),
             recoverDocumentUseCase: new RecoverDocumentUseCase(recoveryStore),
             discardRecoveryUseCase: new DiscardRecoveryUseCase(recoveryStore),

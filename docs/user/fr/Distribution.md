@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: fe119546bc539030 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 2c372aadfd2854d8 -->
 # Distribuer votre travail
 
 <!-- languages -->
@@ -177,8 +177,8 @@ déjà son hash de contenu ; voir [Blurt](11-EvidenceAndStorage.md#blurt).
    (par exemple **Ancrer sur Arweave**) pour enregistrer quand elle
    existait.
 5. Cliquez sur **Partager…** ou **Copier le lien** sous le résultat pour
-   donner aux gens un lien qui ouvre votre construction dans la Vue du
-   Monde sur n’importe quel appareil.
+   donner aux gens un lien qui ouvre votre construction sur n’importe quel
+   appareil, prête à être remixée ou visitée dans la Vue du Monde.
 
 Pour une construction plus grande que les 256 Ko d’Arweave, choisissez
 IPFS. Les pairs auxquels vous êtes connecté peuvent toujours récupérer

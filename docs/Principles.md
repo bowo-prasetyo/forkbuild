@@ -14,7 +14,7 @@ that no longer apply are listed at the end of their theme file under
 |---|---|
 | [Foundations (0.1.x to 0.2.16)](principles/foundations.md) | the short, early rules |
 | [Trust, signatures and authorization](principles/trust.md) | 9 |
-| [Documents, publishing and forking](principles/documents.md) | 10 |
+| [Documents, publishing and forking](principles/documents.md) | 11 |
 | [Placement, world coordinates and overlap](principles/placement.md) | 12 |
 | [World navigation, focus and spatial discovery](principles/navigation.md) | 24 |
 | [World View and the Editor](principles/world-view-and-editor.md) | 2 |
@@ -28,7 +28,7 @@ that no longer apply are listed at the end of their theme file under
 | [Places, landmarks and naming](principles/places.md) | 19 |
 | [Decentralized publication, content and replicas](principles/publication.md) | 52 |
 | [External anchoring and chain transactions](principles/anchoring.md) | 67 |
-| [Achievements, rankings and reconciliation](principles/achievements.md) | 20 |
+| [Achievements, rankings and reconciliation](principles/achievements.md) | 21 |
 | [Notifications](principles/notifications.md) | 9 |
 | [Distribution, settings and wallets](principles/distribution.md) | 4 |
 | [Vehicles, inventory, animals and residents](principles/vehicles.md) | 6 |

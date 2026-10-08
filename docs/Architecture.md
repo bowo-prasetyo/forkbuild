@@ -272,8 +272,8 @@ World View (ui/views/WorldView.js, route `/world/:documentId`) walks
 through the shared world. A link to a Publication (routes
 `/view/steem/:author/:permlink`, `/view/blurt/:author/:permlink`,
 `/view/ar/:id`, `/view/ipfs/:cid`, ui/views/PublicationLinkView.js), from
-a Steem or Blurt post or shared with Share, lands a first-time visitor
-here: it verifies the Publication's Signed Claim read from Steem, Blurt,
+a Steem or Blurt post or shared with Share, opens a build for a
+first-time visitor: it verifies the Publication's Signed Claim read from Steem, Blurt,
 Arweave or IPFS, keeps its build locally,
 admits it as World discovery does, and adopts its publisher's signed
 placement announced beside the Snapshot
@@ -284,7 +284,20 @@ by way of the rendezvous worker's `/b/<payload>` link preview
 (server/rendezvous-worker/buildPreview.js: a title, a picture drawn in the
 worker, then on to the app), for a Publication not yet distributed, with Save picture
 (renderer/BuildPicture.js, a 1200 × 630 PNG drawn by
-DocumentThumbnailRenderer). WorldNavigationSession owns its runtime:
+DocumentThumbnailRenderer). The link's view then shows the build on its
+own screen: turning (ui/components/featured/BuildTurntable.js over
+renderer/ShowcaseTurntableRenderer.js, its bricks read from the content
+store and checked against the signed hash by
+application/publication/sharing/ReadSharedBuild.js), with its remix
+lineage and count (core/RemixLineage.js, over the Publications the
+discovery providers know), Edit a Copy (`/editor?fork=` with an
+EditorEntryContext of reason `shared_link_edit_copy`) and a walk into
+World View. ForkDocumentUseCase reads such a build, which is no document
+of this device, from that content store by its Publication's hash when
+there is no local document (`executeWhenLoaded()` waits for one still on
+disk). Publishing a build with no license first asks its maker whether
+others may remix it (ui/components/RemixPermissionDialog.js, from
+Toolbar), and saves the answer as its license. WorldNavigationSession owns its runtime:
 camera positioning (SpatialCameraController), which documents are
 loaded near the camera (through WorldLayoutProvider and the spatial
 index), loading and unloading them, the local avatar, and selection.

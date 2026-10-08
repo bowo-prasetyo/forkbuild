@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: e6112fd034371b3e -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 03289178d6137f12 -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
@@ -790,7 +790,9 @@ enviada para o servidor de imagens do Steemit sem custo de Resource Credits;
 se você recusar ou ela não puder ser feita, a postagem sai sem ela. Menções,
 tags e links no seu título ou descrição aparecem como texto simples, então
 não notificam ninguém. Qualquer pessoa que clicar no link, mesmo sem nunca
-ter usado o ForkBuild, chega à Visão do mundo na sua construção, depois que o
+ter usado o ForkBuild, chega à página da sua construção, com **Editar uma
+cópia** e um passeio na Visão do mundo (veja
+[O que um link abre](04-PublishingAndForking.md#o-que-um-link-abre)), depois que o
 ForkBuild confere a assinatura do Mundo compartilhado e se a construção
 corresponde ao anúncio dela (se não, a página diz por quê). A construção
 então fica guardada no navegador da pessoa. O link precisa da construção
@@ -877,6 +879,6 @@ só as respostas que faltam são criadas.
 
 A Declaração assinada também pode ser guardada no Blurt, como mais uma
 resposta. O link dela funciona como um do Steem: quem clicar em "See it in
-3D" chega à Visão do mundo na sua construção, depois que o ForkBuild a
+3D" chega à página da sua construção, depois que o ForkBuild a
 confere. **Compartilhar…** e **Copiar link** aparecem assim que ela é
 guardada.

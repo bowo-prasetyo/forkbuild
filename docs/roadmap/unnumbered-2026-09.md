@@ -4680,3 +4680,46 @@ people on to the app's `#/s/<payload>`.
   `APP_URL`; forged, changed, unsigned, damaged and other-version links getting the plain card; any bricks drawing).
 - Not done: previews for links to distributed builds (`#/view/…`), which would need the worker to read Steem, Blurt,
   Arweave or IPFS; and a picture with text on it (the worker has no fonts).
+
+## A shared link opens on the build, ready to remix (unnumbered, 2026-10-08)
+
+**A shared link now opens on the build itself, with one big Edit a Copy, and remixing a build that arrived by link
+works.** A link dropped a first-time visitor into the full World View, dimmed behind "Nothing nearby yet", with Edit
+a Copy only in the inspection panel of a build they first had to click on. Worse, that copy failed: a build opened
+from a link, or found in the World, is kept in the content store by its hash, not as a document of this device, so
+ForkDocumentUseCase found nothing and showed "Fork Unavailable". And a new build has no license, which allows no
+copies, so most shared builds could not have been remixed anyway.
+
+- `ui/views/PublicationLinkView.js`: once the link opens, the build's own screen: the build turning
+  (`ui/components/featured/BuildTurntable.js`, now shared with Home's showcase, over
+  `renderer/ShowcaseTurntableRenderer.js`; its bricks read by `application/publication/sharing/ReadSharedBuild.js`
+  and checked against the signed hash), its title and maker, "Remixed from …" and "Remixed N times", the license,
+  **Edit a Copy** (no account; `/editor?fork=…&publication=…` with a new `EditorEntryReason.SHARED_LINK_EDIT_COPY`
+  context, so the Editor frames the whole copy and offers Back to World) and **Walk around it in the World**. A
+  build whose license allows no copies says so and offers only the walk. Failures read as before. On a phone the
+  build comes first and Edit a Copy spans the screen.
+- `core/RemixLineage.js`: `countRemixes()` (distinct published documents naming a build as their parent) and
+  `describeRemixSource()` (the parent's newest Publication this device knows, else the credit in the remix's
+  license, which a link-only share carries). The Repository's cards and list use them too: "Remixed from "…" by …"
+  replaces "↳ Fork of …", and "Remixed N times" replaces "N forks", now counted once per remixed build.
+- `application/document/ForkDocumentUseCase.js`: with no local document, a Publication's build is read from the
+  content store World Publications are kept in (wired in `CreatePersistenceUseCase`), used only when it matches the
+  signed hash, and never past the license. `executeWhenLoaded()` and `isWaitingForStorage()` let the Editor wait for
+  a build still on disk (IndexedDB) instead of failing. The Editor's fork handling is otherwise unchanged.
+- `ui/components/RemixPermissionDialog.js`, from the Toolbar's Publish: the first publish of a build with no license
+  asks **Let others remix it?**: CC BY 4.0, All Rights Reserved, or Not now (publishes nothing). The answer is saved
+  as the license, so it is asked once.
+- Principles: "A Remix Count Credits And Invites Remixing; It Is Still Only A Count" changes 0.8.105 so the remix
+  count may be shown as an invitation and credit (never a score, rank or sort order; reference counts unchanged);
+  "A Build May Be Remixed Only Because Its Maker Said So" records the publish-time question.
+- Messages in every language (`publicationLink.*`, `remix.*`, `remixPermission.*`; the old `publicationCard.forkOf`,
+  `forkCount`, `unknown` and `publicationList.forkOf`, `unknown` are gone). Guides 04, 11 and Distribution in every
+  language, Architecture, README.
+- Tests: `RemixLineage`, `ForkSharedBuild` (a copy from bytes kept by hash, with credit; changed bytes, another
+  document, no Publication and a no-copies license refused; waiting for a build on disk; the turntable's read),
+  `PublicationLinkViewBrowser` (the screen, its lineage and count, Edit a Copy's route, the no-copies case, a
+  failed link); `run-bundle` publishes through the new question, opens the published house's link in a fresh
+  browser and makes a copy there, and checks the screen on a phone. The browser test runner's import map gains
+  `vue-router`.
+- Not done: the count only knows remixes this device has found, so a first-time visitor usually sees none until
+  network discovery has run; the screen doesn't look for remixes on the networks itself.

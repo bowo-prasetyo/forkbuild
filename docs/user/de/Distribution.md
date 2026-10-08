@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: fe119546bc539030 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 2c372aadfd2854d8 -->
 # Ihre Arbeit verteilen
 
 <!-- languages -->
@@ -138,8 +138,8 @@ bereits dessen Inhalts-Hash trägt; siehe [Blurt](11-EvidenceAndStorage.md#blurt
    **Veröffentlichungen** (zum Beispiel **Auf Arweave verankern**), um
    festzuhalten, wann sie existierte.
 5. Klicken Sie unter dem Ergebnis auf **Teilen …** oder **Link kopieren**, um
-   anderen einen Link zu geben, der Ihren Bau auf jedem Gerät in der
-   Weltansicht öffnet.
+   anderen einen Link zu geben, der Ihren Bau auf jedem Gerät öffnet,
+   bereit zum Remixen oder für einen Rundgang in der Weltansicht.
 
 Für einen Bau, der größer als die 256 KB von Arweave ist, wählen Sie IPFS.
 Peers, mit denen Sie verbunden sind, können Bauten von bis zu 64 MB weiterhin

@@ -19,7 +19,9 @@ history preserved.
 3. Give it a title — Publish refuses an untitled or empty creation — and,
    optionally, a description and a license: click **✎** beside the
    document title in the sidebar to open **Document Properties**. A new
-   document has no license, so nobody can fork it until you pick one.
+   document has no license; the first time you publish it, ForkBuild asks
+   whether others may remix it (see
+   [Letting others remix it](#letting-others-remix-it)).
 4. Press **Save** so it's stored.
 5. Click **Publish**.
 
@@ -54,9 +56,10 @@ World** in World View.
 - **The build travels inside the link.** Nothing has to be distributed
   first, and no wallet or account is involved: the link carries your signed
   Shared World and the build itself. Anyone who opens it, on any
-  device, lands in World View on your build, and **Edit a Copy** makes it
-  theirs. ForkBuild checks the signature, and that the build matches it,
-  before showing anything; a link that was changed or cut short says so.
+  device, lands on your build (see
+  [What a link opens on](#what-a-link-opens-on)). ForkBuild checks the
+  signature, and that the build matches it, before showing anything; a
+  link that was changed or cut short says so.
 - **It shows what it is.** Pasted into a chat app, an email or a post, the
   link shows your build's title, your name and a picture of the build,
   drawn by ForkBuild's link server, which then sends whoever opens it on to
@@ -79,6 +82,25 @@ World** in World View.
 
 Copying or sharing a link, and opening one, are counted anonymously, like
 the daily visit; see [Daily visitor count](13-YourData.md#daily-visitor-count).
+
+### What a link opens on
+
+A link to a build, whether it carries the build or names where it is
+stored, opens on that build's own page:
+
+- the build, turning slowly;
+- its title and who made it;
+- **Remixed from "…" by …** when it is a remix, and **Remixed N times**
+  when this device has found remixes of it (see
+  [Remix counts](#remix-counts));
+- **Edit a Copy**, the big button: your own copy opens in the Editor,
+  ready to change, with no account needed. It remembers where it came
+  from, so its maker keeps the credit, and **Back to World** takes you to
+  the original;
+- **Walk around it in the World**, to see it in World View.
+
+If the build's license doesn't allow copies, the page says so and offers
+only the walk around it.
 
 ## Distributing straight from the Editor
 
@@ -165,6 +187,24 @@ your own published Worlds.
   received it.
 
 ## Choosing a license
+
+### Letting others remix it
+
+The first time you publish a build that has no license, ForkBuild asks
+**Let others remix it?** before anything is published:
+
+- **Yes, allow remixes** sets **CC BY 4.0**: anyone may copy and change it,
+  as long as they credit you, and each remix shows it was remixed from
+  yours.
+- **No, just let people look** sets **All Rights Reserved**: people can
+  walk around it, but not copy it.
+- **Not now** publishes nothing.
+
+Your answer is saved as the build's license, so you're asked only once;
+change it any time in **Document Properties**. A fork already carries its
+original's license, so publishing one never asks.
+
+### All the licenses
 
 A published creation is always shown with a license, chosen from the
 **Document Properties** dialog:
@@ -351,8 +391,17 @@ published world — see
 3. The copy opens in the Editor, titled *"Fork of &lt;original name&gt;"*.
 4. Build on it, then save and publish it as your own.
 
-Your published fork shows up with a **"↳ Fork of …"** note, linking it back to
-the original.
+Your published fork shows up with a **Remixed from "…" by …** note, linking
+it back to the original.
+
+### Remix counts
+
+A build's page and its Repository card say how many times it was remixed
+(**Remixed 3 times**): how many different builds this device has found
+that were forked from it and published. A remix published twice counts
+once, and a build nobody has remixed shows nothing. The count is only what
+this device knows, so another device may show a different number, and it
+never decides what is shown first.
 
 ### When a fork can't complete
 

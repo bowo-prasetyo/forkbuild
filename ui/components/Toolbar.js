@@ -1,5 +1,8 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue';
 import LoginModal from './LoginModal.js';
+import RemixPermissionDialog from './RemixPermissionDialog.js';
+import { License, LicenseId } from '../../core/License.js';
+import { UpdateDocumentMetadataUseCase } from '../../application/document/UpdateDocumentMetadataUseCase.js';
 import { saveFailureMessage } from './saveFailureMessages.js';
 import { saveDocument } from './saveDocument.js';
 import { errorText, formatDate, t } from '../i18n/i18n.js';
@@ -114,7 +117,7 @@ export default {
     // never calls editorSession.importDocument() itself.
     // `saved` follows a successful Save, for the Editor's save sound.
     emits: ['back-to-world', 'open-shortcuts', 'published', 'saved', 'export-document', 'export-all-documents', 'import-document', 'new-document'],
-    components: { LoginModal },
+    components: { LoginModal, RemixPermissionDialog },
     setup(props, { emit }) {
         const identityUseCase = inject('identityUseCase', null);
         const dirty = ref(props.documentManager.state.dirty);
@@ -191,7 +194,29 @@ export default {
         // building. The modal can still publish unsigned.
         const signInToPublish = ref(false);
         const lockedIdentityId = ref(null);
+        // A build with no license may not be copied, so before its first
+        // publish the person says whether others may remix it
+        // (RemixPermissionDialog); the answer becomes its license.
+        const askRemixPermission = ref(false);
         function requestPublish() {
+            const license = props.documentManager.document?.metadata?.license;
+            if (license && license.id === LicenseId.UNSPECIFIED) {
+                askRemixPermission.value = true;
+                return;
+            }
+            requestSignedPublish();
+        }
+        function chooseRemixPermission(licenseId) {
+            askRemixPermission.value = false;
+            try {
+                new UpdateDocumentMetadataUseCase().execute(props.documentManager, { license: new License({ id: licenseId }) });
+            } catch (err) {
+                report(t('toolbar.publishFailed', { error: errorText(err) }));
+                return;
+            }
+            requestSignedPublish();
+        }
+        function requestSignedPublish() {
             const session = identityUseCase?.currentSession?.();
             if (!session || (session.isAuthenticated && identityUseCase.isUnlocked(session.identityId))) {
                 publish();
@@ -291,6 +316,7 @@ export default {
             searchThreshold: SEARCH_THRESHOLD,
             save, createNew, load, place, publish, saveAndReturnToWorld,
             signInToPublish, lockedIdentityId, requestPublish, publishAfterSignIn,
+            askRemixPermission, chooseRemixPermission,
             importFileInput, triggerImportDocument, onImportDocumentFileChosen, exportAllDocuments
         };
     },
@@ -328,6 +354,11 @@ export default {
                 @change="onImportDocumentFileChosen"
             />
             <button class="toolbar-publish" @click="requestPublish">{{ t('toolbar.publish') }}</button>
+            <RemixPermissionDialog
+                v-if="askRemixPermission"
+                @choose="chooseRemixPermission"
+                @cancel="askRemixPermission = false"
+            />
             <LoginModal
                 v-if="signInToPublish"
                 purpose="publish"

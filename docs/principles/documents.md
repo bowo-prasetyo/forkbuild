@@ -119,3 +119,14 @@ passphrase. Automatic backups never ask for a permission on their own, and a
 reminder can be snoozed or turned off.
 
 [Full text](history/0.9.md#a-remembered-backup-key-can-only-make-backups-2026-09-28)
+
+### A Build May Be Remixed Only Because Its Maker Said So (2026-10-08)
+
+A build with no license may not be copied. The first time one is published,
+its maker chooses: allow remixes (CC BY 4.0) or only let people look (All
+Rights Reserved). The answer is saved as its license, changeable in
+Properties; nothing is licensed by default, and a build that has a license
+is never asked about.
+
+[Full text](history/0.9.md#a-build-may-be-remixed-only-because-its-maker-said-so-2026-10-08)
+

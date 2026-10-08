@@ -94,7 +94,11 @@
 // field, a WorldPlacement field, or anything broadcast — the same
 // posture this module's own top-of-file header already established.
 export const EditorEntryReason = Object.freeze({
-    WORLD_VIEW_EDIT_COPY: 'world_view_edit_copy'
+    WORLD_VIEW_EDIT_COPY: 'world_view_edit_copy',
+    // Edit a Copy on the screen a shared link opens on
+    // (ui/views/PublicationLinkView.js): no focus position, so the Editor
+    // frames the whole copy; its World is the shared build's.
+    SHARED_LINK_EDIT_COPY: 'shared_link_edit_copy'
 });
 
 export class EditorEntryContext {

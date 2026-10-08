@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c477db500c6a8d08 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 54b42815b27a2697 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -20,8 +20,9 @@ evolucionar, conservando todo el historial.
 3. Póngale un título (Publicar rechaza una creación sin título o vacía) y,
    si quiere, una descripción y una licencia: haga clic en **✎** junto al
    título del documento en la barra lateral para abrir **Propiedades del
-   documento**. Un documento nuevo no tiene licencia, así que nadie puede
-   bifurcarlo hasta que elija una.
+   documento**. Un documento nuevo no tiene licencia; la primera vez que
+   lo publique, ForkBuild le preguntará si otros pueden remezclarlo (vea
+   [Dejar que otros la remezclen](#dejar-que-otros-la-remezclen)).
 4. Presione **Guardar** para que quede guardado.
 5. Haga clic en **Publicar**.
 
@@ -57,8 +58,8 @@ están en **Mi Mundo compartido** en la Vista de mundo.
 - **La construcción viaja dentro del enlace.** No hace falta distribuir nada
   antes, y no interviene ninguna billetera ni cuenta: el enlace
   lleva su Mundo compartido firmado y la construcción misma. Quien lo abra,
-  en cualquier dispositivo, llega a la Vista de mundo con su construcción, y
-  **Editar una copia** la hace suya. ForkBuild comprueba la firma, y que la
+  en cualquier dispositivo, llega a su construcción (vea
+  [Lo que abre un enlace](#lo-que-abre-un-enlace)). ForkBuild comprueba la firma, y que la
   construcción coincida con ella, antes de mostrar nada; un enlace
   modificado o incompleto lo indica.
 - **Muestra lo que es.** Pegado en una aplicación de chat, un correo o una
@@ -86,6 +87,25 @@ están en **Mi Mundo compartido** en la Vista de mundo.
 Copiar o compartir un enlace, y abrir uno, se cuentan de forma anónima,
 como la visita diaria; consulte
 [Recuento diario de visitantes](13-YourData.md#recuento-diario-de-visitantes).
+
+### Lo que abre un enlace
+
+Un enlace a una construcción, tanto si la lleva dentro como si indica
+dónde está guardada, abre la página propia de esa construcción:
+
+- la construcción, girando despacio;
+- su título y quién la hizo;
+- **Remezcla de “…” de …** cuando es una remezcla, y **Remezclada N veces**
+  cuando este dispositivo ha encontrado remezclas de ella (vea
+  [Recuentos de remezclas](#recuentos-de-remezclas));
+- **Editar una copia**, el botón grande: su propia copia se abre en el
+  Editor, lista para cambiarla, sin necesidad de cuenta. Recuerda de dónde
+  viene, así su autor conserva el reconocimiento, y **Volver al mundo** lo
+  lleva al original;
+- **Recorrerla en el Mundo**, para verla en la Vista de mundo.
+
+Si la licencia de la construcción no permite copias, la página lo dice y
+solo ofrece recorrerla.
 
 ## Distribuir directamente desde el Editor
 
@@ -181,6 +201,25 @@ solo aparece en sus propios Mundos publicados.
   personas que ya lo recibieron.
 
 ## Elegir una licencia
+
+### Dejar que otros la remezclen
+
+La primera vez que publica una construcción sin licencia, ForkBuild
+pregunta **¿Dejar que otros la remezclen?** antes de publicar nada:
+
+- **Sí, permitir remezclas** pone **CC BY 4.0**: cualquiera puede copiarla
+  y cambiarla, siempre que le dé crédito, y cada remezcla muestra que viene
+  de la suya.
+- **No, solo dejar mirar** pone **Todos los derechos reservados**: se puede
+  recorrer, pero no copiar.
+- **Ahora no** no publica nada.
+
+Su respuesta se guarda como la licencia de la construcción, así que solo se
+le pregunta una vez; cámbiela cuando quiera en **Propiedades del
+documento**. Una bifurcación ya lleva la licencia de su original, así que
+publicar una nunca pregunta.
+
+### Todas las licencias
 
 Una creación publicada siempre se muestra con una licencia, elegida en el
 diálogo **Propiedades del documento**:
@@ -382,8 +421,18 @@ publicado: consulte
    original&gt;”*.
 4. Construya sobre ella y luego guárdela y publíquela como propia.
 
-Su bifurcación publicada aparece con una nota **“↳ Bifurcación de …”**,
+Su bifurcación publicada aparece con una nota **Remezcla de “…” de …**,
 que la vincula con el original.
+
+### Recuentos de remezclas
+
+La página de una construcción y su tarjeta del Repositorio dicen cuántas
+veces se remezcló (**Remezclada 3 veces**): cuántas construcciones
+distintas, bifurcadas de ella y publicadas, ha encontrado este
+dispositivo. Una remezcla publicada dos veces cuenta una vez, y una
+construcción que nadie ha remezclado no muestra nada. El recuento es solo
+lo que este dispositivo conoce, así que otro dispositivo puede mostrar un
+número distinto, y nunca decide qué se muestra primero.
 
 ### Cuando una bifurcación no se puede completar
 

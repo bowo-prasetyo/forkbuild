@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: e6112fd034371b3e -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 03289178d6137f12 -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
@@ -831,7 +831,9 @@ Credits ; si vous refusez ou qu’elle ne peut pas être créée, l’article
 part sans elle. Les mentions, tags et liens de votre titre ou de votre
 description sont affichés en texte brut, ils ne notifient donc personne.
 Toute personne qui clique sur le lien, même sans avoir jamais utilisé
-ForkBuild, arrive dans la Vue du Monde sur votre construction, après que
+ForkBuild, arrive sur la page de votre construction, avec **Modifier une
+copie** et un tour dans la Vue du Monde (voir
+[Ce qu’ouvre un lien](04-PublishingAndForking.md#ce-quouvre-un-lien)), après que
 ForkBuild a vérifié la signature du Monde partagé et que la construction
 correspond à son annonce (sinon, la page dit pourquoi). La construction
 est ensuite conservée dans son navigateur. Le lien demande que la
@@ -923,6 +925,6 @@ compte, et seules les réponses manquantes sont créées.
 
 La Déclaration signée peut aussi être stockée sur Blurt, sous forme d’une
 réponse de plus. Son lien fonctionne comme un lien Steem : quiconque clique
-sur « Voir en 3D » arrive dans la Vue du Monde sur votre construction,
+sur « Voir en 3D » arrive sur la page de votre construction,
 après que ForkBuild l’a vérifiée. **Partager…** et **Copier le lien**
 apparaissent une fois qu’elle est stockée.

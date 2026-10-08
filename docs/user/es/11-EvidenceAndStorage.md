@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: e6112fd034371b3e -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 03289178d6137f12 -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
@@ -815,7 +815,10 @@ Resource Credits; si lo rechaza o no se puede crear, la publicación sale
 sin ella. Las menciones, etiquetas y enlaces de su título o su descripción
 se muestran como texto simple, así que no le notifican a nadie. Cualquiera
 que haga clic en el enlace, incluso sin haber usado ForkBuild antes, llega a
-la Vista del mundo con su construcción, después de que ForkBuild compruebe
+la página de su construcción, con **Editar una copia** y un recorrido en la
+Vista del mundo (vea
+[Lo que abre un enlace](04-PublishingAndForking.md#lo-que-abre-un-enlace)),
+después de que ForkBuild compruebe
 la firma del Mundo compartido y que la construcción coincida con su
 anuncio (si no, la página dice por qué). Luego la construcción se guarda en
 su navegador. El enlace necesita que la construcción esté anunciada además
@@ -906,6 +909,6 @@ distribuir con la misma cuenta y solo se crean las respuestas que faltan.
 
 La Declaración firmada también se puede guardar en Blurt, como una
 respuesta más. Su enlace funciona como uno de Steem: quien haga clic en
-“See it in 3D” llega a la Vista del mundo en su construcción, después de
+“See it in 3D” llega a la página de su construcción, después de
 que ForkBuild la compruebe. **Compartir…** y **Copiar enlace** aparecen
 una vez que está guardada.

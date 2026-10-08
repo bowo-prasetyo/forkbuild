@@ -135,7 +135,7 @@ function makeBackend() {
 function cardCtx(publication, overrides = {}) {
     return {
         publication,
-        description: '', parentTitle: null, forkCount: 0, needsPreciseDate: false,
+        description: '', remixSource: null, remixCount: 0, needsPreciseDate: false,
         getPublicationCommentariesCommand: null, addPublicationCommentaryCommand: null, identityUseCase: null,
         commentaryOpen: false, commentaries: [], newCommentaryText: '', commentarySubmitting: false,
         commentaryError: null, pendingCommentaryDraft: null,

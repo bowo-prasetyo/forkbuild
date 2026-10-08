@@ -45,9 +45,13 @@ models").
   structure, save, share a link) ticked off as you do them, ending in a small
   celebration. Logging in is asked for only when you first publish.
 - Share a build the moment it's published: the link carries the signed build
-  itself, so it opens in World View on any device with no wallet or account,
+  itself, so it opens on any device with no wallet or account,
   shows the build's title and a picture of it when pasted into a chat or a
   post, and **Save picture** downloads a PNG of it to post alongside.
+- A shared link opens on the build itself, turning, with who made it, what
+  it was remixed from and how many times it has been remixed, and one big
+  **Edit a Copy** button that needs no account. The first publish of a build
+  with no license asks whether others may remix it.
 
 **World View**
 - A shared world where published creations are placed and streamed in around

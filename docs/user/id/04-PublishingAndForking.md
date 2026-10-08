@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c477db500c6a8d08 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 54b42815b27a2697 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -21,8 +21,9 @@ mengembangkannya — dengan seluruh riwayatnya tetap terjaga.
 3. Beri judul — Terbitkan menolak karya tanpa judul atau kosong — dan,
    secara opsional, deskripsi dan lisensi: klik **✎** di samping judul
    dokumen di bilah sisi untuk membuka **Properti Dokumen**. Dokumen baru
-   tidak memiliki lisensi, jadi tidak ada yang dapat mem-fork-nya sampai
-   Anda memilih lisensi.
+   tidak memiliki lisensi; saat pertama kali Anda menerbitkannya, ForkBuild
+   bertanya apakah orang lain boleh me-remix-nya (lihat
+   [Mengizinkan orang lain me-remix](#mengizinkan-orang-lain-me-remix)).
 4. Tekan **Simpan** agar tersimpan.
 5. Klik **Terbitkan**.
 
@@ -60,8 +61,7 @@ bawah **Dunia Bersama Saya** di Tampilan Dunia.
   didistribusikan lebih dulu, dan tidak ada dompet atau akun yang
   terlibat: tautan itu membawa Dunia Bersama Anda yang bertanda tangan dan
   bangunannya sendiri. Siapa pun yang membukanya, di perangkat apa pun,
-  sampai di Tampilan Dunia pada bangunan Anda, dan **Edit Salinan**
-  menjadikannya milik mereka. ForkBuild memeriksa tanda tangannya, dan
+  sampai pada bangunan Anda (lihat [Apa yang dibuka sebuah tautan](#apa-yang-dibuka-sebuah-tautan)). ForkBuild memeriksa tanda tangannya, dan
   bahwa bangunannya cocok, sebelum menampilkan apa pun; tautan yang diubah
   atau terpotong akan mengatakannya.
 - **Tautan itu menunjukkan isinya.** Saat ditempel di aplikasi obrolan,
@@ -88,6 +88,25 @@ bawah **Dunia Bersama Saya** di Tampilan Dunia.
 Menyalin atau membagikan tautan, dan membukanya, dihitung secara anonim,
 seperti kunjungan harian; lihat
 [Hitungan pengunjung harian](13-YourData.md#hitungan-pengunjung-harian).
+
+### Apa yang dibuka sebuah tautan
+
+Tautan ke sebuah bangunan, baik yang membawa bangunannya maupun yang
+menyebut tempat ia disimpan, membuka halaman bangunan itu sendiri:
+
+- bangunannya, berputar perlahan;
+- judulnya dan siapa pembuatnya;
+- **Remix dari "…" oleh …** jika itu remix, dan **Di-remix N kali** jika
+  perangkat ini telah menemukan remix-nya (lihat
+  [Jumlah remix](#jumlah-remix));
+- **Edit Salinan**, tombol besarnya: salinan Anda sendiri terbuka di
+  Editor, siap diubah, tanpa perlu akun. Salinan itu mencatat asalnya, jadi
+  pembuatnya tetap mendapat kredit, dan **Kembali ke Dunia** membawa Anda
+  ke aslinya;
+- **Jelajahi di Dunia**, untuk melihatnya di Tampilan Dunia.
+
+Jika lisensi bangunan itu tidak mengizinkan salinan, halamannya
+mengatakannya dan hanya menawarkan untuk mengelilinginya.
 
 ## Mendistribusikan langsung dari Editor
 
@@ -181,6 +200,24 @@ pada Dunia terbitan Anda sendiri.
   orang yang sudah menerimanya.
 
 ## Memilih lisensi
+
+### Mengizinkan orang lain me-remix
+
+Saat pertama kali Anda menerbitkan bangunan tanpa lisensi, ForkBuild
+bertanya **Izinkan orang lain me-remix?** sebelum apa pun diterbitkan:
+
+- **Ya, izinkan remix** memasang **CC BY 4.0**: siapa pun boleh menyalin
+  dan mengubahnya, asalkan mencantumkan nama Anda, dan setiap remix
+  menunjukkan bahwa ia berasal dari milik Anda.
+- **Tidak, hanya untuk dilihat** memasang **Hak Cipta Dilindungi**: orang
+  dapat mengelilinginya, tetapi tidak menyalinnya.
+- **Nanti saja** tidak menerbitkan apa pun.
+
+Jawaban Anda disimpan sebagai lisensi bangunan, jadi Anda hanya ditanya
+sekali; ubah kapan saja di **Properti Dokumen**. Sebuah fork sudah membawa
+lisensi aslinya, jadi menerbitkannya tidak pernah bertanya.
+
+### Semua lisensi
 
 Karya yang diterbitkan selalu ditampilkan dengan lisensi, yang dipilih dari
 dialog **Properti Dokumen**:
@@ -383,8 +420,18 @@ di atas.)
 3. Salinannya terbuka di Editor, berjudul *"Fork dari &lt;nama asli&gt;"*.
 4. Kembangkan, lalu simpan dan terbitkan sebagai milik Anda.
 
-Fork terbitan Anda muncul dengan catatan **"↳ Fork dari …"**, yang
+Fork terbitan Anda muncul dengan catatan **Remix dari "…" oleh …**, yang
 menautkannya kembali ke yang asli.
+
+### Jumlah remix
+
+Halaman sebuah bangunan dan kartu Repositori-nya menyebutkan berapa kali
+ia di-remix (**Di-remix 3 kali**): berapa banyak bangunan berbeda yang
+di-fork darinya dan diterbitkan yang telah ditemukan perangkat ini. Remix
+yang diterbitkan dua kali dihitung sekali, dan bangunan yang belum pernah
+di-remix tidak menampilkan apa pun. Jumlahnya hanya apa yang diketahui
+perangkat ini, jadi perangkat lain bisa menampilkan angka berbeda, dan
+jumlah itu tidak pernah menentukan apa yang ditampilkan lebih dulu.
 
 ### Saat fork tidak dapat diselesaikan
 

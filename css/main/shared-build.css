@@ -1,0 +1,213 @@
+/* The screen a shared link opens on (ui/views/PublicationLinkView.js): the
+   build turning, who made it, what it was remixed from and how many times it
+   has been, and Edit a Copy. Scrolls on its own, like Home. */
+
+.shared-build-view {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+}
+
+.shared-build-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: center;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 3rem;
+}
+
+/* Keeps its shape before Three.js has loaded, so nothing moves when the
+   build appears. */
+.shared-build-stage {
+    aspect-ratio: 4 / 3;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #1e2a33;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.shared-build-kicker {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #4caf7d;
+}
+
+.shared-build-title {
+    margin: 0.3rem 0 0.4rem;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    line-height: 1.1;
+    color: #ffffff;
+    overflow-wrap: anywhere;
+    word-break: auto-phrase;
+    text-wrap: balance;
+}
+
+.shared-build-author {
+    margin: 0 0 1rem;
+    font-size: 1.05rem;
+    color: #c8c8c8;
+    overflow-wrap: anywhere;
+}
+
+.shared-build-lineage {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    list-style: none;
+}
+
+.shared-build-lineage li {
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+
+.shared-build-remixed-from {
+    background: #3a2f12;
+    color: #f0d48a;
+}
+
+.shared-build-remix-count {
+    background: #234433;
+    color: #8fe0b4;
+    font-weight: 600;
+}
+
+.shared-build-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+}
+
+.shared-build-actions .cta-button {
+    margin-top: 0;
+    border: none;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.shared-build-edit-copy {
+    padding: 0.8rem 1.6rem;
+    font-size: 1.1rem;
+}
+
+.shared-build-edit-copy:hover,
+.shared-build-actions .cta-button:hover {
+    background: #5fc490;
+}
+
+/* The second action, when Edit a Copy is offered: a plain link-like button. */
+.shared-build-walk:not(.cta-button) {
+    padding: 0;
+    border: none;
+    background: none;
+    color: #4caf7d;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.shared-build-walk:not(.cta-button):hover {
+    text-decoration: underline;
+}
+
+.shared-build-hint {
+    margin: 1rem 0 0;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: #a8a8a8;
+}
+
+.shared-build-license,
+.shared-build-about {
+    margin: 0.6rem 0 0;
+    font-size: 0.85rem;
+    color: #8a8a8a;
+}
+
+.shared-build-about a {
+    color: #4caf7d;
+}
+
+@media (max-width: 720px) {
+    .shared-build-inner {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.25rem;
+        padding: 1.25rem 1rem 2rem;
+    }
+
+    .shared-build-stage {
+        aspect-ratio: 16 / 11;
+    }
+
+    .shared-build-edit-copy {
+        flex: 1 1 100%;
+        text-align: center;
+    }
+}
+
+/* Asked before a build with no license is first published
+   (ui/components/RemixPermissionDialog.js). */
+.modal-panel.remix-permission-dialog {
+    width: min(520px, calc(100vw - 2rem));
+    max-width: none;
+}
+
+.remix-permission-lead {
+    margin: 0 0 1rem;
+    color: #c8c8c8;
+    line-height: 1.45;
+}
+
+.remix-permission-option {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+    margin-bottom: 0.6rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    background: #1a1a1a;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.remix-permission-option:hover,
+.remix-permission-option:focus-visible {
+    border-color: #4caf7d;
+}
+
+.remix-permission-allow {
+    border-color: #2f5c45;
+    background: #182a21;
+}
+
+.remix-permission-name {
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.remix-permission-description {
+    font-size: 0.85rem;
+    line-height: 1.35;
+    color: #a8a8a8;
+}
+
+.remix-permission-note {
+    margin: 0.4rem 0 0;
+    font-size: 0.82rem;
+    color: #8a8a8a;
+}
