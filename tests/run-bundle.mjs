@@ -27,7 +27,7 @@ import { build } from '../scripts/build.mjs';
 import { assert } from './support/Assert.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const MIME_TYPES = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.svg': 'image/svg+xml', '.json': 'application/json', '.map': 'application/json' };
+const MIME_TYPES = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.svg': 'image/svg+xml', '.json': 'application/json', '.map': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 // Console errors from the network features failing offline, not from the page.
 const NETWORK_NOISE = /net::|WebSocket|Failed to load resource|ERR_NAME_NOT_RESOLVED|Failed to fetch|NetworkError/i;
 
@@ -81,6 +81,26 @@ async function openEveryPage(browser, base, paths) {
     return { problems, warnings, homeRequests };
 }
 
+// Home's ways into the Editor, in the published build: the main button opens
+// the ready-made house as a document of the visitor's own, and the address
+// goes back to plain /editor.
+async function startFromHome(browser, base) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    try {
+        await page.goto(`${base}/#/`);
+        await page.waitForSelector('.home-featured-card', { timeout: 60_000 });
+        assert(await page.locator('.home-featured-card').count() === 6, 'Home shows its six ready-made builds');
+        await page.click('.home-cta-primary');
+        await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });
+        await page.waitForFunction(() => location.hash === '#/editor', null, { timeout: 10_000 });
+        const editorText = await page.evaluate(() => document.body.innerText);
+        assert(editorText.includes('village:house'), 'the Editor says the copy came from the built-in House');
+    } finally {
+        await context.close();
+    }
+}
+
 const outdir = mkdtempSync(join(tmpdir(), 'forkbuild-bundle-'));
 const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || undefined,
@@ -109,6 +129,14 @@ try {
     const pagesAtHome = result.homeRequests.filter((url) => /\/bundle\/chunks\/(EditorView|WorldView|DecentralizedPublicationsView|composeAnchoring)-/.test(url));
     assert(pagesAtHome.length === 0, `Home does not load other pages or service groups:\n  ${pagesAtHome.join('\n  ')}`);
     console.log(`✓ the published build opens all ${paths.length} pages with no page error, and Home loads only what it needs`);
+
+    for (const tag of ['<meta name="description"', '<meta property="og:image" content="https://', '<meta name="twitter:card"', '<link rel="manifest" href="manifest.webmanifest">']) {
+        assert(html.includes(tag), `the published index.html keeps ${tag}`);
+    }
+    const manifest = JSON.parse(readFileSync(join(published.outdir, 'manifest.webmanifest'), 'utf8'));
+    assert(manifest.icons.every((icon) => readFileSync(join(published.outdir, icon.src)).length > 0), 'the manifest and its icons are published');
+    await startFromHome(browser, `http://127.0.0.1:${server.address().port}`);
+    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor');
 
     const development = await build(join(outdir, 'development-vue'), { developmentVue: true });
     const devServer = await serve(development.outdir);

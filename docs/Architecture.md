@@ -229,6 +229,14 @@ the detailed references; in short:
   a structure places a copy of its bricks
   (CopyStructureIntoDocumentUseCase through StructureCompositionTool);
   Fork opens it as a new document.
+- Home (ui/views/HomeView.js) offers some built-in structures as ready-made
+  builds (application/home/FeaturedBuilds.js). Each opens through
+  `/editor?start=<structure id>`, which the Editor turns into the same Fork
+  (EditorSession.forkStructure()). Home's 3D showcase
+  (ui/components/home/HomeShowcase.js, renderer/ShowcaseTurntableRenderer.js)
+  and the cards' thumbnails (ui/components/home/HomeFeaturedBuilds.js) load
+  after Home first renders, since they bring in Three.js and the brick
+  libraries, which the first load leaves out.
 - A StructurePlacement (core/StructurePlacement.js) places a whole saved
   Document inside another one by reference, resolved fresh by
   application/editor/StructureDocumentResolver.js; placements can be moved,
@@ -1571,7 +1579,8 @@ way, through RenderWorldUseCase and RenderWorldViewUseCase.
 - World View adds AvatarRenderer, RemoteSpatialPresenceRenderer,
   VehicleRenderer/VehicleFieldRenderer and
   AnimalRenderer/AnimalFieldRenderer. DocumentThumbnailRenderer draws
-  Repository previews.
+  Repository previews. ShowcaseTurntableRenderer draws Home's slowly turning
+  village, with no controls or picking.
 
 ## UI
 

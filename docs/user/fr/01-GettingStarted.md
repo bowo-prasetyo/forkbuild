@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: e707978bda85f9b5 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: ccc330f1bc5e0f97 -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -20,6 +20,16 @@ serveur de rendez-vous par défaut ne sert que le site hébergé, votre propre
 copie ne peut donc pas l’utiliser pour trouver des personnes ; connectez-vous
 plutôt par invitation, ou installez votre propre serveur de rendez-vous
 (voir [Connexions entre pairs et amis](07-PeerConnectionsAndFriends.md)).
+
+L’écran **Accueil** montre un petit village qui tourne en 3D et propose
+trois façons de commencer : **Essayez maintenant : commencez par une
+maison** ouvre une maison toute prête dans l’Éditeur comme votre propre
+copie, prête à être modifiée ; **Partir de zéro** ouvre l’Éditeur sur un
+terrain vide ; et **Découvrir des constructions** ouvre le Dépôt. Sous
+**Partir d’une construction toute prête**, chaque carte (une maison, une
+chaumière, un moulin, une tour de guet, un pont et une petite chapelle) ouvre
+de la même façon votre propre copie de cette construction. Rien n’est
+publié ni envoyé nulle part tant que vous ne le décidez pas.
 
 La barre du haut est toujours visible :
 

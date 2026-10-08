@@ -19,6 +19,14 @@ can't use it to find people; connect with invitations instead, or set up a
 rendezvous server of your own (see
 [Peer Connections & Friends](07-PeerConnectionsAndFriends.md)).
 
+The **Home** screen shows a small village turning in 3D and offers three
+ways in: **Try it now: start with a house** opens a ready-made house in the
+Editor as your own copy, ready to change; **Start from scratch** opens the
+Editor on an empty plot; and **Explore builds** opens the Repository. Under
+**Start from a ready-made build**, each card (a house, a cottage, a mill, a
+watchtower, a bridge and a small chapel) opens your own copy of that build
+the same way. Nothing is published or sent anywhere until you choose to.
+
 The bar at the top is always visible:
 
 `ForkBuild Home Editor Repository My Worlds My Avatar My Identities Peers Following Conversations Publications Network Settings Your Data Language About 🔔 [Login]`

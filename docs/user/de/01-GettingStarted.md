@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: e707978bda85f9b5 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: ccc330f1bc5e0f97 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -21,6 +21,16 @@ Kopie ihn nicht nutzen, um Menschen zu finden; verbinden Sie sich
 stattdessen mit Einladungen oder richten Sie einen eigenen
 Rendezvous-Server ein (siehe
 [Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)).
+
+Die Seite **Start** zeigt ein kleines Dorf, das sich in 3D dreht, und
+bietet drei Einstiege: **Jetzt ausprobieren: mit einem Haus beginnen**
+öffnet ein fertiges Haus im Editor als Ihre eigene Kopie, bereit zum
+Ändern; **Bei null anfangen** öffnet den Editor auf einem leeren Grundstück;
+und **Bauwerke entdecken** öffnet das Repository. Unter **Mit einem fertigen
+Bauwerk beginnen** öffnet jede Karte (ein Haus, eine Hütte, eine Mühle,
+ein Wachturm, eine Brücke und eine kleine Kapelle) auf dieselbe Weise Ihre
+eigene Kopie dieses Bauwerks. Nichts wird veröffentlicht oder irgendwohin
+gesendet, solange Sie es nicht selbst tun.
 
 Die Leiste oben ist immer sichtbar:
 

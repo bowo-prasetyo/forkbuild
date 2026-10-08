@@ -48,7 +48,8 @@ export class ForkStructureUseCase {
             building.addBrick(new Brick({
                 definitionId: brick.definitionId,
                 position: brick.position.clone(),
-                rotation: brick.rotation
+                rotation: brick.rotation,
+                color: brick.color
                 // id omitted deliberately — Brick's constructor default
                 // (createId()) mints a fresh identity, exactly the
                 // "strip every instance id, let it regenerate" rule

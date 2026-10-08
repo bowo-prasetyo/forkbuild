@@ -4465,3 +4465,52 @@ The last step of graduating the Publications page's tabs: all four of a card's t
   Placements & IPFS only IPFS Publishing is badged.
 - Left Experimental on the page: anchoring other than Arweave, the wallets and their Bitcoin and Base steps, Steem,
   Blurt, remote IPFS pinning, and the Wallet, Archive & Publisher Tools panel.
+
+## A Home page that shows what ForkBuild is, and ready-made builds to start from (unnumbered, 2026-10-08)
+
+**Home now shows a slowly turning 3D village, says plainly what ForkBuild is for, and opens a ready-made house in the
+Editor in one click; six ready-made builds below it each open as the visitor's own copy. The site gains link-preview
+tags, a share image and a web app manifest.** Home was a title, a sentence about "interchangeable publishing
+providers" and a button to an empty Editor, so a first visit showed nothing built and gave nothing to start from, and
+a link to the site previewed as a bare "ForkBuild". Home is the page most visits open, so it should show the product
+and get a newcomer to a first build quickly.
+
+- Home (`ui/views/HomeView.js`): a headline and lead about building, remixing and exploring; **Try it now: start with
+  a house** (`/editor?start=village:house`), **Start from scratch** and **Explore builds**; a note that no account is
+  needed and nothing leaves the device until the visitor shares it; **Start from a ready-made build**, a card per
+  featured structure with its thumbnail and **Remix**; four reasons (build, remix, explore, own); a footer linking
+  the user guide in the shown language and the source. Styles are in `css/main/home.css`; on narrow screens the
+  village comes first.
+- Featured builds: `application/home/FeaturedBuilds.js` lists them (`village:house`, `village:cottage`,
+  `village:mill`, `village:watchtower`, `village:bridge`, `village:small_chapel`), finds the structure a `start` query
+  names (`findStarterStructure()`), and lays four of them out for the showcase without overlap
+  (`composeShowcase()`, new bricks, the library's untouched).
+- The Editor takes `?start=<structure id>`: it forks that built-in structure into a new document through
+  `EditorSession.forkStructure()`, as the Build Library's Fork does, says so (`editor.startedFromBuild`) or that the
+  build wasn't found (`editor.starterNotFound`), and goes back to plain `/editor`, as `?fork=` and `?load=` do.
+- The showcase: `renderer/ShowcaseTurntableRenderer.js` draws bricks on a patch of grass with the shared Lights and
+  BuildingRenderer meshes, and turns the camera on animation frames (one turn every 40 seconds). It draws one still
+  frame for `prefers-reduced-motion`. `ui/components/home/HomeShowcase.js` turns it only while it is on screen, and
+  shows the ForkBuild cube where WebGL can't draw. It and `ui/components/home/HomeFeaturedBuilds.js` (thumbnails from
+  a LibraryPreviewService kept for the page's lifetime in `ui/components/home/homeLibrary.js`) load with
+  `defineAsyncComponent()` after Home renders, so Three.js and the brick libraries stay out of the first load, which
+  grows by about 7 KiB.
+- Forking a structure keeps each brick's color (`application/editor/ForkStructureUseCase.js`). It used to drop it, so
+  forks of the Tool Shed and the Stable lost their roof-colored cubes. Placing a structure into a document
+  (`StructureCompositionTransform`) still drops color; that is a separate fix.
+- Site metadata in `index.html`: a title and `description`, Open Graph and Twitter card tags with
+  `assets/social/forkbuild-card.png` (1200 × 630, drawn from the showcase), `theme-color`, an apple-touch icon, and
+  `manifest.webmanifest` with PNG icons in `assets/icons/` (192, 512, a maskable 512). `og:url` and `og:image` name
+  the official site; docs/Deployment.md, "Link previews and installing", says how a copy elsewhere changes them.
+  There is no service worker.
+- Messages: `homeView.*` rewritten in every language (the four old keys removed, 24 added) and the two `editor.*`
+  messages, following each language's conventions in docs/Translating.md.
+- Docs: the Getting Started guide, in every language, describes Home's ways in; docs/Architecture.md,
+  docs/StructureLibrary.md, docs/Deployment.md and README.md.
+- Tests: `tests/FeaturedBuilds.test.js` (the featured ids, the `start` lookup, the showcase layout, colors surviving
+  a fork), `tests/HomeViewBrowser.test.js` (Home's links and cards in real Vue with the shipped CSS, and the
+  turntable drawing, turning and holding still for reduced motion), and `tests/run-bundle.mjs`, which now checks the
+  published `index.html` keeps its preview tags and manifest and that Home's main button opens the house in the
+  published Editor.
+- Not done: the top navigation is unchanged; first-visit guidance in the Editor; previews for individual builds'
+  links, which a hash-routed static site can't give.
