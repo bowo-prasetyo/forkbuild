@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a742c831b5f54e8b -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 5516a73079573bea -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -35,7 +35,7 @@ décidez pas.
 
 La barre du haut est toujours visible :
 
-`ForkBuild Accueil Éditeur Dépôt Mes mondes Mon avatar Mes identités Pairs Abonnements Conversations Publications Paramètres réseau Vos données Langue À propos 🔔 [Se connecter]`
+`ForkBuild Accueil Éditeur Dépôt Mes mondes Plus ▾ 🔔 [Se connecter]`
 
 - **Accueil** — la page d’arrivée
 - **Éditeur** — là où vous construisez
@@ -43,6 +43,12 @@ La barre du haut est toujours visible :
 - **Mes mondes** — les Mondes que vous avez réellement visités sur cet
   appareil, voir
   [Mes mondes](03-WorldView.md#mes-mondes--les-mondes-où-vous-êtes-vraiment-allé)
+
+**Plus** ouvre le reste, en quatre groupes : **Vous** (Mon avatar, Mes identités,
+Vos données), **Personnes** (Pairs, Abonnements, Conversations), **Réseau**
+(Publications, Paramètres réseau) et **Application** (Langue, À propos). Sur un téléphone,
+**Menu** les affiche tous d’un coup.
+
 - **Mon avatar** — votre apparence pour les autres dans la Vue du Monde,
   voir [Avatars et présence](06-AvatarsAndPresence.md)
 - **Mes identités** — les identités cryptographiques stockées sur cet
@@ -68,6 +74,10 @@ La barre du haut est toujours visible :
 
 ## Se connecter
 
+Vous n’avez pas besoin de vous connecter pour commencer à construire. La
+première fois que vous cliquez sur **Publier**, ForkBuild vous demande de
+vous connecter, ou de créer une identité sur place, car publier signe votre
+création. Vous pouvez aussi vous connecter à tout moment :
 Cliquez sur **Se connecter** en haut à droite. ForkBuild n’utilise ni mot
 de passe ni compte central — **votre identité est une paire de clés
 cryptographiques stockée sur cet appareil**. La boîte de dialogue de
@@ -102,6 +112,11 @@ ForkBuild comporte plusieurs grandes parties :
 | **Mon avatar / Pairs / Conversations** | Votre apparence pour les autres, les personnes avec qui vous êtes connecté et vos messages directs — voir les guides ci-dessus |
 
 ## Placer votre première brique
+
+La première fois que vous ouvrez l’Éditeur, une carte **Votre première
+construction** dans le coin de la vue 3D vous guide en cinq étapes et coche
+chacune dès que vous l’avez faite. Voir
+[Votre première construction](02-TheEditor.md#votre-première-construction).
 
 1. Cliquez sur **Éditeur** dans la barre du haut.
 2. Dans la barre latérale gauche, vérifiez que l’outil **Placement** est
@@ -145,8 +160,8 @@ effacer quand le disque manque d’espace.
 Vous n’avez pas besoin d’être connecté pour construire. La connexion
 compte dès que vous publiez ou travaillez avec d’autres personnes : une
 création publiée sans être connecté n’a ni auteur ni signature, elle ne
-peut donc pas être partagée avec des pairs ni distribuée plus tard.
-Connectez-vous d’abord, puis publiez.
+peut donc pas être partagée avec des pairs ni distribuée plus tard, et
+n’obtient pas de lien. Publier vous demande d’abord de vous connecter.
 
 ## Et ensuite ?
 

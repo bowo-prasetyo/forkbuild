@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: ae29bd6e293587d6 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8a7a24368ab8c93 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -71,6 +71,30 @@ ainda não podem fazer nada:
 > **Dica:** Pressione `Ctrl/Cmd+K` em qualquer lugar para abrir a **Paleta
 > de comandos** — uma lista pesquisável, por nome, de todas as ações deste
 > guia.
+
+## Sua primeira construção
+
+Na primeira vez que você abre o Editor em um dispositivo, um cartão **Sua
+primeira construção** fica no canto inferior esquerdo da visão 3D (no
+celular, ele começa recolhido em um pequeno botão
+**Primeira construção · 0/5** no canto superior esquerdo). Ele lista cinco
+passos e mostra uma dica para o próximo:
+
+1. **Colocar um bloco**
+2. **Empilhar um sobre outro**: coloque um bloco em cima de outro.
+3. **Adicionar uma estrutura**: coloque uma estrutura da aba **Estruturas**
+   da Biblioteca de construção.
+4. **Salvar sua construção**
+5. **Publicar e compartilhar um link**: publique e depois use **Copiar
+   link** ou **Compartilhar…**.
+
+Cada passo é marcado quando você o faz, em qualquer ordem; desfazer e
+refazer não contam. Quando os cinco estão feitos, o cartão comemora e
+oferece **Ver outras construções** ou **Continuar construindo**, e depois
+some. **–** o recolhe no botão pequeno; **Ocultar o guia** o esconde de vez
+neste dispositivo. Para trazê-lo de volta, abra a paleta de comandos
+(**Ctrl+K**) e execute **Guia da primeira construção**. Um dispositivo que
+já tem trabalho salvo começa com o guia oculto.
 
 ## As duas ferramentas
 

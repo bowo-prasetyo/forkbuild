@@ -1,4 +1,4 @@
-import { inject, provide, ref, watch } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import UserWidget from './components/UserWidget.js';
 import ExperimentalBanner from './components/ExperimentalBanner.js';
@@ -21,11 +21,38 @@ export default {
         provide('previewService', previewService);
 
         // On phone-width screens the nav folds behind a Menu button; choosing a page
-        // folds it again.
+        // folds it again. The pages a newcomer needs are always in the nav; the
+        // rest are grouped under More, which a phone's Menu shows open.
         const route = useRoute();
         const router = useRouter();
         const menuOpen = ref(false);
-        watch(() => route.fullPath, () => { menuOpen.value = false; });
+        const moreOpen = ref(false);
+        const moreMenu = ref(null);
+        watch(() => route.fullPath, () => {
+            menuOpen.value = false;
+            moreOpen.value = false;
+        });
+        const PRIMARY_PATHS = ['/', '/editor', '/repository', '/worlds/recent'];
+        const inMore = computed(() => !PRIMARY_PATHS.includes(route.path)
+            && !route.path.startsWith('/world/') && !route.path.startsWith('/view/') && !route.path.startsWith('/s/'));
+        function closeMoreOnOutsideClick(event) {
+            if (moreOpen.value && moreMenu.value && !moreMenu.value.contains(event.target)) {
+                moreOpen.value = false;
+            }
+        }
+        function closeMoreOnEscape(event) {
+            if (event.key === 'Escape' && moreOpen.value) {
+                moreOpen.value = false;
+            }
+        }
+        onMounted(() => {
+            document.addEventListener('click', closeMoreOnOutsideClick);
+            document.addEventListener('keydown', closeMoreOnEscape);
+        });
+        onBeforeUnmount(() => {
+            document.removeEventListener('click', closeMoreOnOutsideClick);
+            document.removeEventListener('keydown', closeMoreOnEscape);
+        });
 
         // Notifications, in the header on every page: a read-only history of what
         // was addressed to the signed-in identity (NotificationHistoryPanel).
@@ -74,7 +101,7 @@ export default {
         }
 
         return {
-            t, menuOpen, notificationsOpen, openNotifications,
+            t, menuOpen, moreOpen, moreMenu, inMore, notificationsOpen, openNotifications,
             getRecipientNotificationEventsCommand, viewNotificationPublication
         };
     },
@@ -89,22 +116,45 @@ export default {
                     @click="menuOpen = !menuOpen"
                 >{{ menuOpen ? t('app.menu.close') : t('app.menu.open') }}</button>
                 <div class="app-header-right">
-	                <nav :class="['app-nav', { 'app-nav--open': menuOpen }]">
-	                    <router-link to="/" class="app-nav-link">{{ t('app.nav.home') }}</router-link>
-	                    <router-link to="/editor" class="app-nav-link">{{ t('app.nav.editor') }}</router-link>
-	                    <router-link to="/repository" class="app-nav-link">{{ t('app.nav.repository') }}</router-link>
-	                    <router-link to="/worlds/recent" class="app-nav-link">{{ t('app.nav.myWorlds') }}</router-link>
-	                    <router-link to="/avatar" class="app-nav-link">{{ t('app.nav.myAvatar') }}</router-link>
-	                    <router-link to="/identity" class="app-nav-link">{{ t('app.nav.myIdentities') }}</router-link>
-	                    <router-link to="/peers" class="app-nav-link">{{ t('app.nav.peers') }}</router-link>
-	                    <router-link to="/following" class="app-nav-link">{{ t('app.nav.following') }}</router-link>
-	                    <router-link to="/conversations" class="app-nav-link">{{ t('app.nav.conversations') }}</router-link>
-	                    <router-link to="/publications" class="app-nav-link">{{ t('app.nav.publications') }}</router-link>
-	                    <router-link to="/settings" class="app-nav-link">{{ t('app.nav.networkSettings') }}</router-link>
-	                    <router-link to="/settings/data" class="app-nav-link">{{ t('app.nav.yourData') }}</router-link>
-	                    <router-link to="/settings/language" class="app-nav-link">{{ t('app.nav.language') }}</router-link>
-	                    <router-link to="/about" class="app-nav-link">{{ t('app.nav.about') }}</router-link>
-	                </nav>
+                    <nav :class="['app-nav', { 'app-nav--open': menuOpen }]" :aria-label="t('app.nav.label')">
+                        <router-link to="/" class="app-nav-link">{{ t('app.nav.home') }}</router-link>
+                        <router-link to="/editor" class="app-nav-link">{{ t('app.nav.editor') }}</router-link>
+                        <router-link to="/repository" class="app-nav-link">{{ t('app.nav.repository') }}</router-link>
+                        <router-link to="/worlds/recent" class="app-nav-link">{{ t('app.nav.myWorlds') }}</router-link>
+                        <div ref="moreMenu" :class="['app-nav-more', { 'app-nav-more--open': moreOpen }]">
+                            <button
+                                type="button"
+                                :class="['app-nav-link', 'app-nav-more-toggle', { 'app-nav-more-toggle--active': inMore }]"
+                                aria-haspopup="true"
+                                :aria-expanded="moreOpen ? 'true' : 'false'"
+                                @click="moreOpen = !moreOpen"
+                            >{{ t('app.nav.more') }}</button>
+                            <div class="app-nav-more-panel">
+                                <div class="app-nav-group" role="group" :aria-label="t('app.nav.group.you')">
+                                    <span class="app-nav-group-label" aria-hidden="true">{{ t('app.nav.group.you') }}</span>
+                                    <router-link to="/avatar" class="app-nav-link">{{ t('app.nav.myAvatar') }}</router-link>
+                                    <router-link to="/identity" class="app-nav-link">{{ t('app.nav.myIdentities') }}</router-link>
+                                    <router-link to="/settings/data" class="app-nav-link">{{ t('app.nav.yourData') }}</router-link>
+                                </div>
+                                <div class="app-nav-group" role="group" :aria-label="t('app.nav.group.people')">
+                                    <span class="app-nav-group-label" aria-hidden="true">{{ t('app.nav.group.people') }}</span>
+                                    <router-link to="/peers" class="app-nav-link">{{ t('app.nav.peers') }}</router-link>
+                                    <router-link to="/following" class="app-nav-link">{{ t('app.nav.following') }}</router-link>
+                                    <router-link to="/conversations" class="app-nav-link">{{ t('app.nav.conversations') }}</router-link>
+                                </div>
+                                <div class="app-nav-group" role="group" :aria-label="t('app.nav.group.network')">
+                                    <span class="app-nav-group-label" aria-hidden="true">{{ t('app.nav.group.network') }}</span>
+                                    <router-link to="/publications" class="app-nav-link">{{ t('app.nav.publications') }}</router-link>
+                                    <router-link to="/settings" class="app-nav-link">{{ t('app.nav.networkSettings') }}</router-link>
+                                </div>
+                                <div class="app-nav-group" role="group" :aria-label="t('app.nav.group.app')">
+                                    <span class="app-nav-group-label" aria-hidden="true">{{ t('app.nav.group.app') }}</span>
+                                    <router-link to="/settings/language" class="app-nav-link">{{ t('app.nav.language') }}</router-link>
+                                    <router-link to="/about" class="app-nav-link">{{ t('app.nav.about') }}</router-link>
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
                     <!-- Beside the account: notifications are addressed to the signed-in identity. -->
                     <button
                         type="button"

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: ae29bd6e293587d6 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8a7a24368ab8c93 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -73,6 +73,31 @@ tombol yang belum bisa melakukan apa-apa:
 > **Kiat:** Tekan `Ctrl/Cmd+K` di mana saja untuk membuka **Palet
 > Perintah** — daftar yang dapat dicari berisi setiap tindakan di panduan
 > ini, berdasarkan nama.
+
+## Bangunan pertama Anda
+
+Saat pertama kali Anda membuka Editor di sebuah perangkat, kartu
+**Bangunan pertama Anda** muncul di sudut kiri bawah tampilan 3D (di
+ponsel, kartu itu mulai terlipat menjadi tombol kecil
+**Bangunan pertama · 0/5** di kiri atas). Kartu itu mencantumkan lima langkah
+dan menampilkan petunjuk untuk langkah berikutnya:
+
+1. **Tempatkan sebuah balok**
+2. **Tumpuk satu di atas yang lain**: tempatkan balok di atas balok lain.
+3. **Tambahkan sebuah struktur**: tempatkan struktur dari tab **Struktur**
+   di Pustaka Bangunan.
+4. **Simpan bangunan Anda**
+5. **Terbitkan dan bagikan tautan**: terbitkan, lalu **Salin tautan** atau
+   **Bagikan…**.
+
+Setiap langkah dicentang begitu Anda melakukannya, dalam urutan apa pun;
+urungkan dan ulangi tidak dihitung. Setelah kelimanya selesai, kartu itu
+merayakannya dan menawarkan **Lihat bangunan lain** atau **Terus
+membangun**, lalu menghilang. **–** melipatnya menjadi tombol kecil;
+**Sembunyikan panduan** menyembunyikannya untuk seterusnya di perangkat
+ini. Untuk memunculkannya lagi, buka palet perintah (**Ctrl+K**) dan
+jalankan **Panduan Bangunan Pertama**. Perangkat yang sudah memiliki karya
+tersimpan memulai dengan panduan tersembunyi.
 
 ## Dua alat
 

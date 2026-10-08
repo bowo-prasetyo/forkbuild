@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e2f44cb736080f44 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6a92be43d5eb9d49 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -14,8 +14,9 @@ evolucionar, conservando todo el historial.
 1. Construya algo en el Editor.
 2. Inicie sesión y asegúrese de que su identidad esté desbloqueada
    (consulte [Identidad e inicio de sesión](05-IdentityAndLogin.md)).
-   Publicar firma la creación con ella; si se publica sin haber iniciado
-   sesión, no tiene autor.
+   Publicar firma la creación con ella. Si no inició sesión, **Publicar** le
+   pide iniciar sesión o crear una identidad primero; **Publicar sin
+   firmar** la publica ahí sin autor y sin enlace.
 3. Póngale un título (Publicar rechaza una creación sin título o vacía) y,
    si quiere, una descripción y una licencia: haga clic en **✎** junto al
    título del documento en la barra lateral para abrir **Propiedades del

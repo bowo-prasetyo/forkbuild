@@ -30,13 +30,19 @@ the same builds. Nothing is published or sent anywhere until you choose to.
 
 The bar at the top is always visible:
 
-`ForkBuild Home Editor Repository My Worlds My Avatar My Identities Peers Following Conversations Publications Network Settings Your Data Language About 🔔 [Login]`
+`ForkBuild Home Editor Repository My Worlds More ▾ 🔔 [Login]`
 
 - **Home** — the landing page
 - **Editor** — where you build
 - **Repository** — browse everyone's published creations
 - **My Worlds** — Worlds you've actually visited on this device, see
   [My Worlds](03-WorldView.md#my-worlds--worlds-youve-actually-been-to)
+
+**More** opens the rest, in four groups: **You** (My Avatar, My Identities,
+Your Data), **People** (Peers, Following, Conversations), **Network**
+(Publications, Network Settings) and **App** (Language, About). On a phone,
+**Menu** shows them all at once.
+
 - **My Avatar** — how you appear to others in World View, see
   [Avatars & Presence](06-AvatarsAndPresence.md)
 - **My Identities** — the cryptographic identities stored on this device, see
@@ -59,7 +65,10 @@ The bar at the top is always visible:
 
 ## Logging in
 
-Click **Login** in the top-right corner. ForkBuild doesn't use passwords or
+You don't need to log in to start building. The first time you click
+**Publish**, ForkBuild asks you to log in, or to create an identity right
+there, because publishing signs your creation. You can also log in at any
+time: click **Login** in the top-right corner. ForkBuild doesn't use passwords or
 central accounts — instead, **your identity is a cryptographic key pair
 stored on this device**. The Log In dialog lists every identity this browser
 already holds; click one to use it, or create a new one:
@@ -90,6 +99,10 @@ ForkBuild has several main areas:
 | **My Avatar / Peers / Conversations** | How you appear to others, who you're connected to, and your direct messages — see the guides linked above |
 
 ## Placing your first brick
+
+The first time you open the Editor, a **Your first build** card in the
+corner of the 3D view walks you through five steps and ticks each one off
+as you do it; see [Your first build](02-TheEditor.md#your-first-build).
 
 1. Click **Editor** in the top bar.
 2. In the left sidebar, make sure the **Place** tool is active (press `2`).
@@ -126,7 +139,7 @@ it stops the browser from clearing it when the disk runs low.
 You don't need to be logged in to build. Logging in matters once you
 publish or work with other people: a creation you publish while logged out
 has no author and no signature, so it can't be shared with peers or
-distributed later. Log in first, then publish.
+distributed later, and gets no link. Publish asks you to log in first.
 
 ## What's next?
 

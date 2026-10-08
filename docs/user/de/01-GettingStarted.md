@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a742c831b5f54e8b -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 5516a73079573bea -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -35,7 +35,7 @@ irgendwohin gesendet, solange Sie es nicht selbst tun.
 
 Die Leiste oben ist immer sichtbar:
 
-`ForkBuild Start Editor Repository Meine Welten Mein Avatar Meine Identitäten Peers Gefolgt Unterhaltungen Veröffentlichungen Netzwerkeinstellungen Ihre Daten Sprache Über 🔔 [Anmelden]`
+`ForkBuild Start Editor Repository Meine Welten Mehr ▾ 🔔 [Anmelden]`
 
 - **Start** — die Startseite
 - **Editor** — hier bauen Sie
@@ -43,6 +43,12 @@ Die Leiste oben ist immer sichtbar:
 - **Meine Welten** — Welten, die Sie auf diesem Gerät tatsächlich besucht
   haben, siehe
   [Meine Welten](03-WorldView.md#meine-welten--welten-in-denen-sie-wirklich-waren)
+
+**Mehr** öffnet den Rest, in vier Gruppen: **Persönlich** (Mein Avatar, Meine Identitäten,
+Ihre Daten), **Menschen** (Peers, Gefolgt, Unterhaltungen), **Netzwerk**
+(Veröffentlichungen, Netzwerkeinstellungen) und **App** (Sprache, Über). Auf einem Telefon zeigt
+**Menü** alle auf einmal.
+
 - **Mein Avatar** — wie andere Sie in der Weltansicht sehen, siehe
   [Avatare & Anwesenheit](06-AvatarsAndPresence.md)
 - **Meine Identitäten** — die auf diesem Gerät gespeicherten
@@ -70,6 +76,11 @@ Die Leiste oben ist immer sichtbar:
 
 ## Anmelden
 
+Um mit dem Bauen anzufangen, müssen Sie sich nicht anmelden. Wenn Sie zum
+ersten Mal auf **Veröffentlichen** klicken, bittet ForkBuild Sie, sich
+anzumelden oder gleich dort eine Identität zu erstellen, denn
+Veröffentlichen signiert Ihre Kreation. Sie können sich auch jederzeit
+anmelden:
 Klicken Sie oben rechts auf **Anmelden**. ForkBuild verwendet keine
 Passwörter und keine zentralen Konten — stattdessen ist **Ihre Identität
 ein kryptografisches Schlüsselpaar, das auf diesem Gerät gespeichert ist**.
@@ -105,6 +116,11 @@ ForkBuild hat mehrere Hauptbereiche:
 | **Mein Avatar / Peers / Unterhaltungen** | Wie andere Sie sehen, mit wem Sie verbunden sind, und Ihre Direktnachrichten — siehe die oben verlinkten Anleitungen |
 
 ## Ihren ersten Stein platzieren
+
+Wenn Sie den Editor zum ersten Mal öffnen, führt Sie eine Karte **Ihr
+erstes Bauwerk** in der Ecke der 3D-Ansicht durch fünf Schritte und hakt
+jeden ab, sobald Sie ihn erledigt haben; siehe
+[Ihr erstes Bauwerk](02-TheEditor.md#ihr-erstes-bauwerk).
 
 1. Klicken Sie in der oberen Leiste auf **Editor**.
 2. Stellen Sie in der linken Seitenleiste sicher, dass das Werkzeug
@@ -149,8 +165,8 @@ wenn der Speicherplatz knapp wird.
 Zum Bauen müssen Sie nicht angemeldet sein. Die Anmeldung zählt, sobald Sie
 veröffentlichen oder mit anderen arbeiten: Eine Kreation, die Sie
 abgemeldet veröffentlichen, hat keinen Autor und keine Signatur und kann
-daher später weder mit Peers geteilt noch verteilt werden. Melden Sie sich
-zuerst an und veröffentlichen Sie dann.
+daher später weder mit Peers geteilt noch verteilt werden, und sie bekommt
+keinen Link. Veröffentlichen bittet Sie, sich zuerst anzumelden.
 
 ## Wie geht es weiter?
 

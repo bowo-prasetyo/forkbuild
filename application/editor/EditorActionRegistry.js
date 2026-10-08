@@ -618,6 +618,17 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                     ui.togglePalette();
                 }
             }
+        }),
+        // Brings back the guided first build after it was hidden.
+        define({
+            id: 'ui.firstBuildGuide',
+            category: 'interface',
+            enabled: () => typeof ui.showFirstBuildGuide === 'function',
+            execute: () => {
+                if (typeof ui.showFirstBuildGuide === 'function') {
+                    ui.showFirstBuildGuide();
+                }
+            }
         })
     ];
 }

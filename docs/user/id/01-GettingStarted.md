@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a742c831b5f54e8b -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 5516a73079573bea -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -34,7 +34,7 @@ mana pun sampai Anda memilihnya.
 
 Bilah di bagian atas selalu terlihat:
 
-`ForkBuild Beranda Editor Repositori Dunia Saya Avatar Saya Identitas Saya Rekan Diikuti Percakapan Publikasi Pengaturan Jaringan Data Anda Bahasa Tentang 🔔 [Masuk]`
+`ForkBuild Beranda Editor Repositori Dunia Saya Lainnya ▾ 🔔 [Masuk]`
 
 - **Beranda** — halaman awal
 - **Editor** — tempat Anda membangun
@@ -42,6 +42,12 @@ Bilah di bagian atas selalu terlihat:
 - **Dunia Saya** — Dunia yang benar-benar pernah Anda kunjungi di
   perangkat ini, lihat
   [Dunia Saya](03-WorldView.md#dunia-saya--dunia-yang-benar-benar-pernah-anda-kunjungi)
+
+**Lainnya** membuka sisanya, dalam empat kelompok: **Anda** (Avatar Saya, Identitas Saya,
+Data Anda), **Orang** (Rekan, Diikuti, Percakapan), **Jaringan**
+(Publikasi, Pengaturan Jaringan), dan **Aplikasi** (Bahasa, Tentang). Di ponsel,
+**Menu** menampilkan semuanya sekaligus.
+
 - **Avatar Saya** — bagaimana Anda terlihat oleh orang lain di Tampilan
   Dunia, lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md)
 - **Identitas Saya** — identitas kriptografis yang tersimpan di perangkat
@@ -65,6 +71,10 @@ Bilah di bagian atas selalu terlihat:
 
 ## Masuk
 
+Anda tidak perlu masuk untuk mulai membangun. Saat pertama kali Anda
+mengeklik **Terbitkan**, ForkBuild meminta Anda masuk, atau membuat
+identitas saat itu juga, karena menerbitkan menandatangani karya Anda. Anda
+juga dapat masuk kapan saja:
 Klik **Masuk** di pojok kanan atas. ForkBuild tidak memakai kata sandi atau
 akun pusat — sebagai gantinya, **identitas Anda adalah pasangan kunci
 kriptografis yang tersimpan di perangkat ini**. Dialog masuk menampilkan
@@ -98,6 +108,11 @@ ForkBuild memiliki beberapa area utama:
 | **Avatar Saya / Rekan / Percakapan** | Bagaimana Anda terlihat oleh orang lain, dengan siapa Anda terhubung, dan pesan langsung Anda — lihat panduan yang ditautkan di atas |
 
 ## Menempatkan balok pertama Anda
+
+Saat pertama kali Anda membuka Editor, kartu **Bangunan pertama Anda** di
+sudut tampilan 3D memandu Anda melalui lima langkah dan mencentang
+masing-masing begitu Anda melakukannya; lihat
+[Bangunan pertama Anda](02-TheEditor.md#bangunan-pertama-anda).
 
 1. Klik **Editor** di bilah atas.
 2. Di bilah sisi kiri, pastikan alat **Tempatkan** aktif (tekan `2`).
@@ -138,8 +153,8 @@ penuh.
 Anda tidak perlu masuk untuk membangun. Masuk menjadi penting begitu Anda
 menerbitkan atau bekerja dengan orang lain: karya yang Anda terbitkan
 tanpa masuk tidak memiliki pembuat dan tanda tangan, jadi tidak dapat
-dibagikan kepada rekan atau didistribusikan nanti. Masuklah dulu, lalu
-terbitkan.
+dibagikan kepada rekan atau didistribusikan nanti, dan tidak mendapat
+tautan. Terbitkan meminta Anda masuk lebih dulu.
 
 ## Apa selanjutnya?
 

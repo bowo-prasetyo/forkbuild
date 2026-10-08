@@ -262,6 +262,26 @@
         font-size: 0.95rem;
     }
 
+    /* In the Menu, More's groups are laid out open beneath the main pages. */
+    .app-nav-more {
+        grid-column: 1 / -1;
+    }
+
+    .app-nav-more-toggle {
+        display: none;
+    }
+
+    .app-nav-more-panel {
+        display: grid;
+        position: static;
+        grid-template-columns: 1fr 1fr;
+        min-width: 0;
+        padding: 0;
+        background: none;
+        border: 0;
+        box-shadow: none;
+    }
+
     .about-view {
         padding: 1rem;
     }

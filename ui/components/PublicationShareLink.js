@@ -30,7 +30,9 @@ export default {
         // it only a distributed Publication's link is offered.
         publication: { type: Object, default: null }
     },
-    setup(props) {
+    // `shared` once a link is shared or copied.
+    emits: ['shared'],
+    setup(props, { emit }) {
         const lifecycleStore = inject('publicationDistributionLifecycleStore', null);
         const lifecycleRestorer = inject('publicationDistributionLifecycleRestorer', null);
         const contentStore = inject('publicationContentStore', null);
@@ -84,7 +86,10 @@ export default {
 
         function report(outcome) {
             feedback.value = feedbackText(outcome);
-            if (outcome === 'shared' || outcome === 'copied') funnel?.sharedLink();
+            if (outcome === 'shared' || outcome === 'copied') {
+                funnel?.sharedLink();
+                emit('shared');
+            }
         }
         async function shareNow() {
             report(await sharePublicationLink(share.value));

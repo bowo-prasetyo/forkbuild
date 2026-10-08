@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e2f44cb736080f44 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6a92be43d5eb9d49 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -14,8 +14,10 @@ weiterzuentwickeln — wobei der ganze Verlauf erhalten bleibt.
 1. Bauen Sie etwas im Editor.
 2. Melden Sie sich an und stellen Sie sicher, dass Ihre Identität entsperrt
    ist (siehe [Identität & Anmeldung](05-IdentityAndLogin.md)).
-   Veröffentlichen signiert die Kreation damit; abgemeldet veröffentlicht,
-   hat sie keinen Autor.
+   Veröffentlichen signiert die Kreation damit. Wenn Sie nicht angemeldet
+   sind, bittet **Veröffentlichen** Sie, sich zuerst anzumelden oder eine
+   Identität zu erstellen; **Unsigniert veröffentlichen** veröffentlicht sie
+   dort ohne Autor und ohne Link.
 3. Geben Sie ihr einen Titel — Veröffentlichen verweigert eine Kreation
    ohne Titel oder eine leere — und, optional, eine Beschreibung und eine
    Lizenz: Klicken Sie in der Seitenleiste auf **✎** neben dem

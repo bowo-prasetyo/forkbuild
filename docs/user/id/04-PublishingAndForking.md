@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e2f44cb736080f44 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6a92be43d5eb9d49 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -14,8 +14,10 @@ mengembangkannya — dengan seluruh riwayatnya tetap terjaga.
 1. Bangun sesuatu di Editor.
 2. Masuk dan pastikan identitas Anda tidak terkunci (lihat
    [Identitas & Masuk](05-IdentityAndLogin.md)). Menerbitkan
-   menandatangani karya itu dengan identitas tersebut; jika diterbitkan
-   saat belum masuk, karya itu tidak memiliki pembuat.
+   menandatangani karya itu dengan identitas tersebut. Jika Anda belum
+   masuk, **Terbitkan** meminta Anda masuk atau membuat identitas lebih
+   dulu; **Terbitkan tanpa tanda tangan** di sana menerbitkannya tanpa
+   pembuat dan tanpa tautan.
 3. Beri judul — Terbitkan menolak karya tanpa judul atau kosong — dan,
    secara opsional, deskripsi dan lisensi: klik **✎** di samping judul
    dokumen di bilah sisi untuk membuka **Properti Dokumen**. Dokumen baru

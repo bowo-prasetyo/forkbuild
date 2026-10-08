@@ -68,6 +68,27 @@ that can't do anything yet:
 > **Tip:** Press `Ctrl/Cmd+K` anywhere to open the **Command Palette** — a
 > searchable list of every action in this guide, by name.
 
+## Your first build
+
+The first time you open the Editor on a device, a **Your first build** card
+sits in the bottom-left corner of the 3D view (on a phone it starts folded
+into a small **First build · 0/5** button at the top left). It lists five
+steps and shows a hint for the next one:
+
+1. **Place a brick**
+2. **Stack one on another**: place a brick on top of another.
+3. **Drop in a structure**: place a structure from the Build Library's
+   **Structures** tab.
+4. **Save your build**
+5. **Publish and share a link**: Publish, then **Copy link** or **Share…**.
+
+Each step is ticked off when you do it, in any order; undo and redo don't
+count. When all five are done, the card celebrates and offers **See other
+builds** or **Keep building**, then goes away. **–** folds it into the small
+button; **Hide guide** hides it for good on this device. To bring it back,
+open the command palette (**Ctrl+K**) and run **First-Build Guide**. A device
+that already has saved work starts with the guide hidden.
+
 ## The two tools
 
 ### Place tool (`2`)

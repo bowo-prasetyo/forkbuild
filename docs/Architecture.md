@@ -214,6 +214,18 @@ docs/CapabilityMatrix.md for exactly what each surface may do.
     carries the color for the next placement.
   - Save failures (0.9.653): both Save entry points catch errors and show
     SAVE_FAILURE_MESSAGE. The sidebar scrolls inside `.sidebar-scroll`.
+  - The guided first build: core/FirstBuildChecklist.js decides which
+    of five steps an edit completes (from describeCommand(), which now
+    carries a placed brick's definition and position, so a brick off the
+    ground is a stack); FirstBuildChecklistTracker
+    (application/onboarding/) follows EditorSession#onCommandActivity(), a
+    save and a shared link, and keeps progress in FirstBuildChecklistStore
+    (`first-build-guide`). ui/components/FirstBuildGuide.js shows it over
+    the viewport; the `ui.firstBuildGuide` action brings it back. A device
+    with saved documents starts with it hidden.
+  - Publishing asks for an identity first: Toolbar's Publish opens
+    LoginModal with `purpose="publish"` when no identity is logged in and
+    unlocked, then publishes on `signed-in` (or unsigned on `skip`).
 
 ## Bricks, structures and blueprints
 
@@ -1628,7 +1640,10 @@ defines the routes: Home, Editor (`/editor`), Repository, Recent Worlds,
 Author, World View (`/world/:documentId`), Live World, Avatar, Identity,
 Peers, Chat and Conversations, Publications (`/publications`), the
 settings pages under `/settings/…` (including Language), the leaderboard and reconciliation
-views, and About. Views reach application/ through injected services;
+views, and About. The header (ui/App.js) shows Home, Editor, Repository
+and My Worlds, and groups the other pages under More (You, People,
+Network, App); a phone's Menu lays More's groups out open. Views reach
+application/ through injected services;
 the composables in ui/composables/ share the settings-form logic
 (useEndpointSettingsForm, useEndpointListSettings,
 useRoleProviderPreferenceForm) and the narrow-screen layout

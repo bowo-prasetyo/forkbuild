@@ -30,9 +30,13 @@ export default {
         // vault has idle-locked) open the modal straight into the unlock
         // prompt for one specific identity, instead of always landing on
         // the plain list.
-        unlockIdentityId: { type: String, default: null }
+        unlockIdentityId: { type: String, default: null },
+        // 'publish' when opened by Publish: it says why, and offers to
+        // publish unsigned instead.
+        purpose: { type: String, default: null }
     },
-    emits: ['close'],
+    // `signed-in` follows `close` after a sign-in; `skip` asks to go on without one.
+    emits: ['close', 'signed-in', 'skip'],
     components: { I18nText, NewPassphraseFields },
     setup(props, { emit }) {
         const identityUseCase = inject('identityUseCase');
@@ -54,6 +58,11 @@ export default {
             [...identities.value].sort((a, b) => b.createdAt - a.createdAt)
         );
 
+        function signedIn() {
+            emit('close');
+            emit('signed-in');
+        }
+
         function shortId(identityId) {
             return identityId.slice(-10);
         }
@@ -66,7 +75,7 @@ export default {
                 return;
             }
             await identityUseCase.authenticate(identity.identityId);
-            emit('close');
+            signedIn();
         }
 
         function cancelUnlock() {
@@ -83,7 +92,7 @@ export default {
             unlockError.value = '';
             try {
                 await identityUseCase.authenticate(unlockingId.value, unlockPassphrase.value);
-                emit('close');
+                signedIn();
             } catch (e) {
                 unlockError.value = errorText(e).replace(/^LocalIdentityProvider:\s*/, '');
             } finally {
@@ -108,7 +117,7 @@ export default {
             try {
                 const identity = await identityUseCase.createIdentity(label, passphrase);
                 await identityUseCase.authenticate(identity.identityId, passphrase);
-                emit('close');
+                signedIn();
             } catch (e) {
                 createError.value = errorText(e).replace(/^LocalIdentityProvider:\s*/, '');
             } finally {
@@ -126,7 +135,10 @@ export default {
     template: `
         <div class="modal-overlay" @click.self="$emit('close')">
             <div class="modal-content">
-                <h3>{{ t('loginModal.logIn') }}</h3>
+                <h3>{{ purpose === 'publish' ? t('loginModal.signInToPublish') : t('loginModal.logIn') }}</h3>
+                <p v-if="purpose === 'publish'" class="modal-subtitle login-modal-purpose">
+                    {{ t('loginModal.publishWhy') }}
+                </p>
                 <p class="modal-subtitle">
                     {{ t('loginModal.unlockAnIdentityThisDevice') }}
                 </p>
@@ -189,6 +201,7 @@ export default {
                 <p v-if="createError" class="identity-unlock-error">{{ createError }}</p>
                 <div class="modal-actions">
                     <button class="modal-btn modal-btn--secondary" @click="$emit('close')">{{ t('loginModal.cancel') }}</button>
+                    <button v-if="purpose === 'publish'" class="modal-btn modal-btn--secondary login-modal-skip" @click="$emit('close'); $emit('skip')">{{ t('loginModal.publishUnsigned') }}</button>
                     <button class="modal-btn modal-btn--primary" :disabled="creating" @click="createAndLogIn">
                         {{ creating ? t('loginModal.creating') : t('loginModal.createLogIn') }}
                     </button>

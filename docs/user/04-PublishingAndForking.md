@@ -13,7 +13,9 @@ history preserved.
 1. Build something in the Editor.
 2. Log in and make sure your identity is unlocked (see
    [Identity & Login](05-IdentityAndLogin.md)). Publishing signs the
-   creation with it; published while logged out, it has no author.
+   creation with it. If you aren't logged in, **Publish** asks you to log
+   in or create an identity first; **Publish unsigned** there publishes it
+   with no author, and no link.
 3. Give it a title — Publish refuses an untitled or empty creation — and,
    optionally, a description and a license: click **✎** beside the
    document title in the sidebar to open **Document Properties**. A new
