@@ -137,6 +137,35 @@ async function startFromHome(browser, base) {
     }
 }
 
+// The weekly challenge, in the published build: Home's Join opens the week's
+// starting build as the visitor's own copy, tagged for the week; the Editor's
+// New offers the challenge first; its page explains how to enter.
+async function joinChallenge(browser, base) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    try {
+        await page.goto(`${base}/#/`);
+        await page.waitForSelector('.challenge-card .challenge-join', { timeout: 60_000 });
+        const tag = (await page.textContent('.challenge-card .challenge-card-tag')).trim();
+        assert(/^#[a-z-]+-\d{8}$/.test(tag), `Home shows the week's tag (${tag})`);
+        await page.click('.challenge-card .challenge-join');
+        await page.waitForFunction(() => location.hash === '#/editor', null, { timeout: 60_000 });
+        await page.waitForFunction((tag) => document.body.innerText.includes(tag), tag, { timeout: 30_000 });
+
+        await page.click('.toolbar-new');
+        await page.waitForSelector('.new-document-challenge', { timeout: 30_000 });
+        assert(await page.evaluate(() => document.querySelector('.new-document-option')?.classList.contains('new-document-challenge')), 'New offers the challenge first');
+        await page.keyboard.press('Escape');
+
+        await page.evaluate(() => { location.hash = '#/challenge'; });
+        await page.waitForSelector('.challenge-steps li', { timeout: 60_000 });
+        assert((await page.textContent('.challenge-view .challenge-card-tag')).trim() === tag, 'the challenge page names the same week');
+        await page.waitForSelector('.challenge-view .featured-build-card', { timeout: 60_000 });
+    } finally {
+        await context.close();
+    }
+}
+
 // A link that carries its build, made as Copy link makes one from a castle
 // just published, opens in the published build on the castle, though no
 // network answers: its own screen, with Edit a Copy, which opens the visitor's
@@ -268,7 +297,7 @@ async function firstVisit(browser, base) {
         await page.goto(`${base}/#/`);
         await page.waitForSelector('.home-view', { timeout: 60_000 });
         const topLinks = await page.$$eval('.app-nav > .app-nav-link', (links) => links.map((link) => link.getAttribute('href')));
-        assert(topLinks.join() === '#/,#/editor,#/repository,#/worlds/recent', `the nav shows four pages before More (${topLinks})`);
+        assert(topLinks.join() === '#/,#/editor,#/repository,#/challenge,#/worlds/recent', `the nav shows five pages before More (${topLinks})`);
         assert(!(await page.isVisible('.app-nav-more-panel')), 'More starts closed');
         await page.click('.app-nav-more-toggle');
         assert(await page.isVisible('.app-nav-more-panel a[href="#/peers"]'), 'More holds the rest');
@@ -492,7 +521,8 @@ try {
     const manifest = JSON.parse(readFileSync(join(published.outdir, 'manifest.webmanifest'), 'utf8'));
     assert(manifest.icons.every((icon) => readFileSync(join(published.outdir, icon.src)).length > 0), 'the manifest and its icons are published');
     await startFromHome(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle (which downloads as a 3D model), and the Repository lists them');
+    await joinChallenge(browser, `http://127.0.0.1:${server.address().port}`);
+    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle (which downloads as a 3D model), and the Repository lists them; Home\'s Join opens the week\'s challenge tagged, New offers it first, and its page explains how to enter');
     await openLinkOnlyShare(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a link that carries its build opens on it in the published build, with no network, and Edit a Copy makes the visitor a copy, or it downloads as a 3D model; it fits a phone');
     assert(html.includes('<meta name="forkbuild-service-worker" content="sw.js">') && readFileSync(join(published.outdir, 'sw.js'), 'utf8').includes('forkbuild-'),
@@ -500,7 +530,7 @@ try {
     await offlineAndNotifications(browser, `http://127.0.0.1:${server.address().port}`, published.precacheFiles, published.outdir);
     console.log(`✓ the published site keeps its ${published.precacheFiles} files on the first visit and opens offline, Home and the Editor; a new version is offered and starts on Reload; notifications on this device turn on and off (or say the browser blocks them)`);
     await firstVisit(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ a first visit: four pages and More in the nav, the guided first build in the Editor, Publish asking about remixes and to log in, and the published link copied on another device');
+    console.log('✓ a first visit: five pages and More in the nav, the guided first build in the Editor, Publish asking about remixes and to log in, and the published link copied on another device');
 
     const development = await build(join(outdir, 'development-vue'), { developmentVue: true });
     const devServer = await serve(development.outdir);

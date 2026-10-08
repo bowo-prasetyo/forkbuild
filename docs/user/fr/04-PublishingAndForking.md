@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4c0715a067f50e8b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e6595d73ff729e3e -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -504,6 +504,41 @@ Dans les deux cas, l’unique bouton de la boîte de dialogue, **Retour au
 Monde partagé**, vous ramène là où vous l’avez trouvé — le Monde où il
 était placé, ou le Monde partagé lui-même — plutôt que de vous laisser
 bloqué dans l’Éditeur sans rien à développer.
+
+## Le défi de construction hebdomadaire
+
+Chaque semaine, ForkBuild propose un thème à construire (un phare, un pont,
+une mini-maison, …), du lundi à la fin du dimanche (UTC). L’accueil le
+montre, et **Défi** dans la barre du haut ouvre sa page.
+
+1. **Participer au défi** ouvre une construction de départ dans l’Éditeur
+   comme votre propre copie, déjà étiquetée pour la semaine (une étiquette
+   comme `#lighthouse-20261012` : le thème et le lundi où il a commencé). Le
+   défi est aussi le premier choix de **Nouveau** dans l’Éditeur, et la
+   section **Des idées pour commencer** de la page ouvre d’autres
+   constructions qui vont avec, de la même façon.
+2. Faites-la vôtre, ou recommencez sur un terrain vide : quoi que vous
+   construisiez, cela participe tant que l’étiquette de la semaine reste
+   (ajoutez-la dans **Propriétés du document → Étiquettes** si vous avez
+   commencé autrement).
+3. Publiez-la avant la fin de la semaine et partagez son lien. Le texte du
+   lien nomme le défi et son étiquette, prêt pour une publication.
+
+La page du défi liste les participations que cet appareil connaît : vos
+propres constructions publiées avec l’étiquette, et celles des autres
+trouvées sur les réseaux. Quand une construction est diffusée sur Nostr ou
+Arweave, son annonce liste ses étiquettes, et la page demande l’étiquette
+de la semaine à ces réseaux à chaque ouverture (**Vérifier à nouveau**
+redemande). Chaque participation trouvée est vérifiée comme tout ce que
+trouve le Dépôt, et apparaît aussi dans le Dépôt. Une construction
+partagée seulement par son lien, ou diffusée seulement sur Steem ou Blurt,
+n’est pas trouvée ainsi. Les semaines précédentes restent ouvertes par leur
+lundi (**La semaine dernière : …**), sans **Participer**.
+
+Les participations sont montrées de la plus récente à la plus ancienne,
+avec leur nombre de remix. Personne ne les juge et rien n’est classé : le
+défi est une raison de construire quelque chose cette semaine, et de voir
+ce que d’autres ont fait de la même idée.
 
 ## L’arbre généalogique
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 2d3a98acb2272855 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 6725707d86a7f053 -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -31,14 +31,19 @@ rumah, kincir, dan jembatan) membuka salinan Anda sendiri dari bangunan
 itu dengan cara yang sama; Repositori, Dunia Saya, dan **Baru** di Editor
 menawarkan bangunan yang sama. Tidak ada yang diterbitkan atau dikirim ke
 mana pun sampai Anda memilihnya.
+Beranda juga menampilkan **Tantangan membangun minggu ini**: tema untuk
+dibangun, dengan **Ikut tantangan** (lihat
+[Tantangan membangun mingguan](04-PublishingAndForking.md#tantangan-membangun-mingguan)).
 
 Bilah di bagian atas selalu terlihat:
 
-`ForkBuild Beranda Editor Repositori Dunia Saya Lainnya ▾ 🔔 [Masuk]`
+`ForkBuild Beranda Editor Repositori Tantangan Dunia Saya Lainnya ▾ 🔔 [Masuk]`
 
 - **Beranda** — halaman awal
 - **Editor** — tempat Anda membangun
 - **Repositori** — telusuri karya yang diterbitkan semua orang
+- **Tantangan** — tantangan membangun minggu ini dan karya pesertanya,
+  lihat [Tantangan membangun mingguan](04-PublishingAndForking.md#tantangan-membangun-mingguan)
 - **Dunia Saya** — Dunia yang benar-benar pernah Anda kunjungi di
   perangkat ini, lihat
   [Dunia Saya](03-WorldView.md#dunia-saya--dunia-yang-benar-benar-pernah-anda-kunjungi)

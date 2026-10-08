@@ -6,6 +6,7 @@ import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickReg
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { FEATURED_STRUCTURE_IDS, SHOWCASE_STRUCTURE_IDS, composeShowcase, featuredStructures } from '../application/home/FeaturedBuilds.js';
 import { t } from '../ui/i18n/i18n.js';
+import { challengeAt } from '../core/BuildChallenge.js';
 import { assert } from './support/Assert.js';
 
 // Home, rendered by real Vue with the shipped CSS: what ForkBuild is, a
@@ -56,7 +57,7 @@ await nextTick();
     assert(host.querySelector('h1').textContent.trim() === t('homeView.heroTitle'), 'the headline says what ForkBuild is');
     const primary = host.querySelector('.home-cta-primary');
     assert(primary && primary.getAttribute('href') === '#/editor?start=village%3Ahouse', `the main button opens the ready-made house (${primary && primary.getAttribute('href')})`);
-    const secondary = [...host.querySelectorAll('.home-cta-secondary')].map((link) => link.getAttribute('href'));
+    const secondary = [...host.querySelectorAll('.home-actions .home-cta-secondary')].map((link) => link.getAttribute('href'));
     assert(secondary.join() === '#/editor,#/repository', `and the others an empty plot and the Repository (${secondary.join()})`);
     assert(host.querySelector('.home-reassurance').textContent.trim() === t('homeView.noAccountNeeded'), 'it says no account is needed');
     assert(host.querySelectorAll('.home-reason').length === 4, 'four reasons to try it');
@@ -64,6 +65,18 @@ await nextTick();
     assert(external.length === 2 && external.every((link) => link.target === '_blank' && link.rel === 'noopener' && link.href.startsWith('https://github.com/bowo-prasetyo/forkbuild')),
         'the footer links to the guide and the source, in a new tab');
     console.log('✓ the headline, the buttons and the reasons render with the page');
+}
+
+// This week's build challenge, with Join and the way to its page.
+{
+    const challenge = challengeAt(Date.now());
+    const card = host.querySelector('.challenge-card');
+    assert(card, 'Home shows this week\'s challenge');
+    assert(card.querySelector('.challenge-card-tag').textContent.trim() === `#${challenge.tag}`, 'with the week\'s tag');
+    const join = card.querySelector('.challenge-join').getAttribute('href');
+    assert(join === `#/editor?start=${encodeURIComponent(challenge.starterStructureId)}&challenge=${challenge.id}`, `Join opens the starting build tagged for the week (${join})`);
+    assert(card.querySelector('.challenge-see-entries').getAttribute('href') === '#/challenge', 'and the entries are a click away');
+    console.log('✓ this week\'s challenge is on Home');
 }
 
 // The ready-made builds and the showcase load after it.

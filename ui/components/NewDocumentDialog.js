@@ -2,9 +2,10 @@ import BuildLibraryPreview from './BuildLibraryPreview.js';
 import { libraryItemDescription, libraryItemName } from '../i18n/libraryText.js';
 import { displayText, t } from '../i18n/i18n.js';
 
-// The Editor's New: an empty plot, or one of the ready-made builds
-// (application/home/FeaturedBuilds.js) opened as a new document of the
-// person's own. When the open document has unsaved changes it says so,
+// The Editor's New: this week's build challenge while one runs (its
+// starting build, tagged for the week), an empty plot, or one of the
+// ready-made builds (application/home/FeaturedBuilds.js) opened as a new
+// document of the person's own. When the open document has unsaved changes it says so,
 // since either choice closes it. The host (ui/views/EditorView.js) does
 // the opening; this only reports the choice.
 export default {
@@ -14,9 +15,11 @@ export default {
         structures: { type: Array, required: true },
         previewService: { type: Object, default: null },
         // The open document's title when it has unsaved changes, else null.
-        unsavedTitle: { type: [String, Object], default: null }
+        unsavedTitle: { type: [String, Object], default: null },
+        // This week's challenge, `{ id, title, brief, time }`, or null.
+        challenge: { type: Object, default: null }
     },
-    emits: ['choose-empty', 'choose-structure', 'cancel'],
+    emits: ['choose-challenge', 'choose-empty', 'choose-structure', 'cancel'],
     setup(props) {
         const builds = props.structures.map((structure) => ({
             structure,
@@ -50,6 +53,18 @@ export default {
                 <p v-if="unsavedTitle" class="new-document-unsaved" role="alert">
                     {{ t('newDocumentDialog.unsaved', { title: displayText(unsavedTitle) }) }}
                 </p>
+                <button
+                    v-if="challenge"
+                    type="button"
+                    class="new-document-option new-document-challenge"
+                    @click="$emit('choose-challenge', challenge.id)"
+                >
+                    <span class="new-document-empty-mark" aria-hidden="true">🏆</span>
+                    <span class="new-document-option-text">
+                        <span class="new-document-option-name">{{ t('newDocumentDialog.challenge', { theme: challenge.title }) }}</span>
+                        <span class="new-document-option-description">{{ challenge.brief }} {{ challenge.time }}</span>
+                    </span>
+                </button>
                 <button type="button" class="new-document-option new-document-empty" @click="$emit('choose-empty')">
                     <span class="new-document-empty-mark" aria-hidden="true">＋</span>
                     <span class="new-document-option-text">

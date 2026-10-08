@@ -8,21 +8,24 @@ import { t } from '../../i18n/i18n.js';
 // its thumbnail, that opens it in the Editor as a new document of the
 // visitor's own (`/editor?start=<id>`). Home shows them as a grid; the
 // Repository and My Worlds as one row (`layout="row"`) that scrolls
-// sideways when it doesn't fit. Hosts load this with defineAsyncComponent(),
-// since thumbnails bring in Three.js.
+// sideways when it doesn't fit. The challenge page shows a week's ideas
+// (`ids`), each opened tagged for that week (`challengeId`). Hosts load this
+// with defineAsyncComponent(), since thumbnails bring in Three.js.
 export default {
     name: 'FeaturedBuilds',
     components: { BuildLibraryPreview },
     props: {
-        layout: { type: String, default: 'grid' } // 'grid' | 'row'
+        layout: { type: String, default: 'grid' }, // 'grid' | 'row'
+        ids: { type: Array, default: () => FEATURED_STRUCTURE_IDS },
+        challengeId: { type: String, default: null }
     },
-    setup() {
+    setup(props) {
         const { structureRegistry, previewService } = featuredLibrary();
-        const builds = featuredStructures(structureRegistry, FEATURED_STRUCTURE_IDS).map((structure) => ({
+        const builds = featuredStructures(structureRegistry, props.ids).map((structure) => ({
             structure,
             name: libraryItemName(structure),
             description: libraryItemDescription(structure),
-            to: { path: '/editor', query: { start: structure.id } }
+            to: { path: '/editor', query: props.challengeId ? { start: structure.id, challenge: props.challengeId } : { start: structure.id } }
         }));
         return { t, builds, previewService };
     },

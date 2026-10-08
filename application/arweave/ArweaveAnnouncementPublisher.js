@@ -1,6 +1,6 @@
 import { describeDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
 import { withTimeout } from '../../utils/withTimeout.js';
-import { publicationRecordTag } from '../../core/NarrowDiscoveryTags.js';
+import { announcedBuildTagDiscoveryTags, publicationRecordTag } from '../../core/NarrowDiscoveryTags.js';
 import { WorldEncounterKind } from '../../core/WorldEncounter.js';
 
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';
@@ -274,7 +274,10 @@ export class ArweaveAnnouncementPublisher {
         gatewayUrl = DEFAULT_GATEWAY_URL,
         tagName = DEFAULT_TAG_NAME,
         uploadTaggedTransaction = null,
-        timeoutMs = DEFAULT_TIMEOUT_MS
+        timeoutMs = DEFAULT_TIMEOUT_MS,
+        // Optional `(publicationId) -> string[]`: the build's own tags, each
+        // announced as a `forkbuild-tag:` tag (core/NarrowDiscoveryTags.js).
+        buildTagsFor = null
     } = {}) {
         if (typeof discoveryTag !== 'string' || discoveryTag.length === 0) {
             throw new Error('ArweaveAnnouncementPublisher: a non-empty discoveryTag is required');
@@ -293,6 +296,7 @@ export class ArweaveAnnouncementPublisher {
         this._tagName = tagName;
         this._uploadTaggedTransaction = uploadTaggedTransaction;
         this._timeoutMs = timeoutMs;
+        this._buildTagsFor = typeof buildTagsFor === 'function' ? buildTagsFor : null;
 
         // Bound so `publisher.publish` survives being passed around as a
         // bare function reference — the identical reason application/
@@ -324,8 +328,11 @@ export class ArweaveAnnouncementPublisher {
         const tag = Object.freeze({ name: this._tagName, value: this._discoveryTag });
         // A Publication's announcement also carries its own record tag
         // (docs/AnnouncementIndex.md, "Phase 6").
-        const recordTag = described.kind === WorldEncounterKind.PUBLICATION ? publicationRecordTag(described.objectId) : null;
-        const extraTags = recordTag ? [Object.freeze({ name: this._tagName, value: recordTag })] : [];
+        const isPublication = described.kind === WorldEncounterKind.PUBLICATION;
+        const recordTag = isPublication ? publicationRecordTag(described.objectId) : null;
+        const buildTags = isPublication ? announcedBuildTagDiscoveryTags(this._buildTagsFor, described.objectId) : [];
+        const extraTags = [...(recordTag ? [recordTag] : []), ...buildTags]
+            .map((value) => Object.freeze({ name: this._tagName, value }));
 
         const result = await withTimeout(this._uploadTaggedTransaction(material, tag, extraTags), this._timeoutMs, 'ArweaveAnnouncementPublisher: uploadTaggedTransaction timed out');
 

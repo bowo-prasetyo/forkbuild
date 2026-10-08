@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 2d3a98acb2272855 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 6725707d86a7f053 -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -32,14 +32,20 @@ ouvre de la même façon votre propre copie de cette construction ; le
 Dépôt, Mes mondes et **Nouveau** dans l’Éditeur proposent les mêmes
 constructions. Rien n’est publié ni envoyé nulle part tant que vous ne le
 décidez pas.
+L’accueil montre aussi le **Défi de construction de la semaine** : un
+thème à construire, avec **Participer au défi** (voir
+[Le défi de construction hebdomadaire](04-PublishingAndForking.md#le-défi-de-construction-hebdomadaire)).
 
 La barre du haut est toujours visible :
 
-`ForkBuild Accueil Éditeur Dépôt Mes mondes Plus ▾ 🔔 [Se connecter]`
+`ForkBuild Accueil Éditeur Dépôt Défi Mes mondes Plus ▾ 🔔 [Se connecter]`
 
 - **Accueil** — la page d’arrivée
 - **Éditeur** — là où vous construisez
 - **Dépôt** — parcourir les créations publiées par tout le monde
+- **Défi** — le défi de construction de cette semaine et ses
+  participations, voir
+  [Le défi de construction hebdomadaire](04-PublishingAndForking.md#le-défi-de-construction-hebdomadaire)
 - **Mes mondes** — les Mondes que vous avez réellement visités sur cet
   appareil, voir
   [Mes mondes](03-WorldView.md#mes-mondes--les-mondes-où-vous-êtes-vraiment-allé)

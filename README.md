@@ -29,6 +29,11 @@ models").
   that open in the Editor as your own copy, with no account needed; the
   Repository, My Worlds and the Editor's **New** offer them too. Link
   previews and an installable web app manifest for the site.
+- A weekly build challenge: a new theme every Monday (a lighthouse, a
+  bridge, a tiny home, …) with **Join the challenge**, which opens a starting
+  build tagged for the week, and a **Challenge** page listing the entries
+  found on this device and on Nostr and Arweave. No server decides the
+  week: every copy of the app works out the same theme and tag from the date.
 
 **Editor**
 - Place, select (single, multi, marquee), move, rotate and delete bricks, with

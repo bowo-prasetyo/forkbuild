@@ -461,6 +461,37 @@ to wherever you found it — the World it was placed in, or the Shared World
 itself — rather than leaving you stranded in the Editor with nothing to
 build on.
 
+## The weekly build challenge
+
+Every week ForkBuild sets a theme to build (a lighthouse, a bridge, a tiny
+home, …), from Monday to the end of Sunday (UTC). Home shows it, and
+**Challenge** in the top bar opens its page.
+
+1. **Join the challenge** opens a starting build in the Editor as your own
+   copy, already tagged for the week (a tag such as `#lighthouse-20261012`,
+   the theme and the Monday it began). The challenge is also the first
+   choice in the Editor's **New**, and the page's **Ideas to start from**
+   open other fitting builds the same way.
+2. Make it yours, or start again from an empty plot: whatever you build
+   enters as long as it keeps the week's tag (add it in **Document
+   Properties → Tags** if you started some other way).
+3. Publish it before the week ends, and share its link. The link's text
+   names the challenge and its tag, ready for a post.
+
+The challenge's page lists the entries this device knows of: your own
+published builds with the tag, and others' builds found on the networks.
+When a build is distributed to Nostr or Arweave, its announcement lists its
+tags, and the page asks those networks for the week's tag each time it
+opens (**Check again** asks again). Each entry found is checked like
+anything the Repository finds, and is listed in the Repository too. A build
+shared only by its link, or distributed only to Steem or Blurt, isn't found
+this way. Earlier weeks stay open by their Monday (**Last week: …**), without
+**Join**.
+
+Entries are shown newest first, with their remix counts. Nobody judges
+them and nothing is ranked: the challenge is a reason to build something
+this week, and to see what others made of the same idea.
+
 ## The family tree
 
 Because every fork records its parent, ForkBuild can draw a creation's whole

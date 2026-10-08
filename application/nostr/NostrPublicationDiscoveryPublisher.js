@@ -1,6 +1,6 @@
 import { describeDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
 import { withTimeout } from '../../utils/withTimeout.js';
-import { publicationRecordTag } from '../../core/NarrowDiscoveryTags.js';
+import { announcedBuildTagDiscoveryTags, publicationRecordTag } from '../../core/NarrowDiscoveryTags.js';
 import { WorldEncounterKind } from '../../core/WorldEncounter.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
@@ -263,13 +263,17 @@ export class NostrPublicationDiscoveryPublisher {
     // timeoutMs: how long to wait for `publishImpl` to settle before
     //   treating it as a genuine failure; see this file's own header, "a
     //   genuine transport/signing failure propagates."
+    // buildTagsFor: optional `(publicationId) -> string[]`, the build's own
+    //   tags, each announced as a `forkbuild-tag:` tag
+    //   (core/NarrowDiscoveryTags.js) so the builds with one tag can be found.
     constructor({
         relayUrl = DEFAULT_RELAY_URL,
         tagName = DEFAULT_TAG_NAME,
         kind = DEFAULT_KIND,
         discoveryTag,
         publishImpl = null,
-        timeoutMs = DEFAULT_TIMEOUT_MS
+        timeoutMs = DEFAULT_TIMEOUT_MS,
+        buildTagsFor = null
     } = {}) {
         if (typeof relayUrl !== 'string' || relayUrl.trim().length === 0) {
             throw new Error('NostrPublicationDiscoveryPublisher: a non-empty relayUrl is required');
@@ -286,6 +290,7 @@ export class NostrPublicationDiscoveryPublisher {
         this._discoveryTag = discoveryTag;
         this._publishImpl = publishImpl;
         this._timeoutMs = timeoutMs;
+        this._buildTagsFor = typeof buildTagsFor === 'function' ? buildTagsFor : null;
 
         // Bound so `publisher.publish` survives being passed around as a
         // bare function reference — the identical reason `application/
@@ -313,10 +318,16 @@ export class NostrPublicationDiscoveryPublisher {
 
         // A Publication's announcement also carries its own record tag
         // (docs/AnnouncementIndex.md, "Phase 6").
-        const recordTag = described.kind === WorldEncounterKind.PUBLICATION ? publicationRecordTag(described.objectId) : null;
+        const isPublication = described.kind === WorldEncounterKind.PUBLICATION;
+        const recordTag = isPublication ? publicationRecordTag(described.objectId) : null;
+        const buildTags = isPublication ? announcedBuildTagDiscoveryTags(this._buildTagsFor, described.objectId) : [];
         const eventTemplate = Object.freeze({
             kind: this._kind,
-            tags: [[this._tagName, this._discoveryTag], ...(recordTag ? [[this._tagName, recordTag]] : [])],
+            tags: [
+                [this._tagName, this._discoveryTag],
+                ...(recordTag ? [[this._tagName, recordTag]] : []),
+                ...buildTags.map((tag) => [this._tagName, tag])
+            ],
             content: JSON.stringify(described)
         });
 

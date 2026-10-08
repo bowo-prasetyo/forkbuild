@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 2d3a98acb2272855 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 6725707d86a7f053 -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -31,14 +31,20 @@ pueblo, una casa, un molino y un puente) abre su propia copia de esa
 construcción de la misma manera; el Repositorio, Mis mundos y **Nuevo** en
 el Editor ofrecen las mismas construcciones. Nada se publica ni se envía a
 ningún lugar hasta que usted lo decida.
+Inicio también muestra el **Desafío de construcción de la semana**: un
+tema para construir, con **Unirse al desafío** (consulte
+[El desafío de construcción semanal](04-PublishingAndForking.md#el-desafío-de-construcción-semanal)).
 
 La barra de arriba siempre está visible:
 
-`ForkBuild Inicio Editor Repositorio Mis mundos Más ▾ 🔔 [Iniciar sesión]`
+`ForkBuild Inicio Editor Repositorio Desafío Mis mundos Más ▾ 🔔 [Iniciar sesión]`
 
 - **Inicio**: la página de inicio
 - **Editor**: donde construye
 - **Repositorio**: explore las creaciones publicadas por todos
+- **Desafío**: el desafío de construcción de esta semana y sus
+  participaciones; consulte
+  [El desafío de construcción semanal](04-PublishingAndForking.md#el-desafío-de-construcción-semanal)
 - **Mis mundos**: los Mundos que realmente visitó en este dispositivo;
   consulte
   [Mis mundos](03-WorldView.md#mis-mundos--los-mundos-que-realmente-visitó)

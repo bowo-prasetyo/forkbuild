@@ -17,13 +17,14 @@ import { License, LicenseId } from '../core/License.js';
 import { BUILD_PICTURE_HEIGHT, BUILD_PICTURE_WIDTH } from '../renderer/BuildPicture.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { t } from '../ui/i18n/i18n.js';
+import { challengeAt } from '../core/BuildChallenge.js';
 import { assert } from './support/Assert.js';
 
 // Share, Copy link and Save picture for a build just published, rendered by
 // real Vue in a real browser: the link carries the build, copying it is
 // counted, and the picture is a PNG of the build at link-preview size.
 
-function publishCastle({ signedIn = true } = {}) {
+function publishCastle({ signedIn = true, tags = [] } = {}) {
     const storage = new InMemoryStorageProvider();
     const identity = new LocalIdentityProvider(storage);
     if (signedIn) identity.login('share-browser-alice');
@@ -35,7 +36,7 @@ function publishCastle({ signedIn = true } = {}) {
     }
     world.addBuilding(building);
     const manager = new DocumentManager();
-    manager.load(new Document({ world, metadata: new DocumentMetadata({ title: 'Castle on the hill', author: 'alice', license: new License({ id: LicenseId.CC_BY_4_0 }) }) }), 'doc-castle');
+    manager.load(new Document({ world, metadata: new DocumentMetadata({ title: 'Castle on the hill', author: 'alice', license: new License({ id: LicenseId.CC_BY_4_0 }), tags }) }), 'doc-castle');
     const publication = new PublishDocumentUseCase(new LocalPublisherProvider(storage, contentStore), identity).execute(manager);
     return { publication, contentStore };
 }
@@ -140,4 +141,32 @@ HTMLAnchorElement.prototype.click = function captureDownload() {
     assert(!host.querySelector('.publication-share-link-embed'), 'but no Embed, which needs a link');
     unmount();
     console.log('✓ an unsigned build explains why there is no link');
+}
+
+// A challenge entry's share text names the challenge and carries its tag.
+{
+    const challenge = challengeAt(Date.now());
+    const shared = [];
+    Object.defineProperty(navigator, 'share', { configurable: true, value: async (data) => { shared.push(data); } });
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    try {
+        for (const [tags, expectChallenge] of [[[challenge.tag, 'castle'], true], [['castle'], false]]) {
+            const { host, unmount } = mount(publishCastle({ tags }));
+            await until(() => host.querySelector('.publication-share-link-url'), 'the link');
+            const shareButton = [...host.querySelectorAll('button')].find((button) => button.textContent.trim() === t('share.share'));
+            shareButton.click();
+            await until(() => shared.length > 0, 'the share sheet');
+            const { text } = shared.pop();
+            if (expectChallenge) {
+                assert(text.includes(`#${challenge.tag}`) && text.includes('Castle on the hill'), `an entry is shared as one (${text})`);
+            } else {
+                assert(text === t('share.text', { title: 'Castle on the hill' }), `any other build keeps the usual text (${text})`);
+            }
+            unmount();
+        }
+    } finally {
+        delete navigator.share;
+        delete navigator.canShare;
+    }
+    console.log('✓ a challenge entry is shared with the challenge\'s name and tag');
 }

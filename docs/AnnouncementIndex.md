@@ -321,6 +321,12 @@ reaches its 2,000-record cap. The tags come from `core/NarrowDiscoveryTags.js`.
   signed record is found however far back it was announced. Reading goes
   straight to the network: these lookups are rare and user-initiated, so
   nothing is watched or stored in the index for them.
+- **Build tags.** A Publication announcement on Nostr and Arweave also
+  carries `forkbuild-tag:<tag>` for each of its build's own tags (at most
+  five), read from the snapshot published on this device. The weekly
+  challenge page reads the week's tag
+  (application/challenge/ChallengeEntryDiscovery.js); like the record tag,
+  it goes straight to the network and nothing is watched or indexed.
 - **Steem.** Steem posts do carry tags (`json_metadata.tags`), but
   ForkBuild announces as replies to monthly discovery threads, and Steem's
   tag feeds list only top-level posts, so a tag on a reply cannot be

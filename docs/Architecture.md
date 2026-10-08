@@ -256,6 +256,25 @@ the detailed references; in short:
   defineAsyncComponent(), since they bring in Three.js and the brick
   libraries; one thumbnail service serves them all
   (ui/components/featured/featuredLibrary.js).
+- The weekly build challenge: core/BuildChallenge.js turns a time into the
+  week's challenge (Monday 00:00 UTC to the next, themes taken in turn from
+  CHALLENGE_THEMES starting the week of CHALLENGE_EPOCH) and its tag,
+  `<theme>-<yyyymmdd>`, so every copy of the app agrees with no server. Each
+  theme names a starting structure and a few ideas. Joining
+  (`/editor?start=<structure id>&challenge=<its Monday>`, or the challenge
+  first in the Editor's New) forks the structure as above and puts the
+  week's tag first in the document's tags (withChallengeTag()), which is
+  all that makes a build an entry. Home shows the week
+  (ui/components/challenge/ChallengeCard.js), and ui/views/ChallengeView.js
+  (`/challenge`, `/challenge/<Monday>`) lists the entries:
+  application/challenge/ChallengeEntries.js takes the Publications the
+  Repository knows of whose published snapshot carries the tag
+  (PublishedBuildTags.js) or whose id application/challenge/ChallengeEntryLog.js
+  logged under it. ChallengeEntryDiscovery.js fills that log when the page
+  opens: a RepositoryNetworkDiscovery over Nostr and Arweave for
+  `forkbuild-tag:<tag>` (see "Repository and Author views"), whose run now
+  also reports the announced ids it already knew. An entry's share text
+  names the challenge (ui/components/PublicationShareLink.js).
 - A StructurePlacement (core/StructurePlacement.js) places a whole saved
   Document inside another one by reference, resolved fresh by
   application/editor/StructureDocumentResolver.js; placements can be moved,
@@ -580,6 +599,11 @@ publications with the application-wide decentralized discovery provider
   was read is kept by NetworkPublicationLocatorStore, and Explore on such a
   card opens that record's link view (`/view/ar|steem|blurt|ipfs/…`), which
   fetches and checks the build before opening World View.
+- Build tags announced: the Nostr and Arweave announcement publishers take
+  `buildTagsFor(publicationId)` (composed in ui/main/composePublicationDistribution.js,
+  reading the snapshot published on this device) and add
+  `forkbuild-tag:<tag>` for each, so the builds with one tag can be asked
+  for (docs/Protocol.md).
 - Previews are derived client state, never part of a Publication.
   PublicationPreview asks application/editor/PreviewService.js for a thumbnail
   only while the card is visible; PreviewService queues, deduplicates,
@@ -1674,8 +1698,9 @@ defines the routes: Home, Editor (`/editor`), Repository, Recent Worlds,
 Author, World View (`/world/:documentId`), Live World, Avatar, Identity,
 Peers, Chat and Conversations, Publications (`/publications`), the
 settings pages under `/settings/…` (including Language), the leaderboard and reconciliation
-views, and About. The header (ui/App.js) shows Home, Editor, Repository
-and My Worlds, and groups the other pages under More (You, People,
+views, the weekly challenge (`/challenge`, `/challenge/:id`), and About.
+The header (ui/App.js) shows Home, Editor, Repository, Challenge and My
+Worlds, and groups the other pages under More (You, People,
 Network, App); a phone's Menu lays More's groups out open. Views reach
 application/ through injected services;
 the composables in ui/composables/ share the settings-form logic

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 14eb8e63d6c0263d -->
+<!-- translation-of: docs/Privacy.md source-hash: 65f1e9c30110d299 -->
 # Privacidade
 
 <!-- languages -->
@@ -44,6 +44,9 @@ que você publique, exporte ou envie:
   distribuiu antes.
 - para quais redes este dispositivo enviou cada comentário seu, e quando,
   para que cada comentário possa dizer para onde foi.
+- para cada semana do desafio de construção que você abre, os ids das
+  participações encontradas nas redes, para que a página dele as mostre de
+  novo antes de procurar.
 
 Limpar os dados deste site no navegador apaga tudo isso, e não há outra
 cópia nem como recuperar. Faça antes um backup com **Seus dados → Fazer
@@ -69,7 +72,10 @@ com suas configurações (veja "Notificações neste dispositivo" abaixo).
 
 - **Tudo o que você publica** é público: o conteúdo, o título, a descrição e
   a licença, e a chave pública da sua identidade, que assina a publicação.
-  Depois que outras pessoas têm uma cópia, você não pode recuperá-la.
+  Depois que outras pessoas têm uma cópia, você não pode recuperá-la. Quando você a distribui no Nostr ou no Arweave, o anúncio dela também
+  lista as tags (como `forkbuild-tag:<tag>`), para que qualquer pessoa
+  encontre as construções com uma tag, como as participações do desafio de
+  uma semana.
 - **Os pares a que você se conecta** ficam sabendo a chave pública da sua
   identidade e seu endereço IP (uma conexão direta precisa dele; um relay
   TURN o esconde do par, mas não do relay). Os pares conectados podem ver seu
@@ -150,6 +156,9 @@ páginas de outros sites (veja "Servidores que o ForkBuild contata" abaixo):
 - `/e/embed-open`: uma construção incorporada foi aberta no ForkBuild a
   partir dessa página.
 
+E quando alguém entra no desafio de construção semanal (**Participar do
+desafio**, ou o desafio em **Novo** no Editor): `/e/challenge-join`.
+
 Cada uma envia só o caminho e o número aleatório: nunca o link, a
 construção, o título dela ou quem a fez. Quais construções foram abertas por
 um link fica só na memória da página aberta, e é esquecido quando ela fecha.
@@ -193,12 +202,14 @@ pede a ele.
 | No site oficial, você copia ou compartilha um link para uma construção, abre um link compartilhado ou copia para o Editor uma construção aberta por um link (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com caminho fixo que diz qual dos três momentos foi, sem referenciador e sem cookie |
 | Você instala o ForkBuild pelo site oficial (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com o caminho fixo `/e/installed`, sem referenciador e sem cookie |
 | No site oficial, você copia o código para incorporar de uma construção, ou uma construção incorporada é mostrada ou aberta no ForkBuild (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com um caminho fixo dizendo qual dos três casos foi, sem referenciador e sem cookie |
+| No site oficial, você entra no desafio de construção semanal (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma requisição de imagem com o caminho fixo `/e/challenge-join`, sem referenciador e sem cookie |
 | Você fica visível, ou procura alguém, em **Pares** | o servidor de encontro (`forkbuild-rendezvous.prazjp.workers.dev`) | a chave pública da sua identidade e uma oferta de conexão, guardadas por no máximo 15 minutos; a identidade que você procura; quando você se conecta a alguém que encontrou, sua resposta de conexão (que lista seus endereços de rede), que só essa pessoa pode buscar |
 | Você entra numa sala pública, ou olha uma | o mesmo servidor de encontro | seu cartão de sala assinado (chave pública, nome de exibição, qual sala), guardado por no máximo 15 minutos e renovado enquanto você fica; qual sala você olha |
 | Uma conexão entre pares começa | servidores STUN (`stun.l.google.com`) | nada além de um pedido do seu endereço IP público |
 | Você começa uma conexão entre pares, se o servidor de encontro oferece um relay | o `/turn-credentials` do servidor de encontro, e depois o relay TURN dele (Cloudflare) | um pedido de credenciais de relay de curta duração, no máximo cerca de uma vez por hora; o tráfego retransmitido é criptografado de ponta a ponta pelo WebRTC |
 | O app está aberto e a aba visível (sincronização de anúncios em segundo plano) | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | consultas pelas etiquetas de descoberta do ForkBuild: as etiquetas compartilhadas de Snapshot e de Comentários, e as regiões de nomes de lugares e células do mapa que você visitou |
 | Você abre o Repositório ou a página de um autor | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | uma consulta pela etiqueta compartilhada de publicações (`forkbuild-publication`); depois um pedido do registro assinado de cada publicação recém-anunciada, no máximo 20 por visita ou por **Verificar de novo** |
+| Você abre o desafio de construção de uma semana (**Desafio**) | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`) | uma consulta pela tag dessa semana (`forkbuild-tag:<tag>`); depois, uma requisição do registro assinado de cada participação recém-anunciada, no máximo 20 por visita ou **Verificar de novo** |
 | Você distribui ou descobre publicações pelo Nostr | relays do Nostr (`relay.damus.io`) | os anúncios assinados que você publica; suas consultas |
 | Você guarda ou busca conteúdo no Arweave | um gateway do Arweave (`arweave.net`) | o conteúdo que você publica; o que você busca |
 | Você busca conteúdo no IPFS | um gateway IPFS (`ipfs.io`), ou seu próprio nó IPFS (`127.0.0.1:5001`) | o que você busca ou adiciona |

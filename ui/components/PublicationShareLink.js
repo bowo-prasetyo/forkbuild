@@ -3,6 +3,8 @@ import {
     canUseShareSheet, copyEmbedCode, copyPublicationShareLink, describePublicationShare, prepareLinkOnlyShare, sharePublicationLink
 } from '../../application/publication/PublicationShareLink.js';
 import { embedCode } from '../../core/ForkBuildAppLinks.js';
+import { challengeOfTags } from '../../core/BuildChallenge.js';
+import { challengeThemeTitle } from './challenge/challengeText.js';
 import { displayText, t } from '../i18n/i18n.js';
 
 const FEEDBACK = Object.freeze({
@@ -81,12 +83,26 @@ export default {
 
         // The share functions and the share sheet take text, so the messages
         // are translated once here.
+        // A challenge entry's share text names the challenge and its tag.
+        const enteredChallenge = computed(() => {
+            const snapshotText = linkOnly.value?.snapshotText;
+            if (!snapshotText) return null;
+            try {
+                return challengeOfTags(JSON.parse(snapshotText)?.metadata?.tags);
+            } catch {
+                return null;
+            }
+        });
         const share = computed(() => {
             const described = describePublicationShare({ lifecycle: lifecycle.value, title: props.title, linkOnly: linkOnly.value });
             if (!described) return null;
-            return described.available
-                ? { ...described, title: displayText(described.title), text: t(described.text), hint: t(described.hint), note: displayText(described.note) }
-                : { ...described, reason: t(described.reason) };
+            if (!described.available) return { ...described, reason: t(described.reason) };
+            const title = displayText(described.title);
+            const challenge = enteredChallenge.value;
+            const text = challenge
+                ? t('challenge.shareText', { title, theme: challengeThemeTitle(challenge), tag: challenge.tag })
+                : t(described.text);
+            return { ...described, title, text, hint: t(described.hint), note: displayText(described.note) };
         });
         const shareSheet = computed(() => canUseShareSheet(share.value));
         const canSavePicture = computed(() => Boolean(linkOnly.value?.snapshotText));
