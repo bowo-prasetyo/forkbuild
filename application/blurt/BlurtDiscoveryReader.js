@@ -119,7 +119,8 @@ export function createBlurtDiscoveryReader({
 
     // Resolves to `{ outcome, announcements, sourcesRead, sourcesUnavailable }`
     // and never rejects: a source that can't be read is counted, not
-    // thrown. Each announcement is `{ envelope, author, permlink, created }`.
+    // thrown. Each announcement is `{ envelope, author, permlink, created,
+    // tags }`, `tags` the build tags its post lists.
     async function read(family) {
         if (!isBlurtFamily(family)) throw new TypeError(`unknown Blurt family: ${family}`);
         const tag = blurtFamilyTag(family);
@@ -177,7 +178,7 @@ export function createBlurtDiscoveryReader({
         const announcements = [];
         for (const post of buildPosts.values()) {
             for (const entry of post.announcements) {
-                if (entry.family === family) announcements.push(Object.freeze({ envelope: entry.envelope, author: post.author, permlink: post.permlink, created: post.created }));
+                if (entry.family === family) announcements.push(Object.freeze({ envelope: entry.envelope, author: post.author, permlink: post.permlink, created: post.created, tags: post.tags }));
             }
         }
         // Sources are read in parallel; report in a stable order regardless.

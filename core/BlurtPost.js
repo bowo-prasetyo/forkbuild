@@ -245,7 +245,10 @@ export function parseBlurtBuildPost(post) {
         permlink: post.permlink,
         created: typeof post.created === 'string' ? post.created : null,
         announcements: Object.freeze(announcements),
-        anchors: Object.freeze(anchors)
+        anchors: Object.freeze(anchors),
+        // The build's own tags the post lists after ForkBuild's (which
+        // normalizeBuildTags() leaves out), such as a week's challenge tag.
+        tags: Object.freeze(normalizeBuildTags(metadataOf(post.json_metadata)?.tags))
     });
 }
 
@@ -447,7 +450,7 @@ function failure(problem) {
 
 // `json_metadata.forkbuild`, or null. condenser_api returns the metadata as
 // text; some APIs return it parsed.
-function forkbuildOf(jsonMetadata) {
+function metadataOf(jsonMetadata) {
     let metadata = jsonMetadata;
     if (typeof metadata === 'string') {
         if (metadata.length === 0) return null;
@@ -457,5 +460,10 @@ function forkbuildOf(jsonMetadata) {
             return null;
         }
     }
-    return isPlainObject(metadata) && isPlainObject(metadata.forkbuild) ? metadata.forkbuild : null;
+    return isPlainObject(metadata) ? metadata : null;
+}
+
+function forkbuildOf(jsonMetadata) {
+    const metadata = metadataOf(jsonMetadata);
+    return metadata && isPlainObject(metadata.forkbuild) ? metadata.forkbuild : null;
 }

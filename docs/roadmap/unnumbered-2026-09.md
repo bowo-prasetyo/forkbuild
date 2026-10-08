@@ -4922,3 +4922,20 @@ header, and `4everland.io` didn't answer, each waited out in turn. Checked live 
 - The network searches wait 10 s per gateway (`DISCOVERY_CLAIM_IPFS_TIMEOUT_MS`), not a link's 30 s, so one gateway
   that never answers doesn't hold up every claim.
 - Guide 10 (IPFS Gateway) and Privacy, in every language.
+
+## Challenge entries distributed to Blurt are found (unnumbered, 2026-10-08)
+
+**A build distributed only to Blurt now counts as a challenge entry for everyone, not only on its maker's device.**
+Blurt has no narrow tags like Nostr's and Arweave's, but ForkBuild's Blurt build post already lists the build's own
+tags (`json_metadata.tags`), the week's tag among them.
+
+- `parseBlurtBuildPost()` keeps those tags (ForkBuild's own left out); the Blurt discovery reader passes them with each
+  announcement.
+- `BlurtPublicationDiscoveryQueryService.searchEnvelopes()` answers a build-tag discovery tag (`forkbuild-tag:<tag>`,
+  `buildTagOfDiscoveryTag()`) with the publication announcements whose post lists that tag; the shared tag still finds
+  them all.
+- The challenge asks Nostr, Arweave and Blurt (`buildTagQueryServices`). The page and guide 04 say so, in every
+  language; Privacy lists Blurt nodes for the challenge page; Protocol, AnnouncementIndex, Architecture.
+- Tests: `BlurtChallengeEntries` (tags read back from a real build post; a fake chain answered by the real reader and
+  query service).
+- Not done: Steem, whose announcements are replies in monthly threads.

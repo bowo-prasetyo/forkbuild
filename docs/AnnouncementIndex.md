@@ -325,7 +325,8 @@ reaches its 2,000-record cap. The tags come from `core/NarrowDiscoveryTags.js`.
   carries `forkbuild-tag:<tag>` for each of its build's own tags (at most
   five), read from the snapshot published on this device. The weekly
   challenge page reads the week's tag
-  (application/challenge/ChallengeEntryDiscovery.js); like the record tag,
+  (application/challenge/ChallengeEntryDiscovery.js), and asks Blurt for it
+  too, which answers from the tags its build posts list; like the record tag,
   it goes straight to the network and nothing is watched or indexed.
 - **Steem.** Steem posts do carry tags (`json_metadata.tags`), but
   ForkBuild announces as replies to monthly discovery threads, and Steem's

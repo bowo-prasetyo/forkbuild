@@ -1,9 +1,12 @@
 import { DecentralizedDiscoveryQueryService } from '../discovery/DecentralizedWorldDiscoveryQuery.js';
 import { parseDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
+import { buildTagOfDiscoveryTag } from '../../core/NarrowDiscoveryTags.js';
 
 // Publication leads from Blurt build posts, for the same registry the Nostr,
-// Arweave and Steem services feed. Only the publication family's tag is
-// answered; any other tag finds nothing, as it would on a relay.
+// Arweave and Steem services feed. The publication family's tag finds every
+// one; a build-tag discovery tag (`forkbuild-tag:<tag>`,
+// core/NarrowDiscoveryTags.js) finds those whose post lists that build tag,
+// as a relay finds the events carrying it. Any other tag finds nothing.
 
 export const BLURT_PUBLICATION_DISCOVERY_TAG = 'forkbuild-publication';
 export const BLURT_DISCOVERY_ORIGIN = 'dweb:blurt';
@@ -39,7 +42,8 @@ export class BlurtPublicationDiscoveryQueryService extends DecentralizedDiscover
     // ({ kind, objectId, uri }) plus `origin`. `objectId` is only what the
     // announcer claimed.
     async searchEnvelopes(discoveryTag) {
-        if (discoveryTag !== this._discoveryTag) return [];
+        const buildTag = buildTagOfDiscoveryTag(discoveryTag);
+        if (discoveryTag !== this._discoveryTag && !buildTag) return [];
         let announcements;
         try {
             ({ announcements } = await this._reader.read('publication'));
@@ -47,7 +51,8 @@ export class BlurtPublicationDiscoveryQueryService extends DecentralizedDiscover
             return [];
         }
         const envelopes = [];
-        for (const { envelope } of announcements) {
+        for (const { envelope, tags } of announcements) {
+            if (buildTag && !(Array.isArray(tags) && tags.includes(buildTag))) continue;
             const parsed = parseDecentralizedDiscoveryEnvelope(envelope);
             if (parsed === null) continue;
             envelopes.push({ origin: this.origin, kind: parsed.kind, objectId: parsed.objectId, uri: parsed.uri });

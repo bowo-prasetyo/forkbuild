@@ -480,7 +480,7 @@ const {
     resolvedArweaveGatewayUrl, setArweaveGatewayConfigurationUseCase, setIpfsGatewayConfigurationUseCase,
     setIpfsNodeConfigurationUseCase, nostrRelayConfigurationStore, resolvedNostrRelayUrls,
     setNostrRelayConfigurationUseCase, nostrRelayQueryClient, worldDiscoveryLeadRegistry,
-    worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand, publicationRecordQueryServices,
+    worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand, publicationRecordQueryServices, buildTagQueryServices,
     repositoryNetworkDiscoveryServices, worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
     steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
     steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress,
@@ -588,12 +588,13 @@ const repositoryNetworkDiscovery = new RepositoryNetworkDiscovery({
 });
 app.provide('repositoryNetworkDiscovery', repositoryNetworkDiscovery);
 // A week's challenge entries (core/BuildChallenge.js): found under the week's
-// `forkbuild-tag:` tag on Nostr and Arweave when the challenge page opens,
+// `forkbuild-tag:` tag on Nostr and Arweave, and by the tags Blurt build posts
+// list, when the challenge page opens,
 // verified and admitted as the Repository's own discovery does.
 const challengeEntryLog = new ChallengeEntryLog(new LocalStorageProvider());
 app.provide('challengeEntryLog', challengeEntryLog);
 app.provide('challengeEntryDiscovery', new ChallengeEntryDiscovery({
-    services: publicationRecordQueryServices,
+    services: buildTagQueryServices,
     materialSources: worldEncounterMaterialSources,
     verifier: worldEncounterMaterialVerifier,
     isKnown: repositoryNetworkDiscoveryIsKnown,

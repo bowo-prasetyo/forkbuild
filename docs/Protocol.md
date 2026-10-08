@@ -774,7 +774,9 @@ carried on the same Nostr event (a second `t` tag) or Arweave transaction
     Snapshot's content hash.
   - The weekly challenge page reads `forkbuild-tag:<the week's tag>` alone
     (application/challenge/ChallengeEntryDiscovery.js), on Nostr and
-    Arweave, verifying and admitting each new record as the Repository's
+    Arweave, and asks Blurt the same: a Blurt build post lists the build's
+    tags in `json_metadata.tags`, so BlurtPublicationDiscoveryQueryService
+    answers that query with the posts listing the tag, verifying and admitting each new record as the Repository's
     network discovery does.
   - Readers still read the global tags, so announcements made before the
     narrow tags existed are still found.

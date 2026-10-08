@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e6595d73ff729e3e -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c65e5911fbe21442 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -524,12 +524,11 @@ es, und **Challenge** in der oberen Leiste öffnet seine Seite.
 
 Die Seite der Challenge listet die Beiträge, die dieses Gerät kennt: Ihre
 eigenen veröffentlichten Bauwerke mit dem Tag und die anderer, die in den
-Netzwerken gefunden wurden. Wird ein Bauwerk über Nostr oder Arweave
-verteilt, nennt seine Ankündigung seine Tags, und die Seite fragt diese
+Netzwerken gefunden wurden. Wird ein Bauwerk über Nostr, Arweave oder Blurt verteilt, nennt seine Ankündigung (auf Blurt sein Post) seine Tags, und die Seite fragt diese
 Netzwerke bei jedem Öffnen nach dem Tag der Woche (**Erneut prüfen** fragt
 noch einmal). Jeder gefundene Beitrag wird geprüft wie alles, was das
 Repository findet, und steht auch im Repository. Ein Bauwerk, das nur per
-Link geteilt oder nur über Steem oder Blurt verteilt wurde, wird so nicht
+Link geteilt oder nur über Steem verteilt wurde, wird so nicht
 gefunden. Frühere Wochen bleiben über ihren Montag erreichbar (**Letzte
 Woche: …**), ohne **Mitmachen**.
 
