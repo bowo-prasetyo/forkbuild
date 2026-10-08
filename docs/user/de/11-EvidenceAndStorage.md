@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0433c4a8b0746f12 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 2699bf9fa2001089 -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
@@ -387,10 +387,13 @@ aufbewahrt.
 
 ### Was der Ablauf nicht tut
 
-Selbst eine bestätigte Transaktion erstellt keinen Eintrag unter **Externe
-Nachweise**, sodass andere sie nicht als Nachweis entdecken können. Die
-Ansichten für Prüfen, Signieren und Senden werden durch einen neuen Plan,
-eine neue Signatur oder ein Neuladen geleert. Erhalten bleiben der beim
+Sobald **Transaktion senden** gelingt, wird die Transaktion als neuer Anker
+in die Liste **Externe Nachweise** der Veröffentlichung aufgenommen,
+ungeprüft, bis Sie auf **Nachweise überprüfen** klicken; Peers finden sie mit
+**Bei Peers entdecken**. Ein abgelehntes oder nicht zustellbares Senden fügt
+nichts hinzu. Seine Ansichten behält der Ablauf nicht: Die Ansichten für
+Prüfen, Signieren und Senden werden durch einen neuen Plan, eine neue
+Signatur oder ein Neuladen geleert. Erhalten bleiben der beim
 Finalisieren erstellte Veröffentlichungsdatensatz und jedes Sende- und
 Bestätigungsergebnis im Beobachtungsarchiv.
 

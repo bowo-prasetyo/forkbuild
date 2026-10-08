@@ -10,10 +10,9 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                              hidden until something was checked or attempted
                              this session. -->
                         <div v-if="localSnapshotAvailabilityView(entry).checked || snapshotAcquisitionView(entry).acquisition.attemptCount > 0" class="evidence-list">
-                            <span class="evidence-convergence-title">{{ t('publications.snapshotAcquisition') }} <span class="experimental-badge">{{ t('publications.experimental3') }}</span></span>
+                            <span class="evidence-convergence-title">{{ t('publications.snapshotAcquisition') }} <span class="experimental-badge">{{ t('publications.experimental') }}</span></span>
                             <p class="form-hint form-hint--neutral">
-                                Current possession:
-                                {{ localSnapshotAvailabilityView(entry).checked ? localSnapshotAvailabilityView(entry).message : t('publications.notYetChecked') }}
+                                {{ t('publications.currentPossession', { possession: localSnapshotAvailabilityView(entry).checked ? displayText(localSnapshotAvailabilityView(entry).message) : t('publications.notYetChecked') }) }}
                             </p>
                             <p v-if="snapshotAcquisitionOutcomeCountsSentence(entry)" class="form-hint form-hint--neutral">
                                 {{ t('publications.acquisitionHistory', { history: snapshotAcquisitionOutcomeCountsSentence(entry) }) }}
@@ -62,8 +61,8 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                              and placement counts stay on the Decentralization
                              card. -->
                         <p v-if="localSnapshotContentAvailabilityUseCase && localSnapshotAvailabilityView(entry).checked" class="form-hint form-hint--neutral">
-                            Publication: {{ replicaContentKnowledgeView(entry).hasPublication ? t('publications.knownLocally') : t('publications.notKnownLocally') }}
-                            · Snapshot: {{ replicaContentKnowledgeView(entry).hasValidSnapshot ? 'available' : t('publications.notAvailable') }}
+                            {{ t('publications.publicationKnowledge', { state: replicaContentKnowledgeView(entry).hasPublication ? t('publications.knownLocally') : t('publications.notKnownLocally') }) }}
+                            · {{ t('publications.snapshotKnowledge', { state: replicaContentKnowledgeView(entry).hasValidSnapshot ? t('publications.availableLower') : t('publications.notAvailable') }) }}
                         </p>
 
                         <div v-if="localSnapshotContentAvailabilityUseCase" class="evidence-discovery-header">
@@ -154,7 +153,7 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                              asking it for them; a check never transfers
                              anything. -->
                         <div v-if="snapshotPeerPossessionCoordinator && (retrievalPeers.length > 0 || peerPossessionView(entry).message)" class="evidence-list">
-                            <span class="evidence-convergence-title">{{ t('publications.peerSnapshotPossession') }} <span class="experimental-badge">{{ t('publications.experimental3') }}</span></span>
+                            <span class="evidence-convergence-title">{{ t('publications.peerSnapshotPossession') }} <span class="experimental-badge">{{ t('publications.experimental') }}</span></span>
                             <template v-if="retrievalPeers.length > 0">
                                 <label class="form-field">
                                     <span class="form-label">{{ t('publications.peer2') }}</span>
@@ -187,7 +186,7 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                         <!-- Several peers at once, with a history; reports what
                              each peer said, never ranks them. -->
                         <div v-if="snapshotPeerPossessionCoordinator && (retrievalPeers.length > 0 || peerPossessionComparisonView(entry).peers.length > 0 || peerPossessionObservationDetailsView(entry).count > 0)" class="evidence-list">
-                            <span class="evidence-convergence-title">{{ t('publications.peerSnapshotPossessionComparison') }} <span class="experimental-badge">{{ t('publications.experimental3') }}</span></span>
+                            <span class="evidence-convergence-title">{{ t('publications.peerSnapshotPossessionComparison') }} <span class="experimental-badge">{{ t('publications.experimental') }}</span></span>
                             <template v-if="retrievalPeers.length > 0">
                                 <ul class="replica-knowledge-claim-list">
                                     <li v-for="peer in retrievalPeers" :key="peer.connectionId" class="replica-knowledge-claim">
@@ -290,7 +289,7 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                          verdict; each hides until observed. -->
                     <div v-if="localSnapshotAvailabilityView(entry).checked || snapshotAcquisitionOutcomeCountsSentence(entry) || entry.placementConvergenceView || peerPossessionComparisonView(entry).peers.length > 0"
                          class="decentralization-summary">
-                        <span class="evidence-convergence-title">{{ t('publications.snapshotState') }} <span class="experimental-badge">{{ t('publications.experimental3') }}</span></span>
+                        <span class="evidence-convergence-title">{{ t('publications.snapshotState') }} <span class="experimental-badge">{{ t('publications.experimental') }}</span></span>
 
                         <div class="evidence-list">
                             <span class="evidence-convergence-title">{{ t('publications.content2') }}</span>
@@ -309,7 +308,7 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                         <div class="evidence-list">
                             <span class="evidence-convergence-title">{{ t('publications.localPossession') }}</span>
                             <p class="form-hint form-hint--neutral">
-                                {{ localSnapshotAvailabilityView(entry).checked ? localSnapshotAvailabilityView(entry).message : t('publications.notYetChecked') }}
+                                {{ localSnapshotAvailabilityView(entry).checked ? displayText(localSnapshotAvailabilityView(entry).message) : t('publications.notYetChecked') }}
                             </p>
                         </div>
 

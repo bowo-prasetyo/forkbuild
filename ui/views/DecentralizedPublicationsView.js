@@ -48,6 +48,7 @@ import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import {
     humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, OUTCOME_BADGE_CLASSES, republishAdviceFor,
     preferredDistributionChoice, WALLET_GUIDED_ANCHOR_TYPES, oneClickAnchorTypes, humanizeDiscoveryProvider,
+    isExperimentalAnchorType, everyAnchorTypeExperimental,
     storageTypeOptionLabel, isExperimentalStorageType, describeClaimRelationship,
     EVIDENCE_BADGE_CLASSES
 } from './decentralizedPublications/presentation.js';
@@ -1079,7 +1080,14 @@ export default {
             distributeSnapshot, snapshotDistributionButtonLabel,
             discoveryObservationsView, discoveryDistributionConfigurationRoute, snapshotDistributionConfigurationRoute,
             snapshotDiscoveryConfigurationRoute, entryWorld, oneClickAnchorTypes: oneClickAnchorTypes(availableAnchorTypes),
-            humanizeDiscoveryProvider, storageTypeOptionLabel, isExperimentalStorageType, describeClaimRelationship,
+            // The Proof / Anchoring block is badged as a whole only while every
+            // type it offers (wallet-guided ones included) is Experimental.
+            proofAnchoringExperimental: everyAnchorTypeExperimental([
+                ...oneClickAnchorTypes(availableAnchorTypes),
+                ...(bitcoinWalletConnection ? ['bitcoin-op-return'] : []),
+                ...(baseAnchorPublisher ? ['base'] : [])
+            ]),
+            humanizeDiscoveryProvider, storageTypeOptionLabel, isExperimentalStorageType, isExperimentalAnchorType, describeClaimRelationship,
             steemUploadProgressText, steemNoticePictureText, toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific, inspectionKnowledge,
             evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel,
             describeKnownPlacementCount, togglePlacements, resolvePlacement, placementBadgeClass, placementLifecycleNote,

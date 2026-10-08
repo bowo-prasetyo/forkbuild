@@ -250,6 +250,9 @@ assert(toolsPanel.querySelector('[role="tab"][aria-selected="true"]').textConten
         'but no one-click Bitcoin card, which has no wallet behind it and never succeeds');
     assert(proof.querySelector('.evidence-discovery-header .experimental-badge'), 'Proof / Anchoring is marked Experimental');
     assert(!content.querySelector('.evidence-discovery-header .experimental-badge'), 'Content is not');
+    const steemCard = [...anchorOptions.querySelectorAll('.evidence-anchor-card')]
+        .find((anchorCard) => anchorCard.querySelector('.evidence-anchor-type').textContent.trim() === 'Steem');
+    assert(steemCard && steemCard.querySelector('.evidence-anchor-header .experimental-badge'), 'and so is each anchor type on its own card');
 }
 
 // Removing one failed publication asks first, and Cancel keeps it.
@@ -307,6 +310,7 @@ console.log('✓ the Publications page separates usable publications from failed
     const { content, proof } = distributionRoles(card);
     const anchorButton = buttonNamed(proof, 'Anchor on Steem');
     assert(anchorButton && proof.textContent.includes('your preferred anchoring provider'), 'Proof / Anchoring leads with a button naming the saved provider');
+    assert(proof.querySelector('.evidence-discovery > p .experimental-badge'), 'which is marked Experimental, as Steem is');
     assert(!proof.querySelector('details.identity-mgmt-distribution-options').open, 'the per-type cards are folded under it');
     anchorButton.click();
     await settle();

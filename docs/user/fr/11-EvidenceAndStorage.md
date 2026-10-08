@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0433c4a8b0746f12 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 2699bf9fa2001089 -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
@@ -389,10 +389,13 @@ l’[Archive des observations de publication](12-ArchiveAndLeaderboards.md#larch
 
 ### Ce que le parcours ne fait pas
 
-Même une transaction confirmée ne crée pas d’entrée dans **Preuves
-externes**, les autres ne peuvent donc pas la découvrir comme preuve. Les
-écrans d’examen, de signature et de diffusion sont effacés par un nouveau
-plan, une nouvelle signature ou un rechargement. Ce qui est conservé,
+Dès que **Diffuser la transaction** réussit, la transaction est ajoutée à
+la liste **Preuves externes** de la publication comme nouvelle ancre, non
+vérifiée tant que vous n’avez pas cliqué sur **Vérifier les preuves** ; les
+pairs peuvent la trouver avec **Découvrir auprès des pairs**. Une diffusion
+refusée ou injoignable n’ajoute rien. Le parcours ne garde pas ses écrans :
+les écrans d’examen, de signature et de diffusion sont effacés par un
+nouveau plan, une nouvelle signature ou un rechargement. Ce qui est conservé,
 c’est l’enregistrement de publication créé à la finalisation, ainsi que
 chaque résultat de diffusion et de confirmation dans l’Archive des
 observations.

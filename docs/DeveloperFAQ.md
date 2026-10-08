@@ -243,9 +243,12 @@ names a server the app contacts, add it to [Privacy](Privacy.md).
 Add a route in `ui/router/index.js`. A route with
 `meta: { experimental: true }` shows the Experimental banner
 (`ui/App.js`). To mark only part of a page, as the Publications page does,
-put `<span class="experimental-badge">Experimental</span>` next to that
-part's heading (`Exp.` on a tab), and `(Experimental)` in an `<option>`'s
-text, since a select can't hold a badge. Components are plain objects with a `template` string;
+put `<span class="experimental-badge">{{ t('publications.experimental') }}</span>`
+next to that part's heading (`Exp.` on a tab), and "(Experimental)" in an
+`<option>`'s text (`publications.experimentalOption`), since a select can't
+hold a badge. A storage or anchor type is marked through
+`EXPERIMENTAL_STORAGE_TYPES` or `EXPERIMENTAL_ANCHOR_TYPES` in
+`ui/views/decentralizedPublications/presentation.js`. Components are plain objects with a `template` string;
 prefer `setup()` in new code, and sort choice lists by label with
 `utils/sortOptionsByLabel.js`.
 

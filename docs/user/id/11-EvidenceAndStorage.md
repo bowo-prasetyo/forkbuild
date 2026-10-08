@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0433c4a8b0746f12 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 2699bf9fa2001089 -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
@@ -381,10 +381,13 @@ juga disimpan di
 
 ### Apa yang tidak dilakukan alur ini
 
-Bahkan transaksi yang terkonfirmasi tidak membuat entri **Bukti
-Eksternal**, jadi orang lain tidak dapat menemukannya sebagai bukti. Layar
-tinjauan, penandatanganan, dan penyiaran dihapus oleh rencana baru, tanda
-tangan baru, atau pemuatan ulang. Yang disimpan adalah catatan publikasi
+Begitu **Siarkan Transaksi** berhasil, transaksi itu ditambahkan ke daftar
+**Bukti Eksternal** publikasi sebagai jangkar baru, belum diverifikasi
+sampai Anda mengeklik **Verifikasi Bukti**; peer dapat menemukannya dengan
+**Temukan dari Rekan**. Penyiaran yang ditolak atau tidak terjangkau tidak
+menambahkan apa pun. Alur ini tidak menyimpan layarnya: layar tinjauan,
+penandatanganan, dan penyiaran dihapus oleh rencana baru, tanda tangan
+baru, atau pemuatan ulang. Yang disimpan adalah catatan publikasi
 yang dibuat saat finalisasi, serta setiap hasil penyiaran dan konfirmasi di
 Arsip Pengamatan.
 

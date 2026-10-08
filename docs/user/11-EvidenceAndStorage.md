@@ -345,9 +345,12 @@ cleared on reload, but every result is also kept in the
 
 ### What the pipeline doesn't do
 
-Even a confirmed transaction doesn't create an **External Evidence** entry,
-so other people can't discover it as evidence. The review, signing and
-broadcast screens are cleared by a new plan, a new signature, or a reload.
+Once **Broadcast Transaction** succeeds, the transaction is added to the
+publication's **External Evidence** list as a new anchor, unverified until
+you click **Verify Evidence**; peers can find it with **Discover from
+Peers**. A rejected or unreachable broadcast adds nothing. The pipeline
+doesn't keep its screens: the review, signing and broadcast screens are
+cleared by a new plan, a new signature, or a reload.
 What's kept is the publication record made at finalization, and every
 broadcast and confirmation result in the Observation Archive.
 
