@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: ef3815d3a8349a5a -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 5024adaa9e307817 -->
 # 10 — Configurações de rede
 
 <!-- languages -->
@@ -138,21 +138,22 @@ verificar.
 ## Gateway IPFS
 
 Gateways para ler conteúdo IPFS, uma URL por linha, tentados em ordem como
-os do Arweave. Os padrões são `https://ipfs.io`, `https://dweb.link`,
-`https://4everland.io` e `https://ipfs.filebase.io`.
+os do Arweave. Os padrões são `https://ipfs.filebase.io`, `https://gateway.pinata.cloud`, `https://ipfs.io`, `https://dweb.link` e `https://4everland.io`.
 
-Esta lista é usada ao resolver ou materializar um Posicionamento de Snapshot
-no IPFS, em **Verificar conteúdo no IPFS** e ao abrir links compartilhados
-de conteúdo no IPFS. Ela não muda onde seu próprio conteúdo é fixado
-(pinned).
+Esta lista é usada ao resolver ou materializar um Posicionamento de
+Snapshot no IPFS, para **Verificar conteúdo no IPFS**, para abrir links compartilhados para
+conteúdo no IPFS e quando o Repositório e o desafio semanal leem
+construções encontradas nas redes cuja Declaração assinada está no IPFS.
+Ela não muda onde o seu próprio conteúdo é fixado.
 
-Alguns gateways, entre eles `https://ipfs.io`, bloqueiam pedidos
-automáticos de algumas pessoas com uma verificação anti-robô; os outros
-padrões são mantidos por operadores diferentes, então a leitura passa para
-eles. Se **Verificar** ou **Resolver** continuar falhando com "Failed to
-fetch" para um conteúdo que você sabe que está lá, adicione no topo o
-gateway do seu provedor de pinning (por exemplo
-`https://gateway.pinata.cloud`).
+Alguns gateways, entre eles `https://ipfs.io` e `https://dweb.link`,
+recusam requisições de páginas web para certos conteúdos, ou as bloqueiam
+atrás de uma verificação anti-robôs; os padrões são operados por
+organizações diferentes, então uma leitura passa para o próximo. Se **Verificar** ou
+**Resolver** continuar falhando com "Failed to fetch" para um conteúdo que você sabe
+que existe, adicione no topo o gateway do seu serviço de fixação. Uma
+lista salva antes de 8 de outubro de 2026 mantém a própria ordem:
+**Restaurar padrões** traz de volta os novos padrões.
 
 ## Endpoint do Bitcoin
 

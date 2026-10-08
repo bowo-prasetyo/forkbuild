@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: ef3815d3a8349a5a -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 5024adaa9e307817 -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
@@ -145,22 +145,23 @@ nutzen das erste Gateway der Liste zum Erstellen und Überprüfen.
 ## IPFS-Gateway
 
 Gateways zum Lesen von IPFS-Inhalten, eine URL pro Zeile, der Reihe nach
-versucht wie bei Arweave. Standard sind `https://ipfs.io`,
-`https://dweb.link`, `https://4everland.io` und
-`https://ipfs.filebase.io`.
+versucht wie bei Arweave. Standard sind `https://ipfs.filebase.io`, `https://gateway.pinata.cloud`, `https://ipfs.io`, `https://dweb.link` und `https://4everland.io`.
 
 Diese Liste wird verwendet, wenn eine IPFS-Snapshot-Platzierung aufgelöst
-oder materialisiert wird, für **IPFS-Inhalt überprüfen** und zum Öffnen
-geteilter Links zu Inhalten auf IPFS. Sie ändert nicht, wo Ihre eigenen
-Inhalte gepinnt werden.
+oder materialisiert wird, für **IPFS-Inhalt überprüfen**, zum Öffnen geteilter Links zu
+Inhalten auf IPFS und wenn das Repository und die wöchentliche Challenge
+in den Netzwerken gefundene Bauwerke lesen, deren Signierter Anspruch auf
+IPFS liegt. Sie ändert nicht, wo Ihre eigenen Inhalte gepinnt werden.
 
-Manche Gateways, darunter `https://ipfs.io`, blockieren für manche
-Menschen automatisierte Anfragen hinter einer Bot-Prüfung; die anderen
-Standardwerte werden von anderen Betreibern betrieben, sodass ein
-Lesevorgang auf sie ausweicht. Schlägt **Überprüfen** oder **Auflösen** bei
-Inhalten, von denen Sie wissen, dass sie da sind, immer wieder mit „Failed
-to fetch“ fehl, fügen Sie ganz oben das Gateway Ihres Pinning-Anbieters
-hinzu (zum Beispiel `https://gateway.pinata.cloud`).
+Manche Gateways, darunter `https://ipfs.io` und `https://dweb.link`,
+verweigern Anfragen von Webseiten für manche Inhalte oder blockieren sie
+hinter einer Bot-Prüfung; die Standardwerte werden von verschiedenen
+Betreibern betrieben, sodass ein Lesevorgang auf das nächste ausweicht.
+Schlägt **Überprüfen** oder **Auflösen** bei Inhalten, von denen Sie wissen, dass sie da sind,
+immer wieder mit „Failed to fetch“ fehl, fügen Sie ganz oben das Gateway
+Ihres Pinning-Anbieters hinzu. Eine vor dem 8. Oktober 2026 gespeicherte
+Liste behält ihre eigene Reihenfolge: **Auf Standard zurücksetzen** holt
+die neuen Standardwerte zurück.
 
 ## Bitcoin-Endpunkt
 

@@ -4909,3 +4909,16 @@ device that published it and nowhere else. Links (`#/view/ipfs/…`) were unaffe
   configured IPFS gateways, failing over in order).
 - Tests: `IpfsClaimNetworkDiscovery` (the Repository and the challenge each admit an IPFS-stored claim, read from IPFS
   and never asked of Arweave).
+
+## IPFS gateways that answer the site come first (unnumbered, 2026-10-08)
+
+**Fix.** With IPFS-stored claims now read by the Repository and the challenge, the first challenge entry, a Signed
+Claim pinned with Pinata, still wasn't found: from the site, `ipfs.io` and `dweb.link` refused it with 403 and no CORS
+header, and `4everland.io` didn't answer, each waited out in turn. Checked live from the site, `ipfs.filebase.io` and
+`gateway.pinata.cloud` served it.
+
+- Default IPFS gateways, in order: `ipfs.filebase.io`, `gateway.pinata.cloud` (new), `ipfs.io`, `dweb.link`,
+  `4everland.io`. A list a person saved keeps its own order until **Reset to Defaults**.
+- The network searches wait 10 s per gateway (`DISCOVERY_CLAIM_IPFS_TIMEOUT_MS`), not a link's 30 s, so one gateway
+  that never answers doesn't hold up every claim.
+- Guide 10 (IPFS Gateway) and Privacy, in every language.

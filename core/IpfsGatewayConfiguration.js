@@ -1,14 +1,17 @@
-// The deployment default gateways, in the order reads try them — all from
-// the IPFS project's public-gateway-checker list. ipfs.io stays first (and
-// stays DEFAULT_IPFS_GATEWAY_URL, below); the others are run by different
-// operators, so one outage or bot-detection wall doesn't stop reads. Content
-// read through any of them is checked against our own content hash, so a
-// gateway cannot substitute bytes.
+// The deployment default gateways, in the order reads try them, each run by a
+// different operator, so one outage or bot-detection wall doesn't stop reads.
+// The first two answer a web page's fetch() for content pinned elsewhere
+// (checked live from the site on 2026-10-08, for a Signed Claim pinned with
+// Pinata); ipfs.io and dweb.link refused that request with 403 and no CORS
+// header, and 4everland.io didn't answer, so they come after. Content read
+// through any of them is checked against our own content hash, so a gateway
+// cannot substitute bytes.
 const DEFAULT_IPFS_GATEWAY_URLS = Object.freeze([
+    'https://ipfs.filebase.io',
+    'https://gateway.pinata.cloud',
     'https://ipfs.io',
     'https://dweb.link',
-    'https://4everland.io',
-    'https://ipfs.filebase.io'
+    'https://4everland.io'
 ]);
 const DEFAULT_IPFS_GATEWAY_URL = DEFAULT_IPFS_GATEWAY_URLS[0];
 

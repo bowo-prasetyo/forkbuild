@@ -2,7 +2,7 @@ import { ContentStore } from './ContentStore.js';
 import { ContentUnavailableError } from './IpfsContentStore.js';
 
 const IPFS_URI_PREFIX = 'ipfs://';
-const DEFAULT_GATEWAY_URL = 'https://ipfs.io';
+const DEFAULT_GATEWAY_URL = 'https://ipfs.filebase.io';
 const DEFAULT_TIMEOUT_MS = 5000;
 
 // 0.8.66 — IPFS Remote Gateway Resolution.

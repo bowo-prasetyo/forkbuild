@@ -13,7 +13,7 @@ import { SteemReadingConfigurationStore } from '../../storage/SteemReadingConfig
 import { SetSteemReadingConfigurationUseCase } from '../../application/settings/SetSteemReadingConfigurationUseCase.js';
 import { composeSteemRuntime } from '../../application/steem/SteemRuntimeComposition.js';
 import { composeSteemPublicationNoticeDescriber } from '../../application/steem/SteemPublicationNoticeComposition.js';
-import { buildIpfsWorldEncounterMaterialResolver, composePublicationClaimRetriever } from '../../application/publication/PublicationClaimRetriever.js';
+import { DISCOVERY_CLAIM_IPFS_TIMEOUT_MS, buildIpfsWorldEncounterMaterialResolver, composePublicationClaimRetriever } from '../../application/publication/PublicationClaimRetriever.js';
 import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/IpfsGatewayConfiguration.js';
 import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncingConfigurationStore.js';
 import { SetSteemAnnouncingConfigurationUseCase } from '../../application/settings/SetSteemAnnouncingConfigurationUseCase.js';
@@ -189,7 +189,7 @@ export function composeWorldDiscovery({
         steemMaterialResolver: steemRuntime ? steemRuntime.publicationMaterialResolver : null,
         blurtMaterialResolver: blurtRuntime ? blurtRuntime.publicationMaterialResolver : null,
         // Signed Claims distributed with IPFS storage (`ipfs://`), read as links read them.
-        ipfsMaterialResolver: buildIpfsWorldEncounterMaterialResolver({ gatewayUrls: resolvedIpfsGatewayUrls })
+        ipfsMaterialResolver: buildIpfsWorldEncounterMaterialResolver({ gatewayUrls: resolvedIpfsGatewayUrls, timeoutMs: DISCOVERY_CLAIM_IPFS_TIMEOUT_MS })
     });
     const worldDiscoveryLeadRegistry = decentralizedWorldEncounterMaterialDiscoveryRuntime.registry;
     const worldEncounterMaterialSources = decentralizedWorldEncounterMaterialDiscoveryRuntime.materialSources;

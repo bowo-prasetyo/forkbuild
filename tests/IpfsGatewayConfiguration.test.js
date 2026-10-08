@@ -116,12 +116,12 @@ async function run() {
     // byte-identical to content/IpfsGatewayContentStore.js's own default.
     // ===============================================================
     {
-        assert(DEFAULT_IPFS_GATEWAY_URL === 'https://ipfs.io', 'G1. the exported default matches content/IpfsGatewayContentStore.js\'s own DEFAULT_GATEWAY_URL');
+        assert(DEFAULT_IPFS_GATEWAY_URL === 'https://ipfs.filebase.io', 'G1. the exported default matches content/IpfsGatewayContentStore.js\'s own DEFAULT_GATEWAY_URL');
         assert(isValidIpfsGatewayUrl(DEFAULT_IPFS_GATEWAY_URL), 'G2. the default itself is a valid gatewayUrl by this file\'s own rule');
         expectThrows(() => new IpfsGatewayConfiguration(), 'G3. the constructor never falls back to DEFAULT_IPFS_GATEWAY_URL on its own — a caller resolving "no configuration" must consult the constant explicitly');
 
         const gatewaySource = await source('content/IpfsGatewayContentStore.js');
-        assert(gatewaySource.includes("const DEFAULT_GATEWAY_URL = 'https://ipfs.io'"), 'G4. this shipped default is unchanged by this milestone — only its configurability is new, never a silent swap of what "unconfigured" means');
+        assert(gatewaySource.includes(`const DEFAULT_GATEWAY_URL = '${DEFAULT_IPFS_GATEWAY_URL}'`), 'G4. the gateway store\'s own default is the configuration\'s first default, so "unconfigured" means the same everywhere');
         console.log('✓ Section G: DEFAULT_IPFS_GATEWAY_URL is a plain constant, unchanged from the shipped default, never a second authority the constructor invents');
     }
 

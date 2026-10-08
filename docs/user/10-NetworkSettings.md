@@ -128,19 +128,23 @@ Arweave anchors use the first gateway in the list to create and verify.
 ## IPFS Gateway
 
 Gateways for reading IPFS content, one URL per line, tried in order like
-Arweave's. The defaults are `https://ipfs.io`, `https://dweb.link`,
-`https://4everland.io` and `https://ipfs.filebase.io`.
+Arweave's. The defaults are `https://ipfs.filebase.io`,
+`https://gateway.pinata.cloud`, `https://ipfs.io`, `https://dweb.link` and
+`https://4everland.io`.
 
 This list is used when resolving or materializing an IPFS Snapshot
 Placement, for **Verify IPFS Content**, and for opening shared links to
-content on IPFS. It doesn't change where your own content is pinned.
+content on IPFS, and when the Repository and the weekly challenge read
+builds found on the networks whose Signed Claim is on IPFS. It doesn't
+change where your own content is pinned.
 
-Some gateways, `https://ipfs.io` among them, block automated requests for
-some people behind a bot check; the other defaults are run by different
-operators, so a read falls through to them. If **Verify** or **Resolve**
-keeps failing with "Failed to fetch" for content you know is there, add
-your pinning provider's gateway (for example
-`https://gateway.pinata.cloud`) at the top.
+Some gateways, `https://ipfs.io` and `https://dweb.link` among them, refuse
+requests from web pages for some content, or block them behind a bot check;
+the defaults are run by different operators, so a read falls through to the
+next. If **Verify** or **Resolve** keeps failing with "Failed to fetch" for
+content you know is there, add your pinning provider's gateway at the top.
+A list you saved before 2026-10-08 keeps its own order: **Reset to Defaults** brings
+back the new defaults.
 
 ## Bitcoin Endpoint
 

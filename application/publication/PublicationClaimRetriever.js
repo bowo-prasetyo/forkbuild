@@ -30,6 +30,10 @@ export function createPublicationClaimRetriever({ steem = null, blurt = null, ar
 // store's usual 5 s: content that lives on someone's own IPFS node has to be
 // found through the IPFS network first, which often takes tens of seconds.
 export const PUBLICATION_CLAIM_IPFS_TIMEOUT_MS = 30000;
+// Each gateway's wait when the Repository's or the challenge's network search
+// reads a claim: shorter than a link's, since a search reads many claims in
+// turn and one gateway that never answers mustn't hold them all up.
+export const DISCOVERY_CLAIM_IPFS_TIMEOUT_MS = 10000;
 
 // The retriever for the app: Steem and Blurt through their runtimes'
 // resolvers (null when there is none), Arweave through the configured
