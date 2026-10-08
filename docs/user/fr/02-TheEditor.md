@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: ae29bd6e293587d6 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8a7a24368ab8c93 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -79,6 +79,31 @@ jamais de boutons qui ne peuvent encore rien faire :
 > **Astuce :** appuyez sur `Ctrl/Cmd+K` n’importe où pour ouvrir la
 > **Palette de commandes** — une liste, avec recherche par nom, de toutes
 > les actions de ce guide.
+
+## Votre première construction
+
+La première fois que vous ouvrez l’Éditeur sur un appareil, une carte
+**Votre première construction** apparaît dans le coin inférieur gauche de
+la vue 3D (sur un téléphone, elle commence repliée en un petit bouton
+**Première construction · 0/5** en haut à gauche). Elle liste cinq
+étapes et donne une indication pour la suivante :
+
+1. **Placer une brique**
+2. **En empiler une sur une autre** : placez une brique sur une autre.
+3. **Ajouter une structure** : placez une structure de l’onglet
+   **Structures** de la Bibliothèque de construction.
+4. **Enregistrer votre construction**
+5. **Publier et partager un lien** : publiez, puis **Copier le lien** ou
+   **Partager…**.
+
+Chaque étape est cochée dès que vous la faites, dans n’importe quel
+ordre ; annuler et rétablir ne comptent pas. Quand les cinq sont faites,
+la carte le fête et propose **Voir d’autres constructions** ou **Continuer
+à construire**, puis disparaît. **–** la replie en petit bouton ; **Masquer
+le guide** la masque pour de bon sur cet appareil. Pour la faire revenir,
+ouvrez la palette de commandes (**Ctrl+K**) et lancez **Guide de la
+première construction**. Un appareil qui a déjà du travail enregistré
+commence avec le guide masqué.
 
 ## Les deux outils
 

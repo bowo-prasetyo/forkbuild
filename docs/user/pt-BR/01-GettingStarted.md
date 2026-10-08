@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a742c831b5f54e8b -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 5516a73079573bea -->
 # 01 — Primeiros passos
 
 <!-- languages -->
@@ -32,13 +32,19 @@ construções. Nada é publicado nem enviado a lugar nenhum até você decidir.
 
 A barra no topo está sempre visível:
 
-`ForkBuild Início Editor Repositório Meus mundos Meu avatar Minhas identidades Pares Seguindo Conversas Publicações Configurações de rede Seus dados Idioma Sobre 🔔 [Entrar]`
+`ForkBuild Início Editor Repositório Meus mundos Mais ▾ 🔔 [Entrar]`
 
 - **Início** — a página inicial
 - **Editor** — onde você constrói
 - **Repositório** — navegue pelas criações publicadas por todos
 - **Meus mundos** — os Mundos que você realmente visitou neste dispositivo;
   veja [Meus mundos](03-WorldView.md#meus-mundos--os-mundos-em-que-você-realmente-esteve)
+
+**Mais** abre o resto, em quatro grupos: **Você** (Meu avatar, Minhas identidades,
+Seus dados), **Pessoas** (Pares, Seguindo, Conversas), **Rede**
+(Publicações, Configurações de rede) e **Aplicativo** (Idioma, Sobre). No celular,
+**Menu** mostra todos de uma vez.
+
 - **Meu avatar** — como os outros veem você na Visão do mundo; veja
   [Avatares e presença](06-AvatarsAndPresence.md)
 - **Minhas identidades** — as identidades criptográficas guardadas neste
@@ -63,6 +69,10 @@ A barra no topo está sempre visível:
 
 ## Entrando
 
+Você não precisa entrar para começar a construir. Na primeira vez que você
+clicar em **Publicar**, o ForkBuild pede que você entre, ou crie uma
+identidade ali mesmo, porque publicar assina sua criação. Você também pode
+entrar a qualquer momento:
 Clique em **Entrar** no canto superior direito. O ForkBuild não usa senhas
 nem contas centrais — em vez disso, **sua identidade é um par de chaves
 criptográficas guardado neste dispositivo**. A caixa de diálogo Entrar lista
@@ -96,6 +106,11 @@ O ForkBuild tem várias áreas principais:
 | **Meu avatar / Pares / Conversas** | Como os outros veem você, com quem você está conectado e suas mensagens diretas — veja os guias indicados acima |
 
 ## Colocando seu primeiro bloco
+
+Na primeira vez que você abre o Editor, um cartão **Sua primeira
+construção** no canto da visão 3D guia você por cinco passos e marca cada
+um assim que você o faz; veja
+[Sua primeira construção](02-TheEditor.md#sua-primeira-construção).
 
 1. Clique em **Editor** na barra superior.
 2. Na barra lateral esquerda, confira se a ferramenta **Colocar** está ativa
@@ -136,7 +151,8 @@ impede que o navegador os apague quando o disco estiver cheio.
 Você não precisa ter entrado para construir. Entrar importa quando você
 publica ou trabalha com outras pessoas: uma criação publicada sem ter
 entrado não tem autor nem assinatura, então não pode ser compartilhada com
-pares nem distribuída depois. Entre primeiro, depois publique.
+pares nem distribuída depois, e não ganha link. Publicar pede que você
+entre primeiro.
 
 ## E agora?
 

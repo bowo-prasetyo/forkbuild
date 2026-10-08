@@ -4605,3 +4605,44 @@ costs nothing, and the counter could not tell whether any were made or opened.
   is the rendezvous worker serving `/b/<id>`), a turntable GIF, and glTF/STL export. Discord (2,000 characters a
   message) and Telegram (4,096) refuse a link as long as the castle's; there a distributed build's network link is
   the one to paste.
+
+## A guided first build, logging in at Publish, and a shorter top bar (unnumbered, 2026-10-08)
+
+**The Editor now walks a newcomer through a first build in five steps (place a brick, stack one on another, drop
+in a structure, save, publish and share a link), ticking each off as it is done and celebrating the finish.
+Publishing asks to log in, or to create an identity on the spot, instead of quietly publishing unsigned. The top
+bar shows Home, Editor, Repository and My Worlds, with every other page grouped under More.** A first visit met a
+blank Editor with no goal, sixteen links in the header, and identities, passphrases and three kinds of sharing
+before anything social worked; a creation published while logged out had no author and, since the link-only share,
+no link either.
+
+- `core/FirstBuildChecklist.js`: the steps, which edits complete which (a `place-brick` whose bottom is off the
+  ground stacks; `place-structure`, or `paste-bricks` as composing from the Build Library makes, drops in a
+  structure), and lenient progress (`{ completed, dismissed, celebrated }`). `describeCommand()` now carries a placed
+  brick's definition and position.
+- `application/onboarding/FirstBuildChecklistTracker.js` and `FirstBuildChecklistStore.js` (key
+  `first-build-guide`): follow `EditorSession#onCommandActivity()` (executed edits only, so undo, redo and
+  collaborators' edits never count), a save and a shared link; a device with saved documents the first time the guide
+  would show starts with it hidden.
+- `ui/components/FirstBuildGuide.js` and `css/main/first-build-guide.css`: a card at the bottom left of the viewport
+  (top left, folded to a small button, on a phone), the next step's hint, **Hide guide**, and a finish with confetti
+  (none for reduced motion) offering **See other builds** or **Keep building**. `ui.firstBuildGuide` in the command
+  palette brings it back. `PublicationShareLink` emits `shared`.
+- Logging in at Publish: the Toolbar's Publish opens `LoginModal` with `purpose="publish"` (why it is asked, and
+  **Publish unsigned**) when no identity is logged in and unlocked, and publishes once one is.
+- The header (`ui/App.js`): Home, Editor, Repository, My Worlds and **More**, which groups You (My Avatar, My
+  Identities, Your Data), People (Peers, Following, Conversations), Network (Publications, Network Settings) and App
+  (Language, About); it closes on a choice, Escape or a click outside, and is marked while one of its pages is open.
+  On a phone, Menu lays the groups out open.
+- Messages in every language: `firstBuild.*`, `app.nav.more`, `app.nav.group.*`, `app.nav.label`,
+  `loginModal.signInToPublish`, `loginModal.publishWhy`, `loginModal.publishUnsigned`, `editorAction.ui.firstBuildGuide`.
+- Docs, in every language: guide 01 (the top bar and More, logging in at Publish, the guide), 02 (a new "Your first
+  build" section) and 04 (Publish asking to log in); docs/Architecture.md and README.md.
+- Tests: `tests/FirstBuildChecklist.test.js` (which real commands complete which steps, progress, the tracker with a
+  save and a share, experienced devices), `tests/FirstBuildGuideBrowser.test.js` (the card with the shipped CSS:
+  steps, hint, folding, hiding, the finish), and `tests/run-bundle.mjs`, which now checks a first visit in the
+  published build: the four pages and More (and a phone's Menu), the guide folding, hiding for good and coming back
+  from the palette, and Publish asking to log in, then publishing signed with a link ready, whose Copy link ticks off
+  sharing.
+- Not done: the Editor's own panels are unchanged (the guide points into them rather than reshaping them), and the
+  guide doesn't yet highlight the control each hint names.

@@ -1,4 +1,5 @@
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue';
+import LoginModal from './LoginModal.js';
 import { saveFailureMessage } from './saveFailureMessages.js';
 import { saveDocument } from './saveDocument.js';
 import { errorText, formatDate, t } from '../i18n/i18n.js';
@@ -113,7 +114,9 @@ export default {
     // never calls editorSession.importDocument() itself.
     // `saved` follows a successful Save, for the Editor's save sound.
     emits: ['back-to-world', 'open-shortcuts', 'published', 'saved', 'export-document', 'export-all-documents', 'import-document', 'new-document'],
+    components: { LoginModal },
     setup(props, { emit }) {
+        const identityUseCase = inject('identityUseCase', null);
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
         const recentOpen = ref(false);
@@ -181,6 +184,25 @@ export default {
             } catch (err) {
                 report(t('toolbar.publishFailed', { error: errorText(err) }));
             }
+        }
+
+        // Publishing signs the build with an identity, which is what lets anyone
+        // trust a link to it, so sign-in is asked for here rather than before
+        // building. The modal can still publish unsigned.
+        const signInToPublish = ref(false);
+        const lockedIdentityId = ref(null);
+        function requestPublish() {
+            const session = identityUseCase?.currentSession?.();
+            if (!session || (session.isAuthenticated && identityUseCase.isUnlocked(session.identityId))) {
+                publish();
+                return;
+            }
+            lockedIdentityId.value = session.isAuthenticated ? session.identityId : null;
+            signInToPublish.value = true;
+        }
+        function publishAfterSignIn() {
+            signInToPublish.value = false;
+            publish();
         }
 
         // 0.6.1 — World ↔ Editor Continuity & Return Navigation. "Save &
@@ -268,6 +290,7 @@ export default {
             recentOpen, recentQuery, toggleRecent, formatModified,
             searchThreshold: SEARCH_THRESHOLD,
             save, createNew, load, place, publish, saveAndReturnToWorld,
+            signInToPublish, lockedIdentityId, requestPublish, publishAfterSignIn,
             importFileInput, triggerImportDocument, onImportDocumentFileChosen, exportAllDocuments
         };
     },
@@ -304,7 +327,15 @@ export default {
                 :aria-label="t('toolbar.importFile')"
                 @change="onImportDocumentFileChosen"
             />
-            <button class="toolbar-publish" @click="publish">{{ t('toolbar.publish') }}</button>
+            <button class="toolbar-publish" @click="requestPublish">{{ t('toolbar.publish') }}</button>
+            <LoginModal
+                v-if="signInToPublish"
+                purpose="publish"
+                :unlock-identity-id="lockedIdentityId"
+                @signed-in="publishAfterSignIn"
+                @skip="publishAfterSignIn"
+                @close="signInToPublish = false"
+            />
             <button class="toolbar-new" @click="createNew">{{ t('toolbar.new') }}</button>
             <button
                 v-if="entryContext && entryContext.returnWorldId"

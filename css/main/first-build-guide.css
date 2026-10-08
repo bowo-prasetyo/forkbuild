@@ -1,0 +1,223 @@
+/* The guided first build (ui/components/FirstBuildGuide.js): a small card
+   over the Editor's viewport, bottom left, out of the way of the sound
+   control (top right) and the touch bar (bottom center). */
+.first-build-guide,
+.first-build-guide-pill {
+    position: absolute;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 15;
+}
+
+.first-build-guide {
+    width: min(19rem, calc(100% - 2rem));
+    padding: 0.75rem 0.9rem;
+    background: rgba(18, 18, 18, 0.92);
+    border: 1px solid rgba(76, 175, 125, 0.45);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    color: #e0e0e0;
+    font-size: 0.88rem;
+}
+
+.first-build-guide-pill {
+    padding: 0.45rem 0.9rem;
+    border: 1px solid rgba(76, 175, 125, 0.6);
+    border-radius: 999px;
+    background: rgba(18, 18, 18, 0.92);
+    color: #4caf7d;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.first-build-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.first-build-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.first-build-count {
+    margin-left: auto;
+    color: #909090;
+    font-size: 0.8rem;
+}
+
+.first-build-icon-btn {
+    width: 1.6rem;
+    height: 1.6rem;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    background: #232323;
+    color: #e0e0e0;
+    font-family: inherit;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.first-build-steps {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.first-build-step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #b0b0b0;
+}
+
+.first-build-check {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    border: 1px solid #4a4a4a;
+    border-radius: 50%;
+    font-size: 0.75rem;
+}
+
+.first-build-step--done {
+    color: #808080;
+    text-decoration: line-through;
+}
+
+.first-build-step--done .first-build-check {
+    border-color: #4caf7d;
+    background: #4caf7d;
+    color: #101010;
+}
+
+.first-build-step--current {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.first-build-step--current .first-build-check {
+    border-color: #4caf7d;
+}
+
+.first-build-hint {
+    margin: 0.6rem 0 0;
+    padding: 0.5rem 0.6rem;
+    border-radius: 6px;
+    background: rgba(76, 175, 125, 0.12);
+    color: #d8f0e2;
+    line-height: 1.4;
+}
+
+.first-build-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+}
+
+.first-build-link-btn {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #909090;
+    font-family: inherit;
+    font-size: 0.8rem;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Finished: a short burst of confetti behind the message. */
+.first-build-guide--done {
+    overflow: hidden;
+    text-align: center;
+}
+
+.first-build-celebration-title {
+    margin: 0.25rem 0 0.35rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.first-build-celebration-text {
+    margin: 0 0 0.75rem;
+    color: #c0c0c0;
+    line-height: 1.4;
+}
+
+.first-build-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.first-build-confetti {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.first-build-confetti-piece {
+    position: absolute;
+    top: -0.75rem;
+    width: 0.45rem;
+    height: 0.7rem;
+    border-radius: 2px;
+    opacity: 0;
+    animation: first-build-confetti-fall 1.6s ease-in 2;
+}
+
+.first-build-confetti-piece:nth-child(3n) { background: #4caf7d; }
+.first-build-confetti-piece:nth-child(3n + 1) { background: #ffd54f; }
+.first-build-confetti-piece:nth-child(3n + 2) { background: #e57373; }
+
+.first-build-confetti-piece--1 { left: 6%; animation-delay: 0s; }
+.first-build-confetti-piece--2 { left: 14%; animation-delay: 0.25s; }
+.first-build-confetti-piece--3 { left: 23%; animation-delay: 0.1s; }
+.first-build-confetti-piece--4 { left: 31%; animation-delay: 0.4s; }
+.first-build-confetti-piece--5 { left: 40%; animation-delay: 0.15s; }
+.first-build-confetti-piece--6 { left: 48%; animation-delay: 0.5s; }
+.first-build-confetti-piece--7 { left: 57%; animation-delay: 0.05s; }
+.first-build-confetti-piece--8 { left: 65%; animation-delay: 0.35s; }
+.first-build-confetti-piece--9 { left: 73%; animation-delay: 0.2s; }
+.first-build-confetti-piece--10 { left: 81%; animation-delay: 0.45s; }
+.first-build-confetti-piece--11 { left: 88%; animation-delay: 0.3s; }
+.first-build-confetti-piece--12 { left: 94%; animation-delay: 0.55s; }
+
+@keyframes first-build-confetti-fall {
+    0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(11rem) rotate(320deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .first-build-confetti {
+        display: none;
+    }
+}
+
+@media (max-width: 720px) {
+    /* Top left on a phone: the touch bar has the bottom. */
+    .first-build-guide,
+    .first-build-guide-pill {
+        top: 0.5rem;
+        bottom: auto;
+        left: 0.5rem;
+    }
+
+    .first-build-guide {
+        width: min(17rem, calc(100% - 7.5rem));
+        padding: 0.6rem 0.7rem;
+        font-size: 0.82rem;
+    }
+}

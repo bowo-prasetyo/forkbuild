@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e2f44cb736080f44 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6a92be43d5eb9d49 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -14,8 +14,9 @@ faire évoluer — en conservant tout l’historique.
 1. Construisez quelque chose dans l’Éditeur.
 2. Connectez-vous et vérifiez que votre identité est déverrouillée (voir
    [Identité et connexion](05-IdentityAndLogin.md)). Publier signe la
-   création avec elle ; publiée sans être connecté, elle n’a pas
-   d’auteur.
+   création avec elle. Si vous n’êtes pas connecté, **Publier** vous demande
+   d’abord de vous connecter ou de créer une identité ; **Publier sans
+   signer** la publie alors sans auteur et sans lien.
 3. Donnez-lui un titre — Publier refuse une création sans titre ou vide —
    et, si vous le souhaitez, une description et une licence : cliquez sur
    **✎** à côté du titre du document dans la barre latérale pour ouvrir

@@ -58,6 +58,7 @@ import { composeInjectedWalletServices } from './main/composeInjectedWalletServi
 import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
 import { FunnelEventCounter } from '../application/settings/FunnelEventCounter.js';
+import { FirstBuildChecklistStore } from '../application/onboarding/FirstBuildChecklistStore.js';
 import { browserPrivacySignals, sendCounterHit } from './counterHit.js';
 import { verifyClaimedBuildPublication } from '../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
 import { RepositoryNetworkDiscovery } from '../application/publication/RepositoryNetworkDiscovery.js';
@@ -414,6 +415,8 @@ app.provide('languageSettingsStore', new LanguageSettingsStore({ storageProvider
 // Counted once a day by ui/start.js; Your Data turns it off.
 const visitorCountSettingsStore = new VisitorCountSettingsStore({ storageProvider: new LocalStorageProvider() });
 app.provide('visitorCountSettingsStore', visitorCountSettingsStore);
+// The Editor's guided first build: this device's progress through it.
+app.provide('firstBuildChecklistStore', new FirstBuildChecklistStore({ storageProvider: new LocalStorageProvider() }));
 // A share link made, a shared link opened, a build from one copied: counted
 // under the same setting (docs/Privacy.md, "Visitor count").
 app.provide('funnelEventCounter', new FunnelEventCounter({

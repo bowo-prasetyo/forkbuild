@@ -156,6 +156,94 @@ async function openLinkOnlyShare(browser, base) {
     }
 }
 
+// A newcomer's first visit to the published build: five pages in the nav and
+// the rest under More (laid out open in a phone's Menu); the guided first build
+// in the Editor, which folds, hides for good and comes back from the command
+// palette; and Publish asking to log in first, then publishing signed with a
+// link ready (or unsigned, if asked).
+async function firstVisit(browser, base) {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const page = await context.newPage();
+    try {
+        await page.goto(`${base}/#/`);
+        await page.waitForSelector('.home-view', { timeout: 60_000 });
+        const topLinks = await page.$$eval('.app-nav > .app-nav-link', (links) => links.map((link) => link.getAttribute('href')));
+        assert(topLinks.join() === '#/,#/editor,#/repository,#/worlds/recent', `the nav shows four pages before More (${topLinks})`);
+        assert(!(await page.isVisible('.app-nav-more-panel')), 'More starts closed');
+        await page.click('.app-nav-more-toggle');
+        assert(await page.isVisible('.app-nav-more-panel a[href="#/peers"]'), 'More holds the rest');
+        await page.click('.app-nav-more-panel a[href="#/peers"]');
+        await page.waitForFunction(() => location.hash === '#/peers', null, { timeout: 30_000 });
+        assert(!(await page.isVisible('.app-nav-more-panel')), 'choosing a page closes More');
+        assert(await page.$eval('.app-nav-more-toggle', (toggle) => toggle.classList.contains('app-nav-more-toggle--active')), 'More is marked while one of its pages is open');
+
+        await page.evaluate(() => { location.hash = '#/editor'; });
+        await page.waitForSelector('.first-build-guide', { timeout: 60_000 });
+        const current = await page.$eval('.first-build-step--current', (step) => step.dataset.step);
+        assert(current === 'place-brick', `the guide starts at placing a brick (${current})`);
+        await page.click('.first-build-icon-btn');
+        await page.waitForSelector('.first-build-guide-pill');
+        await page.click('.first-build-guide-pill');
+        await page.waitForSelector('.first-build-guide');
+
+        // Publish while logged out asks to log in; publishing unsigned still works, and stays possible.
+        await page.click('.toolbar-publish');
+        await page.waitForSelector('.login-modal-purpose', { timeout: 10_000 });
+        await page.click('.login-modal-skip');
+        await page.waitForFunction(() => !document.querySelector('.login-modal-purpose'), null, { timeout: 10_000 });
+
+        await page.click('.first-build-link-btn');
+        await page.waitForFunction(() => !document.querySelector('.first-build-guide'), null, { timeout: 10_000 });
+        await page.reload();
+        await page.waitForSelector('.toolbar-publish', { timeout: 60_000 });
+        await page.waitForTimeout(500);
+        assert(!(await page.$('.first-build-guide')), 'hidden, the guide stays hidden after a reload');
+        await page.keyboard.press('Control+k');
+        await page.waitForSelector('[role="dialog"] input', { timeout: 10_000 });
+        await page.keyboard.type('First-Build');
+        await page.keyboard.press('Enter');
+        await page.waitForSelector('.first-build-guide', { timeout: 10_000 });
+    } finally {
+        await context.close();
+    }
+
+    // Logging in from Publish: a new identity is made, the build is published
+    // signed, its link is ready to copy, and copying it ticks off sharing.
+    const signing = await browser.newContext({ viewport: { width: 1280, height: 800 }, permissions: ['clipboard-read', 'clipboard-write'] });
+    const editor = await signing.newPage();
+    try {
+        await editor.goto(`${base}/#/editor?start=village:house`);
+        await editor.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });
+        await editor.click('.toolbar-publish');
+        await editor.waitForSelector('.login-modal-purpose', { timeout: 10_000 });
+        await editor.fill('.modal-content input[type="text"].modal-input', 'Bundle builder');
+        await editor.fill('.new-passphrase-fields input[type="password"] >> nth=0', 'a long bundle passphrase 4821');
+        await editor.fill('.new-passphrase-fields input[type="password"] >> nth=1', 'a long bundle passphrase 4821');
+        await editor.click('.modal-content .modal-actions .modal-btn--primary');
+        await editor.waitForSelector('.editor-post-publish-share .publication-share-link-url', { timeout: 60_000 });
+        const link = await editor.$eval('.editor-post-publish-share .publication-share-link-url', (input) => input.value);
+        assert(link.includes('#/s/1'), `logging in from Publish publishes it signed, with a link ready (${link.slice(0, 60)})`);
+        assert((await editor.textContent('.user-widget')).includes('Bundle builder'), 'and leaves the new identity logged in');
+        await editor.click('.editor-post-publish-share .publication-share-link-actions button:has-text("Copy link")');
+        await editor.waitForSelector('.first-build-step--done[data-step="share"]', { timeout: 10_000 });
+    } finally {
+        await signing.close();
+    }
+
+    const phone = await browser.newContext({ viewport: { width: 390, height: 800 } });
+    const small = await phone.newPage();
+    try {
+        await small.goto(`${base}/#/`);
+        await small.waitForSelector('.home-view', { timeout: 60_000 });
+        await small.click('.app-menu-toggle');
+        assert(await small.isVisible('.app-nav-more-panel a[href="#/settings/data"]') && !(await small.isVisible('.app-nav-more-toggle')), 'a phone\'s Menu shows More\'s pages open');
+        const width = await small.evaluate(() => document.documentElement.scrollWidth);
+        assert(width <= 390, `the open Menu fits the phone (${width}px)`);
+    } finally {
+        await phone.close();
+    }
+}
+
 const outdir = mkdtempSync(join(tmpdir(), 'forkbuild-bundle-'));
 const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || undefined,
@@ -194,6 +282,8 @@ try {
     console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle, and the Repository lists them');
     await openLinkOnlyShare(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a link that carries its build opens World View on it in the published build, with no network');
+    await firstVisit(browser, `http://127.0.0.1:${server.address().port}`);
+    console.log('✓ a first visit: four pages and More in the nav, the guided first build in the Editor, and Publish asking to log in');
 
     const development = await build(join(outdir, 'development-vue'), { developmentVue: true });
     const devServer = await serve(development.outdir);

@@ -56,6 +56,8 @@ import StructureInfoPanel from '../components/StructureInfoPanel.js';
 import ForkFailureDialog from '../components/ForkFailureDialog.js';
 import EditorDistributionDialog from '../components/EditorDistributionDialog.js';
 import PublicationShareLink from '../components/PublicationShareLink.js';
+import FirstBuildGuide from '../components/FirstBuildGuide.js';
+import { useFirstBuildGuide } from './editorView/useFirstBuildGuide.js';
 import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
 import { usePostPublishDistribution } from './editorView/usePostPublishDistribution.js';
 import { useSelectionActions } from './editorView/useSelectionActions.js';
@@ -80,7 +82,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, EditorTouchActionBar, SoundControl },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, FirstBuildGuide, EditorTouchActionBar, SoundControl },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -134,6 +136,7 @@ export default {
                     :publication-id="publishedPublication.id"
                     :title="publishedPublication.title"
                     :publication="publishedPublication"
+                    @shared="firstBuildShared"
                 />
 
                 <EditorDistributionDialog
@@ -270,6 +273,12 @@ export default {
                         :style="{ left: marqueeRect.left + 'px', top: marqueeRect.top + 'px', width: marqueeRect.width + 'px', height: marqueeRect.height + 'px' }"
                     ></div>
                     <TransformFeedback :feedback="transformFeedback" />
+                    <FirstBuildGuide
+                        v-if="firstBuildVisible"
+                        :progress="firstBuildProgress"
+                        @dismiss="dismissFirstBuildGuide"
+                        @celebrated="finishFirstBuildGuide"
+                    />
                     <SoundControl
                         v-if="soundAvailable"
                         :muted="soundMuted"
@@ -745,10 +754,19 @@ export default {
             feedback.show(t('editor.propertiesUpdated'));
         }
 
+        const firstBuildGuide = useFirstBuildGuide({
+            registry,
+            editorSession,
+            isExperienced: () => loadDocumentUseCase.listSavedDocuments().length > 0
+        });
+
         const paletteOpen = ref(false);
         const actionUi = {
             togglePalette() {
                 paletteOpen.value = !paletteOpen.value;
+            },
+            showFirstBuildGuide() {
+                firstBuildGuide.showFirstBuildGuide();
             },
             // The registry cannot collect a name itself; null means Cancel.
             promptRenameGroup(currentName = '') {
@@ -866,6 +884,7 @@ export default {
         } = useSoundControls(() => (typeof createEditorSound === 'function' ? createEditorSound({ editorSession }) : null));
 
         function onDocumentSaved() {
+            firstBuildGuide.firstBuildSaved();
             const service = sound();
             if (service) {
                 service.saved();
@@ -875,6 +894,7 @@ export default {
         onMounted(() => {
             editorSession.start(viewport.value);
             startSound();
+            firstBuildGuide.followFirstBuildEdits();
 
             unsubTool = editorContext.eventBus.subscribe(
                 EditorEvent.TOOL_CHANGED,
@@ -1267,6 +1287,7 @@ export default {
             distributionError,
             distributionResult,
             onDocumentPublished,
+            ...firstBuildGuide,
             distributePublishedDocument,
             distributePublishedDocumentAndSnapshot,
             dismissPublishAction,

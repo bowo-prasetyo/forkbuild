@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a742c831b5f54e8b -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 5516a73079573bea -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -34,7 +34,7 @@ ningún lugar hasta que usted lo decida.
 
 La barra de arriba siempre está visible:
 
-`ForkBuild Inicio Editor Repositorio Mis mundos Mi avatar Mis identidades Pares Siguiendo Conversaciones Publicaciones Configuración de red Sus datos Idioma Acerca de 🔔 [Iniciar sesión]`
+`ForkBuild Inicio Editor Repositorio Mis mundos Más ▾ 🔔 [Iniciar sesión]`
 
 - **Inicio**: la página de inicio
 - **Editor**: donde construye
@@ -42,6 +42,12 @@ La barra de arriba siempre está visible:
 - **Mis mundos**: los Mundos que realmente visitó en este dispositivo;
   consulte
   [Mis mundos](03-WorldView.md#mis-mundos--los-mundos-que-realmente-visitó)
+
+**Más** abre el resto, en cuatro grupos: **Personal** (Mi avatar, Mis identidades,
+Sus datos), **Personas** (Pares, Siguiendo, Conversaciones), **Red**
+(Publicaciones, Configuración de red) y **Aplicación** (Idioma, Acerca de). En un teléfono,
+**Menú** los muestra todos a la vez.
+
 - **Mi avatar**: cómo lo ven los demás en la Vista del mundo; consulte
   [Avatares y presencia](06-AvatarsAndPresence.md)
 - **Mis identidades**: las identidades criptográficas guardadas en este
@@ -69,6 +75,10 @@ La barra de arriba siempre está visible:
 
 ## Iniciar sesión
 
+No necesita iniciar sesión para empezar a construir. La primera vez que
+haga clic en **Publicar**, ForkBuild le pedirá que inicie sesión o que cree
+una identidad ahí mismo, porque publicar firma su creación. También puede
+iniciar sesión en cualquier momento:
 Haga clic en **Iniciar sesión**, en la esquina superior derecha. ForkBuild
 no usa contraseñas ni cuentas centrales: **su identidad es un par de
 claves criptográficas guardado en este dispositivo**. El diálogo Iniciar
@@ -103,6 +113,11 @@ ForkBuild tiene varias áreas principales:
 | **Mi avatar / Pares / Conversaciones** | Cómo lo ven los demás, con quién está conectado y sus mensajes directos: consulte las guías enlazadas arriba |
 
 ## Colocar su primer bloque
+
+La primera vez que abra el Editor, una tarjeta **Su primera construcción**
+en la esquina de la vista 3D lo guía por cinco pasos y marca cada uno en
+cuanto lo hace; consulte
+[Su primera construcción](02-TheEditor.md#su-primera-construcción).
 
 1. Haga clic en **Editor** en la barra superior.
 2. En la barra lateral izquierda, asegúrese de que la herramienta
@@ -146,7 +161,8 @@ poco espacio en el disco.
 No necesita iniciar sesión para construir. Iniciar sesión importa cuando
 publica o trabaja con otras personas: una creación que publica sin haber
 iniciado sesión no tiene autor ni firma, así que no se puede compartir con
-pares ni distribuir después. Primero inicie sesión y luego publique.
+pares ni distribuir después, y no recibe enlace. Publicar le pide iniciar
+sesión primero.
 
 ## ¿Y ahora qué?
 
