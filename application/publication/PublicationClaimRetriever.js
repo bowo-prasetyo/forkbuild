@@ -39,10 +39,17 @@ export function composePublicationClaimRetriever({ steemResolver = null, blurtRe
         steem: steemResolver,
         blurt: blurtResolver,
         arweave: buildArweaveWorldEncounterMaterialResolver({ gatewayUrls: arweaveGatewayUrls }),
-        ipfs: new IpfsWorldEncounterMaterialResolver({
-            gatewayStore: ipfsGatewayUrls.length > 1
-                ? new IpfsGatewayFailoverContentStore({ gatewayUrls: ipfsGatewayUrls, timeoutMs: ipfsTimeoutMs })
-                : new IpfsGatewayContentStore({ gatewayUrl: ipfsGatewayUrls[0], timeoutMs: ipfsTimeoutMs })
-        })
+        ipfs: buildIpfsWorldEncounterMaterialResolver({ gatewayUrls: ipfsGatewayUrls, timeoutMs: ipfsTimeoutMs })
+    });
+}
+
+// A Signed Claim reader for `ipfs://` through the configured gateways, failing
+// over in order; also what the Repository's and the challenge's network
+// discovery read IPFS-stored claims with (ui/main/composeWorldDiscovery.js).
+export function buildIpfsWorldEncounterMaterialResolver({ gatewayUrls, timeoutMs = PUBLICATION_CLAIM_IPFS_TIMEOUT_MS }) {
+    return new IpfsWorldEncounterMaterialResolver({
+        gatewayStore: gatewayUrls.length > 1
+            ? new IpfsGatewayFailoverContentStore({ gatewayUrls, timeoutMs })
+            : new IpfsGatewayContentStore({ gatewayUrl: gatewayUrls[0], timeoutMs })
     });
 }

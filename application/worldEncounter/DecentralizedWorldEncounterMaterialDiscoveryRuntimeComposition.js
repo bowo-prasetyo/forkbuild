@@ -281,10 +281,11 @@ export function composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
     arweaveResolverOptions,
     steemMaterialResolver = null,
     blurtMaterialResolver = null,
+    ipfsMaterialResolver = null,
     verifier
 } = {}) {
     const registry = leadRegistry || new DecentralizedWorldDiscoveryLeadRegistry();
-    const materialSources = composeWorldEncounterMaterialSources({ local, peer, arweaveResolverOptions, steemMaterialResolver, blurtMaterialResolver });
+    const materialSources = composeWorldEncounterMaterialSources({ local, peer, arweaveResolverOptions, steemMaterialResolver, blurtMaterialResolver, ipfsMaterialResolver });
     const services = discoveryServices && typeof discoveryServices === 'object' ? discoveryServices : {};
 
     // The one entry point a caller (a World View action, a test) actually

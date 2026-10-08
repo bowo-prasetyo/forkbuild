@@ -13,7 +13,7 @@ import { SteemReadingConfigurationStore } from '../../storage/SteemReadingConfig
 import { SetSteemReadingConfigurationUseCase } from '../../application/settings/SetSteemReadingConfigurationUseCase.js';
 import { composeSteemRuntime } from '../../application/steem/SteemRuntimeComposition.js';
 import { composeSteemPublicationNoticeDescriber } from '../../application/steem/SteemPublicationNoticeComposition.js';
-import { composePublicationClaimRetriever } from '../../application/publication/PublicationClaimRetriever.js';
+import { buildIpfsWorldEncounterMaterialResolver, composePublicationClaimRetriever } from '../../application/publication/PublicationClaimRetriever.js';
 import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/IpfsGatewayConfiguration.js';
 import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncingConfigurationStore.js';
 import { SetSteemAnnouncingConfigurationUseCase } from '../../application/settings/SetSteemAnnouncingConfigurationUseCase.js';
@@ -179,6 +179,7 @@ export function composeWorldDiscovery({
             ? new IndexBackedPublicationDiscoveryService(service, { index: announcementIndex, kind: AnnouncementKind.PUBLICATION })
             : service
     ]));
+    const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: DEFAULT_IPFS_GATEWAY_URLS }).gatewayUrls;
     const decentralizedWorldEncounterMaterialDiscoveryRuntime = composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
         discoveryServices: decentralizedWorldDiscoveryServices,
         local: new LocalWorldEncounterMaterialSource(new LocalStorageProvider()),
@@ -186,7 +187,9 @@ export function composeWorldDiscovery({
         verifier: worldEncounterMaterialVerifier,
         arweaveResolverOptions: { gatewayUrls: resolvedArweaveGatewayUrls },
         steemMaterialResolver: steemRuntime ? steemRuntime.publicationMaterialResolver : null,
-        blurtMaterialResolver: blurtRuntime ? blurtRuntime.publicationMaterialResolver : null
+        blurtMaterialResolver: blurtRuntime ? blurtRuntime.publicationMaterialResolver : null,
+        // Signed Claims distributed with IPFS storage (`ipfs://`), read as links read them.
+        ipfsMaterialResolver: buildIpfsWorldEncounterMaterialResolver({ gatewayUrls: resolvedIpfsGatewayUrls })
     });
     const worldDiscoveryLeadRegistry = decentralizedWorldEncounterMaterialDiscoveryRuntime.registry;
     const worldEncounterMaterialSources = decentralizedWorldEncounterMaterialDiscoveryRuntime.materialSources;
@@ -210,7 +213,6 @@ export function composeWorldDiscovery({
     // command, so the field stays editable per call.
     // Reads a Signed Claim named by a link (#/view/steem|blurt|ar|ipfs/…) from where
     // it is stored, through the configured Arweave and IPFS gateways.
-    const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: DEFAULT_IPFS_GATEWAY_URLS }).gatewayUrls;
     const retrievePublicationClaim = composePublicationClaimRetriever({
         steemResolver: steemRuntime ? steemRuntime.publicationMaterialResolver : null,
         blurtResolver: blurtRuntime ? blurtRuntime.publicationMaterialResolver : null,
