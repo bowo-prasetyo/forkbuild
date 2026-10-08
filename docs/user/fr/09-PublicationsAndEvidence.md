@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 01594ad476095742 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 62d70aa574353cac -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -8,19 +8,18 @@
 > **En partie expérimental.** La page Publications est une fonctionnalité
 > ordinaire : sa liste et ses statuts, le retrait des publications
 > inutilisables, l’annonce sur Nostr ou Arweave, le stockage sur IPFS ou
-> Arweave, et la vérification, l’import ou l’obtention du snapshot d’une
-> carte. Le reste est **Expérimental** : cela fonctionne, mais peut
-> changer ou être retiré dans une version ultérieure, et ce que cela
-> produit pourrait ne pas être conservé. La page marque chacune de ces
-> parties d’un badge **Expérimental** (**Exp.** sur un onglet) : tous les
-> types d’ancrage, les portefeuilles, Steem, Blurt, l’épinglage IPFS distant, les
-> onglets **Décentralisation et preuves**, **Placements et IPFS** et
-> **Historique**, les sections de possession par les pairs et de résumé
-> de l’onglet **Snapshot**, et tout le panneau **Portefeuille, archives et
-> outils d’éditeur**. Les guides [11](11-EvidenceAndStorage.md) et
-> [12](12-ArchiveAndLeaderboards.md) indiquent lesquelles de leurs sections
-> sont Expérimentales. Construire, enregistrer, publier dans le Dépôt,
-> forker, les identités et les pairs n’en dépendent pas.
+> Arweave, et tout l’onglet **Snapshot** d’une carte. Le reste est
+> **Expérimental** : cela fonctionne, mais peut changer ou être retiré
+> dans une version ultérieure, et ce que cela produit pourrait ne pas être
+> conservé. La page marque chacune de ces parties d’un badge
+> **Expérimental** (**Exp.** sur un onglet) : tous les types d’ancrage,
+> les portefeuilles, Steem, Blurt, l’épinglage IPFS distant, les onglets
+> **Décentralisation et preuves**, **Placements et IPFS** et
+> **Historique**, et tout le panneau **Portefeuille, archives et outils
+> d’éditeur**. Les guides [11](11-EvidenceAndStorage.md) et
+> [12](12-ArchiveAndLeaderboards.md) indiquent lesquelles de leurs
+> sections sont Expérimentales. Construire, enregistrer, publier dans le
+> Dépôt, forker, les identités et les pairs n’en dépendent pas.
 
 Rien de tout cela n’est nécessaire pour utiliser ForkBuild. Passez si vous
 voulez seulement construire, publier et explorer.
@@ -410,6 +409,9 @@ indique *Publication : connue localement / non connue localement ·
 Snapshot : disponible / non disponible* : si cet appareil a catalogué la
 publication signée, et s’il détient des octets valides.
 
+Si la vérification ne trouve pas d’octets valides, une indication renvoie
+vers les façons de les faire venir, plus bas. Rien ne réessaie tout seul.
+
 ### Faire venir les octets
 
 Trois actions, chacune avec son propre clic :
@@ -443,44 +445,35 @@ est la troisième façon. Dès que l’une des trois réussit, une ligne
 **Source :** nomme la plus récente réussie : « Paquet de transfert »,
 « Placement » ou « Pair ».
 
-### Demander aux pairs ce qu’ils ont
+### Quels pairs l’ont ?
 
-*Expérimental*, comme les **Résumés** ci-dessous.
+**Quels pairs l’ont ?** demande à vos pairs connectés s’ils détiennent les
+octets, sans les faire venir. Chaque pair connecté figure dans la liste,
+coché ; décochez ceux que vous ne voulez pas interroger, puis cliquez sur
+**Interroger les pairs sélectionnés** (ensuite **Interroger de nouveau les
+pairs sélectionnés**). La dernière réponse de chaque pair s’affiche avec
+son heure, ainsi que les totaux : **Disponible**, **Non disponible** ou
+**Indéterminé** (pas de réponse à temps). Une réponse est ce que ce pair a
+dit à ce moment-là, pas une promesse.
 
-**Possession du Snapshot par un pair** demande à un pair s’il détient les
-octets, sans les récupérer : choisissez un pair et cliquez sur **Vérifier
-auprès du pair** (puis **…de nouveau**). La réponse, avec une heure
-**Observé :**, est **Le pair signale que le snapshot est disponible**,
-**Le pair signale que le snapshot n’est pas disponible**, ou **Pas de
-réponse du pair**. Une nouvelle vérification remplace la précédente.
+Un pair qui a répondu **Disponible** a son propre bouton **Obtenir le
+Snapshot de *pair***. Il demande les octets à ce seul pair et les vérifie,
+comme **Obtenir le Snapshot d’un pair** ; rien n’est jamais récupéré
+auprès de quelqu’un d’autre à votre place. **Afficher les réponses de cette
+visite** liste chaque réponse sur une ligne (comme
+`20:21:04 — Alice → Disponible`) ; cliquez sur une ligne pour le rapport
+complet, la publication et le hash de contenu. Une ligne n’est jamais
+réécrite.
 
-**Comparaison de possession du Snapshot entre pairs** en interroge
-plusieurs : cochez les pairs et cliquez sur **Vérifier les pairs
-sélectionnés** (puis **…de nouveau**). Un tableau affiche le rapport de
-chaque pair (**Disponible**, **Non disponible** ou **Indéterminé**) et
-quand, plus les totaux. **Afficher l’historique des observations** liste
-chaque vérification de cette visite, une ligne chacune (comme
-`20:21:04 — Alice → Disponible`) ; cliquez sur une ligne pour le rapport
-complet, la publication et le hash du contenu. Une ligne enregistre ce
-qu’un pair a dit à ce moment-là et n’est jamais réécrite.
+### Tentatives de cette visite
 
-### Résumés
-
-- **Acquisition du Snapshot**, en haut de la section dès que vous avez
-  vérifié ou tenté quelque chose : la **Possession actuelle** (la
-  vérification ci-dessus) et l’**Historique d’acquisition**, un décompte
-  des tentatives de cette visite par résultat et par source. Les deux sont
-  indépendants : une tentative stockée ne signifie pas que les octets sont
-  toujours là. Quand ils n’y sont pas, une indication renvoie vers les
-  trois façons de les faire venir ; rien ne réessaie tout seul.
-  **Afficher l’historique d’acquisition** liste chaque tentative (comme
-  `20:16 — Pair → Hash non correspondant`) ; cliquez sur l’une d’elles
-  pour son résultat, sa publication et son hash de contenu.
-- **État du Snapshot**, en dessous, met côte à côte les faits que vous
-  avez réunis pendant cette visite : **Contenu**, **Possession locale**,
-  **Acquisition**, **Placements** et **Observations des pairs**. Chaque
-  partie n’apparaît qu’une fois observée, et elles ne sont jamais réunies
-  en un seul verdict.
+Dès que vous avez tenté de faire venir les octets, **Tentatives de cette
+visite** compte les tentatives de cette visite par résultat et par source.
+Une tentative qui a stocké les octets ne signifie pas qu’ils sont toujours
+là ; c’est **Vérifier le snapshot local** qui le dit. **Afficher
+l’historique d’acquisition** liste chaque tentative (comme
+`20:16 — Pair → Hash non correspondant`) ; cliquez sur l’une d’elles pour
+son résultat, sa publication et son hash de contenu.
 
 ## La décentralisation en un coup d’œil
 

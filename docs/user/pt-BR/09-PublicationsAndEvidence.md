@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 01594ad476095742 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 62d70aa574353cac -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -6,16 +6,15 @@
 <!-- /languages -->
 
 > **Em parte experimental.** A página Publicações é um recurso comum: a
-> lista e os status, remover publicações que não podem ser usadas, anunciar
-> no Nostr ou no Arweave, guardar no IPFS ou no Arweave, e verificar,
-> importar ou obter o snapshot de um cartão. O resto é **Experimental**:
-> funciona, mas pode mudar ou ser removido numa versão futura, e o que
-> produz pode não ser aproveitado depois. A página marca cada uma dessas
-> partes com um selo **Experimental** (**Exp.** numa guia): todo tipo de
-> ancoragem, as carteiras, o Steem, o Blurt, o pinning remoto no IPFS, as guias
+> lista e os status, remover publicações que não podem ser usadas,
+> anunciar no Nostr ou no Arweave, guardar no IPFS ou no Arweave, e tudo
+> na guia **Snapshot** de um cartão. O resto é **Experimental**: funciona,
+> mas pode mudar ou ser removido numa versão futura, e o que produz pode
+> não ser aproveitado depois. A página marca cada uma dessas partes com um
+> selo **Experimental** (**Exp.** numa guia): todo tipo de ancoragem, as
+> carteiras, o Steem, o Blurt, o pinning remoto no IPFS, as guias
 > **Descentralização e evidências**, **Posicionamentos e IPFS** e
-> **Histórico**, as seções de posse pelos pares e de resumos da guia
-> **Snapshot**, e o painel inteiro **Ferramentas de carteira, arquivo e
+> **Histórico**, e o painel inteiro **Ferramentas de carteira, arquivo e
 > editor**. Os guias [11](11-EvidenceAndStorage.md) e
 > [12](12-ArchiveAndLeaderboards.md) dizem quais das seções deles são
 > experimentais. Construir, salvar, publicar no Repositório, bifurcar,
@@ -387,6 +386,9 @@ armazenamento delas é diferente. Depois de uma verificação, uma linha mostra
 disponível / indisponível*: se este dispositivo catalogou a publicação
 assinada, e se tem bytes válidos.
 
+Se a verificação não encontrar bytes válidos, uma dica aponta as formas de
+trazê-los, mais abaixo. Nada é tentado de novo sozinho.
+
 ### Trazendo os bytes
 
 Três ações, cada uma com seu clique:
@@ -419,41 +421,32 @@ Snapshot do par** (depois **…de novo**). Pede só àquele par.
 qual foi o último a dar certo: "Pacote de transferência", "Posicionamento"
 ou "Par".
 
-### Perguntando aos pares o que eles têm
+### Quais pares o têm?
 
-*Experimental*, assim como os **Resumos** abaixo.
+**Quais pares o têm?** pergunta aos seus pares conectados se eles têm os
+bytes, sem trazê-los. Cada par conectado aparece na lista, marcado;
+desmarque os que você não quer consultar e clique em **Perguntar aos pares
+selecionados** (depois, **Perguntar de novo aos pares selecionados**). A
+última resposta de cada par aparece com o momento em que chegou, além dos
+totais: **Disponível**, **Indisponível** ou **Não foi possível determinar**
+(não respondeu a tempo). Uma resposta é o que aquele par disse naquele
+momento, não uma promessa.
 
-**Posse do Snapshot pelos pares** pergunta a um par se ele tem os bytes, sem
-buscá-los: escolha um par e clique em **Verificar com o par** (depois **…de
-novo**). A resposta, com um horário **Observado:**, é **O par informa que o
-snapshot está disponível**, **O par informa que o snapshot não está
-disponível** ou **Sem resposta do par**. Uma verificação nova substitui a
-anterior.
+Um par que respondeu **Disponível** ganha o próprio botão **Obter Snapshot
+de *par***. Ele pede os bytes só a esse par e os confere, como **Obter
+Snapshot do par**; nada é buscado de mais ninguém por você. **Mostrar
+respostas desta visita** lista cada resposta em uma linha (como
+`20:21:04 — Alice → Disponível`); clique em uma linha para ver o relatório
+completo, a publicação e o hash do conteúdo. Uma linha nunca é reescrita.
 
-**Comparação da posse do Snapshot pelos pares** pergunta a vários: marque os
-pares e clique em **Verificar os pares selecionados** (depois **…de novo**).
-Uma tabela mostra o relato de cada par (**Disponível**, **Indisponível** ou
-**Não foi possível determinar**) e quando, mais os totais. **Mostrar
-histórico de observações** lista todas as verificações desta visita, uma
-linha cada (como `20:21:04 — Alice → Disponível`); clique numa linha para o
-relato completo, a publicação e o hash do conteúdo. Uma linha registra o que
-um par disse naquele momento e nunca é reescrita.
+### Tentativas nesta visita
 
-### Resumos
-
-- **Aquisição do Snapshot**, no topo da seção depois que você verificou ou
-  tentou algo: a **posse atual** (a verificação acima) e o **histórico de
-  obtenção**, uma contagem das tentativas desta visita por resultado e
-  origem. Eles são independentes: uma tentativa guardada não quer dizer que
-  os bytes ainda estão aqui. Quando não estão, uma dica aponta os três
-  jeitos de trazê-los; nada tenta de novo sozinho. **Mostrar histórico de
-  obtenção** lista cada tentativa (como `20:16 — Par → Hash divergente`);
-  clique numa para ver o resultado, a publicação e o hash do conteúdo.
-- **Estado do Snapshot**, logo abaixo, põe lado a lado os fatos que você
-  reuniu nesta visita: **Conteúdo**, **Posse local**, **Aquisição**,
-  **Posicionamentos** e **Observações dos pares**. Cada parte só aparece
-  depois que você a observou, e elas nunca são combinadas num único
-  veredito.
+Depois que você tentar trazer os bytes, **Tentativas nesta visita** conta
+as tentativas desta visita por resultado e por origem. Uma tentativa que
+guardou os bytes não quer dizer que eles ainda estão aqui; quem diz isso é
+**Verificar Snapshot local**. **Mostrar histórico de obtenção** lista cada
+tentativa (como `20:16 — Par → Hash não confere`); clique em uma para ver o
+resultado, a publicação e o hash do conteúdo.
 
 ## Descentralização num relance
 

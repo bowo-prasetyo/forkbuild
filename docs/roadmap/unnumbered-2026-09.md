@@ -4343,3 +4343,37 @@ language; and a user guide that said the Bitcoin pipeline never adds evidence, w
 - `docs/Architecture.md` and `docs/DeveloperFAQ.md`: marking a storage or anchor type Experimental.
 - Tests: `tests/PublicationsPageExperimentalParts.test.js` (anchor types and the block-wide rule) and
   `tests/PublicationsPageLayoutBrowser.test.js` (the Steem card's badge, and the preferred provider's).
+
+## The Snapshot tab is a regular feature: one "Which peers have it?" (unnumbered, 2026-10-08)
+
+**A card's Snapshot tab no longer has Experimental parts. Its four Experimental sections become two: "Which peers
+have it?" and "Attempts this visit".** The audit of the Publications page's Experimental parts found the tab's peer
+sections rest on the same peer exchange as Get Snapshot from Peer, which had already graduated, and are well tested;
+what held them back was the page: two sections that both asked peers whether they hold the bytes (one peer, then
+several), a Snapshot Acquisition summary and a Snapshot State summary that repeated the local check's answer three
+times, and a Snapshot State placements line already shown on the Placements tab.
+
+- "Which peers have it?" replaces Peer Snapshot Possession and Peer Snapshot Possession Comparison. Every connected
+  peer is listed ticked (`peerPossessionUncheckedPeerIds` remembers only the ones unticked, so a peer that connects
+  later starts ticked), **Ask Selected Peers** asks the ticked ones through `observePeers()`, and each row that
+  answered Available keeps its own **Get Snapshot from *peer***. The list asked is still one the person sees and
+  chooses, as "Peer Possession Observations Describe What Peers Report" requires. **Show Answers from This Visit**
+  is the old observation history.
+- "Attempts this visit" replaces Snapshot Acquisition, below the peer sections, and shows only once something was
+  tried. It drops "Current possession", which the local check already shows; the hint that points to the ways to
+  bring bytes in now sits under that check's result.
+- Removed: Snapshot State, the single-peer check (`checkSnapshotPossessionWithPeer()` and its view functions) and
+  `application/snapshot/SnapshotStateInspectionView.js` with its test, which nothing else used. The possession
+  modules stay: the comparison and the detail view still use them.
+- Messages: new `publications.whichPeersHaveIt`, `whichPeersHaveItHint`, `askSelectedPeers`,
+  `askSelectedPeersAgain`, `asking`, `attemptsThisVisit`, `showAnswersThisVisit` and `hideAnswersThisVisit` in every
+  language; fourteen keys only the removed sections used are gone.
+- docs/Protocol.md: "Snapshot possession exchange" describes the `forkbuild:snapshot-possession` payloads, which
+  were only named in the protocol table.
+- Docs: `docs/user/09-PublicationsAndEvidence.md` in every language ("Which peers have it?", "Attempts this visit",
+  the hint under the check, and the Snapshot tab in the list of regular features) and the README.
+- Tests: `tests/PublicationsSnapshotPeersBrowser.test.js` (no badge on the tab, every peer ticked, only ticked
+  peers asked, the button only for a peer that said yes and asking that peer alone, the attempts and the answers of
+  this visit).
+  `tests/SortOptionsByLabel.test.js` now expects one peer picker, and the new list, also through the sorted
+  `retrievalPeerOptions`.

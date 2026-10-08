@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 01594ad476095742 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 62d70aa574353cac -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -7,20 +7,18 @@
 
 > **En parte experimental.** La página Publicaciones es una función
 > habitual: su lista y sus estados, quitar publicaciones que no se pueden
-> usar, anunciar en Nostr o Arweave, guardar en IPFS o Arweave, y
-> comprobar, importar u obtener el Snapshot de una tarjeta. El resto es
-> **Experimental**: funciona, pero puede cambiar o eliminarse en una
-> versión futura, y lo que produce podría no conservarse. La página marca
-> cada una de esas partes con una insignia **Experimental** (**Exp.** en
-> una pestaña): todo tipo de anclaje, las billeteras, Steem, Blurt, el pinning
-> remoto de IPFS, las pestañas **Descentralización y evidencia**,
-> **Colocaciones e IPFS** e **Historial**, las secciones de posesión entre
-> pares y de resumen de la pestaña **Snapshot**, y todo el panel
-> **Herramientas de billetera, archivo y editor**. Las guías
-> [11](11-EvidenceAndStorage.md) y [12](12-ArchiveAndLeaderboards.md)
-> indican cuáles de sus secciones son Experimentales. Construir, guardar,
-> publicar en el Repositorio, bifurcar, las identidades y los pares no
-> dependen de nada de esto.
+> usar, anunciar en Nostr o Arweave, guardar en IPFS o Arweave, y todo lo
+> de la pestaña **Snapshot** de una tarjeta. El resto es **Experimental**:
+> funciona, pero puede cambiar o eliminarse en una versión futura, y lo
+> que produce podría no conservarse. La página marca cada una de esas
+> partes con una insignia **Experimental** (**Exp.** en una pestaña): todo
+> tipo de anclaje, las billeteras, Steem, Blurt, el pinning remoto de
+> IPFS, las pestañas **Descentralización y evidencia**, **Colocaciones e
+> IPFS** e **Historial**, y todo el panel **Herramientas de billetera,
+> archivo y editor**. Las guías [11](11-EvidenceAndStorage.md) y
+> [12](12-ArchiveAndLeaderboards.md) indican cuáles de sus secciones son
+> Experimentales. Construir, guardar, publicar en el Repositorio,
+> bifurcar, las identidades y los pares no dependen de nada de esto.
 
 Nada de esto es necesario para usar ForkBuild. Sáltelo si solo quiere
 construir, publicar y explorar.
@@ -401,6 +399,9 @@ línea dice *Publicación: conocida localmente / no conocida localmente ·
 Snapshot: disponible / no disponible*: si este dispositivo catalogó la
 publicación firmada, y si tiene bytes válidos.
 
+Si la comprobación no encuentra bytes válidos, una indicación señala las
+formas de traerlos, más abajo. Nada se reintenta por sí solo.
+
 ### Traer los bytes
 
 Tres acciones, cada una con su propio clic:
@@ -434,43 +435,33 @@ es la tercera forma. Cuando una de las tres funciona, una línea
 **Fuente:** nombra la más reciente que funcionó: “Paquete de
 transferencia”, “Ubicación” o “Par”.
 
-### Preguntarles a los pares qué tienen
+### ¿Qué pares lo tienen?
 
-*Experimental*, igual que los **Resúmenes** de abajo.
+**¿Qué pares lo tienen?** pregunta a sus pares conectados si tienen los
+bytes, sin traerlos. Cada par conectado aparece en la lista, marcado;
+desmarque los que no quiera consultar y luego haga clic en **Preguntar a
+los pares seleccionados** (después, **Preguntar de nuevo a los pares
+seleccionados**). La última respuesta de cada par aparece con el momento en
+que llegó, además de los totales: **Disponible**, **No disponible** o **No
+se pudo determinar** (no respondió a tiempo). Una respuesta es lo que ese
+par dijo en ese momento, no una promesa.
 
-**Posesión del Snapshot por los pares** le pregunta a un par si tiene los
-bytes, sin obtenerlos: elija un par y haga clic en **Comprobar con el par**
-(y luego **…de nuevo**). La respuesta, con una hora **Observado:**, es **El
-par informa que el Snapshot está disponible**, **El par informa que el
-Snapshot no está disponible** o **El par no respondió**. Una comprobación
-nueva reemplaza la anterior.
+Un par que respondió **Disponible** tiene su propio botón **Obtener
+Snapshot de *par***. Le pide los bytes solo a ese par y los comprueba, como
+**Obtener Snapshot del par**; nunca se trae nada de nadie más por usted.
+**Mostrar respuestas de esta visita** lista cada respuesta en una fila
+(como `20:21:04 — Alice → Disponible`); haga clic en una fila para ver el
+informe completo, la publicación y el hash del contenido. Una fila nunca se
+reescribe.
 
-**Comparación de la posesión del Snapshot por los pares** les pregunta a
-varios: marque los pares y haga clic en **Comprobar los pares
-seleccionados** (y luego **…de nuevo**). Una tabla muestra el informe de
-cada par (**Disponible**, **No disponible** o **No se pudo determinar**) y
-cuándo, más los totales. **Mostrar historial de observaciones** muestra
-cada comprobación de esta visita, una fila por comprobación (como
-`20:21:04 — Alicia → Disponible`); haga clic en una fila para ver el
-informe completo, la publicación y el hash del contenido. Una fila registra
-lo que dijo un par en ese momento y nunca se reescribe.
+### Intentos en esta visita
 
-### Resúmenes
-
-- **Adquisición del Snapshot**, arriba de la sección una vez que comprobó
-  o intentó algo: **Posesión actual** (la comprobación de arriba) e
-  **Historial de adquisición**, un conteo de los intentos de esta visita
-  por resultado y por fuente. Son independientes: un intento que guardó
-  algo no significa que los bytes sigan aquí. Cuando no están, una
-  sugerencia señala las tres formas de traerlos; nada se reintenta por sí
-  solo. **Mostrar historial de adquisición** muestra cada intento (como
-  `20:16 — Par → El hash no coincide`); haga clic en uno para ver su
-  resultado, la publicación y el hash del contenido.
-- **Estado del Snapshot**, debajo, pone uno al lado del otro los hechos que
-  reunió en esta visita: **Contenido**, **Posesión local**, **Adquisición**,
-  **Ubicaciones** y **Observaciones de los pares**. Cada parte aparece solo
-  después de que la haya observado, y nunca se combinan en un solo
-  veredicto.
+Una vez que haya intentado traer los bytes, **Intentos en esta visita**
+cuenta los intentos de esta visita por resultado y por fuente. Un intento
+que guardó los bytes no significa que sigan aquí; eso lo dice **Comprobar
+Snapshot local**. **Mostrar historial de adquisición** lista cada intento
+(como `20:16 — Par → Hash no coincide`); haga clic en uno para ver su
+resultado, la publicación y el hash del contenido.
 
 ## La descentralización de un vistazo
 

@@ -16,8 +16,6 @@ import {
 import { describePublicationDecentralization, describeDecentralizationRelationshipContrast } from '../../application/publication/PublicationDecentralizationView.js';
 import { describePublicationReplicaKnowledge } from '../../application/publication/replica/PublicationReplicaKnowledgeView.js';
 import { describePublicationReplicaKnowledgeDetail, describeAcquisitionBreakdown } from '../../application/publication/replica/PublicationReplicaKnowledgeDetailView.js';
-import { describeSnapshotStateInspection } from '../../application/snapshot/SnapshotStateInspectionView.js';
-import { SnapshotPlacementRelationship } from '../../application/snapshot/placement/SnapshotPlacementRelationship.js';
 import { BitcoinAnchorTransactionConstructionState } from '../../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js';
 import { BitcoinAnchorReviewedSigningState } from '../../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningState.js';
 import { BitcoinAnchorSignedPsbtFinalizationState } from '../../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationState.js';
@@ -495,21 +493,16 @@ export default {
                 // falls back between peers.
                 peerMaterializationSelectedPeerId: '',
                 peerMaterializationAttempt: null,
-                // A separate peer choice from the one above: asking whether a
-                // peer has bytes and asking it for them are independent
-                // actions. A new check replaces the previous observation.
-                peerPossessionSelectedPeerId: '',
-                peerPossessionAttempt: null,
                 // Every materialization attempt this session, successful or
                 // not, appended in order.
                 materializationHistory: [],
                 materializationHistoryExpanded: false,
                 // Keyed by stable history index (the history is append-only).
                 materializationHistoryEntryExpanded: {},
-                // Multi-peer comparison, separate from the single-peer check
-                // above: the peers the person ticked, and an append-only
-                // history of every answer.
-                peerPossessionCompareSelectedPeerIds: [],
+                // "Which peers have it?": the connected peers the person
+                // unticked (every other one is asked), and an append-only
+                // history of every answer. Asking never transfers bytes.
+                peerPossessionUncheckedPeerIds: [],
                 peerPossessionObservationHistory: [],
                 peerPossessionComparisonChecking: false,
                 peerPossessionComparisonHistoryExpanded: false,
@@ -622,30 +615,9 @@ export default {
             return describeDecentralizationRelationshipContrast(entry.decentralization);
         }
 
-        // Shows the snapshot's independently observed facts side by side, never
-        // collapsed into one verdict.
-        function snapshotStateInspectionView(entry) {
-            return describeSnapshotStateInspection({
-                publicationId: entry.publication.id,
-                contentHash: entry.publication.contentReference.hash,
-                possessionView: currentPossessionView(entry),
-                acquisitionView: snapshotAcquisitionView(entry),
-                placementConvergenceView: entry.placementConvergenceView,
-                peerPossessionComparisonView: peerPossessionComparisonView(entry)
-            });
-        }
-
-        function snapshotStatePlacementRelationshipLabel(view) {
-            if (!view || !view.placements) return null;
-            return describeClaimRelationship(
-                view.placements.relationship === SnapshotPlacementRelationship.CONFLICT ? 'conflict' : 'agreement',
-                view.placements.placementCount
-            );
-        }
-
         const {
             checkLocalSnapshotAvailability, localSnapshotAvailabilityView, localSnapshotAvailabilityBadgeClass,
-            localSnapshotAvailabilityButtonLabel, currentPossessionView, replicaContentKnowledgeView,
+            localSnapshotAvailabilityButtonLabel, replicaContentKnowledgeView,
             snapshotAcquisitionView, snapshotAcquisitionOutcomeCountsSentence,
             snapshotAcquisitionNeedsSourceHint, onMaterializationFileChosen, importSnapshotContent,
             recordMaterializationSource, localSnapshotMaterializationSourceView,
@@ -789,11 +761,10 @@ export default {
 
         const {
             selectedPeerForMaterialization, requestSnapshotFromPeer, peerMaterializationView,
-            peerMaterializationBadgeClass, peerMaterializationButtonLabel, selectedPeerForPossessionCheck,
-            checkSnapshotPossessionWithPeer, peerPossessionView, peerPossessionBadgeClass,
-            peerPossessionButtonLabel, togglePeerPossessionCompareSelection,
+            peerMaterializationBadgeClass, peerMaterializationButtonLabel,
+            isPeerPossessionPeerChecked, togglePeerPossessionPeer,
             selectedPeersForPossessionComparison, checkSnapshotPossessionWithSelectedPeers,
-            peerPossessionComparisonView, peerPossessionComparisonRowBadgeClass,
+            peerPossessionAskButtonLabel, peerPossessionComparisonView, peerPossessionComparisonRowBadgeClass,
             peerPossessionComparisonRowLabel, materializeFromComparisonPeer, comparisonPeerMaterializationView,
             comparisonPeerMaterializationBadgeClass, comparisonPeerMaterializationButtonLabel,
             peerPossessionObservationHistoryView, togglePeerPossessionComparisonHistory,
@@ -1167,7 +1138,6 @@ export default {
             localSnapshotAvailabilityBadgeClass, localSnapshotAvailabilityButtonLabel,
             replicaContentKnowledgeView,
             snapshotAcquisitionView, snapshotAcquisitionOutcomeCountsSentence, snapshotAcquisitionNeedsSourceHint,
-            snapshotStateInspectionView, snapshotStatePlacementRelationshipLabel,
             localSnapshotMaterializationSourceView,
             snapshotContentMaterializationCoordinator, onMaterializationFileChosen, importSnapshotContent,
             materializationView, materializationBadgeClass, materializationButtonLabel,
@@ -1175,11 +1145,11 @@ export default {
             placementMaterializationView, placementMaterializationBadgeClass, placementMaterializationButtonLabel,
             snapshotPeerMaterializationCoordinator, requestSnapshotFromPeer,
             peerMaterializationView, peerMaterializationBadgeClass, peerMaterializationButtonLabel,
-            snapshotPeerPossessionCoordinator, checkSnapshotPossessionWithPeer,
-            peerPossessionView, peerPossessionBadgeClass, peerPossessionButtonLabel,
+            snapshotPeerPossessionCoordinator,
             materializationHistoryDetailsView, materializationSourceCountsSentence, toggleMaterializationHistory,
             isMaterializationHistoryEntryExpanded, toggleMaterializationHistoryEntry,
-            togglePeerPossessionCompareSelection, checkSnapshotPossessionWithSelectedPeers,
+            isPeerPossessionPeerChecked, togglePeerPossessionPeer, selectedPeersForPossessionComparison,
+            checkSnapshotPossessionWithSelectedPeers, peerPossessionAskButtonLabel,
             peerPossessionComparisonView, peerPossessionComparisonRowBadgeClass, peerPossessionComparisonRowLabel,
             peerPossessionObservationHistoryView, togglePeerPossessionComparisonHistory, peerPossessionRowLabel,
             peerPossessionObservationDetailsView, isPeerPossessionObservationHistoryEntryExpanded, togglePeerPossessionObservationHistoryEntry,
