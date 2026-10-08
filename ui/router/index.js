@@ -141,7 +141,7 @@ const routes = [
     // over; lists whichever of Bitcoin/Arweave this replica currently has a
     // registered publisher for (Base is never listed here — it keeps its
     // own separate wallet-guided anchoring flow).
-    { path: '/settings/anchor-provider', name: 'anchor-provider-settings', component: AnchorProviderSettingsView, meta: { experimental: true } },
+    { path: '/settings/anchor-provider', name: 'anchor-provider-settings', component: AnchorProviderSettingsView },
     // 0.9.366 — Arweave Gateway Settings UI. The one ordinary product path
     // to create/change/clear the persisted Arweave gateway retrieval
     // override (core/ArweaveGatewayConfiguration.js, storage/

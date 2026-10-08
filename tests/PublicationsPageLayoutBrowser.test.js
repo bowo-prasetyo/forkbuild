@@ -157,13 +157,13 @@ await settle();
 const view = host.querySelector('.publications-view');
 
 // Experimental parts are marked on the page itself: the notice, the tools
-// panel, and the expert detail tabs, not the Snapshot tab.
+// panel, and the expert detail tabs, not the Snapshot or Decentralization & Evidence tabs.
 assert(view.textContent.includes('Parts marked') && view.querySelector(':scope > p .experimental-badge'), 'the intro says which parts are Experimental');
 assert(view.querySelector('#publications-tools > summary .experimental-badge'), 'the tools panel is marked Experimental');
 {
     const tabs = [...view.querySelector('.identity-mgmt-card .publications-tools-tabs').querySelectorAll('[role="tab"]')];
     const marked = tabs.filter((tab) => tab.querySelector('.experimental-badge')).map((tab) => tab.firstChild.textContent.trim());
-    assert(marked.join() === 'Decentralization & Evidence,Placements & IPFS,History', `the expert detail tabs are marked (got ${marked.join()})`);
+    assert(marked.join() === 'Placements & IPFS,History', `the expert detail tabs are marked, not Decentralization & Evidence (got ${marked.join()})`);
 }
 const mainList = view.querySelector(':scope > .identity-mgmt-list');
 const usableCards = mainList ? [...mainList.querySelectorAll(':scope > .identity-mgmt-card')] : [];

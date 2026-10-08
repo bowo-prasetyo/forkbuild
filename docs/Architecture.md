@@ -1365,7 +1365,7 @@ Distributing a Publication or a Snapshot involves separate choices, each with it
 |--------|--------|------|
 | Where the bytes go | Arweave, IPFS (Local Kubo), IPFS (Remote Pinning, Experimental), Steem and Blurt (Experimental, small builds) | `PublicationMaterialUploaderComposition` (Publication material); `SnapshotPlacementStoreRegistry` + `ipfsRemotePublicationCoordinator` (Snapshot) |
 | Where it is announced | Nostr (fan-out to every configured relay), Arweave (tagged transaction), Steem (Experimental; a reply to a monthly discovery thread) or Blurt (Experimental; the poster's own top-level build post, found by tag and by authors' histories) | `AnnouncementDiscoveryProviderRegistry`, keyed by `nostr`/`arweave`/`steem`/`blurt` (`core/AnnouncementDiscoveryProvider.js`), for Snapshot and Place Naming (`resolveSnapshotDiscoveryPublisher()`, `distributePlaceNamingClaimCommand`); `*RuntimeComposition` `discoveryProvider` for Publication and Commentary |
-| Proof / anchoring (Experimental) | Bitcoin, Arweave, Steem, Blurt (Bitcoin and Base only through their wallet steps) | `PreferredPublicationAnchorCreationCoordinator` |
+| Proof / anchoring | Arweave; Bitcoin, Steem and Blurt (Experimental; Bitcoin and Base only through their wallet steps) | `PreferredPublicationAnchorCreationCoordinator` |
 
 The saved preferences live in `RoleProviderPreferenceStore` (`CONTENT`, `ANNOUNCEMENT_AND_DISCOVERY`,
 `PROOF_AND_ANCHORING`). They drive the preferred-provider buttons (on the Publications page, "Store on …" and

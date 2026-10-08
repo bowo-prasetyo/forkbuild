@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 62d70aa574353cac -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 2c5fc47e7e82ef51 -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -8,13 +8,14 @@
 > **En partie expérimental.** La page Publications est une fonctionnalité
 > ordinaire : sa liste et ses statuts, le retrait des publications
 > inutilisables, l’annonce sur Nostr ou Arweave, le stockage sur IPFS ou
-> Arweave, et tout l’onglet **Snapshot** d’une carte. Le reste est
+> Arweave, l’ancrage sur Arweave, et les onglets **Snapshot** et
+> **Décentralisation et preuves** d’une carte. Le reste est
 > **Expérimental** : cela fonctionne, mais peut changer ou être retiré
 > dans une version ultérieure, et ce que cela produit pourrait ne pas être
 > conservé. La page marque chacune de ces parties d’un badge
-> **Expérimental** (**Exp.** sur un onglet) : tous les types d’ancrage,
-> les portefeuilles, Steem, Blurt, l’épinglage IPFS distant, les onglets
-> **Décentralisation et preuves**, **Placements et IPFS** et
+> **Expérimental** (**Exp.** sur un onglet) : tous les types d’ancrage
+> sauf Arweave, les portefeuilles et leurs étapes Bitcoin et Base, Steem,
+> Blurt, l’épinglage IPFS distant, les onglets **Placements et IPFS** et
 > **Historique**, et tout le panneau **Portefeuille, archives et outils
 > d’éditeur**. Les guides [11](11-EvidenceAndStorage.md) et
 > [12](12-ArchiveAndLeaderboards.md) indiquent lesquelles de leurs
@@ -94,7 +95,7 @@ type de publication, et seule la publication elle-même est obligatoire :
 | **Snapshot** | Un exemplaire imprimé | Une copie stockée du contenu d’une publication, comme les briques d’un Monde, que d’autres peuvent récupérer et vérifier par rapport à son hash. Voir [Snapshot local](#snapshot-local). |
 | **Placement** | Le rayon où l’exemplaire est rangé | Un enregistrement signé de l’endroit où se tient une construction dans le Monde. Un Monde partagé peut en avoir plusieurs. Voir [Placer ou forker](03-WorldView.md#placer-ou-forker). |
 | **Annonce / Découverte** | Une fiche du catalogue de la bibliothèque | Un petit avis signé sur Nostr, Arweave, Steem ou Blurt indiquant que la publication ou le Snapshot existe et où se trouve sa copie, pour que des personnes non connectées à vous puissent la trouver. Voir [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte). |
-| **Preuve / Ancrage** *(Expérimental)* | Le tampon d’un notaire | Le hash du contenu inscrit dans une transaction blockchain (Bitcoin, Base, Arweave, Steem ou Blurt), comme preuve qu’il existait à ce moment-là. Il ne stocke ni n’annonce rien. Voir [Preuves et stockage](11-EvidenceAndStorage.md). |
+| **Preuve / Ancrage** *(Expérimental, sauf sur Arweave)* | Le tampon d’un notaire | Le hash du contenu inscrit dans une transaction blockchain (Bitcoin, Base, Arweave, Steem ou Blurt), comme preuve qu’il existait à ce moment-là. Il ne stocke ni n’annonce rien. Voir [Preuves et stockage](11-EvidenceAndStorage.md). |
 | **Commentaires** | Les critiques des lecteurs | Des commentaires que toute personne connectée peut joindre à une publication, chacun signé par son auteur, pas par l’éditeur. Voir [Commentaires](#commentaires). |
 
 Vous faites donc une publication ; puis, si vous le souhaitez, vous
@@ -217,7 +218,7 @@ En dessous, deux sections repliées :
   **Autres options de …**. Sans fournisseur enregistré utilisable, toutes
   les options s’affichent à la place. Steem, Blurt et l’épinglage IPFS distant
   sont marqués **Expérimental** partout où ils sont proposés, tout comme
-  tout le bloc **Preuve / Ancrage**. Voir
+  tous les types d’ancrage sauf Arweave. Voir
   [Distribuer depuis la page Publications](#distribuer-depuis-la-page-publications)
   et [Preuves et stockage](11-EvidenceAndStorage.md).
 - **Détails**, en quatre onglets :
@@ -225,7 +226,7 @@ En dessous, deux sections repliées :
 | Onglet | Ce qu’on y trouve |
 |---|---|
 | **Snapshot** | Le [Snapshot local](#snapshot-local) : ce que détient cet appareil, et comment l’obtenir. |
-| **Décentralisation et preuves** *(Exp.)* | La [Décentralisation](#la-décentralisation-en-un-coup-dœil), la [liste des preuves](11-EvidenceAndStorage.md#la-liste-des-preuves), et les étapes de transaction Bitcoin et Base. |
+| **Décentralisation et preuves** | La [Décentralisation](#la-décentralisation-en-un-coup-dœil), la [liste des preuves](11-EvidenceAndStorage.md#la-liste-des-preuves), et les étapes de transaction Bitcoin et Base (expérimental). |
 | **Placements et IPFS** *(Exp.)* | La liste des [Placements de Snapshot](11-EvidenceAndStorage.md#placements-de-snapshot) et la [Publication IPFS](11-EvidenceAndStorage.md#publication-ipfs). |
 | **Historique** *(Exp.)* | **Afficher la chronologie multi-domaines** : toutes les observations IPFS et Bitcoin de cette publication, dans l’ordre chronologique. |
 
@@ -477,7 +478,7 @@ son résultat, sa publication et son hash de contenu.
 
 ## La décentralisation en un coup d’œil
 
-*Expérimental.* Dans l’onglet **Décentralisation et preuves**, dès
+Dans l’onglet **Décentralisation et preuves**, dès
 qu’une publication a une ancre ou un placement, **Décentralisation**
 compare les [Preuves externes](11-EvidenceAndStorage.md#preuves-externes)
 et les [Placements de Snapshot](11-EvidenceAndStorage.md#placements-de-snapshot) :

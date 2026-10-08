@@ -4,6 +4,7 @@ export const anchorEvidenceListTemplate = `<div v-if="entry.evidenceExpanded && 
                             <div v-for="anchorView in entry.evidence.anchors" :key="anchorView.anchorId" class="evidence-anchor-card">
                                 <div class="evidence-anchor-header">
                                     <span class="evidence-anchor-type">{{ humanizeAnchorType(anchorView.anchorType) }}</span>
+                                    <span v-if="isExperimentalAnchorType(anchorView.anchorType)" class="experimental-badge">{{ t('publications.experimental') }}</span>
                                     <span class="peer-badge" :class="evidenceBadgeClass(anchorView)">{{ displayText(anchorView.verificationLabel) }}</span>
                                 </div>
                                 <p v-if="anchorView.verificationReason" class="form-hint form-hint--neutral">

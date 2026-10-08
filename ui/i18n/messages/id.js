@@ -4102,6 +4102,7 @@ export default Object.freeze({
     'notificationHistoryPanel.notificationsCouldNotBeLoaded': 'Notifikasi tidak dapat dimuat.',
     'anchorProviderSettingsView.steemExperimentalAttestedBySteem': 'Steem (Eksperimental; dibuktikan oleh saksi Steem, lebih lemah daripada Bitcoin)',
     'anchorProviderSettingsView.blurtExperimentalAttestedByBlurt': 'Blurt (Eksperimental; dibuktikan oleh saksi Blurt, lebih lemah daripada Bitcoin)',
+    'anchorProviderSettingsView.bitcoinExperimental': 'Bitcoin (Eksperimental; dijangkarkan melalui langkah-langkah dompetnya)',
     'chatView.callDeclined': 'Panggilan ditolak.',
     'chatView.theyReAlreadyOnAnother': 'Mereka sedang dalam panggilan lain.',
     'chatView.noAnswer': 'Tidak ada jawaban.',

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 2699bf9fa2001089 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 441c5aa921f30b41 -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
@@ -9,12 +9,13 @@
 > Arweave über den Block **Verteilung → Inhalt** einer Karte
 > ([Eine Platzierung erstellen](#eine-platzierung-erstellen) und
 > [Einen bevorzugten Anbieter verwenden](#einen-bevorzugten-anbieter-verwenden))
-> ist eine reguläre Funktion. Alles andere hier ist **Experimentell**:
-> externe Nachweise und beide Wallet-Abläufe, die Liste der
+> ist eine reguläre Funktion, ebenso Arweave-Anker und die Nachweisliste.
+> Alles andere hier ist **Experimentell**: die übrigen Arten externer
+> Nachweise und beide Wallet-Abläufe, die Liste der
 > Snapshot-Platzierungen, entferntes IPFS-Pinning und Steem. Es kann sich
-> in einer späteren Version ändern oder entfernt werden, und was es erzeugt,
-> wird möglicherweise nicht übernommen. Die Seite kennzeichnet diese Teile
-> mit einem Abzeichen **Experimentell**.
+> in einer späteren Version ändern oder entfernt werden, und was es
+> erzeugt, wird möglicherweise nicht übernommen. Die Seite kennzeichnet
+> diese Teile mit einem Abzeichen **Experimentell**.
 
 Jede Karte auf der Seite **Veröffentlichungen** (siehe
 [Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md))
@@ -45,7 +46,9 @@ zuerst erhoben wurde.
 
 ## Externe Nachweise
 
-*Experimentell.*
+Arweave-Anker und die Nachweisliste sind eine reguläre Funktion.
+Bitcoin-, Base-, Steem- und Blurt-Anker sind *experimentell* und jeweils
+so gekennzeichnet.
 
 Ein hier aufgeführter Anker bedeutet nur, dass dieses Gerät einen gültig
 signierten Datensatz besitzt, der sagt: „Dies wurde extern erfasst.“ Ob
@@ -57,7 +60,7 @@ beim Aufklappen der Liste.
 ### Nachweise erstellen
 
 Im Abschnitt **Verteilung** einer Veröffentlichungskarte hat der Block
-**Nachweis / Verankerung** (als **Experimentell** gekennzeichnet) eine
+**Nachweis / Verankerung** (Steem und Blurt als **Experimentell** gekennzeichnet) eine
 Karte für jede Art von Nachweis, die ein Klick erstellen kann, jeweils mit
 eigener Schaltfläche: **Arweave-Anker erstellen** und **Steem-Anker
 erstellen**. Bitcoin- und Base-Anker haben keine solche Karte: Sie werden

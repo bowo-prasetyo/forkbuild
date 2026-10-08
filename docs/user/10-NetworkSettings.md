@@ -18,7 +18,7 @@ For what each server learns about you, see [Privacy](../Privacy.md).
 |---|---|---|
 | **Content Provider** | `/settings/content-provider` | Where **Store on …** and **Use Preferred Provider** store new content, and which IPFS node it goes to — see [below](#content-provider) |
 | **Announcement / Discovery Provider** | `/settings/announcement-discovery-provider` | Where your announcements go by default: Nostr, Arweave, Steem or Blurt — see [below](#announcement--discovery-provider) |
-| **Proof / Anchoring Provider** *(experimental)* | `/settings/anchor-provider` | Where **Anchor on …** anchors — see [below](#proof--anchoring-provider) |
+| **Proof / Anchoring Provider** | `/settings/anchor-provider` | Where **Anchor on …** anchors — see [below](#proof--anchoring-provider) |
 | **Arweave Gateway** | `/settings/arweave-gateway` | Gateways for reading Arweave content — see [below](#arweave-gateway) |
 | **IPFS Gateway** | `/settings/ipfs-gateway` | Gateways for reading IPFS content — see [below](#ipfs-gateway) |
 | **Bitcoin Endpoint** *(experimental)* | `/settings/bitcoin-esplora` | The service Bitcoin anchoring uses — see [below](#bitcoin-endpoint) |
@@ -92,8 +92,8 @@ Every comment form starts on it, and you can still switch a comment beside
 
 ## Proof / Anchoring Provider
 
-*Experimental.* Choose where **Anchor on …** (the first button in a
-publication's **Proof / Anchoring** block) creates external evidence: **Arweave**, **Bitcoin**, **Blurt** or **Steem**, whichever this device has
+Choose where **Anchor on …** (the first button in a
+publication's **Proof / Anchoring** block) creates external evidence: **Arweave**, **Bitcoin** *(experimental)*, **Blurt** *(experimental)* or **Steem** *(experimental)*, whichever this device has
 registered. Base is never offered, because every Base anchor needs you to
 review and sign a wallet transaction. With Bitcoin chosen there's no
 **Anchor on …** button: the block shows every option and points to the

@@ -206,7 +206,9 @@ export function discoveryProviderConfigurationRoute(provider) {
 // sections that carry an Experimental badge. Graduating a storage or anchor type
 // is removing it from its list. See docs/user/09-PublicationsAndEvidence.md.
 export const EXPERIMENTAL_STORAGE_TYPES = Object.freeze(['steem', 'blurt', 'remote-pinning']);
-export const EXPERIMENTAL_ANCHOR_TYPES = Object.freeze(['bitcoin-op-return', 'base', 'arweave', 'steem', 'blurt']);
+// Arweave anchoring graduated: it signs and posts through the same wallet and
+// gateway as Arweave storage.
+export const EXPERIMENTAL_ANCHOR_TYPES = Object.freeze(['bitcoin-op-return', 'base', 'steem', 'blurt']);
 
 export function isExperimentalStorageType(storage) {
     return EXPERIMENTAL_STORAGE_TYPES.includes(storage);

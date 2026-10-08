@@ -4104,6 +4104,7 @@ export default Object.freeze({
     'notificationHistoryPanel.notificationsCouldNotBeLoaded': 'Notifications could not be loaded.',
     'anchorProviderSettingsView.steemExperimentalAttestedBySteem': 'Steem (Experimental; attested by Steem witnesses, weaker than Bitcoin)',
     'anchorProviderSettingsView.blurtExperimentalAttestedByBlurt': 'Blurt (Experimental; attested by Blurt witnesses, weaker than Bitcoin)',
+    'anchorProviderSettingsView.bitcoinExperimental': 'Bitcoin (Experimental; anchored through its wallet steps)',
     'chatView.callDeclined': 'Call declined.',
     'chatView.theyReAlreadyOnAnother': 'They’re already on another call.',
     'chatView.noAnswer': 'No answer.',

@@ -4105,6 +4105,7 @@ export default Object.freeze({
     'notificationHistoryPanel.notificationsCouldNotBeLoaded': '알림을 불러올 수 없습니다.',
     'anchorProviderSettingsView.steemExperimentalAttestedBySteem': 'Steem (실험적, Steem 증인이 증명하며 Bitcoin보다 약함)',
     'anchorProviderSettingsView.blurtExperimentalAttestedByBlurt': 'Blurt (실험적. Blurt 증인이 보증하며 Bitcoin보다 약함)',
+    'anchorProviderSettingsView.bitcoinExperimental': 'Bitcoin (실험적, 지갑 단계를 거쳐 앵커링)',
     'chatView.callDeclined': '통화가 거절되었습니다.',
     'chatView.theyReAlreadyOnAnother': '상대가 이미 다른 통화 중입니다.',
     'chatView.noAnswer': '응답이 없습니다.',

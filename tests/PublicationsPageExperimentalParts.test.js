@@ -38,10 +38,11 @@ console.log('✓ Steem and remote pinning storage are labelled Experimental; IPF
 
 // Anchor types are Experimental one by one, so one can graduate on its own; the
 // Proof / Anchoring block is Experimental as a whole only while all it offers are.
-assert(['bitcoin-op-return', 'base', 'arweave', 'steem', 'blurt'].every(isExperimentalAnchorType), 'every anchor type is Experimental today');
+assert(['bitcoin-op-return', 'base', 'steem', 'blurt'].every(isExperimentalAnchorType), 'Bitcoin, Base, Steem and Blurt anchors are Experimental');
+assert(!isExperimentalAnchorType('arweave'), 'Arweave anchors graduated');
 assert(!isExperimentalAnchorType('some-new-chain') && !isExperimentalAnchorType(undefined), 'a type not on the list is not');
-assert(everyAnchorTypeExperimental(['arweave', 'steem']) && everyAnchorTypeExperimental(['bitcoin-op-return']), 'a block offering only Experimental types is Experimental');
-assert(!everyAnchorTypeExperimental(['arweave', 'some-new-chain']), 'one regular type is enough to drop the block-wide badge');
+assert(everyAnchorTypeExperimental(['steem', 'blurt']) && everyAnchorTypeExperimental(['bitcoin-op-return']), 'a block offering only Experimental types is Experimental');
+assert(!everyAnchorTypeExperimental(['arweave', 'steem']), 'Arweave alone is enough to drop the block-wide badge');
 assert(!everyAnchorTypeExperimental([]) && !everyAnchorTypeExperimental(null), 'and a block offering nothing claims nothing');
 console.log('✓ anchor types are Experimental one by one, and the block only while all are');
 

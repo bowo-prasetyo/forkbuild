@@ -6,14 +6,15 @@
 
 > **Partly experimental.** The Publications page is a regular feature: its
 > list and statuses, removing publications that can't be used, announcing
-> on Nostr or Arweave, storing on IPFS or Arweave, and everything on a
-> card's **Snapshot** tab. The rest is **Experimental**: it works, but may
-> change or be removed in a later version, and what it produces may not
-> carry over. The page marks each such part with an **Experimental** badge
-> (**Exp.** on a tab): every kind of anchoring, the wallets, Steem, Blurt,
-> remote IPFS pinning, the **Decentralization & Evidence**, **Placements &
-> IPFS** and **History** tabs, and the whole **Wallet, Archive & Publisher
-> Tools** panel. Guides [11](11-EvidenceAndStorage.md) and
+> on Nostr or Arweave, storing on IPFS or Arweave, anchoring on Arweave,
+> and a card's **Snapshot** and **Decentralization & Evidence** tabs. The
+> rest is **Experimental**: it works, but may change or be removed in a
+> later version, and what it produces may not carry over. The page marks
+> each such part with an **Experimental** badge (**Exp.** on a tab): every
+> kind of anchoring but Arweave, the wallets and their Bitcoin and Base
+> steps, Steem, Blurt, remote IPFS pinning, the **Placements & IPFS** and
+> **History** tabs, and the whole **Wallet, Archive & Publisher Tools**
+> panel. Guides [11](11-EvidenceAndStorage.md) and
 > [12](12-ArchiveAndLeaderboards.md) say which of their sections are
 > Experimental. Building, saving, publishing to the Repository, forking,
 > identities and peers don't depend on any of it.
@@ -87,7 +88,7 @@ itself is required:
 | **Snapshot** | A printed copy | One stored copy of a publication's content, such as a World's bricks, which others can fetch and check against its hash. See [Local Snapshot](#local-snapshot). |
 | **Placement** | Where the copy is shelved | A signed record of where a build stands in the World. One Shared World can have several. See [Placing vs forking](03-WorldView.md#placing-vs-forking). |
 | **Announcement / Discovery** | A library catalogue entry | A small signed notice on Nostr, Arweave, Steem or Blurt saying the publication or Snapshot exists and where its copy is, so people who aren't connected to you can find it. See [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider). |
-| **Proof / Anchoring** *(Experimental)* | A notary's stamp | The content's hash written into a blockchain transaction (Bitcoin, Base, Arweave, Steem or Blurt), as evidence it existed by that time. It stores and announces nothing. See [Evidence & Storage](11-EvidenceAndStorage.md). |
+| **Proof / Anchoring** *(Experimental, except on Arweave)* | A notary's stamp | The content's hash written into a blockchain transaction (Bitcoin, Base, Arweave, Steem or Blurt), as evidence it existed by that time. It stores and announces nothing. See [Evidence & Storage](11-EvidenceAndStorage.md). |
 | **Commentary** | Readers' reviews | Comments anyone signed in can attach to a publication, each signed by its commenter, not the publisher. See [Commentary](#commentary). |
 
 So you make a publication; then, if you like, store its content, announce
@@ -196,7 +197,7 @@ Below that, two folded sections:
   every other provider folded under **Other … options**. Without a saved
   provider it can use, all the options show instead. Steem, Blurt and remote IPFS
   pinning are marked **Experimental** wherever they're offered, and so is
-  the whole **Proof / Anchoring** block. See
+  every kind of anchoring but Arweave. See
   [Distributing from the Publications page](#distributing-from-the-publications-page)
   and [Evidence & Storage](11-EvidenceAndStorage.md).
 - **Details**, in four tabs:
@@ -204,7 +205,7 @@ Below that, two folded sections:
 | Tab | What's there |
 |---|---|
 | **Snapshot** | [Local Snapshot](#local-snapshot): what this device holds, and how to get it. |
-| **Decentralization & Evidence** *(Exp.)* | [Decentralization](#decentralization-at-a-glance), the [evidence list](11-EvidenceAndStorage.md#the-evidence-list), and the Bitcoin and Base transaction steps. |
+| **Decentralization & Evidence** | [Decentralization](#decentralization-at-a-glance), the [evidence list](11-EvidenceAndStorage.md#the-evidence-list), and the Bitcoin and Base transaction steps (Experimental). |
 | **Placements & IPFS** *(Exp.)* | The [Snapshot Placements](11-EvidenceAndStorage.md#snapshot-placements) list and [IPFS Publishing](11-EvidenceAndStorage.md#ipfs-publishing). |
 | **History** *(Exp.)* | **Show Cross-Domain Timeline**: every IPFS and Bitcoin observation for this publication, in time order. |
 
@@ -430,7 +431,7 @@ content hash.
 
 ## Decentralization at a glance
 
-*Experimental.* On the **Decentralization & Evidence** tab, once a publication has an anchor
+On the **Decentralization & Evidence** tab, once a publication has an anchor
 or a placement, **Decentralization** compares
 [External Evidence](11-EvidenceAndStorage.md#external-evidence) and
 [Snapshot Placements](11-EvidenceAndStorage.md#snapshot-placements):

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: b4db56909f354d27 -->
 # 10 — 네트워크 설정
 
 <!-- languages -->
@@ -21,7 +21,7 @@
 |---|---|---|
 | **콘텐츠 제공자** | `/settings/content-provider` | **…에 저장**과 **선호 제공자 사용**이 새 콘텐츠를 저장하는 곳과, 그것을 보낼 IPFS 노드 — [아래](#콘텐츠-제공자) 참고 |
 | **공지 / 발견 제공자** | `/settings/announcement-discovery-provider` | 공지를 기본으로 보낼 곳: Nostr, Arweave, Steem, Blurt — [아래](#공지--발견-제공자) 참고 |
-| **증명 / 앵커링 제공자** *(실험적)* | `/settings/anchor-provider` | **…에 앵커링**이 앵커링하는 곳 — [아래](#증명--앵커링-제공자) 참고 |
+| **증명 / 앵커링 제공자** | `/settings/anchor-provider` | **…에 앵커링**이 앵커링하는 곳 — [아래](#증명--앵커링-제공자) 참고 |
 | **Arweave 게이트웨이** | `/settings/arweave-gateway` | Arweave 콘텐츠를 읽는 게이트웨이 — [아래](#arweave-게이트웨이) 참고 |
 | **IPFS 게이트웨이** | `/settings/ipfs-gateway` | IPFS 콘텐츠를 읽는 게이트웨이 — [아래](#ipfs-게이트웨이) 참고 |
 | **Bitcoin 엔드포인트** *(실험적)* | `/settings/bitcoin-esplora` | Bitcoin 앵커링이 쓰는 서비스 — [아래](#bitcoin-엔드포인트) 참고 |
@@ -88,8 +88,8 @@
 
 ## 증명 / 앵커링 제공자
 
-*실험적.* **…에 앵커링**(게시물 **증명 / 앵커링** 블록의 첫 번째 버튼)이 외부
-증거를 만들 곳을 이 기기에 등록된 **Arweave**, **Bitcoin**, **Blurt**, **Steem** 중에서
+**…에 앵커링**(게시물 **증명 / 앵커링** 블록의 첫 번째 버튼)이 외부
+증거를 만들 곳을 이 기기에 등록된 **Arweave**, **Bitcoin** *(실험적)*, **Blurt** *(실험적)*, **Steem** *(실험적)* 중에서
 고르세요. Base 앵커는 매번 지갑 트랜잭션을 검토하고 서명해야 하므로 Base는 제공되지
 않습니다. Bitcoin을 고르면 **…에 앵커링** 버튼이 없습니다: 블록에 모든 옵션이
 표시되고 지갑 단계를 안내합니다. 실제 Bitcoin 앵커는

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: b4db56909f354d27 -->
 # 10 — Configuración de red
 
 <!-- languages -->
@@ -21,7 +21,7 @@ Para saber qué averigua cada servidor sobre usted, consulte
 |---|---|---|
 | **Proveedor de contenido** | `/settings/content-provider` | Dónde guardan contenido nuevo **Guardar en …** y **Usar el proveedor preferido**, y a qué nodo IPFS va: consulte [más abajo](#proveedor-de-contenido) |
 | **Proveedor de anuncio / descubrimiento** | `/settings/announcement-discovery-provider` | Adónde van sus anuncios de forma predeterminada: Nostr, Arweave, Steem o Blurt; consulte [más abajo](#proveedor-de-anuncio--descubrimiento) |
-| **Proveedor de prueba / anclaje** *(experimental)* | `/settings/anchor-provider` | Dónde ancla **Anclar en …**: consulte [más abajo](#proveedor-de-prueba--anclaje) |
+| **Proveedor de prueba / anclaje** | `/settings/anchor-provider` | Dónde ancla **Anclar en …**: consulte [más abajo](#proveedor-de-prueba--anclaje) |
 | **Gateway de Arweave** | `/settings/arweave-gateway` | Gateways para leer contenido de Arweave: consulte [más abajo](#gateway-de-arweave) |
 | **Gateway de IPFS** | `/settings/ipfs-gateway` | Gateways para leer contenido de IPFS: consulte [más abajo](#gateway-de-ipfs) |
 | **Endpoint de Bitcoin** *(experimental)* | `/settings/bitcoin-esplora` | El servicio que usa el anclaje en Bitcoin: consulte [más abajo](#endpoint-de-bitcoin) |
@@ -106,9 +106,9 @@ comentario junto a **Publicar comentario**.
 
 ## Proveedor de prueba / anclaje
 
-*Experimental.* Elija dónde crea evidencia externa **Anclar en …** (el
+Elija dónde crea evidencia externa **Anclar en …** (el
 primer botón del bloque **Prueba / anclaje** de una publicación):
-**Arweave**, **Bitcoin**, **Blurt** o **Steem**, según los que haya registrado este
+**Arweave**, **Bitcoin** *(experimental)*, **Blurt** *(experimental)* o **Steem** *(experimental)*, según los que haya registrado este
 dispositivo. Base nunca se ofrece, porque cada anclaje en Base requiere que
 usted revise y firme una transacción de billetera. Con Bitcoin elegido no
 hay botón **Anclar en …**: el bloque muestra todas las opciones y remite a

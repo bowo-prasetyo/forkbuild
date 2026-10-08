@@ -4102,6 +4102,7 @@ export default Object.freeze({
     'notificationHistoryPanel.notificationsCouldNotBeLoaded': '通知を読み込めませんでした。',
     'anchorProviderSettingsView.steemExperimentalAttestedBySteem': 'Steem（実験的。Steemのウィットネスによる証明で、Bitcoinより弱い）',
     'anchorProviderSettingsView.blurtExperimentalAttestedByBlurt': 'Blurt（実験的。Blurtのウィットネスが証明し、Bitcoinより弱い）',
+    'anchorProviderSettingsView.bitcoinExperimental': 'Bitcoin（実験的。ウォレットの手順でアンカーを作成）',
     'chatView.callDeclined': '通話が拒否されました。',
     'chatView.theyReAlreadyOnAnother': '相手はすでに別の通話中です。',
     'chatView.noAnswer': '応答がありません。',
