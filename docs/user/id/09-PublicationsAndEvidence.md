@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 62d70aa574353cac -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 2c5fc47e7e82ef51 -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -7,13 +7,14 @@
 
 > **Sebagian eksperimental.** Halaman Publikasi adalah fitur biasa: daftar
 > dan statusnya, menghapus publikasi yang tidak dapat dipakai, mengumumkan
-> di Nostr atau Arweave, menyimpan di IPFS atau Arweave, serta seluruh tab
-> **Snapshot** sebuah kartu. Sisanya **Eksperimental**: berfungsi, tetapi
-> dapat berubah atau dihapus di versi berikutnya, dan apa yang
-> dihasilkannya mungkin tidak terbawa. Halaman ini menandai setiap bagian
-> seperti itu dengan lencana **Eksperimental** (**Eksp.** pada tab):
-> setiap jenis penjangkaran, dompet, Steem, Blurt, pinning IPFS jarak
-> jauh, tab **Desentralisasi & Bukti**, **Penempatan & IPFS**, dan
+> di Nostr atau Arweave, menyimpan di IPFS atau Arweave, penjangkaran di
+> Arweave, serta tab **Snapshot** dan **Desentralisasi & Bukti** sebuah
+> kartu. Sisanya **Eksperimental**: berfungsi, tetapi dapat berubah atau
+> dihapus di versi berikutnya, dan apa yang dihasilkannya mungkin tidak
+> terbawa. Halaman ini menandai setiap bagian seperti itu dengan lencana
+> **Eksperimental** (**Eksp.** pada tab): setiap jenis penjangkaran
+> kecuali Arweave, dompet beserta langkah Bitcoin dan Base-nya, Steem,
+> Blurt, pinning IPFS jarak jauh, tab **Penempatan & IPFS** dan
 > **Riwayat**, serta seluruh panel **Dompet, Arsip & Alat Penerbit**.
 > Panduan [11](11-EvidenceAndStorage.md) dan
 > [12](12-ArchiveAndLeaderboards.md) menyebutkan bagian mana yang
@@ -92,7 +93,7 @@ merupakan jenis publikasi, dan hanya publikasi itu sendiri yang wajib:
 | **Snapshot** | Satu salinan cetak | Satu salinan tersimpan dari konten publikasi, seperti balok sebuah Dunia, yang dapat diambil orang lain dan dicocokkan dengan hash-nya. Lihat [Snapshot Lokal](#snapshot-lokal). |
 | **Penempatan** | Rak tempat salinan itu ditaruh | Catatan bertanda tangan tentang di mana sebuah bangunan berdiri di Dunia. Satu Dunia Bersama dapat memiliki beberapa penempatan. Lihat [Menempatkan vs mem-fork](03-WorldView.md#menempatkan-vs-mem-fork). |
 | **Pengumuman / Penemuan** | Entri katalog perpustakaan | Pemberitahuan kecil bertanda tangan di Nostr, Arweave, Steem, atau Blurt yang menyatakan bahwa publikasi atau Snapshot itu ada dan di mana salinannya, agar orang yang tidak terhubung dengan Anda dapat menemukannya. Lihat [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan). |
-| **Bukti / Penjangkaran** *(Eksperimental)* | Cap notaris | Hash konten yang ditulis ke dalam transaksi blockchain (Bitcoin, Base, Arweave, Steem, atau Blurt), sebagai bukti bahwa konten itu sudah ada pada waktu tersebut. Tidak menyimpan atau mengumumkan apa pun. Lihat [Bukti & Penyimpanan](11-EvidenceAndStorage.md). |
+| **Bukti / Penjangkaran** *(Eksperimental, kecuali di Arweave)* | Cap notaris | Hash konten yang ditulis ke dalam transaksi blockchain (Bitcoin, Base, Arweave, Steem, atau Blurt), sebagai bukti bahwa konten itu sudah ada pada waktu tersebut. Tidak menyimpan atau mengumumkan apa pun. Lihat [Bukti & Penyimpanan](11-EvidenceAndStorage.md). |
 | **Komentar** | Ulasan pembaca | Komentar yang dapat dilekatkan siapa pun yang sudah masuk pada sebuah publikasi, masing-masing ditandatangani oleh pemberi komentar, bukan oleh penerbit. Lihat [Komentar](#komentar). |
 
 Jadi Anda membuat publikasi; lalu, jika mau, menyimpan kontennya,
@@ -211,8 +212,8 @@ Di bawahnya, dua bagian terlipat:
   IPFS**, **Jangkarkan di Steem**), dengan setiap penyedia lain terlipat di
   bawah **Opsi … lain**. Tanpa penyedia tersimpan yang dapat dipakai,
   semua opsi ditampilkan. Steem, Blurt, dan pinning IPFS jarak jauh ditandai
-  **Eksperimental** di mana pun ditawarkan, begitu pula seluruh blok
-  **Bukti / Penjangkaran**. Lihat
+  **Eksperimental** di mana pun ditawarkan, begitu pula setiap jenis
+  penjangkaran kecuali Arweave. Lihat
   [Mendistribusikan dari halaman Publikasi](#mendistribusikan-dari-halaman-publikasi)
   dan [Bukti & Penyimpanan](11-EvidenceAndStorage.md).
 - **Detail**, dalam empat tab:
@@ -220,7 +221,7 @@ Di bawahnya, dua bagian terlipat:
 | Tab | Isinya |
 |---|---|
 | **Snapshot** | [Snapshot Lokal](#snapshot-lokal): apa yang disimpan perangkat ini, dan cara mendapatkannya. |
-| **Desentralisasi & Bukti** *(Eksp.)* | [Desentralisasi](#desentralisasi-sekilas), [daftar bukti](11-EvidenceAndStorage.md#daftar-bukti), dan langkah-langkah transaksi Bitcoin dan Base. |
+| **Desentralisasi & Bukti** | [Desentralisasi](#desentralisasi-sekilas), [daftar bukti](11-EvidenceAndStorage.md#daftar-bukti), dan langkah-langkah transaksi Bitcoin dan Base (Eksperimental). |
 | **Penempatan & IPFS** *(Eksp.)* | Daftar [Penempatan Snapshot](11-EvidenceAndStorage.md#penempatan-snapshot) dan [Penerbitan IPFS](11-EvidenceAndStorage.md#penerbitan-ipfs). |
 | **Riwayat** *(Eksp.)* | **Tampilkan Linimasa Lintas Domain**: setiap pengamatan IPFS dan Bitcoin untuk publikasi ini, berurutan menurut waktu. |
 
@@ -470,7 +471,7 @@ publikasi, dan hash kontennya.
 
 ## Desentralisasi sekilas
 
-*Eksperimental.* Di tab **Desentralisasi & Bukti**, begitu sebuah publikasi
+Di tab **Desentralisasi & Bukti**, begitu sebuah publikasi
 memiliki jangkar atau penempatan, **Desentralisasi** membandingkan
 [Bukti Eksternal](11-EvidenceAndStorage.md#bukti-eksternal) dan
 [Penempatan Snapshot](11-EvidenceAndStorage.md#penempatan-snapshot):

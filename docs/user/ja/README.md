@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 0137e01d1cbcedd8 -->
+<!-- translation-of: docs/user/README.md source-hash: d9d89f42b403877b -->
 # ForkBuild ユーザードキュメント
 
 <!-- languages -->
@@ -51,7 +51,8 @@
     [作品を配信する](Distribution.md#各ネットワークに必要なもの)
     にまとめてあります。
 11. **[証拠とストレージ](11-EvidenceAndStorage.md)** — IPFS
-    や Arweave へのコンテンツの保存と、*試験的* な外部証拠、Bitcoin と
+    や Arweave へのコンテンツの保存、Arweave でのアンカリング、*試験的* な
+    そのほかの外部証拠、Bitcoin と
     Base のウォレットパイプライン、スナップショットの配置、リモート IPFS
     ピン留め、Steem、Blurt。
     これらの関係は [作品を配信する](Distribution.md)で

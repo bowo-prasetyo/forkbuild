@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 62d70aa574353cac -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 2c5fc47e7e82ef51 -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -8,13 +8,14 @@
 > **Teilweise experimentell.** Die Seite Veröffentlichungen ist eine
 > reguläre Funktion: ihre Liste und Status, das Entfernen unbrauchbarer
 > Veröffentlichungen, das Ankündigen auf Nostr oder Arweave, das Speichern
-> auf IPFS oder Arweave und alles im Reiter **Snapshot** einer Karte. Der
-> Rest ist **Experimentell**: Er funktioniert, kann sich aber in einer
-> späteren Version ändern oder entfernt werden, und was er erzeugt, wird
+> auf IPFS oder Arweave, das Verankern auf Arweave sowie die Reiter
+> **Snapshot** und **Dezentralisierung & Nachweise** einer Karte. Der Rest
+> ist **Experimentell**: Er funktioniert, kann sich aber in einer späteren
+> Version ändern oder entfernt werden, und was er erzeugt, wird
 > möglicherweise nicht übernommen. Die Seite kennzeichnet jeden solchen
 > Teil mit einem Abzeichen **Experimentell** (**Exp.** auf einem Reiter):
-> jede Art der Verankerung, die Wallets, Steem, Blurt, entferntes
-> IPFS-Pinning, die Reiter **Dezentralisierung & Nachweise**,
+> jede Art der Verankerung außer Arweave, die Wallets und ihre Schritte
+> für Bitcoin und Base, Steem, Blurt, entferntes IPFS-Pinning, die Reiter
 > **Platzierungen & IPFS** und **Verlauf** sowie den ganzen Bereich
 > **Wallet, Archiv & Herausgeberwerkzeuge**. Die Anleitungen
 > [11](11-EvidenceAndStorage.md) und [12](12-ArchiveAndLeaderboards.md)
@@ -96,7 +97,7 @@ erforderlich:
 | **Snapshot** | ein gedrucktes Exemplar | Eine gespeicherte Kopie des Inhalts einer Veröffentlichung, etwa der Steine einer Welt, die andere holen und gegen ihren Hash prüfen können. Siehe [Lokaler Snapshot](#lokaler-snapshot). |
 | **Platzierung** | das Regal, in dem das Exemplar steht | Ein signierter Nachweis, wo ein Bauwerk in der Welt steht. Eine Geteilte Welt kann mehrere haben. Siehe [Platzieren oder forken](03-WorldView.md#platzieren-oder-forken). |
 | **Ankündigung / Entdeckung** | ein Eintrag im Bibliothekskatalog | Ein kleiner signierter Hinweis auf Nostr, Arweave, Steem oder Blurt, dass die Veröffentlichung oder der Snapshot existiert und wo die Kopie ist, damit Menschen, die nicht mit Ihnen verbunden sind, sie finden können. Siehe [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung). |
-| **Nachweis / Verankerung** *(experimentell)* | ein Notarstempel | Der Hash des Inhalts, in eine Blockchain-Transaktion geschrieben (Bitcoin, Base, Arweave, Steem oder Blurt), als Nachweis, dass er zu diesem Zeitpunkt existierte. Sie speichert und kündigt nichts an. Siehe [Nachweise & Speicher](11-EvidenceAndStorage.md). |
+| **Nachweis / Verankerung** *(experimentell, außer auf Arweave)* | ein Notarstempel | Der Hash des Inhalts, in eine Blockchain-Transaktion geschrieben (Bitcoin, Base, Arweave, Steem oder Blurt), als Nachweis, dass er zu diesem Zeitpunkt existierte. Sie speichert und kündigt nichts an. Siehe [Nachweise & Speicher](11-EvidenceAndStorage.md). |
 | **Kommentare** | Leserrezensionen | Kommentare, die jeder Angemeldete an eine Veröffentlichung hängen kann, jeweils vom Kommentierenden signiert, nicht vom Herausgeber. Siehe [Kommentare](#kommentare). |
 
 Sie erstellen also eine Veröffentlichung; dann können Sie, wenn Sie
@@ -222,7 +223,7 @@ Darunter zwei eingeklappte Abschnitte:
   ist. Ohne gespeicherten Anbieter, den sie nutzen kann, erscheinen
   stattdessen alle Optionen. Steem, Blurt und entferntes IPFS-Pinning sind
   überall, wo sie angeboten werden, als **Experimentell** gekennzeichnet,
-  ebenso der ganze Block **Nachweis / Verankerung**. Siehe
+  ebenso jede Art der Verankerung außer Arweave. Siehe
   [Von der Seite Veröffentlichungen verteilen](#von-der-seite-veröffentlichungen-verteilen)
   und [Nachweise & Speicher](11-EvidenceAndStorage.md).
 - **Details**, in vier Reitern:
@@ -230,7 +231,7 @@ Darunter zwei eingeklappte Abschnitte:
 | Reiter | Was dort ist |
 |---|---|
 | **Snapshot** | [Lokaler Snapshot](#lokaler-snapshot): was dieses Gerät besitzt und wie man es bekommt. |
-| **Dezentralisierung & Nachweise** *(Exp.)* | [Dezentralisierung](#dezentralisierung-auf-einen-blick), die [Nachweisliste](11-EvidenceAndStorage.md#die-nachweisliste) und die Transaktionsschritte für Bitcoin und Base. |
+| **Dezentralisierung & Nachweise** | [Dezentralisierung](#dezentralisierung-auf-einen-blick), die [Nachweisliste](11-EvidenceAndStorage.md#die-nachweisliste) und die Transaktionsschritte für Bitcoin und Base (experimentell). |
 | **Platzierungen & IPFS** *(Exp.)* | Die Liste der [Snapshot-Platzierungen](11-EvidenceAndStorage.md#snapshot-platzierungen) und [Veröffentlichen auf IPFS](11-EvidenceAndStorage.md#veröffentlichen-auf-ipfs). |
 | **Verlauf** *(Exp.)* | **Domänenübergreifende Zeitleiste zeigen**: jede IPFS- und Bitcoin-Beobachtung zu dieser Veröffentlichung in zeitlicher Reihenfolge. |
 
@@ -482,7 +483,7 @@ Sie auf einen für sein Ergebnis, die Veröffentlichung und den Inhalts-Hash.
 
 ## Dezentralisierung auf einen Blick
 
-*Experimentell.* Im Reiter **Dezentralisierung & Nachweise** vergleicht
+Im Reiter **Dezentralisierung & Nachweise** vergleicht
 **Dezentralisierung**, sobald eine Veröffentlichung einen Anker oder eine
 Platzierung hat,
 [Externe Nachweise](11-EvidenceAndStorage.md#externe-nachweise) und

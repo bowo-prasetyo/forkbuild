@@ -4,13 +4,15 @@
 **English** · [Deutsch](de/11-EvidenceAndStorage.md) · [Español](es/11-EvidenceAndStorage.md) · [Français](fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](id/11-EvidenceAndStorage.md) · [日本語](ja/11-EvidenceAndStorage.md) · [한국어](ko/11-EvidenceAndStorage.md) · [Português (Brasil)](pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
 
-> **Mostly experimental.** Storing content on IPFS or Arweave from a card's
-> **Distribution → Content** block ([Creating a placement](#creating-a-placement)
-> and [Using a preferred provider](#using-a-preferred-provider)) is a regular
-> feature. Everything else here is **Experimental**: external evidence and
-> both wallet pipelines, the Snapshot Placements list, remote IPFS pinning,
-> and Steem. It may change or be removed in a later version, and what it
-> produces may not carry over. The page marks these parts with an
+> **Mostly experimental.** Storing content on IPFS or Arweave from a
+> card's **Distribution → Content** block
+> ([Creating a placement](#creating-a-placement) and
+> [Using a preferred provider](#using-a-preferred-provider)) is a regular
+> feature, and so are Arweave anchors and the evidence list. Everything
+> else here is **Experimental**: the other kinds of external evidence and
+> both wallet pipelines, the Snapshot Placements list, remote IPFS
+> pinning, and Steem. It may change or be removed in a later version, and
+> what it produces may not carry over. The page marks these parts with an
 > **Experimental** badge.
 
 Every card on the **Publications** page (see
@@ -39,7 +41,8 @@ nothing about when the claim was first made.
 
 ## External Evidence
 
-*Experimental.*
+Arweave anchors and the evidence list are a regular feature. Bitcoin,
+Base, Steem and Blurt anchors are *Experimental*, and each is marked so.
 
 An anchor listed here only means this device holds a validly signed record
 saying "this was recorded externally." Whether the recording really
@@ -50,7 +53,7 @@ when you expand the list.
 ### Creating evidence
 
 In a publication card's **Distribution** section, the **Proof / Anchoring**
-block (marked **Experimental**) has a card per kind of evidence one click
+block (Steem and Blurt marked **Experimental**) has a card per kind of evidence one click
 can create, each with its own button: **Create Arweave Anchor** and
 **Create Steem Anchor**. Bitcoin and Base anchors have no such card: they're
 made through their wallet steps in the card's **Details → Decentralization

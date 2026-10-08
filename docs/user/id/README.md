@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 0137e01d1cbcedd8 -->
+<!-- translation-of: docs/user/README.md source-hash: d9d89f42b403877b -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
@@ -50,8 +50,8 @@ dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
     Apa yang dibutuhkan setiap jaringan dirangkum di
     [Mendistribusikan Karya Anda](Distribution.md#apa-yang-dibutuhkan-setiap-jaringan).
 11. **[Bukti & Penyimpanan](11-EvidenceAndStorage.md)**
-    — menyimpan konten di IPFS atau Arweave, dan yang *eksperimental*:
-    bukti eksternal, alur dompet Bitcoin dan Base, penempatan snapshot,
+    — menyimpan konten di IPFS atau Arweave, penjangkaran di Arweave, dan
+    yang *eksperimental*: bukti eksternal lainnya, alur dompet Bitcoin dan Base, penempatan snapshot,
     pinning IPFS jarak jauh, Steem, dan Blurt.
     [Mendistribusikan Karya Anda](Distribution.md)
     menunjukkan bagaimana semuanya saling terkait.

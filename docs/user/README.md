@@ -47,7 +47,8 @@ top-level [docs/](..) folder.
     What each network needs is summed up in
     [Distributing Your Work](Distribution.md#what-each-network-needs).
 11. **[Evidence & Storage](11-EvidenceAndStorage.md)** — storing content
-    on IPFS or Arweave, and, *experimental*, external evidence, the Bitcoin
+    on IPFS or Arweave, anchoring on Arweave, and, *experimental*, other
+    external evidence, the Bitcoin
     and Base wallet pipelines, snapshot placements, remote IPFS pinning,
     Steem and Blurt. [Distributing Your Work](Distribution.md) shows how these fit
     together.

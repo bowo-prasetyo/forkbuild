@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: b4db56909f354d27 -->
 # 10 — Paramètres réseau
 
 <!-- languages -->
@@ -21,7 +21,7 @@ Pour ce que chaque serveur apprend sur vous, voir
 |---|---|---|
 | **Fournisseur de contenu** | `/settings/content-provider` | Où **Stocker sur …** et **Utiliser le fournisseur préféré** stockent le nouveau contenu, et vers quel nœud IPFS il va — voir [ci-dessous](#fournisseur-de-contenu) |
 | **Fournisseur d’annonce / de découverte** | `/settings/announcement-discovery-provider` | Où vont vos annonces par défaut : Nostr, Arweave, Steem ou Blurt — voir [ci-dessous](#fournisseur-dannonce--de-découverte) |
-| **Fournisseur de Preuve / Ancrage** *(expérimental)* | `/settings/anchor-provider` | Où **Ancrer sur …** ancre — voir [ci-dessous](#fournisseur-de-preuve--ancrage) |
+| **Fournisseur de Preuve / Ancrage** | `/settings/anchor-provider` | Où **Ancrer sur …** ancre — voir [ci-dessous](#fournisseur-de-preuve--ancrage) |
 | **Passerelle Arweave** | `/settings/arweave-gateway` | Passerelles pour lire le contenu Arweave — voir [ci-dessous](#passerelle-arweave) |
 | **Passerelle IPFS** | `/settings/ipfs-gateway` | Passerelles pour lire le contenu IPFS — voir [ci-dessous](#passerelle-ipfs) |
 | **Endpoint Bitcoin** *(expérimental)* | `/settings/bitcoin-esplora` | Le service qu’utilise l’ancrage Bitcoin — voir [ci-dessous](#endpoint-bitcoin) |
@@ -107,9 +107,9 @@ commentaire à côté de **Publier le commentaire**.
 
 ## Fournisseur de Preuve / Ancrage
 
-*Expérimental.* Choisissez où **Ancrer sur …** (le premier bouton du bloc
+Choisissez où **Ancrer sur …** (le premier bouton du bloc
 **Preuve / Ancrage** d’une publication) crée des preuves externes :
-**Arweave**, **Bitcoin**, **Blurt** ou **Steem**, selon ce que cet appareil a
+**Arweave**, **Bitcoin** *(expérimental)*, **Blurt** *(expérimental)* ou **Steem** *(expérimental)*, selon ce que cet appareil a
 enregistré. Base n’est jamais proposé, car chaque ancre Base exige que
 vous examiniez et signiez une transaction de portefeuille. Avec Bitcoin, il
 n’y a pas de bouton **Ancrer sur …** : le bloc affiche toutes les options

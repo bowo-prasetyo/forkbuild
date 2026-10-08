@@ -4377,3 +4377,31 @@ times, and a Snapshot State placements line already shown on the Placements tab.
   this visit).
   `tests/SortOptionsByLabel.test.js` now expects one peer picker, and the new list, also through the sorted
   `retrievalPeerOptions`.
+
+## Arweave anchoring and the Decentralization & Evidence tab are regular features (unnumbered, 2026-10-08)
+
+**Anchoring on Arweave graduates, and so does a card's Decentralization & Evidence tab; the Proof / Anchoring
+Provider page is no longer Experimental as a whole.** Arweave anchors are signed by the same wallet signer
+(`arweaveHostSigner`) and posted to and read from the same gateway (`POST /tx`, `GET /<id>`) as Arweave storage,
+which graduated on 2026-09-28; what is specific to anchoring, the payload and the proof check, has its own tests
+(`tests/ArweaveAnchorProviderImplementation.test.js`). The tab's Decentralization summary, Synchronize with Peers and
+Replica Knowledge, and the External Evidence list with Discover from Peers, rest on the anchor and placement peer
+exchanges and the knowledge store the rest of the page already uses. What stays Experimental there is per anchor type
+(Bitcoin, Base, Steem, Blurt) and the Bitcoin and Base wallet steps.
+
+- `EXPERIMENTAL_ANCHOR_TYPES` no longer lists `arweave`. With Arweave offered, the Proof / Anchoring block loses its
+  block-wide badge (`everyAnchorTypeExperimental()`), its Arweave card is unmarked, and Steem and Blurt keep theirs.
+- The Decentralization & Evidence tab loses its **Exp.** badge. In its evidence list each anchor of an Experimental
+  type is badged; the Bitcoin transaction, Base transaction and Base review cards are badged.
+- `/settings/anchor-provider` loses `meta: { experimental: true }`, and Network Settings its badge. The options say
+  which are Experimental, as Steem and Blurt already did: Bitcoin is now **Bitcoin (Experimental; anchored through its
+  wallet steps)** (`anchorProviderSettingsView.bitcoinExperimental`, in every language).
+- Docs, in every language: guide 09 (the intro, the Proof / Anchoring row, the Distribution note, the Details table and
+  Decentralization at a glance), 10 (the Proof / Anchoring Provider row and section) and 11 (the intro, External
+  Evidence and Creating evidence), and the user guide's README; the README and docs/Architecture.md.
+- Tests: `tests/PublicationsArweaveAnchoringBrowser.test.js` (the block and the Arweave card unmarked, Steem marked;
+  the tab unmarked, its summary shown, an Arweave anchor unmarked and a Steem one marked in the evidence list);
+  `tests/PublicationsPageExperimentalParts.test.js`, `tests/PublicationsPageLayoutBrowser.test.js` and
+  `tests/NetworkSettingsSharedForms.test.js` follow.
+- Not done: no Arweave anchor was made on the live network from the development environment, which can't reach
+  arweave.net. Make one with Wander before the next release.

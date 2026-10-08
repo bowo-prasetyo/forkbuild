@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: b4db56909f354d27 -->
 # 10 — ネットワーク設定
 
 <!-- languages -->
@@ -20,7 +20,7 @@
 |---|---|---|
 | **コンテンツサービス** | `/settings/content-provider` | **…に保存** と **優先するサービスを使う** が新しいコンテンツを保存する場所と、送り先の IPFS ノード — [下記](#コンテンツサービス) を参照 |
 | **告知 / 発見サービス** | `/settings/announcement-discovery-provider` | 告知の既定の送り先: Nostr、Arweave、Steem、Blurt — [下記](#告知--発見サービス) を参照 |
-| **証明 / アンカリングサービス** *（試験的）* | `/settings/anchor-provider` | **…にアンカー** がアンカーする場所 — [下記](#証明--アンカリングサービス) を参照 |
+| **証明 / アンカリングサービス** | `/settings/anchor-provider` | **…にアンカー** がアンカーする場所 — [下記](#証明--アンカリングサービス) を参照 |
 | **Arweaveゲートウェイ** | `/settings/arweave-gateway` | Arweave のコンテンツを読むためのゲートウェイ — [下記](#arweaveゲートウェイ) を参照 |
 | **IPFSゲートウェイ** | `/settings/ipfs-gateway` | IPFS のコンテンツを読むためのゲートウェイ — [下記](#ipfsゲートウェイ) を参照 |
 | **Bitcoinエンドポイント** *（試験的）* | `/settings/bitcoin-esplora` | Bitcoin のアンカリングが使うサービス — [下記](#bitcoinエンドポイント) を参照 |
@@ -99,9 +99,9 @@
 
 ## 証明 / アンカリングサービス
 
-*試験的。* **…にアンカー**（公開物の **証明 / アンカリング** ブロックの
+**…にアンカー**（公開物の **証明 / アンカリング** ブロックの
 最初のボタン）が外部証拠を作る場所を、このデバイスに登録されている
-**Arweave**、**Bitcoin**、**Blurt**、**Steem** から選びます。Base のアンカーには
+**Arweave**、**Bitcoin** *（試験的）*、**Blurt** *（試験的）*、**Steem** *（試験的）* から選びます。Base のアンカーには
 必ずウォレットのトランザクションを確認して署名する必要があるので、Base は
 選択肢に出ません。Bitcoin を選ぶと **…にアンカー** ボタンはなく、
 ブロックにはすべての選択肢が表示され、ウォレットの手順が案内されます。

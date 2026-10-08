@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: b4db56909f354d27 -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
@@ -20,7 +20,7 @@ Was jeder Server über Sie erfährt, steht unter [Datenschutz](Privacy.md).
 |---|---|---|
 | **Inhaltsanbieter** | `/settings/content-provider` | Wo **Auf … speichern** und **Bevorzugten Anbieter verwenden** neue Inhalte speichern und an welchen IPFS-Knoten sie gehen — siehe [unten](#inhaltsanbieter) |
 | **Anbieter für Ankündigung / Entdeckung** | `/settings/announcement-discovery-provider` | Wohin Ihre Ankündigungen standardmäßig gehen: Nostr, Arweave, Steem oder Blurt — siehe [unten](#anbieter-für-ankündigung--entdeckung) |
-| **Nachweis-/Verankerungsanbieter** *(experimentell)* | `/settings/anchor-provider` | Wo **Auf … verankern** verankert — siehe [unten](#nachweis-verankerungsanbieter) |
+| **Nachweis-/Verankerungsanbieter** | `/settings/anchor-provider` | Wo **Auf … verankern** verankert — siehe [unten](#nachweis-verankerungsanbieter) |
 | **Arweave-Gateway** | `/settings/arweave-gateway` | Gateways zum Lesen von Arweave-Inhalten — siehe [unten](#arweave-gateway) |
 | **IPFS-Gateway** | `/settings/ipfs-gateway` | Gateways zum Lesen von IPFS-Inhalten — siehe [unten](#ipfs-gateway) |
 | **Bitcoin-Endpunkt** *(experimentell)* | `/settings/bitcoin-esplora` | Der Dienst, den die Bitcoin-Verankerung nutzt — siehe [unten](#bitcoin-endpunkt) |
@@ -105,9 +105,9 @@ Kommentar weiterhin ändern.
 
 ## Nachweis-/Verankerungsanbieter
 
-*Experimentell.* Wählen Sie, wo **Auf … verankern** (die erste
+Wählen Sie, wo **Auf … verankern** (die erste
 Schaltfläche im Block **Nachweis / Verankerung** einer Veröffentlichung)
-externe Nachweise erstellt: **Arweave**, **Bitcoin**, **Blurt** oder **Steem**, je
+externe Nachweise erstellt: **Arweave**, **Bitcoin** *(experimentell)*, **Blurt** *(experimentell)* oder **Steem** *(experimentell)*, je
 nachdem, was dieses Gerät registriert hat. Base wird nie angeboten, weil
 jeder Base-Anker erfordert, dass Sie eine Wallet-Transaktion prüfen und
 signieren. Mit Bitcoin gibt es keine Schaltfläche **Auf … verankern**: Der

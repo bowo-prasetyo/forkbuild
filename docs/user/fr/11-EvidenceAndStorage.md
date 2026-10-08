@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 2699bf9fa2001089 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 441c5aa921f30b41 -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
@@ -9,8 +9,9 @@
 > le bloc **Distribution → Contenu** d’une carte
 > ([Créer un placement](#créer-un-placement) et
 > [Utiliser un fournisseur préféré](#utiliser-un-fournisseur-préféré)) est
-> une fonctionnalité ordinaire. Tout le reste ici est **Expérimental** :
-> les preuves externes et les deux parcours de portefeuille, la liste des
+> une fonctionnalité ordinaire, tout comme les ancres Arweave et la liste
+> des preuves. Tout le reste ici est **Expérimental** : les autres types
+> de preuves externes et les deux parcours de portefeuille, la liste des
 > Placements de Snapshot, l’épinglage IPFS distant et Steem. Cela peut
 > changer ou être retiré dans une version ultérieure, et ce que cela
 > produit pourrait ne pas être conservé. La page marque ces parties d’un
@@ -45,7 +46,9 @@ revendication a été faite pour la première fois.
 
 ## Preuves externes
 
-*Expérimental.*
+Les ancres Arweave et la liste des preuves sont une fonctionnalité
+ordinaire. Les ancres Bitcoin, Base, Steem et Blurt sont *Expérimentales*,
+et chacune est marquée ainsi.
 
 Une ancre listée ici signifie seulement que cet appareil détient un
 enregistrement valablement signé disant « ceci a été enregistré à
@@ -57,7 +60,7 @@ ni quand vous dépliez la liste.
 ### Créer des preuves
 
 Dans la section **Distribution** d’une carte de publication, le bloc
-**Preuve / Ancrage** (marqué **Expérimental**) a une carte par type de
+**Preuve / Ancrage** (Steem et Blurt marqués **Expérimental**) a une carte par type de
 preuve qu’un clic peut créer, chacune avec son propre bouton : **Créer une
 ancre Arweave** et **Créer une ancre Steem**. Les ancres Bitcoin et Base
 n’ont pas de telle carte : elles se créent via leurs étapes de

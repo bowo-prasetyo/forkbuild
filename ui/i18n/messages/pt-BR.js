@@ -4104,6 +4104,7 @@ export default Object.freeze({
     'notificationHistoryPanel.notificationsCouldNotBeLoaded': 'Não foi possível carregar as notificações.',
     'anchorProviderSettingsView.steemExperimentalAttestedBySteem': 'Steem (experimental; atestado pelas testemunhas do Steem, mais fraco que o Bitcoin)',
     'anchorProviderSettingsView.blurtExperimentalAttestedByBlurt': 'Blurt (Experimental; atestado pelas testemunhas do Blurt, mais fraco que o Bitcoin)',
+    'anchorProviderSettingsView.bitcoinExperimental': 'Bitcoin (experimental; ancorado pelas etapas da carteira)',
     'chatView.callDeclined': 'Chamada recusada.',
     'chatView.theyReAlreadyOnAnother': 'A pessoa já está em outra chamada.',
     'chatView.noAnswer': 'Sem resposta.',

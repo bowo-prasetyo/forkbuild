@@ -1291,7 +1291,7 @@ export default {
                             <button type="button" role="tab" :aria-selected="entry.detailsTab === 'evidence'"
                                     :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'evidence' }]"
                                     @click="setEntryDetailsTab(entry, 'evidence')">
-                                {{ t('publications.decentralizationEvidence') }}<span class="experimental-badge" :title="t('publications.experimentalMayChangeOrBe')">{{ t('publications.exp') }}</span>
+                                {{ t('publications.decentralizationEvidence') }}
                             </button>
                             <button type="button" role="tab" :aria-selected="entry.detailsTab === 'placements'"
                                     :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'placements' }]"

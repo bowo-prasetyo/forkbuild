@@ -43,12 +43,14 @@ import { displayText, t } from '../i18n/i18n.js';
 // ONLY PROOF_AND_ANCHORING. This view hardcodes `RoleProviderRole.PROOF_AND_ANCHORING`
 // — there is no role selector, and no Content or Discovery section here.
 //
-// `bitcoin-op-return` needs a friendly name here, and `steem` and `blurt`
-// say what backs them. `arweave` already title-cases to "Arweave" through
-// describeRoleProviderPreferenceSettings()'s own fallback, and `base` is
-// never offered (see above).
+// The page is a regular feature; the options that are still Experimental say
+// so in their labels (a <select> can't hold a badge): Bitcoin, anchored only
+// through its wallet steps, and `steem` and `blurt`, which also say what backs
+// them. `arweave` already title-cases to "Arweave" through
+// describeRoleProviderPreferenceSettings()'s own fallback, and `base` is never
+// offered (see above).
 const ANCHOR_PROVIDER_OPTION_LABELS = {
-    'bitcoin-op-return': 'Bitcoin',
+    'bitcoin-op-return': t('anchorProviderSettingsView.bitcoinExperimental'),
     steem: t('anchorProviderSettingsView.steemExperimentalAttestedBySteem'),
     blurt: t('anchorProviderSettingsView.blurtExperimentalAttestedByBlurt')
 };

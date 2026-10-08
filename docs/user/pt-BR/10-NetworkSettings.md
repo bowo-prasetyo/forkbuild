@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: b4db56909f354d27 -->
 # 10 — Configurações de rede
 
 <!-- languages -->
@@ -20,7 +20,7 @@ Para o que cada servidor fica sabendo sobre você, veja
 |---|---|---|
 | **Provedor de conteúdo** | `/settings/content-provider` | Onde **Armazenar em …** e **Usar o provedor preferido** guardam conteúdo novo, e para qual nó IPFS ele vai — veja [abaixo](#provedor-de-conteúdo) |
 | **Provedor de anúncio / descoberta** | `/settings/announcement-discovery-provider` | Para onde vão seus anúncios por padrão: Nostr, Arweave, Steem ou Blurt — veja [abaixo](#provedor-de-anúncio--descoberta) |
-| **Provedor de prova / ancoragem** *(experimental)* | `/settings/anchor-provider` | Onde **Ancorar em …** ancora — veja [abaixo](#provedor-de-prova--ancoragem) |
+| **Provedor de prova / ancoragem** | `/settings/anchor-provider` | Onde **Ancorar em …** ancora — veja [abaixo](#provedor-de-prova--ancoragem) |
 | **Gateway do Arweave** | `/settings/arweave-gateway` | Gateways para ler conteúdo do Arweave — veja [abaixo](#gateway-do-arweave) |
 | **Gateway IPFS** | `/settings/ipfs-gateway` | Gateways para ler conteúdo IPFS — veja [abaixo](#gateway-ipfs) |
 | **Endpoint do Bitcoin** *(experimental)* | `/settings/bitcoin-esplora` | O serviço que a ancoragem no Bitcoin usa — veja [abaixo](#endpoint-do-bitcoin) |
@@ -98,9 +98,9 @@ trocá-la em um comentário ao lado de **Publicar comentário**.
 
 ## Provedor de prova / ancoragem
 
-*Experimental.* Escolha onde **Ancorar em …** (o primeiro botão do bloco
+Escolha onde **Ancorar em …** (o primeiro botão do bloco
 **Prova / ancoragem** de uma publicação) cria evidências externas:
-**Arweave**, **Bitcoin**, **Blurt** ou **Steem**, conforme o que este dispositivo tiver
+**Arweave**, **Bitcoin** *(experimental)*, **Blurt** *(experimental)* ou **Steem** *(experimental)*, conforme o que este dispositivo tiver
 registrado. A Base nunca aparece, porque toda âncora na Base exige que você
 revise e assine uma transação na carteira. Com o Bitcoin escolhido, não há
 botão **Ancorar em …**: o bloco mostra todas as opções e aponta para os

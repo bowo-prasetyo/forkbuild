@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 2699bf9fa2001089 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 441c5aa921f30b41 -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
@@ -9,11 +9,12 @@
 > pelo bloco **Distribuição → Conteúdo** de um cartão
 > ([Criando um posicionamento](#criando-um-posicionamento) e
 > [Usando um provedor preferido](#usando-um-provedor-preferido)) é um
-> recurso comum. Todo o resto aqui é **Experimental**: as evidências externas
-> e os dois fluxos de carteira, a lista de Posicionamentos de snapshot, o
-> pinning remoto no IPFS e o Steem. Pode mudar ou ser removido numa versão
-> futura, e o que produz pode não ser aproveitado depois. A página marca
-> essas partes com um selo **Experimental**.
+> recurso comum, assim como as âncoras no Arweave e a lista de evidências.
+> Todo o resto aqui é **Experimental**: os outros tipos de evidência
+> externa e os dois fluxos de carteira, a lista de Posicionamentos de
+> snapshot, o pinning remoto no IPFS e o Steem. Pode mudar ou ser removido
+> numa versão futura, e o que produz pode não ser aproveitado depois. A
+> página marca essas partes com um selo **Experimental**.
 
 Todo cartão da página **Publicações** (veja
 [Publicações e evidências externas](09-PublicationsAndEvidence.md)) tem
@@ -43,7 +44,9 @@ vez.
 
 ## Evidências externas
 
-*Experimental.*
+As âncoras no Arweave e a lista de evidências são um recurso comum. As
+âncoras no Bitcoin, na Base, no Steem e no Blurt são *Experimentais*, e
+cada uma é marcada assim.
 
 Uma âncora listada aqui só quer dizer que este dispositivo tem um registro
 assinado de forma válida dizendo "isto foi registrado externamente". Se o
@@ -54,7 +57,7 @@ carregar, nem quando chegam evidências, nem quando você expande a lista.
 ### Criando evidências
 
 Na seção **Distribuição** de um cartão de publicação, o bloco **Prova /
-ancoragem** (marcado como **Experimental**) tem um cartão para cada tipo de
+ancoragem** (com o Steem e o Blurt marcados como **Experimental**) tem um cartão para cada tipo de
 evidência que um clique consegue criar, cada um com seu botão: **Criar
 âncora Arweave** e **Criar âncora Steem**. As âncoras no Bitcoin e na Base
 não têm um cartão assim: elas são feitas pelos passos da carteira na guia

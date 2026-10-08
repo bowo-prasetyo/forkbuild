@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 2699bf9fa2001089 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 441c5aa921f30b41 -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
@@ -9,10 +9,11 @@
 > dari blok **Distribusi → Konten** pada sebuah kartu
 > ([Membuat penempatan](#membuat-penempatan) dan
 > [Menggunakan penyedia pilihan](#menggunakan-penyedia-pilihan)) adalah
-> fitur biasa. Semua hal lain di sini **Eksperimental**: bukti eksternal
-> dan kedua alur dompet, daftar Penempatan Snapshot, pinning IPFS jarak
-> jauh, dan Steem. Semuanya dapat berubah atau dihapus di versi berikutnya,
-> dan apa yang dihasilkannya mungkin tidak terbawa. Halaman ini menandai
+> fitur biasa, begitu pula jangkar Arweave dan daftar bukti. Semua hal
+> lain di sini **Eksperimental**: jenis bukti eksternal lainnya dan kedua
+> alur dompet, daftar Penempatan Snapshot, pinning IPFS jarak jauh, dan
+> Steem. Semuanya dapat berubah atau dihapus di versi berikutnya, dan apa
+> yang dihasilkannya mungkin tidak terbawa. Halaman ini menandai
 > bagian-bagian itu dengan lencana **Eksperimental**.
 
 Setiap kartu di halaman **Publikasi** (lihat
@@ -43,7 +44,9 @@ klaim itu pertama kali dibuat.
 
 ## Bukti Eksternal
 
-*Eksperimental.*
+Jangkar Arweave dan daftar bukti adalah fitur biasa. Jangkar Bitcoin,
+Base, Steem, dan Blurt *Eksperimental*, dan masing-masing ditandai
+demikian.
 
 Jangkar yang tercantum di sini hanya berarti perangkat ini menyimpan
 catatan yang ditandatangani dengan sah yang menyatakan "ini dicatat secara
@@ -55,7 +58,7 @@ tidak saat Anda membuka daftarnya.
 ### Membuat bukti
 
 Di bagian **Distribusi** sebuah kartu publikasi, blok **Bukti /
-Penjangkaran** (ditandai **Eksperimental**) memiliki satu kartu untuk setiap
+Penjangkaran** (Steem dan Blurt ditandai **Eksperimental**) memiliki satu kartu untuk setiap
 jenis bukti yang dapat dibuat dengan satu klik, masing-masing dengan
 tombolnya sendiri: **Buat Jangkar Arweave** dan **Buat Jangkar Steem**.
 Jangkar Bitcoin dan Base tidak memiliki kartu seperti itu: keduanya dibuat

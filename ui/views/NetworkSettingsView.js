@@ -31,7 +31,7 @@ export default {
                 </li>
                 <li>
                     <router-link to="/settings/anchor-provider" class="network-settings-link">
-                        <span class="network-settings-link-title">{{ t('networkSettingsView.proofAnchoringProvider') }} <span class="experimental-badge">{{ t('networkSettingsView.experimental') }}</span></span>
+                        <span class="network-settings-link-title">{{ t('networkSettingsView.proofAnchoringProvider') }}</span>
                         <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.preferredSubstrateBitcoinOrArweave') }}</span>
                     </router-link>
                 </li>

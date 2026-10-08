@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 66ab8cb06b913168 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: b4db56909f354d27 -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
@@ -21,7 +21,7 @@ Untuk apa yang diketahui setiap server tentang Anda, lihat
 |---|---|---|
 | **Penyedia Konten** | `/settings/content-provider` | Tempat **Simpan di …** dan **Gunakan Penyedia Pilihan** menyimpan konten baru, dan node IPFS tujuannya — lihat [di bawah](#penyedia-konten) |
 | **Penyedia Pengumuman / Penemuan** | `/settings/announcement-discovery-provider` | Ke mana pengumuman Anda dikirim secara bawaan: Nostr, Arweave, Steem, atau Blurt — lihat [di bawah](#penyedia-pengumuman--penemuan) |
-| **Penyedia Bukti / Penjangkaran** *(eksperimental)* | `/settings/anchor-provider` | Tempat **Jangkarkan di …** menjangkarkan — lihat [di bawah](#penyedia-bukti--penjangkaran) |
+| **Penyedia Bukti / Penjangkaran** | `/settings/anchor-provider` | Tempat **Jangkarkan di …** menjangkarkan — lihat [di bawah](#penyedia-bukti--penjangkaran) |
 | **Gateway Arweave** | `/settings/arweave-gateway` | Gateway untuk membaca konten Arweave — lihat [di bawah](#gateway-arweave) |
 | **Gateway IPFS** | `/settings/ipfs-gateway` | Gateway untuk membaca konten IPFS — lihat [di bawah](#gateway-ipfs) |
 | **Endpoint Bitcoin** *(eksperimental)* | `/settings/bitcoin-esplora` | Layanan yang dipakai penjangkaran Bitcoin — lihat [di bawah](#endpoint-bitcoin) |
@@ -102,9 +102,9 @@ mengubahnya untuk satu komentar di samping **Kirim Komentar**.
 
 ## Penyedia Bukti / Penjangkaran
 
-*Eksperimental.* Pilih tempat **Jangkarkan di …** (tombol pertama di blok
+Pilih tempat **Jangkarkan di …** (tombol pertama di blok
 **Bukti / Penjangkaran** sebuah publikasi) membuat bukti eksternal:
-**Arweave**, **Bitcoin**, **Blurt**, atau **Steem**, mana pun yang terdaftar di
+**Arweave**, **Bitcoin** *(eksperimental)*, **Blurt** *(eksperimental)*, atau **Steem** *(eksperimental)*, mana pun yang terdaftar di
 perangkat ini. Base tidak pernah ditawarkan, karena setiap jangkar Base
 mengharuskan Anda meninjau dan menandatangani transaksi dompet. Jika
 Bitcoin yang dipilih, tidak ada tombol **Jangkarkan di …**: blok itu

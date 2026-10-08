@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 0137e01d1cbcedd8 -->
+<!-- translation-of: docs/user/README.md source-hash: d9d89f42b403877b -->
 # Documentación para usuarios de ForkBuild
 
 <!-- languages -->
@@ -55,8 +55,8 @@ de la carpeta [docs/](../..) de nivel superior (en inglés).
     Lo que necesita cada red se resume en
     [Distribuir su trabajo](Distribution.md#lo-que-necesita-cada-red).
 11. **[Evidencia y almacenamiento](11-EvidenceAndStorage.md)**: guardar
-    contenido en IPFS o Arweave y, de forma *experimental*, la evidencia
-    externa, los flujos de billetera de Bitcoin y Base, las ubicaciones de
+    contenido en IPFS o Arweave, anclar en Arweave y, de forma
+    *experimental*, el resto de la evidencia externa, los flujos de billetera de Bitcoin y Base, las ubicaciones de
     Snapshots, el pinning remoto de IPFS, Steem y Blurt.
     [Distribuir su trabajo](Distribution.md) muestra cómo
     encaja todo esto.

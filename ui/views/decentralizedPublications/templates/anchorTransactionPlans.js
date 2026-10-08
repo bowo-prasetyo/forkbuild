@@ -7,6 +7,7 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                             <div class="evidence-anchor-card">
                                 <div class="evidence-anchor-header">
                                     <span class="evidence-anchor-type">{{ t('publications.bitcoinAnchorTransaction') }}</span>
+                                    <span class="experimental-badge">{{ t('publications.experimental') }}</span>
                                     <span v-if="bitcoinAnchorTransactionConstructionView(entry)" class="peer-badge"
                                         :class="bitcoinAnchorTransactionConstructionBadgeClass(entry)">
                                         {{ displayText(bitcoinAnchorTransactionConstructionView(entry).stateLabel) }}
@@ -72,6 +73,7 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                             <div class="evidence-anchor-card">
                                 <div class="evidence-anchor-header">
                                     <span class="evidence-anchor-type">{{ t('publications.basePublicationTransaction') }}</span>
+                                    <span class="experimental-badge">{{ t('publications.experimental') }}</span>
                                     <span v-if="basePublicationTransactionPlanView(entry)" class="peer-badge"
                                         :class="basePublicationTransactionPlanBadgeClass(entry)">
                                         {{ displayText(basePublicationTransactionPlanView(entry).stateLabel) }}
@@ -124,6 +126,7 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                             <div v-if="basePublicationTransactionReviewView(entry)" class="evidence-anchor-card">
                                 <div class="evidence-anchor-header">
                                     <span class="evidence-anchor-type">{{ t('publications.baseTransactionReview') }}</span>
+                                    <span class="experimental-badge">{{ t('publications.experimental') }}</span>
                                 </div>
                                 <p class="form-hint form-hint--neutral">
                                     {{ t('publications.theFollowingTransactionPlanWill') }}

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 0137e01d1cbcedd8 -->
+<!-- translation-of: docs/user/README.md source-hash: d9d89f42b403877b -->
 # Documentation utilisateur de ForkBuild
 
 <!-- languages -->
@@ -54,8 +54,8 @@ reste du dossier [docs/](../..) de premier niveau.
     pairs. Ce dont chaque réseau a besoin est résumé dans
     [Distribuer votre travail](Distribution.md#ce-dont-chaque-réseau-a-besoin).
 11. **[Preuves et stockage](11-EvidenceAndStorage.md)** — stocker du
-    contenu sur IPFS ou Arweave et, de façon *expérimentale*, les preuves
-    externes, les parcours de portefeuille Bitcoin et Base, les placements
+    contenu sur IPFS ou Arweave, ancrer sur Arweave et, de façon
+    *expérimentale*, les autres preuves externes, les parcours de portefeuille Bitcoin et Base, les placements
     de snapshot, l’épinglage IPFS distant, Steem et Blurt.
     [Distribuer votre travail](Distribution.md) montre comment tout cela
     s’articule.

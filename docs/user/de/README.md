@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 0137e01d1cbcedd8 -->
+<!-- translation-of: docs/user/README.md source-hash: d9d89f42b403877b -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
@@ -54,7 +54,8 @@ in [docs/Architecture.md](../../Architecture.md) und im übrigen
     [Ihre Arbeit verteilen](Distribution.md#was-jedes-netzwerk-braucht)
     zusammen.
 11. **[Nachweise & Speicher](11-EvidenceAndStorage.md)** — Inhalte auf IPFS
-    oder Arweave speichern und, *experimentell*, externe Nachweise, die
+    oder Arweave speichern, auf Arweave verankern und, *experimentell*, andere
+    externe Nachweise, die
     Wallet-Abläufe für Bitcoin und Base, Snapshot-Platzierungen, entferntes
     IPFS-Pinning, Steem und Blurt.
     [Ihre Arbeit verteilen](Distribution.md) zeigt, wie

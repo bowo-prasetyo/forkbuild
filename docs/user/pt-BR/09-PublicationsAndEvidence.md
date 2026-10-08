@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 62d70aa574353cac -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 2c5fc47e7e82ef51 -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -7,13 +7,14 @@
 
 > **Em parte experimental.** A página Publicações é um recurso comum: a
 > lista e os status, remover publicações que não podem ser usadas,
-> anunciar no Nostr ou no Arweave, guardar no IPFS ou no Arweave, e tudo
-> na guia **Snapshot** de um cartão. O resto é **Experimental**: funciona,
-> mas pode mudar ou ser removido numa versão futura, e o que produz pode
-> não ser aproveitado depois. A página marca cada uma dessas partes com um
-> selo **Experimental** (**Exp.** numa guia): todo tipo de ancoragem, as
-> carteiras, o Steem, o Blurt, o pinning remoto no IPFS, as guias
-> **Descentralização e evidências**, **Posicionamentos e IPFS** e
+> anunciar no Nostr ou no Arweave, guardar no IPFS ou no Arweave, ancorar
+> no Arweave, e as guias **Snapshot** e **Descentralização e evidências**
+> de um cartão. O resto é **Experimental**: funciona, mas pode mudar ou
+> ser removido numa versão futura, e o que produz pode não ser aproveitado
+> depois. A página marca cada uma dessas partes com um selo
+> **Experimental** (**Exp.** numa guia): todo tipo de ancoragem exceto no
+> Arweave, as carteiras e seus passos de Bitcoin e Base, o Steem, o Blurt,
+> o pinning remoto no IPFS, as guias **Posicionamentos e IPFS** e
 > **Histórico**, e o painel inteiro **Ferramentas de carteira, arquivo e
 > editor**. Os guias [11](11-EvidenceAndStorage.md) e
 > [12](12-ArchiveAndLeaderboards.md) dizem quais das seções deles são
@@ -92,7 +93,7 @@ obrigatória:
 | **Snapshot** | Um exemplar impresso | Uma cópia guardada do conteúdo de uma publicação, como os blocos de um Mundo, que outros podem buscar e conferir com o hash. Veja [Snapshot local](#snapshot-local). |
 | **Posicionamento** | Em que estante o exemplar fica | Um registro assinado de onde uma construção fica no Mundo. Um Mundo compartilhado pode ter vários. Veja [Posicionar ou bifurcar](03-WorldView.md#posicionar-ou-bifurcar). |
 | **Anúncio / descoberta** | Uma ficha no catálogo da biblioteca | Um pequeno aviso assinado no Nostr, no Arweave, no Steem ou no Blurt dizendo que a publicação ou o Snapshot existe e onde está a cópia, para que pessoas não conectadas a você possam encontrá-lo. Veja [Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta). |
-| **Prova / ancoragem** *(Experimental)* | O carimbo de um cartório | O hash do conteúdo gravado numa transação de blockchain (Bitcoin, Base, Arweave, Steem ou Blurt), como evidência de que ele existia naquele momento. Não guarda nem anuncia nada. Veja [Evidências e armazenamento](11-EvidenceAndStorage.md). |
+| **Prova / ancoragem** *(Experimental, exceto no Arweave)* | O carimbo de um cartório | O hash do conteúdo gravado numa transação de blockchain (Bitcoin, Base, Arweave, Steem ou Blurt), como evidência de que ele existia naquele momento. Não guarda nem anuncia nada. Veja [Evidências e armazenamento](11-EvidenceAndStorage.md). |
 | **Comentários** | As resenhas dos leitores | Comentários que qualquer pessoa que entrou pode anexar a uma publicação, cada um assinado por quem comentou, não pelo editor. Veja [Comentários](#comentários). |
 
 Então você faz uma publicação; depois, se quiser, guarda o conteúdo dela, a
@@ -208,8 +209,8 @@ Abaixo disso, duas seções recolhidas:
   **Ancorar em Steem**), com todos os outros provedores recolhidos em
   **Outras opções de …**. Sem um provedor salvo que ela possa usar, todas as
   opções aparecem. O Steem, o Blurt e o pinning remoto no IPFS são marcados como
-  **Experimental** onde quer que apareçam, assim como o bloco inteiro
-  **Prova / ancoragem**. Veja
+  **Experimental** onde quer que apareçam, assim como todo tipo
+  de ancoragem exceto no Arweave. Veja
   [Distribuindo pela página Publicações](#distribuindo-pela-página-publicações)
   e [Evidências e armazenamento](11-EvidenceAndStorage.md).
 - **Detalhes**, em quatro guias:
@@ -217,7 +218,7 @@ Abaixo disso, duas seções recolhidas:
 | Guia | O que tem |
 |---|---|
 | **Snapshot** | [Snapshot local](#snapshot-local): o que este dispositivo guarda e como obtê-lo. |
-| **Descentralização e evidências** *(Exp.)* | [Descentralização](#descentralização-num-relance), a [lista de evidências](11-EvidenceAndStorage.md#a-lista-de-evidências) e os passos das transações no Bitcoin e na Base. |
+| **Descentralização e evidências** | [Descentralização](#descentralização-num-relance), a [lista de evidências](11-EvidenceAndStorage.md#a-lista-de-evidências) e os passos das transações no Bitcoin e na Base (Experimental). |
 | **Posicionamentos e IPFS** *(Exp.)* | A lista de [Posicionamentos de snapshot](11-EvidenceAndStorage.md#posicionamentos-de-snapshot) e a [Publicação no IPFS](11-EvidenceAndStorage.md#publicação-no-ipfs). |
 | **Histórico** *(Exp.)* | **Mostrar linha do tempo entre domínios**: todas as observações de IPFS e Bitcoin desta publicação, em ordem cronológica. |
 
@@ -450,7 +451,7 @@ resultado, a publicação e o hash do conteúdo.
 
 ## Descentralização num relance
 
-*Experimental.* Na guia **Descentralização e evidências**, depois que uma
+Na guia **Descentralização e evidências**, depois que uma
 publicação tem uma âncora ou um posicionamento, **Descentralização** compara
 as [Evidências externas](11-EvidenceAndStorage.md#evidências-externas) e os
 [Posicionamentos de snapshot](11-EvidenceAndStorage.md#posicionamentos-de-snapshot):

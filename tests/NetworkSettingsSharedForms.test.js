@@ -282,7 +282,7 @@ async function run() {
             label: 'Proof / Anchoring', view: 'AnchorProviderSettingsView.js',
             role: RoleProviderRole.PROOF_AND_ANCHORING, choice: 'bitcoin-op-return',
             extra: { preferredPublicationAnchorCreationCoordinator: { availableAnchorTypes: () => ['bitcoin-op-return', 'arweave'] } },
-            expectedOptions: 'Arweave,Bitcoin'
+            expectedOptions: 'Arweave,Bitcoin (Experimental; anchored through its wallet steps)'
         }
     ];
     for (const page of ROLE_PAGES) {

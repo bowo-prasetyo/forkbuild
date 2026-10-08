@@ -64,8 +64,9 @@ models").
 - Repository and Author views with search, sorting, pagination and
   client-side thumbnails.
 - Decentralized publication: content on Arweave or IPFS and announcements over
-  Nostr or Arweave, managed from the **Publications** page, plus (*experimental*,
-  see below) Steem and anchoring evidence on Bitcoin, Arweave, Base or Steem.
+  Nostr or Arweave and anchoring evidence on Arweave, managed from the
+  **Publications** page, plus (*experimental*, see below) Steem, Blurt and
+  anchoring on Bitcoin, Base, Steem or Blurt.
   All of it is verified by content hash and signature, never taken on trust.
 
 **Identity, peers and social**
@@ -102,13 +103,13 @@ models").
 These areas work, but may change or be removed in a later version, and what
 they produce may not carry over. The app marks them with an **Experimental**
 banner, or, on the Publications page, an **Experimental** badge:
-- external evidence and anchoring (Bitcoin, Arweave, Base and Steem), the
-  Bitcoin and Base wallets, and their Network Settings;
+- external evidence and anchoring on Bitcoin, Base, Steem and Blurt (anchoring
+  on Arweave is a regular feature), the Bitcoin and Base wallets, and their
+  Network Settings;
 - Steem as a place to store and announce builds (added in 1.1), and remote
   IPFS pinning;
-- the Publications page's expert parts: the Decentralization & Evidence,
-  Placements & IPFS and History tabs, and the Wallet, Archive & Publisher
-  Tools panel;
+- the Publications page's expert parts: the Placements & IPFS and History
+  tabs, and the Wallet, Archive & Publisher Tools panel;
 - the Leaderboard, reconciliation and publisher snapshot claim pages.
 
 The rest of the Publications page (the list and statuses, removing

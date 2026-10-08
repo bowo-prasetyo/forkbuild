@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 2699bf9fa2001089 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 441c5aa921f30b41 -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
@@ -9,11 +9,13 @@
 > desde el bloque **Distribución → Contenido** de una tarjeta
 > ([Crear una ubicación](#crear-una-ubicación) y
 > [Usar un proveedor preferido](#usar-un-proveedor-preferido)) es una
-> función habitual. Todo lo demás aquí es **Experimental**: la evidencia
-> externa y los dos flujos de billetera, la lista de Ubicaciones de
-> Snapshots, el pinning remoto de IPFS y Steem. Puede cambiar o eliminarse
-> en una versión futura, y lo que produce podría no conservarse. La página
-> marca estas partes con una insignia **Experimental**.
+> función habitual, igual que los anclajes en Arweave y la lista de
+> evidencia. Todo lo demás aquí es **Experimental**: los demás tipos de
+> evidencia externa y los dos flujos de billetera, la lista de Ubicaciones
+> de Snapshots, el pinning remoto de IPFS y Steem. Puede cambiar o
+> eliminarse en una versión futura, y lo que produce podría no
+> conservarse. La página marca estas partes con una insignia
+> **Experimental**.
 
 Cada tarjeta de la página **Publicaciones** (consulte
 [Publicaciones y evidencia externa](09-PublicationsAndEvidence.md)) tiene
@@ -44,7 +46,9 @@ declaración.
 
 ## Evidencia externa
 
-*Experimental.*
+Los anclajes en Arweave y la lista de evidencia son una función habitual.
+Los anclajes en Bitcoin, Base, Steem y Blurt son *Experimentales*, y cada
+uno está marcado así.
 
 Que un anclaje aparezca aquí solo significa que este dispositivo tiene un
 registro firmado válidamente que dice “esto se registró externamente”. Si
@@ -55,7 +59,7 @@ al cargar, ni cuando llega evidencia, ni cuando despliega la lista.
 ### Crear evidencia
 
 En la sección **Distribución** de la tarjeta de una publicación, el bloque
-**Prueba / anclaje** (marcado como **Experimental**) tiene una tarjeta por
+**Prueba / anclaje** (con Steem y Blurt marcados como **Experimental**) tiene una tarjeta por
 cada tipo de evidencia que se puede crear con un clic, cada una con su
 propio botón: **Crear anclaje en Arweave** y **Crear anclaje en Steem**.
 Los anclajes en Bitcoin y Base no tienen una tarjeta así: se hacen
