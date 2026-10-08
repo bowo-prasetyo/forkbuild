@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 01594ad476095742 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 62d70aa574353cac -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -7,15 +7,14 @@
 
 > **Sebagian eksperimental.** Halaman Publikasi adalah fitur biasa: daftar
 > dan statusnya, menghapus publikasi yang tidak dapat dipakai, mengumumkan
-> di Nostr atau Arweave, menyimpan di IPFS atau Arweave, serta memeriksa,
-> mengimpor, atau mengambil snapshot sebuah kartu. Sisanya
-> **Eksperimental**: berfungsi, tetapi dapat berubah atau dihapus di versi
-> berikutnya, dan apa yang dihasilkannya mungkin tidak terbawa. Halaman ini
-> menandai setiap bagian seperti itu dengan lencana **Eksperimental**
-> (**Eksp.** pada tab): setiap jenis penjangkaran, dompet, Steem, Blurt, pinning
-> IPFS jarak jauh, tab **Desentralisasi & Bukti**, **Penempatan & IPFS**,
-> dan **Riwayat**, bagian kepemilikan rekan dan ringkasan di tab
-> **Snapshot**, serta seluruh panel **Dompet, Arsip & Alat Penerbit**.
+> di Nostr atau Arweave, menyimpan di IPFS atau Arweave, serta seluruh tab
+> **Snapshot** sebuah kartu. Sisanya **Eksperimental**: berfungsi, tetapi
+> dapat berubah atau dihapus di versi berikutnya, dan apa yang
+> dihasilkannya mungkin tidak terbawa. Halaman ini menandai setiap bagian
+> seperti itu dengan lencana **Eksperimental** (**Eksp.** pada tab):
+> setiap jenis penjangkaran, dompet, Steem, Blurt, pinning IPFS jarak
+> jauh, tab **Desentralisasi & Bukti**, **Penempatan & IPFS**, dan
+> **Riwayat**, serta seluruh panel **Dompet, Arsip & Alat Penerbit**.
 > Panduan [11](11-EvidenceAndStorage.md) dan
 > [12](12-ArchiveAndLeaderboards.md) menyebutkan bagian mana yang
 > Eksperimental. Membangun, menyimpan, menerbitkan ke Repositori, fork,
@@ -404,6 +403,10 @@ Snapshot: tersedia / tidak tersedia*: apakah perangkat ini telah
 mengatalogkan publikasi bertanda tangan itu, dan apakah perangkat ini
 menyimpan byte yang valid.
 
+Jika pemeriksaan tidak menemukan byte yang valid, sebuah petunjuk menunjuk
+ke cara-cara mendatangkannya, di bawah. Tidak ada yang dicoba ulang dengan
+sendirinya.
+
 ### Mendatangkan byte-nya
 
 Tiga tindakan, masing-masing dengan kliknya sendiri:
@@ -436,43 +439,34 @@ adalah cara ketiga. Begitu salah satu dari ketiganya berhasil, baris
 **Sumber:** menyebutkan yang terakhir berhasil: "Paket transfer",
 "Penempatan", atau "Rekan".
 
-### Bertanya kepada rekan apa yang mereka miliki
+### Rekan mana yang memilikinya?
 
-*Eksperimental*, begitu pula **Ringkasan** di bawah.
+**Rekan mana yang memilikinya?** menanyakan rekan yang terhubung apakah
+mereka memiliki byte-nya, tanpa mengambilnya. Setiap rekan yang terhubung
+tercantum dan dicentang; hapus centang rekan yang tidak ingin Anda tanyai,
+lalu klik **Tanyai Rekan Terpilih** (lalu **Tanyai Rekan Terpilih Lagi**).
+Jawaban terakhir setiap rekan ditampilkan dengan waktunya, beserta
+totalnya: **Tersedia**, **Tidak tersedia**, atau **Tidak dapat ditentukan**
+(tidak menjawab tepat waktu). Jawaban adalah apa yang dikatakan rekan itu
+pada saat itu, bukan janji.
 
-**Kepemilikan Snapshot oleh Rekan** bertanya kepada satu rekan apakah
-mereka menyimpan byte-nya, tanpa mengambilnya: pilih rekan dan klik
-**Periksa ke Rekan** (lalu **…Lagi**). Jawabannya, dengan waktu
-**Diamati:**, adalah **Rekan melaporkan snapshot tersedia**, **Rekan
-melaporkan snapshot tidak tersedia**, atau **Tidak ada jawaban dari
-rekan**. Pemeriksaan baru menggantikan yang terakhir.
-
-**Perbandingan Kepemilikan Snapshot oleh Rekan** bertanya kepada beberapa
-rekan: centang rekan-rekannya dan klik **Periksa Rekan Terpilih** (lalu
-**…Lagi**). Sebuah tabel menampilkan laporan setiap rekan (**Tersedia**,
-**Tidak tersedia**, atau **Tidak dapat ditentukan**) dan waktunya, ditambah
-totalnya. **Tampilkan Riwayat Pengamatan** mencantumkan setiap pemeriksaan
-pada kunjungan ini, satu baris masing-masing (seperti
+Rekan yang menjawab **Tersedia** mendapat tombolnya sendiri, **Ambil
+Snapshot dari *rekan***. Tombol itu meminta byte-nya hanya dari rekan itu
+dan memeriksanya, seperti **Ambil Snapshot dari Rekan**; tidak ada yang
+pernah diambil dari pihak lain untuk Anda. **Tampilkan Jawaban Kunjungan
+Ini** mencantumkan setiap jawaban, satu baris masing-masing (misalnya
 `20:21:04 — Alice → Tersedia`); klik sebuah baris untuk laporan lengkap,
-publikasi, dan hash kontennya. Sebuah baris mencatat apa yang dikatakan
-rekan pada saat itu dan tidak pernah ditulis ulang.
+publikasi, dan hash kontennya. Sebuah baris tidak pernah ditulis ulang.
 
-### Ringkasan
+### Percobaan pada kunjungan ini
 
-- **Perolehan Snapshot**, di bagian atas bagian ini begitu Anda memeriksa
-  atau mencoba sesuatu: **Kepemilikan saat ini** (pemeriksaan di atas) dan
-  **Riwayat perolehan**, jumlah percobaan pada kunjungan ini menurut hasil
-  dan sumbernya. Keduanya terpisah: percobaan yang berhasil disimpan tidak
-  berarti byte-nya masih ada di sini. Jika sudah tidak ada, sebuah petunjuk
-  menunjuk ke tiga cara untuk mendatangkannya; tidak ada yang dicoba ulang
-  dengan sendirinya. **Tampilkan Riwayat Perolehan** mencantumkan setiap
-  percobaan (seperti `20:16 — Rekan → Hash tidak cocok`); klik salah satunya
-  untuk hasil, publikasi, dan hash kontennya.
-- **Keadaan Snapshot**, di bawahnya, menjajarkan fakta-fakta yang telah Anda
-  kumpulkan pada kunjungan ini: **Konten**, **Kepemilikan lokal**,
-  **Perolehan**, **Penempatan**, dan **Pengamatan rekan**. Setiap bagian
-  hanya muncul setelah Anda mengamatinya, dan semuanya tidak pernah
-  digabungkan menjadi satu putusan.
+Setelah Anda mencoba mendatangkan byte-nya, **Percobaan pada kunjungan
+ini** menghitung percobaan kunjungan ini menurut hasil dan sumbernya.
+Percobaan yang menyimpan byte-nya tidak berarti byte itu masih ada di sini;
+**Periksa Snapshot Lokal** yang mengatakannya. **Tampilkan Riwayat
+Perolehan** mencantumkan setiap percobaan (misalnya
+`20:16 — Rekan → Hash tidak cocok`); klik salah satunya untuk hasil,
+publikasi, dan hash kontennya.
 
 ## Desentralisasi sekilas
 

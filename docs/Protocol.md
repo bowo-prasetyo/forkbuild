@@ -415,7 +415,7 @@ reads `payload`.
 | `forkbuild:content` | application/peer/PeerContentProtocol.js | content bytes by hash |
 | `forkbuild:anchor` | application/anchoring/PublicationAnchorPeerProtocol.js | anchor claims (a RESPONSE holds at most 64 anchors, and only as many as fit one message) |
 | `forkbuild:snapshot-placement` | application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js | Snapshot placement claims |
-| `forkbuild:snapshot-possession` | application/snapshot/possession/PublicationSnapshotPossessionPeerExchange.js | which Snapshots a peer holds |
+| `forkbuild:snapshot-possession` | application/snapshot/possession/PublicationSnapshotPossessionPeerExchange.js | see "Snapshot possession exchange" |
 | `forkbuild:snapshot-content-transfer` | application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js | Snapshot bytes |
 | `forkbuild:world-encounter-material` | application/worldEncounter/PeerWorldEncounterMaterialSource.js | encounter content |
 | `forkbuild:commentary-distribution` | core/PublicationCommentaryDistributionEnvelope.js | see "Publication Commentary Distribution" |
@@ -444,6 +444,29 @@ discovered (docs/AnnouncementIndex.md, "Phase 5"). Three payloads:
 - Payloads are checked like any other discovery result. The signatures
   on Place Naming claims are verified where they are used, as for claims
   from a substrate.
+
+### Snapshot possession exchange
+
+Asks a peer whether it holds the bytes for a content hash, for the
+Publications page's **Which peers have it?**. No content crosses the wire;
+fetching is `forkbuild:snapshot-content-transfer`'s job. Two payloads
+(`application/snapshot/possession/PeerSnapshotPossessionProtocol.js`):
+
+    REQUEST   { kind: 'REQUEST', publicationId, contentHash }
+    RESPONSE  { kind: 'RESPONSE', publicationId, contentHash,
+                possession: 'available' | 'not-available' }
+
+- `publicationId` is a non-empty string of at most 512 characters;
+  `contentHash` is hex, at most 128 characters. Any other message is
+  ignored.
+- A peer always answers a REQUEST, from its own local check of
+  `contentHash`: `available` only when it holds bytes that match it, so a
+  mismatch is `not-available`. `publicationId` is only echoed back, and no
+  catalog is consulted on either side.
+- The asker sends one REQUEST to each peer the person ticked, and treats no
+  RESPONSE within 8 seconds as "could not determine". An answer is what
+  that peer said at that moment: it is not signed, never forwarded, and
+  never becomes a placement or a source of bytes.
 
 ### Large content in parts
 

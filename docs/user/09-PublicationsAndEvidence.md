@@ -5,16 +5,15 @@
 <!-- /languages -->
 
 > **Partly experimental.** The Publications page is a regular feature: its
-> list and statuses, removing publications that can't be used, announcing on
-> Nostr or Arweave, storing on IPFS or Arweave, and checking, importing or
-> getting a card's snapshot. The rest is **Experimental**: it works, but may
+> list and statuses, removing publications that can't be used, announcing
+> on Nostr or Arweave, storing on IPFS or Arweave, and everything on a
+> card's **Snapshot** tab. The rest is **Experimental**: it works, but may
 > change or be removed in a later version, and what it produces may not
 > carry over. The page marks each such part with an **Experimental** badge
-> (**Exp.** on a tab): every kind of anchoring, the wallets, Steem, Blurt, remote
-> IPFS pinning, the **Decentralization & Evidence**, **Placements & IPFS**
-> and **History** tabs, the peer possession and summary sections of the
-> **Snapshot** tab, and the whole **Wallet, Archive & Publisher Tools**
-> panel. Guides [11](11-EvidenceAndStorage.md) and
+> (**Exp.** on a tab): every kind of anchoring, the wallets, Steem, Blurt,
+> remote IPFS pinning, the **Decentralization & Evidence**, **Placements &
+> IPFS** and **History** tabs, and the whole **Wallet, Archive & Publisher
+> Tools** panel. Guides [11](11-EvidenceAndStorage.md) and
 > [12](12-ArchiveAndLeaderboards.md) say which of their sections are
 > Experimental. Building, saving, publishing to the Repository, forking,
 > identities and peers don't depend on any of it.
@@ -370,6 +369,9 @@ locally / not known locally · Snapshot: available / not available*: whether
 this device has cataloged the signed publication, and whether it holds valid
 bytes.
 
+If the check finds no valid bytes, a hint points to the ways to bring them
+in, below. Nothing retries by itself.
+
 ### Bringing the bytes in
 
 Three actions, each its own click:
@@ -400,38 +402,31 @@ Snapshot from Peer** (then **…Again**). It asks only that peer.
 third way. Once one of the three succeeds, a **Source:** line names the most
 recent successful one: "Transfer package", "Placement" or "Peer".
 
-### Asking peers what they have
+### Which peers have it?
 
-*Experimental*, as are the **Summaries** below.
+**Which peers have it?** asks your connected peers whether they hold the
+bytes, without fetching them. Every connected peer is listed, ticked; untick
+any you don't want to ask, then click **Ask Selected Peers** (then **Ask
+Selected Peers Again**). Each peer's latest answer is shown with when it
+came, plus totals: **Available**, **Not available**, or **Could not
+determine** (no answer in time). An answer is what that peer said at that
+moment, not a promise.
 
-**Peer Snapshot Possession** asks one peer whether they hold the bytes,
-without fetching them: choose a peer and click **Check with Peer** (then
-**…Again**). The answer, with an **Observed:** time, is **Peer reports
-snapshot available**, **Peer reports snapshot not available**, or **No
-answer from peer**. A new check replaces the last.
+A peer that answered **Available** gets its own **Get Snapshot from
+*peer*** button. It asks that peer alone for the bytes and checks them, as
+**Get Snapshot from Peer** does; nothing is ever fetched from anyone else
+for you. **Show Answers from This Visit** lists every answer, one row each
+(such as `20:21:04 — Alice → Available`); click a row for the full report,
+publication and content hash. A row is never rewritten.
 
-**Peer Snapshot Possession Comparison** asks several: tick the peers and
-click **Check Selected Peers** (then **…Again**). A table shows each peer's
-report (**Available**, **Not available** or **Could not determine**) and
-when, plus totals. **Show Observation History** lists every check this
-visit, one row each (such as `20:21:04 — Alice → Available`); click a row
-for the full report, publication and content hash. A row records what a
-peer said at that moment and is never rewritten.
+### Attempts this visit
 
-### Summaries
-
-- **Snapshot Acquisition**, at the top of the section once you've checked or
-  tried something: **Current possession** (the check above) and
-  **Acquisition history**, a count of this visit's attempts by outcome and
-  source. They're independent: a stored attempt doesn't mean the bytes are
-  still here. When they aren't, a hint points to the three ways to bring
-  them in; nothing retries by itself. **Show Acquisition History** lists each attempt (such as
-  `20:16 — Peer → Hash mismatch`); click one for its outcome, publication
-  and content hash.
-- **Snapshot State**, below, puts the facts you've gathered this visit side
-  by side: **Content**, **Local possession**, **Acquisition**,
-  **Placements** and **Peer observations**. Each part appears only once
-  you've observed it, and they're never combined into one verdict.
+Once you've tried to bring the bytes in, **Attempts this visit** counts
+this visit's attempts by outcome and by source. An attempt that stored the
+bytes doesn't mean they're still here; **Check Local Snapshot** says that.
+**Show Acquisition History** lists each attempt (such as
+`20:16 — Peer → Hash mismatch`); click one for its outcome, publication and
+content hash.
 
 ## Decentralization at a glance
 

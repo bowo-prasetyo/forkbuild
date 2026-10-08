@@ -107,13 +107,13 @@ banner, or, on the Publications page, an **Experimental** badge:
 - Steem as a place to store and announce builds (added in 1.1), and remote
   IPFS pinning;
 - the Publications page's expert parts: the Decentralization & Evidence,
-  Placements & IPFS and History tabs, peer possession checks, and the
-  Wallet, Archive & Publisher Tools panel;
+  Placements & IPFS and History tabs, and the Wallet, Archive & Publisher
+  Tools panel;
 - the Leaderboard, reconciliation and publisher snapshot claim pages.
 
 The rest of the Publications page (the list and statuses, removing
 publications that can't be used, announcing on Nostr or Arweave, storing on
-IPFS or Arweave, and a card's local snapshot) is a regular feature.
+IPFS or Arweave, and a card's Snapshot tab) is a regular feature.
 
 ## Quick Start
 

@@ -99,9 +99,10 @@ async function run() {
             'publication pickers are sorted by label');
         assert(/return sortLabels\(reconstructDistinctPublisherIdentifiers\(/.test(publications),
             'publisher pickers are sorted');
-        assert((publications.match(/<option v-for="peer in retrievalPeerOptions"/g) || []).length === 2
-            && !/<option v-for="peer in retrievalPeers"/.test(publications),
-            'both peer pickers render the sorted retrievalPeerOptions');
+        assert((publications.match(/<option v-for="peer in retrievalPeerOptions"/g) || []).length === 1
+            && /<li v-for="peer in retrievalPeerOptions"/.test(publications)
+            && !/v-for="peer in retrievalPeers"/.test(publications),
+            'the peer picker and the "Which peers have it?" list render the sorted retrievalPeerOptions');
         assert(/const retrievalPeers = computed\(\(\) => peerSessionManager\.listPeers\(\)\s*\.filter\(/.test(publications),
             'retrievalPeers itself stays in registry order for resolution');
 

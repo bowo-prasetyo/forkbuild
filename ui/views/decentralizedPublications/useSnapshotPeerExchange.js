@@ -5,10 +5,6 @@ import {
 import { PEER_MATERIALIZATION_BADGE_CLASSES, PEER_POSSESSION_BADGE_CLASSES, shortId } from './presentation.js';
 import { SnapshotPeerMaterializationUiState } from '../../../application/snapshot/materialization/SnapshotPeerMaterializationUiState.js';
 import {
-    describePeerPossessionAttempt, describePeerPossessionButtonLabel
-} from '../../../application/snapshot/possession/SnapshotPeerPossessionView.js';
-import { SnapshotPeerPossessionUiState } from '../../../application/snapshot/possession/SnapshotPeerPossessionUiState.js';
-import {
     appendSnapshotPeerPossessionObservationHistoryEntry, latestSnapshotPeerPossessionObservationsByPeer
 } from '../../../application/snapshot/possession/SnapshotPeerPossessionObservationHistory.js';
 import {
@@ -24,9 +20,9 @@ import {
 } from '../../../application/snapshot/possession/SnapshotPeerPossessionObservationDetailView.js';
 import { t } from '../../i18n/i18n.js';
 
-// Snapshot exchange with peers: asking one peer for a snapshot, checking
-// whether one or several peers hold it (with a comparison and its history),
-// and materializing from a peer chosen in that comparison.
+// Snapshot exchange with peers: asking one peer for a snapshot, asking the
+// ticked connected peers whether they hold it ("Which peers have it?", with
+// the answers of this visit), and materializing from a peer that said yes.
 export function useSnapshotPeerExchange({
     mapPeerOutcomeToStoreOutcome, recordMaterializationHistoryEntry, recordMaterializationSource,
     retrievalPeers, snapshotMaterializationSelectionCoordinator, snapshotPeerMaterializationCoordinator,
@@ -82,64 +78,28 @@ export function useSnapshotPeerExchange({
         });
     }
 
-    // Only asks whether the picked peer has the bytes, on an explicit
-    // click. An observation never becomes a materialization.
-    function selectedPeerForPossessionCheck(entry) {
-        return retrievalPeers.value.find((peer) => peer.connectionId === entry.peerPossessionSelectedPeerId) || null;
+    // Every connected peer is ticked until the person unticks it, so the
+    // list asked is always one they can see and change; a peer that
+    // connects later starts ticked. Only the unticked ones are remembered.
+    function isPeerPossessionPeerChecked(entry, connectionId) {
+        return !entry.peerPossessionUncheckedPeerIds.includes(connectionId);
     }
 
-    async function checkSnapshotPossessionWithPeer(entry) {
-        const peer = selectedPeerForPossessionCheck(entry);
-        if (!peer || !snapshotPeerPossessionCoordinator) return;
-        entry.peerPossessionAttempt = { checking: true };
-        try {
-            const observation = await snapshotPeerPossessionCoordinator.observe({
-                peer, publicationId: entry.publication.id, contentHash: entry.publication.contentReference.hash
-            });
-            entry.peerPossessionAttempt = {
-                checking: false, error: null,
-                peerId: observation.peerId, state: observation.state,
-                publicationId: observation.publicationId, contentHash: observation.contentHash, observedAt: observation.observedAt
-            };
-        } catch (error) {
-            entry.peerPossessionAttempt = { checking: false, state: null, error: error.message };
-        }
-    }
-
-    function peerPossessionView(entry) {
-        return describePeerPossessionAttempt(entry.peerPossessionAttempt);
-    }
-
-    function peerPossessionBadgeClass(entry) {
-        const state = peerPossessionView(entry).state;
-        return PEER_POSSESSION_BADGE_CLASSES[state] || null;
-    }
-
-    function peerPossessionButtonLabel(entry) {
-        const view = peerPossessionView(entry);
-        return describePeerPossessionButtonLabel({
-            checking: view.checking,
-            checked: view.state !== SnapshotPeerPossessionUiState.IDLE
-        });
-    }
-
-    // Checkbox selection only. A peer that disconnects before the click is
-    // dropped from the list asked.
-    function togglePeerPossessionCompareSelection(entry, connectionId) {
-        const index = entry.peerPossessionCompareSelectedPeerIds.indexOf(connectionId);
+    function togglePeerPossessionPeer(entry, connectionId) {
+        const index = entry.peerPossessionUncheckedPeerIds.indexOf(connectionId);
         if (index === -1) {
-            entry.peerPossessionCompareSelectedPeerIds.push(connectionId);
+            entry.peerPossessionUncheckedPeerIds.push(connectionId);
         } else {
-            entry.peerPossessionCompareSelectedPeerIds.splice(index, 1);
+            entry.peerPossessionUncheckedPeerIds.splice(index, 1);
         }
     }
 
     function selectedPeersForPossessionComparison(entry) {
-        return retrievalPeers.value.filter((peer) => entry.peerPossessionCompareSelectedPeerIds.includes(peer.connectionId));
+        return retrievalPeers.value.filter((peer) => isPeerPossessionPeerChecked(entry, peer.connectionId));
     }
 
-    // Answers are appended to the history, unlike the single-peer check,
-    // which replaces its result.
+    // Every answer is appended to this visit's history; the list shows the
+    // latest one per peer.
     async function checkSnapshotPossessionWithSelectedPeers(entry) {
         const peers = selectedPeersForPossessionComparison(entry);
         if (peers.length === 0 || !snapshotPeerPossessionCoordinator) return;
@@ -164,6 +124,13 @@ export function useSnapshotPeerExchange({
             publicationId: entry.publication.id, contentHash: entry.publication.contentReference.hash
         });
         return describeSnapshotPeerPossessionComparison(entry.publication.id, entry.publication.contentReference.hash, latest);
+    }
+
+    function peerPossessionAskButtonLabel(entry) {
+        if (entry.peerPossessionComparisonChecking) return t('publications.asking');
+        return peerPossessionObservationHistoryView(entry).count > 0
+            ? t('publications.askSelectedPeersAgain')
+            : t('publications.askSelectedPeers');
     }
 
     function peerPossessionComparisonRowBadgeClass(peerRow) {
@@ -258,10 +225,9 @@ export function useSnapshotPeerExchange({
 
     return {
         selectedPeerForMaterialization, requestSnapshotFromPeer, peerMaterializationView,
-        peerMaterializationBadgeClass, peerMaterializationButtonLabel, selectedPeerForPossessionCheck,
-        checkSnapshotPossessionWithPeer, peerPossessionView, peerPossessionBadgeClass,
-        peerPossessionButtonLabel, togglePeerPossessionCompareSelection, selectedPeersForPossessionComparison,
-        checkSnapshotPossessionWithSelectedPeers, peerPossessionComparisonView,
+        peerMaterializationBadgeClass, peerMaterializationButtonLabel,
+        isPeerPossessionPeerChecked, togglePeerPossessionPeer, selectedPeersForPossessionComparison,
+        checkSnapshotPossessionWithSelectedPeers, peerPossessionAskButtonLabel, peerPossessionComparisonView,
         peerPossessionComparisonRowBadgeClass, peerPossessionComparisonRowLabel, materializeFromComparisonPeer,
         comparisonPeerMaterializationView, comparisonPeerMaterializationBadgeClass,
         comparisonPeerMaterializationButtonLabel, peerPossessionObservationHistoryView,

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 01594ad476095742 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 62d70aa574353cac -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -8,16 +8,15 @@
 > **Teilweise experimentell.** Die Seite Veröffentlichungen ist eine
 > reguläre Funktion: ihre Liste und Status, das Entfernen unbrauchbarer
 > Veröffentlichungen, das Ankündigen auf Nostr oder Arweave, das Speichern
-> auf IPFS oder Arweave und das Prüfen, Importieren oder Holen des
-> Snapshots einer Karte. Der Rest ist **Experimentell**: Er funktioniert,
-> kann sich aber in einer späteren Version ändern oder entfernt werden, und
-> was er erzeugt, wird möglicherweise nicht übernommen. Die Seite
-> kennzeichnet jeden solchen Teil mit einem Abzeichen **Experimentell**
-> (**Exp.** auf einem Reiter): jede Art der Verankerung, die Wallets,
-> Steem, Blurt, entferntes IPFS-Pinning, die Reiter **Dezentralisierung &
-> Nachweise**, **Platzierungen & IPFS** und **Verlauf**, die Abschnitte zu
-> Besitz bei Peers und zur Zusammenfassung im Reiter **Snapshot** sowie den
-> ganzen Bereich **Wallet, Archiv & Herausgeberwerkzeuge**. Die Anleitungen
+> auf IPFS oder Arweave und alles im Reiter **Snapshot** einer Karte. Der
+> Rest ist **Experimentell**: Er funktioniert, kann sich aber in einer
+> späteren Version ändern oder entfernt werden, und was er erzeugt, wird
+> möglicherweise nicht übernommen. Die Seite kennzeichnet jeden solchen
+> Teil mit einem Abzeichen **Experimentell** (**Exp.** auf einem Reiter):
+> jede Art der Verankerung, die Wallets, Steem, Blurt, entferntes
+> IPFS-Pinning, die Reiter **Dezentralisierung & Nachweise**,
+> **Platzierungen & IPFS** und **Verlauf** sowie den ganzen Bereich
+> **Wallet, Archiv & Herausgeberwerkzeuge**. Die Anleitungen
 > [11](11-EvidenceAndStorage.md) und [12](12-ArchiveAndLeaderboards.md)
 > sagen, welche ihrer Abschnitte experimentell sind. Bauen, Speichern,
 > Veröffentlichen im Repository, Forken, Identitäten und Peers hängen von
@@ -417,6 +416,9 @@ eine Zeile *Publication: lokal bekannt / lokal nicht bekannt · Snapshot:
 verfügbar / nicht verfügbar*: ob dieses Gerät die signierte
 Veröffentlichung erfasst hat und ob es gültige Bytes besitzt.
 
+Findet die Prüfung keine gültigen Bytes, verweist ein Hinweis auf die Wege,
+sie hereinzuholen (unten). Nichts versucht es von selbst erneut.
+
 ### Die Bytes hereinholen
 
 Drei Aktionen, jede ein eigener Klick:
@@ -450,44 +452,33 @@ ist der dritte Weg. Sobald einer der drei gelingt, nennt eine Zeile
 **Quelle:** den jüngsten erfolgreichen: „Übertragungspaket“,
 „Platzierung“ oder „Peer“.
 
-### Peers fragen, was sie haben
+### Welche Peers haben es?
 
-*Experimentell*, ebenso wie die **Zusammenfassungen** unten.
+**Welche Peers haben es?** fragt Ihre verbundenen Peers, ob sie die Bytes
+haben, ohne sie zu holen. Jeder verbundene Peer steht angehakt in der
+Liste; entfernen Sie den Haken bei denen, die Sie nicht fragen wollen, und
+klicken Sie dann auf **Ausgewählte Peers fragen** (danach **Ausgewählte
+Peers erneut fragen**). Die letzte Antwort jedes Peers erscheint mit ihrem
+Zeitpunkt, dazu die Summen: **Verfügbar**, **Nicht verfügbar** oder
+**Nicht feststellbar** (keine Antwort rechtzeitig). Eine Antwort ist das,
+was dieser Peer in diesem Moment gesagt hat, kein Versprechen.
 
-**Snapshot-Besitz der Peers** fragt einen Peer, ob er die Bytes besitzt,
-ohne sie zu holen: Wählen Sie einen Peer und klicken Sie auf **Beim Peer
-prüfen** (danach **Erneut beim Peer prüfen**). Die Antwort, mit einer Zeit
-**Beobachtet:**, lautet **Peer meldet: Snapshot verfügbar**, **Peer
-meldet: Snapshot nicht verfügbar** oder **Keine Antwort vom Peer**. Eine
-neue Prüfung ersetzt die letzte.
+Ein Peer, der **Verfügbar** geantwortet hat, bekommt einen eigenen Knopf
+**Snapshot von *Peer* holen**. Er bittet nur diesen Peer um die Bytes und
+prüft sie, wie **Snapshot von Peer holen**; von niemand anderem wird je
+etwas für Sie geholt. **Antworten dieses Besuchs zeigen** listet jede
+Antwort in einer eigenen Zeile auf (etwa `20:21:04 — Alice → Verfügbar`);
+klicken Sie auf eine Zeile für den ganzen Bericht, die Veröffentlichung und
+den Inhalts-Hash. Eine Zeile wird nie umgeschrieben.
 
-**Vergleich des Snapshot-Besitzes der Peers** fragt mehrere: Setzen Sie
-Häkchen bei den Peers und klicken Sie auf **Ausgewählte Peers prüfen**
-(danach **Ausgewählte Peers erneut prüfen**). Eine Tabelle zeigt die
-Meldung jedes Peers (**Verfügbar**, **Nicht verfügbar** oder **Nicht
-feststellbar**) und wann, sowie Summen. **Beobachtungsverlauf zeigen**
-listet jede Prüfung dieses Besuchs auf, eine Zeile pro Prüfung (etwa
-`20:21:04 — Alice → Verfügbar`); klicken Sie auf eine Zeile für die
-vollständige Meldung, Veröffentlichung und den Inhalts-Hash. Eine Zeile
-hält fest, was ein Peer in diesem Moment gesagt hat, und wird nie
-umgeschrieben.
+### Versuche bei diesem Besuch
 
-### Zusammenfassungen
-
-- **Snapshot-Beschaffung**, oben im Abschnitt, sobald Sie etwas geprüft
-  oder versucht haben: **Aktueller Besitz** (die Prüfung oben) und
-  **Beschaffungsverlauf**, eine Zählung der Versuche dieses Besuchs nach
-  Ergebnis und Quelle. Beides ist unabhängig: Ein gespeicherter Versuch
-  heißt nicht, dass die Bytes noch hier sind. Sind sie es nicht, verweist
-  ein Hinweis auf die drei Wege, sie hereinzuholen; nichts versucht es von
-  selbst erneut. **Beschaffungsverlauf zeigen** listet jeden Versuch auf
-  (etwa `20:16 — Peer → Hash-Abweichung`); klicken Sie auf einen für sein
-  Ergebnis, die Veröffentlichung und den Inhalts-Hash.
-- **Snapshot-Zustand**, darunter, stellt die Tatsachen nebeneinander, die
-  Sie bei diesem Besuch gesammelt haben: **Inhalt**, **Lokaler Besitz**,
-  **Beschaffung**, **Platzierungen** und **Beobachtungen der Peers**. Jeder
-  Teil erscheint erst, wenn Sie ihn beobachtet haben, und sie werden nie zu
-  einem Urteil zusammengefasst.
+Sobald Sie versucht haben, die Bytes hereinzuholen, zählt **Versuche bei
+diesem Besuch** die Versuche dieses Besuchs nach Ergebnis und nach Quelle.
+Ein Versuch, der die Bytes gespeichert hat, heißt nicht, dass sie noch hier
+sind; das sagt **Lokalen Snapshot prüfen**. **Beschaffungsverlauf zeigen**
+listet jeden Versuch auf (etwa `20:16 — Peer → Hash-Abweichung`); klicken
+Sie auf einen für sein Ergebnis, die Veröffentlichung und den Inhalts-Hash.
 
 ## Dezentralisierung auf einen Blick
 
