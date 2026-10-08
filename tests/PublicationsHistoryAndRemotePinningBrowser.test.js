@@ -102,6 +102,7 @@ settingsStore.save(new IpfsRemotePinningSettings({ endpoint: 'https://api.exampl
     app.provide('ipfsRemotePinningSettingsStore', settingsStore);
     app.provide('ipfsRemotePublicationCoordinator', { publish: async () => null });
     app.provide('publicationContentStore', { get: async () => null });
+    app.provide('publicationSnapshotPlacementResolutionCoordinator', { discover: () => [] });
     app.mount(host);
     await settle();
 
@@ -119,11 +120,17 @@ settingsStore.save(new IpfsRemotePinningSettings({ endpoint: 'https://api.exampl
     assert(recorded.textContent.includes('ipfs://bafy-earlier-visit'), "History shows what an earlier visit recorded");
     const quiet = await historyOf(cards[1]);
     assert(quiet.textContent.includes('Nothing recorded for this publication yet.'), 'and says so when nothing is recorded');
+    assert(quiet.querySelector('.experimental-badge') && quiet.textContent.includes('Remote IPFS pinning and Bitcoin and Base anchoring, which add to this list, are Experimental.'),
+        'History is a regular tab that says which of its sources are Experimental');
     console.log('✓ History reads the saved archive, with an empty state');
 
     const placementsTab = [...cards[0].querySelectorAll('[role="tab"]')].find((candidate) => candidate.firstChild.textContent.trim() === 'Placements & IPFS');
     placementsTab.click();
     await settle();
+    const ipfsPublishingTitle = [...cards[0].querySelectorAll('.evidence-summary-title')].find((title) => title.textContent.includes('IPFS Publishing'));
+    assert(ipfsPublishingTitle && ipfsPublishingTitle.querySelector('.experimental-badge'), 'on Placements & IPFS, only IPFS Publishing is marked Experimental');
+    const placementsTitle = [...cards[0].querySelectorAll('.evidence-summary-title')].find((title) => title.textContent.includes('Snapshot Placements'));
+    assert(placementsTitle && !placementsTitle.querySelector('.experimental-badge'), 'and the placements list is not');
     const endpointField = [...cards[0].querySelectorAll('.evidence-field')].find((field) => field.querySelector('dt')?.textContent.trim() === 'Endpoint');
     assert(endpointField && endpointField.querySelector('dd').textContent.trim() === 'https://api.example/pin', 'the card starts configured with the saved service');
     console.log('✓ the Publications card starts on the saved service');

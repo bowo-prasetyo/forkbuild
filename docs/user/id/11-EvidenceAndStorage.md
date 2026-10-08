@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: bab90f7325291119 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: e6112fd034371b3e -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
@@ -9,9 +9,9 @@
 > dari blok **Distribusi → Konten** pada sebuah kartu
 > ([Membuat penempatan](#membuat-penempatan) dan
 > [Menggunakan penyedia pilihan](#menggunakan-penyedia-pilihan)) adalah
-> fitur biasa, begitu pula jangkar Arweave dan daftar bukti. Semua hal
-> lain di sini **Eksperimental**: jenis bukti eksternal lainnya dan kedua
-> alur dompet, daftar Penempatan Snapshot, pinning IPFS jarak jauh, dan
+> fitur biasa, begitu pula daftar Penempatan Snapshot, jangkar Arweave,
+> dan daftar bukti. Semua hal lain di sini **Eksperimental**: jenis bukti
+> eksternal lainnya dan kedua alur dompet, pinning IPFS jarak jauh, dan
 > Steem. Semuanya dapat berubah atau dihapus di versi berikutnya, dan apa
 > yang dihasilkannya mungkin tidak terbawa. Halaman ini menandai
 > bagian-bagian itu dengan lencana **Eksperimental**.
@@ -540,9 +540,9 @@ langkah demi langkah tidak pernah melakukannya.
 
 ## Penempatan Snapshot
 
-Membuat penempatan di IPFS, Arweave, atau Lokal adalah fitur biasa; daftar
-di tab **Penempatan & IPFS** dan semua yang ada setelah
-[Menggunakan penyedia pilihan](#menggunakan-penyedia-pilihan) bersifat
+Penempatan snapshot adalah fitur biasa, mulai dari membuatnya di IPFS,
+Arweave, atau Lokal hingga daftar di tab **Penempatan & IPFS**. Hanya IPFS
+(Pinning Jarak Jauh) sebagai penyedia pilihan yang bersifat
 *Eksperimental*.
 
 **Penempatan snapshot** adalah klaim bertanda tangan bahwa sebuah backend

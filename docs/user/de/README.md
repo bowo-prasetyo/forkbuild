@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: d9d89f42b403877b -->
+<!-- translation-of: docs/user/README.md source-hash: ffc19b477aed271d -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
@@ -54,12 +54,10 @@ in [docs/Architecture.md](../../Architecture.md) und im übrigen
     [Ihre Arbeit verteilen](Distribution.md#was-jedes-netzwerk-braucht)
     zusammen.
 11. **[Nachweise & Speicher](11-EvidenceAndStorage.md)** — Inhalte auf IPFS
-    oder Arweave speichern, auf Arweave verankern und, *experimentell*, andere
-    externe Nachweise, die
-    Wallet-Abläufe für Bitcoin und Base, Snapshot-Platzierungen, entferntes
-    IPFS-Pinning, Steem und Blurt.
-    [Ihre Arbeit verteilen](Distribution.md) zeigt, wie
-    das zusammenpasst.
+    oder Arweave speichern, Snapshot-Platzierungen, auf Arweave verankern
+    und, *experimentell*, andere externe Nachweise, die Wallet-Abläufe für
+    Bitcoin und Base, entferntes IPFS-Pinning, Steem und Blurt.
+    [Ihre Arbeit verteilen](Distribution.md) zeigt, wie das zusammenpasst.
 12. **[Archiv & Bestenlisten](12-ArchiveAndLeaderboards.md)** —
     *experimentell*. Das Beobachtungsarchiv, Veröffentlichungsverweise,
     Erfolge, Herausgeberkennungen und die Bestenlisten-Seiten.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 8e320f702249d035 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 58222e42e252988f -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -6,20 +6,19 @@
 <!-- /languages -->
 
 > **Em parte experimental.** A página Publicações é um recurso comum: a
-> lista e os status, remover publicações que não podem ser usadas,
-> anunciar no Nostr ou no Arweave, guardar no IPFS ou no Arweave, ancorar
-> no Arweave, e as guias **Snapshot** e **Descentralização e evidências**
-> de um cartão. O resto é **Experimental**: funciona, mas pode mudar ou
-> ser removido numa versão futura, e o que produz pode não ser aproveitado
-> depois. A página marca cada uma dessas partes com um selo
-> **Experimental** (**Exp.** numa guia): todo tipo de ancoragem exceto no
-> Arweave, as carteiras e seus passos de Bitcoin e Base, o Steem, o Blurt,
-> o pinning remoto no IPFS, as guias **Posicionamentos e IPFS** e
-> **Histórico**, e o painel inteiro **Ferramentas de carteira, arquivo e
-> editor**. Os guias [11](11-EvidenceAndStorage.md) e
-> [12](12-ArchiveAndLeaderboards.md) dizem quais das seções deles são
-> experimentais. Construir, salvar, publicar no Repositório, bifurcar,
-> identidades e pares não dependem de nada disso.
+> lista e os status, remover publicações que não podem ser usadas, anunciar
+> no Nostr ou no Arweave, guardar no IPFS ou no Arweave, ancorar no Arweave,
+> e as quatro guias de um cartão: **Snapshot**, **Descentralização e
+> evidências**, **Posicionamentos e IPFS** e **Histórico**. O resto é
+> **Experimental**: funciona, mas pode mudar ou ser removido numa versão
+> futura, e o que produz pode não ser aproveitado depois. A página marca
+> cada uma dessas partes com um selo **Experimental**: todo tipo de
+> ancoragem exceto no Arweave, as carteiras e seus passos de Bitcoin e Base,
+> o Steem, o Blurt, o pinning remoto no IPFS e o painel inteiro
+> **Ferramentas de carteira, arquivo e editor**. Os guias
+> [11](11-EvidenceAndStorage.md) e [12](12-ArchiveAndLeaderboards.md) dizem
+> quais das seções deles são experimentais. Construir, salvar, publicar no
+> Repositório, bifurcar, identidades e pares não dependem de nada disso.
 
 Nada disto é necessário para usar o ForkBuild. Pule se você só quer
 construir, publicar e explorar.
@@ -219,8 +218,8 @@ Abaixo disso, duas seções recolhidas:
 |---|---|
 | **Snapshot** | [Snapshot local](#snapshot-local): o que este dispositivo guarda e como obtê-lo. |
 | **Descentralização e evidências** | [Descentralização](#descentralização-num-relance), a [lista de evidências](11-EvidenceAndStorage.md#a-lista-de-evidências) e os passos das transações no Bitcoin e na Base (Experimental). |
-| **Posicionamentos e IPFS** *(Exp.)* | A lista de [Posicionamentos de snapshot](11-EvidenceAndStorage.md#posicionamentos-de-snapshot) e a [Publicação no IPFS](11-EvidenceAndStorage.md#publicação-no-ipfs). |
-| **Histórico** *(Exp.)* | **Mostrar linha do tempo entre domínios**: todas as observações de IPFS, Bitcoin e Base que este dispositivo registrou para esta publicação, em ordem cronológica, tiradas do [Arquivo de observações](12-ArchiveAndLeaderboards.md), então ficam entre visitas; ou um aviso de que ainda não há nada registrado. |
+| **Posicionamentos e IPFS** | A lista de [Posicionamentos de snapshot](11-EvidenceAndStorage.md#posicionamentos-de-snapshot) e a [Publicação no IPFS](11-EvidenceAndStorage.md#publicação-no-ipfs) (Experimental). |
+| **Histórico** | **Mostrar linha do tempo entre domínios**: todas as observações de IPFS, Bitcoin e Base que este dispositivo registrou para esta publicação, em ordem cronológica, tiradas do [Arquivo de observações](12-ArchiveAndLeaderboards.md), então ficam entre visitas; ou um aviso de que ainda não há nada registrado. |
 
 ### Significado dos status
 

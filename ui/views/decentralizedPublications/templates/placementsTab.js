@@ -165,7 +165,7 @@ export const placementsTabTemplate = `<div v-show="entry.detailsTab === 'placeme
                          recent attempt only. -->
                     <div v-if="ipfsRemotePublicationCoordinator && publicationContentStore" class="evidence-section">
                         <div class="evidence-summary">
-                            <span class="evidence-summary-title">{{ t('publications.ipfsPublishing') }}</span>
+                            <span class="evidence-summary-title">{{ t('publications.ipfsPublishing') }} <span class="experimental-badge">{{ t('publications.experimental') }}</span></span>
                             <span class="form-hint form-hint--neutral">
                                 {{ t('publications.localKuboCanResolveAnd') }}
                             </span>

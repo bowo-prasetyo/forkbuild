@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: d9d89f42b403877b -->
+<!-- translation-of: docs/user/README.md source-hash: ffc19b477aed271d -->
 # Documentação do ForkBuild para usuários
 
 <!-- languages -->
@@ -52,11 +52,11 @@ pasta [docs/](../..) de nível superior.
     Do que cada rede precisa está resumido em
     [Distribuindo seu trabalho](Distribution.md#do-que-cada-rede-precisa).
 11. **[Evidências e armazenamento](11-EvidenceAndStorage.md)** — guardar
-    conteúdo no IPFS ou no Arweave, ancorar no Arweave e, de forma
-    *experimental*, as demais evidências externas, os fluxos de carteira do Bitcoin e da Base, posicionamentos de
-    snapshot, pinning remoto no IPFS, o Steem e o Blurt.
-    [Distribuindo seu trabalho](Distribution.md) mostra como
-    tudo isso se encaixa.
+    conteúdo no IPFS ou no Arweave, posicionamentos de snapshot, ancorar no
+    Arweave e, de forma *experimental*, as demais evidências externas, os
+    fluxos de carteira do Bitcoin e da Base, pinning remoto no IPFS, o Steem
+    e o Blurt. [Distribuindo seu trabalho](Distribution.md) mostra como tudo
+    isso se encaixa.
 12. **[Arquivo e classificações](12-ArchiveAndLeaderboards.md)** —
     *experimental*. O arquivo de observações, referências entre publicações,
     conquistas, rótulos de editores e as páginas de classificação.
