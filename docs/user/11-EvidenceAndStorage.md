@@ -8,9 +8,9 @@
 > card's **Distribution → Content** block
 > ([Creating a placement](#creating-a-placement) and
 > [Using a preferred provider](#using-a-preferred-provider)) is a regular
-> feature, and so are Arweave anchors and the evidence list. Everything
-> else here is **Experimental**: the other kinds of external evidence and
-> both wallet pipelines, the Snapshot Placements list, remote IPFS
+> feature, and so are the Snapshot Placements list, Arweave anchors and
+> the evidence list. Everything else here is **Experimental**: the other
+> kinds of external evidence and both wallet pipelines, remote IPFS
 > pinning, and Steem. It may change or be removed in a later version, and
 > what it produces may not carry over. The page marks these parts with an
 > **Experimental** badge.
@@ -496,9 +496,9 @@ step-by-step flow never does.
 
 ## Snapshot Placements
 
-Creating a placement on IPFS, Arweave or Local is a regular feature; the
-**Placements & IPFS** tab's list and everything after
-[Using a preferred provider](#using-a-preferred-provider) is *Experimental*.
+Snapshot placements are a regular feature, from creating one on IPFS,
+Arweave or Local to the **Placements & IPFS** tab's list. Only IPFS
+(Remote Pinning) as a preferred provider is *Experimental*.
 
 A **snapshot placement** is a signed claim that a storage backend — **IPFS**,
 **Arweave**, or this device's own **Local** storage — can serve the bytes

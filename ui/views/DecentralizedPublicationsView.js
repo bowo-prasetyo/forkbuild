@@ -1300,12 +1300,12 @@ export default {
                             <button type="button" role="tab" :aria-selected="entry.detailsTab === 'placements'"
                                     :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'placements' }]"
                                     @click="setEntryDetailsTab(entry, 'placements')">
-                                {{ t('publications.placementsIpfs') }}<span class="experimental-badge" :title="t('publications.experimentalMayChangeOrBe')">{{ t('publications.exp') }}</span>
+                                {{ t('publications.placementsIpfs') }}
                             </button>
                             <button type="button" role="tab" :aria-selected="entry.detailsTab === 'history'"
                                     :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'history' }]"
                                     @click="setEntryDetailsTab(entry, 'history')">
-                                {{ t('publications.history') }}<span class="experimental-badge" :title="t('publications.experimentalMayChangeOrBe')">{{ t('publications.exp') }}</span>
+                                {{ t('publications.history') }}
                             </button>
                         </div>
 
@@ -1316,6 +1316,12 @@ export default {
                     ${placementsTabTemplate}
 
                     <div v-show="entry.detailsTab === 'history'">
+                    <!-- The tab is a regular feature; what adds to it (remote
+                         IPFS pinning, Bitcoin and Base anchors) is
+                         Experimental where it is made, and says so here. -->
+                    <p class="form-hint form-hint--neutral">
+                        {{ t('publications.historySources') }} <span class="experimental-badge">{{ t('publications.experimental') }}</span>
+                    </p>
                     <!-- Both domains on one timeline; no combined status. No
                          network access. -->
                     <div v-if="crossDomainPublicationObservationTimelineView(entry).count > 0" class="evidence-section">

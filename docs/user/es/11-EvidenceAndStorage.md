@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: bab90f7325291119 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: e6112fd034371b3e -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
@@ -9,10 +9,10 @@
 > desde el bloque **Distribución → Contenido** de una tarjeta
 > ([Crear una ubicación](#crear-una-ubicación) y
 > [Usar un proveedor preferido](#usar-un-proveedor-preferido)) es una
-> función habitual, igual que los anclajes en Arweave y la lista de
-> evidencia. Todo lo demás aquí es **Experimental**: los demás tipos de
-> evidencia externa y los dos flujos de billetera, la lista de Ubicaciones
-> de Snapshots, el pinning remoto de IPFS y Steem. Puede cambiar o
+> función habitual, igual que la lista de Ubicaciones de Snapshots, los
+> anclajes en Arweave y la lista de evidencia. Todo lo demás aquí es
+> **Experimental**: los demás tipos de evidencia externa y los dos flujos
+> de billetera, el pinning remoto de IPFS y Steem. Puede cambiar o
 > eliminarse en una versión futura, y lo que produce podría no
 > conservarse. La página marca estas partes con una insignia
 > **Experimental**.
@@ -547,9 +547,9 @@ flujo paso a paso nunca lo hace.
 
 ## Ubicaciones de Snapshots
 
-Crear una ubicación en IPFS, Arweave o Local es una función habitual; la
-lista de la pestaña **Colocaciones e IPFS** y todo lo que viene después de
-[Usar un proveedor preferido](#usar-un-proveedor-preferido) es
+Las ubicaciones de snapshots son una función habitual, desde crear una en
+IPFS, Arweave o Local hasta la lista de la pestaña **Colocaciones e
+IPFS**. Solo IPFS (pinning remoto) como proveedor preferido es
 *Experimental*.
 
 Una **ubicación de Snapshot** es una declaración firmada de que un backend

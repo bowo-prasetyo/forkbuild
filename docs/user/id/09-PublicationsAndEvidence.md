@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 8e320f702249d035 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 58222e42e252988f -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -8,16 +8,15 @@
 > **Sebagian eksperimental.** Halaman Publikasi adalah fitur biasa: daftar
 > dan statusnya, menghapus publikasi yang tidak dapat dipakai, mengumumkan
 > di Nostr atau Arweave, menyimpan di IPFS atau Arweave, penjangkaran di
-> Arweave, serta tab **Snapshot** dan **Desentralisasi & Bukti** sebuah
-> kartu. Sisanya **Eksperimental**: berfungsi, tetapi dapat berubah atau
-> dihapus di versi berikutnya, dan apa yang dihasilkannya mungkin tidak
-> terbawa. Halaman ini menandai setiap bagian seperti itu dengan lencana
-> **Eksperimental** (**Eksp.** pada tab): setiap jenis penjangkaran
-> kecuali Arweave, dompet beserta langkah Bitcoin dan Base-nya, Steem,
-> Blurt, pinning IPFS jarak jauh, tab **Penempatan & IPFS** dan
-> **Riwayat**, serta seluruh panel **Dompet, Arsip & Alat Penerbit**.
-> Panduan [11](11-EvidenceAndStorage.md) dan
-> [12](12-ArchiveAndLeaderboards.md) menyebutkan bagian mana yang
+> Arweave, serta keempat tab sebuah kartu: **Snapshot**, **Desentralisasi &
+> Bukti**, **Penempatan & IPFS**, dan **Riwayat**. Sisanya
+> **Eksperimental**: berfungsi, tetapi dapat berubah atau dihapus di versi
+> berikutnya, dan apa yang dihasilkannya mungkin tidak terbawa. Halaman ini
+> menandai setiap bagian seperti itu dengan lencana **Eksperimental**:
+> setiap jenis penjangkaran kecuali Arweave, dompet beserta langkah Bitcoin
+> dan Base-nya, Steem, Blurt, pinning IPFS jarak jauh, serta seluruh panel
+> **Dompet, Arsip & Alat Penerbit**. Panduan [11](11-EvidenceAndStorage.md)
+> dan [12](12-ArchiveAndLeaderboards.md) menyebutkan bagian mana yang
 > Eksperimental. Membangun, menyimpan, menerbitkan ke Repositori, fork,
 > identitas, dan rekan tidak bergantung pada semua itu.
 
@@ -222,8 +221,8 @@ Di bawahnya, dua bagian terlipat:
 |---|---|
 | **Snapshot** | [Snapshot Lokal](#snapshot-lokal): apa yang disimpan perangkat ini, dan cara mendapatkannya. |
 | **Desentralisasi & Bukti** | [Desentralisasi](#desentralisasi-sekilas), [daftar bukti](11-EvidenceAndStorage.md#daftar-bukti), dan langkah-langkah transaksi Bitcoin dan Base (Eksperimental). |
-| **Penempatan & IPFS** *(Eksp.)* | Daftar [Penempatan Snapshot](11-EvidenceAndStorage.md#penempatan-snapshot) dan [Penerbitan IPFS](11-EvidenceAndStorage.md#penerbitan-ipfs). |
-| **Riwayat** *(Eksp.)* | **Tampilkan Linimasa Lintas Domain**: setiap pengamatan IPFS, Bitcoin, dan Base yang dicatat perangkat ini untuk publikasi ini, berurutan menurut waktu, dari [Arsip Pengamatan](12-ArchiveAndLeaderboards.md), sehingga tersimpan antarkunjungan; atau catatan bahwa belum ada yang tercatat. |
+| **Penempatan & IPFS** | Daftar [Penempatan Snapshot](11-EvidenceAndStorage.md#penempatan-snapshot) dan [Penerbitan IPFS](11-EvidenceAndStorage.md#penerbitan-ipfs) (Eksperimental). |
+| **Riwayat** | **Tampilkan Linimasa Lintas Domain**: setiap pengamatan IPFS, Bitcoin, dan Base yang dicatat perangkat ini untuk publikasi ini, berurutan menurut waktu, dari [Arsip Pengamatan](12-ArchiveAndLeaderboards.md), sehingga tersimpan antarkunjungan; atau catatan bahwa belum ada yang tercatat. |
 
 ### Arti status
 

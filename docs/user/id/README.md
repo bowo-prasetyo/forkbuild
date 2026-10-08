@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: d9d89f42b403877b -->
+<!-- translation-of: docs/user/README.md source-hash: ffc19b477aed271d -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
@@ -49,12 +49,12 @@ dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
     koneksi rekan.
     Apa yang dibutuhkan setiap jaringan dirangkum di
     [Mendistribusikan Karya Anda](Distribution.md#apa-yang-dibutuhkan-setiap-jaringan).
-11. **[Bukti & Penyimpanan](11-EvidenceAndStorage.md)**
-    — menyimpan konten di IPFS atau Arweave, penjangkaran di Arweave, dan
-    yang *eksperimental*: bukti eksternal lainnya, alur dompet Bitcoin dan Base, penempatan snapshot,
-    pinning IPFS jarak jauh, Steem, dan Blurt.
-    [Mendistribusikan Karya Anda](Distribution.md)
-    menunjukkan bagaimana semuanya saling terkait.
+11. **[Bukti & Penyimpanan](11-EvidenceAndStorage.md)** — menyimpan konten
+    di IPFS atau Arweave, penempatan snapshot, penjangkaran di Arweave, dan
+    yang *eksperimental*: bukti eksternal lainnya, alur dompet Bitcoin dan
+    Base, pinning IPFS jarak jauh, Steem, dan Blurt.
+    [Mendistribusikan Karya Anda](Distribution.md) menunjukkan bagaimana
+    semuanya saling terkait.
 12. **[Arsip & Papan Peringkat](12-ArchiveAndLeaderboards.md)** — *eksperimental*. Arsip pengamatan, referensi publikasi,
     pencapaian, label penerbit, dan halaman Papan Peringkat.
 13. **[Data Anda](13-YourData.md)** — mencadangkan semua yang disimpan

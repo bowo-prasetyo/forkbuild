@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: bab90f7325291119 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: e6112fd034371b3e -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
@@ -9,12 +9,12 @@
 > pelo bloco **Distribuição → Conteúdo** de um cartão
 > ([Criando um posicionamento](#criando-um-posicionamento) e
 > [Usando um provedor preferido](#usando-um-provedor-preferido)) é um
-> recurso comum, assim como as âncoras no Arweave e a lista de evidências.
-> Todo o resto aqui é **Experimental**: os outros tipos de evidência
-> externa e os dois fluxos de carteira, a lista de Posicionamentos de
-> snapshot, o pinning remoto no IPFS e o Steem. Pode mudar ou ser removido
-> numa versão futura, e o que produz pode não ser aproveitado depois. A
-> página marca essas partes com um selo **Experimental**.
+> recurso comum, assim como a lista de Posicionamentos de snapshot, as
+> âncoras no Arweave e a lista de evidências. Todo o resto aqui é
+> **Experimental**: os outros tipos de evidência externa e os dois fluxos
+> de carteira, o pinning remoto no IPFS e o Steem. Pode mudar ou ser
+> removido numa versão futura, e o que produz pode não ser aproveitado
+> depois. A página marca essas partes com um selo **Experimental**.
 
 Todo cartão da página **Publicações** (veja
 [Publicações e evidências externas](09-PublicationsAndEvidence.md)) tem
@@ -531,9 +531,9 @@ fluxo passo a passo nunca adiciona.
 
 ## Posicionamentos de snapshot
 
-Criar um posicionamento no IPFS, no Arweave ou no Local é um recurso comum;
-a lista da guia **Posicionamentos e IPFS** e tudo o que vem depois de
-[Usando um provedor preferido](#usando-um-provedor-preferido) é
+Os posicionamentos de snapshot são um recurso comum, desde criar um no
+IPFS, no Arweave ou no Local até a lista da guia **Posicionamentos e
+IPFS**. Só o IPFS (pinning remoto) como provedor preferido é
 *experimental*.
 
 Um **posicionamento de snapshot** é uma declaração assinada de que um

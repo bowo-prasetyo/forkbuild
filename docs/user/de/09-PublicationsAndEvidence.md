@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 8e320f702249d035 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 58222e42e252988f -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -8,20 +8,19 @@
 > **Teilweise experimentell.** Die Seite Veröffentlichungen ist eine
 > reguläre Funktion: ihre Liste und Status, das Entfernen unbrauchbarer
 > Veröffentlichungen, das Ankündigen auf Nostr oder Arweave, das Speichern
-> auf IPFS oder Arweave, das Verankern auf Arweave sowie die Reiter
-> **Snapshot** und **Dezentralisierung & Nachweise** einer Karte. Der Rest
-> ist **Experimentell**: Er funktioniert, kann sich aber in einer späteren
-> Version ändern oder entfernt werden, und was er erzeugt, wird
-> möglicherweise nicht übernommen. Die Seite kennzeichnet jeden solchen
-> Teil mit einem Abzeichen **Experimentell** (**Exp.** auf einem Reiter):
-> jede Art der Verankerung außer Arweave, die Wallets und ihre Schritte
-> für Bitcoin und Base, Steem, Blurt, entferntes IPFS-Pinning, die Reiter
-> **Platzierungen & IPFS** und **Verlauf** sowie den ganzen Bereich
-> **Wallet, Archiv & Herausgeberwerkzeuge**. Die Anleitungen
-> [11](11-EvidenceAndStorage.md) und [12](12-ArchiveAndLeaderboards.md)
-> sagen, welche ihrer Abschnitte experimentell sind. Bauen, Speichern,
-> Veröffentlichen im Repository, Forken, Identitäten und Peers hängen von
-> nichts davon ab.
+> auf IPFS oder Arweave, das Verankern auf Arweave sowie alle vier Reiter
+> einer Karte: **Snapshot**, **Dezentralisierung & Nachweise**,
+> **Platzierungen & IPFS** und **Verlauf**. Der Rest ist **Experimentell**:
+> Er funktioniert, kann sich aber in einer späteren Version ändern oder
+> entfernt werden, und was er erzeugt, wird möglicherweise nicht übernommen.
+> Die Seite kennzeichnet jeden solchen Teil mit einem Abzeichen
+> **Experimentell**: jede Art der Verankerung außer Arweave, die Wallets und
+> ihre Schritte für Bitcoin und Base, Steem, Blurt, entferntes IPFS-Pinning
+> sowie den ganzen Bereich **Wallet, Archiv & Herausgeberwerkzeuge**. Die
+> Anleitungen [11](11-EvidenceAndStorage.md) und
+> [12](12-ArchiveAndLeaderboards.md) sagen, welche ihrer Abschnitte
+> experimentell sind. Bauen, Speichern, Veröffentlichen im Repository,
+> Forken, Identitäten und Peers hängen von nichts davon ab.
 
 Nichts hiervon ist nötig, um ForkBuild zu nutzen. Überspringen Sie es, wenn
 Sie nur bauen, veröffentlichen und erkunden möchten.
@@ -232,8 +231,8 @@ Darunter zwei eingeklappte Abschnitte:
 |---|---|
 | **Snapshot** | [Lokaler Snapshot](#lokaler-snapshot): was dieses Gerät besitzt und wie man es bekommt. |
 | **Dezentralisierung & Nachweise** | [Dezentralisierung](#dezentralisierung-auf-einen-blick), die [Nachweisliste](11-EvidenceAndStorage.md#die-nachweisliste) und die Transaktionsschritte für Bitcoin und Base (experimentell). |
-| **Platzierungen & IPFS** *(Exp.)* | Die Liste der [Snapshot-Platzierungen](11-EvidenceAndStorage.md#snapshot-platzierungen) und [Veröffentlichen auf IPFS](11-EvidenceAndStorage.md#veröffentlichen-auf-ipfs). |
-| **Verlauf** *(Exp.)* | **Domänenübergreifende Zeitleiste zeigen**: jede IPFS-, Bitcoin- und Base-Beobachtung, die dieses Gerät zu dieser Veröffentlichung aufgezeichnet hat, in zeitlicher Reihenfolge, aus dem [Beobachtungsarchiv](12-ArchiveAndLeaderboards.md), daher über Besuche hinweg erhalten; oder ein Hinweis, dass noch nichts aufgezeichnet ist. |
+| **Platzierungen & IPFS** | Die Liste der [Snapshot-Platzierungen](11-EvidenceAndStorage.md#snapshot-platzierungen) und [Veröffentlichen auf IPFS](11-EvidenceAndStorage.md#veröffentlichen-auf-ipfs) (Experimentell). |
+| **Verlauf** | **Domänenübergreifende Zeitleiste zeigen**: jede IPFS-, Bitcoin- und Base-Beobachtung, die dieses Gerät zu dieser Veröffentlichung aufgezeichnet hat, in zeitlicher Reihenfolge, aus dem [Beobachtungsarchiv](12-ArchiveAndLeaderboards.md), daher über Besuche hinweg erhalten; oder ein Hinweis, dass noch nichts aufgezeichnet ist. |
 
 ### Bedeutung der Status
 

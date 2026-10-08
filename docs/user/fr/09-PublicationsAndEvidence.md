@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 8e320f702249d035 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 58222e42e252988f -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -8,19 +8,18 @@
 > **En partie expérimental.** La page Publications est une fonctionnalité
 > ordinaire : sa liste et ses statuts, le retrait des publications
 > inutilisables, l’annonce sur Nostr ou Arweave, le stockage sur IPFS ou
-> Arweave, l’ancrage sur Arweave, et les onglets **Snapshot** et
-> **Décentralisation et preuves** d’une carte. Le reste est
-> **Expérimental** : cela fonctionne, mais peut changer ou être retiré
-> dans une version ultérieure, et ce que cela produit pourrait ne pas être
-> conservé. La page marque chacune de ces parties d’un badge
-> **Expérimental** (**Exp.** sur un onglet) : tous les types d’ancrage
-> sauf Arweave, les portefeuilles et leurs étapes Bitcoin et Base, Steem,
-> Blurt, l’épinglage IPFS distant, les onglets **Placements et IPFS** et
-> **Historique**, et tout le panneau **Portefeuille, archives et outils
+> Arweave, l’ancrage sur Arweave, et les quatre onglets d’une carte :
+> **Snapshot**, **Décentralisation et preuves**, **Placements et IPFS** et
+> **Historique**. Le reste est **Expérimental** : cela fonctionne, mais peut
+> changer ou être retiré dans une version ultérieure, et ce que cela produit
+> pourrait ne pas être conservé. La page marque chacune de ces parties d’un
+> badge **Expérimental** : tous les types d’ancrage sauf Arweave, les
+> portefeuilles et leurs étapes Bitcoin et Base, Steem, Blurt, l’épinglage
+> IPFS distant et tout le panneau **Portefeuille, archives et outils
 > d’éditeur**. Les guides [11](11-EvidenceAndStorage.md) et
-> [12](12-ArchiveAndLeaderboards.md) indiquent lesquelles de leurs
-> sections sont Expérimentales. Construire, enregistrer, publier dans le
-> Dépôt, forker, les identités et les pairs n’en dépendent pas.
+> [12](12-ArchiveAndLeaderboards.md) indiquent lesquelles de leurs sections
+> sont Expérimentales. Construire, enregistrer, publier dans le Dépôt,
+> forker, les identités et les pairs n’en dépendent pas.
 
 Rien de tout cela n’est nécessaire pour utiliser ForkBuild. Passez si vous
 voulez seulement construire, publier et explorer.
@@ -227,8 +226,8 @@ En dessous, deux sections repliées :
 |---|---|
 | **Snapshot** | Le [Snapshot local](#snapshot-local) : ce que détient cet appareil, et comment l’obtenir. |
 | **Décentralisation et preuves** | La [Décentralisation](#la-décentralisation-en-un-coup-dœil), la [liste des preuves](11-EvidenceAndStorage.md#la-liste-des-preuves), et les étapes de transaction Bitcoin et Base (expérimental). |
-| **Placements et IPFS** *(Exp.)* | La liste des [Placements de Snapshot](11-EvidenceAndStorage.md#placements-de-snapshot) et la [Publication IPFS](11-EvidenceAndStorage.md#publication-ipfs). |
-| **Historique** *(Exp.)* | **Afficher la chronologie multi-domaines** : toutes les observations IPFS, Bitcoin et Base que cet appareil a enregistrées pour cette publication, dans l’ordre chronologique, tirées de l’[Archive des observations](12-ArchiveAndLeaderboards.md), donc conservées d’une visite à l’autre ; ou une note indiquant que rien n’est encore enregistré. |
+| **Placements et IPFS** | La liste des [Placements de Snapshot](11-EvidenceAndStorage.md#placements-de-snapshot) et la [Publication IPFS](11-EvidenceAndStorage.md#publication-ipfs) (Expérimental). |
+| **Historique** | **Afficher la chronologie multi-domaines** : toutes les observations IPFS, Bitcoin et Base que cet appareil a enregistrées pour cette publication, dans l’ordre chronologique, tirées de l’[Archive des observations](12-ArchiveAndLeaderboards.md), donc conservées d’une visite à l’autre ; ou une note indiquant que rien n’est encore enregistré. |
 
 ### Signification des statuts
 

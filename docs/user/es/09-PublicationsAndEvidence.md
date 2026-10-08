@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 8e320f702249d035 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 58222e42e252988f -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -8,18 +8,18 @@
 > **En parte experimental.** La página Publicaciones es una función
 > habitual: su lista y sus estados, quitar publicaciones que no se pueden
 > usar, anunciar en Nostr o Arweave, guardar en IPFS o Arweave, anclar en
-> Arweave, y las pestañas **Snapshot** y **Descentralización y evidencia**
-> de una tarjeta. El resto es **Experimental**: funciona, pero puede
-> cambiar o eliminarse en una versión futura, y lo que produce podría no
+> Arweave, y las cuatro pestañas de una tarjeta: **Snapshot**,
+> **Descentralización y evidencia**, **Colocaciones e IPFS** e
+> **Historial**. El resto es **Experimental**: funciona, pero puede cambiar
+> o eliminarse en una versión futura, y lo que produce podría no
 > conservarse. La página marca cada una de esas partes con una insignia
-> **Experimental** (**Exp.** en una pestaña): todo tipo de anclaje salvo
-> en Arweave, las billeteras y sus pasos de Bitcoin y Base, Steem, Blurt,
-> el pinning remoto de IPFS, las pestañas **Colocaciones e IPFS** e
-> **Historial**, y todo el panel **Herramientas de billetera, archivo y
-> editor**. Las guías [11](11-EvidenceAndStorage.md) y
-> [12](12-ArchiveAndLeaderboards.md) indican cuáles de sus secciones son
-> Experimentales. Construir, guardar, publicar en el Repositorio,
-> bifurcar, las identidades y los pares no dependen de nada de esto.
+> **Experimental**: todo tipo de anclaje salvo en Arweave, las billeteras y
+> sus pasos de Bitcoin y Base, Steem, Blurt, el pinning remoto de IPFS y
+> todo el panel **Herramientas de billetera, archivo y editor**. Las guías
+> [11](11-EvidenceAndStorage.md) y [12](12-ArchiveAndLeaderboards.md)
+> indican cuáles de sus secciones son Experimentales. Construir, guardar,
+> publicar en el Repositorio, bifurcar, las identidades y los pares no
+> dependen de nada de esto.
 
 Nada de esto es necesario para usar ForkBuild. Sáltelo si solo quiere
 construir, publicar y explorar.
@@ -224,8 +224,8 @@ Debajo, dos secciones plegadas:
 |---|---|
 | **Snapshot** | [Snapshot local](#snapshot-local): lo que tiene este dispositivo y cómo obtenerlo. |
 | **Descentralización y evidencia** | [Descentralización](#la-descentralización-de-un-vistazo), la [lista de evidencia](11-EvidenceAndStorage.md#la-lista-de-evidencia) y los pasos de las transacciones de Bitcoin y Base (Experimental). |
-| **Colocaciones e IPFS** *(Exp.)* | La lista de [Ubicaciones de Snapshots](11-EvidenceAndStorage.md#ubicaciones-de-snapshots) y la [Publicación en IPFS](11-EvidenceAndStorage.md#publicación-en-ipfs). |
-| **Historial** *(Exp.)* | **Mostrar línea de tiempo entre dominios**: todas las observaciones de IPFS, Bitcoin y Base que este dispositivo registró para esta publicación, en orden cronológico, tomadas del [Archivo de observaciones](12-ArchiveAndLeaderboards.md), así que se conservan entre visitas; o un aviso de que todavía no hay nada registrado. |
+| **Colocaciones e IPFS** | La lista de [Ubicaciones de Snapshots](11-EvidenceAndStorage.md#ubicaciones-de-snapshots) y la [Publicación en IPFS](11-EvidenceAndStorage.md#publicación-en-ipfs) (Experimental). |
+| **Historial** | **Mostrar línea de tiempo entre dominios**: todas las observaciones de IPFS, Bitcoin y Base que este dispositivo registró para esta publicación, en orden cronológico, tomadas del [Archivo de observaciones](12-ArchiveAndLeaderboards.md), así que se conservan entre visitas; o un aviso de que todavía no hay nada registrado. |
 
 ### Significado de los estados
 

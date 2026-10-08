@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: d9d89f42b403877b -->
+<!-- translation-of: docs/user/README.md source-hash: ffc19b477aed271d -->
 # ForkBuild 사용자 문서
 
 <!-- languages -->
@@ -46,9 +46,9 @@
     [작품 배포하기](Distribution.md#각-네트워크에-필요한-것)에 정리되어
     있습니다.
 11. **[증거와 저장소](11-EvidenceAndStorage.md)** — IPFS나 Arweave에
-    콘텐츠 저장하기, Arweave에 앵커링하기, 그리고 *실험적* 기능인 그 밖의
+    콘텐츠 저장하기, 스냅샷 배치, Arweave에 앵커링하기, 그리고 *실험적* 기능인 그 밖의
     외부 증거, Bitcoin과 Base
-    지갑 절차, 스냅샷 배치, 원격 IPFS 피닝, Steem과 Blurt.
+    지갑 절차, 원격 IPFS 피닝, Steem과 Blurt.
     [작품 배포하기](Distribution.md)에서 이것들이 어떻게 맞물리는지
     볼 수 있습니다.
 12. **[아카이브와 리더보드](12-ArchiveAndLeaderboards.md)** —

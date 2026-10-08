@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 8e320f702249d035 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 58222e42e252988f -->
 # 09 — 게시물과 외부 증거
 
 <!-- languages -->
@@ -10,11 +10,10 @@
 
 > **일부는 실험적 기능입니다.** 게시물 페이지는 정식 기능입니다: 목록과 상태,
 > 사용할 수 없는 게시물 제거, Nostr나 Arweave에 공지하기, IPFS나 Arweave에
-> 저장하기, Arweave에 앵커링하기, 카드의 **스냅샷** 탭과 **탈중앙화와 증거** 탭. 나머지는 **실험적**입니다: 작동은
+> 저장하기, Arweave에 앵커링하기, 카드의 네 탭 모두(**스냅샷**, **탈중앙화와 증거**, **배치와 IPFS**, **기록**). 나머지는 **실험적**입니다: 작동은
 > 하지만 이후 버전에서 바뀌거나 제거될 수 있으며, 만들어 낸 결과가 이어지지 않을
-> 수 있습니다. 페이지는 그런 부분마다 **실험적** 배지(탭에는 **실험**)를 붙입니다:
-> Arweave를 제외한 모든 종류의 앵커링, 지갑과 그 Bitcoin·Base 단계, Steem, Blurt, 원격 IPFS 피닝,
-> **배치와 IPFS**, **기록** 탭, 그리고
+> 수 있습니다. 페이지는 그런 부분마다 **실험적** 배지를 붙입니다:
+> Arweave를 제외한 모든 종류의 앵커링, 지갑과 그 Bitcoin·Base 단계, Steem, Blurt, 원격 IPFS 피닝, 그리고
 > **지갑, 아카이브 및 게시자 도구** 패널 전체. 안내 [11](11-EvidenceAndStorage.md)과
 > [12](12-ArchiveAndLeaderboards.md)에 어떤 섹션이 실험적인지 나와 있습니다.
 > 짓기, 저장, 저장소에 게시하기, 포크, 신원, 피어는 이 중 어느 것에도 의존하지
@@ -183,8 +182,8 @@ X라고 부른다” 같은 **서명된 클레임**과, 클레임에 더할 수 
 |---|---|
 | **스냅샷** | [로컬 스냅샷](#로컬-스냅샷): 이 기기가 가진 것과 그것을 얻는 방법. |
 | **탈중앙화와 증거** | [탈중앙화](#탈중앙화-한눈에-보기), [증거 목록](11-EvidenceAndStorage.md#증거-목록), Bitcoin과 Base 트랜잭션 단계(실험적). |
-| **배치와 IPFS** *(실험)* | [스냅샷 배치](11-EvidenceAndStorage.md#스냅샷-배치) 목록과 [IPFS 게시](11-EvidenceAndStorage.md#ipfs-게시). |
-| **기록** *(실험)* | **도메인 간 타임라인 표시**: 이 기기가 이 게시물에 대해 기록한 모든 IPFS, Bitcoin, Base 관측을 시간 순서로. [관측 아카이브](12-ArchiveAndLeaderboards.md)에서 읽으므로 방문이 바뀌어도 남으며, 기록이 없으면 그렇다고 알려 줌. |
+| **배치와 IPFS** | [스냅샷 배치](11-EvidenceAndStorage.md#스냅샷-배치) 목록과 [IPFS 게시](11-EvidenceAndStorage.md#ipfs-게시)(실험적). |
+| **기록** | **도메인 간 타임라인 표시**: 이 기기가 이 게시물에 대해 기록한 모든 IPFS, Bitcoin, Base 관측을 시간 순서로. [관측 아카이브](12-ArchiveAndLeaderboards.md)에서 읽으므로 방문이 바뀌어도 남으며, 기록이 없으면 그렇다고 알려 줌. |
 
 ### 상태의 의미
 

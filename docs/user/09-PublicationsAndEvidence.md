@@ -5,19 +5,18 @@
 <!-- /languages -->
 
 > **Partly experimental.** The Publications page is a regular feature: its
-> list and statuses, removing publications that can't be used, announcing
-> on Nostr or Arweave, storing on IPFS or Arweave, anchoring on Arweave,
-> and a card's **Snapshot** and **Decentralization & Evidence** tabs. The
-> rest is **Experimental**: it works, but may change or be removed in a
-> later version, and what it produces may not carry over. The page marks
-> each such part with an **Experimental** badge (**Exp.** on a tab): every
-> kind of anchoring but Arweave, the wallets and their Bitcoin and Base
-> steps, Steem, Blurt, remote IPFS pinning, the **Placements & IPFS** and
-> **History** tabs, and the whole **Wallet, Archive & Publisher Tools**
-> panel. Guides [11](11-EvidenceAndStorage.md) and
-> [12](12-ArchiveAndLeaderboards.md) say which of their sections are
-> Experimental. Building, saving, publishing to the Repository, forking,
-> identities and peers don't depend on any of it.
+> list and statuses, removing publications that can't be used, announcing on
+> Nostr or Arweave, storing on IPFS or Arweave, anchoring on Arweave, and
+> all four of a card's tabs: **Snapshot**, **Decentralization & Evidence**,
+> **Placements & IPFS** and **History**. The rest is **Experimental**: it
+> works, but may change or be removed in a later version, and what it
+> produces may not carry over. The page marks each such part with an
+> **Experimental** badge: every kind of anchoring but Arweave, the wallets
+> and their Bitcoin and Base steps, Steem, Blurt, remote IPFS pinning, and
+> the whole **Wallet, Archive & Publisher Tools** panel. Guides
+> [11](11-EvidenceAndStorage.md) and [12](12-ArchiveAndLeaderboards.md) say
+> which of their sections are Experimental. Building, saving, publishing to
+> the Repository, forking, identities and peers don't depend on any of it.
 
 None of this is needed to use ForkBuild. Skip it if you just want to build,
 publish and explore.
@@ -206,8 +205,8 @@ Below that, two folded sections:
 |---|---|
 | **Snapshot** | [Local Snapshot](#local-snapshot): what this device holds, and how to get it. |
 | **Decentralization & Evidence** | [Decentralization](#decentralization-at-a-glance), the [evidence list](11-EvidenceAndStorage.md#the-evidence-list), and the Bitcoin and Base transaction steps (Experimental). |
-| **Placements & IPFS** *(Exp.)* | The [Snapshot Placements](11-EvidenceAndStorage.md#snapshot-placements) list and [IPFS Publishing](11-EvidenceAndStorage.md#ipfs-publishing). |
-| **History** *(Exp.)* | **Show Cross-Domain Timeline**: every IPFS, Bitcoin and Base observation this device recorded for this publication, in time order, from the [Observation Archive](12-ArchiveAndLeaderboards.md#the-publication-observation-archive), so it's kept across visits; or a note that nothing is recorded yet. |
+| **Placements & IPFS** | The [Snapshot Placements](11-EvidenceAndStorage.md#snapshot-placements) list and [IPFS Publishing](11-EvidenceAndStorage.md#ipfs-publishing) (Experimental). |
+| **History** | **Show Cross-Domain Timeline**: every IPFS, Bitcoin and Base observation this device recorded for this publication, in time order, from the [Observation Archive](12-ArchiveAndLeaderboards.md#the-publication-observation-archive), so it's kept across visits; or a note that nothing is recorded yet. |
 
 ### Status meanings
 

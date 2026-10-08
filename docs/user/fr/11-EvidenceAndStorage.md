@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: bab90f7325291119 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: e6112fd034371b3e -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
@@ -9,10 +9,10 @@
 > le bloc **Distribution → Contenu** d’une carte
 > ([Créer un placement](#créer-un-placement) et
 > [Utiliser un fournisseur préféré](#utiliser-un-fournisseur-préféré)) est
-> une fonctionnalité ordinaire, tout comme les ancres Arweave et la liste
-> des preuves. Tout le reste ici est **Expérimental** : les autres types
-> de preuves externes et les deux parcours de portefeuille, la liste des
-> Placements de Snapshot, l’épinglage IPFS distant et Steem. Cela peut
+> une fonctionnalité ordinaire, tout comme la liste des Placements de
+> Snapshot, les ancres Arweave et la liste des preuves. Tout le reste ici
+> est **Expérimental** : les autres types de preuves externes et les deux
+> parcours de portefeuille, l’épinglage IPFS distant et Steem. Cela peut
 > changer ou être retiré dans une version ultérieure, et ce que cela
 > produit pourrait ne pas être conservé. La page marque ces parties d’un
 > badge **Expérimental**.
@@ -554,10 +554,10 @@ parcours étape par étape ne le fait jamais.
 
 ## Placements de Snapshot
 
-Créer un placement sur IPFS, Arweave ou Local est une fonctionnalité
-ordinaire ; la liste de l’onglet **Placements et IPFS** et tout ce qui
-suit [Utiliser un fournisseur préféré](#utiliser-un-fournisseur-préféré)
-sont *Expérimentaux*.
+Les placements de snapshot sont une fonctionnalité ordinaire, de leur
+création sur IPFS, Arweave ou Local jusqu’à la liste de l’onglet
+**Placements et IPFS**. Seul IPFS (épinglage distant) comme fournisseur
+préféré est *Expérimental*.
 
 Un **placement de snapshot** est une déclaration signée selon laquelle un
 backend de stockage — **IPFS**, **Arweave**, ou le stockage **Local** de

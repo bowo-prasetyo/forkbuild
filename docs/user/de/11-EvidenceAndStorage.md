@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: bab90f7325291119 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: e6112fd034371b3e -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
@@ -9,13 +9,13 @@
 > Arweave über den Block **Verteilung → Inhalt** einer Karte
 > ([Eine Platzierung erstellen](#eine-platzierung-erstellen) und
 > [Einen bevorzugten Anbieter verwenden](#einen-bevorzugten-anbieter-verwenden))
-> ist eine reguläre Funktion, ebenso Arweave-Anker und die Nachweisliste.
-> Alles andere hier ist **Experimentell**: die übrigen Arten externer
-> Nachweise und beide Wallet-Abläufe, die Liste der
-> Snapshot-Platzierungen, entferntes IPFS-Pinning und Steem. Es kann sich
-> in einer späteren Version ändern oder entfernt werden, und was es
-> erzeugt, wird möglicherweise nicht übernommen. Die Seite kennzeichnet
-> diese Teile mit einem Abzeichen **Experimentell**.
+> ist eine reguläre Funktion, ebenso die Liste der Snapshot-Platzierungen,
+> Arweave-Anker und die Nachweisliste. Alles andere hier ist
+> **Experimentell**: die übrigen Arten externer Nachweise und beide
+> Wallet-Abläufe, entferntes IPFS-Pinning und Steem. Es kann sich in einer
+> späteren Version ändern oder entfernt werden, und was es erzeugt, wird
+> möglicherweise nicht übernommen. Die Seite kennzeichnet diese Teile mit
+> einem Abzeichen **Experimentell**.
 
 Jede Karte auf der Seite **Veröffentlichungen** (siehe
 [Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md))
@@ -548,10 +548,9 @@ hinzu; der schrittweise Ablauf tut das nie.
 
 ## Snapshot-Platzierungen
 
-Eine Platzierung auf IPFS, Arweave oder Lokal zu erstellen ist eine
-reguläre Funktion; die Liste im Reiter **Platzierungen & IPFS** und alles
-nach [Einen bevorzugten Anbieter verwenden](#einen-bevorzugten-anbieter-verwenden)
-ist *experimentell*.
+Snapshot-Platzierungen sind eine reguläre Funktion, vom Erstellen auf
+IPFS, Arweave oder Lokal bis zur Liste im Reiter **Platzierungen & IPFS**.
+Nur IPFS (entferntes Pinning) als bevorzugter Anbieter ist *experimentell*.
 
 Eine **Snapshot-Platzierung** ist ein signierter Anspruch, dass ein
 Speicher-Backend — **IPFS**, **Arweave** oder der eigene **lokale**

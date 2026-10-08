@@ -4444,3 +4444,24 @@ always ended in "Preferred provider not found".
 - Tests: `tests/PublicationArchiveTimeline.test.js`, `tests/RemotePinningSavedService.test.js` and
   `tests/PublicationsHistoryAndRemotePinningBrowser.test.js`.
 - Not done: the Placements & IPFS and History tabs keep their **Exp.** badges; graduating them is a separate step.
+
+## The Placements & IPFS and History tabs are regular features (unnumbered, 2026-10-08)
+
+The last step of graduating the Publications page's tabs: all four of a card's tabs are now regular, and the
+**Exp.** tab badge is gone.
+
+- Placements & IPFS: the Snapshot Placements list (Show Placements, Inspect, Resolve, Materialize, Use Preferred
+  Provider, placement relationships) is regular. Only the IPFS Publishing section inside the tab keeps an
+  **Experimental** badge on its title, since it uploads through a remote pinning service.
+- History: the tab reads the durable Observation Archive (done in the previous step) and is regular. A neutral hint
+  at its top (`publications.historySources`) says that remote IPFS pinning and Bitcoin and Base anchoring, which add
+  to its list, are Experimental, with the badge; each is still marked where it is made.
+- `publications.exp` and `publications.experimentalMayChangeOrBe`, used only by the tab badges, are removed;
+  `publications.partsMarked` no longer names the tabs.
+- Docs, in every language: guides 09 (the page's Experimental list and the Details table), 11 (the intro and
+  Snapshot Placements), the user guide index, README.md and DeveloperFAQ.md.
+- Tests: `tests/PublicationsPageLayoutBrowser.test.js` now asserts that no detail tab is marked, and
+  `tests/PublicationsHistoryAndRemotePinningBrowser.test.js` that History names its Experimental sources and that on
+  Placements & IPFS only IPFS Publishing is badged.
+- Left Experimental on the page: anchoring other than Arweave, the wallets and their Bitcoin and Base steps, Steem,
+  Blurt, remote IPFS pinning, and the Wallet, Archive & Publisher Tools panel.
