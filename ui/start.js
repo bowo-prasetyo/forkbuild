@@ -3,6 +3,8 @@ import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
 import { countDailyVisit } from '../application/settings/CountDailyVisit.js';
+import { countLaunchChannel } from '../application/settings/CountLaunchChannel.js';
+import { addressWithoutLaunchChannel } from '../core/LaunchChannel.js';
 import { applyDocumentLanguage, setAppLocale } from './i18n/i18n.js';
 import { negotiateLocale } from './i18n/locales.js';
 import { importWithRetry } from './importWithRetry.js';
@@ -33,13 +35,21 @@ async function chooseLanguage() {
 }
 
 // The daily visitor count (docs/Privacy.md, "Visitor count"): one image
-// request a day, with no referrer, from the official site only. Not waited
-// for.
+// request a day, with no referrer, from the official site only; and, for a
+// visit through a launch post's link (`?ref=<channel>`), which channel it
+// was. The parameter is then taken out of the address, so a reload or a
+// copied address doesn't count it again. Not waited for.
 function countVisit() {
-    countDailyVisit({
-        settingsStore: new VisitorCountSettingsStore({ storageProvider: new LocalStorageProvider() }),
-        origin: window.location.origin,
-        privacySignals: browserPrivacySignals(),
-        sendHit: sendCounterHit
-    });
+    const settingsStore = new VisitorCountSettingsStore({ storageProvider: new LocalStorageProvider() });
+    const counting = { settingsStore, origin: window.location.origin, privacySignals: browserPrivacySignals(), sendHit: sendCounterHit };
+    countDailyVisit(counting);
+    countLaunchChannel({ ...counting, search: window.location.search });
+    const address = addressWithoutLaunchChannel(window.location.href);
+    if (address) {
+        try {
+            history.replaceState(history.state, '', address);
+        } catch {
+            // The address keeps the parameter; nothing else depends on it.
+        }
+    }
 }

@@ -1,6 +1,11 @@
 # ForkBuild
 
-**Build. Fork. Share. Evolve.**
+**Build in 3D in your browser. Remix anything. Own your work.**
+
+**[Try it now](https://bowo-prasetyo.github.io/forkbuild/?ref=github)**: no
+account, no download.
+
+![ForkBuild's Home page, with a small village turning in 3D](docs/launch/press/home-desktop.png)
 
 An open-source, browser-based, decentralized building platform. Creations are
 built from bricks, forked like source code, published through interchangeable

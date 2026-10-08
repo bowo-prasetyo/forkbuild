@@ -143,6 +143,14 @@ It also hears, the same way, when ForkBuild is installed as an app
 And when someone joins the weekly build challenge (**Join the challenge**,
 or the challenge in the Editor's **New**): `/e/challenge-join`.
 
+And when ForkBuild is opened through a link in one of its own launch posts,
+which ends in `?ref=` and the name of the place it was posted (`hn`,
+`producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu` or
+`github`; any other value is ignored): `/r/` and that name, such as `/r/hn`,
+once. The app then takes `ref` out of the address, so reloading or passing
+the address on doesn't send it again. This tells which posts brought people,
+and nothing about who they are or what they did.
+
 Each sends only its path and the random number: never the link, the build,
 its title or who made it. Which builds were opened from a link is kept only
 in the open page's memory, and forgotten when it closes.
@@ -161,7 +169,9 @@ anyway. So `/e/embed-view` and `/e/embed-open` follow only the other two
 rules: never with Global Privacy Control or Do Not Track, and only from the
 official site.
 
-The code is `core/VisitorCount.js`, `application/settings/CountDailyVisit.js`,
+The code is `core/VisitorCount.js`, `core/LaunchChannel.js`,
+`application/settings/CountDailyVisit.js`,
+`application/settings/CountLaunchChannel.js`,
 `application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
 `ui/start.js` and `ui/embed/embedBoot.js`.
 
@@ -185,6 +195,7 @@ only when you use the feature, and each server can be changed under
 | You install ForkBuild from the official site (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/installed`, no referrer and no cookie |
 | On the official site, you copy a build's embed code, or an embedded build is shown, or opened in ForkBuild (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
 | On the official site, you join the weekly build challenge (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/challenge-join`, no referrer and no cookie |
+| You open the official site through a launch post's link (`?ref=…`, see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/r/<channel>`, no referrer and no cookie |
 | You make yourself discoverable, or look someone up, in **Peers** | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | your identity's public key and a connection offer, kept for at most 15 minutes; the identity you look up; when you connect to someone you found, your connection reply (it lists your network addresses), which only they can collect |
 | You join, or look into, a public lobby | the same rendezvous server | your signed lobby card (public key, display name, which lobby), kept for at most 15 minutes and renewed while you stay; which lobby you look into |
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |

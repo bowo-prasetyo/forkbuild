@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 65f1e9c30110d299 -->
+<!-- translation-of: docs/Privacy.md source-hash: ed8e945e703f3ded -->
 # Privacidad
 
 <!-- languages -->
@@ -165,6 +165,14 @@ abajo):
 Y cuando alguien se une al desafío de construcción semanal (**Unirse al
 desafío**, o el desafío en **Nuevo** del Editor): `/e/challenge-join`.
 
+Y cuando ForkBuild se abre desde un enlace de una de sus propias
+publicaciones de lanzamiento, que termina en `?ref=` y el nombre del lugar
+donde se publicó (`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu` o `github`; cualquier otro valor se ignora): `/r/`
+y ese nombre, como `/r/hn`, una vez. La aplicación quita luego `ref` de la
+dirección, para que recargar o pasar la dirección no lo vuelva a enviar.
+Esto indica qué publicaciones trajeron gente, y nada sobre quiénes son ni
+qué hicieron.
+
 Cada una envía solo su ruta y el número aleatorio: nunca el enlace, la
 construcción, su título ni quién la hizo. Qué construcciones se abrieron
 desde un enlace solo se guarda en la memoria de la página abierta, y se
@@ -186,7 +194,8 @@ dos reglas: nunca con Global Privacy Control o Do Not Track, y solo desde el
 sitio oficial.
 
 El código está en `core/VisitorCount.js`,
-`application/settings/CountDailyVisit.js`,
+`core/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
+`application/settings/CountLaunchChannel.js`,
 `application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
 `ui/start.js` y `ui/embed/embedBoot.js`.
 
@@ -210,6 +219,7 @@ dirección IP y lo que usted le pide.
 | Instala ForkBuild desde el sitio oficial (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/e/installed`, sin referente y sin cookie |
 | En el sitio oficial, copia el código para insertar de una construcción, o una construcción insertada se muestra o se abre en ForkBuild (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con una ruta fija que indica cuál de los tres casos fue, sin referente y sin cookie |
 | En el sitio oficial, se une al desafío de construcción semanal (vea «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/e/challenge-join`, sin referente y sin cookie |
+| Abre el sitio oficial desde el enlace de una publicación de lanzamiento (`?ref=…`, vea «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/r/<canal>`, sin referente y sin cookie |
 | Se vuelve descubrible, o busca a alguien, en **Pares** | el servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | la clave pública de su identidad y una oferta de conexión, que se guardan como máximo 15 minutos; la identidad que busca; cuando se conecta con alguien que encontró, su respuesta de conexión (que muestra sus direcciones de red), que solo esa persona puede recoger |
 | Se une a una sala pública, o mira una | el mismo servidor de encuentro | su tarjeta de sala firmada (clave pública, nombre visible, qué sala), que se guarda como máximo 15 minutos y se renueva mientras se queda; qué sala mira |
 | Se inicia una conexión entre pares | servidores STUN (`stun.l.google.com`) | nada más que una solicitud de su dirección IP pública |

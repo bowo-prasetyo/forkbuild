@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 65f1e9c30110d299 -->
+<!-- translation-of: docs/Privacy.md source-hash: ed8e945e703f3ded -->
 # プライバシー
 
 <!-- languages -->
@@ -153,6 +153,13 @@ ForkBuild 自身のファイル（コード、スタイルシート、アイコ�
 また、毎週の建築チャレンジに参加したとき（**チャレンジに参加**、または
 エディターの **新規** のチャレンジ）: `/e/challenge-join`。
 
+また、ForkBuild 自身のローンチ投稿のリンク（末尾が `?ref=` と投稿先の名前:
+`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu`、`github`。それ以外の値は無視されます）から開かれたとき:
+`/r/` とその名前（たとえば `/r/hn`）を 1 回。その後アプリはアドレスから
+`ref` を取り除くので、再読み込みしたりアドレスを渡したりしても、もう一度は
+送られません。どの投稿から人が来たかがわかるだけで、その人が誰で何をしたかは
+何もわかりません。
+
 どれもパスと乱数だけを送り、リンク、作品、そのタイトル、作った人は決して
 送りません。どの作品をリンクから開いたかは、開いているページのメモリーに
 だけ保持され、ページを閉じると忘れられます。
@@ -170,7 +177,7 @@ ForkBuild 自身のファイル（コード、スタイルシート、アイコ�
 `/e/embed-open` は残りの 2 つのルールにだけ従います。Global Privacy Control
 または Do Not Track があれば送らず、公式サイトからしか送りません。
 
-コードは `core/VisitorCount.js`、`application/settings/CountDailyVisit.js`、
+コードは `core/VisitorCount.js`、`core/LaunchChannel.js`、`application/settings/CountDailyVisit.js`、`application/settings/CountLaunchChannel.js`、
 `application/settings/FunnelEventCounter.js`、`ui/counterHit.js`、
 `ui/start.js`、`ui/embed/embedBoot.js` にあります。
 
@@ -194,6 +201,7 @@ ForkBuild 自身のファイル（コード、スタイルシート、アイコ�
 | 公式サイトから ForkBuild をインストールしたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/installed` の画像リクエスト 1 件。リファラーなし、Cookie なし |
 | 公式サイトで作品の埋め込みコードをコピーしたとき、または埋め込まれた作品が表示されたり ForkBuild で開かれたりしたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 3 つのどれだったかを示す固定パスの画像リクエスト 1 件。リファラーなし、Cookie なし |
 | 公式サイトで、毎週の建築チャレンジに参加したとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/challenge-join` の画像リクエスト 1 回。リファラーと Cookie はなし |
+| ローンチ投稿のリンク（`?ref=…`）から公式サイトを開いたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/r/<チャネル>` の画像リクエスト 1 回。リファラーと Cookie はなし |
 | **ピア** で自分を見つけてもらえるようにするか、誰かを探したとき | ランデブーサーバー（`forkbuild-rendezvous.prazjp.workers.dev`） | あなたのアイデンティティの公開鍵と接続の申し出（最長 15 分保持）。探したアイデンティティ。見つけた人に接続するときは、あなたの接続の応答（ネットワークアドレスを含みます）。これを受け取れるのは相手だけです |
 | 公開ロビーに参加するか、のぞいたとき | 同じランデブーサーバー | 署名されたロビーのカード（公開鍵、表示名、どのロビーか）。最長 15 分保持され、ロビーにいる間は更新されます。どのロビーをのぞいたか |
 | ピア接続が始まるとき | STUN サーバー（`stun.l.google.com`） | あなたのパブリック IP アドレスの問い合わせだけ |
