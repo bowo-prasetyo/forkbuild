@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6a92be43d5eb9d49 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c477db500c6a8d08 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -57,12 +57,17 @@ lien** et **Enregistrer l’image**, avec le lien en dessous. Les mêmes
 boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
 
 - **La construction voyage dans le lien.** Rien n’a besoin d’être distribué
-  d’abord, et aucun portefeuille, compte ni serveur n’intervient : le lien
+  d’abord, et aucun portefeuille ni compte n’intervient : le lien
   porte votre Monde partagé signé et la construction elle-même. Quiconque
   l’ouvre, sur n’importe quel appareil, arrive dans la Vue du monde sur
   votre construction, et **Modifier une copie** la fait sienne. ForkBuild
   vérifie la signature, et que la construction lui correspond, avant de
   montrer quoi que ce soit ; un lien modifié ou tronqué le signale.
+- **Il montre ce qu’il est.** Collé dans une messagerie, un courriel ou
+  une publication, le lien affiche le titre de votre construction, votre nom
+  et une image de la construction, dessinée par le serveur de liens de
+  ForkBuild, qui envoie ensuite quiconque l’ouvre vers ForkBuild. Un lien
+  modifié n’affiche que « A shared build ».
 - **Il faut une signature.** Publiez en étant connecté ; une création
   publiée sans être connecté n’obtient pas de lien.
 - **Taille.** Une construction d’environ 500 briques au plus y tient ; le

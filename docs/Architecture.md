@@ -279,8 +279,10 @@ admits it as World discovery does, and adopts its publisher's signed
 placement announced beside the Snapshot
 (application/publication/OpenPublicationLink.js). A link-only share
 (`/s/:payload`, docs/Protocol.md "Link-only shares") carries the claim and
-the build itself and takes the same path with no network; Share offers it
-for a Publication not yet distributed, with Save picture
+the build itself and takes the same path with no network; Share offers it,
+by way of the rendezvous worker's `/b/<payload>` link preview
+(server/rendezvous-worker/buildPreview.js: a title, a picture drawn in the
+worker, then on to the app), for a Publication not yet distributed, with Save picture
 (renderer/BuildPicture.js, a 1200 × 630 PNG drawn by
 DocumentThumbnailRenderer). WorldNavigationSession owns its runtime:
 camera positioning (SpatialCameraController), which documents are

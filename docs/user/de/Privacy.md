@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 225ed1a7731c5549 -->
+<!-- translation-of: docs/Privacy.md source-hash: f677edb8952577f9 -->
 # Datenschutz
 
 <!-- languages -->
@@ -191,6 +191,7 @@ was Sie bei ihm anfragen.
 | Sie speichern, kündigen an oder verankern auf Blurt, oder entdecken Blurt-Beiträge (*experimentell*) | Blurt-API-Knoten (`rpc.blurt.blog`, dann `rpc.beblurt.com`, dann `rpc.drakernoise.com`); das Signieren läuft über die Erweiterung Blurt Keychain (oder WhaleVault) | Ihren Blurt-Kontonamen und die Konten, deren Beitragsverlauf gelesen wird (die, denen Sie folgen, und jedes Konto, das dieses Gerät unter den Tags von ForkBuild posten gesehen hat, auf diesem Gerät gemerkt); was Sie posten, ist dauerhaft öffentlich auf der Chain, unter Ihrem eigenen Konto, und Bearbeitungen lassen die frühere Fassung in seinem Verlauf. Jede Transaktion kostet Ihr Konto eine kleine Gebühr in BLURT |
 | Sie verteilen den Signierten Anspruch einer Veröffentlichung auf Blurt (*experimentell*) | der Bildhoster von Blurt (`img-upload.blurt.blog`), direkt oder, wenn der Browser ihn nicht erreicht, über das `/blurt-image`-Relay des Rendezvous-Servers, das nichts speichert | ein 320×200-Bild des Bauwerks für die Vorschau des Beitrags, signiert mit Ihrem Blurt-Posting-Schlüssel |
 | Sie verteilen den Signierten Anspruch einer Veröffentlichung auf Steem (*experimentell*) | der Steem-Bildhoster (`steemitimages.com`), direkt oder, wenn der Browser ihn nicht erreicht, über das `/steem-image`-Relay des Rendezvous-Servers, das nichts speichert | ein 320×200-Bild des Bauwerks für die Vorschau des Beitrags, signiert mit Ihrem Steem-Posting-Schlüssel |
+| Jemand öffnet einen Link, der sein Bauwerk enthält (`/b/…`), oder eine Website zeigt eine Vorschau davon | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | den Link, der das Bauwerk und seinen Signierten Anspruch enthält; er speichert nichts |
 | Sie öffnen einen geteilten Link zu einer Veröffentlichung (`#/view/…`) | der Steem- oder Blurt-Knoten, das Arweave-Gateway oder das IPFS-Gateway, das der Link nennt, dann die Ankündigungssubstrate, um sein Bauwerk zu finden | welchen Beitrag, welche Transaktion oder welche CID Sie öffnen |
 | Sie verankern oder überprüfen Nachweise auf Bitcoin (*experimentell*) | eine Esplora-API (`blockstream.info`) | die Transaktion, die Sie senden oder nachschlagen |
 | Sie überprüfen Nachweise auf Base (*experimentell*) | ein Base-JSON-RPC-Endpunkt (`mainnet.base.org`) | die Transaktion, die Sie nachschlagen |
@@ -199,14 +200,19 @@ was Sie bei ihm anfragen.
 ForkBuild sendet Ihren privaten Schlüssel, Ihre Passphrase oder Ihre
 gespeicherten Dokumente nie an einen dieser Server.
 
-**Ein Link, der sein Bauwerk enthält** (`#/s/…`, von **Link kopieren**
-oder **Teilen …** erstellt, bevor ein Bauwerk verteilt ist), trägt Ihre
-signierte Geteilte Welt und das Bauwerk selbst hinter dem `#`, einem Teil
-der Adresse, den Browser nie an einen Server senden. Ihn zu erstellen
-kontaktiert nichts, und ihn zu öffnen kontaktiert nur die Website, die die
-App ausliefert. Wer den Link hat, sieht das Bauwerk, seinen Titel, seine
-Beschreibung und den Namen des Autors sowie den öffentlichen Schlüssel Ihrer
-Identität, wie bei jeder Geteilten Welt, die Sie verteilen.
+**Ein Link, der sein Bauwerk enthält** (von **Link kopieren** oder
+**Teilen …** erstellt, bevor ein Bauwerk verteilt ist), trägt Ihre signierte
+Geteilte Welt und das Bauwerk selbst. Er zeigt auf den Rendezvous-Server
+(`forkbuild-rendezvous.prazjp.workers.dev/b/…`), damit Chat-Apps und soziale
+Netzwerke den Titel des Bauwerks und ein Bild davon zeigen können: Wer den
+Link öffnet, oder eine Website, die eine Vorschau davon zeigt, sendet ihn und
+damit das Bauwerk an diesen Server. Er prüft die Signatur, zeichnet das Bild,
+schickt Menschen weiter zur App (`#/s/…`, einem Teil der Adresse, den Browser
+nie an einen Server senden) und speichert nichts. Cloudflare, das den Server
+betreibt, kann die angefragten Adressen protokollieren. Einen Link zu
+erstellen kontaktiert nichts. Wer den Link hat, sieht das Bauwerk, seinen
+Titel, seine Beschreibung und den Namen des Autors sowie den öffentlichen
+Schlüssel Ihrer Identität, wie bei jeder Geteilten Welt, die Sie verteilen.
 
 **Relays werden nur bei Bedarf genutzt.** Eine Verbindung versucht immer
 zuerst einen direkten Weg, dann einen über STUN gefundenen, und weicht nur

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6a92be43d5eb9d49 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c477db500c6a8d08 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -57,13 +57,18 @@ Begitu **Terbitkan** berhasil, pemberitahuan di Editor juga menampilkan
 bawah **Dunia Bersama Saya** di Tampilan Dunia.
 
 - **Bangunannya ikut di dalam tautan.** Tidak ada yang perlu
-  didistribusikan lebih dulu, dan tidak ada dompet, akun, atau server yang
+  didistribusikan lebih dulu, dan tidak ada dompet atau akun yang
   terlibat: tautan itu membawa Dunia Bersama Anda yang bertanda tangan dan
   bangunannya sendiri. Siapa pun yang membukanya, di perangkat apa pun,
   sampai di Tampilan Dunia pada bangunan Anda, dan **Edit Salinan**
   menjadikannya milik mereka. ForkBuild memeriksa tanda tangannya, dan
   bahwa bangunannya cocok, sebelum menampilkan apa pun; tautan yang diubah
   atau terpotong akan mengatakannya.
+- **Tautan itu menunjukkan isinya.** Saat ditempel di aplikasi obrolan,
+  email, atau unggahan, tautan menampilkan judul bangunan Anda, nama Anda,
+  dan gambar bangunan itu, yang digambar oleh server tautan ForkBuild, lalu
+  mengarahkan siapa pun yang membukanya ke ForkBuild. Tautan yang diubah
+  hanya menampilkan "A shared build".
 - **Perlu tanda tangan.** Terbitkan saat masuk; karya yang diterbitkan saat
   keluar tidak mendapat tautan.
 - **Ukuran.** Bangunan hingga sekitar 500 balok muat; tautan kastel siap

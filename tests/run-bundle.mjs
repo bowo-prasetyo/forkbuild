@@ -142,7 +142,7 @@ async function openLinkOnlyShare(browser, base) {
     const manager = new DocumentManager();
     manager.load(new Document({ world, metadata: new DocumentMetadata({ title: 'Linked castle', author: 'alice', license: new License({ id: LicenseId.CC_BY_4_0 }) }) }), 'doc-linked-castle');
     const publication = new PublishDocumentUseCase(new LocalPublisherProvider(storage, contentStore), identity).execute(manager);
-    const { url } = await prepareLinkOnlyShare({ publication, contentStore, appUrl: `${base}/` });
+    const { url } = await prepareLinkOnlyShare({ publication, contentStore, appUrl: `${base}/`, previewUrl: null });
     assert(url, 'the castle gets a link-only share');
 
     const context = await browser.newContext();
@@ -222,7 +222,7 @@ async function firstVisit(browser, base) {
         await editor.click('.modal-content .modal-actions .modal-btn--primary');
         await editor.waitForSelector('.editor-post-publish-share .publication-share-link-url', { timeout: 60_000 });
         const link = await editor.$eval('.editor-post-publish-share .publication-share-link-url', (input) => input.value);
-        assert(link.includes('#/s/1'), `logging in from Publish publishes it signed, with a link ready (${link.slice(0, 60)})`);
+        assert(link.includes('/b/1'), `logging in from Publish publishes it signed, with a link ready (${link.slice(0, 60)})`);
         assert((await editor.textContent('.user-widget')).includes('Bundle builder'), 'and leaves the new identity logged in');
         await editor.click('.editor-post-publish-share .publication-share-link-actions button:has-text("Copy link")');
         await editor.waitForSelector('.first-build-step--done[data-step="share"]', { timeout: 10_000 });

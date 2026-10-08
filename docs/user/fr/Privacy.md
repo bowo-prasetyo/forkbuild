@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 225ed1a7731c5549 -->
+<!-- translation-of: docs/Privacy.md source-hash: f677edb8952577f9 -->
 # Confidentialité
 
 <!-- languages -->
@@ -193,6 +193,7 @@ demandez.
 | Vous stockez, annoncez ou ancrez sur Blurt, ou découvrez des articles Blurt (*expérimental*) | des nœuds API Blurt (`rpc.blurt.blog`, puis `rpc.beblurt.com`, puis `rpc.drakernoise.com`) ; la signature passe par l’extension Blurt Keychain (ou WhaleVault) | le nom de votre compte Blurt, et les comptes dont l’historique d’articles est lu (ceux que vous suivez, et chaque compte que cet appareil a vu publier sous les tags de ForkBuild, mémorisés sur cet appareil) ; ce que vous publiez est public sur la chaîne pour toujours, sous votre propre compte, et les modifications laissent la version précédente dans son historique. Chaque transaction paie de petits frais en BLURT depuis votre compte |
 | Vous distribuez la Déclaration signée d’une Publication sur Blurt (*expérimental*) | l’hébergeur d’images de Blurt (`img-upload.blurt.blog`), directement ou, quand le navigateur ne peut pas l’atteindre, par le relais `/blurt-image` du serveur de rendez-vous, qui ne conserve rien | une image 320×200 de la construction pour l’aperçu de l’article, signée avec votre clé de publication Blurt |
 | Vous distribuez la Déclaration signée d’une Publication sur Steem (*expérimental*) | l’hébergeur d’images de Steem (`steemitimages.com`), directement ou, quand le navigateur ne peut pas l’atteindre, par le relais `/steem-image` du serveur de rendez-vous, qui ne garde rien | une image 320×200 de la construction pour l’aperçu de l’article, signée avec votre clé de publication Steem |
+| Quelqu’un ouvre, ou un site affiche l’aperçu d’un lien qui contient sa construction (`/b/…`) | le serveur de rendez-vous (`forkbuild-rendezvous.prazjp.workers.dev`) | le lien, qui contient la construction et sa Déclaration signée ; il ne conserve rien |
 | Vous ouvrez un lien partagé vers une Publication (`#/view/…`) | le nœud Steem ou Blurt, la passerelle Arweave ou la passerelle IPFS que le lien désigne, puis les supports d’annonce pour trouver sa construction | l’article, la transaction ou le CID que vous ouvrez |
 | Vous ancrez ou vérifiez des preuves sur Bitcoin (*expérimental*) | une API Esplora (`blockstream.info`) | la transaction que vous diffusez ou consultez |
 | Vous vérifiez des preuves sur Base (*expérimental*) | un endpoint JSON-RPC Base (`mainnet.base.org`) | la transaction que vous consultez |
@@ -201,14 +202,20 @@ demandez.
 ForkBuild n’envoie jamais votre clé privée, votre phrase secrète ni vos
 documents enregistrés à aucun de ces serveurs.
 
-**Un lien qui contient sa construction** (`#/s/…`, créé par **Copier le
-lien** ou **Partager…** avant qu’une construction soit distribuée) porte
-votre Monde partagé signé et la construction elle-même après le `#`, une
-partie de l’adresse que les navigateurs n’envoient jamais à un serveur. Le
-créer ne contacte rien, et l’ouvrir ne contacte que le site qui sert
-l’application. Quiconque a le lien peut voir la construction, son titre, sa
-description et le nom de son auteur, ainsi que la clé publique de votre
-identité, comme pour tout Monde partagé que vous distribuez.
+**Un lien qui contient sa construction** (créé par **Copier le lien** ou
+**Partager…** avant qu’une construction soit distribuée) porte votre Monde
+partagé signé et la construction elle-même. Il pointe vers le serveur de
+rendez-vous (`forkbuild-rendezvous.prazjp.workers.dev/b/…`) pour que les
+messageries et les réseaux sociaux puissent afficher le titre de la
+construction et une image d’elle : ouvrir le lien, ou un site qui en
+affiche l’aperçu, l’envoie, et la construction avec, à ce serveur, qui
+vérifie la signature, dessine l’image, envoie les gens vers l’application
+(`#/s/…`, une partie de l’adresse que les navigateurs n’envoient jamais à un
+serveur) et ne conserve rien. Cloudflare, qui fait tourner le serveur, peut
+journaliser les adresses demandées. Créer un lien ne contacte rien.
+Quiconque a le lien peut voir la construction, son titre, sa description et
+le nom de son auteur, ainsi que la clé publique de votre identité, comme pour
+tout Monde partagé que vous distribuez.
 
 **Les relais ne sont utilisés que lorsque c’est nécessaire.** Une
 connexion essaie toujours d’abord un chemin direct, puis un chemin trouvé

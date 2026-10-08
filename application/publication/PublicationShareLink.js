@@ -1,4 +1,4 @@
-import { describePublicationClaimLocator, linkOnlyPublicationViewUrl, publicationShareUrl, FORKBUILD_APP_URL } from '../../core/ForkBuildAppLinks.js';
+import { describePublicationClaimLocator, linkOnlyPublicationViewUrl, linkPreviewUrl, publicationShareUrl, FORKBUILD_APP_URL, FORKBUILD_LINK_PREVIEW_URL } from '../../core/ForkBuildAppLinks.js';
 import { PublicationDistributionState } from './distribution/PublicationDistributionLifecycle.js';
 import { ContentReference } from '../../core/ContentReference.js';
 import { MAX_LINK_PAYLOAD_LENGTH, encodePublicationLinkPayload } from './sharing/PublicationLinkPayload.js';
@@ -52,8 +52,13 @@ export function describePublicationShare({ lifecycle, title = null, linkOnly = n
 // from `contentStore`: `{ url, payloadLength, snapshotText }`, or `{ reason,
 // snapshotText }` (`reason` a message) when it can't be offered: unsigned, its
 // build not on this device (`snapshotText` then null), or too large for a
-// link. `snapshotText` is the build, for a picture of it. Never throws.
-export async function prepareLinkOnlyShare({ publication, contentStore, appUrl = FORKBUILD_APP_URL, maxPayloadLength = MAX_LINK_PAYLOAD_LENGTH }) {
+// link. `snapshotText` is the build, for a picture of it. The link is
+// `previewUrl`'s /b/<payload>, which gives it a title and picture where it is
+// pasted and sends people on to the app, or with `previewUrl` null the app's
+// own `appUrl#/s/<payload>`. Never throws.
+export async function prepareLinkOnlyShare({
+    publication, contentStore, appUrl = FORKBUILD_APP_URL, previewUrl = FORKBUILD_LINK_PREVIEW_URL, maxPayloadLength = MAX_LINK_PAYLOAD_LENGTH
+}) {
     const claim = typeof publication?.toJSON === 'function' ? publication.toJSON() : publication;
     const hash = claim?.contentReference?.hash ?? claim?.contentHash;
     let snapshotText = null;
@@ -75,7 +80,8 @@ export async function prepareLinkOnlyShare({ publication, contentStore, appUrl =
         return Object.freeze({ reason: message('share.linkOnlyUnavailable'), snapshotText });
     }
     if (payload.length > maxPayloadLength) return Object.freeze({ reason: message('share.linkOnlyTooLarge'), snapshotText });
-    return Object.freeze({ url: linkOnlyPublicationViewUrl(payload, appUrl), payloadLength: payload.length, snapshotText });
+    const url = previewUrl ? linkPreviewUrl(payload, previewUrl) : linkOnlyPublicationViewUrl(payload, appUrl);
+    return Object.freeze({ url, payloadLength: payload.length, snapshotText });
 }
 
 // A local store may hold content on disk and not yet in memory; getSync()

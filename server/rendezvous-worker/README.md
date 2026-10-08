@@ -222,6 +222,44 @@ picture, forwarding to the image host blurt.blog's front end uploads to,
 for when the browser can't upload there itself. The same checks and limits apply; the host checks the
 signature against the account's Blurt posting key.
 
+## Link previews for shared builds
+
+`GET /b/<payload>` is where the app's **Share…** and **Copy link** point for
+a build small enough to travel inside the link (see `docs/Protocol.md`,
+"Link-only shares", in the main repo). The app's own `#/s/<payload>` link
+keeps the build in the address's fragment, which never reaches a server, so
+a chat app or social site pasting it can show nothing. This route answers
+with a page carrying Open Graph and Twitter card tags, then sends the
+browser straight on to the app at `APP_URL#/s/<payload>` (a `refresh`
+`<meta>`; the page runs no script).
+
+- **Title and description** come from the build's Signed Claim only when its
+  Ed25519 signature checks out (the same check as the rest of this worker)
+  and the build matches the hash the claim signed. Anything else, including
+  a damaged or older-format link, gets a plain "A shared build" preview
+  with the site's card picture, and still goes on to the app, which says
+  what is wrong.
+- **The picture**, `GET /b/<payload>/preview.png`, is drawn here, without a
+  browser: each brick as flat-shaded boxes, wedges or pyramids
+  (`BRICK_SHAPES` in `buildPreview.js`, which mirrors the app's Core
+  library), 600 × 315, as an indexed-color PNG of a few kilobytes. Drawing
+  one takes a few milliseconds of CPU, and the picture is kept in
+  Cloudflare's edge cache, since a payload is its build and never changes.
+  A build of more than 4,000 bricks gets the site's card instead.
+- **It keeps nothing**, and needs no Durable Object or origin check:
+  crawlers and people open it from anywhere. Cloudflare's own request logs
+  (the `[observability]` setting in `wrangler.toml`) can record the
+  addresses requested, which include the build.
+- **`APP_URL`** (a variable in `wrangler.toml`) is where people are sent;
+  it defaults to `https://bowo-prasetyo.github.io/forkbuild/`. A copy of the
+  app hosted elsewhere sets it to its own address, and points
+  `FORKBUILD_LINK_PREVIEW_URL` in `core/ForkBuildAppLinks.js` at its own
+  worker.
+
+Check it by sharing a build from the app and opening the link, or by pasting
+it into a link-preview debugger (for example Facebook's Sharing Debugger or
+opengraph.xyz).
+
 ## Cost
 
 Cloudflare Workers' free tier currently includes Durable Objects (on
@@ -287,6 +325,10 @@ Redeploy with `wrangler deploy`. Entries stored by the previous version
 keep working until they expire (at most minutes). Clients older than
 this version of the app still publish signed entries, but their REMOVE
 is unsigned and is refused; their entries simply expire instead.
+
+**Deploy this version before the app that shares `/b/` links:** an older
+worker answers such a link with its plain "is running" text instead of
+sending people on to the build.
 
 The answer mailbox, the public lobby and the Steem image relay need this
 version of the worker. Against an older one, the app falls back to handing

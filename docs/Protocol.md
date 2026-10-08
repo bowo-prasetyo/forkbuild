@@ -274,6 +274,22 @@ offers a link only for a signed Publication whose payload is at most 12,000
 characters (about 500 bricks). The route is in the fragment, which browsers
 never send to a server.
 
+The link Share offers is the rendezvous worker's preview of it, so it shows
+a title and picture where it is pasted
+(server/rendezvous-worker/buildPreview.js):
+
+    https://forkbuild-rendezvous.prazjp.workers.dev/b/<payload>
+    https://forkbuild-rendezvous.prazjp.workers.dev/b/<payload>/preview.png
+
+The page carries Open Graph and Twitter card tags and a `refresh` to
+`<APP_URL>#/s/<payload>`. Its title, description and picture come from the
+claim only when the claim's signature verifies against its
+`publisherIdentity.id` (did:key) over the Publication's signing descriptor
+and SHA-256 of `build` equals the claim's `contentReference.hash` (or
+`contentHash`); otherwise it is a plain "A shared build" card. The picture
+is drawn from the snapshot's brick tables (schema 2) or brick lists
+(schema 1).
+
 Opening one (`openPublicationLink({ linkOnly })`) is the shared-link path
 below with no network: the claim is verified with the World discovery
 verifier, the build is kept only if it matches the claim's `contentHash`

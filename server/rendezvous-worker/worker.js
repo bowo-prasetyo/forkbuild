@@ -1,3 +1,5 @@
+import { handleBuildPreview, isBuildPreviewPath } from './buildPreview.js';
+
 // The ForkBuild rendezvous server: a Cloudflare Worker plus one Durable
 // Object that keeps, for each identity, where it can currently be reached.
 // It implements the server half of the protocol documented in
@@ -69,8 +71,12 @@
 // (peer/PeerAuthenticationSession.js); the server only decides who may
 // change which entry.
 //
-// This file imports nothing from the app, so it can be deployed on its
-// own.
+// Link previews: GET /b/<payload> and /b/<payload>/preview.png
+// (buildPreview.js) give a build shared in a link a title and picture when
+// the link is pasted into a chat or a post, then send people on to the app.
+//
+// Neither file imports anything from the app, so the worker can be deployed
+// on its own.
 
 const PROTOCOL_VERSION = 1;
 const SIGNING_DOMAIN = 'forkbuild';
@@ -1112,6 +1118,11 @@ export default {
         }
         if (pathname.startsWith('/blurt-image/')) {
             return handleBlurtImageUpload(request, env);
+        }
+        // Opened by people and link-preview crawlers from anywhere, so no
+        // origin check; it keeps nothing.
+        if (isBuildPreviewPath(pathname)) {
+            return handleBuildPreview(request, env, { verifySignature });
         }
         const isTurnRequest = pathname === '/turn-credentials';
         if (!isTurnRequest && request.headers.get('Upgrade') !== 'websocket') {

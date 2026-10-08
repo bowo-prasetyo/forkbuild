@@ -52,11 +52,15 @@ picture**, with the link below them. The same buttons are under **My Shared
 World** in World View.
 
 - **The build travels inside the link.** Nothing has to be distributed
-  first, and no wallet, account or server is involved: the link carries
-  your signed Shared World and the build itself. Anyone who opens it, on any
+  first, and no wallet or account is involved: the link carries your signed
+  Shared World and the build itself. Anyone who opens it, on any
   device, lands in World View on your build, and **Edit a Copy** makes it
   theirs. ForkBuild checks the signature, and that the build matches it,
   before showing anything; a link that was changed or cut short says so.
+- **It shows what it is.** Pasted into a chat app, an email or a post, the
+  link shows your build's title, your name and a picture of the build,
+  drawn by ForkBuild's link server, which then sends whoever opens it on to
+  ForkBuild. A link that was changed shows only "A shared build".
 - **It needs a signature.** Publish while logged in; a creation published
   while logged out gets no link.
 - **Size.** A build of up to about 500 bricks fits; the ready-made castle's

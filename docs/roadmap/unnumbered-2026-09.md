@@ -4646,3 +4646,37 @@ no link either.
   sharing.
 - Not done: the Editor's own panels are unchanged (the guide points into them rather than reshaping them), and the
   guide doesn't yet highlight the control each hint names.
+
+## Link previews for builds shared in a link (unnumbered, 2026-10-08)
+
+**A build shared with Share… or Copy link now shows its title, its author and a picture of it when the link is
+pasted into a chat app, an email or a post.** The link-only share keeps the build in the address's fragment, which
+never reaches a server, so a pasted link showed nothing at all, and a hash-routed static site can't serve
+per-build tags. Share now points at the rendezvous worker's `/b/<payload>`, which serves the preview and sends
+people on to the app's `#/s/<payload>`.
+
+- `server/rendezvous-worker/buildPreview.js`, routed from `worker.js`: `GET /b/<payload>` answers a page with Open
+  Graph and Twitter card tags and a `refresh` to `APP_URL#/s/<payload>` (no script; `default-src 'none'`). The
+  title, author and brick count are shown only when the claim's Ed25519 signature verifies (the worker's existing
+  check, against the did:key the claim names, over the Publication's signing descriptor) and the build's SHA-256
+  matches the hash it signed; anything else, including a damaged or other-version payload, gets a plain "A shared
+  build" card with the site's picture, and still goes on to the app.
+- `GET /b/<payload>/preview.png`: the build drawn in the worker without a browser. Each brick is flat-shaded boxes,
+  a wedge (slopes, stairs) or a pyramid (hip roofs), from `BRICK_SHAPES`, which mirrors the Core library; seen from
+  above at an angle, over a ground square and a banded sky; 600 × 315; an indexed-color PNG of a few kilobytes,
+  encoded with `CompressionStream`. Drawing one takes a few milliseconds of CPU (triangles filled by exact row spans,
+  depth stepped without division), and it is kept in Cloudflare's edge cache, since a payload never changes. Builds
+  of more than 4,000 bricks get the site's picture.
+- `core/ForkBuildAppLinks.js`: `FORKBUILD_LINK_PREVIEW_URL`, `linkPreviewUrl()` and `payloadFromLinkPreviewUrl()`;
+  `prepareLinkOnlyShare()` offers the preview link (`previewUrl: null` gives the app's own `#/s/` link). `#/s/`
+  links keep working.
+- `wrangler.toml` gains `APP_URL`. The worker must be redeployed before the app that shares `/b/` links: an older
+  one answers them with its plain "is running" text.
+- Privacy: opening such a link, or a site previewing it, sends it, and so the build, to the rendezvous server, which
+  keeps nothing; Cloudflare may log the addresses. docs/Privacy.md (and its translations) and guide 04, in every
+  language, say so; docs/Protocol.md, docs/Architecture.md, docs/Deployment.md, the worker's README and README.md.
+- Tests: `tests/LinkPreview.test.js` (the worker's shapes match the Core library; a real signed castle through the
+  worker's own `fetch`: its title, description, picture and redirect; the PNG's size and pixels; escaping and
+  `APP_URL`; forged, changed, unsigned, damaged and other-version links getting the plain card; any bricks drawing).
+- Not done: previews for links to distributed builds (`#/view/…`), which would need the worker to read Steem, Blurt,
+  Arweave or IPFS; and a picture with text on it (the worker has no fonts).

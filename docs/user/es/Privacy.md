@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 225ed1a7731c5549 -->
+<!-- translation-of: docs/Privacy.md source-hash: f677edb8952577f9 -->
 # Privacidad
 
 <!-- languages -->
@@ -185,6 +185,7 @@ dirección IP y lo que usted le pide.
 | Guarda, anuncia o ancla en Blurt, o descubre publicaciones de Blurt (*experimental*) | nodos de la API de Blurt (`rpc.blurt.blog`, luego `rpc.beblurt.com`, luego `rpc.drakernoise.com`); la firma pasa por la extensión Blurt Keychain (o WhaleVault) | el nombre de su cuenta de Blurt, y las cuentas cuyo historial de publicaciones se lee (las que sigue, y cada cuenta que este dispositivo vio publicar con las etiquetas de ForkBuild, recordadas en este dispositivo); lo que publica es público en la cadena para siempre, con su propia cuenta, y las ediciones dejan la versión anterior en su historial. Cada transacción paga una pequeña comisión en BLURT desde su cuenta |
 | Distribuye en Blurt la Declaración firmada de una publicación (*experimental*) | el alojamiento de imágenes de Blurt (`img-upload.blurt.blog`), directamente o, cuando el navegador no puede alcanzarlo, a través del relé `/blurt-image` del servidor de encuentro, que no guarda nada | una imagen de 320×200 de la construcción para la vista previa de la publicación, firmada con su clave de publicación de Blurt |
 | Distribuye en Steem la Declaración firmada de una publicación (*experimental*) | el alojamiento de imágenes de Steem (`steemitimages.com`), directamente o, cuando el navegador no puede alcanzarlo, a través del relé `/steem-image` del servidor de encuentro, que no guarda nada | una imagen de 320×200 de la construcción para la vista previa de la publicación, firmada con su clave de publicación de Steem |
+| Alguien abre, o un sitio muestra la vista previa de, un enlace que lleva su construcción (`/b/…`) | el servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | el enlace, que contiene la construcción y su Declaración firmada; no guarda nada |
 | Abre un enlace compartido a una publicación (`#/view/…`) | el nodo de Steem o Blurt, el gateway de Arweave o el gateway de IPFS que indica el enlace, y luego los sustratos de anuncio para encontrar su construcción | qué publicación, transacción o CID abre |
 | Ancla o verifica evidencia en Bitcoin (*experimental*) | una API Esplora (`blockstream.info`) | la transacción que transmite o consulta |
 | Verifica evidencia en Base (*experimental*) | un endpoint JSON-RPC de Base (`mainnet.base.org`) | la transacción que consulta |
@@ -193,14 +194,20 @@ dirección IP y lo que usted le pide.
 ForkBuild nunca envía su clave privada, su frase de contraseña ni sus
 documentos guardados a ninguno de estos servidores.
 
-**Un enlace que lleva su construcción** (`#/s/…`, creado con **Copiar
-enlace** o **Compartir…** antes de distribuir una construcción) contiene su
-Mundo compartido firmado y la construcción misma después del `#`, una parte
-de la dirección que los navegadores nunca envían a un servidor. Crearlo no
-contacta nada, y abrirlo solo contacta el sitio que sirve la aplicación.
-Quien tenga el enlace puede ver la construcción, su título, su descripción y
-el nombre del autor, y la clave pública de su identidad, como con cualquier
-Mundo compartido que distribuya.
+**Un enlace que lleva su construcción** (creado con **Copiar enlace** o
+**Compartir…** antes de distribuir una construcción) contiene su Mundo
+compartido firmado y la construcción misma. Apunta al servidor de encuentro
+(`forkbuild-rendezvous.prazjp.workers.dev/b/…`) para que las aplicaciones de
+chat y las redes sociales puedan mostrar el título de la construcción y una
+imagen de ella: abrir el enlace, o que un sitio muestre su vista previa, lo
+envía, y con él la construcción, a ese servidor, que comprueba la firma,
+dibuja la imagen, lleva a las personas a la aplicación (`#/s/…`, una parte de
+la dirección que los navegadores nunca envían a un servidor) y no guarda
+nada. Cloudflare, que opera el servidor, puede registrar las direcciones
+solicitadas. Crear un enlace no contacta nada. Quien tenga el enlace puede
+ver la construcción, su título, su descripción y el nombre del autor, y la
+clave pública de su identidad, como con cualquier Mundo compartido que
+distribuya.
 
 **Los relays se usan solo cuando hacen falta.** Una conexión siempre
 intenta primero un camino directo, luego uno encontrado mediante STUN, y

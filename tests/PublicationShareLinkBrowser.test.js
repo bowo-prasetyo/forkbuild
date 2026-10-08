@@ -73,8 +73,8 @@ HTMLAnchorElement.prototype.click = function captureDownload() {
     const { host, counted, unmount } = mount(castle);
     await until(() => host.querySelector('.publication-share-link-url'), 'the link');
     const url = host.querySelector('.publication-share-link-url').value;
-    assert(url.startsWith('https://bowo-prasetyo.github.io/forkbuild/#/s/1'), `the link is a link-only share (got ${url.slice(0, 60)})`);
-    const decoded = await decodePublicationLinkPayload(url.slice(url.indexOf('#/s/') + 4));
+    assert(url.startsWith('https://forkbuild-rendezvous.prazjp.workers.dev/b/1'), `the link is a link-only share, through the link-preview worker (got ${url.slice(0, 60)})`);
+    const decoded = await decodePublicationLinkPayload(url.slice(url.indexOf('/b/') + 3));
     assert(decoded.claim.id === castle.publication.id && decoded.snapshotText === castle.contentStore.getSync(castle.publication.contentReference), 'it carries the signed claim and the exact build');
     assert(host.textContent.includes(t('share.linkOnlyHint')), 'it says the build travels inside the link');
 
