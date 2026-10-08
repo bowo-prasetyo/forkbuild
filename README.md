@@ -25,9 +25,10 @@ models").
 
 **Home**
 - A landing page with a slowly turning 3D village and ready-made builds (a
-  house, a mill, a bridge and more) that open in the Editor as your own
-  copy, with no account needed; link previews and an installable web app
-  manifest for the site.
+  castle, a harbor island, a village square, a house, a mill and a bridge)
+  that open in the Editor as your own copy, with no account needed; the
+  Repository, My Worlds and the Editor's **New** offer them too. Link
+  previews and an installable web app manifest for the site.
 
 **Editor**
 - Place, select (single, multi, marquee), move, rotate and delete bricks, with

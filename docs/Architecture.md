@@ -222,21 +222,28 @@ the detailed references; in short:
 
 - BrickRegistry (core/) holds brick definitions from core/library/CoreLibrary.js.
   StructureRegistry (core/StructureRegistry.js) holds Structures from
-  core/library/VillageLibrary.js. A Structure is only ordinary bricks in
-  local coordinates.
+  core/library/VillageLibrary.js and core/library/ShowcaseLibrary.js (three
+  larger builds, partly made of copies of Village structures). A Structure
+  is only ordinary bricks in local coordinates.
 - The Editor's Build Library (ui/components/BuildLibraryPanel.js) lists
   both, with previews from application/editor/LibraryPreviewService.js. Clicking
   a structure places a copy of its bricks
   (CopyStructureIntoDocumentUseCase through StructureCompositionTool);
   Fork opens it as a new document.
-- Home (ui/views/HomeView.js) offers some built-in structures as ready-made
-  builds (application/home/FeaturedBuilds.js). Each opens through
+- Ready-made builds: application/home/FeaturedBuilds.js lists six built-in
+  structures (the three showcase ones first). Home, the Repository and My
+  Worlds' empty state show them with ui/components/featured/FeaturedBuilds.js
+  (a grid on Home, one row elsewhere); each card opens
   `/editor?start=<structure id>`, which the Editor turns into the same Fork
-  (EditorSession.forkStructure()). Home's 3D showcase
-  (ui/components/home/HomeShowcase.js, renderer/ShowcaseTurntableRenderer.js)
-  and the cards' thumbnails (ui/components/home/HomeFeaturedBuilds.js) load
-  after Home first renders, since they bring in Three.js and the brick
-  libraries, which the first load leaves out.
+  (EditorSession.forkStructure()). The Editor's New offers them beside an
+  empty plot (ui/components/NewDocumentDialog.js). Either way the camera is
+  then framed on the whole document (EditorSession.frameDocument(), the
+  thumbnail framing from core/PreviewCameraFraming.js), so a large build is
+  seen whole. Home's 3D showcase (ui/components/home/HomeShowcase.js,
+  renderer/ShowcaseTurntableRenderer.js) and the cards are loaded with
+  defineAsyncComponent(), since they bring in Three.js and the brick
+  libraries; one thumbnail service serves them all
+  (ui/components/featured/featuredLibrary.js).
 - A StructurePlacement (core/StructurePlacement.js) places a whole saved
   Document inside another one by reference, resolved fresh by
   application/editor/StructureDocumentResolver.js; placements can be moved,

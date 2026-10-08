@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: ccc330f1bc5e0f97 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a742c831b5f54e8b -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -26,10 +26,12 @@ trois façons de commencer : **Essayez maintenant : commencez par une
 maison** ouvre une maison toute prête dans l’Éditeur comme votre propre
 copie, prête à être modifiée ; **Partir de zéro** ouvre l’Éditeur sur un
 terrain vide ; et **Découvrir des constructions** ouvre le Dépôt. Sous
-**Partir d’une construction toute prête**, chaque carte (une maison, une
-chaumière, un moulin, une tour de guet, un pont et une petite chapelle) ouvre
-de la même façon votre propre copie de cette construction. Rien n’est
-publié ni envoyé nulle part tant que vous ne le décidez pas.
+**Partir d’une construction toute prête**, chaque carte (un château fort,
+une île du port, une place du village, une maison, un moulin et un pont)
+ouvre de la même façon votre propre copie de cette construction ; le
+Dépôt, Mes mondes et **Nouveau** dans l’Éditeur proposent les mêmes
+constructions. Rien n’est publié ni envoyé nulle part tant que vous ne le
+décidez pas.
 
 La barre du haut est toujours visible :
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: ccc330f1bc5e0f97 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a742c831b5f54e8b -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -27,10 +27,11 @@ bietet drei Einstiege: **Jetzt ausprobieren: mit einem Haus beginnen**
 öffnet ein fertiges Haus im Editor als Ihre eigene Kopie, bereit zum
 Ändern; **Bei null anfangen** öffnet den Editor auf einem leeren Grundstück;
 und **Bauwerke entdecken** öffnet das Repository. Unter **Mit einem fertigen
-Bauwerk beginnen** öffnet jede Karte (ein Haus, eine Hütte, eine Mühle,
-ein Wachturm, eine Brücke und eine kleine Kapelle) auf dieselbe Weise Ihre
-eigene Kopie dieses Bauwerks. Nichts wird veröffentlicht oder irgendwohin
-gesendet, solange Sie es nicht selbst tun.
+Bauwerk beginnen** öffnet jede Karte (eine Burg, eine Hafeninsel, ein
+Dorfplatz, ein Haus, eine Mühle und eine Brücke) auf dieselbe Weise Ihre
+eigene Kopie dieses Bauwerks; das Repository, Meine Welten und **Neu** im
+Editor bieten dieselben Bauwerke an. Nichts wird veröffentlicht oder
+irgendwohin gesendet, solange Sie es nicht selbst tun.
 
 Die Leiste oben ist immer sichtbar:
 

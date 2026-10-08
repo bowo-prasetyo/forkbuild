@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9a754ee94fee1ff -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1f52c96ba8857c6b -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -213,6 +213,15 @@ Kreationen, die dieses Gerät kennt: Ihrer eigenen, solcher, die Peers mit
 Ihnen geteilt haben, und solcher, die in dezentralen Netzwerken gefunden
 wurden. Es ist so gebaut, dass es benutzbar bleibt, ob es zehn Kreationen
 enthält oder zehntausend.
+
+### Fertige Bauwerke
+
+Oben zeigt **Mit einem fertigen Bauwerk beginnen** die Bauwerke, die mit
+ForkBuild kommen: eine Burg, eine Hafeninsel, einen Dorfplatz, ein Haus,
+eine Mühle und eine Brücke. Sie sind da, noch bevor etwas veröffentlicht
+oder gefunden wurde. Klicken Sie auf eines (**Remixen**), um Ihre eigene
+Kopie im Editor zu öffnen; veröffentlicht wird nichts, bis Sie es selbst
+veröffentlichen. Ein Klick auf die Überschrift klappt die Reihe ein.
 
 ### Von anderen verteilte Kreationen
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 86f52e38bf5e7dd9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ae29bd6e293587d6 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -52,7 +52,8 @@ organiser votre construction avec des groupes.
     180° forment une croix.
   - **Structures** — vingt structures prêtes à l’emploi dans cinq
     catégories (résidentiel, agricole, commercial, collectif,
-    infrastructure), plus vos propres **Mes structures**. Cliquez sur une
+    infrastructure) et trois constructions plus grandes de la catégorie **vitrine**, plus
+    vos propres **Mes structures**. Cliquez sur une
     carte pour la placer — voir
     [Structures : composer, forker et votre bibliothèque personnelle](#structures--composer-forker-et-votre-bibliothèque-personnelle)
     ci-dessous.
@@ -257,7 +258,9 @@ Ces boutons agissent sur le groupe sélectionné :
 L’onglet **Structures** de la Bibliothèque de construction (voir
 [La disposition](#la-disposition) ci-dessus) vous offre vingt structures
 prêtes à l’emploi — maisons, granges, un puits, un marché, un moulin, un
-pont et bien d’autres, dans cinq catégories — plus **Mes structures**,
+pont et bien d’autres, dans cinq catégories — et trois constructions plus
+grandes de la catégorie **vitrine** (un château fort, une île du port et une place du
+village), plus **Mes structures**,
 votre collection personnelle de tout ce que vous avez enregistré depuis
 une construction. Vous pouvez faire trois choses différentes avec chacune
 d’elles, et elles servent à des fins différentes :
@@ -533,7 +536,11 @@ clic ou appui sur une touche, comme l’exigent les navigateurs.
 - **Enregistrer** (`Ctrl+S`) — garder votre travail sur cet appareil.
 - **Publier** — le partager avec tout le monde (voir
   [Publier et forker](04-PublishingAndForking.md)).
-- **Nouveau** — commencer une nouvelle création vide.
+- **Nouveau** — commencer quelque chose de nouveau : un **Terrain vide**,
+  ou l’une des constructions toutes prêtes (un château fort, une île du
+  port, une place du village, une maison, un moulin et un pont) comme votre
+  propre copie, vue en entier. Si ce qui est ouvert a des modifications non
+  enregistrées, Nouveau le signale d’abord ; enregistrez pour les garder.
 - **Exporter** — télécharger la création actuelle sous forme de fichier
   JSON, pour en garder une copie ou la déplacer vers un autre appareil.
   Les fichiers utilisent un format compact qui stocke les briques sous

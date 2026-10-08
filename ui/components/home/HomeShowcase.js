@@ -1,7 +1,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { ShowcaseTurntableRenderer } from '../../../renderer/ShowcaseTurntableRenderer.js';
 import { SHOWCASE_STRUCTURE_IDS, composeShowcase, featuredStructures } from '../../../application/home/FeaturedBuilds.js';
-import { canDrawWebGl, homeLibrary } from './homeLibrary.js';
+import { canDrawWebGl, featuredLibrary } from '../featured/featuredLibrary.js';
 import { t } from '../../i18n/i18n.js';
 
 // Home's 3D showcase: a small village of built-in structures, turning
@@ -24,7 +24,7 @@ export default {
                 return;
             }
             try {
-                const { brickRegistry, structureRegistry } = homeLibrary();
+                const { brickRegistry, structureRegistry } = featuredLibrary();
                 const reducedMotion = typeof window.matchMedia === 'function'
                     && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                 renderer = new ShowcaseTurntableRenderer(brickRegistry, canvas.value, { reducedMotion });

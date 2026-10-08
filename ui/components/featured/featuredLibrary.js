@@ -2,14 +2,14 @@ import { CreateBrickRegistryUseCase } from '../../../application/editor/CreateBr
 import { CreateStructureRegistryUseCase } from '../../../application/editor/CreateStructureRegistryUseCase.js';
 import { CreateLibraryPreviewUseCase } from '../../../application/editor/CreateLibraryPreviewUseCase.js';
 
-// What Home's showcase and ready-made builds draw from: the built-in brick
-// and structure libraries, and one thumbnail service. Built the first time
-// Home's showcase loads (never with the app) and kept for the page's
-// lifetime, so coming back to Home reuses the thumbnails and the one WebGL
-// context they are drawn with.
+// What the ready-made builds (Home, the Repository, My Worlds) and Home's
+// showcase draw from: the built-in brick and structure libraries, and one
+// thumbnail service. Built the first time one of them loads (never with
+// the app) and kept for the page's lifetime, so moving between those pages
+// reuses the thumbnails and the one WebGL context they are drawn with.
 let library = null;
 
-export function homeLibrary() {
+export function featuredLibrary() {
     if (!library) {
         const brickRegistry = new CreateBrickRegistryUseCase().execute();
         const structureRegistry = new CreateStructureRegistryUseCase().execute();

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 86f52e38bf5e7dd9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ae29bd6e293587d6 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -49,7 +49,8 @@ ordnen.
     die andere Richtung zeigt. Eine Diagonalstrebe und eine um 180° gedrehte
     Kopie ergeben ein Kreuz.
   - **Strukturen** — zwanzig fertige Strukturen in fünf Kategorien
-    (Wohnen, Landwirtschaft, Gewerbe, Gemeinschaft, Infrastruktur) sowie
+    (Wohnen, Landwirtschaft, Gewerbe, Gemeinschaft, Infrastruktur) und
+    drei größere **Schaustücke** sowie
     Ihre eigenen **Meine Strukturen**. Klicken Sie auf eine Karte, um sie
     zu platzieren — siehe
     [Strukturen: zusammensetzen, forken und Ihre persönliche Bibliothek](#strukturen-zusammensetzen-forken-und-ihre-persönliche-bibliothek)
@@ -252,7 +253,8 @@ Bauplan**. Diese Schaltflächen wirken auf die gerade ausgewählte Gruppe:
 Der Reiter **Strukturen** der Baubibliothek (siehe
 [Der Aufbau](#der-aufbau) oben) bietet zwanzig fertige Strukturen — Häuser,
 Scheunen, einen Brunnen, einen Markt, eine Mühle, eine Brücke und mehr, in
-fünf Kategorien — sowie **Meine Strukturen**, Ihre persönliche Sammlung
+fünf Kategorien — und drei größere **Schaustücke** (eine Burg, eine
+Hafeninsel und einen Dorfplatz), sowie **Meine Strukturen**, Ihre persönliche Sammlung
 von allem, was Sie aus einem Bauwerk gespeichert haben. Mit jeder davon
 können Sie drei verschiedene Dinge tun, und sie sind aus verschiedenen
 Gründen wichtig:
@@ -525,7 +527,11 @@ Browser es verlangen.
 - **Speichern** (`Strg+S`) — Ihre Arbeit auf diesem Gerät behalten.
 - **Veröffentlichen** — mit allen teilen (siehe
   [Veröffentlichen & Forken](04-PublishingAndForking.md)).
-- **Neu** — eine frische, leere Kreation beginnen.
+- **Neu** — etwas Neues beginnen: ein **Leeres Grundstück** oder eines der
+  fertigen Bauwerke (eine Burg, eine Hafeninsel, ein Dorfplatz, ein Haus,
+  eine Mühle und eine Brücke) als Ihre eigene Kopie, ganz im Blick. Hat das
+  Geöffnete ungespeicherte Änderungen, sagt Neu das zuerst; speichern Sie
+  es, um sie zu behalten.
 - **Exportieren** — die aktuelle Kreation als JSON-Datei herunterladen, um
   eine Kopie zu behalten oder sie auf ein anderes Gerät zu bringen. Die
   Dateien nutzen ein kompaktes Format, das Steine als Tabelle speichert.

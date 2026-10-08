@@ -254,6 +254,12 @@ export default Object.freeze({
     'library.village.fenceSegment.description': 'Un riel de cerca modular sobre dos postes, del tamaño justo para unirse borde con borde a otro tramo.',
     'library.village.dock': 'Muelle',
     'library.village.dock.description': 'Una plataforma de tablones sobre columnas, que se extiende sobre aguas abiertas.',
+    'library.showcase.castle': 'Castillo',
+    'library.showcase.castle.description': 'Un castillo amurallado con cuatro torres con techo, una puerta en arco, almenas y una torre del homenaje en el patio.',
+    'library.showcase.harborIsland': 'Isla del puerto',
+    'library.showcase.harborIsland.description': 'Una pequeña isla con playa de arena, un faro a rayas, una cabaña, un muelle de madera y un velero amarrado.',
+    'library.showcase.villageSquare': 'Plaza del pueblo',
+    'library.showcase.villageSquare.description': 'Una plaza pavimentada con un pozo en el centro, rodeada por una casa, una capilla, una cabaña, un mercado y un puesto.',
 
     // The command palette (ui/components/CommandPalette.js).
     'commandPalette.title': 'Paleta de comandos',
@@ -945,6 +951,7 @@ export default Object.freeze({
     'library.category.community': 'comunitaria',
     'library.category.infrastructure': 'infraestructura',
     'library.category.uncategorized': 'sin categoría',
+    'library.category.showcase': 'destacados',
 
     // World View: avatarInfoPanel.
     'avatarInfoPanel.avatar': 'Avatar',
@@ -2477,10 +2484,6 @@ export default Object.freeze({
     'homeView.noAccountNeeded': 'Sin cuenta y sin descargas. Lo que construya se queda en este dispositivo hasta que decida compartirlo.',
     'homeView.showcaseLabel': 'Un pequeño pueblo hecho con bloques de ForkBuild, girando despacio',
     'homeView.showcaseFallback': 'ForkBuild',
-    'homeView.featuredTitle': 'Empiece con una construcción ya hecha',
-    'homeView.featuredLead': 'Elija una y hágala suya: se abre en el Editor como su propia copia, lista para cambiar.',
-    'homeView.remix': 'Remezclar',
-    'homeView.openCopyOf': 'Abrir su propia copia de {name} en el Editor',
     'homeView.whyTitle': 'Por qué ForkBuild',
     'homeView.buildTitle': 'Construya con bloques',
     'homeView.buildText': 'Coloque, apile y gire bloques con ajuste a la cuadrícula y deshacer, desde una biblioteca de muros, techos, ventanas y escaleras. Funciona con mouse o pantalla táctil.',
@@ -2493,6 +2496,20 @@ export default Object.freeze({
     'homeView.openSource': 'ForkBuild es libre y de código abierto, bajo la Mozilla Public License 2.0.',
     'homeView.userGuide': 'Guía de uso',
     'homeView.sourceCode': 'Código fuente',
+
+    // Ready-made builds (ui/components/featured/FeaturedBuilds.js).
+    'featuredBuilds.title': 'Empiece con una construcción ya hecha',
+    'featuredBuilds.lead': 'Elija una y hágala suya: se abre en el Editor como su propia copia, lista para cambiar.',
+    'featuredBuilds.remix': 'Remezclar',
+    'featuredBuilds.openCopyOf': 'Abrir su propia copia de {name} en el Editor',
+
+    // The Editor's New (ui/components/NewDocumentDialog.js).
+    'newDocumentDialog.title': 'Empezar algo nuevo',
+    'newDocumentDialog.empty': 'Terreno vacío',
+    'newDocumentDialog.emptyDescription': 'Suelo libre y toda la Biblioteca de construcción.',
+    'newDocumentDialog.readyMade': 'O abra una construcción ya hecha como su propia copia:',
+    'newDocumentDialog.unsaved': 'Esto cierra “{title}”, que tiene cambios sin guardar. Guárdelo primero para conservarlos.',
+    'newDocumentDialog.cancel': 'Cancelar',
 
     // Publications: leaderboardHubView.
     'leaderboardHubView.leaderboard': 'Clasificación',

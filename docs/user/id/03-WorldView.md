@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 60040bc00f156b0b -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 82240492e7eea390 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -722,7 +722,7 @@ pencarian: sebuah Dunia hanya muncul di sini setelah Anda benar-benar
 memasukinya, dan tetap di sini (hanya di perangkat ini) bahkan jika Anda
 tidak pernah menerbitkan atau membagikan apa pun milik Anda. Belum
 mengunjungi tempat mana pun? **Jelajahi Repositori** untuk menemukan yang
-pertama.
+pertama, atau mulai dari salah satu bangunan siap pakai di bawahnya.
 
 ## Menemukan dunia
 

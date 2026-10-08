@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 60040bc00f156b0b -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 82240492e7eea390 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -740,7 +740,8 @@ veröffentlichte Liste und nicht dasselbe wie das Repository oder ein
 Suchergebnis: Eine Welt erscheint hier erst, wenn Sie sie tatsächlich
 betreten haben, und sie bleibt hier (nur auf diesem Gerät), auch wenn Sie
 nie etwas Eigenes veröffentlichen oder teilen. Noch nirgends gewesen?
-**Durchsuchen Sie das Repository**, um Ihre erste zu finden.
+**Durchsuchen Sie das Repository**, um Ihre erste zu finden, oder beginnen
+Sie mit einem der fertigen Bauwerke, die darunter stehen.
 
 ## Welten finden
 

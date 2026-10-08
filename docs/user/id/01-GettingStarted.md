@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: ccc330f1bc5e0f97 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a742c831b5f54e8b -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -26,10 +26,11 @@ menawarkan tiga cara untuk mulai: **Coba sekarang: mulai dengan sebuah
 rumah** membuka rumah siap pakai di Editor sebagai salinan Anda sendiri,
 siap diubah; **Mulai dari nol** membuka Editor pada lahan kosong; dan
 **Jelajahi bangunan** membuka Repositori. Di bawah **Mulai dari bangunan
-siap pakai**, setiap kartu (rumah, pondok, kincir, menara pengawas,
-jembatan, dan kapel kecil) membuka salinan Anda sendiri dari bangunan itu
-dengan cara yang sama. Tidak ada yang diterbitkan atau dikirim ke mana pun
-sampai Anda memilihnya.
+siap pakai**, setiap kartu (kastil, pulau pelabuhan, alun-alun desa,
+rumah, kincir, dan jembatan) membuka salinan Anda sendiri dari bangunan
+itu dengan cara yang sama; Repositori, Dunia Saya, dan **Baru** di Editor
+menawarkan bangunan yang sama. Tidak ada yang diterbitkan atau dikirim ke
+mana pun sampai Anda memilihnya.
 
 Bilah di bagian atas selalu terlihat:
 

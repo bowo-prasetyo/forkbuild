@@ -250,6 +250,12 @@ export default Object.freeze({
     'library.village.fenceSegment.description': '2本の支柱に渡したモジュール式の柵。別のパーツと端同士がぴったり合う大きさです。',
     'library.village.dock': '桟橋',
     'library.village.dock.description': '柱の上に板を張り、水面に張り出した足場。',
+    'library.showcase.castle': '城',
+    'library.showcase.castle.description': '4つの屋根付きの塔、アーチの門、胸壁、中庭の天守がある、城壁に囲まれた城です。',
+    'library.showcase.harborIsland': '港の島',
+    'library.showcase.harborIsland.description': '砂浜、しま模様の灯台、コテージ、木の桟橋、つながれた帆船がある小さな島です。',
+    'library.showcase.villageSquare': '村の広場',
+    'library.showcase.villageSquare.description': '中央に井戸があり、家、礼拝堂、コテージ、市場、屋台に囲まれた石畳の広場です。',
 
     // The command palette (ui/components/CommandPalette.js).
     'commandPalette.title': 'コマンドパレット',
@@ -941,6 +947,7 @@ export default Object.freeze({
     'library.category.community': '公共',
     'library.category.infrastructure': 'インフラ',
     'library.category.uncategorized': '未分類',
+    'library.category.showcase': 'ショーケース',
 
     // World View: avatarInfoPanel.
     'avatarInfoPanel.avatar': 'アバター',
@@ -2473,10 +2480,6 @@ export default Object.freeze({
     'homeView.noAccountNeeded': 'アカウントもダウンロードも不要です。作ったものは、共有すると決めるまでこのデバイスに保存されます。',
     'homeView.showcaseLabel': 'ForkBuildのブロックで作った小さな村が、ゆっくり回っています',
     'homeView.showcaseFallback': 'ForkBuild',
-    'homeView.featuredTitle': 'できあがった作品から始める',
-    'homeView.featuredLead': '1つ選んで自分のものに。エディターで自分専用のコピーとして開くので、自由に変えられます。',
-    'homeView.remix': 'リミックス',
-    'homeView.openCopyOf': '{name}の自分用のコピーをエディターで開く',
     'homeView.whyTitle': 'ForkBuildの特長',
     'homeView.buildTitle': 'ブロックで作る',
     'homeView.buildText': '壁、屋根、窓、階段のライブラリーから、スナップと元に戻すを使ってブロックを置き、積み、回転できます。マウスでもタッチ画面でも使えます。',
@@ -2489,6 +2492,20 @@ export default Object.freeze({
     'homeView.openSource': 'ForkBuildは、Mozilla Public License 2.0 の無料のオープンソースソフトウェアです。',
     'homeView.userGuide': 'ユーザーガイド',
     'homeView.sourceCode': 'ソースコード',
+
+    // Ready-made builds (ui/components/featured/FeaturedBuilds.js).
+    'featuredBuilds.title': 'できあがった作品から始める',
+    'featuredBuilds.lead': '1つ選んで自分のものに。エディターで自分専用のコピーとして開くので、自由に変えられます。',
+    'featuredBuilds.remix': 'リミックス',
+    'featuredBuilds.openCopyOf': '{name}の自分用のコピーをエディターで開く',
+
+    // The Editor's New (ui/components/NewDocumentDialog.js).
+    'newDocumentDialog.title': '新しく始める',
+    'newDocumentDialog.empty': '空き地',
+    'newDocumentDialog.emptyDescription': '何もない地面と、ビルドライブラリのすべて。',
+    'newDocumentDialog.readyMade': 'または、できあがった作品を自分用のコピーとして開く：',
+    'newDocumentDialog.unsaved': '保存していない変更がある「{title}」を閉じます。残すには先に保存してください。',
+    'newDocumentDialog.cancel': 'キャンセル',
 
     // Publications: leaderboardHubView.
     'leaderboardHubView.leaderboard': 'リーダーボード',

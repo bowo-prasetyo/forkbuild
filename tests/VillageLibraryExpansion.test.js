@@ -83,16 +83,20 @@ function makeEmptyDocument(title) {
 async function run() {
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
     const structureRegistry = new CreateStructureRegistryUseCase().execute();
+    // Every built-in structure, the showcase library's included, goes through
+    // the per-structure checks; the catalog shape (Section A) is the
+    // Village's own.
     const allStructures = structureRegistry.getAll();
+    const villageStructures = allStructures.filter((structure) => structure.id.startsWith('village:'));
 
     // ---------------------------------------------------------------
     // Section A: catalog shape
     // ---------------------------------------------------------------
     {
-        assert(allStructures.length === 20, `registry: exactly twenty structures (got ${allStructures.length})`);
+        assert(villageStructures.length === 20, `registry: exactly twenty Village structures (got ${villageStructures.length})`);
 
         const counts = {};
-        for (const structure of allStructures) {
+        for (const structure of villageStructures) {
             counts[structure.category] = (counts[structure.category] || 0) + 1;
         }
         for (const [category, expected] of Object.entries(EXPECTED_CATEGORY_COUNTS)) {
@@ -100,7 +104,7 @@ async function run() {
                 `registry: category "${category}" has ${expected} structures (got ${counts[category] || 0})`);
         }
         const totalCounted = Object.values(counts).reduce((a, b) => a + b, 0);
-        assert(totalCounted === allStructures.length, 'registry: every structure falls into exactly one of the five known categories');
+        assert(totalCounted === villageStructures.length, 'registry: every Village structure falls into exactly one of the five known categories');
 
         // No id collides, none silently duplicated.
         const ids = new Set(allStructures.map((s) => s.id));
@@ -283,7 +287,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const usedDefinitionIds = new Set();
-        for (const structure of allStructures) {
+        for (const structure of villageStructures) {
             for (const brick of structure.bricks) {
                 usedDefinitionIds.add(brick.definitionId);
             }

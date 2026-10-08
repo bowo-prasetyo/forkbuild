@@ -252,6 +252,12 @@ export default Object.freeze({
     'library.village.fenceSegment.description': 'A modular fence rail on two posts, sized to meet edge to edge with another segment.',
     'library.village.dock': 'Dock',
     'library.village.dock.description': 'A plank platform on column stilts, extending out over open water.',
+    'library.showcase.castle': 'Castle',
+    'library.showcase.castle.description': 'A walled castle with four roofed towers, an arched gate, battlements and a keep in the courtyard.',
+    'library.showcase.harborIsland': 'Harbor Island',
+    'library.showcase.harborIsland.description': 'A small island with a sandy beach, a striped lighthouse, a cottage, a wooden dock and a moored sailboat.',
+    'library.showcase.villageSquare': 'Village Square',
+    'library.showcase.villageSquare.description': 'A paved square with a well at its center, framed by a house, a chapel, a cottage, a market and a stall.',
 
     // The command palette (ui/components/CommandPalette.js).
     'commandPalette.title': 'Command palette',
@@ -943,6 +949,7 @@ export default Object.freeze({
     'library.category.community': 'community',
     'library.category.infrastructure': 'infrastructure',
     'library.category.uncategorized': 'uncategorized',
+    'library.category.showcase': 'showcase',
 
     // World View: avatarInfoPanel.
     'avatarInfoPanel.avatar': 'Avatar',
@@ -2475,10 +2482,6 @@ export default Object.freeze({
     'homeView.noAccountNeeded': 'No account and no download. What you build stays on this device until you choose to share it.',
     'homeView.showcaseLabel': 'A small village built from ForkBuild bricks, turning slowly',
     'homeView.showcaseFallback': 'ForkBuild',
-    'homeView.featuredTitle': 'Start from a ready-made build',
-    'homeView.featuredLead': 'Pick one and make it yours: it opens in the Editor as your own copy, ready to change.',
-    'homeView.remix': 'Remix',
-    'homeView.openCopyOf': 'Open your own copy of {name} in the Editor',
     'homeView.whyTitle': 'Why ForkBuild',
     'homeView.buildTitle': 'Build with bricks',
     'homeView.buildText': 'Place, stack and turn bricks with snapping and undo, from a library of walls, roofs, windows and stairs. Works with a mouse or a touch screen.',
@@ -2491,6 +2494,20 @@ export default Object.freeze({
     'homeView.openSource': 'ForkBuild is free and open source, under the Mozilla Public License 2.0.',
     'homeView.userGuide': 'User guide',
     'homeView.sourceCode': 'Source code',
+
+    // Ready-made builds (ui/components/featured/FeaturedBuilds.js).
+    'featuredBuilds.title': 'Start from a ready-made build',
+    'featuredBuilds.lead': 'Pick one and make it yours: it opens in the Editor as your own copy, ready to change.',
+    'featuredBuilds.remix': 'Remix',
+    'featuredBuilds.openCopyOf': 'Open your own copy of {name} in the Editor',
+
+    // The Editor's New (ui/components/NewDocumentDialog.js).
+    'newDocumentDialog.title': 'Start something new',
+    'newDocumentDialog.empty': 'Empty plot',
+    'newDocumentDialog.emptyDescription': 'Bare ground and the whole Build Library.',
+    'newDocumentDialog.readyMade': 'Or open a ready-made build as your own copy:',
+    'newDocumentDialog.unsaved': 'This closes "{title}", which has unsaved changes. Save it first to keep them.',
+    'newDocumentDialog.cancel': 'Cancel',
 
     // Publications: leaderboardHubView.
     'leaderboardHubView.leaderboard': 'Leaderboard',

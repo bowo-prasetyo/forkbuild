@@ -10,7 +10,7 @@ const SOURCE_URL = 'https://github.com/bowo-prasetyo/forkbuild';
 // (tests/InitialLoadModuleGraph.test.js), so they load once Home has
 // rendered. Until then each keeps its space with an empty placeholder.
 const HomeShowcase = defineAsyncComponent(() => import('../components/home/HomeShowcase.js'));
-const HomeFeaturedBuilds = defineAsyncComponent(() => import('../components/home/HomeFeaturedBuilds.js'));
+const FeaturedBuilds = defineAsyncComponent(() => import('../components/featured/FeaturedBuilds.js'));
 
 const REASONS = Object.freeze([
     { icon: '🧱', title: 'homeView.buildTitle', text: 'homeView.buildText' },
@@ -25,7 +25,7 @@ const REASONS = Object.freeze([
 // the first load.
 export default {
     name: 'HomeView',
-    components: { HomeShowcase, HomeFeaturedBuilds },
+    components: { HomeShowcase, FeaturedBuilds },
     setup() {
         return {
             t,
@@ -56,9 +56,9 @@ export default {
                 </header>
 
                 <section class="home-section" aria-labelledby="home-featured-title">
-                    <h2 id="home-featured-title">{{ t('homeView.featuredTitle') }}</h2>
-                    <p class="home-section-lead">{{ t('homeView.featuredLead') }}</p>
-                    <HomeFeaturedBuilds />
+                    <h2 id="home-featured-title">{{ t('featuredBuilds.title') }}</h2>
+                    <p class="home-section-lead">{{ t('featuredBuilds.lead') }}</p>
+                    <FeaturedBuilds />
                 </section>
 
                 <section class="home-section" aria-labelledby="home-why-title">

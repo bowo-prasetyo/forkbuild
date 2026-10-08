@@ -1,0 +1,210 @@
+/* Ready-made builds (ui/components/featured/FeaturedBuilds.js): a grid of
+   cards on Home, one sideways-scrolling row in the Repository and My
+   Worlds; and the Editor's New (ui/components/NewDocumentDialog.js), which
+   offers the same builds beside an empty plot. */
+
+.featured-builds {
+    display: grid;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.featured-builds--grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    min-height: 200px;
+}
+
+.featured-builds--row {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(180px, 220px);
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scroll-snap-type: x proximity;
+}
+
+.featured-builds--row .featured-build-card {
+    scroll-snap-align: start;
+}
+
+.featured-build-link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    background: #1a1a1a;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.featured-build-link:hover,
+.featured-build-link:focus-visible {
+    border-color: #4caf7d;
+    transform: translateY(-2px);
+}
+
+.featured-build-link .build-library-preview {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    border-radius: 6px;
+}
+
+.featured-build-link .build-library-preview-label {
+    font-size: 1.5rem;
+}
+
+.featured-build-name {
+    margin-top: 0.6rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.featured-build-description {
+    flex: 1;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: #a8a8a8;
+}
+
+.featured-builds--row .featured-build-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.featured-build-action {
+    margin-top: 0.6rem;
+    font-weight: 600;
+    color: #4caf7d;
+}
+
+/* The Repository's and My Worlds' shelf of them. */
+.featured-builds-shelf {
+    margin: 0 0 1.5rem;
+}
+
+.featured-builds-shelf > summary {
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.featured-builds-shelf-lead {
+    margin: 0.4rem 0 0.9rem;
+    color: #b0b0b0;
+}
+
+/* The Editor's New. */
+.modal-panel.new-document-dialog {
+    width: min(720px, calc(100vw - 2rem));
+    max-width: none;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+}
+
+.new-document-unsaved {
+    margin: 0 0 0.9rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 6px;
+    background: #3a2f12;
+    color: #f0d48a;
+}
+
+.new-document-option {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    background: #1a1a1a;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.new-document-option:hover,
+.new-document-option:focus-visible {
+    border-color: #4caf7d;
+}
+
+.new-document-empty {
+    align-items: center;
+}
+
+.new-document-empty-mark {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 6px;
+    background: #234433;
+    color: #4caf7d;
+    font-size: 1.5rem;
+}
+
+.new-document-option-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.new-document-option-name {
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.new-document-option-description {
+    font-size: 0.85rem;
+    line-height: 1.35;
+    color: #a8a8a8;
+}
+
+.new-document-ready-made {
+    margin: 1rem 0 0.6rem;
+    color: #b0b0b0;
+}
+
+.new-document-builds {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.new-document-build {
+    align-items: center;
+    height: 100%;
+}
+
+.new-document-build .build-library-preview {
+    flex: 0 0 auto;
+    width: 96px;
+    height: 60px;
+    border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .featured-build-link {
+        transition: none;
+    }
+
+    .featured-build-link:hover,
+    .featured-build-link:focus-visible {
+        transform: none;
+    }
+}

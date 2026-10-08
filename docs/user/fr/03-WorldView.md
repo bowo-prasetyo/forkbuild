@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 60040bc00f156b0b -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 82240492e7eea390 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -749,7 +749,8 @@ partagée ou publiée, et pas la même chose que le Dépôt ou un résultat de
 recherche : un Monde n’apparaît ici qu’une fois que vous y êtes vraiment
 entré, et il y reste (sur cet appareil seulement) même si vous ne publiez
 ou ne partagez jamais rien vous-même. Vous n’êtes encore allé nulle
-part ? **Parcourez le Dépôt** pour trouver votre premier Monde.
+part ? **Parcourez le Dépôt** pour trouver votre premier Monde, ou partez
+de l’une des constructions toutes prêtes proposées en dessous.
 
 ## Trouver des mondes
 

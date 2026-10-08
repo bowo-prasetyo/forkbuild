@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 60040bc00f156b0b -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 82240492e7eea390 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -729,7 +729,8 @@ publicada, y no es lo mismo que el Repositorio ni que un resultado de
 búsqueda: un Mundo solo aparece aquí cuando realmente entró en él, y se
 queda aquí (solo en este dispositivo) aunque usted nunca publique ni
 comparta nada propio. ¿Todavía no visitó ninguno? Use **Explore el
-Repositorio** para encontrar el primero.
+Repositorio** para encontrar el primero, o empiece con una de las
+construcciones ya hechas que aparecen debajo.
 
 ## Encontrar mundos
 

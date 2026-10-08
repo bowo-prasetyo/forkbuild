@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: ccc330f1bc5e0f97 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a742c831b5f54e8b -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -26,10 +26,11 @@ tres formas de empezar: **Probar ahora: empezar con una casa** abre una casa
 ya hecha en el Editor como su propia copia, lista para cambiar; **Empezar
 desde cero** abre el Editor en un terreno vacío; y **Explorar
 construcciones** abre el Repositorio. En **Empiece con una construcción ya
-hecha**, cada tarjeta (una casa, una cabaña, un molino, una torre de
-vigilancia, un puente y una pequeña capilla) abre su propia copia de esa
-construcción de la misma manera. Nada se publica ni se envía a ningún lugar
-hasta que usted lo decida.
+hecha**, cada tarjeta (un castillo, una isla del puerto, una plaza del
+pueblo, una casa, un molino y un puente) abre su propia copia de esa
+construcción de la misma manera; el Repositorio, Mis mundos y **Nuevo** en
+el Editor ofrecen las mismas construcciones. Nada se publica ni se envía a
+ningún lugar hasta que usted lo decida.
 
 La barra de arriba siempre está visible:
 

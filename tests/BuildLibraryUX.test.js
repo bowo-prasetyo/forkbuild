@@ -74,8 +74,8 @@ async function run() {
         // repeating — is unchanged; byte-for-byte the same contract
         // BrickRegistry#groupByCategory() already established.
         const categoryOrder = groups.map((g) => g.category);
-        assert(JSON.stringify(categoryOrder) === JSON.stringify(['residential', 'agricultural', 'commercial', 'community', 'infrastructure']),
-            'groupByCategory: first-seen category order matches VillageLibrary\'s own declaration order');
+        assert(JSON.stringify(categoryOrder) === JSON.stringify(['residential', 'agricultural', 'commercial', 'community', 'infrastructure', 'showcase']),
+            'groupByCategory: first-seen category order matches VillageLibrary\'s own declaration order, then the showcase library registered after it');
         assert(new Set(categoryOrder).size === categoryOrder.length, 'groupByCategory: no category repeats as a second group');
 
         const agricultural = groups.find((g) => g.category === 'agricultural');
@@ -90,7 +90,7 @@ async function run() {
 
         // getAll()/getByCategory()/search() stay exactly what 0.2.81
         // shipped — only the CONTENT grew (0.4.4).
-        assert(registry.getAll().length === 20, 'groupByCategory: getAll() is unaffected — twenty structures (0.4.4)');
+        assert(registry.getAll().filter((s) => s.id.startsWith('village:')).length === 20, 'groupByCategory: getAll() is unaffected — twenty Village structures (0.4.4)');
         assert(registry.getByCategory('commercial').length === 2, 'groupByCategory: getByCategory() is unaffected — two commercial structures');
 
         console.log('✓ Section A: StructureRegistry#groupByCategory() — same shape as BrickRegistry, real VillageLibrary contents');

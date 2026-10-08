@@ -196,6 +196,14 @@ this device knows about: your own, ones peers have shared with you, and
 ones found on decentralized networks. It's built to stay usable whether it
 holds ten creations or ten thousand.
 
+### Ready-made builds
+
+At the top, **Start from a ready-made build** shows the builds that come
+with ForkBuild: a castle, a harbor island, a village square, a house, a mill
+and a bridge. They're there even before anything is published or found.
+Click one (**Remix**) to open your own copy in the Editor; nothing is
+published until you publish it. Click the heading to fold the row away.
+
 ### Creations others distributed
 
 Each time you open the Repository (or an author's page), it looks on Nostr,

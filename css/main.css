@@ -3,6 +3,7 @@
    against earlier ones, so keep this order when adding or moving rules. */
 @import url('main/app-shell.css');
 @import url('main/home.css');
+@import url('main/featured-builds.css');
 @import url('main/editor.css');
 @import url('main/repository-and-account.css');
 @import url('main/world-view.css');

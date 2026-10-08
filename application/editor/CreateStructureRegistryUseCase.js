@@ -1,5 +1,6 @@
 import { StructureRegistry } from '../../core/StructureRegistry.js';
 import { VillageLibrary } from '../../core/library/VillageLibrary.js';
+import { ShowcaseLibrary } from '../../core/library/ShowcaseLibrary.js';
 
 // Builds the StructureRegistry and registers every built-in structure
 // library — the exact same shape as application/editor/CreateBrickRegistryUseCase.js,
@@ -9,6 +10,7 @@ export class CreateStructureRegistryUseCase {
     execute() {
         const registry = new StructureRegistry();
         registry.register(VillageLibrary);
+        registry.register(ShowcaseLibrary);
         return registry;
     }
 }

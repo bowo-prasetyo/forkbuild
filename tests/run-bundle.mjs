@@ -81,21 +81,34 @@ async function openEveryPage(browser, base, paths) {
     return { problems, warnings, homeRequests };
 }
 
-// Home's ways into the Editor, in the published build: the main button opens
-// the ready-made house as a document of the visitor's own, and the address
-// goes back to plain /editor.
+// The ready-made builds, in the published build: Home's main button opens
+// the house as a document of the visitor's own (and the address goes back to
+// plain /editor), the Editor's New opens the castle, and the Repository lists
+// all six.
 async function startFromHome(browser, base) {
     const context = await browser.newContext();
     const page = await context.newPage();
     try {
         await page.goto(`${base}/#/`);
-        await page.waitForSelector('.home-featured-card', { timeout: 60_000 });
-        assert(await page.locator('.home-featured-card').count() === 6, 'Home shows its six ready-made builds');
+        await page.waitForSelector('.featured-build-card', { timeout: 60_000 });
+        assert(await page.locator('.featured-build-card').count() === 6, 'Home shows its six ready-made builds');
         await page.click('.home-cta-primary');
         await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });
         await page.waitForFunction(() => location.hash === '#/editor', null, { timeout: 10_000 });
         const editorText = await page.evaluate(() => document.body.innerText);
         assert(editorText.includes('village:house'), 'the Editor says the copy came from the built-in House');
+
+        // New offers the same builds: the castle opens as the visitor's own copy.
+        await page.click('.toolbar-new');
+        await page.waitForSelector('.new-document-build[data-structure-id="showcase:castle"]', { timeout: 30_000 });
+        await page.click('.new-document-build[data-structure-id="showcase:castle"]');
+        await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'Castle', null, { timeout: 30_000 });
+        assert(!(await page.$('.new-document-dialog')), 'New closes once a build is chosen');
+
+        // The Repository offers them before anything is published or found.
+        await page.evaluate(() => { location.hash = '#/repository'; });
+        await page.waitForSelector('.featured-builds-shelf .featured-build-card', { timeout: 60_000 });
+        assert(await page.locator('.featured-builds-shelf .featured-build-card').count() === 6, 'the Repository shows the six ready-made builds');
     } finally {
         await context.close();
     }
@@ -136,7 +149,7 @@ try {
     const manifest = JSON.parse(readFileSync(join(published.outdir, 'manifest.webmanifest'), 'utf8'));
     assert(manifest.icons.every((icon) => readFileSync(join(published.outdir, icon.src)).length > 0), 'the manifest and its icons are published');
     await startFromHome(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor');
+    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle, and the Repository lists them');
 
     const development = await build(join(outdir, 'development-vue'), { developmentVue: true });
     const devServer = await serve(development.outdir);

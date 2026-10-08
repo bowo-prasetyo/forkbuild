@@ -253,6 +253,12 @@ export default Object.freeze({
     'library.village.fenceSegment.description': '기둥 두 개에 걸친 모듈식 울타리 가로대로, 다른 조각과 끝을 맞대도록 크기가 맞춰져 있습니다.',
     'library.village.dock': '선착장',
     'library.village.dock.description': '기둥 위에 놓여 물 위로 뻗어 나간 판자 플랫폼입니다.',
+    'library.showcase.castle': '성',
+    'library.showcase.castle.description': '지붕 덮인 탑 네 개, 아치형 성문, 흉벽, 안뜰의 본성을 갖춘 성벽 두른 성입니다.',
+    'library.showcase.harborIsland': '항구 섬',
+    'library.showcase.harborIsland.description': '모래사장, 줄무늬 등대, 오두막, 나무 선착장, 정박한 돛단배가 있는 작은 섬입니다.',
+    'library.showcase.villageSquare': '마을 광장',
+    'library.showcase.villageSquare.description': '가운데 우물이 있고 집, 예배당, 오두막, 시장, 노점이 둘러싼 포장된 광장입니다.',
 
     // The command palette (ui/components/CommandPalette.js).
     'commandPalette.title': '명령 팔레트',
@@ -944,6 +950,7 @@ export default Object.freeze({
     'library.category.community': '공공',
     'library.category.infrastructure': '기반 시설',
     'library.category.uncategorized': '미분류',
+    'library.category.showcase': '쇼케이스',
 
     // World View: avatarInfoPanel.
     'avatarInfoPanel.avatar': '아바타',
@@ -2476,10 +2483,6 @@ export default Object.freeze({
     'homeView.noAccountNeeded': '계정도, 다운로드도 필요 없습니다. 지은 것은 공유하기로 할 때까지 이 기기에 남아 있습니다.',
     'homeView.showcaseLabel': 'ForkBuild 블록으로 지은 작은 마을이 천천히 돌아갑니다',
     'homeView.showcaseFallback': 'ForkBuild',
-    'homeView.featuredTitle': '미리 지어진 작품으로 시작',
-    'homeView.featuredLead': '하나를 골라 내 것으로 만드세요. 편집기에서 내 사본으로 열리니 마음대로 바꿀 수 있습니다.',
-    'homeView.remix': '리믹스',
-    'homeView.openCopyOf': '편집기에서 {name}의 내 사본 열기',
     'homeView.whyTitle': 'ForkBuild를 쓰는 이유',
     'homeView.buildTitle': '블록으로 짓기',
     'homeView.buildText': '벽, 지붕, 창문, 계단 라이브러리에서 블록을 골라 스냅과 실행 취소로 놓고, 쌓고, 돌리세요. 마우스와 터치 화면 모두 지원합니다.',
@@ -2492,6 +2495,20 @@ export default Object.freeze({
     'homeView.openSource': 'ForkBuild는 Mozilla Public License 2.0에 따른 무료 오픈 소스입니다.',
     'homeView.userGuide': '사용자 안내서',
     'homeView.sourceCode': '소스 코드',
+
+    // Ready-made builds (ui/components/featured/FeaturedBuilds.js).
+    'featuredBuilds.title': '미리 지어진 작품으로 시작',
+    'featuredBuilds.lead': '하나를 골라 내 것으로 만드세요. 편집기에서 내 사본으로 열리니 마음대로 바꿀 수 있습니다.',
+    'featuredBuilds.remix': '리믹스',
+    'featuredBuilds.openCopyOf': '편집기에서 {name}의 내 사본 열기',
+
+    // The Editor's New (ui/components/NewDocumentDialog.js).
+    'newDocumentDialog.title': '새로 시작',
+    'newDocumentDialog.empty': '빈 땅',
+    'newDocumentDialog.emptyDescription': '아무것도 없는 땅과 빌드 라이브러리 전체.',
+    'newDocumentDialog.readyMade': '또는 미리 지어진 작품을 내 사본으로 열기:',
+    'newDocumentDialog.unsaved': '저장하지 않은 변경 사항이 있는 “{title}”을(를) 닫습니다. 유지하려면 먼저 저장하세요.',
+    'newDocumentDialog.cancel': '취소',
 
     // Publications: leaderboardHubView.
     'leaderboardHubView.leaderboard': '리더보드',
