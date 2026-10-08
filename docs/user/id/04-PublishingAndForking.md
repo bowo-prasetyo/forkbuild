@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e6595d73ff729e3e -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c65e5911fbe21442 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -514,13 +514,11 @@ menampilkannya, dan **Tantangan** di bilah atas membuka halamannya.
 
 Halaman tantangan menampilkan karya peserta yang diketahui perangkat ini:
 bangunan Anda sendiri yang diterbitkan dengan tag itu, dan bangunan orang
-lain yang ditemukan di jaringan. Saat bangunan didistribusikan ke Nostr
-atau Arweave, pengumumannya mencantumkan tagnya, dan halaman itu menanyakan
+lain yang ditemukan di jaringan. Saat bangunan didistribusikan ke Nostr, Arweave, atau Blurt, pengumumannya (di Blurt, postingannya) mencantumkan tagnya, dan halaman itu menanyakan
 tag minggu itu ke jaringan tersebut setiap kali dibuka (**Periksa lagi**
 menanyakan lagi). Setiap karya yang ditemukan diperiksa seperti semua yang
 ditemukan Repositori, dan juga muncul di Repositori. Bangunan yang hanya
-dibagikan lewat tautannya, atau hanya didistribusikan ke Steem atau Blurt,
-tidak ditemukan dengan cara ini. Minggu-minggu sebelumnya tetap bisa dibuka
+dibagikan lewat tautannya, atau hanya didistribusikan ke Steem, tidak ditemukan dengan cara ini. Minggu-minggu sebelumnya tetap bisa dibuka
 lewat hari Seninnya (**Minggu lalu: …**), tanpa **Ikut**.
 
 Karya peserta ditampilkan dari yang terbaru, dengan jumlah remix-nya. Tidak

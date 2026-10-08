@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e6595d73ff729e3e -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c65e5911fbe21442 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -526,13 +526,11 @@ montre, et **Défi** dans la barre du haut ouvre sa page.
 
 La page du défi liste les participations que cet appareil connaît : vos
 propres constructions publiées avec l’étiquette, et celles des autres
-trouvées sur les réseaux. Quand une construction est diffusée sur Nostr ou
-Arweave, son annonce liste ses étiquettes, et la page demande l’étiquette
+trouvées sur les réseaux. Quand une construction est diffusée sur Nostr, Arweave ou Blurt, son annonce (sur Blurt, sa publication) liste ses étiquettes, et la page demande l’étiquette
 de la semaine à ces réseaux à chaque ouverture (**Vérifier à nouveau**
 redemande). Chaque participation trouvée est vérifiée comme tout ce que
 trouve le Dépôt, et apparaît aussi dans le Dépôt. Une construction
-partagée seulement par son lien, ou diffusée seulement sur Steem ou Blurt,
-n’est pas trouvée ainsi. Les semaines précédentes restent ouvertes par leur
+partagée seulement par son lien, ou diffusée seulement sur Steem, n’est pas trouvée ainsi. Les semaines précédentes restent ouvertes par leur
 lundi (**La semaine dernière : …**), sans **Participer**.
 
 Les participations sont montrées de la plus récente à la plus ancienne,

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: d70bfd90aa9c35dd -->
+<!-- translation-of: docs/Privacy.md source-hash: 0c72ea30518d8156 -->
 # 개인정보 보호
 
 <!-- languages -->
@@ -182,7 +182,7 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 | 피어 연결을 시작할 때, 랑데부 서버가 릴레이를 제공하면 | 랑데부 서버의 `/turn-credentials`, 그다음 그 TURN 릴레이(Cloudflare) | 단기 릴레이 자격 증명 요청(많아야 약 1시간에 한 번). 중계되는 트래픽은 WebRTC로 종단 간 암호화됨 |
 | 앱이 열려 있고 탭이 보일 때(백그라운드 공지 동기화) | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`), Blurt 노드(`rpc.blurt.blog`) | ForkBuild 발견 태그에 대한 조회: 공유 스냅샷과 댓글 태그, 내가 방문한 장소 이름 지역과 지도 칸 |
 | 저장소나 작성자 페이지를 열 때 | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`), Blurt 노드(`rpc.blurt.blog`) | 공유 게시물 태그(`forkbuild-publication`)에 대한 조회, 그다음 새로 공지된 게시물마다 서명된 기록 요청(방문 또는 **다시 확인** 한 번에 최대 20개) |
-| 어떤 주의 건축 챌린지(**챌린지**)를 열 때 | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`) | 그 주의 태그(`forkbuild-tag:<tag>`) 조회, 그다음 새로 알려진 참가작마다 서명된 레코드 요청(방문 또는 **다시 확인** 한 번에 최대 20개) |
+| 어떤 주의 건축 챌린지(**챌린지**)를 열 때 | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Blurt 노드(`rpc.blurt.blog`) | 그 주의 태그(`forkbuild-tag:<tag>`) 조회, 그다음 새로 알려진 참가작마다 서명된 레코드 요청(방문 또는 **다시 확인** 한 번에 최대 20개) |
 | Nostr로 게시물을 배포하거나 발견할 때 | Nostr 릴레이(`relay.damus.io`) | 내가 게시하는 서명된 공지, 내 조회 |
 | Arweave에 콘텐츠를 저장하거나 가져올 때 | Arweave 게이트웨이(`arweave.net`) | 내가 게시하는 콘텐츠, 내가 가져오는 것 |
 | IPFS에서 콘텐츠를 가져올 때 | IPFS 게이트웨이(`ipfs.filebase.io`), 또는 내 IPFS 노드(`127.0.0.1:5001`) | 내가 가져오거나 추가하는 것 |

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: d70bfd90aa9c35dd -->
+<!-- translation-of: docs/Privacy.md source-hash: 0c72ea30518d8156 -->
 # Datenschutz
 
 <!-- languages -->
@@ -231,7 +231,7 @@ was Sie bei ihm anfragen.
 | Sie beginnen eine Peer-Verbindung, wenn der Rendezvous-Server ein Relay anbietet | `/turn-credentials` des Rendezvous-Servers, dann sein TURN-Relay (Cloudflare) | eine Anfrage nach kurzlebigen Relay-Zugangsdaten, höchstens etwa einmal pro Stunde; weitergeleiteter Verkehr ist durch WebRTC Ende-zu-Ende-verschlüsselt |
 | Die App ist geöffnet und ihr Tab sichtbar (Synchronisierung der Ankündigungen im Hintergrund) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | Abfragen nach den Entdeckungs-Tags von ForkBuild: den gemeinsamen Tags für Snapshots und Kommentare sowie den Ortsnamen-Regionen und Kartenzellen, die Sie besucht haben |
 | Sie öffnen das Repository oder eine Autorenseite | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | eine Abfrage nach dem gemeinsamen Veröffentlichungs-Tag (`forkbuild-publication`); dann eine Anfrage nach dem signierten Eintrag jeder neu angekündigten Veröffentlichung, höchstens 20 pro Besuch oder **Erneut prüfen** |
-| Sie öffnen die Bau-Challenge einer Woche (**Challenge**) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`) | eine Abfrage nach dem Tag dieser Woche (`forkbuild-tag:<tag>`); dann eine Anfrage nach dem signierten Datensatz jedes neu angekündigten Beitrags, höchstens 20 pro Besuch oder **Erneut prüfen** |
+| Sie öffnen die Bau-Challenge einer Woche (**Challenge**) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Blurt-Knoten (`rpc.blurt.blog`) | eine Abfrage nach dem Tag dieser Woche (`forkbuild-tag:<tag>`); dann eine Anfrage nach dem signierten Datensatz jedes neu angekündigten Beitrags, höchstens 20 pro Besuch oder **Erneut prüfen** |
 | Sie verteilen oder entdecken Veröffentlichungen über Nostr | Nostr-Relays (`relay.damus.io`) | signierte Ankündigungen, die Sie veröffentlichen; Ihre Abfragen |
 | Sie speichern oder holen Inhalte auf Arweave | ein Arweave-Gateway (`arweave.net`) | die Inhalte, die Sie veröffentlichen; was Sie abrufen |
 | Sie holen Inhalte von IPFS | ein IPFS-Gateway (`ipfs.filebase.io`) oder Ihr eigener IPFS-Knoten (`127.0.0.1:5001`) | was Sie abrufen oder hinzufügen |

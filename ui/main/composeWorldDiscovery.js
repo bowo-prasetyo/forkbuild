@@ -253,6 +253,10 @@ export function composeWorldDiscovery({
         // The unwrapped Nostr/Arweave announcement queries, for looking up one
         // Publication's signed record (application/snapshot/claimed/VerifyClaimedBuildPublication.js).
         publicationRecordQueryServices: [networkWorldDiscoveryServices.nostr, networkWorldDiscoveryServices.arweave],
+        // The announcement queries that can be asked for one build tag
+        // (application/challenge/ChallengeEntryDiscovery.js): Nostr and Arweave
+        // by narrow tag, Blurt by the tags its build posts list.
+        buildTagQueryServices: [networkWorldDiscoveryServices.nostr, networkWorldDiscoveryServices.arweave, networkWorldDiscoveryServices.blurt],
         // Every substrate's unwrapped announcement query, for finding the
         // Publications others distributed (application/publication/RepositoryNetworkDiscovery.js).
         repositoryNetworkDiscoveryServices: [

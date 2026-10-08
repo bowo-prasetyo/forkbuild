@@ -271,8 +271,9 @@ the detailed references; in short:
   Repository knows of whose published snapshot carries the tag
   (PublishedBuildTags.js) or whose id application/challenge/ChallengeEntryLog.js
   logged under it. ChallengeEntryDiscovery.js fills that log when the page
-  opens: a RepositoryNetworkDiscovery over Nostr and Arweave for
-  `forkbuild-tag:<tag>` (see "Repository and Author views"), whose run now
+  opens: a RepositoryNetworkDiscovery over Nostr, Arweave and Blurt for
+  `forkbuild-tag:<tag>` (Blurt answers it from the tags its build posts
+  list, BlurtPublicationDiscoveryQueryService) (see "Repository and Author views"), whose run now
   also reports the announced ids it already knew. An entry's share text
   names the challenge (ui/components/PublicationShareLink.js).
 - A StructurePlacement (core/StructurePlacement.js) places a whole saved

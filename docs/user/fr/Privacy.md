@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: d70bfd90aa9c35dd -->
+<!-- translation-of: docs/Privacy.md source-hash: 0c72ea30518d8156 -->
 # Confidentialité
 
 <!-- languages -->
@@ -235,7 +235,7 @@ demandez.
 | Vous démarrez une connexion entre pairs, si le serveur de rendez-vous propose un relais | le `/turn-credentials` du serveur de rendez-vous, puis son relais TURN (Cloudflare) | une demande d’identifiants de relais de courte durée, au plus environ une fois par heure ; le trafic relayé est chiffré de bout en bout par WebRTC |
 | L’application est ouverte et son onglet visible (synchronisation des annonces en arrière-plan) | des relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`), des nœuds Steem (`api.steemit.com`), des nœuds Blurt (`rpc.blurt.blog`) | des requêtes pour les tags de découverte de ForkBuild : les tags communs des Snapshots et des Commentaires, et les régions de Noms de lieux et cases de carte que vous avez visitées |
 | Vous ouvrez le Dépôt ou une page d’auteur | des relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`), des nœuds Steem (`api.steemit.com`), des nœuds Blurt (`rpc.blurt.blog`) | une requête pour le tag commun des publications (`forkbuild-publication`) ; puis une demande de l’enregistrement signé de chaque publication nouvellement annoncée, au plus 20 par visite ou par **Vérifier à nouveau** |
-| Vous ouvrez le défi de construction d’une semaine (**Défi**) | relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`) | une requête pour l’étiquette de cette semaine (`forkbuild-tag:<tag>`) ; puis une demande de l’enregistrement signé de chaque nouvelle participation annoncée, au plus 20 par visite ou **Vérifier à nouveau** |
+| Vous ouvrez le défi de construction d’une semaine (**Défi**) | relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`), des nœuds Blurt (`rpc.blurt.blog`) | une requête pour l’étiquette de cette semaine (`forkbuild-tag:<tag>`) ; puis une demande de l’enregistrement signé de chaque nouvelle participation annoncée, au plus 20 par visite ou **Vérifier à nouveau** |
 | Vous distribuez ou découvrez des publications via Nostr | des relais Nostr (`relay.damus.io`) | les annonces signées que vous publiez ; vos requêtes |
 | Vous stockez ou récupérez du contenu sur Arweave | une passerelle Arweave (`arweave.net`) | le contenu que vous publiez ; ce que vous récupérez |
 | Vous récupérez du contenu depuis IPFS | une passerelle IPFS (`ipfs.filebase.io`), ou votre propre nœud IPFS (`127.0.0.1:5001`) | ce que vous récupérez ou ajoutez |

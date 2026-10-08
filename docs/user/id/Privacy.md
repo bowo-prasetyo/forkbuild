@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: d70bfd90aa9c35dd -->
+<!-- translation-of: docs/Privacy.md source-hash: 0c72ea30518d8156 -->
 # Privasi
 
 <!-- languages -->
@@ -229,7 +229,7 @@ Anda dan apa yang Anda minta darinya.
 | Anda memulai koneksi rekan, jika server rendezvous menawarkan relay | `/turn-credentials` pada server rendezvous, lalu relay TURN-nya (Cloudflare) | permintaan kredensial relay berumur pendek, paling sering sekitar sekali sejam; lalu lintas yang direlay dienkripsi ujung ke ujung oleh WebRTC |
 | Aplikasi terbuka dan tabnya terlihat (sinkronisasi pengumuman di latar belakang) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag penemuan ForkBuild: tag Snapshot dan Komentar bersama, serta wilayah Penamaan Tempat dan sel peta yang pernah Anda kunjungi |
 | Anda membuka Repositori atau halaman pembuat | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag Publikasi bersama (`forkbuild-publication`); lalu permintaan catatan bertandatangan untuk setiap publikasi yang baru diumumkan, paling banyak 20 per kunjungan atau per **Periksa lagi** |
-| Anda membuka tantangan membangun suatu minggu (**Tantangan**) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`) | kueri untuk tag minggu itu (`forkbuild-tag:<tag>`); lalu permintaan rekaman bertanda tangan untuk setiap karya peserta yang baru diumumkan, paling banyak 20 per kunjungan atau **Periksa lagi** |
+| Anda membuka tantangan membangun suatu minggu (**Tantangan**) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag minggu itu (`forkbuild-tag:<tag>`); lalu permintaan rekaman bertanda tangan untuk setiap karya peserta yang baru diumumkan, paling banyak 20 per kunjungan atau **Periksa lagi** |
 | Anda mendistribusikan atau menemukan publikasi melalui Nostr | relay Nostr (`relay.damus.io`) | pengumuman bertanda tangan yang Anda terbitkan; kueri Anda |
 | Anda menyimpan atau mengambil konten di Arweave | gateway Arweave (`arweave.net`) | konten yang Anda terbitkan; apa yang Anda ambil |
 | Anda mengambil konten dari IPFS | gateway IPFS (`ipfs.filebase.io`), atau node IPFS Anda sendiri (`127.0.0.1:5001`) | apa yang Anda ambil atau tambahkan |

@@ -40,6 +40,13 @@ export function buildTagDiscoveryTag(tag) {
     return normalized && normalized === tag ? BUILD_TAG_DISCOVERY_PREFIX + normalized : null;
 }
 
+// The build tag a `forkbuild-tag:` discovery tag names, or null.
+export function buildTagOfDiscoveryTag(discoveryTag) {
+    if (typeof discoveryTag !== 'string' || !discoveryTag.startsWith(BUILD_TAG_DISCOVERY_PREFIX)) return null;
+    const tag = discoveryTag.slice(BUILD_TAG_DISCOVERY_PREFIX.length);
+    return normalizeBuildTag(tag) === tag ? tag : null;
+}
+
 // The build-tag discovery tags for `tags`, each once, invalid ones left out,
 // at most BUILD_TAG_MAX_COUNT.
 export function buildTagDiscoveryTags(tags) {

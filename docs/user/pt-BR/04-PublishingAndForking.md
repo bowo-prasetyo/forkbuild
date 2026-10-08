@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e6595d73ff729e3e -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c65e5911fbe21442 -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -506,13 +506,11 @@ dele.
 
 A página do desafio lista as participações que este dispositivo conhece:
 suas próprias construções publicadas com a tag e as de outras pessoas
-encontradas nas redes. Quando uma construção é distribuída no Nostr ou no
-Arweave, o anúncio dela lista as tags, e a página pergunta a essas redes
+encontradas nas redes. Quando uma construção é distribuída no Nostr, no Arweave ou no Blurt, o anúncio dela (no Blurt, o post) lista as tags, e a página pergunta a essas redes
 pela tag da semana sempre que abre (**Verificar de novo** pergunta outra
 vez). Cada participação encontrada é verificada como tudo o que o
 Repositório encontra, e aparece também no Repositório. Uma construção
-compartilhada só pelo link, ou distribuída só no Steem ou no Blurt, não é
-encontrada assim. As semanas anteriores continuam abertas pela
+compartilhada só pelo link, ou distribuída só no Steem, não é encontrada assim. As semanas anteriores continuam abertas pela
 segunda-feira delas (**Semana passada: …**), sem **Participar**.
 
 As participações aparecem das mais novas para as mais antigas, com as
