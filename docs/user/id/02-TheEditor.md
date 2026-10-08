@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8a7a24368ab8c93 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 053e9eecd73affbf -->
 # 02 — Editor
 
 <!-- languages -->
@@ -536,6 +536,8 @@ atau tekanan tombol pertama Anda, sebagaimana diwajibkan browser.
 - **Ekspor** — mengunduh karya saat ini sebagai file JSON, untuk menyimpan
   salinan atau memindahkannya ke perangkat lain. File memakai format ringkas
   yang menyimpan balok sebagai tabel.
+- **Model 3D** — mengunduh karya sebagai model 3D untuk program lain
+  (lihat [Mengunduh model 3D](#mengunduh-model-3d)).
 - **Impor** — membuka file yang diekspor sebagai karya baru dengan
   identitasnya sendiri; tidak ada yang disimpan sampai Anda **Simpan**. File
   yang diekspor versi sebelumnya tetap dapat dibuka (dikonversi saat
@@ -554,6 +556,30 @@ atau tekanan tombol pertama Anda, sebagaimana diwajibkan browser.
   tanpa perubahan, dan menyimpan salinan di samping dokumen yang ada dalam
   versi berbeda. Perubahan yang belum disimpan tidak disertakan, jadi
   simpan terlebih dahulu.
+
+## Mengunduh model 3D
+
+**Model 3D** di bilah alat mengunduh yang sedang terbuka sebagai berkas
+yang dapat dibuka program 3D lain, dibuat di perangkat ini (tidak ada yang
+diunggah):
+
+- **glTF (.glb)** — berwarna. Terbuka di Blender, Penampil 3D Windows, mesin
+  game seperti Godot dan Unity, dan penampil model daring. Satu satuan
+  ForkBuild sama dengan satu meter.
+- **Untuk cetak 3D (.stl)** — satu warna, dalam milimeter skala 1:100 (pintu
+  setinggi 20 mm, kubus 10 mm), dengan Z ke atas dan berdiri di alas cetak,
+  sehingga slicer (Cura, PrusaSlicer, Bambu Studio…) membukanya siap cetak;
+  perbesar di sana jika ingin lebih besar. Bata yang bersentuhan atau
+  bertumpuk tetap bagian terpisah, yang disatukan slicer saat slicing.
+- **OBJ (.obj)** — berwarna (sebagai warna verteks), untuk program lama.
+
+Setiap bata mempertahankan bentuk dan warna persisnya di ForkBuild, dan
+struktur yang Anda tempatkan ikut jika ada di perangkat ini (pesannya
+memberi tahu jika ada yang tidak). Setiap berkas menyebut bangunan,
+pembuatnya, lisensinya, dan sumber remix-nya: di copyright dan extras glTF,
+di header STL, dan sebagai komentar di OBJ. Halaman bangunan yang dibagikan
+menawarkan unduhan yang sama jika lisensinya mengizinkan salinan (lihat
+[Apa yang dibuka sebuah tautan](04-PublishingAndForking.md#apa-yang-dibuka-sebuah-tautan)).
 
 ## Kontrol kamera
 

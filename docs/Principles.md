@@ -14,7 +14,7 @@ that no longer apply are listed at the end of their theme file under
 |---|---|
 | [Foundations (0.1.x to 0.2.16)](principles/foundations.md) | the short, early rules |
 | [Trust, signatures and authorization](principles/trust.md) | 9 |
-| [Documents, publishing and forking](principles/documents.md) | 11 |
+| [Documents, publishing and forking](principles/documents.md) | 12 |
 | [Placement, world coordinates and overlap](principles/placement.md) | 12 |
 | [World navigation, focus and spatial discovery](principles/navigation.md) | 24 |
 | [World View and the Editor](principles/world-view-and-editor.md) | 2 |

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4bc516de273c1f79 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 28974300f39be674 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -107,7 +107,10 @@ est stockée, ouvre la page propre à cette construction :
   vous mène à l’original ;
 - **En faire le tour dans le Monde**, pour la voir dans la Vue du monde.
 
-Si la licence de la construction n’autorise pas les copies, la page le dit
+Quand la licence autorise les copies, la page propose aussi **La
+télécharger comme modèle 3D** (glTF, STL pour l’impression 3D ou OBJ ; voir
+[Télécharger un modèle 3D](02-TheEditor.md#télécharger-un-modèle-3d)). Si la licence de la construction n’autorise pas
+les copies, la page le dit
 et ne propose que d’en faire le tour.
 
 ## Distribuer directement depuis l’Éditeur

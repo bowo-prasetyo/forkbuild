@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4bc516de273c1f79 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 28974300f39be674 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -107,7 +107,9 @@ gespeichert ist, öffnet die eigene Seite dieses Bauwerks:
   zur Welt** bringt Sie zum Original;
 - **In der Welt darum herumgehen**, um es in der Weltansicht zu sehen.
 
-Erlaubt die Lizenz des Bauwerks keine Kopien, sagt die Seite das und
+Erlaubt die Lizenz Kopien, bietet die Seite auch **Als 3D-Modell
+herunterladen** an (glTF, STL für den 3D-Druck oder OBJ; siehe
+[Ein 3D-Modell herunterladen](02-TheEditor.md#ein-3d-modell-herunterladen)). Erlaubt die Lizenz des Bauwerks keine Kopien, sagt die Seite das und
 bietet nur den Rundgang an.
 
 ## Direkt aus dem Editor verteilen

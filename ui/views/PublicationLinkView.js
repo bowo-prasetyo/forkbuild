@@ -3,7 +3,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { OpenPublicationLinkOutcome } from '../../application/publication/OpenPublicationLink.js';
 import { describePublicationClaimLocator, publicationClaimLocatorFromViewPath } from '../../core/ForkBuildAppLinks.js';
 import { decodePublicationLinkPayload } from '../../application/publication/sharing/PublicationLinkPayload.js';
-import { readSharedBuildBricks } from '../../application/publication/sharing/ReadSharedBuild.js';
+import { readSharedBuildBricks, readSharedBuildDocument } from '../../application/publication/sharing/ReadSharedBuild.js';
+import { BUILD_MODEL_FORMATS } from '../../core/BuildModelFormats.js';
 import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
 import { describeLicense } from '../../application/document/LicenseLabels.js';
 import { countRemixes, describeRemixSource } from '../../core/RemixLineage.js';
@@ -81,6 +82,7 @@ export default {
                 licenseLabel: displayText(describeLicense(license.id)),
                 remixAllowed: license.forkAllowed,
                 remixedFrom: remixedFromText(remixSource),
+                remixSourceTitle: remixSource?.title || '',
                 remixes: remixCountText(lookUp(() => countRemixes(discoveryProvider.findByParentId(opened.documentId), opened.documentId), 0)),
                 bricks: null
             });
@@ -147,13 +149,51 @@ export default {
             });
         }
 
+        // Download it as a 3D model (core/BuildModelFormats.js), offered when
+        // its license allows copies. Three.js and the brick library load on
+        // the first click.
+        const modelMessage = ref('');
+        async function downloadModel(format) {
+            const build = arrived.value;
+            if (!build || !build.remixAllowed) return;
+            modelMessage.value = '';
+            try {
+                const [{ downloadBuildModel }, { featuredLibrary }, { CreatePersistenceUseCase }] = await Promise.all([
+                    import('../components/modelExport/downloadBuildModel.js'),
+                    import('../components/featured/featuredLibrary.js'),
+                    import('../../application/document/CreatePersistenceUseCase.js')
+                ]);
+                const document = await readSharedBuildDocument({ publication: build.publication, contentStore });
+                if (!document) {
+                    modelMessage.value = t('modelExport.unavailable');
+                    return;
+                }
+                const { structureDocumentResolver } = new CreatePersistenceUseCase().execute();
+                const { fileName, missingPlacements } = downloadBuildModel({
+                    format,
+                    world: document.world,
+                    resolveWorld: (documentId) => structureDocumentResolver.resolve(documentId),
+                    registry: featuredLibrary().brickRegistry,
+                    metadata: { title: build.title, author: build.author || '', license: build.licenseLabel, remixedFrom: build.remixSourceTitle }
+                });
+                modelMessage.value = missingPlacements
+                    ? t('modelExport.downloadedMissing', { file: fileName, count: missingPlacements })
+                    : t('modelExport.downloaded', { file: fileName });
+            } catch (error) {
+                modelMessage.value = errorText(error);
+            }
+        }
+
         function walkAround() {
             if (arrived.value) router.push({ path: `/world/${arrived.value.documentId}` });
         }
 
         onMounted(open);
 
-        return { t, state, message, publication, arrived, label, network, open, buildBricks, showTurntable, editCopy, walkAround };
+        return {
+            t, state, message, publication, arrived, label, network, open, buildBricks, showTurntable, editCopy, walkAround,
+            downloadModel, modelMessage, modelFormats: BUILD_MODEL_FORMATS
+        };
     },
     template: `
         <section v-if="state === 'arrived' && arrived" class="shared-build-view">
@@ -177,6 +217,14 @@ export default {
                     <p v-if="arrived.remixAllowed" class="shared-build-hint">{{ t('publicationLink.editCopyHint') }}</p>
                     <p v-else class="shared-build-hint">{{ t('publicationLink.noRemix') }}</p>
                     <p class="shared-build-license">{{ t('publicationLink.license', { license: arrived.licenseLabel }) }}</p>
+                    <p v-if="arrived.remixAllowed" class="shared-build-model">
+                        {{ t('modelExport.sharedLead') }}
+                        <template v-for="(format, index) in modelFormats" :key="format">
+                            <template v-if="index"> · </template>
+                            <button type="button" class="shared-build-model-link" :data-format="format" @click="downloadModel(format)">{{ t('modelExport.' + format + 'Short') }}</button>
+                        </template>
+                    </p>
+                    <p v-if="modelMessage" class="shared-build-model-message" role="status">{{ modelMessage }}</p>
                     <p class="shared-build-about">
                         {{ t('publicationLink.newHere') }}
                         <router-link to="/">{{ t('publicationLink.whatIsForkBuild') }}</router-link>

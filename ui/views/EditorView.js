@@ -70,6 +70,9 @@ import SoundControl from '../components/SoundControl.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 import { libraryItemName } from '../i18n/libraryText.js';
 import { FEATURED_STRUCTURE_IDS, featuredStructures, findStarterStructure } from '../../application/home/FeaturedBuilds.js';
+import ModelExportDialog from '../components/modelExport/ModelExportDialog.js';
+import { downloadBuildModel } from '../components/modelExport/downloadBuildModel.js';
+import { describeLicense } from '../../application/document/LicenseLabels.js';
 
 // Editing shortcuts come from EditorActionRegistry, shared with the palette,
 // the sidebar and the controls docs. Escape priority: text input > shortcuts
@@ -82,7 +85,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, FirstBuildGuide, EditorTouchActionBar, SoundControl },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, FirstBuildGuide, EditorTouchActionBar, SoundControl, ModelExportDialog },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -99,6 +102,7 @@ export default {
                 @published="onDocumentPublished"
                 @saved="onDocumentSaved"
                 @export-document="exportDocument"
+                @export-model="modelExportOpen = true"
                 @export-all-documents="exportAllDocuments"
                 @import-document="importDocument"
                 @new-document="openNewDocumentDialog"
@@ -295,6 +299,11 @@ export default {
                 @close="closePalette"
             />
             <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
+            <ModelExportDialog
+                v-if="modelExportOpen"
+                @choose="exportModel"
+                @cancel="modelExportOpen = false"
+            />
             <NewDocumentDialog
                 v-if="newDocumentDialog"
                 :structures="newDocumentDialog.structures"
@@ -509,6 +518,36 @@ export default {
         // New's choices while its dialog is open: the ready-made builds, and the
         // open document's title when closing it would lose unsaved changes.
         const newDocumentDialog = ref(null);
+
+        // Download as a 3D model (ModelExportDialog): the open build, with the
+        // structures placed in it, credited to its author under its license.
+        const modelExportOpen = ref(false);
+        function exportModel(format) {
+            modelExportOpen.value = false;
+            const document = documentManager.document;
+            if (!document) return;
+            const metadata = document.metadata;
+            const license = metadata.license;
+            try {
+                const { fileName, missingPlacements } = downloadBuildModel({
+                    format,
+                    world: document.world,
+                    resolveWorld: (documentId) => structureDocumentResolver.resolve(documentId),
+                    registry,
+                    metadata: {
+                        title: displayText(metadata.title),
+                        author: metadata.author || '',
+                        license: displayText(describeLicense(license?.id)),
+                        remixedFrom: metadata.parentDocumentId ? (license?.attribution?.title || '') : ''
+                    }
+                });
+                feedback.show(missingPlacements
+                    ? t('modelExport.downloadedMissing', { file: fileName, count: missingPlacements })
+                    : t('modelExport.downloaded', { file: fileName }));
+            } catch (err) {
+                feedback.show(errorText(err));
+            }
+        }
         function openNewDocumentDialog() {
             const { document, state } = documentManager;
             newDocumentDialog.value = {
@@ -1240,6 +1279,7 @@ export default {
             removePersonalStructure,
             exportStructure,
             exportDocument,
+            modelExportOpen, exportModel,
             exportAllDocuments,
             exportAllStructures,
             savedDocumentsRevision,

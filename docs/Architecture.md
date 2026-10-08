@@ -1753,6 +1753,19 @@ for that template compiler; tests/ContentSecurityPolicy.test.js keeps the
 hash and the restrictive directives in step. docs/Deployment.md explains
 the policy and the headers a host should add.
 
+A build downloads as a 3D model (the Editor's **3D model**,
+ui/components/modelExport/ModelExportDialog.js, and a shared build's page
+when its license allows copies): application/export/BuildModelExport.js
+collects its bricks and, one level deep, its placed structures' bricks
+where renderer/WorldRenderer.js draws them (TransformMath's rotation about
+the placement's origin); renderer/BuildMeshExtraction.js turns them into
+triangles with ThreeBrickFactory's own geometry, grouped by color; and
+core/BuildModelFormats.js, with no Three.js, writes glTF binary (one
+primitive per color, linear-light materials), binary STL (Z up, 10 mm a
+unit, on the bed) or OBJ (vertex colors), each carrying the credit.
+ui/components/modelExport/downloadBuildModel.js hands the file to the
+browser; nothing leaves the device.
+
 The built site is also installable and opens offline: scripts/build.mjs
 writes `sw.js` from ui/pwa/serviceWorker.js, filled in with a version and
 the files to keep on install (the page, the bundle but its translations,

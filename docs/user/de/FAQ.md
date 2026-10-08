@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2cea46db0f73aa93 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: e15721b99cda6db7 -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -253,6 +253,13 @@ es Ihrem Gerät als App hinzu. Bauen, Speichern sowie Ihre gespeicherten und
 die fertigen Bauwerke funktionieren offline; Bauwerke und Personen finden,
 Verteilen und Chat brauchen eine Verbindung. Siehe
 [ForkBuild installieren](01-GettingStarted.md#forkbuild-installieren).
+
+### Kann ich mein Bauwerk 3D-drucken oder in Blender öffnen?
+
+Ja. **3D-Modell** in der Werkzeugleiste des Editors lädt es als STL für den
+3D-Druck (in Millimetern, auf dem Druckbett stehend) oder als farbiges glTF
+oder OBJ für Blender und andere Programme herunter. Siehe
+[Ein 3D-Modell herunterladen](02-TheEditor.md#ein-3d-modell-herunterladen).
 
 ### Brauche ich eine Krypto-Wallet?
 

@@ -214,6 +214,13 @@ device as an app. Building, saving and your saved and ready-made builds
 work offline; finding builds and people, distributing and chat need a
 connection. See [Installing ForkBuild](01-GettingStarted.md#installing-forkbuild).
 
+### Can I 3D-print my build, or open it in Blender?
+
+Yes. **3D model** in the Editor's toolbar downloads it as an STL for 3D
+printing (in millimetres, standing on the bed) or as a colored glTF or OBJ
+for Blender and other programs. See
+[Downloading a 3D model](02-TheEditor.md#downloading-a-3d-model).
+
 ### Do I need a crypto wallet?
 
 No. Building, saving, publishing, forking, peers and chat need none. A

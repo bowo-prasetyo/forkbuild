@@ -4767,3 +4767,34 @@ background or as an installed app.
   update banner and Reload starts it, and that the 🔔 panel turns notifications on and off with permission granted.
 - Not done: nothing shows while ForkBuild is closed (that needs web push and a server); Periodic Background Sync,
   which only Chromium has for installed apps, isn't used.
+
+## Download a build as a 3D model: glTF, STL for printing, OBJ (unnumbered, 2026-10-08)
+
+**A build can leave ForkBuild as a 3D model**: for Blender, game engines and model viewers, and for 3D printers.
+Builds could travel only as links and pictures, which reach nobody in the 3D-printing, Blender or game-modding
+communities, and give no reason to search for "design and 3D-print a brick model in the browser".
+
+- `core/BuildModelFormats.js` (pure, no Three.js): `writeGlb()` (glTF 2.0 binary, one node and mesh, one primitive
+  of triangles per color, POSITION with its bounds and NORMAL, matte materials converted to linear light, the credit in
+  `asset.copyright` and `asset.extras`), `writeStl()` (binary, Z up, `STL_MILLIMETRES_PER_UNIT` = 10 so a model is
+  1:100, centred and standing on the bed, facet normals from the vertices, the credit in the header), `writeObj()` (one
+  group per color, vertex colors, normals, the credit as comments). `describeBuildCredit()` writes the one-line credit.
+- `renderer/BuildMeshExtraction.js`: bricks to triangles with ThreeBrickFactory's own geometry, moved and turned as
+  drawn, grouped by color.
+- `application/export/BuildModelExport.js`: `collectModelBricks()` (the build's bricks and, one level deep, the bricks
+  of each placed structure on this device, where WorldRenderer draws them; the rest counted), `writeBuildModel()`
+  (refuses an empty build in words), `buildModelFileName()` (`forkbuild-<title>.<format>`).
+- The Editor's toolbar gains **3D model** (`ModelExportDialog`: glTF, For 3D printing, OBJ, each saying what it is
+  for); the message names the file and says when placed structures weren't on this device. A shared build's page
+  offers **Download it as a 3D model: glTF · STL (3D printing) · OBJ** when its license allows copies, reading the
+  build with the new `readSharedBuildDocument()`.
+- Principle: "A Model Leaves With Its Credit, And Only As Its License Allows". Guides 02, 04 and the FAQ in every
+  language, Architecture, README; messages in every language.
+- Tests: `BuildModelExport` (triangles where bricks stand, turned bricks, placements turned and moved, a missing
+  placement counted; the glTF container, chunks, primitives, bounds, linear colors and credit; STL header, size, Z up,
+  millimetres, on the bed, centred, winding kept; OBJ vertices, colors, normals, faces across groups; file names;
+  an empty build refused), `BuildModelLoadersBrowser` (the showcase castle read back by Three.js's own GLTFLoader,
+  STLLoader and OBJLoader: every triangle, its colors, its credit), and `run-bundle` downloads the castle as `.glb`
+  from the Editor and a shared castle as `.stl` from its page.
+- Not done: merging bricks into one watertight solid (slicers join overlapping shells themselves), textures, and
+  exporting animals, residents or terrain.

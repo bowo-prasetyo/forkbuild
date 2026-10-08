@@ -211,3 +211,72 @@
     font-size: 0.82rem;
     color: #8a8a8a;
 }
+
+/* Download as a 3D model: the Editor's dialog
+   (ui/components/modelExport/ModelExportDialog.js) and the links on a shared
+   build's page. */
+.modal-panel.model-export-dialog {
+    width: min(520px, calc(100vw - 2rem));
+    max-width: none;
+}
+
+.model-export-lead {
+    margin: 0 0 1rem;
+    color: #c8c8c8;
+    line-height: 1.45;
+}
+
+.model-export-option {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+    margin-bottom: 0.6rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    background: #1a1a1a;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.model-export-option:hover,
+.model-export-option:focus-visible {
+    border-color: #4caf7d;
+}
+
+.model-export-name {
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.model-export-description,
+.model-export-note {
+    font-size: 0.85rem;
+    line-height: 1.35;
+    color: #a8a8a8;
+}
+
+.model-export-note {
+    margin: 0.4rem 0 0;
+    color: #8a8a8a;
+}
+
+.shared-build-model,
+.shared-build-model-message {
+    margin: 0.6rem 0 0;
+    font-size: 0.85rem;
+    color: #8a8a8a;
+}
+
+.shared-build-model-link {
+    padding: 0;
+    border: none;
+    background: none;
+    color: #4caf7d;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}

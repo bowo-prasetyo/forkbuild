@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2cea46db0f73aa93 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: e15721b99cda6db7 -->
 # よくある質問
 
 <!-- languages -->
@@ -235,6 +235,13 @@ ForkBuild が開いていて接続している間にしか届きません。7 �
 追加できます。作品づくり、保存、保存した作品や既製の作品はオフラインで
 使えます。作品や人を見つける、配信、チャットには接続が必要です。
 [ForkBuild をインストールする](01-GettingStarted.md#forkbuild-をインストールする) を参照してください。
+
+### 作品を 3D プリントしたり、Blender で開いたりできますか？
+
+できます。エディターのツールバーの **3D モデル** から、3D プリント用の
+STL（ミリメートル単位、ベッドに置いた向き）か、Blender などのソフト向けの
+カラーの glTF や OBJ をダウンロードできます。
+[3D モデルをダウンロードする](02-TheEditor.md#3d-モデルをダウンロードする) を参照してください。
 
 ### 暗号資産のウォレットは必要ですか？
 

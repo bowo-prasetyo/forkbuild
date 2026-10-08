@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2cea46db0f73aa93 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: e15721b99cda6db7 -->
 # 자주 묻는 질문
 
 <!-- languages -->
@@ -211,6 +211,12 @@ Edge에서는 클라우드 저장소가 동기화하는 폴더에 매일 자동�
 저장한 작품과 기성 작품은 오프라인에서도 되고, 작품과 사람 찾기, 배포,
 채팅에는 연결이 필요합니다. [ForkBuild 설치하기](01-GettingStarted.md#forkbuild-설치하기)를
 참고하세요.
+
+### 내 작품을 3D 프린팅하거나 Blender에서 열 수 있나요?
+
+네. 에디터 도구 모음의 **3D 모델**로 3D 프린팅용 STL(밀리미터 단위, 베드에
+놓인 방향)이나 Blender 등을 위한 색상 있는 glTF나 OBJ를 내려받을 수
+있습니다. [3D 모델 내려받기](02-TheEditor.md#3d-모델-내려받기)를 참고하세요.
 
 ### 암호화폐 지갑이 필요한가요?
 

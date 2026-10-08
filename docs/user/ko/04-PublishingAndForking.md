@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4bc516de273c1f79 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 28974300f39be674 -->
 # 04 — 게시와 포크
 
 <!-- languages -->
@@ -92,7 +92,9 @@
   출처 표시가 유지되고, **월드로 돌아가기**로 원본에 갈 수 있습니다.
 - **월드에서 둘러보기**: 월드 뷰에서 작품을 봅니다.
 
-작품의 라이선스가 복사를 허용하지 않으면, 페이지가 그렇다고 알려 주고
+라이선스가 복사를 허용하면 페이지에 **3D 모델로 내려받기**(glTF, 3D
+프린팅용 STL, OBJ; [3D 모델 내려받기](02-TheEditor.md#3d-모델-내려받기) 참고)도 나옵니다. 작품의
+라이선스가 복사를 허용하지 않으면, 페이지가 그렇다고 알려 주고
 둘러보기만 제안합니다.
 
 ## 에디터에서 바로 배포하기

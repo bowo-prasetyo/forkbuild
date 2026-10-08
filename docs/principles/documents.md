@@ -130,3 +130,13 @@ is never asked about.
 
 [Full text](history/0.9.md#a-build-may-be-remixed-only-because-its-maker-said-so-2026-10-08)
 
+### A Model Leaves With Its Credit, And Only As Its License Allows (2026-10-08)
+
+A build downloaded as a 3D model carries its title, author, license and
+what it was remixed from inside the file, and nothing that identifies a
+person or device. The Editor offers it for the open build; someone else's
+build offers it only when its license allows copies. It is made on the
+device, from the shapes and colors ForkBuild draws.
+
+[Full text](history/0.9.md#a-model-leaves-with-its-credit-and-only-as-its-license-allows-2026-10-08)
+

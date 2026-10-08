@@ -99,8 +99,11 @@ stored, opens on that build's own page:
   the original;
 - **Walk around it in the World**, to see it in World View.
 
-If the build's license doesn't allow copies, the page says so and offers
-only the walk around it.
+When the license allows copies, the page also offers **Download it as a 3D
+model** (glTF, STL for 3D printing, or OBJ; see
+[Downloading a 3D model](02-TheEditor.md#downloading-a-3d-model)). If the
+build's license doesn't allow copies, the page says so and offers only the
+walk around it.
 
 ## Distributing straight from the Editor
 
