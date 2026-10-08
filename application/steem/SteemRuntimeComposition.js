@@ -37,7 +37,8 @@ export function composeSteemRuntime({
     appVersion = null,
     contentUploads = null,
     contentUploadProgress = null,
-    describePublication = null
+    describePublication = null,
+    buildTagsFor = null
 } = {}) {
     if (typeof fetchImpl !== 'function') return null;
     const rpc = createSteemRpcClient({ nodes: [...configuration.apiNodes], fetchImpl });
@@ -55,7 +56,7 @@ export function composeSteemRuntime({
         publicationDiscoveryQueryService: new SteemPublicationDiscoveryQueryService({ reader }),
         snapshotDiscoveryQueryService: new SteemSnapshotDiscoveryQueryService({ reader }),
         placeNamingDiscoverySource: new SteemPlaceNamingDiscoverySource({ reader }),
-        publicationDiscoveryPublisher: new SteemPublicationDiscoveryPublisher({ announcer }),
+        publicationDiscoveryPublisher: new SteemPublicationDiscoveryPublisher({ announcer, buildTagsFor }),
         snapshotDiscoveryPublisher: new SteemSnapshotDiscoveryPublisher({ announcer }),
         placeNamingDiscoveryPublisher: new SteemPlaceNamingDiscoveryPublisher({ announcer }),
         commentaryDistribution: new PublicationCommentarySteemDistribution({ reader, announcer }),

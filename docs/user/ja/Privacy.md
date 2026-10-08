@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 0c72ea30518d8156 -->
+<!-- translation-of: docs/Privacy.md source-hash: e0ae7efdeb2bafd1 -->
 # プライバシー
 
 <!-- languages -->
@@ -208,7 +208,7 @@ ForkBuild 自身のファイル（コード、スタイルシート、アイコ�
 | ピア接続を始めるとき、ランデブーサーバーがリレーを提供している場合 | ランデブーサーバーの `/turn-credentials`、次にその TURN リレー（Cloudflare） | 短時間有効なリレーの認証情報の要求（多くても 1 時間に 1 回程度）。リレーされる通信は WebRTC によってエンドツーエンドで暗号化されます |
 | アプリが開いていてタブが表示されているとき（バックグラウンドでの告知の同期） | Nostr リレー（`relay.damus.io`）、Arweave ゲートウェイ（`arweave.net`）、Steem ノード（`api.steemit.com`）、Blurt ノード（`rpc.blurt.blog`） | ForkBuild の発見用タグの問い合わせ: 共有のスナップショットとコメントのタグ、あなたが訪れた地名の地域と地図のセル |
 | リポジトリまたは作者ページを開いたとき | Nostr リレー（`relay.damus.io`）、Arweave ゲートウェイ（`arweave.net`）、Steem ノード（`api.steemit.com`）、Blurt ノード（`rpc.blurt.blog`） | 共有の公開物タグ（`forkbuild-publication`）の問い合わせ。続いて、新しく告知された公開物それぞれの署名付きの記録の要求（1 回の訪問または **もう一度確認** ごとに最大 20 件） |
-| ある週の建築チャレンジ（**チャレンジ**）を開いたとき | Nostr リレー（`relay.damus.io`）、Arweave ゲートウェイ（`arweave.net`）、Blurt ノード（`rpc.blurt.blog`） | その週のタグ（`forkbuild-tag:<tag>`）の問い合わせ。続いて、新しくお知らせされた応募作品ごとの署名済みレコードの要求（1 回の表示または **もう一度確認** につき最大 20 件） |
+| ある週の建築チャレンジ（**チャレンジ**）を開いたとき | Nostr リレー（`relay.damus.io`）、Arweave ゲートウェイ（`arweave.net`）、Steem ノード（`api.steemit.com`）、Blurt ノード（`rpc.blurt.blog`） | その週のタグ（`forkbuild-tag:<tag>`）の問い合わせ。続いて、新しくお知らせされた応募作品ごとの署名済みレコードの要求（1 回の表示または **もう一度確認** につき最大 20 件） |
 | Nostr で公開物を配信または発見するとき | Nostr リレー（`relay.damus.io`） | あなたが公開する署名済みの告知。あなたの問い合わせ |
 | Arweave にコンテンツを保存または取得するとき | Arweave ゲートウェイ（`arweave.net`） | あなたが公開するコンテンツ。取得するもの |
 | IPFS からコンテンツを取得するとき | IPFS ゲートウェイ（`ipfs.filebase.io`）、または自分の IPFS ノード（`127.0.0.1:5001`） | 取得または追加するもの |

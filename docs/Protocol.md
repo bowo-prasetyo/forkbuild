@@ -774,9 +774,10 @@ carried on the same Nostr event (a second `t` tag) or Arweave transaction
     Snapshot's content hash.
   - The weekly challenge page reads `forkbuild-tag:<the week's tag>` alone
     (application/challenge/ChallengeEntryDiscovery.js), on Nostr and
-    Arweave, and asks Blurt the same: a Blurt build post lists the build's
-    tags in `json_metadata.tags`, so BlurtPublicationDiscoveryQueryService
-    answers that query with the posts listing the tag, verifying and admitting each new record as the Repository's
+    Arweave, and asks Steem and Blurt the same: a Steem announcement lists the
+    build's tags in `json_metadata.forkbuild.tags` and a Blurt build post in
+    `json_metadata.tags`, so their publication query services answer that
+    query with the replies or posts listing the tag, verifying and admitting each new record as the Repository's
     network discovery does.
   - Readers still read the global tags, so announcements made before the
     narrow tags existed are still found.
@@ -913,6 +914,11 @@ its options:
       allow_votes: true, allow_curation_rewards: true, extensions: []
     }]
 
+- A publication's announcement may also carry `forkbuild.tags`: its build's own tags (core/BuildTags.js, at most
+  five), read from the snapshot published on the announcing device. It is in ForkBuild's own metadata rather than
+  Steem's `tags`, which mean nothing on a reply. A reader that asks for `forkbuild-tag:<tag>` (a week's challenge)
+  keeps the replies listing it (application/steem/SteemPublicationDiscoveryQueryService.js); readers that predate
+  the field ignore it, and announcements made before it (2026-10-08) list no tags.
 - Payout is declined in the same transaction because options can only be set before a post has votes, and bots vote
   on new posts within minutes. With no payout, a vote moves no rewards, so there is little reason to downvote an
   announcement, and readers ignore votes anyway.

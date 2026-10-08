@@ -1,9 +1,13 @@
 import { DecentralizedDiscoveryQueryService } from '../discovery/DecentralizedWorldDiscoveryQuery.js';
 import { parseDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
+import { buildTagOfDiscoveryTag } from '../../core/NarrowDiscoveryTags.js';
 
 // Publication leads from Steem discovery threads, for the same registry the
-// Nostr and Arweave services feed. Only the publication family's tag is
-// answered; any other tag finds nothing, as it would on a relay.
+// Nostr and Arweave services feed. The publication family's tag finds every
+// one; a build-tag discovery tag (`forkbuild-tag:<tag>`,
+// core/NarrowDiscoveryTags.js) finds those whose reply lists that build tag
+// (core/SteemDiscoveryAnnouncement.js), as a relay finds the events carrying
+// it. Any other tag finds nothing.
 
 export const STEEM_PUBLICATION_DISCOVERY_TAG = 'forkbuild-publication';
 const URI_SCHEME_PATTERN = /^([a-z][a-z0-9+.-]*):\/\//i;
@@ -38,7 +42,8 @@ export class SteemPublicationDiscoveryQueryService extends DecentralizedDiscover
     // ({ kind, objectId, uri }) plus `origin`, as the Nostr and Arweave
     // services give it. `objectId` is only what the announcer claimed.
     async searchEnvelopes(discoveryTag) {
-        if (discoveryTag !== this._discoveryTag) return [];
+        const buildTag = buildTagOfDiscoveryTag(discoveryTag);
+        if (discoveryTag !== this._discoveryTag && !buildTag) return [];
         let announcements;
         try {
             ({ announcements } = await this._reader.read('publication'));
@@ -46,7 +51,8 @@ export class SteemPublicationDiscoveryQueryService extends DecentralizedDiscover
             return [];
         }
         const envelopes = [];
-        for (const { envelope } of announcements) {
+        for (const { envelope, tags } of announcements) {
+            if (buildTag && !(Array.isArray(tags) && tags.includes(buildTag))) continue;
             const parsed = parseDecentralizedDiscoveryEnvelope(envelope);
             if (parsed === null) continue;
             envelopes.push({ origin: this.origin, kind: parsed.kind, objectId: parsed.objectId, uri: parsed.uri });

@@ -480,11 +480,9 @@ home, …), from Monday to the end of Sunday (UTC). Home shows it, and
 
 The challenge's page lists the entries this device knows of: your own
 published builds with the tag, and others' builds found on the networks.
-When a build is distributed to Nostr, Arweave or Blurt, its announcement (on Blurt, its post) lists its tags, and the page asks those networks for the week's tag each time it
+When a build is distributed to Nostr, Arweave, Steem or Blurt, its announcement (on Blurt, its post) lists its tags, and the page asks those networks for the week's tag each time it
 opens (**Check again** asks again). Each entry found is checked like
-anything the Repository finds, and is listed in the Repository too. A build
-shared only by its link, or distributed only to Steem, isn't found
-this way. Earlier weeks stay open by their Monday (**Last week: …**), without
+anything the Repository finds, and is listed in the Repository too. A build shared only by its link isn't found this way, nor one announced only on Steem before 8 October 2026, when Steem announcements began to list tags. Earlier weeks stay open by their Monday (**Last week: …**), without
 **Join**.
 
 Entries are shown newest first, with their remix counts. Nobody judges

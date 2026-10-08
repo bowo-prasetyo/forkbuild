@@ -4939,3 +4939,20 @@ tags (`json_metadata.tags`), the week's tag among them.
 - Tests: `BlurtChallengeEntries` (tags read back from a real build post; a fake chain answered by the real reader and
   query service).
 - Not done: Steem, whose announcements are replies in monthly threads.
+
+## Challenge entries announced on Steem are found (unnumbered, 2026-10-08)
+
+**A build announced only on Steem now counts as a challenge entry for everyone.** Steem can't be searched for replies
+by tag, but it needn't be: the app already reads every reply in the month's publication thread, as the Repository
+does. What was missing was the tags themselves; a Steem announcement carried only its envelope.
+
+- `steemDiscoveryAnnouncementOperations()` takes `tags` and writes a publication's build tags to
+  `json_metadata.forkbuild.tags` (ForkBuild's own metadata, not Steem's `tags`, which mean nothing on a reply);
+  `parseSteemDiscoveryAnnouncement()` reads them back. The announcer passes them through; the publisher reads them from
+  the snapshot published on this device (`buildTagsFor`, as Nostr's and Arweave's do).
+- `SteemPublicationDiscoveryQueryService.searchEnvelopes()` answers `forkbuild-tag:<tag>` with the replies listing it;
+  the challenge asks Nostr, Arweave, Steem and Blurt.
+- Page text and guide 04 in every language (with the date before which Steem announcements list no tags); Privacy
+  lists Steem nodes for the challenge page; Protocol ("Announcing"), AnnouncementIndex, Architecture.
+- Tests: `SteemChallengeEntries`.
+- Not done: builds announced on Steem before this list no tags and aren't found; distributing one again would.

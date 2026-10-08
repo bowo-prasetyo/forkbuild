@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 0c72ea30518d8156 -->
+<!-- translation-of: docs/Privacy.md source-hash: e0ae7efdeb2bafd1 -->
 # Privacidade
 
 <!-- languages -->
@@ -218,7 +218,7 @@ pede a ele.
 | Você começa uma conexão entre pares, se o servidor de encontro oferece um relay | o `/turn-credentials` do servidor de encontro, e depois o relay TURN dele (Cloudflare) | um pedido de credenciais de relay de curta duração, no máximo cerca de uma vez por hora; o tráfego retransmitido é criptografado de ponta a ponta pelo WebRTC |
 | O app está aberto e a aba visível (sincronização de anúncios em segundo plano) | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | consultas pelas etiquetas de descoberta do ForkBuild: as etiquetas compartilhadas de Snapshot e de Comentários, e as regiões de nomes de lugares e células do mapa que você visitou |
 | Você abre o Repositório ou a página de um autor | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | uma consulta pela etiqueta compartilhada de publicações (`forkbuild-publication`); depois um pedido do registro assinado de cada publicação recém-anunciada, no máximo 20 por visita ou por **Verificar de novo** |
-| Você abre o desafio de construção de uma semana (**Desafio**) | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Blurt (`rpc.blurt.blog`) | uma consulta pela tag dessa semana (`forkbuild-tag:<tag>`); depois, uma requisição do registro assinado de cada participação recém-anunciada, no máximo 20 por visita ou **Verificar de novo** |
+| Você abre o desafio de construção de uma semana (**Desafio**) | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | uma consulta pela tag dessa semana (`forkbuild-tag:<tag>`); depois, uma requisição do registro assinado de cada participação recém-anunciada, no máximo 20 por visita ou **Verificar de novo** |
 | Você distribui ou descobre publicações pelo Nostr | relays do Nostr (`relay.damus.io`) | os anúncios assinados que você publica; suas consultas |
 | Você guarda ou busca conteúdo no Arweave | um gateway do Arweave (`arweave.net`) | o conteúdo que você publica; o que você busca |
 | Você busca conteúdo no IPFS | um gateway IPFS (`ipfs.filebase.io`), ou seu próprio nó IPFS (`127.0.0.1:5001`) | o que você busca ou adiciona |

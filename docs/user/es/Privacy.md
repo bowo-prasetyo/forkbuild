@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 0c72ea30518d8156 -->
+<!-- translation-of: docs/Privacy.md source-hash: e0ae7efdeb2bafd1 -->
 # Privacidad
 
 <!-- languages -->
@@ -226,7 +226,7 @@ dirección IP y lo que usted le pide.
 | Inicia una conexión entre pares, si el servidor de encuentro ofrece un relay | `/turn-credentials` del servidor de encuentro, y luego su relay TURN (Cloudflare) | una solicitud de credenciales de relay de corta duración, como máximo una vez por hora aproximadamente; el tráfico retransmitido está cifrado de extremo a extremo por WebRTC |
 | La app está abierta y su pestaña visible (sincronización de anuncios en segundo plano) | relays de Nostr (`relay.damus.io`), un gateway de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`), nodos de Blurt (`rpc.blurt.blog`) | consultas por las etiquetas de descubrimiento de ForkBuild: las etiquetas compartidas de Snapshots y de comentarios, y las regiones de nombres de lugares y las celdas del mapa que visitó |
 | Abre el Repositorio o la página de un autor | relays de Nostr (`relay.damus.io`), un gateway de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`), nodos de Blurt (`rpc.blurt.blog`) | una consulta por la etiqueta compartida de publicaciones (`forkbuild-publication`); luego una solicitud del registro firmado de cada publicación recién anunciada, como máximo 20 por visita o por **Volver a buscar** |
-| Abre el desafío de construcción de una semana (**Desafío**) | relés de Nostr (`relay.damus.io`), una pasarela de Arweave (`arweave.net`), nodos de Blurt (`rpc.blurt.blog`) | una consulta por la etiqueta de esa semana (`forkbuild-tag:<tag>`); después, una solicitud del registro firmado de cada participación anunciada nueva, como máximo 20 por visita o **Volver a buscar** |
+| Abre el desafío de construcción de una semana (**Desafío**) | relés de Nostr (`relay.damus.io`), una pasarela de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`), nodos de Blurt (`rpc.blurt.blog`) | una consulta por la etiqueta de esa semana (`forkbuild-tag:<tag>`); después, una solicitud del registro firmado de cada participación anunciada nueva, como máximo 20 por visita o **Volver a buscar** |
 | Distribuye o descubre publicaciones a través de Nostr | relays de Nostr (`relay.damus.io`) | los anuncios firmados que publica; sus consultas |
 | Guarda u obtiene contenido en Arweave | un gateway de Arweave (`arweave.net`) | el contenido que publica; lo que obtiene |
 | Obtiene contenido de IPFS | un gateway de IPFS (`ipfs.filebase.io`), o su propio nodo IPFS (`127.0.0.1:5001`) | lo que obtiene o agrega |
