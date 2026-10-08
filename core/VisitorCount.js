@@ -67,7 +67,8 @@ export const FunnelEvent = Object.freeze({
     INSTALLED: 'installed',
     EMBED_CODE: 'embed-code',
     EMBED_VIEW: 'embed-view',
-    EMBED_OPEN: 'embed-open'
+    EMBED_OPEN: 'embed-open',
+    CHALLENGE_JOIN: 'challenge-join'
 });
 
 const FUNNEL_EVENTS = new Set(Object.values(FunnelEvent));

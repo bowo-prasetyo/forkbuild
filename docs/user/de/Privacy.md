@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 14eb8e63d6c0263d -->
+<!-- translation-of: docs/Privacy.md source-hash: 65f1e9c30110d299 -->
 # Datenschutz
 
 <!-- languages -->
@@ -45,6 +45,9 @@ veröffentlichen, exportieren oder senden es:
   früher verteilt haben, nicht wieder auflistet.
 - an welche Netzwerke dieses Gerät jeden Ihrer Kommentare gesendet hat, und
   wann, damit jeder Kommentar zeigen kann, wohin er ging.
+- für jede Woche der Bau-Challenge, die Sie öffnen, die IDs der in den
+  Netzwerken gefundenen Beiträge, damit ihre Seite sie vor der Suche wieder
+  anzeigt.
 
 Das Löschen der Daten dieser Website im Browser löscht all das, und es gibt
 keine andere Kopie und keinen Weg, sie wiederherzustellen. Sichern Sie es
@@ -73,7 +76,9 @@ eingeschaltet sind, wird mit Ihren Einstellungen gespeichert (siehe
 - **Alles, was Sie veröffentlichen**, ist öffentlich: sein Inhalt, Titel,
   Beschreibung und Lizenz sowie der öffentliche Schlüssel Ihrer Identität,
   die es signiert. Sobald andere eine Kopie haben, können Sie sie nicht
-  zurücknehmen.
+  zurücknehmen. Wenn Sie es über Nostr oder Arweave verteilen, nennt seine Ankündigung
+  auch seine Tags (als `forkbuild-tag:<tag>`), sodass jeder die Bauwerke mit
+  einem Tag finden kann, etwa die Beiträge zur Challenge einer Woche.
 - **Peers, mit denen Sie sich verbinden**, erfahren den öffentlichen
   Schlüssel Ihrer Identität und Ihre IP-Adresse (eine direkte Verbindung
   braucht sie; ein TURN-Relay verbirgt sie vor dem Peer, aber nicht vor dem
@@ -160,6 +165,9 @@ sind (siehe „Server, die ForkBuild kontaktiert“ unten):
 - `/e/embed-open`: ein eingebettetes Bauwerk wurde von dieser Seite aus in
   ForkBuild geöffnet.
 
+Und wenn jemand bei der wöchentlichen Bau-Challenge mitmacht (**Mitmachen**
+oder die Challenge unter **Neu** im Editor): `/e/challenge-join`.
+
 Jede sendet nur ihren Pfad und die Zufallszahl, nie den Link, das Bauwerk,
 seinen Titel oder wer es gemacht hat. Welche Bauwerke über einen Link
 geöffnet wurden, steht nur im Arbeitsspeicher der geöffneten Seite und ist
@@ -206,12 +214,14 @@ was Sie bei ihm anfragen.
 | Sie kopieren oder teilen auf der offiziellen Website einen Link zu einem Bauwerk, öffnen einen geteilten Link oder kopieren ein darüber geöffnetes Bauwerk in den Editor (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit festem Pfad, der nennt, welcher der drei Momente es war, ohne Referrer und ohne Cookie |
 | Sie installieren ForkBuild von der offiziellen Seite (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/installed`, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website kopieren Sie den Einbettungscode eines Bauwerks, oder ein eingebettetes Bauwerk wird gezeigt oder in ForkBuild geöffnet (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit einem festen Pfad, der nennt, welcher der drei Fälle es war, ohne Referrer und ohne Cookie |
+| Auf der offiziellen Website machen Sie bei der wöchentlichen Bau-Challenge mit (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/challenge-join`, ohne Referrer und ohne Cookie |
 | Sie machen sich unter **Peers** auffindbar oder suchen jemanden | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | den öffentlichen Schlüssel Ihrer Identität und ein Verbindungsangebot, höchstens 15 Minuten aufbewahrt; die Identität, die Sie suchen; wenn Sie sich mit jemandem verbinden, den Sie gefunden haben, Ihre Verbindungsantwort (sie listet Ihre Netzwerkadressen auf), die nur diese Person abholen kann |
 | Sie treten einer öffentlichen Lobby bei oder sehen in eine hinein | derselbe Rendezvous-Server | Ihre signierte Lobby-Karte (öffentlicher Schlüssel, Anzeigename, welche Lobby), höchstens 15 Minuten aufbewahrt und erneuert, solange Sie bleiben; in welche Lobby Sie hineinsehen |
 | Eine Peer-Verbindung beginnt | STUN-Server (`stun.l.google.com`) | nichts außer einer Anfrage nach Ihrer öffentlichen IP-Adresse |
 | Sie beginnen eine Peer-Verbindung, wenn der Rendezvous-Server ein Relay anbietet | `/turn-credentials` des Rendezvous-Servers, dann sein TURN-Relay (Cloudflare) | eine Anfrage nach kurzlebigen Relay-Zugangsdaten, höchstens etwa einmal pro Stunde; weitergeleiteter Verkehr ist durch WebRTC Ende-zu-Ende-verschlüsselt |
 | Die App ist geöffnet und ihr Tab sichtbar (Synchronisierung der Ankündigungen im Hintergrund) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | Abfragen nach den Entdeckungs-Tags von ForkBuild: den gemeinsamen Tags für Snapshots und Kommentare sowie den Ortsnamen-Regionen und Kartenzellen, die Sie besucht haben |
 | Sie öffnen das Repository oder eine Autorenseite | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | eine Abfrage nach dem gemeinsamen Veröffentlichungs-Tag (`forkbuild-publication`); dann eine Anfrage nach dem signierten Eintrag jeder neu angekündigten Veröffentlichung, höchstens 20 pro Besuch oder **Erneut prüfen** |
+| Sie öffnen die Bau-Challenge einer Woche (**Challenge**) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`) | eine Abfrage nach dem Tag dieser Woche (`forkbuild-tag:<tag>`); dann eine Anfrage nach dem signierten Datensatz jedes neu angekündigten Beitrags, höchstens 20 pro Besuch oder **Erneut prüfen** |
 | Sie verteilen oder entdecken Veröffentlichungen über Nostr | Nostr-Relays (`relay.damus.io`) | signierte Ankündigungen, die Sie veröffentlichen; Ihre Abfragen |
 | Sie speichern oder holen Inhalte auf Arweave | ein Arweave-Gateway (`arweave.net`) | die Inhalte, die Sie veröffentlichen; was Sie abrufen |
 | Sie holen Inhalte von IPFS | ein IPFS-Gateway (`ipfs.io`) oder Ihr eigener IPFS-Knoten (`127.0.0.1:5001`) | was Sie abrufen oder hinzufügen |

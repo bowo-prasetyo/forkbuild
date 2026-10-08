@@ -54,6 +54,10 @@ export class FunnelEventCounter {
         return this.count(FunnelEvent.EMBED_OPEN);
     }
 
+    joinedChallenge() {
+        return this.count(FunnelEvent.CHALLENGE_JOIN);
+    }
+
     // Counted once per build opened from a link.
     forked(sourceDocumentId) {
         if (!this._openedFromLink.delete(sourceDocumentId)) return false;

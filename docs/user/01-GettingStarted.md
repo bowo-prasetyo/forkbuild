@@ -27,14 +27,19 @@ Editor on an empty plot; and **Explore builds** opens the Repository. Under
 village square, a house, a mill and a bridge) opens your own copy of that
 build the same way; the Repository, My Worlds and the Editor's **New** offer
 the same builds. Nothing is published or sent anywhere until you choose to.
+Home also shows **This week's build challenge**: a theme to build, with
+**Join the challenge** (see
+[The weekly build challenge](04-PublishingAndForking.md#the-weekly-build-challenge)).
 
 The bar at the top is always visible:
 
-`ForkBuild Home Editor Repository My Worlds More ▾ 🔔 [Login]`
+`ForkBuild Home Editor Repository Challenge My Worlds More ▾ 🔔 [Login]`
 
 - **Home** — the landing page
 - **Editor** — where you build
 - **Repository** — browse everyone's published creations
+- **Challenge** — this week's build challenge and its entries, see
+  [The weekly build challenge](04-PublishingAndForking.md#the-weekly-build-challenge)
 - **My Worlds** — Worlds you've actually visited on this device, see
   [My Worlds](03-WorldView.md#my-worlds--worlds-youve-actually-been-to)
 

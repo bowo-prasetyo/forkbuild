@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 14eb8e63d6c0263d -->
+<!-- translation-of: docs/Privacy.md source-hash: 65f1e9c30110d299 -->
 # Privasi
 
 <!-- languages -->
@@ -46,6 +46,9 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
   pernah Anda distribusikan.
 - jaringan mana saja yang menerima setiap komentar Anda dari perangkat ini,
   dan kapan, agar setiap komentar bisa menunjukkan ke mana ia dikirim.
+- untuk setiap minggu tantangan membangun yang Anda buka, ID karya peserta
+  yang ditemukan di jaringan, agar halamannya menampilkannya lagi sebelum
+  mencari.
 
 Menghapus data situs ini di browser akan menghapus semuanya, dan tidak ada
 salinan lain maupun cara untuk memulihkannya. Cadangkan terlebih dahulu
@@ -73,7 +76,10 @@ Apakah notifikasi di perangkat ini aktif disimpan bersama pengaturan Anda
 - **Apa pun yang Anda terbitkan** bersifat publik: isinya, judul,
   deskripsi, dan lisensinya, serta kunci publik identitas Anda yang
   menandatanganinya. Begitu orang lain memiliki salinannya, Anda tidak
-  dapat menariknya kembali.
+  dapat menariknya kembali. Saat Anda mendistribusikannya ke Nostr atau Arweave, pengumumannya juga
+  mencantumkan tagnya (sebagai `forkbuild-tag:<tag>`), sehingga siapa pun
+  dapat menemukan bangunan dengan tag tertentu, seperti karya peserta
+  tantangan suatu minggu.
 - **Rekan yang terhubung dengan Anda** mengetahui kunci publik identitas
   Anda dan alamat IP Anda (koneksi langsung memerlukannya; relay TURN
   menyembunyikannya dari rekan tetapi tidak dari relay itu sendiri). Rekan
@@ -159,6 +165,9 @@ bawah):
 - `/e/embed-open`: bangunan yang disematkan dibuka di ForkBuild dari halaman
   itu.
 
+Dan saat seseorang ikut tantangan membangun mingguan (**Ikut tantangan**,
+atau tantangan di **Baru** pada Editor): `/e/challenge-join`.
+
 Masing-masing hanya mengirim jalurnya dan angka acak: tidak pernah
 tautannya, bangunannya, judulnya, atau siapa pembuatnya. Bangunan mana yang
 dibuka dari tautan hanya disimpan di memori halaman yang terbuka, dan
@@ -203,12 +212,14 @@ Anda dan apa yang Anda minta darinya.
 | Di situs resmi, Anda menyalin atau membagikan tautan ke sebuah bangunan, membuka tautan yang dibagikan, atau menyalin bangunan yang dibuka dari tautan itu ke Editor (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut momen mana dari ketiganya, tanpa perujuk dan tanpa cookie |
 | Anda memasang ForkBuild dari situs resmi (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/installed`, tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda menyalin kode sematan sebuah bangunan, atau bangunan yang disematkan ditampilkan atau dibuka di ForkBuild (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut yang mana dari ketiganya, tanpa referrer dan tanpa cookie |
+| Di situs resmi, Anda ikut tantangan membangun mingguan (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/challenge-join`, tanpa referrer dan tanpa cookie |
 | Anda menjadikan diri dapat ditemukan, atau mencari seseorang, di **Rekan** | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | kunci publik identitas Anda dan tawaran koneksi, disimpan paling lama 15 menit; identitas yang Anda cari; saat Anda terhubung dengan seseorang yang Anda temukan, balasan koneksi Anda (berisi alamat jaringan Anda), yang hanya dapat diambil oleh orang itu |
 | Anda bergabung ke, atau melihat ke dalam, lobi publik | server rendezvous yang sama | kartu lobi Anda yang ditandatangani (kunci publik, nama tampilan, lobi mana), disimpan paling lama 15 menit dan diperbarui selama Anda tetap di sana; lobi mana yang Anda lihat |
 | Koneksi rekan dimulai | server STUN (`stun.l.google.com`) | hanya permintaan alamat IP publik Anda |
 | Anda memulai koneksi rekan, jika server rendezvous menawarkan relay | `/turn-credentials` pada server rendezvous, lalu relay TURN-nya (Cloudflare) | permintaan kredensial relay berumur pendek, paling sering sekitar sekali sejam; lalu lintas yang direlay dienkripsi ujung ke ujung oleh WebRTC |
 | Aplikasi terbuka dan tabnya terlihat (sinkronisasi pengumuman di latar belakang) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag penemuan ForkBuild: tag Snapshot dan Komentar bersama, serta wilayah Penamaan Tempat dan sel peta yang pernah Anda kunjungi |
 | Anda membuka Repositori atau halaman pembuat | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag Publikasi bersama (`forkbuild-publication`); lalu permintaan catatan bertandatangan untuk setiap publikasi yang baru diumumkan, paling banyak 20 per kunjungan atau per **Periksa lagi** |
+| Anda membuka tantangan membangun suatu minggu (**Tantangan**) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`) | kueri untuk tag minggu itu (`forkbuild-tag:<tag>`); lalu permintaan rekaman bertanda tangan untuk setiap karya peserta yang baru diumumkan, paling banyak 20 per kunjungan atau **Periksa lagi** |
 | Anda mendistribusikan atau menemukan publikasi melalui Nostr | relay Nostr (`relay.damus.io`) | pengumuman bertanda tangan yang Anda terbitkan; kueri Anda |
 | Anda menyimpan atau mengambil konten di Arweave | gateway Arweave (`arweave.net`) | konten yang Anda terbitkan; apa yang Anda ambil |
 | Anda mengambil konten dari IPFS | gateway IPFS (`ipfs.io`), atau node IPFS Anda sendiri (`127.0.0.1:5001`) | apa yang Anda ambil atau tambahkan |

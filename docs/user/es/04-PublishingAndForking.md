@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4c0715a067f50e8b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e6595d73ff729e3e -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -496,6 +496,42 @@ En ambos casos, el único botón del diálogo, **Volver al Mundo compartido**,
 lo lleva de vuelta a donde lo encontró (el Mundo en el que estaba colocado,
 o el Mundo compartido en sí), en lugar de dejarlo varado en el Editor sin
 nada sobre lo que construir.
+
+## El desafío de construcción semanal
+
+Cada semana ForkBuild propone un tema para construir (un faro, un puente,
+una casa diminuta, …), de lunes al final del domingo (UTC). Inicio lo
+muestra, y **Desafío** en la barra de arriba abre su página.
+
+1. **Unirse al desafío** abre una construcción inicial en el Editor como
+   su propia copia, ya con la etiqueta de la semana (por ejemplo
+   `#lighthouse-20261012`: el tema y el lunes en que empezó). El desafío
+   también es la primera opción de **Nuevo** en el Editor, y las **Ideas
+   para empezar** de la página abren otras construcciones adecuadas de la
+   misma manera.
+2. Hágala suya o empiece de nuevo en un terreno vacío: construya lo que
+   construya, participa mientras conserve la etiqueta de la semana
+   (añádala en **Propiedades del documento → Etiquetas** si empezó de otra
+   forma).
+3. Publíquela antes de que acabe la semana y comparta su enlace. El texto
+   del enlace nombra el desafío y su etiqueta, listo para una publicación.
+
+La página del desafío muestra las participaciones que este dispositivo
+conoce: sus propias construcciones publicadas con la etiqueta y las de
+otras personas encontradas en las redes. Cuando una construcción se
+distribuye en Nostr o Arweave, su anuncio enumera sus etiquetas, y la
+página pregunta a esas redes por la etiqueta de la semana cada vez que se
+abre (**Volver a buscar** vuelve a preguntar). Cada participación
+encontrada se comprueba como todo lo que encuentra el Repositorio, y
+aparece también en el Repositorio. Una construcción compartida solo por su
+enlace, o distribuida solo en Steem o Blurt, no se encuentra así. Las
+semanas anteriores siguen disponibles por su lunes (**La semana pasada:
+…**), sin **Unirse**.
+
+Las participaciones se muestran de la más reciente a la más antigua, con
+sus recuentos de remezclas. Nadie las juzga y nada se clasifica: el
+desafío es un motivo para construir algo esta semana y ver qué hicieron
+otras personas con la misma idea.
 
 ## El árbol genealógico
 

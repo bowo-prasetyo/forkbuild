@@ -1,0 +1,144 @@
+/* The weekly build challenge: its card on Home
+   (ui/components/challenge/ChallengeCard.js), its page
+   (ui/views/ChallengeView.js), and its option in the Editor's New. */
+
+.challenge-card,
+.challenge-header {
+    padding: 1.5rem 1.75rem;
+    border: 1px solid #3d5a47;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1d2a22 0%, #1a1a1a 70%);
+}
+
+.challenge-card {
+    margin-top: 3rem;
+}
+
+.challenge-card-kicker,
+.challenge-kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #8fd4ac;
+}
+
+.challenge-card-time {
+    padding: 0.1rem 0.6rem;
+    border-radius: 999px;
+    background: #2c4636;
+    color: #d6f5e3;
+    font-weight: 600;
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+.challenge-card-title,
+.challenge-title {
+    margin: 0 0 0.4rem;
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    line-height: 1.15;
+    color: #ffffff;
+    word-break: auto-phrase;
+}
+
+.challenge-card-brief,
+.challenge-brief {
+    margin: 0 0 0.5rem;
+    max-width: 46rem;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: #c8c8c8;
+}
+
+.challenge-dates {
+    margin: 0 0 0.75rem;
+    color: #a0a0a0;
+}
+
+.challenge-card-tag {
+    margin: 0 0 1rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #8fd4ac;
+    overflow-wrap: anywhere;
+}
+
+.challenge-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+}
+
+.challenge-card-actions .cta-button {
+    margin-top: 0;
+}
+
+.challenge-view {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+}
+
+.challenge-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 2rem 2rem 3rem;
+}
+
+.challenge-section {
+    margin-top: 2.5rem;
+}
+
+.challenge-section h2 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin: 0 0 0.75rem;
+    font-size: 1.4rem;
+    color: #ffffff;
+}
+
+.challenge-entry-count {
+    font-size: 0.95rem;
+    font-weight: normal;
+    color: #a0a0a0;
+}
+
+.challenge-steps {
+    margin: 0;
+    padding-left: 1.4rem;
+    line-height: 1.6;
+    color: #c8c8c8;
+}
+
+.challenge-steps li + li {
+    margin-top: 0.4rem;
+}
+
+.new-document-challenge {
+    margin-bottom: 0.5rem;
+    border-color: #3d5a47;
+    background: linear-gradient(135deg, #1d2a22 0%, #1a1a1a 70%);
+}
+
+@media (max-width: 640px) {
+    .challenge-card,
+    .challenge-header {
+        padding: 1.1rem 1rem;
+    }
+
+    .challenge-card {
+        margin-top: 2rem;
+    }
+
+    .challenge-inner {
+        padding: 1.25rem 1rem 2rem;
+    }
+}

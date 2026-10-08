@@ -38,6 +38,8 @@ send it:
   for those found on the networks, where each one's signed record was read.
 - the ids of Publications you unpublished on this device, so the Repository's
   search of the networks doesn't list copies you distributed earlier again.
+- for each week's build challenge you open, the ids of the entries found on
+  the networks, so its page lists them again before searching.
 - which networks this device sent each of your comments to, and when, so
   each comment can say where it went.
 
@@ -62,9 +64,12 @@ settings (see "Notifications on this device" below).
 
 ## What other people can see
 
-- **Anything you publish** is public: its content, title, description and
-  license, and your identity's public key, which signs it. Once other people
-  have a copy, you can't take it back.
+- **Anything you publish** is public: its content, title, description,
+  tags and license, and your identity's public key, which signs it. Once
+  other people have a copy, you can't take it back. When you distribute it
+  to Nostr or Arweave, its announcement also lists its tags (as
+  `forkbuild-tag:<tag>`), so anyone can find the builds with a tag, such as a
+  week's challenge entries.
 - **Peers you connect to** learn your identity's public key, and your IP
   address (a direct connection needs it; a TURN relay hides it from the peer
   but not from the relay). Connected peers can see your avatar and presence
@@ -135,6 +140,9 @@ It also hears, the same way, when ForkBuild is installed as an app
 - `/e/embed-view`: an embedded build was shown on a page;
 - `/e/embed-open`: an embedded build was opened in ForkBuild from that page.
 
+And when someone joins the weekly build challenge (**Join the challenge**,
+or the challenge in the Editor's **New**): `/e/challenge-join`.
+
 Each sends only its path and the random number: never the link, the build,
 its title or who made it. Which builds were opened from a link is kept only
 in the open page's memory, and forgotten when it closes.
@@ -176,12 +184,14 @@ only when you use the feature, and each server can be changed under
 | On the official site, you copy or share a link to a build, open a shared link, or copy a build opened from one into the Editor (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
 | You install ForkBuild from the official site (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/installed`, no referrer and no cookie |
 | On the official site, you copy a build's embed code, or an embedded build is shown, or opened in ForkBuild (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
+| On the official site, you join the weekly build challenge (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/challenge-join`, no referrer and no cookie |
 | You make yourself discoverable, or look someone up, in **Peers** | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | your identity's public key and a connection offer, kept for at most 15 minutes; the identity you look up; when you connect to someone you found, your connection reply (it lists your network addresses), which only they can collect |
 | You join, or look into, a public lobby | the same rendezvous server | your signed lobby card (public key, display name, which lobby), kept for at most 15 minutes and renewed while you stay; which lobby you look into |
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |
 | You start a peer connection, if the rendezvous server offers a relay | the rendezvous server's `/turn-credentials`, then its TURN relay (Cloudflare) | a request for short-lived relay credentials, at most about once an hour; relayed traffic is end-to-end encrypted by WebRTC |
 | The app is open and its tab visible (background announcement sync) | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`), Blurt nodes (`rpc.blurt.blog`) | queries for ForkBuild's discovery tags: the shared Snapshot and Commentary tags, and the Place Naming regions and map cells you have visited |
 | You open the Repository or an author's page | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`), Blurt nodes (`rpc.blurt.blog`) | a query for the shared Publication tag (`forkbuild-publication`); then a request for each newly announced Publication's signed record, at most 20 per visit or **Check again** |
+| You open a week's build challenge (**Challenge**) | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`) | a query for that week's tag (`forkbuild-tag:<tag>`); then a request for each newly announced entry's signed record, at most 20 per visit or **Check again** |
 | You distribute or discover publications over Nostr | Nostr relays (`relay.damus.io`) | signed announcements you publish; your queries |
 | You store or fetch content on Arweave | an Arweave gateway (`arweave.net`) | the content you publish; what you fetch |
 | You fetch content from IPFS | an IPFS gateway (`ipfs.io`), or your own IPFS node (`127.0.0.1:5001`) | what you fetch or add |

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4c0715a067f50e8b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e6595d73ff729e3e -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -483,6 +483,42 @@ De todo modo, o único botão da caixa de diálogo, **Voltar ao Mundo
 compartilhado**, leva você de volta a onde o encontrou — o Mundo em que ele
 estava posicionado, ou o próprio Mundo compartilhado —, em vez de deixar
 você preso no Editor sem nada para construir.
+
+## O desafio de construção semanal
+
+Toda semana o ForkBuild propõe um tema para construir (um farol, uma
+ponte, uma casa minúscula, …), de segunda-feira até o fim do domingo
+(UTC). O Início o mostra, e **Desafio** na barra do topo abre a página
+dele.
+
+1. **Participar do desafio** abre uma construção inicial no Editor como
+   sua própria cópia, já com a tag da semana (uma tag como
+   `#lighthouse-20261012`: o tema e a segunda-feira em que começou). O
+   desafio também é a primeira opção de **Novo** no Editor, e as **Ideias
+   para começar** da página abrem outras construções que combinam, do
+   mesmo jeito.
+2. Deixe-a do seu jeito ou recomece num terreno vazio: seja o que for que
+   você construir, participa enquanto mantiver a tag da semana
+   (adicione-a em **Propriedades do documento → Tags** se começou de outro
+   jeito).
+3. Publique antes do fim da semana e compartilhe o link. O texto do link
+   cita o desafio e a tag, pronto para um post.
+
+A página do desafio lista as participações que este dispositivo conhece:
+suas próprias construções publicadas com a tag e as de outras pessoas
+encontradas nas redes. Quando uma construção é distribuída no Nostr ou no
+Arweave, o anúncio dela lista as tags, e a página pergunta a essas redes
+pela tag da semana sempre que abre (**Verificar de novo** pergunta outra
+vez). Cada participação encontrada é verificada como tudo o que o
+Repositório encontra, e aparece também no Repositório. Uma construção
+compartilhada só pelo link, ou distribuída só no Steem ou no Blurt, não é
+encontrada assim. As semanas anteriores continuam abertas pela
+segunda-feira delas (**Semana passada: …**), sem **Participar**.
+
+As participações aparecem das mais novas para as mais antigas, com as
+contagens de remixes. Ninguém as julga e nada é classificado: o desafio é
+um motivo para construir algo nesta semana e ver o que outras pessoas
+fizeram com a mesma ideia.
 
 ## A árvore genealógica
 

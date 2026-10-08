@@ -55,9 +55,11 @@ export class RepositoryNetworkDiscovery {
         this._running = null;
     }
 
-    // Resolves to { admitted: Publication[], pending }, `pending` counting the
-    // new leads left for a later run by the per-run cap. Never throws. A call
-    // while a run is in progress shares that run.
+    // Resolves to { admitted: Publication[], known: string[], pending },
+    // `known` the ids announced under the tag that this device already lists
+    // (never fetched), `pending` counting the new leads left for a later run
+    // by the per-run cap. Never throws. A call while a run is in progress
+    // shares that run.
     run() {
         if (!this._running) {
             this._running = this._run().finally(() => {
@@ -70,10 +72,15 @@ export class RepositoryNetworkDiscovery {
     async _run() {
         const leads = await this._collectLeads();
         const admitted = [];
+        const known = new Set();
         let inspected = 0;
         let pending = 0;
         for (const lead of leads) {
-            if (admitted.some((publication) => publication.id === lead.objectId) || this._isKnownQuietly(lead.objectId)) {
+            if (admitted.some((publication) => publication.id === lead.objectId)) {
+                continue;
+            }
+            if (known.has(lead.objectId) || this._isKnownQuietly(lead.objectId)) {
+                known.add(lead.objectId);
                 continue;
             }
             if (inspected >= this._maxInspectionsPerRun) {
@@ -92,7 +99,7 @@ export class RepositoryNetworkDiscovery {
                 // A failed sink never stops the rest of the run.
             }
         }
-        return Object.freeze({ admitted: Object.freeze(admitted), pending });
+        return Object.freeze({ admitted: Object.freeze(admitted), known: Object.freeze([...known]), pending });
     }
 
     // Every Publication announcement under the shared tag, one lead per uri,

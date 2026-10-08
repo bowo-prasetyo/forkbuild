@@ -731,7 +731,7 @@ the third substrate, groups them by discovery thread instead; see below):
 
 | Family | Tag | Envelope |
 |--------|-----|----------|
-| Publications | `forkbuild-publication`, plus `forkbuild-publication:<publicationId>` for a Publication (not an avatar) | `{ protocol: 'forkbuild', version: 1, kind, objectId, uri }` (core/DecentralizedDiscoveryEnvelope.js) |
+| Publications | `forkbuild-publication`, plus `forkbuild-publication:<publicationId>` and `forkbuild-tag:<tag>` for each of its build's tags, for a Publication (not an avatar) | `{ protocol: 'forkbuild', version: 1, kind, objectId, uri }` (core/DecentralizedDiscoveryEnvelope.js) |
 | Snapshots | `forkbuild-snapshot`, plus `forkbuild-snapshot:cell:<cx>:<cz>` when there is a `claimedPosition` | `{ protocol: 'forkbuild-snapshot-discovery', version: 1, publicationId, contentHash, storage, locator, claimedPosition, placementRecord }` (core/SnapshotDiscoveryEnvelope.js; `placementRecord` optional, see below) |
 | Place naming | per region, from `derivePlaceNamingDiscoveryTag(worldId, regionId)` | `{ protocol: 'forkbuild-place-naming-discovery', version: 1, worldId, regionId, claim }` (core/PlaceNamingDiscoveryEnvelope.js) |
 | Commentary | `forkbuild-commentary`, plus `forkbuild-commentary:<publicationId>` | see "Publication Commentary Distribution" |
@@ -740,6 +740,14 @@ The second tags are narrow tags (core/NarrowDiscoveryTags.js). They are
 carried on the same Nostr event (a second `t` tag) or Arweave transaction
 (a second transaction tag), never as a second announcement.
 
+- **Build tags.** `forkbuild-tag:<tag>` names one of the build's own tags
+  (core/BuildTags.js: lowercase letters, digits and inner hyphens), at most
+  five, as the snapshot published on the announcing device has them. A
+  week's build challenge (core/BuildChallenge.js) is the tag
+  `<theme>-<yyyymmdd>`, its Monday in UTC, so every copy of the app names
+  the same week the same way. The tag is the announcer's claim: a reader
+  still fetches and verifies the signed record, and nothing checks that the
+  build carries the tag.
 - **Snapshot cells.** A cell is a 1,000-unit square of the claimed
   position's `x` and `z`: `cx = floor(x / 1000)`, `cz = floor(z / 1000)`.
 - **Signed placement.** A Snapshot announcement with a `claimedPosition`
@@ -764,6 +772,10 @@ carried on the same Nostr event (a second `t` tag) or Arweave transaction
     `objectId` only chooses which records to fetch; a record counts only
     if it is validly signed, has exactly that id, and names exactly the
     Snapshot's content hash.
+  - The weekly challenge page reads `forkbuild-tag:<the week's tag>` alone
+    (application/challenge/ChallengeEntryDiscovery.js), on Nostr and
+    Arweave, verifying and admitting each new record as the Repository's
+    network discovery does.
   - Readers still read the global tags, so announcements made before the
     narrow tags existed are still found.
   - A reader stores a Snapshot under a cell tag only when its claimed

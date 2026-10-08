@@ -22,6 +22,7 @@ function page(name, load) {
 const EditorView = page('EditorView', () => import('../views/EditorView.js'));
 const RepositoryView = page('RepositoryView', () => import('../views/RepositoryView.js'));
 const RecentWorldsView = page('RecentWorldsView', () => import('../views/RecentWorldsView.js'));
+const ChallengeView = page('ChallengeView', () => import('../views/ChallengeView.js'));
 const AboutView = page('AboutView', () => import('../views/AboutView.js'));
 const PublicationLinkView = page('PublicationLinkView', () => import('../views/PublicationLinkView.js'));
 const AuthorView = page('AuthorView', () => import('../views/AuthorView.js'));
@@ -65,6 +66,9 @@ const routes = [
     // never the same list Repository shows (every published World vs.
     // Worlds THIS replica has actually visited).
     { path: '/worlds/recent', name: 'recent-worlds', component: RecentWorldsView },
+    // The weekly build challenge: this week's, or an earlier week's by its Monday.
+    { path: '/challenge', name: 'challenge', component: ChallengeView },
+    { path: '/challenge/:id', name: 'challenge-week', component: ChallengeView },
     { path: '/author/:username', name: 'author', component: AuthorView },
     // 0.9.17 — Integrate World Encounters into the Existing World View.
     // `WorldView` now mounts `ui/components/WorldEncounterCanvas.js`

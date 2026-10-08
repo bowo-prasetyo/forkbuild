@@ -69,6 +69,9 @@ import { FirstBuildChecklistStore } from '../application/onboarding/FirstBuildCh
 import { browserPrivacySignals, sendCounterHit } from './counterHit.js';
 import { verifyClaimedBuildPublication } from '../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
 import { RepositoryNetworkDiscovery } from '../application/publication/RepositoryNetworkDiscovery.js';
+import { ChallengeEntryDiscovery } from '../application/challenge/ChallengeEntryDiscovery.js';
+import { ChallengeEntryLog } from '../application/challenge/ChallengeEntryLog.js';
+import { publishedBuildTags } from '../application/challenge/PublishedBuildTags.js';
 import { NetworkPublicationLocatorStore } from '../application/publication/NetworkPublicationLocatorStore.js';
 import { setDocumentTitles } from '../application/document/DocumentTitles.js';
 import { t } from './i18n/i18n.js';
@@ -562,24 +565,41 @@ app.provide('verifyClaimedBuildPublicationCommand', ({ publicationId, contentHas
 // when the Repository opens (ui/components/PublicationCatalog.js), never at
 // startup: it fetches each new signed record (docs/Privacy.md).
 const networkPublicationLocatorStore = new NetworkPublicationLocatorStore(new LocalStorageProvider());
+// A Publication this device unpublished counts as known, so a copy it
+// distributed earlier is never listed again (publisher/UnpublishedPublicationLog.js).
+function repositoryNetworkDiscoveryIsKnown(publicationId) {
+    return Boolean(decentralizedPublicationDiscoveryProvider.findById(publicationId)
+        || new LocalDiscoveryProvider(new LocalStorageProvider()).findById(publicationId)
+        || new UnpublishedPublicationLog(new LocalStorageProvider()).has(publicationId));
+}
+// Each sink isolated, as WorldEncounterCanvas's admitToRepositoryDiscovery() does.
+function repositoryNetworkDiscoveryAdmit(publication, { locator }) {
+    try { networkPublicationLocatorStore.set(publication.id, locator); } catch { /* see above */ }
+    try { worldEncounterPublicationAdmissionLog.add(publication); } catch { /* see above */ }
+    decentralizedPublicationDiscoveryProvider.add(publication);
+}
 const repositoryNetworkDiscovery = new RepositoryNetworkDiscovery({
     services: repositoryNetworkDiscoveryServices,
     discoveryTag: PUBLICATION_DISCOVERY_TAG,
     materialSources: worldEncounterMaterialSources,
     verifier: worldEncounterMaterialVerifier,
-    // A Publication this device unpublished counts as known, so a copy it
-    // distributed earlier is never listed again (publisher/UnpublishedPublicationLog.js).
-    isKnown: (publicationId) => Boolean(decentralizedPublicationDiscoveryProvider.findById(publicationId)
-        || new LocalDiscoveryProvider(new LocalStorageProvider()).findById(publicationId)
-        || new UnpublishedPublicationLog(new LocalStorageProvider()).has(publicationId)),
-    // Each sink isolated, as WorldEncounterCanvas's admitToRepositoryDiscovery() does.
-    admit: (publication, { locator }) => {
-        try { networkPublicationLocatorStore.set(publication.id, locator); } catch { /* see above */ }
-        try { worldEncounterPublicationAdmissionLog.add(publication); } catch { /* see above */ }
-        decentralizedPublicationDiscoveryProvider.add(publication);
-    }
+    isKnown: repositoryNetworkDiscoveryIsKnown,
+    admit: repositoryNetworkDiscoveryAdmit
 });
 app.provide('repositoryNetworkDiscovery', repositoryNetworkDiscovery);
+// A week's challenge entries (core/BuildChallenge.js): found under the week's
+// `forkbuild-tag:` tag on Nostr and Arweave when the challenge page opens,
+// verified and admitted as the Repository's own discovery does.
+const challengeEntryLog = new ChallengeEntryLog(new LocalStorageProvider());
+app.provide('challengeEntryLog', challengeEntryLog);
+app.provide('challengeEntryDiscovery', new ChallengeEntryDiscovery({
+    services: publicationRecordQueryServices,
+    materialSources: worldEncounterMaterialSources,
+    verifier: worldEncounterMaterialVerifier,
+    isKnown: repositoryNetworkDiscoveryIsKnown,
+    admit: repositoryNetworkDiscoveryAdmit,
+    entryLog: challengeEntryLog
+}));
 app.provide('networkPublicationLocatorStore', networkPublicationLocatorStore);
 app.provide('worldEncounterLeadAssociationsQuery', worldEncounterLeadAssociationsQuery);
 app.provide('publicationDiscoveryTag', PUBLICATION_DISCOVERY_TAG);
@@ -798,7 +818,8 @@ defineServiceGroup('distribution', async () => {
         resolvedIpfsNodeApiUrl, snapshotPlacementStoreRegistry, resolvedAnnouncementDiscoveryProvider,
         resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, PUBLICATION_DISCOVERY_TAG,
         publicationDistributionLifecycleStore, arweaveHostSigner, nostrHostPublisher,
-        nostrPublicationRuntimeCapabilities, steemRuntime, blurtRuntime, snapshotDistributionLog: ownSnapshotDistributionLog
+        nostrPublicationRuntimeCapabilities, steemRuntime, blurtRuntime, snapshotDistributionLog: ownSnapshotDistributionLog,
+        buildTagsFor: (publicationId) => publishedBuildTags(new LocalStorageProvider(), publicationId)
     });
     app.provide('publicationDistributionCommand', publicationDistributionCommand);
     app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPublicationDistributionCommand);

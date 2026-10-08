@@ -355,7 +355,7 @@ async function run() {
 
         const topNavLinks = [...appSource.matchAll(/<router-link to="([^"]+)"/g)].map((m) => m[1]);
         assert(!topNavLinks.includes('/publisher-leaderboard'), n('H3. /publisher-leaderboard remains ABSENT from App.js\'s top-nav router-link destinations — this milestone did not promote it to global navigation'));
-        assert(topNavLinks.length === 14, n(`H4. App.js\'s top nav now carries exactly fourteen destinations (Following, Your Data and Language added; Language sits in the nav so it can be found whatever language is showing), the five settings destinations consolidated behind one Network Settings hub link (found ${topNavLinks.length})`));
+        assert(topNavLinks.length === 15, n(`H4. App.js\'s top nav now carries exactly fifteen destinations (Following, Your Data and Language added; Language sits in the nav so it can be found whatever language is showing; Challenge for the weekly build challenge), the five settings destinations consolidated behind one Network Settings hub link (found ${topNavLinks.length})`));
 
         // /reconciliation-leaderboard remains separately, independently
         // reachable — this milestone did not fold it away or replace it.

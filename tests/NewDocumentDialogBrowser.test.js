@@ -22,13 +22,15 @@ await new Promise((resolve, reject) => {
 
 const structures = featuredStructures(new CreateStructureRegistryUseCase().execute(), FEATURED_STRUCTURE_IDS);
 
-function mount(unsavedTitle = null) {
+function mount(unsavedTitle = null, challenge = null) {
     const events = [];
     const host = document.createElement('div');
     document.body.appendChild(host);
     const app = createApp(NewDocumentDialog, {
         structures,
         unsavedTitle,
+        challenge,
+        onChooseChallenge: (id) => events.push(['challenge', id]),
         onChooseEmpty: () => events.push(['empty']),
         onChooseStructure: (structure) => events.push(['structure', structure.id]),
         onCancel: () => events.push(['cancel'])
@@ -79,6 +81,21 @@ function mount(unsavedTitle = null) {
         `each choice is reported (${JSON.stringify(events)})`);
     unmount();
     console.log('✓ the empty plot, a build, Cancel, a click outside and Escape are reported');
+}
+
+// While a challenge runs it comes first, named, and Join is reported with its week.
+{
+    const challenge = { id: '2026-10-12', title: 'Lighthouse', brief: 'Build a lighthouse.', time: '3 days left' };
+    const { host, events, unmount } = mount(null, challenge);
+    await nextTick();
+    const option = host.querySelector('.new-document-challenge');
+    assert(option && host.querySelector('.new-document-option') === option, 'the challenge is the first option');
+    assert(option.textContent.includes(t('newDocumentDialog.challenge', { theme: 'Lighthouse' })) && option.textContent.includes('3 days left'), 'it names the theme and the time left');
+    assert(document.activeElement === option, 'focus starts on it');
+    option.click();
+    assert(JSON.stringify(events) === JSON.stringify([['challenge', '2026-10-12']]), `joining is reported with the week (${JSON.stringify(events)})`);
+    unmount();
+    console.log('✓ a running challenge is offered first');
 }
 
 console.log('\n✅ All NewDocumentDialog browser tests passed.');

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4c0715a067f50e8b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e6595d73ff729e3e -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -503,6 +503,40 @@ So oder so bringt Sie die einzige Schaltfläche des Dialogs, **Zurück zur
 Geteilten Welt**, dorthin zurück, wo Sie sie gefunden haben — in die Welt,
 in der sie platziert war, oder zur Geteilten Welt selbst —, statt Sie ohne
 Grundlage im Editor stehen zu lassen.
+
+## Die wöchentliche Bau-Challenge
+
+Jede Woche stellt ForkBuild ein Thema zum Bauen (ein Leuchtturm, eine
+Brücke, ein Tiny House, …), von Montag bis Ende Sonntag (UTC). Start zeigt
+es, und **Challenge** in der oberen Leiste öffnet seine Seite.
+
+1. **Mitmachen** öffnet ein Startbauwerk im Editor als Ihre eigene Kopie,
+   schon mit dem Tag der Woche (etwa `#lighthouse-20261012`: das Thema und
+   der Montag, an dem es begann). Die Challenge ist auch die erste Wahl unter
+   **Neu** im Editor, und **Ideen zum Starten** auf der Seite öffnen weitere
+   passende Bauwerke auf dieselbe Weise.
+2. Machen Sie es zu Ihrem oder beginnen Sie neu auf einem leeren
+   Grundstück: Was Sie auch bauen, nimmt teil, solange es den Tag der Woche
+   behält (fügen Sie ihn unter **Dokumenteigenschaften → Tags** hinzu, wenn
+   Sie anders begonnen haben).
+3. Veröffentlichen Sie es vor Ende der Woche und teilen Sie den Link. Der
+   Text des Links nennt die Challenge und ihren Tag, bereit für einen Post.
+
+Die Seite der Challenge listet die Beiträge, die dieses Gerät kennt: Ihre
+eigenen veröffentlichten Bauwerke mit dem Tag und die anderer, die in den
+Netzwerken gefunden wurden. Wird ein Bauwerk über Nostr oder Arweave
+verteilt, nennt seine Ankündigung seine Tags, und die Seite fragt diese
+Netzwerke bei jedem Öffnen nach dem Tag der Woche (**Erneut prüfen** fragt
+noch einmal). Jeder gefundene Beitrag wird geprüft wie alles, was das
+Repository findet, und steht auch im Repository. Ein Bauwerk, das nur per
+Link geteilt oder nur über Steem oder Blurt verteilt wurde, wird so nicht
+gefunden. Frühere Wochen bleiben über ihren Montag erreichbar (**Letzte
+Woche: …**), ohne **Mitmachen**.
+
+Beiträge erscheinen mit den neuesten zuerst, mit ihren Remix-Zahlen.
+Niemand bewertet sie und nichts wird gerankt: Die Challenge ist ein Grund,
+diese Woche etwas zu bauen und zu sehen, was andere aus derselben Idee
+gemacht haben.
 
 ## Der Stammbaum
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 2d3a98acb2272855 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 6725707d86a7f053 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -32,14 +32,19 @@ Dorfplatz, ein Haus, eine Mühle und eine Brücke) auf dieselbe Weise Ihre
 eigene Kopie dieses Bauwerks; das Repository, Meine Welten und **Neu** im
 Editor bieten dieselben Bauwerke an. Nichts wird veröffentlicht oder
 irgendwohin gesendet, solange Sie es nicht selbst tun.
+Start zeigt außerdem die **Bau-Challenge der Woche**: ein Thema zum
+Bauen, mit **Mitmachen** (siehe
+[Die wöchentliche Bau-Challenge](04-PublishingAndForking.md#die-wöchentliche-bau-challenge)).
 
 Die Leiste oben ist immer sichtbar:
 
-`ForkBuild Start Editor Repository Meine Welten Mehr ▾ 🔔 [Anmelden]`
+`ForkBuild Start Editor Repository Challenge Meine Welten Mehr ▾ 🔔 [Anmelden]`
 
 - **Start** — die Startseite
 - **Editor** — hier bauen Sie
 - **Repository** — die veröffentlichten Kreationen aller durchstöbern
+- **Challenge** — die Bau-Challenge dieser Woche und ihre Beiträge, siehe
+  [Die wöchentliche Bau-Challenge](04-PublishingAndForking.md#die-wöchentliche-bau-challenge)
 - **Meine Welten** — Welten, die Sie auf diesem Gerät tatsächlich besucht
   haben, siehe
   [Meine Welten](03-WorldView.md#meine-welten--welten-in-denen-sie-wirklich-waren)

@@ -70,6 +70,9 @@ import SoundControl from '../components/SoundControl.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 import { libraryItemName } from '../i18n/libraryText.js';
 import { FEATURED_STRUCTURE_IDS, featuredStructures, findStarterStructure } from '../../application/home/FeaturedBuilds.js';
+import { challengeAt, challengeById, isChallengeOpen, withChallengeTag } from '../../core/BuildChallenge.js';
+import { BUILD_TAG_MAX_COUNT } from '../../core/BuildTags.js';
+import { challengeLastDayText, challengeThemeBrief, challengeThemeTitle, challengeTimeText } from '../components/challenge/challengeText.js';
 import ModelExportDialog from '../components/modelExport/ModelExportDialog.js';
 import { downloadBuildModel } from '../components/modelExport/downloadBuildModel.js';
 import { describeLicense } from '../../application/document/LicenseLabels.js';
@@ -309,6 +312,8 @@ export default {
                 :structures="newDocumentDialog.structures"
                 :preview-service="libraryPreviewService"
                 :unsaved-title="newDocumentDialog.unsavedTitle"
+                :challenge="newDocumentDialog.challenge"
+                @choose-challenge="startFromChallenge"
                 @choose-empty="startEmptyDocument"
                 @choose-structure="startFromStructure"
                 @cancel="newDocumentDialog = null"
@@ -550,10 +555,39 @@ export default {
         }
         function openNewDocumentDialog() {
             const { document, state } = documentManager;
+            const now = Date.now();
+            const challenge = challengeAt(now);
             newDocumentDialog.value = {
                 structures: featuredStructures(structureRegistry, FEATURED_STRUCTURE_IDS),
-                unsavedTitle: document && state.dirty ? document.metadata.title : null
+                unsavedTitle: document && state.dirty ? document.metadata.title : null,
+                challenge: challenge && isChallengeOpen(challenge, now) && findStarterStructure(structureRegistry, challenge.starterStructureId)
+                    ? { id: challenge.id, title: challengeThemeTitle(challenge), brief: challengeThemeBrief(challenge), time: challengeTimeText(challenge, now) }
+                    : null
             };
+        }
+        // Tags the open document for a running challenge (core/BuildChallenge.js),
+        // which is how a build enters it once published. False for a week
+        // that isn't running.
+        function joinChallenge(challenge) {
+            const document = documentManager.document;
+            if (!document || !challenge || !isChallengeOpen(challenge, Date.now())) return false;
+            updateDocumentMetadataUseCase.execute(documentManager, {
+                tags: withChallengeTag(document.metadata.tags, challenge, BUILD_TAG_MAX_COUNT)
+            });
+            funnelEventCounter?.joinedChallenge();
+            feedback.show(t('challenge.joined', {
+                theme: challengeThemeTitle(challenge), tag: challenge.tag, end: challengeLastDayText(challenge)
+            }));
+            return true;
+        }
+        function startFromChallenge(challengeId) {
+            newDocumentDialog.value = null;
+            const challenge = challengeById(challengeId);
+            const structure = challenge ? findStarterStructure(structureRegistry, challenge.starterStructureId) : null;
+            if (structure && editorSession.forkStructure(structure)) {
+                editorSession.frameDocument();
+                joinChallenge(challenge);
+            }
         }
         function startEmptyDocument() {
             newDocumentDialog.value = null;
@@ -1046,9 +1080,11 @@ export default {
                 // A ready-made build from Home: a built-in structure, opened as a new
                 // document of the visitor's own, the fork the Build Library makes.
                 const structure = findStarterStructure(structureRegistry, route.query.start);
+                // Joining a week's challenge (the challenge page, Home) also tags the copy.
+                const challenge = typeof route.query.challenge === 'string' ? challengeById(route.query.challenge) : null;
                 if (structure && editorSession.forkStructure(structure)) {
                     editorSession.frameDocument();
-                    feedback.show(t('editor.startedFromBuild', { name: libraryItemName(structure) }));
+                    if (!joinChallenge(challenge)) feedback.show(t('editor.startedFromBuild', { name: libraryItemName(structure) }));
                 } else {
                     feedback.show(t('editor.starterNotFound'));
                 }
@@ -1313,7 +1349,7 @@ export default {
             selectedPlacementInfo,
             selectionSummary,
             shortcutsOpen,
-            newDocumentDialog, openNewDocumentDialog, startEmptyDocument, startFromStructure,
+            newDocumentDialog, openNewDocumentDialog, startEmptyDocument, startFromStructure, startFromChallenge,
             rotateSelectedPlacement,
             recolorSelection,
             duplicateSelectedPlacement,

@@ -3,6 +3,7 @@ import { STARTER_STRUCTURE_ID } from '../../application/home/FeaturedBuilds.js';
 import { currentLocale, t } from '../i18n/i18n.js';
 import { userGuideUrl } from '../i18n/userGuide.js';
 import InstallAppButton from '../components/pwa/InstallAppButton.js';
+import ChallengeCard from '../components/challenge/ChallengeCard.js';
 
 const SOURCE_URL = 'https://github.com/bowo-prasetyo/forkbuild';
 
@@ -21,12 +22,12 @@ const REASONS = Object.freeze([
 ]);
 
 // The landing page: what ForkBuild is, a way straight into building (a
-// ready-made house, or an empty plot), ready-made builds to remix, and why
-// it's worth trying. The first page most visits open, and the only one in
+// ready-made house, or an empty plot), this week's build challenge,
+// ready-made builds to remix, and why it's worth trying. The first page most visits open, and the only one in
 // the first load.
 export default {
     name: 'HomeView',
-    components: { HomeShowcase, FeaturedBuilds, InstallAppButton },
+    components: { HomeShowcase, FeaturedBuilds, InstallAppButton, ChallengeCard },
     setup() {
         return {
             t,
@@ -56,6 +57,8 @@ export default {
                         <HomeShowcase />
                     </div>
                 </header>
+
+                <ChallengeCard />
 
                 <section class="home-section" aria-labelledby="home-featured-title">
                     <h2 id="home-featured-title">{{ t('featuredBuilds.title') }}</h2>

@@ -15,7 +15,8 @@ export function composePublicationDistribution({
     resolvedIpfsNodeApiUrl, snapshotPlacementStoreRegistry, resolvedAnnouncementDiscoveryProvider,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, PUBLICATION_DISCOVERY_TAG,
     publicationDistributionLifecycleStore, arweaveHostSigner, nostrHostPublisher,
-    nostrPublicationRuntimeCapabilities, steemRuntime = null, blurtRuntime = null, snapshotDistributionLog = null
+    nostrPublicationRuntimeCapabilities, steemRuntime = null, blurtRuntime = null, snapshotDistributionLog = null,
+    buildTagsFor = null
 }) {
     const arweavePublicationRuntimeCapabilities = createArweavePublicationDistributionRuntimeAdapter({ signer: arweaveHostSigner });
     const arweaveAnnouncementUploadTaggedTransaction = createArweaveTaggedTransactionUpload({
@@ -28,7 +29,14 @@ export function composePublicationDistribution({
         uploadTaggedTransaction: arweaveAnnouncementUploadTaggedTransaction,
         discoveryTag: PUBLICATION_DISCOVERY_TAG
     });
-    const { arweaveUploaderOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities());
+    const resolvedOptions = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities());
+    const { arweaveUploaderOptions } = resolvedOptions;
+    // A Publication's announcement also names its build's own tags, so the
+    // builds with one tag (a week's challenge entries) can be found. An
+    // unconfigured substrate's options stay undefined.
+    const withBuildTags = (options) => (options && buildTagsFor ? { ...options, buildTagsFor } : options);
+    const nostrPublisherOptions = withBuildTags(resolvedOptions.nostrPublisherOptions);
+    const arweaveAnnouncementPublisherOptions = withBuildTags(resolvedOptions.arweaveAnnouncementPublisherOptions);
     // Material storage and remote pinning options stay a per-request choice, so
     // they are not resolved here.
     const ipfsNodeOptions = { apiUrl: resolvedIpfsNodeApiUrl };

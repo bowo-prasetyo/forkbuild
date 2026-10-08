@@ -147,6 +147,7 @@ const PREFIXES = [
     ['announcement-index:', BackupEntryGroup.DOWNLOADED],
     ['announcement-watch:', BackupEntryGroup.DOWNLOADED],
     ['announcement-sync:', BackupEntryGroup.DOWNLOADED],
+    ['challenge-entries:', BackupEntryGroup.DOWNLOADED],
     ['spatial-index-content:', BackupEntryGroup.DOWNLOADED],
     ['placement:', BackupEntryGroup.DOWNLOADED],
     ['placement-record:', BackupEntryGroup.DOWNLOADED],

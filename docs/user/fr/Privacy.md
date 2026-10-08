@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 14eb8e63d6c0263d -->
+<!-- translation-of: docs/Privacy.md source-hash: 65f1e9c30110d299 -->
 # Confidentialité
 
 <!-- languages -->
@@ -46,6 +46,9 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   les copies que vous aviez distribuées.
 - à quels réseaux cet appareil a envoyé chacun de vos commentaires, et
   quand, pour que chaque commentaire puisse indiquer où il est allé.
+- pour chaque semaine du défi de construction que vous ouvrez, les
+  identifiants des participations trouvées sur les réseaux, pour que sa page
+  les affiche de nouveau avant de chercher.
 
 Effacer les données de ce site dans le navigateur supprime tout cela, et
 il n’existe aucune autre copie ni aucun moyen de le récupérer.
@@ -75,7 +78,10 @@ notifications sur cet appareil soient activées est gardé avec vos réglages
 - **Tout ce que vous publiez** est public : son contenu, son titre, sa
   description et sa licence, ainsi que la clé publique de votre identité,
   qui le signe. Une fois que d’autres en ont une copie, vous ne pouvez
-  pas la reprendre.
+  pas la reprendre. Quand vous la diffusez sur Nostr ou Arweave, son annonce liste aussi ses
+  étiquettes (sous la forme `forkbuild-tag:<tag>`), pour que chacun puisse
+  trouver les constructions qui portent une étiquette, comme les
+  participations au défi d’une semaine.
 - **Les pairs auxquels vous vous connectez** apprennent la clé publique
   de votre identité, et votre adresse IP (une connexion directe en a
   besoin ; un relais TURN la cache au pair mais pas au relais). Les pairs
@@ -161,6 +167,10 @@ pages d’autres sites (voir « Serveurs que ForkBuild contacte » plus bas) :
 - `/e/embed-open` : une construction intégrée a été ouverte dans ForkBuild
   depuis cette page.
 
+Et quand quelqu’un participe au défi de construction hebdomadaire
+(**Participer au défi**, ou le défi dans **Nouveau** de l’Éditeur) :
+`/e/challenge-join`.
+
 Chacune n’envoie que son chemin et le nombre aléatoire : jamais le lien, la
 construction, son titre ni qui l’a faite. Les constructions ouvertes depuis
 un lien ne sont retenues que dans la mémoire de la page ouverte, et
@@ -208,12 +218,14 @@ demandez.
 | Sur le site officiel, vous copiez ou partagez un lien vers une construction, ouvrez un lien partagé, ou copiez dans l’Éditeur une construction ouverte depuis un tel lien (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe qui indique lequel des trois moments c’était, sans référent et sans cookie |
 | Vous installez ForkBuild depuis le site officiel (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec le chemin fixe `/e/installed`, sans référent et sans cookie |
 | Sur le site officiel, vous copiez le code d’intégration d’une construction, ou une construction intégrée est affichée ou ouverte dans ForkBuild (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe indiquant lequel des trois cas, sans référent et sans cookie |
+| Sur le site officiel, vous participez au défi de construction hebdomadaire (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec le chemin fixe `/e/challenge-join`, sans référent et sans cookie |
 | Vous vous rendez découvrable, ou cherchez quelqu’un, dans **Pairs** | le serveur de rendez-vous (`forkbuild-rendezvous.prazjp.workers.dev`) | la clé publique de votre identité et une offre de connexion, conservées au plus 15 minutes ; l’identité que vous recherchez ; quand vous vous connectez à quelqu’un que vous avez trouvé, votre réponse de connexion (elle liste vos adresses réseau), que seule cette personne peut récupérer |
 | Vous rejoignez un salon public, ou y jetez un œil | le même serveur de rendez-vous | votre carte de salon signée (clé publique, nom affiché, quel salon), conservée au plus 15 minutes et renouvelée tant que vous restez ; le salon que vous consultez |
 | Une connexion entre pairs démarre | des serveurs STUN (`stun.l.google.com`) | rien d’autre qu’une demande de votre adresse IP publique |
 | Vous démarrez une connexion entre pairs, si le serveur de rendez-vous propose un relais | le `/turn-credentials` du serveur de rendez-vous, puis son relais TURN (Cloudflare) | une demande d’identifiants de relais de courte durée, au plus environ une fois par heure ; le trafic relayé est chiffré de bout en bout par WebRTC |
 | L’application est ouverte et son onglet visible (synchronisation des annonces en arrière-plan) | des relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`), des nœuds Steem (`api.steemit.com`), des nœuds Blurt (`rpc.blurt.blog`) | des requêtes pour les tags de découverte de ForkBuild : les tags communs des Snapshots et des Commentaires, et les régions de Noms de lieux et cases de carte que vous avez visitées |
 | Vous ouvrez le Dépôt ou une page d’auteur | des relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`), des nœuds Steem (`api.steemit.com`), des nœuds Blurt (`rpc.blurt.blog`) | une requête pour le tag commun des publications (`forkbuild-publication`) ; puis une demande de l’enregistrement signé de chaque publication nouvellement annoncée, au plus 20 par visite ou par **Vérifier à nouveau** |
+| Vous ouvrez le défi de construction d’une semaine (**Défi**) | relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`) | une requête pour l’étiquette de cette semaine (`forkbuild-tag:<tag>`) ; puis une demande de l’enregistrement signé de chaque nouvelle participation annoncée, au plus 20 par visite ou **Vérifier à nouveau** |
 | Vous distribuez ou découvrez des publications via Nostr | des relais Nostr (`relay.damus.io`) | les annonces signées que vous publiez ; vos requêtes |
 | Vous stockez ou récupérez du contenu sur Arweave | une passerelle Arweave (`arweave.net`) | le contenu que vous publiez ; ce que vous récupérez |
 | Vous récupérez du contenu depuis IPFS | une passerelle IPFS (`ipfs.io`), ou votre propre nœud IPFS (`127.0.0.1:5001`) | ce que vous récupérez ou ajoutez |

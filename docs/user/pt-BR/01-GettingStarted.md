@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 2d3a98acb2272855 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 6725707d86a7f053 -->
 # 01 — Primeiros passos
 
 <!-- languages -->
@@ -29,14 +29,20 @@ castelo, uma ilha do porto, uma praça da vila, uma casa, um moinho e uma
 ponte) abre sua própria cópia daquela construção do mesmo jeito; o
 Repositório, Meus mundos e **Novo** no Editor oferecem as mesmas
 construções. Nada é publicado nem enviado a lugar nenhum até você decidir.
+O Início também mostra o **Desafio de construção da semana**: um tema
+para construir, com **Participar do desafio** (veja
+[O desafio de construção semanal](04-PublishingAndForking.md#o-desafio-de-construção-semanal)).
 
 A barra no topo está sempre visível:
 
-`ForkBuild Início Editor Repositório Meus mundos Mais ▾ 🔔 [Entrar]`
+`ForkBuild Início Editor Repositório Desafio Meus mundos Mais ▾ 🔔 [Entrar]`
 
 - **Início** — a página inicial
 - **Editor** — onde você constrói
 - **Repositório** — navegue pelas criações publicadas por todos
+- **Desafio** — o desafio de construção desta semana e suas
+  participações; veja
+  [O desafio de construção semanal](04-PublishingAndForking.md#o-desafio-de-construção-semanal)
 - **Meus mundos** — os Mundos que você realmente visitou neste dispositivo;
   veja [Meus mundos](03-WorldView.md#meus-mundos--os-mundos-em-que-você-realmente-esteve)
 

@@ -164,7 +164,7 @@ export class NostrMultiRelayPublicationDiscoveryPublisher {
     //   — see this file's own header, "shared across every constructed relay
     //   publisher." `NostrPublicationDiscoveryPublisher`'s own constructor
     //   performs all validation of these; this file duplicates none of it.
-    constructor({ relayUrls, tagName, kind, discoveryTag, publishImpl, timeoutMs } = {}) {
+    constructor({ relayUrls, tagName, kind, discoveryTag, publishImpl, timeoutMs, buildTagsFor } = {}) {
         if (!Array.isArray(relayUrls) || relayUrls.length === 0) {
             throw new Error('NostrMultiRelayPublicationDiscoveryPublisher: a non-empty relayUrls array is required');
         }
@@ -181,7 +181,8 @@ export class NostrMultiRelayPublicationDiscoveryPublisher {
             kind,
             discoveryTag,
             publishImpl,
-            timeoutMs
+            timeoutMs,
+            buildTagsFor
         }));
 
         // Bound so `publisher.publish` survives being passed around as a

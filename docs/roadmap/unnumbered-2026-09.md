@@ -4837,3 +4837,36 @@ article, for as long as it is up, with a way into ForkBuild beside it.
   and opens the app offline right after an embed was visited on the site.
 - Not done: embedding a build too large for a link (from its network link), Twitter's player card (which needs X's
   approval), and a per-build choice not to be embeddable: a build shared in a link is already public.
+
+## Weekly build challenge (unnumbered, 2026-10-08)
+
+**Every week there is a theme to build, a way in, and a page of what people made.** Builders get a reason to come
+back each week, newcomers get a concrete first thing to make, and a launch post has a call to action ("this week's
+challenge ends Sunday"). Nothing new runs on a server: the week, its theme and its tag are worked out from the date.
+
+- `core/BuildChallenge.js`: weeks run Monday 00:00 UTC to the next; eight themes (lighthouse, bridge, tiny home,
+  castle gate, windmill, market day, tower, quiet place) take turns from the week of 2026-10-12, each with a built-in
+  starting structure and ideas. A week's tag is `<theme>-<yyyymmdd>` (its Monday), a valid build tag, so an entry is
+  simply a build carrying it. `challengeAt()`, `challengeById()`, `challengeForTag()`, `withChallengeTag()`.
+- Joining: Home's card (**Join the challenge**), the challenge page, and the first choice in the Editor's **New**
+  fork the starting structure as a ready-made build does and put the week's tag first in its tags
+  (`/editor?start=<id>&challenge=<Monday>`). An ended week can't be joined.
+- `/challenge` and `/challenge/<Monday>` (`ui/views/ChallengeView.js`, **Challenge** in the top bar): the theme, how
+  to enter, the entries with remix counts, ideas to start from, and last week's. Entries are the Publications this
+  device knows whose published snapshot carries the tag, plus those found on the networks under it.
+- Finding others' entries: a Publication's Nostr and Arweave announcements now also carry `forkbuild-tag:<tag>` for
+  each build tag (`buildTagsFor`, read from the snapshot published on this device; `core/NarrowDiscoveryTags.js`).
+  The page asks Nostr and Arweave for the week's tag (`application/challenge/ChallengeEntryDiscovery.js`, a
+  `RepositoryNetworkDiscovery` on that tag, which now also reports the ids it already knew) and logs what it finds
+  per tag (`ChallengeEntryLog`, `challenge-entries:<tag>`, backed up with downloaded data). Steem and Blurt don't
+  carry the narrow tag.
+- An entry's share text names the challenge and its tag. One more fixed counter path, `/e/challenge-join`.
+- Privacy (tags in announcements, the new query, the log, the counter path), Protocol, AnnouncementIndex,
+  Architecture; guides 01 and 04 in every language; messages in every language.
+- Tests: `BuildChallenge`, `ChallengeEntries` (announced tags on Nostr, multi-relay and Arweave; snapshot tags; the log;
+  discovery under the week's tag), `ChallengeViewBrowser`, `NewDocumentDialogBrowser`, `HomeViewBrowser`,
+  `PublicationShareLinkBrowser` (share text), `FunnelEventCounter`, and `run-bundle` joins from Home in the published
+  build.
+- Not done: entries shared only as a link, or only on Steem or Blurt, aren't found by others; no voting or winners
+  (the page only lists, newest first); themes are a fixed list in code, so a new one ships with a release; no
+  notification when a new week starts.
