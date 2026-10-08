@@ -12,6 +12,7 @@ import { SteemReadingConfiguration } from '../../core/SteemReadingConfiguration.
 import { SteemReadingConfigurationStore } from '../../storage/SteemReadingConfigurationStore.js';
 import { SetSteemReadingConfigurationUseCase } from '../../application/settings/SetSteemReadingConfigurationUseCase.js';
 import { composeSteemRuntime } from '../../application/steem/SteemRuntimeComposition.js';
+import { publishedBuildTags } from '../../application/challenge/PublishedBuildTags.js';
 import { composeSteemPublicationNoticeDescriber } from '../../application/steem/SteemPublicationNoticeComposition.js';
 import { DISCOVERY_CLAIM_IPFS_TIMEOUT_MS, buildIpfsWorldEncounterMaterialResolver, composePublicationClaimRetriever } from '../../application/publication/PublicationClaimRetriever.js';
 import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/IpfsGatewayConfiguration.js';
@@ -119,6 +120,9 @@ export function composeWorldDiscovery({
         getBroadcaster: () => createSteemKeychainBroadcaster({ keychain: globalThis.steem_keychain }),
         contentUploads: new SteemContentUploadStore(new LocalStorageProvider()),
         contentUploadProgress: { report: (state) => { steemContentUploadProgress.value = state; } },
+        // A publication's announcement carries its build's tags, so the weekly
+        // challenge can find it among the thread's replies.
+        buildTagsFor: (publicationId) => publishedBuildTags(new LocalStorageProvider(), publicationId),
         // A Signed Claim's notice shows its build: title, description and a
         // thumbnail uploaded to the Steem image host.
         describePublication: publicationContentStore
@@ -255,8 +259,11 @@ export function composeWorldDiscovery({
         publicationRecordQueryServices: [networkWorldDiscoveryServices.nostr, networkWorldDiscoveryServices.arweave],
         // The announcement queries that can be asked for one build tag
         // (application/challenge/ChallengeEntryDiscovery.js): Nostr and Arweave
-        // by narrow tag, Blurt by the tags its build posts list.
-        buildTagQueryServices: [networkWorldDiscoveryServices.nostr, networkWorldDiscoveryServices.arweave, networkWorldDiscoveryServices.blurt],
+        // by narrow tag, Steem and Blurt by the tags their announcements list.
+        buildTagQueryServices: [
+            networkWorldDiscoveryServices.nostr, networkWorldDiscoveryServices.arweave, networkWorldDiscoveryServices.steem,
+            networkWorldDiscoveryServices.blurt
+        ],
         // Every substrate's unwrapped announcement query, for finding the
         // Publications others distributed (application/publication/RepositoryNetworkDiscovery.js).
         repositoryNetworkDiscoveryServices: [

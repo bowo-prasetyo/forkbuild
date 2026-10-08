@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c65e5911fbe21442 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: eed612cfa7affb09 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -518,12 +518,11 @@ muestra, y **Desafío** en la barra de arriba abre su página.
 
 La página del desafío muestra las participaciones que este dispositivo
 conoce: sus propias construcciones publicadas con la etiqueta y las de
-otras personas encontradas en las redes. Cuando una construcción se distribuye en Nostr, Arweave o Blurt, su anuncio (en Blurt, su publicación) enumera sus etiquetas, y la
+otras personas encontradas en las redes. Cuando una construcción se distribuye en Nostr, Arweave, Steem o Blurt, su anuncio (en Blurt, su publicación) enumera sus etiquetas, y la
 página pregunta a esas redes por la etiqueta de la semana cada vez que se
 abre (**Volver a buscar** vuelve a preguntar). Cada participación
 encontrada se comprueba como todo lo que encuentra el Repositorio, y
-aparece también en el Repositorio. Una construcción compartida solo por su
-enlace, o distribuida solo en Steem, no se encuentra así. Las
+aparece también en el Repositorio. Una construcción compartida solo por su enlace no se encuentra así, ni una anunciada solo en Steem antes del 8 de octubre de 2026, cuando los anuncios en Steem empezaron a incluir etiquetas. Las
 semanas anteriores siguen disponibles por su lunes (**La semana pasada:
 …**), sin **Unirse**.
 

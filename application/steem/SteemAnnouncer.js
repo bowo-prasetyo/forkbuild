@@ -114,12 +114,13 @@ export function createSteemAnnouncer({
 
     // Resolves to what was broadcast. "accepted" means an API node took the
     // transaction; it is not yet irreversible.
-    function announce(family, envelope) {
+    // `tags`: a publication's build tags, carried with the announcement.
+    function announce(family, envelope, { tags = [] } = {}) {
         return enqueue(() => postReply({
             family,
             what: 'announcement',
             permlinkFor: (timeMs) => steemDiscoveryAnnouncementPermlink(timeMs, randomSuffix()),
-            operationsFor: ({ author, threadPermlink, permlink }) => steemDiscoveryAnnouncementOperations({ author, threadAccount, threadPermlink, family, envelope, permlink, appVersion })
+            operationsFor: ({ author, threadPermlink, permlink }) => steemDiscoveryAnnouncementOperations({ author, threadAccount, threadPermlink, family, envelope, permlink, appVersion, tags })
         }));
     }
 
