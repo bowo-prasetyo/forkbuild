@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 2c5fc47e7e82ef51 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 8e320f702249d035 -->
 # 09 — 게시물과 외부 증거
 
 <!-- languages -->
@@ -184,7 +184,7 @@ X라고 부른다” 같은 **서명된 클레임**과, 클레임에 더할 수 
 | **스냅샷** | [로컬 스냅샷](#로컬-스냅샷): 이 기기가 가진 것과 그것을 얻는 방법. |
 | **탈중앙화와 증거** | [탈중앙화](#탈중앙화-한눈에-보기), [증거 목록](11-EvidenceAndStorage.md#증거-목록), Bitcoin과 Base 트랜잭션 단계(실험적). |
 | **배치와 IPFS** *(실험)* | [스냅샷 배치](11-EvidenceAndStorage.md#스냅샷-배치) 목록과 [IPFS 게시](11-EvidenceAndStorage.md#ipfs-게시). |
-| **기록** *(실험)* | **도메인 간 타임라인 표시**: 이 게시물에 대한 모든 IPFS와 Bitcoin 관측을 시간 순서로. |
+| **기록** *(실험)* | **도메인 간 타임라인 표시**: 이 기기가 이 게시물에 대해 기록한 모든 IPFS, Bitcoin, Base 관측을 시간 순서로. [관측 아카이브](12-ArchiveAndLeaderboards.md)에서 읽으므로 방문이 바뀌어도 남으며, 기록이 없으면 그렇다고 알려 줌. |
 
 ### 상태의 의미
 

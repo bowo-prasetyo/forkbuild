@@ -101,9 +101,11 @@ export function describeCreationAttempt(attempt = null) {
             return {
                 state: SnapshotPlacementCreationUiState.PROVIDER_NOT_FOUND,
                 label: message('placementCreation.preferredProviderNotFound'),
-                message: attempt.preference
-                    ? message('placementCreation.preferredProviderMissing', { providerKey: attempt.preference.providerKey })
-                    : message('placementCreation.yourPreferredContentProviderIs'),
+                message: attempt.remotePinningNotSetUp
+                    ? message('placementCreation.remotePinningNotSetUp')
+                    : (attempt.preference
+                        ? message('placementCreation.preferredProviderMissing', { providerKey: attempt.preference.providerKey })
+                        : message('placementCreation.yourPreferredContentProviderIs')),
                 placement: null, reason: attempt.reason
             };
         default:

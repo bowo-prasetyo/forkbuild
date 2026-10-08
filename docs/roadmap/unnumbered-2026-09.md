@@ -4405,3 +4405,42 @@ exchanges and the knowledge store the rest of the page already uses. What stays 
   `tests/NetworkSettingsSharedForms.test.js` follow.
 - Not done: no Arweave anchor was made on the live network from the development environment, which can't reach
   arweave.net. Make one with Wander before the next release.
+
+## A saved remote pinning service, and History that survives a reload (unnumbered, 2026-10-08)
+
+**A card's History tab now reads the Publication Observation Archive, so it shows what earlier visits recorded; and
+IPFS (Remote Pinning) uses one service saved under Content Provider, so it works as a preferred storage.** History
+read only what the page held in memory and was empty after every reload, though the archive keeps each fact as it
+happens. Remote pinning kept nothing at all (docs/principles/publication.md, 0.8.68): every Distribute dialog and
+every card asked for the endpoint, credential and field names again, and a saved IPFS (Remote Pinning) preference
+always ended in "Preferred provider not found".
+
+- History: `application/publication/observationArchive/PublicationArchiveTimeline.js` picks one publication out of
+  the archive by what the archive binds facts to (IPFS records by content hash, Bitcoin by anchor id from this
+  device's Bitcoin Anchor Publication records and the card's evidence list, Base by the transactions of this
+  device's Base Anchor Publication records) and hands it to `describePublicationObservationTimeline()`, which now
+  takes standalone `bitcoin.broadcasts` so a re-broadcast doesn't repeat confirmations. It now includes Base. The tab
+  says when nothing is recorded (`publications.historyEmpty`), and its hint (`publications.historyHint`, replacing
+  `publications.everyIpfsAndBitcoinObservation`) says it is kept across visits. `useCrossDomainObservationTimeline()`
+  no longer reads the in-memory wizard state.
+- Saved service: `core/IpfsRemotePinningSettings.js` (endpoint, optional request and response field) and
+  `storage/IpfsRemotePinningSettingsStore.js` (key `ipfs-remote-pinning-settings`, backed up with the settings by
+  Your Data). It has no place for a credential. Content Provider gains a Remote Pinning Service section (Experimental):
+  Save, Forget Service, and a token field whose value only goes to the tab-lifetime
+  `IpfsRemotePublishingCredentialMemory`.
+- Every remote-pinning form starts on it, with this visit's token (`remotePinningDraftFromSettings()` in
+  `application/ipfs/IpfsRemotePinningDraft.js`): the Editor's and World View's Distribute dialogs, the own-publication
+  panel and the Publications card, which starts configured.
+- Preference: `PreferredSnapshotPlacementCreationCoordinator` takes an optional `remotePinning` path and offers
+  `remote-pinning` among preferable storages. With a service saved it places through
+  `application/ipfs/SavedRemotePinningContentStore.js`, which reads the saved service and token on each upload and
+  records an ordinary `ipfs` placement, through its own `CreateExternalSnapshotPlacementUseCase` sharing the
+  catalog, knowledge store and peer exchange; it is not in the shared registry, so no new storage card or snapshot
+  storage appears. With none saved it says so (`placementCreation.remotePinningNotSetUp`) and uploads nothing.
+- The principle is amended, not dropped: the credential is still never saved. docs/principles/publication.md and
+  history/0.8.md say so.
+- Docs, in every language: guides 09 (History), 10 (Content Provider, the new section), 11 (Using a preferred
+  provider, Configuring a remote pinning provider) and Distribution, and the privacy page; docs/Privacy.md.
+- Tests: `tests/PublicationArchiveTimeline.test.js`, `tests/RemotePinningSavedService.test.js` and
+  `tests/PublicationsHistoryAndRemotePinningBrowser.test.js`.
+- Not done: the Placements & IPFS and History tabs keep their **Exp.** badges; graduating them is a separate step.

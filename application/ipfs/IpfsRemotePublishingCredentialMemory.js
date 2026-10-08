@@ -1,6 +1,7 @@
 // A convenience, tab-lifetime memory of the last remote-pinning credential
 // a person typed into ui/views/DecentralizedPublicationsView.js's own
-// "Configure Remote Publishing" form — NOT a configuration, NOT a
+// "Configure Remote Publishing" form or the Remote Pinning Service section of
+// ui/views/ContentProviderSettingsView.js — NOT a configuration, NOT a
 // capability, and explicitly NOT the thing application/
 // IpfsRemotePublishingConfiguration.js's own "Ephemeral By Construction"
 // header (docs/Principles.md, 0.8.68) refuses to be. That refusal still

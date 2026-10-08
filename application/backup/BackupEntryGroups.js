@@ -83,6 +83,7 @@ const EXACT_NAMES = new Map([
     ['turn-server-configuration', BackupEntryGroup.SETTINGS],
     ['ipfs-gateway-configuration', BackupEntryGroup.SETTINGS],
     ['ipfs-node-configuration', BackupEntryGroup.SETTINGS],
+    ['ipfs-remote-pinning-settings', BackupEntryGroup.SETTINGS],
     ['arweave-gateway-configuration', BackupEntryGroup.SETTINGS],
     ['nostr-relay-configuration', BackupEntryGroup.SETTINGS],
     ['steem-reading-configuration', BackupEntryGroup.SETTINGS],

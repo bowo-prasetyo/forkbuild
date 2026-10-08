@@ -50,6 +50,7 @@ import {
     storageTypeOptionLabel, isExperimentalStorageType, describeClaimRelationship,
     EVIDENCE_BADGE_CLASSES
 } from './decentralizedPublications/presentation.js';
+import { remotePinningConfigurationFromSettings } from '../../application/ipfs/IpfsRemotePinningDraft.js';
 import { useBaseAnchoring } from './decentralizedPublications/useBaseAnchoring.js';
 import { usePublicationObservationArchive } from './decentralizedPublications/usePublicationObservationArchive.js';
 import { useArchivedAnchorPublications } from './decentralizedPublications/useArchivedAnchorPublications.js';
@@ -163,6 +164,8 @@ export default {
         // from publicationContentStore by the publication's contentReference,
         // never from the catalog, which only holds peer-announced envelopes.
         const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
+        // The remote pinning service saved under Content Provider, if any.
+        const ipfsRemotePinningSettingsStore = inject('ipfsRemotePinningSettingsStore', null);
         const publicationContentStore = inject('publicationContentStore', null);
         // The same snapshotDiscoveryPublisher "Distribute Snapshot" uses.
         // Without it, remote-IPFS publishing simply does not announce.
@@ -449,10 +452,14 @@ export default {
                 preferredPlacementCreationAttempt: null,
                 // Remote IPFS publishing: the configuration exists only in
                 // memory until the page closes (see
-                // application/ipfs/IpfsRemotePublishingConfiguration.js); the draft
-                // holds unsubmitted form fields. A new configuration clears the
-                // previous publication outcome.
-                ipfsRemotePublishingConfiguration: null,
+                // application/ipfs/IpfsRemotePublishingConfiguration.js), and
+                // starts on the service saved under Content Provider with this
+                // visit's token, if any; the draft holds unsubmitted form
+                // fields. A new configuration clears the previous publication
+                // outcome.
+                ipfsRemotePublishingConfiguration: remotePinningConfigurationFromSettings(
+                    ipfsRemotePinningSettingsStore ? ipfsRemotePinningSettingsStore.get() : null
+                ),
                 ipfsRemotePublishingConfigureFormOpen: false,
                 ipfsRemotePublishingDraft: { endpoint: '', credential: '', requestField: '', responseField: '' },
                 ipfsRemotePublicationOutcome: null,
@@ -820,10 +827,7 @@ export default {
             crossDomainPublicationObservationTimelineView, toggleCrossDomainPublicationObservationTimeline,
             crossDomainPublicationObservationTimelineEntryBadgeClass,
             crossDomainPublicationObservationTimelineEntryDomainLabel
-        } = useCrossDomainObservationTimeline({
-            bitcoinAnchorBroadcastConfirmationHistory, bitcoinAnchorBroadcastOutcome,
-            bitcoinAnchorBroadcastedAt, bitcoinAnchorFinalizedTransaction, bitcoinAnchorTransactionReview
-        });
+        } = useCrossDomainObservationTimeline({ publicationObservationArchive });
 
         const {
             verifyAnchor, lifecycleNote, toggleInspect, inspectionExpanded, inspectionDetail,
@@ -1318,7 +1322,7 @@ export default {
                         <div class="evidence-summary">
                             <span class="evidence-summary-title">{{ t('publications.crossDomainObservationTimeline') }}</span>
                             <span class="form-hint form-hint--neutral">
-                                {{ t('publications.everyIpfsAndBitcoinObservation') }}
+                                {{ t('publications.historyHint') }}
                             </span>
                         </div>
                         <div class="identity-mgmt-actions">
@@ -1349,6 +1353,7 @@ export default {
                             </ul>
                         </div>
                     </div>
+                    <p v-else class="form-hint form-hint--neutral">{{ t('publications.historyEmpty') }}</p>
                     </div>
 
                     </details>

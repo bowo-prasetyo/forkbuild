@@ -207,7 +207,7 @@ Below that, two folded sections:
 | **Snapshot** | [Local Snapshot](#local-snapshot): what this device holds, and how to get it. |
 | **Decentralization & Evidence** | [Decentralization](#decentralization-at-a-glance), the [evidence list](11-EvidenceAndStorage.md#the-evidence-list), and the Bitcoin and Base transaction steps (Experimental). |
 | **Placements & IPFS** *(Exp.)* | The [Snapshot Placements](11-EvidenceAndStorage.md#snapshot-placements) list and [IPFS Publishing](11-EvidenceAndStorage.md#ipfs-publishing). |
-| **History** *(Exp.)* | **Show Cross-Domain Timeline**: every IPFS and Bitcoin observation for this publication, in time order. |
+| **History** *(Exp.)* | **Show Cross-Domain Timeline**: every IPFS, Bitcoin and Base observation this device recorded for this publication, in time order, from the [Observation Archive](12-ArchiveAndLeaderboards.md#the-publication-observation-archive), so it's kept across visits; or a note that nothing is recorded yet. |
 
 ### Status meanings
 

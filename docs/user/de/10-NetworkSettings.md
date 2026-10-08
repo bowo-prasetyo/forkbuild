@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: b4db56909f354d27 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: ef3815d3a8349a5a -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
@@ -68,13 +68,13 @@ eine Snapshot-Platzierung erstellen (siehe
 und klicken Sie auf **Speichern**. **Lokal** wird nicht angeboten, da jede
 Veröffentlichung schon auf diesem Gerät gespeichert ist.
 
-**IPFS (entferntes Pinning)** wird immer angeboten. Wählen Sie es, ist in
-jedem Dialog **Verteilen** entferntes Pinning als Speicher vorausgewählt;
-Endpunkt und Zugangsdaten geben Sie trotzdem jedes Mal ein. Die
-Schaltflächen für den bevorzugten Anbieter können entferntes Pinning nicht
-nutzen: Ist es gespeichert, zeigt der Block **Inhalt** jedes Backend statt
-**Auf … speichern**, und **Bevorzugten Anbieter verwenden** meldet
-**Bevorzugter Anbieter nicht gefunden**.
+**IPFS (entferntes Pinning)** *(experimentell)* wird immer angeboten. Es
+nutzt den unter **Entfernter Pinning-Dienst** (unten) eingerichteten
+Dienst: Ist einer eingerichtet, legen **Auf IPFS (entferntes Pinning)
+speichern** und **Bevorzugten Anbieter verwenden** den Inhalt dort ab, als
+gewöhnliche IPFS-Platzierung; ist keiner eingerichtet, sagen sie das. Wählen
+Sie es, ist außerdem in jedem Dialog **Verteilen** entferntes Pinning als
+Speicher vorausgewählt.
 
 Ein zweiter Abschnitt, **IPFS-Knoten**, legt den Knoten fest, an den neue
 IPFS-Platzierungen gesendet werden. Standard ist ein lokaler Kubo-Knoten
@@ -83,6 +83,16 @@ ein und klicken Sie auf **Speichern**, oder auf **Standard der
 Installation verwenden**, um zurückzukehren. Das Lesen von IPFS-Inhalten
 betrifft es nicht; dafür gilt die Liste unter
 [IPFS-Gateway](#ipfs-gateway).
+
+Ein dritter Abschnitt, **Entfernter Pinning-Dienst** *(experimentell)*,
+legt den Pinning-Dienst fest, auf den IPFS (entferntes Pinning) hochlädt:
+seine **Adresse** und, falls der Dienst sie braucht, das **Anfragefeld**
+für die Datei und das **Antwortfeld** mit der CID. **Speichern** bewahrt
+diese auf diesem Gerät auf. Das **Token** wird nur aufbewahrt, bis Sie die
+Seite schließen oder neu laden, und nie gespeichert; ein Dienst, der eines
+braucht, lehnt Uploads ab, bis Sie es eingeben. Jeder Dialog **Verteilen**
+und die Seite Veröffentlichungen beginnen mit diesem Dienst, und Sie können
+ihn dort noch ändern. **Dienst vergessen** entfernt ihn.
 
 ## Anbieter für Ankündigung / Entdeckung
 

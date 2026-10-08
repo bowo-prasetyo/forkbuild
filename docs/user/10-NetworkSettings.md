@@ -60,18 +60,27 @@ Placement on (see
 from the backends this device has registered, and click **Save**. **Local**
 isn't offered, since every publication is already stored on this device.
 
-**IPFS (Remote Pinning)** is always offered. Choosing it pre-selects
-Remote Pinning as the storage in every **Distribute** dialog; you still type
-the endpoint and credential each time. The preferred-provider buttons can't
-use Remote Pinning: with it saved, the **Content** block shows every backend
-instead of **Store on …**, and **Use Preferred Provider** reports
-**Preferred provider not found**.
+**IPFS (Remote Pinning)** *(experimental)* is always offered. It uses the
+service set up under **Remote Pinning Service**, below: with one set up,
+**Store on IPFS (Remote Pinning)** and **Use Preferred Provider** place the
+content there, as an ordinary IPFS placement; without one, they say none
+is set up. Choosing it also pre-selects Remote Pinning as the storage in
+every **Distribute** dialog.
 
 A second section, **IPFS Node**, sets the node new IPFS placements are sent
 to. The default is a local Kubo node at `http://127.0.0.1:5001`. Enter
 another node's API URL and **Save**, or **Use Deployment Default** to go
 back. It doesn't affect reading IPFS content, which uses the
 [IPFS Gateway](#ipfs-gateway) list.
+
+A third section, **Remote Pinning Service** *(experimental)*, sets the
+pinning service IPFS (Remote Pinning) uploads to: its **Endpoint** and, if
+the service needs them, the **Request field** for the file and the
+**Response field** holding the CID. **Save** keeps these on this device.
+The **Token** is kept only until you close or reload the page, and is never
+saved; a service that needs one refuses uploads until you enter it. Every
+**Distribute** dialog and the Publications page start on this service, and
+you can still change it there. **Forget Service** removes it.
 
 ## Announcement / Discovery Provider
 

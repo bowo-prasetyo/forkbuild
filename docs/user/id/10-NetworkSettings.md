@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: b4db56909f354d27 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: ef3815d3a8349a5a -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
@@ -69,19 +69,29 @@ dari backend yang terdaftar di perangkat ini, lalu klik **Simpan**.
 **Lokal** tidak ditawarkan, karena setiap publikasi sudah tersimpan di
 perangkat ini.
 
-**IPFS (Pinning Jarak Jauh)** selalu ditawarkan. Memilihnya membuat Pinning
-Jarak Jauh terpilih sebagai penyimpanan di setiap dialog **Distribusikan**;
-Anda tetap mengetik endpoint dan kredensialnya setiap kali. Tombol penyedia
-pilihan tidak dapat memakai Pinning Jarak Jauh: jika itu yang disimpan,
-blok **Konten** menampilkan setiap backend alih-alih **Simpan di …**, dan
-**Gunakan Penyedia Pilihan** melaporkan **Penyedia pilihan tidak
-ditemukan**.
+**IPFS (Pinning Jarak Jauh)** *(eksperimental)* selalu ditawarkan. Ini
+memakai layanan yang disiapkan di **Layanan Pinning Jarak Jauh**, di bawah:
+jika ada, **Simpan di IPFS (Pinning Jarak Jauh)** dan **Gunakan Penyedia
+Pilihan** menaruh konten di sana, sebagai penempatan IPFS biasa; jika
+tidak ada, keduanya memberi tahu bahwa belum ada yang disiapkan. Memilihnya
+juga membuat Pinning Jarak Jauh terpilih sebagai penyimpanan di setiap
+dialog **Distribusikan**.
 
 Bagian kedua, **Node IPFS**, mengatur node tujuan penempatan IPFS baru.
 Bawaannya adalah node Kubo lokal di `http://127.0.0.1:5001`. Masukkan URL
 API node lain lalu **Simpan**, atau **Gunakan Bawaan Deployment** untuk
 kembali. Pengaturan ini tidak memengaruhi pembacaan konten IPFS, yang
 memakai daftar [Gateway IPFS](#gateway-ipfs).
+
+Bagian ketiga, **Layanan Pinning Jarak Jauh** *(eksperimental)*,
+mengatur layanan tujuan unggahan IPFS (Pinning Jarak Jauh): **Alamat**-nya
+dan, jika layanannya memerlukan, **Kolom permintaan** untuk berkas dan
+**Kolom respons** yang memuat CID. **Simpan** menyimpan semua itu di
+perangkat ini. **Token** hanya disimpan sampai Anda menutup atau memuat
+ulang halaman, dan tidak pernah disimpan permanen; layanan yang
+memerlukannya menolak unggahan sampai Anda memasukkannya. Setiap dialog
+**Distribusikan** dan halaman Publikasi dimulai dengan layanan ini, dan
+Anda tetap dapat mengubahnya di sana. **Lupakan Layanan** menghapusnya.
 
 ## Penyedia Pengumuman / Penemuan
 

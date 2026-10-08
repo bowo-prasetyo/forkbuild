@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: b4db56909f354d27 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: ef3815d3a8349a5a -->
 # 10 — Configurações de rede
 
 <!-- languages -->
@@ -66,18 +66,28 @@ entre os backends que este dispositivo registrou, e clique em **Salvar**.
 **Local** não aparece, já que toda publicação já fica guardada neste
 dispositivo.
 
-**IPFS (pinning remoto)** sempre aparece. Escolhê-lo deixa o pinning remoto
-pré-selecionado como armazenamento em toda caixa de diálogo **Distribuir**;
-você ainda digita o endpoint e a credencial a cada vez. Os botões de
-provedor preferido não conseguem usar o pinning remoto: com ele salvo, o
-bloco **Conteúdo** mostra todos os backends em vez de **Armazenar em …**, e
-**Usar o provedor preferido** informa **Provedor preferido não encontrado**.
+**IPFS (pinning remoto)** *(experimental)* sempre aparece. Ele usa o
+serviço configurado em **Serviço de pinning remoto**, abaixo: com um
+configurado, **Armazenar em IPFS (pinning remoto)** e **Usar o provedor
+preferido** colocam o conteúdo lá, como um posicionamento IPFS comum; sem
+nenhum, avisam que nenhum está configurado. Escolhê-lo também deixa o
+pinning remoto pré-selecionado como armazenamento em toda caixa de diálogo
+**Distribuir**.
 
 Uma segunda seção, **Nó IPFS**, define o nó para onde vão os novos
 posicionamentos IPFS. O padrão é um nó Kubo local em
 `http://127.0.0.1:5001`. Digite a URL da API de outro nó e **Salvar**, ou
 **Usar o padrão da implantação** para voltar. Isso não afeta a leitura de
 conteúdo IPFS, que usa a lista de [Gateway IPFS](#gateway-ipfs).
+
+Uma terceira seção, **Serviço de pinning remoto** *(experimental)*, define
+o serviço para o qual o IPFS (pinning remoto) envia: o **Endereço** e, se o
+serviço precisar, o **Campo da requisição** para o arquivo e o **Campo da
+resposta** com o CID. **Salvar** guarda isso neste dispositivo. O
+**Token** só fica até você fechar ou recarregar a página, e nunca é salvo;
+um serviço que precise de um recusa envios até você informá-lo. Toda caixa
+de diálogo **Distribuir** e a página Publicações começam com esse serviço,
+e você ainda pode trocá-lo ali. **Esquecer serviço** o remove.
 
 ## Provedor de anúncio / descoberta
 

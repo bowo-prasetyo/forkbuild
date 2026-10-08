@@ -5,6 +5,10 @@ import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/settings/RoleProviderPreferenceSettingsView.js';
 import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
+import { IpfsRemotePinningSettings } from '../../core/IpfsRemotePinningSettings.js';
+import {
+    recallIpfsRemotePublishingCredential, rememberIpfsRemotePublishingCredential
+} from '../../application/ipfs/IpfsRemotePublishingCredentialMemory.js';
 import { displayText, t } from '../i18n/i18n.js';
 
 // 0.9.302 — Content Provider Preference Settings Entry Point.
@@ -102,6 +106,7 @@ export default {
         const preferredPlacementCreationCoordinator = inject('preferredSnapshotPlacementCreationCoordinator', null);
         const ipfsNodeConfigurationStore = inject('ipfsNodeConfigurationStore', null);
         const setIpfsNodeConfigurationUseCase = inject('setIpfsNodeConfigurationUseCase', null);
+        const ipfsRemotePinningSettingsStore = inject('ipfsRemotePinningSettingsStore', null);
 
         // A legacy saved `local` preference — registered, but not
         // preferable — is displayed as "nothing selected," never as a radio
@@ -155,9 +160,60 @@ export default {
             ipfsNodeForm.configuration.value ? ipfsNodeForm.configuration.value.apiUrl : DEFAULT_IPFS_NODE_API_URL
         ));
 
+        // The remote pinning service IPFS (Remote Pinning) uses. Its endpoint
+        // and field names are saved on this device; the token only goes to the
+        // tab-lifetime credential memory, never to storage.
+        const savedRemotePinning = ref(ipfsRemotePinningSettingsStore ? ipfsRemotePinningSettingsStore.get() : null);
+        const remotePinningEndpoint = ref(savedRemotePinning.value ? savedRemotePinning.value.endpoint : '');
+        const remotePinningRequestField = ref(savedRemotePinning.value && savedRemotePinning.value.requestField ? savedRemotePinning.value.requestField : '');
+        const remotePinningResponseField = ref(savedRemotePinning.value && savedRemotePinning.value.responseField ? savedRemotePinning.value.responseField : '');
+        const remotePinningToken = ref('');
+        const remotePinningTokenEntered = ref(Boolean(recallIpfsRemotePublishingCredential()));
+        const remotePinningStatus = ref(null);
+        const remotePinningError = ref(null);
+
+        function saveRemotePinning() {
+            if (!ipfsRemotePinningSettingsStore) return;
+            let settings;
+            try {
+                settings = new IpfsRemotePinningSettings({
+                    endpoint: remotePinningEndpoint.value,
+                    requestField: remotePinningRequestField.value,
+                    responseField: remotePinningResponseField.value
+                });
+            } catch {
+                remotePinningError.value = t('contentProviderSettingsView.remotePinningInvalid');
+                remotePinningStatus.value = null;
+                return;
+            }
+            ipfsRemotePinningSettingsStore.save(settings);
+            savedRemotePinning.value = settings;
+            if (remotePinningToken.value.trim()) {
+                rememberIpfsRemotePublishingCredential(remotePinningToken.value);
+                remotePinningTokenEntered.value = true;
+            }
+            remotePinningToken.value = '';
+            remotePinningError.value = null;
+            remotePinningStatus.value = 'saved';
+        }
+
+        function forgetRemotePinning() {
+            if (!ipfsRemotePinningSettingsStore) return;
+            ipfsRemotePinningSettingsStore.clear();
+            savedRemotePinning.value = null;
+            remotePinningEndpoint.value = '';
+            remotePinningRequestField.value = '';
+            remotePinningResponseField.value = '';
+            remotePinningError.value = null;
+            remotePinningStatus.value = 'cleared';
+        }
+
         return {
             t,
             displayText,
+            savedRemotePinning, remotePinningEndpoint, remotePinningRequestField, remotePinningResponseField,
+            remotePinningToken, remotePinningTokenEntered, remotePinningStatus, remotePinningError,
+            saveRemotePinning, forgetRemotePinning,
             settings, selectedProviderKey: preferenceForm.selectedProviderKey, hasUnofferedPreference,
             saveError: preferenceForm.saveError, saveStatus: preferenceForm.saveStatus, save: preferenceForm.save,
             hasIpfsNodeOverride: ipfsNodeForm.hasConfiguration, effectiveIpfsNodeApiUrl, ipfsNodeApiUrlInput,
@@ -217,6 +273,44 @@ export default {
 
                 <button class="action-btn action-btn--primary" @click="saveIpfsNodeConfiguration" :disabled="!ipfsNodeApiUrlInput.trim()">{{ t('contentProviderSettingsView.save') }}</button>
                 <button class="action-btn" @click="useIpfsNodeDeploymentDefault">{{ t('contentProviderSettingsView.useDeploymentDefault') }}</button>
+            </div>
+
+            <h2>{{ t('contentProviderSettingsView.remotePinningService') }} <span class="experimental-badge">{{ t('contentProviderSettingsView.experimental') }}</span></h2>
+            <p class="form-hint form-hint--neutral">
+                {{ t('contentProviderSettingsView.remotePinningServiceHint') }}
+            </p>
+            <p v-if="!savedRemotePinning" class="form-hint form-hint--neutral">
+                {{ t('contentProviderSettingsView.remotePinningNotSet') }}
+            </p>
+
+            <div class="remote-pinning-settings-form">
+                <label class="form-field">
+                    <span class="form-label">{{ t('contentProviderSettingsView.remotePinningEndpoint') }}</span>
+                    <input type="text" v-model="remotePinningEndpoint" class="form-input remote-pinning-endpoint-input"
+                           placeholder="https://api.pinata.cloud/pinning/pinFileToIPFS" />
+                </label>
+                <label class="form-field">
+                    <span class="form-label">{{ t('contentProviderSettingsView.remotePinningToken') }}</span>
+                    <input type="password" v-model="remotePinningToken" class="form-input remote-pinning-token-input" autocomplete="off" />
+                </label>
+                <p class="form-hint form-hint--neutral">
+                    {{ remotePinningTokenEntered ? t('contentProviderSettingsView.remotePinningTokenEntered') : t('contentProviderSettingsView.remotePinningTokenNotEntered') }}
+                </p>
+                <label class="form-field">
+                    <span class="form-label">{{ t('contentProviderSettingsView.remotePinningRequestField') }}</span>
+                    <input type="text" v-model="remotePinningRequestField" class="form-input" placeholder="file" />
+                </label>
+                <label class="form-field">
+                    <span class="form-label">{{ t('contentProviderSettingsView.remotePinningResponseField') }}</span>
+                    <input type="text" v-model="remotePinningResponseField" class="form-input" placeholder="cid (Pinata: IpfsHash)" />
+                </label>
+
+                <p v-if="remotePinningError" class="form-hint">{{ remotePinningError }}</p>
+                <p v-if="remotePinningStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('contentProviderSettingsView.saved') }}</p>
+                <p v-if="remotePinningStatus === 'cleared'" class="form-hint form-hint--neutral">{{ t('contentProviderSettingsView.remotePinningForgotten') }}</p>
+
+                <button class="action-btn action-btn--primary" @click="saveRemotePinning" :disabled="!remotePinningEndpoint.trim()">{{ t('contentProviderSettingsView.save') }}</button>
+                <button v-if="savedRemotePinning" class="action-btn" @click="forgetRemotePinning">{{ t('contentProviderSettingsView.forgetRemotePinningService') }}</button>
             </div>
         </section>
     `

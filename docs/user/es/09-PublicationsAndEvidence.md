@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 2c5fc47e7e82ef51 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 8e320f702249d035 -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -225,7 +225,7 @@ Debajo, dos secciones plegadas:
 | **Snapshot** | [Snapshot local](#snapshot-local): lo que tiene este dispositivo y cómo obtenerlo. |
 | **Descentralización y evidencia** | [Descentralización](#la-descentralización-de-un-vistazo), la [lista de evidencia](11-EvidenceAndStorage.md#la-lista-de-evidencia) y los pasos de las transacciones de Bitcoin y Base (Experimental). |
 | **Colocaciones e IPFS** *(Exp.)* | La lista de [Ubicaciones de Snapshots](11-EvidenceAndStorage.md#ubicaciones-de-snapshots) y la [Publicación en IPFS](11-EvidenceAndStorage.md#publicación-en-ipfs). |
-| **Historial** *(Exp.)* | **Mostrar línea de tiempo entre dominios**: todas las observaciones de IPFS y Bitcoin de esta publicación, en orden cronológico. |
+| **Historial** *(Exp.)* | **Mostrar línea de tiempo entre dominios**: todas las observaciones de IPFS, Bitcoin y Base que este dispositivo registró para esta publicación, en orden cronológico, tomadas del [Archivo de observaciones](12-ArchiveAndLeaderboards.md), así que se conservan entre visitas; o un aviso de que todavía no hay nada registrado. |
 
 ### Significado de los estados
 

@@ -258,7 +258,7 @@ const { discoveryCoordinator: publicationSnapshotPlacementDiscoveryCoordinator }
 });
 
 const {
-    ipfsGatewayConfigurationStore, ipfsNodeConfigurationStore, resolvedIpfsNodeApiUrl, resolvedIpfsGatewayUrls,
+    ipfsGatewayConfigurationStore, ipfsNodeConfigurationStore, ipfsRemotePinningSettingsStore, resolvedIpfsNodeApiUrl, resolvedIpfsGatewayUrls,
     composeIpfsGatewayContentStore, publicationSnapshotPlacementResolutionCoordinator,
     publicationSnapshotPlacementResolutionStoreRegistry, snapshotPlacementViewRegistry,
     publicationCatalogContentResolver, snapshotPlacementStoreRegistry, snapshotPlacementCreationCoordinator,
@@ -482,6 +482,7 @@ app.provide('setArweaveGatewayConfigurationUseCase', setArweaveGatewayConfigurat
 app.provide('ipfsGatewayConfigurationStore', ipfsGatewayConfigurationStore);
 app.provide('setIpfsGatewayConfigurationUseCase', setIpfsGatewayConfigurationUseCase);
 app.provide('ipfsNodeConfigurationStore', ipfsNodeConfigurationStore);
+app.provide('ipfsRemotePinningSettingsStore', ipfsRemotePinningSettingsStore);
 app.provide('setIpfsNodeConfigurationUseCase', setIpfsNodeConfigurationUseCase);
 app.provide('nostrRelayConfigurationStore', nostrRelayConfigurationStore);
 app.provide('setNostrRelayConfigurationUseCase', setNostrRelayConfigurationUseCase);

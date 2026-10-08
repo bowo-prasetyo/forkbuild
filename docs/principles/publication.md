@@ -434,10 +434,13 @@ failure outcomes.
 
 ### A Configured Credential Lives Only As Long As The Capability It Grants (0.8.68)
 
-Remote publishing settings (endpoint, credential, field names) are never
-saved. A fresh capability is built for each attempt, the credential is
-never shown again, the service's own result states reach the screen
-unchanged, and the person chooses among the available capabilities.
+A remote pinning credential is never saved. A fresh capability is built
+for each attempt, the credential is never shown again, the service's own
+result states reach the screen unchanged, and the person chooses among the
+available capabilities. Amended 2026-10-08: the service's endpoint and
+field names, which grant nothing on their own, may be saved on the device
+(Content Provider), so IPFS (Remote Pinning) can be a preferred storage;
+the token stays in memory for the visit only.
 
 [Full text](history/0.8.md#a-configured-credential-lives-only-as-long-as-the-capability-it-grants-0868)
 

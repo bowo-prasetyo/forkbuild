@@ -12,6 +12,7 @@ import { commentarySectionTemplate } from './ownPublicationPanel/templates/comme
 import PublicationShareLink from './PublicationShareLink.js';
 import CommentaryDistributionPicker, { commentarySavedText } from './CommentaryDistributionPicker.js';
 import CommentaryNetworkDistribution from './CommentaryNetworkDistribution.js';
+import { remotePinningDraftFromSettings } from '../../application/ipfs/IpfsRemotePinningDraft.js';
 import { errorText, t } from '../i18n/i18n.js';
 
 // Actions on the local user's own current Publication in World View:
@@ -55,7 +56,8 @@ export default {
     name: 'OwnPublicationPanel',
     components: { WorldDistributionDialog, PublicationCommentaryRemoteCheck, PublicationShareLink, CommentaryDistributionPicker, CommentaryNetworkDistribution },
     inject: {
-        identityUseCase: { default: null }
+        identityUseCase: { default: null },
+        ipfsRemotePinningSettingsStore: { default: null }
     },
     props: {
         // Supplied by the host view; null when the active document is unpublished.
@@ -209,8 +211,9 @@ export default {
             distributionDiscoveryProvider: this.defaultDiscoveryDistributionProvider || 'nostr',
             // null until a storage is picked; the computed supplies the default.
             distributionStorageChoice: null,
-            // Shared by both actions; never persisted.
-            remotePinningDraft: { endpoint: '', credential: '', requestField: '', responseField: '' },
+            // Shared by both actions; starts on the service saved under
+            // Content Provider. The token is never persisted.
+            remotePinningDraft: remotePinningDraftFromSettings(this.ipfsRemotePinningSettingsStore ? this.ipfsRemotePinningSettingsStore.get() : null),
             publicationDistributionExecuting: false,
             publicationDistributionError: null,
             publicationDistributionResult: null,

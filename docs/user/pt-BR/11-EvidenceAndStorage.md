@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 441c5aa921f30b41 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: bab90f7325291119 -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
@@ -579,14 +579,16 @@ preferido**, na guia **Detalhes → Posicionamentos e IPFS** do cartão, criam
 um posicionamento no backend salvo em
 [Provedor de conteúdo](10-NetworkSettings.md#provedor-de-conteúdo). Salvar
 uma preferência não muda nem os botões explícitos nem os posicionamentos
-existentes. Sem nada salvo, ou com IPFS (pinning remoto) salvo, o bloco
-**Conteúdo** mostra todos os backends em vez de **Armazenar em …**.
+existentes. Sem nada salvo, o bloco **Conteúdo** mostra todos os backends em vez de
+**Armazenar em …**. Com IPFS (pinning remoto) salvo, **Armazenar em …** usa
+o serviço configurado em
+[Provedor de conteúdo](10-NetworkSettings.md#provedor-de-conteúdo).
 
 | Rótulo | Significado |
 |---|---|
 | **Posicionamento criado** | O mesmo que clicar no botão daquele backend. |
 | **Nenhum posicionamento foi criado** | Nenhuma preferência salva. |
-| **Provedor preferido não encontrado** | O backend salvo não está registrado neste dispositivo, ou é o IPFS (pinning remoto), que precisa de um endpoint digitado a cada vez. |
+| **Provedor preferido não encontrado** | O backend salvo não está registrado neste dispositivo, ou é o IPFS (pinning remoto) sem um serviço configurado em Provedor de conteúdo. |
 
 ### A lista de posicionamentos de snapshot
 
@@ -664,8 +666,12 @@ guardadas no
 
 ### Configurando um provedor de pinning remoto
 
-O ForkBuild não vem com nenhum provedor de pinning. Clique em **Configurar
-publicação remota** (**Reconfigurar publicação remota** depois):
+O ForkBuild não vem com nenhum provedor de pinning. O cartão começa com o
+serviço configurado em
+[Provedor de conteúdo](10-NetworkSettings.md#provedor-de-conteúdo), se
+houver, e com o token que você informou nesta visita. Para usar outro,
+clique em **Configurar publicação remota** (**Reconfigurar publicação
+remota** depois):
 
 | Campo | Significado |
 |---|---|
@@ -675,7 +681,7 @@ publicação remota** (**Reconfigurar publicação remota** depois):
 | **Campo da resposta** (opcional) | O campo da resposta que traz o CID. Padrão `cid`. |
 
 **Salvar configuração** a guarda só para esta visita; ela nunca é gravada, e
-uma recarga ou **Limpar configuração** a descarta. Cancelar mantém a
+**Limpar configuração** a descarta; uma recarga volta ao serviço salvo. Cancelar mantém a
 configuração anterior. Reconfigurar começa do zero, sem nada publicado com o
 novo provedor.
 

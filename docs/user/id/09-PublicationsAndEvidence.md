@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 2c5fc47e7e82ef51 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 8e320f702249d035 -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -223,7 +223,7 @@ Di bawahnya, dua bagian terlipat:
 | **Snapshot** | [Snapshot Lokal](#snapshot-lokal): apa yang disimpan perangkat ini, dan cara mendapatkannya. |
 | **Desentralisasi & Bukti** | [Desentralisasi](#desentralisasi-sekilas), [daftar bukti](11-EvidenceAndStorage.md#daftar-bukti), dan langkah-langkah transaksi Bitcoin dan Base (Eksperimental). |
 | **Penempatan & IPFS** *(Eksp.)* | Daftar [Penempatan Snapshot](11-EvidenceAndStorage.md#penempatan-snapshot) dan [Penerbitan IPFS](11-EvidenceAndStorage.md#penerbitan-ipfs). |
-| **Riwayat** *(Eksp.)* | **Tampilkan Linimasa Lintas Domain**: setiap pengamatan IPFS dan Bitcoin untuk publikasi ini, berurutan menurut waktu. |
+| **Riwayat** *(Eksp.)* | **Tampilkan Linimasa Lintas Domain**: setiap pengamatan IPFS, Bitcoin, dan Base yang dicatat perangkat ini untuk publikasi ini, berurutan menurut waktu, dari [Arsip Pengamatan](12-ArchiveAndLeaderboards.md), sehingga tersimpan antarkunjungan; atau catatan bahwa belum ada yang tercatat. |
 
 ### Arti status
 

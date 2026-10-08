@@ -227,7 +227,7 @@ export function useSnapshotPlacements({
             const result = await preferredPlacementCreationCoordinator.create(entry.publication.id);
             entry.preferredPlacementCreationAttempt = {
                 creating: false, outcome: result.outcome, placement: result.placement, reason: result.reason, error: null,
-                preference: result.preference || null
+                preference: result.preference || null, remotePinningNotSetUp: Boolean(result.remotePinningNotSetUp)
             };
             // Re-discover so the new placement appears in the list.
             loadPlacements(entry);

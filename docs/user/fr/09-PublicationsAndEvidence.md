@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 2c5fc47e7e82ef51 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 8e320f702249d035 -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -228,7 +228,7 @@ En dessous, deux sections repliées :
 | **Snapshot** | Le [Snapshot local](#snapshot-local) : ce que détient cet appareil, et comment l’obtenir. |
 | **Décentralisation et preuves** | La [Décentralisation](#la-décentralisation-en-un-coup-dœil), la [liste des preuves](11-EvidenceAndStorage.md#la-liste-des-preuves), et les étapes de transaction Bitcoin et Base (expérimental). |
 | **Placements et IPFS** *(Exp.)* | La liste des [Placements de Snapshot](11-EvidenceAndStorage.md#placements-de-snapshot) et la [Publication IPFS](11-EvidenceAndStorage.md#publication-ipfs). |
-| **Historique** *(Exp.)* | **Afficher la chronologie multi-domaines** : toutes les observations IPFS et Bitcoin de cette publication, dans l’ordre chronologique. |
+| **Historique** *(Exp.)* | **Afficher la chronologie multi-domaines** : toutes les observations IPFS, Bitcoin et Base que cet appareil a enregistrées pour cette publication, dans l’ordre chronologique, tirées de l’[Archive des observations](12-ArchiveAndLeaderboards.md), donc conservées d’une visite à l’autre ; ou une note indiquant que rien n’est encore enregistré. |
 
 ### Signification des statuts
 

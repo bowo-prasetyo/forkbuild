@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 441c5aa921f30b41 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: bab90f7325291119 -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
@@ -588,14 +588,16 @@ Pilihan** di tab **Detail → Penempatan & IPFS** pada kartu, membuat
 penempatan di backend yang disimpan di
 [Penyedia Konten](10-NetworkSettings.md#penyedia-konten). Menyimpan pilihan
 tidak mengubah tombol eksplisit maupun penempatan yang sudah ada. Jika
-belum ada yang disimpan, atau yang disimpan adalah IPFS (Pinning Jarak
-Jauh), blok **Konten** menampilkan setiap backend alih-alih **Simpan di …**.
+belum ada yang disimpan, blok **Konten** menampilkan setiap backend
+alih-alih **Simpan di …**. Jika yang disimpan adalah IPFS (Pinning Jarak
+Jauh), **Simpan di …** memakai layanan yang disiapkan di
+[Penyedia Konten](10-NetworkSettings.md#penyedia-konten).
 
 | Label | Arti |
 |---|---|
 | **Penempatan dibuat** | Sama dengan mengeklik tombol backend itu. |
 | **Tidak ada penempatan yang dibuat** | Belum ada pilihan yang disimpan. |
-| **Penyedia pilihan tidak ditemukan** | Backend yang disimpan tidak terdaftar di perangkat ini, atau itu IPFS (Pinning Jarak Jauh), yang memerlukan endpoint diketik setiap kali. |
+| **Penyedia pilihan tidak ditemukan** | Backend yang disimpan tidak terdaftar di perangkat ini, atau itu IPFS (Pinning Jarak Jauh) tanpa layanan yang disiapkan di Penyedia Konten. |
 
 ### Daftar Penempatan Snapshot
 
@@ -677,9 +679,12 @@ penerbitan yang berhasil dan setiap verifikasi juga disimpan di
 
 ### Mengonfigurasi penyedia pinning jarak jauh
 
-ForkBuild tidak menyertakan penyedia pinning bawaan. Klik **Konfigurasi
-Penerbitan Jarak Jauh** (kemudian **Konfigurasi Ulang Penerbitan Jarak
-Jauh**):
+ForkBuild tidak menyertakan penyedia pinning bawaan. Kartu dimulai dengan
+layanan yang disiapkan di
+[Penyedia Konten](10-NetworkSettings.md#penyedia-konten), jika ada, dan
+token yang Anda masukkan pada kunjungan ini. Untuk memakai yang lain, klik
+**Konfigurasi Penerbitan Jarak Jauh** (kemudian **Konfigurasi Ulang
+Penerbitan Jarak Jauh**):
 
 | Kolom | Arti |
 |---|---|
@@ -689,8 +694,8 @@ Jauh**):
 | **Kolom respons** (opsional) | Kolom respons yang berisi CID. Bawaannya `cid`. |
 
 **Simpan Konfigurasi** menyimpannya hanya untuk kunjungan ini; tidak pernah
-disimpan permanen, dan memuat ulang atau **Hapus Konfigurasi**
-membuangnya. Membatalkan membiarkan konfigurasi sebelumnya. Mengonfigurasi
+disimpan permanen, dan **Hapus Konfigurasi** membuangnya; memuat ulang
+kembali ke layanan yang disimpan. Membatalkan membiarkan konfigurasi sebelumnya. Mengonfigurasi
 ulang memulai dari awal, tanpa ada yang diterbitkan dengan penyedia baru.
 
 ### Menerbitkan

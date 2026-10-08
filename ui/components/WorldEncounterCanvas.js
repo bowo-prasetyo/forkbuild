@@ -21,6 +21,7 @@ import { observerLocalEncounterPanelTemplate } from './worldEncounterCanvas/temp
 import { snapshotPanelsTemplate } from './worldEncounterCanvas/templates/snapshotPanels.js';
 import { outcomeAndMaterialPanelsTemplate } from './worldEncounterCanvas/templates/outcomeAndMaterialPanels.js';
 import { publicationDiscoveryPanelsTemplate } from './worldEncounterCanvas/templates/publicationDiscoveryPanels.js';
+import { remotePinningDraftFromSettings } from '../../application/ipfs/IpfsRemotePinningDraft.js';
 import { formatDate, t } from '../i18n/i18n.js';
 
 // World Encounter Canvas: a simple 2D World View of encounterable
@@ -220,6 +221,9 @@ import { formatDate, t } from '../i18n/i18n.js';
 export default {
     name: 'WorldEncounterCanvas',
     components: { WorldEncounterMarker, WandererMarker, WorldDistributionDialog, PublicationCommentaryRemoteCheck, CommentaryDistributionPicker, CommentaryNetworkDistribution },
+    inject: {
+        ipfsRemotePinningSettingsStore: { default: null }
+    },
     props: {
         // Exactly `describeWorldEncounterView()`'s result shape.
         view: {
@@ -486,8 +490,9 @@ export default {
             // Backs `selectedDistributionStorage`; null until a storage is picked.
             selectedDistributionStorageChoice: null,
             // Remote Pinning (e.g. Pinata) draft for both distribution actions, shown
-            // only for 'remote-pinning'. A plain object; never persisted.
-            remotePinningDraft: { endpoint: '', credential: '', requestField: '', responseField: '' },
+            // only for 'remote-pinning'. Starts on the service saved under Content
+            // Provider; the token is never persisted.
+            remotePinningDraft: remotePinningDraftFromSettings(this.ipfsRemotePinningSettingsStore ? this.ipfsRemotePinningSettingsStore.get() : null),
             // Ephemeral execution/error/request/result state for
             // `discoverSnapshotCommand`, reset on each selection.
             // `snapshotAttributionResult` is resolveSnapshotPublicationAttribution()'s

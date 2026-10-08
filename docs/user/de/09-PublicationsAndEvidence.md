@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 2c5fc47e7e82ef51 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 8e320f702249d035 -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -233,7 +233,7 @@ Darunter zwei eingeklappte Abschnitte:
 | **Snapshot** | [Lokaler Snapshot](#lokaler-snapshot): was dieses Gerät besitzt und wie man es bekommt. |
 | **Dezentralisierung & Nachweise** | [Dezentralisierung](#dezentralisierung-auf-einen-blick), die [Nachweisliste](11-EvidenceAndStorage.md#die-nachweisliste) und die Transaktionsschritte für Bitcoin und Base (experimentell). |
 | **Platzierungen & IPFS** *(Exp.)* | Die Liste der [Snapshot-Platzierungen](11-EvidenceAndStorage.md#snapshot-platzierungen) und [Veröffentlichen auf IPFS](11-EvidenceAndStorage.md#veröffentlichen-auf-ipfs). |
-| **Verlauf** *(Exp.)* | **Domänenübergreifende Zeitleiste zeigen**: jede IPFS- und Bitcoin-Beobachtung zu dieser Veröffentlichung in zeitlicher Reihenfolge. |
+| **Verlauf** *(Exp.)* | **Domänenübergreifende Zeitleiste zeigen**: jede IPFS-, Bitcoin- und Base-Beobachtung, die dieses Gerät zu dieser Veröffentlichung aufgezeichnet hat, in zeitlicher Reihenfolge, aus dem [Beobachtungsarchiv](12-ArchiveAndLeaderboards.md), daher über Besuche hinweg erhalten; oder ein Hinweis, dass noch nichts aufgezeichnet ist. |
 
 ### Bedeutung der Status
 

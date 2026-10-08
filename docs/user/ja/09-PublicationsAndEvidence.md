@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 2c5fc47e7e82ef51 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 8e320f702249d035 -->
 # 09 — 公開物と外部証拠
 
 <!-- languages -->
@@ -208,7 +208,7 @@ Nostr、Steem。最初は
 | **スナップショット** | [ローカルのスナップショット](#ローカルのスナップショット): このデバイスが保持しているものと、その取得方法。 |
 | **分散化と証拠** | [分散化](#分散化の概要)、[証拠の一覧](11-EvidenceAndStorage.md#証拠の一覧)、Bitcoin と Base のトランザクションの手順（実験的）。 |
 | **配置とIPFS** *（実験）* | [スナップショットの配置](11-EvidenceAndStorage.md#スナップショットの配置) の一覧と [IPFSへの公開](11-EvidenceAndStorage.md#ipfsへの公開)。 |
-| **履歴** *（実験）* | **ドメイン横断のタイムラインを表示**: この公開物についての IPFS と Bitcoin のすべての観測を時系列で。 |
+| **履歴** *（実験）* | **ドメイン横断のタイムラインを表示**: この端末がこの公開物について記録した IPFS、Bitcoin、Base のすべての観測を時系列で。[観測アーカイブ](12-ArchiveAndLeaderboards.md) から読むので、訪問をまたいで残ります。何も記録がなければ、そう表示されます。 |
 
 ### 状態の意味
 
