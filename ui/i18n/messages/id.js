@@ -55,7 +55,7 @@ export default Object.freeze({
 
     // Hitungan pengunjung harian di halaman Data Anda (ui/components/VisitorCountSetting.js).
     'visitorCount.title': 'Hitungan pengunjung harian',
-    'visitorCount.intro': 'Sekali sehari, ForkBuild memberi tahu GoatCounter bahwa satu browser lagi membukanya, agar pembuatnya tahu kira-kira berapa banyak orang yang menggunakannya. Permintaan itu tidak menyebut halaman, bangunan, atau orang apa pun, tidak memasang cookie, dan GoatCounter hanya menyimpan jumlah total.',
+    'visitorCount.intro': 'Sekali sehari, ForkBuild memberi tahu GoatCounter bahwa satu browser lagi membukanya, agar pembuatnya tahu kira-kira berapa banyak orang yang menggunakannya. Dengan cara yang sama, ForkBuild juga menghitung saat tautan berbagi disalin atau dibagikan, saat tautan yang dibagikan dibuka, dan saat bangunan yang dibuka dari tautan itu disalin ke Editor. Setiap permintaan adalah jalur tetap yang tidak menyebut halaman, bangunan, atau orang apa pun, tidak memasang cookie, dan GoatCounter hanya menyimpan jumlah total.',
     'visitorCount.label': 'Hitung browser ini',
     'visitorCount.browserAsksNotToTrack': 'Browser ini meminta situs untuk tidak melacaknya (Global Privacy Control atau Do Not Track), jadi browser ini tidak pernah dihitung.',
     'visitorCount.details': 'Siapa pun dapat melihat jumlah totalnya di {dashboard}. Apa yang dikirim, dan kapan, dijelaskan di {privacy}.',
@@ -129,6 +129,8 @@ export default Object.freeze({
     'publicationLink.label.arweave': 'Transaksi Arweave {id}',
     'publicationLink.label.ipfs': 'Konten IPFS {cid}',
     'publicationLink.label.blurt': '@{author}/{permlink}',
+    'publicationLink.label.link': 'bangunan yang dibagikan',
+    'publicationLink.damaged': 'Tautan ini rusak atau terpotong. Mintalah lagi, lalu salin seluruh tautannya.',
     'publicationLink.invalid': 'Tautan ini tidak menunjuk Dunia Bersama yang dapat dibuka ForkBuild.',
     'publicationLink.notASteemPost': 'Tautan ini tidak menunjuk postingan Steem.',
     'publicationLink.noReader.steem': 'membaca dari Steem tidak tersedia di browser ini',
@@ -789,7 +791,7 @@ export default Object.freeze({
     'distribution.publicationFailed': 'Distribusi Klaim Bertanda Tangan tidak dapat diselesaikan.',
     'distribution.snapshotFailed': 'Distribusi snapshot tidak dapat diselesaikan.',
 
-    // Sharing a distributed Publication (ui/components/PublicationShareLink.js, application/publication/PublicationShareLink.js).
+    // Sharing a Publication (ui/components/PublicationShareLink.js, application/publication/PublicationShareLink.js).
     'share.share': 'Bagikan…',
     'share.copy': 'Salin tautan',
     'share.linkLabel': 'Tautan untuk dibagikan',
@@ -802,6 +804,15 @@ export default Object.freeze({
     'share.text': '{title}, dibangun dengan ForkBuild',
     'share.arweaveNote': 'Disimpan di Arweave: tepat setelah didistribusikan, tautan dapat memerlukan beberapa menit untuk bisa dibuka.',
     'share.ipfsNodeNote': 'Disimpan di node IPFS Anda sendiri: teman hanya dapat membuka tautan selama node Anda daring dan dapat dijangkau. Pinning jarak jauh atau Arweave membuatnya tetap tersedia.',
+    'share.linkOnlyHint': 'Siapa pun dapat membuka tautan ini di perangkat apa pun untuk melihat bangunan dalam 3D dan membuat salinannya sendiri. Bangunannya ikut di dalam tautan, jadi tidak ada yang perlu didistribusikan lebih dulu.',
+    'share.linkOnlyUnsigned': 'Dunia Bersama ini tidak ditandatangani, jadi tautan ke sana tidak akan terbuka. Masuk lalu terbitkan lagi untuk mendapatkan tautan.',
+    'share.linkOnlyNoBuild': 'Bangunan ini tidak tersimpan di perangkat ini, jadi belum ada tautan untuknya.',
+    'share.linkOnlyUnavailable': 'Browser ini tidak dapat membuat tautan untuk bangunan ini. Distribusikan dengan penyimpanan Steem, Blurt, Arweave, atau IPFS untuk mendapatkannya.',
+    'share.linkOnlyTooLarge': 'Bangunan ini terlalu besar untuk muat dalam tautan. Distribusikan dengan penyimpanan Steem, Blurt, Arweave, atau IPFS untuk mendapatkan tautan.',
+    'share.savePicture': 'Simpan gambar',
+    'share.pictureCaption': 'Remix di ForkBuild',
+    'share.pictureDrawing': 'Menggambar…',
+    'share.pictureFailed': 'Gambar tidak dapat digambar di browser ini.',
 
     // Storing on Steem (application/steem/SteemContentUploadProgressText.js).
     'steemUpload.describing': 'Menyimpan di Steem: menambahkan gambar bangunan. Setujui penandatanganan gambar di Steem Keychain.',

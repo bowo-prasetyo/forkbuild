@@ -55,6 +55,7 @@ import CreateBlueprintDialog from '../components/CreateBlueprintDialog.js';
 import StructureInfoPanel from '../components/StructureInfoPanel.js';
 import ForkFailureDialog from '../components/ForkFailureDialog.js';
 import EditorDistributionDialog from '../components/EditorDistributionDialog.js';
+import PublicationShareLink from '../components/PublicationShareLink.js';
 import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
 import { usePostPublishDistribution } from './editorView/usePostPublishDistribution.js';
 import { useSelectionActions } from './editorView/useSelectionActions.js';
@@ -79,7 +80,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, EditorTouchActionBar, SoundControl },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, EditorTouchActionBar, SoundControl },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -126,6 +127,14 @@ export default {
                         @click="dismissPublishAction"
                     >{{ t('editor.dismiss') }}</button>
                 </div>
+                <!-- Share it straight away: a small build travels inside the link. -->
+                <PublicationShareLink
+                    v-if="publishedPublication"
+                    class="editor-post-publish-share"
+                    :publication-id="publishedPublication.id"
+                    :title="publishedPublication.title"
+                    :publication="publishedPublication"
+                />
 
                 <EditorDistributionDialog
                     v-if="distributionDialogOpen"
@@ -410,6 +419,7 @@ export default {
         const { blueprintLineageUseCase, blueprintLineageExchange } = new CreateBlueprintLineageUseCase().execute(identityProvider);
         const publicationResolver = inject('publicationResolver');
         const publicationCatalog = inject('publicationCatalog');
+        const funnelEventCounter = inject('funnelEventCounter', null);
         const publicationPeerExchange = inject('publicationPeerExchange');
 
         // Uses the app-wide peer stack. Without one, propagation is null and the
@@ -926,6 +936,7 @@ export default {
                     }
                     const forkedDocument = forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication);
                     editorSession.openDocument(forkedDocument, decodedEntryContext);
+                    funnelEventCounter?.forked(sourceDocumentId);
                     // Set only after openDocument() succeeds.
                     entryContext.value = decodedEntryContext;
                     arrivalDocumentId = decodedEntryContext ? forkedDocument.world.id : null;

@@ -192,6 +192,13 @@
     border-bottom: 1px solid rgba(76, 175, 125, 0.4);
 }
 
+.editor-post-publish-share {
+    margin: 0;
+    padding: 0.5rem 1rem;
+    background: rgba(76, 175, 125, 0.06);
+    border-bottom: 1px solid rgba(76, 175, 125, 0.4);
+}
+
 .editor-post-publish-message {
     color: #4caf7d;
     font-size: 0.85rem;

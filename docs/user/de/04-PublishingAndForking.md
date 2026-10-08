@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1f52c96ba8857c6b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e2f44cb736080f44 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -38,13 +38,51 @@ geteilten Welt, sodass **Erkunden** immer ein Ziel hat — siehe
 > Angekündigt auf Nostr**), oder **Auf diesem Gerät ist keine Verteilung
 > verzeichnet.** Sichern Sie es unter [Ihre Daten](13-YourData.md), um in
 > der Zwischenzeit eine Kopie zu behalten.
-> Veröffentlichen sendet nie von selbst etwas irgendwohin. Das tun zwei
-> getrennte, optionale Schritte: **Verteilen**, als Nächstes beschrieben,
+> Veröffentlichen sendet nie von selbst etwas irgendwohin. Ein
+> [Link](#einen-link-teilen), den Sie kopieren, bringt das Bauwerk zu dem,
+> dem Sie ihn geben. Das tun zwei
+> getrennte, optionale Schritte: **Verteilen**, weiter unten beschrieben,
 > bringt die Veröffentlichung auf Arweave oder IPFS und kündigt sie auf
 > Nostr oder Arweave an, damit andere sie finden können, ohne mit Ihnen
 > verbunden zu sein; und
 > [**Mit Peers teilen**](#mit-verbundenen-peers-teilen) bietet sie den
 > Menschen an, mit denen Sie verbunden sind.
+
+## Einen Link teilen
+
+Sobald **Veröffentlichen** gelingt, zeigt der Hinweis im Editor auch
+**Teilen …** (wo Ihr Gerät ein Teilen-Menü hat), **Link kopieren** und
+**Bild speichern**, darunter den Link. Dieselben Schaltflächen stehen in der
+Weltansicht unter **Meine Geteilte Welt**.
+
+- **Das Bauwerk steckt im Link.** Vorher muss nichts verteilt werden, und
+  keine Wallet, kein Konto und kein Server ist beteiligt: Der Link trägt
+  Ihre signierte Geteilte Welt und das Bauwerk selbst. Wer ihn öffnet, auf
+  jedem Gerät, landet in der Weltansicht bei Ihrem Bauwerk, und **Eine Kopie
+  bearbeiten** macht es zu seinem eigenen. ForkBuild prüft die Signatur und
+  ob das Bauwerk dazu passt, bevor es etwas zeigt; ein veränderter oder
+  abgeschnittener Link sagt das.
+- **Er braucht eine Signatur.** Veröffentlichen Sie angemeldet; eine
+  abgemeldet veröffentlichte Kreation bekommt keinen Link.
+- **Größe.** Ein Bauwerk mit bis zu etwa 500 Steinen passt hinein; der Link
+  der mitgelieferten Burg hat etwa 3.700 Zeichen. E-Mail und die meisten
+  Chat-Apps und sozialen Netzwerke behalten einen so langen Link, Discord
+  und Telegram begrenzen aber, wie lang eine Nachricht sein darf. Ein
+  größeres Bauwerk sagt, dass es für einen Link zu groß ist: Verteilen Sie
+  es, um einen zu erhalten.
+- **Sobald es verteilt ist**, bieten die Schaltflächen den kürzeren Link an,
+  der nennt, wo die Geteilte Welt gespeichert ist, und der auch Ihre
+  Platzierung mitbringt (siehe [Verteilung](Distribution.md)). Ein Link, der
+  sein Bauwerk enthält, trägt Ihre Platzierung nicht, daher stellt die
+  Weltansicht das Bauwerk dorthin, wo sie Bauwerke ohne Platzierung
+  hinstellt.
+- **Bild speichern** lädt ein PNG des Bauwerks in 1200 × 630 herunter, mit
+  seinem Titel und „Eigene Version auf ForkBuild bauen“ am unteren Rand,
+  zum Posten dort, wo ein Link allein kein Bild zeigt.
+
+Das Kopieren oder Teilen eines Links und das Öffnen eines Links werden
+anonym gezählt, wie der tägliche Besuch; siehe
+[Tägliche Besucherzählung](13-YourData.md#tägliche-besucherzählung).
 
 ## Direkt aus dem Editor verteilen
 

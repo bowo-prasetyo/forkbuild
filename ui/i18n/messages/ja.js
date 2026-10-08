@@ -55,7 +55,7 @@ export default Object.freeze({
 
     // 「あなたのデータ」ページの1日の訪問者数（ui/components/VisitorCountSetting.js）。
     'visitorCount.title': '1日の訪問者数',
-    'visitorCount.intro': 'ForkBuildは1日に1回、ブラウザーがもう1台開いたことをGoatCounterに知らせます。これにより開発者は、おおよその利用者数を知ることができます。このリクエストにはページ、作品、個人を示す情報は含まれず、Cookieも使わず、GoatCounterは合計だけを保存します。',
+    'visitorCount.intro': 'ForkBuildは1日に1回、ブラウザーがもう1台開いたことをGoatCounterに知らせます。これにより開発者は、おおよその利用者数を知ることができます。同じ方法で、共有リンクがコピーまたは共有されたとき、共有リンクが開かれたとき、そのリンクから開いた作品がエディターにコピーされたときも数えます。どのリクエストも固定のパスで、ページ、作品、個人を示す情報は含まれず、Cookieも使わず、GoatCounterは合計だけを保存します。',
     'visitorCount.label': 'このブラウザーを数える',
     'visitorCount.browserAsksNotToTrack': 'このブラウザーはサイトに追跡しないよう求めている（Global Privacy Control または Do Not Track）ため、数えられることはありません。',
     'visitorCount.details': '合計は{dashboard}で誰でも見られます。何がいつ送信されるかは{privacy}に記載しています。',
@@ -129,6 +129,8 @@ export default Object.freeze({
     'publicationLink.label.arweave': 'Arweaveトランザクション {id}',
     'publicationLink.label.ipfs': 'IPFSコンテンツ {cid}',
     'publicationLink.label.blurt': '@{author}/{permlink}',
+    'publicationLink.label.link': '共有された作品',
+    'publicationLink.damaged': 'このリンクは壊れているか、途中で切れています。もう一度送ってもらい、リンク全体をコピーしてください。',
     'publicationLink.invalid': 'このリンクは、ForkBuildで開ける共有ワールドを指していません。',
     'publicationLink.notASteemPost': 'このリンクはSteemの投稿を指していません。',
     'publicationLink.noReader.steem': 'このブラウザーではSteemから読み込めません',
@@ -789,7 +791,7 @@ export default Object.freeze({
     'distribution.publicationFailed': '署名済みクレームの配信を完了できませんでした。',
     'distribution.snapshotFailed': 'スナップショットの配信を完了できませんでした。',
 
-    // Sharing a distributed Publication (ui/components/PublicationShareLink.js, application/publication/PublicationShareLink.js).
+    // Sharing a Publication (ui/components/PublicationShareLink.js, application/publication/PublicationShareLink.js).
     'share.share': '共有…',
     'share.copy': 'リンクをコピー',
     'share.linkLabel': '共有するリンク',
@@ -802,6 +804,15 @@ export default Object.freeze({
     'share.text': '{title} — ForkBuildで作りました',
     'share.arweaveNote': 'Arweaveに保存: 配信直後は、リンクが開けるようになるまで数分かかることがあります。',
     'share.ipfsNodeNote': 'あなた自身のIPFSノードに保存: 友達がリンクを開けるのは、あなたのノードがオンラインで到達可能な間だけです。リモートピン留めかArweaveを使うと、いつでも利用できます。',
+    'share.linkOnlyHint': '誰でもどのデバイスからでもこのリンクを開いて、作品を3Dで見たり、自分のコピーを作ったりできます。作品はリンクの中に入っているので、先に配信する必要はありません。',
+    'share.linkOnlyUnsigned': 'この共有ワールドには署名がないため、リンクを作っても開けません。サインインしてもう一度公開すると、リンクを得られます。',
+    'share.linkOnlyNoBuild': 'この作品はこのデバイスに保存されていないため、まだリンクがありません。',
+    'share.linkOnlyUnavailable': 'このブラウザーではこの作品のリンクを作れません。Steem、Blurt、Arweave、IPFSのいずれかのストレージで配信すると、リンクを得られます。',
+    'share.linkOnlyTooLarge': 'この作品は大きすぎてリンクに収まりません。Steem、Blurt、Arweave、IPFSのいずれかのストレージで配信すると、リンクを得られます。',
+    'share.savePicture': '画像を保存',
+    'share.pictureCaption': 'ForkBuildでリミックスしよう',
+    'share.pictureDrawing': '画像を描いています…',
+    'share.pictureFailed': 'このブラウザーでは画像を描けませんでした。',
 
     // Storing on Steem (application/steem/SteemContentUploadProgressText.js).
     'steemUpload.describing': 'Steemに保存中: 作品の画像を追加しています。Steem Keychainで画像への署名を承認してください。',

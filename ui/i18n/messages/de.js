@@ -58,7 +58,7 @@ export default Object.freeze({
 
     // Die tägliche Besucherzählung auf der Seite „Ihre Daten“ (ui/components/VisitorCountSetting.js).
     'visitorCount.title': 'Tägliche Besucherzählung',
-    'visitorCount.intro': 'Einmal am Tag teilt ForkBuild GoatCounter mit, dass ein weiterer Browser es geöffnet hat, damit seine Entwickler ungefähr wissen, wie viele Menschen es nutzen. Die Anfrage nennt keine Seite, kein Bauwerk und keine Person, setzt kein Cookie, und GoatCounter speichert nur Summen.',
+    'visitorCount.intro': 'Einmal am Tag teilt ForkBuild GoatCounter mit, dass ein weiterer Browser es geöffnet hat, damit seine Entwickler ungefähr wissen, wie viele Menschen es nutzen. Auf die gleiche Weise zählt es außerdem, wenn ein Link zum Teilen kopiert oder geteilt wird, wenn ein geteilter Link geöffnet wird und wenn ein darüber geöffnetes Bauwerk in den Editor kopiert wird. Jede Anfrage ist ein fester Pfad, der keine Seite, kein Bauwerk und keine Person nennt, sie setzt kein Cookie, und GoatCounter speichert nur Summen.',
     'visitorCount.label': 'Diesen Browser mitzählen',
     'visitorCount.browserAsksNotToTrack': 'Dieser Browser bittet Websites, ihn nicht zu verfolgen (Global Privacy Control oder Do Not Track), daher wird er nie gezählt.',
     'visitorCount.details': 'Die Summen kann jeder im {dashboard} sehen. Was wann gesendet wird, beschreibt {privacy}.',
@@ -132,6 +132,8 @@ export default Object.freeze({
     'publicationLink.label.arweave': 'Arweave-Transaktion {id}',
     'publicationLink.label.ipfs': 'IPFS-Inhalt {cid}',
     'publicationLink.label.blurt': '@{author}/{permlink}',
+    'publicationLink.label.link': 'das geteilte Bauwerk',
+    'publicationLink.damaged': 'Dieser Link ist beschädigt oder abgeschnitten. Bitten Sie erneut darum und kopieren Sie den ganzen Link.',
     'publicationLink.invalid': 'Dieser Link verweist auf keine Geteilte Welt, die ForkBuild öffnen kann.',
     'publicationLink.notASteemPost': 'Dieser Link verweist auf keinen Steem-Beitrag.',
     'publicationLink.noReader.steem': 'Lesen von Steem ist in diesem Browser nicht verfügbar',
@@ -792,7 +794,7 @@ export default Object.freeze({
     'distribution.publicationFailed': 'Das Verteilen des Signierten Anspruchs konnte nicht abgeschlossen werden.',
     'distribution.snapshotFailed': 'Das Verteilen des Snapshots konnte nicht abgeschlossen werden.',
 
-    // Sharing a distributed Publication (ui/components/PublicationShareLink.js, application/publication/PublicationShareLink.js).
+    // Sharing a Publication (ui/components/PublicationShareLink.js, application/publication/PublicationShareLink.js).
     'share.share': 'Teilen …',
     'share.copy': 'Link kopieren',
     'share.linkLabel': 'Link zum Teilen',
@@ -805,6 +807,15 @@ export default Object.freeze({
     'share.text': '{title}, gebaut mit ForkBuild',
     'share.arweaveNote': 'Auf Arweave gespeichert: Direkt nach dem Verteilen kann es einige Minuten dauern, bis sich der Link öffnen lässt.',
     'share.ipfsNodeNote': 'Auf Ihrem eigenen IPFS-Knoten gespeichert: Freunde können den Link nur öffnen, solange Ihr Knoten online und erreichbar ist. Entferntes Pinning oder Arweave hält ihn verfügbar.',
+    'share.linkOnlyHint': 'Jeder kann diesen Link auf jedem Gerät öffnen, um das Bauwerk in 3D zu sehen und eine eigene Kopie davon zu machen. Das Bauwerk steckt im Link selbst, deshalb muss vorher nichts verteilt werden.',
+    'share.linkOnlyUnsigned': 'Diese Geteilte Welt ist nicht signiert, daher würde sich ein Link zu ihr nicht öffnen. Melden Sie sich an und veröffentlichen Sie sie erneut, um einen Link zu erhalten.',
+    'share.linkOnlyNoBuild': 'Dieses Bauwerk ist nicht auf diesem Gerät gespeichert, daher gibt es noch keinen Link dafür.',
+    'share.linkOnlyUnavailable': 'Dieser Browser kann keinen Link für dieses Bauwerk erstellen. Verteilen Sie es mit Steem-, Blurt-, Arweave- oder IPFS-Speicher, um einen zu erhalten.',
+    'share.linkOnlyTooLarge': 'Dieses Bauwerk ist zu groß für einen Link. Verteilen Sie es mit Steem-, Blurt-, Arweave- oder IPFS-Speicher, um einen Link zu erhalten.',
+    'share.savePicture': 'Bild speichern',
+    'share.pictureCaption': 'Eigene Version auf ForkBuild bauen',
+    'share.pictureDrawing': 'Das Bild wird gezeichnet …',
+    'share.pictureFailed': 'Das Bild konnte in diesem Browser nicht gezeichnet werden.',
 
     // Storing on Steem (application/steem/SteemContentUploadProgressText.js).
     'steemUpload.describing': 'Speichern auf Steem: Ein Bild des Bauwerks wird hinzugefügt. Bestätigen Sie das Signieren des Bildes in Steem Keychain.',

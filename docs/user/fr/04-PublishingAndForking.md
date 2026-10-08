@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1f52c96ba8857c6b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e2f44cb736080f44 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -38,13 +38,51 @@ ait toujours un endroit où emmener les gens — voir
 > **Aucune distribution enregistrée sur cet appareil**. Sauvegardez-la
 > dans [Vos données](13-YourData.md) pour en garder une copie en
 > attendant.
-> Publier n’envoie jamais rien nulle part de soi-même. Deux étapes
+> Publier n’envoie jamais rien nulle part de soi-même. Un
+> [lien](#partager-un-lien) que vous copiez apporte la construction à qui
+> vous le donnez. Deux étapes
 > distinctes et facultatives le font : **Distribuer**, décrite ci-dessous,
 > envoie la publication sur Arweave ou IPFS et l’annonce sur Nostr ou
 > Arweave pour que d’autres puissent la trouver sans être connectés à
 > vous ; et
 > [**Partager avec les pairs**](#partager-avec-les-pairs-connectés) la
 > propose aux personnes auxquelles vous êtes connecté.
+
+## Partager un lien
+
+Dès que **Publier** réussit, l’avis de l’Éditeur affiche aussi
+**Partager…** (là où votre appareil a un menu de partage), **Copier le
+lien** et **Enregistrer l’image**, avec le lien en dessous. Les mêmes
+boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
+
+- **La construction voyage dans le lien.** Rien n’a besoin d’être distribué
+  d’abord, et aucun portefeuille, compte ni serveur n’intervient : le lien
+  porte votre Monde partagé signé et la construction elle-même. Quiconque
+  l’ouvre, sur n’importe quel appareil, arrive dans la Vue du monde sur
+  votre construction, et **Modifier une copie** la fait sienne. ForkBuild
+  vérifie la signature, et que la construction lui correspond, avant de
+  montrer quoi que ce soit ; un lien modifié ou tronqué le signale.
+- **Il faut une signature.** Publiez en étant connecté ; une création
+  publiée sans être connecté n’obtient pas de lien.
+- **Taille.** Une construction d’environ 500 briques au plus y tient ; le
+  lien du château prêt à l’emploi fait environ 3 700 caractères. Le
+  courriel et la plupart des messageries et des réseaux sociaux gardent un
+  lien aussi long, mais Discord et Telegram limitent la longueur d’un
+  message. Une construction plus grande indique qu’elle est trop grande pour
+  un lien : distribuez-la pour en obtenir un.
+- **Une fois distribuée**, les boutons proposent le lien plus court qui
+  indique où le Monde partagé est stocké, et qui apporte aussi votre
+  placement (voir [Distribution](Distribution.md)). Un lien qui contient sa
+  construction ne contient pas votre placement, la Vue du monde place donc
+  la construction là où elle met celles qui n’en ont pas.
+- **Enregistrer l’image** télécharge un PNG de 1200 × 630 de la
+  construction, avec son titre et « Faites-en votre version sur
+  ForkBuild » en bas, à publier là où un lien seul n’affiche aucune
+  image.
+
+Copier ou partager un lien, et en ouvrir un, sont comptés anonymement,
+comme la visite quotidienne ; voir
+[Comptage quotidien des visiteurs](13-YourData.md#comptage-quotidien-des-visiteurs).
 
 ## Distribuer directement depuis l’Éditeur
 

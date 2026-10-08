@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 01cc1df409866b2e -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 268072de3b1fe04f -->
 # 13 — Data Anda: mencadangkan dan memulihkan
 
 <!-- languages -->
@@ -191,9 +191,12 @@ hanya selama mereka mau.
 Di bagian bawah halaman, **Hitungan pengunjung harian** mengatur satu-satunya
 hal yang dikirim ForkBuild tanpa dibutuhkan fitur apa pun. Sekali sehari,
 situs resmi memberi tahu GoatCounter bahwa satu browser lagi membukanya.
-Permintaan itu tidak menyebut halaman, bangunan, atau orang apa pun dan
-tidak memasang cookie, dan siapa pun dapat melihat jumlah totalnya di dasbor
-publik. Hapus centang **Hitung browser ini** untuk menghentikannya; pilihan
+Dengan cara yang sama, situs itu juga menghitung saat tautan ke sebuah
+bangunan disalin atau dibagikan, saat tautan yang dibagikan dibuka, dan saat
+bangunan yang dibuka dari tautan itu disalin ke Editor. Setiap permintaan
+adalah jalur tetap yang tidak menyebut halaman, bangunan, atau orang apa pun
+dan tidak memasang cookie, dan siapa pun dapat melihat jumlah totalnya di
+dasbor publik. Hapus centang **Hitung browser ini** untuk menghentikannya; pilihan
 itu langsung disimpan, hanya di browser ini. Browser yang mengirim Global
 Privacy Control atau Do Not Track tidak pernah dihitung, dan sakelarnya
 menyebutkan hal itu. Lihat [Privasi](Privacy.md#hitungan-pengunjung) untuk

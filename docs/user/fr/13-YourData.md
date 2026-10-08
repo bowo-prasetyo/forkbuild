@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 01cc1df409866b2e -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 268072de3b1fe04f -->
 # 13 — Vos données : sauvegarder et restaurer
 
 <!-- languages -->
@@ -196,9 +196,12 @@ gardent une copie qu’aussi longtemps qu’ils le choisissent.
 En bas de la page, **Comptage quotidien des visiteurs** contrôle la seule
 chose que ForkBuild envoie sans qu’aucune fonction en ait besoin. Une fois
 par jour, le site officiel signale à GoatCounter qu’un navigateur de plus
-l’a ouvert. La requête ne nomme aucune page, aucune construction ni aucune
-personne et ne dépose aucun cookie, et tout le monde peut consulter les
-totaux sur le tableau de bord public. Décochez **Compter ce navigateur**
+l’a ouvert. Il compte aussi, de la même façon, quand un lien vers une
+construction est copié ou partagé, quand un lien partagé est ouvert et quand
+une construction ouverte depuis un tel lien est copiée dans l’Éditeur.
+Chaque requête est un chemin fixe qui ne nomme aucune page, aucune
+construction ni aucune personne et ne dépose aucun cookie, et tout le monde
+peut consulter les totaux sur le tableau de bord public. Décochez **Compter ce navigateur**
 pour l’arrêter ; le choix est enregistré aussitôt, dans ce navigateur
 uniquement. Un navigateur qui envoie Global Privacy Control ou Do Not Track
 n’est jamais compté, et l’interrupteur l’indique. Voir

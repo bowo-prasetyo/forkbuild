@@ -4559,3 +4559,49 @@ document the moment it is opened.
   checks (geometry, serialization, rendering, fork, copy) now run over the showcase builds too.
 - Not done: walking through a ready-made build in World View. World View shows Publications, which are signed and
   placed; a built-in build reaches it once someone opens a copy, publishes it and places it.
+
+## A link that carries its build, Save picture, and counting the share funnel (unnumbered, 2026-10-08)
+
+**A build can now be shared the moment it is published: Share… and Copy link offer a link that carries the signed
+Shared World and the build itself, so no wallet, account, network or server is needed. Save picture downloads a
+1200 × 630 PNG of the build to post beside it. Three fixed counter paths record a share link made, a shared link
+opened, and a build opened from one copied into the Editor.** Until now a link existed only once a build was
+distributed to Arweave, IPFS, Steem or Blurt, each needing a wallet, a Keychain account or a node of one's own, so
+for most people the "fork it, share it" loop ended at Publish. Links shared by builders are the one way in that
+costs nothing, and the counter could not tell whether any were made or opened.
+
+- `application/publication/sharing/PublicationLinkPayload.js`: the payload, `"1"` + base64url(deflate-raw(JSON
+  `{ claim, build }`)), made and read with `CompressionStream`; at most 12,000 characters offered (the showcase
+  castle's 127 bricks take about 3,700, so about 500 bricks fit), at most 4 MB unpacked when read. docs/Protocol.md,
+  "Link-only shares".
+- `core/ForkBuildAppLinks.js`: `linkOnlyPublicationViewPath()` / `linkOnlyPublicationViewUrl()`, route
+  `#/s/:payload` (ui/router/index.js) on the same `PublicationLinkView`.
+- `application/publication/OpenPublicationLink.js`: `openPublicationLink({ linkOnly })` takes the claim and build
+  from the link, verifies the claim with the World discovery verifier, keeps the build only if it matches the
+  claim's hash, and admits it as before; nothing is read from a network and no placement is searched for.
+- `application/publication/PublicationShareLink.js`: `prepareLinkOnlyShare()` reads the build from the local content
+  store and makes the link, or says why not (unsigned, not on this device, too large); `describePublicationShare()`
+  offers the network link once distributed, as the shorter one, and the link-only one before. The component
+  (`ui/components/PublicationShareLink.js`) takes the Publication, adds **Save picture**, and is now in the Editor's
+  post-publish notice as well as World View's **My Shared World**.
+- `renderer/BuildPicture.js`: the build drawn by `DocumentThumbnailRenderer` at 1200 × 630, with a strip naming it
+  and "Remix it on ForkBuild"; the WebGL context is released before it returns.
+- `core/VisitorCount.js` `FunnelEvent` and `application/settings/FunnelEventCounter.js`: `/e/share-link`,
+  `/e/opened-shared-link` and `/e/remix-from-link`, each a fixed path sent like the daily count, under its setting,
+  Global Privacy Control, Do Not Track and the official-site rule. Which builds were opened from a link is kept in
+  the page's memory only. `ui/counterHit.js` sends both kinds of hit. docs/Privacy.md, the Your Data page's
+  message and guide 13 say so, in every language.
+- Messages in every language: `share.linkOnly*`, `share.savePicture`, `share.picture*`,
+  `publicationLink.label.link`, `publicationLink.damaged`, and `visitorCount.intro`.
+- Docs: guide 04 has a new "Sharing a link" section, in every language; docs/Privacy.md (and its translations),
+  docs/Protocol.md, docs/Architecture.md and docs/Deployment.md.
+- Tests: `tests/LinkOnlyShare.test.js` (a published castle shares and opens with no network; a changed claim or a
+  swapped build is refused; damaged, foreign-version and oversized payloads decode to nothing; what Share offers
+  when), `tests/FunnelEventCounter.test.js`, `tests/PublicationShareLinkBrowser.test.js` (the component in real Vue:
+  the link, Copy link counted, Save picture's PNG), and `tests/run-bundle.mjs`, which now opens a link-only share in
+  the published build and lands in World View on it. `tests/ForkFailureUXConvergenceAudit.test.js` gives the
+  extracted fork handler its new collaborator.
+- Not done: link previews with a picture for each build (a hash-routed static site can't serve them; the next step
+  is the rendezvous worker serving `/b/<id>`), a turntable GIF, and glTF/STL export. Discord (2,000 characters a
+  message) and Telegram (4,096) refuse a link as long as the castle's; there a distributed build's network link is
+  the one to paste.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 4772aa7e86875888 -->
+<!-- translation-of: docs/Privacy.md source-hash: 225ed1a7731c5549 -->
 # Confidentialité
 
 <!-- languages -->
@@ -7,9 +7,10 @@
 
 ForkBuild n’a pas de comptes et ne vous suit pas. Il stocke votre travail
 dans votre propre navigateur et ne communique avec d’autres ordinateurs que
-pour les fonctions qui en ont besoin, plus un comptage anonyme des visiteurs
-une fois par jour, afin que ses créateurs sachent à peu près combien de
-personnes l’utilisent (voir « Comptage des visiteurs » plus bas, et
+pour les fonctions qui en ont besoin, plus un comptage anonyme des
+visiteurs, une fois par jour et quand un lien de partage est utilisé, afin
+que ses créateurs sachent à peu près combien de personnes l’utilisent et
+partagent des constructions (voir « Comptage des visiteurs » plus bas, et
 comment le désactiver). Cette page indique ce qu’il stocke, et chaque
 serveur qu’il peut contacter et quand.
 
@@ -129,7 +130,23 @@ envoie.
 - **Tout le monde peut consulter les totaux** sur le tableau de bord
   public, <https://forkbuild.goatcounter.com/>.
 
-Il n’est jamais envoyé :
+Le même compteur est aussi informé de trois moments du partage d’une
+construction, chacun par une requête d’image de plus du même genre, sous
+son propre chemin fixe :
+
+- `/e/share-link` : un lien vers une construction a été copié ou partagé
+  avec **Copier le lien** ou **Partager…** ;
+- `/e/opened-shared-link` : un lien partagé a ouvert une construction ;
+- `/e/remix-from-link` : une construction ouverte depuis un lien partagé a
+  été copiée dans l’Éditeur (au plus une fois par construction chaque fois
+  que l’application est ouverte).
+
+Chacune n’envoie que son chemin et le nombre aléatoire : jamais le lien, la
+construction, son titre ni qui l’a faite. Les constructions ouvertes depuis
+un lien ne sont retenues que dans la mémoire de la page ouverte, et
+oubliées à sa fermeture.
+
+Aucune de ces requêtes n’est jamais envoyée :
 
 - quand votre navigateur envoie Global Privacy Control ou Do Not Track ;
 - quand vous désactivez **Vos données → Comptage quotidien des visiteurs →
@@ -139,7 +156,9 @@ Il n’est jamais envoyé :
   compris `localhost`.
 
 Le code se trouve dans `core/VisitorCount.js`,
-`application/settings/CountDailyVisit.js` et `ui/start.js`.
+`application/settings/CountDailyVisit.js`,
+`application/settings/FunnelEventCounter.js`, `ui/counterHit.js` et
+`ui/start.js`.
 
 ## Les serveurs que ForkBuild contacte
 
@@ -159,6 +178,7 @@ demandez.
 | Quand | Serveur (par défaut) | Ce qu’il reçoit |
 | --- | --- | --- |
 | L’application s’ouvre sur le site officiel, au plus une fois par jour (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe, sans référent et sans cookie |
+| Sur le site officiel, vous copiez ou partagez un lien vers une construction, ouvrez un lien partagé, ou copiez dans l’Éditeur une construction ouverte depuis un tel lien (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe qui indique lequel des trois moments c’était, sans référent et sans cookie |
 | Vous vous rendez découvrable, ou cherchez quelqu’un, dans **Pairs** | le serveur de rendez-vous (`forkbuild-rendezvous.prazjp.workers.dev`) | la clé publique de votre identité et une offre de connexion, conservées au plus 15 minutes ; l’identité que vous recherchez ; quand vous vous connectez à quelqu’un que vous avez trouvé, votre réponse de connexion (elle liste vos adresses réseau), que seule cette personne peut récupérer |
 | Vous rejoignez un salon public, ou y jetez un œil | le même serveur de rendez-vous | votre carte de salon signée (clé publique, nom affiché, quel salon), conservée au plus 15 minutes et renouvelée tant que vous restez ; le salon que vous consultez |
 | Une connexion entre pairs démarre | des serveurs STUN (`stun.l.google.com`) | rien d’autre qu’une demande de votre adresse IP publique |
@@ -180,6 +200,15 @@ demandez.
 
 ForkBuild n’envoie jamais votre clé privée, votre phrase secrète ni vos
 documents enregistrés à aucun de ces serveurs.
+
+**Un lien qui contient sa construction** (`#/s/…`, créé par **Copier le
+lien** ou **Partager…** avant qu’une construction soit distribuée) porte
+votre Monde partagé signé et la construction elle-même après le `#`, une
+partie de l’adresse que les navigateurs n’envoient jamais à un serveur. Le
+créer ne contacte rien, et l’ouvrir ne contacte que le site qui sert
+l’application. Quiconque a le lien peut voir la construction, son titre, sa
+description et le nom de son auteur, ainsi que la clé publique de votre
+identité, comme pour tout Monde partagé que vous distribuez.
 
 **Les relais ne sont utilisés que lorsque c’est nécessaire.** Une
 connexion essaie toujours d’abord un chemin direct, puis un chemin trouvé

@@ -166,9 +166,11 @@ choose to.
 
 At the bottom of the page, **Daily visitor count** controls the one thing
 ForkBuild sends that no feature needs. Once a day, the official site tells
-GoatCounter that one more browser opened it. The request names no page,
-build or person and sets no cookie, and anyone can see the totals on the
-public dashboard. Untick **Count this browser** to stop it; the choice is
+GoatCounter that one more browser opened it. It also counts, the same way,
+when a link to a build is copied or shared, when a shared link is opened,
+and when a build opened from one is copied into the Editor. Each request is
+a fixed path that names no page, build or person and sets no cookie, and
+anyone can see the totals on the public dashboard. Untick **Count this browser** to stop it; the choice is
 saved at once, in this browser only. A browser that sends Global Privacy
 Control or Do Not Track is never counted, and the switch says so. See
 [Privacy](../Privacy.md#visitor-count) for exactly what is sent.

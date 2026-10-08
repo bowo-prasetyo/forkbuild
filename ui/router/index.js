@@ -81,6 +81,9 @@ const routes = [
     { path: '/view/blurt/:author/:permlink', name: 'blurt-publication-link', component: PublicationLinkView },
     { path: '/view/ar/:id', name: 'arweave-publication-link', component: PublicationLinkView },
     { path: '/view/ipfs/:cid', name: 'ipfs-publication-link', component: PublicationLinkView },
+    // A link-only share: the Signed Claim and the build travel in the link
+    // itself (application/publication/sharing/PublicationLinkPayload.js).
+    { path: '/s/:payload', name: 'link-only-publication-link', component: PublicationLinkView },
     // 0.9.15 — Mount Live World View. Superseded as a top-nav, user-
     // facing destination by 0.9.17 above (`WorldEncounterCanvas` now
     // lives inside `/world/:documentId` itself) — kept registered,

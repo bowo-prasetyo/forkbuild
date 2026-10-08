@@ -256,6 +256,33 @@ A snapshot is loaded only after its bytes match `contentHash`. A
 DiscoveryProvider answers `list()`, `findById()`, `findByAuthor()`,
 `findByParentId()` and `findByDocumentId()` with Publications.
 
+### Link-only shares
+
+A link can carry a Publication and its snapshot together, so it can be
+shared before, or without, distributing it
+(application/publication/sharing/PublicationLinkPayload.js):
+
+    https://bowo-prasetyo.github.io/forkbuild/#/s/<payload>
+
+    payload = "1" + base64url(deflate-raw(UTF-8(JSON)))   (no padding)
+    JSON    = { "claim": <Publication JSON, signed>, "build": "<snapshot text>" }
+
+`1` is the format version; a reader refuses any other. `build` is the
+snapshot exactly as `contentHash` covers it, as a JSON string, never
+re-serialized. A reader unpacks at most 4 MB and refuses more. The writer
+offers a link only for a signed Publication whose payload is at most 12,000
+characters (about 500 bricks). The route is in the fragment, which browsers
+never send to a server.
+
+Opening one (`openPublicationLink({ linkOnly })`) is the shared-link path
+below with no network: the claim is verified with the World discovery
+verifier, the build is kept only if it matches the claim's `contentHash`
+(StoreSnapshotContentUseCase), and the Publication is admitted to the
+discovery provider and the admission log. No publisher placement travels in
+the link, so none is searched for: the build stands at its deterministic
+grid position. When the Publication has been distributed, Share offers the
+network link instead, as the shorter one.
+
 ## Signatures
 
 Every signed object is signed over a canonical envelope built in fixed
@@ -1245,7 +1272,8 @@ ForkBuild's on their device:
 The view then opens `/world/<documentId>`, and World View loads it like any discovered Publication, at its placement,
 or at its deterministic grid position when it has none.
 
-Sharing. The same link is what the app offers to share (`core/ForkBuildAppLinks.js` `publicationShareUrl()`,
+Sharing. The same link is what the app offers to share once the Publication is distributed (before that, a
+link-only share; see "Link-only shares") (`core/ForkBuildAppLinks.js` `publicationShareUrl()`,
 `application/publication/PublicationShareLink.js`, `ui/components/PublicationShareLink.js`): it is derived from a
 Publication's distribution record (`material.uri`, a `steem://`, `ar://` or `ipfs://` locator; `core/ForkBuildAppLinks.js`
 `publicationViewUrl()` makes the link and `publicationClaimLocatorFromViewPath()` reads it back), so it needs no

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 4772aa7e86875888 -->
+<!-- translation-of: docs/Privacy.md source-hash: 225ed1a7731c5549 -->
 # Privacidad
 
 <!-- languages -->
@@ -7,9 +7,10 @@
 
 ForkBuild no tiene cuentas y no lo rastrea. Guarda su trabajo en su propio
 navegador y habla con otras computadoras solo para las funciones que lo
-necesitan, además de un recuento anónimo de visitantes una vez al día para
-que sus creadores sepan aproximadamente cuántas personas lo usan (consulte
-«Recuento de visitantes» más abajo, y cómo desactivarlo). Esta página
+necesitan, además de un recuento anónimo de visitantes, una vez al día y
+cuando se usa un enlace para compartir, para que sus creadores sepan
+aproximadamente cuántas personas lo usan y comparten construcciones
+(consulte «Recuento de visitantes» más abajo, y cómo desactivarlo). Esta página
 muestra lo que guarda, y cada servidor con el que puede comunicarse y
 cuándo.
 
@@ -124,7 +125,23 @@ Esa solicitud es todo lo que envía:
 - **Cualquiera puede ver los totales** en el panel público,
   <https://forkbuild.goatcounter.com/>.
 
-Nunca se envía:
+El mismo contador también se entera de tres momentos al compartir una
+construcción, cada uno como una solicitud de imagen más del mismo tipo, con
+su propia ruta fija:
+
+- `/e/share-link`: se copió o se compartió un enlace a una construcción con
+  **Copiar enlace** o **Compartir…**;
+- `/e/opened-shared-link`: un enlace compartido abrió una construcción;
+- `/e/remix-from-link`: una construcción abierta desde un enlace compartido
+  se copió en el Editor (como mucho una vez por construcción cada vez que la
+  aplicación está abierta).
+
+Cada una envía solo su ruta y el número aleatorio: nunca el enlace, la
+construcción, su título ni quién la hizo. Qué construcciones se abrieron
+desde un enlace solo se guarda en la memoria de la página abierta, y se
+olvida cuando se cierra.
+
+Ninguna de estas solicitudes se envía nunca:
 
 - cuando su navegador envía Global Privacy Control o Do Not Track;
 - cuando desactiva **Sus datos → Recuento diario de visitantes → Contar
@@ -133,7 +150,9 @@ Nunca se envía:
   sitio oficial, incluido `localhost`.
 
 El código está en `core/VisitorCount.js`,
-`application/settings/CountDailyVisit.js` y `ui/start.js`.
+`application/settings/CountDailyVisit.js`,
+`application/settings/FunnelEventCounter.js`, `ui/counterHit.js` y
+`ui/start.js`.
 
 ## Servidores con los que se comunica ForkBuild
 
@@ -151,6 +170,7 @@ dirección IP y lo que usted le pide.
 | Cuándo | Servidor (predeterminado) | Qué recibe |
 | --- | --- | --- |
 | La aplicación se abre en el sitio oficial, como mucho una vez al día (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con una ruta fija, sin referente y sin cookie |
+| En el sitio oficial, copia o comparte un enlace a una construcción, abre un enlace compartido o copia en el Editor una construcción abierta desde uno (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con una ruta fija que indica cuál de los tres momentos fue, sin referente y sin cookie |
 | Se vuelve descubrible, o busca a alguien, en **Pares** | el servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | la clave pública de su identidad y una oferta de conexión, que se guardan como máximo 15 minutos; la identidad que busca; cuando se conecta con alguien que encontró, su respuesta de conexión (que muestra sus direcciones de red), que solo esa persona puede recoger |
 | Se une a una sala pública, o mira una | el mismo servidor de encuentro | su tarjeta de sala firmada (clave pública, nombre visible, qué sala), que se guarda como máximo 15 minutos y se renueva mientras se queda; qué sala mira |
 | Se inicia una conexión entre pares | servidores STUN (`stun.l.google.com`) | nada más que una solicitud de su dirección IP pública |
@@ -172,6 +192,15 @@ dirección IP y lo que usted le pide.
 
 ForkBuild nunca envía su clave privada, su frase de contraseña ni sus
 documentos guardados a ninguno de estos servidores.
+
+**Un enlace que lleva su construcción** (`#/s/…`, creado con **Copiar
+enlace** o **Compartir…** antes de distribuir una construcción) contiene su
+Mundo compartido firmado y la construcción misma después del `#`, una parte
+de la dirección que los navegadores nunca envían a un servidor. Crearlo no
+contacta nada, y abrirlo solo contacta el sitio que sirve la aplicación.
+Quien tenga el enlace puede ver la construcción, su título, su descripción y
+el nombre del autor, y la clave pública de su identidad, como con cualquier
+Mundo compartido que distribuya.
 
 **Los relays se usan solo cuando hacen falta.** Una conexión siempre
 intenta primero un camino directo, luego uno encontrado mediante STUN, y

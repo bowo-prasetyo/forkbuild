@@ -57,6 +57,8 @@ import { composeWorldDiscovery } from './main/composeWorldDiscovery.js';
 import { composeInjectedWalletServices } from './main/composeInjectedWalletServices.js';
 import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
+import { FunnelEventCounter } from '../application/settings/FunnelEventCounter.js';
+import { browserPrivacySignals, sendCounterHit } from './counterHit.js';
 import { verifyClaimedBuildPublication } from '../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
 import { RepositoryNetworkDiscovery } from '../application/publication/RepositoryNetworkDiscovery.js';
 import { NetworkPublicationLocatorStore } from '../application/publication/NetworkPublicationLocatorStore.js';
@@ -410,7 +412,16 @@ app.provide('roleProviderPreferenceStore', roleProviderPreferenceStore);
 // Read once by ui/boot.js before the app loads; the Language page saves to it.
 app.provide('languageSettingsStore', new LanguageSettingsStore({ storageProvider: new LocalStorageProvider() }));
 // Counted once a day by ui/start.js; Your Data turns it off.
-app.provide('visitorCountSettingsStore', new VisitorCountSettingsStore({ storageProvider: new LocalStorageProvider() }));
+const visitorCountSettingsStore = new VisitorCountSettingsStore({ storageProvider: new LocalStorageProvider() });
+app.provide('visitorCountSettingsStore', visitorCountSettingsStore);
+// A share link made, a shared link opened, a build from one copied: counted
+// under the same setting (docs/Privacy.md, "Visitor count").
+app.provide('funnelEventCounter', new FunnelEventCounter({
+    settingsStore: visitorCountSettingsStore,
+    origin: window.location.origin,
+    privacySignals: browserPrivacySignals(),
+    sendHit: sendCounterHit
+}));
 app.provide('setRoleProviderPreferenceUseCase', setRoleProviderPreferenceUseCase);
 // Only a seed for each Announcement/Discovery picker's own selection, never
 // read again after the picker mounts.
@@ -800,16 +811,18 @@ defineServiceGroup('distribution', async () => {
 
     // A link to a Publication (ui/views/PublicationLinkView.js: the "see
     // it in 3D" link on a Steem or Blurt post, or one shared with Share): the Signed Claim
-    // is read from Steem, Blurt, Arweave or IPFS and verified, its build found by content
-    // hash, and the Publication admitted as World discovery admits one.
+    // is read from Steem, Blurt, Arweave or IPFS, or carried in a link-only share, and
+    // verified, its build found by content hash, and the Publication admitted as World
+    // discovery admits one.
     // The publisher's signed placement for a linked Publication, kept where World
     // View reads placements, so the build stands where its publisher put it.
     const linkedPublisherPlacement = createLinkedPublisherPlacement({
         storageProvider: new LocalStorageProvider(),
         findPublicationById: (id) => decentralizedPublicationDiscoveryProvider.findById(id) || new LocalDiscoveryProvider(new LocalStorageProvider()).findById(id)
     });
-    app.provide('openPublicationLink', ({ locator }) => openPublicationLink({
+    app.provide('openPublicationLink', ({ locator = null, linkOnly = null }) => openPublicationLink({
         locator,
+        linkOnly,
         retrieveClaim: retrievePublicationClaim,
         verifier: worldEncounterMaterialVerifier,
         hasLocalContent: async (reference) => publicationContentStore.has(reference),

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 4772aa7e86875888 -->
+<!-- translation-of: docs/Privacy.md source-hash: 225ed1a7731c5549 -->
 # Datenschutz
 
 <!-- languages -->
@@ -7,10 +7,10 @@
 
 ForkBuild hat keine Konten und verfolgt Sie nicht. Es speichert Ihre
 Arbeit in Ihrem eigenen Browser und spricht nur für die Funktionen mit
-anderen Computern, die das brauchen, dazu einmal am Tag eine anonyme
-Besucherzählung, damit seine Entwickler ungefähr wissen, wie viele Menschen
-es nutzen (siehe „Besucherzählung“ unten, auch dazu, wie Sie sie
-abschalten). Diese Seite listet auf, was es speichert, und jeden Server,
+anderen Computern, die das brauchen, dazu eine anonyme Besucherzählung,
+einmal am Tag und wenn ein Link zum Teilen benutzt wird, damit seine
+Entwickler ungefähr wissen, wie viele Menschen es nutzen und Bauwerke teilen
+(siehe „Besucherzählung“ unten, auch dazu, wie Sie sie abschalten). Diese Seite listet auf, was es speichert, und jeden Server,
 den es kontaktieren kann, und wann.
 
 ## Was auf Ihrem Gerät bleibt
@@ -129,7 +129,23 @@ setzt. Mehr sendet sie nicht:
 - **Die Summen kann jeder sehen**, im öffentlichen Dashboard unter
   <https://forkbuild.goatcounter.com/>.
 
-Sie wird nie gesendet:
+Derselbe Zähler erfährt außerdem von drei Momenten beim Teilen eines
+Bauwerks, jeweils als eine weitere Bildanfrage derselben Art, unter einem
+eigenen festen Pfad:
+
+- `/e/share-link`: ein Link zu einem Bauwerk wurde mit **Link kopieren**
+  oder **Teilen …** kopiert oder geteilt;
+- `/e/opened-shared-link`: ein geteilter Link hat ein Bauwerk geöffnet;
+- `/e/remix-from-link`: ein über einen geteilten Link geöffnetes Bauwerk
+  wurde in den Editor kopiert (höchstens einmal pro Bauwerk, solange die
+  App geöffnet ist).
+
+Jede sendet nur ihren Pfad und die Zufallszahl, nie den Link, das Bauwerk,
+seinen Titel oder wer es gemacht hat. Welche Bauwerke über einen Link
+geöffnet wurden, steht nur im Arbeitsspeicher der geöffneten Seite und ist
+vergessen, sobald sie geschlossen wird.
+
+Keine davon wird je gesendet:
 
 - wenn Ihr Browser Global Privacy Control oder Do Not Track sendet;
 - wenn Sie **Ihre Daten → Tägliche Besucherzählung → Diesen Browser
@@ -138,7 +154,9 @@ Sie wird nie gesendet:
   Website bereitgestellt wird, auch nicht von `localhost`.
 
 Der Code steht in `core/VisitorCount.js`,
-`application/settings/CountDailyVisit.js` und `ui/start.js`.
+`application/settings/CountDailyVisit.js`,
+`application/settings/FunnelEventCounter.js`, `ui/counterHit.js` und
+`ui/start.js`.
 
 ## Server, die ForkBuild kontaktiert
 
@@ -158,6 +176,7 @@ was Sie bei ihm anfragen.
 | Wann | Server (Standard) | Was er erhält |
 | --- | --- | --- |
 | Die App öffnet sich auf der offiziellen Website, höchstens einmal am Tag (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit festem Pfad, ohne Referrer und ohne Cookie |
+| Sie kopieren oder teilen auf der offiziellen Website einen Link zu einem Bauwerk, öffnen einen geteilten Link oder kopieren ein darüber geöffnetes Bauwerk in den Editor (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit festem Pfad, der nennt, welcher der drei Momente es war, ohne Referrer und ohne Cookie |
 | Sie machen sich unter **Peers** auffindbar oder suchen jemanden | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | den öffentlichen Schlüssel Ihrer Identität und ein Verbindungsangebot, höchstens 15 Minuten aufbewahrt; die Identität, die Sie suchen; wenn Sie sich mit jemandem verbinden, den Sie gefunden haben, Ihre Verbindungsantwort (sie listet Ihre Netzwerkadressen auf), die nur diese Person abholen kann |
 | Sie treten einer öffentlichen Lobby bei oder sehen in eine hinein | derselbe Rendezvous-Server | Ihre signierte Lobby-Karte (öffentlicher Schlüssel, Anzeigename, welche Lobby), höchstens 15 Minuten aufbewahrt und erneuert, solange Sie bleiben; in welche Lobby Sie hineinsehen |
 | Eine Peer-Verbindung beginnt | STUN-Server (`stun.l.google.com`) | nichts außer einer Anfrage nach Ihrer öffentlichen IP-Adresse |
@@ -179,6 +198,15 @@ was Sie bei ihm anfragen.
 
 ForkBuild sendet Ihren privaten Schlüssel, Ihre Passphrase oder Ihre
 gespeicherten Dokumente nie an einen dieser Server.
+
+**Ein Link, der sein Bauwerk enthält** (`#/s/…`, von **Link kopieren**
+oder **Teilen …** erstellt, bevor ein Bauwerk verteilt ist), trägt Ihre
+signierte Geteilte Welt und das Bauwerk selbst hinter dem `#`, einem Teil
+der Adresse, den Browser nie an einen Server senden. Ihn zu erstellen
+kontaktiert nichts, und ihn zu öffnen kontaktiert nur die Website, die die
+App ausliefert. Wer den Link hat, sieht das Bauwerk, seinen Titel, seine
+Beschreibung und den Namen des Autors sowie den öffentlichen Schlüssel Ihrer
+Identität, wie bei jeder Geteilten Welt, die Sie verteilen.
 
 **Relays werden nur bei Bedarf genutzt.** Eine Verbindung versucht immer
 zuerst einen direkten Weg, dann einen über STUN gefundenen, und weicht nur

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 4772aa7e86875888 -->
+<!-- translation-of: docs/Privacy.md source-hash: 225ed1a7731c5549 -->
 # Privasi
 
 <!-- languages -->
@@ -7,10 +7,10 @@
 
 ForkBuild tidak memiliki akun dan tidak melacak Anda. ForkBuild menyimpan
 pekerjaan Anda di browser Anda sendiri dan berkomunikasi dengan komputer
-lain hanya untuk fitur yang membutuhkannya, ditambah satu hitungan
-pengunjung anonim sehari agar pembuatnya tahu kira-kira berapa banyak orang
-yang menggunakannya (lihat "Hitungan pengunjung" di bawah, juga cara
-mematikannya). Halaman ini mencantumkan apa yang disimpannya, serta setiap
+lain hanya untuk fitur yang membutuhkannya, ditambah hitungan pengunjung
+anonim, sekali sehari dan saat tautan berbagi dipakai, agar pembuatnya tahu
+kira-kira berapa banyak orang yang menggunakannya dan membagikan bangunan
+(lihat "Hitungan pengunjung" di bawah, juga cara mematikannya). Halaman ini mencantumkan apa yang disimpannya, serta setiap
 server yang dapat dihubunginya dan kapan.
 
 ## Apa yang tetap di perangkat Anda
@@ -128,7 +128,23 @@ penghitung yang tidak memasang cookie. Hanya permintaan itu yang dikirim:
 - **Siapa pun dapat melihat jumlah totalnya** di dasbor publik,
   <https://forkbuild.goatcounter.com/>.
 
-Hitungan ini tidak pernah dikirim:
+Penghitung yang sama juga diberi tahu tentang tiga momen saat membagikan
+bangunan, masing-masing sebagai satu permintaan gambar lagi dengan jenis
+yang sama, dengan jalur tetapnya sendiri:
+
+- `/e/share-link`: tautan ke sebuah bangunan disalin atau dibagikan dengan
+  **Salin tautan** atau **Bagikan…**;
+- `/e/opened-shared-link`: tautan yang dibagikan membuka sebuah bangunan;
+- `/e/remix-from-link`: bangunan yang dibuka dari tautan yang dibagikan
+  disalin ke Editor (paling banyak sekali per bangunan setiap kali aplikasi
+  dibuka).
+
+Masing-masing hanya mengirim jalurnya dan angka acak: tidak pernah
+tautannya, bangunannya, judulnya, atau siapa pembuatnya. Bangunan mana yang
+dibuka dari tautan hanya disimpan di memori halaman yang terbuka, dan
+dilupakan saat halaman ditutup.
+
+Tak satu pun dari permintaan ini pernah dikirim:
 
 - saat browser Anda mengirim Global Privacy Control atau Do Not Track;
 - saat Anda mematikan **Data Anda → Hitungan pengunjung harian → Hitung
@@ -137,7 +153,9 @@ Hitungan ini tidak pernah dikirim:
   termasuk `localhost`.
 
 Kodenya ada di `core/VisitorCount.js`,
-`application/settings/CountDailyVisit.js`, dan `ui/start.js`.
+`application/settings/CountDailyVisit.js`,
+`application/settings/FunnelEventCounter.js`, `ui/counterHit.js`, dan
+`ui/start.js`.
 
 ## Server yang dihubungi ForkBuild
 
@@ -156,6 +174,7 @@ Anda dan apa yang Anda minta darinya.
 | Kapan | Server (bawaan) | Apa yang diterimanya |
 | --- | --- | --- |
 | Aplikasi dibuka di situs resmi, paling banyak sekali sehari (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap, tanpa perujuk dan tanpa cookie |
+| Di situs resmi, Anda menyalin atau membagikan tautan ke sebuah bangunan, membuka tautan yang dibagikan, atau menyalin bangunan yang dibuka dari tautan itu ke Editor (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut momen mana dari ketiganya, tanpa perujuk dan tanpa cookie |
 | Anda menjadikan diri dapat ditemukan, atau mencari seseorang, di **Rekan** | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | kunci publik identitas Anda dan tawaran koneksi, disimpan paling lama 15 menit; identitas yang Anda cari; saat Anda terhubung dengan seseorang yang Anda temukan, balasan koneksi Anda (berisi alamat jaringan Anda), yang hanya dapat diambil oleh orang itu |
 | Anda bergabung ke, atau melihat ke dalam, lobi publik | server rendezvous yang sama | kartu lobi Anda yang ditandatangani (kunci publik, nama tampilan, lobi mana), disimpan paling lama 15 menit dan diperbarui selama Anda tetap di sana; lobi mana yang Anda lihat |
 | Koneksi rekan dimulai | server STUN (`stun.l.google.com`) | hanya permintaan alamat IP publik Anda |
@@ -177,6 +196,15 @@ Anda dan apa yang Anda minta darinya.
 
 ForkBuild tidak pernah mengirim kunci privat, frasa sandi, atau dokumen
 tersimpan Anda ke server mana pun di atas.
+
+**Tautan yang membawa bangunannya** (`#/s/…`, dibuat dengan **Salin
+tautan** atau **Bagikan…** sebelum bangunan didistribusikan) memuat Dunia
+Bersama Anda yang bertanda tangan dan bangunan itu sendiri setelah `#`,
+bagian alamat yang tidak pernah dikirim browser ke server. Membuatnya tidak
+menghubungi apa pun, dan membukanya hanya menghubungi situs yang menyajikan
+aplikasi. Siapa pun yang memegang tautan itu dapat melihat bangunannya,
+judul, deskripsi, dan nama pembuatnya, serta kunci publik identitas Anda,
+seperti pada Dunia Bersama mana pun yang Anda distribusikan.
 
 **Relay hanya dipakai bila diperlukan.** Koneksi selalu mencoba jalur
 langsung terlebih dahulu, lalu jalur yang ditemukan melalui STUN, dan
