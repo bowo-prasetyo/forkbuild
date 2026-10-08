@@ -507,6 +507,8 @@ first click or key press, as browsers require.
 - **Export** — download the current creation as a JSON file, to keep a copy
   or move it to another device. Files use a compact format that stores
   bricks as a table.
+- **3D model** — download the creation as a 3D model for other programs
+  (see [Downloading a 3D model](#downloading-a-3d-model)).
 - **Import** — open an exported file as a new creation with its own
   identity; nothing is kept until you **Save**. Files exported by earlier
   versions still open (they are converted as they load), but ForkBuild 1.0.0
@@ -522,6 +524,29 @@ first click or key press, as browsers require.
   doesn't have (open them from Recent), skipping ones it has unchanged, and
   saving a copy beside any it has in a different version. Unsaved changes
   aren't included, so save first.
+
+## Downloading a 3D model
+
+**3D model** in the toolbar downloads what's open as a file other 3D
+programs open, made on this device (nothing is uploaded):
+
+- **glTF (.glb)** — in color. Opens in Blender, Windows 3D Viewer, game
+  engines such as Godot and Unity, and online model viewers. One ForkBuild
+  unit is one metre.
+- **For 3D printing (.stl)** — one color, in millimetres at 1:100 (a door is
+  20 mm tall, a cube 10 mm), turned Z up and standing on the print bed, so a
+  slicer (Cura, PrusaSlicer, Bambu Studio…) opens it ready to print; scale
+  it there if you want it bigger. Bricks that touch or overlap stay
+  separate pieces, which slicers join when they slice.
+- **OBJ (.obj)** — in color (as vertex colors), for older programs.
+
+Each brick keeps the exact shape and color it has in ForkBuild, and the
+structures you placed come along when they are on this device (the message
+says if any weren't). Every file names the build, its author and its
+license, and what it was remixed from: in glTF's copyright and extras, in
+the STL header, and as comments in the OBJ. A shared build's own page offers
+the same downloads when its license allows copies (see
+[What a link opens on](04-PublishingAndForking.md#what-a-link-opens-on)).
 
 ## Camera controls
 

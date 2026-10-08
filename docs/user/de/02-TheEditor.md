@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8a7a24368ab8c93 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 053e9eecd73affbf -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -560,6 +560,8 @@ Browser es verlangen.
 - **Exportieren** — die aktuelle Kreation als JSON-Datei herunterladen, um
   eine Kopie zu behalten oder sie auf ein anderes Gerät zu bringen. Die
   Dateien nutzen ein kompaktes Format, das Steine als Tabelle speichert.
+- **3D-Modell** — die Kreation als 3D-Modell für andere Programme
+  herunterladen (siehe [Ein 3D-Modell herunterladen](#ein-3d-modell-herunterladen)).
 - **Importieren** — eine exportierte Datei als neue Kreation mit eigener
   Identität öffnen; nichts wird behalten, bis Sie **Speichern**. Dateien,
   die frühere Versionen exportiert haben, lassen sich weiterhin öffnen (sie
@@ -579,6 +581,31 @@ Browser es verlangen.
   Zuletzt), überspringt unveränderte, die es hat, und speichert eine Kopie
   neben jedem, das es in einer anderen Version hat. Ungespeicherte
   Änderungen sind nicht enthalten, speichern Sie also vorher.
+
+## Ein 3D-Modell herunterladen
+
+**3D-Modell** in der Werkzeugleiste lädt das Geöffnete als Datei herunter,
+die andere 3D-Programme öffnen, erstellt auf diesem Gerät (nichts wird
+hochgeladen):
+
+- **glTF (.glb)** — in Farbe. Öffnet sich in Blender, dem 3D-Viewer von
+  Windows, Game-Engines wie Godot und Unity und Online-Modellbetrachtern.
+  Eine ForkBuild-Einheit ist ein Meter.
+- **Für den 3D-Druck (.stl)** — einfarbig, in Millimetern im Maßstab 1:100
+  (eine Tür ist 20 mm hoch, ein Würfel 10 mm), mit Z nach oben und auf dem
+  Druckbett stehend, sodass ein Slicer (Cura, PrusaSlicer, Bambu Studio …)
+  es druckfertig öffnet; skalieren Sie es dort, wenn Sie es größer wollen.
+  Steine, die sich berühren oder überlappen, bleiben eigene Teile, die
+  Slicer beim Slicen verbinden.
+- **OBJ (.obj)** — in Farbe (als Vertexfarben), für ältere Programme.
+
+Jeder Stein behält genau die Form und Farbe, die er in ForkBuild hat, und
+Ihre platzierten Strukturen kommen mit, wenn sie auf diesem Gerät sind (die
+Meldung sagt es, falls nicht). Jede Datei nennt das Bauwerk, seinen Urheber,
+seine Lizenz und wovon es ein Remix ist: im Copyright und den Extras von
+glTF, im STL-Header und als Kommentare im OBJ. Die Seite eines geteilten
+Bauwerks bietet dieselben Downloads an, wenn seine Lizenz Kopien erlaubt
+(siehe [Was ein Link öffnet](04-PublishingAndForking.md#was-ein-link-öffnet)).
 
 ## Kamerasteuerung
 

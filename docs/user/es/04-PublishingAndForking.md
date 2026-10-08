@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4bc516de273c1f79 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 28974300f39be674 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -104,7 +104,10 @@ dónde está guardada, abre la página propia de esa construcción:
   lleva al original;
 - **Recorrerla en el Mundo**, para verla en la Vista de mundo.
 
-Si la licencia de la construcción no permite copias, la página lo dice y
+Cuando la licencia permite copias, la página también ofrece **Descargarla
+como modelo 3D** (glTF, STL para impresión 3D u OBJ; consulte
+[Descargar un modelo 3D](02-TheEditor.md#descargar-un-modelo-3d)). Si la licencia de la construcción no permite
+copias, la página lo dice y
 solo ofrece recorrerla.
 
 ## Distribuir directamente desde el Editor

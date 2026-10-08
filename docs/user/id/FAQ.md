@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2cea46db0f73aa93 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: e15721b99cda6db7 -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -245,6 +245,13 @@ perangkat Anda sebagai aplikasi. Membangun, menyimpan, serta bangunan
 tersimpan dan siap pakai berfungsi tanpa internet; menemukan bangunan dan
 orang, mendistribusikan, dan obrolan memerlukan koneksi. Lihat
 [Memasang ForkBuild](01-GettingStarted.md#memasang-forkbuild).
+
+### Bisakah saya mencetak 3D bangunan saya, atau membukanya di Blender?
+
+Bisa. **Model 3D** di bilah alat Editor mengunduhnya sebagai STL untuk cetak
+3D (dalam milimeter, berdiri di alas cetak) atau sebagai glTF atau OBJ
+berwarna untuk Blender dan program lain. Lihat
+[Mengunduh model 3D](02-TheEditor.md#mengunduh-model-3d).
 
 ### Apakah saya memerlukan dompet kripto?
 

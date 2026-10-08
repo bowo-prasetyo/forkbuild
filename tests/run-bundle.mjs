@@ -119,6 +119,15 @@ async function startFromHome(browser, base) {
         await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'Castle', null, { timeout: 30_000 });
         assert(!(await page.$('.new-document-dialog')), 'New closes once a build is chosen');
 
+        // Download as a 3D model: a glTF binary named after the build.
+        await page.click('.toolbar-export-model');
+        await page.waitForSelector('.model-export-dialog', { timeout: 10_000 });
+        const [glb] = await Promise.all([page.waitForEvent('download', { timeout: 30_000 }), page.click('.model-export-option[data-format="glb"]')]);
+        assert(glb.suggestedFilename() === 'forkbuild-castle.glb', `the Editor downloads the castle as a glTF binary (${glb.suggestedFilename()})`);
+        const glbBytes = readFileSync(await glb.path());
+        assert(glbBytes.readUInt32LE(0) === 0x46546c67 && glbBytes.readUInt32LE(8) === glbBytes.length, 'a glTF 2.0 binary of the length it says');
+        assert(!(await page.$('.model-export-dialog')), 'the dialog closes once the file is made');
+
         // The Repository offers them before anything is published or found.
         await page.evaluate(() => { location.hash = '#/repository'; });
         await page.waitForSelector('.featured-builds-shelf .featured-build-card', { timeout: 60_000 });
@@ -162,6 +171,13 @@ async function openLinkOnlyShare(browser, base) {
         await page.click('.shared-build-edit-copy');
         await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'Fork of Linked castle', null, { timeout: 60_000 });
         assert(!(await page.$('.fork-failure-dialog')), 'Edit a Copy opens the visitor\'s own copy, with no failure');
+        await page.goBack();
+        await page.waitForSelector('.shared-build-model-link[data-format="stl"]', { timeout: 60_000 });
+        const [stl] = await Promise.all([page.waitForEvent('download', { timeout: 30_000 }), page.click('.shared-build-model-link[data-format="stl"]')]);
+        assert(stl.suggestedFilename() === 'forkbuild-linked-castle.stl', `a shared build downloads as an STL for printing (${stl.suggestedFilename()})`);
+        const stlBytes = readFileSync(await stl.path());
+        assert(stlBytes.toString('latin1', 0, 30).startsWith('ForkBuild model: Linked castle') && stlBytes.length === 84 + stlBytes.readUInt32LE(80) * 50,
+            'naming the build, with every triangle');
     } finally {
         await context.close();
     }
@@ -411,9 +427,9 @@ try {
     const manifest = JSON.parse(readFileSync(join(published.outdir, 'manifest.webmanifest'), 'utf8'));
     assert(manifest.icons.every((icon) => readFileSync(join(published.outdir, icon.src)).length > 0), 'the manifest and its icons are published');
     await startFromHome(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle, and the Repository lists them');
+    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle (which downloads as a 3D model), and the Repository lists them');
     await openLinkOnlyShare(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ a link that carries its build opens on it in the published build, with no network, and Edit a Copy makes the visitor a copy; it fits a phone');
+    console.log('✓ a link that carries its build opens on it in the published build, with no network, and Edit a Copy makes the visitor a copy, or it downloads as a 3D model; it fits a phone');
     assert(html.includes('<meta name="forkbuild-service-worker" content="sw.js">') && readFileSync(join(published.outdir, 'sw.js'), 'utf8').includes('forkbuild-'),
         'the published site has its service worker, and index.html names it');
     await offlineAndNotifications(browser, `http://127.0.0.1:${server.address().port}`, published.precacheFiles, published.outdir);

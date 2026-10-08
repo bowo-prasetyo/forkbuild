@@ -52,6 +52,9 @@ models").
   it was remixed from and how many times it has been remixed, and one big
   **Edit a Copy** button that needs no account. The first publish of a build
   with no license asks whether others may remix it.
+- Download a build as a 3D model: a colored glTF or OBJ for Blender, game
+  engines and model viewers, or an STL ready for a 3D printer's slicer, each
+  carrying the build's credit and license.
 - Install it as an app from the Home screen; after the first visit it opens
   with no connection, and a new version waits for a click on **Reload**.
 - Opt-in notifications on your device, while ForkBuild is open in the

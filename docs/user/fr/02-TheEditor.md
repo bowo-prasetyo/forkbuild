@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8a7a24368ab8c93 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 053e9eecd73affbf -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -570,6 +570,8 @@ clic ou appui sur une touche, comme l’exigent les navigateurs.
   JSON, pour en garder une copie ou la déplacer vers un autre appareil.
   Les fichiers utilisent un format compact qui stocke les briques sous
   forme de tableau.
+- **Modèle 3D** — télécharger la création comme modèle 3D pour d’autres
+  logiciels (voir [Télécharger un modèle 3D](#télécharger-un-modèle-3d)).
 - **Importer** — ouvrir un fichier exporté comme une nouvelle création
   avec sa propre identité ; rien n’est conservé tant que vous
   n’**Enregistrez** pas. Les fichiers exportés par des versions
@@ -590,6 +592,33 @@ clic ou appui sur une touche, comme l’exigent les navigateurs.
   enregistrant une copie à côté de ceux qu’il a dans une autre version.
   Les modifications non enregistrées ne sont pas incluses, alors
   enregistrez d’abord.
+
+## Télécharger un modèle 3D
+
+**Modèle 3D** dans la barre d’outils télécharge ce qui est ouvert sous
+forme de fichier que d’autres logiciels 3D ouvrent, créé sur cet appareil
+(rien n’est envoyé) :
+
+- **glTF (.glb)** — en couleur. S’ouvre dans Blender, la Visionneuse 3D de
+  Windows, des moteurs de jeu comme Godot et Unity, et les visionneuses en
+  ligne. Une unité ForkBuild vaut un mètre.
+- **Pour l’impression 3D (.stl)** — d’une seule couleur, en millimètres à
+  l’échelle 1:100 (une porte mesure 20 mm, un cube 10 mm), Z vers le haut et
+  posé sur le plateau, pour qu’un trancheur (Cura, PrusaSlicer, Bambu
+  Studio…) l’ouvre prêt à imprimer ; agrandissez-le là si vous voulez. Les
+  briques qui se touchent ou se chevauchent restent des pièces séparées,
+  que les trancheurs fusionnent au tranchage.
+- **OBJ (.obj)** — en couleur (couleurs de sommets), pour les logiciels plus
+  anciens.
+
+Chaque brique garde exactement la forme et la couleur qu’elle a dans
+ForkBuild, et les structures placées sont incluses si elles sont sur cet
+appareil (le message le signale sinon). Chaque fichier nomme la
+construction, son auteur, sa licence et ce dont elle est un remix : dans le
+copyright et les extras glTF, dans l’en-tête STL et en commentaires dans
+l’OBJ. La page d’une construction partagée propose les mêmes
+téléchargements quand sa licence autorise les copies (voir
+[Ce qu’ouvre un lien](04-PublishingAndForking.md#ce-quouvre-un-lien)).
 
 ## Commandes de la caméra
 

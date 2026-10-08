@@ -116,7 +116,7 @@ export default {
     // only), EditorView owns JSON.parse and everything after it. Toolbar
     // never calls editorSession.importDocument() itself.
     // `saved` follows a successful Save, for the Editor's save sound.
-    emits: ['back-to-world', 'open-shortcuts', 'published', 'saved', 'export-document', 'export-all-documents', 'import-document', 'new-document'],
+    emits: ['back-to-world', 'open-shortcuts', 'published', 'saved', 'export-document', 'export-model', 'export-all-documents', 'import-document', 'new-document'],
     components: { LoginModal, RemixPermissionDialog },
     setup(props, { emit }) {
         const identityUseCase = inject('identityUseCase', null);
@@ -344,6 +344,8 @@ export default {
 
             <button class="toolbar-save" @click="save">{{ t('toolbar.save') }}</button>
             <button class="toolbar-export" @click="$emit('export-document')">{{ t('toolbar.export') }}</button>
+            <!-- The build as a 3D model file other programs open; EditorView makes it. -->
+            <button class="toolbar-export-model" @click="$emit('export-model')">{{ t('toolbar.exportModel') }}</button>
             <button class="toolbar-import" @click="triggerImportDocument">{{ t('toolbar.import') }}</button>
             <input
                 ref="importFileInput"

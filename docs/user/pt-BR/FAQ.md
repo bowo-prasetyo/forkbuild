@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2cea46db0f73aa93 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: e15721b99cda6db7 -->
 # Perguntas frequentes
 
 <!-- languages -->
@@ -241,6 +241,13 @@ dispositivo como aplicativo. Construir, salvar e suas construções salvas e
 as prontas funcionam sem internet; encontrar construções e pessoas,
 distribuir e o chat precisam de conexão. Veja
 [Instalando o ForkBuild](01-GettingStarted.md#instalando-o-forkbuild).
+
+### Posso imprimir minha construção em 3D, ou abri-la no Blender?
+
+Pode. **Modelo 3D** na barra de ferramentas do Editor a baixa como STL para
+impressão 3D (em milímetros, apoiada na mesa) ou como glTF ou OBJ colorido
+para o Blender e outros programas. Veja
+[Baixando um modelo 3D](02-TheEditor.md#baixando-um-modelo-3d).
 
 ### Preciso de uma carteira de criptomoedas?
 

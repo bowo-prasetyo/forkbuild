@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2cea46db0f73aa93 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: e15721b99cda6db7 -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -249,6 +249,13 @@ constructions enregistrées et les constructions toutes prêtes fonctionnent
 hors ligne ; trouver des constructions et des personnes, distribuer et le
 chat ont besoin d’une connexion. Voir
 [Installer ForkBuild](01-GettingStarted.md#installer-forkbuild).
+
+### Puis-je imprimer ma construction en 3D, ou l’ouvrir dans Blender ?
+
+Oui. **Modèle 3D** dans la barre d’outils de l’Éditeur la télécharge en STL
+pour l’impression 3D (en millimètres, posée sur le plateau) ou en glTF ou
+OBJ en couleur pour Blender et d’autres logiciels. Voir
+[Télécharger un modèle 3D](02-TheEditor.md#télécharger-un-modèle-3d).
 
 ### Ai-je besoin d’un portefeuille crypto ?
 

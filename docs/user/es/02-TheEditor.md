@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c8a7a24368ab8c93 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 053e9eecd73affbf -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -559,6 +559,8 @@ presione, como exigen los navegadores.
 - **Exportar**: descarga la creación actual como archivo JSON, para
   conservar una copia o llevarla a otro dispositivo. Los archivos usan un
   formato compacto que guarda los bloques como una tabla.
+- **Modelo 3D**: descarga la creación como modelo 3D para otros programas
+  (consulte [Descargar un modelo 3D](#descargar-un-modelo-3d)).
 - **Importar**: abre un archivo exportado como una creación nueva con su
   propia identidad; no se guarda nada hasta que use **Guardar**. Los
   archivos exportados por versiones anteriores siguen abriéndose (se
@@ -577,6 +579,32 @@ presione, como exigen los navegadores.
   Recientes), omite los que tiene sin cambios y guarda una copia al lado de
   cualquiera que tenga en otra versión. Los cambios sin guardar no se
   incluyen, así que guarde primero.
+
+## Descargar un modelo 3D
+
+**Modelo 3D** en la barra de herramientas descarga lo que tiene abierto
+como un archivo que abren otros programas 3D, creado en este dispositivo (no
+se sube nada):
+
+- **glTF (.glb)**: en color. Se abre en Blender, el Visor 3D de Windows,
+  motores de juego como Godot y Unity, y visores de modelos en línea. Una
+  unidad de ForkBuild es un metro.
+- **Para impresión 3D (.stl)**: de un solo color, en milímetros a escala
+  1:100 (una puerta mide 20 mm y un cubo 10 mm), con Z hacia arriba y
+  apoyado en la cama de impresión, así que un laminador (Cura, PrusaSlicer,
+  Bambu Studio…) lo abre listo para imprimir; escálelo allí si lo quiere
+  más grande. Los bloques que se tocan o se superponen quedan como piezas
+  separadas, que los laminadores unen al laminar.
+- **OBJ (.obj)**: en color (como colores de vértice), para programas más
+  antiguos.
+
+Cada bloque conserva la forma y el color exactos que tiene en ForkBuild, y
+las estructuras que colocó se incluyen si están en este dispositivo (el
+mensaje avisa si alguna no lo está). Cada archivo nombra la construcción, su
+autor, su licencia y de qué es remezcla: en el copyright y los extras de
+glTF, en la cabecera del STL y como comentarios en el OBJ. La página propia
+de una construcción compartida ofrece las mismas descargas cuando su licencia
+permite copias (consulte [Lo que abre un enlace](04-PublishingAndForking.md#lo-que-abre-un-enlace)).
 
 ## Controles de cámara
 

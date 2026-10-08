@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4bc516de273c1f79 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 28974300f39be674 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -105,7 +105,10 @@ menyebut tempat ia disimpan, membuka halaman bangunan itu sendiri:
   ke aslinya;
 - **Jelajahi di Dunia**, untuk melihatnya di Tampilan Dunia.
 
-Jika lisensi bangunan itu tidak mengizinkan salinan, halamannya
+Jika lisensinya mengizinkan salinan, halaman itu juga menawarkan **Unduh
+sebagai model 3D** (glTF, STL untuk cetak 3D, atau OBJ; lihat
+[Mengunduh model 3D](02-TheEditor.md#mengunduh-model-3d)). Jika lisensi bangunan itu tidak mengizinkan
+salinan, halamannya
 mengatakannya dan hanya menawarkan untuk mengelilinginya.
 
 ## Mendistribusikan langsung dari Editor
