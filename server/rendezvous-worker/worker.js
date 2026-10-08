@@ -1,4 +1,4 @@
-import { handleBuildPreview, isBuildPreviewPath } from './buildPreview.js';
+import { handleBuildPreview, handleOEmbed, isBuildPreviewPath, isOEmbedPath } from './buildPreview.js';
 
 // The ForkBuild rendezvous server: a Cloudflare Worker plus one Durable
 // Object that keeps, for each identity, where it can currently be reached.
@@ -1123,6 +1123,9 @@ export default {
         // origin check; it keeps nothing.
         if (isBuildPreviewPath(pathname)) {
             return handleBuildPreview(request, env, { verifySignature });
+        }
+        if (isOEmbedPath(pathname)) {
+            return handleOEmbed(request, env, { verifySignature });
         }
         const isTurnRequest = pathname === '/turn-credentials';
         if (!isTurnRequest && request.headers.get('Upgrade') !== 'websocket') {

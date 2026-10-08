@@ -68,7 +68,10 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(request.url);
     if (url.origin !== self.location.origin) return;
     if (request.mode === 'navigate') {
-        event.respondWith(networkFirst(request, PAGE));
+        // Any address in the app is its one page; embed.html (a build embedded
+        // on another site, opened here on its own) is a page of its own, kept
+        // as itself so it never takes the app's place.
+        event.respondWith(networkFirst(request, url.pathname.endsWith('/embed.html') ? null : PAGE));
     } else if (url.pathname.includes('/bundle/')) {
         event.respondWith(cacheFirst(request));
     } else {

@@ -127,7 +127,13 @@ one more image request of the same kind, under its own fixed path:
   the Editor (at most once per build each time the app is open).
 
 It also hears, the same way, when ForkBuild is installed as an app
-(`/e/installed`).
+(`/e/installed`), and about builds embedded in other sites' pages (see
+"Servers ForkBuild contacts" below):
+
+- `/e/embed-code`: a build's embed code was copied with **Embed → Copy embed
+  code**;
+- `/e/embed-view`: an embedded build was shown on a page;
+- `/e/embed-open`: an embedded build was opened in ForkBuild from that page.
 
 Each sends only its path and the random number: never the link, the build,
 its title or who made it. Which builds were opened from a link is kept only
@@ -141,9 +147,15 @@ None of these is ever sent:
 - from any copy of ForkBuild served from somewhere other than the official
   site, including `localhost`.
 
+An embedded build can't read the **Count this browser** choice: it opens no
+storage, and browsers keep a site's storage apart inside other sites' pages
+anyway. So `/e/embed-view` and `/e/embed-open` follow only the other two
+rules: never with Global Privacy Control or Do Not Track, and only from the
+official site.
+
 The code is `core/VisitorCount.js`, `application/settings/CountDailyVisit.js`,
-`application/settings/FunnelEventCounter.js`, `ui/counterHit.js` and
-`ui/start.js`.
+`application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
+`ui/start.js` and `ui/embed/embedBoot.js`.
 
 ## Servers ForkBuild contacts
 
@@ -163,6 +175,7 @@ only when you use the feature, and each server can be changed under
 | The app opens on the official site, at most once a day (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path, no referrer and no cookie |
 | On the official site, you copy or share a link to a build, open a shared link, or copy a build opened from one into the Editor (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
 | You install ForkBuild from the official site (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/installed`, no referrer and no cookie |
+| On the official site, you copy a build's embed code, or an embedded build is shown, or opened in ForkBuild (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
 | You make yourself discoverable, or look someone up, in **Peers** | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | your identity's public key and a connection offer, kept for at most 15 minutes; the identity you look up; when you connect to someone you found, your connection reply (it lists your network addresses), which only they can collect |
 | You join, or look into, a public lobby | the same rendezvous server | your signed lobby card (public key, display name, which lobby), kept for at most 15 minutes and renewed while you stay; which lobby you look into |
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |
@@ -178,6 +191,8 @@ only when you use the feature, and each server can be changed under
 | You distribute a Publication's Signed Claim on Blurt (*experimental*) | Blurt's image host (`img-upload.blurt.blog`), directly or, when the browser can't reach it, through the rendezvous server's `/blurt-image` relay, which keeps nothing | a 320×200 picture of the build for the post's preview, signed with your Blurt posting key |
 | You distribute a Publication's Signed Claim on Steem (*experimental*) | the Steem image host (`steemitimages.com`), directly or, when the browser can't reach it, through the rendezvous server's `/steem-image` relay, which keeps nothing | a 320×200 picture of the build for the post's preview, signed with your Steem posting key |
 | Someone opens, or a site previews, a link to a build that carries it (`/b/…`) | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | the link, which holds the build and its Signed Claim; it keeps nothing |
+| Someone opens a page with a build embedded in it (`embed.html#…`) | the site ForkBuild is served from (`bowo-prasetyo.github.io`) | requests for the embed's files, with no referrer; never the build, which is in the part of the address browsers don't send |
+| A site or editor asks how to embed a `/b/…` link (oEmbed) | the rendezvous server's `/oembed` (`forkbuild-rendezvous.prazjp.workers.dev`) | the link, which holds the build and its Signed Claim; it keeps nothing |
 | You open a shared link to a Publication (`#/view/…`) | the Steem or Blurt node, Arweave gateway or IPFS gateway the link names, then the announcement substrates to find its build | which post, transaction or CID you open |
 | You anchor or verify evidence on Bitcoin (*experimental*) | an Esplora API (`blockstream.info`) | the transaction you broadcast or look up |
 | You verify evidence on Base (*experimental*) | a Base JSON-RPC endpoint (`mainnet.base.org`) | the transaction you look up |
@@ -198,6 +213,16 @@ Cloudflare, which runs the server, may log the addresses requested. Making a
 link contacts nothing. Anyone who has the link can see the build, its title,
 description and author name, and your identity's public key, as with any
 Shared World you distribute.
+
+**An embedded build** (the code **Embed** copies: an `<iframe>` of
+`embed.html#…` on the site ForkBuild is served from) holds the same, your
+signed Shared World and the build. The page it is pasted into loads the
+embed from that site, which learns neither the build (it sits in the part of
+the address browsers never send to a server) nor the page around it (the
+frame sends no referrer). In the reader's browser, the embed checks the
+signature and the build, shows it, and stores nothing; it starts none of the
+app's connections, so no peers, relays or other networks are contacted.
+Anyone who can see the page can see the build, as with its link.
 
 **Relays are used only when needed.** A connection always tries a direct
 path first, then one found through STUN, and falls back to the TURN relay

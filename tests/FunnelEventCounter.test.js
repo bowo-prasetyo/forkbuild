@@ -67,3 +67,14 @@ function counter({ origin = VISITOR_COUNT_SITE_ORIGIN, privacySignals = {}, enab
     assert(instance.installed() === true && hits.at(-1).includes('p=%2Fe%2Finstalled&'), 'installing is counted');
     console.log('✓ installing');
 }
+
+// Embeds: the code copied, an embed shown on another site, and opened from
+// there in ForkBuild, each its own fixed path.
+{
+    const { instance, hits } = counter();
+    assert(instance.copiedEmbedCode() === true && hits.at(-1).includes('p=%2Fe%2Fembed-code&'), 'copying embed code is /e/embed-code');
+    assert(instance.embedViewed() === true && hits.at(-1).includes('p=%2Fe%2Fembed-view&'), 'an embed shown is /e/embed-view');
+    assert(instance.openedFromEmbed() === true && hits.at(-1).includes('p=%2Fe%2Fembed-open&'), 'opening it in ForkBuild is /e/embed-open');
+    assert(counter({ privacySignals: { globalPrivacyControl: true } }).instance.embedViewed() === false, 'under the same rules');
+    console.log('✓ embeds');
+}

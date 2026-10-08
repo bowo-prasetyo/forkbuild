@@ -14,6 +14,12 @@
 // shaded boxes, wedges or pyramids seen from above at an angle, encoded as a
 // PNG. Like worker.js, this file imports nothing from the app; BRICK_SHAPES
 // mirrors core/library/CoreLibrary.js (tests/LinkPreview.test.js checks it).
+//
+// GET /oembed?url=<a /b/ link> answers oEmbed (https://oembed.com), which the
+// /b/ page names for a build that checks out: sites and editors that embed
+// links they are given (Notion, Ghost, WordPress plugins and others) get the
+// <iframe> of the app's embed.html, the same code the app's Embed copies
+// (core/ForkBuildAppLinks.js, embedCode()).
 
 const FORMAT_VERSION = '1';
 const MAX_PAYLOAD_LENGTH = 16000;
@@ -26,6 +32,9 @@ const MAX_DRAWN_BRICKS = 4000;
 export const PREVIEW_WIDTH = 600;
 export const PREVIEW_HEIGHT = 315;
 export const DEFAULT_APP_URL = 'https://bowo-prasetyo.github.io/forkbuild/';
+// The embed's size, as core/ForkBuildAppLinks.js's EMBED_WIDTH and EMBED_HEIGHT.
+export const EMBED_WIDTH = 640;
+export const EMBED_HEIGHT = 480;
 
 // Each core brick's size (width × height × depth), default color, and the
 // shape drawn for it: a box, a wedge rising toward +x (core:slope_45, and the
@@ -418,6 +427,14 @@ export function isBuildPreviewPath(pathname) {
     return PATH.test(pathname);
 }
 
+export function isOEmbedPath(pathname) {
+    return pathname === '/oembed';
+}
+
+function appUrlOf(env) {
+    return typeof env?.APP_URL === 'string' && /^https?:\/\//.test(env.APP_URL) ? env.APP_URL : DEFAULT_APP_URL;
+}
+
 // GET /b/<payload>: the preview page, which sends people on to the app.
 // GET /b/<payload>/preview.png: the build's picture. `verifySignature` is
 // the worker's Ed25519 check.
@@ -428,7 +445,7 @@ export async function handleBuildPreview(request, env, { verifySignature }) {
         return new Response('Not found', { status: 404 });
     }
     const payload = match[1];
-    const appUrl = typeof env?.APP_URL === 'string' && /^https?:\/\//.test(env.APP_URL) ? env.APP_URL : DEFAULT_APP_URL;
+    const appUrl = appUrlOf(env);
     const decoded = await decodeLinkPayload(payload);
     const build = decoded ? await checkSharedBuild(decoded, verifySignature) : null;
     if (match[2]) {
@@ -448,7 +465,9 @@ export async function handleBuildPreview(request, env, { verifySignature }) {
         }
         return request.method === 'HEAD' ? new Response(null, { headers: response.headers }) : response;
     }
-    const page = previewPage({ build, appLink: `${appUrl}#/s/${payload}`, selfUrl: `${url.origin}/b/${payload}`, appUrl });
+    const selfUrl = `${url.origin}/b/${payload}`;
+    const oembedUrl = build ? `${url.origin}/oembed?url=${encodeURIComponent(selfUrl)}&format=json` : null;
+    const page = previewPage({ build, appLink: `${appUrl}#/s/${payload}`, selfUrl, appUrl, oembedUrl });
     return new Response(request.method === 'HEAD' ? null : page, {
         headers: {
             'content-type': 'text/html; charset=utf-8',
@@ -459,7 +478,7 @@ export async function handleBuildPreview(request, env, { verifySignature }) {
     });
 }
 
-export function previewPage({ build, appLink, selfUrl, appUrl }) {
+export function previewPage({ build, appLink, selfUrl, appUrl, oembedUrl = null }) {
     const drawn = build && build.bricks.length > 0 && build.bricks.length <= MAX_DRAWN_BRICKS;
     const title = build?.title ? `${build.title}` : 'A shared build';
     const description = build
@@ -487,7 +506,7 @@ export function previewPage({ build, appLink, selfUrl, appUrl }) {
 <meta name="twitter:title" content="${e(title)}">
 <meta name="twitter:description" content="${e(description)}">
 <meta name="twitter:image" content="${e(image)}">
-<meta http-equiv="refresh" content="0; url=${e(appLink)}">
+${oembedUrl ? `<link rel="alternate" type="application/json+oembed" href="${e(oembedUrl)}" title="${e(title)}">\n` : ''}<meta http-equiv="refresh" content="0; url=${e(appLink)}">
 <style>body{font-family:system-ui,sans-serif;background:#121212;color:#e0e0e0;display:grid;place-items:center;min-height:100vh;margin:0}a{color:#4caf7d}</style>
 </head>
 <body>
@@ -495,6 +514,72 @@ export function previewPage({ build, appLink, selfUrl, appUrl }) {
 </body>
 </html>
 `;
+}
+
+// GET /oembed?url=<this worker's /b/<payload>>[&maxwidth=…][&maxheight=…]
+// [&format=json]: a "rich" oEmbed answer whose html is the build's embed, for
+// a build whose signature and hash check out; 404 for anything else, and 501
+// for a format other than JSON, as the specification asks.
+export async function handleOEmbed(request, env, { verifySignature }) {
+    const url = new URL(request.url);
+    if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Not found', { status: 404 });
+    const format = url.searchParams.get('format');
+    if (format && format !== 'json') return new Response('Only JSON is offered', { status: 501 });
+    let target;
+    try {
+        target = new URL(url.searchParams.get('url') || '');
+    } catch {
+        return new Response('Not found', { status: 404 });
+    }
+    const match = target.origin === url.origin ? PATH.exec(target.pathname) : null;
+    if (!match || match[2]) return new Response('Not found', { status: 404 });
+    const payload = match[1];
+    const decoded = await decodeLinkPayload(payload);
+    const build = decoded ? await checkSharedBuild(decoded, verifySignature) : null;
+    if (!build) return new Response('Not found', { status: 404 });
+
+    const appUrl = appUrlOf(env);
+    const { width, height } = embedSize(url.searchParams.get('maxwidth'), url.searchParams.get('maxheight'));
+    const title = build.title || 'A shared build';
+    const drawn = build.bricks.length > 0 && build.bricks.length <= MAX_DRAWN_BRICKS;
+    const answer = {
+        version: '1.0',
+        type: 'rich',
+        provider_name: 'ForkBuild',
+        provider_url: appUrl,
+        title,
+        ...(build.author ? { author_name: build.author } : {}),
+        html: embedHtml({ payload, frameTitle: `${title} on ForkBuild`, appUrl, width, height }),
+        width,
+        height,
+        cache_age: 86400,
+        ...(drawn ? { thumbnail_url: `${url.origin}/b/${payload}/preview.png`, thumbnail_width: PREVIEW_WIDTH, thumbnail_height: PREVIEW_HEIGHT } : {})
+    };
+    return new Response(request.method === 'HEAD' ? null : JSON.stringify(answer), {
+        headers: {
+            'content-type': 'application/json; charset=utf-8',
+            'cache-control': 'public, max-age=86400',
+            'access-control-allow-origin': '*'
+        }
+    });
+}
+
+// The embed's size within a consumer's maxwidth and maxheight (which oEmbed
+// says never to exceed), keeping its shape.
+function embedSize(maxWidth, maxHeight) {
+    const limit = (value, fallback) => {
+        const number = Number.parseInt(value, 10);
+        return Number.isFinite(number) && number > 0 ? number : fallback;
+    };
+    const scale = Math.min(1, limit(maxWidth, EMBED_WIDTH) / EMBED_WIDTH, limit(maxHeight, EMBED_HEIGHT) / EMBED_HEIGHT);
+    return { width: Math.max(1, Math.floor(EMBED_WIDTH * scale)), height: Math.max(1, Math.floor(EMBED_HEIGHT * scale)) };
+}
+
+// Mirrors core/ForkBuildAppLinks.js's embedCode() (tests/LinkPreview.test.js
+// checks they agree).
+export function embedHtml({ payload, frameTitle, appUrl, width = EMBED_WIDTH, height = EMBED_HEIGHT }) {
+    return `<iframe src="${appUrl}embed.html#${payload}" width="${width}" height="${height}" title="${escapeHtml(frameTitle)}" `
+        + 'style="border:0;max-width:100%" loading="lazy" referrerpolicy="no-referrer"></iframe>';
 }
 
 function escapeHtml(text) {

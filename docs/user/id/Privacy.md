@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ddb447abdff42d17 -->
+<!-- translation-of: docs/Privacy.md source-hash: 14eb8e63d6c0263d -->
 # Privasi
 
 <!-- languages -->
@@ -149,6 +149,16 @@ yang sama, dengan jalur tetapnya sendiri:
 Penghitung itu juga diberi tahu, dengan cara yang sama, saat ForkBuild
 dipasang sebagai aplikasi (`/e/installed`).
 
+Dengan cara yang sama, penghitung juga diberi tahu tentang bangunan yang
+disematkan di halaman situs lain (lihat "Server yang dihubungi ForkBuild" di
+bawah):
+
+- `/e/embed-code`: kode sematan sebuah bangunan disalin dengan
+  **Sematkan → Salin kode sematan**;
+- `/e/embed-view`: bangunan yang disematkan ditampilkan di sebuah halaman;
+- `/e/embed-open`: bangunan yang disematkan dibuka di ForkBuild dari halaman
+  itu.
+
 Masing-masing hanya mengirim jalurnya dan angka acak: tidak pernah
 tautannya, bangunannya, judulnya, atau siapa pembuatnya. Bangunan mana yang
 dibuka dari tautan hanya disimpan di memori halaman yang terbuka, dan
@@ -162,10 +172,16 @@ Tak satu pun dari permintaan ini pernah dikirim:
 - dari salinan ForkBuild yang disajikan di tempat lain selain situs resmi,
   termasuk `localhost`.
 
+Bangunan yang disematkan tidak dapat membaca pilihan **Hitung browser
+ini**: ia tidak membuka penyimpanan apa pun, dan browser memang memisahkan
+penyimpanan sebuah situs di dalam halaman situs lain. Jadi `/e/embed-view`
+dan `/e/embed-open` hanya mengikuti dua aturan lainnya: tidak pernah dengan
+Global Privacy Control atau Do Not Track, dan hanya dari situs resmi.
+
 Kodenya ada di `core/VisitorCount.js`,
 `application/settings/CountDailyVisit.js`,
-`application/settings/FunnelEventCounter.js`, `ui/counterHit.js`, dan
-`ui/start.js`.
+`application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
+`ui/start.js`, dan `ui/embed/embedBoot.js`.
 
 ## Server yang dihubungi ForkBuild
 
@@ -186,6 +202,7 @@ Anda dan apa yang Anda minta darinya.
 | Aplikasi dibuka di situs resmi, paling banyak sekali sehari (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap, tanpa perujuk dan tanpa cookie |
 | Di situs resmi, Anda menyalin atau membagikan tautan ke sebuah bangunan, membuka tautan yang dibagikan, atau menyalin bangunan yang dibuka dari tautan itu ke Editor (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut momen mana dari ketiganya, tanpa perujuk dan tanpa cookie |
 | Anda memasang ForkBuild dari situs resmi (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/installed`, tanpa referrer dan tanpa cookie |
+| Di situs resmi, Anda menyalin kode sematan sebuah bangunan, atau bangunan yang disematkan ditampilkan atau dibuka di ForkBuild (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut yang mana dari ketiganya, tanpa referrer dan tanpa cookie |
 | Anda menjadikan diri dapat ditemukan, atau mencari seseorang, di **Rekan** | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | kunci publik identitas Anda dan tawaran koneksi, disimpan paling lama 15 menit; identitas yang Anda cari; saat Anda terhubung dengan seseorang yang Anda temukan, balasan koneksi Anda (berisi alamat jaringan Anda), yang hanya dapat diambil oleh orang itu |
 | Anda bergabung ke, atau melihat ke dalam, lobi publik | server rendezvous yang sama | kartu lobi Anda yang ditandatangani (kunci publik, nama tampilan, lobi mana), disimpan paling lama 15 menit dan diperbarui selama Anda tetap di sana; lobi mana yang Anda lihat |
 | Koneksi rekan dimulai | server STUN (`stun.l.google.com`) | hanya permintaan alamat IP publik Anda |
@@ -201,6 +218,8 @@ Anda dan apa yang Anda minta darinya.
 | Anda mendistribusikan Klaim Bertanda Tangan sebuah Publikasi di Blurt (*eksperimental*) | host gambar Blurt (`img-upload.blurt.blog`), secara langsung atau, bila peramban tidak dapat menjangkaunya, melalui relai `/blurt-image` server rendezvous, yang tidak menyimpan apa pun | gambar bangunan berukuran 320×200 untuk pratinjau postingan, ditandatangani dengan kunci posting Blurt Anda |
 | Anda mendistribusikan Klaim Bertanda Tangan sebuah Publikasi di Steem (*eksperimental*) | host gambar Steem (`steemitimages.com`), secara langsung atau, bila peramban tidak dapat menjangkaunya, melalui relai `/steem-image` milik server rendezvous, yang tidak menyimpan apa pun | gambar bangunan berukuran 320×200 untuk pratinjau postingan, ditandatangani dengan kunci posting Steem Anda |
 | Seseorang membuka, atau sebuah situs menampilkan pratinjau, tautan yang membawa bangunannya (`/b/…`) | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | tautan itu, yang memuat bangunan dan Klaim Bertanda Tangannya; server tidak menyimpan apa pun |
+| Seseorang membuka halaman yang berisi bangunan yang disematkan (`embed.html#…`) | situs tempat ForkBuild disajikan (`bowo-prasetyo.github.io`) | permintaan untuk berkas-berkas sematan, tanpa referrer; tidak pernah bangunannya, yang ada di bagian alamat yang tidak dikirim browser |
+| Sebuah situs atau editor menanyakan cara menyematkan tautan `/b/…` (oEmbed) | `/oembed` milik server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | tautannya, yang memuat bangunan dan Klaim Bertanda Tangannya; server tidak menyimpan apa pun |
 | Anda membuka tautan bersama ke sebuah Publikasi (`#/view/…`) | node Steem atau Blurt, gateway Arweave, atau gateway IPFS yang disebut tautan itu, lalu substrat pengumuman untuk menemukan bangunannya | postingan, transaksi, atau CID mana yang Anda buka |
 | Anda menjangkarkan atau memverifikasi bukti di Bitcoin (*eksperimental*) | API Esplora (`blockstream.info`) | transaksi yang Anda siarkan atau cari |
 | Anda memverifikasi bukti di Base (*eksperimental*) | endpoint JSON-RPC Base (`mainnet.base.org`) | transaksi yang Anda cari |
@@ -223,6 +242,18 @@ diminta. Membuat tautan tidak menghubungi apa pun. Siapa pun yang memegang
 tautan itu dapat melihat bangunannya, judul, deskripsi, dan nama pembuatnya,
 serta kunci publik identitas Anda, seperti pada Dunia Bersama mana pun yang
 Anda distribusikan.
+
+**Bangunan yang disematkan** (kode yang disalin **Sematkan**: sebuah
+`<iframe>` dari `embed.html#…` di situs tempat ForkBuild disajikan) memuat
+hal yang sama: Dunia Bersama Anda yang ditandatangani dan bangunannya.
+Halaman tempat kode itu ditempel memuat sematan dari situs tersebut, yang
+tidak mengetahui bangunannya (ada di bagian alamat yang tidak pernah dikirim
+browser ke server) maupun halaman di sekitarnya (bingkainya tidak mengirim
+referrer). Di browser pembaca, sematan memeriksa tanda tangan dan
+bangunannya, menampilkannya, dan tidak menyimpan apa pun; ia tidak memulai
+satu pun koneksi aplikasi, jadi tidak ada rekan, relay, atau jaringan lain
+yang dihubungi. Siapa pun yang dapat melihat halaman itu dapat melihat
+bangunannya, sama seperti dengan tautannya.
 
 **Relay hanya dipakai bila diperlukan.** Koneksi selalu mencoba jalur
 langsung terlebih dahulu, lalu jalur yang ditemukan melalui STUN, dan

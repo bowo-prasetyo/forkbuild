@@ -284,7 +284,14 @@ by way of the rendezvous worker's `/b/<payload>` link preview
 (server/rendezvous-worker/buildPreview.js: a title, a picture drawn in the
 worker, then on to the app), for a Publication not yet distributed, with Save picture
 (renderer/BuildPicture.js, a 1200 × 630 PNG drawn by
-DocumentThumbnailRenderer). The link's view then shows the build on its
+DocumentThumbnailRenderer), and Embed, the same payload as an `<iframe>` of
+embed.html for other sites' pages. embed.html is a page of its own
+(ui/embed/embedBoot.js), not a route: it starts no storage, peers or
+relays, checks the payload as opening the link does
+(application/publication/sharing/OpenEmbeddedBuild.js), keeps nothing,
+and shows the build on a draggable BuildTurntable with a link to
+`#/s/<payload>`. The worker's `/oembed` answers with the same `<iframe>`
+for sites that embed links themselves. The link's view then shows the build on its
 own screen: turning (ui/components/featured/BuildTurntable.js over
 renderer/ShowcaseTurntableRenderer.js, its bricks read from the content
 store and checked against the signed hash by

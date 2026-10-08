@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- A build shown inside another site's page (ui/embed/embedBoot.js; docs/Deployment.md, "Embeds").
+         Content Security Policy: as index.html's, with the same import map and so the same hash, and
+         no network beyond this site and the visitor count. tests/ContentSecurityPolicy.test.js checks it. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-1Yauk+MBJJXMGtEunLNkm2IMuBHncM/1loYKdwVuAa4='; style-src 'self'; img-src 'self' data: blob: https://forkbuild.goatcounter.com; font-src 'self'; connect-src 'self'; worker-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+    <meta name="robots" content="noindex">
+    <title>ForkBuild</title>
+    <link rel="stylesheet" href="css/embed.css">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <script type="importmap">
+    {
+        "imports": {
+            "vue": "./vendor/vue/dist/vue.esm-browser.prod.js",
+            "vue-router": "./vendor/vue-router/dist/vue-router.esm-browser.js",
+            "@vue/devtools-api": "./vendor/vue-devtools-api/lib/esm/index.js",
+            "three": "./vendor/three/build/three.module.js",
+            "three/addons/": "./vendor/three/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script type="module" src="ui/embed/embedBoot.js"></script>
+</body>
+</html>

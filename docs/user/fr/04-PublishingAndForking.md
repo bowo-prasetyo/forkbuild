@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 28974300f39be674 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4c0715a067f50e8b -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -54,7 +54,7 @@ ait toujours un endroit où emmener les gens — voir
 
 Dès que **Publier** réussit, l’avis de l’Éditeur affiche aussi
 **Partager…** (là où votre appareil a un menu de partage), **Copier le
-lien** et **Enregistrer l’image**, avec le lien en dessous. Les mêmes
+lien**, **Enregistrer l’image** et **Intégrer**, avec le lien en dessous. Les mêmes
 boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
 
 - **La construction voyage dans le lien.** Rien n’a besoin d’être distribué
@@ -112,6 +112,41 @@ télécharger comme modèle 3D** (glTF, STL pour l’impression 3D ou OBJ ; voir
 [Télécharger un modèle 3D](02-TheEditor.md#télécharger-un-modèle-3d)). Si la licence de la construction n’autorise pas
 les copies, la page le dit
 et ne propose que d’en faire le tour.
+
+### Intégrer une construction dans une page web
+
+Une construction dont le lien la contient peut aussi être affichée dans un
+article de blog ou une page web, où les lecteurs la voient tourner sans
+quitter la page :
+
+1. Sous le lien, choisissez **Intégrer**. Le code à coller apparaît en
+   dessous.
+2. Choisissez **Copier le code d’intégration** et collez-le là où la page
+   accepte du HTML ou un contenu intégré (un `<iframe>`).
+
+Sur la page, la construction tourne lentement, et un glissement sur le côté
+la fait tourner à la main. Son titre et son auteur sont en bas, à côté de
+**Remixer sur ForkBuild** (**Ouvrir dans ForkBuild** quand sa licence
+n’autorise pas les copies), qui ouvre la page de la construction dans
+ForkBuild dans un nouvel onglet (voir
+[Ce qu’ouvre un lien](#ce-quouvre-un-lien)).
+
+- **La construction voyage dans le code**, comme dans son lien : rien n’a
+  besoin d’être distribué, et l’intégration vérifie la signature et la
+  construction avant de l’afficher.
+- **Elle reste discrète.** L’intégration ne lance aucune des connexions de
+  ForkBuild et ne conserve rien dans le navigateur du lecteur ; voir
+  [Confidentialité](Privacy.md).
+- **Les sites qui intègrent eux-mêmes les liens** (ceux qui prennent en
+  charge oEmbed, comme Notion et Ghost) peuvent recevoir à la place le lien
+  de **Copier le lien** : ils demandent l’intégration au serveur de liens
+  de ForkBuild.
+- **Les sites qui retirent le code `<iframe>`**, comme la plupart des
+  réseaux sociaux, ne peuvent pas l’afficher ; partagez-y le lien ou
+  l’image.
+
+Copier le code, et l’affichage ou l’ouverture d’une intégration dans
+ForkBuild, sont aussi comptés anonymement.
 
 ## Distribuer directement depuis l’Éditeur
 

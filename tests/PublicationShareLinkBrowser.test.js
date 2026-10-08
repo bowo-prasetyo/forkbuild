@@ -46,7 +46,7 @@ function mount({ publication, contentStore }) {
     document.body.appendChild(host);
     const app = createApp(PublicationShareLink, { publicationId: publication.id, title: publication.title, publication });
     app.provide('publicationContentStore', contentStore);
-    app.provide('funnelEventCounter', { sharedLink: () => counted.push('share-link') });
+    app.provide('funnelEventCounter', { sharedLink: () => counted.push('share-link'), copiedEmbedCode: () => counted.push('embed-code') });
     app.mount(host);
     return { host, counted, unmount: () => { app.unmount(); host.remove(); } };
 }
@@ -108,8 +108,26 @@ HTMLAnchorElement.prototype.click = function captureDownload() {
     for (let i = 0; i < strip.length; i += 4) if (strip[i] > 200 && strip[i + 1] > 200 && strip[i + 2] > 200) light++;
     assert(light > 20, `the strip along the bottom carries text (${light} light pixels)`);
     assert(!host.querySelector('[role="alert"]'), 'no error is shown');
-    unmount();
     console.log('✓ Save picture downloads a 1200 × 630 PNG of the build');
+
+    // Embed: the <iframe> code, with the same build inside, to copy.
+    assert(!host.querySelector('.publication-share-embed'), 'the embed code starts folded away');
+    const embedButton = host.querySelector('.publication-share-link-embed');
+    assert(embedButton && embedButton.getAttribute('aria-expanded') === 'false', 'Embed is offered');
+    embedButton.click();
+    await until(() => host.querySelector('.publication-share-embed-code'), 'the embed code');
+    const code = host.querySelector('.publication-share-embed-code').value;
+    const payload = url.slice(url.indexOf('/b/') + 3);
+    assert(code.startsWith(`<iframe src="https://bowo-prasetyo.github.io/forkbuild/embed.html#${payload}" `), `an iframe of the same build (${code.slice(0, 70)})`);
+    assert(code.includes(`title="${t('share.embedFrameTitle', { title: 'Castle on the hill' })}"`), 'named for screen readers');
+    assert(host.textContent.includes(t('share.embedHint')) && embedButton.getAttribute('aria-expanded') === 'true', 'saying where to paste it');
+    host.querySelector('.publication-share-embed-copy').click();
+    await until(() => host.querySelector('.publication-share-embed .publication-share-link-feedback').textContent === t('share.embedCopied'), 'the embed code to be copied');
+    assert(copied.at(-1) === code && counted.at(-1) === 'embed-code', `copying it puts it on the clipboard and is counted (${counted})`);
+    embedButton.click();
+    await until(() => !host.querySelector('.publication-share-embed'), 'Embed to fold away again');
+    unmount();
+    console.log('✓ Embed copies an <iframe> of the build');
 }
 
 // An unsigned build gets no link, says why, and can still have a picture.
@@ -119,6 +137,7 @@ HTMLAnchorElement.prototype.click = function captureDownload() {
     assert(!host.querySelector('.publication-share-link-url'), 'no link');
     assert(host.textContent.includes(t('share.linkOnlyUnsigned')), 'it says the build is not signed');
     assert(host.querySelector('.publication-share-link-picture'), 'Save picture is still offered');
+    assert(!host.querySelector('.publication-share-link-embed'), 'but no Embed, which needs a link');
     unmount();
     console.log('✓ an unsigned build explains why there is no link');
 }

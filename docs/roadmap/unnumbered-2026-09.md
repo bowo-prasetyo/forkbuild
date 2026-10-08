@@ -4798,3 +4798,42 @@ communities, and give no reason to search for "design and 3D-print a brick model
   from the Editor and a shared castle as `.stl` from its page.
 - Not done: merging bricks into one watertight solid (slicers join overlapping shells themselves), textures, and
   exporting animals, residents or terrain.
+
+## Embed a build in a web page (unnumbered, 2026-10-08)
+
+**A build can be shown, turning, inside someone else's page.** A shared link gets one click from the people who see
+it; an embed keeps showing the build to every reader of a blog post, a Nostr or Blurt post's site, or a launch
+article, for as long as it is up, with a way into ForkBuild beside it.
+
+- `embed.html`, a page of its own beside `index.html` (`ui/embed/embedBoot.js`, `ui/embed/EmbedView.js`,
+  `css/embed.css`): `embed.html#<payload>`, the link-only share's payload in the fragment. It starts nothing of the
+  app (no storage, peers, relays or networks), chooses the browser's language, checks the payload as opening the link
+  does and shows the build on a `BuildTurntable` (now `draggable`: a sideways drag turns it, through
+  `ShowcaseTurntableRenderer.turnBy()`), with its title, maker and **Remix on ForkBuild** (**Open in ForkBuild** when
+  its license allows no copies), which opens `#/s/<payload>` in a new tab. A damaged, unsigned, forged or changed
+  build says so. Its own Content Security Policy: `index.html`'s, with `connect-src 'self'` and `worker-src 'none'`.
+- `application/publication/sharing/OpenEmbeddedBuild.js`: decode, verify with the World discovery verifier, check the
+  build against the signed hash, deserialize; keeps and admits nothing.
+- `core/ForkBuildAppLinks.js`: `embedUrl()`, `payloadFromEmbedHash()`, `embedCode()` (640 × 480, escaped title, no
+  referrer, lazy). `prepareLinkOnlyShare()` also returns the payload; `copyEmbedCode()`.
+- The share strip gains **Embed** for a build that fits in a link: the `<iframe>` code, **Copy embed code** and where
+  to paste it.
+- The rendezvous worker answers oEmbed: `GET /oembed?url=<its /b/ link>` gives a `rich` answer with the same
+  `<iframe>` (within `maxwidth`/`maxheight`), title, author and thumbnail, for a build that checks out; the `/b/`
+  page names it. The worker must be redeployed for it.
+- `scripts/build.mjs` bundles `embed.html` from its own entry and stylesheet, sharing the app's chunks. The service
+  worker keeps `embed.html` as itself: before, opening it on the site was cached as the app's page, so the app opened
+  as the embed when offline.
+- Three fixed counter paths, `/e/embed-code`, `/e/embed-view` and `/e/embed-open`. The embed can't read the
+  **Count this browser** setting (it opens no storage, and browsers partition storage in other sites' frames), so
+  those two follow only GPC, DNT and the official-site rule.
+- Privacy (and its translations), guide 04 (a new "Embedding a build in a web page") in every language, Protocol,
+  Architecture, Deployment ("Embeds", and `frame-ancestors` must leave `embed.html` out), the worker README, README;
+  messages in every language.
+- Tests: `EmbeddedBuild` (the code, copying it, a signed build opening with every brick, changed, forged, unsigned and
+  damaged ones refused), `EmbedViewBrowser`, `PublicationShareLinkBrowser` (Embed), `LinkPreview` (oEmbed: discovery,
+  the same code as the app, sizes, 404s and 501), `FunnelEventCounter`, `ContentSecurityPolicy` (`embed.html`), and
+  `run-bundle` embeds the castle in another origin's page, drags it, opens it in ForkBuild, fits a 320 × 240 frame,
+  and opens the app offline right after an embed was visited on the site.
+- Not done: embedding a build too large for a link (from its network link), Twitter's player card (which needs X's
+  approval), and a per-build choice not to be embeddable: a build shared in a link is already public.

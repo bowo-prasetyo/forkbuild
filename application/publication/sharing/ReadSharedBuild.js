@@ -10,7 +10,11 @@ import { DocumentSerializer } from '../../../serializer/DocumentSerializer.js';
 // can't be read. Never rejects.
 export async function readSharedBuildBricks({ publication, contentStore, documentSerializer = new DocumentSerializer() }) {
     const document = await readSharedBuildDocument({ publication, contentStore, documentSerializer });
-    if (!document) return null;
+    return document ? bricksOfDocument(document) : null;
+}
+
+// Every brick of every building in `document`, as the turning view draws them.
+export function bricksOfDocument(document) {
     const bricks = [];
     for (const building of document.world.getBuildings()) {
         bricks.push(...building.getBricks());

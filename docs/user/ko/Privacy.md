@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ddb447abdff42d17 -->
+<!-- translation-of: docs/Privacy.md source-hash: 14eb8e63d6c0263d -->
 # 개인정보 보호
 
 <!-- languages -->
@@ -113,6 +113,14 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 
 같은 방식으로, ForkBuild가 앱으로 설치될 때(`/e/installed`)도 집계됩니다.
 
+같은 방식으로, 다른 사이트의 페이지에 임베드된 작품에 대해서도 집계됩니다
+(아래 “ForkBuild가 접속하는 서버” 참고).
+
+- `/e/embed-code`: **임베드 → 임베드 코드 복사**로 작품의 임베드 코드를
+  복사했을 때
+- `/e/embed-view`: 임베드된 작품이 페이지에 표시되었을 때
+- `/e/embed-open`: 임베드된 작품을 그 페이지에서 ForkBuild로 열었을 때
+
 각 요청은 경로와 무작위 숫자만 보내며, 링크, 작품, 제목, 만든 사람은 절대
 보내지 않습니다. 어떤 작품을 링크로 열었는지는 열려 있는 페이지의 메모리에만
 있고, 페이지를 닫으면 잊힙니다.
@@ -124,9 +132,15 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
   브라우저에만 저장됨)
 - `localhost`를 포함해 공식 사이트가 아닌 곳에서 제공되는 ForkBuild 사본
 
+임베드된 작품은 **이 브라우저 집계하기** 선택을 읽을 수 없습니다. 임베드는
+저장소를 열지 않으며, 브라우저는 어차피 다른 사이트의 페이지 안에서는 사이트의
+저장소를 따로 둡니다. 그래서 `/e/embed-view`와 `/e/embed-open`은 나머지 두
+규칙만 따릅니다. Global Privacy Control이나 Do Not Track이 있으면 보내지 않고,
+공식 사이트에서만 보냅니다.
+
 코드는 `core/VisitorCount.js`, `application/settings/CountDailyVisit.js`,
 `application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
-`ui/start.js`에 있습니다.
+`ui/start.js`, `ui/embed/embedBoot.js`에 있습니다.
 
 ## ForkBuild가 연락하는 서버
 
@@ -144,6 +158,7 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 | 공식 사이트에서 앱을 열 때, 하루에 최대 한 번(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정된 경로로, 리퍼러와 쿠키 없이 보내는 이미지 요청 하나 |
 | 공식 사이트에서 작품 링크를 복사하거나 공유할 때, 공유 링크를 열 때, 그 링크로 연 작품을 에디터로 복사할 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 세 순간 중 어느 것인지 나타내는 고정된 경로로, 리퍼러와 쿠키 없이 보내는 이미지 요청 하나 |
 | 공식 사이트에서 ForkBuild를 설치할 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/installed`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
+| 공식 사이트에서 작품의 임베드 코드를 복사하거나, 임베드된 작품이 표시되거나 ForkBuild에서 열릴 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 셋 중 어느 경우인지 나타내는 고정 경로의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | **피어**에서 나를 검색 가능하게 하거나 누군가를 찾을 때 | 랑데부 서버(`forkbuild-rendezvous.prazjp.workers.dev`) | 내 신원의 공개 키와 연결 제안(최대 15분 보관), 내가 찾는 신원, 찾은 사람과 연결할 때 내 연결 응답(내 네트워크 주소가 나열됨, 그 사람만 가져갈 수 있음) |
 | 공개 로비에 참가하거나 들여다볼 때 | 같은 랑데부 서버 | 내 서명된 로비 카드(공개 키, 표시 이름, 어느 로비인지. 최대 15분 보관되며 머무는 동안 갱신), 내가 들여다보는 로비 |
 | 피어 연결이 시작될 때 | STUN 서버(`stun.l.google.com`) | 내 공개 IP 주소 요청 외에는 없음 |
@@ -159,6 +174,8 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 | 게시물의 서명 클레임을 Blurt에 배포할 때(*실험적*) | Blurt 이미지 호스트(`img-upload.blurt.blog`). 브라우저가 직접 닿지 못하면 아무것도 저장하지 않는 랑데부 서버의 `/blurt-image` 중계를 거침 | 게시물 미리보기용 320×200 작품 사진, 내 Blurt 게시 키로 서명됨 |
 | 게시물의 서명 클레임을 Steem에 배포할 때(*실험적*) | Steem 이미지 호스트(`steemitimages.com`). 브라우저가 직접 닿지 못하면 아무것도 저장하지 않는 랑데부 서버의 `/steem-image` 중계를 거침 | 게시물 미리보기용 320×200 작품 사진, 내 Steem 게시 키로 서명됨 |
 | 누군가 작품을 담은 링크(`/b/…`)를 열거나, 사이트가 그 미리 보기를 만들 때 | 랑데부 서버(`forkbuild-rendezvous.prazjp.workers.dev`) | 작품과 서명 클레임을 담은 링크. 서버는 아무것도 저장하지 않음 |
+| 누군가 작품이 임베드된 페이지(`embed.html#…`)를 열 때 | ForkBuild를 제공하는 사이트(`bowo-prasetyo.github.io`) | 임베드 파일 요청, 리퍼러 없음. 작품은 브라우저가 보내지 않는 주소 부분에 있으므로 보내지 않음 |
+| 사이트나 편집기가 `/b/…` 링크를 임베드하는 방법을 물을 때(oEmbed) | 랑데부 서버의 `/oembed`(`forkbuild-rendezvous.prazjp.workers.dev`) | 작품과 서명된 주장을 담은 링크. 서버는 아무것도 보관하지 않음 |
 | 게시물의 공유 링크(`#/view/…`)를 열 때 | 링크가 가리키는 Steem이나 Blurt 노드, Arweave 게이트웨이, IPFS 게이트웨이, 그다음 작품을 찾기 위한 공지 기반 | 내가 여는 게시물, 트랜잭션, CID |
 | Bitcoin에서 증거를 앵커링하거나 검증할 때(*실험적*) | Esplora API(`blockstream.info`) | 내가 브로드캐스트하거나 조회하는 트랜잭션 |
 | Base에서 증거를 검증할 때(*실험적*) | Base JSON-RPC 엔드포인트(`mainnet.base.org`) | 내가 조회하는 트랜잭션 |
@@ -177,6 +194,15 @@ ForkBuild는 개인 키, 암호 문구, 저장한 문서를 이 서버 중 어�
 Cloudflare는 요청된 주소를 기록할 수 있습니다. 링크를 만들 때는 아무 곳에도
 연결하지 않습니다. 링크를 가진 사람은 누구나 작품, 제목, 설명, 작성자 이름, 내
 ID의 공개 키를 볼 수 있으며, 이는 배포하는 다른 공유 월드와 같습니다.
+
+**임베드된 작품**(**임베드**가 복사하는 코드, 즉 ForkBuild를 제공하는 사이트의
+`embed.html#…`을 보여 주는 `<iframe>`)도 같은 것, 곧 서명된 공유 월드와 작품
+자체를 담습니다. 코드를 붙여 넣은 페이지는 그 사이트에서 임베드를 불러오지만,
+사이트는 작품(브라우저가 서버로 절대 보내지 않는 주소 부분에 있음)도, 주변
+페이지(프레임은 리퍼러를 보내지 않음)도 알지 못합니다. 독자의 브라우저 안에서
+임베드는 서명과 작품을 확인하고 보여 줄 뿐 아무것도 저장하지 않습니다. 앱의
+연결은 하나도 시작하지 않으므로 피어, 릴레이, 다른 네트워크에 접속하지
+않습니다. 페이지를 볼 수 있는 사람은 링크와 마찬가지로 작품을 볼 수 있습니다.
 
 **릴레이는 필요할 때만 씁니다.** 연결은 항상 먼저 직접 경로를, 그다음 STUN으로 찾은
 경로를 시도하고, 둘 다 안 될 때만 TURN 릴레이로 넘어갑니다. 로비에서 기다리는 동안

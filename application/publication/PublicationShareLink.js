@@ -49,8 +49,9 @@ export function describePublicationShare({ lifecycle, title = null, linkOnly = n
 }
 
 // The link-only share for `publication` (a Publication, or its JSON), read
-// from `contentStore`: `{ url, payloadLength, snapshotText }`, or `{ reason,
-// snapshotText }` (`reason` a message) when it can't be offered: unsigned, its
+// from `contentStore`: `{ url, payload, payloadLength, snapshotText }`
+// (`payload` also makes its embed code, core/ForkBuildAppLinks.js), or
+// `{ reason, snapshotText }` (`reason` a message) when it can't be offered: unsigned, its
 // build not on this device (`snapshotText` then null), or too large for a
 // link. `snapshotText` is the build, for a picture of it. The link is
 // `previewUrl`'s /b/<payload>, which gives it a title and picture where it is
@@ -81,7 +82,7 @@ export async function prepareLinkOnlyShare({
     }
     if (payload.length > maxPayloadLength) return Object.freeze({ reason: message('share.linkOnlyTooLarge'), snapshotText });
     const url = previewUrl ? linkPreviewUrl(payload, previewUrl) : linkOnlyPublicationViewUrl(payload, appUrl);
-    return Object.freeze({ url, payloadLength: payload.length, snapshotText });
+    return Object.freeze({ url, payload, payloadLength: payload.length, snapshotText });
 }
 
 // A local store may hold content on disk and not yet in memory; getSync()
@@ -133,6 +134,18 @@ export async function copyPublicationShareLink(share, navigatorImpl = globalThis
     if (!share?.available || typeof navigatorImpl?.clipboard?.writeText !== 'function') return 'unavailable';
     try {
         await navigatorImpl.clipboard.writeText(share.url);
+        return 'copied';
+    } catch {
+        return 'unavailable';
+    }
+}
+
+// Copies a build's embed code (core/ForkBuildAppLinks.js, embedCode()), as
+// copyPublicationShareLink() copies its link.
+export async function copyEmbedCode(code, navigatorImpl = globalThis.navigator) {
+    if (typeof code !== 'string' || !code || typeof navigatorImpl?.clipboard?.writeText !== 'function') return 'unavailable';
+    try {
+        await navigatorImpl.clipboard.writeText(code);
         return 'copied';
     } catch {
         return 'unavailable';

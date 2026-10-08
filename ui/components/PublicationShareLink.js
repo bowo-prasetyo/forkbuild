@@ -1,7 +1,8 @@
 import { computed, inject, onBeforeUnmount, ref, watch } from 'vue';
 import {
-    canUseShareSheet, copyPublicationShareLink, describePublicationShare, prepareLinkOnlyShare, sharePublicationLink
+    canUseShareSheet, copyEmbedCode, copyPublicationShareLink, describePublicationShare, prepareLinkOnlyShare, sharePublicationLink
 } from '../../application/publication/PublicationShareLink.js';
+import { embedCode } from '../../core/ForkBuildAppLinks.js';
 import { displayText, t } from '../i18n/i18n.js';
 
 const FEEDBACK = Object.freeze({
@@ -20,7 +21,9 @@ function feedbackText(outcome) {
 // record (publicationDistributionLifecycleStore, restored from this browser's
 // storage when not yet in memory), which it follows, so the link changes as
 // soon as a distribution stores the claim. Before that, given `publication`,
-// a build small enough is shared inside the link itself.
+// a build small enough is shared inside the link itself. A build that fits
+// in a link can also be embedded: Embed shows the <iframe> code to paste into
+// a blog post or web page (core/ForkBuildAppLinks.js, embedCode()).
 export default {
     name: 'PublicationShareLink',
     props: {
@@ -41,6 +44,8 @@ export default {
         const linkOnly = ref(null);
         const feedback = ref('');
         const pictureState = ref('idle');
+        const embedOpen = ref(false);
+        const embedFeedback = ref('');
         let unsubscribe = null;
 
         function follow(publicationId) {
@@ -66,6 +71,8 @@ export default {
             const attempt = ++preparing;
             linkOnly.value = null;
             pictureState.value = 'idle';
+            embedOpen.value = false;
+            embedFeedback.value = '';
             if (!publication || !contentStore) return;
             const prepared = await prepareLinkOnlyShare({ publication, contentStore });
             if (attempt === preparing) linkOnly.value = prepared;
@@ -83,6 +90,11 @@ export default {
         });
         const shareSheet = computed(() => canUseShareSheet(share.value));
         const canSavePicture = computed(() => Boolean(linkOnly.value?.snapshotText));
+        const embed = computed(() => {
+            const payload = linkOnly.value?.payload;
+            if (!payload || !share.value?.available) return null;
+            return embedCode({ payload, frameTitle: t('share.embedFrameTitle', { title: share.value.title }) });
+        });
 
         function report(outcome) {
             feedback.value = feedbackText(outcome);
@@ -96,6 +108,16 @@ export default {
         }
         async function copy() {
             report(await copyPublicationShareLink(share.value));
+        }
+
+        function toggleEmbed() {
+            embedOpen.value = !embedOpen.value;
+            embedFeedback.value = '';
+        }
+        async function copyEmbed() {
+            const outcome = await copyEmbedCode(embed.value);
+            embedFeedback.value = outcome === 'copied' ? t('share.embedCopied') : t('share.embedCopyByHand');
+            if (outcome === 'copied') funnel?.copiedEmbedCode();
         }
 
         async function savePicture() {
@@ -123,7 +145,10 @@ export default {
             }
         }
 
-        return { t, share, shareSheet, feedback, shareNow, copy, canSavePicture, pictureState, savePicture };
+        return {
+            t, share, shareSheet, feedback, shareNow, copy, canSavePicture, pictureState, savePicture,
+            embed, embedOpen, embedFeedback, toggleEmbed, copyEmbed
+        };
     },
     template: `
         <div v-if="share || canSavePicture" class="publication-share-link">
@@ -132,6 +157,7 @@ export default {
                     <button v-if="shareSheet" type="button" class="action-btn action-btn--primary" @click="shareNow">{{ t('share.share') }}</button>
                     <button type="button" :class="['action-btn', shareSheet ? 'action-btn--secondary' : 'action-btn--primary']" @click="copy">{{ t('share.copy') }}</button>
                     <button v-if="canSavePicture" type="button" class="action-btn action-btn--secondary publication-share-link-picture" :disabled="pictureState === 'drawing'" @click="savePicture">{{ t('share.savePicture') }}</button>
+                    <button v-if="embed" type="button" class="action-btn action-btn--secondary publication-share-link-embed" :aria-expanded="embedOpen ? 'true' : 'false'" @click="toggleEmbed">{{ t('share.embed') }}</button>
                     <span class="publication-share-link-feedback" role="status">{{ feedback }}</span>
                 </div>
                 <input class="publication-share-link-url" readonly :value="share.url" :aria-label="t('share.linkLabel')" @focus="$event.target.select()">
@@ -139,6 +165,14 @@ export default {
                     {{ share.hint }}
                     <template v-if="share.note">{{ ' ' + share.note }}</template>
                 </p>
+                <div v-if="embed && embedOpen" class="publication-share-embed">
+                    <textarea class="publication-share-embed-code" readonly rows="3" :value="embed" :aria-label="t('share.embedLabel')" @focus="$event.target.select()"></textarea>
+                    <div class="publication-share-link-actions">
+                        <button type="button" class="action-btn action-btn--primary publication-share-embed-copy" @click="copyEmbed">{{ t('share.embedCopy') }}</button>
+                        <span class="publication-share-link-feedback" role="status">{{ embedFeedback }}</span>
+                    </div>
+                    <p class="form-hint form-hint--neutral">{{ t('share.embedHint') }}</p>
+                </div>
             </template>
             <template v-else>
                 <div v-if="canSavePicture" class="publication-share-link-actions">
