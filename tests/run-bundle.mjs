@@ -354,6 +354,14 @@ async function offlineAndNotifications(browser, base, precacheFiles, publishedDi
         await bell.goto(`${base}/#/`);
         await bell.waitForSelector('.home-view', { timeout: 60_000 });
         await bell.click('.app-notifications-button');
+        // Chromium's headless shell (what CI installs) reports every
+        // notification permission as denied, whatever was granted: there the
+        // panel must say the browser blocks them, and nothing more is tried.
+        if (await bell.evaluate(() => Notification.permission) === 'denied') {
+            await bell.waitForSelector('.device-notification-setting[data-state="blocked"]', { timeout: 10_000 });
+            assert(!(await bell.$('.device-notification-on')), 'a browser that blocks notifications is told so, with nothing to turn on');
+            return;
+        }
         await bell.waitForSelector('.device-notification-setting[data-state="off"]', { timeout: 10_000 });
         await bell.click('.device-notification-on');
         await bell.waitForSelector('.device-notification-setting[data-state="on"]', { timeout: 10_000 });
@@ -409,7 +417,7 @@ try {
     assert(html.includes('<meta name="forkbuild-service-worker" content="sw.js">') && readFileSync(join(published.outdir, 'sw.js'), 'utf8').includes('forkbuild-'),
         'the published site has its service worker, and index.html names it');
     await offlineAndNotifications(browser, `http://127.0.0.1:${server.address().port}`, published.precacheFiles, published.outdir);
-    console.log(`✓ the published site keeps its ${published.precacheFiles} files on the first visit and opens offline, Home and the Editor; a new version is offered and starts on Reload; notifications on this device turn on and off`);
+    console.log(`✓ the published site keeps its ${published.precacheFiles} files on the first visit and opens offline, Home and the Editor; a new version is offered and starts on Reload; notifications on this device turn on and off (or say the browser blocks them)`);
     await firstVisit(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a first visit: four pages and More in the nav, the guided first build in the Editor, Publish asking about remixes and to log in, and the published link copied on another device');
 
