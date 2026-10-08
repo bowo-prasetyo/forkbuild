@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: ef3815d3a8349a5a -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 5024adaa9e307817 -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
@@ -142,21 +142,22 @@ membuat dan memverifikasi.
 ## Gateway IPFS
 
 Gateway untuk membaca konten IPFS, satu URL per baris, dicoba secara
-berurutan seperti milik Arweave. Bawaannya adalah `https://ipfs.io`,
-`https://dweb.link`, `https://4everland.io`, dan
-`https://ipfs.filebase.io`.
+berurutan seperti milik Arweave. Bawaannya adalah `https://ipfs.filebase.io`, `https://gateway.pinata.cloud`, `https://ipfs.io`, `https://dweb.link`, dan `https://4everland.io`.
 
 Daftar ini dipakai saat menyelesaikan atau mewujudkan Penempatan Snapshot
-IPFS, untuk **Verifikasi Konten IPFS**, dan untuk membuka tautan bersama ke
-konten di IPFS. Daftar ini tidak mengubah tempat konten Anda sendiri
-di-pin.
+IPFS, untuk **Verifikasi Konten IPFS**, untuk membuka tautan bersama ke konten di IPFS, dan
+saat Repositori dan tantangan mingguan membaca bangunan yang ditemukan di
+jaringan yang Klaim Bertanda Tangannya ada di IPFS. Daftar ini tidak
+mengubah tempat konten Anda sendiri disematkan.
 
-Beberapa gateway, termasuk `https://ipfs.io`, memblokir permintaan
-otomatis dari sebagian orang di balik pemeriksaan bot; gateway bawaan
-lainnya dijalankan oleh operator yang berbeda, jadi pembacaan beralih ke
-sana. Jika **Verifikasi** atau **Selesaikan** terus gagal dengan "Failed to
-fetch" untuk konten yang Anda tahu ada, tambahkan gateway penyedia pinning
-Anda (misalnya `https://gateway.pinata.cloud`) di bagian paling atas.
+Beberapa gateway, termasuk `https://ipfs.io` dan `https://dweb.link`,
+menolak permintaan dari halaman web untuk sebagian konten, atau
+memblokirnya di balik pemeriksaan bot; gateway bawaan dijalankan oleh
+operator yang berbeda, sehingga pembacaan beralih ke berikutnya. Jika **Verifikasi**
+atau **Selesaikan** terus gagal dengan "Failed to fetch" untuk konten yang Anda tahu
+ada, tambahkan gateway penyedia penyematan Anda di paling atas. Daftar yang
+disimpan sebelum 8 Oktober 2026 mempertahankan urutannya sendiri:
+**Kembalikan ke Bawaan** memulihkan bawaan yang baru.
 
 ## Endpoint Bitcoin
 

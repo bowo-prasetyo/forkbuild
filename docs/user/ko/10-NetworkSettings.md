@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: ef3815d3a8349a5a -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 5024adaa9e307817 -->
 # 10 — 네트워크 설정
 
 <!-- languages -->
@@ -119,18 +119,20 @@ Arweave 앵커는 목록의 첫 번째 게이트웨이로 만들고 검증합니
 ## IPFS 게이트웨이
 
 IPFS 콘텐츠를 읽는 게이트웨이로, 한 줄에 URL 하나씩이며 Arweave처럼 순서대로
-시도합니다. 기본값은 `https://ipfs.io`, `https://dweb.link`,
-`https://4everland.io`, `https://ipfs.filebase.io`입니다.
+시도합니다. 기본값은 `https://ipfs.filebase.io`, `https://gateway.pinata.cloud`, `https://ipfs.io`, `https://dweb.link`, `https://4everland.io`입니다.
 
-이 목록은 IPFS 스냅샷 배치를 해석하거나 구체화할 때, **IPFS 콘텐츠 검증**,
-그리고 IPFS에 있는 콘텐츠의 공유 링크를 열 때 쓰입니다. 내 콘텐츠를 피닝하는 곳은
-바꾸지 않습니다.
+이 목록은 IPFS 스냅샷 배치를 해석하거나 구현할 때, **IPFS 콘텐츠 검증**에, IPFS에 있는
+콘텐츠의 공유 링크를 열 때, 그리고 저장소와 주간 챌린지가 서명된 주장이
+IPFS에 있는 작품을 네트워크에서 찾아 읽을 때 사용됩니다. 내 콘텐츠가
+고정되는 곳은 바뀌지 않습니다.
 
-`https://ipfs.io`를 비롯한 일부 게이트웨이는 봇 확인 뒤에 있는 일부 사람의 자동
-요청을 막습니다. 다른 기본값은 다른 운영자가 운영하므로, 읽기가 그쪽으로
-넘어갑니다. 분명히 있는 콘텐츠인데 **검증**이나 **해석**이 “Failed to fetch”로
-계속 실패하면, 피닝 제공자의 게이트웨이(예: `https://gateway.pinata.cloud`)를 맨
-위에 추가하세요.
+`https://ipfs.io`와 `https://dweb.link` 같은 일부 게이트웨이는 일부
+콘텐츠에 대해 웹 페이지의 요청을 거부하거나 봇 확인 뒤에서 막습니다. 기본
+게이트웨이는 서로 다른 운영자가 운영하므로, 읽기는 다음 게이트웨이로
+넘어갑니다. 있는 줄 아는 콘텐츠에 대해 **검증**나 **해석**가 계속 "Failed to
+fetch"로 실패하면, 사용하는 고정 서비스의 게이트웨이를 맨 위에 추가하세요.
+2026년 10월 8일 이전에 저장한 목록은 자신의 순서를 유지합니다. **기본값으로
+초기화**로 새 기본값을 되돌릴 수 있습니다.
 
 ## Bitcoin 엔드포인트
 

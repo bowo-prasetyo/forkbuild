@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ed8e945e703f3ded -->
+<!-- translation-of: docs/Privacy.md source-hash: d70bfd90aa9c35dd -->
 # Privasi
 
 <!-- languages -->
@@ -232,7 +232,7 @@ Anda dan apa yang Anda minta darinya.
 | Anda membuka tantangan membangun suatu minggu (**Tantangan**) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`) | kueri untuk tag minggu itu (`forkbuild-tag:<tag>`); lalu permintaan rekaman bertanda tangan untuk setiap karya peserta yang baru diumumkan, paling banyak 20 per kunjungan atau **Periksa lagi** |
 | Anda mendistribusikan atau menemukan publikasi melalui Nostr | relay Nostr (`relay.damus.io`) | pengumuman bertanda tangan yang Anda terbitkan; kueri Anda |
 | Anda menyimpan atau mengambil konten di Arweave | gateway Arweave (`arweave.net`) | konten yang Anda terbitkan; apa yang Anda ambil |
-| Anda mengambil konten dari IPFS | gateway IPFS (`ipfs.io`), atau node IPFS Anda sendiri (`127.0.0.1:5001`) | apa yang Anda ambil atau tambahkan |
+| Anda mengambil konten dari IPFS | gateway IPFS (`ipfs.filebase.io`), atau node IPFS Anda sendiri (`127.0.0.1:5001`) | apa yang Anda ambil atau tambahkan |
 | Anda mem-pin konten dengan layanan pinning jarak jauh (*eksperimental*) | layanan yang Anda masukkan | kontennya, dan token yang Anda ketik, yang hanya disimpan sampai halaman ditutup atau dimuat ulang (tidak pernah disimpan permanen); alamat layanan dan nama kolomnya disimpan di perangkat ini setelah Anda menyimpannya di **Penyedia Konten** |
 | Anda menyimpan, mengumumkan, atau menjangkarkan di Steem, atau menemukan pengumuman Steem (*eksperimental*) | node API Steem (`api.steemit.com`, lalu `api.justyy.com`, lalu `steemd.steemworld.org`); penandatanganan melalui ekstensi Steem Keychain | nama akun Steem Anda; apa yang Anda posting (pengumuman, konten tersimpan, jangkar) bersifat publik di rantai untuk selamanya, dan suntingan meninggalkan versi sebelumnya dalam riwayatnya |
 | Anda menyimpan, mengumumkan, atau menjangkarkan di Blurt, atau menemukan postingan Blurt (*eksperimental*) | node API Blurt (`rpc.blurt.blog`, lalu `rpc.beblurt.com`, lalu `rpc.drakernoise.com`); penandatanganan melalui ekstensi Blurt Keychain (atau WhaleVault) | nama akun Blurt Anda, dan akun-akun yang riwayat postingannya dibaca (yang Anda ikuti, dan setiap akun yang pernah dilihat perangkat ini memposting di bawah tag ForkBuild, yang diingat di perangkat ini); apa yang Anda posting bersifat publik di chain selamanya, di bawah akun Anda sendiri, dan suntingan meninggalkan versi sebelumnya di riwayatnya. Setiap transaksi membayar biaya kecil dalam BLURT dari akun Anda |

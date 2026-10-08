@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: ef3815d3a8349a5a -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 5024adaa9e307817 -->
 # 10 — Configuración de red
 
 <!-- languages -->
@@ -146,20 +146,22 @@ verificar.
 ## Gateway de IPFS
 
 Gateways para leer contenido de IPFS, una URL por línea, que se prueban en
-orden como los de Arweave. Los predeterminados son `https://ipfs.io`,
-`https://dweb.link`, `https://4everland.io` y `https://ipfs.filebase.io`.
+orden como los de Arweave. Los predeterminados son `https://ipfs.filebase.io`, `https://gateway.pinata.cloud`, `https://ipfs.io`, `https://dweb.link` y `https://4everland.io`.
 
-Esta lista se usa al resolver o materializar una Ubicación de Snapshot en
-IPFS, para **Verificar contenido de IPFS** y para abrir enlaces compartidos
-a contenido en IPFS. No cambia dónde se fija su propio contenido.
+Esta lista se usa al resolver o materializar una Ubicación de Snapshot de
+IPFS, para **Verificar contenido de IPFS**, para abrir enlaces compartidos a contenido en IPFS y
+cuando el Repositorio y el desafío semanal leen construcciones encontradas
+en las redes cuya Declaración firmada está en IPFS. No cambia dónde se
+fija su propio contenido.
 
-Algunos gateways, entre ellos `https://ipfs.io`, bloquean las solicitudes
-automatizadas de algunas personas detrás de una comprobación antibots; los
-demás predeterminados los administran otros operadores, así que una
-lectura pasa a ellos. Si **Verificar** o **Resolver** siguen fallando con
-“Failed to fetch” para contenido que sabe que está ahí, agregue arriba el
-gateway de su proveedor de pinning (por ejemplo,
-`https://gateway.pinata.cloud`).
+Algunos gateways, entre ellos `https://ipfs.io` y `https://dweb.link`,
+rechazan las solicitudes de páginas web para cierto contenido o las
+bloquean tras una comprobación anti-bots; los predeterminados los operan
+distintas organizaciones, así que una lectura pasa al siguiente. Si **Verificar** o
+**Resolver** sigue fallando con «Failed to fetch» para contenido que sabe que
+existe, añada arriba del todo el gateway de su servicio de fijado. Una
+lista guardada antes del 8 de octubre de 2026 mantiene su propio orden:
+**Restablecer valores predeterminados** recupera los nuevos.
 
 ## Endpoint de Bitcoin
 

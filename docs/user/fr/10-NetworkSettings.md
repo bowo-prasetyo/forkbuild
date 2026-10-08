@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: ef3815d3a8349a5a -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 5024adaa9e307817 -->
 # 10 — Paramètres réseau
 
 <!-- languages -->
@@ -149,21 +149,23 @@ pour créer et vérifier.
 
 Passerelles pour lire le contenu IPFS, une URL par ligne, essayées dans
 l’ordre comme celles d’Arweave. Les valeurs par défaut sont
-`https://ipfs.io`, `https://dweb.link`, `https://4everland.io` et
-`https://ipfs.filebase.io`.
+`https://ipfs.filebase.io`, `https://gateway.pinata.cloud`, `https://ipfs.io`, `https://dweb.link` et `https://4everland.io`.
 
-Cette liste sert à résoudre ou matérialiser un Placement de Snapshot
-IPFS, pour **Vérifier le contenu IPFS**, et pour ouvrir des liens partagés
-vers du contenu sur IPFS. Elle ne change pas l’endroit où votre propre
-contenu est épinglé.
+Cette liste sert à résoudre ou matérialiser un Placement de Snapshot IPFS,
+pour **Vérifier le contenu IPFS**, pour ouvrir les liens partagés vers du contenu sur IPFS, et
+quand le Dépôt et le défi hebdomadaire lisent des constructions trouvées
+sur les réseaux dont la Déclaration signée est sur IPFS. Elle ne change pas
+l’endroit où votre propre contenu est épinglé.
 
-Certaines passerelles, dont `https://ipfs.io`, bloquent les requêtes
-automatisées de certaines personnes derrière une vérification anti-robot ;
-les autres valeurs par défaut sont gérées par d’autres opérateurs, une
-lecture passe donc à elles. Si **Vérifier** ou **Résoudre** échoue sans
-cesse avec « Failed to fetch » pour un contenu dont vous savez qu’il est
-là, ajoutez en haut la passerelle de votre fournisseur d’épinglage (par
-exemple `https://gateway.pinata.cloud`).
+Certaines passerelles, dont `https://ipfs.io` et `https://dweb.link`,
+refusent les requêtes des pages web pour certains contenus, ou les
+bloquent derrière une vérification anti-robots ; les valeurs par défaut
+sont gérées par des opérateurs différents, donc une lecture passe à la
+suivante. Si **Vérifier** ou **Résoudre** échoue sans cesse avec « Failed to fetch » pour
+un contenu que vous savez présent, ajoutez en tête la passerelle de votre
+service d’épinglage. Une liste enregistrée avant le 8 octobre 2026 garde
+son propre ordre : **Rétablir les valeurs par défaut** ramène les
+nouvelles.
 
 ## Endpoint Bitcoin
 
