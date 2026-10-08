@@ -124,7 +124,8 @@ settingsStore.save(new IpfsRemotePinningSettings({ endpoint: 'https://api.exampl
     const placementsTab = [...cards[0].querySelectorAll('[role="tab"]')].find((candidate) => candidate.firstChild.textContent.trim() === 'Placements & IPFS');
     placementsTab.click();
     await settle();
-    assert(cards[0].textContent.includes('https://api.example/pin'), 'the card starts configured with the saved service');
+    const endpointField = [...cards[0].querySelectorAll('.evidence-field')].find((field) => field.querySelector('dt')?.textContent.trim() === 'Endpoint');
+    assert(endpointField && endpointField.querySelector('dd').textContent.trim() === 'https://api.example/pin', 'the card starts configured with the saved service');
     console.log('✓ the Publications card starts on the saved service');
     app.unmount();
     host.remove();
