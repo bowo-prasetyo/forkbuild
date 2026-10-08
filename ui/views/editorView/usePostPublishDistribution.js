@@ -1,6 +1,7 @@
 import { ref, inject } from 'vue';
 import { sanitizeDistributionErrorMessage } from '../../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 import { IpfsRemotePublicationState } from '../../../application/ipfs/IpfsRemotePublicationState.js';
+import { remotePinningDraftFromSettings } from '../../../application/ipfs/IpfsRemotePinningDraft.js';
 import { t } from '../../i18n/i18n.js';
 
 // Post-publish distribution: after a publish, the Editor offers to distribute that exact
@@ -48,7 +49,9 @@ export function usePostPublishDistribution({
         ? snapshotDistributionAvailableStorageTypesCommand()
         : ['ar', 'ipfs'];
     // Never persisted; discarded on reload.
-    const remotePinningDraft = ref({ endpoint: '', credential: '', requestField: '', responseField: '' });
+    // Starts on the service saved under Content Provider, if any.
+    const ipfsRemotePinningSettingsStore = inject('ipfsRemotePinningSettingsStore', null);
+    const remotePinningDraft = ref(remotePinningDraftFromSettings(ipfsRemotePinningSettingsStore ? ipfsRemotePinningSettingsStore.get() : null));
 
     // A plain boolean: the injected commands never change after mount.
     const canDistributePublication = Boolean(multiRelayNostrPublicationDistributionCommand || publicationDistributionCommand);

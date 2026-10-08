@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 2b55b8fafeab85c5 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: fe119546bc539030 -->
 # Ihre Arbeit verteilen
 
 <!-- languages -->
@@ -110,7 +110,7 @@ werden konnte.
 | **Nostr** | Ankündigung / Entdeckung | Eine signierende Nostr-Erweiterung, etwa nos2x | Kündigt bei jedem Relay unter [Nostr-Relays](10-NetworkSettings.md#nostr-relays) gleichzeitig an; mehr Relays heißt, mehr Menschen können Sie finden |
 | **Arweave** | Inhalt, Ankündigung / Entdeckung, Nachweis / Verankerung | Eine Arweave-Wallet-Erweiterung, etwa Wander | Speichert bis zu 256 KB pro Snapshot, etwa achttausend Steine; alles Größere wird vor dem Signieren abgelehnt. Dauerhaft: bleibt verfügbar, wenn Ihr Computer aus ist. Ein neuer Upload kann einige Minuten brauchen, bis er die Gateways erreicht. |
 | **IPFS (Local Kubo)** | Inhalt | Ihr eigener IPFS-Knoten, standardmäßig unter `http://127.0.0.1:5001` | Keine Größenbegrenzung. Nur verfügbar, solange Ihr Knoten online ist, es sei denn, jemand anderes pinnt es. |
-| **IPFS (Remote Pinning)** *(experimentell)* | Inhalt | Ein Konto bei einem Pinata-kompatiblen Pinning-Dienst | Keine Größenbegrenzung. Geben Sie Endpunkt und Zugangsdaten jedes Mal ein; sie werden nie gespeichert. |
+| **IPFS (Remote Pinning)** *(experimentell)* | Inhalt | Ein Konto bei einem Pinata-kompatiblen Pinning-Dienst | Keine Größenbegrenzung. Richten Sie den Dienst einmal unter [Inhaltsanbieter](10-NetworkSettings.md#inhaltsanbieter) ein; das Token wird einmal pro Besuch abgefragt und nie gespeichert. |
 | **Steem** *(experimentell)* | Inhalt, Ankündigung / Entdeckung, Nachweis / Verankerung | Die Erweiterung Steem Keychain mit Ihrem Posting-Schlüssel und Ihr Konto unter [Netzwerkeinstellungen → Steem](10-NetworkSettings.md#steem) | Beiträge sind Antworten auf die monatlichen Threads von ForkBuild; eine Bestätigung pro Beitrag. Speichert etwa 2.500 Steine pro Beitrag, bis zu etwa 30.000 Steine in 20 Beiträgen. Verbraucht Resource Credits, die sich wieder auffüllen. |
 | **Blurt** *(experimentell)* | Inhalt, Ankündigung / Entdeckung, Nachweis / Verankerung | Die Erweiterung Blurt Keychain (oder WhaleVault) mit Ihrem Posting-Schlüssel und Ihr Konto unter [Netzwerkeinstellungen → Blurt](10-NetworkSettings.md#blurt) | Ein Hauptbeitrag von Ihrem eigenen Konto pro Bauwerk, der seine Auszahlung behält; gespeicherte Daten stehen in Antworten darunter. Speichert etwa 2.500 Steine pro Antwort, bis zu etwa 30.000 Steine. Jede Transaktion kostet eine kleine Gebühr in BLURT. |
 | **Bitcoin** *(experimentell)* | Nachweis / Verankerung | Die Erweiterung UniSat, mit Bitcoin auf einer nativen SegWit-Adresse (`bc1q…`) für die Gebühr | Erstellt über die Wallet-Schritte auf der Seite Veröffentlichungen |

@@ -48,7 +48,7 @@ import { PreferredSnapshotPlacementCreationCoordinator } from './PreferredSnapsh
 // in this codebase already takes. A caller wanting a shared instance
 // (e.g. one a future settings UI also reads/writes) passes its own.
 export class CreatePreferredSnapshotPlacementCreationCoordinatorUseCase {
-    execute({ snapshotPlacementCreationCoordinator, contentRegistry, preferenceStore = new RoleProviderPreferenceStore() } = {}) {
+    execute({ snapshotPlacementCreationCoordinator, contentRegistry, preferenceStore = new RoleProviderPreferenceStore(), remotePinning = null } = {}) {
         if (!snapshotPlacementCreationCoordinator || typeof snapshotPlacementCreationCoordinator.create !== 'function') {
             throw new Error('CreatePreferredSnapshotPlacementCreationCoordinatorUseCase: a SnapshotPlacementCreationCoordinator is required');
         }
@@ -69,7 +69,7 @@ export class CreatePreferredSnapshotPlacementCreationCoordinatorUseCase {
         });
         const resolvePreferredRoleProviderUseCase = new ResolvePreferredRoleProviderUseCase({ preferenceStore, resolver });
         const coordinator = new PreferredSnapshotPlacementCreationCoordinator(
-            snapshotPlacementCreationCoordinator, resolvePreferredRoleProviderUseCase
+            snapshotPlacementCreationCoordinator, resolvePreferredRoleProviderUseCase, { remotePinning }
         );
 
         return { coordinator, preferenceStore, resolver, resolvePreferredRoleProviderUseCase };

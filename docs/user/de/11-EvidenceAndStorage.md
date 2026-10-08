@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 441c5aa921f30b41 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: bab90f7325291119 -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
@@ -599,15 +599,17 @@ verwenden** im Reiter **Details → Platzierungen & IPFS** der Karte
 erstellen eine Platzierung auf dem Backend, das unter
 [Inhaltsanbieter](10-NetworkSettings.md#inhaltsanbieter) gespeichert ist.
 Das Speichern einer Präferenz ändert weder die ausdrücklichen
-Schaltflächen noch bestehende Platzierungen. Ist nichts oder IPFS
-(entferntes Pinning) gespeichert, zeigt der Block **Inhalt** jedes Backend
-statt **Auf … speichern**.
+Schaltflächen noch bestehende Platzierungen. Ist nichts
+gespeichert, zeigt der Block **Inhalt** jedes Backend statt **Auf …
+speichern**. Ist IPFS (entferntes Pinning) gespeichert, nutzt **Auf …
+speichern** den unter [Inhaltsanbieter](10-NetworkSettings.md#inhaltsanbieter)
+eingerichteten Dienst.
 
 | Bezeichnung | Bedeutung |
 |---|---|
 | **Platzierung erstellt** | Wie ein Klick auf die Schaltfläche dieses Backends. |
 | **Es wurde keine Platzierung erstellt** | Keine Präferenz gespeichert. |
-| **Bevorzugter Anbieter nicht gefunden** | Das gespeicherte Backend ist auf diesem Gerät nicht registriert, oder es ist IPFS (entferntes Pinning), das jedes Mal einen eingegebenen Endpunkt braucht. |
+| **Bevorzugter Anbieter nicht gefunden** | Das gespeicherte Backend ist auf diesem Gerät nicht registriert, oder es ist IPFS (entferntes Pinning), ohne dass unter Inhaltsanbieter ein Dienst eingerichtet ist. |
 
 ### Die Liste der Snapshot-Platzierungen
 
@@ -689,9 +691,12 @@ aufbewahrt.
 
 ### Einen Anbieter für entferntes Pinning konfigurieren
 
-ForkBuild wird ohne Pinning-Anbieter ausgeliefert. Klicken Sie auf
-**Entferntes Veröffentlichen konfigurieren** (später **Entferntes
-Veröffentlichen neu konfigurieren**):
+ForkBuild wird ohne Pinning-Anbieter ausgeliefert. Die Karte beginnt mit
+dem unter [Inhaltsanbieter](10-NetworkSettings.md#inhaltsanbieter)
+eingerichteten Dienst, falls vorhanden, und dem Token, das Sie bei diesem
+Besuch eingegeben haben. Für einen anderen klicken Sie auf **Entferntes
+Veröffentlichen konfigurieren** (später **Entferntes Veröffentlichen neu
+konfigurieren**):
 
 | Feld | Bedeutung |
 |---|---|
@@ -701,7 +706,8 @@ Veröffentlichen neu konfigurieren**):
 | **Antwortfeld** (optional) | Das Antwortfeld mit der CID. Standard `cid`. |
 
 **Konfiguration speichern** behält sie nur für diesen Besuch; sie wird nie
-gespeichert, und ein Neuladen oder **Konfiguration löschen** verwirft sie.
+gespeichert, und **Konfiguration löschen** verwirft sie; ein Neuladen kehrt zum
+gespeicherten Dienst zurück.
 Abbrechen lässt die vorherige Konfiguration stehen. Eine neue
 Konfiguration beginnt von vorn, ohne dass unter dem neuen Anbieter etwas
 veröffentlicht ist.

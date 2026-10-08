@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 2b55b8fafeab85c5 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: fe119546bc539030 -->
 # Mendistribusikan Karya Anda
 
 <!-- languages -->
@@ -112,7 +112,7 @@ diselesaikan.
 | **Nostr** | Pengumuman / Penemuan | Ekstensi penanda tangan Nostr, seperti nos2x | Mengumumkan ke setiap relay di [Relay Nostr](10-NetworkSettings.md#relay-nostr) sekaligus; makin banyak relay, makin banyak orang yang dapat menemukan Anda |
 | **Arweave** | Konten, Pengumuman / Penemuan, Bukti / Penjangkaran | Ekstensi dompet Arweave, seperti Wander | Menyimpan hingga 256 KB per Snapshot, sekitar delapan ribu balok; yang lebih besar ditolak sebelum ditandatangani. Permanen: tetap tersedia saat komputer Anda mati. Unggahan baru dapat memerlukan beberapa menit untuk sampai ke gateway. |
 | **IPFS (Local Kubo)** | Konten | Node IPFS Anda sendiri, secara bawaan di `http://127.0.0.1:5001` | Tanpa batas ukuran. Hanya tersedia selama node Anda daring, kecuali ada orang lain yang mem-pin-nya. |
-| **IPFS (Remote Pinning)** *(eksperimental)* | Konten | Akun di layanan pinning yang kompatibel dengan Pinata | Tanpa batas ukuran. Ketik endpoint dan kredensial setiap kali; keduanya tidak pernah disimpan. |
+| **IPFS (Remote Pinning)** *(eksperimental)* | Konten | Akun di layanan pinning yang kompatibel dengan Pinata | Tanpa batas ukuran. Siapkan layanannya sekali di [Penyedia Konten](10-NetworkSettings.md#penyedia-konten); token diminta sekali per kunjungan dan tidak pernah disimpan. |
 | **Steem** *(eksperimental)* | Konten, Pengumuman / Penemuan, Bukti / Penjangkaran | Ekstensi Steem Keychain dengan kunci posting Anda, dan akun Anda di [Pengaturan Jaringan → Steem](10-NetworkSettings.md#steem) | Postingan berupa balasan pada utas bulanan ForkBuild; satu persetujuan per postingan. Menyimpan sekitar 2.500 balok per postingan, hingga sekitar 30.000 balok dalam 20 postingan. Memakai Resource Credits, yang terisi kembali. |
 | **Blurt** *(eksperimental)* | Konten, Pengumuman / Penemuan, Bukti / Penjangkaran | Ekstensi Blurt Keychain (atau WhaleVault) dengan kunci posting Anda, dan akun Anda di [Pengaturan Jaringan → Blurt](10-NetworkSettings.md#blurt) | Satu postingan utama dari akun Anda sendiri per bangunan, yang tetap menerima pembayarannya; data yang disimpan ada di balasan di bawahnya. Menyimpan sekitar 2.500 balok per balasan, hingga sekitar 30.000 balok. Setiap transaksi dikenai biaya kecil dalam BLURT. |
 | **Bitcoin** *(eksperimental)* | Bukti / Penjangkaran | Ekstensi UniSat, dengan bitcoin di alamat native SegWit (`bc1q…`) untuk biayanya | Dibuat melalui langkah-langkah dompet di halaman Publikasi |

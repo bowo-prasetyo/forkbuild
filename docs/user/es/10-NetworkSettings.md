@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: b4db56909f354d27 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: ef3815d3a8349a5a -->
 # 10 — Configuración de red
 
 <!-- languages -->
@@ -70,13 +70,13 @@ entre los backends que registró este dispositivo, y haga clic en
 **Guardar**. **Local** no se ofrece, ya que cada publicación ya está
 guardada en este dispositivo.
 
-**IPFS (pinning remoto)** siempre se ofrece. Elegirlo preselecciona el
-pinning remoto como almacenamiento en todos los diálogos **Distribuir**;
-igual tiene que escribir el endpoint y la credencial cada vez. Los botones
-de proveedor preferido no pueden usar el pinning remoto: con él guardado,
-el bloque **Contenido** muestra todos los backends en lugar de **Guardar en
-…**, y **Usar el proveedor preferido** informa **No se encontró el
-proveedor preferido**.
+**IPFS (pinning remoto)** *(experimental)* siempre se ofrece. Usa el
+servicio configurado en **Servicio de pinning remoto**, más abajo: con uno
+configurado, **Guardar en IPFS (pinning remoto)** y **Usar el proveedor
+preferido** colocan el contenido allí, como una ubicación de IPFS normal;
+sin ninguno, avisan de que no hay uno configurado. Elegirlo también
+preselecciona el pinning remoto como almacenamiento en todos los diálogos
+**Distribuir**.
 
 Una segunda sección, **Nodo de IPFS**, configura el nodo al que se envían
 las nuevas ubicaciones en IPFS. El predeterminado es un nodo Kubo local en
@@ -84,6 +84,16 @@ las nuevas ubicaciones en IPFS. El predeterminado es un nodo Kubo local en
 **Guardar**, o **Usar el valor predeterminado de la implementación** para
 volver. No afecta la lectura de contenido de IPFS, que usa la lista de
 [Gateway de IPFS](#gateway-de-ipfs).
+
+Una tercera sección, **Servicio de pinning remoto** *(experimental)*,
+configura el servicio al que sube IPFS (pinning remoto): su **Dirección**
+y, si el servicio los necesita, el **Campo de la solicitud** para el
+archivo y el **Campo de la respuesta** que contiene el CID. **Guardar** los
+conserva en este dispositivo. El **Token** solo se conserva hasta que
+cierre o recargue la página, y nunca se guarda; un servicio que lo necesite
+rechaza las subidas hasta que lo introduzca. Todos los diálogos
+**Distribuir** y la página Publicaciones empiezan con este servicio, y allí
+todavía puede cambiarlo. **Olvidar servicio** lo quita.
 
 ## Proveedor de anuncio / descubrimiento
 

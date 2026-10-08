@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 53567a1ddfefc299 -->
+<!-- translation-of: docs/Privacy.md source-hash: 4772aa7e86875888 -->
 # Privacidade
 
 <!-- languages -->
@@ -156,7 +156,7 @@ pede a ele.
 | Você distribui ou descobre publicações pelo Nostr | relays do Nostr (`relay.damus.io`) | os anúncios assinados que você publica; suas consultas |
 | Você guarda ou busca conteúdo no Arweave | um gateway do Arweave (`arweave.net`) | o conteúdo que você publica; o que você busca |
 | Você busca conteúdo no IPFS | um gateway IPFS (`ipfs.io`), ou seu próprio nó IPFS (`127.0.0.1:5001`) | o que você busca ou adiciona |
-| Você fixa conteúdo num serviço de pinning remoto (*experimental*) | o serviço que você digitar | o conteúdo, e o token que você digita para aquele envio (nunca guardado) |
+| Você fixa conteúdo num serviço de pinning remoto (*experimental*) | o serviço que você digitar | o conteúdo, e o token que você digita, que só fica até você fechar ou recarregar a página (nunca guardado); o endereço do serviço e os nomes de campo ficam neste dispositivo depois que você os salva em **Provedor de conteúdo** |
 | Você guarda, anuncia ou ancora no Steem, ou descobre anúncios do Steem (*experimental*) | nós de API do Steem (`api.steemit.com`, depois `api.justyy.com`, depois `steemd.steemworld.org`); a assinatura passa pela extensão Steem Keychain | o nome da sua conta no Steem; o que você posta (anúncios, conteúdo guardado, âncoras) fica público na cadeia para sempre, e as edições deixam a versão anterior no histórico |
 | Você guarda, anuncia ou ancora no Blurt, ou descobre postagens do Blurt (*experimental*) | nós de API do Blurt (`rpc.blurt.blog`, depois `rpc.beblurt.com`, depois `rpc.drakernoise.com`); a assinatura passa pela extensão Blurt Keychain (ou WhaleVault) | o nome da sua conta no Blurt, e as contas cujo histórico de postagens é lido (as que você segue, e todas as contas que este dispositivo viu postar com as tags do ForkBuild, lembradas neste dispositivo); o que você posta fica público na blockchain para sempre, na sua própria conta, e as edições deixam a versão anterior no histórico. Cada transação paga uma pequena taxa em BLURT da sua conta |
 | Você distribui a Declaração assinada de uma publicação no Blurt (*experimental*) | o servidor de imagens do Blurt (`img-upload.blurt.blog`), diretamente ou, quando o navegador não consegue alcançá-lo, pelo relay `/blurt-image` do servidor de encontro, que não guarda nada | uma imagem 320×200 da construção para a prévia da postagem, assinada com sua chave de postagem do Blurt |

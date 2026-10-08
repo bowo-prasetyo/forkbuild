@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 53567a1ddfefc299 -->
+<!-- translation-of: docs/Privacy.md source-hash: 4772aa7e86875888 -->
 # Datenschutz
 
 <!-- languages -->
@@ -167,7 +167,7 @@ was Sie bei ihm anfragen.
 | Sie verteilen oder entdecken Veröffentlichungen über Nostr | Nostr-Relays (`relay.damus.io`) | signierte Ankündigungen, die Sie veröffentlichen; Ihre Abfragen |
 | Sie speichern oder holen Inhalte auf Arweave | ein Arweave-Gateway (`arweave.net`) | die Inhalte, die Sie veröffentlichen; was Sie abrufen |
 | Sie holen Inhalte von IPFS | ein IPFS-Gateway (`ipfs.io`) oder Ihr eigener IPFS-Knoten (`127.0.0.1:5001`) | was Sie abrufen oder hinzufügen |
-| Sie pinnen Inhalte bei einem entfernten Pinning-Dienst (*experimentell*) | der Dienst, den Sie eingeben | den Inhalt und das Token, das Sie für diesen einen Upload eingeben (nie gespeichert) |
+| Sie pinnen Inhalte bei einem entfernten Pinning-Dienst (*experimentell*) | der Dienst, den Sie eingeben | den Inhalt und das Token, das Sie eingeben und das nur aufbewahrt wird, bis Sie die Seite schließen oder neu laden (nie gespeichert); Adresse und Feldnamen des Dienstes werden auf diesem Gerät aufbewahrt, sobald Sie sie unter **Inhaltsanbieter** speichern |
 | Sie speichern, kündigen an oder verankern auf Steem, oder entdecken Steem-Ankündigungen (*experimentell*) | Steem-API-Knoten (`api.steemit.com`, dann `api.justyy.com`, dann `steemd.steemworld.org`); das Signieren läuft über die Erweiterung Steem Keychain | Ihren Steem-Kontonamen; was Sie posten (Ankündigungen, gespeicherte Inhalte, Anker), ist dauerhaft öffentlich auf der Chain, und Bearbeitungen lassen die frühere Version in ihrem Verlauf |
 | Sie speichern, kündigen an oder verankern auf Blurt, oder entdecken Blurt-Beiträge (*experimentell*) | Blurt-API-Knoten (`rpc.blurt.blog`, dann `rpc.beblurt.com`, dann `rpc.drakernoise.com`); das Signieren läuft über die Erweiterung Blurt Keychain (oder WhaleVault) | Ihren Blurt-Kontonamen und die Konten, deren Beitragsverlauf gelesen wird (die, denen Sie folgen, und jedes Konto, das dieses Gerät unter den Tags von ForkBuild posten gesehen hat, auf diesem Gerät gemerkt); was Sie posten, ist dauerhaft öffentlich auf der Chain, unter Ihrem eigenen Konto, und Bearbeitungen lassen die frühere Fassung in seinem Verlauf. Jede Transaktion kostet Ihr Konto eine kleine Gebühr in BLURT |
 | Sie verteilen den Signierten Anspruch einer Veröffentlichung auf Blurt (*experimentell*) | der Bildhoster von Blurt (`img-upload.blurt.blog`), direkt oder, wenn der Browser ihn nicht erreicht, über das `/blurt-image`-Relay des Rendezvous-Servers, das nichts speichert | ein 320×200-Bild des Bauwerks für die Vorschau des Beitrags, signiert mit Ihrem Blurt-Posting-Schlüssel |

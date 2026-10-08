@@ -540,14 +540,15 @@ Provider** in the card's **Details → Placements & IPFS** tab, create a
 placement on the backend saved under
 [Content Provider](10-NetworkSettings.md#content-provider). Saving a
 preference changes neither the explicit buttons nor existing placements.
-With nothing saved, or with IPFS (Remote Pinning) saved, the **Content**
-block shows every backend instead of **Store on …**.
+With nothing saved, the **Content** block shows every backend instead of
+**Store on …**. With IPFS (Remote Pinning) saved, **Store on …** uses the
+service set up under [Content Provider](10-NetworkSettings.md#content-provider).
 
 | Label | Meaning |
 |---|---|
 | **Placement created** | Same as clicking that backend's button. |
 | **No placement was created** | No preference is saved. |
-| **Preferred provider not found** | The saved backend isn't registered on this device, or it's IPFS (Remote Pinning), which needs an endpoint typed in each time. |
+| **Preferred provider not found** | The saved backend isn't registered on this device, or it's IPFS (Remote Pinning) with no service set up under Content Provider. |
 
 ### The Snapshot Placements list
 
@@ -621,8 +622,10 @@ but every successful publish and every verification is also kept in the
 
 ### Configuring a remote pinning provider
 
-ForkBuild ships with no pinning provider. Click **Configure Remote
-Publishing** (**Reconfigure Remote Publishing** later):
+ForkBuild ships with no pinning provider. The card starts on the service set
+up under [Content Provider](10-NetworkSettings.md#content-provider), if any,
+with the token you entered this visit. To use another, click **Configure
+Remote Publishing** (**Reconfigure Remote Publishing** later):
 
 | Field | Meaning |
 |---|---|
@@ -632,7 +635,7 @@ Publishing** (**Reconfigure Remote Publishing** later):
 | **Response field** (optional) | The response field holding the CID. Default `cid`. |
 
 **Save Configuration** keeps it for this visit only; it's never stored, and
-a reload or **Clear Configuration** discards it. Cancelling leaves the
+**Clear Configuration** discards it; a reload goes back to the saved service. Cancelling leaves the
 previous configuration. Reconfiguring starts over, with nothing published
 under the new provider.
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 53567a1ddfefc299 -->
+<!-- translation-of: docs/Privacy.md source-hash: 4772aa7e86875888 -->
 # Privacidad
 
 <!-- languages -->
@@ -160,7 +160,7 @@ dirección IP y lo que usted le pide.
 | Distribuye o descubre publicaciones a través de Nostr | relays de Nostr (`relay.damus.io`) | los anuncios firmados que publica; sus consultas |
 | Guarda u obtiene contenido en Arweave | un gateway de Arweave (`arweave.net`) | el contenido que publica; lo que obtiene |
 | Obtiene contenido de IPFS | un gateway de IPFS (`ipfs.io`), o su propio nodo IPFS (`127.0.0.1:5001`) | lo que obtiene o agrega |
-| Fija contenido con un servicio de pinning remoto (*experimental*) | el servicio que ingresa | el contenido, y el token que escribe para esa subida (nunca se guarda) |
+| Fija contenido con un servicio de pinning remoto (*experimental*) | el servicio que ingresa | el contenido, y el token que escribe, que solo se conserva hasta que cierre o recargue la página (nunca se guarda); la dirección del servicio y los nombres de campo se guardan en este dispositivo cuando los guarda en **Proveedor de contenido** |
 | Guarda, anuncia o ancla en Steem, o descubre anuncios de Steem (*experimental*) | nodos de la API de Steem (`api.steemit.com`, luego `api.justyy.com`, luego `steemd.steemworld.org`); la firma pasa por la extensión Steem Keychain | el nombre de su cuenta de Steem; lo que publica (anuncios, contenido guardado, anclajes) es público en la cadena para siempre, y las ediciones dejan la versión anterior en su historial |
 | Guarda, anuncia o ancla en Blurt, o descubre publicaciones de Blurt (*experimental*) | nodos de la API de Blurt (`rpc.blurt.blog`, luego `rpc.beblurt.com`, luego `rpc.drakernoise.com`); la firma pasa por la extensión Blurt Keychain (o WhaleVault) | el nombre de su cuenta de Blurt, y las cuentas cuyo historial de publicaciones se lee (las que sigue, y cada cuenta que este dispositivo vio publicar con las etiquetas de ForkBuild, recordadas en este dispositivo); lo que publica es público en la cadena para siempre, con su propia cuenta, y las ediciones dejan la versión anterior en su historial. Cada transacción paga una pequeña comisión en BLURT desde su cuenta |
 | Distribuye en Blurt la Declaración firmada de una publicación (*experimental*) | el alojamiento de imágenes de Blurt (`img-upload.blurt.blog`), directamente o, cuando el navegador no puede alcanzarlo, a través del relé `/blurt-image` del servidor de encuentro, que no guarda nada | una imagen de 320×200 de la construcción para la vista previa de la publicación, firmada con su clave de publicación de Blurt |

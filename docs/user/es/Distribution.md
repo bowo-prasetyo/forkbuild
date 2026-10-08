@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 2b55b8fafeab85c5 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: fe119546bc539030 -->
 # Distribuir su trabajo
 
 <!-- languages -->
@@ -105,7 +105,7 @@ completar.
 | **Nostr** | Anuncio / descubrimiento | Una extensión de firma de Nostr, como nos2x | Anuncia a la vez en todos los relays de [Relays de Nostr](10-NetworkSettings.md#relays-de-nostr); cuantos más relays, más personas pueden encontrarlo |
 | **Arweave** | Contenido, anuncio / descubrimiento, prueba / anclaje | Una extensión de billetera de Arweave, como Wander | Guarda hasta 256 KB por Snapshot, unos ocho mil bloques; todo lo que sea más grande se rechaza antes de firmar. Permanente: sigue disponible con su computadora apagada. Una subida nueva puede tardar unos minutos en llegar a los gateways. |
 | **IPFS (Local Kubo)** | Contenido | Su propio nodo de IPFS, por defecto en `http://127.0.0.1:5001` | Sin límite de tamaño. Disponible solo mientras su nodo esté en línea, a menos que alguien más lo fije. |
-| **IPFS (Remote Pinning)** *(experimental)* | Contenido | Una cuenta en un servicio de pinning compatible con Pinata | Sin límite de tamaño. Escriba el endpoint y la credencial cada vez; nunca se guardan. |
+| **IPFS (Remote Pinning)** *(experimental)* | Contenido | Una cuenta en un servicio de pinning compatible con Pinata | Sin límite de tamaño. Configure el servicio una vez en [Proveedor de contenido](10-NetworkSettings.md#proveedor-de-contenido); el token se pide una vez por visita y nunca se guarda. |
 | **Steem** *(experimental)* | Contenido, anuncio / descubrimiento, prueba / anclaje | La extensión Steem Keychain con su clave de publicación, y su cuenta en [Configuración de red → Steem](10-NetworkSettings.md#steem) | Las publicaciones son respuestas a los hilos mensuales de ForkBuild; una aprobación por publicación. Guarda unos 2.500 bloques por publicación, hasta unos 30.000 bloques en 20 publicaciones. Usa Resource Credits, que se recargan. |
 | **Blurt** *(experimental)* | Contenido, anuncio / descubrimiento, prueba / anclaje | La extensión Blurt Keychain (o WhaleVault) con su clave de publicación, y su cuenta en [Configuración de red → Blurt](10-NetworkSettings.md#blurt) | Una publicación principal desde su propia cuenta por construcción, que conserva su pago; los datos guardados van en respuestas debajo de ella. Guarda unos 2.500 bloques por respuesta, hasta unos 30.000 bloques. Cada transacción cuesta una pequeña comisión en BLURT. |
 | **Bitcoin** *(experimental)* | Prueba / anclaje | La extensión UniSat, con bitcoin en una dirección SegWit nativa (`bc1q…`) para la comisión | Se hace con los pasos de billetera de la página Publicaciones |

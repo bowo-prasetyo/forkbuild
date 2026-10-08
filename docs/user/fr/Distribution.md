@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 2b55b8fafeab85c5 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: fe119546bc539030 -->
 # Distribuer votre travail
 
 <!-- languages -->
@@ -148,7 +148,7 @@ indiquant qu’elle n’a pas pu aboutir.
 | **Nostr** | Annonce / Découverte | Une extension de signature Nostr, comme nos2x | Annonce à tous les relais de [Relais Nostr](10-NetworkSettings.md#relais-nostr) à la fois ; plus de relais, plus de gens peuvent vous trouver |
 | **Arweave** | Contenu, Annonce / Découverte, Preuve / Ancrage | Une extension de portefeuille Arweave, comme Wander | Stocke jusqu’à 256 Ko par Snapshot, soit environ huit mille briques ; au-delà, c’est refusé avant la signature. Permanent : reste disponible quand votre ordinateur est éteint. Un nouvel envoi peut mettre quelques minutes à atteindre les passerelles. |
 | **IPFS (Kubo local)** | Contenu | Votre propre nœud IPFS, par défaut à `http://127.0.0.1:5001` | Pas de limite de taille. Disponible seulement tant que votre nœud est en ligne, sauf si quelqu’un d’autre l’épingle. |
-| **IPFS (épinglage distant)** *(expérimental)* | Contenu | Un compte chez un service d’épinglage compatible Pinata | Pas de limite de taille. Saisissez l’endpoint et l’identifiant à chaque fois ; ils ne sont jamais enregistrés. |
+| **IPFS (épinglage distant)** *(expérimental)* | Contenu | Un compte chez un service d’épinglage compatible Pinata | Pas de limite de taille. Configurez le service une fois sous [Fournisseur de contenu](10-NetworkSettings.md#fournisseur-de-contenu) ; le jeton est demandé une fois par visite et n’est jamais enregistré. |
 | **Steem** *(expérimental)* | Contenu, Annonce / Découverte, Preuve / Ancrage | L’extension Steem Keychain avec votre clé de publication, et votre compte sous [Paramètres réseau → Steem](10-NetworkSettings.md#steem) | Les articles sont des réponses aux fils mensuels de ForkBuild ; une approbation par article. Stocke environ 2 500 briques par article, jusqu’à environ 30 000 briques en 20 articles. Utilise des Resource Credits, qui se rechargent. |
 | **Blurt** *(expérimental)* | Contenu, Annonce / Découverte, Preuve / Ancrage | L’extension Blurt Keychain (ou WhaleVault) avec votre clé de publication, et votre compte sous [Paramètres réseau → Blurt](10-NetworkSettings.md#blurt) | Un article principal depuis votre propre compte par construction, qui garde son paiement ; les données stockées vont dans des réponses en dessous. Stocke environ 2 500 briques par réponse, jusqu’à environ 30 000 briques. Chaque transaction coûte de petits frais en BLURT. |
 | **Bitcoin** *(expérimental)* | Preuve / Ancrage | L’extension UniSat, avec des bitcoins sur une adresse SegWit native (`bc1q…`) pour les frais | Se fait via les étapes de portefeuille de la page Publications |

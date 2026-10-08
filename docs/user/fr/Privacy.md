@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 53567a1ddfefc299 -->
+<!-- translation-of: docs/Privacy.md source-hash: 4772aa7e86875888 -->
 # Confidentialité
 
 <!-- languages -->
@@ -168,7 +168,7 @@ demandez.
 | Vous distribuez ou découvrez des publications via Nostr | des relais Nostr (`relay.damus.io`) | les annonces signées que vous publiez ; vos requêtes |
 | Vous stockez ou récupérez du contenu sur Arweave | une passerelle Arweave (`arweave.net`) | le contenu que vous publiez ; ce que vous récupérez |
 | Vous récupérez du contenu depuis IPFS | une passerelle IPFS (`ipfs.io`), ou votre propre nœud IPFS (`127.0.0.1:5001`) | ce que vous récupérez ou ajoutez |
-| Vous épinglez du contenu chez un service d’épinglage distant (*expérimental*) | le service que vous saisissez | le contenu, et le jeton que vous saisissez pour cet envoi (jamais stocké) |
+| Vous épinglez du contenu chez un service d’épinglage distant (*expérimental*) | le service que vous saisissez | le contenu, et le jeton que vous saisissez, gardé seulement jusqu’à la fermeture ou au rechargement de la page (jamais stocké) ; l’adresse du service et ses noms de champ sont conservés sur cet appareil une fois enregistrés sous **Fournisseur de contenu** |
 | Vous stockez, annoncez ou ancrez sur Steem, ou découvrez des annonces Steem (*expérimental*) | des nœuds API Steem (`api.steemit.com`, puis `api.justyy.com`, puis `steemd.steemworld.org`) ; la signature passe par l’extension Steem Keychain | le nom de votre compte Steem ; ce que vous publiez (annonces, contenu stocké, ancres) est public sur la chaîne pour toujours, et les modifications laissent la version précédente dans son historique |
 | Vous stockez, annoncez ou ancrez sur Blurt, ou découvrez des articles Blurt (*expérimental*) | des nœuds API Blurt (`rpc.blurt.blog`, puis `rpc.beblurt.com`, puis `rpc.drakernoise.com`) ; la signature passe par l’extension Blurt Keychain (ou WhaleVault) | le nom de votre compte Blurt, et les comptes dont l’historique d’articles est lu (ceux que vous suivez, et chaque compte que cet appareil a vu publier sous les tags de ForkBuild, mémorisés sur cet appareil) ; ce que vous publiez est public sur la chaîne pour toujours, sous votre propre compte, et les modifications laissent la version précédente dans son historique. Chaque transaction paie de petits frais en BLURT depuis votre compte |
 | Vous distribuez la Déclaration signée d’une Publication sur Blurt (*expérimental*) | l’hébergeur d’images de Blurt (`img-upload.blurt.blog`), directement ou, quand le navigateur ne peut pas l’atteindre, par le relais `/blurt-image` du serveur de rendez-vous, qui ne conserve rien | une image 320×200 de la construction pour l’aperçu de l’article, signée avec votre clé de publication Blurt |

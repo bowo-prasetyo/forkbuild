@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 2b55b8fafeab85c5 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: fe119546bc539030 -->
 # Distribuindo seu trabalho
 
 <!-- languages -->
@@ -106,7 +106,7 @@ concluída.
 | **Nostr** | Anúncio / descoberta | Uma extensão de assinatura do Nostr, como a nos2x | Anuncia em todos os relays de [Relays do Nostr](10-NetworkSettings.md#relays-do-nostr) de uma vez; mais relays, mais gente pode encontrar você |
 | **Arweave** | Conteúdo, anúncio / descoberta, prova / ancoragem | Uma extensão de carteira do Arweave, como a Wander | Guarda até 256 KB por Snapshot, cerca de oito mil blocos; qualquer coisa maior é recusada antes da assinatura. Permanente: continua disponível com o seu computador desligado. Um envio novo pode levar alguns minutos para chegar aos gateways. |
 | **IPFS (Local Kubo)** | Conteúdo | Seu próprio nó IPFS, por padrão em `http://127.0.0.1:5001` | Sem limite de tamanho. Disponível só enquanto seu nó estiver online, a menos que outra pessoa o fixe. |
-| **IPFS (Remote Pinning)** *(experimental)* | Conteúdo | Uma conta em um serviço de pinning compatível com o Pinata | Sem limite de tamanho. Digite o endpoint e a credencial toda vez; eles nunca são salvos. |
+| **IPFS (Remote Pinning)** *(experimental)* | Conteúdo | Uma conta em um serviço de pinning compatível com o Pinata | Sem limite de tamanho. Configure o serviço uma vez em [Provedor de conteúdo](10-NetworkSettings.md#provedor-de-conteúdo); o token é pedido uma vez por visita e nunca é salvo. |
 | **Steem** *(experimental)* | Conteúdo, anúncio / descoberta, prova / ancoragem | A extensão Steem Keychain com sua chave de postagem, e sua conta em [Configurações de rede → Steem](10-NetworkSettings.md#steem) | As postagens são respostas aos tópicos mensais do ForkBuild; uma aprovação por postagem. Guarda cerca de 2.500 blocos por postagem, até cerca de 30.000 blocos em 20 postagens. Usa Resource Credits, que se recarregam. |
 | **Blurt** *(experimental)* | Conteúdo, anúncio / descoberta, prova / ancoragem | A extensão Blurt Keychain (ou WhaleVault) com sua chave de postagem, e sua conta em [Configurações de rede → Blurt](10-NetworkSettings.md#blurt) | Uma postagem principal da sua própria conta por construção, que mantém seu pagamento; os dados guardados ficam em respostas abaixo dela. Guarda cerca de 2.500 blocos por resposta, até cerca de 30.000 blocos. Cada transação custa uma pequena taxa em BLURT. |
 | **Bitcoin** *(experimental)* | Prova / ancoragem | A extensão UniSat, com bitcoin em um endereço SegWit nativo (`bc1q…`) para a taxa | Feita pelas etapas de carteira na página Publicações |

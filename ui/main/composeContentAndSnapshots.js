@@ -36,6 +36,8 @@ import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/IpfsGatewayConfiguration.j
 import { IpfsGatewayConfigurationStore } from '../../storage/IpfsGatewayConfigurationStore.js';
 import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
 import { IpfsNodeConfigurationStore } from '../../storage/IpfsNodeConfigurationStore.js';
+import { IpfsRemotePinningSettingsStore } from '../../storage/IpfsRemotePinningSettingsStore.js';
+import { SavedRemotePinningContentStore } from '../../application/ipfs/SavedRemotePinningContentStore.js';
 
 // Composition root: IPFS gateway and node settings, the Snapshot placement
 // views and store registries, the role provider preferences, and Snapshot
@@ -54,6 +56,9 @@ export function composeContentAndSnapshots({
     // reading. They are separate settings.
     const ipfsNodeConfigurationStore = new IpfsNodeConfigurationStore(new LocalStorageProvider());
     const resolvedIpfsNodeApiUrl = (ipfsNodeConfigurationStore.get() || { apiUrl: DEFAULT_IPFS_NODE_API_URL }).apiUrl;
+    // The remote pinning service (endpoint and field names; never a token),
+    // read whenever it is used, so a change on Content Provider applies at once.
+    const ipfsRemotePinningSettingsStore = new IpfsRemotePinningSettingsStore(new LocalStorageProvider());
     const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: DEFAULT_IPFS_GATEWAY_URLS }).gatewayUrls;
     function composeIpfsGatewayContentStore(gatewayUrls) {
         return gatewayUrls.length > 1
@@ -96,13 +101,34 @@ export function composeContentAndSnapshots({
         storeRegistry: snapshotPlacementStoreRegistry
     });
 
+    // The saved IPFS (Remote Pinning) preference places through the service
+    // saved under Content Provider: its own placement path, with the same
+    // catalog, knowledge and peer exchange, recording an ordinary 'ipfs'
+    // placement. It is not in the shared registry, so it is never offered as
+    // a separate storage card or snapshot storage.
+    const savedRemotePinningContentStore = new SavedRemotePinningContentStore({ settingsStore: ipfsRemotePinningSettingsStore });
+    const { createExternalSnapshotPlacementUseCase: createRemotePinningPlacementUseCase } = new CreateSnapshotPlacementOrchestratorUseCase().execute({
+        discoveryProvider: publicationCatalogDiscoveryProvider,
+        contentResolver: publicationCatalogContentResolver,
+        placementCatalog: publicationSnapshotPlacementCatalog,
+        identityProvider,
+        stores: [savedRemotePinningContentStore],
+        knowledgeStore: placementKnowledgeStore,
+        peerExchange: publicationSnapshotPlacementPeerExchange
+    });
+    const remotePinning = {
+        isConfigured: () => savedRemotePinningContentStore.isConfigured(),
+        create: (publicationId) => createRemotePinningPlacementUseCase.execute(publicationId, savedRemotePinningContentStore.storage)
+    };
+
     // Adds the saved Content provider preference ("Use Preferred Provider").
     const {
         coordinator: preferredSnapshotPlacementCreationCoordinator,
         preferenceStore: roleProviderPreferenceStore
     } = new CreatePreferredSnapshotPlacementCreationCoordinatorUseCase().execute({
         snapshotPlacementCreationCoordinator,
-        contentRegistry: snapshotPlacementStoreRegistry
+        contentRegistry: snapshotPlacementStoreRegistry,
+        remotePinning
     });
 
     const setRoleProviderPreferenceUseCase = new SetRoleProviderPreferenceUseCase({
@@ -188,7 +214,7 @@ export function composeContentAndSnapshots({
     });
 
     return {
-        ipfsGatewayConfigurationStore, ipfsNodeConfigurationStore, resolvedIpfsNodeApiUrl,
+        ipfsGatewayConfigurationStore, ipfsNodeConfigurationStore, ipfsRemotePinningSettingsStore, resolvedIpfsNodeApiUrl,
         resolvedIpfsGatewayUrls, composeIpfsGatewayContentStore,
         publicationSnapshotPlacementResolutionCoordinator, publicationSnapshotPlacementResolutionStoreRegistry,
         snapshotPlacementViewRegistry, publicationCatalogContentResolver, snapshotPlacementStoreRegistry,

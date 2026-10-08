@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 441c5aa921f30b41 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: bab90f7325291119 -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
@@ -596,15 +596,16 @@ preferido**, en la pestaña **Detalles → Colocaciones e IPFS** de la tarjeta,
 crean una ubicación en el backend guardado en
 [Proveedor de contenido](10-NetworkSettings.md#proveedor-de-contenido).
 Guardar una preferencia no cambia los botones explícitos ni las ubicaciones
-existentes. Sin nada guardado, o con IPFS (pinning remoto) guardado, el
-bloque **Contenido** muestra todos los backends en lugar de **Guardar en
-…**.
+existentes. Sin nada guardado, el bloque **Contenido** muestra todos los
+backends en lugar de **Guardar en …**. Con IPFS (pinning remoto) guardado,
+**Guardar en …** usa el servicio configurado en
+[Proveedor de contenido](10-NetworkSettings.md#proveedor-de-contenido).
 
 | Etiqueta | Significado |
 |---|---|
 | **Ubicación creada** | Lo mismo que hacer clic en el botón de ese backend. |
 | **No se creó ninguna ubicación** | No hay ninguna preferencia guardada. |
-| **No se encontró el proveedor preferido** | El backend guardado no está registrado en este dispositivo, o es IPFS (pinning remoto), que necesita que se escriba un endpoint cada vez. |
+| **No se encontró el proveedor preferido** | El backend guardado no está registrado en este dispositivo, o es IPFS (pinning remoto) sin un servicio configurado en Proveedor de contenido. |
 
 ### La lista de Ubicaciones de Snapshots
 
@@ -684,9 +685,12 @@ correcta y cada verificación también se conservan en el
 
 ### Configurar un proveedor de pinning remoto
 
-ForkBuild no incluye ningún proveedor de pinning. Haga clic en
-**Configurar la publicación remota** (más tarde, **Volver a configurar la
-publicación remota**):
+ForkBuild no incluye ningún proveedor de pinning. La tarjeta empieza con el
+servicio configurado en
+[Proveedor de contenido](10-NetworkSettings.md#proveedor-de-contenido), si
+hay uno, y con el token que introdujo en esta visita. Para usar otro, haga
+clic en **Configurar la publicación remota** (más tarde, **Volver a
+configurar la publicación remota**):
 
 | Campo | Significado |
 |---|---|
@@ -696,7 +700,8 @@ publicación remota**):
 | **Campo de la respuesta (opcional)** | El campo de la respuesta que contiene el CID. Predeterminado: `cid`. |
 
 **Guardar configuración** la conserva solo durante esta visita; nunca se
-guarda, y recargar o **Borrar configuración** la descartan. Cancelar deja
+guarda, y **Borrar configuración** la descarta; al recargar se vuelve al servicio
+guardado. Cancelar deja
 la configuración anterior. Volver a configurar empieza de cero, sin nada
 publicado con el nuevo proveedor.
 

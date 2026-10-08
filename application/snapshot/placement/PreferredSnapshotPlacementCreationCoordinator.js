@@ -104,6 +104,9 @@ import { RoleProviderResolutionStatus } from '../../settings/RoleAwareProviderRe
 // NO_PREFERENCE by `create()`, never acted on.
 export const NON_PREFERABLE_CONTENT_STORAGE_TYPES = Object.freeze(['local']);
 
+// The Content preference key for IPFS (Remote Pinning).
+export const REMOTE_PINNING_PROVIDER_KEY = 'remote-pinning';
+
 export class PreferredSnapshotPlacementCreationCoordinator {
     // `snapshotPlacementCreationCoordinator` — a SnapshotPlacementCreationCoordinator
     // (0.8.25); consulted via `create(publicationId, storage)` and
@@ -112,7 +115,11 @@ export class PreferredSnapshotPlacementCreationCoordinator {
     // ResolvePreferredRoleProviderUseCase (0.9.297); consulted via
     // `execute({ role: CONTENT })` only, and only when `storage` is
     // absent.
-    constructor(snapshotPlacementCreationCoordinator, resolvePreferredRoleProviderUseCase) {
+    // `remotePinning` — optional `{ isConfigured(), create(publicationId) }`
+    // for the saved IPFS (Remote Pinning) preference, which has no registered
+    // store of its own: it places through the remote pinning service saved
+    // under Content Provider (application/ipfs/SavedRemotePinningContentStore.js).
+    constructor(snapshotPlacementCreationCoordinator, resolvePreferredRoleProviderUseCase, { remotePinning = null } = {}) {
         if (!snapshotPlacementCreationCoordinator || typeof snapshotPlacementCreationCoordinator.create !== 'function'
             || typeof snapshotPlacementCreationCoordinator.availableStorageTypes !== 'function') {
             throw new Error('PreferredSnapshotPlacementCreationCoordinator: a SnapshotPlacementCreationCoordinator is required');
@@ -122,6 +129,8 @@ export class PreferredSnapshotPlacementCreationCoordinator {
         }
         this._coordinator = snapshotPlacementCreationCoordinator;
         this._resolvePreferredRoleProviderUseCase = resolvePreferredRoleProviderUseCase;
+        this._remotePinning = remotePinning && typeof remotePinning.create === 'function'
+            && typeof remotePinning.isConfigured === 'function' ? remotePinning : null;
     }
 
     // Unchanged pass-through — see application/
@@ -135,9 +144,14 @@ export class PreferredSnapshotPlacementCreationCoordinator {
     // `availableStorageTypes()`, minus every storage type that is never a
     // meaningful CONTENT preference (NON_PREFERABLE_CONTENT_STORAGE_TYPES
     // above) — what ui/views/ContentProviderSettingsView.js offers.
+    // With a `remotePinning` path, IPFS (Remote Pinning) is preferable too,
+    // set up or not: create() says when no service is set up.
     preferableStorageTypes() {
-        return this.availableStorageTypes()
+        const storages = this.availableStorageTypes()
             .filter((storage) => !NON_PREFERABLE_CONTENT_STORAGE_TYPES.includes(storage));
+        return this._remotePinning && !storages.includes(REMOTE_PINNING_PROVIDER_KEY)
+            ? [...storages, REMOTE_PINNING_PROVIDER_KEY]
+            : storages;
     }
 
     // Resolves to exactly what the wrapped coordinator's own `create()`
@@ -155,6 +169,22 @@ export class PreferredSnapshotPlacementCreationCoordinator {
         }
 
         const decision = this._resolvePreferredRoleProviderUseCase.execute({ role: RoleProviderRole.CONTENT });
+
+        // A saved IPFS (Remote Pinning) preference uses the saved service, or
+        // says that none is set up; it never falls back to another storage.
+        const preferredKey = decision.preference ? decision.preference.providerKey : decision.providerKey;
+        if (preferredKey === REMOTE_PINNING_PROVIDER_KEY && this._remotePinning) {
+            if (!this._remotePinning.isConfigured()) {
+                return {
+                    outcome: RoleProviderResolutionStatus.PROVIDER_NOT_FOUND,
+                    placement: null,
+                    reason: null,
+                    preference: decision.preference || null,
+                    remotePinningNotSetUp: true
+                };
+            }
+            return this._remotePinning.create(publicationId);
+        }
 
         if (decision.status === RoleProviderResolutionStatus.PROVIDER_NOT_FOUND) {
             return {

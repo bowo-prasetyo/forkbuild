@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 441c5aa921f30b41 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: bab90f7325291119 -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
@@ -603,15 +603,16 @@ fournisseur préféré**, dans l’onglet **Détails → Placements et IPFS** de
 la carte, créent un placement sur le backend enregistré sous
 [Fournisseur de contenu](10-NetworkSettings.md#fournisseur-de-contenu).
 Enregistrer une préférence ne change ni les boutons explicites ni les
-placements existants. Sans rien d’enregistré, ou avec IPFS (épinglage
-distant) enregistré, le bloc **Contenu** affiche tous les backends au lieu
-de **Stocker sur …**.
+placements existants. Sans rien d’enregistré, le bloc **Contenu** affiche
+tous les backends au lieu de **Stocker sur …**. Avec IPFS (épinglage
+distant) enregistré, **Stocker sur …** utilise le service configuré sous
+[Fournisseur de contenu](10-NetworkSettings.md#fournisseur-de-contenu).
 
 | Libellé | Signification |
 |---|---|
 | **Placement créé** | Comme un clic sur le bouton de ce backend. |
 | **Aucun placement n’a été créé** | Aucune préférence n’est enregistrée. |
-| **Fournisseur préféré introuvable** | Le backend enregistré n’est pas disponible sur cet appareil, ou c’est IPFS (épinglage distant), qui demande un endpoint saisi à chaque fois. |
+| **Fournisseur préféré introuvable** | Le backend enregistré n’est pas disponible sur cet appareil, ou c’est IPFS (épinglage distant) sans service configuré sous Fournisseur de contenu. |
 
 ### La liste des Placements de Snapshot
 
@@ -695,9 +696,12 @@ l’[Archive des observations de publication](12-ArchiveAndLeaderboards.md#larch
 
 ### Configurer un fournisseur d’épinglage distant
 
-ForkBuild n’est livré avec aucun fournisseur d’épinglage. Cliquez sur
-**Configurer la publication distante** (**Reconfigurer la publication
-distante** ensuite) :
+ForkBuild n’est livré avec aucun fournisseur d’épinglage. La carte part du
+service configuré sous
+[Fournisseur de contenu](10-NetworkSettings.md#fournisseur-de-contenu), s’il
+y en a un, avec le jeton saisi pendant cette visite. Pour en utiliser un
+autre, cliquez sur **Configurer la publication distante** (**Reconfigurer
+la publication distante** ensuite) :
 
 | Champ | Signification |
 |---|---|
@@ -707,8 +711,8 @@ distante** ensuite) :
 | **Champ de réponse** (facultatif) | Le champ de la réponse qui contient le CID. Par défaut `cid`. |
 
 **Enregistrer la configuration** la conserve pour cette visite
-seulement ; elle n’est jamais stockée, et un rechargement ou **Effacer la
-configuration** l’abandonne. Annuler laisse la configuration précédente.
+seulement ; elle n’est jamais stockée, et **Effacer la configuration**
+l’abandonne ; un rechargement revient au service enregistré. Annuler laisse la configuration précédente.
 Reconfigurer repart de zéro, sans rien de publié chez le nouveau
 fournisseur.
 

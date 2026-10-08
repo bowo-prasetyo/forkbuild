@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: b4db56909f354d27 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: ef3815d3a8349a5a -->
 # 10 — Paramètres réseau
 
 <!-- languages -->
@@ -71,13 +71,13 @@ parmi les backends que cet appareil a enregistrés, et cliquez sur
 **Enregistrer**. **Local** n’est pas proposé, puisque chaque publication
 est déjà stockée sur cet appareil.
 
-**IPFS (épinglage distant)** est toujours proposé. Le choisir présélectionne
-l’épinglage distant comme stockage dans chaque boîte de dialogue
-**Distribuer** ; vous saisissez toujours l’endpoint et l’identifiant à
-chaque fois. Les boutons du fournisseur préféré ne peuvent pas utiliser
-l’épinglage distant : quand il est enregistré, le bloc **Contenu** affiche
-tous les backends au lieu de **Stocker sur …**, et **Utiliser le
-fournisseur préféré** indique **Fournisseur préféré introuvable**.
+**IPFS (épinglage distant)** *(expérimental)* est toujours proposé. Il
+utilise le service configuré dans **Service d’épinglage distant**, plus
+bas : s’il y en a un, **Stocker sur IPFS (épinglage distant)** et
+**Utiliser le fournisseur préféré** y placent le contenu, comme un
+placement IPFS ordinaire ; sinon, ils indiquent qu’aucun n’est configuré.
+Le choisir présélectionne aussi l’épinglage distant comme stockage dans
+chaque boîte de dialogue **Distribuer**.
 
 Une seconde section, **Nœud IPFS**, règle le nœud auquel sont envoyés les
 nouveaux placements IPFS. Par défaut, c’est un nœud Kubo local à
@@ -85,6 +85,17 @@ nouveaux placements IPFS. Par défaut, c’est un nœud Kubo local à
 **Enregistrer**, ou **Utiliser la valeur par défaut du déploiement** pour
 revenir en arrière. Cela n’affecte pas la lecture du contenu IPFS, qui
 utilise la liste de [Passerelle IPFS](#passerelle-ipfs).
+
+Une troisième section, **Service d’épinglage distant** *(expérimental)*,
+règle le service vers lequel IPFS (épinglage distant) envoie : son
+**Adresse** et, si le service en a besoin, le **Champ de la requête** pour
+le fichier et le **Champ de la réponse** qui contient le CID.
+**Enregistrer** les conserve sur cet appareil. Le **Jeton** n’est gardé que
+jusqu’à la fermeture ou au rechargement de la page, et n’est jamais
+enregistré ; un service qui en a besoin refuse les envois tant que vous ne
+l’avez pas saisi. Chaque boîte de dialogue **Distribuer** et la page
+Publications partent de ce service, et vous pouvez encore le changer là.
+**Oublier le service** le retire.
 
 ## Fournisseur d’annonce / de découverte
 

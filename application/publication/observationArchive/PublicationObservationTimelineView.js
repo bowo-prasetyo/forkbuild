@@ -373,6 +373,12 @@ export function describePublicationObservationTimeline({ ipfs, bitcoin, base } =
         confirmationHistoriesByAnchorId,
         proofObservationsByAnchorId
     }));
+    // Broadcasts given on their own (the archive keeps them apart from the
+    // anchors' confirmations, and one anchor may be broadcast several times).
+    const broadcasts = Array.isArray(bitcoinInput.broadcasts) ? bitcoinInput.broadcasts : [];
+    broadcasts.forEach((broadcast) => {
+        if (broadcast && broadcast.broadcastedAt instanceof Date) bitcoinEntries.push(bitcoinBroadcastEntry(broadcast));
+    });
 
     const baseObservationsByTransactionHash = (baseInput.observationsByTransactionHash && typeof baseInput.observationsByTransactionHash === 'object')
         ? baseInput.observationsByTransactionHash
