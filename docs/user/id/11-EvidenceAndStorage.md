@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: e6112fd034371b3e -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 03289178d6137f12 -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
@@ -809,7 +809,10 @@ menolak atau gambar tidak dapat dibuat, postingan dikirim tanpanya.
 Sebutan, tag, dan tautan di judul atau deskripsi Anda ditampilkan sebagai
 teks biasa, sehingga tidak memberi tahu siapa pun. Siapa pun yang mengeklik
 tautan itu, bahkan tanpa pernah memakai ForkBuild sebelumnya, akan tiba di
-Tampilan Dunia di bangunan Anda, setelah ForkBuild memeriksa tanda tangan
+halaman bangunan Anda, dengan **Edit Salinan** dan jalan-jalan di Tampilan
+Dunia (lihat
+[Apa yang dibuka sebuah tautan](04-PublishingAndForking.md#apa-yang-dibuka-sebuah-tautan)),
+setelah ForkBuild memeriksa tanda tangan
 Dunia Bersama dan bahwa bangunannya cocok dengan pengumumannya (jika tidak,
 halamannya menyebutkan alasannya). Bangunan itu lalu disimpan di browser
 mereka. Tautan ini memerlukan bangunan yang diumumkan sekaligus disimpan,
@@ -899,6 +902,6 @@ balasan yang belum ada yang dibuat.
 
 Klaim Bertanda Tangan juga dapat disimpan di Blurt, sebagai satu balasan
 lagi. Tautannya bekerja seperti tautan Steem: siapa pun yang mengeklik
-"See it in 3D" akan tiba di Tampilan Dunia pada bangunan Anda, setelah
+"See it in 3D" akan tiba di halaman bangunan Anda, setelah
 ForkBuild memeriksanya. **Bagikan…** dan **Salin tautan** muncul begitu
 klaim itu tersimpan.

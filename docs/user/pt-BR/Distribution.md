@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: fe119546bc539030 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 2c372aadfd2854d8 -->
 # Distribuindo seu trabalho
 
 <!-- languages -->
@@ -132,8 +132,8 @@ construção no Blurt já traz o hash do conteúdo dela; veja [Blurt](11-Evidenc
 4. Se quiser, na página **Publicações**, ancore a publicação (por exemplo
    **Ancorar em Arweave**) para registrar quando ela existia.
 5. Clique em **Compartilhar…** ou **Copiar link** abaixo do resultado para
-   dar às pessoas um link que abre sua construção na Visão do mundo em
-   qualquer dispositivo.
+   dar às pessoas um link que abre sua construção em qualquer dispositivo,
+   pronta para remixar ou passear na Visão do mundo.
 
 Para uma construção maior que os 256 KB do Arweave, escolha o IPFS. Pares
 conectados a você ainda podem buscar construções de até 64 MB direto de

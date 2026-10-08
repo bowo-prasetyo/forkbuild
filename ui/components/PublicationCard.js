@@ -8,6 +8,7 @@ import { describeLicense } from '../../application/document/LicenseLabels.js';
 import { DISTRIBUTION_KIND_LABELS } from '../../application/publication/OwnPublicationDistributionRecord.js';
 import { displayText, t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
+import { remixCountText, remixedFromText } from './remix/remixText.js';
 
 // 0.2.31 — one publication, in card form. Pure presentation: every
 // piece of enriched data (description, parent title, fork count) is
@@ -46,8 +47,9 @@ export default {
     props: {
         publication: { type: Object, required: true },
         description: { type: String, default: '' },
-        parentTitle: { type: String, default: null },
-        forkCount: { type: Number, default: 0 },
+        // What this build was remixed from (core/RemixLineage.js), or null.
+        remixSource: { type: Object, default: null },
+        remixCount: { type: Number, default: 0 },
         // 0.9.539 — see core/PublicationDateAmbiguity.js's own header.
         // True only when the host (PublicationCatalog.js) detected
         // another Publication for the SAME document, published the
@@ -65,6 +67,12 @@ export default {
         };
     },
     computed: {
+        remixedFrom() {
+            return remixedFromText(this.remixSource);
+        },
+        remixes() {
+            return remixCountText(this.remixCount);
+        },
         // Your own publication: where this device recorded distributing it,
         // or null for anyone else's.
         distribution() {
@@ -109,9 +117,7 @@ export default {
         <li class="publication-card">
             <PublicationPreview :publication="publication" size="card" />
             <h3>{{ publication.title }}</h3>
-            <p v-if="publication.parentDocumentId" class="publication-fork-of">
-                {{ t('publicationCard.forkOf', { title: parentTitle || t('publicationCard.unknown') }) }}
-            </p>
+            <p v-if="remixedFrom" class="publication-fork-of">{{ remixedFrom }}</p>
             <p v-if="description" class="publication-description">{{ description }}</p>
             <p class="publication-meta">
                 <span class="publication-badge">{{ t('publicationCard.published') }}</span>
@@ -125,9 +131,7 @@ export default {
             <p class="publication-date" v-if="publication.publishedAt">
                 {{ publishedAtLabel }} · {{ licenseLabel }}
             </p>
-            <p class="publication-forks" v-if="forkCount > 0">
-                {{ t('publicationCard.forkCount', { count: forkCount }) }}
-            </p>
+            <p class="publication-forks" v-if="remixes">{{ remixes }}</p>
             <p v-if="distribution && distribution.recorded" class="publication-distribution">
                 <template v-if="distribution.stored.length">{{ t('publicationCard.storedOn') }}
                     <template v-for="(entry, index) in distribution.stored" :key="'s' + entry.label"><template v-if="index">{{ ' ' + t('publicationCard.and') + ' ' }}</template><span class="publication-distribution-item" :title="entry.detail">{{ entry.label }}</span></template>

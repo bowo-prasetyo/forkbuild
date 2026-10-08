@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c477db500c6a8d08 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 54b42815b27a2697 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -20,8 +20,9 @@ faire évoluer — en conservant tout l’historique.
 3. Donnez-lui un titre — Publier refuse une création sans titre ou vide —
    et, si vous le souhaitez, une description et une licence : cliquez sur
    **✎** à côté du titre du document dans la barre latérale pour ouvrir
-   **Propriétés du document**. Un nouveau document n’a pas de licence,
-   personne ne peut donc le forker tant que vous n’en choisissez pas une.
+   **Propriétés du document**. Un nouveau document n’a pas de licence ;
+   la première fois que vous le publiez, ForkBuild demande si d’autres
+   peuvent le remixer (voir [Laisser les autres la remixer](#laisser-les-autres-la-remixer)).
 4. Appuyez sur **Enregistrer** pour qu’elle soit stockée.
 5. Cliquez sur **Publier**.
 
@@ -59,8 +60,8 @@ boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
 - **La construction voyage dans le lien.** Rien n’a besoin d’être distribué
   d’abord, et aucun portefeuille ni compte n’intervient : le lien
   porte votre Monde partagé signé et la construction elle-même. Quiconque
-  l’ouvre, sur n’importe quel appareil, arrive dans la Vue du monde sur
-  votre construction, et **Modifier une copie** la fait sienne. ForkBuild
+  l’ouvre, sur n’importe quel appareil, arrive sur votre construction (voir
+  [Ce qu’ouvre un lien](#ce-quouvre-un-lien)). ForkBuild
   vérifie la signature, et que la construction lui correspond, avant de
   montrer quoi que ce soit ; un lien modifié ou tronqué le signale.
 - **Il montre ce qu’il est.** Collé dans une messagerie, un courriel ou
@@ -89,6 +90,25 @@ boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
 Copier ou partager un lien, et en ouvrir un, sont comptés anonymement,
 comme la visite quotidienne ; voir
 [Comptage quotidien des visiteurs](13-YourData.md#comptage-quotidien-des-visiteurs).
+
+### Ce qu’ouvre un lien
+
+Un lien vers une construction, qu’il la porte ou qu’il indique où elle
+est stockée, ouvre la page propre à cette construction :
+
+- la construction, qui tourne lentement ;
+- son titre et qui l’a faite ;
+- **Remix de « … » par …** quand c’est un remix, et **Remixée N fois**
+  quand cet appareil a trouvé des remix de celle-ci (voir
+  [Nombre de remix](#nombre-de-remix)) ;
+- **Modifier une copie**, le grand bouton : votre propre copie s’ouvre
+  dans l’Éditeur, prête à être modifiée, sans compte. Elle garde la trace
+  de son origine, son auteur garde donc le mérite, et **Retour au monde**
+  vous mène à l’original ;
+- **En faire le tour dans le Monde**, pour la voir dans la Vue du monde.
+
+Si la licence de la construction n’autorise pas les copies, la page le dit
+et ne propose que d’en faire le tour.
 
 ## Distribuer directement depuis l’Éditeur
 
@@ -184,6 +204,26 @@ bouton n’apparaît que sur vos propres Mondes publiés.
   personnes qui l’ont déjà reçu.
 
 ## Choisir une licence
+
+### Laisser les autres la remixer
+
+La première fois que vous publiez une construction sans licence,
+ForkBuild demande **Autoriser les autres à la remixer ?** avant de publier
+quoi que ce soit :
+
+- **Oui, autoriser les remix** choisit **CC BY 4.0** : chacun peut la
+  copier et la modifier, à condition de vous citer, et chaque remix indique
+  qu’il vient de la vôtre.
+- **Non, seulement la regarder** choisit **Tous droits réservés** : on peut
+  en faire le tour, mais pas la copier.
+- **Pas maintenant** ne publie rien.
+
+Votre réponse est enregistrée comme licence de la construction, on ne vous
+le demande donc qu’une fois ; changez-la quand vous voulez dans
+**Propriétés du document**. Un fork porte déjà la licence de son original,
+le publier ne demande donc jamais rien.
+
+### Toutes les licences
 
 Une création publiée est toujours affichée avec une licence, choisie dans
 la boîte de dialogue **Propriétés du document** :
@@ -388,8 +428,18 @@ ci-dessus.)
    d’origine&gt; »*.
 4. Développez-la, puis enregistrez-la et publiez-la comme la vôtre.
 
-Votre fork publié apparaît avec une note **« ↳ Fork de … »**, qui le
+Votre fork publié apparaît avec une note **Remix de « … » par …**, qui le
 relie à l’original.
+
+### Nombre de remix
+
+La page d’une construction et sa carte dans le Dépôt disent combien de
+fois elle a été remixée (**Remixée 3 fois**) : combien de constructions
+différentes, forkées à partir d’elle et publiées, cet appareil a trouvées.
+Un remix publié deux fois compte une fois, et une construction que
+personne n’a remixée n’affiche rien. Le nombre n’est que ce que cet
+appareil connaît, un autre appareil peut donc afficher un nombre
+différent, et il ne décide jamais de ce qui est montré en premier.
 
 ### Quand un fork ne peut pas aboutir
 

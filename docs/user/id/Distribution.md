@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: fe119546bc539030 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 2c372aadfd2854d8 -->
 # Mendistribusikan Karya Anda
 
 <!-- languages -->
@@ -138,8 +138,8 @@ bangunan Anda sudah memuat hash kontennya; lihat [Blurt](11-EvidenceAndStorage.m
 4. Jika mau, di halaman **Publikasi**, jangkarkan publikasi itu (misalnya
    **Jangkarkan di Arweave**) untuk mencatat kapan publikasi itu sudah ada.
 5. Klik **Bagikan…** atau **Salin tautan** di bawah hasilnya untuk memberi
-   orang tautan yang membuka bangunan Anda di Tampilan Dunia di perangkat
-   apa pun.
+   orang tautan yang membuka bangunan Anda di perangkat apa pun, siap
+   di-remix atau dijelajahi di Tampilan Dunia.
 
 Untuk bangunan yang lebih besar dari batas 256 KB Arweave, pilih IPFS. Rekan
 yang terhubung dengan Anda tetap dapat mengambil bangunan hingga 64 MB

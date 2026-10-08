@@ -162,7 +162,8 @@ content hash; see [Blurt](11-EvidenceAndStorage.md#blurt).
 4. Optionally, on the **Publications** page, anchor the publication (for
    example **Anchor on Arweave**) to record when it existed.
 5. Click **Share…** or **Copy link** under the result to give people a
-   link that opens your build in World View on any device.
+   link that opens your build on any device, ready to remix or walk
+   around in World View.
 
 For a build larger than Arweave's 256 KB, choose IPFS. Peers you're
 connected to can still fetch builds of up to 64 MB straight from you.

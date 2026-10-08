@@ -6,6 +6,7 @@ import { PublicationQuery } from '../../core/PublicationQuery.js';
 import { PublicationSort } from '../../core/PublicationSort.js';
 import { GroupBy, groupPublications } from '../../core/PublicationGrouping.js';
 import { computeAmbiguousPublishedDateIds } from '../../core/PublicationDateAmbiguity.js';
+import { countRemixes, describeRemixSource } from '../../core/RemixLineage.js';
 import PublicationCatalogToolbar from './PublicationCatalogToolbar.js';
 import PublicationCard from './PublicationCard.js';
 import PublicationList from './PublicationList.js';
@@ -70,11 +71,11 @@ export default {
         // re-renders when the current page's own data actually
         // changes — see the module comment on cost.
         const descriptionCache = new Map();
-        const parentTitleCache = new Map();
-        const forkCountCache = new Map();
+        const remixSourceCache = new Map();
+        const remixCountCache = new Map();
         const descriptions = ref({});
-        const parentTitles = ref({});
-        const forkCounts = ref({});
+        const remixSources = ref({});
+        const remixCounts = ref({});
 
         function buildQuery(page) {
             return new PublicationQuery({
@@ -94,15 +95,15 @@ export default {
             return trimmed.slice(0, DESCRIPTION_SNIPPET_LENGTH).trim() + '…';
         }
 
-        // Resolves description/parent-title/fork-count for exactly the
+        // Resolves description/remix source/remix count for exactly the
         // publications on the CURRENT page — bounded by pageSize, not
         // by catalog size, which is what makes this affordable even
         // against a 10,000-publication catalog (see
         // docs/Principles.md).
         function resolveEnrichment(items) {
             const nextDescriptions = { ...descriptions.value };
-            const nextParentTitles = { ...parentTitles.value };
-            const nextForkCounts = { ...forkCounts.value };
+            const nextRemixSources = { ...remixSources.value };
+            const nextRemixCounts = { ...remixCounts.value };
 
             for (const pub of items) {
                 if (!descriptionCache.has(pub.documentId)) {
@@ -118,22 +119,21 @@ export default {
                 nextDescriptions[pub.documentId] = descriptionCache.get(pub.documentId);
 
                 if (pub.parentDocumentId) {
-                    if (!parentTitleCache.has(pub.parentDocumentId)) {
-                        const matches = discoveryProvider.findByDocumentId(pub.parentDocumentId);
-                        parentTitleCache.set(pub.parentDocumentId, matches.length > 0 ? matches[0].title : null);
+                    if (!remixSourceCache.has(pub.id)) {
+                        remixSourceCache.set(pub.id, describeRemixSource(pub, discoveryProvider.findByDocumentId(pub.parentDocumentId)));
                     }
-                    nextParentTitles[pub.documentId] = parentTitleCache.get(pub.parentDocumentId);
+                    nextRemixSources[pub.documentId] = remixSourceCache.get(pub.id);
                 }
 
-                if (!forkCountCache.has(pub.documentId)) {
-                    forkCountCache.set(pub.documentId, discoveryProvider.findByParentId(pub.documentId).length);
+                if (!remixCountCache.has(pub.documentId)) {
+                    remixCountCache.set(pub.documentId, countRemixes(discoveryProvider.findByParentId(pub.documentId), pub.documentId));
                 }
-                nextForkCounts[pub.documentId] = forkCountCache.get(pub.documentId);
+                nextRemixCounts[pub.documentId] = remixCountCache.get(pub.documentId);
             }
 
             descriptions.value = nextDescriptions;
-            parentTitles.value = nextParentTitles;
-            forkCounts.value = nextForkCounts;
+            remixSources.value = nextRemixSources;
+            remixCounts.value = nextRemixCounts;
         }
 
         function runQuery(page = 1) {
@@ -216,7 +216,7 @@ export default {
         return {
             t,
             sort, view, groupBy, pageResult, groups, emptyMessage,
-            descriptions, parentTitles, forkCounts, preciseDateIds,
+            descriptions, remixSources, remixCounts, preciseDateIds,
             onSearch, onChangeSort, onChangeView, onChangeGroupBy, onGoPage,
             networkDiscovery, networkDiscoveryText, searchNetworks,
             openPublication, forkPublication, viewWorld, viewAuthor
@@ -259,8 +259,8 @@ export default {
                             :key="pub.id"
                             :publication="pub"
                             :description="descriptions[pub.documentId]"
-                            :parent-title="parentTitles[pub.documentId]"
-                            :fork-count="forkCounts[pub.documentId] || 0"
+                            :remix-source="remixSources[pub.documentId] || null"
+                            :remix-count="remixCounts[pub.documentId] || 0"
                             :needs-precise-date="preciseDateIds.has(pub.id)"
                             @open="openPublication"
                             @fork="forkPublication"
@@ -272,7 +272,7 @@ export default {
                         v-else
                         :items="group.items"
                         :descriptions="descriptions"
-                        :parent-titles="parentTitles"
+                        :remix-sources="remixSources"
                         :precise-date-ids="preciseDateIds"
                         @open="openPublication"
                         @fork="forkPublication"

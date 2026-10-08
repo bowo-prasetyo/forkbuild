@@ -37,6 +37,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { License, LicenseId } from '../core/License.js';
+import { payloadFromLinkPreviewUrl } from '../core/ForkBuildAppLinks.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -128,8 +129,9 @@ async function startFromHome(browser, base) {
 }
 
 // A link that carries its build, made as Copy link makes one from a castle
-// just published, opens in the published build straight into World View on
-// it, though no network answers.
+// just published, opens in the published build on the castle, though no
+// network answers: its own screen, with Edit a Copy, which opens the visitor's
+// own copy in the Editor, and the walk into World View. It fits a phone.
 async function openLinkOnlyShare(browser, base) {
     const storage = new InMemoryStorageProvider();
     const identity = new LocalIdentityProvider(storage);
@@ -149,10 +151,35 @@ async function openLinkOnlyShare(browser, base) {
     const page = await context.newPage();
     try {
         await page.goto(url);
-        await page.waitForFunction((hash) => location.hash === hash, `#/world/${publication.documentId}`, { timeout: 60_000 });
+        await page.waitForSelector('.shared-build-edit-copy', { timeout: 60_000 });
         assert(!(await page.$('.publication-link-message')), 'the link opened without a complaint');
+        assert((await page.textContent('.shared-build-title')).trim() === 'Linked castle', 'on the castle\'s own screen');
+        await page.waitForSelector('.shared-build-stage canvas', { timeout: 60_000 });
+        await page.click('.shared-build-walk');
+        await page.waitForFunction((hash) => location.hash === hash, `#/world/${publication.documentId}`, { timeout: 60_000 });
+        await page.goBack();
+        await page.waitForSelector('.shared-build-edit-copy', { timeout: 60_000 });
+        await page.click('.shared-build-edit-copy');
+        await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'Fork of Linked castle', null, { timeout: 60_000 });
+        assert(!(await page.$('.fork-failure-dialog')), 'Edit a Copy opens the visitor\'s own copy, with no failure');
     } finally {
         await context.close();
+    }
+
+    const phone = await browser.newContext({ viewport: { width: 390, height: 800 } });
+    const small = await phone.newPage();
+    try {
+        await small.goto(url);
+        await small.waitForSelector('.shared-build-edit-copy', { timeout: 60_000 });
+        const stage = await small.$eval('.shared-build-stage', (element) => element.getBoundingClientRect().bottom);
+        const info = await small.$eval('.shared-build-info', (element) => element.getBoundingClientRect().top);
+        assert(stage <= info + 1, 'on a phone the build comes first');
+        const width = await small.evaluate(() => document.documentElement.scrollWidth);
+        assert(width <= 390, `and the screen fits it (${width}px)`);
+        const button = await small.$eval('.shared-build-edit-copy', (element) => element.getBoundingClientRect().width);
+        assert(button >= 300, `with Edit a Copy across it (${button}px)`);
+    } finally {
+        await phone.close();
     }
 }
 
@@ -186,8 +213,16 @@ async function firstVisit(browser, base) {
         await page.click('.first-build-guide-pill');
         await page.waitForSelector('.first-build-guide');
 
-        // Publish while logged out asks to log in; publishing unsigned still works, and stays possible.
+        // Publish asks first whether others may remix a build with no license
+        // (Not now publishes nothing), then, logged out, to log in; publishing
+        // unsigned still works, and stays possible.
         await page.click('.toolbar-publish');
+        await page.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
+        await page.click('.remix-permission-dialog .action-btn--secondary');
+        assert(!(await page.$('.login-modal-purpose')), 'Not now publishes nothing');
+        await page.click('.toolbar-publish');
+        await page.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
+        await page.click('.remix-permission-look');
         await page.waitForSelector('.login-modal-purpose', { timeout: 10_000 });
         await page.click('.login-modal-skip');
         await page.waitForFunction(() => !document.querySelector('.login-modal-purpose'), null, { timeout: 10_000 });
@@ -208,13 +243,17 @@ async function firstVisit(browser, base) {
     }
 
     // Logging in from Publish: a new identity is made, the build is published
-    // signed, its link is ready to copy, and copying it ticks off sharing.
+    // signed, allowing remixes, its link is ready to copy, and copying it
+    // ticks off sharing. Then the link, opened on another device, makes a
+    // copy there.
     const signing = await browser.newContext({ viewport: { width: 1280, height: 800 }, permissions: ['clipboard-read', 'clipboard-write'] });
     const editor = await signing.newPage();
     try {
         await editor.goto(`${base}/#/editor?start=village:house`);
         await editor.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });
         await editor.click('.toolbar-publish');
+        await editor.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
+        await editor.click('.remix-permission-allow');
         await editor.waitForSelector('.login-modal-purpose', { timeout: 10_000 });
         await editor.fill('.modal-content input[type="text"].modal-input', 'Bundle builder');
         await editor.fill('.new-passphrase-fields input[type="password"] >> nth=0', 'a long bundle passphrase 4821');
@@ -226,6 +265,19 @@ async function firstVisit(browser, base) {
         assert((await editor.textContent('.user-widget')).includes('Bundle builder'), 'and leaves the new identity logged in');
         await editor.click('.editor-post-publish-share .publication-share-link-actions button:has-text("Copy link")');
         await editor.waitForSelector('.first-build-step--done[data-step="share"]', { timeout: 10_000 });
+
+        const friend = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+        try {
+            const visit = await friend.newPage();
+            await visit.goto(`${base}/#/s/${payloadFromLinkPreviewUrl(link)}`);
+            await visit.waitForSelector('.shared-build-edit-copy', { timeout: 60_000 });
+            assert((await visit.textContent('.shared-build-title')).trim() === 'House', 'the link opens on the house');
+            assert((await visit.textContent('.shared-build-license')).includes('CC BY 4.0'), 'which allows remixes, as chosen');
+            await visit.click('.shared-build-edit-copy');
+            await visit.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'Fork of House', null, { timeout: 60_000 });
+        } finally {
+            await friend.close();
+        }
     } finally {
         await signing.close();
     }
@@ -281,9 +333,9 @@ try {
     await startFromHome(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle, and the Repository lists them');
     await openLinkOnlyShare(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ a link that carries its build opens World View on it in the published build, with no network');
+    console.log('✓ a link that carries its build opens on it in the published build, with no network, and Edit a Copy makes the visitor a copy; it fits a phone');
     await firstVisit(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ a first visit: four pages and More in the nav, the guided first build in the Editor, and Publish asking to log in');
+    console.log('✓ a first visit: four pages and More in the nav, the guided first build in the Editor, Publish asking about remixes and to log in, and the published link copied on another device');
 
     const development = await build(join(outdir, 'development-vue'), { developmentVue: true });
     const devServer = await serve(development.outdir);

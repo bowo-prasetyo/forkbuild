@@ -642,6 +642,8 @@ export default {
         // opens; never persisted.
         const entryContext = ref(null);
         let arrivalDocumentId = null;
+        // Set on unmount, so a fork that finishes late opens nothing.
+        let unmounted = false;
 
         // Set only when a fork fails: `{ reason, returnWorldId, focusLocationId }`.
         // Cleared when the dialog closes.
@@ -949,13 +951,12 @@ export default {
                 // Decoded before the try because both outcomes need it: openDocument() on
                 // success and the return address on failure.
                 const decodedEntryContext = editorEntryContextFromQuery(route.query, sourceDocumentId);
-                try {
-                    let sourcePublication = null;
-                    if (route.query.publication) {
-                        sourcePublication = findPublicationUseCase.execute(route.query.publication);
-                    }
-                    const forkedDocument = forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication);
+                let sourcePublication = null;
+                const openFork = (forkedDocument) => {
                     editorSession.openDocument(forkedDocument, decodedEntryContext);
+                    // A copy made on a shared link's screen has no spot to look at,
+                    // so it is seen whole, as a ready-made build is.
+                    if (decodedEntryContext && !decodedEntryContext.focusPosition) editorSession.frameDocument();
                     funnelEventCounter?.forked(sourceDocumentId);
                     // Set only after openDocument() succeeds.
                     entryContext.value = decodedEntryContext;
@@ -964,14 +965,31 @@ export default {
                     feedback.show(decodedEntryContext && decodedEntryContext.title
                         ? t('editor.editingCopy', { title: decodedEntryContext.title })
                         : t('editor.forkCreated', { title: forkedDocument.metadata.title }));
+                };
+                try {
+                    if (route.query.publication) {
+                        sourcePublication = findPublicationUseCase.execute(route.query.publication);
+                    }
+                    openFork(forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication));
                 } catch (err) {
                     // A failed fork shows a dialog with the reason and a way back to where the
                     // viewer came from, instead of a transient toast.
-                    forkFailure.value = {
-                        reason: err.reason || null,
-                        returnWorldId: (decodedEntryContext && decodedEntryContext.returnWorldId) || sourceDocumentId,
-                        focusLocationId: (decodedEntryContext && decodedEntryContext.focusLocationId) || null
+                    const showForkFailure = (err) => {
+                        forkFailure.value = {
+                            reason: err.reason || null,
+                            returnWorldId: (decodedEntryContext && decodedEntryContext.returnWorldId) || sourceDocumentId,
+                            focusLocationId: (decodedEntryContext && decodedEntryContext.focusLocationId) || null
+                        };
                     };
+                    if (forkDocumentUseCase.isWaitingForStorage(err)) {
+                        // Someone else's published build, still on disk: forked once loaded.
+                        forkDocumentUseCase.executeWhenLoaded(sourceDocumentId, identityProvider, sourcePublication).then(
+                            (forkedDocument) => { if (!unmounted) openFork(forkedDocument); },
+                            (loadError) => { if (!unmounted) showForkFailure(loadError); }
+                        );
+                    } else {
+                        showForkFailure(err);
+                    }
                 }
                 router.replace({ path: '/editor' });
             } else if (route.query.load) {
@@ -1132,6 +1150,7 @@ export default {
         });
 
         onBeforeUnmount(() => {
+            unmounted = true;
             if (unsubTool) {
                 unsubTool.unsubscribe();
             }

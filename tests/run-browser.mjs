@@ -32,7 +32,7 @@ const MIME_TYPES = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.json
 const RUNNER_PAGE = `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <script type="importmap">
-{ "imports": { "vue": "/vendor/vue/dist/vue.esm-browser.prod.js", "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }
+{ "imports": { "vue": "/vendor/vue/dist/vue.esm-browser.prod.js", "vue-router": "/vendor/vue-router/dist/vue-router.esm-browser.js", "@vue/devtools-api": "/vendor/vue-devtools-api/lib/esm/index.js", "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }
 </script>
 </head><body></body></html>`;
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c477db500c6a8d08 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 54b42815b27a2697 -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -20,8 +20,9 @@ evoluir — com todo o histórico preservado.
 3. Dê um título a ela — Publicar recusa uma criação sem título ou vazia — e,
    se quiser, uma descrição e uma licença: clique em **✎** ao lado do título
    do documento na barra lateral para abrir **Propriedades do documento**. Um
-   documento novo não tem licença, então ninguém pode bifurcá-lo até você
-   escolher uma.
+   documento novo não tem licença; na primeira vez que você o publicar, o
+   ForkBuild pergunta se outras pessoas podem remixá-lo (veja
+   [Deixando outras pessoas remixarem](#deixando-outras-pessoas-remixarem)).
 4. Pressione **Salvar** para guardá-la.
 5. Clique em **Publicar**.
 
@@ -56,8 +57,8 @@ ficam em **Meu Mundo compartilhado** na Visão do mundo.
 - **A construção vai dentro do link.** Nada precisa ser distribuído antes,
   e nenhuma carteira ou conta entra na história: o link leva seu
   Mundo compartilhado assinado e a própria construção. Quem abrir o link, em
-  qualquer dispositivo, chega à Visão do mundo na sua construção, e **Editar
-  uma cópia** a torna dela. O ForkBuild confere a assinatura, e se a
+  qualquer dispositivo, chega à sua construção (veja
+  [O que um link abre](#o-que-um-link-abre)). O ForkBuild confere a assinatura, e se a
   construção corresponde a ela, antes de mostrar qualquer coisa; um link
   alterado ou cortado avisa isso.
 - **Mostra o que é.** Colado em um aplicativo de conversa, um e-mail ou um
@@ -83,6 +84,25 @@ ficam em **Meu Mundo compartilhado** na Visão do mundo.
 Copiar ou compartilhar um link, e abrir um, são contados de forma anônima,
 como a visita diária; veja
 [Contagem diária de visitantes](13-YourData.md#contagem-diária-de-visitantes).
+
+### O que um link abre
+
+Um link para uma construção, seja ele com a construção dentro ou dizendo
+onde ela está guardada, abre a página própria dessa construção:
+
+- a construção, girando devagar;
+- o título e quem a fez;
+- **Remix de “…”, de …** quando é um remix, e **Remixada N vezes** quando
+  este dispositivo encontrou remixes dela (veja
+  [Contagem de remixes](#contagem-de-remixes));
+- **Editar uma cópia**, o botão grande: sua própria cópia abre no Editor,
+  pronta para mudar, sem precisar de conta. Ela registra de onde veio,
+  então quem fez continua com o crédito, e **Voltar ao mundo** leva você
+  ao original;
+- **Andar ao redor dela no Mundo**, para vê-la na Visão do mundo.
+
+Se a licença da construção não permite cópias, a página diz isso e oferece
+só andar ao redor dela.
 
 ## Distribuindo direto do Editor
 
@@ -174,6 +194,26 @@ Mundos que você mesmo publicou.
   recebeu.
 
 ## Escolhendo uma licença
+
+### Deixando outras pessoas remixarem
+
+Na primeira vez que você publica uma construção sem licença, o ForkBuild
+pergunta **Deixar outras pessoas remixarem?** antes de publicar qualquer
+coisa:
+
+- **Sim, permitir remixes** define **CC BY 4.0**: qualquer pessoa pode
+  copiar e mudar, desde que dê crédito a você, e cada remix mostra que veio
+  da sua.
+- **Não, só deixar olhar** define **Todos os direitos reservados**: dá para
+  andar ao redor, mas não copiar.
+- **Agora não** não publica nada.
+
+Sua resposta é salva como a licença da construção, então a pergunta vem só
+uma vez; mude quando quiser em **Propriedades do documento**. Uma
+bifurcação já leva a licença do original, então publicar uma nunca
+pergunta.
+
+### Todas as licenças
 
 Uma criação publicada sempre aparece com uma licença, escolhida na caixa de
 diálogo **Propriedades do documento**:
@@ -370,8 +410,18 @@ muda um mundo publicado — veja
    original&gt;"*.
 4. Continue a construção, depois salve e publique como sua.
 
-Sua bifurcação publicada aparece com uma nota **"↳ Bifurcação de …"**, que a
+Sua bifurcação publicada aparece com uma nota **Remix de “…”, de …**, que a
 liga de volta ao original.
+
+### Contagem de remixes
+
+A página de uma construção e o cartão dela no Repositório dizem quantas
+vezes ela foi remixada (**Remixada 3 vezes**): quantas construções
+diferentes, bifurcadas dela e publicadas, este dispositivo encontrou. Um
+remix publicado duas vezes conta uma vez, e uma construção que ninguém
+remixou não mostra nada. A contagem é só o que este dispositivo conhece,
+então outro dispositivo pode mostrar um número diferente, e ela nunca
+decide o que aparece primeiro.
 
 ### Quando uma bifurcação não pode ser concluída
 

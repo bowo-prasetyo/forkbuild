@@ -35,6 +35,11 @@ The reference graph groups reference records by publication and is
 recomputed on demand. An incoming count is just a count, never
 popularity or importance, and two identical references stay two edges.
 
+*Changed by "A Remix Count Credits And Invites Remixing; It Is Still Only
+A Count" (2026-10-08):* the number of remixes of a build is shown where
+the build is presented, as an invitation and a credit, though still never
+as a score, rank or sort order. Reference counts are unchanged.
+
 [Full text](history/0.8.md#a-reference-graph-is-grouped-from-durable-facts-and-stays-as-uninterpreted-as-they-are-08105)
 
 ### A Reference-Derived Achievement Is Attributed To A Publication, Never To The Archive As A Whole (0.8.106)
@@ -181,3 +186,14 @@ decision never supersedes or corrects an earlier one. The candidate
 identity comes from the existing projection.
 
 [Full text](history/0.8.md#a-candidates-decision-history-is-a-narration-not-a-state-machine-08154)
+
+### A Remix Count Credits And Invites Remixing; It Is Still Only A Count (2026-10-08)
+
+A shared link's screen and the Repository's cards say how many times a
+build was remixed: the distinct published builds whose Publications name it
+as their parent, as far as this device has found, recomputed whenever
+shown. It is never a score, rank, sort order or achievement threshold, and
+none shows as nothing rather than "0". "Remixed from …" names the parent
+from its own Publication, else from the credit the remix's license carries.
+
+[Full text](history/0.9.md#a-remix-count-credits-and-invites-remixing-it-is-still-only-a-count-2026-10-08)

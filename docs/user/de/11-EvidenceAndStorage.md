@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: e6112fd034371b3e -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 03289178d6137f12 -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
@@ -825,8 +825,9 @@ von Steemit hochgeladen wird; lehnen Sie ab oder lässt es sich nicht
 erstellen, geht der Beitrag ohne Bild hinaus. Erwähnungen, Tags und Links
 in Titel oder Beschreibung werden als reiner Text angezeigt und
 benachrichtigen daher niemanden. Wer auf den Link klickt, selbst ohne
-ForkBuild vorher genutzt zu haben, landet in der Weltansicht bei Ihrem
-Bauwerk, nachdem ForkBuild die Signatur der Geteilten Welt geprüft hat und
+ForkBuild vorher genutzt zu haben, landet auf der Seite Ihres Bauwerks,
+mit **Eine Kopie bearbeiten** und einem Rundgang in der Weltansicht (siehe
+[Was ein Link öffnet](04-PublishingAndForking.md#was-ein-link-öffnet)), nachdem ForkBuild die Signatur der Geteilten Welt geprüft hat und
 dass das Bauwerk zu ihrer Ankündigung passt (wenn nicht, sagt die Seite,
 warum). Das Bauwerk wird dann in seinem Browser aufbewahrt. Der Link
 braucht das Bauwerk angekündigt und gespeichert, was Verteilen erledigt.
@@ -917,6 +918,6 @@ erstellt.
 
 Auch der Signierte Anspruch kann auf Blurt gespeichert werden, als eine
 weitere Antwort. Sein Link funktioniert wie einer von Steem: Wer auf „See
-it in 3D“ klickt, landet in der Weltansicht bei Ihrem Bauwerk, nachdem
+it in 3D“ klickt, landet auf der Seite Ihres Bauwerks, nachdem
 ForkBuild es geprüft hat. **Teilen …** und **Link kopieren** erscheinen,
 sobald er gespeichert ist.

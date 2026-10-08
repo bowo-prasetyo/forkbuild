@@ -5,13 +5,14 @@ import { publicationDateText } from '../i18n/dateText.js';
 import { License } from '../../core/License.js';
 import { describeLicense } from '../../application/document/LicenseLabels.js';
 import { displayText, t } from '../i18n/i18n.js';
+import { remixedFromText } from './remix/remixText.js';
 
 // 0.2.31 — the compact table/row view of a page of publications —
 // "best when there are hundreds or thousands," per the design doc,
 // exactly why it exists alongside PublicationCard rather than
 // replacing it: cards are for visual discovery, this is for scanning
 // a lot of results quickly. Same pure-presentation contract as
-// PublicationCard — every row's description/parent-title is resolved
+// PublicationCard — every row's description/remix source is resolved
 // by the host and handed down already-computed. (Fork counts are a
 // cards-view-only detail; the table has no column for them.)
 //
@@ -33,7 +34,8 @@ export default {
     props: {
         items: { type: Array, required: true },
         descriptions: { type: Object, default: () => ({}) },
-        parentTitles: { type: Object, default: () => ({}) },
+        // What each remix was remixed from (core/RemixLineage.js), by documentId.
+        remixSources: { type: Object, default: () => ({}) },
         // 0.9.539 — see core/PublicationDateAmbiguity.js's own header.
         // Keyed by publicationId (unlike the two maps above, which are
         // keyed by documentId) because the collision this guards
@@ -50,6 +52,7 @@ export default {
         };
     },
     methods: {
+        remixedFromText,
         t,
         licenseLabel(pub) {
             return displayText(describeLicense(License.idOf(pub.license)));
@@ -94,8 +97,8 @@ export default {
                             </td>
                             <td class="publication-table-title-col">
                                 <span class="publication-table-title">{{ pub.title }}</span>
-                                <span v-if="pub.parentDocumentId" class="publication-fork-of">
-                                    {{ t('publicationList.forkOf', { title: parentTitles[pub.documentId] || t('publicationList.unknown') }) }}
+                                <span v-if="remixSources[pub.documentId]" class="publication-fork-of">
+                                    {{ remixedFromText(remixSources[pub.documentId]) }}
                                 </span>
                                 <span v-if="descriptions[pub.documentId]" class="publication-description publication-description--list">
                                     {{ descriptions[pub.documentId] }}

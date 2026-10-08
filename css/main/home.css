@@ -84,13 +84,13 @@
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
 }
 
-.home-showcase-canvas {
+.build-turntable-canvas {
     display: block;
     width: 100%;
     height: 100%;
 }
 
-.home-showcase-fallback {
+.build-turntable-fallback {
     display: block;
     width: 50%;
     height: 100%;

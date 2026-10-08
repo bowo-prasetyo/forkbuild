@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: fe119546bc539030 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 2c372aadfd2854d8 -->
 # 작품 배포하기
 
 <!-- languages -->
@@ -157,8 +157,9 @@ Bitcoin 앵커를 대신하지 말고 함께 쓰세요. [Steem](11-EvidenceAndSt
    시도하세요.
 4. 원하면 **게시물** 페이지에서 게시물을 앵커링해(예: **Arweave에 앵커링**)
    언제 존재했는지 기록하세요.
-5. 결과 아래의 **공유…**나 **링크 복사**를 클릭해, 어느 기기에서든 월드 보기에서
-   내 작품을 여는 링크를 사람들에게 주세요.
+5. 결과 아래의 **공유…**나 **링크 복사**를 클릭해, 어느 기기에서든 내 작품을
+   여는 링크를 사람들에게 주세요. 받은 사람은 리믹스하거나 월드 보기에서
+   둘러볼 수 있습니다.
 
 Arweave의 256KB보다 큰 작품이라면 IPFS를 고르세요. 연결된 피어는 최대 64MB까지의
 작품을 나에게서 직접 가져갈 수 있습니다.
