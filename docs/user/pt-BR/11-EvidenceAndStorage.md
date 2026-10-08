@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0433c4a8b0746f12 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 2699bf9fa2001089 -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
@@ -373,10 +373,13 @@ fica guardado no
 
 ### O que o fluxo não faz
 
-Mesmo uma transação confirmada não cria uma entrada em **Evidências
-externas**, então outras pessoas não conseguem descobri-la como evidência.
-As telas de revisão, assinatura e transmissão são apagadas por um plano
-novo, uma assinatura nova ou uma recarga. O que fica é o registro de
+Quando **Transmitir transação** dá certo, a transação é adicionada à lista
+de **Evidências externas** da publicação como uma âncora nova, sem
+verificação até você clicar em **Verificar evidências**; os pares podem
+encontrá-la com **Descobrir com os pares**. Uma transmissão recusada ou que não
+chega não adiciona nada. O fluxo não guarda suas telas: as de revisão,
+assinatura e transmissão são apagadas por um plano novo, uma assinatura nova
+ou uma recarga. O que fica é o registro de
 publicação feito na finalização, e todo resultado de transmissão e
 confirmação no Arquivo de observações.
 

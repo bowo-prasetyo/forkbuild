@@ -10,7 +10,7 @@ export const evidenceTabTemplate = `<div v-show="entry.detailsTab === 'evidence'
                          class="decentralization-summary">
                         <span class="evidence-convergence-title">{{ t('publications.decentralization') }}</span>
                         <p v-if="entry.replicaKnowledge" class="form-hint form-hint--neutral">
-                            Publication: {{ entry.replicaKnowledge.hasPublication ? t('publications.knownLocally') : t('publications.notKnownLocally') }}
+                            {{ t('publications.publicationKnowledge', { state: entry.replicaKnowledge.hasPublication ? t('publications.knownLocally') : t('publications.notKnownLocally') }) }}
                         </p>
                         <div class="decentralization-dimensions">
                             <div class="decentralization-dimension">

@@ -1615,7 +1615,8 @@ useRoleProviderPreferenceForm) and the narrow-screen layout
 Experimental banner from ui/App.js. A page that is a regular feature with
 Experimental parts, like the Publications page, marks those parts itself
 with `.experimental-badge` instead; `decentralizedPublications/presentation.js`
-lists its Experimental storage types.
+lists its Experimental storage types and anchor types, so graduating one is
+removing it from its list.
 
 Text the app shows goes through ui/i18n/ (see docs/Translating.md).
 ui/i18n/i18n.js holds the one Translator (ui/i18n/Translator.js: message

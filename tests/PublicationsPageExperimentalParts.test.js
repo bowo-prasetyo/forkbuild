@@ -6,7 +6,7 @@
 // its publisher's own signed placement, the same record World View picks.
 import {
     oneClickAnchorTypes, describeClaimRelationship, humanizeDiscoveryProvider, discoveryProviderConfigurationRoute,
-    storageTypeOptionLabel, isExperimentalStorageType
+    storageTypeOptionLabel, isExperimentalStorageType, isExperimentalAnchorType, everyAnchorTypeExperimental
 } from '../ui/views/decentralizedPublications/presentation.js';
 import { latestPublisherPlacementRecord, PublisherPlacementClaimLookup } from '../application/placement/PublisherPlacementClaim.js';
 import { placementMethods } from '../application/worldNavigation/placementMethods.js';
@@ -35,6 +35,15 @@ assert(discoveryProviderConfigurationRoute('steem') === '/settings/steem'
     && discoveryProviderConfigurationRoute('arweave') === '/settings/arweave-gateway'
     && discoveryProviderConfigurationRoute('nostr') === '/settings/nostr-relay', 'and a settings page each');
 console.log('✓ Steem and remote pinning storage are labelled Experimental; IPFS, Arweave and Local are not');
+
+// Anchor types are Experimental one by one, so one can graduate on its own; the
+// Proof / Anchoring block is Experimental as a whole only while all it offers are.
+assert(['bitcoin-op-return', 'base', 'arweave', 'steem', 'blurt'].every(isExperimentalAnchorType), 'every anchor type is Experimental today');
+assert(!isExperimentalAnchorType('some-new-chain') && !isExperimentalAnchorType(undefined), 'a type not on the list is not');
+assert(everyAnchorTypeExperimental(['arweave', 'steem']) && everyAnchorTypeExperimental(['bitcoin-op-return']), 'a block offering only Experimental types is Experimental');
+assert(!everyAnchorTypeExperimental(['arweave', 'some-new-chain']), 'one regular type is enough to drop the block-wide badge');
+assert(!everyAnchorTypeExperimental([]) && !everyAnchorTypeExperimental(null), 'and a block offering nothing claims nothing');
+console.log('✓ anchor types are Experimental one by one, and the block only while all are');
 
 // The publisher's placement.
 function record({ owner, signed = true, updatedAt, x }) {

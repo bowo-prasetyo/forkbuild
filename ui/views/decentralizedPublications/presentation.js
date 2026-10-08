@@ -202,19 +202,31 @@ export function discoveryProviderConfigurationRoute(provider) {
 
 // The parts of the Publications page that stay Experimental while the rest of
 // it is a regular feature: these storage types, Steem and Blurt as substrates
-// (their <option>s say so in the templates), every anchor type, and the sections
-// that carry an Experimental badge. See docs/user/09-PublicationsAndEvidence.md.
+// (their <option>s say so in the templates), these anchor types, and the
+// sections that carry an Experimental badge. Graduating a storage or anchor type
+// is removing it from its list. See docs/user/09-PublicationsAndEvidence.md.
 export const EXPERIMENTAL_STORAGE_TYPES = Object.freeze(['steem', 'blurt', 'remote-pinning']);
+export const EXPERIMENTAL_ANCHOR_TYPES = Object.freeze(['bitcoin-op-return', 'base', 'arweave', 'steem', 'blurt']);
 
 export function isExperimentalStorageType(storage) {
     return EXPERIMENTAL_STORAGE_TYPES.includes(storage);
+}
+
+export function isExperimentalAnchorType(anchorType) {
+    return EXPERIMENTAL_ANCHOR_TYPES.includes(anchorType);
+}
+
+// Whether the Proof / Anchoring block as a whole is Experimental: every anchor
+// type it offers is. Each type's own card is badged either way.
+export function everyAnchorTypeExperimental(anchorTypes) {
+    return Array.isArray(anchorTypes) && anchorTypes.length > 0 && anchorTypes.every(isExperimentalAnchorType);
 }
 
 // An option label that says when a storage type is Experimental, for
 // <select>s, which can't hold a badge.
 export function storageTypeOptionLabel(storage) {
     const label = humanizeStorageType(storage);
-    return isExperimentalStorageType(storage) ? `${label} (Experimental)` : label;
+    return isExperimentalStorageType(storage) ? t('publications.experimentalOption', { name: label }) : label;
 }
 
 // The anchor types a card's generic "Create … Anchor" button can make. Bitcoin

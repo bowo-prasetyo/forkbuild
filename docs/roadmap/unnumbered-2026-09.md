@@ -4319,3 +4319,27 @@ Three components returned `t` twice from `setup()`: `ui/components/NewPassphrase
 - `scripts/build.mjs` throws when esbuild reports any warning for the JavaScript or the stylesheet, after esbuild
   has printed them. `npm run test:bundle` builds the site, so CI now fails on a new warning instead of letting it
   through.
+
+## Experimental anchor types one by one, and the Publications page's untranslated text (unnumbered, 2026-10-08)
+
+**Each anchor type now carries its own Experimental badge, so one can graduate without the rest; and the
+Publications page no longer shows English text in other languages.** An audit of the page's Experimental parts found
+the Proof / Anchoring block could only be Experimental as a whole, which blocks graduating Arweave anchoring on its
+own; four labels written straight into the templates; an English "(Experimental)" added to storage options in every
+language; and a user guide that said the Bitcoin pipeline never adds evidence, which it has done since it was wired to
+`publishBroadcastedAnchor()`.
+
+- `EXPERIMENTAL_ANCHOR_TYPES`, `isExperimentalAnchorType()` and `everyAnchorTypeExperimental()` in
+  `ui/views/decentralizedPublications/presentation.js`. Each one-click anchor card, and the preferred provider's line,
+  is badged by its type; the block's own badge shows only while every type it offers (Bitcoin and Base included when
+  their wallets are set up) is Experimental. Every type still is, so nothing looks different yet.
+- Translated: "Current possession:" (Snapshot Acquisition), "Publication:" and "Snapshot: available" (Local Snapshot)
+  and "Publication:" (Decentralization), through `publications.currentPossession`, `publicationKnowledge`,
+  `snapshotKnowledge` and `availableLower`; `storageTypeOptionLabel()` uses `publications.experimentalOption`. Snapshot
+  State's local possession line passes its message through `displayText()`, as the others do.
+- `publications.experimental2` and `experimental3`, the same word as `publications.experimental`, are gone.
+- `docs/user/11-EvidenceAndStorage.md`, "What the pipeline doesn't do", in every language: a successful broadcast adds
+  the transaction to the evidence list as a new, unverified anchor.
+- `docs/Architecture.md` and `docs/DeveloperFAQ.md`: marking a storage or anchor type Experimental.
+- Tests: `tests/PublicationsPageExperimentalParts.test.js` (anchor types and the block-wide rule) and
+  `tests/PublicationsPageLayoutBrowser.test.js` (the Steem card's badge, and the preferred provider's).

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0433c4a8b0746f12 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 2699bf9fa2001089 -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
@@ -383,10 +383,13 @@ también se conserva en el
 
 ### Lo que no hace el flujo
 
-Ni siquiera una transacción confirmada crea una entrada de **Evidencia
-externa**, así que otras personas no pueden descubrirla como evidencia. Las
-pantallas de revisión, firma y transmisión se borran con un plan nuevo, una
-firma nueva o al recargar. Lo que se conserva es el registro de publicación
+Cuando **Transmitir transacción** funciona, la transacción se añade a la
+lista de **Evidencia externa** de la publicación como un anclaje nuevo, sin
+verificar hasta que haga clic en **Verificar evidencia**; los pares pueden
+encontrarla con **Descubrir de los pares**. Una transmisión rechazada o que
+no llega no añade nada. El flujo no conserva sus pantallas: las de
+revisión, firma y transmisión se borran con un plan nuevo, una firma nueva
+o al recargar. Lo que se conserva es el registro de publicación
 creado al finalizar, y cada resultado de transmisión y de confirmación en el
 Archivo de observaciones.
 

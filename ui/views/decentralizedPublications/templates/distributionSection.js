@@ -149,7 +149,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                             <div v-if="contentPreference.providerKey" class="evidence-discovery">
                                 <p class="form-hint form-hint--neutral">
                                     <I18nText keypath="publications.storesThisPublicationSContent2"><template #provider><strong>{{ humanizeStorageType(contentPreference.providerKey) }}</strong></template></I18nText>
-                                    <span v-if="isExperimentalStorageType(contentPreference.providerKey)" class="experimental-badge">{{ t('publications.experimental2') }}</span>
+                                    <span v-if="isExperimentalStorageType(contentPreference.providerKey)" class="experimental-badge">{{ t('publications.experimental') }}</span>
                                 </p>
                                 <div class="evidence-discovery-header">
                                     <button class="action-btn action-btn--primary"
@@ -181,7 +181,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                 <div v-for="storage in availableStorageTypes" :key="storage" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
                                         <span class="evidence-anchor-type">{{ humanizeStorageType(storage) }}</span>
-                                        <span v-if="isExperimentalStorageType(storage)" class="experimental-badge">{{ t('publications.experimental2') }}</span>
+                                        <span v-if="isExperimentalStorageType(storage)" class="experimental-badge">{{ t('publications.experimental') }}</span>
                                         <span v-if="placementCreationView(entry, storage).label" class="peer-badge" :class="placementCreationBadgeClass(entry, storage)">
                                             {{ displayText(placementCreationView(entry, storage).label) }}
                                         </span>
@@ -208,16 +208,17 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                             </details>
                         </div>
 
-                        <!-- Proof / Anchoring, Experimental as a whole: one
-                             button for the saved preferred provider (the
-                             person's own choice, named; never Bitcoin or
-                             Base, which take wallet steps), then one card per
-                             anchorType a click can make, folded when that
-                             button is shown. -->
+                        <!-- Proof / Anchoring: one button for the saved
+                             preferred provider (the person's own choice,
+                             named; never Bitcoin or Base, which take wallet
+                             steps), then one card per anchorType a click can
+                             make, folded when that button is shown. Each
+                             Experimental type is badged; the block is too
+                             while every type it offers is. -->
                         <div v-if="oneClickAnchorTypes.length > 0 || bitcoinWalletConnection || baseAnchorPublisher" class="identity-mgmt-distribution-role">
                             <div class="evidence-discovery-header">
                                 <span class="evidence-convergence-title">{{ t('publications.proofAnchoring') }}</span>
-                                <span class="experimental-badge">{{ t('publications.experimental2') }}</span>
+                                <span v-if="proofAnchoringExperimental" class="experimental-badge">{{ t('publications.experimental') }}</span>
                                 <router-link to="/settings/anchor-provider" class="action-btn action-btn--secondary">{{ t('publications.configure') }}</router-link>
                             </div>
                             <!-- Resolves the saved PROOF_AND_ANCHORING
@@ -226,6 +227,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                 <template v-if="anchorPreference.providerKey">
                                     <p class="form-hint form-hint--neutral">
                                         <I18nText keypath="publications.recordsThisPublicationSContent"><template #provider><strong>{{ humanizeAnchorType(anchorPreference.providerKey) }}</strong></template></I18nText>
+                                        <span v-if="isExperimentalAnchorType(anchorPreference.providerKey)" class="experimental-badge">{{ t('publications.experimental') }}</span>
                                     </p>
                                     <div class="evidence-discovery-header">
                                         <button class="action-btn action-btn--primary"
@@ -271,6 +273,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                 <div v-for="anchorType in oneClickAnchorTypes" :key="anchorType" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
                                         <span class="evidence-anchor-type">{{ humanizeAnchorType(anchorType) }}</span>
+                                        <span v-if="isExperimentalAnchorType(anchorType)" class="experimental-badge">{{ t('publications.experimental') }}</span>
                                         <span v-if="creationView(entry, anchorType).label" class="peer-badge" :class="creationBadgeClass(entry, anchorType)">
                                             {{ displayText(creationView(entry, anchorType).label) }}
                                         </span>
