@@ -6,8 +6,9 @@
 
 ForkBuild has no accounts and does not track you. It stores your work in
 your own browser and talks to other computers only for the features that
-need them, plus one anonymous visitor count a day so its makers know roughly
-how many people use it (see "Visitor count" below, and how to turn it off).
+need them, plus an anonymous visitor count, once a day and when a share
+link is used, so its makers know roughly how many people use it and share
+builds (see "Visitor count" below, and how to turn it off).
 This page lists what it stores, and every server it can contact and when.
 
 ## What stays on your device
@@ -108,7 +109,20 @@ sets no cookies. That request is all it sends:
 - **Anyone can see the totals** on the public dashboard,
   <https://forkbuild.goatcounter.com/>.
 
-It is never sent:
+The same counter also hears about three moments in sharing a build, each as
+one more image request of the same kind, under its own fixed path:
+
+- `/e/share-link`: a link to a build was copied or shared with **Copy link**
+  or **Share…**;
+- `/e/opened-shared-link`: a shared link opened a build;
+- `/e/remix-from-link`: a build opened from a shared link was copied into
+  the Editor (at most once per build each time the app is open).
+
+Each sends only its path and the random number: never the link, the build,
+its title or who made it. Which builds were opened from a link is kept only
+in the open page's memory, and forgotten when it closes.
+
+None of these is ever sent:
 
 - when your browser sends Global Privacy Control or Do Not Track;
 - when you turn off **Your Data → Daily visitor count → Count this
@@ -116,8 +130,9 @@ It is never sent:
 - from any copy of ForkBuild served from somewhere other than the official
   site, including `localhost`.
 
-The code is `core/VisitorCount.js`, `application/settings/CountDailyVisit.js`
-and `ui/start.js`.
+The code is `core/VisitorCount.js`, `application/settings/CountDailyVisit.js`,
+`application/settings/FunnelEventCounter.js`, `ui/counterHit.js` and
+`ui/start.js`.
 
 ## Servers ForkBuild contacts
 
@@ -135,6 +150,7 @@ only when you use the feature, and each server can be changed under
 | When | Server (default) | What it receives |
 | --- | --- | --- |
 | The app opens on the official site, at most once a day (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path, no referrer and no cookie |
+| On the official site, you copy or share a link to a build, open a shared link, or copy a build opened from one into the Editor (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
 | You make yourself discoverable, or look someone up, in **Peers** | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | your identity's public key and a connection offer, kept for at most 15 minutes; the identity you look up; when you connect to someone you found, your connection reply (it lists your network addresses), which only they can collect |
 | You join, or look into, a public lobby | the same rendezvous server | your signed lobby card (public key, display name, which lobby), kept for at most 15 minutes and renewed while you stay; which lobby you look into |
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |
@@ -156,6 +172,14 @@ only when you use the feature, and each server can be changed under
 
 ForkBuild never sends your private key, your passphrase, or your saved
 documents to any of these servers.
+
+**A link that carries its build** (`#/s/…`, made by **Copy link** or
+**Share…** before a build is distributed) holds your signed Shared World and
+the build itself after the `#`, a part of an address browsers never send to
+a server. Making one contacts nothing, and opening one contacts nothing but
+the site that serves the app. Anyone who has the link can see the build, its
+title, description and author name, and your identity's public key, as with
+any Shared World you distribute.
 
 **Relays are used only when needed.** A connection always tries a direct
 path first, then one found through STUN, and falls back to the TURN relay

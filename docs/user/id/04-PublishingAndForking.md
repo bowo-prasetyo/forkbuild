@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1f52c96ba8857c6b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e2f44cb736080f44 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -38,12 +38,49 @@ punya tempat untuk dituju — lihat
 > **Tidak ada distribusi yang tercatat di perangkat ini.** Cadangkan di
 > [Data Anda](13-YourData.md) untuk menyimpan salinan sementara itu.
 > Menerbitkan tidak pernah mengirim apa pun ke mana pun dengan sendirinya.
+> [Tautan](#membagikan-tautan) yang Anda salin membawa bangunan itu kepada
+> orang yang Anda beri.
 > Dua langkah terpisah yang opsional yang melakukannya: **Distribusikan**,
-> yang dijelaskan berikutnya, mengirim publikasi ke Arweave atau IPFS dan
+> yang dijelaskan di bawah, mengirim publikasi ke Arweave atau IPFS dan
 > mengumumkannya di Nostr atau Arweave sehingga orang lain dapat
 > menemukannya tanpa terhubung dengan Anda; dan
 > [**Bagikan dengan Rekan**](#berbagi-dengan-rekan-yang-terhubung)
 > menawarkannya kepada orang-orang yang terhubung dengan Anda.
+
+## Membagikan tautan
+
+Begitu **Terbitkan** berhasil, pemberitahuan di Editor juga menampilkan
+**Bagikan…** (jika perangkat Anda punya menu berbagi), **Salin tautan**, dan
+**Simpan gambar**, dengan tautannya di bawahnya. Tombol yang sama ada di
+bawah **Dunia Bersama Saya** di Tampilan Dunia.
+
+- **Bangunannya ikut di dalam tautan.** Tidak ada yang perlu
+  didistribusikan lebih dulu, dan tidak ada dompet, akun, atau server yang
+  terlibat: tautan itu membawa Dunia Bersama Anda yang bertanda tangan dan
+  bangunannya sendiri. Siapa pun yang membukanya, di perangkat apa pun,
+  sampai di Tampilan Dunia pada bangunan Anda, dan **Edit Salinan**
+  menjadikannya milik mereka. ForkBuild memeriksa tanda tangannya, dan
+  bahwa bangunannya cocok, sebelum menampilkan apa pun; tautan yang diubah
+  atau terpotong akan mengatakannya.
+- **Perlu tanda tangan.** Terbitkan saat masuk; karya yang diterbitkan saat
+  keluar tidak mendapat tautan.
+- **Ukuran.** Bangunan hingga sekitar 500 balok muat; tautan kastel siap
+  pakai sekitar 3.700 karakter. Email serta sebagian besar aplikasi obrolan
+  dan media sosial mempertahankan tautan sepanjang itu, tetapi Discord dan
+  Telegram membatasi panjang pesan. Bangunan yang lebih besar mengatakan
+  bahwa ia terlalu besar untuk tautan: distribusikan untuk mendapatkannya.
+- **Setelah didistribusikan**, tombol-tombolnya menawarkan tautan yang
+  lebih pendek yang menyebut tempat Dunia Bersama disimpan, yang juga
+  membawa penempatan Anda (lihat [Distribusi](Distribution.md)). Tautan yang
+  membawa bangunannya tidak membawa penempatan Anda, jadi Tampilan Dunia
+  menaruh bangunan itu di tempat ia menaruh bangunan tanpa penempatan.
+- **Simpan gambar** mengunduh PNG 1200 × 630 dari bangunan itu, dengan
+  judulnya dan "Remix di ForkBuild" di bagian bawah, untuk diunggah di
+  tempat yang tidak menampilkan gambar untuk tautan saja.
+
+Menyalin atau membagikan tautan, dan membukanya, dihitung secara anonim,
+seperti kunjungan harian; lihat
+[Hitungan pengunjung harian](13-YourData.md#hitungan-pengunjung-harian).
 
 ## Mendistribusikan langsung dari Editor
 

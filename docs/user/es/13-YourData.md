@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 01cc1df409866b2e -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 268072de3b1fe04f -->
 # 13 — Sus datos
 
 <!-- languages -->
@@ -196,8 +196,11 @@ mientras quieran.
 
 Al final de la página, **Recuento diario de visitantes** controla lo único
 que ForkBuild envía sin que ninguna función lo necesite. Una vez al día, el
-sitio oficial avisa a GoatCounter de que un navegador más lo ha abierto. La
-solicitud no nombra ninguna página, construcción ni persona y no guarda
+sitio oficial avisa a GoatCounter de que un navegador más lo ha abierto. De
+la misma manera, también cuenta cuando se copia o se comparte un enlace a
+una construcción, cuando se abre un enlace compartido y cuando una
+construcción abierta desde uno se copia en el Editor. Cada solicitud es una
+ruta fija que no nombra ninguna página, construcción ni persona y no guarda
 cookies, y cualquiera puede ver los totales en el panel público. Desmarque
 **Contar este navegador** para detenerlo; la elección se guarda al
 instante, solo en este navegador. Un navegador que envía Global Privacy

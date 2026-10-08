@@ -12,6 +12,9 @@ export const FORKBUILD_APP_URL = 'https://bowo-prasetyo.github.io/forkbuild/';
 const PERMLINK_PATTERN = /^[a-z0-9-]{1,256}$/;
 // An Arweave transaction id: 43 base64url characters.
 const ARWEAVE_ID_PATTERN = /^[A-Za-z0-9_-]{43}$/;
+// A link-only share's payload (application/publication/sharing/
+// PublicationLinkPayload.js): base64url, as one path segment.
+const LINK_PAYLOAD_PATTERN = /^[A-Za-z0-9_-]+$/;
 // An IPFS CID on its own (no path): CIDv0 (base58, "Qm…") or CIDv1 (base32,
 // "b…", or base36, "k…"), letters and digits only.
 const IPFS_CID_PATTERN = /^[A-Za-z0-9]{32,128}$/;
@@ -99,4 +102,20 @@ export function publicationViewUrl(locator, appUrl = FORKBUILD_APP_URL) {
 // (`{ uri, storage }`); null when there is no link for it.
 export function publicationShareUrl(material, appUrl = FORKBUILD_APP_URL) {
     return publicationViewUrl(material?.uri, appUrl);
+}
+
+// The app route that opens a Publication carried inside the link itself, its
+// Signed Claim and its build together (`/s/<payload>`), so sharing it needs no
+// network. The route is in the fragment, which browsers never send to a server.
+export function linkOnlyPublicationViewPath(payload) {
+    if (!isLinkOnlyPublicationPayload(payload)) throw new TypeError('not a link payload');
+    return `/s/${payload}`;
+}
+
+export function linkOnlyPublicationViewUrl(payload, appUrl = FORKBUILD_APP_URL) {
+    return `${appUrl}#${linkOnlyPublicationViewPath(payload)}`;
+}
+
+export function isLinkOnlyPublicationPayload(payload) {
+    return typeof payload === 'string' && LINK_PAYLOAD_PATTERN.test(payload);
 }

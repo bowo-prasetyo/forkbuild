@@ -41,6 +41,9 @@ models").
   library, structure placements, and document export/import.
 - Save, autosave with crash recovery, and publishing to an immutable,
   content-hashed snapshot.
+- Share a build the moment it's published: the link carries the signed build
+  itself, so it opens in World View on any device with no wallet, account or
+  server, and **Save picture** downloads a PNG of it to post alongside.
 
 **World View**
 - A shared world where published creations are placed and streamed in around

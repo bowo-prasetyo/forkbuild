@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 01cc1df409866b2e -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 268072de3b1fe04f -->
 # 13 — Ihre Daten
 
 <!-- languages -->
@@ -196,9 +196,12 @@ festgehalten: Sie behalten eine Kopie nur so lange, wie sie möchten.
 Ganz unten auf der Seite steuert **Tägliche Besucherzählung** das Einzige,
 was ForkBuild sendet, ohne dass eine Funktion es braucht. Einmal am Tag
 teilt die offizielle Website GoatCounter mit, dass ein weiterer Browser sie
-geöffnet hat. Die Anfrage nennt keine Seite, kein Bauwerk und keine Person
-und setzt kein Cookie, und die Summen kann jeder im öffentlichen Dashboard
-sehen. Entfernen Sie das Häkchen bei **Diesen Browser mitzählen**, um sie
+geöffnet hat. Auf die gleiche Weise zählt sie außerdem, wenn ein Link zu
+einem Bauwerk kopiert oder geteilt wird, wenn ein geteilter Link geöffnet
+wird und wenn ein darüber geöffnetes Bauwerk in den Editor kopiert wird.
+Jede Anfrage ist ein fester Pfad, der keine Seite, kein Bauwerk und keine
+Person nennt und kein Cookie setzt, und die Summen kann jeder im
+öffentlichen Dashboard sehen. Entfernen Sie das Häkchen bei **Diesen Browser mitzählen**, um sie
 abzuschalten; die Wahl wird sofort gespeichert, nur in diesem Browser. Ein
 Browser, der Global Privacy Control oder Do Not Track sendet, wird nie
 gezählt, und der Schalter sagt das. Was genau gesendet wird, steht unter

@@ -30,6 +30,11 @@ import { isUserFacingError } from '../../core/UserFacingError.js';
 //      publisher put it. Searched for even when the build is already here,
 //      until this device holds one.
 //
+// A link-only share (`#/s/<payload>`) carries the claim and the build
+// themselves (`linkOnly`, application/publication/sharing/PublicationLinkPayload.js):
+// nothing is read from a network, and the build it carries is the first one
+// tried in step 3.
+//
 // World View then loads the Publication like any other. Nothing here trusts
 // where the claim came from: the signature and the content hash decide.
 
@@ -48,25 +53,29 @@ const Outcome = OpenPublicationLinkOutcome;
 // per network where what to say differs (publicationLink.<outcome>.<network>).
 // `detail` is the network's own error text, which is not translated.
 const CANDIDATE_STORAGE_ORDER = ['steem', 'blurt', 'ar', 'ipfs'];
+const LINK_ONLY_SOURCE = Object.freeze({ network: 'link', locator: 'link', label: message('publicationLink.label.link') });
 
 // `locator` is where the Signed Claim is stored; `retrieveClaim(locator)`
 // resolves to its JSON, null when it isn't there, or rejects when the
-// network can't be reached.
+// network can't be reached. `linkOnly` (`{ claim, snapshotText }`) replaces
+// `locator` for a link that carries both.
 export async function openPublicationLink({
-    locator,
-    retrieveClaim, verifier,
+    locator = null, linkOnly = null,
+    retrieveClaim = null, verifier,
     hasLocalContent = async () => false,
     findSnapshotCandidates = null, resolveSnapshotCandidate = null,
     storeSnapshotContent,
     discoveryProvider = null, admissionLog = null,
     publisherPlacement = null
 }) {
-    const where = describePublicationClaimLocator(locator);
-    if (!where) return failure(Outcome.INVALID_LINK, message('publicationLink.invalid'));
+    const where = linkOnly ? LINK_ONLY_SOURCE : describePublicationClaimLocator(locator);
+    if (!where || (linkOnly && (!linkOnly.claim || typeof linkOnly.snapshotText !== 'string'))) {
+        return failure(Outcome.INVALID_LINK, message('publicationLink.invalid'));
+    }
 
     let material;
     try {
-        material = await retrieveClaim(where.locator);
+        material = linkOnly ? linkOnly.claim : await retrieveClaim(where.locator);
     } catch (error) {
         return failure(Outcome.UNREACHABLE, message(`publicationLink.unreachable.${where.network}`, {
             label: where.label,
@@ -99,7 +108,9 @@ export async function openPublicationLink({
     }
 
     const contentHash = publication.contentReference?.hash ?? publication.contentHash;
-    const found = await findSnapshot({ publication, contentHash, hasLocalContent, findSnapshotCandidates, resolveSnapshotCandidate, storeSnapshotContent });
+    const found = linkOnly
+        ? await storeLinkedSnapshot({ publication, contentHash, snapshotText: linkOnly.snapshotText, hasLocalContent, storeSnapshotContent })
+        : await findSnapshot({ publication, contentHash, hasLocalContent, findSnapshotCandidates, resolveSnapshotCandidate, storeSnapshotContent });
     if (!found.ok) return failure(Outcome.BUILD_NOT_FOUND, found.message, publication);
 
     // As World discovery admits a verified Publication: each sink on its
@@ -137,6 +148,24 @@ async function adoptPublisherPlacement({ publication, contentHash, candidates, f
     } catch {
         return false;
     }
+}
+
+// The build a link-only share carries, kept once it matches the claim's hash.
+// Its publisher's placement isn't in the link, so nothing is searched for.
+async function storeLinkedSnapshot({ publication, contentHash, snapshotText, hasLocalContent, storeSnapshotContent }) {
+    if (await hasLocalContent(new ContentReference({ hash: contentHash }))) return { ok: true, candidates: [] };
+    const stored = await storeSnapshotContent({ contentHash, bytes: snapshotText });
+    if (stored.outcome === StoreSnapshotContentOutcome.STORED || stored.outcome === StoreSnapshotContentOutcome.ALREADY_AVAILABLE) {
+        return { ok: true, candidates: [] };
+    }
+    return {
+        ok: false,
+        message: message('publicationLink.buildNotLoaded', {
+            title: publication.title,
+            author: publication.author ?? message('publicationLink.unknownAuthor'),
+            reasons: [message('publicationLink.buildMismatch')]
+        })
+    };
 }
 
 // `candidates` is what the announcement search found, or null when the build

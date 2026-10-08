@@ -25,6 +25,19 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { build } from '../scripts/build.mjs';
 import { assert } from './support/Assert.js';
+import { prepareLinkOnlyShare } from '../application/publication/PublicationShareLink.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
+import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { LocalContentStore } from '../content/LocalContentStore.js';
+import { ShowcaseLibrary } from '../core/library/ShowcaseLibrary.js';
+import { Document } from '../core/Document.js';
+import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/World.js';
+import { Building } from '../core/Building.js';
+import { License, LicenseId } from '../core/License.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const MIME_TYPES = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.svg': 'image/svg+xml', '.json': 'application/json', '.map': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
@@ -114,6 +127,35 @@ async function startFromHome(browser, base) {
     }
 }
 
+// A link that carries its build, made as Copy link makes one from a castle
+// just published, opens in the published build straight into World View on
+// it, though no network answers.
+async function openLinkOnlyShare(browser, base) {
+    const storage = new InMemoryStorageProvider();
+    const identity = new LocalIdentityProvider(storage);
+    identity.login('bundle-link-alice');
+    const contentStore = new LocalContentStore(storage);
+    const world = new World();
+    const building = new Building({ creator: 'alice' });
+    for (const brick of ShowcaseLibrary.structures.find((structure) => structure.id === 'showcase:castle').bricks) building.addBrick(brick);
+    world.addBuilding(building);
+    const manager = new DocumentManager();
+    manager.load(new Document({ world, metadata: new DocumentMetadata({ title: 'Linked castle', author: 'alice', license: new License({ id: LicenseId.CC_BY_4_0 }) }) }), 'doc-linked-castle');
+    const publication = new PublishDocumentUseCase(new LocalPublisherProvider(storage, contentStore), identity).execute(manager);
+    const { url } = await prepareLinkOnlyShare({ publication, contentStore, appUrl: `${base}/` });
+    assert(url, 'the castle gets a link-only share');
+
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    try {
+        await page.goto(url);
+        await page.waitForFunction((hash) => location.hash === hash, `#/world/${publication.documentId}`, { timeout: 60_000 });
+        assert(!(await page.$('.publication-link-message')), 'the link opened without a complaint');
+    } finally {
+        await context.close();
+    }
+}
+
 const outdir = mkdtempSync(join(tmpdir(), 'forkbuild-bundle-'));
 const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || undefined,
@@ -150,6 +192,8 @@ try {
     assert(manifest.icons.every((icon) => readFileSync(join(published.outdir, icon.src)).length > 0), 'the manifest and its icons are published');
     await startFromHome(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle, and the Repository lists them');
+    await openLinkOnlyShare(browser, `http://127.0.0.1:${server.address().port}`);
+    console.log('✓ a link that carries its build opens World View on it in the published build, with no network');
 
     const development = await build(join(outdir, 'development-vue'), { developmentVue: true });
     const devServer = await serve(development.outdir);

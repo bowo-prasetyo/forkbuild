@@ -33,12 +33,46 @@ below). It's also automatically given a position in the shared world, so
 > example **Stored on IPFS · Announced on Nostr**), or **No distribution
 > recorded on this device**. Back it up on [Your Data](13-YourData.md) to
 > keep a copy in the meantime.
-> Publishing never sends anything anywhere by itself. Two separate, optional
-> steps do: **Distribute**, described next, pushes the publication to
+> Publishing never sends anything anywhere by itself. A
+> [link](#sharing-a-link) you copy carries the build to whoever you give it
+> to. Two separate, optional
+> steps do: **Distribute**, described below, pushes the publication to
 > Arweave or IPFS and announces it on Nostr or Arweave so other people can
 > find it without being connected to you; and
 > [**Share with Peers**](#sharing-with-connected-peers) offers it to the
 > people you are connected to.
+
+## Sharing a link
+
+The moment **Publish** succeeds, the notice in the Editor also shows
+**Share…** (where your device has a share sheet), **Copy link** and **Save
+picture**, with the link below them. The same buttons are under **My Shared
+World** in World View.
+
+- **The build travels inside the link.** Nothing has to be distributed
+  first, and no wallet, account or server is involved: the link carries
+  your signed Shared World and the build itself. Anyone who opens it, on any
+  device, lands in World View on your build, and **Edit a Copy** makes it
+  theirs. ForkBuild checks the signature, and that the build matches it,
+  before showing anything; a link that was changed or cut short says so.
+- **It needs a signature.** Publish while logged in; a creation published
+  while logged out gets no link.
+- **Size.** A build of up to about 500 bricks fits; the ready-made castle's
+  link is about 3,700 characters. Email and most chat apps and social sites
+  keep a link that long, but Discord and Telegram limit how long a message
+  can be. A larger build says it is too large for a link: distribute it to
+  get one.
+- **Once distributed**, the buttons offer the shorter link that names where
+  the Shared World is stored, which also brings your placement along (see
+  [Distribution](Distribution.md)). A link that carries its build doesn't
+  carry your placement, so World View stands the build where it puts
+  builds without one.
+- **Save picture** downloads a 1200 × 630 PNG of the build, with its title
+  and "Remix it on ForkBuild" along the bottom, for posting where a link
+  alone shows no picture.
+
+Copying or sharing a link, and opening one, are counted anonymously, like
+the daily visit; see [Daily visitor count](13-YourData.md#daily-visitor-count).
 
 ## Distributing straight from the Editor
 

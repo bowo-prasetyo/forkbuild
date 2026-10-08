@@ -2,6 +2,7 @@ import { inject, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { OpenPublicationLinkOutcome } from '../../application/publication/OpenPublicationLink.js';
 import { describePublicationClaimLocator, publicationClaimLocatorFromViewPath } from '../../core/ForkBuildAppLinks.js';
+import { decodePublicationLinkPayload } from '../../application/publication/sharing/PublicationLinkPayload.js';
 import { errorText, t } from '../i18n/i18n.js';
 
 const NETWORK_NAMES = Object.freeze({ steem: 'Steem', blurt: 'Blurt', arweave: 'Arweave', ipfs: 'IPFS' });
@@ -12,7 +13,8 @@ const RETRY_OUTCOMES = new Set([OpenPublicationLinkOutcome.UNREACHABLE, OpenPubl
 // Where a link to a Publication lands: `#/view/steem/<author>/<permlink>` or
 // `#/view/blurt/<author>/<permlink>` (the "see it in 3D" link on a Steem or
 // Blurt post), `#/view/ar/<id>` or
-// `#/view/ipfs/<cid>` (links shared with Share) name its Signed Claim.
+// `#/view/ipfs/<cid>` (links shared with Share) name its Signed Claim;
+// `#/s/<payload>` (a link-only share) carries the claim and the build.
 // `openPublicationLink` (ui/main.js) reads and verifies it, fetches and
 // checks its build, and admits it as World discovery does; this view then
 // opens World View on it, or says why it can't.
@@ -22,12 +24,14 @@ export default {
         const route = useRoute();
         const router = useRouter();
         const openLink = inject('openPublicationLink', null);
+        const funnel = inject('funnelEventCounter', null);
         const state = ref('loading');
         const message = ref('');
         const publication = ref(null);
-        const locator = publicationClaimLocatorFromViewPath(route.path);
+        const payload = typeof route.params.payload === 'string' ? route.params.payload : null;
+        const locator = payload ? null : publicationClaimLocatorFromViewPath(route.path);
         const where = describePublicationClaimLocator(locator);
-        const label = where ? t(where.label) : t('publicationLink.thisLink');
+        const label = where ? t(where.label) : t(payload ? 'publicationLink.label.link' : 'publicationLink.thisLink');
         const network = where ? NETWORK_NAMES[where.network] : null;
 
         async function open() {
@@ -40,11 +44,19 @@ export default {
             }
             let result;
             try {
-                result = await openLink({ locator });
+                if (payload) {
+                    const linkOnly = await decodePublicationLinkPayload(payload);
+                    result = linkOnly
+                        ? await openLink({ linkOnly })
+                        : { outcome: OpenPublicationLinkOutcome.INVALID_LINK, message: t('publicationLink.damaged'), publication: null };
+                } else {
+                    result = await openLink({ locator });
+                }
             } catch (error) {
                 result = { outcome: 'failed', message: errorText(error), publication: null };
             }
             if (result.outcome === OpenPublicationLinkOutcome.OPENED) {
+                funnel?.openedSharedLink(result.documentId);
                 router.replace({ path: `/world/${result.documentId}` });
                 return;
             }
@@ -52,8 +64,9 @@ export default {
                 ? { title: result.publication.title, author: result.publication.author }
                 : null;
             message.value = typeof result.message === 'string' ? result.message : t(result.message);
-            const retry = RETRY_OUTCOMES.has(result.outcome)
-                || (result.outcome === OpenPublicationLinkOutcome.CLAIM_UNAVAILABLE && !['steem', 'blurt'].includes(where?.network));
+            // A link-only share reads nothing from a network, so trying again can't help.
+            const retry = !payload && (RETRY_OUTCOMES.has(result.outcome)
+                || (result.outcome === OpenPublicationLinkOutcome.CLAIM_UNAVAILABLE && !['steem', 'blurt'].includes(where?.network)));
             state.value = retry ? 'retry' : 'failed';
         }
 

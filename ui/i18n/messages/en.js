@@ -57,7 +57,7 @@ export default Object.freeze({
 
     // The daily visitor count on the Your Data page (ui/components/VisitorCountSetting.js).
     'visitorCount.title': 'Daily visitor count',
-    'visitorCount.intro': 'Once a day, ForkBuild tells GoatCounter that one more browser opened it, so its makers know roughly how many people use it. The request names no page, build or person, sets no cookie, and GoatCounter keeps only totals.',
+    'visitorCount.intro': 'Once a day, ForkBuild tells GoatCounter that one more browser opened it, so its makers know roughly how many people use it. It also counts, the same way, when a share link is copied or shared, when a shared link is opened, and when a build opened from one is copied into the Editor. Each request is a fixed path that names no page, build or person, sets no cookie, and GoatCounter keeps only totals.',
     'visitorCount.label': 'Count this browser',
     'visitorCount.browserAsksNotToTrack': 'This browser asks sites not to track it (Global Privacy Control or Do Not Track), so it is never counted.',
     'visitorCount.details': 'Anyone can see the totals on the {dashboard}. What is sent, and when, is described on {privacy}.',
@@ -131,6 +131,8 @@ export default Object.freeze({
     'publicationLink.label.arweave': 'Arweave transaction {id}',
     'publicationLink.label.ipfs': 'IPFS content {cid}',
     'publicationLink.label.blurt': '@{author}/{permlink}',
+    'publicationLink.label.link': 'the shared build',
+    'publicationLink.damaged': 'This link is damaged or cut short. Ask for it again, and copy the whole link.',
     'publicationLink.invalid': 'This link does not name a Shared World ForkBuild can open.',
     'publicationLink.notASteemPost': 'This link does not name a Steem post.',
     'publicationLink.noReader.steem': 'reading from Steem isn\'t available in this browser',
@@ -791,7 +793,7 @@ export default Object.freeze({
     'distribution.publicationFailed': 'Signed Claim distribution could not be completed.',
     'distribution.snapshotFailed': 'Snapshot distribution could not be completed.',
 
-    // Sharing a distributed Publication (ui/components/PublicationShareLink.js, application/publication/PublicationShareLink.js).
+    // Sharing a Publication (ui/components/PublicationShareLink.js, application/publication/PublicationShareLink.js).
     'share.share': 'Share…',
     'share.copy': 'Copy link',
     'share.linkLabel': 'Link to share',
@@ -804,6 +806,15 @@ export default Object.freeze({
     'share.text': '{title}, built with ForkBuild',
     'share.arweaveNote': 'Stored on Arweave: right after distributing, the link can take a few minutes to open.',
     'share.ipfsNodeNote': 'Stored on your own IPFS node: friends can open the link only while your node is online and reachable. Remote pinning or Arweave keeps it available.',
+    'share.linkOnlyHint': 'Anyone can open this link on any device to see the build in 3D and make a copy of their own. The build travels inside the link, so nothing has to be distributed first.',
+    'share.linkOnlyUnsigned': 'This Shared World is not signed, so a link to it would not open. Sign in and publish it again to get a link.',
+    'share.linkOnlyNoBuild': 'This build is not stored on this device, so there is no link for it yet.',
+    'share.linkOnlyUnavailable': 'This browser can\'t make a link for this build. Distribute it with Steem, Blurt, Arweave or IPFS storage to get one.',
+    'share.linkOnlyTooLarge': 'This build is too large to fit in a link. Distribute it with Steem, Blurt, Arweave or IPFS storage to get a link.',
+    'share.savePicture': 'Save picture',
+    'share.pictureCaption': 'Remix it on ForkBuild',
+    'share.pictureDrawing': 'Drawing the picture…',
+    'share.pictureFailed': 'The picture couldn\'t be drawn in this browser.',
 
     // Storing on Steem (application/steem/SteemContentUploadProgressText.js).
     'steemUpload.describing': 'Storing on Steem: adding a picture of the build. Approve signing the picture in Steem Keychain.',

@@ -53,3 +53,31 @@ export function shouldCountVisit({ settings, day, origin, privacySignals }) {
 export function visitorCountHitUrl(random) {
     return `${VISITOR_COUNT_ENDPOINT}?p=%2F&rnd=${encodeURIComponent(random)}`;
 }
+
+// The few moments the counter also hears about, each as its own fixed path
+// (docs/Privacy.md, "Visitor count"): a share link copied or shared, a shared
+// link opened, and a build opened from a link then copied into the Editor.
+// Nothing about the build, the link or the person is part of the path.
+export const FunnelEvent = Object.freeze({
+    SHARE_LINK: 'share-link',
+    OPENED_SHARED_LINK: 'opened-shared-link',
+    REMIX_FROM_LINK: 'remix-from-link'
+});
+
+const FUNNEL_EVENTS = new Set(Object.values(FunnelEvent));
+
+export function isFunnelEvent(event) {
+    return FUNNEL_EVENTS.has(event);
+}
+
+// The same rules as the daily count, without its once a day.
+export function shouldCountFunnelEvent({ settings, origin, privacySignals }) {
+    return origin === VISITOR_COUNT_SITE_ORIGIN
+        && normalizeVisitorCountSettings(settings).enabled
+        && !asksNotToBeTracked(privacySignals);
+}
+
+export function funnelEventHitUrl(event, random) {
+    if (!isFunnelEvent(event)) throw new TypeError(`not a funnel event: ${event}`);
+    return `${VISITOR_COUNT_ENDPOINT}?p=${encodeURIComponent(`/e/${event}`)}&rnd=${encodeURIComponent(random)}`;
+}

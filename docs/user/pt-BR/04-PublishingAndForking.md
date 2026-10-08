@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1f52c96ba8857c6b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e2f44cb736080f44 -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -35,12 +35,48 @@ veja [Encontrando mundos](03-WorldView.md#encontrando-mundos).
 > distribuição (por exemplo **Guardado no IPFS · Anunciado no Nostr**), ou
 > **Nenhuma distribuição registrada neste dispositivo.** Faça um backup em
 > [Seus dados](13-YourData.md) para ter uma cópia enquanto isso.
-> Publicar nunca envia nada para lugar nenhum por conta própria. Dois passos
-> separados e opcionais fazem isso: **Distribuir**, descrito a seguir,
+> Publicar nunca envia nada para lugar nenhum por conta própria. Um
+> [link](#compartilhando-um-link) que você copia leva a construção a quem
+> você o der. Dois passos
+> separados e opcionais fazem isso: **Distribuir**, descrito mais abaixo,
 > envia a publicação para o Arweave ou o IPFS e a anuncia no Nostr ou no
 > Arweave, para que outras pessoas a encontrem sem estar conectadas a você;
 > e [**Compartilhar com pares**](#compartilhando-com-pares-conectados) a
 > oferece às pessoas com quem você está conectado.
+
+## Compartilhando um link
+
+Assim que **Publicar** dá certo, o aviso no Editor também mostra
+**Compartilhar…** (onde seu dispositivo tem um menu de compartilhamento),
+**Copiar link** e **Salvar imagem**, com o link embaixo. Os mesmos botões
+ficam em **Meu Mundo compartilhado** na Visão do mundo.
+
+- **A construção vai dentro do link.** Nada precisa ser distribuído antes,
+  e nenhuma carteira, conta ou servidor entra na história: o link leva seu
+  Mundo compartilhado assinado e a própria construção. Quem abrir o link, em
+  qualquer dispositivo, chega à Visão do mundo na sua construção, e **Editar
+  uma cópia** a torna dela. O ForkBuild confere a assinatura, e se a
+  construção corresponde a ela, antes de mostrar qualquer coisa; um link
+  alterado ou cortado avisa isso.
+- **Precisa de assinatura.** Publique com a sessão iniciada; uma criação
+  publicada sem entrar não ganha link.
+- **Tamanho.** Cabe uma construção de até uns 500 blocos; o link do castelo
+  pronto tem uns 3.700 caracteres. O e-mail e a maioria dos aplicativos de
+  conversa e redes sociais mantêm um link desse tamanho, mas o Discord e o
+  Telegram limitam o tamanho de uma mensagem. Uma construção maior avisa que
+  é grande demais para um link: distribua-a para obter um.
+- **Depois de distribuída**, os botões oferecem o link mais curto que diz
+  onde o Mundo compartilhado está guardado, e que também leva o seu
+  posicionamento (veja [Distribuição](Distribution.md)). Um link que leva a
+  construção não leva o seu posicionamento, então a Visão do mundo coloca a
+  construção onde coloca as que não têm um.
+- **Salvar imagem** baixa um PNG de 1200 × 630 da construção, com o título
+  dela e "Faça sua versão no ForkBuild" na parte de baixo, para postar onde
+  um link sozinho não mostra imagem.
+
+Copiar ou compartilhar um link, e abrir um, são contados de forma anônima,
+como a visita diária; veja
+[Contagem diária de visitantes](13-YourData.md#contagem-diária-de-visitantes).
 
 ## Distribuindo direto do Editor
 

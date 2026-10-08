@@ -58,7 +58,7 @@ export default Object.freeze({
 
     // 내 데이터 페이지의 일일 방문자 수(ui/components/VisitorCountSetting.js).
     'visitorCount.title': '일일 방문자 수',
-    'visitorCount.intro': 'ForkBuild는 하루에 한 번 브라우저 하나가 더 열었다는 사실을 GoatCounter에 알려, 만든 사람들이 대략 몇 명이 사용하는지 알 수 있게 합니다. 이 요청에는 페이지, 작품, 사람에 대한 정보가 없고 쿠키도 설정하지 않으며, GoatCounter는 합계만 보관합니다.',
+    'visitorCount.intro': 'ForkBuild는 하루에 한 번 브라우저 하나가 더 열었다는 사실을 GoatCounter에 알려, 만든 사람들이 대략 몇 명이 사용하는지 알 수 있게 합니다. 같은 방식으로 공유 링크를 복사하거나 공유할 때, 공유 링크를 열 때, 그 링크로 연 작품을 에디터로 복사할 때도 셉니다. 모든 요청은 고정된 경로이며 페이지, 작품, 사람에 대한 정보가 없고 쿠키도 설정하지 않으며, GoatCounter는 합계만 보관합니다.',
     'visitorCount.label': '이 브라우저 집계하기',
     'visitorCount.browserAsksNotToTrack': '이 브라우저는 사이트에 추적하지 말라고 요청하므로(Global Privacy Control 또는 Do Not Track) 집계되지 않습니다.',
     'visitorCount.details': '합계는 누구나 {dashboard}에서 볼 수 있습니다. 무엇을 언제 보내는지는 {privacy}에 설명되어 있습니다.',
@@ -132,6 +132,8 @@ export default Object.freeze({
     'publicationLink.label.arweave': 'Arweave 트랜잭션 {id}',
     'publicationLink.label.ipfs': 'IPFS 콘텐츠 {cid}',
     'publicationLink.label.blurt': '@{author}/{permlink}',
+    'publicationLink.label.link': '공유된 작품',
+    'publicationLink.damaged': '이 링크는 손상되었거나 잘려 있습니다. 다시 받아서 링크 전체를 복사하세요.',
     'publicationLink.invalid': '이 링크는 ForkBuild가 열 수 있는 공유 월드를 가리키지 않습니다.',
     'publicationLink.notASteemPost': '이 링크는 Steem 글을 가리키지 않습니다.',
     'publicationLink.noReader.steem': '이 브라우저에서는 Steem에서 읽을 수 없습니다',
@@ -792,7 +794,7 @@ export default Object.freeze({
     'distribution.publicationFailed': '서명 클레임 배포를 완료할 수 없습니다.',
     'distribution.snapshotFailed': '스냅샷 배포를 완료할 수 없습니다.',
 
-    // Sharing a distributed Publication (ui/components/PublicationShareLink.js, application/publication/PublicationShareLink.js).
+    // Sharing a Publication (ui/components/PublicationShareLink.js, application/publication/PublicationShareLink.js).
     'share.share': '공유…',
     'share.copy': '링크 복사',
     'share.linkLabel': '공유할 링크',
@@ -805,6 +807,15 @@ export default Object.freeze({
     'share.text': 'ForkBuild로 만든 {title}',
     'share.arweaveNote': 'Arweave에 저장됨: 배포 직후에는 링크가 열리기까지 몇 분 걸릴 수 있습니다.',
     'share.ipfsNodeNote': '내 IPFS 노드에 저장됨: 노드가 온라인이고 접근 가능할 때만 친구가 링크를 열 수 있습니다. 원격 피닝이나 Arweave를 쓰면 계속 사용할 수 있습니다.',
+    'share.linkOnlyHint': '누구나 어떤 기기에서든 이 링크를 열어 작품을 3D로 보고 자신의 사본을 만들 수 있습니다. 작품이 링크 안에 들어 있어서 먼저 배포할 필요가 없습니다.',
+    'share.linkOnlyUnsigned': '이 공유 월드는 서명되지 않아 링크를 만들어도 열리지 않습니다. 로그인한 뒤 다시 게시하면 링크를 얻을 수 있습니다.',
+    'share.linkOnlyNoBuild': '이 작품은 이 기기에 저장되어 있지 않아 아직 링크가 없습니다.',
+    'share.linkOnlyUnavailable': '이 브라우저에서는 이 작품의 링크를 만들 수 없습니다. Steem, Blurt, Arweave 또는 IPFS 저장소로 배포하면 링크를 얻을 수 있습니다.',
+    'share.linkOnlyTooLarge': '이 작품은 너무 커서 링크에 담을 수 없습니다. Steem, Blurt, Arweave 또는 IPFS 저장소로 배포하면 링크를 얻을 수 있습니다.',
+    'share.savePicture': '이미지 저장',
+    'share.pictureCaption': 'ForkBuild에서 리믹스하기',
+    'share.pictureDrawing': '이미지를 그리는 중…',
+    'share.pictureFailed': '이 브라우저에서는 이미지를 그릴 수 없습니다.',
 
     // Storing on Steem (application/steem/SteemContentUploadProgressText.js).
     'steemUpload.describing': 'Steem에 저장 중: 작품 사진을 추가하고 있습니다. Steem Keychain에서 사진 서명을 승인하세요.',

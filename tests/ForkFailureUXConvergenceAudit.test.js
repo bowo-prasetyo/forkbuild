@@ -182,8 +182,9 @@ async function run() {
     // Mirrors EditorView.js's own setup() closure exactly: `entryContext`
     // and `forkFailure` are refs (`{ value }`), `arrivalDocumentId` is a
     // plain closure `let`, `router.replace`/`feedback.show` are the only
-    // two methods this block ever calls on those two collaborators, and
-    // `t` is the real translator its messages go through.
+    // two methods this block ever calls on those two collaborators,
+    // `t` is the real translator its messages go through, and there is no
+    // `funnelEventCounter`, as when the app provides none.
     function runForkHandler({ route, identityProvider, findPublicationUseCase, forkDocumentUseCase }) {
         const entryContextRef = { value: null };
         const forkFailureRef = { value: null };
@@ -197,13 +198,13 @@ async function run() {
         const factory = new Function(
             'route', 'identityProvider', 'findPublicationUseCase', 'forkDocumentUseCase',
             'editorEntryContextFromQuery', 'editorSession', 'feedback', 'router',
-            'entryContext', 'forkFailure', 't',
+            'entryContext', 'forkFailure', 't', 'funnelEventCounter',
             `let arrivalDocumentId = null;\n${forkBlockSource}\nreturn { arrivalDocumentId };`
         );
         const result = factory(
             route, identityProvider, findPublicationUseCase, forkDocumentUseCase,
             editorEntryContextFromQuery, editorSession, feedback, router,
-            entryContextRef, forkFailureRef, t
+            entryContextRef, forkFailureRef, t, null
         );
         return {
             entryContext: entryContextRef.value,

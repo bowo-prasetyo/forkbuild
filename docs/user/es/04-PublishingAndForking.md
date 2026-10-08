@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1f52c96ba8857c6b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e2f44cb736080f44 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -37,12 +37,49 @@ gente: consulte [Encontrar mundos](03-WorldView.md#encontrar-mundos).
 > **No hay ninguna distribución registrada en este dispositivo.** Mientras
 > tanto, haga una copia de seguridad en [Sus datos](13-YourData.md) para
 > conservar una copia.
-> Publicar nunca envía nada a ningún lugar por sí solo. Lo hacen dos pasos
-> aparte y opcionales: **Distribuir**, que se describe a continuación,
+> Publicar nunca envía nada a ningún lugar por sí solo. Un
+> [enlace](#compartir-un-enlace) que usted copie lleva la construcción a
+> quien se lo dé. Lo hacen dos pasos
+> aparte y opcionales: **Distribuir**, que se describe más abajo,
 > envía la publicación a Arweave o IPFS y la anuncia en Nostr o Arweave
 > para que otras personas la encuentren sin estar conectadas con usted; y
 > [**Compartir con pares**](#compartir-con-pares-conectados) se la ofrece
 > a las personas con las que está conectado.
+
+## Compartir un enlace
+
+En cuanto **Publicar** se completa, el aviso del Editor también muestra
+**Compartir…** (donde su dispositivo tiene un menú para compartir), **Copiar
+enlace** y **Guardar imagen**, con el enlace debajo. Los mismos botones
+están en **Mi Mundo compartido** en la Vista de mundo.
+
+- **La construcción viaja dentro del enlace.** No hace falta distribuir nada
+  antes, y no interviene ninguna billetera, cuenta ni servidor: el enlace
+  lleva su Mundo compartido firmado y la construcción misma. Quien lo abra,
+  en cualquier dispositivo, llega a la Vista de mundo con su construcción, y
+  **Editar una copia** la hace suya. ForkBuild comprueba la firma, y que la
+  construcción coincida con ella, antes de mostrar nada; un enlace
+  modificado o incompleto lo indica.
+- **Necesita una firma.** Publique con la sesión iniciada; una creación
+  publicada sin sesión no recibe enlace.
+- **Tamaño.** Cabe una construcción de hasta unos 500 bloques; el enlace del
+  castillo listo para usar tiene unos 3.700 caracteres. El correo y la
+  mayoría de las aplicaciones de chat y redes sociales conservan un enlace
+  así de largo, pero Discord y Telegram limitan la longitud de un mensaje.
+  Una construcción más grande indica que es demasiado grande para un
+  enlace: distribúyala para obtener uno.
+- **Una vez distribuida**, los botones ofrecen el enlace más corto que
+  indica dónde está guardado el Mundo compartido, y que también lleva su
+  colocación (consulte [Distribución](Distribution.md)). Un enlace que lleva
+  su construcción no lleva su colocación, así que la Vista de mundo pone la
+  construcción donde pone las que no tienen una.
+- **Guardar imagen** descarga un PNG de 1200 × 630 de la construcción, con
+  su título y “Haga su propia versión en ForkBuild” en la parte inferior,
+  para publicar donde un enlace por sí solo no muestra ninguna imagen.
+
+Copiar o compartir un enlace, y abrir uno, se cuentan de forma anónima,
+como la visita diaria; consulte
+[Recuento diario de visitantes](13-YourData.md#recuento-diario-de-visitantes).
 
 ## Distribuir directamente desde el Editor
 
