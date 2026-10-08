@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 65f1e9c30110d299 -->
+<!-- translation-of: docs/Privacy.md source-hash: ed8e945e703f3ded -->
 # Datenschutz
 
 <!-- languages -->
@@ -168,6 +168,14 @@ sind (siehe „Server, die ForkBuild kontaktiert“ unten):
 Und wenn jemand bei der wöchentlichen Bau-Challenge mitmacht (**Mitmachen**
 oder die Challenge unter **Neu** im Editor): `/e/challenge-join`.
 
+Und wenn ForkBuild über einen Link aus einem seiner eigenen Launch-Posts
+geöffnet wird, der auf `?ref=` und den Namen des Orts endet, an dem er
+erschien (`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu` oder `github`; jeder andere Wert wird ignoriert): `/r/` und
+dieser Name, etwa `/r/hn`, einmal. Die App nimmt `ref` danach aus der
+Adresse, sodass ein Neuladen oder Weitergeben der Adresse es nicht noch
+einmal sendet. Das zeigt, welche Posts Menschen gebracht haben, und nichts
+darüber, wer sie sind oder was sie getan haben.
+
 Jede sendet nur ihren Pfad und die Zufallszahl, nie den Link, das Bauwerk,
 seinen Titel oder wer es gemacht hat. Welche Bauwerke über einen Link
 geöffnet wurden, steht nur im Arbeitsspeicher der geöffneten Seite und ist
@@ -189,7 +197,8 @@ nie mit Global Privacy Control oder Do Not Track, und nur von der
 offiziellen Website.
 
 Der Code steht in `core/VisitorCount.js`,
-`application/settings/CountDailyVisit.js`,
+`core/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
+`application/settings/CountLaunchChannel.js`,
 `application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
 `ui/start.js` und `ui/embed/embedBoot.js`.
 
@@ -215,6 +224,7 @@ was Sie bei ihm anfragen.
 | Sie installieren ForkBuild von der offiziellen Seite (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/installed`, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website kopieren Sie den Einbettungscode eines Bauwerks, oder ein eingebettetes Bauwerk wird gezeigt oder in ForkBuild geöffnet (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit einem festen Pfad, der nennt, welcher der drei Fälle es war, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website machen Sie bei der wöchentlichen Bau-Challenge mit (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/challenge-join`, ohne Referrer und ohne Cookie |
+| Sie öffnen die offizielle Website über den Link eines Launch-Posts (`?ref=…`, siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/r/<Kanal>`, ohne Referrer und ohne Cookie |
 | Sie machen sich unter **Peers** auffindbar oder suchen jemanden | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | den öffentlichen Schlüssel Ihrer Identität und ein Verbindungsangebot, höchstens 15 Minuten aufbewahrt; die Identität, die Sie suchen; wenn Sie sich mit jemandem verbinden, den Sie gefunden haben, Ihre Verbindungsantwort (sie listet Ihre Netzwerkadressen auf), die nur diese Person abholen kann |
 | Sie treten einer öffentlichen Lobby bei oder sehen in eine hinein | derselbe Rendezvous-Server | Ihre signierte Lobby-Karte (öffentlicher Schlüssel, Anzeigename, welche Lobby), höchstens 15 Minuten aufbewahrt und erneuert, solange Sie bleiben; in welche Lobby Sie hineinsehen |
 | Eine Peer-Verbindung beginnt | STUN-Server (`stun.l.google.com`) | nichts außer einer Anfrage nach Ihrer öffentlichen IP-Adresse |

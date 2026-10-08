@@ -4870,3 +4870,28 @@ challenge ends Sunday"). Nothing new runs on a server: the week, its theme and i
 - Not done: entries shared only as a link, or only on Steem or Blurt, aren't found by others; no voting or winners
   (the page only lists, newest first); themes are a fixed list in code, so a new one ships with a release; no
   notification when a new week starts.
+
+## Launch kit and launch-channel counts (unnumbered, 2026-10-08)
+
+**Everything needed to take ForkBuild to Show HN, Product Hunt, Reddit, itch.io, its own networks and teachers, and to
+tell afterwards which of them brought people.** The landing page, ready-made builds, guided first build, free share
+links, previews, remix landing, installable app, 3D export, embeds and weekly challenge are in place; what was missing
+was the posts themselves and a way to read their results.
+
+- `docs/launch/`: the plan (order and timing, a pre-launch checklist, known issues to say up front, what to read on
+  the counter afterwards), drafts for Show HN, Product Hunt, Reddit (r/threejs, r/WebGL, r/SideProject), itch.io
+  (with a one-button launcher page, `itch/index.html`, since the app can't run inside itch's frame), Nostr, Steem and
+  Blurt, and teachers (what can and can't be claimed, with no review against children's-privacy law), and a press
+  kit.
+- `scripts/press-kit.mjs` takes the press screenshots in a real browser with no network (Home on a desktop and a
+  phone, the castle, harbor island and village square in the Editor, the challenge; Product Hunt's 1270 × 760);
+  `docs/launch/press/` holds them.
+- Launch-channel counts: a visit through `?ref=<channel>` (`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`,
+  `blurt`, `edu`, `github`; `core/LaunchChannel.js`) is counted once as `/r/<channel>`, under the funnel events'
+  rules (`application/settings/CountLaunchChannel.js`, from `ui/start.js`); the app then takes `ref` out of the
+  address. Any other value is ignored.
+- README: a **Try it now** link and a screenshot at the top, and the tagline the posts use.
+- Privacy (and its translations).
+- Tests: `LaunchChannel`.
+- Not done, and not code: the posts themselves, the GitHub repository's description and topics (Settings), and
+  seeding the challenge with real entries; see the checklist in `docs/launch/README.md`.

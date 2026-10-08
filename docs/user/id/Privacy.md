@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 65f1e9c30110d299 -->
+<!-- translation-of: docs/Privacy.md source-hash: ed8e945e703f3ded -->
 # Privasi
 
 <!-- languages -->
@@ -168,6 +168,14 @@ bawah):
 Dan saat seseorang ikut tantangan membangun mingguan (**Ikut tantangan**,
 atau tantangan di **Baru** pada Editor): `/e/challenge-join`.
 
+Dan saat ForkBuild dibuka lewat tautan dari salah satu postingan
+peluncurannya sendiri, yang diakhiri `?ref=` dan nama tempat postingan itu
+(`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu` atau `github`; nilai lain diabaikan): `/r/` dan nama itu, seperti
+`/r/hn`, sekali. Aplikasi lalu menghapus `ref` dari alamat, sehingga memuat
+ulang atau meneruskan alamat itu tidak mengirimnya lagi. Ini menunjukkan
+postingan mana yang membawa orang, dan tidak ada apa pun tentang siapa
+mereka atau apa yang mereka lakukan.
+
 Masing-masing hanya mengirim jalurnya dan angka acak: tidak pernah
 tautannya, bangunannya, judulnya, atau siapa pembuatnya. Bangunan mana yang
 dibuka dari tautan hanya disimpan di memori halaman yang terbuka, dan
@@ -188,7 +196,8 @@ dan `/e/embed-open` hanya mengikuti dua aturan lainnya: tidak pernah dengan
 Global Privacy Control atau Do Not Track, dan hanya dari situs resmi.
 
 Kodenya ada di `core/VisitorCount.js`,
-`application/settings/CountDailyVisit.js`,
+`core/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
+`application/settings/CountLaunchChannel.js`,
 `application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
 `ui/start.js`, dan `ui/embed/embedBoot.js`.
 
@@ -213,6 +222,7 @@ Anda dan apa yang Anda minta darinya.
 | Anda memasang ForkBuild dari situs resmi (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/installed`, tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda menyalin kode sematan sebuah bangunan, atau bangunan yang disematkan ditampilkan atau dibuka di ForkBuild (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut yang mana dari ketiganya, tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda ikut tantangan membangun mingguan (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/challenge-join`, tanpa referrer dan tanpa cookie |
+| Anda membuka situs resmi lewat tautan postingan peluncuran (`?ref=…`, lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/r/<saluran>`, tanpa referrer dan tanpa cookie |
 | Anda menjadikan diri dapat ditemukan, atau mencari seseorang, di **Rekan** | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | kunci publik identitas Anda dan tawaran koneksi, disimpan paling lama 15 menit; identitas yang Anda cari; saat Anda terhubung dengan seseorang yang Anda temukan, balasan koneksi Anda (berisi alamat jaringan Anda), yang hanya dapat diambil oleh orang itu |
 | Anda bergabung ke, atau melihat ke dalam, lobi publik | server rendezvous yang sama | kartu lobi Anda yang ditandatangani (kunci publik, nama tampilan, lobi mana), disimpan paling lama 15 menit dan diperbarui selama Anda tetap di sana; lobi mana yang Anda lihat |
 | Koneksi rekan dimulai | server STUN (`stun.l.google.com`) | hanya permintaan alamat IP publik Anda |

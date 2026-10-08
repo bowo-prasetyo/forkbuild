@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 65f1e9c30110d299 -->
+<!-- translation-of: docs/Privacy.md source-hash: ed8e945e703f3ded -->
 # 개인정보 보호
 
 <!-- languages -->
@@ -128,6 +128,13 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 그리고 누군가 주간 건축 챌린지에 참여할 때(**챌린지 참여하기**, 또는
 에디터의 **새로 만들기**에 있는 챌린지): `/e/challenge-join`.
 
+그리고 ForkBuild 자체의 출시 게시물에 있는 링크(끝이 `?ref=`와 게시한 곳의
+이름: `hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu`, `github`. 다른 값은 무시됨)로 열릴 때: `/r/`와 그 이름(예:
+`/r/hn`)을 한 번. 그런 다음 앱은 주소에서 `ref`를 지우므로, 새로 고치거나
+주소를 전달해도 다시 보내지 않습니다. 이것은 어떤 게시물이 사람들을
+데려왔는지만 알려 주고, 그 사람이 누구이며 무엇을 했는지는 알려 주지
+않습니다.
+
 각 요청은 경로와 무작위 숫자만 보내며, 링크, 작품, 제목, 만든 사람은 절대
 보내지 않습니다. 어떤 작품을 링크로 열었는지는 열려 있는 페이지의 메모리에만
 있고, 페이지를 닫으면 잊힙니다.
@@ -145,7 +152,8 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 규칙만 따릅니다. Global Privacy Control이나 Do Not Track이 있으면 보내지 않고,
 공식 사이트에서만 보냅니다.
 
-코드는 `core/VisitorCount.js`, `application/settings/CountDailyVisit.js`,
+코드는 `core/VisitorCount.js`, `core/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
+`application/settings/CountLaunchChannel.js`,
 `application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
 `ui/start.js`, `ui/embed/embedBoot.js`에 있습니다.
 
@@ -167,6 +175,7 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 | 공식 사이트에서 ForkBuild를 설치할 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/installed`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 작품의 임베드 코드를 복사하거나, 임베드된 작품이 표시되거나 ForkBuild에서 열릴 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 셋 중 어느 경우인지 나타내는 고정 경로의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 주간 건축 챌린지에 참여할 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/challenge-join`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
+| 출시 게시물의 링크(`?ref=…`)로 공식 사이트를 열 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/r/<채널>`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | **피어**에서 나를 검색 가능하게 하거나 누군가를 찾을 때 | 랑데부 서버(`forkbuild-rendezvous.prazjp.workers.dev`) | 내 신원의 공개 키와 연결 제안(최대 15분 보관), 내가 찾는 신원, 찾은 사람과 연결할 때 내 연결 응답(내 네트워크 주소가 나열됨, 그 사람만 가져갈 수 있음) |
 | 공개 로비에 참가하거나 들여다볼 때 | 같은 랑데부 서버 | 내 서명된 로비 카드(공개 키, 표시 이름, 어느 로비인지. 최대 15분 보관되며 머무는 동안 갱신), 내가 들여다보는 로비 |
 | 피어 연결이 시작될 때 | STUN 서버(`stun.l.google.com`) | 내 공개 IP 주소 요청 외에는 없음 |

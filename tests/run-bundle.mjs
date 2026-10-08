@@ -166,6 +166,21 @@ async function joinChallenge(browser, base) {
     }
 }
 
+// A launch post's link (`?ref=<channel>`, docs/launch/README.md) opens Home,
+// and the parameter leaves the address, keeping the route.
+async function openLaunchLink(browser, base) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    try {
+        await page.goto(`${base}/?ref=hn#/challenge`);
+        await page.waitForSelector('.challenge-view', { timeout: 60_000 });
+        const address = await page.evaluate(() => ({ search: location.search, hash: location.hash }));
+        assert(address.search === '' && address.hash === '#/challenge', `the ref parameter leaves the address, the route stays (${JSON.stringify(address)})`);
+    } finally {
+        await context.close();
+    }
+}
+
 // A link that carries its build, made as Copy link makes one from a castle
 // just published, opens in the published build on the castle, though no
 // network answers: its own screen, with Edit a Copy, which opens the visitor's
@@ -522,7 +537,8 @@ try {
     assert(manifest.icons.every((icon) => readFileSync(join(published.outdir, icon.src)).length > 0), 'the manifest and its icons are published');
     await startFromHome(browser, `http://127.0.0.1:${server.address().port}`);
     await joinChallenge(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle (which downloads as a 3D model), and the Repository lists them; Home\'s Join opens the week\'s challenge tagged, New offers it first, and its page explains how to enter');
+    await openLaunchLink(browser, `http://127.0.0.1:${server.address().port}`);
+    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle (which downloads as a 3D model), and the Repository lists them; Home\'s Join opens the week\'s challenge tagged, New offers it first, and its page explains how to enter; a launch post\'s ?ref= leaves the address');
     await openLinkOnlyShare(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a link that carries its build opens on it in the published build, with no network, and Edit a Copy makes the visitor a copy, or it downloads as a 3D model; it fits a phone');
     assert(html.includes('<meta name="forkbuild-service-worker" content="sw.js">') && readFileSync(join(published.outdir, 'sw.js'), 'utf8').includes('forkbuild-'),
