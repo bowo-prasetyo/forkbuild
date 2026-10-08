@@ -23,6 +23,12 @@ models").
 
 ## Features
 
+**Home**
+- A landing page with a slowly turning 3D village and ready-made builds (a
+  house, a mill, a bridge and more) that open in the Editor as your own
+  copy, with no account needed; link previews and an installable web app
+  manifest for the site.
+
 **Editor**
 - Place, select (single, multi, marquee), move, rotate and delete bricks, with
   undo/redo, grid snapping and a placement preview.

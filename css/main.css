@@ -2,6 +2,7 @@
    pieces, imported in their original order: later rules still win ties
    against earlier ones, so keep this order when adding or moving rules. */
 @import url('main/app-shell.css');
+@import url('main/home.css');
 @import url('main/editor.css');
 @import url('main/repository-and-account.css');
 @import url('main/world-view.css');

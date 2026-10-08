@@ -6,9 +6,25 @@
     <!-- Content Security Policy: see docs/Deployment.md. The sha256 value is the hash of the
          import map below; tests/ContentSecurityPolicy.test.js fails if they drift apart. -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-1Yauk+MBJJXMGtEunLNkm2IMuBHncM/1loYKdwVuAa4='; style-src 'self'; img-src 'self' data: blob: https://forkbuild.goatcounter.com; font-src 'self'; media-src 'self' blob:; connect-src 'self' https: wss: http://127.0.0.1:* http://localhost:*; worker-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
-    <title>ForkBuild</title>
+    <title>ForkBuild: build in 3D, right in your browser</title>
+    <!-- What search engines and link previews show for the site (docs/Deployment.md, "Link previews").
+         og:url and og:image are the official site's; a copy hosted elsewhere can point them at itself. -->
+    <meta name="description" content="ForkBuild is a free, open-source 3D building game in your browser. Snap bricks into houses and villages, remix other people's builds, and explore a shared world with friends. No account needed.">
+    <meta name="theme-color" content="#121212">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ForkBuild">
+    <meta property="og:title" content="ForkBuild: build in 3D, right in your browser">
+    <meta property="og:description" content="Snap bricks into houses and villages, remix other people's builds, and explore a shared world with friends. Free, open source, no account needed.">
+    <meta property="og:url" content="https://bowo-prasetyo.github.io/forkbuild/">
+    <meta property="og:image" content="https://bowo-prasetyo.github.io/forkbuild/assets/social/forkbuild-card.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="A small village of brick houses and towers built in ForkBuild, beside the words: Build in 3D, right in your browser.">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="stylesheet" href="css/main.css">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
 
     <script type="importmap">
     {
@@ -317,6 +333,8 @@
     <link rel="modulepreload" href="application/publication/LoadPublicationDocumentUseCase.js">
     <link rel="modulepreload" href="application/editor/CreateBrickRegistryUseCase.js">
     <link rel="modulepreload" href="application/editor/PreviewService.js">
+    <link rel="modulepreload" href="application/home/FeaturedBuilds.js">
+    <link rel="modulepreload" href="ui/i18n/userGuide.js">
     <link rel="modulepreload" href="core/PublicationCommentary.js">
     <link rel="modulepreload" href="core/PublicationCommentaryCollection.js">
     <link rel="modulepreload" href="identity/AuthorizationVerifier.js">
@@ -553,6 +571,7 @@
     <link rel="modulepreload" href="core/BrickRegistry.js">
     <link rel="modulepreload" href="core/library/CoreLibrary.js">
     <link rel="modulepreload" href="core/DocumentPreview.js">
+    <link rel="modulepreload" href="core/Brick.js">
     <link rel="modulepreload" href="identity/DelegationVerifier.js">
     <link rel="modulepreload" href="core/AvatarInteractionKind.js">
     <link rel="modulepreload" href="core/VehicleType.js">
@@ -643,7 +662,6 @@
     <link rel="modulepreload" href="vendor/noble-curves/abstract/montgomery.js">
     <link rel="modulepreload" href="vendor/noble-curves/abstract/oprf.js">
     <link rel="modulepreload" href="vendor/noble-curves/utils.js">
-    <link rel="modulepreload" href="core/Brick.js">
     <link rel="modulepreload" href="identity/IdentityImport.js">
     <link rel="modulepreload" href="core/PeerAuthenticationEnvelope.js">
     <link rel="modulepreload" href="core/PeerRelationshipStatus.js">

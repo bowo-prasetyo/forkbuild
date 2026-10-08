@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: e707978bda85f9b5 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: ccc330f1bc5e0f97 -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -20,6 +20,16 @@ atiende al sitio alojado, así que una copia propia no puede usarlo para
 encontrar personas; conéctese mediante invitaciones, o configure su propio
 servidor de encuentro (consulte
 [Conexiones entre pares y amigos](07-PeerConnectionsAndFriends.md)).
+
+La pantalla **Inicio** muestra un pequeño pueblo que gira en 3D y ofrece
+tres formas de empezar: **Probar ahora: empezar con una casa** abre una casa
+ya hecha en el Editor como su propia copia, lista para cambiar; **Empezar
+desde cero** abre el Editor en un terreno vacío; y **Explorar
+construcciones** abre el Repositorio. En **Empiece con una construcción ya
+hecha**, cada tarjeta (una casa, una cabaña, un molino, una torre de
+vigilancia, un puente y una pequeña capilla) abre su propia copia de esa
+construcción de la misma manera. Nada se publica ni se envía a ningún lugar
+hasta que usted lo decida.
 
 La barra de arriba siempre está visible:
 

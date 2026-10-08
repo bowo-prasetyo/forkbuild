@@ -98,9 +98,8 @@ html, body {
     display: flex;
 }
 
-/* Home / About views */
+/* About view (Home has its own stylesheet, main/home.css) */
 
-.home-view,
 .about-view {
     padding: 2rem;
     max-width: 640px;

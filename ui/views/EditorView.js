@@ -64,6 +64,8 @@ import { useStructureInspection } from './editorView/useStructureInspection.js';
 import { useSoundControls } from '../composables/useSoundControls.js';
 import SoundControl from '../components/SoundControl.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
+import { libraryItemName } from '../i18n/libraryText.js';
+import { findStarterStructure } from '../../application/home/FeaturedBuilds.js';
 
 // Editing shortcuts come from EditorActionRegistry, shared with the palette,
 // the sidebar and the controls docs. Escape priority: text input > shortcuts
@@ -918,6 +920,16 @@ export default {
                     feedback.show(t(err.reason === LoadFailureReason.MATERIAL_UNAVAILABLE
                         ? 'editor.materialUnavailable'
                         : 'editor.couldNotOpen'));
+                }
+                router.replace({ path: '/editor' });
+            } else if (route.query.start) {
+                // A ready-made build from Home: a built-in structure, opened as a new
+                // document of the visitor's own, the fork the Build Library makes.
+                const structure = findStarterStructure(structureRegistry, route.query.start);
+                if (structure && editorSession.forkStructure(structure)) {
+                    feedback.show(t('editor.startedFromBuild', { name: libraryItemName(structure) }));
+                } else {
+                    feedback.show(t('editor.starterNotFound'));
                 }
                 router.replace({ path: '/editor' });
             }

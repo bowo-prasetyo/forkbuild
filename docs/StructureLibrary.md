@@ -69,7 +69,11 @@ The fork gets a fresh document identity (world.id) and fresh brick
 identities throughout — every Brick placed into the new Document is a
 newly constructed instance, never one of the library Structure's own
 Brick objects, so nothing about editing a fork can ever mutate the
-library. `document.metadata.parentStructureId` records which Structure
+library. Each new Brick keeps the library Brick's definition, position,
+rotation and color, so a fork looks like the structure's thumbnail (until
+2026-10 the color was dropped, and the Tool Shed's and Stable's
+roof-colored cubes came out in their default color).
+`document.metadata.parentStructureId` records which Structure
 the fork came from (core/DocumentMetadata.js) — provenance only, never a
 live dependency: editing, saving, or reloading a fork never reads from
 or writes back to the Structure it was forked from, and the Structure

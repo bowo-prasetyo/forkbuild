@@ -72,6 +72,26 @@ first load fails to download `ui/boot.js` reloads the page once
 cache, so the reload requests only what is missing. If that fails too, the
 page shows a message with a Reload button rather than a blank page.
 
+## Link previews and installing
+
+`index.html` carries what search engines and link previews read: a
+`description`, Open Graph tags (`og:title`, `og:description`, `og:image` and
+the rest) and a `twitter:card`. A pasted link to the site shows the picture
+in `assets/social/forkbuild-card.png` (1200 × 630, drawn from the Home
+page's own 3D showcase) with that title and description. Link previews need
+absolute addresses, so `og:url` and `og:image` name the official site,
+`https://bowo-prasetyo.github.io/forkbuild/`; a copy hosted elsewhere can
+change those two lines to its own address. The app itself never fetches
+them, so the Content Security Policy needs nothing for them.
+
+`manifest.webmanifest` (linked from `index.html`) names the app, its colors
+and its icons (`favicon.svg`, and `assets/icons/` for browsers that want
+PNGs, including a maskable one), so browsers that install web apps can
+install ForkBuild from the address bar. Its addresses are relative, so it
+works unchanged wherever the folder is served. There is no service worker:
+an installed ForkBuild still needs its host to load. The manifest is fetched
+from the page's own origin, which `default-src 'self'` already allows.
+
 ## Everything is served from your own origin
 
 The page loads no scripts, styles or fonts from anywhere else. The
