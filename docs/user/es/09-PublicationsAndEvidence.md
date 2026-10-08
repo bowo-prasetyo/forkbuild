@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 58222e42e252988f -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -372,10 +372,9 @@ comprueba la firma de cada comentario obtenido, y ninguno se cuenta dos
 veces.
 
 Cuando alguien comenta una publicación que usted publicó, aparece una
-entrada **Publication commented** (publicación comentada) en su
+entrada **Nuevo comentario en su construcción** en su
 [Historial de notificaciones](03-WorldView.md#orientación-y-ubicaciones)
-(el botón 🔔 del encabezado). Es el único tipo de notificación que tiene
-ForkBuild hoy.
+(el botón 🔔 del encabezado).
 
 ## Snapshot local
 

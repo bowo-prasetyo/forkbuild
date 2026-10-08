@@ -48,7 +48,8 @@ const policy = parsePolicy(metas[0][1]);
         'base-uri': ["'none'"],
         'form-action': ["'none'"],
         'frame-src': ["'none'"],
-        'worker-src': ["'none'"]
+        // The published site's service worker (sw.js), from this origin only.
+        'worker-src': ["'self'"]
     };
     for (const [name, values] of Object.entries(expect)) {
         assert(JSON.stringify(policy.get(name)) === JSON.stringify(values), `${name} is ${values.join(' ')} (found ${JSON.stringify(policy.get(name))})`);

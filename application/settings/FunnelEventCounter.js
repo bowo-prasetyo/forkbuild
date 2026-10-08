@@ -38,6 +38,10 @@ export class FunnelEventCounter {
         return this.count(FunnelEvent.OPENED_SHARED_LINK);
     }
 
+    installed() {
+        return this.count(FunnelEvent.INSTALLED);
+    }
+
     // Counted once per build opened from a link.
     forked(sourceDocumentId) {
         if (!this._openedFromLink.delete(sourceDocumentId)) return false;

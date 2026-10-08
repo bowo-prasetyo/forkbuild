@@ -20,6 +20,7 @@ function counter({ origin = VISITOR_COUNT_SITE_ORIGIN, privacySignals = {}, enab
     assert(funnelEventHitUrl(FunnelEvent.SHARE_LINK, '5') === 'https://forkbuild.goatcounter.com/count?p=%2Fe%2Fshare-link&rnd=5', 'a share link is /e/share-link');
     assert(funnelEventHitUrl(FunnelEvent.OPENED_SHARED_LINK, '5').includes('p=%2Fe%2Fopened-shared-link&'), 'an opened link is /e/opened-shared-link');
     assert(funnelEventHitUrl(FunnelEvent.REMIX_FROM_LINK, '5').includes('p=%2Fe%2Fremix-from-link&'), 'a remix is /e/remix-from-link');
+    assert(funnelEventHitUrl(FunnelEvent.INSTALLED, '5').includes('p=%2Fe%2Finstalled&'), 'installing ForkBuild is /e/installed');
     let refused = false;
     try {
         funnelEventHitUrl('../anything', '5');
@@ -58,4 +59,11 @@ function counter({ origin = VISITOR_COUNT_SITE_ORIGIN, privacySignals = {}, enab
     assert(instance.forked('doc-1') === false, 'counted once');
     assert(hits.filter((url) => url.includes('opened-shared-link')).length === 1, 'opening the link was counted');
     console.log('✓ remixes from a link');
+}
+
+// Installing ForkBuild as an app.
+{
+    const { instance, hits } = counter();
+    assert(instance.installed() === true && hits.at(-1).includes('p=%2Fe%2Finstalled&'), 'installing is counted');
+    console.log('✓ installing');
 }

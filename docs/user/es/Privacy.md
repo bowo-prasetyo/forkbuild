@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: f677edb8952577f9 -->
+<!-- translation-of: docs/Privacy.md source-hash: ddb447abdff42d17 -->
 # Privacidad
 
 <!-- languages -->
@@ -7,8 +7,7 @@
 
 ForkBuild no tiene cuentas y no lo rastrea. Guarda su trabajo en su propio
 navegador y habla con otras computadoras solo para las funciones que lo
-necesitan, además de un recuento anónimo de visitantes, una vez al día y
-cuando se usa un enlace para compartir, para que sus creadores sepan
+necesitan, además de un recuento anónimo de visitantes, una vez al día, cuando se usa un enlace para compartir y cuando se instala, para que sus creadores sepan
 aproximadamente cuántas personas lo usan y comparten construcciones
 (consulte «Recuento de visitantes» más abajo, y cómo desactivarlo). Esta página
 muestra lo que guarda, y cada servidor con el que puede comunicarse y
@@ -61,6 +60,14 @@ seguridad que solo puede crear copias de seguridad (nunca abrirlas), en una
 base de datos IndexedDB aparte, `forkbuild-backup`; cuándo y dónde hizo su
 última copia de seguridad se guarda con el resto de los datos, pero se deja
 fuera de las copias.
+
+En el sitio oficial, el navegador también guarda los archivos propios de
+ForkBuild (su código, su hoja de estilos, sus iconos y el idioma que usa) a
+través del service worker del sitio, para que ForkBuild se abra sin conexión
+y se pueda instalar como aplicación. Son los mismos archivos para todos y no
+contienen nada suyo. Si las notificaciones en este dispositivo están
+activadas se guarda con su configuración (consulte «Notificaciones en este
+dispositivo» más abajo).
 
 ## Lo que pueden ver otras personas
 
@@ -136,6 +143,9 @@ su propia ruta fija:
   se copió en el Editor (como mucho una vez por construcción cada vez que la
   aplicación está abierta).
 
+También se entera, de la misma manera, cuando ForkBuild se instala como
+aplicación (`/e/installed`).
+
 Cada una envía solo su ruta y el número aleatorio: nunca el enlace, la
 construcción, su título ni quién la hizo. Qué construcciones se abrieron
 desde un enlace solo se guarda en la memoria de la página abierta, y se
@@ -171,6 +181,7 @@ dirección IP y lo que usted le pide.
 | --- | --- | --- |
 | La aplicación se abre en el sitio oficial, como mucho una vez al día (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con una ruta fija, sin referente y sin cookie |
 | En el sitio oficial, copia o comparte un enlace a una construcción, abre un enlace compartido o copia en el Editor una construcción abierta desde uno (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con una ruta fija que indica cuál de los tres momentos fue, sin referente y sin cookie |
+| Instala ForkBuild desde el sitio oficial (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/e/installed`, sin referente y sin cookie |
 | Se vuelve descubrible, o busca a alguien, en **Pares** | el servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | la clave pública de su identidad y una oferta de conexión, que se guardan como máximo 15 minutos; la identidad que busca; cuando se conecta con alguien que encontró, su respuesta de conexión (que muestra sus direcciones de red), que solo esa persona puede recoger |
 | Se une a una sala pública, o mira una | el mismo servidor de encuentro | su tarjeta de sala firmada (clave pública, nombre visible, qué sala), que se guarda como máximo 15 minutos y se renueva mientras se queda; qué sala mira |
 | Se inicia una conexión entre pares | servidores STUN (`stun.l.google.com`) | nada más que una solicitud de su dirección IP pública |
@@ -216,6 +227,19 @@ sala, las ofertas que su dispositivo tiene listas nunca piden credenciales
 de relay, así que estar en una sala no gasta la cuota de relay que el
 servidor de encuentro reparte cada mes; la persona que se conecta con
 usted pide una, si la necesita.
+
+## Notificaciones en este dispositivo
+
+Si activa **Avisarme en este dispositivo** (en el panel 🔔), su dispositivo
+muestra por sí mismo sus notificaciones nuevas mientras ForkBuild está
+abierto en una pestaña en segundo plano o como aplicación instalada. No se
+usa ningún servicio push y no se envía nada a ninguna parte para ello: la
+página abierta entrega la notificación a su navegador, que la muestra a
+través de su sistema operativo. El texto de la notificación (por ejemplo, el
+título de una construcción y el nombre de quien la hizo) puede quedar
+entonces en el historial de notificaciones de su dispositivo, como con
+cualquier aplicación. Desactívelo en el mismo panel, o bloquee las
+notificaciones de ForkBuild en la configuración del sitio del navegador.
 
 ## Si ejecuta su propia copia
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 58222e42e252988f -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
 # 09 — 公開物と外部証拠
 
 <!-- languages -->
@@ -351,9 +351,8 @@ Nostr、Steem。最初は
 
 あなたが公開した公開物に誰かがコメントすると、
 [通知の履歴](03-WorldView.md#方向と場所)
-（ヘッダーの 🔔 ボタン）に **Publication commented**（公開物にコメントが
-付きました）の項目が表示されます。現在 ForkBuild にある通知はこの
-種類だけです。
+（ヘッダーの 🔔 ボタン）に **あなたの作品に新しいコメント** の項目が
+表示されます。
 
 ## ローカルのスナップショット
 

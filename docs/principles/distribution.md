@@ -45,3 +45,14 @@ waiting on a human approval gets the wallet's own bounded timeout (120
 seconds), and no shorter outer timeout may cut it off first.
 
 [Full text](history/0.9.md#one-signer-one-request-at-a-time-2026-09-21)
+
+### An Offline Copy Holds The App, Never Your Data (2026-10-08)
+
+The published site's service worker keeps only ForkBuild's own files, the
+same for everyone, never anything a person made. The page is asked of the
+network first, a new version waits for Reload or for every tab to close,
+nothing from another site passes through it, and an unbundled copy
+registers none.
+
+[Full text](history/0.9.md#an-offline-copy-holds-the-app-never-your-data-2026-10-08)
+

@@ -132,10 +132,12 @@ export function describeNotificationDeduplicationPolicy() {
 }
 
 // Event types whose subject is not a Commentary name the payload field that
-// takes commentaryId's place. A followed author's new Publication is one fact
-// per Publication, however many times it is discovered.
+// takes commentaryId's place. A followed author's new Publication, or a remix
+// of your build, is one fact per Publication, however many times it is
+// discovered.
 const SUBJECT_FIELD_BY_EVENT_TYPE = Object.freeze({
-    'publication.followed-author-published': 'publicationId'
+    'publication.followed-author-published': 'publicationId',
+    'publication.remixed': 'publicationId'
 });
 
 // The adopted logical identity for the current Commentary producer:

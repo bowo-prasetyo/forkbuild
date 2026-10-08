@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: d6122c9368a1f486 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 2cea46db0f73aa93 -->
 # 자주 묻는 질문
 
 <!-- languages -->
@@ -203,6 +203,14 @@ Edge에서는 클라우드 저장소가 동기화하는 폴더에 매일 자동�
 
 네. 두 화면 모두 터치 조작이 있으며, 좁은 화면에서는 메뉴와 사이드 패널이
 접힙니다. [터치스크린](ControlsReference.md#터치스크린)을 보세요.
+
+### ForkBuild는 오프라인에서도 되나요? 설치할 수 있나요?
+
+네, 호스팅된 사이트라면 됩니다. 처음 방문한 뒤에는 연결 없이도 열리고, 홈
+화면의 **ForkBuild 설치**로 기기에 앱으로 추가할 수 있습니다. 짓기, 저장,
+저장한 작품과 기성 작품은 오프라인에서도 되고, 작품과 사람 찾기, 배포,
+채팅에는 연결이 필요합니다. [ForkBuild 설치하기](01-GettingStarted.md#forkbuild-설치하기)를
+참고하세요.
 
 ### 암호화폐 지갑이 필요한가요?
 

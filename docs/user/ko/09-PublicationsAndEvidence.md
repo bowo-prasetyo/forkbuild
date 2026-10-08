@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 58222e42e252988f -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
 # 09 — 게시물과 외부 증거
 
 <!-- languages -->
@@ -307,8 +307,7 @@ X라고 부른다” 같은 **서명된 클레임**과, 클레임에 더할 수 
 세지 않습니다.
 
 누군가 내가 게시한 게시물에 댓글을 달면,
-[알림 기록](03-WorldView.md#방향과-위치)(머리글의 🔔 버튼)에 **Publication
-commented** 항목이 나타납니다. 지금 ForkBuild에 있는 알림은 이 한 종류뿐입니다.
+[알림 기록](03-WorldView.md#방향과-위치)(머리글의 🔔 버튼)에 **내 작품에 새 댓글** 항목이 나타납니다.
 
 ## 로컬 스냅샷
 

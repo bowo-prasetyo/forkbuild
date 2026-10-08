@@ -1,0 +1,88 @@
+/* Installing ForkBuild, a new version being ready, and notifications on this
+   device (ui/components/pwa/, ui/components/DeviceNotificationSetting.js). */
+
+.app-update-banner {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding: 0.55rem 0.9rem;
+    border-bottom: 1px solid #2f5c45;
+    background: #182a21;
+    color: #d6f0e2;
+    font-size: 0.88rem;
+}
+
+.install-app {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.75rem;
+}
+
+.install-app--button .install-app-button {
+    padding: 0.45rem 0.9rem;
+    border: 1px solid #4caf7d;
+    border-radius: 6px;
+    background: transparent;
+    color: #4caf7d;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.install-app--button .install-app-button:hover,
+.install-app--button .install-app-button:focus-visible {
+    background: #182a21;
+}
+
+/* In the More menu it reads as one more of its items. */
+.install-app--link {
+    display: contents;
+}
+
+.install-app--link .install-app-button {
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 0.88rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.install-app-why,
+.install-app-hint {
+    font-size: 0.9rem;
+    color: #9a9a9a;
+}
+
+.home-install {
+    margin-top: 1rem;
+}
+
+.device-notification-setting {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.75rem;
+    margin: 0 0 1rem;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    background: #1a1a1a;
+}
+
+.device-notification-status {
+    margin: 0;
+    color: #c8c8c8;
+}
+
+.device-notification-hint {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    color: #8a8a8a;
+}

@@ -185,10 +185,14 @@ the top of the panel handles getting around:
 **Notifications** is the 🔔 button in the app's header, beside Login, so it's there on
 every page, not just in World View. It opens your **Notification History** —
 a durable record of notification facts addressed to your identity, most
-recent activity first. Today the only thing that produces one is someone
-commenting on a publication you published (see
-[Commentary](09-PublicationsAndEvidence.md#commentary) below) — each entry
-shows what happened and when, and an **Explore** button takes you to that
+recent activity first. Three things produce one: someone commenting on a
+publication you published (see
+[Commentary](09-PublicationsAndEvidence.md#commentary)), new work by
+someone you follow (see
+[Following people](07-PeerConnectionsAndFriends.md#following-people)), and
+someone remixing one of your builds (see
+[Remix counts](04-PublishingAndForking.md#remix-counts)). Each entry says
+what happened and when, and an **Explore** button takes you to that
 publication's World: inside World View it flies you there, anywhere else it
 opens World View at it. It's a plain read-only log, not an inbox: there's no
 read/unread state, no dismissing an entry, and no count badge on the button
@@ -201,6 +205,20 @@ The compass shows cardinal directions (N, E, S, W) and your current heading
 in degrees, plus small dots for nearby structures, collaborators, and
 landmarks — hover one for its label, or check the readable list underneath
 the compass.
+
+### Notifications on this device
+
+At the top of the panel, **Notify me on this device** lets your device show
+these notifications itself, like any app's: the browser asks you to allow
+it, and **Turn off** stops it. They appear while ForkBuild is open but not
+in front of you, in another tab or as an
+[installed app](01-GettingStarted.md#installing-forkbuild) in the
+background; clicking one opens ForkBuild at that build. Nothing is sent
+anywhere to make this work, so a closed ForkBuild shows nothing: what
+arrived meanwhile is in the panel next time. A few at most appear at once,
+and the rest wait in the panel. If the browser blocks ForkBuild's
+notifications, the panel says so; allow them in the browser's site
+settings to turn them on.
 
 ### Explore, Map, and Places — three ways to browse, never at once
 

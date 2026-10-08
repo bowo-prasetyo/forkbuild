@@ -7,11 +7,14 @@ import { applyDocumentLanguage, setAppLocale } from './i18n/i18n.js';
 import { negotiateLocale } from './i18n/locales.js';
 import { importWithRetry } from './importWithRetry.js';
 import { browserPrivacySignals, sendCounterHit } from './counterHit.js';
+import { watchInstallPrompt } from './pwa/installPrompt.js';
 
 // Starts the app; ui/boot.js imports it. Storage is opened first because
 // every store reads it synchronously (see storage/IndexedDbStorageBackend.js);
 // the app is imported only after that, so none of its modules can read
-// storage before it is ready.
+// storage before it is ready. The browser's offer to install ForkBuild is
+// listened for first, since it can come before the app has loaded.
+watchInstallPrompt();
 await openBrowserStorage();
 await chooseLanguage();
 countVisit();

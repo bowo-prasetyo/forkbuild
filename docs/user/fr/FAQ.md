@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: d6122c9368a1f486 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 2cea46db0f73aa93 -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -239,6 +239,16 @@ Voir [Paramètres réseau](10-NetworkSettings.md).
 Oui. Les deux vues ont des commandes tactiles, et sur un écran étroit le
 menu et les panneaux latéraux se replient. Voir
 [Écrans tactiles](ControlsReference.md#écrans-tactiles).
+
+### ForkBuild fonctionne-t-il hors ligne ? Puis-je l’installer ?
+
+Oui, sur le site hébergé. Après votre première visite, ForkBuild s’ouvre
+sans connexion, et **Installer ForkBuild** sur l’écran d’Accueil l’ajoute
+à votre appareil comme application. Construire, enregistrer, vos
+constructions enregistrées et les constructions toutes prêtes fonctionnent
+hors ligne ; trouver des constructions et des personnes, distribuer et le
+chat ont besoin d’une connexion. Voir
+[Installer ForkBuild](01-GettingStarted.md#installer-forkbuild).
 
 ### Ai-je besoin d’un portefeuille crypto ?
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 54b42815b27a2697 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4bc516de273c1f79 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -432,6 +432,11 @@ yang diterbitkan dua kali dihitung sekali, dan bangunan yang belum pernah
 di-remix tidak menampilkan apa pun. Jumlahnya hanya apa yang diketahui
 perangkat ini, jadi perangkat lain bisa menampilkan angka berbeda, dan
 jumlah itu tidak pernah menentukan apa yang ditampilkan lebih dulu.
+
+Saat perangkat ini menemukan remix dari orang lain atas salah satu
+bangunan Anda, 🔔 Anda mendapat entri **… me-remix bangunan Anda**, sekali
+per remix (dan perangkat Anda juga menampilkannya, jika Anda mengaktifkan
+[Notifikasi di perangkat ini](03-WorldView.md#notifikasi-di-perangkat-ini)).
 
 ### Saat fork tidak dapat diselesaikan
 

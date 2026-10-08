@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 54b42815b27a2697 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4bc516de273c1f79 -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -422,6 +422,11 @@ remix publicado duas vezes conta uma vez, e uma construção que ninguém
 remixou não mostra nada. A contagem é só o que este dispositivo conhece,
 então outro dispositivo pode mostrar um número diferente, e ela nunca
 decide o que aparece primeiro.
+
+Quando este dispositivo encontra o remix que outra pessoa fez de uma das
+suas construções, seu 🔔 ganha uma entrada **… remixou sua construção**,
+uma vez por remix (e seu dispositivo também a mostra, se você ativou
+[Notificações neste dispositivo](03-WorldView.md#notificações-neste-dispositivo)).
 
 ### Quando uma bifurcação não pode ser concluída
 

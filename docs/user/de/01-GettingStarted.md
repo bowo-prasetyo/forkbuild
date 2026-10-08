@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 5516a73079573bea -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 2d3a98acb2272855 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -46,7 +46,7 @@ Die Leiste oben ist immer sichtbar:
 
 **Mehr** öffnet den Rest, in vier Gruppen: **Persönlich** (Mein Avatar, Meine Identitäten,
 Ihre Daten), **Menschen** (Peers, Gefolgt, Unterhaltungen), **Netzwerk**
-(Veröffentlichungen, Netzwerkeinstellungen) und **App** (Sprache, Über). Auf einem Telefon zeigt
+(Veröffentlichungen, Netzwerkeinstellungen) und **App** (Sprache, Über und **ForkBuild installieren**, wo der Browser es installieren kann). Auf einem Telefon zeigt
 **Menü** alle auf einmal.
 
 - **Mein Avatar** — wie andere Sie in der Weltansicht sehen, siehe
@@ -73,6 +73,34 @@ Ihre Daten), **Menschen** (Peers, Gefolgt, Unterhaltungen), **Netzwerk**
   Japanisch, Koreanisch und brasilianischem Portugiesisch (siehe [Translating ForkBuild](../../Translating.md)
   (Englisch)).
 - **Über** — Versionsinformationen
+
+## ForkBuild installieren
+
+ForkBuild lässt sich als App installieren: Es öffnet sich dann vom
+Home-Bildschirm, Dock oder der App-Liste in einem eigenen Fenster und
+funktioniert ohne Verbindung. Klicken Sie auf dem Startbildschirm (oder
+unter **Mehr**) auf **ForkBuild installieren** und bestätigen Sie im Dialog
+des Browsers. In Safari auf einem iPhone oder iPad sagt die Schaltfläche
+stattdessen, wie es geht: Tippen Sie auf **Teilen**, dann auf **Zum
+Home-Bildschirm**. Wo der Browser keine Apps installieren kann oder
+ForkBuild schon installiert ist, wird die Schaltfläche nicht gezeigt.
+
+- **Offline.** Beim ersten Öffnen behält Ihr Browser die Dateien von
+  ForkBuild, sodass es danach auch ohne Verbindung öffnet, installiert oder
+  nicht: Start, der Editor, Ihre gespeicherten und die fertigen Bauwerke
+  funktionieren. Was das Netz braucht (Bauwerke und Personen finden,
+  Verteilen, Chat und Anrufe), wartet, bis Sie wieder online sind.
+- **Updates.** Ist eine neue Version da, sagt eine Zeile oben **Eine neue
+  Version von ForkBuild ist bereit**; **Neu laden** startet sie, sonst
+  startet sie beim nächsten Öffnen von ForkBuild von selbst.
+- **Benachrichtigungen.** Ein installiertes ForkBuild (oder eines in einem
+  Hintergrund-Tab) kann Ihre Benachrichtigungen über Ihr Gerät anzeigen;
+  siehe [Benachrichtigungen auf diesem Gerät](03-WorldView.md#benachrichtigungen-auf-diesem-gerät).
+
+Das gilt für die gehostete Seite. Eine Kopie, die Sie direkt aus dem
+Ordner betreiben (wie oben), lässt sich nicht installieren und funktioniert
+nicht offline; eine mit `node scripts/build.mjs` gebaute schon (siehe
+[Deployment](../../Deployment.md)).
 
 ## Anmelden
 

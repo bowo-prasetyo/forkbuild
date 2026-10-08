@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 82240492e7eea390 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 34099c3e43b46a48 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -201,11 +201,12 @@ kamera). Sederet tombol di dekat bagian atas panel menangani perpindahan:
 **Notifikasi** adalah tombol 🔔 di kepala aplikasi, di samping Masuk, jadi
 ada di setiap halaman, bukan hanya di Tampilan Dunia. Tombol ini membuka
 **Riwayat Notifikasi** Anda — catatan yang tahan lama berisi fakta
-notifikasi yang ditujukan ke identitas Anda, dari aktivitas terbaru. Saat
-ini satu-satunya hal yang menghasilkan notifikasi adalah seseorang
-mengomentari publikasi yang Anda terbitkan (lihat
-[Komentar](09-PublicationsAndEvidence.md#komentar)) — setiap entri
-menampilkan apa yang terjadi dan kapan, dan tombol **Jelajahi** membawa
+notifikasi yang ditujukan ke identitas Anda, dari aktivitas terbaru. Tiga hal menghasilkan notifikasi: seseorang mengomentari publikasi yang
+Anda terbitkan (lihat [Komentar](09-PublicationsAndEvidence.md#komentar)), karya baru dari orang yang Anda ikuti
+(lihat [Mengikuti orang](07-PeerConnectionsAndFriends.md#mengikuti-orang)), dan
+seseorang me-remix salah satu bangunan Anda (lihat
+[Jumlah remix](04-PublishingAndForking.md#jumlah-remix)). Setiap entri
+menyebutkan apa yang terjadi dan kapan, dan tombol **Jelajahi** membawa
 Anda ke Dunia publikasi itu: di dalam Tampilan Dunia, tombol itu
 menerbangkan Anda ke sana, di tempat lain membuka Tampilan Dunia di sana.
 Ini catatan baca-saja biasa, bukan kotak masuk: tidak ada status sudah
@@ -219,6 +220,20 @@ Kompas menampilkan arah mata angin (U, T, S, B) dan arah hadap Anda saat
 ini dalam derajat, ditambah titik-titik kecil untuk struktur, kolaborator,
 dan penanda di dekat Anda — arahkan penunjuk ke salah satunya untuk melihat
 labelnya, atau periksa daftar yang mudah dibaca di bawah kompas.
+
+### Notifikasi di perangkat ini
+
+Di bagian atas panel, **Beri tahu saya di perangkat ini** membuat perangkat
+Anda menampilkan notifikasi ini sendiri, seperti notifikasi aplikasi apa
+pun: peramban meminta izin Anda, dan **Matikan** menghentikannya.
+Notifikasi muncul selama ForkBuild terbuka tetapi tidak di depan, di tab
+lain atau sebagai [aplikasi terpasang](01-GettingStarted.md#memasang-forkbuild) di
+latar belakang; mengeklik salah satunya membuka ForkBuild di bangunan itu.
+Tidak ada yang dikirim ke mana pun untuk ini, jadi ForkBuild yang tertutup
+tidak menampilkan apa pun: yang tiba sementara itu ada di panel lain kali.
+Paling banyak beberapa muncul sekaligus, sisanya menunggu di panel. Jika
+peramban memblokir notifikasi ForkBuild, panel mengatakannya; izinkan di
+pengaturan situs peramban untuk mengaktifkannya.
 
 ### Jelajahi, Peta, dan Tempat — tiga cara menelusuri, tidak pernah sekaligus
 

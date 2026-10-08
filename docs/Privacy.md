@@ -6,9 +6,10 @@
 
 ForkBuild has no accounts and does not track you. It stores your work in
 your own browser and talks to other computers only for the features that
-need them, plus an anonymous visitor count, once a day and when a share
-link is used, so its makers know roughly how many people use it and share
-builds (see "Visitor count" below, and how to turn it off).
+need them, plus an anonymous visitor count, once a day, when a share
+link is used and when it is installed, so its makers know roughly how many
+people use it and share builds (see "Visitor count" below, and how to turn
+it off).
 This page lists what it stores, and every server it can contact and when.
 
 ## What stays on your device
@@ -51,6 +52,13 @@ you ask, a key made from your backup passphrase that can only make backups
 (never open them) in a separate `forkbuild-backup` IndexedDB database; when
 and where you last backed up is kept with the rest of the data but left out
 of backups.
+
+On the official site, the browser also keeps ForkBuild's own files (its
+code, stylesheet, icons and the language you use) through the site's
+service worker, so ForkBuild opens without a connection and can be installed
+as an app. They are the same files for everyone and hold nothing of yours.
+Whether notifications on this device are turned on is kept with your
+settings (see "Notifications on this device" below).
 
 ## What other people can see
 
@@ -118,6 +126,9 @@ one more image request of the same kind, under its own fixed path:
 - `/e/remix-from-link`: a build opened from a shared link was copied into
   the Editor (at most once per build each time the app is open).
 
+It also hears, the same way, when ForkBuild is installed as an app
+(`/e/installed`).
+
 Each sends only its path and the random number: never the link, the build,
 its title or who made it. Which builds were opened from a link is kept only
 in the open page's memory, and forgotten when it closes.
@@ -151,6 +162,7 @@ only when you use the feature, and each server can be changed under
 | --- | --- | --- |
 | The app opens on the official site, at most once a day (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path, no referrer and no cookie |
 | On the official site, you copy or share a link to a build, open a shared link, or copy a build opened from one into the Editor (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
+| You install ForkBuild from the official site (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/installed`, no referrer and no cookie |
 | You make yourself discoverable, or look someone up, in **Peers** | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | your identity's public key and a connection offer, kept for at most 15 minutes; the identity you look up; when you connect to someone you found, your connection reply (it lists your network addresses), which only they can collect |
 | You join, or look into, a public lobby | the same rendezvous server | your signed lobby card (public key, display name, which lobby), kept for at most 15 minutes and renewed while you stay; which lobby you look into |
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |
@@ -193,6 +205,17 @@ only when neither works. While you wait in a lobby, the offers your device
 keeps ready never ask for relay credentials, so a lobby stay does not use up
 the relay allowance the rendezvous server hands out each month; the person
 who connects to you asks for one, if they need it.
+
+## Notifications on this device
+
+If you turn on **Notify me on this device** (in the 🔔 panel), your device
+shows your new notifications itself while ForkBuild is open in a background
+tab or as an installed app. No push service is used and nothing is sent
+anywhere for it: the open page hands the notification to your browser,
+which shows it through your operating system. The notification's text (for
+example a build's title and its maker's name) may then be kept in your
+device's notification history, as with any app's. Turn it off in the same
+panel, or block ForkBuild's notifications in the browser's site settings.
 
 ## If you run your own copy
 

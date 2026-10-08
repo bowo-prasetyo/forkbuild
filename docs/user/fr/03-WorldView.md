@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 82240492e7eea390 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 34099c3e43b46a48 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -211,10 +211,13 @@ panneau sert à se déplacer :
 de Se connecter, il est donc présent sur toutes les pages, pas seulement
 dans la Vue du Monde. Il ouvre votre **Historique des notifications** —
 un registre durable des notifications adressées à votre identité, les
-plus récentes en premier. Aujourd’hui, la seule chose qui en produit une
-est un commentaire sur une publication que vous avez publiée (voir
-[Commentaires](09-PublicationsAndEvidence.md#commentaires) ci-dessous) —
-chaque entrée indique ce qui s’est passé et quand, et un bouton
+plus récentes en premier. Trois choses en produisent une : un commentaire sur une publication que
+vous avez publiée (voir [Commentaires](09-PublicationsAndEvidence.md#commentaires)), une nouvelle œuvre d’une personne
+que vous suivez (voir
+[Suivre des personnes](07-PeerConnectionsAndFriends.md#suivre-des-personnes)) et le
+remix de l’une de vos constructions (voir
+[Nombre de remix](04-PublishingAndForking.md#nombre-de-remix)). Chaque entrée
+indique ce qui s’est passé et quand, et un bouton
 **Explorer** vous emmène dans le Monde de cette publication : dans la Vue
 du Monde, il vous y fait voler ; ailleurs, il ouvre la Vue du Monde à cet
 endroit. C’est un simple journal en lecture seule, pas une boîte de
@@ -228,6 +231,22 @@ La boussole affiche les points cardinaux (N, E, S, O) et votre cap actuel
 en degrés, plus de petits points pour les structures, collaborateurs et
 points de repère proches — survolez-en un pour voir son nom, ou consultez
 la liste lisible sous la boussole.
+
+### Notifications sur cet appareil
+
+En haut du panneau, **Me notifier sur cet appareil** permet à votre
+appareil d’afficher lui-même ces notifications, comme celles de n’importe
+quelle application : le navigateur vous demande l’autorisation, et
+**Désactiver** l’arrête. Elles apparaissent tant que ForkBuild est ouvert
+mais pas au premier plan, dans un autre onglet ou comme
+[application installée](01-GettingStarted.md#installer-forkbuild) en arrière-plan ;
+cliquer sur l’une d’elles ouvre ForkBuild sur cette construction. Rien
+n’est envoyé nulle part pour cela : un ForkBuild fermé n’affiche donc rien,
+et ce qui est arrivé entre-temps sera dans le panneau la fois suivante. Il
+n’en apparaît que quelques-unes à la fois, le reste attend dans le
+panneau. Si le navigateur bloque les notifications de ForkBuild, le panneau
+le dit ; autorisez-les dans les réglages du site du navigateur pour les
+activer.
 
 ### Explorer, Carte et Lieux — trois façons de parcourir, jamais en même temps
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 58222e42e252988f -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -380,10 +380,9 @@ ouvrez les commentaires sont vérifiées. La signature de chaque
 commentaire récupéré est vérifiée, et aucun n’est compté deux fois.
 
 Quand quelqu’un commente une publication que vous avez publiée, une
-entrée indiquant qu’une publication a été commentée apparaît dans votre
+entrée **Nouveau commentaire sur votre construction** apparaît dans votre
 [Historique des notifications](03-WorldView.md#orientation-et-emplacements)
-(le bouton 🔔 de l’en-tête). C’est le seul type de notification de
-ForkBuild aujourd’hui.
+(le bouton 🔔 de l’en-tête).
 
 ## Snapshot local
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 58222e42e252988f -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -359,9 +359,9 @@ consultadas as publicações cujos comentários você abre. A assinatura de cada
 comentário buscado é conferida, e nenhum é contado duas vezes.
 
 Quando alguém comenta numa publicação que você publicou, aparece uma entrada
-**Publication commented** (comentaram numa publicação sua) no seu
+**Novo comentário na sua construção** no seu
 [Histórico de notificações](03-WorldView.md#orientação-e-locais) (o botão 🔔
-no cabeçalho). É o único tipo de notificação que o ForkBuild tem hoje.
+no cabeçalho).
 
 ## Snapshot local
 

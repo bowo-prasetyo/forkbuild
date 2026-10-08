@@ -5,12 +5,16 @@ import ExperimentalBanner from './components/ExperimentalBanner.js';
 import BackupReminderBanner from './components/BackupReminderBanner.js';
 import NotificationHistoryPanel from './components/NotificationHistoryPanel.js';
 import PageLoadFailureNotice from './components/PageLoadFailureNotice.js';
+import AppUpdateBanner from './components/pwa/AppUpdateBanner.js';
+import InstallAppButton from './components/pwa/InstallAppButton.js';
+import DeviceNotificationSetting from './components/DeviceNotificationSetting.js';
+import { describeNotification } from './notifications/notificationText.js';
 import { CreatePreviewUseCase } from '../application/editor/CreatePreviewUseCase.js';
 import { t } from './i18n/i18n.js';
 
 export default {
     name: 'App',
-    components: { UserWidget, ExperimentalBanner, BackupReminderBanner, NotificationHistoryPanel, PageLoadFailureNotice },
+    components: { UserWidget, ExperimentalBanner, BackupReminderBanner, NotificationHistoryPanel, PageLoadFailureNotice, AppUpdateBanner, InstallAppButton, DeviceNotificationSetting },
     // 0.2.32: one app-wide PreviewService, provided here (same
     // provide/inject convention LoginModal's identityUseCase already
     // uses) so its cache and generation queue survive navigating
@@ -102,7 +106,7 @@ export default {
 
         return {
             t, menuOpen, moreOpen, moreMenu, inMore, notificationsOpen, openNotifications,
-            getRecipientNotificationEventsCommand, viewNotificationPublication
+            getRecipientNotificationEventsCommand, viewNotificationPublication, describeNotification
         };
     },
     template: `
@@ -151,6 +155,7 @@ export default {
                                     <span class="app-nav-group-label" aria-hidden="true">{{ t('app.nav.group.app') }}</span>
                                     <router-link to="/settings/language" class="app-nav-link">{{ t('app.nav.language') }}</router-link>
                                     <router-link to="/about" class="app-nav-link">{{ t('app.nav.about') }}</router-link>
+                                    <InstallAppButton variant="link" />
                                 </div>
                             </div>
                         </div>
@@ -167,6 +172,7 @@ export default {
                 </div>
             </header>
 
+            <AppUpdateBanner />
             <BackupReminderBanner :path="$route.path" @open-your-data="$router.push('/settings/data')" />
             <ExperimentalBanner v-if="$route.meta.experimental" />
             <PageLoadFailureNotice />
@@ -177,8 +183,11 @@ export default {
                 v-if="notificationsOpen"
                 :getRecipientNotificationEventsCommand="getRecipientNotificationEventsCommand"
                 :viewPublicationCommand="viewNotificationPublication"
+                :describeNotification="describeNotification"
                 @cancel="notificationsOpen = false"
-            />
+            >
+                <DeviceNotificationSetting />
+            </NotificationHistoryPanel>
         </div>
     `
 };

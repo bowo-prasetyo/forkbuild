@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: d6122c9368a1f486 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 2cea46db0f73aa93 -->
 # Perguntas frequentes
 
 <!-- languages -->
@@ -232,6 +232,15 @@ app começa. Recarregue a página depois de salvar. Veja
 Sim. As duas visões têm controles de toque, e numa tela estreita o menu e os
 painéis laterais se recolhem. Veja
 [Telas sensíveis ao toque](ControlsReference.md#telas-sensíveis-ao-toque).
+
+### O ForkBuild funciona sem internet? Posso instalá-lo?
+
+Sim, no site hospedado. Depois da primeira visita o ForkBuild abre sem
+conexão, e **Instalar o ForkBuild** na tela Início o adiciona ao seu
+dispositivo como aplicativo. Construir, salvar e suas construções salvas e
+as prontas funcionam sem internet; encontrar construções e pessoas,
+distribuir e o chat precisam de conexão. Veja
+[Instalando o ForkBuild](01-GettingStarted.md#instalando-o-forkbuild).
 
 ### Preciso de uma carteira de criptomoedas?
 

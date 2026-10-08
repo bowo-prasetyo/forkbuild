@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 19e30fff7ffaefab -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
 # 07 — Conexiones entre pares y amigos
 
 <!-- languages -->
@@ -201,9 +201,9 @@ otro.
   al más antiguo. Haga clic en un nombre para ver solo el trabajo de esa
   persona.
 - **Notificaciones.** Cuando una creación nueva de alguien a quien sigue
-  llega a este dispositivo, el panel 🔔 recibe una entrada **Publication
-  followed author published** (un autor que sigue publicó), una vez por
-  creación, con **Explorar** para abrirla.
+  llega a este dispositivo, el panel 🔔 recibe una entrada **… publicó algo nuevo**, una vez por
+  creación (y su dispositivo también la muestra, si activó
+  [Notificaciones en este dispositivo](03-WorldView.md#notificaciones-en-este-dispositivo)), con **Explorar** para abrirla.
 - **Sus Mundos compartidos se obtienen para usted.** Los Mundos que alguien
   a quien sigue comparte con sus pares conectados se recuperan
   automáticamente, como ya ocurre con los Amigos y los pares Recordados.

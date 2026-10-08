@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 82240492e7eea390 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 34099c3e43b46a48 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -206,11 +206,13 @@ Eine Reihe von Schaltflächen oben im Feld dient dem Fortbewegen:
 neben Anmelden, und daher auf jeder Seite da, nicht nur in der
 Weltansicht. Sie öffnet Ihren **Benachrichtigungsverlauf** — eine
 dauerhafte Aufzeichnung der an Ihre Identität gerichteten
-Benachrichtigungen, die jüngste Aktivität zuerst. Derzeit erzeugt nur
-eines eine: wenn jemand eine Veröffentlichung kommentiert, die Sie
-veröffentlicht haben (siehe
-[Kommentare](09-PublicationsAndEvidence.md#kommentare) unten) — jeder
-Eintrag zeigt, was wann passiert ist, und eine Schaltfläche **Erkunden**
+Benachrichtigungen, die jüngste Aktivität zuerst. Drei Dinge erzeugen eine: wenn jemand eine Veröffentlichung kommentiert, die
+Sie veröffentlicht haben (siehe [Kommentare](09-PublicationsAndEvidence.md#kommentare)), neue Arbeit von jemandem,
+dem Sie folgen (siehe
+[Personen folgen](07-PeerConnectionsAndFriends.md#personen-folgen)), und wenn
+jemand eines Ihrer Bauwerke remixt (siehe
+[Remix-Zähler](04-PublishingAndForking.md#remix-zähler)). Jeder Eintrag sagt,
+was wann passiert ist, und eine Schaltfläche **Erkunden**
 bringt Sie zur Welt dieser Veröffentlichung: In der Weltansicht fliegt sie
 Sie dorthin, überall sonst öffnet sie die Weltansicht dort. Es ist ein
 schlichtes schreibgeschütztes Protokoll, kein Posteingang: Es gibt keinen
@@ -224,6 +226,20 @@ Der Kompass zeigt die Himmelsrichtungen (N, O, S, W) und Ihre aktuelle
 Richtung in Grad, dazu kleine Punkte für Strukturen, Mitwirkende und
 Wahrzeichen in der Nähe — fahren Sie über einen für seine Beschriftung,
 oder sehen Sie in die lesbare Liste unter dem Kompass.
+
+### Benachrichtigungen auf diesem Gerät
+
+Oben im Feld lässt **Auf diesem Gerät benachrichtigen** Ihr Gerät diese
+Benachrichtigungen selbst anzeigen, wie die jeder App: Der Browser fragt
+Sie, ob Sie es erlauben, und **Ausschalten** beendet es. Sie erscheinen,
+während ForkBuild geöffnet ist, aber nicht vorne, in einem anderen Tab oder
+als [installierte App](01-GettingStarted.md#forkbuild-installieren) im Hintergrund;
+ein Klick darauf öffnet ForkBuild bei diesem Bauwerk. Dafür wird nichts
+irgendwohin gesendet, ein geschlossenes ForkBuild zeigt also nichts: Was
+inzwischen ankam, steht beim nächsten Mal im Feld. Höchstens einige
+erscheinen auf einmal, der Rest wartet im Feld. Blockiert der Browser die
+Benachrichtigungen von ForkBuild, sagt das Feld es; erlauben Sie sie in den
+Website-Einstellungen des Browsers, um sie einzuschalten.
 
 ### Erkunden, Karte und Gegenden — drei Arten zu stöbern, nie gleichzeitig
 
