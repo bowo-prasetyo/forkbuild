@@ -4895,3 +4895,17 @@ was the posts themselves and a way to read their results.
 - Tests: `LaunchChannel`.
 - Not done, and not code: the posts themselves, the GitHub repository's description and topics (Settings), and
   seeding the challenge with real entries; see the checklist in `docs/launch/README.md`.
+
+## Builds whose Signed Claim is on IPFS are found on the networks (unnumbered, 2026-10-08)
+
+**Fix.** A Publication distributed with IPFS storage announces `ipfs://<cid>` as where its Signed Claim is. The
+Repository's search of the networks and the weekly challenge read announced claims through the World Encounter
+material sources, which had readers for Arweave, Steem and Blurt only, so an `ipfs://` claim went to the Arweave
+reader and was never admitted: the first challenge entry, distributed to Nostr with Pinata pinning, was listed on the
+device that published it and nowhere else. Links (`#/view/ipfs/…`) were unaffected; they use their own retriever.
+
+- `composeWorldEncounterMaterialSources()` takes an `ipfsMaterialResolver` and sends `ipfs://` to it;
+  `composeWorldDiscovery()` passes the same reader links use (`buildIpfsWorldEncounterMaterialResolver()`, the
+  configured IPFS gateways, failing over in order).
+- Tests: `IpfsClaimNetworkDiscovery` (the Repository and the challenge each admit an IPFS-stored claim, read from IPFS
+  and never asked of Arweave).

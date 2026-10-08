@@ -590,7 +590,8 @@ publications with the application-wide decentralized discovery provider
   ui/main.js, through ui/components/publicationCatalog/useRepositoryNetworkDiscovery.js).
   It reads `searchEnvelopes('forkbuild-publication')` from the Nostr relay
   set, the Arweave GraphQL query, Steem and Blurt, fetches each new record through
-  the World Encounter material sources, and admits it to the decentralized
+  the World Encounter material sources (which read a Signed Claim from Arweave,
+  Steem, Blurt or, for `ipfs://`, the configured IPFS gateways, as links do), and admits it to the decentralized
   discovery provider and the World Encounter admission log only when the
   verifier returns VERIFIED and it is exactly the Publication announced.
   Each run checks at most 20 new records; refused records are not fetched

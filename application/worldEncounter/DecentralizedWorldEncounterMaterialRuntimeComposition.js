@@ -4,6 +4,8 @@ import { DecentralizedWorldEncounterMaterialSource } from './DecentralizedWorldE
 import { STEEM_CONTENT_URI_PREFIX } from '../../core/SteemContentManifest.js';
 import { BLURT_CONTENT_URI_PREFIX } from '../../core/BlurtPost.js';
 
+const IPFS_URI_PREFIX = 'ipfs://';
+
 // 0.9.36 — Decentralized World Encounter Material Runtime Composition.
 //
 // 0.9.33 built a real `WorldEncounterMaterialSource` for the decentralized
@@ -233,10 +235,11 @@ export function buildArweaveWorldEncounterMaterialResolver({ gatewayUrls, ...opt
 // build the `decentralized` slot. `steemMaterialResolver` and
 // `blurtMaterialResolver` (a SteemWorldEncounterMaterialResolver or
 // BlurtWorldEncounterMaterialResolver, or null) add Signed Claims stored on
-// those chains: a `steem://` or `blurt://` uri goes to its resolver, and
-// every other uri to Arweave.
-export function composeWorldEncounterMaterialSources({ local, peer, arweaveResolverOptions, steemMaterialResolver = null, blurtMaterialResolver = null } = {}) {
-    if (!steemMaterialResolver && !blurtMaterialResolver) {
+// those chains, and `ipfsMaterialResolver` (an IpfsWorldEncounterMaterialResolver,
+// or null) those stored on IPFS: a `steem://`, `blurt://` or `ipfs://` uri
+// goes to its resolver, and every other uri to Arweave.
+export function composeWorldEncounterMaterialSources({ local, peer, arweaveResolverOptions, steemMaterialResolver = null, blurtMaterialResolver = null, ipfsMaterialResolver = null } = {}) {
+    if (!steemMaterialResolver && !blurtMaterialResolver && !ipfsMaterialResolver) {
         const { decentralized } = composeArweaveDecentralizedWorldEncounterMaterialSource(arweaveResolverOptions);
         return Object.freeze({ local, peer, decentralized });
     }
@@ -244,6 +247,7 @@ export function composeWorldEncounterMaterialSources({ local, peer, arweaveResol
     const retrieveByUri = (uri) => {
         if (steemMaterialResolver && typeof uri === 'string' && uri.startsWith(STEEM_CONTENT_URI_PREFIX)) return steemMaterialResolver.retrieveByUri(uri);
         if (blurtMaterialResolver && typeof uri === 'string' && uri.startsWith(BLURT_CONTENT_URI_PREFIX)) return blurtMaterialResolver.retrieveByUri(uri);
+        if (ipfsMaterialResolver && typeof uri === 'string' && uri.startsWith(IPFS_URI_PREFIX)) return ipfsMaterialResolver.retrieveByUri(uri);
         return arweaveResolver.retrieveByUri(uri);
     };
     return Object.freeze({ local, peer, decentralized: new DecentralizedWorldEncounterMaterialSource(retrieveByUri) });
