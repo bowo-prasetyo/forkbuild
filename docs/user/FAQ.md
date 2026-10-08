@@ -206,6 +206,14 @@ Reload the page after saving. See [Network Settings](10-NetworkSettings.md).
 Yes. Both views have touch controls, and on a narrow screen the menu and
 side panels fold away. See [Touch screens](ControlsReference.md#touch-screens).
 
+### Does ForkBuild work offline? Can I install it?
+
+Yes, on the hosted site. After your first visit ForkBuild opens with no
+connection, and **Install ForkBuild** on the Home screen adds it to your
+device as an app. Building, saving and your saved and ready-made builds
+work offline; finding builds and people, distributing and chat need a
+connection. See [Installing ForkBuild](01-GettingStarted.md#installing-forkbuild).
+
 ### Do I need a crypto wallet?
 
 No. Building, saving, publishing, forking, peers and chat need none. A

@@ -177,8 +177,10 @@ anything.
   that has reached this device, newest first. Click a name to see only that
   person's work.
 - **Notifications.** When a new creation by someone you follow reaches this
-  device, the 🔔 panel gets a **Publication followed author published**
-  entry, once per creation, with **Explore** to open it.
+  device, the 🔔 panel gets a **… published something new** entry, once per
+  creation, with **Explore** to open it (and your device shows it too, if
+  you turned on
+  [Notifications on this device](03-WorldView.md#notifications-on-this-device)).
 - **Their shared Worlds are fetched for you.** Worlds that someone you follow
   shares with connected peers are retrieved automatically, as they already
   are for Friends and Remembered peers.

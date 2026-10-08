@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 54b42815b27a2697 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4bc516de273c1f79 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -442,6 +442,11 @@ zweimal veröffentlichter Remix zählt einmal, und ein Bauwerk, das niemand
 geremixt hat, zeigt nichts. Der Zähler ist nur, was dieses Gerät kennt,
 ein anderes Gerät kann also eine andere Zahl zeigen, und er entscheidet
 nie, was zuerst gezeigt wird.
+
+Findet dieses Gerät den Remix eines Ihrer Bauwerke von jemand anderem,
+bekommt Ihre 🔔 einen Eintrag **… hat Ihr Bauwerk geremixt**, einmal pro
+Remix (und Ihr Gerät zeigt ihn auch an, wenn Sie
+[Benachrichtigungen auf diesem Gerät](03-WorldView.md#benachrichtigungen-auf-diesem-gerät) eingeschaltet haben).
 
 ### Wenn ein Fork nicht möglich ist
 

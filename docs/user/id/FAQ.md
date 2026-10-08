@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: d6122c9368a1f486 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 2cea46db0f73aa93 -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -236,6 +236,15 @@ Muat ulang halaman setelah menyimpan. Lihat
 Bisa. Kedua tampilan memiliki kontrol sentuh, dan di layar sempit menu
 serta panel samping terlipat. Lihat
 [Layar sentuh](ControlsReference.md#layar-sentuh).
+
+### Apakah ForkBuild berfungsi tanpa internet? Bisakah saya memasangnya?
+
+Ya, di situs yang di-host. Setelah kunjungan pertama, ForkBuild terbuka
+tanpa koneksi, dan **Pasang ForkBuild** di layar Beranda menambahkannya ke
+perangkat Anda sebagai aplikasi. Membangun, menyimpan, serta bangunan
+tersimpan dan siap pakai berfungsi tanpa internet; menemukan bangunan dan
+orang, mendistribusikan, dan obrolan memerlukan koneksi. Lihat
+[Memasang ForkBuild](01-GettingStarted.md#memasang-forkbuild).
 
 ### Apakah saya memerlukan dompet kripto?
 

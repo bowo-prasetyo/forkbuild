@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: d6122c9368a1f486 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 2cea46db0f73aa93 -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -244,6 +244,15 @@ gelesen. Laden Sie die Seite nach dem Speichern neu. Siehe
 Ja. Beide Ansichten haben eine Touch-Steuerung, und auf einem schmalen
 Bildschirm klappen das Menü und die Seitenfelder weg. Siehe
 [Touchscreens](ControlsReference.md#touchscreens).
+
+### Funktioniert ForkBuild offline? Kann ich es installieren?
+
+Ja, auf der gehosteten Seite. Nach dem ersten Besuch öffnet ForkBuild auch
+ohne Verbindung, und **ForkBuild installieren** auf dem Startbildschirm fügt
+es Ihrem Gerät als App hinzu. Bauen, Speichern sowie Ihre gespeicherten und
+die fertigen Bauwerke funktionieren offline; Bauwerke und Personen finden,
+Verteilen und Chat brauchen eine Verbindung. Siehe
+[ForkBuild installieren](01-GettingStarted.md#forkbuild-installieren).
 
 ### Brauche ich eine Krypto-Wallet?
 

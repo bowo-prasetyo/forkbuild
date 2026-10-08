@@ -44,6 +44,13 @@ import { AnnouncementIndex } from '../application/announcementIndex/Announcement
 import { createFollowedAnnouncementRetention } from '../application/announcementIndex/FollowedAnnouncementRetention.js';
 import { FollowingFeed } from '../application/publication/FollowingFeed.js';
 import { FollowedAuthorPublicationNotifier } from '../application/publication/FollowedAuthorPublicationNotifier.js';
+import { RemixedBuildNotifier } from '../application/publication/RemixedBuildNotifier.js';
+import { DeviceNotificationSettingsStore } from '../application/settings/DeviceNotificationSettingsStore.js';
+import { DeviceNotificationRelay } from '../application/notification/DeviceNotificationRelay.js';
+import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
+import { registerServiceWorker, showDeviceNotification } from './pwa/serviceWorkerClient.js';
+import { browserNotificationPermission } from './components/DeviceNotificationSetting.js';
+import { describeNotification } from './notifications/notificationText.js';
 import { composeAnnouncementSync } from './main/composeAnnouncementSync.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { UnpublishedPublicationLog } from '../publisher/UnpublishedPublicationLog.js';
@@ -147,8 +154,19 @@ const followedAuthorPublicationNotifier = new FollowedAuthorPublicationNotifier(
     isBlocked: (identityId) => peerBlockUseCase.isBlocked(identityId),
     notificationSink: (notificationEvent) => new NotificationEventStore(new LocalStorageProvider()).save(notificationEvent)
 });
+// A remix of one of the signed-in identity's own builds, found the same way.
+const remixedBuildNotifier = new RemixedBuildNotifier({
+    identityProvider,
+    findPublicationsOfDocument: (documentId) => new CompositeDiscoveryProvider([
+        new LocalDiscoveryProvider(new LocalStorageProvider()),
+        decentralizedPublicationDiscoveryProvider
+    ]).findByDocumentId(documentId),
+    isBlocked: (identityId) => peerBlockUseCase.isBlocked(identityId),
+    notificationSink: (notificationEvent) => new NotificationEventStore(new LocalStorageProvider()).save(notificationEvent)
+});
 decentralizedPublicationDiscoveryProvider.onAdded((publication) => {
     followedAuthorPublicationNotifier.handlePublicationAdmitted(publication);
+    remixedBuildNotifier.handlePublicationAdmitted(publication);
 });
 
 // Shares the commentary store's localStorage keys with
@@ -419,12 +437,15 @@ app.provide('visitorCountSettingsStore', visitorCountSettingsStore);
 app.provide('firstBuildChecklistStore', new FirstBuildChecklistStore({ storageProvider: new LocalStorageProvider() }));
 // A share link made, a shared link opened, a build from one copied: counted
 // under the same setting (docs/Privacy.md, "Visitor count").
-app.provide('funnelEventCounter', new FunnelEventCounter({
+const funnelEventCounter = new FunnelEventCounter({
     settingsStore: visitorCountSettingsStore,
     origin: window.location.origin,
     privacySignals: browserPrivacySignals(),
     sendHit: sendCounterHit
-}));
+});
+app.provide('funnelEventCounter', funnelEventCounter);
+// ForkBuild installed as an app: counted the same way.
+window.addEventListener('appinstalled', () => funnelEventCounter.installed());
 app.provide('setRoleProviderPreferenceUseCase', setRoleProviderPreferenceUseCase);
 // Only a seed for each Announcement/Discovery picker's own selection, never
 // read again after the picker mounts.
@@ -874,5 +895,51 @@ defineServiceGroup('sound', async () => {
     }));
 });
 
+// Whether notifications are also shown by the operating system; turned on in
+// the bell's panel (ui/components/DeviceNotificationSetting.js).
+const deviceNotificationSettingsStore = new DeviceNotificationSettingsStore({ storageProvider: new LocalStorageProvider() });
+app.provide('deviceNotificationSettingsStore', deviceNotificationSettingsStore);
+
 app.use(router);
 app.mount('#app');
+
+// Installing and working offline: the published site's service worker
+// (ui/pwa/serviceWorkerClient.js; none in the unbundled repository). A
+// clicked notification opens where it points.
+const navigateTo = (path) => {
+    router.push(path).catch(() => {});
+};
+registerServiceWorker({ navigate: navigateTo });
+
+// Notifications on this device (core/DeviceNotifications.js): the signed-in
+// identity's new notifications, shown by the operating system while
+// ForkBuild is open but not in view, once turned on in the bell's panel.
+const deviceNotificationEvents = identityProvider
+    ? new GetRecipientNotificationEventsUseCase(new NotificationEventStore(new LocalStorageProvider()), identityProvider)
+    : null;
+const deviceNotificationLookup = new CompositeDiscoveryProvider([
+    new LocalDiscoveryProvider(new LocalStorageProvider()),
+    decentralizedPublicationDiscoveryProvider
+]);
+const deviceNotificationRelay = new DeviceNotificationRelay({
+    recipient: () => resolveSigningIdentityId(identityProvider),
+    loadEvents: () => (deviceNotificationEvents ? deviceNotificationEvents.execute() : []),
+    settings: () => deviceNotificationSettingsStore.get(),
+    permission: browserNotificationPermission,
+    isVisible: () => document.visibilityState === 'visible',
+    describe: (event) => {
+        const described = describeNotification(event);
+        if (!described) return null;
+        const publicationId = event.payload?.publicationId;
+        const documentId = typeof publicationId === 'string' ? deviceNotificationLookup.findById(publicationId)?.documentId : null;
+        return { ...described, path: documentId ? `/world/${documentId}` : '/', tag: event.notificationId };
+    },
+    show: (described) => showDeviceNotification(described, { navigate: navigateTo })
+});
+deviceNotificationRelay.start();
+// After a Publication is admitted (its notifiers have stored theirs by then),
+// and now and then for the rest (comments, other tabs).
+decentralizedPublicationDiscoveryProvider.onAdded(() => {
+    setTimeout(() => deviceNotificationRelay.check(), 0);
+});
+setInterval(() => deviceNotificationRelay.check(), 20_000);

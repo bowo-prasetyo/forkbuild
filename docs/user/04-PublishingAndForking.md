@@ -403,6 +403,11 @@ once, and a build nobody has remixed shows nothing. The count is only what
 this device knows, so another device may show a different number, and it
 never decides what is shown first.
 
+When this device finds someone else's remix of one of your builds, your 🔔
+gets a **… remixed your build** entry, once per remix (and your device
+shows it too, if you turned on
+[Notifications on this device](03-WorldView.md#notifications-on-this-device)).
+
 ### When a fork can't complete
 
 Occasionally a fork can't go through — most often when forking a Shared World

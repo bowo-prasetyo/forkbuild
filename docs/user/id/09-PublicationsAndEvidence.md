@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 58222e42e252988f -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -374,9 +374,8 @@ komentarnya Anda buka yang diperiksa. Tanda tangan setiap komentar yang
 diambil diperiksa, dan tidak ada yang dihitung dua kali.
 
 Saat seseorang mengomentari publikasi yang Anda terbitkan, entri
-**Publication commented** (publikasi Anda dikomentari) muncul di
-[Riwayat Notifikasi](03-WorldView.md#orientasi-dan-lokasi) Anda (tombol 🔔 di kepala halaman). Itulah satu-satunya
-jenis notifikasi yang dimiliki ForkBuild saat ini.
+**Komentar baru pada bangunan Anda** muncul di
+[Riwayat Notifikasi](03-WorldView.md#orientasi-dan-lokasi) Anda (tombol 🔔 di kepala halaman).
 
 ## Snapshot Lokal
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 19e30fff7ffaefab -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
 # 07 — Koneksi Rekan & Teman
 
 <!-- languages -->
@@ -203,8 +203,9 @@ pun kepada yang lain.
   karya terbaru mereka yang telah sampai di perangkat ini, dari yang
   terbaru. Klik sebuah nama untuk melihat karya orang itu saja.
 - **Notifikasi.** Saat karya baru dari orang yang Anda ikuti sampai di
-  perangkat ini, panel 🔔 mendapat entri **Publication followed author
-  published** (pembuat yang Anda ikuti menerbitkan), sekali per karya,
+  perangkat ini, panel 🔔 mendapat entri **… menerbitkan sesuatu yang baru**, sekali per
+  karya (dan perangkat Anda juga menampilkannya, jika Anda mengaktifkan
+  [Notifikasi di perangkat ini](03-WorldView.md#notifikasi-di-perangkat-ini)),
   dengan **Jelajahi** untuk membukanya.
 - **Dunia yang mereka bagikan diambilkan untuk Anda.** Dunia yang dibagikan
   orang yang Anda ikuti kepada rekan yang terhubung diambil secara

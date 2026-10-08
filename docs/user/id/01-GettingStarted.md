@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 5516a73079573bea -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 2d3a98acb2272855 -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -45,7 +45,7 @@ Bilah di bagian atas selalu terlihat:
 
 **Lainnya** membuka sisanya, dalam empat kelompok: **Anda** (Avatar Saya, Identitas Saya,
 Data Anda), **Orang** (Rekan, Diikuti, Percakapan), **Jaringan**
-(Publikasi, Pengaturan Jaringan), dan **Aplikasi** (Bahasa, Tentang). Di ponsel,
+(Publikasi, Pengaturan Jaringan), dan **Aplikasi** (Bahasa, Tentang, dan **Pasang ForkBuild** jika peramban dapat memasangnya). Di ponsel,
 **Menu** menampilkan semuanya sekaligus.
 
 - **Avatar Saya** — bagaimana Anda terlihat oleh orang lain di Tampilan
@@ -68,6 +68,35 @@ Data Anda), **Orang** (Rekan, Diikuti, Percakapan), **Jaringan**
   ForkBuild tersedia dalam bahasa Inggris, bahasa Jerman, bahasa Spanyol, bahasa Prancis, Bahasa Indonesia,
   bahasa Jepang, bahasa Korea, dan bahasa Portugis Brasil (lihat [Translating ForkBuild](../../Translating.md), bahasa Inggris).
 - **Tentang** — informasi versi
+
+## Memasang ForkBuild
+
+ForkBuild dapat dipasang sebagai aplikasi, sehingga terbuka dari layar
+utama, dock, atau daftar aplikasi di jendelanya sendiri, dan berfungsi
+tanpa internet. Klik **Pasang ForkBuild** di layar Beranda (atau di bawah
+**Lainnya**), lalu konfirmasi di dialog peramban. Di Safari pada iPhone
+atau iPad, tombol itu menjelaskan caranya: ketuk **Bagikan**, lalu
+**Tambahkan ke Layar Utama**. Jika peramban tidak dapat memasang aplikasi,
+atau ForkBuild sudah terpasang, tombol itu tidak ditampilkan.
+
+- **Tanpa internet.** Saat pertama kali Anda membuka ForkBuild, peramban
+  menyimpan berkasnya, jadi ForkBuild terbuka lagi tanpa koneksi, terpasang
+  atau tidak: Beranda, Editor, bangunan tersimpan Anda dan bangunan siap
+  pakai berfungsi. Apa pun yang memerlukan jaringan (menemukan bangunan dan
+  orang, mendistribusikan, obrolan dan panggilan) menunggu sampai Anda
+  online lagi.
+- **Pembaruan.** Saat versi baru keluar, sebuah baris di atas menyebutkan
+  **Versi baru ForkBuild sudah siap**; klik **Muat ulang** untuk
+  memulainya, atau versi itu mulai sendiri saat Anda membuka ForkBuild
+  berikutnya.
+- **Notifikasi.** ForkBuild yang terpasang (atau terbuka di tab latar
+  belakang) dapat menampilkan notifikasi Anda melalui perangkat Anda; lihat
+  [Notifikasi di perangkat ini](03-WorldView.md#notifikasi-di-perangkat-ini).
+
+Ini berlaku untuk situs yang di-host. Salinan yang Anda jalankan langsung
+dari folder (seperti di atas) tidak dapat dipasang dan tidak berfungsi
+tanpa internet; salinan yang dibangun dengan `node scripts/build.mjs` dapat
+(lihat [Deployment](../../Deployment.md)).
 
 ## Masuk
 

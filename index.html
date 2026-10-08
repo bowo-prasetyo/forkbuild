@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Content Security Policy: see docs/Deployment.md. The sha256 value is the hash of the
          import map below; tests/ContentSecurityPolicy.test.js fails if they drift apart. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-1Yauk+MBJJXMGtEunLNkm2IMuBHncM/1loYKdwVuAa4='; style-src 'self'; img-src 'self' data: blob: https://forkbuild.goatcounter.com; font-src 'self'; media-src 'self' blob:; connect-src 'self' https: wss: http://127.0.0.1:* http://localhost:*; worker-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-1Yauk+MBJJXMGtEunLNkm2IMuBHncM/1loYKdwVuAa4='; style-src 'self'; img-src 'self' data: blob: https://forkbuild.goatcounter.com; font-src 'self'; media-src 'self' blob:; connect-src 'self' https: wss: http://127.0.0.1:* http://localhost:*; worker-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
     <title>ForkBuild: build in 3D, right in your browser</title>
     <!-- What search engines and link previews show for the site (docs/Deployment.md, "Link previews").
          og:url and og:image are the official site's; a copy hosted elsewhere can point them at itself. -->
@@ -55,6 +55,7 @@
     <link rel="modulepreload" href="ui/i18n/locales.js">
     <link rel="modulepreload" href="ui/importWithRetry.js">
     <link rel="modulepreload" href="ui/counterHit.js">
+    <link rel="modulepreload" href="ui/pwa/installPrompt.js">
     <link rel="modulepreload" href="vendor/vue/dist/vue.esm-browser.prod.js">
     <link rel="modulepreload" href="ui/App.js">
     <link rel="modulepreload" href="ui/router/index.js">
@@ -100,6 +101,13 @@
     <link rel="modulepreload" href="application/announcementIndex/FollowedAnnouncementRetention.js">
     <link rel="modulepreload" href="application/publication/FollowingFeed.js">
     <link rel="modulepreload" href="application/publication/FollowedAuthorPublicationNotifier.js">
+    <link rel="modulepreload" href="application/publication/RemixedBuildNotifier.js">
+    <link rel="modulepreload" href="application/settings/DeviceNotificationSettingsStore.js">
+    <link rel="modulepreload" href="application/notification/DeviceNotificationRelay.js">
+    <link rel="modulepreload" href="identity/resolveSigningIdentityId.js">
+    <link rel="modulepreload" href="ui/pwa/serviceWorkerClient.js">
+    <link rel="modulepreload" href="ui/components/DeviceNotificationSetting.js">
+    <link rel="modulepreload" href="ui/notifications/notificationText.js">
     <link rel="modulepreload" href="ui/main/composeAnnouncementSync.js">
     <link rel="modulepreload" href="discovery/LocalDiscoveryProvider.js">
     <link rel="modulepreload" href="publisher/UnpublishedPublicationLog.js">
@@ -133,6 +141,8 @@
     <link rel="modulepreload" href="ui/components/BackupReminderBanner.js">
     <link rel="modulepreload" href="ui/components/NotificationHistoryPanel.js">
     <link rel="modulepreload" href="ui/components/PageLoadFailureNotice.js">
+    <link rel="modulepreload" href="ui/components/pwa/AppUpdateBanner.js">
+    <link rel="modulepreload" href="ui/components/pwa/InstallAppButton.js">
     <link rel="modulepreload" href="application/editor/CreatePreviewUseCase.js">
     <link rel="modulepreload" href="ui/router/pageServiceGroups.js">
     <link rel="modulepreload" href="ui/pageLoadFailure.js">
@@ -143,7 +153,6 @@
     <link rel="modulepreload" href="application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js">
     <link rel="modulepreload" href="core/CommentaryDistributionProvider.js">
     <link rel="modulepreload" href="application/publication/commentary/PublicationCommentaryNotificationProducer.js">
-    <link rel="modulepreload" href="identity/resolveSigningIdentityId.js">
     <link rel="modulepreload" href="application/publication/commentary/PublicationCommentaryNostrDistribution.js">
     <link rel="modulepreload" href="application/nostr/NostrRelayUrls.js">
     <link rel="modulepreload" href="content/ArweaveContentStore.js">
@@ -201,6 +210,7 @@
     <link rel="modulepreload" href="utils/responseSize.js">
     <link rel="modulepreload" href="utils/typeGuards.js">
     <link rel="modulepreload" href="core/PlacementRecord.js">
+    <link rel="modulepreload" href="core/DeviceNotifications.js">
     <link rel="modulepreload" href="application/announcementIndex/AnnouncementSync.js">
     <link rel="modulepreload" href="application/announcementIndex/AnnouncementSyncCursorStore.js">
     <link rel="modulepreload" href="application/announcementIndex/BackgroundAnnouncementSync.js">

@@ -921,7 +921,10 @@ Repository cards and ui/components/SharedWithYouPanel.js above the catalog.
   - FollowedAuthorPublicationNotifier listens to the provider's onAdded(),
     subscribed after the startup rebuild, and saves a
     `publication.followed-author-published` NotificationEvent, deduplicated
-    by Publication id.
+    by Publication id. RemixedBuildNotifier, on the same onAdded(), saves a
+    `publication.remixed` one when a verified Publication by someone else
+    names as its parent a build this device has a Publication of signed by
+    the signed-in identity.
   - application/announcementIndex/FollowedAnnouncementRetention.js is the
     Announcement Index's `isKeptFirst`: Snapshot records with a followed
     publisher's signed placement, and Place Naming claims a followed author
@@ -1572,7 +1575,16 @@ the rest.
   its header's 🔔 button through application/chat/NotificationHistoryAccess.js
   (composed in ui/main.js). A mounted World View registers its focusWorld()
   so a notification's Explore moves within it. Only persistence is
-  claimed: not delivery, seen or read.
+  claimed: not delivery, seen or read. ui/notifications/notificationText.js
+  puts the kinds ForkBuild makes into words for the panel (passed in as a
+  prop). Once turned on (ui/components/DeviceNotificationSetting.js, in the
+  panel's slot; application/settings/DeviceNotificationSettingsStore.js),
+  application/notification/DeviceNotificationRelay.js shows the
+  recipient's new events through the operating system while the page is
+  open but hidden: it takes what is stored at start (or on a change of
+  identity) as seen, is checked after each admission and every 20 seconds,
+  and shows at most three at once (core/DeviceNotifications.js). There is no
+  push service, so nothing shows while ForkBuild is closed.
 
 The user-facing entry point is the Publications page (`/publications`,
 ui/views/DecentralizedPublicationsView.js). docs/Roadmap.md has one entry
@@ -1740,6 +1752,21 @@ from the app's origin plus the import map by hash, with `'unsafe-eval'`
 for that template compiler; tests/ContentSecurityPolicy.test.js keeps the
 hash and the restrictive directives in step. docs/Deployment.md explains
 the policy and the headers a host should add.
+
+The built site is also installable and opens offline: scripts/build.mjs
+writes `sw.js` from ui/pwa/serviceWorker.js, filled in with a version and
+the files to keep on install (the page, the bundle but its translations,
+the manifest and icons), and adds a `<meta name="forkbuild-service-worker">`
+that ui/pwa/serviceWorkerClient.js registers from ui/main.js (the unbundled
+repository has neither, so it never runs one). The worker answers the page
+network-first, the content-named bundle cache-first, and the rest of the
+origin network-first with a kept fallback; a new version waits for
+ui/components/pwa/AppUpdateBanner.js's Reload. A clicked notification
+focuses an open page (which follows `forkbuild:navigate`) or opens one.
+ui/pwa/installPrompt.js keeps the browser's `beforeinstallprompt` from
+ui/start.js on, for ui/components/pwa/InstallAppButton.js on Home and in
+More (or Safari's Add to Home Screen hint); `appinstalled` is counted as
+`/e/installed`. Its CSP allows `worker-src 'self'`.
 
 ## Directories without a section of their own
 

@@ -88,9 +88,39 @@ them, so the Content Security Policy needs nothing for them.
 and its icons (`favicon.svg`, and `assets/icons/` for browsers that want
 PNGs, including a maskable one), so browsers that install web apps can
 install ForkBuild from the address bar. Its addresses are relative, so it
-works unchanged wherever the folder is served. There is no service worker:
-an installed ForkBuild still needs its host to load. The manifest is fetched
-from the page's own origin, which `default-src 'self'` already allows.
+works unchanged wherever the folder is served. The manifest is fetched from
+the page's own origin, which `default-src 'self'` already allows.
+
+### Installing and working offline
+
+The built site (`node scripts/build.mjs`, which GitHub Pages publishes) has a
+service worker, `sw.js` at its root, generated from
+`ui/pwa/serviceWorker.js`, and its `index.html` names it in a
+`<meta name="forkbuild-service-worker">` tag, which
+`ui/pwa/serviceWorkerClient.js` registers. On the first visit it keeps the
+page, the bundle's code and stylesheet, the manifest and the icons (about
+4.6 MB; translations are kept once used, and the page passes on the files it
+loaded before the worker was in charge, so the language in use works
+offline). From then on:
+
+- the page is asked of the network first and the kept copy used offline;
+- the bundle's files, named by their content, are used from the cache first;
+- anything else from the site is kept as fetched and used offline;
+- nothing from any other origin is touched.
+
+A new build has a new `sw.js` (its version is a hash of the page and the
+file list). Browsers check for it on each visit; it installs beside the
+running one, the page says **A new version of ForkBuild is ready**, and
+**Reload** starts it. Otherwise it starts once every ForkBuild tab is
+closed, and only then are the old version's files deleted, so an open tab
+never loses a file it may still load.
+
+Serve `sw.js` with a JavaScript content type, from the same folder as
+`index.html` (its scope is that folder). It is a classic script, so any
+browser with service workers runs it. The unbundled repository has no
+`<meta>` tag and registers nothing, so working on ForkBuild never meets a
+stale cache. To stop a published copy using one, delete `sw.js` from it:
+browsers then drop the registration on their next update check.
 
 A shared build's own link gets its own title and picture from the rendezvous
 worker: **Share…** and **Copy link** point at its `/b/<payload>`, which
@@ -154,7 +184,8 @@ applies on any host:
 | `img-src` | `'self' data: blob: https://forkbuild.goatcounter.com` | Thumbnails are rendered to `data:` images; the visitor count's hits are images from GoatCounter (docs/Privacy.md, "Visitor count"). |
 | `media-src` | `'self' blob:` | Voice call audio. |
 | `connect-src` | `'self' https: wss: http://127.0.0.1:* http://localhost:*` | Relays, gateways and APIs are user-configurable, so any HTTPS/WSS endpoint is allowed; plain HTTP only to a local IPFS node. |
-| `object-src`, `frame-src`, `worker-src` | `'none'` | Not used. |
+| `worker-src` | `'self'` | The built site's service worker, `sw.js` (see "Installing and working offline"). |
+| `object-src`, `frame-src` | `'none'` | Not used. |
 | `base-uri`, `form-action` | `'none'` | Every form is handled in script. |
 
 **`'unsafe-eval'` is a known limitation.** Vue compiles the components'

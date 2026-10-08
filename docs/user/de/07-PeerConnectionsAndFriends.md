@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 19e30fff7ffaefab -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
 # 07 — Peer-Verbindungen & Freunde
 
 <!-- languages -->
@@ -208,9 +208,9 @@ den anderen um etwas bitten muss.
   neueste zuerst. Klicken Sie auf einen Namen, um nur die Werke dieser
   Person zu sehen.
 - **Benachrichtigungen.** Wenn eine neue Kreation von jemandem, dem Sie
-  folgen, dieses Gerät erreicht, bekommt das Feld 🔔 einen Eintrag
-  **Publication followed author published** (ein gefolgter Autor hat
-  veröffentlicht), einmal pro Kreation, mit **Erkunden**, um sie zu
+  folgen, dieses Gerät erreicht, bekommt das Feld 🔔 einen Eintrag **… hat etwas Neues veröffentlicht**,
+  einmal pro Kreation (und Ihr Gerät zeigt ihn auch an, wenn Sie
+  [Benachrichtigungen auf diesem Gerät](03-WorldView.md#benachrichtigungen-auf-diesem-gerät) eingeschaltet haben), mit **Erkunden**, um sie zu
   öffnen.
 - **Ihre geteilten Welten werden für Sie geholt.** Welten, die jemand, dem
   Sie folgen, mit verbundenen Peers teilt, werden automatisch abgerufen,

@@ -52,6 +52,11 @@ models").
   it was remixed from and how many times it has been remixed, and one big
   **Edit a Copy** button that needs no account. The first publish of a build
   with no license asks whether others may remix it.
+- Install it as an app from the Home screen; after the first visit it opens
+  with no connection, and a new version waits for a click on **Reload**.
+- Opt-in notifications on your device, while ForkBuild is open in the
+  background, for new work by people you follow, remixes of your builds and
+  comments; nothing is sent anywhere to make them work.
 
 **World View**
 - A shared world where published creations are placed and streamed in around

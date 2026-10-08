@@ -78,3 +78,14 @@ delivery, reading the history changes nothing, and delivered, seen and
 read states do not exist.
 
 [Full text](history/0.9.md#persisted-delivered-seen-and-read-are-four-different-claims--this-system-makes-only-the-first-one-09286)
+
+### A Notification Leaves The Page Only Because Its Reader Asked, And Only On This Device (2026-10-08)
+
+Notifications may also be shown by the operating system, once the person
+turns it on in the 🔔 panel. There is no push service: the open page shows
+what it already keeps, so a closed ForkBuild shows nothing and nothing is
+sent. Only new ones show, never while ForkBuild is on screen, at most three
+at once; showing one is not delivery, and no seen or read state follows.
+
+[Full text](history/0.9.md#a-notification-leaves-the-page-only-because-its-reader-asked-and-only-on-this-device-2026-10-08)
+

@@ -56,12 +56,14 @@ export function visitorCountHitUrl(random) {
 
 // The few moments the counter also hears about, each as its own fixed path
 // (docs/Privacy.md, "Visitor count"): a share link copied or shared, a shared
-// link opened, and a build opened from a link then copied into the Editor.
+// link opened, a build opened from a link then copied into the Editor, and
+// ForkBuild installed as an app.
 // Nothing about the build, the link or the person is part of the path.
 export const FunnelEvent = Object.freeze({
     SHARE_LINK: 'share-link',
     OPENED_SHARED_LINK: 'opened-shared-link',
-    REMIX_FROM_LINK: 'remix-from-link'
+    REMIX_FROM_LINK: 'remix-from-link',
+    INSTALLED: 'installed'
 });
 
 const FUNNEL_EVENTS = new Set(Object.values(FunnelEvent));

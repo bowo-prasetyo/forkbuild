@@ -40,7 +40,8 @@ The bar at the top is always visible:
 
 **More** opens the rest, in four groups: **You** (My Avatar, My Identities,
 Your Data), **People** (Peers, Following, Conversations), **Network**
-(Publications, Network Settings) and **App** (Language, About). On a phone,
+(Publications, Network Settings) and **App** (Language, About, and
+**Install ForkBuild** where the browser can install it). On a phone,
 **Menu** shows them all at once.
 
 - **My Avatar** — how you appear to others in World View, see
@@ -62,6 +63,32 @@ Your Data), **People** (Peers, Following, Conversations), **Network**
   save your work first. ForkBuild comes in English, German, Spanish,
   French, Bahasa Indonesia, Japanese, Korean and Brazilian Portuguese (see [Translating ForkBuild](../Translating.md)).
 - **About** — version info
+
+## Installing ForkBuild
+
+ForkBuild can be installed as an app, so it opens from your home screen,
+dock or app list in a window of its own, and works without a connection.
+Click **Install ForkBuild** on the Home screen (or under **More**), then
+confirm in the browser's own dialog. In Safari on an iPhone or iPad, the
+button says how instead: tap **Share**, then **Add to Home Screen**. Where
+the browser can't install apps, or ForkBuild is already installed, the
+button isn't shown.
+
+- **Offline.** The first time you open ForkBuild, your browser keeps its
+  files, so it opens again with no connection, installed or not: Home, the
+  Editor, your saved builds and the ready-made ones all work. Anything that
+  needs the network (finding builds and people, distributing, chat and
+  calls) waits until you are back online.
+- **Updates.** When a new version is out, a line at the top says **A new
+  version of ForkBuild is ready**; click **Reload** to start it, or it
+  starts by itself the next time you open ForkBuild.
+- **Notifications.** An installed ForkBuild (or one open in a background
+  tab) can show your notifications through your device; see
+  [Notifications on this device](03-WorldView.md#notifications-on-this-device).
+
+This applies to the hosted site. A copy you run straight from the folder
+(as above) doesn't install or work offline; one built with
+`node scripts/build.mjs` does (see [Deployment](../Deployment.md)).
 
 ## Logging in
 

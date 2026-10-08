@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: d6122c9368a1f486 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 2cea46db0f73aa93 -->
 # Preguntas frecuentes
 
 <!-- languages -->
@@ -235,6 +235,15 @@ inicia la app. Recargue la página después de guardar. Consulte
 Sí. Ambas vistas tienen controles táctiles, y en una pantalla angosta el
 menú y los paneles laterales se pliegan. Consulte
 [Pantallas táctiles](ControlsReference.md#pantallas-táctiles).
+
+### ¿ForkBuild funciona sin conexión? ¿Puedo instalarlo?
+
+Sí, en el sitio alojado. Tras su primera visita, ForkBuild se abre sin
+conexión, y **Instalar ForkBuild** en la pantalla de Inicio lo agrega a su
+dispositivo como aplicación. Construir, guardar y sus construcciones
+guardadas y las ya hechas funcionan sin conexión; encontrar construcciones
+y personas, distribuir y el chat necesitan conexión. Consulte
+[Instalar ForkBuild](01-GettingStarted.md#instalar-forkbuild).
 
 ### ¿Necesito una billetera de criptomonedas?
 

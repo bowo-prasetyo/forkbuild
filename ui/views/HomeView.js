@@ -2,6 +2,7 @@ import { defineAsyncComponent } from 'vue';
 import { STARTER_STRUCTURE_ID } from '../../application/home/FeaturedBuilds.js';
 import { currentLocale, t } from '../i18n/i18n.js';
 import { userGuideUrl } from '../i18n/userGuide.js';
+import InstallAppButton from '../components/pwa/InstallAppButton.js';
 
 const SOURCE_URL = 'https://github.com/bowo-prasetyo/forkbuild';
 
@@ -25,7 +26,7 @@ const REASONS = Object.freeze([
 // the first load.
 export default {
     name: 'HomeView',
-    components: { HomeShowcase, FeaturedBuilds },
+    components: { HomeShowcase, FeaturedBuilds, InstallAppButton },
     setup() {
         return {
             t,
@@ -49,6 +50,7 @@ export default {
                             <router-link to="/repository" class="home-cta-secondary">{{ t('homeView.exploreBuilds') }}</router-link>
                         </div>
                         <p class="home-reassurance">{{ t('homeView.noAccountNeeded') }}</p>
+                        <InstallAppButton class="home-install" :why="t('installApp.why')" />
                     </div>
                     <div class="home-hero-visual">
                         <HomeShowcase />

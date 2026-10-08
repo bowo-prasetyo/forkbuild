@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 82240492e7eea390 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 34099c3e43b46a48 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -192,11 +192,12 @@ de botões perto do topo do painel cuida do deslocamento:
 **Notificações** é o botão 🔔 no cabeçalho do app, ao lado de Entrar, então
 ele está em todas as páginas, não só na Visão do mundo. Ele abre seu
 **Histórico de notificações** — um registro durável dos fatos de notificação
-endereçados à sua identidade, com a atividade mais recente primeiro. Hoje,
-a única coisa que gera uma notificação é alguém comentar uma publicação que
-você publicou (veja
-[Comentários](09-PublicationsAndEvidence.md#comentários)) — cada entrada
-mostra o que aconteceu e quando, e um botão **Explorar** leva você ao Mundo
+endereçados à sua identidade, com a atividade mais recente primeiro. Três coisas geram uma: alguém comentar uma publicação que você publicou
+(veja [Comentários](09-PublicationsAndEvidence.md#comentários)), uma obra nova de alguém que você segue (veja
+[Seguindo pessoas](07-PeerConnectionsAndFriends.md#seguindo-pessoas)) e alguém
+remixar uma das suas construções (veja
+[Contagem de remixes](04-PublishingAndForking.md#contagem-de-remixes)). Cada entrada
+diz o que aconteceu e quando, e um botão **Explorar** leva você ao Mundo
 daquela publicação: dentro da Visão do mundo, ele voa até lá; em qualquer
 outro lugar, abre a Visão do mundo nele. É um registro simples, somente
 leitura, não uma caixa de entrada: não há estado de lida/não lida, não dá
@@ -209,6 +210,20 @@ A bússola mostra os pontos cardeais (N, L, S, O) e sua direção atual em
 graus, mais pequenos pontos para estruturas, colaboradores e marcos
 próximos — passe o mouse sobre um para ver o rótulo, ou confira a lista
 legível embaixo da bússola.
+
+### Notificações neste dispositivo
+
+No alto do painel, **Avisar neste dispositivo** deixa seu dispositivo
+mostrar essas notificações sozinho, como as de qualquer aplicativo: o
+navegador pede sua permissão, e **Desativar** para. Elas aparecem enquanto
+o ForkBuild está aberto mas não na frente, em outra aba ou como
+[aplicativo instalado](01-GettingStarted.md#instalando-o-forkbuild) em segundo plano;
+clicar numa delas abre o ForkBuild naquela construção. Nada é enviado para
+lugar nenhum para isso, então um ForkBuild fechado não mostra nada: o que
+chegou nesse meio-tempo estará no painel da próxima vez. Aparecem no
+máximo algumas de uma vez, e o resto espera no painel. Se o navegador
+bloquear as notificações do ForkBuild, o painel avisa; permita-as nas
+configurações do site no navegador para ativá-las.
 
 ### Explorar, Mapa e Lugares — três jeitos de navegar, nunca ao mesmo tempo
 

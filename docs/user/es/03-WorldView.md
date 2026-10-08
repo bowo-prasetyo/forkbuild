@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 82240492e7eea390 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 34099c3e43b46a48 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -203,10 +203,12 @@ desplazamientos:
 Iniciar sesión, así que está en todas las páginas, no solo en la Vista del
 mundo. Abre su **Historial de notificaciones**: un registro duradero de las
 notificaciones dirigidas a su identidad, con la actividad más reciente
-primero. Hoy lo único que produce una es que alguien comente una
-publicación que usted publicó (consulte
-[Comentarios](09-PublicationsAndEvidence.md#comentarios) más abajo): cada
-entrada muestra qué pasó y cuándo, y un botón **Explorar** lo lleva al
+primero. Tres cosas producen una: que alguien comente una publicación que usted
+publicó (consulte [Comentarios](09-PublicationsAndEvidence.md#comentarios)), una obra nueva de alguien a quien sigue
+(consulte [Seguir a personas](07-PeerConnectionsAndFriends.md#seguir-a-personas))
+y que alguien remezcle una de sus construcciones (consulte
+[Recuentos de remezclas](04-PublishingAndForking.md#recuentos-de-remezclas)). Cada
+entrada dice qué pasó y cuándo, y un botón **Explorar** lo lleva al
 Mundo de esa publicación: dentro de la Vista del mundo lo lleva volando, y
 en cualquier otro lugar abre la Vista del mundo allí. Es un simple registro
 de solo lectura, no una bandeja de entrada: no hay estado de leído/no
@@ -220,6 +222,21 @@ La brújula muestra los puntos cardinales (N, E, S, O) y su orientación
 actual en grados, además de pequeños puntos para las estructuras, los
 colaboradores y los hitos cercanos: pase el cursor sobre uno para ver su
 etiqueta, o consulte la lista legible debajo de la brújula.
+
+### Notificaciones en este dispositivo
+
+Arriba en el panel, **Avisarme en este dispositivo** deja que su
+dispositivo muestre estas notificaciones por sí mismo, como las de
+cualquier aplicación: el navegador le pide permiso, y **Desactivar** lo
+detiene. Aparecen mientras ForkBuild está abierto pero no delante, en otra
+pestaña o como [aplicación instalada](01-GettingStarted.md#instalar-forkbuild) en
+segundo plano; al hacer clic en una, ForkBuild se abre en esa construcción.
+No se envía nada a ninguna parte para esto, así que un ForkBuild cerrado no
+muestra nada: lo que llegó mientras tanto estará en el panel la próxima
+vez. Aparecen unas pocas a la vez como mucho, y el resto espera en el
+panel. Si el navegador bloquea las notificaciones de ForkBuild, el panel lo
+indica; permítalas en la configuración del sitio del navegador para
+activarlas.
 
 ### Explorar, Mapa y Lugares — tres formas de recorrer, nunca a la vez
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 19e30fff7ffaefab -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
 # 07 — Connexions entre pairs et amis
 
 <!-- languages -->
@@ -209,8 +209,9 @@ l’autre.
   plus récentes aux plus anciennes. Cliquez sur un nom pour ne voir que
   les créations de cette personne.
 - **Notifications.** Quand une nouvelle création d’une personne que vous
-  suivez arrive sur cet appareil, le panneau 🔔 reçoit une entrée
-  indiquant qu’un auteur suivi a publié, une fois par création, avec
+  suivez arrive sur cet appareil, le panneau 🔔 reçoit une entrée **… a publié quelque chose de nouveau**,
+  une fois par création (et votre appareil l’affiche aussi, si vous avez
+  activé [Notifications sur cet appareil](03-WorldView.md#notifications-sur-cet-appareil)), avec
   **Explorer** pour l’ouvrir.
 - **Ses Mondes partagés sont récupérés pour vous.** Les Mondes qu’une
   personne que vous suivez partage avec des pairs connectés sont récupérés

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 54b42815b27a2697 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4bc516de273c1f79 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -433,6 +433,11 @@ dispositivo. Una remezcla publicada dos veces cuenta una vez, y una
 construcción que nadie ha remezclado no muestra nada. El recuento es solo
 lo que este dispositivo conoce, así que otro dispositivo puede mostrar un
 número distinto, y nunca decide qué se muestra primero.
+
+Cuando este dispositivo encuentra la remezcla de otra persona de una de
+sus construcciones, su 🔔 recibe una entrada **… remezcló su
+construcción**, una vez por remezcla (y su dispositivo también la muestra,
+si activó [Notificaciones en este dispositivo](03-WorldView.md#notificaciones-en-este-dispositivo)).
 
 ### Cuando una bifurcación no se puede completar
 

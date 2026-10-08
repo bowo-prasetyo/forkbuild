@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: f677edb8952577f9 -->
+<!-- translation-of: docs/Privacy.md source-hash: ddb447abdff42d17 -->
 # Privasi
 
 <!-- languages -->
@@ -8,7 +8,7 @@
 ForkBuild tidak memiliki akun dan tidak melacak Anda. ForkBuild menyimpan
 pekerjaan Anda di browser Anda sendiri dan berkomunikasi dengan komputer
 lain hanya untuk fitur yang membutuhkannya, ditambah hitungan pengunjung
-anonim, sekali sehari dan saat tautan berbagi dipakai, agar pembuatnya tahu
+anonim, sekali sehari, saat tautan berbagi dipakai, dan saat ForkBuild dipasang, agar pembuatnya tahu
 kira-kira berapa banyak orang yang menggunakannya dan membagikan bangunan
 (lihat "Hitungan pengunjung" di bawah, juga cara mematikannya). Halaman ini mencantumkan apa yang disimpannya, serta setiap
 server yang dapat dihubunginya dan kapan.
@@ -60,6 +60,13 @@ dibuat dari frasa sandi cadangan Anda yang hanya dapat membuat cadangan
 (tidak pernah membukanya) di database IndexedDB terpisah
 `forkbuild-backup`; kapan dan ke mana Anda terakhir mencadangkan disimpan
 bersama data lainnya tetapi tidak disertakan dalam cadangan.
+
+Di situs resmi, browser juga menyimpan berkas ForkBuild sendiri (kodenya,
+stylesheet, ikon, dan bahasa yang Anda pakai) melalui service worker situs,
+agar ForkBuild terbuka tanpa koneksi dan dapat dipasang sebagai aplikasi.
+Berkas itu sama untuk semua orang dan tidak berisi apa pun milik Anda.
+Apakah notifikasi di perangkat ini aktif disimpan bersama pengaturan Anda
+(lihat "Notifikasi di perangkat ini" di bawah).
 
 ## Apa yang dapat dilihat orang lain
 
@@ -139,6 +146,9 @@ yang sama, dengan jalur tetapnya sendiri:
   disalin ke Editor (paling banyak sekali per bangunan setiap kali aplikasi
   dibuka).
 
+Penghitung itu juga diberi tahu, dengan cara yang sama, saat ForkBuild
+dipasang sebagai aplikasi (`/e/installed`).
+
 Masing-masing hanya mengirim jalurnya dan angka acak: tidak pernah
 tautannya, bangunannya, judulnya, atau siapa pembuatnya. Bangunan mana yang
 dibuka dari tautan hanya disimpan di memori halaman yang terbuka, dan
@@ -175,6 +185,7 @@ Anda dan apa yang Anda minta darinya.
 | --- | --- | --- |
 | Aplikasi dibuka di situs resmi, paling banyak sekali sehari (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap, tanpa perujuk dan tanpa cookie |
 | Di situs resmi, Anda menyalin atau membagikan tautan ke sebuah bangunan, membuka tautan yang dibagikan, atau menyalin bangunan yang dibuka dari tautan itu ke Editor (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut momen mana dari ketiganya, tanpa perujuk dan tanpa cookie |
+| Anda memasang ForkBuild dari situs resmi (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/installed`, tanpa referrer dan tanpa cookie |
 | Anda menjadikan diri dapat ditemukan, atau mencari seseorang, di **Rekan** | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | kunci publik identitas Anda dan tawaran koneksi, disimpan paling lama 15 menit; identitas yang Anda cari; saat Anda terhubung dengan seseorang yang Anda temukan, balasan koneksi Anda (berisi alamat jaringan Anda), yang hanya dapat diambil oleh orang itu |
 | Anda bergabung ke, atau melihat ke dalam, lobi publik | server rendezvous yang sama | kartu lobi Anda yang ditandatangani (kunci publik, nama tampilan, lobi mana), disimpan paling lama 15 menit dan diperbarui selama Anda tetap di sana; lobi mana yang Anda lihat |
 | Koneksi rekan dimulai | server STUN (`stun.l.google.com`) | hanya permintaan alamat IP publik Anda |
@@ -220,6 +231,19 @@ menunggu di lobi, tawaran yang disiapkan perangkat Anda tidak pernah
 meminta kredensial relay, jadi berada di lobi tidak menghabiskan jatah
 relay yang dibagikan server rendezvous setiap bulan; orang yang terhubung
 dengan Anda yang memintanya, jika mereka membutuhkannya.
+
+## Notifikasi di perangkat ini
+
+Jika Anda mengaktifkan **Beri tahu saya di perangkat ini** (di panel 🔔),
+perangkat Anda menampilkan sendiri notifikasi baru Anda selama ForkBuild
+terbuka di tab latar belakang atau sebagai aplikasi terpasang. Tidak ada
+layanan push yang dipakai dan tidak ada yang dikirim ke mana pun untuk itu:
+halaman yang terbuka menyerahkan notifikasi ke browser Anda, yang
+menampilkannya melalui sistem operasi Anda. Teks notifikasi (misalnya judul
+bangunan dan nama pembuatnya) kemudian dapat tersimpan di riwayat
+notifikasi perangkat Anda, seperti notifikasi aplikasi apa pun. Matikan di
+panel yang sama, atau blokir notifikasi ForkBuild di pengaturan situs
+browser.
 
 ## Jika Anda menjalankan salinan sendiri
 

@@ -340,11 +340,10 @@ answers, you see *Couldn't reach Nostr or Arweave — showing comments stored
 on this device*. Only publications whose comments you open are checked.
 Every fetched comment's signature is checked, and none is counted twice.
 
-When someone comments on a publication you published, a **Publication
-commented** entry appears in your
+When someone comments on a publication you published, a **New comment on
+your build** entry appears in your
 [Notification History](03-WorldView.md#orientation-and-locations) (the 🔔
-button in the header). It's the only kind of notification ForkBuild has
-today.
+button in the header).
 
 ## Local Snapshot
 

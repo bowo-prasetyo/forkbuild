@@ -97,6 +97,10 @@ import { errorText, t } from '../i18n/i18n.js';
 export default {
     name: 'NotificationHistoryPanel',
     props: {
+        // `(event) -> { title, body } | null`: a notification in words, for
+        // the kinds the app knows (ui/notifications/notificationText.js);
+        // without it, or for any other kind, it is named from its eventType.
+        describeNotification: { type: Function, default: null },
         // `() -> NotificationEvent[]` — WorldView.js's own thin wrapper
         // around `session.getRecipientNotificationEvents()`. `null` when
         // no session/use case is wired; this panel never calls it in
@@ -183,7 +187,11 @@ export default {
         // commented") without hardcoding any one producer's own
         // vocabulary — a future eventType this panel has never seen
         // renders exactly as legibly.
+        // The kinds ForkBuild makes are put into words instead
+        // (ui/notifications/notificationText.js).
         notificationTitle(event) {
+            const described = this.describeNotification ? this.describeNotification(event) : null;
+            if (described) return described.title;
             return event.eventType
                 .split(/[._:-]/)
                 .join(' ')
@@ -193,6 +201,13 @@ export default {
         // this panel has no per-eventType knowledge of what a payload
         // "means," only that whatever fields a producer put there are
         // already-durable facts safe to show as-is.
+        notificationBody(event) {
+            return (this.describeNotification && this.describeNotification(event)?.body) || '';
+        },
+        // A kind put into words shows its words rather than its fields.
+        shownDetails(event) {
+            return this.describeNotification && this.describeNotification(event) ? [] : this.notificationDetails(event);
+        },
         notificationDetails(event) {
             const payload = event.payload || {};
             return Object.keys(payload).map((key) => ({
@@ -216,6 +231,9 @@ export default {
                     {{ t('notificationHistoryPanel.aDurableRecordOfNotification') }}
                 </p>
 
+                <!-- What the host adds above the history (App: notifications on this device). -->
+                <slot></slot>
+
                 <p v-if="notificationHistoryError" class="notification-history-panel-error">
                     {{ notificationHistoryError }}
                 </p>
@@ -233,8 +251,9 @@ export default {
                         <div class="locations-panel-item-info">
                             <span class="locations-panel-item-title">{{ notificationTitle(event) }}</span>
                             <span class="locations-panel-item-position">{{ formatNotificationTimestamp(event.createdAt) }}</span>
+                            <span v-if="notificationBody(event)" class="notification-history-item-detail">{{ notificationBody(event) }}</span>
                             <span
-                                v-for="detail in notificationDetails(event)"
+                                v-for="detail in shownDetails(event)"
                                 :key="detail.label"
                                 class="notification-history-item-detail"
                             >

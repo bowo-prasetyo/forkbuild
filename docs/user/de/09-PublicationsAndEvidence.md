@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 58222e42e252988f -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -387,11 +387,9 @@ Kommentare Sie öffnen, werden geprüft. Die Signatur jedes geholten
 Kommentars wird geprüft, und keiner wird doppelt gezählt.
 
 Wenn jemand eine Veröffentlichung kommentiert, die Sie veröffentlicht
-haben, erscheint ein Eintrag **Publication commented** (Veröffentlichung
-kommentiert) in Ihrem
+haben, erscheint ein Eintrag **Neuer Kommentar zu Ihrem Bauwerk** in Ihrem
 [Benachrichtigungsverlauf](03-WorldView.md#orientierung-und-orte) (die
-Schaltfläche 🔔 in der Kopfzeile). Es ist derzeit die einzige Art von
-Benachrichtigung, die ForkBuild hat.
+Schaltfläche 🔔 in der Kopfzeile).
 
 ## Lokaler Snapshot
 

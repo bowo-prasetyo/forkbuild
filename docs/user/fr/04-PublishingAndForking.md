@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 54b42815b27a2697 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4bc516de273c1f79 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -440,6 +440,11 @@ Un remix publié deux fois compte une fois, et une construction que
 personne n’a remixée n’affiche rien. Le nombre n’est que ce que cet
 appareil connaît, un autre appareil peut donc afficher un nombre
 différent, et il ne décide jamais de ce qui est montré en premier.
+
+Quand cet appareil trouve le remix, par quelqu’un d’autre, de l’une de vos
+constructions, votre 🔔 reçoit une entrée **… a remixé votre
+construction**, une fois par remix (et votre appareil l’affiche aussi, si
+vous avez activé [Notifications sur cet appareil](03-WorldView.md#notifications-sur-cet-appareil)).
 
 ### Quand un fork ne peut pas aboutir
 

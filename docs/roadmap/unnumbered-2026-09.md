@@ -4723,3 +4723,47 @@ copies, so most shared builds could not have been remixed anyway.
   `vue-router`.
 - Not done: the count only knows remixes this device has found, so a first-time visitor usually sees none until
   network discovery has run; the screen doesn't look for remixes on the networks itself.
+
+## Install ForkBuild, use it offline, and get notified on your device (unnumbered, 2026-10-08)
+
+**The published site installs as an app, opens with no connection, and can show your notifications through your
+device; your builds being remixed is a new notification.** Nothing brought a person back once the tab was closed: no
+install, nothing offline, and notifications only in the 🔔 panel. Web push would need a server holding a subscription
+per device, which ForkBuild doesn't have, so notifications stay on the device and show while ForkBuild is open in the
+background or as an installed app.
+
+- Offline: `scripts/build.mjs` writes `sw.js` from `ui/pwa/serviceWorker.js`, with a version (a hash of the page and
+  the file list) and the files to keep on install: the page, the bundle except its translations, the manifest and
+  icons (228 files, about 4.6 MB). The page is network-first with a kept fallback, the content-named bundle
+  cache-first, the rest of the origin network-first; other origins are untouched. The page passes on the files it
+  loaded before the worker took charge, so the language in use is kept. `index.html` names the worker in a `<meta>`
+  tag that `ui/pwa/serviceWorkerClient.js` registers; the unbundled repository has neither. CSP: `worker-src 'self'`.
+- Updates: a new worker waits; `ui/components/pwa/AppUpdateBanner.js` says **A new version of ForkBuild is ready**,
+  and **Reload** tells it to take over and reloads once it has. Old files are deleted only then.
+- Install: `ui/pwa/installPrompt.js`, watched from `ui/start.js` so an early `beforeinstallprompt` isn't missed;
+  `ui/components/pwa/InstallAppButton.js` on Home (with "Opens like an app and works offline.") and under More → App,
+  or Safari's Share → Add to Home Screen hint on an iPhone or iPad; hidden once installed. `appinstalled` counts
+  `/e/installed` under the visitor count's rules.
+- Notifications on this device: `core/DeviceNotifications.js` (the setting, its state with the browser's permission,
+  which events to show), `application/notification/DeviceNotificationRelay.js` (reads the store, takes what is there
+  at start or on a change of identity as seen, shows new ones only while the page is hidden and turned on, at most
+  three at once, never throws), `DeviceNotificationSettingsStore`, and `ui/components/DeviceNotificationSetting.js`
+  (**Notify me on this device** / **Turn off**, blocked and unsupported states) in the 🔔 panel's new slot. Checked
+  after each admission and every 20 seconds; shown through the service worker where there is one (clicking focuses
+  or opens ForkBuild at the build), else with `new Notification`.
+- `application/publication/RemixedBuildNotifier.js`: a verified Publication by someone else (not blocked) that names
+  as its parent a build this device has a Publication of signed by the signed-in identity saves a
+  `publication.remixed` notification, deduplicated by the remix's id.
+- `ui/notifications/notificationText.js` puts the three kinds into words ("… published something new", "… remixed
+  your build", "New comment on your build"), for the panel (a new `describeNotification` prop; unknown kinds keep
+  their old names) and the device.
+- Principles: "A Notification Leaves The Page Only Because Its Reader Asked, And Only On This Device" and "An
+  Offline Copy Holds The App, Never Your Data". Privacy (the kept files, the setting, `/e/installed`, a new
+  "Notifications on this device" section), Deployment ("Installing and working offline", the CSP table),
+  Architecture, README, guides 01, 03, 04, 07, 09 and the FAQ, in every language.
+- Tests: `DeviceNotifications` (the setting, the selection, the relay's every rule, the remix notifier's checks),
+  `InstallPrompt`, `FunnelEventCounter`; `run-bundle` checks the published worker and meta tag, that the first visit
+  keeps every file, that Home and a ready-made build in the Editor open offline, that a changed `sw.js` shows the
+  update banner and Reload starts it, and that the 🔔 panel turns notifications on and off with permission granted.
+- Not done: nothing shows while ForkBuild is closed (that needs web push and a server); Periodic Background Sync,
+  which only Chromium has for installed apps, isn't used.

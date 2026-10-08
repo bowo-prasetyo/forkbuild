@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: f677edb8952577f9 -->
+<!-- translation-of: docs/Privacy.md source-hash: ddb447abdff42d17 -->
 # Datenschutz
 
 <!-- languages -->
@@ -8,7 +8,7 @@
 ForkBuild hat keine Konten und verfolgt Sie nicht. Es speichert Ihre
 Arbeit in Ihrem eigenen Browser und spricht nur für die Funktionen mit
 anderen Computern, die das brauchen, dazu eine anonyme Besucherzählung,
-einmal am Tag und wenn ein Link zum Teilen benutzt wird, damit seine
+einmal am Tag, wenn ein Link zum Teilen benutzt wird und wenn es installiert wird, damit seine
 Entwickler ungefähr wissen, wie viele Menschen es nutzen und Bauwerke teilen
 (siehe „Besucherzählung“ unten, auch dazu, wie Sie sie abschalten). Diese Seite listet auf, was es speichert, und jeden Server,
 den es kontaktieren kann, und wann.
@@ -59,6 +59,14 @@ aus Ihrer Sicherungs-Passphrase abgeleiteten Schlüssel, der Sicherungen nur
 erstellen (nie öffnen) kann, in einer separaten IndexedDB-Datenbank
 `forkbuild-backup` auf; wann und wohin Sie zuletzt gesichert haben, wird mit
 den übrigen Daten aufbewahrt, aber nicht in Sicherungen aufgenommen.
+
+Auf der offiziellen Seite behält der Browser über den Service Worker der
+Seite außerdem die eigenen Dateien von ForkBuild (Code, Stylesheet, Symbole
+und die Sprache, die Sie nutzen), damit ForkBuild ohne Verbindung öffnet und
+sich als App installieren lässt. Es sind für alle dieselben Dateien, und
+nichts von Ihnen steckt darin. Ob Benachrichtigungen auf diesem Gerät
+eingeschaltet sind, wird mit Ihren Einstellungen gespeichert (siehe
+„Benachrichtigungen auf diesem Gerät“ unten).
 
 ## Was andere sehen können
 
@@ -140,6 +148,9 @@ eigenen festen Pfad:
   wurde in den Editor kopiert (höchstens einmal pro Bauwerk, solange die
   App geöffnet ist).
 
+Ebenso erfährt er, wenn ForkBuild als App installiert wird
+(`/e/installed`).
+
 Jede sendet nur ihren Pfad und die Zufallszahl, nie den Link, das Bauwerk,
 seinen Titel oder wer es gemacht hat. Welche Bauwerke über einen Link
 geöffnet wurden, steht nur im Arbeitsspeicher der geöffneten Seite und ist
@@ -177,6 +188,7 @@ was Sie bei ihm anfragen.
 | --- | --- | --- |
 | Die App öffnet sich auf der offiziellen Website, höchstens einmal am Tag (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit festem Pfad, ohne Referrer und ohne Cookie |
 | Sie kopieren oder teilen auf der offiziellen Website einen Link zu einem Bauwerk, öffnen einen geteilten Link oder kopieren ein darüber geöffnetes Bauwerk in den Editor (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit festem Pfad, der nennt, welcher der drei Momente es war, ohne Referrer und ohne Cookie |
+| Sie installieren ForkBuild von der offiziellen Seite (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/installed`, ohne Referrer und ohne Cookie |
 | Sie machen sich unter **Peers** auffindbar oder suchen jemanden | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | den öffentlichen Schlüssel Ihrer Identität und ein Verbindungsangebot, höchstens 15 Minuten aufbewahrt; die Identität, die Sie suchen; wenn Sie sich mit jemandem verbinden, den Sie gefunden haben, Ihre Verbindungsantwort (sie listet Ihre Netzwerkadressen auf), die nur diese Person abholen kann |
 | Sie treten einer öffentlichen Lobby bei oder sehen in eine hinein | derselbe Rendezvous-Server | Ihre signierte Lobby-Karte (öffentlicher Schlüssel, Anzeigename, welche Lobby), höchstens 15 Minuten aufbewahrt und erneuert, solange Sie bleiben; in welche Lobby Sie hineinsehen |
 | Eine Peer-Verbindung beginnt | STUN-Server (`stun.l.google.com`) | nichts außer einer Anfrage nach Ihrer öffentlichen IP-Adresse |
@@ -221,6 +233,19 @@ Lobby warten, fordern die Angebote, die Ihr Gerät bereithält, nie
 Relay-Zugangsdaten an, sodass ein Aufenthalt in der Lobby das monatliche
 Relay-Kontingent des Rendezvous-Servers nicht aufbraucht; die Person, die
 sich mit Ihnen verbindet, fordert eines an, falls sie es braucht.
+
+## Benachrichtigungen auf diesem Gerät
+
+Wenn Sie **Auf diesem Gerät benachrichtigen** (im Feld 🔔) einschalten,
+zeigt Ihr Gerät Ihre neuen Benachrichtigungen selbst an, während ForkBuild
+in einem Hintergrund-Tab oder als installierte App geöffnet ist. Dafür wird
+kein Push-Dienst genutzt und nichts irgendwohin gesendet: Die geöffnete
+Seite übergibt die Benachrichtigung Ihrem Browser, der sie über Ihr
+Betriebssystem anzeigt. Der Text der Benachrichtigung (zum Beispiel der
+Titel eines Bauwerks und der Name seines Urhebers) kann dann im
+Benachrichtigungsverlauf Ihres Geräts bleiben, wie bei jeder App. Schalten
+Sie es im selben Feld aus, oder blockieren Sie die Benachrichtigungen von
+ForkBuild in den Website-Einstellungen des Browsers.
 
 ## Wenn Sie eine eigene Kopie betreiben
 

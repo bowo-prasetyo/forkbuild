@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 54b42815b27a2697 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 4bc516de273c1f79 -->
 # 04 — 게시와 포크
 
 <!-- languages -->
@@ -367,6 +367,10 @@ Git에서 프로젝트를 포크하는 것과 똑같습니다: 가지를 쳐서 
 작품에는 아무것도 표시되지 않습니다. 횟수는 이 기기가 아는 것뿐이라 다른
 기기에서는 다른 수가 보일 수 있으며, 무엇을 먼저 보여 줄지 정하지는
 않습니다.
+
+이 기기가 다른 사람이 내 작품을 리믹스한 것을 찾으면, 🔔에 **… 님이 내
+작품을 리믹스했습니다** 항목이 리믹스마다 한 번 생깁니다
+([이 기기에서 알림 받기](03-WorldView.md#이-기기에서-알림-받기)를 켰다면 기기에도 표시됩니다).
 
 ### 포크를 완료할 수 없을 때
 

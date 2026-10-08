@@ -17,7 +17,7 @@
 // Chromium comes from `npx playwright-core install chromium`, or from the
 // executable named by the CHROMIUM_PATH environment variable.
 import { createServer } from 'node:http';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { extname, join, normalize } from 'node:path';
@@ -296,6 +296,78 @@ async function firstVisit(browser, base) {
     }
 }
 
+// Installing and offline: the published site registers its service worker,
+// which keeps the app's files on the first visit, so the app opens again
+// with no network, Home and a ready-made build in the Editor alike. The
+// bell's panel turns notifications on this device on, once the browser
+// allows them.
+async function offlineAndNotifications(browser, base, precacheFiles, publishedDir) {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const page = await context.newPage();
+    try {
+        await page.goto(`${base}/`);
+        await page.waitForSelector('.home-view', { timeout: 60_000 });
+        const controlled = await page.evaluate(async () => {
+            await navigator.serviceWorker.ready;
+            for (let i = 0; i < 100 && !navigator.serviceWorker.controller; i++) await new Promise((resolve) => setTimeout(resolve, 100));
+            return Boolean(navigator.serviceWorker.controller);
+        });
+        assert(controlled, 'the published site registers its service worker, which takes charge of the first visit');
+        const kept = await page.evaluate(async () => {
+            const names = (await caches.keys()).filter((name) => name.startsWith('forkbuild-'));
+            return names.length === 1 ? (await (await caches.open(names[0])).keys()).length : -1;
+        });
+        assert(kept >= precacheFiles, `the app's files are kept on the first visit (${kept} of at least ${precacheFiles})`);
+
+        await context.setOffline(true);
+        await page.reload();
+        await page.waitForSelector('.home-view', { timeout: 60_000 });
+        await page.evaluate(() => { location.hash = '#/editor?start=village:house'; });
+        await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });
+        await context.setOffline(false);
+
+        // A new version: the page says so, and Reload starts it.
+        const workerFile = join(publishedDir, 'sw.js');
+        const current = readFileSync(workerFile, 'utf8');
+        writeFileSync(workerFile, `${current}\n// a new version\n`);
+        try {
+            await page.evaluate(async () => (await navigator.serviceWorker.getRegistration()).update());
+            await page.waitForSelector('.app-update-banner', { timeout: 60_000 });
+            await Promise.all([page.waitForEvent('load', { timeout: 60_000 }), page.click('.app-update-reload')]);
+            await page.waitForSelector('.home-view, .editor-view, #app main > *', { timeout: 60_000 });
+            assert(!(await page.$('.app-update-banner')), 'after Reload the new version runs, and the banner is gone');
+            assert(await page.evaluate(async () => {
+                const registration = await navigator.serviceWorker.getRegistration();
+                return Boolean(navigator.serviceWorker.controller) && !registration.waiting;
+            }), 'the new version is in charge, with nothing left waiting');
+        } finally {
+            writeFileSync(workerFile, current);
+        }
+    } finally {
+        await context.close();
+    }
+
+    const allowing = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await allowing.grantPermissions(['notifications'], { origin: base });
+    const bell = await allowing.newPage();
+    try {
+        await bell.goto(`${base}/#/`);
+        await bell.waitForSelector('.home-view', { timeout: 60_000 });
+        await bell.click('.app-notifications-button');
+        await bell.waitForSelector('.device-notification-setting[data-state="off"]', { timeout: 10_000 });
+        await bell.click('.device-notification-on');
+        await bell.waitForSelector('.device-notification-setting[data-state="on"]', { timeout: 10_000 });
+        await bell.reload();
+        await bell.waitForSelector('.home-view', { timeout: 60_000 });
+        await bell.click('.app-notifications-button');
+        await bell.waitForSelector('.device-notification-setting[data-state="on"]', { timeout: 10_000 });
+        await bell.click('.device-notification-off');
+        await bell.waitForSelector('.device-notification-setting[data-state="off"]', { timeout: 10_000 });
+    } finally {
+        await allowing.close();
+    }
+}
+
 const outdir = mkdtempSync(join(tmpdir(), 'forkbuild-bundle-'));
 const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || undefined,
@@ -334,6 +406,10 @@ try {
     console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle, and the Repository lists them');
     await openLinkOnlyShare(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a link that carries its build opens on it in the published build, with no network, and Edit a Copy makes the visitor a copy; it fits a phone');
+    assert(html.includes('<meta name="forkbuild-service-worker" content="sw.js">') && readFileSync(join(published.outdir, 'sw.js'), 'utf8').includes('forkbuild-'),
+        'the published site has its service worker, and index.html names it');
+    await offlineAndNotifications(browser, `http://127.0.0.1:${server.address().port}`, published.precacheFiles, published.outdir);
+    console.log(`✓ the published site keeps its ${published.precacheFiles} files on the first visit and opens offline, Home and the Editor; a new version is offered and starts on Reload; notifications on this device turn on and off`);
     await firstVisit(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a first visit: four pages and More in the nav, the guided first build in the Editor, Publish asking about remixes and to log in, and the published link copied on another device');
 
