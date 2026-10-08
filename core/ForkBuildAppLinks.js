@@ -119,3 +119,20 @@ export function linkOnlyPublicationViewUrl(payload, appUrl = FORKBUILD_APP_URL) 
 export function isLinkOnlyPublicationPayload(payload) {
     return typeof payload === 'string' && LINK_PAYLOAD_PATTERN.test(payload);
 }
+
+// Where a link that carries its build is shared from, so it gets a title and
+// a picture when pasted into a chat or a post: the rendezvous worker's
+// /b/<payload> (server/rendezvous-worker/buildPreview.js), which shows link
+// previews that, and sends people on to linkOnlyPublicationViewUrl().
+export const FORKBUILD_LINK_PREVIEW_URL = 'https://forkbuild-rendezvous.prazjp.workers.dev/';
+
+export function linkPreviewUrl(payload, previewUrl = FORKBUILD_LINK_PREVIEW_URL) {
+    if (!isLinkOnlyPublicationPayload(payload)) throw new TypeError('not a link payload');
+    return `${previewUrl}b/${payload}`;
+}
+
+// The payload a /b/<payload> link carries, or null.
+export function payloadFromLinkPreviewUrl(url) {
+    const match = typeof url === 'string' ? /\/b\/([A-Za-z0-9_-]+)(?:[?#].*)?$/.exec(url) : null;
+    return match ? match[1] : null;
+}

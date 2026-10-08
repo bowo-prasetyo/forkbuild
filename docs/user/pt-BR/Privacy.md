@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 225ed1a7731c5549 -->
+<!-- translation-of: docs/Privacy.md source-hash: f677edb8952577f9 -->
 # Privacidade
 
 <!-- languages -->
@@ -180,6 +180,7 @@ pede a ele.
 | Você guarda, anuncia ou ancora no Blurt, ou descobre postagens do Blurt (*experimental*) | nós de API do Blurt (`rpc.blurt.blog`, depois `rpc.beblurt.com`, depois `rpc.drakernoise.com`); a assinatura passa pela extensão Blurt Keychain (ou WhaleVault) | o nome da sua conta no Blurt, e as contas cujo histórico de postagens é lido (as que você segue, e todas as contas que este dispositivo viu postar com as tags do ForkBuild, lembradas neste dispositivo); o que você posta fica público na blockchain para sempre, na sua própria conta, e as edições deixam a versão anterior no histórico. Cada transação paga uma pequena taxa em BLURT da sua conta |
 | Você distribui a Declaração assinada de uma publicação no Blurt (*experimental*) | o servidor de imagens do Blurt (`img-upload.blurt.blog`), diretamente ou, quando o navegador não consegue alcançá-lo, pelo relay `/blurt-image` do servidor de encontro, que não guarda nada | uma imagem 320×200 da construção para a prévia da postagem, assinada com sua chave de postagem do Blurt |
 | Você distribui a Declaração assinada de uma publicação no Steem (*experimental*) | o servidor de imagens do Steem (`steemitimages.com`), diretamente ou, quando o navegador não consegue alcançá-lo, pelo relé `/steem-image` do servidor de encontro, que não guarda nada | uma imagem de 320×200 da construção para a prévia da postagem, assinada com sua chave de postagem do Steem |
+| Alguém abre, ou um site mostra a prévia de, um link que leva a construção (`/b/…`) | o servidor de encontro (`forkbuild-rendezvous.prazjp.workers.dev`) | o link, que contém a construção e a Declaração assinada dela; ele não guarda nada |
 | Você abre um link compartilhado de uma publicação (`#/view/…`) | o nó do Steem ou do Blurt, o gateway do Arweave ou o gateway IPFS que o link indica, e depois os substratos de anúncio para encontrar a construção | qual postagem, transação ou CID você abre |
 | Você ancora ou verifica evidências no Bitcoin (*experimental*) | uma API Esplora (`blockstream.info`) | a transação que você transmite ou consulta |
 | Você verifica evidências na Base (*experimental*) | um endpoint JSON-RPC da Base (`mainnet.base.org`) | a transação que você consulta |
@@ -188,14 +189,20 @@ pede a ele.
 O ForkBuild nunca envia sua chave privada, sua frase secreta nem seus
 documentos salvos para nenhum desses servidores.
 
-**Um link que leva a construção** (`#/s/…`, criado por **Copiar link** ou
+**Um link que leva a construção** (criado por **Copiar link** ou
 **Compartilhar…** antes de a construção ser distribuída) carrega seu Mundo
-compartilhado assinado e a própria construção depois do `#`, uma parte do
-endereço que os navegadores nunca enviam a um servidor. Criá-lo não contata
-nada, e abri-lo só contata o site que serve o aplicativo. Quem tiver o link
-pode ver a construção, o título, a descrição e o nome do autor dela, e a
-chave pública da sua identidade, como em qualquer Mundo compartilhado que
-você distribuir.
+compartilhado assinado e a própria construção. Ele aponta para o servidor de
+encontro (`forkbuild-rendezvous.prazjp.workers.dev/b/…`) para que
+aplicativos de conversa e redes sociais possam mostrar o título da
+construção e uma imagem dela: abrir o link, ou um site mostrar a prévia
+dele, o envia, e com ele a construção, para esse servidor, que confere a
+assinatura, desenha a imagem, leva as pessoas ao aplicativo (`#/s/…`, uma
+parte do endereço que os navegadores nunca enviam a um servidor) e não
+guarda nada. A Cloudflare, que roda o servidor, pode registrar os endereços
+pedidos. Criar um link não contata nada. Quem tiver o link pode ver a
+construção, o título, a descrição e o nome do autor dela, e a chave pública
+da sua identidade, como em qualquer Mundo compartilhado que você
+distribuir.
 
 **Os relays só são usados quando precisa.** Uma conexão sempre tenta primeiro
 um caminho direto, depois um encontrado pelo STUN, e só recorre ao relay TURN

@@ -92,6 +92,14 @@ works unchanged wherever the folder is served. There is no service worker:
 an installed ForkBuild still needs its host to load. The manifest is fetched
 from the page's own origin, which `default-src 'self'` already allows.
 
+A shared build's own link gets its own title and picture from the rendezvous
+worker: **Share…** and **Copy link** point at its `/b/<payload>`, which
+serves the preview and sends people on to `APP_URL#/s/<payload>` (see
+`server/rendezvous-worker/README.md`, "Link previews for shared builds").
+Redeploy the worker before publishing an app that shares such links. A copy
+hosted elsewhere sets the worker's `APP_URL` to its own address and
+`FORKBUILD_LINK_PREVIEW_URL` in `core/ForkBuildAppLinks.js` to its worker.
+
 ## Everything is served from your own origin
 
 The page loads no scripts, styles or fonts from anywhere else. The

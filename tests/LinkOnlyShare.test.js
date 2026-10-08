@@ -1,6 +1,7 @@
 import { deflateRawSync } from 'node:zlib';
 import {
-    FORKBUILD_APP_URL, isLinkOnlyPublicationPayload, linkOnlyPublicationViewPath, linkOnlyPublicationViewUrl
+    FORKBUILD_APP_URL, FORKBUILD_LINK_PREVIEW_URL, isLinkOnlyPublicationPayload, linkOnlyPublicationViewPath, linkOnlyPublicationViewUrl,
+    linkPreviewUrl, payloadFromLinkPreviewUrl
 } from '../core/ForkBuildAppLinks.js';
 import {
     MAX_LINK_PAYLOAD_LENGTH, decodePublicationLinkPayload, encodePublicationLinkPayload
@@ -80,7 +81,7 @@ function visitor() {
 }
 
 function payloadOf(url) {
-    return url.slice(url.indexOf('#/s/') + '#/s/'.length);
+    return payloadFromLinkPreviewUrl(url) ?? url.slice(url.indexOf('#/s/') + '#/s/'.length);
 }
 
 function describePublicationShare(input) {
@@ -92,6 +93,8 @@ function describePublicationShare(input) {
 {
     assert(linkOnlyPublicationViewPath('1abc_-Z9') === '/s/1abc_-Z9', 'a payload is one path segment');
     assert(linkOnlyPublicationViewUrl('1abc') === `${FORKBUILD_APP_URL}#/s/1abc`, 'the link points at the published app');
+    assert(linkPreviewUrl('1abc') === `${FORKBUILD_LINK_PREVIEW_URL}b/1abc` && payloadFromLinkPreviewUrl(linkPreviewUrl('1abc')) === '1abc', 'the shared link goes through the link-preview worker, and reads back');
+    assert(payloadFromLinkPreviewUrl('https://example.org/elsewhere') === null, 'any other address carries no payload');
     for (const bad of ['', '1a/b', '1a b', '1a+b', '1a=', null, 7]) {
         assert(!isLinkOnlyPublicationPayload(bad), `${JSON.stringify(bad)} is not a payload`);
     }
@@ -109,7 +112,7 @@ function describePublicationShare(input) {
 {
     const { publication, contentStore, brickCount } = publishBuild();
     const prepared = await prepareLinkOnlyShare({ publication, contentStore });
-    assert(prepared.url?.startsWith(`${FORKBUILD_APP_URL}#/s/1`), `the castle gets a link (got ${JSON.stringify(prepared.reason ?? prepared)})`);
+    assert(prepared.url?.startsWith(`${FORKBUILD_LINK_PREVIEW_URL}b/1`), `the castle gets a link, through the link-preview worker (got ${JSON.stringify(prepared.reason ?? prepared)})`);
     assert(prepared.payloadLength <= MAX_LINK_PAYLOAD_LENGTH && prepared.payloadLength < 6000, `the castle's link is short enough to paste anywhere (${prepared.payloadLength} characters)`);
     assert(prepared.snapshotText === contentStore.getSync(publication.contentReference), 'the build is kept for a picture');
     console.log(`✓ a published castle (${brickCount} bricks) shares as a ${prepared.payloadLength}-character link`);
@@ -200,7 +203,7 @@ function describePublicationShare(input) {
     assert(!offered.available && offered.reason.includes('too large'), `a build too large for a link says how to get one (got ${JSON.stringify(offered)})`);
     const elsewhere = await prepareLinkOnlyShare({ publication, contentStore: new LocalContentStore(new InMemoryStorageProvider()) });
     assert(!elsewhere.url && elsewhere.snapshotText === null && displayText(elsewhere.reason).includes('not stored on this device'), 'a build not on this device gets no link');
-    const custom = await prepareLinkOnlyShare({ publication: publication.toJSON(), contentStore, appUrl: 'https://example.org/app/' });
+    const custom = await prepareLinkOnlyShare({ publication: publication.toJSON(), contentStore, appUrl: 'https://example.org/app/', previewUrl: null });
     assert(custom.url.startsWith('https://example.org/app/#/s/1'), 'a Publication\'s JSON and another app address work too');
     console.log('✓ what the share offers');
 }

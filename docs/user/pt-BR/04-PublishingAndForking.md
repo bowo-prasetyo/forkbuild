@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6a92be43d5eb9d49 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c477db500c6a8d08 -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -54,12 +54,16 @@ Assim que **Publicar** dá certo, o aviso no Editor também mostra
 ficam em **Meu Mundo compartilhado** na Visão do mundo.
 
 - **A construção vai dentro do link.** Nada precisa ser distribuído antes,
-  e nenhuma carteira, conta ou servidor entra na história: o link leva seu
+  e nenhuma carteira ou conta entra na história: o link leva seu
   Mundo compartilhado assinado e a própria construção. Quem abrir o link, em
   qualquer dispositivo, chega à Visão do mundo na sua construção, e **Editar
   uma cópia** a torna dela. O ForkBuild confere a assinatura, e se a
   construção corresponde a ela, antes de mostrar qualquer coisa; um link
   alterado ou cortado avisa isso.
+- **Mostra o que é.** Colado em um aplicativo de conversa, um e-mail ou um
+  post, o link mostra o título da sua construção, seu nome e uma imagem
+  dela, desenhada pelo servidor de links do ForkBuild, que depois leva quem
+  o abrir ao ForkBuild. Um link alterado mostra só "A shared build".
 - **Precisa de assinatura.** Publique com a sessão iniciada; uma criação
   publicada sem entrar não ganha link.
 - **Tamanho.** Cabe uma construção de até uns 500 blocos; o link do castelo

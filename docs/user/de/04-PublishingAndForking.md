@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6a92be43d5eb9d49 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c477db500c6a8d08 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -58,12 +58,17 @@ Sobald **Veröffentlichen** gelingt, zeigt der Hinweis im Editor auch
 Weltansicht unter **Meine Geteilte Welt**.
 
 - **Das Bauwerk steckt im Link.** Vorher muss nichts verteilt werden, und
-  keine Wallet, kein Konto und kein Server ist beteiligt: Der Link trägt
+  keine Wallet und kein Konto ist beteiligt: Der Link trägt
   Ihre signierte Geteilte Welt und das Bauwerk selbst. Wer ihn öffnet, auf
   jedem Gerät, landet in der Weltansicht bei Ihrem Bauwerk, und **Eine Kopie
   bearbeiten** macht es zu seinem eigenen. ForkBuild prüft die Signatur und
   ob das Bauwerk dazu passt, bevor es etwas zeigt; ein veränderter oder
   abgeschnittener Link sagt das.
+- **Er zeigt, was er ist.** In eine Chat-App, eine E-Mail oder einen
+  Beitrag eingefügt, zeigt der Link den Titel Ihres Bauwerks, Ihren Namen
+  und ein Bild des Bauwerks, gezeichnet vom Link-Server von ForkBuild, der
+  jeden, der ihn öffnet, weiter zu ForkBuild schickt. Ein veränderter Link
+  zeigt nur „A shared build“.
 - **Er braucht eine Signatur.** Veröffentlichen Sie angemeldet; eine
   abgemeldet veröffentlichte Kreation bekommt keinen Link.
 - **Größe.** Ein Bauwerk mit bis zu etwa 500 Steinen passt hinein; der Link

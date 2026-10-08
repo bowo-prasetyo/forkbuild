@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 225ed1a7731c5549 -->
+<!-- translation-of: docs/Privacy.md source-hash: f677edb8952577f9 -->
 # Privasi
 
 <!-- languages -->
@@ -189,6 +189,7 @@ Anda dan apa yang Anda minta darinya.
 | Anda menyimpan, mengumumkan, atau menjangkarkan di Blurt, atau menemukan postingan Blurt (*eksperimental*) | node API Blurt (`rpc.blurt.blog`, lalu `rpc.beblurt.com`, lalu `rpc.drakernoise.com`); penandatanganan melalui ekstensi Blurt Keychain (atau WhaleVault) | nama akun Blurt Anda, dan akun-akun yang riwayat postingannya dibaca (yang Anda ikuti, dan setiap akun yang pernah dilihat perangkat ini memposting di bawah tag ForkBuild, yang diingat di perangkat ini); apa yang Anda posting bersifat publik di chain selamanya, di bawah akun Anda sendiri, dan suntingan meninggalkan versi sebelumnya di riwayatnya. Setiap transaksi membayar biaya kecil dalam BLURT dari akun Anda |
 | Anda mendistribusikan Klaim Bertanda Tangan sebuah Publikasi di Blurt (*eksperimental*) | host gambar Blurt (`img-upload.blurt.blog`), secara langsung atau, bila peramban tidak dapat menjangkaunya, melalui relai `/blurt-image` server rendezvous, yang tidak menyimpan apa pun | gambar bangunan berukuran 320×200 untuk pratinjau postingan, ditandatangani dengan kunci posting Blurt Anda |
 | Anda mendistribusikan Klaim Bertanda Tangan sebuah Publikasi di Steem (*eksperimental*) | host gambar Steem (`steemitimages.com`), secara langsung atau, bila peramban tidak dapat menjangkaunya, melalui relai `/steem-image` milik server rendezvous, yang tidak menyimpan apa pun | gambar bangunan berukuran 320×200 untuk pratinjau postingan, ditandatangani dengan kunci posting Steem Anda |
+| Seseorang membuka, atau sebuah situs menampilkan pratinjau, tautan yang membawa bangunannya (`/b/…`) | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | tautan itu, yang memuat bangunan dan Klaim Bertanda Tangannya; server tidak menyimpan apa pun |
 | Anda membuka tautan bersama ke sebuah Publikasi (`#/view/…`) | node Steem atau Blurt, gateway Arweave, atau gateway IPFS yang disebut tautan itu, lalu substrat pengumuman untuk menemukan bangunannya | postingan, transaksi, atau CID mana yang Anda buka |
 | Anda menjangkarkan atau memverifikasi bukti di Bitcoin (*eksperimental*) | API Esplora (`blockstream.info`) | transaksi yang Anda siarkan atau cari |
 | Anda memverifikasi bukti di Base (*eksperimental*) | endpoint JSON-RPC Base (`mainnet.base.org`) | transaksi yang Anda cari |
@@ -197,14 +198,20 @@ Anda dan apa yang Anda minta darinya.
 ForkBuild tidak pernah mengirim kunci privat, frasa sandi, atau dokumen
 tersimpan Anda ke server mana pun di atas.
 
-**Tautan yang membawa bangunannya** (`#/s/…`, dibuat dengan **Salin
-tautan** atau **Bagikan…** sebelum bangunan didistribusikan) memuat Dunia
-Bersama Anda yang bertanda tangan dan bangunan itu sendiri setelah `#`,
-bagian alamat yang tidak pernah dikirim browser ke server. Membuatnya tidak
-menghubungi apa pun, dan membukanya hanya menghubungi situs yang menyajikan
-aplikasi. Siapa pun yang memegang tautan itu dapat melihat bangunannya,
-judul, deskripsi, dan nama pembuatnya, serta kunci publik identitas Anda,
-seperti pada Dunia Bersama mana pun yang Anda distribusikan.
+**Tautan yang membawa bangunannya** (dibuat dengan **Salin tautan** atau
+**Bagikan…** sebelum bangunan didistribusikan) memuat Dunia Bersama Anda
+yang bertanda tangan dan bangunan itu sendiri. Tautan itu mengarah ke server
+rendezvous (`forkbuild-rendezvous.prazjp.workers.dev/b/…`) agar aplikasi
+obrolan dan media sosial dapat menampilkan judul bangunan dan gambarnya:
+membuka tautan, atau situs yang menampilkan pratinjaunya, mengirim tautan
+itu, beserta bangunannya, ke server tersebut, yang memeriksa tanda tangan,
+menggambar gambarnya, mengarahkan orang ke aplikasi (`#/s/…`, bagian alamat
+yang tidak pernah dikirim browser ke server), dan tidak menyimpan apa pun.
+Cloudflare, yang menjalankan server itu, mungkin mencatat alamat yang
+diminta. Membuat tautan tidak menghubungi apa pun. Siapa pun yang memegang
+tautan itu dapat melihat bangunannya, judul, deskripsi, dan nama pembuatnya,
+serta kunci publik identitas Anda, seperti pada Dunia Bersama mana pun yang
+Anda distribusikan.
 
 **Relay hanya dipakai bila diperlukan.** Koneksi selalu mencoba jalur
 langsung terlebih dahulu, lalu jalur yang ditemukan melalui STUN, dan

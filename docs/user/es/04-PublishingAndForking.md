@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6a92be43d5eb9d49 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c477db500c6a8d08 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -55,12 +55,17 @@ enlace** y **Guardar imagen**, con el enlace debajo. Los mismos botones
 están en **Mi Mundo compartido** en la Vista de mundo.
 
 - **La construcción viaja dentro del enlace.** No hace falta distribuir nada
-  antes, y no interviene ninguna billetera, cuenta ni servidor: el enlace
+  antes, y no interviene ninguna billetera ni cuenta: el enlace
   lleva su Mundo compartido firmado y la construcción misma. Quien lo abra,
   en cualquier dispositivo, llega a la Vista de mundo con su construcción, y
   **Editar una copia** la hace suya. ForkBuild comprueba la firma, y que la
   construcción coincida con ella, antes de mostrar nada; un enlace
   modificado o incompleto lo indica.
+- **Muestra lo que es.** Pegado en una aplicación de chat, un correo o una
+  publicación, el enlace muestra el título de su construcción, su nombre y
+  una imagen de la construcción, dibujada por el servidor de enlaces de
+  ForkBuild, que luego lleva a quien lo abra a ForkBuild. Un enlace
+  modificado solo muestra “A shared build”.
 - **Necesita una firma.** Publique con la sesión iniciada; una creación
   publicada sin sesión no recibe enlace.
 - **Tamaño.** Cabe una construcción de hasta unos 500 bloques; el enlace del

@@ -165,6 +165,7 @@ only when you use the feature, and each server can be changed under
 | You store, announce or anchor on Blurt, or discover Blurt posts (*experimental*) | Blurt API nodes (`rpc.blurt.blog`, then `rpc.beblurt.com`, then `rpc.drakernoise.com`); signing goes through the Blurt Keychain extension (or WhaleVault) | your Blurt account name, and the accounts whose post histories are read (the ones you follow, and every account this device has seen post under ForkBuild's tags, remembered on this device); what you post is public on the chain for good, under your own account, and edits leave the earlier version in its history. Every transaction pays a small fee in BLURT from your account |
 | You distribute a Publication's Signed Claim on Blurt (*experimental*) | Blurt's image host (`img-upload.blurt.blog`), directly or, when the browser can't reach it, through the rendezvous server's `/blurt-image` relay, which keeps nothing | a 320×200 picture of the build for the post's preview, signed with your Blurt posting key |
 | You distribute a Publication's Signed Claim on Steem (*experimental*) | the Steem image host (`steemitimages.com`), directly or, when the browser can't reach it, through the rendezvous server's `/steem-image` relay, which keeps nothing | a 320×200 picture of the build for the post's preview, signed with your Steem posting key |
+| Someone opens, or a site previews, a link to a build that carries it (`/b/…`) | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | the link, which holds the build and its Signed Claim; it keeps nothing |
 | You open a shared link to a Publication (`#/view/…`) | the Steem or Blurt node, Arweave gateway or IPFS gateway the link names, then the announcement substrates to find its build | which post, transaction or CID you open |
 | You anchor or verify evidence on Bitcoin (*experimental*) | an Esplora API (`blockstream.info`) | the transaction you broadcast or look up |
 | You verify evidence on Base (*experimental*) | a Base JSON-RPC endpoint (`mainnet.base.org`) | the transaction you look up |
@@ -173,13 +174,18 @@ only when you use the feature, and each server can be changed under
 ForkBuild never sends your private key, your passphrase, or your saved
 documents to any of these servers.
 
-**A link that carries its build** (`#/s/…`, made by **Copy link** or
-**Share…** before a build is distributed) holds your signed Shared World and
-the build itself after the `#`, a part of an address browsers never send to
-a server. Making one contacts nothing, and opening one contacts nothing but
-the site that serves the app. Anyone who has the link can see the build, its
-title, description and author name, and your identity's public key, as with
-any Shared World you distribute.
+**A link that carries its build** (made by **Copy link** or **Share…**
+before a build is distributed) holds your signed Shared World and the build
+itself. It points at the rendezvous server
+(`forkbuild-rendezvous.prazjp.workers.dev/b/…`) so that chat apps and social
+sites can show the build's title and a picture of it: opening the link, or a
+site previewing it, sends it, and so the build, to that server, which checks
+the signature, draws the picture, sends people on to the app (`#/s/…`, a
+part of the address browsers never send to a server) and keeps nothing.
+Cloudflare, which runs the server, may log the addresses requested. Making a
+link contacts nothing. Anyone who has the link can see the build, its title,
+description and author name, and your identity's public key, as with any
+Shared World you distribute.
 
 **Relays are used only when needed.** A connection always tries a direct
 path first, then one found through STUN, and falls back to the TURN relay
