@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 86f52e38bf5e7dd9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ae29bd6e293587d6 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -44,7 +44,8 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
     gire um duas vezes (**R**, **R**) para virá-lo para o outro lado. Uma
     escora diagonal e uma cópia girada 180° formam um X.
   - **Estruturas** — vinte estruturas prontas em cinco categorias
-    (residencial, agrícola, comercial, comunitária, infraestrutura), mais as
+    (residencial, agrícola, comercial, comunitária, infraestrutura) e três
+    construções maiores da categoria **vitrine**, mais as
     suas em **Minhas estruturas**. Clique em um cartão para posicioná-la —
     veja
     [Estruturas: compor, bifurcar e sua biblioteca pessoal](#estruturas-compor-bifurcar-e-sua-biblioteca-pessoal)
@@ -239,7 +240,8 @@ sobre o grupo selecionado:
 A guia **Estruturas** da Biblioteca de construção (veja
 [O layout](#o-layout) acima) oferece vinte estruturas prontas — casas,
 celeiros, um poço, um mercado, um moinho, uma ponte e mais, em cinco
-categorias — mais **Minhas estruturas**, sua coleção pessoal com tudo o que
+categorias — e três construções maiores da categoria **vitrine** (um castelo, uma ilha
+do porto e uma praça da vila), mais **Minhas estruturas**, sua coleção pessoal com tudo o que
 você salvou de uma construção. Há coisas diferentes que você pode fazer com
 qualquer uma delas, e elas importam por motivos diferentes:
 
@@ -495,7 +497,11 @@ seu primeiro clique ou tecla, como os navegadores exigem.
 - **Salvar** (`Ctrl+S`) — guarda seu trabalho neste dispositivo.
 - **Publicar** — compartilha com todo mundo (veja
   [Publicar e bifurcar](04-PublishingAndForking.md)).
-- **Novo** — começa uma criação nova e vazia.
+- **Novo** — começa algo novo: um **Terreno vazio**, ou uma das
+  construções prontas (um castelo, uma ilha do porto, uma praça da vila, uma
+  casa, um moinho e uma ponte) como sua própria cópia, vista inteira. Se o
+  que está aberto tem alterações não salvas, Novo avisa primeiro; salve
+  para mantê-las.
 - **Exportar** — baixa a criação atual como arquivo JSON, para guardar uma
   cópia ou levá-la a outro dispositivo. Os arquivos usam um formato compacto
   que guarda os blocos como uma tabela.

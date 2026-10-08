@@ -250,6 +250,12 @@ export default Object.freeze({
     'library.village.fenceSegment.description': 'Rel pagar modular pada dua tiang, berukuran pas untuk bersambung ujung ke ujung dengan segmen lain.',
     'library.village.dock': 'Dermaga',
     'library.village.dock.description': 'Panggung papan di atas tiang, menjorok ke atas perairan terbuka.',
+    'library.showcase.castle': 'Kastil',
+    'library.showcase.castle.description': 'Kastil bertembok dengan empat menara beratap, gerbang lengkung, benteng bergerigi, dan menara utama di halaman.',
+    'library.showcase.harborIsland': 'Pulau Pelabuhan',
+    'library.showcase.harborIsland.description': 'Pulau kecil dengan pantai berpasir, mercusuar bergaris, pondok, dermaga kayu, dan perahu layar yang tertambat.',
+    'library.showcase.villageSquare': 'Alun-Alun Desa',
+    'library.showcase.villageSquare.description': 'Alun-alun berlantai batu dengan sumur di tengahnya, dikelilingi rumah, kapel, pondok, pasar, dan kios.',
 
     // The command palette (ui/components/CommandPalette.js).
     'commandPalette.title': 'Palet perintah',
@@ -941,6 +947,7 @@ export default Object.freeze({
     'library.category.community': 'komunitas',
     'library.category.infrastructure': 'infrastruktur',
     'library.category.uncategorized': 'tanpa kategori',
+    'library.category.showcase': 'unggulan',
 
     // World View: avatarInfoPanel.
     'avatarInfoPanel.avatar': 'Avatar',
@@ -2473,10 +2480,6 @@ export default Object.freeze({
     'homeView.noAccountNeeded': 'Tanpa akun dan tanpa unduhan. Apa yang Anda bangun tetap di perangkat ini sampai Anda memilih untuk membagikannya.',
     'homeView.showcaseLabel': 'Desa kecil dari balok ForkBuild, berputar perlahan',
     'homeView.showcaseFallback': 'ForkBuild',
-    'homeView.featuredTitle': 'Mulai dari bangunan siap pakai',
-    'homeView.featuredLead': 'Pilih satu dan jadikan milik Anda: bangunan itu terbuka di Editor sebagai salinan Anda sendiri, siap diubah.',
-    'homeView.remix': 'Remix',
-    'homeView.openCopyOf': 'Buka salinan Anda sendiri dari {name} di Editor',
     'homeView.whyTitle': 'Kenapa ForkBuild',
     'homeView.buildTitle': 'Membangun dengan balok',
     'homeView.buildText': 'Letakkan, tumpuk, dan putar balok dengan snap dan urungkan, dari pustaka dinding, atap, jendela, dan tangga. Bisa dengan mouse atau layar sentuh.',
@@ -2489,6 +2492,20 @@ export default Object.freeze({
     'homeView.openSource': 'ForkBuild gratis dan bersumber terbuka, di bawah Mozilla Public License 2.0.',
     'homeView.userGuide': 'Panduan pengguna',
     'homeView.sourceCode': 'Kode sumber',
+
+    // Ready-made builds (ui/components/featured/FeaturedBuilds.js).
+    'featuredBuilds.title': 'Mulai dari bangunan siap pakai',
+    'featuredBuilds.lead': 'Pilih satu dan jadikan milik Anda: bangunan itu terbuka di Editor sebagai salinan Anda sendiri, siap diubah.',
+    'featuredBuilds.remix': 'Remix',
+    'featuredBuilds.openCopyOf': 'Buka salinan Anda sendiri dari {name} di Editor',
+
+    // The Editor's New (ui/components/NewDocumentDialog.js).
+    'newDocumentDialog.title': 'Mulai sesuatu yang baru',
+    'newDocumentDialog.empty': 'Lahan kosong',
+    'newDocumentDialog.emptyDescription': 'Tanah kosong dan seluruh Pustaka Bangunan.',
+    'newDocumentDialog.readyMade': 'Atau buka bangunan siap pakai sebagai salinan Anda sendiri:',
+    'newDocumentDialog.unsaved': 'Ini akan menutup "{title}", yang memiliki perubahan belum disimpan. Simpan dulu untuk mempertahankannya.',
+    'newDocumentDialog.cancel': 'Batal',
 
     // Publications: leaderboardHubView.
     'leaderboardHubView.leaderboard': 'Papan Peringkat',

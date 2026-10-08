@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: ccc330f1bc5e0f97 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a742c831b5f54e8b -->
 # 01 — Primeiros passos
 
 <!-- languages -->
@@ -24,10 +24,11 @@ A tela **Início** mostra uma pequena vila girando em 3D e oferece três
 formas de começar: **Experimente agora: comece com uma casa** abre uma casa
 pronta no Editor como sua própria cópia, pronta para mudar; **Começar do
 zero** abre o Editor em um terreno vazio; e **Explorar construções** abre o
-Repositório. Em **Comece com uma construção pronta**, cada cartão (uma
-casa, um chalé, um moinho, uma torre de vigia, uma ponte e uma
-capelinha) abre sua própria cópia daquela construção do mesmo jeito. Nada é
-publicado nem enviado a lugar nenhum até você decidir.
+Repositório. Em **Comece com uma construção pronta**, cada cartão (um
+castelo, uma ilha do porto, uma praça da vila, uma casa, um moinho e uma
+ponte) abre sua própria cópia daquela construção do mesmo jeito; o
+Repositório, Meus mundos e **Novo** no Editor oferecem as mesmas
+construções. Nada é publicado nem enviado a lugar nenhum até você decidir.
 
 A barra no topo está sempre visível:
 

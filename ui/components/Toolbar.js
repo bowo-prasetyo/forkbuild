@@ -112,7 +112,7 @@ export default {
     // only), EditorView owns JSON.parse and everything after it. Toolbar
     // never calls editorSession.importDocument() itself.
     // `saved` follows a successful Save, for the Editor's save sound.
-    emits: ['back-to-world', 'open-shortcuts', 'published', 'saved', 'export-document', 'export-all-documents', 'import-document'],
+    emits: ['back-to-world', 'open-shortcuts', 'published', 'saved', 'export-document', 'export-all-documents', 'import-document', 'new-document'],
     setup(props, { emit }) {
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
@@ -136,8 +136,10 @@ export default {
             emit('saved');
         }
 
+        // New asks the Editor, which offers an empty plot or a ready-made build
+        // (ui/components/NewDocumentDialog.js) and opens the one chosen.
         function createNew() {
-            props.editorSession.newDocument();
+            emit('new-document');
         }
 
         function load(id) {

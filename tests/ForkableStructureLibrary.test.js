@@ -84,7 +84,11 @@ async function run() {
     {
         const registry = new CreateStructureRegistryUseCase().execute();
 
-        assert(registry.getAll().length === 20, 'registry: VillageLibrary registers exactly twenty structures (0.4.4)');
+        // The built-in registry also holds the showcase library
+        // (core/library/ShowcaseLibrary.js); the Village's own twenty are
+        // counted here.
+        const villageStructures = registry.getAll().filter((structure) => structure.id.startsWith('village:'));
+        assert(villageStructures.length === 20, 'registry: VillageLibrary registers exactly twenty structures (0.4.4)');
         for (const id of STRUCTURE_IDS) {
             assert(registry.has(id), `registry: ${id} is registered`);
             assert(registry.get(id) instanceof Structure, `registry: get(${id}) returns a Structure`);

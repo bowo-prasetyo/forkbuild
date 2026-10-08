@@ -2,17 +2,20 @@ import { Brick } from '../../core/Brick.js';
 import { Position } from '../../core/Position.js';
 import { SpatialBounds } from '../../core/SpatialBounds.js';
 
-// The built-in structures the Home page offers as ready-made builds, in the
-// order its cards show them. Each opens in the Editor as a new, independent
-// document (`/editor?start=<id>`, EditorSession.forkStructure()), the same
-// fork the Build Library's Fork button makes.
+// The built-in structures offered as ready-made builds, in the order their
+// cards show them: the three showcase builds (core/library/ShowcaseLibrary.js)
+// first, then three Village ones. Home, the Repository and My Worlds list
+// them, and the Editor's New offers them beside an empty plot. Each opens in
+// the Editor as a new, independent document (`/editor?start=<id>`,
+// EditorSession.forkStructure()), the same fork the Build Library's Fork
+// button makes.
 export const FEATURED_STRUCTURE_IDS = Object.freeze([
+    'showcase:castle',
+    'showcase:harbor_island',
+    'showcase:village_square',
     'village:house',
-    'village:cottage',
     'village:mill',
-    'village:watchtower',
-    'village:bridge',
-    'village:small_chapel'
+    'village:bridge'
 ]);
 
 // What Home's main button opens: something whole to change, rather than an

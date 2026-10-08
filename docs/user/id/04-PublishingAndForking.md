@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9a754ee94fee1ff -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1f52c96ba8857c6b -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -210,6 +210,15 @@ terbitan yang diketahui perangkat ini: milik Anda sendiri, yang dibagikan
 rekan kepada Anda, dan yang ditemukan di jaringan terdesentralisasi.
 Repositori dibuat agar tetap mudah dipakai baik berisi sepuluh karya
 maupun sepuluh ribu.
+
+### Bangunan siap pakai
+
+Di bagian atas, **Mulai dari bangunan siap pakai** menampilkan bangunan
+yang disertakan bersama ForkBuild: kastil, pulau pelabuhan, alun-alun
+desa, rumah, kincir, dan jembatan. Semuanya sudah ada bahkan sebelum ada
+yang diterbitkan atau ditemukan. Klik salah satunya (**Remix**) untuk
+membuka salinan Anda sendiri di Editor; tidak ada yang diterbitkan sampai
+Anda menerbitkannya. Klik judulnya untuk melipat baris itu.
 
 ### Karya yang didistribusikan orang lain
 

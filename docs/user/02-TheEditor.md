@@ -43,8 +43,8 @@ transform bricks, and how to organize your build with groups.
     side; rotate one twice (**R**, **R**) to turn it the other way. A
     Diagonal Brace and a copy turned 180° make a cross.
   - **Structures** — twenty ready-made structures across five categories
-    (residential, agricultural, commercial, community, infrastructure),
-    plus your own **My Structures**. Click a card to place it — see
+    (residential, agricultural, commercial, community, infrastructure) and
+    three larger **showcase** builds, plus your own **My Structures**. Click a card to place it — see
     [Structures: composing, forking, and your personal library](#structures-composing-forking-and-your-personal-library)
     below.
 
@@ -230,7 +230,9 @@ is selected:
 
 The Build Library's **Structures** tab (see [The layout](#the-layout) above)
 gives you twenty ready-made structures — houses, barns, a well, a market, a
-mill, a bridge, and more, across five categories — plus **My Structures**,
+mill, a bridge, and more, across five categories — and three larger
+**showcase** builds (a castle, a harbor island and a village square), plus
+**My Structures**,
 your own personal collection of anything you've saved from a build. There
 are three different things you can do with any of them, and they matter for
 different reasons:
@@ -477,7 +479,10 @@ first click or key press, as browsers require.
 - **Save** (`Ctrl+S`) — keep your work on this device.
 - **Publish** — share it with everyone (see
   [Publishing & Forking](04-PublishingAndForking.md)).
-- **New** — start a fresh, empty creation.
+- **New** — start something new: an **Empty plot**, or one of the
+  ready-made builds (a castle, a harbor island, a village square, a house, a
+  mill and a bridge) as your own copy, seen whole. If what's open has
+  unsaved changes, New says so first; save it to keep them.
 - **Export** — download the current creation as a JSON file, to keep a copy
   or move it to another device. Files use a compact format that stores
   bricks as a table.

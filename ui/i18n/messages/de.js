@@ -253,6 +253,12 @@ export default Object.freeze({
     'library.village.fenceSegment.description': 'Ein modulares Zaunelement auf zwei Pfosten, so bemessen, dass es nahtlos an ein weiteres Stück anschließt.',
     'library.village.dock': 'Anleger',
     'library.village.dock.description': 'Eine Bohlenplattform auf Säulenstelzen, die über offenes Wasser hinausragt.',
+    'library.showcase.castle': 'Burg',
+    'library.showcase.castle.description': 'Eine ummauerte Burg mit vier überdachten Türmen, einem Bogentor, Zinnen und einem Bergfried im Hof.',
+    'library.showcase.harborIsland': 'Hafeninsel',
+    'library.showcase.harborIsland.description': 'Eine kleine Insel mit Sandstrand, gestreiftem Leuchtturm, einer Hütte, einem Holzsteg und einem vertäuten Segelboot.',
+    'library.showcase.villageSquare': 'Dorfplatz',
+    'library.showcase.villageSquare.description': 'Ein gepflasterter Platz mit einem Brunnen in der Mitte, umgeben von einem Haus, einer Kapelle, einer Hütte, einem Markt und einem Stand.',
 
     // The command palette (ui/components/CommandPalette.js).
     'commandPalette.title': 'Befehlspalette',
@@ -944,6 +950,7 @@ export default Object.freeze({
     'library.category.community': 'Gemeinschaft',
     'library.category.infrastructure': 'Infrastruktur',
     'library.category.uncategorized': 'ohne Kategorie',
+    'library.category.showcase': 'Schaustücke',
 
     // World View: avatarInfoPanel.
     'avatarInfoPanel.avatar': 'Avatar',
@@ -2476,10 +2483,6 @@ export default Object.freeze({
     'homeView.noAccountNeeded': 'Kein Konto, kein Download. Was Sie bauen, bleibt auf diesem Gerät, bis Sie es teilen möchten.',
     'homeView.showcaseLabel': 'Ein kleines Dorf aus ForkBuild-Steinen, das sich langsam dreht',
     'homeView.showcaseFallback': 'ForkBuild',
-    'homeView.featuredTitle': 'Mit einem fertigen Bauwerk beginnen',
-    'homeView.featuredLead': 'Wählen Sie eins aus und machen Sie es zu Ihrem: Es öffnet sich im Editor als Ihre eigene Kopie, bereit zum Ändern.',
-    'homeView.remix': 'Remixen',
-    'homeView.openCopyOf': 'Eine eigene Kopie von {name} im Editor öffnen',
     'homeView.whyTitle': 'Warum ForkBuild',
     'homeView.buildTitle': 'Mit Steinen bauen',
     'homeView.buildText': 'Steine platzieren, stapeln und drehen, mit Einrasten und Rückgängig, aus einer Bibliothek mit Wänden, Dächern, Fenstern und Treppen. Mit Maus oder Touchscreen.',
@@ -2492,6 +2495,20 @@ export default Object.freeze({
     'homeView.openSource': 'ForkBuild ist frei und quelloffen, unter der Mozilla Public License 2.0.',
     'homeView.userGuide': 'Benutzerhandbuch',
     'homeView.sourceCode': 'Quellcode',
+
+    // Ready-made builds (ui/components/featured/FeaturedBuilds.js).
+    'featuredBuilds.title': 'Mit einem fertigen Bauwerk beginnen',
+    'featuredBuilds.lead': 'Wählen Sie eins aus und machen Sie es zu Ihrem: Es öffnet sich im Editor als Ihre eigene Kopie, bereit zum Ändern.',
+    'featuredBuilds.remix': 'Remixen',
+    'featuredBuilds.openCopyOf': 'Eine eigene Kopie von {name} im Editor öffnen',
+
+    // The Editor's New (ui/components/NewDocumentDialog.js).
+    'newDocumentDialog.title': 'Etwas Neues beginnen',
+    'newDocumentDialog.empty': 'Leeres Grundstück',
+    'newDocumentDialog.emptyDescription': 'Freier Boden und die ganze Baubibliothek.',
+    'newDocumentDialog.readyMade': 'Oder ein fertiges Bauwerk als eigene Kopie öffnen:',
+    'newDocumentDialog.unsaved': 'Damit wird „{title}“ geschlossen, das ungespeicherte Änderungen hat. Speichern Sie es zuerst, um sie zu behalten.',
+    'newDocumentDialog.cancel': 'Abbrechen',
 
     // Publications: leaderboardHubView.
     'leaderboardHubView.leaderboard': 'Bestenliste',

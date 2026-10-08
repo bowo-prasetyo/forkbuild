@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9a754ee94fee1ff -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1f52c96ba8857c6b -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -208,6 +208,15 @@ El **Repositorio** es el catálogo, con búsqueda, de todas las creaciones
 publicadas que conoce este dispositivo: las suyas, las que le compartieron
 sus pares y las que se encontraron en redes descentralizadas. Está hecho
 para seguir siendo útil tanto si tiene diez creaciones como diez mil.
+
+### Construcciones ya hechas
+
+Arriba, **Empiece con una construcción ya hecha** muestra las
+construcciones que vienen con ForkBuild: un castillo, una isla del puerto,
+una plaza del pueblo, una casa, un molino y un puente. Están ahí incluso
+antes de que se publique o se encuentre algo. Haga clic en una
+(**Remezclar**) para abrir su propia copia en el Editor; nada se publica
+hasta que usted lo publique. Haga clic en el título para plegar la fila.
 
 ### Creaciones que otros distribuyeron
 

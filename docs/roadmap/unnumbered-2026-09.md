@@ -4514,3 +4514,48 @@ and get a newcomer to a first build quickly.
   published Editor.
 - Not done: the top navigation is unchanged; first-visit guidance in the Editor; previews for individual builds'
   links, which a hash-routed static site can't give.
+
+## Ready-made builds everywhere a newcomer starts: showcase builds, New, and the Repository (unnumbered, 2026-10-08)
+
+**ForkBuild now ships three larger showcase builds (a castle, a harbor island and a village square), and offers six
+ready-made builds wherever someone new starts: on Home, at the top of the Repository, in My Worlds while nothing has
+been visited, and in the Editor's New, beside an empty plot. Each opens as the person's own copy, framed whole.** On
+a first visit the Repository said "No publications yet", My Worlds "You haven't visited any Worlds yet", and New
+opened an empty plot, so a newcomer met nothing to look at or start from unless the networks happened to answer.
+Built-in content shipped with the site is always there, needs no network and no signature, and is an ordinary
+document the moment it is opened.
+
+- `core/library/ShowcaseLibrary.js`: `showcase:castle` (16 × 16 curtain walls of block_2x2 with stone-colored
+  battlements, four towers with hipped roofs, an arched gate, a keep with a door and windows), `showcase:harbor_island`
+  (sand and grass terraces of colored block_2x2, a striped lighthouse with a lit lantern, the Village cottage, a dock
+  of wooden plates on cube pilings, a moored sailboat) and `showcase:village_square` (a 20 × 20 plaza of slab_4x4
+  with the Village house, small chapel, cottage, well, market stall and market). Category `showcase`; registered by
+  `CreateStructureRegistryUseCase` after the Village library, so the Build Library's Structures tab lists them too.
+  The square and the island copy Village bricks into place; nothing is shared with the Village library.
+- `application/home/FeaturedBuilds.js`: the featured list is now the three showcase builds, then the Village house,
+  mill and bridge. `STARTER_STRUCTURE_ID` (Home's main button) is still the house.
+- `ui/components/featured/FeaturedBuilds.js` (moved from `ui/components/home/HomeFeaturedBuilds.js`, with
+  `featuredLibrary.js` from `homeLibrary.js`): the cards, as a grid (Home) or one sideways-scrolling row
+  (`layout="row"`). The Repository shows them above the catalog in a `<details>` that folds away; My Worlds below
+  its empty-state message. Both load them with `defineAsyncComponent()`.
+- The Editor's New (`ui/components/NewDocumentDialog.js`): **Empty plot** or one of the six builds. When the open
+  document has unsaved changes it names it and says either choice closes it. The Toolbar's New now emits
+  `new-document` for the Editor to open the dialog, instead of opening an empty document itself; Escape, Cancel or a
+  click outside closes it, and the Editor's shortcuts are off while it is open.
+- `EditorSession.frameDocument()` (`application/editorSession/selectionEditingMethods.js`) frames the camera on the
+  whole open document with the thumbnail framing from `core/PreviewCameraFraming.js` at the Editor's field of view.
+  The Editor calls it after opening a ready-made build from `?start=` or New; before, the fixed camera put a large
+  build like the castle all round it.
+- Messages, in every language: `featuredBuilds.*` (the four card and heading messages moved from `homeView.*`),
+  `newDocumentDialog.*`, `library.category.showcase` and `library.showcase.*` names and descriptions.
+- Docs, in every language: guides 01 (Home's cards), 02 (New, and the showcase builds in the Structures tab), 03 (My
+  Worlds) and 04 (a "Ready-made builds" section in the Repository); docs/StructureLibrary.md, docs/Architecture.md
+  and README.md.
+- Tests: `tests/ShowcaseLibrary.test.js` (registered, named, on the ground, what each holds, Village bricks copied
+  not shared), `tests/EditorFrameDocument.test.js`, `tests/NewDocumentDialogBrowser.test.js`, and
+  `tests/run-bundle.mjs`, which now opens the castle from New and checks the Repository's six cards in the published
+  build. `tests/VillageLibraryExpansion.test.js`, `tests/ForkableStructureLibrary.test.js` and
+  `tests/BuildLibraryUX.test.js` count the Village's own twenty structures and five categories; their per-structure
+  checks (geometry, serialization, rendering, fork, copy) now run over the showcase builds too.
+- Not done: walking through a ready-made build in World View. World View shows Publications, which are signed and
+  placed; a built-in build reaches it once someone opens a copy, publishes it and places it.

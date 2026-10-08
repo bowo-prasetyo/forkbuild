@@ -68,11 +68,11 @@ await nextTick();
 
 // The ready-made builds and the showcase load after it.
 {
-    await until(() => host.querySelectorAll('.home-featured-card').length === FEATURED_STRUCTURE_IDS.length, 'the ready-made builds');
-    const links = [...host.querySelectorAll('.home-featured-link')];
+    await until(() => host.querySelectorAll('.featured-build-card').length === FEATURED_STRUCTURE_IDS.length, 'the ready-made builds');
+    const links = [...host.querySelectorAll('.featured-build-link')];
     assert(links.map((link) => new URLSearchParams(link.getAttribute('href').split('?')[1]).get('start')).join() === FEATURED_STRUCTURE_IDS.join(),
         'each card opens its own structure');
-    assert(links.every((link) => link.getAttribute('aria-label') && link.querySelector('.home-featured-name').textContent.trim()),
+    assert(links.every((link) => link.getAttribute('aria-label') && link.querySelector('.featured-build-name').textContent.trim()),
         'each card is named, for screen readers too');
     await until(() => host.querySelector('.home-showcase-canvas, .home-showcase-fallback'), 'the showcase');
     const showcase = host.querySelector('.home-showcase');

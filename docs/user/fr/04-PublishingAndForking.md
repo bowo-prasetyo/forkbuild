@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9a754ee94fee1ff -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1f52c96ba8857c6b -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -212,6 +212,16 @@ publiées que cet appareil connaît : les vôtres, celles que des pairs ont
 partagées avec vous, et celles trouvées sur des réseaux décentralisés. Il
 est conçu pour rester utilisable qu’il contienne dix créations ou dix
 mille.
+
+### Constructions toutes prêtes
+
+En haut, **Partir d’une construction toute prête** montre les
+constructions fournies avec ForkBuild : un château fort, une île du port,
+une place du village, une maison, un moulin et un pont. Elles sont là
+avant même que quoi que ce soit soit publié ou trouvé. Cliquez sur l’une
+d’elles (**Remixer**) pour ouvrir votre propre copie dans l’Éditeur ; rien
+n’est publié tant que vous ne la publiez pas. Cliquez sur le titre pour
+replier la rangée.
 
 ### Créations distribuées par d’autres
 

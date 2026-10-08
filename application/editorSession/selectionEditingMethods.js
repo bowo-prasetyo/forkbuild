@@ -6,6 +6,8 @@ import { ToolId } from '../editor-state/ToolId.js';
 import { Position } from '../../core/Position.js';
 import { CameraState } from '../../renderer/CameraState.js';
 import { message } from '../../core/Message.js';
+import { SpatialBounds } from '../../core/SpatialBounds.js';
+import { computeThumbnailCamera } from '../../core/PreviewCameraFraming.js';
 
 // EditorSession selection editing: select all or none, marquee selection,
 // framing the camera, entry contexts, delete, recolor, and align, distribute
@@ -14,6 +16,9 @@ import { message } from '../../core/Message.js';
 // Same camera offset as WorldNavigationSession#focusLocation(), so both views
 // frame locations the same way.
 const ENTRY_CAMERA_OFFSET = { x: 12, y: 12, z: 12 };
+// renderer/CameraController.js's field of view, so frameDocument() fits the
+// whole document on screen.
+const EDITOR_FOV_DEGREES = 60;
 
 export const selectionEditingMethods = {
     selectAll() {
@@ -50,6 +55,30 @@ export const selectionEditingMethods = {
         this._session.setCameraState(new CameraState({
             position: new Position(x + ENTRY_CAMERA_OFFSET.x, y + ENTRY_CAMERA_OFFSET.y, z + ENTRY_CAMERA_OFFSET.z),
             target: new Position(x, y, z),
+            zoom: 1
+        }));
+        return true;
+    },
+
+    // Frames the camera on the whole open document, from the same corner a
+    // thumbnail is drawn from and far enough back to see all of it, so a
+    // ready-made build opened from Home or New is seen whole however large it
+    // is. Returns false before a render session exists or for an empty
+    // document.
+    frameDocument() {
+        const document = this._documentManager.document;
+        if (!this._session || !document) {
+            return false;
+        }
+        const bricks = document.world.getBuildings().flatMap((building) => building.getBricks());
+        if (bricks.length === 0) {
+            return false;
+        }
+        const framing = computeThumbnailCamera(SpatialBounds.fromBricks(bricks, this._registry), { fovDegrees: EDITOR_FOV_DEGREES });
+        const { position, target } = framing;
+        this._session.setCameraState(new CameraState({
+            position: new Position(position.x, position.y, position.z),
+            target: new Position(target.x, target.y, target.z),
             zoom: 1
         }));
         return true;

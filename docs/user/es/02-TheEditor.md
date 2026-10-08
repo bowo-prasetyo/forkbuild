@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 86f52e38bf5e7dd9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ae29bd6e293587d6 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -48,7 +48,8 @@ grupos.
     un lado; gire uno dos veces (**R**, **R**) para orientarlo al revés. Una
     riostra diagonal y una copia girada 180° forman una cruz.
   - **Estructuras**: veinte estructuras ya hechas en cinco categorías
-    (residencial, agrícola, comercial, comunitaria, infraestructura), más
+    (residencial, agrícola, comercial, comunitaria, infraestructura) y tres
+    construcciones más grandes de la categoría **destacados**, más
     sus propias **Mis estructuras**. Haga clic en una tarjeta para
     colocarla: consulte
     [Estructuras: componer, bifurcar y su biblioteca personal](#estructuras-componer-bifurcar-y-su-biblioteca-personal)
@@ -253,7 +254,9 @@ botones actúan sobre el grupo que esté seleccionado:
 La pestaña **Estructuras** de la Biblioteca de construcción (consulte
 [La disposición](#la-disposición) arriba) le ofrece veinte estructuras ya
 hechas (casas, graneros, un pozo, un mercado, un molino, un puente y más,
-en cinco categorías), además de **Mis estructuras**, su propia colección
+en cinco categorías) y tres construcciones más grandes de la categoría **destacados** (un
+castillo, una isla del puerto y una plaza del pueblo), además de **Mis
+estructuras**, su propia colección
 personal de todo lo que haya guardado de una construcción. Hay tres cosas
 distintas que puede hacer con cualquiera de ellas, y cada una importa por
 razones distintas:
@@ -524,7 +527,11 @@ presione, como exigen los navegadores.
 - **Guardar** (`Ctrl+S`): conserva su trabajo en este dispositivo.
 - **Publicar**: lo comparte con todos (consulte
   [Publicar y bifurcar](04-PublishingAndForking.md)).
-- **Nuevo**: empieza una creación nueva y vacía.
+- **Nuevo**: empiece algo nuevo: un **Terreno vacío**, o una de las
+  construcciones ya hechas (un castillo, una isla del puerto, una plaza del
+  pueblo, una casa, un molino y un puente) como su propia copia, vista
+  entera. Si lo que tiene abierto tiene cambios sin guardar, Nuevo se lo
+  avisa primero; guárdelo para conservarlos.
 - **Exportar**: descarga la creación actual como archivo JSON, para
   conservar una copia o llevarla a otro dispositivo. Los archivos usan un
   formato compacto que guarda los bloques como una tabla.

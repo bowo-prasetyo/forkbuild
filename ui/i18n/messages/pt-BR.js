@@ -254,6 +254,12 @@ export default Object.freeze({
     'library.village.fenceSegment.description': 'Um trilho de cerca modular sobre dois postes, do tamanho certo para encaixar ponta com ponta com outro trecho.',
     'library.village.dock': 'Píer',
     'library.village.dock.description': 'Uma plataforma de tábuas sobre colunas, avançando sobre a água aberta.',
+    'library.showcase.castle': 'Castelo',
+    'library.showcase.castle.description': 'Um castelo murado com quatro torres com telhado, um portão em arco, ameias e uma torre de menagem no pátio.',
+    'library.showcase.harborIsland': 'Ilha do porto',
+    'library.showcase.harborIsland.description': 'Uma pequena ilha com praia de areia, um farol listrado, um chalé, um cais de madeira e um veleiro atracado.',
+    'library.showcase.villageSquare': 'Praça da vila',
+    'library.showcase.villageSquare.description': 'Uma praça pavimentada com um poço no centro, cercada por uma casa, uma capela, um chalé, um mercado e uma barraca.',
 
     // The command palette (ui/components/CommandPalette.js).
     'commandPalette.title': 'Paleta de comandos',
@@ -945,6 +951,7 @@ export default Object.freeze({
     'library.category.community': 'comunitária',
     'library.category.infrastructure': 'infraestrutura',
     'library.category.uncategorized': 'sem categoria',
+    'library.category.showcase': 'vitrine',
 
     // World View: avatarInfoPanel.
     'avatarInfoPanel.avatar': 'Avatar',
@@ -2477,10 +2484,6 @@ export default Object.freeze({
     'homeView.noAccountNeeded': 'Sem conta e sem download. O que você constrói fica neste dispositivo até você decidir compartilhar.',
     'homeView.showcaseLabel': 'Uma pequena vila feita com blocos do ForkBuild, girando devagar',
     'homeView.showcaseFallback': 'ForkBuild',
-    'homeView.featuredTitle': 'Comece com uma construção pronta',
-    'homeView.featuredLead': 'Escolha uma e faça dela a sua: ela abre no Editor como sua própria cópia, pronta para mudar.',
-    'homeView.remix': 'Remixar',
-    'homeView.openCopyOf': 'Abrir sua própria cópia de {name} no Editor',
     'homeView.whyTitle': 'Por que o ForkBuild',
     'homeView.buildTitle': 'Construa com blocos',
     'homeView.buildText': 'Coloque, empilhe e gire blocos com encaixe e desfazer, a partir de uma biblioteca de paredes, telhados, janelas e escadas. Funciona com mouse ou tela sensível ao toque.',
@@ -2493,6 +2496,20 @@ export default Object.freeze({
     'homeView.openSource': 'O ForkBuild é livre e de código aberto, sob a Mozilla Public License 2.0.',
     'homeView.userGuide': 'Guia do usuário',
     'homeView.sourceCode': 'Código-fonte',
+
+    // Ready-made builds (ui/components/featured/FeaturedBuilds.js).
+    'featuredBuilds.title': 'Comece com uma construção pronta',
+    'featuredBuilds.lead': 'Escolha uma e faça dela a sua: ela abre no Editor como sua própria cópia, pronta para mudar.',
+    'featuredBuilds.remix': 'Remixar',
+    'featuredBuilds.openCopyOf': 'Abrir sua própria cópia de {name} no Editor',
+
+    // The Editor's New (ui/components/NewDocumentDialog.js).
+    'newDocumentDialog.title': 'Começar algo novo',
+    'newDocumentDialog.empty': 'Terreno vazio',
+    'newDocumentDialog.emptyDescription': 'Chão livre e toda a Biblioteca de construção.',
+    'newDocumentDialog.readyMade': 'Ou abra uma construção pronta como sua própria cópia:',
+    'newDocumentDialog.unsaved': 'Isto fecha “{title}”, que tem alterações não salvas. Salve primeiro para mantê-las.',
+    'newDocumentDialog.cancel': 'Cancelar',
 
     // Publications: leaderboardHubView.
     'leaderboardHubView.leaderboard': 'Classificação',

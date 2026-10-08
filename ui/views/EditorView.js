@@ -31,6 +31,7 @@ import EditingSidebar from '../components/EditingSidebar.js';
 import StructureInstancePanel from '../components/StructureInstancePanel.js';
 import CommandPalette from '../components/CommandPalette.js';
 import KeyboardShortcutsOverlay from '../components/KeyboardShortcutsOverlay.js';
+import NewDocumentDialog from '../components/NewDocumentDialog.js';
 import ActionFeedback from '../components/ActionFeedback.js';
 import RecoveryBanner from '../components/RecoveryBanner.js';
 import TransformFeedback from '../components/TransformFeedback.js';
@@ -65,7 +66,7 @@ import { useSoundControls } from '../composables/useSoundControls.js';
 import SoundControl from '../components/SoundControl.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 import { libraryItemName } from '../i18n/libraryText.js';
-import { findStarterStructure } from '../../application/home/FeaturedBuilds.js';
+import { FEATURED_STRUCTURE_IDS, featuredStructures, findStarterStructure } from '../../application/home/FeaturedBuilds.js';
 
 // Editing shortcuts come from EditorActionRegistry, shared with the palette,
 // the sidebar and the controls docs. Escape priority: text input > shortcuts
@@ -78,7 +79,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, EditorTouchActionBar, SoundControl },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, EditorTouchActionBar, SoundControl },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -97,6 +98,7 @@ export default {
                 @export-document="exportDocument"
                 @export-all-documents="exportAllDocuments"
                 @import-document="importDocument"
+                @new-document="openNewDocumentDialog"
             />
             <RecoveryBanner
                 :status="recoveryStatus"
@@ -275,6 +277,15 @@ export default {
                 @close="closePalette"
             />
             <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
+            <NewDocumentDialog
+                v-if="newDocumentDialog"
+                :structures="newDocumentDialog.structures"
+                :preview-service="libraryPreviewService"
+                :unsaved-title="newDocumentDialog.unsavedTitle"
+                @choose-empty="startEmptyDocument"
+                @choose-structure="startFromStructure"
+                @cancel="newDocumentDialog = null"
+            />
             <KeyboardShortcutsOverlay
                 v-if="shortcutsOpen"
                 :registry="actionRegistry"
@@ -476,6 +487,27 @@ export default {
         // have moved the same selection.
         const selectionSummary = ref(null);
         const shortcutsOpen = ref(false);
+        // New's choices while its dialog is open: the ready-made builds, and the
+        // open document's title when closing it would lose unsaved changes.
+        const newDocumentDialog = ref(null);
+        function openNewDocumentDialog() {
+            const { document, state } = documentManager;
+            newDocumentDialog.value = {
+                structures: featuredStructures(structureRegistry, FEATURED_STRUCTURE_IDS),
+                unsavedTitle: document && state.dirty ? document.metadata.title : null
+            };
+        }
+        function startEmptyDocument() {
+            newDocumentDialog.value = null;
+            editorSession.newDocument();
+        }
+        function startFromStructure(structure) {
+            newDocumentDialog.value = null;
+            if (editorSession.forkStructure(structure)) {
+                editorSession.frameDocument();
+                feedback.show(t('editor.startedFromBuild', { name: libraryItemName(structure) }));
+            }
+        }
         let unsubTool = null;
         let unsubSelection = null;
         let unsubActiveStructure = null;
@@ -927,6 +959,7 @@ export default {
                 // document of the visitor's own, the fork the Build Library makes.
                 const structure = findStarterStructure(structureRegistry, route.query.start);
                 if (structure && editorSession.forkStructure(structure)) {
+                    editorSession.frameDocument();
                     feedback.show(t('editor.startedFromBuild', { name: libraryItemName(structure) }));
                 } else {
                     feedback.show(t('editor.starterNotFound'));
@@ -972,6 +1005,10 @@ export default {
                     if (event.key === 'Escape') {
                         event.target.blur();
                     }
+                    return;
+                }
+                // New's dialog owns the keyboard while it is open; it closes itself on Escape.
+                if (newDocumentDialog.value) {
                     return;
                 }
                 // 1.5. An open Keyboard Shortcuts overlay owns the keyboard next, so `?`/Escape
@@ -1186,6 +1223,7 @@ export default {
             selectedPlacementInfo,
             selectionSummary,
             shortcutsOpen,
+            newDocumentDialog, openNewDocumentDialog, startEmptyDocument, startFromStructure,
             rotateSelectedPlacement,
             recolorSelection,
             duplicateSelectedPlacement,

@@ -659,7 +659,7 @@ list, and not the same as the Repository or a search result: a World only
 appears here once you've actually entered it, and it stays here (on this
 device only) even if you never publish or share anything of your own.
 Haven't visited anywhere yet? **Browse the Repository** to find your first
-one.
+one, or start from one of the ready-made builds listed under it.
 
 ## Finding worlds
 

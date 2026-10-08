@@ -1,4 +1,4 @@
-import { inject } from 'vue';
+import { defineAsyncComponent, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
 import { LocalWorldExperienceStore } from '../../application/world/LocalWorldExperienceStore.js';
@@ -6,6 +6,10 @@ import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscov
 import WorldCard from '../components/WorldCard.js';
 import { t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
+
+// The ready-made builds, offered while nothing has been visited yet. Loaded
+// when shown, since their thumbnails bring in Three.js.
+const FeaturedBuilds = defineAsyncComponent(() => import('../components/featured/FeaturedBuilds.js'));
 
 // 0.3.10 — World Persistence & Return Experience. "Recent Worlds": a
 // local index of Worlds THIS replica has visited before, most-recent
@@ -41,7 +45,7 @@ const RECENT_WORLDS_LIMIT = 20;
 
 export default {
     name: 'RecentWorldsView',
-    components: { I18nText, WorldCard },
+    components: { I18nText, WorldCard, FeaturedBuilds },
     setup() {
         const router = useRouter();
         const localWorldExperienceStore = new LocalWorldExperienceStore({ storageProvider: new LocalStorageProvider() });
@@ -111,11 +115,18 @@ export default {
             <h1>{{ t('recentWorldsView.myWorlds') }}</h1>
             <p class="recent-worlds-subtitle">{{ t('recentWorldsView.worldsYouVeVisitedBefore') }}</p>
 
-            <div v-if="worlds.length === 0" class="empty-state">
-                <I18nText keypath="recentWorldsView.youHavenTVisitedAny">
-                    <template #repository><router-link to="/repository">{{ t('recentWorldsView.browseTheRepository') }}</router-link></template>
-                </I18nText>
-            </div>
+            <template v-if="worlds.length === 0">
+                <div class="empty-state">
+                    <I18nText keypath="recentWorldsView.youHavenTVisitedAny">
+                        <template #repository><router-link to="/repository">{{ t('recentWorldsView.browseTheRepository') }}</router-link></template>
+                    </I18nText>
+                </div>
+                <section class="featured-builds-shelf" aria-labelledby="recent-worlds-featured-title">
+                    <h2 id="recent-worlds-featured-title">{{ t('featuredBuilds.title') }}</h2>
+                    <p class="featured-builds-shelf-lead">{{ t('featuredBuilds.lead') }}</p>
+                    <FeaturedBuilds layout="row" />
+                </section>
+            </template>
 
             <ul v-else class="publication-list">
                 <WorldCard

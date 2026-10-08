@@ -37,7 +37,7 @@ search() are unchanged since 0.2.81.
 
 core/library/VillageLibrary.js (namespaced "village:structure", mirroring
 docs/BrickIDs.md's own "library:brick" convention) is the current built-in
-structure library. 0.2.81 shipped six structures; 0.4.4 (Village Library
+structure library it started with. 0.2.81 shipped six structures; 0.4.4 (Village Library
 Expansion) grew the same library to twenty, across five categories —
 content only, no new architecture, no new brick primitive:
 
@@ -56,6 +56,24 @@ Five of those twenty (village:market_stall, village:pavilion,
 village:village_gate, village:fence_segment, village:dock) place zero
 wall_1x3 bricks — deliberately: see docs/Roadmap.md, 0.4.4, "Structure
 != Building."
+
+core/library/ShowcaseLibrary.js (namespaced "showcase", category
+`showcase`, registered after the Village library) holds three larger,
+finished builds for people who'd rather start from something whole (see
+application/home/FeaturedBuilds.js, which offers them on Home, in the
+Repository, in My Worlds and in the Editor's New):
+
+    showcase:castle          curtain walls, four roofed towers, an arched
+                             gate, battlements and a keep (16 × 16)
+    showcase:harbor_island   sand and grass terraces, a lighthouse, a
+                             Village cottage, a dock and a sailboat
+    showcase:village_square  a 20 × 20 plaza with six Village structures
+
+They follow the same rules: ordinary core:* bricks only, local
+coordinates, resting on the ground. The square and the island reuse
+Village structures by copying their bricks into place (new Brick
+instances, moved; the Village's own are never shared), so changing a
+Village structure changes the showcase builds made from it.
 
 ## Forking a Structure
 

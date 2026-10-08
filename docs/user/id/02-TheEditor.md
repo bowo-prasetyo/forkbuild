@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 86f52e38bf5e7dd9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ae29bd6e293587d6 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -46,7 +46,8 @@ dengan grup.
     sisi; putar dua kali (**R**, **R**) untuk membaliknya ke arah lain.
     Penguat Diagonal dan salinannya yang diputar 180° membentuk silang.
   - **Struktur** — dua puluh struktur siap pakai dalam lima kategori
-    (hunian, pertanian, komersial, komunitas, infrastruktur), ditambah
+    (hunian, pertanian, komersial, komunitas, infrastruktur) dan tiga
+    bangunan lebih besar dalam kategori **unggulan**, ditambah
     **Struktur Saya** milik Anda sendiri. Klik sebuah kartu untuk
     menempatkannya — lihat
     [Struktur: menyusun, mem-fork, dan pustaka pribadi Anda](#struktur-menyusun-mem-fork-dan-pustaka-pribadi-anda)
@@ -243,7 +244,9 @@ pun yang sedang dipilih:
 
 Tab **Struktur** di Pustaka Bangunan (lihat [Tata letak](#tata-letak) di
 atas) memberi Anda dua puluh struktur siap pakai — rumah, lumbung, sumur,
-pasar, kincir, jembatan, dan lainnya, dalam lima kategori — ditambah
+pasar, kincir, jembatan, dan lainnya, dalam lima kategori — dan tiga
+bangunan lebih besar dalam kategori **unggulan** (kastil, pulau pelabuhan, dan
+alun-alun desa), ditambah
 **Struktur Saya**, koleksi pribadi Anda berisi apa pun yang Anda simpan
 dari sebuah bangunan. Ada tiga hal berbeda yang dapat Anda lakukan dengan
 salah satunya, dan masing-masing penting untuk alasan yang berbeda:
@@ -500,7 +503,11 @@ atau tekanan tombol pertama Anda, sebagaimana diwajibkan browser.
 - **Simpan** (`Ctrl+S`) — menyimpan pekerjaan Anda di perangkat ini.
 - **Terbitkan** — membagikannya kepada semua orang (lihat
   [Penerbitan & Fork](04-PublishingAndForking.md)).
-- **Baru** — memulai karya baru yang kosong.
+- **Baru** — memulai sesuatu yang baru: **Lahan kosong**, atau salah satu
+  bangunan siap pakai (kastil, pulau pelabuhan, alun-alun desa, rumah,
+  kincir, dan jembatan) sebagai salinan Anda sendiri, terlihat utuh. Jika
+  yang sedang terbuka memiliki perubahan belum disimpan, Baru memberi tahu
+  dulu; simpan untuk mempertahankannya.
 - **Ekspor** — mengunduh karya saat ini sebagai file JSON, untuk menyimpan
   salinan atau memindahkannya ke perangkat lain. File memakai format ringkas
   yang menyimpan balok sebagai tabel.
