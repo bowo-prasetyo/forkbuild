@@ -58,6 +58,9 @@ Each of these is something a first visitor from a launch post will hit.
       a private window; check that the rendezvous worker's monthly TURN
       allowance (`TURN_CREDENTIALS_PER_MONTH` in
       `server/rendezvous-worker/wrangler.toml`) can take a spike of peers.
+- [ ] Your Hacker News account has a history of taking part, so it can
+      post a Show HN (see [Show HN](ShowHN.md#before-you-post-the-account)).
+      Until it can, the launch goes ahead without it.
 - [ ] Be free for the whole of launch day to answer every comment, and have
       a known-issues list ready (below).
 
@@ -69,10 +72,10 @@ on their own.
 | Day | Where | Why then |
 | --- | --- | --- |
 | Monday | The week's challenge starts | The posts have something current to point at |
-| Tuesday, 8–10 am US Eastern | Show HN | Technical audience most likely to try a no-account, peer-to-peer app and say what breaks |
-| Wednesday–Thursday | r/threejs, then r/WebGL, then r/SideProject, a day apart | Fix what Show HN found first |
-| The following Tuesday, 12:01 am US Pacific | Product Hunt | Needs the gallery and a few early comments; runs the whole day |
+| Tuesday–Thursday | r/threejs, then r/WebGL, then r/SideProject, a day apart | Technical audiences likely to try a no-account, peer-to-peer app and say what breaks; fix what each finds before the next |
 | Same week | Nostr, Steem, Blurt | Communities ForkBuild already publishes to |
+| The following Tuesday, 12:01 am US Pacific | Product Hunt | Needs the gallery and a few early comments; runs the whole day |
+| A Tuesday, 8–10 am US Eastern, once your HN account can post it | Show HN | Hacker News refuses Show HN from accounts without a history there ([Show HN](ShowHN.md#before-you-post-the-account)); by then the first fixes are in |
 | After the first weeks | itch.io, teachers | Slower, longer-lived channels |
 
 ## Measuring it
@@ -103,4 +106,4 @@ defensive:
   Blurt need their wallets. Sharing a link needs none of them.
 - Talking to someone needs you both online and friends with each other.
 - The challenge page finds others' entries only when they were distributed
-  to Nostr or Arweave.
+  to Nostr, Arweave, Steem or Blurt.
