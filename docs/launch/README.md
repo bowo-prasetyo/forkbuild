@@ -8,7 +8,7 @@ reads like an advert, and most of them ask that you say you made it.
 - [Show HN](ShowHN.md)
 - [Product Hunt](ProductHunt.md)
 - [Reddit](Reddit.md)
-- [itch.io](ItchIo.md)
+- [itch.io](ItchIo.md): published at <https://forkbuild.itch.io/forkbuild>
 - [Nostr, Steem and Blurt](Communities.md)
 - [Educators](Educators.md)
 - [Press kit](PressKit.md): screenshots, one-liners, facts
@@ -76,7 +76,8 @@ on their own.
 | Same week | Nostr, Steem, Blurt | Communities ForkBuild already publishes to |
 | The following Tuesday, 12:01 am US Pacific | Product Hunt | Needs the gallery and a few early comments; runs the whole day |
 | A Tuesday, 8–10 am US Eastern, once your HN account can post it | Show HN | Hacker News refuses Show HN from accounts without a history there ([Show HN](ShowHN.md#before-you-post-the-account)); by then the first fixes are in |
-| After the first weeks | itch.io, teachers | Slower, longer-lived channels |
+| Each Monday | A devlog on the itch.io page naming the week's theme | The page is up ([itch.io](ItchIo.md)); a devlog tells its followers there's something new |
+| After the first weeks | Teachers | A slower, longer-lived channel |
 
 ## Measuring it
 
