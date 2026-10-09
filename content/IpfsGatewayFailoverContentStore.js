@@ -2,6 +2,8 @@ import { ContentStore } from './ContentStore.js';
 import { IpfsGatewayContentStore } from './IpfsGatewayContentStore.js';
 import { ContentUnavailableError } from './IpfsContentStore.js';
 
+const DEFAULT_START_NEXT_AFTER_MS = 3000;
+
 // 0.9.666 — IPFS Gateway Read Failover.
 //
 // content/IpfsGatewayContentStore.js's own header names this codebase's
@@ -23,10 +25,11 @@ import { ContentUnavailableError } from './IpfsContentStore.js';
 //        gateway, constructed once, up front
 //        │
 //        ├─ get(reference) / has(reference) — try gateway A's store; a
-//        │    ContentUnavailableError tries gateway B next, then C; the
-//        │    first SUCCESS returns immediately, the rest are never
-//        │    contacted; every gateway failing throws the LAST gateway's
-//        │    own ContentUnavailableError, unchanged
+//        │    ContentUnavailableError, or A staying silent for
+//        │    `startNextAfterMs`, starts gateway B, then C; the first
+//        │    SUCCESS returns immediately, gateways not yet started are
+//        │    never contacted; every gateway failing throws the last
+//        │    ContentUnavailableError, unchanged
 //        │
 //        └─ put(bytes) — delegates to the first configured gateway's own
 //             store, which is content/IpfsGatewayContentStore.js's own
@@ -49,15 +52,24 @@ import { ContentUnavailableError } from './IpfsContentStore.js';
 // advances to the next configured gateway. Anything else propagates
 // immediately, exactly as it would from a single IpfsGatewayContentStore.
 //
-// NO CACHING, NO HEALTH CHECK, NO REORDERING. Gateways are always tried in
-// the exact order they were configured, every call, fresh — the
+// NO CACHING, NO HEALTH CHECK, NO REORDERING. Gateways are always started
+// in the exact order they were configured, every call, fresh — the
 // configured order IS the entire policy; see core/
 // IpfsGatewayConfiguration.js's own header, "ordering IS the priority."
 //
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Fan-out.** A successful read from one gateway terminates the
-//   operation; the remaining configured gateways are never queried merely
-//   for redundancy.
+// A SLOW GATEWAY DOESN'T HOLD UP THE NEXT ONE. A gateway that hasn't
+// answered within `startNextAfterMs` stays in the running, and the next
+// configured gateway starts alongside it; whichever answers first wins.
+// A public gateway can take its whole timeout to give up on a CID it
+// can't find, while another serves the same CID in a few seconds — trying
+// them strictly one after another made a reader wait out the first's
+// timeout before the second was even asked. A gateway that answers
+// quickly still ends the read before any other is contacted.
+//
+// DELIBERATELY EXCLUDED.
+// - **Redundant confirmation.** A successful read from one gateway ends
+//   the operation; the configured gateways not yet started are never
+//   queried merely for redundancy.
 // - **Any change to content/IpfsGatewayContentStore.js itself.** This
 //   class only ever constructs and calls it, exactly as any other caller
 //   would.
@@ -70,7 +82,9 @@ export class IpfsGatewayFailoverContentStore extends ContentStore {
     // fetchImpl / timeoutMs: forwarded verbatim to every underlying
     //   IpfsGatewayContentStore — see that file's own constructor for
     //   their meaning.
-    constructor({ gatewayUrls, fetchImpl = null, timeoutMs } = {}) {
+    // startNextAfterMs: how long a gateway may stay silent before the next
+    //   one starts alongside it.
+    constructor({ gatewayUrls, fetchImpl = null, timeoutMs, startNextAfterMs = DEFAULT_START_NEXT_AFTER_MS } = {}) {
         super();
         if (!Array.isArray(gatewayUrls) || gatewayUrls.length === 0) {
             throw new Error('IpfsGatewayFailoverContentStore: a non-empty gatewayUrls array is required');
@@ -78,6 +92,7 @@ export class IpfsGatewayFailoverContentStore extends ContentStore {
         this._stores = gatewayUrls.map((gatewayUrl) => new IpfsGatewayContentStore({
             gatewayUrl, fetchImpl, timeoutMs
         }));
+        this._startNextAfterMs = startNextAfterMs;
     }
 
     // The full ordered list of gateway urls this instance was built from —
@@ -93,23 +108,40 @@ export class IpfsGatewayFailoverContentStore extends ContentStore {
         return this._stores[0].put(bytes);
     }
 
-    // get(reference) -> Promise<string|null>. Tries each configured
-    // gateway's own store in order; the first to resolve (including with
-    // `null`, for a non-ipfs:// reference) returns immediately. A
-    // `ContentUnavailableError` tries the next gateway; once every gateway
-    // has failed, the LAST one's own ContentUnavailableError propagates,
-    // unchanged.
-    async get(reference) {
-        let lastError = null;
-        for (const store of this._stores) {
-            try {
-                return await store.get(reference);
-            } catch (error) {
-                if (!(error instanceof ContentUnavailableError)) throw error;
-                lastError = error;
-            }
-        }
-        throw lastError;
+    // get(reference) -> Promise<string|null>. Starts each configured
+    // gateway's own store in order, the next one as soon as the last one
+    // started fails or has been silent for `startNextAfterMs`; the first to
+    // resolve (including with `null`, for a non-ipfs:// reference) returns.
+    // Once every gateway has failed with a `ContentUnavailableError`, the
+    // last of those errors propagates, unchanged; any other error
+    // propagates at once.
+    get(reference) {
+        return new Promise((resolve, reject) => {
+            const stores = this._stores;
+            let started = 0;
+            let failed = 0;
+            let settled = false;
+            let timer = null;
+            const settle = (outcome, value) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                outcome(value);
+            };
+            const startNext = () => {
+                clearTimeout(timer);
+                if (settled || started >= stores.length) return;
+                const store = stores[started++];
+                if (started < stores.length) timer = setTimeout(startNext, this._startNextAfterMs);
+                store.get(reference).then((value) => settle(resolve, value), (error) => {
+                    if (!(error instanceof ContentUnavailableError)) return settle(reject, error);
+                    failed += 1;
+                    if (failed === stores.length) return settle(reject, error);
+                    startNext();
+                });
+            };
+            startNext();
+        });
     }
 
     // has(reference) -> Promise<boolean>. Best-effort, mirrors content/
