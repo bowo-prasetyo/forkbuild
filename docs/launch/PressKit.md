@@ -18,6 +18,7 @@
 - **Site:** <https://bowo-prasetyo.github.io/forkbuild/>
 - **Source:** <https://github.com/bowo-prasetyo/forkbuild>, Mozilla Public
   License 2.0
+- **itch.io:** <https://forkbuild.itch.io/forkbuild>
 - **Runs in:** any current browser, desktop or phone; installable as an app,
   and works offline
 - **Languages:** English, German, Spanish, French, Bahasa Indonesia,
