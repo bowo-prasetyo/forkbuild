@@ -6,6 +6,27 @@ person who made it, and stay to answer comments for the first few hours.
 
 **Link:** <https://bowo-prasetyo.github.io/forkbuild/?ref=hn>
 
+## Before you post: the account
+
+Hacker News can refuse a Show HN from an account without a history on the
+site. In October 2026 it was turning them away with "We're temporarily
+restricting Show HNs because of a massive influx, mostly by users who
+aren't yet familiar with the site or its culture", and asking newcomers to
+take part first. So Show HN doesn't come first in the launch order (see
+[Order](README.md#order)):
+
+- Use an account you already comment from. If you don't have one, start
+  weeks ahead: read the [guidelines](https://news.ycombinator.com/newsguidelines.html)
+  and [welcome page](https://news.ycombinator.com/newswelcome.html), and
+  comment where you have something to add, such as threads on browser 3D,
+  Three.js, WebRTC, Nostr or local-first apps.
+- Then submit, as below. If it's refused again, carry on with the other
+  channels and try later; nothing else in the launch waits on it.
+- Don't get round the refusal: no posting the same link as an ordinary
+  story, and no asking anyone else to post or upvote it. HN treats both as
+  abuse, and a penalty on the site's domain would also sink the Show HN
+  when it does go up.
+
 ## Title (80 characters at most)
 
 > Show HN: ForkBuild – Build 3D in the browser, fork anything, no accounts
