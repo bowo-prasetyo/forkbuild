@@ -36,6 +36,8 @@ import { readSource as source } from './support/SourceText.js';
 //            operation; put() never fails over either
 // Section K: composition wiring — ui/main.js's own composeIpfsGatewayContentStore()
 //            picks the failover class only for 2+ entries
+// Section L: a slow gateway — the next starts alongside it after
+//            startNextAfterMs, and whichever answers first wins
 
 async function expectRejects(promise, message, ErrorType = null) {
     let rejected = false;
@@ -272,8 +274,8 @@ async function run() {
         assert(helperMatch, 'K1. ui/main.js defines a composeIpfsGatewayContentStore() helper');
         const helperSource = helperMatch[0];
         assert(/gatewayUrls\.length > 1/.test(helperSource), 'K2. the helper branches on whether more than one gateway is configured');
-        assert(/new IpfsGatewayFailoverContentStore\(\{\s*gatewayUrls\s*\}\)/.test(helperSource), 'K3. 2+ configured gateways build IpfsGatewayFailoverContentStore, with the full list forwarded');
-        assert(/new IpfsGatewayContentStore\(\{\s*gatewayUrl:\s*gatewayUrls\[0\]\s*\}\)/.test(helperSource), 'K4. a single configured gateway builds the plain IpfsGatewayContentStore, with only the first (only) entry forwarded');
+        assert(/new IpfsGatewayFailoverContentStore\(\{\s*gatewayUrls,\s*timeoutMs: SNAPSHOT_IPFS_TIMEOUT_MS\s*\}\)/.test(helperSource), 'K3. 2+ configured gateways build IpfsGatewayFailoverContentStore, with the full list forwarded');
+        assert(/new IpfsGatewayContentStore\(\{\s*gatewayUrl:\s*gatewayUrls\[0\],\s*timeoutMs: SNAPSHOT_IPFS_TIMEOUT_MS\s*\}\)/.test(helperSource), 'K4. a single configured gateway builds the plain IpfsGatewayContentStore, with only the first (only) entry forwarded');
 
         // Sanity — the classes this helper wires actually behave the way
         // K2-K4 claim, exercised directly rather than merely asserted
@@ -292,6 +294,39 @@ async function run() {
             'K6. IpfsGatewayConfiguration.gatewayUrls flows straight into the failover content store with its own order and length preserved');
 
         console.log('✓ Section K: composeIpfsGatewayContentStore() picks the failover collaborator only when 2+ gateways are actually configured, and IpfsGatewayConfiguration.gatewayUrls flows straight through unmodified');
+    }
+
+    // ===============================================================
+    // Section L — a slow gateway doesn't hold up the next one.
+    // ===============================================================
+    {
+        const delays = { [A]: 200, [B]: 10, [C]: 10 };
+        const startedAt = {};
+        const t0 = Date.now();
+        const slowFetch = (url) => {
+            const origin = new URL(url).origin;
+            startedAt[origin] = Date.now() - t0;
+            return new Promise((resolve) => setTimeout(() => resolve(new Response(`from-${origin}`, { status: 200 })), delays[origin]));
+        };
+        const store = new IpfsGatewayFailoverContentStore({ gatewayUrls: [A, B, C], fetchImpl: slowFetch, startNextAfterMs: 30 });
+        const result = await store.get(ipfsReference);
+        assert(result === `from-${B}`, 'L1. gateway B, started while A was still silent, answers first and wins');
+        assert(startedAt[B] >= 25 && startedAt[B] < 150, `L2. gateway B started once A had been silent for startNextAfterMs (at ${startedAt[B]} ms)`);
+        assert(!(C in startedAt), 'L3. gateway C was never contacted — B answered before C\'s turn came');
+
+        // A slow gateway that fails still leaves the read to the others.
+        const failingSlowFetch = (url) => {
+            const origin = new URL(url).origin;
+            return new Promise((resolve) => setTimeout(() => resolve(new Response(origin === C ? 'from-c' : 'nope', { status: origin === C ? 200 : 404 })), origin === A ? 60 : 5));
+        };
+        const store2 = new IpfsGatewayFailoverContentStore({ gatewayUrls: [A, B, C], fetchImpl: failingSlowFetch, startNextAfterMs: 30 });
+        assert(await store2.get(ipfsReference) === 'from-c', 'L4. with A slow and B failing, C is started at once on B\'s failure and wins');
+
+        // The default leaves a gateway a few seconds before starting the next.
+        const { fetchImpl, requestsByOrigin } = makeMultiGatewayFetch({ [A]: { body: 'from-a' }, [B]: { body: 'from-b' } });
+        const defaultStore = new IpfsGatewayFailoverContentStore({ gatewayUrls: [A, B], fetchImpl });
+        assert(await defaultStore.get(ipfsReference) === 'from-a' && totalRequests(requestsByOrigin, B) === 0, 'L5. a gateway answering promptly still ends the read alone');
+        console.log('✓ Section L: a slow gateway no longer holds up the next configured gateway — whichever answers first wins');
     }
 
     console.log('\n✅ All IPFS Gateway Read Failover (0.9.666) tests passed.');

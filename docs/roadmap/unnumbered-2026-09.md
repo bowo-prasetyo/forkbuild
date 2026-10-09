@@ -4956,3 +4956,15 @@ does. What was missing was the tags themselves; a Steem announcement carried onl
   lists Steem nodes for the challenge page; Protocol ("Announcing"), AnnouncementIndex, Architecture.
 - Tests: `SteemChallengeEntries`.
 - Not done: builds announced on Steem before this list no tags and aren't found; distributing one again would.
+
+## A slow IPFS gateway no longer fails a build load (unnumbered, 2026-10-09)
+
+**A build published to IPFS now opens even when the first gateway in the list is slow to find it.** Gateways were
+tried strictly one after another, five seconds each: one that hangs on a CID it hasn't cached used up its whole wait
+before the next was asked, and the gateway that had the build (6 s, in a real case) never got the time it needed.
+
+- `IpfsGatewayFailoverContentStore` starts the next gateway alongside one that has been silent for `startNextAfterMs`
+  (3 s by default), as well as on its failure; whichever answers first wins. A gateway answering promptly still ends
+  the read before any other is contacted.
+- Builds (Snapshot content) give each gateway 30 s instead of 5 s.
+- Tests: `IpfsGatewayReadFailover` section L.

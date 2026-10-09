@@ -39,6 +39,8 @@ import { IpfsNodeConfigurationStore } from '../../storage/IpfsNodeConfigurationS
 import { IpfsRemotePinningSettingsStore } from '../../storage/IpfsRemotePinningSettingsStore.js';
 import { SavedRemotePinningContentStore } from '../../application/ipfs/SavedRemotePinningContentStore.js';
 
+const SNAPSHOT_IPFS_TIMEOUT_MS = 30000;
+
 // Composition root: IPFS gateway and node settings, the Snapshot placement
 // views and store registries, the role provider preferences, and Snapshot
 // content availability, transfer and materialization.
@@ -60,10 +62,12 @@ export function composeContentAndSnapshots({
     // read whenever it is used, so a change on Content Provider applies at once.
     const ipfsRemotePinningSettingsStore = new IpfsRemotePinningSettingsStore(new LocalStorageProvider());
     const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: DEFAULT_IPFS_GATEWAY_URLS }).gatewayUrls;
+    // A build no gateway has cached yet can take several seconds to come
+    // back, so each gateway gets longer than its 5 s default.
     function composeIpfsGatewayContentStore(gatewayUrls) {
         return gatewayUrls.length > 1
-            ? new IpfsGatewayFailoverContentStore({ gatewayUrls })
-            : new IpfsGatewayContentStore({ gatewayUrl: gatewayUrls[0] });
+            ? new IpfsGatewayFailoverContentStore({ gatewayUrls, timeoutMs: SNAPSHOT_IPFS_TIMEOUT_MS })
+            : new IpfsGatewayContentStore({ gatewayUrl: gatewayUrls[0], timeoutMs: SNAPSHOT_IPFS_TIMEOUT_MS });
     }
     const {
         coordinator: publicationSnapshotPlacementResolutionCoordinator,
