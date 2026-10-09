@@ -99,8 +99,11 @@ joining a lobby need you to unlock it again.
 
 ### How do I move my work to another computer or browser?
 
-Nothing syncs by itself. To move everything, back it up on **Your Data**
-and restore the file on the other device (see [Your Data](13-YourData.md)).
+Nothing syncs by itself. To copy everything, click **Show a code** on
+**Your Data**, under **Copy to another device**, and scan the code with the
+other device (or open its link there) while both are online. Or back it up
+there and restore the file on the other device (see
+[Your Data](13-YourData.md)).
 To move one kind of thing:
 
 - **Documents**: **Export** in the Editor toolbar, or **Export All

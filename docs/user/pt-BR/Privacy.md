@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: e0ae7efdeb2bafd1 -->
+<!-- translation-of: docs/Privacy.md source-hash: 77c9263e9e7ad941 -->
 # Privacidade
 
 <!-- languages -->
@@ -214,6 +214,7 @@ pede a ele.
 | Você abre o site oficial pelo link de um post de lançamento (`?ref=…`, veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma requisição de imagem com o caminho fixo `/r/<canal>`, sem referenciador e sem cookie |
 | Você fica visível, ou procura alguém, em **Pares** | o servidor de encontro (`forkbuild-rendezvous.prazjp.workers.dev`) | a chave pública da sua identidade e uma oferta de conexão, guardadas por no máximo 15 minutos; a identidade que você procura; quando você se conecta a alguém que encontrou, sua resposta de conexão (que lista seus endereços de rede), que só essa pessoa pode buscar |
 | Você entra numa sala pública, ou olha uma | o mesmo servidor de encontro | seu cartão de sala assinado (chave pública, nome de exibição, qual sala), guardado por no máximo 15 minutos e renovado enquanto você fica; qual sala você olha |
+| Você copia para outro dispositivo (**Seus dados** → **Copiar para outro dispositivo**) ou abre o link dele no outro dispositivo | o servidor de encontro (`forkbuild-rendezvous.prazjp.workers.dev`) | uma chave pública criada só para esta cópia (não a da sua identidade) e uma oferta de conexão, guardadas por no máximo 10 minutos; do outro dispositivo, essa chave e a resposta de conexão. O que é copiado vai diretamente entre os dispositivos, criptografado com uma chave que só o código tem |
 | Uma conexão entre pares começa | servidores STUN (`stun.l.google.com`) | nada além de um pedido do seu endereço IP público |
 | Você começa uma conexão entre pares, se o servidor de encontro oferece um relay | o `/turn-credentials` do servidor de encontro, e depois o relay TURN dele (Cloudflare) | um pedido de credenciais de relay de curta duração, no máximo cerca de uma vez por hora; o tráfego retransmitido é criptografado de ponta a ponta pelo WebRTC |
 | O app está aberto e a aba visível (sincronização de anúncios em segundo plano) | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | consultas pelas etiquetas de descoberta do ForkBuild: as etiquetas compartilhadas de Snapshot e de Comentários, e as regiões de nomes de lugares e células do mapa que você visitou |

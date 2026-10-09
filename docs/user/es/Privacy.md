@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: e0ae7efdeb2bafd1 -->
+<!-- translation-of: docs/Privacy.md source-hash: 77c9263e9e7ad941 -->
 # Privacidad
 
 <!-- languages -->
@@ -222,6 +222,7 @@ dirección IP y lo que usted le pide.
 | Abre el sitio oficial desde el enlace de una publicación de lanzamiento (`?ref=…`, vea «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/r/<canal>`, sin referente y sin cookie |
 | Se vuelve descubrible, o busca a alguien, en **Pares** | el servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | la clave pública de su identidad y una oferta de conexión, que se guardan como máximo 15 minutos; la identidad que busca; cuando se conecta con alguien que encontró, su respuesta de conexión (que muestra sus direcciones de red), que solo esa persona puede recoger |
 | Se une a una sala pública, o mira una | el mismo servidor de encuentro | su tarjeta de sala firmada (clave pública, nombre visible, qué sala), que se guarda como máximo 15 minutos y se renueva mientras se queda; qué sala mira |
+| Copia a otro dispositivo (**Sus datos** → **Copiar a otro dispositivo**) o abre su enlace en el otro dispositivo | el servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | una clave pública creada solo para esta copia (no la de su identidad) y una oferta de conexión, guardadas como máximo 10 minutos; desde el otro dispositivo, esa clave y su respuesta de conexión. Lo copiado va directamente entre los dispositivos, cifrado con una clave que solo tiene el código |
 | Se inicia una conexión entre pares | servidores STUN (`stun.l.google.com`) | nada más que una solicitud de su dirección IP pública |
 | Inicia una conexión entre pares, si el servidor de encuentro ofrece un relay | `/turn-credentials` del servidor de encuentro, y luego su relay TURN (Cloudflare) | una solicitud de credenciales de relay de corta duración, como máximo una vez por hora aproximadamente; el tráfico retransmitido está cifrado de extremo a extremo por WebRTC |
 | La app está abierta y su pestaña visible (sincronización de anuncios en segundo plano) | relays de Nostr (`relay.damus.io`), un gateway de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`), nodos de Blurt (`rpc.blurt.blog`) | consultas por las etiquetas de descubrimiento de ForkBuild: las etiquetas compartidas de Snapshots y de comentarios, y las regiones de nombres de lugares y las celdas del mapa que visitó |

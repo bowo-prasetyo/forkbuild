@@ -4968,3 +4968,31 @@ before the next was asked, and the gateway that had the build (6 s, in a real ca
   the read before any other is contacted.
 - Builds (Snapshot content) give each gateway 30 s instead of 5 s.
 - Tests: `IpfsGatewayReadFailover` section L.
+
+## Copy to another device by QR code (unnumbered, 2026-10-09)
+
+**Builds no longer live in one browser unless you move a file.** Your Data → Copy to another device shows a one-off
+QR code and link. Scanning it with a phone, or opening the link in another browser, copies everything ForkBuild keeps
+on this device there: builds, structures, identities and settings. The other device lists what arrived and adds it
+only when asked, keeping everything it already has.
+
+- `core/QrCode.js`: a QR Code encoder (byte mode, versions 1–40, mask by penalty), checked module for module against
+  an independent encoder for every version and level; `ui/components/QrCodeImage.js` draws it as SVG.
+- `core/DevicePairingCode.js`: the code is one base64url segment after `#/pair/` holding a one-off Ed25519 public key
+  and a 32-byte secret.
+- `identity/EphemeralIdentityProvider.js`: an in-memory signing identity, so pairing never uses (or needs unlocked)
+  the person's own identity and the rendezvous servers never learn it.
+- `application/devicePairing/DevicePairing.js`: the showing device publishes a WebRTC offer under the one-off key
+  through the app's rendezvous servers; the other device finds it by the code, answers through the mailbox, and both
+  one-off keys authenticate the connection. The showing device sends its backup (`DeviceBackupUseCase`), encrypted
+  with the secret, in parts over `forkbuild:device-pairing`; the other device opens it with the code and merges it
+  (`RestoreMode.MERGE`). A code serves one device for 10 minutes.
+- Pages `/settings/data/pair` and `/pair/:code`; an entry on Your Data; messages in every language; guide 13, FAQ,
+  Privacy (the rendezvous server row) and README.
+- Tests: `QrCode` (golden symbols from the independent encoder), `DevicePairing` (two devices over real WebRTC and an
+  in-memory rendezvous network: copy and merge, one device per code, a wrong secret, failures),
+  `DevicePairingViewBrowser`.
+- Not done: the device grants (`authorizeDevice`) stay unused: both devices hold the same identities instead.
+  No in-app camera scanner; the phone's own camera opens the link. A device holding more than about 48 MB (the peer
+  layer's 64 MB transfer limit, in base64) can't be copied this way and fails as a dropped connection; a backup
+  file still works.

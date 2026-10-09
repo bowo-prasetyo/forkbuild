@@ -30,6 +30,8 @@ const WorldView = page('WorldView', () => import('../views/WorldView.js'));
 const LiveWorldView = page('LiveWorldView', () => import('../views/LiveWorldView.js'));
 const AvatarSettingsView = page('AvatarSettingsView', () => import('../views/AvatarSettingsView.js'));
 const IdentityManagementView = page('IdentityManagementView', () => import('../views/IdentityManagementView.js'));
+const DevicePairingView = page('DevicePairingView', () => import('../views/DevicePairingView.js'));
+const DevicePairingReceiveView = page('DevicePairingReceiveView', () => import('../views/DevicePairingReceiveView.js'));
 const PeerConnectionsView = page('PeerConnectionsView', () => import('../views/PeerConnectionsView.js'));
 const FollowingView = page('FollowingView', () => import('../views/FollowingView.js'));
 const ChatView = page('ChatView', () => import('../views/ChatView.js'));
@@ -126,6 +128,10 @@ const routes = [
     // ui/views/NetworkSettingsView.js's own header.
     { path: '/settings', name: 'network-settings', component: NetworkSettingsView },
     { path: '/settings/data', name: 'your-data', component: YourDataView },
+    // Copy everything to another device by a one-off code; the other device
+    // opens /pair/<code> (core/DevicePairingCode.js).
+    { path: '/settings/data/pair', name: 'device-pairing', component: DevicePairingView },
+    { path: '/pair/:code', name: 'device-pairing-receive', component: DevicePairingReceiveView },
     { path: '/settings/language', name: 'language-settings', component: LanguageSettingsView },
     // 0.9.302 — Content Provider Preference Settings Entry Point. The one
     // ordinary product path to create/change the persisted CONTENT role

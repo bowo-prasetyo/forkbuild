@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: e15721b99cda6db7 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 8311a31a81066243 -->
 # Perguntas frequentes
 
 <!-- languages -->
@@ -112,9 +112,11 @@ desbloqueie de novo.
 
 ### Como levo meu trabalho para outro computador ou navegador?
 
-Nada se sincroniza sozinho. Para levar tudo, faça um backup em **Seus
-dados** e restaure o arquivo no outro dispositivo (veja
-[Seus dados](13-YourData.md)). Para levar um tipo de coisa:
+Nada se sincroniza sozinho. Para copiar tudo, clique em **Mostrar um
+código** em **Seus dados**, em **Copiar para outro dispositivo**, e
+escaneie o código com o outro dispositivo (ou abra o link dele lá) enquanto
+os dois estão on-line. Ou faça lá um backup e restaure o arquivo no outro
+dispositivo (veja [Seus dados](13-YourData.md)). Para levar um tipo de coisa:
 
 - **Documentos**: **Exportar** na barra de ferramentas do Editor, ou
   **Exportar todos os documentos** no fim de **Recentes**, depois

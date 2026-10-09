@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: e0ae7efdeb2bafd1 -->
+<!-- translation-of: docs/Privacy.md source-hash: 77c9263e9e7ad941 -->
 # 개인정보 보호
 
 <!-- languages -->
@@ -178,6 +178,7 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 | 출시 게시물의 링크(`?ref=…`)로 공식 사이트를 열 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/r/<채널>`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | **피어**에서 나를 검색 가능하게 하거나 누군가를 찾을 때 | 랑데부 서버(`forkbuild-rendezvous.prazjp.workers.dev`) | 내 신원의 공개 키와 연결 제안(최대 15분 보관), 내가 찾는 신원, 찾은 사람과 연결할 때 내 연결 응답(내 네트워크 주소가 나열됨, 그 사람만 가져갈 수 있음) |
 | 공개 로비에 참가하거나 들여다볼 때 | 같은 랑데부 서버 | 내 서명된 로비 카드(공개 키, 표시 이름, 어느 로비인지. 최대 15분 보관되며 머무는 동안 갱신), 내가 들여다보는 로비 |
+| 다른 기기로 복사하거나(**내 데이터** → **다른 기기로 복사**) 다른 기기에서 그 링크를 열 때 | 랑데부 서버(`forkbuild-rendezvous.prazjp.workers.dev`) | 이번 복사만을 위해 만든 공개 키(내 신원의 키가 아님)와 연결 제안, 최대 10분간 보관; 다른 기기에서는 그 키와 연결 응답. 복사되는 내용은 기기 사이에서 직접 전송되며, 코드에만 있는 키로 암호화됩니다 |
 | 피어 연결이 시작될 때 | STUN 서버(`stun.l.google.com`) | 내 공개 IP 주소 요청 외에는 없음 |
 | 피어 연결을 시작할 때, 랑데부 서버가 릴레이를 제공하면 | 랑데부 서버의 `/turn-credentials`, 그다음 그 TURN 릴레이(Cloudflare) | 단기 릴레이 자격 증명 요청(많아야 약 1시간에 한 번). 중계되는 트래픽은 WebRTC로 종단 간 암호화됨 |
 | 앱이 열려 있고 탭이 보일 때(백그라운드 공지 동기화) | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`), Blurt 노드(`rpc.blurt.blog`) | ForkBuild 발견 태그에 대한 조회: 공유 스냅샷과 댓글 태그, 내가 방문한 장소 이름 지역과 지도 칸 |

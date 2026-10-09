@@ -131,7 +131,10 @@ models").
 **Your data**
 - Everything lives in this browser. **Your Data** backs all of it up to one
   passphrase-encrypted file and restores it here or on another device,
-  adding what's missing or replacing everything. Documents, structures and
+  adding what's missing or replacing everything. **Copy to another device**
+  shows a one-off QR code instead: scanning it with a phone, or opening its
+  link in another browser, copies everything there directly, encrypted with
+  a key only the code holds. Documents, structures and
   identities also export on their own pages, all at once or one at a time,
   and each of your publications in the Repository says where this device
   recorded distributing it.

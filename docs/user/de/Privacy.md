@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: e0ae7efdeb2bafd1 -->
+<!-- translation-of: docs/Privacy.md source-hash: 77c9263e9e7ad941 -->
 # Datenschutz
 
 <!-- languages -->
@@ -227,6 +227,7 @@ was Sie bei ihm anfragen.
 | Sie öffnen die offizielle Website über den Link eines Launch-Posts (`?ref=…`, siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/r/<Kanal>`, ohne Referrer und ohne Cookie |
 | Sie machen sich unter **Peers** auffindbar oder suchen jemanden | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | den öffentlichen Schlüssel Ihrer Identität und ein Verbindungsangebot, höchstens 15 Minuten aufbewahrt; die Identität, die Sie suchen; wenn Sie sich mit jemandem verbinden, den Sie gefunden haben, Ihre Verbindungsantwort (sie listet Ihre Netzwerkadressen auf), die nur diese Person abholen kann |
 | Sie treten einer öffentlichen Lobby bei oder sehen in eine hinein | derselbe Rendezvous-Server | Ihre signierte Lobby-Karte (öffentlicher Schlüssel, Anzeigename, welche Lobby), höchstens 15 Minuten aufbewahrt und erneuert, solange Sie bleiben; in welche Lobby Sie hineinsehen |
+| Sie kopieren auf ein anderes Gerät (**Ihre Daten** → **Auf ein anderes Gerät kopieren**) oder öffnen dessen Link auf dem anderen Gerät | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | ein nur für diesen Kopiervorgang erzeugter öffentlicher Schlüssel (nicht der Ihrer Identität) und ein Verbindungsangebot, höchstens 10 Minuten lang aufbewahrt; vom anderen Gerät dieser Schlüssel und seine Verbindungsantwort. Was kopiert wird, geht direkt zwischen den Geräten, verschlüsselt mit einem Schlüssel, den nur der Code enthält |
 | Eine Peer-Verbindung beginnt | STUN-Server (`stun.l.google.com`) | nichts außer einer Anfrage nach Ihrer öffentlichen IP-Adresse |
 | Sie beginnen eine Peer-Verbindung, wenn der Rendezvous-Server ein Relay anbietet | `/turn-credentials` des Rendezvous-Servers, dann sein TURN-Relay (Cloudflare) | eine Anfrage nach kurzlebigen Relay-Zugangsdaten, höchstens etwa einmal pro Stunde; weitergeleiteter Verkehr ist durch WebRTC Ende-zu-Ende-verschlüsselt |
 | Die App ist geöffnet und ihr Tab sichtbar (Synchronisierung der Ankündigungen im Hintergrund) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | Abfragen nach den Entdeckungs-Tags von ForkBuild: den gemeinsamen Tags für Snapshots und Kommentare sowie den Ortsnamen-Regionen und Kartenzellen, die Sie besucht haben |
