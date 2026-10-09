@@ -33,6 +33,7 @@ import { CreatePublicationAnchorDiscoveryCoordinatorUseCase } from '../applicati
 import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
 import { CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase.js';
 import { LocalStorageProvider, flushLocalStorage } from '../storage/LocalStorageProvider.js';
+import { DevicePairing } from '../application/devicePairing/DevicePairing.js';
 import { DeviceBackupUseCase } from '../application/backup/DeviceBackupUseCase.js';
 import { BackupStatusStore } from '../application/backup/BackupStatusStore.js';
 import { BackupReminder } from '../application/backup/BackupReminder.js';
@@ -99,7 +100,7 @@ const {
     peerSessionManager, peerRelationshipUseCase, peerReconnectionUseCase, findPeerUseCase, peerMessageBus,
     peerBlockUseCase, deviceAuthorizationUseCase, friendRelationshipUseCase,
     identityLifecyclePropagationUseCase, chatUseCase, peerPresenceUseCase, deviceConversationSyncUseCase,
-    voiceUseCase, publicLobbyUseCase, followUseCase
+    voiceUseCase, publicLobbyUseCase, followUseCase, peerConnectionProvider, rendezvousTransports
 } = composeIdentityAndPeers({ decentralizedPublicationDiscoveryProvider });
 
 // The one LocalPublicationCatalog instance; every collaborator below shares it.
@@ -348,6 +349,9 @@ app.provide('deviceBackupUseCase', deviceBackupUseCase);
 app.provide('backupStatusStore', backupStatusStore);
 app.provide('backupReminder', new BackupReminder({ statusStore: backupStatusStore, deviceBackup: deviceBackupUseCase }));
 app.provide('backupDestinations', backupDestinations);
+// Copies everything to another device through a one-off code, over the same
+// peer connections and rendezvous servers as Peers.
+app.provide('devicePairing', new DevicePairing({ deviceBackup: deviceBackupUseCase, peerConnectionProvider, rendezvousTransports }));
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
 app.provide('peerRelationshipUseCase', peerRelationshipUseCase);

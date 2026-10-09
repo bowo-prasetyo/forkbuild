@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 268072de3b1fe04f -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 38913c40f5bb246d -->
 # 13 — Seus dados
 
 <!-- languages -->
@@ -26,6 +26,30 @@ cheio.**, clique em **Pedir ao navegador para mantê-los**. Os navegadores
 costumam concordar depois que você adiciona o site aos favoritos, o instala
 ou o usa com frequência. Isso só protege contra o navegador fazer uma
 limpeza por conta própria: limpar os dados do site continua apagando tudo.
+
+## Copiando para outro dispositivo
+
+Para ter suas construções também em um celular, um tablet ou outro
+navegador, copie tudo para lá diretamente, sem nenhum arquivo no meio:
+
+1. No dispositivo que tem suas construções, clique em **Mostrar um código**
+   em **Copiar para outro dispositivo**. Aparecem um código QR e um link.
+2. Escaneie o código QR com a câmera do outro dispositivo ou abra o link
+   nele. Mantenha a página com o código aberta até a cópia terminar.
+3. O outro dispositivo se conecta, recebe tudo e lista o que chegou. Clique
+   lá em **Adicionar a este dispositivo**. Nada que já esteja nesse
+   dispositivo é substituído: quando os dois têm o mesmo item, fica a cópia
+   desse dispositivo. Depois o ForkBuild reinicia lá com suas construções.
+
+Um código funciona uma vez, por 10 minutos, enquanto a página dele
+continuar aberta. Qualquer pessoa que o abrir nesse tempo pode copiar tudo,
+incluindo suas identidades, então mostre-o apenas aos seus próprios
+dispositivos. Os dois dispositivos precisam estar on-line: eles se
+encontram pelo servidor de encontro e depois os dados vão diretamente de um
+para o outro, criptografados com uma chave que só existe no código. O
+servidor de encontro não vê nem a chave nem seus dados. Identidades com
+frase secreta continuam protegidas por ela, e você entra no outro
+dispositivo como depois de uma restauração.
 
 ## Fazendo backup
 

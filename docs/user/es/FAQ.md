@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: e15721b99cda6db7 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 8311a31a81066243 -->
 # Preguntas frecuentes
 
 <!-- languages -->
@@ -112,9 +112,11 @@ ser descubrible y unirse a una sala requieren que la vuelva a desbloquear.
 
 ### ¿Cómo llevo mi trabajo a otra computadora o a otro navegador?
 
-Nada se sincroniza solo. Para llevarlo todo, haga una copia de seguridad en
-**Sus datos** y restaure el archivo en el otro dispositivo (consulte
-[Sus datos](13-YourData.md)). Para llevar un solo tipo de cosa:
+Nada se sincroniza solo. Para copiarlo todo, haga clic en **Mostrar un
+código** en **Sus datos**, dentro de **Copiar a otro dispositivo**, y
+escanee el código con el otro dispositivo (o abra allí su enlace) mientras
+ambos están en línea. O haga allí una copia de seguridad y restaure el
+archivo en el otro dispositivo (consulte [Sus datos](13-YourData.md)). Para llevar un solo tipo de cosa:
 
 - **Documentos**: **Exportar** en la barra de herramientas del Editor, o
   **Exportar todos los documentos** al final de **Recientes**, y luego

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: e15721b99cda6db7 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 8311a31a81066243 -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -117,9 +117,12 @@ müssen Sie sie wieder entsperren.
 
 ### Wie bringe ich meine Arbeit auf einen anderen Computer oder Browser?
 
-Nichts synchronisiert sich von selbst. Um alles mitzunehmen, sichern Sie es
-unter **Ihre Daten** und stellen die Datei auf dem anderen Gerät wieder her
-(siehe [Ihre Daten](13-YourData.md)). Um nur eine Art von Dingen
+Nichts synchronisiert sich von selbst. Um alles zu kopieren, klicken Sie
+unter **Ihre Daten** bei **Auf ein anderes Gerät kopieren** auf **Code
+anzeigen** und scannen den Code mit dem anderen Gerät (oder öffnen dort
+seinen Link), während beide online sind. Oder Sie sichern dort alles und
+stellen die Datei auf dem anderen Gerät wieder her (siehe
+[Ihre Daten](13-YourData.md)). Um nur eine Art von Dingen
 mitzunehmen:
 
 - **Dokumente**: **Exportieren** in der Werkzeugleiste des Editors oder

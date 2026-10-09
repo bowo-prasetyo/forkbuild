@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: e15721b99cda6db7 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 8311a31a81066243 -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -113,9 +113,11 @@ rejoindre un salon demandent de la déverrouiller de nouveau.
 
 ### Comment déplacer mon travail vers un autre ordinateur ou navigateur ?
 
-Rien ne se synchronise de soi-même. Pour tout déplacer, faites une
-sauvegarde dans **Vos données** et restaurez le fichier sur l’autre
-appareil (voir [Vos données](13-YourData.md)). Pour déplacer un seul type
+Rien ne se synchronise de soi-même. Pour tout copier, cliquez sur
+**Afficher un code** dans **Vos données**, sous **Copier vers un autre
+appareil**, et scannez le code avec l’autre appareil (ou ouvrez-y son lien)
+pendant que les deux sont en ligne. Ou faites-y une sauvegarde et restaurez
+le fichier sur l’autre appareil (voir [Vos données](13-YourData.md)). Pour déplacer un seul type
 de chose :
 
 - **Documents** : **Exporter** dans la barre d’outils de l’Éditeur, ou

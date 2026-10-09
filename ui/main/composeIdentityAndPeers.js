@@ -205,6 +205,7 @@ export function composeIdentityAndPeers({ decentralizedPublicationDiscoveryProvi
         setBitcoinEsploraConfigurationUseCase, peerSessionManager, peerRelationshipUseCase,
         peerReconnectionUseCase, findPeerUseCase, peerMessageBus, peerBlockUseCase, deviceAuthorizationUseCase,
         friendRelationshipUseCase, identityLifecyclePropagationUseCase, chatUseCase, peerPresenceUseCase,
-        deviceConversationSyncUseCase, voiceUseCase, publicLobbyUseCase, followUseCase
+        deviceConversationSyncUseCase, voiceUseCase, publicLobbyUseCase, followUseCase,
+        peerConnectionProvider, rendezvousTransports: Array.from(rendezvousTransports.values())
     };
 }

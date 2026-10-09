@@ -1,13 +1,13 @@
 import { computed, inject, onMounted, reactive, ref } from 'vue';
-import { BACKUP_ENTRY_GROUP_LABELS } from '../../application/backup/BackupEntryGroups.js';
 import { BACKUP_FILE_EXTENSION, BackupFileError, IncorrectBackupPassphraseError } from '../../application/backup/DeviceBackupFile.js';
 import { RestoreMode } from '../../application/backup/DeviceBackupUseCase.js';
 import { BackupDestination, REMINDER_INTERVAL_OPTIONS_DAYS } from '../../application/backup/BackupStatusStore.js';
 import { backupFileName } from '../../application/backup/BackupFolder.js';
 import { evaluateNewPassphrase } from '../../application/identity/NewPassphrasePolicy.js';
 import { byteSizeText } from '../i18n/sizeText.js';
+import { backupGroupRows } from '../i18n/backupGroupLabel.js';
 import { formatRelativeVisit } from '../../utils/formatRelativeVisit.js';
-import { displayText, errorText, hasMessage, t } from '../i18n/i18n.js';
+import { displayText, errorText, t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
 import VisitorCountSetting from '../components/VisitorCountSetting.js';
 
@@ -22,12 +22,6 @@ const DESTINATION_LABELS = {
 // Backs up everything ForkBuild keeps in this browser to one encrypted
 // file, and restores it here or on another device. Clearing the browser's
 // site data deletes all of it, so this page is the one place to keep a copy.
-// A backup group's name by its id ('avatar-and-worlds' → backupGroup.avatarAndWorlds),
-// or application/backup's English for a group without a message.
-function backupGroupLabel(group) {
-    const key = `backupGroup.${group.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase())}`;
-    return hasMessage(key) ? t(key) : BACKUP_ENTRY_GROUP_LABELS[group];
-}
 
 export default {
     name: 'YourDataView',
@@ -103,12 +97,7 @@ export default {
         const persisted = ref(null);
         const persistRefused = ref(false);
 
-        function groupRows(counts) {
-            return Object.keys(BACKUP_ENTRY_GROUP_LABELS)
-                .filter((group) => counts[group])
-                .map((group) => ({ group, label: backupGroupLabel(group), count: counts[group] }));
-        }
-        const storedRows = computed(() => groupRows(groups.value));
+        const storedRows = computed(() => backupGroupRows(groups.value));
 
         async function refreshStorage() {
             groups.value = deviceBackup ? deviceBackup.summarize() : {};
@@ -179,7 +168,7 @@ export default {
                     // so the key is derived afterwards.
                     const written = await destinations.backUpToFolder(passphrase ? { passphrase } : {});
                     if (remember) await destinations.rememberKey(passphrase);
-                    result = { rows: groupRows(written.groups), where: t('yourDataView.savedAsIn', { file: written.fileName, folder: written.folderName }) };
+                    result = { rows: backupGroupRows(written.groups), where: t('yourDataView.savedAsIn', { file: written.fileName, folder: written.folderName }) };
                 } else {
                     let created = destination === BackupDestination.SHARE ? preparedShare : null;
                     if (!created) {
@@ -211,7 +200,7 @@ export default {
                     }
                     statusStore && statusStore.recordBackup(destination, created.createdAt);
                     result = {
-                        rows: groupRows(created.groups), size: created.bytes.length, leftOutContentCount: created.leftOutContentCount,
+                        rows: backupGroupRows(created.groups), size: created.bytes.length, leftOutContentCount: created.leftOutContentCount,
                         where: destination === BackupDestination.SHARE ? t('yourDataView.shared') : t('yourDataView.downloaded')
                     };
                 }
@@ -259,7 +248,7 @@ export default {
             restoreForm.busy = true;
             try {
                 const { createdAt, entries, groups: inFile } = await deviceBackup.readBackupFile(restoreForm.bytes, restoreForm.passphrase);
-                restoreForm.preview = { createdAt, entries, rows: groupRows(inFile) };
+                restoreForm.preview = { createdAt, entries, rows: backupGroupRows(inFile) };
                 restoreForm.passphrase = '';
             } catch (e) {
                 restoreForm.error = e instanceof IncorrectBackupPassphraseError || e instanceof BackupFileError
@@ -351,6 +340,12 @@ export default {
                         {{ t('yourDataView.theBrowserSaidNoBrowsers') }}
                     </p>
                 </template>
+            </div>
+
+            <div v-if="available" class="your-data-section your-data-pairing">
+                <h2>{{ t('devicePairing.title') }}</h2>
+                <p class="form-hint form-hint--neutral">{{ t('yourDataView.copyToAnotherDeviceHint') }}</p>
+                <router-link to="/settings/data/pair" class="action-btn action-btn--secondary your-data-pair">{{ t('yourDataView.showACode') }}</router-link>
             </div>
 
             <div v-if="available" class="your-data-section">

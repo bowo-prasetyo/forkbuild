@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: e0ae7efdeb2bafd1 -->
+<!-- translation-of: docs/Privacy.md source-hash: 77c9263e9e7ad941 -->
 # Privasi
 
 <!-- languages -->
@@ -225,6 +225,7 @@ Anda dan apa yang Anda minta darinya.
 | Anda membuka situs resmi lewat tautan postingan peluncuran (`?ref=…`, lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/r/<saluran>`, tanpa referrer dan tanpa cookie |
 | Anda menjadikan diri dapat ditemukan, atau mencari seseorang, di **Rekan** | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | kunci publik identitas Anda dan tawaran koneksi, disimpan paling lama 15 menit; identitas yang Anda cari; saat Anda terhubung dengan seseorang yang Anda temukan, balasan koneksi Anda (berisi alamat jaringan Anda), yang hanya dapat diambil oleh orang itu |
 | Anda bergabung ke, atau melihat ke dalam, lobi publik | server rendezvous yang sama | kartu lobi Anda yang ditandatangani (kunci publik, nama tampilan, lobi mana), disimpan paling lama 15 menit dan diperbarui selama Anda tetap di sana; lobi mana yang Anda lihat |
+| Anda menyalin ke perangkat lain (**Data Anda** → **Salin ke perangkat lain**), atau membuka tautannya di perangkat lain | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | kunci publik yang dibuat khusus untuk penyalinan ini (bukan milik identitas Anda) dan tawaran koneksi, disimpan paling lama 10 menit; dari perangkat lain, kunci itu dan balasan koneksinya. Yang disalin dikirim langsung antarperangkat, dienkripsi dengan kunci yang hanya ada di kode |
 | Koneksi rekan dimulai | server STUN (`stun.l.google.com`) | hanya permintaan alamat IP publik Anda |
 | Anda memulai koneksi rekan, jika server rendezvous menawarkan relay | `/turn-credentials` pada server rendezvous, lalu relay TURN-nya (Cloudflare) | permintaan kredensial relay berumur pendek, paling sering sekitar sekali sejam; lalu lintas yang direlay dienkripsi ujung ke ujung oleh WebRTC |
 | Aplikasi terbuka dan tabnya terlihat (sinkronisasi pengumuman di latar belakang) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag penemuan ForkBuild: tag Snapshot dan Komentar bersama, serta wilayah Penamaan Tempat dan sel peta yang pernah Anda kunjungi |

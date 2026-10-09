@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 268072de3b1fe04f -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 38913c40f5bb246d -->
 # 13 — Vos données : sauvegarder et restaurer
 
 <!-- languages -->
@@ -28,6 +28,32 @@ conserver**. Les navigateurs acceptent généralement une fois que vous
 avez ajouté le site aux favoris, l’avez installé ou l’utilisez souvent.
 Cela ne protège que contre le ménage que le navigateur ferait de
 lui-même : effacer les données du site supprime toujours tout.
+
+## Copier vers un autre appareil
+
+Pour avoir aussi vos constructions sur un téléphone, une tablette ou un
+autre navigateur, copiez-y tout directement, sans fichier intermédiaire :
+
+1. Sur l’appareil qui a vos constructions, cliquez sur **Afficher un code**
+   sous **Copier vers un autre appareil**. Un code QR et un lien
+   apparaissent.
+2. Scannez le code QR avec l’appareil photo de l’autre appareil, ou ouvrez-y
+   le lien. Gardez la page du code ouverte jusqu’à la fin de la copie.
+3. L’autre appareil se connecte, reçoit tout et affiche ce qui est arrivé.
+   Cliquez-y sur **Ajouter à cet appareil**. Rien de ce qui se trouve déjà
+   sur cet appareil n’est remplacé : si les deux ont le même élément, c’est
+   la copie de cet appareil qui reste. ForkBuild y redémarre ensuite avec
+   vos constructions.
+
+Un code fonctionne une fois, pendant 10 minutes, tant que sa page reste
+ouverte. Toute personne qui l’ouvre pendant ce temps peut tout copier, vos
+identités comprises ; ne le montrez donc qu’à vos propres appareils. Les deux
+appareils doivent être en ligne : ils se trouvent par le serveur de
+rendez-vous, puis les données passent directement de l’un à l’autre,
+chiffrées avec une clé qui n’existe que dans le code. Le serveur de
+rendez-vous ne voit ni la clé ni vos données. Les identités protégées par
+une phrase secrète le restent, et vous vous connectez sur l’autre appareil
+comme après une restauration.
 
 ## Sauvegarder
 

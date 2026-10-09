@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 268072de3b1fe04f -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 38913c40f5bb246d -->
 # 13 — Data Anda: mencadangkan dan memulihkan
 
 <!-- languages -->
@@ -27,6 +27,30 @@ penuh.**, klik **Minta Browser untuk Menyimpannya**. Browser biasanya
 setuju setelah Anda menandai situs ini, memasangnya, atau sering
 memakainya. Ini hanya melindungi dari browser yang merapikan data dengan
 sendirinya: menghapus data situs tetap menghapus semuanya.
+
+## Menyalin ke perangkat lain
+
+Agar bangunan Anda juga ada di ponsel, tablet, atau browser lain, salin
+semuanya langsung ke sana, tanpa berkas perantara:
+
+1. Di perangkat yang berisi bangunan Anda, klik **Tampilkan kode** di
+   bawah **Salin ke perangkat lain**. Sebuah kode QR dan tautan muncul.
+2. Pindai kode QR dengan kamera perangkat lain, atau buka tautannya di
+   sana. Biarkan halaman kode tetap terbuka sampai penyalinan selesai.
+3. Perangkat lain terhubung, menerima semuanya, dan menampilkan apa yang
+   tiba. Klik **Tambahkan ke perangkat ini** di sana. Tidak ada yang sudah
+   ada di perangkat itu yang diganti: jika keduanya punya item yang sama,
+   salinan di perangkat itu yang dipertahankan. Setelah itu ForkBuild
+   dimulai ulang di sana dengan bangunan Anda.
+
+Kode berlaku sekali, selama 10 menit, selama halamannya tetap terbuka.
+Siapa pun yang membukanya dalam waktu itu dapat menyalin semuanya, termasuk
+identitas Anda, jadi tunjukkan hanya ke perangkat Anda sendiri. Kedua
+perangkat harus online: keduanya saling menemukan lewat server rendezvous,
+lalu data dikirim langsung di antara keduanya, dienkripsi dengan kunci yang
+hanya ada di kode. Server rendezvous tidak melihat kunci maupun data Anda.
+Identitas yang memakai frasa sandi tetap terlindungi olehnya, dan Anda
+masuk di perangkat lain seperti setelah pemulihan.
 
 ## Mencadangkan
 

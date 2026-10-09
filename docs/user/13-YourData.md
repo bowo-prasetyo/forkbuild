@@ -25,6 +25,29 @@ bookmarked or installed the site or use it often. This only protects
 against the browser tidying up on its own: clearing site data still deletes
 everything.
 
+## Copying to another device
+
+To have your builds on a phone, a tablet or another browser as well, copy
+everything there directly, with no file in between:
+
+1. On the device that has your builds, click **Show a code** under **Copy to
+   another device**. A QR code and a link appear.
+2. Scan the QR code with the other device's camera, or open the link there.
+   Keep the page with the code open until the copy is done.
+3. The other device connects, receives everything and lists what arrived.
+   Click **Add to this device** there. Nothing already on that device is
+   replaced: where both have the same item, that device's copy stays.
+   ForkBuild then starts again there with your builds.
+
+A code works once, for 10 minutes, while its page stays open. Anyone who
+opens it in that time can copy everything, your identities included, so
+show it only to your own devices. Both devices must be online: they find
+each other through the rendezvous server, then the data goes straight
+between them, encrypted with a key that exists only in the code. The
+rendezvous server sees neither the key nor your data. Identities with a
+passphrase stay protected by it, and you log in on the other device as
+after a restore.
+
 ## Backing up
 
 1. Choose a **backup passphrase** (at least 8 characters) and type it twice.

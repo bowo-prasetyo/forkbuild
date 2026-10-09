@@ -774,3 +774,29 @@
     font-size: 0.85rem;
     color: #d0d0d0;
 }
+
+/* Copy to another device: the one-off code as a QR code and a link. */
+.qr-code-image {
+    display: block;
+    width: min(260px, 100%);
+    height: auto;
+    margin: 0.75rem auto;
+    border-radius: 6px;
+}
+
+.device-pairing-link {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.device-pairing-link .modal-input {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.75rem;
+}
+
+.your-data-pair {
+    display: inline-block;
+    text-decoration: none;
+}

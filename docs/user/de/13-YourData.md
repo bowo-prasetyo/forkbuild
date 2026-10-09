@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 268072de3b1fe04f -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 38913c40f5bb246d -->
 # 13 — Ihre Daten
 
 <!-- languages -->
@@ -29,6 +29,34 @@ Browser stimmen meist zu, sobald Sie die Website als Lesezeichen gespeichert
 oder installiert haben oder sie häufig nutzen. Das schützt nur davor, dass
 der Browser von selbst aufräumt: Das Löschen der Websitedaten löscht
 trotzdem alles.
+
+## Auf ein anderes Gerät kopieren
+
+Um Ihre Bauwerke auch auf einem Smartphone, einem Tablet oder in einem
+anderen Browser zu haben, kopieren Sie alles direkt dorthin, ohne Datei
+dazwischen:
+
+1. Klicken Sie auf dem Gerät mit Ihren Bauwerken unter **Auf ein anderes
+   Gerät kopieren** auf **Code anzeigen**. Ein QR-Code und ein Link
+   erscheinen.
+2. Scannen Sie den QR-Code mit der Kamera des anderen Geräts oder öffnen
+   Sie dort den Link. Lassen Sie die Seite mit dem Code geöffnet, bis das
+   Kopieren abgeschlossen ist.
+3. Das andere Gerät verbindet sich, empfängt alles und listet auf, was
+   angekommen ist. Klicken Sie dort auf **Zu diesem Gerät hinzufügen**.
+   Nichts, was schon auf dem Gerät ist, wird ersetzt: Haben beide dasselbe
+   Element, bleibt die Version dieses Geräts. Danach startet ForkBuild dort
+   mit Ihren Bauwerken neu.
+
+Ein Code funktioniert einmal, 10 Minuten lang, solange seine Seite geöffnet
+bleibt. Wer ihn in dieser Zeit öffnet, kann alles kopieren, auch Ihre
+Identitäten. Zeigen Sie ihn daher nur Ihren eigenen Geräten. Beide Geräte
+müssen online sein: Sie finden sich über den Rendezvous-Server, dann gehen
+die Daten direkt zwischen ihnen hin und her, verschlüsselt mit einem
+Schlüssel, den nur der Code enthält. Der Rendezvous-Server sieht weder den
+Schlüssel noch Ihre Daten. Identitäten mit Passphrase bleiben durch sie
+geschützt, und Sie melden sich auf dem anderen Gerät an wie nach einer
+Wiederherstellung.
 
 ## Sichern
 

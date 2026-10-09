@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: e15721b99cda6db7 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 8311a31a81066243 -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -115,9 +115,11 @@ Anda membukanya lagi.
 
 ### Bagaimana cara memindahkan pekerjaan saya ke komputer atau browser lain?
 
-Tidak ada yang tersinkron dengan sendirinya. Untuk memindahkan semuanya,
-cadangkan di **Data Anda** dan pulihkan file itu di perangkat lain (lihat
-[Data Anda](13-YourData.md)). Untuk memindahkan satu jenis saja:
+Tidak ada yang tersinkron dengan sendirinya. Untuk menyalin semuanya, klik
+**Tampilkan kode** di **Data Anda**, di bawah **Salin ke perangkat lain**,
+lalu pindai kodenya dengan perangkat lain (atau buka tautannya di sana)
+selagi keduanya online. Atau cadangkan di sana dan pulihkan file itu di
+perangkat lain (lihat [Data Anda](13-YourData.md)). Untuk memindahkan satu jenis saja:
 
 - **Dokumen**: **Ekspor** di bilah alat Editor, atau **Ekspor Semua
   Dokumen** di bagian bawah **Terbaru**, lalu **Impor** di perangkat lain.
