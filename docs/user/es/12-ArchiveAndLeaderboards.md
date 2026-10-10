@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 9ecc6d131bdffddc -->
+<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 472fcc2701093e58 -->
 # 12 — Archivo y logros
 
 <!-- languages -->
@@ -7,7 +7,7 @@
 
 > **Experimental.** Todo lo que hay aquí puede cambiar o eliminarse en una
 > versión futura, y lo que produce podría no conservarse. En la página
-> Publicaciones, el panel **Herramientas de billetera, archivo y editor**
+> Publicaciones, el panel **Herramientas de billetera y archivo**
 > está marcado con una insignia **Experimental**.
 
 Las herramientas de Bitcoin, Base e IPFS de
@@ -17,7 +17,7 @@ archivo y lo que se construye sobre él: las referencias entre
 publicaciones y los logros.
 
 La mayoría de estas tarjetas están en la página Publicaciones, en
-**Herramientas de billetera, archivo y editor**, en sus pestañas
+**Herramientas de billetera y archivo**, en sus pestañas
 **Herramientas de archivo** y **Referencias y logros**. Cada una muestra
 **Guardado localmente** cuando lo que contiene se conserva al recargar.
 

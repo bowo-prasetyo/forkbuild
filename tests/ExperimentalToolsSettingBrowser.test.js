@@ -10,8 +10,8 @@ import { assert } from './support/Assert.js';
 // Show experimental tools (docs/Pillars.md, "Infrastructure, kept out of
 // sight"), rendered by real Vue: off until turned on, saved the moment it
 // changes on Network Settings, and while off, Network Settings leaves out the
-// Experimental pages and the Publications page leaves out its Wallet, Archive
-// & Publisher Tools, pointing to Network Settings instead. A card's step that
+// Experimental pages and the Publications page leaves out its Wallet &
+// Archive Tools, pointing to Network Settings instead. A card's step that
 // needs the tools still opens them for that visit.
 
 const RouterLinkStub = { props: ['to'], template: '<a :href="to"><slot /></a>' };
@@ -88,7 +88,7 @@ function providePublications(app, store) {
     const { host, unmount } = mount(DecentralizedPublicationsView, (app) => providePublications(app, store));
     await settle();
     assert(host.querySelector('.identity-mgmt-card'), 'publications are still listed');
-    assert(!host.querySelector('#publications-tools'), 'the Wallet, Archive & Publisher Tools panel is hidden');
+    assert(!host.querySelector('#publications-tools'), 'the Wallet & Archive Tools panel is hidden');
     const intro = host.querySelector('.publications-view > p');
     assert(intro.querySelector('a.publications-tools-hidden-link[href="/settings"]'), 'the intro links to Network Settings');
     assert(intro.textContent.includes('Show experimental tools'), 'and names the switch');

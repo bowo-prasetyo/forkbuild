@@ -5179,3 +5179,17 @@ under one identity. Finishes that entry's "Not done".
   now also loads an archive saved with a publisher association and drops it, and refuses one whose association
   collection is not a list. The archive fingerprint vectors are unchanged.
 
+## "Wallet & Archive Tools" (unnumbered, 2026-10-10)
+
+**The Publications page's tools panel is now called Wallet & Archive Tools.** It was "Wallet, Archive & Publisher
+Tools", but with the publisher leaderboards and Publisher Associations retired it holds no publisher tools: its tabs
+are Blockchain Anchoring, Archive Tools and References & Achievements. Pillar served: none directly; the words players
+see should match what's there (docs/Pillars.md, "Words").
+
+- The message `publications.walletArchivePublisherTools` is `publications.walletArchiveTools`, in every language
+  (Wallet- & Archivwerkzeuge, Herramientas de billetera y archivo, Outils de portefeuille et d’archives, Alat Dompet &
+  Arsip, ウォレット・アーカイブ用ツール, 지갑 및 아카이브 도구, Ferramentas de carteira e arquivo). The page's intro, the
+  Experimental note and the Network Settings hint no longer mention publisher tools.
+- Guides 09 to 12 in every language, README, Pillars and Protocol; the setting's comment and two browser tests that
+  find the panel by its name.
+

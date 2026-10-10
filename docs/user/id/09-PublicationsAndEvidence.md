@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f9a5331b0e272454 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: ba7d350bddd098ef -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -15,7 +15,7 @@
 > menandai setiap bagian seperti itu dengan lencana **Eksperimental**:
 > setiap jenis penjangkaran kecuali Arweave, dompet beserta langkah Bitcoin
 > dan Base-nya, Steem, Blurt, pinning IPFS jarak jauh, serta seluruh panel
-> **Dompet, Arsip & Alat Penerbit**. Panduan [11](11-EvidenceAndStorage.md)
+> **Alat Dompet & Arsip**. Panduan [11](11-EvidenceAndStorage.md)
 > dan [12](12-ArchiveAndLeaderboards.md) menyebutkan bagian mana yang
 > Eksperimental. Membangun, menyimpan, menerbitkan ke Repositori, fork,
 > identitas, dan rekan tidak bergantung pada semua itu.
@@ -178,8 +178,8 @@ pembuatnya, dan Tampilan Dunia, dan tetap ada setelah dimuat ulang.
 
 Buka **Publikasi** di bilah atas. Halaman ini mencantumkan setiap publikasi
 bertanda tangan yang telah dikatalogkan perangkat ini, milik Anda atau
-milik rekan. Di bagian bawah, panel terlipat **Dompet, Arsip & Alat
-Penerbit** berisi alat untuk seluruh halaman dalam tiga tab:
+milik rekan. Di bagian bawah, panel terlipat **Alat Dompet & Arsip** berisi
+alat untuk seluruh halaman dalam tiga tab:
 **Penjangkaran Blockchain**, **Alat Arsip**, dan **Referensi &
 Pencapaian** (lihat panduan [11](11-EvidenceAndStorage.md) dan
 [12](12-ArchiveAndLeaderboards.md)). Tautan ke panel itu di pengantar

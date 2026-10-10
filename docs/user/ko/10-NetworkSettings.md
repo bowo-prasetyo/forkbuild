@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 49cd90a03daca28b -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 7085ae1ba4a129cf -->
 # 10 — 네트워크 설정
 
 <!-- languages -->
@@ -35,7 +35,7 @@
 
 페이지 맨 위의 **실험적 도구 표시**를 켜면 ForkBuild의 **실험적** 기능이
 표시됩니다: 여기의 **Bitcoin 엔드포인트** 페이지와
-[게시물 페이지](09-PublicationsAndEvidence.md#게시물-페이지)의 **지갑, 아카이브 및 게시자 도구** 패널입니다.
+[게시물 페이지](09-PublicationsAndEvidence.md#게시물-페이지)의 **지갑 및 아카이브 도구** 패널입니다.
 켜기 전까지는 꺼져 있고, 바꾸는 즉시 이 기기에 저장됩니다. 짓고, 게시하고,
 공유하는 데 필요한 것은 아무것도 숨겨지지 않습니다.
 

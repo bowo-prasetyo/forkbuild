@@ -220,7 +220,7 @@ assert(order.indexOf(mainList) < order.indexOf(toolsPanel) && order.indexOf(fail
     'and comes after the publications and the failed group');
 toolsPanel.querySelector('[role="tab"]:nth-child(2)').click();
 await settle();
-buttonNamed(view.querySelector(':scope > p'), 'Wallet, Archive & Publisher Tools').click();
+buttonNamed(view.querySelector(':scope > p'), 'Wallet & Archive Tools').click();
 await settle();
 assert(toolsPanel.open, "the intro's link opens it");
 assert(toolsPanel.querySelector('[role="tab"][aria-selected="true"]').textContent.trim() === 'Blockchain Anchoring', 'on the Blockchain Anchoring tab');

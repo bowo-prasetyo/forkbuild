@@ -32,7 +32,7 @@ For what each server learns about you, see [Privacy](../Privacy.md).
 
 At the top of the page, **Show experimental tools** lists the parts of
 ForkBuild that are **Experimental**: the **Bitcoin Endpoint** page here,
-and the **Wallet, Archive & Publisher Tools** panel on the
+and the **Wallet & Archive Tools** panel on the
 [Publications page](09-PublicationsAndEvidence.md#the-publications-page). It is off until you turn it on, and is saved on
 this device as soon as you change it. Nothing you need to build, publish or
 share is hidden while it is off.

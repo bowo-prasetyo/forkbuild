@@ -1474,7 +1474,7 @@ with one distinct contentHash is published as a single anchor.
 `CreateExternalPublicationAnchorUseCase#executeBatch(publicationIds, anchorType)` runs a batch for any publisher with
 `publishBatch()`, and creates and signs one `PublicationAnchor` per Publication from its proof, exactly as a single
 anchor is created. `PublicationAnchorCreationCoordinator` offers `batchAnchorTypes()` and `createBatch()`. On the
-Publications page, Wallet, Archive & Publisher Tools → Blockchain Anchoring has **Anchor Several Publications on
+Publications page, Wallet & Archive Tools → Blockchain Anchoring has **Anchor Several Publications on
 Steem**: pick publications (**Select Unanchored** picks those without a Steem anchor), then one click and one
 Keychain approval anchor them all.
 

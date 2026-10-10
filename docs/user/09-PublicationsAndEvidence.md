@@ -13,7 +13,7 @@
 > produces may not carry over. The page marks each such part with an
 > **Experimental** badge: every kind of anchoring but Arweave, the wallets
 > and their Bitcoin and Base steps, Steem, Blurt, remote IPFS pinning, and
-> the whole **Wallet, Archive & Publisher Tools** panel. Guides
+> the whole **Wallet & Archive Tools** panel. Guides
 > [11](11-EvidenceAndStorage.md) and [12](12-ArchiveAndLeaderboards.md) say
 > which of their sections are Experimental. Building, saving, publishing to
 > the Repository, forking, identities and peers don't depend on any of it.
@@ -163,8 +163,8 @@ after a reload.
 ## The Publications page
 
 Open **Publications** in the top bar. It lists every signed publication this
-device has cataloged, yours or a peer's. At the bottom, the folded **Wallet,
-Archive & Publisher Tools** panel holds page-wide tools in three tabs:
+device has cataloged, yours or a peer's. At the bottom, the folded **Wallet
+& Archive Tools** panel holds page-wide tools in three tabs:
 **Blockchain Anchoring**, **Archive Tools** and **References &
 Achievements** (see guides [11](11-EvidenceAndStorage.md) and
 [12](12-ArchiveAndLeaderboards.md)). The link to it in the page's intro, and

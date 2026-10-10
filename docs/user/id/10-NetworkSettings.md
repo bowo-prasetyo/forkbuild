@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 49cd90a03daca28b -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 7085ae1ba4a129cf -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
@@ -35,7 +35,7 @@ Untuk apa yang diketahui setiap server tentang Anda, lihat
 
 Di bagian atas halaman, **Tampilkan alat eksperimental** menampilkan
 bagian ForkBuild yang **Eksperimental**: halaman **Endpoint Bitcoin** di
-sini, dan panel **Dompet, Arsip & Alat Penerbit** di
+sini, dan panel **Alat Dompet & Arsip** di
 [halaman Publikasi](09-PublicationsAndEvidence.md#halaman-publikasi). Pengaturan ini mati sampai Anda menyalakannya,
 dan disimpan di perangkat ini begitu Anda mengubahnya. Tidak ada yang Anda
 perlukan untuk membangun, menerbitkan, atau berbagi yang disembunyikan.

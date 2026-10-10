@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 49cd90a03daca28b -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 7085ae1ba4a129cf -->
 # 10 — ネットワーク設定
 
 <!-- languages -->
@@ -34,7 +34,7 @@
 
 ページ上部の **実験的なツールを表示** をオンにすると、ForkBuild の
 **実験的** な部分が表示されます。ここでは **Bitcoinエンドポイント** の
-ページ、[公開物ページ](09-PublicationsAndEvidence.md#公開物ページ) では **ウォレット・アーカイブ・公開者向けツール**
+ページ、[公開物ページ](09-PublicationsAndEvidence.md#公開物ページ) では **ウォレット・アーカイブ用ツール**
 のパネルです。オンにするまではオフのままで、変更するとすぐにこのデバイスに
 保存されます。作る、公開する、共有するために必要なものは何も隠れません。
 

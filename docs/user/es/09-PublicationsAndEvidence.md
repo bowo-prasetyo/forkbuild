@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f9a5331b0e272454 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: ba7d350bddd098ef -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -15,7 +15,7 @@
 > conservarse. La página marca cada una de esas partes con una insignia
 > **Experimental**: todo tipo de anclaje salvo en Arweave, las billeteras y
 > sus pasos de Bitcoin y Base, Steem, Blurt, el pinning remoto de IPFS y
-> todo el panel **Herramientas de billetera, archivo y editor**. Las guías
+> todo el panel **Herramientas de billetera y archivo**. Las guías
 > [11](11-EvidenceAndStorage.md) y [12](12-ArchiveAndLeaderboards.md)
 > indican cuáles de sus secciones son Experimentales. Construir, guardar,
 > publicar en el Repositorio, bifurcar, las identidades y los pares no
@@ -178,7 +178,7 @@ la Vista del mundo, y sigue allí después de recargar.
 
 Abra **Publicaciones** en la barra superior. Muestra todas las
 publicaciones firmadas que catalogó este dispositivo, suyas o de un par. Al
-final, el panel plegado **Herramientas de billetera, archivo y editor**
+final, el panel plegado **Herramientas de billetera y archivo**
 contiene herramientas para toda la página en tres pestañas: **Anclaje en
 blockchain**, **Herramientas de archivo** y **Referencias y logros**
 (consulte las guías [11](11-EvidenceAndStorage.md) y

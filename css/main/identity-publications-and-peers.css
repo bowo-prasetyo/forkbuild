@@ -150,7 +150,7 @@
     width: 100%;
 }
 
-/* Page-level wallet/archive/publisher tools panel on the Publications
+/* Page-level wallet and archive tools panel on the Publications
    page — same disclosure pattern, one level up. The folded group of
    publications that failed their check uses it too. */
 .publications-tools-panel {

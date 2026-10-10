@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 03289178d6137f12 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: cb4b276ed6e02e88 -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
@@ -127,7 +127,7 @@ pequena taxa em BLURT. A finalidade, **Verificar evidências** e
 para a postagem.
 
 **Ancorando várias publicações de uma vez no Steem.** Em **Ferramentas de
-carteira, arquivo e editor → Ancoragem em blockchain**, **Ancorar várias
+carteira e arquivo → Ancoragem em blockchain**, **Ancorar várias
 publicações em Steem** lista suas publicações catalogadas. Marque as que
 quiser (ou **Selecionar as não ancoradas**) e clique em **Ancorar N
 publicações em Steem**. Uma única aprovação no Keychain ancora até 64. Cada
@@ -255,7 +255,7 @@ um clique separado.
 > há modo de teste.
 
 Todos os painéis dele que valem para a página toda ficam em **Ferramentas de
-carteira, arquivo e editor → Ancoragem em blockchain**, o painel recolhido no
+carteira e arquivo → Ancoragem em blockchain**, o painel recolhido no
 fim da página Publicações; os passos de cada publicação ficam no cartão
 dela. Quando um passo precisa antes de uma carteira ou de fundos observados,
 o link dele abre esse painel para você.
@@ -424,7 +424,7 @@ mesmo levando o hash do conteúdo como dado), termos próprios.
 
 ### Conectando uma carteira e observando uma conta
 
-No cartão **Rede Base** (em **Ferramentas de carteira, arquivo e editor →
+No cartão **Rede Base** (em **Ferramentas de carteira e arquivo →
 Ancoragem em blockchain**), clique em **Conectar carteira Base** e aprove. Os
 estados são **Conectada**, **Desconectada** e **Carteira indisponível**, como
 no Bitcoin; **Desconectar** a encerra e recarregar a esquece.

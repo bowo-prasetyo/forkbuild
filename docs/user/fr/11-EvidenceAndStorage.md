@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 03289178d6137f12 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: cb4b276ed6e02e88 -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
@@ -132,7 +132,7 @@ preuves** et **Inspecter les preuves** fonctionnent comme pour Steem, et
 la carte renvoie vers l’article.
 
 **Ancrer plusieurs publications à la fois sur Steem.** Sous
-**Portefeuille, archives et outils d’éditeur → Ancrage sur blockchain**,
+**Outils de portefeuille et d’archives → Ancrage sur blockchain**,
 **Ancrer plusieurs publications sur Steem** liste vos publications
 cataloguées. Cochez celles que vous voulez (ou **Sélectionner les non
 ancrées**) et cliquez sur **Ancrer N publications sur Steem**. Une seule
@@ -265,7 +265,7 @@ transaction. Chaque étape demande son propre clic.
 > vraie transaction. Il n’y a pas de mode test.
 
 Tous ses panneaux valables pour toute la page se trouvent sous
-**Portefeuille, archives et outils d’éditeur → Ancrage sur blockchain**,
+**Outils de portefeuille et d’archives → Ancrage sur blockchain**,
 le panneau replié en bas de la page Publications ; les étapes propres à
 chaque publication sont sur sa carte. Quand une étape demande d’abord
 d’observer un portefeuille ou des fonds, son lien ouvre ce panneau pour
@@ -443,8 +443,8 @@ termes.
 
 ### Connecter un portefeuille et observer un compte
 
-Sur la carte **Réseau Base** (sous **Portefeuille, archives et outils
-d’éditeur → Ancrage sur blockchain**), cliquez sur **Connecter un
+Sur la carte **Réseau Base** (sous **Outils de portefeuille et d’archives →
+Ancrage sur blockchain**), cliquez sur **Connecter un
 portefeuille Base** et approuvez. Les états sont **Connecté**,
 **Déconnecté** et **Portefeuille indisponible**, comme pour Bitcoin ;
 **Déconnecter** supprime la connexion et un rechargement l’oublie.

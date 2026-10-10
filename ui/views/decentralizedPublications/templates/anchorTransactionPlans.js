@@ -18,7 +18,7 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                                 </p>
                                 <p v-if="!isBitcoinAnchorFundingObserved()" class="form-hint form-hint--neutral">
                                     <I18nText keypath="publications.firstObserveWalletFundingIn">
-                                        <template #tools><button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">{{ t('publications.walletArchivePublisherTools') }}</button></template>
+                                        <template #tools><button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">{{ t('publications.walletArchiveTools') }}</button></template>
                                     </I18nText>
                                 </p>
                                 <div class="identity-mgmt-actions">
@@ -84,7 +84,7 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                                 </p>
                                 <p v-if="!isBaseAccountObserved()" class="form-hint form-hint--neutral">
                                     <I18nText keypath="publications.firstObserveABaseAccount">
-                                        <template #tools><button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">{{ t('publications.walletArchivePublisherTools') }}</button></template>
+                                        <template #tools><button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">{{ t('publications.walletArchiveTools') }}</button></template>
                                     </I18nText>
                                 </p>
                                 <div class="identity-mgmt-actions">

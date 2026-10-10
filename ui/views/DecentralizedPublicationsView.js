@@ -1218,7 +1218,7 @@ export default {
             <p class="form-hint form-hint--neutral">
                 <I18nText v-if="publicationsToolsShown" keypath="publications.intro">
                     <template #peer><router-link to="/peers">{{ t('publications.peer') }}</router-link></template>
-                    <template #tools><button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">{{ t('publications.walletArchivePublisherTools') }}</button></template>
+                    <template #tools><button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">{{ t('publications.walletArchiveTools') }}</button></template>
                 </I18nText>
                 <I18nText v-else keypath="publications.introToolsHidden">
                     <template #peer><router-link to="/peers">{{ t('publications.peer') }}</router-link></template>
@@ -1444,7 +1444,7 @@ export default {
                  need a wallet observed here first. -->
             <details v-if="publicationsToolsShown" id="publications-tools" class="publications-tools-panel" :open="publicationsToolsOpen"
                      @toggle="publicationsToolsOpen = $event.target.open">
-                <summary class="publications-tools-panel-summary">{{ t('publications.walletArchivePublisherTools') }} <span class="experimental-badge">{{ t('publications.experimental') }}</span></summary>
+                <summary class="publications-tools-panel-summary">{{ t('publications.walletArchiveTools') }} <span class="experimental-badge">{{ t('publications.experimental') }}</span></summary>
                 <p class="form-hint form-hint--neutral">
                     {{ t('publications.experimentalEverythingInThisPanel') }}
                 </p>

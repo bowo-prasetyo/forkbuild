@@ -113,8 +113,8 @@ Otherwise it adds the build's content hash to your current Blurt post, or
 makes a new one, for a small fee in BLURT. Finality, **Verify Evidence** and
 **Inspect Evidence** work as for Steem, and the card links to the post.
 
-**Anchoring several publications at once on Steem.** Under **Wallet, Archive
-& Publisher Tools → Blockchain Anchoring**, **Anchor Several Publications on
+**Anchoring several publications at once on Steem.** Under **Wallet &
+Archive Tools → Blockchain Anchoring**, **Anchor Several Publications on
 Steem** lists your cataloged publications. Tick the ones you want (or
 **Select Unanchored**) and click **Anchor N Publications on Steem**. One
 Keychain approval anchors up to 64. Each publication still gets its own
@@ -233,7 +233,7 @@ click.
 > Plan** on, it works with your wallet's real funds, and **Broadcast
 > Transaction** sends a real transaction. There is no test mode.
 
-All of its page-wide panels are under **Wallet, Archive & Publisher Tools →
+All of its page-wide panels are under **Wallet & Archive Tools →
 Blockchain Anchoring**, the folded panel at the bottom of the Publications
 page; the per-publication steps are on each publication's card. Where a step
 needs a wallet or funding observed first, its link opens that panel for you.
@@ -393,7 +393,7 @@ the content hash as data), its own terms.
 
 ### Connecting a wallet and observing an account
 
-On the **Base Network** card (under **Wallet, Archive & Publisher Tools →
+On the **Base Network** card (under **Wallet & Archive Tools →
 Blockchain Anchoring**), click **Connect Base Wallet** and approve it. The
 states are **Connected**, **Disconnected** and **Wallet unavailable**, as
 for Bitcoin; **Disconnect** drops it and a reload forgets it.

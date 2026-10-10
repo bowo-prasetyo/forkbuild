@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 49cd90a03daca28b -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 7085ae1ba4a129cf -->
 # 10 — Configurações de rede
 
 <!-- languages -->
@@ -35,7 +35,7 @@ Para o que cada servidor fica sabendo sobre você, veja
 No alto da página, **Mostrar ferramentas experimentais** mostra as partes
 do ForkBuild que são **experimentais**: aqui, a página **Endpoint do
 Bitcoin**, e na [página Publicações](09-PublicationsAndEvidence.md#a-página-publicações), o painel **Ferramentas de
-carteira, arquivo e editor**. Fica desativado até você ativá-lo e é salvo
+carteira e arquivo**. Fica desativado até você ativá-lo e é salvo
 neste dispositivo assim que você o muda. Nada do que você precisa para
 construir, publicar ou compartilhar fica oculto.
 

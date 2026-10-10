@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 49cd90a03daca28b -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 7085ae1ba4a129cf -->
 # 10 — Paramètres réseau
 
 <!-- languages -->
@@ -36,7 +36,7 @@ Pour ce que chaque serveur apprend sur vous, voir
 En haut de la page, **Afficher les outils expérimentaux** affiche les
 parties de ForkBuild qui sont **expérimentales** : ici, la page
 **Endpoint Bitcoin**, et sur la [page Publications](09-PublicationsAndEvidence.md#la-page-publications), le panneau
-**Portefeuille, archives et outils d’éditeur**. Il est désactivé tant que
+**Outils de portefeuille et d’archives**. Il est désactivé tant que
 vous ne l’activez pas, et il est enregistré sur cet appareil dès que vous le
 changez. Rien de ce qu’il faut pour construire, publier ou partager n’est
 masqué.

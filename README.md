@@ -167,7 +167,7 @@ after **Show experimental tools** is turned on in Network Settings
   Network Settings;
 - Steem as a place to store and announce builds (added in 1.1), and remote
   IPFS pinning;
-- the Publications page's Wallet, Archive & Publisher Tools panel.
+- the Publications page's Wallet & Archive Tools panel.
 
 The rest of the Publications page (the list and statuses, removing
 publications that can't be used, announcing on Nostr or Arweave, storing on

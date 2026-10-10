@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 49cd90a03daca28b -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 7085ae1ba4a129cf -->
 # 10 — Configuración de red
 
 <!-- languages -->
@@ -36,7 +36,7 @@ Para saber qué averigua cada servidor sobre usted, consulte
 Arriba de la página, **Mostrar herramientas experimentales** muestra las
 partes de ForkBuild que son **experimentales**: aquí, la página
 **Endpoint de Bitcoin**, y en la [página Publicaciones](09-PublicationsAndEvidence.md#la-página-publicaciones), el panel
-**Herramientas de billetera, archivo y editor**. Está desactivado hasta que
+**Herramientas de billetera y archivo**. Está desactivado hasta que
 lo active, y se guarda en este dispositivo en cuanto lo cambia. No se oculta
 nada que necesite para construir, publicar o compartir.
 
