@@ -1,7 +1,9 @@
 // The sound of the vehicle the local avatar rides, held for as long as it
-// rides: a bicycle's tyre hiss, a motorcycle's buzzing two-stroke, a car's low
-// rumble and a drone's whine. `setLoad(load)` (0 to 1: speed over top speed)
-// raises pitch, brightness and loudness; `stop()` fades it out and frees it.
+// rides: a bicycle's tyre hiss, a penny-farthing's (MOTORCYCLE) slower tick
+// and rim hiss, a hay wagon's (CAR) wooden wheels rumbling and knocking, and a
+// hot-air balloon's (DRONE) burner roar. The wheeled ones are silent standing
+// still. `setLoad(load)` (0 to 1: speed over top speed) raises pitch,
+// brightness and loudness; `stop()` fades it out and frees it.
 
 const RAMP_TIME_CONSTANT = 0.15;
 const FADE_SECONDS = 0.4;
@@ -19,26 +21,22 @@ const ENGINE_PROFILE = Object.freeze({
         gain: [0, 0.18]
     },
     motorcycle: {
-        partials: [{ type: 'sawtooth', from: 48, to: 150, gain: 0.6 }, { type: 'square', from: 96.5, to: 301, gain: 0.25 }],
-        noise: { type: 'lowpass', from: 400, to: 1200, q: 0.7, gain: 0.35 },
-        filter: { from: 700, to: 2600 },
-        gain: [0.12, 0.32]
+        partials: [],
+        noise: { type: 'bandpass', from: 1200, to: 3200, q: 0.9, gain: 1 },
+        tick: { from: 1, to: 5 },
+        gain: [0, 0.16]
     },
     car: {
-        partials: [{ type: 'sawtooth', from: 34, to: 95, gain: 0.7 }, { type: 'sawtooth', from: 68.3, to: 191, gain: 0.3 }],
-        noise: { type: 'lowpass', from: 200, to: 700, q: 0.7, gain: 0.6 },
-        filter: { from: 380, to: 1300 },
-        gain: [0.14, 0.34]
+        partials: [],
+        noise: { type: 'lowpass', from: 260, to: 900, q: 0.8, gain: 1 },
+        tick: { from: 1.5, to: 6 },
+        gain: [0, 0.45]
     },
     drone: {
-        partials: [
-            { type: 'sawtooth', from: 190, to: 300, gain: 0.35 },
-            { type: 'sawtooth', from: 193, to: 305, gain: 0.35 },
-            { type: 'square', from: 381, to: 612, gain: 0.12 }
-        ],
-        noise: { type: 'bandpass', from: 1500, to: 3000, q: 0.9, gain: 0.3 },
-        filter: { from: 1500, to: 3200 },
-        gain: [0.1, 0.18]
+        partials: [{ type: 'triangle', from: 50, to: 64, gain: 0.25 }],
+        noise: { type: 'bandpass', from: 500, to: 1100, q: 0.5, gain: 0.8 },
+        filter: { from: 900, to: 2000 },
+        gain: [0.14, 0.24]
     }
 });
 

@@ -205,8 +205,8 @@ does; pushing it sideways only turns you, so you can steer while cruising.
 
 ### Vehicles
 
-Some worlds place a bicycle, motorcycle, car, or drone your avatar can
-ride instead of walking. Walk close enough to one and a prompt appears
+Some worlds place a bicycle, penny-farthing, hay wagon, or hot-air balloon
+your avatar can ride instead of walking. Walk close enough to one and a prompt appears
 telling you which key mounts it:
 
 | Key | Action |
@@ -227,21 +227,21 @@ around. Dismounting puts your avatar back on foot at a
 clear spot beside the vehicle. A vehicle's top speed, acceleration,
 braking, and turning all depend on what kind of vehicle it is, and its
 collision footprint is sized to match — today that's the bicycle, the
-motorcycle, the car, and the drone, the four vehicles worlds actually
-place and render. A motorcycle is faster than a bicycle and rarer to
-find, a car is faster still than a motorcycle and rarer still, and a
-drone is the fastest and rarest of all.
+penny-farthing, the hay wagon, and the hot-air balloon, the four vehicles
+worlds actually place and render. A penny-farthing is faster than a
+bicycle and rarer to find, a hay wagon is faster still and rarer still,
+and a hot-air balloon is the fastest and rarest of all.
 
-A drone sits on the ground, idle, exactly like the other three, until
-you mount it and start moving — holding **W** or **S** lifts it off the
-ground; letting go brings it back down. Once airborne it flies above
-trees, but a tall building still blocks it exactly as it would a car, so
-flying doesn't mean ignoring the world's own geometry. You can't
-dismount a drone in mid-air — bring it back to the ground first.
+A hot-air balloon sits on the ground, idle, exactly like the other three,
+until you mount it and start moving — holding **W** or **S** lifts it off
+the ground; letting go brings it back down. Once airborne it flies above
+trees, but a tall building still blocks it exactly as it would a wagon, so
+flying doesn't mean ignoring the world's own geometry. You can't get out
+of a balloon in mid-air — bring it back to the ground first.
 
-Bicycles, motorcycles and cars stop at the water's edge. A drone flies on
-over lakes and the sea, and lets you down on the water: land it and get
-off, and your avatar is swimming. You can't take a wheeled vehicle out of
+Bicycles, penny-farthings and hay wagons stop at the water's edge. A
+balloon flies on over lakes and the sea, and lets you down on the water:
+land it and get off, and your avatar is swimming. You can't take a wheeled vehicle out of
 your inventory while you are in the water.
 
 #### Carrying a vehicle
@@ -265,9 +265,10 @@ out next; it never spawns or removes anything by itself.
 #### Riding with other people around
 
 People who can see your avatar also see what you ride: your bicycle,
-motorcycle, car or drone is drawn under you on their screen, facing the
-way you're going, and they hear its engine, your getting on and off and
-your braking (see "Sound" in [03 — World View](03-WorldView.md)). You see
+penny-farthing, hay wagon or balloon is drawn under you on their screen,
+facing the way you're going, and they hear it rolling or roaring, your
+getting on and off and your braking (see "Sound" in
+[03 — World View](03-WorldView.md)). You see
 and hear theirs the same way. It follows your presence setting: whoever
 can't see you doesn't learn what you ride either.
 

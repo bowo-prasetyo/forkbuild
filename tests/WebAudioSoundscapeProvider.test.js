@@ -253,22 +253,33 @@ async function runTests() {
         console.log('✓ cues never queue up while silent');
     }
 
-    // Each vehicle has an engine that rises in pitch and loudness with speed.
+    // Each vehicle has a voice that rises in pitch and loudness with speed. The
+    // balloon's burner (DRONE) roars even hovering still; the wheeled ones (a
+    // bicycle, a penny-farthing, a hay wagon) are silent standing and sound
+    // only rolling.
     {
-        for (const vehicleType of ['motorcycle', 'car', 'drone']) {
-            const idle = await renderEffects(2, (p) => p.setEngine({ vehicleType, load: 0 }));
-            const fast = await renderEffects(2, (p) => p.setEngine({ vehicleType, load: 1 }));
-            const idleRms = rmsOf(idle, SAMPLE_RATE, SAMPLE_RATE * 2);
-            const fastRms = rmsOf(fast, SAMPLE_RATE, SAMPLE_RATE * 2);
-            assert(idleRms > 0.005, `a ${vehicleType} idles audibly (${idleRms})`);
-            assert(fastRms > idleRms, `a ${vehicleType} is louder at speed (${fastRms} vs ${idleRms})`);
-            const idleRate = zeroCrossingRate(idle, SAMPLE_RATE, SAMPLE_RATE * 2);
+        const voice = async (vehicleType, load) => renderEffects(2, (p) => p.setEngine({ vehicleType, load }));
+        const idleBurner = await voice('drone', 0);
+        const fastBurner = await voice('drone', 1);
+        const idleRms = rmsOf(idleBurner, SAMPLE_RATE, SAMPLE_RATE * 2);
+        const fastRms = rmsOf(fastBurner, SAMPLE_RATE, SAMPLE_RATE * 2);
+        assert(idleRms > 0.005, `a balloon's burner sounds hovering still (${idleRms})`);
+        assert(fastRms > idleRms, `and louder at speed (${fastRms} vs ${idleRms})`);
+        const idleBurnerRate = zeroCrossingRate(idleBurner, SAMPLE_RATE, SAMPLE_RATE * 2);
+        const fastBurnerRate = zeroCrossingRate(fastBurner, SAMPLE_RATE, SAMPLE_RATE * 2);
+        assert(fastBurnerRate > idleBurnerRate, `and higher (${fastBurnerRate} vs ${idleBurnerRate} crossings/s)`);
+        for (const vehicleType of ['bicycle', 'motorcycle', 'car']) {
+            const parked = rmsOf(await voice(vehicleType, 0), SAMPLE_RATE, SAMPLE_RATE * 2);
+            const slow = await voice(vehicleType, 0.3);
+            const fast = await voice(vehicleType, 1);
+            const slowRms = rmsOf(slow, SAMPLE_RATE, SAMPLE_RATE * 2);
+            const fastRolling = rmsOf(fast, SAMPLE_RATE, SAMPLE_RATE * 2);
+            assert(parked < 0.001 && slowRms > 0.002, `a ${vehicleType} is silent standing and sounds rolling (${parked}, ${slowRms})`);
+            assert(fastRolling > slowRms, `a ${vehicleType} is louder faster (${fastRolling} vs ${slowRms})`);
+            const slowRate = zeroCrossingRate(slow, SAMPLE_RATE, SAMPLE_RATE * 2);
             const fastRate = zeroCrossingRate(fast, SAMPLE_RATE, SAMPLE_RATE * 2);
-            assert(fastRate > idleRate, `a ${vehicleType} is higher at speed (${fastRate} vs ${idleRate} crossings/s)`);
+            assert(fastRate > slowRate, `a ${vehicleType} is higher faster (${fastRate} vs ${slowRate} crossings/s)`);
         }
-        const parkedBike = rmsOf(await renderEffects(2, (p) => p.setEngine({ vehicleType: 'bicycle', load: 0 })), SAMPLE_RATE, SAMPLE_RATE * 2);
-        const rollingBike = rmsOf(await renderEffects(2, (p) => p.setEngine({ vehicleType: 'bicycle', load: 0.8 })), SAMPLE_RATE, SAMPLE_RATE * 2);
-        assert(parkedBike < 0.001 && rollingBike > 0.005, `a bicycle is silent standing and hisses rolling (${parkedBike}, ${rollingBike})`);
 
         const stopped = await renderEffects(2, (p) => { p.setEngine({ vehicleType: 'car', load: 1 }); p.setEngine(null); });
         assert(rmsOf(stopped, SAMPLE_RATE, SAMPLE_RATE * 2) < 0.001, 'getting off fades the engine out');
@@ -279,14 +290,15 @@ async function runTests() {
             const provider = new WebAudioSoundscapeProvider({
                 contextFactory: () => context, documentRef: null, random: seededRandom(), setTimeoutFn: () => 1, clearTimeoutFn: () => {}
             });
-            provider.setEngine({ vehicleType: 'car', load: 0.5 });
+            // The balloon's burner: the one voice that sounds at any speed.
+            provider.setEngine({ vehicleType: 'drone', load: 0.5 });
             assert(provider.context === null, 'setup: no context yet');
             provider.resume();
             const early = (await offline.startRendering()).getChannelData(0);
             provider.dispose();
             assert(rmsOf(early, SAMPLE_RATE, SAMPLE_RATE * 2) > 0.005, 'an engine set before audio starts plays once it does');
         }
-        console.log('✓ engines for every vehicle, following speed');
+        console.log('✓ a voice for every vehicle, following speed');
     }
 
     // Animals and residents are audible, placed left or right, and quieter far away.

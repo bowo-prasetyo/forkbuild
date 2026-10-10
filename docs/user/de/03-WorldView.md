@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 1d94840844dd42aa -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d2c323274d094628 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -117,13 +117,7 @@ Laub im Wald, weicher Sand am Strand, Stein auf hohem und felsigem
 Gelände, Platschen in einem See oder Fluss und ein hohles Klopfen auf
 Steinen. Springen macht ein Rauschen und Landen einen dumpfen Aufprall,
 schwerer nach einem längeren Fall. Fahren Sie ein Fahrzeug, hören Sie es:
-die Reifen und den Freilauf eines Fahrrads, das Surren eines Motorrads, das
-Brummen eines Autos oder das Sirren einer Drohne, ansteigend, wenn Sie
-schneller werden, und verklingend, wenn Sie absteigen. Auf- und Absteigen
-haben ebenfalls ihren eigenen Klang (die Klingel und der Ständer eines
-Fahrrads, der Kickstarter eines Motorrads, eine Autotür und die Zündung,
-die anlaufenden und auslaufenden Rotoren einer Drohne), und Bremsen bei
-Tempo lässt Reifen oder Bremsbeläge quietschen, umso lauter, je schneller
+die Reifen und den Freilauf eines Fahrrads oder Hochrads, das Rumpeln der Holzräder eines Heuwagens oder den Brenner eines Heißluftballons, ansteigend, wenn Sie schneller werden, und verklingend, wenn Sie absteigen; die Fahrzeuge mit Rädern sind im Stand still. Auf- und Absteigen haben ebenfalls ihren eigenen Klang (die Klingel und der Ständer eines Fahrrads, das Knarren und Klingeln eines Hochrads, die knarrenden Bretter und das raschelnde Heu eines Wagens, der aufbrausende und verlöschende Brenner), und Bremsen bei Tempo lässt die Bremsen quietschen, schaben oder knirschen, umso lauter, je schneller
 Sie waren.
 
 Die Änderungen, die Sie hier an einer Welt vornehmen, haben dieselben
@@ -147,10 +141,9 @@ Auch die Avatare anderer Menschen sind zu hören: ihre Schritte auf dem
 jeweiligen Untergrund und ihre Sprünge und Landungen, von dort aus, wo sie
 sind. Nur Menschen, die Sie sehen können, sind zu hören; blenden Sie andere
 Avatare aus, verstummen sie. Wer ein Fahrzeug fährt, ist bis zu 40 m weit
-beim Fahren zu hören: sein Motor steigt und fällt mit dem Tempo, sein Auf-
+beim Fahren zu hören: seine Räder oder sein Brenner steigen und fallen mit dem Tempo, sein Auf-
 und Absteigen und ein Quietschen, wenn er scharf abbremst (das Bremsen
-selbst wird nicht gesendet, daher gilt ein harter Halt dafür). Nur die
-Motoren der drei nächsten Fahrer spielen, damit eine Menge den Rest nicht
+selbst wird nicht gesendet, daher gilt ein harter Halt dafür). Nur die Fahrzeuge der drei nächsten Fahrer spielen, damit eine Menge den Rest nicht
 übertönt.
 
 Klänge um Sie herum werden **in 3D** platziert: vorn oder hinten, oben oder

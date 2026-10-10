@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 115a0e070d0fa0c2 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 121cc4635a6da58b -->
 # 06 — Avatares e presença
 
 <!-- languages -->
@@ -214,7 +214,7 @@ automático ligado.
 
 ### Veículos
 
-Alguns mundos têm uma bicicleta, moto, carro ou drone em que seu avatar pode
+Alguns mundos têm uma bicicleta, um biciclo, uma carroça de feno ou um balão de ar quente em que seu avatar pode
 montar em vez de andar. Chegue perto o bastante de um e aparece um aviso
 dizendo qual tecla o monta:
 
@@ -234,19 +234,16 @@ o veem assim também. Um veículo só vira enquanto se move, então virar
 parado não faz nada; de ré, ele anda para trás sem dar meia-volta. Descer põe seu avatar a pé de novo, num ponto livre
 ao lado do veículo. A velocidade máxima, a aceleração, a frenagem e a
 manobrabilidade de um veículo dependem do tipo dele, e a área de colisão tem
-o tamanho certo — hoje são a bicicleta, a moto, o carro e o drone, os quatro
-veículos que os mundos de fato posicionam e desenham. Uma moto é mais rápida
-que uma bicicleta e mais rara, um carro é ainda mais rápido que uma moto e
-ainda mais raro, e um drone é o mais rápido e o mais raro de todos.
+o tamanho certo — hoje são a bicicleta, o biciclo, a carroça de feno e o balão de ar quente, os quatro
+veículos que os mundos de fato posicionam e desenham. Um biciclo é mais rápido que uma bicicleta e mais raro, uma carroça de feno é ainda mais rápida e ainda mais rara, e um balão de ar quente é o mais rápido e o mais raro de todos.
 
-Um drone fica no chão, parado, exatamente como os outros três, até você
+Um balão de ar quente fica no chão, parado, exatamente como os outros três, até você
 montar nele e começar a se mover — segurar **W** ou **S** o tira do chão;
 soltar o traz de volta para baixo. No ar, ele voa acima das árvores, mas uma
-construção alta ainda o bloqueia exatamente como bloquearia um carro, então
-voar não quer dizer ignorar a geometria do mundo. Você não pode descer de um
-drone no ar — traga-o de volta ao chão antes.
+construção alta ainda o bloqueia exatamente como bloquearia uma carroça, então
+voar não quer dizer ignorar a geometria do mundo. Você não pode descer de um balão no ar — traga-o de volta ao chão antes.
 
-Bicicletas, motos e carros param na beira d’água. Um drone segue voando
+Bicicletas, biciclos e carroças param na beira d’água. Um balão segue voando
 sobre lagos e o mar, e deixa você na água: pouse, desça, e seu avatar está
 nadando. Você não pode tirar um veículo com rodas do inventário enquanto
 está na água.
@@ -271,8 +268,8 @@ remove nada sozinho.
 #### Andando de veículo com outras pessoas por perto
 
 Quem consegue ver seu avatar também vê em que você está montado: sua
-bicicleta, moto, carro ou drone aparece embaixo de você na tela da pessoa,
-virado para onde você vai, e ela ouve o motor, sua subida e descida e suas
+bicicleta, biciclo, carroça ou balão aparece embaixo de você na tela da pessoa,
+virado para onde você vai, e ela ouve o rodar ou o queimador, sua subida e descida e suas
 freadas (veja "Som" em [03 — Visão do mundo](03-WorldView.md)). Você vê e
 ouve os delas do mesmo jeito. Isso segue sua configuração de presença: quem
 não consegue ver você também não fica sabendo em que você está montado.

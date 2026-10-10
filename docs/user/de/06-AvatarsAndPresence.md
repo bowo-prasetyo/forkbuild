@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 115a0e070d0fa0c2 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 121cc4635a6da58b -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -228,7 +228,7 @@ während der automatischen Fahrt lenken können.
 
 ### Fahrzeuge
 
-Manche Welten stellen ein Fahrrad, Motorrad, Auto oder eine Drohne bereit,
+Manche Welten stellen ein Fahrrad, ein Hochrad, einen Heuwagen oder einen Heißluftballon bereit,
 mit dem Ihr Avatar statt zu gehen fahren kann. Gehen Sie nahe genug heran,
 und ein Hinweis sagt Ihnen, mit welcher Taste Sie aufsteigen:
 
@@ -250,22 +250,15 @@ beim Rückwärtsfahren fährt es rückwärts, ohne sich umzudrehen. Beim Absteig
 Avatar an einer freien Stelle neben dem Fahrzeug wieder auf den Füßen.
 Höchstgeschwindigkeit, Beschleunigung, Bremsen und Lenken eines Fahrzeugs
 hängen davon ab, was für ein Fahrzeug es ist, und seine Kollisionsfläche
-ist passend bemessen — derzeit sind das Fahrrad, Motorrad, Auto und
-Drohne, die vier Fahrzeuge, die Welten tatsächlich platzieren und
-darstellen. Ein Motorrad ist schneller als ein Fahrrad und seltener zu
-finden, ein Auto noch schneller als ein Motorrad und noch seltener, und
-eine Drohne ist das schnellste und seltenste von allen.
+ist passend bemessen — derzeit sind das Fahrrad, Hochrad, Heuwagen und Heißluftballon, die vier Fahrzeuge, die Welten tatsächlich platzieren und
+darstellen. Ein Hochrad ist schneller als ein Fahrrad und seltener zu finden, ein Heuwagen noch schneller und noch seltener, und ein Heißluftballon ist das schnellste und seltenste von allen.
 
-Eine Drohne steht still auf dem Boden, genau wie die anderen drei, bis Sie
-aufsteigen und losfahren — **W** oder **S** gedrückt zu halten hebt sie vom
-Boden ab; loslassen bringt sie wieder herunter. In der Luft fliegt sie über
-Bäume, aber ein hohes Gebäude blockiert sie genauso wie ein Auto; Fliegen
+Ein Heißluftballon steht still auf dem Boden, genau wie die anderen drei, bis Sie
+aufsteigen und losfahren — **W** oder **S** gedrückt zu halten hebt ihn vom Boden ab; loslassen bringt ihn wieder herunter. In der Luft fliegt er über Bäume, aber ein hohes Gebäude blockiert ihn genauso wie einen Wagen; Fliegen
 heißt also nicht, die Geometrie der Welt zu ignorieren. Mitten in der Luft
-können Sie nicht von einer Drohne absteigen — bringen Sie sie zuerst
-zurück auf den Boden.
+können Sie nicht aus einem Ballon aussteigen — bringen Sie ihn zuerst zurück auf den Boden.
 
-Fahrräder, Motorräder und Autos halten am Ufer an. Eine Drohne fliegt über
-Seen und das Meer weiter und setzt Sie auf dem Wasser ab: Landen Sie sie und
+Fahrräder, Hochräder und Heuwagen halten am Ufer an. Ein Ballon fliegt über Seen und das Meer weiter und setzt Sie auf dem Wasser ab: Landen Sie ihn und
 steigen Sie ab, und Ihr Avatar schwimmt. Ein Fahrzeug mit Rädern können Sie
 nicht aus Ihrem Inventar holen, solange Sie im Wasser sind.
 
@@ -291,9 +284,8 @@ nie selbst etwas.
 
 #### Mit anderen in der Nähe fahren
 
-Wer Ihren Avatar sehen kann, sieht auch, was Sie fahren: Ihr Fahrrad,
-Motorrad, Auto oder Ihre Drohne wird auf dessen Bildschirm unter Ihnen
-gezeichnet, in Fahrtrichtung, und er hört den Motor, Ihr Auf- und
+Wer Ihren Avatar sehen kann, sieht auch, was Sie fahren: Ihr Fahrrad, Hochrad, Heuwagen oder Ballon wird auf dessen Bildschirm unter Ihnen
+gezeichnet, in Fahrtrichtung, und er hört es rollen oder brausen, Ihr Auf- und
 Absteigen und Ihr Bremsen (siehe „Ton“ in
 [03 — Weltansicht](03-WorldView.md)). Deren Fahrzeuge sehen und hören Sie
 genauso. Es folgt Ihrer Anwesenheitseinstellung: Wer Sie nicht sehen kann,

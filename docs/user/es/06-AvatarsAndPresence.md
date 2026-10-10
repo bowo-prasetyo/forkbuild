@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 115a0e070d0fa0c2 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 121cc4635a6da58b -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -222,8 +222,7 @@ mientras va en crucero.
 
 ### Vehículos
 
-Algunos mundos colocan una bicicleta, una motocicleta, un auto o un dron
-que su avatar puede conducir en lugar de caminar. Acérquese lo suficiente
+Algunos mundos colocan una bicicleta, un biciclo, una carreta de heno o un globo aerostático que su avatar puede conducir en lugar de caminar. Acérquese lo suficiente
 a uno y aparece un aviso que le indica con qué tecla subirse:
 
 | Tecla | Acción |
@@ -243,22 +242,16 @@ girar estando detenido no hace nada; al retroceder, se mueve hacia atrás
 sin darse la vuelta. Al bajarse, su avatar vuelve a estar a
 pie en un lugar despejado junto al vehículo. La velocidad máxima, la
 aceleración, el frenado y el giro de un vehículo dependen del tipo de
-vehículo, y su huella de colisión tiene el tamaño correspondiente: hoy son
-la bicicleta, la motocicleta, el auto y el dron, los cuatro vehículos que
-los mundos realmente colocan y dibujan. Una motocicleta es más rápida que
-una bicicleta y más difícil de encontrar, un auto es todavía más rápido
-que una motocicleta y todavía más raro, y un dron es el más rápido y el
-más raro de todos.
+vehículo, y su huella de colisión tiene el tamaño correspondiente: hoy son la bicicleta, el biciclo, la carreta de heno y el globo aerostático, los cuatro vehículos que
+los mundos realmente colocan y dibujan. Un biciclo es más rápido que una bicicleta y más difícil de encontrar, una carreta de heno es todavía más rápida y todavía más rara, y un globo aerostático es el más rápido y el más raro de todos.
 
-Un dron está en el suelo, quieto, exactamente como los otros tres, hasta
+Un globo aerostático está en el suelo, quieto, exactamente como los otros tres, hasta
 que se sube a él y empieza a moverse: mantener **W** o **S** lo levanta del
 suelo; soltarlas lo hace bajar. Una vez en el aire, vuela por encima de los
-árboles, pero un edificio alto lo bloquea igual que a un auto, así que
-volar no significa ignorar la geometría del mundo. No puede bajarse de un
-dron en el aire: primero tráigalo de vuelta al suelo.
+árboles, pero un edificio alto lo bloquea igual que a una carreta, así que
+volar no significa ignorar la geometría del mundo. No puede bajarse de un globo en el aire: primero tráigalo de vuelta al suelo.
 
-Las bicicletas, motocicletas y coches se detienen en la orilla. Un dron
-sigue volando sobre lagos y el mar, y lo deja sobre el agua: aterrícelo,
+Las bicicletas, biciclos y carretas se detienen en la orilla. Un globo sigue volando sobre lagos y el mar, y lo deja sobre el agua: aterrícelo,
 bájese y su avatar estará nadando. No puede sacar un vehículo con ruedas
 de su inventario mientras está en el agua.
 
@@ -283,8 +276,8 @@ que **Q** sacará después; nunca hace aparecer ni quita nada por sí solo.
 #### Conducir con otras personas alrededor
 
 Las personas que pueden ver su avatar también ven lo que conduce: su
-bicicleta, motocicleta, auto o dron se dibuja debajo de usted en su
-pantalla, mirando hacia donde va, y oyen su motor, cuando se sube y se baja
+bicicleta, biciclo, carreta o globo se dibuja debajo de usted en su
+pantalla, mirando hacia donde va, y lo oyen rodar o rugir, cuando se sube y se baja
 y cuando frena (consulte “Sonido” en
 [03 — Vista del mundo](03-WorldView.md)). Usted ve y oye los de ellas de la
 misma forma. Sigue su opción de presencia: quien no puede verlo tampoco se

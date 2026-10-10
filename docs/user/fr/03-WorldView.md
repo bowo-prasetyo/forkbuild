@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 1d94840844dd42aa -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d2c323274d094628 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -120,13 +120,7 @@ l’herbe, les feuilles qui craquent en forêt, le sable doux d’une plage, la
 pierre sur les hauteurs rocheuses, les éclaboussures dans un lac ou une
 rivière, et un son creux sur les briques. Sauter fait un souffle, et
 atterrir un bruit sourd, plus lourd après une chute plus longue. À bord
-d’un véhicule, vous l’entendez : les pneus et la roue libre d’un vélo, le
-bourdonnement d’une moto, le grondement d’une voiture ou le sifflement d’un
-drone, qui montent quand vous accélérez et s’estompent quand vous
-descendez. Monter et descendre ont aussi leur son (la sonnette et la
-béquille d’un vélo, le kick d’une moto, la portière et le démarrage d’une
-voiture, les rotors d’un drone qui démarrent et s’arrêtent), et freiner à
-vitesse fait crisser les pneus ou les plaquettes, d’autant plus fort que
+d’un véhicule, vous l’entendez : les pneus et la roue libre d’un vélo ou d’un grand-bi, les roues de bois d’une charrette à foin qui grondent ou le brûleur d’une montgolfière, qui montent quand vous accélérez et s’estompent quand vous descendez ; ceux à roues se taisent à l’arrêt. Monter et descendre ont aussi leur son (la sonnette et la béquille d’un vélo, le grincement et le tintement d’un grand-bi, les planches qui craquent et le foin qui bruisse d’une charrette, le brûleur qui s’emballe puis s’éteint), et freiner à vitesse fait crisser, racler ou grincer les freins, d’autant plus fort que
 vous alliez vite.
 
 Les modifications que vous apportez ici à un Monde ont les mêmes sons
@@ -150,11 +144,10 @@ Les avatars des autres personnes s’entendent aussi : leurs pas sur ce sur
 quoi ils marchent, leurs sauts et leurs atterrissages, depuis là où ils
 sont. Seules les personnes que vous pouvez voir s’entendent ; masquez les
 autres avatars et ils se taisent. Quelqu’un à bord d’un véhicule
-s’entend jusqu’à 40 m : son moteur qui monte et descend avec sa vitesse,
+s’entend jusqu’à 40 m : ses roues ou son brûleur qui montent et descendent avec sa vitesse,
 quand il monte et descend, et un crissement quand il ralentit
 brusquement (le freinage lui-même n’est pas transmis, donc un arrêt brutal
-est interprété comme tel). Seuls les moteurs des trois conducteurs les
-plus proches sont joués, pour qu’une foule ne couvre pas le reste.
+est interprété comme tel). Seuls les véhicules des trois conducteurs les plus proches sont joués, pour qu’une foule ne couvre pas le reste.
 
 Les sons autour de vous sont placés en **3D** : devant ou derrière, au-
 dessus ou en dessous, ainsi qu’à gauche ou à droite, et tournent quand

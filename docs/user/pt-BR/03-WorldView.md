@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 1d94840844dd42aa -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d2c323274d094628 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -110,12 +110,7 @@ caminhada ou da corrida e mudam conforme o que está sob os pés: grama, folhas
 estalando na floresta, areia fofa na praia, pedra em terreno alto e rochoso,
 respingos em um lago ou rio, e uma batida oca sobre blocos. Pular faz um
 zunido, e aterrissar um baque, mais pesado depois de uma queda maior.
-Montado em um veículo, você o ouve: os pneus e a catraca de uma bicicleta, o
-zumbido de uma moto, o ronco de um carro ou o chiado de um drone, subindo
-quando você acelera e sumindo quando você desce. Subir e descer também têm
-som próprio (a campainha e o descanso da bicicleta, o pedal de partida da
-moto, a porta e a ignição do carro, os rotores do drone acelerando e
-parando), e frear em velocidade faz os pneus ou as pastilhas cantarem, mais
+Montado em um veículo, você o ouve: os pneus e a catraca de uma bicicleta ou de um biciclo, o rodar das rodas de madeira de uma carroça de feno ou o queimador de um balão de ar quente, subindo quando você acelera e sumindo quando você desce; os de rodas ficam quietos parados. Subir e descer também têm som próprio (a campainha e o descanso da bicicleta, o rangido e o sino do biciclo, as tábuas rangendo e o feno farfalhando na carroça, o queimador rugindo e apagando), e frear em velocidade faz os freios cantarem, rasparem ou rangerem, mais
 alto quanto mais rápido você estava.
 
 As mudanças que você faz em um Mundo aqui têm os mesmos sons curtos do
@@ -137,10 +132,9 @@ Os avatares das outras pessoas também são ouvidos: os passos delas sobre o
 que estiverem pisando, e seus pulos e aterrissagens, de onde estão. Só são
 ouvidas as pessoas que você consegue ver; oculte os outros avatares e eles
 ficam em silêncio. Alguém montado em um veículo é ouvido nele, até 40 m de
-distância: o motor subindo e descendo com a velocidade, a subida e a descida,
+distância: as rodas ou o queimador subindo e descendo com a velocidade, a subida e a descida,
 e um chiado quando a pessoa reduz bruscamente (a frenagem em si não é
-enviada, então uma parada brusca é entendida como frenagem). Só tocam os
-motores dos três condutores mais próximos, para que uma multidão não abafe
+enviada, então uma parada brusca é entendida como frenagem). Só tocam os veículos dos três condutores mais próximos, para que uma multidão não abafe
 o resto.
 
 Os sons ao seu redor são posicionados em **3D**: à frente ou atrás, acima ou
