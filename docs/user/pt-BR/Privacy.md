@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: a81525a044b02e2b -->
+<!-- translation-of: docs/Privacy.md source-hash: ffd5c3f422c5e675 -->
 # Privacidade
 
 <!-- languages -->
@@ -163,6 +163,22 @@ páginas de outros sites (veja "Servidores que o ForkBuild contata" abaixo):
 E quando alguém entra no desafio de construção semanal (**Participar do
 desafio**, ou o desafio em **Novo** no Editor): `/e/challenge-join`.
 
+E na primeira vez que uma construção é publicada a partir deste navegador
+(publicá-la de novo depois não envia nada):
+
+- o tamanho dela, como uma de cinco faixas de blocos colocados diretamente,
+  sem contar estruturas: `/e/publish-bricks-0`, `/e/publish-bricks-1`
+  (de 1 a 9), `/e/publish-bricks-10` (de 10 a 49), `/e/publish-bricks-50`
+  (de 50 a 199) ou `/e/publish-bricks-200` (200 ou mais). Nunca o número exato;
+- `/e/second-build`, quando é a segunda construção publicada a partir deste
+  navegador, o que acontece uma única vez;
+- `/e/remix-published`, quando é uma cópia de uma construção que este
+  navegador não publicou.
+
+Isso é calculado a partir das construções que este navegador publicou, que
+ele já guarda (veja "O que fica no seu dispositivo"); nada novo é guardado
+para isso.
+
 E quando o ForkBuild é aberto por um link de um dos próprios posts de
 lançamento, que termina em `?ref=` e no nome do lugar onde foi publicado
 (`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu` ou `github`; qualquer outro valor é ignorado): `/r/` e esse nome,
@@ -215,6 +231,7 @@ pede a ele.
 | Você instala o ForkBuild pelo site oficial (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com o caminho fixo `/e/installed`, sem referenciador e sem cookie |
 | No site oficial, você copia o código para incorporar de uma construção, ou uma construção incorporada é mostrada ou aberta no ForkBuild (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com um caminho fixo dizendo qual dos três casos foi, sem referenciador e sem cookie |
 | No site oficial, você entra no desafio de construção semanal (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma requisição de imagem com o caminho fixo `/e/challenge-join`, sem referenciador e sem cookie |
+| No site oficial, você publica uma construção pela primeira vez (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma requisição de imagem com um caminho fixo que indica a faixa de blocos, e mais uma para uma segunda construção ou um remix, sem referenciador e sem cookie |
 | Você abre o site oficial pelo link de um post de lançamento (`?ref=…`, veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma requisição de imagem com o caminho fixo `/r/<canal>`, sem referenciador e sem cookie |
 | Você fica visível, ou procura alguém, em **Pares** | o servidor de encontro (`forkbuild-rendezvous.prazjp.workers.dev`) | a chave pública da sua identidade e uma oferta de conexão, guardadas por no máximo 15 minutos; a identidade que você procura; quando você se conecta a alguém que encontrou, sua resposta de conexão (que lista seus endereços de rede), que só essa pessoa pode buscar |
 | Você entra numa sala pública, ou olha uma | o mesmo servidor de encontro | seu cartão de sala assinado (chave pública, nome de exibição, qual sala), guardado por no máximo 15 minutos e renovado enquanto você fica; qual sala você olha |

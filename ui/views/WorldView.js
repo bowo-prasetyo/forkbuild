@@ -413,7 +413,8 @@ export default {
         const {
             onSaveMetadata, openMetadataEditor, publishActiveDocument, saveActiveDocument
         } = useDocumentActions({
-            activeDocumentInfo, feedback, guarded, metadataEditTarget, refreshSpatialUI, session, showMetadataEditor
+            activeDocumentInfo, feedback, guarded, metadataEditTarget, refreshSpatialUI, session, showMetadataEditor,
+            funnelEventCounter: inject('funnelEventCounter', null)
         });
 
         const {

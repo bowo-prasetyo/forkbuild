@@ -46,3 +46,15 @@ export function snapshotBrickCount(snapshot) {
     }
     return total;
 }
+
+// The same count for a build still open for editing: the bricks its World's
+// buildings hold, structure placements aside.
+export function worldBrickCount(world) {
+    let total = 0;
+    const buildings = typeof world?.getBuildings === 'function' ? world.getBuildings() : [];
+    for (const building of buildings) {
+        const bricks = typeof building?.getBricks === 'function' ? building.getBricks() : null;
+        if (Array.isArray(bricks)) total += bricks.length;
+    }
+    return total;
+}

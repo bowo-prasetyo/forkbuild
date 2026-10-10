@@ -1,4 +1,14 @@
-import { FunnelEvent, VISITOR_COUNT_SITE_ORIGIN, funnelEventHitUrl, isFunnelEvent } from '../core/VisitorCount.js';
+import { FunnelEvent, VISITOR_COUNT_SITE_ORIGIN, funnelEventHitUrl, isFunnelEvent, publishedBrickRangeEvent, publishedBuildEvents } from '../core/VisitorCount.js';
+import { worldBrickCount } from '../core/BuilderStamps.js';
+import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
+import { LocalContentStore } from '../content/LocalContentStore.js';
+import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
+import { Document } from '../core/Document.js';
+import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/World.js';
+import { Building } from '../core/Building.js';
+import { Brick } from '../core/Brick.js';
+import { Position } from '../core/Position.js';
 import { FunnelEventCounter } from '../application/settings/FunnelEventCounter.js';
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -78,4 +88,52 @@ function counter({ origin = VISITOR_COUNT_SITE_ORIGIN, privacySignals = {}, enab
     assert(instance.joinedChallenge() === true && hits.at(-1).includes('p=%2Fe%2Fchallenge-join&'), 'joining the weekly challenge is /e/challenge-join');
     assert(counter({ privacySignals: { globalPrivacyControl: true } }).instance.embedViewed() === false, 'under the same rules');
     console.log('✓ embeds');
+}
+
+// A build's first publish from this device: its brick range, this device's
+// second build, a remix of someone else's. Published for real, so the
+// counter reads the same records the app does.
+{
+    const storage = new InMemoryStorageProvider();
+    const publisher = new LocalPublisherProvider(storage, new LocalContentStore(storage));
+    const discovery = new LocalDiscoveryProvider(storage);
+    const store = new VisitorCountSettingsStore({ storageProvider: new InMemoryStorageProvider() });
+    const hits = [];
+    const instance = new FunnelEventCounter({
+        settingsStore: store, origin: VISITOR_COUNT_SITE_ORIGIN, random: () => 0.5,
+        sendHit: (url) => hits.push(url), listOwnPublications: () => discovery.list()
+    });
+    const build = (title, bricks, parentDocumentId = null) => {
+        const world = new World();
+        const building = new Building({ creator: 'alice' });
+        for (let i = 0; i < bricks; i++) building.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(i, 0.5, 0) }));
+        world.addBuilding(building);
+        return new Document({ world, metadata: new DocumentMetadata({ title, author: 'alice', parentDocumentId }) });
+    };
+    const publish = (document) => instance.publishedBuild(publisher.publish(document, null), worldBrickCount(document.world));
+
+    const first = build('First', 12);
+    assert(worldBrickCount(first.world) === 12, 'an open build\'s bricks are counted');
+    assert(publish(first).join() === 'publish-bricks-10', 'a first build: only its brick range');
+    assert(hits.at(-1) === 'https://forkbuild.goatcounter.com/count?p=%2Fe%2Fpublish-bricks-10&rnd=5', 'a fixed path, with no count, title or id');
+    assert(publish(first).length === 0, 'publishing the same build again adds nothing');
+
+    const second = build('Second', 250);
+    assert(publish(second).join() === 'publish-bricks-200,second-build', 'the second build is counted once, as such');
+    const ownRemix = build('Mine again', 3, first.world.id);
+    assert(publish(ownRemix).join() === 'publish-bricks-1', 'a third build is not a second, and a copy of one\'s own build is not a remix');
+    const remix = build('Remix', 60, 'someone-elses-build');
+    assert(publish(remix).join() === 'publish-bricks-50,remix-published', 'a copy of someone else\'s build is a remix');
+    assert(hits.every((url) => !url.includes('someone') && !url.includes('Remix')), 'nothing about the build is sent');
+
+    assert(publishedBrickRangeEvent(0) === 'publish-bricks-0' && publishedBrickRangeEvent(9) === 'publish-bricks-1'
+        && publishedBrickRangeEvent(49) === 'publish-bricks-10' && publishedBrickRangeEvent(199) === 'publish-bricks-50'
+        && publishedBrickRangeEvent(undefined) === 'publish-bricks-0', 'five ranges, by their lowest count');
+    assert(publishedBuildEvents({ publication: null, brickCount: 5 }).length === 0, 'no build, nothing');
+
+    store.setEnabled(false);
+    assert(publish(build('Uncounted', 5)).length === 0, 'under the daily count\'s setting');
+    const failing = new FunnelEventCounter({ settingsStore: store, origin: VISITOR_COUNT_SITE_ORIGIN, sendHit: () => {}, listOwnPublications: () => { throw new Error('broken'); } });
+    assert(failing.publishedBuild({ id: 'p', documentId: 'd' }, 5).length === 0, 'records that can\'t be read never throw');
+    console.log('✓ published builds');
 }
