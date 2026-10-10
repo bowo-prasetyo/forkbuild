@@ -240,6 +240,7 @@ needs a wallet or funding observed first, its link opens that panel for you.
 
 ### What you'll need
 
+- **Bitcoin wallet** switched on under [Network Settings → Wallets](10-NetworkSettings.md#show-experimental-tools).
 - The **UniSat** browser extension (`window.unisat`); no other Bitcoin
   wallet is supported yet.
 - An account holding spendable bitcoin at a **native SegWit** address
@@ -384,6 +385,7 @@ the content hash as data), its own terms.
 
 ### What you'll need
 
+- **Base wallet** switched on under [Network Settings → Wallets](10-NetworkSettings.md#show-experimental-tools).
 - A browser wallet using the standard
   [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) `window.ethereum`
   interface, such as Coinbase Wallet or MetaMask.

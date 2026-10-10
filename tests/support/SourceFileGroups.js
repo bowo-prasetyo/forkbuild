@@ -53,9 +53,10 @@ export function worldEncounterCanvasFiles() {
     ];
 }
 
-// ui/main.js, the composition root, with the compose functions it calls.
+// ui/main.js, the composition root, with the compose functions it calls and
+// the network writer plugins it loads (ui/main/plugins).
 export function mainFiles() {
-    return fileGroup('ui/main.js', 'ui/main');
+    return [...jsFilesIn('ui/main/plugins'), ...fileGroup('ui/main.js', 'ui/main')];
 }
 
 export function ownPublicationPanelFiles() {

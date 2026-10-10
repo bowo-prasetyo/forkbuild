@@ -1469,8 +1469,9 @@ The saved preferences live in `RoleProviderPreferenceStore` (`CONTENT`, `ANNOUNC
 and they seed every picker's first value through `resolveSavedProviderDefault()`; they never override a choice already
 made. The Distribution roles offer that button only for a saved provider they can use
 (`preferredDistributionChoice()`), never for a wallet-guided anchor type, and otherwise show every option. The
-per-type anchor cards list only `oneClickAnchorTypes()`: the one-click Bitcoin publisher stays registered (the
-Proof / Anchoring Provider page offers Bitcoin) but has no wallet and never succeeds, so it gets no card. On the
+per-type anchor cards list only `oneClickAnchorTypes()`: the one-click Bitcoin publisher is registered while Bitcoin's
+wallet is switched on (the Proof / Anchoring Provider page then offers Bitcoin) but has no wallet and never succeeds, so it
+gets no card. On the
 Publications page, Distribute Snapshot on a World distributes the World's own snapshot (the wrapped Publication's
 `contentReference`, not the envelope's) with its publisher's signed placement from `PublisherPlacementClaimLookup`
 (`application/placement/PublisherPlacementClaim.js`, the same record World View's `getPublisherPlacementRecord()`
@@ -1697,8 +1698,8 @@ groups each page needs, and the router loads them beside the page's own
 modules, so they are provided before it renders (a provide added after the
 app mounted reaches every component created later). There are four:
 `anchoring` (publication evidence, and Bitcoin, Base, Arweave, Steem and
-Blurt anchoring with their wallets: the Publications page and the Proof &
-Anchoring settings), `distribution` (publication and Snapshot distribution,
+Blurt anchoring: the Publications page and the Proof & Anchoring settings),
+`distribution` (publication and Snapshot distribution,
 Snapshot and place-name discovery, remote IPFS pinning, IPFS content checks
 and Publication links: the Editor, World View, the Publications page and a
 Publication link), `observationArchive` (the Publications page) and `sound` (World View and the Editor). What must run from
@@ -1707,6 +1708,22 @@ peers' messages, background announcement sync, backups, and everything the
 header shows. tests/ServiceGroupCoverage.test.js fails if a page injects a
 service from a group not listed for it, if a listed group goes unused, or if
 the header injects a group's service.
+
+Bitcoin's and Base's wallet steps are network writers (core/NetworkWriters.js,
+docs/Pillars.md "Networks: readers and writers"), built only when switched on
+in Network Settings (application/settings/NetworkWriterSettingsStore.js,
+ui/components/NetworkWritersSetting.js). `anchoring` (ui/main/composeAnchoring.js)
+builds every network's anchor reader: proof checks and evidence views for
+Arweave, Steem, Blurt, Bitcoin and Base, and Bitcoin's confirmation and
+reconcile. ui/main/NetworkWriterLoader.js then imports and builds the writer
+plugins switched on (ui/main/plugins/composeBitcoinWallet.js and
+composeBaseWallet.js) on what `anchoring` built, and one switched on later at
+once; each provides its services like a group, and the Publications page's
+composables inject them only while the switch is on
+(ui/views/decentralizedPublications/networkWriterServices.js). Bitcoin's
+one-shot publisher joins the shared anchor publisher registry with its
+writer. tests/NetworkWriters.test.js checks that only the plugins reach the
+wallet modules.
 
 ui/router/index.js
 defines the routes: Home, Editor (`/editor`), Repository, Recent Worlds,

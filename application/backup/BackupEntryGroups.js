@@ -96,6 +96,7 @@ const EXACT_NAMES = new Map([
     ['role-provider-preference:by-role', BackupEntryGroup.SETTINGS],
     ['commentary-distribution-preference', BackupEntryGroup.SETTINGS],
     ['experimental-tools-settings', BackupEntryGroup.SETTINGS],
+    ['network-writer-settings', BackupEntryGroup.SETTINGS],
 
     ['publication-catalog:entries', BackupEntryGroup.DOWNLOADED],
     ['world-encounter-publication-admission-log:entries', BackupEntryGroup.DOWNLOADED],

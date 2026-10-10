@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: cb4b276ed6e02e88 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
 # 11 — 証拠とストレージ
 
 <!-- languages -->
@@ -252,6 +252,7 @@ Bitcoin のアンカーのカードには **Bitcoinアンカー** のセクシ�
 
 ### 必要なもの
 
+- [ネットワーク設定 → ウォレット](10-NetworkSettings.md#実験的なツールを表示) で **Bitcoin ウォレット** をオンにしておくこと。
 - **UniSat** ブラウザー拡張機能（`window.unisat`）。ほかの Bitcoin
   ウォレットにはまだ対応していません。
 - **ネイティブ SegWit** のアドレス（`bc1q…` で始まる）に使えるビット
@@ -403,6 +404,7 @@ Bitcoin とは別のもので、独自のウォレット、独自のトランザ
 
 ### 必要なもの
 
+- [ネットワーク設定 → ウォレット](10-NetworkSettings.md#実験的なツールを表示) で **Base ウォレット** をオンにしておくこと。
 - 標準の [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193)
   `window.ethereum` インターフェースを使うブラウザーのウォレット
   （Coinbase Wallet や MetaMask など）。

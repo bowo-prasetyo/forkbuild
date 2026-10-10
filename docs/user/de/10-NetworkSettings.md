@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 7085ae1ba4a129cf -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 030d653a072ce0a8 -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
@@ -39,6 +39,16 @@ von ForkBuild, die **experimentell** sind: hier die Seite
 den Bereich **Wallet- & Archivwerkzeuge**. Der Schalter ist aus, bis Sie ihn
 einschalten, und wird auf diesem Gerät gespeichert, sobald Sie ihn ändern. Nichts, was Sie
 zum Bauen, Veröffentlichen oder Teilen brauchen, wird ausgeblendet.
+
+Darunter hat **Wallets** einen Schalter für jede Wallet, mit der ForkBuild
+verankern kann: **Bitcoin-Wallet** und **Base-Wallet**. Jeder ist aus, bis
+Sie ihn einschalten, und wird auf diesem Gerät gespeichert. Solange einer aus
+ist, bietet die Seite Veröffentlichungen die Schritte dieser Wallet weder an
+noch lädt sie sie, und Bitcoin wird nicht als
+[Nachweis-/Verankerungsanbieter](#nachweis-verankerungsanbieter) angeboten. Bereits
+erstellte Bitcoin- und Base-Anker werden in jedem Fall geprüft und angezeigt.
+Das Ausschalten wirkt, sobald die Seite Veröffentlichungen das nächste Mal
+geöffnet wird.
 
 ## Wie sich jede Seite verhält
 

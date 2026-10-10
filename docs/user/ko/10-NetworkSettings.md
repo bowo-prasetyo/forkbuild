@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 7085ae1ba4a129cf -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 030d653a072ce0a8 -->
 # 10 — 네트워크 설정
 
 <!-- languages -->
@@ -38,6 +38,13 @@
 [게시물 페이지](09-PublicationsAndEvidence.md#게시물-페이지)의 **지갑 및 아카이브 도구** 패널입니다.
 켜기 전까지는 꺼져 있고, 바꾸는 즉시 이 기기에 저장됩니다. 짓고, 게시하고,
 공유하는 데 필요한 것은 아무것도 숨겨지지 않습니다.
+
+그 아래 **지갑**에는 ForkBuild가 앵커링에 쓸 수 있는 지갑마다 스위치가
+있습니다: **Bitcoin 지갑**과 **Base 지갑**. 각각 켜기 전까지는 꺼져 있고, 이
+기기에 저장됩니다. 꺼져 있는 동안 게시물 페이지는 그 지갑의 단계를 보여 주지도
+불러오지도 않으며, Bitcoin은 [증명 / 앵커링 제공자](#증명--앵커링-제공자)로 제공되지
+않습니다. 이미 만들어진 Bitcoin·Base 앵커는 어느 경우든 확인하고 표시합니다.
+끈 변경은 다음에 게시물 페이지를 열 때 적용됩니다.
 
 ## 모든 페이지의 공통 동작
 

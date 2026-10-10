@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: cb4b276ed6e02e88 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
@@ -262,6 +262,7 @@ o link dele abre esse painel para você.
 
 ### Do que você vai precisar
 
+- A **Carteira de Bitcoin** ativada em [Configurações de rede → Carteiras](10-NetworkSettings.md#mostrar-ferramentas-experimentais).
 - A extensão de navegador **UniSat** (`window.unisat`); nenhuma outra
   carteira Bitcoin é suportada ainda.
 - Uma conta com bitcoin disponível para gastar num endereço **SegWit
@@ -415,6 +416,7 @@ mesmo levando o hash do conteúdo como dado), termos próprios.
 
 ### Do que você vai precisar
 
+- A **Carteira da Base** ativada em [Configurações de rede → Carteiras](10-NetworkSettings.md#mostrar-ferramentas-experimentais).
 - Uma carteira de navegador que use a interface padrão
   [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) `window.ethereum`,
   como a Coinbase Wallet ou a MetaMask.

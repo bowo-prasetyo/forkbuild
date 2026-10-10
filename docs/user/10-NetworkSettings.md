@@ -37,6 +37,14 @@ and the **Wallet & Archive Tools** panel on the
 this device as soon as you change it. Nothing you need to build, publish or
 share is hidden while it is off.
 
+Below it, **Wallets** has a switch for each wallet ForkBuild can anchor
+with: **Bitcoin wallet** and **Base wallet**. Each is off until you turn it
+on, and is saved on this device. While one is off, the Publications page
+neither offers that wallet's steps nor loads them, and Bitcoin isn't offered
+as a [Proof / Anchoring Provider](#proof--anchoring-provider). Anchors
+already made on Bitcoin or Base are still checked and shown either way.
+Turning one off takes effect the next time the Publications page opens.
+
 ## How every page behaves
 
 - **Reload after saving.** Changes take effect the next time the app loads

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: cb4b276ed6e02e88 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
@@ -269,6 +269,7 @@ tautannya membuka panel itu untuk Anda.
 
 ### Apa yang Anda perlukan
 
+- **Dompet Bitcoin** dinyalakan di [Pengaturan Jaringan → Dompet](10-NetworkSettings.md#tampilkan-alat-eksperimental).
 - Ekstensi browser **UniSat** (`window.unisat`); dompet Bitcoin lain belum
   didukung.
 - Akun yang menyimpan bitcoin yang dapat dibelanjakan di alamat **native
@@ -424,6 +425,7 @@ istilahnya sendiri.
 
 ### Apa yang Anda perlukan
 
+- **Dompet Base** dinyalakan di [Pengaturan Jaringan → Dompet](10-NetworkSettings.md#tampilkan-alat-eksperimental).
 - Dompet browser yang memakai antarmuka standar
   [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) `window.ethereum`,
   seperti Coinbase Wallet atau MetaMask.

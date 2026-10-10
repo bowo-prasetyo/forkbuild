@@ -1,4 +1,5 @@
 import { inject, reactive } from 'vue';
+import { isNetworkWriterOn } from './networkWriterServices.js';
 import { BaseWalletConnectionState } from '../../../application/anchoring/base/BaseWalletConnectionState.js';
 import { describeBaseWalletConnection } from '../../../application/anchoring/base/BaseWalletConnectionView.js';
 import {
@@ -40,25 +41,29 @@ export function useBaseAnchoring({
     archiveBaseAnchorPublicationRecord, archiveBaseTransactionInclusionObservation, loadEvidence,
     persistPublicationObservationArchive, publicationObservationArchive
 }) {
+    // Bitcoin's and Base's wallets are network writers (core/NetworkWriters.js):
+    // their steps are offered only while Network Settings has this one switched
+    // on, read when the page opens.
+    const on = isNetworkWriterOn('base');
     // Page-level and unrelated to the Bitcoin wallet. A Base wallet
     // connection exposes an account address only, never a signing
     // capability; network observations are fresh, explicitly-triggered
     // reads.
-    const baseWalletConnection = inject('baseWalletConnection', null);
-    const baseNetworkObserver = inject('baseNetworkObserver', null);
+    const baseWalletConnection = on ? inject('baseWalletConnection', null) : null;
+    const baseNetworkObserver = on ? inject('baseNetworkObserver', null) : null;
     // Requires an already-observed baseAccountObservationState.observation;
     // the coordinator never observes an account itself.
-    const basePublicationTransactionPlanCoordinator = inject('basePublicationTransactionPlanCoordinator', null);
+    const basePublicationTransactionPlanCoordinator = on ? inject('basePublicationTransactionPlanCoordinator', null) : null;
     // A signing capability kept separate from baseWalletConnection, which
     // only ever exposes an account.
-    const baseInjectedProviderWalletTransactionSigner = inject('baseInjectedProviderWalletTransactionSigner', null);
-    const baseReviewedSigningCoordinator = inject('baseReviewedSigningCoordinator', null);
-    const baseSignedTransactionFinalizationCoordinator = inject('baseSignedTransactionFinalizationCoordinator', null);
-    const baseTransactionBroadcastCoordinator = inject('baseTransactionBroadcastCoordinator', null);
-    const baseTransactionInclusionObservationCoordinator = inject('baseTransactionInclusionObservationCoordinator', null);
+    const baseInjectedProviderWalletTransactionSigner = on ? inject('baseInjectedProviderWalletTransactionSigner', null) : null;
+    const baseReviewedSigningCoordinator = on ? inject('baseReviewedSigningCoordinator', null) : null;
+    const baseSignedTransactionFinalizationCoordinator = on ? inject('baseSignedTransactionFinalizationCoordinator', null) : null;
+    const baseTransactionBroadcastCoordinator = on ? inject('baseTransactionBroadcastCoordinator', null) : null;
+    const baseTransactionInclusionObservationCoordinator = on ? inject('baseTransactionInclusionObservationCoordinator', null) : null;
     // anchoring/BaseAnchorPublisher.js's review-preserving path; the UI
     // never assembles its own sign/finalize/broadcast sequence.
-    const baseAnchorPublisher = inject('baseAnchorPublisher', null);
+    const baseAnchorPublisher = on ? inject('baseAnchorPublisher', null) : null;
 
     const baseWalletConnectionState = reactive({
         status: BaseWalletConnectionState.DISCONNECTED,

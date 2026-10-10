@@ -720,7 +720,11 @@ async function run() {
         const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
 
         // I1-I2: Bitcoin — the activated 0.9.512 seam.
-        assert(mainSrc.includes("app.provide('bitcoinAnchorPublicationCoordinator', bitcoinAnchorPublicationCoordinator);"), n('I1[bitcoin]. ui/main.js provides the real coordinator to the app'));
+        // Bitcoin's wallet is a network writer (core/NetworkWriters.js): its plugin
+        // returns the coordinator, and NetworkWriterLoader provides what a plugin
+        // returns (tests/NetworkWriters.test.js).
+        assert(/return \{[\s\S]*\bbitcoinAnchorPublicationCoordinator\b[\s\S]*\};\n\}/.test(codeOnly(await source('ui/main/plugins/composeBitcoinWallet.js'))),
+            n('I1[bitcoin]. the Bitcoin wallet plugin provides the real coordinator to the app'));
         const broadcastFnMatch = viewSrc.match(/async function broadcastBitcoinAnchorTransaction\(\) \{[\s\S]*?\n {4}\}\n/);
         assert(broadcastFnMatch && broadcastFnMatch[0].includes('publishBroadcastedAnchor(') && broadcastFnMatch[0].includes('BitcoinAnchorBroadcastState.BROADCASTED'),
             n('I2[bitcoin]. publishBroadcastedAnchor() is reachable from the real, explicit "Broadcast Transaction" action, guarded by the real BROADCASTED state'));
