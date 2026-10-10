@@ -3644,6 +3644,10 @@ export default Object.freeze({
     'visibilityPolicyForm.saved': '저장했습니다.',
 
     // Identity, Peers, Chat and settings: aboutView.
+    'notFoundView.title': '이 페이지는 여기에 없습니다',
+    'notFoundView.explanation': '링크가 잘못 입력되었거나, 새 버전의 ForkBuild에는 더 이상 없는 페이지를 가리킵니다.',
+    'notFoundView.goHome': '홈으로',
+    'notFoundView.openEditor': '에디터 열기',
     'aboutView.aboutForkbuild': 'ForkBuild 정보',
     'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild는 브라우저에서 즐기는 3D 건축 게임입니다. 작은 장소를 짓고, 누구나 리믹스하게 하고, 친구들과 함께 그 안을 걸어 보세요. 작품은 여러분의 것입니다. 기기에 보관되고, 어느 한 회사가 운영하지 않는 열린 네트워크에 게시됩니다.',
     'aboutView.projectReadme': '프로젝트 README',

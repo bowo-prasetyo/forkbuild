@@ -3641,6 +3641,10 @@ export default Object.freeze({
     'visibilityPolicyForm.saved': 'Tersimpan.',
 
     // Identity, Peers, Chat and settings: aboutView.
+    'notFoundView.title': 'Halaman ini tidak ada di sini',
+    'notFoundView.explanation': 'Tautannya mungkin salah ketik, atau mengarah ke halaman yang sudah tidak ada di versi ForkBuild yang lebih baru.',
+    'notFoundView.goHome': 'Ke Beranda',
+    'notFoundView.openEditor': 'Buka Editor',
     'aboutView.aboutForkbuild': 'Tentang ForkBuild',
     'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild adalah gim membangun 3D di browser Anda: bangun sebuah tempat kecil, biarkan siapa pun me-remix-nya, lalu jelajahi bersama teman. Karya Anda tetap milik Anda: tersimpan di perangkat Anda dan diterbitkan ke jaringan terbuka yang tidak dikuasai satu perusahaan pun.',
     'aboutView.projectReadme': 'README Proyek',

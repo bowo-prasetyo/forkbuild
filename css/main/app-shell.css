@@ -296,3 +296,17 @@ html, body {
     margin: -0.25rem 0 0.75rem;
 }
 .metadata-editor-tag-suggestion { padding: 0.15rem 0.5rem; font-size: 0.8rem; }
+
+/* An address no page answers (ui/views/NotFoundView.js). Its button keeps
+   .cta-button's dark text over .about-view's green links. */
+.not-found-view .cta-button {
+    color: #121212;
+}
+
+.not-found-view .cta-button:hover {
+    text-decoration: none;
+}
+
+.not-found-view-editor {
+    margin-left: 1rem;
+}

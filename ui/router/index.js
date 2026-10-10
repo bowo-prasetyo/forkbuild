@@ -52,6 +52,7 @@ const TurnServerSettingsView = page('TurnServerSettingsView', () => import('../v
 const RendezvousSettingsView = page('RendezvousSettingsView', () => import('../views/RendezvousSettingsView.js'));
 const YourDataView = page('YourDataView', () => import('../views/YourDataView.js'));
 const LanguageSettingsView = page('LanguageSettingsView', () => import('../views/LanguageSettingsView.js'));
+const NotFoundView = page('NotFoundView', () => import('../views/NotFoundView.js'));
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },
@@ -232,7 +233,9 @@ const routes = [
     // "What we are not making"): an old link to one opens Home.
     ...['/leaderboard', '/publisher-leaderboard', '/publisher-snapshot-claim', '/reconciliation-workspace',
         '/reconciliation-leaderboard', '/evidence-export-comparison'].map((path) => ({ path, redirect: '/' })),
-    { path: '/about', name: 'about', component: AboutView }
+    { path: '/about', name: 'about', component: AboutView },
+    // Any other address, such as an old link to a retired page.
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView }
 ];
 
 export const router = createRouter({

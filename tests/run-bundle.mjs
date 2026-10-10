@@ -176,6 +176,10 @@ async function openLaunchLink(browser, base) {
         await page.waitForSelector('.challenge-view', { timeout: 60_000 });
         const address = await page.evaluate(() => ({ search: location.search, hash: location.hash }));
         assert(address.search === '' && address.hash === '#/challenge', `the ref parameter leaves the address, the route stays (${JSON.stringify(address)})`);
+
+        // An old link to a retired page says so, instead of an empty page.
+        await page.evaluate(() => { location.hash = '#/leaderboards'; });
+        await page.waitForSelector('.not-found-view a[href="#/"]', { timeout: 60_000 });
     } finally {
         await context.close();
     }
@@ -538,7 +542,7 @@ try {
     await startFromHome(browser, `http://127.0.0.1:${server.address().port}`);
     await joinChallenge(browser, `http://127.0.0.1:${server.address().port}`);
     await openLaunchLink(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle (which downloads as a 3D model), and the Repository lists them; Home\'s Join opens the week\'s challenge tagged, New offers it first, and its page explains how to enter; a launch post\'s ?ref= leaves the address');
+    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle (which downloads as a 3D model), and the Repository lists them; Home\'s Join opens the week\'s challenge tagged, New offers it first, and its page explains how to enter; a launch post\'s ?ref= leaves the address, and a retired page\'s link says it is gone');
     await openLinkOnlyShare(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a link that carries its build opens on it in the published build, with no network, and Edit a Copy makes the visitor a copy, or it downloads as a 3D model; it fits a phone');
     assert(html.includes('<meta name="forkbuild-service-worker" content="sw.js">') && readFileSync(join(published.outdir, 'sw.js'), 'utf8').includes('forkbuild-'),

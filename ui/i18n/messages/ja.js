@@ -3641,6 +3641,10 @@ export default Object.freeze({
     'visibilityPolicyForm.saved': '保存しました。',
 
     // Identity, Peers, Chat and settings: aboutView.
+    'notFoundView.title': 'このページはありません',
+    'notFoundView.explanation': 'リンクが間違っているか、新しいバージョンの ForkBuild にはもうないページを指しています。',
+    'notFoundView.goHome': 'ホームへ',
+    'notFoundView.openEditor': 'エディターを開く',
     'aboutView.aboutForkbuild': 'ForkBuildについて',
     'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuildは、ブラウザーで遊べる3Dの建築ゲームです。小さな場所を作り、だれでもリミックスでき、友だちと一緒に中を歩けます。作品はあなたのもの。デバイスに保存され、特定の企業が運営しないオープンなネットワークに公開できます。',
     'aboutView.projectReadme': 'プロジェクトのREADME',
