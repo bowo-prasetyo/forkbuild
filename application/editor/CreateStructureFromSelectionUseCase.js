@@ -92,7 +92,8 @@ export class CreateStructureFromSelectionUseCase {
                 brick.position.y,
                 brick.position.z - originZ
             ),
-            rotation: brick.rotation
+            rotation: brick.rotation,
+            tilt: brick.tilt || 0
         }));
 
         return new Structure({

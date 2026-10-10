@@ -17,13 +17,13 @@ export function extractBuildMeshes(bricks, registry, { factory = new ThreeBrickF
     const matrix = new THREE.Matrix4();
     const normalMatrix = new THREE.Matrix3();
     const rotation = new THREE.Quaternion();
-    const axis = new THREE.Vector3(0, 1, 0);
+    const orientation = new THREE.Euler(0, 0, 0, 'YXZ');
     const one = new THREE.Vector3(1, 1, 1);
     const point = new THREE.Vector3();
     const normal = new THREE.Vector3();
 
     for (const brick of bricks) {
-        const { definitionId, x, y, z, rotationY, color } = describer.describe(brick);
+        const { definitionId, x, y, z, rotationY, rotationX = 0, color } = describer.describe(brick);
         let geometry = geometries.get(definitionId);
         if (!geometry) {
             const shaped = factory.createGeometry(definitionId);
@@ -31,7 +31,8 @@ export function extractBuildMeshes(bricks, registry, { factory = new ThreeBrickF
             if (!geometry.getAttribute('normal')) geometry.computeVertexNormals();
             geometries.set(definitionId, geometry);
         }
-        rotation.setFromAxisAngle(axis, rotationY);
+        // Tilt then turn (Euler 'YXZ', core/BrickOrientation.js).
+        rotation.setFromEuler(orientation.set(rotationX, rotationY, 0, 'YXZ'));
         matrix.compose(new THREE.Vector3(x, y, z), rotation, one);
         normalMatrix.getNormalMatrix(matrix);
 

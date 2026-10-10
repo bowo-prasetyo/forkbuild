@@ -44,7 +44,8 @@ export class ImportBlueprintUseCase {
         const bricks = source.bricks.map((brickJson) => new Brick({
             definitionId: brickJson.definitionId,
             position: new Position(brickJson.position.x, brickJson.position.y, brickJson.position.z),
-            rotation: brickJson.rotation
+            rotation: brickJson.rotation,
+            tilt: brickJson.tilt || 0
             // id omitted deliberately — Brick's constructor default
             // (createId()) mints a fresh identity; see this class's own
             // header on why an imported package's own brick ids are

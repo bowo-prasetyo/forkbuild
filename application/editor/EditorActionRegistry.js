@@ -528,6 +528,41 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                 feedback.show(done('transform.rotateCounterClockwise'));
             })
         }),
+        // Tilt (core/BrickOrientation.js): lays each selected brick on its next
+        // side, where it stands. Bricks only; a placed structure turns but
+        // never tilts.
+        define({
+            id: 'transform.tilt',
+            category: 'transform',
+            tier: 'primary',
+            shortcut: 'T',
+            keys: [{ key: 't' }],
+            enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection && !ctx.selectionIsStructurePlacement,
+            disabledReason: (ctx) => {
+                if (!ctx.hasSelection) return reason('noSelection');
+                if (ctx.selectionIsStructurePlacement) return reason('tiltBricksOnly');
+                return null;
+            },
+            execute: () => surfaceCall('tiltSelection', 'tilt', (tiltSelection) => {
+                if (tiltSelection(1)) feedback.show(done('transform.tilt'));
+            })
+        }),
+        define({
+            id: 'transform.tiltBack',
+            category: 'transform',
+            tier: 'primary',
+            shortcut: 'Shift+T',
+            keys: [{ key: 't', shift: true }],
+            enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection && !ctx.selectionIsStructurePlacement,
+            disabledReason: (ctx) => {
+                if (!ctx.hasSelection) return reason('noSelection');
+                if (ctx.selectionIsStructurePlacement) return reason('tiltBricksOnly');
+                return null;
+            },
+            execute: () => surfaceCall('tiltSelection', 'tilt', (tiltSelection) => {
+                if (tiltSelection(-1)) feedback.show(done('transform.tiltBack'));
+            })
+        }),
         ...alignActions,
         ...distributeActions,
         define({

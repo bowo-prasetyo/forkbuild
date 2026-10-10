@@ -1,5 +1,5 @@
 // The Editor's touch-screen stand-ins for keys a phone lacks: Undo, Redo,
-// Rotate, Delete, a Multi-select toggle (a tap then acts as Ctrl-click), a Box
+// Rotate, Tilt, Delete, a Multi-select toggle (a tap then acts as Ctrl-click), a Box
 // toggle (a drag then draws the Shift-drag marquee), and the Command Palette,
 // which reaches every other action. Each runs the same
 // EditorActionRegistry action as its shortcut, with the same enabled rules.
@@ -8,6 +8,7 @@ const ACTIONS = Object.freeze({
     undo: 'history.undo',
     redo: 'history.redo',
     rotate: 'transform.rotateClockwise',
+    tilt: 'transform.tilt',
     delete: 'selection.delete',
     palette: 'ui.commandPalette'
 });
@@ -22,7 +23,7 @@ export default {
         // While placing, Rotate turns the piece being placed (the R key there).
         placing: { type: Boolean, default: false }
     },
-    emits: ['run', 'rotate-placement', 'toggle-multi-select', 'toggle-box-select'],
+    emits: ['run', 'rotate-placement', 'tilt-placement', 'toggle-multi-select', 'toggle-box-select'],
     computed: {
         context() {
             return this.getContext();
@@ -43,6 +44,14 @@ export default {
             } else {
                 this.run('rotate');
             }
+        },
+        // While placing, Tilt lays the piece being placed on its next side (the T key there).
+        tilt() {
+            if (this.placing) {
+                this.$emit('tilt-placement');
+            } else {
+                this.run('tilt');
+            }
         }
     },
     template: `
@@ -50,6 +59,7 @@ export default {
             <button type="button" class="editor-touch-btn" :disabled="isDisabled('undo')" @click="run('undo')">{{ t('touchBar.undo') }}</button>
             <button type="button" class="editor-touch-btn" :disabled="isDisabled('redo')" @click="run('redo')">{{ t('touchBar.redo') }}</button>
             <button type="button" class="editor-touch-btn" :disabled="!placing && isDisabled('rotate')" @click="rotate">{{ t('touchBar.rotate') }}</button>
+            <button type="button" class="editor-touch-btn" :disabled="!placing && isDisabled('tilt')" @click="tilt">{{ t('touchBar.tilt') }}</button>
             <button type="button" class="editor-touch-btn" :disabled="isDisabled('delete')" @click="run('delete')">{{ t('touchBar.delete') }}</button>
             <button
                 type="button"

@@ -76,6 +76,12 @@ export default {
                 >{{ t('selectionInspector.rotateCcw') }}</button>
                 <button
                     type="button" class="editor-panel-btn"
+                    :disabled="isDisabled('transform.tilt')"
+                    :title="titleFor('transform.tilt', t('selectionInspector.tiltHint'))"
+                    @click="run('transform.tilt')"
+                >{{ t('selectionInspector.tilt') }}</button>
+                <button
+                    type="button" class="editor-panel-btn"
                     :disabled="isDisabled('selection.duplicate')"
                     :title="titleFor('selection.duplicate', t('selectionInspector.duplicateHint'))"
                     @click="run('selection.duplicate')"

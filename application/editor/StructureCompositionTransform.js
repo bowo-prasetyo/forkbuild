@@ -39,7 +39,8 @@ export function transformStructureBricks(structure, { position = { x: 0, y: 0, z
                 y: rotated.y + (position.y || 0),
                 z: rotated.z + (position.z || 0)
             },
-            rotation: normalizeRotation(brick.rotation + rotation)
+            rotation: normalizeRotation(brick.rotation + rotation),
+            tilt: brick.tilt || 0
         };
     });
 }

@@ -1,3 +1,4 @@
+import { nextTilt } from '../../core/BrickOrientation.js';
 import { Tool } from './Tool.js';
 import { PlacementValidator } from '../../core/PlacementValidator.js';
 import { PlaceBrickCommand } from '../commands/PlaceBrickCommand.js';
@@ -54,12 +55,18 @@ export class PlacementTool extends Tool {
         this._placementValidator = new PlacementValidator();
         this._positionService = new PlacementPositionService(context.registry);
         this._rotation = 0;
+        // The pending brick's tilt (core/BrickOrientation.js): T lays it
+        // on another side, Shift+T the other way.
+        this._tilt = 0;
+        this._lastPointer = null;
         this._lastPosition = null;
     }
 
     deactivate() {
         this.context.previewUseCase.hide();
         this._rotation = 0;
+        this._tilt = 0;
+        this._lastPointer = null;
         this._lastPosition = null;
     }
 
@@ -88,7 +95,8 @@ export class PlacementTool extends Tool {
                     existingBrick,
                     pointerEvent.pickedBrick.normal,
                     definitionId,
-                    this.context.editorContext.settings
+                    this.context.editorContext.settings,
+                    this._tilt
                 );
             }
         }
@@ -97,10 +105,13 @@ export class PlacementTool extends Tool {
             position = this._positionService.calculateGround(
                 pointerEvent.worldPosition,
                 definitionId,
-                this.context.editorContext.settings
+                this.context.editorContext.settings,
+                this._tilt
             );
         }
 
+        // Kept so a tilt can work out the pending brick's resting height again.
+        this._lastPointer = pointerEvent;
         this._lastPosition = position;
         this._showPreview(definitionId, position);
     }
@@ -128,6 +139,7 @@ export class PlacementTool extends Tool {
             definitionId: preview.definitionId,
             position: preview.position,
             rotation: preview.rotation,
+            tilt: preview.tilt,
             // The raw override (null unless the palette chose a color) —
             // never preview.color, which is always resolved to a
             // concrete shade for the ghost. Leaving this null when
@@ -142,11 +154,19 @@ export class PlacementTool extends Tool {
     }
 
     onKeyDown(keyEvent) {
-        if (!keyEvent || typeof keyEvent.key !== 'string' || keyEvent.key.toLowerCase() !== 'r') {
+        if (!keyEvent || typeof keyEvent.key !== 'string') {
+            return;
+        }
+        const key = keyEvent.key.toLowerCase();
+        if (key !== 'r' && key !== 't') {
             return;
         }
         const definitionId = this.context.editorContext.activeBrick.definitionId;
         if (!definitionId) {
+            return;
+        }
+        if (key === 't') {
+            this.tilt(keyEvent.modifiers?.shift ? -1 : 1);
             return;
         }
         const delta = keyEvent.modifiers?.shift ? -90 : 90;
@@ -156,6 +176,24 @@ export class PlacementTool extends Tool {
         if (this._lastPosition) {
             this._showPreview(definitionId, this._lastPosition);
         }
+    }
+
+    // Lays the pending brick on its next side (`direction` -1: the other
+    // way). Its height may change, so its resting position is worked out
+    // again from where the pointer last was.
+    tilt(direction = 1) {
+        const definitionId = this.context.editorContext.activeBrick.definitionId;
+        if (!definitionId) {
+            return;
+        }
+        this._tilt = nextTilt(this._tilt, direction);
+        if (this._lastPointer) {
+            this.onPointerMove(this._lastPointer);
+        }
+    }
+
+    get pendingTilt() {
+        return this._tilt;
     }
 
     // Shared by onPointerMove() (a fresh position) and onKeyDown() (the
@@ -178,6 +216,6 @@ export class PlacementTool extends Tool {
         const color = this.context.editorContext.activeBrick.color !== null
             ? this.context.editorContext.activeBrick.color
             : (definition ? definition.color : null);
-        this.context.previewUseCase.show(definitionId, position, this._rotation, valid, color);
+        this.context.previewUseCase.show(definitionId, position, this._rotation, valid, color, this._tilt);
     }
 }

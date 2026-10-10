@@ -1,3 +1,4 @@
+import { applyBrickOrientation } from './applyBrickOrientation.js';
 import { BuildingRenderer } from './BuildingRenderer.js';
 import { BrickInstanceRegistry } from './BrickInstanceRegistry.js';
 import { PlacementMeshRegistry } from './PlacementMeshRegistry.js';
@@ -333,7 +334,7 @@ export class WorldRenderer {
                     localPoint.y + placement.position.y + offset.y + groundY,
                     localPoint.z + placement.position.z + offset.z
                 );
-                mesh.rotation.y = (brick.rotation + placement.rotation) * (Math.PI / 180);
+                applyBrickOrientation(mesh, brick.rotation + placement.rotation, brick.tilt);
                 this._renderer.add(mesh);
                 meshes.push(mesh);
             }

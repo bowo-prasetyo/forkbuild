@@ -1,3 +1,4 @@
+import { isValidTilt } from '../../core/BrickOrientation.js';
 import { CURRENT_SCHEMA_VERSION, BLUEPRINT_KIND } from './BlueprintPackage.js';
 import {
     validateBlueprintAttributionPublication,
@@ -82,6 +83,9 @@ function validateBrick(brick, index, seenIds, registry) {
     validatePosition(brick.position, index);
     if (!isFiniteNumber(brick.rotation)) {
         throw new BlueprintPackageError(`BlueprintImport: bricks[${index}].rotation must be a finite number`);
+    }
+    if (brick.tilt !== undefined && !isValidTilt(brick.tilt)) {
+        throw new BlueprintPackageError(`BlueprintImport: bricks[${index}].tilt must be 0, 90, 180 or 270`);
     }
 }
 

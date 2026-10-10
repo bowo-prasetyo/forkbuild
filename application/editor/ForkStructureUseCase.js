@@ -49,6 +49,7 @@ export class ForkStructureUseCase {
                 definitionId: brick.definitionId,
                 position: brick.position.clone(),
                 rotation: brick.rotation,
+                tilt: brick.tilt || 0,
                 color: brick.color
                 // id omitted deliberately — Brick's constructor default
                 // (createId()) mints a fresh identity, exactly the

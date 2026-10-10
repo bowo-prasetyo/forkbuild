@@ -101,6 +101,9 @@ export class World {
         if (changes.rotation !== undefined) {
             brick.rotation = changes.rotation;
         }
+        if (changes.tilt !== undefined) {
+            brick.tilt = changes.tilt;
+        }
         if (changes.color !== undefined) {
             brick.color = changes.color;
         }

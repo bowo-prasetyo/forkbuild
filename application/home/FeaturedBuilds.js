@@ -73,6 +73,7 @@ export function composeShowcase(structures, brickRegistry, { gap = SHOWCASE_GAP 
                 definitionId: brick.definitionId,
                 position: new Position(brick.position.x + dx, brick.position.y, brick.position.z + dz),
                 rotation: brick.rotation,
+                tilt: brick.tilt || 0,
                 color: brick.color
             }));
         }

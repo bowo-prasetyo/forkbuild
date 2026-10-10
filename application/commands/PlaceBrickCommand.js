@@ -1,3 +1,4 @@
+import { normalizeTilt } from '../../core/BrickOrientation.js';
 import { Brick } from '../../core/Brick.js';
 import { Position } from '../../core/Position.js';
 import { Command } from './Command.js';
@@ -34,13 +35,15 @@ import { bricksMessage } from './HistoryDescription.js';
 // job, called by whoever constructs this command (PlacementTool), not by
 // the command itself.
 export class PlaceBrickCommand extends Command {
-    constructor({ worldId, buildingId, definitionId, position, rotation = 0, color = null, id, timestamp } = {}) {
+    constructor({ worldId, buildingId, definitionId, position, rotation = 0, tilt = 0, color = null, id, timestamp } = {}) {
         super({ id, timestamp });
         this._worldId = worldId;
         this._buildingId = buildingId;
         this._definitionId = definitionId;
         this._position = position;
         this._rotation = rotation;
+        // A quarter turn laying the brick on another side (core/BrickOrientation.js).
+        this._tilt = normalizeTilt(tilt);
         // Choose Your Brick Color: the color the palette had active when
         // this placement was made, or null to use the definition's own
         // default — see application/editor-state/ActiveBrickState.js.
@@ -53,6 +56,7 @@ export class PlaceBrickCommand extends Command {
     get definitionId() { return this._definitionId; }
     get position() { return this._position; }
     get rotation() { return this._rotation; }
+    get tilt() { return this._tilt; }
     get color() { return this._color; }
     get type() { return 'place-brick'; }
 
@@ -65,6 +69,7 @@ export class PlaceBrickCommand extends Command {
             definitionId: this._definitionId,
             position: this._position,
             rotation: this._rotation,
+            tilt: this._tilt,
             color: this._color
         });
         context.world.addBrickToBuilding(this._buildingId, brick);
@@ -89,7 +94,7 @@ export class PlaceBrickCommand extends Command {
     }
 
     toJSON() {
-        return {
+        const json = {
             type: this.type,
             id: this._id,
             timestamp: this._timestamp.toISOString(),
@@ -101,6 +106,8 @@ export class PlaceBrickCommand extends Command {
             color: this._color,
             executedBrickId: this._executedBrickId
         };
+        if (this._tilt !== 0) json.tilt = this._tilt;
+        return json;
     }
 
     static fromJSON(json, registry) {
@@ -110,6 +117,7 @@ export class PlaceBrickCommand extends Command {
             definitionId: json.definitionId,
             position: Position.fromJSON(json.position),
             rotation: json.rotation,
+            tilt: json.tilt,
             color: json.color !== undefined ? json.color : null,
             id: json.id,
             timestamp: new Date(json.timestamp)

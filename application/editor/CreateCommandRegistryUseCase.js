@@ -3,6 +3,7 @@ import { PlaceBrickCommand } from '../commands/PlaceBrickCommand.js';
 import { DeleteBrickCommand } from '../commands/DeleteBrickCommand.js';
 import { MoveBrickCommand } from '../commands/MoveBrickCommand.js';
 import { RotateBrickCommand } from '../commands/RotateBrickCommand.js';
+import { TiltBrickCommand } from '../commands/TiltBrickCommand.js';
 import { SetBrickColorCommand } from '../commands/SetBrickColorCommand.js';
 import { CompositeCommand } from '../commands/CompositeCommand.js';
 import { TransformSelectionCommand } from '../commands/TransformSelectionCommand.js';
@@ -39,6 +40,7 @@ export class CreateCommandRegistryUseCase {
         registry.register('place-brick', PlaceBrickCommand);
         registry.register('delete-brick', DeleteBrickCommand);
         registry.register('move-brick', MoveBrickCommand);
+        registry.register('tilt-brick', TiltBrickCommand);
         registry.register('rotate-brick', RotateBrickCommand);
         // Choose Your Brick Color — per-instance recolor, the same
         // inherited undo/redo/persistence/replay contract as rotate-brick.

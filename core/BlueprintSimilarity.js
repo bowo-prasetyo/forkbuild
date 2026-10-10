@@ -74,7 +74,7 @@ function positionKey(brick) {
 }
 
 function fullKey(brick) {
-    return `${positionKey(brick)}|${brick.rotation}|${brick.definitionId}`;
+    return `${positionKey(brick)}|${brick.rotation}|${brick.definitionId}${brick.tilt ? `|${brick.tilt}` : ''}`;
 }
 
 function ratio(matchCount, unionSize) {

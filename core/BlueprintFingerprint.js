@@ -113,7 +113,10 @@ function canonicalizeBrick(brick) {
             y: roundForFingerprint(brick.position.y),
             z: roundForFingerprint(brick.position.z)
         },
-        rotation: roundForFingerprint(brick.rotation)
+        rotation: roundForFingerprint(brick.rotation),
+        // Only a tilted brick adds its tilt, so every untilted structure keeps
+        // the fingerprint it always had.
+        ...(brick.tilt ? { tilt: brick.tilt } : {})
     };
 }
 
@@ -125,7 +128,7 @@ function canonicalizeBrick(brick) {
 // order in the sorted output can never affect the resulting JSON.
 function brickSortKey(canonicalBrick) {
     const p = canonicalBrick.position;
-    return `${p.x}|${p.y}|${p.z}|${canonicalBrick.rotation}|${canonicalBrick.definitionId}`;
+    return `${p.x}|${p.y}|${p.z}|${canonicalBrick.rotation}|${canonicalBrick.definitionId}${canonicalBrick.tilt ? `|${canonicalBrick.tilt}` : ''}`;
 }
 
 // Derives the canonical, order-independent, id-independent design

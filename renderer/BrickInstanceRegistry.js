@@ -347,8 +347,11 @@ function colorOf(visual) {
     return visual.color !== null && visual.color !== undefined ? visual.color : DEFAULT_COLOR;
 }
 
+// The brick's turn and tilt (Euler 'YXZ', core/BrickOrientation.js), then its position.
+const _orientation = new THREE.Euler(0, 0, 0, 'YXZ');
 function matrixOf(visual, target) {
-    return target.makeRotationY(visual.rotationY || 0).setPosition(visual.x, visual.y, visual.z);
+    _orientation.set(visual.rotationX || 0, visual.rotationY || 0, 0, 'YXZ');
+    return target.makeRotationFromEuler(_orientation).setPosition(visual.x, visual.y, visual.z);
 }
 
 function copyItem(attribute, from, to) {

@@ -1,3 +1,4 @@
+import { orientedSize } from '../../core/BrickOrientation.js';
 import { Position } from '../../core/Position.js';
 
 // Shared placement logic used by both PlacementTool (EditorView) and
@@ -8,16 +9,19 @@ export class PlacementPositionService {
         this._registry = registry;
     }
 
-    calculateGround(worldPosition, definitionId, settings = {}) {
+    // `tilt` lays the new brick on another side (core/BrickOrientation.js):
+    // it rests on the ground by its tilted height.
+    calculateGround(worldPosition, definitionId, settings = {}, tilt = 0) {
         const def = this._registry.get(definitionId);
         if (!def) return null;
+        const size = orientedSize(def, tilt);
 
         const snapEnabled = settings.gridSnapEnabled !== false;
         const snapSize = settings.gridSnapSize || 1;
 
         const snappedX = snapEnabled ? Math.round(worldPosition.x / snapSize) * snapSize : worldPosition.x;
         const snappedZ = snapEnabled ? Math.round(worldPosition.z / snapSize) * snapSize : worldPosition.z;
-        const y = def.height / 2;
+        const y = size.height / 2;
 
         return new Position(snappedX, y, snappedZ);
     }
@@ -45,10 +49,14 @@ export class PlacementPositionService {
         return new Position(snappedX, 0, snappedZ);
     }
 
-    calculateStack(existingBrick, normal, definitionId, settings = {}) {
-        const existingDef = this._registry.get(existingBrick.definitionId);
-        const newDef = this._registry.get(definitionId);
-        if (!existingDef || !newDef) return null;
+    // Both bricks are sized as tilted: the one stacked on by its own tilt,
+    // the new one by `tilt`.
+    calculateStack(existingBrick, normal, definitionId, settings = {}, tilt = 0) {
+        const existingDefinition = this._registry.get(existingBrick.definitionId);
+        const newDefinition = this._registry.get(definitionId);
+        if (!existingDefinition || !newDefinition) return null;
+        const existingDef = orientedSize(existingDefinition, existingBrick.tilt);
+        const newDef = orientedSize(newDefinition, tilt);
 
         const snapEnabled = settings.gridSnapEnabled !== false;
         const snapSize = settings.gridSnapSize || 1;

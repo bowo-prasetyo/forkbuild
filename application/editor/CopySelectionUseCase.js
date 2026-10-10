@@ -45,7 +45,8 @@ export class CopySelectionUseCase {
                     y: brick.position.y - bounds.center.y,
                     z: brick.position.z - bounds.center.z
                 },
-                rotation: brick.rotation
+                rotation: brick.rotation,
+                tilt: brick.tilt || 0
             });
         }
         if (items.length === 0) {

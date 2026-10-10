@@ -180,14 +180,16 @@ export function bricksOf(snapshotText) {
         const table = building?.brickTable;
         if (table && Array.isArray(table.values) && Array.isArray(table.definitions)) {
             const colors = Array.isArray(table.colors) ? table.colors : [];
+            // A build with tilted bricks carries one tilt per brick (core/BrickTable.js).
+            const tilts = Array.isArray(table.tilts) ? table.tilts : [];
             for (let i = 0; i + 5 < table.values.length; i += 6) {
                 const v = table.values;
-                bricks.push({ definitionId: table.definitions[v[i]], x: v[i + 1], y: v[i + 2], z: v[i + 3], rotation: v[i + 4], color: v[i + 5] ? colors[v[i + 5] - 1] : null });
+                bricks.push({ definitionId: table.definitions[v[i]], x: v[i + 1], y: v[i + 2], z: v[i + 3], rotation: v[i + 4], tilt: Number(tilts[i / 6]) || 0, color: v[i + 5] ? colors[v[i + 5] - 1] : null });
             }
         } else if (Array.isArray(building?.bricks)) {
             for (const brick of building.bricks) {
                 const p = brick?.position ?? {};
-                bricks.push({ definitionId: brick?.definitionId, x: p.x, y: p.y, z: p.z, rotation: brick?.rotation ?? 0, color: brick?.color ?? null });
+                bricks.push({ definitionId: brick?.definitionId, x: p.x, y: p.y, z: p.z, rotation: brick?.rotation ?? 0, tilt: Number(brick?.tilt) || 0, color: brick?.color ?? null });
             }
         }
     }
@@ -234,8 +236,16 @@ function addBrick(triangles, brick) {
     const angle = (Number(brick.rotation) || 0) * Math.PI / 180;
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
+    // The brick's tilt about its own +x (core/BrickOrientation.js), then
     // Three.js's rotation about +y, then the brick's position.
-    const place = ([x, y, z]) => [brick.x + x * cos + z * sin, brick.y + y, brick.z - x * sin + z * cos];
+    const tilt = (Number(brick.tilt) || 0) * Math.PI / 180;
+    const tcos = Math.cos(tilt);
+    const tsin = Math.sin(tilt);
+    const place = ([x, y0, z0]) => {
+        const y = y0 * tcos - z0 * tsin;
+        const z = y0 * tsin + z0 * tcos;
+        return [brick.x + x * cos + z * sin, brick.y + y, brick.z - x * sin + z * cos];
+    };
     const hw = w / 2, hh = h / 2, hd = d / 2;
     const faces = [];
     if (kind === 'wedge') {

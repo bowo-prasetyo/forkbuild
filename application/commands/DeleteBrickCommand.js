@@ -46,7 +46,8 @@ export class DeleteBrickCommand extends Command {
             id: brick.id,
             definitionId: brick.definitionId,
             position: brick.position,
-            rotation: brick.rotation
+            rotation: brick.rotation,
+            tilt: brick.tilt || 0
         };
         context.world.removeBrickFromBuilding(this._buildingId, this._brickId);
     }
@@ -62,7 +63,8 @@ export class DeleteBrickCommand extends Command {
             id: snapshot.id,
             definitionId: snapshot.definitionId,
             position: snapshot.position,
-            rotation: snapshot.rotation
+            rotation: snapshot.rotation,
+            tilt: snapshot.tilt || 0
         });
         context.world.addBrickToBuilding(this._buildingId, restoredBrick);
     }

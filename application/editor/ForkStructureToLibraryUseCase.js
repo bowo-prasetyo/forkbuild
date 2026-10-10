@@ -57,7 +57,8 @@ export class ForkStructureToLibraryUseCase {
         const bricks = structure.bricks.map((brick) => new Brick({
             definitionId: brick.definitionId,
             position: new Position(brick.position.x, brick.position.y, brick.position.z),
-            rotation: brick.rotation
+            rotation: brick.rotation,
+            tilt: brick.tilt || 0
             // id omitted deliberately — see this class's own header on
             // why every id crossing this boundary regenerates.
         }));

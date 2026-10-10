@@ -1,3 +1,4 @@
+import { orientedSize } from '../../core/BrickOrientation.js';
 // Computes world-space bounding boxes for selected bricks. Brick geometry
 // comes from BrickDefinition dimensions; brick positions are treated as
 // the center of the brick, matching the Three.js mesh placement model.
@@ -22,9 +23,7 @@ export class SelectionBoundsService {
 
     calculateBrickBounds(brick) {
         const definition = this._brickRegistry ? this._brickRegistry.get(brick.definitionId) : null;
-        const width = definition ? definition.width : 1;
-        const height = definition ? definition.height : 1;
-        const depth = definition ? definition.depth : 1;
+        const { width, height, depth } = orientedSize(definition, brick.tilt);
         const half = { x: width / 2, y: height / 2, z: depth / 2 };
         return SelectionBoundsService.fromMinMax(
             { x: brick.position.x - half.x, y: brick.position.y - half.y, z: brick.position.z - half.z },

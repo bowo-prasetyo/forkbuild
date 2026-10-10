@@ -1,3 +1,4 @@
+import { applyBrickOrientation } from './applyBrickOrientation.js';
 import { BuildingRenderer } from './BuildingRenderer.js';
 
 // Draws a claimed build: a downloaded Snapshot whose publisher claims a
@@ -58,7 +59,7 @@ export class ClaimedBuildGhostRenderer {
                     brick.position.y + position.y + groundY,
                     brick.position.z + position.z
                 );
-                mesh.rotation.y = brick.rotation * (Math.PI / 180);
+                applyBrickOrientation(mesh, brick.rotation, brick.tilt);
                 makeGhostly(mesh);
                 this._renderer.add(mesh);
                 meshes.push(mesh);

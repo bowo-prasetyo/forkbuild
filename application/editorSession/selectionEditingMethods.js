@@ -1,3 +1,5 @@
+import { TiltBrickCommand } from '../commands/TiltBrickCommand.js';
+import { nextTilt, orientedSize } from '../../core/BrickOrientation.js';
 import { SelectionState } from '../editor-state/SelectionState.js';
 import { DeleteBrickCommand } from '../commands/DeleteBrickCommand.js';
 import { SetBrickColorCommand } from '../commands/SetBrickColorCommand.js';
@@ -180,6 +182,42 @@ export const selectionEditingMethods = {
             ? commands[0]
             : commands.reduce((composite, child) => composite.add(child),
                 new CompositeCommand({ description: message('history.recolorBricks', { count: commands.length }) }));
+        this._commandHistory.execute(command);
+        return true;
+    },
+
+    // Lays every selected brick on its next side (core/BrickOrientation.js;
+    // `direction` -1 the other way), each where it stands with its bottom
+    // kept at the same height, in one undo step. Brick selections only: a
+    // placed structure turns, it doesn't tilt.
+    tiltSelection(direction = 1) {
+        if (this._editorContext.tool.activeTool === ToolId.PLACE) {
+            return false;
+        }
+        const selection = this._editorContext.selection;
+        const document = this._documentManager.document;
+        if (selection.isEmpty || !document || !this._commandHistory || selection.isStructurePlacementSelection) {
+            return false;
+        }
+        const worldId = document.world.id;
+        const commands = [];
+        for (const item of selection.items) {
+            const building = document.world.getBuilding(item.buildingId);
+            const brick = building ? building.findBrick(item.brickId) : null;
+            if (!brick) continue;
+            const definition = this._registry ? this._registry.get(brick.definitionId) : null;
+            const tilt = nextTilt(brick.tilt, direction);
+            const bottom = brick.position.y - orientedSize(definition, brick.tilt).height / 2;
+            const position = new Position(brick.position.x, bottom + orientedSize(definition, tilt).height / 2, brick.position.z);
+            commands.push(new TiltBrickCommand({ worldId, buildingId: item.buildingId, brickId: item.brickId, tilt, position }));
+        }
+        if (commands.length === 0) {
+            return false;
+        }
+        const command = commands.length === 1
+            ? commands[0]
+            : commands.reduce((composite, child) => composite.add(child),
+                new CompositeCommand({ description: message('history.tiltBricks', { count: commands.length }) }));
         this._commandHistory.execute(command);
         return true;
     },
