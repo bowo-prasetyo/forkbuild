@@ -8,9 +8,12 @@ import { BUILD_MODEL_FORMATS } from '../../core/BuildModelFormats.js';
 import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
 import { describeLicense } from '../../application/document/LicenseLabels.js';
 import { countRemixes, describeRemixSource } from '../../core/RemixLineage.js';
+import { remixFamily } from '../../core/RemixFamily.js';
 import { License } from '../../core/License.js';
 import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery } from '../../core/EditorEntryContext.js';
 import { remixCountText, remixedFromText } from '../components/remix/remixText.js';
+import RemixFamilyTree from '../components/remix/RemixFamilyTree.js';
+import { exploreRouteFor } from '../components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 
 // The turning build needs Three.js, which the first load leaves out, so it
@@ -39,13 +42,14 @@ const RETRY_OUTCOMES = new Set([OpenPublicationLinkOutcome.UNREACHABLE, OpenPubl
 // so, and offers only the walk.
 export default {
     name: 'PublicationLinkView',
-    components: { BuildTurntable },
+    components: { BuildTurntable, RemixFamilyTree },
     setup() {
         const route = useRoute();
         const router = useRouter();
         const openLink = inject('openPublicationLink', null);
         const funnel = inject('funnelEventCounter', null);
         const contentStore = inject('publicationContentStore', null);
+        const networkPublicationLocatorStore = inject('networkPublicationLocatorStore', null);
         const { discoveryProvider } = new CreateDiscoveryUseCase().execute({
             decentralizedDiscoveryProvider: inject('decentralizedPublicationDiscoveryProvider', null)
         });
@@ -84,6 +88,11 @@ export default {
                 remixedFrom: remixedFromText(remixSource),
                 remixSourceTitle: remixSource?.title || '',
                 remixes: remixCountText(lookUp(() => countRemixes(discoveryProvider.findByParentId(opened.documentId), opened.documentId), 0)),
+                // The whole family, back to the original and down through its remixes.
+                family: lookUp(() => remixFamily(opened, {
+                    findByDocumentId: (documentId) => discoveryProvider.findByDocumentId(documentId),
+                    findByParentId: (documentId) => discoveryProvider.findByParentId(documentId)
+                }), null),
                 bricks: null
             });
         }
@@ -184,6 +193,13 @@ export default {
             }
         }
 
+        // A family member opens where the Repository would open it; this
+        // build itself, and a member with no Publication here, aren't links.
+        function familyRoute(member) {
+            if (!member?.publication || member.documentId === arrived.value?.documentId) return null;
+            return exploreRouteFor(member.publication, networkPublicationLocatorStore);
+        }
+
         function walkAround() {
             if (arrived.value) router.push({ path: `/world/${arrived.value.documentId}` });
         }
@@ -192,7 +208,7 @@ export default {
 
         return {
             t, state, message, publication, arrived, label, network, open, buildBricks, showTurntable, editCopy, walkAround,
-            downloadModel, modelMessage, modelFormats: BUILD_MODEL_FORMATS
+            downloadModel, modelMessage, modelFormats: BUILD_MODEL_FORMATS, familyRoute
         };
     },
     template: `
@@ -217,6 +233,7 @@ export default {
                     <p v-if="arrived.remixAllowed" class="shared-build-hint">{{ t('publicationLink.editCopyHint') }}</p>
                     <p v-else class="shared-build-hint">{{ t('publicationLink.noRemix') }}</p>
                     <p class="shared-build-license">{{ t('publicationLink.license', { license: arrived.licenseLabel }) }}</p>
+                    <RemixFamilyTree :family="arrived.family" :route-for="familyRoute" heading="h2" />
                     <p v-if="arrived.remixAllowed" class="shared-build-model">
                         {{ t('modelExport.sharedLead') }}
                         <template v-for="(format, index) in modelFormats" :key="format">

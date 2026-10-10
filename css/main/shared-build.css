@@ -280,3 +280,50 @@
     text-decoration: underline;
     cursor: pointer;
 }
+
+/* A build's family tree (ui/components/remix/RemixFamilyTree.js), on a shared
+   link and on the challenge page: ancestors down to this build, then its
+   remixes, each level indented under the one it came from. */
+.remix-family {
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+.remix-family-title {
+    margin: 0 0 0.4rem;
+    font-size: 1rem;
+}
+
+.remix-family-line,
+.remix-family-remixes {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.remix-family-remixes {
+    margin-left: 0.6rem;
+    padding-left: 0.8rem;
+    border-left: 2px solid rgba(127, 127, 127, 0.4);
+}
+
+.remix-family-member {
+    padding: 0.15rem 0;
+    overflow-wrap: anywhere;
+}
+
+.remix-family-ancestor::after {
+    content: ' ↓';
+    opacity: 0.6;
+}
+
+.remix-family-self-mark,
+.remix-family-more {
+    opacity: 0.7;
+}
+
+.challenge-families .remix-family {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid rgba(127, 127, 127, 0.35);
+    border-radius: 8px;
+}

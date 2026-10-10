@@ -2,8 +2,10 @@ import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } f
 import { useRoute, useRouter } from 'vue-router';
 import { challengeAt, challengeById, isChallengeOpen, previousChallenge } from '../../core/BuildChallenge.js';
 import { countRemixes, describeRemixSource } from '../../core/RemixLineage.js';
+import { familyTreesOf } from '../../core/RemixFamily.js';
 import { CreateChallengeEntriesUseCase } from '../../application/challenge/CreateChallengeEntriesUseCase.js';
 import PublicationCard from '../components/PublicationCard.js';
+import RemixFamilyTree from '../components/remix/RemixFamilyTree.js';
 import { exploreRouteFor } from '../components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import {
     challengeDatesText, challengeJoinRoute, challengeThemeBrief, challengeThemeTitle, challengeTimeText
@@ -19,7 +21,7 @@ const FeaturedBuilds = defineAsyncComponent(() => import('../components/featured
 // opens), and built-in builds to start from.
 export default {
     name: 'ChallengeView',
-    components: { PublicationCard, FeaturedBuilds },
+    components: { PublicationCard, FeaturedBuilds, RemixFamilyTree },
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -56,6 +58,7 @@ export default {
         const entries = ref([]);
         const remixCounts = ref({});
         const remixSources = ref({});
+        const families = ref([]);
         function refresh() {
             if (!challenge.value) return;
             const items = listEntries(challenge.value.tag);
@@ -70,6 +73,14 @@ export default {
             entries.value = items;
             remixCounts.value = counts;
             remixSources.value = sources;
+            families.value = familyTreesOf(items, {
+                findByDocumentId: (documentId) => discoveryProvider.findByDocumentId(documentId),
+                findByParentId: (documentId) => discoveryProvider.findByParentId(documentId)
+            });
+        }
+        // A family member opens as the entries do.
+        function familyRoute(member) {
+            return member?.publication ? exploreRouteFor(member.publication, networkPublicationLocatorStore) : null;
         }
 
         // null | { searching: true } | { searching: false, found, pending }
@@ -107,7 +118,7 @@ export default {
             t,
             challenge,
             view,
-            entries, remixCounts, remixSources,
+            entries, remixCounts, remixSources, families, familyRoute,
             networkSearch, networkSearchText, searchNetworks,
             openPublication: (pub) => router.push({ path: '/editor', query: { load: pub.documentId } }),
             forkPublication: (pub) => router.push({ path: '/editor', query: { fork: pub.documentId, publication: pub.id } }),
@@ -176,6 +187,12 @@ export default {
                             @view-author="viewAuthor"
                         />
                     </ul>
+                </section>
+
+                <section v-if="families.length" class="challenge-section challenge-families" aria-labelledby="challenge-families-title">
+                    <h2 id="challenge-families-title">{{ t('challenge.familiesTitle') }}</h2>
+                    <p class="home-section-lead">{{ t('challenge.familiesLead') }}</p>
+                    <RemixFamilyTree v-for="family in families" :key="family.build.documentId" :family="family" :route-for="familyRoute" />
                 </section>
 
                 <section v-if="view.open" class="challenge-section" aria-labelledby="challenge-ideas-title">
