@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 5024adaa9e307817 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 49cd90a03daca28b -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
@@ -30,6 +30,15 @@ Untuk apa yang diketahui setiap server tentang Anda, lihat
 | **Blurt** *(eksperimental)* | `/settings/blurt` | Akun Blurt Anda, dan dari mana Blurt dibaca — lihat [di bawah](#blurt) |
 | **Server STUN** / **Server TURN** | `/settings/stun`, `/settings/turn-server` | Bantuan untuk koneksi rekan — lihat [TURN](07-PeerConnectionsAndFriends.md#turn-me-relay-koneksi-rekan-yang-tidak-menemukan-jalur-langsung) |
 | **Server Rendezvous** | `/settings/rendezvous` | Cara rekan saling menemukan — lihat [Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md) |
+
+## Tampilkan alat eksperimental
+
+Di bagian atas halaman, **Tampilkan alat eksperimental** menampilkan
+bagian ForkBuild yang **Eksperimental**: halaman **Endpoint Bitcoin** di
+sini, dan panel **Dompet, Arsip & Alat Penerbit** di
+[halaman Publikasi](09-PublicationsAndEvidence.md#halaman-publikasi). Pengaturan ini mati sampai Anda menyalakannya,
+dan disimpan di perangkat ini begitu Anda mengubahnya. Tidak ada yang Anda
+perlukan untuk membangun, menerbitkan, atau berbagi yang disembunyikan.
 
 ## Perilaku setiap halaman
 

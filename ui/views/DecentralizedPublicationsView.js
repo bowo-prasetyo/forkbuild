@@ -118,7 +118,14 @@ export default {
         // and scrolls to it; the panel's own state (wallets, funding) is kept
         // either way, since it only folds.
         const publicationsToolsOpen = ref(false);
+        // The Experimental tools panel is listed only while Network
+        // Settings' Show experimental tools is on (docs/Pillars.md). A
+        // card's step that needs it (a wallet observed here first) still
+        // opens it for this visit. Without a store, it is always listed.
+        const experimentalToolsSettingsStore = inject('experimentalToolsSettingsStore', null);
+        const publicationsToolsShown = ref(experimentalToolsSettingsStore ? experimentalToolsSettingsStore.get().shown : true);
         async function openPublicationsTools(tab) {
+            publicationsToolsShown.value = true;
             setPublicationsToolsTab(tab);
             publicationsToolsOpen.value = true;
             await nextTick();
@@ -1036,7 +1043,7 @@ export default {
         return {
             t,
             displayText,
-            publicationsToolsOpen, openPublicationsTools,
+            publicationsToolsOpen, publicationsToolsShown, openPublicationsTools,
             entries, loading, retrievalPeers, retrievalPeerOptions, retrievalPeerLabel, availableAnchorTypes,
             humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck, usableEntries, failedEntries, anyRetrievable,
@@ -1224,9 +1231,13 @@ export default {
         <section class="publications-view">
             <h1>{{ t('publications.publications') }}</h1>
             <p class="form-hint form-hint--neutral">
-                <I18nText keypath="publications.intro">
+                <I18nText v-if="publicationsToolsShown" keypath="publications.intro">
                     <template #peer><router-link to="/peers">{{ t('publications.peer') }}</router-link></template>
                     <template #tools><button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">{{ t('publications.walletArchivePublisherTools') }}</button></template>
+                </I18nText>
+                <I18nText v-else keypath="publications.introToolsHidden">
+                    <template #peer><router-link to="/peers">{{ t('publications.peer') }}</router-link></template>
+                    <template #settings><router-link to="/settings" class="publications-tools-hidden-link">{{ t('app.nav.networkSettings') }}</router-link></template>
                 </I18nText>
             </p>
             <!-- The page is a regular feature; only the parts marked with an
@@ -1446,7 +1457,7 @@ export default {
                  publications come first. openPublicationsTools() opens it on
                  a tab and scrolls to it, for the per-publication steps that
                  need a wallet observed here first. -->
-            <details id="publications-tools" class="publications-tools-panel" :open="publicationsToolsOpen"
+            <details v-if="publicationsToolsShown" id="publications-tools" class="publications-tools-panel" :open="publicationsToolsOpen"
                      @toggle="publicationsToolsOpen = $event.target.open">
                 <summary class="publications-tools-panel-summary">{{ t('publications.walletArchivePublisherTools') }} <span class="experimental-badge">{{ t('publications.experimental') }}</span></summary>
                 <p class="form-hint form-hint--neutral">

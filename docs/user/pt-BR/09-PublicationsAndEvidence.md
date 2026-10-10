@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7c7451cea88d3528 -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -181,6 +181,11 @@ ferramentas para a página toda em três guias: **Ancoragem em blockchain**,
 [11](11-EvidenceAndStorage.md) e [12](12-ArchiveAndLeaderboards.md)). O link
 para ele na introdução da página, e em qualquer passo que precise antes de
 uma carteira observada, o abre para você.
+
+O painel só aparece enquanto **Mostrar ferramentas experimentais** estiver
+ativado em [Configurações de rede](10-NetworkSettings.md#mostrar-ferramentas-experimentais); até lá, a introdução leva às
+Configurações de rede. Um passo que precise antes de uma carteira observada
+ainda abre o painel durante essa visita.
 
 Cada cartão de publicação mostra:
 

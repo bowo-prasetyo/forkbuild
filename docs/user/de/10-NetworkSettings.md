@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 5024adaa9e307817 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 49cd90a03daca28b -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
@@ -29,6 +29,16 @@ Was jeder Server über Sie erfährt, steht unter [Datenschutz](Privacy.md).
 | **Blurt** *(experimentell)* | `/settings/blurt` | Ihr Blurt-Konto und woher Blurt gelesen wird — siehe [unten](#blurt) |
 | **STUN-Server** / **TURN-Server** | `/settings/stun`, `/settings/turn-server` | Hilfe für Peer-Verbindungen — siehe [TURN](07-PeerConnectionsAndFriends.md#turn-peer-verbindungen-weiterleiten-die-keinen-direkten-weg-finden) |
 | **Rendezvous-Server** | `/settings/rendezvous` | Wie Peers einander finden — siehe [Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md) |
+
+## Experimentelle Werkzeuge anzeigen
+
+Oben auf der Seite zeigt **Experimentelle Werkzeuge anzeigen** die Teile
+von ForkBuild, die **experimentell** sind: hier die Seite
+**Bitcoin-Endpunkt** und auf der
+[Seite Veröffentlichungen](09-PublicationsAndEvidence.md#die-seite-veröffentlichungen) den Bereich **Wallet, Archiv &
+Herausgeberwerkzeuge**. Der Schalter ist aus, bis Sie ihn einschalten, und
+wird auf diesem Gerät gespeichert, sobald Sie ihn ändern. Nichts, was Sie
+zum Bauen, Veröffentlichen oder Teilen brauchen, wird ausgeblendet.
 
 ## Wie sich jede Seite verhält
 

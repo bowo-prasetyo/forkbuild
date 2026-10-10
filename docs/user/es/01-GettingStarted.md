@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 6725707d86a7f053 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: cd219cc0fb352867 -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -50,7 +50,7 @@ La barra de arriba siempre está visible:
   [Mis mundos](03-WorldView.md#mis-mundos--los-mundos-que-realmente-visitó)
 
 **Más** abre el resto, en cuatro grupos: **Personal** (Mi avatar, Mis identidades,
-Sus datos), **Personas** (Pares, Siguiendo, Conversaciones), **Red**
+Sus datos), **Personas** (Pares, Siguiendo, Conversaciones), **Avanzado**
 (Publicaciones, Configuración de red) y **Aplicación** (Idioma, Acerca de y **Instalar ForkBuild** donde el navegador puede instalarlo). En un teléfono,
 **Menú** los muestra todos a la vez.
 

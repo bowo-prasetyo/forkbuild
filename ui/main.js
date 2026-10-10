@@ -65,6 +65,7 @@ import { composeWorldDiscovery } from './main/composeWorldDiscovery.js';
 import { composeInjectedWalletServices } from './main/composeInjectedWalletServices.js';
 import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
+import { ExperimentalToolsSettingsStore } from '../application/settings/ExperimentalToolsSettingsStore.js';
 import { FunnelEventCounter } from '../application/settings/FunnelEventCounter.js';
 import { FirstBuildChecklistStore } from '../application/onboarding/FirstBuildChecklistStore.js';
 import { browserPrivacySignals, sendCounterHit } from './counterHit.js';
@@ -440,6 +441,8 @@ app.provide('languageSettingsStore', new LanguageSettingsStore({ storageProvider
 // Counted once a day by ui/start.js; Your Data turns it off.
 const visitorCountSettingsStore = new VisitorCountSettingsStore({ storageProvider: new LocalStorageProvider() });
 app.provide('visitorCountSettingsStore', visitorCountSettingsStore);
+// Network Settings' Show experimental tools: off until turned on (docs/Pillars.md).
+app.provide('experimentalToolsSettingsStore', new ExperimentalToolsSettingsStore({ storageProvider: new LocalStorageProvider() }));
 // The Editor's guided first build: this device's progress through it.
 app.provide('firstBuildChecklistStore', new FirstBuildChecklistStore({ storageProvider: new LocalStorageProvider() }));
 // A share link made, a shared link opened, a build from one copied: counted

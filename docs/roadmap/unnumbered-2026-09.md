@@ -4996,3 +4996,29 @@ only when asked, keeping everything it already has.
   No in-app camera scanner; the phone's own camera opens the link. A device holding more than about 48 MB (the peer
   layer's 64 MB transfer limit, in base64) can't be copied this way and fails as a dropped connection; a backup
   file still works.
+
+## Pillars, and the Experimental tools behind a switch (unnumbered, 2026-10-10)
+
+**ForkBuild now says what it is for, in one place, and a newcomer no longer meets the Experimental tools.** A
+creative-direction review of 1.3.0 found four visions competing in the app: an open protocol (VISION.md and the About
+page), a creative builder (the Home page), an exploration game and a publishing system. The Home page had already
+chosen the builder; this makes that the project's choice. Pillar served: all three, by keeping the first ten minutes
+about building.
+
+- `docs/Pillars.md`: the fantasy ("Build a little place. Anyone can remix it. Walk inside it with friends."), three
+  pillars, the filter every feature passes, the words players see, the tone, what ForkBuild is not, and how each pillar
+  is measured. README, VISION.md, Principles.md and CONTRIBUTING point to it; CONTRIBUTING asks each roadmap entry to
+  name its pillar.
+- VISION.md leads with the game; the engine and protocol are how it's built. The About page says the same, in every
+  language.
+- The menu's **Network** group is now **Advanced** (`app.nav.group.advanced`).
+- **Show experimental tools** on Network Settings (`ExperimentalToolsSettingsStore`, `ExperimentalToolsSetting`), off
+  until turned on and kept in the backup's Network settings. While it is off, Network Settings leaves out the Bitcoin
+  Endpoint page and the Publications page leaves out its Wallet, Archive & Publisher Tools, whose intro points to
+  Network Settings instead. A card's step that needs a wallet observed first still opens the panel for that visit.
+  Every route still opens by its address.
+- Guides 01, 09 and 10 and README, in every language.
+- Tests: `ExperimentalToolsSettingBrowser`.
+- Not done, from the same review: folding Distribute into Publish, a page of your own builds (My Worlds lists Worlds
+  visited), the Builder's release (a larger brick kit, family trees, building on a plot in a World, builder stamps),
+  and archiving the reconciliation and publisher leaderboard pages.

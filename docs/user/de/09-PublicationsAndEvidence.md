@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7c7451cea88d3528 -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -191,6 +191,12 @@ Herausgeberwerkzeuge** seitenweite Werkzeuge in drei Reitern:
 [12](12-ArchiveAndLeaderboards.md)). Der Link dorthin in der Einleitung
 der Seite und in jedem Schritt, der zuerst eine beobachtete Wallet
 braucht, öffnet ihn für Sie.
+
+Der Bereich wird nur angezeigt, solange **Experimentelle Werkzeuge
+anzeigen** in den [Netzwerkeinstellungen](10-NetworkSettings.md#experimentelle-werkzeuge-anzeigen) eingeschaltet ist; bis
+dahin verweist die Einleitung stattdessen auf die Netzwerkeinstellungen.
+Ein Schritt, der zuerst eine beobachtete Wallet braucht, öffnet den Bereich
+trotzdem für diesen Besuch.
 
 Jede Karte einer Veröffentlichung zeigt:
 

@@ -1,6 +1,7 @@
 # Principles
 
-The design rules the code keeps, grouped by theme. Each rule is stated
+The design rules the code keeps, grouped by theme. What the rules are
+for, and which features to build at all, is in [Pillars.md](Pillars.md). Each rule is stated
 in a few lines and links to the full text it was written as, in the
 history files below.
 

@@ -28,6 +28,15 @@ For what each server learns about you, see [Privacy](../Privacy.md).
 | **STUN Servers** / **TURN Server** | `/settings/stun`, `/settings/turn-server` | Help for peer connections — see [TURN](07-PeerConnectionsAndFriends.md#turn-relaying-peer-connections-that-cant-find-a-direct-path) |
 | **Rendezvous Servers** | `/settings/rendezvous` | How peers find each other — see [Peer Connections & Friends](07-PeerConnectionsAndFriends.md) |
 
+## Show experimental tools
+
+At the top of the page, **Show experimental tools** lists the parts of
+ForkBuild that are **Experimental**: the **Bitcoin Endpoint** page here,
+and the **Wallet, Archive & Publisher Tools** panel on the
+[Publications page](09-PublicationsAndEvidence.md#the-publications-page). It is off until you turn it on, and is saved on
+this device as soon as you change it. Nothing you need to build, publish or
+share is hidden while it is off.
+
 ## How every page behaves
 
 - **Reload after saving.** Changes take effect the next time the app loads

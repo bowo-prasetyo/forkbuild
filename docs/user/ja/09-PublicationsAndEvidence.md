@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7c7451cea88d3528 -->
 # 09 — 公開物と外部証拠
 
 <!-- languages -->
@@ -174,6 +174,11 @@ Nostr、Steem。最初は
 [12](12-ArchiveAndLeaderboards.md) を参照）。ページの冒頭にあるリンクや、
 先にウォレットの観測が必要な手順のリンクから開くと、パネルが自動で
 開きます。
+
+このパネルは、[ネットワーク設定](10-NetworkSettings.md#実験的なツールを表示) で **実験的なツールを表示** が
+オンのときだけ表示されます。オフのあいだ、ページの冒頭はネットワーク設定へ
+案内します。先にウォレットの観測が必要な手順からは、その訪問のあいだだけ
+パネルが開きます。
 
 各公開物のカードには、次のものが表示されます。
 

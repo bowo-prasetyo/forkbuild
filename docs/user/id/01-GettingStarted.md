@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 6725707d86a7f053 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: cd219cc0fb352867 -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -49,7 +49,7 @@ Bilah di bagian atas selalu terlihat:
   [Dunia Saya](03-WorldView.md#dunia-saya--dunia-yang-benar-benar-pernah-anda-kunjungi)
 
 **Lainnya** membuka sisanya, dalam empat kelompok: **Anda** (Avatar Saya, Identitas Saya,
-Data Anda), **Orang** (Rekan, Diikuti, Percakapan), **Jaringan**
+Data Anda), **Orang** (Rekan, Diikuti, Percakapan), **Lanjutan**
 (Publikasi, Pengaturan Jaringan), dan **Aplikasi** (Bahasa, Tentang, dan **Pasang ForkBuild** jika peramban dapat memasangnya). Di ponsel,
 **Menu** menampilkan semuanya sekaligus.
 

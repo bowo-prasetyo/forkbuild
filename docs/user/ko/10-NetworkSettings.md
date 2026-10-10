@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 5024adaa9e307817 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 49cd90a03daca28b -->
 # 10 — 네트워크 설정
 
 <!-- languages -->
@@ -30,6 +30,14 @@
 | **Blurt** *(실험적)* | `/settings/blurt` | 내 Blurt 계정과 Blurt를 읽는 곳 — [아래](#blurt) 참고 |
 | **STUN 서버** / **TURN 서버** | `/settings/stun`, `/settings/turn-server` | 피어 연결을 돕는 서버 — [TURN](07-PeerConnectionsAndFriends.md#turn-직접-경로를-찾지-못하는-피어-연결-중계하기) 참고 |
 | **랑데부 서버** | `/settings/rendezvous` | 피어끼리 서로 찾는 방법 — [피어 연결과 친구](07-PeerConnectionsAndFriends.md) 참고 |
+
+## 실험적 도구 표시
+
+페이지 맨 위의 **실험적 도구 표시**를 켜면 ForkBuild의 **실험적** 기능이
+표시됩니다: 여기의 **Bitcoin 엔드포인트** 페이지와
+[게시물 페이지](09-PublicationsAndEvidence.md#게시물-페이지)의 **지갑, 아카이브 및 게시자 도구** 패널입니다.
+켜기 전까지는 꺼져 있고, 바꾸는 즉시 이 기기에 저장됩니다. 짓고, 게시하고,
+공유하는 데 필요한 것은 아무것도 숨겨지지 않습니다.
 
 ## 모든 페이지의 공통 동작
 
