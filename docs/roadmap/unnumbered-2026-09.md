@@ -5193,3 +5193,22 @@ see should match what's there (docs/Pillars.md, "Words").
 - Guides 09 to 12 in every language, README, Pillars and Protocol; the setting's comment and two browser tests that
   find the panel by its name.
 
+## No new networks, and how one is added (unnumbered, 2026-10-10)
+
+**docs/Pillars.md now says no new network or chain joins until the building numbers move, and how one is added when
+it does.** The creative-direction review's third recommendation asked for the freeze; talking it through added the
+shape that makes networks optional without narrowing what players can find. Pillar served: your work is yours, and
+lives in a world (every copy still finds builds on every substrate).
+
+- **Readers and writers.** A network's reader (finding its announcements, fetching what is stored there, checking
+  its proofs) runs in every copy, whatever a player switched on, so discovery searches every substrate; adding one is
+  a project decision, the Privacy page names its servers, it gives up on its own without holding up the others, and it
+  needn't load before the first screen. A network's writer (publishing, announcing, storing, anchoring, wallets and
+  their settings) is a plugin a player switches on, nothing outside it names the network, and ForkBuild works with
+  none.
+- Today Nostr, Arweave, Steem and Blurt are the substrates discovery searches; Bitcoin and Base hold anchor proofs
+  only. CONTRIBUTING points a change that adds or reworks a network to the rule.
+- Not done: splitting the existing networks. Bitcoin's and Base's wallet pipelines become plugins first, with their
+  proof checks loaded when an anchor needs one; then Steem's and Blurt's writers, with their readers loaded when the
+  background sync first runs. Whether those writers are on by default waits for the launch numbers.
+

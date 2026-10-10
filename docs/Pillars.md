@@ -84,6 +84,30 @@ is a means, not the game:
   is turned on in Network Settings.
 - Nothing infrastructural is a reason for a release to exist on its own.
 
+### Networks: readers and writers
+
+No new network or chain joins ForkBuild until the building numbers move (see
+"Measuring it": how big published builds are, and how many builders come back
+for a second one). When one does, or when an existing one is reworked, it
+comes in two parts:
+
+- **A reader**: finding its announcements, fetching builds and comments
+  stored there, and checking its proofs. Every copy of ForkBuild runs every
+  reader, whatever a player has switched on, so discovery searches every
+  substrate. A reader is paid for by every player (traffic, slow or failing
+  nodes, data from strangers), so adding one is a project decision recorded
+  in the roadmap, and the Privacy page names the servers it contacts. No
+  reader holds up another (each gives up on its own), and none has to load
+  before the first screen.
+- **A writer**: publishing, announcing, storing, anchoring, wallets and
+  their settings. A writer is a plugin a player switches on. Nothing outside
+  it names its network, and ForkBuild works with none switched on.
+
+Today Nostr, Arweave, Steem and Blurt are the substrates discovery searches;
+Bitcoin and Base hold anchor proofs only, so their readers are proof checks.
+None is split this way yet: Bitcoin's and Base's wallets come first, then
+Steem's and Blurt's writers.
+
 ## Words
 
 Use the player's words wherever a player reads them, in new text and when
@@ -149,7 +173,9 @@ project's. The review's other recommendations, in order:
    to it, and builder stamps for facts like "your build was remixed".
    Done on 2026-10-10, and tilting bricks onto their other sides soon
    after; showing a week's entries together as a walkable World is left.
-3. No new networks or chains until the building numbers move; the
+3. No new networks or chains until the building numbers move (written down
+   on 2026-10-10, with how a network is added: "Networks: readers and
+   writers" above), and later each existing one made optional; the
    reconciliation and publisher leaderboard pages archived (done on
    2026-10-10: removed, with their code); no new vehicle or swimming
    features until building catches up.

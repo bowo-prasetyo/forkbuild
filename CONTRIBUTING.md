@@ -52,7 +52,8 @@ filter to run matching files only: `npm run test:node -- Avatar`.
      a language.
 2. Check the change against [docs/Pillars.md](docs/Pillars.md): say in its
    roadmap entry which pillar it serves, and keep anything a newcomer
-   doesn't need under **More → Advanced**.
+   doesn't need under **More → Advanced**. A change that adds or reworks a
+   network follows its "Networks: readers and writers".
 3. Add or update tests for what you change, and run `npm test`.
 4. Update the docs the change affects: the user guides in `docs/user/`, and
    `docs/Architecture.md` or `docs/Protocol.md`, edited in place;
