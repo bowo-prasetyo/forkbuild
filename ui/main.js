@@ -448,13 +448,16 @@ app.provide('experimentalToolsSettingsStore', new ExperimentalToolsSettingsStore
 app.provide('buildPlotStore', new BuildPlotStore({ storageProvider: new LocalStorageProvider() }));
 // The Editor's guided first build: this device's progress through it.
 app.provide('firstBuildChecklistStore', new FirstBuildChecklistStore({ storageProvider: new LocalStorageProvider() }));
-// A share link made, a shared link opened, a build from one copied: counted
-// under the same setting (docs/Privacy.md, "Visitor count").
+// A share link made, a shared link opened, a build from one copied, a build
+// published: counted under the same setting (docs/Privacy.md, "Visitor count").
 const funnelEventCounter = new FunnelEventCounter({
     settingsStore: visitorCountSettingsStore,
     origin: window.location.origin,
     privacySignals: browserPrivacySignals(),
-    sendHit: sendCounterHit
+    sendHit: sendCounterHit,
+    // A build's first publish from this device: its brick range, a second
+    // build, a remix.
+    listOwnPublications: () => new LocalDiscoveryProvider(new LocalStorageProvider()).list()
 });
 app.provide('funnelEventCounter', funnelEventCounter);
 // ForkBuild installed as an app: counted the same way.

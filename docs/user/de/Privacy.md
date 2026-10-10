@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: a81525a044b02e2b -->
+<!-- translation-of: docs/Privacy.md source-hash: ffd5c3f422c5e675 -->
 # Datenschutz
 
 <!-- languages -->
@@ -172,6 +172,22 @@ sind (siehe „Server, die ForkBuild kontaktiert“ unten):
 Und wenn jemand bei der wöchentlichen Bau-Challenge mitmacht (**Mitmachen**
 oder die Challenge unter **Neu** im Editor): `/e/challenge-join`.
 
+Und wenn ein Bauwerk zum ersten Mal aus diesem Browser veröffentlicht wird
+(spätere Veröffentlichungen desselben Bauwerks senden nichts):
+
+- seine Größe, als einer von fünf Bereichen direkt gesetzter Steine, ohne
+  Strukturen: `/e/publish-bricks-0`, `/e/publish-bricks-1` (1 bis 9),
+  `/e/publish-bricks-10` (10 bis 49), `/e/publish-bricks-50` (50 bis 199) oder
+  `/e/publish-bricks-200` (200 oder mehr). Nie die genaue Zahl;
+- `/e/second-build`, wenn es das zweite aus diesem Browser veröffentlichte
+  Bauwerk ist, was nur einmal vorkommt;
+- `/e/remix-published`, wenn es eine Kopie eines Bauwerks ist, das dieser
+  Browser nicht veröffentlicht hat.
+
+Das wird aus den Bauwerken ermittelt, die dieser Browser veröffentlicht hat
+und ohnehin aufbewahrt (siehe „Was auf Ihrem Gerät bleibt“); dafür wird
+nichts Neues gespeichert.
+
 Und wenn ForkBuild über einen Link aus einem seiner eigenen Launch-Posts
 geöffnet wird, der auf `?ref=` und den Namen des Orts endet, an dem er
 erschien (`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu` oder `github`; jeder andere Wert wird ignoriert): `/r/` und
@@ -228,6 +244,7 @@ was Sie bei ihm anfragen.
 | Sie installieren ForkBuild von der offiziellen Seite (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/installed`, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website kopieren Sie den Einbettungscode eines Bauwerks, oder ein eingebettetes Bauwerk wird gezeigt oder in ForkBuild geöffnet (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit einem festen Pfad, der nennt, welcher der drei Fälle es war, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website machen Sie bei der wöchentlichen Bau-Challenge mit (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/challenge-join`, ohne Referrer und ohne Cookie |
+| Auf der offiziellen Website veröffentlichen Sie ein Bauwerk zum ersten Mal (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit einem festen Pfad, der den Bereich der Steinanzahl nennt, und eine weitere für ein zweites Bauwerk oder einen Remix, ohne Referrer und ohne Cookie |
 | Sie öffnen die offizielle Website über den Link eines Launch-Posts (`?ref=…`, siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/r/<Kanal>`, ohne Referrer und ohne Cookie |
 | Sie machen sich unter **Peers** auffindbar oder suchen jemanden | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | den öffentlichen Schlüssel Ihrer Identität und ein Verbindungsangebot, höchstens 15 Minuten aufbewahrt; die Identität, die Sie suchen; wenn Sie sich mit jemandem verbinden, den Sie gefunden haben, Ihre Verbindungsantwort (sie listet Ihre Netzwerkadressen auf), die nur diese Person abholen kann |
 | Sie treten einer öffentlichen Lobby bei oder sehen in eine hinein | derselbe Rendezvous-Server | Ihre signierte Lobby-Karte (öffentlicher Schlüssel, Anzeigename, welche Lobby), höchstens 15 Minuten aufbewahrt und erneuert, solange Sie bleiben; in welche Lobby Sie hineinsehen |

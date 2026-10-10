@@ -68,7 +68,7 @@ export default Object.freeze({
 
     // El recuento diario de visitantes en la página Sus datos (ui/components/VisitorCountSetting.js).
     'visitorCount.title': 'Recuento diario de visitantes',
-    'visitorCount.intro': 'Una vez al día, ForkBuild avisa a GoatCounter de que un navegador más lo ha abierto, para que sus creadores sepan aproximadamente cuántas personas lo usan. De la misma manera, también cuenta cuando se copia o se comparte un enlace, cuando se abre un enlace compartido y cuando una construcción abierta desde uno se copia en el Editor. Cada solicitud es una ruta fija que no nombra ninguna página, construcción ni persona, no guarda cookies y GoatCounter solo conserva totales.',
+    'visitorCount.intro': 'Una vez al día, ForkBuild avisa a GoatCounter de que un navegador más lo ha abierto, para que sus creadores sepan aproximadamente cuántas personas lo usan. De la misma manera, también cuenta cuando se copia o se comparte un enlace, cuando se abre un enlace compartido y cuando una construcción abierta desde uno se copia en el Editor. Cuando publicas una construcción por primera vez, cuenta aproximadamente cuántos bloques tiene (uno de cinco rangos), si es tu segunda construcción y si es un remix de la de otra persona. Cada solicitud es una ruta fija que no nombra ninguna página, construcción ni persona, no guarda cookies y GoatCounter solo conserva totales.',
     'visitorCount.label': 'Contar este navegador',
     'visitorCount.browserAsksNotToTrack': 'Este navegador pide a los sitios que no lo rastreen (Global Privacy Control o Do Not Track), así que nunca se cuenta.',
     'visitorCount.details': 'Cualquiera puede ver los totales en el {dashboard}. Qué se envía y cuándo se describe en {privacy}.',

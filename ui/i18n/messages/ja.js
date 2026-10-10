@@ -64,7 +64,7 @@ export default Object.freeze({
 
     // 「あなたのデータ」ページの1日の訪問者数（ui/components/VisitorCountSetting.js）。
     'visitorCount.title': '1日の訪問者数',
-    'visitorCount.intro': 'ForkBuildは1日に1回、ブラウザーがもう1台開いたことをGoatCounterに知らせます。これにより開発者は、おおよその利用者数を知ることができます。同じ方法で、共有リンクがコピーまたは共有されたとき、共有リンクが開かれたとき、そのリンクから開いた作品がエディターにコピーされたときも数えます。どのリクエストも固定のパスで、ページ、作品、個人を示す情報は含まれず、Cookieも使わず、GoatCounterは合計だけを保存します。',
+    'visitorCount.intro': 'ForkBuildは1日に1回、ブラウザーがもう1台開いたことをGoatCounterに知らせます。これにより開発者は、おおよその利用者数を知ることができます。同じ方法で、共有リンクがコピーまたは共有されたとき、共有リンクが開かれたとき、そのリンクから開いた作品がエディターにコピーされたときも数えます。作品を初めて公開したときは、ブロックのおおよその数（5つの範囲のいずれか）、それが2つ目の作品かどうか、他の人の作品のリミックスかどうかも数えます。どのリクエストも固定のパスで、ページ、作品、個人を示す情報は含まれず、Cookieも使わず、GoatCounterは合計だけを保存します。',
     'visitorCount.label': 'このブラウザーを数える',
     'visitorCount.browserAsksNotToTrack': 'このブラウザーはサイトに追跡しないよう求めている（Global Privacy Control または Do Not Track）ため、数えられることはありません。',
     'visitorCount.details': '合計は{dashboard}で誰でも見られます。何がいつ送信されるかは{privacy}に記載しています。',

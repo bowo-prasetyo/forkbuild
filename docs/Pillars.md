@@ -126,10 +126,13 @@ Each pillar has a question the launch counters can answer
 (see [the launch kit](launch/README.md#measuring-it)):
 
 - **Building:** do people who arrive start a build (`/e/challenge-join`)
-  and publish one?
+  and publish one, and how big are the builds they publish
+  (`/e/publish-bricks-0`, `-1`, `-10`, `-50` and `-200`, by range)?
 - **Family tree:** are shared links opened by people the builder didn't bring
-  (`/e/opened-shared-link`), and remixed (`/e/remix-from-link`)?
-- **Yours, in a world:** do people come back for a second build?
+  (`/e/opened-shared-link`), copied (`/e/remix-from-link`), and are the copies
+  published as remixes (`/e/remix-published`)?
+- **Yours, in a world:** do people come back for a second build
+  (`/e/second-build`)?
 
 ## Where this came from
 
@@ -150,3 +153,6 @@ project's. The review's other recommendations, in order:
 3. No new networks or chains until the building numbers move; the
    reconciliation and publisher leaderboard pages archived; no new vehicle or
    swimming features until building catches up.
+4. Counting what says whether the fantasy lands: how big published builds
+   are, how many builders publish a second build, and how many builds are
+   remixes. Done on 2026-10-10 (see "Measuring it" above).

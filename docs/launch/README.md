@@ -90,6 +90,17 @@ the week after, by day:
 - **Arrivals per channel:** `/r/hn`, `/r/producthunt`, `/r/reddit`, …
 - **Did they build?** `/e/challenge-join` against the arrivals; the daily
   count `/`.
+- **How much did they build?** The five `/e/publish-bricks-…` paths, one per
+  build published for the first time, so together they are the builds
+  published. The range holding the middle one is the median build's size:
+  `-0` (structures only), `-1` (1–9 bricks), `-10` (10–49), `-50` (50–199),
+  `-200` (200 or more). Mostly `-1` means people publish a first try and
+  leave; the kit and the guided first build are where to look.
+- **Did they come back?** `/e/second-build` against the builds published:
+  the share of builders who published a second one.
+- **Do builds have a family tree?** `/e/remix-published` against the builds
+  published: remixes per build. `/e/remix-from-link` counts copies started
+  from a link; this counts the ones finished and published.
 - **Did it spread?** `/e/share-link` (links made), `/e/opened-shared-link`
   (links opened by someone), `/e/remix-from-link` (copies made from a link).
   Opened links per week is the number that says whether ForkBuild is being

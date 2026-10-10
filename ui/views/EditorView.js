@@ -78,6 +78,7 @@ import { challengeLastDayText, challengeThemeBrief, challengeThemeTitle, challen
 import ModelExportDialog from '../components/modelExport/ModelExportDialog.js';
 import { downloadBuildModel } from '../components/modelExport/downloadBuildModel.js';
 import { describeLicense } from '../../application/document/LicenseLabels.js';
+import { worldBrickCount } from '../../core/BuilderStamps.js';
 
 // Editing shortcuts come from EditorActionRegistry, shared with the palette,
 // the sidebar and the controls docs. Escape priority: text input > shortcuts
@@ -723,6 +724,7 @@ export default {
             documentManager, documentVersion, router, feedback
         });
         function onPublished(publication) {
+            funnelEventCounter?.publishedBuild(publication, worldBrickCount(documentManager.document?.world));
             onDocumentPublished(publication);
             onBuildPlotPublished(publication);
         }

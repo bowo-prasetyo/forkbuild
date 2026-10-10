@@ -1,17 +1,20 @@
-import { FunnelEvent, funnelEventHitUrl, isFunnelEvent, shouldCountFunnelEvent } from '../../core/VisitorCount.js';
+import { FunnelEvent, funnelEventHitUrl, isFunnelEvent, publishedBuildEvents, shouldCountFunnelEvent } from '../../core/VisitorCount.js';
 
 // Tells the visitor counter about a few moments in sharing a build
 // (core/VisitorCount.js, FunnelEvent), under the daily count's own rules and
 // setting. Remembers, for this page only, which builds were opened from a
 // shared link, so copying one of them into the Editor counts as a remix from
-// a link. Never throws: a counter must not be able to stop what it counts.
+// a link. `listOwnPublications` returns the Publications this device has
+// published (LocalDiscoveryProvider#list()), read when a build is published.
+// Never throws: a counter must not be able to stop what it counts.
 export class FunnelEventCounter {
-    constructor({ settingsStore, origin, privacySignals = {}, random = Math.random, sendHit }) {
+    constructor({ settingsStore, origin, privacySignals = {}, random = Math.random, sendHit, listOwnPublications = () => [] }) {
         this._settingsStore = settingsStore;
         this._origin = origin;
         this._privacySignals = privacySignals;
         this._random = random;
         this._sendHit = sendHit;
+        this._listOwnPublications = listOwnPublications;
         this._openedFromLink = new Set();
     }
 
@@ -62,5 +65,16 @@ export class FunnelEventCounter {
     forked(sourceDocumentId) {
         if (!this._openedFromLink.delete(sourceDocumentId)) return false;
         return this.count(FunnelEvent.REMIX_FROM_LINK);
+    }
+
+    // A build just published (core/VisitorCount.js, publishedBuildEvents).
+    // Returns the events sent.
+    publishedBuild(publication, brickCount) {
+        try {
+            const events = publishedBuildEvents({ publication, brickCount, ownPublications: this._listOwnPublications() });
+            return events.filter((event) => this.count(event));
+        } catch {
+            return [];
+        }
     }
 }

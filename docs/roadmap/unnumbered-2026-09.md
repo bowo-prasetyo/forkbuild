@@ -5094,3 +5094,28 @@ diagonal couldn't be built any other way. Pillar served: building feels joyful.
   copies, drawing and export); `EditorSidebarLayoutBrowser` lists Tilt among the selection's everyday actions. Checked
   in the real Editor: a post placed tilted and one tilted after placing are saved with `tilts` and rest on the ground.
 - Upgrading: builds with tilted bricks show those bricks upright in 1.3.0 and earlier.
+
+## Counting what says whether building lands (unnumbered, 2026-10-10)
+
+**The launch week can now say how much people build, whether they come back, and whether builds are remixed.** The
+launch counters said who arrived, who joined the challenge and who shared a link, but not whether a published build
+held twelve bricks or four hundred, whether anyone published a second, or whether copies were finished. Those are the
+numbers that say whether the Builder's release changed anything. Pillar served: all three, by measuring them
+(docs/Pillars.md, "Measuring it").
+
+- **What is counted.** The first time a build is published from a browser, the visitor counter hears its brick range,
+  one of five fixed paths named by its lowest count (`/e/publish-bricks-0`, `-1`, `-10`, `-50`, `-200`); `/e/second-build`
+  when it is that browser's second build, which happens once; and `/e/remix-published` when it is a copy of a build the
+  browser didn't publish. Publishing a build again sends nothing, so the ranges add up to the builds published.
+- **How.** `publishedBuildEvents()` and `publishedBrickRangeEvent()` in core/VisitorCount.js decide from the
+  Publication, its bricks (`worldBrickCount()` in core/BuilderStamps.js, structure placements aside, as the stamps
+  count) and the browser's own published builds (LocalDiscoveryProvider), which it already keeps; nothing new is
+  stored. `FunnelEventCounter#publishedBuild()` sends them under the daily count's rules: the official site only,
+  never with Global Privacy Control or Do Not Track, never with **Count this browser** off. Counted after a publish
+  from the Editor and from World View.
+- Privacy (and in every language), the **Your Data** text in every language, the launch kit's "Measuring it" and
+  Pillars.
+- Tests: `FunnelEventCounter` publishes real builds and checks each path, that a republish and a copy of one's own
+  build add nothing, and that no title or id is sent.
+- Not done: telling apart a builder who comes back on another day from one who publishes two builds in one sitting;
+  the counter keeps totals only and can't join paths into one person's.

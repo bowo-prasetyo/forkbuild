@@ -66,7 +66,7 @@ export default Object.freeze({
 
     // The daily visitor count on the Your Data page (ui/components/VisitorCountSetting.js).
     'visitorCount.title': 'Daily visitor count',
-    'visitorCount.intro': 'Once a day, ForkBuild tells GoatCounter that one more browser opened it, so its makers know roughly how many people use it. It also counts, the same way, when a share link is copied or shared, when a shared link is opened, and when a build opened from one is copied into the Editor. Each request is a fixed path that names no page, build or person, sets no cookie, and GoatCounter keeps only totals.',
+    'visitorCount.intro': 'Once a day, ForkBuild tells GoatCounter that one more browser opened it, so its makers know roughly how many people use it. It also counts, the same way, when a share link is copied or shared, when a shared link is opened, and when a build opened from one is copied into the Editor. When you first publish a build, it counts roughly how many bricks it has (one of five ranges), whether it is your second build, and whether it is a remix of someone else\'s. Each request is a fixed path that names no page, build or person, sets no cookie, and GoatCounter keeps only totals.',
     'visitorCount.label': 'Count this browser',
     'visitorCount.browserAsksNotToTrack': 'This browser asks sites not to track it (Global Privacy Control or Do Not Track), so it is never counted.',
     'visitorCount.details': 'Anyone can see the totals on the {dashboard}. What is sent, and when, is described on {privacy}.',

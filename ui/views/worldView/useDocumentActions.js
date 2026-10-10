@@ -1,7 +1,9 @@
 // Document-level actions on the World View: metadata editing, Save and Publish.
 import { t } from '../../i18n/i18n.js';
+import { worldBrickCount } from '../../../core/BuilderStamps.js';
 export function useDocumentActions({
-    activeDocumentInfo, feedback, guarded, metadataEditTarget, refreshSpatialUI, session, showMetadataEditor
+    activeDocumentInfo, feedback, guarded, metadataEditTarget, refreshSpatialUI, session, showMetadataEditor,
+    funnelEventCounter = null
 }) {
     // Editing a published snapshot's metadata forks it first, so this goes through
     // guarded(). Openable from the inspected document's panel or the header (the
@@ -38,6 +40,7 @@ export function useDocumentActions({
         if (!info) return;
         guarded(() => {
             const publication = session.publishDocument(info.documentId);
+            funnelEventCounter?.publishedBuild(publication, worldBrickCount(session.getDocument(info.documentId)?.world));
             feedback.show(t('worldView.published2', { title: publication.title }));
         });
         refreshSpatialUI();

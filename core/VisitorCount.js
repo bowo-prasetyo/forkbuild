@@ -58,7 +58,10 @@ export function visitorCountHitUrl(random) {
 // (docs/Privacy.md, "Visitor count"): a share link copied or shared, a shared
 // link opened, a build opened from a link then copied into the Editor,
 // ForkBuild installed as an app, and a build's embed code copied, an embedded
-// build shown on another site, and opened from there in ForkBuild.
+// build shown on another site, and opened from there in ForkBuild; and, when
+// a build is first published from this device, roughly how many bricks it
+// has, whether it is this device's second build, and whether it remixes
+// someone else's (publishedBuildEvents below).
 // Nothing about the build, the link or the person is part of the path.
 export const FunnelEvent = Object.freeze({
     SHARE_LINK: 'share-link',
@@ -68,7 +71,14 @@ export const FunnelEvent = Object.freeze({
     EMBED_CODE: 'embed-code',
     EMBED_VIEW: 'embed-view',
     EMBED_OPEN: 'embed-open',
-    CHALLENGE_JOIN: 'challenge-join'
+    CHALLENGE_JOIN: 'challenge-join',
+    PUBLISH_BRICKS_0: 'publish-bricks-0',
+    PUBLISH_BRICKS_1: 'publish-bricks-1',
+    PUBLISH_BRICKS_10: 'publish-bricks-10',
+    PUBLISH_BRICKS_50: 'publish-bricks-50',
+    PUBLISH_BRICKS_200: 'publish-bricks-200',
+    SECOND_BUILD: 'second-build',
+    REMIX_PUBLISHED: 'remix-published'
 });
 
 const FUNNEL_EVENTS = new Set(Object.values(FunnelEvent));
@@ -87,4 +97,50 @@ export function shouldCountFunnelEvent({ settings, origin, privacySignals }) {
 export function funnelEventHitUrl(event, random) {
     if (!isFunnelEvent(event)) throw new TypeError(`not a funnel event: ${event}`);
     return `${VISITOR_COUNT_ENDPOINT}?p=${encodeURIComponent(`/e/${event}`)}&rnd=${encodeURIComponent(random)}`;
+}
+
+// A published build's size as one of five ranges, named by their lowest
+// count: 0 (only ready-made structures), 1–9, 10–49, 50–199 and 200 or more.
+// Coarse on purpose: the range says how much building a build holds without
+// the exact count singling it out.
+const BRICK_RANGES = Object.freeze([
+    [200, FunnelEvent.PUBLISH_BRICKS_200],
+    [50, FunnelEvent.PUBLISH_BRICKS_50],
+    [10, FunnelEvent.PUBLISH_BRICKS_10],
+    [1, FunnelEvent.PUBLISH_BRICKS_1]
+]);
+
+export function publishedBrickRangeEvent(brickCount) {
+    const count = Number.isInteger(brickCount) && brickCount > 0 ? brickCount : 0;
+    for (const [lowest, event] of BRICK_RANGES) {
+        if (count >= lowest) return event;
+    }
+    return FunnelEvent.PUBLISH_BRICKS_0;
+}
+
+// What publishing `publication` tells the counter, given every Publication
+// this device has published (`ownPublications`, which may or may not already
+// hold `publication`). Only a build's first publish from this device counts,
+// so publishing it again after more work adds nothing, and the brick ranges
+// add up to the builds published:
+// - its brick range (publishedBrickRangeEvent);
+// - /e/second-build when it is the second build this device has published,
+//   which happens once;
+// - /e/remix-published when it is a copy of a build this device didn't
+//   publish (a copy of one's own build is more work on it, not a remix).
+export function publishedBuildEvents({ publication, brickCount, ownPublications = [] }) {
+    const documentId = publication?.documentId;
+    if (typeof documentId !== 'string' || !documentId) return Object.freeze([]);
+    const earlier = (Array.isArray(ownPublications) ? ownPublications : [])
+        .filter((own) => own && own.id !== publication.id && typeof own.documentId === 'string');
+    if (earlier.some((own) => own.documentId === documentId)) return Object.freeze([]);
+
+    const events = [publishedBrickRangeEvent(brickCount)];
+    const earlierBuilds = new Set(earlier.map((own) => own.documentId));
+    if (earlierBuilds.size === 1) events.push(FunnelEvent.SECOND_BUILD);
+    const parent = publication.parentDocumentId;
+    if (typeof parent === 'string' && parent && parent !== documentId && !earlierBuilds.has(parent)) {
+        events.push(FunnelEvent.REMIX_PUBLISHED);
+    }
+    return Object.freeze(events);
 }
