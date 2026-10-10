@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6d422d4ef6fb45c9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 98b7f4c2be018dd9 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -543,6 +543,30 @@ ce que d’autres ont fait de la même idée.
 Quand des participations sont des remix les unes des autres, ou d’autres
 constructions, **Arbres généalogiques** sous les participations montre d’où
 elles viennent, un arbre par chaîne de remix.
+
+### La place du défi
+
+Dès qu’une semaine a des participations, **Parcourir la place** sur sa page
+vous emmène dans la vue du monde, dans une clairière du monde partagé où les
+participations de la semaine se dressent en anneaux autour d’une place
+dégagée. Promenez-vous parmi elles ou choisissez-en une dans le panneau :
+**Naviguer** vole jusqu’à elle, **Ouvrir** l’ouvre comme le ferait
+**Explorer**, et **Modifier une copie** commence votre propre copie.
+
+- Les 24 premières participations publiées s’y dressent, les plus anciennes
+  au plus près du centre, si bien qu’une nouvelle rejoint le bord extérieur.
+  Les autres sont sur la page du défi.
+- Les participations trouvées sur les réseaux sont récupérées et vérifiées
+  comme à l’ouverture de leur lien. Celle qui ne peut pas être récupérée est
+  laissée de côté, et le panneau dit combien l’ont été.
+- Une participation dont l’auteur a choisi **Moi seul peux le placer** ne se
+  dresse pas sur la place, puisque l’y mettre reviendrait à la placer. Elle
+  reste sur la page du défi.
+- Les participations sont des pièces exposées, pas des placements : rien
+  n’est signé ni conservé pour personne, et elles disparaissent quand vous
+  partez. Comme le reste de la vue du monde, la place montre ce que cet
+  appareil connaît : deux visiteurs peuvent donc en voir un ensemble
+  différent.
 
 ## L’arbre généalogique
 

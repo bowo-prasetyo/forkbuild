@@ -61,6 +61,9 @@ export class RenderWorldViewUseCase {
         }
         // Claimed builds: translucent and never pickable, apart from worldRenderer.
         const claimedBuildGhostRenderer = new ClaimedBuildGhostRenderer(renderer, registry);
+        // The challenge plaza's exhibits (core/ChallengePlaza.js): drawn like a
+        // claimed build, but solid.
+        const plazaExhibitRenderer = new ClaimedBuildGhostRenderer(renderer, registry, { translucent: false });
         renderer.start();
         const pickingService = new PickingService(
             renderer.camera,
@@ -362,6 +365,8 @@ export class RenderWorldViewUseCase {
             removeWorld: (world, documentId) => worldRenderer.removeWorld(world, documentId),
             showClaimedBuild: (key, world, position) => claimedBuildGhostRenderer.show(key, world, position),
             hideClaimedBuild: (key) => claimedBuildGhostRenderer.hide(key),
+            showPlazaExhibit: (key, world, position) => plazaExhibitRenderer.show(key, world, position),
+            hidePlazaExhibit: (key) => plazaExhibitRenderer.hide(key),
             selectBrick: (brickId) => spatialSelectionRenderer.select(brickId),
             selectBricks: (brickIds, primaryBrickId = null) => spatialSelectionRenderer.selectMany(brickIds, primaryBrickId),
             // 0.2.93 — highlights every mesh of ONE StructurePlacement,
@@ -771,6 +776,7 @@ export class RenderWorldViewUseCase {
             },
             dispose() {
                 claimedBuildGhostRenderer.hideAll();
+                plazaExhibitRenderer.hideAll();
                 transformGizmoController.dispose();
                 transformGizmoRenderer.dispose();
                 spatialPreviewRenderer.dispose();

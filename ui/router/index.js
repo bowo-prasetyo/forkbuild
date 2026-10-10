@@ -27,6 +27,9 @@ const AboutView = page('AboutView', () => import('../views/AboutView.js'));
 const PublicationLinkView = page('PublicationLinkView', () => import('../views/PublicationLinkView.js'));
 const AuthorView = page('AuthorView', () => import('../views/AuthorView.js'));
 const WorldView = page('WorldView', () => import('../views/WorldView.js'));
+// The challenge plaza is World View too, under its own name, so that going
+// between a plaza and a World mounts it afresh instead of reusing the page.
+const PlazaView = page('WorldView', () => import('../views/WorldView.js').then((module) => ({ default: { ...module.default, name: 'PlazaView' } })));
 const LiveWorldView = page('LiveWorldView', () => import('../views/LiveWorldView.js'));
 const AvatarSettingsView = page('AvatarSettingsView', () => import('../views/AvatarSettingsView.js'));
 const IdentityManagementView = page('IdentityManagementView', () => import('../views/IdentityManagementView.js'));
@@ -75,6 +78,8 @@ const routes = [
     // is the one canonical, user-facing World surface from this
     // milestone forward.
     { path: '/world/:documentId', name: 'world', component: WorldView },
+    // A week's challenge plaza (core/ChallengePlaza.js), in World View.
+    { path: '/plaza/:challengeId', name: 'plaza', component: PlazaView },
     // A link to a Publication, naming where its Signed Claim is stored: the
     // "see it in 3D" link on a Steem or Blurt post, or one shared with Share.
     // Opens World View on that Publication once it checks out.

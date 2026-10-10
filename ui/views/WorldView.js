@@ -82,6 +82,8 @@ import { headerSectionTemplate } from './worldView/templates/headerSection.js';
 import { worldListsSectionTemplate } from './worldView/templates/worldListsSection.js';
 import { navigationHudSectionTemplate } from './worldView/templates/navigationHudSection.js';
 import { publicationSectionTemplate } from './worldView/templates/publicationSection.js';
+import { plazaSectionTemplate } from './worldView/templates/plazaSection.js';
+import { useChallengePlaza } from './worldView/useChallengePlaza.js';
 import { hoverCardTemplate } from './worldView/templates/hoverCard.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 import { plotQuery } from '../../core/BuildPlot.js';
@@ -272,6 +274,10 @@ export default {
             decentralizedPublicationDiscoveryProvider: decentralizedDiscoveryProviderForEnrichment
         });
         const session = worldViewFactory.createSession(registry);
+        // `/plaza/<week>`: the week's challenge plaza instead of a World.
+        const {
+            plaza, inPlaza, enterPlaza, leavePlaza, backToPlaza, focusExhibit, openExhibit, remixExhibit
+        } = useChallengePlaza({ route, router, session, refreshSpatialUI: () => refreshSpatialUI() });
         // The automatic Snapshot cascade, scoped to this mount (a fresh idempotency map
         // per session). `automaticCascadeSessionActive` is set false first thing on
         // unmount; the cascade reads it through a closure so a long-running chain sees
@@ -671,7 +677,7 @@ export default {
             redoLabel.value = session.getRedoLabel();
             activePlacementInfo.value = activeId ? session.getPlacementInfo(activeId) : null;
             ownPublication.value = activeId ? session.getPublicationForDocument(activeId) : null;
-            if (activeId && activeId !== route.params.documentId) {
+            if (activeId && !inPlaza.value && activeId !== route.params.documentId) {
                 router.replace({ path: `/world/${activeId}` });
             }
 
@@ -972,7 +978,8 @@ export default {
         // side panel starts closed so the World fills the screen.
         const touchInput = useMediaQuery(TOUCH_INPUT_QUERY);
         const compactLayout = useMediaQuery(COMPACT_LAYOUT_QUERY);
-        const panelOpen = ref(!compactLayout.value);
+        // Open in the plaza even on a phone: its panel is what says where you are.
+        const panelOpen = ref(!compactLayout.value || inPlaza.value);
         // The camera and walking controls hint, behind the panel's ? button.
         const controlsHintOpen = ref(false);
         const touchPadVisible = computed(() => touchInput.value && hasLocalAvatar.value && avatarControlMode.value);
@@ -1034,7 +1041,11 @@ export default {
         onMounted(() => {
             allPublications.value = listPublicationsUseCase.execute();
             session.start(viewport.value);
-            session.navigateToDocument(initialDocumentId);
+            if (inPlaza.value) {
+                enterPlaza();
+            } else {
+                session.navigateToDocument(initialDocumentId);
+            }
             refreshSpatialUI();
 
             // Reopens the focus panel for the location the Editor's "Back to World" named;
@@ -1121,6 +1132,7 @@ export default {
             // sees a dead session at its registration checkpoint.
             automaticCascadeSessionActive = false;
             placeNamingDiscoveryPresentationActive = false;
+            leavePlaza();
             disposeClaimedBuilds();
             unsubscribeAnnouncementIndexChanges();
             if (placeNamingDiscoveryMonitor) {
@@ -1346,6 +1358,7 @@ export default {
             adoptNearbyPlaceNamingClaim,
             goHome,
             buildHere,
+            plaza, inPlaza, backToPlaza, focusExhibit, openExhibit, remixExhibit,
             openLocationsPanel,
             closeLocationsPanel,
             focusLocation,
@@ -1437,6 +1450,7 @@ export default {
                   @click="togglePanel"
               >{{ panelOpen ? t('worldView.hidePanel') : t('worldView.panel') }}</button>
               <div class="world-view-overlay-scroll">
+                ${plazaSectionTemplate}
                 ${headerSectionTemplate}
                 <!--
                     Panel order: what you're looking at, where to go, what's around, then your
@@ -1447,7 +1461,7 @@ export default {
                 <div v-if="cameraPosition || activeDocumentInfo" class="world-view-actions world-view-actions--navigation">
                     <button v-if="cameraPosition" class="action-btn" @click="goHome">{{ t('worldView.home') }}</button>
                     <button
-                        v-if="cameraPosition"
+                        v-if="cameraPosition && !inPlaza"
                         type="button"
                         class="action-btn world-view-build-here"
                         :title="t('buildPlot.buildHereHint')"

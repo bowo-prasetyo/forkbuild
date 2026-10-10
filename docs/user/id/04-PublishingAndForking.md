@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6d422d4ef6fb45c9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 98b7f4c2be018dd9 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -531,6 +531,30 @@ ide yang sama.
 Jika ada karya peserta yang di-remix dari satu sama lain, atau dari
 bangunan lain, **Silsilah** di bawah daftar peserta menunjukkan asalnya,
 satu pohon untuk setiap rantai remix.
+
+### Alun-alun tantangan
+
+Begitu satu minggu punya karya, **Jelajahi alun-alun** di halamannya
+membawamu ke Tampilan Dunia, ke sebuah tanah lapang di dunia bersama tempat
+karya minggu itu berdiri melingkar mengelilingi alun-alun terbuka.
+Berjalanlah di antaranya, atau pilih satu di panel: **Navigasi** terbang ke
+sana, **Buka** membukanya seperti **Jelajahi**, dan **Edit Salinan** memulai
+salinanmu sendiri.
+
+- 24 karya pertama yang diterbitkan berdiri di sana, yang paling lama
+  paling dekat ke tengah, sehingga karya baru bergabung di tepi luar.
+  Sisanya ada di halaman tantangan.
+- Karya yang ditemukan di jaringan diambil dan diperiksa seperti saat
+  tautannya dibuka. Karya yang tidak bisa diambil ditinggalkan, dan panel
+  menyebutkan berapa banyak.
+- Karya yang penerbitnya memilih **Hanya saya yang boleh menempatkannya**
+  tidak berdiri di alun-alun, karena menaruhnya di sana sama dengan
+  menempatkannya. Karya itu tetap di halaman tantangan.
+- Karya-karya itu adalah pajangan, bukan penempatan: tidak ada yang
+  ditandatangani atau disimpan untuk siapa pun, dan semuanya hilang saat kamu
+  pergi. Seperti bagian lain Tampilan Dunia, alun-alun menampilkan apa yang
+  diketahui perangkat ini, jadi dua pengunjung bisa melihat kumpulan yang
+  berbeda.
 
 ## Pohon keluarga
 

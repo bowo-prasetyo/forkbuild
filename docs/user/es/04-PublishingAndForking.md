@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6d422d4ef6fb45c9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 98b7f4c2be018dd9 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -537,6 +537,29 @@ otras personas con la misma idea.
 Cuando hay participaciones remezcladas unas de otras, o de otras
 construcciones, **Árboles familiares** bajo las participaciones muestra de
 dónde vienen, un árbol por cada cadena de remezclas.
+
+### La plaza del reto
+
+En cuanto una semana tiene participaciones, **Recorrer la plaza** en su
+página te lleva a la vista del mundo, a un claro del mundo compartido donde
+las participaciones de la semana se alzan en anillos alrededor de una plaza
+abierta. Pasea entre ellas o elige una en el panel: **Navegar** vuela hasta
+ella, **Abrir** la abre como lo haría **Explorar**, y **Editar una copia**
+empieza tu propia copia.
+
+- Se alzan allí las primeras 24 participaciones publicadas, las más
+  antiguas más cerca del centro, así que una nueva se suma al borde
+  exterior. El resto está en la página del reto.
+- Las participaciones encontradas en las redes se obtienen y comprueban
+  como al abrir su enlace. Si una no se puede obtener, se deja fuera, y el
+  panel dice cuántas fueron.
+- Una participación cuyo autor eligió **Solo yo puedo colocarlo** no se
+  alza en la plaza, porque ponerla allí sería colocarla. Sigue en la página
+  del reto.
+- Las participaciones son piezas expuestas, no colocaciones: no se firma
+  ni se guarda nada para nadie, y desaparecen al salir. Como el resto de la
+  vista del mundo, la plaza muestra lo que conoce este dispositivo, así que
+  dos visitantes pueden ver conjuntos distintos.
 
 ## El árbol genealógico
 

@@ -18,7 +18,8 @@ const FeaturedBuilds = defineAsyncComponent(() => import('../components/featured
 // /challenge, an earlier one at /challenge/<its Monday>. How to enter, Join
 // while it runs, the entries (published builds carrying the week's tag,
 // this device's own and those found on Nostr and Arweave when the page
-// opens), and built-in builds to start from.
+// opens), Walk the plaza once there are some (core/ChallengePlaza.js), and
+// built-in builds to start from.
 export default {
     name: 'ChallengeView',
     components: { PublicationCard, FeaturedBuilds, RemixFamilyTree },
@@ -145,6 +146,7 @@ export default {
                     <p class="challenge-card-tag">#{{ challenge.tag }}</p>
                     <div class="challenge-card-actions">
                         <router-link v-if="view.open" :to="view.joinRoute" class="cta-button challenge-join">{{ t('challenge.join') }}</router-link>
+                        <router-link v-if="entries.length" :to="{ path: '/plaza/' + challenge.id }" class="home-cta-secondary challenge-plaza-link">{{ t('challenge.walkPlaza') }}</router-link>
                         <router-link v-if="!view.isCurrent" to="/challenge" class="home-cta-secondary challenge-current-link">{{ t('challenge.current') }}</router-link>
                         <router-link v-if="view.previousRoute" :to="view.previousRoute" class="home-cta-secondary challenge-previous-link">{{ t('challenge.previous', { theme: view.previousTitle }) }}</router-link>
                     </div>

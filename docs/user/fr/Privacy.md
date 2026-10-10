@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ffd5c3f422c5e675 -->
+<!-- translation-of: docs/Privacy.md source-hash: 377c2dfdc99b3ce6 -->
 # Confidentialité
 
 <!-- languages -->
@@ -173,7 +173,8 @@ pages d’autres sites (voir « Serveurs que ForkBuild contacte » plus bas) :
 
 Et quand quelqu’un participe au défi de construction hebdomadaire
 (**Participer au défi**, ou le défi dans **Nouveau** de l’Éditeur) :
-`/e/challenge-join`.
+`/e/challenge-join` ; et quand quelqu’un ouvre la
+place du défi d’une semaine dans la vue du monde : `/e/plaza-visit`.
 
 Et la première fois qu’une construction est publiée depuis ce navigateur
 (la republier plus tard n’envoie rien) :
@@ -248,7 +249,7 @@ demandez.
 | Sur le site officiel, vous copiez ou partagez un lien vers une construction, ouvrez un lien partagé, ou copiez dans l’Éditeur une construction ouverte depuis un tel lien (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe qui indique lequel des trois moments c’était, sans référent et sans cookie |
 | Vous installez ForkBuild depuis le site officiel (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec le chemin fixe `/e/installed`, sans référent et sans cookie |
 | Sur le site officiel, vous copiez le code d’intégration d’une construction, ou une construction intégrée est affichée ou ouverte dans ForkBuild (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe indiquant lequel des trois cas, sans référent et sans cookie |
-| Sur le site officiel, vous participez au défi de construction hebdomadaire (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec le chemin fixe `/e/challenge-join`, sans référent et sans cookie |
+| Sur le site officiel, vous participez au défi de construction hebdomadaire ou ouvrez sa place (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec le chemin fixe `/e/challenge-join` ou `/e/plaza-visit`, sans référent et sans cookie |
 | Sur le site officiel, vous publiez une construction pour la première fois (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe indiquant sa tranche de briques, et une de plus pour une deuxième construction ou un remix, sans référent et sans cookie |
 | Vous ouvrez le site officiel par le lien d’une publication de lancement (`?ref=…`, voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec le chemin fixe `/r/<canal>`, sans référent et sans cookie |
 | Vous vous rendez découvrable, ou cherchez quelqu’un, dans **Pairs** | le serveur de rendez-vous (`forkbuild-rendezvous.prazjp.workers.dev`) | la clé publique de votre identité et une offre de connexion, conservées au plus 15 minutes ; l’identité que vous recherchez ; quand vous vous connectez à quelqu’un que vous avez trouvé, votre réponse de connexion (elle liste vos adresses réseau), que seule cette personne peut récupérer |

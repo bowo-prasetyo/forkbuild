@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 456d4315d584caa5 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 1d94840844dd42aa -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -652,6 +652,15 @@ vergessen** wird der Bau wie gewohnt platziert. Die Stelle ist nur Ihre
 eigene Notiz, wo Ihr Bau gezeigt wird, auf diesem Gerät und in seinen
 Sicherungen; sie beansprucht kein Land, und andere dürfen dort ebenfalls
 bauen.
+
+### Der Challenge-Platz
+
+**Über den Platz gehen** auf der Challenge-Seite einer Woche öffnet die
+Weltansicht auf einer Lichtung, wo die Beiträge dieser Woche um einen
+offenen Platz stehen, mit einem Panel, das sie auflistet (siehe
+[Der Challenge-Platz](04-PublishingAndForking.md#der-challenge-platz)). Dort wachsen in
+keiner Woche Bäume. Die Beiträge werden nur gezeigt, solange du auf dem
+Platz bist, und **Hier bauen** wird dort nicht angeboten.
 
 ### Wahrzeichen — einen Ort markieren, den man sich merken sollte
 

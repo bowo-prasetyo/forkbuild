@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6d422d4ef6fb45c9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 98b7f4c2be018dd9 -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -523,6 +523,29 @@ fizeram com a mesma ideia.
 Quando há participações remixadas umas das outras, ou de outras
 construções, **Árvores genealógicas** abaixo das participações mostra de
 onde vieram, uma árvore para cada cadeia de remixes.
+
+### A praça do desafio
+
+Assim que uma semana tem participações, **Passear pela praça** na página
+dela leva você à visão do mundo, a uma clareira no mundo compartilhado onde
+as participações da semana ficam em anéis ao redor de uma praça aberta.
+Passeie entre elas ou escolha uma no painel: **Navegar** voa até ela,
+**Abrir** a abre como **Explorar** faria, e **Editar uma cópia** começa a
+sua própria cópia.
+
+- As primeiras 24 participações publicadas ficam lá, as mais antigas mais
+  perto do centro, então uma nova entra na borda de fora. As demais estão
+  na página do desafio.
+- Participações encontradas nas redes são buscadas e conferidas como ao
+  abrir o link delas. Uma que não pode ser buscada fica de fora, e o painel
+  diz quantas foram.
+- Uma participação cujo autor escolheu **Só eu posso posicioná-lo** não
+  fica na praça, já que colocá-la lá seria posicioná-la. Ela continua na
+  página do desafio.
+- As participações são peças expostas, não posicionamentos: nada é
+  assinado nem guardado para ninguém, e elas somem quando você sai. Como o
+  resto da visão do mundo, a praça mostra o que este dispositivo conhece,
+  então dois visitantes podem ver conjuntos diferentes.
 
 ## A árvore genealógica
 

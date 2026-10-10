@@ -144,7 +144,8 @@ It also hears, the same way, when ForkBuild is installed as an app
 - `/e/embed-open`: an embedded build was opened in ForkBuild from that page.
 
 And when someone joins the weekly build challenge (**Join the challenge**,
-or the challenge in the Editor's **New**): `/e/challenge-join`.
+or the challenge in the Editor's **New**): `/e/challenge-join`; and when someone
+opens a week's challenge plaza in World View: `/e/plaza-visit`.
 
 And the first time a build is published from this browser (publishing it
 again later sends nothing):
@@ -212,7 +213,7 @@ only when you use the feature, and each server can be changed under
 | On the official site, you copy or share a link to a build, open a shared link, or copy a build opened from one into the Editor (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
 | You install ForkBuild from the official site (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/installed`, no referrer and no cookie |
 | On the official site, you copy a build's embed code, or an embedded build is shown, or opened in ForkBuild (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
-| On the official site, you join the weekly build challenge (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/challenge-join`, no referrer and no cookie |
+| On the official site, you join the weekly build challenge, or open its plaza (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/challenge-join` or `/e/plaza-visit`, no referrer and no cookie |
 | On the official site, you publish a build for the first time (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming its range of bricks, and one more for a second build or a remix, no referrer and no cookie |
 | You open the official site through a launch post's link (`?ref=…`, see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/r/<channel>`, no referrer and no cookie |
 | You make yourself discoverable, or look someone up, in **Peers** | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | your identity's public key and a connection offer, kept for at most 15 minutes; the identity you look up; when you connect to someone you found, your connection reply (it lists your network addresses), which only they can collect |

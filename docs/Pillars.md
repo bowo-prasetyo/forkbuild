@@ -172,7 +172,8 @@ project's. The review's other recommendations, in order:
    on the challenge page, building on a plot in a World and publishing back
    to it, and builder stamps for facts like "your build was remixed".
    Done on 2026-10-10, and tilting bricks onto their other sides soon
-   after; showing a week's entries together as a walkable World is left.
+   after; and later that day, each week's entries standing together in the
+   challenge plaza, a clearing in the shared World.
 3. No new networks or chains until the building numbers move (written down
    on 2026-10-10, with how a network is added: "Networks: readers and
    writers" above), and later each existing one made optional; the

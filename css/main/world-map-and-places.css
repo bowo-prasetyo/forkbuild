@@ -718,3 +718,58 @@
 .world-view-claimed-build-hint {
     color: #b08a4a;
 }
+
+/* The challenge plaza's panel (ui/views/worldView/templates/plazaSection.js),
+   above the header while World View shows a week's plaza. */
+.world-view-plaza {
+    margin-bottom: 0.75rem;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid #2f5a43;
+    border-radius: 6px;
+    background: rgba(76, 175, 125, 0.08);
+}
+
+.world-view-plaza-kicker {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #8fd1ae;
+}
+
+.world-view-plaza-title {
+    margin: 0.2rem 0 0.3rem;
+}
+
+.world-view-plaza-lead,
+.world-view-plaza-status {
+    margin: 0 0 0.4rem;
+    font-size: 0.78rem;
+    color: #b0b0b0;
+}
+
+.world-view-plaza-exhibit {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
+}
+
+.world-view-plaza-exhibit .world-view-nearby-row-label {
+    flex-basis: 100%;
+    font-weight: 600;
+}
+
+.world-view-plaza-author {
+    flex-basis: 100%;
+    margin-top: -0.25rem;
+    font-size: 0.7rem;
+    color: #808080;
+}
+
+.world-view-plaza-note {
+    margin: 0.3rem 0;
+    font-size: 0.72rem;
+    color: #909090;
+}
