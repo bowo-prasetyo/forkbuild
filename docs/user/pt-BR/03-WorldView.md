@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 456d4315d584caa5 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 1d94840844dd42aa -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -609,6 +609,15 @@ de volta para olhar. **Esquecer este lugar** deixa que ela seja
 posicionada como sempre. O lugar é só uma nota sua de onde mostrar sua
 construção, guardada neste dispositivo e nos seus backups; ele não
 reivindica o terreno, e outras pessoas também podem construir ali.
+
+### A praça do desafio
+
+**Passear pela praça** na página do desafio de uma semana abre a visão do
+mundo numa clareira onde as participações daquela semana ficam ao redor de
+uma praça aberta, com um painel que as lista (veja
+[A praça do desafio](04-PublishingAndForking.md#a-praça-do-desafio)). Nenhuma árvore
+cresce lá, em semana nenhuma. As participações só aparecem enquanto você
+está na praça, e **Construir aqui** não é oferecido lá.
 
 ### Marcos — marcando um lugar que vale lembrar
 

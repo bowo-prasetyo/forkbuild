@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6d422d4ef6fb45c9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 98b7f4c2be018dd9 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -541,6 +541,29 @@ gemacht haben.
 Wenn Beiträge voneinander oder aus anderen Bauten geremixt wurden, zeigt
 **Stammbäume** unter den Beiträgen, woher sie stammen, ein Baum für jede
 Kette von Remixen.
+
+### Der Challenge-Platz
+
+Sobald eine Woche Beiträge hat, bringt dich **Über den Platz gehen** auf
+ihrer Seite in die Weltansicht, auf eine Lichtung in der gemeinsamen Welt,
+wo die Beiträge der Woche in Ringen um einen offenen Platz stehen. Geh
+zwischen ihnen umher oder wähle einen im Panel: **Navigieren** fliegt hin,
+**Öffnen** öffnet ihn wie **Erkunden**, und **Eine Kopie bearbeiten**
+beginnt deine eigene Kopie.
+
+- Die ersten 24 veröffentlichten Beiträge stehen dort, die ältesten der
+  Mitte am nächsten, sodass ein neuer Beitrag am äußeren Rand hinzukommt.
+  Die übrigen sind auf der Challenge-Seite.
+- Beiträge aus den Netzwerken werden geladen und geprüft, so wie beim
+  Öffnen ihres Links. Einer, der sich nicht laden lässt, fehlt, und das
+  Panel sagt, wie viele es sind.
+- Ein Beitrag, dessen Veröffentlicher **Nur ich darf es platzieren**
+  gewählt hat, steht nicht auf dem Platz, denn ihn dort aufzustellen hieße,
+  ihn zu platzieren. Er bleibt auf der Challenge-Seite.
+- Die Beiträge sind Ausstellungsstücke, keine Platzierungen: Für niemanden
+  wird etwas signiert oder gespeichert, und sie verschwinden, wenn du gehst.
+  Wie die übrige Weltansicht zeigt der Platz, was dieses Gerät kennt, also
+  sehen zwei Besucher womöglich verschiedene Beiträge.
 
 ## Der Stammbaum
 

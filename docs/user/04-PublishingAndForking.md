@@ -496,6 +496,28 @@ When entries were remixed from each other, or from other builds,
 **Family trees** under the entries shows where they came from, one tree for
 each chain of remixes.
 
+### The challenge plaza
+
+Once a week has entries, **Walk the plaza** on its page takes you into
+World View, to a clearing in the shared World where the week's entries
+stand in rings round an open square. Walk among them, or pick one in the
+panel: **Navigate** flies to it, **Open** opens it as **Explore** would,
+and **Edit a Copy** starts your own copy of it.
+
+- The first 24 entries published stand there, the oldest nearest the
+  middle, so a new entry joins the outer edge. The rest are on the
+  challenge page.
+- Entries found on the networks are fetched and checked the way opening
+  their link would be. One that can't be fetched is left out, and the
+  panel says how many were.
+- An entry whose publisher chose **Only I may place it** doesn't stand in
+  the plaza, since standing it there would be placing it. It stays on the
+  challenge page.
+- The entries are exhibits, not placements: nothing is signed or kept for
+  anyone, and they're gone when you leave. Like the rest of World View, the
+  plaza shows what this device knows, so two visitors may see a different
+  set.
+
 ## The family tree
 
 Because every fork records its parent, ForkBuild can draw a creation's whole

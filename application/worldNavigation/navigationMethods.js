@@ -2,6 +2,7 @@ import { ORIGIN_LOCATION_ID } from '../world/WorldLocationDirectory.js';
 import { CameraFocusAnimator } from '../editor/CameraFocusAnimator.js';
 import { computeCompassHeading } from '../../core/CompassHeading.js';
 import { LOCATION_FOCUS_OFFSET } from './constants.js';
+import { terrainHeightAt } from '../../core/TerrainHeightField.js';
 
 // WorldNavigationSession navigation: focusing documents, selections and
 // locations, going home, the compass, and the animated camera glide. None of
@@ -164,6 +165,23 @@ export const navigationMethods = {
             position: { x: x + LOCATION_FOCUS_OFFSET.x, y: y + LOCATION_FOCUS_OFFSET.y, z: z + LOCATION_FOCUS_OFFSET.z },
             target: { x, y, z }
         });
+        return true;
+    },
+
+    // Takes the camera and the local avatar to a bare World position on the
+    // ground, such as the challenge plaza (core/ChallengePlaza.js). Like
+    // goHome(), it moves the avatar on purpose: the visitor asked to go there.
+    // Never touches the active document. False for a position that isn't one.
+    visitPosition(position) {
+        if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.z)) {
+            return false;
+        }
+        const ground = { x: position.x, y: terrainHeightAt(this.getWorldSeed(), position.x, position.z), z: position.z };
+        this.focusPosition(ground);
+        if (this._avatarPresenceSession) {
+            this._avatarPresenceSession.update({ position: ground });
+        }
+        this.updateSpatialView();
         return true;
     },
 

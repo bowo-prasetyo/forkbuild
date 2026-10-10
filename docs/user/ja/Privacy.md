@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ffd5c3f422c5e675 -->
+<!-- translation-of: docs/Privacy.md source-hash: 377c2dfdc99b3ce6 -->
 # プライバシー
 
 <!-- languages -->
@@ -155,6 +155,7 @@ ForkBuild 自身のファイル（コード、スタイルシート、アイコ�
 
 また、毎週の建築チャレンジに参加したとき（**チャレンジに参加**、または
 エディターの **新規** のチャレンジ）: `/e/challenge-join`。
+ワールドビューでその週のチャレンジ広場を開いたとき: `/e/plaza-visit`。
 
 また、作品がこのブラウザーから初めて公開されたとき（あとで同じ作品を再公開しても何も送りません）:
 
@@ -213,7 +214,7 @@ ForkBuild 自身のファイル（コード、スタイルシート、アイコ�
 | 公式サイトで、作品へのリンクをコピーまたは共有したとき、共有リンクを開いたとき、そのリンクから開いた作品をエディターにコピーしたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 3 つのうちどの場面かを示す固定のパスで、リファラーも Cookie もない画像リクエスト 1 回 |
 | 公式サイトから ForkBuild をインストールしたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/installed` の画像リクエスト 1 件。リファラーなし、Cookie なし |
 | 公式サイトで作品の埋め込みコードをコピーしたとき、または埋め込まれた作品が表示されたり ForkBuild で開かれたりしたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 3 つのどれだったかを示す固定パスの画像リクエスト 1 件。リファラーなし、Cookie なし |
-| 公式サイトで、毎週の建築チャレンジに参加したとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/challenge-join` の画像リクエスト 1 回。リファラーと Cookie はなし |
+| 公式サイトで、毎週の建築チャレンジに参加したとき、またはその広場を開いたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/challenge-join` または `/e/plaza-visit` の画像リクエスト 1 回。リファラーと Cookie はなし |
 | 公式サイトで、作品を初めて公開したとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | ブロック数の範囲を示す固定パスの画像リクエスト 1 回と、2 つ目の作品またはリミックスのときにもう 1 回。リファラーと Cookie はなし |
 | ローンチ投稿のリンク（`?ref=…`）から公式サイトを開いたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/r/<チャネル>` の画像リクエスト 1 回。リファラーと Cookie はなし |
 | **ピア** で自分を見つけてもらえるようにするか、誰かを探したとき | ランデブーサーバー（`forkbuild-rendezvous.prazjp.workers.dev`） | あなたのアイデンティティの公開鍵と接続の申し出（最長 15 分保持）。探したアイデンティティ。見つけた人に接続するときは、あなたの接続の応答（ネットワークアドレスを含みます）。これを受け取れるのは相手だけです |

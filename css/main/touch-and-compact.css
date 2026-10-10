@@ -385,6 +385,26 @@
     .toolbar > * {
         flex-shrink: 0;
     }
+
+    /* The toolbar scrolls sideways here, so the actions a build needs come
+       first: Back to World when there is one, Save, then Publish, before
+       Export, 3D model and Import. The app's own header already names
+       ForkBuild. */
+    .toolbar-title {
+        display: none;
+    }
+
+    .toolbar-back-to-world {
+        order: -3;
+    }
+
+    .toolbar-save {
+        order: -2;
+    }
+
+    .toolbar-publish {
+        order: -1;
+    }
 }
 
 /* On a narrow screen the navigation HUD takes the top right, so the sound

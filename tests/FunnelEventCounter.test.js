@@ -86,6 +86,7 @@ function counter({ origin = VISITOR_COUNT_SITE_ORIGIN, privacySignals = {}, enab
     assert(instance.embedViewed() === true && hits.at(-1).includes('p=%2Fe%2Fembed-view&'), 'an embed shown is /e/embed-view');
     assert(instance.openedFromEmbed() === true && hits.at(-1).includes('p=%2Fe%2Fembed-open&'), 'opening it in ForkBuild is /e/embed-open');
     assert(instance.joinedChallenge() === true && hits.at(-1).includes('p=%2Fe%2Fchallenge-join&'), 'joining the weekly challenge is /e/challenge-join');
+    assert(instance.visitedPlaza() === true && hits.at(-1).includes('p=%2Fe%2Fplaza-visit&'), 'walking into its plaza is /e/plaza-visit');
     assert(counter({ privacySignals: { globalPrivacyControl: true } }).instance.embedViewed() === false, 'under the same rules');
     console.log('✓ embeds');
 }

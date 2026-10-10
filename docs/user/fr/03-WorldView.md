@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 456d4315d584caa5 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 1d94840844dd42aa -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -663,6 +663,15 @@ d’habitude. L’emplacement n’est que votre propre note de l’endroit où
 montrer votre construction, gardée sur cet appareil et dans ses
 sauvegardes ; il ne réserve pas le terrain, et d’autres peuvent y
 construire aussi.
+
+### La place du défi
+
+**Parcourir la place** sur la page du défi d’une semaine ouvre la vue du
+monde dans une clairière où les participations de cette semaine se dressent
+autour d’une place dégagée, avec un panneau qui les liste (voir
+[La place du défi](04-PublishingAndForking.md#la-place-du-défi)). Aucun arbre n’y
+pousse, quelle que soit la semaine. Les participations ne sont montrées que
+tant que vous êtes sur la place, et **Construire ici** n’y est pas proposé.
 
 ### Points de repère — marquer un lieu qui mérite qu’on s’en souvienne
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ffd5c3f422c5e675 -->
+<!-- translation-of: docs/Privacy.md source-hash: 377c2dfdc99b3ce6 -->
 # Datenschutz
 
 <!-- languages -->
@@ -170,7 +170,8 @@ sind (siehe „Server, die ForkBuild kontaktiert“ unten):
   ForkBuild geöffnet.
 
 Und wenn jemand bei der wöchentlichen Bau-Challenge mitmacht (**Mitmachen**
-oder die Challenge unter **Neu** im Editor): `/e/challenge-join`.
+oder die Challenge unter **Neu** im Editor): `/e/challenge-join`; und wenn jemand den
+Challenge-Platz einer Woche in der Weltansicht öffnet: `/e/plaza-visit`.
 
 Und wenn ein Bauwerk zum ersten Mal aus diesem Browser veröffentlicht wird
 (spätere Veröffentlichungen desselben Bauwerks senden nichts):
@@ -243,7 +244,7 @@ was Sie bei ihm anfragen.
 | Sie kopieren oder teilen auf der offiziellen Website einen Link zu einem Bauwerk, öffnen einen geteilten Link oder kopieren ein darüber geöffnetes Bauwerk in den Editor (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit festem Pfad, der nennt, welcher der drei Momente es war, ohne Referrer und ohne Cookie |
 | Sie installieren ForkBuild von der offiziellen Seite (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/installed`, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website kopieren Sie den Einbettungscode eines Bauwerks, oder ein eingebettetes Bauwerk wird gezeigt oder in ForkBuild geöffnet (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit einem festen Pfad, der nennt, welcher der drei Fälle es war, ohne Referrer und ohne Cookie |
-| Auf der offiziellen Website machen Sie bei der wöchentlichen Bau-Challenge mit (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/challenge-join`, ohne Referrer und ohne Cookie |
+| Auf der offiziellen Website machen Sie bei der wöchentlichen Bau-Challenge mit oder öffnen ihren Platz (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/challenge-join` oder `/e/plaza-visit`, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website veröffentlichen Sie ein Bauwerk zum ersten Mal (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit einem festen Pfad, der den Bereich der Steinanzahl nennt, und eine weitere für ein zweites Bauwerk oder einen Remix, ohne Referrer und ohne Cookie |
 | Sie öffnen die offizielle Website über den Link eines Launch-Posts (`?ref=…`, siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/r/<Kanal>`, ohne Referrer und ohne Cookie |
 | Sie machen sich unter **Peers** auffindbar oder suchen jemanden | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | den öffentlichen Schlüssel Ihrer Identität und ein Verbindungsangebot, höchstens 15 Minuten aufbewahrt; die Identität, die Sie suchen; wenn Sie sich mit jemandem verbinden, den Sie gefunden haben, Ihre Verbindungsantwort (sie listet Ihre Netzwerkadressen auf), die nur diese Person abholen kann |

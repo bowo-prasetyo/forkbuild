@@ -166,6 +166,51 @@ async function joinChallenge(browser, base) {
     }
 }
 
+// The challenge plaza, in the published build: an entry published unsigned
+// for the week stands there, reached from the challenge page's Walk the
+// plaza, in World View, which stays on the plaza; an unknown week says so.
+async function walkThePlaza(browser, base) {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const page = await context.newPage();
+    const problems = [];
+    page.on('pageerror', (error) => problems.push(error.message));
+    try {
+        await page.goto(`${base}/#/`);
+        await page.waitForSelector('.challenge-card .challenge-join', { timeout: 60_000 });
+        const join = await page.getAttribute('.challenge-card .challenge-join', 'href');
+        await page.goto(`${base}/${join}`);
+        await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim(), null, { timeout: 60_000 });
+        await page.click('.toolbar-publish');
+        await page.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
+        await page.click('.remix-permission-allow');
+        await page.waitForSelector('.login-modal-purpose', { timeout: 10_000 });
+        await page.click('.login-modal-skip');
+        await page.waitForSelector('.editor-post-publish-share', { timeout: 60_000 });
+
+        await page.evaluate(() => { location.hash = '#/challenge'; });
+        await page.waitForSelector('.challenge-plaza-link', { timeout: 60_000 });
+        await page.click('.challenge-plaza-link');
+        await page.waitForSelector('.world-view-plaza-exhibit', { timeout: 60_000 });
+        assert(await page.locator('.world-view-plaza-exhibit').count() === 1, 'the entry stands in the plaza');
+        await page.click('.world-view-plaza-focus');
+        await page.waitForTimeout(4000);
+        assert(/^#\/plaza\/\d{4}-\d{2}-\d{2}$/.test(await page.evaluate(() => location.hash)), 'World View stays on the plaza');
+        // Open leaves the plaza for the entry's own World.
+        await page.click('.world-view-plaza-open');
+        await page.waitForFunction(() => location.hash.startsWith('#/world/'), null, { timeout: 60_000 });
+        await page.waitForFunction(() => !document.querySelector('.world-view-plaza'), null, { timeout: 60_000 });
+
+        await page.evaluate(() => { location.hash = '#/challenge'; });
+        await page.waitForSelector('.challenge-view', { timeout: 60_000 });
+        await page.evaluate(() => { location.hash = '#/plaza/not-a-week'; });
+        await page.waitForSelector('.world-view-plaza .world-view-plaza-challenge', { timeout: 60_000 });
+        assert(!(await page.$('.world-view-plaza-exhibit')), 'an unknown week stands nothing');
+        assert(problems.length === 0, `no page errors on the plaza:\n  ${problems.join('\n  ')}`);
+    } finally {
+        await context.close();
+    }
+}
+
 // A launch post's link (`?ref=<channel>`, docs/launch/README.md) opens Home,
 // and the parameter leaves the address, keeping the route.
 async function openLaunchLink(browser, base) {
@@ -176,6 +221,10 @@ async function openLaunchLink(browser, base) {
         await page.waitForSelector('.challenge-view', { timeout: 60_000 });
         const address = await page.evaluate(() => ({ search: location.search, hash: location.hash }));
         assert(address.search === '' && address.hash === '#/challenge', `the ref parameter leaves the address, the route stays (${JSON.stringify(address)})`);
+
+        // An old link to a retired page says so, instead of an empty page.
+        await page.evaluate(() => { location.hash = '#/leaderboards'; });
+        await page.waitForSelector('.not-found-view a[href="#/"]', { timeout: 60_000 });
     } finally {
         await context.close();
     }
@@ -538,7 +587,7 @@ try {
     await startFromHome(browser, `http://127.0.0.1:${server.address().port}`);
     await joinChallenge(browser, `http://127.0.0.1:${server.address().port}`);
     await openLaunchLink(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle (which downloads as a 3D model), and the Repository lists them; Home\'s Join opens the week\'s challenge tagged, New offers it first, and its page explains how to enter; a launch post\'s ?ref= leaves the address');
+    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle (which downloads as a 3D model), and the Repository lists them; Home\'s Join opens the week\'s challenge tagged, New offers it first, and its page explains how to enter; a launch post\'s ?ref= leaves the address, and a retired page\'s link says it is gone');
     await openLinkOnlyShare(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a link that carries its build opens on it in the published build, with no network, and Edit a Copy makes the visitor a copy, or it downloads as a 3D model; it fits a phone');
     assert(html.includes('<meta name="forkbuild-service-worker" content="sw.js">') && readFileSync(join(published.outdir, 'sw.js'), 'utf8').includes('forkbuild-'),
@@ -547,6 +596,8 @@ try {
     console.log(`✓ the published site keeps its ${published.precacheFiles} files on the first visit and opens offline, Home and the Editor; a new version is offered and starts on Reload; notifications on this device turn on and off (or say the browser blocks them)`);
     await firstVisit(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a first visit: five pages and More in the nav, the guided first build in the Editor, Publish asking about remixes and to log in, and the published link copied on another device');
+    await walkThePlaza(browser, `http://127.0.0.1:${server.address().port}`);
+    console.log('✓ an entry published for the week stands in its plaza, reached from the challenge page, and World View stays there until Open takes you to the entry\'s World; an unknown week says so');
 
     const development = await build(join(outdir, 'development-vue'), { developmentVue: true });
     const devServer = await serve(development.outdir);

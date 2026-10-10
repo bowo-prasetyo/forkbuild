@@ -98,6 +98,8 @@ the week after, by day:
   leave; the kit and the guided first build are where to look.
 - **Did they come back?** `/e/second-build` against the builds published:
   the share of builders who published a second one.
+- **Do entrants look at each other's builds?** `/e/plaza-visit` against
+  `/e/challenge-join`: visits to a week's challenge plaza.
 - **Do builds have a family tree?** `/e/remix-published` against the builds
   published: remixes per build. `/e/remix-from-link` counts copies started
   from a link; this counts the ones finished and published.

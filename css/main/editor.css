@@ -81,6 +81,21 @@
     background: #262626;
 }
 
+/* The build as a 3D model file: a secondary action like .toolbar-export. */
+.toolbar-export-model {
+    padding: 0.3rem 0.8rem;
+    background: transparent;
+    color: #d0d0d0;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-export-model:hover {
+    background: #262626;
+}
+
 /* The native file input itself is never shown — .toolbar-import is the
    only click target a user ever sees, the same "styled trigger button +
    invisible native file input" shape .personal-structure-library-import-input

@@ -58,7 +58,8 @@ export function visitorCountHitUrl(random) {
 // (docs/Privacy.md, "Visitor count"): a share link copied or shared, a shared
 // link opened, a build opened from a link then copied into the Editor,
 // ForkBuild installed as an app, and a build's embed code copied, an embedded
-// build shown on another site, and opened from there in ForkBuild; and, when
+// build shown on another site, and opened from there in ForkBuild; the weekly
+// challenge joined, and its plaza visited; and, when
 // a build is first published from this device, roughly how many bricks it
 // has, whether it is this device's second build, and whether it remixes
 // someone else's (publishedBuildEvents below).
@@ -72,6 +73,7 @@ export const FunnelEvent = Object.freeze({
     EMBED_VIEW: 'embed-view',
     EMBED_OPEN: 'embed-open',
     CHALLENGE_JOIN: 'challenge-join',
+    PLAZA_VISIT: 'plaza-visit',
     PUBLISH_BRICKS_0: 'publish-bricks-0',
     PUBLISH_BRICKS_1: 'publish-bricks-1',
     PUBLISH_BRICKS_10: 'publish-bricks-10',

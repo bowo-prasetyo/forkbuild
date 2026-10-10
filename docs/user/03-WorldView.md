@@ -587,6 +587,15 @@ only your own note of where to show your build, kept on this device and in
 its backups; it doesn't claim the land, and others may build there too
 (see [Why can two builds sit in the same spot?](#why-can-two-builds-sit-in-the-same-spot)).
 
+### The challenge plaza
+
+**Walk the plaza** on a week's challenge page opens World View in a
+clearing where that week's entries stand round an open square, with a
+panel listing them (see
+[The challenge plaza](04-PublishingAndForking.md#the-challenge-plaza)).
+No trees grow there, for any week. The entries are shown only while you're
+in the plaza, and **Build here** isn't offered there.
+
 ### Landmarks — marking a place worth remembering
 
 Unlike a structure (a placed building you or someone else built) or a

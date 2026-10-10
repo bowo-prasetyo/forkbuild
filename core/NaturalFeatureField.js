@@ -34,6 +34,7 @@
 import { terrainHeightAt } from './TerrainHeightField.js';
 import { ecologyZoneAt, ECOLOGY_ZONE, moistureAt } from './TerrainEcology.js';
 import { isRiverAt } from './Hydrology.js';
+import { isInPlazaClearing } from './ChallengePlaza.js';
 import { lerp, smoothstep } from '../utils/interpolation.js';
 
 export const FEATURE_TYPE = Object.freeze({
@@ -203,6 +204,9 @@ function featureForCell(seed, cellX, cellZ) {
     // flowing water — checked last, and only here, so a river never has
     // to be reasoned about anywhere else in this file.
     if (isRiverAt(seed, x, z)) return null;
+    // The challenge plaza's clearing (core/ChallengePlaza.js), vetoed the
+    // same way: a fixed site, so every replica clears the same trees.
+    if (isInPlazaClearing(x, z)) return null;
 
     const rotationY = hash2D(seed + ROTATION_SEED_OFFSET, cellX, cellZ) * Math.PI * 2;
     const scale = 0.7 + hash2D(seed + SCALE_SEED_OFFSET, cellX, cellZ) * 0.6; // [0.7, 1.3)

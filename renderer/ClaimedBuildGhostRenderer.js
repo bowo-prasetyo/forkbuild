@@ -14,12 +14,17 @@ import { BuildingRenderer } from './BuildingRenderer.js';
 // material, like a structure placement's (WorldRenderer#_renderStructurePlacement);
 // a build larger than `maxBricks` is drawn only in part, since a ghost is a
 // preview, not the build.
+//
+// With `translucent: false` it draws the challenge plaza's exhibits
+// (core/ChallengePlaza.js) the same way but solid: builds shown where no
+// placement puts them, which nothing can select or edit either.
 export const DEFAULT_MAX_GHOST_BRICKS = 4000;
 const GHOST_OPACITY = 0.35;
 
 export class ClaimedBuildGhostRenderer {
-    constructor(renderer, registry, { buildingRenderer = new BuildingRenderer(registry), maxBricks = DEFAULT_MAX_GHOST_BRICKS } = {}) {
+    constructor(renderer, registry, { buildingRenderer = new BuildingRenderer(registry), maxBricks = DEFAULT_MAX_GHOST_BRICKS, translucent = true } = {}) {
         this._renderer = renderer;
+        this._translucent = translucent;
         this._buildingRenderer = buildingRenderer;
         this._maxBricks = maxBricks;
         // key -> meshes[]
@@ -60,7 +65,11 @@ export class ClaimedBuildGhostRenderer {
                     brick.position.z + position.z
                 );
                 applyBrickOrientation(mesh, brick.rotation, brick.tilt);
-                makeGhostly(mesh);
+                if (this._translucent) {
+                    makeGhostly(mesh);
+                } else {
+                    mesh.userData.plazaExhibit = true;
+                }
                 this._renderer.add(mesh);
                 meshes.push(mesh);
             }

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 456d4315d584caa5 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 1d94840844dd42aa -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -646,6 +646,15 @@ para mirarla. **Olvidar este lugar** deja que se ubique como siempre. El
 lugar es solo su propia nota de dónde mostrar su construcción, guardada en
 este dispositivo y en sus copias de seguridad; no reclama el terreno, y
 otros también pueden construir allí.
+
+### La plaza del reto
+
+**Recorrer la plaza** en la página del reto de una semana abre la vista del
+mundo en un claro donde las participaciones de esa semana se alzan
+alrededor de una plaza abierta, con un panel que las enumera (ver
+[La plaza del reto](04-PublishingAndForking.md#la-plaza-del-reto)). Allí no crecen
+árboles, ninguna semana. Las participaciones solo se muestran mientras
+estás en la plaza, y allí no se ofrece **Construir aquí**.
 
 ### Hitos — marcar un lugar que vale la pena recordar
 

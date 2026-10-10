@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ffd5c3f422c5e675 -->
+<!-- translation-of: docs/Privacy.md source-hash: 377c2dfdc99b3ce6 -->
 # 개인정보 보호
 
 <!-- languages -->
@@ -130,6 +130,7 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 
 그리고 누군가 주간 건축 챌린지에 참여할 때(**챌린지 참여하기**, 또는
 에디터의 **새로 만들기**에 있는 챌린지): `/e/challenge-join`.
+그리고 월드 뷰에서 한 주의 챌린지 광장을 열 때: `/e/plaza-visit`.
 
 그리고 이 브라우저에서 작품을 처음 게시할 때(나중에 같은 작품을 다시 게시하면 아무것도 보내지 않음):
 
@@ -187,7 +188,7 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 | 공식 사이트에서 작품 링크를 복사하거나 공유할 때, 공유 링크를 열 때, 그 링크로 연 작품을 에디터로 복사할 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 세 순간 중 어느 것인지 나타내는 고정된 경로로, 리퍼러와 쿠키 없이 보내는 이미지 요청 하나 |
 | 공식 사이트에서 ForkBuild를 설치할 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/installed`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 작품의 임베드 코드를 복사하거나, 임베드된 작품이 표시되거나 ForkBuild에서 열릴 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 셋 중 어느 경우인지 나타내는 고정 경로의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
-| 공식 사이트에서 주간 건축 챌린지에 참여할 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/challenge-join`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
+| 공식 사이트에서 주간 건축 챌린지에 참여하거나 그 광장을 열 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/challenge-join` 또는 `/e/plaza-visit`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 작품을 처음 게시할 때("방문자 수 집계" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 블록 수 구간을 나타내는 고정 경로의 이미지 요청 하나와, 두 번째 작품이나 리믹스일 때 하나 더, 리퍼러와 쿠키 없음 |
 | 출시 게시물의 링크(`?ref=…`)로 공식 사이트를 열 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/r/<채널>`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | **피어**에서 나를 검색 가능하게 하거나 누군가를 찾을 때 | 랑데부 서버(`forkbuild-rendezvous.prazjp.workers.dev`) | 내 신원의 공개 키와 연결 제안(최대 15분 보관), 내가 찾는 신원, 찾은 사람과 연결할 때 내 연결 응답(내 네트워크 주소가 나열됨, 그 사람만 가져갈 수 있음) |

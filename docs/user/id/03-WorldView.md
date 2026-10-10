@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 456d4315d584caa5 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 1d94840844dd42aa -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -638,6 +638,16 @@ tempat ini** membuatnya ditempatkan seperti biasa. Tempat itu hanyalah
 catatan Anda sendiri tentang di mana bangunan Anda ditampilkan, disimpan di
 perangkat ini dan cadangannya; tempat itu tidak mengklaim lahan, dan orang
 lain juga boleh membangun di sana.
+
+### Alun-alun tantangan
+
+**Jelajahi alun-alun** di halaman tantangan suatu minggu membuka Tampilan
+Dunia di sebuah tanah lapang tempat karya minggu itu berdiri mengelilingi
+alun-alun terbuka, dengan panel yang mendaftarnya (lihat
+[Alun-alun tantangan](04-PublishingAndForking.md#alun-alun-tantangan)). Tidak ada pohon
+yang tumbuh di sana, minggu apa pun. Karya-karya itu hanya ditampilkan
+selama kamu berada di alun-alun, dan **Bangun di sini** tidak ditawarkan di
+sana.
 
 ### Penanda — menandai tempat yang layak diingat
 

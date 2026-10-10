@@ -4,6 +4,8 @@ import { evaluateSpatialAllocation } from '../../core/SpatialAllocationPolicy.js
 import { isWithinRadius, distanceBetween } from '../../core/SpatialQuery.js';
 import { summarizeDiscoveryDiagnostics } from '../../core/DiscoveryDiagnosticsSummary.js';
 import { latestPublisherPlacementRecord } from '../placement/PublisherPlacementClaim.js';
+import { SpatialBounds } from '../../core/SpatialBounds.js';
+import { plazaFootprint } from '../../core/ChallengePlaza.js';
 
 // Location-browser radii. NEARBY_RADIUS is small but non-zero: the camera
 // essentially never lands exactly on a placement's position (Focus parks it
@@ -542,6 +544,23 @@ export const placementMethods = {
     hideClaimedBuild(key) {
         if (!this._session || typeof this._session.hideClaimedBuild !== 'function') return;
         this._session.hideClaimedBuild(key);
+    },
+
+    // The challenge plaza's exhibits (core/ChallengePlaza.js): drawn solid but
+    // unpickable, never as a Placement. No-ops before start().
+    showPlazaExhibit(key, world, position) {
+        if (!this._session || typeof this._session.showPlazaExhibit !== 'function') return 0;
+        return this._session.showPlazaExhibit(key, world, position);
+    },
+
+    hidePlazaExhibit(key) {
+        if (!this._session || typeof this._session.hidePlazaExhibit !== 'function') return;
+        this._session.hidePlazaExhibit(key);
+    },
+
+    // The ground a build covers, in its own coordinates, for laying out the plaza.
+    measurePlazaFootprint(world) {
+        return plazaFootprint(SpatialBounds.fromWorld(world, this._registry));
     },
 
     // Retracts the Publication governing `documentId` from the catalog. Not a
