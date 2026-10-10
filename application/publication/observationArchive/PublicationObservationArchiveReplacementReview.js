@@ -159,7 +159,6 @@ function describeReplacementReviewSide(archive) {
         baseTransactionInclusionCount: summary.baseTransactionInclusionCount,
         baseAnchorPublicationRecordCount: archive.baseAnchorPublicationRecordCount,
         publicationReferenceRecordCount: archive.publicationReferenceRecordCount,
-        publisherPublicationAssociationRecordCount: archive.publisherPublicationAssociationRecordCount,
 
         localFactCount: provenance.localFactCount,
         importedFactCount: provenance.importedFactCount,

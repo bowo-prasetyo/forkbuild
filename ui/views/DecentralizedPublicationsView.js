@@ -56,7 +56,6 @@ import { usePublicationObservationArchive } from './decentralizedPublications/us
 import { useArchivedAnchorPublications } from './decentralizedPublications/useArchivedAnchorPublications.js';
 import { usePublicationReferences } from './decentralizedPublications/usePublicationReferences.js';
 import { useAchievements } from './decentralizedPublications/useAchievements.js';
-import { usePublisherAssociations } from './decentralizedPublications/usePublisherAssociations.js';
 import { useBitcoinAnchoring } from './decentralizedPublications/useBitcoinAnchoring.js';
 import { useBitcoinAnchorReconciliation } from './decentralizedPublications/useBitcoinAnchorReconciliation.js';
 import { useSnapshotPlacements } from './decentralizedPublications/useSnapshotPlacements.js';
@@ -308,16 +307,6 @@ export default {
             baseAnchorPublicationLifecycleExpanded, baseAnchorPublicationsExpanded,
             bitcoinAnchorPublicationLifecycleExpanded, bitcoinAnchorPublicationsExpanded,
             findKnownPublicationIdentity, publicationObservationArchive
-        });
-
-        const {
-            publisherAssociationsExpanded, publisherAssociationPublisherId, publisherAssociationPublicationKey,
-            publisherAssociationError, publisherAssociationSelectedPublisherId, togglePublisherAssociations,
-            publisherPublicationAssociationRecordHistoryView, distinctPublisherIdentifiersView,
-            createPublisherPublicationAssociationRecordUseCase, recordPublisherAssociation,
-            publisherAssociationProfileView
-        } = usePublisherAssociations({
-            findKnownPublicationIdentity, persistPublicationObservationArchive, publicationObservationArchive
         });
 
         // Every authenticated peer, in registry order: the candidate list
@@ -1138,10 +1127,6 @@ export default {
             canViewAchievementBadgeLifecycle, viewAchievementBadgeLifecycle,
             achievementProfileExpanded, toggleAchievementProfile,
             achievementProfileSelectedKey, achievementProfileView,
-            publisherAssociationsExpanded, togglePublisherAssociations,
-            publisherAssociationPublisherId, publisherAssociationPublicationKey, publisherAssociationError,
-            recordPublisherAssociation, publisherPublicationAssociationRecordHistoryView,
-            distinctPublisherIdentifiersView, publisherAssociationSelectedPublisherId, publisherAssociationProfileView,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,

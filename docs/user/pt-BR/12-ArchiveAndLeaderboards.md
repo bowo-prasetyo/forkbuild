@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 2831381c24cb53fe -->
+<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 9ecc6d131bdffddc -->
 # 12 — Arquivo e conquistas
 
 <!-- languages -->
@@ -13,8 +13,8 @@
 As ferramentas de Bitcoin, Base e IPFS de
 [Evidências e armazenamento](11-EvidenceAndStorage.md) registram o que
 observam num arquivo durável neste dispositivo. Este guia trata desse
-arquivo e do que é construído sobre ele: referências entre publicações,
-conquistas e rótulos de editores.
+arquivo e do que é construído sobre ele: referências entre publicações e
+conquistas.
 
 A maioria destes cartões fica na página Publicações, em **Ferramentas de
 carteira, arquivo e editor**, nas guias **Ferramentas de arquivo** e
@@ -172,29 +172,7 @@ e a lista completa de conquistas dela, cada uma com quando foi ganha.
 As conquistas pertencem às identidades de publicação, não a pessoas: nada
 aqui liga uma publicação a uma pessoa.
 
-## Identidade do editor
-
-**Associações de editores** permite rotular publicações com um nome de
-editor, por sua própria conta.
-
-Um identificador de editor é um rótulo simples e autodeclarado, não uma
-identidade verificada nem um login. A correspondência é exata: `Alice`,
-`alice` e `ALICE` são três editores. Nada é deduzido de carteiras, conteúdo
-ou nomes.
-
-**Mostrar associações do editor**, e depois:
-
-1. **Identificador do editor** — digite um rótulo, ou escolha um que você já
-   usou.
-2. **Publicação** — escolha uma das suas identidades de publicação no
-   Bitcoin ou na Base.
-3. **Adicionar publicação** — registra a associação.
-
-**Associações registradas** as lista, da mais antiga para a mais nova.
-**Publicações associadas a um editor** mostra todas as publicações de um
-editor escolhido, com o hash do conteúdo e quando foi associada.
-
-## Removido: classificações e conciliação
+## Removido: classificações, conciliação e rótulos de editores
 
 Versões anteriores tinham páginas de classificação: uma classificação de
 editores, declarações assinadas de instantâneo do editor, um espaço e uma
@@ -205,3 +183,7 @@ dessas páginas abre o Início. Um arquivo salvo quando elas existiam continua
 carregando e sendo importado, com todos os seus outros registros; as
 declarações de classificação e as decisões de conciliação que ele tinha são
 descartadas.
+
+As Associações de editores, que rotulavam suas publicações com um nome de
+editor para essas páginas, também foram removidas. Os rótulos que um arquivo
+tinha são descartados da mesma forma.

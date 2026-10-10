@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 2831381c24cb53fe -->
+<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 9ecc6d131bdffddc -->
 # 12 — Archive et succès
 
 <!-- languages -->
@@ -14,7 +14,7 @@ Les outils Bitcoin, Base et IPFS de
 [Preuves et stockage](11-EvidenceAndStorage.md) enregistrent ce qu’ils
 observent dans une archive durable sur cet appareil. Ce guide présente
 cette archive et ce qui s’appuie dessus : les références entre
-publications, les succès et les étiquettes d’éditeur.
+publications et les succès.
 
 La plupart de ces cartes se trouvent sur la page Publications, sous
 **Portefeuille, archives et outils d’éditeur**, dans ses onglets **Outils
@@ -178,30 +178,7 @@ succès et leur liste complète, chacun avec sa date d’obtention.
 Les succès appartiennent aux identités de publication, pas aux
 personnes : rien ici ne relie une publication à une personne.
 
-## Identité d’éditeur
-
-**Associations d’éditeurs** vous permet d’étiqueter des publications avec
-un nom d’éditeur, sur votre seule parole.
-
-Un identifiant d’éditeur est une simple étiquette auto-déclarée, pas une
-identité vérifiée ni une connexion. La correspondance est exacte :
-`Alice`, `alice` et `ALICE` sont trois éditeurs. Rien n’est déduit des
-portefeuilles, du contenu ou des noms.
-
-**Afficher les associations d’éditeurs**, puis :
-
-1. **Identifiant de l’éditeur** — saisissez une étiquette, ou choisissez
-   une étiquette déjà utilisée.
-2. **Publication** — choisissez l’une de vos identités de publication
-   Bitcoin ou Base.
-3. **Ajouter la publication** — enregistre l’association.
-
-**Associations enregistrées** les liste, de la plus ancienne à la plus
-récente. **Publications associées à un éditeur** affiche toutes les
-publications d’un éditeur choisi, avec le hash du contenu et la date
-d’association.
-
-## Retiré : classements et réconciliation
+## Retiré : classements, réconciliation et étiquettes d’éditeur
 
 Les versions précédentes avaient des pages de Classement : un classement des
 éditeurs, des déclarations d’instantané d’éditeur signées, un espace et un
@@ -212,3 +189,7 @@ pages ouvre l’Accueil. Une archive enregistrée quand elles existaient se
 charge et s’importe toujours, avec tous ses autres enregistrements ; les
 déclarations de classement et les décisions de réconciliation qu’elle
 contenait sont abandonnées.
+
+Les Associations d’éditeurs, qui étiquetaient vos publications d’un nom
+d’éditeur pour ces pages, ont aussi été retirées. Les étiquettes que
+contenait une archive sont abandonnées de la même façon.

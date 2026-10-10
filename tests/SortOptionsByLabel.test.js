@@ -97,8 +97,6 @@ async function run() {
             'the first-entry fallback default still reads the unsorted registry-order list');
         assert(/return Object\.freeze\(sortOptionsByLabel\(\[\.\.\.bitcoinOptions, \.\.\.baseOptions\]\)\);/.test(publications),
             'publication pickers are sorted by label');
-        assert(/return sortLabels\(reconstructDistinctPublisherIdentifiers\(/.test(publications),
-            'publisher pickers are sorted');
         assert((publications.match(/<option v-for="peer in retrievalPeerOptions"/g) || []).length === 1
             && /<li v-for="peer in retrievalPeerOptions"/.test(publications)
             && !/v-for="peer in retrievalPeers"/.test(publications),

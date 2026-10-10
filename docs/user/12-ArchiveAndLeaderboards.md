@@ -12,8 +12,7 @@
 The Bitcoin, Base and IPFS tools in
 [Evidence & Storage](11-EvidenceAndStorage.md) record what they observe in
 a durable archive on this device. This guide covers that archive and what's
-built on it: references between publications, achievements and publisher
-labels.
+built on it: references between publications, and achievements.
 
 Most of these cards are on the Publications page under **Wallet, Archive &
 Publisher Tools**, in its **Archive Tools** and **References &
@@ -158,27 +157,7 @@ see its achievement count and full list, each with when it was earned.
 Achievements belong to publication identities, not people: nothing here
 links a publication to a person.
 
-## Publisher Identity
-
-**Publisher Associations** lets you label publications with a publisher
-name, at your own word.
-
-A publisher identifier is a plain, self-declared label, not a verified
-identity or a login. Matching is exact: `Alice`, `alice` and `ALICE` are
-three publishers. Nothing is inferred from wallets, content or names.
-
-**Show Publisher Associations**, then:
-
-1. **Publisher identifier** — type a label, or pick one you've used before.
-2. **Publication** — choose one of your Bitcoin or Base publication
-   identities.
-3. **Add Publication** — records the association.
-
-**Recorded Associations** lists them, oldest first. **A Publisher's
-Associated Publications** shows every publication for a chosen publisher,
-with content hash and when it was associated.
-
-## Retired: leaderboards and reconciliation
+## Retired: leaderboards, reconciliation and publisher labels
 
 Earlier versions had Leaderboard pages: a publisher leaderboard, signed
 publisher snapshot claims, a reconciliation workspace and leaderboard, and
@@ -187,3 +166,7 @@ evidence export comparison. ForkBuild doesn't rank people or keep scores
 old link to one of those pages opens Home. An archive saved while they
 existed still loads and imports, with all its other records; the leaderboard
 claims and reconciliation decisions it held are dropped.
+
+Publisher Associations, which labelled your publications with a publisher
+name for those pages, were removed too. The labels an archive held are
+dropped the same way.

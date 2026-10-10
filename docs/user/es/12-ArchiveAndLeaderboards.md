@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 2831381c24cb53fe -->
+<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 9ecc6d131bdffddc -->
 # 12 — Archivo y logros
 
 <!-- languages -->
@@ -14,7 +14,7 @@ Las herramientas de Bitcoin, Base e IPFS de
 [Evidencia y almacenamiento](11-EvidenceAndStorage.md) registran lo que
 observan en un archivo duradero en este dispositivo. Esta guía cubre ese
 archivo y lo que se construye sobre él: las referencias entre
-publicaciones, los logros y las etiquetas de editor.
+publicaciones y los logros.
 
 La mayoría de estas tarjetas están en la página Publicaciones, en
 **Herramientas de billetera, archivo y editor**, en sus pestañas
@@ -175,30 +175,7 @@ lista completa, cada uno con cuándo se obtuvo.
 Los logros pertenecen a identidades de publicación, no a personas: nada
 aquí vincula una publicación con una persona.
 
-## Identidad del editor
-
-**Asociaciones de editores** le permite etiquetar publicaciones con un
-nombre de editor, según su propia palabra.
-
-Un identificador de editor es una etiqueta simple y autodeclarada, no una
-identidad verificada ni un inicio de sesión. La coincidencia es exacta:
-`Alicia`, `alicia` y `ALICIA` son tres editores distintos. Nada se deduce de
-billeteras, contenidos ni nombres.
-
-**Mostrar asociaciones de editores**, y luego:
-
-1. **Identificador del editor**: escriba una etiqueta, o elija una que ya
-   usó.
-2. **Publicación**: elija una de sus identidades de publicación de Bitcoin
-   o Base.
-3. **Agregar publicación**: registra la asociación.
-
-**Asociaciones registradas** las muestra, de la más antigua a la más
-reciente. **Publicaciones asociadas a un editor** muestra todas las
-publicaciones de un editor elegido, con su hash de contenido y cuándo se
-asoció.
-
-## Retirado: clasificaciones y conciliación
+## Retirado: clasificaciones, conciliación y etiquetas de editor
 
 Las versiones anteriores tenían páginas de Clasificación: una clasificación
 de editores, declaraciones firmadas de instantánea del editor, un espacio y
@@ -208,3 +185,7 @@ evidencia. ForkBuild no clasifica a las personas ni lleva puntuaciones
 páginas abre Inicio. Un archivo guardado cuando existían se sigue cargando e
 importando, con todos sus demás registros; las declaraciones de clasificación
 y las decisiones de conciliación que contenía se descartan.
+
+También se eliminaron las Asociaciones de editores, que etiquetaban sus
+publicaciones con un nombre de editor para esas páginas. Las etiquetas que
+tenía un archivo se descartan de la misma manera.

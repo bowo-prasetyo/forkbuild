@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f792d993d2ee00e6 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f9a5331b0e272454 -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -40,8 +40,7 @@ vous pouvez ajouter à une revendication :
   (Bitcoin, Base, Arweave, Steem, Blurt), les parcours de portefeuille, les
   Placements de Snapshot, la publication IPFS, Steem et Blurt.
 - **[Archive et succès](12-ArchiveAndLeaderboards.md)** — l’archive
-  durable des observations, les références, les succès et les étiquettes
-  d’éditeur.
+  durable des observations, les références et les succès.
 
 ## Deux sens de « publier »
 
@@ -517,7 +516,7 @@ vérifications, les tentatives et les écrans en cours ne le sont pas.
 | — | **Publication IPFS** : la configuration du fournisseur, les résultats, l’historique à l’écran et l’historique de vérification |
 | Les enregistrements **Publications d’ancres Bitcoin/Base**, créés à la finalisation | La connexion des parcours de portefeuille, l’observation des fonds ou du compte, le plan, l’examen, la signature, la transaction finalisée, le résultat de diffusion et l’historique à l’écran des confirmations ou inclusions |
 | L’**Archive des observations de publication** (chaque publication et vérification IPFS, diffusion, confirmation et preuve de contenu Bitcoin, et inclusion Base), jusqu’à **Vider l’archive** | — |
-| Les Références entre publications et les Associations d’éditeurs | Les cartes et lignes que vous aviez ouvertes |
+| Les Références entre publications | Les cartes et lignes que vous aviez ouvertes |
 
 Après un rechargement, les résultats d’un parcours ou d’une publication
 IPFS restent visibles dans

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 2831381c24cb53fe -->
+<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 9ecc6d131bdffddc -->
 # 12 — Arsip & Pencapaian
 
 <!-- languages -->
@@ -13,8 +13,8 @@
 Alat Bitcoin, Base, dan IPFS di
 [Bukti & Penyimpanan](11-EvidenceAndStorage.md) mencatat apa yang
 diamatinya dalam arsip yang tahan lama di perangkat ini. Panduan ini
-membahas arsip itu dan apa yang dibangun di atasnya: referensi antarpublikasi,
-pencapaian, dan label penerbit.
+membahas arsip itu dan apa yang dibangun di atasnya: referensi antarpublikasi
+dan pencapaian.
 
 Sebagian besar kartu ini ada di halaman Publikasi di bawah **Dompet, Arsip
 & Alat Penerbit**, di tab **Alat Arsip** dan **Referensi & Pencapaian**.
@@ -171,29 +171,7 @@ masing-masing dengan waktu didapatnya.
 Pencapaian dimiliki identitas publikasi, bukan orang: tidak ada apa pun di
 sini yang mengaitkan publikasi dengan seseorang.
 
-## Identitas Penerbit
-
-**Asosiasi Penerbit** memungkinkan Anda memberi label nama penerbit pada
-publikasi, berdasarkan pernyataan Anda sendiri.
-
-Pengenal penerbit adalah label sederhana yang dinyatakan sendiri, bukan
-identitas yang diverifikasi atau login. Pencocokannya persis: `Alice`,
-`alice`, dan `ALICE` adalah tiga penerbit. Tidak ada yang disimpulkan dari
-dompet, konten, atau nama.
-
-**Tampilkan Asosiasi Penerbit**, lalu:
-
-1. **Pengenal penerbit** — ketik label, atau pilih yang pernah Anda pakai.
-2. **Publikasi** — pilih salah satu identitas publikasi Bitcoin atau Base
-   Anda.
-3. **Tambah Publikasi** — mencatat asosiasi itu.
-
-**Asosiasi yang Tercatat** mencantumkannya, dari yang terlama.
-**Publikasi yang Dikaitkan dengan Seorang Penerbit** menampilkan setiap
-publikasi untuk penerbit yang dipilih, dengan hash konten dan waktu
-pengaitannya.
-
-## Dihentikan: papan peringkat dan rekonsiliasi
+## Dihentikan: papan peringkat, rekonsiliasi, dan label penerbit
 
 Versi sebelumnya punya halaman Papan Peringkat: papan peringkat penerbit,
 klaim snapshot penerbit yang ditandatangani, ruang kerja dan papan peringkat
@@ -202,3 +180,7 @@ orang atau mencatat skor ([Pilar](../../Pillars.md#what-we-are-not-making)), jad
 ke salah satu halaman itu membuka Beranda. Arsip yang disimpan saat halaman
 itu masih ada tetap bisa dimuat dan diimpor, dengan semua catatan lainnya;
 klaim papan peringkat dan keputusan rekonsiliasi di dalamnya dibuang.
+
+Asosiasi Penerbit, yang memberi label nama penerbit pada publikasi Anda untuk
+halaman-halaman itu, juga dihapus. Label yang ada di arsip dibuang dengan
+cara yang sama.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f792d993d2ee00e6 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f9a5331b0e272454 -->
 # 09 — 게시물과 외부 증거
 
 <!-- languages -->
@@ -34,7 +34,7 @@ X라고 부른다” 같은 **서명된 클레임**과, 클레임에 더할 수 
 - **[증거와 저장소](11-EvidenceAndStorage.md)** — 외부 증거(Bitcoin, Base,
   Arweave, Steem, Blurt), 지갑 절차, 스냅샷 배치, IPFS 게시, Steem과 Blurt.
 - **[아카이브와 업적](12-ArchiveAndLeaderboards.md)** — 영구 관측 아카이브,
-  참조, 업적, 게시자 라벨.
+  참조, 업적.
 
 ## “게시”의 두 가지 의미
 
@@ -423,7 +423,7 @@ JSON 묶음)를 고르는 파일 선택기와 붙여넣기 상자를 보여 줍�
 | — | **IPFS 게시**: 제공자 설정, 결과, 화면의 기록과 검증 기록 |
 | 확정할 때 만들어지는 **Bitcoin/Base 앵커 게시** 기록 | 지갑 절차의 연결, 자금 또는 계정 관측, 계획, 검토, 서명, 확정된 트랜잭션, 브로드캐스트 결과, 화면의 컨펌 또는 포함 기록 |
 | **게시 관측 아카이브**(모든 IPFS 게시와 검증, Bitcoin 브로드캐스트, 컨펌, 콘텐츠 증명, Base 포함), **아카이브 지우기** 전까지 | — |
-| 게시물 참조와 게시자 연결 | 열어 두었던 카드와 줄 |
+| 게시물 참조 | 열어 두었던 카드와 줄 |
 
 새로 고친 뒤에도 절차나 IPFS 게시의 결과는
 [관측 아카이브](12-ArchiveAndLeaderboards.md#게시-관측-아카이브), 기록의 수명 주기,

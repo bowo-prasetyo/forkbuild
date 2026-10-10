@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 3b535dc98d81e02d -->
+<!-- translation-of: docs/user/README.md source-hash: e484e2933c088ce1 -->
 # Documentation utilisateur de ForkBuild
 
 <!-- languages -->
@@ -61,7 +61,7 @@ reste du dossier [docs/](../..) de premier niveau.
     s’articule.
 12. **[Archive et succès](12-ArchiveAndLeaderboards.md)** —
     *expérimental*. L’archive des observations, les références entre
-    publications, les succès et les étiquettes d’éditeur.
+    publications et les succès.
 13. **[Vos données](13-YourData.md)** — sauvegarder tout ce que ce
     navigateur contient dans un seul fichier chiffré et le restaurer, les
     exports plus restreints, et où cet appareil a enregistré la
