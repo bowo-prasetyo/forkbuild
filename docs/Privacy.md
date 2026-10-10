@@ -42,6 +42,9 @@ send it:
   the networks, so its page lists them again before searching.
 - which networks this device sent each of your comments to, and when, so
   each comment can say where it went.
+- for each build you started with **Build here**, the World and the spot
+  you chose, so publishing it stands it there. Your stamps on Home are
+  worked out from what is already listed here and aren't stored.
 
 Clearing this site's data in the browser deletes all of it, and there is no
 other copy and no way to recover it. Back it up first with **Your Data →

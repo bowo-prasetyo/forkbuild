@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 053e9eecd73affbf -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2e46c9cbf050378c -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -39,16 +39,18 @@ ordnen.
   siehe [Das Feld Auswahl](#das-feld-auswahl) unten.
 - **Baubibliothek** — ein Suchfeld und zwei Reiter:
   - **Steine** — alles, was Sie mit dem Platzierwerkzeug setzen können,
-    als Kacheln in fünf Abschnitten (Grundformen, Tragwerk, Dächer &
-    Treppen, Öffnungen, Details). Klicken Sie auf eine, um sie auszuwählen
+    als Kacheln in sechs Abschnitten (Grundformen, Tragwerk, Dächer &
+    Treppen, Öffnungen, Details, Natur): fünfzig Teile, von halben Würfeln,
+    runden Steinen und Baumstämmen bis zu Sattel- und Kegeldächern,
+    Fensterrahmen und Rundfenstern, Zäunen, Bänken, Büschen und Kiefern. Klicken Sie auf eine, um sie auszuwählen
     (und zum Platzierwerkzeug zu wechseln); dann erscheint ein Farbfeld
     **Farbe** zum Wählen ihrer Farbe — siehe [Steinfarben](#steinfarben)
     unten.
-    **Schräge 45°**, **Treppe** und **Diagonalstrebe 2x2** steigen zu einer
-    Seite hin an; drehen Sie einen Stein zweimal (**R**, **R**), damit er in
+    **Schräge 45°**, **Flache Schräge 2x1**, **Treppe**, **Breite Treppe** und
+    **Diagonalstrebe 2x2** steigen zu einer Seite hin an; drehen Sie einen Stein zweimal (**R**, **R**), damit er in
     die andere Richtung zeigt. Eine Diagonalstrebe und eine um 180° gedrehte
     Kopie ergeben ein Kreuz.
-  - **Strukturen** — zwanzig fertige Strukturen in fünf Kategorien
+  - **Strukturen** — zweiundzwanzig fertige Strukturen in fünf Kategorien
     (Wohnen, Landwirtschaft, Gewerbe, Gemeinschaft, Infrastruktur) und
     drei größere **Schaustücke** sowie
     Ihre eigenen **Meine Strukturen**. Klicken Sie auf eine Karte, um sie
@@ -173,6 +175,11 @@ wählen:
   stattdessen das eigene Dokument der Struktur (siehe
   [Strukturinstanzen](#strukturinstanzen-eine-lebendige-referenz) unten).
 
+Neben jedem Farbfeld **Farbe** steht eine Reihe von **Dorffarben** (Putz,
+Stein, Ziegel, Dachrot, Eiche, Laub, Himmel und mehr), die gut
+zusammenpassen: Ein Klick wählt eine davon, für die nächsten Steine oder
+für die Auswahl. Mit dem Farbfeld können Sie weiterhin jede Farbe wählen.
+
 Die Farbe eines Steins wird mit Ihrer Kreation gespeichert und reist mit
 ihr, wenn Sie sie veröffentlichen oder teilen.
 
@@ -276,7 +283,7 @@ Bauplan**. Diese Schaltflächen wirken auf die gerade ausgewählte Gruppe:
 ## Strukturen: zusammensetzen, forken und Ihre persönliche Bibliothek
 
 Der Reiter **Strukturen** der Baubibliothek (siehe
-[Der Aufbau](#der-aufbau) oben) bietet zwanzig fertige Strukturen — Häuser,
+[Der Aufbau](#der-aufbau) oben) bietet zweiundzwanzig fertige Strukturen — Häuser,
 Scheunen, einen Brunnen, einen Markt, eine Mühle, eine Brücke und mehr, in
 fünf Kategorien — und drei größere **Schaustücke** (eine Burg, eine
 Hafeninsel und einen Dorfplatz), sowie **Meine Strukturen**, Ihre persönliche Sammlung

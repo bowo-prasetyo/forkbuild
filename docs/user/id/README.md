@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: ffc19b477aed271d -->
+<!-- translation-of: docs/user/README.md source-hash: b2d25842ce536f07 -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
@@ -123,7 +123,7 @@ tambahan.
 ## Struktur dan cetak biru yang dapat dipakai ulang
 
 Selain balok satu per satu, Pustaka Bangunan di Editor memungkinkan Anda
-membangun dengan seluruh struktur sekaligus — dua puluh struktur siap pakai
+membangun dengan seluruh struktur sekaligus — dua puluh dua struktur siap pakai
 dalam lima kategori, ditambah apa pun yang Anda simpan sendiri:
 
 - **Tempatkan** sebuah struktur langsung ke dalam apa yang sedang Anda

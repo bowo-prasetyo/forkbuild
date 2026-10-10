@@ -118,7 +118,7 @@ creating a coherent shared place without storing extra data.
 ## Reusable structures and blueprints
 
 Beyond individual bricks, the Editor's Build Library lets you build with
-whole structures at once — twenty ready-made ones spanning five
+whole structures at once — twenty-two ready-made ones spanning five
 categories, plus anything you save yourself:
 
 - **Place** a structure straight into what you're building, or **fork**

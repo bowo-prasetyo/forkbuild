@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: eed612cfa7affb09 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6d422d4ef6fb45c9 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -98,6 +98,9 @@ dónde está guardada, abre la página propia de esa construcción:
 - **Remezcla de “…” de …** cuando es una remezcla, y **Remezclada N veces**
   cuando este dispositivo ha encontrado remezclas de ella (vea
   [Recuentos de remezclas](#recuentos-de-remezclas));
+- su **Árbol familiar**: las construcciones de las que se remezcló,
+  hasta la original, y las remezclas hechas de ella y de esas, cada una
+  como enlace cuando este dispositivo puede abrirla;
 - **Editar una copia**, el botón grande: su propia copia se abre en el
   Editor, lista para cambiarla, sin necesidad de cuenta. Recuerda de dónde
   viene, así su autor conserva el reconocimiento, y **Volver al mundo** lo
@@ -531,6 +534,10 @@ sus recuentos de remezclas. Nadie las juzga y nada se clasifica: el
 desafío es un motivo para construir algo esta semana y ver qué hicieron
 otras personas con la misma idea.
 
+Cuando hay participaciones remezcladas unas de otras, o de otras
+construcciones, **Árboles familiares** bajo las participaciones muestra de
+dónde vienen, un árbol por cada cadena de remezclas.
+
 ## El árbol genealógico
 
 Como cada bifurcación registra a su antecesor, ForkBuild puede dibujar todo
@@ -545,6 +552,11 @@ Casa medieval (original)
 
 Esto significa que una gran creación puede inspirar todo un ecosistema de
 variaciones, y que todos en la cadena reciben crédito.
+
+La página propia de una construcción, abierta desde un enlace compartido,
+muestra el mismo linaje como **Árbol familiar**: de qué se remezcló, hasta
+la original, luego la construcción misma y después las remezclas hechas de
+ella, hasta donde sabe este dispositivo.
 
 ## Un ciclo creativo típico
 

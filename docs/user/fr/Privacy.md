@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 77c9263e9e7ad941 -->
+<!-- translation-of: docs/Privacy.md source-hash: a81525a044b02e2b -->
 # Confidentialité
 
 <!-- languages -->
@@ -49,6 +49,10 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
 - pour chaque semaine du défi de construction que vous ouvrez, les
   identifiants des participations trouvées sur les réseaux, pour que sa page
   les affiche de nouveau avant de chercher.
+- pour chaque construction commencée avec **Construire ici**, le monde et
+  l’emplacement choisis, pour qu’une fois publiée elle s’y dresse. Vos
+  tampons sur l’Accueil sont établis à partir de ce qui est déjà listé ici
+  et ne sont pas enregistrés.
 
 Effacer les données de ce site dans le navigateur supprime tout cela, et
 il n’existe aucune autre copie ni aucun moyen de le récupérer.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: eed612cfa7affb09 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6d422d4ef6fb45c9 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -101,6 +101,9 @@ gespeichert ist, öffnet die eigene Seite dieses Bauwerks:
 - **Remix von „…“ von …**, wenn es ein Remix ist, und **N-mal geremixt**,
   wenn dieses Gerät Remixe davon gefunden hat (siehe
   [Remix-Zähler](#remix-zähler));
+- sein **Stammbaum**: die Bauten, aus denen er geremixt wurde, bis zum
+  Original, und die Remixe daraus und aus diesen, jeder als Link, wenn
+  dieses Gerät ihn öffnen kann;
 - **Eine Kopie bearbeiten**, die große Schaltfläche: Ihre eigene Kopie
   öffnet sich im Editor, bereit zum Ändern, ohne Konto. Sie hält fest,
   woher sie stammt, so behält der Urheber die Anerkennung, und **Zurück
@@ -535,6 +538,10 @@ Niemand bewertet sie und nichts wird gerankt: Die Challenge ist ein Grund,
 diese Woche etwas zu bauen und zu sehen, was andere aus derselben Idee
 gemacht haben.
 
+Wenn Beiträge voneinander oder aus anderen Bauten geremixt wurden, zeigt
+**Stammbäume** unter den Beiträgen, woher sie stammen, ein Baum für jede
+Kette von Remixen.
+
 ## Der Stammbaum
 
 Weil jeder Fork seinen Elternteil festhält, kann ForkBuild die ganze
@@ -549,6 +556,11 @@ Mittelalterliches Haus (Original)
 
 So kann eine großartige Kreation ein ganzes Ökosystem von Varianten
 anstoßen — und jeder in der Kette wird genannt.
+
+Die eigene Seite eines Baus, geöffnet über einen geteilten Link, zeigt
+dieselbe Abstammung als **Stammbaum**: woraus er geremixt wurde, bis zum
+Original, dann den Bau selbst, dann die Remixe daraus, soweit dieses Gerät
+sie kennt.
 
 ## Ein typischer kreativer Kreislauf
 

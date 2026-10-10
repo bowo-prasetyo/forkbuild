@@ -31,6 +31,12 @@ Home also shows **This week's build challenge**: a theme to build, with
 **Join the challenge** (see
 [The weekly build challenge](04-PublishingAndForking.md#the-weekly-build-challenge)).
 
+Once you have published builds, Home also shows **Your stamps**: facts
+about your own builds, such as **Remixed** when someone made a remix of one,
+**Challenger** when you entered a weekly challenge, or **Big builder** for a
+build of a hundred bricks or more. They are worked out on this device from
+its own records and shown only to you: credit, never points or a ranking.
+
 The bar at the top is always visible:
 
 `ForkBuild Home Editor Repository Challenge My Worlds More ▾ 🔔 [Login]`

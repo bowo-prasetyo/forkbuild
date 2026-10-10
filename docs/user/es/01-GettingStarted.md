@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: cd219cc0fb352867 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 0c8735655a65c0e1 -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -34,6 +34,13 @@ ningún lugar hasta que usted lo decida.
 Inicio también muestra el **Desafío de construcción de la semana**: un
 tema para construir, con **Unirse al desafío** (consulte
 [El desafío de construcción semanal](04-PublishingAndForking.md#el-desafío-de-construcción-semanal)).
+
+Cuando ya ha publicado construcciones, Inicio también muestra **Sus
+sellos**: datos sobre sus propias construcciones, como **Remezclada** cuando
+alguien remezcló una, **Participante** cuando participó en un reto semanal o
+**Gran constructor** por una construcción de cien bloques o más. Se calculan
+en este dispositivo a partir de sus propios registros y solo los ve usted:
+son un reconocimiento, nunca puntos ni una clasificación.
 
 La barra de arriba siempre está visible:
 

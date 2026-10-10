@@ -575,6 +575,18 @@ This is the *only* door out of World View's read-only surface. Everything
 else here — flying around, Search, Explore Here/What's Here?, the compass,
 the Map, Info — only ever looks.
 
+### Build here — starting a build for this spot
+
+**Build here**, beside **Home**, starts a new, empty build in the Editor
+for the spot your avatar is standing on (or, flying, the spot under the
+camera). The Editor says which World it's for. When you publish the
+build, it stands right there: its first placement is that spot instead of
+an open plot ForkBuild picks, and **Go and see it** brings you back to
+look. **Forget this spot** lets the build be placed as usual. The spot is
+only your own note of where to show your build, kept on this device and in
+its backups; it doesn't claim the land, and others may build there too
+(see [Why can two builds sit in the same spot?](#why-can-two-builds-sit-in-the-same-spot)).
+
 ### Landmarks — marking a place worth remembering
 
 Unlike a structure (a placed building you or someone else built) or a

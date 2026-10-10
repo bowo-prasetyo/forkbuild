@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 77c9263e9e7ad941 -->
+<!-- translation-of: docs/Privacy.md source-hash: a81525a044b02e2b -->
 # Datenschutz
 
 <!-- languages -->
@@ -48,6 +48,10 @@ veröffentlichen, exportieren oder senden es:
 - für jede Woche der Bau-Challenge, die Sie öffnen, die IDs der in den
   Netzwerken gefundenen Beiträge, damit ihre Seite sie vor der Suche wieder
   anzeigt.
+- für jeden Bau, den Sie mit **Hier bauen** begonnen haben, die Welt und
+  die gewählte Stelle, damit er beim Veröffentlichen dort steht. Ihre
+  Stempel auf der Startseite werden aus dem hier Aufgeführten ermittelt und
+  nicht gespeichert.
 
 Das Löschen der Daten dieser Website im Browser löscht all das, und es gibt
 keine andere Kopie und keinen Weg, sie wiederherzustellen. Sichern Sie es

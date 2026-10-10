@@ -64,6 +64,23 @@ brace 180° gives the other diagonal, so two make a cross. Bricks only turn
 about the vertical axis, so a fixed-angle brace is how a diagonal timber is
 built at all.
 
+The Builder's kit (2026-10-10, docs/Pillars.md, "Building feels joyful")
+brings the library to fifty: smaller and longer blocks (core:cube_half,
+core:brick_1x2, core:brick_1x4), small and round plates, round bricks and
+pillars (CylinderGeometry), more walls, a short beam and a log, a shallow
+slope (walked as a SLOPE) and an inverted one, gable, cone and ridge roofs,
+a wide stair (walked as STEP), a ladder, a framed and a round window and a
+fence (panels with holes cut through, so they can be seen through), a
+double door, shutters, a small arch, a chimney, a barrel, a bench, and a
+new `nature` category (core:bush, core:pine_tree, core:rock,
+core:lawn_2x2) that the Build Library shows as its own Nature section.
+Every one is still one primitive with one geometry, drawn at exactly its
+declared size (tests/BuildersKit.test.js). Bricks still turn only about the
+vertical axis: tilting would change the document format, and is left for
+its own change. core/VillagePalette.js holds sixteen village colours the
+Build Library and the Selection Inspector offer beside the colour picker;
+a chosen swatch is an ordinary brick colour.
+
 0.2.80 (Expanded Brick Vocabulary) added eleven more: core:block_2x2,
 core:wall_1x3, core:slab_4x4, core:roof_hip, core:stair, core:column,
 core:beam, core:arch, core:window_large, core:door, core:trim — one per

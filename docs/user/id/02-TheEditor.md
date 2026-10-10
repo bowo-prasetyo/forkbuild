@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 053e9eecd73affbf -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2e46c9cbf050378c -->
 # 02 — Editor
 
 <!-- languages -->
@@ -38,14 +38,16 @@ dengan grup.
   saat ini; lihat [Panel Pilihan](#panel-pilihan) di bawah.
 - **Pustaka Bangunan** — kotak pencarian dan dua tab:
   - **Balok** — semua yang dapat Anda tempatkan dengan alat Tempatkan,
-    sebagai ubin dalam lima bagian (Dasar, Struktur, Atap & Tangga,
-    Bukaan, Detail). Klik salah satunya untuk memilihnya (dan beralih ke
+    sebagai ubin dalam enam bagian (Dasar, Struktur, Atap & Tangga,
+    Bukaan, Detail, Alam): lima puluh keping, dari setengah kubus, balok
+    bulat, dan gelondong kayu hingga atap pelana dan kerucut, bingkai
+    jendela dan jendela bulat, pagar, bangku, semak, dan pohon pinus. Klik salah satunya untuk memilihnya (dan beralih ke
     alat Tempatkan); contoh warna **Warna** lalu muncul untuk memilih
     warnanya — lihat [Warna balok](#warna-balok) di bawah.
-    **Lereng 45°**, **Tangga**, dan **Penguat Diagonal 2x2** naik ke satu
-    sisi; putar dua kali (**R**, **R**) untuk membaliknya ke arah lain.
+    **Lereng 45°**, **Lereng Landai 2x1**, **Tangga**, **Tangga Lebar**, dan
+    **Penguat Diagonal 2x2** naik ke satu sisi; putar dua kali (**R**, **R**) untuk membaliknya ke arah lain.
     Penguat Diagonal dan salinannya yang diputar 180° membentuk silang.
-  - **Struktur** — dua puluh struktur siap pakai dalam lima kategori
+  - **Struktur** — dua puluh dua struktur siap pakai dalam lima kategori
     (hunian, pertanian, komersial, komunitas, infrastruktur) dan tiga
     bangunan lebih besar dalam kategori **unggulan**, ditambah
     **Struktur Saya** milik Anda sendiri. Klik sebuah kartu untuk
@@ -167,6 +169,11 @@ memilih warna sendiri:
   struktur — edit dokumen struktur itu sendiri sebagai gantinya (lihat
   [Instans struktur](#instans-struktur-referensi-hidup) di bawah).
 
+Di samping setiap contoh **Warna** ada sederet **warna desa** (plester,
+batu, bata, merah genteng, kayu ek, daun, langit, dan lainnya) yang serasi:
+satu klik memilihnya, untuk balok berikutnya atau untuk pilihan. Contoh
+warna tetap bisa dipakai untuk memilih warna apa pun.
+
 Warna balok disimpan bersama karya Anda dan ikut terbawa saat Anda
 menerbitkan atau membagikannya.
 
@@ -268,7 +275,7 @@ pun yang sedang dipilih:
 ## Struktur: menyusun, mem-fork, dan pustaka pribadi Anda
 
 Tab **Struktur** di Pustaka Bangunan (lihat [Tata letak](#tata-letak) di
-atas) memberi Anda dua puluh struktur siap pakai — rumah, lumbung, sumur,
+atas) memberi Anda dua puluh dua struktur siap pakai — rumah, lumbung, sumur,
 pasar, kincir, jembatan, dan lainnya, dalam lima kategori — dan tiga
 bangunan lebih besar dalam kategori **unggulan** (kastil, pulau pelabuhan, dan
 alun-alun desa), ditambah

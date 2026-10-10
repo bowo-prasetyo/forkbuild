@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: ffc19b477aed271d -->
+<!-- translation-of: docs/user/README.md source-hash: b2d25842ce536f07 -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
@@ -132,7 +132,7 @@ zusätzliche Daten gespeichert werden.
 ## Wiederverwendbare Strukturen und Baupläne
 
 Über einzelne Steine hinaus können Sie mit der Baubibliothek des Editors
-mit ganzen Strukturen auf einmal bauen — zwanzig fertigen in fünf
+mit ganzen Strukturen auf einmal bauen — zweiundzwanzig fertigen in fünf
 Kategorien sowie allem, was Sie selbst speichern:
 
 - **Platzieren** Sie eine Struktur direkt in das, was Sie gerade bauen,

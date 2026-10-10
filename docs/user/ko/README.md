@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: ffc19b477aed271d -->
+<!-- translation-of: docs/user/README.md source-hash: b2d25842ce536f07 -->
 # ForkBuild 사용자 문서
 
 <!-- languages -->
@@ -113,7 +113,7 @@ ForkBuild에서는 몸을 가진 아바타로 협업하고 월드를 발견할 �
 
 에디터의 빌드 라이브러리에서는 블록 하나하나를 넘어 구조물 전체를 한
 번에 지을 수 있습니다 — 다섯 가지 카테고리에 걸친 기본 제공 구조물
-스무 개와, 직접 저장한 모든 것이 있습니다:
+스물두 개와, 직접 저장한 모든 것이 있습니다:
 
 - 짓고 있는 작품에 구조물을 바로 **배치**하거나, 완전히 새로운 문서로
   **포크**하세요.

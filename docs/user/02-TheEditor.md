@@ -35,14 +35,17 @@ transform bricks, and how to organize your build with groups.
   [The Selection panel](#the-selection-panel) below.
 - **Build Library** — a search box and two tabs:
   - **Bricks** — everything you can place with the Place tool, as tiles in
-    five sections (Basic, Structure, Roofs & Stairs, Openings, Details).
+    six sections (Basic, Structure, Roofs & Stairs, Openings, Details,
+    Nature): fifty pieces, from half cubes, round bricks and logs to gable
+    and cone roofs, framed and round windows, fences, benches, bushes and
+    pine trees.
     Click one to select it (and switch to the Place tool); a
     **Color** swatch then appears for choosing its color — see
     [Brick colors](#brick-colors) below.
-    **Slope 45°**, **Stair** and **Diagonal Brace 2x2** rise toward one
-    side; rotate one twice (**R**, **R**) to turn it the other way. A
+    **Slope 45°**, **Shallow Slope 2x1**, **Stair**, **Wide Stair** and
+    **Diagonal Brace 2x2** rise toward one side; rotate one twice (**R**, **R**) to turn it the other way. A
     Diagonal Brace and a copy turned 180° make a cross.
-  - **Structures** — twenty ready-made structures across five categories
+  - **Structures** — twenty-two ready-made structures across five categories
     (residential, agricultural, commercial, community, infrastructure) and
     three larger **showcase** builds, plus your own **My Structures**. Click a card to place it — see
     [Structures: composing, forking, and your personal library](#structures-composing-forking-and-your-personal-library)
@@ -153,6 +156,11 @@ Every brick type has its own default color, but you can choose your own:
   document instead (see
   [Structure instances](#structure-instances-a-live-reference) below).
 
+Beside each **Color** swatch is a row of **village colors** (plaster,
+stone, brick, roof red, oak, leaf, sky and more) that go well together:
+one click picks one, for the next bricks or for the selection. The swatch
+still lets you pick any color.
+
 A brick's color is saved with your creation and travels with it when you
 publish or share it.
 
@@ -250,7 +258,7 @@ is selected:
 ## Structures: composing, forking, and your personal library
 
 The Build Library's **Structures** tab (see [The layout](#the-layout) above)
-gives you twenty ready-made structures — houses, barns, a well, a market, a
+gives you twenty-two ready-made structures — houses, barns, a well, a market, a
 mill, a bridge, and more, across five categories — and three larger
 **showcase** builds (a castle, a harbor island and a village square), plus
 **My Structures**,
