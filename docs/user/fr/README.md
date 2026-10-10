@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: ffc19b477aed271d -->
+<!-- translation-of: docs/user/README.md source-hash: b2d25842ce536f07 -->
 # Documentation utilisateur de ForkBuild
 
 <!-- languages -->
@@ -137,7 +137,7 @@ données supplémentaires.
 
 Au-delà des briques individuelles, la Bibliothèque de construction de
 l’Éditeur vous permet de construire avec des structures entières d’un
-coup — vingt structures prêtes à l’emploi réparties en cinq catégories,
+coup — vingt-deux structures prêtes à l’emploi réparties en cinq catégories,
 plus tout ce que vous enregistrez vous-même :
 
 - **Placez** une structure directement dans ce que vous construisez, ou

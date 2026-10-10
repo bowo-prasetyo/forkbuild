@@ -6,6 +6,7 @@ import { LocalPlacementRegistry } from '../../placement/LocalPlacementRegistry.j
 import { PublishDocumentUseCase } from '../publication/PublishDocumentUseCase.js';
 import { PlacePublicationUseCase } from '../placement/PlacePublicationUseCase.js';
 import { GridPlacementStrategy } from '../placement/InitialPlacementStrategy.js';
+import { BuildPlotPlacementStrategy } from '../plot/BuildPlotPlacementStrategy.js';
 import { LoadPublicationDocumentUseCase } from '../publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../editor/CreateBrickRegistryUseCase.js';
 import { LocalContentStore } from '../../content/LocalContentStore.js';
@@ -23,7 +24,9 @@ import { LocalContentStore } from '../../content/LocalContentStore.js';
 // like one published from World View — one guarantee ("every publish
 // gets a placement"), not two call sites that could drift apart.
 export class CreatePublisherUseCase {
-    execute(identityProvider) {
+    // `buildPlotStore`, when given, puts a build started with Build here on
+    // its plot when it is first published (BuildPlotPlacementStrategy).
+    execute(identityProvider, { buildPlotStore = null } = {}) {
         const storageProvider = new LocalStorageProvider();
         const contentStore = new LocalContentStore(storageProvider);
         const publisherProvider = new LocalPublisherProvider(storageProvider, contentStore);
@@ -39,7 +42,10 @@ export class CreatePublisherUseCase {
             placementRegistry,
             identityProvider
         );
-        const initialPlacementStrategy = new GridPlacementStrategy();
+        const gridPlacementStrategy = new GridPlacementStrategy();
+        const initialPlacementStrategy = buildPlotStore
+            ? new BuildPlotPlacementStrategy({ buildPlotStore, fallback: gridPlacementStrategy })
+            : gridPlacementStrategy;
 
         return {
             publishDocumentUseCase: new PublishDocumentUseCase(

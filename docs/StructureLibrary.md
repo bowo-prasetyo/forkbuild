@@ -39,10 +39,12 @@ core/library/VillageLibrary.js (namespaced "village:structure", mirroring
 docs/BrickIDs.md's own "library:brick" convention) is the current built-in
 structure library it started with. 0.2.81 shipped six structures; 0.4.4 (Village Library
 Expansion) grew the same library to twenty, across five categories —
-content only, no new architecture, no new brick primitive:
+content only, no new architecture, no new brick primitive. The Builder's
+kit (2026-10-10) added two more, Garden Cottage and Round Tower, so that
+every core brick is still used somewhere in the library:
 
-    residential      village:house, village:cottage, village:large_house,
-                      village:tool_shed
+    residential      village:house, village:garden_cottage, village:cottage,
+                      village:large_house, village:tool_shed
     agricultural      village:barn, village:mill, village:stable,
                       village:granary, village:silo
     commercial         village:market, village:market_stall
@@ -50,7 +52,7 @@ content only, no new architecture, no new brick primitive:
                       village:small_chapel
     infrastructure     village:well, village:bridge, village:village_gate,
                       village:watchtower, village:fence_segment,
-                      village:dock
+                      village:dock, village:round_tower
 
 Five of those twenty (village:market_stall, village:pavilion,
 village:village_gate, village:fence_segment, village:dock) place zero

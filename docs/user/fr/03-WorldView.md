@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 34099c3e43b46a48 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 456d4315d584caa5 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -650,6 +650,19 @@ liste.
 C’est la *seule* porte de sortie de la surface en lecture seule de la Vue
 du Monde. Tout le reste ici — se déplacer, Recherche, Explorer ici /
 Qu’y a-t-il ici ?, la boussole, la Carte, Infos — ne fait que regarder.
+
+### Construire ici — commencer une construction pour cet endroit
+
+**Construire ici**, à côté de **Accueil**, commence dans l’Éditeur une
+nouvelle construction vide pour l’endroit où se tient votre avatar (ou, en
+vol, l’endroit sous la caméra). L’Éditeur indique pour quel monde elle
+est. Une fois publiée, elle se dresse là : son premier placement est cet
+endroit au lieu d’un terrain libre choisi par ForkBuild, et **Aller la
+voir** vous y ramène. **Oublier cet emplacement** la laisse placer comme
+d’habitude. L’emplacement n’est que votre propre note de l’endroit où
+montrer votre construction, gardée sur cet appareil et dans ses
+sauvegardes ; il ne réserve pas le terrain, et d’autres peuvent y
+construire aussi.
 
 ### Points de repère — marquer un lieu qui mérite qu’on s’en souvienne
 

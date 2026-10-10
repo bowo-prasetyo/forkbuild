@@ -54,6 +54,10 @@ function b(definitionId, x, y, z, rotation = 0, color = null) {
 // they read as part of the roof.
 const ROOF_COLOR = 0xd08a3e;
 
+// Floors and platforms of oak, paths and steps of stone (core/VillagePalette.js).
+const OAK = 0x8b5a2b;
+const STONE = 0x9a9a9a;
+
 const houseBricks = [
     // Floor — one slab_4x4, top surface at y = 0.25.
     b('core:slab_4x4', 0, 0.125, 0),
@@ -627,6 +631,124 @@ const dockBricks = [
     b('core:plate_2x4', 0, 3.125, 4)
 ];
 
+// Garden Cottage — the Builder's kit (2026-10-10) in one small home: plastered
+// walls of several widths, round and framed windows with shutters, a double
+// door under a gabled porch, a shallow-pitched roof with ridge caps and a
+// chimney, and a fenced front garden with a lawn, a path, a bench, a bush, a
+// rock and a pine.
+const gardenCottageBricks = [
+    b('core:plate_2x2', -1, 0.125, -1, 0, OAK),
+    b('core:plate_2x2', 1, 0.125, -1, 0, OAK),
+    b('core:plate_2x2', -1, 0.125, 1, 0, OAK),
+    b('core:plate_2x2', 1, 0.125, 1, 0, OAK),
+
+    // Front: a double door between two stacks with round windows.
+    b('core:wall_1x1', -1.5, 0.75, 1.875),
+    b('core:window_round', -1.5, 1.75, 1.875),
+    b('core:wall_1x1', -1.5, 2.75, 1.875),
+    b('core:wall_1x1', 1.5, 0.75, 1.875),
+    b('core:window_round', 1.5, 1.75, 1.875),
+    b('core:wall_1x1', 1.5, 2.75, 1.875),
+    b('core:door_double', 0, 1.25, 1.9),
+    b('core:wall_half_2x1', 0, 2.75, 1.875),
+
+    b('core:wall_2x3', -1, 1.75, -1.875),
+    b('core:wall_2x3', 1, 1.75, -1.875),
+    b('core:wall_2x3', -1.875, 1.75, -1, 90),
+    b('core:wall_2x3', -1.875, 1.75, 1, 90),
+
+    // East side: a pair of framed windows with a shutter at each side.
+    b('core:wall_2x3', 1.875, 1.75, -1, 90),
+    b('core:wall_half_2x1', 1.875, 0.75, 1, 90),
+    b('core:window_frame', 1.875, 1.75, 0.5, 90),
+    b('core:window_frame', 1.875, 1.75, 1.5, 90),
+    b('core:wall_half_2x1', 1.875, 2.75, 1, 90),
+    b('core:shutter', 2.05, 1.75, -0.25, 90),
+    b('core:shutter', 2.05, 1.75, 2.25, 90),
+
+    // Corbels under the west eave.
+    b('core:slope_inverted', -2.5, 2.75, -1.5, 0, OAK),
+    b('core:slope_inverted', -2.5, 2.75, 1.5, 0, OAK),
+
+    // Roof: two shallow pitches meeting at a capped ridge.
+    b('core:slope_shallow', -1, 3.75, -1.5),
+    b('core:slope_shallow', -1, 3.75, -0.5),
+    b('core:slope_shallow', -1, 3.75, 0.5),
+    b('core:slope_shallow', -1, 3.75, 1.5),
+    b('core:slope_shallow', 1, 3.75, -1.5, 180),
+    b('core:slope_shallow', 1, 3.75, -0.5, 180),
+    b('core:slope_shallow', 1, 3.75, 0.5, 180),
+    b('core:slope_shallow', 1, 3.75, 1.5, 180),
+    b('core:roof_ridge', 0, 4.5, -1.5),
+    b('core:roof_ridge', 0, 4.5, -0.5),
+    b('core:roof_ridge', 0, 4.5, 0.5),
+    b('core:roof_ridge', 0, 4.5, 1.5),
+    b('core:chimney', -1, 4.5, -1),
+
+    // Porch roof over the door, and a threshold stone.
+    b('core:roof_gable', 0, 2.75, 3),
+    b('core:cube_half', 0, 0.25, 2.5, 0, STONE),
+
+    // Front garden.
+    b('core:lawn_2x2', -3, 0.05, 5),
+    b('core:lawn_2x2', -1, 0.05, 5),
+    b('core:lawn_2x2', 1, 0.05, 5),
+    b('core:lawn_2x2', 3, 0.05, 5),
+    b('core:lawn_2x2', -3, 0.05, 7),
+    b('core:lawn_2x2', -1, 0.05, 7),
+    b('core:lawn_2x2', 1, 0.05, 7),
+    b('core:lawn_2x2', 3, 0.05, 7),
+    b('core:plate_1x1', 0, 0.225, 3.5, 0, STONE),
+    b('core:plate_1x1', 0, 0.225, 4.5, 0, STONE),
+    b('core:plate_1x1', 0, 0.225, 5.5, 0, STONE),
+    b('core:plate_1x1', 0, 0.225, 6.5, 0, STONE),
+    b('core:plate_1x1', 0, 0.225, 7.5, 0, STONE),
+    b('core:brick_1x4', -4, 0.5, 6, 90),
+    b('core:brick_1x2', -2.5, 0.5, 8),
+    b('core:fence', 3, 0.5, 8),
+    b('core:fence', 4, 0.5, 5, 90),
+    b('core:fence', 4, 0.5, 7, 90),
+    b('core:bench', -2.5, 0.35, 6),
+    b('core:bush', 2.5, 0.6, 6.5),
+    b('core:rock', 3.2, 0.6, 4.6),
+    b('core:pine_tree', -3.2, 1.35, 3)
+];
+
+// Round Tower — a lookout on a brick plinth: four round pillars, an arched
+// doorway under a lintel, a ladder up to a plank platform, a turret of
+// round bricks under a cone roof, and barrels and a log at its foot.
+const roundTowerBricks = [
+    b('core:brick_1x4', 0, 0.5, -1.5),
+    b('core:brick_1x4', 0, 0.5, -0.5),
+    b('core:brick_1x4', 0, 0.5, 0.5),
+    b('core:brick_1x4', 0, 0.5, 1.5),
+    b('core:stair_wide', 2.5, 0.5, 0, 180),
+    b('core:round_plate_2x2', 0, 1.125, 0),
+
+    b('core:pillar', -1.5, 2.5, -1.5),
+    b('core:pillar', 1.5, 2.5, -1.5),
+    b('core:pillar', -1.5, 2.5, 1.5),
+    b('core:pillar', 1.5, 2.5, 1.5),
+    b('core:arch_small', 0, 1.75, -1.5),
+    b('core:beam_short', 0, 2.75, -1.5),
+    b('core:ladder', 0, 2.5, 1.9),
+
+    b('core:plate_2x2', -1, 4.125, -1, 0, OAK),
+    b('core:plate_2x2', 1, 4.125, -1, 0, OAK),
+    b('core:plate_2x2', -1, 4.125, 1, 0, OAK),
+    b('core:plate_2x2', 1, 4.125, 1, 0, OAK),
+    b('core:round_1x1', -1.5, 4.75, -1.5),
+    b('core:round_1x1', 1.5, 4.75, -1.5),
+    b('core:round_1x1', -1.5, 4.75, 1.5),
+    b('core:round_1x1', 1.5, 4.75, 1.5),
+    b('core:round_plate_2x2', 0, 5.375, 0),
+    b('core:roof_cone', 0, 6.5, 0),
+
+    b('core:barrel', -2.7, 0.5, 1),
+    b('core:barrel', -2.7, 0.5, -0.2),
+    b('core:log', 0, 0.25, -2.8)
+];
+
 export const VillageLibrary = {
     id: 'village',
     structures: [
@@ -638,6 +760,14 @@ export const VillageLibrary = {
             tags: ['house', 'residential', 'dwelling'],
             description: 'A small hipped-roof cottage with a raised entry step, a chimney, a door, and windows on every wall.',
             bricks: houseBricks
+        }),
+        new Structure({
+            id: 'village:garden_cottage',
+            name: 'Garden Cottage',
+            category: 'residential',
+            tags: ['cottage', 'residential', 'garden', 'dwelling'],
+            description: 'A plastered cottage with round windows, shutters and a porch, and a fenced front garden with a bench.',
+            bricks: gardenCottageBricks
         }),
         new Structure({
             id: 'village:cottage',
@@ -798,6 +928,14 @@ export const VillageLibrary = {
             tags: ['dock', 'pier', 'infrastructure'],
             description: 'A plank platform on column stilts, extending out over open water.',
             bricks: dockBricks
+        }),
+        new Structure({
+            id: 'village:round_tower',
+            name: 'Round Tower',
+            category: 'infrastructure',
+            tags: ['tower', 'lookout', 'infrastructure'],
+            description: 'A lookout on a brick plinth: round pillars, an arched doorway, a ladder to a platform and a turret under a cone roof.',
+            bricks: roundTowerBricks
         })
     ]
 };

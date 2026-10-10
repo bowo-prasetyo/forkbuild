@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 77c9263e9e7ad941 -->
+<!-- translation-of: docs/Privacy.md source-hash: a81525a044b02e2b -->
 # Privacidade
 
 <!-- languages -->
@@ -47,6 +47,10 @@ que você publique, exporte ou envie:
 - para cada semana do desafio de construção que você abre, os ids das
   participações encontradas nas redes, para que a página dele as mostre de
   novo antes de procurar.
+- para cada construção que você começou com **Construir aqui**, o Mundo e
+  o lugar escolhidos, para que ao publicar ela fique ali. Seus selos no
+  Início são calculados a partir do que já está listado aqui e não são
+  guardados.
 
 Limpar os dados deste site no navegador apaga tudo isso, e não há outra
 cópia nem como recuperar. Faça antes um backup com **Seus dados → Fazer

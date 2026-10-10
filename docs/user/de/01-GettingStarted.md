@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: cd219cc0fb352867 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 0c8735655a65c0e1 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -35,6 +35,14 @@ irgendwohin gesendet, solange Sie es nicht selbst tun.
 Start zeigt außerdem die **Bau-Challenge der Woche**: ein Thema zum
 Bauen, mit **Mitmachen** (siehe
 [Die wöchentliche Bau-Challenge](04-PublishingAndForking.md#die-wöchentliche-bau-challenge)).
+
+Sobald Sie Bauten veröffentlicht haben, zeigt die Seite **Start** auch
+**Ihre Stempel**: Tatsachen über Ihre eigenen Bauten, etwa **Geremixt**, wenn
+jemand einen davon geremixt hat, **Herausforderer**, wenn Sie an einer
+Wochen-Challenge teilgenommen haben, oder **Großbaumeister** für einen Bau
+mit hundert Steinen oder mehr. Sie werden auf diesem Gerät aus seinen eigenen
+Aufzeichnungen ermittelt und nur Ihnen gezeigt: Anerkennung, nie Punkte oder
+eine Rangliste.
 
 Die Leiste oben ist immer sichtbar:
 

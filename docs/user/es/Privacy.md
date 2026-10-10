@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 77c9263e9e7ad941 -->
+<!-- translation-of: docs/Privacy.md source-hash: a81525a044b02e2b -->
 # Privacidad
 
 <!-- languages -->
@@ -48,6 +48,9 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
 - para cada semana del desafío de construcción que abre, los identificadores
   de las participaciones encontradas en las redes, para que su página las
   vuelva a mostrar antes de buscar.
+- para cada construcción que empezó con **Construir aquí**, el mundo y el
+  lugar que eligió, para que al publicarla quede allí. Sus sellos en Inicio
+  se calculan a partir de lo que ya aparece aquí y no se guardan.
 
 Borrar los datos de este sitio en el navegador lo elimina todo, y no hay
 ninguna otra copia ni forma de recuperarlo. Haga primero una copia de

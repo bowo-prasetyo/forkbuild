@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 053e9eecd73affbf -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2e46c9cbf050378c -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -39,15 +39,18 @@ grupos.
   actual; consulte [El panel Selección](#el-panel-selección) más abajo.
 - **Biblioteca de construcción**: un cuadro de búsqueda y dos pestañas:
   - **Bloques**: todo lo que puede colocar con la herramienta Colocar,
-    como mosaicos en cinco secciones (Básicos, Estructura, Techos y
-    escaleras, Aberturas, Detalles). Haga clic en uno para seleccionarlo
+    como mosaicos en seis secciones (Básicos, Estructura, Techos y
+    escaleras, Aberturas, Detalles, Naturaleza): cincuenta piezas, desde
+    medios cubos, bloques redondos y troncos hasta tejados a dos aguas y
+    cónicos, marcos de ventana y ventanas redondas, vallas, bancos,
+    arbustos y pinos. Haga clic en uno para seleccionarlo
     (y pasar a la herramienta Colocar); aparece entonces una muestra de
     **Color** para elegir su color: consulte
     [Colores de los bloques](#colores-de-los-bloques) más abajo.
-    **Pendiente 45°**, **Escalera** y **Riostra diagonal 2x2** suben hacia
-    un lado; gire uno dos veces (**R**, **R**) para orientarlo al revés. Una
+    **Pendiente 45°**, **Pendiente suave 2x1**, **Escalera**, **Escalera
+    ancha** y **Riostra diagonal 2x2** suben hacia un lado; gire uno dos veces (**R**, **R**) para orientarlo al revés. Una
     riostra diagonal y una copia girada 180° forman una cruz.
-  - **Estructuras**: veinte estructuras ya hechas en cinco categorías
+  - **Estructuras**: veintidós estructuras ya hechas en cinco categorías
     (residencial, agrícola, comercial, comunitaria, infraestructura) y tres
     construcciones más grandes de la categoría **destacados**, más
     sus propias **Mis estructuras**. Haga clic en una tarjeta para
@@ -173,6 +176,11 @@ elegir el suyo:
   [Instancias de estructuras](#instancias-de-estructuras-una-referencia-viva)
   más abajo).
 
+Junto a cada muestra de **Color** hay una fila de **colores del pueblo**
+(yeso, piedra, ladrillo, rojo teja, roble, hoja, cielo y más) que combinan
+bien: un clic elige uno, para los siguientes bloques o para la selección.
+La muestra sigue permitiendo elegir cualquier color.
+
 El color de un bloque se guarda con su creación y viaja con ella cuando la
 publica o la comparte.
 
@@ -276,7 +284,7 @@ botones actúan sobre el grupo que esté seleccionado:
 ## Estructuras: componer, bifurcar y su biblioteca personal
 
 La pestaña **Estructuras** de la Biblioteca de construcción (consulte
-[La disposición](#la-disposición) arriba) le ofrece veinte estructuras ya
+[La disposición](#la-disposición) arriba) le ofrece veintidós estructuras ya
 hechas (casas, graneros, un pozo, un mercado, un molino, un puente y más,
 en cinco categorías) y tres construcciones más grandes de la categoría **destacados** (un
 castillo, una isla del puerto y una plaza del pueblo), además de **Mis

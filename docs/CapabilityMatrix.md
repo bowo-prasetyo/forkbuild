@@ -68,6 +68,12 @@ touched. See `WorldNavigationSession#getPublicationIdForDocument()` (in
 `application/worldNavigation/forkOnWriteMethods.js`)
 and `tests/WorldViewReadOnlyFork.test.js`.
 
+**Build here** is the second door: it opens the Editor on a new, empty build
+for the spot the avatar stands on (`/editor?plot=`), and changes nothing in
+World View. Publishing that build places it on the spot
+(`application/plot/BuildPlotPlacementStrategy.js`), through the same
+placement every publish already makes. See `tests/BuildPlot.test.js`.
+
 ## Surface-Specific Capabilities
 
 ### Editor View

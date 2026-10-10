@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: eed612cfa7affb09 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6d422d4ef6fb45c9 -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -95,6 +95,9 @@ onde ela está guardada, abre a página própria dessa construção:
 - **Remix de “…”, de …** quando é um remix, e **Remixada N vezes** quando
   este dispositivo encontrou remixes dela (veja
   [Contagem de remixes](#contagem-de-remixes));
+- a **Árvore genealógica**: as construções de que ela é remix, até a
+  original, e os remixes feitos dela e desses, cada um como link quando
+  este dispositivo consegue abri-lo;
 - **Editar uma cópia**, o botão grande: sua própria cópia abre no Editor,
   pronta para mudar, sem precisar de conta. Ela registra de onde veio,
   então quem fez continua com o crédito, e **Voltar ao mundo** leva você
@@ -517,6 +520,10 @@ contagens de remixes. Ninguém as julga e nada é classificado: o desafio é
 um motivo para construir algo nesta semana e ver o que outras pessoas
 fizeram com a mesma ideia.
 
+Quando há participações remixadas umas das outras, ou de outras
+construções, **Árvores genealógicas** abaixo das participações mostra de
+onde vieram, uma árvore para cada cadeia de remixes.
+
 ## A árvore genealógica
 
 Como toda bifurcação registra o pai, o ForkBuild consegue desenhar a
@@ -531,6 +538,11 @@ Casa medieval (original)
 
 Isso quer dizer que uma ótima criação pode inspirar todo um ecossistema de
 variações — e todos na cadeia recebem crédito.
+
+A página própria de uma construção, aberta de um link compartilhado,
+mostra a mesma linhagem como **Árvore genealógica**: de que ela é remix,
+até a original, depois a própria construção e depois os remixes feitos
+dela, até onde este dispositivo sabe.
 
 ## Um ciclo criativo típico
 

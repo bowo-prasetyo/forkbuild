@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: ffc19b477aed271d -->
+<!-- translation-of: docs/user/README.md source-hash: b2d25842ce536f07 -->
 # Documentação do ForkBuild para usuários
 
 <!-- languages -->
@@ -125,7 +125,7 @@ criando um lugar compartilhado coerente sem guardar dados extras.
 ## Estruturas e plantas reutilizáveis
 
 Além dos blocos individuais, a Biblioteca de construção do Editor permite
-construir com estruturas inteiras de uma vez — vinte prontas, em cinco
+construir com estruturas inteiras de uma vez — vinte e duas prontas, em cinco
 categorias, mais tudo o que você mesmo salvar:
 
 - **Posicione** uma estrutura direto no que você está construindo, ou

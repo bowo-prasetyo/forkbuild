@@ -84,6 +84,7 @@ import { navigationHudSectionTemplate } from './worldView/templates/navigationHu
 import { publicationSectionTemplate } from './worldView/templates/publicationSection.js';
 import { hoverCardTemplate } from './worldView/templates/hoverCard.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
+import { plotQuery } from '../../core/BuildPlot.js';
 import { compassText, spatialContextDescription } from '../i18n/worldText.js';
 
 // Snapshot fetches the automatic cascade runs at once.
@@ -890,6 +891,23 @@ export default {
             currentReturnWorld, router, session
         });
 
+        // Build here (core/BuildPlot.js): a new build in the Editor for the spot
+        // the avatar stands on (else the camera's), in this World; publishing
+        // it stands it here.
+        function buildHere() {
+            const position = session.getAvatarPosition() || session.getCameraPosition();
+            const worldDocumentId = session.getActiveDocumentId() || route.params.documentId || null;
+            if (!position || !worldDocumentId) return;
+            let worldTitle = '';
+            try {
+                worldTitle = session.getDocument(worldDocumentId)?.metadata?.title || '';
+            } catch {
+                // An untitled spot is still a spot.
+            }
+            if (!worldTitle && title.value !== t('worldView.loading')) worldTitle = title.value || '';
+            router.push({ path: '/editor', query: plotQuery({ worldDocumentId, worldTitle, position }) });
+        }
+
         // -----------------------------------------------------------------
         // Search & Spatial Discovery
         // -----------------------------------------------------------------
@@ -1326,6 +1344,7 @@ export default {
             navigateToNearbyPlaceNamingClaim,
             adoptNearbyPlaceNamingClaim,
             goHome,
+            buildHere,
             openLocationsPanel,
             closeLocationsPanel,
             focusLocation,
@@ -1426,6 +1445,13 @@ export default {
                 -->
                 <div v-if="cameraPosition || activeDocumentInfo" class="world-view-actions world-view-actions--navigation">
                     <button v-if="cameraPosition" class="action-btn" @click="goHome">{{ t('worldView.home') }}</button>
+                    <button
+                        v-if="cameraPosition"
+                        type="button"
+                        class="action-btn world-view-build-here"
+                        :title="t('buildPlot.buildHereHint')"
+                        @click="buildHere"
+                    >{{ t('buildPlot.buildHere') }}</button>
                     <button
                         v-if="activeDocumentInfo"
                         class="action-btn"

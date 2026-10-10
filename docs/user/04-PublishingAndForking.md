@@ -93,6 +93,9 @@ stored, opens on that build's own page:
 - **Remixed from "…" by …** when it is a remix, and **Remixed N times**
   when this device has found remixes of it (see
   [Remix counts](#remix-counts));
+- its **Family tree**: the builds it was remixed from, back to the
+  original, and the remixes made from it and from those, each one a link
+  when this device can open it;
 - **Edit a Copy**, the big button: your own copy opens in the Editor,
   ready to change, with no account needed. It remembers where it came
   from, so its maker keeps the credit, and **Back to World** takes you to
@@ -489,6 +492,10 @@ Entries are shown newest first, with their remix counts. Nobody judges
 them and nothing is ranked: the challenge is a reason to build something
 this week, and to see what others made of the same idea.
 
+When entries were remixed from each other, or from other builds,
+**Family trees** under the entries shows where they came from, one tree for
+each chain of remixes.
+
 ## The family tree
 
 Because every fork records its parent, ForkBuild can draw a creation's whole
@@ -502,6 +509,10 @@ Medieval House (original)
 
 This means a great creation can inspire an entire ecosystem of variations —
 and everyone in the chain gets credit.
+
+A build's own page, opened from a shared link, shows the same lineage as a
+**Family tree**: what it was remixed from, back to the original, then the
+build itself, then the remixes made from it, as far as this device knows.
 
 ## A typical creative loop
 

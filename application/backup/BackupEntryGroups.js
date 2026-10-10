@@ -77,6 +77,7 @@ const EXACT_NAMES = new Map([
     ['avatar-inventory', BackupEntryGroup.AVATAR_AND_WORLDS],
     ['vehicle-runtime-instances', BackupEntryGroup.AVATAR_AND_WORLDS],
     ['animal-runtime-instances', BackupEntryGroup.AVATAR_AND_WORLDS],
+    ['build-plots', BackupEntryGroup.AVATAR_AND_WORLDS],
 
     ['rendezvous-configuration', BackupEntryGroup.SETTINGS],
     ['ice-server-configuration', BackupEntryGroup.SETTINGS],

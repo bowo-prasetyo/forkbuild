@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: cd219cc0fb352867 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 0c8735655a65c0e1 -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -35,6 +35,14 @@ décidez pas.
 L’accueil montre aussi le **Défi de construction de la semaine** : un
 thème à construire, avec **Participer au défi** (voir
 [Le défi de construction hebdomadaire](04-PublishingAndForking.md#le-défi-de-construction-hebdomadaire)).
+
+Une fois que vous avez publié des constructions, l’Accueil montre aussi
+**Vos tampons** : des faits sur vos propres constructions, comme **Remixée**
+quand quelqu’un en a fait un remix, **Challenger** quand vous avez participé
+à un défi de la semaine, ou **Grand bâtisseur** pour une construction de cent
+briques ou plus. Ils sont établis sur cet appareil à partir de ses propres
+données et ne sont montrés qu’à vous : une reconnaissance, jamais des points
+ni un classement.
 
 La barre du haut est toujours visible :
 

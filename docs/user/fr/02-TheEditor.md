@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 053e9eecd73affbf -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2e46c9cbf050378c -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -41,16 +41,19 @@ organiser votre construction avec des groupes.
 - **Bibliothèque de construction** — un champ de recherche et deux
   onglets :
   - **Briques** — tout ce que vous pouvez placer avec l’outil Placement,
-    sous forme de vignettes réparties en cinq sections (Base, Structure,
-    Toits et escaliers, Ouvertures, Détails). Cliquez sur l’une d’elles
+    sous forme de vignettes réparties en six sections (Base, Structure,
+    Toits et escaliers, Ouvertures, Détails, Nature) : cinquante pièces,
+    des demi-cubes, briques rondes et rondins aux toits à pignon et
+    coniques, cadres de fenêtre et œils-de-bœuf, clôtures, bancs, buissons
+    et sapins. Cliquez sur l’une d’elles
     pour la sélectionner (et passer à l’outil Placement) ; un nuancier
     **Couleur** apparaît alors pour choisir sa couleur — voir
     [Couleurs des briques](#couleurs-des-briques) ci-dessous.
-    **Pente 45°**, **Escalier** et **Contreventement diagonal 2x2** montent
-    vers un côté ; tournez-en un deux fois (**R**, **R**) pour l’orienter
+    **Pente 45°**, **Pente douce 2x1**, **Escalier**, **Escalier large** et
+    **Contreventement diagonal 2x2** montent vers un côté ; tournez-en un deux fois (**R**, **R**) pour l’orienter
     dans l’autre sens. Un contreventement diagonal et une copie tournée de
     180° forment une croix.
-  - **Structures** — vingt structures prêtes à l’emploi dans cinq
+  - **Structures** — vingt-deux structures prêtes à l’emploi dans cinq
     catégories (résidentiel, agricole, commercial, collectif,
     infrastructure) et trois constructions plus grandes de la catégorie **vitrine**, plus
     vos propres **Mes structures**. Cliquez sur une
@@ -175,6 +178,12 @@ vôtre :
   [Instances de structure](#instances-de-structure--une-référence-vivante)
   ci-dessous).
 
+À côté de chaque nuancier **Couleur**, une rangée de **couleurs du
+village** (enduit, pierre, brique, rouge tuile, chêne, feuille, ciel…) qui
+vont bien ensemble : un clic en choisit une, pour les prochaines briques
+ou pour la sélection. Le nuancier permet toujours de choisir n’importe
+quelle couleur.
+
 La couleur d’une brique est enregistrée avec votre création et la suit
 quand vous la publiez ou la partagez.
 
@@ -281,7 +290,7 @@ Ces boutons agissent sur le groupe sélectionné :
 ## Structures : composer, forker et votre bibliothèque personnelle
 
 L’onglet **Structures** de la Bibliothèque de construction (voir
-[La disposition](#la-disposition) ci-dessus) vous offre vingt structures
+[La disposition](#la-disposition) ci-dessus) vous offre vingt-deux structures
 prêtes à l’emploi — maisons, granges, un puits, un marché, un moulin, un
 pont et bien d’autres, dans cinq catégories — et trois constructions plus
 grandes de la catégorie **vitrine** (un château fort, une île du port et une place du

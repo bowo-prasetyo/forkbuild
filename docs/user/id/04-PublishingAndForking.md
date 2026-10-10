@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: eed612cfa7affb09 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6d422d4ef6fb45c9 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -99,6 +99,9 @@ menyebut tempat ia disimpan, membuka halaman bangunan itu sendiri:
 - **Remix dari "…" oleh …** jika itu remix, dan **Di-remix N kali** jika
   perangkat ini telah menemukan remix-nya (lihat
   [Jumlah remix](#jumlah-remix));
+- **Silsilah**-nya: bangunan asal remix-nya, sampai yang asli, dan
+  remix yang dibuat darinya dan dari remix itu, masing-masing berupa
+  tautan jika perangkat ini dapat membukanya;
 - **Edit Salinan**, tombol besarnya: salinan Anda sendiri terbuka di
   Editor, siap diubah, tanpa perlu akun. Salinan itu mencatat asalnya, jadi
   pembuatnya tetap mendapat kredit, dan **Kembali ke Dunia** membawa Anda
@@ -525,6 +528,10 @@ ada yang menilai dan tidak ada peringkat: tantangan ini adalah alasan untuk
 membangun sesuatu minggu ini, dan melihat apa yang dibuat orang lain dari
 ide yang sama.
 
+Jika ada karya peserta yang di-remix dari satu sama lain, atau dari
+bangunan lain, **Silsilah** di bawah daftar peserta menunjukkan asalnya,
+satu pohon untuk setiap rantai remix.
+
 ## Pohon keluarga
 
 Karena setiap fork mencatat induknya, ForkBuild dapat menggambar seluruh
@@ -539,6 +546,11 @@ Medieval House (asli)
 
 Ini berarti sebuah karya hebat dapat mengilhami seluruh ekosistem variasi —
 dan setiap orang dalam rantai itu mendapat penghargaan.
+
+Halaman sebuah bangunan, yang dibuka dari tautan yang dibagikan,
+menampilkan garis keturunan yang sama sebagai **Silsilah**: asal remix-nya
+sampai yang asli, lalu bangunan itu sendiri, lalu remix yang dibuat
+darinya, sejauh yang diketahui perangkat ini.
 
 ## Alur kreatif yang umum
 

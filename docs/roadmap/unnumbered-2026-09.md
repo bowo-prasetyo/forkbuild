@@ -5022,3 +5022,41 @@ about building.
 - Not done, from the same review: folding Distribute into Publish, a page of your own builds (My Worlds lists Worlds
   visited), the Builder's release (a larger brick kit, family trees, building on a plot in a World, builder stamps),
   and archiving the reconciliation and publisher leaderboard pages.
+
+## The Builder's release: fifty bricks, family trees, Build here and stamps (unnumbered, 2026-10-10)
+
+**Building gets as much as everything else.** The review behind docs/Pillars.md found the brick kit the thinnest
+system in the game, remixing credited but never shown as a family, World View with no way back into building, and no
+credit for building at all. This answers its second recommendation. Pillars served: building feels joyful (the kit,
+the palette), every build has a family tree (family trees), and your work lives in a world (Build here, stamps).
+
+- **Fifty bricks.** Thirty-three new core bricks (docs/BrickIDs.md): half cubes, 1x2 and 1x4 bricks, small and round
+  plates, round bricks and pillars, more walls, a short beam and a log, a shallow and an inverted slope, gable and cone
+  roofs and a ridge cap, a wide stair and a ladder, framed and round windows and a fence you can see through, a double
+  door, shutters, a small arch, a chimney, a barrel, a bench, and a `nature` category (bush, pine, rock, lawn) with its
+  own Build Library section. Each is one geometry in renderer/ThreeBrickFactory.js at exactly its declared size; the
+  shallow slope and wide stair are walked as drawn (core/WalkableSurface.js); the link-preview worker draws them; all
+  are named in every language. Two Village structures, Garden Cottage and Round Tower, use them, so every core brick
+  still has a ready-made example.
+- **Village colours.** core/VillagePalette.js: sixteen colours offered as swatches beside the colour picker in the
+  Build Library and the Selection Inspector (ui/components/VillagePaletteSwatches.js).
+- **Family trees.** core/RemixFamily.js follows `parentDocumentId` back to the original and down through the remixes
+  this device knows of, within limits it counts rather than hides. A shared link shows the tree
+  (ui/components/remix/RemixFamilyTree.js); the challenge page shows one tree per chain of entries.
+- **Build here.** World View's Build here opens the Editor on a new build for the spot the avatar stands on
+  (core/BuildPlot.js, application/plot/BuildPlotStore.js, backed up with Worlds visited). The Editor says so in a
+  banner, and publishing places the build on that spot (application/plot/BuildPlotPlacementStrategy.js, which
+  PublishDocumentUseCase now asks with the document's id); after publishing the banner offers Go and see it. A plot is
+  the builder's own note and claims no land.
+- **Stamps.** core/BuilderStamps.js names six facts and their thresholds (builds published, remixes by others, builds
+  remixed, challenges entered, the largest build's bricks, builds on a plot), gathered on this device by
+  application/stamps/BuilderStampFacts.js. Home shows those earned, and nothing before the first. Facts, never points,
+  levels or ranks (docs/principles/achievements.md).
+- Guides 01 to 04 and the guide index, in every language; README, Architecture, BrickLibrary, BrickIDs,
+  StructureLibrary, CapabilityMatrix, Privacy and Pillars.
+- Tests: `BuildersKit`, `VillagePaletteBrowser`, `RemixFamily`, `RemixFamilyTreeBrowser`, `BuildPlot`,
+  `BuildPlotBannerBrowser`, `BuilderStamps`, `BuilderStampsBrowser`; the structure and brick counts in
+  `VillageLibraryExpansion`, `ForkableStructureLibrary`, `BuildLibraryUX` and `ExpandedBrickVocabulary`.
+- Not done: tilting bricks about the other axes, which changes the document format and needs its own protocol change;
+  and showing a week's challenge entries together as a walkable World.
+- Upgrading: builds that use the new bricks can't be fully drawn by 1.3.0, as with any new brick.

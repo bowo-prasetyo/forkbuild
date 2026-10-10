@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 77c9263e9e7ad941 -->
+<!-- translation-of: docs/Privacy.md source-hash: a81525a044b02e2b -->
 # Privasi
 
 <!-- languages -->
@@ -49,6 +49,10 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
 - untuk setiap minggu tantangan membangun yang Anda buka, ID karya peserta
   yang ditemukan di jaringan, agar halamannya menampilkannya lagi sebelum
   mencari.
+- untuk setiap bangunan yang Anda mulai dengan **Bangun di sini**, Dunia
+  dan tempat yang Anda pilih, agar saat diterbitkan bangunan itu berdiri di
+  sana. Cap Anda di Beranda dihitung dari apa yang sudah tercantum di sini
+  dan tidak disimpan.
 
 Menghapus data situs ini di browser akan menghapus semuanya, dan tidak ada
 salinan lain maupun cara untuk memulihkannya. Cadangkan terlebih dahulu

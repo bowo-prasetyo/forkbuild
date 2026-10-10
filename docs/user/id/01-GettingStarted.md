@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: cd219cc0fb352867 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 0c8735655a65c0e1 -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -34,6 +34,13 @@ mana pun sampai Anda memilihnya.
 Beranda juga menampilkan **Tantangan membangun minggu ini**: tema untuk
 dibangun, dengan **Ikut tantangan** (lihat
 [Tantangan membangun mingguan](04-PublishingAndForking.md#tantangan-membangun-mingguan)).
+
+Setelah Anda menerbitkan bangunan, Beranda juga menampilkan **Cap
+Anda**: fakta tentang bangunan Anda sendiri, seperti **Di-remix** saat
+seseorang membuat remix salah satunya, **Penantang** saat Anda ikut
+tantangan mingguan, atau **Pembangun besar** untuk bangunan dengan seratus
+balok atau lebih. Semuanya dihitung di perangkat ini dari catatannya sendiri
+dan hanya ditampilkan kepada Anda: penghargaan, bukan poin atau peringkat.
 
 Bilah di bagian atas selalu terlihat:
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 34099c3e43b46a48 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 456d4315d584caa5 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -639,6 +639,19 @@ wird, statt es aus einer Liste auszuwählen.
 Das ist die *einzige* Tür aus der schreibgeschützten Fläche der
 Weltansicht hinaus. Alles andere hier — Herumfliegen, Suche, Hier
 erkunden/Was ist hier?, der Kompass, die Karte, Info — sieht nur hin.
+
+### Hier bauen — einen Bau für diese Stelle beginnen
+
+**Hier bauen**, neben **Start**, beginnt im Editor einen neuen, leeren
+Bau für die Stelle, an der Ihr Avatar steht (oder, im Flug, die Stelle
+unter der Kamera). Der Editor zeigt an, für welche Welt er ist. Wenn Sie
+den Bau veröffentlichen, steht er genau dort: Seine erste Platzierung ist
+diese Stelle statt eines freien Platzes, den ForkBuild wählt, und
+**Ansehen** bringt Sie zurück, um ihn anzuschauen. Mit **Diese Stelle
+vergessen** wird der Bau wie gewohnt platziert. Die Stelle ist nur Ihre
+eigene Notiz, wo Ihr Bau gezeigt wird, auf diesem Gerät und in seinen
+Sicherungen; sie beansprucht kein Land, und andere dürfen dort ebenfalls
+bauen.
 
 ### Wahrzeichen — einen Ort markieren, den man sich merken sollte
 

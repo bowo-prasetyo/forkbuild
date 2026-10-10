@@ -36,6 +36,10 @@ longer-term aim.
   that open in the Editor as your own copy, with no account needed; the
   Repository, My Worlds and the Editor's **New** offer them too. Link
   previews and an installable web app manifest for the site.
+- **Your stamps**: once you have published, Home shows facts about your own
+  builds (published, remixed by others, challenges entered, a build of a
+  hundred bricks or more), worked out on this device. Credit, never points
+  or a ranking.
 - A weekly build challenge: a new theme every Monday (a lighthouse, a
   bridge, a tiny home, …) with **Join the challenge**, which opens a starting
   build tagged for the week, and a **Challenge** page listing the entries
@@ -47,8 +51,11 @@ longer-term aim.
   undo/redo, grid snapping and a placement preview.
 - Interactive transform gizmo, numeric transform input, snapping, and alignment
   and distribution tools.
-- Groups, clipboard, brick colors, and a command palette (Ctrl/Cmd+K) that
-  shares one action registry with the sidebar and keyboard shortcuts.
+- Groups, clipboard, brick colors with a palette of village colors, and a
+  command palette (Ctrl/Cmd+K) that shares one action registry with the
+  sidebar and keyboard shortcuts.
+- Fifty bricks, from half cubes, round bricks and logs to gable and cone
+  roofs, framed and round windows, fences, benches, bushes and pine trees.
 - A Build Library of bricks and ready-made structures, a personal blueprint
   library, structure placements, and document export/import.
 - Save, autosave with crash recovery, and publishing to an immutable,
@@ -61,7 +68,7 @@ longer-term aim.
   shows the build's title and a picture of it when pasted into a chat or a
   post, and **Save picture** downloads a PNG of it to post alongside.
 - A shared link opens on the build itself, turning, with who made it, what
-  it was remixed from and how many times it has been remixed, and one big
+  it was remixed from and how many times it has been remixed, its whole family tree, and one big
   **Edit a Copy** button that needs no account. The first publish of a build
   with no license asks whether others may remix it.
 - Embed a build in a blog post or web page: **Embed** copies an `<iframe>`
@@ -87,6 +94,8 @@ longer-term aim.
 - Residents: people a World's author adds, who stroll around their homes,
   walking round buildings, turn to greet you, and tell you what's around —
   with a Focus button to look at what they mention.
+- **Build here** starts a new build in the Editor for the spot you're
+  standing on; publishing it stands it there.
 - Text and spatial search, a map, named regions and landmarks, and World
   Encounters with publications that connected peers are sharing.
 - World View observes and navigates; editing happens in the Editor. **Edit a

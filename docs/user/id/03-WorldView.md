@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 34099c3e43b46a48 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 456d4315d584caa5 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -625,6 +625,19 @@ daftar.
 Inilah *satu-satunya* pintu keluar dari ruang baca-saja Tampilan Dunia.
 Semua hal lain di sini — terbang berkeliling, Cari, Jelajahi di Sini/Ada
 Apa di Sini?, kompas, Peta, Info — hanya melihat.
+
+### Bangun di sini — memulai bangunan untuk tempat ini
+
+**Bangun di sini**, di samping **Beranda**, memulai bangunan baru yang
+kosong di Editor untuk tempat avatar Anda berdiri (atau, saat terbang,
+tempat di bawah kamera). Editor menyebutkan untuk Dunia mana bangunan itu.
+Saat Anda menerbitkannya, bangunan itu berdiri tepat di sana: penempatan
+pertamanya adalah tempat itu, bukan lahan kosong yang dipilih ForkBuild,
+dan **Lihat ke sana** membawa Anda kembali untuk melihatnya. **Lupakan
+tempat ini** membuatnya ditempatkan seperti biasa. Tempat itu hanyalah
+catatan Anda sendiri tentang di mana bangunan Anda ditampilkan, disimpan di
+perangkat ini dan cadangannya; tempat itu tidak mengklaim lahan, dan orang
+lain juga boleh membangun di sana.
 
 ### Penanda — menandai tempat yang layak diingat
 

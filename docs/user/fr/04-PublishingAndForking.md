@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: eed612cfa7affb09 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 6d422d4ef6fb45c9 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -101,6 +101,9 @@ est stockée, ouvre la page propre à cette construction :
 - **Remix de « … » par …** quand c’est un remix, et **Remixée N fois**
   quand cet appareil a trouvé des remix de celle-ci (voir
   [Nombre de remix](#nombre-de-remix)) ;
+- son **Arbre généalogique** : les constructions dont elle est un remix,
+  jusqu’à l’originale, et les remix faits d’elle et de ceux-ci, chacun en
+  lien quand cet appareil peut l’ouvrir ;
 - **Modifier une copie**, le grand bouton : votre propre copie s’ouvre
   dans l’Éditeur, prête à être modifiée, sans compte. Elle garde la trace
   de son origine, son auteur garde donc le mérite, et **Retour au monde**
@@ -537,6 +540,10 @@ avec leur nombre de remix. Personne ne les juge et rien n’est classé : le
 défi est une raison de construire quelque chose cette semaine, et de voir
 ce que d’autres ont fait de la même idée.
 
+Quand des participations sont des remix les unes des autres, ou d’autres
+constructions, **Arbres généalogiques** sous les participations montre d’où
+elles viennent, un arbre par chaîne de remix.
+
 ## L’arbre généalogique
 
 Comme chaque fork enregistre son parent, ForkBuild peut dessiner toute la
@@ -551,6 +558,11 @@ Maison médiévale (original)
 
 Une belle création peut ainsi inspirer tout un écosystème de variantes —
 et chacun dans la chaîne est crédité.
+
+La page propre d’une construction, ouverte depuis un lien partagé, montre
+la même lignée en **Arbre généalogique** : ce dont elle est un remix,
+jusqu’à l’originale, puis la construction elle-même, puis les remix qui en
+ont été faits, pour autant que cet appareil les connaisse.
 
 ## Une boucle créative typique
 

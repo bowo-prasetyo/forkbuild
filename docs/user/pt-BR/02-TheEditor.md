@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 053e9eecd73affbf -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2e46c9cbf050378c -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -36,14 +36,17 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
   [O painel Seleção](#o-painel-seleção) abaixo.
 - **Biblioteca de construção** — uma caixa de pesquisa e duas guias:
   - **Blocos** — tudo o que você pode colocar com a ferramenta Colocar, em
-    blocos de cinco seções (Básicos, Estrutura, Telhados e escadas,
-    Aberturas, Detalhes). Clique em um para selecioná-lo (e passar para a
+    blocos de seis seções (Básicos, Estrutura, Telhados e escadas,
+    Aberturas, Detalhes, Natureza): cinquenta peças, de meios cubos, blocos
+    redondos e toras a telhados de duas águas e cônicos, molduras de
+    janela e janelas redondas, cercas, bancos, arbustos e pinheiros. Clique em um para selecioná-lo (e passar para a
     ferramenta Colocar); aparece então uma amostra **Cor** para escolher a
     cor dele — veja [Cores dos blocos](#cores-dos-blocos) abaixo.
-    **Rampa 45°**, **Escada** e **Escora diagonal 2x2** sobem para um lado;
+    **Rampa 45°**, **Rampa suave 2x1**, **Escada**, **Escada larga** e
+    **Escora diagonal 2x2** sobem para um lado;
     gire um duas vezes (**R**, **R**) para virá-lo para o outro lado. Uma
     escora diagonal e uma cópia girada 180° formam um X.
-  - **Estruturas** — vinte estruturas prontas em cinco categorias
+  - **Estruturas** — vinte e duas estruturas prontas em cinco categorias
     (residencial, agrícola, comercial, comunitária, infraestrutura) e três
     construções maiores da categoria **vitrine**, mais as
     suas em **Minhas estruturas**. Clique em um cartão para posicioná-la —
@@ -163,6 +166,11 @@ Cada tipo de bloco tem sua cor padrão, mas você pode escolher a sua:
   [Instâncias de estrutura](#instâncias-de-estrutura-uma-referência-viva)
   abaixo).
 
+Ao lado de cada amostra **Cor** há uma fileira de **cores da vila**
+(reboco, pedra, tijolo, vermelho telha, carvalho, folha, céu e mais) que
+combinam bem: um clique escolhe uma, para os próximos blocos ou para a
+seleção. A amostra continua permitindo escolher qualquer cor.
+
 A cor de um bloco é salva com sua criação e vai junto quando você a publica
 ou compartilha.
 
@@ -262,7 +270,7 @@ sobre o grupo selecionado:
 ## Estruturas: compor, bifurcar e sua biblioteca pessoal
 
 A guia **Estruturas** da Biblioteca de construção (veja
-[O layout](#o-layout) acima) oferece vinte estruturas prontas — casas,
+[O layout](#o-layout) acima) oferece vinte e duas estruturas prontas — casas,
 celeiros, um poço, um mercado, um moinho, uma ponte e mais, em cinco
 categorias — e três construções maiores da categoria **vitrine** (um castelo, uma ilha
 do porto e uma praça da vila), mais **Minhas estruturas**, sua coleção pessoal com tudo o que

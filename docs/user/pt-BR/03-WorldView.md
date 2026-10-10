@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 34099c3e43b46a48 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 456d4315d584caa5 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -597,6 +597,18 @@ escolhê-la em uma lista.
 Esta é a *única* porta de saída da superfície somente leitura da Visão do
 mundo. Todo o resto aqui — voar, Buscar, Explorar aqui/O que há aqui?, a
 bússola, o Mapa, Informações — só olha.
+
+### Construir aqui — começar uma construção para este lugar
+
+**Construir aqui**, ao lado de **Início**, começa no Editor uma
+construção nova e vazia para o lugar onde seu avatar está (ou, voando, o
+lugar sob a câmera). O Editor diz para qual Mundo ela é. Quando você a
+publica, ela fica exatamente ali: o primeiro posicionamento é esse lugar,
+em vez de um terreno livre que o ForkBuild escolhe, e **Ir ver** traz você
+de volta para olhar. **Esquecer este lugar** deixa que ela seja
+posicionada como sempre. O lugar é só uma nota sua de onde mostrar sua
+construção, guardada neste dispositivo e nos seus backups; ele não
+reivindica o terreno, e outras pessoas também podem construir ali.
 
 ### Marcos — marcando um lugar que vale lembrar
 

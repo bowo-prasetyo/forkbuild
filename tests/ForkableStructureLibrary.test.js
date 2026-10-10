@@ -85,10 +85,10 @@ async function run() {
         const registry = new CreateStructureRegistryUseCase().execute();
 
         // The built-in registry also holds the showcase library
-        // (core/library/ShowcaseLibrary.js); the Village's own twenty are
+        // (core/library/ShowcaseLibrary.js); the Village's own twenty-two are
         // counted here.
         const villageStructures = registry.getAll().filter((structure) => structure.id.startsWith('village:'));
-        assert(villageStructures.length === 20, 'registry: VillageLibrary registers exactly twenty structures (0.4.4)');
+        assert(villageStructures.length === 22, 'registry: VillageLibrary registers exactly twenty-two structures (twenty in 0.4.4, two in 2026-10)');
         for (const id of STRUCTURE_IDS) {
             assert(registry.has(id), `registry: ${id} is registered`);
             assert(registry.get(id) instanceof Structure, `registry: get(${id}) returns a Structure`);
@@ -120,13 +120,13 @@ async function run() {
         // shape; this assertion only needs to prove House is still among
         // them, membership never contains, exactly as before.
         const residential = registry.getByCategory('residential');
-        assert(residential.length === 4 && residential.some((s) => s.id === 'village:house'),
-            'registry: getByCategory("residential") includes House among four residential structures');
+        assert(residential.length === 5 && residential.some((s) => s.id === 'village:house'),
+            'registry: getByCategory("residential") includes House among five residential structures');
         const bySearch = registry.search(['bridge']);
         assert(bySearch.length === 1 && bySearch[0].id === 'village:bridge',
             'registry: search(["bridge"]) returns exactly Bridge');
 
-        console.log('✓ Section A: StructureRegistry/VillageLibrary — twenty structures, every brick a real core:* primitive');
+        console.log('✓ Section A: StructureRegistry/VillageLibrary — twenty-two structures, every brick a real core:* primitive');
     }
 
     // ---------------------------------------------------------------

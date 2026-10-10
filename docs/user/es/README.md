@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: ffc19b477aed271d -->
+<!-- translation-of: docs/user/README.md source-hash: b2d25842ce536f07 -->
 # Documentación para usuarios de ForkBuild
 
 <!-- languages -->
@@ -132,7 +132,7 @@ adicionales.
 ## Estructuras y planos reutilizables
 
 Más allá de los bloques individuales, la Biblioteca de construcción del
-Editor le permite construir con estructuras completas de una vez: veinte
+Editor le permite construir con estructuras completas de una vez: veintidós
 ya hechas en cinco categorías, más todo lo que usted mismo guarde:
 
 - **Coloque** una estructura directamente en lo que está construyendo, o

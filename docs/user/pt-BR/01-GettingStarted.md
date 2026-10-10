@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: cd219cc0fb352867 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 0c8735655a65c0e1 -->
 # 01 — Primeiros passos
 
 <!-- languages -->
@@ -32,6 +32,13 @@ construções. Nada é publicado nem enviado a lugar nenhum até você decidir.
 O Início também mostra o **Desafio de construção da semana**: um tema
 para construir, com **Participar do desafio** (veja
 [O desafio de construção semanal](04-PublishingAndForking.md#o-desafio-de-construção-semanal)).
+
+Depois que você publica construções, o Início também mostra **Seus
+selos**: fatos sobre suas próprias construções, como **Remixada** quando
+alguém fez um remix de uma delas, **Desafiante** quando você participou de um
+desafio semanal ou **Grande construtor** por uma construção com cem blocos ou
+mais. Eles são calculados neste dispositivo a partir dos próprios registros e
+só aparecem para você: reconhecimento, nunca pontos nem ranking.
 
 A barra no topo está sempre visível:
 

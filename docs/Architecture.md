@@ -317,14 +317,23 @@ renderer/ShowcaseTurntableRenderer.js, its bricks read from the content
 store and checked against the signed hash by
 application/publication/sharing/ReadSharedBuild.js), with its remix
 lineage and count (core/RemixLineage.js, over the Publications the
-discovery providers know), Edit a Copy (`/editor?fork=` with an
+discovery providers know) and its whole family tree (core/RemixFamily.js,
+drawn by ui/components/remix/RemixFamilyTree.js, which the challenge page
+also uses, one tree per chain of entries), Edit a Copy (`/editor?fork=` with an
 EditorEntryContext of reason `shared_link_edit_copy`) and a walk into
 World View. ForkDocumentUseCase reads such a build, which is no document
 of this device, from that content store by its Publication's hash when
 there is no local document (`executeWhenLoaded()` waits for one still on
 disk). Publishing a build with no license first asks its maker whether
 others may remix it (ui/components/RemixPermissionDialog.js, from
-Toolbar), and saves the answer as its license. WorldNavigationSession owns its runtime:
+Toolbar), and saves the answer as its license. Build here in World View
+opens `/editor?plot=<world>&x=&y=&z=`: the Editor starts a new build and
+keeps its plot (core/BuildPlot.js, application/plot/BuildPlotStore.js), and
+CreatePublisherUseCase hands PublishDocumentUseCase a
+BuildPlotPlacementStrategy, so that build's first placement is its plot
+rather than a grid spot. Home's Your stamps (core/BuilderStamps.js) are
+worked out from this device's own publications, snapshots and plots by
+application/stamps/BuilderStampFacts.js. WorldNavigationSession owns its runtime:
 camera positioning (SpatialCameraController), which documents are
 loaded near the camera (through WorldLayoutProvider and the spatial
 index), loading and unloading them, the local avatar, and selection.

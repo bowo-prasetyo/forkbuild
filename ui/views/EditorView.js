@@ -57,6 +57,8 @@ import ForkFailureDialog from '../components/ForkFailureDialog.js';
 import EditorDistributionDialog from '../components/EditorDistributionDialog.js';
 import PublicationShareLink from '../components/PublicationShareLink.js';
 import FirstBuildGuide from '../components/FirstBuildGuide.js';
+import BuildPlotBanner from '../components/BuildPlotBanner.js';
+import { useBuildPlot } from './editorView/useBuildPlot.js';
 import { useFirstBuildGuide } from './editorView/useFirstBuildGuide.js';
 import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
 import { usePostPublishDistribution } from './editorView/usePostPublishDistribution.js';
@@ -88,7 +90,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, FirstBuildGuide, EditorTouchActionBar, SoundControl, ModelExportDialog },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, FirstBuildGuide, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -102,7 +104,7 @@ export default {
                 :saved-documents-revision="savedDocumentsRevision"
                 @back-to-world="backToWorld"
                 @open-shortcuts="shortcutsOpen = true"
-                @published="onDocumentPublished"
+                @published="onPublished"
                 @saved="onDocumentSaved"
                 @export-document="exportDocument"
                 @export-model="modelExportOpen = true"
@@ -114,6 +116,13 @@ export default {
                 :status="recoveryStatus"
                 @recover="recoverDocument"
                 @discard="discardRecovery"
+            />
+            <BuildPlotBanner
+                v-if="buildPlot"
+                :plot="buildPlot"
+                :published="buildPlotPublished"
+                @visit="visitBuildPlot"
+                @forget="forgetBuildPlot"
             />
             <!--
                 Post-publish distribution action, shown only for the just-published
@@ -432,7 +441,8 @@ export default {
 
         const identityUseCase = inject('identityUseCase');
         const identityProvider = identityUseCase.provider;
-        const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider);
+        // A build started with Build here is published onto its plot.
+        const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider, { buildPlotStore: inject('buildPlotStore', null) });
         // Fork/load lookups also search Repository-admitted decentralized publications.
         const decentralizedDiscoveryProviderForLookup = inject('decentralizedPublicationDiscoveryProvider', null);
         const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute({
@@ -708,6 +718,13 @@ export default {
         // tracks it: otherwise the sidebar's groups and undo/redo would stay cached
         // when a group is created.
         const documentVersion = ref(0);
+        const { buildPlot, buildPlotPublished, startBuildPlot, onBuildPlotPublished, forgetBuildPlot, visitBuildPlot } = useBuildPlot({
+            documentManager, documentVersion, router, feedback
+        });
+        function onPublished(publication) {
+            onDocumentPublished(publication);
+            onBuildPlotPublished(publication);
+        }
         let unsubDocumentState = null;
 
         // The EditorEntryContext a fork arrived with, kept for as long as that fork is
@@ -1076,6 +1093,10 @@ export default {
                         : 'editor.couldNotOpen'));
                 }
                 router.replace({ path: '/editor' });
+            } else if (route.query.plot) {
+                // Build here from World View: a new build for that spot.
+                if (!startBuildPlot(route.query, editorSession)) feedback.show(t('buildPlot.invalid'));
+                router.replace({ path: '/editor' });
             } else if (route.query.start) {
                 // A ready-made build from Home: a built-in structure, opened as a new
                 // document of the visitor's own, the fork the Build Library makes.
@@ -1382,6 +1403,7 @@ export default {
             distributionError,
             distributionResult,
             onDocumentPublished,
+            onPublished, buildPlot, buildPlotPublished, forgetBuildPlot, visitBuildPlot,
             ...firstBuildGuide,
             distributePublishedDocument,
             distributePublishedDocumentAndSnapshot,
