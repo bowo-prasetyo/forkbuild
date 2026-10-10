@@ -68,6 +68,11 @@ import { VisitorCountSettingsStore } from '../application/settings/VisitorCountS
 import { ExperimentalToolsSettingsStore } from '../application/settings/ExperimentalToolsSettingsStore.js';
 import { NetworkWriterSettingsStore } from '../application/settings/NetworkWriterSettingsStore.js';
 import { NetworkWriterLoader } from './main/NetworkWriterLoader.js';
+import { followNetworkWriterSwitches } from './main/followNetworkWriterSwitches.js';
+import { isWritable } from '../core/NetworkWriters.js';
+import { DEFAULT_ANNOUNCEMENT_DISCOVERY_PROVIDER } from '../core/AnnouncementDiscoveryProvider.js';
+import { SteemAnnouncingConfigurationStore } from '../storage/SteemAnnouncingConfigurationStore.js';
+import { BlurtAnnouncingConfigurationStore } from '../storage/BlurtAnnouncingConfigurationStore.js';
 import { BuildPlotStore } from '../application/plot/BuildPlotStore.js';
 import { FunnelEventCounter } from '../application/settings/FunnelEventCounter.js';
 import { FirstBuildChecklistStore } from '../application/onboarding/FirstBuildChecklistStore.js';
@@ -448,8 +453,19 @@ app.provide('visitorCountSettingsStore', visitorCountSettingsStore);
 app.provide('experimentalToolsSettingsStore', new ExperimentalToolsSettingsStore({ storageProvider: new LocalStorageProvider() }));
 // Network Settings' writer switches (core/NetworkWriters.js): which network
 // writers this device builds. Bitcoin's and Base's wallets are plugins, built
-// after the 'anchoring' group below, only when switched on.
-const networkWriterSettingsStore = new NetworkWriterSettingsStore({ storageProvider: new LocalStorageProvider() });
+// after the 'anchoring' group below, only when switched on. Steem's and
+// Blurt's share their readers' runtime: their switches decide what is offered
+// and whether anything is posted, and start on for a device that already has
+// an account saved to post as.
+const networkWriterSettingsStore = new NetworkWriterSettingsStore({
+    storageProvider: new LocalStorageProvider(),
+    defaults: {
+        steem: () => Boolean(new SteemAnnouncingConfigurationStore(new LocalStorageProvider()).get()?.account),
+        blurt: () => Boolean(new BlurtAnnouncingConfigurationStore(new LocalStorageProvider()).get()?.account)
+    }
+});
+// Kept from now on, whatever later happens to the account.
+networkWriterSettingsStore.adoptDefaults();
 app.provide('networkWriterSettingsStore', networkWriterSettingsStore);
 const networkWriterLoader = new NetworkWriterLoader({
     settingsStore: networkWriterSettingsStore,
@@ -484,11 +500,20 @@ app.provide('funnelEventCounter', funnelEventCounter);
 // ForkBuild installed as an app: counted the same way.
 window.addEventListener('appinstalled', () => funnelEventCounter.installed());
 app.provide('setRoleProviderPreferenceUseCase', setRoleProviderPreferenceUseCase);
+// The saved default networks, as seeds this device can write to: one naming
+// Steem or Blurt with its writer switched off (core/NetworkWriters.js) seeds
+// Nostr instead. Read once, here, like the preferences themselves.
+const writableAnnouncementDiscoveryProvider = isWritable(resolvedAnnouncementDiscoveryProvider, networkWriterSettingsStore.get())
+    ? resolvedAnnouncementDiscoveryProvider
+    : DEFAULT_ANNOUNCEMENT_DISCOVERY_PROVIDER;
+const writableCommentaryDistributionProvider = isWritable(resolvedCommentaryDistributionProvider, networkWriterSettingsStore.get())
+    ? resolvedCommentaryDistributionProvider
+    : writableAnnouncementDiscoveryProvider;
 // Only a seed for each Announcement/Discovery picker's own selection, never
 // read again after the picker mounts.
-app.provide('defaultAnnouncementDiscoveryProvider', resolvedAnnouncementDiscoveryProvider);
+app.provide('defaultAnnouncementDiscoveryProvider', writableAnnouncementDiscoveryProvider);
 // The same, for each comment form's network picker.
-app.provide('defaultCommentaryDistributionProvider', resolvedCommentaryDistributionProvider);
+app.provide('defaultCommentaryDistributionProvider', writableCommentaryDistributionProvider);
 // The Announcement / Discovery settings page saves the comment default here.
 app.provide('commentaryDistributionPreferenceStore', commentaryDistributionPreferenceStore);
 app.provide('localSnapshotContentAvailabilityUseCase', localSnapshotContentAvailabilityUseCase);
@@ -524,21 +549,26 @@ const {
     blurtNoticePictureProblem
 } = composeWorldDiscovery({
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
-    ipfsNodeConfigurationStore, publicationContentStore, announcementIndex
+    ipfsNodeConfigurationStore, publicationContentStore, announcementIndex,
+    isNetworkWriterEnabled: (id) => networkWriterSettingsStore.isEnabled(id)
 });
 // Small Snapshots stored in a Steem post, created and resolved like the
 // Arweave store (docs/Protocol.md, "Proposed: Steem Content Storage").
 // Steem anchors are registered with the other anchor services, in the
 // 'anchoring' service group below.
+// Resolving reads them for everyone; storing onto them is offered only while
+// the network's writer is switched on, following the switch as it changes.
 if (steemRuntime) {
-    snapshotPlacementStoreRegistry.register(steemRuntime.contentStore);
     publicationSnapshotPlacementResolutionStoreRegistry.register(steemRuntime.contentStore);
 }
 // Blurt's store likewise (docs/Protocol.md, "Proposed: Blurt Substrate").
 if (blurtRuntime) {
-    snapshotPlacementStoreRegistry.register(blurtRuntime.contentStore);
     publicationSnapshotPlacementResolutionStoreRegistry.register(blurtRuntime.contentStore);
 }
+followNetworkWriterSwitches(networkWriterSettingsStore, { steem: steemRuntime, blurt: blurtRuntime }, {
+    on: (runtime) => snapshotPlacementStoreRegistry.register(runtime.contentStore),
+    off: (runtime) => snapshotPlacementStoreRegistry.unregister(runtime.contentStore.storage)
+});
 // Watches a newly created anchor until its block is final, by anchorType;
 // Steem and Blurt have one.
 app.provide('anchorFinalityObservers', new Map([steemRuntime, blurtRuntime]
@@ -773,7 +803,8 @@ defineServiceGroup('anchoring', async () => {
     const { composeAnchoring } = await import('./main/composeAnchoring.js');
     const anchoring = composeAnchoring({
         identityProvider, resolvedBitcoinEsploraApiUrls, publicationCatalog, publicationAnchorCatalog,
-        anchorKnowledgeStore, roleProviderPreferenceStore, arweaveHostSigner, resolvedArweaveGatewayUrl, steemRuntime, blurtRuntime
+        anchorKnowledgeStore, roleProviderPreferenceStore, arweaveHostSigner, resolvedArweaveGatewayUrl, steemRuntime, blurtRuntime,
+        networkWriterSettingsStore
     });
 
     app.provide('publicationEvidenceCoordinator', anchoring.publicationEvidenceCoordinator);
@@ -824,7 +855,7 @@ defineServiceGroup('distribution', async () => {
         snapshotDistributionCommand, snapshotDiscoveryPublisher, snapshotDistributionAvailableStorageTypes,
         announcementDiscoveryProviderRegistry
     } = composePublicationDistribution({
-        resolvedIpfsNodeApiUrl, snapshotPlacementStoreRegistry, resolvedAnnouncementDiscoveryProvider,
+        resolvedIpfsNodeApiUrl, snapshotPlacementStoreRegistry, resolvedAnnouncementDiscoveryProvider: writableAnnouncementDiscoveryProvider,
         resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, PUBLICATION_DISCOVERY_TAG,
         publicationDistributionLifecycleStore, arweaveHostSigner, nostrHostPublisher,
         nostrPublicationRuntimeCapabilities, steemRuntime, blurtRuntime, snapshotDistributionLog: ownSnapshotDistributionLog,
@@ -845,7 +876,7 @@ defineServiceGroup('distribution', async () => {
         discoverIndexedSnapshotCandidatesCommand, indexedPlaceNamingDiscoveryQueryService
     } = composeSnapshotDiscovery({
         publicationSnapshotPlacementCatalog, publicationSnapshotPlacementResolutionStoreRegistry,
-        roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
+        roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider: writableAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
         resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
         arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime, blurtRuntime,
         announcementIndex, publicationContentStore, announcementDiscoveryProviderRegistry

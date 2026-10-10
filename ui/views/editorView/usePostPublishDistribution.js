@@ -1,4 +1,5 @@
 import { ref, inject } from 'vue';
+import { useWritableNetworks } from '../../components/networkWriters/useWritableNetworks.js';
 import { sanitizeDistributionErrorMessage } from '../../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 import { IpfsRemotePublicationState } from '../../../application/ipfs/IpfsRemotePublicationState.js';
 import { remotePinningDraftFromSettings } from '../../../application/ipfs/IpfsRemotePinningDraft.js';
@@ -34,9 +35,11 @@ export function usePostPublishDistribution({
     const publisherPlacementClaimLookup = inject('publisherPlacementClaimLookup', null);
 
     // Substrate choice shared by both actions: page-local, never persisted.
-    // Opens on the saved preference, else 'nostr'.
+    // Opens on the saved preference, else 'nostr', and on 'nostr' too when the
+    // saved one is a network whose writer is switched off (core/NetworkWriters.js).
     const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
-    const selectedDiscoveryProvider = ref(defaultAnnouncementDiscoveryProvider);
+    const { writableOr } = useWritableNetworks();
+    const selectedDiscoveryProvider = ref(writableOr(defaultAnnouncementDiscoveryProvider));
 
     // One Storage choice shared by both actions: page-local, never persisted. When
     // Snapshot distribution is available the options are the registered storages

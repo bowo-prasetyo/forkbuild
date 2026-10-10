@@ -1,4 +1,4 @@
-import { createSteemAnnouncer, SteemAnnouncementError, STEEM_MIN_REPLY_INTERVAL_MS } from '../application/steem/SteemAnnouncer.js';
+import { createSteemAnnouncer, SteemAnnouncementError, STEEM_MIN_REPLY_INTERVAL_MS, STEEM_WRITER_OFF_MESSAGE } from '../application/steem/SteemAnnouncer.js';
 import { SteemPublicationDiscoveryPublisher } from '../application/steem/SteemPublicationDiscoveryPublisher.js';
 import { SteemSnapshotDiscoveryPublisher } from '../application/steem/SteemSnapshotDiscoveryPublisher.js';
 import { SteemPlaceNamingDiscoveryPublisher } from '../application/steem/SteemPlaceNamingDiscoveryPublisher.js';
@@ -57,12 +57,13 @@ function fakeClock() {
     return clock;
 }
 
-function announcerFor(chain, { account = 'alice', broadcaster = chain.broadcaster, clock = fakeClock() } = {}) {
+function announcerFor(chain, { account = 'alice', broadcaster = chain.broadcaster, clock = fakeClock(), isEnabled = undefined } = {}) {
     let n = 0;
     return createSteemAnnouncer({
         rpc: chain.rpc,
         getBroadcaster: () => broadcaster,
         getAccount: () => account,
+        ...(isEnabled ? { isEnabled } : {}),
         appVersion: '1.0.0',
         now: () => NOW,
         clock: clock.now,
@@ -93,6 +94,22 @@ async function rejection(promise) {
     assert(metadata.app === 'forkbuild/1.0.0' && metadata.forkbuild.version === 1 && metadata.forkbuild.family === 'snapshot' && metadata.forkbuild.envelope.contentHash === 'h', 'metadata carries the envelope');
     assert(optionsKind === 'comment_options' && options.max_accepted_payout === '0.000 SBD' && options.allow_votes === true, 'payout declined, votes on');
     console.log('✓ announcement operations');
+}
+
+// With this device's Steem writer switched off (core/NetworkWriters.js),
+// nothing is posted and nothing on the chain is asked; switched back on, it
+// posts again.
+{
+    const chain = fakeChain();
+    let enabled = false;
+    const announcer = announcerFor(chain, { isEnabled: () => enabled });
+    const refused = await rejection(announcer.announce('snapshot', { contentHash: 'h' }));
+    assert(refused instanceof SteemAnnouncementError && refused.message === STEEM_WRITER_OFF_MESSAGE, 'switched off, posting says so');
+    assert(chain.broadcasts.length === 0 && chain.contentCalls.length === 0, 'and nothing is broadcast or asked');
+    enabled = true;
+    await announcer.announce('snapshot', { contentHash: 'h' });
+    assert(chain.broadcasts.length === 1, 'switched on, it posts');
+    console.log('✓ a switched-off Steem writer posts nothing');
 }
 
 // Announcing goes to the current month's thread, signed as the configured account.

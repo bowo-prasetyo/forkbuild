@@ -34,6 +34,11 @@ export default Object.freeze({
     'networkWriters.bitcoinHint': 'Connect a Bitcoin wallet, such as UniSat, and anchor publications on Bitcoin.',
     'networkWriters.base': 'Base wallet',
     'networkWriters.baseHint': 'Connect a Base wallet and anchor publications on Base.',
+    'networkWriters.steemSwitch': 'Post to Steem from this device',
+    'networkWriters.steemSwitchHint': 'Offers Steem when you publish, comment, name a place, store a build or make an anchor. Builds and comments already on Steem are found and shown either way.',
+    'networkWriters.blurtSwitch': 'Post to Blurt from this device',
+    'networkWriters.blurtSwitchHint': 'Offers Blurt when you publish, comment, name a place, store a build or make an anchor. Builds and comments already on Blurt are found and shown either way.',
+    'networkWriters.postingOff': 'Posting is off, so nothing is posted to {network} from this device.',
     'app.nav.group.app': 'App',
     'app.notifications': 'Notifications',
     // Shown instead of a blank page when the app's files did not download

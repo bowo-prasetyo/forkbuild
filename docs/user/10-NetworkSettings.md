@@ -191,6 +191,12 @@ row per relay.
 
 ## Steem
 
+**Post to Steem from this device**, under **Posting**, is off on a new device. While it is off,
+ForkBuild doesn't offer Steem when you publish, comment, name a place, store
+a build or make an anchor, posts nothing there, and hides the account
+field. A device that already had a Steem account saved starts with it on.
+Builds and comments already on Steem are found and shown either way.
+
 *Experimental.* Set **Your Steem account** under **Posting** (this applies
 immediately, without a reload), needed to post or store on Steem — see
 [Steem](11-EvidenceAndStorage.md#steem). Reading from Steem needs no
@@ -209,6 +215,12 @@ discovery name Steem as unavailable rather than reporting that nothing was
 found.
 
 ## Blurt
+
+**Post to Blurt from this device**, under **Posting**, is off on a new device. While it is off,
+ForkBuild doesn't offer Blurt when you publish, comment, name a place, store
+a build or make an anchor, posts nothing there, and hides the account
+field. A device that already had a Blurt account saved starts with it on.
+Builds and comments already on Blurt are found and shown either way.
 
 *Experimental.* Set **Your Blurt account** under **Posting** (this applies
 immediately, without a reload), needed to post, store or anchor on Blurt —

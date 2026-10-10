@@ -35,6 +35,11 @@ export default Object.freeze({
     'networkWriters.bitcoinHint': 'Eine Bitcoin-Wallet wie UniSat verbinden und Veröffentlichungen auf Bitcoin verankern.',
     'networkWriters.base': 'Base-Wallet',
     'networkWriters.baseHint': 'Eine Base-Wallet verbinden und Veröffentlichungen auf Base verankern.',
+    'networkWriters.steemSwitch': 'Von diesem Gerät auf Steem posten',
+    'networkWriters.steemSwitchHint': 'Bietet Steem an, wenn Sie veröffentlichen, kommentieren, einen Ort benennen, einen Bau speichern oder einen Anker setzen. Bauten und Kommentare, die schon auf Steem sind, werden so oder so gefunden und gezeigt.',
+    'networkWriters.blurtSwitch': 'Von diesem Gerät auf Blurt posten',
+    'networkWriters.blurtSwitchHint': 'Bietet Blurt an, wenn Sie veröffentlichen, kommentieren, einen Ort benennen, einen Bau speichern oder einen Anker setzen. Bauten und Kommentare, die schon auf Blurt sind, werden so oder so gefunden und gezeigt.',
+    'networkWriters.postingOff': 'Posten ist aus, daher wird von diesem Gerät nichts auf {network} gepostet.',
     'app.nav.group.app': 'App',
     'app.notifications': 'Benachrichtigungen',
     // Shown instead of a blank page when the app's files did not download

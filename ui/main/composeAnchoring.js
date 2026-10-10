@@ -1,4 +1,5 @@
 import { CreateExternalAnchorVerifierUseCase } from '../../application/anchoring/CreateExternalAnchorVerifierUseCase.js';
+import { followNetworkWriterSwitches } from './followNetworkWriterSwitches.js';
 import { CreateBitcoinAnchorProofVerifierUseCase } from '../../application/anchoring/bitcoin/CreateBitcoinAnchorProofVerifierUseCase.js';
 import { CreatePublicationEvidenceCoordinatorUseCase } from '../../application/publication/evidence/CreatePublicationEvidenceCoordinatorUseCase.js';
 import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../../application/anchoring/CreateExternalPublicationAnchorOrchestratorUseCase.js';
@@ -24,7 +25,8 @@ import { CreateBaseAnchorProofVerifierUseCase } from '../../application/anchorin
 // what this returns is what they build on.
 export function composeAnchoring({
     identityProvider, resolvedBitcoinEsploraApiUrls, publicationCatalog, publicationAnchorCatalog,
-    anchorKnowledgeStore, roleProviderPreferenceStore, arweaveHostSigner, resolvedArweaveGatewayUrl, steemRuntime = null, blurtRuntime = null
+    anchorKnowledgeStore, roleProviderPreferenceStore, arweaveHostSigner, resolvedArweaveGatewayUrl, steemRuntime = null, blurtRuntime = null,
+    networkWriterSettingsStore = null
 }) {
     const { bitcoinProofVerifier } = new CreateBitcoinAnchorProofVerifierUseCase().execute({ apiUrls: resolvedBitcoinEsploraApiUrls });
     // Captured so the Arweave wiring below can register a second proof verifier
@@ -69,16 +71,28 @@ export function composeAnchoring({
     // Steem anchors are created, verified and described like Arweave ones
     // (docs/Protocol.md, "Proposed: Steem Anchoring"). Registered before
     // Arweave and Base, the order the registries have always listed them in.
+    // Their anchors are checked and described for everyone; making one is
+    // offered only while the network's writer is switched on
+    // (core/NetworkWriters.js), following the switch as it changes.
     if (steemRuntime) {
-        externalAnchorPublisherRegistry.register(steemRuntime.anchorPublisher);
         externalAnchorProofVerifierRegistry.register(steemRuntime.proofVerifier);
         externalAnchorEvidenceViewRegistry.register(steemRuntime.anchorEvidenceView);
     }
     // Blurt anchors likewise (docs/Protocol.md, "Proposed: Blurt Substrate").
     if (blurtRuntime) {
-        externalAnchorPublisherRegistry.register(blurtRuntime.anchorPublisher);
         externalAnchorProofVerifierRegistry.register(blurtRuntime.proofVerifier);
         externalAnchorEvidenceViewRegistry.register(blurtRuntime.anchorEvidenceView);
+    }
+    const anchorWriterRuntimes = { steem: steemRuntime, blurt: blurtRuntime };
+    if (networkWriterSettingsStore) {
+        followNetworkWriterSwitches(networkWriterSettingsStore, anchorWriterRuntimes, {
+            on: (runtime) => externalAnchorPublisherRegistry.register(runtime.anchorPublisher),
+            off: (runtime) => externalAnchorPublisherRegistry.unregister(runtime.anchorPublisher.anchorType)
+        });
+    } else {
+        for (const runtime of Object.values(anchorWriterRuntimes)) {
+            if (runtime) externalAnchorPublisherRegistry.register(runtime.anchorPublisher);
+        }
     }
 
     // Registered into the same registries. With no wallet installed,

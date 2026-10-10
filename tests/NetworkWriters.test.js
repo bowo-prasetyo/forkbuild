@@ -1,7 +1,10 @@
-import { NETWORK_WRITERS, NetworkWriter, isNetworkWriter, normalizeNetworkWriterSettings } from '../core/NetworkWriters.js';
+import { NETWORK_WRITERS, NetworkWriter, isNetworkWriter, isWritable, normalizeNetworkWriterSettings, writableKeys } from '../core/NetworkWriters.js';
 import { NetworkWriterSettingsStore } from '../application/settings/NetworkWriterSettingsStore.js';
 import { backupEntryGroupOf, BackupEntryGroup } from '../application/backup/BackupEntryGroups.js';
 import { NetworkWriterLoader } from '../ui/main/NetworkWriterLoader.js';
+import { followNetworkWriterSwitches } from '../ui/main/followNetworkWriterSwitches.js';
+import { composeSteemRuntime } from '../application/steem/SteemRuntimeComposition.js';
+import { composeBlurtRuntime } from '../application/blurt/BlurtRuntimeComposition.js';
 import { composeAnchoring } from '../ui/main/composeAnchoring.js';
 import { composeBitcoinWallet } from '../ui/main/plugins/composeBitcoinWallet.js';
 import { composeBaseWallet } from '../ui/main/plugins/composeBaseWallet.js';
@@ -36,12 +39,29 @@ function anchoring() {
 
 // The writers, and how a saved choice is read.
 {
-    assert(NETWORK_WRITERS.join() === 'bitcoin,base' && isNetworkWriter(NetworkWriter.BASE) && !isNetworkWriter('steem'), 'Bitcoin and Base have writers');
-    assert(JSON.stringify(normalizeNetworkWriterSettings(null)) === '{"bitcoin":false,"base":false}', 'every writer is off until switched on');
-    assert(JSON.stringify(normalizeNetworkWriterSettings({ bitcoin: true, base: 'yes', steem: true })) === '{"bitcoin":true,"base":false}',
+    assert(NETWORK_WRITERS.join() === 'bitcoin,base,steem,blurt' && isNetworkWriter(NetworkWriter.STEEM) && !isNetworkWriter('nostr'),
+        'Bitcoin, Base, Steem and Blurt have writers; Nostr is built in');
+    assert(JSON.stringify(normalizeNetworkWriterSettings(null)) === '{"bitcoin":false,"base":false,"steem":false,"blurt":false}', 'every writer is off until switched on');
+    assert(JSON.stringify(normalizeNetworkWriterSettings({ bitcoin: true, base: 'yes', nostr: true })) === '{"bitcoin":true,"base":false,"steem":false,"blurt":false}',
         'only true switches one on, and nothing else is kept');
     assert(normalizeNetworkWriterSettings([true]).bitcoin === false, 'a damaged value switches nothing on');
-    console.log('✓ writers are off until switched on');
+    const defaults = { steem: true };
+    assert(normalizeNetworkWriterSettings(null, defaults).steem === true, 'a writer never switched follows its default');
+    assert(normalizeNetworkWriterSettings({ steem: false }, defaults).steem === false, 'a saved choice beats the default');
+    console.log('✓ writers are off until switched on, or follow their default until switched');
+}
+
+// Which networks can be written to: Nostr, Arweave and every storage or
+// anchor type always; Steem and Blurt only with their writer on.
+{
+    const off = normalizeNetworkWriterSettings(null);
+    const steemOn = normalizeNetworkWriterSettings({ steem: true });
+    assert(writableKeys(['nostr', 'arweave', 'steem', 'blurt'], off).join() === 'nostr,arweave', 'with both off, Nostr and Arweave');
+    assert(writableKeys(['nostr', 'arweave', 'steem', 'blurt'], steemOn).join() === 'nostr,arweave,steem', 'Steem once switched on');
+    assert(isWritable('ipfs', off) && isWritable('ar', off) && isWritable('peers', off), 'other storage and the peers-only choice need no writer');
+    assert(!isWritable('blurt', steemOn) && !isWritable('steem', null), 'Blurt still off, and no settings means off');
+    assert(writableKeys('junk', steemOn).length === 0, 'junk lists nothing');
+    console.log('✓ Steem and Blurt can be written to only with their writer on');
 }
 
 // The store: saved per device, in the backup's settings, with change listeners.
@@ -56,10 +76,90 @@ function anchoring() {
     store.setEnabled('base', false);
     assert(heard.join() === 'base:true,base:false', 'each change is heard');
     let refused = false;
-    try { store.setEnabled('steem', true); } catch { refused = true; }
-    assert(refused, 'a network without a writer plugin cannot be switched on');
+    try { store.setEnabled('nostr', true); } catch { refused = true; }
+    assert(refused, 'a network without a writer cannot be switched');
     assert(backupEntryGroupOf('network-writer-settings') === BackupEntryGroup.SETTINGS, 'a backup carries the switches with the other Network settings');
     console.log('✓ the switches are saved, heard and backed up');
+}
+
+// Steem and Blurt start on for a device that already has an account to post
+// as, and off for one that doesn't; switching another writer doesn't freeze
+// them, and a saved choice wins.
+{
+    const storage = new InMemoryStorageProvider();
+    let steemAccount = 'alice';
+    const store = new NetworkWriterSettingsStore({
+        storageProvider: storage,
+        defaults: { steem: () => Boolean(steemAccount), blurt: () => { throw new Error('unreadable'); } }
+    });
+    assert(store.isEnabled('steem') === true && store.isEnabled('blurt') === false, 'on with an account saved; a failing default is off');
+    store.setEnabled('bitcoin', true);
+    steemAccount = null;
+    assert(store.isEnabled('steem') === false, 'switching Bitcoin saved nothing for Steem: it still follows its default');
+    steemAccount = 'alice';
+    store.setEnabled('steem', false);
+    assert(store.isEnabled('steem') === false, 'switched off, it stays off whatever the account');
+    assert(JSON.stringify(storage.load('network-writer-settings')) === '{"bitcoin":true,"steem":false}', 'only the switches touched are saved');
+    console.log('✓ Steem and Blurt start on where an account is saved, until switched');
+}
+
+// Adopted once as the app starts, the default stays even after the account is
+// cleared; a writer whose default is off, or already switched, isn't touched.
+{
+    const storage = new InMemoryStorageProvider();
+    let account = 'alice';
+    const store = new NetworkWriterSettingsStore({ storageProvider: storage, defaults: { steem: () => Boolean(account), blurt: () => false } });
+    storage.save('network-writer-settings', { base: true });
+    assert(store.adoptDefaults().join() === 'steem', 'only Steem, on by its default, is adopted');
+    account = null;
+    assert(store.isEnabled('steem') === true, 'clearing the account later leaves posting on');
+    assert(JSON.stringify(storage.load('network-writer-settings')) === '{"base":true,"steem":true}', 'saved beside what was already switched');
+    assert(store.adoptDefaults().length === 0, 'a second start adopts nothing');
+    console.log('✓ the default is adopted once, as the app starts');
+}
+
+// Steem's and Blurt's writers share their readers' runtime, so there is
+// nothing to load: what they offer follows the switch, live. Anchors made on
+// them are checked and described for everyone; making one is offered only
+// while switched on.
+{
+    const noNetwork = async () => { throw new Error('no network in this test'); };
+    const steemRuntime = composeSteemRuntime({ fetchImpl: noNetwork });
+    const blurtRuntime = composeBlurtRuntime({ fetchImpl: noNetwork });
+    const store = new NetworkWriterSettingsStore({ storageProvider: new InMemoryStorageProvider() });
+    store.setEnabled('blurt', true);
+    const core = composeAnchoring({
+        identityProvider: makeIdentity('Alice'),
+        resolvedBitcoinEsploraApiUrls: ESPLORA,
+        publicationCatalog: new LocalPublicationCatalog(new InMemoryStorageProvider()),
+        publicationAnchorCatalog: new LocalPublicationAnchorCatalog(new InMemoryStorageProvider()),
+        anchorKnowledgeStore: new LocalAnchorKnowledgeStore(new InMemoryStorageProvider()),
+        roleProviderPreferenceStore: new RoleProviderPreferenceStore(new InMemoryStorageProvider()),
+        arweaveHostSigner: noWallet,
+        resolvedArweaveGatewayUrl: 'https://arweave.invalid',
+        steemRuntime, blurtRuntime, networkWriterSettingsStore: store
+    });
+    for (const anchorType of ['steem', 'blurt']) {
+        assert(core.externalAnchorProofVerifierRegistry.has(anchorType) && core.externalAnchorEvidenceViewRegistry.has(anchorType),
+            `${anchorType} anchors are checked and described whatever the switch`);
+    }
+    assert(!core.externalAnchorPublisherRegistry.has('steem') && core.externalAnchorPublisherRegistry.has('blurt'), 'only a switched-on network makes anchors');
+    store.setEnabled('steem', true);
+    store.setEnabled('blurt', false);
+    assert(core.externalAnchorPublisherRegistry.has('steem') && !core.externalAnchorPublisherRegistry.has('blurt'), 'switching follows at once');
+
+    const seen = [];
+    const stop = followNetworkWriterSwitches(store, { steem: steemRuntime, blurt: null }, {
+        on: (runtime, id) => seen.push(`on:${id}`),
+        off: (runtime, id) => seen.push(`off:${id}`)
+    });
+    store.setEnabled('steem', true);
+    store.setEnabled('steem', false);
+    store.setEnabled('blurt', true);
+    stop();
+    store.setEnabled('steem', true);
+    assert(seen.join() === 'on:steem,off:steem', `applied now, then each real change, never for a network not built, never after stopping (${seen})`);
+    console.log("✓ Steem's and Blurt's anchors are offered while switched on, and checked always");
 }
 
 // The anchoring readers alone: every network's anchors can be checked and

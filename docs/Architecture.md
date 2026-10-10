@@ -1725,6 +1725,24 @@ one-shot publisher joins the shared anchor publisher registry with its
 writer. tests/NetworkWriters.test.js checks that only the plugins reach the
 wallet modules.
 
+Steem's and Blurt's writers are switches too, without plugins: one runtime per
+network (application/steem/SteemRuntimeComposition.js,
+application/blurt/BlurtRuntimeComposition.js) holds both its reader (discovery,
+material resolution, proof checks) and its writer (the announcer or poster,
+the publishers over it, content storage and anchoring), on one RPC client. The
+switch is enforced where everything posts: the announcer and poster refuse
+while it is off (`isEnabled`, from `isNetworkWriterEnabled` in
+ui/main/composeWorldDiscovery.js). Offering follows it live: the content store
+joins `snapshotPlacementStoreRegistry` (storage choices) and the anchor
+publisher joins the anchor publisher registry only while it is on
+(ui/main/followNetworkWriterSwitches.js; the resolution registry and proof
+checks keep them for everyone), and the pickers list the networks
+ui/components/networkWriters/useWritableNetworks.js says can be written to.
+The saved default networks seed Nostr instead of a switched-off one. The
+switch itself is on each network's settings page
+(ui/components/networkWriters/NetworkWriterSwitch.js), and starts on where an
+account to post as is already saved.
+
 ui/router/index.js
 defines the routes: Home, Editor (`/editor`), Repository, Recent Worlds,
 Author, World View (`/world/:documentId`), Live World, Avatar, Identity,

@@ -20,6 +20,7 @@
 // with the raw arguments the host's session calls need — never calls
 // the session directly.
 import { formatDate, t } from '../i18n/i18n.js';
+import { useWritableNetworks } from './networkWriters/useWritableNetworks.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 
 // Network names, the same in every language.
@@ -174,6 +175,10 @@ export default {
             advancedExpanded: false
         };
     },
+    setup() {
+        const { only } = useWritableNetworks();
+        return { writableDiscoveryProviders: only };
+    },
     computed: {
         canPublish() {
             return this.newName.trim().length > 0;
@@ -212,7 +217,9 @@ export default {
         },
         // Display order only — see utils/sortOptionsByLabel.js.
         discoveryProviderOptions() {
-            return sortOptionsByLabel(Object.keys(DISCOVERY_PROVIDER_LABELS), (key) => DISCOVERY_PROVIDER_LABELS[key]);
+            // Steem and Blurt only while this device's writer for them is on.
+            const writable = this.writableDiscoveryProviders || ((keys) => keys);
+            return sortOptionsByLabel(writable(Object.keys(DISCOVERY_PROVIDER_LABELS)), (key) => DISCOVERY_PROVIDER_LABELS[key]);
         }
     },
     methods: {

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 030d653a072ce0a8 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 09927c2e29d339ff -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
@@ -207,6 +207,13 @@ relay.
 
 ## Steem
 
+**Posting ke Steem dari perangkat ini**, di bawah **Memposting**, mati di perangkat baru. Selama mati,
+ForkBuild tidak menawarkan Steem saat Anda menerbitkan, berkomentar, menamai
+tempat, menyimpan bangunan, atau membuat jangkar, tidak memposting apa pun
+ke sana, dan menyembunyikan kolom akun. Perangkat yang sudah menyimpan akun
+Steem mulai dengan pengaturan ini menyala. Bangunan dan komentar yang sudah
+ada di Steem tetap ditemukan dan ditampilkan.
+
 *Eksperimental.* Atur **Akun Steem Anda** di bawah **Memposting** (ini
 langsung berlaku, tanpa memuat ulang), yang diperlukan untuk memposting
 atau menyimpan di Steem — lihat
@@ -227,6 +234,13 @@ dan penemuan Snapshot menyebutkan Steem tidak tersedia, alih-alih
 melaporkan bahwa tidak ada yang ditemukan.
 
 ## Blurt
+
+**Posting ke Blurt dari perangkat ini**, di bawah **Memposting**, mati di perangkat baru. Selama mati,
+ForkBuild tidak menawarkan Blurt saat Anda menerbitkan, berkomentar, menamai
+tempat, menyimpan bangunan, atau membuat jangkar, tidak memposting apa pun
+ke sana, dan menyembunyikan kolom akun. Perangkat yang sudah menyimpan akun
+Blurt mulai dengan pengaturan ini menyala. Bangunan dan komentar yang sudah
+ada di Blurt tetap ditemukan dan ditampilkan.
 
 *Eksperimental.* Atur **Akun Blurt Anda** di bawah **Memposting** (ini
 langsung berlaku, tanpa memuat ulang), yang diperlukan untuk memposting,

@@ -48,6 +48,11 @@ Each of these is something a first visitor from a launch post will hit.
       → General, and the About box's website set to the site with
       `?ref=github`), and topics `threejs`, `webgl`, `3d`, `nostr`,
       `local-first`, `p2p`, `browser-game`.
+- [ ] On the device you post from, **Post to Steem from this device** and
+      **Post to Blurt from this device** are ticked (Network Settings → Steem
+      and → Blurt). They start ticked where your account was already saved;
+      a new visitor's start unticked, so their builds go to Nostr unless they
+      switch one on.
 - [ ] This week's challenge has entries: publish three to five builds of the
       week's theme yourself and distribute them to Nostr, so the
       **Challenge** page isn't empty. Do the same for the next week before it

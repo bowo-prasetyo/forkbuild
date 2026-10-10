@@ -1,4 +1,5 @@
 import { reactive, ref, computed, nextTick, onMounted, onBeforeUnmount, inject } from 'vue';
+import { useWritableNetworks } from '../components/networkWriters/useWritableNetworks.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { resolveSavedProviderDefault } from '../../application/settings/SavedProviderDefaultChoice.js';
 import { PublicationResolutionOutcome } from '../../application/publication/PublicationResolutionOutcome.js';
@@ -107,6 +108,9 @@ export default {
     name: 'DecentralizedPublicationsView',
     components: { I18nText, PublicationShareLink },
     setup() {
+        // Steem and Blurt are offered only while this device's writer for them
+        // is switched on (core/NetworkWriters.js).
+        const { steemOn, blurtOn } = useWritableNetworks();
         // Groups the page-level tool cards into three tabs. Presentation only:
         // panels use v-show, so no card state changes.
         const publicationsToolsTab = ref('anchoring');
@@ -1051,6 +1055,7 @@ export default {
             distributeSnapshot, snapshotDistributionButtonLabel,
             discoveryObservationsView, discoveryDistributionConfigurationRoute, snapshotDistributionConfigurationRoute,
             snapshotDiscoveryConfigurationRoute, entryWorld, oneClickAnchorTypes: oneClickAnchorTypes(availableAnchorTypes),
+            steemOn, blurtOn,
             // The Proof / Anchoring block is badged as a whole only while every
             // type it offers (wallet-guided ones included) is Experimental.
             proofAnchoringExperimental: everyAnchorTypeExperimental([

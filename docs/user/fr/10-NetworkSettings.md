@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 030d653a072ce0a8 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 09927c2e29d339ff -->
 # 10 — Paramètres réseau
 
 <!-- languages -->
@@ -218,6 +218,14 @@ liste une ligne **Découverte** par relais.
 
 ## Steem
 
+**Publier sur Steem depuis cet appareil**, dans la partie publication, est désactivé sur un nouvel
+appareil. Tant qu’il l’est, ForkBuild ne propose pas Steem quand vous
+publiez, commentez, nommez un lieu, stockez une construction ou créez un
+ancrage, n’y publie rien et masque le champ du compte. Un appareil qui
+avait déjà un compte Steem enregistré démarre avec l’option activée. Les
+constructions et commentaires déjà sur Steem sont trouvés et affichés dans
+tous les cas.
+
 *Expérimental.* Définissez **Votre compte Steem** sous **Publication**
 (cela s’applique immédiatement, sans rechargement), nécessaire pour
 publier ou stocker sur Steem — voir
@@ -239,6 +247,14 @@ commentaires** et la découverte de Snapshots indiquent que Steem est
 indisponible plutôt que de signaler que rien n’a été trouvé.
 
 ## Blurt
+
+**Publier sur Blurt depuis cet appareil**, dans la partie publication, est désactivé sur un nouvel
+appareil. Tant qu’il l’est, ForkBuild ne propose pas Blurt quand vous
+publiez, commentez, nommez un lieu, stockez une construction ou créez un
+ancrage, n’y publie rien et masque le champ du compte. Un appareil qui
+avait déjà un compte Blurt enregistré démarre avec l’option activée. Les
+constructions et commentaires déjà sur Blurt sont trouvés et affichés dans
+tous les cas.
 
 *Expérimental.* Définissez **Votre compte Blurt** sous **Publication**
 (cela s’applique immédiatement, sans rechargement), nécessaire pour
