@@ -345,6 +345,25 @@
     color: #e0e0e0;
 }
 
+/* The Bitcoin and Base wallet switches (ui/components/NetworkWritersSetting.js),
+   listed under Show experimental tools. */
+.network-writers-setting {
+    margin-top: 1.25rem;
+    padding: 0.75rem 1rem;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.network-writers-title {
+    font-size: 1rem;
+    margin: 0 0 0.4rem;
+}
+
+.network-writer + .network-writer {
+    margin-top: 0.6rem;
+}
+
 /* 0.9.302 — Content Provider Preference Settings Entry Point. Same card
    language as .avatar-settings-view/.avatar-settings-form above, one
    axis over. */

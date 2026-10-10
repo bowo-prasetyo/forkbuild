@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 7085ae1ba4a129cf -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 030d653a072ce0a8 -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
@@ -39,6 +39,15 @@ sini, dan panel **Alat Dompet & Arsip** di
 [halaman Publikasi](09-PublicationsAndEvidence.md#halaman-publikasi). Pengaturan ini mati sampai Anda menyalakannya,
 dan disimpan di perangkat ini begitu Anda mengubahnya. Tidak ada yang Anda
 perlukan untuk membangun, menerbitkan, atau berbagi yang disembunyikan.
+
+Di bawahnya, **Dompet** memiliki sakelar untuk setiap dompet yang dapat
+dipakai ForkBuild untuk menjangkarkan: **Dompet Bitcoin** dan **Dompet Base**.
+Masing-masing mati sampai Anda menyalakannya, dan disimpan di perangkat ini.
+Selama salah satunya mati, halaman Publikasi tidak menawarkan maupun memuat
+langkah-langkah dompet itu, dan Bitcoin tidak ditawarkan sebagai
+[Penyedia Bukti / Penjangkaran](#penyedia-bukti--penjangkaran). Jangkar yang sudah dibuat di
+Bitcoin atau Base tetap diperiksa dan ditampilkan. Mematikannya berlaku saat
+halaman Publikasi dibuka berikutnya.
 
 ## Perilaku setiap halaman
 

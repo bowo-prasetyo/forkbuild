@@ -4,15 +4,18 @@
 // Gateway, Bitcoin Endpoint, Nostr Relays, STUN, TURN, Rendezvous) — so the
 // top nav only needs one "Network Settings" entry instead of ten. Each
 // linked page keeps its own route, component, and Save logic unchanged.
-// Pages for Experimental features are listed only while Show experimental
-// tools is on (docs/Pillars.md, "Infrastructure, kept out of sight").
+// Pages for Experimental features, and the Bitcoin and Base wallet switches
+// (ui/components/NetworkWritersSetting.js), are listed only while Show
+// experimental tools is on (docs/Pillars.md, "Infrastructure, kept out of
+// sight").
 import { inject, ref } from 'vue';
 import { t } from '../i18n/i18n.js';
 import ExperimentalToolsSetting from '../components/ExperimentalToolsSetting.js';
+import NetworkWritersSetting from '../components/NetworkWritersSetting.js';
 
 export default {
     name: 'NetworkSettingsView',
-    components: { ExperimentalToolsSetting },
+    components: { ExperimentalToolsSetting, NetworkWritersSetting },
     setup() {
         const store = inject('experimentalToolsSettingsStore', null);
         // Without a store (a page mounted on its own) everything is listed.
@@ -26,6 +29,7 @@ export default {
                 {{ t('networkSettingsView.endpointServersForkbuildUsesTo') }}
             </p>
             <ExperimentalToolsSetting @change="experimentalShown = $event" />
+            <NetworkWritersSetting v-if="experimentalShown" />
 
             <ul class="network-settings-list">
                 <li>

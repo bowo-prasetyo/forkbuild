@@ -105,8 +105,8 @@ comes in two parts:
 
 Today Nostr, Arweave, Steem and Blurt are the substrates discovery searches;
 Bitcoin and Base hold anchor proofs only, so their readers are proof checks.
-None is split this way yet: Bitcoin's and Base's wallets come first, then
-Steem's and Blurt's writers.
+Bitcoin's and Base's wallets are split this way: each is a plugin switched on
+under Network Settings → Wallets. Steem's and Blurt's writers are next.
 
 ## Words
 

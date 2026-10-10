@@ -66,6 +66,8 @@ import { composeInjectedWalletServices } from './main/composeInjectedWalletServi
 import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
 import { ExperimentalToolsSettingsStore } from '../application/settings/ExperimentalToolsSettingsStore.js';
+import { NetworkWriterSettingsStore } from '../application/settings/NetworkWriterSettingsStore.js';
+import { NetworkWriterLoader } from './main/NetworkWriterLoader.js';
 import { BuildPlotStore } from '../application/plot/BuildPlotStore.js';
 import { FunnelEventCounter } from '../application/settings/FunnelEventCounter.js';
 import { FirstBuildChecklistStore } from '../application/onboarding/FirstBuildChecklistStore.js';
@@ -444,6 +446,25 @@ const visitorCountSettingsStore = new VisitorCountSettingsStore({ storageProvide
 app.provide('visitorCountSettingsStore', visitorCountSettingsStore);
 // Network Settings' Show experimental tools: off until turned on (docs/Pillars.md).
 app.provide('experimentalToolsSettingsStore', new ExperimentalToolsSettingsStore({ storageProvider: new LocalStorageProvider() }));
+// Network Settings' writer switches (core/NetworkWriters.js): which network
+// writers this device builds. Bitcoin's and Base's wallets are plugins, built
+// after the 'anchoring' group below, only when switched on.
+const networkWriterSettingsStore = new NetworkWriterSettingsStore({ storageProvider: new LocalStorageProvider() });
+app.provide('networkWriterSettingsStore', networkWriterSettingsStore);
+const networkWriterLoader = new NetworkWriterLoader({
+    settingsStore: networkWriterSettingsStore,
+    plugins: {
+        bitcoin: async (anchoring) => {
+            const { composeBitcoinWallet } = await import('./main/plugins/composeBitcoinWallet.js');
+            return composeBitcoinWallet({ anchoring, resolvedBitcoinEsploraApiUrls });
+        },
+        base: async (anchoring) => {
+            const { composeBaseWallet } = await import('./main/plugins/composeBaseWallet.js');
+            return composeBaseWallet({ anchoring });
+        }
+    },
+    provide: (key, value) => app.provide(key, value)
+});
 // Build here's plots: World View records one, the Editor publishes onto it.
 app.provide('buildPlotStore', new BuildPlotStore({ storageProvider: new LocalStorageProvider() }));
 // The Editor's guided first build: this device's progress through it.
@@ -745,51 +766,25 @@ app.provide('announcementIndexChanges', announcementIndexChanges);
 // peer exchanges that must listen from the start, and what the header shows
 // on every page.
 
-// Publication evidence and external anchoring (Bitcoin, Base, Arweave, Steem, Blurt)
-// and their wallets, for the Publications page and the Proof & Anchoring
-// settings.
+// Publication evidence and external anchoring (Bitcoin, Base, Arweave, Steem,
+// Blurt), for the Publications page and the Proof & Anchoring settings, and
+// the Bitcoin and Base wallets switched on in Network Settings.
 defineServiceGroup('anchoring', async () => {
     const { composeAnchoring } = await import('./main/composeAnchoring.js');
-    const {
-        publicationEvidenceCoordinator,
-        publicationAnchorCreationCoordinator, preferredPublicationAnchorCreationCoordinator,
-        externalAnchorEvidenceViewRegistry, bitcoinAnchorProofReconciliationView, bitcoinWalletConnection,
-        bitcoinWalletFundingObserver, baseWalletConnection, baseNetworkObserver,
-        basePublicationTransactionPlanCoordinator, baseInjectedProviderWalletTransactionSigner,
-        baseReviewedSigningCoordinator, baseSignedTransactionFinalizationCoordinator,
-        baseTransactionBroadcastCoordinator, baseAnchorPublisher, baseTransactionInclusionObservationCoordinator,
-        bitcoinAnchorTransactionConstructionCoordinator, bitcoinAnchorTransactionReviewCoordinator,
-        bitcoinAnchorReviewedSigningCoordinator, bitcoinAnchorSignedPsbtFinalizationCoordinator,
-        bitcoinAnchorBroadcastCoordinator, bitcoinAnchorPublicationCoordinator,
-        bitcoinAnchorConfirmationCoordinator
-    } = composeAnchoring({
+    const anchoring = composeAnchoring({
         identityProvider, resolvedBitcoinEsploraApiUrls, publicationCatalog, publicationAnchorCatalog,
         anchorKnowledgeStore, roleProviderPreferenceStore, arweaveHostSigner, resolvedArweaveGatewayUrl, steemRuntime, blurtRuntime
     });
 
-    app.provide('publicationEvidenceCoordinator', publicationEvidenceCoordinator);
-    app.provide('publicationAnchorCreationCoordinator', publicationAnchorCreationCoordinator);
-    app.provide('preferredPublicationAnchorCreationCoordinator', preferredPublicationAnchorCreationCoordinator);
-    app.provide('externalAnchorEvidenceViewRegistry', externalAnchorEvidenceViewRegistry);
-    app.provide('bitcoinAnchorProofReconciliationView', bitcoinAnchorProofReconciliationView);
-    app.provide('bitcoinWalletConnection', bitcoinWalletConnection);
-    app.provide('bitcoinWalletFundingObserver', bitcoinWalletFundingObserver);
-    app.provide('baseWalletConnection', baseWalletConnection);
-    app.provide('baseNetworkObserver', baseNetworkObserver);
-    app.provide('basePublicationTransactionPlanCoordinator', basePublicationTransactionPlanCoordinator);
-    app.provide('baseInjectedProviderWalletTransactionSigner', baseInjectedProviderWalletTransactionSigner);
-    app.provide('baseReviewedSigningCoordinator', baseReviewedSigningCoordinator);
-    app.provide('baseSignedTransactionFinalizationCoordinator', baseSignedTransactionFinalizationCoordinator);
-    app.provide('baseTransactionBroadcastCoordinator', baseTransactionBroadcastCoordinator);
-    app.provide('baseTransactionInclusionObservationCoordinator', baseTransactionInclusionObservationCoordinator);
-    app.provide('baseAnchorPublisher', baseAnchorPublisher);
-    app.provide('bitcoinAnchorTransactionConstructionCoordinator', bitcoinAnchorTransactionConstructionCoordinator);
-    app.provide('bitcoinAnchorTransactionReviewCoordinator', bitcoinAnchorTransactionReviewCoordinator);
-    app.provide('bitcoinAnchorReviewedSigningCoordinator', bitcoinAnchorReviewedSigningCoordinator);
-    app.provide('bitcoinAnchorSignedPsbtFinalizationCoordinator', bitcoinAnchorSignedPsbtFinalizationCoordinator);
-    app.provide('bitcoinAnchorBroadcastCoordinator', bitcoinAnchorBroadcastCoordinator);
-    app.provide('bitcoinAnchorPublicationCoordinator', bitcoinAnchorPublicationCoordinator);
-    app.provide('bitcoinAnchorConfirmationCoordinator', bitcoinAnchorConfirmationCoordinator);
+    app.provide('publicationEvidenceCoordinator', anchoring.publicationEvidenceCoordinator);
+    app.provide('publicationAnchorCreationCoordinator', anchoring.publicationAnchorCreationCoordinator);
+    app.provide('preferredPublicationAnchorCreationCoordinator', anchoring.preferredPublicationAnchorCreationCoordinator);
+    app.provide('externalAnchorEvidenceViewRegistry', anchoring.externalAnchorEvidenceViewRegistry);
+    app.provide('bitcoinAnchorProofReconciliationView', anchoring.bitcoinAnchorProofReconciliationView);
+
+    // The wallets switched on (Bitcoin's and Base's writers), before a page
+    // that injects them renders.
+    await networkWriterLoader.attach(anchoring);
 });
 
 // Distributing publications and Snapshots (Arweave, Nostr, IPFS, Steem, Blurt),

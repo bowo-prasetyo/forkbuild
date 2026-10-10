@@ -51,6 +51,14 @@ export const anchoringToolsTabTemplate = `<div v-show="publicationsToolsTab === 
                 </p>
             </div>
 
+            <!-- Bitcoin's and Base's wallets are network writers, offered once
+                 switched on in Network Settings (core/NetworkWriters.js). -->
+            <p v-if="!bitcoinWalletConnection || !baseWalletConnection" class="form-hint form-hint--neutral network-writers-hint">
+                <I18nText keypath="publications.walletsSwitchedOn">
+                    <template #settings><router-link to="/settings">{{ t('app.nav.networkSettings') }}</router-link></template>
+                </I18nText>
+            </p>
+
             <!-- Bitcoin wallet: page-level, like Base Network below, so a first
                  anchor needs no existing one to reach it. This page anchors to
                  Bitcoin mainnet only. -->

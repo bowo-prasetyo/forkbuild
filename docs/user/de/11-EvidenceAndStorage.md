@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: cb4b276ed6e02e88 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
@@ -273,6 +273,7 @@ braucht, öffnet sein Link diesen Bereich für Sie.
 
 ### Was Sie brauchen
 
+- **Bitcoin-Wallet** eingeschaltet unter [Netzwerkeinstellungen → Wallets](10-NetworkSettings.md#experimentelle-werkzeuge-anzeigen).
 - Die Browsererweiterung **UniSat** (`window.unisat`); keine andere
   Bitcoin-Wallet wird bisher unterstützt.
 - Ein Konto mit ausgebbaren Bitcoin an einer **nativen SegWit**-Adresse
@@ -429,6 +430,7 @@ an sich selbst, die den Inhalts-Hash als Daten trägt), eigene Begriffe.
 
 ### Was Sie brauchen
 
+- **Base-Wallet** eingeschaltet unter [Netzwerkeinstellungen → Wallets](10-NetworkSettings.md#experimentelle-werkzeuge-anzeigen).
 - Eine Browser-Wallet mit der Standardschnittstelle
   [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) `window.ethereum`,
   etwa Coinbase Wallet oder MetaMask.

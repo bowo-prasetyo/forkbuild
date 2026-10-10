@@ -1,4 +1,5 @@
 import { inject, reactive, ref } from 'vue';
+import { isNetworkWriterOn } from './networkWriterServices.js';
 import { BitcoinWalletConnectionState } from '../../../application/anchoring/bitcoin/BitcoinWalletConnectionState.js';
 import { describeBitcoinWalletConnection } from '../../../application/anchoring/bitcoin/BitcoinWalletConnectionView.js';
 import {
@@ -44,35 +45,39 @@ export function useBitcoinAnchoring({
     archiveBitcoinAnchorPublicationRecord, archiveBitcoinBroadcast, archiveBitcoinConfirmationObservation,
     findEntry, loadEvidence
 }) {
+    // Bitcoin's and Base's wallets are network writers (core/NetworkWriters.js):
+    // their steps are offered only while Network Settings has this one switched
+    // on, read when the page opens.
+    const on = isNetworkWriterOn('bitcoin');
     // One shared wallet connection for the whole page (connecting once
     // shows everywhere), and the only place this page asks a browser wallet
     // for an account or a signing capability. Reading confirmation status
     // needs no wallet.
-    const bitcoinWalletConnection = inject('bitcoinWalletConnection', null);
+    const bitcoinWalletConnection = on ? inject('bitcoinWalletConnection', null) : null;
     // Page-level, not per evidence card: funding is prepared for a
     // transaction that has not been built yet. Always a fresh,
     // explicitly-triggered read, never a background poll.
-    const bitcoinWalletFundingObserver = inject('bitcoinWalletFundingObserver', null);
+    const bitcoinWalletFundingObserver = on ? inject('bitcoinWalletFundingObserver', null) : null;
     // The Bitcoin anchor pipeline: review coordinator turns a constructed
     // plan into a signable PSBT description, then signing, finalization,
     // broadcast and confirmation each run on their own explicit click. None
     // of these coordinators advances to the next step on its own.
-    const bitcoinAnchorTransactionReviewCoordinator = inject('bitcoinAnchorTransactionReviewCoordinator', null);
-    const bitcoinAnchorReviewedSigningCoordinator = inject('bitcoinAnchorReviewedSigningCoordinator', null);
-    const bitcoinAnchorSignedPsbtFinalizationCoordinator = inject('bitcoinAnchorSignedPsbtFinalizationCoordinator', null);
-    const bitcoinAnchorBroadcastCoordinator = inject('bitcoinAnchorBroadcastCoordinator', null);
+    const bitcoinAnchorTransactionReviewCoordinator = on ? inject('bitcoinAnchorTransactionReviewCoordinator', null) : null;
+    const bitcoinAnchorReviewedSigningCoordinator = on ? inject('bitcoinAnchorReviewedSigningCoordinator', null) : null;
+    const bitcoinAnchorSignedPsbtFinalizationCoordinator = on ? inject('bitcoinAnchorSignedPsbtFinalizationCoordinator', null) : null;
+    const bitcoinAnchorBroadcastCoordinator = on ? inject('bitcoinAnchorBroadcastCoordinator', null) : null;
     // A separate instance from bitcoinAnchorProofReconciliationView even
     // though both use the same observer: this one only observes the txid of
     // this page's own BROADCASTED outcome, that one a persisted anchor's
     // proof.txid.
-    const bitcoinAnchorConfirmationCoordinator = inject('bitcoinAnchorConfirmationCoordinator', null);
+    const bitcoinAnchorConfirmationCoordinator = on ? inject('bitcoinAnchorConfirmationCoordinator', null) : null;
     // Mints a real PublicationAnchor after a successful broadcast (via
     // publishBroadcastedAnchor()). Without it, only the local publication
     // record is kept.
-    const bitcoinAnchorPublicationCoordinator = inject('bitcoinAnchorPublicationCoordinator', null);
+    const bitcoinAnchorPublicationCoordinator = on ? inject('bitcoinAnchorPublicationCoordinator', null) : null;
     // Requires an already-observed bitcoinAnchorFundingState.observation;
     // the coordinator never observes funding itself.
-    const bitcoinAnchorTransactionConstructionCoordinator = inject('bitcoinAnchorTransactionConstructionCoordinator', null);
+    const bitcoinAnchorTransactionConstructionCoordinator = on ? inject('bitcoinAnchorTransactionConstructionCoordinator', null) : null;
 
     // Wallet, funding, account and pipeline state below is page-level: one
     // wallet and one in-progress transaction per page, not per publication.

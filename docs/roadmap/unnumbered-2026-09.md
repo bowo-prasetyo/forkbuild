@@ -5212,3 +5212,36 @@ lives in a world (every copy still finds builds on every substrate).
   proof checks loaded when an anchor needs one; then Steem's and Blurt's writers, with their readers loaded when the
   background sync first runs. Whether those writers are on by default waits for the launch numbers.
 
+## Bitcoin's and Base's wallets as plugins (unnumbered, 2026-10-10)
+
+**Bitcoin's and Base's wallet steps are now network writers: plugins this device builds only when switched on.** Until
+now the Publications page built both wallet pipelines (about 13,500 lines in 114 modules) for anyone who opened it,
+even with the Experimental tools hidden. This is the first network split as docs/Pillars.md "Networks: readers and
+writers" describes. Pillar served: your work is yours (one identity; a chain is something a player adds, not the core).
+
+- **Switches.** core/NetworkWriters.js names the writers (`bitcoin`, `base`); NetworkWriterSettingsStore keeps which are
+  on (`network-writer-settings`, off until switched on, in the backup's Network settings). Network Settings lists
+  **Wallets**, with **Bitcoin wallet** and **Base wallet**, under Show experimental tools
+  (ui/components/NetworkWritersSetting.js). Every language.
+- **Readers stay for everyone.** ui/main/composeAnchoring.js builds every network's anchor reader: proof checks and
+  evidence views for Arweave, Steem, Blurt, Bitcoin and Base, and Bitcoin's confirmation and reconcile (about 2,200
+  lines for Bitcoin and Base). They load with the Publications page, as before, never at startup; loading them only
+  when an anchor needs checking wasn't worth the extra machinery at that size.
+- **Writers as plugins.** ui/main/plugins/composeBitcoinWallet.js (the PSBT pipeline, funding, broadcast and
+  confirmation, and the one-shot Bitcoin publisher, which now joins the shared registry only with its writer) and
+  composeBaseWallet.js (the Base wallet, plan, sign, finalize, broadcast and inclusion). ui/main/NetworkWriterLoader.js
+  imports and builds the ones switched on once the `anchoring` group is built, and one switched on later at once; each
+  is built once, and a failed one is tried again.
+- **The Publications page** offers a wallet's steps only while its switch is on, read when the page opens
+  (ui/views/decentralizedPublications/networkWriterServices.js), and its Blockchain Anchoring tab points to Network
+  Settings while one is off. With Bitcoin's switched off, the Proof / Anchoring Provider page no longer lists Bitcoin;
+  a saved Bitcoin preference reports its provider missing, as any missing provider does.
+- Guides 10 and 11 in every language, Architecture, Pillars.
+- Tests: `NetworkWriters` (the switches, the readers with no wallet built, each plugin's services, the loader, and that
+  only the plugins reach the wallet modules); `NetworkWritersBrowser` (the switches on Network Settings, and each
+  wallet's card on the Publications page only while its switch is on); `SubstrateRoleMatrix` composes Bitcoin's plugin
+  before Bitcoin creates anchors; `InitialLoadModuleGraph` keeps the plugins out of the first load.
+- Upgrading: someone who used a Bitcoin or Base wallet switches it on once under Network Settings → Wallets.
+- Not done: the Publications page's wallet cards still live in its templates and composables, which name Bitcoin and
+  Base; moving them into the plugins is a later step. Steem's and Blurt's writers come next.
+

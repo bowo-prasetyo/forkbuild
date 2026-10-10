@@ -44,6 +44,8 @@ console.log('✓ Three.js is not in the first load');
 // their modules puts it back into the first load.
 const serviceGroupModules = [
     'ui/main/composeAnchoring.js',
+    'ui/main/plugins/composeBitcoinWallet.js',
+    'ui/main/plugins/composeBaseWallet.js',
     'ui/main/composePublicationDistribution.js',
     'ui/main/composeSnapshotDiscovery.js',
     'application/publication/OpenPublicationLink.js',

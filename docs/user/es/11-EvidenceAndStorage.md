@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: cb4b276ed6e02e88 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
@@ -271,6 +271,7 @@ fondos, su enlace abre ese panel por usted.
 
 ### Qué necesita
 
+- La **Billetera de Bitcoin** activada en [Configuración de red → Billeteras](10-NetworkSettings.md#mostrar-herramientas-experimentales).
 - La extensión de navegador **UniSat** (`window.unisat`); todavía no se
   admite ninguna otra billetera de Bitcoin.
 - Una cuenta con bitcoin gastable en una dirección **SegWit nativa** (que
@@ -426,6 +427,7 @@ misma que lleva el hash de contenido como datos), sus propios términos.
 
 ### Qué necesita
 
+- La **Billetera de Base** activada en [Configuración de red → Billeteras](10-NetworkSettings.md#mostrar-herramientas-experimentales).
 - Una billetera de navegador que use la interfaz estándar
   [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) `window.ethereum`,
   como Coinbase Wallet o MetaMask.

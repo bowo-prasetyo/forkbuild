@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 7085ae1ba4a129cf -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 030d653a072ce0a8 -->
 # 10 — Configuración de red
 
 <!-- languages -->
@@ -39,6 +39,15 @@ partes de ForkBuild que son **experimentales**: aquí, la página
 **Herramientas de billetera y archivo**. Está desactivado hasta que
 lo active, y se guarda en este dispositivo en cuanto lo cambia. No se oculta
 nada que necesite para construir, publicar o compartir.
+
+Debajo, **Billeteras** tiene un interruptor para cada billetera con la que
+ForkBuild puede anclar: **Billetera de Bitcoin** y **Billetera de Base**.
+Cada uno está desactivado hasta que lo active, y se guarda en este
+dispositivo. Mientras uno está desactivado, la página Publicaciones no ofrece
+ni carga los pasos de esa billetera, y Bitcoin no se ofrece como
+[Proveedor de prueba / anclaje](#proveedor-de-prueba--anclaje). Los anclajes ya creados en
+Bitcoin o Base se siguen comprobando y mostrando igualmente. Desactivar uno
+surte efecto la próxima vez que se abre la página Publicaciones.
 
 ## Cómo se comporta cada página
 

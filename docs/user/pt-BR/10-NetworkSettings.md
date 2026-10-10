@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 7085ae1ba4a129cf -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 030d653a072ce0a8 -->
 # 10 — Configurações de rede
 
 <!-- languages -->
@@ -38,6 +38,15 @@ Bitcoin**, e na [página Publicações](09-PublicationsAndEvidence.md#a-página-
 carteira e arquivo**. Fica desativado até você ativá-lo e é salvo
 neste dispositivo assim que você o muda. Nada do que você precisa para
 construir, publicar ou compartilhar fica oculto.
+
+Logo abaixo, **Carteiras** tem um botão para cada carteira com que o
+ForkBuild pode ancorar: **Carteira de Bitcoin** e **Carteira da Base**. Cada
+um fica desativado até você ativá-lo, e é salvo neste dispositivo. Enquanto
+um estiver desativado, a página Publicações não oferece nem carrega os passos
+dessa carteira, e o Bitcoin não é oferecido como
+[Provedor de prova / ancoragem](#provedor-de-prova--ancoragem). As âncoras já criadas no
+Bitcoin ou na Base continuam sendo verificadas e mostradas. Desativar uma
+carteira vale a partir da próxima vez que a página Publicações abrir.
 
 ## Como todas as páginas se comportam
 

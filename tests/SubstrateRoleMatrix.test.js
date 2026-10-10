@@ -9,6 +9,7 @@
 // the role's registry). The matrix at the end is the expected one;
 // changing what a substrate serves means changing it here on purpose.
 import { composeAnchoring } from '../ui/main/composeAnchoring.js';
+import { composeBitcoinWallet } from '../ui/main/plugins/composeBitcoinWallet.js';
 import { composeSteemRuntime } from '../application/steem/SteemRuntimeComposition.js';
 import { composeBlurtRuntime } from '../application/blurt/BlurtRuntimeComposition.js';
 import { SteemReadingConfiguration } from '../core/SteemReadingConfiguration.js';
@@ -135,9 +136,13 @@ const matrix = Object.fromEntries(SUBSTRATES.map((substrate) => [substrate, new 
         assert(composed.externalAnchorEvidenceViewRegistry.has(anchorType), `${substrate} anchors can be described, not only verified`);
         matrix[substrate].add(RoleProviderRole.PROOF_AND_ANCHORING);
     }
-    const creatable = SUBSTRATES.filter((substrate) => ANCHOR_TYPE[substrate] && composed.externalAnchorPublisherRegistry.has(ANCHOR_TYPE[substrate]));
-    // Base anchors are created through their own wallet pipeline (anchoring/BaseAnchorPublisher.js), not this registry.
-    assert(creatable.join() === 'arweave,steem,blurt,bitcoin', `anchors are created through the shared registry on every verifiable substrate but Base (got ${creatable})`);
+    const creatable = () => SUBSTRATES.filter((substrate) => ANCHOR_TYPE[substrate] && composed.externalAnchorPublisherRegistry.has(ANCHOR_TYPE[substrate]));
+    // Bitcoin's wallet is a network writer (core/NetworkWriters.js), joining the
+    // registry only when switched on; Base anchors are created through their own
+    // wallet pipeline (anchoring/BaseAnchorPublisher.js), not this registry.
+    assert(creatable().join() === 'arweave,steem,blurt', `without the wallet plugins, anchors are created on Arweave, Steem and Blurt (got ${creatable()})`);
+    composeBitcoinWallet({ anchoring: composed, resolvedBitcoinEsploraApiUrls: ['https://esplora.invalid/api'] });
+    assert(creatable().join() === 'arweave,steem,blurt,bitcoin', `with Bitcoin's wallet switched on, on every verifiable substrate but Base (got ${creatable()})`);
     console.log('✓ Proof & Anchoring, from the composed registries');
 }
 

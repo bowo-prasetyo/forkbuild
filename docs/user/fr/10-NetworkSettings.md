@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 7085ae1ba4a129cf -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 030d653a072ce0a8 -->
 # 10 — Paramètres réseau
 
 <!-- languages -->
@@ -40,6 +40,17 @@ parties de ForkBuild qui sont **expérimentales** : ici, la page
 vous ne l’activez pas, et il est enregistré sur cet appareil dès que vous le
 changez. Rien de ce qu’il faut pour construire, publier ou partager n’est
 masqué.
+
+En dessous, **Portefeuilles** propose un interrupteur pour chaque
+portefeuille avec lequel ForkBuild peut ancrer : **Portefeuille Bitcoin** et
+**Portefeuille Base**. Chacun est désactivé tant que vous ne l’activez pas, et
+il est enregistré sur cet appareil. Tant que l’un est désactivé, la page
+Publications ne propose ni ne charge les étapes de ce portefeuille, et
+Bitcoin n’est pas proposé comme
+[fournisseur de preuve / ancrage](#fournisseur-de-preuve--ancrage). Les ancres déjà
+créées sur Bitcoin ou Base sont vérifiées et affichées dans tous les cas.
+Désactiver un portefeuille prend effet à la prochaine ouverture de la page
+Publications.
 
 ## Comment se comporte chaque page
 

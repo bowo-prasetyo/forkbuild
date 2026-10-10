@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: cb4b276ed6e02e88 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
@@ -273,6 +273,7 @@ vous.
 
 ### Ce dont vous aurez besoin
 
+- Le **Portefeuille Bitcoin** activé dans [Paramètres réseau → Portefeuilles](10-NetworkSettings.md#afficher-les-outils-expérimentaux).
 - L’extension de navigateur **UniSat** (`window.unisat`) ; aucun autre
   portefeuille Bitcoin n’est encore pris en charge.
 - Un compte détenant des bitcoins dépensables à une adresse **SegWit
@@ -433,6 +434,7 @@ termes.
 
 ### Ce dont vous aurez besoin
 
+- Le **Portefeuille Base** activé dans [Paramètres réseau → Portefeuilles](10-NetworkSettings.md#afficher-les-outils-expérimentaux).
 - Un portefeuille de navigateur utilisant l’interface standard
   [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) `window.ethereum`,
   comme Coinbase Wallet ou MetaMask.

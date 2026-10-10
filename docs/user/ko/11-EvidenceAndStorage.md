@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: cb4b276ed6e02e88 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
 # 11 — 증거와 저장소
 
 <!-- languages -->
@@ -226,6 +226,7 @@ Bitcoin 앵커의 카드에는 **Bitcoin 앵커** 섹션도 있습니다. **조�
 
 ### 필요한 것
 
+- [네트워크 설정 → 지갑](10-NetworkSettings.md#실험적-도구-표시)에서 **Bitcoin 지갑**을 켜 두기.
 - **UniSat** 브라우저 확장 프로그램(`window.unisat`). 다른 Bitcoin 지갑은 아직
   지원하지 않습니다.
 - **네이티브 SegWit** 주소(`bc1q…`로 시작)에 지출 가능한 비트코인이 있는 계정.
@@ -362,6 +363,7 @@ Bitcoin 앵커의 카드에는 **Bitcoin 앵커** 섹션도 있습니다. **조�
 
 ### 필요한 것
 
+- [네트워크 설정 → 지갑](10-NetworkSettings.md#실험적-도구-표시)에서 **Base 지갑**을 켜 두기.
 - 표준 [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) `window.ethereum`
   인터페이스를 쓰는 브라우저 지갑(예: Coinbase Wallet, MetaMask).
 - 체인 ID **8453**(Base 메인넷) 또는 **84532**(Base Sepolia)의 계정. 다른
