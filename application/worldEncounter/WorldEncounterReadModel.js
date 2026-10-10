@@ -40,10 +40,7 @@
 // THIS FILE ACCEPTS 0.9.0'S OWN RESULT DIRECTLY — NEVER RAW WORLD RECORDS.
 // `describeWorldEncounterReadModel()` takes 0.9.0's own already-computed
 // `{ publications, avatars }` result as its one argument and performs a
-// pure, structural transform of it — exactly the shape 0.8.176's own
-// evidence agreement result already hands to 0.8.177's own
-// `describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardReadModel()`.
-// It never calls `deriveWorldEncounters()` itself, and never accepts a
+// pure, structural transform of it. It never calls `deriveWorldEncounters()` itself, and never accepts a
 // `publications`/`placements`/`anchors`/`avatarProfiles`/`avatarPresences`
 // argument of its own — that stays entirely 0.9.0's own seam.
 //

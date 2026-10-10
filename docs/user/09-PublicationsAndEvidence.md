@@ -35,9 +35,8 @@ X", and about the optional depth you can add to a claim:
 - **[Evidence & Storage](11-EvidenceAndStorage.md)** — external evidence
   (Bitcoin, Base, Arweave, Steem, Blurt), the wallet pipelines, Snapshot
   Placements, IPFS publishing, Steem and Blurt.
-- **[Archive & Leaderboards](12-ArchiveAndLeaderboards.md)** — the durable
-  observation archive, references, achievements, publisher labels and the
-  Leaderboard pages.
+- **[Archive & Achievements](12-ArchiveAndLeaderboards.md)** — the durable
+  observation archive, references, achievements and publisher labels.
 
 ## Two meanings of "publish"
 
@@ -468,7 +467,6 @@ progress are not.
 | **Bitcoin/Base Anchor Publications** records, made at finalization | The wallet pipelines' connection, funding or account observation, plan, review, signature, finalized transaction, broadcast result and on-screen confirmation or inclusion history |
 | The **Publication Observation Archive** (every IPFS publish and verification, Bitcoin broadcast, confirmation and content proof, and Base inclusion), until **Clear Archive** | — |
 | Publication References and Publisher Associations | Which cards and rows you had open |
-| Reconciliation decisions and observations (kept in the archive) | Pasted peer archives, imported evidence exports, filters, Evidence Export Comparison, and Publisher Snapshot Claim |
 
 After a reload, a pipeline's or IPFS publish's results are still visible in
 the [Observation Archive](12-ArchiveAndLeaderboards.md#the-publication-observation-archive),

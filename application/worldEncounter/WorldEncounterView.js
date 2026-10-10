@@ -53,10 +53,7 @@
 // `totalCount`.
 //
 // `publicationCount`/`avatarCount`/`totalCount` ARE RECOMPUTED FROM THE
-// ARRAYS THEMSELVES, NEVER TRUSTED BLINDLY OFF A SUPPLIED COUNT FIELD — the
-// same defensive posture `PublisherLeaderboardClaimSnapshotReconciliation-
-// CandidateLeaderboardView.js`'s own `rowCount = rows.length` already holds
-// at the equivalent seam one chain over. When `readModel` is a genuine 0.9.1
+// ARRAYS THEMSELVES, NEVER TRUSTED BLINDLY OFF A SUPPLIED COUNT FIELD. When `readModel` is a genuine 0.9.1
 // result these numbers agree with 0.9.1's own count fields exactly, because
 // 0.9.1 already guarantees `publicationCount === publications.length`; when
 // it is not, this file still returns a coherent, internally-consistent

@@ -2252,54 +2252,12 @@ export default Object.freeze({
     'worldCard.continueExploring': 'Continuer l’exploration',
 
     // Publications: candidateEvidenceDetailPanel.
-    'candidateEvidenceDetailPanel.decisionEvidence': 'Preuves de décision',
-    'candidateEvidenceDetailPanel.none': 'Aucune',
-    'candidateEvidenceDetailPanel.observationEvidence': 'Preuves d’observation',
 
     // Publications: candidateLeaderboardTable.
-    'candidateLeaderboardTable.noReconciliationCandidatesToDisplay': 'Aucun candidat de réconciliation à afficher.',
-    'candidateLeaderboardTable.candidate': 'Candidat',
-    'candidateLeaderboardTable.decisionEvidence': 'Preuves de décision',
-    'candidateLeaderboardTable.observationEvidence': 'Preuves d’observation',
-    'candidateLeaderboardTable.shared': 'Commun',
-    'candidateLeaderboardTable.sourceOnly': 'Source uniquement',
-    'candidateLeaderboardTable.targetOnly': 'Cible uniquement',
 
     // Publications: evidenceExportComparisonRecordPairSelector.
-    'evidenceExportComparisonRecordPairSelector.explicitRecordPairing': 'Appariement explicite des enregistrements',
-    'evidenceExportComparisonRecordPairSelector.nothingHereDecidesWhichRecords': 'Rien ici ne décide quels enregistrements se correspondent — choisissez vous-même un enregistrement source et un enregistrement cible, dans l’un ou l’autre export, dans l’une ou l’autre partition, puis ajoutez-les comme paire explicite.',
-    'evidenceExportComparisonRecordPairSelector.decisionEvidence': 'Preuves de décision',
-    'evidenceExportComparisonRecordPairSelector.sourceRecord': 'Enregistrement source',
-    'evidenceExportComparisonRecordPairSelector.selectASourceRecord': 'Sélectionnez un enregistrement source…',
-    'evidenceExportComparisonRecordPairSelector.targetRecord': 'Enregistrement cible',
-    'evidenceExportComparisonRecordPairSelector.selectATargetRecord': 'Sélectionnez un enregistrement cible…',
-    'evidenceExportComparisonRecordPairSelector.addPair': 'Ajouter la paire',
-    'evidenceExportComparisonRecordPairSelector.remove': 'Retirer',
-    'evidenceExportComparisonRecordPairSelector.noDecisionPairsSelectedYet': 'Aucune paire de décision sélectionnée pour l’instant.',
-    'evidenceExportComparisonRecordPairSelector.observationEvidence': 'Preuves d’observation',
-    'evidenceExportComparisonRecordPairSelector.noObservationPairsSelectedYet': 'Aucune paire d’observation sélectionnée pour l’instant.',
-    'evidenceExportComparisonRecordPairSelector.pairedRecordDifferences': 'Différences entre enregistrements appariés',
-    'evidenceExportComparisonRecordPairSelector.noExplicitPairsAddedYet': 'Aucune paire explicite ajoutée pour l’instant, d’un côté comme de l’autre.',
-    'evidenceExportComparisonRecordPairSelector.decisionPairs': 'Paires de décision',
-    'evidenceExportComparisonRecordPairSelector.source': 'Source :',
-    'evidenceExportComparisonRecordPairSelector.target': 'Cible :',
-    'evidenceExportComparisonRecordPairSelector.identicalOnEveryNamedField': 'Identiques sur chaque champ nommé.',
-    'evidenceExportComparisonRecordPairSelector.observationPairs': 'Paires d’observation',
 
     // Publications: evidenceExportComparisonTable.
-    'evidenceExportComparisonTable.comparisonState': 'État de la comparaison',
-    'evidenceExportComparisonTable.source': 'Source',
-    'evidenceExportComparisonTable.target': 'Cible',
-    'evidenceExportComparisonTable.same': 'Identique',
-    'evidenceExportComparisonTable.filter': 'Filtre',
-    'evidenceExportComparisonTable.noCandidatesDecisionEvidenceOr': 'Aucun candidat, aucune preuve de décision ni d’observation dans l’un ou l’autre export.',
-    'evidenceExportComparisonTable.candidatePresence': 'Présence des candidats',
-    'evidenceExportComparisonTable.sourceOnly': 'Source uniquement',
-    'evidenceExportComparisonTable.shared': 'Commun',
-    'evidenceExportComparisonTable.targetOnly': 'Cible uniquement',
-    'evidenceExportComparisonTable.none': 'Aucun',
-    'evidenceExportComparisonTable.decisionEvidence': 'Preuves de décision',
-    'evidenceExportComparisonTable.observationEvidence': 'Preuves d’observation',
 
     // Publications: authorView.
     'authorView.originalWorksForks': 'Œuvres originales et forks',
@@ -2519,8 +2477,6 @@ export default Object.freeze({
     'publications.exportImport': 'Export / Import',
     'publications.aPortableCopyOfThe': 'Une copie portable des faits enregistrés ci-dessus — identités de publication et observations uniquement, jamais une connexion de portefeuille, une capacité de signature, une clé privée ni un identifiant de service d’épinglage. L’export n’effectue aucune opération réseau. L’import REMPLACE entièrement l’archive actuelle — il ne fusionne jamais avec elle.',
     'publications.exportArchive': 'Exporter l’archive',
-    'publications.reconcilingThisArchiveAgainstA': 'Réconcilier cette archive avec celle d’un pair, créer ou exporter votre propre déclaration signée d’instantané de classement, et voir les éditeurs classés selon leurs propres succès enregistrés : tout cela se passe sur la page {leaderboard}.',
-    'publications.leaderboard': 'Classement',
     'publications.exportedArchive': 'Archive exportée',
     'publications.downloadArchiveExport': 'Télécharger l’export de l’archive',
     'publications.importArchive': 'Importer une archive',
@@ -2809,70 +2765,10 @@ export default Object.freeze({
     'challenge.shareText': '{title}, ma participation au défi ForkBuild « {theme} » #{tag}',
 
     // Publications: leaderboardHubView.
-    'leaderboardHubView.leaderboard': 'Classement',
-    'leaderboardHubView.reconciliationPublisherSnapshotClaimsAnd': 'Réconciliation, déclarations d’instantané des éditeurs et performances des éditeurs — tous les parcours liés au classement accessibles depuis la page Publications, réunis en un seul endroit.',
-    'leaderboardHubView.reconciliationCandidateLeaderboard': 'Classement des candidats de réconciliation',
-    'leaderboardHubView.compareThisArchiveSDecision': 'Comparer, candidat par candidat, les preuves de décision et d’observation de cette archive avec l’archive exportée d’un pair.',
-    'leaderboardHubView.reconciliationWorkspace': 'Espace de réconciliation',
-    'leaderboardHubView.reconcileThisArchiveAgainstA': 'Réconcilier explicitement cette archive avec une seule preuve fournie par un pair.',
-    'leaderboardHubView.publisherSnapshotClaim': 'Déclaration d’instantané d’éditeur',
-    'leaderboardHubView.authorAndExportYourOwn': 'Créer et exporter votre propre déclaration signée d’instantané de classement — la preuve qu’attend l’Espace d’un pair.',
-    'leaderboardHubView.publisherPerformanceLeaderboard': 'Classement des performances des éditeurs',
-    'leaderboardHubView.seePublishersRankedByTheir': 'Voir les éditeurs classés selon leurs propres succès et publications enregistrés, recalculés à partir de la seule archive de cette réplique.',
-    'leaderboardHubView.publisherAchievementProfile': 'Profil de succès de l’éditeur',
-    'leaderboardHubView.persistedLocally': 'Conservé localement',
-    'leaderboardHubView.aPublisherSOwnAchievements': 'Les succès propres à un éditeur, cumulés sur toutes les publications que cet éditeur a explicitement revendiquées — jamais déduits d’un hash de contenu ou d’un portefeuille commun, et jamais un score, un rang ni une entrée de classement.',
-    'leaderboardHubView.chooseAPublisher': 'Choisir un éditeur',
-    'leaderboardHubView.noPublisherHasBeenAssociated': 'Aucun éditeur n’a encore été associé à quoi que ce soit — enregistrez d’abord une association sur la page {publications}.',
-    'leaderboardHubView.publications': 'Publications',
-    'leaderboardHubView.publisher': 'Éditeur',
-    'leaderboardHubView.chooseAPublisher2': 'Choisissez un éditeur…',
-    'leaderboardHubView.associatedPublications': 'Publications associées',
-    'leaderboardHubView.achievementsEarned': 'Succès obtenus',
-    'leaderboardHubView.distinctAchievementKinds': 'Types de succès distincts',
-    'leaderboardHubView.noneOfThisPublisherS': 'Aucune des publications associées à cet éditeur n’a encore obtenu de succès.',
-    'leaderboardHubView.theseAchievementsBelongToThe': 'Ces succès appartiennent aux publications que cet éditeur a explicitement revendiquées — jamais une preuve que cet éditeur contrôle ou possède l’une d’elles, ni qu’il est la personne derrière.',
-    'leaderboardHubView.publisherAchievementBadges': 'Badges de succès de l’éditeur',
-    'leaderboardHubView.badgesEarned': 'Badges obtenus',
-    'leaderboardHubView.distinctBadgeKinds': 'Types de badges distincts',
-    'leaderboardHubView.noneOfThisPublisherS2': 'Aucune des publications associées à cet éditeur n’a encore obtenu de succès présenté sous forme de badge.',
-    'leaderboardHubView.sourcePublication': 'Publication source',
-    'leaderboardHubView.blockchain': 'Blockchain',
-    'leaderboardHubView.contentHash': 'Hash du contenu',
-    'leaderboardHubView.chainReference': 'Référence dans la chaîne',
-    'leaderboardHubView.created': 'Créé',
-    'leaderboardHubView.thisBadgeIsAPresentation': 'Ce badge présente un succès déjà obtenu par une publication que cet éditeur a explicitement revendiquée — jamais un nouveau succès, et jamais un score ni un rang.',
-    'leaderboardHubView.viewPublicationOnPublicationsPage': 'Voir la publication sur la page Publications',
-    'leaderboardHubView.theseBadgesPresentAchievementsAlready': 'Ces badges présentent des succès déjà obtenus par des publications que cet éditeur a explicitement revendiquées — jamais une preuve que cet éditeur contrôle ou possède l’une d’elles, ni qu’il est la personne derrière.',
-    'leaderboardHubView.publisherAchievementStatistics': 'Statistiques de succès de l’éditeur',
-    'leaderboardHubView.measurableFactsAboutAPublisher': 'Des faits mesurables sur les publications explicitement associées à un éditeur et les succès qui en découlent — jamais en soi un score, un rang, un niveau ni une entrée de classement. Ce sont les mêmes faits selon lesquels le Classement des performances des éditeurs ci-dessus classe les éditeurs.',
-    'leaderboardHubView.theseArePlainCountsOf': 'Ce sont de simples décomptes de faits déjà acquis — jamais un score, un rang, un niveau, un palier ni une entrée de classement, et jamais une preuve que cet éditeur contrôle ou possède l’une des publications comptées ci-dessus, ni qu’il est la personne derrière.',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView.
-    'publisherLeaderboardSnapshotClaimAuthoringView.publisherSnapshotClaim': 'Déclaration d’instantané d’éditeur',
-    'publisherLeaderboardSnapshotClaimAuthoringView.signInToAnIdentity': 'Connectez-vous à une identité avant de générer une déclaration — {identities}.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.myIdentities': 'Mes identités',
-    'publisherLeaderboardSnapshotClaimAuthoringView.snapshotClaim': 'Déclaration d’instantané',
-    'publisherLeaderboardSnapshotClaimAuthoringView.generatingComputesThisReplicaS': 'Générer calcule à l’instant même l’instantané de classement actuel de cette réplique, à partir de ses propres preuves enregistrées, et signe une déclaration portant EXACTEMENT sur cet instantané avec l’identité à laquelle vous êtes connecté.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.generateSignClaim': 'Générer et signer la déclaration',
-    'publisherLeaderboardSnapshotClaimAuthoringView.startOver': 'Recommencer',
-    'publisherLeaderboardSnapshotClaimAuthoringView.claimCreated': 'Déclaration créée',
-    'publisherLeaderboardSnapshotClaimAuthoringView.evidenceFingerprint': 'Empreinte des preuves',
-    'publisherLeaderboardSnapshotClaimAuthoringView.policyVersion': 'Version de la règle',
-    'publisherLeaderboardSnapshotClaimAuthoringView.snapshotFingerprint': 'Empreinte de l’instantané',
-    'publisherLeaderboardSnapshotClaimAuthoringView.exportClaim': 'Exporter la déclaration',
-    'publisherLeaderboardSnapshotClaimAuthoringView.exportedClaim': 'Déclaration exportée',
-    'publisherLeaderboardSnapshotClaimAuthoringView.downloadClaim': 'Télécharger la déclaration',
 
     // Publications: publisherPerformanceLeaderboardView.
-    'publisherPerformanceLeaderboardView.publisherPerformanceLeaderboard': 'Classement des performances des éditeurs',
-    'publisherPerformanceLeaderboardView.publishersRankedByTheirOwn': 'Les éditeurs classés selon leurs propres succès et publications enregistrés, recalculés à partir de l’archive de cette réplique à chaque chargement de la page. C’est une présentation du résultat de la Règle de classement des éditeurs existante — jamais un second système de classement — et rien de ce qui est affiché ici n’est conservé.',
-    'publisherPerformanceLeaderboardView.noPublishersToRankYet': 'Aucun éditeur à classer pour l’instant — aucun éditeur n’a explicitement associé de publication dans l’archive de cette réplique.',
-    'publisherPerformanceLeaderboardView.rank': 'Rang',
-    'publisherPerformanceLeaderboardView.publisher': 'Éditeur',
-    'publisherPerformanceLeaderboardView.achievements': 'Succès',
-    'publisherPerformanceLeaderboardView.achievementKinds': 'Types de succès',
-    'publisherPerformanceLeaderboardView.publications': 'Publications',
 
     // Publications: recentWorldsView.
     'recentWorldsView.myWorlds': 'Mes mondes',
@@ -2881,62 +2777,10 @@ export default Object.freeze({
     'recentWorldsView.browseTheRepository': 'Parcourez le Dépôt',
 
     // Publications: reconciliationCandidateLeaderboardEvidenceExportComparisonView.
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteASourceEvidenceExport': 'Collez le JSON d’un document d’export de preuves source',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteATargetEvidenceExport': 'Collez le JSON d’un document d’export de preuves cible',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.evidenceExportComparison': 'Comparaison d’exports de preuves',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareTwoPreviouslyExportedEvidence': 'Comparez deux rapports de preuves exportés auparavant — un rapport de la semaine dernière avec celui d’aujourd’hui, ou un rapport que vous avez exporté avec celui qu’un pair vous a envoyé. Cela ne lit jamais l’archive active d’aucune réplique et ne fusionne pas avec le Classement des candidats de réconciliation, ne le remplace ni ne le recalcule — c’est une comparaison entre deux documents portables distincts, rien de plus.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExport': 'Export de preuves source',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExportJson': 'JSON de l’export de preuves source',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid': 'Ce n’est pas un document d’export de preuves valide — le côté Source n’a pas été mis à jour.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExport': 'Export de preuves cible',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExportJson': 'JSON de l’export de preuves cible',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid2': 'Ce n’est pas un document d’export de preuves valide — le côté Cible n’a pas été mis à jour.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareEvidence': 'Comparer les preuves',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.clearComparison': 'Effacer la comparaison',
 
     // Publications: reconciliationCandidateLeaderboardView.
-    'reconciliationCandidateLeaderboardView.pasteAPeerReplicaS': 'Collez le JSON de l’archive exportée de la réplique d’un pair',
-    'reconciliationCandidateLeaderboardView.pasteAnExportedEvidenceDocument': 'Collez le JSON d’un document de preuves exporté',
-    'reconciliationCandidateLeaderboardView.reconciliationCandidateLeaderboard': 'Classement des candidats de réconciliation',
-    'reconciliationCandidateLeaderboardView.decisionAndObservationEvidenceThis': 'Les preuves de décision et d’observation que cette réplique a enregistrées pour chaque candidat de réconciliation, comparées explicitement à l’archive du pair fournie ci-dessous. Rien ici ne fusionne, ne remplace ni ne réconcilie l’une ou l’autre archive — c’est une comparaison, jamais une réconciliation.',
-    'reconciliationCandidateLeaderboardView.peerArchive': 'Archive du pair',
-    'reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied': 'Comparaison avec une archive de pair fournie explicitement — mais cette archive ne contient encore aucun enregistrement de décision ou d’observation, donc chaque décompte ci-dessous reste « Source uniquement ». Il s’agit bien d’un pair réel fourni, pas de la valeur par défaut sans pair.',
-    'reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied2': 'Comparaison avec une archive de pair fournie explicitement.',
-    'reconciliationCandidateLeaderboardView.peerArchiveJson': 'JSON de l’archive du pair',
-    'reconciliationCandidateLeaderboardView.useAsPeerArchive': 'Utiliser comme archive du pair',
-    'reconciliationCandidateLeaderboardView.clearPeerArchive': 'Effacer l’archive du pair',
-    'reconciliationCandidateLeaderboardView.thisIsNotAValid': 'Ce n’est pas un export d’archive valide — rien n’a été comparé.',
-    'reconciliationCandidateLeaderboardView.evidenceFilter': 'Filtre des preuves',
-    'reconciliationCandidateLeaderboardView.evidenceType': 'Type de preuve',
-    'reconciliationCandidateLeaderboardView.replicaRelation': 'Relation entre répliques',
-    'reconciliationCandidateLeaderboardView.evidenceExport': 'Export des preuves',
-    'reconciliationCandidateLeaderboardView.exportsExactlyTheEvidenceCurrently': 'Exporte exactement les preuves actuellement affichées ci-dessus — la même sélection du Filtre des preuves et le même état de comparaison avec le pair — sous forme de document JSON portable. Rien ici ne recalcule de preuves, ne filtre de candidat ni ne contacte de serveur.',
-    'reconciliationCandidateLeaderboardView.exportEvidence': 'Exporter les preuves',
-    'reconciliationCandidateLeaderboardView.compareExportedEvidence': 'Comparer des preuves exportées',
-    'reconciliationCandidateLeaderboardView.exportedEvidence': 'Preuves exportées',
-    'reconciliationCandidateLeaderboardView.downloadEvidenceExport': 'Télécharger l’export des preuves',
-    'reconciliationCandidateLeaderboardView.importEvidenceExport': 'Importer un export de preuves',
-    'reconciliationCandidateLeaderboardView.pasteAPreviouslyExportedEvidence': 'Collez un document de preuves exporté auparavant (depuis le panneau Export des preuves ci-dessus, de cette réplique ou d’un pair) pour l’inspecter. Cela ne fusionne jamais avec le classement actif ci-dessus, ne le remplace ni ne le recalcule — c’est une consultation en lecture seule d’un document portable distinct.',
-    'reconciliationCandidateLeaderboardView.evidenceExportJson': 'JSON de l’export de preuves',
-    'reconciliationCandidateLeaderboardView.importEvidence': 'Importer les preuves',
-    'reconciliationCandidateLeaderboardView.clearImportedEvidence': 'Effacer les preuves importées',
-    'reconciliationCandidateLeaderboardView.thisIsNotAValid2': 'Ce n’est pas un document d’export de preuves valide — rien n’a été importé.',
-    'reconciliationCandidateLeaderboardView.importedEvidence': 'Preuves importées',
 
     // Publications: reconciliationWorkspaceView.
-    'reconciliationWorkspaceView.pasteAPeerSExported': 'Collez le JSON de la déclaration d’instantané de classement exportée par un pair',
-    'reconciliationWorkspaceView.reconciliationWorkspace': 'Espace de réconciliation',
-    'reconciliationWorkspaceView.localArchive': 'Archive locale',
-    'reconciliationWorkspaceView.thisReplicaSOwnRecorded': 'Les preuves enregistrées par cette réplique — la même archive que lisent et écrivent déjà la page Publications et le Classement des candidats de réconciliation. Il n’y a pas d’archive distincte à choisir.',
-    'reconciliationWorkspaceView.peerEvidence': 'Preuve du pair',
-    'reconciliationWorkspaceView.pasteAPeerSOwn': 'Collez ci-dessous la déclaration signée d’instantané de classement exportée par un pair (Exporter la déclaration, sur sa réplique).',
-    'reconciliationWorkspaceView.peerEvidenceJson': 'JSON de la preuve du pair',
-    'reconciliationWorkspaceView.reconcile': 'Réconcilier',
-    'reconciliationWorkspaceView.clearResult': 'Effacer le résultat',
-    'reconciliationWorkspaceView.result': 'Résultat',
-    'reconciliationWorkspaceView.reconciliationProducedACandidateRecorded': 'La réconciliation a produit un candidat, enregistré comme décision et comme observation de revalidation dans l’archive de cette réplique.',
-    'reconciliationWorkspaceView.viewInLeaderboard': 'Voir dans le classement',
-    'reconciliationWorkspaceView.noReconciliationCandidateWasProduced': 'Aucun candidat de réconciliation n’a été produit — les preuves de ce pair concordent déjà avec l’instantané local de cette réplique.',
 
     // Publications: repositoryView.
     'repositoryView.repository': 'Dépôt',
@@ -2965,15 +2809,6 @@ export default Object.freeze({
     'sharedWithYouPanel.dismiss': 'Ignorer',
     'sharedWithYouPanel.dismissHint': 'Masquer ce partage sur cet appareil. Il ne reviendra pas, même s’il est annoncé à nouveau.',
     'sharedWithYouPanel.shareUnavailable': 'La personne qui a partagé ce Monde ne l’a pas envoyé. L’appareil depuis lequel elle est connectée ne l’a peut-être plus ; demandez-lui de le partager à nouveau.',
-    'candidateLeaderboardTable.hideEvidence': 'Masquer les preuves',
-    'candidateLeaderboardTable.inspectEvidence': 'Inspecter les preuves',
-    'evidenceExportComparisonRecordPairSelector.noDifferences': 'Aucune différence',
-    'evidenceExportComparisonRecordPairSelector.hideDifferences': 'Masquer les différences ▲',
-    'evidenceExportComparisonRecordPairSelector.inspectDifferences': 'Inspecter les différences ▼',
-    'evidenceExportComparisonTable.hideRecords': 'Masquer les enregistrements ▲',
-    'evidenceExportComparisonTable.inspectRecords': 'Inspecter les enregistrements ▼',
-    'evidenceExportComparisonTable.hideIdentity': 'Masquer l’identité ▲',
-    'evidenceExportComparisonTable.inspectIdentity': 'Inspecter l’identité ▼',
     'authorView.anonymous': 'Anonyme',
     'publications.askingPeers': 'Interrogation des pairs…',
     'publications.retrieveFromPeers': 'Récupérer auprès des pairs',
@@ -2982,12 +2817,6 @@ export default Object.freeze({
     'publications.hideCrossDomainTimeline': 'Masquer la chronologie multi-domaines',
     'publications.showCrossDomainTimeline': 'Afficher la chronologie multi-domaines',
     'publications.published': 'Publié',
-    'leaderboardHubView.hidePublisherAchievementProfile': 'Masquer le profil de succès de l’éditeur',
-    'leaderboardHubView.showPublisherAchievementProfile': 'Afficher le profil de succès de l’éditeur',
-    'leaderboardHubView.hidePublisherAchievementBadges': 'Masquer les badges de succès de l’éditeur',
-    'leaderboardHubView.showPublisherAchievementBadges': 'Afficher les badges de succès de l’éditeur',
-    'leaderboardHubView.hidePublisherAchievementStatistics': 'Masquer les statistiques de succès de l’éditeur',
-    'leaderboardHubView.showPublisherAchievementStatistics': 'Afficher les statistiques de succès de l’éditeur',
     'publications.hideDetails': 'Masquer les détails',
     'publications.inspectEvidence': 'Inspecter les preuves',
     'publications.verifying': 'Vérification…',
@@ -3158,17 +2987,12 @@ export default Object.freeze({
     'publications.thisReplicaDoesNotCurrently': 'Cette réplique ne possède pas actuellement de snapshot valide. Choisissez une source ci-dessous — « Importer un Snapshot », « Matérialiser le Snapshot » d’un placement ou « Obtenir le Snapshot d’un pair » — pour réessayer.',
 
     // Publications: leaderboardHubView, text with quotes.
-    'leaderboardHubView.aBadgePresentationOfThe': 'Une présentation sous forme de badges des succès que cet éditeur a déjà obtenus, sur toutes les publications qu’il a explicitement revendiquées — jamais un nouveau succès, et jamais un score, un rang ni une entrée de classement. Certains succès (ceux qui découlent des références) n’ont pas encore de badge et n’apparaissent que dans la carte « Profil de succès de l’éditeur » ci-dessus.',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView, text with quotes.
-    'publisherLeaderboardSnapshotClaimAuthoringView.authorAndExportASigned': 'Créez et exportez une déclaration signée sur l’instantané de classement actuel de VOTRE PROPRE réplique — exactement la preuve que le champ « Preuve du pair » de l’Espace de réconciliation demande à un pair de coller. Générer, signer et exporter sont trois actions distinctes et explicites ; rien sur cette page ne s’exécute automatiquement.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.pasteThisIntoAPeer': 'Collez ceci dans le champ « Preuve du pair » de l’Espace de réconciliation d’un pair, ou envoyez-lui le fichier téléchargé.',
 
     // Publications: reconciliationCandidateLeaderboardView, text with quotes.
-    'reconciliationCandidateLeaderboardView.noPeerArchiveSuppliedYet': 'Aucune archive de pair fournie pour l’instant — chaque décompte ci-dessous reste « Source uniquement » tant que vous n’en collez pas une. Collez l’archive exportée de la réplique d’un pair (Exporter l’archive, sur la page Publications) et cliquez sur « Utiliser comme archive du pair ».',
 
     // Publications: reconciliationWorkspaceView, text with quotes.
-    'reconciliationWorkspaceView.reconcileThisReplicaSOwn': 'Réconciliez explicitement l’archive locale de cette réplique avec une preuve fournie par un pair. Rien sur cette page ne s’exécute automatiquement — la réconciliation n’a lieu que lorsque vous cliquez sur « Réconcilier » ci-dessous.',
 
     // Publications: the publication list, text built around values.
     'publications.preference.storage.unavailable': 'Votre stockage préféré, {name}, ne peut pas être utilisé en un clic ici ; utilisez les options ci-dessous.',
@@ -3417,64 +3241,27 @@ export default Object.freeze({
     'publications.contentHashAssociated': 'Hash du contenu : {contentHash} · Associé : {createdAt}',
 
     // Publications: leaderboardHubView, text with values.
-    'leaderboardHubView.earnedBy': 'Obtenu {observedAt} par {blockchain} — {chainReference}',
-    'leaderboardHubView.earned': '{description} — obtenu {earnedAt}',
-    'leaderboardHubView.publications2': 'Publications {blockchain}',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView, text with values.
-    'publisherLeaderboardSnapshotClaimAuthoringView.claimCreatedSuccessfullySignedBy': 'Déclaration créée avec succès — signée par {signer}.',
 
     // Publications: publisherPerformanceLeaderboardView, text with values.
-    'publisherPerformanceLeaderboardView.publisherSRankedUnderPublisher': { one: '{count} éditeur classé, selon la Règle de classement des éditeurs v{version}', other: '{count} éditeurs classés, selon la Règle de classement des éditeurs v{version}' },
 
     // Publications: reconciliationCandidateLeaderboardView, text with values.
-    'reconciliationCandidateLeaderboardView.comparison': 'Comparaison : {state}',
-    'reconciliationCandidateLeaderboardView.candidates': 'Candidats : {count}',
-    'reconciliationCandidateLeaderboardView.decisions': 'Décisions : {count}',
-    'reconciliationCandidateLeaderboardView.observations': 'Observations : {count}',
 
     // Publications: reconciliationWorkspaceView, text with values.
-    'reconciliationWorkspaceView.reconciliationDidNotCompleteOutcome': 'La réconciliation n’a pas abouti — résultat : {outcome}',
 
     // Publications: candidateEvidenceDetailPanel, text with values.
-    'candidateEvidenceDetailPanel.shared': 'Commun ({count})',
-    'candidateEvidenceDetailPanel.decided': '{disposition} — décidé {decidedAt}',
-    'candidateEvidenceDetailPanel.sourceOnly': 'Source uniquement ({count})',
-    'candidateEvidenceDetailPanel.targetOnly': 'Cible uniquement ({count})',
-    'candidateEvidenceDetailPanel.observedPlanPresentMatchesPlan': '{disposition} — observé {observedAt} — plan {planFingerprint} — présent : {candidatePresent} — correspond au plan : {candidateMatchesPlan}',
 
     // Publications: candidateLeaderboardTable, text with values.
-    'candidateLeaderboardTable.candidateS': { one: '{count} candidat', other: '{count} candidats' },
 
     // Publications: evidenceExportComparisonRecordPairSelector, text with values.
-    'evidenceExportComparisonRecordPairSelector.decisionPair': 'Paire de décision {number}',
-    'evidenceExportComparisonRecordPairSelector.observationPair': 'Paire d’observation {number}',
 
     // Publications: evidenceExportComparisonTable, text with values.
-    'evidenceExportComparisonTable.sourceOnly2': 'Source uniquement ({count})',
-    'evidenceExportComparisonTable.shared2': 'Commun ({count})',
-    'evidenceExportComparisonTable.targetOnly2': 'Cible uniquement ({count})',
 
     // Publications: counts in expressions.
-    'evidenceExportComparisonRecordPairSelector.differences': { one: '{count} différence', other: '{count} différences' },
     'publications.showObservationHistoryCount': 'Afficher l’historique des observations ({count})',
 
     // Publications: reconciliation components (ui/components/reconciliation/).
-    'reconciliation.unknownCandidate': 'Candidat inconnu',
-    'reconciliation.claimAndSnapshot': 'Déclaration {claimId} ↔ Snapshot nº {snapshotIndex}',
-    'reconciliation.claimWithoutSnapshot': 'Déclaration {claimId} (pas de Snapshot correspondant)',
-    'reconciliation.snapshotWithoutClaim': 'Snapshot nº {snapshotIndex} (pas de Déclaration correspondante)',
-    'reconciliation.unknownDecisionRecord': 'Enregistrement de décision inconnu',
-    'reconciliation.unknownObservationRecord': 'Enregistrement d’observation inconnu',
-    'reconciliation.decisionRecord': '{candidate} — {disposition} — décidé {when}',
-    'reconciliation.observationRecord': '{candidate} — {disposition} — observé {when}',
-    'reconciliation.unknownTime': 'à une date inconnue',
-    'reconciliation.yes': 'oui',
-    'reconciliation.no': 'non',
-    'reconciliation.unknownPlan': 'plan inconnu',
-    'reconciliation.comparingPeerArchive': 'Comparaison avec une archive de pair fournie.',
-    'reconciliation.peerArchiveEmpty': 'Une archive de pair a été fournie, mais elle ne contient aucune preuve enregistrée — chaque décompte ci-dessous ne reflète encore que cette réplique.',
-    'reconciliation.noPeerArchive': 'Aucune archive de pair fournie — chaque décompte ci-dessous ne reflète que cette réplique.',
 
     // Publications: labels chosen in the page's composables (ui/views/decentralizedPublications/).
     'publications.unknownContent': 'Contenu inconnu',
@@ -3802,12 +3589,6 @@ export default Object.freeze({
     'publicationSort.titleDesc': 'Titre Z–A',
     'publicationSort.authorAsc': 'Auteur A–Z',
     'publications.anchorCountOn': { one: 'Ancrer {count} publication sur {anchorType}', other: 'Ancrer {count} publications sur {anchorType}' },
-    'reconciliation.filter.all': 'Tout',
-    'reconciliation.filter.decisions': 'Décisions',
-    'reconciliation.filter.observations': 'Observations',
-    'reconciliation.filter.shared': 'Commun',
-    'reconciliation.filter.sourceOnly': 'Source uniquement',
-    'reconciliation.filter.targetOnly': 'Cible uniquement',
 
     // Publications: reconciliation comparison states.
     'reconciliation.state.noPeer': 'Aucune archive de pair',

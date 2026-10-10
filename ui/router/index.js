@@ -50,12 +50,6 @@ const BlurtSettingsView = page('BlurtSettingsView', () => import('../views/Blurt
 const StunSettingsView = page('StunSettingsView', () => import('../views/StunSettingsView.js'));
 const TurnServerSettingsView = page('TurnServerSettingsView', () => import('../views/TurnServerSettingsView.js'));
 const RendezvousSettingsView = page('RendezvousSettingsView', () => import('../views/RendezvousSettingsView.js'));
-const ReconciliationCandidateLeaderboardView = page('ReconciliationCandidateLeaderboardView', () => import('../views/ReconciliationCandidateLeaderboardView.js'));
-const ReconciliationCandidateLeaderboardEvidenceExportComparisonView = page('ReconciliationCandidateLeaderboardEvidenceExportComparisonView', () => import('../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js'));
-const ReconciliationWorkspaceView = page('ReconciliationWorkspaceView', () => import('../views/ReconciliationWorkspaceView.js'));
-const PublisherLeaderboardSnapshotClaimAuthoringView = page('PublisherLeaderboardSnapshotClaimAuthoringView', () => import('../views/PublisherLeaderboardSnapshotClaimAuthoringView.js'));
-const PublisherPerformanceLeaderboardView = page('PublisherPerformanceLeaderboardView', () => import('../views/PublisherPerformanceLeaderboardView.js'));
-const LeaderboardHubView = page('LeaderboardHubView', () => import('../views/LeaderboardHubView.js'));
 const YourDataView = page('YourDataView', () => import('../views/YourDataView.js'));
 const LanguageSettingsView = page('LanguageSettingsView', () => import('../views/LanguageSettingsView.js'));
 
@@ -234,93 +228,10 @@ const routes = [
     // dashboard" shape /settings/arweave-gateway, /settings/nostr-relay,
     // and /settings/stun already hold.
     { path: '/settings/rendezvous', name: 'rendezvous-settings', component: RendezvousSettingsView },
-    // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration. 0.9.400's
-    // own audit (tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js)
-    // found this route real, wired, and reachable end to end EXCEPT that no
-    // in-app link to it existed anywhere — not even the "contextual, not
-    // top-nav" kind /chat/:identityId already held above. Reached now from
-    // the Publication Archive card on /publications (ui/views/
-    // DecentralizedPublicationsView.js), the exact page that already
-    // produces the peer archive export this page's own "Use as Peer
-    // Archive" step asks a person to paste. Deliberately still not its own
-    // top-nav destination — the identical "contextual, not global"
-    // navigation /chat/:identityId already uses.
-    { path: '/reconciliation-leaderboard', name: 'reconciliation-leaderboard', component: ReconciliationCandidateLeaderboardView, meta: { experimental: true } },
-    // 0.8.192 — Reconciliation Candidate Leaderboard Evidence Export
-    // Comparison UI. A second, independent workflow from
-    // /reconciliation-leaderboard directly above: that page compares two
-    // LIVE archives; this page compares two previously EXPORTED, portable
-    // evidence documents, and never reads either live archive at all — see
-    // ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js's
-    // own header. Deliberately OUT OF SCOPE for 0.9.400: that milestone's
-    // own audit gave /reconciliation-leaderboard directly above a real
-    // entry point but explicitly left this page as it found it — still
-    // reached by URL only, with no in-app link anywhere, a real gap this
-    // milestone named but did not close. A future milestone's own decision
-    // to make.
-    //
-    // 0.9.402 recorded that future decision explicitly — CONTEXTUAL_ENTRY_
-    // POINT, with the Leaderboard's own "Export Evidence" panel above as
-    // the verified natural predecessor — but deliberately deferred wiring
-    // it. 0.9.403 fulfills that deferral: one `<router-link>` in
-    // ui/views/ReconciliationCandidateLeaderboardView.js's own Evidence
-    // Export panel, "Compare Exported Evidence," beside "Export Evidence"
-    // itself. This route's own registration, name, and component below are
-    // unchanged by that milestone — only a caller was added, one hop below
-    // /reconciliation-leaderboard, still never a top-nav destination.
-    { path: '/evidence-export-comparison', name: 'evidence-export-comparison', component: ReconciliationCandidateLeaderboardEvidenceExportComparisonView, meta: { experimental: true } },
-    // 0.9.408 — Reconciliation Workspace UI. The first user-facing surface
-    // over application/leaderboard/snapshot/ReconcileClaimUseCase.js
-    // (0.9.407, UNCHANGED) — see ui/views/ReconciliationWorkspaceView.js's
-    // own header. Deliberately its own route, one hop from /publications
-    // (the same "Publication Archive" card that already links to
-    // /reconciliation-leaderboard above), never folded into either existing
-    // reconciliation page and never itself a top-nav destination — the
-    // identical "contextual, not global" navigation shape this whole
-    // reconciliation family already holds.
-    { path: '/reconciliation-workspace', name: 'reconciliation-workspace', component: ReconciliationWorkspaceView, meta: { experimental: true } },
-    // 0.9.411 — Publisher Leaderboard Snapshot Claim Authoring & Export.
-    // The producer-side counterpart to /reconciliation-workspace directly
-    // above: that page consumes a pasted peer claim; this page authors,
-    // signs, and exports THIS replica's own — see ui/views/
-    // PublisherLeaderboardSnapshotClaimAuthoringView.js's own header.
-    // Deliberately its own route, one hop from /publications (the SAME
-    // "Publication Archive" card that already links to
-    // /reconciliation-leaderboard and /reconciliation-workspace above),
-    // never folded into either existing reconciliation page and never
-    // itself a top-nav destination — the identical "contextual, not
-    // global" navigation shape this whole reconciliation family already
-    // holds.
-    { path: '/publisher-snapshot-claim', name: 'publisher-snapshot-claim', component: PublisherLeaderboardSnapshotClaimAuthoringView, meta: { experimental: true } },
-    // 0.9.417 — Publisher Performance Leaderboard UI. 0.9.416's own audit
-    // (tests/PublisherPerformanceLeaderboardProductGapAudit.test.js)
-    // proved application/leaderboard/PublisherRankingPolicy.js (0.8.112) and
-    // application/leaderboard/PublisherLeaderboardView.js (0.8.113), both UNCHANGED,
-    // real and correct but reachable by zero UI paths, and named this
-    // exact shape — a distinct route, contextual, not top-nav — as its
-    // preferred entry-point candidate (that audit's own Section E).
-    // Reached from the SAME "Publication Archive" card on /publications
-    // that already links to /reconciliation-leaderboard,
-    // /reconciliation-workspace, and /publisher-snapshot-claim above —
-    // see ui/views/DecentralizedPublicationsView.js's own 0.9.417
-    // comment. Deliberately its own route, never folded into
-    // /reconciliation-leaderboard itself (the two remain genuinely
-    // distinct concepts — see 0.9.416's own Section A) and never a
-    // top-nav destination.
-    { path: '/publisher-leaderboard', name: 'publisher-leaderboard', component: PublisherPerformanceLeaderboardView, meta: { experimental: true } },
-    // AMENDED — the four routes immediately above this comment
-    // (/reconciliation-leaderboard, /reconciliation-workspace,
-    // /publisher-snapshot-claim, /publisher-leaderboard) were each
-    // originally reached by their own direct contextual link on
-    // /publications' own "Publication Archive" card, per their own
-    // comments above. Those four links (plus the Publisher Achievement
-    // Profile/Badges/Statistics cards that used to sit further down that
-    // same page) are now reached through this one hub route instead — see
-    // ui/views/LeaderboardHubView.js's own header for why those three cards
-    // moved with the links rather than staying behind. The four routes and
-    // their components above are otherwise unchanged; only the caller
-    // moved.
-    { path: '/leaderboard', name: 'leaderboard', component: LeaderboardHubView, meta: { experimental: true } },
+    // The leaderboards and reconciliation pages were retired (docs/Pillars.md,
+    // "What we are not making"): an old link to one opens Home.
+    ...['/leaderboard', '/publisher-leaderboard', '/publisher-snapshot-claim', '/reconciliation-workspace',
+        '/reconciliation-leaderboard', '/evidence-export-comparison'].map((path) => ({ path, redirect: '/' })),
     { path: '/about', name: 'about', component: AboutView }
 ];
 

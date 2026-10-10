@@ -253,29 +253,9 @@ export const SignatureType = Object.freeze({
     // Principles.md, "A Placement Is A Locator, Not Evidence Of History
     // (0.8.18)."
     PUBLICATION_SNAPSHOT_PLACEMENT: 'publication-snapshot-placement',
-    // 0.8.121 — a REQUIRED signature (never optional — see this file's
-    // own "no unsigned claims" rule above), over a
-    // core/PublisherLeaderboardSnapshotClaim.js record. Proves "identity
-    // X itself asserts that the leaderboard snapshot fingerprinting to
-    // `snapshotFingerprint` is the exact snapshot its `evidenceFingerprint`
-    // and `policyVersion` reproduce" — a claim ABOUT a reproducible
-    // conclusion (application/leaderboard/snapshot/Snapshot.js, 0.8.119),
-    // never about the achievement evidence beneath it, and never a
-    // second, competing verdict alongside application/
-    // leaderboard/snapshot/Verification.js's own independent,
-    // unsigned comparison (0.8.120). Signed with a did:key
-    // identity/SigningIdentity.js identity ONLY — deliberately never with
-    // an application/publisher/PublisherIdentityRecord.js label, which carries no
-    // cryptographic meaning at all; see core/PublisherLeaderboardSnapshotClaim.js's
-    // own header, "Do not use PublisherIdentityRecord as the signer."
-    // Several claims, from different signing identities, can all name the
-    // SAME snapshot fingerprint, and several more can each name a
-    // DIFFERENT one built from the identical evidence under a
-    // disagreement about policy — none of them is ever more authoritative
-    // than another, the identical "no central authority" posture every
-    // other claim type in this file already holds. See core/
-    // PublisherLeaderboardSnapshotClaim.js's own
-    // getPublisherLeaderboardSnapshotClaimSigningDescriptor().
+    // Retired with the publisher leaderboards (docs/Pillars.md): signed
+    // leaderboard snapshot claims. Nothing signs or verifies one any more;
+    // the purpose is kept so its string is never reused for something else.
     PUBLISHER_LEADERBOARD_SNAPSHOT_CLAIM: 'publisher-leaderboard-snapshot-claim',
     // 0.9.618 — a REQUIRED signature (never optional — see this file's
     // own "no unsigned claims" rule above), over a

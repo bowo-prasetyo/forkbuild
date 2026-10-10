@@ -5119,3 +5119,41 @@ numbers that say whether the Builder's release changed anything. Pillar served: 
   build add nothing, and that no title or id is sent.
 - Not done: telling apart a builder who comes back on another day from one who publishes two builds in one sitting;
   the counter keeps totals only and can't join paths into one person's.
+
+## The leaderboards and reconciliation retired (unnumbered, 2026-10-10)
+
+**ForkBuild no longer has leaderboards, publisher rankings or the reconciliation pages.** They ranked publishers and
+reconciled signed claims about those rankings, which contradicts "no points, levels or rankings of people"
+(docs/Pillars.md, "What we are not making") and served no player; since 1.3.0 they sat behind **Show experimental
+tools**. Pillar served: building feels joyful, by taking a scoreboard out of a builder. Recommendation 3 of the
+creative-direction review (docs/Pillars.md, "Where this came from").
+
+- **Pages.** `/leaderboard`, `/publisher-leaderboard`, `/publisher-snapshot-claim`, `/reconciliation-workspace`,
+  `/reconciliation-leaderboard` and `/evidence-export-comparison` are gone; an old link to one opens Home
+  (ui/router/index.js). The Publications page's Archive Tools no longer link to them. Their CSS and their 219
+  messages in every language went with them.
+- **Code.** Everything only those pages reached: application/leaderboard/, application/claimSnapshotReconciliation/,
+  ui/components/reconciliation/, the publisher achievement profile, badge and statistics views, and achievement
+  evidence export, exchange, merge and fingerprint (most already unused); 107 modules, about 27,000 lines. Achievements
+  themselves stay on the Publications page.
+- **Signed claims.** core/PublisherLeaderboardSnapshotClaim.js and `LocalAuthorizationVerifier#verifyPublisherLeaderboardSnapshotClaim()`
+  are removed; nothing signs or accepts such a claim now. The signature purpose `publisher-leaderboard-snapshot-claim`
+  stays in core/Signature.js, retired, so the string is never reused.
+- **The observation archive keeps schema 10.** Its leaderboard claim, reconciliation decision and revalidation
+  observation collections are gone from the model, the difference, the replacement review, the inspection and the
+  import count. On reading, each must still be a list (as schema 10 has always required) and is dropped; on writing,
+  each is an empty list. So an archive saved with them still loads and imports with every other fact, an older copy
+  of ForkBuild still reads what this one writes, and an archive that never had them keeps its fingerprint. Bumping the
+  schema would have emptied every saved archive, since another schemaVersion loads as an empty one.
+- docs/principles/achievements.md is now "Achievements and credit"; its 14 ranking and reconciliation rules move under
+  "Retired", kept so old citations resolve. Guide 12 is "Archive & Achievements" (file name kept for links), with a
+  short "Retired" section, and guides 09 and the guide index follow, in every language; README, Architecture,
+  Pillars and Translating too.
+- Tests: 99 test files of the removed code are removed with it. `PublicationObservationArchive` Section G loads an
+  archive saved with leaderboard claims and decisions, keeps its other facts, drops those, saves exactly as an archive
+  that never had them, and still refuses a retired collection that is missing or not a list. The archive fingerprint
+  vectors are unchanged. Checked in the real app: each old address opens Home, from a fresh load and from in-app
+  navigation, and the Publications page opens with no errors.
+- Not done: Publisher Associations stay on the Publications page; with the publisher cards gone they only label
+  publications, and folding or removing them is a separate call.
+

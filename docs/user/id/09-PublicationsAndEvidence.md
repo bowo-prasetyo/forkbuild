@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7c7451cea88d3528 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f792d993d2ee00e6 -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -38,9 +38,8 @@ tambahkan pada sebuah klaim:
 - **[Bukti & Penyimpanan](11-EvidenceAndStorage.md)** — bukti eksternal
   (Bitcoin, Base, Arweave, Steem, Blurt), alur dompet, Penempatan Snapshot,
   penerbitan IPFS, Steem, dan Blurt.
-- **[Arsip & Papan Peringkat](12-ArchiveAndLeaderboards.md)** — arsip
-  pengamatan yang tahan lama, referensi, pencapaian, label penerbit, dan
-  halaman Papan Peringkat.
+- **[Arsip & Pencapaian](12-ArchiveAndLeaderboards.md)** — arsip
+  pengamatan yang tahan lama, referensi, pencapaian, dan label penerbit.
 
 ## Dua arti "terbitkan"
 
@@ -512,7 +511,6 @@ percobaan, dan layar yang sedang berlangsung tidak.
 | Catatan **Publikasi Jangkar Bitcoin/Base**, dibuat saat finalisasi | Koneksi alur dompet, pengamatan dana atau akun, rencana, tinjauan, tanda tangan, transaksi yang difinalisasi, hasil penyiaran, dan riwayat konfirmasi atau inklusi di layar |
 | **Arsip Pengamatan Publikasi** (setiap penerbitan dan verifikasi IPFS, penyiaran, konfirmasi, dan bukti konten Bitcoin, serta inklusi Base), sampai **Kosongkan Arsip** | — |
 | Referensi Publikasi dan Asosiasi Penerbit | Kartu dan baris mana yang sedang Anda buka |
-| Keputusan dan pengamatan rekonsiliasi (disimpan di arsip) | Arsip rekan yang ditempel, ekspor bukti yang diimpor, saringan, Perbandingan Ekspor Bukti, dan Klaim Snapshot Penerbit |
 
 Setelah dimuat ulang, hasil sebuah alur atau penerbitan IPFS tetap terlihat
 di [Arsip Pengamatan](12-ArchiveAndLeaderboards.md#arsip-pengamatan-publikasi),

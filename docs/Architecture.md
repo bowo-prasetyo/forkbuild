@@ -1610,11 +1610,12 @@ the rest.
 - **Evidence, archives and timelines.** Observation histories, archives
   with fingerprints and differences, and lifecycle timelines
   (PublicationObservationArchive*, *TimelineView, *ArchiveView).
-- **Achievements, rankings and reconciliation.** Achievement events,
-  badges and profiles derived from evidence; leaderboards as a
-  presentation of a ranking policy; signed leaderboard claims and their
-  reconciliation (the `/leaderboard`, `/publisher-leaderboard`,
-  `/reconciliation-*` and `/evidence-export-comparison` routes).
+- **Achievements.** Achievement events, badges and profiles derived from
+  evidence (application/achievement/). The leaderboards, signed leaderboard
+  claims and their reconciliation were retired in October 2026; their old
+  routes redirect to Home, and the observation archive reads and drops the
+  collections they kept (application/publication/observationArchive/
+  PublicationObservationArchive.js, "LEGACY_FIELDS").
 - **Notifications.** core/NotificationEvent.js,
   storage/NotificationEventStore.js, GetRecipientNotificationEventsUseCase
   and ui/components/NotificationHistoryPanel.js, which ui/App.js hosts from
@@ -1636,8 +1637,8 @@ The user-facing entry point is the Publications page (`/publications`,
 ui/views/DecentralizedPublicationsView.js). docs/Roadmap.md has one entry
 per milestone for this area, and docs/Principles.md groups its rules
 under "Decentralized publication, content and replicas", "External
-anchoring and chain transactions", "Achievements, rankings and
-reconciliation" and "Notifications".
+anchoring and chain transactions", "Achievements and credit" and
+"Notifications".
 
 ## Renderer
 
@@ -1700,8 +1701,7 @@ Blurt anchoring with their wallets: the Publications page and the Proof &
 Anchoring settings), `distribution` (publication and Snapshot distribution,
 Snapshot and place-name discovery, remote IPFS pinning, IPFS content checks
 and Publication links: the Editor, World View, the Publications page and a
-Publication link), `observationArchive` (the Publications page and the
-leaderboards) and `sound` (World View and the Editor). What must run from
+Publication link), `observationArchive` (the Publications page) and `sound` (World View and the Editor). What must run from
 the start stays at startup: the stores, the peer exchanges that listen for
 peers' messages, background announcement sync, backups, and everything the
 header shows. tests/ServiceGroupCoverage.test.js fails if a page injects a
@@ -1712,8 +1712,7 @@ ui/router/index.js
 defines the routes: Home, Editor (`/editor`), Repository, Recent Worlds,
 Author, World View (`/world/:documentId`), Live World, Avatar, Identity,
 Peers, Chat and Conversations, Publications (`/publications`), the
-settings pages under `/settings/…` (including Language), the leaderboard and reconciliation
-views, the weekly challenge (`/challenge`, `/challenge/:id`), and About.
+settings pages under `/settings/…` (including Language), the weekly challenge (`/challenge`, `/challenge/:id`), and About.
 The header (ui/App.js) shows Home, Editor, Repository, Challenge and My
 Worlds, and groups the other pages under More (You, People,
 Network, App); a phone's Menu lays More's groups out open. Views reach

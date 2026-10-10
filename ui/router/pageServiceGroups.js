@@ -8,10 +8,5 @@ export const PAGE_SERVICE_GROUPS = Object.freeze({
     WorldView: ['distribution', 'sound'],
     PublicationLinkView: ['distribution'],
     DecentralizedPublicationsView: ['anchoring', 'distribution', 'observationArchive'],
-    AnchorProviderSettingsView: ['anchoring'],
-    ReconciliationCandidateLeaderboardView: ['observationArchive'],
-    ReconciliationWorkspaceView: ['observationArchive'],
-    PublisherLeaderboardSnapshotClaimAuthoringView: ['observationArchive'],
-    PublisherPerformanceLeaderboardView: ['observationArchive'],
-    LeaderboardHubView: ['observationArchive']
+    AnchorProviderSettingsView: ['anchoring']
 });

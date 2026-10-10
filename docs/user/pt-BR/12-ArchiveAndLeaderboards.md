@@ -1,5 +1,5 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 6f86f5609d7f2b27 -->
-# 12 — Arquivo e classificações
+<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 2831381c24cb53fe -->
+# 12 — Arquivo e conquistas
 
 <!-- languages -->
 [English](../12-ArchiveAndLeaderboards.md) · [Deutsch](../de/12-ArchiveAndLeaderboards.md) · [Español](../es/12-ArchiveAndLeaderboards.md) · [Français](../fr/12-ArchiveAndLeaderboards.md) · [Bahasa Indonesia](../id/12-ArchiveAndLeaderboards.md) · [日本語](../ja/12-ArchiveAndLeaderboards.md) · [한국어](../ko/12-ArchiveAndLeaderboards.md) · **Português (Brasil)**
@@ -8,14 +8,13 @@
 > **Experimental.** Tudo aqui pode mudar ou ser removido numa versão
 > futura, e o que produz pode não ser aproveitado depois. Na página
 > Publicações, o painel **Ferramentas de carteira, arquivo e editor** é
-> marcado com um selo **Experimental**; as páginas de classificação mostram
-> uma faixa **Experimental**.
+> marcado com um selo **Experimental**.
 
 As ferramentas de Bitcoin, Base e IPFS de
 [Evidências e armazenamento](11-EvidenceAndStorage.md) registram o que
 observam num arquivo durável neste dispositivo. Este guia trata desse
 arquivo e do que é construído sobre ele: referências entre publicações,
-conquistas, rótulos de editores e as páginas de classificação.
+conquistas e rótulos de editores.
 
 A maioria destes cartões fica na página Publicações, em **Ferramentas de
 carteira, arquivo e editor**, nas guias **Ferramentas de arquivo** e
@@ -176,8 +175,7 @@ aqui liga uma publicação a uma pessoa.
 ## Identidade do editor
 
 **Associações de editores** permite rotular publicações com um nome de
-editor, por sua própria conta, para os cartões de editor e a classificação
-abaixo.
+editor, por sua própria conta.
 
 Um identificador de editor é um rótulo simples e autodeclarado, não uma
 identidade verificada nem um login. A correspondência é exata: `Alice`,
@@ -196,164 +194,14 @@ ou nomes.
 **Publicações associadas a um editor** mostra todas as publicações de um
 editor escolhido, com o hash do conteúdo e quando foi associada.
 
-Três cartões da página de [Classificação](#central-de-classificações) se
-baseiam nessas associações, cada um com sua lista **Escolha um editor**:
+## Removido: classificações e conciliação
 
-| Cartão | Mostra |
-|---|---|
-| **Perfil de conquistas do editor** | Todas as conquistas ganhas por qualquer publicação que o editor reivindica, e qual publicação a ganhou. |
-| **Emblemas de conquistas do editor** | O mesmo, limitado às conquistas com emblema, cada uma com um link de volta para o ciclo de vida dela na página Publicações. |
-| **Estatísticas de conquistas do editor** | Contagens de publicações associadas, conquistas, tipos de conquista, emblemas e tipos de emblema, publicações por cadeia e conquistas por tipo. |
-
-Sem associações ainda, cada cartão diz isso e aponta para Associações de
-editores. Eles informam o que um editor *declara*, não quem controla uma
-publicação, e nenhum deles classifica ninguém.
-
-## Central de classificações
-
-A página **Classificação** (`/leaderboard`) reúne links para as páginas
-abaixo, mais os três cartões de editor acima. Ela não está na barra
-superior: abra-a pelo link **Classificação** abaixo do cartão **Arquivo de
-publicações**, na página Publicações.
-
-### Classificação de desempenho dos editores
-
-`/publisher-leaderboard` classifica os editores pelo que este dispositivo
-registrou: **Posição**, **Editor**, **Conquistas**, **Tipos de conquista** e
-**Publicações**, calculados de novo cada vez que a página abre e nunca
-guardados. Um editor aparece depois que você associou uma publicação a ele.
-Os nomes são rótulos seus, não identidades verificadas.
-
-### Declaração de snapshot do editor
-
-`/publisher-snapshot-claim` assina uma declaração sobre o snapshot atual da
-sua classificação, para que um par possa comparar com ele. Você precisa ter
-entrado.
-
-1. **Gerar e assinar declaração** — calcula seu snapshot e assina uma
-   declaração sobre ele. Mostra quem assinou e as impressões digitais da
-   evidência, da política e do snapshot. **Recomeçar** a descarta.
-2. **Exportar declaração** — mostra a declaração como JSON, com um link
-   **Baixar declaração**, para colar no
-   [Espaço de conciliação](#espaço-de-conciliação) de um par ou enviar como
-   arquivo.
-
-### Espaço de conciliação
-
-`/reconciliation-workspace`: cole a declaração exportada de um par em **JSON
-da evidência do par** e clique em **Conciliar**. Ele compara a declaração
-com o seu arquivo e, quando isso encontra um candidato de conciliação,
-registra uma decisão e uma observação de revalidação no seu arquivo e
-oferece **Ver na classificação**. Se não houver nada para conciliar, ele diz
-por quê. **Limpar resultado** dispensa o resultado.
-
-### Classificação de candidatos de conciliação
-
-`/reconciliation-leaderboard` é somente leitura. Mostra, para cada candidato
-de conciliação, as evidências que o seu arquivo guarda, comparadas, se você
-quiser, com o arquivo de um par.
-
-Um **candidato** é um ponto onde uma declaração de evidência externa e um
-registro de Snapshot local do mesmo conteúdo foram comparados:
-
-| Rótulo do candidato | Significado |
-|---|---|
-| **Declaração *X* ↔ Snapshot nº *N*** | Uma declaração e um snapshot que foram comparados e divergiram. |
-| **Declaração *X* (sem Snapshot correspondente)** | Uma declaração sem snapshot para comparar. |
-| **Snapshot nº *N* (sem declaração correspondente)** | Um snapshot sem declaração para comparar. |
-
-Os candidatos vêm do Espaço de conciliação. Até você conciliar ali uma
-declaração de um par, a página mostra "Não há candidatos de conciliação para
-mostrar.".
-
-**Colunas.** **Evidências de decisão** (uma escolha registrada de qual lado
-mereceu confiança) e **Evidências de observação** (uma nova conferência
-posterior daquela decisão) têm, cada uma, três contagens: **Em comum** (os
-dois arquivos têm), **Só na origem** (só o seu) e **Só no destino** (só o do
-par). As linhas aparecem na ordem em que foram encontradas, não por quantas
-evidências têm; isto não é uma classificação.
-
-**Comparando com um par.** Cole a exportação de arquivo de um par em
-**Arquivo do par** e clique em **Usar como arquivo do par**. Uma colagem
-inválida é recusada. Sem arquivo de par, tudo conta como Só na origem. Uma
-linha acima da tabela diz em que caso você está:
-
-| Faixa | Significado |
-|---|---|
-| *Nenhum arquivo de par fornecido — todas as contagens abaixo refletem só esta réplica.* | Ainda sem arquivo de par. |
-| *Um arquivo de par foi fornecido, mas não tem nenhuma evidência registrada — todas as contagens abaixo ainda refletem só esta réplica.* | Um arquivo de verdade, mas vazio. |
-| *Comparando com um arquivo de par fornecido.* | Uma comparação de verdade. |
-
-**Inspecionar evidências** (depois **Ocultar evidências**) numa linha lista
-os registros de decisão e de observação por trás das contagens dela,
-divididos em Em comum, Só na origem e Só no destino. Cada observação mostra
-a impressão digital do plano com que foi conferida (como `plano
-abcdef012345…`) e se o candidato estava **presente** e **corresponde ao
-plano**, como registrado. Registros parecidos continuam separados.
-
-**Filtro de evidências.** Duas listas restringem o que aparece: **Tipo de
-evidência** (**Todos**, **Decisões**, **Observações**) e **Relação entre
-réplicas** (**Todos**, **Em comum**, **Só na origem**, **Só no destino**).
-Uma linha fica se tiver evidências daquele tipo naquela relação. Com
-**Relação entre réplicas** em **Todos**, nada é filtrado; com **Tipo de
-evidência** em **Todos**, uma linha corresponde se qualquer um dos tipos
-tiver a relação escolhida. O filtro também restringe a lista Inspecionar
-evidências de cada linha. Ele só oculta linhas e registros; as contagens de
-uma linha nunca mudam.
-
-**Exportação de evidências.** **Exportar evidências** produz um documento
-JSON exatamente com o que o filtro mostra, registrando o estado de
-comparação e o filtro usados, com um link **Baixar a exportação de
-evidências**
-(`reconciliation-candidate-leaderboard-evidence-export.json`). Nada é
-enviado. **Comparar evidências exportadas** abre a
-[Comparação de exportações de evidências](#comparação-de-exportações-de-evidências).
-
-**Importar exportação de evidências.** Cole uma exportação (sua ou de um
-par) e clique em **Importar evidências** para ver o estado de comparação e
-as contagens de candidatos, decisões e observações dela. Uma colagem
-inválida é recusada e o resumo anterior fica. **Limpar evidências
-importadas** o dispensa. Isso não afeta a tabela acima.
-
-A página lê seu arquivo uma vez, quando abre; reabra-a para ver registros
-novos. O arquivo do par, o filtro, as linhas abertas e o resumo importado não
-são guardados.
-
-## Comparação de exportações de evidências
-
-`/evidence-export-comparison` compara duas exportações de evidências entre
-si — por exemplo a da semana passada com a de hoje, ou a sua com a de um
-par. Não lê seu arquivo nem afeta a classificação.
-
-Cole os dois documentos em **Exportação de evidências de origem** e
-**Exportação de evidências de destino** e clique em **Comparar evidências**.
-Um lado inválido é recusado sozinho; o outro lado fica. **Limpar
-comparação** esvazia a página.
-
-- **Estado da comparação** e **Filtro** mostram o estado de comparação e o
-  filtro registrados em cada documento, e se são iguais.
-- Três tabelas — **presença de candidatos**, **evidências de decisão** e
-  **evidências de observação** — contam, cada uma, Só na origem, Em comum e
-  Só no destino, e nunca são combinadas.
-- **Inspecionar registros** (depois **Ocultar registros**) lista os
-  registros por trás das contagens de uma tabela. Num registro de decisão
-  ou de observação, **Inspecionar identidade** mostra os campos que o
-  identificam:
-
-| Registro | Campos de identidade |
-|---|---|
-| Decisão | `decided`, `candidate`, `decision`, `decidedAt` |
-| Observação | `candidate`, `decision`, `planIdentity`, `candidatePresent`, `candidateType`, `candidateMatchesPlan`, `observedAt` |
-
-**Pareamento explícito de registros.** Para comparar dois registros
-específicos, escolha um registro de origem e um de destino (de qualquer
-partição) para decisões ou observações e clique em **Adicionar par**;
-**Remover** tira um par. Nada é pareado automaticamente, e o mesmo par pode
-ser adicionado duas vezes. Em **Diferenças entre registros pareados**, cada
-**Par de decisões *N*** ou **Par de observações *N*** mostra quantos campos
-de identidade diferem (ou **Sem diferenças**); **Inspecionar diferenças**
-os nomeia, ou diz **Idênticos em todos os campos nomeados.** Nunca diz qual
-lado está certo.
-
-Nada nesta página é guardado nem enviado para lugar nenhum; recarregar a
-apaga.
+Versões anteriores tinham páginas de classificação: uma classificação de
+editores, declarações assinadas de instantâneo do editor, um espaço e uma
+classificação de conciliação, e a comparação de exportações de evidências.
+O ForkBuild não classifica pessoas nem guarda pontuações
+([Pilares](../../Pillars.md#what-we-are-not-making)), por isso elas foram removidas. Um link antigo para uma
+dessas páginas abre o Início. Um arquivo salvo quando elas existiam continua
+carregando e sendo importado, com todos os seus outros registros; as
+declarações de classificação e as decisões de conciliação que ele tinha são
+descartadas.

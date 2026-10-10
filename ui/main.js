@@ -901,7 +901,7 @@ defineServiceGroup('distribution', async () => {
 });
 
 // Every observation of a publication this device has recorded, for the
-// Publications page's history and the leaderboards; a single shared instance
+// Publications page's history; a single shared instance
 // app-wide.
 defineServiceGroup('observationArchive', async () => {
     const { LocalStoragePublicationObservationArchive } = await import('../storage/LocalStoragePublicationObservationArchive.js');

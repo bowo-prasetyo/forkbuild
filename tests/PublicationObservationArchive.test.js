@@ -400,6 +400,42 @@ async function run() {
     }
     console.log('✓ Section F: clear() is the only destructive action — save()/load() never call it');
 
+    // ---------------------------------------------------------------
+    // Section G — the retired leaderboard and reconciliation collections:
+    // an archive saved while they existed still loads, its other facts
+    // intact and those collections dropped; they are always written empty,
+    // so an older copy of ForkBuild can still read what this one saves.
+    // ---------------------------------------------------------------
+    {
+        const LEGACY = ['leaderboardClaimRecords', 'leaderboardClaimRecordProvenance', 'reconciliationDecisionRecords',
+            'reconciliationDecisionRecordProvenance', 'revalidationObservationRecords', 'revalidationObservationRecordProvenance'];
+        const archive = PublicationObservationArchive.empty().appendIpfsPublicationRecord(new IpfsPublicationRecord({
+            contentHash: 'sha256:legacy', locator: 'ipfs://bafylegacy', publishedAt: new Date('2026-08-01T00:00:00Z'), publicationMethod: IpfsPublicationMethod.REMOTE_PINNING
+        }));
+        const saved = archive.toJSON();
+        assert(saved.schemaVersion === 10 && LEGACY.every((field) => Array.isArray(saved[field]) && saved[field].length === 0),
+            '48. schema 10 is kept, and the retired collections are written, empty');
+
+        const older = JSON.parse(JSON.stringify(saved));
+        older.leaderboardClaimRecords = [{ claim: { claimId: 'c-1' }, receivedAt: '2026-08-02T00:00:00.000Z', origin: 'PEER' }];
+        older.leaderboardClaimRecordProvenance = ['LOCAL'];
+        older.reconciliationDecisionRecords = [{ decided: true, candidate: { selected: true }, decision: 'OBSERVE', decidedAt: '2026-08-03T00:00:00.000Z' }];
+        older.reconciliationDecisionRecordProvenance = ['IMPORTED'];
+        const loaded = PublicationObservationArchive.fromJSON(older);
+        assert(loaded.publicationCount === 1 && loaded.ipfsPublicationRecords[0].locator === 'ipfs://bafylegacy',
+            '49. an archive saved with leaderboard claims and decisions still loads with its other facts');
+        assert(LEGACY.every((field) => loaded.toJSON()[field].length === 0) && loaded.totalFactCount === archive.totalFactCount,
+            '50. the retired collections are dropped, and count toward nothing');
+        assert(JSON.stringify(loaded.toJSON()) === JSON.stringify(saved), '51. and the archive saves exactly as one that never had them');
+
+        const broken = JSON.parse(JSON.stringify(saved));
+        broken.leaderboardClaimRecords = 'not a list';
+        assert(PublicationObservationArchive.fromJSON(broken).publicationCount === 0, '52. a retired collection that is not a list is still malformed');
+        delete broken.leaderboardClaimRecords;
+        assert(PublicationObservationArchive.fromJSON(broken).publicationCount === 0, '53. and one that is missing is too, as schema 10 has always required');
+    }
+    console.log('✓ Section G: archives saved with the retired leaderboard collections still load, without them');
+
     console.log('\nAll PublicationObservationArchive tests passed.');
 }
 

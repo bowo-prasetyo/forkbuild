@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: b2d25842ce536f07 -->
+<!-- translation-of: docs/user/README.md source-hash: 3b535dc98d81e02d -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
@@ -58,9 +58,9 @@ in [docs/Architecture.md](../../Architecture.md) und im übrigen
     und, *experimentell*, andere externe Nachweise, die Wallet-Abläufe für
     Bitcoin und Base, entferntes IPFS-Pinning, Steem und Blurt.
     [Ihre Arbeit verteilen](Distribution.md) zeigt, wie das zusammenpasst.
-12. **[Archiv & Bestenlisten](12-ArchiveAndLeaderboards.md)** —
+12. **[Archiv & Erfolge](12-ArchiveAndLeaderboards.md)** —
     *experimentell*. Das Beobachtungsarchiv, Veröffentlichungsverweise,
-    Erfolge, Herausgeberkennungen und die Bestenlisten-Seiten.
+    Erfolge und Herausgeberkennungen.
 13. **[Ihre Daten](13-YourData.md)** — alles, was dieser Browser enthält,
     in eine verschlüsselte Datei sichern und wiederherstellen, die
     kleineren Exporte und wo dieses Gerät das Verteilen Ihrer

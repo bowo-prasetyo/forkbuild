@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7c7451cea88d3528 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f792d993d2ee00e6 -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -40,9 +40,8 @@ Tiefe, die Sie einem Anspruch geben können:
 - **[Nachweise & Speicher](11-EvidenceAndStorage.md)** — externe Nachweise
   (Bitcoin, Base, Arweave, Steem, Blurt), die Wallet-Abläufe,
   Snapshot-Platzierungen, Veröffentlichen auf IPFS, Steem und Blurt.
-- **[Archiv & Bestenlisten](12-ArchiveAndLeaderboards.md)** — das
-  dauerhafte Beobachtungsarchiv, Verweise, Erfolge, Herausgeberkennungen
-  und die Bestenlisten-Seiten.
+- **[Archiv & Erfolge](12-ArchiveAndLeaderboards.md)** — das
+  dauerhafte Beobachtungsarchiv, Verweise, Erfolge und Herausgeberkennungen.
 
 ## Zwei Bedeutungen von „veröffentlichen“
 
@@ -524,7 +523,6 @@ Versuche und Ansichten in Arbeit nicht.
 | Datensätze unter **Bitcoin-/Base-Ankerveröffentlichungen**, beim Finalisieren erstellt | Verbindung, Guthaben- oder Kontobeobachtung, Plan, Prüfung, Signatur, finalisierte Transaktion, Sendeergebnis und angezeigter Bestätigungs- oder Aufnahmeverlauf der Wallet-Abläufe |
 | Das **Beobachtungsarchiv** der Veröffentlichungen (jede IPFS-Veröffentlichung und -Überprüfung, jedes Bitcoin-Senden, jede Bestätigung und jeder Inhaltsnachweis sowie jede Base-Aufnahme), bis **Archiv leeren** | — |
 | Veröffentlichungsverweise und Herausgeberzuordnungen | Welche Karten und Zeilen Sie geöffnet hatten |
-| Abgleichsentscheidungen und -beobachtungen (im Archiv aufbewahrt) | Eingefügte Peer-Archive, importierte Nachweisexporte, Filter, Vergleich von Nachweisexporten und Snapshot-Anspruch des Herausgebers |
 
 Nach einem Neuladen sind die Ergebnisse eines Ablaufs oder einer
 IPFS-Veröffentlichung weiterhin im

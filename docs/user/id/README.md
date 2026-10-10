@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: b2d25842ce536f07 -->
+<!-- translation-of: docs/user/README.md source-hash: 3b535dc98d81e02d -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
@@ -55,8 +55,8 @@ dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
     Base, pinning IPFS jarak jauh, Steem, dan Blurt.
     [Mendistribusikan Karya Anda](Distribution.md) menunjukkan bagaimana
     semuanya saling terkait.
-12. **[Arsip & Papan Peringkat](12-ArchiveAndLeaderboards.md)** — *eksperimental*. Arsip pengamatan, referensi publikasi,
-    pencapaian, label penerbit, dan halaman Papan Peringkat.
+12. **[Arsip & Pencapaian](12-ArchiveAndLeaderboards.md)** — *eksperimental*. Arsip pengamatan, referensi publikasi,
+    pencapaian, dan label penerbit.
 13. **[Data Anda](13-YourData.md)** — mencadangkan semua yang disimpan
     browser ini ke satu file terenkripsi dan memulihkannya, ekspor yang
     lebih kecil, dan di mana perangkat ini mencatat distribusi publikasi

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: b2d25842ce536f07 -->
+<!-- translation-of: docs/user/README.md source-hash: 3b535dc98d81e02d -->
 # Documentation utilisateur de ForkBuild
 
 <!-- languages -->
@@ -59,10 +59,9 @@ reste du dossier [docs/](../..) de premier niveau.
     portefeuille Bitcoin et Base, l’épinglage IPFS distant, Steem et Blurt.
     [Distribuer votre travail](Distribution.md) montre comment tout cela
     s’articule.
-12. **[Archive et classements](12-ArchiveAndLeaderboards.md)** —
+12. **[Archive et succès](12-ArchiveAndLeaderboards.md)** —
     *expérimental*. L’archive des observations, les références entre
-    publications, les succès, les étiquettes d’éditeur et les pages de
-    Classement.
+    publications, les succès et les étiquettes d’éditeur.
 13. **[Vos données](13-YourData.md)** — sauvegarder tout ce que ce
     navigateur contient dans un seul fichier chiffré et le restaurer, les
     exports plus restreints, et où cet appareil a enregistré la

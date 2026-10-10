@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7c7451cea88d3528 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f792d993d2ee00e6 -->
 # 09 — 公開物と外部証拠
 
 <!-- languages -->
@@ -37,8 +37,8 @@ ForkBuild を使うのに、ここにあるものは何も必要ありません�
 - **[証拠とストレージ](11-EvidenceAndStorage.md)** — 外部証拠
   （Bitcoin、Base、Arweave、Steem、Blurt）、ウォレットのパイプライン、
   スナップショットの配置、IPFS への公開、Steem と Blurt。
-- **[アーカイブとリーダーボード](12-ArchiveAndLeaderboards.md)** — 永続的な
-  観測アーカイブ、参照、実績、公開者ラベル、リーダーボードのページ。
+- **[アーカイブと実績](12-ArchiveAndLeaderboards.md)** — 永続的な
+  観測アーカイブ、参照、実績、公開者ラベル。
 
 ## 「公開」の 2 つの意味
 
@@ -483,7 +483,6 @@ Nostr、Steem。最初は
 | 確定時に作られる **Bitcoin/Baseアンカーの公開** の記録 | ウォレットのパイプラインの接続、資金やアカウントの観測、計画、確認、署名、確定したトランザクション、ブロードキャストの結果、画面上の承認や取り込みの履歴 |
 | **公開物の観測アーカイブ**（IPFS へのすべての公開と検証、Bitcoin のブロードキャスト、承認と内容の証明、Base への取り込み）。**アーカイブをクリア** するまで | — |
 | 公開物の参照と公開者の関連付け | 開いていたカードや行 |
-| 照合の判断と観測（アーカイブに保存） | 貼り付けたピアのアーカイブ、インポートした証拠のエクスポート、絞り込み、証拠エクスポートの比較、公開者のスナップショットの主張 |
 
 再読み込みしたあとも、パイプラインや IPFS への公開の結果は、
 [観測アーカイブ](12-ArchiveAndLeaderboards.md#公開物の観測アーカイブ)、
