@@ -5,6 +5,10 @@
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · **Bahasa Indonesia** · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../05-IdentityAndLogin.md).
+<!-- /stale -->
+
 ForkBuild tidak memiliki kata sandi dan tidak ada server akun pusat.
 **Identitas Anda adalah pasangan kunci kriptografis yang tersimpan di
 browser ini** — kunci yang sama yang menandatangani semua yang Anda bangun,

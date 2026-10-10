@@ -5,6 +5,10 @@
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · **Português (Brasil)**
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../05-IdentityAndLogin.md).
+<!-- /stale -->
+
 O ForkBuild não tem senhas nem servidor central de contas. **Sua identidade é
 um par de chaves criptográficas guardado neste navegador** — a mesma chave
 que assina tudo o que você constrói, publica, envia em mensagem ou move. Este

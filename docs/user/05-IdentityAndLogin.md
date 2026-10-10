@@ -88,6 +88,21 @@ Browser password managers are told not to autofill this page's fields.
 There's no rename or delete — identities are meant to persist; if you want
 to stop using one, revoke it instead.
 
+### What revoking does — and doesn't
+
+Revoking stops an identity from signing anything new, including the proof
+it needs to start a new connection with another person. It does **not** log
+you out, and you can still log in with it afterwards — its card on **My
+Identities** just shows **Revoked**. That's on purpose, so you
+can still open it to look at it or **Export** it one last time. To keep
+working, create a new identity and log in with that one instead.
+
+Revoking is permanent, on this device and on any device you restore its
+backup to. Connections that were already open when you revoked aren't cut;
+the next time they reconnect, the revoked identity can't prove itself.
+Declare a successor *before* revoking if you want people to know which
+identity replaces it — afterwards the revoked one can no longer sign that.
+
 ## Backing up an identity (export & import)
 
 Your identity only exists on this device unless you back it up. **Export**
