@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 1d94840844dd42aa -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d2c323274d094628 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -114,13 +114,7 @@ irama berjalan atau berlarinya dan berubah sesuai apa yang diinjak: rumput,
 dedaunan yang berderak di hutan, pasir lembut di pantai, batu di dataran
 tinggi dan berbatu, cipratan di danau atau sungai, dan ketukan hampa di atas
 balok. Melompat menghasilkan desir, dan mendarat bunyi gedebuk, lebih berat
-setelah jatuh lebih lama. Saat berkendara, Anda mendengarnya: ban dan roda
-bebas sepeda, dengung sepeda motor, gemuruh mobil, atau desing drone, makin
-tinggi saat Anda mempercepat dan memudar saat Anda turun. Naik dan turun
-juga memiliki suaranya sendiri (bel dan standar sepeda, starter injak
-sepeda motor, pintu dan kunci kontak mobil, baling-baling drone yang
-berputar naik dan turun), dan mengerem saat melaju membuat ban atau kampas
-rem berdecit, makin keras makin cepat Anda melaju.
+setelah jatuh lebih lama. Saat berkendara, Anda mendengarnya: ban dan roda bebas sepeda atau sepeda roda tinggi, gemuruh roda kayu gerobak jerami, atau deru pembakar balon udara, makin tinggi saat Anda mempercepat dan memudar saat Anda turun; kendaraan beroda diam saat berhenti. Naik dan turun juga memiliki suaranya sendiri (bel dan standar sepeda, derit dan denting sepeda roda tinggi, papan berderit dan jerami berdesir pada gerobak, pembakar yang menderu lalu padam), dan mengerem saat melaju membuat rem berdecit, bergesek, atau berderak, makin keras makin cepat Anda melaju.
 
 Perubahan yang Anda buat pada Dunia di sini memiliki suara pendek yang sama
 seperti di Editor: memberi nama penanda atau wilayah, menambah atau
@@ -142,11 +136,9 @@ Avatar orang lain juga terdengar: langkah kaki mereka di atas apa pun yang
 mereka pijak, serta lompatan dan pendaratan mereka, dari tempat mereka
 berada. Hanya orang yang dapat Anda lihat yang terdengar; sembunyikan
 avatar lain dan mereka menjadi senyap. Seseorang yang mengendarai kendaraan
-terdengar mengendarainya, hingga 40 m jauhnya: mesinnya naik turun sesuai
-kecepatan mereka, saat mereka naik dan turun, dan decitan saat mereka
+terdengar mengendarainya, hingga 40 m jauhnya: roda atau pembakarnya naik turun sesuai kecepatan mereka, saat mereka naik dan turun, dan decitan saat mereka
 melambat tajam (pengereman itu sendiri tidak dikirim, jadi berhenti
-mendadak dianggap sebagai pengereman). Hanya mesin tiga pengendara terdekat
-yang diputar, sehingga keramaian tidak menenggelamkan suara lainnya.
+mendadak dianggap sebagai pengereman). Hanya kendaraan tiga pengendara terdekat yang diputar, sehingga keramaian tidak menenggelamkan suara lainnya.
 
 Suara di sekitar Anda ditempatkan dalam **3D**: di depan atau di belakang,
 di atas atau di bawah, serta di kiri atau di kanan, ikut berputar saat Anda

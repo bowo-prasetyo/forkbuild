@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 115a0e070d0fa0c2 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 121cc4635a6da58b -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -236,8 +236,7 @@ que vous tourner, vous pouvez donc diriger en croisière.
 
 ### Véhicules
 
-Certains mondes placent un vélo, une moto, une voiture ou un drone que
-votre avatar peut utiliser au lieu de marcher. Approchez-vous assez de
+Certains mondes placent un vélo, un grand-bi, une charrette à foin ou une montgolfière que votre avatar peut utiliser au lieu de marcher. Approchez-vous assez de
 l’un d’eux et une indication apparaît, précisant quelle touche permet de
 monter :
 
@@ -259,22 +258,15 @@ marche arrière il recule sans faire demi-tour. Descendre remet votre avatar à 
 à un endroit dégagé à côté du véhicule. La vitesse maximale,
 l’accélération, le freinage et la manœuvrabilité d’un véhicule dépendent
 de son type, et son encombrement pour les collisions est dimensionné en
-conséquence — aujourd’hui, ce sont le vélo, la moto, la voiture et le
-drone, les quatre véhicules que les mondes placent et affichent
-réellement. Une moto est plus rapide qu’un vélo et plus rare, une voiture
-est encore plus rapide qu’une moto et encore plus rare, et un drone est le
-plus rapide et le plus rare de tous.
+conséquence — aujourd’hui, ce sont le vélo, le grand-bi, la charrette à foin et la montgolfière, les quatre véhicules que les mondes placent et affichent
+réellement. Un grand-bi est plus rapide qu’un vélo et plus rare, une charrette à foin est encore plus rapide et encore plus rare, et une montgolfière est la plus rapide et la plus rare de tous.
 
-Un drone repose au sol, immobile, exactement comme les trois autres,
+Une montgolfière repose au sol, immobile, exactement comme les trois autres,
 jusqu’à ce que vous montiez dessus et commenciez à bouger — maintenir
-**W** ou **S** le fait décoller ; relâcher le ramène au sol. Une fois en
-l’air, il vole au-dessus des arbres, mais un grand bâtiment le bloque
-toujours exactement comme il bloquerait une voiture : voler ne veut pas
-dire ignorer la géométrie du monde. Vous ne pouvez pas descendre d’un
-drone en plein vol — ramenez-le d’abord au sol.
+**W** ou **S** la fait décoller ; relâcher la ramène au sol. Une fois en l’air, elle vole au-dessus des arbres, mais un grand bâtiment la bloque toujours exactement comme il bloquerait une charrette : voler ne veut pas
+dire ignorer la géométrie du monde. Vous ne pouvez pas descendre d’une montgolfière en plein vol — ramenez-la d’abord au sol.
 
-Les vélos, motos et voitures s’arrêtent au bord de l’eau. Un drone continue
-au-dessus des lacs et de la mer, et vous dépose sur l’eau : posez-le,
+Les vélos, grands-bis et charrettes s’arrêtent au bord de l’eau. Une montgolfière continue au-dessus des lacs et de la mer, et vous dépose sur l’eau : posez-la,
 descendez, et votre avatar nage. Vous ne pouvez pas sortir un véhicule à
 roues de votre inventaire tant que vous êtes dans l’eau.
 
@@ -301,9 +293,8 @@ ni disparaître quoi que ce soit.
 #### Rouler avec d’autres personnes autour
 
 Les personnes qui peuvent voir votre avatar voient aussi ce que vous
-conduisez : votre vélo, moto, voiture ou drone est dessiné sous vous sur
-leur écran, tourné dans la direction où vous allez, et elles entendent son
-moteur, quand vous montez et descendez, et vos freinages (voir « Son »
+conduisez : votre vélo, grand-bi, charrette ou montgolfière est dessiné sous vous sur
+leur écran, tourné dans la direction où vous allez, et elles l’entendent rouler ou gronder, quand vous montez et descendez, et vos freinages (voir « Son »
 dans [03 — La Vue du Monde](03-WorldView.md)). Vous voyez et entendez les
 leurs de la même façon. Cela suit votre réglage de présence : qui ne peut
 pas vous voir n’apprend pas non plus ce que vous conduisez.

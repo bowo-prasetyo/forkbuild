@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 115a0e070d0fa0c2 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 121cc4635a6da58b -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -226,8 +226,7 @@ Anda, jadi Anda dapat mengemudi selama jelajah otomatis.
 
 ### Kendaraan
 
-Beberapa dunia menempatkan sepeda, sepeda motor, mobil, atau drone yang
-dapat dinaiki avatar Anda alih-alih berjalan. Berjalanlah cukup dekat ke
+Beberapa dunia menempatkan sepeda, sepeda roda tinggi, gerobak jerami, atau balon udara yang dapat dinaiki avatar Anda alih-alih berjalan. Berjalanlah cukup dekat ke
 salah satunya dan sebuah petunjuk muncul yang memberi tahu tombol mana
 untuk menaikinya:
 
@@ -249,21 +248,17 @@ kendaraan bergerak ke belakang tanpa berputar balik. Turun dari kendaraan
 mengembalikan avatar Anda berjalan kaki di tempat kosong di samping
 kendaraan. Kecepatan tertinggi, percepatan, pengereman, dan belokan sebuah
 kendaraan semuanya bergantung pada jenisnya, dan jejak tabrakannya
-disesuaikan — saat ini itu sepeda, sepeda motor, mobil, dan drone, empat
-kendaraan yang benar-benar ditempatkan dan digambar di dunia. Sepeda motor
-lebih cepat daripada sepeda dan lebih jarang ditemukan, mobil lebih cepat
-lagi daripada sepeda motor dan lebih jarang lagi, dan drone adalah yang
-tercepat dan paling langka.
+disesuaikan — saat ini itu sepeda, sepeda roda tinggi, gerobak jerami, dan balon udara, empat
+kendaraan yang benar-benar ditempatkan dan digambar di dunia. Sepeda roda tinggi lebih cepat daripada sepeda dan lebih jarang ditemukan, gerobak jerami lebih cepat lagi dan lebih jarang lagi, dan balon udara adalah yang tercepat dan paling langka.
 
-Drone diam di tanah, persis seperti tiga lainnya, sampai Anda menaikinya
+Balon udara diam di tanah, persis seperti tiga lainnya, sampai Anda menaikinya
 dan mulai bergerak — menahan **W** atau **S** mengangkatnya dari tanah;
-melepasnya membawanya turun kembali. Begitu terbang, drone melayang di atas
-pepohonan, tetapi bangunan tinggi tetap menghalanginya persis seperti
-menghalangi mobil, jadi terbang tidak berarti mengabaikan bentuk dunia itu
-sendiri. Anda tidak dapat turun dari drone di udara — bawa kembali ke tanah
+melepasnya membawanya turun kembali. Begitu terbang, balon melayang di atas
+pepohonan, tetapi bangunan tinggi tetap menghalanginya persis seperti menghalangi gerobak, jadi terbang tidak berarti mengabaikan bentuk dunia itu
+sendiri. Anda tidak dapat turun dari balon di udara — bawa kembali ke tanah
 terlebih dahulu.
 
-Sepeda, sepeda motor, dan mobil berhenti di tepi air. Drone terus terbang
+Sepeda, sepeda roda tinggi, dan gerobak berhenti di tepi air. Balon terus terbang
 di atas danau dan laut, dan menurunkan Anda di atas air: daratkan, turun,
 dan avatar Anda pun berenang. Anda tidak dapat mengeluarkan kendaraan
 beroda dari inventaris saat berada di air.
@@ -291,9 +286,8 @@ pun dengan sendirinya.
 #### Berkendara di dekat orang lain
 
 Orang yang dapat melihat avatar Anda juga melihat apa yang Anda naiki:
-sepeda, sepeda motor, mobil, atau drone Anda digambar di bawah Anda di
-layar mereka, menghadap ke arah Anda melaju, dan mereka mendengar suara
-mesinnya, saat Anda naik dan turun, serta pengereman Anda (lihat "Sound" di
+sepeda, sepeda roda tinggi, gerobak, atau balon Anda digambar di bawah Anda di
+layar mereka, menghadap ke arah Anda melaju, dan mereka mendengar suaranya melaju, saat Anda naik dan turun, serta pengereman Anda (lihat "Sound" di
 [03 — World View](03-WorldView.md)). Anda melihat dan
 mendengar milik mereka dengan cara yang sama. Ini mengikuti pengaturan
 kehadiran Anda: siapa pun yang tidak dapat melihat Anda juga tidak tahu apa

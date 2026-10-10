@@ -127,7 +127,12 @@ A small, sunny, hand-built village: houses, mills, chapels, markets,
 lighthouses and bridges, in warm colours. The ready-made structures, the
 showcase builds and every weekly challenge theme already share this look.
 New content fits it: things a village would have, and ways to get around one
-(on foot, by cart, boat or glider) before cars and drones.
+(on foot, by cart, boat or glider) before cars and drones. The vehicles the
+World already had were brought into it on 2026-10-10: the bicycle stays, and
+the motorcycle, car and drone are now drawn and heard as a penny-farthing, a
+hay wagon and a hot-air balloon. Only their look, sound and names changed;
+their ids, which peers and saved inventories carry, and how each one moves
+stayed as they were.
 
 ## What we are not making
 
@@ -179,7 +184,8 @@ project's. The review's other recommendations, in order:
    writers" above), and later each existing one made optional; the
    reconciliation and publisher leaderboard pages archived (done on
    2026-10-10: removed, with their code); no new vehicle or swimming
-   features until building catches up.
+   features until building catches up, and the vehicles given the village's
+   look (done on 2026-10-10, see "Tone" above).
 4. Counting what says whether the fantasy lands: how big published builds
    are, how many builders publish a second build, and how many builds are
    remixes. Done on 2026-10-10 (see "Measuring it" above).

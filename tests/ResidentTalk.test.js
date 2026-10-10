@@ -86,8 +86,8 @@ function runTests() {
         assert(describeDistance(4) === 'just a few steps' && describeDistance(NaN) === 'just a few steps', '1. Very close is "just a few steps"');
         assert(describeDistance(83) === 'about 80 m' && describeDistance(340) === 'about 350 m', '2. Metres are rounded, never falsely precise');
         assert(describeDistance(3240) === 'about 3.2 km' && describeDistance(12600) === 'about 13 km', '3. Kilometres too');
-        assert(phraseFact({ kind: RESIDENT_FACT_KIND.VEHICLE, vehicleType: 'car', distance: 200, direction: 'NE' }) === "There's a car about 200 m to the north-east."
-            && phraseFact({ kind: RESIDENT_FACT_KIND.VEHICLE, vehicleType: 'car', distance: 200, direction: null }) === "There's a car about 200 m away.",
+        assert(phraseFact({ kind: RESIDENT_FACT_KIND.VEHICLE, vehicleType: 'car', distance: 200, direction: 'NE' }) === "There's a hay wagon about 200 m to the north-east."
+            && phraseFact({ kind: RESIDENT_FACT_KIND.VEHICLE, vehicleType: 'car', distance: 200, direction: null }) === "There's a hay wagon about 200 m away.",
             '4. Compass sectors become words; with no direction, just how far');
 
         assert(sanitizeSpokenText('  Old\n\tMill  ', 60) === 'Old Mill', '5. Whitespace collapses');
@@ -119,10 +119,10 @@ function runTests() {
         ];
         const first = composeResidentRemarks(facts, { turn: 0 });
         assert(first.length === 2, '18. A resident says two things: something nearby, and another build');
-        assert(first[0] === "There's a car about 20 m to the east." && first[1].includes('“Mill”'),
+        assert(first[0] === "There's a hay wagon about 20 m to the east." && first[1].includes('“Mill”'),
             '19. First, the nearest nearby thing and the nearest other build');
         const turns = [0, 1, 2, 3].map((turn) => composeResidentRemarks(facts, { turn })[0]);
-        assert(turns[0].includes('car') && turns[1].includes('rabbit') && turns[2].includes('Old Well') && turns[3] === 'This is Willow Village.',
+        assert(turns[0].includes('hay wagon') && turns[1].includes('rabbit') && turns[2].includes('Old Well') && turns[3] === 'This is Willow Village.',
             '20. Talking again moves on: each kind takes its turn, nearest kind first, the place last');
         assert(composeResidentRemarks(facts, { turn: 4 })[0].includes('bicycle'),
             '20b. ...and when a kind comes round again, it names its next-nearest thing');

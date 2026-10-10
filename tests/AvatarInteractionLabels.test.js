@@ -10,7 +10,7 @@ import { assert } from './support/Assert.js';
         'nothing to store or deploy shows nothing');
 
     const store = describeVehicleStoreAction({ canStore: true, canDeploy: false, vehicleType: 'car', carriedCount: 3, selectedIndex: null });
-    assert(store.action === 'store' && store.vehicleLabel === 'Car', 'riding a car offers Store');
+    assert(store.action === 'store' && store.vehicleLabel === 'Hay wagon', 'riding a car (the hay wagon) offers Store');
     assert(store.canCycle === false && store.position === null, 'cycling is never offered while riding');
 
     const single = describeVehicleStoreAction({ canStore: false, canDeploy: true, vehicleType: 'bicycle', carriedCount: 1, selectedIndex: 1 });
@@ -19,7 +19,7 @@ import { assert } from './support/Assert.js';
 
     const several = describeVehicleStoreAction({ canStore: false, canDeploy: true, vehicleType: 'drone', carriedCount: 3, selectedIndex: 2 });
     assert(several.canCycle === true && several.position === '2/3', 'with three carried, cycling is offered and the position shown');
-    assert(several.vehicleLabel === 'Drone', 'the selected vehicle is named');
+    assert(several.vehicleLabel === 'Hot-air balloon', 'the selected vehicle is named');
     console.log('✓ store and deploy');
 }
 

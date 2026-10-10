@@ -105,13 +105,14 @@ Your avatar makes its own sounds too. Footsteps keep time with its walk or
 run and change with what is underfoot: grass, crunching leaves in a forest,
 soft sand on a beach, stone on high and rocky ground, splashes in a lake or
 river, and a hollow knock on bricks. Jumping makes a whoosh, and landing a
-thud, heavier after a longer fall. Riding a vehicle, you hear it: a
-bicycle's tyres and freewheel, a motorcycle's buzz, a car's rumble or a
-drone's whine, rising as you speed up and fading when you get off. Getting
-on and off has its own sound too (a bicycle's bell and kickstand, a
-motorcycle's kick-start, a car door and ignition, a drone's rotors spinning
-up and down), and braking at speed makes the tyres or brake pads squeal,
-louder the faster you were going.
+thud, heavier after a longer fall. Riding a vehicle, you hear it: the tyres
+and freewheel of a bicycle or a penny-farthing, a hay wagon's wooden wheels
+rumbling, or a hot-air balloon's burner, rising as you speed up and fading
+when you get off; the wheeled ones are quiet standing still. Getting on and
+off has its own sound too (a bicycle's bell and kickstand, a penny-farthing's
+creak and ding, a wagon's creaking boards and rustling hay, the burner
+roaring up and dying away), and braking at speed makes the brakes squeal,
+scrape or grind, louder the faster you were going.
 
 The changes you make to a World here have the same short sounds as in the
 Editor: naming a landmark or region, adding or removing a resident, turning an
@@ -131,10 +132,10 @@ animal does so is part of the World.
 Other people's avatars are heard too: their footsteps on whatever they are
 walking on, and their jumps and landings, from where they are. Only the people
 you can see are heard; hide other avatars and they fall silent. Someone riding
-a vehicle is heard riding it, up to 40 m away: its engine rising and falling
-with their speed, their getting on and off, and a squeal when they slow down
+a vehicle is heard riding it, up to 40 m away: its wheels or burner rising
+and falling with their speed, their getting on and off, and a squeal when they slow down
 sharply (braking itself isn't sent, so a hard stop is taken for it). Only
-the three nearest riders' engines play, so a crowd doesn't drown out the
+the three nearest riders' vehicles play, so a crowd doesn't drown out the
 rest.
 
 Sounds around you are placed in **3D**: ahead or behind, above or below, as

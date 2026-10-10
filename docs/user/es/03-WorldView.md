@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 1d94840844dd42aa -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d2c323274d094628 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -115,13 +115,7 @@ su caminata o su carrera y cambian según lo que pisa: pasto, hojas que
 crujen en un bosque, arena blanda en una playa, piedra en terreno alto y
 rocoso, chapoteos en un lago o un río, y un golpe hueco sobre bloques.
 Saltar hace un silbido, y aterrizar un golpe sordo, más fuerte tras una
-caída más larga. Al conducir un vehículo, lo oye: las ruedas y el piñón
-libre de una bicicleta, el zumbido de una motocicleta, el ronroneo de un
-auto o el silbido de un dron, que suben al acelerar y se desvanecen al
-bajarse. Subirse y bajarse también tiene su propio sonido (el timbre y la
-pata de una bicicleta, el arranque a patada de una motocicleta, la puerta
-y el encendido de un auto, los rotores de un dron que aceleran y frenan),
-y frenar a velocidad hace chirriar las ruedas o las pastillas de freno,
+caída más larga. Al conducir un vehículo, lo oye: las ruedas y el piñón libre de una bicicleta o un biciclo, el traqueteo de las ruedas de madera de una carreta de heno o el quemador de un globo aerostático, que suben al acelerar y se desvanecen al bajarse; los de ruedas callan cuando están quietos. Subirse y bajarse también tiene su propio sonido (el timbre y la pata de una bicicleta, el crujido y el timbre de un biciclo, las tablas que crujen y el heno que susurra en una carreta, el quemador que ruge y se apaga), y frenar a velocidad hace chirriar, raspar o rechinar los frenos,
 más fuerte cuanto más rápido iba.
 
 Los cambios que hace aquí en un Mundo tienen los mismos sonidos breves que
@@ -144,10 +138,9 @@ También se oyen los avatares de otras personas: sus pasos sobre lo que
 estén pisando, y sus saltos y aterrizajes, desde donde están. Solo se oye a
 las personas que puede ver; oculte los demás avatares y se quedan en
 silencio. A alguien que conduce un vehículo se lo oye conducirlo, hasta a
-40 m de distancia: el motor sube y baja con su velocidad, se oye cuando se
+40 m de distancia: las ruedas o el quemador suben y bajan con su velocidad, se oye cuando se
 sube y se baja, y un chirrido cuando frena bruscamente (el frenado en sí no
-se envía, así que una parada brusca se toma como tal). Solo suenan los
-motores de los tres conductores más cercanos, para que una multitud no tape
+se envía, así que una parada brusca se toma como tal). Solo suenan los vehículos de los tres conductores más cercanos, para que una multitud no tape
 todo lo demás.
 
 Los sonidos a su alrededor se ubican en **3D**: adelante o atrás, arriba o

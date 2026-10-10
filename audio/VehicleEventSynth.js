@@ -1,10 +1,12 @@
-// One-off vehicle sounds, synthesized: getting on (a bicycle's bell, a
-// motorcycle's kick-start, a car's door and ignition, a drone's rotors
-// spinning up), getting off (a kickstand, an engine cutting out, a door, the
-// rotors winding down) and braking (brake pads squealing on a bicycle, tyres
-// skidding on a motorcycle or car, a drone's rotors dipping), louder the
-// faster it was going. Each call builds short-lived nodes that disconnect
-// themselves.
+// One-off vehicle sounds, synthesized, for the village's vehicles
+// (renderer/VehicleRenderer.js: MOTORCYCLE is a penny-farthing, CAR a hay
+// wagon, DRONE a hot-air balloon): getting on (a bicycle's bell, a
+// penny-farthing's creak and ding, a wagon's creaking boards and rustling
+// hay, a balloon's burner roaring up), getting off (a kickstand, a creak and
+// a step down, a thump into the hay, the burner dying away) and braking
+// (brake pads squealing on a bicycle, a spoon brake scraping a tyre, wooden
+// wheels grinding, a vent puffing on the balloon), louder the faster it was
+// going. Each call builds short-lived nodes that disconnect themselves.
 import { VehicleType } from '../core/VehicleType.js';
 
 function releaseAfter(last, nodes) {
@@ -63,10 +65,26 @@ function bell(context, destination, start) {
     }
 }
 
-// A door shutting: a low thud with a latch click.
-function door(context, destination, buffer, start, random) {
-    tone(context, destination, { from: 90, to: 55, seconds: 0.18, gain: 0.7, attack: 0.003 }, start);
-    noise(context, destination, buffer, { type: 'bandpass', from: 3000, q: 2, seconds: 0.04, gain: 0.3 }, start + 0.02, random);
+// Wooden boards creaking under weight: a slow, wavering low tone.
+function creak(context, destination, start, { from = 190, to = 260, seconds = 0.35, gain = 0.3 } = {}) {
+    tone(context, destination, { type: 'triangle', from, to, seconds, gain, attack: 0.04 }, start);
+    tone(context, destination, { type: 'triangle', from: from * 1.5, to: to * 1.48, seconds: seconds * 0.8, gain: gain * 0.35, attack: 0.04 }, start + 0.03);
+}
+
+// Hay rustling: a short burst of bright, airy noise.
+function rustle(context, destination, buffer, start, random, gain = 0.35) {
+    noise(context, destination, buffer, { type: 'highpass', from: 3500, seconds: 0.3, gain }, start, random);
+}
+
+// A step down onto the ground: a soft, low thud.
+function thump(context, destination, start, gain = 0.6) {
+    tone(context, destination, { from: 90, to: 55, seconds: 0.18, gain, attack: 0.003 }, start);
+}
+
+// A balloon's burner: a roar of breathy noise swelling or dying away.
+function burner(context, destination, buffer, start, random, { from, to, seconds, gain }) {
+    noise(context, destination, buffer, { type: 'bandpass', from, to, q: 0.6, seconds, gain }, start, random);
+    tone(context, destination, { type: 'triangle', from: 55, to: 62, seconds, gain: gain * 0.3, attack: 0.1 }, start);
 }
 
 export function playMount(context, destination, buffer, vehicleType, random = Math.random) {
@@ -76,19 +94,20 @@ export function playMount(context, destination, buffer, vehicleType, random = Ma
             bell(context, destination, start);
             break;
         case VehicleType.MOTORCYCLE:
-            // Two kicks of the starter, then the engine catching with a rev.
-            for (let i = 0; i < 2; i++) {
-                tone(context, destination, { type: 'sawtooth', from: 30, to: 45, seconds: 0.15, gain: 0.35 }, start + i * 0.22);
-            }
-            tone(context, destination, { type: 'sawtooth', from: 55, to: 140, seconds: 0.45, gain: 0.4, attack: 0.03 }, start + 0.45);
+            // The penny-farthing: its frame creaking as you climb up, then one
+            // low ding of its bell.
+            creak(context, destination, start, { from: 320, to: 420, seconds: 0.3, gain: 0.22 });
+            tone(context, destination, { from: 1500, seconds: 0.5, gain: 0.22, attack: 0.002 }, start + 0.32);
+            tone(context, destination, { from: 3700, seconds: 0.25, gain: 0.06, attack: 0.002 }, start + 0.32);
             break;
         case VehicleType.CAR:
-            door(context, destination, buffer, start, random);
-            tone(context, destination, { type: 'sawtooth', from: 28, to: 70, seconds: 0.6, gain: 0.35, attack: 0.08 }, start + 0.35);
+            // The hay wagon: boards creaking, then the hay settling.
+            creak(context, destination, start);
+            rustle(context, destination, buffer, start + 0.25, random);
             break;
         case VehicleType.DRONE:
-            tone(context, destination, { type: 'sawtooth', from: 60, to: 240, seconds: 0.7, gain: 0.2, attack: 0.2 }, start);
-            tone(context, destination, { type: 'sawtooth', from: 62, to: 244, seconds: 0.7, gain: 0.2, attack: 0.2 }, start);
+            // The balloon: the burner roaring up.
+            burner(context, destination, buffer, start, random, { from: 500, to: 1300, seconds: 0.8, gain: 0.5 });
             break;
         default:
             break;
@@ -104,15 +123,18 @@ export function playDismount(context, destination, buffer, vehicleType, random =
             tone(context, destination, { type: 'triangle', from: 1400, seconds: 0.12, gain: 0.12, attack: 0.002 }, start);
             break;
         case VehicleType.MOTORCYCLE:
-            tone(context, destination, { type: 'sawtooth', from: 110, to: 35, seconds: 0.5, gain: 0.3 }, start);
+            // A creak as you climb down, then your feet on the ground.
+            creak(context, destination, start, { from: 420, to: 300, seconds: 0.28, gain: 0.2 });
+            thump(context, destination, start + 0.3, 0.45);
             break;
         case VehicleType.CAR:
-            tone(context, destination, { type: 'sawtooth', from: 60, to: 25, seconds: 0.35, gain: 0.25 }, start);
-            door(context, destination, buffer, start + 0.4, random);
+            // A rustle as you leave the hay, then a step down.
+            rustle(context, destination, buffer, start, random, 0.3);
+            thump(context, destination, start + 0.25);
             break;
         case VehicleType.DRONE:
-            tone(context, destination, { type: 'sawtooth', from: 240, to: 50, seconds: 0.8, gain: 0.18 }, start);
-            tone(context, destination, { type: 'sawtooth', from: 244, to: 52, seconds: 0.8, gain: 0.18 }, start);
+            // The burner dying away.
+            burner(context, destination, buffer, start, random, { from: 1200, to: 400, seconds: 0.7, gain: 0.4 });
             break;
         default:
             break;
@@ -130,13 +152,18 @@ export function playBrake(context, destination, buffer, vehicleType, intensity, 
             noise(context, destination, buffer, { type: 'bandpass', from: 3500, q: 4, seconds, gain: 0.15 * level }, start, random);
             break;
         case VehicleType.MOTORCYCLE:
+            // A spoon brake pressed on the big tyre: a dry, falling scrape.
+            noise(context, destination, buffer, { type: 'bandpass', from: 2400, to: 1500, q: 3, seconds, gain: 0.35 * level }, start, random);
+            tone(context, destination, { type: 'triangle', from: 1100, to: 900, seconds, gain: 0.06 * level, attack: 0.02 }, start);
+            break;
         case VehicleType.CAR:
-            // Tyres skidding: a harsh, falling band of noise over a scraping tone.
-            noise(context, destination, buffer, { type: 'bandpass', from: 1800, to: 1100, q: 6, seconds, gain: 0.5 * level }, start, random);
-            tone(context, destination, { type: 'sawtooth', from: 900, to: 700, seconds, gain: 0.08 * level, attack: 0.02 }, start);
+            // Wooden wheels grinding to a stop, the boards creaking.
+            noise(context, destination, buffer, { type: 'bandpass', from: 700, to: 380, q: 2, seconds, gain: 0.55 * level }, start, random);
+            creak(context, destination, start, { from: 220, to: 170, seconds, gain: 0.2 * level });
             break;
         case VehicleType.DRONE:
-            tone(context, destination, { type: 'sawtooth', from: 300, to: 180, seconds, gain: 0.15 * level, attack: 0.02 }, start);
+            // A puff from the vent as the balloon checks its way.
+            noise(context, destination, buffer, { type: 'bandpass', from: 1600, to: 800, q: 0.8, seconds, gain: 0.35 * level }, start, random);
             break;
         default:
             break;
