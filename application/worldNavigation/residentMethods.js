@@ -63,8 +63,8 @@ export const residentMethods = {
             // The bricks an avatar on the ground would bump into, gathered
             // around a resident's home out to where its walks can reach.
             const obstacles = new AvatarMovementConstraint({
-                loadedDocuments: this._loadedDocuments,
-                getWorldPosition: (documentId) => this._getWorldPosition(documentId),
+                loadedDocuments: this._solidDocuments(),
+                getWorldPosition: (documentId) => this._solidWorldPosition(documentId),
                 brickRegistry: this._registry,
                 queryRadius: RESIDENT_OBSTACLE_QUERY_RADIUS,
                 maxStepHeight: DEFAULT_MAX_STEP_HEIGHT,

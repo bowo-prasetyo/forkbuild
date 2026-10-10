@@ -6,6 +6,7 @@ import { summarizeDiscoveryDiagnostics } from '../../core/DiscoveryDiagnosticsSu
 import { latestPublisherPlacementRecord } from '../placement/PublisherPlacementClaim.js';
 import { SpatialBounds } from '../../core/SpatialBounds.js';
 import { plazaFootprint } from '../../core/ChallengePlaza.js';
+import { terrainHeightAt } from '../../core/TerrainHeightField.js';
 
 // Location-browser radii. NEARBY_RADIUS is small but non-zero: the camera
 // essentially never lands exactly on a placement's position (Focus parks it
@@ -13,6 +14,9 @@ import { plazaFootprint } from '../../core/ChallengePlaza.js';
 const DEFAULT_EXPLORE_RADIUS = 25;
 
 const NEARBY_RADIUS = 5;
+
+// Exhibits share _solidDocuments() with real documents; this keeps their ids apart.
+const PLAZA_EXHIBIT_SOLID_PREFIX = 'plaza-exhibit:';
 
 // WorldNavigationSession methods for publications and their placements:
 // document and placement info, overlap checks, search, the location browser,
@@ -547,15 +551,50 @@ export const placementMethods = {
     },
 
     // The challenge plaza's exhibits (core/ChallengePlaza.js): drawn solid but
-    // unpickable, never as a Placement. No-ops before start().
+    // unpickable, never as a Placement. Solid to walk into, too: while shown,
+    // an exhibit is one of the solid builds the avatar's collision and
+    // step-up read (_solidDocuments() below), at the ground height it is
+    // drawn at. Drawing is a no-op before start().
     showPlazaExhibit(key, world, position) {
+        const grounded = { x: position.x, y: position.y + terrainHeightAt(this.getWorldSeed(), position.x, position.z), z: position.z };
+        this._plazaExhibitSolids().set(PLAZA_EXHIBIT_SOLID_PREFIX + key, { document: { world }, position: grounded });
         if (!this._session || typeof this._session.showPlazaExhibit !== 'function') return 0;
         return this._session.showPlazaExhibit(key, world, position);
     },
 
     hidePlazaExhibit(key) {
+        this._plazaExhibitSolids().delete(PLAZA_EXHIBIT_SOLID_PREFIX + key);
         if (!this._session || typeof this._session.hidePlazaExhibit !== 'function') return;
         this._session.hidePlazaExhibit(key);
+    },
+
+    _plazaExhibitSolids() {
+        if (!this._plazaExhibitSolidMap) this._plazaExhibitSolidMap = new Map();
+        return this._plazaExhibitSolidMap;
+    },
+
+    // What collision is built from (application/avatar/AvatarMovementConstraint.js,
+    // AvatarStepConstraint.js): the loaded documents and the plaza's
+    // exhibits, as one live `[id, document]` iterable, each id resolved to a
+    // world position by _solidWorldPosition(). Read afresh on every pass, like
+    // _loadedDocuments itself, so an exhibit blocks from the moment it is shown
+    // until it is hidden.
+    _solidDocuments() {
+        if (!this._solidDocumentsView) {
+            const session = this;
+            this._solidDocumentsView = {
+                *[Symbol.iterator]() {
+                    if (session._loadedDocuments) yield* session._loadedDocuments;
+                    for (const [id, solid] of session._plazaExhibitSolids()) yield [id, solid.document];
+                }
+            };
+        }
+        return this._solidDocumentsView;
+    },
+
+    _solidWorldPosition(id) {
+        const exhibit = typeof id === 'string' && id.startsWith(PLAZA_EXHIBIT_SOLID_PREFIX) ? this._plazaExhibitSolids().get(id) : null;
+        return exhibit ? exhibit.position : this._getWorldPosition(id);
     },
 
     // The ground a build covers, in its own coordinates, for laying out the plaza.

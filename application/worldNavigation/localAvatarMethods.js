@@ -298,8 +298,9 @@ export const localAvatarMethods = {
     // it finds no obstacles.
     _buildAvatarMovementConstraint() {
         return new AvatarMovementConstraint({
-            loadedDocuments: this._loadedDocuments,
-            getWorldPosition: (documentId) => this._getWorldPosition(documentId),
+            // The loaded documents and the plaza's exhibits (_solidDocuments()).
+            loadedDocuments: this._solidDocuments(),
+            getWorldPosition: (documentId) => this._solidWorldPosition(documentId),
             brickRegistry: this._registry,
             // Same constant as _buildAvatarStepConstraint(), so the bricks excluded from
             // horizontal collision as climbable are the ones the step constraint climbs.
@@ -321,8 +322,8 @@ export const localAvatarMethods = {
     // With nothing loaded, terrain alone decides support height.
     _buildAvatarStepConstraint() {
         return new AvatarStepConstraint({
-            loadedDocuments: this._loadedDocuments,
-            getWorldPosition: (documentId) => this._getWorldPosition(documentId),
+            loadedDocuments: this._solidDocuments(),
+            getWorldPosition: (documentId) => this._solidWorldPosition(documentId),
             brickRegistry: this._registry,
             // Structure tops must be as walkable as ordinary buildings.
             structureResolver: this._structureResolver
