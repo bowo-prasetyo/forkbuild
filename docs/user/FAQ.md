@@ -130,6 +130,15 @@ cloud storage syncs. See [Your Data](13-YourData.md) and [Privacy](../Privacy.md
 No. Identities are meant to last. To stop using one, declare a successor or
 revoke it on **My Identities**.
 
+### I revoked my identity, so why can I still log in with it?
+
+That's expected. Revoking stops the identity from signing anything new,
+including what it needs to connect to other people, but it doesn't stop you
+from logging in. That way you can still look at it or export it.
+It shows **Revoked** on **My Identities**, and it can never be un-revoked.
+Create a new identity to keep working. See
+[What revoking does — and doesn't](05-IdentityAndLogin.md#what-revoking-does--and-doesnt).
+
 ### Why won't an older copy of ForkBuild open my exported document?
 
 Documents are now saved in a newer, more compact format. ForkBuild 1.0.0
