@@ -13,6 +13,8 @@ const SOURCE_URL = 'https://github.com/bowo-prasetyo/forkbuild';
 // rendered. Until then each keeps its space with an empty placeholder.
 const HomeShowcase = defineAsyncComponent(() => import('../components/home/HomeShowcase.js'));
 const FeaturedBuilds = defineAsyncComponent(() => import('../components/featured/FeaturedBuilds.js'));
+// Reads this device's own records, so it loads after Home too.
+const BuilderStamps = defineAsyncComponent(() => import('../components/home/BuilderStamps.js'));
 
 const REASONS = Object.freeze([
     { icon: '🧱', title: 'homeView.buildTitle', text: 'homeView.buildText' },
@@ -27,7 +29,7 @@ const REASONS = Object.freeze([
 // the first load.
 export default {
     name: 'HomeView',
-    components: { HomeShowcase, FeaturedBuilds, InstallAppButton, ChallengeCard },
+    components: { HomeShowcase, FeaturedBuilds, InstallAppButton, ChallengeCard, BuilderStamps },
     setup() {
         return {
             t,
@@ -59,6 +61,8 @@ export default {
                 </header>
 
                 <ChallengeCard />
+
+                <BuilderStamps />
 
                 <section class="home-section" aria-labelledby="home-featured-title">
                     <h2 id="home-featured-title">{{ t('featuredBuilds.title') }}</h2>
