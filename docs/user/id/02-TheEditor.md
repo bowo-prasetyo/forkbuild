@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2e46c9cbf050378c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 91fd6bed6af1eba8 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -146,11 +146,22 @@ Dengan satu balok atau lebih dipilih:
 | **Page Up / Page Down** | Mendorong ke atas / bawah |
 | **R** | Memutar 90° searah jarum jam |
 | **Shift + R** | Memutar 90° berlawanan arah jarum jam |
+| **T** | Miringkan ke sisi berikutnya |
+| **Shift + T** | Miringkan ke arah sebaliknya |
 | **Delete / Backspace** | Menghapus balok yang dipilih |
 
 Saat Anda memilih beberapa balok, balok-balok itu berputar di sekitar
 **pusat bersamanya**, sehingga satu bagian utuh berayun sebagai satu
 kesatuan.
+
+**T** merebahkan setiap balok terpilih ke sisi berikutnya, di tempatnya:
+tiang rebah menjadi balok melintang, dinding menjadi lantai, lereng terbalik
+menjadi bagian menjorok. Setiap balok mempertahankan tinggi alasnya, dan
+memiringkan bisa diurungkan dalam satu langkah. Empat kali tekan membuat
+balok tegak lagi. Saat menempatkan, **T** memiringkan balok yang akan Anda
+tempatkan. Struktur yang ditempatkan diputar, tidak dimiringkan. Versi
+ForkBuild yang lebih lama (1.3.0 dan sebelumnya) menampilkan balok miring
+dalam posisi tegak.
 
 ## Warna balok
 

@@ -519,7 +519,11 @@ one object per brick; Building/World/Document `toJSON()` write it when
 asked for `compactBricks`, and `Building.fromJSON()` reads either form.
 New bricks get 12-character ids (`createBrickId()`). Together these make
 a large build about a fifth of its former size, and serializing,
-hashing and parsing it several times faster.
+hashing and parsing it several times faster. A table with a tilted brick
+adds a `tilts` column (core/BrickOrientation.js holds the orientation
+rules: the Euler order renderers use, and `orientedSize()`, which bounds,
+collision, walking and stacking ask instead of reading a definition's
+height and depth).
 
 Every document that enters the domain goes through the same pipeline:
 parse → DocumentSchemaMigrator.migrate() (bring the envelope to

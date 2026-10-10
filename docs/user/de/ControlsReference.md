@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 10c15eb5d27a8961 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: ac00224cc1d8ef6a -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -168,6 +168,8 @@ diesem Gerät gespeichert und überstehen ein Neuladen — siehe
 | `Bild↑` / `Bild↓` | Auswahl entlang der Y-Achse der Welt verschieben |
 | `R` | Um +90° um den Drehpunkt der Auswahl drehen |
 | `Umschalt+R` | Um −90° drehen |
+| `T` | Jeden ausgewählten Stein auf seine nächste Seite kippen, Unterseite bleibt |
+| `Umschalt+T` | In die andere Richtung kippen |
 | `Umschalt` beim Ziehen des Gizmos | Präzisionsmodus (0,1-fache Schritte) |
 
 ## Transformieren — Gizmo (nur Editor)
@@ -321,6 +323,8 @@ Weltansicht hat gar kein Platzierwerkzeug.
 | Zeiger bewegen | Die Vorschau folgt der Bodenstelle/Steinfläche unter dem Zeiger | rot gefärbt, wenn die Position gerade belegt ist |
 | `R` | Die wartende Vorschau um +90° drehen | bleibt beim Wechsel des Steins erhalten; wird zurückgesetzt, wenn Sie den Platziermodus verlassen. Vor dem ersten Überfahren gedrückt, dreht es die nächste Vorschau |
 | `Umschalt+R` | Die wartende Vorschau um −90° drehen | |
+| `T` | Die wartende Vorschau auf ihre nächste Seite kippen | wird beim Verlassen des Platziermodus zurückgesetzt |
+| `Umschalt+T` | Die wartende Vorschau in die andere Richtung kippen | |
 | Klick | Die Vorschau als echten Stein übernehmen | an einer belegten (roten) Position verweigert |
 | Farbfeld **Farbe** der Baubibliothek | Die Farbe für die nächsten Steine wählen, die Sie platzieren | wird auf die Standardfarbe der Steinart zurückgesetzt, wenn Sie eine andere Art wählen — siehe [Steinfarben](02-TheEditor.md#steinfarben) |
 
@@ -390,6 +394,7 @@ Leiste unten im Ansichtsfenster steht für die Tasten:
 |---|---|---|
 | **Rückgängig** / **Wiederholen** | `Strg/Cmd+Z` / `Strg/Cmd+Umschalt+Z` | |
 | **Drehen** | `R` | Beim Platzieren dreht es den nächsten Stein oder die nächste Struktur vor dem Tippen; sonst dreht es die Auswahl |
+| **Kippen** | `T` | Beim Platzieren legt es den nächsten Stein auf seine nächste Seite; sonst kippt es die ausgewählten Steine |
 | **Löschen** | `Entf` | |
 | **Mehrfach** | `Strg/Cmd`-Klick | Solange es an ist, fügt jedes Tippen der Auswahl einen Stein hinzu oder entfernt ihn |
 | **Rahmen** | `Umschalt`-Ziehen | Solange es an ist, zieht ein Ein-Finger-Ziehen einen Auswahlrahmen auf, statt die Kamera zu bewegen; ist auch **Mehrfach** an, fügt der Rahmen der Auswahl hinzu (`Strg/Cmd+Umschalt`-Ziehen). Die Kamera steht still, solange Rahmen an ist (ein zweiter Finger bricht den Rahmen ab, statt zu zoomen); schalten Sie es also aus, um sich wieder zu bewegen |

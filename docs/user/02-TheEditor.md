@@ -135,10 +135,20 @@ With one or more bricks selected:
 | **Page Up / Page Down** | Nudge up / down |
 | **R** | Rotate 90° clockwise |
 | **Shift + R** | Rotate 90° counter-clockwise |
+| **T** | Tilt onto the next side |
+| **Shift + T** | Tilt the other way |
 | **Delete / Backspace** | Remove the selected bricks |
 
 When you select multiple bricks, they rotate around their **shared center**, so
 a whole section swings as one unit.
+
+**T** tilts each selected brick onto its next side, where it stands: a
+post lies down as a beam, a wall becomes a floor, a slope turns upside down
+as an overhang. Each brick keeps its bottom at the same height, and the
+tilt is one step to undo. Four presses bring a brick back upright. While
+placing, **T** tilts the brick you're about to place instead. A placed
+structure turns but doesn't tilt. Older copies of ForkBuild (1.3.0 and
+earlier) show tilted bricks upright.
 
 ## Brick colors
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 10c15eb5d27a8961 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: ac00224cc1d8ef6a -->
 # Referência de controles
 
 <!-- languages -->
@@ -167,6 +167,8 @@ neste dispositivo e sobrevivem a uma recarga — veja
 | `PgUp` / `PgDn` | Mover a seleção ao longo do Y do mundo |
 | `R` | Girar +90° em torno do pivô da seleção |
 | `Shift+R` | Girar −90° |
+| `T` | Deitar cada bloco selecionado sobre a próxima face, mantendo a base |
+| `Shift+T` | Tombar ao contrário |
 | `Shift` enquanto arrasta o gizmo | Modo de precisão (passos de 0,1×) |
 
 ## Transformar — gizmo (só no Editor)
@@ -317,6 +319,8 @@ tem ferramenta Colocar.
 | Mover o ponteiro | A prévia acompanha o chão ou a face de bloco sob o ponteiro | fica vermelha quando a posição está ocupada |
 | `R` | Girar a prévia pendente +90° | continua ao trocar de bloco; zera quando você sai do modo Colocar. Pressionada antes de passar o mouse sobre algo, gira a próxima prévia |
 | `Shift+R` | Girar a prévia pendente −90° | |
+| `T` | Tombar a prévia pendente sobre a próxima face | volta ao normal ao sair do modo Colocar |
+| `Shift+T` | Tombar a prévia pendente ao contrário | |
 | Clicar | Confirmar a prévia como um bloco de verdade | recusado numa posição ocupada (vermelha) |
 | Amostra **Cor** da Biblioteca de construção | Escolher a cor dos próximos blocos que você colocar | volta à cor padrão do tipo quando você escolhe outro tipo — veja [Cores dos blocos](02-TheEditor.md#cores-dos-blocos) |
 
@@ -382,6 +386,7 @@ teclas:
 |---|---|---|
 | **Desfazer** / **Refazer** | `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` | |
 | **Girar** | `R` | Ao colocar, gira o próximo bloco ou estrutura antes do toque; senão, gira a seleção |
+| **Tombar** | `T` | Ao colocar, deita o próximo bloco sobre a próxima face; senão, tomba os blocos selecionados |
 | **Excluir** | `Delete` | |
 | **Múltiplo** | `Ctrl/Cmd` + clique | Ligado, cada toque põe um bloco na seleção ou o tira |
 | **Caixa** | `Shift` + arrastar | Ligado, arrastar com um dedo desenha uma caixa de seleção em vez de mover a câmera; com **Múltiplo** também ligado, a caixa soma à seleção (`Ctrl/Cmd+Shift` + arrastar). A câmera fica parada enquanto Caixa está ligado (um segundo dedo cancela a caixa em vez de dar zoom), então desligue para voltar a se mover |

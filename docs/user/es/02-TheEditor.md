@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2e46c9cbf050378c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 91fd6bed6af1eba8 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -151,10 +151,21 @@ Con uno o más bloques seleccionados:
 | **RePág / AvPág** | Desplazar hacia arriba / hacia abajo |
 | **R** | Girar 90° en sentido horario |
 | **Mayús + R** | Girar 90° en sentido antihorario |
+| **T** | Inclinar sobre la siguiente cara |
+| **Mayús + T** | Inclinar al revés |
 | **Supr / Retroceso** | Quitar los bloques seleccionados |
 
 Cuando selecciona varios bloques, giran alrededor de su **centro común**,
 así que toda una sección gira como una sola unidad.
+
+**T** tumba cada bloque seleccionado sobre su siguiente cara, donde está:
+un poste queda acostado como una viga, un muro se vuelve suelo, una
+pendiente se da la vuelta como un voladizo. Cada bloque conserva la altura
+de su base, y la inclinación se deshace en un paso. Con cuatro pulsaciones
+el bloque vuelve a estar de pie. Mientras coloca, **T** inclina en cambio
+el bloque que va a colocar. Una estructura colocada gira, pero no se
+inclina. Las versiones anteriores de ForkBuild (1.3.0 y previas) muestran
+de pie los bloques inclinados.
 
 ## Colores de los bloques
 

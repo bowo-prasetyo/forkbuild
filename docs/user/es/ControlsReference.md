@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 10c15eb5d27a8961 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: ac00224cc1d8ef6a -->
 # Referencia de controles
 
 <!-- languages -->
@@ -170,6 +170,8 @@ en este dispositivo y se conservan al recargar: consulte
 | `RePág` / `AvPág` | Mover la selección a lo largo del eje Y del mundo |
 | `R` | Girar +90° alrededor del pivote de la selección |
 | `Mayús+R` | Girar −90° |
+| `T` | Tumbar cada bloque seleccionado sobre su siguiente cara, conservando su base |
+| `Mayús+T` | Inclinar al revés |
 | `Mayús` mientras arrastra el gizmo | Modo de precisión (incrementos de 0,1×) |
 
 ## Transformar — gizmo (solo en el Editor)
@@ -322,6 +324,8 @@ del mundo no tiene herramienta Colocar.
 | Mover el puntero | La vista previa sigue el suelo o la cara del bloque bajo el cursor | se tiñe de rojo cuando la posición está ocupada |
 | `R` | Girar +90° la vista previa pendiente | se mantiene al cambiar de bloque; se restablece al salir del modo Colocar. Si se presiona antes de pasar el cursor por algo, gira la próxima vista previa |
 | `Mayús+R` | Girar −90° la vista previa pendiente | |
+| `T` | Inclinar la vista previa pendiente sobre su siguiente cara | se reinicia al salir del modo Colocar |
+| `Mayús+T` | Inclinar al revés la vista previa pendiente | |
 | Clic | Confirmar la vista previa como un bloque real | se rechaza en una posición ocupada (roja) |
 | Muestra de **Color** de la Biblioteca de construcción | Elegir el color de los próximos bloques que coloque | vuelve al color predeterminado del tipo de bloque cuando elige otro tipo; consulte [Colores de los bloques](02-TheEditor.md#colores-de-los-bloques) |
 
@@ -390,6 +394,7 @@ pie de la ventana gráfica reemplaza las teclas:
 |---|---|---|
 | **Deshacer** / **Rehacer** | `Ctrl/Cmd+Z` / `Ctrl/Cmd+Mayús+Z` | |
 | **Girar** | `R` | Mientras coloca, gira el próximo bloque o estructura antes de que toque; si no, gira la selección |
+| **Inclinar** | `T` | Mientras coloca, tumba el próximo bloque sobre su siguiente cara; si no, inclina los bloques seleccionados |
 | **Eliminar** | `Supr` | |
 | **Múltiple** | `Ctrl/Cmd` + clic | Mientras está activado, cada toque agrega un bloque a la selección o lo quita |
 | **Recuadro** | `Mayús` + arrastrar | Mientras está activado, arrastrar con un dedo dibuja un recuadro de selección en lugar de mover la cámara; con **Múltiple** también activado, el recuadro agrega a la selección (`Ctrl/Cmd+Mayús` + arrastrar). La cámara queda quieta mientras Recuadro está activado (un segundo dedo cancela el recuadro en lugar de hacer zoom), así que desactívelo para volver a moverse |

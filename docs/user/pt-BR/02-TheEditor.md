@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2e46c9cbf050378c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 91fd6bed6af1eba8 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -144,10 +144,20 @@ Com um ou mais blocos selecionados:
 | **Page Up / Page Down** | Deslocar para cima / para baixo |
 | **R** | Girar 90° no sentido horário |
 | **Shift + R** | Girar 90° no sentido anti-horário |
+| **T** | Tombar sobre a próxima face |
+| **Shift + T** | Tombar ao contrário |
 | **Delete / Backspace** | Remover os blocos selecionados |
 
 Quando você seleciona vários blocos, eles giram em torno do **centro em
 comum**, então uma seção inteira gira como uma unidade.
+
+**T** deita cada bloco selecionado sobre a próxima face, onde ele está:
+um poste deita como uma viga, uma parede vira piso, uma rampa vira de
+cabeça para baixo como um beiral. Cada bloco mantém a altura da base, e o
+tombo se desfaz em um passo. Quatro toques deixam o bloco de pé de novo.
+Ao colocar, **T** tomba o bloco que você vai colocar. Uma estrutura
+posicionada gira, mas não tomba. Versões antigas do ForkBuild (1.3.0 e
+anteriores) mostram de pé os blocos tombados.
 
 ## Cores dos blocos
 

@@ -5060,3 +5060,37 @@ the palette), every build has a family tree (family trees), and your work lives 
 - Not done: tilting bricks about the other axes, which changes the document format and needs its own protocol change;
   and showing a week's challenge entries together as a walkable World.
 - Upgrading: builds that use the new bricks can't be fully drawn by 1.3.0, as with any new brick.
+
+## Tilting bricks onto their other sides (unnumbered, 2026-10-10)
+
+**Any brick can lie on another side.** Bricks turned only about the vertical, so a post couldn't lie down as a beam,
+a wall couldn't become a floor and a slope couldn't hang upside down as an overhang; the Brace was added only because a
+diagonal couldn't be built any other way. Pillar served: building feels joyful.
+
+- **Model.** core/BrickOrientation.js: a brick's `tilt` is a quarter turn about its own width axis, 0, 90, 180 or 270,
+  applied before its `rotation`, so its orientation is Ry(rotation) · Rx(tilt) (a Three.js Euler of order `YXZ`).
+  Every orientation a turn and a tilt make stays on the grid. A tilt of 90 or 270 swaps height and depth, which
+  `orientedSize()` gives to everything that sizes a brick: SpatialBounds, SelectionBoundsService, AvatarCollision's
+  `brickAabb()`, the avatar's step and movement constraints, and PlacementPositionService's resting height and
+  stacking. A tilted ramp or stair is walked as the flat top of its box (`walkableSurfaceKindFor(id, tilt)`).
+- **Format.** Written only when set: `tilt` on a Brick's JSON, `tilts` (one per brick) on a brick table whose bricks
+  include a tilted one, and `tilt` on a `place-brick` command. Every untilted document keeps its bytes, content hash and
+  blueprint fingerprint (BlueprintFingerprint and BlueprintSimilarity add a tilt to a brick's key only when set).
+  DocumentValidator, `brickTableErrors()` and BlueprintImportValidator refuse any other tilt. `PROTOCOL_VERSION` is
+  unchanged: an older copy ignores the field and draws those bricks upright (docs/Protocol.md, "Brick Tilt").
+- **Copies.** Placing, pasting, duplicating, repeating, deleting and undoing, structures, their composition and forks,
+  blueprints and the ready-made builds all carry the tilt.
+- **Drawing.** BrickRenderer describes a `rotationX`; BrickInstanceRegistry builds each instance's matrix from the
+  Euler; WorldRenderer's structure placements, the placement, structure and composition previews and claimed-build
+  ghosts set it (renderer/applyBrickOrientation.js); BuildMeshExtraction exports it to glTF, STL and OBJ; the
+  link-preview worker reads `tilts` and tilts each brick before turning it.
+- **Editing.** `T` (Shift+T the other way) tilts the brick about to be placed. With bricks selected, **Tilt** (`T`,
+  `transform.tilt`; `transform.tiltBack`) lays each on its next side where it stands, its bottom kept at the same
+  height, as one undo step: TiltBrickCommand carries the new tilt and position, so collaborators replay the same brick.
+  Tilt is on the Selection panel, the touch bar and in the Command Palette; a placed structure turns but doesn't tilt.
+  It plays the rotate sound. Every language.
+- Guide 02 and the Controls Reference in every language; Protocol, Architecture, BrickLibrary, README, Pillars.
+- Tests: `BrickTilt` (orientation, format and hashes, bounds and collision, placing, tilting a selection and undo,
+  copies, drawing and export); `EditorSidebarLayoutBrowser` lists Tilt among the selection's everyday actions. Checked
+  in the real Editor: a post placed tilted and one tilted after placing are saved with `tilts` and rest on the ground.
+- Upgrading: builds with tilted bricks show those bricks upright in 1.3.0 and earlier.
