@@ -53,7 +53,10 @@ import { composeWorldEncounterLeadAssociationsQuery } from '../../application/wo
 // distribution lifecycles.
 export function composeWorldDiscovery({
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
-    ipfsNodeConfigurationStore, publicationContentStore = null, announcementIndex = null
+    ipfsNodeConfigurationStore, publicationContentStore = null, announcementIndex = null,
+    // Whether this device's writer for a network is switched on
+    // (core/NetworkWriters.js): Steem and Blurt post nothing while theirs is off.
+    isNetworkWriterEnabled = () => true
 }) {
     // The one World discovery registry. A peer's World contribution registers when
     // it sends and unregisters automatically when the peer disconnects.
@@ -118,6 +121,7 @@ export function composeWorldDiscovery({
         configuration: steemReadingConfigurationStore.get() || new SteemReadingConfiguration(),
         getAccount: () => steemAnnouncingConfigurationStore.get()?.account ?? null,
         getBroadcaster: () => createSteemKeychainBroadcaster({ keychain: globalThis.steem_keychain }),
+        isWriterEnabled: () => isNetworkWriterEnabled('steem'),
         contentUploads: new SteemContentUploadStore(new LocalStorageProvider()),
         contentUploadProgress: { report: (state) => { steemContentUploadProgress.value = state; } },
         // A publication's announcement carries its build's tags, so the weekly
@@ -128,7 +132,8 @@ export function composeWorldDiscovery({
         describePublication: publicationContentStore
             ? composeSteemPublicationNoticeDescriber({
                 contentStore: publicationContentStore,
-                getAccount: () => steemAnnouncingConfigurationStore.get()?.account ?? null,
+                // No picture is uploaded while the writer is off.
+                getAccount: () => (isNetworkWriterEnabled('steem') ? steemAnnouncingConfigurationStore.get()?.account ?? null : null),
                 onPictureMissing: ({ title, reason }) => { steemNoticePictureProblem.value = { title, reason, at: Date.now() }; }
             })
             : null
@@ -150,6 +155,7 @@ export function composeWorldDiscovery({
         configuration: blurtReadingConfigurationStore.get() || new BlurtReadingConfiguration(),
         getAccount: blurtAccount,
         getBroadcaster: () => createBlurtKeychainBroadcaster(),
+        isWriterEnabled: () => isNetworkWriterEnabled('blurt'),
         knownAuthors: new BlurtKnownAuthorStore(new LocalStorageProvider()),
         postRecords: new BlurtPostRecordStore(new LocalStorageProvider()),
         contentUploads: new BlurtContentUploadStore(new LocalStorageProvider()),
@@ -158,7 +164,7 @@ export function composeWorldDiscovery({
         describePublication: publicationContentStore
             ? composeSteemPublicationNoticeDescriber({
                 contentStore: publicationContentStore,
-                getAccount: blurtAccount,
+                getAccount: () => (isNetworkWriterEnabled('blurt') ? blurtAccount() : null),
                 chainName: 'Blurt',
                 upload: async ({ account, bytes }) => (await uploadBlurtImage({ account, bytes, fileName: 'forkbuild-build.png' })).url,
                 onPictureMissing: ({ title, reason }) => { blurtNoticePictureProblem.value = { title, reason, at: Date.now() }; }

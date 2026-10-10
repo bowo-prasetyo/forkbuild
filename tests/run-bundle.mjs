@@ -211,6 +211,51 @@ async function walkThePlaza(browser, base) {
     }
 }
 
+// Steem's and Blurt's posting switches (core/NetworkWriters.js), in the
+// published build: off for a new visitor, so their settings page offers the
+// switch without the account form and the preferred network lists neither;
+// switched on, both appear. A device that already had an account saved to
+// post as starts with its switch on.
+async function postingSwitches(browser, base) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const preferredNetworks = () => page.$$eval('.announcement-discovery-provider-option input[type="radio"]', (inputs) => inputs.map((input) => input.value));
+    try {
+        await page.goto(`${base}/#/settings/steem`);
+        await page.waitForSelector('.network-writer-toggle--steem', { timeout: 60_000 });
+        assert(!(await page.isChecked('.network-writer-toggle--steem')) && !(await page.$('#steem-account')) && await page.$('.steem-posting-off'),
+            'a new visitor posts to Steem only after switching it on, and sees no account form until then');
+        await page.evaluate(() => { location.hash = '#/settings/announcement-discovery-provider'; });
+        await page.waitForSelector('.announcement-discovery-provider-option', { timeout: 60_000 });
+        let networks = await preferredNetworks();
+        assert(!networks.includes('steem') && !networks.includes('blurt') && networks.includes('nostr'), `the preferred network offers neither while off (${networks})`);
+
+        await page.evaluate(() => { location.hash = '#/settings/steem'; });
+        await page.waitForSelector('.network-writer-toggle--steem', { timeout: 60_000 });
+        await page.check('.network-writer-toggle--steem');
+        await page.waitForSelector('#steem-account', { timeout: 10_000 });
+        await page.evaluate(() => { location.hash = '#/settings/announcement-discovery-provider'; });
+        await page.waitForSelector('.announcement-discovery-provider-option', { timeout: 60_000 });
+        networks = await preferredNetworks();
+        assert(networks.includes('steem') && !networks.includes('blurt'), `switched on, Steem is offered (${networks})`);
+    } finally {
+        await context.close();
+    }
+
+    const existing = await browser.newContext();
+    await existing.addInitScript(() => {
+        try { localStorage.setItem('forkbuild:blurt-announcing-configuration', JSON.stringify({ account: 'alice' })); } catch { /* no storage */ }
+    });
+    const poster = await existing.newPage();
+    try {
+        await poster.goto(`${base}/#/settings/blurt`);
+        await poster.waitForSelector('.network-writer-toggle--blurt', { timeout: 60_000 });
+        assert(await poster.isChecked('.network-writer-toggle--blurt') && await poster.$('#blurt-account'), 'a device that already posts to Blurt keeps posting');
+    } finally {
+        await existing.close();
+    }
+}
+
 // A launch post's link (`?ref=<channel>`, docs/launch/README.md) opens Home,
 // and the parameter leaves the address, keeping the route.
 async function openLaunchLink(browser, base) {
@@ -598,6 +643,8 @@ try {
     console.log('✓ a first visit: five pages and More in the nav, the guided first build in the Editor, Publish asking about remixes and to log in, and the published link copied on another device');
     await walkThePlaza(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ an entry published for the week stands in its plaza, reached from the challenge page, and World View stays there until Open takes you to the entry\'s World; an unknown week says so');
+    await postingSwitches(browser, `http://127.0.0.1:${server.address().port}`);
+    console.log('✓ posting to Steem and Blurt is off for a new visitor and offered once switched on; a device that already posted keeps it on');
 
     const development = await build(join(outdir, 'development-vue'), { developmentVue: true });
     const devServer = await serve(development.outdir);

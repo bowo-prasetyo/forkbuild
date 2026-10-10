@@ -31,6 +31,7 @@ export function composeBlurtRuntime({
     fetchImpl = globalThis.fetch,
     getAccount = () => null,
     getBroadcaster = () => undefined,
+    isWriterEnabled = () => true,
     appVersion = null,
     knownAuthors = null,
     postRecords = null,
@@ -42,7 +43,9 @@ export function composeBlurtRuntime({
     if (typeof fetchImpl !== 'function') return null;
     const rpc = createBlurtRpcClient({ nodes: [...configuration.apiNodes], fetchImpl });
     const reader = createBlurtDiscoveryReader({ rpc, knownAuthors });
-    const poster = createBlurtPoster({ rpc, getAccount, getBroadcaster, appVersion, records: postRecords, onWaiting });
+    // Nothing is posted while this device's Blurt writer is switched off
+    // (core/NetworkWriters.js); reading never asks.
+    const poster = createBlurtPoster({ rpc, getAccount, getBroadcaster, isEnabled: isWriterEnabled, appVersion, records: postRecords, onWaiting });
     return Object.freeze({
         configuration,
         reader,

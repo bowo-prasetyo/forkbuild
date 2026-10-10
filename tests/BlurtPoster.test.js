@@ -1,4 +1,4 @@
-import { createBlurtPoster, BlurtPostingError, BLURT_BUILD_POST_GROUPING_MS, BLURT_MIN_ROOT_POST_INTERVAL_MS } from '../application/blurt/BlurtPoster.js';
+import { createBlurtPoster, BlurtPostingError, BLURT_BUILD_POST_GROUPING_MS, BLURT_MIN_ROOT_POST_INTERVAL_MS, BLURT_WRITER_OFF_MESSAGE } from '../application/blurt/BlurtPoster.js';
 import { createBlurtRpcClient } from '../blurt/BlurtRpcClient.js';
 import { createBlurtDiscoveryReader } from '../application/blurt/BlurtDiscoveryReader.js';
 import { BlurtPublicationDiscoveryPublisher } from '../application/blurt/BlurtPublicationDiscoveryPublisher.js';
@@ -30,12 +30,13 @@ const CLAIM_URI = 'blurt://alice/forkbuild-c-claim-aaaaaaaa';
 
 let suffixes = 0;
 
-function posterFor(chain, { account = 'alice', broadcaster = chain.broadcaster, records = null, onWaiting = null } = {}) {
+function posterFor(chain, { account = 'alice', broadcaster = chain.broadcaster, records = null, onWaiting = null, isEnabled = undefined } = {}) {
     const sleeps = [];
     const poster = createBlurtPoster({
         rpc: createBlurtRpcClient({ nodes: ['https://a'], fetchImpl: chain.fetchImpl }),
         getBroadcaster: () => broadcaster,
         getAccount: () => account,
+        ...(isEnabled ? { isEnabled } : {}),
         appVersion: '1.3.0',
         records,
         onWaiting,
@@ -141,6 +142,21 @@ async function rejection(promise) {
     const leads = await new BlurtPublicationDiscoveryQueryService({ reader }).search('forkbuild-publication');
     assert(leads.length === 1 && leads[0].uri === CLAIM_URI && leads[0].storage === 'blurt', 'the Publication lead is found');
     console.log('✓ one build post per Distribute');
+}
+
+// With this device's Blurt writer switched off (core/NetworkWriters.js),
+// nothing is posted; switched back on, it posts again.
+{
+    const chain = fakeBlurtChain();
+    let enabled = false;
+    const poster = posterFor(chain, { isEnabled: () => enabled });
+    const refused = await rejection(poster.announce('commentary', { commentaryId: 'c1' }));
+    assert(refused instanceof BlurtPostingError && refused.message === BLURT_WRITER_OFF_MESSAGE, 'switched off, posting says so');
+    assert(chain.broadcasts.length === 0, 'and nothing is broadcast');
+    enabled = true;
+    await poster.announce('commentary', { commentaryId: 'c1' });
+    assert(chain.broadcasts.length > 0, 'switched on, it posts');
+    console.log('✓ a switched-off Blurt writer posts nothing');
 }
 
 // A build post groups for 30 minutes; after that a new one starts. A post

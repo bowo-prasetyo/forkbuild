@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 030d653a072ce0a8 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 09927c2e29d339ff -->
 # 10 — Configurações de rede
 
 <!-- languages -->
@@ -202,6 +202,14 @@ quando outro está fora do ar. Não há status por relay aqui; um resultado de
 
 ## Steem
 
+**Postar no Steem a partir deste dispositivo**, na parte de postagem, fica desligado em um dispositivo
+novo. Enquanto estiver desligado, o ForkBuild não oferece o Steem quando você
+publica, comenta, dá nome a um lugar, guarda uma construção ou cria uma
+âncora, não posta nada lá e esconde o campo da conta. Um dispositivo que já
+tinha uma conta do Steem salva começa com ele ligado. Construções e
+comentários que já estão no Steem são encontrados e mostrados de qualquer
+forma.
+
 *Experimental.* Defina **Sua conta no Steem** em **Postagem** (isso vale na
 hora, sem recarregar), necessária para postar ou guardar no Steem — veja
 [Steem](11-EvidenceAndStorage.md#steem). Ler do Steem não exige conta. O
@@ -220,6 +228,14 @@ e a descoberta de Snapshots dizem que o Steem está indisponível, em vez de
 informar que nada foi encontrado.
 
 ## Blurt
+
+**Postar no Blurt a partir deste dispositivo**, na parte de postagem, fica desligado em um dispositivo
+novo. Enquanto estiver desligado, o ForkBuild não oferece o Blurt quando você
+publica, comenta, dá nome a um lugar, guarda uma construção ou cria uma
+âncora, não posta nada lá e esconde o campo da conta. Um dispositivo que já
+tinha uma conta do Blurt salva começa com ele ligado. Construções e
+comentários que já estão no Blurt são encontrados e mostrados de qualquer
+forma.
 
 *Experimental.* Defina **Sua conta do Blurt** em **Publicação** (isso vale
 na hora, sem recarregar), necessária para postar, guardar ou ancorar no

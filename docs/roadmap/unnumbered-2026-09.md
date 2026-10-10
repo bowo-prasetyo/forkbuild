@@ -5245,3 +5245,34 @@ writers" describes. Pillar served: your work is yours (one identity; a chain is 
 - Not done: the Publications page's wallet cards still live in its templates and composables, which name Bitcoin and
   Base; moving them into the plugins is a later step. Steem's and Blurt's writers come next.
 
+
+## Steem's and Blurt's writers as switches (unnumbered, 2026-10-10)
+
+**Posting to Steem and Blurt is now a writer each device switches on.** Until now every copy offered both networks in
+every publish, comment, place-name, storage and anchor picker, and a new player met two chains and their Keychains
+before building anything. This finishes the split docs/Pillars.md "Networks: readers and writers" describes, after
+Bitcoin's and Base's wallets. Pillar served: your work is yours (a chain is something a player adds, not the core).
+
+- **Switches.** core/NetworkWriters.js adds `steem` and `blurt`, and says which networks can be written to
+  (`isWritable`, `writableKeys`). NetworkWriterSettingsStore takes defaults: Steem's and Blurt's start on where an account
+  to post as is already saved, so a device that posted before keeps posting (adopted once as the app starts, so
+  clearing the account later doesn't switch it off); a switch saves only itself. Each network's
+  settings page has **Post to Steem (Blurt) from this device** under **Posting**, with the account form shown only
+  while it is on (ui/components/networkWriters/NetworkWriterSwitch.js). Every language.
+- **Readers stay for everyone.** Discovery of builds, Snapshots, place names and comments, reading links, resolving
+  stored Snapshots and checking anchors all run whatever the switch says.
+- **Enforced where it posts.** The Steem announcer and the Blurt poster refuse while the switch is off, saying where to
+  switch it on; every Steem and Blurt write (announcements, comments, content storage, anchors) goes through them.
+  A notice's picture isn't uploaded either.
+- **Offered only while on.** The storage registry and the anchor publisher registry follow the switch live
+  (ui/main/followNetworkWriterSwitches.js), so the publish dialogs' storage choices, the Publications page and the
+  Proof / Anchoring page follow too; the network pickers (Editor and World View dialogs, the Publications page,
+  comments, place names, the Announcement / Discovery page) list Steem and Blurt only while on
+  (ui/components/networkWriters/useWritableNetworks.js). A saved default naming a switched-off network seeds Nostr.
+- **Not a plugin.** Unlike the wallets, these writers share their readers' runtime (one RPC client; the content store
+  reads and writes), and are about 1,900 lines with their readers, so nothing is loaded later: the switch decides what is
+  offered and whether anything posts.
+- Guide 10 in every language, Architecture, Pillars.
+- Tests: `NetworkWriters` (the switches and their defaults, which networks are writable, the anchor registry following
+  the switch), `SteemAnnouncer` and `BlurtPoster` (nothing posted while off), the bundled site (a new visitor's Steem
+  page and preferred network, switching on, and a device with a Blurt account starting on).

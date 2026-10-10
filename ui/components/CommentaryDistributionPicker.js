@@ -1,4 +1,5 @@
 import { describeSteemAnnouncingUnreadiness } from '../../application/steem/SteemAnnouncingReadiness.js';
+import { useWritableNetworks } from './networkWriters/useWritableNetworks.js';
 import { describeBlurtAnnouncingUnreadiness } from '../../application/blurt/BlurtAnnouncingReadiness.js';
 import { LOCAL_AND_PEERS_ONLY } from '../../core/CommentaryDistributionProvider.js';
 import { t } from '../i18n/i18n.js';
@@ -62,15 +63,21 @@ export default {
             });
         }
     },
+    // Steem and Blurt are offered only while this device's writer for them is
+    // switched on (core/NetworkWriters.js).
+    setup() {
+        const { steemOn, blurtOn } = useWritableNetworks();
+        return { steemOn, blurtOn };
+    },
     template: `
         <div class="commentary-distribution-picker">
             <label class="publication-commentary-provider-label">
                 {{ t('publicationCommentarySection.distribution') }}
                 <select v-model="model" class="form-select commentary-distribution-picker-select" :disabled="disabled">
                     <option value="arweave">Arweave</option>
-                    <option value="blurt">Blurt</option>
+                    <option v-if="blurtOn" value="blurt">Blurt</option>
                     <option value="nostr">Nostr</option>
-                    <option value="steem">Steem</option>
+                    <option v-if="steemOn" value="steem">Steem</option>
                     <option v-if="!networksOnly" value="${LOCAL_AND_PEERS_ONLY}">{{ t('publicationCommentarySection.localAndPeersOnly') }}</option>
                 </select>
             </label>

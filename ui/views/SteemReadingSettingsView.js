@@ -1,4 +1,6 @@
 import { ref, computed, inject } from 'vue';
+import NetworkWriterSwitch from '../components/networkWriters/NetworkWriterSwitch.js';
+import { useWritableNetworks } from '../components/networkWriters/useWritableNetworks.js';
 import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
 import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
 import {
@@ -16,7 +18,10 @@ import { t } from '../i18n/i18n.js';
 // the defaults are never saved as a preference.
 export default {
     name: 'SteemReadingSettingsView',
+    components: { NetworkWriterSwitch },
     setup() {
+        // The account form only while this device posts to Steem (core/NetworkWriters.js).
+        const { steemOn: postingOn } = useWritableNetworks();
         const store = inject('steemReadingConfigurationStore', null);
         const useCase = inject('setSteemReadingConfigurationUseCase', null);
         const accountStore = inject('steemAnnouncingConfigurationStore', null);
@@ -76,7 +81,8 @@ export default {
             save: form.save, resetToDefaults: form.clear,
             accountInput, savedAccount: accountForm.configuration, accountSaveError: accountForm.saveError,
             accountSaveStatus: accountForm.saveStatus, accountClearStatus: accountForm.clearStatus,
-            saveAccount: accountForm.save, clearAccount: accountForm.clear
+            saveAccount: accountForm.save, clearAccount: accountForm.clear,
+            postingOn
         };
     },
     template: `
@@ -112,6 +118,9 @@ export default {
             </div>
 
             <h2>{{ t('steemReadingSettingsView.posting') }}</h2>
+            <NetworkWriterSwitch writer="steem" :label="t('networkWriters.steemSwitch')" :hint="t('networkWriters.steemSwitchHint')" />
+            <p v-if="!postingOn" class="form-hint form-hint--neutral steem-posting-off">{{ t('networkWriters.postingOff', { network: 'Steem' }) }}</p>
+            <template v-if="postingOn">
             <p class="form-hint form-hint--neutral">
                 {{ t('steemReadingSettingsView.toAnnounceOnSteemChoose') }}
             </p>
@@ -129,6 +138,7 @@ export default {
                 <button class="action-btn action-btn--primary" @click="saveAccount" :disabled="!accountInput.trim()">{{ t('steemReadingSettingsView.saveAccount') }}</button>
                 <button class="action-btn" @click="clearAccount">{{ t('steemReadingSettingsView.clear') }}</button>
             </div>
+            </template>
         </section>
     `
 };

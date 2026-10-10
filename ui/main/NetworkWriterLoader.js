@@ -9,7 +9,9 @@ import { NETWORK_WRITERS } from '../../core/NetworkWriters.js';
 // forgotten so the next attempt tries again, and never stops the others.
 //
 // `plugins` maps a writer to an async function (anchoring) => services, which
-// imports the writer's modules only when called. `provide(key, value)` makes a
+// imports the writer's modules only when called. A writer with no plugin here
+// (Steem, Blurt: their writers share their readers' runtime) is only a switch,
+// read where it is offered and enforced where it posts. `provide(key, value)` makes a
 // service available (app.provide). Switching a writer off does not unload it:
 // what the Publications page offers is decided by the switch when the page
 // opens (ui/views/decentralizedPublications/networkWriterServices.js).
@@ -21,7 +23,7 @@ export class NetworkWriterLoader {
         this._anchoring = null;
         this._loads = new Map();
         settingsStore.onChange((id, enabled) => {
-            if (enabled && this._anchoring) this.load(id).catch(() => {});
+            if (enabled && this._anchoring && this._plugins[id]) this.load(id).catch(() => {});
         });
     }
 

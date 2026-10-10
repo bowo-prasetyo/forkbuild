@@ -34,6 +34,7 @@ export function composeSteemRuntime({
     fetchImpl = globalThis.fetch,
     getAccount = () => null,
     getBroadcaster = () => undefined,
+    isWriterEnabled = () => true,
     appVersion = null,
     contentUploads = null,
     contentUploadProgress = null,
@@ -48,7 +49,9 @@ export function composeSteemRuntime({
         earliestPeriod: configuration.earliestPeriod
     });
     // Announcements go to the first thread account's threads.
-    const announcer = createSteemAnnouncer({ rpc, getAccount, getBroadcaster, threadAccount: configuration.threadAccounts[0], appVersion });
+    // Nothing is posted while this device's Steem writer is switched off
+    // (core/NetworkWriters.js); reading never asks.
+    const announcer = createSteemAnnouncer({ rpc, getAccount, getBroadcaster, isEnabled: isWriterEnabled, threadAccount: configuration.threadAccounts[0], appVersion });
     return Object.freeze({
         configuration,
         reader,

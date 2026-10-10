@@ -1,4 +1,5 @@
 import { computed, inject, ref } from 'vue';
+import { useWritableNetworks } from '../components/networkWriters/useWritableNetworks.js';
 import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPreferenceForm.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS } from '../../core/AnnouncementDiscoveryProvider.js';
@@ -57,17 +58,21 @@ export default {
             setUseCase: setRoleProviderPreferenceUseCase
         });
 
+        // Steem and Blurt only while this device's writer for them is switched
+        // on (core/NetworkWriters.js).
+        const { only } = useWritableNetworks();
         const settings = computed(() => sortOptionsByLabel(describeRoleProviderPreferenceSettings({
-            availableProviderKeys: AVAILABLE_PROVIDER_KEYS
+            availableProviderKeys: only(AVAILABLE_PROVIDER_KEYS)
         }).options));
 
         // Comments: their own default, saved apart from the role preference
         // because "Local & peers only" is a choice only comments have.
         // Nothing saved means comments follow the choice above.
         const commentaryPreferenceStore = inject('commentaryDistributionPreferenceStore', null);
+        // Read when the page opens: the switches live on another page.
         const commentaryOptions = [
             { providerKey: FOLLOW_ANNOUNCEMENT_DISCOVERY, label: t('announcementDiscoveryProviderSettingsView.commentsFollow') },
-            ...sortOptionsByLabel(AVAILABLE_PROVIDER_KEYS.map((providerKey) => ({ providerKey, label: commentaryDistributionProviderLabel(providerKey) }))),
+            ...sortOptionsByLabel(only(AVAILABLE_PROVIDER_KEYS).map((providerKey) => ({ providerKey, label: commentaryDistributionProviderLabel(providerKey) }))),
             { providerKey: LOCAL_AND_PEERS_ONLY, label: commentaryDistributionProviderLabel(LOCAL_AND_PEERS_ONLY) }
         ];
         const selectedCommentaryProviderKey = ref((commentaryPreferenceStore && commentaryPreferenceStore.get()) || FOLLOW_ANNOUNCEMENT_DISCOVERY);

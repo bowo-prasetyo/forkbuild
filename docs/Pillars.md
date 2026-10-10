@@ -106,7 +106,11 @@ comes in two parts:
 Today Nostr, Arweave, Steem and Blurt are the substrates discovery searches;
 Bitcoin and Base hold anchor proofs only, so their readers are proof checks.
 Bitcoin's and Base's wallets are split this way: each is a plugin switched on
-under Network Settings → Wallets. Steem's and Blurt's writers are next.
+under Network Settings → Wallets. So are Steem's and Blurt's writers, each
+switched on with **Post to Steem (or Blurt) from this device** on its own
+settings page; a device that already had an account saved to post as starts
+with it on. Their writers share their readers' runtime, so the switch decides
+what is offered and whether anything is posted, rather than what is loaded.
 
 ## Words
 
@@ -181,7 +185,8 @@ project's. The review's other recommendations, in order:
    challenge plaza, a clearing in the shared World.
 3. No new networks or chains until the building numbers move (written down
    on 2026-10-10, with how a network is added: "Networks: readers and
-   writers" above), and later each existing one made optional; the
+   writers" above), and later each existing one made optional (done on
+   2026-10-10: Bitcoin's and Base's wallets, then Steem's and Blurt's writers); the
    reconciliation and publisher leaderboard pages archived (done on
    2026-10-10: removed, with their code); no new vehicle or swimming
    features until building catches up, and the vehicles given the village's

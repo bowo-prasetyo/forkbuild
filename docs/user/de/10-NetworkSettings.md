@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 030d653a072ce0a8 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 09927c2e29d339ff -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
@@ -213,6 +213,13 @@ keinen Status pro Relay; ein Ergebnis von **Verteilen** listet eine Zeile
 
 ## Steem
 
+**Von diesem Gerät auf Steem posten** unter **Posten** ist auf einem neuen Gerät aus. Solange es aus
+ist, bietet ForkBuild Steem nicht an, wenn Sie veröffentlichen, kommentieren,
+einen Ort benennen, einen Bau speichern oder einen Anker setzen, postet
+dort nichts und blendet das Kontofeld aus. Ein Gerät, auf dem schon ein
+Steem-Konto gespeichert war, startet mit dem Schalter an. Bauten und
+Kommentare, die schon auf Steem sind, werden so oder so gefunden und gezeigt.
+
 *Experimentell.* Legen Sie unter **Posten** **Ihr Steem-Konto** fest (das
 gilt sofort, ohne Neuladen); es wird zum Posten oder Speichern auf Steem
 gebraucht — siehe [Steem](11-EvidenceAndStorage.md#steem). Zum Lesen von
@@ -233,6 +240,13 @@ und die Snapshot-Entdeckung Steem als nicht verfügbar, statt zu melden,
 dass nichts gefunden wurde.
 
 ## Blurt
+
+**Von diesem Gerät auf Blurt posten** unter **Posten** ist auf einem neuen Gerät aus. Solange es aus
+ist, bietet ForkBuild Blurt nicht an, wenn Sie veröffentlichen, kommentieren,
+einen Ort benennen, einen Bau speichern oder einen Anker setzen, postet
+dort nichts und blendet das Kontofeld aus. Ein Gerät, auf dem schon ein
+Blurt-Konto gespeichert war, startet mit dem Schalter an. Bauten und
+Kommentare, die schon auf Blurt sind, werden so oder so gefunden und gezeigt.
 
 *Experimentell.* Legen Sie unter **Veröffentlichen** **Ihr Blurt-Konto**
 fest (das gilt sofort, ohne Neuladen); es wird zum Posten, Speichern oder

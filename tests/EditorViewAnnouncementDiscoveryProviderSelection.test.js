@@ -222,7 +222,11 @@ async function run() {
         // exactly Nostr and Arweave, no more, no fewer.
         const discoveryProviderSelectMatch = dialogSource.match(/<select\s+v-model="discoveryProviderModel"[\s\S]*?<\/select>/);
         assert(discoveryProviderSelectMatch !== null, n('A4a. the discoveryProviderModel <select> element is isolable'));
-        const optionMatches = (discoveryProviderSelectMatch ? discoveryProviderSelectMatch[0] : '').match(/<option value="[^"]*">/g) || [];
+        // Blurt and Steem carry a v-if: offered only while this device's
+        // writer for them is switched on (core/NetworkWriters.js).
+        const optionMatches = (discoveryProviderSelectMatch ? discoveryProviderSelectMatch[0] : '').match(/<option(?: v-if="[^"]*")? value="[^"]*">/g) || [];
+        assert(optionMatches.includes('<option v-if="blurtOn" value="blurt">') && optionMatches.includes('<option v-if="steemOn" value="steem">'),
+            n('A4b. Blurt and Steem are offered only while switched on'));
         assert(optionMatches.length === 4,
             n(`A4. exactly four <option> elements (Arweave, Blurt, Nostr, Steem) exist inside the selectedDiscoveryProvider <select> (found ${optionMatches.length}) — the currently supported choices, no more, no fewer`));
 
@@ -240,7 +244,9 @@ async function run() {
         // anyone who has never saved a preference.
         assert(/const defaultAnnouncementDiscoveryProvider = inject\('defaultAnnouncementDiscoveryProvider',\s*'nostr'\);/.test(editorSource),
             n('A5a. defaultAnnouncementDiscoveryProvider is injected with an explicit \'nostr\' fallback'));
-        assert(/const selectedDiscoveryProvider = ref\(defaultAnnouncementDiscoveryProvider\);/.test(editorSource),
+        // ...unless it names a network whose writer has since been switched
+        // off (core/NetworkWriters.js), when it opens on 'nostr' instead.
+        assert(/const selectedDiscoveryProvider = ref\(writableOr\(defaultAnnouncementDiscoveryProvider\)\);/.test(editorSource),
             n('A5b. selectedDiscoveryProvider opens on that injected default — matching PublicationDistributionRuntimeComposition.js\'s own \'nostr\' default whenever nothing has been saved, so a mount that never touches the control, and whose parent injects nothing, behaves exactly as every pre-0.9.502 mount already did'));
 
         // Rendered alongside the SAME action it configures, gated on

@@ -33,6 +33,9 @@ export const STEEM_MIN_REPLY_INTERVAL_MS = 3000;
 const DEFAULT_REPLY_MARGIN_MS = 1500;
 const REPLY_INTERVAL_REFUSAL = /STEEM_MIN_REPLY_INTERVAL|comment once every/i;
 
+// What posting says while this device's Steem writer is switched off.
+export const STEEM_WRITER_OFF_MESSAGE = 'Posting to Steem is switched off on this device. Switch it on under Network Settings → Steem.';
+
 export class SteemAnnouncementError extends Error {
     constructor(message) {
         super(message);
@@ -44,6 +47,9 @@ export function createSteemAnnouncer({
     rpc,
     getBroadcaster,
     getAccount,
+    // Whether this device's Steem writer is switched on (core/NetworkWriters.js);
+    // nothing is posted while it is off.
+    isEnabled = () => true,
     threadAccount = STEEM_DISCOVERY_THREAD_ACCOUNT,
     appVersion = null,
     now = () => new Date(),
@@ -170,6 +176,7 @@ export function createSteemAnnouncer({
 
     // The account posts would come from right now, or null.
     function currentAccount() {
+        if (!isEnabled()) return null;
         const author = getAccount();
         return isSteemAccountName(author) ? author : null;
     }
@@ -194,6 +201,9 @@ export function createSteemAnnouncer({
     }
 
     async function withPoster(task) {
+        if (!isEnabled()) {
+            throw new SteemAnnouncementError(STEEM_WRITER_OFF_MESSAGE);
+        }
         const author = getAccount();
         if (!isSteemAccountName(author)) {
             throw new SteemAnnouncementError('Set your Steem account in Network Settings → Steem before posting on Steem.');

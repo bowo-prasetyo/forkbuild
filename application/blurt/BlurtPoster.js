@@ -43,6 +43,9 @@ const DEFAULT_MARGIN_MS = 1500;
 const INTERVAL_REFUSAL = /once every|one comment edit per block/i;
 const FEE_REFUSAL = /sufficient funds for transaction fee/i;
 
+// What posting says while this device's Blurt writer is switched off.
+export const BLURT_WRITER_OFF_MESSAGE = 'Posting to Blurt is switched off on this device. Switch it on under Network Settings → Blurt.';
+
 export class BlurtPostingError extends Error {
     constructor(message) {
         super(message);
@@ -58,6 +61,9 @@ export function createBlurtPoster({
     rpc,
     getBroadcaster,
     getAccount,
+    // Whether this device's Blurt writer is switched on (core/NetworkWriters.js);
+    // nothing is posted while it is off.
+    isEnabled = () => true,
     appVersion = null,
     records = null,
     onWaiting = null,
@@ -162,6 +168,7 @@ export function createBlurtPoster({
 
     // The account posts would come from right now, or null.
     function currentAccount() {
+        if (!isEnabled()) return null;
         const author = getAccount();
         return isBlurtAccountName(author) ? author : null;
     }
@@ -293,6 +300,9 @@ export function createBlurtPoster({
     }
 
     async function withPoster(task) {
+        if (!isEnabled()) {
+            throw new BlurtPostingError(BLURT_WRITER_OFF_MESSAGE);
+        }
         const author = getAccount();
         if (!isBlurtAccountName(author)) {
             throw new BlurtPostingError('Set your Blurt account in Network Settings → Blurt before posting on Blurt.');

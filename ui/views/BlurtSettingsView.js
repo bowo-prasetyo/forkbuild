@@ -1,4 +1,6 @@
 import { ref, computed, inject } from 'vue';
+import NetworkWriterSwitch from '../components/networkWriters/NetworkWriterSwitch.js';
+import { useWritableNetworks } from '../components/networkWriters/useWritableNetworks.js';
 import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
 import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
 import { DEFAULT_BLURT_API_NODES } from '../../core/BlurtReadingConfiguration.js';
@@ -11,7 +13,10 @@ import { t } from '../i18n/i18n.js';
 // the defaults are never saved as a preference.
 export default {
     name: 'BlurtSettingsView',
+    components: { NetworkWriterSwitch },
     setup() {
+        // The account form only while this device posts to Blurt (core/NetworkWriters.js).
+        const { blurtOn: postingOn } = useWritableNetworks();
         const store = inject('blurtReadingConfigurationStore', null);
         const useCase = inject('setBlurtReadingConfigurationUseCase', null);
         const accountStore = inject('blurtAnnouncingConfigurationStore', null);
@@ -56,7 +61,8 @@ export default {
             save: form.save, resetToDefaults: form.clear,
             accountInput, savedAccount: accountForm.configuration, accountSaveError: accountForm.saveError,
             accountSaveStatus: accountForm.saveStatus, accountClearStatus: accountForm.clearStatus,
-            saveAccount: accountForm.save, clearAccount: accountForm.clear
+            saveAccount: accountForm.save, clearAccount: accountForm.clear,
+            postingOn
         };
     },
     template: `
@@ -86,6 +92,9 @@ export default {
             </div>
 
             <h2>{{ t('blurtSettingsView.posting') }}</h2>
+            <NetworkWriterSwitch writer="blurt" :label="t('networkWriters.blurtSwitch')" :hint="t('networkWriters.blurtSwitchHint')" />
+            <p v-if="!postingOn" class="form-hint form-hint--neutral blurt-posting-off">{{ t('networkWriters.postingOff', { network: 'Blurt' }) }}</p>
+            <template v-if="postingOn">
             <p class="form-hint form-hint--neutral">
                 {{ t('blurtSettingsView.toPostOnBlurtChoose') }}
             </p>
@@ -103,6 +112,7 @@ export default {
                 <button class="action-btn action-btn--primary" @click="saveAccount" :disabled="!accountInput.trim()">{{ t('blurtSettingsView.saveAccount') }}</button>
                 <button class="action-btn" @click="clearAccount">{{ t('blurtSettingsView.clear') }}</button>
             </div>
+            </template>
         </section>
     `
 };

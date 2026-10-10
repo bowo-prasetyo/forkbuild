@@ -36,6 +36,11 @@ export default Object.freeze({
     'networkWriters.bitcoinHint': 'Conecte una billetera de Bitcoin, como UniSat, y ancle publicaciones en Bitcoin.',
     'networkWriters.base': 'Billetera de Base',
     'networkWriters.baseHint': 'Conecte una billetera de Base y ancle publicaciones en Base.',
+    'networkWriters.steemSwitch': 'Publicar en Steem desde este dispositivo',
+    'networkWriters.steemSwitchHint': 'Ofrece Steem al publicar, comentar, nombrar un lugar, guardar una construcción o crear un anclaje. Las construcciones y comentarios que ya están en Steem se encuentran y se muestran igualmente.',
+    'networkWriters.blurtSwitch': 'Publicar en Blurt desde este dispositivo',
+    'networkWriters.blurtSwitchHint': 'Ofrece Blurt al publicar, comentar, nombrar un lugar, guardar una construcción o crear un anclaje. Las construcciones y comentarios que ya están en Blurt se encuentran y se muestran igualmente.',
+    'networkWriters.postingOff': 'Publicar está desactivado, así que no se publica nada en {network} desde este dispositivo.',
     'app.nav.group.app': 'Aplicación',
     'app.notifications': 'Notificaciones',
     // Shown instead of a blank page when the app's files did not download

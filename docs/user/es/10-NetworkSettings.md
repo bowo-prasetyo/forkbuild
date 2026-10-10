@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 030d653a072ce0a8 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 09927c2e29d339ff -->
 # 10 — Configuración de red
 
 <!-- languages -->
@@ -211,6 +211,14 @@ relay; el resultado de **Distribuir** muestra una fila de
 
 ## Steem
 
+**Publicar en Steem desde este dispositivo**, en la sección de publicación, está desactivado en un
+dispositivo nuevo. Mientras lo esté, ForkBuild no ofrece Steem al publicar,
+comentar, nombrar un lugar, guardar una construcción o crear un anclaje,
+no publica nada allí y oculta el campo de la cuenta. Un dispositivo que ya
+tenía guardada una cuenta de Steem empieza con él activado. Las
+construcciones y comentarios que ya están en Steem se encuentran y se
+muestran igualmente.
+
 *Experimental.* Configure **Su cuenta de Steem** en **Publicación** (se
 aplica de inmediato, sin recargar); se necesita para publicar o guardar en
 Steem: consulte [Steem](11-EvidenceAndStorage.md#steem). Leer de Steem no
@@ -231,6 +239,14 @@ nuevos** y el descubrimiento de Snapshots indican que Steem no está
 disponible, en lugar de informar que no se encontró nada.
 
 ## Blurt
+
+**Publicar en Blurt desde este dispositivo**, en la sección de publicación, está desactivado en un
+dispositivo nuevo. Mientras lo esté, ForkBuild no ofrece Blurt al publicar,
+comentar, nombrar un lugar, guardar una construcción o crear un anclaje,
+no publica nada allí y oculta el campo de la cuenta. Un dispositivo que ya
+tenía guardada una cuenta de Blurt empieza con él activado. Las
+construcciones y comentarios que ya están en Blurt se encuentran y se
+muestran igualmente.
 
 *Experimental.* Configure **Su cuenta de Blurt** en **Publicar** (se aplica
 de inmediato, sin recargar); se necesita para publicar, guardar o anclar

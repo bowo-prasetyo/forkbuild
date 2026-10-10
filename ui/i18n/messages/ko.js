@@ -35,6 +35,11 @@ export default Object.freeze({
     'networkWriters.bitcoinHint': 'UniSat 같은 Bitcoin 지갑을 연결하고 게시물을 Bitcoin에 앵커링합니다.',
     'networkWriters.base': 'Base 지갑',
     'networkWriters.baseHint': 'Base 지갑을 연결하고 게시물을 Base에 앵커링합니다.',
+    'networkWriters.steemSwitch': '이 기기에서 Steem에 게시',
+    'networkWriters.steemSwitchHint': '게시, 댓글, 장소 이름 붙이기, 작품 저장, 앵커 만들기를 할 때 Steem을 선택할 수 있게 합니다. 이미 Steem에 있는 작품과 댓글은 어느 쪽이든 찾아서 보여 줍니다.',
+    'networkWriters.blurtSwitch': '이 기기에서 Blurt에 게시',
+    'networkWriters.blurtSwitchHint': '게시, 댓글, 장소 이름 붙이기, 작품 저장, 앵커 만들기를 할 때 Blurt를 선택할 수 있게 합니다. 이미 Blurt에 있는 작품과 댓글은 어느 쪽이든 찾아서 보여 줍니다.',
+    'networkWriters.postingOff': '게시가 꺼져 있어 이 기기에서 {network}에 아무것도 게시하지 않습니다.',
     'app.nav.group.app': '앱',
     'app.notifications': '알림',
     // Shown instead of a blank page when the app's files did not download

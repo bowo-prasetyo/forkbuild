@@ -71,7 +71,8 @@ async function run() {
             const text = path === 'ui/views/DecentralizedPublicationsView.js' ? publicationsViewSourceWithTemplate() : await source(path);
             assert(!/<option value="nostr">Nostr<\/option>\s*<option value="arweave">Arweave<\/option>/.test(text),
                 `${path} no longer lists Nostr before Arweave`);
-            assert(/<option value="arweave">Arweave<\/option>\s*<option value="blurt">[^<]*<\/option>\s*<option value="nostr">Nostr<\/option>/.test(text),
+            // Blurt and Steem carry a v-if: offered only while their writer is on.
+            assert(/<option value="arweave">Arweave<\/option>\s*<option (?:v-if="blurtOn" )?value="blurt">[^<]*<\/option>\s*<option value="nostr">Nostr<\/option>/.test(text),
                 `${path} lists the Announcement / Discovery substrates alphabetically`);
         }
 

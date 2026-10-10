@@ -1,4 +1,5 @@
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
+import { useWritableNetworks } from './networkWriters/useWritableNetworks.js';
 import { describeSteemContentUploadProgress, describeSteemNoticePictureProblem } from '../../application/steem/SteemContentUploadProgressText.js';
 import { describeBlurtContentUploadProgress, describeBlurtNoticePictureProblem } from '../../application/blurt/BlurtContentUploadProgressText.js';
 import PublicationShareLink from './PublicationShareLink.js';
@@ -118,6 +119,12 @@ export default {
         'update:storage',
         'update:discoveryProvider'
     ],
+    // The announcing networks this device can write to (core/NetworkWriters.js):
+    // Steem and Blurt only while switched on.
+    setup() {
+        const { steemOn, blurtOn } = useWritableNetworks();
+        return { steemOn, blurtOn };
+    },
     computed: {
         // Only while this dialog's Snapshot is being distributed, so another
         // page's upload never shows here.
@@ -219,9 +226,9 @@ export default {
                         <span class="form-label">{{ t('distribution.substrate') }}</span>
                         <select v-model="discoveryProviderModel" class="form-select editor-distribution-dialog-provider-select" :disabled="anyExecuting">
                             <option value="arweave">Arweave</option>
-                            <option value="blurt">Blurt</option>
+                            <option v-if="blurtOn" value="blurt">Blurt</option>
                             <option value="nostr">Nostr</option>
-                            <option value="steem">Steem</option>
+                            <option v-if="steemOn" value="steem">Steem</option>
                         </select>
                     </label>
                 </div>

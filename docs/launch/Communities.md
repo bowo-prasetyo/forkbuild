@@ -29,7 +29,9 @@ A post in the communities that take creative and open-source work, with
 pictures, a shared link and the site (`?ref=steem` or `?ref=blurt`). Blurt
 posts that ForkBuild makes itself already list a build's tags, so a
 challenge entry distributed to Blurt carries the week's tag there too, and
-upvotes earn its maker BLURT.
+upvotes earn its maker BLURT. A builder posts there only after ticking
+**Post to Blurt from this device** (Network Settings → Blurt), so a post
+inviting Blurt users to enter can say so.
 
 Ask in each community whether a weekly ForkBuild challenge post would be
 welcome before making it a habit.
