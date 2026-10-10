@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 9ecc6d131bdffddc -->
+<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 472fcc2701093e58 -->
 # 12 — Archive et succès
 
 <!-- languages -->
@@ -7,8 +7,8 @@
 
 > **Expérimental.** Tout ce qui est ici peut changer ou être retiré dans
 > une version ultérieure, et ce que cela produit pourrait ne pas être
-> conservé. Sur la page Publications, le panneau **Portefeuille, archives
-> et outils d’éditeur** porte un badge **Expérimental**.
+> conservé. Sur la page Publications, le panneau **Outils de portefeuille et
+> d’archives** porte un badge **Expérimental**.
 
 Les outils Bitcoin, Base et IPFS de
 [Preuves et stockage](11-EvidenceAndStorage.md) enregistrent ce qu’ils
@@ -17,7 +17,7 @@ cette archive et ce qui s’appuie dessus : les références entre
 publications et les succès.
 
 La plupart de ces cartes se trouvent sur la page Publications, sous
-**Portefeuille, archives et outils d’éditeur**, dans ses onglets **Outils
+**Outils de portefeuille et d’archives**, dans ses onglets **Outils
 d’archive** et **Références et succès**. Chacune affiche **Conservé
 localement** quand ce qu’elle contient survit à un rechargement.
 

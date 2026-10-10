@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 9ecc6d131bdffddc -->
+<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 472fcc2701093e58 -->
 # 12 — Archiv & Erfolge
 
 <!-- languages -->
@@ -7,8 +7,8 @@
 
 > **Experimentell.** Alles hier kann sich in einer späteren Version ändern
 > oder entfernt werden, und was es erzeugt, wird möglicherweise nicht
-> übernommen. Auf der Seite Veröffentlichungen ist der Bereich **Wallet,
-> Archiv & Herausgeberwerkzeuge** mit einem Abzeichen **Experimentell**
+> übernommen. Auf der Seite Veröffentlichungen ist der Bereich **Wallet- &
+> Archivwerkzeuge** mit einem Abzeichen **Experimentell**
 > gekennzeichnet.
 
 Die Werkzeuge für Bitcoin, Base und IPFS unter
@@ -18,7 +18,7 @@ behandelt dieses Archiv und was darauf aufbaut: Verweise zwischen
 Veröffentlichungen und Erfolge.
 
 Die meisten dieser Karten liegen auf der Seite Veröffentlichungen unter
-**Wallet, Archiv & Herausgeberwerkzeuge**, in deren Reitern
+**Wallet- & Archivwerkzeuge**, in deren Reitern
 **Archivwerkzeuge** und **Verweise & Erfolge**. Jede zeigt **Lokal
 gespeichert**, wenn ihr Inhalt ein Neuladen übersteht.
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f9a5331b0e272454 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: ba7d350bddd098ef -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -15,8 +15,8 @@
 > pourrait ne pas être conservé. La page marque chacune de ces parties d’un
 > badge **Expérimental** : tous les types d’ancrage sauf Arweave, les
 > portefeuilles et leurs étapes Bitcoin et Base, Steem, Blurt, l’épinglage
-> IPFS distant et tout le panneau **Portefeuille, archives et outils
-> d’éditeur**. Les guides [11](11-EvidenceAndStorage.md) et
+> IPFS distant et tout le panneau **Outils de portefeuille et d’archives**.
+> Les guides [11](11-EvidenceAndStorage.md) et
 > [12](12-ArchiveAndLeaderboards.md) indiquent lesquelles de leurs sections
 > sont Expérimentales. Construire, enregistrer, publier dans le Dépôt,
 > forker, les identités et les pairs n’en dépendent pas.
@@ -181,8 +181,8 @@ Monde, et y reste après un rechargement.
 
 Ouvrez **Publications** dans la barre du haut. Elle liste toutes les
 publications signées que cet appareil a cataloguées, les vôtres ou celles
-d’un pair. En bas, le panneau replié **Portefeuille, archives et outils
-d’éditeur** contient des outils pour toute la page, en trois onglets :
+d’un pair. En bas, le panneau replié **Outils de portefeuille et
+d’archives** contient des outils pour toute la page, en trois onglets :
 **Ancrage sur blockchain**, **Outils d’archive** et **Références et
 succès** (voir les guides [11](11-EvidenceAndStorage.md) et
 [12](12-ArchiveAndLeaderboards.md)). Le lien qui y mène dans

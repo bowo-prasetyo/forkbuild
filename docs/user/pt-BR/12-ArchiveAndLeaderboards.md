@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 9ecc6d131bdffddc -->
+<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 472fcc2701093e58 -->
 # 12 — Arquivo e conquistas
 
 <!-- languages -->
@@ -7,7 +7,7 @@
 
 > **Experimental.** Tudo aqui pode mudar ou ser removido numa versão
 > futura, e o que produz pode não ser aproveitado depois. Na página
-> Publicações, o painel **Ferramentas de carteira, arquivo e editor** é
+> Publicações, o painel **Ferramentas de carteira e arquivo** é
 > marcado com um selo **Experimental**.
 
 As ferramentas de Bitcoin, Base e IPFS de
@@ -17,7 +17,7 @@ arquivo e do que é construído sobre ele: referências entre publicações e
 conquistas.
 
 A maioria destes cartões fica na página Publicações, em **Ferramentas de
-carteira, arquivo e editor**, nas guias **Ferramentas de arquivo** e
+carteira e arquivo**, nas guias **Ferramentas de arquivo** e
 **Referências e conquistas**. Cada um mostra **Guardado localmente** quando o
 que ele guarda sobrevive a uma recarga.
 

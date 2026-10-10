@@ -1,5 +1,5 @@
 // Keeps whether this browser shows the Experimental tools: the Publications
-// page's Wallet, Archive & Publisher Tools and the experimental Network
+// page's Wallet & Archive Tools and the experimental Network
 // Settings pages (docs/Pillars.md, "Infrastructure, kept out of sight").
 // Off until a person turns it on. Personal and local: never published,
 // shared or part of any World.

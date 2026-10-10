@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 03289178d6137f12 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: cb4b276ed6e02e88 -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
@@ -127,8 +127,8 @@ membuat yang baru, dengan biaya kecil dalam BLURT. Finalitas,
 **Verifikasi Bukti**, dan **Periksa Bukti** bekerja seperti pada Steem,
 dan kartunya menautkan ke postingan tersebut.
 
-**Menjangkarkan beberapa publikasi sekaligus di Steem.** Di bawah **Dompet,
-Arsip & Alat Penerbit → Penjangkaran Blockchain**, **Jangkarkan Beberapa
+**Menjangkarkan beberapa publikasi sekaligus di Steem.** Di bawah **Alat
+Dompet & Arsip → Penjangkaran Blockchain**, **Jangkarkan Beberapa
 Publikasi di Steem** mencantumkan publikasi yang sudah Anda katalogkan.
 Centang yang Anda inginkan (atau **Pilih yang Belum Dijangkarkan**) dan klik
 **Jangkarkan N Publikasi di Steem**. Satu persetujuan Keychain
@@ -261,8 +261,8 @@ langkah adalah kliknya sendiri.
 > Anda, dan **Siarkan Transaksi** mengirim transaksi sungguhan. Tidak ada
 > mode uji coba.
 
-Semua panel untuk seluruh halaman berada di bawah **Dompet, Arsip & Alat
-Penerbit → Penjangkaran Blockchain**, panel terlipat di bagian bawah
+Semua panel untuk seluruh halaman berada di bawah **Alat Dompet & Arsip →
+Penjangkaran Blockchain**, panel terlipat di bagian bawah
 halaman Publikasi; langkah per publikasi ada di kartu setiap publikasi.
 Jika sebuah langkah memerlukan dompet atau dana diamati terlebih dahulu,
 tautannya membuka panel itu untuk Anda.
@@ -433,7 +433,7 @@ istilahnya sendiri.
 
 ### Menghubungkan dompet dan mengamati akun
 
-Di kartu **Jaringan Base** (di bawah **Dompet, Arsip & Alat Penerbit →
+Di kartu **Jaringan Base** (di bawah **Alat Dompet & Arsip →
 Penjangkaran Blockchain**), klik **Hubungkan Dompet Base** dan setujui.
 Statusnya **Terhubung**, **Terputus**, dan **Dompet tidak tersedia**,
 seperti untuk Bitcoin; **Putuskan** memutusnya dan memuat ulang

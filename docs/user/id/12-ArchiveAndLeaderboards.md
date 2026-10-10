@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 9ecc6d131bdffddc -->
+<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 472fcc2701093e58 -->
 # 12 — Arsip & Pencapaian
 
 <!-- languages -->
@@ -7,7 +7,7 @@
 
 > **Eksperimental.** Semua yang ada di sini dapat berubah atau dihapus di
 > versi berikutnya, dan apa yang dihasilkannya mungkin tidak terbawa. Di
-> halaman Publikasi, panel **Dompet, Arsip & Alat Penerbit** ditandai
+> halaman Publikasi, panel **Alat Dompet & Arsip** ditandai
 > dengan lencana **Eksperimental**.
 
 Alat Bitcoin, Base, dan IPFS di
@@ -16,8 +16,8 @@ diamatinya dalam arsip yang tahan lama di perangkat ini. Panduan ini
 membahas arsip itu dan apa yang dibangun di atasnya: referensi antarpublikasi
 dan pencapaian.
 
-Sebagian besar kartu ini ada di halaman Publikasi di bawah **Dompet, Arsip
-& Alat Penerbit**, di tab **Alat Arsip** dan **Referensi & Pencapaian**.
+Sebagian besar kartu ini ada di halaman Publikasi di bawah **Alat Dompet &
+Arsip**, di tab **Alat Arsip** dan **Referensi & Pencapaian**.
 Masing-masing menampilkan **Disimpan secara lokal** jika isinya tetap ada
 setelah dimuat ulang.
 

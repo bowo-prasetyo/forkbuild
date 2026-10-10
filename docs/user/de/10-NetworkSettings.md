@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 49cd90a03daca28b -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 7085ae1ba4a129cf -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
@@ -35,9 +35,9 @@ Was jeder Server über Sie erfährt, steht unter [Datenschutz](Privacy.md).
 Oben auf der Seite zeigt **Experimentelle Werkzeuge anzeigen** die Teile
 von ForkBuild, die **experimentell** sind: hier die Seite
 **Bitcoin-Endpunkt** und auf der
-[Seite Veröffentlichungen](09-PublicationsAndEvidence.md#die-seite-veröffentlichungen) den Bereich **Wallet, Archiv &
-Herausgeberwerkzeuge**. Der Schalter ist aus, bis Sie ihn einschalten, und
-wird auf diesem Gerät gespeichert, sobald Sie ihn ändern. Nichts, was Sie
+[Seite Veröffentlichungen](09-PublicationsAndEvidence.md#die-seite-veröffentlichungen)
+den Bereich **Wallet- & Archivwerkzeuge**. Der Schalter ist aus, bis Sie ihn
+einschalten, und wird auf diesem Gerät gespeichert, sobald Sie ihn ändern. Nichts, was Sie
 zum Bauen, Veröffentlichen oder Teilen brauchen, wird ausgeblendet.
 
 ## Wie sich jede Seite verhält

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f9a5331b0e272454 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: ba7d350bddd098ef -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -15,7 +15,7 @@
 > cada uma dessas partes com um selo **Experimental**: todo tipo de
 > ancoragem exceto no Arweave, as carteiras e seus passos de Bitcoin e Base,
 > o Steem, o Blurt, o pinning remoto no IPFS e o painel inteiro
-> **Ferramentas de carteira, arquivo e editor**. Os guias
+> **Ferramentas de carteira e arquivo**. Os guias
 > [11](11-EvidenceAndStorage.md) e [12](12-ArchiveAndLeaderboards.md) dizem
 > quais das seções deles são experimentais. Construir, salvar, publicar no
 > Repositório, bifurcar, identidades e pares não dependem de nada disso.
@@ -174,7 +174,7 @@ mundo, e continua lá depois de recarregar.
 
 Abra **Publicações** na barra superior. Ela lista todas as publicações
 assinadas que este dispositivo catalogou, suas ou de um par. No fim, o
-painel recolhido **Ferramentas de carteira, arquivo e editor** guarda
+painel recolhido **Ferramentas de carteira e arquivo** guarda
 ferramentas para a página toda em três guias: **Ancoragem em blockchain**,
 **Ferramentas de arquivo** e **Referências e conquistas** (veja os guias
 [11](11-EvidenceAndStorage.md) e [12](12-ArchiveAndLeaderboards.md)). O link

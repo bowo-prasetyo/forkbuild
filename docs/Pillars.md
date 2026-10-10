@@ -79,9 +79,9 @@ is a means, not the game:
   page and in Network Settings. (Today the Editor still offers **Distribute**
   as its own step after Publish; folding it in is open work.)
 - Network Settings and the Publications page live under **More → Advanced**.
-  The Experimental tools (the Publications page's Wallet, Archive &
-  Publisher Tools and the Bitcoin Endpoint page) stay hidden until **Show experimental tools** is turned on
-  in Network Settings.
+  The Experimental tools (the Publications page's Wallet & Archive Tools and
+  the Bitcoin Endpoint page) stay hidden until **Show experimental tools**
+  is turned on in Network Settings.
 - Nothing infrastructural is a reason for a release to exist on its own.
 
 ## Words

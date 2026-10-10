@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 03289178d6137f12 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: cb4b276ed6e02e88 -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
@@ -133,7 +133,7 @@ evidencia** e **Inspeccionar evidencia** funcionan como en Steem, y la
 tarjeta enlaza a la publicación.
 
 **Anclar varias publicaciones a la vez en Steem.** En **Herramientas de
-billetera, archivo y editor → Anclaje en blockchain**, **Anclar varias
+billetera y archivo → Anclaje en blockchain**, **Anclar varias
 publicaciones en Steem** muestra sus publicaciones catalogadas. Marque las
 que quiera (o use **Seleccionar las no ancladas**) y haga clic en **Anclar
 N publicaciones en Steem**. Una sola aprobación de Keychain ancla hasta 64.
@@ -263,8 +263,8 @@ es su propio clic.
 > de su billetera, y **Transmitir transacción** envía una transacción real.
 > No hay un modo de prueba.
 
-Todos sus paneles para toda la página están en **Herramientas de
-billetera, archivo y editor → Anclaje en blockchain**, el panel plegado al
+Todos sus paneles para toda la página están en **Herramientas de billetera y
+archivo → Anclaje en blockchain**, el panel plegado al
 final de la página Publicaciones; los pasos de cada publicación están en su
 tarjeta. Cuando un paso necesita que antes se observe una billetera o sus
 fondos, su enlace abre ese panel por usted.
@@ -436,8 +436,8 @@ misma que lleva el hash de contenido como datos), sus propios términos.
 
 ### Conectar una billetera y observar una cuenta
 
-En la tarjeta **Red de Base** (en **Herramientas de billetera, archivo y
-editor → Anclaje en blockchain**), haga clic en **Conectar billetera de
+En la tarjeta **Red de Base** (en **Herramientas de billetera y archivo →
+Anclaje en blockchain**), haga clic en **Conectar billetera de
 Base** y apruébelo. Los estados son **Conectada**, **Desconectada** y
 **Billetera no disponible**, igual que para Bitcoin; **Desconectar** la
 quita y recargar la olvida.

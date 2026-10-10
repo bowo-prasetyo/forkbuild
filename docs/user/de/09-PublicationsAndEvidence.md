@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f9a5331b0e272454 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: ba7d350bddd098ef -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -16,7 +16,7 @@
 > Die Seite kennzeichnet jeden solchen Teil mit einem Abzeichen
 > **Experimentell**: jede Art der Verankerung außer Arweave, die Wallets und
 > ihre Schritte für Bitcoin und Base, Steem, Blurt, entferntes IPFS-Pinning
-> sowie den ganzen Bereich **Wallet, Archiv & Herausgeberwerkzeuge**. Die
+> sowie den ganzen Bereich **Wallet- & Archivwerkzeuge**. Die
 > Anleitungen [11](11-EvidenceAndStorage.md) und
 > [12](12-ArchiveAndLeaderboards.md) sagen, welche ihrer Abschnitte
 > experimentell sind. Bauen, Speichern, Veröffentlichen im Repository,
@@ -183,8 +183,8 @@ Autors und in die Weltansicht und bleibt dort auch nach einem Neuladen.
 
 Öffnen Sie in der oberen Leiste **Veröffentlichungen**. Sie listet jede
 signierte Veröffentlichung auf, die dieses Gerät erfasst hat, Ihre oder die
-eines Peers. Ganz unten enthält der eingeklappte Bereich **Wallet, Archiv &
-Herausgeberwerkzeuge** seitenweite Werkzeuge in drei Reitern:
+eines Peers. Ganz unten enthält der eingeklappte Bereich **Wallet- &
+Archivwerkzeuge** seitenweite Werkzeuge in drei Reitern:
 **Blockchain-Verankerung**, **Archivwerkzeuge** und **Verweise & Erfolge**
 (siehe Anleitungen [11](11-EvidenceAndStorage.md) und
 [12](12-ArchiveAndLeaderboards.md)). Der Link dorthin in der Einleitung

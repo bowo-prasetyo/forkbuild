@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 03289178d6137f12 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: cb4b276ed6e02e88 -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
@@ -134,7 +134,7 @@ kleine Gebühr in BLURT. Endgültigkeit, **Nachweise überprüfen** und
 den Beitrag.
 
 **Mehrere Veröffentlichungen auf einmal auf Steem verankern.** Unter
-**Wallet, Archiv & Herausgeberwerkzeuge → Blockchain-Verankerung** listet
+**Wallet- & Archivwerkzeuge → Blockchain-Verankerung** listet
 **Mehrere Veröffentlichungen auf Steem verankern** Ihre erfassten
 Veröffentlichungen auf. Setzen Sie Häkchen bei denen, die Sie möchten
 (oder **Nicht verankerte auswählen**), und klicken Sie auf **N
@@ -264,8 +264,8 @@ Jeder Schritt ist ein eigener Klick.
 > Wallet, und **Transaktion senden** sendet eine echte Transaktion. Es
 > gibt keinen Testmodus.
 
-Alle seitenweiten Bereiche liegen unter **Wallet, Archiv &
-Herausgeberwerkzeuge → Blockchain-Verankerung**, dem eingeklappten Bereich
+Alle seitenweiten Bereiche liegen unter **Wallet- & Archivwerkzeuge →
+Blockchain-Verankerung**, dem eingeklappten Bereich
 ganz unten auf der Seite Veröffentlichungen; die Schritte pro
 Veröffentlichung stehen auf der Karte jeder Veröffentlichung. Wo ein
 Schritt zuerst eine beobachtete Wallet oder ein beobachtetes Guthaben
@@ -438,8 +438,8 @@ an sich selbst, die den Inhalts-Hash als Daten trägt), eigene Begriffe.
 
 ### Eine Wallet verbinden und ein Konto beobachten
 
-Klicken Sie auf der Karte **Base-Netzwerk** (unter **Wallet, Archiv &
-Herausgeberwerkzeuge → Blockchain-Verankerung**) auf **Base-Wallet
+Klicken Sie auf der Karte **Base-Netzwerk** (unter **Wallet- &
+Archivwerkzeuge → Blockchain-Verankerung**) auf **Base-Wallet
 verbinden** und bestätigen Sie. Die Zustände sind **Verbunden**,
 **Getrennt** und **Wallet nicht verfügbar**, wie bei Bitcoin; **Trennen**
 beendet die Verbindung, und ein Neuladen vergisst sie.
