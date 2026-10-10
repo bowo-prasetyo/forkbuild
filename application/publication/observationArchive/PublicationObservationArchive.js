@@ -10,8 +10,6 @@ import { appendBaseAnchorPublicationRecordHistoryEntry } from '../../anchoring/b
 import { isValidBlockchainKind } from '../../anchoring/BlockchainKind.js';
 import { PublicationReferenceRecord } from '../PublicationReferenceRecord.js';
 import { appendPublicationReferenceRecordHistoryEntry } from '../PublicationReferenceRecordHistory.js';
-import { PublisherPublicationAssociationRecord } from '../../publisher/PublisherPublicationAssociationRecord.js';
-import { appendPublisherPublicationAssociationRecordHistoryEntry } from '../../publisher/PublisherPublicationAssociationRecordHistory.js';
 import {
     PublicationObservationArchiveProvenanceOrigin,
     isValidPublicationObservationArchiveProvenanceOrigin
@@ -38,11 +36,12 @@ const SCHEMA_VERSION = 10;
 //   bitcoinBroadcastRecords, bitcoinConfirmationObservationsByAnchorId,
 //   bitcoinContentProofObservationsByAnchorId, bitcoinAnchorPublicationRecords
 //   baseTransactionInclusionObservationsByTransactionHash, baseAnchorPublicationRecords
-//   publicationReferenceRecords, publisherPublicationAssociationRecords
+//   publicationReferenceRecords
 //
-// Schema 10 also had leaderboard claim, reconciliation decision and
-// revalidation observation collections, for the leaderboard and
-// reconciliation pages, which were retired. They are still written, always
+// Schema 10 also had publisher association, leaderboard claim,
+// reconciliation decision and revalidation observation collections, for
+// Publisher Associations and the leaderboard and reconciliation pages,
+// which were retired. They are still written, always
 // empty, so an older copy of ForkBuild can read this archive, and whatever an
 // older archive holds in them is read and dropped (LEGACY_FIELDS below).
 //
@@ -88,8 +87,6 @@ export class PublicationObservationArchive {
         baseAnchorPublicationRecordProvenance = [],
         publicationReferenceRecords = [],
         publicationReferenceRecordProvenance = [],
-        publisherPublicationAssociationRecords = [],
-        publisherPublicationAssociationRecordProvenance = [],
         archiveImportEvents = []
     } = {}) {
         this._ipfsPublicationRecords = Object.freeze([...ipfsPublicationRecords]);
@@ -134,8 +131,6 @@ export class PublicationObservationArchive {
         this._baseAnchorPublicationRecordProvenance = Object.freeze([...baseAnchorPublicationRecordProvenance]);
         this._publicationReferenceRecords = Object.freeze([...publicationReferenceRecords]);
         this._publicationReferenceRecordProvenance = Object.freeze([...publicationReferenceRecordProvenance]);
-        this._publisherPublicationAssociationRecords = Object.freeze([...publisherPublicationAssociationRecords]);
-        this._publisherPublicationAssociationRecordProvenance = Object.freeze([...publisherPublicationAssociationRecordProvenance]);
         this._archiveImportEvents = Object.freeze([...archiveImportEvents]);
         Object.freeze(this);
     }
@@ -158,8 +153,6 @@ export class PublicationObservationArchive {
     get baseAnchorPublicationRecordProvenance() { return this._baseAnchorPublicationRecordProvenance; }
     get publicationReferenceRecords() { return this._publicationReferenceRecords; }
     get publicationReferenceRecordProvenance() { return this._publicationReferenceRecordProvenance; }
-    get publisherPublicationAssociationRecords() { return this._publisherPublicationAssociationRecords; }
-    get publisherPublicationAssociationRecordProvenance() { return this._publisherPublicationAssociationRecordProvenance; }
     get archiveImportEvents() { return this._archiveImportEvents; }
 
     // Exposed so the export module can record it without duplicating the number.
@@ -181,10 +174,6 @@ export class PublicationObservationArchive {
 
     get publicationReferenceRecordCount() {
         return this._publicationReferenceRecords.length;
-    }
-
-    get publisherPublicationAssociationRecordCount() {
-        return this._publisherPublicationAssociationRecords.length;
     }
 
     // Every IPFS verification, Bitcoin confirmation and content-proof check, and
@@ -219,8 +208,7 @@ export class PublicationObservationArchive {
             + countOriginMatches(this._bitcoinAnchorPublicationRecordProvenance, origin)
             + countOriginMatchesByKey(this._baseTransactionInclusionObservationProvenanceByTransactionHash, origin)
             + countOriginMatches(this._baseAnchorPublicationRecordProvenance, origin)
-            + countOriginMatches(this._publicationReferenceRecordProvenance, origin)
-            + countOriginMatches(this._publisherPublicationAssociationRecordProvenance, origin);
+            + countOriginMatches(this._publicationReferenceRecordProvenance, origin);
     }
 
     _fields() {
@@ -243,8 +231,6 @@ export class PublicationObservationArchive {
             baseAnchorPublicationRecordProvenance: this._baseAnchorPublicationRecordProvenance,
             publicationReferenceRecords: this._publicationReferenceRecords,
             publicationReferenceRecordProvenance: this._publicationReferenceRecordProvenance,
-            publisherPublicationAssociationRecords: this._publisherPublicationAssociationRecords,
-            publisherPublicationAssociationRecordProvenance: this._publisherPublicationAssociationRecordProvenance,
             archiveImportEvents: this._archiveImportEvents
         };
     }
@@ -379,15 +365,6 @@ export class PublicationObservationArchive {
         });
     }
 
-    appendPublisherPublicationAssociationRecord(record, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
-        if (!record || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
-        return new PublicationObservationArchive({
-            ...this._fields(),
-            publisherPublicationAssociationRecords: appendPublisherPublicationAssociationRecordHistoryEntry(this._publisherPublicationAssociationRecords, record),
-            publisherPublicationAssociationRecordProvenance: Object.freeze([...this._publisherPublicationAssociationRecordProvenance, origin])
-        });
-    }
-
     // Replaces every provenance tag with `origin`; facts and import events are
     // untouched. Only importing uses this, never fromJSON().
     withUniformProvenance(origin) {
@@ -414,8 +391,7 @@ export class PublicationObservationArchive {
                 (origins) => Object.freeze(origins.map(() => origin))
             ),
             baseAnchorPublicationRecordProvenance: Object.freeze(this._baseAnchorPublicationRecordProvenance.map(() => origin)),
-            publicationReferenceRecordProvenance: Object.freeze(this._publicationReferenceRecordProvenance.map(() => origin)),
-            publisherPublicationAssociationRecordProvenance: Object.freeze(this._publisherPublicationAssociationRecordProvenance.map(() => origin))
+            publicationReferenceRecordProvenance: Object.freeze(this._publicationReferenceRecordProvenance.map(() => origin))
         });
     }
 
@@ -497,8 +473,6 @@ export class PublicationObservationArchive {
             baseAnchorPublicationRecordProvenance: [...this._baseAnchorPublicationRecordProvenance],
             publicationReferenceRecords: this._publicationReferenceRecords.map((record) => record.toJSON()),
             publicationReferenceRecordProvenance: [...this._publicationReferenceRecordProvenance],
-            publisherPublicationAssociationRecords: this._publisherPublicationAssociationRecords.map((record) => record.toJSON()),
-            publisherPublicationAssociationRecordProvenance: [...this._publisherPublicationAssociationRecordProvenance],
             ...Object.fromEntries(LEGACY_FIELDS.map((field) => [field, []])),
             archiveImportEvents: this._archiveImportEvents.map(serializeArchiveImportEvent)
         };
@@ -562,8 +536,6 @@ export class PublicationObservationArchive {
             baseAnchorPublicationRecordProvenance: validated.baseAnchorPublicationRecordProvenance,
             publicationReferenceRecords: validated.publicationReferenceRecords.map((record) => PublicationReferenceRecord.fromJSON(record)),
             publicationReferenceRecordProvenance: validated.publicationReferenceRecordProvenance,
-            publisherPublicationAssociationRecords: validated.publisherPublicationAssociationRecords.map((record) => PublisherPublicationAssociationRecord.fromJSON(record)),
-            publisherPublicationAssociationRecordProvenance: validated.publisherPublicationAssociationRecordProvenance,
             archiveImportEvents: validated.archiveImportEvents.map(deserializeArchiveImportEvent)
         });
     }
@@ -633,8 +605,6 @@ const BASE_TRANSACTION_INCLUSION_OBSERVATION_FIELDS = ['state', 'txid', 'blockHa
 const BASE_ANCHOR_PUBLICATION_RECORD_FIELDS = ['contentHash', 'txid', 'network', 'createdAt'];
 const BLOCKCHAIN_PUBLICATION_IDENTITY_FIELDS = ['blockchain', 'contentHash', 'chainReference', 'createdAt'];
 const PUBLICATION_REFERENCE_RECORD_FIELDS = ['sourcePublicationIdentity', 'referencedPublicationIdentity', 'createdAt'];
-const PUBLISHER_IDENTITY_FIELDS = ['publisherId'];
-const PUBLISHER_PUBLICATION_ASSOCIATION_RECORD_FIELDS = ['publisherIdentity', 'publicationIdentity', 'createdAt'];
 function isValidTimestamp(value) {
     if (typeof value !== 'string') return false;
     const parsed = new Date(value);
@@ -706,22 +676,6 @@ export function validatePublicationReferenceRecord(record) {
     return record;
 }
 
-function validatePublisherIdentityJSON(value) {
-    if (!isPlainObject(value) || !hasOnlyKeys(value, PUBLISHER_IDENTITY_FIELDS)) return null;
-    if (!PUBLISHER_IDENTITY_FIELDS.every((key) => key in value)) return null;
-    if (typeof value.publisherId !== 'string' || !value.publisherId) return null;
-    return value;
-}
-
-export function validatePublisherPublicationAssociationRecord(record) {
-    if (!isPlainObject(record) || !hasOnlyKeys(record, PUBLISHER_PUBLICATION_ASSOCIATION_RECORD_FIELDS)) return null;
-    if (!PUBLISHER_PUBLICATION_ASSOCIATION_RECORD_FIELDS.every((key) => key in record)) return null;
-    if (!validatePublisherIdentityJSON(record.publisherIdentity)) return null;
-    if (!validateBlockchainPublicationIdentityJSON(record.publicationIdentity)) return null;
-    if (!isValidTimestamp(record.createdAt)) return null;
-    return record;
-}
-
 export function validateArray(value, itemValidator) {
     if (!Array.isArray(value)) return null;
     const validated = [];
@@ -783,10 +737,12 @@ function validateArchiveImportEvent(event) {
     return event;
 }
 
-// The retired leaderboard and reconciliation collections (see the header):
-// each must still be a list, as schema 10 has always required, and is
-// otherwise not read.
+// The retired publisher association, leaderboard and reconciliation
+// collections (see the header): each must still be a list, as schema 10 has
+// always required, and is otherwise not read.
 const LEGACY_FIELDS = Object.freeze([
+    'publisherPublicationAssociationRecords',
+    'publisherPublicationAssociationRecordProvenance',
     'leaderboardClaimRecords',
     'leaderboardClaimRecordProvenance',
     'reconciliationDecisionRecords',
@@ -815,8 +771,6 @@ const TOP_LEVEL_FIELDS = [
     'baseAnchorPublicationRecordProvenance',
     'publicationReferenceRecords',
     'publicationReferenceRecordProvenance',
-    'publisherPublicationAssociationRecords',
-    'publisherPublicationAssociationRecordProvenance',
     ...LEGACY_FIELDS,
     'archiveImportEvents'
 ];
@@ -887,11 +841,6 @@ function validateArchiveJSON(json) {
     const publicationReferenceRecordProvenance = validateProvenanceArray(json.publicationReferenceRecordProvenance, publicationReferenceRecords.length);
     if (!publicationReferenceRecordProvenance) return null;
 
-    const publisherPublicationAssociationRecords = validateArray(json.publisherPublicationAssociationRecords, validatePublisherPublicationAssociationRecord);
-    if (!publisherPublicationAssociationRecords) return null;
-    const publisherPublicationAssociationRecordProvenance = validateProvenanceArray(json.publisherPublicationAssociationRecordProvenance, publisherPublicationAssociationRecords.length);
-    if (!publisherPublicationAssociationRecordProvenance) return null;
-
     if (!LEGACY_FIELDS.every((field) => Array.isArray(json[field]))) return null;
 
     const archiveImportEvents = validateArray(json.archiveImportEvents, validateArchiveImportEvent);
@@ -916,8 +865,6 @@ function validateArchiveJSON(json) {
         baseAnchorPublicationRecordProvenance,
         publicationReferenceRecords,
         publicationReferenceRecordProvenance,
-        publisherPublicationAssociationRecords,
-        publisherPublicationAssociationRecordProvenance,
         archiveImportEvents
     };
 }

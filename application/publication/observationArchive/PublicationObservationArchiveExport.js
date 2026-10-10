@@ -156,8 +156,7 @@ export function importPublicationObservationArchive(payload) {
 // read directly off `archive` itself (`PublicationObservationArchive.SCHEMA_VERSION`
 // and the sum of its own `publicationCount`/`observationCount`/
 // `bitcoinAnchorPublicationRecordCount`/`baseAnchorPublicationRecordCount`
-// (0.8.99)/`publicationReferenceRecordCount` (0.8.104)/
-// `publisherPublicationAssociationRecordCount` (0.8.108)), so a caller
+// (0.8.99)/`publicationReferenceRecordCount` (0.8.104)), so a caller
 // cannot accidentally pass a stale or fabricated count.
 //
 // NEVER A VERIFICATION. This function does not check, re-validate, or
@@ -176,6 +175,5 @@ export function recordPublicationObservationArchiveImport(archive, { importedAt 
         importedArchiveSchemaVersion: PublicationObservationArchive.SCHEMA_VERSION,
         importedEntryCount: archive.publicationCount + archive.observationCount + archive.bitcoinAnchorPublicationRecordCount
             + archive.baseAnchorPublicationRecordCount + archive.publicationReferenceRecordCount
-            + archive.publisherPublicationAssociationRecordCount
     });
 }

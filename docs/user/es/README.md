@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 3b535dc98d81e02d -->
+<!-- translation-of: docs/user/README.md source-hash: e484e2933c088ce1 -->
 # Documentación para usuarios de ForkBuild
 
 <!-- languages -->
@@ -62,7 +62,7 @@ de la carpeta [docs/](../..) de nivel superior (en inglés).
     encaja todo esto.
 12. **[Archivo y logros](12-ArchiveAndLeaderboards.md)**:
     *experimental*. El archivo de observaciones, las referencias entre
-    publicaciones, los logros y las etiquetas de editor.
+    publicaciones y los logros.
 13. **[Sus datos](13-YourData.md)**: hacer una copia de seguridad de todo
     lo que tiene este navegador en un solo archivo cifrado y restaurarla,
     las exportaciones más pequeñas y dónde registró este dispositivo la

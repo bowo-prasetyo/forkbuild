@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 2831381c24cb53fe -->
+<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 9ecc6d131bdffddc -->
 # 12 — Archiv & Erfolge
 
 <!-- languages -->
@@ -15,7 +15,7 @@ Die Werkzeuge für Bitcoin, Base und IPFS unter
 [Nachweise & Speicher](11-EvidenceAndStorage.md) halten fest, was sie
 beobachten, in einem dauerhaften Archiv auf diesem Gerät. Diese Anleitung
 behandelt dieses Archiv und was darauf aufbaut: Verweise zwischen
-Veröffentlichungen, Erfolge und Herausgeberkennungen.
+Veröffentlichungen und Erfolge.
 
 Die meisten dieser Karten liegen auf der Seite Veröffentlichungen unter
 **Wallet, Archiv & Herausgeberwerkzeuge**, in deren Reitern
@@ -181,30 +181,7 @@ Zeitpunkt, an dem er erzielt wurde.
 Erfolge gehören Veröffentlichungsidentitäten, nicht Menschen: Nichts hier
 verknüpft eine Veröffentlichung mit einer Person.
 
-## Herausgeberidentität
-
-Mit **Herausgeberzuordnungen** versehen Sie Veröffentlichungen auf Ihr
-eigenes Wort hin mit einem Herausgebernamen.
-
-Eine Herausgeberkennung ist ein schlichtes, selbst erklärtes Etikett,
-keine überprüfte Identität und keine Anmeldung. Der Abgleich ist exakt:
-`Alice`, `alice` und `ALICE` sind drei Herausgeber. Nichts wird aus
-Wallets, Inhalten oder Namen abgeleitet.
-
-**Herausgeberzuordnungen zeigen**, dann:
-
-1. **Herausgeberkennung** — geben Sie ein Etikett ein oder wählen Sie
-   eines, das Sie schon benutzt haben.
-2. **Veröffentlichung** — wählen Sie eine Ihrer Bitcoin- oder
-   Base-Veröffentlichungsidentitäten.
-3. **Veröffentlichung hinzufügen** — erfasst die Zuordnung.
-
-**Erfasste Zuordnungen** listet sie auf, die älteste zuerst.
-**Zugeordnete Veröffentlichungen eines Herausgebers** zeigt jede
-Veröffentlichung eines gewählten Herausgebers, mit Inhalts-Hash und dem
-Zeitpunkt der Zuordnung.
-
-## Eingestellt: Bestenlisten und Abgleich
+## Eingestellt: Bestenlisten, Abgleich und Herausgeberkennungen
 
 Frühere Versionen hatten Bestenlisten-Seiten: eine Bestenliste der
 Herausgeber, signierte Snapshot-Ansprüche von Herausgebern, einen
@@ -215,3 +192,7 @@ Seiten öffnet die Startseite. Ein Archiv, das gespeichert wurde, als es sie
 noch gab, lässt sich weiter laden und importieren, mit all seinen übrigen
 Datensätzen; die Bestenlisten-Ansprüche und Abgleichsentscheidungen darin
 werden verworfen.
+
+Auch die Herausgeberzuordnungen, mit denen Sie Ihre Veröffentlichungen für
+diese Seiten mit einem Herausgebernamen versehen konnten, wurden entfernt.
+Die Kennungen in einem Archiv werden auf dieselbe Weise verworfen.

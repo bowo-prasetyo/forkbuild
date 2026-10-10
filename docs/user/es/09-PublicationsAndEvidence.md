@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f792d993d2ee00e6 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f9a5331b0e272454 -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -40,8 +40,7 @@ declaración:
   externa (Bitcoin, Base, Arweave, Steem, Blurt), los flujos de billetera, las
   Ubicaciones de Snapshots, la publicación en IPFS, Steem y Blurt.
 - **[Archivo y logros](12-ArchiveAndLeaderboards.md)**: el archivo
-  duradero de observaciones, las referencias, los logros y las etiquetas de
-  editor.
+  duradero de observaciones, las referencias y los logros.
 
 ## Dos significados de “publicar”
 
@@ -506,7 +505,7 @@ comprobaciones, los intentos y las pantallas en curso no.
 | — | **Publicación en IPFS**: la configuración del proveedor, los resultados, el historial en pantalla y el historial de verificación |
 | Los registros de **Publicaciones de anclaje en Bitcoin/Base**, creados al finalizar | La conexión de los flujos de billetera, la observación de fondos o de la cuenta, el plan, la revisión, la firma, la transacción finalizada, el resultado de la transmisión y el historial en pantalla de confirmación o inclusión |
 | El **Archivo de observaciones de publicaciones** (cada publicación y verificación en IPFS, cada transmisión, confirmación y prueba de contenido de Bitcoin, y cada inclusión en Base), hasta **Vaciar archivo** | — |
-| Las Referencias entre publicaciones y las Asociaciones de editores | Qué tarjetas y filas tenía abiertas |
+| Las Referencias entre publicaciones | Qué tarjetas y filas tenía abiertas |
 
 Después de recargar, los resultados de un flujo o de una publicación en
 IPFS siguen visibles en el

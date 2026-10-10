@@ -52,8 +52,8 @@ top-level [docs/](..) folder.
     pipelines, remote IPFS pinning, Steem and Blurt.
     [Distributing Your Work](Distribution.md) shows how these fit together.
 12. **[Archive & Achievements](12-ArchiveAndLeaderboards.md)** —
-    *experimental*. The observation archive, publication references,
-    achievements and publisher labels.
+    *experimental*. The observation archive, publication references and
+    achievements.
 13. **[Your Data](13-YourData.md)** — backing up everything this browser
     holds to one encrypted file and restoring it, the smaller exports, and
     where this device recorded distributing your publications.

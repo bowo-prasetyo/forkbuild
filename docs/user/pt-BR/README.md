@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 3b535dc98d81e02d -->
+<!-- translation-of: docs/user/README.md source-hash: e484e2933c088ce1 -->
 # Documentação do ForkBuild para usuários
 
 <!-- languages -->
@@ -58,8 +58,8 @@ pasta [docs/](../..) de nível superior.
     e o Blurt. [Distribuindo seu trabalho](Distribution.md) mostra como tudo
     isso se encaixa.
 12. **[Arquivo e conquistas](12-ArchiveAndLeaderboards.md)** —
-    *experimental*. O arquivo de observações, referências entre publicações,
-    conquistas e rótulos de editores.
+    *experimental*. O arquivo de observações, referências entre publicações
+    e conquistas.
 13. **[Seus dados](13-YourData.md)** — fazer backup de tudo o que este
     navegador guarda em um único arquivo criptografado e restaurá-lo, as
     exportações menores e onde este dispositivo registrou a distribuição das

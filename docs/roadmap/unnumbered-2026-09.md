@@ -5157,3 +5157,25 @@ creative-direction review (docs/Pillars.md, "Where this came from").
 - Not done: Publisher Associations stay on the Publications page; with the publisher cards gone they only label
   publications, and folding or removing them is a separate call.
 
+## Publisher Associations retired (unnumbered, 2026-10-10)
+
+**The Publications page no longer has Publisher Associations.** They let a person label their Bitcoin and Base
+publication records with a self-declared publisher name, for the publisher leaderboard and the publisher achievement
+cards. Those went in "The leaderboards and reconciliation retired" above, and nothing else read the labels: a second,
+unverified name beside the signing identity that already says who made a build. Pillar served: your work is yours,
+under one identity. Finishes that entry's "Not done".
+
+- **Card and code.** The Publisher Associations card in References & Achievements, `usePublisherAssociations`, and
+  application/publisher/'s association modules (CreatePublisherPublicationAssociationRecordUseCase,
+  PublisherAssociationView, PublisherIdentityRecord, PublisherPublicationAssociationRecord and its history and history
+  view): 7 modules, about 630 lines, and 22 messages in every language. Publishing (CreatePublisherUseCase) is untouched.
+- **The observation archive keeps schema 10.** `publisherPublicationAssociationRecords` and its provenance join the
+  retired collections (LEGACY_FIELDS): read as lists and dropped, written empty. They are gone from the model, the
+  difference, the replacement review, the inspection and the import count. An archive saved with labels loads and
+  imports with every other fact; the labels are dropped. An archive that never had any keeps its fingerprint.
+- Guide 12 loses its Publisher Identity section and its "Retired" section says so; guides 09 and the guide index
+  follow, in every language. The Wallet, Archive & Publisher Tools panel keeps its name for now.
+- Tests: `PublisherPublicationAssociationRecord` is removed with its code. `PublicationObservationArchive` Section G
+  now also loads an archive saved with a publisher association and drops it, and refuses one whose association
+  collection is not a list. The archive fingerprint vectors are unchanged.
+

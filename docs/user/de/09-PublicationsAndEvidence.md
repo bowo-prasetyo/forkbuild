@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f792d993d2ee00e6 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f9a5331b0e272454 -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -41,7 +41,7 @@ Tiefe, die Sie einem Anspruch geben können:
   (Bitcoin, Base, Arweave, Steem, Blurt), die Wallet-Abläufe,
   Snapshot-Platzierungen, Veröffentlichen auf IPFS, Steem und Blurt.
 - **[Archiv & Erfolge](12-ArchiveAndLeaderboards.md)** — das
-  dauerhafte Beobachtungsarchiv, Verweise, Erfolge und Herausgeberkennungen.
+  dauerhafte Beobachtungsarchiv, Verweise und Erfolge.
 
 ## Zwei Bedeutungen von „veröffentlichen“
 
@@ -522,7 +522,7 @@ Versuche und Ansichten in Arbeit nicht.
 | — | **Veröffentlichen auf IPFS**: die Anbieterkonfiguration, Ergebnisse, der angezeigte Verlauf und der Überprüfungsverlauf |
 | Datensätze unter **Bitcoin-/Base-Ankerveröffentlichungen**, beim Finalisieren erstellt | Verbindung, Guthaben- oder Kontobeobachtung, Plan, Prüfung, Signatur, finalisierte Transaktion, Sendeergebnis und angezeigter Bestätigungs- oder Aufnahmeverlauf der Wallet-Abläufe |
 | Das **Beobachtungsarchiv** der Veröffentlichungen (jede IPFS-Veröffentlichung und -Überprüfung, jedes Bitcoin-Senden, jede Bestätigung und jeder Inhaltsnachweis sowie jede Base-Aufnahme), bis **Archiv leeren** | — |
-| Veröffentlichungsverweise und Herausgeberzuordnungen | Welche Karten und Zeilen Sie geöffnet hatten |
+| Veröffentlichungsverweise | Welche Karten und Zeilen Sie geöffnet hatten |
 
 Nach einem Neuladen sind die Ergebnisse eines Ablaufs oder einer
 IPFS-Veröffentlichung weiterhin im
