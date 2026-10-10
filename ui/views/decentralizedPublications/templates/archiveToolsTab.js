@@ -69,11 +69,6 @@ export const archiveToolsTabTemplate = `<div v-show="publicationsToolsTab === 'a
                         {{ showPublicationArchiveImportForm ? t('publications.cancelImport') : t('publications.importArchive2') }}
                     </button>
                 </div>
-                <p class="form-hint form-hint--neutral">
-                    <I18nText keypath="publications.reconcilingThisArchiveAgainstA">
-                        <template #leaderboard><router-link to="/leaderboard">{{ t('publications.leaderboard') }}</router-link></template>
-                    </I18nText>
-                </p>
 
                 <div v-if="publicationArchiveExportedPackage.json" class="evidence-inspection-adapter">
                     <span class="evidence-inspection-adapter-title">{{ t('publications.exportedArchive') }}</span>

@@ -137,8 +137,8 @@
    Convention. Publications' own markup (tools panel + entries list, see
    ui/views/DecentralizedPublicationsView.js) has always been built
    exclusively from the .identity-mgmt-list/.identity-mgmt-card vocabulary
-   shared by IdentityManagementView/PeerConnectionsView/ConversationsView/
-   LeaderboardHubView — it simply never joined those views' own outer
+   shared by IdentityManagementView/PeerConnectionsView/ConversationsView
+   — it simply never joined those views' own outer
    container rule. This is that same, byte-identical 720px "social
    surface" convention (see .identity-management-view above), not the
    1400px grid-catalog convention used by .repository-view/.author-view/

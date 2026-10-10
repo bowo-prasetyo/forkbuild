@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: b2d25842ce536f07 -->
+<!-- translation-of: docs/user/README.md source-hash: 3b535dc98d81e02d -->
 # ForkBuild ユーザードキュメント
 
 <!-- languages -->
@@ -57,9 +57,8 @@
     ピン留め、Steem、Blurt。
     これらの関係は [作品を配信する](Distribution.md)で
     説明しています。
-12. **[アーカイブとリーダーボード](12-ArchiveAndLeaderboards.md)**
-    — *試験的*。観測アーカイブ、公開物の参照、実績、公開者ラベル、
-    リーダーボードのページ。
+12. **[アーカイブと実績](12-ArchiveAndLeaderboards.md)**
+    — *試験的*。観測アーカイブ、公開物の参照、実績、公開者ラベル。
 13. **[あなたのデータ](13-YourData.md)** — このブラウザーが保持する
     すべてを暗号化した 1 つのファイルにバックアップして復元する方法、
     より小さなエクスポート、このデバイスが公開物を配信した記録。

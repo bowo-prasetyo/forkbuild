@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7c7451cea88d3528 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: f792d993d2ee00e6 -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -38,9 +38,9 @@ declaração:
 - **[Evidências e armazenamento](11-EvidenceAndStorage.md)** — evidências
   externas (Bitcoin, Base, Arweave, Steem, Blurt), os fluxos de carteira, os
   Posicionamentos de Snapshot, a publicação no IPFS, o Steem e o Blurt.
-- **[Arquivo e classificações](12-ArchiveAndLeaderboards.md)** — o arquivo
-  durável de observações, as referências, as conquistas, os rótulos de
-  editores e as páginas de classificação.
+- **[Arquivo e conquistas](12-ArchiveAndLeaderboards.md)** — o arquivo
+  durável de observações, as referências, as conquistas e os rótulos de
+  editores.
 
 ## Dois sentidos de "publicar"
 
@@ -490,7 +490,6 @@ tentativas e telas em andamento, não.
 | Os registros de **Publicações de âncora no Bitcoin/Base**, feitos na finalização | A conexão dos fluxos de carteira, a observação de fundos ou da conta, o plano, a revisão, a assinatura, a transação finalizada, o resultado da transmissão e o histórico de confirmação ou inclusão na tela |
 | O **Arquivo de observações de publicações** (cada publicação e verificação no IPFS, transmissão, confirmação e prova de conteúdo no Bitcoin, e inclusão na Base), até **Esvaziar arquivo** | — |
 | Referências entre publicações e Associações de editores | Quais cartões e linhas você tinha abertos |
-| Decisões e observações de conciliação (guardadas no arquivo) | Arquivos de pares colados, exportações de evidências importadas, filtros, a Comparação de exportações de evidências e a Declaração de snapshot do editor |
 
 Depois de recarregar, os resultados de um fluxo ou de uma publicação no IPFS
 continuam visíveis no

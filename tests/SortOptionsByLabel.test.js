@@ -106,10 +106,6 @@ async function run() {
         assert(/const retrievalPeers = computed\(\(\) => peerSessionManager\.listPeers\(\)\s*\.filter\(/.test(publications),
             'retrievalPeers itself stays in registry order for resolution');
 
-        const leaderboard = await source('ui/views/LeaderboardHubView.js');
-        assert(/return sortLabels\(reconstructDistinctPublisherIdentifiers\(this\.archive\(\)\)\);/.test(leaderboard),
-            'Leaderboard Hub publisher pickers are sorted');
-
         for (const path of ['ui/views/AnchorProviderSettingsView.js', 'ui/views/AnnouncementDiscoveryProviderSettingsView.js']) {
             const text = await source(path);
             assert(/const settings = computed\(\(\) => sortOptionsByLabel\(describeRoleProviderPreferenceSettings\(/.test(text),
@@ -150,8 +146,6 @@ async function run() {
         const chat = withEnglish(await source('ui/views/ChatView.js'));
         assert(!/sortOptionsByLabel/.test(chat) && /<option value="">System default mic<\/option>/.test(chat),
             'audio devices keep the OS order with the system default first');
-        const pairSelector = await source('ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js');
-        assert(!/sortOptionsByLabel/.test(pairSelector), 'reconciliation record pools stay in their flat, unreordered order');
     }
     console.log('✓ Section C: ordered lists keep their deliberate order');
 

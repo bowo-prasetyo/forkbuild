@@ -80,8 +80,7 @@ is a means, not the game:
   as its own step after Publish; folding it in is open work.)
 - Network Settings and the Publications page live under **More → Advanced**.
   The Experimental tools (the Publications page's Wallet, Archive &
-  Publisher Tools, the Leaderboard pages they lead to, and the Bitcoin
-  Endpoint page) stay hidden until **Show experimental tools** is turned on
+  Publisher Tools and the Bitcoin Endpoint page) stay hidden until **Show experimental tools** is turned on
   in Network Settings.
 - Nothing infrastructural is a reason for a release to exist on its own.
 
@@ -151,8 +150,9 @@ project's. The review's other recommendations, in order:
    Done on 2026-10-10, and tilting bricks onto their other sides soon
    after; showing a week's entries together as a walkable World is left.
 3. No new networks or chains until the building numbers move; the
-   reconciliation and publisher leaderboard pages archived; no new vehicle or
-   swimming features until building catches up.
+   reconciliation and publisher leaderboard pages archived (done on
+   2026-10-10: removed, with their code); no new vehicle or swimming
+   features until building catches up.
 4. Counting what says whether the fantasy lands: how big published builds
    are, how many builders publish a second build, and how many builds are
    remixes. Done on 2026-10-10 (see "Measuring it" above).

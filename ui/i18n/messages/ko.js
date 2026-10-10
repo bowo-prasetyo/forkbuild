@@ -2252,54 +2252,12 @@ export default Object.freeze({
     'worldCard.continueExploring': '계속 탐색하기',
 
     // Publications: candidateEvidenceDetailPanel.
-    'candidateEvidenceDetailPanel.decisionEvidence': '결정 증거',
-    'candidateEvidenceDetailPanel.none': '없음',
-    'candidateEvidenceDetailPanel.observationEvidence': '관측 증거',
 
     // Publications: candidateLeaderboardTable.
-    'candidateLeaderboardTable.noReconciliationCandidatesToDisplay': '표시할 조정 후보가 없습니다.',
-    'candidateLeaderboardTable.candidate': '후보',
-    'candidateLeaderboardTable.decisionEvidence': '결정 증거',
-    'candidateLeaderboardTable.observationEvidence': '관측 증거',
-    'candidateLeaderboardTable.shared': '공통',
-    'candidateLeaderboardTable.sourceOnly': '원본에만',
-    'candidateLeaderboardTable.targetOnly': '대상에만',
 
     // Publications: evidenceExportComparisonRecordPairSelector.
-    'evidenceExportComparisonRecordPairSelector.explicitRecordPairing': '명시적 레코드 짝짓기',
-    'evidenceExportComparisonRecordPairSelector.nothingHereDecidesWhichRecords': '여기서는 어떤 레코드가 서로 대응하는지 결정하지 않습니다 — 어느 내보내기, 어느 구획에서든 원본 레코드와 대상 레코드를 직접 골라 명시적인 짝으로 추가하세요.',
-    'evidenceExportComparisonRecordPairSelector.decisionEvidence': '결정 증거',
-    'evidenceExportComparisonRecordPairSelector.sourceRecord': '원본 레코드',
-    'evidenceExportComparisonRecordPairSelector.selectASourceRecord': '원본 레코드 선택…',
-    'evidenceExportComparisonRecordPairSelector.targetRecord': '대상 레코드',
-    'evidenceExportComparisonRecordPairSelector.selectATargetRecord': '대상 레코드 선택…',
-    'evidenceExportComparisonRecordPairSelector.addPair': '짝 추가',
-    'evidenceExportComparisonRecordPairSelector.remove': '제거',
-    'evidenceExportComparisonRecordPairSelector.noDecisionPairsSelectedYet': '아직 선택한 결정 짝이 없습니다.',
-    'evidenceExportComparisonRecordPairSelector.observationEvidence': '관측 증거',
-    'evidenceExportComparisonRecordPairSelector.noObservationPairsSelectedYet': '아직 선택한 관측 짝이 없습니다.',
-    'evidenceExportComparisonRecordPairSelector.pairedRecordDifferences': '짝지은 레코드의 차이',
-    'evidenceExportComparisonRecordPairSelector.noExplicitPairsAddedYet': '아직 어느 쪽에도 추가한 명시적 짝이 없습니다.',
-    'evidenceExportComparisonRecordPairSelector.decisionPairs': '결정 짝',
-    'evidenceExportComparisonRecordPairSelector.source': '원본:',
-    'evidenceExportComparisonRecordPairSelector.target': '대상:',
-    'evidenceExportComparisonRecordPairSelector.identicalOnEveryNamedField': '이름 붙은 모든 필드가 동일합니다.',
-    'evidenceExportComparisonRecordPairSelector.observationPairs': '관측 짝',
 
     // Publications: evidenceExportComparisonTable.
-    'evidenceExportComparisonTable.comparisonState': '비교 상태',
-    'evidenceExportComparisonTable.source': '원본',
-    'evidenceExportComparisonTable.target': '대상',
-    'evidenceExportComparisonTable.same': '동일',
-    'evidenceExportComparisonTable.filter': '필터',
-    'evidenceExportComparisonTable.noCandidatesDecisionEvidenceOr': '어느 내보내기에도 후보, 결정 증거, 관측 증거가 없습니다.',
-    'evidenceExportComparisonTable.candidatePresence': '후보 존재 여부',
-    'evidenceExportComparisonTable.sourceOnly': '원본에만',
-    'evidenceExportComparisonTable.shared': '공통',
-    'evidenceExportComparisonTable.targetOnly': '대상에만',
-    'evidenceExportComparisonTable.none': '없음',
-    'evidenceExportComparisonTable.decisionEvidence': '결정 증거',
-    'evidenceExportComparisonTable.observationEvidence': '관측 증거',
 
     // Publications: authorView.
     'authorView.originalWorksForks': '원작과 포크',
@@ -2519,8 +2477,6 @@ export default Object.freeze({
     'publications.exportImport': '내보내기 / 가져오기',
     'publications.aPortableCopyOfThe': '위에 기록된 사실의 휴대용 사본입니다 — 게시 식별자와 관측만 담으며, 지갑 연결, 서명 기능, 개인 키, 피닝 제공자 자격 증명은 절대 담지 않습니다. 내보내기는 자체적으로 네트워크 작업을 하지 않습니다. 가져오기는 현재 아카이브를 완전히 교체합니다 — 절대 합치지 않습니다.',
     'publications.exportArchive': '아카이브 내보내기',
-    'publications.reconcilingThisArchiveAgainstA': '이 아카이브를 피어의 아카이브와 조정하기, 내 서명된 리더보드 스냅샷 클레임 작성 및 내보내기, 기록된 업적으로 게시자 순위 보기는 모두 {leaderboard} 페이지에서 합니다.',
-    'publications.leaderboard': '리더보드',
     'publications.exportedArchive': '내보낸 아카이브',
     'publications.downloadArchiveExport': '아카이브 내보내기 다운로드',
     'publications.importArchive': '아카이브 가져오기',
@@ -2809,70 +2765,10 @@ export default Object.freeze({
     'challenge.shareText': 'ForkBuild {theme} 챌린지 참가작 {title} #{tag}',
 
     // Publications: leaderboardHubView.
-    'leaderboardHubView.leaderboard': '리더보드',
-    'leaderboardHubView.reconciliationPublisherSnapshotClaimsAnd': '조정, 게시자 스냅샷 클레임, 게시자 성과 — 게시물 페이지에서 갈 수 있는 리더보드 관련 작업을 모두 한곳에 모았습니다.',
-    'leaderboardHubView.reconciliationCandidateLeaderboard': '조정 후보 리더보드',
-    'leaderboardHubView.compareThisArchiveSDecision': '이 아카이브의 결정 증거와 관측 증거를 후보별로 피어가 내보낸 아카이브와 비교합니다.',
-    'leaderboardHubView.reconciliationWorkspace': '조정 작업 공간',
-    'leaderboardHubView.reconcileThisArchiveAgainstA': '이 아카이브를 피어 증거 하나와 명시적으로 조정합니다.',
-    'leaderboardHubView.publisherSnapshotClaim': '게시자 스냅샷 클레임',
-    'leaderboardHubView.authorAndExportYourOwn': '내 서명된 리더보드 스냅샷 클레임을 작성하고 내보냅니다 — 피어의 작업 공간이 기대하는 증거입니다.',
-    'leaderboardHubView.publisherPerformanceLeaderboard': '게시자 성과 리더보드',
-    'leaderboardHubView.seePublishersRankedByTheir': '이 복제본의 아카이브만으로 새로 계산한, 기록된 업적과 게시물에 따른 게시자 순위를 봅니다.',
-    'leaderboardHubView.publisherAchievementProfile': '게시자 업적 프로필',
-    'leaderboardHubView.persistedLocally': '로컬에 보존됨',
-    'leaderboardHubView.aPublisherSOwnAchievements': '게시자가 명시적으로 주장한 모든 게시물에 걸친 게시자의 업적입니다 — 공유된 콘텐츠 해시나 지갑으로 추론하지 않으며, 점수, 순위, 리더보드 항목이 아닙니다.',
-    'leaderboardHubView.chooseAPublisher': '게시자 선택',
-    'leaderboardHubView.noPublisherHasBeenAssociated': '아직 어떤 게시자도 연결되지 않았습니다 — 먼저 {publications} 페이지에서 기록하세요.',
-    'leaderboardHubView.publications': '게시물',
-    'leaderboardHubView.publisher': '게시자',
-    'leaderboardHubView.chooseAPublisher2': '게시자 선택…',
-    'leaderboardHubView.associatedPublications': '연결된 게시물',
-    'leaderboardHubView.achievementsEarned': '획득한 업적',
-    'leaderboardHubView.distinctAchievementKinds': '서로 다른 업적 종류',
-    'leaderboardHubView.noneOfThisPublisherS': '이 게시자에 연결된 게시물 중 아직 업적을 얻은 것이 없습니다.',
-    'leaderboardHubView.theseAchievementsBelongToThe': '이 업적은 이 게시자가 명시적으로 주장한 게시물의 것입니다 — 이 게시자가 그것들을 통제하거나, 소유하거나, 그 뒤에 있는 사람이라는 증거가 아닙니다.',
-    'leaderboardHubView.publisherAchievementBadges': '게시자 업적 배지',
-    'leaderboardHubView.badgesEarned': '획득한 배지',
-    'leaderboardHubView.distinctBadgeKinds': '서로 다른 배지 종류',
-    'leaderboardHubView.noneOfThisPublisherS2': '이 게시자에 연결된 게시물 중 아직 배지로 표시되는 업적을 얻은 것이 없습니다.',
-    'leaderboardHubView.sourcePublication': '원본 게시물',
-    'leaderboardHubView.blockchain': '블록체인',
-    'leaderboardHubView.contentHash': '콘텐츠 해시',
-    'leaderboardHubView.chainReference': '체인 참조',
-    'leaderboardHubView.created': '생성일',
-    'leaderboardHubView.thisBadgeIsAPresentation': '이 배지는 이 게시자가 명시적으로 주장한 게시물이 이미 얻은 업적 하나를 표시한 것입니다 — 새로운 업적이 아니며, 점수나 순위도 아닙니다.',
-    'leaderboardHubView.viewPublicationOnPublicationsPage': '게시물 페이지에서 보기',
-    'leaderboardHubView.theseBadgesPresentAchievementsAlready': '이 배지들은 이 게시자가 명시적으로 주장한 게시물이 이미 얻은 업적을 표시합니다 — 이 게시자가 그것들을 통제하거나, 소유하거나, 그 뒤에 있는 사람이라는 증거가 아닙니다.',
-    'leaderboardHubView.publisherAchievementStatistics': '게시자 업적 통계',
-    'leaderboardHubView.measurableFactsAboutAPublisher': '게시자에 명시적으로 연결된 게시물과 거기서 도출된 업적에 대한 측정 가능한 사실입니다 — 그 자체로는 점수, 순위, 레벨, 리더보드 항목이 아닙니다. 위의 게시자 성과 리더보드가 게시자 순위를 매길 때 쓰는 것과 같은 사실입니다.',
-    'leaderboardHubView.theseArePlainCountsOf': '이미 얻은 사실의 단순한 개수입니다 — 점수, 순위, 레벨, 등급, 리더보드 항목이 아니며, 이 게시자가 위에서 센 게시물을 통제하거나, 소유하거나, 그 뒤에 있는 사람이라는 증거도 아닙니다.',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView.
-    'publisherLeaderboardSnapshotClaimAuthoringView.publisherSnapshotClaim': '게시자 스냅샷 클레임',
-    'publisherLeaderboardSnapshotClaimAuthoringView.signInToAnIdentity': '클레임을 만들기 전에 신원으로 로그인하세요 — {identities}.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.myIdentities': '내 신원',
-    'publisherLeaderboardSnapshotClaimAuthoringView.snapshotClaim': '스냅샷 클레임',
-    'publisherLeaderboardSnapshotClaimAuthoringView.generatingComputesThisReplicaS': '생성하면 이 복제본의 현재 리더보드 스냅샷을 기록된 증거로부터 지금 새로 계산하고, 바로 그 스냅샷에 대한 클레임을 현재 로그인한 신원으로 서명합니다.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.generateSignClaim': '클레임 생성 및 서명',
-    'publisherLeaderboardSnapshotClaimAuthoringView.startOver': '처음부터 다시',
-    'publisherLeaderboardSnapshotClaimAuthoringView.claimCreated': '클레임을 만들었습니다',
-    'publisherLeaderboardSnapshotClaimAuthoringView.evidenceFingerprint': '증거 지문',
-    'publisherLeaderboardSnapshotClaimAuthoringView.policyVersion': '정책 버전',
-    'publisherLeaderboardSnapshotClaimAuthoringView.snapshotFingerprint': '스냅샷 지문',
-    'publisherLeaderboardSnapshotClaimAuthoringView.exportClaim': '클레임 내보내기',
-    'publisherLeaderboardSnapshotClaimAuthoringView.exportedClaim': '내보낸 클레임',
-    'publisherLeaderboardSnapshotClaimAuthoringView.downloadClaim': '클레임 다운로드',
 
     // Publications: publisherPerformanceLeaderboardView.
-    'publisherPerformanceLeaderboardView.publisherPerformanceLeaderboard': '게시자 성과 리더보드',
-    'publisherPerformanceLeaderboardView.publishersRankedByTheirOwn': '이 페이지를 열 때마다 이 복제본의 아카이브로부터 새로 계산한, 기록된 업적과 게시물에 따른 게시자 순위입니다. 기존 게시자 순위 정책의 결과를 표시한 것일 뿐 — 두 번째 순위 체계가 아니며 — 여기 표시된 어떤 것도 저장되지 않습니다.',
-    'publisherPerformanceLeaderboardView.noPublishersToRankYet': '아직 순위를 매길 게시자가 없습니다 — 이 복제본의 아카이브에서 게시물을 명시적으로 연결한 게시자가 없습니다.',
-    'publisherPerformanceLeaderboardView.rank': '순위',
-    'publisherPerformanceLeaderboardView.publisher': '게시자',
-    'publisherPerformanceLeaderboardView.achievements': '업적',
-    'publisherPerformanceLeaderboardView.achievementKinds': '업적 종류',
-    'publisherPerformanceLeaderboardView.publications': '게시물',
 
     // Publications: recentWorldsView.
     'recentWorldsView.myWorlds': '내 월드',
@@ -2881,62 +2777,10 @@ export default Object.freeze({
     'recentWorldsView.browseTheRepository': '저장소 둘러보기',
 
     // Publications: reconciliationCandidateLeaderboardEvidenceExportComparisonView.
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteASourceEvidenceExport': '원본 증거 내보내기 문서 JSON을 붙여넣으세요',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteATargetEvidenceExport': '대상 증거 내보내기 문서 JSON을 붙여넣으세요',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.evidenceExportComparison': '증거 내보내기 비교',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareTwoPreviouslyExportedEvidence': '이전에 내보낸 증거 보고서 두 개를 비교합니다 — 지난주 보고서와 오늘 보고서, 또는 내가 내보낸 보고서와 피어가 보낸 보고서처럼요. 어느 복제본의 실시간 아카이브도 읽지 않으며, 조정 후보 리더보드에 합치거나, 교체하거나, 다시 계산하지 않습니다 — 서로 다른 두 휴대용 문서를 비교할 뿐입니다.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExport': '원본 증거 내보내기',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExportJson': '원본 증거 내보내기 JSON',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid': '올바른 증거 내보내기 문서가 아닙니다 — 원본 쪽을 업데이트하지 않았습니다.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExport': '대상 증거 내보내기',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExportJson': '대상 증거 내보내기 JSON',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid2': '올바른 증거 내보내기 문서가 아닙니다 — 대상 쪽을 업데이트하지 않았습니다.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareEvidence': '증거 비교',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.clearComparison': '비교 지우기',
 
     // Publications: reconciliationCandidateLeaderboardView.
-    'reconciliationCandidateLeaderboardView.pasteAPeerReplicaS': '피어 복제본이 내보낸 아카이브 JSON을 붙여넣으세요',
-    'reconciliationCandidateLeaderboardView.pasteAnExportedEvidenceDocument': '내보낸 증거 문서 JSON을 붙여넣으세요',
-    'reconciliationCandidateLeaderboardView.reconciliationCandidateLeaderboard': '조정 후보 리더보드',
-    'reconciliationCandidateLeaderboardView.decisionAndObservationEvidenceThis': '이 복제본이 각 조정 후보에 대해 기록한 결정 증거와 관측 증거를 아래에 입력한 피어 아카이브와 명시적으로 비교합니다. 여기서는 어느 아카이브도 합치거나, 교체하거나, 조정하지 않습니다 — 비교일 뿐, 조정이 아닙니다.',
-    'reconciliationCandidateLeaderboardView.peerArchive': '피어 아카이브',
-    'reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied': '명시적으로 입력한 피어 아카이브와 비교하고 있지만, 그 피어 아카이브에는 아직 기록된 결정이나 관측 레코드가 없어서 아래의 모든 개수가 여전히 원본에만 있음으로 표시됩니다. 피어가 없을 때의 기본값이 아니라, 실제로 입력한 피어입니다.',
-    'reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied2': '명시적으로 입력한 피어 아카이브와 비교하고 있습니다.',
-    'reconciliationCandidateLeaderboardView.peerArchiveJson': '피어 아카이브 JSON',
-    'reconciliationCandidateLeaderboardView.useAsPeerArchive': '피어 아카이브로 사용',
-    'reconciliationCandidateLeaderboardView.clearPeerArchive': '피어 아카이브 지우기',
-    'reconciliationCandidateLeaderboardView.thisIsNotAValid': '올바른 아카이브 내보내기 파일이 아닙니다 — 비교하지 않았습니다.',
-    'reconciliationCandidateLeaderboardView.evidenceFilter': '증거 필터',
-    'reconciliationCandidateLeaderboardView.evidenceType': '증거 유형',
-    'reconciliationCandidateLeaderboardView.replicaRelation': '복제본 관계',
-    'reconciliationCandidateLeaderboardView.evidenceExport': '증거 내보내기',
-    'reconciliationCandidateLeaderboardView.exportsExactlyTheEvidenceCurrently': '지금 위에 표시된 증거 그대로 — 같은 증거 필터 선택과 같은 피어 비교 상태로 — 휴대용 JSON 문서로 내보냅니다. 여기서는 증거를 다시 계산하거나, 후보를 거르거나, 서버에 연결하지 않습니다.',
-    'reconciliationCandidateLeaderboardView.exportEvidence': '증거 내보내기',
-    'reconciliationCandidateLeaderboardView.compareExportedEvidence': '내보낸 증거 비교',
-    'reconciliationCandidateLeaderboardView.exportedEvidence': '내보낸 증거',
-    'reconciliationCandidateLeaderboardView.downloadEvidenceExport': '증거 내보내기 다운로드',
-    'reconciliationCandidateLeaderboardView.importEvidenceExport': '증거 내보내기 가져오기',
-    'reconciliationCandidateLeaderboardView.pasteAPreviouslyExportedEvidence': '이전에 내보낸 증거 문서(위의 증거 내보내기 패널에서 이 복제본이나 피어가 내보낸 것)를 붙여넣어 살펴보세요. 위의 실시간 리더보드에 합치거나, 교체하거나, 다시 계산하지 않습니다 — 별도의 휴대용 문서를 읽기 전용으로 보는 것입니다.',
-    'reconciliationCandidateLeaderboardView.evidenceExportJson': '증거 내보내기 JSON',
-    'reconciliationCandidateLeaderboardView.importEvidence': '증거 가져오기',
-    'reconciliationCandidateLeaderboardView.clearImportedEvidence': '가져온 증거 지우기',
-    'reconciliationCandidateLeaderboardView.thisIsNotAValid2': '올바른 증거 내보내기 문서가 아닙니다 — 가져오지 않았습니다.',
-    'reconciliationCandidateLeaderboardView.importedEvidence': '가져온 증거',
 
     // Publications: reconciliationWorkspaceView.
-    'reconciliationWorkspaceView.pasteAPeerSExported': '피어가 내보낸 리더보드 스냅샷 클레임 JSON을 붙여넣으세요',
-    'reconciliationWorkspaceView.reconciliationWorkspace': '조정 작업 공간',
-    'reconciliationWorkspaceView.localArchive': '로컬 아카이브',
-    'reconciliationWorkspaceView.thisReplicaSOwnRecorded': '이 복제본이 기록한 증거입니다 — 게시물 페이지와 조정 후보 리더보드가 이미 읽고 쓰는 바로 그 아카이브입니다. 따로 고를 아카이브는 없습니다.',
-    'reconciliationWorkspaceView.peerEvidence': '피어 증거',
-    'reconciliationWorkspaceView.pasteAPeerSOwn': '피어가 직접 내보낸 서명된 리더보드 스냅샷 클레임을 아래에 붙여넣으세요(피어의 복제본에서 클레임 내보내기).',
-    'reconciliationWorkspaceView.peerEvidenceJson': '피어 증거 JSON',
-    'reconciliationWorkspaceView.reconcile': '조정',
-    'reconciliationWorkspaceView.clearResult': '결과 지우기',
-    'reconciliationWorkspaceView.result': '결과',
-    'reconciliationWorkspaceView.reconciliationProducedACandidateRecorded': '조정 결과 후보가 만들어져, 이 복제본의 아카이브에 결정과 재검증 관측으로 기록되었습니다.',
-    'reconciliationWorkspaceView.viewInLeaderboard': '리더보드에서 보기',
-    'reconciliationWorkspaceView.noReconciliationCandidateWasProduced': '조정 후보가 만들어지지 않았습니다 — 이 피어의 증거가 이미 이 복제본의 로컬 스냅샷과 일치합니다.',
 
     // Publications: repositoryView.
     'repositoryView.repository': '저장소',
@@ -2965,15 +2809,6 @@ export default Object.freeze({
     'sharedWithYouPanel.dismiss': '숨기기',
     'sharedWithYouPanel.dismissHint': '이 기기에서 이 공유를 숨깁니다. 다시 알려져도 다시 나타나지 않습니다.',
     'sharedWithYouPanel.shareUnavailable': '이 월드를 공유한 사람이 보내 주지 않았습니다. 연결된 기기에 더 이상 없을 수 있으니 다시 공유해 달라고 요청하세요.',
-    'candidateLeaderboardTable.hideEvidence': '증거 숨기기',
-    'candidateLeaderboardTable.inspectEvidence': '증거 살펴보기',
-    'evidenceExportComparisonRecordPairSelector.noDifferences': '차이 없음',
-    'evidenceExportComparisonRecordPairSelector.hideDifferences': '차이 숨기기 ▲',
-    'evidenceExportComparisonRecordPairSelector.inspectDifferences': '차이 살펴보기 ▼',
-    'evidenceExportComparisonTable.hideRecords': '레코드 숨기기 ▲',
-    'evidenceExportComparisonTable.inspectRecords': '레코드 살펴보기 ▼',
-    'evidenceExportComparisonTable.hideIdentity': '식별 정보 숨기기 ▲',
-    'evidenceExportComparisonTable.inspectIdentity': '식별 정보 살펴보기 ▼',
     'authorView.anonymous': '익명',
     'publications.askingPeers': '피어에게 묻는 중…',
     'publications.retrieveFromPeers': '피어에게서 가져오기',
@@ -2982,12 +2817,6 @@ export default Object.freeze({
     'publications.hideCrossDomainTimeline': '도메인 간 타임라인 숨기기',
     'publications.showCrossDomainTimeline': '도메인 간 타임라인 표시',
     'publications.published': '게시됨',
-    'leaderboardHubView.hidePublisherAchievementProfile': '게시자 업적 프로필 숨기기',
-    'leaderboardHubView.showPublisherAchievementProfile': '게시자 업적 프로필 표시',
-    'leaderboardHubView.hidePublisherAchievementBadges': '게시자 업적 배지 숨기기',
-    'leaderboardHubView.showPublisherAchievementBadges': '게시자 업적 배지 표시',
-    'leaderboardHubView.hidePublisherAchievementStatistics': '게시자 업적 통계 숨기기',
-    'leaderboardHubView.showPublisherAchievementStatistics': '게시자 업적 통계 표시',
     'publications.hideDetails': '세부 정보 숨기기',
     'publications.inspectEvidence': '증거 살펴보기',
     'publications.verifying': '검증 중…',
@@ -3158,17 +2987,12 @@ export default Object.freeze({
     'publications.thisReplicaDoesNotCurrently': '이 복제본에는 현재 유효한 스냅샷이 없습니다. 아래에서 출처를 골라 — “스냅샷 가져오기”, 배치의 “스냅샷 구체화”, 피어의 “피어에게서 스냅샷 받기” — 다시 시도하세요.',
 
     // Publications: leaderboardHubView, text with quotes.
-    'leaderboardHubView.aBadgePresentationOfThe': '이 게시자가 명시적으로 주장한 모든 게시물에 걸쳐 이미 얻은 업적을 배지로 표시한 것입니다 — 새로운 업적이 아니며, 점수, 순위, 리더보드 항목도 아닙니다. 일부 업적(참조에서 도출된 것)은 아직 배지 표시가 없어 위의 “게시자 업적 프로필” 카드에만 나타납니다.',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView, text with quotes.
-    'publisherLeaderboardSnapshotClaimAuthoringView.authorAndExportASigned': '내 복제본의 현재 리더보드 스냅샷에 대한 서명된 클레임을 작성하고 내보냅니다 — 조정 작업 공간의 “피어 증거” 필드가 피어에게 붙여넣으라고 요청하는 바로 그 증거입니다. 생성, 서명, 내보내기는 각각 별도의 명시적 작업이며, 이 페이지의 어떤 것도 자동으로 실행되지 않습니다.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.pasteThisIntoAPeer': '이것을 피어의 조정 작업 공간 “피어 증거” 필드에 붙여넣거나, 다운로드한 파일을 보내세요.',
 
     // Publications: reconciliationCandidateLeaderboardView, text with quotes.
-    'reconciliationCandidateLeaderboardView.noPeerArchiveSuppliedYet': '아직 입력한 피어 아카이브가 없습니다 — 붙여넣기 전까지 아래의 모든 개수는 원본에만 있음으로 표시됩니다. 피어 복제본이 내보낸 아카이브(게시물 페이지의 아카이브 내보내기)를 붙여넣고 “피어 아카이브로 사용”을 클릭하세요.',
 
     // Publications: reconciliationWorkspaceView, text with quotes.
-    'reconciliationWorkspaceView.reconcileThisReplicaSOwn': '이 복제본의 로컬 아카이브를 피어 증거 하나와 명시적으로 조정합니다. 이 페이지의 어떤 것도 자동으로 실행되지 않습니다 — 아래의 “조정”을 클릭할 때만 조정이 이루어집니다.',
 
     // Publications: the publication list, text built around values.
     'publications.preference.storage.unavailable': '선호 저장소인 {name}은(는) 여기서 한 번의 클릭으로 사용할 수 없습니다. 아래 옵션을 사용하세요.',
@@ -3417,64 +3241,27 @@ export default Object.freeze({
     'publications.contentHashAssociated': '콘텐츠 해시: {contentHash} · 연결: {createdAt}',
 
     // Publications: leaderboardHubView, text with values.
-    'leaderboardHubView.earnedBy': '{observedAt}에 {blockchain}에서 획득 — {chainReference}',
-    'leaderboardHubView.earned': '{description} — {earnedAt}에 획득',
-    'leaderboardHubView.publications2': '{blockchain} 게시물',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView, text with values.
-    'publisherLeaderboardSnapshotClaimAuthoringView.claimCreatedSuccessfullySignedBy': '클레임을 만들었습니다 — {signer} 님이 서명했습니다.',
 
     // Publications: publisherPerformanceLeaderboardView, text with values.
-    'publisherPerformanceLeaderboardView.publisherSRankedUnderPublisher': { other: '게시자 순위 정책 v{version}에 따라 게시자 {count}명의 순위를 매겼습니다' },
 
     // Publications: reconciliationCandidateLeaderboardView, text with values.
-    'reconciliationCandidateLeaderboardView.comparison': '비교: {state}',
-    'reconciliationCandidateLeaderboardView.candidates': '후보: {count}',
-    'reconciliationCandidateLeaderboardView.decisions': '결정: {count}',
-    'reconciliationCandidateLeaderboardView.observations': '관측: {count}',
 
     // Publications: reconciliationWorkspaceView, text with values.
-    'reconciliationWorkspaceView.reconciliationDidNotCompleteOutcome': '조정이 완료되지 않았습니다 — 결과: {outcome}',
 
     // Publications: candidateEvidenceDetailPanel, text with values.
-    'candidateEvidenceDetailPanel.shared': '공통 ({count})',
-    'candidateEvidenceDetailPanel.decided': '{disposition} — {decidedAt}에 결정됨',
-    'candidateEvidenceDetailPanel.sourceOnly': '원본에만 ({count})',
-    'candidateEvidenceDetailPanel.targetOnly': '대상에만 ({count})',
-    'candidateEvidenceDetailPanel.observedPlanPresentMatchesPlan': '{disposition} — {observedAt}에 관측됨 — 계획 {planFingerprint} — 존재: {candidatePresent} — 계획과 일치: {candidateMatchesPlan}',
 
     // Publications: candidateLeaderboardTable, text with values.
-    'candidateLeaderboardTable.candidateS': { other: '후보 {count}개' },
 
     // Publications: evidenceExportComparisonRecordPairSelector, text with values.
-    'evidenceExportComparisonRecordPairSelector.decisionPair': '결정 짝 {number}',
-    'evidenceExportComparisonRecordPairSelector.observationPair': '관측 짝 {number}',
 
     // Publications: evidenceExportComparisonTable, text with values.
-    'evidenceExportComparisonTable.sourceOnly2': '원본에만 ({count})',
-    'evidenceExportComparisonTable.shared2': '공통 ({count})',
-    'evidenceExportComparisonTable.targetOnly2': '대상에만 ({count})',
 
     // Publications: counts in expressions.
-    'evidenceExportComparisonRecordPairSelector.differences': { other: '차이 {count}개' },
     'publications.showObservationHistoryCount': '관측 기록 표시 ({count})',
 
     // Publications: reconciliation components (ui/components/reconciliation/).
-    'reconciliation.unknownCandidate': '알 수 없는 후보',
-    'reconciliation.claimAndSnapshot': '클레임 {claimId} ↔ 스냅샷 #{snapshotIndex}',
-    'reconciliation.claimWithoutSnapshot': '클레임 {claimId} (대응하는 스냅샷 없음)',
-    'reconciliation.snapshotWithoutClaim': '스냅샷 #{snapshotIndex} (대응하는 클레임 없음)',
-    'reconciliation.unknownDecisionRecord': '알 수 없는 결정 레코드',
-    'reconciliation.unknownObservationRecord': '알 수 없는 관측 레코드',
-    'reconciliation.decisionRecord': '{candidate} — {disposition} — {when}에 결정됨',
-    'reconciliation.observationRecord': '{candidate} — {disposition} — {when}에 관측됨',
-    'reconciliation.unknownTime': '알 수 없는 시각',
-    'reconciliation.yes': '예',
-    'reconciliation.no': '아니요',
-    'reconciliation.unknownPlan': '알 수 없는 계획',
-    'reconciliation.comparingPeerArchive': '입력한 피어 아카이브와 비교하고 있습니다.',
-    'reconciliation.peerArchiveEmpty': '피어 아카이브를 입력했지만 기록된 증거가 없습니다 — 아래의 모든 개수는 여전히 이 복제본만 반영합니다.',
-    'reconciliation.noPeerArchive': '입력한 피어 아카이브가 없습니다 — 아래의 모든 개수는 이 복제본만 반영합니다.',
 
     // Publications: labels chosen in the page's composables (ui/views/decentralizedPublications/).
     'publications.unknownContent': '알 수 없는 콘텐츠',
@@ -3802,12 +3589,6 @@ export default Object.freeze({
     'publicationSort.titleDesc': '제목 내림차순',
     'publicationSort.authorAsc': '작성자 오름차순',
     'publications.anchorCountOn': { other: '{anchorType}에 게시물 {count}개 앵커링' },
-    'reconciliation.filter.all': '전체',
-    'reconciliation.filter.decisions': '결정',
-    'reconciliation.filter.observations': '관측',
-    'reconciliation.filter.shared': '공통',
-    'reconciliation.filter.sourceOnly': '원본에만',
-    'reconciliation.filter.targetOnly': '대상에만',
 
     // Publications: reconciliation comparison states.
     'reconciliation.state.noPeer': '피어 아카이브 없음',

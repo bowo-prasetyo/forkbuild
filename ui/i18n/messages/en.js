@@ -2251,54 +2251,12 @@ export default Object.freeze({
     'worldCard.continueExploring': 'Continue Exploring',
 
     // Publications: candidateEvidenceDetailPanel.
-    'candidateEvidenceDetailPanel.decisionEvidence': 'Decision Evidence',
-    'candidateEvidenceDetailPanel.none': 'None',
-    'candidateEvidenceDetailPanel.observationEvidence': 'Observation Evidence',
 
     // Publications: candidateLeaderboardTable.
-    'candidateLeaderboardTable.noReconciliationCandidatesToDisplay': 'No reconciliation candidates to display.',
-    'candidateLeaderboardTable.candidate': 'Candidate',
-    'candidateLeaderboardTable.decisionEvidence': 'Decision Evidence',
-    'candidateLeaderboardTable.observationEvidence': 'Observation Evidence',
-    'candidateLeaderboardTable.shared': 'Shared',
-    'candidateLeaderboardTable.sourceOnly': 'Source-only',
-    'candidateLeaderboardTable.targetOnly': 'Target-only',
 
     // Publications: evidenceExportComparisonRecordPairSelector.
-    'evidenceExportComparisonRecordPairSelector.explicitRecordPairing': 'Explicit Record Pairing',
-    'evidenceExportComparisonRecordPairSelector.nothingHereDecidesWhichRecords': 'Nothing here decides which records correspond — pick a source record and a target record yourself, from either export, in either partition, then add them as an explicit pair.',
-    'evidenceExportComparisonRecordPairSelector.decisionEvidence': 'Decision evidence',
-    'evidenceExportComparisonRecordPairSelector.sourceRecord': 'Source record',
-    'evidenceExportComparisonRecordPairSelector.selectASourceRecord': 'Select a source record…',
-    'evidenceExportComparisonRecordPairSelector.targetRecord': 'Target record',
-    'evidenceExportComparisonRecordPairSelector.selectATargetRecord': 'Select a target record…',
-    'evidenceExportComparisonRecordPairSelector.addPair': 'Add Pair',
-    'evidenceExportComparisonRecordPairSelector.remove': 'Remove',
-    'evidenceExportComparisonRecordPairSelector.noDecisionPairsSelectedYet': 'No decision pairs selected yet.',
-    'evidenceExportComparisonRecordPairSelector.observationEvidence': 'Observation evidence',
-    'evidenceExportComparisonRecordPairSelector.noObservationPairsSelectedYet': 'No observation pairs selected yet.',
-    'evidenceExportComparisonRecordPairSelector.pairedRecordDifferences': 'Paired Record Differences',
-    'evidenceExportComparisonRecordPairSelector.noExplicitPairsAddedYet': 'No explicit pairs added yet, on either side.',
-    'evidenceExportComparisonRecordPairSelector.decisionPairs': 'Decision pairs',
-    'evidenceExportComparisonRecordPairSelector.source': 'Source:',
-    'evidenceExportComparisonRecordPairSelector.target': 'Target:',
-    'evidenceExportComparisonRecordPairSelector.identicalOnEveryNamedField': 'Identical on every named field.',
-    'evidenceExportComparisonRecordPairSelector.observationPairs': 'Observation pairs',
 
     // Publications: evidenceExportComparisonTable.
-    'evidenceExportComparisonTable.comparisonState': 'Comparison State',
-    'evidenceExportComparisonTable.source': 'Source',
-    'evidenceExportComparisonTable.target': 'Target',
-    'evidenceExportComparisonTable.same': 'Same',
-    'evidenceExportComparisonTable.filter': 'Filter',
-    'evidenceExportComparisonTable.noCandidatesDecisionEvidenceOr': 'No candidates, decision evidence, or observation evidence in either export.',
-    'evidenceExportComparisonTable.candidatePresence': 'Candidate presence',
-    'evidenceExportComparisonTable.sourceOnly': 'Source-only',
-    'evidenceExportComparisonTable.shared': 'Shared',
-    'evidenceExportComparisonTable.targetOnly': 'Target-only',
-    'evidenceExportComparisonTable.none': 'None',
-    'evidenceExportComparisonTable.decisionEvidence': 'Decision evidence',
-    'evidenceExportComparisonTable.observationEvidence': 'Observation evidence',
 
     // Publications: authorView.
     'authorView.originalWorksForks': 'Original Works & Forks',
@@ -2518,8 +2476,6 @@ export default Object.freeze({
     'publications.exportImport': 'Export / Import',
     'publications.aPortableCopyOfThe': 'A portable copy of the recorded facts above — publication identities and observations only, never a wallet connection, a signing capability, a private key, or any pinning-provider credential. Exporting performs no network operation of its own. Importing REPLACES the current archive entirely — it never merges with it.',
     'publications.exportArchive': 'Export Archive',
-    'publications.reconcilingThisArchiveAgainstA': 'Reconciling this archive against a peer\'s, authoring or exporting your own signed leaderboard snapshot claim, and seeing publishers ranked by their own recorded achievements all happen on the {leaderboard} page.',
-    'publications.leaderboard': 'Leaderboard',
     'publications.exportedArchive': 'Exported Archive',
     'publications.downloadArchiveExport': 'Download Archive Export',
     'publications.importArchive': 'Import Archive',
@@ -2809,70 +2765,10 @@ export default Object.freeze({
     'challenge.shareText': '{title}, my entry for the ForkBuild {theme} challenge #{tag}',
 
     // Publications: leaderboardHubView.
-    'leaderboardHubView.leaderboard': 'Leaderboard',
-    'leaderboardHubView.reconciliationPublisherSnapshotClaimsAnd': 'Reconciliation, publisher snapshot claims, and publisher performance — every leaderboard-related workflow reachable from the Publications page, collected in one place.',
-    'leaderboardHubView.reconciliationCandidateLeaderboard': 'Reconciliation Candidate Leaderboard',
-    'leaderboardHubView.compareThisArchiveSDecision': 'Compare this archive\'s decision and observation evidence, candidate by candidate, against a peer\'s own exported archive.',
-    'leaderboardHubView.reconciliationWorkspace': 'Reconciliation Workspace',
-    'leaderboardHubView.reconcileThisArchiveAgainstA': 'Reconcile this archive against a single piece of peer evidence, explicitly.',
-    'leaderboardHubView.publisherSnapshotClaim': 'Publisher Snapshot Claim',
-    'leaderboardHubView.authorAndExportYourOwn': 'Author and export your own signed leaderboard snapshot claim — the evidence a peer\'s Workspace expects.',
-    'leaderboardHubView.publisherPerformanceLeaderboard': 'Publisher Performance Leaderboard',
-    'leaderboardHubView.seePublishersRankedByTheir': 'See publishers ranked by their own recorded achievements and publications, computed fresh from this replica\'s own archive alone.',
-    'leaderboardHubView.publisherAchievementProfile': 'Publisher Achievement Profile',
-    'leaderboardHubView.persistedLocally': 'Persisted locally',
-    'leaderboardHubView.aPublisherSOwnAchievements': 'A publisher\'s own achievements, aggregated across every publication that publisher has explicitly claimed — never inferred from a shared content hash or wallet, and never a score, rank, or leaderboard entry.',
-    'leaderboardHubView.chooseAPublisher': 'Choose A Publisher',
-    'leaderboardHubView.noPublisherHasBeenAssociated': 'No publisher has been associated with anything yet — record one on the {publications} page first.',
-    'leaderboardHubView.publications': 'Publications',
-    'leaderboardHubView.publisher': 'Publisher',
-    'leaderboardHubView.chooseAPublisher2': 'Choose a publisher…',
-    'leaderboardHubView.associatedPublications': 'Associated publications',
-    'leaderboardHubView.achievementsEarned': 'Achievements earned',
-    'leaderboardHubView.distinctAchievementKinds': 'Distinct achievement kinds',
-    'leaderboardHubView.noneOfThisPublisherS': 'None of this publisher\'s associated publications have earned an achievement yet.',
-    'leaderboardHubView.theseAchievementsBelongToThe': 'These achievements belong to the publications this publisher has explicitly claimed — never proof that this publisher controls, owns, or is the human behind any of them.',
-    'leaderboardHubView.publisherAchievementBadges': 'Publisher Achievement Badges',
-    'leaderboardHubView.badgesEarned': 'Badges earned',
-    'leaderboardHubView.distinctBadgeKinds': 'Distinct badge kinds',
-    'leaderboardHubView.noneOfThisPublisherS2': 'None of this publisher\'s associated publications have earned a badge-presented achievement yet.',
-    'leaderboardHubView.sourcePublication': 'Source Publication',
-    'leaderboardHubView.blockchain': 'Blockchain',
-    'leaderboardHubView.contentHash': 'Content hash',
-    'leaderboardHubView.chainReference': 'Chain reference',
-    'leaderboardHubView.created': 'Created',
-    'leaderboardHubView.thisBadgeIsAPresentation': 'This badge is a presentation of one achievement already earned by a publication this publisher has explicitly claimed — never a new achievement, and never a score or a rank.',
-    'leaderboardHubView.viewPublicationOnPublicationsPage': 'View Publication On Publications Page',
-    'leaderboardHubView.theseBadgesPresentAchievementsAlready': 'These badges present achievements already earned by publications this publisher has explicitly claimed — never proof that this publisher controls, owns, or is the human behind any of them.',
-    'leaderboardHubView.publisherAchievementStatistics': 'Publisher Achievement Statistics',
-    'leaderboardHubView.measurableFactsAboutAPublisher': 'Measurable facts about a publisher\'s explicitly associated publications and their derived achievements — never a score, rank, level, or leaderboard entry on their own. These are the same facts the Publisher Performance Leaderboard above ranks publishers by.',
-    'leaderboardHubView.theseArePlainCountsOf': 'These are plain counts of already-earned facts — never a score, rank, level, tier, or leaderboard entry, and never proof that this publisher controls, owns, or is the human behind any of the publications counted above.',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView.
-    'publisherLeaderboardSnapshotClaimAuthoringView.publisherSnapshotClaim': 'Publisher Snapshot Claim',
-    'publisherLeaderboardSnapshotClaimAuthoringView.signInToAnIdentity': 'Sign in to an identity before generating a claim — {identities}.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.myIdentities': 'My Identities',
-    'publisherLeaderboardSnapshotClaimAuthoringView.snapshotClaim': 'Snapshot Claim',
-    'publisherLeaderboardSnapshotClaimAuthoringView.generatingComputesThisReplicaS': 'Generating computes this replica\'s own current leaderboard snapshot fresh, right now, from its own recorded evidence, and signs a claim about EXACTLY that snapshot under your own currently signed-in identity.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.generateSignClaim': 'Generate & Sign Claim',
-    'publisherLeaderboardSnapshotClaimAuthoringView.startOver': 'Start Over',
-    'publisherLeaderboardSnapshotClaimAuthoringView.claimCreated': 'Claim Created',
-    'publisherLeaderboardSnapshotClaimAuthoringView.evidenceFingerprint': 'Evidence fingerprint',
-    'publisherLeaderboardSnapshotClaimAuthoringView.policyVersion': 'Policy version',
-    'publisherLeaderboardSnapshotClaimAuthoringView.snapshotFingerprint': 'Snapshot fingerprint',
-    'publisherLeaderboardSnapshotClaimAuthoringView.exportClaim': 'Export Claim',
-    'publisherLeaderboardSnapshotClaimAuthoringView.exportedClaim': 'Exported Claim',
-    'publisherLeaderboardSnapshotClaimAuthoringView.downloadClaim': 'Download Claim',
 
     // Publications: publisherPerformanceLeaderboardView.
-    'publisherPerformanceLeaderboardView.publisherPerformanceLeaderboard': 'Publisher Performance Leaderboard',
-    'publisherPerformanceLeaderboardView.publishersRankedByTheirOwn': 'Publishers ranked by their own recorded achievements and publications, computed fresh from this replica\'s own archive every time this page loads. This is a presentation of the existing Publisher Ranking Policy\'s own result — never a second ranking system — and nothing shown here is persisted.',
-    'publisherPerformanceLeaderboardView.noPublishersToRankYet': 'No publishers to rank yet — no publisher has explicitly associated a publication in this replica\'s own archive.',
-    'publisherPerformanceLeaderboardView.rank': 'Rank',
-    'publisherPerformanceLeaderboardView.publisher': 'Publisher',
-    'publisherPerformanceLeaderboardView.achievements': 'Achievements',
-    'publisherPerformanceLeaderboardView.achievementKinds': 'Achievement Kinds',
-    'publisherPerformanceLeaderboardView.publications': 'Publications',
 
     // Publications: recentWorldsView.
     'recentWorldsView.myWorlds': 'My Worlds',
@@ -2881,62 +2777,10 @@ export default Object.freeze({
     'recentWorldsView.browseTheRepository': 'Browse the Repository',
 
     // Publications: reconciliationCandidateLeaderboardEvidenceExportComparisonView.
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteASourceEvidenceExport': 'Paste a source evidence export document JSON',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteATargetEvidenceExport': 'Paste a target evidence export document JSON',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.evidenceExportComparison': 'Evidence Export Comparison',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareTwoPreviouslyExportedEvidence': 'Compare two previously exported evidence reports — a report from last week against one from today, or a report you exported against one a peer sent you. This never reads either replica\'s own live archive and never merges into, replaces, or recomputes the Reconciliation Candidate Leaderboard — it is a comparison between two separate, portable documents, nothing more.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExport': 'Source Evidence Export',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExportJson': 'Source evidence export JSON',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid': 'This is not a valid evidence export document — the Source side was not updated.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExport': 'Target Evidence Export',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExportJson': 'Target evidence export JSON',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid2': 'This is not a valid evidence export document — the Target side was not updated.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareEvidence': 'Compare Evidence',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.clearComparison': 'Clear Comparison',
 
     // Publications: reconciliationCandidateLeaderboardView.
-    'reconciliationCandidateLeaderboardView.pasteAPeerReplicaS': 'Paste a peer replica\'s exported archive JSON',
-    'reconciliationCandidateLeaderboardView.pasteAnExportedEvidenceDocument': 'Paste an exported evidence document JSON',
-    'reconciliationCandidateLeaderboardView.reconciliationCandidateLeaderboard': 'Reconciliation Candidate Leaderboard',
-    'reconciliationCandidateLeaderboardView.decisionAndObservationEvidenceThis': 'Decision and observation evidence this replica has recorded for each reconciliation candidate, compared explicitly against the peer archive supplied below. Nothing here merges, replaces, or reconciles either archive — this is a comparison, never a reconciliation.',
-    'reconciliationCandidateLeaderboardView.peerArchive': 'Peer Archive',
-    'reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied': 'Comparing against an explicitly supplied peer archive — but that peer archive has no decision or observation records of its own recorded yet, so every count below is still Source-only. This is a real, supplied peer, not the no-peer default.',
-    'reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied2': 'Comparing against an explicitly supplied peer archive.',
-    'reconciliationCandidateLeaderboardView.peerArchiveJson': 'Peer archive JSON',
-    'reconciliationCandidateLeaderboardView.useAsPeerArchive': 'Use as Peer Archive',
-    'reconciliationCandidateLeaderboardView.clearPeerArchive': 'Clear Peer Archive',
-    'reconciliationCandidateLeaderboardView.thisIsNotAValid': 'This is not a valid archive export — nothing was compared.',
-    'reconciliationCandidateLeaderboardView.evidenceFilter': 'Evidence Filter',
-    'reconciliationCandidateLeaderboardView.evidenceType': 'Evidence type',
-    'reconciliationCandidateLeaderboardView.replicaRelation': 'Replica relation',
-    'reconciliationCandidateLeaderboardView.evidenceExport': 'Evidence Export',
-    'reconciliationCandidateLeaderboardView.exportsExactlyTheEvidenceCurrently': 'Exports exactly the evidence currently shown above — the same Evidence Filter selection and the same peer comparison state — as a portable JSON document. Nothing here recomputes evidence, filters a candidate, or contacts a server.',
-    'reconciliationCandidateLeaderboardView.exportEvidence': 'Export Evidence',
-    'reconciliationCandidateLeaderboardView.compareExportedEvidence': 'Compare Exported Evidence',
-    'reconciliationCandidateLeaderboardView.exportedEvidence': 'Exported Evidence',
-    'reconciliationCandidateLeaderboardView.downloadEvidenceExport': 'Download Evidence Export',
-    'reconciliationCandidateLeaderboardView.importEvidenceExport': 'Import Evidence Export',
-    'reconciliationCandidateLeaderboardView.pasteAPreviouslyExportedEvidence': 'Paste a previously exported evidence document (from the Evidence Export panel above, this replica\'s own or a peer\'s) to inspect it. This never merges into, replaces, or recomputes the live leaderboard above — it is a read-only look at a separate, portable document.',
-    'reconciliationCandidateLeaderboardView.evidenceExportJson': 'Evidence export JSON',
-    'reconciliationCandidateLeaderboardView.importEvidence': 'Import Evidence',
-    'reconciliationCandidateLeaderboardView.clearImportedEvidence': 'Clear Imported Evidence',
-    'reconciliationCandidateLeaderboardView.thisIsNotAValid2': 'This is not a valid evidence export document — nothing was imported.',
-    'reconciliationCandidateLeaderboardView.importedEvidence': 'Imported Evidence',
 
     // Publications: reconciliationWorkspaceView.
-    'reconciliationWorkspaceView.pasteAPeerSExported': 'Paste a peer\'s exported leaderboard snapshot claim JSON',
-    'reconciliationWorkspaceView.reconciliationWorkspace': 'Reconciliation Workspace',
-    'reconciliationWorkspaceView.localArchive': 'Local Archive',
-    'reconciliationWorkspaceView.thisReplicaSOwnRecorded': 'This replica\'s own recorded evidence — the same archive the Publications page and the Reconciliation Candidate Leaderboard already read and write. There is no separate archive to pick.',
-    'reconciliationWorkspaceView.peerEvidence': 'Peer Evidence',
-    'reconciliationWorkspaceView.pasteAPeerSOwn': 'Paste a peer\'s own exported, signed leaderboard snapshot claim below (Export Claim, on their replica).',
-    'reconciliationWorkspaceView.peerEvidenceJson': 'Peer evidence JSON',
-    'reconciliationWorkspaceView.reconcile': 'Reconcile',
-    'reconciliationWorkspaceView.clearResult': 'Clear Result',
-    'reconciliationWorkspaceView.result': 'Result',
-    'reconciliationWorkspaceView.reconciliationProducedACandidateRecorded': 'Reconciliation produced a candidate, recorded as a decision and a revalidation observation in this replica\'s own archive.',
-    'reconciliationWorkspaceView.viewInLeaderboard': 'View in Leaderboard',
-    'reconciliationWorkspaceView.noReconciliationCandidateWasProduced': 'No reconciliation candidate was produced — this peer\'s evidence already agrees with this replica\'s own local snapshot.',
 
     // Publications: repositoryView.
     'repositoryView.repository': 'Repository',
@@ -2965,15 +2809,6 @@ export default Object.freeze({
     'sharedWithYouPanel.dismiss': 'Dismiss',
     'sharedWithYouPanel.dismissHint': 'Hide this share on this device. It won\'t come back, even if it\'s announced again.',
     'sharedWithYouPanel.shareUnavailable': 'The person who shared this World didn\'t send it. The device they\'re connected from may no longer have it; ask them to share it again.',
-    'candidateLeaderboardTable.hideEvidence': 'Hide Evidence',
-    'candidateLeaderboardTable.inspectEvidence': 'Inspect Evidence',
-    'evidenceExportComparisonRecordPairSelector.noDifferences': 'No differences',
-    'evidenceExportComparisonRecordPairSelector.hideDifferences': 'Hide differences ▲',
-    'evidenceExportComparisonRecordPairSelector.inspectDifferences': 'Inspect differences ▼',
-    'evidenceExportComparisonTable.hideRecords': 'Hide records ▲',
-    'evidenceExportComparisonTable.inspectRecords': 'Inspect records ▼',
-    'evidenceExportComparisonTable.hideIdentity': 'Hide identity ▲',
-    'evidenceExportComparisonTable.inspectIdentity': 'Inspect identity ▼',
     'authorView.anonymous': 'Anonymous',
     'publications.askingPeers': 'Asking peers…',
     'publications.retrieveFromPeers': 'Retrieve from Peers',
@@ -2982,12 +2817,6 @@ export default Object.freeze({
     'publications.hideCrossDomainTimeline': 'Hide Cross-Domain Timeline',
     'publications.showCrossDomainTimeline': 'Show Cross-Domain Timeline',
     'publications.published': 'Published',
-    'leaderboardHubView.hidePublisherAchievementProfile': 'Hide Publisher Achievement Profile',
-    'leaderboardHubView.showPublisherAchievementProfile': 'Show Publisher Achievement Profile',
-    'leaderboardHubView.hidePublisherAchievementBadges': 'Hide Publisher Achievement Badges',
-    'leaderboardHubView.showPublisherAchievementBadges': 'Show Publisher Achievement Badges',
-    'leaderboardHubView.hidePublisherAchievementStatistics': 'Hide Publisher Achievement Statistics',
-    'leaderboardHubView.showPublisherAchievementStatistics': 'Show Publisher Achievement Statistics',
     'publications.hideDetails': 'Hide Details',
     'publications.inspectEvidence': 'Inspect Evidence',
     'publications.verifying': 'Verifying…',
@@ -3158,17 +2987,12 @@ export default Object.freeze({
     'publications.thisReplicaDoesNotCurrently': 'This replica does not currently possess a valid snapshot. Choose a source below — "Import Snapshot," a placement\'s own "Materialize Snapshot," or a peer\'s own "Get Snapshot from Peer" — to try again.',
 
     // Publications: leaderboardHubView, text with quotes.
-    'leaderboardHubView.aBadgePresentationOfThe': 'A badge presentation of the achievements this publisher has already earned, across every publication that publisher has explicitly claimed — never a new achievement, and never a score, rank, or leaderboard entry. Some achievements (reference-derived ones) have no badge presentation yet and appear only in the "Publisher Achievement Profile" card above.',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView, text with quotes.
-    'publisherLeaderboardSnapshotClaimAuthoringView.authorAndExportASigned': 'Author and export a signed claim about YOUR OWN replica\'s current leaderboard snapshot — the exact evidence artifact the Reconciliation Workspace\'s own "Peer Evidence" field asks a peer to paste. Generating, signing, and exporting are three separate, explicit actions; nothing on this page runs automatically.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.pasteThisIntoAPeer': 'Paste this into a peer\'s Reconciliation Workspace "Peer Evidence" field, or send them the downloaded file.',
 
     // Publications: reconciliationCandidateLeaderboardView, text with quotes.
-    'reconciliationCandidateLeaderboardView.noPeerArchiveSuppliedYet': 'No peer archive supplied yet — every count below is Source-only until you paste one. Paste a peer replica\'s own exported archive (Export Archive, on the Publications page) and click "Use as Peer Archive".',
 
     // Publications: reconciliationWorkspaceView, text with quotes.
-    'reconciliationWorkspaceView.reconcileThisReplicaSOwn': 'Reconcile this replica\'s own local archive against one piece of peer evidence, explicitly. Nothing on this page runs automatically — reconciliation happens only when you click "Reconcile," below.',
 
     // Publications: the publication list, text built around values.
     'publications.preference.storage.unavailable': 'Your preferred storage, {name}, can\'t be used with one click here; use the options below.',
@@ -3417,64 +3241,27 @@ export default Object.freeze({
     'publications.contentHashAssociated': 'Content hash: {contentHash} · Associated: {createdAt}',
 
     // Publications: leaderboardHubView, text with values.
-    'leaderboardHubView.earnedBy': 'Earned {observedAt} by {blockchain} — {chainReference}',
-    'leaderboardHubView.earned': '{description} — earned {earnedAt}',
-    'leaderboardHubView.publications2': '{blockchain} publications',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView, text with values.
-    'publisherLeaderboardSnapshotClaimAuthoringView.claimCreatedSuccessfullySignedBy': 'Claim created successfully — signed by {signer}.',
 
     // Publications: publisherPerformanceLeaderboardView, text with values.
-    'publisherPerformanceLeaderboardView.publisherSRankedUnderPublisher': { one: '{count} publisher ranked, under Publisher Ranking Policy v{version}', other: '{count} publishers ranked, under Publisher Ranking Policy v{version}' },
 
     // Publications: reconciliationCandidateLeaderboardView, text with values.
-    'reconciliationCandidateLeaderboardView.comparison': 'Comparison: {state}',
-    'reconciliationCandidateLeaderboardView.candidates': 'Candidates: {count}',
-    'reconciliationCandidateLeaderboardView.decisions': 'Decisions: {count}',
-    'reconciliationCandidateLeaderboardView.observations': 'Observations: {count}',
 
     // Publications: reconciliationWorkspaceView, text with values.
-    'reconciliationWorkspaceView.reconciliationDidNotCompleteOutcome': 'Reconciliation did not complete — outcome: {outcome}',
 
     // Publications: candidateEvidenceDetailPanel, text with values.
-    'candidateEvidenceDetailPanel.shared': 'Shared ({count})',
-    'candidateEvidenceDetailPanel.decided': '{disposition} — decided {decidedAt}',
-    'candidateEvidenceDetailPanel.sourceOnly': 'Source-only ({count})',
-    'candidateEvidenceDetailPanel.targetOnly': 'Target-only ({count})',
-    'candidateEvidenceDetailPanel.observedPlanPresentMatchesPlan': '{disposition} — observed {observedAt} — plan {planFingerprint} — present: {candidatePresent} — matches plan: {candidateMatchesPlan}',
 
     // Publications: candidateLeaderboardTable, text with values.
-    'candidateLeaderboardTable.candidateS': { one: '{count} candidate', other: '{count} candidates' },
 
     // Publications: evidenceExportComparisonRecordPairSelector, text with values.
-    'evidenceExportComparisonRecordPairSelector.decisionPair': 'Decision Pair {number}',
-    'evidenceExportComparisonRecordPairSelector.observationPair': 'Observation Pair {number}',
 
     // Publications: evidenceExportComparisonTable, text with values.
-    'evidenceExportComparisonTable.sourceOnly2': 'Source-only ({count})',
-    'evidenceExportComparisonTable.shared2': 'Shared ({count})',
-    'evidenceExportComparisonTable.targetOnly2': 'Target-only ({count})',
 
     // Publications: counts in expressions.
-    'evidenceExportComparisonRecordPairSelector.differences': { one: '{count} difference', other: '{count} differences' },
     'publications.showObservationHistoryCount': 'Show Observation History ({count})',
 
     // Publications: reconciliation components (ui/components/reconciliation/).
-    'reconciliation.unknownCandidate': 'Unknown candidate',
-    'reconciliation.claimAndSnapshot': 'Claim {claimId} ↔ Snapshot #{snapshotIndex}',
-    'reconciliation.claimWithoutSnapshot': 'Claim {claimId} (no corresponding Snapshot)',
-    'reconciliation.snapshotWithoutClaim': 'Snapshot #{snapshotIndex} (no corresponding Claim)',
-    'reconciliation.unknownDecisionRecord': 'Unknown decision record',
-    'reconciliation.unknownObservationRecord': 'Unknown observation record',
-    'reconciliation.decisionRecord': '{candidate} — {disposition} — decided {when}',
-    'reconciliation.observationRecord': '{candidate} — {disposition} — observed {when}',
-    'reconciliation.unknownTime': 'unknown time',
-    'reconciliation.yes': 'yes',
-    'reconciliation.no': 'no',
-    'reconciliation.unknownPlan': 'unknown plan',
-    'reconciliation.comparingPeerArchive': 'Comparing against a supplied peer archive.',
-    'reconciliation.peerArchiveEmpty': 'A peer archive was supplied, but it has no evidence recorded — every count below still reflects this replica alone.',
-    'reconciliation.noPeerArchive': 'No peer archive supplied — every count below reflects this replica alone.',
 
     // Publications: labels chosen in the page's composables (ui/views/decentralizedPublications/).
     'publications.unknownContent': 'Unknown content',
@@ -3802,12 +3589,6 @@ export default Object.freeze({
     'publicationSort.titleDesc': 'Title Z–A',
     'publicationSort.authorAsc': 'Author A–Z',
     'publications.anchorCountOn': { one: 'Anchor {count} Publication on {anchorType}', other: 'Anchor {count} Publications on {anchorType}' },
-    'reconciliation.filter.all': 'All',
-    'reconciliation.filter.decisions': 'Decisions',
-    'reconciliation.filter.observations': 'Observations',
-    'reconciliation.filter.shared': 'Shared',
-    'reconciliation.filter.sourceOnly': 'Source-only',
-    'reconciliation.filter.targetOnly': 'Target-only',
 
     // Publications: reconciliation comparison states.
     'reconciliation.state.noPeer': 'No peer archive',

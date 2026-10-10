@@ -1,4 +1,4 @@
-# Principles: Achievements, rankings and reconciliation
+# Principles: Achievements and credit
 
 Each rule links to its full text in [the history](../Principles.md#history).
 
@@ -60,6 +60,26 @@ not human identity, matching is by `sameAs()` and never content hash,
 and an empty profile is a valid answer.
 
 [Full text](history/0.8.md#a-publication-profile-names-what-a-publication-earned-never-who-earned-it-08107)
+
+### A Remix Count Credits And Invites Remixing; It Is Still Only A Count (2026-10-08)
+
+A shared link's screen and the Repository's cards say how many times a
+build was remixed: the distinct published builds whose Publications name it
+as their parent, as far as this device has found, recomputed whenever
+shown. It is never a score, rank, sort order or achievement threshold, and
+none shows as nothing rather than "0". "Remixed from …" names the parent
+from its own Publication, else from the credit the remix's license carries.
+
+[Full text](history/0.9.md#a-remix-count-credits-and-invites-remixing-it-is-still-only-a-count-2026-10-08)
+
+## Retired with the leaderboards and reconciliation (2026-10)
+
+The rules below governed the publisher leaderboards, achievement evidence
+exchange, signed leaderboard snapshot claims and their reconciliation. Those
+pages and their code were removed because ForkBuild doesn't rank people or
+keep scores ([Pillars](../Pillars.md#what-we-are-not-making)). The rules are
+kept so that history and old comments citing them still resolve; nothing in
+the app follows them now.
 
 ### A Ranking Is A Policy Output, Not A Discovered Property (0.8.112)
 
@@ -186,14 +206,3 @@ decision never supersedes or corrects an earlier one. The candidate
 identity comes from the existing projection.
 
 [Full text](history/0.8.md#a-candidates-decision-history-is-a-narration-not-a-state-machine-08154)
-
-### A Remix Count Credits And Invites Remixing; It Is Still Only A Count (2026-10-08)
-
-A shared link's screen and the Repository's cards say how many times a
-build was remixed: the distinct published builds whose Publications name it
-as their parent, as far as this device has found, recomputed whenever
-shown. It is never a score, rank, sort order or achievement threshold, and
-none shows as nothing rather than "0". "Remixed from …" names the parent
-from its own Publication, else from the credit the remix's license carries.
-
-[Full text](history/0.9.md#a-remix-count-credits-and-invites-remixing-it-is-still-only-a-count-2026-10-08)

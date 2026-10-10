@@ -51,9 +51,9 @@ top-level [docs/](..) folder.
     *experimental*, other external evidence, the Bitcoin and Base wallet
     pipelines, remote IPFS pinning, Steem and Blurt.
     [Distributing Your Work](Distribution.md) shows how these fit together.
-12. **[Archive & Leaderboards](12-ArchiveAndLeaderboards.md)** —
+12. **[Archive & Achievements](12-ArchiveAndLeaderboards.md)** —
     *experimental*. The observation archive, publication references,
-    achievements, publisher labels, and the Leaderboard pages.
+    achievements and publisher labels.
 13. **[Your Data](13-YourData.md)** — backing up everything this browser
     holds to one encrypted file and restoring it, the smaller exports, and
     where this device recorded distributing your publications.

@@ -2249,54 +2249,12 @@ export default Object.freeze({
     'worldCard.continueExploring': 'Lanjutkan Menjelajah',
 
     // Publications: candidateEvidenceDetailPanel.
-    'candidateEvidenceDetailPanel.decisionEvidence': 'Bukti Keputusan',
-    'candidateEvidenceDetailPanel.none': 'Tidak ada',
-    'candidateEvidenceDetailPanel.observationEvidence': 'Bukti Pengamatan',
 
     // Publications: candidateLeaderboardTable.
-    'candidateLeaderboardTable.noReconciliationCandidatesToDisplay': 'Tidak ada kandidat rekonsiliasi untuk ditampilkan.',
-    'candidateLeaderboardTable.candidate': 'Kandidat',
-    'candidateLeaderboardTable.decisionEvidence': 'Bukti Keputusan',
-    'candidateLeaderboardTable.observationEvidence': 'Bukti Pengamatan',
-    'candidateLeaderboardTable.shared': 'Bersama',
-    'candidateLeaderboardTable.sourceOnly': 'Hanya sumber',
-    'candidateLeaderboardTable.targetOnly': 'Hanya target',
 
     // Publications: evidenceExportComparisonRecordPairSelector.
-    'evidenceExportComparisonRecordPairSelector.explicitRecordPairing': 'Pemasangan Catatan Eksplisit',
-    'evidenceExportComparisonRecordPairSelector.nothingHereDecidesWhichRecords': 'Tidak ada yang memutuskan di sini catatan mana yang saling berkaitan — pilih sendiri catatan sumber dan catatan target, dari ekspor mana pun, di partisi mana pun, lalu tambahkan sebagai pasangan eksplisit.',
-    'evidenceExportComparisonRecordPairSelector.decisionEvidence': 'Bukti keputusan',
-    'evidenceExportComparisonRecordPairSelector.sourceRecord': 'Catatan sumber',
-    'evidenceExportComparisonRecordPairSelector.selectASourceRecord': 'Pilih catatan sumber…',
-    'evidenceExportComparisonRecordPairSelector.targetRecord': 'Catatan target',
-    'evidenceExportComparisonRecordPairSelector.selectATargetRecord': 'Pilih catatan target…',
-    'evidenceExportComparisonRecordPairSelector.addPair': 'Tambah Pasangan',
-    'evidenceExportComparisonRecordPairSelector.remove': 'Hapus',
-    'evidenceExportComparisonRecordPairSelector.noDecisionPairsSelectedYet': 'Belum ada pasangan keputusan yang dipilih.',
-    'evidenceExportComparisonRecordPairSelector.observationEvidence': 'Bukti pengamatan',
-    'evidenceExportComparisonRecordPairSelector.noObservationPairsSelectedYet': 'Belum ada pasangan pengamatan yang dipilih.',
-    'evidenceExportComparisonRecordPairSelector.pairedRecordDifferences': 'Perbedaan Catatan Berpasangan',
-    'evidenceExportComparisonRecordPairSelector.noExplicitPairsAddedYet': 'Belum ada pasangan eksplisit yang ditambahkan, di sisi mana pun.',
-    'evidenceExportComparisonRecordPairSelector.decisionPairs': 'Pasangan keputusan',
-    'evidenceExportComparisonRecordPairSelector.source': 'Sumber:',
-    'evidenceExportComparisonRecordPairSelector.target': 'Target:',
-    'evidenceExportComparisonRecordPairSelector.identicalOnEveryNamedField': 'Identik di setiap kolom bernama.',
-    'evidenceExportComparisonRecordPairSelector.observationPairs': 'Pasangan pengamatan',
 
     // Publications: evidenceExportComparisonTable.
-    'evidenceExportComparisonTable.comparisonState': 'Keadaan Perbandingan',
-    'evidenceExportComparisonTable.source': 'Sumber',
-    'evidenceExportComparisonTable.target': 'Target',
-    'evidenceExportComparisonTable.same': 'Sama',
-    'evidenceExportComparisonTable.filter': 'Saring',
-    'evidenceExportComparisonTable.noCandidatesDecisionEvidenceOr': 'Tidak ada kandidat, bukti keputusan, atau bukti pengamatan di kedua ekspor.',
-    'evidenceExportComparisonTable.candidatePresence': 'Keberadaan kandidat',
-    'evidenceExportComparisonTable.sourceOnly': 'Hanya sumber',
-    'evidenceExportComparisonTable.shared': 'Bersama',
-    'evidenceExportComparisonTable.targetOnly': 'Hanya target',
-    'evidenceExportComparisonTable.none': 'Tidak ada',
-    'evidenceExportComparisonTable.decisionEvidence': 'Bukti keputusan',
-    'evidenceExportComparisonTable.observationEvidence': 'Bukti pengamatan',
 
     // Publications: authorView.
     'authorView.originalWorksForks': 'Karya Asli & Fork',
@@ -2516,8 +2474,6 @@ export default Object.freeze({
     'publications.exportImport': 'Ekspor / Impor',
     'publications.aPortableCopyOfThe': 'Salinan portabel dari fakta yang tercatat di atas — hanya identitas publikasi dan pengamatan, tidak pernah koneksi dompet, kemampuan penandatanganan, kunci privat, atau kredensial penyedia pinning apa pun. Mengekspor tidak melakukan operasi jaringan sendiri. Mengimpor MENGGANTI arsip saat ini seluruhnya — tidak pernah menggabungkan dengannya.',
     'publications.exportArchive': 'Ekspor Arsip',
-    'publications.reconcilingThisArchiveAgainstA': 'Merekonsiliasi arsip ini dengan arsip rekan, membuat atau mengekspor klaim snapshot papan peringkat bertanda tangan milik Anda sendiri, dan melihat peringkat penerbit berdasarkan pencapaian yang mereka catat sendiri, semuanya dilakukan di halaman {leaderboard}.',
-    'publications.leaderboard': 'Papan Peringkat',
     'publications.exportedArchive': 'Arsip yang Diekspor',
     'publications.downloadArchiveExport': 'Unduh Ekspor Arsip',
     'publications.importArchive': 'Impor Arsip',
@@ -2806,70 +2762,10 @@ export default Object.freeze({
     'challenge.shareText': '{title}, karya saya untuk tantangan {theme} ForkBuild #{tag}',
 
     // Publications: leaderboardHubView.
-    'leaderboardHubView.leaderboard': 'Papan Peringkat',
-    'leaderboardHubView.reconciliationPublisherSnapshotClaimsAnd': 'Rekonsiliasi, klaim snapshot penerbit, dan kinerja penerbit — setiap alur kerja terkait papan peringkat yang dapat dijangkau dari halaman Publikasi, dikumpulkan di satu tempat.',
-    'leaderboardHubView.reconciliationCandidateLeaderboard': 'Papan Peringkat Kandidat Rekonsiliasi',
-    'leaderboardHubView.compareThisArchiveSDecision': 'Bandingkan bukti keputusan dan pengamatan arsip ini, kandidat demi kandidat, dengan arsip ekspor milik rekan.',
-    'leaderboardHubView.reconciliationWorkspace': 'Ruang Kerja Rekonsiliasi',
-    'leaderboardHubView.reconcileThisArchiveAgainstA': 'Rekonsiliasikan arsip ini dengan satu bukti dari rekan, secara eksplisit.',
-    'leaderboardHubView.publisherSnapshotClaim': 'Klaim Snapshot Penerbit',
-    'leaderboardHubView.authorAndExportYourOwn': 'Buat dan ekspor klaim snapshot papan peringkat bertanda tangan milik Anda sendiri — bukti yang diharapkan Ruang Kerja rekan.',
-    'leaderboardHubView.publisherPerformanceLeaderboard': 'Papan Peringkat Kinerja Penerbit',
-    'leaderboardHubView.seePublishersRankedByTheir': 'Lihat peringkat penerbit berdasarkan pencapaian dan publikasi yang mereka catat sendiri, dihitung ulang hanya dari arsip replika ini.',
-    'leaderboardHubView.publisherAchievementProfile': 'Profil Pencapaian Penerbit',
-    'leaderboardHubView.persistedLocally': 'Disimpan secara lokal',
-    'leaderboardHubView.aPublisherSOwnAchievements': 'Pencapaian milik seorang penerbit, dijumlahkan dari setiap publikasi yang diklaim secara eksplisit oleh penerbit itu — tidak pernah disimpulkan dari hash konten atau dompet yang sama, dan tidak pernah berupa skor, peringkat, atau entri papan peringkat.',
-    'leaderboardHubView.chooseAPublisher': 'Pilih Seorang Penerbit',
-    'leaderboardHubView.noPublisherHasBeenAssociated': 'Belum ada penerbit yang dikaitkan dengan apa pun — catat satu di halaman {publications} terlebih dahulu.',
-    'leaderboardHubView.publications': 'Publikasi',
-    'leaderboardHubView.publisher': 'Penerbit',
-    'leaderboardHubView.chooseAPublisher2': 'Pilih penerbit…',
-    'leaderboardHubView.associatedPublications': 'Publikasi yang dikaitkan',
-    'leaderboardHubView.achievementsEarned': 'Pencapaian yang diraih',
-    'leaderboardHubView.distinctAchievementKinds': 'Jenis pencapaian berbeda',
-    'leaderboardHubView.noneOfThisPublisherS': 'Belum ada publikasi yang dikaitkan dengan penerbit ini yang meraih pencapaian.',
-    'leaderboardHubView.theseAchievementsBelongToThe': 'Pencapaian ini milik publikasi yang diklaim secara eksplisit oleh penerbit ini — tidak pernah bukti bahwa penerbit ini mengendalikan, memiliki, atau merupakan manusia di balik salah satunya.',
-    'leaderboardHubView.publisherAchievementBadges': 'Lencana Pencapaian Penerbit',
-    'leaderboardHubView.badgesEarned': 'Lencana yang diraih',
-    'leaderboardHubView.distinctBadgeKinds': 'Jenis lencana berbeda',
-    'leaderboardHubView.noneOfThisPublisherS2': 'Belum ada publikasi yang dikaitkan dengan penerbit ini yang meraih pencapaian berlencana.',
-    'leaderboardHubView.sourcePublication': 'Publikasi Sumber',
-    'leaderboardHubView.blockchain': 'Blockchain',
-    'leaderboardHubView.contentHash': 'Hash konten',
-    'leaderboardHubView.chainReference': 'Referensi rantai',
-    'leaderboardHubView.created': 'Dibuat',
-    'leaderboardHubView.thisBadgeIsAPresentation': 'Lencana ini adalah penyajian dari satu pencapaian yang sudah diraih oleh publikasi yang diklaim secara eksplisit oleh penerbit ini — tidak pernah pencapaian baru, dan tidak pernah skor atau peringkat.',
-    'leaderboardHubView.viewPublicationOnPublicationsPage': 'Lihat Publikasi di Halaman Publikasi',
-    'leaderboardHubView.theseBadgesPresentAchievementsAlready': 'Lencana ini menyajikan pencapaian yang sudah diraih oleh publikasi yang diklaim secara eksplisit oleh penerbit ini — tidak pernah bukti bahwa penerbit ini mengendalikan, memiliki, atau merupakan manusia di balik salah satunya.',
-    'leaderboardHubView.publisherAchievementStatistics': 'Statistik Pencapaian Penerbit',
-    'leaderboardHubView.measurableFactsAboutAPublisher': 'Fakta terukur tentang publikasi yang dikaitkan secara eksplisit dengan seorang penerbit beserta pencapaian turunannya — tidak pernah berupa skor, peringkat, level, atau entri papan peringkat dengan sendirinya. Ini adalah fakta yang sama yang digunakan Papan Peringkat Kinerja Penerbit di atas untuk memeringkat penerbit.',
-    'leaderboardHubView.theseArePlainCountsOf': 'Ini adalah hitungan biasa dari fakta yang sudah diraih — tidak pernah skor, peringkat, level, tingkatan, atau entri papan peringkat, dan tidak pernah bukti bahwa penerbit ini mengendalikan, memiliki, atau merupakan manusia di balik publikasi yang dihitung di atas.',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView.
-    'publisherLeaderboardSnapshotClaimAuthoringView.publisherSnapshotClaim': 'Klaim Snapshot Penerbit',
-    'publisherLeaderboardSnapshotClaimAuthoringView.signInToAnIdentity': 'Masuk ke sebuah identitas sebelum membuat klaim — {identities}.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.myIdentities': 'Identitas Saya',
-    'publisherLeaderboardSnapshotClaimAuthoringView.snapshotClaim': 'Klaim Snapshot',
-    'publisherLeaderboardSnapshotClaimAuthoringView.generatingComputesThisReplicaS': 'Membuat klaim akan menghitung ulang snapshot papan peringkat replika ini saat ini juga, dari bukti yang dicatatnya sendiri, lalu menandatangani klaim tentang TEPAT snapshot itu dengan identitas yang sedang Anda gunakan untuk masuk.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.generateSignClaim': 'Buat & Tandatangani Klaim',
-    'publisherLeaderboardSnapshotClaimAuthoringView.startOver': 'Mulai Ulang',
-    'publisherLeaderboardSnapshotClaimAuthoringView.claimCreated': 'Klaim Dibuat',
-    'publisherLeaderboardSnapshotClaimAuthoringView.evidenceFingerprint': 'Sidik jari bukti',
-    'publisherLeaderboardSnapshotClaimAuthoringView.policyVersion': 'Versi kebijakan',
-    'publisherLeaderboardSnapshotClaimAuthoringView.snapshotFingerprint': 'Sidik jari snapshot',
-    'publisherLeaderboardSnapshotClaimAuthoringView.exportClaim': 'Ekspor Klaim',
-    'publisherLeaderboardSnapshotClaimAuthoringView.exportedClaim': 'Klaim yang Diekspor',
-    'publisherLeaderboardSnapshotClaimAuthoringView.downloadClaim': 'Unduh Klaim',
 
     // Publications: publisherPerformanceLeaderboardView.
-    'publisherPerformanceLeaderboardView.publisherPerformanceLeaderboard': 'Papan Peringkat Kinerja Penerbit',
-    'publisherPerformanceLeaderboardView.publishersRankedByTheirOwn': 'Penerbit diperingkat berdasarkan pencapaian dan publikasi yang mereka catat sendiri, dihitung ulang dari arsip replika ini setiap kali halaman ini dimuat. Ini adalah penyajian hasil Kebijakan Peringkat Penerbit yang sudah ada — tidak pernah sistem peringkat kedua — dan tidak ada yang ditampilkan di sini yang disimpan.',
-    'publisherPerformanceLeaderboardView.noPublishersToRankYet': 'Belum ada penerbit untuk diperingkat — belum ada penerbit yang secara eksplisit mengaitkan publikasi di arsip replika ini.',
-    'publisherPerformanceLeaderboardView.rank': 'Peringkat',
-    'publisherPerformanceLeaderboardView.publisher': 'Penerbit',
-    'publisherPerformanceLeaderboardView.achievements': 'Pencapaian',
-    'publisherPerformanceLeaderboardView.achievementKinds': 'Jenis Pencapaian',
-    'publisherPerformanceLeaderboardView.publications': 'Publikasi',
 
     // Publications: recentWorldsView.
     'recentWorldsView.myWorlds': 'Dunia Saya',
@@ -2878,62 +2774,10 @@ export default Object.freeze({
     'recentWorldsView.browseTheRepository': 'Jelajahi Repositori',
 
     // Publications: reconciliationCandidateLeaderboardEvidenceExportComparisonView.
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteASourceEvidenceExport': 'Tempel JSON dokumen ekspor bukti sumber',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteATargetEvidenceExport': 'Tempel JSON dokumen ekspor bukti target',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.evidenceExportComparison': 'Perbandingan Ekspor Bukti',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareTwoPreviouslyExportedEvidence': 'Bandingkan dua laporan bukti yang sudah diekspor sebelumnya — laporan minggu lalu dengan laporan hari ini, atau laporan yang Anda ekspor dengan laporan yang dikirim rekan kepada Anda. Ini tidak pernah membaca arsip aktif milik replika mana pun dan tidak pernah menggabungkan ke, mengganti, atau menghitung ulang Papan Peringkat Kandidat Rekonsiliasi — ini hanya perbandingan antara dua dokumen portabel yang terpisah, tidak lebih.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExport': 'Ekspor Bukti Sumber',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExportJson': 'JSON ekspor bukti sumber',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid': 'Ini bukan dokumen ekspor bukti yang valid — sisi Sumber tidak diperbarui.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExport': 'Ekspor Bukti Target',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExportJson': 'JSON ekspor bukti target',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid2': 'Ini bukan dokumen ekspor bukti yang valid — sisi Target tidak diperbarui.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareEvidence': 'Bandingkan Bukti',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.clearComparison': 'Hapus Perbandingan',
 
     // Publications: reconciliationCandidateLeaderboardView.
-    'reconciliationCandidateLeaderboardView.pasteAPeerReplicaS': 'Tempel JSON arsip ekspor milik replika rekan',
-    'reconciliationCandidateLeaderboardView.pasteAnExportedEvidenceDocument': 'Tempel JSON dokumen bukti yang diekspor',
-    'reconciliationCandidateLeaderboardView.reconciliationCandidateLeaderboard': 'Papan Peringkat Kandidat Rekonsiliasi',
-    'reconciliationCandidateLeaderboardView.decisionAndObservationEvidenceThis': 'Bukti keputusan dan pengamatan yang dicatat replika ini untuk setiap kandidat rekonsiliasi, dibandingkan secara eksplisit dengan arsip rekan yang diberikan di bawah. Tidak ada yang menggabungkan, mengganti, atau merekonsiliasi arsip mana pun di sini — ini perbandingan, tidak pernah rekonsiliasi.',
-    'reconciliationCandidateLeaderboardView.peerArchive': 'Arsip Rekan',
-    'reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied': 'Membandingkan dengan arsip rekan yang diberikan secara eksplisit — tetapi arsip rekan itu belum mencatat catatan keputusan atau pengamatannya sendiri, jadi setiap hitungan di bawah masih Hanya sumber. Ini rekan nyata yang diberikan, bukan bawaan tanpa rekan.',
-    'reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied2': 'Membandingkan dengan arsip rekan yang diberikan secara eksplisit.',
-    'reconciliationCandidateLeaderboardView.peerArchiveJson': 'JSON arsip rekan',
-    'reconciliationCandidateLeaderboardView.useAsPeerArchive': 'Gunakan sebagai Arsip Rekan',
-    'reconciliationCandidateLeaderboardView.clearPeerArchive': 'Hapus Arsip Rekan',
-    'reconciliationCandidateLeaderboardView.thisIsNotAValid': 'Ini bukan ekspor arsip yang valid — tidak ada yang dibandingkan.',
-    'reconciliationCandidateLeaderboardView.evidenceFilter': 'Saringan Bukti',
-    'reconciliationCandidateLeaderboardView.evidenceType': 'Jenis bukti',
-    'reconciliationCandidateLeaderboardView.replicaRelation': 'Hubungan replika',
-    'reconciliationCandidateLeaderboardView.evidenceExport': 'Ekspor Bukti',
-    'reconciliationCandidateLeaderboardView.exportsExactlyTheEvidenceCurrently': 'Mengekspor persis bukti yang saat ini ditampilkan di atas — pilihan Saringan Bukti yang sama dan keadaan perbandingan rekan yang sama — sebagai dokumen JSON portabel. Tidak ada yang menghitung ulang bukti, menyaring kandidat, atau menghubungi server di sini.',
-    'reconciliationCandidateLeaderboardView.exportEvidence': 'Ekspor Bukti',
-    'reconciliationCandidateLeaderboardView.compareExportedEvidence': 'Bandingkan Bukti yang Diekspor',
-    'reconciliationCandidateLeaderboardView.exportedEvidence': 'Bukti yang Diekspor',
-    'reconciliationCandidateLeaderboardView.downloadEvidenceExport': 'Unduh Ekspor Bukti',
-    'reconciliationCandidateLeaderboardView.importEvidenceExport': 'Impor Ekspor Bukti',
-    'reconciliationCandidateLeaderboardView.pasteAPreviouslyExportedEvidence': 'Tempel dokumen bukti yang sudah diekspor sebelumnya (dari panel Ekspor Bukti di atas, milik replika ini atau milik rekan) untuk memeriksanya. Ini tidak pernah menggabungkan ke, mengganti, atau menghitung ulang papan peringkat aktif di atas — ini hanya tampilan baca-saja atas dokumen portabel yang terpisah.',
-    'reconciliationCandidateLeaderboardView.evidenceExportJson': 'JSON ekspor bukti',
-    'reconciliationCandidateLeaderboardView.importEvidence': 'Impor Bukti',
-    'reconciliationCandidateLeaderboardView.clearImportedEvidence': 'Hapus Bukti yang Diimpor',
-    'reconciliationCandidateLeaderboardView.thisIsNotAValid2': 'Ini bukan dokumen ekspor bukti yang valid — tidak ada yang diimpor.',
-    'reconciliationCandidateLeaderboardView.importedEvidence': 'Bukti yang Diimpor',
 
     // Publications: reconciliationWorkspaceView.
-    'reconciliationWorkspaceView.pasteAPeerSExported': 'Tempel JSON klaim snapshot papan peringkat yang diekspor rekan',
-    'reconciliationWorkspaceView.reconciliationWorkspace': 'Ruang Kerja Rekonsiliasi',
-    'reconciliationWorkspaceView.localArchive': 'Arsip Lokal',
-    'reconciliationWorkspaceView.thisReplicaSOwnRecorded': 'Bukti yang dicatat sendiri oleh replika ini — arsip yang sama yang sudah dibaca dan ditulis oleh halaman Publikasi dan Papan Peringkat Kandidat Rekonsiliasi. Tidak ada arsip terpisah untuk dipilih.',
-    'reconciliationWorkspaceView.peerEvidence': 'Bukti Rekan',
-    'reconciliationWorkspaceView.pasteAPeerSOwn': 'Tempel klaim snapshot papan peringkat bertanda tangan yang diekspor sendiri oleh rekan di bawah (Ekspor Klaim, di replika mereka).',
-    'reconciliationWorkspaceView.peerEvidenceJson': 'JSON bukti rekan',
-    'reconciliationWorkspaceView.reconcile': 'Rekonsiliasi',
-    'reconciliationWorkspaceView.clearResult': 'Hapus Hasil',
-    'reconciliationWorkspaceView.result': 'Hasil',
-    'reconciliationWorkspaceView.reconciliationProducedACandidateRecorded': 'Rekonsiliasi menghasilkan kandidat, dicatat sebagai keputusan dan pengamatan validasi ulang di arsip replika ini sendiri.',
-    'reconciliationWorkspaceView.viewInLeaderboard': 'Lihat di Papan Peringkat',
-    'reconciliationWorkspaceView.noReconciliationCandidateWasProduced': 'Tidak ada kandidat rekonsiliasi yang dihasilkan — bukti rekan ini sudah sesuai dengan snapshot lokal replika ini sendiri.',
 
     // Publications: repositoryView.
     'repositoryView.repository': 'Repositori',
@@ -2962,15 +2806,6 @@ export default Object.freeze({
     'sharedWithYouPanel.dismiss': 'Abaikan',
     'sharedWithYouPanel.dismissHint': 'Sembunyikan berbagi ini di perangkat ini. Tidak akan muncul lagi, meskipun diumumkan lagi.',
     'sharedWithYouPanel.shareUnavailable': 'Orang yang membagikan Dunia ini tidak mengirimkannya. Perangkat yang mereka gunakan untuk terhubung mungkin sudah tidak memilikinya; minta mereka membagikannya lagi.',
-    'candidateLeaderboardTable.hideEvidence': 'Sembunyikan Bukti',
-    'candidateLeaderboardTable.inspectEvidence': 'Periksa Bukti',
-    'evidenceExportComparisonRecordPairSelector.noDifferences': 'Tidak ada perbedaan',
-    'evidenceExportComparisonRecordPairSelector.hideDifferences': 'Sembunyikan perbedaan ▲',
-    'evidenceExportComparisonRecordPairSelector.inspectDifferences': 'Periksa perbedaan ▼',
-    'evidenceExportComparisonTable.hideRecords': 'Sembunyikan catatan ▲',
-    'evidenceExportComparisonTable.inspectRecords': 'Periksa catatan ▼',
-    'evidenceExportComparisonTable.hideIdentity': 'Sembunyikan identitas ▲',
-    'evidenceExportComparisonTable.inspectIdentity': 'Periksa identitas ▼',
     'authorView.anonymous': 'Anonim',
     'publications.askingPeers': 'Bertanya ke rekan…',
     'publications.retrieveFromPeers': 'Ambil dari Rekan',
@@ -2979,12 +2814,6 @@ export default Object.freeze({
     'publications.hideCrossDomainTimeline': 'Sembunyikan Linimasa Lintas Domain',
     'publications.showCrossDomainTimeline': 'Tampilkan Linimasa Lintas Domain',
     'publications.published': 'Diterbitkan',
-    'leaderboardHubView.hidePublisherAchievementProfile': 'Sembunyikan Profil Pencapaian Penerbit',
-    'leaderboardHubView.showPublisherAchievementProfile': 'Tampilkan Profil Pencapaian Penerbit',
-    'leaderboardHubView.hidePublisherAchievementBadges': 'Sembunyikan Lencana Pencapaian Penerbit',
-    'leaderboardHubView.showPublisherAchievementBadges': 'Tampilkan Lencana Pencapaian Penerbit',
-    'leaderboardHubView.hidePublisherAchievementStatistics': 'Sembunyikan Statistik Pencapaian Penerbit',
-    'leaderboardHubView.showPublisherAchievementStatistics': 'Tampilkan Statistik Pencapaian Penerbit',
     'publications.hideDetails': 'Sembunyikan Detail',
     'publications.inspectEvidence': 'Periksa Bukti',
     'publications.verifying': 'Memverifikasi…',
@@ -3155,17 +2984,12 @@ export default Object.freeze({
     'publications.thisReplicaDoesNotCurrently': 'Replika ini saat ini tidak memiliki snapshot yang valid. Pilih sumber di bawah — "Impor Snapshot", "Materialisasi Snapshot" milik sebuah penempatan, atau "Ambil Snapshot dari Rekan" milik rekan — untuk mencoba lagi.',
 
     // Publications: leaderboardHubView, text with quotes.
-    'leaderboardHubView.aBadgePresentationOfThe': 'Penyajian lencana dari pencapaian yang sudah diraih penerbit ini, di setiap publikasi yang diklaim secara eksplisit oleh penerbit itu — tidak pernah pencapaian baru, dan tidak pernah skor, peringkat, atau entri papan peringkat. Beberapa pencapaian (yang berasal dari referensi) belum memiliki penyajian lencana dan hanya muncul di kartu "Profil Pencapaian Penerbit" di atas.',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView, text with quotes.
-    'publisherLeaderboardSnapshotClaimAuthoringView.authorAndExportASigned': 'Buat dan ekspor klaim bertanda tangan tentang snapshot papan peringkat replika MILIK ANDA saat ini — artefak bukti persis yang diminta kolom "Bukti Rekan" di Ruang Kerja Rekonsiliasi untuk ditempel oleh rekan. Membuat, menandatangani, dan mengekspor adalah tiga tindakan eksplisit yang terpisah; tidak ada yang berjalan otomatis di halaman ini.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.pasteThisIntoAPeer': 'Tempel ini ke kolom "Bukti Rekan" di Ruang Kerja Rekonsiliasi milik rekan, atau kirimkan file yang diunduh kepada mereka.',
 
     // Publications: reconciliationCandidateLeaderboardView, text with quotes.
-    'reconciliationCandidateLeaderboardView.noPeerArchiveSuppliedYet': 'Belum ada arsip rekan yang diberikan — setiap hitungan di bawah adalah Hanya sumber sampai Anda menempelkan satu. Tempel arsip ekspor milik replika rekan (Ekspor Arsip, di halaman Publikasi) dan klik "Gunakan sebagai Arsip Rekan".',
 
     // Publications: reconciliationWorkspaceView, text with quotes.
-    'reconciliationWorkspaceView.reconcileThisReplicaSOwn': 'Rekonsiliasikan arsip lokal replika ini dengan satu bukti dari rekan, secara eksplisit. Tidak ada yang berjalan otomatis di halaman ini — rekonsiliasi hanya terjadi saat Anda mengklik "Rekonsiliasi" di bawah.',
 
     // Publications: the publication list, text built around values.
     'publications.preference.storage.unavailable': 'Penyimpanan pilihan Anda, {name}, tidak dapat digunakan dengan satu klik di sini; gunakan opsi di bawah.',
@@ -3414,64 +3238,27 @@ export default Object.freeze({
     'publications.contentHashAssociated': 'Hash konten: {contentHash} · Dikaitkan: {createdAt}',
 
     // Publications: leaderboardHubView, text with values.
-    'leaderboardHubView.earnedBy': 'Diraih {observedAt} oleh {blockchain} — {chainReference}',
-    'leaderboardHubView.earned': '{description} — diraih {earnedAt}',
-    'leaderboardHubView.publications2': 'Publikasi {blockchain}',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView, text with values.
-    'publisherLeaderboardSnapshotClaimAuthoringView.claimCreatedSuccessfullySignedBy': 'Klaim berhasil dibuat — ditandatangani oleh {signer}.',
 
     // Publications: publisherPerformanceLeaderboardView, text with values.
-    'publisherPerformanceLeaderboardView.publisherSRankedUnderPublisher': { other: '{count} penerbit diperingkat, berdasarkan Kebijakan Peringkat Penerbit v{version}' },
 
     // Publications: reconciliationCandidateLeaderboardView, text with values.
-    'reconciliationCandidateLeaderboardView.comparison': 'Perbandingan: {state}',
-    'reconciliationCandidateLeaderboardView.candidates': 'Kandidat: {count}',
-    'reconciliationCandidateLeaderboardView.decisions': 'Keputusan: {count}',
-    'reconciliationCandidateLeaderboardView.observations': 'Pengamatan: {count}',
 
     // Publications: reconciliationWorkspaceView, text with values.
-    'reconciliationWorkspaceView.reconciliationDidNotCompleteOutcome': 'Rekonsiliasi tidak selesai — hasil: {outcome}',
 
     // Publications: candidateEvidenceDetailPanel, text with values.
-    'candidateEvidenceDetailPanel.shared': 'Bersama ({count})',
-    'candidateEvidenceDetailPanel.decided': '{disposition} — diputuskan {decidedAt}',
-    'candidateEvidenceDetailPanel.sourceOnly': 'Hanya sumber ({count})',
-    'candidateEvidenceDetailPanel.targetOnly': 'Hanya target ({count})',
-    'candidateEvidenceDetailPanel.observedPlanPresentMatchesPlan': '{disposition} — diamati {observedAt} — rencana {planFingerprint} — ada: {candidatePresent} — cocok dengan rencana: {candidateMatchesPlan}',
 
     // Publications: candidateLeaderboardTable, text with values.
-    'candidateLeaderboardTable.candidateS': { other: '{count} kandidat' },
 
     // Publications: evidenceExportComparisonRecordPairSelector, text with values.
-    'evidenceExportComparisonRecordPairSelector.decisionPair': 'Pasangan Keputusan {number}',
-    'evidenceExportComparisonRecordPairSelector.observationPair': 'Pasangan Pengamatan {number}',
 
     // Publications: evidenceExportComparisonTable, text with values.
-    'evidenceExportComparisonTable.sourceOnly2': 'Hanya sumber ({count})',
-    'evidenceExportComparisonTable.shared2': 'Bersama ({count})',
-    'evidenceExportComparisonTable.targetOnly2': 'Hanya target ({count})',
 
     // Publications: counts in expressions.
-    'evidenceExportComparisonRecordPairSelector.differences': { other: '{count} perbedaan' },
     'publications.showObservationHistoryCount': 'Tampilkan Riwayat Pengamatan ({count})',
 
     // Publications: reconciliation components (ui/components/reconciliation/).
-    'reconciliation.unknownCandidate': 'Kandidat tidak dikenal',
-    'reconciliation.claimAndSnapshot': 'Klaim {claimId} ↔ Snapshot #{snapshotIndex}',
-    'reconciliation.claimWithoutSnapshot': 'Klaim {claimId} (tanpa Snapshot yang sesuai)',
-    'reconciliation.snapshotWithoutClaim': 'Snapshot #{snapshotIndex} (tanpa Klaim yang sesuai)',
-    'reconciliation.unknownDecisionRecord': 'Catatan keputusan tidak dikenal',
-    'reconciliation.unknownObservationRecord': 'Catatan pengamatan tidak dikenal',
-    'reconciliation.decisionRecord': '{candidate} — {disposition} — diputuskan {when}',
-    'reconciliation.observationRecord': '{candidate} — {disposition} — diamati {when}',
-    'reconciliation.unknownTime': 'waktu tidak diketahui',
-    'reconciliation.yes': 'ya',
-    'reconciliation.no': 'tidak',
-    'reconciliation.unknownPlan': 'rencana tidak diketahui',
-    'reconciliation.comparingPeerArchive': 'Membandingkan dengan arsip rekan yang diberikan.',
-    'reconciliation.peerArchiveEmpty': 'Arsip rekan telah diberikan, tetapi tidak ada bukti yang tercatat di dalamnya — setiap hitungan di bawah masih hanya mencerminkan replika ini.',
-    'reconciliation.noPeerArchive': 'Tidak ada arsip rekan yang diberikan — setiap hitungan di bawah hanya mencerminkan replika ini.',
 
     // Publications: labels chosen in the page's composables (ui/views/decentralizedPublications/).
     'publications.unknownContent': 'Konten tidak dikenal',
@@ -3799,12 +3586,6 @@ export default Object.freeze({
     'publicationSort.titleDesc': 'Judul Z–A',
     'publicationSort.authorAsc': 'Pembuat A–Z',
     'publications.anchorCountOn': { other: 'Jangkarkan {count} Publikasi di {anchorType}' },
-    'reconciliation.filter.all': 'Semua',
-    'reconciliation.filter.decisions': 'Keputusan',
-    'reconciliation.filter.observations': 'Pengamatan',
-    'reconciliation.filter.shared': 'Bersama',
-    'reconciliation.filter.sourceOnly': 'Hanya sumber',
-    'reconciliation.filter.targetOnly': 'Hanya target',
 
     // Publications: reconciliation comparison states.
     'reconciliation.state.noPeer': 'Tidak ada arsip rekan',

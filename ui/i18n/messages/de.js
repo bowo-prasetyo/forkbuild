@@ -2252,54 +2252,12 @@ export default Object.freeze({
     'worldCard.continueExploring': 'Weiter erkunden',
 
     // Publications: candidateEvidenceDetailPanel.
-    'candidateEvidenceDetailPanel.decisionEvidence': 'Entscheidungsnachweise',
-    'candidateEvidenceDetailPanel.none': 'Keine',
-    'candidateEvidenceDetailPanel.observationEvidence': 'Beobachtungsnachweise',
 
     // Publications: candidateLeaderboardTable.
-    'candidateLeaderboardTable.noReconciliationCandidatesToDisplay': 'Keine Abgleichskandidaten anzuzeigen.',
-    'candidateLeaderboardTable.candidate': 'Kandidat',
-    'candidateLeaderboardTable.decisionEvidence': 'Entscheidungsnachweise',
-    'candidateLeaderboardTable.observationEvidence': 'Beobachtungsnachweise',
-    'candidateLeaderboardTable.shared': 'Gemeinsam',
-    'candidateLeaderboardTable.sourceOnly': 'Nur Quelle',
-    'candidateLeaderboardTable.targetOnly': 'Nur Ziel',
 
     // Publications: evidenceExportComparisonRecordPairSelector.
-    'evidenceExportComparisonRecordPairSelector.explicitRecordPairing': 'Explizite Datensatzpaarung',
-    'evidenceExportComparisonRecordPairSelector.nothingHereDecidesWhichRecords': 'Hier wird nicht entschieden, welche Datensätze einander entsprechen — wählen Sie selbst einen Quelldatensatz und einen Zieldatensatz aus einem der beiden Exporte, in einer der beiden Partitionen, und fügen Sie sie dann als explizites Paar hinzu.',
-    'evidenceExportComparisonRecordPairSelector.decisionEvidence': 'Entscheidungsnachweise',
-    'evidenceExportComparisonRecordPairSelector.sourceRecord': 'Quelldatensatz',
-    'evidenceExportComparisonRecordPairSelector.selectASourceRecord': 'Einen Quelldatensatz wählen …',
-    'evidenceExportComparisonRecordPairSelector.targetRecord': 'Zieldatensatz',
-    'evidenceExportComparisonRecordPairSelector.selectATargetRecord': 'Einen Zieldatensatz wählen …',
-    'evidenceExportComparisonRecordPairSelector.addPair': 'Paar hinzufügen',
-    'evidenceExportComparisonRecordPairSelector.remove': 'Entfernen',
-    'evidenceExportComparisonRecordPairSelector.noDecisionPairsSelectedYet': 'Noch keine Entscheidungspaare ausgewählt.',
-    'evidenceExportComparisonRecordPairSelector.observationEvidence': 'Beobachtungsnachweise',
-    'evidenceExportComparisonRecordPairSelector.noObservationPairsSelectedYet': 'Noch keine Beobachtungspaare ausgewählt.',
-    'evidenceExportComparisonRecordPairSelector.pairedRecordDifferences': 'Unterschiede gepaarter Datensätze',
-    'evidenceExportComparisonRecordPairSelector.noExplicitPairsAddedYet': 'Auf keiner Seite wurden bisher explizite Paare hinzugefügt.',
-    'evidenceExportComparisonRecordPairSelector.decisionPairs': 'Entscheidungspaare',
-    'evidenceExportComparisonRecordPairSelector.source': 'Quelle:',
-    'evidenceExportComparisonRecordPairSelector.target': 'Ziel:',
-    'evidenceExportComparisonRecordPairSelector.identicalOnEveryNamedField': 'In jedem benannten Feld identisch.',
-    'evidenceExportComparisonRecordPairSelector.observationPairs': 'Beobachtungspaare',
 
     // Publications: evidenceExportComparisonTable.
-    'evidenceExportComparisonTable.comparisonState': 'Vergleichsstatus',
-    'evidenceExportComparisonTable.source': 'Quelle',
-    'evidenceExportComparisonTable.target': 'Ziel',
-    'evidenceExportComparisonTable.same': 'Gleich',
-    'evidenceExportComparisonTable.filter': 'Filter',
-    'evidenceExportComparisonTable.noCandidatesDecisionEvidenceOr': 'Keine Kandidaten, Entscheidungsnachweise oder Beobachtungsnachweise in einem der beiden Exporte.',
-    'evidenceExportComparisonTable.candidatePresence': 'Vorkommen der Kandidaten',
-    'evidenceExportComparisonTable.sourceOnly': 'Nur Quelle',
-    'evidenceExportComparisonTable.shared': 'Gemeinsam',
-    'evidenceExportComparisonTable.targetOnly': 'Nur Ziel',
-    'evidenceExportComparisonTable.none': 'Keine',
-    'evidenceExportComparisonTable.decisionEvidence': 'Entscheidungsnachweise',
-    'evidenceExportComparisonTable.observationEvidence': 'Beobachtungsnachweise',
 
     // Publications: authorView.
     'authorView.originalWorksForks': 'Originalwerke & Forks',
@@ -2519,8 +2477,6 @@ export default Object.freeze({
     'publications.exportImport': 'Export / Import',
     'publications.aPortableCopyOfThe': 'Eine portable Kopie der oben erfassten Tatsachen — nur Veröffentlichungsidentitäten und Beobachtungen, nie eine Wallet-Verbindung, eine Signierfunktion, ein privater Schlüssel oder Zugangsdaten eines Pinning-Anbieters. Der Export führt selbst keinen Netzwerkvorgang aus. Der Import ERSETZT das aktuelle Archiv vollständig — er führt nie zusammen.',
     'publications.exportArchive': 'Archiv exportieren',
-    'publications.reconcilingThisArchiveAgainstA': 'Das Abgleichen dieses Archivs mit dem eines Peers, das Erstellen oder Exportieren Ihres eigenen signierten Bestenlisten-Snapshot-Anspruchs und die Rangliste der Herausgeber nach ihren eigenen erfassten Erfolgen finden Sie auf der Seite {leaderboard}.',
-    'publications.leaderboard': 'Bestenliste',
     'publications.exportedArchive': 'Exportiertes Archiv',
     'publications.downloadArchiveExport': 'Archivexport herunterladen',
     'publications.importArchive': 'Archiv importieren',
@@ -2809,70 +2765,10 @@ export default Object.freeze({
     'challenge.shareText': '{title}, mein Beitrag zur ForkBuild-Challenge „{theme}“ #{tag}',
 
     // Publications: leaderboardHubView.
-    'leaderboardHubView.leaderboard': 'Bestenliste',
-    'leaderboardHubView.reconciliationPublisherSnapshotClaimsAnd': 'Abgleich, Snapshot-Ansprüche von Herausgebern und Herausgeberleistung — jeder Ablauf rund um die Bestenliste, der von der Seite Veröffentlichungen erreichbar ist, an einem Ort gesammelt.',
-    'leaderboardHubView.reconciliationCandidateLeaderboard': 'Bestenliste der Abgleichskandidaten',
-    'leaderboardHubView.compareThisArchiveSDecision': 'Die Entscheidungs- und Beobachtungsnachweise dieses Archivs Kandidat für Kandidat mit dem eigenen exportierten Archiv eines Peers vergleichen.',
-    'leaderboardHubView.reconciliationWorkspace': 'Abgleichsarbeitsbereich',
-    'leaderboardHubView.reconcileThisArchiveAgainstA': 'Dieses Archiv ausdrücklich mit einem einzelnen Nachweis eines Peers abgleichen.',
-    'leaderboardHubView.publisherSnapshotClaim': 'Snapshot-Anspruch des Herausgebers',
-    'leaderboardHubView.authorAndExportYourOwn': 'Ihren eigenen signierten Bestenlisten-Snapshot-Anspruch erstellen und exportieren — den Nachweis, den der Arbeitsbereich eines Peers erwartet.',
-    'leaderboardHubView.publisherPerformanceLeaderboard': 'Bestenliste der Herausgeberleistung',
-    'leaderboardHubView.seePublishersRankedByTheir': 'Herausgeber nach ihren eigenen erfassten Erfolgen und Veröffentlichungen gereiht sehen, jedes Mal neu allein aus dem eigenen Archiv dieses Replikats berechnet.',
-    'leaderboardHubView.publisherAchievementProfile': 'Erfolgsprofil des Herausgebers',
-    'leaderboardHubView.persistedLocally': 'Lokal gespeichert',
-    'leaderboardHubView.aPublisherSOwnAchievements': 'Die eigenen Erfolge eines Herausgebers, zusammengefasst über alle Veröffentlichungen, die dieser Herausgeber ausdrücklich beansprucht hat — nie aus einem gemeinsamen Inhalts-Hash oder einer Wallet abgeleitet und nie eine Punktzahl, ein Rang oder ein Bestenlisteneintrag.',
-    'leaderboardHubView.chooseAPublisher': 'Einen Herausgeber wählen',
-    'leaderboardHubView.noPublisherHasBeenAssociated': 'Bisher wurde kein Herausgeber etwas zugeordnet — erfassen Sie zuerst eine Zuordnung auf der Seite {publications}.',
-    'leaderboardHubView.publications': 'Veröffentlichungen',
-    'leaderboardHubView.publisher': 'Herausgeber',
-    'leaderboardHubView.chooseAPublisher2': 'Einen Herausgeber wählen …',
-    'leaderboardHubView.associatedPublications': 'Zugeordnete Veröffentlichungen',
-    'leaderboardHubView.achievementsEarned': 'Erzielte Erfolge',
-    'leaderboardHubView.distinctAchievementKinds': 'Verschiedene Erfolgsarten',
-    'leaderboardHubView.noneOfThisPublisherS': 'Keine der zugeordneten Veröffentlichungen dieses Herausgebers hat bisher einen Erfolg erzielt.',
-    'leaderboardHubView.theseAchievementsBelongToThe': 'Diese Erfolge gehören zu den Veröffentlichungen, die dieser Herausgeber ausdrücklich beansprucht hat — nie ein Nachweis, dass dieser Herausgeber eine davon kontrolliert, besitzt oder der Mensch dahinter ist.',
-    'leaderboardHubView.publisherAchievementBadges': 'Erfolgsabzeichen des Herausgebers',
-    'leaderboardHubView.badgesEarned': 'Erzielte Abzeichen',
-    'leaderboardHubView.distinctBadgeKinds': 'Verschiedene Abzeichenarten',
-    'leaderboardHubView.noneOfThisPublisherS2': 'Keine der zugeordneten Veröffentlichungen dieses Herausgebers hat bisher einen als Abzeichen dargestellten Erfolg erzielt.',
-    'leaderboardHubView.sourcePublication': 'Quellveröffentlichung',
-    'leaderboardHubView.blockchain': 'Blockchain',
-    'leaderboardHubView.contentHash': 'Inhalts-Hash',
-    'leaderboardHubView.chainReference': 'Chain-Verweis',
-    'leaderboardHubView.created': 'Erstellt',
-    'leaderboardHubView.thisBadgeIsAPresentation': 'Dieses Abzeichen stellt einen Erfolg dar, den bereits eine Veröffentlichung erzielt hat, die dieser Herausgeber ausdrücklich beansprucht hat — nie ein neuer Erfolg und nie eine Punktzahl oder ein Rang.',
-    'leaderboardHubView.viewPublicationOnPublicationsPage': 'Veröffentlichung auf der Seite Veröffentlichungen ansehen',
-    'leaderboardHubView.theseBadgesPresentAchievementsAlready': 'Diese Abzeichen stellen Erfolge dar, die bereits von Veröffentlichungen erzielt wurden, die dieser Herausgeber ausdrücklich beansprucht hat — nie ein Nachweis, dass dieser Herausgeber eine davon kontrolliert, besitzt oder der Mensch dahinter ist.',
-    'leaderboardHubView.publisherAchievementStatistics': 'Erfolgsstatistik des Herausgebers',
-    'leaderboardHubView.measurableFactsAboutAPublisher': 'Messbare Tatsachen über die ausdrücklich zugeordneten Veröffentlichungen eines Herausgebers und die daraus abgeleiteten Erfolge — für sich genommen nie eine Punktzahl, ein Rang, eine Stufe oder ein Bestenlisteneintrag. Es sind dieselben Tatsachen, nach denen die Bestenliste der Herausgeberleistung oben die Herausgeber reiht.',
-    'leaderboardHubView.theseArePlainCountsOf': 'Dies sind schlichte Zählungen bereits erzielter Tatsachen — nie eine Punktzahl, ein Rang, eine Stufe oder ein Bestenlisteneintrag und nie ein Nachweis, dass dieser Herausgeber eine der oben gezählten Veröffentlichungen kontrolliert, besitzt oder der Mensch dahinter ist.',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView.
-    'publisherLeaderboardSnapshotClaimAuthoringView.publisherSnapshotClaim': 'Snapshot-Anspruch des Herausgebers',
-    'publisherLeaderboardSnapshotClaimAuthoringView.signInToAnIdentity': 'Melden Sie sich mit einer Identität an, bevor Sie einen Anspruch erzeugen — {identities}.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.myIdentities': 'Meine Identitäten',
-    'publisherLeaderboardSnapshotClaimAuthoringView.snapshotClaim': 'Snapshot-Anspruch',
-    'publisherLeaderboardSnapshotClaimAuthoringView.generatingComputesThisReplicaS': 'Das Erzeugen berechnet den aktuellen Bestenlisten-Snapshot dieses Replikats jetzt neu aus seinen eigenen erfassten Nachweisen und signiert einen Anspruch über GENAU diesen Snapshot unter Ihrer aktuell angemeldeten Identität.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.generateSignClaim': 'Anspruch erzeugen & signieren',
-    'publisherLeaderboardSnapshotClaimAuthoringView.startOver': 'Neu beginnen',
-    'publisherLeaderboardSnapshotClaimAuthoringView.claimCreated': 'Anspruch erstellt',
-    'publisherLeaderboardSnapshotClaimAuthoringView.evidenceFingerprint': 'Fingerabdruck der Nachweise',
-    'publisherLeaderboardSnapshotClaimAuthoringView.policyVersion': 'Richtlinienversion',
-    'publisherLeaderboardSnapshotClaimAuthoringView.snapshotFingerprint': 'Snapshot-Fingerabdruck',
-    'publisherLeaderboardSnapshotClaimAuthoringView.exportClaim': 'Anspruch exportieren',
-    'publisherLeaderboardSnapshotClaimAuthoringView.exportedClaim': 'Exportierter Anspruch',
-    'publisherLeaderboardSnapshotClaimAuthoringView.downloadClaim': 'Anspruch herunterladen',
 
     // Publications: publisherPerformanceLeaderboardView.
-    'publisherPerformanceLeaderboardView.publisherPerformanceLeaderboard': 'Bestenliste der Herausgeberleistung',
-    'publisherPerformanceLeaderboardView.publishersRankedByTheirOwn': 'Herausgeber, gereiht nach ihren eigenen erfassten Erfolgen und Veröffentlichungen, bei jedem Laden dieser Seite neu aus dem eigenen Archiv dieses Replikats berechnet. Dies ist eine Darstellung des Ergebnisses der bestehenden Herausgeber-Ranglistenrichtlinie — nie ein zweites Ranglistensystem — und nichts hier Angezeigte wird gespeichert.',
-    'publisherPerformanceLeaderboardView.noPublishersToRankYet': 'Noch keine Herausgeber zu reihen — kein Herausgeber hat im eigenen Archiv dieses Replikats ausdrücklich eine Veröffentlichung zugeordnet.',
-    'publisherPerformanceLeaderboardView.rank': 'Rang',
-    'publisherPerformanceLeaderboardView.publisher': 'Herausgeber',
-    'publisherPerformanceLeaderboardView.achievements': 'Erfolge',
-    'publisherPerformanceLeaderboardView.achievementKinds': 'Erfolgsarten',
-    'publisherPerformanceLeaderboardView.publications': 'Veröffentlichungen',
 
     // Publications: recentWorldsView.
     'recentWorldsView.myWorlds': 'Meine Welten',
@@ -2881,62 +2777,10 @@ export default Object.freeze({
     'recentWorldsView.browseTheRepository': 'Durchsuchen Sie das Repository',
 
     // Publications: reconciliationCandidateLeaderboardEvidenceExportComparisonView.
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteASourceEvidenceExport': 'Fügen Sie das JSON eines Quell-Nachweisexports ein',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteATargetEvidenceExport': 'Fügen Sie das JSON eines Ziel-Nachweisexports ein',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.evidenceExportComparison': 'Vergleich von Nachweisexporten',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareTwoPreviouslyExportedEvidence': 'Vergleichen Sie zwei zuvor exportierte Nachweisberichte — einen Bericht von letzter Woche mit einem von heute oder einen, den Sie exportiert haben, mit einem, den ein Peer Ihnen geschickt hat. Dies liest nie das aktuelle Archiv eines der beiden Replikate und führt nie etwas in die Bestenliste der Abgleichskandidaten zusammen, ersetzt sie nicht und berechnet sie nicht neu — es ist ein Vergleich zwischen zwei getrennten, portablen Dokumenten, nicht mehr.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExport': 'Quell-Nachweisexport',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExportJson': 'JSON des Quell-Nachweisexports',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid': 'Dies ist kein gültiges Nachweisexport-Dokument — die Quellseite wurde nicht aktualisiert.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExport': 'Ziel-Nachweisexport',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExportJson': 'JSON des Ziel-Nachweisexports',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid2': 'Dies ist kein gültiges Nachweisexport-Dokument — die Zielseite wurde nicht aktualisiert.',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareEvidence': 'Nachweise vergleichen',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.clearComparison': 'Vergleich löschen',
 
     // Publications: reconciliationCandidateLeaderboardView.
-    'reconciliationCandidateLeaderboardView.pasteAPeerReplicaS': 'Fügen Sie das exportierte Archiv-JSON des Replikats eines Peers ein',
-    'reconciliationCandidateLeaderboardView.pasteAnExportedEvidenceDocument': 'Fügen Sie das JSON eines exportierten Nachweisdokuments ein',
-    'reconciliationCandidateLeaderboardView.reconciliationCandidateLeaderboard': 'Bestenliste der Abgleichskandidaten',
-    'reconciliationCandidateLeaderboardView.decisionAndObservationEvidenceThis': 'Entscheidungs- und Beobachtungsnachweise, die dieses Replikat zu jedem Abgleichskandidaten erfasst hat, ausdrücklich mit dem unten angegebenen Peer-Archiv verglichen. Hier wird keines der beiden Archive zusammengeführt, ersetzt oder abgeglichen — dies ist ein Vergleich, nie ein Abgleich.',
-    'reconciliationCandidateLeaderboardView.peerArchive': 'Peer-Archiv',
-    'reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied': 'Vergleich mit einem ausdrücklich angegebenen Peer-Archiv — dieses Peer-Archiv hat aber noch keine eigenen Entscheidungs- oder Beobachtungsdatensätze, daher ist jede Zahl unten noch Nur Quelle. Dies ist ein echter, angegebener Peer, nicht der Standard ohne Peer.',
-    'reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied2': 'Vergleich mit einem ausdrücklich angegebenen Peer-Archiv.',
-    'reconciliationCandidateLeaderboardView.peerArchiveJson': 'JSON des Peer-Archivs',
-    'reconciliationCandidateLeaderboardView.useAsPeerArchive': 'Als Peer-Archiv verwenden',
-    'reconciliationCandidateLeaderboardView.clearPeerArchive': 'Peer-Archiv löschen',
-    'reconciliationCandidateLeaderboardView.thisIsNotAValid': 'Dies ist kein gültiger Archivexport — nichts wurde verglichen.',
-    'reconciliationCandidateLeaderboardView.evidenceFilter': 'Nachweisfilter',
-    'reconciliationCandidateLeaderboardView.evidenceType': 'Nachweisart',
-    'reconciliationCandidateLeaderboardView.replicaRelation': 'Beziehung der Replikate',
-    'reconciliationCandidateLeaderboardView.evidenceExport': 'Nachweisexport',
-    'reconciliationCandidateLeaderboardView.exportsExactlyTheEvidenceCurrently': 'Exportiert genau die oben derzeit angezeigten Nachweise — dieselbe Auswahl im Nachweisfilter und denselben Peer-Vergleichszustand — als portables JSON-Dokument. Hier werden keine Nachweise neu berechnet, keine Kandidaten gefiltert und kein Server kontaktiert.',
-    'reconciliationCandidateLeaderboardView.exportEvidence': 'Nachweise exportieren',
-    'reconciliationCandidateLeaderboardView.compareExportedEvidence': 'Exportierte Nachweise vergleichen',
-    'reconciliationCandidateLeaderboardView.exportedEvidence': 'Exportierte Nachweise',
-    'reconciliationCandidateLeaderboardView.downloadEvidenceExport': 'Nachweisexport herunterladen',
-    'reconciliationCandidateLeaderboardView.importEvidenceExport': 'Nachweisexport importieren',
-    'reconciliationCandidateLeaderboardView.pasteAPreviouslyExportedEvidence': 'Fügen Sie ein zuvor exportiertes Nachweisdokument ein (aus dem Feld Nachweisexport oben, von diesem Replikat oder dem eines Peers), um es zu untersuchen. Dies führt nie etwas in die aktuelle Bestenliste oben zusammen, ersetzt sie nicht und berechnet sie nicht neu — es ist ein schreibgeschützter Blick auf ein getrenntes, portables Dokument.',
-    'reconciliationCandidateLeaderboardView.evidenceExportJson': 'JSON des Nachweisexports',
-    'reconciliationCandidateLeaderboardView.importEvidence': 'Nachweise importieren',
-    'reconciliationCandidateLeaderboardView.clearImportedEvidence': 'Importierte Nachweise löschen',
-    'reconciliationCandidateLeaderboardView.thisIsNotAValid2': 'Dies ist kein gültiges Nachweisexport-Dokument — nichts wurde importiert.',
-    'reconciliationCandidateLeaderboardView.importedEvidence': 'Importierte Nachweise',
 
     // Publications: reconciliationWorkspaceView.
-    'reconciliationWorkspaceView.pasteAPeerSExported': 'Fügen Sie das JSON des exportierten Bestenlisten-Snapshot-Anspruchs eines Peers ein',
-    'reconciliationWorkspaceView.reconciliationWorkspace': 'Abgleichsarbeitsbereich',
-    'reconciliationWorkspaceView.localArchive': 'Lokales Archiv',
-    'reconciliationWorkspaceView.thisReplicaSOwnRecorded': 'Die eigenen erfassten Nachweise dieses Replikats — dasselbe Archiv, das die Seite Veröffentlichungen und die Bestenliste der Abgleichskandidaten bereits lesen und schreiben. Es gibt kein separates Archiv zur Auswahl.',
-    'reconciliationWorkspaceView.peerEvidence': 'Nachweis eines Peers',
-    'reconciliationWorkspaceView.pasteAPeerSOwn': 'Fügen Sie unten den eigenen exportierten, signierten Bestenlisten-Snapshot-Anspruch eines Peers ein (Anspruch exportieren, auf dessen Replikat).',
-    'reconciliationWorkspaceView.peerEvidenceJson': 'JSON des Peer-Nachweises',
-    'reconciliationWorkspaceView.reconcile': 'Abgleichen',
-    'reconciliationWorkspaceView.clearResult': 'Ergebnis löschen',
-    'reconciliationWorkspaceView.result': 'Ergebnis',
-    'reconciliationWorkspaceView.reconciliationProducedACandidateRecorded': 'Der Abgleich hat einen Kandidaten ergeben, erfasst als Entscheidung und als Neuprüfungsbeobachtung im eigenen Archiv dieses Replikats.',
-    'reconciliationWorkspaceView.viewInLeaderboard': 'In der Bestenliste ansehen',
-    'reconciliationWorkspaceView.noReconciliationCandidateWasProduced': 'Es wurde kein Abgleichskandidat erzeugt — der Nachweis dieses Peers stimmt bereits mit dem eigenen lokalen Snapshot dieses Replikats überein.',
 
     // Publications: repositoryView.
     'repositoryView.repository': 'Repository',
@@ -2965,15 +2809,6 @@ export default Object.freeze({
     'sharedWithYouPanel.dismiss': 'Ausblenden',
     'sharedWithYouPanel.dismissHint': 'Diese Freigabe auf diesem Gerät ausblenden. Sie kommt nicht zurück, auch wenn sie erneut angekündigt wird.',
     'sharedWithYouPanel.shareUnavailable': 'Die Person, die diese Welt geteilt hat, hat sie nicht gesendet. Das Gerät, mit dem sie verbunden ist, hat sie möglicherweise nicht mehr; bitte sie, die Welt erneut zu teilen.',
-    'candidateLeaderboardTable.hideEvidence': 'Nachweise ausblenden',
-    'candidateLeaderboardTable.inspectEvidence': 'Nachweise untersuchen',
-    'evidenceExportComparisonRecordPairSelector.noDifferences': 'Keine Unterschiede',
-    'evidenceExportComparisonRecordPairSelector.hideDifferences': 'Unterschiede ausblenden ▲',
-    'evidenceExportComparisonRecordPairSelector.inspectDifferences': 'Unterschiede untersuchen ▼',
-    'evidenceExportComparisonTable.hideRecords': 'Datensätze ausblenden ▲',
-    'evidenceExportComparisonTable.inspectRecords': 'Datensätze untersuchen ▼',
-    'evidenceExportComparisonTable.hideIdentity': 'Identität ausblenden ▲',
-    'evidenceExportComparisonTable.inspectIdentity': 'Identität untersuchen ▼',
     'authorView.anonymous': 'Anonym',
     'publications.askingPeers': 'Peers werden gefragt …',
     'publications.retrieveFromPeers': 'Von Peers abrufen',
@@ -2982,12 +2817,6 @@ export default Object.freeze({
     'publications.hideCrossDomainTimeline': 'Domänenübergreifende Zeitleiste ausblenden',
     'publications.showCrossDomainTimeline': 'Domänenübergreifende Zeitleiste zeigen',
     'publications.published': 'Veröffentlicht',
-    'leaderboardHubView.hidePublisherAchievementProfile': 'Erfolgsprofil des Herausgebers ausblenden',
-    'leaderboardHubView.showPublisherAchievementProfile': 'Erfolgsprofil des Herausgebers zeigen',
-    'leaderboardHubView.hidePublisherAchievementBadges': 'Erfolgsabzeichen des Herausgebers ausblenden',
-    'leaderboardHubView.showPublisherAchievementBadges': 'Erfolgsabzeichen des Herausgebers zeigen',
-    'leaderboardHubView.hidePublisherAchievementStatistics': 'Erfolgsstatistik des Herausgebers ausblenden',
-    'leaderboardHubView.showPublisherAchievementStatistics': 'Erfolgsstatistik des Herausgebers zeigen',
     'publications.hideDetails': 'Details ausblenden',
     'publications.inspectEvidence': 'Nachweise untersuchen',
     'publications.verifying': 'Wird überprüft …',
@@ -3158,17 +2987,12 @@ export default Object.freeze({
     'publications.thisReplicaDoesNotCurrently': 'Dieses Replikat besitzt derzeit keinen gültigen Snapshot. Wählen Sie unten eine Quelle — „Snapshot importieren“, das eigene „Snapshot materialisieren“ einer Platzierung oder „Snapshot von Peer holen“ eines Peers —, um es erneut zu versuchen.',
 
     // Publications: leaderboardHubView, text with quotes.
-    'leaderboardHubView.aBadgePresentationOfThe': 'Eine Darstellung der Erfolge als Abzeichen, die dieser Herausgeber bereits erzielt hat, über alle Veröffentlichungen, die er ausdrücklich beansprucht hat — nie ein neuer Erfolg und nie eine Punktzahl, ein Rang oder ein Bestenlisteneintrag. Manche Erfolge (die aus Verweisen abgeleiteten) haben noch keine Abzeichendarstellung und erscheinen nur in der Karte „Erfolgsprofil des Herausgebers“ oben.',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView, text with quotes.
-    'publisherLeaderboardSnapshotClaimAuthoringView.authorAndExportASigned': 'Erstellen und exportieren Sie einen signierten Anspruch über den aktuellen Bestenlisten-Snapshot IHRES EIGENEN Replikats — genau das Nachweisartefakt, das das Feld „Nachweis eines Peers“ im Abgleichsarbeitsbereich von einem Peer verlangt. Erzeugen, Signieren und Exportieren sind drei getrennte, ausdrückliche Aktionen; nichts auf dieser Seite läuft automatisch.',
-    'publisherLeaderboardSnapshotClaimAuthoringView.pasteThisIntoAPeer': 'Fügen Sie dies in das Feld „Nachweis eines Peers“ im Abgleichsarbeitsbereich eines Peers ein oder senden Sie ihm die heruntergeladene Datei.',
 
     // Publications: reconciliationCandidateLeaderboardView, text with quotes.
-    'reconciliationCandidateLeaderboardView.noPeerArchiveSuppliedYet': 'Noch kein Peer-Archiv angegeben — jede Zahl unten ist Nur Quelle, bis Sie eines einfügen. Fügen Sie das eigene exportierte Archiv des Replikats eines Peers ein (Archiv exportieren, auf der Seite Veröffentlichungen) und klicken Sie auf „Als Peer-Archiv verwenden“.',
 
     // Publications: reconciliationWorkspaceView, text with quotes.
-    'reconciliationWorkspaceView.reconcileThisReplicaSOwn': 'Gleichen Sie das eigene lokale Archiv dieses Replikats ausdrücklich mit einem einzelnen Nachweis eines Peers ab. Nichts auf dieser Seite läuft automatisch — der Abgleich findet nur statt, wenn Sie unten auf „Abgleichen“ klicken.',
 
     // Publications: the publication list, text built around values.
     'publications.preference.storage.unavailable': 'Ihr bevorzugter Speicher, {name}, kann hier nicht mit einem Klick genutzt werden; nutzen Sie die Optionen unten.',
@@ -3416,64 +3240,27 @@ export default Object.freeze({
     'publications.contentHashAssociated': 'Inhalts-Hash: {contentHash} · Zugeordnet: {createdAt}',
 
     // Publications: leaderboardHubView, text with values.
-    'leaderboardHubView.earnedBy': 'Erzielt {observedAt} durch {blockchain} — {chainReference}',
-    'leaderboardHubView.earned': '{description} — erzielt {earnedAt}',
-    'leaderboardHubView.publications2': '{blockchain}-Veröffentlichungen',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView, text with values.
-    'publisherLeaderboardSnapshotClaimAuthoringView.claimCreatedSuccessfullySignedBy': 'Anspruch erfolgreich erstellt — signiert von {signer}.',
 
     // Publications: publisherPerformanceLeaderboardView, text with values.
-    'publisherPerformanceLeaderboardView.publisherSRankedUnderPublisher': { one: '{count} Herausgeber gereiht, nach Herausgeber-Ranglistenrichtlinie v{version}', other: '{count} Herausgeber gereiht, nach Herausgeber-Ranglistenrichtlinie v{version}' },
 
     // Publications: reconciliationCandidateLeaderboardView, text with values.
-    'reconciliationCandidateLeaderboardView.comparison': 'Vergleich: {state}',
-    'reconciliationCandidateLeaderboardView.candidates': 'Kandidaten: {count}',
-    'reconciliationCandidateLeaderboardView.decisions': 'Entscheidungen: {count}',
-    'reconciliationCandidateLeaderboardView.observations': 'Beobachtungen: {count}',
 
     // Publications: reconciliationWorkspaceView, text with values.
-    'reconciliationWorkspaceView.reconciliationDidNotCompleteOutcome': 'Der Abgleich wurde nicht abgeschlossen — Ergebnis: {outcome}',
 
     // Publications: candidateEvidenceDetailPanel, text with values.
-    'candidateEvidenceDetailPanel.shared': 'Gemeinsam ({count})',
-    'candidateEvidenceDetailPanel.decided': '{disposition} — entschieden {decidedAt}',
-    'candidateEvidenceDetailPanel.sourceOnly': 'Nur Quelle ({count})',
-    'candidateEvidenceDetailPanel.targetOnly': 'Nur Ziel ({count})',
-    'candidateEvidenceDetailPanel.observedPlanPresentMatchesPlan': '{disposition} — beobachtet {observedAt} — Plan {planFingerprint} — vorhanden: {candidatePresent} — passt zum Plan: {candidateMatchesPlan}',
 
     // Publications: candidateLeaderboardTable, text with values.
-    'candidateLeaderboardTable.candidateS': { one: '{count} Kandidat', other: '{count} Kandidaten' },
 
     // Publications: evidenceExportComparisonRecordPairSelector, text with values.
-    'evidenceExportComparisonRecordPairSelector.decisionPair': 'Entscheidungspaar {number}',
-    'evidenceExportComparisonRecordPairSelector.observationPair': 'Beobachtungspaar {number}',
 
     // Publications: evidenceExportComparisonTable, text with values.
-    'evidenceExportComparisonTable.sourceOnly2': 'Nur Quelle ({count})',
-    'evidenceExportComparisonTable.shared2': 'Gemeinsam ({count})',
-    'evidenceExportComparisonTable.targetOnly2': 'Nur Ziel ({count})',
 
     // Publications: counts in expressions.
-    'evidenceExportComparisonRecordPairSelector.differences': { one: '{count} Unterschied', other: '{count} Unterschiede' },
     'publications.showObservationHistoryCount': 'Beobachtungsverlauf zeigen ({count})',
 
     // Publications: reconciliation components (ui/components/reconciliation/).
-    'reconciliation.unknownCandidate': 'Unbekannter Kandidat',
-    'reconciliation.claimAndSnapshot': 'Anspruch {claimId} ↔ Snapshot Nr. {snapshotIndex}',
-    'reconciliation.claimWithoutSnapshot': 'Anspruch {claimId} (kein zugehöriger Snapshot)',
-    'reconciliation.snapshotWithoutClaim': 'Snapshot Nr. {snapshotIndex} (kein zugehöriger Anspruch)',
-    'reconciliation.unknownDecisionRecord': 'Unbekannter Entscheidungsdatensatz',
-    'reconciliation.unknownObservationRecord': 'Unbekannter Beobachtungsdatensatz',
-    'reconciliation.decisionRecord': '{candidate} — {disposition} — entschieden {when}',
-    'reconciliation.observationRecord': '{candidate} — {disposition} — beobachtet {when}',
-    'reconciliation.unknownTime': 'unbekannte Zeit',
-    'reconciliation.yes': 'ja',
-    'reconciliation.no': 'nein',
-    'reconciliation.unknownPlan': 'unbekannter Plan',
-    'reconciliation.comparingPeerArchive': 'Vergleich mit einem angegebenen Peer-Archiv.',
-    'reconciliation.peerArchiveEmpty': 'Ein Peer-Archiv wurde angegeben, enthält aber keine erfassten Nachweise — jede Zahl unten bezieht sich weiterhin nur auf dieses Replikat.',
-    'reconciliation.noPeerArchive': 'Kein Peer-Archiv angegeben — jede Zahl unten bezieht sich nur auf dieses Replikat.',
 
     // Publications: labels chosen in the page's composables (ui/views/decentralizedPublications/).
     'publications.unknownContent': 'Unbekannter Inhalt',
@@ -3801,12 +3588,6 @@ export default Object.freeze({
     'publicationSort.titleDesc': 'Titel Z–A',
     'publicationSort.authorAsc': 'Autor A–Z',
     'publications.anchorCountOn': { one: '{count} Veröffentlichung auf {anchorType} verankern', other: '{count} Veröffentlichungen auf {anchorType} verankern' },
-    'reconciliation.filter.all': 'Alle',
-    'reconciliation.filter.decisions': 'Entscheidungen',
-    'reconciliation.filter.observations': 'Beobachtungen',
-    'reconciliation.filter.shared': 'Gemeinsam',
-    'reconciliation.filter.sourceOnly': 'Nur Quelle',
-    'reconciliation.filter.targetOnly': 'Nur Ziel',
 
     // Publications: reconciliation comparison states.
     'reconciliation.state.noPeer': 'Kein Peer-Archiv',

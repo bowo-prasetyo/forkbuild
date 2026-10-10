@@ -1,4 +1,4 @@
-# 12 — Archive & Leaderboards
+# 12 — Archive & Achievements
 
 <!-- languages -->
 **English** · [Deutsch](de/12-ArchiveAndLeaderboards.md) · [Español](es/12-ArchiveAndLeaderboards.md) · [Français](fr/12-ArchiveAndLeaderboards.md) · [Bahasa Indonesia](id/12-ArchiveAndLeaderboards.md) · [日本語](ja/12-ArchiveAndLeaderboards.md) · [한국어](ko/12-ArchiveAndLeaderboards.md) · [Português (Brasil)](pt-BR/12-ArchiveAndLeaderboards.md)
@@ -7,14 +7,13 @@
 > **Experimental.** Everything here may change or be removed in a later
 > version, and what it produces may not carry over. On the Publications
 > page, the **Wallet, Archive & Publisher Tools** panel is marked with an
-> **Experimental** badge; the Leaderboard pages show an **Experimental**
-> banner.
+> **Experimental** badge.
 
 The Bitcoin, Base and IPFS tools in
 [Evidence & Storage](11-EvidenceAndStorage.md) record what they observe in
 a durable archive on this device. This guide covers that archive and what's
-built on it: references between publications, achievements, publisher
-labels, and the Leaderboard pages.
+built on it: references between publications, achievements and publisher
+labels.
 
 Most of these cards are on the Publications page under **Wallet, Archive &
 Publisher Tools**, in its **Archive Tools** and **References &
@@ -162,7 +161,7 @@ links a publication to a person.
 ## Publisher Identity
 
 **Publisher Associations** lets you label publications with a publisher
-name, at your own word, for the publisher cards and leaderboard below.
+name, at your own word.
 
 A publisher identifier is a plain, self-declared label, not a verified
 identity or a login. Matching is exact: `Alice`, `alice` and `ALICE` are
@@ -179,157 +178,12 @@ three publishers. Nothing is inferred from wallets, content or names.
 Associated Publications** shows every publication for a chosen publisher,
 with content hash and when it was associated.
 
-Three cards on the [Leaderboard](#leaderboard-hub) page build on these
-associations, each with its own **Choose A Publisher** dropdown:
+## Retired: leaderboards and reconciliation
 
-| Card | Shows |
-|---|---|
-| **Publisher Achievement Profile** | Every achievement earned by any publication the publisher claims, and which publication earned it. |
-| **Publisher Achievement Badges** | The same, limited to achievements with a badge, each linking back to its lifecycle on the Publications page. |
-| **Publisher Achievement Statistics** | Counts of associated publications, achievements, achievement kinds, badges and badge kinds, publications per chain, and achievements per kind. |
-
-With no associations yet, each card says so and points to Publisher
-Associations. They report what a publisher *claims*, not who controls a
-publication, and none of them ranks anyone.
-
-## Leaderboard Hub
-
-The **Leaderboard** page (`/leaderboard`) links the pages below, plus the
-three publisher cards above. It isn't in the top bar: open it from the
-**Leaderboard** link under the **Publication Archive** card on the
-Publications page.
-
-### Publisher Performance Leaderboard
-
-`/publisher-leaderboard` ranks publishers by what this device has recorded:
-**Rank**, **Publisher**, **Achievements**, **Achievement Kinds** and
-**Publications**, computed fresh each time the page opens and never saved.
-A publisher appears once you've associated a publication with it. Names are
-your own labels, not verified identities.
-
-### Publisher Snapshot Claim
-
-`/publisher-snapshot-claim` signs a claim about your current leaderboard
-snapshot, so a peer can compare against it. You need to be signed in.
-
-1. **Generate & Sign Claim** — computes your snapshot and signs a claim
-   about it. Shows the signer and the evidence, policy and snapshot
-   fingerprints. **Start Over** discards it.
-2. **Export Claim** — shows the claim as JSON with a **Download Claim**
-   link, to paste into a peer's
-   [Reconciliation Workspace](#reconciliation-workspace) or send as a file.
-
-### Reconciliation Workspace
-
-`/reconciliation-workspace`: paste a peer's exported claim into **Peer
-Evidence JSON** and click **Reconcile**. It compares the claim with your
-archive and, when that finds a reconciliation candidate, records a decision
-and a revalidation observation in your archive and offers **View in
-Leaderboard**. If there's nothing to reconcile, it says why. **Clear
-Result** dismisses the result.
-
-### Reconciliation Candidate Leaderboard
-
-`/reconciliation-leaderboard` is read-only. It shows, for each
-reconciliation candidate, the evidence your archive holds, optionally
-compared with a peer's archive.
-
-A **candidate** is a place where an external-evidence claim and a Local
-Snapshot record for the same content were compared:
-
-| Candidate label | Meaning |
-|---|---|
-| **Claim *X* ↔ Snapshot #*N*** | A claim and a snapshot that were compared and diverged. |
-| **Claim *X* (no corresponding Snapshot)** | A claim with no snapshot to compare. |
-| **Snapshot #*N* (no corresponding Claim)** | A snapshot with no claim to compare. |
-
-Candidates come from the Reconciliation Workspace. Until you've reconciled
-a peer claim there, the page shows "No reconciliation candidates to
-display".
-
-**Columns.** **Decision Evidence** (a recorded choice of which side was
-trusted) and **Observation Evidence** (a later recheck of that decision)
-each have three counts: **Shared** (both archives have it), **Source-only**
-(only yours) and **Target-only** (only the peer's). Rows appear in the
-order they were found, not by how much evidence they have; this isn't a
-ranking.
-
-**Comparing with a peer.** Paste a peer's archive export into **Peer
-Archive** and click **Use as Peer Archive**. An invalid paste is rejected.
-Without a peer archive, everything counts as Source-only. A line above the
-table says which case you're in:
-
-| Banner | Meaning |
-|---|---|
-| *No peer archive supplied — every count below reflects this replica alone.* | No peer archive yet. |
-| *A peer archive was supplied, but it has no evidence recorded — every count below still reflects this replica alone.* | A real archive, but empty. |
-| *Comparing against a supplied peer archive.* | A real comparison. |
-
-**Inspect Evidence** (then **Hide Evidence**) on a row lists the decision and
-observation records behind its counts, split into Shared, Source-only and
-Target-only. Each observation shows the fingerprint of the plan it was
-checked against (such as `plan abcdef012345…`) and whether the candidate was
-**present** and **matches plan**, as recorded.
-Similar-looking records stay separate.
-
-**Evidence Filter.** Two dropdowns narrow what's shown: **Evidence type**
-(**All**, **Decisions**, **Observations**) and **Replica relation** (**All**,
-**Shared**, **Source-only**, **Target-only**). A row stays if it has
-evidence of that type in that relation. With **Replica relation** on **All**,
-nothing is filtered; with **Evidence type** on **All**, a row matches if
-either type has the chosen relation. The filter also narrows each row's
-Inspect Evidence list. It only hides rows and records; the counts on a row
-never change.
-
-**Evidence Export.** **Export Evidence** produces a JSON document of exactly
-what the filter shows, recording the comparison state and filter used, with
-a **Download Evidence Export** link
-(`reconciliation-candidate-leaderboard-evidence-export.json`). Nothing is
-uploaded. **Compare Exported Evidence** opens
-[Evidence Export Comparison](#evidence-export-comparison).
-
-**Import Evidence Export.** Paste an export (yours or a peer's) and click
-**Import Evidence** to see its comparison state and candidate, decision and
-observation counts. An invalid paste is rejected and the previous summary
-kept. **Clear Imported Evidence** dismisses it. This doesn't affect the
-table above.
-
-The page reads your archive once when it opens; reopen it to see new
-records. The peer archive, filter, open rows and imported summary aren't
-saved.
-
-## Evidence Export Comparison
-
-`/evidence-export-comparison` compares two evidence exports with each other
-— for example last week's and today's, or yours and a peer's. It doesn't
-read your archive or affect the leaderboard.
-
-Paste the two documents into **Source Evidence Export** and **Target
-Evidence Export** and click **Compare Evidence**. An invalid side is
-rejected on its own; the other side is kept. **Clear Comparison** empties
-the page.
-
-- **Comparison State and Filter** show each document's recorded comparison
-  state and filter, and whether they're the same.
-- Three tables — **candidate presence**, **decision evidence** and
-  **observation evidence** — each count Source-only, Shared and
-  Target-only, and are never combined.
-- **Inspect records** (then **Hide records**) lists the records behind a
-  table's counts. On a decision or observation record, **Inspect
-  identity** shows the fields that identify it:
-
-| Record | Identity fields |
-|---|---|
-| Decision | `decided`, `candidate`, `decision`, `decidedAt` |
-| Observation | `candidate`, `decision`, `planIdentity`, `candidatePresent`, `candidateType`, `candidateMatchesPlan`, `observedAt` |
-
-**Explicit Record Pairing.** To compare two particular records, pick a
-source and a target record (from any partition) for decisions or
-observations and click **Add Pair**; **Remove** takes a pair out. Nothing is
-paired automatically, and the same pair can be added twice. Under **Paired
-Record Differences**, each **Decision Pair *N*** or **Observation Pair *N***
-shows how many identity fields differ (or **No differences**); **Inspect
-differences** names them, or says **Identical on every named field**. It
-never says which side is right.
-
-Nothing on this page is saved or sent anywhere; a reload clears it.
+Earlier versions had Leaderboard pages: a publisher leaderboard, signed
+publisher snapshot claims, a reconciliation workspace and leaderboard, and
+evidence export comparison. ForkBuild doesn't rank people or keep scores
+([Pillars](../Pillars.md#what-we-are-not-making)), so they were removed. An
+old link to one of those pages opens Home. An archive saved while they
+existed still loads and imports, with all its other records; the leaderboard
+claims and reconciliation decisions it held are dropped.

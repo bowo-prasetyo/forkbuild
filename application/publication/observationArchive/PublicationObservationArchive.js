@@ -12,10 +12,6 @@ import { PublicationReferenceRecord } from '../PublicationReferenceRecord.js';
 import { appendPublicationReferenceRecordHistoryEntry } from '../PublicationReferenceRecordHistory.js';
 import { PublisherPublicationAssociationRecord } from '../../publisher/PublisherPublicationAssociationRecord.js';
 import { appendPublisherPublicationAssociationRecordHistoryEntry } from '../../publisher/PublisherPublicationAssociationRecordHistory.js';
-import { LeaderboardClaimRecord } from '../../leaderboard/claim/Record.js';
-import { appendLeaderboardClaimHistoryEntry } from '../../leaderboard/claim/History.js';
-import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../../claimSnapshotReconciliation/decision/History.js';
-import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../../claimSnapshotReconciliation/revalidationObservation/History.js';
 import {
     PublicationObservationArchiveProvenanceOrigin,
     isValidPublicationObservationArchiveProvenanceOrigin
@@ -43,17 +39,20 @@ const SCHEMA_VERSION = 10;
 //   bitcoinContentProofObservationsByAnchorId, bitcoinAnchorPublicationRecords
 //   baseTransactionInclusionObservationsByTransactionHash, baseAnchorPublicationRecords
 //   publicationReferenceRecords, publisherPublicationAssociationRecords
-//   leaderboardClaimRecords, reconciliationDecisionRecords,
-//   revalidationObservationRecords
+//
+// Schema 10 also had leaderboard claim, reconciliation decision and
+// revalidation observation collections, for the leaderboard and
+// reconciliation pages, which were retired. They are still written, always
+// empty, so an older copy of ForkBuild can read this archive, and whatever an
+// older archive holds in them is read and dropped (LEGACY_FIELDS below).
 //
 // The IPFS and Bitcoin collections are shaped to feed
 // PublicationObservationTimelineView directly (Base is not in the timeline).
 // Identity is always explicit and caller-supplied: an IPFS observation names
 // this archive's own recordIndex, a Bitcoin fact its anchorId, a Base
 // observation its txid; nothing is inferred from a shared contentHash.
-// Identity records, observations, relationships, claim receipts, decisions and
-// revalidation observations each have their own count; none is folded into
-// another.
+// Identity records, observations and relationships each have their own count;
+// none is folded into another.
 //
 // No capabilities or credentials, ever: every field is plain, already-observed,
 // JSON-serializable data, which is what makes persisting it verbatim safe.
@@ -91,12 +90,6 @@ export class PublicationObservationArchive {
         publicationReferenceRecordProvenance = [],
         publisherPublicationAssociationRecords = [],
         publisherPublicationAssociationRecordProvenance = [],
-        leaderboardClaimRecords = [],
-        leaderboardClaimRecordProvenance = [],
-        reconciliationDecisionRecords = [],
-        reconciliationDecisionRecordProvenance = [],
-        revalidationObservationRecords = [],
-        revalidationObservationRecordProvenance = [],
         archiveImportEvents = []
     } = {}) {
         this._ipfsPublicationRecords = Object.freeze([...ipfsPublicationRecords]);
@@ -143,12 +136,6 @@ export class PublicationObservationArchive {
         this._publicationReferenceRecordProvenance = Object.freeze([...publicationReferenceRecordProvenance]);
         this._publisherPublicationAssociationRecords = Object.freeze([...publisherPublicationAssociationRecords]);
         this._publisherPublicationAssociationRecordProvenance = Object.freeze([...publisherPublicationAssociationRecordProvenance]);
-        this._leaderboardClaimRecords = Object.freeze([...leaderboardClaimRecords]);
-        this._leaderboardClaimRecordProvenance = Object.freeze([...leaderboardClaimRecordProvenance]);
-        this._reconciliationDecisionRecords = Object.freeze([...reconciliationDecisionRecords]);
-        this._reconciliationDecisionRecordProvenance = Object.freeze([...reconciliationDecisionRecordProvenance]);
-        this._revalidationObservationRecords = Object.freeze([...revalidationObservationRecords]);
-        this._revalidationObservationRecordProvenance = Object.freeze([...revalidationObservationRecordProvenance]);
         this._archiveImportEvents = Object.freeze([...archiveImportEvents]);
         Object.freeze(this);
     }
@@ -173,12 +160,6 @@ export class PublicationObservationArchive {
     get publicationReferenceRecordProvenance() { return this._publicationReferenceRecordProvenance; }
     get publisherPublicationAssociationRecords() { return this._publisherPublicationAssociationRecords; }
     get publisherPublicationAssociationRecordProvenance() { return this._publisherPublicationAssociationRecordProvenance; }
-    get leaderboardClaimRecords() { return this._leaderboardClaimRecords; }
-    get leaderboardClaimRecordProvenance() { return this._leaderboardClaimRecordProvenance; }
-    get reconciliationDecisionRecords() { return this._reconciliationDecisionRecords; }
-    get reconciliationDecisionRecordProvenance() { return this._reconciliationDecisionRecordProvenance; }
-    get revalidationObservationRecords() { return this._revalidationObservationRecords; }
-    get revalidationObservationRecordProvenance() { return this._revalidationObservationRecordProvenance; }
     get archiveImportEvents() { return this._archiveImportEvents; }
 
     // Exposed so the export module can record it without duplicating the number.
@@ -204,21 +185,6 @@ export class PublicationObservationArchive {
 
     get publisherPublicationAssociationRecordCount() {
         return this._publisherPublicationAssociationRecords.length;
-    }
-
-    // Counts receipts: the same claim received twice counts twice.
-    get leaderboardClaimRecordCount() {
-        return this._leaderboardClaimRecords.length;
-    }
-
-    // Counts recorded decisions: the same decision recorded twice counts twice.
-    get reconciliationDecisionRecordCount() {
-        return this._reconciliationDecisionRecords.length;
-    }
-
-    // Counts recorded observations, duplicates included.
-    get revalidationObservationRecordCount() {
-        return this._revalidationObservationRecords.length;
     }
 
     // Every IPFS verification, Bitcoin confirmation and content-proof check, and
@@ -254,10 +220,7 @@ export class PublicationObservationArchive {
             + countOriginMatchesByKey(this._baseTransactionInclusionObservationProvenanceByTransactionHash, origin)
             + countOriginMatches(this._baseAnchorPublicationRecordProvenance, origin)
             + countOriginMatches(this._publicationReferenceRecordProvenance, origin)
-            + countOriginMatches(this._publisherPublicationAssociationRecordProvenance, origin)
-            + countOriginMatches(this._leaderboardClaimRecordProvenance, origin)
-            + countOriginMatches(this._reconciliationDecisionRecordProvenance, origin)
-            + countOriginMatches(this._revalidationObservationRecordProvenance, origin);
+            + countOriginMatches(this._publisherPublicationAssociationRecordProvenance, origin);
     }
 
     _fields() {
@@ -282,12 +245,6 @@ export class PublicationObservationArchive {
             publicationReferenceRecordProvenance: this._publicationReferenceRecordProvenance,
             publisherPublicationAssociationRecords: this._publisherPublicationAssociationRecords,
             publisherPublicationAssociationRecordProvenance: this._publisherPublicationAssociationRecordProvenance,
-            leaderboardClaimRecords: this._leaderboardClaimRecords,
-            leaderboardClaimRecordProvenance: this._leaderboardClaimRecordProvenance,
-            reconciliationDecisionRecords: this._reconciliationDecisionRecords,
-            reconciliationDecisionRecordProvenance: this._reconciliationDecisionRecordProvenance,
-            revalidationObservationRecords: this._revalidationObservationRecords,
-            revalidationObservationRecordProvenance: this._revalidationObservationRecordProvenance,
             archiveImportEvents: this._archiveImportEvents
         };
     }
@@ -431,36 +388,6 @@ export class PublicationObservationArchive {
         });
     }
 
-    appendLeaderboardClaimRecord(record, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
-        if (!(record instanceof LeaderboardClaimRecord) || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
-        return new PublicationObservationArchive({
-            ...this._fields(),
-            leaderboardClaimRecords: appendLeaderboardClaimHistoryEntry(this._leaderboardClaimRecords, record),
-            leaderboardClaimRecordProvenance: Object.freeze([...this._leaderboardClaimRecordProvenance, origin])
-        });
-    }
-
-    // The pre-check repeats the history function's own tolerance so a no-op
-    // returns `this` rather than a new instance.
-    appendReconciliationDecisionRecord(record, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
-        if (!record || typeof record !== 'object' || record.decided !== true || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
-        return new PublicationObservationArchive({
-            ...this._fields(),
-            reconciliationDecisionRecords: appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry(this._reconciliationDecisionRecords, record),
-            reconciliationDecisionRecordProvenance: Object.freeze([...this._reconciliationDecisionRecordProvenance, origin])
-        });
-    }
-
-    // Same pre-check reasoning as appendReconciliationDecisionRecord().
-    appendRevalidationObservationRecord(observation, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
-        if (!observation || typeof observation !== 'object' || observation.observed !== true || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
-        return new PublicationObservationArchive({
-            ...this._fields(),
-            revalidationObservationRecords: appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry(this._revalidationObservationRecords, observation),
-            revalidationObservationRecordProvenance: Object.freeze([...this._revalidationObservationRecordProvenance, origin])
-        });
-    }
-
     // Replaces every provenance tag with `origin`; facts and import events are
     // untouched. Only importing uses this, never fromJSON().
     withUniformProvenance(origin) {
@@ -488,10 +415,7 @@ export class PublicationObservationArchive {
             ),
             baseAnchorPublicationRecordProvenance: Object.freeze(this._baseAnchorPublicationRecordProvenance.map(() => origin)),
             publicationReferenceRecordProvenance: Object.freeze(this._publicationReferenceRecordProvenance.map(() => origin)),
-            publisherPublicationAssociationRecordProvenance: Object.freeze(this._publisherPublicationAssociationRecordProvenance.map(() => origin)),
-            leaderboardClaimRecordProvenance: Object.freeze(this._leaderboardClaimRecordProvenance.map(() => origin)),
-            reconciliationDecisionRecordProvenance: Object.freeze(this._reconciliationDecisionRecordProvenance.map(() => origin)),
-            revalidationObservationRecordProvenance: Object.freeze(this._revalidationObservationRecordProvenance.map(() => origin))
+            publisherPublicationAssociationRecordProvenance: Object.freeze(this._publisherPublicationAssociationRecordProvenance.map(() => origin))
         });
     }
 
@@ -575,12 +499,7 @@ export class PublicationObservationArchive {
             publicationReferenceRecordProvenance: [...this._publicationReferenceRecordProvenance],
             publisherPublicationAssociationRecords: this._publisherPublicationAssociationRecords.map((record) => record.toJSON()),
             publisherPublicationAssociationRecordProvenance: [...this._publisherPublicationAssociationRecordProvenance],
-            leaderboardClaimRecords: this._leaderboardClaimRecords.map((record) => record.toJSON()),
-            leaderboardClaimRecordProvenance: [...this._leaderboardClaimRecordProvenance],
-            reconciliationDecisionRecords: this._reconciliationDecisionRecords.map(serializeReconciliationDecisionRecord),
-            reconciliationDecisionRecordProvenance: [...this._reconciliationDecisionRecordProvenance],
-            revalidationObservationRecords: this._revalidationObservationRecords.map(serializeRevalidationObservationRecord),
-            revalidationObservationRecordProvenance: [...this._revalidationObservationRecordProvenance],
+            ...Object.fromEntries(LEGACY_FIELDS.map((field) => [field, []])),
             archiveImportEvents: this._archiveImportEvents.map(serializeArchiveImportEvent)
         };
     }
@@ -645,12 +564,6 @@ export class PublicationObservationArchive {
             publicationReferenceRecordProvenance: validated.publicationReferenceRecordProvenance,
             publisherPublicationAssociationRecords: validated.publisherPublicationAssociationRecords.map((record) => PublisherPublicationAssociationRecord.fromJSON(record)),
             publisherPublicationAssociationRecordProvenance: validated.publisherPublicationAssociationRecordProvenance,
-            leaderboardClaimRecords: validated.leaderboardClaimRecords.map((record) => LeaderboardClaimRecord.fromJSON(record)),
-            leaderboardClaimRecordProvenance: validated.leaderboardClaimRecordProvenance,
-            reconciliationDecisionRecords: validated.reconciliationDecisionRecords.map(deserializeReconciliationDecisionRecord),
-            reconciliationDecisionRecordProvenance: validated.reconciliationDecisionRecordProvenance,
-            revalidationObservationRecords: validated.revalidationObservationRecords.map(deserializeRevalidationObservationRecord),
-            revalidationObservationRecordProvenance: validated.revalidationObservationRecordProvenance,
             archiveImportEvents: validated.archiveImportEvents.map(deserializeArchiveImportEvent)
         });
     }
@@ -684,50 +597,6 @@ function deserializeObservation(observation) {
         ...observation,
         observedAt: new Date(observation.observedAt)
     };
-}
-
-// Decision records are plain frozen objects with ISO string timestamps, so they
-// round-trip inline.
-function serializeReconciliationDecisionRecord(record) {
-    return {
-        decided: true,
-        candidate: { ...record.candidate },
-        decision: record.decision,
-        decidedAt: record.decidedAt
-    };
-}
-
-function deserializeReconciliationDecisionRecord(record) {
-    return Object.freeze({
-        decided: true,
-        candidate: Object.freeze({ ...record.candidate }),
-        decision: record.decision,
-        decidedAt: record.decidedAt
-    });
-}
-
-function serializeRevalidationObservationRecord(record) {
-    return {
-        observed: true,
-        decision: serializeReconciliationDecisionRecord(record.decision),
-        planIdentity: { ...record.planIdentity },
-        candidatePresent: record.candidatePresent,
-        candidateType: record.candidateType,
-        candidateMatchesPlan: record.candidateMatchesPlan,
-        observedAt: record.observedAt
-    };
-}
-
-function deserializeRevalidationObservationRecord(record) {
-    return Object.freeze({
-        observed: true,
-        decision: deserializeReconciliationDecisionRecord(record.decision),
-        planIdentity: Object.freeze({ ...record.planIdentity }),
-        candidatePresent: record.candidatePresent,
-        candidateType: record.candidateType,
-        candidateMatchesPlan: record.candidateMatchesPlan,
-        observedAt: record.observedAt
-    });
 }
 
 function serializeArchiveImportEvent(event) {
@@ -766,19 +635,6 @@ const BLOCKCHAIN_PUBLICATION_IDENTITY_FIELDS = ['blockchain', 'contentHash', 'ch
 const PUBLICATION_REFERENCE_RECORD_FIELDS = ['sourcePublicationIdentity', 'referencedPublicationIdentity', 'createdAt'];
 const PUBLISHER_IDENTITY_FIELDS = ['publisherId'];
 const PUBLISHER_PUBLICATION_ASSOCIATION_RECORD_FIELDS = ['publisherIdentity', 'publicationIdentity', 'createdAt'];
-const LEADERBOARD_CLAIM_RECORD_FIELDS = ['claim', 'receivedAt', 'origin'];
-const RECONCILIATION_DECISION_RECORD_FIELDS = ['decided', 'candidate', 'decision', 'decidedAt'];
-const RECONCILIATION_DECISION_CANDIDATE_DIVERGENT_CORRESPONDENCE_FIELDS = [
-    'selected', 'type', 'claimId', 'snapshotIndex', 'evidenceFingerprintDiffers', 'policyVersionDiffers', 'snapshotFingerprintDiffers'
-];
-const RECONCILIATION_DECISION_CANDIDATE_CLAIM_WITHOUT_SNAPSHOT_FIELDS = ['selected', 'type', 'claimId'];
-const RECONCILIATION_DECISION_CANDIDATE_SNAPSHOT_WITHOUT_CLAIM_FIELDS = ['selected', 'type', 'snapshotIndex'];
-const RECONCILIATION_PLAN_IDENTITY_FIELDS = ['algorithm', 'planFingerprint', 'candidateCount'];
-const REVALIDATION_OBSERVATION_RECORD_FIELDS = [
-    'observed', 'decision', 'planIdentity', 'candidatePresent', 'candidateType', 'candidateMatchesPlan', 'observedAt'
-];
-const REVALIDATION_OBSERVATION_CANDIDATE_TYPES = ['DIVERGENT_CORRESPONDENCE', 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM'];
-
 function isValidTimestamp(value) {
     if (typeof value !== 'string') return false;
     const parsed = new Date(value);
@@ -810,8 +666,6 @@ function validateBitcoinBroadcastRecord(record) {
     return record;
 }
 
-// Exported so AchievementEvidenceExport validates these four record shapes with
-// the same strictness.
 export function validateBitcoinAnchorPublicationRecord(record) {
     if (!isPlainObject(record) || !hasOnlyKeys(record, BITCOIN_ANCHOR_PUBLICATION_RECORD_FIELDS)) return null;
     if (!BITCOIN_ANCHOR_PUBLICATION_RECORD_FIELDS.every((key) => key in record)) return null;
@@ -865,81 +719,6 @@ export function validatePublisherPublicationAssociationRecord(record) {
     if (!validatePublisherIdentityJSON(record.publisherIdentity)) return null;
     if (!validateBlockchainPublicationIdentityJSON(record.publicationIdentity)) return null;
     if (!isValidTimestamp(record.createdAt)) return null;
-    return record;
-}
-
-// Deep validation is delegated to LeaderboardClaimRecord.fromJSON().
-function validateLeaderboardClaimRecord(record) {
-    if (!isPlainObject(record) || !hasOnlyKeys(record, LEADERBOARD_CLAIM_RECORD_FIELDS)) return null;
-    if (!LEADERBOARD_CLAIM_RECORD_FIELDS.every((key) => key in record)) return null;
-    if (!LeaderboardClaimRecord.fromJSON(record)) return null;
-    return record;
-}
-
-// One of the three candidate shapes, checked inline (this file never calls the
-// reconciliation modules).
-function validateReconciliationDecisionCandidate(candidate) {
-    if (!isPlainObject(candidate) || candidate.selected !== true) return null;
-
-    if (candidate.type === 'DIVERGENT_CORRESPONDENCE') {
-        if (!hasOnlyKeys(candidate, RECONCILIATION_DECISION_CANDIDATE_DIVERGENT_CORRESPONDENCE_FIELDS)) return null;
-        if (!RECONCILIATION_DECISION_CANDIDATE_DIVERGENT_CORRESPONDENCE_FIELDS.every((key) => key in candidate)) return null;
-        if (typeof candidate.claimId !== 'string' || !candidate.claimId) return null;
-        if (!Number.isInteger(candidate.snapshotIndex)) return null;
-        if (typeof candidate.evidenceFingerprintDiffers !== 'boolean') return null;
-        if (typeof candidate.policyVersionDiffers !== 'boolean') return null;
-        if (typeof candidate.snapshotFingerprintDiffers !== 'boolean') return null;
-        return candidate;
-    }
-
-    if (candidate.type === 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT') {
-        if (!hasOnlyKeys(candidate, RECONCILIATION_DECISION_CANDIDATE_CLAIM_WITHOUT_SNAPSHOT_FIELDS)) return null;
-        if (!RECONCILIATION_DECISION_CANDIDATE_CLAIM_WITHOUT_SNAPSHOT_FIELDS.every((key) => key in candidate)) return null;
-        if (typeof candidate.claimId !== 'string' || !candidate.claimId) return null;
-        return candidate;
-    }
-
-    if (candidate.type === 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM') {
-        if (!hasOnlyKeys(candidate, RECONCILIATION_DECISION_CANDIDATE_SNAPSHOT_WITHOUT_CLAIM_FIELDS)) return null;
-        if (!RECONCILIATION_DECISION_CANDIDATE_SNAPSHOT_WITHOUT_CLAIM_FIELDS.every((key) => key in candidate)) return null;
-        if (!Number.isInteger(candidate.snapshotIndex)) return null;
-        return candidate;
-    }
-
-    return null;
-}
-
-function validateReconciliationDecisionRecord(record) {
-    if (!isPlainObject(record) || !hasOnlyKeys(record, RECONCILIATION_DECISION_RECORD_FIELDS)) return null;
-    if (!RECONCILIATION_DECISION_RECORD_FIELDS.every((key) => key in record)) return null;
-    if (record.decided !== true) return null;
-    if (record.decision !== 'OBSERVE' && record.decision !== 'DEFER') return null;
-    if (!isValidTimestamp(record.decidedAt)) return null;
-    if (!validateReconciliationDecisionCandidate(record.candidate)) return null;
-    return record;
-}
-
-// Shape only; no fingerprint is recomputed.
-function validateRevalidationPlanIdentity(value) {
-    if (!isPlainObject(value) || !hasOnlyKeys(value, RECONCILIATION_PLAN_IDENTITY_FIELDS)) return null;
-    if (!RECONCILIATION_PLAN_IDENTITY_FIELDS.every((key) => key in value)) return null;
-    if (value.algorithm !== 'SHA-256') return null;
-    if (typeof value.planFingerprint !== 'string' || !/^[0-9a-f]{64}$/.test(value.planFingerprint)) return null;
-    if (!Number.isInteger(value.candidateCount) || value.candidateCount < 0) return null;
-    return value;
-}
-
-// Shape only.
-function validateRevalidationObservationRecord(record) {
-    if (!isPlainObject(record) || !hasOnlyKeys(record, REVALIDATION_OBSERVATION_RECORD_FIELDS)) return null;
-    if (!REVALIDATION_OBSERVATION_RECORD_FIELDS.every((key) => key in record)) return null;
-    if (record.observed !== true) return null;
-    if (!validateReconciliationDecisionRecord(record.decision)) return null;
-    if (!validateRevalidationPlanIdentity(record.planIdentity)) return null;
-    if (typeof record.candidatePresent !== 'boolean') return null;
-    if (!REVALIDATION_OBSERVATION_CANDIDATE_TYPES.includes(record.candidateType)) return null;
-    if (typeof record.candidateMatchesPlan !== 'boolean') return null;
-    if (!isValidTimestamp(record.observedAt)) return null;
     return record;
 }
 
@@ -1004,6 +783,18 @@ function validateArchiveImportEvent(event) {
     return event;
 }
 
+// The retired leaderboard and reconciliation collections (see the header):
+// each must still be a list, as schema 10 has always required, and is
+// otherwise not read.
+const LEGACY_FIELDS = Object.freeze([
+    'leaderboardClaimRecords',
+    'leaderboardClaimRecordProvenance',
+    'reconciliationDecisionRecords',
+    'reconciliationDecisionRecordProvenance',
+    'revalidationObservationRecords',
+    'revalidationObservationRecordProvenance'
+]);
+
 const TOP_LEVEL_FIELDS = [
     'schemaVersion',
     'ipfsPublicationRecords',
@@ -1026,12 +817,7 @@ const TOP_LEVEL_FIELDS = [
     'publicationReferenceRecordProvenance',
     'publisherPublicationAssociationRecords',
     'publisherPublicationAssociationRecordProvenance',
-    'leaderboardClaimRecords',
-    'leaderboardClaimRecordProvenance',
-    'reconciliationDecisionRecords',
-    'reconciliationDecisionRecordProvenance',
-    'revalidationObservationRecords',
-    'revalidationObservationRecordProvenance',
+    ...LEGACY_FIELDS,
     'archiveImportEvents'
 ];
 
@@ -1106,20 +892,7 @@ function validateArchiveJSON(json) {
     const publisherPublicationAssociationRecordProvenance = validateProvenanceArray(json.publisherPublicationAssociationRecordProvenance, publisherPublicationAssociationRecords.length);
     if (!publisherPublicationAssociationRecordProvenance) return null;
 
-    const leaderboardClaimRecords = validateArray(json.leaderboardClaimRecords, validateLeaderboardClaimRecord);
-    if (!leaderboardClaimRecords) return null;
-    const leaderboardClaimRecordProvenance = validateProvenanceArray(json.leaderboardClaimRecordProvenance, leaderboardClaimRecords.length);
-    if (!leaderboardClaimRecordProvenance) return null;
-
-    const reconciliationDecisionRecords = validateArray(json.reconciliationDecisionRecords, validateReconciliationDecisionRecord);
-    if (!reconciliationDecisionRecords) return null;
-    const reconciliationDecisionRecordProvenance = validateProvenanceArray(json.reconciliationDecisionRecordProvenance, reconciliationDecisionRecords.length);
-    if (!reconciliationDecisionRecordProvenance) return null;
-
-    const revalidationObservationRecords = validateArray(json.revalidationObservationRecords, validateRevalidationObservationRecord);
-    if (!revalidationObservationRecords) return null;
-    const revalidationObservationRecordProvenance = validateProvenanceArray(json.revalidationObservationRecordProvenance, revalidationObservationRecords.length);
-    if (!revalidationObservationRecordProvenance) return null;
+    if (!LEGACY_FIELDS.every((field) => Array.isArray(json[field]))) return null;
 
     const archiveImportEvents = validateArray(json.archiveImportEvents, validateArchiveImportEvent);
     if (!archiveImportEvents) return null;
@@ -1145,12 +918,6 @@ function validateArchiveJSON(json) {
         publicationReferenceRecordProvenance,
         publisherPublicationAssociationRecords,
         publisherPublicationAssociationRecordProvenance,
-        leaderboardClaimRecords,
-        leaderboardClaimRecordProvenance,
-        reconciliationDecisionRecords,
-        reconciliationDecisionRecordProvenance,
-        revalidationObservationRecords,
-        revalidationObservationRecordProvenance,
         archiveImportEvents
     };
 }

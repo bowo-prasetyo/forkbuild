@@ -57,15 +57,12 @@
 //
 // TWO KINDS, DELIBERATELY NOT A THIRD. `WorldEncounterKind.PUBLICATION`
 // and `WorldEncounterKind.AVATAR` are the only two kinds this milestone
-// names. `core/PublisherLeaderboardSnapshotClaim.js` is deliberately NOT
-// a third kind here: a claim has no `publicationId` and no world
-// position — it names an evidence/policy/snapshot fingerprint, not a
-// place — and associating a signing identity's claim with a particular
-// placed publication or a particular live avatar is a relationship this
-// codebase has never established anywhere. Inventing that link here,
-// silently, would repeat exactly the mistake that file's own header spent
-// a full paragraph forbidding for a different pair of concepts ("DO NOT
-// USE PublisherIdentityRecord AS THE SIGNER"). If a future milestone wants
+// names. A signed claim is deliberately NOT a third kind here: a claim has
+// no `publicationId` and no world position, and associating a signing
+// identity's claim with a particular placed publication or a particular
+// live avatar is a relationship this codebase has never established
+// anywhere. Inventing that link here, silently, would be a guess. If a
+// future milestone wants
 // claims to be encounterable, it can say so explicitly; this one does not
 // guess.
 //

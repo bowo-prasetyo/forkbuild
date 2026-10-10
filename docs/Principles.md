@@ -29,7 +29,7 @@ that no longer apply are listed at the end of their theme file under
 | [Places, landmarks and naming](principles/places.md) | 19 |
 | [Decentralized publication, content and replicas](principles/publication.md) | 52 |
 | [External anchoring and chain transactions](principles/anchoring.md) | 67 |
-| [Achievements, rankings and reconciliation](principles/achievements.md) | 21 |
+| [Achievements and credit](principles/achievements.md) | 7 (and 14 retired) |
 | [Notifications](principles/notifications.md) | 10 |
 | [Distribution, settings and wallets](principles/distribution.md) | 5 |
 | [Vehicles, inventory, animals and residents](principles/vehicles.md) | 6 |

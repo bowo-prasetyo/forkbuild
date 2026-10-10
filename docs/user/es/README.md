@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: b2d25842ce536f07 -->
+<!-- translation-of: docs/user/README.md source-hash: 3b535dc98d81e02d -->
 # Documentación para usuarios de ForkBuild
 
 <!-- languages -->
@@ -60,10 +60,9 @@ de la carpeta [docs/](../..) de nivel superior (en inglés).
     los flujos de billetera de Bitcoin y Base, el pinning remoto de IPFS,
     Steem y Blurt. [Distribuir su trabajo](Distribution.md) muestra cómo
     encaja todo esto.
-12. **[Archivo y clasificaciones](12-ArchiveAndLeaderboards.md)**:
+12. **[Archivo y logros](12-ArchiveAndLeaderboards.md)**:
     *experimental*. El archivo de observaciones, las referencias entre
-    publicaciones, los logros, las etiquetas de editor y las páginas de
-    Clasificación.
+    publicaciones, los logros y las etiquetas de editor.
 13. **[Sus datos](13-YourData.md)**: hacer una copia de seguridad de todo
     lo que tiene este navegador en un solo archivo cifrado y restaurarla,
     las exportaciones más pequeñas y dónde registró este dispositivo la

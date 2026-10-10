@@ -2249,54 +2249,12 @@ export default Object.freeze({
     'worldCard.continueExploring': '探索を続ける',
 
     // Publications: candidateEvidenceDetailPanel.
-    'candidateEvidenceDetailPanel.decisionEvidence': '判定の証拠',
-    'candidateEvidenceDetailPanel.none': 'なし',
-    'candidateEvidenceDetailPanel.observationEvidence': '観測の証拠',
 
     // Publications: candidateLeaderboardTable.
-    'candidateLeaderboardTable.noReconciliationCandidatesToDisplay': '表示する照合の候補はありません。',
-    'candidateLeaderboardTable.candidate': '候補',
-    'candidateLeaderboardTable.decisionEvidence': '判定の証拠',
-    'candidateLeaderboardTable.observationEvidence': '観測の証拠',
-    'candidateLeaderboardTable.shared': '共通',
-    'candidateLeaderboardTable.sourceOnly': '比較元のみ',
-    'candidateLeaderboardTable.targetOnly': '比較先のみ',
 
     // Publications: evidenceExportComparisonRecordPairSelector.
-    'evidenceExportComparisonRecordPairSelector.explicitRecordPairing': '記録の明示的なペアリング',
-    'evidenceExportComparisonRecordPairSelector.nothingHereDecidesWhichRecords': 'ここではどの記録が対応するかを決めません — どちらのエクスポート、どちらの区分からでも、比較元の記録と比較先の記録を自分で選び、明示的なペアとして追加してください。',
-    'evidenceExportComparisonRecordPairSelector.decisionEvidence': '判定の証拠',
-    'evidenceExportComparisonRecordPairSelector.sourceRecord': '比較元の記録',
-    'evidenceExportComparisonRecordPairSelector.selectASourceRecord': '比較元の記録を選択…',
-    'evidenceExportComparisonRecordPairSelector.targetRecord': '比較先の記録',
-    'evidenceExportComparisonRecordPairSelector.selectATargetRecord': '比較先の記録を選択…',
-    'evidenceExportComparisonRecordPairSelector.addPair': 'ペアを追加',
-    'evidenceExportComparisonRecordPairSelector.remove': '削除',
-    'evidenceExportComparisonRecordPairSelector.noDecisionPairsSelectedYet': '判定のペアはまだ選択されていません。',
-    'evidenceExportComparisonRecordPairSelector.observationEvidence': '観測の証拠',
-    'evidenceExportComparisonRecordPairSelector.noObservationPairsSelectedYet': '観測のペアはまだ選択されていません。',
-    'evidenceExportComparisonRecordPairSelector.pairedRecordDifferences': 'ペアにした記録の違い',
-    'evidenceExportComparisonRecordPairSelector.noExplicitPairsAddedYet': 'どちら側にも、明示的なペアはまだ追加されていません。',
-    'evidenceExportComparisonRecordPairSelector.decisionPairs': '判定のペア',
-    'evidenceExportComparisonRecordPairSelector.source': '比較元:',
-    'evidenceExportComparisonRecordPairSelector.target': '比較先:',
-    'evidenceExportComparisonRecordPairSelector.identicalOnEveryNamedField': '名前の付いたすべてのフィールドが同一です。',
-    'evidenceExportComparisonRecordPairSelector.observationPairs': '観測のペア',
 
     // Publications: evidenceExportComparisonTable.
-    'evidenceExportComparisonTable.comparisonState': '比較の状態',
-    'evidenceExportComparisonTable.source': '比較元',
-    'evidenceExportComparisonTable.target': '比較先',
-    'evidenceExportComparisonTable.same': '同一',
-    'evidenceExportComparisonTable.filter': '絞り込み',
-    'evidenceExportComparisonTable.noCandidatesDecisionEvidenceOr': 'どちらのエクスポートにも、候補、判定の証拠、観測の証拠はありません。',
-    'evidenceExportComparisonTable.candidatePresence': '候補の有無',
-    'evidenceExportComparisonTable.sourceOnly': '比較元のみ',
-    'evidenceExportComparisonTable.shared': '共通',
-    'evidenceExportComparisonTable.targetOnly': '比較先のみ',
-    'evidenceExportComparisonTable.none': 'なし',
-    'evidenceExportComparisonTable.decisionEvidence': '判定の証拠',
-    'evidenceExportComparisonTable.observationEvidence': '観測の証拠',
 
     // Publications: authorView.
     'authorView.originalWorksForks': 'オリジナル作品とフォーク',
@@ -2516,8 +2474,6 @@ export default Object.freeze({
     'publications.exportImport': 'エクスポート / インポート',
     'publications.aPortableCopyOfThe': '上に記録された事実の持ち運び可能なコピーです — 公開IDと観測のみで、ウォレットの接続、署名機能、秘密鍵、ピン留めサービスの認証情報は含みません。エクスポート自体はネットワーク操作を行いません。インポートは現在のアーカイブを完全に「置き換え」ます — 統合されることはありません。',
     'publications.exportArchive': 'アーカイブをエクスポート',
-    'publications.reconcilingThisArchiveAgainstA': 'このアーカイブをピアのものと照合すること、自分の署名付きリーダーボードのスナップショットの主張を作成・エクスポートすること、記録された実績で公開者のランキングを見ることは、すべて{leaderboard}ページで行います。',
-    'publications.leaderboard': 'リーダーボード',
     'publications.exportedArchive': 'エクスポートしたアーカイブ',
     'publications.downloadArchiveExport': 'アーカイブのエクスポートをダウンロード',
     'publications.importArchive': 'アーカイブをインポート',
@@ -2806,70 +2762,10 @@ export default Object.freeze({
     'challenge.shareText': '{title} — ForkBuild「{theme}」チャレンジへの応募作品 #{tag}',
 
     // Publications: leaderboardHubView.
-    'leaderboardHubView.leaderboard': 'リーダーボード',
-    'leaderboardHubView.reconciliationPublisherSnapshotClaimsAnd': '照合、公開者のスナップショットの主張、公開者の実績 — 公開物ページからたどれるリーダーボード関連のすべての作業を、1か所にまとめています。',
-    'leaderboardHubView.reconciliationCandidateLeaderboard': '照合候補のリーダーボード',
-    'leaderboardHubView.compareThisArchiveSDecision': 'このアーカイブの判定と観測の証拠を、ピアがエクスポートしたアーカイブと候補ごとに比較します。',
-    'leaderboardHubView.reconciliationWorkspace': '照合ワークスペース',
-    'leaderboardHubView.reconcileThisArchiveAgainstA': 'このアーカイブを、ピアの1つの証拠と明示的に照合します。',
-    'leaderboardHubView.publisherSnapshotClaim': '公開者のスナップショットの主張',
-    'leaderboardHubView.authorAndExportYourOwn': '自分の署名付きリーダーボードのスナップショットの主張を作成してエクスポートします — ピアのワークスペースが必要とする証拠です。',
-    'leaderboardHubView.publisherPerformanceLeaderboard': '公開者の実績リーダーボード',
-    'leaderboardHubView.seePublishersRankedByTheir': '記録された実績と公開をもとに、このレプリカ自身のアーカイブだけから毎回計算した公開者のランキングを見ます。',
-    'leaderboardHubView.publisherAchievementProfile': '公開者の実績プロフィール',
-    'leaderboardHubView.persistedLocally': 'ローカルに保存',
-    'leaderboardHubView.aPublisherSOwnAchievements': 'ある公開者が明示的に主張したすべての公開にわたって集計した、その公開者自身の実績です — 共通のコンテンツハッシュやウォレットから推測されることはなく、スコアやランキング、リーダーボードの項目でもありません。',
-    'leaderboardHubView.chooseAPublisher': '公開者を選択',
-    'leaderboardHubView.noPublisherHasBeenAssociated': 'まだどの公開者も何にも関連付けられていません — まず{publications}ページで記録してください。',
-    'leaderboardHubView.publications': '公開物',
-    'leaderboardHubView.publisher': '公開者',
-    'leaderboardHubView.chooseAPublisher2': '公開者を選択…',
-    'leaderboardHubView.associatedPublications': '関連付けられた公開',
-    'leaderboardHubView.achievementsEarned': '獲得した実績',
-    'leaderboardHubView.distinctAchievementKinds': '実績の種類数',
-    'leaderboardHubView.noneOfThisPublisherS': 'この公開者に関連付けられた公開は、まだどれも実績を獲得していません。',
-    'leaderboardHubView.theseAchievementsBelongToThe': 'これらの実績は、この公開者が明示的に主張した公開のものです — この公開者がそれらを管理・所有している、またはその背後にいる人であるという証明ではありません。',
-    'leaderboardHubView.publisherAchievementBadges': '公開者の実績バッジ',
-    'leaderboardHubView.badgesEarned': '獲得したバッジ',
-    'leaderboardHubView.distinctBadgeKinds': 'バッジの種類数',
-    'leaderboardHubView.noneOfThisPublisherS2': 'この公開者に関連付けられた公開は、まだどれもバッジで表示される実績を獲得していません。',
-    'leaderboardHubView.sourcePublication': '元の公開',
-    'leaderboardHubView.blockchain': 'ブロックチェーン',
-    'leaderboardHubView.contentHash': 'コンテンツハッシュ',
-    'leaderboardHubView.chainReference': 'チェーン上の参照',
-    'leaderboardHubView.created': '作成日時',
-    'leaderboardHubView.thisBadgeIsAPresentation': 'このバッジは、この公開者が明示的に主張した公開がすでに獲得した1つの実績を表示したものです — 新しい実績ではなく、スコアやランキングでもありません。',
-    'leaderboardHubView.viewPublicationOnPublicationsPage': '公開物ページで公開を見る',
-    'leaderboardHubView.theseBadgesPresentAchievementsAlready': 'これらのバッジは、この公開者が明示的に主張した公開がすでに獲得した実績を表示したものです — この公開者がそれらを管理・所有している、またはその背後にいる人であるという証明ではありません。',
-    'leaderboardHubView.publisherAchievementStatistics': '公開者の実績の統計',
-    'leaderboardHubView.measurableFactsAboutAPublisher': '公開者に明示的に関連付けられた公開と、そこから導かれた実績についての測定可能な事実です — それ自体はスコア、ランキング、レベル、リーダーボードの項目ではありません。上の「公開者の実績リーダーボード」が公開者を順位付けするのに使う事実と同じものです。',
-    'leaderboardHubView.theseArePlainCountsOf': 'これはすでに獲得した事実の単純な数です — スコア、ランキング、レベル、階級、リーダーボードの項目ではなく、この公開者が上で数えた公開を管理・所有している、またはその背後にいる人であるという証明でもありません。',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView.
-    'publisherLeaderboardSnapshotClaimAuthoringView.publisherSnapshotClaim': '公開者のスナップショットの主張',
-    'publisherLeaderboardSnapshotClaimAuthoringView.signInToAnIdentity': '主張を生成する前にアイデンティティにサインインしてください — {identities}。',
-    'publisherLeaderboardSnapshotClaimAuthoringView.myIdentities': 'マイアイデンティティ',
-    'publisherLeaderboardSnapshotClaimAuthoringView.snapshotClaim': 'スナップショットの主張',
-    'publisherLeaderboardSnapshotClaimAuthoringView.generatingComputesThisReplicaS': '生成すると、このレプリカ自身の現在のリーダーボードのスナップショットを、記録された証拠から今この場で計算し直し、「まさにその」スナップショットについての主張に、現在サインインしているあなたのアイデンティティで署名します。',
-    'publisherLeaderboardSnapshotClaimAuthoringView.generateSignClaim': '主張を生成して署名',
-    'publisherLeaderboardSnapshotClaimAuthoringView.startOver': 'やり直す',
-    'publisherLeaderboardSnapshotClaimAuthoringView.claimCreated': '主張を作成しました',
-    'publisherLeaderboardSnapshotClaimAuthoringView.evidenceFingerprint': '証拠のフィンガープリント',
-    'publisherLeaderboardSnapshotClaimAuthoringView.policyVersion': 'ポリシーのバージョン',
-    'publisherLeaderboardSnapshotClaimAuthoringView.snapshotFingerprint': 'スナップショットのフィンガープリント',
-    'publisherLeaderboardSnapshotClaimAuthoringView.exportClaim': '主張をエクスポート',
-    'publisherLeaderboardSnapshotClaimAuthoringView.exportedClaim': 'エクスポートした主張',
-    'publisherLeaderboardSnapshotClaimAuthoringView.downloadClaim': '主張をダウンロード',
 
     // Publications: publisherPerformanceLeaderboardView.
-    'publisherPerformanceLeaderboardView.publisherPerformanceLeaderboard': '公開者の実績リーダーボード',
-    'publisherPerformanceLeaderboardView.publishersRankedByTheirOwn': '記録された実績と公開をもとに、ページを読み込むたびにこのレプリカ自身のアーカイブから計算した公開者のランキングです。これは既存の「公開者ランキングポリシー」の結果を表示したもので、別のランキングの仕組みではありません。ここに表示されるものは何も保存されません。',
-    'publisherPerformanceLeaderboardView.noPublishersToRankYet': 'まだ順位付けする公開者がいません — このレプリカのアーカイブには、公開を明示的に関連付けた公開者がいません。',
-    'publisherPerformanceLeaderboardView.rank': '順位',
-    'publisherPerformanceLeaderboardView.publisher': '公開者',
-    'publisherPerformanceLeaderboardView.achievements': '実績',
-    'publisherPerformanceLeaderboardView.achievementKinds': '実績の種類',
-    'publisherPerformanceLeaderboardView.publications': '公開',
 
     // Publications: recentWorldsView.
     'recentWorldsView.myWorlds': 'マイワールド',
@@ -2878,62 +2774,10 @@ export default Object.freeze({
     'recentWorldsView.browseTheRepository': 'リポジトリを見る',
 
     // Publications: reconciliationCandidateLeaderboardEvidenceExportComparisonView.
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteASourceEvidenceExport': '比較元の証拠エクスポートのJSONを貼り付け',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.pasteATargetEvidenceExport': '比較先の証拠エクスポートのJSONを貼り付け',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.evidenceExportComparison': '証拠エクスポートの比較',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareTwoPreviouslyExportedEvidence': '以前にエクスポートした2つの証拠レポートを比較します — 先週のレポートと今日のレポート、あるいは自分がエクスポートしたものとピアから送られてきたもの、などです。どちらのレプリカのライブのアーカイブも読まず、照合候補のリーダーボードに統合したり、置き換えたり、再計算したりすることもありません — 2つの別々の持ち運び可能なドキュメントを比較するだけです。',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExport': '比較元の証拠エクスポート',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.sourceEvidenceExportJson': '比較元の証拠エクスポートのJSON',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid': 'これは有効な証拠エクスポートのドキュメントではありません — 比較元は更新されませんでした。',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExport': '比較先の証拠エクスポート',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.targetEvidenceExportJson': '比較先の証拠エクスポートのJSON',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.thisIsNotAValid2': 'これは有効な証拠エクスポートのドキュメントではありません — 比較先は更新されませんでした。',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.compareEvidence': '証拠を比較',
-    'reconciliationCandidateLeaderboardEvidenceExportComparisonView.clearComparison': '比較をクリア',
 
     // Publications: reconciliationCandidateLeaderboardView.
-    'reconciliationCandidateLeaderboardView.pasteAPeerReplicaS': 'ピアのレプリカがエクスポートしたアーカイブのJSONを貼り付け',
-    'reconciliationCandidateLeaderboardView.pasteAnExportedEvidenceDocument': 'エクスポートした証拠ドキュメントのJSONを貼り付け',
-    'reconciliationCandidateLeaderboardView.reconciliationCandidateLeaderboard': '照合候補のリーダーボード',
-    'reconciliationCandidateLeaderboardView.decisionAndObservationEvidenceThis': 'このレプリカが各照合候補について記録した判定と観測の証拠を、下で指定したピアのアーカイブと明示的に比較したものです。ここではどちらのアーカイブも統合、置き換え、照合しません — これは比較であり、照合ではありません。',
-    'reconciliationCandidateLeaderboardView.peerArchive': 'ピアのアーカイブ',
-    'reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied': '明示的に指定したピアのアーカイブと比較していますが、そのアーカイブにはまだ判定や観測の記録がないため、下の数はすべて「比較元のみ」のままです。これは実際に指定されたピアで、ピアなしの既定値ではありません。',
-    'reconciliationCandidateLeaderboardView.comparingAgainstAnExplicitlySupplied2': '明示的に指定したピアのアーカイブと比較しています。',
-    'reconciliationCandidateLeaderboardView.peerArchiveJson': 'ピアのアーカイブのJSON',
-    'reconciliationCandidateLeaderboardView.useAsPeerArchive': 'ピアのアーカイブとして使う',
-    'reconciliationCandidateLeaderboardView.clearPeerArchive': 'ピアのアーカイブをクリア',
-    'reconciliationCandidateLeaderboardView.thisIsNotAValid': 'これは有効なアーカイブのエクスポートではありません — 何も比較していません。',
-    'reconciliationCandidateLeaderboardView.evidenceFilter': '証拠の絞り込み',
-    'reconciliationCandidateLeaderboardView.evidenceType': '証拠の種類',
-    'reconciliationCandidateLeaderboardView.replicaRelation': 'レプリカ間の関係',
-    'reconciliationCandidateLeaderboardView.evidenceExport': '証拠のエクスポート',
-    'reconciliationCandidateLeaderboardView.exportsExactlyTheEvidenceCurrently': '上に現在表示されている証拠を、同じ「証拠の絞り込み」の選択と同じピアとの比較状態のまま、持ち運び可能なJSONドキュメントとしてエクスポートします。証拠の再計算、候補の絞り込み、サーバーへの接続は行いません。',
-    'reconciliationCandidateLeaderboardView.exportEvidence': '証拠をエクスポート',
-    'reconciliationCandidateLeaderboardView.compareExportedEvidence': 'エクスポートした証拠を比較',
-    'reconciliationCandidateLeaderboardView.exportedEvidence': 'エクスポートした証拠',
-    'reconciliationCandidateLeaderboardView.downloadEvidenceExport': '証拠のエクスポートをダウンロード',
-    'reconciliationCandidateLeaderboardView.importEvidenceExport': '証拠のエクスポートをインポート',
-    'reconciliationCandidateLeaderboardView.pasteAPreviouslyExportedEvidence': '以前にエクスポートした証拠ドキュメント（上の「証拠のエクスポート」パネルから、このレプリカ自身またはピアのもの）を貼り付けて調べます。上のライブのリーダーボードに統合したり、置き換えたり、再計算したりすることはありません — 別の持ち運び可能なドキュメントを読み取り専用で見るだけです。',
-    'reconciliationCandidateLeaderboardView.evidenceExportJson': '証拠エクスポートのJSON',
-    'reconciliationCandidateLeaderboardView.importEvidence': '証拠をインポート',
-    'reconciliationCandidateLeaderboardView.clearImportedEvidence': 'インポートした証拠をクリア',
-    'reconciliationCandidateLeaderboardView.thisIsNotAValid2': 'これは有効な証拠エクスポートのドキュメントではありません — 何もインポートしていません。',
-    'reconciliationCandidateLeaderboardView.importedEvidence': 'インポートした証拠',
 
     // Publications: reconciliationWorkspaceView.
-    'reconciliationWorkspaceView.pasteAPeerSExported': 'ピアがエクスポートしたリーダーボードのスナップショットの主張のJSONを貼り付け',
-    'reconciliationWorkspaceView.reconciliationWorkspace': '照合ワークスペース',
-    'reconciliationWorkspaceView.localArchive': 'ローカルのアーカイブ',
-    'reconciliationWorkspaceView.thisReplicaSOwnRecorded': 'このレプリカ自身が記録した証拠です — 公開物ページと照合候補のリーダーボードがすでに読み書きしているのと同じアーカイブです。別に選ぶアーカイブはありません。',
-    'reconciliationWorkspaceView.peerEvidence': 'ピアの証拠',
-    'reconciliationWorkspaceView.pasteAPeerSOwn': 'ピアが自分のレプリカでエクスポートした（「主張をエクスポート」）、署名付きのリーダーボードのスナップショットの主張を下に貼り付けてください。',
-    'reconciliationWorkspaceView.peerEvidenceJson': 'ピアの証拠のJSON',
-    'reconciliationWorkspaceView.reconcile': '照合',
-    'reconciliationWorkspaceView.clearResult': '結果をクリア',
-    'reconciliationWorkspaceView.result': '結果',
-    'reconciliationWorkspaceView.reconciliationProducedACandidateRecorded': '照合によって候補が生まれ、このレプリカ自身のアーカイブに判定と再検証の観測として記録されました。',
-    'reconciliationWorkspaceView.viewInLeaderboard': 'リーダーボードで見る',
-    'reconciliationWorkspaceView.noReconciliationCandidateWasProduced': '照合候補は生まれませんでした — このピアの証拠は、このレプリカ自身のローカルのスナップショットとすでに一致しています。',
 
     // Publications: repositoryView.
     'repositoryView.repository': 'リポジトリ',
@@ -2962,15 +2806,6 @@ export default Object.freeze({
     'sharedWithYouPanel.dismiss': '非表示',
     'sharedWithYouPanel.dismissHint': 'この共有をこのデバイスで非表示にします。再度通知されても戻りません。',
     'sharedWithYouPanel.shareUnavailable': 'このワールドを共有した人から送られてきませんでした。接続中のデバイスにはもう無いのかもしれません。もう一度共有するよう依頼してください。',
-    'candidateLeaderboardTable.hideEvidence': '証拠を隠す',
-    'candidateLeaderboardTable.inspectEvidence': '証拠を調べる',
-    'evidenceExportComparisonRecordPairSelector.noDifferences': '違いはありません',
-    'evidenceExportComparisonRecordPairSelector.hideDifferences': '違いを隠す ▲',
-    'evidenceExportComparisonRecordPairSelector.inspectDifferences': '違いを調べる ▼',
-    'evidenceExportComparisonTable.hideRecords': '記録を隠す ▲',
-    'evidenceExportComparisonTable.inspectRecords': '記録を調べる ▼',
-    'evidenceExportComparisonTable.hideIdentity': 'IDを隠す ▲',
-    'evidenceExportComparisonTable.inspectIdentity': 'IDを調べる ▼',
     'authorView.anonymous': '匿名',
     'publications.askingPeers': 'ピアに問い合わせ中…',
     'publications.retrieveFromPeers': 'ピアから取得',
@@ -2979,12 +2814,6 @@ export default Object.freeze({
     'publications.hideCrossDomainTimeline': 'ドメイン横断のタイムラインを隠す',
     'publications.showCrossDomainTimeline': 'ドメイン横断のタイムラインを表示',
     'publications.published': '公開日時',
-    'leaderboardHubView.hidePublisherAchievementProfile': '公開者の実績プロフィールを隠す',
-    'leaderboardHubView.showPublisherAchievementProfile': '公開者の実績プロフィールを表示',
-    'leaderboardHubView.hidePublisherAchievementBadges': '公開者の実績バッジを隠す',
-    'leaderboardHubView.showPublisherAchievementBadges': '公開者の実績バッジを表示',
-    'leaderboardHubView.hidePublisherAchievementStatistics': '公開者の実績の統計を隠す',
-    'leaderboardHubView.showPublisherAchievementStatistics': '公開者の実績の統計を表示',
     'publications.hideDetails': '詳細を隠す',
     'publications.inspectEvidence': '証拠を調べる',
     'publications.verifying': '検証中…',
@@ -3155,17 +2984,12 @@ export default Object.freeze({
     'publications.thisReplicaDoesNotCurrently': 'このレプリカは現在、有効なスナップショットを持っていません。下から取得元を選んで — 「スナップショットをインポート」、配置の「スナップショットを実体化」、ピアの「ピアからスナップショットを取得」のいずれか — もう一度お試しください。',
 
     // Publications: leaderboardHubView, text with quotes.
-    'leaderboardHubView.aBadgePresentationOfThe': 'この公開者が明示的に主張したすべての公開にわたって、すでに獲得した実績をバッジで表示したものです — 新しい実績ではなく、スコア、ランキング、リーダーボードの項目でもありません。一部の実績（参照から導かれるもの）にはまだバッジがなく、上の「公開者の実績プロフィール」カードにのみ表示されます。',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView, text with quotes.
-    'publisherLeaderboardSnapshotClaimAuthoringView.authorAndExportASigned': '「あなた自身の」レプリカの現在のリーダーボードのスナップショットについて、署名付きの主張を作成してエクスポートします — 照合ワークスペースの「ピアの証拠」欄がピアに貼り付けを求める、まさにその証拠です。生成、署名、エクスポートはそれぞれ別の明示的な操作で、このページで自動的に実行されるものはありません。',
-    'publisherLeaderboardSnapshotClaimAuthoringView.pasteThisIntoAPeer': 'これをピアの照合ワークスペースの「ピアの証拠」欄に貼り付けるか、ダウンロードしたファイルを送ってください。',
 
     // Publications: reconciliationCandidateLeaderboardView, text with quotes.
-    'reconciliationCandidateLeaderboardView.noPeerArchiveSuppliedYet': 'まだピアのアーカイブが指定されていません — 貼り付けるまで、下の数はすべて「比較元のみ」です。ピアのレプリカがエクスポートしたアーカイブ（公開物ページの「アーカイブをエクスポート」）を貼り付けて、「ピアのアーカイブとして使う」をクリックしてください。',
 
     // Publications: reconciliationWorkspaceView, text with quotes.
-    'reconciliationWorkspaceView.reconcileThisReplicaSOwn': 'このレプリカ自身のローカルのアーカイブを、ピアの1つの証拠と明示的に照合します。このページで自動的に実行されるものはありません — 照合は下の「照合」をクリックしたときにのみ行われます。',
 
     // Publications: the publication list, text built around values.
     'publications.preference.storage.unavailable': '優先するストレージの{name}は、ここではワンクリックで使えません。下の選択肢を使ってください。',
@@ -3414,64 +3238,27 @@ export default Object.freeze({
     'publications.contentHashAssociated': 'コンテンツハッシュ: {contentHash} · 関連付け: {createdAt}',
 
     // Publications: leaderboardHubView, text with values.
-    'leaderboardHubView.earnedBy': '獲得: {observedAt}（{blockchain} — {chainReference}）',
-    'leaderboardHubView.earned': '{description} — 獲得: {earnedAt}',
-    'leaderboardHubView.publications2': '{blockchain}の公開',
 
     // Publications: publisherLeaderboardSnapshotClaimAuthoringView, text with values.
-    'publisherLeaderboardSnapshotClaimAuthoringView.claimCreatedSuccessfullySignedBy': '主張を作成しました — 署名者: {signer}。',
 
     // Publications: publisherPerformanceLeaderboardView, text with values.
-    'publisherPerformanceLeaderboardView.publisherSRankedUnderPublisher': { other: '公開者ランキングポリシー v{version} で{count}人の公開者を順位付けしました' },
 
     // Publications: reconciliationCandidateLeaderboardView, text with values.
-    'reconciliationCandidateLeaderboardView.comparison': '比較: {state}',
-    'reconciliationCandidateLeaderboardView.candidates': '候補: {count}',
-    'reconciliationCandidateLeaderboardView.decisions': '判定: {count}',
-    'reconciliationCandidateLeaderboardView.observations': '観測: {count}',
 
     // Publications: reconciliationWorkspaceView, text with values.
-    'reconciliationWorkspaceView.reconciliationDidNotCompleteOutcome': '照合は完了しませんでした — 結果: {outcome}',
 
     // Publications: candidateEvidenceDetailPanel, text with values.
-    'candidateEvidenceDetailPanel.shared': '共通（{count}）',
-    'candidateEvidenceDetailPanel.decided': '{disposition} — 判定: {decidedAt}',
-    'candidateEvidenceDetailPanel.sourceOnly': '比較元のみ（{count}）',
-    'candidateEvidenceDetailPanel.targetOnly': '比較先のみ（{count}）',
-    'candidateEvidenceDetailPanel.observedPlanPresentMatchesPlan': '{disposition} — 観測: {observedAt} — 計画: {planFingerprint} — 存在: {candidatePresent} — 計画と一致: {candidateMatchesPlan}',
 
     // Publications: candidateLeaderboardTable, text with values.
-    'candidateLeaderboardTable.candidateS': { other: '{count}件の候補' },
 
     // Publications: evidenceExportComparisonRecordPairSelector, text with values.
-    'evidenceExportComparisonRecordPairSelector.decisionPair': '判定のペア {number}',
-    'evidenceExportComparisonRecordPairSelector.observationPair': '観測のペア {number}',
 
     // Publications: evidenceExportComparisonTable, text with values.
-    'evidenceExportComparisonTable.sourceOnly2': '比較元のみ（{count}）',
-    'evidenceExportComparisonTable.shared2': '共通（{count}）',
-    'evidenceExportComparisonTable.targetOnly2': '比較先のみ（{count}）',
 
     // Publications: counts in expressions.
-    'evidenceExportComparisonRecordPairSelector.differences': { other: '{count}件の違い' },
     'publications.showObservationHistoryCount': '観測の履歴を表示（{count}）',
 
     // Publications: reconciliation components (ui/components/reconciliation/).
-    'reconciliation.unknownCandidate': '不明な候補',
-    'reconciliation.claimAndSnapshot': '主張 {claimId} ↔ スナップショット #{snapshotIndex}',
-    'reconciliation.claimWithoutSnapshot': '主張 {claimId}（対応するスナップショットなし）',
-    'reconciliation.snapshotWithoutClaim': 'スナップショット #{snapshotIndex}（対応する主張なし）',
-    'reconciliation.unknownDecisionRecord': '不明な判定の記録',
-    'reconciliation.unknownObservationRecord': '不明な観測の記録',
-    'reconciliation.decisionRecord': '{candidate} — {disposition} — 判定: {when}',
-    'reconciliation.observationRecord': '{candidate} — {disposition} — 観測: {when}',
-    'reconciliation.unknownTime': '日時不明',
-    'reconciliation.yes': 'はい',
-    'reconciliation.no': 'いいえ',
-    'reconciliation.unknownPlan': '不明な計画',
-    'reconciliation.comparingPeerArchive': '指定したピアのアーカイブと比較しています。',
-    'reconciliation.peerArchiveEmpty': 'ピアのアーカイブが指定されましたが、証拠が記録されていません — 下の数はすべてこのレプリカだけのものです。',
-    'reconciliation.noPeerArchive': 'ピアのアーカイブが指定されていません — 下の数はすべてこのレプリカだけのものです。',
 
     // Publications: labels chosen in the page's composables (ui/views/decentralizedPublications/).
     'publications.unknownContent': '不明な内容',
@@ -3799,12 +3586,6 @@ export default Object.freeze({
     'publicationSort.titleDesc': 'タイトル Z–A',
     'publicationSort.authorAsc': '作者 A–Z',
     'publications.anchorCountOn': { other: '{count}件の公開物を{anchorType}にアンカー' },
-    'reconciliation.filter.all': 'すべて',
-    'reconciliation.filter.decisions': '判定',
-    'reconciliation.filter.observations': '観測',
-    'reconciliation.filter.shared': '共通',
-    'reconciliation.filter.sourceOnly': '比較元のみ',
-    'reconciliation.filter.targetOnly': '比較先のみ',
 
     // Publications: reconciliation comparison states.
     'reconciliation.state.noPeer': 'ピアのアーカイブなし',

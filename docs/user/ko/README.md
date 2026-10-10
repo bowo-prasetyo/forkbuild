@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: b2d25842ce536f07 -->
+<!-- translation-of: docs/user/README.md source-hash: 3b535dc98d81e02d -->
 # ForkBuild 사용자 문서
 
 <!-- languages -->
@@ -51,9 +51,8 @@
     지갑 절차, 원격 IPFS 피닝, Steem과 Blurt.
     [작품 배포하기](Distribution.md)에서 이것들이 어떻게 맞물리는지
     볼 수 있습니다.
-12. **[아카이브와 리더보드](12-ArchiveAndLeaderboards.md)** —
-    *실험적*. 관측 아카이브, 게시물 참조, 업적, 게시자 라벨, 리더보드
-    페이지.
+12. **[아카이브와 업적](12-ArchiveAndLeaderboards.md)** —
+    *실험적*. 관측 아카이브, 게시물 참조, 업적, 게시자 라벨.
 13. **[내 데이터](13-YourData.md)** — 이 브라우저가 가진 모든 것을
     암호화된 파일 하나로 백업하고 복원하기, 더 작은 내보내기, 이 기기가
     내 게시물의 배포를 기록한 곳.

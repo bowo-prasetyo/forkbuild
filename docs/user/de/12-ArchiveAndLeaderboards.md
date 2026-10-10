@@ -1,5 +1,5 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 6f86f5609d7f2b27 -->
-# 12 — Archiv & Bestenlisten
+<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 2831381c24cb53fe -->
+# 12 — Archiv & Erfolge
 
 <!-- languages -->
 [English](../12-ArchiveAndLeaderboards.md) · **Deutsch** · [Español](../es/12-ArchiveAndLeaderboards.md) · [Français](../fr/12-ArchiveAndLeaderboards.md) · [Bahasa Indonesia](../id/12-ArchiveAndLeaderboards.md) · [日本語](../ja/12-ArchiveAndLeaderboards.md) · [한국어](../ko/12-ArchiveAndLeaderboards.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndLeaderboards.md)
@@ -9,15 +9,13 @@
 > oder entfernt werden, und was es erzeugt, wird möglicherweise nicht
 > übernommen. Auf der Seite Veröffentlichungen ist der Bereich **Wallet,
 > Archiv & Herausgeberwerkzeuge** mit einem Abzeichen **Experimentell**
-> gekennzeichnet; die Bestenlisten-Seiten zeigen ein Banner
-> **Experimentell**.
+> gekennzeichnet.
 
 Die Werkzeuge für Bitcoin, Base und IPFS unter
 [Nachweise & Speicher](11-EvidenceAndStorage.md) halten fest, was sie
 beobachten, in einem dauerhaften Archiv auf diesem Gerät. Diese Anleitung
 behandelt dieses Archiv und was darauf aufbaut: Verweise zwischen
-Veröffentlichungen, Erfolge, Herausgeberkennungen und die
-Bestenlisten-Seiten.
+Veröffentlichungen, Erfolge und Herausgeberkennungen.
 
 Die meisten dieser Karten liegen auf der Seite Veröffentlichungen unter
 **Wallet, Archiv & Herausgeberwerkzeuge**, in deren Reitern
@@ -186,8 +184,7 @@ verknüpft eine Veröffentlichung mit einer Person.
 ## Herausgeberidentität
 
 Mit **Herausgeberzuordnungen** versehen Sie Veröffentlichungen auf Ihr
-eigenes Wort hin mit einem Herausgebernamen, für die Herausgeberkarten und
-die Bestenliste unten.
+eigenes Wort hin mit einem Herausgebernamen.
 
 Eine Herausgeberkennung ist ein schlichtes, selbst erklärtes Etikett,
 keine überprüfte Identität und keine Anmeldung. Der Abgleich ist exakt:
@@ -207,175 +204,14 @@ Wallets, Inhalten oder Namen abgeleitet.
 Veröffentlichung eines gewählten Herausgebers, mit Inhalts-Hash und dem
 Zeitpunkt der Zuordnung.
 
-Drei Karten auf der Seite [Bestenliste](#übersicht-der-bestenliste) bauen
-auf diesen Zuordnungen auf, jede mit ihrem eigenen Auswahlmenü **Einen
-Herausgeber wählen**:
+## Eingestellt: Bestenlisten und Abgleich
 
-| Karte | Zeigt |
-|---|---|
-| **Erfolgsprofil des Herausgebers** | Jeden Erfolg, den eine vom Herausgeber beanspruchte Veröffentlichung erzielt hat, und welche Veröffentlichung ihn erzielt hat. |
-| **Erfolgsabzeichen des Herausgebers** | Dasselbe, beschränkt auf Erfolge mit Abzeichen, jeweils mit Link zurück zu seinem Lebenszyklus auf der Seite Veröffentlichungen. |
-| **Erfolgsstatistik des Herausgebers** | Zahlen zugeordneter Veröffentlichungen, Erfolge, Erfolgsarten, Abzeichen und Abzeichenarten, Veröffentlichungen pro Chain und Erfolge pro Art. |
-
-Gibt es noch keine Zuordnungen, sagt das jede Karte und verweist auf
-Herausgeberzuordnungen. Sie melden, was ein Herausgeber *beansprucht*,
-nicht, wer eine Veröffentlichung kontrolliert, und keine reiht jemanden.
-
-## Übersicht der Bestenliste
-
-Die Seite **Bestenliste** (`/leaderboard`) verlinkt die Seiten unten sowie
-die drei Herausgeberkarten oben. Sie steht nicht in der oberen Leiste:
-Öffnen Sie sie über den Link **Bestenliste** unter der Karte
-**Veröffentlichungsarchiv** auf der Seite Veröffentlichungen.
-
-### Bestenliste der Herausgeberleistung
-
-`/publisher-leaderboard` reiht Herausgeber nach dem, was dieses Gerät
-erfasst hat: **Rang**, **Herausgeber**, **Erfolge**, **Erfolgsarten** und
-**Veröffentlichungen**, bei jedem Öffnen der Seite neu berechnet und nie
-gespeichert. Ein Herausgeber erscheint, sobald Sie ihm eine
-Veröffentlichung zugeordnet haben. Namen sind Ihre eigenen Etiketten, keine
-überprüften Identitäten.
-
-### Snapshot-Anspruch des Herausgebers
-
-`/publisher-snapshot-claim` signiert einen Anspruch über Ihren aktuellen
-Bestenlisten-Snapshot, damit ein Peer dagegen vergleichen kann. Sie müssen
-angemeldet sein.
-
-1. **Anspruch erzeugen & signieren** — berechnet Ihren Snapshot und
-   signiert einen Anspruch darüber. Zeigt den Unterzeichner und die
-   Fingerabdrücke von Nachweisen, Richtlinie und Snapshot. **Neu
-   beginnen** verwirft ihn.
-2. **Anspruch exportieren** — zeigt den Anspruch als JSON mit einem Link
-   **Anspruch herunterladen**, zum Einfügen in den
-   [Abgleichsarbeitsbereich](#abgleichsarbeitsbereich) eines Peers oder zum
-   Versenden als Datei.
-
-### Abgleichsarbeitsbereich
-
-`/reconciliation-workspace`: Fügen Sie den exportierten Anspruch eines
-Peers in **JSON des Peer-Nachweises** ein und klicken Sie auf
-**Abgleichen**. Es vergleicht den Anspruch mit Ihrem Archiv und erfasst,
-wenn dabei ein Abgleichskandidat herauskommt, eine Entscheidung und eine
-Neuprüfungsbeobachtung in Ihrem Archiv und bietet **In der Bestenliste
-ansehen** an. Gibt es nichts abzugleichen, sagt es, warum. **Ergebnis
-löschen** blendet das Ergebnis aus.
-
-### Bestenliste der Abgleichskandidaten
-
-`/reconciliation-leaderboard` ist schreibgeschützt. Sie zeigt für jeden
-Abgleichskandidaten die Nachweise, die Ihr Archiv enthält, wahlweise
-verglichen mit dem Archiv eines Peers.
-
-Ein **Kandidat** ist eine Stelle, an der ein Anspruch auf externe
-Nachweise und ein Datensatz eines lokalen Snapshots für denselben Inhalt
-verglichen wurden:
-
-| Bezeichnung des Kandidaten | Bedeutung |
-|---|---|
-| **Anspruch *X* ↔ Snapshot Nr. *N*** | Ein Anspruch und ein Snapshot, die verglichen wurden und auseinandergehen. |
-| **Anspruch *X* (kein zugehöriger Snapshot)** | Ein Anspruch ohne Snapshot zum Vergleichen. |
-| **Snapshot Nr. *N* (kein zugehöriger Anspruch)** | Ein Snapshot ohne Anspruch zum Vergleichen. |
-
-Kandidaten stammen aus dem Abgleichsarbeitsbereich. Bis Sie dort einen
-Anspruch eines Peers abgeglichen haben, zeigt die Seite „Keine
-Abgleichskandidaten anzuzeigen.“
-
-**Spalten.** **Entscheidungsnachweise** (eine erfasste Wahl, welcher Seite
-vertraut wurde) und **Beobachtungsnachweise** (eine spätere Neuprüfung
-dieser Entscheidung) haben jeweils drei Zahlen: **Gemeinsam** (beide
-Archive haben es), **Nur Quelle** (nur Ihres) und **Nur Ziel** (nur das
-des Peers). Zeilen erscheinen in der Reihenfolge, in der sie gefunden
-wurden, nicht danach, wie viele Nachweise sie haben; das ist keine
-Rangfolge.
-
-**Mit einem Peer vergleichen.** Fügen Sie den Archivexport eines Peers in
-**Peer-Archiv** ein und klicken Sie auf **Als Peer-Archiv verwenden**.
-Eine ungültige Eingabe wird abgelehnt. Ohne Peer-Archiv zählt alles als
-Nur Quelle. Eine Zeile über der Tabelle sagt, welcher Fall vorliegt:
-
-| Banner | Bedeutung |
-|---|---|
-| *Kein Peer-Archiv angegeben — jede Zahl unten bezieht sich nur auf dieses Replikat.* | Noch kein Peer-Archiv. |
-| *Ein Peer-Archiv wurde angegeben, enthält aber keine erfassten Nachweise — jede Zahl unten bezieht sich weiterhin nur auf dieses Replikat.* | Ein echtes Archiv, aber leer. |
-| *Vergleich mit einem angegebenen Peer-Archiv.* | Ein echter Vergleich. |
-
-**Nachweise untersuchen** (danach **Nachweise ausblenden**) bei einer
-Zeile listet die Entscheidungs- und Beobachtungsdatensätze hinter ihren
-Zahlen auf, aufgeteilt in Gemeinsam, Nur Quelle und Nur Ziel. Jede
-Beobachtung zeigt den Fingerabdruck des Plans, gegen den sie geprüft
-wurde (etwa `Plan abcdef012345…`), und ob der Kandidat **vorhanden** war
-und **zum Plan passt**, wie erfasst. Ähnlich aussehende Datensätze bleiben
-getrennt.
-
-**Nachweisfilter.** Zwei Auswahlmenüs grenzen ein, was angezeigt wird:
-**Nachweisart** (**Alle**, **Entscheidungen**, **Beobachtungen**) und
-**Beziehung der Replikate** (**Alle**, **Gemeinsam**, **Nur Quelle**,
-**Nur Ziel**). Eine Zeile bleibt, wenn sie Nachweise dieser Art in dieser
-Beziehung hat. Steht **Beziehung der Replikate** auf **Alle**, wird nichts
-gefiltert; steht **Nachweisart** auf **Alle**, passt eine Zeile, wenn
-eine der beiden Arten die gewählte Beziehung hat. Der Filter grenzt auch
-die Liste unter Nachweise untersuchen jeder Zeile ein. Er blendet nur
-Zeilen und Datensätze aus; die Zahlen einer Zeile ändern sich nie.
-
-**Nachweisexport.** **Nachweise exportieren** erzeugt ein JSON-Dokument
-von genau dem, was der Filter zeigt, mit dem verwendeten
-Vergleichszustand und Filter, und einem Link **Nachweisexport
-herunterladen**
-(`reconciliation-candidate-leaderboard-evidence-export.json`). Nichts wird
-hochgeladen. **Exportierte Nachweise vergleichen** öffnet
-[Vergleich von Nachweisexporten](#vergleich-von-nachweisexporten).
-
-**Nachweisexport importieren.** Fügen Sie einen Export ein (Ihren oder den
-eines Peers) und klicken Sie auf **Nachweise importieren**, um seinen
-Vergleichszustand und die Zahlen von Kandidaten, Entscheidungen und
-Beobachtungen zu sehen. Eine ungültige Eingabe wird abgelehnt und die
-vorherige Zusammenfassung behalten. **Importierte Nachweise löschen**
-blendet sie aus. Die Tabelle oben bleibt davon unberührt.
-
-Die Seite liest Ihr Archiv einmal beim Öffnen; öffnen Sie sie erneut, um
-neue Datensätze zu sehen. Peer-Archiv, Filter, geöffnete Zeilen und die
-importierte Zusammenfassung werden nicht gespeichert.
-
-## Vergleich von Nachweisexporten
-
-`/evidence-export-comparison` vergleicht zwei Nachweisexporte
-miteinander — etwa den der letzten Woche mit dem von heute oder Ihren mit
-dem eines Peers. Es liest Ihr Archiv nicht und beeinflusst die Bestenliste
-nicht.
-
-Fügen Sie die beiden Dokumente in **Quell-Nachweisexport** und
-**Ziel-Nachweisexport** ein und klicken Sie auf **Nachweise
-vergleichen**. Eine ungültige Seite wird für sich abgelehnt; die andere
-bleibt erhalten. **Vergleich löschen** leert die Seite.
-
-- **Vergleichsstatus und Filter** zeigen den erfassten Vergleichszustand
-  und Filter jedes Dokuments und ob sie gleich sind.
-- Drei Tabellen — **Vorkommen der Kandidaten**,
-  **Entscheidungsnachweise** und **Beobachtungsnachweise** — zählen
-  jeweils Nur Quelle, Gemeinsam und Nur Ziel und werden nie
-  zusammengefasst.
-- **Datensätze untersuchen** (danach **Datensätze ausblenden**) listet
-  die Datensätze hinter den Zahlen einer Tabelle auf. Bei einem
-  Entscheidungs- oder Beobachtungsdatensatz zeigt **Identität
-  untersuchen** die Felder, die ihn identifizieren:
-
-| Datensatz | Identitätsfelder |
-|---|---|
-| Entscheidung | `decided`, `candidate`, `decision`, `decidedAt` |
-| Beobachtung | `candidate`, `decision`, `planIdentity`, `candidatePresent`, `candidateType`, `candidateMatchesPlan`, `observedAt` |
-
-**Explizite Datensatzpaarung.** Um zwei bestimmte Datensätze zu
-vergleichen, wählen Sie einen Quell- und einen Zieldatensatz (aus einer
-beliebigen Partition) für Entscheidungen oder Beobachtungen und klicken
-Sie auf **Paar hinzufügen**; **Entfernen** nimmt ein Paar heraus. Nichts
-wird automatisch gepaart, und dasselbe Paar kann zweimal hinzugefügt
-werden. Unter **Unterschiede gepaarter Datensätze** zeigt jedes
-**Entscheidungspaar *N*** oder **Beobachtungspaar *N***, wie viele
-Identitätsfelder sich unterscheiden (oder **Keine Unterschiede**);
-**Unterschiede untersuchen** nennt sie oder sagt **In jedem benannten Feld
-identisch.** Es sagt nie, welche Seite recht hat.
-
-Nichts auf dieser Seite wird gespeichert oder irgendwohin gesendet; ein
-Neuladen leert sie.
+Frühere Versionen hatten Bestenlisten-Seiten: eine Bestenliste der
+Herausgeber, signierte Snapshot-Ansprüche von Herausgebern, einen
+Abgleichsarbeitsbereich mit eigener Bestenliste und einen Vergleich von
+Nachweisexporten. ForkBuild reiht keine Menschen und führt keine Punktestände
+([Säulen](../../Pillars.md#what-we-are-not-making)), deshalb wurden sie entfernt. Ein alter Link auf eine dieser
+Seiten öffnet die Startseite. Ein Archiv, das gespeichert wurde, als es sie
+noch gab, lässt sich weiter laden und importieren, mit all seinen übrigen
+Datensätzen; die Bestenlisten-Ansprüche und Abgleichsentscheidungen darin
+werden verworfen.
