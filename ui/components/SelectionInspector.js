@@ -1,5 +1,6 @@
 import { fromCssHex } from '../../core/ColorHex.js';
 import { displayText, t } from '../i18n/i18n.js';
+import VillagePaletteSwatches from './VillagePaletteSwatches.js';
 
 // The card for an ordinary BRICK selection: count, live position and the
 // everyday actions. StructureInstancePanel is the card for a
@@ -8,6 +9,7 @@ import { displayText, t } from '../i18n/i18n.js';
 // EditingSidebar fills the default slot with its collapsed sections.
 export default {
     name: 'SelectionInspector',
+    components: { VillagePaletteSwatches },
     props: {
         registry: { type: Object, required: true },
         getContext: { type: Function, required: true },
@@ -114,6 +116,7 @@ export default {
                     @click="run('selection.clear')"
                 >{{ t('selectionInspector.deselect') }}</button>
             </div>
+            <VillagePaletteSwatches v-if="recolor" @choose="recolor" />
             <slot></slot>
         </section>
     `

@@ -176,6 +176,162 @@ function archGeometry(width, height, depth) {
     };
 }
 
+// An upright cylinder or cone filling its width x height x depth box —
+// core:round_1x1, core:pillar, core:barrel (16 sides); a cone for
+// core:roof_cone and the eight-sided core:pine_tree.
+function cylinderGeometry(diameter, height, segments = 16) {
+    return () => new THREE.CylinderGeometry(diameter / 2, diameter / 2, height, segments);
+}
+
+function coneGeometry(diameter, height, segments = 16) {
+    return () => new THREE.ConeGeometry(diameter / 2, height, segments);
+}
+
+// A cylinder lying along local X — core:log.
+function logGeometry(length, diameter) {
+    return () => {
+        const geometry = new THREE.CylinderGeometry(diameter / 2, diameter / 2, length, 12);
+        geometry.rotateZ(Math.PI / 2);
+        return geometry;
+    };
+}
+
+// A profile in the width x height face, extruded along depth and centered:
+// the shared last step of every shape below.
+function extrudeProfile(shape, width, height, depth) {
+    const geometry = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
+    geometry.translate(-width / 2, -height / 2, -depth / 2);
+    return geometry;
+}
+
+// A triangular prism with its ridge along local Z, over the middle of its
+// width — core:roof_gable and core:roof_ridge.
+function gableGeometry(width, height, depth) {
+    return () => {
+        const shape = new THREE.Shape();
+        shape.moveTo(0, 0);
+        shape.lineTo(width, 0);
+        shape.lineTo(width / 2, height);
+        shape.lineTo(0, 0);
+        return extrudeProfile(shape, width, height, depth);
+    };
+}
+
+// core:slope_45 turned upside down — core:slope_inverted. Full width at
+// the top, narrowing to its back edge at the bottom, for eaves.
+function invertedWedgeGeometry(width, height, depth) {
+    return () => {
+        const shape = new THREE.Shape();
+        shape.moveTo(width, 0);
+        shape.lineTo(width, height);
+        shape.lineTo(0, height);
+        shape.lineTo(width, 0);
+        return extrudeProfile(shape, width, height, depth);
+    };
+}
+
+// A rectangle with holes cut through it, extruded along depth: a window
+// frame, a ladder, a fence. `holes` are [x, y, w, h] rectangles.
+function panelWithHoles(width, height, depth, holes) {
+    const shape = new THREE.Shape();
+    shape.moveTo(0, 0);
+    shape.lineTo(width, 0);
+    shape.lineTo(width, height);
+    shape.lineTo(0, height);
+    shape.lineTo(0, 0);
+    for (const [x, y, w, h] of holes) {
+        const hole = new THREE.Path();
+        hole.moveTo(x, y);
+        hole.lineTo(x, y + h);
+        hole.lineTo(x + w, y + h);
+        hole.lineTo(x + w, y);
+        hole.lineTo(x, y);
+        shape.holes.push(hole);
+    }
+    return extrudeProfile(shape, width, height, depth);
+}
+
+// A square frame around a see-through opening — core:window_frame.
+function windowFrameGeometry(width, height, depth, frame = 0.15) {
+    return () => panelWithHoles(width, height, depth, [[frame, frame, width - 2 * frame, height - 2 * frame]]);
+}
+
+// A square panel with a round opening — core:window_round.
+function roundWindowGeometry(width, height, depth) {
+    return () => {
+        const shape = new THREE.Shape();
+        shape.moveTo(0, 0);
+        shape.lineTo(width, 0);
+        shape.lineTo(width, height);
+        shape.lineTo(0, height);
+        shape.lineTo(0, 0);
+        const hole = new THREE.Path();
+        hole.absarc(width / 2, height / 2, Math.min(width, height) * 0.35, 0, Math.PI * 2, true);
+        shape.holes.push(hole);
+        return extrudeProfile(shape, width, height, depth);
+    };
+}
+
+// Two rails and evenly spaced rungs — core:ladder.
+function ladderGeometry(width, height, depth, rungs = 8) {
+    return () => {
+        const rail = 0.12;
+        const rung = 0.08;
+        const gap = (height - (rungs + 1) * rung) / rungs;
+        const holes = [];
+        for (let i = 0; i < rungs; i++) {
+            holes.push([rail, rung + i * (gap + rung), width - 2 * rail, gap]);
+        }
+        return panelWithHoles(width, height, depth, holes);
+    };
+}
+
+// Pickets joined by two rails — core:fence.
+function fenceGeometry(width, height, depth, pickets = 6) {
+    return () => {
+        const picket = 0.12;
+        const gap = (width - pickets * picket) / (pickets - 1);
+        const holes = [];
+        for (let i = 0; i < pickets - 1; i++) {
+            const x = picket + i * (picket + gap);
+            // Open between the ground and the low rail, and between the rails.
+            holes.push([x, 0.15, gap, height * 0.25]);
+            holes.push([x, 0.15 + height * 0.25 + 0.1, gap, height * 0.35]);
+        }
+        return panelWithHoles(width, height, depth, holes);
+    };
+}
+
+// A seat on two legs, seen from the front and extruded along depth — core:bench.
+function benchGeometry(width, height, depth) {
+    return () => {
+        const seat = height * 0.3;
+        const leg = width * 0.12;
+        const shape = new THREE.Shape();
+        shape.moveTo(0, 0);
+        shape.lineTo(leg, 0);
+        shape.lineTo(leg, height - seat);
+        shape.lineTo(width - leg, height - seat);
+        shape.lineTo(width - leg, 0);
+        shape.lineTo(width, 0);
+        shape.lineTo(width, height);
+        shape.lineTo(0, height);
+        shape.lineTo(0, 0);
+        return extrudeProfile(shape, width, height, depth);
+    };
+}
+
+// Faceted round shapes scaled to their box — core:bush and core:rock.
+function polyhedronGeometry(PolyhedronGeometry, detail, [width, height, depth]) {
+    return () => {
+        const geometry = new PolyhedronGeometry(0.5, detail);
+        geometry.computeBoundingBox();
+        const box = geometry.boundingBox;
+        geometry.scale(width / (box.max.x - box.min.x), height / (box.max.y - box.min.y), depth / (box.max.z - box.min.z));
+        return geometry;
+    };
+}
+
 const GEOMETRIES = new Map([
     // Original four (0.1.5).
     ['core:cube', boxGeometry([1, 1, 1])],
@@ -196,7 +352,42 @@ const GEOMETRIES = new Map([
     ['core:door', boxGeometry([1, 2, 0.1])],
     ['core:trim', boxGeometry([1, 0.25, 0.25])],
     ['core:post', boxGeometry([0.25, 3, 0.25])],
-    ['core:brace_2x2', braceGeometry(2, 2, 0.25, 0.25)]
+    ['core:brace_2x2', braceGeometry(2, 2, 0.25, 0.25)],
+
+    // The Builder's kit (2026-10-10).
+    ['core:cube_half', boxGeometry([1, 0.5, 1])],
+    ['core:brick_1x2', boxGeometry([2, 1, 1])],
+    ['core:brick_1x4', boxGeometry([4, 1, 1])],
+    ['core:plate_1x1', boxGeometry([1, 0.25, 1])],
+    ['core:plate_2x2', boxGeometry([2, 0.25, 2])],
+    ['core:round_1x1', cylinderGeometry(1, 1)],
+    ['core:round_plate_2x2', cylinderGeometry(2, 0.25, 24)],
+    ['core:wall_1x1', boxGeometry([1, 1, 0.25])],
+    ['core:wall_2x3', boxGeometry([2, 3, 0.25])],
+    ['core:wall_half_2x1', boxGeometry([2, 1, 0.25])],
+    ['core:pillar', cylinderGeometry(1, 3)],
+    ['core:beam_short', boxGeometry([2, 0.5, 0.5])],
+    ['core:log', logGeometry(4, 0.5)],
+    ['core:slope_shallow', wedgeGeometry(2, 1, 1)],
+    ['core:slope_inverted', invertedWedgeGeometry(1, 1, 1)],
+    ['core:roof_gable', gableGeometry(2, 1, 2)],
+    ['core:roof_cone', coneGeometry(2, 2)],
+    ['core:roof_ridge', gableGeometry(1, 0.5, 1)],
+    ['core:stair_wide', stairGeometry(1, 1, 2)],
+    ['core:ladder', ladderGeometry(1, 3, 0.15)],
+    ['core:window_frame', windowFrameGeometry(1, 1, 0.25)],
+    ['core:window_round', roundWindowGeometry(1, 1, 0.25)],
+    ['core:door_double', boxGeometry([2, 2, 0.1])],
+    ['core:shutter', boxGeometry([0.5, 1, 0.05])],
+    ['core:arch_small', archGeometry(1, 1.5, 0.5)],
+    ['core:fence', fenceGeometry(2, 1, 0.15)],
+    ['core:chimney', boxGeometry([0.75, 1.5, 0.75])],
+    ['core:barrel', cylinderGeometry(0.8, 1)],
+    ['core:bench', benchGeometry(2, 0.5, 0.5)],
+    ['core:bush', polyhedronGeometry(THREE.IcosahedronGeometry, 1, [1, 1, 1])],
+    ['core:pine_tree', coneGeometry(1.5, 2.5, 8)],
+    ['core:rock', polyhedronGeometry(THREE.DodecahedronGeometry, 0, [1, 1, 1])],
+    ['core:lawn_2x2', boxGeometry([2, 0.1, 2])]
 ]);
 
 const FALLBACK_GEOMETRY = boxGeometry([1, 1, 1]);

@@ -85,12 +85,12 @@ async function run() {
 
         const infrastructure = groups.find((g) => g.category === 'infrastructure');
         const infrastructureIds = infrastructure.structures.map((s) => s.id).sort();
-        assert(JSON.stringify(infrastructureIds) === JSON.stringify(['village:bridge', 'village:dock', 'village:fence_segment', 'village:village_gate', 'village:watchtower', 'village:well']),
-            'groupByCategory: all six infrastructure structures share the infrastructure group');
+        assert(JSON.stringify(infrastructureIds) === JSON.stringify(['village:bridge', 'village:dock', 'village:fence_segment', 'village:round_tower', 'village:village_gate', 'village:watchtower', 'village:well']),
+            'groupByCategory: all seven infrastructure structures share the infrastructure group');
 
         // getAll()/getByCategory()/search() stay exactly what 0.2.81
         // shipped — only the CONTENT grew (0.4.4).
-        assert(registry.getAll().filter((s) => s.id.startsWith('village:')).length === 20, 'groupByCategory: getAll() is unaffected — twenty Village structures (0.4.4)');
+        assert(registry.getAll().filter((s) => s.id.startsWith('village:')).length === 22, 'groupByCategory: getAll() is unaffected — twenty-two Village structures (0.4.4, and two in 2026-10)');
         assert(registry.getByCategory('commercial').length === 2, 'groupByCategory: getByCategory() is unaffected — two commercial structures');
 
         console.log('✓ Section A: StructureRegistry#groupByCategory() — same shape as BrickRegistry, real VillageLibrary contents');
@@ -299,8 +299,8 @@ async function run() {
         const names = (section) => section.definitions.map((d) => d.name);
 
         assert(JSON.stringify(sections.map((s) => s.category))
-            === JSON.stringify(['Basic', 'Structure', 'Roofs & Stairs', 'Openings', 'Details']),
-            `bricks: five display sections in a fixed order, got ${sections.map((s) => s.category).join(', ')}`);
+            === JSON.stringify(['Basic', 'Structure', 'Roofs & Stairs', 'Openings', 'Details', 'Nature']),
+            `bricks: six display sections in a fixed order, got ${sections.map((s) => s.category).join(', ')}`);
         const total = registryGroups.reduce((sum, g) => sum + g.definitions.length, 0);
         assert(sections.reduce((sum, s) => sum + s.definitions.length, 0) === total,
             'bricks: every registry brick appears in exactly one section');

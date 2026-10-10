@@ -37,9 +37,9 @@ export const EMBED_WIDTH = 640;
 export const EMBED_HEIGHT = 480;
 
 // Each core brick's size (width × height × depth), default color, and the
-// shape drawn for it: a box, a wedge rising toward +x (core:slope_45, and the
-// stair's outline), or a four-sided pyramid (core:roof_hip). Any other brick
-// is drawn as a grey unit box.
+// shape drawn for it: a box, a wedge rising toward +x (the slopes, and the
+// stairs' outline), or a four-sided pyramid (the hip, gable and cone roofs,
+// and the pine tree). Any other brick is drawn as a grey unit box.
 export const BRICK_SHAPES = Object.freeze({
     'core:cube': [1, 1, 1, 0x4caf7d, 'box'],
     'core:slope_45': [1, 1, 1, 0xd08a3e, 'wedge'],
@@ -57,7 +57,40 @@ export const BRICK_SHAPES = Object.freeze({
     'core:door': [1, 2, 0.1, 0x6b4226, 'box'],
     'core:trim': [1, 0.25, 0.25, 0xe8e2d0, 'box'],
     'core:post': [0.25, 3, 0.25, 0x5a3a22, 'box'],
-    'core:brace_2x2': [2, 2, 0.25, 0x5a3a22, 'box']
+    'core:brace_2x2': [2, 2, 0.25, 0x5a3a22, 'box'],
+    'core:cube_half': [1, 0.5, 1, 0x4caf7d, 'box'],
+    'core:brick_1x2': [2, 1, 1, 0xa4553b, 'box'],
+    'core:brick_1x4': [4, 1, 1, 0xa4553b, 'box'],
+    'core:plate_1x1': [1, 0.25, 1, 0x5a8fd0, 'box'],
+    'core:plate_2x2': [2, 0.25, 2, 0x5a8fd0, 'box'],
+    'core:round_1x1': [1, 1, 1, 0xc9c3b4, 'box'],
+    'core:round_plate_2x2': [2, 0.25, 2, 0x9a9a9a, 'box'],
+    'core:wall_1x1': [1, 1, 0.25, 0xe8dcc0, 'box'],
+    'core:wall_2x3': [2, 3, 0.25, 0xe8dcc0, 'box'],
+    'core:wall_half_2x1': [2, 1, 0.25, 0xc9c3b4, 'box'],
+    'core:pillar': [1, 3, 1, 0xd8d2c0, 'box'],
+    'core:beam_short': [2, 0.5, 0.5, 0x8b5a2b, 'box'],
+    'core:log': [4, 0.5, 0.5, 0x8b5a2b, 'box'],
+    'core:slope_shallow': [2, 1, 1, 0xd08a3e, 'wedge'],
+    'core:slope_inverted': [1, 1, 1, 0xd08a3e, 'box'],
+    'core:roof_gable': [2, 1, 2, 0xa63a3a, 'hip'],
+    'core:roof_cone': [2, 2, 2, 0x55606e, 'hip'],
+    'core:roof_ridge': [1, 0.5, 1, 0xa63a3a, 'hip'],
+    'core:stair_wide': [1, 1, 2, 0xb0a48f, 'wedge'],
+    'core:ladder': [1, 3, 0.15, 0x8b5a2b, 'box'],
+    'core:window_frame': [1, 1, 0.25, 0xf2ead3, 'box'],
+    'core:window_round': [1, 1, 0.25, 0xf2ead3, 'box'],
+    'core:door_double': [2, 2, 0.1, 0x6b4226, 'box'],
+    'core:shutter': [0.5, 1, 0.05, 0x4f8a3c, 'box'],
+    'core:arch_small': [1, 1.5, 0.5, 0xa89f8a, 'box'],
+    'core:fence': [2, 1, 0.15, 0xf2ead3, 'box'],
+    'core:chimney': [0.75, 1.5, 0.75, 0xa4553b, 'box'],
+    'core:barrel': [0.8, 1, 0.8, 0x8b5a2b, 'box'],
+    'core:bench': [2, 0.5, 0.5, 0x8b5a2b, 'box'],
+    'core:bush': [1, 1, 1, 0x4f8a3c, 'box'],
+    'core:pine_tree': [1.5, 2.5, 1.5, 0x2f6b3a, 'hip'],
+    'core:rock': [1, 1, 1, 0x8a8577, 'box'],
+    'core:lawn_2x2': [2, 0.1, 2, 0x7cb342, 'box']
 });
 const UNKNOWN_SHAPE = [1, 1, 1, 0x9e9e9e, 'box'];
 

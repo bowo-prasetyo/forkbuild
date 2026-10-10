@@ -68,7 +68,9 @@ const DEG_TO_RAD = Math.PI / 180;
 // brick in this codebase has always had.
 const SHAPE_KIND_BY_DEFINITION_ID = new Map([
     ['core:stair', WalkableSurfaceKind.STEP],
-    ['core:slope_45', WalkableSurfaceKind.SLOPE]
+    ['core:slope_45', WalkableSurfaceKind.SLOPE],
+    ['core:stair_wide', WalkableSurfaceKind.STEP],
+    ['core:slope_shallow', WalkableSurfaceKind.SLOPE]
 ]);
 
 export function walkableSurfaceKindFor(definitionId) {

@@ -1,6 +1,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import BuildLibraryPreview from './BuildLibraryPreview.js';
 import StructureLibraryCard from './StructureLibraryCard.js';
+import VillagePaletteSwatches from './VillagePaletteSwatches.js';
 import { sortStructures, STRUCTURE_SORT_OPTIONS } from '../../core/sortStructures.js';
 import { toCssHex, fromCssHex } from '../../core/ColorHex.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
@@ -60,7 +61,7 @@ export function buildCategoryOptions(...groupsLists) {
 // themselves, so the palette shows them in a few broader sections
 // instead. Display only: BrickDefinition.category is left alone. The
 // section names here are ids; brickSectionName() shows them.
-const BRICK_SECTIONS = ['Basic', 'Structure', 'Roofs & Stairs', 'Openings', 'Details'];
+const BRICK_SECTIONS = ['Basic', 'Structure', 'Roofs & Stairs', 'Openings', 'Details', 'Nature'];
 const BRICK_SECTION_BY_CATEGORY = {
     primitive: 'Basic',
     structural: 'Basic',
@@ -73,7 +74,8 @@ const BRICK_SECTION_BY_CATEGORY = {
     arch: 'Openings',
     window: 'Openings',
     door: 'Openings',
-    decorative: 'Details'
+    decorative: 'Details',
+    nature: 'Nature'
 };
 const OPENING_TAGS = new Set(['window', 'door', 'opening']);
 
@@ -82,7 +84,8 @@ const BRICK_SECTION_KEYS = {
     Structure: 'buildLibrary.section.structure',
     'Roofs & Stairs': 'buildLibrary.section.roofsAndStairs',
     Openings: 'buildLibrary.section.openings',
-    Details: 'buildLibrary.section.details'
+    Details: 'buildLibrary.section.details',
+    Nature: 'buildLibrary.section.nature'
 };
 
 // A section's heading; a category without a section of its own is named as
@@ -221,7 +224,7 @@ export function groupBricksForDisplay(groups) {
 // extracted here rather than a fourth copy-pasted block.
 export default {
     name: 'BuildLibraryPanel',
-    components: { BuildLibraryPreview, StructureLibraryCard },
+    components: { BuildLibraryPreview, StructureLibraryCard, VillagePaletteSwatches },
     props: {
         paletteUseCase: {
             type: Object,
@@ -348,10 +351,13 @@ export default {
                 : (selectedDefinition.value ? selectedDefinition.value.color : 0x4caf7d)
         ));
 
-        function onColorChange(event) {
-            const color = fromCssHex(event.target.value);
+        function chooseColor(color) {
             props.paletteUseCase.setActiveColor(color);
             activeColor.value = color;
+        }
+
+        function onColorChange(event) {
+            chooseColor(fromCssHex(event.target.value));
         }
 
         const filteredBrickGroups = computed(() => {
@@ -589,8 +595,10 @@ export default {
             activeTab,
             query,
             selectedDefinitionId,
+            activeColor,
             activeColorCss,
             onColorChange,
+            chooseColor,
             openMenuId,
             sourceFilter,
             categoryFilter,
@@ -653,6 +661,7 @@ export default {
                     {{ t('buildLibrary.color') }}
                     <input type="color" class="brick-palette-color-input" :value="activeColorCss" @input="onColorChange" />
                 </label>
+                <VillagePaletteSwatches v-if="selectedDefinitionId" :selected="activeColor" @choose="chooseColor" />
                 <p v-if="filteredBrickGroups.length === 0" class="build-library-empty">{{ t('buildLibrary.noBricks') }}</p>
                 <div v-for="group in filteredBrickGroups" :key="group.category" class="palette-group">
                     <h4 class="palette-category">{{ brickSectionName(group.category) }}</h4>

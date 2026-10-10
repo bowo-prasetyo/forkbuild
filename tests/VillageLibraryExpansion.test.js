@@ -57,11 +57,11 @@ import { assert } from './support/Assert.js';
 //              spatial composition, never a synonym for "building"
 
 const EXPECTED_CATEGORY_COUNTS = {
-    residential: 4,
+    residential: 5,
     agricultural: 5,
     commercial: 2,
     community: 3,
-    infrastructure: 6
+    infrastructure: 7
 };
 
 // Structures deliberately built with no enclosing walls at all — the
@@ -93,7 +93,7 @@ async function run() {
     // Section A: catalog shape
     // ---------------------------------------------------------------
     {
-        assert(villageStructures.length === 20, `registry: exactly twenty Village structures (got ${villageStructures.length})`);
+        assert(villageStructures.length === 22, `registry: exactly twenty-two Village structures (got ${villageStructures.length})`);
 
         const counts = {};
         for (const structure of villageStructures) {
@@ -110,7 +110,7 @@ async function run() {
         const ids = new Set(allStructures.map((s) => s.id));
         assert(ids.size === allStructures.length, 'registry: every structure id is unique');
 
-        console.log('✓ Section A: catalog shape — twenty structures, five categories, matching docs/StructureLibrary.md');
+        console.log('✓ Section A: catalog shape — twenty-two structures, five categories, matching docs/StructureLibrary.md');
     }
 
     // ---------------------------------------------------------------
@@ -293,12 +293,12 @@ async function run() {
             }
         }
         const allDefinitionIds = brickRegistry.getAll().map((def) => def.id);
-        assert(allDefinitionIds.length === 17, `sanity: BrickRegistry still has 17 core definitions (got ${allDefinitionIds.length})`);
+        assert(allDefinitionIds.length === 50, `sanity: BrickRegistry has 50 core definitions (got ${allDefinitionIds.length})`);
         for (const definitionId of allDefinitionIds) {
             assert(usedDefinitionIds.has(definitionId),
                 `vocabulary: ${definitionId} is used by at least one Village structure`);
         }
-        console.log('✓ Section I: every one of the 17 core:* primitives is used somewhere in the Village library');
+        console.log('✓ Section I: every one of the 50 core:* primitives is used somewhere in the Village library');
     }
 
     // ---------------------------------------------------------------
