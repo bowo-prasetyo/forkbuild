@@ -14,7 +14,8 @@ export class SpatialClipboardState {
         this._items = items.map((item) => ({
             definitionId: item.definitionId,
             position: { ...item.position },
-            rotation: item.rotation || 0
+            rotation: item.rotation || 0,
+            tilt: item.tilt || 0
         }));
         this._groups = groups.map((group) => ({
             name: group.name || null,
@@ -29,7 +30,8 @@ export class SpatialClipboardState {
         return this._items.map((item) => ({
             definitionId: item.definitionId,
             position: { ...item.position },
-            rotation: item.rotation
+            rotation: item.rotation,
+            tilt: item.tilt || 0
         }));
     }
 

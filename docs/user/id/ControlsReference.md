@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 10c15eb5d27a8961 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: ac00224cc1d8ef6a -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -165,6 +165,8 @@ disimpan di perangkat ini dan tetap ada setelah dimuat ulang — lihat
 | `PgUp` / `PgDn` | Memindahkan pilihan sepanjang sumbu Y dunia |
 | `R` | Memutar +90° di sekitar poros pilihan |
 | `Shift+R` | Memutar −90° |
+| `T` | Rebahkan setiap balok terpilih ke sisi berikutnya, alasnya tetap |
+| `Shift+T` | Miringkan ke arah sebaliknya |
 | `Shift` saat menyeret gizmo | Mode presisi (kelipatan 0,1×) |
 
 ## Transformasi — gizmo (hanya Editor)
@@ -315,6 +317,8 @@ sekali tidak memiliki alat Tempatkan.
 | Gerakkan penunjuk | Pratinjau mengikuti permukaan tanah/balok yang ditunjuk | berwarna merah saat posisi itu sedang terisi |
 | `R` | Memutar pratinjau yang tertunda +90° | tetap berlaku saat berganti balok; diatur ulang saat Anda keluar dari mode Tempatkan. Jika ditekan sebelum ada yang ditunjuk, memutar pratinjau berikutnya |
 | `Shift+R` | Memutar pratinjau yang tertunda −90° | |
+| `T` | Miringkan pratinjau yang tertunda ke sisi berikutnya | diatur ulang saat Anda keluar dari mode Tempatkan |
+| `Shift+T` | Miringkan pratinjau yang tertunda ke arah sebaliknya | |
 | Klik | Menerapkan pratinjau sebagai Balok sungguhan | ditolak di posisi yang terisi (merah) |
 | Contoh warna **Warna** di Pustaka Bangunan | Memilih warna untuk balok berikutnya yang Anda tempatkan | kembali ke warna bawaan jenis balok saat Anda memilih jenis lain — lihat [Brick colors](02-TheEditor.md#warna-balok) |
 
@@ -381,6 +385,7 @@ viewport menggantikan tombol-tombol keyboard:
 |---|---|---|
 | **Urungkan** / **Ulangi** | `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` | |
 | **Putar** | `R` | Saat menempatkan, memutar balok atau struktur berikutnya sebelum Anda mengetuk; selain itu memutar pilihan |
+| **Miringkan** | `T` | Saat menempatkan, merebahkan balok berikutnya ke sisi berikutnya; selain itu memiringkan balok terpilih |
 | **Hapus** | `Delete` | |
 | **Multi** | `Ctrl/Cmd`-klik | Selama aktif, setiap ketukan menambahkan balok ke pilihan atau mengeluarkannya |
 | **Kotak** | `Shift`-seret | Selama aktif, seretan satu jari menggambar kotak pilihan alih-alih menggerakkan kamera; dengan **Multi** juga aktif, kotak menambah ke pilihan (`Ctrl/Cmd+Shift`-seret). Kamera diam selama Kotak aktif (jari kedua membatalkan kotak alih-alih zoom), jadi matikan untuk bergerak lagi |

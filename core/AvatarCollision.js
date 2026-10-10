@@ -1,3 +1,4 @@
+import { orientedSize } from './BrickOrientation.js';
 // 0.2.42 — pure, Three.js-free avatar/world collision geometry. See
 // core/AvatarMovementSimulation.js's own header for why NONE of this
 // lives there: the kinematic simulation stays completely unaware that
@@ -47,10 +48,9 @@ export function avatarAabbAt(position) {
 // (`rotationDegrees`, about the vertical axis, as BrickRenderer draws
 // it): a quarter turn swaps width and depth exactly, and any other angle
 // gets the box that encloses the turned footprint.
-export function brickAabb(center, definition, rotationDegrees = 0) {
-    const width = definition ? definition.width : 1;
-    const height = definition ? definition.height : 1;
-    const depth = definition ? definition.depth : 1;
+export function brickAabb(center, definition, rotationDegrees = 0, tilt = 0) {
+    // A tilted brick's box is its tilted size (core/BrickOrientation.js).
+    const { width, height, depth } = orientedSize(definition, tilt);
     const { halfX, halfZ } = footprintHalfExtents(width, depth, rotationDegrees);
     const halfY = height / 2;
     return {

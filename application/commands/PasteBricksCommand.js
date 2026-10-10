@@ -33,7 +33,8 @@ export class PasteBricksCommand extends Command {
             position: item.position instanceof Position
                 ? item.position.clone()
                 : Position.fromJSON(item.position),
-            rotation: item.rotation || 0
+            rotation: item.rotation || 0,
+            tilt: item.tilt || 0
         }));
         this._groups = groups.map((group) => ({
             name: group.name || null,
@@ -50,7 +51,8 @@ export class PasteBricksCommand extends Command {
         return this._items.map((item) => ({
             definitionId: item.definitionId,
             position: item.position.clone(),
-            rotation: item.rotation
+            rotation: item.rotation,
+            tilt: item.tilt || 0
         }));
     }
     get groups() {
@@ -77,7 +79,8 @@ export class PasteBricksCommand extends Command {
                     id: this._executedBrickIds[i] || undefined,
                     definitionId: item.definitionId,
                     position: item.position.clone(),
-                    rotation: item.rotation
+                    rotation: item.rotation,
+                    tilt: item.tilt || 0
                 });
                 context.world.addBrickToBuilding(this._buildingId, brick);
                 added.push(brick.id);
@@ -155,7 +158,8 @@ export class PasteBricksCommand extends Command {
             items: this._items.map((item) => ({
                 definitionId: item.definitionId,
                 position: item.position.toJSON(),
-                rotation: item.rotation
+                rotation: item.rotation,
+                tilt: item.tilt || 0
             })),
             groups: this._groups.map((group) => ({
                 name: group.name,

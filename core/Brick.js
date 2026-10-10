@@ -1,5 +1,6 @@
 import { Position } from './Position.js';
 import { createBrickId } from './createId.js';
+import { normalizeTilt } from './BrickOrientation.js';
 
 // A Brick is a placement: which definition, where, and how rotated. It
 // never carries geometry — that lives behind BrickRegistry, looked up by
@@ -11,11 +12,15 @@ export class Brick {
     // Brick Color: set at placement time (PlaceBrickCommand) or later via
     // the undoable SetBrickColorCommand; never required, so an existing
     // World with no colors set renders exactly as it always has.
-    constructor({ id = createBrickId(), definitionId, position = new Position(), rotation = 0, color = null }) {
+    // tilt: a quarter turn about the brick's own width axis, laying it on
+    // another side (core/BrickOrientation.js). 0 for every brick that
+    // predates it, and left out of its JSON then.
+    constructor({ id = createBrickId(), definitionId, position = new Position(), rotation = 0, tilt = 0, color = null }) {
         this._id = id;
         this._definitionId = definitionId;
         this._position = position;
         this._rotation = rotation;
+        this._tilt = normalizeTilt(tilt);
         this._color = color;
     }
 
@@ -43,6 +48,14 @@ export class Brick {
         this._rotation = rotation;
     }
 
+    get tilt() {
+        return this._tilt;
+    }
+
+    set tilt(tilt) {
+        this._tilt = normalizeTilt(tilt);
+    }
+
     get color() {
         return this._color;
     }
@@ -57,18 +70,23 @@ export class Brick {
             definitionId: this._definitionId,
             position: this._position.clone(),
             rotation: this._rotation,
+            tilt: this._tilt,
             color: this._color
         });
     }
 
     toJSON() {
-        return {
+        const json = {
             id: this._id,
             definitionId: this._definitionId,
             position: this._position.toJSON(),
             rotation: this._rotation,
             color: this._color
         };
+        // Only a tilted brick says so, so an untilted one serializes (and
+        // hashes) exactly as it always has.
+        if (this._tilt !== 0) json.tilt = this._tilt;
+        return json;
     }
 
     static fromJSON(json) {
@@ -77,6 +95,7 @@ export class Brick {
             definitionId: json.definitionId,
             position: Position.fromJSON(json.position),
             rotation: json.rotation,
+            tilt: json.tilt,
             color: json.color !== undefined ? json.color : null
         });
     }

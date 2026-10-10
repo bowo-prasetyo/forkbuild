@@ -34,6 +34,7 @@ const CUE_BY_COMMAND_TYPE = Object.freeze({
     'transform-selection': EDITOR_SOUND_CUE.MOVE,
     'set-structure-placement-transform': EDITOR_SOUND_CUE.MOVE,
     'rotate-brick': EDITOR_SOUND_CUE.ROTATE,
+    'tilt-brick': EDITOR_SOUND_CUE.ROTATE,
     'rotate-structure-placement': EDITOR_SOUND_CUE.ROTATE,
     'paste-bricks': EDITOR_SOUND_CUE.PASTE,
     'duplicate-group': EDITOR_SOUND_CUE.PASTE,

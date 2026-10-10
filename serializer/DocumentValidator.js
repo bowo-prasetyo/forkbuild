@@ -2,6 +2,7 @@ import { ValidationResult } from './ValidationResult.js';
 import { PROTOCOL_VERSION } from '../core/protocolVersion.js';
 import { DOCUMENT_SCHEMA_VERSION } from '../core/documentSchema.js';
 import { brickTableErrors } from '../core/BrickTable.js';
+import { isValidTilt } from '../core/BrickOrientation.js';
 
 // Pure structural validation of a document JSON envelope. No Vue, no
 // Three.js, no EditorSession, no WorldNavigationSession, no browser
@@ -163,6 +164,9 @@ export const DocumentValidator = Object.freeze({
         }
         if (brick.rotation !== undefined && typeof brick.rotation !== 'number') {
             errors.push(`${prefix}.rotation must be a number when present`);
+        }
+        if (brick.tilt !== undefined && !isValidTilt(brick.tilt)) {
+            errors.push(`${prefix}.tilt must be 0, 90, 180 or 270 when present`);
         }
     },
 

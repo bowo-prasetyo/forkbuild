@@ -39,6 +39,7 @@ export function collectModelBricks(world, resolveWorld = () => null) {
                     definitionId: brick.definitionId,
                     color: brick.color,
                     rotation: brick.rotation + placement.rotation,
+                    tilt: brick.tilt || 0,
                     position: Object.freeze({
                         x: turned.x + placement.position.x,
                         y: turned.y + placement.position.y,

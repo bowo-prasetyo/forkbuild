@@ -28,7 +28,8 @@ export class PasteClipboardUseCase {
                 y: item.position.y + position.y,
                 z: item.position.z + position.z
             },
-            rotation: item.rotation
+            rotation: item.rotation,
+            tilt: item.tilt || 0
         }));
         return new PasteBricksCommand({
             worldId,

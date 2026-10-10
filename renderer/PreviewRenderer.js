@@ -1,3 +1,4 @@
+import { applyBrickOrientation } from './applyBrickOrientation.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
 import { ThreeBrickFactory } from './ThreeBrickFactory.js';
 
@@ -70,7 +71,7 @@ export class PreviewRenderer {
 
         const groundY = this._terrainOffsetY();
         this._mesh.position.set(preview.position.x, preview.position.y + groundY, preview.position.z);
-        this._mesh.rotation.y = preview.rotation * (Math.PI / 180);
+        applyBrickOrientation(this._mesh, preview.rotation, preview.tilt);
         this._applyValidity(preview.valid);
     }
 

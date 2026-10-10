@@ -1,3 +1,4 @@
+import { normalizeTilt } from '../core/BrickOrientation.js';
 import { ThreeBrickFactory } from './ThreeBrickFactory.js';
 
 // BrickRenderer no longer knows what a brick looks like. Given a Brick, it
@@ -12,8 +13,9 @@ export class BrickRenderer {
         this._brickFactory = brickFactory;
     }
 
-    // { definitionId, x, y, z, rotationY (radians), color }, in the
-    // brick's own (document-local) coordinates.
+    // { definitionId, x, y, z, rotationY, rotationX (radians), color }, in
+    // the brick's own (document-local) coordinates. rotationX is its tilt
+    // (core/BrickOrientation.js), applied before rotationY (Euler 'YXZ').
     describe(brick) {
         const definition = this._registry.get(brick.definitionId);
         if (!definition) {
@@ -25,6 +27,7 @@ export class BrickRenderer {
             y: brick.position.y,
             z: brick.position.z,
             rotationY: brick.rotation * (Math.PI / 180),
+            rotationX: normalizeTilt(brick.tilt) * (Math.PI / 180),
             // Choose Your Brick Color: an instance override (Brick#color,
             // set by SetBrickColorCommand) wins; otherwise fall back to
             // this type's own default (BrickDefinition#color).
@@ -33,9 +36,11 @@ export class BrickRenderer {
     }
 
     createMesh(brick) {
-        const { definitionId, x, y, z, rotationY, color } = this.describe(brick);
+        const { definitionId, x, y, z, rotationY, rotationX, color } = this.describe(brick);
         const mesh = this._brickFactory.createMesh(definitionId, color);
         mesh.position.set(x, y, z);
+        mesh.rotation.order = 'YXZ';
+        mesh.rotation.x = rotationX;
         mesh.rotation.y = rotationY;
         mesh.name = brick.id;
 

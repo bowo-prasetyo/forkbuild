@@ -57,7 +57,8 @@ export class DuplicateGroupCommand extends Command {
                         brick.position.y + this._offset.y,
                         brick.position.z + this._offset.z
                     ),
-                    rotation: brick.rotation
+                    rotation: brick.rotation,
+                    tilt: brick.tilt || 0
                 });
                 context.world.addBrickToBuilding(buildingId, copy);
                 added.push(copy.id);

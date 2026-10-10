@@ -16,11 +16,14 @@ export class PreviewState {
     // PlaceBrickCommand will carry (ActiveBrickState's own color, or null
     // for the definition's default); renderer/PreviewRenderer.js tints
     // the ghost with it so what you see is what you get.
-    constructor({ visible = false, definitionId = null, position = new Position(), rotation = 0, valid = true, color = null } = {}) {
+    // tilt: the quarter turn laying the pending brick on another side
+    // (core/BrickOrientation.js), which the T key changes.
+    constructor({ visible = false, definitionId = null, position = new Position(), rotation = 0, tilt = 0, valid = true, color = null } = {}) {
         this._visible = visible;
         this._definitionId = definitionId;
         this._position = position;
         this._rotation = rotation;
+        this._tilt = tilt;
         this._valid = valid;
         this._color = color;
     }
@@ -39,6 +42,10 @@ export class PreviewState {
 
     get rotation() {
         return this._rotation;
+    }
+
+    get tilt() {
+        return this._tilt;
     }
 
     get valid() {

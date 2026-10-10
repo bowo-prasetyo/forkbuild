@@ -280,6 +280,7 @@ export default {
                         :placing="PLACING_TOOLS.has(activeTool)"
                         @run="runTouchAction"
                         @rotate-placement="rotateTouchPlacement"
+                        @tilt-placement="tiltTouchPlacement"
                         @toggle-multi-select="toggleTouchMultiSelect"
                         @toggle-box-select="toggleTouchBoxSelect"
                     />
@@ -937,6 +938,11 @@ export default {
             editorSession.onKeyDown({ key: 'r' });
             feedback.show(t('editor.touchRotated'));
         }
+        // The T key while placing: lays the piece about to be placed on its next side.
+        function tiltTouchPlacement() {
+            editorSession.onKeyDown({ key: 't' });
+            feedback.show(t('editor.touchTilted'));
+        }
 
         let onPointerDown = null;
         let onPointerMove = null;
@@ -1222,6 +1228,11 @@ export default {
                     editorSession.onKeyDown(event);
                     return;
                 }
+                // 4.55. And Tilt (T) for the brick about to be placed.
+                if (activeTool.value === ToolId.PLACE && event.key.toLowerCase() === 't') {
+                    editorSession.onKeyDown(event);
+                    return;
+                }
                 // 4.6. Same for COMPOSE_STRUCTURE's Escape, which would otherwise match the
                 // disabled 'selection.clear'.
                 if (activeTool.value === ToolId.COMPOSE_STRUCTURE && event.key === 'Escape') {
@@ -1307,7 +1318,7 @@ export default {
             touchBoxSelect,
             toggleTouchBoxSelect,
             runTouchAction,
-            rotateTouchPlacement,
+            rotateTouchPlacement, tiltTouchPlacement,
             PLACING_TOOLS,
             marqueeRect,
             transformFeedback,

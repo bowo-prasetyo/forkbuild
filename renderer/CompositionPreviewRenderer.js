@@ -1,3 +1,5 @@
+import { applyBrickOrientation } from './applyBrickOrientation.js';
+import { normalizeTilt } from '../core/BrickOrientation.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
 import { ThreeBrickFactory } from './ThreeBrickFactory.js';
 
@@ -85,6 +87,7 @@ export class CompositionPreviewRenderer {
             mesh.userData.baseColor = mesh.material.color.clone();
             mesh.userData.localPosition = brick.position;
             mesh.userData.localRotation = brick.rotation;
+            mesh.userData.localTilt = normalizeTilt(brick.tilt);
             meshes.push(mesh);
         }
         return meshes;
@@ -106,7 +109,7 @@ export class CompositionPreviewRenderer {
                 localPoint.y + preview.position.y + groundY,
                 localPoint.z + preview.position.z
             );
-            mesh.rotation.y = (mesh.userData.localRotation + preview.rotation) * (Math.PI / 180);
+            applyBrickOrientation(mesh, mesh.userData.localRotation + preview.rotation, mesh.userData.localTilt);
         }
     }
 

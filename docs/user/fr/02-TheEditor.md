@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2e46c9cbf050378c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 91fd6bed6af1eba8 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -153,10 +153,20 @@ Avec une ou plusieurs briques sélectionnées :
 | **Pg préc / Pg suiv** | Décaler vers le haut / le bas |
 | **R** | Pivoter de 90° dans le sens horaire |
 | **Maj + R** | Pivoter de 90° dans le sens antihoraire |
+| **T** | Basculer sur la face suivante |
+| **Maj + T** | Basculer dans l’autre sens |
 | **Suppr / Retour arrière** | Retirer les briques sélectionnées |
 
 Quand vous sélectionnez plusieurs briques, elles pivotent autour de leur
 **centre commun**, si bien qu’une section entière tourne d’un seul bloc.
+
+**T** couche chaque brique sélectionnée sur sa face suivante, là où elle
+est : un poteau s’allonge en poutre, un mur devient un sol, une pente se
+retourne en surplomb. Chaque brique garde la hauteur de sa base, et la
+bascule s’annule en une étape. Quatre appuis remettent une brique debout.
+Pendant un placement, **T** bascule plutôt la brique que vous allez poser.
+Une structure placée pivote mais ne bascule pas. Les anciennes versions de
+ForkBuild (1.3.0 et avant) montrent les briques basculées debout.
 
 ## Couleurs des briques
 

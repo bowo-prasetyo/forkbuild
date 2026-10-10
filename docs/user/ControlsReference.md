@@ -161,6 +161,8 @@ device and survive a reload — see
 | `PgUp` / `PgDn` | Move selection along world Y |
 | `R` | Rotate +90° around the selection pivot |
 | `Shift+R` | Rotate −90° |
+| `T` | Tilt each selected brick onto its next side, keeping its bottom |
+| `Shift+T` | Tilt the other way |
 | `Shift` while gizmo-dragging | Precision mode (0.1× increments) |
 
 ## Transform — gizmo (Editor only)
@@ -310,6 +312,8 @@ Place tool at all.
 | Move the pointer | Preview follows the hovered ground/brick face | tinted red when the position is currently occupied |
 | `R` | Rotate the pending preview +90° | persists across brick switches; resets when you leave Place mode. Pressed before anything is hovered, it turns the next preview |
 | `Shift+R` | Rotate the pending preview −90° | |
+| `T` | Tilt the pending preview onto its next side | resets when you leave Place mode |
+| `Shift+T` | Tilt the pending preview the other way | |
 | Click | Commit the preview as a real Brick | refused at an occupied (red) position |
 | Build Library **Color** swatch | Choose the color for the next bricks you place | resets to the brick type's default when you pick a different type — see [Brick colors](02-TheEditor.md#brick-colors) |
 
@@ -371,6 +375,7 @@ the scene. The bar at the bottom of the viewport stands in for the keys:
 |---|---|---|
 | **Undo** / **Redo** | `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` | |
 | **Rotate** | `R` | While placing, turns the next brick or structure before you tap; otherwise rotates the selection |
+| **Tilt** | `T` | While placing, lays the next brick on its next side; otherwise tilts the selected bricks |
 | **Delete** | `Delete` | |
 | **Multi** | `Ctrl/Cmd`-click | While on, each tap adds a brick to the selection or removes it |
 | **Box** | `Shift`-drag | While on, a one-finger drag draws a selection box instead of moving the camera; with **Multi** also on, the box adds to the selection (`Ctrl/Cmd+Shift`-drag). The camera stays still while Box is on (a second finger cancels the box rather than zooming), so turn it off to move around again |

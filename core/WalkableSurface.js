@@ -73,7 +73,10 @@ const SHAPE_KIND_BY_DEFINITION_ID = new Map([
     ['core:slope_shallow', WalkableSurfaceKind.SLOPE]
 ]);
 
-export function walkableSurfaceKindFor(definitionId) {
+// A tilted brick (core/BrickOrientation.js) walks as the flat top of its
+// box: a ramp or stair laid on another side is no longer one.
+export function walkableSurfaceKindFor(definitionId, tilt = 0) {
+    if (tilt) return WalkableSurfaceKind.FLAT;
     return SHAPE_KIND_BY_DEFINITION_ID.get(definitionId) || WalkableSurfaceKind.FLAT;
 }
 

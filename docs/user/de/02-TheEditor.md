@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2e46c9cbf050378c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 91fd6bed6af1eba8 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -151,10 +151,21 @@ Mit einem oder mehreren ausgewählten Steinen:
 | **Bild↑ / Bild↓** | Schrittweise nach oben / unten verschieben |
 | **R** | Um 90° im Uhrzeigersinn drehen |
 | **Umschalt + R** | Um 90° gegen den Uhrzeigersinn drehen |
+| **T** | Auf die nächste Seite kippen |
+| **Umschalt + T** | In die andere Richtung kippen |
 | **Entf / Rücktaste** | Die ausgewählten Steine entfernen |
 
 Wenn Sie mehrere Steine auswählen, drehen sie sich um ihren **gemeinsamen
 Mittelpunkt**, sodass ein ganzer Abschnitt als eine Einheit schwenkt.
+
+**T** kippt jeden ausgewählten Stein an Ort und Stelle auf seine nächste
+Seite: Ein Pfosten liegt dann als Balken, eine Wand wird zum Boden, eine
+Schräge steht kopf als Überhang. Jeder Stein behält die Höhe seiner
+Unterseite, und das Kippen ist ein Schritt zum Rückgängigmachen. Nach vier
+Drücken steht ein Stein wieder aufrecht. Beim Platzieren kippt **T**
+stattdessen den Stein, den Sie gleich setzen. Eine platzierte Struktur wird
+gedreht, nicht gekippt. Ältere Versionen von ForkBuild (1.3.0 und früher)
+zeigen gekippte Steine aufrecht.
 
 ## Steinfarben
 

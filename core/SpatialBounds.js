@@ -1,3 +1,4 @@
+import { orientedSize } from './BrickOrientation.js';
 // Pure geometry: the axis-aligned bounding box (AABB) of a published
 // world in its LOCAL coordinate system. Calculated once from the
 // document's bricks, then translated by the WorldPlacement's global
@@ -84,9 +85,7 @@ export class SpatialBounds {
         for (const brick of bricks) {
             hasBricks = true;
             const def = registry ? registry.get(brick.definitionId) : null;
-            const w = def ? def.width : 1;
-            const h = def ? def.height : 1;
-            const d = def ? def.depth : 1;
+            const { width: w, height: h, depth: d } = orientedSize(def, brick.tilt);
 
             minX = Math.min(minX, brick.position.x - w / 2);
             maxX = Math.max(maxX, brick.position.x + w / 2);

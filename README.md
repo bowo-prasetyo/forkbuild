@@ -47,7 +47,8 @@ longer-term aim.
   week: every copy of the app works out the same theme and tag from the date.
 
 **Editor**
-- Place, select (single, multi, marquee), move, rotate and delete bricks, with
+- Place, select (single, multi, marquee), move, rotate, tilt onto another
+  side and delete bricks, with
   undo/redo, grid snapping and a placement preview.
 - Interactive transform gizmo, numeric transform input, snapping, and alignment
   and distribution tools.

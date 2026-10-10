@@ -75,9 +75,10 @@ double door, shutters, a small arch, a chimney, a barrel, a bench, and a
 new `nature` category (core:bush, core:pine_tree, core:rock,
 core:lawn_2x2) that the Build Library shows as its own Nature section.
 Every one is still one primitive with one geometry, drawn at exactly its
-declared size (tests/BuildersKit.test.js). Bricks still turn only about the
-vertical axis: tilting would change the document format, and is left for
-its own change. core/VillagePalette.js holds sixteen village colours the
+declared size (tests/BuildersKit.test.js). Any brick can also be tilted onto
+another side (core/BrickOrientation.js, docs/Protocol.md "Brick Tilt"), so
+a post lies down as a beam and a slope turns upside down; the
+geometries need nothing for it. core/VillagePalette.js holds sixteen village colours the
 Build Library and the Selection Inspector offer beside the colour picker;
 a chosen swatch is an ordinary brick colour.
 

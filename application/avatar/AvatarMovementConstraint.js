@@ -178,9 +178,9 @@ export class AvatarMovementConstraint {
                     // would take down movement entirely over one bad
                     // or future-versioned brick.
                     if (!definition) continue;
-                    const worldAabb = translateAabb(brickAabb(brick.position, definition, brick.rotation), worldPosition);
+                    const worldAabb = translateAabb(brickAabb(brick.position, definition, brick.rotation, brick.tilt), worldPosition);
                     if (flatAabbDistance(worldAabb, position, avatarRadius) > this._queryRadius) continue;
-                    if (canStep && this._excludedByStep(worldAabb, brick.definitionId, supportHeight)) continue;
+                    if (canStep && this._excludedByStep(worldAabb, brick.definitionId, supportHeight, brick.tilt)) continue;
                     obstacles.push(worldAabb);
                 }
             }
@@ -222,9 +222,9 @@ export class AvatarMovementConstraint {
                         y: localPoint.y + placementWorldPosition.y,
                         z: localPoint.z + placementWorldPosition.z
                     };
-                    const worldAabb = brickAabb(worldCenter, definition, brick.rotation + (placement.rotation || 0));
+                    const worldAabb = brickAabb(worldCenter, definition, brick.rotation + (placement.rotation || 0), brick.tilt);
                     if (flatAabbDistance(worldAabb, position, avatarRadius) > this._queryRadius) continue;
-                    if (canStep && this._excludedByStep(worldAabb, brick.definitionId, supportHeight)) continue;
+                    if (canStep && this._excludedByStep(worldAabb, brick.definitionId, supportHeight, brick.tilt)) continue;
                     obstacles.push(worldAabb);
                 }
             }
@@ -258,8 +258,8 @@ export class AvatarMovementConstraint {
     // plain `worldAabb.max.y - supportHeight` difference already
     // captures both directions symmetrically, matching
     // core/BrickWalkability.js#isStepClimbable's own convention.
-    _excludedByStep(worldAabb, definitionId, supportHeight) {
-        const shapeKind = walkableSurfaceKindFor(definitionId);
+    _excludedByStep(worldAabb, definitionId, supportHeight, tilt = 0) {
+        const shapeKind = walkableSurfaceKindFor(definitionId, tilt);
         if (shapeKind === WalkableSurfaceKind.STEP || shapeKind === WalkableSurfaceKind.SLOPE) {
             return true;
         }

@@ -89,7 +89,8 @@ export class RepeatSelectionUseCase {
                         y: item.position.y + anchor.y,
                         z: item.position.z + anchor.z
                     },
-                    rotation: item.rotation
+                    rotation: item.rotation,
+                    tilt: item.tilt || 0
                 });
             }
         }

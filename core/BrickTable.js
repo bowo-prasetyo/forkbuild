@@ -1,3 +1,5 @@
+import { isValidTilt, normalizeTilt } from './BrickOrientation.js';
+
 // The compact form of a building's bricks in a stored or published
 // document (document schema 2, core/documentSchema.js). Instead of one
 // JSON object per brick, a building carries one table:
@@ -8,6 +10,12 @@
 //         ids: ['a8Kf2x...', ...],           // one per brick
 //         values: [d, x, y, z, r, c, ...]    // six numbers per brick
 //     }
+//
+// A table whose bricks include a tilted one (core/BrickOrientation.js) also
+// carries `tilts: [t, ...]`, one per brick, each 0, 90, 180 or 270. A table
+// with no tilted brick has no `tilts`, so it is byte for byte what it was
+// before tilting existed; a copy of the app that predates it ignores
+// `tilts` and draws those bricks upright.
 //
 // For brick i, values[6i..6i+5] are: its index into `definitions`, its
 // position x, y and z, its rotation in degrees, and 0 for no color or
@@ -59,13 +67,16 @@ export function encodeBrickTable(bricks) {
         values[offset + 4] = brick.rotation === undefined ? 0 : brick.rotation;
         values[offset + 5] = c;
     }
-    return { definitions, colors, ids, values };
+    const tilts = bricks.map((brick) => normalizeTilt(brick.tilt));
+    return tilts.some((tilt) => tilt !== 0)
+        ? { definitions, colors, ids, values, tilts }
+        : { definitions, colors, ids, values };
 }
 
 // Returns brick JSON objects ({ id, definitionId, position, rotation,
 // color }) for Brick.fromJSON(). Assumes a table isValidBrickTable() accepts.
 export function decodeBrickTable(table) {
-    const { definitions, colors, ids, values } = table;
+    const { definitions, colors, ids, values, tilts } = table;
     const bricks = new Array(ids.length);
     for (let i = 0; i < ids.length; i++) {
         const offset = i * BRICK_TABLE_STRIDE;
@@ -77,6 +88,7 @@ export function decodeBrickTable(table) {
             rotation: values[offset + 4],
             color: c === 0 ? null : colors[c - 1]
         };
+        if (Array.isArray(tilts) && tilts[i]) bricks[i].tilt = tilts[i];
     }
     return bricks;
 }
@@ -121,6 +133,15 @@ export function brickTableErrors(table, prefix = 'brickTable') {
         }
         if (!Number.isInteger(c) || c < 0 || c > colors.length) {
             return [`${prefix}.values[${offset + 5}] (brick ${i} color) must be 0 or index colors from 1`];
+        }
+    }
+    if (table.tilts !== undefined) {
+        if (!Array.isArray(table.tilts) || table.tilts.length !== ids.length) {
+            return [`${prefix}.tilts must hold one tilt per id`];
+        }
+        const bad = table.tilts.findIndex((tilt) => !isValidTilt(tilt));
+        if (bad !== -1) {
+            return [`${prefix}.tilts[${bad}] (brick ${bad} tilt) must be 0, 90, 180 or 270`];
         }
     }
     return [];

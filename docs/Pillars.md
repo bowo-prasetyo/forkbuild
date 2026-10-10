@@ -145,8 +145,8 @@ project's. The review's other recommendations, in order:
    village colour palette), each build's family tree on its shared link and
    on the challenge page, building on a plot in a World and publishing back
    to it, and builder stamps for facts like "your build was remixed".
-   Done on 2026-10-10 except tilting, which changes the document format,
-   and showing a week's entries together as a walkable World.
+   Done on 2026-10-10, and tilting bricks onto their other sides soon
+   after; showing a week's entries together as a walkable World is left.
 3. No new networks or chains until the building numbers move; the
    reconciliation and publisher leaderboard pages archived; no new vehicle or
    swimming features until building catches up.

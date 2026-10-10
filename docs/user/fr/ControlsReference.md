@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 10c15eb5d27a8961 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: ac00224cc1d8ef6a -->
 # Référence des commandes
 
 <!-- languages -->
@@ -175,6 +175,8 @@ enregistrés sur cet appareil et survivent à un rechargement — voir
 | `Pg préc` / `Pg suiv` | Déplacer la sélection le long de l’axe Y du monde |
 | `R` | Pivoter de +90° autour du pivot de la sélection |
 | `Maj+R` | Pivoter de −90° |
+| `T` | Coucher chaque brique sélectionnée sur sa face suivante, sa base gardée |
+| `Maj+T` | Basculer dans l’autre sens |
 | `Maj` pendant un glissement du manipulateur | Mode précision (incréments de 0,1×) |
 
 ## Transformation — manipulateur (Éditeur uniquement)
@@ -329,6 +331,8 @@ pas dans la Palette de commandes (là, `R`/`Maj+R` font pivoter une
 | Déplacer le pointeur | L’aperçu suit la face du sol ou de la brique survolée | teinté en rouge quand la position est actuellement occupée |
 | `R` | Faire pivoter l’aperçu en attente de +90° | persiste quand vous changez de brique ; se réinitialise quand vous quittez le mode Placement. Appuyé avant de survoler quoi que ce soit, il fait tourner le prochain aperçu |
 | `Maj+R` | Faire pivoter l’aperçu en attente de −90° | |
+| `T` | Basculer l’aperçu en attente sur sa face suivante | revient à zéro quand vous quittez le mode Placement |
+| `Maj+T` | Basculer l’aperçu en attente dans l’autre sens | |
 | Clic | Valider l’aperçu comme une vraie brique | refusé à une position occupée (rouge) |
 | Nuancier **Couleur** de la Bibliothèque de construction | Choisir la couleur des prochaines briques que vous placez | revient à la couleur par défaut du type quand vous en choisissez un autre — voir [Couleurs des briques](02-TheEditor.md#couleurs-des-briques) |
 
@@ -397,6 +401,7 @@ de la vue remplace les touches :
 |---|---|---|
 | **Annuler** / **Rétablir** | `Ctrl/Cmd+Z` / `Ctrl/Cmd+Maj+Z` | |
 | **Pivoter** | `R` | Pendant un placement, fait tourner la prochaine brique ou structure avant l’appui ; sinon, fait pivoter la sélection |
+| **Basculer** | `T` | Pendant un placement, couche la prochaine brique sur sa face suivante ; sinon, bascule les briques sélectionnées |
 | **Supprimer** | `Suppr` | |
 | **Multi** | `Ctrl/Cmd`-clic | Tant qu’il est actif, chaque appui ajoute une brique à la sélection ou l’en retire |
 | **Cadre** | `Maj`-glisser | Tant qu’il est actif, glisser un doigt trace un cadre de sélection au lieu de déplacer la caméra ; avec **Multi** aussi actif, le cadre ajoute à la sélection (`Ctrl/Cmd+Maj`-glisser). La caméra reste immobile tant que Cadre est actif (un second doigt annule le cadre au lieu de zoomer), désactivez-le donc pour vous déplacer de nouveau |

@@ -1,3 +1,4 @@
+import { orientedSize } from '../../core/BrickOrientation.js';
 import { isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../../core/BrickWalkability.js';
 import { resolveWalkableSurfaceAt, walkableSurfaceKindFor } from '../../core/WalkableSurface.js';
 import { TransformMath } from '../editor/TransformMath.js';
@@ -183,13 +184,14 @@ export class AvatarStepConstraint {
                         y: brick.position.y + worldPosition.y,
                         z: brick.position.z + worldPosition.z
                     };
-                    if (hasReference && (center.y - definition.height / 2) - referenceHeight > this._maxStepHeight) continue;
+                    const size = orientedSize(definition, brick.tilt);
+                    if (hasReference && (center.y - size.height / 2) - referenceHeight > this._maxStepHeight) continue;
                     const surface = resolveWalkableSurfaceAt({
-                        shapeKind: walkableSurfaceKindFor(brick.definitionId),
+                        shapeKind: walkableSurfaceKindFor(brick.definitionId, brick.tilt),
                         center,
-                        width: definition.width,
-                        height: definition.height,
-                        depth: definition.depth,
+                        width: size.width,
+                        height: size.height,
+                        depth: size.depth,
                         rotationDegrees: brick.rotation
                     }, x, z);
                     if (surface !== null && surface.height > height) {
@@ -232,13 +234,14 @@ export class AvatarStepConstraint {
                         y: localPoint.y + placementWorldPosition.y,
                         z: localPoint.z + placementWorldPosition.z
                     };
-                    if (hasReference && (center.y - definition.height / 2) - referenceHeight > this._maxStepHeight) continue;
+                    const size = orientedSize(definition, brick.tilt);
+                    if (hasReference && (center.y - size.height / 2) - referenceHeight > this._maxStepHeight) continue;
                     const surface = resolveWalkableSurfaceAt({
-                        shapeKind: walkableSurfaceKindFor(brick.definitionId),
+                        shapeKind: walkableSurfaceKindFor(brick.definitionId, brick.tilt),
                         center,
-                        width: definition.width,
-                        height: definition.height,
-                        depth: definition.depth,
+                        width: size.width,
+                        height: size.height,
+                        depth: size.depth,
                         rotationDegrees: brick.rotation + placement.rotation
                     }, x, z);
                     if (surface !== null && surface.height > height) {

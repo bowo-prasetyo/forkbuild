@@ -90,10 +90,12 @@ deserializing and serializing again gives byte-identical JSON):
       }
     }
 
-    Brick: { id, definitionId, position: { x, y, z }, rotation, color }   // in memory, and in schema 1
+    Brick: { id, definitionId, position: { x, y, z }, rotation, color, tilt? }   // in memory, and in schema 1
 
-- `rotation` is degrees around Y. Translate and rotate are the only
-  transforms; there is no scale.
+- `rotation` is degrees around Y. `tilt`, present only when it isn't 0, is
+  a quarter turn (90, 180 or 270) about the brick's own X axis, applied
+  before `rotation` (see "Brick Tilt" below). Translate, rotate and tilt
+  are the only transforms; there is no scale.
 - A StructurePlacement references another Document by id and never
   copies its bricks.
 - Fields added after a document was written are optional and read with a
@@ -131,6 +133,10 @@ A building's bricks are stored as one table rather than one object each
       values: [ d, x, y, z, r, c, … ]  // six numbers per brick
     }
 
+A table whose bricks include a tilted one also carries `tilts: [ t, … ]`,
+one tilt per brick in brick order, each 0, 90, 180 or 270. A table with no
+tilted brick has no `tilts`.
+
 For brick `i`, `values[6i … 6i+5]` are the index of its definition in
 `definitions`, its position `x`, `y`, `z`, its `rotation` in degrees, and
 `0` for no color or `1 +` the index of its color in `colors`. Bricks keep
@@ -144,6 +150,25 @@ The table is about a quarter of the object form's size with UUID brick
 ids, and a fifth with short ones: the hollow 233-base pyramid (54,289
 bricks) is 7.49 MB as objects with UUIDs, 3.09 MB as a table with the
 same ids, and 1.79 MB built anew.
+
+### Brick Tilt
+
+A brick's orientation is its `rotation`, degrees about the vertical, and its
+`tilt`, a quarter turn about its own width axis that lays it on another
+side: 0 (upright), 90 (its top toward its front, +Z), 180 (upside down) or
+270. The tilt is applied first, so the orientation is Ry(rotation) ·
+Rx(tilt), a Three.js Euler of order `YXZ` (core/BrickOrientation.js). A tilt
+of 90 or 270 swaps the brick's height and depth for its bounds, collision
+and stacking, and a tilted brick is walked on as the flat top of that box.
+
+It is written only when set: `tilt` on an object brick, `tilts` on a brick
+table (above), and `tilt` on a `place-brick` command; tilting an existing
+brick is a `tilt-brick` command carrying the new tilt and position. So a
+document with no tilted brick serializes, hashes and fingerprints exactly
+as it did before tilting existed. `PROTOCOL_VERSION` is unchanged: a copy
+of the app that predates tilting ignores the field and draws those bricks
+upright, and the validators of this version refuse any tilt but 0, 90, 180
+and 270.
 
 ### Brick Color
 
