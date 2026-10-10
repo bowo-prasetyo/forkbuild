@@ -47,10 +47,22 @@ function rmsOf(data, from = 0, to = data.length) {
 }
 
 // Renders what `act(provider)` plays over `seconds`, ambience silent.
+// The same seeded random sequence for every render, so a sound's level is the
+// same on every run: synthesized footsteps and creature sounds vary with
+// `random`, and some sit close to the thresholds below (a rabbit's step is
+// quiet on purpose), where an unlucky Math.random draw would fail a test.
+function seededRandom() {
+    let seedState = 12345;
+    return () => {
+        seedState = (seedState * 1103515245 + 12345) % 2147483648;
+        return seedState / 2147483648;
+    };
+}
+
 async function renderEffects(seconds, act) {
     const { offline, context } = runningOffline(seconds);
     const provider = new WebAudioSoundscapeProvider({
-        contextFactory: () => context, documentRef: null, setTimeoutFn: () => 1, clearTimeoutFn: () => {}
+        contextFactory: () => context, documentRef: null, random: seededRandom(), setTimeoutFn: () => 1, clearTimeoutFn: () => {}
     });
     provider.setVolume(1);
     provider.resume();
@@ -164,6 +176,7 @@ async function runTests() {
         const provider = new WebAudioSoundscapeProvider({
             contextFactory: () => context,
             documentRef: null,
+            random: seededRandom(),
             setTimeoutFn: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
             clearTimeoutFn: () => {}
         });
@@ -264,7 +277,7 @@ async function runTests() {
         {
             const { offline, context } = runningOffline(2);
             const provider = new WebAudioSoundscapeProvider({
-                contextFactory: () => context, documentRef: null, setTimeoutFn: () => 1, clearTimeoutFn: () => {}
+                contextFactory: () => context, documentRef: null, random: seededRandom(), setTimeoutFn: () => 1, clearTimeoutFn: () => {}
             });
             provider.setEngine({ vehicleType: 'car', load: 0.5 });
             assert(provider.context === null, 'setup: no context yet');
@@ -289,7 +302,7 @@ async function runTests() {
                 }
             });
             const provider = new WebAudioSoundscapeProvider({
-                contextFactory: () => context, documentRef: null, setTimeoutFn: () => 1, clearTimeoutFn: () => {}
+                contextFactory: () => context, documentRef: null, random: seededRandom(), setTimeoutFn: () => 1, clearTimeoutFn: () => {}
             });
             provider.setVolume(1);
             provider.resume();
@@ -338,7 +351,7 @@ async function runTests() {
         const { offline, context } = runningOffline(2);
         const timers = [];
         const editor = new WebAudioSoundscapeProvider({
-            contextFactory: () => context, documentRef: null, ambience: false,
+            contextFactory: () => context, documentRef: null, ambience: false, random: seededRandom(),
             setTimeoutFn: (fn) => { timers.push(fn); return timers.length; }, clearTimeoutFn: () => {}
         });
         editor.setVolume(1);
@@ -384,11 +397,7 @@ async function runTests() {
             });
             // The same seeded random sequence each time, so every render plays the
             // identical footstep and only its placement differs.
-            let seedState = 12345;
-            const random = () => {
-                seedState = (seedState * 1103515245 + 12345) % 2147483648;
-                return seedState / 2147483648;
-            };
+            const random = seededRandom();
             const provider = new WebAudioSoundscapeProvider({
                 contextFactory: () => context, documentRef: null, random, setTimeoutFn: () => 1, clearTimeoutFn: () => {}
             });
