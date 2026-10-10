@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 6725707d86a7f053 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: cd219cc0fb352867 -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -51,7 +51,7 @@ La barre du haut est toujours visible :
   [Mes mondes](03-WorldView.md#mes-mondes--les-mondes-où-vous-êtes-vraiment-allé)
 
 **Plus** ouvre le reste, en quatre groupes : **Vous** (Mon avatar, Mes identités,
-Vos données), **Personnes** (Pairs, Abonnements, Conversations), **Réseau**
+Vos données), **Personnes** (Pairs, Abonnements, Conversations), **Avancé**
 (Publications, Paramètres réseau) et **Application** (Langue, À propos, et **Installer ForkBuild** là où le navigateur peut l’installer). Sur un téléphone,
 **Menu** les affiche tous d’un coup.
 

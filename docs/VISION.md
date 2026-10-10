@@ -1,8 +1,23 @@
-ForkBuild is an open construction platform where digital creations can be built, forked, shared, and preserved across decentralized publishing systems. The project aims to define an open protocol for collaborative world-building rather than a game tied to any single platform or blockchain.
+# Vision
+
+**Build a little place. Anyone can remix it. Walk inside it with friends.**
+
+ForkBuild is a 3D building game in the browser. You snap bricks into houses,
+bridges and whole villages with no account and no download, share a link,
+and anyone can make their own credited copy and build on it. Then you walk
+through what you made, together. Your work stays yours: it lives on your
+device, is signed with a key you hold, and can be published to open
+networks that no single company runs. [Pillars.md](Pillars.md) turns this
+into the test every feature has to pass.
+
+## How it's built
+
+Under the game is an open construction protocol, so that builds outlive
+any one copy of the app, any one server and any one network.
 
 ForkBuild is architected as an engine first: a clean domain model (core/), an event-driven core that never depends on rendering or UI, interchangeable rendering and publishing adapters, and a protocol designed for decentralized collaborative world-building. The browser editor (ui/) is the engine's first client, not the engine itself — every feature should be built asking "does this belong in the engine, or only in this client?"
 
-The clearer aspiration: ForkBuild is Git for 3D models. Every creation has a history, can be forked, and can evolve — not a single-player building toy, but a foundation for an open construction ecosystem. First-class entity identity (UUIDs on World/Building/Brick, never array indices or sequential numbers), an aggregate root that mediates every mutation, and an event-driven core are the concrete architectural choices that make that aspiration possible rather than aspirational.
+The engine's aspiration is Git for 3D models. Every creation has a history, can be forked, and can evolve, so the game is never a single-player toy: it is the first client of an open construction ecosystem. The engine serves the game's pillars; it is not a product in its own right. First-class entity identity (UUIDs on World/Building/Brick, never array indices or sequential numbers), an aggregate root that mediates every mutation, and an event-driven core are the concrete architectural choices that make that aspiration possible rather than aspirational.
 
 As of 0.1.46, this aspiration has three concrete navigation modes:
 

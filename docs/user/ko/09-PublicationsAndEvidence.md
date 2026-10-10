@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7c7451cea88d3528 -->
 # 09 — 게시물과 외부 증거
 
 <!-- languages -->
@@ -152,6 +152,10 @@ X라고 부른다” 같은 **서명된 클레임**과, 클레임에 더할 수 
 앵커링**, **아카이브 도구**, **참조와 업적**(안내 [11](11-EvidenceAndStorage.md)과
 [12](12-ArchiveAndLeaderboards.md) 참고). 페이지 소개에 있는 링크와, 먼저 지갑을
 관측해야 하는 단계의 링크를 누르면 이 패널이 열립니다.
+
+이 패널은 [네트워크 설정](10-NetworkSettings.md#실험적-도구-표시)에서 **실험적 도구 표시**가 켜져 있을 때만
+표시됩니다. 그 전까지 페이지 소개는 네트워크 설정으로 안내합니다. 먼저 지갑을
+관측해야 하는 단계는 그 방문 동안 여전히 패널을 엽니다.
 
 각 게시물 카드에는 다음이 표시됩니다:
 

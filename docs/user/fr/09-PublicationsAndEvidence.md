@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7c7451cea88d3528 -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -189,6 +189,11 @@ succès** (voir les guides [11](11-EvidenceAndStorage.md) et
 [12](12-ArchiveAndLeaderboards.md)). Le lien qui y mène dans
 l’introduction de la page, et dans toute étape qui demande d’abord
 d’observer un portefeuille, l’ouvre pour vous.
+
+Le panneau n’apparaît que si **Afficher les outils expérimentaux** est
+activé dans les [Paramètres réseau](10-NetworkSettings.md#afficher-les-outils-expérimentaux) ; sinon, l’introduction renvoie
+aux Paramètres réseau. Une étape qui demande d’abord d’observer un
+portefeuille ouvre quand même le panneau pour cette visite.
 
 Chaque carte de publication affiche :
 

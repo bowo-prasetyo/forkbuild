@@ -171,6 +171,11 @@ Achievements** (see guides [11](11-EvidenceAndStorage.md) and
 [12](12-ArchiveAndLeaderboards.md)). The link to it in the page's intro, and
 in any step that needs a wallet observed first, opens it for you.
 
+The panel is listed only while **Show experimental tools** is on in
+[Network Settings](10-NetworkSettings.md#show-experimental-tools); until then, the intro links to Network Settings
+instead. A step that needs a wallet observed first still opens the panel
+for that visit.
+
 Each publication card shows:
 
 - Its name, once its content has been checked: a Shared World's title or a

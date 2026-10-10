@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7c7451cea88d3528 -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -186,6 +186,11 @@ blockchain**, **Herramientas de archivo** y **Referencias y logros**
 [12](12-ArchiveAndLeaderboards.md)). El enlace a él en la introducción de
 la página, y en cualquier paso que necesite observar antes una billetera,
 lo abre por usted.
+
+El panel solo aparece mientras **Mostrar herramientas experimentales**
+está activado en [Configuración de red](10-NetworkSettings.md#mostrar-herramientas-experimentales); hasta entonces, la
+introducción enlaza a Configuración de red. Un paso que necesite observar
+antes una billetera sigue abriendo el panel durante esa visita.
 
 Cada tarjeta de publicación muestra:
 

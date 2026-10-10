@@ -44,7 +44,7 @@ The bar at the top is always visible:
   [My Worlds](03-WorldView.md#my-worlds--worlds-youve-actually-been-to)
 
 **More** opens the rest, in four groups: **You** (My Avatar, My Identities,
-Your Data), **People** (Peers, Following, Conversations), **Network**
+Your Data), **People** (Peers, Following, Conversations), **Advanced**
 (Publications, Network Settings) and **App** (Language, About, and
 **Install ForkBuild** where the browser can install it). On a phone,
 **Menu** shows them all at once.

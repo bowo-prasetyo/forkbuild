@@ -26,7 +26,9 @@ export default Object.freeze({
     'app.nav.more': 'Lainnya',
     'app.nav.group.you': 'Anda',
     'app.nav.group.people': 'Orang',
-    'app.nav.group.network': 'Jaringan',
+    'app.nav.group.advanced': 'Lanjutan',
+    'experimentalTools.label': 'Tampilkan alat eksperimental',
+    'experimentalTools.hint': 'Menampilkan halaman dan alat Eksperimental: Dompet, Arsip & Alat Penerbit di halaman Publikasi, dan halaman Endpoint Bitcoin. Semuanya berfungsi, tetapi bisa berubah atau dihapus di versi berikutnya. Tidak ada yang Anda perlukan untuk membangun, menerbitkan, atau berbagi yang disembunyikan.',
     'app.nav.group.app': 'Aplikasi',
     'app.notifications': 'Notifikasi',
     'app.loadFailed': 'ForkBuild tidak dapat selesai dimuat. Periksa koneksi Anda, lalu muat ulang halaman.',
@@ -2186,6 +2188,7 @@ export default Object.freeze({
     // Publications: publications.
     'publications.publications': 'Publikasi',
     'publications.intro': 'Setiap publikasi bertanda tangan yang pernah dilihat perangkat ini — miliknya sendiri, atau yang diumumkan oleh {peer} yang terhubung. Setiap status diperiksa ulang saat halaman dibuka: tercantum di sini tidak pernah berarti kontennya ada di perangkat ini. Dompet, arsip, dan alat penerbit ada di {tools} di bagian bawah halaman.',
+    'publications.introToolsHidden': 'Setiap publikasi bertanda tangan yang pernah dilihat perangkat ini — miliknya sendiri, atau yang diumumkan oleh {peer} yang terhubung. Setiap status diperiksa ulang saat halaman dibuka: tercantum di sini tidak pernah berarti kontennya ada di perangkat ini. Dompet, arsip, dan alat penerbit eksperimental disembunyikan; nyalakan Tampilkan alat eksperimental di {settings} untuk menampilkannya.',
     'publications.peer': 'rekan',
     'publications.walletArchivePublisherTools': 'Dompet, Arsip & Alat Penerbit',
     'publications.partsMarked': 'Bagian yang ditandai {badge} (penjangkaran, dompet, Steem, Blurt, pinning IPFS jarak jauh, serta alat dompet, arsip, dan penerbit) berfungsi, tetapi dapat berubah atau dihapus di versi mendatang, dan hasilnya mungkin tidak terbawa.',
@@ -3741,7 +3744,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: aboutView.
     'aboutView.aboutForkbuild': 'Tentang ForkBuild',
-    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild adalah platform konstruksi terbuka tempat kreasi digital dapat dibangun, di-fork, dibagikan, dan dilestarikan melalui sistem penerbitan terdesentralisasi.',
+    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild adalah gim membangun 3D di browser Anda: bangun sebuah tempat kecil, biarkan siapa pun me-remix-nya, lalu jelajahi bersama teman. Karya Anda tetap milik Anda: tersimpan di perangkat Anda dan diterbitkan ke jaringan terbuka yang tidak dikuasai satu perusahaan pun.',
     'aboutView.projectReadme': 'README Proyek',
     'aboutView.architectureMilestoneHistoryAndWhat': '— arsitektur, riwayat tonggak, dan apa saja yang sudah dirilis sejauh ini.',
     'aboutView.userGuide': 'Panduan Pengguna',

@@ -147,8 +147,8 @@ export default {
                                     <router-link to="/following" class="app-nav-link">{{ t('app.nav.following') }}</router-link>
                                     <router-link to="/conversations" class="app-nav-link">{{ t('app.nav.conversations') }}</router-link>
                                 </div>
-                                <div class="app-nav-group" role="group" :aria-label="t('app.nav.group.network')">
-                                    <span class="app-nav-group-label" aria-hidden="true">{{ t('app.nav.group.network') }}</span>
+                                <div class="app-nav-group" role="group" :aria-label="t('app.nav.group.advanced')">
+                                    <span class="app-nav-group-label" aria-hidden="true">{{ t('app.nav.group.advanced') }}</span>
                                     <router-link to="/publications" class="app-nav-link">{{ t('app.nav.publications') }}</router-link>
                                     <router-link to="/settings" class="app-nav-link">{{ t('app.nav.networkSettings') }}</router-link>
                                 </div>

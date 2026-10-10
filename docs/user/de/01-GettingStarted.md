@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 6725707d86a7f053 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: cd219cc0fb352867 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -50,7 +50,7 @@ Die Leiste oben ist immer sichtbar:
   [Meine Welten](03-WorldView.md#meine-welten--welten-in-denen-sie-wirklich-waren)
 
 **Mehr** öffnet den Rest, in vier Gruppen: **Persönlich** (Mein Avatar, Meine Identitäten,
-Ihre Daten), **Menschen** (Peers, Gefolgt, Unterhaltungen), **Netzwerk**
+Ihre Daten), **Menschen** (Peers, Gefolgt, Unterhaltungen), **Erweitert**
 (Veröffentlichungen, Netzwerkeinstellungen) und **App** (Sprache, Über und **ForkBuild installieren**, wo der Browser es installieren kann). Auf einem Telefon zeigt
 **Menü** alle auf einmal.
 

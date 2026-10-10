@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 356c367dc4c97c80 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7c7451cea88d3528 -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -186,6 +186,11 @@ Pencapaian** (lihat panduan [11](11-EvidenceAndStorage.md) dan
 [12](12-ArchiveAndLeaderboards.md)). Tautan ke panel itu di pengantar
 halaman, dan di setiap langkah yang memerlukan pengamatan dompet terlebih
 dahulu, akan membukanya untuk Anda.
+
+Panel ini hanya tampil selama **Tampilkan alat eksperimental** menyala di
+[Pengaturan Jaringan](10-NetworkSettings.md#tampilkan-alat-eksperimental); sampai saat itu, pengantar halaman menautkan ke
+Pengaturan Jaringan. Langkah yang memerlukan pengamatan dompet terlebih
+dahulu tetap membuka panel untuk kunjungan itu.
 
 Setiap kartu publikasi menampilkan:
 

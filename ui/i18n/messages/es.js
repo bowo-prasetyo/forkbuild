@@ -27,7 +27,9 @@ export default Object.freeze({
     'app.nav.more': 'Más',
     'app.nav.group.you': 'Personal',
     'app.nav.group.people': 'Personas',
-    'app.nav.group.network': 'Red',
+    'app.nav.group.advanced': 'Avanzado',
+    'experimentalTools.label': 'Mostrar herramientas experimentales',
+    'experimentalTools.hint': 'Muestra las páginas y herramientas experimentales: «Herramientas de billetera, archivo y editor» en la página Publicaciones, y la página Endpoint de Bitcoin. Funcionan, pero pueden cambiar o desaparecer en una versión posterior. No se oculta nada que necesite para construir, publicar o compartir.',
     'app.nav.group.app': 'Aplicación',
     'app.notifications': 'Notificaciones',
     // Shown instead of a blank page when the app's files did not download
@@ -2190,6 +2192,7 @@ export default Object.freeze({
     // Publications: publications.
     'publications.publications': 'Publicaciones',
     'publications.intro': 'Cada publicación firmada que ha visto este dispositivo: las propias o las que anunció un {peer} conectado. Cada estado se comprueba de nuevo al abrir la página: que algo aparezca en la lista nunca significa que su contenido esté en este dispositivo. Las billeteras, los archivos y las herramientas de editor están en {tools}, al final de la página.',
+    'publications.introToolsHidden': 'Cada publicación firmada que ha visto este dispositivo: las propias o las que anunció un {peer} conectado. Cada estado se comprueba de nuevo al abrir la página: que algo aparezca en la lista nunca significa que su contenido esté en este dispositivo. Las billeteras, los archivos y las herramientas de editor experimentales están ocultos; active «Mostrar herramientas experimentales» en {settings} para verlos.',
     'publications.peer': 'par',
     'publications.walletArchivePublisherTools': 'Herramientas de billetera, archivo y editor',
     'publications.partsMarked': 'Las partes marcadas como {badge} (anclaje, billeteras, Steem, Blurt, pinning remoto de IPFS y las herramientas de billetera, archivo y editor) funcionan, pero pueden cambiar o eliminarse en una versión futura, y lo que producen podría no conservarse.',
@@ -3743,7 +3746,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: aboutView.
     'aboutView.aboutForkbuild': 'Acerca de ForkBuild',
-    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild es una plataforma de construcción abierta donde las creaciones digitales se pueden construir, bifurcar, compartir y conservar en sistemas de publicación descentralizados.',
+    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild es un juego de construcción en 3D en su navegador: construya un pequeño lugar, deje que cualquiera lo remezcle y recórralo con sus amigos. Su trabajo sigue siendo suyo: se guarda en su dispositivo y se publica en redes abiertas que no controla ninguna empresa.',
     'aboutView.projectReadme': 'README del proyecto',
     'aboutView.architectureMilestoneHistoryAndWhat': ': arquitectura, historial de hitos del proyecto y lo que se ha lanzado hasta ahora.',
     'aboutView.userGuide': 'Guía del usuario',

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 5024adaa9e307817 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 49cd90a03daca28b -->
 # 10 — Paramètres réseau
 
 <!-- languages -->
@@ -30,6 +30,16 @@ Pour ce que chaque serveur apprend sur vous, voir
 | **Blurt** *(expérimental)* | `/settings/blurt` | Votre compte Blurt, et d’où Blurt est lu — voir [ci-dessous](#blurt) |
 | **Serveurs STUN** / **Serveur TURN** | `/settings/stun`, `/settings/turn-server` | Aide aux connexions entre pairs — voir [TURN](07-PeerConnectionsAndFriends.md#turn--relayer-les-connexions-qui-ne-trouvent-pas-de-chemin-direct) |
 | **Serveurs de rendez-vous** | `/settings/rendezvous` | Comment les pairs se trouvent — voir [Connexions entre pairs et amis](07-PeerConnectionsAndFriends.md) |
+
+## Afficher les outils expérimentaux
+
+En haut de la page, **Afficher les outils expérimentaux** affiche les
+parties de ForkBuild qui sont **expérimentales** : ici, la page
+**Endpoint Bitcoin**, et sur la [page Publications](09-PublicationsAndEvidence.md#la-page-publications), le panneau
+**Portefeuille, archives et outils d’éditeur**. Il est désactivé tant que
+vous ne l’activez pas, et il est enregistré sur cet appareil dès que vous le
+changez. Rien de ce qu’il faut pour construire, publier ou partager n’est
+masqué.
 
 ## Comment se comporte chaque page
 

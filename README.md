@@ -23,8 +23,10 @@ tags and formatted descriptions, and finds Worlds others distributed. 1.1.0
 fixed two security problems in 1.0.0, so update any copy older than that. Every milestone is recorded in
 [docs/Roadmap.md](docs/Roadmap.md).
 
-See [docs/VISION.md](docs/VISION.md) for the longer-term aim ("Git for 3D
-models").
+What ForkBuild is for, and the test every feature has to pass, is in
+[docs/Pillars.md](docs/Pillars.md): *build a little place, anyone can remix
+it, walk inside it with friends.* [docs/VISION.md](docs/VISION.md) has the
+longer-term aim.
 
 ## Features
 
@@ -146,7 +148,10 @@ models").
 
 These areas work, but may change or be removed in a later version, and what
 they produce may not carry over. The app marks them with an **Experimental**
-banner, or, on the Publications page, an **Experimental** badge:
+banner, or, on the Publications page, an **Experimental** badge. The
+Publications page's tools panel and the Bitcoin Endpoint page are listed only
+after **Show experimental tools** is turned on in Network Settings
+(**More → Advanced**):
 - external evidence and anchoring on Bitcoin, Base, Steem and Blurt (anchoring
   on Arweave is a regular feature), the Bitcoin and Base wallets, and their
   Network Settings;
@@ -210,6 +215,8 @@ See [docs/Architecture.md](docs/Architecture.md) for the full description.
 
 ## Documentation
 
+- [docs/Pillars.md](docs/Pillars.md): what ForkBuild is for, the three
+  pillars every feature serves, and the words players see.
 - [docs/user/](docs/user/README.md): user guides, including the
   [Controls Reference](docs/user/ControlsReference.md).
 - [docs/Architecture.md](docs/Architecture.md): how the system is built

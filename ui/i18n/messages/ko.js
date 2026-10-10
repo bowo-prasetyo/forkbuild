@@ -26,7 +26,9 @@ export default Object.freeze({
     'app.nav.more': '더 보기',
     'app.nav.group.you': '나',
     'app.nav.group.people': '사람',
-    'app.nav.group.network': '네트워크',
+    'app.nav.group.advanced': '고급',
+    'experimentalTools.label': '실험적 도구 표시',
+    'experimentalTools.hint': '실험적 페이지와 도구를 표시합니다: 게시물 페이지의 지갑, 아카이브 및 게시자 도구와 Bitcoin 엔드포인트 페이지입니다. 작동하지만 이후 버전에서 바뀌거나 제거될 수 있습니다. 짓고, 게시하고, 공유하는 데 필요한 것은 아무것도 숨겨지지 않습니다.',
     'app.nav.group.app': '앱',
     'app.notifications': '알림',
     // Shown instead of a blank page when the app's files did not download
@@ -2189,6 +2191,7 @@ export default Object.freeze({
     // Publications: publications.
     'publications.publications': '게시물',
     'publications.intro': '이 기기가 본 모든 서명된 게시물입니다 — 직접 게시한 것이거나 연결된 {peer}이(가) 공지한 것입니다. 각 상태는 페이지를 열 때마다 새로 확인합니다: 목록에 있다고 해서 콘텐츠가 이 기기에 있다는 뜻은 아닙니다. 지갑, 아카이브, 게시자 도구는 페이지 아래쪽의 {tools}에 있습니다.',
+    'publications.introToolsHidden': '이 기기가 본 모든 서명된 게시물입니다 — 직접 게시한 것이거나 연결된 {peer}이(가) 공지한 것입니다. 각 상태는 페이지를 열 때마다 새로 확인합니다: 목록에 있다고 해서 콘텐츠가 이 기기에 있다는 뜻은 아닙니다. 실험적 지갑, 아카이브, 게시자 도구는 숨겨져 있습니다. 표시하려면 {settings}에서 ‘실험적 도구 표시’를 켜세요.',
     'publications.peer': '피어',
     'publications.walletArchivePublisherTools': '지갑, 아카이브 및 게시자 도구',
     'publications.partsMarked': '{badge} 표시가 있는 부분(앵커링, 지갑, Steem, Blurt, 원격 IPFS 피닝, 지갑, 아카이브 및 게시자 도구)은 작동하지만, 이후 버전에서 바뀌거나 제거될 수 있으며 만들어 낸 결과가 이어지지 않을 수 있습니다.',
@@ -3744,7 +3747,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: aboutView.
     'aboutView.aboutForkbuild': 'ForkBuild 정보',
-    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild는 디지털 창작물을 짓고, 포크하고, 공유하고, 탈중앙 게시 시스템에 보존할 수 있는 열린 건축 플랫폼입니다.',
+    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild는 브라우저에서 즐기는 3D 건축 게임입니다. 작은 장소를 짓고, 누구나 리믹스하게 하고, 친구들과 함께 그 안을 걸어 보세요. 작품은 여러분의 것입니다. 기기에 보관되고, 어느 한 회사가 운영하지 않는 열린 네트워크에 게시됩니다.',
     'aboutView.projectReadme': '프로젝트 README',
     'aboutView.architectureMilestoneHistoryAndWhat': '— 아키텍처, 마일스톤 기록, 지금까지 출시된 기능.',
     'aboutView.userGuide': '사용자 가이드',

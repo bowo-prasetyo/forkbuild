@@ -94,6 +94,7 @@ const EXACT_NAMES = new Map([
     ['bitcoin-esplora-configuration', BackupEntryGroup.SETTINGS],
     ['role-provider-preference:by-role', BackupEntryGroup.SETTINGS],
     ['commentary-distribution-preference', BackupEntryGroup.SETTINGS],
+    ['experimental-tools-settings', BackupEntryGroup.SETTINGS],
 
     ['publication-catalog:entries', BackupEntryGroup.DOWNLOADED],
     ['world-encounter-publication-admission-log:entries', BackupEntryGroup.DOWNLOADED],

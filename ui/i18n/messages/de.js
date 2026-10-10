@@ -26,7 +26,9 @@ export default Object.freeze({
     'app.nav.more': 'Mehr',
     'app.nav.group.you': 'Persönlich',
     'app.nav.group.people': 'Menschen',
-    'app.nav.group.network': 'Netzwerk',
+    'app.nav.group.advanced': 'Erweitert',
+    'experimentalTools.label': 'Experimentelle Werkzeuge anzeigen',
+    'experimentalTools.hint': 'Zeigt die experimentellen Seiten und Werkzeuge: „Wallet, Archiv & Herausgeberwerkzeuge“ auf der Seite Veröffentlichungen und die Seite Bitcoin-Endpunkt. Sie funktionieren, können sich aber in einer späteren Version ändern oder entfernt werden. Nichts, was Sie zum Bauen, Veröffentlichen oder Teilen brauchen, wird ausgeblendet.',
     'app.nav.group.app': 'App',
     'app.notifications': 'Benachrichtigungen',
     // Shown instead of a blank page when the app's files did not download
@@ -2189,6 +2191,7 @@ export default Object.freeze({
     // Publications: publications.
     'publications.publications': 'Veröffentlichungen',
     'publications.intro': 'Jede signierte Veröffentlichung, die dieses Gerät gesehen hat — eine eigene oder eine, die ein verbundener {peer} angekündigt hat. Jeder Status wird beim Öffnen der Seite neu geprüft: In der Liste zu stehen bedeutet nie, dass der Inhalt auf diesem Gerät ist. Wallets, Archive und Herausgeberwerkzeuge finden Sie unter {tools} unten auf der Seite.',
+    'publications.introToolsHidden': 'Jede signierte Veröffentlichung, die dieses Gerät gesehen hat — eine eigene oder eine, die ein verbundener {peer} angekündigt hat. Jeder Status wird beim Öffnen der Seite neu geprüft: In der Liste zu stehen bedeutet nie, dass der Inhalt auf diesem Gerät ist. Experimentelle Wallets, Archive und Herausgeberwerkzeuge sind ausgeblendet; schalten Sie unter {settings} „Experimentelle Werkzeuge anzeigen“ ein, um sie aufzulisten.',
     'publications.peer': 'Peer',
     'publications.walletArchivePublisherTools': 'Wallet, Archiv & Herausgeberwerkzeuge',
     'publications.partsMarked': 'Mit {badge} gekennzeichnete Teile (Verankerung, Wallets, Steem, Blurt, entferntes IPFS-Pinning sowie die Wallet-, Archiv- und Herausgeberwerkzeuge) funktionieren, können sich aber in einer späteren Version ändern oder entfernt werden, und was sie erzeugen, wird möglicherweise nicht übernommen.',
@@ -3743,7 +3746,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: aboutView.
     'aboutView.aboutForkbuild': 'Über ForkBuild',
-    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild ist eine offene Bauplattform, auf der digitale Kreationen gebaut, geforkt, geteilt und über dezentrale Veröffentlichungssysteme hinweg bewahrt werden können.',
+    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild ist ein 3D-Bauspiel im Browser: Bauen Sie einen kleinen Ort, lassen Sie andere ihn remixen, und gehen Sie mit Freunden hindurch. Ihre Arbeit bleibt Ihre: Sie liegt auf Ihrem Gerät und wird in offenen Netzwerken veröffentlicht, die keinem einzelnen Unternehmen gehören.',
     'aboutView.projectReadme': 'Projekt-README',
     'aboutView.architectureMilestoneHistoryAndWhat': '— Architektur, Meilensteine und was bisher ausgeliefert wurde.',
     'aboutView.userGuide': 'Benutzerhandbuch',

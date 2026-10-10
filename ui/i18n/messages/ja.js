@@ -26,7 +26,9 @@ export default Object.freeze({
     'app.nav.more': 'その他',
     'app.nav.group.you': 'あなた',
     'app.nav.group.people': '人',
-    'app.nav.group.network': 'ネットワーク',
+    'app.nav.group.advanced': '詳細',
+    'experimentalTools.label': '実験的なツールを表示',
+    'experimentalTools.hint': '実験的なページとツールを表示します。公開物ページのウォレット・アーカイブ・公開者向けツールと、Bitcoinエンドポイントのページです。動作しますが、今後のバージョンで変更・削除されることがあります。作る、公開する、共有するために必要なものは何も隠れません。',
     'app.nav.group.app': 'アプリ',
     'app.notifications': '通知',
     'app.loadFailed': 'ForkBuild の読み込みを完了できませんでした。接続を確認してから、ページを再読み込みしてください。',
@@ -2186,6 +2188,7 @@ export default Object.freeze({
     // Publications: publications.
     'publications.publications': '公開物',
     'publications.intro': 'このデバイスが見たすべての署名付き公開物です — 自分のものか、接続中の{peer}が告知したものです。各状態はページを開くたびに新たに確認されます。一覧にあっても、内容がこのデバイスにあるとは限りません。ウォレット、アーカイブ、公開者向けツールはページ下部の{tools}にあります。',
+    'publications.introToolsHidden': 'このデバイスが見たすべての署名付き公開物です — 自分のものか、接続中の{peer}が告知したものです。各状態はページを開くたびに新たに確認されます。一覧にあっても、内容がこのデバイスにあるとは限りません。実験的なウォレット、アーカイブ、公開者向けツールは非表示です。表示するには{settings}で「実験的なツールを表示」をオンにしてください。',
     'publications.peer': 'ピア',
     'publications.walletArchivePublisherTools': 'ウォレット・アーカイブ・公開者向けツール',
     'publications.partsMarked': '{badge}の印が付いた部分（アンカリング、ウォレット、Steem、Blurt、リモートIPFSピン留め、ウォレット・アーカイブ・公開者向けツール）は動作しますが、今後のバージョンで変更または削除される可能性があり、作成したものが引き継がれない場合があります。',
@@ -3741,7 +3744,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: aboutView.
     'aboutView.aboutForkbuild': 'ForkBuildについて',
-    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuildは、デジタルな作品を作り、フォークし、共有し、分散型の公開システムにまたがって保存できる、オープンな建築プラットフォームです。',
+    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuildは、ブラウザーで遊べる3Dの建築ゲームです。小さな場所を作り、だれでもリミックスでき、友だちと一緒に中を歩けます。作品はあなたのもの。デバイスに保存され、特定の企業が運営しないオープンなネットワークに公開できます。',
     'aboutView.projectReadme': 'プロジェクトのREADME',
     'aboutView.architectureMilestoneHistoryAndWhat': '— アーキテクチャ、マイルストーンの履歴、これまでにリリースされた機能。',
     'aboutView.userGuide': 'ユーザーガイド',

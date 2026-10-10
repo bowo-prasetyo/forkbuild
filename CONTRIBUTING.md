@@ -50,13 +50,16 @@ filter to run matching files only: `npm run test:node -- Avatar`.
    - Text the app shows goes through `t()` so it can be translated; see
      [docs/Translating.md](docs/Translating.md), which also covers adding
      a language.
-2. Add or update tests for what you change, and run `npm test`.
-3. Update the docs the change affects: the user guides in `docs/user/`, and
+2. Check the change against [docs/Pillars.md](docs/Pillars.md): say in its
+   roadmap entry which pillar it serves, and keep anything a newcomer
+   doesn't need under **More → Advanced**.
+3. Add or update tests for what you change, and run `npm test`.
+4. Update the docs the change affects: the user guides in `docs/user/`, and
    `docs/Architecture.md` or `docs/Protocol.md`, edited in place;
    `docs/Privacy.md` if the app contacts a new server or stores something new,
    and `docs/CapabilityMatrix.md` if what a surface may change is different.
    Add an entry to the roadmap describing what changed and why.
-4. Open a pull request. CI runs the full test suite; it must pass.
+5. Open a pull request. CI runs the full test suite; it must pass.
 
 ## Reporting bugs and security problems
 

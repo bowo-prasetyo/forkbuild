@@ -4,17 +4,28 @@
 // Gateway, Bitcoin Endpoint, Nostr Relays, STUN, TURN, Rendezvous) — so the
 // top nav only needs one "Network Settings" entry instead of ten. Each
 // linked page keeps its own route, component, and Save logic unchanged.
+// Pages for Experimental features are listed only while Show experimental
+// tools is on (docs/Pillars.md, "Infrastructure, kept out of sight").
+import { inject, ref } from 'vue';
 import { t } from '../i18n/i18n.js';
+import ExperimentalToolsSetting from '../components/ExperimentalToolsSetting.js';
 
 export default {
     name: 'NetworkSettingsView',
-    methods: { t },
+    components: { ExperimentalToolsSetting },
+    setup() {
+        const store = inject('experimentalToolsSettingsStore', null);
+        // Without a store (a page mounted on its own) everything is listed.
+        const experimentalShown = ref(store ? store.get().shown : true);
+        return { t, experimentalShown };
+    },
     template: `
         <section class="network-settings-view">
             <h1>{{ t('networkSettingsView.networkSettings') }}</h1>
             <p class="form-hint form-hint--neutral">
                 {{ t('networkSettingsView.endpointServersForkbuildUsesTo') }}
             </p>
+            <ExperimentalToolsSetting @change="experimentalShown = $event" />
 
             <ul class="network-settings-list">
                 <li>
@@ -50,7 +61,7 @@ export default {
                         <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.gatewayUsedForRetrievingIpfs') }}</span>
                     </router-link>
                 </li>
-                <li>
+                <li v-if="experimentalShown">
                     <router-link to="/settings/bitcoin-esplora" class="network-settings-link">
                         <span class="network-settings-link-title">{{ t('networkSettingsView.bitcoinEndpoint') }} <span class="experimental-badge">{{ t('networkSettingsView.experimental') }}</span></span>
                         <span class="form-hint form-hint--neutral">{{ t('networkSettingsView.esploraCompatibleEndpointUsedFor') }}</span>

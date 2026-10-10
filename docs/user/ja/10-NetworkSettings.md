@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 5024adaa9e307817 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 49cd90a03daca28b -->
 # 10 — ネットワーク設定
 
 <!-- languages -->
@@ -29,6 +29,14 @@
 | **Blurt** *（試験的）* | `/settings/blurt` | あなたの Blurt アカウントと、Blurt を読む場所 — [下記](#blurt) を参照 |
 | **STUNサーバー** / **TURNサーバー** | `/settings/stun`、`/settings/turn-server` | ピア接続の補助 — [TURN](07-PeerConnectionsAndFriends.md#turn-直接の経路が見つからないピア接続を中継する) を参照 |
 | **ランデブーサーバー** | `/settings/rendezvous` | ピアどうしが互いを見つける方法 — [ピア接続と友達](07-PeerConnectionsAndFriends.md) を参照 |
+
+## 実験的なツールを表示
+
+ページ上部の **実験的なツールを表示** をオンにすると、ForkBuild の
+**実験的** な部分が表示されます。ここでは **Bitcoinエンドポイント** の
+ページ、[公開物ページ](09-PublicationsAndEvidence.md#公開物ページ) では **ウォレット・アーカイブ・公開者向けツール**
+のパネルです。オンにするまではオフのままで、変更するとすぐにこのデバイスに
+保存されます。作る、公開する、共有するために必要なものは何も隠れません。
 
 ## すべてのページに共通する動作
 

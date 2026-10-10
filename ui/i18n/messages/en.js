@@ -25,7 +25,9 @@ export default Object.freeze({
     'app.nav.more': 'More',
     'app.nav.group.you': 'You',
     'app.nav.group.people': 'People',
-    'app.nav.group.network': 'Network',
+    'app.nav.group.advanced': 'Advanced',
+    'experimentalTools.label': 'Show experimental tools',
+    'experimentalTools.hint': 'Lists the Experimental pages and tools: the Publications page\'s Wallet, Archive & Publisher Tools, and the Bitcoin Endpoint page. They work, but may change or be removed in a later version. Nothing you need to build, publish or share is hidden.',
     'app.nav.group.app': 'App',
     'app.notifications': 'Notifications',
     // Shown instead of a blank page when the app's files did not download
@@ -2188,6 +2190,7 @@ export default Object.freeze({
     // Publications: publications.
     'publications.publications': 'Publications',
     'publications.intro': 'Every signed publication this device has seen — its own, or one a connected {peer} announced. Each status is checked fresh when the page opens: being listed never means the content is on this device. Wallets, archives and publisher tools are in {tools} at the bottom of the page.',
+    'publications.introToolsHidden': 'Every signed publication this device has seen — its own, or one a connected {peer} announced. Each status is checked fresh when the page opens: being listed never means the content is on this device. Experimental wallets, archives and publisher tools are hidden; turn on Show experimental tools in {settings} to list them.',
     'publications.peer': 'peer',
     'publications.walletArchivePublisherTools': 'Wallet, Archive & Publisher Tools',
     'publications.partsMarked': 'Parts marked {badge} (anchoring, wallets, Steem, Blurt, remote IPFS pinning and the Wallet, Archive & Publisher Tools) work, but may change or be removed in a later version, and what they produce may not carry over.',
@@ -3744,7 +3747,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: aboutView.
     'aboutView.aboutForkbuild': 'About ForkBuild',
-    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild is an open construction platform where digital creations can be built, forked, shared, and preserved across decentralized publishing systems.',
+    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild is a 3D building game in your browser: build a little place, let anyone remix it, and walk inside it with friends. Your work stays yours, kept on your device and published to open networks that no single company runs.',
     'aboutView.projectReadme': 'Project README',
     'aboutView.architectureMilestoneHistoryAndWhat': '— architecture, milestone history, and what\'s shipped so far.',
     'aboutView.userGuide': 'User Guide',

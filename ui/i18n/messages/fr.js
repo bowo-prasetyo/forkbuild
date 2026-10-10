@@ -26,7 +26,9 @@ export default Object.freeze({
     'app.nav.more': 'Plus',
     'app.nav.group.you': 'Vous',
     'app.nav.group.people': 'Personnes',
-    'app.nav.group.network': 'Réseau',
+    'app.nav.group.advanced': 'Avancé',
+    'experimentalTools.label': 'Afficher les outils expérimentaux',
+    'experimentalTools.hint': 'Affiche les pages et outils expérimentaux : « Portefeuille, archives et outils d’éditeur » sur la page Publications, et la page Endpoint Bitcoin. Ils fonctionnent, mais peuvent changer ou disparaître dans une version ultérieure. Rien de ce qu’il faut pour construire, publier ou partager n’est masqué.',
     'app.nav.group.app': 'Application',
     'app.notifications': 'Notifications',
     // Shown instead of a blank page when the app's files did not download
@@ -2189,6 +2191,7 @@ export default Object.freeze({
     // Publications: publications.
     'publications.publications': 'Publications',
     'publications.intro': 'Toutes les publications signées que cet appareil a vues — les siennes, ou celles qu’un {peer} connecté a annoncées. Chaque statut est vérifié à nouveau à l’ouverture de la page : figurer dans la liste ne signifie jamais que le contenu est sur cet appareil. Les portefeuilles, archives et outils d’éditeur se trouvent dans {tools} en bas de la page.',
+    'publications.introToolsHidden': 'Toutes les publications signées que cet appareil a vues — les siennes, ou celles qu’un {peer} connecté a annoncées. Chaque statut est vérifié à nouveau à l’ouverture de la page : figurer dans la liste ne signifie jamais que le contenu est sur cet appareil. Les portefeuilles, archives et outils d’éditeur expérimentaux sont masqués ; activez « Afficher les outils expérimentaux » dans {settings} pour les afficher.',
     'publications.peer': 'pair',
     'publications.walletArchivePublisherTools': 'Portefeuille, archives et outils d’éditeur',
     'publications.partsMarked': 'Les parties marquées {badge} (ancrage, portefeuilles, Steem, Blurt, épinglage IPFS distant et les outils de portefeuille, d’archives et d’éditeur) fonctionnent, mais peuvent changer ou être retirées dans une version ultérieure, et ce qu’elles produisent pourrait ne pas être conservé.',
@@ -3744,7 +3747,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: aboutView.
     'aboutView.aboutForkbuild': 'À propos de ForkBuild',
-    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild est une plateforme de construction ouverte où des créations numériques peuvent être construites, forkées, partagées et préservées sur des systèmes de publication décentralisés.',
+    'aboutView.forkbuildIsAnOpenConstruction': 'ForkBuild est un jeu de construction en 3D dans votre navigateur : construisez un petit lieu, laissez n’importe qui le remixer, et parcourez-le avec vos amis. Votre travail reste le vôtre : il est gardé sur votre appareil et publié sur des réseaux ouverts qu’aucune entreprise ne contrôle.',
     'aboutView.projectReadme': 'README du projet',
     'aboutView.architectureMilestoneHistoryAndWhat': '— architecture, historique des étapes et ce qui est déjà livré (en anglais).',
     'aboutView.userGuide': 'Guide de l’utilisateur',

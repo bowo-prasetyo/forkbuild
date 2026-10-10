@@ -27,7 +27,9 @@ export default Object.freeze({
     'app.nav.more': 'Mais',
     'app.nav.group.you': 'Você',
     'app.nav.group.people': 'Pessoas',
-    'app.nav.group.network': 'Rede',
+    'app.nav.group.advanced': 'Avançado',
+    'experimentalTools.label': 'Mostrar ferramentas experimentais',
+    'experimentalTools.hint': 'Mostra as páginas e ferramentas experimentais: as Ferramentas de carteira, arquivo e editor da página Publicações e a página Endpoint do Bitcoin. Elas funcionam, mas podem mudar ou ser removidas numa versão futura. Nada do que você precisa para construir, publicar ou compartilhar fica oculto.',
     'app.nav.group.app': 'Aplicativo',
     'app.notifications': 'Notificações',
     // Shown instead of a blank page when the app's files did not download
@@ -2190,6 +2192,7 @@ export default Object.freeze({
     // Publications: publications.
     'publications.publications': 'Publicações',
     'publications.intro': 'Todas as publicações assinadas que este dispositivo já viu: as próprias, ou as que um {peer} conectado anunciou. Cada status é verificado de novo quando a página abre: estar na lista nunca significa que o conteúdo está neste dispositivo. Carteiras, arquivos e ferramentas de editor ficam em {tools}, no fim da página.',
+    'publications.introToolsHidden': 'Todas as publicações assinadas que este dispositivo já viu: as próprias, ou as que um {peer} conectado anunciou. Cada status é verificado de novo quando a página abre: estar na lista nunca significa que o conteúdo está neste dispositivo. Carteiras, arquivos e ferramentas de editor experimentais estão ocultos; ative “Mostrar ferramentas experimentais” em {settings} para vê-los.',
     'publications.peer': 'par',
     'publications.walletArchivePublisherTools': 'Ferramentas de carteira, arquivo e editor',
     'publications.partsMarked': 'As partes marcadas como {badge} (ancoragem, carteiras, Steem, Blurt, pinning remoto de IPFS e as ferramentas de carteira, arquivo e editor) funcionam, mas podem mudar ou ser removidas em uma versão futura, e o que produzem pode não ser mantido.',
@@ -3743,7 +3746,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: aboutView.
     'aboutView.aboutForkbuild': 'Sobre o ForkBuild',
-    'aboutView.forkbuildIsAnOpenConstruction': 'O ForkBuild é uma plataforma aberta de construção onde criações digitais podem ser construídas, bifurcadas, compartilhadas e preservadas em sistemas de publicação descentralizados.',
+    'aboutView.forkbuildIsAnOpenConstruction': 'O ForkBuild é um jogo de construção em 3D no seu navegador: construa um pequeno lugar, deixe qualquer pessoa remixá-lo e passeie por ele com seus amigos. Seu trabalho continua seu: fica no seu dispositivo e é publicado em redes abertas que nenhuma empresa controla.',
     'aboutView.projectReadme': 'README do projeto',
     'aboutView.architectureMilestoneHistoryAndWhat': '— arquitetura, histórico de marcos do projeto e o que já foi entregue.',
     'aboutView.userGuide': 'Guia do usuário',
