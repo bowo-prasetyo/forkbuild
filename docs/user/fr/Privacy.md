@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: efd7b4e45e7a253b -->
+<!-- translation-of: docs/Privacy.md source-hash: b42e7153e5753e1e -->
 # Confidentialité
 
 <!-- languages -->
@@ -58,6 +58,11 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   l’emplacement choisis, pour qu’une fois publiée elle s’y dresse. Vos
   tampons sur l’Accueil sont établis à partir de ce qui est déjà listé ici
   et ne sont pas enregistrés.
+- pour chaque construction commencée à partir d’une structure toute faite ou
+  comme copie d’une construction, et pour chaque structure toute faite
+  ajoutée, quelles briques c’étaient et où elles se trouvaient, pour que la
+  publication distingue les briques que vous avez posées de celles du départ
+  (seule la tranche est comptée).
 
 Effacer les données de ce site dans le navigateur supprime tout cela, et
 il n’existe aucune autre copie ni aucun moyen de le récupérer.
@@ -197,6 +202,10 @@ Et la première fois qu’une construction est publiée depuis ce navigateur
   directement, hors structures : `/e/publish-bricks-0`, `/e/publish-bricks-1`
   (de 1 à 9), `/e/publish-bricks-10` (de 10 à 49), `/e/publish-bricks-50`
   (de 50 à 199) ou `/e/publish-bricks-200` (200 ou plus). Jamais le nombre
+- les mêmes cinq tranches pour les briques que son auteur a posées ou
+  modifiées, sans les briques toutes faites avec lesquelles elle a commencé
+  ou qui y ont été ajoutées : de `/e/publish-placed-0` à
+  `/e/publish-placed-200` ;
   exact ;
 - `/e/second-build`, quand c’est la deuxième construction publiée depuis ce
   navigateur, ce qui n’arrive qu’une fois ;
@@ -204,8 +213,7 @@ Et la première fois qu’une construction est publiée depuis ce navigateur
   navigateur n’a pas publiée.
 
 Ils sont déduits des constructions que ce navigateur a publiées, qu’il garde
-déjà (voir « Ce qui reste sur votre appareil ») ; rien de nouveau n’est
-enregistré pour cela.
+déjà (voir « Ce qui reste sur votre appareil ») ; pour les briques posées, s’y ajoute une note des briques avec lesquelles chaque construction a commencé, gardée à côté d’elle sur cet appareil et jamais envoyée.
 
 Et quand ForkBuild est ouvert par un lien de l’une de ses propres
 publications de lancement, qui se termine par `?ref=` et le nom de l’endroit

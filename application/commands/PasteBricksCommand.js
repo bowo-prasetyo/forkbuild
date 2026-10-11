@@ -64,6 +64,10 @@ export class PasteBricksCommand extends Command {
     get executedBrickIds() { return [...this._executedBrickIds]; }
     get executedGroupIds() { return [...this._executedGroupIds]; }
     get type() { return 'paste-bricks'; }
+    // Whether these are a ready-made Build Library structure's bricks
+    // (application/editor/CopyStructureIntoDocumentUseCase.js) rather than
+    // the builder's own, copied and pasted (core/PlacedBricks.js).
+    get isLibraryStructure() { return this._description?.key === 'history.copyStructureIntoDocument'; }
 
     execute(context) {
         this._assertWorldMatches(context);

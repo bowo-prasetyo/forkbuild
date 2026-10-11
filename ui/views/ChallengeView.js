@@ -1,6 +1,6 @@
 import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { challengeAt, challengeById, isChallengeOpen, previousChallenge } from '../../core/BuildChallenge.js';
+import { challengeAt, challengeById, isChallengeOpen, isRemixChallenge, previousChallenge } from '../../core/BuildChallenge.js';
 import { countRemixes, describeRemixSource } from '../../core/RemixLineage.js';
 import { familyTreesOf } from '../../core/RemixFamily.js';
 import { CreateChallengeEntriesUseCase } from '../../application/challenge/CreateChallengeEntriesUseCase.js';
@@ -8,7 +8,7 @@ import PublicationCard from '../components/PublicationCard.js';
 import RemixFamilyTree from '../components/remix/RemixFamilyTree.js';
 import { exploreRouteFor } from '../components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import {
-    challengeDatesText, challengeJoinRoute, challengeThemeBrief, challengeThemeTitle, challengeTimeText
+    challengeDatesText, challengeJoinRoute, challengeRemixRoute, challengeThemeBrief, challengeThemeTitle, challengeThemeTwist, challengeTimeText
 } from '../components/challenge/challengeText.js';
 import { t } from '../i18n/i18n.js';
 
@@ -20,7 +20,8 @@ const CollectionFamilies = defineAsyncComponent(() => import('../components/feat
 // while it runs, the entries (published builds carrying the week's tag,
 // this device's own and those found on Nostr and Arweave when the page
 // opens), Walk the plaza once there are some (core/ChallengePlaza.js), and
-// built-in builds to start from.
+// built-in builds to start from. A remix week lists the week before's
+// entries instead, each one Remix this away from an entry of its own.
 export default {
     name: 'ChallengeView',
     components: { PublicationCard, FeaturedBuilds, RemixFamilyTree, CollectionFamilies },
@@ -46,8 +47,10 @@ export default {
             const previous = previousChallenge(shown);
             return {
                 open: isChallengeOpen(shown, now),
+                remix: isRemixChallenge(shown),
                 title: challengeThemeTitle(shown),
                 brief: challengeThemeBrief(shown),
+                twist: challengeThemeTwist(shown),
                 dates: challengeDatesText(shown),
                 time: challengeTimeText(shown, now),
                 joinRoute: challengeJoinRoute(shown),
@@ -58,6 +61,8 @@ export default {
         });
 
         const entries = ref([]);
+        // A remix week: the week before's entries, to start from.
+        const remixFrom = ref([]);
         const remixCounts = ref({});
         const remixSources = ref({});
         const families = ref([]);
@@ -73,6 +78,7 @@ export default {
                 }
             }
             entries.value = items;
+            remixFrom.value = isRemixChallenge(challenge.value) ? listEntries(previousChallenge(challenge.value).tag) : [];
             remixCounts.value = counts;
             remixSources.value = sources;
             families.value = familyTreesOf(items, {
@@ -93,7 +99,12 @@ export default {
             const shown = challenge.value;
             if (!shown || !entryDiscovery || networkSearch.value?.searching) return;
             networkSearch.value = { searching: true };
-            const result = await entryDiscovery.run(shown.tag);
+            let result = await entryDiscovery.run(shown.tag);
+            // A remix week also looks for the entries it starts from.
+            if (isRemixChallenge(shown) && !unmounted && challenge.value === shown) {
+                const earlier = await entryDiscovery.run(previousChallenge(shown).tag);
+                result = { found: result.found + earlier.found, pending: result.pending + earlier.pending };
+            }
             if (unmounted || challenge.value !== shown) {
                 if (!unmounted) networkSearch.value = null;
                 return;
@@ -120,7 +131,8 @@ export default {
             t,
             challenge,
             view,
-            entries, remixCounts, remixSources, families, familyRoute,
+            entries, remixFrom, remixCounts, remixSources, families, familyRoute,
+            remixPublication: (pub) => router.push(challengeRemixRoute(challenge.value, pub)),
             networkSearch, networkSearchText, searchNetworks,
             openPublication: (pub) => router.push({ path: '/editor', query: { load: pub.documentId } }),
             forkPublication: (pub) => router.push({ path: '/editor', query: { fork: pub.documentId, publication: pub.id } }),
@@ -144,6 +156,7 @@ export default {
                     <h1 class="challenge-title">{{ view.title }}</h1>
                     <p class="challenge-dates">{{ view.dates }}</p>
                     <p class="challenge-brief">{{ view.brief }}</p>
+                    <p v-if="view.twist" class="challenge-twist"><strong>{{ t('challenge.twistLabel') }}</strong> {{ view.twist }}</p>
                     <p class="challenge-card-tag">#{{ challenge.tag }}</p>
                     <div class="challenge-card-actions">
                         <router-link v-if="view.open" :to="view.joinRoute" class="cta-button challenge-join">{{ t('challenge.join') }}</router-link>
@@ -156,10 +169,31 @@ export default {
                 <section v-if="view.open" class="challenge-section" aria-labelledby="challenge-how-title">
                     <h2 id="challenge-how-title">{{ t('challenge.howTitle') }}</h2>
                     <ol class="challenge-steps">
-                        <li>{{ t('challenge.howJoin', { tag: challenge.tag }) }}</li>
+                        <li v-if="view.remix">{{ t('challenge.howRemix', { tag: challenge.tag }) }}</li>
+                        <li v-else>{{ t('challenge.howJoin', { tag: challenge.tag }) }}</li>
                         <li>{{ t('challenge.howBuild', { tag: challenge.tag }) }}</li>
                         <li>{{ t('challenge.howPublish') }}</li>
                     </ol>
+                </section>
+
+                <section v-if="view.remix && view.open" id="challenge-remix-from" class="challenge-section challenge-remix-from" aria-labelledby="challenge-remix-title">
+                    <h2 id="challenge-remix-title">{{ t('challenge.remixFromTitle', { theme: view.previousTitle }) }}</h2>
+                    <p class="home-section-lead">{{ t('challenge.remixFromLead') }}</p>
+                    <ul v-if="remixFrom.length" class="publication-list challenge-remix-entries">
+                        <PublicationCard
+                            v-for="pub in remixFrom"
+                            :key="'from-' + pub.id"
+                            :publication="pub"
+                            @view.open="openPublication"
+                            @fork="remixPublication"
+                            @explore="explorePublication"
+                            @view-author="viewAuthor"
+                        />
+                    </ul>
+                    <template v-else>
+                        <p class="empty-state challenge-remix-none">{{ t('challenge.remixFromNone') }}</p>
+                        <CollectionFamilies heading="h3" />
+                    </template>
                 </section>
 
                 <section class="challenge-section" aria-labelledby="challenge-entries-title">
@@ -198,11 +232,11 @@ export default {
                     <RemixFamilyTree v-for="family in families" :key="family.build.documentId" :family="family" :route-for="familyRoute" />
                 </section>
                 <!-- Before a week has any remixes of its own, the app's example families. -->
-                <section v-else-if="entries.length === 0" class="challenge-section challenge-families challenge-example-families">
+                <section v-else-if="entries.length === 0 && !view.remix" class="challenge-section challenge-families challenge-example-families">
                     <CollectionFamilies heading="h2" />
                 </section>
 
-                <section v-if="view.open" class="challenge-section" aria-labelledby="challenge-ideas-title">
+                <section v-if="view.open && !view.remix" class="challenge-section" aria-labelledby="challenge-ideas-title">
                     <h2 id="challenge-ideas-title">{{ t('challenge.ideasTitle') }}</h2>
                     <p class="home-section-lead">{{ t('challenge.ideasLead') }}</p>
                     <FeaturedBuilds :key="challenge.id" layout="row" :ids="challenge.ideaStructureIds" :challenge-id="challenge.id" />

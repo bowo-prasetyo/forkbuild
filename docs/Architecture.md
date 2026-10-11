@@ -270,11 +270,20 @@ the detailed references; in short:
   keep the turn of the first eight themes they ran with, so their tags
   stand) and its tag,
   `<theme>-<yyyymmdd>`, so every copy of the app agrees with no server. Each
-  theme names a starting structure and a few ideas. Joining
-  (`/editor?start=<structure id>&challenge=<its Monday>`, or the challenge
-  first in the Editor's New) forks the structure as above and puts the
-  week's tag first in the document's tags (withChallengeTag()), which is
-  all that makes a build an entry. Home shows the week
+  theme names a starting structure and a few ideas, and has a twist
+  (`challenge.theme.<id>.twist`). Joining (`/editor?challenge=<its Monday>`,
+  or the challenge first in the Editor's New) opens an empty plot named
+  after the theme, puts the week's tag first in the document's tags
+  (withChallengeTag()), which is all that makes a build an entry, and pins
+  challengeIdeaStructureIds() at the top of the Build Library's Structures
+  (BuildLibraryPanel's `pinnedStructures`) for as long as that plot is
+  open; an idea on the challenge page (`/editor?start=<id>&challenge=…`)
+  forks that structure instead. From CHALLENGE_EPOCH every fourth week is a
+  remix week (CHALLENGE_KIND.REMIX, tag `remix-<yyyymmdd>`, `remixOf` the
+  week before; the themes keep their turn round it): its Join goes to its
+  page, which lists the week before's entries, and Remix on one opens
+  `/editor?fork=<doc>&publication=<id>&challenge=<Monday>`, tagged once the
+  copy opens. Home shows the week
   (ui/components/challenge/ChallengeCard.js), and ui/views/ChallengeView.js
   (`/challenge`, `/challenge/<Monday>`) lists the entries:
   application/challenge/ChallengeEntries.js takes the Publications the
@@ -286,6 +295,17 @@ the detailed references; in short:
   announcement replies and build posts list) (see "Repository and Author views"), whose run now
   also reports the announced ids it already knew. An entry's share text
   names the challenge (ui/components/PublicationShareLink.js).
+- Ready-made bricks: application/document/ReadyMadeBricksStore.js keeps, per
+  World id on this device, the bricks a build was started with (a structure
+  forked, `EditorSession#forkStructure()`, or a copy of a build,
+  `noteReadyMadeStart()` after a `?fork=`) and the bricks of Build Library
+  structures pasted in (a PasteBricksCommand whose `isLibraryStructure`,
+  noted as it executes). core/PlacedBricks.js compares bricks by signature
+  (definition, position, turn, tilt, colour), never by id, so a ready-made
+  brick moved or recoloured is the builder's own. Publishing reports the
+  placed count's range (core/VisitorCount.js, `publish-placed-*`) beside the
+  brick range, and core/LaunchTargets.js's gate reads its median
+  (`median-placed`).
 - A StructurePlacement (core/StructurePlacement.js) places a whole saved
   Document inside another one by reference, resolved fresh by
   application/editor/StructureDocumentResolver.js; placements can be moved,
@@ -1294,6 +1314,11 @@ surface and stays silent under water. Presence keeps its existing `animation` va
   with `spokenAt` and `seconds` (`speechSecondsFor()`, shared with the bubble). `ui/components/ResidentSpeechActions.js`
   shows a Focus button per target while that speech is current and the viewer is beside the resident;
   `focusResidentMention(index)` calls the camera-only `focusPosition()` at the ground there.
+- **Wishes, and what came of them.** On a wish turn (`isWishTurn()`), `core/ResidentWish.js#residentWishNear()` names
+  what the ground nearby lacks, with a Build there. Once a build, a structure or a loaded World stands within
+  `WISH_CLEAR_RADIUS` of the spot it would wish for, `residentWishFulfilledNear()` finds it instead and the resident
+  says so as a fact (`phraseWishFulfilled()`, by the build's title when it has one, with a Focus on it). Nothing is
+  kept, counted or rewarded.
 
 ## Terrain layers
 

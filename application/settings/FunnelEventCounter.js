@@ -83,9 +83,11 @@ export class FunnelEventCounter {
 
     // A build just published (core/VisitorCount.js, publishedBuildEvents).
     // Returns the events sent.
-    publishedBuild(publication, brickCount) {
+    // `placedCount`: how many of its bricks its builder placed or changed
+    // (application/document/ReadyMadeBricksStore.js), when known.
+    publishedBuild(publication, brickCount, placedCount) {
         try {
-            const events = publishedBuildEvents({ publication, brickCount, ownPublications: this._listOwnPublications() });
+            const events = publishedBuildEvents({ publication, brickCount, placedCount, ownPublications: this._listOwnPublications() });
             return events.filter((event) => this.count(event));
         } catch {
             return [];

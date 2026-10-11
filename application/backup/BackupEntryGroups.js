@@ -107,6 +107,8 @@ const EXACT_NAMES = new Map([
 const PREFIXES = [
     ['recovery:', BackupEntryGroup.DOCUMENTS],
     ['recovery-info:', BackupEntryGroup.DOCUMENTS],
+    // The bricks each build started with (application/document/ReadyMadeBricksStore.js).
+    ['ready-made-bricks:', BackupEntryGroup.DOCUMENTS],
 
     ['local-identity-key:', BackupEntryGroup.IDENTITIES],
     ['local-identity-revocation:', BackupEntryGroup.IDENTITIES],

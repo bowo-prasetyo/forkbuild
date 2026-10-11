@@ -87,8 +87,9 @@ is a means, not the game:
 ### Networks: readers and writers
 
 No new network or chain joins ForkBuild until the building numbers move: both
-building targets in "Measuring it" (the median published build at 10 bricks
-or more, and a second build from at least 20% of builders) met over a week
+building targets in "Measuring it" (the median published build holding 10
+bricks or more that its builder placed, ready-made ones left out, and a
+second build from at least 20% of builders) met over a week
 with at least 50 builds published. `node scripts/launch-scorecard.mjs` says
 whether the gate is open. When one does join, or when an existing one is
 reworked, it comes in two parts:
@@ -160,8 +161,10 @@ Each pillar has a question the launch counters can answer
 (see [the launch kit](launch/README.md#measuring-it)):
 
 - **Building:** do people who arrive start a build (`/e/challenge-join`)
-  and publish one, and how big are the builds they publish
-  (`/e/publish-bricks-0`, `-1`, `-10`, `-50` and `-200`, by range)?
+  and publish one, and how much of it did they build themselves
+  (`/e/publish-placed-0`, `-1`, `-10`, `-50` and `-200`: the bricks placed or
+  changed, by range, the ready-made ones a build started with or had dropped
+  in left out; `/e/publish-bricks-…` counts them all)?
 - **Family tree:** are shared links opened by people the builder didn't bring
   (`/e/opened-shared-link`), copied (`/e/remix-from-link`), and are the copies
   published as remixes (`/e/remix-published`)?
@@ -180,7 +183,8 @@ number is "too few to say" rather than met or missed.
 
 | Pillar | Target | Number | Minimum |
 |---|---|---|---|
-| Building | The median published build's range (`/e/publish-bricks-…`) | 10 bricks or more | 50 builds |
+| Building | The median published build's placed bricks (`/e/publish-placed-…`) | 10 or more | 50 builds |
+| Building | The median published build's range, ready-made bricks included (`/e/publish-bricks-…`) | 10 bricks or more | 50 builds |
 | Building | Second builds per build published (`/e/second-build`) | 20% | 50 builds |
 | Family tree | Links opened per link made (`/e/opened-shared-link` / `/e/share-link`) | 100% | 20 links |
 | Family tree | Copies made per link opened (`/e/remix-from-link` / `/e/opened-shared-link`) | 10% | 50 opens |
@@ -188,7 +192,9 @@ number is "too few to say" rather than met or missed.
 | Yours, in a world | Friends arrived per walk link (`/e/walk-joined` / `/e/walk-link`) | 50% | 20 links |
 | Yours, in a world | Plaza visits per challenge join (`/e/plaza-visit` / `/e/challenge-join`) | 25% | 20 joins |
 
-The two building targets are the gate on new networks (above). A missed
+The placed bricks and the second builds are the gate on new networks
+(above): a ready-made build published untouched holds plenty of bricks but
+none placed, so it never opens it. A missed
 target says where to look next, not that a feature failed: a small median
 build points at the kit and the guided first build, few second builds at
 what brings a builder back, few copies per opened link at the shared link's

@@ -100,7 +100,11 @@ the week after, by day:
   published. The range holding the middle one is the median build's size:
   `-0` (structures only), `-1` (1–9 bricks), `-10` (10–49), `-50` (50–199),
   `-200` (200 or more). Mostly `-1` means people publish a first try and
-  leave; the kit and the guided first build are where to look.
+  leave; the kit and the guided first build are where to look. The five
+  `/e/publish-placed-…` paths count the same builds by the bricks their
+  builder placed or changed, ready-made ones left out: a ready-made build
+  published untouched is `-0` there. That is the median the gate on new
+  networks reads (core/LaunchTargets.js, `median-placed`).
 - **Did they come back?** `/e/second-build` against the builds published:
   the share of builders who published a second one.
 - **Do entrants look at each other's builds?** `/e/plaza-visit` against

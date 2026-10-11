@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 8a6d8b43407550d1 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 60a63aedcbfe91d7 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -542,18 +542,33 @@ rumah mungil, …), dari Senin sampai akhir Minggu (UTC). Beranda
 menampilkannya, dan **Tantangan** di bilah atas membuka halamannya.
 
 Ada 26 tema, sehingga setengah tahun berlalu sebelum satu tema muncul
-lagi, dan masing-masing dimulai dari bangunannya sendiri.
+lagi, masing-masing dengan ide untuk memulai dan tantangan tambahan yang membuat
+karya minggu itu berbeda-beda, misalnya *"Buat cukup lebar untuk dilewati
+gerobak jerami."* Setiap minggu keempat adalah minggu remix (lihat di
+bawah).
 
-1. **Ikut tantangan** membuka bangunan awal di Editor sebagai salinan Anda
-   sendiri, sudah bertag minggu itu (tag seperti `#lighthouse-20261012`:
-   temanya dan hari Senin saat dimulai). Tantangan juga menjadi pilihan
-   pertama di **Baru** pada Editor, dan **Ide untuk memulai** di halamannya
-   membuka bangunan lain yang cocok dengan cara yang sama.
-2. Jadikan milik Anda, atau mulai lagi dari lahan kosong: apa pun yang Anda
-   bangun ikut serta selama tetap memakai tag minggu itu (tambahkan di
-   **Properti Dokumen → Tag** jika Anda memulai dengan cara lain).
+1. **Ikut tantangan** membuka lahan kosong milik Anda di Editor, dinamai
+   sesuai tema dan sudah bertag minggu itu (tag seperti
+   `#lighthouse-20261012`: temanya dan hari Senin saat dimulai), dengan
+   struktur minggu itu disematkan di atas **Struktur** di Pustaka Bangunan.
+   Tantangan juga menjadi pilihan pertama di **Baru** pada Editor, dan
+   **Ide untuk memulai** di halamannya membuka salah satu bangunan itu
+   sebagai salinan Anda sendiri.
+2. Bangun dengan cara Anda: tambahkan sebuah ide jika mau, lalu jadikan
+   milik Anda. Apa pun yang Anda bangun ikut serta selama tetap memakai tag
+   minggu itu (tambahkan di **Properti Dokumen → Tag** jika Anda memulai
+   dengan cara lain).
 3. Terbitkan sebelum minggu berakhir, lalu bagikan tautannya. Teks
    tautannya menyebut tantangan dan tagnya, siap untuk sebuah postingan.
+
+**Minggu remix.** Setiap minggu keempat, mulai dari minggu 2 November
+2026, adalah minggu remix (`#remix-20261102`): alih-alih sebuah tema,
+sebuah karya dimulai sebagai salinan Anda sendiri dari salah satu karya
+minggu sebelumnya. **Ikut** membuka halaman tantangan, yang menampilkan
+karya minggu lalu; **Remix** pada salah satunya membuka salinan Anda di
+Editor, bertag minggu itu. Salinan Anda mengingat milik siapa asalnya,
+sehingga pembuatnya tercantum di pohon keluarga. Jika minggu lalu tidak ada
+karya, keluarga remix contoh yang ditawarkan.
 
 Halaman tantangan menampilkan karya peserta yang diketahui perangkat ini:
 bangunan Anda sendiri yang diterbitkan dengan tag itu, dan bangunan orang

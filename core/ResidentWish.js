@@ -131,6 +131,45 @@ export function residentWishNear({ seed, position, homePosition = null, builtPos
     return found(OPEN_GROUND_WISHES[cellHash(spot) % OPEN_GROUND_WISHES.length], spot);
 }
 
+// What the ground near a resident wished for and now has: the spot it would
+// wonder about (residentWishNear() as if nothing were built), when a build
+// now stands within WISH_CLEAR_RADIUS of it. { wish, spot, build: { x, z,
+// title } } (title '' when it has none), or null. A statement of what is
+// there, never a reward: nothing is kept or counted, and whoever built it is
+// none of the resident's business.
+//
+//   built — [{ x, z, title }]: builds, structures and loaded Worlds near it
+export function residentWishFulfilledNear({ seed, position, homePosition = null, built = [] } = {}) {
+    const wish = residentWishNear({ seed, position, homePosition, builtPositions: [] });
+    if (!wish) return null;
+    let nearest = null;
+    let nearestDistance = Infinity;
+    for (const candidate of built || []) {
+        if (!candidate || !Number.isFinite(candidate.x) || !Number.isFinite(candidate.z)) continue;
+        const distance = Math.hypot(candidate.x - wish.spot.x, candidate.z - wish.spot.z);
+        if (distance < WISH_CLEAR_RADIUS && distance < nearestDistance) {
+            nearest = candidate;
+            nearestDistance = distance;
+        }
+    }
+    if (!nearest) return null;
+    return {
+        wish: wish.wish,
+        spot: wish.spot,
+        build: { x: nearest.x, z: nearest.z, title: typeof nearest.title === 'string' ? nearest.title : '' }
+    };
+}
+
+// What the resident says once it is there: where it stands, by its title
+// when it has one, and what the resident always thought would go there.
+export function phraseWishFulfilled(fulfilled, where, title = '') {
+    if (!fulfilled || !Object.values(RESIDENT_WISH).includes(fulfilled.wish)) return null;
+    const thing = message(`resident.wishThing.${fulfilled.wish}`);
+    return title
+        ? message('resident.wishBuiltNamed', { title, where, thing })
+        : message('resident.wishBuilt', { where, thing });
+}
+
 // What the resident says about it: one sentence (a message) with where the
 // spot is, `where` being core/ResidentTalk.js's own "about 30 m to the east".
 export function phraseWish(wish, where) {

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: efd7b4e45e7a253b -->
+<!-- translation-of: docs/Privacy.md source-hash: b42e7153e5753e1e -->
 # Datenschutz
 
 <!-- languages -->
@@ -57,6 +57,11 @@ veröffentlichen, exportieren oder senden es:
   die gewählte Stelle, damit er beim Veröffentlichen dort steht. Ihre
   Stempel auf der Startseite werden aus dem hier Aufgeführten ermittelt und
   nicht gespeichert.
+- für jedes Bauwerk, das mit einer vorgefertigten Struktur oder als Kopie
+  eines Bauwerks begann, und für jede eingesetzte vorgefertigte Struktur,
+  welche Steine es waren und wo sie standen, damit das Veröffentlichen die
+  von Ihnen gesetzten Steine von den Startsteinen unterscheiden kann
+  (gezählt wird nur der Bereich, in den sie fallen).
 
 Das Löschen der Daten dieser Website im Browser löscht all das, und es gibt
 keine andere Kopie und keinen Weg, sie wiederherzustellen. Sichern Sie es
@@ -194,14 +199,16 @@ Und wenn ein Bauwerk zum ersten Mal aus diesem Browser veröffentlicht wird
   Strukturen: `/e/publish-bricks-0`, `/e/publish-bricks-1` (1 bis 9),
   `/e/publish-bricks-10` (10 bis 49), `/e/publish-bricks-50` (50 bis 199) oder
   `/e/publish-bricks-200` (200 oder mehr). Nie die genaue Zahl;
+- dieselben fünf Bereiche für die Steine, die sein Erbauer gesetzt oder
+  verändert hat, ohne die vorgefertigten, mit denen es begann oder die
+  eingesetzt wurden: `/e/publish-placed-0` bis `/e/publish-placed-200`;
 - `/e/second-build`, wenn es das zweite aus diesem Browser veröffentlichte
   Bauwerk ist, was nur einmal vorkommt;
 - `/e/remix-published`, wenn es eine Kopie eines Bauwerks ist, das dieser
   Browser nicht veröffentlicht hat.
 
 Das wird aus den Bauwerken ermittelt, die dieser Browser veröffentlicht hat
-und ohnehin aufbewahrt (siehe „Was auf Ihrem Gerät bleibt“); dafür wird
-nichts Neues gespeichert.
+und ohnehin aufbewahrt (siehe „Was auf Ihrem Gerät bleibt“); für die gesetzten Steine kommt eine Notiz der Steine hinzu, mit denen jedes Bauwerk begann, die daneben auf diesem Gerät bleibt und nirgendwohin gesendet wird.
 
 Und wenn ForkBuild über einen Link aus einem seiner eigenen Launch-Posts
 geöffnet wird, der auf `?ref=` und den Namen des Orts endet, an dem er

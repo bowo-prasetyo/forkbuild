@@ -14,8 +14,8 @@ import {
     RESIDENT_OBSTACLE_QUERY_RADIUS
 } from '../world/ResidentRuntime.js';
 import { gatherResidentFacts, RESIDENT_KNOWLEDGE_RADIUS } from '../world/ResidentSurroundings.js';
-import { pickResidentRemarkFacts, phraseFact, focusTargetsFor, speechSecondsFor, describeWhere, QUIET_REMARK, RESIDENT_FACT_KIND } from '../../core/ResidentTalk.js';
-import { residentWishNear, phraseWish, wishBuildLabel, isWishTurn } from '../../core/ResidentWish.js';
+import { pickResidentRemarkFacts, phraseFact, focusTargetsFor, speechSecondsFor, describeWhere, sanitizeSpokenText, MAX_SPOKEN_TITLE_LENGTH, QUIET_REMARK, RESIDENT_FACT_KIND } from '../../core/ResidentTalk.js';
+import { residentWishNear, residentWishFulfilledNear, phraseWish, phraseWishFulfilled, wishBuildLabel, isWishTurn } from '../../core/ResidentWish.js';
 import { directionLabelBetween } from '../../core/GeographicPlaceNavigation.js';
 import { terrainHeightAt } from '../../core/TerrainHeightField.js';
 import { regionsContaining } from '../../core/WorldRegionGeography.js';
@@ -281,16 +281,19 @@ export const residentMethods = {
         const translate = this._residentSpeechTranslator || String;
         // Every third conversation, and whenever it has nothing else to say, it
         // may wonder what the ground nearby has never had (core/ResidentWish.js).
-        const wish = isWishTurn(turn, { quiet: picked.length === 0 }) ? this._residentWishAround(nearest, facts) : null;
+        // Once something stands where it wondered, it says so instead.
+        const wishTurn = isWishTurn(turn, { quiet: picked.length === 0 });
+        const wish = wishTurn ? this._residentWishAround(nearest, facts) : null;
+        const fulfilled = wishTurn && !wish ? this._residentWishFulfilledAround(nearest, facts) : null;
         const said = wish
             ? [wish.remark]
-            : (picked.length > 0 ? picked.map(phraseFact) : [QUIET_REMARK]);
+            : (fulfilled ? [fulfilled.remark] : (picked.length > 0 ? picked.map(phraseFact) : [QUIET_REMARK]));
         const remarks = said.map((remark) => translate(remark));
         const speech = {
             residentId: nearest.id,
             remarks,
             // What the viewer may choose to look at: see focusResidentMention().
-            focusTargets: wish ? [] : focusTargetsFor(picked),
+            focusTargets: wish ? [] : (fulfilled ? fulfilled.focusTargets : focusTargetsFor(picked)),
             // What the viewer may choose to build, and where: see the UI's Build there.
             wish: wish ? {
                 kind: wish.wish,
@@ -376,6 +379,29 @@ export const residentMethods = {
         const from = { x: pose.x, z: pose.z };
         const where = describeWhere({ distance: Math.hypot(wish.spot.x - from.x, wish.spot.z - from.z), direction: directionLabelBetween(from, wish.spot) });
         return { ...wish, remark: phraseWish(wish, where), label: wishBuildLabel(wish) };
+    },
+
+    // What stands now where a resident would have wondered (core/ResidentWish.js,
+    // residentWishFulfilledNear()), with its remark and, when it has a title, a
+    // Focus target on it: { remark, focusTargets }, or null.
+    _residentWishFulfilledAround(pose, facts) {
+        const built = (facts || [])
+            .filter((fact) => (fact.kind === RESIDENT_FACT_KIND.BUILD || fact.kind === RESIDENT_FACT_KIND.STRUCTURE) && fact.position)
+            .map((fact) => ({ x: fact.position.x, z: fact.position.z, title: fact.title || '' }));
+        for (const document of this.getLoadedDocuments()) {
+            const offset = this.getDocumentPosition(document.world.id);
+            if (offset) built.push({ x: offset.x, z: offset.z, title: this._residentWorldTitle(document.world.id) });
+        }
+        const homeWorld = this.getDocumentPosition(pose.worldId) || pose.home || null;
+        const fulfilled = residentWishFulfilledNear({ seed: this.getWorldSeed(), position: { x: pose.x, z: pose.z }, homePosition: homeWorld, built });
+        if (!fulfilled) return null;
+        const from = { x: pose.x, z: pose.z };
+        const where = describeWhere({ distance: Math.hypot(fulfilled.build.x - from.x, fulfilled.build.z - from.z), direction: directionLabelBetween(from, fulfilled.build) });
+        const title = sanitizeSpokenText(fulfilled.build.title, MAX_SPOKEN_TITLE_LENGTH) || '';
+        return {
+            remark: phraseWishFulfilled(fulfilled, where, title),
+            focusTargets: title ? [{ kind: RESIDENT_FACT_KIND.BUILD, label: title, position: { x: fulfilled.build.x, z: fulfilled.build.z } }] : []
+        };
     },
 
     // The title a Build there plot names its World by: the resident's own

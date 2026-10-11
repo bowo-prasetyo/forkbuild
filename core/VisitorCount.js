@@ -80,6 +80,11 @@ export const FunnelEvent = Object.freeze({
     PUBLISH_BRICKS_10: 'publish-bricks-10',
     PUBLISH_BRICKS_50: 'publish-bricks-50',
     PUBLISH_BRICKS_200: 'publish-bricks-200',
+    PUBLISH_PLACED_0: 'publish-placed-0',
+    PUBLISH_PLACED_1: 'publish-placed-1',
+    PUBLISH_PLACED_10: 'publish-placed-10',
+    PUBLISH_PLACED_50: 'publish-placed-50',
+    PUBLISH_PLACED_200: 'publish-placed-200',
     SECOND_BUILD: 'second-build',
     REMIX_PUBLISHED: 'remix-published',
     WALK_LINK: 'walk-link',
@@ -123,17 +128,36 @@ export function publishedBrickRangeEvent(brickCount) {
     return FunnelEvent.PUBLISH_BRICKS_0;
 }
 
+// The same ranges for the bricks its builder placed or changed, leaving out
+// the ready-made ones it started with (core/PlacedBricks.js): 0 is a
+// ready-made build published untouched.
+const PLACED_RANGES = Object.freeze([
+    [200, FunnelEvent.PUBLISH_PLACED_200],
+    [50, FunnelEvent.PUBLISH_PLACED_50],
+    [10, FunnelEvent.PUBLISH_PLACED_10],
+    [1, FunnelEvent.PUBLISH_PLACED_1]
+]);
+
+export function publishedPlacedRangeEvent(placedCount) {
+    const count = Number.isInteger(placedCount) && placedCount > 0 ? placedCount : 0;
+    for (const [lowest, event] of PLACED_RANGES) {
+        if (count >= lowest) return event;
+    }
+    return FunnelEvent.PUBLISH_PLACED_0;
+}
+
 // What publishing `publication` tells the counter, given every Publication
 // this device has published (`ownPublications`, which may or may not already
 // hold `publication`). Only a build's first publish from this device counts,
 // so publishing it again after more work adds nothing, and the brick ranges
 // add up to the builds published:
-// - its brick range (publishedBrickRangeEvent);
+// - its brick range (publishedBrickRangeEvent), and, when `placedCount` is
+//   given, the range of the bricks its builder placed (publishedPlacedRangeEvent);
 // - /e/second-build when it is the second build this device has published,
 //   which happens once;
 // - /e/remix-published when it is a copy of a build this device didn't
 //   publish (a copy of one's own build is more work on it, not a remix).
-export function publishedBuildEvents({ publication, brickCount, ownPublications = [] }) {
+export function publishedBuildEvents({ publication, brickCount, placedCount, ownPublications = [] }) {
     const documentId = publication?.documentId;
     if (typeof documentId !== 'string' || !documentId) return Object.freeze([]);
     const earlier = (Array.isArray(ownPublications) ? ownPublications : [])
@@ -141,6 +165,7 @@ export function publishedBuildEvents({ publication, brickCount, ownPublications 
     if (earlier.some((own) => own.documentId === documentId)) return Object.freeze([]);
 
     const events = [publishedBrickRangeEvent(brickCount)];
+    if (placedCount !== undefined && placedCount !== null) events.push(publishedPlacedRangeEvent(placedCount));
     const earlierBuilds = new Set(earlier.map((own) => own.documentId));
     if (earlierBuilds.size === 1) events.push(FunnelEvent.SECOND_BUILD);
     const parent = publication.parentDocumentId;

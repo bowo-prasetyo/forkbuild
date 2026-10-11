@@ -2,8 +2,8 @@
 // when, the tag a week's entries carry, and reading a challenge back from
 // its id or its tag.
 import {
-    CHALLENGE_THEMES, challengeAt, challengeById, challengeDaysLeft, challengeForTag, challengeOfTags,
-    isChallengeOpen, previousChallenge, withChallengeTag
+    CHALLENGE_KIND, CHALLENGE_THEMES, REMIX_WEEK_EVERY, challengeAt, challengeById, challengeDaysLeft, challengeForTag,
+    challengeIdeaStructureIds, challengeOfTags, isChallengeOpen, isRemixChallenge, previousChallenge, withChallengeTag
 } from '../core/BuildChallenge.js';
 import { BUILD_TAG_MAX_COUNT, normalizeBuildTag } from '../core/BuildTags.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
@@ -21,8 +21,9 @@ import { assert } from './support/Assert.js';
     assert(challengeAt(Date.parse('2026-10-18T23:59:59Z')).id === '2026-10-12', 'Sunday night is still that week');
     const second = challengeAt(Date.parse('2026-10-19T00:00:00Z'));
     assert(second.id === '2026-10-19' && second.themeId === CHALLENGE_THEMES[1].id, 'Monday starts the next theme');
-    const wrapped = challengeAt(Date.parse('2026-10-12T00:00:00Z') + CHALLENGE_THEMES.length * 7 * 86400000);
-    assert(wrapped.themeId === CHALLENGE_THEMES[0].id, 'the themes come round again');
+    // Every fourth week is a remix week, so the 26 themes take 34 weeks.
+    const wrapped = challengeAt(Date.parse('2026-10-12T00:00:00Z') + 34 * 7 * 86400000);
+    assert(wrapped.themeId === CHALLENGE_THEMES[0].id, `the themes come round again after the themed weeks (got ${wrapped.themeId})`);
     const before = challengeAt(Date.parse('2026-10-08T12:00:00Z'));
     // Weeks before the first keep the themes they ran with when there were
     // eight, so their entries' tags still name them.
@@ -30,13 +31,34 @@ import { assert } from './support/Assert.js';
         `a week before the first keeps the theme it ran with (got ${before.themeId})`);
     assert(challengeAt(Date.parse('2026-09-30T12:00:00Z')).themeId === 'tower', 'and so does the week before that');
     assert(CHALLENGE_THEMES.length >= 26, `half a year of themes before one comes round again (got ${CHALLENGE_THEMES.length})`);
-    assert(challengeAt(Date.parse('2026-10-12T00:00:00Z') + 8 * 7 * 86400000).themeId === CHALLENGE_THEMES[8].id,
-        'the ninth week has the ninth theme, not the first again');
+    assert(challengeAt(Date.parse('2026-10-12T00:00:00Z') + 10 * 7 * 86400000).themeId === CHALLENGE_THEMES[8].id,
+        'the ninth themed week (the eleventh, two remix weeks in) has the ninth theme');
     const starters = CHALLENGE_THEMES.map((theme) => theme.starterStructureId);
     assert(new Set(starters).size === starters.length, 'every theme starts from a build of its own');
     assert(challengeAt(new Date('2026-10-14T00:00:00Z')).id === '2026-10-12', 'a Date works as well as a time');
     assert(challengeAt(NaN) === null, 'no time, no challenge');
     console.log('✓ one theme a week, Monday to Monday, in turn');
+}
+
+// Every fourth week from the first is a remix week: its entries start from
+// the week before's, its tag says so, and the themes keep their turn round it.
+{
+    const week = (n) => challengeAt(Date.parse('2026-10-12T12:00:00Z') + n * 7 * 86400000);
+    const remix = week(REMIX_WEEK_EVERY - 1);
+    assert(isRemixChallenge(remix) && remix.kind === CHALLENGE_KIND.REMIX && remix.id === '2026-11-02', 'the fourth week is a remix week');
+    assert(remix.tag === 'remix-20261102' && normalizeBuildTag(remix.tag) === remix.tag, `with a tag of its own (${remix.tag})`);
+    assert(remix.remixOf === '2026-10-26' && previousChallenge(remix).id === remix.remixOf, 'started from the week before');
+    assert(challengeForTag(remix.tag).id === remix.id && challengeById(remix.id).kind === CHALLENGE_KIND.REMIX, 'found again by its tag or its Monday');
+    assert(challengeIdeaStructureIds(remix).length === 0 && remix.starterStructureId === null, 'with no structures to start from');
+    assert(week(2).themeId === CHALLENGE_THEMES[2].id && week(4).themeId === CHALLENGE_THEMES[3].id, 'the themes carry on round it');
+    assert(isRemixChallenge(week(7)) && !isRemixChallenge(week(8)) && !isRemixChallenge(week(0)), 'every fourth week, no others');
+    assert(!isRemixChallenge(challengeAt(Date.parse('2026-10-08T12:00:00Z'))), 'weeks before the first are as they were');
+    const themed = week(0);
+    assert(themed.kind === CHALLENGE_KIND.THEME && themed.remixOf === null, 'a themed week is no remix');
+    const ideas = challengeIdeaStructureIds(themed);
+    assert(ideas[0] === themed.starterStructureId && new Set(ideas).size === ideas.length && ideas.length >= 2,
+        `a themed week pins its starter, then its ideas, once each (${ideas})`);
+    console.log('✓ every fourth week is a remix week, and the themes keep their turn');
 }
 
 // Every week's tag is a valid build tag, and every theme starts from

@@ -47,7 +47,12 @@ send it:
 - which networks this device sent each of your comments to, and when, so
   each comment can say where it went.
 - for each build you started with **Build here**, the World and the spot
-  you chose, so publishing it stands it there. Your stamps on Home are
+  you chose, so publishing it stands it there.
+- for each build started from a ready-made structure or as a copy of a
+  build, and for each ready-made structure dropped into one, what its
+  bricks were and where they stood, so publishing can tell the bricks you
+  placed from the ones you started with (only which range they fall in is
+  ever counted; see "Visitor count"). Your stamps on Home are
   worked out from what is already listed here and aren't stored.
 
 Clearing this site's data in the browser deletes all of it, and there is no
@@ -168,13 +173,18 @@ again later sends nothing):
   aside: `/e/publish-bricks-0`, `/e/publish-bricks-1` (1 to 9),
   `/e/publish-bricks-10` (10 to 49), `/e/publish-bricks-50` (50 to 199) or
   `/e/publish-bricks-200` (200 or more). Never the exact count;
+- the same five ranges for the bricks its builder placed or changed, the
+  ready-made ones it started with or had dropped in left out:
+  `/e/publish-placed-0` to `/e/publish-placed-200`;
 - `/e/second-build`, when it is the second build published from this
   browser, which happens once;
 - `/e/remix-published`, when it is a copy of a build this browser didn't
   publish.
 
 These are worked out from the builds this browser has published, which it
-already keeps (see "What stays on your device"); nothing new is stored for them.
+already keeps (see "What stays on your device"), and, for the bricks placed,
+a note of the bricks each build started with, kept beside it on this device
+and never sent anywhere.
 
 And when ForkBuild is opened through a link in one of its own launch posts,
 which ends in `?ref=` and the name of the place it was posted (`hn`,

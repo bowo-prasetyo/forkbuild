@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 7741d1f107953066 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: ec20eefd36a2abe5 -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -425,6 +425,12 @@ pikiran yang diucapkan, tidak pernah tugas: tidak ada yang disimpan, tidak
 ada yang memeriksa apakah sudah dibangun, dan tidak ada hadiah. Tanah yang
 sama memberi pikiran yang sama kepada semua orang, dan tempat yang sudah
 punya bangunan di dekatnya tidak menginginkan apa pun.
+
+Begitu ada sesuatu di sana, ia mengatakannya sebagai fakta biasa, misalnya
+*"Seseorang sudah membangun sekitar 14 m ke arah timur, tepat di tempat yang
+selalu saya kira cocok untuk sebuah sumur."*, dengan menyebut nama
+bangunannya jika ada judul, dan tombol untuk melihatnya. Tetap tidak ada
+yang disimpan atau diberi hadiah.
 
 Apa yang dikatakan penghuni adalah apa yang diketahui ForkBuild *Anda*:
 bangunan di katalog Anda, orang-orang yang hadir bersama Anda, kendaraan dan

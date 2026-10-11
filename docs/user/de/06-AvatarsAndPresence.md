@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 7741d1f107953066 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: ec20eefd36a2abe5 -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -428,6 +428,12 @@ nur ein laut gedachter Gedanke, nie eine Aufgabe: Nichts wird gespeichert,
 niemand prüft, ob es gebaut wurde, und es gibt keine Belohnung. Derselbe
 Boden weckt bei allen denselben Gedanken, und eine Stelle, an der schon ein
 Bau steht, wünscht sich nichts.
+
+Steht dort dann etwas, sagt er stattdessen genau das, als schlichte
+Tatsache, etwa *„Jemand hat etwa 14 m östlich gebaut, genau da, wo ich immer
+dachte, ein Brunnen gehöre hin.“*, mit dem Namen des Bauwerks, wenn es einen
+Titel hat, und einer Schaltfläche, um es anzusehen. Auch dann wird nichts
+festgehalten oder belohnt.
 
 Was ein Bewohner sagt, ist das, was *Ihre* Kopie von ForkBuild weiß: die
 Bauwerke in Ihrem Katalog, die Menschen, die mit Ihnen da sind, die

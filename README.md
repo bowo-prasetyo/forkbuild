@@ -41,10 +41,13 @@ longer-term aim.
   hundred bricks or more), worked out on this device. Credit, never points
   or a ranking.
 - A weekly build challenge: a new theme every Monday (a lighthouse, a
-  bridge, a tiny home, …) with **Join the challenge**, which opens a starting
-  build tagged for the week, and a **Challenge** page listing the entries
-  found on this device and on Nostr and Arweave. No server decides the
-  week: every copy of the app works out the same theme and tag from the date.
+  bridge, a tiny home, …), each with a twist, with **Join the challenge**,
+  which opens an empty plot tagged for the week with the theme's ideas
+  pinned in the Build Library, and a **Challenge** page listing the entries
+  found on this device and on Nostr and Arweave. Every fourth week is a
+  remix week: an entry starts as a copy of one of last week's. No server
+  decides the week: every copy of the app works out the same theme and tag
+  from the date.
 
 **Editor**
 - Place, select (single, multi, marquee), move, rotate, tilt onto another

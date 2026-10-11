@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import BuildLibraryPreview from './BuildLibraryPreview.js';
 import StructureLibraryCard from './StructureLibraryCard.js';
 import VillagePaletteSwatches from './VillagePaletteSwatches.js';
@@ -284,6 +284,18 @@ export default {
         recentStructures: {
             type: Array,
             default: () => []
+        },
+        // Ready-made structures to keep at the top of Structures, under
+        // `pinnedTitle`: the week's ideas when a build joins the challenge
+        // from an empty plot (ui/views/EditorView.js). Pinning them opens the
+        // Structures tab.
+        pinnedStructures: {
+            type: Array,
+            default: () => []
+        },
+        pinnedTitle: {
+            type: String,
+            default: ''
         }
     },
     emits: [
@@ -453,6 +465,15 @@ export default {
                 matches(normalized, libraryItemName(structure), structure.name, structure.category, structure.tags.join(' '), libraryItemDescription(structure), structure.description));
         });
 
+        const filteredPinnedStructures = computed(() => {
+            const normalized = normalize(query.value);
+            return (props.pinnedStructures || []).filter((structure) =>
+                matches(normalized, libraryItemName(structure), structure.name, structure.category, structure.tags.join(' '), libraryItemDescription(structure), structure.description));
+        });
+        watch(() => props.pinnedStructures, (pinned) => {
+            if (pinned && pinned.length > 0) activeTab.value = 'structures';
+        }, { immediate: true });
+
         function setTab(tab) {
             activeTab.value = tab;
             query.value = '';
@@ -593,6 +614,7 @@ export default {
             t, libraryItemName, libraryItemDescription, libraryCategoryName, brickSectionName,
             hasPersonalStructures,
             activeTab,
+            filteredPinnedStructures,
             query,
             selectedDefinitionId,
             activeColor,
@@ -717,11 +739,30 @@ export default {
                 </div>
 
                 <p
-                    v-if="filteredStructureGroups.length === 0 && filteredPersonalStructureGroups.length === 0 && filteredRecentStructures.length === 0"
+                    v-if="filteredStructureGroups.length === 0 && filteredPersonalStructureGroups.length === 0 && filteredRecentStructures.length === 0 && filteredPinnedStructures.length === 0"
                     class="build-library-empty"
                 >
                     {{ t('buildLibrary.noStructures') }}
                 </p>
+
+                <div v-if="filteredPinnedStructures.length > 0" class="palette-group pinned-structures-group">
+                    <h4 class="palette-category">{{ pinnedTitle }}</h4>
+                    <ul class="structure-list">
+                        <StructureLibraryCard
+                            v-for="structure in filteredPinnedStructures"
+                            :key="'pinned-' + structure.id"
+                            :structure="structure"
+                            :preview-service="previewService"
+                            source="built-in"
+                            :is-menu-open="openMenuId === structure.id"
+                            @place="placeStructure"
+                            @toggle-menu="toggleMenu"
+                            @info="inspectStructure"
+                            @fork="forkStructure"
+                            @fork-to-library="forkToLibrary"
+                        />
+                    </ul>
+                </div>
 
                 <div v-if="filteredRecentStructures.length > 0" class="palette-group recent-structures-group">
                     <h4 class="palette-category">{{ t('buildLibrary.recent') }}</h4>
