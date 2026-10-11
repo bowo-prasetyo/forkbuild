@@ -3626,6 +3626,16 @@ export default Object.freeze({
     'loginModal.publishUnsigned': '서명 없이 게시',
     'loginModal.signInToWalk': '로그인하고 함께 걷기',
     'loginModal.walkWhy': '함께 걸으면 친구와 직접 연결되고, 친구에게는 내 아바타가 내 ID의 이름으로 보입니다. ID는 이 기기에만 있으며 이메일도 계정도 필요 없습니다.',
+    'loginModal.quick.publishTitle': '게시할 이름 정하기',
+    'loginModal.quick.walkTitle': '걸을 때 쓸 이름 정하기',
+    'loginModal.quick.publishLead': '작품은 이 이름으로 서명되어, 링크를 여는 사람 누구나 내 작품인지 확인할 수 있습니다. 이메일도 계정도 필요 없습니다.',
+    'loginModal.quick.walkLead': '친구에게는 내 아바타가 이 이름으로 보입니다. 이메일도 계정도 필요 없습니다.',
+    'loginModal.quick.name': '내 이름',
+    'loginModal.quick.keyNote': '나를 대신해 서명하는 키는 이 브라우저에 남습니다. 지금 암호 문구로 보호하거나, 나중에 언제든 내 신원에서 보호할 수 있습니다.',
+    'loginModal.quick.withPassphrase': '지금 암호 문구로 보호하기',
+    'loginModal.quick.publishAs': '{name}(으)로 게시',
+    'loginModal.quick.walkAs': '{name}(으)로 걷기',
+    'loginModal.quick.continue': '계속',
     'loginModal.noIdentitiesOnThisDevice': '아직 이 기기에 신원이 없습니다.',
     'loginModal.createNewIdentity': '새 신원 만들기',
     'loginModal.unlocking': '잠금 해제 중…',
@@ -4485,5 +4495,9 @@ export default Object.freeze({
     'walkTogether.join.joining': '{name} 님에게 가는 중…',
     'walkTogether.join.joiningSomeone': '친구에게 가는 중…',
     'walkTogether.join.joined': '참가했습니다! 월드를 여는 중…',
-    'walkTogether.join.home': 'ForkBuild로 가기'
+    'walkTogether.join.home': 'ForkBuild로 가기',
+
+    // The reminder that a quick-start identity has no passphrase (ui/components/ProtectIdentityNote.js).
+    'protectIdentityNote.text': '내 키는 암호 문구 없이 이 브라우저에 보관되어 있어, 이 브라우저를 쓰는 누구나 나로서 게시할 수 있습니다.',
+    'protectIdentityNote.action': '암호 문구 추가'
 });

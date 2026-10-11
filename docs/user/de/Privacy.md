@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 1bcac3d373cc9606 -->
+<!-- translation-of: docs/Privacy.md source-hash: b4c0a3045ba7efaa -->
 # Datenschutz
 
 <!-- languages -->
@@ -25,6 +25,10 @@ veröffentlichen, exportieren oder senden es:
 - Ihre Identitäten: jeweils der öffentliche Schlüssel und der private
   Schlüssel, mit Ihrer Passphrase verschlüsselt, sofern Sie sie nicht ohne
   Passphrase erstellt haben;
+- eine Identität, die beim ersten Veröffentlichen oder Spazieren nur mit
+  einem Namen erstellt wurde, hat keine Passphrase, bis Sie unter
+  **Meine Identitäten** eine hinzufügen; bis dahin könnte alles, was den
+  Speicher dieser Website lesen kann, als sie signieren;
 - bekannte Peers, Freunde, die Personen, denen Sie folgen, Blockierungen,
   Chatverläufe und vorgemerkte Nachrichten (niemand erfährt, dass Sie ihm
   folgen, und nichts über ein Folgen wird je gesendet);

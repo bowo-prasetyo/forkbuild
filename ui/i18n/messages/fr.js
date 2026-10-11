@@ -3626,6 +3626,16 @@ export default Object.freeze({
     'loginModal.publishUnsigned': 'Publier sans signer',
     'loginModal.signInToWalk': 'Se connecter pour se promener ensemble',
     'loginModal.walkWhy': 'Se promener ensemble vous connecte directement à votre ami, qui voit votre avatar sous le nom de votre identité. Une identité n’existe que sur cet appareil : ni courriel, ni compte.',
+    'loginModal.quick.publishTitle': 'Choisissez un nom pour publier',
+    'loginModal.quick.walkTitle': 'Choisissez un nom pour vous promener',
+    'loginModal.quick.publishLead': 'Votre construction est signée sous ce nom, pour que quiconque ouvre votre lien puisse vérifier qu’elle est de vous. Ni courriel, ni compte.',
+    'loginModal.quick.walkLead': 'Votre ami voit votre avatar sous ce nom. Ni courriel, ni compte.',
+    'loginModal.quick.name': 'Votre nom',
+    'loginModal.quick.keyNote': 'La clé qui signe pour vous reste dans ce navigateur. Vous pouvez la protéger par une phrase secrète maintenant, ou plus tard quand vous voulez dans Mes identités.',
+    'loginModal.quick.withPassphrase': 'La protéger maintenant par une phrase secrète',
+    'loginModal.quick.publishAs': 'Publier en tant que {name}',
+    'loginModal.quick.walkAs': 'Se promener en tant que {name}',
+    'loginModal.quick.continue': 'Continuer',
     'loginModal.noIdentitiesOnThisDevice': 'Aucune identité sur cet appareil pour l’instant.',
     'loginModal.createNewIdentity': 'Créer une nouvelle identité',
     'loginModal.unlocking': 'Déverrouillage…',
@@ -4485,5 +4495,9 @@ export default Object.freeze({
     'walkTogether.join.joining': 'Vous rejoignez {name}…',
     'walkTogether.join.joiningSomeone': 'Vous rejoignez votre ami…',
     'walkTogether.join.joined': 'Vous y êtes ! Ouverture du Monde…',
-    'walkTogether.join.home': 'Aller sur ForkBuild'
+    'walkTogether.join.home': 'Aller sur ForkBuild',
+
+    // The reminder that a quick-start identity has no passphrase (ui/components/ProtectIdentityNote.js).
+    'protectIdentityNote.text': 'Votre clé est gardée dans ce navigateur sans phrase secrète : toute personne qui utilise ce navigateur pourrait publier en votre nom.',
+    'protectIdentityNote.action': 'Ajouter une phrase secrète'
 });

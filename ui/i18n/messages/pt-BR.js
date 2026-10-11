@@ -3625,6 +3625,16 @@ export default Object.freeze({
     'loginModal.publishUnsigned': 'Publicar sem assinar',
     'loginModal.signInToWalk': 'Entrar para passear juntos',
     'loginModal.walkWhy': 'Passear juntos conecta você diretamente ao seu amigo, que vê seu avatar com o nome da sua identidade. Uma identidade só existe neste dispositivo: sem e-mail, sem conta.',
+    'loginModal.quick.publishTitle': 'Escolha um nome para publicar',
+    'loginModal.quick.walkTitle': 'Escolha um nome para passear',
+    'loginModal.quick.publishLead': 'Sua construção é assinada com este nome, para que qualquer pessoa que abrir seu link possa conferir que é sua. Sem e-mail, sem conta.',
+    'loginModal.quick.walkLead': 'Seu amigo vê seu avatar com este nome. Sem e-mail, sem conta.',
+    'loginModal.quick.name': 'Seu nome',
+    'loginModal.quick.keyNote': 'A chave que assina por você fica neste navegador. Você pode protegê-la com uma frase secreta agora, ou quando quiser depois em Minhas identidades.',
+    'loginModal.quick.withPassphrase': 'Protegê-la agora com uma frase secreta',
+    'loginModal.quick.publishAs': 'Publicar como {name}',
+    'loginModal.quick.walkAs': 'Passear como {name}',
+    'loginModal.quick.continue': 'Continuar',
     'loginModal.noIdentitiesOnThisDevice': 'Ainda não há identidades neste dispositivo.',
     'loginModal.createNewIdentity': 'Criar nova identidade',
     'loginModal.unlocking': 'Desbloqueando…',
@@ -4484,5 +4494,9 @@ export default Object.freeze({
     'walkTogether.join.joining': 'Entrando com {name}…',
     'walkTogether.join.joiningSomeone': 'Entrando com seu amigo…',
     'walkTogether.join.joined': 'Você entrou! Abrindo o Mundo…',
-    'walkTogether.join.home': 'Ir para o ForkBuild'
+    'walkTogether.join.home': 'Ir para o ForkBuild',
+
+    // The reminder that a quick-start identity has no passphrase (ui/components/ProtectIdentityNote.js).
+    'protectIdentityNote.text': 'Sua chave fica neste navegador sem frase secreta, então qualquer pessoa que usar este navegador poderia publicar como você.',
+    'protectIdentityNote.action': 'Adicionar uma frase secreta'
 });

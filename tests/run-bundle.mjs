@@ -466,15 +466,16 @@ async function firstVisit(browser, base) {
         await editor.click('.toolbar-publish');
         await editor.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
         await editor.click('.remix-permission-allow');
-        await editor.waitForSelector('.login-modal-purpose', { timeout: 10_000 });
-        await editor.fill('.modal-content input[type="text"].modal-input', 'Bundle builder');
-        await editor.fill('.new-passphrase-fields input[type="password"] >> nth=0', 'a long bundle passphrase 4821');
-        await editor.fill('.new-passphrase-fields input[type="password"] >> nth=1', 'a long bundle passphrase 4821');
-        await editor.click('.modal-content .modal-actions .modal-btn--primary');
+        // A first publish on a new device asks only for a name.
+        await editor.waitForSelector('.login-modal-quick', { timeout: 10_000 });
+        assert(!(await editor.$('.login-modal-quick input[type="password"]')), 'a first publish asks for no passphrase');
+        await editor.fill('.login-modal-quick-name', 'Bundle builder');
+        await editor.click('.login-modal-quick-go');
         await editor.waitForSelector('.editor-post-publish-share .publication-share-link-url', { timeout: 60_000 });
         const link = await editor.$eval('.editor-post-publish-share .publication-share-link-url', (input) => input.value);
-        assert(link.includes('/b/1'), `logging in from Publish publishes it signed, with a link ready (${link.slice(0, 60)})`);
+        assert(link.includes('/b/1'), `a name is enough to publish it signed, with a link ready (${link.slice(0, 60)})`);
         assert((await editor.textContent('.user-widget')).includes('Bundle builder'), 'and leaves the new identity logged in');
+        assert(await editor.$('.editor-post-publish-protect .protect-identity-note-link'), 'and the Editor offers to add a passphrase');
         await editor.click('.editor-post-publish-share .publication-share-link-actions button:has-text("Copy link")');
         await editor.waitForSelector('.first-build-step--done[data-step="share"]', { timeout: 10_000 });
         await editor.click('.editor-post-publish-share .publication-share-link-embed');

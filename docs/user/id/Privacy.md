@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 1bcac3d373cc9606 -->
+<!-- translation-of: docs/Privacy.md source-hash: b4c0a3045ba7efaa -->
 # Privasi
 
 <!-- languages -->
@@ -25,6 +25,10 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
 - identitas Anda: kunci publik masing-masing, dan kunci privatnya, yang
   dienkripsi dengan frasa sandi Anda kecuali Anda memilih membuatnya tanpa
   frasa sandi;
+- identitas yang dibuat hanya dengan nama, saat pertama kali menerbitkan
+  atau berjalan bersama, tidak memiliki frasa sandi sampai Anda
+  menambahkannya di **Identitas Saya**, jadi apa pun yang dapat membaca
+  penyimpanan situs ini dapat menandatangani sebagai identitas itu;
 - rekan yang dikenal, teman, orang yang Anda ikuti, blokir, riwayat
   obrolan, dan pesan yang diantrekan (tidak ada yang diberi tahu bahwa
   Anda mengikutinya, dan tidak ada informasi tentang mengikuti yang pernah

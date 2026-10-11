@@ -3623,6 +3623,16 @@ export default Object.freeze({
     'loginModal.publishUnsigned': '署名せずに公開',
     'loginModal.signInToWalk': 'ログインして一緒に歩く',
     'loginModal.walkWhy': '一緒に歩くと友だちと直接つながり、友だちにはあなたのアバターが ID の名前で見えます。ID はこのデバイスにだけあり、メールもアカウントも要りません。',
+    'loginModal.quick.publishTitle': '公開に使う名前を決める',
+    'loginModal.quick.walkTitle': '歩くときの名前を決める',
+    'loginModal.quick.publishLead': '作品はこの名前で署名されるので、リンクを開いた人は誰でもあなたの作品だと確かめられます。メールもアカウントも要りません。',
+    'loginModal.quick.walkLead': '友だちには、あなたのアバターがこの名前で見えます。メールもアカウントも要りません。',
+    'loginModal.quick.name': 'あなたの名前',
+    'loginModal.quick.keyNote': 'あなたの代わりに署名する鍵はこのブラウザーに残ります。今パスフレーズで守ることも、あとでいつでもマイアイデンティティで守ることもできます。',
+    'loginModal.quick.withPassphrase': '今パスフレーズで守る',
+    'loginModal.quick.publishAs': '{name}として公開',
+    'loginModal.quick.walkAs': '{name}として歩く',
+    'loginModal.quick.continue': '続ける',
     'loginModal.noIdentitiesOnThisDevice': 'このデバイスにはまだアイデンティティがありません。',
     'loginModal.createNewIdentity': '新しいアイデンティティを作成',
     'loginModal.unlocking': 'ロック解除中…',
@@ -4482,5 +4492,9 @@ export default Object.freeze({
     'walkTogether.join.joining': '{name}さんのところへ向かっています…',
     'walkTogether.join.joiningSomeone': '友だちのところへ向かっています…',
     'walkTogether.join.joined': '参加しました！ワールドを開いています…',
-    'walkTogether.join.home': 'ForkBuild へ'
+    'walkTogether.join.home': 'ForkBuild へ',
+
+    // The reminder that a quick-start identity has no passphrase (ui/components/ProtectIdentityNote.js).
+    'protectIdentityNote.text': 'あなたの鍵はパスフレーズなしでこのブラウザーに保存されているため、このブラウザーを使う人なら誰でもあなたとして公開できます。',
+    'protectIdentityNote.action': 'パスフレーズを付ける'
 });

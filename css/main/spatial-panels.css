@@ -199,6 +199,23 @@
     border-bottom: 1px solid rgba(76, 175, 125, 0.4);
 }
 
+/* The reminder that the identity the build was signed with has no passphrase
+   (ui/components/ProtectIdentityNote.js). */
+.editor-post-publish-protect {
+    margin: 0;
+    padding: 0.45rem 1rem;
+    font-size: 0.85rem;
+    color: #f0d08a;
+    background: rgba(240, 208, 138, 0.06);
+    border-bottom: 1px solid rgba(240, 208, 138, 0.35);
+}
+
+.protect-identity-note-link {
+    color: #f0d08a;
+    font-weight: 600;
+    margin-left: 0.25rem;
+}
+
 .editor-post-publish-message {
     color: #4caf7d;
     font-size: 0.85rem;

@@ -299,3 +299,15 @@ device consult its own adopted, signed grant record, which is exactly as
 evidence-gated as resolving someone else.
 
 [Full text](history/0.1-0.2.md#a-device-is-never-taught-to-resolve-itself-except-reflexively-against-itself-0282-narrowed-0283)
+
+### A First Publish Asks Only For A Name (2026-10-11)
+
+On a device that holds no identity, Publish and a walk link make one from a
+name alone, without a passphrase, so the first thing a newcomer shares is
+never held behind a form (docs/Pillars.md, "Does it make the first ten
+minutes harder?"). A passphrase is still the default everywhere else: Login,
+My Identities, and the quick start's own "Protect it with a passphrase now".
+An identity made this way is the same as one created with **Create without
+a passphrase**: its key is stored unencrypted on this device, it shows as
+**⚠ Unprotected**, it can be protected at any time, and the Editor says so
+beside what it published (ui/components/ProtectIdentityNote.js).

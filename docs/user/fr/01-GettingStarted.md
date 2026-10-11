@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 0c8735655a65c0e1 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: abb471311eb7fdd6 -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -119,9 +119,18 @@ ligne ; une copie construite avec `node scripts/build.mjs`, si (voir
 ## Se connecter
 
 Vous n’avez pas besoin de vous connecter pour commencer à construire. La
-première fois que vous cliquez sur **Publier**, ForkBuild vous demande de
-vous connecter, ou de créer une identité sur place, car publier signe votre
-création. Vous pouvez aussi vous connecter à tout moment :
+première fois que vous cliquez sur **Publier**, ForkBuild vous demande un
+nom pour publier, car publier signe votre création. Tapez-en un et cliquez
+sur **Publier en tant que …** : une identité à ce nom est créée sur cet
+appareil, et votre construction est publiée. Sa clé est gardée dans ce
+navigateur sans phrase secrète jusqu’à ce que vous en ajoutiez une :
+l’Éditeur vous le dit après la publication, et **Protéger par une phrase
+secrète** dans **Mes identités** en ajoute une quand vous voulez. Pour
+choisir une phrase secrète tout de suite, cliquez plutôt sur **La protéger
+maintenant par une phrase secrète**. Un lien de promenade demande de la
+même façon, avec **Se promener en tant que …**.
+
+Vous pouvez aussi vous connecter à tout moment :
 Cliquez sur **Se connecter** en haut à droite. ForkBuild n’utilise ni mot
 de passe ni compte central — **votre identité est une paire de clés
 cryptographiques stockée sur cet appareil**. La boîte de dialogue de

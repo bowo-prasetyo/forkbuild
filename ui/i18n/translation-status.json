@@ -3192,6 +3192,16 @@
         "loginModal.publishUnsigned": "9e037627",
         "loginModal.signInToWalk": "1d284f24",
         "loginModal.walkWhy": "fc368f38",
+        "loginModal.quick.publishTitle": "ca9893db",
+        "loginModal.quick.walkTitle": "8c1ccb63",
+        "loginModal.quick.publishLead": "39bf50cf",
+        "loginModal.quick.walkLead": "cfb065fa",
+        "loginModal.quick.name": "2c6b2e25",
+        "loginModal.quick.keyNote": "f14619fc",
+        "loginModal.quick.withPassphrase": "2d30a94f",
+        "loginModal.quick.publishAs": "8c043477",
+        "loginModal.quick.walkAs": "9fb5f75a",
+        "loginModal.quick.continue": "31fbef16",
         "loginModal.noIdentitiesOnThisDevice": "e9736f49",
         "loginModal.createNewIdentity": "7ebaa3b9",
         "loginModal.unlocking": "a4114da0",
@@ -3957,6 +3967,8 @@
         "walkTogether.join.joining": "56727336",
         "walkTogether.join.joiningSomeone": "761f6892",
         "walkTogether.join.joined": "1d4b89fe",
-        "walkTogether.join.home": "fe678c0b"
+        "walkTogether.join.home": "fe678c0b",
+        "protectIdentityNote.text": "4d00038a",
+        "protectIdentityNote.action": "ed95ed4f"
     }
 }

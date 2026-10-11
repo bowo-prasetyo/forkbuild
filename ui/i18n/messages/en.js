@@ -3626,6 +3626,16 @@ export default Object.freeze({
     'loginModal.publishUnsigned': 'Publish unsigned',
     'loginModal.signInToWalk': 'Log in to walk together',
     'loginModal.walkWhy': 'Walking together connects you directly to your friend, who sees your avatar under your identity\'s name. An identity lives only on this device: no email, no account.',
+    'loginModal.quick.publishTitle': 'Choose a name to publish under',
+    'loginModal.quick.walkTitle': 'Choose a name to walk as',
+    'loginModal.quick.publishLead': 'Your build is signed under this name, so anyone who opens your link can check it\'s yours. No email, no account.',
+    'loginModal.quick.walkLead': 'Your friend sees your avatar under this name. No email, no account.',
+    'loginModal.quick.name': 'Your name',
+    'loginModal.quick.keyNote': 'The key that signs for you stays in this browser. You can protect it with a passphrase now, or any time later under My Identities.',
+    'loginModal.quick.withPassphrase': 'Protect it with a passphrase now',
+    'loginModal.quick.publishAs': 'Publish as {name}',
+    'loginModal.quick.walkAs': 'Walk as {name}',
+    'loginModal.quick.continue': 'Continue',
     'loginModal.noIdentitiesOnThisDevice': 'No identities on this device yet.',
     'loginModal.createNewIdentity': 'Create New Identity',
     'loginModal.unlocking': 'Unlocking…',
@@ -4485,5 +4495,9 @@ export default Object.freeze({
     'walkTogether.join.joining': 'Joining {name}…',
     'walkTogether.join.joiningSomeone': 'Joining your friend…',
     'walkTogether.join.joined': 'You\'re in! Opening the World…',
-    'walkTogether.join.home': 'Go to ForkBuild'
+    'walkTogether.join.home': 'Go to ForkBuild',
+
+    // The reminder that a quick-start identity has no passphrase (ui/components/ProtectIdentityNote.js).
+    'protectIdentityNote.text': 'Your key is kept in this browser without a passphrase, so anyone using this browser could publish as you.',
+    'protectIdentityNote.action': 'Add a passphrase'
 });
