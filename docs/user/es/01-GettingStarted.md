@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 0c8735655a65c0e1 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: abb471311eb7fdd6 -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -116,8 +116,17 @@ carpeta (como arriba) no se instala ni funciona sin conexión; una hecha con
 ## Iniciar sesión
 
 No necesita iniciar sesión para empezar a construir. La primera vez que
-haga clic en **Publicar**, ForkBuild le pedirá que inicie sesión o que cree
-una identidad ahí mismo, porque publicar firma su creación. También puede
+haga clic en **Publicar**, ForkBuild le pedirá un nombre con el que
+publicar, porque publicar firma su creación. Escriba uno y haga clic en
+**Publicar como …**: se crea en este dispositivo una identidad con ese
+nombre y se publica su construcción. Su clave se guarda en este navegador
+sin frase de contraseña hasta que añada una: el Editor se lo dice después
+de publicar, y **Proteger con frase de contraseña** en **Mis identidades**
+añade una cuando quiera. Para elegir una frase de contraseña desde el
+principio, haga clic en **Protegerla ahora con una frase de contraseña**.
+Un enlace para pasear pregunta igual, con **Pasear como …**.
+
+También puede
 iniciar sesión en cualquier momento:
 Haga clic en **Iniciar sesión**, en la esquina superior derecha. ForkBuild
 no usa contraseñas ni cuentas centrales: **su identidad es un par de

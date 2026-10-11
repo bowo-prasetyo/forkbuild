@@ -3625,6 +3625,16 @@ export default Object.freeze({
     'loginModal.publishUnsigned': 'Publicar sin firmar',
     'loginModal.signInToWalk': 'Iniciar sesión para pasear juntos',
     'loginModal.walkWhy': 'Pasear juntos le conecta directamente con su amigo, que ve su avatar con el nombre de su identidad. Una identidad solo existe en este dispositivo: sin correo y sin cuenta.',
+    'loginModal.quick.publishTitle': 'Elija un nombre con el que publicar',
+    'loginModal.quick.walkTitle': 'Elija un nombre con el que pasear',
+    'loginModal.quick.publishLead': 'Su construcción se firma con este nombre, para que cualquiera que abra su enlace pueda comprobar que es suya. Sin correo y sin cuenta.',
+    'loginModal.quick.walkLead': 'Su amigo ve su avatar con este nombre. Sin correo y sin cuenta.',
+    'loginModal.quick.name': 'Su nombre',
+    'loginModal.quick.keyNote': 'La clave que firma por usted se queda en este navegador. Puede protegerla con una frase de contraseña ahora, o cuando quiera más tarde en Mis identidades.',
+    'loginModal.quick.withPassphrase': 'Protegerla ahora con una frase de contraseña',
+    'loginModal.quick.publishAs': 'Publicar como {name}',
+    'loginModal.quick.walkAs': 'Pasear como {name}',
+    'loginModal.quick.continue': 'Continuar',
     'loginModal.noIdentitiesOnThisDevice': 'Todavía no hay identidades en este dispositivo.',
     'loginModal.createNewIdentity': 'Crear identidad nueva',
     'loginModal.unlocking': 'Desbloqueando…',
@@ -4484,5 +4494,9 @@ export default Object.freeze({
     'walkTogether.join.joining': 'Uniéndose a {name}…',
     'walkTogether.join.joiningSomeone': 'Uniéndose a su amigo…',
     'walkTogether.join.joined': '¡Ya está dentro! Abriendo el Mundo…',
-    'walkTogether.join.home': 'Ir a ForkBuild'
+    'walkTogether.join.home': 'Ir a ForkBuild',
+
+    // The reminder that a quick-start identity has no passphrase (ui/components/ProtectIdentityNote.js).
+    'protectIdentityNote.text': 'Su clave está en este navegador sin frase de contraseña, así que cualquiera que use este navegador podría publicar como usted.',
+    'protectIdentityNote.action': 'Añadir una frase de contraseña'
 });

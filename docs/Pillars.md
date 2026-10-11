@@ -208,4 +208,5 @@ pillar's "with friends" needs no Peers page; publishing without first
 creating a passphrase identity; Distribute folded into Publish; World View
 opening as a visitor's view, with its protocol panels under Advanced; and
 more challenge themes. The "walk here with me" link was added the same day (see the
-roadmap, "Walk here with me").
+roadmap, "Walk here with me"), and then publishing without first creating a
+passphrase identity ("A first publish asks only for a name").

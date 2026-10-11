@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 1bcac3d373cc9606 -->
+<!-- translation-of: docs/Privacy.md source-hash: b4c0a3045ba7efaa -->
 # Privacidad
 
 <!-- languages -->
@@ -25,6 +25,10 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
 - sus identidades: la clave pública de cada una, y su clave privada,
   cifrada con su frase de contraseña a menos que haya elegido crearla sin
   una;
+- una identidad creada solo con un nombre, al publicar o pasear por
+  primera vez, no tiene frase de contraseña hasta que añada una en
+  **Mis identidades**, así que cualquier cosa que pueda leer el
+  almacenamiento de este sitio podría firmar como ella;
 - los pares conocidos, los amigos, las personas que sigue, los bloqueos, el
   historial de chat y los mensajes en cola (no se le avisa a nadie que
   usted lo sigue, y nunca se envía nada sobre un seguimiento);

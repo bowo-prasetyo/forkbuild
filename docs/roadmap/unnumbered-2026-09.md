@@ -5347,3 +5347,29 @@ world (a build is a place you visit with friends).
   its failures, and the host's dialog at phone width); `FunnelEventCounter` (the two paths).
 - Not done: walking together in the challenge plaza (it has no single World to send); a link that keeps working after
   the host leaves World View; and showing the host which friends' avatars their own visibility settings hide.
+
+
+## A first publish asks only for a name (unnumbered, 2026-10-11)
+
+**Publishing your first build no longer starts with a passphrase form.** The guided first build's last step, "Publish
+and share a link", opened a dialog asking for a display name, a passphrase typed twice, or a ticked opt-out, before
+anything could be shared; the creative-direction review of 2026-10-11 named it the funnel's sharpest step, and walk-link
+guests met the same form. Pillar served: building feels joyful (a newcomer finishes and shares a first build), with
+your work is yours (the build is still signed by a key the player holds).
+
+- **Quick start** (ui/components/LoginModal.js). Opened by Publish or a walk link on a device that holds no identity,
+  the dialog asks only for a name: **Publish as …** (or **Walk as …**) creates an identity without a passphrase, logs
+  in and goes on. **Protect it with a passphrase now** opens the full form, keeping the name; **Publish unsigned** stays.
+  With any identity on the device, or from the header's Login, the dialog is unchanged.
+- **The trade, said plainly.** Such an identity is the one **Create without a passphrase** always made: its key is
+  unencrypted in this browser and it shows as **⚠ Unprotected** on My Identities, where **Protect with Passphrase**
+  adds one. The dialog says the key stays in the browser and can be protected now or later, and after publishing the
+  Editor says anyone using this browser could publish as you, with **Add a passphrase**
+  (ui/components/ProtectIdentityNote.js). docs/principles/identity.md records the rule.
+- Every language: the dialog and the reminder, guide 01's "Logging in" and the Privacy page; README.
+- Tests: `LoginModalQuickStartBrowser` (a name and Publish as …, creating no passphrase; the full form one click away
+  with the name kept; no quick start when an identity exists or from Login; the reminder only for an identity without
+  a passphrase); `WalkTogetherBrowser` follows the walk link's quick start.
+- Not done: a reminder outside the Editor (Your Data's backup reminder could carry it), and keeping a quick-start key
+  wrapped by a device-bound WebCrypto key, which would protect it from anything that copies the site's storage but
+  not from script running in the page, and would not survive a backup restored elsewhere.

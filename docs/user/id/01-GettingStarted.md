@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 0c8735655a65c0e1 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: abb471311eb7fdd6 -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -113,9 +113,17 @@ tanpa internet; salinan yang dibangun dengan `node scripts/build.mjs` dapat
 ## Masuk
 
 Anda tidak perlu masuk untuk mulai membangun. Saat pertama kali Anda
-mengeklik **Terbitkan**, ForkBuild meminta Anda masuk, atau membuat
-identitas saat itu juga, karena menerbitkan menandatangani karya Anda. Anda
-juga dapat masuk kapan saja:
+mengeklik **Terbitkan**, ForkBuild meminta nama untuk menerbitkan, karena
+menerbitkan menandatangani karya Anda. Ketik satu lalu klik
+**Terbitkan sebagai …**: identitas dengan nama itu dibuat di perangkat ini,
+dan bangunan Anda diterbitkan. Kuncinya disimpan di browser ini tanpa frasa
+sandi sampai Anda menambahkannya: Editor memberi tahu setelah Anda
+menerbitkan, dan **Lindungi dengan Frasa Sandi** di **Identitas Saya**
+menambahkannya kapan saja. Untuk langsung memilih frasa sandi, klik
+**Lindungi dengan frasa sandi sekarang**. Tautan jalan bersama bertanya
+dengan cara yang sama, dengan **Berjalan sebagai …**.
+
+Anda juga dapat masuk kapan saja:
 Klik **Masuk** di pojok kanan atas. ForkBuild tidak memakai kata sandi atau
 akun pusat — sebagai gantinya, **identitas Anda adalah pasangan kunci
 kriptografis yang tersimpan di perangkat ini**. Dialog masuk menampilkan

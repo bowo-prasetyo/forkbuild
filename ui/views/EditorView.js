@@ -56,6 +56,7 @@ import StructureInfoPanel from '../components/StructureInfoPanel.js';
 import ForkFailureDialog from '../components/ForkFailureDialog.js';
 import EditorDistributionDialog from '../components/EditorDistributionDialog.js';
 import PublicationShareLink from '../components/PublicationShareLink.js';
+import ProtectIdentityNote from '../components/ProtectIdentityNote.js';
 import FirstBuildGuide from '../components/FirstBuildGuide.js';
 import BuildPlotBanner from '../components/BuildPlotBanner.js';
 import { useBuildPlot } from './editorView/useBuildPlot.js';
@@ -91,7 +92,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, FirstBuildGuide, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -155,6 +156,7 @@ export default {
                     :publication="publishedPublication"
                     @shared="firstBuildShared"
                 />
+                <ProtectIdentityNote v-if="publishedPublication" class="editor-post-publish-protect" />
 
                 <EditorDistributionDialog
                     v-if="distributionDialogOpen"

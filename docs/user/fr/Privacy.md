@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 1bcac3d373cc9606 -->
+<!-- translation-of: docs/Privacy.md source-hash: b4c0a3045ba7efaa -->
 # Confidentialité
 
 <!-- languages -->
@@ -25,6 +25,10 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   enregistrées, et les structures enregistrées ;
 - vos identités : la clé publique de chacune, et sa clé privée, chiffrée
   avec votre phrase secrète sauf si vous avez choisi de la créer sans ;
+- une identité créée avec un simple nom, lors d’une première publication
+  ou promenade, n’a pas de phrase secrète tant que vous n’en ajoutez pas une
+  dans **Mes identités** : tout ce qui peut lire le stockage de ce site
+  pourrait alors signer en son nom ;
 - les pairs connus, les amis, les personnes que vous suivez, les
   blocages, l’historique du chat et les messages en attente (personne
   n’est informé que vous le suivez, et rien concernant un abonnement n’est

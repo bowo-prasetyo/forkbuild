@@ -102,8 +102,8 @@ assert(host.textContent.includes(t('walkTogether.join.signInWhy')), 'it says why
 assert(!host.querySelector('.walk-together-join'), 'Join waits for a log in');
 host.querySelector('.walk-together-sign-in').click();
 await nextTick();
-assert(host.querySelector('.modal-overlay h3').textContent === t('loginModal.signInToWalk'), 'the login dialog says it is for walking together');
-assert(host.textContent.includes(t('loginModal.walkWhy')), 'and why');
+assert(host.querySelector('.modal-overlay h3').textContent === t('loginModal.quick.walkTitle'), 'with no identity yet, the login dialog asks only for a name to walk as');
+assert(host.textContent.includes(t('loginModal.quick.walkLead')), 'and says what the name is for');
 assert(guests.length === 0, 'nothing connects before a log in');
 
 // Logged in: the page names who you walk as and what joining shares, then joins on a click.
