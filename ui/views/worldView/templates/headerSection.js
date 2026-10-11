@@ -18,7 +18,7 @@ export const headerSectionTemplate = `<h2>{{ title }}</h2>
                     Principles.md, "Camera Focus, Active Document, and Selection Are Three
                     Different Things").
                 -->
-                <p class="world-view-context">
+                <p v-if="advanced" class="world-view-context">
                     {{ t('worldView.cameraAndEditing', { camera: focusedDocumentTitle || t('worldView.world2'), editing: activeDocumentInfo ? title : t('worldView.none') }) }}
                 </p>
                 <div v-if="activeDocumentInfo && activeDocumentInfo.editable" class="world-view-actions">

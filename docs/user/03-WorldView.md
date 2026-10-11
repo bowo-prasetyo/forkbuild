@@ -22,6 +22,28 @@ released animal into the World as a decoration with **G** (see
 From the **Repository**, click **Explore** on any creation — or navigate to a
 world's URL directly. You'll appear next to that creation in the shared world.
 
+## A visitor's view, and Advanced
+
+World View opens as a visitor's view: the build's name and who made it,
+what's around you, and what you can do here (**Build here**, **Walk here
+with me**, and **Edit a Copy** when the build isn't yours). The tools for
+the networks behind the World wait at the bottom of the panel, under
+**Show advanced tools**:
+
+- the coordinates over the view, Search's **Location** fields, and the
+  header's **Camera · Editing** line (see [Camera vs. Editing](#camera-vs-editing));
+- Nearby's **Place Names**, **Claimed Builds** and **World Encounters**
+  groups, with **Discover Shared World** inside World Encounters;
+- **My Shared World**, your publication's own network panel, and Move
+  Placement beside it;
+- the list of Worlds that couldn't load, and the avatar diagnostics.
+
+The choice is remembered on this device and changes nothing for anyone
+else. The compass, the place names along the bottom, Search, Locations,
+the Map and Places, your avatar and the build's Save and Publish stay in
+both views. Builds whose publishers claim a spot nearby are still drawn
+as faint ghosts; their list is under Advanced.
+
 ## Flying around
 
 - **Left-drag** — orbit the camera
@@ -256,6 +278,8 @@ navigation control in World View already holds to.
 
 ### World Encounters — publications and avatars your peers are sharing
 
+(Shown with **Show advanced tools** on; see [A visitor's view, and Advanced](#a-visitors-view-and-advanced).)
+
 The **World Encounters** group, inside Explore's Nearby section, is a
 small flat map of its own — separate from the World Map described
 below — that plots two kinds of thing your connected peers have told you
@@ -414,6 +438,8 @@ for connecting to someone.
 
 ### Nearby Place Names — discovering claims from anyone
 
+(Shown with **Show advanced tools** on; see [A visitor's view, and Advanced](#a-visitors-view-and-advanced).)
+
 **Place Names**, the fourth Nearby group, shows signed place-naming
 claims for the World Regions currently around you — without needing a
 connected peer at all. Like Discover Shared World above, it searches a
@@ -444,6 +470,8 @@ stay on screen; it's never treated as "there are no nearby claims." See
 claim gets published in the first place.
 
 ### Claimed Builds — other people's builds, where their publishers say they stand
+
+(Shown with **Show advanced tools** on; see [A visitor's view, and Advanced](#a-visitors-view-and-advanced).)
 
 As you walk, ForkBuild downloads Snapshots announced near you (see
 [My Shared World](#my-shared-world--distributing-your-own-snapshot-no-peers-required)'s
@@ -542,7 +570,8 @@ the Editor, ready to build on. Two panels offer it: the **Focus** panel
 (the Info button on Explore/Locations rows, for a region/landmark/
 structure) and the **Inspection** panel (a direct click in the 3D view,
 for a brick, bare ground, or a placed structure) — same action, same
-button, either way you got there.
+button, either way you got there. When the World you're in is someone
+else's build, the panel's top row offers **Edit a Copy** of all of it, too.
 
 - For a **landmark**, a **region**, a **brick**, or **bare ground**,
   that's the World document they belong to.
@@ -614,8 +643,9 @@ walking around. The dialog lists who is on the way and who has arrived.
 ### The challenge plaza
 
 **Walk the plaza** on a week's challenge page opens World View in a
-clearing where that week's entries stand round an open square, with a
-panel listing them (see
+clearing where that week's entries stand round an open square, paved,
+with a well, benches and lamp posts, so the plaza is a place even in a week
+with no entries yet; a panel lists them (see
 [The challenge plaza](04-PublishingAndForking.md#the-challenge-plaza)).
 No trees grow there, for any week. The entries are shown only while you're
 in the plaza, and **Build here** isn't offered there.
@@ -676,7 +706,7 @@ competes with everything else the naming system can do.
 
 ## Camera vs. Editing
 
-The header shows two things that can genuinely differ:
+(Shown with **Show advanced tools** on; see [A visitor's view, and Advanced](#a-visitors-view-and-advanced).) The header shows two things that can genuinely differ:
 
 ```
 Camera: Alice's Castle · Editing: Bob's Castle
@@ -735,9 +765,10 @@ The **Search** panel searches by **title or author**, over everything
 published — not just what's currently loaded around you. Type a term and
 click **Find**.
 
-You can optionally narrow it to a **Location**: fill in X/Y/Z and a **Radius**
-(in World Units) and the search only returns results within that distance of
-that point. Leave Location blank for a plain text search.
+With **Show advanced tools** on, you can optionally narrow it to a
+**Location**: fill in X/Y/Z and a **Radius** (in World Units) and the search
+only returns results within that distance of that point. Leave Location
+blank for a plain text search.
 
 Each result shows:
 
@@ -1006,6 +1037,8 @@ unchanged") tells you so. It follows the same license rules as any other
 fork (see [Publishing & Forking](04-PublishingAndForking.md#forking-make-it-your-own)).
 
 ### My Shared World — distributing your own Snapshot, no peers required
+
+(Shown with **Show advanced tools** on; see [A visitor's view, and Advanced](#a-visitors-view-and-advanced).)
 
 Further down the panel, below Search and Avatar, sits a **My Shared World** panel, showing your
 current world's title and author once it's actually published, plus its

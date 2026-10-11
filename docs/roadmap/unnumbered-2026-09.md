@@ -5373,3 +5373,35 @@ your work is yours (the build is still signed by a key the player holds).
 - Not done: a reminder outside the Editor (Your Data's backup reminder could carry it), and keeping a quick-start key
   wrapped by a device-bound WebCrypto key, which would protect it from anything that copies the site's storage but
   not from script running in the page, and would not survive a backup restored elsewhere.
+
+## A visitor's World View (unnumbered, 2026-10-11)
+
+**World View opens as a place, not a console.** A friend arriving through a **Walk here with me** link landed in a panel
+of coordinates, a "Camera: … · Editing: …" line, Place Names, Claimed Builds, World Encounters and the publication's
+network tools; the creative-direction review of 2026-10-11 named it the screen that read most like a debugging console,
+and the walk link made it the first screen a guest sees. Pillar served: walking inside it with friends (the guest sees
+the build, its maker and what to do), with building feels joyful (**Build here** and **Edit a Copy** lead the panel).
+
+- **A visitor's view by default** (ui/views/WorldView.js and its templates). The coordinates, Search's Location fields
+  (ui/components/WorldSearchPanel.js's `showLocation`), the Camera · Editing line,
+  Nearby's Place Names, Claimed Builds and World Encounters groups, the Own Publication panel and Move Placement, the
+  unloadable-Worlds list and the avatar diagnostics show only with **Show advanced tools**, the last thing in the panel.
+  The compass, place names, Search, Locations, Map, Places, avatar controls and the build's Save and Publish stay.
+- **Remembered per device** (application/settings/WorldViewDetailStore.js, provided as `worldViewDetailStore`); a
+  damaged entry, a storage error or no store at all is a visitor's view. Discovery behind the hidden panels keeps
+  running, except the World Encounters canvas, which runs only while shown.
+- **Edit a Copy of the World you're in.** When the active build isn't yours, the panel's top row offers **Edit a
+  Copy**, through the same handoff as the Inspection panel's.
+- **The plaza is a place with no entries** (core/library/PlazaSquare.js). Visiting a challenge plaza stands a paved
+  square of sandstone slabs in the open middle, with a well, three benches, four lamp posts and bushes, drawn and solid
+  like an exhibit and gone when the visitor leaves; every brick stays inside the open middle and the arrival spot is
+  clear.
+- Every language: the switch and its hint; guide 03 ("A visitor's view, and Advanced", and a pointer on each Advanced
+  section); docs/Architecture.md; the Privacy page lists the new setting.
+- Tests: `WorldViewDetailStore` (the default, the saved choice, damage and storage errors);
+  `PlazaSquare` (known bricks, inside the open middle whichever way they turn, a clear middle, one building);
+  `WorldViewPanelLayoutBrowser` (a visitor's Nearby without the network groups; no Camera · Editing line and no
+  coordinates until Advanced).
+- Not done: residents asking about builds ("Someone should build a bridge here"), and a plaza square that changes with
+  the week's theme.
+

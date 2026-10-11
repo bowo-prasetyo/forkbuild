@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: b4c0a3045ba7efaa -->
+<!-- translation-of: docs/Privacy.md source-hash: 7157ea7fcc79e377 -->
 # Privacidad
 
 <!-- languages -->
@@ -33,7 +33,8 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
   historial de chat y los mensajes en cola (no se le avisa a nadie que
   usted lo sigue, y nunca se envía nada sobre un seguimiento);
 - el perfil de su avatar, la configuración (incluido si la Vista del mundo
-  reproduce sonido, a qué volumen y en 3D o estéreo, y el idioma que eligió;
+  reproduce sonido, a qué volumen y en 3D o estéreo, si muestra sus
+  herramientas avanzadas, y el idioma que eligió;
   si no eligió ninguno, ForkBuild lee en el dispositivo los idiomas
   preferidos del navegador y no los envía a ningún lugar), y el nombre de
   usuario y la credencial de un servidor TURN si ingresa uno en

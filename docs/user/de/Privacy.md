@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: b4c0a3045ba7efaa -->
+<!-- translation-of: docs/Privacy.md source-hash: 7157ea7fcc79e377 -->
 # Datenschutz
 
 <!-- languages -->
@@ -33,7 +33,8 @@ veröffentlichen, exportieren oder senden es:
   Chatverläufe und vorgemerkte Nachrichten (niemand erfährt, dass Sie ihm
   folgen, und nichts über ein Folgen wird je gesendet);
 - Ihr Avatarprofil, Einstellungen (darunter, ob die Weltansicht Ton
-  abspielt, wie laut und ob in 3D oder Stereo, und die von Ihnen gewählte
+  abspielt, wie laut und ob in 3D oder Stereo, ob die Weltansicht ihre
+  erweiterten Werkzeuge zeigt, und die von Ihnen gewählte
   Sprache; haben Sie keine gewählt, liest ForkBuild die bevorzugten Sprachen
   des Browsers auf dem Gerät und sendet sie nirgendwohin) sowie Benutzername
   und Zugangsdaten eines TURN-Servers, falls Sie sie unter

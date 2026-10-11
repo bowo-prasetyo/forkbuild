@@ -68,6 +68,7 @@ import { LanguageSettingsStore } from '../application/settings/LanguageSettingsS
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
 import { ExperimentalToolsSettingsStore } from '../application/settings/ExperimentalToolsSettingsStore.js';
 import { NetworkWriterSettingsStore } from '../application/settings/NetworkWriterSettingsStore.js';
+import { WorldViewDetailStore } from '../application/settings/WorldViewDetailStore.js';
 import { NetworkWriterLoader } from './main/NetworkWriterLoader.js';
 import { followNetworkWriterSwitches } from './main/followNetworkWriterSwitches.js';
 import { isWritable } from '../core/NetworkWriters.js';
@@ -362,6 +363,8 @@ app.provide('backupDestinations', backupDestinations);
 // Copies everything to another device through a one-off code, over the same
 // peer connections and rendezvous servers as Peers.
 app.provide('devicePairing', new DevicePairing({ deviceBackup: deviceBackupUseCase, peerConnectionProvider, rendezvousTransports }));
+// World View's visitor's view or every tool, chosen per device.
+app.provide('worldViewDetailStore', new WorldViewDetailStore({ storageProvider: new LocalStorageProvider() }));
 // "Walk here with me": a link that connects a friend's peer session to this
 // one through a one-off meeting on the same rendezvous servers.
 app.provide('walkTogether', new WalkTogether({ peerSessionManager, identityProvider, peerConnectionProvider, rendezvousTransports }));

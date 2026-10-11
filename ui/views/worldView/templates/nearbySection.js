@@ -1,5 +1,6 @@
 // World view template: the Explore mode's Nearby section (Explore Here / What's Here?, then places,
-// landmarks, people, place names and encounters).
+// landmarks and people; discovered place names, claimed builds and World Encounters only under
+// Advanced).
 // It renders in WorldView's scope, so it uses the names its setup() returns.
 export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode === WorldViewPrimaryMode.EXPLORE" class="world-view-section world-view-section--nearby">
                 <h4>{{ t('worldView.nearby') }}</h4>
@@ -76,6 +77,7 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                 -->
                 <CollapsibleSection
                     :title="t('worldView.placeNames')"
+                    v-if="advanced"
                     :count="nearbyPlaceNamingClaimRows.length"
                     :collapsed="nearbySectionsCollapsed.placeNaming"
                     @toggle="setNearbySectionCollapsed('placeNaming', NEARBY_PLACE_NAMING_SECTION, $event)"
@@ -120,7 +122,7 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                     places the Wanderer's own copy there.
                 -->
                 <CollapsibleSection
-                    v-if="claimedBuildRows.length > 0"
+                    v-if="advanced && claimedBuildRows.length > 0"
                     :title="t('worldView.claimedBuilds')"
                     :count="claimedBuildRows.length"
                     :collapsed="nearbySectionsCollapsed.claimedBuilds"
@@ -172,6 +174,7 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                 -->
                 <CollapsibleSection
                     :title="t('worldView.worldEncounters')"
+                    v-if="advanced"
                     :collapsed="nearbySectionsCollapsed.worldEncounters"
                     @toggle="setNearbySectionCollapsed('worldEncounters', WORLD_ENCOUNTERS_SECTION, $event)"
                 >

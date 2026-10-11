@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: b4c0a3045ba7efaa -->
+<!-- translation-of: docs/Privacy.md source-hash: 7157ea7fcc79e377 -->
 # Privacidade
 
 <!-- languages -->
@@ -32,7 +32,8 @@ que você publique, exporte ou envie:
   de conversas e mensagens na fila (ninguém é avisado de que você o segue, e
   nada sobre seguir é enviado);
 - seu perfil de avatar, as configurações (incluindo se a Visão do mundo toca
-  som, o volume, em 3D ou estéreo, e o idioma que você escolheu; quando você
+  som, o volume, em 3D ou estéreo, se ela mostra suas ferramentas
+  avançadas, e o idioma que você escolheu; quando você
   não escolheu um, o ForkBuild lê os idiomas preferidos do navegador no
   próprio dispositivo e não os envia para lugar nenhum), e o nome de usuário
   e a credencial de um servidor TURN, se você digitar um em **Configurações

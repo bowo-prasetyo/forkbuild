@@ -7,6 +7,9 @@ import { worldListsSectionTemplate } from '../ui/views/worldView/templates/world
 import { inspectionPanelsTemplate } from '../ui/views/worldView/templates/inspectionPanels.js';
 import { hoverCardTemplate } from '../ui/views/worldView/templates/hoverCard.js';
 import { avatarSectionTemplate } from '../ui/views/worldView/templates/avatarSection.js';
+import { headerSectionTemplate } from '../ui/views/worldView/templates/headerSection.js';
+import { navigationHudSectionTemplate } from '../ui/views/worldView/templates/navigationHudSection.js';
+import WorldSearchPanel from '../ui/components/WorldSearchPanel.js';
 import { residentRefusalLabel } from '../ui/components/avatarInteractionLabels.js';
 import ResidentSpeechActions from '../ui/components/ResidentSpeechActions.js';
 import { CameraPerspective } from '../core/CameraPerspective.js';
@@ -52,6 +55,7 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     const { host, vm, unmount } = mount({
         components: { CollapsibleSection, WorldEncounterCanvas: { template: '<div class="stub-canvas"></div>' } },
         data: () => ({
+            advanced: true,
             cameraPosition: { x: 0, y: 0, z: 0 },
             primaryMode: WorldViewPrimaryMode.EXPLORE,
             WorldViewPrimaryMode,
@@ -133,9 +137,17 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     await nextTick();
     assert(claimRow.textContent.includes('signed by bob (key did:key:z6MkhaXgBZDv…a1b2c3)') && !claimRow.querySelector('.world-view-claimed-build-verify'),
         'once verified, the row names the signing key and Verify goes');
+
+    // A visitor's view: only what is around you, without the network's groups.
+    vm.advanced = false;
+    await nextTick();
+    assert(JSON.stringify(titles()) === JSON.stringify(['Landmarks', 'People']),
+        `a visitor's view leaves out Place Names, Claimed Builds and World Encounters — got ${titles().join(', ')}`);
+    assert(!section.querySelector('.stub-canvas') && !section.querySelector('.world-view-claimed-build-row'), 'neither the canvas nor a claim row is drawn');
     unmount();
     console.log('✓ Nearby shows short group titles, folds empty ones, and holds the camera queries');
     console.log('✓ Claimed Builds lists nearby claims with Navigate, Accept Position and Hide');
+    console.log('✓ a visitor\'s view keeps Nearby to places, landmarks and people');
 }
 
 // Avatar: without an avatar of your own, only what works shows.
@@ -246,6 +258,7 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
 {
     const { host, vm, unmount } = mount({
         data: () => ({
+            advanced: false,
             failedWorlds: [],
             nearbyWorlds: [],
             loadedWorlds: [{ documentId: 'current', title: 'A Pyramid with Stair', author: 'forkbuild' }]
@@ -405,4 +418,75 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     assert(getComputedStyle(body).display !== 'none' && body.textContent.includes('nice stairs'), 'opening it shows them');
     unmount();
     console.log('✓ the publication panel keeps rare actions behind More and confirms Unpublish');
+}
+
+// A visitor's view: no camera/editing line and no coordinates, until Advanced.
+{
+    const { host, vm, unmount } = mount({
+        data: () => ({
+            advanced: false,
+            title: 'Harbor Island',
+            author: 'alice',
+            activeDocumentInfo: { status: 'published', editable: false },
+            focusedDocumentTitle: null
+        }),
+        methods: { parentTitle() { return null; } },
+        template: `<div>${headerSectionTemplate}</div>`
+    });
+    assert(host.querySelector('h2').textContent.trim() === 'Harbor Island' && host.textContent.includes('alice'),
+        'the header names the build and credits its maker');
+    assert(!host.querySelector('.world-view-context'), 'a visitor sees no Camera/Editing line');
+    vm.advanced = true;
+    await nextTick();
+    assert(host.querySelector('.world-view-context').textContent.includes('Harbor Island'), 'Advanced shows it again');
+    unmount();
+
+    const hud = mount({
+        components: { CompassIndicator: { template: '<div class="stub-compass"></div>' } },
+        data: () => ({
+            advanced: false,
+            cameraPosition: { x: 12.34, y: 1, z: -5 },
+            compassHeading: 0,
+            compassMarkers: [],
+            spatialContext: null,
+            nearbyGeographicPlaces: []
+        }),
+        template: `<div>${navigationHudSectionTemplate}</div>`
+    });
+    assert(hud.host.querySelector('.stub-compass') && !hud.host.querySelector('.world-view-nav-hud-coords'),
+        'a visitor keeps the compass but sees no coordinates');
+    hud.vm.advanced = true;
+    await nextTick();
+    assert(hud.host.querySelector('.world-view-nav-hud-coords').textContent.includes('12.3'), 'Advanced shows the coordinates');
+    hud.unmount();
+    console.log('✓ a visitor\'s view hides the Camera/Editing line and the coordinates until Advanced');
+}
+
+// Search's Location fields are an Advanced tool; hiding them drops a radius
+// already typed, so a search is by text alone.
+{
+    const searches = [];
+    const { host, vm, unmount } = mount({
+        components: { WorldSearchPanel },
+        data: () => ({ advanced: true }),
+        methods: { onSearch(query) { searches.push(query); } },
+        template: '<WorldSearchPanel :results="[]" :show-location="advanced" @search="onSearch" />'
+    });
+    assert(host.querySelector('.world-search-location'), 'Advanced shows the Location fields');
+    const radius = host.querySelector('.world-search-radius');
+    radius.value = '25';
+    radius.dispatchEvent(new Event('input'));
+    vm.advanced = false;
+    await nextTick();
+    assert(!host.querySelector('.world-search-location'), 'a visitor sees no Location fields');
+    const query = host.querySelector('input[type="text"], input:not([type])');
+    query.value = 'castle';
+    query.dispatchEvent(new Event('input'));
+    host.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }));
+    await nextTick();
+    assert(searches.length === 1, `one search ran — got ${searches.length}`);
+    assert(searches[0].text === 'castle' && searches[0].radius === undefined && searches[0].center === undefined,
+        `the search is by text alone once the fields are hidden — got ${JSON.stringify(searches[0])}`);
+    unmount();
+    console.log('✓ Search\'s Location fields are Advanced, and hiding them drops the radius');
 }

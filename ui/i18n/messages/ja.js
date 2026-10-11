@@ -1621,6 +1621,8 @@ export default Object.freeze({
     'worldView.places': '地名',
     'worldView.search': '検索',
     'worldView.walk': '歩く',
+    'worldView.advancedTools': '詳細ツールを表示',
+    'worldView.advancedToolsHint': '座標、位置での検索、カメラと編集の行、ワールドでの出会い、主張された作品、見つかった地名、公開のネットワークツール。この端末に記憶されます。',
     'worldView.askTheResidentNextTo': '隣にいる住人に周りのことを聞く（T）',
     'worldView.avatar': 'アバター',
     'worldView.showMyAvatar': '自分のアバターを表示',

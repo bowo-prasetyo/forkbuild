@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: b4c0a3045ba7efaa -->
+<!-- translation-of: docs/Privacy.md source-hash: 7157ea7fcc79e377 -->
 # Confidentialité
 
 <!-- languages -->
@@ -34,7 +34,8 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   n’est informé que vous le suivez, et rien concernant un abonnement n’est
   jamais envoyé) ;
 - votre profil d’avatar, vos réglages (y compris si la Vue du Monde joue
-  du son, à quel volume, en 3D ou en stéréo, et la langue que vous avez
+  du son, à quel volume, en 3D ou en stéréo, si elle montre ses outils
+  avancés, et la langue que vous avez
   choisie ; quand vous n’en avez pas choisi, ForkBuild lit les langues
   préférées du navigateur sur l’appareil et ne les envoie nulle part), et
   le nom d’utilisateur et l’identifiant d’un serveur TURN si vous en

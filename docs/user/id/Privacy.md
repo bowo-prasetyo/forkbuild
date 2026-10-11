@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: b4c0a3045ba7efaa -->
+<!-- translation-of: docs/Privacy.md source-hash: 7157ea7fcc79e377 -->
 # Privasi
 
 <!-- languages -->
@@ -34,7 +34,8 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
   Anda mengikutinya, dan tidak ada informasi tentang mengikuti yang pernah
   dikirim);
 - profil avatar Anda, pengaturan (termasuk apakah Tampilan Dunia
-  memutar suara, seberapa keras, dalam 3D atau stereo, dan bahasa yang
+  memutar suara, seberapa keras, dalam 3D atau stereo, apakah Tampilan
+  Dunia menampilkan alat lanjutannya, dan bahasa yang
   Anda pilih; jika Anda belum memilih, ForkBuild membaca bahasa pilihan
   browser di perangkat dan tidak mengirimnya ke mana pun), serta nama
   pengguna dan kredensial server TURN jika Anda memasukkannya di

@@ -1624,6 +1624,8 @@ export default Object.freeze({
     'worldView.places': '장소',
     'worldView.search': '검색',
     'worldView.walk': '걷기',
+    'worldView.advancedTools': '고급 도구 보기',
+    'worldView.advancedToolsHint': '좌표, 위치 검색, 카메라·편집 줄, 월드 조우, 주장된 작품, 발견한 장소 이름, 내 게시물의 네트워크 도구. 이 기기에 기억됩니다.',
     'worldView.askTheResidentNextTo': '옆에 있는 주민에게 주변에 무엇이 있는지 묻기 (T)',
     'worldView.avatar': '아바타',
     'worldView.showMyAvatar': '내 아바타 표시',

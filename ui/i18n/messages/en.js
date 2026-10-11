@@ -1623,6 +1623,8 @@ export default Object.freeze({
     'worldView.places': 'Places',
     'worldView.search': 'Search',
     'worldView.walk': 'Walk',
+    'worldView.advancedTools': 'Show advanced tools',
+    'worldView.advancedToolsHint': 'Coordinates, location search, the camera and editing line, World Encounters, claimed builds, discovered place names and your publication\'s network tools. Remembered on this device.',
     'worldView.askTheResidentNextTo': 'Ask the resident next to you what\'s around (T)',
     'worldView.avatar': 'Avatar',
     'worldView.showMyAvatar': 'Show My Avatar',

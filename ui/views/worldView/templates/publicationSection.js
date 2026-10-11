@@ -1,4 +1,4 @@
-// World view template: the Own Publication panel. Each row of its Placements list
+// World view template: the Own Publication panel, shown under Advanced only. Each row of its Placements list
 // carries its own Move and Remove, so the panel needs no host Move Placement.
 // It renders in WorldView's scope, so it uses the names its setup() returns.
 export const publicationSectionTemplate = `<!--
@@ -6,7 +6,7 @@ export const publicationSectionTemplate = `<!--
                     depends on primary mode, a peer or Encounters. The commands are this view's
                     thin wrappers, shared with WorldEncounterCanvas where they overlap.
                 -->
-                <div v-if="cameraPosition" class="world-view-section world-view-section--publication">
+                <div v-if="advanced && cameraPosition" class="world-view-section world-view-section--publication">
                     <OwnPublicationPanel
                         :publication="ownPublication"
                         :unpublishCommand="unpublishOwnPublication"
@@ -34,7 +34,7 @@ export const publicationSectionTemplate = `<!--
                         :discoverSnapshotCandidatesWithOutcomeCommand="discoverSnapshotCandidatesWithOutcomeCommand"
                     />
                 </div>
-                <div v-else-if="activePlacementInfo" class="world-view-actions">
+                <div v-else-if="advanced && activePlacementInfo" class="world-view-actions">
                     <button
                         class="action-btn"
                         :disabled="!activePlacementInfo.movable"

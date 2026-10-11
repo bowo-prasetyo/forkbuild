@@ -1,11 +1,12 @@
-// World view template: the coordinates, compass and nearby-marker legend floating over the viewport.
+// World view template: the coordinates (Advanced only), compass and nearby-marker legend floating
+// over the viewport.
 // It renders in WorldView's scope, so it uses the names its setup() returns.
 export const navigationHudSectionTemplate = `<!--
                 Coordinates and compass float over the viewport, transparent so the World
                 stays dominant.
             -->
             <div v-if="cameraPosition" class="world-view-nav-hud">
-                <p class="world-view-nav-hud-coords">
+                <p v-if="advanced" class="world-view-nav-hud-coords">
                     {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
                 </p>
                 <div class="world-view-nav-hud-compass">

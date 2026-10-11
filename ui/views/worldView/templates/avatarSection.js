@@ -27,7 +27,7 @@ export const avatarSectionTemplate = `<!--
                         Diagnostics appear only here, never on an avatar: rendering presence and
                         trusting it stay separate.
                     -->
-                    <p v-if="showOtherAvatars && remoteAvatarDiagnostics.total > 0" class="world-view-avatar-diagnostics">
+                    <p v-if="advanced && showOtherAvatars && remoteAvatarDiagnostics.total > 0" class="world-view-avatar-diagnostics">
                         {{ t('worldView.otherAvatars', { count: remoteAvatarDiagnostics.total }) }}
                         <span class="world-view-avatar-diagnostics-detail">
                             {{ t('worldView.otherAvatarsDetail', { parts: [

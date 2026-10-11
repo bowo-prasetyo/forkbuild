@@ -187,7 +187,8 @@
         min-height: 40px;
     }
 
-    .world-view-avatar-toggle input[type="checkbox"] {
+    .world-view-avatar-toggle input[type="checkbox"],
+    .world-view-advanced-toggle input[type="checkbox"] {
         width: 20px;
         height: 20px;
     }

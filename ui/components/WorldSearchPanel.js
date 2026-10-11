@@ -39,6 +39,12 @@ export default {
         catalogEmpty: {
             type: Boolean,
             default: false
+        },
+        // The Location fields; World View shows them under Advanced only.
+        // Hidden, Radius stays empty, so a search is by text alone.
+        showLocation: {
+            type: Boolean,
+            default: true
         }
     },
     emits: ['search', 'focus'],
@@ -71,6 +77,12 @@ export default {
                     : t('worldSearchPanel.nothingNear', { radius: this.submittedRadius, location });
             }
             return t('worldSearchPanel.noMatches', { query: this.submittedQuery });
+        }
+    },
+    watch: {
+        // Hiding the fields drops the radius, so a hidden location never narrows a search.
+        showLocation(shown) {
+            if (!shown) this.radiusInput = '';
         }
     },
     methods: {
@@ -120,7 +132,7 @@ export default {
                 <button type="submit" class="action-btn">{{ t('worldSearchPanel.find') }}</button>
             </form>
 
-            <div class="world-search-location">
+            <div v-if="showLocation" class="world-search-location">
                 <span class="form-label">{{ t('worldSearchPanel.locationWorldUnits') }}</span>
                 <div class="world-search-location-fields">
                     <input v-model.number="centerX" type="number" step="1" class="form-input world-search-coord" placeholder="X" :aria-label="t('worldSearchPanel.centerX')" />
