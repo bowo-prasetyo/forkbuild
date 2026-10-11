@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 61a04fb91b01f630 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 7741d1f107953066 -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -153,6 +153,15 @@ marche à pied est arrêtée. Un animal que vous avez attrapé ne bloque plus
 rien. Votre avatar peut marcher sur les structures placées, escalader des
 surfaces verticales et parcourir un terrain accidenté. La caméra suit
 naturellement votre avatar pendant que vous vous déplacez.
+
+Les portes et les arches sont des entrées. Une porte s’ouvre en pivotant, à
+l’opposé de vous, quand vous vous en approchez, et se referme derrière vous ;
+elle s’ouvre aussi pour les résidents et pour les personnes que vous voyez,
+et personne d’autre ne voit les portes que vous ouvrez. On passe par
+l’ouverture d’une arche, et ses côtés et son sommet sont aussi solides
+qu’ils en ont l’air. Une petite arche est trop basse pour passer, et une
+porte ou une arche basculée sur le côté vous arrête comme n’importe quelle
+autre brique.
 
 **Suivre l’avatar** garde la caméra verrouillée sur votre avatar pendant
 qu’il se déplace, au lieu d’orbiter librement. Vous pouvez aussi suivre

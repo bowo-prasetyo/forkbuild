@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { DEFAULT_STAIR_STEP_COUNT } from '../core/WalkableSurface.js';
+import { ARCH_OPENINGS } from '../core/BrickPassage.js';
 
 // The renderer-side counterpart to core/BrickRegistry: it knows nothing
 // about what a brick *means*, only how to turn one specific definitionId
@@ -135,40 +136,53 @@ function braceGeometry(width, height, depth, barWidth) {
     };
 }
 
-// A rectangular frame with a semicircular-topped passage cut through its
-// center, extruded along depth — core:arch. The opening is a
-// THREE.Path hole on the outer THREE.Shape, faceted (straight segments)
-// rather than a true curve — a deliberately simple polygon, matching
-// every other factory's "single mesh, single primitive" restraint.
-function archGeometry(width, height, depth) {
+// A rectangular frame with a round-topped passage through it, extruded
+// along depth — core:arch and core:arch_small. The opening's shape is
+// core/BrickPassage.js#ARCH_OPENINGS, the same one an avatar's collision
+// with the arch follows, so the way through that is drawn is the way
+// through that walks. The curve is faceted (straight segments) rather than
+// a true curve, matching every other factory's "single mesh, single
+// primitive" restraint. An opening down to the ground (no sill) is cut
+// into the outline itself, an inverted U; one above a sill is a hole.
+const ARCH_SEGMENTS = 12;
+
+function archGeometry(width, height, depth, opening) {
     return () => {
-        const shape = new THREE.Shape();
-        shape.moveTo(0, 0);
-        shape.lineTo(width, 0);
-        shape.lineTo(width, height);
-        shape.lineTo(0, height);
-        shape.lineTo(0, 0);
-
-        const margin = Math.min(width, height) * 0.15;
-        const halfOpening = width / 2 - margin;
-        const springHeight = height * 0.35;
-        const groundY = margin;
         const cx = width / 2;
-        const segments = 12;
-
-        const hole = new THREE.Path();
-        hole.moveTo(cx - halfOpening, groundY);
-        hole.lineTo(cx - halfOpening, groundY + springHeight);
-        for (let i = 1; i <= segments; i++) {
-            const angle = Math.PI - (Math.PI * i) / segments;
-            hole.lineTo(
-                cx + halfOpening * Math.cos(angle),
-                groundY + springHeight + halfOpening * Math.sin(angle)
-            );
+        const curve = [];
+        // Evenly round the ellipse, not evenly across it, so the steep ends
+        // of the curve get as many facets as its flat top.
+        for (let i = 0; i <= ARCH_SEGMENTS; i++) {
+            const angle = Math.PI - (Math.PI * i) / ARCH_SEGMENTS;
+            curve.push([
+                cx + opening.halfWidth * Math.cos(angle),
+                opening.sill + opening.spring + opening.rise * Math.sin(angle)
+            ]);
         }
-        hole.lineTo(cx + halfOpening, groundY);
-        hole.lineTo(cx - halfOpening, groundY);
-        shape.holes.push(hole);
+
+        const shape = new THREE.Shape();
+        if (opening.sill > 0) {
+            shape.moveTo(0, 0);
+            shape.lineTo(width, 0);
+            shape.lineTo(width, height);
+            shape.lineTo(0, height);
+            shape.lineTo(0, 0);
+            const hole = new THREE.Path();
+            hole.moveTo(cx - opening.halfWidth, opening.sill);
+            for (const [x, y] of curve) hole.lineTo(x, y);
+            hole.lineTo(cx + opening.halfWidth, opening.sill);
+            hole.lineTo(cx - opening.halfWidth, opening.sill);
+            shape.holes.push(hole);
+        } else {
+            shape.moveTo(0, 0);
+            shape.lineTo(cx - opening.halfWidth, 0);
+            for (const [x, y] of curve) shape.lineTo(x, y);
+            shape.lineTo(cx + opening.halfWidth, 0);
+            shape.lineTo(width, 0);
+            shape.lineTo(width, height);
+            shape.lineTo(0, height);
+            shape.lineTo(0, 0);
+        }
 
         const geometry = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
         geometry.translate(-width / 2, -height / 2, -depth / 2);
@@ -347,7 +361,7 @@ const GEOMETRIES = new Map([
     ['core:stair', stairGeometry(1, 1, 1)],
     ['core:column', columnGeometry(0.25, 3)],
     ['core:beam', boxGeometry([4, 0.5, 0.5])],
-    ['core:arch', archGeometry(2, 2, 0.5)],
+    ['core:arch', archGeometry(2, 2, 0.5, ARCH_OPENINGS['core:arch'])],
     ['core:window_large', boxGeometry([2, 1.5, 0.25])],
     ['core:door', boxGeometry([1, 2, 0.1])],
     ['core:trim', boxGeometry([1, 0.25, 0.25])],
@@ -379,7 +393,7 @@ const GEOMETRIES = new Map([
     ['core:window_round', roundWindowGeometry(1, 1, 0.25)],
     ['core:door_double', boxGeometry([2, 2, 0.1])],
     ['core:shutter', boxGeometry([0.5, 1, 0.05])],
-    ['core:arch_small', archGeometry(1, 1.5, 0.5)],
+    ['core:arch_small', archGeometry(1, 1.5, 0.5, ARCH_OPENINGS['core:arch_small'])],
     ['core:fence', fenceGeometry(2, 1, 0.15)],
     ['core:chimney', boxGeometry([0.75, 1.5, 0.75])],
     ['core:barrel', cylinderGeometry(0.8, 1)],

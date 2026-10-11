@@ -184,6 +184,18 @@ export class RenderWorldViewUseCase {
             animalFieldRenderer.animate(wildlifeTime, DEFAULT_WORLD_SEED, observer);
             worldRenderer.animateDecorations(wildlifeTime, DEFAULT_WORLD_SEED, observer);
         });
+        // Doors swing open for whoever walks up to them: you, the people
+        // you see, and residents (core/DoorSwing.js), where each is drawn.
+        renderer.addFrameListener((deltaSeconds) => {
+            const observers = [];
+            if (localAvatarVisual) observers.push(localAvatarVisual.root.position);
+            for (const visual of remoteAvatarVisuals.values()) observers.push(visual.root.position);
+            for (const id of residentFieldRenderer.trackedResidentIds()) {
+                const object = residentFieldRenderer.getObject(id);
+                if (object) observers.push(object.position);
+            }
+            worldRenderer.animateDoors(observers, deltaSeconds);
+        });
         renderer.addFrameListener((deltaSeconds) => {
             residentFieldRenderer.tick(deltaSeconds);
             if (localAvatarVisual) {

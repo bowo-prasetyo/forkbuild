@@ -1,6 +1,7 @@
 import { orientedSize } from '../../core/BrickOrientation.js';
 import { isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../../core/BrickWalkability.js';
 import { resolveWalkableSurfaceAt, walkableSurfaceKindFor } from '../../core/WalkableSurface.js';
+import { passageFloorAt } from '../../core/BrickPassage.js';
 import { TransformMath } from '../editor/TransformMath.js';
 
 // The flat plane core/AvatarMovementSimulation.js has always walked on
@@ -184,18 +185,9 @@ export class AvatarStepConstraint {
                         y: brick.position.y + worldPosition.y,
                         z: brick.position.z + worldPosition.z
                     };
-                    const size = orientedSize(definition, brick.tilt);
-                    if (hasReference && (center.y - size.height / 2) - referenceHeight > this._maxStepHeight) continue;
-                    const surface = resolveWalkableSurfaceAt({
-                        shapeKind: walkableSurfaceKindFor(brick.definitionId, brick.tilt),
-                        center,
-                        width: size.width,
-                        height: size.height,
-                        depth: size.depth,
-                        rotationDegrees: brick.rotation
-                    }, x, z);
-                    if (surface !== null && surface.height > height) {
-                        height = surface.height;
+                    const surface = this._brickSupportAt(brick, definition, center, brick.rotation, x, z, referenceHeight, hasReference);
+                    if (surface !== null && surface > height) {
+                        height = surface;
                     }
                 }
             }
@@ -234,23 +226,38 @@ export class AvatarStepConstraint {
                         y: localPoint.y + placementWorldPosition.y,
                         z: localPoint.z + placementWorldPosition.z
                     };
-                    const size = orientedSize(definition, brick.tilt);
-                    if (hasReference && (center.y - size.height / 2) - referenceHeight > this._maxStepHeight) continue;
-                    const surface = resolveWalkableSurfaceAt({
-                        shapeKind: walkableSurfaceKindFor(brick.definitionId, brick.tilt),
-                        center,
-                        width: size.width,
-                        height: size.height,
-                        depth: size.depth,
-                        rotationDegrees: brick.rotation + placement.rotation
-                    }, x, z);
-                    if (surface !== null && surface.height > height) {
-                        height = surface.height;
+                    const surface = this._brickSupportAt(brick, definition, center, brick.rotation + placement.rotation, x, z, referenceHeight, hasReference);
+                    if (surface !== null && surface > height) {
+                        height = surface;
                     }
                 }
             }
         }
         return height;
+    }
+
+    // The height `brick` offers to stand on at (x, z), or null: its walkable
+    // surface there, unless that is out of reach from `referenceHeight` (a
+    // brick wholly above a step's reach is no support at all). In the way
+    // through a door or an arch (core/BrickPassage.js), a top out of reach is
+    // a roof over a passer-by, so what they stand on is the passage's floor.
+    _brickSupportAt(brick, definition, center, rotationDegrees, x, z, referenceHeight, hasReference) {
+        const size = orientedSize(definition, brick.tilt);
+        if (hasReference && (center.y - size.height / 2) - referenceHeight > this._maxStepHeight) return null;
+        const surface = resolveWalkableSurfaceAt({
+            shapeKind: walkableSurfaceKindFor(brick.definitionId, brick.tilt),
+            center,
+            width: size.width,
+            height: size.height,
+            depth: size.depth,
+            rotationDegrees
+        }, x, z);
+        if (surface === null) return null;
+        if (!hasReference || surface.height - referenceHeight > this._maxStepHeight) {
+            const passage = passageFloorAt(center, brick.definitionId, definition, rotationDegrees, brick.tilt, x, z);
+            if (passage) return passage.height;
+        }
+        return surface.height;
     }
 
     // `position` — the avatar's position BEFORE this tick's movement.

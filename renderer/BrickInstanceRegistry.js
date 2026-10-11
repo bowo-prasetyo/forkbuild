@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { ThreeBrickFactory, DEFAULT_COLOR } from './ThreeBrickFactory.js';
+import { doorSwingOffset } from '../core/DoorSwing.js';
 
 // Edge length of the cube of space one batch covers.
 export const CHUNK_SIZE = 16;
@@ -34,8 +35,12 @@ export class BrickInstanceRegistry {
         // chunk key -> BrickChunk, and chunk mesh -> BrickChunk for picking.
         this._chunks = new Map();
         this._chunksByMesh = new Map();
-        // brickId -> { documentId, buildingId, visual, chunk, index, highlight }
+        // brickId -> { documentId, buildingId, visual, chunk, index, highlight, swing }
         this._entries = new Map();
+        // definitionId -> Set of brickIds, so the few bricks of one kind
+        // (World View's doors, renderer/DoorSwingAnimator.js) are found
+        // without walking every brick each frame.
+        this._idsByDefinition = new Map();
         this._matrix = new THREE.Matrix4();
         this._color = new THREE.Color();
     }
@@ -57,18 +62,24 @@ export class BrickInstanceRegistry {
         if (previous) {
             this.remove(brickId);
         }
-        const entry = { documentId, buildingId, visual: { ...visual }, chunk: null, index: -1, highlight };
+        const entry = { documentId, buildingId, visual: { ...visual }, chunk: null, index: -1, highlight, swing: 0 };
         this._entries.set(brickId, entry);
+        this._indexDefinition(brickId, entry.visual.definitionId);
         this._place(brickId, entry);
     }
 
-    // Moves, rotates or recolors a brick already here; keeps its highlight.
+    // Moves, rotates or recolors a brick already here; keeps its highlight
+    // and how far it is swung open.
     update(brickId, visual) {
         const entry = this._entries.get(brickId);
         if (!entry) {
             return;
         }
         const next = { ...visual };
+        if (next.definitionId !== entry.visual.definitionId) {
+            this._unindexDefinition(brickId, entry.visual.definitionId);
+            this._indexDefinition(brickId, next.definitionId);
+        }
         if (chunkKeyOf(next) !== entry.chunk.key) {
             this._unplace(entry);
             entry.visual = next;
@@ -85,6 +96,7 @@ export class BrickInstanceRegistry {
             return;
         }
         this._unplace(entry);
+        this._unindexDefinition(brickId, entry.visual.definitionId);
         this._entries.delete(brickId);
     }
 
@@ -95,6 +107,7 @@ export class BrickInstanceRegistry {
         this._chunks.clear();
         this._chunksByMesh.clear();
         this._entries.clear();
+        this._idsByDefinition.clear();
     }
 
     getDocumentId(brickId) {
@@ -131,7 +144,45 @@ export class BrickInstanceRegistry {
         if (geometry.boundingBox === null) {
             geometry.computeBoundingBox();
         }
-        return target.copy(geometry.boundingBox).applyMatrix4(matrixOf(entry.visual, this._matrix));
+        return target.copy(geometry.boundingBox).applyMatrix4(matrixOfEntry(entry, this._matrix));
+    }
+
+    // The ids of the bricks of `definitionId` here (a live set: copy it
+    // before adding or removing bricks while going through it).
+    brickIdsOf(definitionId) {
+        return this._idsByDefinition.get(definitionId) || EMPTY_IDS;
+    }
+
+    // The brick's middle, turn (radians) and definition, in world
+    // coordinates, or null.
+    getVisual(brickId) {
+        const entry = this._entries.get(brickId);
+        if (!entry) {
+            return null;
+        }
+        const { definitionId, x, y, z, rotationX, rotationY } = entry.visual;
+        return { definitionId, x, y, z, rotationX: rotationX || 0, rotationY: rotationY || 0 };
+    }
+
+    // Swings a door open `angle` radians about its hinge
+    // (core/DoorSwing.js), 0 to close it; `width` is the door's. Only how it
+    // is drawn and picked changes, never where the brick is.
+    setSwing(brickId, angle, width) {
+        const entry = this._entries.get(brickId);
+        if (!entry) {
+            return;
+        }
+        const next = Number.isFinite(angle) ? angle : 0;
+        if (next === entry.swing && width === entry.swingWidth) {
+            return;
+        }
+        entry.swing = next;
+        entry.swingWidth = width;
+        this._write(entry);
+    }
+
+    getSwing(brickId) {
+        return this._entries.get(brickId)?.swing ?? null;
     }
 
     // Emissive highlight color (0xRRGGBB); 0 means none.
@@ -206,7 +257,27 @@ export class BrickInstanceRegistry {
     }
 
     _write(entry) {
-        entry.chunk.writeInstance(entry.index, matrixOf(entry.visual, this._matrix), this._color.setHex(colorOf(entry.visual)));
+        entry.chunk.writeInstance(entry.index, matrixOfEntry(entry, this._matrix), this._color.setHex(colorOf(entry.visual)));
+    }
+
+    _indexDefinition(brickId, definitionId) {
+        let ids = this._idsByDefinition.get(definitionId);
+        if (!ids) {
+            ids = new Set();
+            this._idsByDefinition.set(definitionId, ids);
+        }
+        ids.add(brickId);
+    }
+
+    _unindexDefinition(brickId, definitionId) {
+        const ids = this._idsByDefinition.get(definitionId);
+        if (!ids) {
+            return;
+        }
+        ids.delete(brickId);
+        if (ids.size === 0) {
+            this._idsByDefinition.delete(definitionId);
+        }
     }
 
     _growChunk(chunk) {
@@ -353,6 +424,19 @@ function matrixOf(visual, target) {
     _orientation.set(visual.rotationX || 0, visual.rotationY || 0, 0, 'YXZ');
     return target.makeRotationFromEuler(_orientation).setPosition(visual.x, visual.y, visual.z);
 }
+
+// matrixOf(), with a door swung about its hinge (setSwing()).
+function matrixOfEntry(entry, target) {
+    const { visual, swing } = entry;
+    if (!swing) {
+        return matrixOf(visual, target);
+    }
+    const offset = doorSwingOffset(entry.swingWidth || 0, visual.rotationY || 0, swing);
+    _orientation.set(visual.rotationX || 0, (visual.rotationY || 0) + swing, 0, 'YXZ');
+    return target.makeRotationFromEuler(_orientation).setPosition(visual.x + offset.x, visual.y, visual.z + offset.z);
+}
+
+const EMPTY_IDS = Object.freeze(new Set());
 
 function copyItem(attribute, from, to) {
     const size = attribute.itemSize;

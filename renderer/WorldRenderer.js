@@ -4,6 +4,7 @@ import { BrickInstanceRegistry } from './BrickInstanceRegistry.js';
 import { PlacementMeshRegistry } from './PlacementMeshRegistry.js';
 import { AnimalRenderer } from './AnimalRenderer.js';
 import { AnimalVisual } from './AnimalVisual.js';
+import { DoorSwingAnimator } from './DoorSwingAnimator.js';
 import { DomainEvent } from '../core/events/Event.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 
@@ -112,6 +113,10 @@ export class WorldRenderer {
         // brickInstances' own getter exactly.
         this._placementMeshRegistry = new PlacementMeshRegistry();
         this._placementToDocument = new Map();
+        // Doors swing open for people walking up to them (animateDoors()).
+        this._doorSwing = new DoorSwingAnimator(this._brickInstances, registry);
+        // placementId -> keys of its doors in _doorSwing.
+        this._placementDoorKeys = new Map();
     }
 
     get brickInstances() {
@@ -325,6 +330,7 @@ export class WorldRenderer {
         this._removeStructurePlacementMeshes(placement.id);
         const groundY = this._terrainOffsetY(offset.x, offset.z);
         const meshes = [];
+        const doorKeys = [];
         for (const building of placedWorld.getBuildings()) {
             for (const brick of building.getBricks()) {
                 const localPoint = this._rotateAroundOrigin(brick.position, placement.rotation);
@@ -337,9 +343,13 @@ export class WorldRenderer {
                 applyBrickOrientation(mesh, brick.rotation + placement.rotation, brick.tilt);
                 this._renderer.add(mesh);
                 meshes.push(mesh);
+                this._addPlacementDoor(placement.id, brick, mesh, doorKeys);
             }
         }
         this._placementMeshRegistry.set(placement.id, meshes);
+        if (doorKeys.length > 0) {
+            this._placementDoorKeys.set(placement.id, doorKeys);
+        }
     }
 
     _rotateAroundOrigin(point, degrees) {
@@ -422,7 +432,38 @@ export class WorldRenderer {
         this._animalDecorationVisuals.delete(decorationId);
     }
 
+    // A standing door among a placement's bricks swings like a World's own
+    // (animateDoors()); `mesh` is where it is drawn shut.
+    _addPlacementDoor(placementId, brick, mesh, doorKeys) {
+        const definition = brick.tilt ? null : this._doorSwing.doorDefinition(brick.definitionId);
+        if (!definition) {
+            return;
+        }
+        const key = `${placementId}|${brick.id}`;
+        this._doorSwing.addMeshDoor(key, mesh, {
+            x: mesh.position.x,
+            y: mesh.position.y,
+            z: mesh.position.z,
+            rotationY: mesh.rotation.y,
+            width: definition.width,
+            height: definition.height
+        });
+        doorKeys.push(key);
+    }
+
+    // Swings doors toward open for the people near them, and shut behind
+    // them, `deltaSeconds` on. observers: [{ x, y, z }], where people stand,
+    // in world coordinates. World View calls it every frame; the Editor
+    // never does, so its doors stay shut.
+    animateDoors(observers, deltaSeconds) {
+        this._doorSwing.animate(observers, deltaSeconds);
+    }
+
     _removeStructurePlacementMeshes(placementId) {
+        for (const key of this._placementDoorKeys.get(placementId) || []) {
+            this._doorSwing.removeMeshDoor(key);
+        }
+        this._placementDoorKeys.delete(placementId);
         const meshes = this._placementMeshRegistry.getMeshes(placementId);
         if (meshes.length === 0) {
             return;
