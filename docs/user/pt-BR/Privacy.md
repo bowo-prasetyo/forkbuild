@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ff126b5ac2ead020 -->
+<!-- translation-of: docs/Privacy.md source-hash: 09b3b731fab3269c -->
 # Privacidade
 
 <!-- languages -->
@@ -122,7 +122,12 @@ com suas configurações (veja "Notificações neste dispositivo" abaixo).
   mudança que qualquer um de vocês fizer nela, para onde seu ponteiro aponta
   e o que você selecionou, enquanto vocês constroem juntos. Ela fica com a
   cópia dela. Você fica sabendo do mesmo jeito o endereço IP dela, o nome
-  com que ela constrói e para onde ela aponta.
+  com que ela constrói e para onde ela aponta. Cada amigo cuja mudança a sua
+  construção recebe aparece nos créditos dela, com o nome com que construiu
+  e a chave pública da identidade dele, e quando você a publica, esse
+  crédito faz parte da publicação assinada dela, que qualquer pessoa que vir
+  a construção pode ler (a página que um link **Construir comigo** abre
+  avisa isso antes de a pessoa entrar).
 - **Qualquer pessoa, enquanto você está numa sala pública.** Entrar na sala
   pública (**Pares**) ou na sala de um Mundo (**Sala** na Visão do mundo)
   lista a chave pública da sua identidade e o nome de exibição que você
@@ -187,7 +192,7 @@ páginas de outros sites (veja "Servidores que o ForkBuild contata" abaixo):
 
 E quando alguém entra no desafio de construção semanal (**Participar do
 desafio**, ou o desafio em **Novo** no Editor): `/e/challenge-join`; e quando alguém abre a
-praça do desafio de uma semana na visão do mundo: `/e/plaza-visit`. E quando alguém cria um link **Passear aqui comigo** na visão do mundo: `/e/walk-link`; e quando um amigo chega por um deles: `/e/walk-joined`. E quando alguém cria um link **Construir comigo** no Editor: `/e/build-link`; e quando um amigo entra por um deles: `/e/build-joined`.
+praça do desafio de uma semana na visão do mundo: `/e/plaza-visit`. E quando alguém cria um link **Passear aqui comigo** na visão do mundo: `/e/walk-link`; e quando um amigo chega por um deles: `/e/walk-joined`. E quando alguém cria um link **Construir comigo** no Editor: `/e/build-link`; e quando um amigo entra por um deles: `/e/build-joined`; e a primeira vez que uma construção é publicada com créditos aos amigos que a construíram juntos: `/e/publish-together`.
 
 E na primeira vez que uma construção é publicada a partir deste navegador
 (publicá-la de novo depois não envia nada):
@@ -260,7 +265,7 @@ pede a ele.
 | No site oficial, você copia o código para incorporar de uma construção, ou uma construção incorporada é mostrada ou aberta no ForkBuild (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com um caminho fixo dizendo qual dos três casos foi, sem referenciador e sem cookie |
 | No site oficial, você entra no desafio de construção semanal ou abre a praça dele (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma requisição de imagem com o caminho fixo `/e/challenge-join` ou `/e/plaza-visit`, sem referenciador e sem cookie |
 | No site oficial, você cria um link **Passear aqui comigo** ou chega por um deles (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com o caminho fixo `/e/walk-link` ou `/e/walk-joined`, sem referenciador e sem cookie |
-| No site oficial, você cria um link **Construir comigo** ou entra por um deles (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com o caminho fixo `/e/build-link` ou `/e/build-joined`, sem referenciador e sem cookie |
+| No site oficial, você cria um link **Construir comigo** ou entra por um deles (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com o caminho fixo `/e/build-link` ou `/e/build-joined` (e `/e/publish-together` quando uma construção feita em conjunto é publicada pela primeira vez com os créditos deles), sem referenciador e sem cookie |
 | No site oficial, você publica uma construção pela primeira vez (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma requisição de imagem com um caminho fixo que indica a faixa de blocos, e mais uma para uma segunda construção ou um remix, sem referenciador e sem cookie |
 | Você abre o site oficial pelo link de um post de lançamento (`?ref=…`, veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma requisição de imagem com o caminho fixo `/r/<canal>`, sem referenciador e sem cookie |
 | Você fica visível, ou procura alguém, em **Pares** | o servidor de encontro (`forkbuild-rendezvous.prazjp.workers.dev`) | a chave pública da sua identidade e uma oferta de conexão, guardadas por no máximo 15 minutos; a identidade que você procura; quando você se conecta a alguém que encontrou, sua resposta de conexão (que lista seus endereços de rede), que só essa pessoa pode buscar |

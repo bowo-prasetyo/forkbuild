@@ -167,6 +167,7 @@ export default {
                 <template v-else-if="!busy">
                     <p v-if="user && user.displayName" class="walk-together-as">{{ k('join.as', { name: user.displayName }) }}</p>
                     <p class="walk-together-privacy">{{ t('walkTogether.join.privacy') }}</p>
+                    <p v-if="building" class="walk-together-privacy walk-together-credit">{{ t('buildTogether.join.credit') }}</p>
                     <p v-if="failed" class="walk-together-note walk-together-failure" role="alert">{{ failureText() }}</p>
                     <button v-if="!failed || canRetry" type="button" class="cta-button walk-together-join" @click="join">
                         {{ failed ? t('walkTogether.tryAgain') : t('walkTogether.join.join') }}

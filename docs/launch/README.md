@@ -112,7 +112,9 @@ the week after, by day:
 - **Do people walk together?** `/e/walk-joined` against `/e/walk-link`:
   friends who arrived through a "Walk here with me" link, per link made.
 - **Do people build together?** `/e/build-joined` against `/e/build-link`:
-  friends who joined through a "Build with me" link, per link made.
+  friends who joined through a "Build with me" link, per link made; and
+  `/e/publish-together` against `/e/build-joined`: builds made together
+  that were published, crediting everyone who built.
 - **Do builds have a family tree?** `/e/remix-published` against the builds
   published: remixes per build. `/e/remix-from-link` counts copies started
   from a link; this counts the ones finished and published.

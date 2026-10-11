@@ -160,7 +160,8 @@ function publicationDescriptor(claim) {
             license: claim.license,
             contentReference: claim.contentReference,
             publisherIdentity: claim.publisherIdentity,
-            ...(claim.placementPolicy ? { placementPolicy: claim.placementPolicy } : {})
+            ...(claim.placementPolicy ? { placementPolicy: claim.placementPolicy } : {}),
+            ...(Array.isArray(claim.builtWith) && claim.builtWith.length > 0 ? { builtWith: claim.builtWith } : {})
         }
     };
 }

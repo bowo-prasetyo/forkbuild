@@ -85,6 +85,8 @@ function makeEditor(label) {
     });
     const rejected = [];
     propagation.onOperationRejected((reason) => rejected.push(reason));
+    // As ui/views/EditorView.js wires it: each friend whose edit is accepted is credited.
+    propagation.onOperationReceived((documentId, command, authorIdentityId) => together.noteEdit(documentId, authorIdentityId));
     const session = new EditorSession({
         registry: new CreateBrickRegistryUseCase().execute(), editorContext, toolRegistry: null, documentManager,
         selectionUseCase: new SelectionUseCase(editorContext), previewUseCase: new PreviewUseCase(editorContext),
@@ -105,7 +107,8 @@ function makeEditor(label) {
         editor: {
             openDocument: () => documentManager.document,
             appliedOperationIds: () => session.appliedOperationIds(),
-            openShared: (document, operationIds) => session.openSharedDocument(document, operationIds)
+            openShared: (document, operationIds) => session.openSharedDocument(document, operationIds),
+            creditBuilder: (builder) => Boolean(documentManager.document && documentManager.document.metadata.creditBuilder(builder))
         }
     });
     return {
@@ -170,7 +173,10 @@ async function runTests() {
         await wait(30);
         assert(host.bricks() === 5 && ana.bricks() === 5, `nothing comes back twice (${host.bricks()}, ${ana.bricks()})`);
         assert(host.session.commandHistory.getExecutedCommands().some((command) => command.id === anas.id), 'Ana\'s edit is in the host\'s build');
-        console.log('✓ edits travel both ways, each applied once');
+        const credits = host.document.metadata.builtWith;
+        assert(credits.length === 1 && credits[0].name === 'Ana' && credits[0].identityId === ana.id, `Ana's edit credits her on the host's build (${JSON.stringify(credits)})`);
+        assert(ana.document.metadata.builtWith.length === 0, 'the host is the author, never credited as a co-builder');
+        console.log('✓ edits travel both ways, each applied once, and credit who made them');
     }
 
     // Someone connected but not invited can't edit or get the build.
@@ -181,6 +187,7 @@ async function runTests() {
         await wait();
         assert(host.bricks() === before && host.rejected.includes(DocumentOperationRejectionReason.NOT_AUTHORIZED), 'an uninvited edit is refused');
         assert(await ben.together.join({ documentId: DOC, hostIdentityId: host.id }) === BuildTogetherOutcome.REFUSED, 'and so is asking for the build');
+        assert(!host.document.metadata.builtWith.some((entry) => entry.identityId === ben.id), 'nor is credited');
         console.log('✓ nobody the host hasn\'t allowed can edit or fetch the build');
     }
 
@@ -196,6 +203,7 @@ async function runTests() {
         ben.execute(place(6));
         await wait(30);
         assert(ana.bricks() === count + 2 && host.bricks() === count + 2, `and Ben's reaches Ana (${ana.bricks()})`);
+        assert(host.document.metadata.builtWith.map((entry) => entry.name).join() === 'Ana,Ben', 'each friend who built is credited, in the order they did');
         console.log('✓ co-builders see each other\'s edits through the host');
     }
 

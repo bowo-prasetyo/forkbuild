@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 60fb1dcaa24488dc -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: a745a00cb02e79f9 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -608,6 +608,12 @@ ulang, atau dihapus oleh salah satu dari kalian muncul di kedua layar.
 - Editor setiap teman menyimpan salinannya sendiri di perangkatnya. Saat
   Anda berhenti, ia boleh menyimpannya, tetapi perubahannya tidak lagi
   sampai kepada Anda.
+- Semua orang yang baloknya diterima bangunan Anda dicantumkan di bangunan
+  itu: panel bangunan menampilkan **Dibangun bersama** dan nama mereka, dan
+  saat Anda menerbitkan, tautan yang dibagikan dan silsilahnya juga
+  menyebutkannya, di bawah tanda tangan Anda. Salinan yang dibuat orang lain
+  dari bangunan itu dimulai tanpa pencantuman tersebut; salinan itu adalah
+  bangunan baru.
 - Bergabung menghubungkan kedua perangkat Anda secara langsung, seperti
   **Jalan di sini bersamaku**: masing-masing dapat melihat alamat IP yang
   lain. Tidak ada yang menjadi rekan yang diingat atau teman kecuali Anda

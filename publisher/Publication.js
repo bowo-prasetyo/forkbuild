@@ -2,11 +2,18 @@ import { createId } from '../core/createId.js';
 import { License } from '../core/License.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature, SignatureType } from '../core/Signature.js';
+import { normalizeBuiltWith } from '../core/BuiltWith.js';
 
 // Written only when set, so a Publication without one signs and serializes
 // exactly as it did before the field existed.
 function placementPolicyField(placementPolicy) {
     return placementPolicy ? { placementPolicy } : {};
+}
+
+// Signed, and stored, only when someone built it with its author
+// (core/BuiltWith.js), so every older Publication's signature still holds.
+function builtWithField(builtWith) {
+    return builtWith.length > 0 ? { builtWith: builtWith.map((entry) => ({ name: entry.name, identityId: entry.identityId })) } : {};
 }
 
 // Pure data: the result of publishing a Document.
@@ -44,7 +51,8 @@ export class Publication {
         contentReference = null,
         publisherIdentity = null,
         signature = null,
-        placementPolicy = null
+        placementPolicy = null,
+        builtWith = []
     } = {}) {
         this._id = id;
         this._documentId = documentId;
@@ -65,6 +73,7 @@ export class Publication {
         this._signature = signature instanceof Signature ? signature : Signature.fromJSON(signature);
         // Null (not stored) means "anyone may place it": see core/PlacementPolicy.js.
         this._placementPolicy = typeof placementPolicy === 'string' && placementPolicy.length > 0 ? placementPolicy : null;
+        this._builtWith = normalizeBuiltWith(builtWith);
     }
 
     get id() { return this._id; }
@@ -83,6 +92,7 @@ export class Publication {
     get publisherIdentity() { return this._publisherIdentity ? { ...this._publisherIdentity } : null; }
     get signature() { return this._signature; }
     get placementPolicy() { return this._placementPolicy; }
+    get builtWith() { return this._builtWith; }
 
     withSignature(signature) {
         return new Publication({
@@ -101,7 +111,8 @@ export class Publication {
             contentReference: this._contentReference,
             publisherIdentity: this._publisherIdentity,
             signature,
-            placementPolicy: this._placementPolicy
+            placementPolicy: this._placementPolicy,
+            builtWith: this._builtWith
         });
     }
 
@@ -129,7 +140,8 @@ export class Publication {
                 license: this._license ? this._license.toJSON() : null,
                 contentReference: this._contentReference ? this._contentReference.toJSON() : null,
                 publisherIdentity: this._publisherIdentity,
-                ...placementPolicyField(this._placementPolicy)
+                ...placementPolicyField(this._placementPolicy),
+                ...builtWithField(this._builtWith)
             }
         };
     }
@@ -152,6 +164,7 @@ export class Publication {
             contentReference: this._contentReference ? this._contentReference.toJSON() : null,
             publisherIdentity: this._publisherIdentity ? { ...this._publisherIdentity } : null,
             ...placementPolicyField(this._placementPolicy),
+            ...builtWithField(this._builtWith),
             signature: this._signature ? this._signature.toJSON() : null
         };
     }
@@ -174,7 +187,8 @@ export class Publication {
             contentReference: json.contentReference,
             publisherIdentity: json.publisherIdentity || null,
             signature: json.signature || null,
-            placementPolicy: json.placementPolicy || null
+            placementPolicy: json.placementPolicy || null,
+            builtWith: Array.isArray(json.builtWith) ? json.builtWith : []
         });
     }
 }

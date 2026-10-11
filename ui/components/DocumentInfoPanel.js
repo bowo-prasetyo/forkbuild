@@ -4,13 +4,14 @@ import { LifecycleStatus } from '../../application/document/DocumentLifecycleSta
 import { displayText, t } from '../i18n/i18n.js';
 import { descriptionPlainText } from '../../core/DescriptionMarkup.js';
 import FormattedDescription from './FormattedDescription.js';
+import { builtWithNames } from './remix/builtWithText.js';
 
 // 0.2.21: the "Document Information" panel from the milestone design
 // — one component, shared by the Editor sidebar and World View's
 // inspection column, reading whatever shape each surface's
 // getDocumentInfo()-equivalent produces:
 //
-//   { title, description, author, license, parentDocumentId,
+//   { title, description, author, builtWith, license, parentDocumentId,
 //     parentStructureId, parentStructureName, statusLabel, dirty,
 //     editable, editabilityNotice }
 //
@@ -48,6 +49,10 @@ export default {
         licenseLabel(license) {
             return t(describeLicense(license ? license.id : null));
         },
+        // Who built it with its author (core/BuiltWith.js), as a phrase.
+        builtWith(info) {
+            return builtWithNames(info.builtWith);
+        },
         isDraft(info) {
             return info.status === LifecycleStatus.DRAFT;
         },
@@ -77,6 +82,7 @@ export default {
             <p v-if="info.parentDocumentId || info.parentStructureId" class="document-info-compact-origin">
                 {{ t('documentInfo.forkedFromCompact', { origin: originLabel(info) }) }}
             </p>
+            <p v-if="builtWith(info)" class="document-info-compact-built-with">{{ t('builtWith.line', { names: builtWith(info) }) }}</p>
             <p
                 v-if="info.editabilityNotice"
                 :class="['editability-notice', { 'editability-notice--blocked': info.editabilityNotice.blocked }]"
@@ -114,6 +120,10 @@ export default {
             <div class="info-row" v-if="info.author">
                 <span class="info-label">{{ t('documentInfo.author') }}</span>
                 <span class="info-value">{{ info.author }}</span>
+            </div>
+            <div class="info-row" v-if="builtWith(info)">
+                <span class="info-label">{{ t('documentInfo.builtWith') }}</span>
+                <span class="info-value">{{ builtWith(info) }}</span>
             </div>
             <div class="info-row" v-if="info.parentDocumentId">
                 <span class="info-label">{{ t('documentInfo.forkedFrom') }}</span>

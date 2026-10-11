@@ -57,7 +57,8 @@
     color: #ffffff;
 }
 
-.document-info-compact-origin {
+.document-info-compact-origin,
+.document-info-compact-built-with {
     margin: 0.3rem 0 0;
     font-size: 0.72rem;
     color: #707070;

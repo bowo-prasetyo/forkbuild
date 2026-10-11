@@ -572,6 +572,17 @@ that one build (asked at the same authorization gate as ownership, per
 operation) until Stop; it relays each guest's operations to the other
 guests under its own identity. Presence is ephemeral and never stored.
 
+Each guest whose operation the host accepts is credited on the build
+(DocumentMetadata `builtWith`, core/BuiltWith.js): `[{ name, identityId }]`,
+at most 12, never the author. Publishing copies it onto the Publication,
+where it is part of the signed payload only when present (as
+`placementPolicy` is), so every older Publication's signature holds:
+
+    publication   { …, builtWith: [{ name, identityId }] }   (absent when empty)
+
+It is the author's claim, signed by the author; nobody else can add to or
+take from it. A fork by anyone else starts with none.
+
 ### Announcement Index exchange
 
 Peers share the Snapshot candidates and Place Naming claims each has

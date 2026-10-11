@@ -3,6 +3,7 @@ import { PROTOCOL_VERSION } from './protocolVersion.js';
 import { License } from './License.js';
 import { PlacementPolicy } from './PlacementPolicy.js';
 import { normalizeBuildTags } from './BuildTags.js';
+import { normalizeBuiltWith, sameBuiltWith, withBuilder } from './BuiltWith.js';
 
 const DEFAULT_ENGINE_VERSION = `${VERSION.major}.${VERSION.minor}.${VERSION.patch}`;
 
@@ -70,7 +71,11 @@ export class DocumentMetadata {
         // Words that say what the build is (core/BuildTags.js), which a
         // Blurt post lists. Stored only when there are some, so older
         // documents keep their content hash.
-        tags = []
+        tags = [],
+        // Friends who built it together with its author (core/BuiltWith.js),
+        // copied onto the signed Publication. Stored only when there are
+        // some, so older documents keep their content hash.
+        builtWith = []
     } = {}) {
         this._title = title;
         this._description = description;
@@ -85,6 +90,7 @@ export class DocumentMetadata {
         this._license = license instanceof License ? license : (license ? License.fromJSON(license) : new License());
         this._placementPolicy = placementPolicy || PlacementPolicy.ANYONE;
         this._tags = Object.freeze(normalizeBuildTags(tags));
+        this._builtWith = normalizeBuiltWith(builtWith, { authorIdentityId: this._authorIdentityId });
     }
 
     get title() { return this._title; }
@@ -100,6 +106,7 @@ export class DocumentMetadata {
     get license() { return this._license; }
     get placementPolicy() { return this._placementPolicy; }
     get tags() { return this._tags; }
+    get builtWith() { return this._builtWith; }
 
     // 0.2.21: title/description become directly editable (Document
     // Properties UI) — same "value object with a few narrow, explicit
@@ -132,6 +139,17 @@ export class DocumentMetadata {
         return true;
     }
 
+    // Credits `builder` ({ name, identityId }), a friend whose edits this
+    // build's author accepted while building together. True when the
+    // credits changed.
+    creditBuilder(builder) {
+        const next = withBuilder(this._builtWith, builder, { authorIdentityId: this._authorIdentityId });
+        if (sameBuiltWith(next, this._builtWith)) return false;
+        this._builtWith = next;
+        this.touch();
+        return true;
+    }
+
     toJSON() {
         return {
             title: this._title,
@@ -146,7 +164,8 @@ export class DocumentMetadata {
             authorIdentityId: this._authorIdentityId,
             license: this._license.toJSON(),
             ...(this._placementPolicy !== PlacementPolicy.ANYONE ? { placementPolicy: this._placementPolicy } : {}),
-            ...(this._tags.length > 0 ? { tags: [...this._tags] } : {})
+            ...(this._tags.length > 0 ? { tags: [...this._tags] } : {}),
+            ...(this._builtWith.length > 0 ? { builtWith: this._builtWith.map((entry) => ({ ...entry })) } : {})
         };
     }
 
@@ -175,7 +194,8 @@ export class DocumentMetadata {
             authorIdentityId: json.authorIdentityId || null,
             license: json.license ? License.fromJSON(json.license) : null,
             placementPolicy: json.placementPolicy || PlacementPolicy.ANYONE,
-            tags: Array.isArray(json.tags) ? json.tags : []
+            tags: Array.isArray(json.tags) ? json.tags : [],
+            builtWith: Array.isArray(json.builtWith) ? json.builtWith : []
         });
     }
 }

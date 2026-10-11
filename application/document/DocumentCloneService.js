@@ -77,6 +77,7 @@ export class DocumentCloneService {
         // Determine license: explicit option > source license > default
         const nextLicense = license !== undefined ? license : sourceDocument.metadata.license;
 
+        const nextAuthorIdentityId = authorIdentityId === undefined ? sourceDocument.metadata.authorIdentityId : authorIdentityId;
         const metadata = new DocumentMetadata({
             title: title !== null ? title : copyTitle(sourceDocument.metadata.title),
             // 0.2.21: a description is part of what "the same content,
@@ -86,7 +87,12 @@ export class DocumentCloneService {
             // Tags say what the build is, so a fork keeps them like its description.
             tags: sourceDocument.metadata.tags,
             author: author === undefined ? sourceDocument.metadata.author : author,
-            authorIdentityId: authorIdentityId === undefined ? sourceDocument.metadata.authorIdentityId : authorIdentityId,
+            authorIdentityId: nextAuthorIdentityId,
+            // Who built it with its author (core/BuiltWith.js) stays with the
+            // author's own builds: a copy someone else makes starts with none.
+            builtWith: nextAuthorIdentityId && nextAuthorIdentityId === sourceDocument.metadata.authorIdentityId
+                ? sourceDocument.metadata.builtWith
+                : [],
             created: new Date(),
             modified: new Date(),
             parentDocumentId: parentDocumentId === undefined ? sourceDocument.world.id : parentDocumentId,

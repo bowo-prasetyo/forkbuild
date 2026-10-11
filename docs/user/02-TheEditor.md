@@ -572,6 +572,11 @@ either of you places, moves, recolours or deletes appears on both screens.
   strip shows the link again.
 - Each friend's Editor keeps its own copy, saved on their device. When you
   stop, they can keep it, but what they change no longer reaches you.
+- Everyone whose bricks your build takes in is credited on it: the build's
+  panel says **Built with** and their names, and when you publish, the
+  shared link and the family tree say so too, under your signature. A copy
+  someone else makes of it starts with no such credits; theirs is a new
+  build.
 - Joining connects your two devices directly, as **Walk here with me**
   does: each of you can see the other's IP address. Nobody becomes a Known
   Peer or a friend unless you choose to. It needs a rendezvous server; the

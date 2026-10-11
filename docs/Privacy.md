@@ -112,7 +112,11 @@ settings (see "Notifications on this device" below).
   itself, then every change either of you makes to it, where your pointer
   is and what you have selected, while you build together. They keep their
   copy. You learn their IP address, the name they build under, and where
-  they point the same way.
+  they point the same way. Each friend whose change your build takes in is
+  credited on it, by the name they built under and their identity's public
+  key, and when you publish it that credit is part of its signed
+  Publication, which anyone who sees the build can read (the page a
+  **Build with me** link opens says so before they join).
 - **Anyone, while you are in a public lobby.** Joining the public lobby
   (**Peers**) or a World's lobby (**Lobby** in World View) lists your
   identity's public key and the display name you choose, for anyone who
@@ -173,7 +177,8 @@ opens a week's challenge plaza in World View: `/e/plaza-visit`. And when
 someone makes a **Walk here with me** link in World View: `/e/walk-link`; and
 when a friend arrives through one: `/e/walk-joined`. And when someone makes a
 **Build with me** link in the Editor: `/e/build-link`; and when a friend joins
-through one: `/e/build-joined`.
+through one: `/e/build-joined`; and the first time a build is published
+crediting friends who built it together: `/e/publish-together`.
 
 And the first time a build is published from this browser (publishing it
 again later sends nothing):
@@ -248,7 +253,7 @@ only when you use the feature, and each server can be changed under
 | On the official site, you copy a build's embed code, or an embedded build is shown, or opened in ForkBuild (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
 | On the official site, you join the weekly build challenge, or open its plaza (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/challenge-join` or `/e/plaza-visit`, no referrer and no cookie |
 | On the official site, you make a **Walk here with me** link, or arrive through one (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/walk-link` or `/e/walk-joined`, no referrer and no cookie |
-| On the official site, you make a **Build with me** link, or join through one (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/build-link` or `/e/build-joined`, no referrer and no cookie |
+| On the official site, you make a **Build with me** link, or join through one (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/build-link` or `/e/build-joined` (and `/e/publish-together` when a build made together is first published crediting them), no referrer and no cookie |
 | On the official site, you publish a build for the first time (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming its range of bricks, and one more for a second build or a remix, no referrer and no cookie |
 | You open the official site through a launch post's link (`?ref=…`, see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/r/<channel>`, no referrer and no cookie |
 | You make yourself discoverable, or look someone up, in **Peers** | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | your identity's public key and a connection offer, kept for at most 15 minutes; the identity you look up; when you connect to someone you found, your connection reply (it lists your network addresses), which only they can collect |

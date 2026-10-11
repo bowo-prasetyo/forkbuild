@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 60fb1dcaa24488dc -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: a745a00cb02e79f9 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -633,6 +633,11 @@ aparece en ambas pantallas.
   mostrar el enlace.
 - El Editor de cada amigo guarda su propia copia, en su dispositivo. Cuando
   usted se detiene, pueden conservarla, pero lo que cambien ya no le llega.
+- Todos aquellos cuyos bloques incorpora su construcción figuran en ella: el
+  panel de la construcción dice **Construida con** y sus nombres, y cuando
+  usted publica, el enlace compartido y el árbol familiar también lo dicen,
+  bajo su firma. Una copia que otra persona haga de ella empieza sin esos
+  créditos; la suya es una construcción nueva.
 - Unirse conecta directamente sus dos dispositivos, como **Pasear aquí
   conmigo**: cada uno puede ver la dirección IP del otro. Nadie pasa a ser
   un par recordado ni un amigo si usted no lo elige. Necesita un servidor de

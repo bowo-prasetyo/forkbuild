@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 60fb1dcaa24488dc -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: a745a00cb02e79f9 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -647,6 +647,12 @@ sur les deux écrans.
 - L’Éditeur de chaque ami garde sa propre copie, enregistrée sur son
   appareil. Quand vous arrêtez, il peut la garder, mais ce qu’il modifie ne
   vous parvient plus.
+- Toutes les personnes dont votre construction intègre les briques y sont
+  créditées : le panneau de la construction indique **Construit avec** et
+  leurs noms, et quand vous publiez, le lien partagé et l’arbre généalogique
+  l’indiquent aussi, sous votre signature. Une copie qu’une autre personne
+  en fait commence sans ces crédits ; la sienne est une nouvelle
+  construction.
 - Rejoindre connecte directement vos deux appareils, comme **Se promener ici
   avec moi** : chacun peut voir l’adresse IP de l’autre. Personne ne devient
   un pair mémorisé ni un ami si vous ne le choisissez pas. Il faut un
