@@ -5500,3 +5500,33 @@ building feels joyful (a fresh theme every week for half a year).
   collection category follows showcase).
 - Not done: thumbnails in the family trees, and families made from the community's own remixes once there are some.
 
+## Numbers to reach, and a guide in two parts (unnumbered, 2026-10-11)
+
+**The counters now have targets, and the user guide separates playing from the machinery.** docs/Pillars.md said "no
+new networks until the building numbers move" without saying what moving meant, so the gate could never clearly pass
+or fail; and the user guide's "Start here (read in order)" was 13 chapters, four of them about infrastructure. The
+creative-direction review of 2026-10-11 asked for numeric targets and for the guide to be split into Play and
+Advanced. Pillar served: all three (each now has a number to reach), with the guide's Play half serving building feels
+joyful (a newcomer reads only what playing needs).
+
+- **Targets** (core/LaunchTargets.js, pure): seven, each a pillar's question as a number over one week, with the fewest
+  it must be counted from before it means anything — the median published build at 10 bricks or more and second builds
+  at 20% of builds (both from 50 builds); links opened per link made at 100% (from 20 links), copies per opened link at
+  10% (from 50 opens), remixes per build at 15% (from 50 builds); friends arrived per walk link at 50% and plaza visits
+  per challenge join at 25% (each from 20). Each is met, missed, or too few to say.
+- **The gate on new networks** opens only when both building targets are met; docs/Pillars.md now says so, with the
+  table of targets under "The numbers to reach" and what a missed one points at.
+- **The scorecard** (`node scripts/launch-scorecard.mjs`): reads a week's counts as GoatCounter's CSV export (counted
+  a row per hit), a JSON object or plain `path total` lines, and prints each target by pillar and the gate.
+  docs/launch/README.md says how.
+- **The user guide in two parts** (docs/user/README.md and its seven translations): **Play (read in order)** — Getting
+  Started, The Editor, World View, Publishing & Forking, Avatars & Presence, Your Data — and **Advanced** — Identity &
+  Login, Peer Connections & Friends, Chat & Conversations, Publications & External Evidence, Network Settings, Evidence
+  & Storage, Archive & Achievements — with a line saying what each half is for. The World View and Publishing entries
+  now describe what a player does there (Build here, Walk here with me, residents; choosing where builds go, the
+  challenge and family trees) rather than the network tools now under Advanced. No page moved, so no link broke.
+- Tests: `LaunchTargets` (every target reads paths the app counts; the median build; met, missed and too few; the gate;
+  JSON, GoatCounter export and plain counts; the scorecard's grouping and gate line).
+- Not done: a banner on each Advanced chapter saying it is optional, rewriting VISION.md's engine half for
+  contributors, and renaming chapter 12 now that it has no leaderboards.
+

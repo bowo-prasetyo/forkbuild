@@ -86,10 +86,12 @@ is a means, not the game:
 
 ### Networks: readers and writers
 
-No new network or chain joins ForkBuild until the building numbers move (see
-"Measuring it": how big published builds are, and how many builders come back
-for a second one). When one does, or when an existing one is reworked, it
-comes in two parts:
+No new network or chain joins ForkBuild until the building numbers move: both
+building targets in "Measuring it" (the median published build at 10 bricks
+or more, and a second build from at least 20% of builders) met over a week
+with at least 50 builds published. `node scripts/launch-scorecard.mjs` says
+whether the gate is open. When one does join, or when an existing one is
+reworked, it comes in two parts:
 
 - **A reader**: finding its announcements, fetching builds and comments
   stored there, and checking its proofs. Every copy of ForkBuild runs every
@@ -169,6 +171,30 @@ Each pillar has a question the launch counters can answer
   are made (`/e/walk-link`), and how many friends arrive through them
   (`/e/walk-joined`)?
 
+### The numbers to reach
+
+Each question has a number, read over one week (core/LaunchTargets.js holds
+them; `node scripts/launch-scorecard.mjs <counts>` prints a week's against
+them, from GoatCounter's export or a list of totals). Below its minimum, a
+number is "too few to say" rather than met or missed.
+
+| Pillar | Target | Number | Minimum |
+|---|---|---|---|
+| Building | The median published build's range (`/e/publish-bricks-…`) | 10 bricks or more | 50 builds |
+| Building | Second builds per build published (`/e/second-build`) | 20% | 50 builds |
+| Family tree | Links opened per link made (`/e/opened-shared-link` / `/e/share-link`) | 100% | 20 links |
+| Family tree | Copies made per link opened (`/e/remix-from-link` / `/e/opened-shared-link`) | 10% | 50 opens |
+| Family tree | Remixes per build published (`/e/remix-published`) | 15% | 50 builds |
+| Yours, in a world | Friends arrived per walk link (`/e/walk-joined` / `/e/walk-link`) | 50% | 20 links |
+| Yours, in a world | Plaza visits per challenge join (`/e/plaza-visit` / `/e/challenge-join`) | 25% | 20 joins |
+
+The two building targets are the gate on new networks (above). A missed
+target says where to look next, not that a feature failed: a small median
+build points at the kit and the guided first build, few second builds at
+what brings a builder back, few copies per opened link at the shared link's
+**Edit a Copy**. The numbers are a first guess for launch; change them here
+and in core/LaunchTargets.js together, with the reason in the roadmap.
+
 ## Where this came from
 
 A creative-direction review of 1.3.0 (October 2026) found four visions
@@ -215,4 +241,6 @@ visitor's World View"), Distribute folded into Publish ("Publish sends
 it where it goes"), and residents wondering aloud what the ground nearby
 lacks, with Build there ("Residents wonder what's missing"), and 26 challenge
 themes with example remix families for empty shelves ("Half a year of
-themes, and families to start from").
+themes, and families to start from"), and numbers for the counters with the
+user guide split into Play and Advanced ("Numbers to reach, and a guide in
+two parts").

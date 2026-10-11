@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 49ae366b36e4be1b -->
+<!-- translation-of: docs/user/README.md source-hash: 7bb42fbd771c7a59 -->
 # Documentation utilisateur de ForkBuild
 
 <!-- languages -->
@@ -11,7 +11,10 @@ fonctionnement interne du moteur est décrit dans
 [docs/Architecture.md](../../Architecture.md) (en anglais) et dans le
 reste du dossier [docs/](../..) de premier niveau.
 
-## Pour commencer (à lire dans l’ordre)
+## Jouer (à lire dans l’ordre)
+
+Tout ce qu’il faut pour construire, partager, remixer et se promener
+avec des amis.
 
 1. **[Premiers pas](01-GettingStarted.md)** — ouvrir l’application,
    placer votre première brique, et ne se connecter que pour publier.
@@ -20,52 +23,62 @@ reste du dossier [docs/](../..) de premier niveau.
    structures de la Bibliothèque de construction et vos propres plans,
    les instances de structure, et le titre, la description et la licence
    d’une création.
-3. **[La Vue du Monde](03-WorldView.md)** — l’espace 3D partagé, en
-   lecture seule, où vit chaque création publiée : se déplacer, trouver
-   et inspecter des choses, **Modifier une copie** pour emporter quelque
-   chose dans l’Éditeur, les Rencontres dans le Monde partagées par vos
-   pairs, distribuer votre propre publication depuis **Mon Monde
-   partagé**, les commentaires et les notifications.
-4. **[Publier et forker](04-PublishingAndForking.md)** — la publication,
-   les licences, les forks, le catalogue du Dépôt, et la distribution
-   d’une publication directement depuis l’Éditeur. Pour tout ce que vous
-   pouvez distribuer et où, voir [Distribuer votre travail](Distribution.md).
-5. **[Identité et connexion](05-IdentityAndLogin.md)** — votre identité
-   cryptographique, le coffre (verrouillage et déverrouillage), sa
-   sauvegarde par export et import, et la gestion des identités depuis
-   **Mes identités**.
-6. **[Avatars et présence](06-AvatarsAndPresence.md)** — personnaliser
+3. **[La Vue du Monde](03-WorldView.md)** — le monde 3D partagé où
+   vit chaque construction publiée : marcher et voler, trouver et
+   regarder les choses, **Construire ici**, **Se promener ici avec
+   moi**, les habitants et **Modifier une copie** pour emporter quelque
+   chose dans l’Éditeur. Ses outils réseau attendent sous **Afficher les
+   outils avancés**.
+4. **[Publier et forker](04-PublishingAndForking.md)** — publier et
+   partager un lien, choisir où vont vos constructions, les licences,
+   remixer, le Dépôt et ses constructions toutes prêtes, le défi de la
+   semaine et sa place, et les arbres généalogiques. Pour tout ce vers
+   quoi une construction peut aller, voir [Distribuer votre
+   travail](Distribution.md).
+5. **[Avatars et présence](06-AvatarsAndPresence.md)** — personnaliser
    votre avatar, qui peut vous voir, marcher, les perspectives de caméra,
    les véhicules, les animaux et votre inventaire.
-7. **[Connexions entre pairs et amis](07-PeerConnectionsAndFriends.md)** —
-   se connecter directement à d’autres personnes, mémoriser, devenir amis,
-   suivre, bloquer, la reconnexion automatique et votre propre relais
-   TURN.
-8. **[Chat et conversations](08-ChatAndConversations.md)** — la
-   messagerie directe réservée aux amis, la remise hors ligne, les
-   accusés de lecture et les appels vocaux.
-9. **[Publications et preuves externes](09-PublicationsAndEvidence.md)** —
-   la couche technique et facultative : revendications signées de
-   paternité et de noms de lieux, la page Publications, les commentaires,
-   et ce que détient votre appareil (Snapshot local). Certaines parties de
-   la page sont *expérimentales*, et marquées comme telles.
-10. **[Paramètres réseau](10-NetworkSettings.md)** — passerelles, relais,
-    fournisseurs de stockage et d’annonce, et serveurs de connexion entre
-    pairs. Ce dont chaque réseau a besoin est résumé dans
-    [Distribuer votre travail](Distribution.md#ce-dont-chaque-réseau-a-besoin).
-11. **[Preuves et stockage](11-EvidenceAndStorage.md)** — stocker du contenu
-    sur IPFS ou Arweave, les placements de snapshot, ancrer sur Arweave et,
-    de façon *expérimentale*, les autres preuves externes, les parcours de
-    portefeuille Bitcoin et Base, l’épinglage IPFS distant, Steem et Blurt.
-    [Distribuer votre travail](Distribution.md) montre comment tout cela
-    s’articule.
-12. **[Archive et succès](12-ArchiveAndLeaderboards.md)** —
-    *expérimental*. L’archive des observations, les références entre
-    publications et les succès.
-13. **[Vos données](13-YourData.md)** — sauvegarder tout ce que ce
-    navigateur contient dans un seul fichier chiffré et le restaurer, les
-    exports plus restreints, et où cet appareil a enregistré la
-    distribution de vos publications.
+6. **[Vos données](13-YourData.md)** — sauvegarder tout ce que ce
+   navigateur contient dans un seul fichier chiffré et le restaurer, les
+   exports plus restreints, et où cet appareil a enregistré la
+   distribution de vos publications.
+
+## Avancé
+
+La mécanique en dessous : votre identité en détail, les connexions
+directes avec d’autres personnes, les réseaux où une construction peut
+aller, et les outils expérimentaux. Rien de tout cela n’est nécessaire
+pour jouer.
+
+- **[Identité et connexion](05-IdentityAndLogin.md)** — votre identité
+  cryptographique, le coffre (verrouillage et déverrouillage), sa
+  sauvegarde par export et import, et la gestion des identités depuis
+  **Mes identités**.
+- **[Connexions entre pairs et amis](07-PeerConnectionsAndFriends.md)** —
+  se connecter directement à d’autres personnes, mémoriser, devenir amis,
+  suivre, bloquer, la reconnexion automatique et votre propre relais
+  TURN.
+- **[Chat et conversations](08-ChatAndConversations.md)** — la
+  messagerie directe réservée aux amis, la remise hors ligne, les
+  accusés de lecture et les appels vocaux.
+- **[Publications et preuves externes](09-PublicationsAndEvidence.md)** —
+  la couche technique et facultative : revendications signées de
+  paternité et de noms de lieux, la page Publications, les commentaires,
+  et ce que détient votre appareil (Snapshot local). Certaines parties de
+  la page sont *expérimentales*, et marquées comme telles.
+- **[Paramètres réseau](10-NetworkSettings.md)** — passerelles, relais,
+  fournisseurs de stockage et d’annonce, et serveurs de connexion entre
+  pairs. Ce dont chaque réseau a besoin est résumé dans
+  [Distribuer votre travail](Distribution.md#ce-dont-chaque-réseau-a-besoin).
+- **[Preuves et stockage](11-EvidenceAndStorage.md)** — stocker du contenu
+  sur IPFS ou Arweave, les placements de snapshot, ancrer sur Arweave et,
+  de façon *expérimentale*, les autres preuves externes, les parcours de
+  portefeuille Bitcoin et Base, l’épinglage IPFS distant, Steem et Blurt.
+  [Distribuer votre travail](Distribution.md) montre comment tout cela
+  s’articule.
+- **[Archive et succès](12-ArchiveAndLeaderboards.md)** —
+  *expérimental*. L’archive des observations, les références entre
+  publications et les succès.
 
 ## Référence
 
