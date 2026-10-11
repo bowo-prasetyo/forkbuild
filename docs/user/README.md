@@ -9,7 +9,9 @@ describes the product as it works today; engine internals live in
 [docs/Architecture.md](../Architecture.md) and the rest of the
 top-level [docs/](..) folder.
 
-## Start here (read in order)
+## Play (read in order)
+
+Everything you need to build, share, remix and walk around with friends.
 
 1. **[Getting Started](01-GettingStarted.md)** — open the app, place
    your first brick, and log in only when you publish.
@@ -17,46 +19,54 @@ top-level [docs/](..) folder.
    selection, transforms, brick colors, groups, the Build Library's
    structures and your own blueprints, structure instances, and a
    creation's title/description/license.
-3. **[World View](03-WorldView.md)** — the shared, read-only 3D space
-   every published creation lives in: flying around, finding and
-   inspecting things, **Edit a Copy** to take something into the Editor,
-   World Encounters shared by your peers, distributing your own
-   publication from **My Shared World**, commentary and notifications.
-4. **[Publishing & Forking](04-PublishingAndForking.md)** — publishing,
-   licenses, forking, the Repository catalog, and distributing a
-   publication straight from the Editor. For everything you can distribute
-   and where it can go, see [Distributing Your Work](Distribution.md).
-5. **[Identity & Login](05-IdentityAndLogin.md)** — your cryptographic
-   identity, the vault (locking/unlocking), backing it up with
-   export/import, and managing identities from **My Identities**.
-6. **[Avatars & Presence](06-AvatarsAndPresence.md)** — customizing your
+3. **[World View](03-WorldView.md)** — the shared 3D world every
+   published build lives in: walking and flying around, finding and
+   looking at things, **Build here**, **Walk here with me**, residents,
+   and **Edit a Copy** to take something into the Editor. Its network
+   tools wait under **Show advanced tools**.
+4. **[Publishing & Forking](04-PublishingAndForking.md)** —
+   publishing and sharing a link, choosing where your builds go,
+   licenses, remixing, the Repository and its ready-made builds, the
+   weekly challenge and its plaza, and family trees. For everything a
+   build can be sent to, see [Distributing Your Work](Distribution.md).
+5. **[Avatars & Presence](06-AvatarsAndPresence.md)** — customizing your
    avatar, who can see you, walking, camera perspectives, vehicles,
    animals, and your inventory.
-7. **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)** —
-   connecting directly to other people, remembering, friending, following,
-   blocking, automatic reconnection, and your own TURN relay.
-8. **[Chat & Conversations](08-ChatAndConversations.md)** — direct,
-   friends-only messaging, offline delivery, read receipts, and voice
-   calls.
-9. **[Publications & External Evidence](09-PublicationsAndEvidence.md)** —
-   the technical, optional layer: signed authorship and place-name claims,
-   the Publications page, commentary, and what your device holds (Local
-   Snapshot). Parts of the page are *experimental*, and marked so.
-10. **[Network Settings](10-NetworkSettings.md)** — gateways, relays,
-    storage and announcement providers, and peer-connection servers.
-    What each network needs is summed up in
-    [Distributing Your Work](Distribution.md#what-each-network-needs).
-11. **[Evidence & Storage](11-EvidenceAndStorage.md)** — storing content on
-    IPFS or Arweave, snapshot placements, anchoring on Arweave, and,
-    *experimental*, other external evidence, the Bitcoin and Base wallet
-    pipelines, remote IPFS pinning, Steem and Blurt.
-    [Distributing Your Work](Distribution.md) shows how these fit together.
-12. **[Archive & Achievements](12-ArchiveAndLeaderboards.md)** —
-    *experimental*. The observation archive, publication references and
-    achievements.
-13. **[Your Data](13-YourData.md)** — backing up everything this browser
-    holds to one encrypted file and restoring it, the smaller exports, and
-    where this device recorded distributing your publications.
+6. **[Your Data](13-YourData.md)** — backing up everything this browser
+   holds to one encrypted file and restoring it, the smaller exports, and
+   where this device recorded distributing your publications.
+
+## Advanced
+
+The machinery underneath: your identity in detail, direct connections to
+other people, the networks a build can be sent to, and the experimental
+tools. You don't need any of it to play.
+
+- **[Identity & Login](05-IdentityAndLogin.md)** — your cryptographic
+  identity, the vault (locking/unlocking), backing it up with
+  export/import, and managing identities from **My Identities**.
+- **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)** —
+  connecting directly to other people, remembering, friending, following,
+  blocking, automatic reconnection, and your own TURN relay.
+- **[Chat & Conversations](08-ChatAndConversations.md)** — direct,
+  friends-only messaging, offline delivery, read receipts, and voice
+  calls.
+- **[Publications & External Evidence](09-PublicationsAndEvidence.md)** —
+  the technical, optional layer: signed authorship and place-name claims,
+  the Publications page, commentary, and what your device holds (Local
+  Snapshot). Parts of the page are *experimental*, and marked so.
+- **[Network Settings](10-NetworkSettings.md)** — gateways, relays,
+  storage and announcement providers, and peer-connection servers.
+  What each network needs is summed up in
+  [Distributing Your Work](Distribution.md#what-each-network-needs).
+- **[Evidence & Storage](11-EvidenceAndStorage.md)** — storing content on
+  IPFS or Arweave, snapshot placements, anchoring on Arweave, and,
+  *experimental*, other external evidence, the Bitcoin and Base wallet
+  pipelines, remote IPFS pinning, Steem and Blurt.
+  [Distributing Your Work](Distribution.md) shows how these fit together.
+- **[Archive & Achievements](12-ArchiveAndLeaderboards.md)** —
+  *experimental*. The observation archive, publication references and
+  achievements.
 
 ## Reference
 

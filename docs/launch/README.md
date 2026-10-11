@@ -115,6 +115,17 @@ the week after, by day:
   Opened links per week is the number that says whether ForkBuild is being
   seen by people its makers didn't bring.
 
+Each of these has a number to reach (docs/Pillars.md, "The numbers to
+reach"). For a week, export the hits from GoatCounter (or write the totals
+as lines of `/e/<event> <total>`) and run
+
+```
+node scripts/launch-scorecard.mjs export.csv
+```
+
+It prints each target as met, below, or too few to say, grouped by pillar,
+and whether the gate on new networks is open.
+
 The counter keeps totals only, so these are rough: a visitor who blocks the
 counter isn't counted, and the paths can't be joined into one person's path.
 That is on purpose (docs/Privacy.md).

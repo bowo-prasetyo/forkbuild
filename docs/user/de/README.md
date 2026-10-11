@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 49ae366b36e4be1b -->
+<!-- translation-of: docs/user/README.md source-hash: 7bb42fbd771c7a59 -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
@@ -10,7 +10,10 @@ das Produkt so, wie es heute funktioniert; die Interna der Engine stehen
 in [docs/Architecture.md](../../Architecture.md) und im übrigen
 [docs/](../..)-Ordner auf oberster Ebene (nur auf Englisch).
 
-## Hier anfangen (der Reihe nach lesen)
+## Spielen (der Reihe nach lesen)
+
+Alles, was Sie brauchen, um zu bauen, zu teilen, zu remixen und mit
+Freunden herumzulaufen.
 
 1. **[Erste Schritte](01-GettingStarted.md)** — die App öffnen, den
    ersten Stein platzieren und sich erst zum Veröffentlichen anmelden.
@@ -18,53 +21,61 @@ in [docs/Architecture.md](../../Architecture.md) und im übrigen
    Auswahl, Transformationen, Steinfarben, Gruppen, die Strukturen der
    Baubibliothek und Ihre eigenen Baupläne, Strukturinstanzen sowie Titel,
    Beschreibung und Lizenz einer Kreation.
-3. **[Weltansicht](03-WorldView.md)** — der geteilte, schreibgeschützte
-   3D-Raum, in dem jede veröffentlichte Kreation lebt: herumfliegen, Dinge
-   finden und untersuchen, **Eine Kopie bearbeiten**, um etwas in den
-   Editor zu übernehmen, Begegnungen in der Welt, die Ihre Peers teilen,
-   das Verteilen Ihrer eigenen Veröffentlichung über **Meine Geteilte
-   Welt**, Kommentare und Benachrichtigungen.
+3. **[Weltansicht](03-WorldView.md)** — die geteilte 3D-Welt, in der
+   jedes veröffentlichte Bauwerk steht: herumlaufen und -fliegen, Dinge
+   finden und ansehen, **Hier bauen**, **Mit mir hier spazieren**,
+   Bewohner und **Eine Kopie bearbeiten**, um etwas in den Editor zu
+   holen. Die Netzwerkwerkzeuge liegen unter **Erweiterte Werkzeuge
+   zeigen**.
 4. **[Veröffentlichen & Forken](04-PublishingAndForking.md)** —
-   Veröffentlichen, Lizenzen, Forken, der Katalog im Repository und das
-   Verteilen einer Veröffentlichung direkt aus dem Editor.
-   Alles, was Sie verteilen können, und wohin es gehen kann, steht in
-   [Ihre Arbeit verteilen](Distribution.md).
-5. **[Identität & Anmeldung](05-IdentityAndLogin.md)** — Ihre
-   kryptografische Identität, der Tresor (Sperren/Entsperren), das Sichern
-   per Export/Import und das Verwalten von Identitäten unter **Meine
-   Identitäten**.
-6. **[Avatare & Anwesenheit](06-AvatarsAndPresence.md)** — Ihren Avatar
+   veröffentlichen und einen Link teilen, wählen, wohin Ihre Bauwerke
+   gehen, Lizenzen, remixen, das Repository und seine fertigen Bauwerke,
+   die wöchentliche Challenge und ihr Platz und Stammbäume. Alles, wohin
+   ein Bauwerk gehen kann, steht unter [Ihre Arbeit
+   verteilen](Distribution.md).
+5. **[Avatare & Anwesenheit](06-AvatarsAndPresence.md)** — Ihren Avatar
    anpassen, wer Sie sehen kann, Gehen, Kameraperspektiven, Fahrzeuge,
    Tiere und Ihr Inventar.
-7. **[Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)** —
-   sich direkt mit anderen Menschen verbinden, sie sich merken, sich
-   befreunden, folgen, blockieren, automatisches Neuverbinden und Ihr
-   eigenes TURN-Relay.
-8. **[Chat & Unterhaltungen](08-ChatAndConversations.md)** — direkte
-   Nachrichten nur unter Freunden, Zustellung im Offline-Zustand,
-   Lesebestätigungen und Sprachanrufe.
-9. **[Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md)** —
-   die technische, optionale Ebene: signierte Urheberschafts- und
-   Ortsnamensansprüche, die Seite Veröffentlichungen, Kommentare und was
-   Ihr Gerät besitzt (lokaler Snapshot). Teile der Seite sind
-   *experimentell* und so gekennzeichnet.
-10. **[Netzwerkeinstellungen](10-NetworkSettings.md)** — Gateways, Relays,
-    Speicher- und Ankündigungsanbieter sowie Server für Peer-Verbindungen.
-    Was jedes Netzwerk braucht, fasst
-    [Ihre Arbeit verteilen](Distribution.md#was-jedes-netzwerk-braucht)
-    zusammen.
-11. **[Nachweise & Speicher](11-EvidenceAndStorage.md)** — Inhalte auf IPFS
-    oder Arweave speichern, Snapshot-Platzierungen, auf Arweave verankern
-    und, *experimentell*, andere externe Nachweise, die Wallet-Abläufe für
-    Bitcoin und Base, entferntes IPFS-Pinning, Steem und Blurt.
-    [Ihre Arbeit verteilen](Distribution.md) zeigt, wie das zusammenpasst.
-12. **[Archiv & Erfolge](12-ArchiveAndLeaderboards.md)** —
-    *experimentell*. Das Beobachtungsarchiv, Veröffentlichungsverweise
-    und Erfolge.
-13. **[Ihre Daten](13-YourData.md)** — alles, was dieser Browser enthält,
-    in eine verschlüsselte Datei sichern und wiederherstellen, die
-    kleineren Exporte und wo dieses Gerät das Verteilen Ihrer
-    Veröffentlichungen festgehalten hat.
+6. **[Ihre Daten](13-YourData.md)** — alles, was dieser Browser enthält,
+   in eine verschlüsselte Datei sichern und wiederherstellen, die
+   kleineren Exporte und wo dieses Gerät das Verteilen Ihrer
+   Veröffentlichungen festgehalten hat.
+
+## Erweitert
+
+Die Technik darunter: Ihre Identität im Detail, direkte Verbindungen zu
+anderen Menschen, die Netzwerke, an die ein Bauwerk gehen kann, und die
+experimentellen Werkzeuge. Zum Spielen brauchen Sie nichts davon.
+
+- **[Identität & Anmeldung](05-IdentityAndLogin.md)** — Ihre
+  kryptografische Identität, der Tresor (Sperren/Entsperren), das Sichern
+  per Export/Import und das Verwalten von Identitäten unter **Meine
+  Identitäten**.
+- **[Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)** —
+  sich direkt mit anderen Menschen verbinden, sie sich merken, sich
+  befreunden, folgen, blockieren, automatisches Neuverbinden und Ihr
+  eigenes TURN-Relay.
+- **[Chat & Unterhaltungen](08-ChatAndConversations.md)** — direkte
+  Nachrichten nur unter Freunden, Zustellung im Offline-Zustand,
+  Lesebestätigungen und Sprachanrufe.
+- **[Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md)** —
+  die technische, optionale Ebene: signierte Urheberschafts- und
+  Ortsnamensansprüche, die Seite Veröffentlichungen, Kommentare und was
+  Ihr Gerät besitzt (lokaler Snapshot). Teile der Seite sind
+  *experimentell* und so gekennzeichnet.
+- **[Netzwerkeinstellungen](10-NetworkSettings.md)** — Gateways, Relays,
+  Speicher- und Ankündigungsanbieter sowie Server für Peer-Verbindungen.
+  Was jedes Netzwerk braucht, fasst
+  [Ihre Arbeit verteilen](Distribution.md#was-jedes-netzwerk-braucht)
+  zusammen.
+- **[Nachweise & Speicher](11-EvidenceAndStorage.md)** — Inhalte auf IPFS
+  oder Arweave speichern, Snapshot-Platzierungen, auf Arweave verankern
+  und, *experimentell*, andere externe Nachweise, die Wallet-Abläufe für
+  Bitcoin und Base, entferntes IPFS-Pinning, Steem und Blurt.
+  [Ihre Arbeit verteilen](Distribution.md) zeigt, wie das zusammenpasst.
+- **[Archiv & Erfolge](12-ArchiveAndLeaderboards.md)** —
+  *experimentell*. Das Beobachtungsarchiv, Veröffentlichungsverweise
+  und Erfolge.
 
 ## Nachschlagen
 

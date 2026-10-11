@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 49ae366b36e4be1b -->
+<!-- translation-of: docs/user/README.md source-hash: 7bb42fbd771c7a59 -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
@@ -10,7 +10,10 @@ menjelaskan produk sebagaimana cara kerjanya saat ini; bagian dalam mesin
 dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
 [docs/](../..) tingkat atas (hanya dalam bahasa Inggris).
 
-## Mulai dari sini (baca berurutan)
+## Bermain (baca berurutan)
+
+Semua yang Anda perlukan untuk membangun, berbagi, meremiks, dan
+berjalan-jalan bersama teman.
 
 1. **[Memulai](01-GettingStarted.md)** — membuka aplikasi, menempatkan
    balok pertama Anda, dan masuk hanya saat menerbitkan.
@@ -18,49 +21,57 @@ dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
    membangun: alat, pemilihan, transformasi, warna balok, grup, struktur di
    Pustaka Bangunan dan cetak biru Anda sendiri, instans struktur, serta
    judul/deskripsi/lisensi sebuah karya.
-3. **[Tampilan Dunia](03-WorldView.md)** — ruang 3D
-   bersama yang hanya dapat dilihat, tempat setiap karya yang diterbitkan
-   berada: terbang berkeliling, menemukan dan memeriksa sesuatu,
-   **Edit Salinan** untuk membawa sesuatu ke Editor, Perjumpaan Dunia yang
-   dibagikan rekan Anda, mendistribusikan publikasi Anda sendiri dari
-   **Dunia Bersama Saya**, komentar dan notifikasi.
-4. **[Penerbitan & Fork](04-PublishingAndForking.md)**
-   — menerbitkan, lisensi, fork, katalog Repositori, dan mendistribusikan
-   publikasi langsung dari Editor.
-   Untuk semua yang dapat Anda distribusikan dan ke mana semuanya dapat
-   dikirim, lihat [Mendistribusikan Karya Anda](Distribution.md).
-5. **[Identitas & Masuk](05-IdentityAndLogin.md)** —
-   identitas kriptografis Anda, brankas (mengunci/membuka), mencadangkannya
-   dengan ekspor/impor, dan mengelola identitas dari **Identitas Saya**.
-6. **[Avatar & Kehadiran](06-AvatarsAndPresence.md)** —
+3. **[Tampilan Dunia](03-WorldView.md)** — dunia 3D bersama tempat
+   setiap bangunan yang diterbitkan berada: berjalan dan terbang
+   berkeliling, menemukan dan melihat berbagai hal, **Bangun di sini**,
+   **Jalan di sini bersamaku**, para penghuni, dan **Edit Salinan**
+   untuk membawa sesuatu ke Editor. Alat jaringannya menunggu di bawah
+   **Tampilkan alat lanjutan**.
+4. **[Penerbitan & Fork](04-PublishingAndForking.md)** — menerbitkan
+   dan membagikan tautan, memilih ke mana bangunan Anda dikirim,
+   lisensi, meremiks, Repositori dan bangunan siap pakainya, tantangan
+   mingguan dan alun-alunnya, serta pohon keluarga. Untuk semua tujuan
+   sebuah bangunan, lihat [Mendistribusikan Karya
+   Anda](Distribution.md).
+5. **[Avatar & Kehadiran](06-AvatarsAndPresence.md)** —
    menyesuaikan avatar, siapa yang dapat melihat Anda, berjalan, sudut
    pandang kamera, kendaraan, hewan, dan inventaris Anda.
-7. **[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)** — terhubung langsung dengan orang lain, mengingat, berteman,
-   mengikuti, memblokir, menghubungkan kembali secara otomatis, dan relay
-   TURN Anda sendiri.
-8. **[Obrolan & Percakapan](08-ChatAndConversations.md)** — pesan langsung khusus teman, pengiriman saat luring, tanda
-   sudah dibaca, dan panggilan suara.
-9. **[Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md)** — lapisan teknis yang opsional: klaim kepengarangan dan
-   nama tempat yang ditandatangani, halaman Publikasi, komentar, dan apa
-   yang disimpan perangkat Anda (Snapshot Lokal). Sebagian halamannya
-   *eksperimental*, dan ditandai demikian.
-10. **[Pengaturan Jaringan](10-NetworkSettings.md)** —
-    gateway, relay, penyedia penyimpanan dan pengumuman, serta server untuk
-    koneksi rekan.
-    Apa yang dibutuhkan setiap jaringan dirangkum di
-    [Mendistribusikan Karya Anda](Distribution.md#apa-yang-dibutuhkan-setiap-jaringan).
-11. **[Bukti & Penyimpanan](11-EvidenceAndStorage.md)** — menyimpan konten
-    di IPFS atau Arweave, penempatan snapshot, penjangkaran di Arweave, dan
-    yang *eksperimental*: bukti eksternal lainnya, alur dompet Bitcoin dan
-    Base, pinning IPFS jarak jauh, Steem, dan Blurt.
-    [Mendistribusikan Karya Anda](Distribution.md) menunjukkan bagaimana
-    semuanya saling terkait.
-12. **[Arsip & Pencapaian](12-ArchiveAndLeaderboards.md)** — *eksperimental*. Arsip pengamatan, referensi publikasi,
-    dan pencapaian.
-13. **[Data Anda](13-YourData.md)** — mencadangkan semua yang disimpan
-    browser ini ke satu file terenkripsi dan memulihkannya, ekspor yang
-    lebih kecil, dan di mana perangkat ini mencatat distribusi publikasi
-    Anda.
+6. **[Data Anda](13-YourData.md)** — mencadangkan semua yang disimpan
+   browser ini ke satu file terenkripsi dan memulihkannya, ekspor yang
+   lebih kecil, dan di mana perangkat ini mencatat distribusi publikasi
+   Anda.
+
+## Lanjutan
+
+Mesin di baliknya: identitas Anda secara rinci, koneksi langsung dengan
+orang lain, jaringan tempat sebuah bangunan bisa dikirim, dan alat
+eksperimental. Anda tidak memerlukan semua ini untuk bermain.
+
+- **[Identitas & Masuk](05-IdentityAndLogin.md)** —
+  identitas kriptografis Anda, brankas (mengunci/membuka), mencadangkannya
+  dengan ekspor/impor, dan mengelola identitas dari **Identitas Saya**.
+- **[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)** — terhubung langsung dengan orang lain, mengingat, berteman,
+  mengikuti, memblokir, menghubungkan kembali secara otomatis, dan relay
+  TURN Anda sendiri.
+- **[Obrolan & Percakapan](08-ChatAndConversations.md)** — pesan langsung khusus teman, pengiriman saat luring, tanda
+  sudah dibaca, dan panggilan suara.
+- **[Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md)** — lapisan teknis yang opsional: klaim kepengarangan dan
+  nama tempat yang ditandatangani, halaman Publikasi, komentar, dan apa
+  yang disimpan perangkat Anda (Snapshot Lokal). Sebagian halamannya
+  *eksperimental*, dan ditandai demikian.
+- **[Pengaturan Jaringan](10-NetworkSettings.md)** —
+  gateway, relay, penyedia penyimpanan dan pengumuman, serta server untuk
+  koneksi rekan.
+  Apa yang dibutuhkan setiap jaringan dirangkum di
+  [Mendistribusikan Karya Anda](Distribution.md#apa-yang-dibutuhkan-setiap-jaringan).
+- **[Bukti & Penyimpanan](11-EvidenceAndStorage.md)** — menyimpan konten
+  di IPFS atau Arweave, penempatan snapshot, penjangkaran di Arweave, dan
+  yang *eksperimental*: bukti eksternal lainnya, alur dompet Bitcoin dan
+  Base, pinning IPFS jarak jauh, Steem, dan Blurt.
+  [Mendistribusikan Karya Anda](Distribution.md) menunjukkan bagaimana
+  semuanya saling terkait.
+- **[Arsip & Pencapaian](12-ArchiveAndLeaderboards.md)** — *eksperimental*. Arsip pengamatan, referensi publikasi,
+  dan pencapaian.
 
 ## Referensi
 
