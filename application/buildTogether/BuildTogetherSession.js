@@ -81,7 +81,11 @@ export class BuildTogetherSession {
     //   appliedOperationIds(): the operations the open build already reflects;
     //   openShared(document, operationIds): opens a co-builder's copy;
     //   creditBuilder({ identityId, name }): credits a friend on the open
-    //     build (DocumentMetadata#creditBuilder), true when it changed.
+    //     build (DocumentMetadata#creditBuilder), true when it changed;
+    //   adoptCredits(builtWith): a co-builder's copy takes the author's
+    //     credits (DocumentMetadata#adoptBuiltWith);
+    //   notedHelped({ documentId, title, authorName, authorIdentityId }):
+    //     the author credits this replica: a build it helped make.
     // resolveConnectionIdentity(connectedPeer): { identityId } for who is
     //   behind a connection, an authorized device's owner included (the
     //   app's DeviceAuthorizationPropagationUseCase), as the command
@@ -202,11 +206,23 @@ export class BuildTogetherSession {
     // through the editor's creditBuilder). True when they were credited.
     noteEdit(documentId, identityId) {
         if (!this.allows(documentId, identityId) || typeof this._editor.creditBuilder !== 'function') return false;
+        let credited = false;
         try {
-            return this._editor.creditBuilder({ identityId, name: this._allowed.get(identityId) || null }) === true;
+            credited = this._editor.creditBuilder({ identityId, name: this._allowed.get(identityId) || null }) === true;
         } catch {
-            return false;
+            credited = false;
         }
+        if (credited) this._sendCredits();
+        return credited;
+    }
+
+    // The hosted build's credits, to each co-builder: their copies follow
+    // the author's list (core/BuiltWith.js), so every copy says who built it.
+    _sendCredits() {
+        const document = this._editor.openDocument();
+        if (!this._hosted || !document || document.world.id !== this._hosted) return;
+        const builtWith = (document.metadata.builtWith || []).map((entry) => ({ name: entry.name, identityId: entry.identityId }));
+        for (const peer of this._coBuilderPeers()) this._send(peer, { type: 'credits', documentId: this._hosted, builtWith });
     }
 
     // Whether this replica passes on edits to `documentId` (shouldRelay).
@@ -328,6 +344,7 @@ export class BuildTogetherSession {
         case 'ended': return this._hostEnded(payload, peer);
         case 'left': return this._guestLeft(payload, peer);
         case 'presence': return this._acceptPresence(payload, peer);
+        case 'credits': return this._acceptCredits(payload, peer);
         default:
         }
     }
@@ -381,6 +398,41 @@ export class BuildTogetherSession {
             return this._finishRequest(BuildTogetherOutcome.NOT_VERIFIED);
         }
         this._finishRequest(BuildTogetherOutcome.OPENED);
+        this._noteIfCredited(document.metadata.builtWith);
+    }
+
+    // The author's credits for the joined build: this copy follows them.
+    // Only from the host, for the build this Editor has open from them.
+    _acceptCredits(payload, peer) {
+        if (!this._fromHost(payload, peer) || !this._joined.opened || !Array.isArray(payload.builtWith)) return;
+        const document = this._editor.openDocument();
+        if (!document || document.world.id !== this._joined.documentId || typeof this._editor.adoptCredits !== 'function') return;
+        try {
+            this._editor.adoptCredits(payload.builtWith);
+        } catch {
+            return;
+        }
+        this._noteIfCredited(payload.builtWith);
+        this._changed();
+    }
+
+    // The author credits this replica's identity: a build it helped make
+    // (application/buildTogether/HelpedBuildsStore.js, through the editor).
+    _noteIfCredited(builtWith) {
+        if (!this._joined || typeof this._editor.notedHelped !== 'function' || !Array.isArray(builtWith)) return;
+        const own = this._ownIdentityIds();
+        if (!builtWith.some((entry) => entry && own.includes(entry.identityId))) return;
+        const document = this._editor.openDocument();
+        try {
+            this._editor.notedHelped({
+                documentId: this._joined.documentId,
+                title: document && document.world.id === this._joined.documentId ? document.metadata.title : null,
+                authorName: this._joined.hostName,
+                authorIdentityId: document?.metadata.authorIdentityId || this._joined.hostIdentityId
+            });
+        } catch {
+            // The list is a convenience; building goes on.
+        }
     }
 
     _finishRequest(outcome) {

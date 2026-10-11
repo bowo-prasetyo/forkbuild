@@ -52,7 +52,11 @@ send it:
   build, and for each ready-made structure dropped into one, what its
   bricks were and where they stood, so publishing can tell the bricks you
   placed from the ones you started with (only which range they fall in is
-  ever counted; see "Visitor count"). Your stamps on Home are
+  ever counted; see "Visitor count").
+- for each identity, the builds a friend credited it on while you built
+  them together (**Build with me**): each build's title, its author's name
+  and identity, and when, for **Builds you helped make** on My Worlds and
+  your own builder page. Your stamps on Home are
   worked out from what is already listed here and aren't stored.
 
 Clearing this site's data in the browser deletes all of it, and there is no
@@ -116,7 +120,9 @@ settings (see "Notifications on this device" below).
   credited on it, by the name they built under and their identity's public
   key, and when you publish it that credit is part of its signed
   Publication, which anyone who sees the build can read (the page a
-  **Build with me** link opens says so before they join).
+  **Build with me** link opens says so before they join). While you build
+  together, everyone's copy follows that list, so each friend sees who else
+  is credited.
 - **Anyone, while you are in a public lobby.** Joining the public lobby
   (**Peers**) or a World's lobby (**Lobby** in World View) lists your
   identity's public key and the display name you choose, for anyone who

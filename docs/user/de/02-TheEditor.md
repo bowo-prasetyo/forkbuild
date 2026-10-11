@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: a745a00cb02e79f9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c13a0384c503ab2c -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -637,8 +637,15 @@ umfärbt oder löscht, auf beiden Bildschirmen.
 - Alle, deren Steine Ihr Bauwerk übernimmt, werden darauf genannt: Der
   Bereich des Bauwerks zeigt **Gebaut mit** und ihre Namen, und wenn Sie
   veröffentlichen, sagen es auch der geteilte Link und der Stammbaum, unter
-  Ihrer Signatur. Eine Kopie, die jemand anderes davon macht, beginnt ohne
-  solche Nennungen; seine ist ein neues Bauwerk.
+  Ihrer Signatur. Die Kopie jedes Freundes zeigt dieselben Nennungen. Eine
+  Kopie, die jemand anderes davon macht, beginnt ohne solche Nennungen;
+  seine ist ein neues Bauwerk.
+- Jeder genannte Name und der Autor eines geteilten Bauwerks öffnet die
+  Seite dieser Person: die Bauwerke, die ihre Identität signiert hat, und
+  die Bauwerke, auf denen andere sie nennen. **Meine Welten** listet
+  **Bauten, an denen Sie mitgebaut haben** auf, also die, auf denen ein
+  Freund Sie genannt hat; jedes öffnet seine Welt, sobald es veröffentlicht
+  ist.
 - Beim Beitreten werden Ihre beiden Geräte direkt verbunden, wie bei **Mit
   mir hier spazieren**: Jeder kann die IP-Adresse des anderen sehen. Niemand
   wird zu einem gemerkten Peer oder Freund, wenn Sie es nicht wählen. Es

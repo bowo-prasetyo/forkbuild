@@ -13,7 +13,10 @@ import { License } from '../../core/License.js';
 import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery } from '../../core/EditorEntryContext.js';
 import { remixCountText, remixedFromText } from '../components/remix/remixText.js';
 import RemixFamilyTree from '../components/remix/RemixFamilyTree.js';
-import { builtWithNames } from '../components/remix/builtWithText.js';
+import { builtWithNames, builderRoute } from '../components/remix/builtWithText.js';
+import BuiltWithNames from '../components/remix/BuiltWithNames.js';
+import I18nText from '../i18n/I18nText.js';
+import { normalizeBuiltWith } from '../../core/BuiltWith.js';
 import { exploreRouteFor } from '../components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 
@@ -43,7 +46,7 @@ const RETRY_OUTCOMES = new Set([OpenPublicationLinkOutcome.UNREACHABLE, OpenPubl
 // so, and offers only the walk.
 export default {
     name: 'PublicationLinkView',
-    components: { BuildTurntable, RemixFamilyTree },
+    components: { BuildTurntable, RemixFamilyTree, BuiltWithNames, I18nText },
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -86,6 +89,9 @@ export default {
                 author: typeof opened.author === 'string' && opened.author.trim() ? opened.author.trim() : null,
                 // Friends who built it with its author (core/BuiltWith.js).
                 builtWith: builtWithNames(opened.builtWith),
+                builtWithList: normalizeBuiltWith(opened.builtWith),
+                // The author's page, by the identity that signed it.
+                authorRoute: builderRoute(opened.publisherIdentity?.id, typeof opened.author === 'string' ? opened.author.trim() || null : null),
                 licenseLabel: displayText(describeLicense(license.id)),
                 remixAllowed: license.forkAllowed,
                 remixedFrom: remixedFromText(remixSource),
@@ -224,8 +230,13 @@ export default {
                 <div class="shared-build-info">
                     <p class="shared-build-kicker">{{ t('publicationLink.title') }}</p>
                     <h1 class="shared-build-title">{{ arrived.title }}</h1>
-                    <p class="shared-build-author">{{ arrived.author ? t('publicationLink.by', { author: arrived.author }) : t('publicationLink.byUnknown') }}</p>
-                    <p v-if="arrived.builtWith" class="shared-build-built-with">{{ t('builtWith.line', { names: arrived.builtWith }) }}</p>
+                    <p v-if="arrived.author && arrived.authorRoute" class="shared-build-author">
+                        <I18nText keypath="publicationLink.by"><template #author><router-link :to="arrived.authorRoute" class="shared-build-author-link">{{ arrived.author }}</router-link></template></I18nText>
+                    </p>
+                    <p v-else class="shared-build-author">{{ arrived.author ? t('publicationLink.by', { author: arrived.author }) : t('publicationLink.byUnknown') }}</p>
+                    <p v-if="arrived.builtWith" class="shared-build-built-with">
+                        <I18nText keypath="builtWith.line"><template #names><BuiltWithNames :list="arrived.builtWithList" /></template></I18nText>
+                    </p>
                     <ul v-if="arrived.remixedFrom || arrived.remixes" class="shared-build-lineage">
                         <li v-if="arrived.remixedFrom" class="shared-build-remixed-from">{{ arrived.remixedFrom }}</li>
                         <li v-if="arrived.remixes" class="shared-build-remix-count">{{ arrived.remixes }}</li>

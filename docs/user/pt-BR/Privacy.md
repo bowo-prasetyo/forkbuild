@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 09b3b731fab3269c -->
+<!-- translation-of: docs/Privacy.md source-hash: 472c2d45139f70da -->
 # Privacidade
 
 <!-- languages -->
@@ -52,14 +52,18 @@ que você publique, exporte ou envie:
 - para cada semana do desafio de construção que você abre, os ids das
   participações encontradas nas redes, para que a página dele as mostre de
   novo antes de procurar.
-- para cada construção que você começou com **Construir aqui**, o Mundo e
-  o lugar escolhidos, para que ao publicar ela fique ali. Seus selos no
-  Início são calculados a partir do que já está listado aqui e não são
-  guardados.
+- para cada construção que você começou com **Construir aqui**, o Mundo e o
+  lugar escolhidos, para que ao publicar ela fique ali.
 - para cada construção começada a partir de uma estrutura pronta ou como
   cópia de outra, e para cada estrutura pronta colocada nela, quais blocos
   eram e onde estavam, para que ao publicar se distingam os blocos que você
   colocou dos iniciais (só a faixa é contada).
+- para cada identidade, as construções em que um amigo deu crédito a ela
+  enquanto vocês as construíam juntos (**Construir comigo**): o título de
+  cada construção, o nome e a identidade do autor dela, e quando, para
+  **Construções que você ajudou a fazer** em Meus mundos e na sua própria
+  página de construtor. Seus selos no Início são calculados a partir do que
+  já está listado aqui e não são guardados.
 
 Limpar os dados deste site no navegador apaga tudo isso, e não há outra
 cópia nem como recuperar. Faça antes um backup com **Seus dados → Fazer
@@ -127,7 +131,9 @@ com suas configurações (veja "Notificações neste dispositivo" abaixo).
   e a chave pública da identidade dele, e quando você a publica, esse
   crédito faz parte da publicação assinada dela, que qualquer pessoa que vir
   a construção pode ler (a página que um link **Construir comigo** abre
-  avisa isso antes de a pessoa entrar).
+  avisa isso antes de a pessoa entrar). Enquanto vocês constroem juntos, a
+  cópia de cada um segue essa lista, então cada amigo vê quem mais aparece
+  nos créditos.
 - **Qualquer pessoa, enquanto você está numa sala pública.** Entrar na sala
   pública (**Pares**) ou na sala de um Mundo (**Sala** na Visão do mundo)
   lista a chave pública da sua identidade e o nome de exibição que você

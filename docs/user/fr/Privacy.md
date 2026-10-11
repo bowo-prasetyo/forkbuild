@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 09b3b731fab3269c -->
+<!-- translation-of: docs/Privacy.md source-hash: 472c2d45139f70da -->
 # Confidentialité
 
 <!-- languages -->
@@ -55,14 +55,18 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   identifiants des participations trouvées sur les réseaux, pour que sa page
   les affiche de nouveau avant de chercher.
 - pour chaque construction commencée avec **Construire ici**, le monde et
-  l’emplacement choisis, pour qu’une fois publiée elle s’y dresse. Vos
-  tampons sur l’Accueil sont établis à partir de ce qui est déjà listé ici
-  et ne sont pas enregistrés.
+  l’emplacement choisis, pour qu’une fois publiée elle s’y dresse.
 - pour chaque construction commencée à partir d’une structure toute faite ou
   comme copie d’une construction, et pour chaque structure toute faite
   ajoutée, quelles briques c’étaient et où elles se trouvaient, pour que la
   publication distingue les briques que vous avez posées de celles du départ
   (seule la tranche est comptée).
+- pour chaque identité, les constructions où un ami l’a créditée pendant que
+  vous les construisiez ensemble (**Construire avec moi**) : le titre de
+  chacune, le nom et l’identité de son auteur, et quand, pour
+  **Constructions auxquelles vous avez participé** dans Mes mondes et sur
+  votre propre page de constructeur. Vos tampons sur l’Accueil sont établis
+  à partir de ce qui est déjà listé ici et ne sont pas enregistrés.
 
 Effacer les données de ce site dans le navigateur supprime tout cela, et
 il n’existe aucune autre copie ni aucun moyen de le récupérer.
@@ -138,7 +142,8 @@ notifications sur cet appareil soient activées est gardé avec vos réglages
   identité, et quand vous la publiez, ce crédit fait partie de sa
   publication signée, que peut lire toute personne qui voit la construction
   (la page qu’ouvre un lien **Construire avec moi** le signale avant qu’on
-  la rejoigne).
+  la rejoigne). Pendant que vous construisez ensemble, la copie de chacun
+  suit cette liste, si bien que chaque ami voit qui d’autre est crédité.
 - **N’importe qui, pendant que vous êtes dans un salon public.** Rejoindre
   le salon public (**Pairs**) ou le salon d’un Monde (**Salon** dans la
   Vue du Monde) liste la clé publique de votre identité et le nom affiché

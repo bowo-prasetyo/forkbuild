@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: a745a00cb02e79f9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c13a0384c503ab2c -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -650,9 +650,14 @@ sur les deux écrans.
 - Toutes les personnes dont votre construction intègre les briques y sont
   créditées : le panneau de la construction indique **Construit avec** et
   leurs noms, et quand vous publiez, le lien partagé et l’arbre généalogique
-  l’indiquent aussi, sous votre signature. Une copie qu’une autre personne
-  en fait commence sans ces crédits ; la sienne est une nouvelle
-  construction.
+  l’indiquent aussi, sous votre signature. La copie de chaque ami affiche
+  les mêmes crédits. Une copie qu’une autre personne en fait commence sans
+  ces crédits ; la sienne est une nouvelle construction.
+- Chaque nom crédité, ainsi que l’auteur d’une construction partagée, ouvre
+  la page de cette personne : les constructions que son identité a signées
+  et celles où d’autres la créditent. **Mes mondes** liste **Constructions
+  auxquelles vous avez participé**, celles où un ami vous a crédité, chacune
+  ouvrant son Monde une fois publiée.
 - Rejoindre connecte directement vos deux appareils, comme **Se promener ici
   avec moi** : chacun peut voir l’adresse IP de l’autre. Personne ne devient
   un pair mémorisé ni un ami si vous ne le choisissez pas. Il faut un

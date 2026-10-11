@@ -4682,6 +4682,19 @@ export default Object.freeze({
     'builtWith.someone': 'seorang teman',
     'builtWith.credited': '{name} dicantumkan di bangunan ini: setelah diterbitkan, tertulis bahwa bangunan ini dibangun bersama {name}.',
 
+    // A builder's page by identity, and the builds you helped make (ui/views/BuilderView.js, ui/views/RecentWorldsView.js).
+    'builderView.someone': 'Seorang pembangun',
+    'builderView.identity': 'Identitas {id}',
+    'builderView.you': 'Ini Anda.',
+    'builderView.builds': 'Bangunannya',
+    'builderView.noBuilds': 'Belum ada bangunannya yang dikenal di perangkat ini.',
+    'builderView.builtWith': 'Dibangun bersama orang lain',
+    'builderView.noBuiltWith': 'Belum ada bangunan yang mencantumkannya sebagai rekan pembangun di perangkat ini.',
+    'helpedBuilds.title': 'Bangunan yang Anda bantu buat',
+    'helpedBuilds.lead': 'Bangunan tempat seorang teman mencantumkan Anda saat kalian membangunnya bersama.',
+    'helpedBuilds.withAuthor': 'bersama {name}',
+    'helpedBuilds.notPublished': 'Belum diterbitkan',
+
     // The reminder that a quick-start identity has no passphrase (ui/components/ProtectIdentityNote.js).
     'protectIdentityNote.text': 'Kunci Anda disimpan di browser ini tanpa frasa sandi, jadi siapa pun yang memakai browser ini dapat menerbitkan sebagai Anda.',
     'protectIdentityNote.action': 'Tambahkan frasa sandi'

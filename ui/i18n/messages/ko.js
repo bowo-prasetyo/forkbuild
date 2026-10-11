@@ -4685,6 +4685,19 @@ export default Object.freeze({
     'builtWith.someone': '친구',
     'builtWith.credited': '{name} 님이 이 작품의 공동 제작자로 기록되었습니다. 공개하면 {name} 님과 함께 만들었다고 표시됩니다.',
 
+    // A builder's page by identity, and the builds you helped make (ui/views/BuilderView.js, ui/views/RecentWorldsView.js).
+    'builderView.someone': '어느 빌더',
+    'builderView.identity': '아이덴티티 {id}',
+    'builderView.you': '나입니다.',
+    'builderView.builds': '이 사람의 작품',
+    'builderView.noBuilds': '이 기기에서는 아직 이 사람의 작품을 찾지 못했습니다.',
+    'builderView.builtWith': '다른 사람과 함께 만든 작품',
+    'builderView.noBuiltWith': '이 기기에서는 아직 이 사람을 공동 제작자로 기록한 작품을 찾지 못했습니다.',
+    'helpedBuilds.title': '내가 도운 작품',
+    'helpedBuilds.lead': '함께 만들 때 친구가 나를 공동 제작자로 기록한 작품입니다.',
+    'helpedBuilds.withAuthor': '{name} 님과 함께',
+    'helpedBuilds.notPublished': '아직 공개되지 않음',
+
     // The reminder that a quick-start identity has no passphrase (ui/components/ProtectIdentityNote.js).
     'protectIdentityNote.text': '내 키는 암호 문구 없이 이 브라우저에 보관되어 있어, 이 브라우저를 쓰는 누구나 나로서 게시할 수 있습니다.',
     'protectIdentityNote.action': '암호 문구 추가'

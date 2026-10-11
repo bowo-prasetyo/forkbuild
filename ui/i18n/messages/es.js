@@ -4684,6 +4684,19 @@ export default Object.freeze({
     'builtWith.someone': 'un amigo',
     'builtWith.credited': '{name} figura en esta construcción: al publicarla, dirá que se construyó con {name}.',
 
+    // A builder's page by identity, and the builds you helped make (ui/views/BuilderView.js, ui/views/RecentWorldsView.js).
+    'builderView.someone': 'Un constructor',
+    'builderView.identity': 'Identidad {id}',
+    'builderView.you': 'Este es usted.',
+    'builderView.builds': 'Sus construcciones',
+    'builderView.noBuilds': 'Aún no se conoce en este dispositivo ninguna construcción suya.',
+    'builderView.builtWith': 'Construidas con otros',
+    'builderView.noBuiltWith': 'Aún no se conoce en este dispositivo ninguna construcción que lo mencione como coconstructor.',
+    'helpedBuilds.title': 'Construcciones que ayudó a hacer',
+    'helpedBuilds.lead': 'Construcciones en las que un amigo lo mencionó cuando las construyeron juntos.',
+    'helpedBuilds.withAuthor': 'con {name}',
+    'helpedBuilds.notPublished': 'Aún sin publicar',
+
     // The reminder that a quick-start identity has no passphrase (ui/components/ProtectIdentityNote.js).
     'protectIdentityNote.text': 'Su clave está en este navegador sin frase de contraseña, así que cualquiera que use este navegador podría publicar como usted.',
     'protectIdentityNote.action': 'Añadir una frase de contraseña'

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 09b3b731fab3269c -->
+<!-- translation-of: docs/Privacy.md source-hash: 472c2d45139f70da -->
 # Datenschutz
 
 <!-- languages -->
@@ -53,15 +53,19 @@ veröffentlichen, exportieren oder senden es:
 - für jede Woche der Bau-Challenge, die Sie öffnen, die IDs der in den
   Netzwerken gefundenen Beiträge, damit ihre Seite sie vor der Suche wieder
   anzeigt.
-- für jeden Bau, den Sie mit **Hier bauen** begonnen haben, die Welt und
-  die gewählte Stelle, damit er beim Veröffentlichen dort steht. Ihre
-  Stempel auf der Startseite werden aus dem hier Aufgeführten ermittelt und
-  nicht gespeichert.
+- für jeden Bau, den Sie mit **Hier bauen** begonnen haben, die Welt und die
+  gewählte Stelle, damit er beim Veröffentlichen dort steht.
 - für jedes Bauwerk, das mit einer vorgefertigten Struktur oder als Kopie
   eines Bauwerks begann, und für jede eingesetzte vorgefertigte Struktur,
   welche Steine es waren und wo sie standen, damit das Veröffentlichen die
   von Ihnen gesetzten Steine von den Startsteinen unterscheiden kann
   (gezählt wird nur der Bereich, in den sie fallen).
+- für jede Identität die Bauwerke, auf denen ein Freund sie genannt hat,
+  während Sie sie gemeinsam gebaut haben (**Mit mir bauen**): den Titel
+  jedes Bauwerks, Namen und Identität seines Autors und wann, für **Bauten,
+  an denen Sie mitgebaut haben** in Meine Welten und auf Ihrer eigenen
+  Erbauerseite. Ihre Stempel auf der Startseite werden aus dem hier
+  Aufgeführten ermittelt und nicht gespeichert.
 
 Das Löschen der Daten dieser Website im Browser löscht all das, und es gibt
 keine andere Kopie und keinen Weg, sie wiederherzustellen. Sichern Sie es
@@ -134,6 +138,8 @@ eingeschaltet sind, wird mit Ihren Einstellungen gespeichert (siehe
   veröffentlichen, ist diese Nennung Teil seiner signierten
   Veröffentlichung, die jeder lesen kann, der das Bauwerk sieht (die Seite,
   die ein Link **Mit mir bauen** öffnet, sagt das, bevor er beitritt).
+  Solange Sie gemeinsam bauen, folgt die Kopie jedes Beteiligten dieser
+  Liste, sodass jeder Freund sieht, wer sonst noch genannt ist.
 - **Jeder, solange Sie in einer öffentlichen Lobby sind.** Wenn Sie der
   öffentlichen Lobby (**Peers**) oder der Lobby einer Welt (**Lobby** in der
   Weltansicht) beitreten, werden der öffentliche Schlüssel Ihrer Identität

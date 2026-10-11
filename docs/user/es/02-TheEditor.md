@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: a745a00cb02e79f9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c13a0384c503ab2c -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -636,8 +636,14 @@ aparece en ambas pantallas.
 - Todos aquellos cuyos bloques incorpora su construcción figuran en ella: el
   panel de la construcción dice **Construida con** y sus nombres, y cuando
   usted publica, el enlace compartido y el árbol familiar también lo dicen,
-  bajo su firma. Una copia que otra persona haga de ella empieza sin esos
-  créditos; la suya es una construcción nueva.
+  bajo su firma. La copia de cada amigo muestra los mismos créditos. Una
+  copia que otra persona haga de ella empieza sin esos créditos; la suya es
+  una construcción nueva.
+- Cada nombre acreditado, y el autor de una construcción compartida, abre la
+  página de esa persona: las construcciones que firmó su identidad y
+  aquellas en las que otros le dan crédito. **Mis mundos** muestra
+  **Construcciones que ayudó a hacer**, aquellas en las que un amigo le dio
+  crédito a usted, y cada una abre su Mundo una vez publicada.
 - Unirse conecta directamente sus dos dispositivos, como **Pasear aquí
   conmigo**: cada uno puede ver la dirección IP del otro. Nadie pasa a ser
   un par recordado ni un amigo si usted no lo elige. Necesita un servidor de

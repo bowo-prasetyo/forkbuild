@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 09b3b731fab3269c -->
+<!-- translation-of: docs/Privacy.md source-hash: 472c2d45139f70da -->
 # Privacidad
 
 <!-- languages -->
@@ -54,12 +54,17 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
   de las participaciones encontradas en las redes, para que su página las
   vuelva a mostrar antes de buscar.
 - para cada construcción que empezó con **Construir aquí**, el mundo y el
-  lugar que eligió, para que al publicarla quede allí. Sus sellos en Inicio
-  se calculan a partir de lo que ya aparece aquí y no se guardan.
+  lugar que eligió, para que al publicarla quede allí.
 - para cada construcción empezada con una estructura prefabricada o como
   copia de otra, y para cada estructura prefabricada añadida, qué bloques
   eran y dónde estaban, para que al publicar se distingan los bloques que
   usted colocó de los de partida (solo se cuenta en qué rango caen).
+- para cada identidad, las construcciones en las que un amigo le dio crédito
+  mientras las construían juntos (**Construir conmigo**): el título de cada
+  construcción, el nombre y la identidad de su autor, y cuándo, para
+  **Construcciones que ayudó a hacer** en Mis mundos y en su propia página
+  de constructor. Sus sellos en Inicio se calculan a partir de lo que ya
+  aparece aquí y no se guardan.
 
 Borrar los datos de este sitio en el navegador lo elimina todo, y no hay
 ninguna otra copia ni forma de recuperarlo. Haga primero una copia de
@@ -130,7 +135,8 @@ dispositivo» más abajo).
   pública de su identidad, y cuando usted la publica, ese crédito forma
   parte de su publicación firmada, que puede leer cualquiera que vea la
   construcción (la página que abre un enlace **Construir conmigo** lo dice
-  antes de unirse).
+  antes de unirse). Mientras construyen juntos, la copia de cada uno sigue
+  esa lista, así que cada amigo ve quién más figura en los créditos.
 - **Cualquiera, mientras está en una sala pública.** Unirse a la sala
   pública (**Pares**) o a la sala de un Mundo (**Sala** en la Vista del
   mundo) muestra la clave pública de su identidad y el nombre visible que

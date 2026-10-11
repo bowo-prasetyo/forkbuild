@@ -150,6 +150,17 @@ export class DocumentMetadata {
         return true;
     }
 
+    // Takes the credits the build's author keeps (Build with me: a
+    // co-builder's copy of the author's build follows the author's list,
+    // themselves included). True when they changed.
+    adoptBuiltWith(list) {
+        const next = normalizeBuiltWith(list, { authorIdentityId: this._authorIdentityId });
+        if (sameBuiltWith(next, this._builtWith)) return false;
+        this._builtWith = next;
+        this.touch();
+        return true;
+    }
+
     toJSON() {
         return {
             title: this._title,

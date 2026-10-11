@@ -109,6 +109,8 @@ const PREFIXES = [
     ['recovery-info:', BackupEntryGroup.DOCUMENTS],
     // The bricks each build started with (application/document/ReadyMadeBricksStore.js).
     ['ready-made-bricks:', BackupEntryGroup.DOCUMENTS],
+    // The builds each identity helped make (application/buildTogether/HelpedBuildsStore.js).
+    ['helped-builds:', BackupEntryGroup.DOCUMENTS],
 
     ['local-identity-key:', BackupEntryGroup.IDENTITIES],
     ['local-identity-revocation:', BackupEntryGroup.IDENTITIES],

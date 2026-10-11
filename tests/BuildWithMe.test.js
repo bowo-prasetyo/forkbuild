@@ -108,11 +108,14 @@ function makeEditor(label) {
             openDocument: () => documentManager.document,
             appliedOperationIds: () => session.appliedOperationIds(),
             openShared: (document, operationIds) => session.openSharedDocument(document, operationIds),
-            creditBuilder: (builder) => Boolean(documentManager.document && documentManager.document.metadata.creditBuilder(builder))
+            creditBuilder: (builder) => Boolean(documentManager.document && documentManager.document.metadata.creditBuilder(builder)),
+            adoptCredits: (builtWith) => Boolean(documentManager.document && documentManager.document.metadata.adoptBuiltWith(builtWith)),
+            notedHelped: (entry) => helped.push(entry)
         }
     });
+    const helped = [];
     return {
-        label, device, bus, registry, documentManager, session, together, rejected,
+        label, device, bus, registry, documentManager, session, together, rejected, helped,
         id: device.identity.identityId,
         get document() { return documentManager.document; },
         execute(command) { session.commandHistory.execute(command); return command; },
@@ -175,7 +178,11 @@ async function runTests() {
         assert(host.session.commandHistory.getExecutedCommands().some((command) => command.id === anas.id), 'Ana\'s edit is in the host\'s build');
         const credits = host.document.metadata.builtWith;
         assert(credits.length === 1 && credits[0].name === 'Ana' && credits[0].identityId === ana.id, `Ana's edit credits her on the host's build (${JSON.stringify(credits)})`);
-        assert(ana.document.metadata.builtWith.length === 0, 'the host is the author, never credited as a co-builder');
+        await wait();
+        assert(ana.document.metadata.builtWith.map((entry) => entry.name).join() === 'Ana', 'Ana\'s copy follows the host\'s credits, her own included');
+        assert(!ana.document.metadata.builtWith.some((entry) => entry.identityId === host.id), 'the host is the author, never credited as a co-builder');
+        assert(ana.helped.length === 1 && ana.helped[0].documentId === DOC && ana.helped[0].title === 'Harbor' && ana.helped[0].authorName === 'Host' && ana.helped[0].authorIdentityId === host.id,
+            `and her device notes a build she helped make (${JSON.stringify(ana.helped)})`);
         console.log('✓ edits travel both ways, each applied once, and credit who made them');
     }
 
@@ -204,6 +211,9 @@ async function runTests() {
         await wait(30);
         assert(ana.bricks() === count + 2 && host.bricks() === count + 2, `and Ben's reaches Ana (${ana.bricks()})`);
         assert(host.document.metadata.builtWith.map((entry) => entry.name).join() === 'Ana,Ben', 'each friend who built is credited, in the order they did');
+        assert(ana.document.metadata.builtWith.map((entry) => entry.name).join() === 'Ana,Ben' && ben.document.metadata.builtWith.map((entry) => entry.name).join() === 'Ana,Ben',
+            'every copy credits everyone, though each guest\'s edits reach the other under the host\'s name');
+        assert(ben.helped.some((entry) => entry.documentId === DOC), 'Ben\'s device notes it too');
         console.log('✓ co-builders see each other\'s edits through the host');
     }
 
