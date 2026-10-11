@@ -158,6 +158,8 @@ export class DocumentCommandPropagationUseCase {
         commandRegistry,
         resolveDocument,
         isBlocked = null,
+        resolveWorldEditGrant = null,
+        shouldRelay = null,
         replayGuard = new ReplayGuard(),
         protocol = DocumentCommandPropagationUseCase.DEFAULT_PROTOCOL
     } = {}) {
@@ -186,6 +188,17 @@ export class DocumentCommandPropagationUseCase {
         this._commandRegistry = commandRegistry;
         this._resolveDocument = resolveDocument;
         this._isBlocked = typeof isBlocked === 'function' ? isBlocked : null;
+        // (documentId, identityId) => whether that identity may edit that
+        // document though it isn't its owner: Build with me's co-builders
+        // (application/buildTogether/BuildTogetherSession.js). Asked at the
+        // same WorldAuthorizationService gate as ownership, per operation.
+        this._resolveWorldEditGrant = typeof resolveWorldEditGrant === 'function' ? resolveWorldEditGrant : null;
+        // documentId => whether this replica passes on what it accepts for
+        // that document to its other peers. Build with me's host does: each
+        // co-builder is connected to the host alone, so the host is how one
+        // co-builder's edits reach the others. A relayed operation is sent
+        // under this replica's own identity, which is what vouches for it.
+        this._shouldRelay = typeof shouldRelay === 'function' ? shouldRelay : null;
         this._replayGuard = replayGuard;
         this._protocol = protocol;
         this._eventBus = new EventBus();
@@ -244,7 +257,10 @@ export class DocumentCommandPropagationUseCase {
     // exactly: undo()/redo() publish COMMAND_UNDONE/COMMAND_REDONE,
     // neither of which this method ever listens to. Returns an
     // unsubscribe function.
-    attachCommandHistory({ documentId, commandHistory }) {
+    // `isLocal()`, when given, says whether the command just executed is
+    // this replica's own: a collaborator's operation applied through the
+    // same history is never sent on again as if this replica authored it.
+    attachCommandHistory({ documentId, commandHistory, isLocal = null }) {
         if (!documentId || typeof documentId !== 'string') {
             throw new Error('DocumentCommandPropagationUseCase.attachCommandHistory(): documentId is required');
         }
@@ -265,6 +281,9 @@ export class DocumentCommandPropagationUseCase {
             // identity to author the operation there is no authenticated
             // peer to send it to either, so the edit stays local.
             if (!resolveSigningIdentityId(this._identityProvider)) {
+                return;
+            }
+            if (typeof isLocal === 'function' && !isLocal(command)) {
                 return;
             }
             const executed = commandHistory.getExecutedCommands();
@@ -365,7 +384,7 @@ export class DocumentCommandPropagationUseCase {
         if (!document) {
             return { accepted: false, reason: DocumentOperationRejectionReason.UNKNOWN_DOCUMENT };
         }
-        const access = this._resolveAccessFor(social, document);
+        const access = this._resolveAccessFor(social, document, payload.documentId);
         if (access !== WorldAccessLevel.EDIT) {
             return {
                 accepted: false,
@@ -403,12 +422,13 @@ export class DocumentCommandPropagationUseCase {
         };
     }
 
-    _resolveAccessFor(social, document) {
+    _resolveAccessFor(social, document, documentId) {
         const authorization = new WorldAuthorizationService({
             resolveSocialIdentity: () => social,
-            isBlocked: this._isBlocked
+            isBlocked: this._isBlocked,
+            resolveWorldEditGrant: this._resolveWorldEditGrant
         });
-        return authorization.resolveAccess(document);
+        return authorization.resolveAccess(document, documentId);
     }
 
     // 0.9.230 — lets a caller other than this class's own protocol
@@ -465,6 +485,33 @@ export class DocumentCommandPropagationUseCase {
             authorIdentityId: result.authorIdentityId,
             causalPredecessors: result.causalPredecessors
         });
+        if (this._shouldRelay && this._shouldRelay(result.documentId)) {
+            this._relay(payload, meta.connectedPeer);
+        }
+    }
+
+    _relay(payload, fromPeer) {
+        const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
+        if (!authorIdentityId) {
+            return;
+        }
+        let envelope;
+        try {
+            envelope = toDocumentOperationEnvelope({
+                operationId: payload.operationId,
+                documentId: payload.documentId,
+                authorIdentityId,
+                command: payload.command,
+                causalPredecessors: payload.causalPredecessors || []
+            });
+        } catch {
+            return;
+        }
+        for (const peer of this._authenticatedPeers()) {
+            if (peer !== fromPeer) {
+                this._bus.send(peer, this._protocol, envelope);
+            }
+        }
     }
 }
 

@@ -172,7 +172,9 @@ Each pillar has a question the launch counters can answer
   (`/e/second-build`)?
   And do they walk in it with friends: how many "Walk here with me" links
   are made (`/e/walk-link`), and how many friends arrive through them
-  (`/e/walk-joined`)?
+  (`/e/walk-joined`)? And build with them: how many "Build with me" links
+  are made (`/e/build-link`), and how many friends join through them
+  (`/e/build-joined`)?
 
 ### The numbers to reach
 
@@ -190,6 +192,7 @@ number is "too few to say" rather than met or missed.
 | Family tree | Copies made per link opened (`/e/remix-from-link` / `/e/opened-shared-link`) | 10% | 50 opens |
 | Family tree | Remixes per build published (`/e/remix-published`) | 15% | 50 builds |
 | Yours, in a world | Friends arrived per walk link (`/e/walk-joined` / `/e/walk-link`) | 50% | 20 links |
+| Yours, in a world | Friends joined per build link (`/e/build-joined` / `/e/build-link`) | 50% | 20 links |
 | Yours, in a world | Plaza visits per challenge join (`/e/plaza-visit` / `/e/challenge-join`) | 25% | 20 joins |
 
 The placed bricks and the second builds are the gate on new networks

@@ -17,6 +17,15 @@ import { t } from '../i18n/i18n.js';
 // Join is a click rather than automatic: joining connects this device
 // directly to the host's, which shows each of them the other's IP address,
 // so the page says so first.
+//
+// A "Build with me" link (`#/build/<code>`, the route's meta.building) is
+// joined the same way, then opens the Editor, which asks the host for the
+// build (ui/views/editorView/useBuildTogether.js).
+
+// The words that differ when the link is to build together.
+const BUILD_KEYS = new Set([
+    'join.title', 'join.lead', 'join.signInWhy', 'join.signIn', 'join.as', 'join.joined', 'unavailable', 'failure.notFound'
+]);
 export default {
     name: 'WalkTogetherJoinView',
     components: { LoginModal },
@@ -27,11 +36,13 @@ export default {
         const identityUseCase = inject('identityUseCase', null);
         const openLink = inject('openPublicationLink', null);
         const funnel = inject('funnelEventCounter', null);
+        const building = computed(() => route.meta?.building === true);
+        const k = (key, params) => t(`${building.value && BUILD_KEYS.has(key) ? 'buildTogether' : 'walkTogether'}.${key}`, params);
         // Another walk link opened from this page reuses it: everything
         // follows the link's code.
         const code = computed(() => (typeof route.params.code === 'string' ? route.params.code : ''));
         const validCode = computed(() => parseWalkTogetherCode(code.value) !== null);
-        const available = Boolean(walkTogether && walkTogether.available && openLink);
+        const available = Boolean(walkTogether && walkTogether.available && (openLink || route.meta?.building === true));
 
         const user = ref(identityUseCase ? identityUseCase.currentUser() : null);
         const canWalk = ref(Boolean(walkTogether && walkTogether.canWalk()));
@@ -65,12 +76,27 @@ export default {
                 return;
             }
             stop();
-            const next = walkTogether.createGuest(code.value, { openWorld, guestName: user.value ? user.value.displayName : null });
+            const guestName = user.value ? user.value.displayName : null;
+            const next = building.value
+                ? walkTogether.createBuildGuest(code.value, { guestName })
+                : walkTogether.createGuest(code.value, { openWorld, guestName });
             guest.value = next;
             state.value = next.state;
             unsubscribeGuest = next.onChange((changed) => {
                 state.value = changed;
-                if (changed.status === WalkTogetherStatus.JOINED) {
+                if (changed.status !== WalkTogetherStatus.JOINED) return;
+                if (building.value) {
+                    if (funnel && typeof funnel.joinedBuild === 'function') funnel.joinedBuild();
+                    router.replace({
+                        path: '/editor',
+                        query: {
+                            together: changed.documentId,
+                            host: changed.hostIdentityId || '',
+                            ...(changed.hostName ? { hostName: changed.hostName } : {}),
+                            ...(changed.title ? { title: changed.title } : {})
+                        }
+                    });
+                } else {
                     if (funnel) funnel.joinedWalk();
                     router.replace({ path: `/world/${changed.documentId}` });
                 }
@@ -114,30 +140,32 @@ export default {
             case WalkTogetherStatus.JOINING:
                 return state.value.hostName ? t('walkTogether.join.joining', { name: state.value.hostName }) : t('walkTogether.join.joiningSomeone');
             case WalkTogetherStatus.JOINED:
-                return t('walkTogether.join.joined');
+                return k('join.joined');
             default:
                 return t('walkTogether.join.connecting');
             }
         });
 
         return {
-            t, validCode, available, user, canWalk, signingIn, state, busy, failed, canRetry, progressText, join, signedIn,
-            failureText: () => walkTogetherFailureText(state.value && state.value.failure)
+            t, k, building, validCode, available, user, canWalk, signingIn, state, busy, failed, canRetry, progressText, join, signedIn,
+            failureText: () => (building.value && state.value && state.value.failure === WalkTogetherFailure.NOT_FOUND
+                ? k('failure.notFound')
+                : walkTogetherFailureText(state.value && state.value.failure))
         };
     },
     template: `
         <section class="walk-together-join-view">
-            <h1>{{ t('walkTogether.join.title') }}</h1>
-            <p class="walk-together-lead">{{ t('walkTogether.join.lead') }}</p>
+            <h1>{{ k('join.title') }}</h1>
+            <p class="walk-together-lead">{{ k('join.lead') }}</p>
             <p v-if="!validCode" class="walk-together-note walk-together-failure" role="alert">{{ t('walkTogether.failure.invalidCode') }}</p>
-            <p v-else-if="!available" class="walk-together-note">{{ t('walkTogether.unavailable') }}</p>
+            <p v-else-if="!available" class="walk-together-note">{{ k('unavailable') }}</p>
             <template v-else>
                 <template v-if="!canWalk">
-                    <p class="walk-together-note">{{ t('walkTogether.join.signInWhy') }}</p>
-                    <button type="button" class="cta-button walk-together-sign-in" @click="signingIn = true">{{ t('walkTogether.join.signIn') }}</button>
+                    <p class="walk-together-note">{{ k('join.signInWhy') }}</p>
+                    <button type="button" class="cta-button walk-together-sign-in" @click="signingIn = true">{{ k('join.signIn') }}</button>
                 </template>
                 <template v-else-if="!busy">
-                    <p v-if="user && user.displayName" class="walk-together-as">{{ t('walkTogether.join.as', { name: user.displayName }) }}</p>
+                    <p v-if="user && user.displayName" class="walk-together-as">{{ k('join.as', { name: user.displayName }) }}</p>
                     <p class="walk-together-privacy">{{ t('walkTogether.join.privacy') }}</p>
                     <p v-if="failed" class="walk-together-note walk-together-failure" role="alert">{{ failureText() }}</p>
                     <button v-if="!failed || canRetry" type="button" class="cta-button walk-together-join" @click="join">
@@ -147,7 +175,7 @@ export default {
                 <p v-else class="walk-together-progress" role="status">{{ progressText }}</p>
             </template>
             <p class="walk-together-home"><router-link to="/">{{ t('walkTogether.join.home') }}</router-link></p>
-            <LoginModal v-if="signingIn" purpose="walk" @signed-in="signedIn" @close="signingIn = false" />
+            <LoginModal v-if="signingIn" :purpose="building ? 'build' : 'walk'" @signed-in="signedIn" @close="signingIn = false" />
         </section>
     `
 };

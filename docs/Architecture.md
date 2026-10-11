@@ -955,6 +955,34 @@ ui/components/walkTogether/) keep the link while World View is open; the
 guest's page is ui/views/WalkTogetherJoinView.js, which asks for a log in
 and a Join click before connecting.
 
+**Build with me.** The same meeting (WalkTogether's createBuildHost and
+createBuildGuest, `#/build/<code>`, its own protocol) connects a friend to
+the Editor's open build instead of a World. application/buildTogether/
+BuildTogetherSession.js then works over the ordinary connection it leaves:
+the guest's Editor asks for the build (it need not be published), the host
+answers only guests who joined through its link, sending the Document and
+the ids of the operations it already reflects, and the guest opens it with
+EditorSession#openSharedDocument(), which counts those ids as applied so
+the operations that follow apply as they arrive. Edits travel as the
+Editor's ordinary command protocol (DocumentCommandPropagationUseCase): the
+host's replica accepts a guest's operations through `resolveWorldEditGrant`
+(asked per operation at the WorldAuthorizationService gate, a session fact
+that ends with Stop, another build or leaving the Editor; never stored or
+signed), and `shouldRelay` passes each guest's on to the others, since each
+guest is connected to the host alone. A guest accepts the host's because the
+build's `authorIdentityId` is the host's, checked against the connection.
+Presence (pointer and selection) travels on the same protocol and is drawn by
+renderer/CoBuilderRenderer.js. While sharing, EditorSession pauses Undo and
+Redo, which no replica propagates. Making two-way editing work needed three
+fixes in the Editor's replication: a collaborator's operation applied
+through the local history is never broadcast again as this replica's
+(`isLocal`), this replica's own operations are recorded in its causal graph
+(so a collaborator's next operation, which follows one of ours, is ready
+rather than deferred for ever), and the deferral boundary takes a baseline
+of operations a shared copy already reflects. The Editor side is
+ui/views/editorView/useBuildTogether.js and
+ui/components/walkTogether/BuildTogetherStrip.js.
+
 **A visitor's view.** World View opens without its protocol tools: the
 coordinates, Search's Location fields, the Camera · Editing line, Nearby's
 Place Names, Claimed Builds and World Encounters, the Own Publication panel,

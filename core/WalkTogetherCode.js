@@ -28,6 +28,16 @@ export function walkTogetherLink(code, appUrl) {
     return `${String(appUrl).split('#')[0]}#${walkTogetherPath(code)}`;
 }
 
+// A "Build with me" link (application/buildTogether/) carries the same kind
+// of code, on its own route (ui/views/WalkTogetherJoinView.js, building).
+export function buildTogetherPath(code) {
+    return `/build/${code}`;
+}
+
+export function buildTogetherLink(code, appUrl) {
+    return `${String(appUrl).split('#')[0]}#${buildTogetherPath(code)}`;
+}
+
 export function createWalkTogetherCode(identityId) {
     const publicKey = didKeyToPublicKey(identityId);
     if (!publicKey || publicKey.length !== PUBLIC_KEY_LENGTH) {

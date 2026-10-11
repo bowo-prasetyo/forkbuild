@@ -109,6 +109,16 @@ export const LAUNCH_TARGETS = Object.freeze([
         minimum: 20
     }),
     Object.freeze({
+        id: 'build-joined',
+        pillar: 'world',
+        question: 'Does a "Build with me" link bring a friend to build?',
+        kind: 'ratio',
+        numerator: [path(FunnelEvent.BUILD_JOINED)],
+        denominator: [path(FunnelEvent.BUILD_LINK)],
+        target: 0.5,
+        minimum: 20
+    }),
+    Object.freeze({
         id: 'plaza-visits',
         pillar: 'world',
         question: 'Do challenge entrants walk the plaza to see each other\'s builds?',

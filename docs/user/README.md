@@ -111,10 +111,13 @@ ForkBuild gives you embodied collaboration and world discovery:
 
 - **Walk and navigate** — use WASD keys to walk your avatar across
   buildings and terrain, jump, climb, and explore vertical spaces.
-- **Build together** — see other builders' avatars and understand what
-  they're working on through spatial awareness, then use **Edit a
-  Copy** to take something you found into the Editor and build on it
-  yourself.
+- **Build together** — **Build with me** in the Editor makes a link that
+  opens your build in a friend's Editor, so you build it together, live,
+  each seeing the other's bricks appear and where they're pointing (see
+  [The Editor](02-TheEditor.md#build-with-me-building-together-live)). In
+  World View, see other builders' avatars and what they're working on,
+  then use **Edit a Copy** to take something you found into the Editor
+  and build on it yourself.
 - **Discover the world** — use the compass with contextual location
   markers to find nearby structures and terrain features like forests,
   rivers, and grasslands.

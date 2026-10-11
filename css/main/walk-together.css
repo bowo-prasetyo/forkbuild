@@ -86,3 +86,77 @@
 .walk-together-home a:hover {
     text-decoration: underline;
 }
+
+/* Build with me in the Editor (ui/views/editorView/useBuildTogether.js):
+   the sidebar button, and who is building, over the viewport top left, out
+   of the way of the sound control and the phone Tools button (top right)
+   and the first-build guide (bottom left). */
+.editor-build-together {
+    display: block;
+    width: 100%;
+    margin: 0.5rem 0;
+}
+
+.build-together-strip {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 15;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.75rem;
+    max-width: calc(100% - 8rem);
+    box-sizing: border-box;
+    padding: 0.45rem 0.7rem;
+    background: rgba(18, 18, 18, 0.9);
+    border: 1px solid rgba(111, 211, 155, 0.45);
+    border-radius: 10px;
+    color: #e0e0e0;
+    font-size: 0.85rem;
+}
+
+.build-together-strip-title {
+    font-weight: 600;
+}
+
+.build-together-people {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.build-together-person {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.build-together-person--away {
+    color: #9a9a9a;
+}
+
+.build-together-dot {
+    display: inline-block;
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+}
+
+.build-together-undo-note {
+    font-size: 0.78rem;
+    color: #b8b8b8;
+}
+
+.build-together-strip-actions {
+    display: inline-flex;
+    gap: 0.35rem;
+}
+
+.build-together-strip .action-btn {
+    padding: 0.2rem 0.6rem;
+    font-size: 0.8rem;
+}

@@ -75,6 +75,16 @@ export class FunnelEventCounter {
         return this.count(FunnelEvent.WALK_JOINED);
     }
 
+    // A "Build with me" link made (application/buildTogether/).
+    madeBuildLink() {
+        return this.count(FunnelEvent.BUILD_LINK);
+    }
+
+    // A friend joined through one.
+    joinedBuild() {
+        return this.count(FunnelEvent.BUILD_JOINED);
+    }
+
     // Counted once per build opened from a link.
     forked(sourceDocumentId) {
         if (!this._openedFromLink.delete(sourceDocumentId)) return false;

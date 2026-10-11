@@ -4,8 +4,9 @@
 // rendezvous network. The World a guest receives is checked by an injected
 // openWorld, as the app checks a link-only share.
 import {
-    WalkTogether, WalkTogetherFailure, WalkTogetherGuestStatus, WalkTogetherStatus, WALK_TOGETHER_PROTOCOL
+    WalkTogether, WalkTogetherFailure, WalkTogetherGuestStatus, WalkTogetherStatus, WALK_TOGETHER_PROTOCOL, MAX_OFFER_TTL_MS
 } from '../application/walkTogether/WalkTogether.js';
+import { LIMITS as RENDEZVOUS_LIMITS } from '../server/rendezvous-worker/worker.js';
 import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { LocalRendezvousNetwork } from '../peer/LocalRendezvousNetwork.js';
@@ -23,7 +24,7 @@ function signedClaim(publisherId) {
     return { documentId: WORLD_DOCUMENT_ID, title: 'Harbor', signature: 'ab'.repeat(64), publisherIdentity: { id: publisherId } };
 }
 
-function makePerson(network, { ttlMs, joinTimeoutMs, identityProvider } = {}) {
+function makePerson(network, { ttlMs, joinTimeoutMs, maxOfferTtlMs, identityProvider } = {}) {
     const identity = identityProvider || new EphemeralIdentityProvider();
     const peerConnectionProvider = new WebRtcPeerConnectionProvider();
     const peerSessionManager = new PeerSessionManager({ identityProvider: identity, peerConnectionProvider: new WebRtcPeerConnectionProvider() });
@@ -35,7 +36,8 @@ function makePerson(network, { ttlMs, joinTimeoutMs, identityProvider } = {}) {
         answerPollIntervalMs: 50,
         answerWatchIntervalMs: 50,
         ...(ttlMs ? { ttlMs } : {}),
-        ...(joinTimeoutMs ? { joinTimeoutMs } : {})
+        ...(joinTimeoutMs ? { joinTimeoutMs } : {}),
+        ...(maxOfferTtlMs ? { maxOfferTtlMs } : {})
     });
     return {
         identity,
@@ -231,3 +233,65 @@ function authenticatedPeer(person, remoteIdentityId) {
 
 assert(WALK_TOGETHER_PROTOCOL === 'forkbuild:walk-together', 'the protocol is namespaced');
 console.log('Walk together tests passed.');
+
+// Build with me meets the same way, on its own protocol: the welcome names
+// the build, and each side learns the other's identity, which is what the
+// host allows and the guest's Editor asks (BuildWithMe).
+{
+    const network = new LocalRendezvousNetwork();
+    const host = makePerson(network);
+    const sam = makePerson(network);
+    const hosting = host.walk.createBuildHost({ build: { documentId: '  doc-7 ', title: '  The   Mill ' }, hostName: 'Ana' });
+    await hosting.start();
+    assert(hosting.state.status === WalkTogetherStatus.WAITING, `the build link works (${JSON.stringify(hosting.state)})`);
+    const { code } = hosting.state;
+
+    const walkGuest = sam.walk.createGuest(code, { ...opener(), guestName: 'Sam' });
+    walkGuest._walk._joinTimeoutMs = 300;
+    await walkGuest.start();
+    assert(walkGuest.state.status === WalkTogetherStatus.FAILED, 'opened as a walk link, a build link welcomes nobody');
+
+    const guest = sam.walk.createBuildGuest(code, { guestName: 'Sam' });
+    await guest.start();
+    const joined = await waitFor(guest, hasStatus(WalkTogetherStatus.JOINED), 'Sam joins the build');
+    assert(joined.documentId === 'doc-7' && joined.title === 'The Mill' && joined.hostName === 'Ana', 'the guest learns which build, and whose');
+    assert(joined.hostIdentityId === host.identity.identityId, 'and the host\'s identity, proved by the connection');
+    const onHost = await waitFor(hosting, (state) => state.guests.some((entry) => entry.status === WalkTogetherGuestStatus.JOINED), 'the host sees Sam');
+    const samEntry = onHost.guests.find((entry) => entry.status === WalkTogetherGuestStatus.JOINED);
+    assert(samEntry.identityId === sam.identity.identityId && samEntry.name === 'Sam', 'the host learns the guest\'s identity, to allow');
+    assert(authenticatedPeer(host, sam.identity.identityId), 'their peer sessions are connected');
+
+    const noBuild = host.walk.createBuildHost({ build: { documentId: '' }, hostName: 'Ana' });
+    await noBuild.start();
+    assert(noBuild.state.failure === WalkTogetherFailure.NOT_PUBLISHED, 'no build, no link');
+    console.log('✓ a build link connects a friend to the host and names the build');
+    hosting.close();
+    guest.close();
+    for (const person of [host, sam]) person.dispose();
+}
+
+// Rendezvous servers keep a standing offer at most 15 minutes, less than a
+// link lasts: each offer is shorter, and a fresh one replaces it before it
+// ends, so the link keeps working to the end.
+{
+    assert(MAX_OFFER_TTL_MS < RENDEZVOUS_LIMITS.maxPublicationLifetimeMs, 'an offer is shorter than the reference server keeps one');
+    const network = new LocalRendezvousNetwork();
+    const host = makePerson(network, { maxOfferTtlMs: 1500 });
+    const kim = makePerson(network);
+    const hosting = host.walk.createBuildHost({ build: { documentId: 'doc-9', title: 'Pier' }, hostName: 'Ana' });
+    await hosting.start();
+    const key = parseWalkTogetherCode(hosting.state.code).identityId;
+    const [first] = await network.lookup(key);
+    assert(first && new Date(first.expiresAt).getTime() - Date.now() <= 1500, 'each offer lasts no longer than a server keeps one');
+    assert(hosting.state.expiresAt.getTime() - Date.now() > 60000, 'though the link lasts much longer');
+    await new Promise((resolve) => setTimeout(resolve, 2200));
+    const [renewed] = await network.lookup(key);
+    assert(renewed && renewed.publicationId !== first.publicationId, 'a fresh offer replaces it before it ends');
+    const guest = kim.walk.createBuildGuest(hosting.state.code, { guestName: 'Kim' });
+    await guest.start();
+    await waitFor(guest, hasStatus(WalkTogetherStatus.JOINED), 'a friend joins after the first offer would have lapsed');
+    console.log('✓ a link outlasts the rendezvous servers\' limit on one offer');
+    hosting.close();
+    guest.close();
+    for (const person of [host, kim]) person.dispose();
+}

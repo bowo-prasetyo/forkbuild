@@ -41,10 +41,26 @@ import { createWalkTogetherCode, parseWalkTogetherCode } from '../../core/WalkTo
 // each standing offer answers one connection, so the host publishes a new
 // one as each is taken. A World can be walked together only once it is
 // published and signed, since that is what a guest can check.
+//
+// "Build with me" (application/buildTogether/) meets the same way, on its
+// own protocol, but the welcome names the build instead of carrying it: the
+// build itself, which may not be published, comes over the peer connection
+// once the guest's Editor asks for it (BuildTogetherSession.js), where the
+// edits that follow it travel too. Each guest's identity, proved by that
+// connection, is in the host's guest list once they have joined.
 
 export const WALK_TOGETHER_PROTOCOL = 'forkbuild:walk-together';
+export const BUILD_TOGETHER_PROTOCOL = 'forkbuild:build-together';
+const MAX_TITLE_LENGTH = 120;
+const MAX_ID_LENGTH = 200;
 export const WALK_LINK_TTL_MS = 30 * 60 * 1000;
 export const JOIN_TIMEOUT_MS = 45 * 1000;
+// Each standing offer lasts at most this long (rendezvous servers refuse
+// one over 15 minutes: server/rendezvous-worker/worker.js,
+// maxPublicationLifetimeMs); while the link lasts, a fresh one replaces it
+// shortly before it ends.
+export const MAX_OFFER_TTL_MS = 10 * 60 * 1000;
+const OFFER_RENEW_BEFORE_MS = 60 * 1000;
 // How long the invitation each guest receives stays open.
 const GUEST_INVITATION_TTL_MS = 5 * 60 * 1000;
 const SETTLE_BEFORE_CLOSE_MS = 2000;
@@ -100,7 +116,7 @@ export class WalkTogether {
     //   the one-off meeting.
     constructor({
         peerSessionManager, identityProvider, peerConnectionProvider, rendezvousTransports,
-        ttlMs = WALK_LINK_TTL_MS, joinTimeoutMs = JOIN_TIMEOUT_MS, answerPollIntervalMs, answerWatchIntervalMs
+        ttlMs = WALK_LINK_TTL_MS, joinTimeoutMs = JOIN_TIMEOUT_MS, maxOfferTtlMs = MAX_OFFER_TTL_MS, answerPollIntervalMs, answerWatchIntervalMs
     }) {
         if (!peerSessionManager) throw new Error('WalkTogether: peerSessionManager is required');
         if (!identityProvider) throw new Error('WalkTogether: identityProvider is required');
@@ -111,6 +127,7 @@ export class WalkTogether {
         this._rendezvousTransports = Array.from(rendezvousTransports || []);
         this._ttlMs = ttlMs;
         this._joinTimeoutMs = joinTimeoutMs;
+        this._maxOfferTtlMs = maxOfferTtlMs;
         this._pollIntervals = {
             ...(answerPollIntervalMs !== undefined ? { answerPollIntervalMs } : {}),
             ...(answerWatchIntervalMs !== undefined ? { answerWatchIntervalMs } : {})
@@ -132,6 +149,19 @@ export class WalkTogether {
     // hash covers it. `hostName` is shown to guests. Call start().
     createHost({ world, hostName }) {
         return new WalkTogetherHost(this, { world, hostName });
+    }
+
+    // Invites guests to build `build`: { documentId, title }, the build open
+    // in the host's Editor. Call start().
+    createBuildHost({ build, hostName }) {
+        return new WalkTogetherHost(this, { build, hostName });
+    }
+
+    // Joins the host behind a Build with me `code`. Once JOINED, its state
+    // names the build ({ documentId, title }) and the host's identity
+    // (hostIdentityId), whose Editor sends the build. Call start().
+    createBuildGuest(code, { guestName }) {
+        return new WalkTogetherGuest(this, code, { guestName, building: true });
     }
 
     // Joins the host behind `code`. `openWorld({ claim, snapshotText })`
@@ -201,29 +231,37 @@ class WalkSide {
 }
 
 export class WalkTogetherHost extends WalkSide {
-    constructor(walk, { world, hostName }) {
+    constructor(walk, { world = null, build = null, hostName }) {
         super(walk);
         this._world = world;
+        this._build = build;
+        this._protocol = build ? BUILD_TOGETHER_PROTOCOL : WALK_TOGETHER_PROTOCOL;
         this._hostName = cleanText(hostName, MAX_NAME_LENGTH);
         // Per one-off connection: { guest, mainConnectionId }.
         this._arrivals = new Map();
         this._guests = [];
+        this._offerGeneration = 0;
     }
 
     async start() {
         if (!this._walk.available) return this._fail(WalkTogetherFailure.UNREACHABLE);
         if (!this._walk.canWalk()) return this._fail(WalkTogetherFailure.NOT_SIGNED_IN);
-        try {
-            this._worldPayload = await encodeWorld(this._world);
-        } catch {
-            this._worldPayload = null;
+        if (this._build) {
+            this._buildPayload = cleanBuild(this._build);
+            if (!this._buildPayload) return this._fail(WalkTogetherFailure.NOT_PUBLISHED);
+        } else {
+            try {
+                this._worldPayload = await encodeWorld(this._world);
+            } catch {
+                this._worldPayload = null;
+            }
+            if (!this._worldPayload) return this._fail(WalkTogetherFailure.NOT_PUBLISHED);
         }
-        if (!this._worldPayload) return this._fail(WalkTogetherFailure.NOT_PUBLISHED);
         if (this._closed) return;
         const identity = new EphemeralIdentityProvider();
         this._meeting = this._walk._openMeeting(identity);
         const { manager, bus } = this._meeting;
-        bus.subscribe(WALK_TOGETHER_PROTOCOL, (payload, { connectedPeer }) => this._receive(connectedPeer, payload));
+        bus.subscribe(this._protocol, (payload, { connectedPeer }) => this._receive(connectedPeer, payload));
         if (!(await this._publish())) return this._fail(WalkTogetherFailure.UNREACHABLE);
         if (this._closed) return;
         this._expiresAt = new Date(Date.now() + this._walk._ttlMs);
@@ -260,13 +298,33 @@ export class WalkTogetherHost extends WalkSide {
         try {
             const remaining = this._expiresAt ? this._expiresAt.getTime() - Date.now() : this._walk._ttlMs;
             if (remaining <= 0) return false;
-            const published = await this._meeting.manager.publishSelf({ ttlMs: remaining });
-            return Array.isArray(published) ? published.length > 0 : Boolean(published);
+            const ttlMs = Math.min(remaining, this._walk._maxOfferTtlMs);
+            const published = await this._meeting.manager.publishSelf({ ttlMs });
+            const ok = Array.isArray(published) ? published.length > 0 : Boolean(published);
+            if (ok && ttlMs < remaining) this._renewOfferIn(ttlMs);
+            return ok;
         } catch {
             return false;
         } finally {
             this._publishing = false;
         }
+    }
+
+    // Replaces a standing offer nobody has taken before it ends: the old one
+    // is withdrawn first, so a guest never finds an offer about to lapse.
+    _renewOfferIn(ttlMs) {
+        const offer = ++this._offerGeneration;
+        this._later(Math.max(1000, ttlMs - Math.min(OFFER_RENEW_BEFORE_MS, ttlMs / 2)), async () => {
+            if (this._closed || offer !== this._offerGeneration || this._publishing || !this._meeting) return;
+            const { manager } = this._meeting;
+            if (!manager.isPublishing()) return;
+            try {
+                await manager.stopPublishing();
+            } catch {
+                // A server that missed the withdrawal lets the old offer lapse.
+            }
+            if (!this._closed && this._meeting && !this._publishing) await this._publish();
+        });
     }
 
     _update() {
@@ -285,7 +343,7 @@ export class WalkTogetherHost extends WalkSide {
             peer.close();
             return;
         }
-        const guest = { id: peer.connectionId, name: null, status: WalkTogetherGuestStatus.ARRIVING };
+        const guest = { id: peer.connectionId, name: null, identityId: null, status: WalkTogetherGuestStatus.ARRIVING };
         const arrival = { guest, mainConnectionId: null };
         this._arrivals.set(peer, arrival);
         this._guests.push(guest);
@@ -306,8 +364,12 @@ export class WalkTogetherHost extends WalkSide {
             return this._guestFailed(arrival, peer);
         }
         if (this._closed) return;
-        const welcome = JSON.stringify({ hostName: this._hostName, world: this._worldPayload, invitation: invitation.toJSON() });
-        const sent = await sendInParts(bus, peer, WALK_TOGETHER_PROTOCOL, welcome, (part) => ({ type: 'part', ...part }));
+        const welcome = JSON.stringify({
+            hostName: this._hostName,
+            ...(this._build ? { build: this._buildPayload } : { world: this._worldPayload }),
+            invitation: invitation.toJSON()
+        });
+        const sent = await sendInParts(bus, peer, this._protocol, welcome, (part) => ({ type: 'part', ...part }));
         if (!sent) this._guestFailed(arrival, peer);
     }
 
@@ -326,6 +388,7 @@ export class WalkTogetherHost extends WalkSide {
         }
         whenAuthenticated(mainPeer, this._walk._joinTimeoutMs).then((authenticated) => {
             if (authenticated) {
+                arrival.guest.identityId = mainPeer.remoteIdentity?.identityId || null;
                 arrival.guest.status = WalkTogetherGuestStatus.JOINED;
                 this._update();
                 this._later(SETTLE_BEFORE_CLOSE_MS, () => peer.close());
@@ -351,10 +414,12 @@ export class WalkTogetherHost extends WalkSide {
 }
 
 export class WalkTogetherGuest extends WalkSide {
-    constructor(walk, code, { openWorld, guestName }) {
+    constructor(walk, code, { openWorld = null, guestName, building = false }) {
         super(walk);
         this._code = parseWalkTogetherCode(code);
         this._openWorld = openWorld;
+        this._building = building;
+        this._protocol = building ? BUILD_TOGETHER_PROTOCOL : WALK_TOGETHER_PROTOCOL;
         this._guestName = cleanText(guestName, MAX_NAME_LENGTH);
         this._assembler = new PartAssembler({ maxConcurrentTransfers: 1 });
     }
@@ -364,7 +429,7 @@ export class WalkTogetherGuest extends WalkSide {
         if (!this._walk.available) return this._fail(WalkTogetherFailure.UNREACHABLE);
         this._set({ status: WalkTogetherStatus.CONNECTING });
         this._meeting = this._walk._openMeeting(new EphemeralIdentityProvider());
-        this._meeting.bus.subscribe(WALK_TOGETHER_PROTOCOL, (payload, { connectedPeer }) => {
+        this._meeting.bus.subscribe(this._protocol, (payload, { connectedPeer }) => {
             if (connectedPeer === this._peer && payload && payload.type === 'part') this._acceptPart(payload);
         });
         // Two guests can race for one standing offer; the one that loses
@@ -452,18 +517,24 @@ export class WalkTogetherGuest extends WalkSide {
     }
 
     async _join(text) {
-        const welcome = parseWelcome(text);
+        const welcome = parseWelcome(text, { building: this._building });
         if (!welcome) {
             this._reply({ type: 'failed' });
             return this._fail(WalkTogetherFailure.CONNECTION);
         }
-        this._set({ status: WalkTogetherStatus.JOINING, hostName: welcome.hostName });
-        const linkOnly = await decodePublicationLinkPayload(welcome.world);
+        this._set({ status: WalkTogetherStatus.JOINING, hostName: welcome.hostName, ...(welcome.build ? { title: welcome.build.title } : {}) });
         let opened = null;
-        try {
-            opened = linkOnly ? await this._openWorld(linkOnly) : null;
-        } catch {
-            opened = null;
+        if (welcome.build) {
+            // The build comes later, from the host's Editor, over the
+            // connection made here.
+            opened = { opened: true, documentId: welcome.build.documentId };
+        } else {
+            const linkOnly = await decodePublicationLinkPayload(welcome.world);
+            try {
+                opened = linkOnly ? await this._openWorld(linkOnly) : null;
+            } catch {
+                opened = null;
+            }
         }
         if (this._closed) return;
         if (!opened || !opened.opened || !opened.documentId) {
@@ -493,13 +564,18 @@ export class WalkTogetherGuest extends WalkSide {
             accepted.connectedPeer.close();
             return this._fail(WalkTogetherFailure.CONNECTION);
         }
-        this._set({ status: WalkTogetherStatus.JOINED, hostName: welcome.hostName, documentId: opened.documentId });
+        this._set({
+            status: WalkTogetherStatus.JOINED,
+            hostName: welcome.hostName,
+            documentId: opened.documentId,
+            ...(welcome.build ? { title: welcome.build.title, hostIdentityId: accepted.connectedPeer.remoteIdentity?.identityId || null } : {})
+        });
         this._later(SETTLE_BEFORE_CLOSE_MS, () => this.close());
     }
 
     _reply(payload) {
         try {
-            this._meeting.bus.send(this._peer, WALK_TOGETHER_PROTOCOL, payload);
+            this._meeting.bus.send(this._peer, this._protocol, payload);
         } catch {
             // The host learns nothing more; it sees the connection close.
         }
@@ -515,7 +591,7 @@ async function encodeWorld(world) {
     return encodePublicationLinkPayload({ claim, snapshotText: world.snapshotText });
 }
 
-function parseWelcome(text) {
+function parseWelcome(text, { building = false } = {}) {
     let parsed;
     try {
         parsed = JSON.parse(text);
@@ -523,13 +599,22 @@ function parseWelcome(text) {
         return null;
     }
     if (!parsed || typeof parsed !== 'object') return null;
-    if (typeof parsed.world !== 'string' || !parsed.world) return null;
+    const build = building ? cleanBuild(parsed.build) : null;
+    if (building ? !build : (typeof parsed.world !== 'string' || !parsed.world)) return null;
     if (!parsed.invitation || typeof parsed.invitation !== 'object' || Array.isArray(parsed.invitation)) return null;
     return {
         hostName: cleanText(parsed.hostName, MAX_NAME_LENGTH),
-        world: parsed.world,
+        ...(building ? { build } : { world: parsed.world }),
         invitation: parsed.invitation
     };
+}
+
+// { documentId, title } for a build named in a welcome, else null.
+function cleanBuild(build) {
+    if (!build || typeof build !== 'object') return null;
+    const documentId = typeof build.documentId === 'string' ? build.documentId.trim() : '';
+    if (!documentId || documentId.length > MAX_ID_LENGTH) return null;
+    return Object.freeze({ documentId, title: cleanText(build.title, MAX_TITLE_LENGTH) });
 }
 
 // Resolves true once `connectedPeer` is authenticated, false when it

@@ -119,6 +119,19 @@ export class DocumentMetadata {
         this._modified = new Date();
     }
 
+    // A build made on this device before anyone logged in records no owner
+    // at all. The identity that first shares it to build together (Build
+    // with me, ui/views/editorView/useBuildTogether.js) becomes its owner,
+    // as it would have had it been logged in when it began. Never replaces
+    // an owner already recorded. True when it claimed.
+    claimOwner({ author = null, authorIdentityId }) {
+        if (this._authorIdentityId || this._author || !authorIdentityId) return false;
+        this._author = author || null;
+        this._authorIdentityId = authorIdentityId;
+        this.touch();
+        return true;
+    }
+
     toJSON() {
         return {
             title: this._title,

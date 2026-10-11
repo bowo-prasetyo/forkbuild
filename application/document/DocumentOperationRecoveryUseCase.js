@@ -201,7 +201,10 @@ export class DocumentOperationRecoveryUseCase {
     // header for the algorithm) — a second, independent subscriber to the
     // SAME `CommandHistoryEvent.COMMAND_EXECUTED` event, never a change
     // to that method. Returns an unsubscribe function.
-    attachCommandHistory({ documentId, commandHistory }) {
+    // `isLocal(command)`, when given, leaves out collaborators' operations
+    // applied through the same history: only this replica's own are its to
+    // answer for.
+    attachCommandHistory({ documentId, commandHistory, isLocal = null }) {
         if (!documentId || typeof documentId !== 'string') {
             throw new Error('DocumentOperationRecoveryUseCase.attachCommandHistory(): documentId is required');
         }
@@ -211,6 +214,9 @@ export class DocumentOperationRecoveryUseCase {
         const subscription = commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_EXECUTED, ({ command }) => {
             const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
             if (!authorIdentityId) {
+                return;
+            }
+            if (typeof isLocal === 'function' && !isLocal(command)) {
                 return;
             }
             const executed = commandHistory.getExecutedCommands();

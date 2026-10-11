@@ -500,6 +500,7 @@ reads `payload`.
 | `forkbuild:world-spatial-presence` | core/WorldSpatialPresenceAdvertisement.js | where they are looking |
 | `forkbuild:world-discovery` | application/discovery/WorldDiscoveryRuntimeBootstrap.js | World Encounter discovery |
 | `forkbuild:document-sync` | application/document/DocumentCommandPropagationUseCase.js | Editor document commands |
+| `forkbuild:build-together-sync` | application/buildTogether/BuildTogetherSession.js | see "Build links" |
 | `forkbuild:document-operation-recovery` | core/DocumentOperationRecoveryProtocol.js | fetching missed Editor operations |
 | `forkbuild:publication` | application/publication/PublicationPeerExchange.js | Publications |
 | `forkbuild:content` | application/peer/PeerContentProtocol.js | content bytes by hash |
@@ -536,6 +537,40 @@ real identities then authenticate over an ordinary connection
 (`forkbuild-peer-auth/1`). `hostName` and `name` are display text, at most
 60 characters, trusted by nobody. The protocol never runs on a connection
 between real identities.
+
+Each standing offer lasts at most 10 minutes (the reference server keeps
+none over 15); while the link lasts, the host withdraws an offer nobody took
+shortly before it ends and publishes a fresh one.
+
+### Build links
+
+A "Build with me" link carries the same code on its own route,
+`#/build/<code>`, and meets the same way on `forkbuild:build-together`, but
+the welcome names the build instead of carrying it:
+
+    host → guest   joined: { hostName, build: { documentId, title }, invitation }
+
+Once the two real identities are connected, the guest's Editor asks the host
+for the build over that connection, on `forkbuild:build-together-sync`:
+
+    guest → host   { type: 'request', documentId }
+    host → guest   { type: 'part', documentId, transferId, index, count, totalLength, part }
+                   joined: { document, operations }
+                   or { type: 'refused', documentId }
+    both           { type: 'presence', documentId, pointer: {x,y,z}|null, selection: [brickId] }
+                   (the host relays each guest's to the others with who and name)
+    host → guests  { type: 'ended', documentId }
+    guest → host   { type: 'left', documentId }
+
+`document` is the Document's JSON; the guest opens it only when its
+`authorIdentityId` is the identity the connection proved for the host.
+`operations` are the ids of the operations it already reflects, so the
+guest treats those as applied and the operations that follow them on
+`forkbuild:document-sync` apply as they arrive. The host answers only a
+guest who joined through its link, and accepts that guest's operations for
+that one build (asked at the same authorization gate as ownership, per
+operation) until Stop; it relays each guest's operations to the other
+guests under its own identity. Presence is ephemeral and never stored.
 
 ### Announcement Index exchange
 
