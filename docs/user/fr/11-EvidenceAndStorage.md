@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: db53c936c475dddc -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · **Français** · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
+
+> **Avancé.** Ce chapitre n’est pas nécessaire pour construire, partager,
+> remixer ou se promener avec des amis : les
+> [chapitres Jouer](README.md#jouer-à-lire-dans-lordre) s’en chargent. Lisez la suite si vous
+> voulez savoir ce qui tourne en dessous.
 
 > **Surtout expérimental.** Stocker du contenu sur IPFS ou Arweave depuis
 > le bloc **Distribution → Contenu** d’une carte
@@ -389,7 +394,7 @@ minée, avec les trois mêmes résultats que la
 Chaque vérification est ajoutée à **Afficher l’historique des
 confirmations** de cette diffusion. Cette liste est effacée au
 rechargement, mais chaque résultat est aussi conservé dans
-l’[Archive des observations de publication](12-ArchiveAndLeaderboards.md#larchive-des-observations-de-publication).
+l’[Archive des observations de publication](12-ArchiveAndAchievements.md#larchive-des-observations-de-publication).
 
 ### Ce que le parcours ne fait pas
 
@@ -539,7 +544,7 @@ Après une diffusion, **Observer la transaction**, dans la section
 **Observer de nouveau la transaction** ajoute une entrée à **Afficher
 l’historique des observations**. Cette liste est effacée au
 rechargement, mais chaque observation est aussi conservée dans
-l’[Archive des observations de publication](12-ArchiveAndLeaderboards.md#larchive-des-observations-de-publication).
+l’[Archive des observations de publication](12-ArchiveAndAchievements.md#larchive-des-observations-de-publication).
 
 ### Publications d’ancres Base
 
@@ -694,7 +699,7 @@ déclaration signée que d’autres peuvent découvrir : c’est la trace qu’u
 fournisseur a accepté ces octets. Les résultats à l’écran sont effacés au
 rechargement, mais chaque publication réussie et chaque vérification sont
 aussi conservées dans
-l’[Archive des observations de publication](12-ArchiveAndLeaderboards.md#larchive-des-observations-de-publication).
+l’[Archive des observations de publication](12-ArchiveAndAchievements.md#larchive-des-observations-de-publication).
 
 ### Configurer un fournisseur d’épinglage distant
 

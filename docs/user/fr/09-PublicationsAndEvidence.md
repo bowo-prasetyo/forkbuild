@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 60b09baf9d911d48 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: e4bde91bbeb7419e -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · **Français** · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
+
+> **Avancé.** Ce chapitre n’est pas nécessaire pour construire, partager,
+> remixer ou se promener avec des amis : les
+> [chapitres Jouer](README.md#jouer-à-lire-dans-lordre) s’en chargent. Lisez la suite si vous
+> voulez savoir ce qui tourne en dessous.
 
 > **En partie expérimental.** La page Publications est une fonctionnalité
 > ordinaire : sa liste et ses statuts, le retrait des publications
@@ -17,7 +22,7 @@
 > portefeuilles et leurs étapes Bitcoin et Base, Steem, Blurt, l’épinglage
 > IPFS distant et tout le panneau **Outils de portefeuille et d’archives**.
 > Les guides [11](11-EvidenceAndStorage.md) et
-> [12](12-ArchiveAndLeaderboards.md) indiquent lesquelles de leurs sections
+> [12](12-ArchiveAndAchievements.md) indiquent lesquelles de leurs sections
 > sont Expérimentales. Construire, enregistrer, publier dans le Dépôt,
 > forker, les identités et les pairs n’en dépendent pas.
 
@@ -39,7 +44,7 @@ vous pouvez ajouter à une revendication :
 - **[Preuves et stockage](11-EvidenceAndStorage.md)** — preuves externes
   (Bitcoin, Base, Arweave, Steem, Blurt), les parcours de portefeuille, les
   Placements de Snapshot, la publication IPFS, Steem et Blurt.
-- **[Archive et succès](12-ArchiveAndLeaderboards.md)** — l’archive
+- **[Archive et succès](12-ArchiveAndAchievements.md)** — l’archive
   durable des observations, les références et les succès.
 
 ## Deux sens de « publier »
@@ -185,7 +190,7 @@ d’un pair. En bas, le panneau replié **Outils de portefeuille et
 d’archives** contient des outils pour toute la page, en trois onglets :
 **Ancrage sur blockchain**, **Outils d’archive** et **Références et
 succès** (voir les guides [11](11-EvidenceAndStorage.md) et
-[12](12-ArchiveAndLeaderboards.md)). Le lien qui y mène dans
+[12](12-ArchiveAndAchievements.md)). Le lien qui y mène dans
 l’introduction de la page, et dans toute étape qui demande d’abord
 d’observer un portefeuille, l’ouvre pour vous.
 
@@ -231,7 +236,7 @@ En dessous, deux sections repliées :
 | **Snapshot** | Le [Snapshot local](#snapshot-local) : ce que détient cet appareil, et comment l’obtenir. |
 | **Décentralisation et preuves** | La [Décentralisation](#la-décentralisation-en-un-coup-dœil), la [liste des preuves](11-EvidenceAndStorage.md#la-liste-des-preuves), et les étapes de transaction Bitcoin et Base (expérimental). |
 | **Placements et IPFS** | La liste des [Placements de Snapshot](11-EvidenceAndStorage.md#placements-de-snapshot) et la [Publication IPFS](11-EvidenceAndStorage.md#publication-ipfs) (Expérimental). |
-| **Historique** | **Afficher la chronologie multi-domaines** : toutes les observations IPFS, Bitcoin et Base que cet appareil a enregistrées pour cette publication, dans l’ordre chronologique, tirées de l’[Archive des observations](12-ArchiveAndLeaderboards.md), donc conservées d’une visite à l’autre ; ou une note indiquant que rien n’est encore enregistré. |
+| **Historique** | **Afficher la chronologie multi-domaines** : toutes les observations IPFS, Bitcoin et Base que cet appareil a enregistrées pour cette publication, dans l’ordre chronologique, tirées de l’[Archive des observations](12-ArchiveAndAchievements.md), donc conservées d’une visite à l’autre ; ou une note indiquant que rien n’est encore enregistré. |
 
 ### Signification des statuts
 
@@ -520,7 +525,7 @@ vérifications, les tentatives et les écrans en cours ne le sont pas.
 
 Après un rechargement, les résultats d’un parcours ou d’une publication
 IPFS restent visibles dans
-l’[Archive des observations](12-ArchiveAndLeaderboards.md#larchive-des-observations-de-publication),
+l’[Archive des observations](12-ArchiveAndAchievements.md#larchive-des-observations-de-publication),
 le cycle de vie d’un enregistrement, ou (pour Bitcoin) l’Historique des
 preuves d’ancrage Bitcoin. Reconnectez le portefeuille, ou reconfigurez le
 fournisseur d’épinglage, pour continuer.

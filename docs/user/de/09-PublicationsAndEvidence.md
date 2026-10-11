@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 60b09baf9d911d48 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: e4bde91bbeb7419e -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · **Deutsch** · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
+
+> **Erweitert.** Zum Bauen, Teilen, Remixen und Herumlaufen mit Freunden
+> brauchen Sie dieses Kapitel nicht: Das steht in den
+> [Spielen-Kapiteln](README.md#spielen-der-reihe-nach-lesen). Lesen Sie weiter, wenn Sie wissen
+> möchten, was darunter läuft.
 
 > **Teilweise experimentell.** Die Seite Veröffentlichungen ist eine
 > reguläre Funktion: ihre Liste und Status, das Entfernen unbrauchbarer
@@ -18,7 +23,7 @@
 > ihre Schritte für Bitcoin und Base, Steem, Blurt, entferntes IPFS-Pinning
 > sowie den ganzen Bereich **Wallet- & Archivwerkzeuge**. Die
 > Anleitungen [11](11-EvidenceAndStorage.md) und
-> [12](12-ArchiveAndLeaderboards.md) sagen, welche ihrer Abschnitte
+> [12](12-ArchiveAndAchievements.md) sagen, welche ihrer Abschnitte
 > experimentell sind. Bauen, Speichern, Veröffentlichen im Repository,
 > Forken, Identitäten und Peers hängen von nichts davon ab.
 
@@ -40,7 +45,7 @@ Tiefe, die Sie einem Anspruch geben können:
 - **[Nachweise & Speicher](11-EvidenceAndStorage.md)** — externe Nachweise
   (Bitcoin, Base, Arweave, Steem, Blurt), die Wallet-Abläufe,
   Snapshot-Platzierungen, Veröffentlichen auf IPFS, Steem und Blurt.
-- **[Archiv & Erfolge](12-ArchiveAndLeaderboards.md)** — das
+- **[Archiv & Erfolge](12-ArchiveAndAchievements.md)** — das
   dauerhafte Beobachtungsarchiv, Verweise und Erfolge.
 
 ## Zwei Bedeutungen von „veröffentlichen“
@@ -187,7 +192,7 @@ eines Peers. Ganz unten enthält der eingeklappte Bereich **Wallet- &
 Archivwerkzeuge** seitenweite Werkzeuge in drei Reitern:
 **Blockchain-Verankerung**, **Archivwerkzeuge** und **Verweise & Erfolge**
 (siehe Anleitungen [11](11-EvidenceAndStorage.md) und
-[12](12-ArchiveAndLeaderboards.md)). Der Link dorthin in der Einleitung
+[12](12-ArchiveAndAchievements.md)). Der Link dorthin in der Einleitung
 der Seite und in jedem Schritt, der zuerst eine beobachtete Wallet
 braucht, öffnet ihn für Sie.
 
@@ -237,7 +242,7 @@ Darunter zwei eingeklappte Abschnitte:
 | **Snapshot** | [Lokaler Snapshot](#lokaler-snapshot): was dieses Gerät besitzt und wie man es bekommt. |
 | **Dezentralisierung & Nachweise** | [Dezentralisierung](#dezentralisierung-auf-einen-blick), die [Nachweisliste](11-EvidenceAndStorage.md#die-nachweisliste) und die Transaktionsschritte für Bitcoin und Base (experimentell). |
 | **Platzierungen & IPFS** | Die Liste der [Snapshot-Platzierungen](11-EvidenceAndStorage.md#snapshot-platzierungen) und [Veröffentlichen auf IPFS](11-EvidenceAndStorage.md#veröffentlichen-auf-ipfs) (Experimentell). |
-| **Verlauf** | **Domänenübergreifende Zeitleiste zeigen**: jede IPFS-, Bitcoin- und Base-Beobachtung, die dieses Gerät zu dieser Veröffentlichung aufgezeichnet hat, in zeitlicher Reihenfolge, aus dem [Beobachtungsarchiv](12-ArchiveAndLeaderboards.md), daher über Besuche hinweg erhalten; oder ein Hinweis, dass noch nichts aufgezeichnet ist. |
+| **Verlauf** | **Domänenübergreifende Zeitleiste zeigen**: jede IPFS-, Bitcoin- und Base-Beobachtung, die dieses Gerät zu dieser Veröffentlichung aufgezeichnet hat, in zeitlicher Reihenfolge, aus dem [Beobachtungsarchiv](12-ArchiveAndAchievements.md), daher über Besuche hinweg erhalten; oder ein Hinweis, dass noch nichts aufgezeichnet ist. |
 
 ### Bedeutung der Status
 
@@ -526,7 +531,7 @@ Versuche und Ansichten in Arbeit nicht.
 
 Nach einem Neuladen sind die Ergebnisse eines Ablaufs oder einer
 IPFS-Veröffentlichung weiterhin im
-[Beobachtungsarchiv](12-ArchiveAndLeaderboards.md#das-beobachtungsarchiv-der-veröffentlichungen),
+[Beobachtungsarchiv](12-ArchiveAndAchievements.md#das-beobachtungsarchiv-der-veröffentlichungen),
 im Lebenszyklus eines Datensatzes oder (bei Bitcoin) unter Historische
 Nachweise zu Bitcoin-Ankern zu sehen. Verbinden Sie die Wallet erneut oder
 konfigurieren Sie den Pinning-Anbieter neu, um weiterzumachen.

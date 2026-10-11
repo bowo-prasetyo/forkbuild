@@ -4,6 +4,10 @@
 **English** · [Deutsch](de/05-IdentityAndLogin.md) · [Español](es/05-IdentityAndLogin.md) · [Français](fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](id/05-IdentityAndLogin.md) · [日本語](ja/05-IdentityAndLogin.md) · [한국어](ko/05-IdentityAndLogin.md) · [Português (Brasil)](pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
+> **Advanced.** You don't need this chapter to build, share, remix or walk
+> around with friends: the [Play chapters](README.md#play-read-in-order) cover that. Read on
+> when you want to know what runs underneath.
+
 ForkBuild has no passwords and no central account server. **Your identity is
 a cryptographic key pair stored in this browser** — the same key that signs
 everything you build, publish, message, or move. This guide covers creating,

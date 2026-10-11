@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 472fcc2701093e58 -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: ccbd98440904720c -->
 # 12 — Archiv & Erfolge
 
 <!-- languages -->
-[English](../12-ArchiveAndLeaderboards.md) · **Deutsch** · [Español](../es/12-ArchiveAndLeaderboards.md) · [Français](../fr/12-ArchiveAndLeaderboards.md) · [Bahasa Indonesia](../id/12-ArchiveAndLeaderboards.md) · [日本語](../ja/12-ArchiveAndLeaderboards.md) · [한국어](../ko/12-ArchiveAndLeaderboards.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndLeaderboards.md)
+[English](../12-ArchiveAndAchievements.md) · **Deutsch** · [Español](../es/12-ArchiveAndAchievements.md) · [Français](../fr/12-ArchiveAndAchievements.md) · [Bahasa Indonesia](../id/12-ArchiveAndAchievements.md) · [日本語](../ja/12-ArchiveAndAchievements.md) · [한국어](../ko/12-ArchiveAndAchievements.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndAchievements.md)
 <!-- /languages -->
+
+> **Erweitert.** Zum Bauen, Teilen, Remixen und Herumlaufen mit Freunden
+> brauchen Sie dieses Kapitel nicht: Das steht in den
+> [Spielen-Kapiteln](README.md#spielen-der-reihe-nach-lesen). Lesen Sie weiter, wenn Sie wissen
+> möchten, was darunter läuft.
 
 > **Experimentell.** Alles hier kann sich in einer späteren Version ändern
 > oder entfernt werden, und was es erzeugt, wird möglicherweise nicht

@@ -5,6 +5,10 @@
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · **한국어** · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
+> **고급.** 짓고, 공유하고, 리믹스하고, 친구와 돌아다니는 데 이 장은 필요
+> 없어요. 그건 [놀기 장](README.md#놀기-순서대로-읽기)에 있어요. 그 아래에서 무엇이
+> 돌아가는지 궁금할 때 읽어 보세요.
+
 <!-- stale -->
 > **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../05-IdentityAndLogin.md)을 참고하세요.
 <!-- /stale -->

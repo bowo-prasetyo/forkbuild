@@ -1,9 +1,13 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 406b0d8076916c27 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 9d492973ecac26a3 -->
 # 08 — チャットと会話
 
 <!-- languages -->
 [English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · **日本語** · [한국어](../ko/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
+
+> **詳細。** 作る、共有する、リミックスする、友達と歩き回るためにこの章は
+> 必要ありません。それは [遊ぶの章](README.md#遊ぶ順番に読んでください) にあります。下で何が
+> 動いているか知りたくなったら読み進めてください。
 
 ForkBuild の直接メッセージはピアツーピアで、**友達どうしだけ** のもの
 です。先に誰かと友達になる方法は

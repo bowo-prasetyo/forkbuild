@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 7bb42fbd771c7a59 -->
+<!-- translation-of: docs/user/README.md source-hash: 94604632cac7e494 -->
 # Documentación para usuarios de ForkBuild
 
 <!-- languages -->
@@ -75,7 +75,7 @@ para jugar.
   los flujos de billetera de Bitcoin y Base, el pinning remoto de IPFS,
   Steem y Blurt. [Distribuir su trabajo](Distribution.md) muestra cómo
   encaja todo esto.
-- **[Archivo y logros](12-ArchiveAndLeaderboards.md)**:
+- **[Archivo y logros](12-ArchiveAndAchievements.md)**:
   *experimental*. El archivo de observaciones, las referencias entre
   publicaciones y los logros.
 

@@ -5530,3 +5530,25 @@ joyful (a newcomer reads only what playing needs).
 - Not done: a banner on each Advanced chapter saying it is optional, rewriting VISION.md's engine half for
   contributors, and renaming chapter 12 now that it has no leaderboards.
 
+## Advanced chapters marked, VISION for contributors (unnumbered, 2026-10-11)
+
+**The last of the creative-direction review's documentation items.** Pillar served: building feels joyful (a newcomer
+is told which chapters they can skip), with the project's own direction (contributors read the code's purpose in the
+game's terms).
+
+- **Each Advanced chapter says it is optional**: Identity & Login, Peer Connections & Friends, Chat & Conversations,
+  Publications & External Evidence, Network Settings, Evidence & Storage and Archive & Achievements open with a note
+  that building, sharing, remixing and walking with friends don't need them, linking to the Play chapters. In all
+  eight languages; the seven translations of chapter 05, already out of date with its English, stay marked so.
+- **Chapter 12 renamed** from `12-ArchiveAndLeaderboards.md` to `12-ArchiveAndAchievements.md`, matching its title
+  since leaderboards were retired, in every language, with every link to it.
+- **docs/VISION.md's second half** ("How it's built, for contributors") replaces "engine first … Git for 3D models"
+  and the 0.1.46 navigation notes: why a build is a signed document in an open format, the layers and what each holds,
+  what a contributor keeps to (the Editor builds and World View is for looking and meeting, changes through the World
+  as undoable commands, remixes remember their source, infrastructure out of sight, the player's words), and where to
+  start.
+- **Who signs** (docs/Pillars.md, "Networks: readers and writers"): writers sign and pay through the player's own
+  extension or wallet wherever one exists, and ForkBuild holds no key for those networks; IPFS remote pinning, with no
+  extension or wallet, is the exception whose access details ForkBuild holds (address and fields saved, token for the
+  visit).
+

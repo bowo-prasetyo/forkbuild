@@ -1,9 +1,13 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 8340037963101c3f -->
 # 07 — ピア接続と友達
 
 <!-- languages -->
 [English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · **日本語** · [한국어](../ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
+
+> **詳細。** 作る、共有する、リミックスする、友達と歩き回るためにこの章は
+> 必要ありません。それは [遊ぶの章](README.md#遊ぶ順番に読んでください) にあります。下で何が
+> 動いているか知りたくなったら読み進めてください。
 
 ForkBuild は、あなたを他の人のブラウザーに直接つなぎます。友達リストを
 保管する中央サーバーはありません。上部のバーで **ピア** を開くと、

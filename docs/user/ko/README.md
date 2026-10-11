@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 7bb42fbd771c7a59 -->
+<!-- translation-of: docs/user/README.md source-hash: 94604632cac7e494 -->
 # ForkBuild 사용자 문서
 
 <!-- languages -->
@@ -61,7 +61,7 @@
   지갑 절차, 원격 IPFS 피닝, Steem과 Blurt.
   [작품 배포하기](Distribution.md)에서 이것들이 어떻게 맞물리는지
   볼 수 있습니다.
-- **[아카이브와 업적](12-ArchiveAndLeaderboards.md)** —
+- **[아카이브와 업적](12-ArchiveAndAchievements.md)** —
   *실험적*. 관측 아카이브, 게시물 참조, 업적.
 
 ## 참조

@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 09927c2e29d339ff -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 447355b9c6923a6a -->
 # 10 — Configuración de red
 
 <!-- languages -->
 [English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · **Español** · [Français](../fr/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · [日本語](../ja/10-NetworkSettings.md) · [한국어](../ko/10-NetworkSettings.md) · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
+
+> **Avanzado.** No necesita este capítulo para construir, compartir, remezclar
+> o pasear con sus amigos: eso está en los
+> [capítulos de Jugar](README.md#jugar-léalo-en-orden). Siga leyendo si quiere saber qué
+> funciona por debajo.
 
 **Configuración de red**, en la barra superior, enlaza todas las páginas
 que controlan con qué servidores habla ForkBuild. La mayoría de las

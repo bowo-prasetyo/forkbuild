@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: db53c936c475dddc -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · **Español** · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
+
+> **Avanzado.** No necesita este capítulo para construir, compartir, remezclar
+> o pasear con sus amigos: eso está en los
+> [capítulos de Jugar](README.md#jugar-léalo-en-orden). Siga leyendo si quiere saber qué
+> funciona por debajo.
 
 > **En su mayor parte experimental.** Guardar contenido en IPFS o Arweave
 > desde el bloque **Distribución → Contenido** de una tarjeta
@@ -384,7 +389,7 @@ con los mismos tres resultados que la
 Cada comprobación se agrega al **Mostrar historial de confirmaciones** de
 esta transmisión. Esa lista se borra al recargar, pero cada resultado
 también se conserva en el
-[Archivo de observaciones de publicaciones](12-ArchiveAndLeaderboards.md#el-archivo-de-observaciones-de-publicaciones).
+[Archivo de observaciones de publicaciones](12-ArchiveAndAchievements.md#el-archivo-de-observaciones-de-publicaciones).
 
 ### Lo que no hace el flujo
 
@@ -532,7 +537,7 @@ Después de una transmisión, **Observar transacción**, en la sección
 **Observar la transacción de nuevo** agrega al **Mostrar historial de
 observaciones**. Esa lista se borra al recargar, pero cada observación
 también se conserva en el
-[Archivo de observaciones de publicaciones](12-ArchiveAndLeaderboards.md#el-archivo-de-observaciones-de-publicaciones).
+[Archivo de observaciones de publicaciones](12-ArchiveAndAchievements.md#el-archivo-de-observaciones-de-publicaciones).
 
 ### Publicaciones de anclaje en Base
 
@@ -683,7 +688,7 @@ ubicación, el resultado no es una declaración firmada que otros puedan
 descubrir: es un registro de que un proveedor aceptó estos bytes. Los
 resultados en pantalla se borran al recargar, pero cada publicación
 correcta y cada verificación también se conservan en el
-[Archivo de observaciones de publicaciones](12-ArchiveAndLeaderboards.md#el-archivo-de-observaciones-de-publicaciones).
+[Archivo de observaciones de publicaciones](12-ArchiveAndAchievements.md#el-archivo-de-observaciones-de-publicaciones).
 
 ### Configurar un proveedor de pinning remoto
 

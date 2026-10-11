@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 7bb42fbd771c7a59 -->
+<!-- translation-of: docs/user/README.md source-hash: 94604632cac7e494 -->
 # Documentação do ForkBuild para usuários
 
 <!-- languages -->
@@ -71,7 +71,7 @@ ferramentas experimentais. Você não precisa de nada disso para jogar.
   fluxos de carteira do Bitcoin e da Base, pinning remoto no IPFS, o Steem
   e o Blurt. [Distribuindo seu trabalho](Distribution.md) mostra como tudo
   isso se encaixa.
-- **[Arquivo e conquistas](12-ArchiveAndLeaderboards.md)** —
+- **[Arquivo e conquistas](12-ArchiveAndAchievements.md)** —
   *experimental*. O arquivo de observações, referências entre publicações
   e conquistas.
 

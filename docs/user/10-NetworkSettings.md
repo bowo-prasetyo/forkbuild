@@ -4,6 +4,10 @@
 **English** · [Deutsch](de/10-NetworkSettings.md) · [Español](es/10-NetworkSettings.md) · [Français](fr/10-NetworkSettings.md) · [Bahasa Indonesia](id/10-NetworkSettings.md) · [日本語](ja/10-NetworkSettings.md) · [한국어](ko/10-NetworkSettings.md) · [Português (Brasil)](pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
 
+> **Advanced.** You don't need this chapter to build, share, remix or walk
+> around with friends: the [Play chapters](README.md#play-read-in-order) cover that. Read on
+> when you want to know what runs underneath.
+
 **Network Settings**, in the top bar, links every page that controls which
 servers ForkBuild talks to. Most people never need to change anything
 here: the defaults work out of the box. Come here when a server is down,

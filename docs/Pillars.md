@@ -114,6 +114,16 @@ settings page; a device that already had an account saved to post as starts
 with it on. Their writers share their readers' runtime, so the switch decides
 what is offered and whether anything is posted, rather than what is loaded.
 
+**Who signs.** A writer signs and pays through the player's own browser
+extension or wallet whenever one exists for its network (a Nostr extension,
+an Arweave wallet, Steem or Blurt Keychain, a Bitcoin or Base wallet), and
+ForkBuild never holds a key for those networks itself (decided 2026-10-11).
+The one exception is IPFS remote pinning: no extension or wallet exists for
+it, so ForkBuild holds its access details. The service's address and fields
+are saved in Network Settings, and its token is kept only for the visit, as
+docs/principles/publication.md's "A Configured Credential Lives Only As Long
+As The Capability It Grants" requires.
+
 ## Words
 
 Use the player's words wherever a player reads them, in new text and when
@@ -243,4 +253,6 @@ lacks, with Build there ("Residents wonder what's missing"), and 26 challenge
 themes with example remix families for empty shelves ("Half a year of
 themes, and families to start from"), and numbers for the counters with the
 user guide split into Play and Advanced ("Numbers to reach, and a guide in
-two parts").
+two parts"), with each Advanced chapter marked optional, VISION.md's second
+half rewritten for contributors and chapter 12 renamed ("Advanced chapters
+marked, VISION for contributors").

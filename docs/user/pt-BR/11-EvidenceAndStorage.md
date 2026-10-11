@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: db53c936c475dddc -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · **Português (Brasil)**
 <!-- /languages -->
+
+> **Avançado.** Você não precisa deste capítulo para construir, compartilhar,
+> remixar ou passear com amigos: isso está nos
+> [capítulos de Jogar](README.md#jogar-leia-em-ordem). Continue lendo se quiser saber o que
+> roda por baixo.
 
 > **Em grande parte experimental.** Guardar conteúdo no IPFS ou no Arweave
 > pelo bloco **Distribuição → Conteúdo** de um cartão
@@ -373,7 +378,7 @@ minerada, com os mesmos três resultados de
 Cada verificação entra no **Mostrar histórico de confirmações** desta
 transmissão. Essa lista é apagada ao recarregar, mas todo resultado também
 fica guardado no
-[Arquivo de observações de publicações](12-ArchiveAndLeaderboards.md#o-arquivo-de-observações-de-publicações).
+[Arquivo de observações de publicações](12-ArchiveAndAchievements.md#o-arquivo-de-observações-de-publicações).
 
 ### O que o fluxo não faz
 
@@ -517,7 +522,7 @@ transação na Base**, confere se ela está num bloco:
 **Observar a transação de novo** acrescenta ao **Mostrar histórico de
 observações**. Essa lista é apagada ao recarregar, mas toda observação
 também fica guardada no
-[Arquivo de observações de publicações](12-ArchiveAndLeaderboards.md#o-arquivo-de-observações-de-publicações).
+[Arquivo de observações de publicações](12-ArchiveAndAchievements.md#o-arquivo-de-observações-de-publicações).
 
 ### Publicações de âncora na Base
 
@@ -664,7 +669,7 @@ remoto só pode publicar.) Ao contrário de um posicionamento, o resultado não
 um provedor aceitou estes bytes. Os resultados na tela são apagados ao
 recarregar, mas toda publicação bem-sucedida e toda verificação também ficam
 guardadas no
-[Arquivo de observações de publicações](12-ArchiveAndLeaderboards.md#o-arquivo-de-observações-de-publicações).
+[Arquivo de observações de publicações](12-ArchiveAndAchievements.md#o-arquivo-de-observações-de-publicações).
 
 ### Configurando um provedor de pinning remoto
 

@@ -5,6 +5,10 @@
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · **日本語** · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
+> **詳細。** 作る、共有する、リミックスする、友達と歩き回るためにこの章は
+> 必要ありません。それは [遊ぶの章](README.md#遊ぶ順番に読んでください) にあります。下で何が
+> 動いているか知りたくなったら読み進めてください。
+
 <!-- stale -->
 > **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../05-IdentityAndLogin.md)も参照してください。
 <!-- /stale -->

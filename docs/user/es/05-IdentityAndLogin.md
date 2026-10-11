@@ -5,6 +5,11 @@
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · **Español** · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
+> **Avanzado.** No necesita este capítulo para construir, compartir, remezclar
+> o pasear con sus amigos: eso está en los
+> [capítulos de Jugar](README.md#jugar-léalo-en-orden). Siga leyendo si quiere saber qué
+> funciona por debajo.
+
 <!-- stale -->
 > **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../05-IdentityAndLogin.md).
 <!-- /stale -->

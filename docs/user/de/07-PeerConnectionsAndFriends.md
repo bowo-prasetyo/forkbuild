@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 8340037963101c3f -->
 # 07 — Peer-Verbindungen & Freunde
 
 <!-- languages -->
 [English](../07-PeerConnectionsAndFriends.md) · **Deutsch** · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · [日本語](../ja/07-PeerConnectionsAndFriends.md) · [한국어](../ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
+
+> **Erweitert.** Zum Bauen, Teilen, Remixen und Herumlaufen mit Freunden
+> brauchen Sie dieses Kapitel nicht: Das steht in den
+> [Spielen-Kapiteln](README.md#spielen-der-reihe-nach-lesen). Lesen Sie weiter, wenn Sie wissen
+> möchten, was darunter läuft.
 
 ForkBuild verbindet Sie direkt mit den Browsern anderer Menschen — es gibt
 keinen zentralen Server mit einer Freundesliste. Öffnen Sie in der oberen

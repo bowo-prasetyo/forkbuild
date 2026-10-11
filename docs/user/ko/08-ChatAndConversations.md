@@ -1,9 +1,13 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 406b0d8076916c27 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 9d492973ecac26a3 -->
 # 08 — 채팅과 대화
 
 <!-- languages -->
 [English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · **한국어** · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
+
+> **고급.** 짓고, 공유하고, 리믹스하고, 친구와 돌아다니는 데 이 장은 필요
+> 없어요. 그건 [놀기 장](README.md#놀기-순서대로-읽기)에 있어요. 그 아래에서 무엇이
+> 돌아가는지 궁금할 때 읽어 보세요.
 
 <!-- languages -->
 <!-- /languages -->

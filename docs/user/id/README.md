@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 7bb42fbd771c7a59 -->
+<!-- translation-of: docs/user/README.md source-hash: 94604632cac7e494 -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
@@ -70,7 +70,7 @@ eksperimental. Anda tidak memerlukan semua ini untuk bermain.
   Base, pinning IPFS jarak jauh, Steem, dan Blurt.
   [Mendistribusikan Karya Anda](Distribution.md) menunjukkan bagaimana
   semuanya saling terkait.
-- **[Arsip & Pencapaian](12-ArchiveAndLeaderboards.md)** — *eksperimental*. Arsip pengamatan, referensi publikasi,
+- **[Arsip & Pencapaian](12-ArchiveAndAchievements.md)** — *eksperimental*. Arsip pengamatan, referensi publikasi,
   dan pencapaian.
 
 ## Referensi

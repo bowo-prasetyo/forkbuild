@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 7bb42fbd771c7a59 -->
+<!-- translation-of: docs/user/README.md source-hash: 94604632cac7e494 -->
 # ForkBuild ユーザードキュメント
 
 <!-- languages -->
@@ -59,7 +59,7 @@
   ピン留め、Steem、Blurt。
   これらの関係は [作品を配信する](Distribution.md)で
   説明しています。
-- **[アーカイブと実績](12-ArchiveAndLeaderboards.md)**
+- **[アーカイブと実績](12-ArchiveAndAchievements.md)**
   — *試験的*。観測アーカイブ、公開物の参照、実績。
 
 ## リファレンス

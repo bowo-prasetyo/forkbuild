@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 8340037963101c3f -->
 # 07 — Conexões entre pares e amigos
 
 <!-- languages -->
 [English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · [日本語](../ja/07-PeerConnectionsAndFriends.md) · [한국어](../ko/07-PeerConnectionsAndFriends.md) · **Português (Brasil)**
 <!-- /languages -->
+
+> **Avançado.** Você não precisa deste capítulo para construir, compartilhar,
+> remixar ou passear com amigos: isso está nos
+> [capítulos de Jogar](README.md#jogar-leia-em-ordem). Continue lendo se quiser saber o que
+> roda por baixo.
 
 O ForkBuild conecta você diretamente aos navegadores de outras pessoas — não
 há um servidor central guardando uma lista de amigos. Abra **Pares** na barra

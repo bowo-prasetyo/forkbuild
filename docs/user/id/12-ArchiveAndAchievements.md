@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 472fcc2701093e58 -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: ccbd98440904720c -->
 # 12 — Arsip & Pencapaian
 
 <!-- languages -->
-[English](../12-ArchiveAndLeaderboards.md) · [Deutsch](../de/12-ArchiveAndLeaderboards.md) · [Español](../es/12-ArchiveAndLeaderboards.md) · [Français](../fr/12-ArchiveAndLeaderboards.md) · **Bahasa Indonesia** · [日本語](../ja/12-ArchiveAndLeaderboards.md) · [한국어](../ko/12-ArchiveAndLeaderboards.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndLeaderboards.md)
+[English](../12-ArchiveAndAchievements.md) · [Deutsch](../de/12-ArchiveAndAchievements.md) · [Español](../es/12-ArchiveAndAchievements.md) · [Français](../fr/12-ArchiveAndAchievements.md) · **Bahasa Indonesia** · [日本語](../ja/12-ArchiveAndAchievements.md) · [한국어](../ko/12-ArchiveAndAchievements.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndAchievements.md)
 <!-- /languages -->
+
+> **Lanjutan.** Anda tidak memerlukan bab ini untuk membangun, berbagi,
+> meremiks, atau berjalan-jalan bersama teman: semua itu ada di
+> [bab Bermain](README.md#bermain-baca-berurutan). Lanjutkan membaca bila Anda ingin tahu apa
+> yang berjalan di baliknya.
 
 > **Eksperimental.** Semua yang ada di sini dapat berubah atau dihapus di
 > versi berikutnya, dan apa yang dihasilkannya mungkin tidak terbawa. Di

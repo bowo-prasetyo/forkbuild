@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 7bb42fbd771c7a59 -->
+<!-- translation-of: docs/user/README.md source-hash: 94604632cac7e494 -->
 # Documentation utilisateur de ForkBuild
 
 <!-- languages -->
@@ -76,7 +76,7 @@ pour jouer.
   portefeuille Bitcoin et Base, l’épinglage IPFS distant, Steem et Blurt.
   [Distribuer votre travail](Distribution.md) montre comment tout cela
   s’articule.
-- **[Archive et succès](12-ArchiveAndLeaderboards.md)** —
+- **[Archive et succès](12-ArchiveAndAchievements.md)** —
   *expérimental*. L’archive des observations, les références entre
   publications et les succès.
 

@@ -5,6 +5,11 @@
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · **Bahasa Indonesia** · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
+> **Lanjutan.** Anda tidak memerlukan bab ini untuk membangun, berbagi,
+> meremiks, atau berjalan-jalan bersama teman: semua itu ada di
+> [bab Bermain](README.md#bermain-baca-berurutan). Lanjutkan membaca bila Anda ingin tahu apa
+> yang berjalan di baliknya.
+
 <!-- stale -->
 > **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../05-IdentityAndLogin.md).
 <!-- /stale -->

@@ -4,6 +4,10 @@
 **English** · [Deutsch](de/08-ChatAndConversations.md) · [Español](es/08-ChatAndConversations.md) · [Français](fr/08-ChatAndConversations.md) · [Bahasa Indonesia](id/08-ChatAndConversations.md) · [日本語](ja/08-ChatAndConversations.md) · [한국어](ko/08-ChatAndConversations.md) · [Português (Brasil)](pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
 
+> **Advanced.** You don't need this chapter to build, share, remix or walk
+> around with friends: the [Play chapters](README.md#play-read-in-order) cover that. Read on
+> when you want to know what runs underneath.
+
 Direct messaging in ForkBuild is peer-to-peer and **friends-only** — see
 [Peer Connections & Friends](07-PeerConnectionsAndFriends.md) for how to
 become friends with someone first.

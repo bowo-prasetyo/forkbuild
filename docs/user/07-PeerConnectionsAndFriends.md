@@ -4,6 +4,10 @@
 **English** · [Deutsch](de/07-PeerConnectionsAndFriends.md) · [Español](es/07-PeerConnectionsAndFriends.md) · [Français](fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](id/07-PeerConnectionsAndFriends.md) · [日本語](ja/07-PeerConnectionsAndFriends.md) · [한국어](ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
+> **Advanced.** You don't need this chapter to build, share, remix or walk
+> around with friends: the [Play chapters](README.md#play-read-in-order) cover that. Read on
+> when you want to know what runs underneath.
+
 ForkBuild connects you directly to other people's browsers — there's no
 central server holding a friends list. Open **Peers** in the top bar to
 manage who you're connected, known, and friends with.

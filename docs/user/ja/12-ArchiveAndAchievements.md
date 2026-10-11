@@ -1,9 +1,13 @@
-<!-- translation-of: docs/user/12-ArchiveAndLeaderboards.md source-hash: 472fcc2701093e58 -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: ccbd98440904720c -->
 # 12 — アーカイブと実績
 
 <!-- languages -->
-[English](../12-ArchiveAndLeaderboards.md) · [Deutsch](../de/12-ArchiveAndLeaderboards.md) · [Español](../es/12-ArchiveAndLeaderboards.md) · [Français](../fr/12-ArchiveAndLeaderboards.md) · [Bahasa Indonesia](../id/12-ArchiveAndLeaderboards.md) · **日本語** · [한국어](../ko/12-ArchiveAndLeaderboards.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndLeaderboards.md)
+[English](../12-ArchiveAndAchievements.md) · [Deutsch](../de/12-ArchiveAndAchievements.md) · [Español](../es/12-ArchiveAndAchievements.md) · [Français](../fr/12-ArchiveAndAchievements.md) · [Bahasa Indonesia](../id/12-ArchiveAndAchievements.md) · **日本語** · [한국어](../ko/12-ArchiveAndAchievements.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndAchievements.md)
 <!-- /languages -->
+
+> **詳細。** 作る、共有する、リミックスする、友達と歩き回るためにこの章は
+> 必要ありません。それは [遊ぶの章](README.md#遊ぶ順番に読んでください) にあります。下で何が
+> 動いているか知りたくなったら読み進めてください。
 
 > **実験的です。** ここにあるものはすべて、今後のバージョンで変わったり
 > 削除されたりすることがあり、作ったものが引き継がれないこともあります。

@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 406b0d8076916c27 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 9d492973ecac26a3 -->
 # 08 — Conversas
 
 <!-- languages -->
 [English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · [한국어](../ko/08-ChatAndConversations.md) · **Português (Brasil)**
 <!-- /languages -->
+
+> **Avançado.** Você não precisa deste capítulo para construir, compartilhar,
+> remixar ou passear com amigos: isso está nos
+> [capítulos de Jogar](README.md#jogar-leia-em-ordem). Continue lendo se quiser saber o que
+> roda por baixo.
 
 As mensagens diretas no ForkBuild são entre pares e **só entre amigos** —
 veja [Conexões entre pares e amigos](07-PeerConnectionsAndFriends.md) para

@@ -5,6 +5,11 @@
 [English](../05-IdentityAndLogin.md) · **Deutsch** · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
+> **Erweitert.** Zum Bauen, Teilen, Remixen und Herumlaufen mit Freunden
+> brauchen Sie dieses Kapitel nicht: Das steht in den
+> [Spielen-Kapiteln](README.md#spielen-der-reihe-nach-lesen). Lesen Sie weiter, wenn Sie wissen
+> möchten, was darunter läuft.
+
 <!-- stale -->
 > **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../05-IdentityAndLogin.md).
 <!-- /stale -->
