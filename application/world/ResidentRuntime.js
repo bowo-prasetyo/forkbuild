@@ -90,10 +90,10 @@ export class ResidentRuntime {
     }
 
     // Where `entry` (from residents()) is at `timeSeconds`: residentPoseAt()'s
-    // pose, plus the resident's id and World.
+    // pose, plus the resident's id, World and home (shared space).
     poseOf(entry, timeSeconds) {
         const pose = residentPoseAt({ id: entry.id, home: entry.home }, timeSeconds, { isClear: this._isClearFor(entry) });
-        return { id: entry.id, worldId: entry.worldId, documentId: entry.documentId, ...pose };
+        return { id: entry.id, worldId: entry.worldId, documentId: entry.documentId, home: { ...entry.home }, ...pose };
     }
 
     // The poses of residents within `radius` of `center` right now, nearest

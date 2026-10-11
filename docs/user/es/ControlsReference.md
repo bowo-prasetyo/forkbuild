@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: ac00224cc1d8ef6a -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: d53bccd516685088 -->
 # Referencia de controles
 
 <!-- languages -->
@@ -143,6 +143,7 @@ mismo sin él.
 | `R` (junto a un habitante) | Quitarlo de su Mundo | Aparece el aviso **[R] Quitar habitante**; deshaga con `Ctrl/Cmd+Z` |
 | `T` (junto a un habitante) | Hablar: le cuenta qué hay alrededor | Se muestra en un globo sobre su cabeza; háblele otra vez para que diga otra cosa. El botón **Hablar** de la sección Avatar y del panel táctil hace lo mismo |
 | Botón **Enfocar: …** (mientras se ven las palabras de un habitante) | Mirar lo que mencionó | Solo la cámara; su avatar se queda donde está. Se ofrece para hitos, estructuras, construcciones y vehículos |
+| Botón **Construir … allí** (mientras un residente piensa en voz alta) | Empezar una construcción suya en el lugar al que se refería | Abre el Editor con una estructura de Aldea ya hecha para cambiar; al publicarla, queda allí |
 
 Su inventario, los vehículos colocados y los animales soltados se guardan
 en este dispositivo y se conservan al recargar: consulte

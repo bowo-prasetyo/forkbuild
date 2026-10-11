@@ -26,13 +26,18 @@ export function useBuildPlot({ documentManager, documentVersion, router, feedbac
     });
     const buildPlotPublished = computed(() => Boolean(buildPlot.value && publishedHere.value.has(buildPlot.value.buildDocumentId)));
 
-    // Starts an empty build for the plot a Build here link names. False when
-    // the link names none.
-    function startBuildPlot(query, editorSession) {
+    // Starts a build for the plot a Build here link names: empty, or a copy
+    // of `structure` when the link names a ready-made one (a resident's Build
+    // there, core/ResidentWish.js). False when the link names no plot.
+    function startBuildPlot(query, editorSession, { structure = null } = {}) {
         const worldDocumentId = typeof query?.plot === 'string' ? query.plot : null;
         const position = plotPositionFromQuery(query);
         if (!store || !worldDocumentId || !position) return false;
-        editorSession.newDocument();
+        if (structure && editorSession.forkStructure(structure)) {
+            editorSession.frameDocument();
+        } else {
+            editorSession.newDocument();
+        }
         const document = documentManager.document;
         if (!document) return false;
         const worldTitle = typeof query.title === 'string' ? query.title : '';

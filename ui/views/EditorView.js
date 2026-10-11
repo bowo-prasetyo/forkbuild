@@ -1132,8 +1132,10 @@ export default {
                 }
                 router.replace({ path: '/editor' });
             } else if (route.query.plot) {
-                // Build here from World View: a new build for that spot.
-                if (!startBuildPlot(route.query, editorSession)) feedback.show(t('buildPlot.invalid'));
+                // Build here from World View: a new build for that spot, started from
+                // a ready-made structure when the link names one (a resident's Build there).
+                const structure = typeof route.query.start === 'string' ? findStarterStructure(structureRegistry, route.query.start) : null;
+                if (!startBuildPlot(route.query, editorSession, { structure })) feedback.show(t('buildPlot.invalid'));
                 router.replace({ path: '/editor' });
             } else if (route.query.start) {
                 // A ready-made build from Home: a built-in structure, opened as a new

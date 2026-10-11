@@ -2015,6 +2015,7 @@ export default Object.freeze({
     // World View: residentSpeechActions, continued.
     'residentSpeechActions.focusHint': '{target}を見るようにカメラを動かします（アバターはここに残ります）',
     'residentSpeechActions.focus': 'フォーカス: {target}',
+    'residentSpeechActions.buildHint': 'その場所のための自分の新しい作品をエディターで開きます。変更できる既製の作品から始まります。',
 
     // Fallback errors when an operation fails without saying why.
     'failure.commentaryCreated': 'コメントを作成できませんでした。',
@@ -2064,6 +2065,20 @@ export default Object.freeze({
     // {title} or {name} is someone else's text, shown as written; {where} is
     // one of the resident.where.* messages, {distance} a resident.distance.* one.
     'resident.quiet': 'この辺りは静かですね。近くに何があるかは知りません。',
+    'resident.wish.bridge': '{where}の川には、まだだれも橋を架けたことがありません。',
+    'resident.wish.dock': '{where}の水辺には、これまで桟橋がありませんでした。',
+    'resident.wish.lookout': '{where}の高台に見張り塔があれば、遠くまで見渡せるでしょう。まだ一度も建ったことがありません。',
+    'resident.wish.well': '{where}の空き地には、これまで井戸がありませんでした。',
+    'resident.wish.pavilion': '{where}の空き地には、日陰で座れる場所がありません。',
+    'resident.wish.marketStall': '{where}の空き地に屋台を出した人は、まだいません。',
+    'resident.wish.cottage': '{where}の空き地は、小さな家を建てるのに静かでいい場所です。まだだれも住んでいません。',
+    'resident.wishBuild.bridge': 'そこに橋を建てる',
+    'resident.wishBuild.dock': 'そこに桟橋を建てる',
+    'resident.wishBuild.lookout': 'そこに見張り塔を建てる',
+    'resident.wishBuild.well': 'そこに井戸を建てる',
+    'resident.wishBuild.pavilion': 'そこにあずまやを建てる',
+    'resident.wishBuild.marketStall': 'そこに屋台を建てる',
+    'resident.wishBuild.cottage': 'そこに小さな家を建てる',
     'resident.distance.fewSteps': 'ほんの数歩',
     'resident.distance.meters': '約{meters} m',
     'resident.distance.kilometers': '約{kilometers} km',

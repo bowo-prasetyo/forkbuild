@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: ac00224cc1d8ef6a -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: d53bccd516685088 -->
 # Référence des commandes
 
 <!-- languages -->
@@ -148,6 +148,7 @@ chose sans lui.
 | `R` (à côté d’un habitant) | Le retirer de son Monde | Une indication affiche **[R] Retirer l’habitant** ; annulez avec `Ctrl/Cmd+Z` |
 | `T` (à côté d’un habitant) | Parler : il vous dit ce qu’il y a autour | Affiché dans une bulle au-dessus de sa tête ; parlez-lui de nouveau pour autre chose. Le bouton **Parler** de la section Avatar et du pavé tactile fait la même chose |
 | Bouton **Centrer : …** (pendant que les paroles d’un habitant sont affichées) | Regarder ce qu’il a mentionné | Caméra seulement ; votre avatar ne bouge pas. Proposé pour les points de repère, structures, constructions et véhicules |
+| Bouton **Construire … là-bas** (pendant qu’un habitant pense à voix haute) | Commencer une construction à vous à l’endroit qu’il voulait dire | Ouvre l’Éditeur avec une structure de Village toute prête à modifier ; la publier la place là-bas |
 
 Votre inventaire, les véhicules placés et les animaux relâchés sont
 enregistrés sur cet appareil et survivent à un rechargement — voir

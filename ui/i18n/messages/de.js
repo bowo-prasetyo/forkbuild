@@ -2018,6 +2018,7 @@ export default Object.freeze({
     // World View: residentSpeechActions, continued.
     'residentSpeechActions.focusHint': 'Die Kamera bewegen, um {target} anzusehen (Ihr Avatar bleibt hier)',
     'residentSpeechActions.focus': 'Fokus: {target}',
+    'residentSpeechActions.buildHint': 'Öffnet den Editor mit einem neuen eigenen Bau für diese Stelle, begonnen mit einem fertigen, den Sie ändern können.',
 
     // Fallback errors when an operation fails without saying why.
     'failure.commentaryCreated': 'Der Kommentar konnte nicht erstellt werden.',
@@ -2067,6 +2068,20 @@ export default Object.freeze({
     // {title} or {name} is someone else's text, shown as written; {where} is
     // one of the resident.where.* messages, {distance} a resident.distance.* one.
     'resident.quiet': 'Hier ist es ruhig. Ich weiß von nichts in der Nähe.',
+    'resident.wish.bridge': 'Über den Fluss {where} hat noch nie jemand eine Brücke gebaut.',
+    'resident.wish.dock': 'Am Wasser {where} gab es noch nie einen Steg.',
+    'resident.wish.lookout': 'Von der Anhöhe {where} würde ein Aussichtsturm weit übers Land sehen. Dort stand noch nie einer.',
+    'resident.wish.well': 'Auf der freien Fläche {where} gab es noch nie einen Brunnen.',
+    'resident.wish.pavilion': 'Auf der freien Fläche {where} kann man nirgends im Schatten sitzen.',
+    'resident.wish.marketStall': 'Auf der freien Fläche {where} hat noch nie jemand einen Stand aufgebaut.',
+    'resident.wish.cottage': 'Die freie Fläche {where} wäre ein ruhiger Ort für ein Häuschen. Dort wohnt noch niemand.',
+    'resident.wishBuild.bridge': 'Dort eine Brücke bauen',
+    'resident.wishBuild.dock': 'Dort einen Steg bauen',
+    'resident.wishBuild.lookout': 'Dort einen Aussichtsturm bauen',
+    'resident.wishBuild.well': 'Dort einen Brunnen bauen',
+    'resident.wishBuild.pavilion': 'Dort einen Pavillon bauen',
+    'resident.wishBuild.marketStall': 'Dort einen Stand bauen',
+    'resident.wishBuild.cottage': 'Dort ein Häuschen bauen',
     'resident.distance.fewSteps': 'nur ein paar Schritte',
     'resident.distance.meters': 'etwa {meters} m',
     'resident.distance.kilometers': 'etwa {kilometers} km',

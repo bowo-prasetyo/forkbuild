@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 121cc4635a6da58b -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 61a04fb91b01f630 -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -386,6 +386,21 @@ desplazan, así que no tienen uno). Haga clic en él para llevar la cámara a
 echar un vistazo, igual que **Enfocar** en el panel Ubicaciones: su avatar
 se queda junto al habitante, y al volver a caminar la cámara regresa si
 Seguir avatar está activado.
+
+Una de cada tres veces que habla con él, y siempre que no tiene otra cosa
+que decir, un residente puede preguntarse en voz alta por algo que el
+terreno cercano nunca ha tenido: un puente sobre un río, un muelle en un
+lago o en el mar, una atalaya en un terreno alto o, en terreno abierto, un
+pozo, un pabellón con sombra, un puesto de mercado o una casita; por
+ejemplo, *«Nadie ha construido nunca un puente sobre el río que está a unos
+30 m al este.»* Mientras lo dice, aparece abajo en la vista un botón
+**Construir un puente allí** (o un muelle, una atalaya…). Haga clic y el
+Editor abre una construcción nueva y suya para ese lugar, empezada a partir
+de la estructura de Aldea ya hecha, igual que **Construir aquí** en la Vista
+del mundo: al publicarla, queda allí. Es solo un pensamiento en voz alta,
+nunca una tarea: no se guarda nada, nadie comprueba si se construyó y no hay
+recompensa. El mismo terreno da el mismo pensamiento a todo el mundo, y un
+lugar que ya tiene una construcción cerca no desea nada.
 
 Lo que dice un habitante es lo que sabe *su* copia de ForkBuild: las
 construcciones de su catálogo, las personas presentes con usted, los

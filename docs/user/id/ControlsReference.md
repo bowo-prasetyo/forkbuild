@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: ac00224cc1d8ef6a -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: d53bccd516685088 -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -138,6 +138,7 @@ yang sama tanpanya.
 | `R` (di samping penghuni) | Menghapusnya dari Dunianya | Petunjuk menampilkan **[R] Hapus Penghuni**; urungkan dengan `Ctrl/Cmd+Z` |
 | `T` (di samping penghuni) | Bicara: penghuni memberi tahu apa yang ada di sekitar | Ditampilkan dalam gelembung di atas kepalanya; bicara lagi untuk hal lain. Tombol **Bicara** di bagian Avatar dan di pad sentuh melakukan hal yang sama |
 | Tombol **Fokus: …** (selama ucapan penghuni ditampilkan) | Melihat apa yang disebutkannya | Hanya kamera; avatar Anda tetap di tempat. Ditawarkan untuk penanda, struktur, bangunan, dan kendaraan |
+| Tombol **Bangun … di sana** (saat penghuni berpikir dengan suara keras) | Memulai bangunan milik Anda di tempat yang dimaksud | Membuka Editor dengan struktur Desa siap pakai untuk diubah; menerbitkannya akan menempatkannya di sana |
 
 Inventaris Anda, kendaraan yang ditempatkan, dan hewan yang dilepaskan
 disimpan di perangkat ini dan tetap ada setelah dimuat ulang — lihat

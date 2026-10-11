@@ -2015,6 +2015,7 @@ export default Object.freeze({
     // World View: residentSpeechActions, continued.
     'residentSpeechActions.focusHint': 'Gerakkan kamera untuk melihat {target} (avatar Anda tetap di sini)',
     'residentSpeechActions.focus': 'Fokus: {target}',
+    'residentSpeechActions.buildHint': 'Membuka Editor dengan bangunan baru milikmu untuk tempat itu, dimulai dari bangunan siap pakai yang bisa kamu ubah.',
 
     // Fallback errors when an operation fails without saying why.
     'failure.commentaryCreated': 'Komentar tidak dapat dibuat.',
@@ -2064,6 +2065,20 @@ export default Object.freeze({
     // {title} or {name} is someone else's text, shown as written; {where} is
     // one of the resident.where.* messages, {distance} a resident.distance.* one.
     'resident.quiet': 'Di sekitar sini sepi. Saya tidak tahu ada apa pun di dekat sini.',
+    'resident.wish.bridge': 'Belum pernah ada yang membangun jembatan di atas sungai {where}.',
+    'resident.wish.dock': 'Perairan {where} belum pernah punya dermaga.',
+    'resident.wish.lookout': 'Dari dataran tinggi {where}, menara pengawas bisa melihat sangat jauh. Belum pernah ada di sana.',
+    'resident.wish.well': 'Tanah lapang {where} belum pernah punya sumur.',
+    'resident.wish.pavilion': 'Tidak ada tempat untuk duduk berteduh di tanah lapang {where}.',
+    'resident.wish.marketStall': 'Belum pernah ada yang membuka lapak di tanah lapang {where}.',
+    'resident.wish.cottage': 'Tanah lapang {where} bisa jadi tempat yang tenang untuk pondok. Belum ada yang tinggal di sana.',
+    'resident.wishBuild.bridge': 'Bangun jembatan di sana',
+    'resident.wishBuild.dock': 'Bangun dermaga di sana',
+    'resident.wishBuild.lookout': 'Bangun menara pengawas di sana',
+    'resident.wishBuild.well': 'Bangun sumur di sana',
+    'resident.wishBuild.pavilion': 'Bangun paviliun di sana',
+    'resident.wishBuild.marketStall': 'Bangun lapak di sana',
+    'resident.wishBuild.cottage': 'Bangun pondok di sana',
     'resident.distance.fewSteps': 'hanya beberapa langkah',
     'resident.distance.meters': 'sekitar {meters} m',
     'resident.distance.kilometers': 'sekitar {kilometers} km',

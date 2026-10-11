@@ -5436,3 +5436,35 @@ click from a finished build to one anyone can find).
 - Not done: an app-held Nostr key, so publishing could reach Nostr without a browser extension; the World View and
   Publications page Distribute buttons, which stay under Advanced.
 
+## Residents wonder what's missing (unnumbered, 2026-10-11)
+
+**The world now gives reasons to build.** A World Resident only ever told you what was around; the creative-direction
+review of 2026-10-11 found that, apart from Build here, nothing in World View led back to building, and suggested
+residents ask about builds without becoming quest-givers. Pillar served: your work lives in a world (it "connects the
+world back to building, so exploring gives you reasons to build"), with building feels joyful (one click from a thought
+to a ready-made start on that spot).
+
+- **What the ground lacks** (core/ResidentWish.js, pure). Looking out to 40 m, a resident finds a river (a bridge over
+  it), still water (a dock on it), dry high ground (a lookout), or else open, dry ground 14 m past its home on the far
+  side from its World (a well, pavilion, market stall or cottage, chosen by the ground's 50 m cell). A spot with a build,
+  structure or loaded World within 10 m has nothing to wish for. Same ground, same thought, for everyone.
+- **When it says so** (application/worldNavigation/residentMethods.js). Every third conversation, and whenever it has
+  nothing else to say, it says the wish instead of its usual remarks, as one statement with where the spot is: "Nobody
+  has ever built a bridge over the river about 30 m to the east."
+- **Build there** (ui/components/ResidentSpeechActions.js). While it is said, a **Build a bridge there** (dock,
+  lookout…) button sits where the Focus buttons do. It opens the Editor on a plot for that spot in the resident's World
+  (`/editor?plot=…&start=village:bridge`, core/BuildPlot.js) whose new build starts as a copy of the Village structure
+  (ui/views/editorView/useBuildPlot.js); publishing stands it there, as Build here does.
+- **Never a quest:** nothing is stored, tracked, checked or rewarded, and the resident is the same whether or not
+  anyone builds it. docs/principles/vehicles.md gains "A Resident May Wonder What's Missing, Never Ask For It".
+- Every language: the seven wishes, their buttons and the button's hint; guide 06 (Residents) and the Controls
+  reference.
+- Tests: `ResidentWish` (every starter is a Village structure; river, still water, high ground and open ground each
+  give their wish at a real spot of the default World; the same inputs give the same wish; a built spot gives none;
+  statements, labels and the every-third-time cadence); `ResidentTalk` (a session's resident wonders aloud only on
+  wish turns, in one sentence, offering a Village structure on a spot in its own World); `BuildPlotStarter` (a plot
+  link naming a structure starts from a copy of it; without one, or when it can't be copied, the build starts empty);
+  `WorldViewPanelLayoutBrowser` (the Build there button).
+- Not done: wishes drawn from what the World's own builds are (a village with no chapel), and a wish that changes with
+  the week's challenge theme.
+

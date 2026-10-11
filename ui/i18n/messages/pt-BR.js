@@ -2019,6 +2019,7 @@ export default Object.freeze({
     // World View: residentSpeechActions, continued.
     'residentSpeechActions.focusHint': 'Mover a câmera para olhar {target} (seu avatar fica aqui)',
     'residentSpeechActions.focus': 'Focar: {target}',
+    'residentSpeechActions.buildHint': 'Abre o Editor com uma construção nova e sua para esse lugar, começada a partir de uma pronta que você pode mudar.',
 
     // Fallback errors when an operation fails without saying why.
     'failure.commentaryCreated': 'Não foi possível criar o comentário.',
@@ -2068,6 +2069,20 @@ export default Object.freeze({
     // {title} or {name} is someone else's text, shown as written; {where} is
     // one of the resident.where.* messages, {distance} a resident.distance.* one.
     'resident.quiet': 'Está tudo calmo por aqui. Não sei de nada por perto.',
+    'resident.wish.bridge': 'Ninguém nunca construiu uma ponte sobre o rio que fica {where}.',
+    'resident.wish.dock': 'A água que fica {where} nunca teve um píer.',
+    'resident.wish.lookout': 'Do terreno alto que fica {where}, uma torre de vigia enxergaria longe. Nunca houve uma.',
+    'resident.wish.well': 'O terreno aberto que fica {where} nunca teve um poço.',
+    'resident.wish.pavilion': 'Não há onde sentar na sombra no terreno aberto que fica {where}.',
+    'resident.wish.marketStall': 'Ninguém nunca montou uma barraca no terreno aberto que fica {where}.',
+    'resident.wish.cottage': 'O terreno aberto que fica {where} seria um lugar tranquilo para uma casinha. Ninguém mora lá ainda.',
+    'resident.wishBuild.bridge': 'Construir uma ponte lá',
+    'resident.wishBuild.dock': 'Construir um píer lá',
+    'resident.wishBuild.lookout': 'Construir uma torre de vigia lá',
+    'resident.wishBuild.well': 'Construir um poço lá',
+    'resident.wishBuild.pavilion': 'Construir um pavilhão lá',
+    'resident.wishBuild.marketStall': 'Construir uma barraca lá',
+    'resident.wishBuild.cottage': 'Construir uma casinha lá',
     'resident.distance.fewSteps': 'só alguns passos',
     'resident.distance.meters': 'uns {meters} m',
     'resident.distance.kilometers': 'uns {kilometers} km',

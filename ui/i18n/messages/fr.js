@@ -2018,6 +2018,7 @@ export default Object.freeze({
     // World View: residentSpeechActions, continued.
     'residentSpeechActions.focusHint': 'Déplacer la caméra pour regarder {target} (votre avatar reste ici)',
     'residentSpeechActions.focus': 'Centrer : {target}',
+    'residentSpeechActions.buildHint': 'Ouvre l’Éditeur avec une nouvelle construction à vous pour cet endroit, commencée à partir d’une construction toute prête que vous pouvez modifier.',
 
     // Fallback errors when an operation fails without saying why.
     'failure.commentaryCreated': 'Le commentaire n’a pas pu être créé.',
@@ -2067,6 +2068,20 @@ export default Object.freeze({
     // {title} or {name} is someone else's text, shown as written; {where} is
     // one of the resident.where.* messages, {distance} a resident.distance.* one.
     'resident.quiet': 'C’est calme par ici. Je ne connais rien à proximité.',
+    'resident.wish.bridge': 'Personne n’a jamais construit de pont sur la rivière située {where}.',
+    'resident.wish.dock': 'L’eau située {where} n’a jamais eu de ponton.',
+    'resident.wish.lookout': 'Depuis la hauteur située {where}, une tour de guet verrait très loin. Il n’y en a jamais eu.',
+    'resident.wish.well': 'Le terrain dégagé situé {where} n’a jamais eu de puits.',
+    'resident.wish.pavilion': 'Il n’y a nulle part où s’asseoir à l’ombre sur le terrain dégagé situé {where}.',
+    'resident.wish.marketStall': 'Personne n’a jamais installé d’étal sur le terrain dégagé situé {where}.',
+    'resident.wish.cottage': 'Le terrain dégagé situé {where} serait un coin tranquille pour une maisonnette. Personne n’y habite encore.',
+    'resident.wishBuild.bridge': 'Construire un pont là-bas',
+    'resident.wishBuild.dock': 'Construire un ponton là-bas',
+    'resident.wishBuild.lookout': 'Construire une tour de guet là-bas',
+    'resident.wishBuild.well': 'Construire un puits là-bas',
+    'resident.wishBuild.pavilion': 'Construire un pavillon là-bas',
+    'resident.wishBuild.marketStall': 'Construire un étal là-bas',
+    'resident.wishBuild.cottage': 'Construire une maisonnette là-bas',
     'resident.distance.fewSteps': 'à quelques pas',
     'resident.distance.meters': 'à environ {meters} m',
     'resident.distance.kilometers': 'à environ {kilometers} km',

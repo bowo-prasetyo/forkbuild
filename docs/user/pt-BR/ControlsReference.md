@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: ac00224cc1d8ef6a -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: d53bccd516685088 -->
 # Referência de controles
 
 <!-- languages -->
@@ -140,6 +140,7 @@ morador** e **Conversar** da seção Avatar fazem o mesmo sem isso.
 | `R` (ao lado de um morador) | Tirá-lo do Mundo | Um aviso mostra **[R] Remover morador**; desfaça com `Ctrl/Cmd+Z` |
 | `T` (ao lado de um morador) | Conversar: ele conta o que há em volta | Num balão sobre a cabeça dele; converse de novo para ouvir outra coisa. O botão **Conversar** da seção Avatar e do painel de toque faz o mesmo |
 | Botão **Focar: …** (enquanto as palavras de um morador estão visíveis) | Olhar o que ele mencionou | Só a câmera; seu avatar fica onde está. Aparece para marcos, estruturas, construções e veículos |
+| Botão **Construir … lá** (enquanto um morador pensa em voz alta) | Começar uma construção sua no lugar a que ele se referia | Abre o Editor com uma estrutura de Vila pronta para mudar; publicá-la a coloca lá |
 
 Seu inventário, os veículos posicionados e os animais soltos ficam salvos
 neste dispositivo e sobrevivem a uma recarga — veja

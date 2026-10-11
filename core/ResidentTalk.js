@@ -7,7 +7,9 @@
 // docs/principles/vehicles.md, "A Resident Tells You What's Around, Never
 // What To Do"): every remark is a plain statement of where something is,
 // with a rounded distance and a compass direction seen from the resident.
-// No remark asks, urges or rewards anything.
+// No remark asks, urges or rewards anything. Every third conversation it may
+// instead wonder what the ground nearby has never had (core/ResidentWish.js),
+// still as a statement.
 //
 // Titles and names come from other people (a publication's title and
 // author, a presence display name), so they are spoken as plain text:
@@ -95,7 +97,11 @@ export function describeDistance(meters) {
 }
 
 // "about 80 m to the east", "about 80 m away" (no direction known), or
-// "just a few steps away".
+// "just a few steps away". Also how a wish (core/ResidentWish.js) says where.
+export function describeWhere(fact) {
+    return where(fact);
+}
+
 function where(fact) {
     if (!(fact.distance >= A_FEW_STEPS)) return message('resident.where.fewSteps');
     const distance = describeDistance(fact.distance);

@@ -14,7 +14,9 @@ import {
     RESIDENT_OBSTACLE_QUERY_RADIUS
 } from '../world/ResidentRuntime.js';
 import { gatherResidentFacts, RESIDENT_KNOWLEDGE_RADIUS } from '../world/ResidentSurroundings.js';
-import { pickResidentRemarkFacts, phraseFact, focusTargetsFor, speechSecondsFor, QUIET_REMARK } from '../../core/ResidentTalk.js';
+import { pickResidentRemarkFacts, phraseFact, focusTargetsFor, speechSecondsFor, describeWhere, QUIET_REMARK, RESIDENT_FACT_KIND } from '../../core/ResidentTalk.js';
+import { residentWishNear, phraseWish, wishBuildLabel, isWishTurn } from '../../core/ResidentWish.js';
+import { directionLabelBetween } from '../../core/GeographicPlaceNavigation.js';
 import { terrainHeightAt } from '../../core/TerrainHeightField.js';
 import { regionsContaining } from '../../core/WorldRegionGeography.js';
 import { message } from '../../core/Message.js';
@@ -274,14 +276,31 @@ export const residentMethods = {
         }
         const turn = this._residentConversationTurns.get(nearest.id) || 0;
         this._residentConversationTurns.set(nearest.id, turn + 1);
-        const picked = pickResidentRemarkFacts(this._residentFactsAround(nearest, time), { turn });
+        const facts = this._residentFactsAround(nearest, time);
+        const picked = pickResidentRemarkFacts(facts, { turn });
         const translate = this._residentSpeechTranslator || String;
-        const remarks = (picked.length > 0 ? picked.map(phraseFact) : [QUIET_REMARK]).map((remark) => translate(remark));
+        // Every third conversation, and whenever it has nothing else to say, it
+        // may wonder what the ground nearby has never had (core/ResidentWish.js).
+        const wish = isWishTurn(turn, { quiet: picked.length === 0 }) ? this._residentWishAround(nearest, facts) : null;
+        const said = wish
+            ? [wish.remark]
+            : (picked.length > 0 ? picked.map(phraseFact) : [QUIET_REMARK]);
+        const remarks = said.map((remark) => translate(remark));
         const speech = {
             residentId: nearest.id,
             remarks,
             // What the viewer may choose to look at: see focusResidentMention().
-            focusTargets: focusTargetsFor(picked),
+            focusTargets: wish ? [] : focusTargetsFor(picked),
+            // What the viewer may choose to build, and where: see the UI's Build there.
+            wish: wish ? {
+                kind: wish.wish,
+                structureId: wish.structureId,
+                // A message, like a Focus target's label: the UI words it.
+                label: wish.label,
+                worldDocumentId: nearest.documentId,
+                worldTitle: this._residentWorldTitle(nearest.documentId),
+                position: { x: wish.spot.x, y: 0, z: wish.spot.z }
+            } : null,
             spokenAt: Date.now(),
             seconds: speechSecondsFor(remarks)
         };
@@ -293,8 +312,10 @@ export const residentMethods = {
     },
 
     // What the last conversation said, or null: { residentId, remarks,
-    // focusTargets, spokenAt (ms), seconds (how long it stays up) }. For the
-    // UI's Focus buttons and screen-reader announcement.
+    // focusTargets, wish, spokenAt (ms), seconds (how long it stays up) }. For
+    // the UI's Focus and Build there buttons and screen-reader announcement.
+    // `wish` is null, or { kind, structureId, label, worldDocumentId,
+    // worldTitle, position } for Build there.
     lastResidentSpeech() {
         return this._lastResidentSpeech || null;
     },
@@ -334,6 +355,38 @@ export const residentMethods = {
             }
         }
         return null;
+    },
+
+    // What the ground near a resident has never had, as core/ResidentWish.js
+    // finds it, with its remark and button label (messages): { wish,
+    // structureId, spot, remark, label }, or null. `facts` are
+    // _residentFactsAround()'s, whose builds and structures, with the loaded
+    // Worlds, count as already built.
+    _residentWishAround(pose, facts) {
+        const builtPositions = (facts || [])
+            .filter((fact) => (fact.kind === RESIDENT_FACT_KIND.BUILD || fact.kind === RESIDENT_FACT_KIND.STRUCTURE) && fact.position)
+            .map((fact) => fact.position);
+        for (const document of this.getLoadedDocuments()) {
+            const offset = this.getDocumentPosition(document.world.id);
+            if (offset) builtPositions.push({ x: offset.x, z: offset.z });
+        }
+        const homeWorld = this.getDocumentPosition(pose.worldId) || pose.home || null;
+        const wish = residentWishNear({ seed: this.getWorldSeed(), position: { x: pose.x, z: pose.z }, homePosition: homeWorld, builtPositions });
+        if (!wish) return null;
+        const from = { x: pose.x, z: pose.z };
+        const where = describeWhere({ distance: Math.hypot(wish.spot.x - from.x, wish.spot.z - from.z), direction: directionLabelBetween(from, wish.spot) });
+        return { ...wish, remark: phraseWish(wish, where), label: wishBuildLabel(wish) };
+    },
+
+    // The title a Build there plot names its World by: the resident's own
+    // World's, or '' when it has none.
+    _residentWorldTitle(documentId) {
+        try {
+            const document = this.getDocument(documentId);
+            return (document && document.metadata && document.metadata.title) || '';
+        } catch {
+            return '';
+        }
     },
 
     // Everything gatherResidentFacts() needs, from this session, around a

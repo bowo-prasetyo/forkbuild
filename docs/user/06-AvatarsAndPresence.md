@@ -370,6 +370,20 @@ Click it to swing the camera over for a look, the same as **Focus** in the
 Locations panel: your avatar stays beside the resident, and walking again
 brings the camera back if Follow Avatar is on.
 
+Every third time you talk to it, and whenever it has nothing else to say, a
+resident may instead wonder aloud about something the ground nearby has
+never had: a bridge over a river, a dock on a lake or the sea, a lookout on
+high ground, or, on open ground, a well, a shady pavilion, a market stall
+or a cottage — for example *"Nobody has ever built a bridge over the river
+about 30 m to the east."* While it says so, a **Build a bridge there**
+button (or a dock, a lookout…) appears at the bottom of the view. Click it
+and the Editor opens a new build of your own for that spot, started from
+the ready-made Village structure, the same as **Build here** in World View:
+publishing it stands it there. It is only ever a thought out loud, never a
+task: nothing is remembered, nobody checks whether it got built, and there
+is no reward. The same ground gives the same thought to everyone, and a
+spot that already has a build nearby has nothing to wish for.
+
 What a resident says is what *your* copy of ForkBuild knows: the builds in
 your catalog, the people present with you, the vehicles and animals you
 haven't taken. Someone else talking to the same resident may hear different

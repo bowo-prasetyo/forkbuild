@@ -247,6 +247,22 @@ function runTests() {
         for (let i = 0; i < 4; i++) heard.push(session.talkToNearestResident().remarks.join(' '));
         assert(new Set(heard).size > 1, '45. Talking again, it moves on to other things');
 
+        // Every third conversation it may wonder what the ground nearby has
+        // never had (core/ResidentWish.js), with a Build there to choose.
+        const later = [];
+        for (let i = 0; i < 6; i++) later.push(session.talkToNearestResident());
+        const wishTurns = later.map((speech, i) => (speech.wish ? 5 + i : null)).filter((turn) => turn !== null);
+        assert(wishTurns.length > 0 && wishTurns.every((turn) => turn % 3 === 2),
+            `45a. It wonders aloud only every third time while it has other things to say (turns ${wishTurns.join(', ')})`);
+        const wishing = later.find((speech) => speech.wish);
+        assert(wishing.remarks.length === 1 && !wishing.remarks[0].startsWith('resident.') && wishing.focusTargets.length === 0,
+            `45b. ...in one sentence of its own, with no Focus buttons (got ${wishing.remarks[0]})`);
+        assert(/^village:/.test(wishing.wish.structureId) && english(wishing.wish.label).startsWith('Build a'),
+            `45c. ...offering to build a ready-made Village structure there (got ${wishing.wish.structureId}, ${english(wishing.wish.label)})`);
+        assert(wishing.wish.worldDocumentId === 'w-home' && wishing.wish.worldTitle === 'Home Village'
+            && Number.isFinite(wishing.wish.position.x) && Number.isFinite(wishing.wish.position.z),
+            '45d. ...on a spot in its own World');
+
         said.length = 0;
         assert(session._processResidentTalkInput('T', 'keydown') === true && said.length === 1, '46. The T key talks');
         session._processResidentTalkInput('t', 'keydown');
