@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 121cc4635a6da58b -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 61a04fb91b01f630 -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -412,6 +412,22 @@ personnes se déplacent, ils n’en ont donc pas). Cliquez dessus pour
 tourner la caméra et jeter un œil, comme **Centrer** dans le panneau
 Emplacements : votre avatar reste à côté de l’habitant, et marcher de
 nouveau ramène la caméra si Suivre l’avatar est activé.
+
+Une fois sur trois quand vous lui parlez, et chaque fois qu’il n’a rien
+d’autre à dire, un habitant peut se demander à voix haute ce que le terrain
+voisin n’a jamais eu : un pont sur une rivière, un ponton sur un lac ou la
+mer, une tour de guet sur une hauteur, ou, sur un terrain dégagé, un puits,
+un pavillon ombragé, un étal de marché ou une maisonnette — par exemple
+*« Personne n’a jamais construit de pont sur la rivière située à environ
+30 m à l’est. »* Pendant qu’il le dit, un bouton **Construire un pont
+là-bas** (ou un ponton, une tour de guet…) apparaît en bas de la vue.
+Cliquez dessus et l’Éditeur ouvre une nouvelle construction à vous pour cet
+endroit, commencée à partir de la structure de Village toute prête, comme
+**Construire ici** dans la Vue du Monde : la publier la place là-bas. Ce
+n’est jamais qu’une pensée à voix haute, jamais une tâche : rien n’est
+gardé, personne ne vérifie si elle a été construite, et il n’y a aucune
+récompense. Le même terrain donne la même pensée à tout le monde, et un
+endroit qui a déjà une construction à côté ne souhaite rien.
 
 Ce que dit un habitant, c’est ce que sait *votre* copie de ForkBuild : les
 constructions de votre catalogue, les personnes présentes avec vous, les

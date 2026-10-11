@@ -12,6 +12,7 @@ import { navigationHudSectionTemplate } from '../ui/views/worldView/templates/na
 import WorldSearchPanel from '../ui/components/WorldSearchPanel.js';
 import { residentRefusalLabel } from '../ui/components/avatarInteractionLabels.js';
 import ResidentSpeechActions from '../ui/components/ResidentSpeechActions.js';
+import { message } from '../core/Message.js';
 import { CameraPerspective } from '../core/CameraPerspective.js';
 import { WorldViewPrimaryMode } from '../application/world/WorldViewNavigationState.js';
 import { assert } from './support/Assert.js';
@@ -252,6 +253,27 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     assert(getComputedStyle(row).position === 'absolute', 'the row floats over the view, from the real stylesheet');
     unmount();
     console.log('✓ A resident\'s mentions get Focus buttons');
+}
+
+// A resident's wish (core/ResidentWish.js): one Build there button, worded in
+// the viewer's language, and nothing else.
+{
+    const built = [];
+    const { host, vm, unmount } = mount({
+        components: { ResidentSpeechActions },
+        data: () => ({ wish: null }),
+        methods: { onBuild() { built.push(true); } },
+        template: '<div><ResidentSpeechActions :targets="[]" :wish="wish" @build="onBuild" /></div>'
+    });
+    assert(!host.querySelector('.resident-speech-actions'), 'without a wish, nothing shows');
+    vm.wish = { label: message('resident.wishBuild.bridge') };
+    await nextTick();
+    const button = host.querySelector('.resident-speech-actions-build');
+    assert(button && button.textContent.trim() === 'Build a bridge there', `a wish offers Build there — got ${button && button.textContent.trim()}`);
+    button.click();
+    assert(built.length === 1, 'and clicking it asks the host to build');
+    unmount();
+    console.log('✓ A resident\'s wish gets a Build there button');
 }
 
 // Worlds in View is hidden while it would only repeat the header's World.

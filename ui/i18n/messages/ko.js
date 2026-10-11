@@ -2018,6 +2018,7 @@ export default Object.freeze({
     // World View: residentSpeechActions, continued.
     'residentSpeechActions.focusHint': '카메라를 움직여 {target}을(를) 봅니다 (아바타는 그대로 있습니다)',
     'residentSpeechActions.focus': '초점: {target}',
+    'residentSpeechActions.buildHint': '그 자리를 위한 나만의 새 작품을 에디터에서 엽니다. 바꿀 수 있는 완성된 작품에서 시작합니다.',
 
     // Fallback errors when an operation fails without saying why.
     'failure.commentaryCreated': '댓글을 작성할 수 없습니다.',
@@ -2067,6 +2068,20 @@ export default Object.freeze({
     // {title} or {name} is someone else's text, shown as written; {where} is
     // one of the resident.where.* messages, {distance} a resident.distance.* one.
     'resident.quiet': '이 근처는 조용해요. 주변에 아는 게 없어요.',
+    'resident.wish.bridge': '{where}의 강에는 아직 아무도 다리를 놓은 적이 없어요.',
+    'resident.wish.dock': '{where}의 물가에는 지금까지 선착장이 없었어요.',
+    'resident.wish.lookout': '{where}의 언덕에 망루가 있으면 멀리까지 보일 거예요. 한 번도 세워진 적이 없어요.',
+    'resident.wish.well': '{where}의 빈터에는 지금까지 우물이 없었어요.',
+    'resident.wish.pavilion': '{where}의 빈터에는 그늘에 앉을 곳이 없어요.',
+    'resident.wish.marketStall': '{where}의 빈터에 가판대를 차린 사람은 아직 없어요.',
+    'resident.wish.cottage': '{where}의 빈터는 작은 집을 짓기에 조용하고 좋은 곳이에요. 아직 아무도 살지 않아요.',
+    'resident.wishBuild.bridge': '거기에 다리 짓기',
+    'resident.wishBuild.dock': '거기에 선착장 짓기',
+    'resident.wishBuild.lookout': '거기에 망루 짓기',
+    'resident.wishBuild.well': '거기에 우물 짓기',
+    'resident.wishBuild.pavilion': '거기에 정자 짓기',
+    'resident.wishBuild.marketStall': '거기에 가판대 짓기',
+    'resident.wishBuild.cottage': '거기에 작은 집 짓기',
     'resident.distance.fewSteps': '몇 걸음',
     'resident.distance.meters': '약 {meters}m',
     'resident.distance.kilometers': '약 {kilometers}km',

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: ac00224cc1d8ef6a -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: d53bccd516685088 -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -141,6 +141,7 @@ tun dasselbe ohne ihn.
 | `R` (neben einem Bewohner) | Ihn aus seiner Welt entfernen | Ein Hinweis zeigt **[R] Bewohner entfernen**; rückgängig mit `Strg/Cmd+Z` |
 | `T` (neben einem Bewohner) | Sprechen: Er erzählt, was es in der Umgebung gibt | Erscheint in einer Sprechblase über seinem Kopf; sprechen Sie erneut, um etwas anderes zu hören. Die Schaltfläche **Sprechen** im Abschnitt Avatar und auf dem Touchpad tut dasselbe |
 | Schaltfläche **Fokus: …** (solange die Worte eines Bewohners zu sehen sind) | Ansehen, was er erwähnt hat | Nur die Kamera; Ihr Avatar bleibt, wo er ist. Angeboten für Wahrzeichen, Strukturen, Bauwerke und Fahrzeuge |
+| Schaltfläche **Dort … bauen** (während ein Bewohner laut nachdenkt) | Einen eigenen Bau an der gemeinten Stelle beginnen | Öffnet den Editor mit einem fertigen Dorf-Bauwerk zum Ändern; Veröffentlichen stellt ihn dorthin |
 
 Ihr Inventar, abgestellte Fahrzeuge und freigelassene Tiere werden auf
 diesem Gerät gespeichert und überstehen ein Neuladen — siehe

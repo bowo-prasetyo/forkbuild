@@ -8,7 +8,7 @@ export const dialogsTemplate = `<ActionFeedback :message="feedbackMessage" :visi
                 <ResidentInteractionPrompt v-if="avatarControlMode" :state="residentInteractionState" />
             </template>
             <!-- Look at what a resident just mentioned: shown on touch screens too. -->
-            <ResidentSpeechActions :targets="residentFocusTargets" @focus="focusResidentMention" />
+            <ResidentSpeechActions :targets="residentFocusTargets" :wish="residentWish" @focus="focusResidentMention" @build="buildResidentWish" />
             <!-- What a resident just said, for screen readers; the bubble over its head shows it. -->
             <div class="visually-hidden" aria-live="polite">
                 <template v-if="residentSpeech">{{ t('worldView.residentSays', { remarks: residentSpeech.remarks.join(' ') }) }}</template>

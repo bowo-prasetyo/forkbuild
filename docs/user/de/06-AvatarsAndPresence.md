@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 121cc4635a6da58b -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 61a04fb91b01f630 -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -404,6 +404,22 @@ bleibt — ein Wahrzeichen, eine Struktur, ein Bauwerk oder ein Fahrzeug
 darauf, um die Kamera zum Ansehen hinüberzuschwenken, genau wie
 **Fokussieren** im Feld Orte: Ihr Avatar bleibt neben dem Bewohner, und
 erneutes Gehen bringt die Kamera zurück, wenn Avatar folgen an ist.
+
+Jedes dritte Mal, wenn Sie mit ihm sprechen, und immer dann, wenn er sonst
+nichts zu sagen hat, denkt ein Bewohner stattdessen laut darüber nach, was
+der Boden in der Nähe noch nie hatte: eine Brücke über einen Fluss, einen
+Steg an einem See oder am Meer, einen Aussichtsturm auf einer Anhöhe oder auf
+freier Fläche einen Brunnen, einen schattigen Pavillon, einen Marktstand oder
+ein Häuschen — zum Beispiel *„Über den Fluss etwa 30 m östlich von hier hat
+noch nie jemand eine Brücke gebaut.“* Solange er das sagt, erscheint unten in
+der Ansicht eine Schaltfläche **Dort eine Brücke bauen** (oder einen Steg,
+einen Aussichtsturm …). Ein Klick öffnet im Editor einen neuen eigenen Bau
+für diese Stelle, begonnen mit dem fertigen Dorf-Bauwerk, genau wie **Hier
+bauen** in der Weltansicht: Veröffentlichen stellt ihn dorthin. Es ist immer
+nur ein laut gedachter Gedanke, nie eine Aufgabe: Nichts wird gespeichert,
+niemand prüft, ob es gebaut wurde, und es gibt keine Belohnung. Derselbe
+Boden weckt bei allen denselben Gedanken, und eine Stelle, an der schon ein
+Bau steht, wünscht sich nichts.
 
 Was ein Bewohner sagt, ist das, was *Ihre* Kopie von ForkBuild weiß: die
 Bauwerke in Ihrem Katalog, die Menschen, die mit Ihnen da sind, die

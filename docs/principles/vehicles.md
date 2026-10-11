@@ -60,6 +60,23 @@ riding, or an animal they caught.
 
 [Full text](history/0.9.md#a-resident-tells-you-whats-around-never-what-to-do-2026-09-29)
 
+### A Resident May Wonder What's Missing, Never Ask For It (2026-10-11)
+
+Every third conversation, and whenever it has nothing else to say, a
+resident may wonder aloud about something the ground nearby has never had
+(core/ResidentWish.js): a bridge over a river, a dock on still water, a
+lookout on high ground, or a well, pavilion, stall or cottage on open
+ground, with where that spot is. It is still a statement of what is (and
+isn't) there, never a request: no question, no "you should", no reward,
+nothing tracked, remembered or checked, and nobody is told whether it was
+built. It comes from the terrain and the builds nearby only, so the same
+ground gives the same thought to everyone, and a spot already built on gives
+none. The viewer may choose **Build a … there**, which opens the Editor on a
+plot for that spot (core/BuildPlot.js) started from the matching Village
+structure, exactly as Build here would; choosing it, or not, changes nothing
+for the resident. This is how the world gives reasons to build
+(docs/Pillars.md) without becoming a quest game.
+
 ### Others See What You Ride, Never Where You Parked (2026-09-29)
 
 Which vehicle an avatar rides is sent, signed, on its own channel

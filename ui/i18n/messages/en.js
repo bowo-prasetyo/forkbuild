@@ -2017,6 +2017,7 @@ export default Object.freeze({
     // World View: residentSpeechActions, continued.
     'residentSpeechActions.focusHint': 'Move the camera to look at {target} (your avatar stays here)',
     'residentSpeechActions.focus': 'Focus: {target}',
+    'residentSpeechActions.buildHint': 'Opens the Editor with a new build of your own for that spot, started from a ready-made one you can change.',
 
     // Fallback errors when an operation fails without saying why.
     'failure.commentaryCreated': 'Commentary could not be created.',
@@ -2066,6 +2067,20 @@ export default Object.freeze({
     // {title} or {name} is someone else's text, shown as written; {where} is
     // one of the resident.where.* messages, {distance} a resident.distance.* one.
     'resident.quiet': 'It\'s quiet around here. I don\'t know of anything nearby.',
+    'resident.wish.bridge': 'Nobody has ever built a bridge over the river {where}.',
+    'resident.wish.dock': 'The water {where} has never had a dock.',
+    'resident.wish.lookout': 'From the high ground {where}, a lookout would see for miles. There\'s never been one.',
+    'resident.wish.well': 'The open ground {where} has never had a well.',
+    'resident.wish.pavilion': 'There\'s nowhere to sit in the shade on the open ground {where}.',
+    'resident.wish.marketStall': 'Nobody has ever set up a stall on the open ground {where}.',
+    'resident.wish.cottage': 'The open ground {where} would be a quiet spot for a cottage. Nobody lives there yet.',
+    'resident.wishBuild.bridge': 'Build a bridge there',
+    'resident.wishBuild.dock': 'Build a dock there',
+    'resident.wishBuild.lookout': 'Build a lookout there',
+    'resident.wishBuild.well': 'Build a well there',
+    'resident.wishBuild.pavilion': 'Build a pavilion there',
+    'resident.wishBuild.marketStall': 'Build a stall there',
+    'resident.wishBuild.cottage': 'Build a cottage there',
     'resident.distance.fewSteps': 'just a few steps',
     'resident.distance.meters': 'about {meters} m',
     'resident.distance.kilometers': 'about {kilometers} km',

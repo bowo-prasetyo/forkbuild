@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 121cc4635a6da58b -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 61a04fb91b01f630 -->
 # 06 — Avatares e presença
 
 <!-- languages -->
@@ -372,6 +372,21 @@ marco, uma estrutura, uma construção ou um veículo (animais e pessoas se
 movem, então não ganham botão). Clique nele para virar a câmera e dar uma
 olhada, como **Focar** no painel Locais: seu avatar fica ao lado do morador,
 e voltar a andar traz a câmera de volta se Seguir avatar estiver ativo.
+
+Uma em cada três vezes que você fala com ele, e sempre que não tem mais nada
+a dizer, um morador pode, em vez disso, se perguntar em voz alta sobre algo
+que o terreno ali perto nunca teve: uma ponte sobre um rio, um píer num lago
+ou no mar, uma torre de vigia num terreno alto ou, em terreno aberto, um
+poço, um pavilhão com sombra, uma barraca de feira ou uma casinha — por
+exemplo, *"Ninguém nunca construiu uma ponte sobre o rio que fica a cerca de
+30 m a leste."* Enquanto ele diz isso, um botão **Construir uma ponte lá**
+(ou um píer, uma torre de vigia…) aparece na parte de baixo da visão. Clique
+e o Editor abre uma construção nova e sua para esse lugar, começada a partir
+da estrutura de Vila pronta, igual a **Construir aqui** na Visão do mundo:
+publicá-la a coloca lá. É sempre só um pensamento em voz alta, nunca uma
+tarefa: nada fica guardado, ninguém confere se foi construído e não há
+recompensa. O mesmo terreno dá o mesmo pensamento a todo mundo, e um lugar
+que já tem uma construção por perto não deseja nada.
 
 O que um morador diz é o que a *sua* cópia do ForkBuild sabe: as construções
 do seu catálogo, as pessoas presentes com você, os veículos e animais que

@@ -2019,6 +2019,7 @@ export default Object.freeze({
     // World View: residentSpeechActions, continued.
     'residentSpeechActions.focusHint': 'Mover la cámara para mirar {target} (su avatar se queda aquí)',
     'residentSpeechActions.focus': 'Enfocar: {target}',
+    'residentSpeechActions.buildHint': 'Abre el Editor con una construcción nueva y suya para ese lugar, empezada a partir de una ya hecha que puede cambiar.',
 
     // Fallback errors when an operation fails without saying why.
     'failure.commentaryCreated': 'No se pudo crear el comentario.',
@@ -2068,6 +2069,20 @@ export default Object.freeze({
     // {title} or {name} is someone else's text, shown as written; {where} is
     // one of the resident.where.* messages, {distance} a resident.distance.* one.
     'resident.quiet': 'Por aquí está todo tranquilo. No sé de nada cercano.',
+    'resident.wish.bridge': 'Nadie ha construido nunca un puente sobre el río que está {where}.',
+    'resident.wish.dock': 'El agua que está {where} nunca ha tenido un muelle.',
+    'resident.wish.lookout': 'Desde el terreno alto que está {where}, una atalaya vería muy lejos. Nunca ha habido una.',
+    'resident.wish.well': 'El terreno abierto que está {where} nunca ha tenido un pozo.',
+    'resident.wish.pavilion': 'En el terreno abierto que está {where} no hay dónde sentarse a la sombra.',
+    'resident.wish.marketStall': 'Nadie ha montado nunca un puesto en el terreno abierto que está {where}.',
+    'resident.wish.cottage': 'El terreno abierto que está {where} sería un lugar tranquilo para una casita. Todavía no vive nadie allí.',
+    'resident.wishBuild.bridge': 'Construir un puente allí',
+    'resident.wishBuild.dock': 'Construir un muelle allí',
+    'resident.wishBuild.lookout': 'Construir una atalaya allí',
+    'resident.wishBuild.well': 'Construir un pozo allí',
+    'resident.wishBuild.pavilion': 'Construir un pabellón allí',
+    'resident.wishBuild.marketStall': 'Construir un puesto allí',
+    'resident.wishBuild.cottage': 'Construir una casita allí',
     'resident.distance.fewSteps': 'solo unos pasos',
     'resident.distance.meters': 'unos {meters} m',
     'resident.distance.kilometers': 'unos {kilometers} km',

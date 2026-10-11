@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 121cc4635a6da58b -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 61a04fb91b01f630 -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -401,6 +401,22 @@ struktur, bangunan, atau kendaraan (hewan dan orang berpindah, jadi tidak
 mendapat tombol). Klik untuk mengayunkan kamera ke sana dan melihat, sama
 seperti **Fokus** di panel Lokasi: avatar Anda tetap di samping penghuni,
 dan berjalan lagi mengembalikan kamera jika Ikuti Avatar aktif.
+
+Setiap kali ketiga Anda berbicara dengannya, dan setiap kali ia tidak punya
+hal lain untuk dikatakan, seorang penghuni bisa bertanya-tanya dengan suara
+keras tentang sesuatu yang belum pernah ada di tanah sekitarnya: jembatan di
+atas sungai, dermaga di danau atau laut, menara pengawas di dataran tinggi,
+atau, di tanah lapang, sumur, paviliun yang teduh, lapak pasar, atau pondok —
+misalnya *"Belum pernah ada yang membangun jembatan di atas sungai sekitar
+30 m ke arah timur."* Selama ia mengatakannya, tombol **Bangun jembatan di
+sana** (atau dermaga, menara pengawas…) muncul di bagian bawah tampilan.
+Klik, dan Editor membuka bangunan baru milik Anda untuk tempat itu, dimulai
+dari struktur Desa yang sudah jadi, sama seperti **Bangun di sini** di
+Tampilan Dunia: menerbitkannya akan menempatkannya di sana. Itu hanya
+pikiran yang diucapkan, tidak pernah tugas: tidak ada yang disimpan, tidak
+ada yang memeriksa apakah sudah dibangun, dan tidak ada hadiah. Tanah yang
+sama memberi pikiran yang sama kepada semua orang, dan tempat yang sudah
+punya bangunan di dekatnya tidak menginginkan apa pun.
 
 Apa yang dikatakan penghuni adalah apa yang diketahui ForkBuild *Anda*:
 bangunan di katalog Anda, orang-orang yang hadir bersama Anda, kendaraan dan

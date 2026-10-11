@@ -361,6 +361,9 @@ export default {
         // are up (the same time its bubble stays) and the viewer is still
         // beside it; empty otherwise.
         const residentFocusTargets = ref([]);
+        // Build there for what that resident wondered about
+        // (core/ResidentWish.js): shown on the same terms as the Focus buttons.
+        const residentWish = ref(null);
         const cruiseState = ref(null);
         // The local avatar's swim mode and air, for the air meter and touch pad.
         const swimState = ref(null);
@@ -1038,6 +1041,23 @@ export default {
             if (next !== residentFocusTargets.value && !(next.length === 0 && residentFocusTargets.value.length === 0)) {
                 residentFocusTargets.value = next;
             }
+            const wish = current && speech.wish ? speech.wish : null;
+            if (wish !== residentWish.value) residentWish.value = wish;
+        }
+
+        // Build there: a new build of the viewer's own for the spot the resident
+        // meant, started from the wish's ready-made structure, the same plot
+        // Build here makes (core/BuildPlot.js). Only ever the viewer's choice.
+        function buildResidentWish() {
+            const wish = residentWish.value;
+            if (!wish || !wish.worldDocumentId) return;
+            router.push({
+                path: '/editor',
+                query: {
+                    ...plotQuery({ worldDocumentId: wish.worldDocumentId, worldTitle: wish.worldTitle, position: wish.position }),
+                    start: wish.structureId
+                }
+            });
         }
 
         // A Focus button: a camera-only look at what the resident mentioned.
@@ -1206,6 +1226,7 @@ export default {
             residentSpeech,
             talkToResident,
             residentFocusTargets,
+            residentWish, buildResidentWish,
             focusResidentMention,
             residentRefusalLabel,
             cruiseState,
