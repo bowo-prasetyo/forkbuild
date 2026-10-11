@@ -133,6 +133,13 @@ caught no longer blocks anything. Your avatar can walk across placed structures,
 climb vertical surfaces, and navigate uneven terrain. The camera follows
 your avatar naturally as you move.
 
+Doors and arches are ways in. A door swings open, away from you, as you
+walk up to it, and shuts behind you; it opens for residents and the people
+you see too, and nobody else sees the doors you open. You walk through an
+arch's opening, and its sides and top are as solid as they look. A small
+arch is too low to walk through, and a door or arch tilted onto its side
+blocks you like any other brick.
+
 **Follow Avatar** keeps the camera locked to your avatar as it moves, instead
 of orbiting freely. You can also follow other players' avatars to see where
 they're going.

@@ -5530,3 +5530,41 @@ joyful (a newcomer reads only what playing needs).
 - Not done: a banner on each Advanced chapter saying it is optional, rewriting VISION.md's engine half for
   contributors, and renaming chapter 12 now that it has no leaderboards.
 
+
+## Step inside: doors and arches you can walk through (unnumbered, 2026-10-11)
+
+**You can walk into what you build.** The fantasy's third beat is "walk inside it with friends", but a creative-direction
+audit (docs/reviews/CreativeDirection-2026-10-11.md, finding 1) found nobody could: every brick collided as its one
+box, so a door panel filled the gap left for it and an arch, drawn with an opening, was a solid block. The starter house
+on Home also had its entry stair turned sideways, its tread higher than the door's floor. Pillar served: your work
+lives in a world ("makes a build more worth visiting"), with building feels joyful (the doorway you place works).
+
+- **What a brick collides as** (core/BrickPassage.js, pure). One box for every brick but two: a standing door collides as
+  nothing, and a standing core:arch as its two jambs and a lintel cut into twelve strips that follow its curve without
+  ever cutting into the masonry. Tilted onto its side, either is one box again. `AvatarMovementConstraint` pushes these
+  boxes (broad phase and step exclusion still ask about the whole brick), so residents, whose obstacles come from it,
+  walk through doorways too.
+- **A doorway's floor** (`passageFloorAt()`). Over a door or an arch's opening, `AvatarStepConstraint` takes a top out of
+  a step's reach as a roof, not as a wall too high to climb, and the avatar stands on the passage's floor.
+- **The doorway arch** (`ARCH_OPENINGS`). core:arch's opening now reaches the ground (no sill) and rises to 1.9 under a
+  flattened curve: 1.8 of headroom up to 0.5 from its middle, so a walking avatar (0.7 × 1.8) gets through with 0.15 of
+  play either side. renderer/ThreeBrickFactory.js draws the arch from the same numbers, so what is drawn and what
+  collides can't drift apart; its size, and every brick's position, are unchanged. core:arch_small keeps its sill and
+  semicircle: at 1.5 tall it is a window.
+- **Doors swing** (core/DoorSwing.js, renderer/DoorSwingAnimator.js). In World View a door swings open, away from whoever
+  comes within 1.6 m, in a third of a second, keeps opening the same way while they pass, and shuts behind them. The
+  local avatar, the remote avatars and the residents open doors, for a World's own bricks (instances, swung about their
+  hinge in renderer/BrickInstanceRegistry.js) and for a structure placement's (meshes). Drawing only: nothing is stored
+  or sent, the build still holds a shut door, and the Editor never swings one.
+- **The ready-made builds' entrances.** The House and the Large House get a doorstep level with their floor in place of
+  the sideways stair; the Garden Cottage's threshold stone is level with its floor, since one 0.25 higher brought a
+  visitor's head up against the wall over its double door (the stone it was, a half cube, now sits beside the path).
+- Docs: guide 06 (Walking your avatar), in every language; docs/Architecture.md; docs/BrickLibrary.md.
+- Tests: `StepInside` (doors collide as nothing and other bricks as before; the doorway arch lets an avatar through
+  0.15 either side of its middle and is solid where drawn; the small arch stops one; turned arches; a doorway's floor;
+  the mesh's opening matches; doors swing away, don't flap back, shut, and keep their hinge; World View swings a World's
+  doors and a placement's; with the real movement pipeline, an avatar walks through all 20 ground-floor doorways in the
+  ready-made builds, both ways).
+- Not done: doors set into solid towers (the Silo, the Watchtower, the Lighthouse, the castle's keep) still have nothing
+  behind them, and the Stable's stalls are half a step deep; giving them insides is content work. A door is passable
+  whether or not anyone is near, so someone walking faster than it swings passes through it as it opens.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 61a04fb91b01f630 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 7741d1f107953066 -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -145,6 +145,13 @@ detiene la caminata a pie. Un animal que haya atrapado ya no bloquea nada.
 Su avatar puede caminar sobre estructuras colocadas, trepar superficies
 verticales y recorrer terreno irregular. La cámara sigue a su avatar con
 naturalidad mientras se mueve.
+
+Las puertas y los arcos son entradas. Una puerta se abre, alejándose de
+usted, cuando se acerca, y se cierra a su paso; también se abre para los
+residentes y para las personas que ve, y nadie más ve las puertas que usted
+abre. Por la abertura de un arco se pasa, y sus lados y su parte superior son
+tan sólidos como parecen. Un arco pequeño es demasiado bajo para pasar, y una
+puerta o un arco inclinado de lado le bloquea como cualquier otro bloque.
 
 **Seguir avatar** mantiene la cámara fija en su avatar mientras se mueve,
 en lugar de orbitar libremente. También puede seguir los avatares de otros

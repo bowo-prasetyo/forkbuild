@@ -101,6 +101,15 @@ serializer/DocumentSchemaMigrator.js — a document that only ever used
 the original four bricks is untouched, and a document using the new
 eleven is exactly as portable as one that doesn't.
 
+Doors and arches are ways through (2026-10-11, core/BrickPassage.js). A
+standing door has no collision, and in World View swings open for whoever
+walks up to it (core/DoorSwing.js). A standing core:arch collides as its
+jambs and a lintel that follows its opening, which is cut down to the
+ground and tall enough for a walking avatar; the opening's shape
+(`ARCH_OPENINGS`) is what both the collision and the mesh read.
+core:arch_small keeps its sill and semicircle: at 1.5 tall it is a window.
+Tilted onto its side, either collides as its one box.
+
 BrickRegistry#groupByCategory() (0.2.80) groups getAll()'s contents by
 category in first-seen order — [{ category, definitions }] — for the
 Brick Palette to render as sections now that eleven categories exist;

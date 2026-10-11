@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 61a04fb91b01f630 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 7741d1f107953066 -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -146,6 +146,14 @@ sudah Anda tangkap tidak lagi menghalangi apa pun. Avatar Anda dapat
 berjalan di atas struktur yang ditempatkan, memanjat permukaan tegak, dan
 menyusuri medan yang tidak rata. Kamera mengikuti avatar Anda secara alami
 saat Anda bergerak.
+
+Pintu dan lengkungan adalah jalan masuk. Pintu berayun terbuka, menjauh
+dari Anda, saat Anda mendekatinya, lalu menutup di belakang Anda; pintu juga
+terbuka untuk penghuni dan untuk orang yang Anda lihat, dan tidak ada orang
+lain yang melihat pintu yang Anda buka. Anda berjalan melewati bukaan
+lengkungan, dan sisi serta puncaknya sepadat kelihatannya. Lengkungan kecil
+terlalu rendah untuk dilewati, dan pintu atau lengkungan yang dimiringkan ke
+samping menghalangi Anda seperti balok lainnya.
 
 **Ikuti Avatar** menjaga kamera tetap terkunci pada avatar Anda saat
 bergerak, alih-alih mengorbit bebas. Anda juga dapat mengikuti avatar

@@ -1,4 +1,5 @@
-import { brickAabb, translateAabb, resolveHorizontalMovement, AVATAR_COLLISION_RADIUS } from '../../core/AvatarCollision.js';
+import { brickAabb, resolveHorizontalMovement, AVATAR_COLLISION_RADIUS } from '../../core/AvatarCollision.js';
+import { brickCollisionBoxes } from '../../core/BrickPassage.js';
 import { WalkableSurfaceKind, walkableSurfaceKindFor } from '../../core/WalkableSurface.js';
 import { TransformMath } from '../editor/TransformMath.js';
 
@@ -178,10 +179,12 @@ export class AvatarMovementConstraint {
                     // would take down movement entirely over one bad
                     // or future-versioned brick.
                     if (!definition) continue;
-                    const worldAabb = translateAabb(brickAabb(brick.position, definition, brick.rotation, brick.tilt), worldPosition);
-                    if (flatAabbDistance(worldAabb, position, avatarRadius) > this._queryRadius) continue;
-                    if (canStep && this._excludedByStep(worldAabb, brick.definitionId, supportHeight, brick.tilt)) continue;
-                    obstacles.push(worldAabb);
+                    const worldCenter = {
+                        x: brick.position.x + worldPosition.x,
+                        y: brick.position.y + worldPosition.y,
+                        z: brick.position.z + worldPosition.z
+                    };
+                    this._pushBrickObstacles(obstacles, brick, definition, worldCenter, brick.rotation, position, supportHeight, avatarRadius, canStep);
                 }
             }
             this._collectPlacementObstacles(document, worldPosition, position, supportHeight, avatarRadius, canStep, obstacles);
@@ -222,12 +225,22 @@ export class AvatarMovementConstraint {
                         y: localPoint.y + placementWorldPosition.y,
                         z: localPoint.z + placementWorldPosition.z
                     };
-                    const worldAabb = brickAabb(worldCenter, definition, brick.rotation + (placement.rotation || 0), brick.tilt);
-                    if (flatAabbDistance(worldAabb, position, avatarRadius) > this._queryRadius) continue;
-                    if (canStep && this._excludedByStep(worldAabb, brick.definitionId, supportHeight, brick.tilt)) continue;
-                    obstacles.push(worldAabb);
+                    this._pushBrickObstacles(obstacles, brick, definition, worldCenter, brick.rotation + (placement.rotation || 0), position, supportHeight, avatarRadius, canStep);
                 }
             }
+        }
+    }
+
+    // The broad phase and the step exclusion ask about the brick as a whole
+    // (its one enclosing box); what is pushed is what it collides as
+    // (core/BrickPassage.js): nothing for a standing door, the jambs and
+    // lintel of a standing arch, and the whole box for every other brick.
+    _pushBrickObstacles(obstacles, brick, definition, worldCenter, rotationDegrees, position, supportHeight, avatarRadius, canStep) {
+        const worldAabb = brickAabb(worldCenter, definition, rotationDegrees, brick.tilt);
+        if (flatAabbDistance(worldAabb, position, avatarRadius) > this._queryRadius) return;
+        if (canStep && this._excludedByStep(worldAabb, brick.definitionId, supportHeight, brick.tilt)) return;
+        for (const box of brickCollisionBoxes(worldCenter, brick.definitionId, definition, rotationDegrees, brick.tilt)) {
+            obstacles.push(box);
         }
     }
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 61a04fb91b01f630 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 7741d1f107953066 -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -148,6 +148,14 @@ gefangen haben, blockiert nichts mehr. Ihr Avatar kann über platzierte
 Strukturen gehen, senkrechte Flächen erklimmen und sich in unebenem
 Gelände bewegen. Die Kamera folgt Ihrem Avatar natürlich, während Sie sich
 bewegen.
+
+Türen und Bögen sind Eingänge. Eine Tür schwingt auf, von Ihnen weg, wenn
+Sie auf sie zugehen, und schließt sich hinter Ihnen; sie öffnet sich auch für
+Bewohner und für die Personen, die Sie sehen, und niemand sonst sieht die
+Türen, die Sie öffnen. Durch die Öffnung eines Bogens gehen Sie hindurch,
+und seine Seiten und sein Scheitel sind so fest, wie sie aussehen. Ein
+kleiner Bogen ist zu niedrig zum Hindurchgehen, und eine auf die Seite
+gekippte Tür oder ein gekippter Bogen hält Sie auf wie jeder andere Stein.
 
 **Avatar folgen** hält die Kamera an Ihren Avatar gekoppelt, während er
 sich bewegt, statt frei zu kreisen. Sie können auch den Avataren anderer

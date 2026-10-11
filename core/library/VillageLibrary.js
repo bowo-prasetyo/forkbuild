@@ -68,7 +68,8 @@ const houseBricks = [
     b('core:wall_1x3', 0.5, 1.75, -2),
     b('core:wall_1x3', 1.5, 1.75, -2),
     b('core:door', -0.5, 1.25, -2),
-    b('core:stair', -0.5, 0.5, -2.5),
+    // The doorstep: level with the floor, so the door opens onto it.
+    b('core:plate_1x1', -0.5, 0.125, -2.5, 0, STONE),
 
     // North (back) wall — four full segments plus a large window.
     b('core:wall_1x3', -1.5, 1.75, 2),
@@ -271,14 +272,14 @@ const largeHouseBricks = [
     b('core:slab_4x4', -1, 0.125, 0),
     b('core:plate_2x4', 2, 0.125, 0),
 
-    // Ground floor — south wall (door + stair entry).
+    // Ground floor — south wall (door + doorstep).
     b('core:wall_1x3', -2.5, 1.75, -2),
     b('core:wall_1x3', -1.5, 1.75, -2),
     b('core:wall_1x3', -0.5, 1.75, -2),
     b('core:wall_1x3', 1.5, 1.75, -2),
     b('core:wall_1x3', 2.5, 1.75, -2),
     b('core:door', 0.5, 1.25, -2),
-    b('core:stair', 0.5, 0.5, -2.5),
+    b('core:plate_1x1', 0.5, 0.125, -2.5, 0, STONE),
 
     // Ground floor — north wall with a large window.
     b('core:wall_1x3', -2.5, 1.75, 2),
@@ -718,7 +719,9 @@ const gardenCottageBricks = [
 
     // Porch roof over the door, and a threshold stone.
     b('core:roof_gable', 0, 2.75, 3),
-    b('core:cube_half', 0, 0.25, 2.5, 0, STONE),
+    // Level with the floor: a stone any higher would bring a visitor's head
+    // up against the wall over the door.
+    b('core:plate_1x1', 0, 0.125, 2.5, 0, STONE),
 
     // Front garden.
     b('core:lawn_2x2', -3, 0.05, 5),
@@ -739,6 +742,7 @@ const gardenCottageBricks = [
     b('core:fence', 3, 0.5, 8),
     b('core:fence', 4, 0.5, 5, 90),
     b('core:fence', 4, 0.5, 7, 90),
+    b('core:cube_half', 1.5, 0.25, 3.5, 0, STONE),
     b('core:bench', -2.5, 0.35, 6),
     b('core:bush', 2.5, 0.6, 6.5),
     b('core:rock', 3.2, 0.6, 4.6),

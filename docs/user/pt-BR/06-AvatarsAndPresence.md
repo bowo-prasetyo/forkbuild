@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 61a04fb91b01f630 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 7741d1f107953066 -->
 # 06 — Avatares e presença
 
 <!-- languages -->
@@ -138,6 +138,14 @@ caminhada a pé é barrada. Um animal que você pegou não bloqueia mais nada.
 Seu avatar pode andar sobre estruturas posicionadas, escalar superfícies
 verticais e percorrer terreno irregular. A câmera acompanha seu avatar
 naturalmente enquanto você se move.
+
+Portas e arcos são entradas. Uma porta se abre, para longe de você, quando
+você se aproxima, e se fecha depois que você passa; ela também se abre para
+os moradores e para as pessoas que você vê, e ninguém mais vê as portas que
+você abre. Você passa pela abertura de um arco, e as laterais e o topo dele
+são tão sólidos quanto parecem. Um arco pequeno é baixo demais para passar,
+e uma porta ou um arco inclinado de lado bloqueia você como qualquer outro
+bloco.
 
 **Seguir avatar** mantém a câmera travada no seu avatar enquanto ele se
 move, em vez de orbitar livremente. Você também pode seguir os avatares de

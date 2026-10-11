@@ -1141,6 +1141,15 @@ this order. Each is a separate class, and each can be left out:
       -> AvatarWildlifeConstraint   slide around deer/rabbits
       -> AvatarResidentConstraint   slide around World Residents
 
+The brick constraints ask core/BrickPassage.js what each brick collides as: one box (`brickAabb()`) for nearly
+every brick, nothing for a standing door, and for a standing arch its jambs and a lintel stepped down to follow the
+opening (`ARCH_OPENINGS`, which renderer/ThreeBrickFactory.js draws the arch with too). Over a doorway or an arch's
+opening, `AvatarStepConstraint` takes a top out of a step's reach as a roof, not as ground to climb, so the avatar
+stands on the passage's floor (`passageFloorAt()`). Tilted, a door or an arch is one box again. In World View, doors
+swing open away from whoever walks up and shut behind them (core/DoorSwing.js; renderer/DoorSwingAnimator.js through
+`WorldRenderer#animateDoors()`, fed every frame with where the local avatar, the remote avatars and the residents are
+drawn). The swing is drawing only: the build still holds a shut door, and the Editor never swings one.
+
 `AvatarWaterConstraint` is not a step in that chain. It supplies water to the controller: the depth that slows wading
 (`core/AvatarWaterWalkability.js`), and where the surface lies in the presence frame. On foot, water deeper than half
 the avatar's height over whatever it would stand on (`core/AvatarSwimming.js#isSwimmableDepth()`) makes the avatar
