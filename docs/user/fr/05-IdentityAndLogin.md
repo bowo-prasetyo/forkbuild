@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: b7e773ae656ae805 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: a155256d8ce4d313 -->
 # 05 — Identité et connexion
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · **Français** · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../05-IdentityAndLogin.md).
-<!-- /stale -->
 
 ForkBuild n’a ni mot de passe ni serveur de comptes central. **Votre
 identité est une paire de clés cryptographiques stockée dans ce
@@ -108,6 +104,24 @@ automatiquement les champs de cette page.
 
 Il n’y a ni renommage ni suppression — les identités sont faites pour
 durer ; si vous voulez arrêter d’en utiliser une, révoquez-la plutôt.
+
+### Ce que fait la révocation — et ce qu’elle ne fait pas
+
+Révoquer empêche une identité de signer quoi que ce soit de nouveau, y
+compris la preuve dont elle a besoin pour établir une nouvelle connexion
+avec une autre personne. Cela ne vous déconnecte **pas**, et vous pouvez
+toujours vous connecter avec elle ensuite — sa carte dans **Mes identités**
+affiche simplement **Révoquée**. C’est voulu, pour que vous puissiez encore
+l’ouvrir pour la consulter ou l’**Exporter** une dernière fois. Pour
+continuer à travailler, créez une nouvelle identité et connectez-vous avec
+celle-ci.
+
+La révocation est définitive, sur cet appareil et sur tout appareil où vous
+restaurez sa sauvegarde. Les connexions déjà ouvertes au moment de la
+révocation ne sont pas coupées ; à leur prochaine reconnexion, l’identité
+révoquée ne pourra plus prouver qui elle est. Déclarez un successeur *avant*
+de révoquer si vous voulez que les autres sachent quelle identité la
+remplace — ensuite, l’identité révoquée ne peut plus le signer.
 
 ## Sauvegarder une identité (export et import)
 

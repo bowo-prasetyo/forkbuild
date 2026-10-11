@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: b7e773ae656ae805 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: a155256d8ce4d313 -->
 # 05 — Identidad e inicio de sesión
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · **Español** · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../05-IdentityAndLogin.md).
-<!-- /stale -->
 
 ForkBuild no tiene contraseñas ni un servidor central de cuentas. **Su
 identidad es un par de claves criptográficas guardado en este navegador**:
@@ -106,6 +102,23 @@ automáticamente los campos de esta página.
 No hay forma de cambiar el nombre ni de eliminar una identidad: las
 identidades están pensadas para perdurar; si quiere dejar de usar una,
 revóquela.
+
+### Qué hace revocar — y qué no
+
+Revocar impide que una identidad firme nada nuevo, incluida la prueba que
+necesita para iniciar una nueva conexión con otra persona. **No** cierra su
+sesión, y puede seguir iniciando sesión con ella después: su tarjeta en
+**Mis identidades** simplemente muestra **Revocada**. Es a propósito, para
+que todavía pueda abrirla para consultarla o usar **Exportar** una última
+vez. Para seguir trabajando, cree una identidad nueva e inicie sesión con
+ella.
+
+Revocar es permanente, en este dispositivo y en cualquier dispositivo donde
+restaure su copia de seguridad. Las conexiones que ya estaban abiertas
+cuando la revocó no se cortan; la próxima vez que se reconecten, la
+identidad revocada no podrá demostrar quién es. Declare una sucesora *antes*
+de revocar si quiere que los demás sepan qué identidad la reemplaza:
+después, la revocada ya no puede firmar eso.
 
 ## Hacer una copia de seguridad de una identidad (exportar e importar)
 

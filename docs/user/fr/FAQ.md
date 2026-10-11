@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 8311a31a81066243 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: b2edb99b3a03a213 -->
 # Questions fréquentes
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · **Français** · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../FAQ.md).
-<!-- /stale -->
 
 Des réponses courtes aux questions les plus fréquentes, chacune renvoyant
 vers le guide qui l’explique en détail.
@@ -152,6 +148,16 @@ jour dans un dossier synchronisé par votre stockage en ligne. Voir
 
 Non. Les identités sont faites pour durer. Pour arrêter d’en utiliser
 une, déclarez un successeur ou révoquez-la dans **Mes identités**.
+
+### J’ai révoqué mon identité, alors pourquoi puis-je encore me connecter avec elle ?
+
+C’est normal. Révoquer empêche l’identité de signer quoi que ce soit de
+nouveau, y compris ce dont elle a besoin pour se connecter à d’autres
+personnes, mais cela ne vous empêche pas de vous connecter. Vous pouvez
+ainsi encore la consulter ou l’exporter. Elle affiche **Révoquée** dans
+**Mes identités**, et la révocation ne peut jamais être annulée. Créez une
+nouvelle identité pour continuer à travailler. Voir
+[Ce que fait la révocation — et ce qu’elle ne fait pas](05-IdentityAndLogin.md#ce-que-fait-la-révocation--et-ce-quelle-ne-fait-pas).
 
 ### Pourquoi une ancienne copie de ForkBuild n’ouvre-t-elle pas mon document exporté ?
 

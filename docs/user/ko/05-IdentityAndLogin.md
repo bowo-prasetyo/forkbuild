@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: b7e773ae656ae805 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: a155256d8ce4d313 -->
 # 05 — 신원과 로그인
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · **한국어** · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../05-IdentityAndLogin.md)을 참고하세요.
-<!-- /stale -->
 
 <!-- languages -->
 <!-- /languages -->
@@ -92,6 +88,21 @@ ForkBuild에는 비밀번호도 중앙 계정 서버도 없습니다. **신원�
 
 이름 바꾸기나 삭제는 없습니다 — 신원은 오래 유지되도록 만들어졌습니다. 그만
 쓰고 싶다면 대신 폐기하세요.
+
+### 폐기가 하는 일과 하지 않는 일
+
+폐기하면 그 신원은 더 이상 새로운 것에 서명할 수 없습니다. 다른 사람과 새
+연결을 시작하는 데 필요한 증명도 마찬가지입니다. 하지만 로그아웃되지는
+**않으며**, 폐기한 뒤에도 그 신원으로 로그인할 수 있습니다 — **내 신원**의
+카드에 **폐기됨**이 표시될 뿐입니다. 일부러 그렇게 한 것으로, 그 신원을 열어
+살펴보거나 마지막으로 한 번 더 **내보내기**할 수 있게 하기 위해서입니다. 계속
+작업하려면 새 신원을 만들고 그 신원으로 로그인하세요.
+
+폐기는 영구적이며, 이 기기뿐 아니라 그 백업을 복원한 모든 기기에서도
+마찬가지입니다. 폐기할 때 이미 열려 있던 연결은 끊기지 않지만, 다음에 다시
+연결될 때 폐기된 신원은 자신을 증명할 수 없습니다. 어떤 신원이 이를 대신하는지
+다른 사람들이 알기를 원한다면 폐기하기 *전에* 후속 신원을 선언하세요 — 폐기한
+뒤에는 그 신원으로 더 이상 서명할 수 없습니다.
 
 ## 신원 백업하기 (내보내기와 가져오기)
 

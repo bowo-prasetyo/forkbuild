@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 8311a31a81066243 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: b2edb99b3a03a213 -->
 # Pertanyaan Umum
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · **Bahasa Indonesia** · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../FAQ.md).
-<!-- /stale -->
 
 Jawaban singkat atas pertanyaan yang paling sering muncul, masing-masing
 dengan tautan ke panduan yang menjelaskannya secara lengkap.
@@ -153,6 +149,16 @@ setiap hari ke folder yang disinkronkan oleh penyimpanan cloud Anda. Lihat
 Tidak. Identitas dimaksudkan untuk bertahan lama. Untuk berhenti
 memakainya, nyatakan penggantinya atau cabut identitas itu di **Identitas
 Saya**.
+
+### Saya sudah mencabut identitas saya, mengapa saya masih bisa masuk dengannya?
+
+Itu memang seharusnya. Mencabut menghentikan identitas dari menandatangani
+apa pun yang baru, termasuk yang dibutuhkannya untuk terhubung dengan orang
+lain, tetapi tidak menghentikan Anda untuk masuk. Dengan begitu Anda masih
+bisa melihat atau mengekspornya. Identitas itu menampilkan **Dicabut** di
+**Identitas Saya**, dan pencabutan tidak pernah bisa dibatalkan. Buat
+identitas baru untuk terus bekerja. Lihat
+[Apa yang dilakukan pencabutan — dan yang tidak](05-IdentityAndLogin.md#apa-yang-dilakukan-pencabutan--dan-yang-tidak).
 
 ### Mengapa salinan ForkBuild yang lebih lama tidak bisa membuka dokumen yang saya ekspor?
 
