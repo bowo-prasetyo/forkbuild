@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: b42e7153e5753e1e -->
+<!-- translation-of: docs/Privacy.md source-hash: ff126b5ac2ead020 -->
 # Privacidad
 
 <!-- languages -->
@@ -118,6 +118,14 @@ dispositivo» más abajo).
   par conectado corriente: conoce su dirección IP y ve su avatar y su
   presencia según lo permita su configuración de visibilidad. Usted conoce
   las suyas del mismo modo, y el nombre con el que pasea.
+- **Amigos con los que construye.** Cualquiera que abra un enlace
+  **Construir conmigo** que usted creó, mientras funcione, se conecta con
+  usted del mismo modo y recibe su nombre visible, el título de la
+  construcción y, en cuanto su Editor lo pide, la construcción misma;
+  después, cada cambio que cualquiera de los dos haga en ella, adónde apunta
+  su puntero y qué tiene seleccionado, mientras construyen juntos. Conserva
+  su copia. Usted conoce del mismo modo su dirección IP, el nombre con el
+  que construye y adónde apunta.
 - **Cualquiera, mientras está en una sala pública.** Unirse a la sala
   pública (**Pares**) o a la sala de un Mundo (**Sala** en la Vista del
   mundo) muestra la clave pública de su identidad y el nombre visible que
@@ -184,7 +192,7 @@ abajo):
 
 Y cuando alguien se une al desafío de construcción semanal (**Unirse al
 desafío**, o el desafío en **Nuevo** del Editor): `/e/challenge-join`; y cuando alguien abre
-la plaza del reto de una semana en la vista del mundo: `/e/plaza-visit`. Y cuando alguien crea un enlace **Pasear aquí conmigo** en la vista del mundo: `/e/walk-link`; y cuando un amigo llega por uno: `/e/walk-joined`.
+la plaza del reto de una semana en la vista del mundo: `/e/plaza-visit`. Y cuando alguien crea un enlace **Pasear aquí conmigo** en la vista del mundo: `/e/walk-link`; y cuando un amigo llega por uno: `/e/walk-joined`. Y cuando alguien crea un enlace **Construir conmigo** en el Editor: `/e/build-link`; y cuando un amigo se une por uno: `/e/build-joined`.
 
 Y la primera vez que se publica una construcción desde este navegador
 (publicarla de nuevo más tarde no envía nada):
@@ -259,12 +267,14 @@ dirección IP y lo que usted le pide.
 | En el sitio oficial, copia el código para insertar de una construcción, o una construcción insertada se muestra o se abre en ForkBuild (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con una ruta fija que indica cuál de los tres casos fue, sin referente y sin cookie |
 | En el sitio oficial, se une al desafío de construcción semanal o abre su plaza (vea «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/e/challenge-join` o `/e/plaza-visit`, sin referente y sin cookie |
 | En el sitio oficial, crea un enlace **Pasear aquí conmigo** o llega por uno (vea «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/e/walk-link` o `/e/walk-joined`, sin referente y sin cookie |
+| En el sitio oficial, crea un enlace **Construir conmigo** o se une por uno (vea «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/e/build-link` o `/e/build-joined`, sin referente y sin cookie |
 | En el sitio oficial, publica una construcción por primera vez (vea «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con una ruta fija que indica su rango de bloques, y otra más si es una segunda construcción o un remix, sin referente y sin cookie |
 | Abre el sitio oficial desde el enlace de una publicación de lanzamiento (`?ref=…`, vea «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/r/<canal>`, sin referente y sin cookie |
 | Se vuelve descubrible, o busca a alguien, en **Pares** | el servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | la clave pública de su identidad y una oferta de conexión, que se guardan como máximo 15 minutos; la identidad que busca; cuando se conecta con alguien que encontró, su respuesta de conexión (que muestra sus direcciones de red), que solo esa persona puede recoger |
 | Se une a una sala pública, o mira una | el mismo servidor de encuentro | su tarjeta de sala firmada (clave pública, nombre visible, qué sala), que se guarda como máximo 15 minutos y se renueva mientras se queda; qué sala mira |
 | Copia a otro dispositivo (**Sus datos** → **Copiar a otro dispositivo**) o abre su enlace en el otro dispositivo | el servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | una clave pública creada solo para esta copia (no la de su identidad) y una oferta de conexión, guardadas como máximo 10 minutos; desde el otro dispositivo, esa clave y su respuesta de conexión. Lo copiado va directamente entre los dispositivos, cifrado con una clave que solo tiene el código |
-| Crea un enlace **Pasear aquí conmigo** en la vista del mundo, o abre uno | el servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | una clave pública creada solo para este enlace (no la de su identidad) y una oferta de conexión, guardada mientras el enlace funciona (como máximo 30 minutos) y ofrecida de nuevo tras cada amigo que se une; de un amigo, esa clave y su respuesta de conexión. El Mundo, ambos nombres y la invitación que conecta sus dos sesiones de pares van directamente entre sus dispositivos |
+| Crea un enlace **Pasear aquí conmigo** en la vista del mundo, o abre uno | el servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | una clave pública creada solo para este enlace (no la de su identidad) y una oferta de conexión, cada una guardada como máximo 10 minutos y ofrecida de nuevo mientras el enlace funciona (como máximo 30 minutos) y tras cada amigo que se une; de un amigo, esa clave y su respuesta de conexión. El Mundo, ambos nombres y la invitación que conecta sus dos sesiones de pares van directamente entre sus dispositivos |
+| Crea un enlace **Construir conmigo** en el Editor, o abre uno | el mismo servidor de encuentro | lo mismo que para **Pasear aquí conmigo**. El título de la construcción, ambos nombres, la invitación, la construcción y cada cambio en ella van directamente entre sus dispositivos |
 | Se inicia una conexión entre pares | servidores STUN (`stun.l.google.com`) | nada más que una solicitud de su dirección IP pública |
 | Inicia una conexión entre pares, si el servidor de encuentro ofrece un relay | `/turn-credentials` del servidor de encuentro, y luego su relay TURN (Cloudflare) | una solicitud de credenciales de relay de corta duración, como máximo una vez por hora aproximadamente; el tráfico retransmitido está cifrado de extremo a extremo por WebRTC |
 | La app está abierta y su pestaña visible (sincronización de anuncios en segundo plano) | relays de Nostr (`relay.damus.io`), un gateway de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`), nodos de Blurt (`rpc.blurt.blog`) | consultas por las etiquetas de descubrimiento de ForkBuild: las etiquetas compartidas de Snapshots y de comentarios, y las regiones de nombres de lugares y las celdas del mapa que visitó |

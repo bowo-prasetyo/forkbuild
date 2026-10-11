@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: ee6ec2bdfb73a405 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 60fb1dcaa24488dc -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -254,6 +254,11 @@ Toda mudança é registrada, então você sempre pode voltar:
 
 Mover dez blocos conta como **um** passo de desfazer, então desfazer
 continua prático mesmo em construções grandes.
+
+Enquanto vocês constroem juntos (**Construir comigo**, abaixo), Desfazer e
+Refazer ficam pausados: senão, o seu passo e o do seu amigo poderiam ser
+desfeitos em uma ordem diferente em cada tela. Em vez disso, exclua ou mova
+um bloco.
 
 ## Grupos
 
@@ -570,6 +575,34 @@ seu primeiro clique ou tecla, como os navegadores exigem.
   este dispositivo não tem (abra-os em Recentes), ignorando os que ele tem
   sem mudanças e salvando uma cópia ao lado de qualquer um que ele tenha em
   outra versão. Alterações não salvas não entram, então salve antes.
+
+## Construir comigo: construir juntos, ao vivo
+
+**Construir comigo**, abaixo do nome da construção na barra lateral, cria um
+link que deixa seus amigos trabalharem nesta construção com você, ao mesmo
+tempo. Envie como quiser; ele também aparece como QR code para um celular.
+Um amigo que abre o link entra na conta, se ainda não entrou (os blocos dele
+são adicionados com o nome dele), clica em **Entrar** e a sua construção
+abre no Editor dele. A partir daí, cada bloco que qualquer um de vocês
+colocar, mover, mudar de cor ou excluir aparece nas duas telas.
+
+- Uma faixa sobre a cena mostra quem está construindo, cada um com sua
+  própria cor, e cada um de vocês vê para onde o outro está apontando e o
+  que ele selecionou, nessa cor.
+- Precisa ser a sua própria construção: uma que você começou, ou uma cópia
+  que você fez. Uma construção que você começou antes de entrar na conta
+  passa a ser sua quando você convida amigos para ela.
+- Qualquer pessoa que abrir o link nos primeiros 30 minutos pode entrar,
+  enquanto a construção continuar aberta no seu Editor. Todos que entraram
+  podem construir até você clicar em **Parar**, abrir outra construção ou
+  sair do Editor. **Link**, na faixa, mostra o link de novo.
+- O Editor de cada amigo guarda a própria cópia, salva no dispositivo dele.
+  Quando você para, ele pode ficar com ela, mas o que ele mudar não chega
+  mais até você.
+- Entrar conecta os dois dispositivos diretamente, como **Passear aqui
+  comigo**: cada um pode ver o endereço IP do outro. Ninguém vira um par
+  lembrado nem amigo a menos que você escolha. É preciso um servidor de
+  encontro; o site oficial tem um.
 
 ## Baixando um modelo 3D
 

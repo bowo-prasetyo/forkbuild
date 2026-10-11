@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: ee6ec2bdfb73a405 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 60fb1dcaa24488dc -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -273,6 +273,11 @@ arrière :
 
 Déplacer dix briques compte pour **une seule** étape d’annulation,
 l’annulation reste donc gérable même sur de grosses constructions.
+
+Pendant que vous construisez ensemble (**Construire avec moi**, plus bas),
+Annuler et Rétablir sont suspendus : sinon, votre étape et celle de votre
+ami pourraient être annulées dans un ordre différent sur chaque écran.
+Supprimez ou déplacez plutôt une brique.
 
 ## Groupes
 
@@ -616,6 +621,36 @@ clic ou appui sur une touche, comme l’exigent les navigateurs.
   enregistrant une copie à côté de ceux qu’il a dans une autre version.
   Les modifications non enregistrées ne sont pas incluses, alors
   enregistrez d’abord.
+
+## Construire avec moi : construire ensemble, en direct
+
+**Construire avec moi**, sous le nom de la construction dans la barre
+latérale, crée un lien qui permet à vos amis de travailler sur cette
+construction avec vous, en même temps. Envoyez-le comme vous voulez ; il
+s’affiche aussi en code QR pour un téléphone. Un ami qui l’ouvre se connecte
+s’il ne l’a pas encore fait (ses briques sont ajoutées sous son nom), clique
+sur **Rejoindre**, et votre construction s’ouvre dans son Éditeur. Dès lors,
+chaque brique que l’un de vous place, déplace, recolore ou supprime apparaît
+sur les deux écrans.
+
+- Un bandeau au-dessus de la scène montre qui construit, chacun dans sa
+  couleur, et chacun voit où l’autre pointe et ce qu’il a sélectionné, dans
+  cette couleur.
+- Il doit s’agir de votre propre construction : une que vous avez commencée,
+  ou une copie que vous avez faite. Une construction commencée avant de vous
+  connecter devient la vôtre quand vous y invitez des amis.
+- Toute personne qui ouvre le lien dans ses 30 premières minutes peut
+  rejoindre, tant que la construction reste ouverte dans votre Éditeur. Tous
+  ceux qui ont rejoint peuvent construire jusqu’à ce que vous cliquiez sur
+  **Arrêter**, ouvriez une autre construction ou quittiez l’Éditeur.
+  **Lien**, dans le bandeau, affiche de nouveau le lien.
+- L’Éditeur de chaque ami garde sa propre copie, enregistrée sur son
+  appareil. Quand vous arrêtez, il peut la garder, mais ce qu’il modifie ne
+  vous parvient plus.
+- Rejoindre connecte directement vos deux appareils, comme **Se promener ici
+  avec moi** : chacun peut voir l’adresse IP de l’autre. Personne ne devient
+  un pair mémorisé ni un ami si vous ne le choisissez pas. Il faut un
+  serveur de rendez-vous ; le site officiel en a un.
 
 ## Télécharger un modèle 3D
 

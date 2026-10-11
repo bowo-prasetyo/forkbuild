@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: ee6ec2bdfb73a405 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 60fb1dcaa24488dc -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -267,6 +267,11 @@ Jede Änderung wird festgehalten, sodass Sie immer zurückgehen können:
 
 Zehn Steine zu verschieben zählt als **ein** Rückgängig-Schritt, sodass
 Rückgängig auch bei großen Bauwerken überschaubar bleibt.
+
+Während Sie gemeinsam bauen (**Mit mir bauen**, unten), sind Rückgängig und
+Wiederholen pausiert: Ihr Schritt und der Ihres Freundes könnten sonst auf
+jedem Bildschirm in einer anderen Reihenfolge rückgängig gemacht werden.
+Löschen oder verschieben Sie stattdessen einen Stein.
 
 ## Gruppen
 
@@ -604,6 +609,35 @@ Browser es verlangen.
   Zuletzt), überspringt unveränderte, die es hat, und speichert eine Kopie
   neben jedem, das es in einer anderen Version hat. Ungespeicherte
   Änderungen sind nicht enthalten, speichern Sie also vorher.
+
+## Mit mir bauen: gemeinsam bauen, live
+
+**Mit mir bauen**, unter dem Namen des Bauwerks in der Seitenleiste,
+erstellt einen Link, mit dem Freunde dieses Bauwerk gleichzeitig mit Ihnen
+bauen. Schicken Sie ihn auf jedem Weg, der Ihnen passt; er erscheint auch
+als QR-Code für ein Handy. Ein Freund, der ihn öffnet, meldet sich an, falls
+noch nicht geschehen (seine Steine werden unter seinem Namen hinzugefügt),
+klickt auf **Beitreten**, und Ihr Bauwerk öffnet sich in seinem Editor. Von
+da an erscheint jeder Stein, den einer von Ihnen platziert, verschiebt,
+umfärbt oder löscht, auf beiden Bildschirmen.
+
+- Eine Leiste über der Szene zeigt, wer baut, jeden in seiner eigenen Farbe,
+  und jeder von Ihnen sieht in dieser Farbe, wohin der andere zeigt und was
+  er ausgewählt hat.
+- Es muss Ihr eigenes Bauwerk sein: eines, das Sie begonnen haben, oder eine
+  Kopie, die Sie erstellt haben. Ein Bauwerk, das Sie vor der Anmeldung
+  begonnen haben, wird Ihres, wenn Sie Freunde dazu einladen.
+- Wer den Link in den ersten 30 Minuten öffnet, kann beitreten, solange das
+  Bauwerk in Ihrem Editor geöffnet bleibt. Alle, die beigetreten sind,
+  können bauen, bis Sie auf **Beenden** klicken, ein anderes Bauwerk öffnen
+  oder den Editor verlassen. **Link** in der Leiste zeigt den Link erneut.
+- Der Editor jedes Freundes behält seine eigene Kopie, auf seinem Gerät
+  gespeichert. Wenn Sie aufhören, kann er sie behalten, aber was er ändert,
+  erreicht Sie nicht mehr.
+- Beim Beitreten werden Ihre beiden Geräte direkt verbunden, wie bei **Mit
+  mir hier spazieren**: Jeder kann die IP-Adresse des anderen sehen. Niemand
+  wird zu einem gemerkten Peer oder Freund, wenn Sie es nicht wählen. Es
+  braucht einen Rendezvous-Server; die offizielle Website hat einen.
 
 ## Ein 3D-Modell herunterladen
 
