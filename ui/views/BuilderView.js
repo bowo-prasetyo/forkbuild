@@ -24,7 +24,7 @@ export default {
         const data = useBuilderData();
         const identityId = computed(() => (typeof route.params.identityId === 'string' ? route.params.identityId : ''));
         const profile = computed(() => builderProfile({ identityId: identityId.value, publications: data.publications(), signerOf: data.signerOf }));
-        const isYou = computed(() => Boolean(identityId.value) && identityId.value === data.ownIdentityId());
+        const isYou = computed(() => data.isOwnIdentity(identityId.value));
         const name = computed(() => profile.value.name || (typeof route.query.name === 'string' && route.query.name.trim() ? route.query.name.trim() : null));
         const helped = computed(() => (isYou.value ? data.helpedBy(identityId.value) : []));
         const worldRoute = (publication) => ({ path: `/world/${publication.documentId}` });

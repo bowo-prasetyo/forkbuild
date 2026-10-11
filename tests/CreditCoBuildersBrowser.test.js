@@ -5,6 +5,18 @@ import RemixFamilyTree from '../ui/components/remix/RemixFamilyTree.js';
 import { remixFamily } from '../core/RemixFamily.js';
 import { t } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
+import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { LocalContentStore } from '../content/LocalContentStore.js';
+import { Document } from '../core/Document.js';
+import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/World.js';
+import { Building } from '../core/Building.js';
+import { Brick } from '../core/Brick.js';
+import { Position } from '../core/Position.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // Credit co-builders (core/BuiltWith.js), rendered by real Vue: the Editor's
 // build panel and the family tree say who built a build with its author.
@@ -14,7 +26,7 @@ function mount(component, props) {
     const host = document.createElement('div');
     document.body.appendChild(host);
     const app = createApp({ render: () => h(component, props) });
-    app.component('router-link', { props: ['to'], template: '<a><slot /></a>' });
+    app.component('router-link', { props: ['to'], template: '<a :data-to="typeof to === \'string\' ? to : to.path"><slot /></a>' });
     app.mount(host);
     return { host, unmount: () => { app.unmount(); host.remove(); } };
 }
@@ -48,4 +60,31 @@ const info = { title: 'Harbor', status: 'saved', editable: true, builtWith: [{ n
     assert(line[1].startsWith(t('remixFamily.titleWith', { title: 'Mill', names: 'Lee' })), `and so does this build, with no author named (${line[1]})`);
     tree.unmount();
     console.log('✓ the family tree credits co-builders');
+}
+
+// A signed build: its maker's name links to their page, by the identity whose
+// signature verifies, and so does each credited name; its title, to the build.
+{
+    const storage = new InMemoryStorageProvider();
+    const identity = new LocalIdentityProvider(storage);
+    identity.login('tree-ana');
+    const world = new World();
+    const building = new Building({ creator: 'x' });
+    building.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(0, 0.5, 0) }));
+    world.addBuilding(building);
+    const manager = new DocumentManager();
+    manager.load(new Document({ world, metadata: new DocumentMetadata({ title: 'Tree Harbor', builtWith: [{ name: 'Kim', identityId: 'did:key:kim' }] }) }), 'tree-doc');
+    const parent = new PublishDocumentUseCase(new LocalPublisherProvider(storage, new LocalContentStore(storage)), identity).execute(manager);
+    const child = { documentId: 'tree-child', parentDocumentId: parent.documentId, title: 'Tree Harbor II', author: 'sam', publishedAt: new Date().toISOString() };
+    const family = remixFamily(child, { findByDocumentId: (id) => (id === parent.documentId ? [parent] : []), findByParentId: () => [] });
+    const tree = mount(RemixFamilyTree, { family, routeFor: (member) => (member.publication ? { path: `/world/${member.documentId}` } : null) });
+    const ancestor = tree.host.querySelector('.remix-family-ancestor');
+    assert(ancestor.querySelector('.remix-family-link').dataset.to === `/world/${parent.documentId}` && ancestor.querySelector('.remix-family-link').textContent === 'Tree Harbor', 'the title links to the build');
+    const author = ancestor.querySelector('.remix-family-author');
+    assert(author && author.textContent === 'tree-ana' && author.dataset.to === `/builder/${encodeURIComponent(identity.getSigningIdentity().id)}`, 'its maker to their page, by the identity that signed it');
+    const credit = ancestor.querySelector('.built-with-name');
+    assert(credit && credit.textContent === 'Kim' && credit.dataset.to === `/builder/${encodeURIComponent('did:key:kim')}`, 'and each credited name to theirs');
+    assert(!tree.host.querySelector('.remix-family-self .remix-family-author'), 'an unsigned build\'s maker links nowhere');
+    tree.unmount();
+    console.log('✓ the family tree\'s names link to their people');
 }

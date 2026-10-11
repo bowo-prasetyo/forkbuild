@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c13a0384c503ab2c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 761f34649511fe59 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -641,9 +641,13 @@ aparece en ambas pantallas.
   una construcción nueva.
 - Cada nombre acreditado, y el autor de una construcción compartida, abre la
   página de esa persona: las construcciones que firmó su identidad y
-  aquellas en las que otros le dan crédito. **Mis mundos** muestra
+  aquellas en las que otros le dan crédito. En el árbol familiar, el título
+  de cada construcción la abre, y los nombres de su autor y de quienes la
+  construyeron con él abren sus páginas. **Mis mundos** muestra
   **Construcciones que ayudó a hacer**, aquellas en las que un amigo le dio
-  crédito a usted, y cada una abre su Mundo una vez publicada.
+  crédito a usted, y cada una abre su Mundo una vez publicada; sus otros
+  dispositivos también las muestran, una vez conectados a este (o tras
+  recibir una copia de sus datos).
 - Unirse conecta directamente sus dos dispositivos, como **Pasear aquí
   conmigo**: cada uno puede ver la dirección IP del otro. Nadie pasa a ser
   un par recordado ni un amigo si usted no lo elige. Necesita un servidor de

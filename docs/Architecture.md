@@ -1005,7 +1005,14 @@ pages go by: application/buildTogether/builderProfile.js lists the builds
 their identity signed and those whose verified author credits them, and
 helpedBuilds.js merges those credits with the device's notes for **Builds you
 helped make** on My Worlds and your own page. Credited names and a shared
-build's author link there (ui/components/remix/BuiltWithNames.js).
+build's author link there (ui/components/remix/BuiltWithNames.js); in the
+family tree (ui/components/remix/RemixFamilyTree.js) a member's title links
+to its build, its author to their page only when its Publication's signature
+verifies, and its credited names to theirs. The list of builds helped make is
+kept under the identity a person's devices share, and
+application/buildTogether/HelpedBuildsSyncUseCase.js gives it to their other
+devices while connected (sibling devices, as DeviceConversationSyncUseCase
+decides them).
 
 **A visitor's view.** World View opens without its protocol tools: the
 coordinates, Search's Location fields, the Camera · Editing line, Nearby's

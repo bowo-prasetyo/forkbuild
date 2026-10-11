@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 472c2d45139f70da -->
+<!-- translation-of: docs/Privacy.md source-hash: 0c17fa09c34c708f -->
 # Privacidad
 
 <!-- languages -->
@@ -63,7 +63,11 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
   mientras las construían juntos (**Construir conmigo**): el título de cada
   construcción, el nombre y la identidad de su autor, y cuándo, para
   **Construcciones que ayudó a hacer** en Mis mundos y en su propia página
-  de constructor. Sus sellos en Inicio se calculan a partir de lo que ya
+  de constructor. Esta lista se guarda bajo la identidad que comparten sus
+  dispositivos, y mientras otro dispositivo suyo esté conectado (un
+  dispositivo autorizado de la misma identidad) los dos se pasan sus
+  listas; nunca va al dispositivo de nadie más. Sus sellos en Inicio se
+  calculan a partir de lo que ya
   aparece aquí y no se guardan.
 
 Borrar los datos de este sitio en el navegador lo elimina todo, y no hay

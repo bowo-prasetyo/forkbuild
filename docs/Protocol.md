@@ -501,6 +501,7 @@ reads `payload`.
 | `forkbuild:world-discovery` | application/discovery/WorldDiscoveryRuntimeBootstrap.js | World Encounter discovery |
 | `forkbuild:document-sync` | application/document/DocumentCommandPropagationUseCase.js | Editor document commands |
 | `forkbuild:build-together-sync` | application/buildTogether/BuildTogetherSession.js | see "Build links" |
+| `forkbuild:helped-builds` | application/buildTogether/HelpedBuildsSyncUseCase.js | see "Build links" |
 | `forkbuild:document-operation-recovery` | core/DocumentOperationRecoveryProtocol.js | fetching missed Editor operations |
 | `forkbuild:publication` | application/publication/PublicationPeerExchange.js | Publications |
 | `forkbuild:content` | application/peer/PeerContentProtocol.js | content bytes by hash |
@@ -586,6 +587,17 @@ take from it. A fork by anyone else starts with none. While building
 together, the host sends the list on `credits` each time it changes, and
 each guest's copy takes it from its host alone, for the build it opened
 from them.
+
+A guest's builds helped make are kept under the identity its devices share
+(DeviceAuthorizationPropagationUseCase#resolveOwnSocialIdentity()), and go
+only between that identity's own devices (a connection that resolves to the
+same identity), on `forkbuild:helped-builds`:
+
+    either way   { kind: 'list', identityId, entries: [{ documentId, title, authorName, authorIdentityId, at }] }
+
+the whole list when such a device connects, then each build noted while it
+stays connected. Each is kept by its newest `at`; a list merged in is never
+sent on, and one for any other identity is ignored.
 
 ### Announcement Index exchange
 

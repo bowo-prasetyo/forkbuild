@@ -221,8 +221,11 @@ const text = (host, selector) => host.querySelector(selector)?.textContent.trim(
             'each name links to that person\'s page');
         const authorLink = view.host.querySelector('.shared-build-author a.shared-build-author-link');
         assert(authorLink && authorLink.getAttribute('href').includes(`/builder/${encodeURIComponent(castle.publication.publisherIdentity.id)}`), 'and the maker\'s name to theirs, by the identity that signed it');
-        const self = view.host.querySelector('.remix-family-self strong');
-        assert(self && self.textContent === t('remixFamily.byAuthorWith', { title: 'Castle on the hill', author: 'link-view-alice', names }), `and so does its family tree (${self && self.textContent})`);
+        const self = view.host.querySelector('.remix-family-self .remix-family-label');
+        assert(self && self.textContent.replace(/\s+/g, ' ').trim() === t('remixFamily.byAuthorWith', { title: 'Castle on the hill', author: 'link-view-alice', names }), `and so does its family tree (${self && self.textContent})`);
+        assert(view.host.querySelector('.remix-family-self strong').textContent === 'Castle on the hill', 'this build\'s own title in bold');
+        assert(view.host.querySelector('.remix-family-self .remix-family-author').getAttribute('href').includes(`/builder/${encodeURIComponent(castle.publication.publisherIdentity.id)}`), 'its maker linking to their page');
+        assert([...view.host.querySelectorAll('.remix-family-self .built-with-name')].map((link) => link.textContent).join() === 'Kim,Sam', 'and each co-builder to theirs');
         console.log('✓ a build made together credits everyone who built it');
     } finally {
         view.unmount();

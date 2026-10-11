@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c13a0384c503ab2c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 761f34649511fe59 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -607,9 +607,13 @@ colocar, mover, mudar de cor ou excluir aparece nas duas telas.
   a dela é uma construção nova.
 - Cada nome nos créditos, e o autor de uma construção compartilhada, abre a
   página dessa pessoa: as construções que a identidade dela assinou e
-  aquelas em que outros dão crédito a ela. **Meus mundos** lista
-  **Construções que você ajudou a fazer**, aquelas em que um amigo deu
-  crédito a você, e cada uma abre o Mundo dela quando é publicada.
+  aquelas em que outros dão crédito a ela. Na árvore genealógica, o título
+  de cada construção a abre, e os nomes do autor dela e dos coconstrutores
+  abrem as páginas deles. **Meus mundos** lista **Construções que você
+  ajudou a fazer**, aquelas em que um amigo deu crédito a você, e cada uma
+  abre o Mundo dela quando é publicada; seus outros dispositivos também as
+  listam, depois de conectados a este (ou de receberem uma cópia dos seus
+  dados).
 - Entrar conecta os dois dispositivos diretamente, como **Passear aqui
   comigo**: cada um pode ver o endereço IP do outro. Ninguém vira um par
   lembrado nem amigo a menos que você escolha. É preciso um servidor de

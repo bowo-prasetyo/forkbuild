@@ -185,6 +185,7 @@ export default Object.freeze({
     'remixFamily.byAuthor': '{title} oleh {author}',
     'remixFamily.byAuthorWith': '{title} oleh {author}, dibangun bersama {names}',
     'remixFamily.titleWith': '{title}, dibangun bersama {names}',
+    'remixFamily.titleOnly': '{title}',
     'remixFamily.unseen': 'Bangunan yang belum pernah dilihat perangkat ini',
     'remixFamily.more': { other: 'dan {count} remix lainnya' },
     'remix.count': { other: 'Di-remix {count} kali' },

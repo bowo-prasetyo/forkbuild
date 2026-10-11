@@ -187,6 +187,7 @@ export default Object.freeze({
     'remixFamily.byAuthor': '{title} by {author}',
     'remixFamily.byAuthorWith': '{title} by {author}, built with {names}',
     'remixFamily.titleWith': '{title}, built with {names}',
+    'remixFamily.titleOnly': '{title}',
     'remixFamily.unseen': 'A build this device hasn\'t seen',
     'remixFamily.more': { one: 'and 1 more remix', other: 'and {count} more remixes' },
     'remix.count': { one: 'Remixed once', other: 'Remixed {count} times' },

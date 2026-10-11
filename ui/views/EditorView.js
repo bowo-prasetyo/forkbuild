@@ -573,6 +573,15 @@ export default {
         const readyMadeBricks = inject('readyMadeBricksStore', null);
         // The builds this identity helped make with friends (Build with me).
         const helpedBuildsStore = inject('helpedBuildsStore', null);
+        // The identity this device acts for: its own, or the one it is an
+        // authorized device of. Credits and the builds you helped make go by it.
+        function ownBuilderIdentityId() {
+            try {
+                return deviceAuthorizationUseCase?.resolveOwnSocialIdentity()?.identityId || resolveSigningIdentityId(identityProvider);
+            } catch {
+                return resolveSigningIdentityId(identityProvider);
+            }
+        }
         const editorSession = new EditorSession({
             registry,
             editorContext,
@@ -604,7 +613,8 @@ export default {
                 peerMessageBus,
                 connectedPeerRegistry: peerSessionManager.registry,
                 resolveConnectionIdentity: (connectedPeer) => deviceAuthorizationUseCase.resolveConnectionIdentity(connectedPeer),
-                ownIdentityIds: () => [resolveSigningIdentityId(identityProvider)].filter(Boolean),
+                // This device's key, and the identity it acts for, which credits name.
+                ownIdentityIds: () => [resolveSigningIdentityId(identityProvider), ownBuilderIdentityId()].filter(Boolean),
                 editor: {
                     openDocument: () => documentManager.document,
                     appliedOperationIds: () => editorSession.appliedOperationIds(),
@@ -616,7 +626,7 @@ export default {
                         return true;
                     },
                     notedHelped: (helped) => {
-                        const own = resolveSigningIdentityId(identityProvider);
+                        const own = ownBuilderIdentityId();
                         if (helpedBuildsStore && own) helpedBuildsStore.note(own, helped);
                     },
                     creditBuilder: (builder) => {

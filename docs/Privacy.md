@@ -56,7 +56,10 @@ send it:
 - for each identity, the builds a friend credited it on while you built
   them together (**Build with me**): each build's title, its author's name
   and identity, and when, for **Builds you helped make** on My Worlds and
-  your own builder page. Your stamps on Home are
+  your own builder page. It is kept under the identity your devices share,
+  and while another device of yours is connected (an authorized device of
+  the same identity) the two give each other their lists; it never goes to
+  anyone else's device. Your stamps on Home are
   worked out from what is already listed here and aren't stored.
 
 Clearing this site's data in the browser deletes all of it, and there is no

@@ -34,7 +34,9 @@ function mount(family) {
     assert(line[0].startsWith('Old Mill by ana'), `the original first (got ${line[0]})`);
     assert(line[1].startsWith('My Mill by ben') && line[1].includes('(this build)'), 'then this build, marked');
     const remix = host.querySelector('.remix-family-self .remix-family-remixes a');
-    assert(remix && remix.textContent === 'Mill by the River by cy' && remix.getAttribute('href') === '/world/remix', 'its remix, linked, under it');
+    assert(remix && remix.textContent === 'Mill by the River' && remix.getAttribute('href') === '/world/remix', 'its remix, its title a link to it, under it');
+    assert(remix.closest('li').textContent.replace(/\s+/g, ' ').trim() === 'Mill by the River by cy', 'with who made it');
+    assert(!host.querySelector('.remix-family-author'), 'a maker whose signature this device can\'t check links nowhere');
     assert(host.querySelector('.remix-family-ancestor a').getAttribute('href') === '/world/original', 'the original links too');
     assert(host.querySelector('.remix-family-title').textContent === 'Family tree', 'headed Family tree');
     unmount();

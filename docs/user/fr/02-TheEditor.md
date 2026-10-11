@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c13a0384c503ab2c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 761f34649511fe59 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -655,9 +655,13 @@ sur les deux écrans.
   ces crédits ; la sienne est une nouvelle construction.
 - Chaque nom crédité, ainsi que l’auteur d’une construction partagée, ouvre
   la page de cette personne : les constructions que son identité a signées
-  et celles où d’autres la créditent. **Mes mondes** liste **Constructions
+  et celles où d’autres la créditent. Dans l’arbre généalogique, le titre
+  de chaque construction l’ouvre, et les noms de son auteur et de ses
+  co-constructeurs ouvrent leurs pages. **Mes mondes** liste **Constructions
   auxquelles vous avez participé**, celles où un ami vous a crédité, chacune
-  ouvrant son Monde une fois publiée.
+  ouvrant son Monde une fois publiée ; vos autres appareils les listent
+  aussi, une fois connectés à celui-ci (ou après avoir reçu une copie de vos
+  données).
 - Rejoindre connecte directement vos deux appareils, comme **Se promener ici
   avec moi** : chacun peut voir l’adresse IP de l’autre. Personne ne devient
   un pair mémorisé ni un ami si vous ne le choisissez pas. Il faut un

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 472c2d45139f70da -->
+<!-- translation-of: docs/Privacy.md source-hash: 0c17fa09c34c708f -->
 # Datenschutz
 
 <!-- languages -->
@@ -64,7 +64,11 @@ veröffentlichen, exportieren oder senden es:
   während Sie sie gemeinsam gebaut haben (**Mit mir bauen**): den Titel
   jedes Bauwerks, Namen und Identität seines Autors und wann, für **Bauten,
   an denen Sie mitgebaut haben** in Meine Welten und auf Ihrer eigenen
-  Erbauerseite. Ihre Stempel auf der Startseite werden aus dem hier
+  Erbauerseite. Diese Liste wird unter der Identität aufbewahrt, die Ihre
+  Geräte gemeinsam haben, und solange ein anderes Gerät von Ihnen verbunden
+  ist (ein berechtigtes Gerät derselben Identität), geben die beiden
+  einander ihre Listen; sie gelangt nie auf das Gerät eines anderen. Ihre
+  Stempel auf der Startseite werden aus dem hier
   Aufgeführten ermittelt und nicht gespeichert.
 
 Das Löschen der Daten dieser Website im Browser löscht all das, und es gibt

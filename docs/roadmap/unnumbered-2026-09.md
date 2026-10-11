@@ -5778,3 +5778,33 @@ work is yours, and every build has a family tree.
   width); `PublicationLinkViewBrowser` and `CreditCoBuildersBrowser` (the links).
 - Not done: the family tree's names as links (each line already links to its build), and the builds you helped make
   on another of your devices, until they are published or the record is copied there (Your Data).
+
+## Family-tree names as links, and the builds you helped make on all your devices (unnumbered, 2026-10-11)
+
+**Every name in a family tree leads to its person, and the builds you helped make follow you.** The family tree linked
+each line to its build but no name to anyone, and the builds you helped make showed only on the device that built
+them. Worse, a device of yours authorized under another identity never noted them at all: credits name the identity
+your devices share, and it looked only for its own key. Pillars served: every build has a family tree, and your work is
+yours.
+
+- **Family tree** (ui/components/remix/RemixFamilyTree.js). Each line is now its message with parts: the title links to
+  the build (this build's stays bold), the author's name to their page only when the member's Publication's signature
+  verifies (never an identity a copy merely claims), and each credited name to theirs (BuiltWithNames).
+- **Kept under the identity your devices share** (ui/views/EditorView.js, ui/composables/useBuilderData.js). A guest's
+  Editor recognises credits naming that identity or its own key, and notes the build under the shared identity; your
+  page is yours on any of your devices, and a list noted under a device's key before this is still read.
+- **On each of your devices** (application/buildTogether/HelpedBuildsSyncUseCase.js, `forkbuild:helped-builds`).
+  When another device of yours connects (a connection resolving to the same identity, as conversation sync decides),
+  each gives the other its list, and each build noted while it stays connected goes to it. Entries keep their newest
+  note (`HelpedBuildsStore#merge()`); a merged list is never sent on; another identity's list, or another person's
+  device, is ignored. Your Data's backup and copy carry the list for devices never connected at the same time.
+- Every language: guide 02's Build with me section and the Privacy page (the list now goes between your own devices);
+  `remixFamily.titleOnly` for a line with neither author nor credits. docs/Protocol.md and docs/Architecture.md
+  describe it.
+- Tests: `HelpedBuildsSync` (two of my devices exchange lists on connecting, newer notes win, a build noted later
+  reaches the other; someone else's device gets and gives nothing; another identity's list or nonsense is ignored; no
+  echo); `RemixFamilyTreeBrowser` and `CreditCoBuildersBrowser` (titles link to builds, a signed build's author to
+  their page, an unsigned one's to nowhere, credited names to theirs); `CoBuilderPagesBrowser` (another device acting
+  for your identity knows your page and lists the builds you helped make).
+- Not done: a device of yours that is never connected at the same time as the one that built learns of an unpublished
+  build helped make only through Your Data.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 472c2d45139f70da -->
+<!-- translation-of: docs/Privacy.md source-hash: 0c17fa09c34c708f -->
 # Confidentialité
 
 <!-- languages -->
@@ -65,7 +65,11 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   vous les construisiez ensemble (**Construire avec moi**) : le titre de
   chacune, le nom et l’identité de son auteur, et quand, pour
   **Constructions auxquelles vous avez participé** dans Mes mondes et sur
-  votre propre page de constructeur. Vos tampons sur l’Accueil sont établis
+  votre propre page de constructeur. Cette liste est conservée sous
+  l’identité que partagent vos appareils, et tant qu’un autre de vos
+  appareils est connecté (un appareil autorisé de la même identité), les
+  deux s’échangent leurs listes ; elle ne va jamais sur l’appareil de
+  quelqu’un d’autre. Vos tampons sur l’Accueil sont établis
   à partir de ce qui est déjà listé ici et ne sont pas enregistrés.
 
 Effacer les données de ce site dans le navigateur supprime tout cela, et
