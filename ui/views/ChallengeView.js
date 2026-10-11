@@ -13,6 +13,7 @@ import {
 import { t } from '../i18n/i18n.js';
 
 const FeaturedBuilds = defineAsyncComponent(() => import('../components/featured/FeaturedBuilds.js'));
+const CollectionFamilies = defineAsyncComponent(() => import('../components/featured/CollectionFamilies.js'));
 
 // A week's build challenge (core/BuildChallenge.js): this week's at
 // /challenge, an earlier one at /challenge/<its Monday>. How to enter, Join
@@ -22,7 +23,7 @@ const FeaturedBuilds = defineAsyncComponent(() => import('../components/featured
 // built-in builds to start from.
 export default {
     name: 'ChallengeView',
-    components: { PublicationCard, FeaturedBuilds, RemixFamilyTree },
+    components: { PublicationCard, FeaturedBuilds, RemixFamilyTree, CollectionFamilies },
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -195,6 +196,10 @@ export default {
                     <h2 id="challenge-families-title">{{ t('challenge.familiesTitle') }}</h2>
                     <p class="home-section-lead">{{ t('challenge.familiesLead') }}</p>
                     <RemixFamilyTree v-for="family in families" :key="family.build.documentId" :family="family" :route-for="familyRoute" />
+                </section>
+                <!-- Before a week has any remixes of its own, the app's example families. -->
+                <section v-else-if="entries.length === 0" class="challenge-section challenge-families challenge-example-families">
+                    <CollectionFamilies heading="h2" />
                 </section>
 
                 <section v-if="view.open" class="challenge-section" aria-labelledby="challenge-ideas-title">

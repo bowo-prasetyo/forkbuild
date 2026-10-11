@@ -256,9 +256,19 @@ the detailed references; in short:
   defineAsyncComponent(), since they bring in Three.js and the brick
   libraries; one thumbnail service serves them all
   (ui/components/featured/featuredLibrary.js).
+- Example remix families: core/library/CollectionLibrary.js is a built-in
+  structure library (`collection:*`) whose builds are remixes of other
+  built-in ones, each its parent's bricks with more added.
+  COLLECTION_REMIXED_FROM keeps who came from whom beside the library (a
+  Structure stores no parent), and collectionFamilies() turns it into trees.
+  ui/components/featured/CollectionFamilies.js shows them in the
+  Repository's ready-made shelf and on a challenge week with no entries,
+  each name opening `/editor?start=<id>`. They are never Publications.
 - The weekly build challenge: core/BuildChallenge.js turns a time into the
   week's challenge (Monday 00:00 UTC to the next, themes taken in turn from
-  CHALLENGE_THEMES starting the week of CHALLENGE_EPOCH) and its tag,
+  CHALLENGE_THEMES starting the week of CHALLENGE_EPOCH; weeks before it
+  keep the turn of the first eight themes they ran with, so their tags
+  stand) and its tag,
   `<theme>-<yyyymmdd>`, so every copy of the app agrees with no server. Each
   theme names a starting structure and a few ideas. Joining
   (`/editor?start=<structure id>&challenge=<its Monday>`, or the challenge

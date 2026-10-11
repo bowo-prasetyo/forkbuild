@@ -115,6 +115,8 @@ await nextTick();
     assert(host.querySelector('.challenge-card-time').textContent.trim() === t('challenge.ended'), 'it says it ended');
     assert(host.querySelector('.challenge-no-entries').textContent.trim() === t('challenge.noEntriesEnded'), 'and that nothing was entered');
     assert(host.querySelector('.challenge-current-link'), 'with a way back to this week');
+    // A week with no entries shows the app's example remix families instead.
+    await until(() => host.querySelectorAll('.challenge-example-families .collection-family').length === 3, 'the example families');
     releaseSearch();
     console.log('✓ an earlier week shows its own entries and cannot be joined');
 }

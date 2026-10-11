@@ -332,6 +332,17 @@ and a bridge. They're there even before anything is published or found.
 Click one (**Remix**) to open your own copy in the Editor; nothing is
 published until you publish it. Click the heading to fold the row away.
 
+Under them, **How remixes grow** shows three example families that come
+with ForkBuild, each a chain of remixes of a ready-made build: the House,
+remixed into a House with a Porch, which was remixed twice more (a House
+with a Garden and a House with a Tower); the Watchtower, remixed into a
+Lighthouse and then a Lighthouse and Keeper's Cottage; and the Mill,
+remixed into a Mill and Granary and then a Farmstead. Each one is its
+parent with more added, the way a remix of yours would be. Click any name
+to open your own copy of it. They're the app's own examples, never anyone's
+publications; they're also in the Build Library's **Structures**, under
+*collection*.
+
 ### Creations others distributed
 
 Each time you open the Repository (or an author's page), it looks on Nostr,
@@ -480,8 +491,10 @@ build on.
 ## The weekly build challenge
 
 Every week ForkBuild sets a theme to build (a lighthouse, a bridge, a tiny
-home, …), from Monday to the end of Sunday (UTC). Home shows it, and
-**Challenge** in the top bar opens its page.
+home, a harbor, a front porch, …), from Monday to the end of Sunday (UTC).
+There are 26 themes, so half a year passes before one comes round again,
+and each starts from a build of its own. Home shows it, and **Challenge** in
+the top bar opens its page.
 
 1. **Join the challenge** opens a starting build in the Editor as your own
    copy, already tagged for the week (a tag such as `#lighthouse-20261012`,
@@ -507,7 +520,8 @@ this week, and to see what others made of the same idea.
 
 When entries were remixed from each other, or from other builds,
 **Family trees** under the entries shows where they came from, one tree for
-each chain of remixes.
+each chain of remixes. A week with no entries yet shows the example
+families instead (see [Ready-made builds](#ready-made-builds)).
 
 ### The challenge plaza
 

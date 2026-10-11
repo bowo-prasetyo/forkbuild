@@ -322,6 +322,46 @@
     opacity: 0.7;
 }
 
+/* The app's example remix families (ui/components/featured/CollectionFamilies.js),
+   side by side in the Repository's ready-made shelf and on an empty challenge week. */
+.collection-families {
+    margin: 1rem 0 0.5rem;
+}
+
+.collection-families-lead {
+    margin: 0 0 0.6rem;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.collection-families-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 0.75rem;
+}
+
+.collection-family {
+    margin: 0;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid rgba(127, 127, 127, 0.35);
+    border-radius: 8px;
+}
+
+.collection-family-original {
+    font-weight: 600;
+}
+
+/* The ready-made cards' green, so each name reads as "open this one". */
+.collection-family .remix-family-link {
+    color: #4caf7d;
+    text-decoration: none;
+}
+
+.collection-family .remix-family-link:hover,
+.collection-family .remix-family-link:focus-visible {
+    text-decoration: underline;
+}
+
 .challenge-families .remix-family {
     padding: 0.6rem 0.8rem;
     border: 1px solid rgba(127, 127, 127, 0.35);

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bbb4bcd1d65f4618 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 17fb6ab977019cd5 -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -345,6 +345,16 @@ publicado ou encontrado. Clique em uma (**Remixar**) para abrir sua própria
 cópia no Editor; nada é publicado até você publicar. Clique no título para
 recolher a fileira.
 
+Abaixo delas, **Como os remixes crescem** mostra três famílias de exemplo
+que vêm com o ForkBuild, cada uma uma cadeia de remixes de uma construção
+pronta: a Casa, remixada em Casa com varanda, que foi remixada mais duas
+vezes (Casa com jardim e Casa com torre); a Torre de vigia, remixada em
+Farol e depois em Farol e casa do faroleiro; e o Moinho, remixado em Moinho
+e celeiro e depois em Sítio. Cada uma é a anterior com algo a mais, como
+seria um remix seu. Clique num nome para abrir sua própria cópia. São
+exemplos do app, nunca publicações de alguém; também estão em
+**Estruturas** na Biblioteca de construção, em *coleção*.
+
 ### Criações que outras pessoas distribuíram
 
 Toda vez que você abre o Repositório (ou a página de um autor), ele procura
@@ -508,6 +518,9 @@ ponte, uma casa minúscula, …), de segunda-feira até o fim do domingo
 (UTC). O Início o mostra, e **Desafio** na barra do topo abre a página
 dele.
 
+São 26 temas, então meio ano passa antes que um se repita, e cada um
+começa de uma construção própria.
+
 1. **Participar do desafio** abre uma construção inicial no Editor como
    sua própria cópia, já com a tag da semana (uma tag como
    `#lighthouse-20261012`: o tema e a segunda-feira em que começou). O
@@ -537,6 +550,7 @@ fizeram com a mesma ideia.
 Quando há participações remixadas umas das outras, ou de outras
 construções, **Árvores genealógicas** abaixo das participações mostra de
 onde vieram, uma árvore para cada cadeia de remixes.
+Uma semana ainda sem participações mostra as famílias de exemplo no lugar (veja [Construções prontas](#construções-prontas)).
 
 ### A praça do desafio
 

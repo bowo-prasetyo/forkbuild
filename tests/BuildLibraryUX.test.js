@@ -74,8 +74,8 @@ async function run() {
         // repeating — is unchanged; byte-for-byte the same contract
         // BrickRegistry#groupByCategory() already established.
         const categoryOrder = groups.map((g) => g.category);
-        assert(JSON.stringify(categoryOrder) === JSON.stringify(['residential', 'agricultural', 'commercial', 'community', 'infrastructure', 'showcase']),
-            'groupByCategory: first-seen category order matches VillageLibrary\'s own declaration order, then the showcase library registered after it');
+        assert(JSON.stringify(categoryOrder) === JSON.stringify(['residential', 'agricultural', 'commercial', 'community', 'infrastructure', 'showcase', 'collection']),
+            'groupByCategory: first-seen category order matches VillageLibrary\'s own declaration order, then the showcase and collection libraries registered after it');
         assert(new Set(categoryOrder).size === categoryOrder.length, 'groupByCategory: no category repeats as a second group');
 
         const agricultural = groups.find((g) => g.category === 'agricultural');

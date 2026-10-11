@@ -7,6 +7,7 @@ import { t } from '../i18n/i18n.js';
 // something to open before anything is published or found. Loaded when
 // shown, since their thumbnails bring in Three.js.
 const FeaturedBuilds = defineAsyncComponent(() => import('../components/featured/FeaturedBuilds.js'));
+const CollectionFamilies = defineAsyncComponent(() => import('../components/featured/CollectionFamilies.js'));
 
 // Repository View — the "GitHub" mode: every published document,
 // browsable at catalog scale. As of 0.2.31 this is a thin wrapper
@@ -23,7 +24,7 @@ const FeaturedBuilds = defineAsyncComponent(() => import('../components/featured
 // while the page is open remounts it.
 export default {
     name: 'RepositoryView',
-    components: { PublicationCatalog, SharedWithYouPanel, FeaturedBuilds },
+    components: { PublicationCatalog, SharedWithYouPanel, FeaturedBuilds, CollectionFamilies },
     setup() {
         const catalogKey = ref(0);
         return { t, catalogKey, reloadCatalog: () => { catalogKey.value++; } };
@@ -36,6 +37,7 @@ export default {
                 <summary>{{ t('featuredBuilds.title') }}</summary>
                 <p class="featured-builds-shelf-lead">{{ t('featuredBuilds.lead') }}</p>
                 <FeaturedBuilds layout="row" />
+                <CollectionFamilies />
             </details>
             <PublicationCatalog :key="catalogKey" />
         </section>

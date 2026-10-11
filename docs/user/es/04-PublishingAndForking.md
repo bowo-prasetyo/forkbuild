@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bbb4bcd1d65f4618 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 17fb6ab977019cd5 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -351,6 +351,17 @@ antes de que se publique o se encuentre algo. Haga clic en una
 (**Remezclar**) para abrir su propia copia en el Editor; nada se publica
 hasta que usted lo publique. Haga clic en el título para plegar la fila.
 
+Debajo, **Cómo crecen las remezclas** muestra tres familias de ejemplo
+que vienen con ForkBuild, cada una una cadena de remezclas de una
+construcción ya hecha: la Casa, remezclada en Casa con porche, que se
+remezcló dos veces más (Casa con jardín y Casa con torre); la Atalaya,
+remezclada en Faro y luego en Faro y casa del farero; y el Molino,
+remezclado en Molino y granero y luego en Granja. Cada una es la anterior
+con algo más, como lo sería una remezcla suya. Haga clic en un nombre para
+abrir su propia copia. Son ejemplos de la aplicación, nunca publicaciones de
+nadie; también están en **Estructuras** de la Biblioteca de construcción,
+en *colección*.
+
 ### Creaciones que otros distribuyeron
 
 Cada vez que abre el Repositorio (o la página de un autor), busca en Nostr,
@@ -519,6 +530,9 @@ Cada semana ForkBuild propone un tema para construir (un faro, un puente,
 una casa diminuta, …), de lunes al final del domingo (UTC). Inicio lo
 muestra, y **Desafío** en la barra de arriba abre su página.
 
+Hay 26 temas, así que pasa medio año antes de que uno se repita, y cada
+uno empieza a partir de una construcción propia.
+
 1. **Unirse al desafío** abre una construcción inicial en el Editor como
    su propia copia, ya con la etiqueta de la semana (por ejemplo
    `#lighthouse-20261012`: el tema y el lunes en que empezó). El desafío
@@ -550,6 +564,7 @@ otras personas con la misma idea.
 Cuando hay participaciones remezcladas unas de otras, o de otras
 construcciones, **Árboles familiares** bajo las participaciones muestra de
 dónde vienen, un árbol por cada cadena de remezclas.
+Una semana sin entradas todavía muestra en su lugar las familias de ejemplo (vea [Construcciones ya hechas](#construcciones-ya-hechas)).
 
 ### La plaza del reto
 
