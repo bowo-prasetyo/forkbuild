@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 38913c40f5bb246d -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: ceaf8eebe8c02fe4 -->
 # 13 — Data Anda: mencadangkan dan memulihkan
 
 <!-- languages -->
@@ -174,7 +174,7 @@ halamannya masing-masing:
 | Apa | Ekspor | Impor |
 |---|---|---|
 | Satu dokumen | **Ekspor** di bilah alat Editor | **Impor** di bilah alat Editor |
-| Semua dokumen tersimpan | **Ekspor Semua Dokumen** di bagian bawah menu **Terbaru** di Editor | **Impor** di bilah alat Editor |
+| Semua bangunan tersimpan | **Ekspor Semua Bangunan** di bagian bawah menu **Terbaru** di Editor | **Impor** di bilah alat Editor |
 | Satu struktur | **Ekspor Cetak Biru** di menu **⋮** pada kartunya | **Impor Cetak Biru** di samping **Struktur Saya** |
 | Semua struktur | **Ekspor Semua** di samping **Struktur Saya** | **Impor Cetak Biru** di samping **Struktur Saya** |
 | Satu identitas | **Ekspor** di **Identitas Saya** | **Impor Identitas** di **Identitas Saya** |

@@ -11,8 +11,8 @@ top-level [docs/](..) folder.
 
 ## Start here (read in order)
 
-1. **[Getting Started](01-GettingStarted.md)** — open the app, log in,
-   and place your first brick.
+1. **[Getting Started](01-GettingStarted.md)** — open the app, place
+   your first brick, and log in only when you publish.
 2. **[The Editor](02-TheEditor.md)** — the building toolkit: tools,
    selection, transforms, brick colors, groups, the Build Library's
    structures and your own blueprints, structure instances, and a

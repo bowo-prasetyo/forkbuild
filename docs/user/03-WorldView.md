@@ -971,7 +971,7 @@ When multiple people are present in the same World:
 
 The header has **Save**, **Publish**, and **Edit Metadata** buttons whenever
 you're editing something, so you can capture and share a world without
-leaving it. The status line (**🔒 Published** or **✎ Editing fork**) always
+leaving it. The status line (**🔒 Published** or **✎ Editing your copy**) always
 shows which one it is.
 
 A published world can never change. If the world you're editing is

@@ -194,3 +194,14 @@ project's. The review's other recommendations, in order:
 4. Counting what says whether the fantasy lands: how big published builds
    are, how many builders publish a second build, and how many builds are
    remixes. Done on 2026-10-10 (see "Measuring it" above).
+
+A follow-up review on 2026-10-11 found the first impression still let the
+pillars down: the starter house's chimney floated, the Editor named a copy's
+origin by its id, and Home's tagline still said "Fork". Those were fixed that
+day, with the Mill given sails and the player's words brought into the
+Repository, the Editor and the challenge (see the roadmap, "First-impression
+polish"). It recommended next: a "walk here with me" link, so the third
+pillar's "with friends" needs no Peers page; publishing without first
+creating a passphrase identity; Distribute folded into Publish; World View
+opening as a visitor's view, with its protocol panels under Advanced; and
+more challenge themes.

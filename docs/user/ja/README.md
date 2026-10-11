@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: e484e2933c088ce1 -->
+<!-- translation-of: docs/user/README.md source-hash: 49ae366b36e4be1b -->
 # ForkBuild ユーザードキュメント
 
 <!-- languages -->
@@ -12,8 +12,8 @@
 
 ## まずはここから（順番に読んでください）
 
-1. **[はじめに](01-GettingStarted.md)** — アプリを開いてログインし、
-   最初のブロックを置くまで。
+1. **[はじめに](01-GettingStarted.md)** — アプリを開いて最初のブロックを
+   置くまで。ログインは公開するときだけです。
 2. **[エディター](02-TheEditor.md)** — 作品づくりの道具一式:
    ツール、選択、変形、ブロックの色、グループ、ビルドライブラリの構造物と
    自分のブループリント、構造物のインスタンス、作品のタイトル・説明・

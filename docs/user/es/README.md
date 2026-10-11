@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: e484e2933c088ce1 -->
+<!-- translation-of: docs/user/README.md source-hash: 49ae366b36e4be1b -->
 # Documentación para usuarios de ForkBuild
 
 <!-- languages -->
@@ -12,8 +12,8 @@ de la carpeta [docs/](../..) de nivel superior (en inglés).
 
 ## Empiece aquí (léalas en orden)
 
-1. **[Primeros pasos](01-GettingStarted.md)**: abrir la app, iniciar
-   sesión y colocar su primer bloque.
+1. **[Primeros pasos](01-GettingStarted.md)**: abrir la app, colocar
+   su primer bloque e iniciar sesión solo al publicar.
 2. **[El Editor](02-TheEditor.md)**: el kit de construcción: herramientas,
    selección, transformaciones, colores de bloques, grupos, las
    estructuras de la Biblioteca de construcción y sus propios planos,

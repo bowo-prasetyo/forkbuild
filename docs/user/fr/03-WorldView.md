@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: d2c323274d094628 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: a13b8d7d65867a5b -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -1092,7 +1092,7 @@ Quand plusieurs personnes sont présentes dans le même Monde :
 L’en-tête propose les boutons **Enregistrer**, **Publier** et **Modifier
 les métadonnées** dès que vous modifiez quelque chose, pour que vous
 puissiez capturer et partager un monde sans le quitter. La ligne d’état
-(**🔒 Publié** ou **✎ Modification d’un fork**) indique toujours de quoi il
+(**🔒 Publié** ou **✎ Modification de votre copie**) indique toujours de quoi il
 s’agit.
 
 Un monde publié ne peut jamais changer. Si le monde que vous modifiez est

@@ -229,7 +229,7 @@ no migration path for it yet.
 
 ### Document Bundle
 
-Editor → Recent → **Export All Documents** writes every saved document in one file:
+Editor → Recent → **Export All Builds** writes every saved document in one file:
 
     { kind: 'forkbuild-document-bundle', formatVersion: 1, exportedAt, documents: [ { schemaVersion, world, metadata }, … ] }
 

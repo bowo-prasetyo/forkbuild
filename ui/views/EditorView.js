@@ -750,6 +750,13 @@ export default {
             documentVersion, editorContext, editorSession, feedback, selectedPlacementInfo, selectionSummary
         });
 
+        // A built-in structure's name in the chosen language, for "Remixed
+        // from …"; null for one this registry doesn't hold (a personal
+        // blueprint), which the panel shows by a short id instead.
+        function structureName(structureId) {
+            return structureId && structureRegistry.has(structureId) ? libraryItemName(structureRegistry.get(structureId)) : null;
+        }
+
         function refreshDocumentInfo() {
             documentVersion.value++;
             const document = documentManager.document;
@@ -774,6 +781,7 @@ export default {
                 placementPolicy: document.metadata.placementPolicy,
                 parentDocumentId: document.metadata.parentDocumentId,
                 parentStructureId: document.metadata.parentStructureId,
+                parentStructureName: structureName(document.metadata.parentStructureId),
                 status,
                 statusLabel: describeLifecycleStatus(status, { dirty: state.dirty }),
                 dirty: state.dirty,

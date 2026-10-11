@@ -426,14 +426,14 @@ async function main() {
         // merely that the events exist somewhere.
         const cardAffordances = {
             Open: /action-btn--open"[^>]*>Open</,
-            Fork: /action-btn--fork"[^>]*>Fork</,
+            Fork: /action-btn--fork"[^>]*>Remix</,
             Explore: /action-btn--explore"[^>]*>Explore</,
             Commentary: /action-btn--comment"[\s\S]{0,200}>\{\{ commentaryOpen \? 'Hide Comments' : 'Comment' \}\}</,
             Author: /@click\.prevent="\$emit\('view-author', publication\.author\)"/
         };
         const listAffordances = {
             Open: /action-btn--open"[^>]*>Open</,
-            Fork: /action-btn--fork"[^>]*>Fork</,
+            Fork: /action-btn--fork"[^>]*>Remix</,
             Explore: /action-btn--explore"[^>]*>Explore</,
             Commentary: /action-btn--comment"[\s\S]{0,200}>\{\{ isCommentaryOpen\(pub\) \? 'Hide Comments' : 'Comment' \}\}</,
             Author: /@click\.prevent="\$emit\('view-author', pub\.author\)"/
@@ -649,7 +649,7 @@ async function main() {
         // other after 0.9.563 shipped.
         const forkingDoc = await readSource('docs/user/04-PublishingAndForking.md');
         const cardSource = withEnglish(await readSource('ui/components/PublicationCard.js'));
-        assert(/Also called "Edit a Copy" in World View/.test(forkingDoc) && cardSource.includes('>Fork<'),
+        assert(/Also called "Edit a Copy" in World View/.test(forkingDoc) && cardSource.includes('>Remix<'),
             '58. LIVE: the documentation names "Fork" as Repository/Author\'s own label (0.9.563), and PublicationCard.js\'s own button is still literally labeled "Fork" — doc and button agree.');
         assert(/Explore.{0,400}Continue Exploring/s.test(forkingDoc) && cardSource.includes('>Explore<'),
             '59. LIVE: the documentation ties "Continue Exploring" back to "Explore" as Repository/Author\'s own mechanic, and the button is still literally labeled "Explore."');

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 91fd6bed6af1eba8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9eb8c2a710f0b80 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -568,7 +568,7 @@ atau tekanan tombol pertama Anda, sebagaimana diwajibkan browser.
   juga memiliki tombol **Tempatkan** — lihat
   [Instans struktur](#instans-struktur-referensi-hidup) — untuk
   menambahkannya ke dokumen *saat ini* alih-alih menggantinya. **Ekspor
-  Semua Dokumen** di bagian bawah mengunduh setiap dokumen tersimpan
+  Semua Bangunan** di bagian bawah mengunduh setiap bangunan tersimpan
   sebagai satu file; **Impor** membacanya kembali, menyimpan dokumen yang
   belum ada di perangkat ini (buka dari Terbaru), melewati yang sudah ada
   tanpa perubahan, dan menyimpan salinan di samping dokumen yang ada dalam

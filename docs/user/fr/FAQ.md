@@ -125,7 +125,7 @@ le fichier sur l’autre appareil (voir [Vos données](13-YourData.md)). Pour d�
 de chose :
 
 - **Documents** : **Exporter** dans la barre d’outils de l’Éditeur, ou
-  **Exporter tous les documents** en bas de **Récents**, puis **Importer**
+  **Exporter toutes les constructions** en bas de **Récents**, puis **Importer**
   sur l’autre appareil.
 - **Vos propres structures** : **Exporter le plan** depuis le menu **⋮**
   d’une carte, ou **Tout exporter** à côté de **Mes structures**, puis

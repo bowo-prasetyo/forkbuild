@@ -123,7 +123,7 @@ ambos están en línea. O haga allí una copia de seguridad y restaure el
 archivo en el otro dispositivo (consulte [Sus datos](13-YourData.md)). Para llevar un solo tipo de cosa:
 
 - **Documentos**: **Exportar** en la barra de herramientas del Editor, o
-  **Exportar todos los documentos** al final de **Recientes**, y luego
+  **Exportar todas las construcciones** al final de **Recientes**, y luego
   **Importar** en el otro dispositivo.
 - **Sus propias estructuras**: **Exportar plano** desde el menú **⋮** de una
   tarjeta, o **Exportar todo** junto a **Mis estructuras**, y luego

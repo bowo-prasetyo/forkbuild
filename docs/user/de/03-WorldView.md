@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: d2c323274d094628 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: a13b8d7d65867a5b -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -1075,7 +1075,7 @@ Wenn mehrere Menschen in derselben Welt sind:
 Die Kopfzeile hat die Schaltflächen **Speichern**, **Veröffentlichen** und
 **Metadaten bearbeiten**, sobald Sie etwas bearbeiten, sodass Sie eine Welt
 festhalten und teilen können, ohne sie zu verlassen. Die Statuszeile
-(**🔒 Veröffentlicht** oder **✎ Fork wird bearbeitet**) zeigt immer, was
+(**🔒 Veröffentlicht** oder **✎ Ihre Kopie wird bearbeitet**) zeigt immer, was
 davon zutrifft.
 
 Eine veröffentlichte Welt kann sich nie ändern. Ist die Welt, die Sie

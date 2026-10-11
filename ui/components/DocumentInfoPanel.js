@@ -11,8 +11,8 @@ import FormattedDescription from './FormattedDescription.js';
 // getDocumentInfo()-equivalent produces:
 //
 //   { title, description, author, license, parentDocumentId,
-//     parentStructureId, statusLabel, dirty, editable,
-//     editabilityNotice }
+//     parentStructureId, parentStructureName, statusLabel, dirty,
+//     editable, editabilityNotice }
 //
 // Deliberately dumb: no session/use-case imports, no mutation. It
 // renders `info` and emits 'edit-metadata' when the caller should open
@@ -53,6 +53,11 @@ export default {
         },
         shortId(id) {
             return id ? `${id.slice(0, 8)}…` : '—';
+        },
+        // What a copy was made from: a built-in structure by its name, never
+        // its id ("village:house"), and anything else by a short id.
+        originLabel(info) {
+            return info.parentStructureName || this.shortId(info.parentStructureId || info.parentDocumentId);
         }
     },
     template: `
@@ -70,7 +75,7 @@ export default {
                 >✎</button>
             </div>
             <p v-if="info.parentDocumentId || info.parentStructureId" class="document-info-compact-origin">
-                {{ t('documentInfo.forkedFromCompact', { origin: info.parentStructureId || shortId(info.parentDocumentId) }) }}
+                {{ t('documentInfo.forkedFromCompact', { origin: originLabel(info) }) }}
             </p>
             <p
                 v-if="info.editabilityNotice"
@@ -116,7 +121,7 @@ export default {
             </div>
             <div class="info-row" v-if="info.parentStructureId">
                 <span class="info-label">{{ t('documentInfo.forkedFromStructure') }}</span>
-                <span class="info-value">{{ info.parentStructureId }}</span>
+                <span class="info-value">{{ info.parentStructureName || shortId(info.parentStructureId) }}</span>
             </div>
 
             <p

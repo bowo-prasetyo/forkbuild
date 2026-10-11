@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: ba7d350bddd098ef -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 60b09baf9d911d48 -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -58,7 +58,7 @@ Veröffentlichungen. **Mit Peers teilen** tut es: Es signiert die Welt als
 [Eine Kreation aus dem Repository, dezentral](#eine-kreation-aus-dem-repository-dezentral)).
 
 Die Seite Veröffentlichungen hat kein **Öffnen**, **Erkunden** oder
-**Forken**, nicht einmal für eine Geteilte Welt. Sie zeigt den signierten
+**Remixen**, nicht einmal für eine Geteilte Welt. Sie zeigt den signierten
 Datensatz, nicht die Welt. Um eine Geteilte Welt zu öffnen, zu erkunden
 oder zu forken, suchen Sie sie im Repository, auf der Seite ihres Autors
 oder in der Weltansicht. Eine, die Sie von einem Peer erhalten haben,

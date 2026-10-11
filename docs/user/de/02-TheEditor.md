@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 91fd6bed6af1eba8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9eb8c2a710f0b80 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -593,8 +593,8 @@ Browser es verlangen.
   **Platzieren** — siehe
   [Strukturinstanzen](#strukturinstanzen-eine-lebendige-referenz) —, um
   ihn Ihrem *aktuellen* Dokument hinzuzufügen, statt es zu ersetzen.
-  **Alle Dokumente exportieren** ganz unten lädt alle gespeicherten
-  Dokumente als eine Datei herunter; **Importieren** liest sie wieder ein,
+  **Alle Bauwerke exportieren** ganz unten lädt alle gespeicherten
+  Bauwerke als eine Datei herunter; **Importieren** liest sie wieder ein,
   speichert die Dokumente, die dieses Gerät nicht hat (öffnen Sie sie über
   Zuletzt), überspringt unveränderte, die es hat, und speichert eine Kopie
   neben jedem, das es in einer anderen Version hat. Ungespeicherte

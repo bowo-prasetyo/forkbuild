@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 98b7f4c2be018dd9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c03b4c493f0a5c98 -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -6,7 +6,7 @@
 <!-- /languages -->
 
 Este é o coração do ForkBuild. **Publicar** compartilha sua criação com o
-mundo. **Bifurcar** deixa qualquer pessoa copiar uma criação e fazê-la
+mundo. **Remixar** deixa qualquer pessoa copiar uma criação e fazê-la
 evoluir — com todo o histórico preservado.
 
 ## Publicando sua criação
@@ -144,7 +144,7 @@ também são contados de forma anônima.
 ## Distribuindo direto do Editor
 
 Assim que **Publicar** dá certo, o Editor mostra ali mesmo um pequeno aviso
-— "Mundo compartilhado publicado com sucesso." — com um botão
+— "Publicada! Compartilhe o link, ou use Distribuir para enviá-la às redes abertas e qualquer pessoa poder encontrá-la." — com um botão
 **Distribuir** ao lado, e um **Dispensar** para fechá-lo sem fazer nada.
 Clicar em **Distribuir** abre uma caixa de diálogo **Distribuir**, em vez
 de encher a sobreposição de seletores e resultados de que você só precisa
@@ -389,7 +389,7 @@ Toda criação oferece três ações:
 | Botão | O que faz |
 |---|---|
 | **Abrir** | Carrega aquele documento no Editor |
-| **Bifurcar** | Copia para uma criação editável sua |
+| **Remixar** | Copia para uma criação editável sua |
 | **Explorar** | Voa até ela na Visão do mundo |
 
 (O botão **Continuar explorando** de **Meus mundos** — veja
@@ -418,7 +418,7 @@ recarregar. Ela aparece igual a qualquer outra coisa aqui.
 
 ## Bifurcar: torne-a sua
 
-**Bifurcar** é o que torna o ForkBuild especial. Quando você bifurca uma
+**Remixar** é o que torna o ForkBuild especial. Quando você bifurca uma
 criação:
 
 - Você recebe uma **cópia nova e independente** para editar à vontade.
@@ -442,7 +442,7 @@ muda um mundo publicado — veja
 ### Como bifurcar
 
 1. Encontre uma criação no **Repositório** (ou na Visão do mundo).
-2. Clique em **Bifurcar**.
+2. Clique em **Remixar**.
 3. A cópia abre no Editor, com o título *"Bifurcação de &lt;nome
    original&gt;"*.
 4. Continue a construção, depois salve e publique como sua.

@@ -5276,3 +5276,39 @@ Bitcoin's and Base's wallets. Pillar served: your work is yours (a chain is some
 - Tests: `NetworkWriters` (the switches and their defaults, which networks are writable, the anchor registry following
   the switch), `SteemAnnouncer` and `BlurtPoster` (nothing posted while off), the bundled site (a new visitor's Steem
   page and preferred network, switching on, and a device with a Blurt account starting on).
+
+
+## First-impression polish (unnumbered, 2026-10-11)
+
+**What a newcomer meets first now looks finished and speaks the player's words.** A creative-direction review of the
+1.3 line found that the starter house, the first thing Home's main button opens, had its chimney floating above the
+roof, that the Editor named it "Forked from village:house", and that the tagline above Home's title still said "Build.
+Fork. Share. Evolve." although docs/Pillars.md says remix and own your work. Pillar served: building feels joyful (a
+newcomer's first build starts from something that looks right), with every build has a family tree (credit named in
+its words).
+
+- **Nothing floats on a hipped roof.** A core:roof_hip is a pyramid, so a brick set on its box stands in mid-air over
+  the slope. House's and Large House's chimneys were green cubes set that way; they are now core:chimney bricks rising
+  through the roof. Village Hall's cupola balanced on one cap's peak; it now rises from inside the roof, in the walls'
+  colour, under its own cap. `StructureRoofSupport` checks every built-in structure.
+- **A Mill with sails.** The Mill was three grey blocks with a cap; it is now a sandstone tower with four cream sails
+  on timber stocks round a hub, laid out as a pinwheel. Its description says so in every language.
+- **A warmer Home village.** Home's turning village shows the Garden Cottage, built from the Builder's kit, instead of
+  the grey Watchtower.
+- **Credit by name.** The Editor's header says "Remixed from House" (the structure's name in the chosen language)
+  rather than its id, and a personal blueprint by a short id (`parentStructureName`, filled in by EditorView).
+- **The player's words** (docs/Pillars.md, "Words"), in every language: Home's tagline is "Remix anything. Own your
+  work." (`homeView.tagline`, which replaces `homeView.buildForkShareEvolve`), and package.json's description matches;
+  the Repository's **Fork** buttons say **Remix**; "Forked from" is "Remixed from"; the Editor's Recent menu and import
+  speak of builds, not documents; the fork notices say "your own copy"; World View's status says **✎ Editing your
+  copy**; after Publish the Editor says what to do next (share the link, or Distribute) instead of "Shared World
+  published successfully."; and the challenge's "How to enter" no longer names four networks or "Document
+  Properties", but where the tag is (✎, by the build's title) and that Distribute is what puts a build on the page.
+- The user guide's contents no longer say to log in before placing a first brick, and guides 02, 03, 04, 09, 13 and
+  the FAQ quote the new labels, in every language.
+- Tests: `StructureRoofSupport` (the check finds the old chimney; no built-in structure has a floating brick; House and
+  Large House use chimney bricks); `EditorSidebarLayoutBrowser` (the header names a built-in structure, never its id,
+  and anything else by a short id).
+- Not done (from the same review): a "walk here with me" link, publishing without first creating a passphrase
+  identity, folding Distribute into Publish, a visitor's World View with the protocol panels under Advanced, and more
+  challenge themes.

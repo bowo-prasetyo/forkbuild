@@ -51,7 +51,7 @@ X", and about the optional depth you can add to a claim:
 with Peers** does: it signs the World as a **Shared World** that can travel
 to peers (see [A Repository creation, decentralized](#a-repository-creation-decentralized)).
 
-The Publications page has no **Open**, **Explore** or **Fork**, not even for
+The Publications page has no **Open**, **Explore** or **Remix**, not even for
 a Shared World. It shows the signed record, not the World. To open, explore
 or fork a Shared World, find it in the Repository, on its author's page or
 in World View. One you received from a peer appears there once its content

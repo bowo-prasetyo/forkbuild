@@ -110,7 +110,8 @@ async function startFromHome(browser, base) {
         await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });
         await page.waitForFunction(() => location.hash === '#/editor', null, { timeout: 10_000 });
         const editorText = await page.evaluate(() => document.body.innerText);
-        assert(editorText.includes('village:house'), 'the Editor says the copy came from the built-in House');
+        assert(editorText.includes('Remixed from House') && !editorText.includes('village:house'),
+            'the Editor says the copy came from the built-in House, by its name rather than its id');
 
         // New offers the same builds: the castle opens as the visitor's own copy.
         await page.click('.toolbar-new');

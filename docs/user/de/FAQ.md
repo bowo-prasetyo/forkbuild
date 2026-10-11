@@ -130,7 +130,7 @@ stellen die Datei auf dem anderen Gerät wieder her (siehe
 mitzunehmen:
 
 - **Dokumente**: **Exportieren** in der Werkzeugleiste des Editors oder
-  **Alle Dokumente exportieren** ganz unten unter **Zuletzt**, dann
+  **Alle Bauwerke exportieren** ganz unten unter **Zuletzt**, dann
   **Importieren** auf dem anderen Gerät.
 - **Ihre eigenen Strukturen**: **Bauplan exportieren** im Menü **⋮** einer
   Karte oder **Alle exportieren** neben **Meine Strukturen**, dann

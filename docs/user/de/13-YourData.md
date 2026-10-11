@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 38913c40f5bb246d -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: ceaf8eebe8c02fe4 -->
 # 13 — Ihre Daten
 
 <!-- languages -->
@@ -182,7 +182,7 @@ Export auf ihrer eigenen Seite:
 | Was | Export | Import |
 |---|---|---|
 | Ein Dokument | **Exportieren** in der Werkzeugleiste des Editors | **Importieren** in der Werkzeugleiste des Editors |
-| Alle gespeicherten Dokumente | **Alle Dokumente exportieren** ganz unten im Menü **Zuletzt** des Editors | **Importieren** in der Werkzeugleiste des Editors |
+| Alle gespeicherten Bauwerke | **Alle Bauwerke exportieren** ganz unten im Menü **Zuletzt** des Editors | **Importieren** in der Werkzeugleiste des Editors |
 | Eine Struktur | **Bauplan exportieren** im Menü **⋮** ihrer Karte | **Bauplan importieren** neben **Meine Strukturen** |
 | Alle Strukturen | **Alle exportieren** neben **Meine Strukturen** | **Bauplan importieren** neben **Meine Strukturen** |
 | Eine Identität | **Exportieren** unter **Meine Identitäten** | **Identität importieren** unter **Meine Identitäten** |

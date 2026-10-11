@@ -107,7 +107,7 @@ there and restore the file on the other device (see
 To move one kind of thing:
 
 - **Documents**: **Export** in the Editor toolbar, or **Export All
-  Documents** at the bottom of **Recent**, then **Import** on the other
+  Builds** at the bottom of **Recent**, then **Import** on the other
   device.
 - **Your own structures**: **Export Blueprint** from a card's **⋮** menu,
   or **Export All** beside **My Structures**, then **Import Blueprint**.

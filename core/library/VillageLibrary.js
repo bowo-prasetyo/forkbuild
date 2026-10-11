@@ -46,8 +46,8 @@ import { Position } from '../Position.js';
 // idiom core:mill's own windows already established: it sits flush
 // against (or, on a segmented wall, entirely inside an otherwise-empty
 // slot of) the surface it opens, never floating free of it.
-function b(definitionId, x, y, z, rotation = 0, color = null) {
-    return new Brick({ definitionId, position: new Position(x, y, z), rotation, color });
+function b(definitionId, x, y, z, rotation = 0, color = null, tilt = 0) {
+    return new Brick({ definitionId, position: new Position(x, y, z), rotation, color, tilt });
 }
 
 // core:slope_45's own color, for the cubes that raise a stepped roof row so
@@ -99,8 +99,9 @@ const houseBricks = [
     b('core:roof_hip', 1, 4.0, -1),
     b('core:roof_hip', 1, 4.0, 1),
 
-    // Chimney — one ordinary cube, resting on a roof cap.
-    b('core:cube', 1.5, 5.25, -1.5)
+    // Chimney — a brick stack rising through the south-east roof cap, its
+    // foot below the slope all round so it never floats above the roof.
+    b('core:chimney', 1.25, 4.5, -1.25)
 ];
 
 const barnBricks = [
@@ -166,11 +167,15 @@ const marketBricks = [
     b('core:trim', 1.5, 3.625, 0, 90)
 ];
 
+// Sandstone for the Mill's tower and cream sailcloth (core/VillagePalette.js).
+const SANDSTONE = 0xd9c08c;
+const SAILCLOTH = 0xf2ead3;
+
 const millBricks = [
-    // Three block_2x2 stacked into a tower.
-    b('core:block_2x2', 0, 1, 0),
-    b('core:block_2x2', 0, 3, 0),
-    b('core:block_2x2', 0, 5, 0),
+    // Three block_2x2 stacked into a sandstone tower.
+    b('core:block_2x2', 0, 1, 0, 0, SANDSTONE),
+    b('core:block_2x2', 0, 3, 0, 0, SANDSTONE),
+    b('core:block_2x2', 0, 5, 0, 0, SANDSTONE),
 
     // A hipped cap on top.
     b('core:roof_hip', 0, 6.75, 0),
@@ -178,7 +183,24 @@ const millBricks = [
     // Windows on three faces of the tower.
     b('core:window_small', 1, 3, 0, 90),
     b('core:window_small', -1, 3, 0, 90),
-    b('core:window_small', 0, 5, 1)
+    b('core:window_small', 0, 5, 1),
+
+    // Sails on the south (front) face: a round hub laid on its side, four timber
+    // stocks three long (the side ones are posts tilted and turned to lie
+    // along X), and a sail of cloth along the outer two thirds of each
+    // stock, each on the stock's clockwise side so the four read as a
+    // pinwheel.
+    b('core:round_1x1', 0, 4, -1.5, 0, OAK, 90),
+    b('core:post', 0, 5.5, -2.125),
+    b('core:post', 0, 2.5, -2.125),
+    b('core:post', 1.5, 4, -2.125, 90, null, 90),
+    b('core:post', -1.5, 4, -2.125, 90, null, 90),
+    b('core:wall_1x1', -0.625, 5.5, -2.125, 0, SAILCLOTH),
+    b('core:wall_1x1', -0.625, 6.5, -2.125, 0, SAILCLOTH),
+    b('core:wall_half_2x1', 2, 4.625, -2.125, 0, SAILCLOTH),
+    b('core:wall_1x1', 0.625, 1.5, -2.125, 0, SAILCLOTH),
+    b('core:wall_1x1', 0.625, 2.5, -2.125, 0, SAILCLOTH),
+    b('core:wall_half_2x1', -2, 3.375, -2.125, 0, SAILCLOTH)
 ];
 
 const bridgeBricks = [
@@ -312,7 +334,8 @@ const largeHouseBricks = [
     b('core:roof_hip', 2, 7.25, -1),
     b('core:roof_hip', 2, 7.25, 1),
 
-    b('core:cube', 2.5, 8.5, -1.5)
+    // Chimney — through the south-east cap, as on House.
+    b('core:chimney', 2.25, 7.75, -1.25)
 ];
 
 // Tool Shed — deliberately tiny: an open, doorless front (a lean-to,
@@ -464,6 +487,9 @@ const marketStallBricks = [
     b('core:trim', 0.5, 2.875, -2)
 ];
 
+// core:wall_1x3's own colour, for the Village Hall's cupola.
+const HALL_WALL = 0xc9b896;
+
 // Village Hall — the largest COMMUNITY structure: a wide single-story
 // hall with a double door, a large window on every wall, a 3x3 hipped
 // roof, and a small bell cupola — deliberately not a second Large
@@ -505,8 +531,12 @@ const villageHallBricks = [
     b('core:roof_hip', 2, 3.75, 0),
     b('core:roof_hip', 2, 3.75, 2),
 
-    b('core:cube', 0, 5.0, 0),
-    b('core:roof_hip', 0, 6.25, 0)
+    // The cupola: two wall-coloured cubes rising from inside the centre
+    // cap, so it stands in the roof rather than balancing on its peak, and
+    // a cap of its own.
+    b('core:cube', 0, 4.25, 0, 0, HALL_WALL),
+    b('core:cube', 0, 5.25, 0, 0, HALL_WALL),
+    b('core:roof_hip', 0, 6.5, 0)
 ];
 
 // Pavilion — an open gazebo: four columns and a hipped roof, nothing
@@ -808,7 +838,7 @@ export const VillageLibrary = {
             name: 'Mill',
             category: 'agricultural',
             tags: ['mill', 'agricultural', 'tower'],
-            description: 'A three-tier mill tower with a hipped cap and window openings.',
+            description: 'A three-tier sandstone mill tower with a hipped cap, window openings and four sails.',
             bricks: millBricks
         }),
         new Structure({

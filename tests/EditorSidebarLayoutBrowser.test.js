@@ -205,6 +205,19 @@ const emptyContext = (extra = {}) => ({ hasSelection: false, selectionCount: 0, 
     compact.querySelector('button').click();
     assert(edits.length === 1, 'the edit button opens the metadata editor');
     assert(host.querySelector('.full').textContent.includes('Draft — not yet saved'), 'the full panel (World View) still shows status');
+
+    // A copy of a built-in structure names it, never by its id.
+    info.parentStructureId = 'village:house';
+    info.parentStructureName = 'House';
+    await nextTick();
+    const origin = compact.querySelector('.document-info-compact-origin').textContent.trim();
+    assert(origin === 'Remixed from House', `the compact header names the structure, got "${origin}"`);
+    assert(!host.textContent.includes('village:house'), 'no panel shows the structure\'s id');
+    info.parentStructureId = '0f3c9a51-7d2e-4b8a-9c1d-2e5f6a7b8c9d';
+    info.parentStructureName = null;
+    await nextTick();
+    assert(compact.querySelector('.document-info-compact-origin').textContent.trim() === 'Remixed from 0f3c9a51…',
+        'a structure without a known name is shown by a short id');
     app.unmount();
     host.remove();
 }

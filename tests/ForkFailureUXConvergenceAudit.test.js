@@ -513,8 +513,8 @@ async function run() {
         assert(openedDocument.metadata.title === 'Fork of Freely Forkable', '4. the fork\'s own derived title is correct.');
         assert(openedDocument.world.id !== publication.documentId, '5. the fork got a fresh World identity — never the source\'s own.');
         assert(openedEntryContext === null, '6. with no entry context on this route, openDocument() received null — never a manufactured one.');
-        assert(outcome.feedbackLog.length === 1 && outcome.feedbackLog[0].includes('Created your editable fork'),
-            '7. the real "created your fork" feedback message fired.');
+        assert(outcome.feedbackLog.length === 1 && outcome.feedbackLog[0].includes('Made your own copy of'),
+            '7. the real "made your own copy" feedback message fired.');
         assert(outcome.routerReplaceCalls.length === 1 && outcome.routerReplaceCalls[0].path === '/editor',
             '8. the URL is normalized back to /editor exactly as on the failure path.');
         assert(storage.saveCalls === 0, '9. forking itself performs no storage save — DocumentCloneService/openDocument never persist by themselves.');
