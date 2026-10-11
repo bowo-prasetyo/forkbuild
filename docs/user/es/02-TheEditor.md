@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9eb8c2a710f0b80 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ee6ec2bdfb73a405 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -85,7 +85,7 @@ botones que todavía no pueden hacer nada:
 La primera vez que abre el Editor en un dispositivo, una tarjeta **Su
 primera construcción** aparece en la esquina inferior izquierda de la vista
 3D (en un teléfono empieza plegada en un pequeño botón
-**Primera construcción · 0/5** arriba a la izquierda). Enumera cinco pasos y
+**Primera construcción · 0/6** arriba a la izquierda). Enumera seis pasos y
 muestra una pista para el siguiente:
 
 1. **Colocar un bloque**
@@ -95,11 +95,16 @@ muestra una pista para el siguiente:
 4. **Guardar su construcción**
 5. **Publicar y compartir un enlace**: publique y luego use **Copiar
    enlace** o **Compartir…**.
+6. **Entrar caminando**: haga clic en **Entrar caminando**, junto al enlace
+   que muestra Publicar (o en la tarjeta), y entre por la puerta de su
+   construcción en la Vista del mundo (vea
+   [Entrar caminando](04-PublishingAndForking.md#entrar-caminando)).
 
 Cada paso se marca cuando lo hace, en cualquier orden; deshacer y rehacer
-no cuentan. Cuando los cinco están hechos, la tarjeta lo celebra y ofrece
-**Ver otras construcciones** o **Seguir construyendo**, y luego desaparece.
-**–** la pliega en el botón pequeño; **Ocultar la guía** la oculta para
+no cuentan. Cuando los seis están hechos, la tarjeta lo celebra y ofrece
+**Ver otras construcciones** o **Seguir construyendo**, y luego desaparece;
+si ya estaba terminada antes de que entrar caminando fuera un paso, no
+vuelve. **–** la pliega en el botón pequeño; **Ocultar la guía** la oculta para
 siempre en este dispositivo. Para traerla de vuelta, abra la paleta de
 comandos (**Ctrl+K**) y ejecute **Guía de la primera construcción**. Un
 dispositivo que ya tiene trabajo guardado empieza con la guía oculta.

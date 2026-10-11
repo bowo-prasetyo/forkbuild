@@ -11,6 +11,7 @@ import { ObserverLocalEncounterStore } from '../../application/worldEncounter/Ob
 import { selectNearbySnapshotCandidates } from '../../application/snapshot/NearbySnapshotCandidates.js';
 import { limitConcurrency } from '../../utils/limitConcurrency.js';
 import ActionFeedback from '../components/ActionFeedback.js';
+import { useArrival } from './worldView/useArrival.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
 import PlacementInfoPanel from '../components/PlacementInfoPanel.js';
@@ -718,7 +719,7 @@ export default {
 
         const {
             _syncWorldExperience, _syncWorldPresence, _syncWorldSpatialPresence, disposeWorldPresence,
-            refreshCollaborationRoster, syncCurrentWorldSpatialPresence
+            refreshCollaborationRoster, syncCurrentWorldSpatialPresence, skipWelcomeFor
         } = useWorldPresenceSync({
             cameraPerspective, openWelcomePanel, refreshWelcomeContext, resolveIdentityDisplayName, session, showWelcomePanel,
             spatialCollaboratorRows, worldMembers, worldPresenceRoster, worldReturnInfo
@@ -1082,11 +1083,18 @@ export default {
             compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
         });
 
+        const { arriveAtDoor, watchArrival } = useArrival({ session, feedback });
+
         onMounted(() => {
             allPublications.value = listPublicationsUseCase.execute();
             session.start(viewport.value);
             if (inPlaza.value) {
                 enterPlaza();
+            } else if (route.query.arrive === 'door') {
+                // Walk inside it (the Editor, after Publish): at the build's door.
+                skipWelcomeFor(initialDocumentId);
+                arriveAtDoor(initialDocumentId);
+                router.replace({ path: `/world/${initialDocumentId}` });
             } else {
                 session.navigateToDocument(initialDocumentId);
             }
@@ -1130,7 +1138,11 @@ export default {
             // (selection/activity immediately, position/heading at most every ~90ms); this
             // only guarantees a fresh read to throttle from. A no-op outside spatial
             // presence.
-            spatialPresenceSyncInterval = setInterval(syncCurrentWorldSpatialPresence, 100);
+            // Also follows an arrival at a build's door (useArrival) until the avatar walks in.
+            spatialPresenceSyncInterval = setInterval(() => {
+                syncCurrentWorldSpatialPresence();
+                watchArrival();
+            }, 100);
 
             // Its own short interval: the 3-second refresh is far too slow for a prompt
             // that must appear as the avatar approaches a vehicle. Only reads session

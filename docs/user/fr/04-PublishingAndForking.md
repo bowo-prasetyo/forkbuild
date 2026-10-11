@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 17fb6ab977019cd5 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 8a6d8b43407550d1 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -33,6 +33,19 @@ partagez ou la distribuez (voir la remarque ci-dessous). Elle reçoit aussi
 automatiquement une position dans le monde partagé, pour qu’**Explorer**
 ait toujours un endroit où emmener les gens — voir
 [Trouver des mondes](03-WorldView.md#trouver-des-mondes).
+
+### Entrer à pied
+
+À côté du lien, l’avis que montre Publier propose **Entrer à pied** (**En
+faire le tour** pour une construction sans porte). Il ouvre le monde avec
+votre avatar au sol devant la porte de la construction, face à elle ; la
+porte s’ouvre quand vous vous approchez, et entrer (**W**, ou le joystick sur
+un téléphone) coche la dernière étape de
+[Votre première construction](02-TheEditor.md#votre-première-construction).
+La porte est l’entrée principale : une porte dans un mur ou une tour pleins,
+sans place pour se tenir derrière, ne compte pas, et on arrive devant une
+construction sans porte. La carte **Votre première construction** propose le
+même bouton une fois la construction publiée.
 
 > **Remarque :** publier ne stocke votre Document/Monde que sur cet
 > appareil. Sa carte dans le Dépôt indique où cet appareil a enregistré sa

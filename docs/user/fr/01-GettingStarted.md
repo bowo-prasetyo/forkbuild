@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: abb471311eb7fdd6 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8bcc959091ee56db -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -167,7 +167,7 @@ ForkBuild comporte plusieurs grandes parties :
 ## Placer votre première brique
 
 La première fois que vous ouvrez l’Éditeur, une carte **Votre première
-construction** dans le coin de la vue 3D vous guide en cinq étapes et coche
+construction** dans le coin de la vue 3D vous guide en six étapes et coche
 chacune dès que vous l’avez faite. Voir
 [Votre première construction](02-TheEditor.md#votre-première-construction).
 

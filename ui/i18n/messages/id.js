@@ -84,6 +84,10 @@ export default Object.freeze({
 
     // World View (ui/views/WorldView.js).
     'worldView.forkCreated': 'Salinan Anda sendiri yang dapat diedit telah dibuat — "{title}" tidak berubah',
+    'worldView.arrivedAtDoor': 'Ini pintunya. Masuk dengan W, atau dengan joystick.',
+    'worldView.arrivedAtBuild': 'Ini dia. Kelilingi dengan W, atau dengan joystick.',
+    'worldView.walkedInside': 'Anda sudah di dalam! Lihat-lihat sekeliling.',
+    'worldView.firstBuildWalkedInside': '🎉 Anda masuk ke dalam bangunan pertama Anda!',
 
     // Forking a published World (application/worldNavigation/forkOnWriteMethods.js).
     'fork.notice.blocked': 'Diterbitkan dengan "{license}" — pembuatnya tidak mengizinkan fork, jadi dunia ini dapat dilihat tetapi tidak dapat diedit.',
@@ -881,6 +885,8 @@ export default Object.freeze({
     'editor.published': 'Diterbitkan! Bagikan tautannya. Agar siapa pun bisa menemukannya tanpa tautan, pilih ke mana dikirim.',
     'editor.distribute': 'Pilih ke mana dikirim',
     'editor.dismiss': 'Tutup',
+    'editor.walkInside': 'Masuk ke dalamnya',
+    'editor.walkAround': 'Kelilingi',
     'editor.publishedSending': 'Diterbitkan! Sedang dikirim ke {network}…',
     'editor.publishedSent': 'Diterbitkan dan dikirim ke {network}: sekarang siapa pun bisa menemukannya.',
     'editor.publishedSendFailed': 'Diterbitkan, tetapi pengiriman ke {network} gagal: {error}',
@@ -901,13 +907,16 @@ export default Object.freeze({
     'firstBuild.step.structure': 'Tambahkan sebuah struktur',
     'firstBuild.step.save': 'Simpan bangunan Anda',
     'firstBuild.step.share': 'Terbitkan dan bagikan tautan',
+    'firstBuild.step.walkInside': 'Masuk ke dalamnya',
     'firstBuild.hint.placeBrick': 'Pilih Tempatkan, ambil balok di Balok pada Pustaka Bangunan, lalu klik tanah.',
     'firstBuild.hint.stack': 'Dengan Tempatkan masih aktif, klik bagian atas sebuah balok untuk menaruh balok lain di atasnya.',
     'firstBuild.hint.structure': 'Buka Struktur di Pustaka Bangunan, pilih rumah, menara, atau jembatan, lalu klik tempatnya.',
     'firstBuild.hint.save': 'Klik Simpan, atau tekan Ctrl+S (⌘S di Mac). Bangunan Anda tetap ada di browser ini.',
     'firstBuild.hint.share': 'Klik Terbitkan (Anda akan diminta masuk, untuk menandatangani bangunan Anda), lalu Salin tautan: siapa pun dapat membukanya dan membuat salinannya sendiri.',
+    'firstBuild.hint.walkInside': 'Klik Masuk ke dalamnya: Anda tiba di depan pintu bangunan Anda. Masuk dengan W, atau dengan joystick di ponsel.',
+    'firstBuild.walk': 'Masuk ke dalamnya',
     'firstBuild.doneTitle': 'Bangunan pertama Anda sudah dibagikan!',
-    'firstBuild.doneText': 'Siapa pun yang memegang tautan Anda dapat membukanya dalam 3D dan me-remix-nya. Lihat apa yang dibangun orang lain, atau terus membangun.',
+    'firstBuild.doneText': 'Anda membangun sebuah tempat, membagikannya, dan masuk ke dalamnya. Siapa pun yang memegang tautan Anda dapat membukanya dalam 3D dan me-remix-nya. Lihat apa yang dibangun orang lain, atau terus membangun.',
     'firstBuild.explore': 'Lihat bangunan lain',
     'firstBuild.close': 'Terus membangun',
     'editor.touchPlaceHint': 'Ketuk tanah untuk menempatkan; Putar memutar balok terlebih dahulu.',

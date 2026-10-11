@@ -2,23 +2,29 @@ import { computed, ref } from 'vue';
 import { FIRST_BUILD_STEPS, isFirstBuildComplete, nextFirstBuildStep } from '../../core/FirstBuildChecklist.js';
 import { t } from '../i18n/i18n.js';
 
-// The guided first build in the Editor (core/FirstBuildChecklist.js): five
+// The guided first build in the Editor (core/FirstBuildChecklist.js): six
 // steps with the next one's hint, ticked off as they are done, and a short
-// celebration once the build is shared. It can fold to a small button (as it
-// starts on a phone), or be hidden (the command palette's First-Build Guide
-// brings it back). It only shows `progress` and reports what the person chose.
+// celebration once the build is shared and walked into. While walking inside
+// is next and the build is published, the hint has a Walk inside it button
+// (`walkRoute`, World View at the build's door). It can fold to a small
+// button (as it starts on a phone), or be hidden (the command palette's
+// First-Build Guide brings it back). It only shows `progress` and reports what
+// the person chose.
 const STEP_KEYS = Object.freeze({
     'place-brick': 'placeBrick',
     stack: 'stack',
     structure: 'structure',
     save: 'save',
-    share: 'share'
+    share: 'share',
+    'walk-inside': 'walkInside'
 });
 
 export default {
     name: 'FirstBuildGuide',
     props: {
-        progress: { type: Object, required: true }
+        progress: { type: Object, required: true },
+        // Where Walk inside it goes, once the build is published; null before.
+        walkRoute: { type: Object, default: null }
     },
     emits: ['dismiss', 'celebrated'],
     setup(props) {
@@ -74,6 +80,11 @@ export default {
                 </li>
             </ol>
             <p v-if="current" class="first-build-hint">{{ t('firstBuild.hint.' + current.key) }}</p>
+            <router-link
+                v-if="current && current.id === 'walk-inside' && walkRoute"
+                :to="walkRoute"
+                class="action-btn action-btn--primary first-build-walk"
+            >{{ t('firstBuild.walk') }}</router-link>
             <div class="first-build-footer">
                 <button type="button" class="first-build-link-btn" @click="$emit('dismiss')">{{ t('firstBuild.hide') }}</button>
             </div>

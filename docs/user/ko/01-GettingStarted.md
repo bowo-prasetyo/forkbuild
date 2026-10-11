@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: abb471311eb7fdd6 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8bcc959091ee56db -->
 # 01 — 시작하기
 
 <!-- languages -->
@@ -143,7 +143,7 @@ ForkBuild에는 몇 가지 주요 영역이 있습니다:
 
 ## 첫 블록 놓기
 
-에디터를 처음 열면 3D 보기 모서리의 **나의 첫 작품** 카드가 다섯 단계를
+에디터를 처음 열면 3D 보기 모서리의 **나의 첫 작품** 카드가 여섯 단계를
 안내하고, 한 단계를 마칠 때마다 체크합니다.
 [나의 첫 작품](02-TheEditor.md#나의-첫-작품)을 참고하세요.
 

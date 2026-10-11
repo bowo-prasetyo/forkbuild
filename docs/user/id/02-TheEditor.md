@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9eb8c2a710f0b80 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ee6ec2bdfb73a405 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -81,7 +81,7 @@ tombol yang belum bisa melakukan apa-apa:
 Saat pertama kali Anda membuka Editor di sebuah perangkat, kartu
 **Bangunan pertama Anda** muncul di sudut kiri bawah tampilan 3D (di
 ponsel, kartu itu mulai terlipat menjadi tombol kecil
-**Bangunan pertama · 0/5** di kiri atas). Kartu itu mencantumkan lima langkah
+**Bangunan pertama · 0/6** di kiri atas). Kartu itu mencantumkan enam langkah
 dan menampilkan petunjuk untuk langkah berikutnya:
 
 1. **Tempatkan sebuah balok**
@@ -91,11 +91,16 @@ dan menampilkan petunjuk untuk langkah berikutnya:
 4. **Simpan bangunan Anda**
 5. **Terbitkan dan bagikan tautan**: terbitkan, lalu **Salin tautan** atau
    **Bagikan…**.
+6. **Masuk ke dalamnya**: klik **Masuk ke dalamnya**, di samping tautan yang
+   ditampilkan Terbitkan (atau di kartu), lalu masuk lewat pintu bangunan
+   Anda di Tampilan Dunia (lihat
+   [Masuk ke dalamnya](04-PublishingAndForking.md#masuk-ke-dalamnya)).
 
 Setiap langkah dicentang begitu Anda melakukannya, dalam urutan apa pun;
-urungkan dan ulangi tidak dihitung. Setelah kelimanya selesai, kartu itu
+urungkan dan ulangi tidak dihitung. Setelah keenamnya selesai, kartu itu
 merayakannya dan menawarkan **Lihat bangunan lain** atau **Terus
-membangun**, lalu menghilang. **–** melipatnya menjadi tombol kecil;
+membangun**, lalu menghilang; jika sudah selesai sebelum masuk ke dalam menjadi sebuah
+langkah, kartu itu tidak muncul lagi. **–** melipatnya menjadi tombol kecil;
 **Sembunyikan panduan** menyembunyikannya untuk seterusnya di perangkat
 ini. Untuk memunculkannya lagi, buka palet perintah (**Ctrl+K**) dan
 jalankan **Panduan Bangunan Pertama**. Perangkat yang sudah memiliki karya

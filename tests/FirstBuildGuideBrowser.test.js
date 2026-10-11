@@ -18,19 +18,19 @@ await new Promise((resolve, reject) => {
     document.head.appendChild(link);
 });
 
-function mount(completed) {
+function mount(completed, walkRoute = null) {
     const events = [];
     const host = document.createElement('div');
     host.style.cssText = 'position: relative; width: 900px; height: 600px;';
     document.body.appendChild(host);
-    const state = reactive({ progress: normalizeFirstBuildProgress({ completed }) });
+    const state = reactive({ progress: normalizeFirstBuildProgress({ completed }), walkRoute });
     const app = createApp({
         components: { FirstBuildGuide },
         setup: () => ({ state, events }),
-        template: `<FirstBuildGuide :progress="state.progress" @dismiss="events.push('dismiss')" @celebrated="events.push('celebrated')" />`
+        template: `<FirstBuildGuide :progress="state.progress" :walk-route="state.walkRoute" @dismiss="events.push('dismiss')" @celebrated="events.push('celebrated')" />`
     });
     // The test page has no router; a plain link stands in for router-link.
-    app.component('router-link', { props: ['to'], template: '<a :href="to"><slot /></a>' });
+    app.component('router-link', { props: ['to'], template: '<a :href="typeof to === \'string\' ? to : to.path + \'?arrive=\' + to.query.arrive"><slot /></a>' });
     app.mount(host);
     return { host, events, state, unmount: () => { app.unmount(); host.remove(); } };
 }
@@ -56,13 +56,29 @@ function mount(completed) {
     host.querySelector('.first-build-icon-btn').click();
     await nextTick();
     const pill = host.querySelector('.first-build-guide-pill');
-    assert(pill && !host.querySelector('.first-build-steps') && pill.textContent.includes('3/5'), 'folded, a small button says how far along');
+    assert(pill && !host.querySelector('.first-build-steps') && pill.textContent.includes(`3/${FIRST_BUILD_STEPS.length}`), 'folded, a small button says how far along');
     pill.click();
     await nextTick();
     host.querySelector('.first-build-link-btn').click();
     assert(events.join() === 'dismiss', 'Hide guide asks to hide it');
     unmount();
     console.log('✓ the steps, the next one\'s hint, folding and hiding');
+}
+
+// Walking inside is last: once the build is published, its hint has a button.
+{
+    const shared = FIRST_BUILD_STEPS.filter((step) => step !== 'walk-inside');
+    const before = mount(shared);
+    await nextTick();
+    assert(before.host.querySelector('.first-build-hint').textContent.trim() === t('firstBuild.hint.walkInside'), 'the hint is for walking inside');
+    assert(!before.host.querySelector('.first-build-walk'), 'no button before the build is published');
+    before.unmount();
+    const after = mount(shared, { path: '/world/doc-1', query: { arrive: 'door' } });
+    await nextTick();
+    const walk = after.host.querySelector('.first-build-walk');
+    assert(walk && walk.textContent.trim() === t('firstBuild.walk') && walk.getAttribute('href') === '/world/doc-1?arrive=door', 'published: Walk inside it goes to its door');
+    after.unmount();
+    console.log('✓ walking inside comes last, with a way to its door');
 }
 
 // Finished: the celebration, and its two ways on.

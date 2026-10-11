@@ -5,8 +5,8 @@ import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
 
 // Ticks off the guided first build (core/FirstBuildChecklist.js) as the
 // person works in the Editor: its own edits (EditorSession#onCommandActivity,
-// so undo, redo and collaborators' edits never count), a save, and a link
-// copied or shared. Saves each change to `store` and tells `subscribe()`
+// so undo, redo and collaborators' edits never count), a save, a link
+// copied or shared, and, in World View, walking inside the published build. Saves each change to `store` and tells `subscribe()`
 // listeners. Never throws into the Editor.
 export class FirstBuildChecklistTracker {
     // `brickHeight(definitionId)` tells a placed brick on the ground from one
@@ -52,6 +52,12 @@ export class FirstBuildChecklistTracker {
 
     shared() {
         this._complete([FirstBuildStep.SHARE]);
+    }
+
+    // World View: the avatar walked in through the published build's door
+    // (application/worldNavigation/arrivalMethods.js).
+    walkedInside() {
+        this._complete([FirstBuildStep.WALK_INSIDE]);
     }
 
     dismiss() {

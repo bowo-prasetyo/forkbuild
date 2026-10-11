@@ -87,6 +87,10 @@ export default Object.freeze({
 
     // World View (ui/views/WorldView.js).
     'worldView.forkCreated': '수정 가능한 내 사본을 만들었습니다. “{title}”은(는) 그대로입니다',
+    'worldView.arrivedAtDoor': '여기가 문이에요. W 키나 조이스틱으로 들어가세요.',
+    'worldView.arrivedAtBuild': '여기 있어요. W 키나 조이스틱으로 주변을 걸어 보세요.',
+    'worldView.walkedInside': '안으로 들어왔어요! 둘러보세요.',
+    'worldView.firstBuildWalkedInside': '🎉 첫 작품 안으로 걸어 들어갔어요!',
 
     // Forking a published World (application/worldNavigation/forkOnWriteMethods.js).
     'fork.notice.blocked': '“{license}” 라이선스로 게시되었습니다. 작성자가 포크를 허용하지 않아 이 월드는 볼 수만 있고 수정할 수 없습니다.',
@@ -884,6 +888,8 @@ export default Object.freeze({
     'editor.published': '게시했습니다! 링크를 공유하세요. 링크 없이도 누구나 찾을 수 있게 하려면 보낼 곳을 고르세요.',
     'editor.distribute': '보낼 곳 고르기',
     'editor.dismiss': '닫기',
+    'editor.walkInside': '안으로 걸어 들어가기',
+    'editor.walkAround': '주변 걸어 보기',
     'editor.publishedSending': '게시했습니다! {network}(으)로 보내는 중…',
     'editor.publishedSent': '게시하고 {network}(으)로 보냈습니다. 이제 누구나 찾을 수 있습니다.',
     'editor.publishedSendFailed': '게시했지만 {network}(으)로 보내지 못했습니다: {error}',
@@ -904,13 +910,16 @@ export default Object.freeze({
     'firstBuild.step.structure': '구조물 넣기',
     'firstBuild.step.save': '작품 저장하기',
     'firstBuild.step.share': '게시하고 링크 공유하기',
+    'firstBuild.step.walkInside': '안으로 걸어 들어가기',
     'firstBuild.hint.placeBrick': '배치를 고르고 빌드 라이브러리의 블록에서 하나를 고른 다음 바닥을 클릭하세요.',
     'firstBuild.hint.stack': '배치가 켜진 상태에서 블록 윗면을 클릭하면 그 위에 하나를 더 놓을 수 있습니다.',
     'firstBuild.hint.structure': '빌드 라이브러리에서 구조물을 열고 집, 탑, 다리 중 하나를 고른 다음 놓을 곳을 클릭하세요.',
     'firstBuild.hint.save': '저장을 클릭하거나 Ctrl+S(Mac에서는 ⌘S)를 누르세요. 작품은 이 브라우저에 남습니다.',
     'firstBuild.hint.share': '게시를 클릭하고(작품에 서명하려고 로그인을 요청합니다) 링크 복사를 클릭하세요. 누구나 링크를 열어 자신만의 사본을 만들 수 있습니다.',
+    'firstBuild.hint.walkInside': '안으로 걸어 들어가기를 클릭하면 작품의 문 앞에 도착합니다. W 키(휴대폰에서는 조이스틱)로 걸어 들어가세요.',
+    'firstBuild.walk': '안으로 걸어 들어가기',
     'firstBuild.doneTitle': '첫 작품을 세상에 내놓았어요!',
-    'firstBuild.doneText': '링크가 있는 사람은 누구나 3D로 열어 리믹스할 수 있습니다. 다른 사람들의 작품을 보거나 계속 만들어 보세요.',
+    'firstBuild.doneText': '장소를 만들고, 공유하고, 그 안으로 걸어 들어갔어요. 링크가 있는 사람은 누구나 3D로 열어 리믹스할 수 있습니다. 다른 사람들의 작품을 보거나 계속 만들어 보세요.',
     'firstBuild.explore': '다른 작품 보기',
     'firstBuild.close': '계속 만들기',
     'editor.touchPlaceHint': '지면을 탭해 배치하세요. 회전을 누르면 먼저 블록을 돌립니다.',

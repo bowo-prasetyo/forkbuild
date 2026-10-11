@@ -87,6 +87,10 @@ export default Object.freeze({
 
     // World View (ui/views/WorldView.js).
     'worldView.forkCreated': 'Votre propre copie modifiable a été créée — « {title} » reste inchangé',
+    'worldView.arrivedAtDoor': 'Voici la porte. Entrez avec W, ou avec le joystick.',
+    'worldView.arrivedAtBuild': 'La voici. Faites-en le tour avec W, ou avec le joystick.',
+    'worldView.walkedInside': 'Vous êtes à l’intérieur ! Jetez un œil.',
+    'worldView.firstBuildWalkedInside': '🎉 Vous êtes entré dans votre première construction !',
 
     // Forking a published World (application/worldNavigation/forkOnWriteMethods.js).
     'fork.notice.blocked': 'Publié sous « {license} » — l’auteur n’autorise pas les forks, ce monde peut donc être consulté mais pas modifié.',
@@ -884,6 +888,8 @@ export default Object.freeze({
     'editor.published': 'Publiée ! Partagez son lien. Pour que tout le monde la trouve sans lien, choisissez où elle va.',
     'editor.distribute': 'Choisir où elle va',
     'editor.dismiss': 'Ignorer',
+    'editor.walkInside': 'Entrer à pied',
+    'editor.walkAround': 'En faire le tour',
     'editor.publishedSending': 'Publiée ! Envoi vers {network}…',
     'editor.publishedSent': 'Publiée et envoyée vers {network} : tout le monde peut la trouver maintenant.',
     'editor.publishedSendFailed': 'Publiée, mais l’envoi vers {network} n’a pas fonctionné : {error}',
@@ -904,13 +910,16 @@ export default Object.freeze({
     'firstBuild.step.structure': 'Ajouter une structure',
     'firstBuild.step.save': 'Enregistrer votre construction',
     'firstBuild.step.share': 'Publier et partager un lien',
+    'firstBuild.step.walkInside': 'Entrer à pied',
     'firstBuild.hint.placeBrick': 'Choisissez Placement, prenez une brique dans Briques de la Bibliothèque de construction, puis cliquez sur le sol.',
     'firstBuild.hint.stack': 'Placement toujours actif, cliquez sur le dessus d’une brique pour en poser une autre dessus.',
     'firstBuild.hint.structure': 'Ouvrez Structures dans la Bibliothèque de construction, choisissez une maison, une tour ou un pont, puis cliquez là où il doit aller.',
     'firstBuild.hint.save': 'Cliquez sur Enregistrer ou appuyez sur Ctrl+S (⌘S sur Mac). Votre construction reste dans ce navigateur.',
     'firstBuild.hint.share': 'Cliquez sur Publier (il vous demande de vous connecter, pour signer votre construction), puis sur Copier le lien : n’importe qui peut l’ouvrir et en faire sa propre copie.',
+    'firstBuild.hint.walkInside': 'Cliquez sur Entrer à pied : vous arrivez devant la porte de votre construction. Entrez avec W, ou avec le joystick sur un téléphone.',
+    'firstBuild.walk': 'Entrer à pied',
     'firstBuild.doneTitle': 'Votre première construction est lancée !',
-    'firstBuild.doneText': 'Quiconque a votre lien peut l’ouvrir en 3D et en faire sa version. Découvrez ce que d’autres ont construit, ou continuez à construire.',
+    'firstBuild.doneText': 'Vous avez construit un lieu, l’avez partagé et y êtes entré. Quiconque a votre lien peut l’ouvrir en 3D et en faire sa version. Découvrez ce que d’autres ont construit, ou continuez à construire.',
     'firstBuild.explore': 'Voir d’autres constructions',
     'firstBuild.close': 'Continuer à construire',
     'editor.touchPlaceHint': 'Touchez le sol pour placer ; Pivoter tourne d’abord la brique.',

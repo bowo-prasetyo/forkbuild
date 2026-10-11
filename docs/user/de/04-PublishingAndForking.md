@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 17fb6ab977019cd5 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 8a6d8b43407550d1 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -33,6 +33,19 @@ Autor. Andere sehen sie erst, wenn Sie sie teilen oder verteilen (siehe den
 Hinweis unten). Sie erhält außerdem automatisch eine Position in der
 geteilten Welt, sodass **Erkunden** immer ein Ziel hat — siehe
 [Welten finden](03-WorldView.md#welten-finden).
+
+### Hineingehen
+
+Neben dem Link zeigt die Meldung nach dem Veröffentlichen **Hineingehen**
+(**Darum herumgehen** bei einem Bauwerk ohne Tür). Es öffnet die Weltansicht
+mit Ihrem Avatar auf dem Boden vor der Tür des Bauwerks, ihr zugewandt; die
+Tür schwingt auf, wenn Sie darauf zugehen, und hineinzugehen (**W**, auf dem
+Handy der Joystick) hakt den letzten Schritt von
+[Ihr erstes Bauwerk](02-TheEditor.md#ihr-erstes-bauwerk) ab. Die Tür ist der
+Haupteingang des Bauwerks: Eine Tür in einer massiven Wand oder einem Turm,
+hinter der man nicht stehen kann, zählt nicht, und an ein Bauwerk ohne Tür
+kommen Sie von vorn. Die Karte **Ihr erstes Bauwerk** bietet dieselbe
+Schaltfläche an, sobald das Bauwerk veröffentlicht ist.
 
 > **Hinweis:** Veröffentlichen speichert Ihr Dokument bzw. Ihre Welt nur
 > auf diesem Gerät. Ihre Karte im Repository sagt, wo dieses Gerät das

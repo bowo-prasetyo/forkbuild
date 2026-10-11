@@ -119,6 +119,13 @@
     line-height: 1.4;
 }
 
+/* Walk inside it, under the last step's hint once the build is published. */
+.first-build-walk {
+    display: inline-block;
+    margin-top: 0.5rem;
+    text-decoration: none;
+}
+
 .first-build-footer {
     display: flex;
     justify-content: flex-end;

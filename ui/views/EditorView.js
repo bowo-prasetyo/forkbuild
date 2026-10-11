@@ -61,6 +61,7 @@ import FirstBuildGuide from '../components/FirstBuildGuide.js';
 import BuildPlotBanner from '../components/BuildPlotBanner.js';
 import { useBuildPlot } from './editorView/useBuildPlot.js';
 import { useFirstBuildGuide } from './editorView/useFirstBuildGuide.js';
+import { useWalkInside } from './editorView/useWalkInside.js';
 import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
 import { usePostPublishDistribution } from './editorView/usePostPublishDistribution.js';
 import { useSelectionActions } from './editorView/useSelectionActions.js';
@@ -155,6 +156,12 @@ export default {
                         :disabled="sendStatus === 'sending'"
                         @click="distributionDialogOpen = true"
                     >{{ sendStatus === 'local' ? t('editor.distribute') : t('editor.changeWhereItGoes') }}</button>
+                    <!-- Walk inside it: World View, standing at the build's door. -->
+                    <router-link
+                        v-if="walkInside"
+                        :to="walkInside.route"
+                        class="action-btn action-btn--primary editor-post-publish-walk"
+                    >{{ walkInside.hasDoor ? t('editor.walkInside') : t('editor.walkAround') }}</router-link>
                     <button
                         type="button"
                         class="action-btn action-btn--secondary editor-post-publish-dismiss-btn"
@@ -314,6 +321,7 @@ export default {
                     <FirstBuildGuide
                         v-if="firstBuildVisible"
                         :progress="firstBuildProgress"
+                        :walk-route="walkInside ? walkInside.route : null"
                         @dismiss="dismissFirstBuildGuide"
                         @celebrated="finishFirstBuildGuide"
                     />
@@ -745,10 +753,12 @@ export default {
         const { buildPlot, buildPlotPublished, startBuildPlot, onBuildPlotPublished, forgetBuildPlot, visitBuildPlot } = useBuildPlot({
             documentManager, documentVersion, router, feedback
         });
+        const { walkInside, walkInsidePublished } = useWalkInside({ documentManager, registry, documentVersion });
         function onPublished(publication) {
             funnelEventCounter?.publishedBuild(publication, worldBrickCount(documentManager.document?.world));
             onDocumentPublished(publication);
             onBuildPlotPublished(publication);
+            walkInsidePublished(publication);
         }
         let unsubDocumentState = null;
 
@@ -1450,6 +1460,7 @@ export default {
             onDocumentPublished,
             onPublished, buildPlot, buildPlotPublished, forgetBuildPlot, visitBuildPlot,
             ...firstBuildGuide,
+            walkInside,
             distributePublishedDocument,
             distributePublishedDocumentAndSnapshot,
             canRemember, rememberChoice, setRememberChoice, sendStatus, sendDestinationName, sendError,

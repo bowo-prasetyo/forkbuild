@@ -87,6 +87,10 @@ export default Object.freeze({
 
     // World View (ui/views/WorldView.js).
     'worldView.forkCreated': 'Ihre eigene bearbeitbare Kopie wurde erstellt — „{title}“ bleibt unverändert',
+    'worldView.arrivedAtDoor': 'Hier ist die Tür. Gehen Sie mit W hinein, oder mit dem Joystick.',
+    'worldView.arrivedAtBuild': 'Hier ist es. Gehen Sie mit W darum herum, oder mit dem Joystick.',
+    'worldView.walkedInside': 'Sie sind drinnen! Sehen Sie sich um.',
+    'worldView.firstBuildWalkedInside': '🎉 Sie sind in Ihr erstes Bauwerk hineingegangen!',
 
     // Forking a published World (application/worldNavigation/forkOnWriteMethods.js).
     'fork.notice.blocked': 'Veröffentlicht unter „{license}“ — der Autor hat das Forken nicht erlaubt, daher kann diese Welt angesehen, aber nicht bearbeitet werden.',
@@ -884,6 +888,8 @@ export default Object.freeze({
     'editor.published': 'Veröffentlicht! Teilen Sie den Link. Damit alle es auch ohne Link finden, wählen Sie, wohin es geht.',
     'editor.distribute': 'Wählen, wohin es geht',
     'editor.dismiss': 'Ausblenden',
+    'editor.walkInside': 'Hineingehen',
+    'editor.walkAround': 'Darum herumgehen',
     'editor.publishedSending': 'Veröffentlicht! Wird an {network} gesendet …',
     'editor.publishedSent': 'Veröffentlicht und an {network} gesendet: Jetzt können alle es finden.',
     'editor.publishedSendFailed': 'Veröffentlicht, aber das Senden an {network} hat nicht geklappt: {error}',
@@ -904,13 +910,16 @@ export default Object.freeze({
     'firstBuild.step.structure': 'Eine Struktur einsetzen',
     'firstBuild.step.save': 'Ihr Bauwerk speichern',
     'firstBuild.step.share': 'Veröffentlichen und einen Link teilen',
+    'firstBuild.step.walkInside': 'Hineingehen',
     'firstBuild.hint.placeBrick': 'Wählen Sie Platzieren, suchen Sie unter Steine in der Baubibliothek einen Stein aus und klicken Sie dann auf den Boden.',
     'firstBuild.hint.stack': 'Klicken Sie bei eingeschaltetem Platzieren oben auf einen Stein, um einen weiteren daraufzusetzen.',
     'firstBuild.hint.structure': 'Öffnen Sie Strukturen in der Baubibliothek, wählen Sie ein Haus, einen Turm oder eine Brücke und klicken Sie dorthin, wo es hin soll.',
     'firstBuild.hint.save': 'Klicken Sie auf Speichern oder drücken Sie Strg+S (⌘S auf dem Mac). Ihr Bauwerk bleibt in diesem Browser.',
     'firstBuild.hint.share': 'Klicken Sie auf Veröffentlichen (dabei werden Sie gebeten, sich anzumelden, um Ihr Bauwerk zu signieren), dann auf Link kopieren: Jeder kann ihn öffnen und eine eigene Kopie machen.',
+    'firstBuild.hint.walkInside': 'Klicken Sie auf Hineingehen: Sie stehen vor der Tür Ihres Bauwerks. Gehen Sie mit W hinein, auf dem Handy mit dem Joystick.',
+    'firstBuild.walk': 'Hineingehen',
     'firstBuild.doneTitle': 'Ihr erstes Bauwerk ist in der Welt!',
-    'firstBuild.doneText': 'Jeder mit Ihrem Link kann es in 3D öffnen und daraus etwas Eigenes machen. Sehen Sie sich an, was andere gebaut haben, oder bauen Sie weiter.',
+    'firstBuild.doneText': 'Sie haben einen Ort gebaut, ihn geteilt und sind hineingegangen. Jeder mit Ihrem Link kann ihn in 3D öffnen und daraus etwas Eigenes machen. Sehen Sie sich an, was andere gebaut haben, oder bauen Sie weiter.',
     'firstBuild.explore': 'Andere Bauwerke ansehen',
     'firstBuild.close': 'Weiterbauen',
     'editor.touchPlaceHint': 'Tippen Sie auf den Boden, um zu platzieren; Drehen dreht den Stein vorher.',

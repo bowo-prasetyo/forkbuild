@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 17fb6ab977019cd5 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 8a6d8b43407550d1 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -34,6 +34,19 @@ membagikan atau mendistribusikannya (lihat catatan di bawah). Karya itu
 juga otomatis diberi posisi di dunia bersama, sehingga **Jelajahi** selalu
 punya tempat untuk dituju — lihat
 [Menemukan dunia](03-WorldView.md#menemukan-dunia).
+
+### Masuk ke dalamnya
+
+Di samping tautan, pemberitahuan yang ditampilkan Terbitkan memiliki **Masuk
+ke dalamnya** (**Kelilingi** untuk bangunan tanpa pintu). Tombol itu membuka
+Tampilan Dunia dengan avatar Anda di tanah di depan pintu bangunan,
+menghadapnya; pintu berayun terbuka saat Anda mendekat, dan masuk (**W**,
+atau joystick di ponsel) mencentang langkah terakhir
+[Bangunan pertama Anda](02-TheEditor.md#bangunan-pertama-anda). Pintu itu
+adalah jalan masuk utama: pintu di dinding atau menara yang padat, tanpa
+tempat berdiri di baliknya, tidak dihitung, dan bangunan tanpa pintu didatangi
+dari depan. Kartu **Bangunan pertama Anda** menawarkan tombol yang sama
+setelah bangunan diterbitkan.
 
 > **Catatan:** Menerbitkan hanya menyimpan Dokumen/Dunia Anda di perangkat
 > ini. Kartunya di Repositori menyebutkan di mana perangkat ini mencatat

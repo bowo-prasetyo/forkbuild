@@ -146,8 +146,8 @@ ForkBuild has several main areas:
 ## Placing your first brick
 
 The first time you open the Editor, a **Your first build** card in the
-corner of the 3D view walks you through five steps and ticks each one off
-as you do it; see [Your first build](02-TheEditor.md#your-first-build).
+corner of the 3D view walks you through six steps and ticks each one off
+as you do it, the last one walking inside your published build; see [Your first build](02-TheEditor.md#your-first-build).
 
 1. Click **Editor** in the top bar.
 2. In the left sidebar, make sure the **Place** tool is active (press `2`).

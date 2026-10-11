@@ -86,6 +86,10 @@ export default Object.freeze({
 
     // World View (ui/views/WorldView.js).
     'worldView.forkCreated': 'Created your own editable copy — "{title}" is unchanged',
+    'worldView.arrivedAtDoor': 'Here\'s the door. Walk in with W, or the joystick.',
+    'worldView.arrivedAtBuild': 'Here it is. Walk around it with W, or the joystick.',
+    'worldView.walkedInside': 'You\'re inside! Have a look around.',
+    'worldView.firstBuildWalkedInside': '🎉 You walked into your first build!',
 
     // Forking a published World (application/worldNavigation/forkOnWriteMethods.js).
     'fork.notice.blocked': 'Published under "{license}" — the author has not allowed forking, so this world can be viewed but not edited.',
@@ -883,6 +887,8 @@ export default Object.freeze({
     'editor.published': 'Published! Share its link. To let anyone find it without a link, choose where it goes.',
     'editor.distribute': 'Choose where it goes',
     'editor.dismiss': 'Dismiss',
+    'editor.walkInside': 'Walk inside it',
+    'editor.walkAround': 'Walk around it',
     'editor.publishedSending': 'Published! Sending it to {network}…',
     'editor.publishedSent': 'Published and sent to {network}: anyone can find it now.',
     'editor.publishedSendFailed': 'Published, but sending it to {network} didn\'t work: {error}',
@@ -903,13 +909,16 @@ export default Object.freeze({
     'firstBuild.step.structure': 'Drop in a structure',
     'firstBuild.step.save': 'Save your build',
     'firstBuild.step.share': 'Publish and share a link',
+    'firstBuild.step.walkInside': 'Walk inside it',
     'firstBuild.hint.placeBrick': 'Choose Place, pick a brick under Bricks in the Build Library, then click the ground.',
     'firstBuild.hint.stack': 'With Place still on, click the top of a brick to put another on it.',
     'firstBuild.hint.structure': 'Open Structures in the Build Library, pick a house, tower or bridge, and click where it goes.',
     'firstBuild.hint.save': 'Click Save, or press Ctrl+S (⌘S on a Mac). Your build stays in this browser.',
     'firstBuild.hint.share': 'Click Publish (it asks you to log in, to sign your build), then Copy link: anyone can open it and make their own copy.',
+    'firstBuild.hint.walkInside': 'Click Walk inside it: you arrive at your build\'s door. Walk in with W, or the joystick on a phone.',
+    'firstBuild.walk': 'Walk inside it',
     'firstBuild.doneTitle': 'Your first build is out there!',
-    'firstBuild.doneText': 'Anyone with your link can open it in 3D and remix it. See what others have built, or keep building.',
+    'firstBuild.doneText': 'You built a place, shared it and walked inside it. Anyone with your link can open it in 3D and remix it. See what others have built, or keep building.',
     'firstBuild.explore': 'See other builds',
     'firstBuild.close': 'Keep building',
     'editor.touchPlaceHint': 'Tap the ground to place; Rotate turns the brick first.',

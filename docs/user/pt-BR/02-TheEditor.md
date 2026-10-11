@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9eb8c2a710f0b80 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ee6ec2bdfb73a405 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -80,7 +80,7 @@ ainda não podem fazer nada:
 Na primeira vez que você abre o Editor em um dispositivo, um cartão **Sua
 primeira construção** fica no canto inferior esquerdo da visão 3D (no
 celular, ele começa recolhido em um pequeno botão
-**Primeira construção · 0/5** no canto superior esquerdo). Ele lista cinco
+**Primeira construção · 0/6** no canto superior esquerdo). Ele lista seis
 passos e mostra uma dica para o próximo:
 
 1. **Colocar um bloco**
@@ -90,11 +90,16 @@ passos e mostra uma dica para o próximo:
 4. **Salvar sua construção**
 5. **Publicar e compartilhar um link**: publique e depois use **Copiar
    link** ou **Compartilhar…**.
+6. **Entrar andando**: clique em **Entrar andando**, ao lado do link que
+   Publicar mostra (ou no cartão), e entre pela porta da sua construção na
+   Visão do Mundo (veja
+   [Entrar andando](04-PublishingAndForking.md#entrar-andando)).
 
 Cada passo é marcado quando você o faz, em qualquer ordem; desfazer e
-refazer não contam. Quando os cinco estão feitos, o cartão comemora e
+refazer não contam. Quando os seis estão feitos, o cartão comemora e
 oferece **Ver outras construções** ou **Continuar construindo**, e depois
-some. **–** o recolhe no botão pequeno; **Ocultar o guia** o esconde de vez
+some; se já estava concluído antes de entrar andando ser um passo, não
+volta. **–** o recolhe no botão pequeno; **Ocultar o guia** o esconde de vez
 neste dispositivo. Para trazê-lo de volta, abra a paleta de comandos
 (**Ctrl+K**) e execute **Guia da primeira construção**. Um dispositivo que
 já tem trabalho salvo começa com o guia oculto.

@@ -157,6 +157,7 @@ export const worldStreamingMethods = {
             this._registerCommandHistory(document.world.id, new CommandHistory({ world: document.world }));
         }
         this._settlePendingAvatarSpawn(documentId);
+        this._settlePendingArrival(documentId);
     },
 
     _unloadWorld(documentId) {
