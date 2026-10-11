@@ -93,6 +93,7 @@
     <link rel="modulepreload" href="application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js">
     <link rel="modulepreload" href="application/snapshot/placement/CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase.js">
     <link rel="modulepreload" href="application/devicePairing/DevicePairing.js">
+    <link rel="modulepreload" href="application/walkTogether/WalkTogether.js">
     <link rel="modulepreload" href="application/backup/DeviceBackupUseCase.js">
     <link rel="modulepreload" href="application/backup/BackupStatusStore.js">
     <link rel="modulepreload" href="application/backup/BackupReminder.js">
@@ -216,13 +217,13 @@
     <link rel="modulepreload" href="application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js">
     <link rel="modulepreload" href="application/placement/CreatePlacementKnowledgeStoreUseCase.js">
     <link rel="modulepreload" href="application/snapshot/placement/PublicationSnapshotPlacementDiscoveryCoordinator.js">
-    <link rel="modulepreload" href="application/peer/PeerSessionManager.js">
+    <link rel="modulepreload" href="application/peer/OneOffPeerSession.js">
     <link rel="modulepreload" href="application/peer/ChunkedPeerTransfer.js">
-    <link rel="modulepreload" href="peer/DiscoveryBootstrap.js">
-    <link rel="modulepreload" href="peer/RendezvousDiscoveryProvider.js">
-    <link rel="modulepreload" href="peer/PeerMessageBus.js">
     <link rel="modulepreload" href="identity/EphemeralIdentityProvider.js">
     <link rel="modulepreload" href="core/DevicePairingCode.js">
+    <link rel="modulepreload" href="application/publication/sharing/PublicationLinkPayload.js">
+    <link rel="modulepreload" href="peer/RendezvousPublicationSigning.js">
+    <link rel="modulepreload" href="core/WalkTogetherCode.js">
     <link rel="modulepreload" href="application/backup/BackupEntryGroups.js">
     <link rel="modulepreload" href="application/backup/DeviceBackupFile.js">
     <link rel="modulepreload" href="application/backup/BackupFolder.js">
@@ -241,8 +242,11 @@
     <link rel="modulepreload" href="application/identity/CreateIdentityProviderUseCase.js">
     <link rel="modulepreload" href="application/identity/IdentityUseCase.js">
     <link rel="modulepreload" href="application/publication/commentary/CreatePublicationCommentaryUseCase.js">
+    <link rel="modulepreload" href="application/peer/PeerSessionManager.js">
     <link rel="modulepreload" href="peer/WebRtcPeerConnectionProvider.js">
     <link rel="modulepreload" href="peer/WebSocketRendezvousTransport.js">
+    <link rel="modulepreload" href="peer/RendezvousDiscoveryProvider.js">
+    <link rel="modulepreload" href="peer/DiscoveryBootstrap.js">
     <link rel="modulepreload" href="peer/IceServerConfig.js">
     <link rel="modulepreload" href="storage/IceServerConfigurationStore.js">
     <link rel="modulepreload" href="application/settings/SetIceServerConfigurationUseCase.js">
@@ -270,6 +274,7 @@
     <link rel="modulepreload" href="application/chat/CreateRemoteReadReceiptStoreUseCase.js">
     <link rel="modulepreload" href="application/presence/PeerPresenceUseCase.js">
     <link rel="modulepreload" href="application/chat/VoiceUseCase.js">
+    <link rel="modulepreload" href="peer/PeerMessageBus.js">
     <link rel="modulepreload" href="application/chat/CreateSiblingReadStateStoreUseCase.js">
     <link rel="modulepreload" href="application/chat/DeviceConversationSyncUseCase.js">
     <link rel="modulepreload" href="core/BitcoinEsploraConfiguration.js">
@@ -431,15 +436,6 @@
     <link rel="modulepreload" href="application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js">
     <link rel="modulepreload" href="application/placement/PlacementAcquisitionKind.js">
     <link rel="modulepreload" href="application/placement/LocalPlacementKnowledgeStore.js">
-    <link rel="modulepreload" href="peer/LocalPeerDiscoveryProvider.js">
-    <link rel="modulepreload" href="peer/PeerInvitation.js">
-    <link rel="modulepreload" href="application/peer/ConnectToPeerUseCase.js">
-    <link rel="modulepreload" href="application/peer/DiscoverPeersUseCase.js">
-    <link rel="modulepreload" href="peer/RendezvousPublicationSigning.js">
-    <link rel="modulepreload" href="peer/PeerDiscoveryProvider.js">
-    <link rel="modulepreload" href="peer/PeerDiscoveryRecord.js">
-    <link rel="modulepreload" href="peer/PeerDiscoverySource.js">
-    <link rel="modulepreload" href="peer/RendezvousPublication.js">
     <link rel="modulepreload" href="identity/SigningIdentity.js">
     <link rel="modulepreload" href="core/PlaceNamingDiscoveryEnvelope.js">
     <link rel="modulepreload" href="core/SnapshotDiscoveryEnvelope.js">
@@ -456,10 +452,18 @@
     <link rel="modulepreload" href="application/publication/CanCommentOnPublicationUseCase.js">
     <link rel="modulepreload" href="application/publication/commentary/GetPublicationCommentariesUseCase.js">
     <link rel="modulepreload" href="application/publication/commentary/AddPublicationCommentaryUseCase.js">
+    <link rel="modulepreload" href="peer/LocalPeerDiscoveryProvider.js">
+    <link rel="modulepreload" href="peer/PeerInvitation.js">
+    <link rel="modulepreload" href="application/peer/ConnectToPeerUseCase.js">
+    <link rel="modulepreload" href="application/peer/DiscoverPeersUseCase.js">
     <link rel="modulepreload" href="peer/PeerConnectionProvider.js">
     <link rel="modulepreload" href="peer/WebRtcPeerConnection.js">
     <link rel="modulepreload" href="peer/PeerConnectionOffer.js">
     <link rel="modulepreload" href="peer/RendezvousTransport.js">
+    <link rel="modulepreload" href="peer/RendezvousPublication.js">
+    <link rel="modulepreload" href="peer/PeerDiscoveryProvider.js">
+    <link rel="modulepreload" href="peer/PeerDiscoveryRecord.js">
+    <link rel="modulepreload" href="peer/PeerDiscoverySource.js">
     <link rel="modulepreload" href="core/IceServerConfiguration.js">
     <link rel="modulepreload" href="core/TurnServerConfiguration.js">
     <link rel="modulepreload" href="core/RendezvousConfiguration.js">
@@ -619,9 +623,6 @@
     <link rel="modulepreload" href="core/Structure.js">
     <link rel="modulepreload" href="application/anchoring/AnchorKnowledgeRecord.js">
     <link rel="modulepreload" href="application/snapshot/placement/SnapshotPlacementKnowledgeRecord.js">
-    <link rel="modulepreload" href="peer/PeerAuthenticationSession.js">
-    <link rel="modulepreload" href="application/peer/ConnectedPeer.js">
-    <link rel="modulepreload" href="application/peer/ConnectedPeerRegistry.js">
     <link rel="modulepreload" href="identity/IdentityProvider.js">
     <link rel="modulepreload" href="identity/Identity.js">
     <link rel="modulepreload" href="identity/LocalIdentity.js">
@@ -634,6 +635,9 @@
     <link rel="modulepreload" href="identity/IdentityRecovery.js">
     <link rel="modulepreload" href="identity/IdentityLifecycleTransfer.js">
     <link rel="modulepreload" href="core/IdentityLifecycleState.js">
+    <link rel="modulepreload" href="peer/PeerAuthenticationSession.js">
+    <link rel="modulepreload" href="application/peer/ConnectedPeer.js">
+    <link rel="modulepreload" href="application/peer/ConnectedPeerRegistry.js">
     <link rel="modulepreload" href="peer/PeerConnection.js">
     <link rel="modulepreload" href="peer/PeerConnectionAnswer.js">
     <link rel="modulepreload" href="peer/PeerIdentity.js">
@@ -694,8 +698,8 @@
     <link rel="modulepreload" href="vendor/noble-curves/abstract/montgomery.js">
     <link rel="modulepreload" href="vendor/noble-curves/abstract/oprf.js">
     <link rel="modulepreload" href="vendor/noble-curves/utils.js">
-    <link rel="modulepreload" href="core/PeerAuthenticationEnvelope.js">
     <link rel="modulepreload" href="identity/IdentityImport.js">
+    <link rel="modulepreload" href="core/PeerAuthenticationEnvelope.js">
     <link rel="modulepreload" href="core/PeerRelationshipStatus.js">
     <link rel="modulepreload" href="core/SteemBinary.js">
     <link rel="modulepreload" href="core/DecentralizedWorldDiscoveryLead.js">

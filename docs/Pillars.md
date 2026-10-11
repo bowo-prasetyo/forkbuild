@@ -165,6 +165,9 @@ Each pillar has a question the launch counters can answer
   published as remixes (`/e/remix-published`)?
 - **Yours, in a world:** do people come back for a second build
   (`/e/second-build`)?
+  And do they walk in it with friends: how many "Walk here with me" links
+  are made (`/e/walk-link`), and how many friends arrive through them
+  (`/e/walk-joined`)?
 
 ## Where this came from
 
@@ -204,4 +207,5 @@ polish"). It recommended next: a "walk here with me" link, so the third
 pillar's "with friends" needs no Peers page; publishing without first
 creating a passphrase identity; Distribute folded into Publish; World View
 opening as a visitor's view, with its protocol panels under Advanced; and
-more challenge themes.
+more challenge themes. The "walk here with me" link was added the same day (see the
+roadmap, "Walk here with me").

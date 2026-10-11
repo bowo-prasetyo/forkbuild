@@ -5312,3 +5312,38 @@ its words).
 - Not done (from the same review): a "walk here with me" link, publishing without first creating a passphrase
   identity, folding Distribute into Publish, a visitor's World View with the protocol panels under Advanced, and more
   challenge themes.
+
+
+## Walk here with me (unnumbered, 2026-10-11)
+
+**One link brings a friend into the World you're standing in.** The fantasy's last clause, "walk inside it with
+friends", had no path a newcomer could take: walking together meant creating an identity, then either swapping a
+WebRTC invitation and its reply by hand on the Peers page or joining a public lobby that lists you to strangers. The
+creative-direction review of 2026-10-11 called it the weakest pillar. Pillar served: your work is yours, and lives in a
+world (a build is a place you visit with friends).
+
+- **The link.** World View's **Walk here with me**, beside **Build here**, opens a dialog with a link (and its QR
+  code), who is on the way and who has arrived. A friend who opens it (`#/walk/<code>`, core/WalkTogetherCode.js) logs
+  in if they haven't, is told that joining shows each side the other's IP address, clicks **Join**, and lands in the
+  same World, where the two see each other. One link serves any number of friends for 30 minutes while the host stays
+  in World View; **Stop the link** ends it, and friends who joined stay connected.
+- **How it connects** (application/walkTogether/WalkTogether.js). The meeting uses one-off keys on a peer session of
+  its own (application/peer/OneOffPeerSession.js, now shared with device pairing), so the rendezvous servers never see
+  either identity and neither is made discoverable. Over it the host sends its name, the World as a link-only payload
+  and an invitation from its own peer session; the guest checks and keeps the World as opening a `#/s/` link does,
+  accepts the invitation expecting the host's identity, and sends back its reply. What remains is an ordinary
+  authenticated peer connection between the two real identities, so presence, profiles, gestures and vehicles travel
+  as for any connected peer, under each side's visibility settings. Nobody is remembered or befriended by it.
+- **Only a published World.** A guest can only check a signed, published build, so an unpublished World's dialog says
+  to publish it first.
+- **Counting it.** `/e/walk-link` when a link is made and `/e/walk-joined` when a friend arrives, under the visitor
+  count's rules (docs/Privacy.md, docs/Pillars.md "Measuring it", the launch kit).
+- Every language: the dialog, the guest's page, a "walk" purpose for the login dialog, guide 03's new section and the
+  Privacy page. docs/Protocol.md ("Walk links") and docs/Architecture.md describe it.
+- Tests: `WalkTogether` (two friends join one host through one link over real WebRTC and an in-memory rendezvous
+  network, ending up authenticated to each other's real identities; the rendezvous network never sees them; a World
+  that doesn't check out connects nobody; an unpublished World, a signed-out host, no rendezvous server, a damaged,
+  unknown or expired link, and closing the link); `WalkTogetherBrowser` (the guest's page from log in to World View,
+  its failures, and the host's dialog at phone width); `FunnelEventCounter` (the two paths).
+- Not done: walking together in the challenge plaza (it has no single World to send); a link that keeps working after
+  the host leaves World View; and showing the host which friends' avatars their own visibility settings hide.

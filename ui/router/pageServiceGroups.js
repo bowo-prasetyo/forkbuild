@@ -7,6 +7,7 @@ export const PAGE_SERVICE_GROUPS = Object.freeze({
     EditorView: ['distribution', 'sound'],
     WorldView: ['distribution', 'sound'],
     PublicationLinkView: ['distribution'],
+    WalkTogetherJoinView: ['distribution'],
     DecentralizedPublicationsView: ['anchoring', 'distribution', 'observationArchive'],
     AnchorProviderSettingsView: ['anchoring']
 });

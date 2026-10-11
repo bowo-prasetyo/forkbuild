@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a13b8d7d65867a5b -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c5211b73c764ada -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -603,6 +603,32 @@ de volta para olhar. **Esquecer este lugar** deixa que ela seja
 posicionada como sempre. O lugar é só uma nota sua de onde mostrar sua
 construção, guardada neste dispositivo e nos seus backups; ele não
 reivindica o terreno, e outras pessoas também podem construir ali.
+
+### Passear aqui comigo — trazer amigos para este Mundo
+
+**Passear aqui comigo**, ao lado de **Construir aqui**, cria um link que
+traz amigos para o Mundo em que você está, para passearem juntos por ele.
+Envie como quiser; ele também aparece como QR code para um celular. Um amigo
+que abre o link entra na conta, se ainda não entrou (ele passeia com o
+próprio avatar, com o próprio nome), clica em **Entrar** e chega a este
+Mundo, onde vocês se veem andando por aí. A janela mostra quem está a
+caminho e quem já chegou.
+
+- O Mundo precisa estar publicado antes: o ForkBuild do seu amigo confere a
+  assinatura e a construção, como faz com um link compartilhado, e guarda
+  uma cópia.
+- O link funciona para qualquer pessoa que o abrir, por 30 minutos,
+  enquanto você ficar na visão do mundo. Fechar a janela não o interrompe;
+  **Parar o link** interrompe. Os amigos que já entraram continuam
+  conectados nos dois casos.
+- Entrar conecta os dois dispositivos diretamente, como um convite em
+  **Pares**: cada um pode ver o endereço IP do outro, e os avatares aparecem
+  conforme a visibilidade de presença de cada lado permite (veja
+  [Avatares e presença](06-AvatarsAndPresence.md)). Ninguém vira um par
+  lembrado nem amigo a menos que você escolha.
+- É preciso um servidor de encontro. O site oficial tem um; uma cópia que
+  você mesmo roda precisa do seu (veja
+  [Conexões entre pares e amigos](07-PeerConnectionsAndFriends.md)).
 
 ### A praça do desafio
 

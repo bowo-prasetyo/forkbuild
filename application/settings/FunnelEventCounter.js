@@ -65,6 +65,16 @@ export class FunnelEventCounter {
         return this.count(FunnelEvent.PLAZA_VISIT);
     }
 
+    // A "Walk here with me" link made (application/walkTogether/).
+    madeWalkLink() {
+        return this.count(FunnelEvent.WALK_LINK);
+    }
+
+    // A friend arrived through one.
+    joinedWalk() {
+        return this.count(FunnelEvent.WALK_JOINED);
+    }
+
     // Counted once per build opened from a link.
     forked(sourceDocumentId) {
         if (!this._openedFromLink.delete(sourceDocumentId)) return false;

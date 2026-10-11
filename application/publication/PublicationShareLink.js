@@ -61,14 +61,7 @@ export async function prepareLinkOnlyShare({
     publication, contentStore, appUrl = FORKBUILD_APP_URL, previewUrl = FORKBUILD_LINK_PREVIEW_URL, maxPayloadLength = MAX_LINK_PAYLOAD_LENGTH
 }) {
     const claim = typeof publication?.toJSON === 'function' ? publication.toJSON() : publication;
-    const hash = claim?.contentReference?.hash ?? claim?.contentHash;
-    let snapshotText = null;
-    try {
-        snapshotText = hash && contentStore ? await readContent(contentStore, new ContentReference({ hash })) : null;
-        if (snapshotText && typeof snapshotText !== 'string') snapshotText = new TextDecoder().decode(snapshotText);
-    } catch {
-        snapshotText = null;
-    }
+    const snapshotText = await readPublishedBuildText({ publication: claim, contentStore });
     if (!snapshotText) return Object.freeze({ reason: message('share.linkOnlyNoBuild'), snapshotText: null });
     // Opening the link checks the signature, so an unsigned one would only fail there.
     if (!claim.signature || !claim.publisherIdentity) {
@@ -83,6 +76,21 @@ export async function prepareLinkOnlyShare({
     if (payload.length > maxPayloadLength) return Object.freeze({ reason: message('share.linkOnlyTooLarge'), snapshotText });
     const url = previewUrl ? linkPreviewUrl(payload, previewUrl) : linkOnlyPublicationViewUrl(payload, appUrl);
     return Object.freeze({ url, payload, payloadLength: payload.length, snapshotText });
+}
+
+// A Publication's build as text, exactly as its content hash covers it,
+// read from this device's content store; null when it isn't held here.
+// Never rejects.
+export async function readPublishedBuildText({ publication, contentStore }) {
+    const claim = typeof publication?.toJSON === 'function' ? publication.toJSON() : publication;
+    const hash = claim?.contentReference?.hash ?? claim?.contentHash;
+    try {
+        const content = hash && contentStore ? await readContent(contentStore, new ContentReference({ hash })) : null;
+        if (!content) return null;
+        return typeof content === 'string' ? content : new TextDecoder().decode(content);
+    } catch {
+        return null;
+    }
 }
 
 // A local store may hold content on disk and not yet in memory; getSync()

@@ -87,6 +87,9 @@ import { useChallengePlaza } from './worldView/useChallengePlaza.js';
 import { hoverCardTemplate } from './worldView/templates/hoverCard.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 import { plotQuery } from '../../core/BuildPlot.js';
+import { useWalkTogether } from './worldView/useWalkTogether.js';
+import WalkTogetherDialog from '../components/walkTogether/WalkTogetherDialog.js';
+import LoginModal from '../components/LoginModal.js';
 import { compassText, spatialContextDescription } from '../i18n/worldText.js';
 
 // Snapshot fetches the automatic cascade runs at once.
@@ -110,7 +113,7 @@ export default {
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
         WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt, AnimalInteractionPrompt, ResidentInteractionPrompt, ResidentSpeechActions,
-        HistoryTimelinePanel, TouchMovementPad, BreathMeter, SoundControl
+        HistoryTimelinePanel, TouchMovementPad, BreathMeter, SoundControl, WalkTogetherDialog, LoginModal
     },
     setup() {
         const route = useRoute();
@@ -898,6 +901,9 @@ export default {
             currentReturnWorld, router, session
         });
 
+        // Walk here with me: a link that brings friends into this World.
+        const walk = useWalkTogether({ ownPublication });
+
         // Build here (core/BuildPlot.js): a new build in the Editor for the spot
         // the avatar stands on (else the camera's), in this World; publishing
         // it stands it here.
@@ -1399,6 +1405,7 @@ export default {
             myIdentityId,
             showMembersPanel,
             activeWorldLobby, showLobbyPanel, openLobbyPanel, closeLobbyPanel,
+            ...walk,
             worldCollaborationRoster,
             worldOnlineCount,
             spatialCollaboratorRows,
@@ -1467,6 +1474,13 @@ export default {
                         :title="t('buildPlot.buildHereHint')"
                         @click="buildHere"
                     >{{ t('buildPlot.buildHere') }}</button>
+                    <button
+                        v-if="activeDocumentInfo && !inPlaza"
+                        type="button"
+                        class="action-btn world-view-walk-together"
+                        :title="t('walkTogether.buttonHint')"
+                        @click="openWalkDialog"
+                    >{{ t('walkTogether.button') }}</button>
                     <button
                         v-if="activeDocumentInfo"
                         class="action-btn"

@@ -97,6 +97,9 @@ longer-term aim.
   with a Focus button to look at what they mention.
 - **Build here** starts a new build in the Editor for the spot you're
   standing on; publishing it stands it there.
+- **Walk here with me** makes a link that brings friends into the World
+  you're in: they log in, click **Join**, and you see each other walking
+  around, with no invitation to paste back and no lobby.
 - Text and spatial search, a map, named regions and landmarks, and World
   Encounters with publications that connected peers are sharing.
 - World View observes and navigates; editing happens in the Editor. **Edit a

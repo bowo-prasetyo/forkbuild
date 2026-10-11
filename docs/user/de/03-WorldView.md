@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a13b8d7d65867a5b -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c5211b73c764ada -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -645,6 +645,33 @@ vergessen** wird der Bau wie gewohnt platziert. Die Stelle ist nur Ihre
 eigene Notiz, wo Ihr Bau gezeigt wird, auf diesem Gerät und in seinen
 Sicherungen; sie beansprucht kein Land, und andere dürfen dort ebenfalls
 bauen.
+
+### Mit mir hier spazieren — Freunde in diese Welt holen
+
+**Mit mir hier spazieren**, neben **Hier bauen**, erstellt einen Link, der
+Freunde in die Welt holt, in der Sie gerade sind, um gemeinsam darin
+herumzugehen. Schicken Sie ihn auf jedem Weg, der Ihnen passt; er erscheint
+auch als QR-Code für ein Handy. Ein Freund, der ihn öffnet, meldet sich an,
+falls noch nicht geschehen (er spaziert als sein eigener Avatar, unter
+seinem Namen), klickt auf **Beitreten** und kommt in diese Welt, wo Sie
+einander herumgehen sehen. Der Dialog zeigt, wer unterwegs ist und wer
+angekommen ist.
+
+- Die Welt muss zuerst veröffentlicht sein: Das ForkBuild Ihres Freundes
+  prüft ihre Signatur und ihr Bauwerk wie bei einem geteilten Link und
+  behält eine Kopie.
+- Der Link funktioniert 30 Minuten lang für alle, die ihn öffnen, solange
+  Sie in der Weltansicht bleiben. Das Schließen des Dialogs lässt ihn weiter
+  funktionieren; **Link beenden** beendet ihn. Freunde, die schon
+  dazugekommen sind, bleiben in jedem Fall verbunden.
+- Beim Beitreten werden Ihre beiden Geräte direkt verbunden, wie bei einer
+  Einladung unter **Peers**: Jeder kann die IP-Adresse des anderen sehen, und
+  Ihre Avatare erscheinen so, wie die Präsenz-Sichtbarkeit beider Seiten es
+  erlaubt (siehe [Avatare & Präsenz](06-AvatarsAndPresence.md)). Niemand wird
+  zu einem gemerkten Peer oder Freund, wenn Sie es nicht wählen.
+- Es braucht einen Rendezvous-Server. Die offizielle Website hat einen; eine
+  Kopie, die Sie selbst betreiben, braucht einen eigenen (siehe
+  [Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)).
 
 ### Der Challenge-Platz
 

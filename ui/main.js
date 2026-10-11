@@ -34,6 +34,7 @@ import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../applic
 import { CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase.js';
 import { LocalStorageProvider, flushLocalStorage } from '../storage/LocalStorageProvider.js';
 import { DevicePairing } from '../application/devicePairing/DevicePairing.js';
+import { WalkTogether } from '../application/walkTogether/WalkTogether.js';
 import { DeviceBackupUseCase } from '../application/backup/DeviceBackupUseCase.js';
 import { BackupStatusStore } from '../application/backup/BackupStatusStore.js';
 import { BackupReminder } from '../application/backup/BackupReminder.js';
@@ -361,6 +362,9 @@ app.provide('backupDestinations', backupDestinations);
 // Copies everything to another device through a one-off code, over the same
 // peer connections and rendezvous servers as Peers.
 app.provide('devicePairing', new DevicePairing({ deviceBackup: deviceBackupUseCase, peerConnectionProvider, rendezvousTransports }));
+// "Walk here with me": a link that connects a friend's peer session to this
+// one through a one-off meeting on the same rendezvous servers.
+app.provide('walkTogether', new WalkTogether({ peerSessionManager, identityProvider, peerConnectionProvider, rendezvousTransports }));
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
 app.provide('peerRelationshipUseCase', peerRelationshipUseCase);

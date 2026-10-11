@@ -900,6 +900,31 @@ any peer, and friendship still gates chat and voice. The UI is
 ui/components/PublicLobbyPanel.js, on the Peers page and behind World
 View's Lobby button.
 
+**Walk here with me.** application/walkTogether/WalkTogether.js brings a
+friend into the World on screen through one link (core/WalkTogetherCode.js,
+`#/walk/<code>`), so walking together needs neither the Peers page nor a
+lobby. The meeting runs on a peer session of its own around a one-off
+identity (application/peer/OneOffPeerSession.js, shared with device
+pairing): the host's one-off key publishes a standing offer on the
+rendezvous servers and republishes as each is taken, so one link serves any
+number of guests for 30 minutes; the guest finds it by the key in the link
+and accepts only that key. Over that connection the host sends, in parts
+(ChunkedPeerTransfer), its name, the World as a link-only payload and an
+invitation from the app's own PeerSessionManager; the guest checks and
+keeps the World with openPublicationLink, as a `#/s/` link is opened,
+accepts the invitation with its own session (expecting the host's
+identity), and sends the reply and its name back, which the host applies
+with completeConnection(). The result is an ordinary authenticated
+connection between the two real identities, so presence, profiles,
+gestures and vehicles travel as for any connected peer, under each side's
+visibility settings; nobody is remembered or befriended by it, and neither
+identity is made discoverable. Only a published, signed World can be walked
+together, since that is what a guest can check. World View's
+`Walk here with me` button and dialog (ui/views/worldView/useWalkTogether.js,
+ui/components/walkTogether/) keep the link while World View is open; the
+guest's page is ui/views/WalkTogetherJoinView.js, which asks for a log in
+and a Join click before connecting.
+
 **Protocols.** Every application protocol shares each connection through
 peer/PeerMessageBus.js, which routes by a protocol id
 (`forkbuild:chat`, `forkbuild:avatar-presence`, …; the full list is in

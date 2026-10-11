@@ -35,6 +35,7 @@ const AvatarSettingsView = page('AvatarSettingsView', () => import('../views/Ava
 const IdentityManagementView = page('IdentityManagementView', () => import('../views/IdentityManagementView.js'));
 const DevicePairingView = page('DevicePairingView', () => import('../views/DevicePairingView.js'));
 const DevicePairingReceiveView = page('DevicePairingReceiveView', () => import('../views/DevicePairingReceiveView.js'));
+const WalkTogetherJoinView = page('WalkTogetherJoinView', () => import('../views/WalkTogetherJoinView.js'));
 const PeerConnectionsView = page('PeerConnectionsView', () => import('../views/PeerConnectionsView.js'));
 const FollowingView = page('FollowingView', () => import('../views/FollowingView.js'));
 const ChatView = page('ChatView', () => import('../views/ChatView.js'));
@@ -132,6 +133,9 @@ const routes = [
     // opens /pair/<code> (core/DevicePairingCode.js).
     { path: '/settings/data/pair', name: 'device-pairing', component: DevicePairingView },
     { path: '/pair/:code', name: 'device-pairing-receive', component: DevicePairingReceiveView },
+    // A "Walk here with me" link: join the friend who made it, in their World
+    // (core/WalkTogetherCode.js, application/walkTogether/WalkTogether.js).
+    { path: '/walk/:code', name: 'walk-together', component: WalkTogetherJoinView },
     { path: '/settings/language', name: 'language-settings', component: LanguageSettingsView },
     // 0.9.302 — Content Provider Preference Settings Entry Point. The one
     // ordinary product path to create/change the persisted CONTENT role
