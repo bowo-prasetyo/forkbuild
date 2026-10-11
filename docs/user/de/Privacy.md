@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 377c2dfdc99b3ce6 -->
+<!-- translation-of: docs/Privacy.md source-hash: 1bcac3d373cc9606 -->
 # Datenschutz
 
 <!-- languages -->
@@ -102,6 +102,14 @@ eingeschaltet sind, wird mit Ihren Einstellungen gespeichert (siehe
   sind. Die Geräte Ihrer Freunde und bekannten Peers rufen sie von selbst
   ab, alle anderen nur, wenn sie auf **Abrufen** klicken. Eine Welt, die Sie
   nur **veröffentlichen**, wird nie an jemanden gesendet.
+- **Freunde, mit denen Sie spazieren.** Wer einen Link **Mit mir hier
+  spazieren** öffnet, den Sie erstellt haben, solange er funktioniert,
+  erhält die Welt, in der Sie sind (ihre signierte Veröffentlichung und ihr
+  Bauwerk, wie ein geteilter Link sie trägt) und Ihren Anzeigenamen, und
+  verbindet sich mit Ihnen als gewöhnlicher verbundener Peer: Er erfährt
+  Ihre IP-Adresse und sieht Ihren Avatar und Ihre Präsenz so, wie Ihre
+  Sichtbarkeitseinstellungen es erlauben. Sie erfahren seine auf dieselbe
+  Weise, und den Namen, unter dem er spaziert.
 - **Jeder, solange Sie in einer öffentlichen Lobby sind.** Wenn Sie der
   öffentlichen Lobby (**Peers**) oder der Lobby einer Welt (**Lobby** in der
   Weltansicht) beitreten, werden der öffentliche Schlüssel Ihrer Identität
@@ -171,7 +179,7 @@ sind (siehe „Server, die ForkBuild kontaktiert“ unten):
 
 Und wenn jemand bei der wöchentlichen Bau-Challenge mitmacht (**Mitmachen**
 oder die Challenge unter **Neu** im Editor): `/e/challenge-join`; und wenn jemand den
-Challenge-Platz einer Woche in der Weltansicht öffnet: `/e/plaza-visit`.
+Challenge-Platz einer Woche in der Weltansicht öffnet: `/e/plaza-visit`. Und wenn jemand in der Weltansicht einen Link **Mit mir hier spazieren** erstellt: `/e/walk-link`; und wenn ein Freund über einen solchen ankommt: `/e/walk-joined`.
 
 Und wenn ein Bauwerk zum ersten Mal aus diesem Browser veröffentlicht wird
 (spätere Veröffentlichungen desselben Bauwerks senden nichts):
@@ -245,11 +253,13 @@ was Sie bei ihm anfragen.
 | Sie installieren ForkBuild von der offiziellen Seite (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/installed`, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website kopieren Sie den Einbettungscode eines Bauwerks, oder ein eingebettetes Bauwerk wird gezeigt oder in ForkBuild geöffnet (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit einem festen Pfad, der nennt, welcher der drei Fälle es war, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website machen Sie bei der wöchentlichen Bau-Challenge mit oder öffnen ihren Platz (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/challenge-join` oder `/e/plaza-visit`, ohne Referrer und ohne Cookie |
+| Auf der offiziellen Website erstellen Sie einen Link **Mit mir hier spazieren** oder kommen über einen an (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/walk-link` oder `/e/walk-joined`, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website veröffentlichen Sie ein Bauwerk zum ersten Mal (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit einem festen Pfad, der den Bereich der Steinanzahl nennt, und eine weitere für ein zweites Bauwerk oder einen Remix, ohne Referrer und ohne Cookie |
 | Sie öffnen die offizielle Website über den Link eines Launch-Posts (`?ref=…`, siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/r/<Kanal>`, ohne Referrer und ohne Cookie |
 | Sie machen sich unter **Peers** auffindbar oder suchen jemanden | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | den öffentlichen Schlüssel Ihrer Identität und ein Verbindungsangebot, höchstens 15 Minuten aufbewahrt; die Identität, die Sie suchen; wenn Sie sich mit jemandem verbinden, den Sie gefunden haben, Ihre Verbindungsantwort (sie listet Ihre Netzwerkadressen auf), die nur diese Person abholen kann |
 | Sie treten einer öffentlichen Lobby bei oder sehen in eine hinein | derselbe Rendezvous-Server | Ihre signierte Lobby-Karte (öffentlicher Schlüssel, Anzeigename, welche Lobby), höchstens 15 Minuten aufbewahrt und erneuert, solange Sie bleiben; in welche Lobby Sie hineinsehen |
 | Sie kopieren auf ein anderes Gerät (**Ihre Daten** → **Auf ein anderes Gerät kopieren**) oder öffnen dessen Link auf dem anderen Gerät | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | ein nur für diesen Kopiervorgang erzeugter öffentlicher Schlüssel (nicht der Ihrer Identität) und ein Verbindungsangebot, höchstens 10 Minuten lang aufbewahrt; vom anderen Gerät dieser Schlüssel und seine Verbindungsantwort. Was kopiert wird, geht direkt zwischen den Geräten, verschlüsselt mit einem Schlüssel, den nur der Code enthält |
+| Sie erstellen in der Weltansicht einen Link **Mit mir hier spazieren** oder öffnen einen | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | einen öffentlichen Schlüssel nur für diesen Link (nicht den Ihrer Identität) und ein Verbindungsangebot, gehalten, solange der Link funktioniert (höchstens 30 Minuten), und nach jedem ankommenden Freund neu angeboten; von einem Freund dieser Schlüssel und seine Verbindungsantwort. Die Welt, beide Namen und die Einladung, die Ihre beiden Peer-Sitzungen verbindet, gehen direkt zwischen Ihren Geräten |
 | Eine Peer-Verbindung beginnt | STUN-Server (`stun.l.google.com`) | nichts außer einer Anfrage nach Ihrer öffentlichen IP-Adresse |
 | Sie beginnen eine Peer-Verbindung, wenn der Rendezvous-Server ein Relay anbietet | `/turn-credentials` des Rendezvous-Servers, dann sein TURN-Relay (Cloudflare) | eine Anfrage nach kurzlebigen Relay-Zugangsdaten, höchstens etwa einmal pro Stunde; weitergeleiteter Verkehr ist durch WebRTC Ende-zu-Ende-verschlüsselt |
 | Die App ist geöffnet und ihr Tab sichtbar (Synchronisierung der Ankündigungen im Hintergrund) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | Abfragen nach den Entdeckungs-Tags von ForkBuild: den gemeinsamen Tags für Snapshots und Kommentare sowie den Ortsnamen-Regionen und Kartenzellen, die Sie besucht haben |

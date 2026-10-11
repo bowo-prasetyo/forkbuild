@@ -32,7 +32,9 @@ export default {
         // the plain list.
         unlockIdentityId: { type: String, default: null },
         // 'publish' when opened by Publish: it says why, and offers to
-        // publish unsigned instead.
+        // publish unsigned instead. 'walk' when opened to walk together
+        // (ui/views/WalkTogetherJoinView.js, World View's Walk here with
+        // me): it says why.
         purpose: { type: String, default: null }
     },
     // `signed-in` follows `close` after a sign-in; `skip` asks to go on without one.
@@ -135,9 +137,12 @@ export default {
     template: `
         <div class="modal-overlay" @click.self="$emit('close')">
             <div class="modal-content">
-                <h3>{{ purpose === 'publish' ? t('loginModal.signInToPublish') : t('loginModal.logIn') }}</h3>
+                <h3>{{ purpose === 'publish' ? t('loginModal.signInToPublish') : purpose === 'walk' ? t('loginModal.signInToWalk') : t('loginModal.logIn') }}</h3>
                 <p v-if="purpose === 'publish'" class="modal-subtitle login-modal-purpose">
                     {{ t('loginModal.publishWhy') }}
+                </p>
+                <p v-else-if="purpose === 'walk'" class="modal-subtitle login-modal-purpose">
+                    {{ t('loginModal.walkWhy') }}
                 </p>
                 <p class="modal-subtitle">
                     {{ t('loginModal.unlockAnIdentityThisDevice') }}

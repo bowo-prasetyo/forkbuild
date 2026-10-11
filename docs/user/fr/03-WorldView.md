@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a13b8d7d65867a5b -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c5211b73c764ada -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -656,6 +656,32 @@ d’habitude. L’emplacement n’est que votre propre note de l’endroit où
 montrer votre construction, gardée sur cet appareil et dans ses
 sauvegardes ; il ne réserve pas le terrain, et d’autres peuvent y
 construire aussi.
+
+### Se promener ici avec moi — amener vos amis dans ce Monde
+
+**Se promener ici avec moi**, à côté de **Construire ici**, crée un lien qui
+amène vos amis dans le Monde où vous êtes, pour vous y promener ensemble.
+Envoyez-le comme vous voulez ; il s’affiche aussi en code QR pour un
+téléphone. Un ami qui l’ouvre se connecte s’il ne l’a pas encore fait (il se
+promène avec son propre avatar, sous son nom), clique sur **Rejoindre** et
+arrive dans ce Monde, où vous vous voyez marcher. La fenêtre indique qui
+arrive et qui est là.
+
+- Le Monde doit d’abord être publié : le ForkBuild de votre ami vérifie sa
+  signature et sa construction, comme pour un lien partagé, et en garde une
+  copie.
+- Le lien fonctionne pour toute personne qui l’ouvre, pendant 30 minutes,
+  tant que vous restez dans la vue du monde. Fermer la fenêtre le laisse
+  fonctionner ; **Arrêter le lien** l’arrête. Les amis déjà arrivés restent
+  connectés dans les deux cas.
+- Rejoindre connecte directement vos deux appareils, comme une invitation
+  dans **Pairs** : chacun peut voir l’adresse IP de l’autre, et vos avatars
+  s’affichent selon ce que permet la visibilité de présence de chaque côté
+  (voir [Avatars et présence](06-AvatarsAndPresence.md)). Personne ne devient
+  un pair mémorisé ni un ami si vous ne le choisissez pas.
+- Il faut un serveur de rendez-vous. Le site officiel en a un ; une copie
+  que vous faites tourner vous-même a besoin du sien (voir
+  [Connexions entre pairs et amis](07-PeerConnectionsAndFriends.md)).
 
 ### La place du défi
 

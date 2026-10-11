@@ -588,6 +588,29 @@ only your own note of where to show your build, kept on this device and in
 its backups; it doesn't claim the land, and others may build there too
 (see [Why can two builds sit in the same spot?](#why-can-two-builds-sit-in-the-same-spot)).
 
+### Walk here with me — bringing friends into this World
+
+**Walk here with me**, beside **Build here**, makes a link that brings
+friends into the World you're in, to walk around it together. Send it any
+way you like; it also shows as a QR code for a phone. A friend who opens it
+logs in if they haven't yet (they walk as their own avatar, under their
+name), clicks **Join**, and arrives in this World, where you see each other
+walking around. The dialog lists who is on the way and who has arrived.
+
+- The World has to be published first: your friend's ForkBuild checks its
+  signature and its build, as it does for a shared link, and keeps a copy.
+- The link works for anyone who opens it, for 30 minutes, while you stay in
+  World View. Closing the dialog keeps it working; **Stop the link** ends
+  it. Friends who already joined stay connected either way.
+- Joining connects your two devices directly, as an invitation on **Peers**
+  does: each of you can see the other's IP address, and your avatars show
+  as each side's **Presence Visibility** allows (see
+  [Who can see you](06-AvatarsAndPresence.md#who-can-see-you-two-independent-settings)).
+  Nobody becomes a Known Peer or a friend unless you choose to.
+- It needs a rendezvous server. The official site has one; a copy you run
+  yourself needs its own (see
+  [Peer Connections & Friends](07-PeerConnectionsAndFriends.md)).
+
 ### The challenge plaza
 
 **Walk the plaza** on a week's challenge page opens World View in a

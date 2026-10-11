@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 377c2dfdc99b3ce6 -->
+<!-- translation-of: docs/Privacy.md source-hash: 1bcac3d373cc9606 -->
 # Confidentialité
 
 <!-- languages -->
@@ -106,6 +106,14 @@ notifications sur cet appareil soient activées est gardé avec vos réglages
   connus le récupèrent d’eux-mêmes ; ceux des autres seulement quand ils
   cliquent sur **Récupérer**. Un Monde que vous vous contentez de
   **Publier** n’est jamais envoyé à personne.
+- **Les amis avec qui vous vous promenez.** Toute personne qui ouvre un
+  lien **Se promener ici avec moi** que vous avez créé, tant qu’il
+  fonctionne, reçoit le Monde où vous êtes (sa publication signée et sa
+  construction, comme un lien partagé les transporte) et votre nom
+  d’affichage, et se connecte à vous comme un pair connecté ordinaire :
+  elle apprend votre adresse IP et voit votre avatar et votre présence
+  selon vos réglages de visibilité. Vous apprenez les siens de la même
+  façon, ainsi que le nom sous lequel elle se promène.
 - **N’importe qui, pendant que vous êtes dans un salon public.** Rejoindre
   le salon public (**Pairs**) ou le salon d’un Monde (**Salon** dans la
   Vue du Monde) liste la clé publique de votre identité et le nom affiché
@@ -174,7 +182,7 @@ pages d’autres sites (voir « Serveurs que ForkBuild contacte » plus bas) :
 Et quand quelqu’un participe au défi de construction hebdomadaire
 (**Participer au défi**, ou le défi dans **Nouveau** de l’Éditeur) :
 `/e/challenge-join` ; et quand quelqu’un ouvre la
-place du défi d’une semaine dans la vue du monde : `/e/plaza-visit`.
+place du défi d’une semaine dans la vue du monde : `/e/plaza-visit`. Et quand quelqu’un crée un lien **Se promener ici avec moi** dans la vue du monde : `/e/walk-link` ; et quand un ami arrive par l’un d’eux : `/e/walk-joined`.
 
 Et la première fois qu’une construction est publiée depuis ce navigateur
 (la republier plus tard n’envoie rien) :
@@ -250,11 +258,13 @@ demandez.
 | Vous installez ForkBuild depuis le site officiel (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec le chemin fixe `/e/installed`, sans référent et sans cookie |
 | Sur le site officiel, vous copiez le code d’intégration d’une construction, ou une construction intégrée est affichée ou ouverte dans ForkBuild (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe indiquant lequel des trois cas, sans référent et sans cookie |
 | Sur le site officiel, vous participez au défi de construction hebdomadaire ou ouvrez sa place (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec le chemin fixe `/e/challenge-join` ou `/e/plaza-visit`, sans référent et sans cookie |
+| Sur le site officiel, vous créez un lien **Se promener ici avec moi** ou arrivez par l’un d’eux (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image au chemin fixe `/e/walk-link` ou `/e/walk-joined`, sans référent ni cookie |
 | Sur le site officiel, vous publiez une construction pour la première fois (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe indiquant sa tranche de briques, et une de plus pour une deuxième construction ou un remix, sans référent et sans cookie |
 | Vous ouvrez le site officiel par le lien d’une publication de lancement (`?ref=…`, voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec le chemin fixe `/r/<canal>`, sans référent et sans cookie |
 | Vous vous rendez découvrable, ou cherchez quelqu’un, dans **Pairs** | le serveur de rendez-vous (`forkbuild-rendezvous.prazjp.workers.dev`) | la clé publique de votre identité et une offre de connexion, conservées au plus 15 minutes ; l’identité que vous recherchez ; quand vous vous connectez à quelqu’un que vous avez trouvé, votre réponse de connexion (elle liste vos adresses réseau), que seule cette personne peut récupérer |
 | Vous rejoignez un salon public, ou y jetez un œil | le même serveur de rendez-vous | votre carte de salon signée (clé publique, nom affiché, quel salon), conservée au plus 15 minutes et renouvelée tant que vous restez ; le salon que vous consultez |
 | Vous copiez vers un autre appareil (**Vos données** → **Copier vers un autre appareil**), ou ouvrez son lien sur l’autre appareil | le serveur de rendez-vous (`forkbuild-rendezvous.prazjp.workers.dev`) | une clé publique créée pour cette seule copie (pas celle de votre identité) et une offre de connexion, gardées au plus 10 minutes ; depuis l’autre appareil, cette clé et sa réponse de connexion. Ce qui est copié passe directement d’un appareil à l’autre, chiffré avec une clé que seul le code contient |
+| Vous créez un lien **Se promener ici avec moi** dans la vue du monde, ou en ouvrez un | le serveur de rendez-vous (`forkbuild-rendezvous.prazjp.workers.dev`) | une clé publique créée pour ce seul lien (pas celle de votre identité) et une offre de connexion, gardée tant que le lien fonctionne (au plus 30 minutes) et proposée de nouveau après chaque ami arrivé ; d’un ami, cette clé et sa réponse de connexion. Le Monde, les deux noms et l’invitation qui relie vos deux sessions de pairs passent directement entre vos appareils |
 | Une connexion entre pairs démarre | des serveurs STUN (`stun.l.google.com`) | rien d’autre qu’une demande de votre adresse IP publique |
 | Vous démarrez une connexion entre pairs, si le serveur de rendez-vous propose un relais | le `/turn-credentials` du serveur de rendez-vous, puis son relais TURN (Cloudflare) | une demande d’identifiants de relais de courte durée, au plus environ une fois par heure ; le trafic relayé est chiffré de bout en bout par WebRTC |
 | L’application est ouverte et son onglet visible (synchronisation des annonces en arrière-plan) | des relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`), des nœuds Steem (`api.steemit.com`), des nœuds Blurt (`rpc.blurt.blog`) | des requêtes pour les tags de découverte de ForkBuild : les tags communs des Snapshots et des Commentaires, et les régions de Noms de lieux et cases de carte que vous avez visitées |

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 377c2dfdc99b3ce6 -->
+<!-- translation-of: docs/Privacy.md source-hash: 1bcac3d373cc9606 -->
 # Privasi
 
 <!-- languages -->
@@ -104,6 +104,14 @@ Apakah notifikasi di perangkat ini aktif disimpan bersama pengaturan Anda
   sendirinya; perangkat orang lain hanya saat mereka mengeklik **Ambil**.
   Dunia yang hanya Anda **Terbitkan** tidak pernah dikirim kepada siapa
   pun.
+- **Teman yang berjalan bersama Anda.** Siapa pun yang membuka tautan
+  **Jalan di sini bersamaku** yang Anda buat, selama tautan itu berfungsi,
+  menerima Dunia tempat Anda berada (publikasi bertanda tangannya dan
+  bangunannya, seperti yang dibawa tautan yang dibagikan) dan nama tampilan
+  Anda, lalu terhubung dengan Anda sebagai rekan terhubung biasa: ia
+  mengetahui alamat IP Anda dan melihat avatar serta kehadiran Anda sesuai
+  pengaturan visibilitas Anda. Anda mengetahui miliknya dengan cara yang
+  sama, beserta nama yang ia pakai berjalan.
 - **Siapa pun, selama Anda berada di lobi publik.** Bergabung ke lobi
   publik (**Rekan**) atau lobi sebuah Dunia (**Lobi** di Tampilan Dunia)
   mencantumkan kunci publik identitas Anda dan nama tampilan yang Anda
@@ -171,7 +179,7 @@ bawah):
 
 Dan saat seseorang ikut tantangan membangun mingguan (**Ikut tantangan**,
 atau tantangan di **Baru** pada Editor): `/e/challenge-join`; dan saat seseorang membuka
-alun-alun tantangan suatu minggu di Tampilan Dunia: `/e/plaza-visit`.
+alun-alun tantangan suatu minggu di Tampilan Dunia: `/e/plaza-visit`. Dan saat seseorang membuat tautan **Jalan di sini bersamaku** di Tampilan Dunia: `/e/walk-link`; dan saat seorang teman tiba lewat tautan itu: `/e/walk-joined`.
 
 Dan saat sebuah bangunan pertama kali diterbitkan dari browser ini
 (menerbitkannya lagi nanti tidak mengirim apa pun):
@@ -244,11 +252,13 @@ Anda dan apa yang Anda minta darinya.
 | Anda memasang ForkBuild dari situs resmi (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/installed`, tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda menyalin kode sematan sebuah bangunan, atau bangunan yang disematkan ditampilkan atau dibuka di ForkBuild (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut yang mana dari ketiganya, tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda ikut tantangan membangun mingguan atau membuka alun-alunnya (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/challenge-join` atau `/e/plaza-visit`, tanpa referrer dan tanpa cookie |
+| Di situs resmi, Anda membuat tautan **Jalan di sini bersamaku** atau tiba lewat tautan itu (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/walk-link` atau `/e/walk-joined`, tanpa perujuk dan tanpa cookie |
 | Di situs resmi, Anda menerbitkan sebuah bangunan untuk pertama kali (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut rentang baloknya, dan satu lagi untuk bangunan kedua atau remix, tanpa referrer dan tanpa cookie |
 | Anda membuka situs resmi lewat tautan postingan peluncuran (`?ref=…`, lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/r/<saluran>`, tanpa referrer dan tanpa cookie |
 | Anda menjadikan diri dapat ditemukan, atau mencari seseorang, di **Rekan** | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | kunci publik identitas Anda dan tawaran koneksi, disimpan paling lama 15 menit; identitas yang Anda cari; saat Anda terhubung dengan seseorang yang Anda temukan, balasan koneksi Anda (berisi alamat jaringan Anda), yang hanya dapat diambil oleh orang itu |
 | Anda bergabung ke, atau melihat ke dalam, lobi publik | server rendezvous yang sama | kartu lobi Anda yang ditandatangani (kunci publik, nama tampilan, lobi mana), disimpan paling lama 15 menit dan diperbarui selama Anda tetap di sana; lobi mana yang Anda lihat |
 | Anda menyalin ke perangkat lain (**Data Anda** → **Salin ke perangkat lain**), atau membuka tautannya di perangkat lain | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | kunci publik yang dibuat khusus untuk penyalinan ini (bukan milik identitas Anda) dan tawaran koneksi, disimpan paling lama 10 menit; dari perangkat lain, kunci itu dan balasan koneksinya. Yang disalin dikirim langsung antarperangkat, dienkripsi dengan kunci yang hanya ada di kode |
+| Anda membuat tautan **Jalan di sini bersamaku** di Tampilan Dunia, atau membukanya | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | kunci publik yang dibuat khusus untuk tautan ini (bukan kunci identitas Anda) dan sebuah tawaran koneksi, disimpan selama tautan berfungsi (paling lama 30 menit) dan ditawarkan lagi setelah tiap teman bergabung; dari seorang teman, kunci itu dan balasan koneksinya. Dunia, kedua nama, dan undangan yang menghubungkan kedua sesi rekan Anda berpindah langsung antarperangkat Anda |
 | Koneksi rekan dimulai | server STUN (`stun.l.google.com`) | hanya permintaan alamat IP publik Anda |
 | Anda memulai koneksi rekan, jika server rendezvous menawarkan relay | `/turn-credentials` pada server rendezvous, lalu relay TURN-nya (Cloudflare) | permintaan kredensial relay berumur pendek, paling sering sekitar sekali sejam; lalu lintas yang direlay dienkripsi ujung ke ujung oleh WebRTC |
 | Aplikasi terbuka dan tabnya terlihat (sinkronisasi pengumuman di latar belakang) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag penemuan ForkBuild: tag Snapshot dan Komentar bersama, serta wilayah Penamaan Tempat dan sel peta yang pernah Anda kunjungi |

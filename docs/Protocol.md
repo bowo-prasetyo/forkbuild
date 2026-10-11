@@ -511,6 +511,32 @@ reads `payload`.
 | `forkbuild:commentary-distribution` | core/PublicationCommentaryDistributionEnvelope.js | see "Publication Commentary Distribution" |
 | `forkbuild:announcement-index` | application/announcementIndex/AnnouncementIndexPeerProtocol.js | see "Announcement Index exchange" |
 
+### Walk links
+
+A "Walk here with me" link (core/WalkTogetherCode.js) names a one-off
+meeting, not a person:
+
+    https://bowo-prasetyo.github.io/forkbuild/#/walk/<code>
+
+    code = base64url(0x01 || ed25519 public key)   (44 characters, no padding)
+
+The key is the inviting device's one-off identity, used only for this link;
+its standing offers are found on the rendezvous servers by its did:key, and
+the guest's connection accepts no other key. Over that one-off connection,
+`forkbuild:walk-together` carries:
+
+    host → guest   { type: 'part', transferId, index, count, totalLength, part }
+                   joined: { hostName, world, invitation }
+    guest → host   { type: 'reply', reply, name }  or  { type: 'failed' }
+
+`world` is a link-only payload (see "Link-only shares"), checked exactly as
+one; `invitation` is a PeerInvitation (peer/PeerInvitation.js) from the
+host's own peer session and `reply` the WebRTC answer to it, so the two
+real identities then authenticate over an ordinary connection
+(`forkbuild-peer-auth/1`). `hostName` and `name` are display text, at most
+60 characters, trusted by nobody. The protocol never runs on a connection
+between real identities.
+
 ### Announcement Index exchange
 
 Peers share the Snapshot candidates and Place Naming claims each has

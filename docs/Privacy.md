@@ -89,6 +89,12 @@ settings (see "Notifications on this device" below).
   connected. Your Friends' and Known Peers' devices fetch it on their own;
   anyone else's only when they click **Retrieve**. A World you only
   **Publish** is never sent to anyone.
+- **Friends you walk with.** Anyone who opens a **Walk here with me** link
+  you made, while it works, receives the World you are in (its signed
+  Publication and build, as a shared link carries them) and your display
+  name, and connects to you as an ordinary connected peer: they learn your
+  IP address and see your avatar and presence as your visibility settings
+  allow. You learn theirs the same way, and the name they walk under.
 - **Anyone, while you are in a public lobby.** Joining the public lobby
   (**Peers**) or a World's lobby (**Lobby** in World View) lists your
   identity's public key and the display name you choose, for anyone who
@@ -145,7 +151,9 @@ It also hears, the same way, when ForkBuild is installed as an app
 
 And when someone joins the weekly build challenge (**Join the challenge**,
 or the challenge in the Editor's **New**): `/e/challenge-join`; and when someone
-opens a week's challenge plaza in World View: `/e/plaza-visit`.
+opens a week's challenge plaza in World View: `/e/plaza-visit`. And when
+someone makes a **Walk here with me** link in World View: `/e/walk-link`; and
+when a friend arrives through one: `/e/walk-joined`.
 
 And the first time a build is published from this browser (publishing it
 again later sends nothing):
@@ -214,11 +222,13 @@ only when you use the feature, and each server can be changed under
 | You install ForkBuild from the official site (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/installed`, no referrer and no cookie |
 | On the official site, you copy a build's embed code, or an embedded build is shown, or opened in ForkBuild (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
 | On the official site, you join the weekly build challenge, or open its plaza (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/challenge-join` or `/e/plaza-visit`, no referrer and no cookie |
+| On the official site, you make a **Walk here with me** link, or arrive through one (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/walk-link` or `/e/walk-joined`, no referrer and no cookie |
 | On the official site, you publish a build for the first time (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming its range of bricks, and one more for a second build or a remix, no referrer and no cookie |
 | You open the official site through a launch post's link (`?ref=…`, see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/r/<channel>`, no referrer and no cookie |
 | You make yourself discoverable, or look someone up, in **Peers** | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | your identity's public key and a connection offer, kept for at most 15 minutes; the identity you look up; when you connect to someone you found, your connection reply (it lists your network addresses), which only they can collect |
 | You join, or look into, a public lobby | the same rendezvous server | your signed lobby card (public key, display name, which lobby), kept for at most 15 minutes and renewed while you stay; which lobby you look into |
 | You copy to another device (**Your Data** → **Copy to another device**), or open its link on the other device | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | a public key made for this one copy (not your identity's) and a connection offer, kept for at most 10 minutes; from the other device, that key and its connection reply. What is copied goes directly between the devices, encrypted with a key only the code holds |
+| You make a **Walk here with me** link in World View, or open one | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | a public key made for this one link (not your identity's) and a connection offer, kept while the link works (at most 30 minutes) and offered again after each friend joins; from a friend, that key and their connection reply. The World, both names and the invitation that connects your two peer sessions go directly between your devices |
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |
 | You start a peer connection, if the rendezvous server offers a relay | the rendezvous server's `/turn-credentials`, then its TURN relay (Cloudflare) | a request for short-lived relay credentials, at most about once an hour; relayed traffic is end-to-end encrypted by WebRTC |
 | The app is open and its tab visible (background announcement sync) | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`), Blurt nodes (`rpc.blurt.blog`) | queries for ForkBuild's discovery tags: the shared Snapshot and Commentary tags, and the Place Naming regions and map cells you have visited |

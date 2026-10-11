@@ -165,6 +165,17 @@ export const dialogsTemplate = `<ActionFeedback :message="feedbackMessage" :visi
                 @revoke="revokeWorldMember"
                 @cancel="closeMembersPanel"
             />
+            <WalkTogetherDialog
+                v-if="showWalkDialog"
+                :state="walkState"
+                :link="walkLink"
+                :available="walkAvailable"
+                :needs-publish="walkNeedsPublish"
+                @retry="startWalk"
+                @stop="stopWalk"
+                @close="closeWalkDialog"
+            />
+            <LoginModal v-if="signInToWalk" purpose="walk" @signed-in="walkSignedIn" @close="signInToWalk = false" />
             <div v-if="showLobbyPanel && activeWorldLobby" role="dialog" :aria-label="t('worldView.worldLobby')" class="modal-overlay" @click.self="closeLobbyPanel">
                 <div class="modal-panel">
                     <PublicLobbyPanel :lobby="activeWorldLobby" :title="t('worldView.thisWorldSLobby')" />

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a13b8d7d65867a5b -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c5211b73c764ada -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -630,6 +630,32 @@ tempat ini** membuatnya ditempatkan seperti biasa. Tempat itu hanyalah
 catatan Anda sendiri tentang di mana bangunan Anda ditampilkan, disimpan di
 perangkat ini dan cadangannya; tempat itu tidak mengklaim lahan, dan orang
 lain juga boleh membangun di sana.
+
+### Jalan di sini bersamaku — membawa teman ke Dunia ini
+
+**Jalan di sini bersamaku**, di samping **Bangun di sini**, membuat tautan
+yang membawa teman ke Dunia tempat Anda berada, untuk berjalan-jalan
+bersama. Kirimkan dengan cara apa pun; tautan itu juga tampil sebagai kode
+QR untuk ponsel. Teman yang membukanya masuk jika belum (ia berjalan sebagai
+avatarnya sendiri, dengan namanya), mengklik **Bergabung**, lalu tiba di
+Dunia ini, tempat kalian saling melihat berjalan-jalan. Dialog menunjukkan
+siapa yang sedang dalam perjalanan dan siapa yang sudah tiba.
+
+- Dunia harus diterbitkan lebih dulu: ForkBuild teman Anda memeriksa tanda
+  tangan dan bangunannya, seperti untuk tautan yang dibagikan, lalu
+  menyimpan salinannya.
+- Tautan berfungsi untuk siapa pun yang membukanya, selama 30 menit, selama
+  Anda tetap di Tampilan Dunia. Menutup dialog tidak menghentikannya;
+  **Hentikan tautan** menghentikannya. Teman yang sudah bergabung tetap
+  terhubung dalam kedua kasus.
+- Bergabung menghubungkan kedua perangkat Anda secara langsung, seperti
+  undangan di **Rekan**: masing-masing dapat melihat alamat IP yang lain, dan
+  avatar kalian tampil sesuai izin visibilitas kehadiran tiap pihak (lihat
+  [Avatar & Kehadiran](06-AvatarsAndPresence.md)). Tidak ada yang menjadi
+  rekan yang diingat atau teman kecuali Anda memilihnya.
+- Fitur ini memerlukan server rendezvous. Situs resmi memilikinya; salinan
+  yang Anda jalankan sendiri memerlukan server sendiri (lihat
+  [Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)).
 
 ### Alun-alun tantangan
 

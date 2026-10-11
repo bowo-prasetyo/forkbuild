@@ -31,6 +31,11 @@ function counter({ origin = VISITOR_COUNT_SITE_ORIGIN, privacySignals = {}, enab
     assert(funnelEventHitUrl(FunnelEvent.OPENED_SHARED_LINK, '5').includes('p=%2Fe%2Fopened-shared-link&'), 'an opened link is /e/opened-shared-link');
     assert(funnelEventHitUrl(FunnelEvent.REMIX_FROM_LINK, '5').includes('p=%2Fe%2Fremix-from-link&'), 'a remix is /e/remix-from-link');
     assert(funnelEventHitUrl(FunnelEvent.INSTALLED, '5').includes('p=%2Fe%2Finstalled&'), 'installing ForkBuild is /e/installed');
+    assert(funnelEventHitUrl(FunnelEvent.WALK_LINK, '5').includes('p=%2Fe%2Fwalk-link&'), 'a walk link made is /e/walk-link');
+    assert(funnelEventHitUrl(FunnelEvent.WALK_JOINED, '5').includes('p=%2Fe%2Fwalk-joined&'), 'a friend arriving is /e/walk-joined');
+    const walking = counter();
+    assert(walking.instance.madeWalkLink() === true && walking.instance.joinedWalk() === true
+        && walking.hits.map((url) => url.match(/p=%2Fe%2F([a-z-]+)/)[1]).join() === 'walk-link,walk-joined', 'walking together is counted by its two moments');
     let refused = false;
     try {
         funnelEventHitUrl('../anything', '5');

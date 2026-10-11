@@ -1,9 +1,6 @@
-import { PeerSessionManager } from '../peer/PeerSessionManager.js';
+import { openOneOffPeerSession } from '../peer/OneOffPeerSession.js';
 import { PartAssembler, sendInParts } from '../peer/ChunkedPeerTransfer.js';
 import { RestoreMode } from '../backup/DeviceBackupUseCase.js';
-import { DiscoveryBootstrap } from '../../peer/DiscoveryBootstrap.js';
-import { RendezvousDiscoveryProvider } from '../../peer/RendezvousDiscoveryProvider.js';
-import { PeerMessageBus } from '../../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { EphemeralIdentityProvider } from '../../identity/EphemeralIdentityProvider.js';
 import {
@@ -29,7 +26,7 @@ import {
 //                                           (nothing here is overwritten)
 //
 // Both sides use a PeerSessionManager of their own around a one-off
-// identity (identity/EphemeralIdentityProvider.js), so the user's identity
+// identity (application/peer/OneOffPeerSession.js), so the user's identity
 // is never involved, need not be unlocked, and never meets the rendezvous
 // servers. The servers and the network see the one-off keys and
 // ciphertext; the secret exists only in the code.
@@ -108,39 +105,13 @@ export class DevicePairing {
     }
 
     _openPeerSession(identityProvider) {
-        const discoveryProviders = this._rendezvousTransports.map((transport) => new RendezvousDiscoveryProvider({ transport, identityProvider }));
-        const discovery = new DiscoveryBootstrap({ bootstrapProviders: discoveryProviders });
-        const manager = new PeerSessionManager({
+        return openOneOffPeerSession({
             identityProvider,
-            peerConnectionProvider: borrowedConnectionProvider(this._peerConnectionProvider),
-            discoveryProvider: discovery,
-            ...this._pollIntervals
+            peerConnectionProvider: this._peerConnectionProvider,
+            rendezvousTransports: this._rendezvousTransports,
+            pollIntervals: this._pollIntervals
         });
-        const bus = new PeerMessageBus();
-        return {
-            manager,
-            bus,
-            close() {
-                for (const peer of manager.listPeers()) peer.close();
-                bus.dispose();
-                manager.dispose();
-                discovery.dispose();
-                for (const provider of discoveryProviders) provider.dispose();
-            }
-        };
     }
-}
-
-// The app's connection provider, minus dispose(): PeerSessionManager#dispose
-// disposes its provider, and this one is shared.
-function borrowedConnectionProvider(provider) {
-    return {
-        createOffer: (options) => provider.createOffer(options),
-        connect: (remoteAddress) => provider.connect(remoteAddress),
-        onIncomingConnection: (callback) => provider.onIncomingConnection(callback),
-        ...(typeof provider.prepareIceServers === 'function' ? { prepareIceServers: () => provider.prepareIceServers() } : {}),
-        dispose() {}
-    };
 }
 
 class PairingSide {
