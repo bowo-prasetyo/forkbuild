@@ -80,7 +80,10 @@ export class LocalPublisherProvider extends PublisherProvider {
             signature: null,
             placementPolicy: document.metadata.placementPolicy === PlacementPolicy.ANYONE
                 ? null
-                : document.metadata.placementPolicy
+                : document.metadata.placementPolicy,
+            // Friends who built it with its author, credited under the
+            // author's signature (core/BuiltWith.js).
+            builtWith: document.metadata.builtWith || []
         });
         if (canSign) {
             publication = publication.withSignature(

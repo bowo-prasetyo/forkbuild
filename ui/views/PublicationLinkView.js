@@ -13,6 +13,7 @@ import { License } from '../../core/License.js';
 import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery } from '../../core/EditorEntryContext.js';
 import { remixCountText, remixedFromText } from '../components/remix/remixText.js';
 import RemixFamilyTree from '../components/remix/RemixFamilyTree.js';
+import { builtWithNames } from '../components/remix/builtWithText.js';
 import { exploreRouteFor } from '../components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 
@@ -83,6 +84,8 @@ export default {
                 documentId: opened.documentId,
                 title: typeof opened.title === 'string' && opened.title.trim() ? opened.title.trim() : t('publicationLink.untitled'),
                 author: typeof opened.author === 'string' && opened.author.trim() ? opened.author.trim() : null,
+                // Friends who built it with its author (core/BuiltWith.js).
+                builtWith: builtWithNames(opened.builtWith),
                 licenseLabel: displayText(describeLicense(license.id)),
                 remixAllowed: license.forkAllowed,
                 remixedFrom: remixedFromText(remixSource),
@@ -222,6 +225,7 @@ export default {
                     <p class="shared-build-kicker">{{ t('publicationLink.title') }}</p>
                     <h1 class="shared-build-title">{{ arrived.title }}</h1>
                     <p class="shared-build-author">{{ arrived.author ? t('publicationLink.by', { author: arrived.author }) : t('publicationLink.byUnknown') }}</p>
+                    <p v-if="arrived.builtWith" class="shared-build-built-with">{{ t('builtWith.line', { names: arrived.builtWith }) }}</p>
                     <ul v-if="arrived.remixedFrom || arrived.remixes" class="shared-build-lineage">
                         <li v-if="arrived.remixedFrom" class="shared-build-remixed-from">{{ arrived.remixedFrom }}</li>
                         <li v-if="arrived.remixes" class="shared-build-remix-count">{{ arrived.remixes }}</li>

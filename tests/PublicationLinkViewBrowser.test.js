@@ -48,7 +48,7 @@ async function until(condition, what, timeoutMs = 20000) {
 }
 
 // A castle published by alice, as a remix of bob's "Old Keep" when `remix`.
-function publishCastle({ license = LicenseId.CC_BY_4_0, remix = true } = {}) {
+function publishCastle({ license = LicenseId.CC_BY_4_0, remix = true, builtWith = [] } = {}) {
     const storage = new InMemoryStorageProvider();
     const identity = new LocalIdentityProvider(storage);
     identity.login('link-view-alice');
@@ -66,7 +66,8 @@ function publishCastle({ license = LicenseId.CC_BY_4_0, remix = true } = {}) {
         metadata: new DocumentMetadata({
             title: 'Castle on the hill', author: 'alice',
             license: new License({ id: license, attribution }),
-            parentDocumentId: remix ? 'doc-old-keep' : null
+            parentDocumentId: remix ? 'doc-old-keep' : null,
+            builtWith
         })
     }), `doc-castle-${license}`);
     const publication = new PublishDocumentUseCase(new LocalPublisherProvider(storage, contentStore), identity).execute(manager);
@@ -127,6 +128,7 @@ const text = (host, selector) => host.querySelector(selector)?.textContent.trim(
         await until(() => view.host.querySelector('.shared-build-view'), 'the arrival screen');
         assert(text(view.host, '.shared-build-title') === 'Castle on the hill', 'it names the build');
         assert(text(view.host, '.shared-build-author') === t('publicationLink.by', { author: 'link-view-alice' }), `and its maker (${text(view.host, '.shared-build-author')})`);
+        assert(!view.host.querySelector('.shared-build-built-with'), 'a build made alone credits nobody else');
         assert(text(view.host, '.shared-build-remixed-from') === t('remix.fromBy', { title: 'Old Keep', author: 'bob' }),
             `it says what it was remixed from, from the credit its license carries (${text(view.host, '.shared-build-remixed-from')})`);
         assert(text(view.host, '.shared-build-remix-count') === t('remix.count', { count: 2 }),
@@ -197,6 +199,25 @@ const text = (host, selector) => host.querySelector(selector)?.textContent.trim(
         assert(text(view.host, '.publication-link-message') === t('publicationLink.damaged'), 'it says what went wrong');
         assert(view.counted.length === 0, 'and nothing is counted as opened');
         console.log('✓ a link that can\'t open says why');
+    } finally {
+        view.unmount();
+    }
+}
+
+// A build made together credits the friends who built it with its author
+// (core/BuiltWith.js), here and in its family tree.
+{
+    const castle = publishCastle({ remix: false, builtWith: [{ name: 'Kim', identityId: 'did:key:z6MkKim' }, { name: 'Sam', identityId: 'did:key:z6MkSam' }] });
+    const discovery = new DecentralizedPublicationDiscoveryProvider();
+    discovery.add(remixOf(castle.publication.documentId, 'doc-remix-9', 'pub-remix-9', '2026-10-04T00:00:00Z'));
+    const view = await mount({ ...castle, discovery });
+    try {
+        await until(() => view.host.querySelector('.shared-build-view'), 'the arrival screen');
+        const names = new Intl.ListFormat('en', { type: 'conjunction' }).format(['Kim', 'Sam']);
+        assert(text(view.host, '.shared-build-built-with') === t('builtWith.line', { names }), `it says who built it with its maker (${text(view.host, '.shared-build-built-with')})`);
+        const self = view.host.querySelector('.remix-family-self strong');
+        assert(self && self.textContent === t('remixFamily.byAuthorWith', { title: 'Castle on the hill', author: 'link-view-alice', names }), `and so does its family tree (${self && self.textContent})`);
+        console.log('✓ a build made together credits everyone who built it');
     } finally {
         view.unmount();
     }

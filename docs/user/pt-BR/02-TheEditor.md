@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 60fb1dcaa24488dc -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: a745a00cb02e79f9 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -599,6 +599,11 @@ colocar, mover, mudar de cor ou excluir aparece nas duas telas.
 - O Editor de cada amigo guarda a própria cópia, salva no dispositivo dele.
   Quando você para, ele pode ficar com ela, mas o que ele mudar não chega
   mais até você.
+- Todos cujos blocos a sua construção recebe aparecem nos créditos dela: o
+  painel da construção diz **Construída com** e os nomes deles, e quando
+  você publica, o link compartilhado e a árvore genealógica também dizem
+  isso, sob a sua assinatura. Uma cópia que outra pessoa fizer dela começa
+  sem esses créditos; a dela é uma construção nova.
 - Entrar conecta os dois dispositivos diretamente, como **Passear aqui
   comigo**: cada um pode ver o endereço IP do outro. Ninguém vira um par
   lembrado nem amigo a menos que você escolha. É preciso um servidor de

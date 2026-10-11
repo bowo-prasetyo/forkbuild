@@ -119,6 +119,16 @@ export const LAUNCH_TARGETS = Object.freeze([
         minimum: 20
     }),
     Object.freeze({
+        id: 'published-together',
+        pillar: 'world',
+        question: 'Do builds made together get published, crediting everyone?',
+        kind: 'ratio',
+        numerator: [path(FunnelEvent.PUBLISH_TOGETHER)],
+        denominator: [path(FunnelEvent.BUILD_JOINED)],
+        target: 0.3,
+        minimum: 20
+    }),
+    Object.freeze({
         id: 'plaza-visits',
         pillar: 'world',
         question: 'Do challenge entrants walk the plaza to see each other\'s builds?',

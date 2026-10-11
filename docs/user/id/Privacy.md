@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ff126b5ac2ead020 -->
+<!-- translation-of: docs/Privacy.md source-hash: 09b3b731fab3269c -->
 # Privasi
 
 <!-- languages -->
@@ -130,7 +130,12 @@ Apakah notifikasi di perangkat ini aktif disimpan bersama pengaturan Anda
   bangunan itu, ke mana penunjuk Anda mengarah, dan apa yang Anda pilih,
   selama kalian membangun bersama. Ia tetap menyimpan salinannya. Anda
   mengetahui alamat IP-nya, nama yang ia pakai membangun, dan ke mana ia
-  menunjuk dengan cara yang sama.
+  menunjuk dengan cara yang sama. Setiap teman yang perubahannya diterima
+  bangunan Anda dicantumkan di bangunan itu, dengan nama yang ia pakai
+  membangun dan kunci publik identitasnya, dan saat Anda menerbitkannya,
+  pencantuman itu menjadi bagian dari publikasi bertanda tangannya, yang
+  dapat dibaca siapa pun yang melihat bangunan itu (halaman yang dibuka
+  tautan **Bangun bersamaku** menyebutkannya sebelum ia bergabung).
 - **Siapa pun, selama Anda berada di lobi publik.** Bergabung ke lobi
   publik (**Rekan**) atau lobi sebuah Dunia (**Lobi** di Tampilan Dunia)
   mencantumkan kunci publik identitas Anda dan nama tampilan yang Anda
@@ -198,7 +203,7 @@ bawah):
 
 Dan saat seseorang ikut tantangan membangun mingguan (**Ikut tantangan**,
 atau tantangan di **Baru** pada Editor): `/e/challenge-join`; dan saat seseorang membuka
-alun-alun tantangan suatu minggu di Tampilan Dunia: `/e/plaza-visit`. Dan saat seseorang membuat tautan **Jalan di sini bersamaku** di Tampilan Dunia: `/e/walk-link`; dan saat seorang teman tiba lewat tautan itu: `/e/walk-joined`. Dan saat seseorang membuat tautan **Bangun bersamaku** di Editor: `/e/build-link`; dan saat seorang teman bergabung lewat tautan itu: `/e/build-joined`.
+alun-alun tantangan suatu minggu di Tampilan Dunia: `/e/plaza-visit`. Dan saat seseorang membuat tautan **Jalan di sini bersamaku** di Tampilan Dunia: `/e/walk-link`; dan saat seorang teman tiba lewat tautan itu: `/e/walk-joined`. Dan saat seseorang membuat tautan **Bangun bersamaku** di Editor: `/e/build-link`; dan saat seorang teman bergabung lewat tautan itu: `/e/build-joined`; dan pertama kali sebuah bangunan diterbitkan dengan mencantumkan teman-teman yang membangunnya bersama: `/e/publish-together`.
 
 Dan saat sebuah bangunan pertama kali diterbitkan dari browser ini
 (menerbitkannya lagi nanti tidak mengirim apa pun):
@@ -274,7 +279,7 @@ Anda dan apa yang Anda minta darinya.
 | Di situs resmi, Anda menyalin kode sematan sebuah bangunan, atau bangunan yang disematkan ditampilkan atau dibuka di ForkBuild (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut yang mana dari ketiganya, tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda ikut tantangan membangun mingguan atau membuka alun-alunnya (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/challenge-join` atau `/e/plaza-visit`, tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda membuat tautan **Jalan di sini bersamaku** atau tiba lewat tautan itu (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/walk-link` atau `/e/walk-joined`, tanpa perujuk dan tanpa cookie |
-| Di situs resmi, Anda membuat tautan **Bangun bersamaku** atau bergabung lewat tautan itu (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/build-link` atau `/e/build-joined`, tanpa perujuk dan tanpa cookie |
+| Di situs resmi, Anda membuat tautan **Bangun bersamaku** atau bergabung lewat tautan itu (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/build-link` atau `/e/build-joined` (dan `/e/publish-together` saat bangunan yang dibuat bersama pertama kali diterbitkan dengan mencantumkan mereka), tanpa perujuk dan tanpa cookie |
 | Di situs resmi, Anda menerbitkan sebuah bangunan untuk pertama kali (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut rentang baloknya, dan satu lagi untuk bangunan kedua atau remix, tanpa referrer dan tanpa cookie |
 | Anda membuka situs resmi lewat tautan postingan peluncuran (`?ref=…`, lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/r/<saluran>`, tanpa referrer dan tanpa cookie |
 | Anda menjadikan diri dapat ditemukan, atau mencari seseorang, di **Rekan** | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | kunci publik identitas Anda dan tawaran koneksi, disimpan paling lama 15 menit; identitas yang Anda cari; saat Anda terhubung dengan seseorang yang Anda temukan, balasan koneksi Anda (berisi alamat jaringan Anda), yang hanya dapat diambil oleh orang itu |

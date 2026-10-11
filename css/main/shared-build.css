@@ -54,6 +54,17 @@
     overflow-wrap: anywhere;
 }
 
+/* Friends who built it with its author (core/BuiltWith.js). */
+.shared-build-author:has(+ .shared-build-built-with) {
+    margin-bottom: 0.25rem;
+}
+
+.shared-build-built-with {
+    margin: 0 0 1rem;
+    color: #a8d8bc;
+    overflow-wrap: anywhere;
+}
+
 .shared-build-lineage {
     display: flex;
     flex-wrap: wrap;

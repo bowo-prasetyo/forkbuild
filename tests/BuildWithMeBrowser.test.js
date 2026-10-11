@@ -89,6 +89,7 @@ const funnel = { joinedBuild: () => counted.push('build-joined'), madeBuildLink:
     assert(host.textContent.includes(t('buildTogether.join.lead')) && host.textContent.includes(t('buildTogether.join.as', { name: 'Sam' })),
         'it says what the invitation is, and who you build as');
     assert(host.textContent.includes(t('walkTogether.join.privacy')), 'and what joining shares');
+    assert(host.textContent.includes(t('buildTogether.join.credit')), 'and that a published build credits whoever built in it');
     assert(document.documentElement.scrollWidth <= window.innerWidth, 'nothing overflows the page sideways');
     host.querySelector('.walk-together-join').click();
     await until(() => sides.length === 1 && sides[0].started, 'Join starts');

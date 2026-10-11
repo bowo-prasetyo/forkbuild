@@ -61,7 +61,8 @@ export function visitorCountHitUrl(random) {
 // build shown on another site, and opened from there in ForkBuild; the weekly
 // challenge joined, and its plaza visited; a "Walk here with me" link made,
 // and a friend arriving through one; a "Build with me" link made, and a
-// friend joining through one; and, when
+// friend joining through one; a build published crediting friends who built
+// it together; and, when
 // a build is first published from this device, roughly how many bricks it
 // has, whether it is this device's second build, and whether it remixes
 // someone else's (publishedBuildEvents below).
@@ -91,7 +92,8 @@ export const FunnelEvent = Object.freeze({
     WALK_LINK: 'walk-link',
     WALK_JOINED: 'walk-joined',
     BUILD_LINK: 'build-link',
-    BUILD_JOINED: 'build-joined'
+    BUILD_JOINED: 'build-joined',
+    PUBLISH_TOGETHER: 'publish-together'
 });
 
 const FUNNEL_EVENTS = new Set(Object.values(FunnelEvent));
@@ -165,7 +167,11 @@ export function publishedBuildEvents({ publication, brickCount, placedCount, own
     if (typeof documentId !== 'string' || !documentId) return Object.freeze([]);
     const earlier = (Array.isArray(ownPublications) ? ownPublications : [])
         .filter((own) => own && own.id !== publication.id && typeof own.documentId === 'string');
-    if (earlier.some((own) => own.documentId === documentId)) return Object.freeze([]);
+    // Built together (core/BuiltWith.js): counted once per build, the first
+    // time it is published crediting friends, which may be after its first
+    // publish (a build often goes out alone before friends join it).
+    const together = credits(publication) && !earlier.some((own) => own.documentId === documentId && credits(own));
+    if (earlier.some((own) => own.documentId === documentId)) return Object.freeze(together ? [FunnelEvent.PUBLISH_TOGETHER] : []);
 
     const events = [publishedBrickRangeEvent(brickCount)];
     if (placedCount !== undefined && placedCount !== null) events.push(publishedPlacedRangeEvent(placedCount));
@@ -175,5 +181,10 @@ export function publishedBuildEvents({ publication, brickCount, placedCount, own
     if (typeof parent === 'string' && parent && parent !== documentId && !earlierBuilds.has(parent)) {
         events.push(FunnelEvent.REMIX_PUBLISHED);
     }
+    if (together) events.push(FunnelEvent.PUBLISH_TOGETHER);
     return Object.freeze(events);
+}
+
+function credits(publication) {
+    return Array.isArray(publication?.builtWith) && publication.builtWith.length > 0;
 }

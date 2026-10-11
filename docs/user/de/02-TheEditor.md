@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 60fb1dcaa24488dc -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: a745a00cb02e79f9 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -634,6 +634,11 @@ umfärbt oder löscht, auf beiden Bildschirmen.
 - Der Editor jedes Freundes behält seine eigene Kopie, auf seinem Gerät
   gespeichert. Wenn Sie aufhören, kann er sie behalten, aber was er ändert,
   erreicht Sie nicht mehr.
+- Alle, deren Steine Ihr Bauwerk übernimmt, werden darauf genannt: Der
+  Bereich des Bauwerks zeigt **Gebaut mit** und ihre Namen, und wenn Sie
+  veröffentlichen, sagen es auch der geteilte Link und der Stammbaum, unter
+  Ihrer Signatur. Eine Kopie, die jemand anderes davon macht, beginnt ohne
+  solche Nennungen; seine ist ein neues Bauwerk.
 - Beim Beitreten werden Ihre beiden Geräte direkt verbunden, wie bei **Mit
   mir hier spazieren**: Jeder kann die IP-Adresse des anderen sehen. Niemand
   wird zu einem gemerkten Peer oder Freund, wenn Sie es nicht wählen. Es

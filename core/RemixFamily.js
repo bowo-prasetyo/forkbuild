@@ -8,6 +8,8 @@
 // Pure: `lookUp` reads the Publications this device knows of, as
 // DiscoveryProvider#findByDocumentId() and #findByParentId() do.
 
+import { normalizeBuiltWith } from './BuiltWith.js';
+
 export const REMIX_FAMILY_LIMITS = Object.freeze({
     // Generations followed back toward the original.
     ancestors: 6,
@@ -18,7 +20,8 @@ export const REMIX_FAMILY_LIMITS = Object.freeze({
 });
 
 // `{ ancestors, build, remixes, more }`:
-// - ancestors: oldest first, each `{ documentId, title, author, publication }`;
+// - ancestors: oldest first, each `{ documentId, title, author, publication,
+//   builtWith }` (builtWith: who built it with its author, core/BuiltWith.js);
 //   the last is this build's own parent. A parent this device has no
 //   Publication for is named from the credit the remix carries, and the
 //   line stops there.
@@ -121,7 +124,11 @@ export function remixFamilySize(family) {
 }
 
 function member(documentId, title, author, publication) {
-    return Object.freeze({ documentId, title: text(title), author: text(author), publication: publication || null });
+    return Object.freeze({
+        documentId, title: text(title), author: text(author), publication: publication || null,
+        // Who built it with its author, as its Publication credits them.
+        builtWith: normalizeBuiltWith(publication?.builtWith)
+    });
 }
 
 function newest(publications) {

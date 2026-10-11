@@ -1,5 +1,6 @@
 import { t } from '../../i18n/i18n.js';
 import { remixFamilySize } from '../../../core/RemixFamily.js';
+import { builtWithNames } from './builtWithText.js';
 
 // A build's family tree (core/RemixFamily.js): what it was remixed from,
 // back to the original, then this build, then the remixes made from it.
@@ -24,8 +25,14 @@ const RemixFamilyMembers = {
     `
 };
 
+// "Harbor by Ana", and "Harbor by Ana, built with Kim" when friends built it
+// with her (core/BuiltWith.js).
 function memberLabel(member) {
     const title = member.title || t('remixFamily.untitled');
+    const names = builtWithNames(member.builtWith);
+    if (names) {
+        return member.author ? t('remixFamily.byAuthorWith', { title, author: member.author, names }) : t('remixFamily.titleWith', { title, names });
+    }
     return member.author ? t('remixFamily.byAuthor', { title, author: member.author }) : title;
 }
 

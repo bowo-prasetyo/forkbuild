@@ -79,7 +79,9 @@ export class BuildTogetherSession {
     // editor: the Editor, as this session needs it —
     //   openDocument(): the open Document, or null;
     //   appliedOperationIds(): the operations the open build already reflects;
-    //   openShared(document, operationIds): opens a co-builder's copy.
+    //   openShared(document, operationIds): opens a co-builder's copy;
+    //   creditBuilder({ identityId, name }): credits a friend on the open
+    //     build (DocumentMetadata#creditBuilder), true when it changed.
     // resolveConnectionIdentity(connectedPeer): { identityId } for who is
     //   behind a connection, an authorized device's owner included (the
     //   app's DeviceAuthorizationPropagationUseCase), as the command
@@ -192,6 +194,19 @@ export class BuildTogetherSession {
     // protocol for each operation that arrives (resolveWorldEditGrant).
     allows(documentId, identityId) {
         return Boolean(this._hosted) && documentId === this._hosted && this._allowed.has(identityId);
+    }
+
+    // An operation by `identityId` on `documentId` was accepted (the command
+    // protocol's onOperationReceived): a friend allowed on the hosted build
+    // built something, so the build credits them (core/BuiltWith.js,
+    // through the editor's creditBuilder). True when they were credited.
+    noteEdit(documentId, identityId) {
+        if (!this.allows(documentId, identityId) || typeof this._editor.creditBuilder !== 'function') return false;
+        try {
+            return this._editor.creditBuilder({ identityId, name: this._allowed.get(identityId) || null }) === true;
+        } catch {
+            return false;
+        }
     }
 
     // Whether this replica passes on edits to `documentId` (shouldRelay).

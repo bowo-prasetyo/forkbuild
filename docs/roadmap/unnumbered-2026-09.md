@@ -5710,3 +5710,41 @@ your work is yours, and lives in a world (a build is a place you make with frien
 - Not done: Undo while sharing (it needs an inverse operation every replica applies); a guest joining another
   guest's link; crediting co-builders in the family tree when the build is published (the review's Release C, item
   3); and a host's other devices accepting a guest's edits (the permission lives on the device that made the link).
+
+## Credit co-builders (unnumbered, 2026-10-11)
+
+**A build made together says who built it.** Build with me let friends build one build live, but the result named
+only its author: the friends' bricks vanished into someone else's credit, and the family tree, the place a build's
+story is told, couldn't tell it. The creative-direction review of 2026-10-11 (Release C, item 3) asked that a shared
+build credit both builders. Pillars served: every build has a family tree, and your work is yours.
+
+- **Recorded as they build** (core/BuiltWith.js, `DocumentMetadata#creditBuilder()`). When the host's Editor accepts
+  a friend's edit (`BuildTogetherSession#noteEdit()`, on the command protocol's received operations), that friend is
+  credited on the build: the name they built under and their identity, at most 12, never the author, in the order
+  they first built. Joining without building credits nobody. The Editor says so the first time ("Kim is credited on
+  this build"), and the build's panel shows **Built with**. Stored only when there are some, so other builds keep
+  their content hash.
+- **Signed by the author** (publisher/Publication.js). Publishing copies the credits onto the Publication, in its
+  signed payload only when present, as `placementPolicy` is, so every older signature holds. It is the author's
+  claim: a co-builder added or taken away afterwards breaks the signature. The link-preview worker mirrors the same
+  signing fields.
+- **Shown where a build is credited.** The shared link's page ("Built with Kim and Sam" under "by Ana"), the family
+  tree ("Harbor by Ana, built with Kim", for every member that credits friends) and the Editor's build panel, in each
+  language's own list form.
+- **Copies.** A copy someone else makes starts with no credits; the credit stays with the build they built. The
+  author's own copy (an import) keeps them.
+- **Said before joining.** The page a Build with me link opens says that a published build credits whoever built in
+  it, by name and identity; docs/Privacy.md says it too.
+- **Counting it.** `/e/publish-together` the first time a build is published crediting friends, which may be after
+  its first publish, and a `published-together` reading of 30% per friend joined (docs/Pillars.md, the launch kit).
+- Every language: the credits, the join page's note, guide 02's Build with me section and the Privacy page.
+  docs/Protocol.md and docs/Architecture.md describe it; README.
+- Tests: `CreditCoBuilders` (the list's rules; the build keeping credits and storing nothing when there are none;
+  copies; the Publication signing them, verifying when read back, and failing when one is added or removed; a build
+  made alone signing exactly what it always did; the link preview checking a co-built build's signature; the family
+  tree; the counter, once per build); `BuildWithMe` (a guest's accepted edit credits them on the host's build, in
+  order, and an uninvited peer's refused edit credits nobody); `PublicationLinkViewBrowser`, `CreditCoBuildersBrowser`
+  and `BuildWithMeBrowser` (the share page, the family tree, the build panel and the join page's note).
+- Not done: crediting guests in each other's copies (a guest's own copy credits nobody, since edits relayed by the
+  host arrive under the host's identity); a guest's own list of builds they helped make; and linking a credited name
+  to that person's profile.

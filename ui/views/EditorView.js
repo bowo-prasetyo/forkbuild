@@ -606,9 +606,21 @@ export default {
                 editor: {
                     openDocument: () => documentManager.document,
                     appliedOperationIds: () => editorSession.appliedOperationIds(),
-                    openShared: (document, operationIds) => editorSession.openSharedDocument(document, operationIds)
+                    openShared: (document, operationIds) => editorSession.openSharedDocument(document, operationIds),
+                    creditBuilder: (builder) => {
+                        const document = documentManager.document;
+                        if (!document || !document.metadata.creditBuilder(builder)) return false;
+                        documentManager.markDirty();
+                        feedback.show(t('builtWith.credited', { name: builder.name || t('builtWith.someone') }));
+                        return true;
+                    }
                 }
             })
+            : null;
+        // Each friend whose edit this build accepts is credited on it
+        // (core/BuiltWith.js), and so on its Publication.
+        const unsubscribeBuildCredits = buildTogetherSession
+            ? documentCommandPropagation.onOperationReceived((documentId, command, authorIdentityId) => buildTogetherSession.noteEdit(documentId, authorIdentityId))
             : null;
 
         const activeTool = ref(editorContext.tool.activeTool);
@@ -912,6 +924,7 @@ export default {
                 description: document.metadata.description || '',
                 tags: document.metadata.tags,
                 author: document.metadata.author,
+                builtWith: document.metadata.builtWith,
                 license: document.metadata.license,
                 placementPolicy: document.metadata.placementPolicy,
                 parentDocumentId: document.metadata.parentDocumentId,
@@ -1453,6 +1466,7 @@ export default {
             stopSound();
             editorSession.dispose();
             // Created per mount, so dispose it to avoid leaking bus subscriptions.
+            if (unsubscribeBuildCredits) unsubscribeBuildCredits();
             if (documentCommandPropagation) {
                 documentCommandPropagation.dispose();
             }

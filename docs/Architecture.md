@@ -983,6 +983,17 @@ of operations a shared copy already reflects. The Editor side is
 ui/views/editorView/useBuildTogether.js and
 ui/components/walkTogether/BuildTogetherStrip.js.
 
+**Credit co-builders.** When the host's command protocol accepts a guest's
+operation, BuildTogetherSession#noteEdit() credits that guest on the open
+build (DocumentMetadata#creditBuilder(), core/BuiltWith.js: name and
+identity, at most 12, never the author), saved with the build.
+LocalPublisherProvider copies the credits onto the Publication, signed only
+when present, and the rendezvous worker's link preview mirrors the same
+signing fields (server/rendezvous-worker/buildPreview.js). DocumentCloneService
+keeps them only for a copy by the same author. The share page, the family
+tree (core/RemixFamily.js members carry `builtWith`) and the Editor's build
+panel name them (ui/components/remix/builtWithText.js).
+
 **A visitor's view.** World View opens without its protocol tools: the
 coordinates, Search's Location fields, the Camera · Editing line, Nearby's
 Place Names, Claimed Builds and World Encounters, the Own Publication panel,
