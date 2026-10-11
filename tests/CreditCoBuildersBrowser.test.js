@@ -26,6 +26,7 @@ const info = { title: 'Harbor', status: 'saved', editable: true, builtWith: [{ n
     const compact = mount(DocumentInfoPanel, { info, compact: true });
     const line = compact.host.querySelector('.document-info-compact-built-with');
     assert(line && line.textContent.trim() === t('builtWith.line', { names: names('Kim', t('builtWith.someone')) }), `the Editor's panel says who built it too (${line && line.textContent})`);
+    assert(line.querySelector('a.built-with-name') && line.querySelectorAll('a.built-with-name').length === 2, 'each credited name a link to their page');
     compact.unmount();
     const full = mount(DocumentInfoPanel, { info });
     assert(full.host.textContent.includes(t('documentInfo.builtWith')), 'and its full form');

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: a745a00cb02e79f9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c13a0384c503ab2c -->
 # 02 — Editor
 
 <!-- languages -->
@@ -611,9 +611,15 @@ ulang, atau dihapus oleh salah satu dari kalian muncul di kedua layar.
 - Semua orang yang baloknya diterima bangunan Anda dicantumkan di bangunan
   itu: panel bangunan menampilkan **Dibangun bersama** dan nama mereka, dan
   saat Anda menerbitkan, tautan yang dibagikan dan silsilahnya juga
-  menyebutkannya, di bawah tanda tangan Anda. Salinan yang dibuat orang lain
-  dari bangunan itu dimulai tanpa pencantuman tersebut; salinan itu adalah
+  menyebutkannya, di bawah tanda tangan Anda. Salinan setiap teman
+  menampilkan pencantuman yang sama. Salinan yang dibuat orang lain dari
+  bangunan itu dimulai tanpa pencantuman tersebut; salinan itu adalah
   bangunan baru.
+- Setiap nama yang dicantumkan, dan pembuat bangunan yang dibagikan, membuka
+  halaman orang itu: bangunan yang ditandatangani identitasnya, dan bangunan
+  tempat orang lain mencantumkannya. **Dunia Saya** menampilkan **Bangunan
+  yang Anda bantu buat**, yaitu bangunan tempat seorang teman mencantumkan
+  Anda, masing-masing membuka Dunianya setelah diterbitkan.
 - Bergabung menghubungkan kedua perangkat Anda secara langsung, seperti
   **Jalan di sini bersamaku**: masing-masing dapat melihat alamat IP yang
   lain. Tidak ada yang menjadi rekan yang diingat atau teman kecuali Anda

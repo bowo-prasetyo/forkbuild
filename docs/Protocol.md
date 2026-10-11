@@ -560,6 +560,7 @@ for the build over that connection, on `forkbuild:build-together-sync`:
     both           { type: 'presence', documentId, pointer: {x,y,z}|null, selection: [brickId] }
                    (the host relays each guest's to the others with who and name)
     host → guests  { type: 'ended', documentId }
+    host → guests  { type: 'credits', documentId, builtWith: [{ name, identityId }] }
     guest → host   { type: 'left', documentId }
 
 `document` is the Document's JSON; the guest opens it only when its
@@ -581,7 +582,10 @@ where it is part of the signed payload only when present (as
     publication   { …, builtWith: [{ name, identityId }] }   (absent when empty)
 
 It is the author's claim, signed by the author; nobody else can add to or
-take from it. A fork by anyone else starts with none.
+take from it. A fork by anyone else starts with none. While building
+together, the host sends the list on `credits` each time it changes, and
+each guest's copy takes it from its host alone, for the build it opened
+from them.
 
 ### Announcement Index exchange
 

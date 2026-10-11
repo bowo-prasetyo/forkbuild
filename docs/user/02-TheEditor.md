@@ -574,9 +574,13 @@ either of you places, moves, recolours or deletes appears on both screens.
   stop, they can keep it, but what they change no longer reaches you.
 - Everyone whose bricks your build takes in is credited on it: the build's
   panel says **Built with** and their names, and when you publish, the
-  shared link and the family tree say so too, under your signature. A copy
-  someone else makes of it starts with no such credits; theirs is a new
-  build.
+  shared link and the family tree say so too, under your signature. Each
+  friend's copy shows the same credits. A copy someone else makes of it
+  starts with no such credits; theirs is a new build.
+- Each credited name, and a shared build's author, opens that person's
+  page: the builds their identity signed, and the builds others credit
+  them on. **My Worlds** lists **Builds you helped make**, the ones a
+  friend credited you on, each opening its World once it is published.
 - Joining connects your two devices directly, as **Walk here with me**
   does: each of you can see the other's IP address. Nobody becomes a Known
   Peer or a friend unless you choose to. It needs a rendezvous server; the

@@ -4154,6 +4154,17 @@
         "builtWith.line": "8f9301f6",
         "builtWith.someone": "908d415b",
         "builtWith.credited": "13171fa9",
+        "builderView.someone": "51f5f062",
+        "builderView.identity": "78995ad7",
+        "builderView.you": "2f498b10",
+        "builderView.builds": "19337b36",
+        "builderView.noBuilds": "444ff53b",
+        "builderView.builtWith": "0a2a9466",
+        "builderView.noBuiltWith": "fc2d5e4a",
+        "helpedBuilds.title": "f2745a18",
+        "helpedBuilds.lead": "5b005270",
+        "helpedBuilds.withAuthor": "22aae4f3",
+        "helpedBuilds.notPublished": "d785c25a",
         "protectIdentityNote.text": "4d00038a",
         "protectIdentityNote.action": "ed95ed4f"
     }

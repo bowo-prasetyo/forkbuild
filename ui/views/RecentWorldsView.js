@@ -6,6 +6,8 @@ import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscov
 import WorldCard from '../components/WorldCard.js';
 import { t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
+import HelpedBuildsList from '../components/walkTogether/HelpedBuildsList.js';
+import { useBuilderData } from '../composables/useBuilderData.js';
 
 // The ready-made builds, offered while nothing has been visited yet. Loaded
 // when shown, since their thumbnails bring in Three.js.
@@ -45,7 +47,7 @@ const RECENT_WORLDS_LIMIT = 20;
 
 export default {
     name: 'RecentWorldsView',
-    components: { I18nText, WorldCard, FeaturedBuilds },
+    components: { I18nText, WorldCard, FeaturedBuilds, HelpedBuildsList },
     setup() {
         const router = useRouter();
         const localWorldExperienceStore = new LocalWorldExperienceStore({ storageProvider: new LocalStorageProvider() });
@@ -108,7 +110,11 @@ export default {
             router.push({ path: `/world/${documentId}` });
         }
 
-        return { t, worlds, enterWorld };
+        // The builds this identity helped make with friends (Build with me).
+        const builderData = useBuilderData();
+        const helped = builderData.helpedBy(builderData.ownIdentityId());
+
+        return { t, worlds, enterWorld, helped };
     },
     template: `
         <section class="recent-worlds-view">
@@ -136,6 +142,12 @@ export default {
                     @enter="enterWorld"
                 />
             </ul>
+
+            <section v-if="helped.length" class="helped-builds-shelf" aria-labelledby="recent-worlds-helped-title">
+                <h2 id="recent-worlds-helped-title">{{ t('helpedBuilds.title') }}</h2>
+                <p class="helped-builds-lead">{{ t('helpedBuilds.lead') }}</p>
+                <HelpedBuildsList :builds="helped" />
+            </section>
         </section>
     `
 };

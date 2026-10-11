@@ -571,6 +571,8 @@ export default {
 
         // The bricks each build started with, to count the builder's own at publish.
         const readyMadeBricks = inject('readyMadeBricksStore', null);
+        // The builds this identity helped make with friends (Build with me).
+        const helpedBuildsStore = inject('helpedBuildsStore', null);
         const editorSession = new EditorSession({
             registry,
             editorContext,
@@ -607,6 +609,16 @@ export default {
                     openDocument: () => documentManager.document,
                     appliedOperationIds: () => editorSession.appliedOperationIds(),
                     openShared: (document, operationIds) => editorSession.openSharedDocument(document, operationIds),
+                    adoptCredits: (builtWith) => {
+                        const document = documentManager.document;
+                        if (!document || !document.metadata.adoptBuiltWith(builtWith)) return false;
+                        documentManager.markDirty();
+                        return true;
+                    },
+                    notedHelped: (helped) => {
+                        const own = resolveSigningIdentityId(identityProvider);
+                        if (helpedBuildsStore && own) helpedBuildsStore.note(own, helped);
+                    },
                     creditBuilder: (builder) => {
                         const document = documentManager.document;
                         if (!document || !document.metadata.creditBuilder(builder)) return false;

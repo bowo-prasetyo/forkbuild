@@ -5,6 +5,8 @@ import { displayText, t } from '../i18n/i18n.js';
 import { descriptionPlainText } from '../../core/DescriptionMarkup.js';
 import FormattedDescription from './FormattedDescription.js';
 import { builtWithNames } from './remix/builtWithText.js';
+import BuiltWithNames from './remix/BuiltWithNames.js';
+import I18nText from '../i18n/I18nText.js';
 
 // 0.2.21: the "Document Information" panel from the milestone design
 // — one component, shared by the Editor sidebar and World View's
@@ -27,7 +29,7 @@ import { builtWithNames } from './remix/builtWithText.js';
 // but it also says "Saved" for a document that was never saved.
 export default {
     name: 'DocumentInfoPanel',
-    components: { FormattedDescription },
+    components: { FormattedDescription, BuiltWithNames, I18nText },
     props: {
         info: {
             type: Object,
@@ -82,7 +84,9 @@ export default {
             <p v-if="info.parentDocumentId || info.parentStructureId" class="document-info-compact-origin">
                 {{ t('documentInfo.forkedFromCompact', { origin: originLabel(info) }) }}
             </p>
-            <p v-if="builtWith(info)" class="document-info-compact-built-with">{{ t('builtWith.line', { names: builtWith(info) }) }}</p>
+            <p v-if="builtWith(info)" class="document-info-compact-built-with">
+                <I18nText keypath="builtWith.line"><template #names><BuiltWithNames :list="info.builtWith" /></template></I18nText>
+            </p>
             <p
                 v-if="info.editabilityNotice"
                 :class="['editability-notice', { 'editability-notice--blocked': info.editabilityNotice.blocked }]"
@@ -123,7 +127,7 @@ export default {
             </div>
             <div class="info-row" v-if="builtWith(info)">
                 <span class="info-label">{{ t('documentInfo.builtWith') }}</span>
-                <span class="info-value">{{ builtWith(info) }}</span>
+                <span class="info-value"><BuiltWithNames :list="info.builtWith" /></span>
             </div>
             <div class="info-row" v-if="info.parentDocumentId">
                 <span class="info-label">{{ t('documentInfo.forkedFrom') }}</span>

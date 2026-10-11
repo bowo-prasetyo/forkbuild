@@ -4685,6 +4685,19 @@ export default Object.freeze({
     'builtWith.someone': 'a friend',
     'builtWith.credited': '{name} is credited on this build: published, it says it was built with them.',
 
+    // A builder's page by identity, and the builds you helped make (ui/views/BuilderView.js, ui/views/RecentWorldsView.js).
+    'builderView.someone': 'A builder',
+    'builderView.identity': 'Identity {id}',
+    'builderView.you': 'This is you.',
+    'builderView.builds': 'Their builds',
+    'builderView.noBuilds': 'No builds of theirs are known on this device yet.',
+    'builderView.builtWith': 'Built with others',
+    'builderView.noBuiltWith': 'No builds crediting them as a co-builder are known on this device yet.',
+    'helpedBuilds.title': 'Builds you helped make',
+    'helpedBuilds.lead': 'Builds a friend credited you on when you built them together.',
+    'helpedBuilds.withAuthor': 'with {name}',
+    'helpedBuilds.notPublished': 'Not published yet',
+
     // The reminder that a quick-start identity has no passphrase (ui/components/ProtectIdentityNote.js).
     'protectIdentityNote.text': 'Your key is kept in this browser without a passphrase, so anyone using this browser could publish as you.',
     'protectIdentityNote.action': 'Add a passphrase'

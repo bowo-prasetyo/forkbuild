@@ -80,6 +80,7 @@ import { BuildPlotStore } from '../application/plot/BuildPlotStore.js';
 import { FunnelEventCounter } from '../application/settings/FunnelEventCounter.js';
 import { FirstBuildChecklistStore } from '../application/onboarding/FirstBuildChecklistStore.js';
 import { ReadyMadeBricksStore } from '../application/document/ReadyMadeBricksStore.js';
+import { HelpedBuildsStore } from '../application/buildTogether/HelpedBuildsStore.js';
 import { browserPrivacySignals, sendCounterHit } from './counterHit.js';
 import { verifyClaimedBuildPublication } from '../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
 import { RepositoryNetworkDiscovery } from '../application/publication/RepositoryNetworkDiscovery.js';
@@ -498,6 +499,8 @@ app.provide('buildPlotStore', new BuildPlotStore({ storageProvider: new LocalSto
 app.provide('firstBuildChecklistStore', new FirstBuildChecklistStore({ storageProvider: new LocalStorageProvider() }));
 // The bricks each build started with, so publishing counts only the builder's own.
 app.provide('readyMadeBricksStore', new ReadyMadeBricksStore({ storageProvider: new LocalStorageProvider() }));
+// The builds each identity helped make with friends (Build with me).
+app.provide('helpedBuildsStore', new HelpedBuildsStore({ storageProvider: new LocalStorageProvider() }));
 // A share link made, a shared link opened, a build from one copied, a build
 // published: counted under the same setting (docs/Privacy.md, "Visitor count").
 const funnelEventCounter = new FunnelEventCounter({

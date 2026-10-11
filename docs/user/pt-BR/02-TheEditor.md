@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: a745a00cb02e79f9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c13a0384c503ab2c -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -602,8 +602,14 @@ colocar, mover, mudar de cor ou excluir aparece nas duas telas.
 - Todos cujos blocos a sua construção recebe aparecem nos créditos dela: o
   painel da construção diz **Construída com** e os nomes deles, e quando
   você publica, o link compartilhado e a árvore genealógica também dizem
-  isso, sob a sua assinatura. Uma cópia que outra pessoa fizer dela começa
-  sem esses créditos; a dela é uma construção nova.
+  isso, sob a sua assinatura. A cópia de cada amigo mostra os mesmos
+  créditos. Uma cópia que outra pessoa fizer dela começa sem esses créditos;
+  a dela é uma construção nova.
+- Cada nome nos créditos, e o autor de uma construção compartilhada, abre a
+  página dessa pessoa: as construções que a identidade dela assinou e
+  aquelas em que outros dão crédito a ela. **Meus mundos** lista
+  **Construções que você ajudou a fazer**, aquelas em que um amigo deu
+  crédito a você, e cada uma abre o Mundo dela quando é publicada.
 - Entrar conecta os dois dispositivos diretamente, como **Passear aqui
   comigo**: cada um pode ver o endereço IP do outro. Ninguém vira um par
   lembrado nem amigo a menos que você escolha. É preciso um servidor de

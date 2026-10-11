@@ -4682,6 +4682,19 @@ export default Object.freeze({
     'builtWith.someone': '友だち',
     'builtWith.credited': '{name}がこの作品の共作者として記録されました。公開すると、{name}と一緒に作ったことが表示されます。',
 
+    // A builder's page by identity, and the builds you helped make (ui/views/BuilderView.js, ui/views/RecentWorldsView.js).
+    'builderView.someone': 'ビルダー',
+    'builderView.identity': 'アイデンティティ {id}',
+    'builderView.you': 'これはあなたです。',
+    'builderView.builds': 'この人の作品',
+    'builderView.noBuilds': 'このデバイスでは、この人の作品はまだ見つかっていません。',
+    'builderView.builtWith': 'ほかの人と一緒に作った作品',
+    'builderView.noBuiltWith': 'このデバイスでは、この人を共作者として記した作品はまだ見つかっていません。',
+    'helpedBuilds.title': 'あなたが手伝った作品',
+    'helpedBuilds.lead': '一緒に作ったときに、友だちがあなたを共作者として記した作品です。',
+    'helpedBuilds.withAuthor': '{name}と一緒に',
+    'helpedBuilds.notPublished': 'まだ公開されていません',
+
     // The reminder that a quick-start identity has no passphrase (ui/components/ProtectIdentityNote.js).
     'protectIdentityNote.text': 'あなたの鍵はパスフレーズなしでこのブラウザーに保存されているため、このブラウザーを使う人なら誰でもあなたとして公開できます。',
     'protectIdentityNote.action': 'パスフレーズを付ける'

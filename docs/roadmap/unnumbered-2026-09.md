@@ -5748,3 +5748,33 @@ build credit both builders. Pillars served: every build has a family tree, and y
 - Not done: crediting guests in each other's copies (a guest's own copy credits nobody, since edits relayed by the
   host arrive under the host's identity); a guest's own list of builds they helped make; and linking a credited name
   to that person's profile.
+
+## Co-builders' pages, copies and the builds they helped make (unnumbered, 2026-10-11)
+
+**A credit now reaches every copy, leads to its person, and stays with them.** Credit co-builders named friends on
+the host's build, but a guest's own copy credited nobody (guests' edits reach each other under the host's identity),
+a credited name went nowhere, and a guest had no way to find the builds they had helped make. Pillars served: your
+work is yours, and every build has a family tree.
+
+- **Every copy credits everyone** (application/buildTogether/BuildTogetherSession.js). The host sends the build's
+  credits to its co-builders each time they change (`credits`), and each guest's copy adopts them
+  (`DocumentMetadata#adoptBuiltWith()`), taking them from its host alone, for the build it opened from them.
+- **Builds you helped make** (application/buildTogether/HelpedBuildsStore.js, helpedBuilds.js). When the credits a
+  guest receives name their identity, the device notes the build: title, author and when, per identity, backed up
+  with the documents. My Worlds lists them with the builds found published crediting you (only credits whose author's
+  signature verifies), each opening its World once published, or the saved copy in the Editor before then.
+- **A builder's page** (`#/builder/<identity>`, ui/views/BuilderView.js). One person by the identity that signs, not
+  the typed name the Repository's author pages go by (application/buildTogether/builderProfile.js): the builds their
+  identity signed, the builds others credit them on, Follow, and on your own page the builds you helped make.
+- **Names that lead somewhere** (ui/components/remix/BuiltWithNames.js). Credited names on the shared link's page
+  and in the Editor's build panel, and a shared build's author, link to that person's page; the phrase keeps each
+  language's own list form.
+- Every language: the pages and the list; guide 02's Build with me section and the Privacy page. docs/Protocol.md
+  (`credits`) and docs/Architecture.md describe it; README.
+- Tests: `BuildWithMe` (every copy follows the host's credits, the guest included, and each guest's device notes the
+  build); `CoBuilderPages` (the store; a builder's verified builds and credits, a forged credit counting for nothing;
+  the merged list; names as links; a copy taking credits only from its host, for its build);
+  `CoBuilderPagesBrowser` (a builder's page, your own page and My Worlds from real signed Publications, at phone
+  width); `PublicationLinkViewBrowser` and `CreditCoBuildersBrowser` (the links).
+- Not done: the family tree's names as links (each line already links to its build), and the builds you helped make
+  on another of your devices, until they are published or the record is copied there (Your Data).

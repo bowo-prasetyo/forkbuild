@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 09b3b731fab3269c -->
+<!-- translation-of: docs/Privacy.md source-hash: 472c2d45139f70da -->
 # Privasi
 
 <!-- languages -->
@@ -54,14 +54,18 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
 - untuk setiap minggu tantangan membangun yang Anda buka, ID karya peserta
   yang ditemukan di jaringan, agar halamannya menampilkannya lagi sebelum
   mencari.
-- untuk setiap bangunan yang Anda mulai dengan **Bangun di sini**, Dunia
-  dan tempat yang Anda pilih, agar saat diterbitkan bangunan itu berdiri di
-  sana. Cap Anda di Beranda dihitung dari apa yang sudah tercantum di sini
-  dan tidak disimpan.
+- untuk setiap bangunan yang Anda mulai dengan **Bangun di sini**, Dunia dan
+  tempat yang Anda pilih, agar saat diterbitkan bangunan itu berdiri di
+  sana.
 - untuk setiap bangunan yang dimulai dari struktur siap pakai atau sebagai
   salinan bangunan, dan untuk setiap struktur siap pakai yang ditambahkan,
   balok apa saja dan di mana letaknya, agar saat menerbitkan balok yang Anda
   pasang bisa dibedakan dari balok awal (hanya rentangnya yang dihitung).
+- untuk setiap identitas, bangunan tempat seorang teman mencantumkannya saat
+  kalian membangunnya bersama (**Bangun bersamaku**): judul setiap bangunan,
+  nama dan identitas pembuatnya, dan kapan, untuk **Bangunan yang Anda bantu
+  buat** di Dunia Saya dan di halaman pembangun Anda sendiri. Cap Anda di
+  Beranda dihitung dari apa yang sudah tercantum di sini dan tidak disimpan.
 
 Menghapus data situs ini di browser akan menghapus semuanya, dan tidak ada
 salinan lain maupun cara untuk memulihkannya. Cadangkan terlebih dahulu
@@ -135,7 +139,9 @@ Apakah notifikasi di perangkat ini aktif disimpan bersama pengaturan Anda
   membangun dan kunci publik identitasnya, dan saat Anda menerbitkannya,
   pencantuman itu menjadi bagian dari publikasi bertanda tangannya, yang
   dapat dibaca siapa pun yang melihat bangunan itu (halaman yang dibuka
-  tautan **Bangun bersamaku** menyebutkannya sebelum ia bergabung).
+  tautan **Bangun bersamaku** menyebutkannya sebelum ia bergabung). Selama
+  kalian membangun bersama, salinan setiap orang mengikuti daftar itu,
+  sehingga setiap teman melihat siapa lagi yang dicantumkan.
 - **Siapa pun, selama Anda berada di lobi publik.** Bergabung ke lobi
   publik (**Rekan**) atau lobi sebuah Dunia (**Lobi** di Tampilan Dunia)
   mencantumkan kunci publik identitas Anda dan nama tampilan yang Anda

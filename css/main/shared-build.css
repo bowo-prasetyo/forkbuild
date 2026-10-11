@@ -378,3 +378,58 @@
     border: 1px solid rgba(127, 127, 127, 0.35);
     border-radius: 8px;
 }
+
+/* Credited names and a shared build's author, each a link to their page
+   (ui/components/remix/BuiltWithNames.js, ui/views/BuilderView.js). */
+.built-with-name,
+.shared-build-author-link {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* A builder's page, and the builds you helped make (My Worlds). */
+.builder-view {
+    flex: 1;
+    min-width: 0;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 16px;
+    overflow-y: auto;
+}
+
+.builder-identity,
+.builder-empty,
+.helped-builds-lead {
+    color: #b8b8b8;
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+
+.builder-builds,
+.builder-built-with,
+.helped-builds-list {
+    list-style: none;
+    margin: 0.5rem 0 1.5rem;
+    padding: 0;
+}
+
+.builder-build,
+.helped-build {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.6rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid #2a2a2a;
+    overflow-wrap: anywhere;
+}
+
+.helped-build-author,
+.helped-build-note {
+    color: #b8b8b8;
+    font-size: 0.85rem;
+}
+
+.helped-builds-shelf {
+    margin-top: 2rem;
+}

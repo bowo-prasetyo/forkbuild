@@ -89,6 +89,7 @@ async function mount({ publication, contentStore, discovery = new DecentralizedP
             { path: '/s/:payload', component: PublicationLinkView },
             { path: '/editor', component: { template: '<p>editor</p>' } },
             { path: '/world/:id', component: { template: '<p>world</p>' } },
+            { path: '/builder/:identityId', component: { template: '<p>builder</p>' } },
             { path: '/', component: { template: '<p>home</p>' } }
         ]
     });
@@ -215,6 +216,11 @@ const text = (host, selector) => host.querySelector(selector)?.textContent.trim(
         await until(() => view.host.querySelector('.shared-build-view'), 'the arrival screen');
         const names = new Intl.ListFormat('en', { type: 'conjunction' }).format(['Kim', 'Sam']);
         assert(text(view.host, '.shared-build-built-with') === t('builtWith.line', { names }), `it says who built it with its maker (${text(view.host, '.shared-build-built-with')})`);
+        const nameLinks = [...view.host.querySelectorAll('.shared-build-built-with a.built-with-name')];
+        assert(nameLinks.map((link) => link.textContent).join() === 'Kim,Sam' && nameLinks[0].getAttribute('href').includes(`/builder/${encodeURIComponent('did:key:z6MkKim')}`),
+            'each name links to that person\'s page');
+        const authorLink = view.host.querySelector('.shared-build-author a.shared-build-author-link');
+        assert(authorLink && authorLink.getAttribute('href').includes(`/builder/${encodeURIComponent(castle.publication.publisherIdentity.id)}`), 'and the maker\'s name to theirs, by the identity that signed it');
         const self = view.host.querySelector('.remix-family-self strong');
         assert(self && self.textContent === t('remixFamily.byAuthorWith', { title: 'Castle on the hill', author: 'link-view-alice', names }), `and so does its family tree (${self && self.textContent})`);
         console.log('✓ a build made together credits everyone who built it');

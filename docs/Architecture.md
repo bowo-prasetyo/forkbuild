@@ -994,6 +994,19 @@ keeps them only for a copy by the same author. The share page, the family
 tree (core/RemixFamily.js members carry `builtWith`) and the Editor's build
 panel name them (ui/components/remix/builtWithText.js).
 
+The host sends the list to its co-builders whenever it changes (`credits`),
+and each guest's copy adopts it (DocumentMetadata#adoptBuiltWith()), so every
+copy credits everyone, though guests' edits reach each other under the
+host's identity. A guest credited there notes the build in
+application/buildTogether/HelpedBuildsStore.js (per identity, on the device,
+backed up). ui/views/BuilderView.js (`#/builder/<identity>`) is a person's
+page by the identity that signs, not the typed name the Repository's author
+pages go by: application/buildTogether/builderProfile.js lists the builds
+their identity signed and those whose verified author credits them, and
+helpedBuilds.js merges those credits with the device's notes for **Builds you
+helped make** on My Worlds and your own page. Credited names and a shared
+build's author link there (ui/components/remix/BuiltWithNames.js).
+
 **A visitor's view.** World View opens without its protocol tools: the
 coordinates, Search's Location fields, the Camera · Editing line, Nearby's
 Place Names, Claimed Builds and World Encounters, the Own Publication panel,

@@ -74,8 +74,10 @@ longer-term aim.
 - **Build with me** makes a link that opens your build in a friend's Editor,
   so you build it together, live: each brick either of you places appears on
   both screens, and each sees where the other is pointing and what they have
-  selected, until you press Stop. Everyone who built is credited on the build:
-  published, its link and family tree say who built it with you.
+  selected, until you press Stop. Everyone who built is credited on the build,
+  in every copy: published, its link and family tree say who built it with
+  you, each name opening that person's page, and **My Worlds** lists the
+  builds you helped make.
 - Share a build the moment it's published: the link carries the signed build
   itself, so it opens on any device with no wallet or account,
   shows the build's title and a picture of it when pasted into a chat or a

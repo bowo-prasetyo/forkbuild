@@ -26,6 +26,7 @@ const ChallengeView = page('ChallengeView', () => import('../views/ChallengeView
 const AboutView = page('AboutView', () => import('../views/AboutView.js'));
 const PublicationLinkView = page('PublicationLinkView', () => import('../views/PublicationLinkView.js'));
 const AuthorView = page('AuthorView', () => import('../views/AuthorView.js'));
+const BuilderView = page('BuilderView', () => import('../views/BuilderView.js'));
 const WorldView = page('WorldView', () => import('../views/WorldView.js'));
 // The challenge plaza is World View too, under its own name, so that going
 // between a plaza and a World mounts it afresh instead of reusing the page.
@@ -71,6 +72,9 @@ const routes = [
     { path: '/challenge', name: 'challenge', component: ChallengeView },
     { path: '/challenge/:id', name: 'challenge-week', component: ChallengeView },
     { path: '/author/:username', name: 'author', component: AuthorView },
+    // One person's page by the identity that signs: their builds, and builds
+    // they built with others (ui/views/BuilderView.js).
+    { path: '/builder/:identityId', name: 'builder', component: BuilderView },
     // 0.9.17 — Integrate World Encounters into the Existing World View.
     // `WorldView` now mounts `ui/components/WorldEncounterCanvas.js`
     // itself, inside a "World Encounters" section, driven by the exact
