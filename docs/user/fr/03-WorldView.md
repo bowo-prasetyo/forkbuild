@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c5211b73c764ada -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d70cb11661c7d2d4 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -26,6 +26,32 @@ et intégrer au Monde un animal relâché comme décoration avec **G** (voir
 Depuis le **Dépôt**, cliquez sur **Explorer** sur n’importe quelle
 création — ou allez directement à l’URL d’un monde. Vous apparaissez à
 côté de cette création dans le monde partagé.
+
+## Une vue de visiteur, et Avancé
+
+La Vue du Monde s’ouvre en vue de visiteur : le nom de la construction et
+qui l’a faite, ce qui vous entoure et ce que vous pouvez faire ici
+(**Construire ici**, **Se promener ici avec moi** et **Modifier une copie**
+quand la construction n’est pas la vôtre). Les outils des réseaux derrière le
+Monde attendent en bas du panneau, sous **Afficher les outils avancés** :
+
+- les coordonnées au-dessus de la vue, les champs **Emplacement** de la
+  recherche et la ligne **Caméra · Modification**
+  de l’en-tête (voir [Caméra et modification](#caméra-et-modification)) ;
+- les groupes **Noms de lieux**, **Constructions déclarées** et **Rencontres
+  dans le Monde** d’À proximité, avec **Découverte de Mondes partagés** dans
+  les Rencontres ;
+- **Mon Monde partagé**, le panneau réseau de votre publication, et
+  **Déplacer le placement** à côté ;
+- la liste des Mondes qui n’ont pas pu se charger, et les diagnostics des
+  avatars.
+
+Le choix est mémorisé sur cet appareil et ne change rien pour personne
+d’autre. La boussole, les noms de lieux en bas, Rechercher, Lieux, la Carte et
+Endroits, votre avatar et Enregistrer et Publier de la construction restent
+dans les deux vues. Les constructions dont les éditeurs revendiquent un
+endroit proche sont toujours dessinées en fantômes pâles ; leur liste est
+sous Avancé.
 
 ## Se déplacer
 
@@ -281,6 +307,8 @@ Monde.
 
 ### Rencontres dans le Monde — publications et avatars que vos pairs partagent
 
+(Affiché quand **Afficher les outils avancés** est coché ; voir [Une vue de visiteur, et Avancé](#une-vue-de-visiteur-et-avancé).)
+
 Le groupe **Rencontres dans le Monde**, dans la section À proximité
 d’Explorer, est une petite carte plate à part — distincte de la Carte du
 Monde décrite ci-dessous — qui place deux types de choses dont vos pairs
@@ -457,6 +485,8 @@ connecter à quelqu’un.
 
 ### Noms de lieux à proximité — découvrir les propositions de n’importe qui
 
+(Affiché quand **Afficher les outils avancés** est coché ; voir [Une vue de visiteur, et Avancé](#une-vue-de-visiteur-et-avancé).)
+
 **Noms de lieux**, le quatrième groupe d’À proximité, affiche les
 propositions de nom de lieu signées pour les Régions du Monde qui vous
 entourent — sans aucun pair connecté. Comme Découvrir un Monde partagé
@@ -493,6 +523,8 @@ proximité ». Voir
 façon dont une proposition est publiée au départ.
 
 ### Constructions déclarées — les constructions des autres, là où leurs éditeurs disent qu’elles se trouvent
+
+(Affiché quand **Afficher les outils avancés** est coché ; voir [Une vue de visiteur, et Avancé](#une-vue-de-visiteur-et-avancé).)
 
 Pendant que vous marchez, ForkBuild télécharge les Snapshots annoncés près
 de vous (voir le parcours automatique de
@@ -610,6 +642,10 @@ pour une région, un point de repère ou une structure) et le panneau
 ou une structure placée) — même action, même bouton, quel que soit le
 chemin.
 
+Quand le Monde où vous êtes est la construction de quelqu’un d’autre, la
+première ligne du panneau propose aussi **Modifier une copie** de toute
+celle-ci.
+
 - Pour un **point de repère**, une **région**, une **brique** ou un **sol
   nu**, c’est le document du Monde auquel ils appartiennent.
 - Pour une **structure placée**, c’est le contenu propre de la structure —
@@ -692,6 +728,10 @@ autour d’une place dégagée, avec un panneau qui les liste (voir
 pousse, quelle que soit la semaine. Les participations ne sont montrées que
 tant que vous êtes sur la place, et **Construire ici** n’y est pas proposé.
 
+La place ouverte au milieu est pavée, avec un puits, des bancs et des
+lampadaires, pour que la place soit un lieu même une semaine sans
+participation.
+
 ### Points de repère — marquer un lieu qui mérite qu’on s’en souvienne
 
 Contrairement à une structure (un bâtiment placé, construit par vous ou
@@ -757,6 +797,8 @@ concurrence avec tout le reste de ce que permet le système de nommage.
 > appareil a publiées ou apprises.
 
 ## Caméra et modification
+
+(Affiché quand **Afficher les outils avancés** est coché ; voir [Une vue de visiteur, et Avancé](#une-vue-de-visiteur-et-avancé).)
 
 L’en-tête affiche deux choses qui peuvent réellement différer :
 
@@ -827,6 +869,7 @@ Vous pouvez éventuellement la limiter à un **Emplacement** : remplissez
 X/Y/Z et un **Rayon** (en unités du Monde) et la recherche ne renvoie que
 les résultats situés à cette distance de ce point. Laissez Emplacement
 vide pour une simple recherche textuelle.
+(Les champs d’emplacement n’apparaissent qu’avec **Afficher les outils avancés**.)
 
 Chaque résultat affiche :
 
@@ -1131,6 +1174,8 @@ suit les mêmes règles de licence que tout autre fork (voir
 [Publier et forker](04-PublishingAndForking.md#forker--faites-le-vôtre)).
 
 ### Mon Monde partagé — distribuer votre propre Snapshot, sans pair nécessaire
+
+(Affiché quand **Afficher les outils avancés** est coché ; voir [Une vue de visiteur, et Avancé](#une-vue-de-visiteur-et-avancé).)
 
 Plus bas dans le panneau, sous Recherche et Avatar, se trouve un panneau
 **Mon Monde partagé**, qui affiche le titre et l’auteur de votre monde

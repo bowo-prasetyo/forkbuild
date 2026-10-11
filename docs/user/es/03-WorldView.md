@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c5211b73c764ada -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d70cb11661c7d2d4 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -26,6 +26,31 @@ incorporar al Mundo como decoración un animal soltado, con **G**
 Desde el **Repositorio**, haga clic en **Explorar** en cualquier creación,
 o vaya directamente a la URL de un mundo. Aparecerá junto a esa creación en
 el mundo compartido.
+
+## Una vista de visitante, y Avanzado
+
+La Vista del mundo se abre como vista de visitante: el nombre de la
+construcción y quién la hizo, lo que hay a su alrededor y lo que puede hacer
+aquí (**Construir aquí**, **Pasear aquí conmigo** y **Editar una copia**
+cuando la construcción no es suya). Las herramientas de las redes que hay
+detrás del Mundo esperan al final del panel, en **Mostrar herramientas
+avanzadas**:
+
+- las coordenadas sobre la vista, los campos **Ubicación** de Buscar y la
+  línea **Cámara · Edición** de la
+  cabecera (vea [Cámara y edición](#cámara-y-edición));
+- los grupos **Nombres de lugares**, **Construcciones declaradas** y
+  **Encuentros en el Mundo** de Cerca, con **Descubrimiento de Mundos
+  compartidos** dentro de los Encuentros;
+- **Mi Mundo compartido**, el panel de red de su publicación, y **Mover
+  colocación** a su lado;
+- la lista de Mundos que no se pudieron cargar y los diagnósticos de avatares.
+
+La elección se recuerda en este dispositivo y no cambia nada para nadie más.
+La brújula, los nombres de lugares de abajo, Buscar, Ubicaciones, el Mapa y
+Lugares, su avatar y Guardar y Publicar de la construcción siguen en ambas
+vistas. Las construcciones cuyos editores declaran un lugar cercano se siguen
+dibujando como fantasmas tenues; su lista está en Avanzado.
 
 ## Volar por el mundo
 
@@ -268,6 +293,8 @@ demás controles de navegación de la Vista del mundo.
 
 ### Encuentros en el Mundo — publicaciones y avatares que comparten sus pares
 
+(Se muestra con **Mostrar herramientas avanzadas** activado; vea [Una vista de visitante, y Avanzado](#una-vista-de-visitante-y-avanzado).)
+
 El grupo **Encuentros en el Mundo**, dentro de la sección Cerca de
 Explorar, es un pequeño mapa plano propio (aparte del Mapa del mundo que
 se describe más abajo) que ubica dos tipos de cosas de las que le
@@ -446,6 +473,8 @@ conectarse con alguien.
 
 ### Nombres de lugares cercanos — descubrir declaraciones de cualquier persona
 
+(Se muestra con **Mostrar herramientas avanzadas** activado; vea [Una vista de visitante, y Avanzado](#una-vista-de-visitante-y-avanzado).)
+
 **Nombres de lugares**, el cuarto grupo de Cerca, muestra declaraciones
 firmadas de nombres para las Regiones del Mundo que lo rodean en este
 momento, sin necesidad de ningún par conectado. Igual que Descubrir Mundo
@@ -481,6 +510,8 @@ declaraciones cercanas”. Consulte
 saber cómo se publica una declaración en primer lugar.
 
 ### Construcciones declaradas — las construcciones de otros, donde sus editores dicen que están
+
+(Se muestra con **Mostrar herramientas avanzadas** activado; vea [Una vista de visitante, y Avanzado](#una-vista-de-visitante-y-avanzado).)
 
 Mientras camina, ForkBuild descarga los Snapshots anunciados cerca de usted
 (consulte el camino automático de
@@ -595,6 +626,9 @@ Explorar/Ubicaciones, para una región, un hito o una estructura) y el panel
 vacío o una estructura colocada): la misma acción y el mismo botón, sin
 importar cómo llegó allí.
 
+Cuando el Mundo en el que está es la construcción de otra persona, la fila
+superior del panel también ofrece **Editar una copia** de toda ella.
+
 - Para un **hito**, una **región**, un **bloque** o **terreno vacío**, es
   el documento del Mundo al que pertenecen.
 - Para una **estructura colocada**, es el contenido propio de la
@@ -674,6 +708,9 @@ alrededor de una plaza abierta, con un panel que las enumera (ver
 árboles, ninguna semana. Las participaciones solo se muestran mientras
 estás en la plaza, y allí no se ofrece **Construir aquí**.
 
+La plaza abierta del centro está pavimentada, con un pozo, bancos y
+farolas, para que la plaza sea un lugar incluso en una semana sin entradas.
+
 ### Hitos — marcar un lugar que vale la pena recordar
 
 A diferencia de una estructura (un edificio colocado que construyó usted u
@@ -735,6 +772,8 @@ nombres.
 > publicó o conoció.
 
 ## Cámara y edición
+
+(Se muestra con **Mostrar herramientas avanzadas** activado; vea [Una vista de visitante, y Avanzado](#una-vista-de-visitante-y-avanzado).)
 
 El encabezado muestra dos cosas que realmente pueden ser distintas:
 
@@ -803,6 +842,7 @@ Si quiere, puede limitarlo a una **Ubicación**: complete X/Y/Z y un
 **Radio** (en unidades del Mundo) y la búsqueda solo devuelve resultados a
 esa distancia de ese punto como máximo. Deje Ubicación vacía para una
 búsqueda de texto simple.
+(Los campos de ubicación solo aparecen con **Mostrar herramientas avanzadas**.)
 
 Cada resultado muestra:
 
@@ -1090,6 +1130,8 @@ que cualquier otra bifurcación (consulte
 [Publicar y bifurcar](04-PublishingAndForking.md#bifurcar-hágalo-suyo)).
 
 ### Mi Mundo compartido — distribuir su propio Snapshot, sin necesidad de pares
+
+(Se muestra con **Mostrar herramientas avanzadas** activado; vea [Una vista de visitante, y Avanzado](#una-vista-de-visitante-y-avanzado).)
 
 Más abajo en el panel, debajo de Buscar y Avatar, hay un panel **Mi Mundo
 compartido**, que muestra el título y el autor de su mundo actual una vez

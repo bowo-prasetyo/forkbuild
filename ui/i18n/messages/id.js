@@ -1621,6 +1621,8 @@ export default Object.freeze({
     'worldView.places': 'Tempat',
     'worldView.search': 'Cari',
     'worldView.walk': 'Jalan',
+    'worldView.advancedTools': 'Tampilkan alat lanjutan',
+    'worldView.advancedToolsHint': 'Koordinat, pencarian lokasi, baris kamera dan penyuntingan, Perjumpaan Dunia, bangunan yang diklaim, nama tempat yang ditemukan, dan alat jaringan publikasimu. Diingat di perangkat ini.',
     'worldView.askTheResidentNextTo': 'Tanyakan kepada penghuni di dekat Anda apa yang ada di sekitar (T)',
     'worldView.avatar': 'Avatar',
     'worldView.showMyAvatar': 'Tampilkan Avatar Saya',

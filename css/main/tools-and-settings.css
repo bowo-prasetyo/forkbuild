@@ -497,6 +497,24 @@
     color: #707070;
 }
 
+/* World View's Advanced switch, last in the panel: a visitor's view until
+   this device chooses every tool. */
+.world-view-advanced-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    color: #c9c9c9;
+    margin-top: 0.8rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.world-view-advanced-hint {
+    margin-top: 0.2rem;
+    font-size: 0.75rem;
+}
+
 /* World Residents: Add Resident Here / Remove Resident, or the reason
    adding isn't possible where the avatar stands. */
 .world-view-residents {

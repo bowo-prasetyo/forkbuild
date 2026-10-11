@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c5211b73c764ada -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d70cb11661c7d2d4 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -24,6 +24,29 @@ menjadikan hewan yang dilepaskan sebagai hiasan Dunia dengan **G** (lihat
 Dari **Repositori**, klik **Jelajahi** pada karya mana pun — atau buka URL
 sebuah dunia secara langsung. Anda akan muncul di samping karya itu di
 dunia bersama.
+
+## Tampilan pengunjung, dan Lanjutan
+
+Tampilan Dunia terbuka sebagai tampilan pengunjung: nama bangunan dan
+siapa pembuatnya, apa yang ada di sekitar Anda, dan apa yang bisa Anda
+lakukan di sini (**Bangun di sini**, **Jalan di sini bersamaku**, dan **Edit
+Salinan** bila bangunan itu bukan milik Anda). Alat untuk jaringan di balik
+Dunia menunggu di bagian bawah panel, di bawah **Tampilkan alat lanjutan**:
+
+- koordinat di atas tampilan, kolom **Lokasi** di Cari, dan baris
+  **Kamera · Mengedit** di header
+  (lihat [Kamera vs. Mengedit](#kamera-vs-mengedit));
+- grup **Nama Tempat**, **Bangunan yang Diklaim**, dan **Perjumpaan Dunia**
+  di Sekitar, dengan **Penemuan Dunia Bersama** di dalam Perjumpaan;
+- **Dunia Bersama Saya**, panel jaringan publikasi Anda, dan **Pindahkan
+  Penempatan** di sebelahnya;
+- daftar Dunia yang gagal dimuat, dan diagnostik avatar.
+
+Pilihan ini diingat di perangkat ini dan tidak mengubah apa pun bagi orang
+lain. Kompas, nama tempat di bagian bawah, Cari, Lokasi, Peta dan Tempat,
+avatar Anda, serta Simpan dan Terbitkan untuk bangunan tetap ada di kedua
+tampilan. Bangunan yang penerbitnya mengklaim tempat di dekat Anda tetap
+digambar sebagai bayangan samar; daftarnya ada di Lanjutan.
 
 ## Terbang berkeliling
 
@@ -263,6 +286,8 @@ dipegang setiap kontrol navigasi lain di Tampilan Dunia.
 
 ### Perjumpaan Dunia — publikasi dan avatar yang dibagikan rekan Anda
 
+(Ditampilkan bila **Tampilkan alat lanjutan** aktif; lihat [Tampilan pengunjung, dan Lanjutan](#tampilan-pengunjung-dan-lanjutan).)
+
 Kelompok **Perjumpaan Dunia**, di dalam bagian Di Sekitar milik Jelajahi,
 adalah peta datar kecilnya sendiri — terpisah dari Peta Dunia yang
 dijelaskan di bawah — yang memetakan dua jenis hal yang telah diberitahukan
@@ -435,6 +460,8 @@ terhubung dengan seseorang.
 
 ### Nama Tempat di Sekitar — menemukan klaim dari siapa pun
 
+(Ditampilkan bila **Tampilkan alat lanjutan** aktif; lihat [Tampilan pengunjung, dan Lanjutan](#tampilan-pengunjung-dan-lanjutan).)
+
 **Nama Tempat**, kelompok keempat di Di Sekitar, menampilkan klaim
 penamaan tempat bertanda tangan untuk Wilayah Dunia yang saat ini ada di
 sekitar Anda — tanpa memerlukan rekan yang terhubung sama sekali. Seperti
@@ -470,6 +497,8 @@ Lihat [Memberi nama tempat](09-PublicationsAndEvidence.md#memberi-nama-tempat)
 untuk cara sebuah klaim diterbitkan sejak awal.
 
 ### Bangunan yang Diklaim — bangunan orang lain, di tempat yang dinyatakan penerbitnya
+
+(Ditampilkan bila **Tampilkan alat lanjutan** aktif; lihat [Tampilan pengunjung, dan Lanjutan](#tampilan-pengunjung-dan-lanjutan).)
 
 Saat Anda berjalan, ForkBuild mengunduh Snapshot yang diumumkan di dekat
 Anda (lihat jalur otomatis di
@@ -585,6 +614,9 @@ wilayah/penanda/struktur) dan panel **Pemeriksaan** (klik langsung di
 tampilan 3D, untuk balok, tanah kosong, atau struktur yang ditempatkan) —
 tindakan yang sama, tombol yang sama, dari mana pun Anda sampai di sana.
 
+Bila Dunia tempat Anda berada adalah bangunan orang lain, baris teratas
+panel juga menawarkan **Edit Salinan** untuk seluruhnya.
+
 - Untuk **penanda**, **wilayah**, **balok**, atau **tanah kosong**, itu
   adalah dokumen Dunia tempat mereka berada.
 - Untuk **struktur yang ditempatkan**, itu adalah konten struktur itu
@@ -667,6 +699,10 @@ yang tumbuh di sana, minggu apa pun. Karya-karya itu hanya ditampilkan
 selama kamu berada di alun-alun, dan **Bangun di sini** tidak ditawarkan di
 sana.
 
+Lapangan terbuka di tengah dilapisi batu, dengan sumur, bangku, dan
+lampu jalan, sehingga alun-alun tetap menjadi tempat bahkan pada minggu
+tanpa entri.
+
 ### Penanda — menandai tempat yang layak diingat
 
 Tidak seperti struktur (bangunan yang ditempatkan, dibangun oleh Anda atau
@@ -727,6 +763,8 @@ dengan semua hal lain yang dapat dilakukan sistem penamaan.
 > perangkat ini, di satu tempat.
 
 ## Kamera vs. Mengedit
+
+(Ditampilkan bila **Tampilkan alat lanjutan** aktif; lihat [Tampilan pengunjung, dan Lanjutan](#tampilan-pengunjung-dan-lanjutan).)
 
 Kepala panel menampilkan dua hal yang memang bisa berbeda:
 
@@ -795,6 +833,7 @@ Anda dapat mempersempitnya secara opsional ke sebuah **Lokasi**: isi X/Y/Z
 dan **Radius** (dalam Satuan Dunia) maka pencarian hanya mengembalikan hasil
 dalam jarak itu dari titik tersebut. Biarkan Lokasi kosong untuk pencarian
 teks biasa.
+(Kolom lokasi hanya muncul bila **Tampilkan alat lanjutan** aktif.)
 
 Setiap hasil menampilkan:
 
@@ -1088,6 +1127,8 @@ seperti fork lainnya (lihat
 [Penerbitan & Fork](04-PublishingAndForking.md#fork-jadikan-milik-anda)).
 
 ### Dunia Bersama Saya — mendistribusikan Snapshot Anda sendiri, tanpa rekan
+
+(Ditampilkan bila **Tampilkan alat lanjutan** aktif; lihat [Tampilan pengunjung, dan Lanjutan](#tampilan-pengunjung-dan-lanjutan).)
 
 Lebih ke bawah di panel, di bawah Cari dan Avatar, ada panel **Dunia
 Bersama Saya**, yang menampilkan judul dan pembuat dunia Anda saat ini

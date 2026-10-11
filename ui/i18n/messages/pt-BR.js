@@ -1625,6 +1625,8 @@ export default Object.freeze({
     'worldView.places': 'Lugares',
     'worldView.search': 'Buscar',
     'worldView.walk': 'Andar',
+    'worldView.advancedTools': 'Mostrar ferramentas avançadas',
+    'worldView.advancedToolsHint': 'Coordenadas, a busca por local, a linha de câmera e edição, Encontros no Mundo, construções reivindicadas, nomes de lugares descobertos e as ferramentas de rede da sua publicação. Lembrado neste dispositivo.',
     'worldView.askTheResidentNextTo': 'Pergunte ao morador ao seu lado o que há por perto (T)',
     'worldView.avatar': 'Avatar',
     'worldView.showMyAvatar': 'Mostrar meu avatar',

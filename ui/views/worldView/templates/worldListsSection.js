@@ -1,6 +1,6 @@
-// World view template: the unavailable, loaded and nearby World lists.
+// World view template: the unavailable (Advanced only), loaded and nearby World lists.
 // It renders in WorldView's scope, so it uses the names its setup() returns.
-export const worldListsSectionTemplate = `<div v-if="failedWorlds.length > 0" class="world-view-section world-view-section--error">
+export const worldListsSectionTemplate = `<div v-if="advanced && failedWorlds.length > 0" class="world-view-section world-view-section--error">
                     <h4>{{ t('worldView.unavailableWorlds', { count: failedWorlds.length }) }}</h4>
                     <ul class="world-list world-list--failed">
                         <li v-for="w in failedWorlds" :key="w.documentId" class="world-item world-item--failed">

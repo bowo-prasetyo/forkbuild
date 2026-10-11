@@ -925,6 +925,18 @@ ui/components/walkTogether/) keep the link while World View is open; the
 guest's page is ui/views/WalkTogetherJoinView.js, which asks for a log in
 and a Join click before connecting.
 
+**A visitor's view.** World View opens without its protocol tools: the
+coordinates, Search's Location fields, the Camera · Editing line, Nearby's
+Place Names, Claimed Builds and World Encounters, the Own Publication panel,
+unloadable Worlds and the avatar diagnostics render only while `advanced` is
+on in ui/views/WorldView.js. The choice is a per-device setting,
+application/settings/WorldViewDetailStore.js, provided as
+`worldViewDetailStore`; without one (an embed, a test) World View is a
+visitor's view. The automatic Snapshot cascade, place-name discovery and
+the claimed-build ghosts run either way; the World Encounters canvas, which
+does its own discovery, runs only while it is shown, as it already ran only
+in Explore mode.
+
 **Protocols.** Every application protocol shares each connection through
 peer/PeerMessageBus.js, which routes by a protocol id
 (`forkbuild:chat`, `forkbuild:avatar-presence`, …; the full list is in

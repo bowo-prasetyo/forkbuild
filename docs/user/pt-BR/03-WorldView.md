@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c5211b73c764ada -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d70cb11661c7d2d4 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -24,6 +24,30 @@ Mundo, como decoração, um animal solto, com **G** (veja
 No **Repositório**, clique em **Explorar** em qualquer criação — ou vá
 direto à URL de um mundo. Você aparece ao lado daquela criação no mundo
 compartilhado.
+
+## Uma visão de visitante, e Avançado
+
+A Visão do mundo abre como uma visão de visitante: o nome da construção e
+quem a fez, o que há ao seu redor e o que você pode fazer aqui (**Construir
+aqui**, **Passear aqui comigo** e **Editar uma cópia** quando a construção
+não é sua). As ferramentas das redes por trás do Mundo ficam no fim do
+painel, em **Mostrar ferramentas avançadas**:
+
+- as coordenadas sobre a visão, os campos **Local** da busca e a linha
+  **Câmera · Edição** do cabeçalho
+  (veja [Câmera e edição](#câmera-e-edição));
+- os grupos **Nomes de lugares**, **Construções declaradas** e **Encontros
+  no Mundo** de Por perto, com **Descoberta de Mundos compartilhados** dentro
+  dos Encontros;
+- **Meu Mundo compartilhado**, o painel de rede da sua publicação, e **Mover
+  posicionamento** ao lado;
+- a lista de Mundos que não puderam carregar e os diagnósticos de avatares.
+
+A escolha fica guardada neste dispositivo e não muda nada para mais
+ninguém. A bússola, os nomes de lugares embaixo, Buscar, Locais, o Mapa e
+Lugares, seu avatar e Salvar e Publicar da construção continuam nas duas
+visões. Construções cujos editores declaram um lugar por perto continuam
+desenhadas como fantasmas claros; a lista delas fica em Avançado.
 
 ## Voando por aí
 
@@ -254,6 +278,8 @@ da Visão do mundo já respeitam.
 
 ### Encontros no Mundo — publicações e avatares que seus pares estão compartilhando
 
+(Aparece com **Mostrar ferramentas avançadas** ligado; veja [Uma visão de visitante, e Avançado](#uma-visão-de-visitante-e-avançado).)
+
 O grupo **Encontros no Mundo**, dentro da seção Por perto de Explorar, é um
 pequeno mapa plano próprio — separado do Mapa do mundo descrito abaixo — que
 mostra dois tipos de coisa de que seus pares conectados falaram a você:
@@ -421,6 +447,8 @@ conectar a alguém.
 
 ### Nomes de lugares por perto — descobrindo declarações de qualquer pessoa
 
+(Aparece com **Mostrar ferramentas avançadas** ligado; veja [Uma visão de visitante, e Avançado](#uma-visão-de-visitante-e-avançado).)
+
 **Nomes de lugares**, o quarto grupo de Por perto, mostra declarações
 assinadas de nomes de lugares para as Regiões do Mundo ao seu redor — sem
 precisar de nenhum par conectado. Como Descobrir Mundo compartilhado acima,
@@ -453,6 +481,8 @@ por perto". Veja
 para saber como uma declaração é publicada.
 
 ### Construções declaradas — construções de outras pessoas, onde os editores dizem que elas ficam
+
+(Aparece com **Mostrar ferramentas avançadas** ligado; veja [Uma visão de visitante, e Avançado](#uma-visão-de-visitante-e-avançado).)
 
 Enquanto você caminha, o ForkBuild baixa os Snapshots anunciados perto de
 você (veja o caminho automático de
@@ -559,6 +589,9 @@ uma região/marco/estrutura) e o painel **Inspeção** (um clique direto na
 visualização 3D, para um bloco, o chão vazio ou uma estrutura posicionada)
 — a mesma ação, o mesmo botão, não importa por onde você chegou.
 
+Quando o Mundo em que você está é a construção de outra pessoa, a linha de
+cima do painel também oferece **Editar uma cópia** dela inteira.
+
 - Para um **marco**, uma **região**, um **bloco** ou o **chão vazio**, é o
   documento do Mundo a que eles pertencem.
 - Para uma **estrutura posicionada**, é o próprio conteúdo da estrutura —
@@ -639,6 +672,9 @@ uma praça aberta, com um painel que as lista (veja
 cresce lá, em semana nenhuma. As participações só aparecem enquanto você
 está na praça, e **Construir aqui** não é oferecido lá.
 
+A praça aberta no meio é calçada, com um poço, bancos e postes de luz,
+para que a praça seja um lugar mesmo numa semana sem participações.
+
 ### Marcos — marcando um lugar que vale lembrar
 
 Ao contrário de uma estrutura (uma construção posicionada que você ou outra
@@ -695,6 +731,8 @@ o resto que o sistema de nomes sabe fazer.
 > publicou ou de que ficou sabendo.
 
 ## Câmera e edição
+
+(Aparece com **Mostrar ferramentas avançadas** ligado; veja [Uma visão de visitante, e Avançado](#uma-visão-de-visitante-e-avançado).)
 
 O cabeçalho mostra duas coisas que podem de fato ser diferentes:
 
@@ -759,6 +797,7 @@ Se quiser, você pode restringir a um **Local**: preencha X/Y/Z e um **Raio**
 (em unidades do Mundo), e a busca só devolve resultados dentro dessa
 distância daquele ponto. Deixe Local em branco para uma busca simples por
 texto.
+(Os campos de local só aparecem com **Mostrar ferramentas avançadas** ligado.)
 
 Cada resultado mostra:
 
@@ -1040,6 +1079,8 @@ qualquer outra bifurcação (veja
 [Publicar e bifurcar](04-PublishingAndForking.md#bifurcar-torne-a-sua)).
 
 ### Meu Mundo compartilhado — distribuindo seu próprio Snapshot, sem precisar de pares
+
+(Aparece com **Mostrar ferramentas avançadas** ligado; veja [Uma visão de visitante, e Avançado](#uma-visão-de-visitante-e-avançado).)
 
 Mais abaixo no painel, depois de Buscar e Avatar, fica o painel **Meu Mundo
 compartilhado**, que mostra o título e o autor do seu mundo atual depois que

@@ -904,6 +904,24 @@ export default {
         // Walk here with me: a link that brings friends into this World.
         const walk = useWalkTogether({ ownPublication });
 
+        // A visitor's view unless this device chose Advanced
+        // (application/settings/WorldViewDetailStore.js): the coordinates,
+        // Search's location fields, the camera/editing line, World Encounters,
+        // claimed builds, discovered place names and the publication's network
+        // tools show only then.
+        const worldViewDetailStore = inject('worldViewDetailStore', null);
+        const advanced = ref(worldViewDetailStore ? worldViewDetailStore.isAdvanced() : false);
+        function setAdvanced(next) {
+            advanced.value = worldViewDetailStore ? worldViewDetailStore.setAdvanced(next) : next === true;
+        }
+
+        // Edit a Copy of the build this World is, when it isn't yours to change.
+        function editActiveCopy() {
+            const documentId = session.getActiveDocumentId() || route.params.documentId || null;
+            if (!documentId) return;
+            editInspectedCopy({ type: 'world', documentId, worldTitle: title.value, worldPosition: null });
+        }
+
         // Build here (core/BuildPlot.js): a new build in the Editor for the spot
         // the avatar stands on (else the camera's), in this World; publishing
         // it stands it here.
@@ -1364,6 +1382,7 @@ export default {
             adoptNearbyPlaceNamingClaim,
             goHome,
             buildHere,
+            advanced, setAdvanced, editActiveCopy,
             plaza, inPlaza, backToPlaza, focusExhibit, openExhibit, remixExhibit,
             openLocationsPanel,
             closeLocationsPanel,
@@ -1482,6 +1501,13 @@ export default {
                         @click="openWalkDialog"
                     >{{ t('walkTogether.button') }}</button>
                     <button
+                        v-if="activeDocumentInfo && !activeDocumentInfo.editable && !inPlaza"
+                        type="button"
+                        class="action-btn world-view-edit-copy"
+                        :title="t('publicationLink.editCopyHint')"
+                        @click="editActiveCopy"
+                    >{{ t('publicationLink.editCopy') }}</button>
+                    <button
                         v-if="activeDocumentInfo"
                         class="action-btn"
                         :title="t('worldView.landmarksRegionsAndEveryStructure')"
@@ -1539,6 +1565,7 @@ export default {
                     <WorldSearchPanel
                         :results="searchResults"
                         :catalog-empty="catalogEmpty"
+                        :show-location="advanced"
                         @search="performSearch"
                         @focus="focusWorld"
                     />
@@ -1549,6 +1576,17 @@ export default {
                 ${publicationSectionTemplate}
 
                 ${worldListsSectionTemplate}
+
+                <!-- A visitor's view by default; this device can choose every tool. -->
+                <label class="world-view-advanced-toggle">
+                    <input
+                        type="checkbox"
+                        :checked="advanced"
+                        @change="setAdvanced($event.target.checked)"
+                    />
+                    {{ t('worldView.advancedTools') }}
+                </label>
+                <p class="form-hint form-hint--neutral world-view-advanced-hint">{{ t('worldView.advancedToolsHint') }}</p>
               </div>
             </div>
             <div ref="viewport" class="world-viewport"></div>

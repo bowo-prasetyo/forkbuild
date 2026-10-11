@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c5211b73c764ada -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d70cb11661c7d2d4 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -26,6 +26,31 @@ einbringen (siehe
 Klicken Sie im **Repository** bei einer beliebigen Kreation auf
 **Erkunden** — oder rufen Sie direkt die URL einer Welt auf. Sie erscheinen
 neben dieser Kreation in der geteilten Welt.
+
+## Ein Besucherblick und Erweitert
+
+Die Weltansicht öffnet sich als Besucherblick: der Name des Baus und wer
+ihn gemacht hat, was um Sie herum ist und was Sie hier tun können (**Hier
+bauen**, **Mit mir hier spazieren** und **Eine Kopie bearbeiten**, wenn der
+Bau nicht Ihnen gehört). Die Werkzeuge für die Netzwerke hinter der Welt
+warten unten im Panel unter **Erweiterte Werkzeuge zeigen**:
+
+- die Koordinaten über der Ansicht, die Felder **Ort** der Suche und die
+  Zeile **Kamera · Bearbeitung** in
+  der Kopfzeile (siehe [Kamera und Bearbeitung](#kamera-und-bearbeitung));
+- die Gruppen **Ortsnamen**, **Beanspruchte Bauwerke** und **Begegnungen in
+  der Welt** unter In der Nähe, mit **Entdeckung Geteilter Welten** in den
+  Begegnungen;
+- **Meine Geteilte Welt**, das Netzwerk-Panel Ihrer Veröffentlichung, und
+  daneben **Platzierung verschieben**;
+- die Liste der Welten, die nicht geladen werden konnten, und die
+  Avatar-Diagnose.
+
+Die Wahl wird auf diesem Gerät gespeichert und ändert für niemanden sonst
+etwas. Kompass, Ortsnamen am unteren Rand, Suche, Orte, Karte und Plätze,
+Ihr Avatar sowie Speichern und Veröffentlichen des Baus bleiben in beiden
+Ansichten. Bauwerke, deren Herausgeber einen Platz in der Nähe beanspruchen,
+werden weiter als blasse Geister gezeigt; ihre Liste liegt unter Erweitert.
 
 ## Herumfliegen
 
@@ -272,6 +297,8 @@ Navigationselement der Weltansicht bereits einhält.
 
 ### Begegnungen in der Welt — Veröffentlichungen und Avatare, die Ihre Peers teilen
 
+(Zu sehen, wenn **Erweiterte Werkzeuge zeigen** an ist; siehe [Ein Besucherblick und Erweitert](#ein-besucherblick-und-erweitert).)
+
 Die Gruppe **Begegnungen in der Welt** im Abschnitt In der Nähe von
 Erkunden ist eine eigene kleine flache Karte — getrennt von der unten
 beschriebenen Weltkarte —, die zweierlei einzeichnet, wovon Ihnen Ihre
@@ -449,6 +476,8 @@ steht unter
 
 ### Ortsnamen in der Nähe — Ansprüche von jedem entdecken
 
+(Zu sehen, wenn **Erweiterte Werkzeuge zeigen** an ist; siehe [Ein Besucherblick und Erweitert](#ein-besucherblick-und-erweitert).)
+
 **Ortsnamen**, die vierte Gruppe unter In der Nähe, zeigt signierte
 Ortsnamensansprüche für die Regionen der Welt, die gerade um Sie herum
 liegen — ganz ohne verbundenen Peer. Wie Geteilte Welt entdecken oben
@@ -482,6 +511,8 @@ behandelt. Wie ein Anspruch überhaupt veröffentlicht wird, steht unter
 [Einen Ort benennen](09-PublicationsAndEvidence.md#einen-ort-benennen).
 
 ### Beanspruchte Bauwerke — die Bauwerke anderer, dort, wo ihre Herausgeber sie hinstellen
+
+(Zu sehen, wenn **Erweiterte Werkzeuge zeigen** an ist; siehe [Ein Besucherblick und Erweitert](#ein-besucherblick-und-erweitert).)
 
 Während Sie gehen, lädt ForkBuild Snapshots herunter, die in Ihrer Nähe
 angekündigt sind (siehe den automatischen Weg unter
@@ -598,6 +629,9 @@ direkter Klick in die 3D-Ansicht, für einen Stein, bloßen Boden oder eine
 platzierte Struktur) — dieselbe Aktion, dieselbe Schaltfläche, egal auf
 welchem Weg Sie dorthin gekommen sind.
 
+Ist die Welt, in der Sie sind, der Bau eines anderen, bietet die oberste
+Zeile des Panels auch **Eine Kopie bearbeiten** für den ganzen Bau an.
+
 - Bei einem **Wahrzeichen**, einer **Region**, einem **Stein** oder
   **bloßem Boden** ist es das Weltdokument, zu dem sie gehören.
 - Bei einer **platzierten Struktur** ist es der eigene Inhalt der
@@ -682,6 +716,9 @@ offenen Platz stehen, mit einem Panel, das sie auflistet (siehe
 keiner Woche Bäume. Die Beiträge werden nur gezeigt, solange du auf dem
 Platz bist, und **Hier bauen** wird dort nicht angeboten.
 
+Der offene Platz in der Mitte ist gepflastert, mit einem Brunnen, Bänken
+und Laternen, damit der Platz auch in einer Woche ohne Einsendungen ein Ort ist.
+
 ### Wahrzeichen — einen Ort markieren, den man sich merken sollte
 
 Anders als eine Struktur (ein platziertes Gebäude, das Sie oder jemand
@@ -745,6 +782,8 @@ ich es?“ — nie mit allem anderen konkurriert, was das Namenssystem kann.
 > hat, an einem Ort sehen möchten.
 
 ## Kamera und Bearbeitung
+
+(Zu sehen, wenn **Erweiterte Werkzeuge zeigen** an ist; siehe [Ein Besucherblick und Erweitert](#ein-besucherblick-und-erweitert).)
 
 Die Kopfzeile zeigt zwei Dinge, die sich wirklich unterscheiden können:
 
@@ -816,6 +855,7 @@ Optional können Sie die Suche auf einen **Ort** eingrenzen: Füllen Sie
 X/Y/Z und einen **Radius** (in Welteinheiten) aus, und die Suche liefert
 nur Ergebnisse innerhalb dieser Entfernung um diesen Punkt. Lassen Sie Ort
 leer für eine reine Textsuche.
+(Die Felder für den Ort gibt es nur mit **Erweiterte Werkzeuge zeigen**.)
 
 Jedes Ergebnis zeigt:
 
@@ -1116,6 +1156,8 @@ Lizenzregeln wie für jeden anderen Fork (siehe
 [Veröffentlichen & Forken](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen)).
 
 ### Meine Geteilte Welt — Ihren eigenen Snapshot verteilen, ohne Peers
+
+(Zu sehen, wenn **Erweiterte Werkzeuge zeigen** an ist; siehe [Ein Besucherblick und Erweitert](#ein-besucherblick-und-erweitert).)
 
 Weiter unten im Feld, unter Suche und Avatar, sitzt ein Feld **Meine
 Geteilte Welt**, das Titel und Autor Ihrer aktuellen Welt zeigt, sobald sie

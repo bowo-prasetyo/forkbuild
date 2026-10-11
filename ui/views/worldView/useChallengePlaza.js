@@ -1,6 +1,7 @@
 import { computed, inject, ref } from 'vue';
 import { challengeById } from '../../../core/BuildChallenge.js';
 import { PLAZA_CENTER, PLAZA_MAX_EXHIBITS, layoutPlazaExhibits, plazaEntryOrder } from '../../../core/ChallengePlaza.js';
+import { plazaSquareWorld } from '../../../core/library/PlazaSquare.js';
 import { CreateChallengeEntriesUseCase } from '../../../application/challenge/CreateChallengeEntriesUseCase.js';
 import { OpenPublicationLinkOutcome } from '../../../application/publication/OpenPublicationLink.js';
 import { readSharedBuildDocument } from '../../../application/publication/sharing/ReadSharedBuild.js';
@@ -15,7 +16,11 @@ import { t } from '../../i18n/i18n.js';
 // (application/publication/OpenPublicationLink.js); an entry whose publisher
 // chose "Only I may place it" is left to the challenge page, since standing
 // it here would be placing it. Exhibits are never placements: they are gone
-// when the visitor leaves.
+// when the visitor leaves. The plaza's own square (core/library/PlazaSquare.js)
+// stands the same way, entries or none.
+// Exhibit keys are Document ids; this one can't be.
+const PLAZA_SQUARE_KEY = 'plaza:square';
+
 export function useChallengePlaza({ route, router, session, refreshSpatialUI }) {
     const challengeId = route.name === 'plaza' ? String(route.params.challengeId || '') : null;
     const challenge = challengeId ? challengeById(challengeId) : null;
@@ -157,6 +162,7 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI }) 
     async function enterPlaza() {
         if (!challenge) return false;
         active = true;
+        session.showPlazaExhibit(PLAZA_SQUARE_KEY, plazaSquareWorld(), PLAZA_CENTER);
         session.visitPosition(PLAZA_CENTER);
         funnel?.visitedPlaza();
         await load();
@@ -168,6 +174,7 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI }) 
 
     function leavePlaza() {
         active = false;
+        if (challenge) session.hidePlazaExhibit(PLAZA_SQUARE_KEY);
         for (const key of Array.from(shown.keys())) session.hidePlazaExhibit(key);
         shown.clear();
     }
