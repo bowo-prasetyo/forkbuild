@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: db53c936c475dddc -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
 [English](../11-EvidenceAndStorage.md) · **Deutsch** · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
+
+> **Erweitert.** Zum Bauen, Teilen, Remixen und Herumlaufen mit Freunden
+> brauchen Sie dieses Kapitel nicht: Das steht in den
+> [Spielen-Kapiteln](README.md#spielen-der-reihe-nach-lesen). Lesen Sie weiter, wenn Sie wissen
+> möchten, was darunter läuft.
 
 > **Größtenteils experimentell.** Das Speichern von Inhalten auf IPFS oder
 > Arweave über den Block **Verteilung → Inhalt** einer Karte
@@ -386,7 +391,7 @@ gemined wurde, mit denselben drei Ergebnissen wie beim
 [Abgleich von Bitcoin-Ankern](#abgleich-von-bitcoin-ankern). Jede Prüfung
 wird zu **Bestätigungsverlauf zeigen** dieses Sendevorgangs hinzugefügt.
 Diese Liste wird beim Neuladen geleert, aber jedes Ergebnis wird auch im
-[Beobachtungsarchiv der Veröffentlichungen](12-ArchiveAndLeaderboards.md#das-beobachtungsarchiv-der-veröffentlichungen)
+[Beobachtungsarchiv der Veröffentlichungen](12-ArchiveAndAchievements.md#das-beobachtungsarchiv-der-veröffentlichungen)
 aufbewahrt.
 
 ### Was der Ablauf nicht tut
@@ -532,7 +537,7 @@ der Base-Transaktion**, ob sie in einem Block ist:
 
 **Transaktion erneut beobachten** ergänzt **Beobachtungsverlauf zeigen**.
 Diese Liste wird beim Neuladen geleert, aber jede Beobachtung wird auch im
-[Beobachtungsarchiv der Veröffentlichungen](12-ArchiveAndLeaderboards.md#das-beobachtungsarchiv-der-veröffentlichungen)
+[Beobachtungsarchiv der Veröffentlichungen](12-ArchiveAndAchievements.md#das-beobachtungsarchiv-der-veröffentlichungen)
 aufbewahrt.
 
 ### Base-Ankerveröffentlichungen
@@ -687,7 +692,7 @@ signierter Anspruch, den andere entdecken können: Es ist ein Nachweis, dass
 ein Anbieter diese Bytes angenommen hat. Die angezeigten Ergebnisse werden
 beim Neuladen geleert, aber jede erfolgreiche Veröffentlichung und jede
 Überprüfung wird auch im
-[Beobachtungsarchiv der Veröffentlichungen](12-ArchiveAndLeaderboards.md#das-beobachtungsarchiv-der-veröffentlichungen)
+[Beobachtungsarchiv der Veröffentlichungen](12-ArchiveAndAchievements.md#das-beobachtungsarchiv-der-veröffentlichungen)
 aufbewahrt.
 
 ### Einen Anbieter für entferntes Pinning konfigurieren

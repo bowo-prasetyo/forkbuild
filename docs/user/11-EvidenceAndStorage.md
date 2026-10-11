@@ -4,6 +4,10 @@
 **English** · [Deutsch](de/11-EvidenceAndStorage.md) · [Español](es/11-EvidenceAndStorage.md) · [Français](fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](id/11-EvidenceAndStorage.md) · [日本語](ja/11-EvidenceAndStorage.md) · [한국어](ko/11-EvidenceAndStorage.md) · [Português (Brasil)](pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
 
+> **Advanced.** You don't need this chapter to build, share, remix or walk
+> around with friends: the [Play chapters](README.md#play-read-in-order) cover that. Read on
+> when you want to know what runs underneath.
+
 > **Mostly experimental.** Storing content on IPFS or Arweave from a
 > card's **Distribution → Content** block
 > ([Creating a placement](#creating-a-placement) and
@@ -345,7 +349,7 @@ mined, with the same three results as
 [Bitcoin anchor reconciliation](#bitcoin-anchor-reconciliation). Each check
 is added to this broadcast's **Show Confirmation History**. That list is
 cleared on reload, but every result is also kept in the
-[Publication Observation Archive](12-ArchiveAndLeaderboards.md#the-publication-observation-archive).
+[Publication Observation Archive](12-ArchiveAndAchievements.md#the-publication-observation-archive).
 
 ### What the pipeline doesn't do
 
@@ -483,7 +487,7 @@ Transaction** checks whether it's in a block:
 
 **Observe Transaction Again** adds to **Show Observation History**. That
 list is cleared on reload, but every observation is also kept in the
-[Publication Observation Archive](12-ArchiveAndLeaderboards.md#the-publication-observation-archive).
+[Publication Observation Archive](12-ArchiveAndAchievements.md#the-publication-observation-archive).
 
 ### Base Anchor Publications
 
@@ -620,7 +624,7 @@ Unlike a placement,
 the result isn't a signed claim others can discover: it's a record that a
 provider accepted these bytes. The on-screen results are cleared on reload,
 but every successful publish and every verification is also kept in the
-[Publication Observation Archive](12-ArchiveAndLeaderboards.md#the-publication-observation-archive).
+[Publication Observation Archive](12-ArchiveAndAchievements.md#the-publication-observation-archive).
 
 ### Configuring a remote pinning provider
 

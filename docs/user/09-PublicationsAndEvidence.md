@@ -4,6 +4,10 @@
 **English** · [Deutsch](de/09-PublicationsAndEvidence.md) · [Español](es/09-PublicationsAndEvidence.md) · [Français](fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](id/09-PublicationsAndEvidence.md) · [日本語](ja/09-PublicationsAndEvidence.md) · [한국어](ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
 
+> **Advanced.** You don't need this chapter to build, share, remix or walk
+> around with friends: the [Play chapters](README.md#play-read-in-order) cover that. Read on
+> when you want to know what runs underneath.
+
 > **Partly experimental.** The Publications page is a regular feature: its
 > list and statuses, removing publications that can't be used, announcing on
 > Nostr or Arweave, storing on IPFS or Arweave, anchoring on Arweave, and
@@ -14,7 +18,7 @@
 > **Experimental** badge: every kind of anchoring but Arweave, the wallets
 > and their Bitcoin and Base steps, Steem, Blurt, remote IPFS pinning, and
 > the whole **Wallet & Archive Tools** panel. Guides
-> [11](11-EvidenceAndStorage.md) and [12](12-ArchiveAndLeaderboards.md) say
+> [11](11-EvidenceAndStorage.md) and [12](12-ArchiveAndAchievements.md) say
 > which of their sections are Experimental. Building, saving, publishing to
 > Explore, forking, identities and peers don't depend on any of it.
 
@@ -35,7 +39,7 @@ X", and about the optional depth you can add to a claim:
 - **[Evidence & Storage](11-EvidenceAndStorage.md)** — external evidence
   (Bitcoin, Base, Arweave, Steem, Blurt), the wallet pipelines, Snapshot
   Placements, IPFS publishing, Steem and Blurt.
-- **[Archive & Achievements](12-ArchiveAndLeaderboards.md)** — the durable
+- **[Archive & Achievements](12-ArchiveAndAchievements.md)** — the durable
   observation archive, references and achievements.
 
 ## Two meanings of "publish"
@@ -167,7 +171,7 @@ device has cataloged, yours or a peer's. At the bottom, the folded **Wallet
 & Archive Tools** panel holds page-wide tools in three tabs:
 **Blockchain Anchoring**, **Archive Tools** and **References &
 Achievements** (see guides [11](11-EvidenceAndStorage.md) and
-[12](12-ArchiveAndLeaderboards.md)). The link to it in the page's intro, and
+[12](12-ArchiveAndAchievements.md)). The link to it in the page's intro, and
 in any step that needs a wallet observed first, opens it for you.
 
 The panel is listed only while **Show experimental tools** is on in
@@ -210,7 +214,7 @@ Below that, two folded sections:
 | **Snapshot** | [Local Snapshot](#local-snapshot): what this device holds, and how to get it. |
 | **Decentralization & Evidence** | [Decentralization](#decentralization-at-a-glance), the [evidence list](11-EvidenceAndStorage.md#the-evidence-list), and the Bitcoin and Base transaction steps (Experimental). |
 | **Placements & IPFS** | The [Snapshot Placements](11-EvidenceAndStorage.md#snapshot-placements) list and [IPFS Publishing](11-EvidenceAndStorage.md#ipfs-publishing) (Experimental). |
-| **History** | **Show Cross-Domain Timeline**: every IPFS, Bitcoin and Base observation this device recorded for this publication, in time order, from the [Observation Archive](12-ArchiveAndLeaderboards.md#the-publication-observation-archive), so it's kept across visits; or a note that nothing is recorded yet. |
+| **History** | **Show Cross-Domain Timeline**: every IPFS, Bitcoin and Base observation this device recorded for this publication, in time order, from the [Observation Archive](12-ArchiveAndAchievements.md#the-publication-observation-archive), so it's kept across visits; or a note that nothing is recorded yet. |
 
 ### Status meanings
 
@@ -470,7 +474,7 @@ progress are not.
 | Publication References | Which cards and rows you had open |
 
 After a reload, a pipeline's or IPFS publish's results are still visible in
-the [Observation Archive](12-ArchiveAndLeaderboards.md#the-publication-observation-archive),
+the [Observation Archive](12-ArchiveAndAchievements.md#the-publication-observation-archive),
 a record's lifecycle, or (for Bitcoin) Historical Bitcoin Anchor Evidence.
 Reconnect the wallet, or reconfigure the pinning provider, to continue.
 

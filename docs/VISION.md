@@ -10,37 +10,53 @@ device, is signed with a key you hold, and can be published to open
 networks that no single company runs. [Pillars.md](Pillars.md) turns this
 into the test every feature has to pass.
 
-## How it's built
+## How it's built, for contributors
 
-Under the game is an open construction protocol, so that builds outlive
-any one copy of the app, any one server and any one network.
+The game comes first. Every change answers to [Pillars.md](Pillars.md): which
+pillar it serves and how a player would notice. The code underneath exists
+so that the game's promises hold, and is not a product of its own.
 
-ForkBuild is architected as an engine first: a clean domain model (core/), an event-driven core that never depends on rendering or UI, interchangeable rendering and publishing adapters, and a protocol designed for decentralized collaborative world-building. The browser editor (ui/) is the engine's first client, not the engine itself — every feature should be built asking "does this belong in the engine, or only in this client?"
+**Why it's built this way.** A build should outlive any one copy of the app,
+any one server and any one network. So a build is a signed document a player
+keeps on their own device, in an open format ([Protocol.md](Protocol.md)),
+that can be shared as a link, sent straight to friends, or published to open
+networks, and that any copy of ForkBuild can open, check and remix with its
+maker's credit. Nothing depends on a ForkBuild server being up.
 
-The engine's aspiration is Git for 3D models. Every creation has a history, can be forked, and can evolve, so the game is never a single-player toy: it is the first client of an open construction ecosystem. The engine serves the game's pillars; it is not a product in its own right. First-class entity identity (UUIDs on World/Building/Brick, never array indices or sequential numbers), an aggregate root that mediates every mutation, and an event-driven core are the concrete architectural choices that make that aspiration possible rather than aspirational.
+**The layers** ([Architecture.md](Architecture.md) has the detail):
 
-As of 0.1.46, this aspiration has three concrete navigation modes:
+- `core/` is the game's rules and data, pure: worlds, buildings, bricks,
+  documents, their lineage, terrain, the weekly challenge, residents. No
+  Three.js, Vue or browser APIs, so it runs and is tested anywhere.
+- `application/` is what a player can do (place a brick, publish, remix,
+  walk with a friend), each a use case over `core/`.
+- `renderer/` draws it with Three.js; `ui/` is the browser app in Vue.
+- Around them sit the adapters (storage, networks, peers), each behind a
+  small interface, so a network can be added or switched off without the
+  game noticing.
 
-- **Repository View** — the "GitHub" of 3D models: browse, search, fork.
-- **Author View** — the "profile": explore a creator's lineage.
-- **World View** — the "Minecraft": walk through shared spaces and
-  inspect bricks, then open an independent copy in the Editor the
-  moment you want to build.
+`tests/LayerBoundaries.test.js` keeps those imports pointing one way.
 
-All three are views over the same protocol data, not separate systems.
+**What a contributor keeps to** (the full list is
+[Principles.md](Principles.md) and [CodingConventions.md](CodingConventions.md)):
 
-As of 0.1.46, building was a first-class, direct experience identically
-in the Editor and the World View: an interactive transform gizmo, live
-drag preview, one undoable operation per commit — the classic editing
-kernel (select, transform, group, clipboard, history, replay) complete
-under real pointer interaction in both surfaces. As of 0.5.9, that
-parity is deliberately reversed: World View observes and navigates,
-the Editor alone mutates and builds — see docs/Principles.md, "World
-View Observes and Navigates; Editor Mutates and Builds (0.5.9)." World
-Region/Landmark naming (annotating a place you're standing at) is the
-one exception, kept in World View because it was never brick-level
-construction in the first place. World Animal Decorations (0.9.702),
-which bake an animal you released into the World you're standing in,
-follow the same reasoning. Vehicles, inventory and caught animals are the
-avatar's own runtime state, never document edits. See
-docs/CapabilityMatrix.md.
+- **The Editor builds; World View is for looking, walking and meeting.**
+  Building happens in the Editor, and World View hands a player there with
+  Build here or Edit a Copy. Naming places and decorating with an animal
+  are the exceptions, since they annotate rather than build.
+- **Every change to a build goes through its World** (the aggregate root),
+  as an undoable command that publishes an event. Bricks, buildings and
+  worlds have their own ids, never positions in a list.
+- **A remix remembers where it came from**, so a build's family tree can
+  always be drawn and its maker always credited.
+- **Infrastructure stays out of sight.** Networks, anchoring and wallets
+  live under Advanced, each network is a reader everyone runs plus a writer
+  a player switches on, and no new network joins until the building
+  numbers in Pillars.md say so.
+- **Player's words, everywhere a player reads:** build, remix, Publish,
+  structure (Pillars.md, "Words").
+
+**Getting started:** [CONTRIBUTING.md](../CONTRIBUTING.md) covers setting up,
+the tests and what a change needs; [DeveloperFAQ.md](DeveloperFAQ.md)
+answers the usual first questions; the [roadmap](Roadmap.md) records why
+each change was made.

@@ -1,8 +1,12 @@
 # 12 — Archive & Achievements
 
 <!-- languages -->
-**English** · [Deutsch](de/12-ArchiveAndLeaderboards.md) · [Español](es/12-ArchiveAndLeaderboards.md) · [Français](fr/12-ArchiveAndLeaderboards.md) · [Bahasa Indonesia](id/12-ArchiveAndLeaderboards.md) · [日本語](ja/12-ArchiveAndLeaderboards.md) · [한국어](ko/12-ArchiveAndLeaderboards.md) · [Português (Brasil)](pt-BR/12-ArchiveAndLeaderboards.md)
+**English** · [Deutsch](de/12-ArchiveAndAchievements.md) · [Español](es/12-ArchiveAndAchievements.md) · [Français](fr/12-ArchiveAndAchievements.md) · [Bahasa Indonesia](id/12-ArchiveAndAchievements.md) · [日本語](ja/12-ArchiveAndAchievements.md) · [한국어](ko/12-ArchiveAndAchievements.md) · [Português (Brasil)](pt-BR/12-ArchiveAndAchievements.md)
 <!-- /languages -->
+
+> **Advanced.** You don't need this chapter to build, share, remix or walk
+> around with friends: the [Play chapters](README.md#play-read-in-order) cover that. Read on
+> when you want to know what runs underneath.
 
 > **Experimental.** Everything here may change or be removed in a later
 > version, and what it produces may not carry over. On the Publications
