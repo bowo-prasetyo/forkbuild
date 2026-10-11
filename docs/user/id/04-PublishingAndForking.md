@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 98b7f4c2be018dd9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c03b4c493f0a5c98 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -6,7 +6,7 @@
 <!-- /languages -->
 
 Inilah inti ForkBuild. **Menerbitkan** membagikan karya Anda kepada dunia.
-**Fork** memungkinkan siapa pun menyalin sebuah karya dan
+**Remix** memungkinkan siapa pun menyalin sebuah karya dan
 mengembangkannya — dengan seluruh riwayatnya tetap terjaga.
 
 ## Menerbitkan karya Anda
@@ -150,7 +150,7 @@ ForkBuild, juga dihitung secara anonim.
 ## Mendistribusikan langsung dari Editor
 
 Begitu **Terbitkan** berhasil, Editor menampilkan pemberitahuan kecil di
-tempat itu juga — "Dunia Bersama berhasil diterbitkan." — dengan tombol
+tempat itu juga — "Diterbitkan! Bagikan tautannya, atau gunakan Distribusikan untuk mengirimnya ke jaringan terbuka agar siapa pun bisa menemukannya." — dengan tombol
 **Distribusikan** di sampingnya, dan **Tutup** untuk menghilangkannya tanpa
 melakukan apa pun. Mengeklik **Distribusikan** membuka dialog
 **Distribusikan** alih-alih memenuhi lapisan itu dengan pemilih dan hasil
@@ -311,7 +311,7 @@ mereka.
 ## Mengedit karya yang sudah diterbitkan
 
 Karya yang sudah diterbitkan **tidak dapat diubah** — tidak pernah bisa
-berubah setelahnya. Untuk mengembangkannya, **Fork** (di bawah), atau
+berubah setelahnya. Untuk mengembangkannya, **Remix** (di bawah), atau
 gunakan **Edit Salinan** di Tampilan Dunia. Di Tampilan Dunia, membuat
 perubahan pertama Anda pada dunia yang diterbitkan — metadatanya, penanda
 atau nama wilayah, atau hiasan hewan — otomatis membuat salinan Anda
@@ -400,7 +400,7 @@ Setiap karya menawarkan tiga tindakan:
 | Tombol | Fungsinya |
 |---|---|
 | **Buka** | Memuat dokumen itu ke Editor |
-| **Fork** | Menyalinnya menjadi karya Anda sendiri yang dapat diedit |
+| **Remix** | Menyalinnya menjadi karya Anda sendiri yang dapat diedit |
 | **Jelajahi** | Terbang ke sana di Tampilan Dunia |
 
 (Tombol **Lanjutkan Menjelajah** milik **Dunia Saya** — lihat
@@ -431,7 +431,7 @@ tidak berbeda dengan hal lain di sini.
 
 ## Fork: jadikan milik Anda
 
-**Fork** adalah yang membuat ForkBuild istimewa. Saat Anda mem-fork sebuah
+**Remix** adalah yang membuat ForkBuild istimewa. Saat Anda mem-fork sebuah
 karya:
 
 - Anda mendapat **salinan baru yang mandiri** untuk diedit dengan bebas.
@@ -455,7 +455,7 @@ di atas.)
 ### Cara mem-fork
 
 1. Temukan sebuah karya di **Repositori** (atau di Tampilan Dunia).
-2. Klik **Fork**.
+2. Klik **Remix**.
 3. Salinannya terbuka di Editor, berjudul *"Fork dari &lt;nama asli&gt;"*.
 4. Kembangkan, lalu simpan dan terbitkan sebagai milik Anda.
 

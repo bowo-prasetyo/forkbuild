@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 98b7f4c2be018dd9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c03b4c493f0a5c98 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -6,7 +6,7 @@
 <!-- /languages -->
 
 C’est le cœur de ForkBuild. **Publier** partage votre création avec le
-monde. **Forker** permet à n’importe qui de copier une création et de la
+monde. **Remixer** permet à n’importe qui de copier une création et de la
 faire évoluer — en conservant tout l’historique.
 
 ## Publier votre création
@@ -154,7 +154,7 @@ ForkBuild, sont aussi comptés anonymement.
 ## Distribuer directement depuis l’Éditeur
 
 Dès que **Publier** réussit, l’Éditeur affiche un petit avis sur place —
-« Monde partagé publié avec succès. » — avec un bouton **Distribuer** à
+« Publiée ! Partagez son lien, ou utilisez Distribuer pour l’envoyer sur les réseaux ouverts, afin que tout le monde puisse la trouver. » — avec un bouton **Distribuer** à
 côté, et **Ignorer** pour le faire disparaître sans rien faire. Cliquer
 sur **Distribuer** ouvre une boîte de dialogue **Distribuer** plutôt que
 d’encombrer l’écran de sélecteurs et de résultats dont vous n’avez besoin
@@ -408,7 +408,7 @@ Chaque création propose trois actions :
 | Bouton | Ce qu’il fait |
 |---|---|
 | **Ouvrir** | Charger ce document dans l’Éditeur |
-| **Forker** | Le copier dans votre propre création modifiable |
+| **Remixer** | Le copier dans votre propre création modifiable |
 | **Explorer** | Aller le voir dans la Vue du Monde |
 
 (Le bouton **Continuer l’exploration** de **Mes mondes** — voir
@@ -437,7 +437,7 @@ rechargement. Elle n’est affichée d’aucune façon différente du reste.
 
 ## Forker : faites-le vôtre
 
-**Forker** est ce qui rend ForkBuild unique. Quand vous forkez une
+**Remixer** est ce qui rend ForkBuild unique. Quand vous forkez une
 création :
 
 - Vous obtenez une **toute nouvelle copie indépendante**, à modifier
@@ -464,7 +464,7 @@ ci-dessus.)
 ### Comment forker
 
 1. Trouvez une création dans le **Dépôt** (ou dans la Vue du Monde).
-2. Cliquez sur **Forker**.
+2. Cliquez sur **Remixer**.
 3. La copie s’ouvre dans l’Éditeur, intitulée *« Fork de &lt;nom
    d’origine&gt; »*.
 4. Développez-la, puis enregistrez-la et publiez-la comme la vôtre.

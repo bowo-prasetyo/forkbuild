@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 98b7f4c2be018dd9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c03b4c493f0a5c98 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -6,7 +6,7 @@
 <!-- /languages -->
 
 Das ist das Herz von ForkBuild. **Veröffentlichen** teilt Ihre Kreation mit
-der Welt. **Forken** erlaubt jedem, eine Kreation zu kopieren und
+der Welt. **Remixen** erlaubt jedem, eine Kreation zu kopieren und
 weiterzuentwickeln — wobei der ganze Verlauf erhalten bleibt.
 
 ## Ihre Kreation veröffentlichen
@@ -150,7 +150,7 @@ ForkBuild werden anonym gezählt.
 ## Direkt aus dem Editor verteilen
 
 Sobald **Veröffentlichen** gelingt, zeigt der Editor genau dort einen
-kleinen Hinweis — „Geteilte Welt erfolgreich veröffentlicht.“ — mit einer
+kleinen Hinweis — „Veröffentlicht! Teilen Sie den Link, oder schicken Sie es mit ‚Verteilen‘ in die offenen Netzwerke, damit alle es finden.“ — mit einer
 Schaltfläche **Verteilen** daneben und **Ausblenden**, um ihn zu
 schließen, ohne etwas zu tun. Ein Klick auf **Verteilen** öffnet einen
 Dialog **Verteilen**, statt die Einblendung mit Auswahlfeldern und
@@ -403,7 +403,7 @@ Jede Kreation bietet drei Aktionen:
 | Schaltfläche | Was sie tut |
 |---|---|
 | **Öffnen** | Das Dokument in den Editor laden |
-| **Forken** | Es in Ihre eigene bearbeitbare Kreation kopieren |
+| **Remixen** | Es in Ihre eigene bearbeitbare Kreation kopieren |
 | **Erkunden** | In der Weltansicht dorthin fliegen |
 
 (Die eigene Schaltfläche **Weiter erkunden** unter **Meine Welten** —
@@ -436,7 +436,7 @@ angezeigt als alles andere hier.
 
 ## Forken: machen Sie es zu Ihrem eigenen
 
-**Forken** macht ForkBuild besonders. Wenn Sie eine Kreation forken:
+**Remixen** macht ForkBuild besonders. Wenn Sie eine Kreation forken:
 
 - Erhalten Sie eine **ganz neue, unabhängige Kopie**, die Sie frei
   bearbeiten können.
@@ -461,7 +461,7 @@ oben.)
 ### So forken Sie
 
 1. Finden Sie eine Kreation im **Repository** (oder in der Weltansicht).
-2. Klicken Sie auf **Forken**.
+2. Klicken Sie auf **Remixen**.
 3. Die Kopie öffnet sich im Editor, mit dem Titel *„Fork von
    &lt;ursprünglicher Name&gt;“*.
 4. Bauen Sie darauf auf, speichern und veröffentlichen Sie sie dann als

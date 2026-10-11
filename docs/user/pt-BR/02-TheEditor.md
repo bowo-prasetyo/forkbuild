@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 91fd6bed6af1eba8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9eb8c2a710f0b80 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -560,7 +560,7 @@ seu primeiro clique ou tecla, como os navegadores exigem.
   ir direto a um pelo nome. Cada entrada também tem um botão **Posicionar** —
   veja [Instâncias de estrutura](#instâncias-de-estrutura-uma-referência-viva)
   — para adicioná-la ao seu documento *atual* em vez de substituí-lo.
-  **Exportar todos os documentos**, no fim, baixa todos os documentos salvos
+  **Exportar todas as construções**, no fim, baixa todas as construções salvas
   em um único arquivo; **Importar** o lê de volta, salvando os documentos que
   este dispositivo não tem (abra-os em Recentes), ignorando os que ele tem
   sem mudanças e salvando uma cópia ao lado de qualquer um que ele tenha em

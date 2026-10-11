@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: ba7d350bddd098ef -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 60b09baf9d911d48 -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -55,7 +55,7 @@ com pares** coloca: ele assina o Mundo como um **Mundo compartilhado** que
 pode viajar até os pares (veja
 [Uma criação do Repositório, descentralizada](#uma-criação-do-repositório-descentralizada)).
 
-A página Publicações não tem **Abrir**, **Explorar** nem **Bifurcar**, nem
+A página Publicações não tem **Abrir**, **Explorar** nem **Remixar**, nem
 para um Mundo compartilhado. Ela mostra o registro assinado, não o Mundo.
 Para abrir, explorar ou bifurcar um Mundo compartilhado, encontre-o no
 Repositório, na página do autor ou na Visão do mundo. Um que você recebeu de

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 38913c40f5bb246d -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: ceaf8eebe8c02fe4 -->
 # 13 — Seus dados
 
 <!-- languages -->
@@ -168,7 +168,7 @@ dele:
 | O quê | Exportar | Importar |
 |---|---|---|
 | Um documento | **Exportar** na barra de ferramentas do Editor | **Importar** na barra de ferramentas do Editor |
-| Todos os documentos salvos | **Exportar todos os documentos**, no fim do menu **Recentes** do Editor | **Importar** na barra de ferramentas do Editor |
+| Todas as construções salvas | **Exportar todas as construções**, no fim do menu **Recentes** do Editor | **Importar** na barra de ferramentas do Editor |
 | Uma estrutura | **Exportar planta** no menu **⋮** do cartão dela | **Importar planta** ao lado de **Minhas estruturas** |
 | Todas as estruturas | **Exportar tudo** ao lado de **Minhas estruturas** | **Importar planta** ao lado de **Minhas estruturas** |
 | Uma identidade | **Exportar** em **Minhas identidades** | **Importar identidade** em **Minhas identidades** |

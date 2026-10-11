@@ -537,7 +537,7 @@ first click or key press, as browsers require.
   Each entry also has a **Place** button — see
   [Structure instances](#structure-instances-a-live-reference)
   — for adding it to your *current* document instead of replacing it.
-  **Export All Documents** at the bottom downloads every saved document as
+  **Export All Builds** at the bottom downloads every saved build as
   one file; **Import** reads it back, saving the documents this device
   doesn't have (open them from Recent), skipping ones it has unchanged, and
   saving a copy beside any it has in a different version. Unsaved changes

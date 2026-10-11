@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 38913c40f5bb246d -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: ceaf8eebe8c02fe4 -->
 # 13 — Vos données : sauvegarder et restaurer
 
 <!-- languages -->
@@ -181,7 +181,7 @@ sa propre page :
 | Quoi | Exporter | Importer |
 |---|---|---|
 | Un document | **Exporter** dans la barre d’outils de l’Éditeur | **Importer** dans la barre d’outils de l’Éditeur |
-| Tous les documents enregistrés | **Exporter tous les documents** en bas du menu **Récents** de l’Éditeur | **Importer** dans la barre d’outils de l’Éditeur |
+| Toutes les constructions enregistrées | **Exporter toutes les constructions** en bas du menu **Récents** de l’Éditeur | **Importer** dans la barre d’outils de l’Éditeur |
 | Une structure | **Exporter le plan** dans le menu **⋮** de sa carte | **Importer un plan** à côté de **Mes structures** |
 | Toutes les structures | **Tout exporter** à côté de **Mes structures** | **Importer un plan** à côté de **Mes structures** |
 | Une identité | **Exporter** dans **Mes identités** | **Importer une identité** dans **Mes identités** |

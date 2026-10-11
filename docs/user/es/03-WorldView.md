@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: d2c323274d094628 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: a13b8d7d65867a5b -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -1053,7 +1053,7 @@ Cuando hay varias personas en el mismo Mundo:
 El encabezado tiene los botones **Guardar**, **Publicar** y **Editar
 metadatos** siempre que está editando algo, así que puede capturar y
 compartir un mundo sin salir de él. La línea de estado (**🔒 Publicado** o
-**✎ Editando bifurcación**) siempre muestra cuál es el caso.
+**✎ Editando su copia**) siempre muestra cuál es el caso.
 
 Un mundo publicado nunca puede cambiar. Si el mundo que está editando está
 publicado, su primer cambio aquí (editar sus metadatos, agregar o cambiar

@@ -123,7 +123,7 @@ os dois estão on-line. Ou faça lá um backup e restaure o arquivo no outro
 dispositivo (veja [Seus dados](13-YourData.md)). Para levar um tipo de coisa:
 
 - **Documentos**: **Exportar** na barra de ferramentas do Editor, ou
-  **Exportar todos os documentos** no fim de **Recentes**, depois
+  **Exportar todas as construções** no fim de **Recentes**, depois
   **Importar** no outro dispositivo.
 - **Suas próprias estruturas**: **Exportar planta** no menu **⋮** de um
   cartão, ou **Exportar tudo** ao lado de **Minhas estruturas**, depois

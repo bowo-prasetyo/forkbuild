@@ -140,8 +140,9 @@ counted anonymously too.
 ## Distributing straight from the Editor
 
 The moment **Publish** succeeds, the Editor shows a small notice right
-there — "Shared World published successfully." — with a **Distribute**
-button beside it, and a **Dismiss** to make it go away without doing
+there — "Published! Share its link, or use Distribute to send it to the
+open networks so anyone can find it." — with a **Distribute** button
+beside it, and a **Dismiss** to make it go away without doing
 anything. Clicking **Distribute** opens a **Distribute** dialog rather
 than cluttering the overlay with pickers and results you only need once
 in a while; closing it again (**Close**, clicking outside it, or Escape)
@@ -294,7 +295,7 @@ too.
 ## Editing a published creation
 
 A published creation is **immutable** — it can never change after the
-fact. To build on one, **Fork** it (below), or use **Edit a Copy** in World
+fact. To build on one, **Remix** it (below), or use **Edit a Copy** in World
 View. In World View, making your first change to a published world — its
 metadata, a landmark or region name, or an animal decoration —
 automatically creates your own copy, titled *"Fork of &lt;original
@@ -373,7 +374,7 @@ Every creation offers three actions:
 | Button | What it does |
 |---|---|
 | **Open** | Load that document into the Editor |
-| **Fork** | Copy it into your own editable creation |
+| **Remix** | Copy it into your own editable creation |
 | **Explore** | Fly to it in World View |
 
 (**My Worlds**' own **Continue Exploring** button — see
@@ -422,7 +423,7 @@ published world — see
 ### How to fork
 
 1. Find a creation in the **Repository** (or in World View).
-2. Click **Fork**.
+2. Click **Remix**.
 3. The copy opens in the Editor, titled *"Fork of &lt;original name&gt;"*.
 4. Build on it, then save and publish it as your own.
 

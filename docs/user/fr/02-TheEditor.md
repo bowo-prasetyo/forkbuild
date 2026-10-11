@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 91fd6bed6af1eba8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9eb8c2a710f0b80 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -604,8 +604,8 @@ clic ou appui sur une touche, comme l’exigent les navigateurs.
   d’eux par son nom. Chaque entrée a aussi un bouton **Placer** — voir
   [Instances de structure](#instances-de-structure--une-référence-vivante)
   — pour l’ajouter à votre document *actuel* au lieu de le remplacer.
-  **Exporter tous les documents**, en bas, télécharge tous les documents
-  enregistrés dans un seul fichier ; **Importer** le relit, en
+  **Exporter toutes les constructions**, en bas, télécharge toutes les constructions
+  enregistrées dans un seul fichier ; **Importer** le relit, en
   enregistrant les documents que cet appareil n’a pas (ouvrez-les depuis
   Récents), en ignorant ceux qu’il a déjà à l’identique, et en
   enregistrant une copie à côté de ceux qu’il a dans une autre version.

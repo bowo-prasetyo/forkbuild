@@ -22,11 +22,13 @@ export const FEATURED_STRUCTURE_IDS = Object.freeze([
 // empty plot.
 export const STARTER_STRUCTURE_ID = 'village:house';
 
-// The small village Home's 3D showcase turns, laid out two by two.
+// The small village Home's 3D showcase turns, laid out two by two: warm,
+// lived-in buildings (docs/Pillars.md, "Tone"), with the Garden Cottage
+// showing off the Builder's kit.
 export const SHOWCASE_STRUCTURE_IDS = Object.freeze([
     'village:house',
     'village:mill',
-    'village:watchtower',
+    'village:garden_cottage',
     'village:small_chapel'
 ]);
 

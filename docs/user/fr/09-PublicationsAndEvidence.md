@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: ba7d350bddd098ef -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 60b09baf9d911d48 -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -56,7 +56,7 @@ vous pouvez ajouter à une revendication :
 partagé**, capable de voyager vers les pairs (voir
 [Une création du Dépôt, décentralisée](#une-création-du-dépôt-décentralisée)).
 
-La page Publications n’a ni **Ouvrir**, ni **Explorer**, ni **Forker**,
+La page Publications n’a ni **Ouvrir**, ni **Explorer**, ni **Remixer**,
 même pas pour un Monde partagé. Elle montre l’enregistrement signé, pas le
 Monde. Pour ouvrir, explorer ou forker un Monde partagé, trouvez-le dans
 le Dépôt, sur la page de son auteur ou dans la Vue du Monde. Un Monde

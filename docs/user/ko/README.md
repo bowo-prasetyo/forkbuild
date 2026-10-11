@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: e484e2933c088ce1 -->
+<!-- translation-of: docs/user/README.md source-hash: 49ae366b36e4be1b -->
 # ForkBuild 사용자 문서
 
 <!-- languages -->
@@ -15,8 +15,8 @@
 
 ## 여기서 시작하세요 (순서대로 읽기)
 
-1. **[시작하기](01-GettingStarted.md)** — 앱을 열고, 로그인하고, 첫
-   블록을 놓습니다.
+1. **[시작하기](01-GettingStarted.md)** — 앱을 열고 첫 블록을 놓습니다.
+   로그인은 게시할 때만 하면 됩니다.
 2. **[에디터](02-TheEditor.md)** — 건축 도구 모음: 도구, 선택, 변환,
    블록 색상, 그룹, 빌드 라이브러리의 구조물과 내 설계도, 구조물
    인스턴스, 그리고 작품의 제목/설명/라이선스.

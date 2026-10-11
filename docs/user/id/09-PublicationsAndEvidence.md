@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: ba7d350bddd098ef -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 60b09baf9d911d48 -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -55,7 +55,7 @@ tambahkan pada sebuah klaim:
 sebagai **Dunia Bersama** yang dapat berpindah ke rekan (lihat
 [Karya Repositori, terdesentralisasi](#karya-repositori-terdesentralisasi)).
 
-Halaman Publikasi tidak memiliki **Buka**, **Jelajahi**, atau **Fork**,
+Halaman Publikasi tidak memiliki **Buka**, **Jelajahi**, atau **Remix**,
 bahkan untuk Dunia Bersama. Halaman ini menampilkan catatan bertanda
 tangan, bukan Dunianya. Untuk membuka, menjelajahi, atau mem-fork Dunia
 Bersama, temukan di Repositori, di halaman pembuatnya, atau di Tampilan

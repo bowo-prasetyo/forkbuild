@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 91fd6bed6af1eba8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9eb8c2a710f0b80 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -592,8 +592,8 @@ presione, como exigen los navegadores.
   tiene un botón **Colocar** (consulte
   [Instancias de estructuras](#instancias-de-estructuras-una-referencia-viva))
   para agregarlo a su documento *actual* en lugar de reemplazarlo.
-  **Exportar todos los documentos**, al final, descarga todos los
-  documentos guardados en un solo archivo; **Importar** lo vuelve a leer:
+  **Exportar todas las construcciones**, al final, descarga todas las
+  construcciones guardadas en un solo archivo; **Importar** lo vuelve a leer:
   guarda los documentos que este dispositivo no tiene (ábralos desde
   Recientes), omite los que tiene sin cambios y guarda una copia al lado de
   cualquiera que tenga en otra versión. Los cambios sin guardar no se

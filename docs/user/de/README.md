@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: e484e2933c088ce1 -->
+<!-- translation-of: docs/user/README.md source-hash: 49ae366b36e4be1b -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
@@ -12,8 +12,8 @@ in [docs/Architecture.md](../../Architecture.md) und im übrigen
 
 ## Hier anfangen (der Reihe nach lesen)
 
-1. **[Erste Schritte](01-GettingStarted.md)** — die App öffnen, sich
-   anmelden und den ersten Stein platzieren.
+1. **[Erste Schritte](01-GettingStarted.md)** — die App öffnen, den
+   ersten Stein platzieren und sich erst zum Veröffentlichen anmelden.
 2. **[Der Editor](02-TheEditor.md)** — das Baukastenwerkzeug: Werkzeuge,
    Auswahl, Transformationen, Steinfarben, Gruppen, die Strukturen der
    Baubibliothek und Ihre eigenen Baupläne, Strukturinstanzen sowie Titel,

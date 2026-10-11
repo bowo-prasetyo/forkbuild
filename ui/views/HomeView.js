@@ -44,7 +44,7 @@ export default {
             <div class="home-inner">
                 <header class="home-hero">
                     <div class="home-hero-text">
-                        <p class="tagline">{{ t('homeView.buildForkShareEvolve') }}</p>
+                        <p class="tagline">{{ t('homeView.tagline') }}</p>
                         <h1 class="home-title">{{ t('homeView.heroTitle') }}</h1>
                         <p class="home-lead">{{ t('homeView.heroLead') }}</p>
                         <div class="home-actions">

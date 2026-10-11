@@ -126,7 +126,7 @@ selagi keduanya online. Atau cadangkan di sana dan pulihkan file itu di
 perangkat lain (lihat [Data Anda](13-YourData.md)). Untuk memindahkan satu jenis saja:
 
 - **Dokumen**: **Ekspor** di bilah alat Editor, atau **Ekspor Semua
-  Dokumen** di bagian bawah **Terbaru**, lalu **Impor** di perangkat lain.
+  Bangunan** di bagian bawah **Terbaru**, lalu **Impor** di perangkat lain.
 - **Struktur Anda sendiri**: **Ekspor Cetak Biru** dari menu **⋮** pada
   kartunya, atau **Ekspor Semua** di samping **Struktur Saya**, lalu
   **Impor Cetak Biru**.

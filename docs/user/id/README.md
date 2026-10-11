@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: e484e2933c088ce1 -->
+<!-- translation-of: docs/user/README.md source-hash: 49ae366b36e4be1b -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
@@ -12,8 +12,8 @@ dijelaskan di [docs/Architecture.md](../../Architecture.md) dan di folder
 
 ## Mulai dari sini (baca berurutan)
 
-1. **[Memulai](01-GettingStarted.md)** — membuka aplikasi, masuk, dan
-   menempatkan balok pertama Anda.
+1. **[Memulai](01-GettingStarted.md)** — membuka aplikasi, menempatkan
+   balok pertama Anda, dan masuk hanya saat menerbitkan.
 2. **[Editor](02-TheEditor.md)** — perangkat untuk
    membangun: alat, pemilihan, transformasi, warna balok, grup, struktur di
    Pustaka Bangunan dan cetak biru Anda sendiri, instans struktur, serta

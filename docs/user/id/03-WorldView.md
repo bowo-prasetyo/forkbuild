@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: d2c323274d094628 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: a13b8d7d65867a5b -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -1049,7 +1049,7 @@ Saat beberapa orang hadir di Dunia yang sama:
 Kepala panel memiliki tombol **Simpan**, **Terbitkan**, dan **Edit Metadata**
 setiap kali Anda sedang mengedit sesuatu, sehingga Anda dapat merekam dan
 membagikan sebuah dunia tanpa meninggalkannya. Baris statusnya
-(**🔒 Diterbitkan** atau **✎ Mengedit fork**) selalu menunjukkan yang mana.
+(**🔒 Diterbitkan** atau **✎ Mengedit salinan Anda**) selalu menunjukkan yang mana.
 
 Dunia yang diterbitkan tidak pernah dapat berubah. Jika dunia yang sedang
 Anda edit sudah diterbitkan, perubahan pertama Anda di sini — mengedit

@@ -152,7 +152,7 @@ For moving one kind of thing, or sharing it, use the export on its own page:
 | What | Export | Import |
 |---|---|---|
 | One document | **Export** in the Editor toolbar | **Import** in the Editor toolbar |
-| Every saved document | **Export All Documents** at the bottom of the Editor's **Recent** menu | **Import** in the Editor toolbar |
+| Every saved build | **Export All Builds** at the bottom of the Editor's **Recent** menu | **Import** in the Editor toolbar |
 | One structure | **Export Blueprint** in its card's **⋮** menu | **Import Blueprint** beside **My Structures** |
 | Every structure | **Export All** beside **My Structures** | **Import Blueprint** beside **My Structures** |
 | One identity | **Export** on **My Identities** | **Import Identity** on **My Identities** |

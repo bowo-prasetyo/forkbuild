@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: e484e2933c088ce1 -->
+<!-- translation-of: docs/user/README.md source-hash: 49ae366b36e4be1b -->
 # Documentation utilisateur de ForkBuild
 
 <!-- languages -->
@@ -13,8 +13,8 @@ reste du dossier [docs/](../..) de premier niveau.
 
 ## Pour commencer (à lire dans l’ordre)
 
-1. **[Premiers pas](01-GettingStarted.md)** — ouvrir l’application, se
-   connecter et placer votre première brique.
+1. **[Premiers pas](01-GettingStarted.md)** — ouvrir l’application,
+   placer votre première brique, et ne se connecter que pour publier.
 2. **[L’Éditeur](02-TheEditor.md)** — la boîte à outils de construction :
    outils, sélection, transformations, couleurs des briques, groupes, les
    structures de la Bibliothèque de construction et vos propres plans,
