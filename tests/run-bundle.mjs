@@ -501,13 +501,25 @@ async function firstVisit(browser, base) {
         // Walk inside it: World View at the house's door; walking ahead goes
         // in, which ticks off the guided first build's last step.
         assert((await editor.textContent('.editor-post-publish-walk')).trim() === 'Walk inside it', 'Publish offers to walk inside the house');
+        // World View's messages last a few seconds, which a slow machine can
+        // spend on one frame: every message is noted as it appears instead.
+        await editor.evaluate(() => {
+            window.__messages = [];
+            new MutationObserver(() => {
+                for (const node of document.querySelectorAll('[aria-live="polite"]')) {
+                    const text = node.textContent.trim();
+                    if (text && !window.__messages.includes(text)) window.__messages.push(text);
+                }
+            }).observe(document.body, { childList: true, subtree: true, characterData: true });
+        });
+        const said = (words) => editor.waitForFunction((w) => window.__messages.some((m) => m.includes(w)), words, { timeout: 90_000, polling: 100 });
         await editor.click('.editor-post-publish-walk');
         await editor.waitForSelector('.world-viewport canvas', { timeout: 60_000 });
-        await editor.waitForFunction(() => document.body.textContent.includes('Here\'s the door.'), null, { timeout: 30_000 });
+        await said('Here\'s the door.');
         assert(!editor.url().includes('arrive='), `the arrival leaves the address clean (${editor.url()})`);
         await editor.click('.world-viewport canvas', { position: { x: 640, y: 120 } });
         await editor.keyboard.down('w');
-        await editor.waitForFunction(() => document.body.textContent.includes('You\'re inside!'), null, { timeout: 30_000 });
+        await said('You\'re inside!');
         await editor.keyboard.up('w');
         await editor.goBack();
         await editor.waitForSelector('.first-build-step--done[data-step="walk-inside"]', { timeout: 60_000 });
