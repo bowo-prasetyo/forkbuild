@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 7157ea7fcc79e377 -->
+<!-- translation-of: docs/Privacy.md source-hash: efd7b4e45e7a253b -->
 # Privacidad
 
 <!-- languages -->
@@ -34,7 +34,7 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
   usted lo sigue, y nunca se envía nada sobre un seguimiento);
 - el perfil de su avatar, la configuración (incluido si la Vista del mundo
   reproduce sonido, a qué volumen y en 3D o estéreo, si muestra sus
-  herramientas avanzadas, y el idioma que eligió;
+  herramientas avanzadas, a dónde envía Publicar sus construcciones, y el idioma que eligió;
   si no eligió ninguno, ForkBuild lee en el dispositivo los idiomas
   preferidos del navegador y no los envía a ningún lugar), y el nombre de
   usuario y la credencial de un servidor TURN si ingresa uno en
@@ -88,6 +88,7 @@ dispositivo» más abajo).
   etiquetas (como `forkbuild-tag:<tag>`), para que cualquiera encuentre las
   construcciones con una etiqueta, como las participaciones del desafío de
   una semana.
+  Cuando elige a dónde van sus construcciones, cada Publicar envía también la construcción allí; hasta entonces, Publicar no envía nada.
 - **Los pares con los que se conecta** conocen la clave pública de su
   identidad y su dirección IP (una conexión directa la necesita; un relay
   TURN la oculta del par, pero no del relay). Los pares conectados pueden

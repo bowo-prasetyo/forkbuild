@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 7157ea7fcc79e377 -->
+<!-- translation-of: docs/Privacy.md source-hash: efd7b4e45e7a253b -->
 # Confidentialité
 
 <!-- languages -->
@@ -35,7 +35,7 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   jamais envoyé) ;
 - votre profil d’avatar, vos réglages (y compris si la Vue du Monde joue
   du son, à quel volume, en 3D ou en stéréo, si elle montre ses outils
-  avancés, et la langue que vous avez
+  avancés, où Publier envoie vos constructions, et la langue que vous avez
   choisie ; quand vous n’en avez pas choisi, ForkBuild lit les langues
   préférées du navigateur sur l’appareil et ne les envoie nulle part), et
   le nom d’utilisateur et l’identifiant d’un serveur TURN si vous en
@@ -91,6 +91,7 @@ notifications sur cet appareil soient activées est gardé avec vos réglages
   étiquettes (sous la forme `forkbuild-tag:<tag>`), pour que chacun puisse
   trouver les constructions qui portent une étiquette, comme les
   participations au défi d’une semaine.
+  Une fois que vous avez choisi où vont vos constructions, chaque Publier y envoie aussi la construction ; jusque-là, Publier n’envoie rien.
 - **Les pairs auxquels vous vous connectez** apprennent la clé publique
   de votre identité, et votre adresse IP (une connexion directe en a
   besoin ; un relais TURN la cache au pair mais pas au relais). Les pairs

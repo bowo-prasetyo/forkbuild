@@ -127,20 +127,34 @@ export default {
                 @forget="forgetBuildPlot"
             />
             <!--
-                Post-publish distribution action, shown only for the just-published
-                Publication. Sits at the top so it is not hidden below the viewport.
+                What Publish did, for the just-published Publication: sent where this
+                device sends each build, or kept here until the person chooses where it
+                goes (ui/views/editorView/usePostPublishDistribution.js). Sits at the top
+                so it is not hidden below the viewport.
             -->
             <div v-if="publishedPublication || distributionError || (distributionResult && distributionResult.length) || snapshotDistributionError || snapshotDistributionResult" class="editor-post-publish-overlay">
                 <div v-if="publishedPublication" class="editor-post-publish-action">
-                    <span class="editor-post-publish-message">{{ t('editor.published') }}</span>
+                    <span class="editor-post-publish-message" role="status">
+                        <template v-if="sendStatus === 'sending'">{{ t('editor.publishedSending', { network: sendDestinationName }) }}</template>
+                        <template v-else-if="sendStatus === 'sent'">{{ t('editor.publishedSent', { network: sendDestinationName }) }}</template>
+                        <template v-else-if="sendStatus === 'failed'">{{ t('editor.publishedSendFailed', { network: sendDestinationName, error: sendError }) }}</template>
+                        <template v-else>{{ t('editor.published') }}</template>
+                    </span>
 
+                    <button
+                        v-if="sendStatus === 'failed' && canDistributeSnapshot && canDistributePublication"
+                        type="button"
+                        class="action-btn action-btn--primary editor-post-publish-retry"
+                        @click="distributePublishedDocumentAndSnapshot"
+                    >{{ t('editor.tryAgain') }}</button>
                     <!-- Opens EditorDistributionDialog, which holds every storage/substrate choice. -->
                     <button
                         v-if="canDistributeSnapshot || canDistributePublication"
                         type="button"
-                        class="action-btn action-btn--primary editor-post-publish-distribute-trigger"
+                        :class="['action-btn', sendStatus === 'local' ? 'action-btn--primary' : 'action-btn--secondary', 'editor-post-publish-distribute-trigger']"
+                        :disabled="sendStatus === 'sending'"
                         @click="distributionDialogOpen = true"
-                    >{{ t('editor.distribute') }}</button>
+                    >{{ sendStatus === 'local' ? t('editor.distribute') : t('editor.changeWhereItGoes') }}</button>
                     <button
                         type="button"
                         class="action-btn action-btn--secondary editor-post-publish-dismiss-btn"
@@ -175,6 +189,10 @@ export default {
                     :document-id="publishedPublication ? publishedPublication.documentId : null"
                     :publication-id="publishedPublication ? publishedPublication.id : null"
                     :publication-title="publishedPublication ? publishedPublication.title : null"
+                    :for-publish="true"
+                    :rememberable="canRemember"
+                    :remember="rememberChoice"
+                    @update:remember="setRememberChoice"
                     @close="distributionDialogOpen = false"
                     @distribute-both="distributePublishedDocumentAndSnapshot"
                     @distribute-publication="distributePublishedDocument"
@@ -661,9 +679,11 @@ export default {
             distributionError, distributionExecuting, distributionResult, onDocumentPublished, publishedPublication,
             remotePinningDraft, selectedDiscoveryProvider, selectedDistributionStorage, snapshotDistributionError,
             snapshotDistributionExecuting, snapshotDistributionResult, snapshotDistributionStorageTypes,
-            viewDistributedPublicationInRepository
+            viewDistributedPublicationInRepository,
+            canRemember, rememberChoice, setRememberChoice, sendStatus, sendDestinationName, sendError
         } = usePostPublishDistribution({
-            router
+            router,
+            rememberDestination: true
         });
 
         // A second, independent offer for an authorship claim published from the
@@ -1430,6 +1450,7 @@ export default {
             ...firstBuildGuide,
             distributePublishedDocument,
             distributePublishedDocumentAndSnapshot,
+            canRemember, rememberChoice, setRememberChoice, sendStatus, sendDestinationName, sendError,
             dismissPublishAction,
             viewDistributedPublicationInRepository,
             canDistributeAttribution,

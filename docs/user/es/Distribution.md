@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 2c372aadfd2854d8 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: e191fb1f57264f38 -->
 # Distribuir su trabajo
 
 <!-- languages -->
@@ -16,13 +16,16 @@ guía que explica los detalles.
 
 | Acción | Adónde va | Quién lo recibe | Guía |
 |---|---|---|---|
-| **Publicar** | Solo a este dispositivo | Nadie más, por ahora | [Publicar su creación](04-PublishingAndForking.md#publicar-su-creación) |
+| **Publicar** | Este dispositivo y, cuando haya elegido a dónde van sus construcciones, también allí | Nadie más hasta entonces; después, cualquiera | [Publicar su creación](04-PublishingAndForking.md#publicar-su-creación), [A dónde va](04-PublishingAndForking.md#a-dónde-va--enviar-una-construcción-al-publicar) |
 | **Compartir con pares** | Directamente a las personas con las que está conectado | Sus pares conectados, mientras usted esté en línea | [Compartir con pares conectados](04-PublishingAndForking.md#compartir-con-pares-conectados) |
 | **Distribuir** | Redes descentralizadas (IPFS, Arweave, Nostr, Steem, Blurt) | Cualquiera, sin necesidad de estar conectado con usted | Esta página |
 
-Publicar nunca envía nada a ningún lugar por sí solo, y compartir con pares
-no es distribuir: los pares guardan una copia solo mientras quieran, y nadie
-más puede encontrarla. Cada distribución es un clic propio y explícito.
+Hasta que elija a dónde van sus construcciones, publicar no envía nada a
+ningún lugar por sí solo. Cuando elige (en el **A dónde va** del Editor, con
+**Enviar aquí cada vez que publique** marcado), cada Publicar de una
+construcción firmada la distribuye también allí; desmarque la casilla para
+dejar de hacerlo. Compartir con pares no es distribuir: los pares conservan
+una copia solo mientras quieran, y nadie más puede encontrarla.
 
 ## Los tres papeles que puede cumplir una red
 
@@ -64,7 +67,7 @@ lo recuperan ven la construcción exactamente donde usted la puso.
 Detalles:
 
 - Declaración firmada y Snapshot:
-  [Distribuir directamente desde el Editor](04-PublishingAndForking.md#distribuir-directamente-desde-el-editor),
+  [A dónde va](04-PublishingAndForking.md#a-dónde-va--enviar-una-construcción-al-publicar),
   [Mi Mundo compartido](03-WorldView.md#mi-mundo-compartido--distribuir-su-propio-snapshot-sin-necesidad-de-pares)
   y el propio [diálogo Distribuir](03-WorldView.md#encuentros-en-el-mundo--publicaciones-y-avatares-que-comparten-sus-pares).
 - La página Publicaciones:

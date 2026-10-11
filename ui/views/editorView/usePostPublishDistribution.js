@@ -1,17 +1,29 @@
-import { ref, inject } from 'vue';
+import { ref, inject, computed } from 'vue';
 import { useWritableNetworks } from '../../components/networkWriters/useWritableNetworks.js';
 import { sanitizeDistributionErrorMessage } from '../../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 import { IpfsRemotePublicationState } from '../../../application/ipfs/IpfsRemotePublicationState.js';
 import { remotePinningDraftFromSettings } from '../../../application/ipfs/IpfsRemotePinningDraft.js';
+import { PUBLISH_STORAGES } from '../../../application/settings/PublishDestinationStore.js';
 import { t } from '../../i18n/i18n.js';
+
+// The networks' own names, in every language.
+const NETWORK_NAMES = Object.freeze({ nostr: 'Nostr', arweave: 'Arweave', steem: 'Steem', blurt: 'Blurt' });
 
 // Post-publish distribution: after a publish, the Editor offers to distribute that exact
 // Publication (announcement/discovery plus content) and its snapshot bytes. Page-local,
 // ephemeral state only. `includeSnapshot: false` is for a Publication that has no
 // Snapshot of its own (an authorship claim): only its Signed Claim is offered.
+//
+// `rememberDestination: true` folds sending into Publish (docs/Pillars.md, "one
+// verb, Publish"): a send that works with "Send here every time I publish"
+// ticked keeps where it went (application/settings/PublishDestinationStore.js),
+// and each signed publish after that sends there on its own, reporting in the
+// same notice. Without a kept destination, Publish stays on this device and in
+// its links until the person chooses where it goes.
 export function usePostPublishDistribution({
     router,
-    includeSnapshot = true
+    includeSnapshot = true,
+    rememberDestination = false
 }) {
     // Toolbar forwards the exact just-published Publication; nothing here looks up
     // "the latest Publication". ActionFeedback stays passive: this view owns the
@@ -38,7 +50,7 @@ export function usePostPublishDistribution({
     // Opens on the saved preference, else 'nostr', and on 'nostr' too when the
     // saved one is a network whose writer is switched off (core/NetworkWriters.js).
     const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
-    const { writableOr } = useWritableNetworks();
+    const { writableOr, writable } = useWritableNetworks();
     const selectedDiscoveryProvider = ref(writableOr(defaultAnnouncementDiscoveryProvider));
 
     // One Storage choice shared by both actions: page-local, never persisted. When
@@ -158,6 +170,23 @@ export function usePostPublishDistribution({
         return snapshotDistributionCommand(snapshotBytes, storage, claim.publicationId, claim.claimedPosition, discoveryProvider, claim.placementRecord);
     }
 
+    // Where Publish sends on its own; null without a store (a test, the
+    // authorship claim's notice) or before anything is kept.
+    const destinationStore = rememberDestination ? inject('publishDestinationStore', null) : null;
+    const rememberChoice = ref(true);
+    // Remembering needs a store and a storage that can be kept.
+    const canRemember = computed(() => Boolean(destinationStore) && PUBLISH_STORAGES.includes(selectedDistributionStorage.value));
+
+    // The kept destination when this device can still send there: its network
+    // still switched on and its storage still offered.
+    function usableDestination() {
+        if (!destinationStore || !canDistributeSnapshot || !canDistributePublication) return null;
+        const destination = destinationStore.get();
+        if (!destination) return null;
+        if (!writable(destination.discoveryProvider) || !distributionStorageEligible.includes(destination.storage)) return null;
+        return destination;
+    }
+
     // Replaced by each successful publish: "Publish A, Publish B, click" must
     // distribute B.
     const publishedPublication = ref(null);
@@ -175,11 +204,18 @@ export function usePostPublishDistribution({
     // Reset with the rest of this state so a stale dialog never carries over.
     const distributionDialogOpen = ref(false);
 
-    // The only writer of publishedPublication. Publishing never distributes on its
-    // own; distribution needs a later explicit click.
+    // The only writer of publishedPublication. A signed publish goes on to send
+    // where this device keeps sending (usableDestination()); otherwise nothing
+    // leaves the device until the person chooses where it goes. Returns the
+    // send's promise, or undefined when nothing is sent.
     function onDocumentPublished(publication) {
         publishedPublication.value = publication;
         resetDistributionState();
+        const destination = publication && publication.signature ? usableDestination() : null;
+        if (!destination) return undefined;
+        selectedDiscoveryProvider.value = destination.discoveryProvider;
+        selectedDistributionStorage.value = destination.storage;
+        return distributePublishedDocumentAndSnapshot();
     }
 
     function dismissPublishAction() {
@@ -292,8 +328,50 @@ export function usePostPublishDistribution({
     // matching the template order.
     function distributePublishedDocumentAndSnapshot() {
         return Promise.resolve(distributePublishedSnapshot())
-            .then(() => distributePublishedDocument());
+            .then(() => distributePublishedDocument())
+            .then(() => {
+                if (rememberChoice.value) keepDestinationIfSent();
+            });
     }
+
+    // Both halves arrived, with nothing failed.
+    function lastSendSucceeded() {
+        return Boolean(snapshotDistributionResult.value && !snapshotDistributionError.value
+            && distributionResult.value && distributionResult.value.length && !distributionError.value);
+    }
+
+    function keepDestinationIfSent() {
+        if (!canRemember.value || !lastSendSucceeded()) return;
+        try {
+            destinationStore.save({
+                discoveryProvider: selectedDiscoveryProvider.value,
+                storage: selectedDistributionStorage.value
+            });
+        } catch (error) {
+            // Unsaved, the build is still sent; the next Publish asks again.
+            console.warn('Publish: could not keep where it goes', error);
+        }
+    }
+
+    // Unticking stops sending on Publish at once; ticking keeps a send that
+    // already worked here, or the next one that does.
+    function setRememberChoice(value) {
+        rememberChoice.value = value === true;
+        if (!destinationStore) return;
+        if (rememberChoice.value) keepDestinationIfSent();
+        else destinationStore.clear();
+    }
+
+    // What the notice under Publish says: 'local' (nothing sent yet),
+    // 'sending', 'sent' or 'failed'.
+    const sendStatus = computed(() => {
+        if (snapshotDistributionExecuting.value || distributionExecuting.value) return 'sending';
+        if (snapshotDistributionError.value || distributionError.value) return 'failed';
+        if (lastSendSucceeded()) return 'sent';
+        return 'local';
+    });
+    const sendDestinationName = computed(() => NETWORK_NAMES[selectedDiscoveryProvider.value] || selectedDiscoveryProvider.value);
+    const sendError = computed(() => snapshotDistributionError.value || distributionError.value || null);
 
     // Navigates to /world/:documentId using the documentId already held; never a
     // catalog lookup. Without one it does nothing.
@@ -311,6 +389,7 @@ export function usePostPublishDistribution({
         distributionError, distributionExecuting, distributionResult, onDocumentPublished, publishedPublication,
         remotePinningDraft, selectedDiscoveryProvider, selectedDistributionStorage, snapshotDistributionError,
         snapshotDistributionExecuting, snapshotDistributionResult, snapshotDistributionStorageTypes,
-        viewDistributedPublicationInRepository
+        viewDistributedPublicationInRepository,
+        canRemember, rememberChoice, setRememberChoice, sendStatus, sendDestinationName, sendError
     };
 }

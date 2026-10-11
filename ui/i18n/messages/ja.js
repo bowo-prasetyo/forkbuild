@@ -864,9 +864,14 @@ export default Object.freeze({
     'toolbar.exportAllHint': '保存したすべての作品を1つのファイルでダウンロード',
 
     // Editor (ui/views/EditorView.js).
-    'editor.published': '公開しました！リンクを共有するか、「配信」でオープンなネットワークに送ると、だれでも見つけられます。',
-    'editor.distribute': '配信',
+    'editor.published': '公開しました！リンクを共有できます。リンクなしでもだれでも見つけられるように、送り先を選びましょう。',
+    'editor.distribute': '送り先を選ぶ',
     'editor.dismiss': '閉じる',
+    'editor.publishedSending': '公開しました！{network} に送っています…',
+    'editor.publishedSent': '公開して {network} に送りました。だれでも見つけられます。',
+    'editor.publishedSendFailed': '公開しましたが、{network} への送信はうまくいきませんでした: {error}',
+    'editor.tryAgain': 'もう一度試す',
+    'editor.changeWhereItGoes': '送り先を変える',
     'editor.tool': 'ツール',
     'editor.select': '選択',
     'editor.place': '配置',
@@ -1060,6 +1065,11 @@ export default Object.freeze({
 
     // Editor: distributing a new Publication (ui/components/EditorDistributionDialog.js).
     'distribution.title': '配信',
+    'distribution.whereItGoes': '送り先',
+    'distribution.whereItGoesLead': '作品をオープンなネットワークに送ると、リンクなしでもだれでも見つけられます。そのネットワーク用のブラウザーのウォレットや拡張機能が、送るたびに承認を求めます。',
+    'distribution.send': '送る',
+    'distribution.sendEveryTime': '公開するたびにここへ送る',
+    'distribution.sendEveryTimeHint': '送信がうまくいくと、このデバイスに記憶されます。以後は公開するたびに自動でそこへ送ります。やめるにはチェックを外します。Arweave と Blurt は送るたびに少額の手数料がかかります。',
     'distribution.storage': 'ストレージ',
     'distribution.endpoint': 'エンドポイント',
     'distribution.credential': '認証情報（任意）',

@@ -867,9 +867,14 @@ export default Object.freeze({
     'toolbar.exportAllHint': '저장된 모든 작품을 파일 하나로 다운로드',
 
     // Editor (ui/views/EditorView.js).
-    'editor.published': '게시했습니다! 링크를 공유하거나, 배포로 열린 네트워크에 보내 누구나 찾을 수 있게 하세요.',
-    'editor.distribute': '배포',
+    'editor.published': '게시했습니다! 링크를 공유하세요. 링크 없이도 누구나 찾을 수 있게 하려면 보낼 곳을 고르세요.',
+    'editor.distribute': '보낼 곳 고르기',
     'editor.dismiss': '닫기',
+    'editor.publishedSending': '게시했습니다! {network}(으)로 보내는 중…',
+    'editor.publishedSent': '게시하고 {network}(으)로 보냈습니다. 이제 누구나 찾을 수 있습니다.',
+    'editor.publishedSendFailed': '게시했지만 {network}(으)로 보내지 못했습니다: {error}',
+    'editor.tryAgain': '다시 시도',
+    'editor.changeWhereItGoes': '보낼 곳 바꾸기',
     'editor.tool': '도구',
     'editor.select': '선택',
     'editor.place': '배치',
@@ -1063,6 +1068,11 @@ export default Object.freeze({
 
     // Editor: distributing a new Publication (ui/components/EditorDistributionDialog.js).
     'distribution.title': '배포',
+    'distribution.whereItGoes': '보낼 곳',
+    'distribution.whereItGoesLead': '작품을 열린 네트워크로 보내면 링크 없이도 누구나 찾을 수 있습니다. 그 네트워크용 브라우저 지갑이나 확장 프로그램이 보낼 때마다 승인을 요청합니다.',
+    'distribution.send': '보내기',
+    'distribution.sendEveryTime': '게시할 때마다 여기로 보내기',
+    'distribution.sendEveryTimeHint': '보내기가 성공하면 이 기기에 기억됩니다. 그 뒤로는 게시할 때마다 알아서 그곳으로 보냅니다. 그만하려면 체크를 해제하세요. Arweave와 Blurt는 보낼 때마다 적은 수수료가 듭니다.',
     'distribution.storage': '저장소',
     'distribution.endpoint': '엔드포인트',
     'distribution.credential': '자격 증명 (선택)',

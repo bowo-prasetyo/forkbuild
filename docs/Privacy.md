@@ -31,7 +31,7 @@ send it:
   is ever sent);
 - your avatar profile, settings (including whether World View plays sound,
   how loud, and in 3D or stereo, whether World View shows its advanced
-  tools, and the language you chose; when you
+  tools, where Publish sends your builds, and the language you chose; when you
   haven't chosen one, ForkBuild reads the browser's preferred languages on
   the device and sends them nowhere), and a TURN server's username and credential
   if you enter one under **Network Settings**;
@@ -73,7 +73,9 @@ settings (see "Notifications on this device" below).
 
 - **Anything you publish** is public: its content, title, description,
   tags and license, and your identity's public key, which signs it. Once
-  other people have a copy, you can't take it back. When you distribute it
+  other people have a copy, you can't take it back. Once you choose where
+  your builds go, each Publish sends the build there too; until then,
+  Publish sends nothing. When you distribute it
   to Nostr or Arweave, its announcement also lists its tags (as
   `forkbuild-tag:<tag>`), so anyone can find the builds with a tag, such as a
   week's challenge entries.

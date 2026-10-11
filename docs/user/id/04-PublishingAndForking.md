@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c03b4c493f0a5c98 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bbb4bcd1d65f4618 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -40,15 +40,13 @@ punya tempat untuk dituju — lihat
 > distribusinya (misalnya **Disimpan di IPFS · Diumumkan di Nostr**), atau
 > **Tidak ada distribusi yang tercatat di perangkat ini.** Cadangkan di
 > [Data Anda](13-YourData.md) untuk menyimpan salinan sementara itu.
-> Menerbitkan tidak pernah mengirim apa pun ke mana pun dengan sendirinya.
-> [Tautan](#membagikan-tautan) yang Anda salin membawa bangunan itu kepada
-> orang yang Anda beri.
-> Dua langkah terpisah yang opsional yang melakukannya: **Distribusikan**,
-> yang dijelaskan di bawah, mengirim publikasi ke Arweave atau IPFS dan
-> mengumumkannya di Nostr atau Arweave sehingga orang lain dapat
-> menemukannya tanpa terhubung dengan Anda; dan
-> [**Bagikan dengan Rekan**](#berbagi-dengan-rekan-yang-terhubung)
-> menawarkannya kepada orang-orang yang terhubung dengan Anda.
+> Sampai Anda memilih ke mana bangunan Anda dikirim, menerbitkan tidak
+> mengirim apa pun ke mana pun dengan sendirinya. [Tautan](#membagikan-tautan) yang
+> Anda salin membawa bangunan itu kepada orang yang Anda beri. Setelah Anda
+> memilih jaringan (lihat [Ke mana dikirim](#ke-mana-dikirim--mengirim-bangunan-saat-menerbitkan)), setiap Terbitkan juga
+> mengirim bangunan ke sana, sehingga orang lain dapat menemukannya tanpa
+> terhubung dengan Anda. [**Bagikan dengan Rekan**](#berbagi-dengan-rekan-yang-terhubung) menawarkannya
+> kepada orang-orang yang terhubung dengan Anda.
 
 ## Membagikan tautan
 
@@ -147,27 +145,46 @@ di tab baru (lihat
 Menyalin kode sematan, serta sematan yang ditampilkan atau dibuka di
 ForkBuild, juga dihitung secara anonim.
 
-## Mendistribusikan langsung dari Editor
+## Ke mana dikirim — mengirim bangunan saat menerbitkan
 
-Begitu **Terbitkan** berhasil, Editor menampilkan pemberitahuan kecil di
-tempat itu juga — "Diterbitkan! Bagikan tautannya, atau gunakan Distribusikan untuk mengirimnya ke jaringan terbuka agar siapa pun bisa menemukannya." — dengan tombol
-**Distribusikan** di sampingnya, dan **Tutup** untuk menghilangkannya tanpa
-melakukan apa pun. Mengeklik **Distribusikan** membuka dialog
-**Distribusikan** alih-alih memenuhi lapisan itu dengan pemilih dan hasil
-yang hanya sesekali Anda perlukan; menutupnya lagi (**Tutup**, mengeklik di
-luarnya, atau Escape) tidak pernah menghilangkan apa pun yang dihasilkannya
-— membukanya lagi menampilkan hasil, kesalahan, atau keadaan yang sedang
-berjalan persis seperti saat Anda meninggalkannya.
+**Terbitkan** menyimpan bangunan Anda di perangkat ini dan di tautannya
+sampai Anda memilih ke mana dikirim. Tepat setelah Terbitkan pertama Anda,
+Editor berkata "Diterbitkan! Bagikan tautannya. Agar siapa pun bisa
+menemukannya tanpa tautan, pilih ke mana dikirim." dengan tombol **Pilih ke
+mana dikirim** di samping tautan, dan **Tutup**.
+
+**Pilih ke mana dikirim** membuka dialog **Ke mana dikirim**: pilih
+**Penyimpanan** (tempat bangunan itu sendiri disimpan: Arweave, IPFS, atau
+Steem atau Blurt bila penulisnya aktif) dan **Substrat Pengumuman /
+Penemuan** (tempat bangunan diumumkan: Nostr, Arweave, Steem, atau Blurt),
+lalu klik **Kirim**. **Kirim ke sini setiap kali aku menerbitkan** mulanya
+tercentang: setelah pengiriman berhasil dengan centang itu, perangkat ini
+menyimpan pilihannya, dan **setiap Terbitkan sesudahnya mengirim bangunan ke
+sana dengan sendirinya**. Pemberitahuan lalu berkata "Sedang dikirim ke
+Nostr…", kemudian "Diterbitkan dan dikirim ke Nostr: sekarang siapa pun bisa
+menemukannya.", atau, bila pengiriman gagal, apa yang salah, dengan **Coba
+lagi** dan **Ubah ke mana dikirim**. Hapus centang (di dialog, dari **Ubah
+ke mana dikirim**) untuk berhenti, dan Terbitkan kembali menyimpan bangunan
+di perangkat ini. Pinning jarak jauh tidak pernah disimpan, karena tokennya
+hanya berlaku selama kunjungan; pilih di dialog setiap kali.
+
+Hanya bangunan bertanda tangan yang dikirim dengan sendirinya; **Terbitkan
+tanpa tanda tangan** tidak mengirim apa pun. Dompet atau ekstensi browser
+Anda untuk jaringan itu (dompet Arweave seperti Wander, ekstensi Nostr
+seperti nos2x, Steem atau Blurt Keychain) meminta persetujuan Anda untuk
+setiap pengiriman, dan Arweave serta Blurt memungut biaya kecil setiap kali.
+Tanpa itu, pengiriman berakhir dengan pemberitahuan biasa "…tidak dapat
+diselesaikan" dan bangunan tetap diterbitkan di sini.
 
 Dialog ini sama dengan yang dipakai Tampilan Dunia — pengaturan
-**Penyimpanan** dan **Substrat Pengumuman / Penemuan**-nya, tombol gabungan
-**Distribusikan**, serta tombol terpisah **Distribusikan Snapshot saja** /
-**Distribusikan Klaim Bertanda Tangan saja** semuanya bekerja seperti
-dijelaskan di
-[Perjumpaan Dunia](03-WorldView.md#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda). Ada dua perbedaan di sini: dialog ini selalu bekerja pada
-Dunia Bersama yang baru saja dihasilkan oleh klik Terbitkan Anda, dan
-bagian **Snapshot** muncul lebih dulu, sehingga tombol gabungan menjalankan
-Snapshot terlebih dahulu, lalu Klaim Bertanda Tangan.
+**Penyimpanan** dan **Substrat Pengumuman / Penemuan**-nya, serta tombol
+terpisah **Distribusikan Snapshot saja** / **Distribusikan Klaim Bertanda
+Tangan saja**, bekerja seperti yang dijelaskan di
+[Perjumpaan Dunia](03-WorldView.md#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda). Dua hal berbeda di sini: dialog ini selalu
+bekerja pada Dunia Bersama persis yang baru dihasilkan klik Terbitkan Anda,
+dan **Snapshot** didahulukan, sehingga **Kirim** mengirim Snapshot, lalu
+Klaim Bertanda Tangan. Menutup dialog (**Tutup**, klik di luarnya, atau
+Escape) tidak pernah menghilangkan apa pun yang dihasilkannya.
 
 Hasil Klaim Bertanda Tangan muncul di bagiannya sendiri:
 
@@ -193,15 +210,10 @@ secara terpisah dari distribusi Klaim Bertanda Tangan; lihat
 [Snapshot Lokal](09-PublicationsAndEvidence.md#snapshot-lokal) untuk arti
 perbedaan itu.
 
-Seperti setiap tombol distribusi lain di aplikasi ini, mendistribusikan
-memerlukan ekstensi browser penanda tangan — dompet Arweave (seperti
-Wander) atau ekstensi Nostr (seperti nos2x); tanpanya, prosesnya berakhir
-dengan pemberitahuan sederhana "…tidak dapat diselesaikan." Menerbitkan
-sendiri tidak pernah mendistribusikan apa pun: distribusi hanya terjadi
-pada klik terpisah dan eksplisit di kemudian hari ini. Menerbitkan lagi
-mengganti seluruh lapisan dengan yang baru untuk publikasi baru;
-menutupnya, atau meninggalkan halaman, menghapusnya — baik pemberitahuan
-maupun hasil kedua bagian tidak diingat di mana pun.
+Menerbitkan lagi mengganti seluruh pemberitahuan dengan yang baru untuk
+publikasi baru; menutupnya, atau meninggalkan halaman, menghapusnya.
+Pemberitahuan maupun hasil bagian mana pun tidak diingat di mana pun; hanya
+ke mana bangunan Anda dikirim.
 
 ## Berbagi dengan rekan yang terhubung
 
@@ -302,11 +314,12 @@ dapat mengabaikannya, dan pengaturan ini tidak dapat menarik kembali
 penempatan yang dibuat seseorang sebelum Anda memilihnya.
 
 Bagaimanapun juga, orang lain melihat bangunan Anda di tempat *Anda*
-menaruhnya begitu Anda **Distribusikan** Snapshot-nya dari Tampilan Dunia atau langsung setelah menerbitkan di Editor:
-pengumumannya membawa penempatan Anda yang ditandatangani, dan ForkBuild
-mereka menampilkan bangunan di sana begitu mengenali Dunia Bersama Anda.
-Pindahkan dan distribusikan lagi, dan bangunan itu juga berpindah bagi
-mereka.
+menaruhnya begitu Anda mengirim Snapshot-nya, seperti yang dilakukan
+Terbitkan setelah Anda memilih ke mana bangunan Anda dikirim, atau dengan
+**Distribusikan** di Tampilan Dunia: pengumumannya membawa penempatan
+bertanda tangan Anda, dan ForkBuild mereka menampilkan bangunan di sana
+begitu mengenal Dunia Bersama Anda. Pindahkan dan distribusikan lagi, dan
+bangunan itu juga berpindah bagi mereka.
 
 ## Mengedit karya yang sudah diterbitkan
 

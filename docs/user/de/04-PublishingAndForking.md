@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c03b4c493f0a5c98 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bbb4bcd1d65f4618 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -40,15 +40,13 @@ geteilten Welt, sodass **Erkunden** immer ein Ziel hat — siehe
 > Angekündigt auf Nostr**), oder **Auf diesem Gerät ist keine Verteilung
 > verzeichnet.** Sichern Sie es unter [Ihre Daten](13-YourData.md), um in
 > der Zwischenzeit eine Kopie zu behalten.
-> Veröffentlichen sendet nie von selbst etwas irgendwohin. Ein
-> [Link](#einen-link-teilen), den Sie kopieren, bringt das Bauwerk zu dem,
-> dem Sie ihn geben. Das tun zwei
-> getrennte, optionale Schritte: **Verteilen**, weiter unten beschrieben,
-> bringt die Veröffentlichung auf Arweave oder IPFS und kündigt sie auf
-> Nostr oder Arweave an, damit andere sie finden können, ohne mit Ihnen
-> verbunden zu sein; und
-> [**Mit Peers teilen**](#mit-verbundenen-peers-teilen) bietet sie den
-> Menschen an, mit denen Sie verbunden sind.
+> Bis Sie wählen, wohin Ihre Bauwerke gehen, sendet Veröffentlichen von selbst
+> nichts irgendwohin. Ein [Link](#einen-link-teilen), den Sie kopieren, bringt das
+> Bauwerk zu dem, dem Sie ihn geben. Sobald Sie ein Netzwerk wählen (siehe
+> [Wohin es geht](#wohin-es-geht--ein-bauwerk-beim-veröffentlichen-senden)), sendet jedes Veröffentlichen das Bauwerk auch
+> dorthin, damit andere es finden, ohne mit Ihnen verbunden zu sein.
+> [**Mit Peers teilen**](#mit-verbundenen-peers-teilen) bietet es den Menschen an, mit denen Sie
+> verbunden sind.
 
 ## Einen Link teilen
 
@@ -147,29 +145,48 @@ eigene Seite des Bauwerks in ForkBuild in einem neuen Tab öffnet (siehe
 Auch das Kopieren des Codes und das Zeigen oder Öffnen einer Einbettung in
 ForkBuild werden anonym gezählt.
 
-## Direkt aus dem Editor verteilen
+## Wohin es geht — ein Bauwerk beim Veröffentlichen senden
 
-Sobald **Veröffentlichen** gelingt, zeigt der Editor genau dort einen
-kleinen Hinweis — „Veröffentlicht! Teilen Sie den Link, oder schicken Sie es mit ‚Verteilen‘ in die offenen Netzwerke, damit alle es finden.“ — mit einer
-Schaltfläche **Verteilen** daneben und **Ausblenden**, um ihn zu
-schließen, ohne etwas zu tun. Ein Klick auf **Verteilen** öffnet einen
-Dialog **Verteilen**, statt die Einblendung mit Auswahlfeldern und
-Ergebnissen zu überladen, die Sie nur gelegentlich brauchen; das Schließen
-(**Schließen**, Klick außerhalb oder Escape) verliert nie etwas, das er
-erzeugt hat — erneut geöffnet zeigt er genau das Ergebnis, den Fehler oder
-den laufenden Zustand, in dem Sie ihn verlassen haben.
+**Veröffentlichen** behält Ihr Bauwerk auf diesem Gerät und in seinen Links,
+bis Sie wählen, wohin es geht. Direkt nach Ihrem ersten Veröffentlichen sagt
+der Editor „Veröffentlicht! Teilen Sie den Link. Damit alle es auch ohne
+Link finden, wählen Sie, wohin es geht.“ mit einer Schaltfläche **Wählen,
+wohin es geht** neben dem Link und **Ausblenden**.
 
-Der Dialog ist derselbe, den die Weltansicht verwendet — seine
-Einstellungen **Speicher** und **Substrat für Ankündigung / Entdeckung**,
-die kombinierte Schaltfläche **Verteilen** und die getrennten
+**Wählen, wohin es geht** öffnet den Dialog **Wohin es geht**: Wählen Sie
+einen **Speicher** (wo das Bauwerk selbst liegt: Arweave, IPFS, oder Steem
+bzw. Blurt, wenn deren Schreiber an sind) und ein **Substrat für
+Ankündigung / Entdeckung** (wo es angekündigt wird: Nostr, Arweave, Steem
+oder Blurt) und klicken Sie auf **Senden**. **Bei jedem Veröffentlichen
+hierhin senden** ist anfangs angehakt: Sobald ein Senden mit Häkchen
+klappt, merkt sich dieses Gerät die Wahl, und **jedes Veröffentlichen danach
+sendet das Bauwerk von selbst dorthin**. Der Hinweis sagt dann „Wird an
+Nostr gesendet …“, danach „Veröffentlicht und an Nostr gesendet: Jetzt
+können alle es finden.“ oder, wenn ein Senden scheitert, was schiefging, mit
+**Erneut versuchen** und **Ändern, wohin es geht**. Entfernen Sie das Häkchen
+(im Dialog, über **Ändern, wohin es geht**), um aufzuhören; dann behält
+Veröffentlichen Bauwerke wieder auf diesem Gerät. Remote Pinning wird nie
+gemerkt, weil sein Token nur für den Besuch gilt; wählen Sie es jedes Mal
+im Dialog.
+
+Nur ein signiertes Bauwerk wird von selbst gesendet; **Unsigniert
+veröffentlichen** sendet nichts. Die Wallet oder Erweiterung Ihres Browsers
+für dieses Netzwerk (eine Arweave-Wallet wie Wander, eine Nostr-Erweiterung
+wie nos2x, Steem oder Blurt Keychain) fragt bei jedem Senden nach Ihrer
+Zustimmung, und Arweave und Blurt verlangen jedes Mal eine kleine Gebühr.
+Ohne eine endet das Senden mit einem schlichten Hinweis „… konnte nicht
+abgeschlossen werden“, und das Bauwerk bleibt hier veröffentlicht.
+
+Der Dialog ist derselbe, den die Weltansicht verwendet — seine Einstellungen
+**Speicher** und **Substrat für Ankündigung / Entdeckung** und die getrennten
 Schaltflächen **Nur Snapshot verteilen** / **Nur Signierten Anspruch
-verteilen** funktionieren alle wie unter
-[Begegnungen in der Welt](03-WorldView.md#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen)
-beschrieben. Zwei Dinge sind hier anders: Er wirkt immer genau auf die
-Geteilte Welt, die Ihr Klick auf Veröffentlichen gerade erzeugt hat, und
-der Abschnitt **Snapshot** kommt zuerst, sodass die kombinierte
-Schaltfläche zuerst den Snapshot und dann den Signierten Anspruch
-ausführt.
+verteilen** funktionieren wie unter
+[Begegnungen in der Welt](03-WorldView.md#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen) beschrieben. Zwei Dinge
+sind hier anders: Er wirkt immer auf genau die Geteilte Welt, die Ihr Klick
+auf Veröffentlichen gerade erzeugt hat, und der **Snapshot** geht zuerst,
+sodass **Senden** erst den Snapshot und dann den Signierten Anspruch sendet.
+Den Dialog zu schließen (**Schließen**, Klick außerhalb oder Escape) verliert
+nie etwas, das er erzeugt hat.
 
 Das Ergebnis des Signierten Anspruchs erscheint in einem eigenen
 Abschnitt:
@@ -196,16 +213,10 @@ Snapshots unabhängig vom Verteilen des Signierten Anspruchs platziert und
 entdeckt werden; was dieser Unterschied bedeutet, steht unter
 [Lokaler Snapshot](09-PublicationsAndEvidence.md#lokaler-snapshot).
 
-Wie jede andere Verteilen-Schaltfläche in dieser App braucht das Verteilen
-eine Browsererweiterung zum Signieren — eine Arweave-Wallet (etwa Wander)
-oder eine Nostr-Erweiterung (etwa nos2x); ohne eine endet es mit einem
-schlichten Hinweis „… konnte nicht abgeschlossen werden“. Veröffentlichen
-selbst verteilt nie etwas von sich aus: Verteilen geschieht nur durch
-diesen späteren, getrennten, ausdrücklichen Klick. Erneutes
-Veröffentlichen ersetzt die ganze Einblendung durch eine neue für die neue
-Veröffentlichung; sie auszublenden oder die Seite zu verlassen löscht
-sie — weder der Hinweis noch das Ergebnis eines Abschnitts wird irgendwo
-gespeichert.
+Erneutes Veröffentlichen ersetzt den ganzen Hinweis durch einen neuen für
+die neue Veröffentlichung; ihn auszublenden oder die Seite zu verlassen
+löscht ihn. Weder der Hinweis noch das Ergebnis eines Abschnitts wird
+irgendwo gespeichert; nur, wohin Ihre Bauwerke gehen.
 
 ## Mit verbundenen Peers teilen
 
@@ -307,10 +318,12 @@ ForkBuild hält sich daran, aber sie ist kein Schloss. Wer den Code der App
 die jemand vor Ihrer Wahl gemacht hat.
 
 So oder so sehen andere Ihr Bauwerk dort, wo *Sie* es hingestellt haben,
-sobald Sie seinen Snapshot aus der Weltansicht oder direkt nach dem Veröffentlichen im Editor **verteilen**: Die
-Ankündigung trägt Ihre signierte Platzierung, und ihr ForkBuild zeigt das
-Bauwerk dort, sobald es Ihre Geteilte Welt kennt. Verschieben Sie es und
-verteilen Sie erneut, und es verschiebt sich auch bei ihnen.
+sobald Sie seinen Snapshot senden, wie es Veröffentlichen tut, sobald Sie
+gewählt haben, wohin Ihre Bauwerke gehen, oder mit **Verteilen** in der
+Weltansicht: Die Ankündigung trägt Ihre signierte Platzierung, und ihr
+ForkBuild zeigt das Bauwerk dort, sobald es Ihre Geteilte Welt kennt.
+Verschieben Sie es und verteilen Sie erneut, und es verschiebt sich auch bei
+ihnen.
 
 ## Eine veröffentlichte Kreation bearbeiten
 

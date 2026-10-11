@@ -864,9 +864,14 @@ export default Object.freeze({
     'toolbar.exportAllHint': 'Unduh setiap bangunan yang tersimpan dalam satu file',
 
     // Editor (ui/views/EditorView.js).
-    'editor.published': 'Diterbitkan! Bagikan tautannya, atau gunakan Distribusikan untuk mengirimnya ke jaringan terbuka agar siapa pun bisa menemukannya.',
-    'editor.distribute': 'Distribusikan',
+    'editor.published': 'Diterbitkan! Bagikan tautannya. Agar siapa pun bisa menemukannya tanpa tautan, pilih ke mana dikirim.',
+    'editor.distribute': 'Pilih ke mana dikirim',
     'editor.dismiss': 'Tutup',
+    'editor.publishedSending': 'Diterbitkan! Sedang dikirim ke {network}…',
+    'editor.publishedSent': 'Diterbitkan dan dikirim ke {network}: sekarang siapa pun bisa menemukannya.',
+    'editor.publishedSendFailed': 'Diterbitkan, tetapi pengiriman ke {network} gagal: {error}',
+    'editor.tryAgain': 'Coba lagi',
+    'editor.changeWhereItGoes': 'Ubah ke mana dikirim',
     'editor.tool': 'Alat',
     'editor.select': 'Pilih',
     'editor.place': 'Tempatkan',
@@ -1060,6 +1065,11 @@ export default Object.freeze({
 
     // Editor: distributing a new Publication (ui/components/EditorDistributionDialog.js).
     'distribution.title': 'Distribusikan',
+    'distribution.whereItGoes': 'Ke mana dikirim',
+    'distribution.whereItGoesLead': 'Kirim bangunanmu ke jaringan terbuka agar siapa pun bisa menemukannya tanpa tautan. Dompet atau ekstensi browsermu untuk jaringan itu meminta persetujuanmu untuk setiap pengiriman.',
+    'distribution.send': 'Kirim',
+    'distribution.sendEveryTime': 'Kirim ke sini setiap kali aku menerbitkan',
+    'distribution.sendEveryTimeHint': 'Disimpan di perangkat ini setelah pengiriman berhasil. Setiap Terbitkan lalu mengirim ke sana dengan sendirinya; hapus centang untuk berhenti. Arweave dan Blurt memungut biaya kecil untuk setiap pengiriman.',
     'distribution.storage': 'Penyimpanan',
     'distribution.endpoint': 'Endpoint',
     'distribution.credential': 'Kredensial (opsional)',

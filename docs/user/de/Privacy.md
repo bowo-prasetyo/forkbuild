@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 7157ea7fcc79e377 -->
+<!-- translation-of: docs/Privacy.md source-hash: efd7b4e45e7a253b -->
 # Datenschutz
 
 <!-- languages -->
@@ -34,7 +34,7 @@ veröffentlichen, exportieren oder senden es:
   folgen, und nichts über ein Folgen wird je gesendet);
 - Ihr Avatarprofil, Einstellungen (darunter, ob die Weltansicht Ton
   abspielt, wie laut und ob in 3D oder Stereo, ob die Weltansicht ihre
-  erweiterten Werkzeuge zeigt, und die von Ihnen gewählte
+  erweiterten Werkzeuge zeigt, wohin Veröffentlichen Ihre Bauwerke sendet, und die von Ihnen gewählte
   Sprache; haben Sie keine gewählt, liest ForkBuild die bevorzugten Sprachen
   des Browsers auf dem Gerät und sendet sie nirgendwohin) sowie Benutzername
   und Zugangsdaten eines TURN-Servers, falls Sie sie unter
@@ -88,6 +88,7 @@ eingeschaltet sind, wird mit Ihren Einstellungen gespeichert (siehe
   zurücknehmen. Wenn Sie es über Nostr oder Arweave verteilen, nennt seine Ankündigung
   auch seine Tags (als `forkbuild-tag:<tag>`), sodass jeder die Bauwerke mit
   einem Tag finden kann, etwa die Beiträge zur Challenge einer Woche.
+  Sobald Sie wählen, wohin Ihre Bauwerke gehen, sendet jedes Veröffentlichen das Bauwerk auch dorthin; bis dahin sendet Veröffentlichen nichts.
 - **Peers, mit denen Sie sich verbinden**, erfahren den öffentlichen
   Schlüssel Ihrer Identität und Ihre IP-Adresse (eine direkte Verbindung
   braucht sie; ein TURN-Relay verbirgt sie vor dem Peer, aber nicht vor dem

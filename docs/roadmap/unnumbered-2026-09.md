@@ -5405,3 +5405,34 @@ the build, its maker and what to do), with building feels joyful (**Build here**
 - Not done: residents asking about builds ("Someone should build a bridge here"), and a plaza square that changes with
   the week's theme.
 
+## Publish sends it where it goes (unnumbered, 2026-10-11)
+
+**Distribute is folded into Publish.** Publishing kept a build on the device and offered **Distribute** as a second
+step every time; docs/Pillars.md ("Infrastructure, kept out of sight") asked for one verb, Publish, with one choice
+inside it, and the creative-direction review of 2026-10-11 named the separate step as friction at the peak moment.
+Pillar served: your work is yours (it reaches the open networks in the same step), with building feels joyful (one
+click from a finished build to one anyone can find).
+
+- **Where it goes, chosen once** (ui/views/editorView/usePostPublishDistribution.js, `rememberDestination`). After
+  Publish, the Editor's notice offers **Choose where it goes**, which opens the old dialog as **Where it goes**
+  (ui/components/EditorDistributionDialog.js, `forPublish`), with **Send** and **Send here every time I publish**,
+  ticked by default. A send that works with it ticked is kept (application/settings/PublishDestinationStore.js); each
+  signed Publish after that sends there by itself, and the notice says sending, sent, or what failed, with **Try
+  again** and **Change where it goes**. Unticking forgets the choice at once.
+- **Not sent by itself:** an unsigned build; a destination whose network writer has been switched off since, or whose
+  storage this device no longer offers; remote pinning, whose token lasts only for the visit (never kept); and an
+  authorship claim's notice, which stays **Distribute**. Nostr and Arweave still sign through the browser's extension
+  or wallet, so every send asks the person to approve it; nothing is sent while nobody is looking.
+- **The village's stray green cubes** (core/library/VillageLibrary.js). The Well's stone ring, the Market Stall's
+  counter and the Fence Segment's posts were core:cube at its default green; they are stone and oak now, and the
+  plaza square no longer recolors its well.
+- Every language: the notice, the dialog's title, lead, Send, the box and its hint; guide 04 ("Where it goes —
+  sending a build as you publish"), the Distribution overview, the Privacy page and docs/Architecture.md; Pillars.
+- Tests: `PublishSendsWhereItGoes` (nothing sent until chosen; a working send kept and the next publish sending there
+  by itself; a failed send reported with the build still published; unsigned builds, an unticked box, a switched-off
+  network and authorship claims sending nothing; remote pinning never kept; the store's validation);
+  `WhereItGoesDialogBrowser` (the dialog's title, Send and box, and the authorship claim's unchanged dialog);
+  `VillageLibraryExpansion` gains "no Village cube is left at the default green".
+- Not done: an app-held Nostr key, so publishing could reach Nostr without a browser extension; the World View and
+  Publications page Distribute buttons, which stay under Advanced.
+

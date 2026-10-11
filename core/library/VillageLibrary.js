@@ -123,15 +123,16 @@ const barnBricks = [
 ];
 
 const wellBricks = [
-    // A ring of eight cubes around an open 1x1 shaft at the origin.
-    b('core:cube', -1, 0.5, -1),
-    b('core:cube', 0, 0.5, -1),
-    b('core:cube', 1, 0.5, -1),
-    b('core:cube', -1, 0.5, 0),
-    b('core:cube', 1, 0.5, 0),
-    b('core:cube', -1, 0.5, 1),
-    b('core:cube', 0, 0.5, 1),
-    b('core:cube', 1, 0.5, 1),
+    // A ring of eight stone cubes around an open 1x1 shaft at the origin
+    // (a cube is green unless colored).
+    b('core:cube', -1, 0.5, -1, 0, STONE),
+    b('core:cube', 0, 0.5, -1, 0, STONE),
+    b('core:cube', 1, 0.5, -1, 0, STONE),
+    b('core:cube', -1, 0.5, 0, 0, STONE),
+    b('core:cube', 1, 0.5, 0, 0, STONE),
+    b('core:cube', -1, 0.5, 1, 0, STONE),
+    b('core:cube', 0, 0.5, 1, 0, STONE),
+    b('core:cube', 1, 0.5, 1, 0, STONE),
 
     // Two columns rise from the ring to carry the well-house frame.
     b('core:column', -1, 2.5, 0),
@@ -481,7 +482,7 @@ const marketStallBricks = [
 
     b('core:plate_2x4', 0, 3.125, 0),
 
-    b('core:cube', 0, 0.5, 1),
+    b('core:cube', 0, 0.5, 1, 0, OAK),
 
     b('core:trim', -0.5, 2.875, -2),
     b('core:trim', 0.5, 2.875, -2)
@@ -632,8 +633,8 @@ const watchtowerBricks = [
 // deliberately overhangs each post by 1 unit, so adjacent fence
 // segments meet edge to edge when placed end to end.
 const fenceSegmentBricks = [
-    b('core:cube', -1, 0.5, 0),
-    b('core:cube', 1, 0.5, 0),
+    b('core:cube', -1, 0.5, 0, 0, OAK),
+    b('core:cube', 1, 0.5, 0, 0, OAK),
     b('core:beam', 0, 1.25, 0)
 ];
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 2c372aadfd2854d8 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: e191fb1f57264f38 -->
 # Distribuer votre travail
 
 <!-- languages -->
@@ -17,14 +17,17 @@ explique les détails.
 
 | Action | Où cela va | Qui le reçoit | Guide |
 |---|---|---|---|
-| **Publier** | Cet appareil uniquement | Personne d’autre, pour l’instant | [Publier votre création](04-PublishingAndForking.md#publier-votre-création) |
+| **Publier** | Cet appareil et, une fois choisi où vont vos constructions, là aussi | Personne d’autre jusque-là ; ensuite, tout le monde | [Publier votre création](04-PublishingAndForking.md#publier-votre-création), [Où elle va](04-PublishingAndForking.md#où-elle-va--envoyer-une-construction-en-publiant) |
 | **Partager avec les pairs** | Directement aux personnes auxquelles vous êtes connecté | Vos pairs connectés, tant que vous êtes en ligne | [Partager avec les pairs connectés](04-PublishingAndForking.md#partager-avec-les-pairs-connectés) |
 | **Distribuer** | Des réseaux décentralisés (IPFS, Arweave, Nostr, Steem, Blurt) | N’importe qui, sans connexion à vous | Cette page |
 
-Publier n’envoie jamais rien nulle part de soi-même, et partager avec des
-pairs n’est pas distribuer : les pairs n’en gardent une copie qu’aussi
-longtemps qu’ils le choisissent, et personne d’autre ne peut la trouver.
-Chaque distribution est un clic explicite.
+Tant que vous n’avez pas choisi où vont vos constructions, publier
+n’envoie rien nulle part de soi-même. Une fois le choix fait (dans **Où
+elle va** de l’Éditeur, avec **Envoyer ici à chaque publication** coché),
+chaque Publier d’une construction signée la distribue aussi là ; décochez
+la case pour arrêter. Partager avec les pairs n’est pas distribuer : les
+pairs gardent une copie aussi longtemps qu’ils le veulent, et personne
+d’autre ne peut la trouver.
 
 ## Les trois rôles qu’un réseau peut jouer
 
@@ -104,7 +107,7 @@ la Déclaration signée seulement** :
 Détails :
 
 - Déclaration signée et Snapshot :
-  [Distribuer directement depuis l’Éditeur](04-PublishingAndForking.md#distribuer-directement-depuis-léditeur),
+  [Où elle va](04-PublishingAndForking.md#où-elle-va--envoyer-une-construction-en-publiant),
   [Mon Monde partagé](03-WorldView.md#mon-monde-partagé--distribuer-votre-propre-snapshot-sans-pair-nécessaire),
   et la [boîte de dialogue Distribuer](03-WorldView.md#rencontres-dans-le-monde--publications-et-avatars-que-vos-pairs-partagent)
   elle-même.

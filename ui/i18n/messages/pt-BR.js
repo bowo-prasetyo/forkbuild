@@ -868,9 +868,14 @@ export default Object.freeze({
     'toolbar.exportAllHint': 'Baixar todas as construções salvas em um único arquivo',
 
     // Editor (ui/views/EditorView.js).
-    'editor.published': 'Publicada! Compartilhe o link, ou use Distribuir para enviá-la às redes abertas e qualquer pessoa poder encontrá-la.',
-    'editor.distribute': 'Distribuir',
+    'editor.published': 'Publicada! Compartilhe o link. Para que qualquer pessoa a encontre sem link, escolha para onde ela vai.',
+    'editor.distribute': 'Escolher para onde vai',
     'editor.dismiss': 'Dispensar',
+    'editor.publishedSending': 'Publicada! Enviando para {network}…',
+    'editor.publishedSent': 'Publicada e enviada para {network}: agora qualquer pessoa pode encontrá-la.',
+    'editor.publishedSendFailed': 'Publicada, mas o envio para {network} não funcionou: {error}',
+    'editor.tryAgain': 'Tentar de novo',
+    'editor.changeWhereItGoes': 'Mudar para onde vai',
     'editor.tool': 'Ferramenta',
     'editor.select': 'Selecionar',
     'editor.place': 'Colocar',
@@ -1064,6 +1069,11 @@ export default Object.freeze({
 
     // Editor: distributing a new Publication (ui/components/EditorDistributionDialog.js).
     'distribution.title': 'Distribuir',
+    'distribution.whereItGoes': 'Para onde vai',
+    'distribution.whereItGoesLead': 'Envie sua construção para uma rede aberta para que qualquer pessoa a encontre sem link. A carteira ou extensão do seu navegador para essa rede pede sua aprovação a cada envio.',
+    'distribution.send': 'Enviar',
+    'distribution.sendEveryTime': 'Enviar para cá toda vez que eu publicar',
+    'distribution.sendEveryTimeHint': 'Fica guardado neste dispositivo quando um envio funciona. Depois, cada Publicar envia para lá sozinho; desmarque para parar. Arweave e Blurt cobram uma pequena taxa a cada envio.',
     'distribution.storage': 'Armazenamento',
     'distribution.endpoint': 'Endpoint',
     'distribution.credential': 'Credencial (opcional)',
