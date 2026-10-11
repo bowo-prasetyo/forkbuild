@@ -391,6 +391,11 @@ task: nothing is remembered, nobody checks whether it got built, and there
 is no reward. The same ground gives the same thought to everyone, and a
 spot that already has a build nearby has nothing to wish for.
 
+Once something does stand there, it says so instead, as a plain fact — for
+example *"Someone has built about 14 m to the east, just where I always
+thought a well would go."* — naming the build when it has a title, with a
+button to look at it. Still nothing is kept or rewarded.
+
 What a resident says is what *your* copy of ForkBuild knows: the builds in
 your catalog, the people present with you, the vehicles and animals you
 haven't taken. Someone else talking to the same resident may hear different

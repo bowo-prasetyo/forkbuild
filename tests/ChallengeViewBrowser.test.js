@@ -2,7 +2,8 @@
 import { createApp, nextTick } from 'vue';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import ChallengeView from '../ui/views/ChallengeView.js';
-import { challengeAt, previousChallenge } from '../core/BuildChallenge.js';
+import { challengeAt, challengeById, previousChallenge } from '../core/BuildChallenge.js';
+import { challengeJoinRoute } from '../ui/components/challenge/challengeText.js';
 import { ChallengeEntryLog } from '../application/challenge/ChallengeEntryLog.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { Publication } from '../publisher/Publication.js';
@@ -31,6 +32,16 @@ async function until(condition, what, timeoutMs = 20000) {
         await new Promise((resolve) => setTimeout(resolve, 50));
     }
 }
+
+// The page reads the clock, so it is set to a themed week (the first,
+// lighthouse), with time still running: every fourth week is a remix week,
+// whose page is checked on its own below.
+const realNow = Date.now.bind(Date);
+function runClockFrom(ms) {
+    const shift = realNow() - ms;
+    Date.now = () => realNow() - shift;
+}
+runClockFrom(Date.parse('2026-10-14T12:00:00Z'));
 
 const challenge = challengeAt(Date.now());
 const previous = previousChallenge(challenge);
@@ -82,8 +93,9 @@ await nextTick();
     assert(host.querySelector('.challenge-title').textContent.trim() === t(`challenge.theme.${challenge.themeId.replace(/-([a-z])/g, (_, c) => c.toUpperCase())}.title`), 'the theme is the headline');
     assert(host.querySelector('.challenge-card-tag').textContent.trim() === `#${challenge.tag}`, 'the week\'s tag is shown');
     const join = host.querySelector('.challenge-join');
-    assert(join && join.getAttribute('href') === router.resolve({ path: '/editor', query: { start: challenge.starterStructureId, challenge: challenge.id } }).href,
-        `Join opens the starting build for this week (${join && join.getAttribute('href')})`);
+    assert(join && join.getAttribute('href') === router.resolve({ path: '/editor', query: { challenge: challenge.id } }).href,
+        `Join opens an empty plot for this week (${join && join.getAttribute('href')})`);
+    assert(host.querySelector('.challenge-twist').textContent.includes(t('challenge.theme.lighthouse.twist')), 'with the week\'s twist');
     assert(host.querySelectorAll('.challenge-steps li').length === 3, 'three steps to enter');
     assert(searched.join() === challenge.tag, 'the networks are searched for this week\'s tag');
     assert(host.querySelector('.publication-catalog-network').textContent.includes(t('challenge.network.searching')), 'and it says so');
@@ -131,4 +143,51 @@ await nextTick();
 
 app.unmount();
 host.remove();
+
+// A remix week (the fourth): Join goes to last week's entries, each a Remix
+// away from an entry of its own, and there are no ideas to start from.
+{
+    runClockFrom(Date.parse('2026-11-04T12:00:00Z'));
+    const remix = challengeAt(Date.now());
+    const before = challengeById(remix.remixOf);
+    const log = new ChallengeEntryLog(new InMemoryStorageProvider());
+    log.add(before.tag, ['pub-logged']);
+    const remixRouter = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+            { path: '/challenge', component: ChallengeView },
+            { path: '/challenge/:id', component: ChallengeView },
+            { path: '/:rest(.*)', component: { template: '<div></div>' } }
+        ]
+    });
+    const remixSearched = [];
+    const remixHost = document.createElement('div');
+    document.body.appendChild(remixHost);
+    const remixApp = createApp({ template: '<router-view />' });
+    remixApp.use(remixRouter);
+    remixApp.provide('challengeEntryLog', log);
+    remixApp.provide('challengeEntryDiscovery', { run: async (tag) => { remixSearched.push(tag); return { found: 0, pending: 0 }; } });
+    remixApp.provide('decentralizedPublicationDiscoveryProvider', discovery);
+    remixRouter.push('/challenge');
+    await remixRouter.isReady();
+    remixApp.mount(remixHost);
+    await nextTick();
+    assert(remixHost.querySelector('.challenge-title').textContent.trim() === t('challenge.theme.remix.title'), 'the week is a remix week');
+    assert(!remixHost.querySelector('.challenge-twist'), 'whose twist is the remix itself');
+    const remixJoin = remixHost.querySelector('.challenge-join').getAttribute('href');
+    assert(remixJoin === remixRouter.resolve(challengeJoinRoute(remix)).href && remixJoin.includes('#challenge-remix-from'), `Join goes to last week's entries (${remixJoin})`);
+    const cards = remixHost.querySelectorAll('.challenge-remix-entries > *');
+    assert(cards.length === 1 && remixHost.querySelector('.challenge-remix-from').textContent.includes('Harbor Light'), 'last week\'s entry is there to remix');
+    remixHost.querySelector('.challenge-remix-entries .action-btn--fork').click();
+    await until(() => remixRouter.currentRoute.value.path === '/editor', 'the remix');
+    const query = remixRouter.currentRoute.value.query;
+    assert(query.fork === 'doc-pub-logged' && query.publication === 'pub-logged' && query.challenge === remix.id, `Remix opens a copy tagged for the week (${JSON.stringify(query)})`);
+    await until(() => remixSearched.length === 2, 'both searches');
+    assert(remixSearched.join() === `${remix.tag},${before.tag}`, 'the networks are searched for this week\'s entries and last week\'s');
+    assert(!remixHost.querySelector('.challenge-section .featured-build-card'), 'no ready-made ideas');
+    remixApp.unmount();
+    remixHost.remove();
+    console.log('✓ a remix week starts from last week\'s entries');
+}
+Date.now = realNow;
 console.log('\n✅ All ChallengeView browser tests passed.');

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 7741d1f107953066 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: ec20eefd36a2abe5 -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -437,6 +437,12 @@ n’est jamais qu’une pensée à voix haute, jamais une tâche : rien n’es
 gardé, personne ne vérifie si elle a été construite, et il n’y a aucune
 récompense. Le même terrain donne la même pensée à tout le monde, et un
 endroit qui a déjà une construction à côté ne souhaite rien.
+
+Une fois que quelque chose s’y dresse, il le dit à la place, comme un simple
+fait, par exemple *« Quelqu’un a construit à environ 14 m à l’est, juste là
+où j’ai toujours pensé qu’irait un puits. »*, en nommant la construction si
+elle a un titre, avec un bouton pour la regarder. Là encore, rien n’est
+gardé ni récompensé.
 
 Ce que dit un habitant, c’est ce que sait *votre* copie de ForkBuild : les
 constructions de votre catalogue, les personnes présentes avec vous, les

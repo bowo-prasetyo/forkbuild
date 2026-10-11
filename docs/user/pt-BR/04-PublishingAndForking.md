@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 8a6d8b43407550d1 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 60a63aedcbfe91d7 -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -531,21 +531,34 @@ ponte, uma casa minúscula, …), de segunda-feira até o fim do domingo
 (UTC). O Início o mostra, e **Desafio** na barra do topo abre a página
 dele.
 
-São 26 temas, então meio ano passa antes que um se repita, e cada um
-começa de uma construção própria.
+São 26 temas, então meio ano passa antes que um se repita, cada um com ideias para começar e um detalhe que deixa as participações
+da semana diferentes, como *“Faça-a larga o bastante para a carroça de
+feno passar.”* Uma em cada quatro semanas é uma semana de remix (veja
+abaixo).
 
-1. **Participar do desafio** abre uma construção inicial no Editor como
-   sua própria cópia, já com a tag da semana (uma tag como
-   `#lighthouse-20261012`: o tema e a segunda-feira em que começou). O
-   desafio também é a primeira opção de **Novo** no Editor, e as **Ideias
-   para começar** da página abrem outras construções que combinam, do
-   mesmo jeito.
-2. Deixe-a do seu jeito ou recomece num terreno vazio: seja o que for que
-   você construir, participa enquanto mantiver a tag da semana
-   (adicione-a em **Propriedades do documento → Tags** se começou de outro
-   jeito).
+1. **Participar do desafio** abre no Editor um terreno vazio só seu, com o
+   nome do tema e já com a tag da semana (uma tag como
+   `#lighthouse-20261012`: o tema e a segunda-feira em que começou), com as
+   estruturas da semana fixadas no topo das **Estruturas** da Biblioteca de
+   construção. O desafio também é a primeira opção de **Novo** no Editor, e
+   as **Ideias para começar** da página abrem uma dessas construções como
+   sua própria cópia.
+2. Construa do seu jeito: coloque uma ideia se quiser e faça dela a sua.
+   Seja o que for que você construir, participa enquanto mantiver a tag da
+   semana (adicione-a em **Propriedades do documento → Tags** se começou de
+   outro jeito).
 3. Publique antes do fim da semana e compartilhe o link. O texto do link
    cita o desafio e a tag, pronto para um post.
+
+**Semanas de remix.** Uma em cada quatro semanas, a partir da semana de
+2 de novembro de 2026, é uma semana de remix (`#remix-20261102`): em vez de
+um tema, uma participação começa como sua própria cópia de uma das
+participações da semana anterior. **Participar** leva à página do desafio,
+que lista as participações da semana passada; **Remixar** numa delas abre
+sua cópia no Editor, com a tag da semana. Sua cópia lembra de quem era,
+então quem a construiu aparece na árvore genealógica. Se a semana passada
+não teve participações, as famílias de remixes de exemplo são oferecidas no
+lugar.
 
 A página do desafio lista as participações que este dispositivo conhece:
 suas próprias construções publicadas com a tag e as de outras pessoas

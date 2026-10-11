@@ -263,6 +263,21 @@ function runTests() {
             && Number.isFinite(wishing.wish.position.x) && Number.isFinite(wishing.wish.position.z),
             '45d. ...on a spot in its own World');
 
+        // Once something stands there, it says so instead: a fact, with a
+        // Focus on it, and nothing to build.
+        const spot = wishing.wish.position;
+        session._loadedDocuments.set('w-well', new Document({ world: new World({ id: 'w-well' }), metadata: new DocumentMetadata({ title: 'Ana\'s Well' }) }));
+        const positionOf = session.getDocumentPosition.bind(session);
+        session.getDocumentPosition = (documentId) => (documentId === 'w-well' ? { x: spot.x + 2, y: 0, z: spot.z } : positionOf(documentId));
+        const noticing = [];
+        for (let i = 0; i < 3; i++) noticing.push(session.talkToNearestResident());
+        const noticed = noticing.find((speech) => speech.remarks.some((r) => r.includes('where I always thought')));
+        assert(noticed && noticed.remarks[0].includes('Ana\'s Well') && noticed.wish === null,
+            `45e. Once a build stands where it wondered, it says so, with nothing to build (got ${noticing.map((speech) => speech.remarks.join(' ')).join(' | ')})`);
+        assert(noticed.focusTargets.length === 1 && noticed.focusTargets[0].label === 'Ana\'s Well', '45f. ...and a Focus on it');
+        session.getDocumentPosition = positionOf;
+        session._loadedDocuments.delete('w-well');
+
         said.length = 0;
         assert(session._processResidentTalkInput('T', 'keydown') === true && said.length === 1, '46. The T key talks');
         session._processResidentTalkInput('t', 'keydown');

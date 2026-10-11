@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 8a6d8b43407550d1 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 60a63aedcbfe91d7 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -543,21 +543,34 @@ Cada semana ForkBuild propone un tema para construir (un faro, un puente,
 una casa diminuta, …), de lunes al final del domingo (UTC). Inicio lo
 muestra, y **Desafío** en la barra de arriba abre su página.
 
-Hay 26 temas, así que pasa medio año antes de que uno se repita, y cada
-uno empieza a partir de una construcción propia.
+Hay 26 temas, así que pasa medio año antes de que uno se repita, cada uno con ideas para empezar y un giro que hace distintas las
+participaciones de la semana, como *«Hágalo lo bastante ancho para que pase
+el carro de heno.»* Una de cada cuatro semanas es una semana de remezcla
+(vea más abajo).
 
-1. **Unirse al desafío** abre una construcción inicial en el Editor como
-   su propia copia, ya con la etiqueta de la semana (por ejemplo
-   `#lighthouse-20261012`: el tema y el lunes en que empezó). El desafío
-   también es la primera opción de **Nuevo** en el Editor, y las **Ideas
-   para empezar** de la página abren otras construcciones adecuadas de la
-   misma manera.
-2. Hágala suya o empiece de nuevo en un terreno vacío: construya lo que
-   construya, participa mientras conserve la etiqueta de la semana
-   (añádala en **Propiedades del documento → Etiquetas** si empezó de otra
-   forma).
+1. **Unirse al desafío** abre en el Editor un terreno vacío propio, con el
+   nombre del tema y ya con la etiqueta de la semana (por ejemplo
+   `#lighthouse-20261012`: el tema y el lunes en que empezó), y las
+   estructuras de la semana fijadas arriba en **Estructuras** de la
+   Biblioteca de construcción. El desafío también es la primera opción de
+   **Nuevo** en el Editor, y las **Ideas para empezar** de la página abren
+   en cambio una de esas construcciones como su propia copia.
+2. Constrúyalo a su manera: agregue una idea si quiere y hágala suya.
+   Construya lo que construya, participa mientras conserve la etiqueta de
+   la semana (añádala en **Propiedades del documento → Etiquetas** si
+   empezó de otra forma).
 3. Publíquela antes de que acabe la semana y comparta su enlace. El texto
    del enlace nombra el desafío y su etiqueta, listo para una publicación.
+
+**Semanas de remezcla.** Una de cada cuatro semanas, empezando por la del
+2 de noviembre de 2026, es una semana de remezcla (`#remix-20261102`): en
+lugar de un tema, una participación empieza como su propia copia de una de
+las participaciones de la semana anterior. **Unirse** lleva a la página del
+desafío, que muestra las participaciones de la semana pasada; **Remezclar**
+en una abre su copia en el Editor, con la etiqueta de la semana. Su copia
+recuerda de quién era, así su autor aparece en el árbol familiar. Si la
+semana pasada no tuvo participaciones, se ofrecen en cambio las familias
+de remezclas de ejemplo.
 
 La página del desafío muestra las participaciones que este dispositivo
 conoce: sus propias construcciones publicadas con la etiqueta y las de

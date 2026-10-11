@@ -1,4 +1,4 @@
-import { challengeDaysLeft, isChallengeOpen } from '../../../core/BuildChallenge.js';
+import { challengeDaysLeft, isChallengeOpen, isRemixChallenge } from '../../../core/BuildChallenge.js';
 import { formatDate, t } from '../../i18n/i18n.js';
 
 // The words a challenge (core/BuildChallenge.js) is shown with.
@@ -14,6 +14,12 @@ export function challengeThemeTitle(challenge) {
 
 export function challengeThemeBrief(challenge) {
     return t(`challenge.theme.${themeKey(challenge)}.brief`);
+}
+
+// The week's twist (a constraint that makes entries differ), or '' for a
+// remix week, whose twist is starting from someone else's entry.
+export function challengeThemeTwist(challenge) {
+    return isRemixChallenge(challenge) ? '' : t(`challenge.theme.${themeKey(challenge)}.twist`);
 }
 
 // The week's last day, such as "Sunday, 18 October": the week ends at the
@@ -33,8 +39,17 @@ export function challengeTimeText(challenge, now = Date.now()) {
     return now < challenge.startsAt.getTime() ? t('challenge.notStarted') : t('challenge.ended');
 }
 
-// Where Join goes: the theme's starting build, opened as the visitor's own
-// copy and tagged for the week (ui/views/EditorView.js).
-export function challengeJoinRoute(challenge, structureId = challenge.starterStructureId) {
-    return { path: '/editor', query: { start: structureId, challenge: challenge.id } };
+// Where Join goes. A themed week: an empty plot tagged for the week, with the
+// theme's structures pinned in the Build Library (ui/views/EditorView.js);
+// given a `structureId` (an idea picked on the challenge page), a copy of
+// that structure instead. A remix week: its page, at last week's entries, one
+// of which an entry starts as.
+export function challengeJoinRoute(challenge, structureId = null) {
+    if (isRemixChallenge(challenge)) return { path: `/challenge/${challenge.id}`, hash: '#challenge-remix-from' };
+    return { path: '/editor', query: structureId ? { start: structureId, challenge: challenge.id } : { challenge: challenge.id } };
+}
+
+// A remix week's entry: a copy of `publication`, tagged for `challenge`.
+export function challengeRemixRoute(challenge, publication) {
+    return { path: '/editor', query: { fork: publication.documentId, publication: publication.id, challenge: challenge.id } };
 }

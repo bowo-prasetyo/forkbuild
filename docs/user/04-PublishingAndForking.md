@@ -505,19 +505,31 @@ build on.
 Every week ForkBuild sets a theme to build (a lighthouse, a bridge, a tiny
 home, a harbor, a front porch, …), from Monday to the end of Sunday (UTC).
 There are 26 themes, so half a year passes before one comes round again,
-and each starts from a build of its own. Home shows it, and **Challenge** in
+each with ideas to start from and a twist that makes the week's entries
+differ, such as *"Make it wide enough for the hay wagon to cross."* Every
+fourth week is a remix week instead (see below). Home shows it, and **Challenge** in
 the top bar opens its page.
 
-1. **Join the challenge** opens a starting build in the Editor as your own
-   copy, already tagged for the week (a tag such as `#lighthouse-20261012`,
-   the theme and the Monday it began). The challenge is also the first
-   choice in the Editor's **New**, and the page's **Ideas to start from**
-   open other fitting builds the same way.
-2. Make it yours, or start again from an empty plot: whatever you build
-   enters as long as it keeps the week's tag (add it in **Document
-   Properties → Tags** if you started some other way).
+1. **Join the challenge** opens an empty plot of your own in the Editor,
+   named after the theme and already tagged for the week (a tag such as
+   `#lighthouse-20261012`, the theme and the Monday it began), with the
+   week's ready-made structures pinned at the top of the Build Library's
+   **Structures**. The challenge is also the first choice in the Editor's
+   **New**, and the page's **Ideas to start from** open one of those
+   builds as your own copy instead.
+2. Build it your way: drop in an idea if you like, then make it yours.
+   Whatever you build enters as long as it keeps the week's tag (add it in
+   **Document Properties → Tags** if you started some other way).
 3. Publish it before the week ends, and share its link. The link's text
    names the challenge and its tag, ready for a post.
+
+**Remix weeks.** Every fourth week, starting with the week of 2 November
+2026, is a remix week (`#remix-20261102`): instead of a theme, an entry
+starts as your own copy of one of the week before's entries. **Join** goes
+to the challenge page, which lists last week's entries; **Remix** on one
+opens your copy in the Editor, tagged for the week. Your copy remembers
+whose it was, so its builder is credited in the family tree. If last week
+had no entries, the example remix families are offered instead.
 
 The challenge's page lists the entries this device knows of: your own
 published builds with the tag, and others' builds found on the networks.

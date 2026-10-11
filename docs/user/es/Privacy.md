@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: efd7b4e45e7a253b -->
+<!-- translation-of: docs/Privacy.md source-hash: b42e7153e5753e1e -->
 # Privacidad
 
 <!-- languages -->
@@ -56,6 +56,10 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
 - para cada construcción que empezó con **Construir aquí**, el mundo y el
   lugar que eligió, para que al publicarla quede allí. Sus sellos en Inicio
   se calculan a partir de lo que ya aparece aquí y no se guardan.
+- para cada construcción empezada con una estructura prefabricada o como
+  copia de otra, y para cada estructura prefabricada añadida, qué bloques
+  eran y dónde estaban, para que al publicar se distingan los bloques que
+  usted colocó de los de partida (solo se cuenta en qué rango caen).
 
 Borrar los datos de este sitio en el navegador lo elimina todo, y no hay
 ninguna otra copia ni forma de recuperarlo. Haga primero una copia de
@@ -189,14 +193,16 @@ Y la primera vez que se publica una construcción desde este navegador
   contar las estructuras: `/e/publish-bricks-0`, `/e/publish-bricks-1`
   (de 1 a 9), `/e/publish-bricks-10` (de 10 a 49), `/e/publish-bricks-50`
   (de 50 a 199) o `/e/publish-bricks-200` (200 o más). Nunca el número exacto;
+- los mismos cinco rangos para los bloques que su autor colocó o cambió, sin
+  los prefabricados con los que empezó o que se le añadieron: de
+  `/e/publish-placed-0` a `/e/publish-placed-200`;
 - `/e/second-build`, cuando es la segunda construcción publicada desde este
   navegador, lo que ocurre una sola vez;
 - `/e/remix-published`, cuando es una copia de una construcción que este
   navegador no publicó.
 
 Se calculan a partir de las construcciones que este navegador ha publicado,
-que ya guarda (vea «Lo que se queda en su dispositivo»); no se guarda nada
-nuevo para ello.
+que ya guarda (vea «Lo que se queda en su dispositivo»); para los bloques colocados, también una nota de los bloques con los que empezó cada construcción, guardada junto a ella en este dispositivo y nunca enviada.
 
 Y cuando ForkBuild se abre desde un enlace de una de sus propias
 publicaciones de lanzamiento, que termina en `?ref=` y el nombre del lugar

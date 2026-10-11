@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: efd7b4e45e7a253b -->
+<!-- translation-of: docs/Privacy.md source-hash: b42e7153e5753e1e -->
 # Privacidade
 
 <!-- languages -->
@@ -56,6 +56,10 @@ que você publique, exporte ou envie:
   o lugar escolhidos, para que ao publicar ela fique ali. Seus selos no
   Início são calculados a partir do que já está listado aqui e não são
   guardados.
+- para cada construção começada a partir de uma estrutura pronta ou como
+  cópia de outra, e para cada estrutura pronta colocada nela, quais blocos
+  eram e onde estavam, para que ao publicar se distingam os blocos que você
+  colocou dos iniciais (só a faixa é contada).
 
 Limpar os dados deste site no navegador apaga tudo isso, e não há outra
 cópia nem como recuperar. Faça antes um backup com **Seus dados → Fazer
@@ -184,14 +188,16 @@ E na primeira vez que uma construção é publicada a partir deste navegador
   sem contar estruturas: `/e/publish-bricks-0`, `/e/publish-bricks-1`
   (de 1 a 9), `/e/publish-bricks-10` (de 10 a 49), `/e/publish-bricks-50`
   (de 50 a 199) ou `/e/publish-bricks-200` (200 ou mais). Nunca o número exato;
+- as mesmas cinco faixas para os blocos que quem construiu colocou ou mudou,
+  sem os prontos com que ela começou ou que foram colocados nela: de
+  `/e/publish-placed-0` a `/e/publish-placed-200`;
 - `/e/second-build`, quando é a segunda construção publicada a partir deste
   navegador, o que acontece uma única vez;
 - `/e/remix-published`, quando é uma cópia de uma construção que este
   navegador não publicou.
 
 Isso é calculado a partir das construções que este navegador publicou, que
-ele já guarda (veja "O que fica no seu dispositivo"); nada novo é guardado
-para isso.
+ele já guarda (veja "O que fica no seu dispositivo"); para os blocos colocados, também uma anotação dos blocos com que cada construção começou, guardada junto dela neste dispositivo e nunca enviada.
 
 E quando o ForkBuild é aberto por um link de um dos próprios posts de
 lançamento, que termina em `?ref=` e no nome do lugar onde foi publicado

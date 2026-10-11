@@ -80,7 +80,11 @@ export class EditorSession {
         // outgoing is wired per CommandHistory in _rebuild(), incoming once in the
         // constructor.
         documentCommandPropagation = null,
-        documentOperationRecovery = null
+        documentOperationRecovery = null,
+        // Records the bricks each build starts with (application/document/
+        // ReadyMadeBricksStore.js), so publishing can tell them from the
+        // builder's own. Optional.
+        readyMadeBricks = null
     }) {
         this._registry = registry;
         this._editorContext = editorContext;
@@ -123,6 +127,7 @@ export class EditorSession {
             causalGapDetector: this._causalGapDetector
         });
         this._documentOperationRecovery = documentOperationRecovery;
+        this._readyMadeBricks = readyMadeBricks;
 
         this._container = null;
         this._session = null;
@@ -405,12 +410,33 @@ export class EditorSession {
         for (const subscription of this._activitySubscriptions) {
             subscription.unsubscribe();
         }
-        const activity = (kind) => ({ command }) => this._emitCommandActivity(kind, command);
+        const activity = (kind) => ({ command }) => {
+            if (kind === EDITOR_ACTIVITY.EXECUTED) this._noteReadyMadePaste(command);
+            this._emitCommandActivity(kind, command);
+        };
         this._activitySubscriptions = [
             this._commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_EXECUTED, activity(EDITOR_ACTIVITY.EXECUTED)),
             this._commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_UNDONE, activity(EDITOR_ACTIVITY.UNDONE)),
             this._commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_REDONE, activity(EDITOR_ACTIVITY.REDONE))
         ];
+    }
+
+    // The open build was just started from something (a ready-made structure,
+    // or a copy of a build): all its bricks are ready-made, not its builder's.
+    noteReadyMadeStart() {
+        const world = this._documentManager.document?.world;
+        if (this._readyMadeBricks && world) this._readyMadeBricks.started(world);
+    }
+
+    // A Build Library structure dropped in: its bricks are ready-made too.
+    _noteReadyMadePaste(command) {
+        if (!this._readyMadeBricks || !command || !command.isLibraryStructure) return;
+        const world = this._documentManager.document?.world;
+        if (!world || world.id !== command.worldId) return;
+        const building = world.getBuilding(command.buildingId);
+        if (!building) return;
+        const bricks = command.executedBrickIds.map((id) => building.findBrick(id)).filter(Boolean);
+        this._readyMadeBricks.added(world.id, bricks);
     }
 
     // Calls `listener(activity, command)` for every edit the user makes in this

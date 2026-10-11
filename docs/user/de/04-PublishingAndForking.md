@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 8a6d8b43407550d1 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 60a63aedcbfe91d7 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -550,19 +550,32 @@ Brücke, ein Tiny House, …), von Montag bis Ende Sonntag (UTC). Start zeigt
 es, und **Challenge** in der oberen Leiste öffnet seine Seite.
 
 Es gibt 26 Themen, sodass ein halbes Jahr vergeht, bevor eines
-wiederkommt, und jedes beginnt mit einem eigenen Bauwerk.
+wiederkommt, jedes mit Ideen zum Starten und einem Kniff, der die Beiträge der Woche
+verschieden macht, etwa *„Machen Sie sie breit genug für den Heuwagen.“*
+Jede vierte Woche ist stattdessen eine Remix-Woche (siehe unten).
 
-1. **Mitmachen** öffnet ein Startbauwerk im Editor als Ihre eigene Kopie,
-   schon mit dem Tag der Woche (etwa `#lighthouse-20261012`: das Thema und
-   der Montag, an dem es begann). Die Challenge ist auch die erste Wahl unter
-   **Neu** im Editor, und **Ideen zum Starten** auf der Seite öffnen weitere
-   passende Bauwerke auf dieselbe Weise.
-2. Machen Sie es zu Ihrem oder beginnen Sie neu auf einem leeren
-   Grundstück: Was Sie auch bauen, nimmt teil, solange es den Tag der Woche
-   behält (fügen Sie ihn unter **Dokumenteigenschaften → Tags** hinzu, wenn
-   Sie anders begonnen haben).
+1. **Mitmachen** öffnet im Editor ein leeres Grundstück für Sie, nach dem
+   Thema benannt und schon mit dem Tag der Woche (etwa
+   `#lighthouse-20261012`: das Thema und der Montag, an dem es begann), und
+   die Strukturen der Woche stehen oben unter **Strukturen** in der
+   Baubibliothek. Die Challenge ist auch die erste Wahl unter **Neu** im
+   Editor, und **Ideen zum Starten** auf der Seite öffnen stattdessen eines
+   dieser Bauwerke als Ihre eigene Kopie.
+2. Bauen Sie es auf Ihre Art: Setzen Sie gern eine Idee ein und machen Sie
+   sie zu Ihrer. Was Sie auch bauen, nimmt teil, solange es den Tag der
+   Woche behält (fügen Sie ihn unter **Dokumenteigenschaften → Tags** hinzu,
+   wenn Sie anders begonnen haben).
 3. Veröffentlichen Sie es vor Ende der Woche und teilen Sie den Link. Der
    Text des Links nennt die Challenge und ihren Tag, bereit für einen Post.
+
+**Remix-Wochen.** Jede vierte Woche, beginnend mit der Woche vom
+2. November 2026, ist eine Remix-Woche (`#remix-20261102`): Statt eines
+Themas beginnt ein Beitrag als Ihre eigene Kopie eines Beitrags der Woche
+davor. **Mitmachen** führt zur Seite der Challenge, die die Beiträge der
+letzten Woche listet; **Remixen** bei einem davon öffnet Ihre Kopie im
+Editor, mit dem Tag der Woche. Ihre Kopie weiß, wessen sie war, damit sein
+Erbauer im Stammbaum genannt wird. Gab es letzte Woche keine Beiträge,
+werden stattdessen die Beispiel-Remix-Familien angeboten.
 
 Die Seite der Challenge listet die Beiträge, die dieses Gerät kennt: Ihre
 eigenen veröffentlichten Bauwerke mit dem Tag und die anderer, die in den

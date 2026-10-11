@@ -198,13 +198,13 @@ async function run() {
         const factory = new Function(
             'route', 'identityProvider', 'findPublicationUseCase', 'forkDocumentUseCase',
             'editorEntryContextFromQuery', 'editorSession', 'feedback', 'router',
-            'entryContext', 'forkFailure', 't', 'funnelEventCounter',
+            'entryContext', 'forkFailure', 't', 'funnelEventCounter', 'afterForkOpened',
             `let arrivalDocumentId = null;\n${forkBlockSource}\nreturn { arrivalDocumentId };`
         );
         const result = factory(
             route, identityProvider, findPublicationUseCase, forkDocumentUseCase,
             editorEntryContextFromQuery, editorSession, feedback, router,
-            entryContextRef, forkFailureRef, t, null
+            entryContextRef, forkFailureRef, t, null, () => {}
         );
         return {
             entryContext: entryContextRef.value,

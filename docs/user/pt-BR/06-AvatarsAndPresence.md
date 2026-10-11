@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 7741d1f107953066 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: ec20eefd36a2abe5 -->
 # 06 — Avatares e presença
 
 <!-- languages -->
@@ -395,6 +395,12 @@ publicá-la a coloca lá. É sempre só um pensamento em voz alta, nunca uma
 tarefa: nada fica guardado, ninguém confere se foi construído e não há
 recompensa. O mesmo terreno dá o mesmo pensamento a todo mundo, e um lugar
 que já tem uma construção por perto não deseja nada.
+
+Quando já houver algo lá, ele diz isso no lugar, como um simples fato, por
+exemplo *“Alguém construiu a uns 14 m a leste, bem onde eu sempre achei que
+caberia um poço.”*, dizendo o nome da construção se ela tiver título, com um
+botão para olhar para ela. Ainda assim, nada fica guardado nem é
+recompensado.
 
 O que um morador diz é o que a *sua* cópia do ForkBuild sabe: as construções
 do seu catálogo, as pessoas presentes com você, os veículos e animais que

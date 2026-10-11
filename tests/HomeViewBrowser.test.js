@@ -6,7 +6,7 @@ import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickReg
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { FEATURED_STRUCTURE_IDS, SHOWCASE_STRUCTURE_IDS, composeShowcase, featuredStructures } from '../application/home/FeaturedBuilds.js';
 import { t } from '../ui/i18n/i18n.js';
-import { challengeAt } from '../core/BuildChallenge.js';
+import { challengeAt, isRemixChallenge } from '../core/BuildChallenge.js';
 import { assert } from './support/Assert.js';
 
 // Home, rendered by real Vue with the shipped CSS: what ForkBuild is, a
@@ -74,7 +74,9 @@ await nextTick();
     assert(card, 'Home shows this week\'s challenge');
     assert(card.querySelector('.challenge-card-tag').textContent.trim() === `#${challenge.tag}`, 'with the week\'s tag');
     const join = card.querySelector('.challenge-join').getAttribute('href');
-    assert(join === `#/editor?start=${encodeURIComponent(challenge.starterStructureId)}&challenge=${challenge.id}`, `Join opens the starting build tagged for the week (${join})`);
+    // A themed week opens an empty plot tagged for it; a remix week, its entries to start from.
+    const expected = isRemixChallenge(challenge) ? `#/challenge/${challenge.id}#challenge-remix-from` : `#/editor?challenge=${challenge.id}`;
+    assert(join === expected, `Join opens the week's way in (${join})`);
     assert(card.querySelector('.challenge-see-entries').getAttribute('href') === '#/challenge', 'and the entries are a click away');
     console.log('✓ this week\'s challenge is on Home');
 }

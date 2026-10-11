@@ -15,6 +15,7 @@ export const structureAndBlueprintMethods = {
         }
         const forkedDocument = this._forkStructureUseCase.execute(structure, this._identityProvider);
         this.openDocument(forkedDocument);
+        this.noteReadyMadeStart();
         return true;
     },
 

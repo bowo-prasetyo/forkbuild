@@ -1,5 +1,5 @@
 import {
-    LAUNCH_TARGETS, NETWORK_GATE_TARGETS, TARGET_STATUS, evaluateLaunchTargets, medianBrickRange, parseCounts
+    LAUNCH_TARGETS, NETWORK_GATE_TARGETS, TARGET_STATUS, evaluateLaunchTargets, medianBrickRange, medianPlacedRange, parseCounts
 } from '../core/LaunchTargets.js';
 import { FunnelEvent } from '../core/VisitorCount.js';
 import { formatScorecard } from '../scripts/launch-scorecard.mjs';
@@ -37,9 +37,13 @@ const byId = (results) => Object.fromEntries(results.map((result) => [result.id,
 
 // Met, missed, or too few to say; and the gate follows the building targets.
 {
-    const builds = { '/e/publish-bricks-1': 30, '/e/publish-bricks-10': 25, '/e/publish-bricks-50': 10 };
+    const builds = {
+        '/e/publish-bricks-1': 30, '/e/publish-bricks-10': 25, '/e/publish-bricks-50': 10,
+        '/e/publish-placed-1': 30, '/e/publish-placed-10': 25, '/e/publish-placed-50': 10
+    };
     const good = evaluateLaunchTargets({ ...builds, '/e/second-build': 15 });
     assert(byId(good.results)['median-build'].status === TARGET_STATUS.MET && byId(good.results)['median-build'].value === 10, 'a median of 10+ bricks is met');
+    assert(byId(good.results)['median-placed'].status === TARGET_STATUS.MET && byId(good.results)['median-placed'].value === 10, 'and of 10+ placed bricks');
     assert(byId(good.results)['second-build'].status === TARGET_STATUS.MET, '15 second builds in 65 (23%) meets 20%');
     assert(good.gate === 'open', 'both building targets met: the gate is open');
 
@@ -50,6 +54,15 @@ const byId = (results) => Object.fromEntries(results.map((result) => [result.id,
     assert(byId(small.results)['second-build'].status === TARGET_STATUS.TOO_FEW && small.gate === 'unknown', 'ten builds are too few to say');
     assert(byId(small.results)['plaza-visits'].value === null && byId(small.results)['plaza-visits'].status === TARGET_STATUS.TOO_FEW,
         'nothing counted at all is too few, with no value');
+    // Ready-made builds published untouched: plenty of bricks, none placed.
+    const readyMade = evaluateLaunchTargets({
+        '/e/publish-bricks-10': 65, '/e/publish-placed-0': 50, '/e/publish-placed-1': 15, '/e/second-build': 15
+    });
+    assert(byId(readyMade.results)['median-build'].status === TARGET_STATUS.MET, 'their bricks meet the old measure');
+    assert(byId(readyMade.results)['median-placed'].status === TARGET_STATUS.MISSED && readyMade.gate === 'closed',
+        'but nothing placed misses the gate\'s, and it stays closed');
+    assert(medianPlacedRange({ '/e/publish-placed-0': 2, '/e/publish-placed-50': 1 }).median === 0, 'the placed median reads the placed ranges');
+    assert(NETWORK_GATE_TARGETS.includes('median-placed') && !NETWORK_GATE_TARGETS.includes('median-build'), 'the gate counts placed bricks');
     console.log('✓ each target is met, missed or too few to say, and the gate follows the building ones');
 }
 
@@ -72,9 +85,9 @@ const byId = (results) => Object.fromEntries(results.map((result) => [result.id,
 
 // The scorecard names each target and says where the gate stands.
 {
-    const text = formatScorecard({ '/e/publish-bricks-1': 60, '/e/second-build': 3 });
+    const text = formatScorecard({ '/e/publish-bricks-1': 60, '/e/publish-placed-1': 60, '/e/second-build': 3 });
     assert(text.includes('BUILDING') && text.includes('FAMILY') && text.includes('WORLD'), 'grouped by pillar');
-    assert(/✗ below\s+median-build/.test(text) && /✗ below\s+second-build/.test(text), 'a missed target says so');
+    assert(/✗ below\s+median-placed/.test(text) && /✗ below\s+second-build/.test(text), 'a missed target says so');
     assert(text.trim().endsWith('New networks: CLOSED: a building target is below where it should be.'), 'and ends with the gate');
     console.log('✓ the scorecard groups targets by pillar and ends with the gate');
 }

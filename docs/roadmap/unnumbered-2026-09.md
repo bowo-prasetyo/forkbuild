@@ -5607,3 +5607,53 @@ building feels joyful (the guide ends inside what you made).
   inside it → the house's door → W → inside, ticked off in the Editor's guide).
 - Not done: arriving at a structure placement's door (only a World's own bricks are searched), and choosing among
   several doors.
+
+## Make it yours (unnumbered, 2026-10-11)
+
+**Building is counted, and the challenge asks for it.** The creative-direction audit
+(docs/reviews/CreativeDirection-2026-10-11.md, findings 2, 5 and 6) found that the building target could be met
+without building: it counted every brick, so the starter house (26) published untouched landed at 10+, and Join opened
+a finished structure, so a week's entries could all be the stock lighthouse. Residents wondered what the ground lacked
+but never noticed when someone built it. Pillar served: building feels joyful (the count and the challenge ask for the
+builder's own bricks), with every build has a family tree (remix weeks).
+
+- **Placed bricks** (core/PlacedBricks.js, application/document/ReadyMadeBricksStore.js). A device-local record, per
+  World id, of a build's ready-made bricks: everything when it starts as a forked structure
+  (`EditorSession#forkStructure()`) or a copy of a build (`noteReadyMadeStart()` after `?fork=`), plus each Build Library
+  structure pasted in (`PasteBricksCommand#isLibraryStructure`, noted as it executes). Bricks are compared by
+  signature (definition, position to 0.001, turn, tilt, colour), never id: a ready-made brick moved, turned or
+  recoloured is the builder's; one deleted counts for nothing. A build with no record is all its builder's.
+- **The count** (core/VisitorCount.js). A build's first publish also sends `/e/publish-placed-0`, `-1`, `-10`, `-50` or
+  `-200`, from the Editor and from World View. core/LaunchTargets.js gains `median-placed` (10 or more), and the gate
+  on new networks now reads it with `second-build`; `median-build` stays as a reading. docs/Pillars.md,
+  docs/launch/README.md and docs/Privacy.md (the new event and the local record) say so.
+- **Join opens an empty plot** (ui/views/EditorView.js). `/editor?challenge=<Monday>` (Home's and the challenge page's
+  Join, and the Editor's New) opens a new build named after the theme, tagged for the week, with the theme's starter
+  and ideas pinned at the top of the Build Library's Structures (BuildLibraryPanel's `pinnedStructures`, which opens
+  the tab) for as long as that build is open. An idea picked on the challenge page still opens as a copy.
+- **Twists.** Every theme has one line that makes the week's entries differ ("Make it wide enough for the hay wagon
+  to cross.", "Use only three colours."), shown under the brief on Home's card and the challenge page.
+- **Remix weeks** (core/BuildChallenge.js). From CHALLENGE_EPOCH, every fourth week (2 November 2026, then every four)
+  is a remix week, tag `remix-<yyyymmdd>`, `remixOf` the week before; the themes keep their turn round it, and weeks
+  before the epoch are as they were. Its Join goes to its page, which lists last week's entries (searching the
+  networks for both tags); Remix on one opens `/editor?fork=…&challenge=<Monday>`, tagged once the copy opens. With
+  no entries last week, the example remix families are offered.
+- **Residents notice** (core/ResidentWish.js, `residentWishFulfilledNear()`). On a wish turn, once a build, structure or
+  loaded World stands within 10 m of the spot a resident would wonder about, it says so instead, as a fact: "“Ana's
+  Well” stands about 14 m to the east, just where I always thought a well would go." With a title, a Focus on it;
+  never a reward, and nothing is kept.
+- Every language: the twists, the remix week, the challenge's new steps and labels, and the residents' new remarks;
+  guides 04 (the challenge, with remix weeks) and 06 (residents); docs/Architecture.md; the README.
+- Tests: `MakeItYours` (signatures; placed counts for the starter house, moved, added and deleted bricks; the store;
+  the Editor noting a forked structure, a library paste and a copy, and not a paste of one's own; the placed range
+  events; residents noticing a build where they wondered, by title or not); `BuildChallenge` (remix weeks, the turn
+  round them, the pinned ideas); `LaunchTargets` (the placed median, and ready-made builds keeping the gate shut);
+  `ResidentTalk` (a session's resident noticing a loaded World at its wish spot, with a Focus); `ChallengeViewBrowser`
+  (Join's empty plot, the twist, and a remix week's entries to remix, with the clock set to each kind of week);
+  `HomeViewBrowser`; `ForkFailureUXConvergenceAudit` (the fork handler's new `afterForkOpened()`); the bundled site
+  (Join opens an empty plot with the ideas pinned; the plaza flow, in a themed week).
+- The record is backed up and restored with everything else (Your Data), so a build carried to another device keeps
+  telling its ready-made bricks from its builder's.
+- Not done: a challenge plot's pinned structures after the page reloads (they are offered while the plot stays open),
+  and a remix week's entries remixed from builds shared only by link (only entries found under last week's tag are
+  listed).

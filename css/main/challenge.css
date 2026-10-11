@@ -56,6 +56,18 @@
     color: #c8c8c8;
 }
 
+/* The week's twist: a constraint, set apart from the brief. */
+.challenge-card-twist,
+.challenge-twist {
+    margin: 0 0 0.5rem;
+    max-width: 46rem;
+    padding: 0.4rem 0.6rem;
+    border-left: 3px solid #e0a040;
+    background: rgba(224, 160, 64, 0.1);
+    line-height: 1.45;
+    color: #f0dcc0;
+}
+
 .challenge-dates {
     margin: 0 0 0.75rem;
     color: #a0a0a0;

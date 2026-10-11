@@ -1,10 +1,10 @@
 import { challengeAt } from '../../../core/BuildChallenge.js';
-import { challengeJoinRoute, challengeThemeBrief, challengeThemeTitle, challengeTimeText } from './challengeText.js';
+import { challengeJoinRoute, challengeThemeBrief, challengeThemeTitle, challengeThemeTwist, challengeTimeText } from './challengeText.js';
 import { t } from '../../i18n/i18n.js';
 
 // This week's build challenge, on Home: the theme, how long is left, and the
-// ways in (Join, which opens a starting build tagged for the week, and the
-// challenge page with its entries).
+// ways in (Join, which opens an empty plot tagged for the week, or in a
+// remix week the entries to remix, and the challenge page with its entries).
 export default {
     name: 'ChallengeCard',
     props: {
@@ -19,6 +19,7 @@ export default {
             challenge,
             title: challengeThemeTitle(challenge),
             brief: challengeThemeBrief(challenge),
+            twist: challengeThemeTwist(challenge),
             time: challengeTimeText(challenge, now),
             joinRoute: challengeJoinRoute(challenge),
             pageRoute: { path: '/challenge' }
@@ -32,6 +33,7 @@ export default {
             </p>
             <h2 id="challenge-card-title" class="challenge-card-title">{{ title }}</h2>
             <p class="challenge-card-brief">{{ brief }}</p>
+            <p v-if="twist" class="challenge-card-twist"><strong>{{ t('challenge.twistLabel') }}</strong> {{ twist }}</p>
             <p class="challenge-card-tag">#{{ challenge.tag }}</p>
             <div class="challenge-card-actions">
                 <router-link :to="joinRoute" class="cta-button challenge-join">{{ t('challenge.join') }}</router-link>

@@ -20,6 +20,16 @@ export const BRICK_RANGES = Object.freeze([
     Object.freeze({ lowest: 200, path: path(FunnelEvent.PUBLISH_BRICKS_200) })
 ]);
 
+// The same ranges for the bricks a build's builder placed or changed, its
+// ready-made bricks left out (core/PlacedBricks.js).
+export const PLACED_RANGES = Object.freeze([
+    Object.freeze({ lowest: 0, path: path(FunnelEvent.PUBLISH_PLACED_0) }),
+    Object.freeze({ lowest: 1, path: path(FunnelEvent.PUBLISH_PLACED_1) }),
+    Object.freeze({ lowest: 10, path: path(FunnelEvent.PUBLISH_PLACED_10) }),
+    Object.freeze({ lowest: 50, path: path(FunnelEvent.PUBLISH_PLACED_50) }),
+    Object.freeze({ lowest: 200, path: path(FunnelEvent.PUBLISH_PLACED_200) })
+]);
+
 export const TARGET_STATUS = Object.freeze({
     MET: 'met',
     MISSED: 'missed',
@@ -31,10 +41,20 @@ export const TARGET_STATUS = Object.freeze({
 // fewest the denominator must hold before the answer means anything.
 export const LAUNCH_TARGETS = Object.freeze([
     Object.freeze({
+        id: 'median-placed',
+        pillar: 'building',
+        question: 'Does the median published build hold 10 bricks its builder placed, not only ready-made ones?',
+        kind: 'median-range',
+        ranges: 'placed',
+        target: 10,
+        minimum: 50
+    }),
+    Object.freeze({
         id: 'median-build',
         pillar: 'building',
-        question: 'Is the median published build a real build, not a first try?',
+        question: 'Is the median published build a real build, not a first try (ready-made bricks included)?',
         kind: 'median-range',
+        ranges: 'bricks',
         target: 10,
         minimum: 50
     }),
@@ -100,8 +120,10 @@ export const LAUNCH_TARGETS = Object.freeze([
     })
 ]);
 
-// The targets that must all be met before a new network or chain joins.
-export const NETWORK_GATE_TARGETS = Object.freeze(['median-build', 'second-build']);
+// The targets that must all be met before a new network or chain joins: the
+// bricks builders placed themselves, so a ready-made build published
+// untouched never opens it.
+export const NETWORK_GATE_TARGETS = Object.freeze(['median-placed', 'second-build']);
 
 function total(counts, paths) {
     return paths.reduce((sum, key) => {
@@ -113,17 +135,26 @@ function total(counts, paths) {
 // The lowest brick count of the range holding the median published build,
 // and how many builds were published; the median is null with none.
 export function medianBrickRange(counts) {
-    const totals = BRICK_RANGES.map((range) => total(counts, [range.path]));
+    return medianRange(counts, BRICK_RANGES);
+}
+
+// The same, for the bricks builders placed themselves.
+export function medianPlacedRange(counts) {
+    return medianRange(counts, PLACED_RANGES);
+}
+
+function medianRange(counts, ranges) {
+    const totals = ranges.map((range) => total(counts, [range.path]));
     const builds = totals.reduce((sum, value) => sum + value, 0);
     if (builds === 0) return { median: null, builds };
     // The middle build in size order (the lower middle for an even count).
     const middle = Math.ceil(builds / 2);
     let seen = 0;
-    for (let index = 0; index < BRICK_RANGES.length; index += 1) {
+    for (let index = 0; index < ranges.length; index += 1) {
         seen += totals[index];
-        if (seen >= middle) return { median: BRICK_RANGES[index].lowest, builds };
+        if (seen >= middle) return { median: ranges[index].lowest, builds };
     }
-    return { median: BRICK_RANGES[BRICK_RANGES.length - 1].lowest, builds };
+    return { median: ranges[ranges.length - 1].lowest, builds };
 }
 
 // One target against `counts`: { id, pillar, question, value, target,
@@ -133,7 +164,7 @@ export function evaluateTarget(target, counts) {
     let value;
     let sample;
     if (target.kind === 'median-range') {
-        const { median, builds } = medianBrickRange(counts);
+        const { median, builds } = target.ranges === 'placed' ? medianPlacedRange(counts) : medianBrickRange(counts);
         value = median;
         sample = builds;
     } else {

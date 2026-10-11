@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 8a6d8b43407550d1 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 60a63aedcbfe91d7 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -554,20 +554,34 @@ une mini-maison, …), du lundi à la fin du dimanche (UTC). L’accueil le
 montre, et **Défi** dans la barre du haut ouvre sa page.
 
 Il y a 26 thèmes, si bien qu’une demi-année passe avant qu’un thème
-revienne, et chacun commence par une construction qui lui est propre.
+revienne, chacun avec des idées pour commencer et une contrainte qui rend les
+participations de la semaine différentes, comme *« Faites-le assez large
+pour que la charrette de foin passe. »* Une semaine sur quatre est une
+semaine du remix (voir plus bas).
 
-1. **Participer au défi** ouvre une construction de départ dans l’Éditeur
-   comme votre propre copie, déjà étiquetée pour la semaine (une étiquette
-   comme `#lighthouse-20261012` : le thème et le lundi où il a commencé). Le
-   défi est aussi le premier choix de **Nouveau** dans l’Éditeur, et la
-   section **Des idées pour commencer** de la page ouvre d’autres
-   constructions qui vont avec, de la même façon.
-2. Faites-la vôtre, ou recommencez sur un terrain vide : quoi que vous
-   construisiez, cela participe tant que l’étiquette de la semaine reste
-   (ajoutez-la dans **Propriétés du document → Étiquettes** si vous avez
-   commencé autrement).
+1. **Participer au défi** ouvre dans l’Éditeur un terrain vide à vous,
+   nommé d’après le thème et déjà étiqueté pour la semaine (une étiquette
+   comme `#lighthouse-20261012` : le thème et le lundi où il a commencé),
+   avec les structures de la semaine épinglées en haut des **Structures** de
+   la Bibliothèque de construction. Le défi est aussi le premier choix de
+   **Nouveau** dans l’Éditeur, et la section **Des idées pour commencer** de
+   la page ouvre plutôt l’une de ces constructions comme votre propre copie.
+2. Construisez à votre façon : ajoutez une idée si vous voulez, puis
+   faites-en la vôtre. Quoi que vous construisiez, cela participe tant que
+   l’étiquette de la semaine reste (ajoutez-la dans **Propriétés du document
+   → Étiquettes** si vous avez commencé autrement).
 3. Publiez-la avant la fin de la semaine et partagez son lien. Le texte du
    lien nomme le défi et son étiquette, prêt pour une publication.
+
+**Semaines du remix.** Une semaine sur quatre, à partir de celle du
+2 novembre 2026, est une semaine du remix (`#remix-20261102`) : au lieu
+d’un thème, une participation commence comme votre propre copie d’une
+participation de la semaine précédente. **Participer** mène à la page du
+défi, qui liste les participations de la semaine dernière ; **Remixer**
+sur l’une d’elles ouvre votre copie dans l’Éditeur, étiquetée pour la
+semaine. Votre copie se souvient à qui elle était, pour que son auteur soit
+crédité dans l’arbre généalogique. Si la semaine dernière n’a eu aucune
+participation, les familles de remix d’exemple sont proposées à la place.
 
 La page du défi liste les participations que cet appareil connaît : vos
 propres constructions publiées avec l’étiquette, et celles des autres

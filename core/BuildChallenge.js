@@ -7,9 +7,18 @@ import { normalizeBuildTag } from './BuildTags.js';
 // Monday it began, so every week's tag is different and any copy of the
 // app works out the same tag for the same week, with no server.
 //
-// Each theme names built-in structures (core/library/) to start from: the
-// one Join opens, and a few more shown as ideas. The UI's text for a theme
-// is `challenge.theme.<id>.title` and `.brief`.
+// Each theme names built-in structures (core/library/) as ideas: Join opens
+// an empty plot with them pinned in the Build Library, so an entry is built
+// rather than a ready-made one published, and dropping one in is the
+// builder's choice. The UI's text for a theme is
+// `challenge.theme.<id>.title`, `.brief` and `.twist` (a constraint that
+// makes the week's entries differ).
+//
+// From CHALLENGE_EPOCH, every fourth week is a remix week instead
+// (CHALLENGE_KIND.REMIX, tag "remix-20261102"): an entry starts as a copy of
+// one of the week before's entries (`remixOf`), so older builds get a
+// second life and the family tree grows. The themes keep their turn around
+// it.
 
 export const CHALLENGE_THEMES = Object.freeze([
     Object.freeze({ id: 'lighthouse', starterStructureId: 'collection:lighthouse', ideaStructureIds: Object.freeze(['collection:lighthouse', 'collection:keepers_lighthouse', 'showcase:harbor_island']) }),
@@ -42,6 +51,16 @@ export const CHALLENGE_THEMES = Object.freeze([
     Object.freeze({ id: 'family-home', starterStructureId: 'village:house', ideaStructureIds: Object.freeze(['village:house', 'collection:house_with_garden', 'village:large_house']) })
 ]);
 
+export const CHALLENGE_KIND = Object.freeze({
+    THEME: 'theme',
+    REMIX: 'remix'
+});
+
+// A remix week's theme id, the start of its tag, and how often one comes
+// round: the fourth week of every four from CHALLENGE_EPOCH.
+export const REMIX_THEME_ID = 'remix';
+export const REMIX_WEEK_EVERY = 4;
+
 // How many themes there were before the 2026-10-11 additions. Weeks before
 // CHALLENGE_EPOCH keep the themes they ran with (their entries carry those
 // weeks' tags), taken in turn from the first this many.
@@ -56,9 +75,18 @@ const EPOCH_MS = Date.parse(`${CHALLENGE_EPOCH}T00:00:00Z`);
 const CHALLENGE_ID_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const CHALLENGE_TAG_PATTERN = /^([a-z][a-z0-9-]*)-(\d{4})(\d{2})(\d{2})$/;
 
+function isRemixWeek(weekIndex) {
+    return weekIndex >= 0 && weekIndex % REMIX_WEEK_EVERY === REMIX_WEEK_EVERY - 1;
+}
+
+// The theme of a themed week: before CHALLENGE_EPOCH the original turn; from
+// it, the themes in turn over the weeks that aren't remix weeks.
 function themeForWeek(weekIndex) {
-    const count = weekIndex < 0 ? ORIGINAL_THEME_COUNT : CHALLENGE_THEMES.length;
-    return CHALLENGE_THEMES[((weekIndex % count) + count) % count];
+    if (weekIndex < 0) {
+        return CHALLENGE_THEMES[((weekIndex % ORIGINAL_THEME_COUNT) + ORIGINAL_THEME_COUNT) % ORIGINAL_THEME_COUNT];
+    }
+    const themedWeeks = weekIndex - Math.floor((weekIndex + 1) / REMIX_WEEK_EVERY);
+    return CHALLENGE_THEMES[themedWeeks % CHALLENGE_THEMES.length];
 }
 
 function isoDate(ms) {
@@ -69,17 +97,43 @@ function isoDate(ms) {
 // 00:00 UTC.
 function challengeStartingAt(startMs) {
     const weekIndex = Math.round((startMs - EPOCH_MS) / WEEK_MS);
-    const theme = themeForWeek(weekIndex);
     const id = isoDate(startMs);
+    if (isRemixWeek(weekIndex)) {
+        return Object.freeze({
+            id,
+            kind: CHALLENGE_KIND.REMIX,
+            themeId: REMIX_THEME_ID,
+            tag: `${REMIX_THEME_ID}-${id.replaceAll('-', '')}`,
+            startsAt: new Date(startMs),
+            endsAt: new Date(startMs + WEEK_MS),
+            remixOf: isoDate(startMs - WEEK_MS),
+            starterStructureId: null,
+            ideaStructureIds: Object.freeze([])
+        });
+    }
+    const theme = themeForWeek(weekIndex);
     return Object.freeze({
         id,
+        kind: CHALLENGE_KIND.THEME,
         themeId: theme.id,
         tag: `${theme.id}-${id.replaceAll('-', '')}`,
         startsAt: new Date(startMs),
         endsAt: new Date(startMs + WEEK_MS),
+        remixOf: null,
         starterStructureId: theme.starterStructureId,
         ideaStructureIds: theme.ideaStructureIds
     });
+}
+
+export function isRemixChallenge(challenge) {
+    return challenge?.kind === CHALLENGE_KIND.REMIX;
+}
+
+// The structures a themed week pins in the Build Library when Join opens an
+// empty plot: its starter, then its ideas, each once. None for a remix week.
+export function challengeIdeaStructureIds(challenge) {
+    if (!challenge || isRemixChallenge(challenge)) return [];
+    return [...new Set([challenge.starterStructureId, ...(challenge.ideaStructureIds || [])].filter(Boolean))];
 }
 
 // The challenge running at `now` (a Date or a time in ms).

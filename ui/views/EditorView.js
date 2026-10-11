@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../../application/editor/CreateStructureRegistryUseCase.js';
@@ -74,7 +74,7 @@ import SoundControl from '../components/SoundControl.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 import { libraryItemName } from '../i18n/libraryText.js';
 import { FEATURED_STRUCTURE_IDS, featuredStructures, findStarterStructure } from '../../application/home/FeaturedBuilds.js';
-import { challengeAt, challengeById, isChallengeOpen, withChallengeTag } from '../../core/BuildChallenge.js';
+import { challengeAt, challengeById, challengeIdeaStructureIds, isChallengeOpen, isRemixChallenge, withChallengeTag } from '../../core/BuildChallenge.js';
 import { BUILD_TAG_MAX_COUNT } from '../../core/BuildTags.js';
 import { challengeLastDayText, challengeThemeBrief, challengeThemeTitle, challengeTimeText } from '../components/challenge/challengeText.js';
 import ModelExportDialog from '../components/modelExport/ModelExportDialog.js';
@@ -276,6 +276,8 @@ export default {
                         :registry="brickRegistry"
                         :personal-saved-at-by-id="personalSavedAtById"
                         :recent-structures="recentStructures"
+                        :pinned-structures="pinnedStructures"
+                        :pinned-title="pinnedTitle"
                         :preview-service="libraryPreviewService"
                         @place="setTool(ToolId.PLACE)"
                         @fork="forkStructure"
@@ -526,6 +528,8 @@ export default {
         const pasteClipboardUseCase = new PasteClipboardUseCase();
         const repeatSelectionUseCase = new RepeatSelectionUseCase(registry);
 
+        // The bricks each build started with, to count the builder's own at publish.
+        const readyMadeBricks = inject('readyMadeBricksStore', null);
         const editorSession = new EditorSession({
             registry,
             editorContext,
@@ -545,7 +549,8 @@ export default {
             blueprintAttributionExchange,
             blueprintLineageExchange,
             documentCommandPropagation,
-            documentOperationRecovery
+            documentOperationRecovery,
+            readyMadeBricks
         });
 
         const activeTool = ref(editorContext.tool.activeTool);
@@ -600,7 +605,7 @@ export default {
             newDocumentDialog.value = {
                 structures: featuredStructures(structureRegistry, FEATURED_STRUCTURE_IDS),
                 unsavedTitle: document && state.dirty ? document.metadata.title : null,
-                challenge: challenge && isChallengeOpen(challenge, now) && findStarterStructure(structureRegistry, challenge.starterStructureId)
+                challenge: challenge && !isRemixChallenge(challenge) && isChallengeOpen(challenge, now)
                     ? { id: challenge.id, title: challengeThemeTitle(challenge), brief: challengeThemeBrief(challenge), time: challengeTimeText(challenge, now) }
                     : null
             };
@@ -620,14 +625,44 @@ export default {
             }));
             return true;
         }
+        // Joining a themed week: an empty plot of the builder's own, named after
+        // the theme and tagged for the week, with the theme's structures pinned at
+        // the top of the Build Library's Structures. Dropping one in is the
+        // builder's choice, and counts as ready-made (core/PlacedBricks.js).
+        const challengePins = ref(null);
+        function startChallengePlot(challenge) {
+            if (!challenge || isRemixChallenge(challenge) || !isChallengeOpen(challenge, Date.now())) return false;
+            editorSession.newDocument();
+            const theme = challengeThemeTitle(challenge);
+            updateDocumentMetadataUseCase.execute(documentManager, { title: theme });
+            joinChallenge(challenge);
+            challengePins.value = {
+                worldId: documentManager.document?.world.id ?? null,
+                title: t('challenge.pinnedTitle', { theme }),
+                structures: challengeIdeaStructureIds(challenge)
+                    .map((id) => findStarterStructure(structureRegistry, id))
+                    .filter(Boolean)
+            };
+            return true;
+        }
+        // Pinned for as long as the challenge's plot is the open build.
+        const pinnedStructures = computed(() => {
+            void documentVersion.value;
+            const pins = challengePins.value;
+            return pins && documentManager.document?.world.id === pins.worldId ? pins.structures : [];
+        });
+        const pinnedTitle = computed(() => challengePins.value?.title ?? '');
+        // A copy just opened from ?fork=: its bricks are someone else's, not its
+        // builder's (core/PlacedBricks.js), and a remix week's entry (its
+        // challenge page's Remix) is tagged for the week.
+        function afterForkOpened() {
+            editorSession.noteReadyMadeStart();
+            const remixWeek = typeof route.query.challenge === 'string' ? challengeById(route.query.challenge) : null;
+            if (remixWeek) joinChallenge(remixWeek);
+        }
         function startFromChallenge(challengeId) {
             newDocumentDialog.value = null;
-            const challenge = challengeById(challengeId);
-            const structure = challenge ? findStarterStructure(structureRegistry, challenge.starterStructureId) : null;
-            if (structure && editorSession.forkStructure(structure)) {
-                editorSession.frameDocument();
-                joinChallenge(challenge);
-            }
+            startChallengePlot(challengeById(challengeId));
         }
         function startEmptyDocument() {
             newDocumentDialog.value = null;
@@ -755,7 +790,8 @@ export default {
         });
         const { walkInside, walkInsidePublished } = useWalkInside({ documentManager, registry, documentVersion });
         function onPublished(publication) {
-            funnelEventCounter?.publishedBuild(publication, worldBrickCount(documentManager.document?.world));
+            const publishedWorld = documentManager.document?.world;
+            funnelEventCounter?.publishedBuild(publication, worldBrickCount(publishedWorld), readyMadeBricks?.placedCount(publishedWorld));
             onDocumentPublished(publication);
             onBuildPlotPublished(publication);
             walkInsidePublished(publication);
@@ -1092,6 +1128,7 @@ export default {
                 let sourcePublication = null;
                 const openFork = (forkedDocument) => {
                     editorSession.openDocument(forkedDocument, decodedEntryContext);
+                    afterForkOpened();
                     // A copy made on a shared link's screen has no spot to look at,
                     // so it is seen whole, as a ready-made build is.
                     if (decodedEntryContext && !decodedEntryContext.focusPosition) editorSession.frameDocument();
@@ -1146,6 +1183,10 @@ export default {
                 // a ready-made structure when the link names one (a resident's Build there).
                 const structure = typeof route.query.start === 'string' ? findStarterStructure(structureRegistry, route.query.start) : null;
                 if (!startBuildPlot(route.query, editorSession, { structure })) feedback.show(t('buildPlot.invalid'));
+                router.replace({ path: '/editor' });
+            } else if (route.query.challenge && !route.query.start) {
+                // Join from Home or the challenge page: the week's empty plot.
+                if (!startChallengePlot(challengeById(String(route.query.challenge)))) feedback.show(t('challenge.cannotJoin'));
                 router.replace({ path: '/editor' });
             } else if (route.query.start) {
                 // A ready-made build from Home: a built-in structure, opened as a new
@@ -1460,6 +1501,7 @@ export default {
             onDocumentPublished,
             onPublished, buildPlot, buildPlotPublished, forgetBuildPlot, visitBuildPlot,
             ...firstBuildGuide,
+            pinnedStructures, pinnedTitle,
             walkInside,
             distributePublishedDocument,
             distributePublishedDocumentAndSnapshot,

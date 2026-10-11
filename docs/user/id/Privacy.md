@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: efd7b4e45e7a253b -->
+<!-- translation-of: docs/Privacy.md source-hash: b42e7153e5753e1e -->
 # Privasi
 
 <!-- languages -->
@@ -58,6 +58,10 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
   dan tempat yang Anda pilih, agar saat diterbitkan bangunan itu berdiri di
   sana. Cap Anda di Beranda dihitung dari apa yang sudah tercantum di sini
   dan tidak disimpan.
+- untuk setiap bangunan yang dimulai dari struktur siap pakai atau sebagai
+  salinan bangunan, dan untuk setiap struktur siap pakai yang ditambahkan,
+  balok apa saja dan di mana letaknya, agar saat menerbitkan balok yang Anda
+  pasang bisa dibedakan dari balok awal (hanya rentangnya yang dihitung).
 
 Menghapus data situs ini di browser akan menghapus semuanya, dan tidak ada
 salinan lain maupun cara untuk memulihkannya. Cadangkan terlebih dahulu
@@ -194,6 +198,9 @@ Dan saat sebuah bangunan pertama kali diterbitkan dari browser ini
   langsung, di luar struktur: `/e/publish-bricks-0`, `/e/publish-bricks-1`
   (1 sampai 9), `/e/publish-bricks-10` (10 sampai 49), `/e/publish-bricks-50`
   (50 sampai 199) atau `/e/publish-bricks-200` (200 atau lebih). Tidak pernah
+- lima rentang yang sama untuk balok yang dipasang atau diubah pembuatnya,
+  tanpa balok siap pakai yang menjadi awalnya atau yang ditambahkan ke
+  dalamnya: `/e/publish-placed-0` sampai `/e/publish-placed-200`;
   jumlah persisnya;
 - `/e/second-build`, saat itu bangunan kedua yang diterbitkan dari browser
   ini, yang hanya terjadi sekali;
@@ -201,8 +208,7 @@ Dan saat sebuah bangunan pertama kali diterbitkan dari browser ini
   browser ini.
 
 Semua ini dihitung dari bangunan yang telah diterbitkan browser ini, yang
-memang sudah disimpannya (lihat "Apa yang tetap di perangkat Anda"); tidak
-ada yang baru disimpan untuk itu.
+memang sudah disimpannya (lihat "Apa yang tetap di perangkat Anda"); untuk balok yang dipasang, juga catatan balok yang menjadi awal setiap bangunan, disimpan di sampingnya di perangkat ini dan tidak pernah dikirim.
 
 Dan saat ForkBuild dibuka lewat tautan dari salah satu postingan
 peluncurannya sendiri, yang diakhiri `?ref=` dan nama tempat postingan itu

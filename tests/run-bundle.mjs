@@ -25,6 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { build } from '../scripts/build.mjs';
 import { assert } from './support/Assert.js';
+import { challengeAt, isRemixChallenge } from '../core/BuildChallenge.js';
 import { prepareLinkOnlyShare } from '../application/publication/PublicationShareLink.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
@@ -141,8 +142,21 @@ async function startFromHome(browser, base) {
 // The weekly challenge, in the published build: Home's Join opens the week's
 // starting build as the visitor's own copy, tagged for the week; the Editor's
 // New offers the challenge first; its page explains how to enter.
+// A browser context whose clock is in a themed challenge week: this week, or,
+// in a remix week (whose Join goes to last week's entries rather than an
+// empty plot), the next, with time still running.
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+async function themedWeekContext(browser, options = {}) {
+    const context = await browser.newContext(options);
+    if (process.env.FORKBUILD_TEST_REMIX_WEEK || isRemixChallenge(challengeAt(Date.now()))) {
+        await context.clock.install({ time: Date.now() + WEEK_MS });
+        await context.clock.resume();
+    }
+    return context;
+}
+
 async function joinChallenge(browser, base) {
-    const context = await browser.newContext();
+    const context = await themedWeekContext(browser);
     const page = await context.newPage();
     try {
         await page.goto(`${base}/#/`);
@@ -152,6 +166,8 @@ async function joinChallenge(browser, base) {
         await page.click('.challenge-card .challenge-join');
         await page.waitForFunction(() => location.hash === '#/editor', null, { timeout: 60_000 });
         await page.waitForFunction((tag) => document.body.innerText.includes(tag), tag, { timeout: 30_000 });
+        // An empty plot, with the week's structures pinned at the top of the Build Library.
+        await page.waitForSelector('.pinned-structures-group .structure-item, .pinned-structures-group li', { timeout: 30_000 });
 
         await page.click('.toolbar-new');
         await page.waitForSelector('.new-document-challenge', { timeout: 30_000 });
@@ -171,7 +187,7 @@ async function joinChallenge(browser, base) {
 // for the week stands there, reached from the challenge page's Walk the
 // plaza, in World View, which stays on the plaza; an unknown week says so.
 async function walkThePlaza(browser, base) {
-    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const context = await themedWeekContext(browser, { viewport: { width: 1280, height: 800 } });
     const page = await context.newPage();
     const problems = [];
     page.on('pageerror', (error) => problems.push(error.message));
