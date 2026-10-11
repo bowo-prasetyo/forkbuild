@@ -37,14 +37,13 @@ below). It's also automatically given a position in the shared world, so
 > example **Stored on IPFS · Announced on Nostr**), or **No distribution
 > recorded on this device**. Back it up on [Your Data](13-YourData.md) to
 > keep a copy in the meantime.
-> Publishing never sends anything anywhere by itself. A
-> [link](#sharing-a-link) you copy carries the build to whoever you give it
-> to. Two separate, optional
-> steps do: **Distribute**, described below, pushes the publication to
-> Arweave or IPFS and announces it on Nostr or Arweave so other people can
-> find it without being connected to you; and
-> [**Share with Peers**](#sharing-with-connected-peers) offers it to the
-> people you are connected to.
+> Until you choose where your builds go, publishing sends nothing anywhere
+> by itself. A [link](#sharing-a-link) you copy carries the build to whoever
+> you give it to. Once you choose a network (see
+> [Where it goes](#where-it-goes--sending-a-build-as-you-publish)), each
+> Publish sends the build there too, so other people can find it without
+> being connected to you. [**Share with Peers**](#sharing-with-connected-peers)
+> offers it to the people you are connected to.
 
 ## Sharing a link
 
@@ -137,26 +136,44 @@ build's own page in ForkBuild in a new tab (see
 Copying embed code, and an embed being shown or opened in ForkBuild, are
 counted anonymously too.
 
-## Distributing straight from the Editor
+## Where it goes — sending a build as you publish
 
-The moment **Publish** succeeds, the Editor shows a small notice right
-there — "Published! Share its link, or use Distribute to send it to the
-open networks so anyone can find it." — with a **Distribute** button
-beside it, and a **Dismiss** to make it go away without doing
-anything. Clicking **Distribute** opens a **Distribute** dialog rather
-than cluttering the overlay with pickers and results you only need once
-in a while; closing it again (**Close**, clicking outside it, or Escape)
-never loses anything it produced — reopening it shows the exact same
-result, error, or in-flight state you left it in.
+**Publish** keeps your build on this device and in its links until you
+choose where it goes. Right after your first Publish, the Editor says
+"Published! Share its link. To let anyone find it without a link, choose
+where it goes." with a **Choose where it goes** button beside the share
+link, and a **Dismiss**.
+
+**Choose where it goes** opens the **Where it goes** dialog: pick a
+**Storage** (where the build itself is kept: Arweave, IPFS, or Steem or
+Blurt when their writers are on) and an **Announcement / Discovery
+substrate** (where it is announced: Nostr, Arweave, Steem or Blurt), then
+click **Send**. **Send here every time I publish** starts ticked: once a
+send works with it ticked, this device keeps the choice, and **every
+Publish after that sends the build there by itself**. The notice then
+says "Sending it to Nostr…", then "Published and sent to Nostr: anyone can
+find it now.", or, when a send fails, what went wrong, with **Try again**
+and **Change where it goes**. Untick the box (in the dialog, from
+**Change where it goes**) to stop, and Publish keeps builds on this device
+again. Remote pinning is never kept, since its token lasts only for the
+visit; choose it in the dialog each time.
+
+Only a signed build is sent by itself; **Publish unsigned** sends nothing.
+Your browser's wallet or extension for that network (an Arweave wallet such
+as Wander, a Nostr extension such as nos2x, Steem or Blurt Keychain) asks
+you to approve each send, and Arweave and Blurt charge a small fee for
+each. Without one, the send ends in a plain "…could not be completed"
+notice and the build stays published here.
 
 The dialog is the same one World View uses — its **Storage** and
-**Announcement / Discovery substrate** settings, the combined
-**Distribute** button, and the separate **Distribute Snapshot only** /
-**Distribute Signed Claim only** buttons all work as described in
+**Announcement / Discovery substrate** settings, and the separate
+**Distribute Snapshot only** / **Distribute Signed Claim only** buttons
+all work as described in
 [World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing).
 Two things differ here: it always acts on the exact Shared World your
-Publish click just produced, and the **Snapshot** section comes first,
-so the combined button runs the Snapshot first, then the Signed Claim.
+Publish click just produced, and the **Snapshot** goes first, so **Send**
+sends the Snapshot, then the Signed Claim. Closing the dialog (**Close**,
+clicking outside it, or Escape) never loses anything it produced.
 
 The Signed Claim's result appears in its own section:
 
@@ -181,15 +198,10 @@ and discovered independently of Signed Claim distribution; see
 [Local Snapshot](09-PublicationsAndEvidence.md#local-snapshot) for what
 that distinction means.
 
-Like every other distribution button in this app, distributing needs a
-signing browser extension — an Arweave wallet (such as Wander) or a Nostr
-extension (such as nos2x); without one, it ends in a plain "…could not be
-completed" notice. Publishing itself never distributes anything on its
-own: distribution only ever
-happens on this later, separate, explicit click. Publishing again
-replaces the whole overlay with a fresh one for the new publication;
-dismissing it, or leaving the page, clears it — neither the notice nor
-either section's result is remembered anywhere.
+Publishing again replaces the whole notice with a fresh one for the new
+publication; dismissing it, or leaving the page, clears it. Neither the
+notice nor either section's result is remembered anywhere; only where your
+builds go is.
 
 ## Sharing with connected peers
 
@@ -286,8 +298,8 @@ could ignore it, and it can't take back a placement someone made before you
 chose it.
 
 Either way, other people see your build where *you* put it once you
-**Distribute** its Snapshot, from World View or right after publishing in the
-Editor: the announcement carries your
+send its Snapshot, as Publish does once you've chosen where your builds go, or
+with **Distribute** in World View: the announcement carries your
 signed placement, and their ForkBuild shows the build there as soon as it
 knows your Shared World. Move it and distribute again, and it moves for them
 too.

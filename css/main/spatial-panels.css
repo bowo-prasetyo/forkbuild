@@ -199,6 +199,26 @@
     border-bottom: 1px solid rgba(76, 175, 125, 0.4);
 }
 
+/* "Where it goes" (ui/components/EditorDistributionDialog.js after Publish):
+   the box that keeps the choice for every publish. */
+.editor-distribution-dialog-remember {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+    font-size: 0.9rem;
+}
+
+.editor-distribution-dialog-remember input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.editor-distribution-dialog-remember-hint,
+.editor-distribution-dialog-lead {
+    margin-top: 0.25rem;
+}
+
 /* The reminder that the identity the build was signed with has no passphrase
    (ui/components/ProtectIdentityNote.js). */
 .editor-post-publish-protect {

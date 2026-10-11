@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 7157ea7fcc79e377 -->
+<!-- translation-of: docs/Privacy.md source-hash: efd7b4e45e7a253b -->
 # Privasi
 
 <!-- languages -->
@@ -35,7 +35,7 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
   dikirim);
 - profil avatar Anda, pengaturan (termasuk apakah Tampilan Dunia
   memutar suara, seberapa keras, dalam 3D atau stereo, apakah Tampilan
-  Dunia menampilkan alat lanjutannya, dan bahasa yang
+  Dunia menampilkan alat lanjutannya, ke mana Terbitkan mengirim bangunan Anda, dan bahasa yang
   Anda pilih; jika Anda belum memilih, ForkBuild membaca bahasa pilihan
   browser di perangkat dan tidak mengirimnya ke mana pun), serta nama
   pengguna dan kredensial server TURN jika Anda memasukkannya di
@@ -89,6 +89,7 @@ Apakah notifikasi di perangkat ini aktif disimpan bersama pengaturan Anda
   mencantumkan tagnya (sebagai `forkbuild-tag:<tag>`), sehingga siapa pun
   dapat menemukan bangunan dengan tag tertentu, seperti karya peserta
   tantangan suatu minggu.
+  Setelah Anda memilih ke mana bangunan Anda dikirim, setiap Terbitkan juga mengirim bangunan ke sana; sampai saat itu, Terbitkan tidak mengirim apa pun.
 - **Rekan yang terhubung dengan Anda** mengetahui kunci publik identitas
   Anda dan alamat IP Anda (koneksi langsung memerlukannya; relay TURN
   menyembunyikannya dari rekan tetapi tidak dari relay itu sendiri). Rekan

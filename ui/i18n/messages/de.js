@@ -867,9 +867,14 @@ export default Object.freeze({
     'toolbar.exportAllHint': 'Alle gespeicherten Bauwerke in einer Datei herunterladen',
 
     // Editor (ui/views/EditorView.js).
-    'editor.published': 'Veröffentlicht! Teilen Sie den Link, oder schicken Sie es mit „Verteilen“ in die offenen Netzwerke, damit alle es finden.',
-    'editor.distribute': 'Verteilen',
+    'editor.published': 'Veröffentlicht! Teilen Sie den Link. Damit alle es auch ohne Link finden, wählen Sie, wohin es geht.',
+    'editor.distribute': 'Wählen, wohin es geht',
     'editor.dismiss': 'Ausblenden',
+    'editor.publishedSending': 'Veröffentlicht! Wird an {network} gesendet …',
+    'editor.publishedSent': 'Veröffentlicht und an {network} gesendet: Jetzt können alle es finden.',
+    'editor.publishedSendFailed': 'Veröffentlicht, aber das Senden an {network} hat nicht geklappt: {error}',
+    'editor.tryAgain': 'Erneut versuchen',
+    'editor.changeWhereItGoes': 'Ändern, wohin es geht',
     'editor.tool': 'Werkzeug',
     'editor.select': 'Auswählen',
     'editor.place': 'Platzieren',
@@ -1063,6 +1068,11 @@ export default Object.freeze({
 
     // Editor: distributing a new Publication (ui/components/EditorDistributionDialog.js).
     'distribution.title': 'Verteilen',
+    'distribution.whereItGoes': 'Wohin es geht',
+    'distribution.whereItGoesLead': 'Senden Sie Ihren Bau an ein offenes Netzwerk, damit alle ihn auch ohne Link finden. Die Wallet oder Erweiterung Ihres Browsers für dieses Netzwerk fragt bei jedem Senden nach Ihrer Zustimmung.',
+    'distribution.send': 'Senden',
+    'distribution.sendEveryTime': 'Bei jedem Veröffentlichen hierhin senden',
+    'distribution.sendEveryTimeHint': 'Wird auf diesem Gerät gespeichert, sobald ein Senden klappt. Jedes Veröffentlichen sendet dann von selbst dorthin; Häkchen entfernen, um aufzuhören. Arweave und Blurt verlangen für jedes Senden eine kleine Gebühr.',
     'distribution.storage': 'Speicher',
     'distribution.endpoint': 'Endpunkt',
     'distribution.credential': 'Zugangsdaten (optional)',

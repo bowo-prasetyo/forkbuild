@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 2c372aadfd2854d8 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: e191fb1f57264f38 -->
 # Ihre Arbeit verteilen
 
 <!-- languages -->
@@ -16,14 +16,17 @@ Abschnitt verweist auf die Anleitung, die die Einzelheiten erklärt.
 
 | Aktion | Wohin es geht | Wer es bekommt | Anleitung |
 |---|---|---|---|
-| **Veröffentlichen** | Nur auf dieses Gerät | Noch niemand sonst | [Ihre Kreation veröffentlichen](04-PublishingAndForking.md#ihre-kreation-veröffentlichen) |
+| **Veröffentlichen** | Dieses Gerät, und sobald Sie gewählt haben, wohin Ihre Bauwerke gehen, auch dorthin | Bis dahin niemand sonst; danach alle | [Ihre Kreation veröffentlichen](04-PublishingAndForking.md#ihre-kreation-veröffentlichen), [Wohin es geht](04-PublishingAndForking.md#wohin-es-geht--ein-bauwerk-beim-veröffentlichen-senden) |
 | **Mit Peers teilen** | Direkt zu den Menschen, mit denen Sie verbunden sind | Ihre verbundenen Peers, solange Sie online sind | [Mit verbundenen Peers teilen](04-PublishingAndForking.md#mit-verbundenen-peers-teilen) |
 | **Verteilen** | Dezentrale Netzwerke (IPFS, Arweave, Nostr, Steem, Blurt) | Jeder, ganz ohne Verbindung zu Ihnen | Diese Seite |
 
-Veröffentlichen sendet von sich aus nie etwas irgendwohin, und das Teilen mit
-Peers ist kein Verteilen: Peers behalten eine Kopie nur, solange sie wollen,
-und niemand sonst kann sie finden. Jedes Verteilen ist ein eigener,
-ausdrücklicher Klick.
+Bis Sie wählen, wohin Ihre Bauwerke gehen, sendet Veröffentlichen von
+selbst nichts irgendwohin. Sobald Sie wählen (im Editor unter **Wohin es
+geht**, mit angehaktem **Bei jedem Veröffentlichen hierhin senden**), verteilt
+jedes Veröffentlichen eines signierten Bauwerks es auch dorthin; entfernen
+Sie das Häkchen, um aufzuhören. Mit Peers teilen ist kein Verteilen: Peers
+behalten eine Kopie nur so lange, wie sie möchten, und sonst kann sie
+niemand finden.
 
 ## Die drei Rollen, die ein Netzwerk spielen kann
 
@@ -67,7 +70,7 @@ haben.
 Einzelheiten:
 
 - Signierter Anspruch und Snapshot:
-  [Direkt aus dem Editor verteilen](04-PublishingAndForking.md#direkt-aus-dem-editor-verteilen),
+  [Wohin es geht](04-PublishingAndForking.md#wohin-es-geht--ein-bauwerk-beim-veröffentlichen-senden),
   [Meine Geteilte Welt](03-WorldView.md#meine-geteilte-welt--ihren-eigenen-snapshot-verteilen-ohne-peers)
   und der [Verteilen-Dialog](03-WorldView.md#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen)
   selbst.

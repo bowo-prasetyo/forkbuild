@@ -15,13 +15,16 @@ details.
 
 | Action | Where it goes | Who gets it | Guide |
 |---|---|---|---|
-| **Publish** | This device only | Nobody else, yet | [Publishing your creation](04-PublishingAndForking.md#publishing-your-creation) |
+| **Publish** | This device, and once you've chosen where your builds go, there too | Nobody else until then; then anyone | [Publishing your creation](04-PublishingAndForking.md#publishing-your-creation), [Where it goes](04-PublishingAndForking.md#where-it-goes--sending-a-build-as-you-publish) |
 | **Share with Peers** | Straight to the people you're connected to | Your connected peers, while you're online | [Sharing with connected peers](04-PublishingAndForking.md#sharing-with-connected-peers) |
 | **Distribute** | Decentralized networks (IPFS, Arweave, Nostr, Steem, Blurt) | Anyone, with no connection to you needed | This page |
 
-Publishing never sends anything anywhere by itself, and sharing with peers
-isn't distribution: peers keep a copy only as long as they choose to, and
-nobody else can find it. Every distribution is its own explicit click.
+Until you choose where your builds go, publishing sends nothing anywhere by
+itself. Once you choose (in the Editor's **Where it goes**, with **Send here
+every time I publish** ticked), each Publish of a signed build distributes
+it there too; untick the box to stop. Sharing with peers isn't
+distribution: peers keep a copy only as long as they choose to, and nobody
+else can find it.
 
 ## The three roles a network can play
 
@@ -94,7 +97,7 @@ only** or **Distribute Signed Claim only**:
 Details:
 
 - Signed Claim and Snapshot:
-  [Distributing straight from the Editor](04-PublishingAndForking.md#distributing-straight-from-the-editor),
+  [Where it goes](04-PublishingAndForking.md#where-it-goes--sending-a-build-as-you-publish),
   [My Shared World](03-WorldView.md#my-shared-world--distributing-your-own-snapshot-no-peers-required),
   and the [Distribute dialog](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
   itself.

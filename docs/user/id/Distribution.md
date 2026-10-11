@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 2c372aadfd2854d8 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: e191fb1f57264f38 -->
 # Mendistribusikan Karya Anda
 
 <!-- languages -->
@@ -17,14 +17,17 @@ menautkan ke panduan yang menjelaskan detailnya.
 
 | Tindakan | Ke mana perginya | Siapa yang menerimanya | Panduan |
 |---|---|---|---|
-| **Terbitkan** | Hanya perangkat ini | Belum ada orang lain | [Menerbitkan karya Anda](04-PublishingAndForking.md#menerbitkan-karya-anda) |
+| **Terbitkan** | Perangkat ini, dan setelah Anda memilih ke mana bangunan Anda dikirim, juga ke sana | Belum ada orang lain sampai saat itu; lalu siapa pun | [Menerbitkan karya Anda](04-PublishingAndForking.md#menerbitkan-karya-anda), [Ke mana dikirim](04-PublishingAndForking.md#ke-mana-dikirim--mengirim-bangunan-saat-menerbitkan) |
 | **Bagikan dengan Rekan** | Langsung ke orang-orang yang terhubung dengan Anda | Rekan yang terhubung, selama Anda daring | [Berbagi dengan rekan yang terhubung](04-PublishingAndForking.md#berbagi-dengan-rekan-yang-terhubung) |
 | **Distribusikan** | Jaringan terdesentralisasi (IPFS, Arweave, Nostr, Steem, Blurt) | Siapa pun, tanpa perlu terhubung dengan Anda | Halaman ini |
 
-Menerbitkan tidak pernah mengirim apa pun ke mana pun dengan sendirinya, dan
-berbagi dengan rekan bukanlah distribusi: rekan menyimpan salinan hanya
-selama mereka mau, dan orang lain tidak dapat menemukannya. Setiap
-distribusi adalah klik tersendiri yang disengaja.
+Sampai Anda memilih ke mana bangunan Anda dikirim, menerbitkan tidak
+mengirim apa pun ke mana pun dengan sendirinya. Setelah Anda memilih (di
+**Ke mana dikirim** pada Editor, dengan **Kirim ke sini setiap kali aku
+menerbitkan** tercentang), setiap Terbitkan bangunan bertanda tangan juga
+mendistribusikannya ke sana; hapus centang untuk berhenti. Berbagi dengan
+rekan bukan distribusi: rekan menyimpan salinan hanya selama mereka mau,
+dan tidak ada orang lain yang bisa menemukannya.
 
 ## Tiga peran yang dapat dimainkan sebuah jaringan
 
@@ -68,7 +71,7 @@ menaruhnya.
 Detail:
 
 - Klaim Bertanda Tangan dan Snapshot:
-  [Mendistribusikan langsung dari Editor](04-PublishingAndForking.md#mendistribusikan-langsung-dari-editor),
+  [Ke mana dikirim](04-PublishingAndForking.md#ke-mana-dikirim--mengirim-bangunan-saat-menerbitkan),
   [Dunia Bersama Saya](03-WorldView.md#dunia-bersama-saya--mendistribusikan-snapshot-anda-sendiri-tanpa-rekan),
   dan [dialog Distribusikan](03-WorldView.md#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda)
   itu sendiri.

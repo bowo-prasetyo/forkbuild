@@ -315,6 +315,22 @@ async function run() {
         console.log('✓ Section J: several Village structures are deliberately not buildings — no enclosing walls at all');
     }
 
+    // ---------------------------------------------------------------
+    // Section K: no cube left at its default green
+    // ---------------------------------------------------------------
+    // core:cube is green unless colored, which read as a stray grass block on a
+    // well, a stall and a fence; every Village cube says what it is made of.
+    {
+        for (const structure of VillageLibrary.structures) {
+            for (const brick of structure.bricks) {
+                if (brick.definitionId !== 'core:cube') continue;
+                assert(brick.color !== null && brick.color !== undefined,
+                    `${structure.id}: the cube at (${brick.position.x}, ${brick.position.y}, ${brick.position.z}) has a color of its own`);
+            }
+        }
+        console.log('✓ Section K: no Village cube is left at the default green');
+    }
+
     console.log('\nAll Village Library Expansion tests passed.');
 }
 

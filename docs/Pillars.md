@@ -76,8 +76,8 @@ is a means, not the game:
 
 - Players should see one verb, **Publish**, and one choice inside it: where
   to send the build. Network-by-network detail belongs on the Publications
-  page and in Network Settings. (Today the Editor still offers **Distribute**
-  as its own step after Publish; folding it in is open work.)
+  page and in Network Settings. Publish asks where the build goes once, in
+  **Where it goes**, and sends each signed build there from then on.
 - Network Settings and the Publications page live under **More → Advanced**.
   The Experimental tools (the Publications page's Wallet & Archive Tools and
   the Bitcoin Endpoint page) stay hidden until **Show experimental tools**
@@ -211,4 +211,5 @@ more challenge themes. The "walk here with me" link was added the same day (see 
 roadmap, "Walk here with me"), and then publishing without first creating a
 passphrase identity ("A first publish asks only for a name"), and World View
 opening as a visitor's view, with the plaza given a square of its own ("A
-visitor's World View").
+visitor's World View"), and Distribute folded into Publish ("Publish sends
+it where it goes").

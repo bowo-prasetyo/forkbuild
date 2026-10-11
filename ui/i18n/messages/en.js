@@ -866,9 +866,14 @@ export default Object.freeze({
     'toolbar.exportAllHint': 'Download every saved build in one file',
 
     // Editor (ui/views/EditorView.js).
-    'editor.published': 'Published! Share its link, or use Distribute to send it to the open networks so anyone can find it.',
-    'editor.distribute': 'Distribute',
+    'editor.published': 'Published! Share its link. To let anyone find it without a link, choose where it goes.',
+    'editor.distribute': 'Choose where it goes',
     'editor.dismiss': 'Dismiss',
+    'editor.publishedSending': 'Published! Sending it to {network}…',
+    'editor.publishedSent': 'Published and sent to {network}: anyone can find it now.',
+    'editor.publishedSendFailed': 'Published, but sending it to {network} didn\'t work: {error}',
+    'editor.tryAgain': 'Try again',
+    'editor.changeWhereItGoes': 'Change where it goes',
     'editor.tool': 'Tool',
     'editor.select': 'Select',
     'editor.place': 'Place',
@@ -1062,6 +1067,11 @@ export default Object.freeze({
 
     // Editor: distributing a new Publication (ui/components/EditorDistributionDialog.js).
     'distribution.title': 'Distribute',
+    'distribution.whereItGoes': 'Where it goes',
+    'distribution.whereItGoesLead': 'Send your build to an open network so anyone can find it without a link. Your browser\'s wallet or extension for that network asks you to approve each send.',
+    'distribution.send': 'Send',
+    'distribution.sendEveryTime': 'Send here every time I publish',
+    'distribution.sendEveryTimeHint': 'Kept on this device once a send works. Each Publish then sends there by itself; untick to stop. Arweave and Blurt charge a small fee for each send.',
     'distribution.storage': 'Storage',
     'distribution.endpoint': 'Endpoint',
     'distribution.credential': 'Credential (optional)',

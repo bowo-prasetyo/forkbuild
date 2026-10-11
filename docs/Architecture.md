@@ -1524,7 +1524,11 @@ of an authorship claim just published from `StructureInfoPanel`, through a secon
 includeSnapshot: false })`). A place name is the exception: it has no Signed Claim of its own to store, so World View's
 naming panel announces the claim itself through `distributePlaceNamingClaimCommand(claim, discoveryProvider)`, which
 builds the chosen substrate's publisher per click. Each of these is offered right after the local publish and never
-runs on its own. One settings block
+runs on its own, with one exception: the Editor's own publish (`usePostPublishDistribution({ rememberDestination:
+true })`) keeps where a combined send that worked went, when "Send here every time I publish" is ticked
+(`application/settings/PublishDestinationStore.js`, provided as `publishDestinationStore`; remote pinning is never
+kept), and each signed publish after that runs the combined send there by itself, unless that network's writer has
+since been switched off. One settings block
 (Storage, Remote Pinning draft, Announcement/Discovery) feeds both legs. The combined "Distribute" action runs
 Snapshot and Publication one after the other, because both may sign through the same wallet extension. Every
 injected-wallet adapter (Nostr NIP-07, Arweave, UniSat, EIP-1193, Steem Keychain, Blurt Keychain) has a 120-second approval timeout.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c03b4c493f0a5c98 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bbb4bcd1d65f4618 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -40,15 +40,13 @@ ait toujours un endroit où emmener les gens — voir
 > **Aucune distribution enregistrée sur cet appareil**. Sauvegardez-la
 > dans [Vos données](13-YourData.md) pour en garder une copie en
 > attendant.
-> Publier n’envoie jamais rien nulle part de soi-même. Un
-> [lien](#partager-un-lien) que vous copiez apporte la construction à qui
-> vous le donnez. Deux étapes
-> distinctes et facultatives le font : **Distribuer**, décrite ci-dessous,
-> envoie la publication sur Arweave ou IPFS et l’annonce sur Nostr ou
-> Arweave pour que d’autres puissent la trouver sans être connectés à
-> vous ; et
-> [**Partager avec les pairs**](#partager-avec-les-pairs-connectés) la
-> propose aux personnes auxquelles vous êtes connecté.
+> Tant que vous n’avez pas choisi où vont vos constructions, publier n’envoie
+> rien nulle part de soi-même. Un [lien](#partager-un-lien) que vous copiez apporte la
+> construction à qui vous le donnez. Une fois un réseau choisi (voir
+> [Où elle va](#où-elle-va--envoyer-une-construction-en-publiant)), chaque Publier y envoie aussi la construction, pour
+> que d’autres la trouvent sans être connectés à vous.
+> [**Partager avec les pairs**](#partager-avec-les-pairs-connectés) la propose aux personnes auxquelles
+> vous êtes connecté.
 
 ## Partager un lien
 
@@ -151,27 +149,48 @@ ForkBuild dans un nouvel onglet (voir
 Copier le code, et l’affichage ou l’ouverture d’une intégration dans
 ForkBuild, sont aussi comptés anonymement.
 
-## Distribuer directement depuis l’Éditeur
+## Où elle va — envoyer une construction en publiant
 
-Dès que **Publier** réussit, l’Éditeur affiche un petit avis sur place —
-« Publiée ! Partagez son lien, ou utilisez Distribuer pour l’envoyer sur les réseaux ouverts, afin que tout le monde puisse la trouver. » — avec un bouton **Distribuer** à
-côté, et **Ignorer** pour le faire disparaître sans rien faire. Cliquer
-sur **Distribuer** ouvre une boîte de dialogue **Distribuer** plutôt que
-d’encombrer l’écran de sélecteurs et de résultats dont vous n’avez besoin
-que de temps en temps ; la fermer (**Fermer**, un clic à l’extérieur ou
-Échap) ne perd jamais rien de ce qu’elle a produit — la rouvrir affiche
-exactement le même résultat, la même erreur ou le même état en cours.
+**Publier** garde votre construction sur cet appareil et dans ses liens
+jusqu’à ce que vous choisissiez où elle va. Juste après votre premier
+Publier, l’Éditeur dit « Publiée ! Partagez son lien. Pour que tout le monde
+la trouve sans lien, choisissez où elle va. » avec un bouton **Choisir où
+elle va** à côté du lien, et **Ignorer**.
 
-C’est la même boîte de dialogue que celle de la Vue du Monde — ses
-réglages **Stockage** et **Support d’annonce / de découverte**, le bouton
-**Distribuer** combiné, et les boutons distincts **Distribuer le Snapshot
-seulement** / **Distribuer la Déclaration signée seulement** fonctionnent
-tous comme décrit dans
-[Rencontres dans le Monde](03-WorldView.md#rencontres-dans-le-monde--publications-et-avatars-que-vos-pairs-partagent).
-Deux choses diffèrent ici : elle agit toujours sur le Monde partagé exact
-que votre clic sur Publier vient de produire, et la section **Snapshot**
-vient en premier, si bien que le bouton combiné exécute d’abord le
-Snapshot, puis la Déclaration signée.
+**Choisir où elle va** ouvre la boîte de dialogue **Où elle va** : choisissez
+un **Stockage** (où la construction elle-même est gardée : Arweave, IPFS, ou
+Steem ou Blurt quand leurs rédacteurs sont activés) et un **Support
+d’annonce / de découverte** (où elle est annoncée : Nostr, Arweave, Steem ou
+Blurt), puis cliquez sur **Envoyer**. **Envoyer ici à chaque publication**
+est coché au départ : dès qu’un envoi fonctionne avec la case cochée, cet
+appareil garde le choix, et **chaque Publier ensuite y envoie la
+construction tout seul**. L’avis dit alors « Envoi vers Nostr… », puis
+« Publiée et envoyée vers Nostr : tout le monde peut la trouver
+maintenant. », ou, quand un envoi échoue, ce qui n’a pas marché, avec
+**Réessayer** et **Changer où elle va**. Décochez la case (dans la boîte de
+dialogue, depuis **Changer où elle va**) pour arrêter, et Publier garde de
+nouveau les constructions sur cet appareil. L’épinglage distant n’est
+jamais gardé, car son jeton ne dure que la visite ; choisissez-le chaque
+fois dans la boîte de dialogue.
+
+Seule une construction signée est envoyée toute seule ; **Publier sans
+signer** n’envoie rien. Le portefeuille ou l’extension de votre navigateur
+pour ce réseau (un portefeuille Arweave comme Wander, une extension Nostr
+comme nos2x, Steem ou Blurt Keychain) vous demande d’approuver chaque envoi,
+et Arweave et Blurt prennent de petits frais à chaque fois. Sans eux,
+l’envoi se termine par un simple avis « … n’a pas pu être effectuée » et la
+construction reste publiée ici.
+
+La boîte de dialogue est la même que celle de la Vue du Monde : ses
+réglages **Stockage** et **Support d’annonce / de découverte** et les
+boutons séparés **Distribuer le Snapshot seulement** / **Distribuer la
+Déclaration signée seulement** fonctionnent comme décrit dans
+[Rencontres dans le Monde](03-WorldView.md#rencontres-dans-le-monde--publications-et-avatars-que-vos-pairs-partagent). Deux choses diffèrent ici : elle agit
+toujours sur le Monde partagé exact que votre clic sur Publier vient de
+produire, et le **Snapshot** passe en premier, si bien qu’**Envoyer** envoie
+le Snapshot, puis la Déclaration signée. Fermer la boîte de dialogue
+(**Fermer**, un clic à l’extérieur ou Échap) ne perd jamais rien de ce
+qu’elle a produit.
 
 Le résultat de la Déclaration signée apparaît dans sa propre section :
 
@@ -199,15 +218,10 @@ Déclarations signées ; voir
 [Snapshot local](09-PublicationsAndEvidence.md#snapshot-local) pour ce que
 signifie cette distinction.
 
-Comme tous les autres boutons de distribution de cette application,
-distribuer demande une extension de navigateur capable de signer — un
-portefeuille Arweave (comme Wander) ou une extension Nostr (comme nos2x) ;
-sans elle, cela se termine par un simple avis « …n’a pas pu aboutir ».
-Publier ne distribue jamais rien de soi-même : la distribution n’a lieu
-que lors de ce clic ultérieur, distinct et explicite. Publier de nouveau
-remplace tout l’avis par un nouveau pour la nouvelle publication ;
-l’ignorer, ou quitter la page, l’efface — ni l’avis ni le résultat de
-l’une ou l’autre section ne sont mémorisés nulle part.
+Publier de nouveau remplace tout l’avis par un nouveau pour la nouvelle
+publication ; l’ignorer, ou quitter la page, l’efface. Ni l’avis ni le
+résultat d’une section ne sont gardés nulle part ; seul l’endroit où vont
+vos constructions l’est.
 
 ## Partager avec les pairs connectés
 
@@ -310,10 +324,11 @@ ForkBuild le respecte, mais ce n’est pas un verrou. Quelqu’un qui aurait
 modifié le code de l’application pourrait l’ignorer, et il ne peut pas
 annuler un placement fait avant que vous le choisissiez.
 
-Dans tous les cas, les autres voient votre construction là où *vous*
-l’avez mise dès que vous **Distribuez** son Snapshot depuis la Vue du
-Monde ou juste après la publication dans l’Éditeur : l’annonce porte votre placement signé, et leur ForkBuild affiche
-la construction à cet endroit dès qu’il connaît votre Monde partagé.
+Dans les deux cas, les autres voient votre construction là où *vous* l’avez
+mise dès que vous envoyez son Snapshot, comme le fait Publier une fois que
+vous avez choisi où vont vos constructions, ou avec **Distribuer** dans la
+Vue du Monde : l’annonce porte votre placement signé, et leur ForkBuild
+montre la construction à cet endroit dès qu’il connaît votre Monde partagé.
 Déplacez-la et distribuez de nouveau, et elle se déplace aussi chez eux.
 
 ## Modifier une création publiée

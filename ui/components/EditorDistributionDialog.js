@@ -108,7 +108,14 @@ export default {
         distributionError: { type: String, default: null },
         distributionResult: { type: Array, default: null },
 
-        documentId: { type: String, default: null }
+        documentId: { type: String, default: null },
+
+        // The World's own publish (not an authorship claim): the dialog is
+        // "Where it goes", its combined action is Send, and it can keep the
+        // choice for every publish (ui/views/editorView/usePostPublishDistribution.js).
+        forPublish: { type: Boolean, default: false },
+        rememberable: { type: Boolean, default: false },
+        remember: { type: Boolean, default: true }
     },
     emits: [
         'close',
@@ -117,7 +124,8 @@ export default {
         'distribute-snapshot',
         'view-in-repository',
         'update:storage',
-        'update:discoveryProvider'
+        'update:discoveryProvider',
+        'update:remember'
     ],
     // The announcing networks this device can write to (core/NetworkWriters.js):
     // Steem and Blurt only while switched on.
@@ -186,13 +194,14 @@ export default {
     template: `
         <div
             role="dialog"
-            :aria-label="t('distribution.title')"
+            :aria-label="forPublish ? t('distribution.whereItGoes') : t('distribution.title')"
             class="modal-overlay"
             @click.self="$emit('close')"
             @keydown="onKeydown"
         >
             <div class="modal-panel editor-distribution-dialog">
-                <h3>{{ t('distribution.title') }}</h3>
+                <h3>{{ forPublish ? t('distribution.whereItGoes') : t('distribution.title') }}</h3>
+                <p v-if="forPublish" class="form-hint form-hint--neutral editor-distribution-dialog-lead">{{ t('distribution.whereItGoesLead') }}</p>
 
                 <div class="editor-distribution-dialog-settings">
                     <label class="form-field editor-distribution-dialog-storage-label">
@@ -239,8 +248,17 @@ export default {
                         class="action-btn action-btn--primary editor-distribution-dialog-combined-action"
                         :disabled="anyExecuting"
                         @click="$emit('distribute-both')"
-                    >{{ anyExecuting ? t('distribution.distributing') : t('distribution.distribute') }}</button>
-                    <p class="editor-distribution-dialog-combined-hint form-hint form-hint--neutral">{{ t('distribution.combinedHint') }}</p>
+                    >{{ anyExecuting ? t('distribution.distributing') : (forPublish ? t('distribution.send') : t('distribution.distribute')) }}</button>
+                    <p v-if="!forPublish" class="editor-distribution-dialog-combined-hint form-hint form-hint--neutral">{{ t('distribution.combinedHint') }}</p>
+                    <label v-if="forPublish && rememberable" class="editor-distribution-dialog-remember">
+                        <input
+                            type="checkbox"
+                            :checked="remember"
+                            @change="$emit('update:remember', $event.target.checked)"
+                        />
+                        {{ t('distribution.sendEveryTime') }}
+                    </label>
+                    <p v-if="forPublish && rememberable" class="form-hint form-hint--neutral editor-distribution-dialog-remember-hint">{{ t('distribution.sendEveryTimeHint') }}</p>
                 </div>
 
                 <div v-if="canDistributeSnapshot" class="editor-distribution-dialog-section editor-distribution-dialog-snapshot-section">

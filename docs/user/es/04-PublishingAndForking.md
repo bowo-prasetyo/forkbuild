@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: c03b4c493f0a5c98 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bbb4bcd1d65f4618 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -39,14 +39,13 @@ gente: consulte [Encontrar mundos](03-WorldView.md#encontrar-mundos).
 > **No hay ninguna distribución registrada en este dispositivo.** Mientras
 > tanto, haga una copia de seguridad en [Sus datos](13-YourData.md) para
 > conservar una copia.
-> Publicar nunca envía nada a ningún lugar por sí solo. Un
-> [enlace](#compartir-un-enlace) que usted copie lleva la construcción a
-> quien se lo dé. Lo hacen dos pasos
-> aparte y opcionales: **Distribuir**, que se describe más abajo,
-> envía la publicación a Arweave o IPFS y la anuncia en Nostr o Arweave
-> para que otras personas la encuentren sin estar conectadas con usted; y
-> [**Compartir con pares**](#compartir-con-pares-conectados) se la ofrece
-> a las personas con las que está conectado.
+> Hasta que elija a dónde van sus construcciones, publicar no envía nada a
+> ningún lugar por sí solo. Un [enlace](#compartir-un-enlace) que usted copie lleva la
+> construcción a quien se lo dé. Cuando elige una red (vea
+> [A dónde va](#a-dónde-va--enviar-una-construcción-al-publicar)), cada Publicar envía también la construcción allí,
+> para que otras personas la encuentren sin estar conectadas con usted.
+> [**Compartir con pares**](#compartir-con-pares-conectados) se la ofrece a las personas con las que
+> está conectado.
 
 ## Compartir un enlace
 
@@ -145,27 +144,45 @@ pestaña nueva (consulte [Lo que abre un enlace](#lo-que-abre-un-enlace)).
 Copiar el código, y que una inserción se muestre o se abra en ForkBuild,
 también se cuentan de forma anónima.
 
-## Distribuir directamente desde el Editor
+## A dónde va — enviar una construcción al publicar
 
-En cuanto **Publicar** funciona, el Editor muestra ahí mismo un pequeño
-aviso (“¡Publicada! Comparta su enlace, o use Distribuir para enviarla a las redes abiertas y que cualquiera pueda encontrarla.”) con un botón
-**Distribuir** al lado, y un **Descartar** para cerrarlo sin hacer nada.
-Hacer clic en **Distribuir** abre un diálogo **Distribuir**, en lugar de
-llenar la superposición de selectores y resultados que solo necesita de
-vez en cuando; cerrarlo (**Cerrar**, hacer clic fuera de él o Escape) nunca
-pierde nada de lo que produjo: al volver a abrirlo muestra exactamente el
-mismo resultado, error o estado en curso en que lo dejó.
+**Publicar** guarda su construcción en este dispositivo y en sus enlaces
+hasta que usted elija a dónde va. Justo después de su primer Publicar, el
+Editor dice «¡Publicada! Comparta su enlace. Para que cualquiera la
+encuentre sin enlace, elija a dónde va.» con un botón **Elegir a dónde va**
+junto al enlace, y **Descartar**.
 
-El diálogo es el mismo que usa la Vista del mundo: su configuración de
-**Almacenamiento** y de **Sustrato de anuncio / descubrimiento**, el botón
-combinado **Distribuir** y los botones aparte **Distribuir solo el
-Snapshot** / **Distribuir solo la Declaración firmada** funcionan como se
-describe en
-[Encuentros en el Mundo](03-WorldView.md#encuentros-en-el-mundo--publicaciones-y-avatares-que-comparten-sus-pares).
-Aquí cambian dos cosas: siempre actúa sobre el Mundo compartido exacto que
-acaba de producir su clic en Publicar, y la sección **Snapshot** va
-primero, así que el botón combinado ejecuta primero el Snapshot y luego la
-Declaración firmada.
+**Elegir a dónde va** abre el diálogo **A dónde va**: elija un
+**Almacenamiento** (dónde se guarda la construcción misma: Arweave, IPFS, o
+Steem o Blurt cuando sus escritores están activados) y un **Sustrato de
+anuncio / descubrimiento** (dónde se anuncia: Nostr, Arweave, Steem o
+Blurt), y haga clic en **Enviar**. **Enviar aquí cada vez que publique**
+empieza marcado: cuando un envío funciona con la casilla marcada, este
+dispositivo guarda la elección, y **cada Publicar después de eso envía la
+construcción allí por sí solo**. El aviso dice entonces «Enviándola a
+Nostr…», después «Publicada y enviada a Nostr: ya cualquiera puede
+encontrarla.» o, si un envío falla, qué salió mal, con **Intentar de nuevo**
+y **Cambiar a dónde va**. Desmarque la casilla (en el diálogo, desde
+**Cambiar a dónde va**) para dejar de hacerlo, y Publicar vuelve a guardar
+las construcciones en este dispositivo. El anclaje remoto nunca se guarda,
+porque su token dura solo la visita; elíjalo en el diálogo cada vez.
+
+Solo una construcción firmada se envía por sí sola; **Publicar sin firmar**
+no envía nada. La billetera o extensión de su navegador para esa red (una
+billetera de Arweave como Wander, una extensión de Nostr como nos2x, Steem o
+Blurt Keychain) le pide aprobar cada envío, y Arweave y Blurt cobran una
+pequeña tarifa por cada uno. Sin ninguna, el envío termina con un simple
+aviso «…no se pudo completar» y la construcción sigue publicada aquí.
+
+El diálogo es el mismo que usa la Vista del mundo: sus ajustes
+**Almacenamiento** y **Sustrato de anuncio / descubrimiento** y los botones
+separados **Distribuir solo el Snapshot** / **Distribuir solo la
+Declaración firmada** funcionan como se describe en
+[Encuentros en el Mundo](03-WorldView.md#encuentros-en-el-mundo--publicaciones-y-avatares-que-comparten-sus-pares). Hay dos diferencias: siempre actúa sobre el
+Mundo compartido exacto que acaba de producir su clic en Publicar, y el
+**Snapshot** va primero, así que **Enviar** envía el Snapshot y luego la
+Declaración firmada. Cerrar el diálogo (**Cerrar**, un clic fuera o Escape)
+nunca pierde nada de lo que produjo.
 
 El resultado de la Declaración firmada aparece en su propia sección:
 
@@ -193,15 +210,10 @@ Declaración firmada; consulte
 [Snapshot local](09-PublicationsAndEvidence.md#snapshot-local) para saber
 qué significa esa distinción.
 
-Como cualquier otro botón de distribución de esta app, distribuir requiere
-una extensión de firma en el navegador: una billetera de Arweave (como
-Wander) o una extensión de Nostr (como nos2x); sin ella, termina con un
-simple aviso “No se pudo completar…”. Publicar en sí nunca distribuye nada
-por su cuenta: la distribución solo ocurre con este clic posterior, aparte
-y explícito. Publicar de nuevo reemplaza toda la superposición por una
-nueva para la nueva publicación; descartarla, o salir de la página, la
-borra: ni el aviso ni el resultado de ninguna de las dos secciones se
-recuerdan en ningún lugar.
+Publicar de nuevo reemplaza todo el aviso por uno nuevo para la nueva
+publicación; descartarlo, o salir de la página, lo borra. Ni el aviso ni el
+resultado de ninguna sección se recuerdan en ningún lugar; solo a dónde van
+sus construcciones.
 
 ## Compartir con pares conectados
 
@@ -304,10 +316,11 @@ código de la app podría ignorarlo, y no puede deshacer una colocación que
 alguien hizo antes de que usted lo eligiera.
 
 En cualquier caso, otras personas ven su construcción donde *usted* la
-puso una vez que **distribuye** su Snapshot desde la Vista del mundo o justo después de publicar en el Editor: el
+puso en cuanto envía su Snapshot, como hace Publicar cuando ya eligió a
+dónde van sus construcciones, o con **Distribuir** en la Vista del mundo: el
 anuncio lleva su colocación firmada, y su ForkBuild muestra la construcción
-allí en cuanto conoce su Mundo compartido. Muévala y vuelva a distribuirla,
-y también se moverá para ellos.
+allí en cuanto conoce su Mundo compartido. Muévala y distribúyala de nuevo, y
+también se mueve para ellos.
 
 ## Editar una creación publicada
 

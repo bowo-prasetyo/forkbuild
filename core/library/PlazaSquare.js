@@ -17,8 +17,6 @@ const PAVING_TOP = 0.25;
 const SANDSTONE = 0xd8c7a0;
 const SANDSTONE_DARK = 0xc9b48a;
 const LAMP = 0xffd54f;
-// The well's ring, which the Village well leaves at the cube's default green.
-const STONE = 0x9a948a;
 
 function b(definitionId, x, y, z, rotation = 0, color = null) {
     return new Brick({ definitionId, position: new Position(x, y, z), rotation, color });
@@ -49,7 +47,7 @@ function wellBricks(dx, dz) {
         brick.position.y + PAVING_TOP,
         brick.position.z + dz,
         brick.rotation,
-        brick.color ?? STONE
+        brick.color
     ));
 }
 
