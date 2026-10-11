@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: b7e773ae656ae805 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: a155256d8ce4d313 -->
 # 05 — Identitas & Masuk
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · **Bahasa Indonesia** · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../05-IdentityAndLogin.md).
-<!-- /stale -->
 
 ForkBuild tidak memiliki kata sandi dan tidak ada server akun pusat.
 **Identitas Anda adalah pasangan kunci kriptografis yang tersimpan di
@@ -104,6 +100,24 @@ di halaman ini.
 
 Tidak ada ganti nama atau hapus — identitas dimaksudkan untuk bertahan;
 jika Anda ingin berhenti memakainya, cabut saja.
+
+### Apa yang dilakukan pencabutan — dan yang tidak
+
+Mencabut menghentikan identitas dari menandatangani apa pun yang baru,
+termasuk bukti yang dibutuhkannya untuk memulai koneksi baru dengan orang
+lain. Mencabut **tidak** membuat Anda keluar, dan Anda masih bisa masuk
+dengannya setelah itu — kartunya di **Identitas Saya** hanya menampilkan
+**Dicabut**. Itu disengaja, agar Anda masih bisa membukanya untuk melihatnya
+atau **Ekspor** sekali lagi. Untuk terus bekerja, buat identitas baru dan
+masuk dengan identitas itu.
+
+Pencabutan bersifat permanen, di perangkat ini dan di perangkat mana pun
+tempat Anda memulihkan cadangannya. Koneksi yang sudah terbuka saat Anda
+mencabutnya tidak diputus; saat tersambung ulang berikutnya, identitas yang
+dicabut tidak bisa membuktikan dirinya. Nyatakan pengganti *sebelum*
+mencabut jika Anda ingin orang lain tahu identitas mana yang
+menggantikannya — setelah itu identitas yang dicabut tidak bisa lagi
+menandatanganinya.
 
 ## Mencadangkan identitas (ekspor & impor)
 

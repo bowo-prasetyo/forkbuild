@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: b7e773ae656ae805 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: a155256d8ce4d313 -->
 # 05 — Identität & Anmeldung
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · **Deutsch** · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../05-IdentityAndLogin.md).
-<!-- /stale -->
 
 ForkBuild hat keine Passwörter und keinen zentralen Kontoserver. **Ihre
 Identität ist ein kryptografisches Schlüsselpaar, das in diesem Browser
@@ -107,6 +103,25 @@ nicht automatisch auszufüllen.
 Es gibt kein Umbenennen oder Löschen — Identitäten sind auf Dauer
 angelegt; wenn Sie eine nicht mehr verwenden möchten, widerrufen Sie sie
 stattdessen.
+
+### Was Widerrufen bewirkt — und was nicht
+
+Widerrufen hindert eine Identität daran, noch etwas Neues zu signieren,
+auch den Nachweis, den sie braucht, um eine neue Verbindung mit einer
+anderen Person aufzubauen. Es meldet Sie **nicht** ab, und Sie können sich
+danach weiterhin mit ihr anmelden — ihre Karte unter **Meine Identitäten**
+zeigt dann nur **Widerrufen**. Das ist Absicht, damit Sie sie noch öffnen
+können, um sie anzusehen oder ein letztes Mal zu **Exportieren**. Um
+weiterzuarbeiten, erstellen Sie eine neue Identität und melden sich
+stattdessen mit dieser an.
+
+Widerrufen ist endgültig, auf diesem Gerät und auf jedem Gerät, auf dem Sie
+ihre Sicherung wiederherstellen. Verbindungen, die beim Widerrufen schon
+offen waren, werden nicht getrennt; wenn sie sich das nächste Mal neu
+verbinden, kann die widerrufene Identität sich nicht mehr ausweisen.
+Benennen Sie einen Nachfolger, *bevor* Sie widerrufen, wenn andere wissen
+sollen, welche Identität sie ersetzt — danach kann die widerrufene das nicht
+mehr signieren.
 
 ## Eine Identität sichern (Export & Import)
 

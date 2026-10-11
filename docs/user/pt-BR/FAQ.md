@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 8311a31a81066243 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: b2edb99b3a03a213 -->
 # Perguntas frequentes
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../FAQ.md).
-<!-- /stale -->
 
 Respostas curtas às dúvidas mais comuns, cada uma com um link para o guia
 que explica o assunto por inteiro.
@@ -150,6 +146,15 @@ armazenamento em nuvem sincroniza. Veja [Seus dados](13-YourData.md) e
 
 Não. As identidades são feitas para durar. Para parar de usar uma, declare
 uma sucessora ou revogue-a em **Minhas identidades**.
+
+### Revoguei minha identidade, então por que ainda consigo entrar com ela?
+
+Isso é esperado. Revogar impede a identidade de assinar qualquer coisa
+nova, inclusive o que ela precisa para se conectar a outras pessoas, mas não
+impede você de entrar. Assim você ainda pode consultá-la ou exportá-la. Ela
+mostra **Revogada** em **Minhas identidades**, e a revogação nunca pode ser
+desfeita. Crie uma nova identidade para continuar trabalhando. Veja
+[O que revogar faz — e o que não faz](05-IdentityAndLogin.md#o-que-revogar-faz--e-o-que-não-faz).
 
 ### Por que uma cópia mais antiga do ForkBuild não abre meu documento exportado?
 

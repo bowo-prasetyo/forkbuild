@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 8311a31a81066243 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: b2edb99b3a03a213 -->
 # Häufige Fragen
 
 <!-- languages -->
 [English](../FAQ.md) · **Deutsch** · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../FAQ.md).
-<!-- /stale -->
 
 Kurze Antworten auf die Fragen, auf die man am häufigsten stößt, jeweils
 mit einem Link zur Anleitung, die es ausführlich erklärt.
@@ -158,6 +154,16 @@ und [Datenschutz](Privacy.md).
 Nein. Identitäten sind auf Dauer angelegt. Um eine nicht mehr zu
 verwenden, benennen Sie unter **Meine Identitäten** einen Nachfolger oder
 widerrufen Sie sie.
+
+### Ich habe meine Identität widerrufen — warum kann ich mich trotzdem damit anmelden?
+
+Das ist so gewollt. Widerrufen hindert die Identität daran, noch etwas
+Neues zu signieren, auch das, was sie braucht, um sich mit anderen Personen
+zu verbinden, aber es hindert Sie nicht daran, sich anzumelden. So können
+Sie sie weiterhin ansehen oder exportieren. Sie zeigt **Widerrufen** unter
+**Meine Identitäten**, und der Widerruf lässt sich nie rückgängig machen.
+Erstellen Sie eine neue Identität, um weiterzuarbeiten. Siehe
+[Was Widerrufen bewirkt — und was nicht](05-IdentityAndLogin.md#was-widerrufen-bewirkt--und-was-nicht).
 
 ### Warum öffnet eine ältere Kopie von ForkBuild mein exportiertes Dokument nicht?
 

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 8311a31a81066243 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: b2edb99b3a03a213 -->
 # 자주 묻는 질문
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · **한국어** · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../FAQ.md)을 참고하세요.
-<!-- /stale -->
 
 <!-- languages -->
 <!-- /languages -->
@@ -129,6 +125,14 @@ Edge에서는 클라우드 저장소가 동기화하는 폴더에 매일 자동�
 
 아니요. 신원은 오래 유지되도록 만들어졌습니다. 그만 쓰려면 **내 신원**에서 후속
 신원을 선언하거나 폐기하세요.
+
+### 신원을 폐기했는데 왜 아직 그 신원으로 로그인할 수 있나요?
+
+정상입니다. 폐기하면 그 신원은 다른 사람과 연결하는 데 필요한 것을 포함해
+새로운 것에 서명할 수 없게 되지만, 로그인까지 막지는 않습니다. 그래서 여전히
+살펴보거나 내보낼 수 있습니다. **내 신원**에 **폐기됨**으로 표시되며, 폐기는
+절대 되돌릴 수 없습니다. 계속 작업하려면 새 신원을 만드세요.
+[폐기가 하는 일과 하지 않는 일](05-IdentityAndLogin.md#폐기가-하는-일과-하지-않는-일)를 참고하세요.
 
 ### 왜 이전 버전의 ForkBuild에서 내보낸 문서가 열리지 않나요?
 

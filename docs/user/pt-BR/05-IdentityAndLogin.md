@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: b7e773ae656ae805 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: a155256d8ce4d313 -->
 # 05 — Identidade e login
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../05-IdentityAndLogin.md).
-<!-- /stale -->
 
 O ForkBuild não tem senhas nem servidor central de contas. **Sua identidade é
 um par de chaves criptográficas guardado neste navegador** — a mesma chave
@@ -96,6 +92,23 @@ não preencher automaticamente os campos desta página.
 
 Não há como renomear nem excluir — as identidades são feitas para durar; se
 quiser parar de usar uma, revogue-a.
+
+### O que revogar faz — e o que não faz
+
+Revogar impede uma identidade de assinar qualquer coisa nova, inclusive a
+prova de que ela precisa para iniciar uma nova conexão com outra pessoa.
+Isso **não** desconecta você, e você ainda pode entrar com ela depois — o
+cartão dela em **Minhas identidades** só mostra **Revogada**. É de
+propósito, para que você ainda possa abri-la para consultar ou
+**Exportar** uma última vez. Para continuar trabalhando, crie uma nova
+identidade e entre com ela.
+
+Revogar é permanente, neste dispositivo e em qualquer dispositivo em que
+você restaurar o backup dela. Conexões que já estavam abertas quando você
+revogou não são cortadas; na próxima vez que se reconectarem, a identidade
+revogada não conseguirá se provar. Declare uma sucessora *antes* de revogar
+se quiser que as pessoas saibam qual identidade a substitui — depois disso,
+a revogada não consegue mais assinar isso.
 
 ## Fazendo backup de uma identidade (exportar e importar)
 

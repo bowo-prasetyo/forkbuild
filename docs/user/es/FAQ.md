@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 8311a31a81066243 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: b2edb99b3a03a213 -->
 # Preguntas frecuentes
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · **Español** · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../FAQ.md).
-<!-- /stale -->
 
 Respuestas breves a las preguntas con las que más se encuentra la gente,
 cada una con un enlace a la guía que la explica por completo.
@@ -151,6 +147,15 @@ almacenamiento en la nube. Consulte [Sus datos](13-YourData.md) y
 
 No. Las identidades están pensadas para perdurar. Para dejar de usar una,
 declare una sucesora o revóquela en **Mis identidades**.
+
+### Revoqué mi identidad, ¿por qué todavía puedo iniciar sesión con ella?
+
+Es lo esperado. Revocar impide que la identidad firme nada nuevo, incluido
+lo que necesita para conectarse con otras personas, pero no le impide
+iniciar sesión. Así todavía puede consultarla o exportarla. Muestra
+**Revocada** en **Mis identidades**, y la revocación nunca se puede
+deshacer. Cree una identidad nueva para seguir trabajando. Consulte
+[Qué hace revocar — y qué no](05-IdentityAndLogin.md#qué-hace-revocar--y-qué-no).
 
 ### ¿Por qué una copia más antigua de ForkBuild no abre mi documento exportado?
 
