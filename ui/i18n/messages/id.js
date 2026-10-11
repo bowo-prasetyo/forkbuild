@@ -3623,6 +3623,16 @@ export default Object.freeze({
     'loginModal.publishUnsigned': 'Terbitkan tanpa tanda tangan',
     'loginModal.signInToWalk': 'Masuk untuk berjalan bersama',
     'loginModal.walkWhy': 'Berjalan bersama menghubungkan Anda langsung dengan teman Anda, yang melihat avatar Anda dengan nama identitas Anda. Identitas hanya ada di perangkat ini: tanpa email, tanpa akun.',
+    'loginModal.quick.publishTitle': 'Pilih nama untuk menerbitkan',
+    'loginModal.quick.walkTitle': 'Pilih nama untuk berjalan',
+    'loginModal.quick.publishLead': 'Bangunan Anda ditandatangani dengan nama ini, sehingga siapa pun yang membuka tautan Anda dapat memeriksa bahwa itu milik Anda. Tanpa email, tanpa akun.',
+    'loginModal.quick.walkLead': 'Teman Anda melihat avatar Anda dengan nama ini. Tanpa email, tanpa akun.',
+    'loginModal.quick.name': 'Nama Anda',
+    'loginModal.quick.keyNote': 'Kunci yang menandatangani untuk Anda tetap di browser ini. Anda dapat melindunginya dengan frasa sandi sekarang, atau kapan saja nanti di Identitas Saya.',
+    'loginModal.quick.withPassphrase': 'Lindungi dengan frasa sandi sekarang',
+    'loginModal.quick.publishAs': 'Terbitkan sebagai {name}',
+    'loginModal.quick.walkAs': 'Berjalan sebagai {name}',
+    'loginModal.quick.continue': 'Lanjutkan',
     'loginModal.noIdentitiesOnThisDevice': 'Belum ada identitas di perangkat ini.',
     'loginModal.createNewIdentity': 'Buat Identitas Baru',
     'loginModal.unlocking': 'Membuka…',
@@ -4482,5 +4492,9 @@ export default Object.freeze({
     'walkTogether.join.joining': 'Bergabung dengan {name}…',
     'walkTogether.join.joiningSomeone': 'Bergabung dengan teman Anda…',
     'walkTogether.join.joined': 'Anda sudah masuk! Membuka Dunia…',
-    'walkTogether.join.home': 'Buka ForkBuild'
+    'walkTogether.join.home': 'Buka ForkBuild',
+
+    // The reminder that a quick-start identity has no passphrase (ui/components/ProtectIdentityNote.js).
+    'protectIdentityNote.text': 'Kunci Anda disimpan di browser ini tanpa frasa sandi, jadi siapa pun yang memakai browser ini dapat menerbitkan sebagai Anda.',
+    'protectIdentityNote.action': 'Tambahkan frasa sandi'
 });

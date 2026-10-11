@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 0c8735655a65c0e1 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: abb471311eb7fdd6 -->
 # 01 — Primeiros passos
 
 <!-- languages -->
@@ -110,8 +110,17 @@ Isso vale para o site hospedado. Uma cópia que você roda direto da pasta
 ## Entrando
 
 Você não precisa entrar para começar a construir. Na primeira vez que você
-clicar em **Publicar**, o ForkBuild pede que você entre, ou crie uma
-identidade ali mesmo, porque publicar assina sua criação. Você também pode
+clicar em **Publicar**, o ForkBuild pede um nome para publicar, porque
+publicar assina sua criação. Digite um e clique em **Publicar como …**: uma
+identidade com esse nome é criada neste dispositivo, e sua construção é
+publicada. A chave fica neste navegador sem frase secreta até você
+adicionar uma: o Editor avisa depois que você publica, e **Proteger com
+frase secreta** em **Minhas identidades** adiciona uma quando quiser. Para
+escolher uma frase secreta logo de início, clique em **Protegê-la agora com
+uma frase secreta**. Um link para passear pergunta do mesmo jeito, com
+**Passear como …**.
+
+Você também pode
 entrar a qualquer momento:
 Clique em **Entrar** no canto superior direito. O ForkBuild não usa senhas
 nem contas centrais — em vez disso, **sua identidade é um par de chaves

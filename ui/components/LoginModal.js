@@ -23,6 +23,17 @@ import I18nText from '../i18n/I18nText.js';
 // Creating a new identity asks for a passphrase by default (see
 // NewPassphraseFields.js); an unprotected identity takes an explicit
 // opt-out.
+//
+// Quick start: opened by Publish or a walk link on a device that holds no
+// identity yet, the modal asks only for a name, and "Publish as …" (or
+// "Walk as …") creates an identity without a passphrase and goes on, so a
+// first build can be shared without a form in the way (docs/Pillars.md,
+// "Does it make the first ten minutes harder?"). The key is then kept in
+// this browser unencrypted, as with the opt-out, and the identity shows as
+// ⚠ Unprotected on My Identities, where a passphrase can be added any time;
+// "Protect it with a passphrase now" opens the full form instead. The
+// Editor reminds whoever published with such an identity
+// (ProtectIdentityNote.js).
 export default {
     name: 'LoginModal',
     props: {
@@ -59,6 +70,16 @@ export default {
         const sortedIdentities = computed(() =>
             [...identities.value].sort((a, b) => b.createdAt - a.createdAt)
         );
+        const showFullCreate = ref(false);
+        const quickStart = computed(() => (props.purpose === 'publish' || props.purpose === 'walk')
+            && identities.value.length === 0 && !showFullCreate.value);
+        const quickName = computed(() => newLabel.value.trim());
+        const quickActionText = computed(() => {
+            if (!quickName.value) return t('loginModal.quick.continue');
+            return props.purpose === 'walk'
+                ? t('loginModal.quick.walkAs', { name: quickName.value })
+                : t('loginModal.quick.publishAs', { name: quickName.value });
+        });
 
         function signedIn() {
             emit('close');
@@ -127,8 +148,27 @@ export default {
             }
         }
 
+        // Quick start: a name is all it takes; the key stays unprotected until
+        // a passphrase is added on My Identities.
+        async function quickCreate() {
+            const label = quickName.value;
+            createError.value = '';
+            if (!label || creating.value) return;
+            creating.value = true;
+            try {
+                const identity = await identityUseCase.createIdentity(label, null);
+                await identityUseCase.authenticate(identity.identityId, null);
+                signedIn();
+            } catch (e) {
+                createError.value = errorText(e).replace(/^LocalIdentityProvider:\s*/, '');
+            } finally {
+                creating.value = false;
+            }
+        }
+
         return {
             t,
+            quickStart, quickName, quickActionText, quickCreate, showFullCreate,
             sortedIdentities, newLabel, newPassphrase, newPassphraseConfirmation, allowUnprotected,
             createAttempted, creating, createError, shortId, logInAs, createAndLogIn,
             unlockingId, unlockPassphrase, unlockError, unlocking, cancelUnlock, confirmUnlock
@@ -136,7 +176,33 @@ export default {
     },
     template: `
         <div class="modal-overlay" @click.self="$emit('close')">
-            <div class="modal-content">
+            <div v-if="quickStart" class="modal-content login-modal-quick">
+                <h3>{{ purpose === 'walk' ? t('loginModal.quick.walkTitle') : t('loginModal.quick.publishTitle') }}</h3>
+                <p class="modal-subtitle login-modal-purpose">
+                    {{ purpose === 'walk' ? t('loginModal.quick.walkLead') : t('loginModal.quick.publishLead') }}
+                </p>
+                <input
+                    v-model="newLabel"
+                    type="text"
+                    :placeholder="t('loginModal.quick.name')"
+                    :aria-label="t('loginModal.quick.name')"
+                    class="modal-input login-modal-quick-name"
+                    maxlength="60"
+                    autofocus
+                    @keydown.enter="quickCreate"
+                />
+                <p class="form-hint form-hint--neutral login-modal-quick-note">{{ t('loginModal.quick.keyNote') }}</p>
+                <button type="button" class="login-modal-quick-protect" @click="showFullCreate = true">{{ t('loginModal.quick.withPassphrase') }}</button>
+                <p v-if="createError" class="identity-unlock-error">{{ createError }}</p>
+                <div class="modal-actions">
+                    <button class="modal-btn modal-btn--secondary" @click="$emit('close')">{{ t('loginModal.cancel') }}</button>
+                    <button v-if="purpose === 'publish'" class="modal-btn modal-btn--secondary login-modal-skip" @click="$emit('close'); $emit('skip')">{{ t('loginModal.publishUnsigned') }}</button>
+                    <button class="modal-btn modal-btn--primary login-modal-quick-go" :disabled="!quickName || creating" @click="quickCreate">
+                        {{ creating ? t('loginModal.creating') : quickActionText }}
+                    </button>
+                </div>
+            </div>
+            <div v-else class="modal-content">
                 <h3>{{ purpose === 'publish' ? t('loginModal.signInToPublish') : purpose === 'walk' ? t('loginModal.signInToWalk') : t('loginModal.logIn') }}</h3>
                 <p v-if="purpose === 'publish'" class="modal-subtitle login-modal-purpose">
                     {{ t('loginModal.publishWhy') }}

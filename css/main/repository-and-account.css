@@ -397,6 +397,27 @@
     flex-shrink: 0;
 }
 
+/* LoginModal's quick start: a name, and a way to the full form. */
+.login-modal-quick-note {
+    margin: 0.35rem 0 0.5rem;
+}
+
+.login-modal-quick-protect {
+    display: inline-block;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #4caf7d;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.login-modal-quick-protect:hover {
+    text-decoration: underline;
+}
+
 .identity-divider {
     display: flex;
     align-items: center;

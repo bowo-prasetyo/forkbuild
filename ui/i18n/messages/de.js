@@ -3625,6 +3625,16 @@ export default Object.freeze({
     'loginModal.publishUnsigned': 'Unsigniert veröffentlichen',
     'loginModal.signInToWalk': 'Zum gemeinsamen Spazieren anmelden',
     'loginModal.walkWhy': 'Gemeinsames Spazieren verbindet Sie direkt mit Ihrem Freund, der Ihren Avatar unter dem Namen Ihrer Identität sieht. Eine Identität gibt es nur auf diesem Gerät: keine E-Mail, kein Konto.',
+    'loginModal.quick.publishTitle': 'Wählen Sie einen Namen zum Veröffentlichen',
+    'loginModal.quick.walkTitle': 'Wählen Sie einen Namen zum Spazieren',
+    'loginModal.quick.publishLead': 'Ihr Bauwerk wird unter diesem Namen signiert, damit jeder, der Ihren Link öffnet, prüfen kann, dass es von Ihnen ist. Keine E-Mail, kein Konto.',
+    'loginModal.quick.walkLead': 'Ihr Freund sieht Ihren Avatar unter diesem Namen. Keine E-Mail, kein Konto.',
+    'loginModal.quick.name': 'Ihr Name',
+    'loginModal.quick.keyNote': 'Der Schlüssel, der für Sie signiert, bleibt in diesem Browser. Sie können ihn jetzt mit einer Passphrase schützen oder jederzeit später unter Meine Identitäten.',
+    'loginModal.quick.withPassphrase': 'Jetzt mit einer Passphrase schützen',
+    'loginModal.quick.publishAs': 'Als {name} veröffentlichen',
+    'loginModal.quick.walkAs': 'Als {name} spazieren',
+    'loginModal.quick.continue': 'Weiter',
     'loginModal.noIdentitiesOnThisDevice': 'Noch keine Identitäten auf diesem Gerät.',
     'loginModal.createNewIdentity': 'Neue Identität erstellen',
     'loginModal.unlocking': 'Wird entsperrt …',
@@ -4484,5 +4494,9 @@ export default Object.freeze({
     'walkTogether.join.joining': 'Sie kommen zu {name} …',
     'walkTogether.join.joiningSomeone': 'Sie kommen zu Ihrem Freund …',
     'walkTogether.join.joined': 'Sie sind dabei! Die Welt wird geöffnet …',
-    'walkTogether.join.home': 'Zu ForkBuild'
+    'walkTogether.join.home': 'Zu ForkBuild',
+
+    // The reminder that a quick-start identity has no passphrase (ui/components/ProtectIdentityNote.js).
+    'protectIdentityNote.text': 'Ihr Schlüssel liegt ohne Passphrase in diesem Browser, daher könnte jeder, der diesen Browser benutzt, als Sie veröffentlichen.',
+    'protectIdentityNote.action': 'Passphrase hinzufügen'
 });

@@ -104,10 +104,17 @@ This applies to the hosted site. A copy you run straight from the folder
 ## Logging in
 
 You don't need to log in to start building. The first time you click
-**Publish**, ForkBuild asks you to log in, or to create an identity right
-there, because publishing signs your creation. You can also log in at any
-time: click **Login** in the top-right corner. ForkBuild doesn't use passwords or
-central accounts — instead, **your identity is a cryptographic key pair
+**Publish**, ForkBuild asks for a name to publish under, because publishing
+signs your creation. Type one and click **Publish as …**: an identity with
+that name is made on this device, and your build is published. Its key is
+kept in this browser without a passphrase until you add one: the Editor
+says so after you publish, and **Protect with Passphrase** on
+**My Identities** adds one any time. To choose a passphrase straight away,
+click **Protect it with a passphrase now** instead. A walk link asks the
+same way, with **Walk as …**.
+
+You can also log in at any time: click **Login** in the top-right corner.
+ForkBuild doesn't use passwords or central accounts — instead, **your identity is a cryptographic key pair
 stored on this device**. The Log In dialog lists every identity this browser
 already holds; click one to use it, or create a new one:
 

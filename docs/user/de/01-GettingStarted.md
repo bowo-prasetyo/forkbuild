@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 0c8735655a65c0e1 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: abb471311eb7fdd6 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -118,9 +118,18 @@ nicht offline; eine mit `node scripts/build.mjs` gebaute schon (siehe
 ## Anmelden
 
 Um mit dem Bauen anzufangen, müssen Sie sich nicht anmelden. Wenn Sie zum
-ersten Mal auf **Veröffentlichen** klicken, bittet ForkBuild Sie, sich
-anzumelden oder gleich dort eine Identität zu erstellen, denn
-Veröffentlichen signiert Ihre Kreation. Sie können sich auch jederzeit
+ersten Mal auf **Veröffentlichen** klicken, fragt ForkBuild nach einem Namen
+zum Veröffentlichen, denn Veröffentlichen signiert Ihre Kreation. Geben Sie
+einen ein und klicken Sie auf **Als … veröffentlichen**: Eine Identität mit
+diesem Namen wird auf diesem Gerät erstellt, und Ihr Bauwerk wird
+veröffentlicht. Ihr Schlüssel liegt ohne Passphrase in diesem Browser, bis
+Sie eine hinzufügen: Der Editor sagt es Ihnen nach dem Veröffentlichen, und
+**Mit Passphrase schützen** unter **Meine Identitäten** fügt jederzeit eine
+hinzu. Um gleich eine Passphrase zu wählen, klicken Sie stattdessen auf
+**Jetzt mit einer Passphrase schützen**. Ein Spazier-Link fragt genauso, mit
+**Als … spazieren**.
+
+Sie können sich auch jederzeit
 anmelden:
 Klicken Sie oben rechts auf **Anmelden**. ForkBuild verwendet keine
 Passwörter und keine zentralen Konten — stattdessen ist **Ihre Identität

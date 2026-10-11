@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 1bcac3d373cc9606 -->
+<!-- translation-of: docs/Privacy.md source-hash: b4c0a3045ba7efaa -->
 # Privacidade
 
 <!-- languages -->
@@ -24,6 +24,10 @@ que você publique, exporte ou envie:
 - suas identidades: a chave pública de cada uma, e a chave privada,
   criptografada com sua frase secreta, a menos que você tenha escolhido
   criá-la sem uma;
+- uma identidade criada só com um nome, ao publicar ou passear pela
+  primeira vez, não tem frase secreta até você adicionar uma em
+  **Minhas identidades**, então qualquer coisa que consiga ler o
+  armazenamento deste site poderia assinar como ela;
 - pares conhecidos, amigos, as pessoas que você segue, bloqueios, histórico
   de conversas e mensagens na fila (ninguém é avisado de que você o segue, e
   nada sobre seguir é enviado);

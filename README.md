@@ -127,9 +127,12 @@ longer-term aim.
 
 **Identity, peers and social**
 - Ed25519 identities (did:key) held on the device, signed with the audited
-  noble-curves library. Private keys are encrypted with a passphrase by default
-  (PBKDF2-SHA256 and AES-256-GCM through the browser's WebCrypto), with
-  export/import, succession, revocation and multi-device grants.
+  noble-curves library. Private keys are encrypted with a passphrase
+  (PBKDF2-SHA256 and AES-256-GCM through the browser's WebCrypto), offered
+  whenever an identity is made; a first publish or walk needs only a name,
+  and its identity shows as **⚠ Unprotected**, with a reminder, until a
+  passphrase is added. Export/import, succession, revocation and
+  multi-device grants.
 - Direct WebRTC peer connections found through rendezvous or a manual
   invitation, and authenticated with a challenge–response handshake.
 - An opt-in public lobby, one for everyone and one per World, for meeting
