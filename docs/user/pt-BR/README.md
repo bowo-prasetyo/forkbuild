@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 7bb42fbd771c7a59 -->
+<!-- translation-of: docs/user/README.md source-hash: ad61b5f6af2559db -->
 # Documentação do ForkBuild para usuários
 
 <!-- languages -->
@@ -118,10 +118,14 @@ O ForkBuild oferece colaboração com presença no mundo e descoberta:
 
 - **Caminhe e navegue** — use as teclas WASD para caminhar com seu avatar
   por construções e terreno, pular, escalar e explorar espaços verticais.
-- **Construa junto** — veja os avatares de outros construtores e entenda no
-  que estão trabalhando pela percepção espacial; depois use **Editar uma
-  cópia** para levar ao Editor algo que você encontrou e continuar a
-  construção você mesmo.
+- **Construa junto** — **Construir comigo**, no Editor, cria um link que
+  abre a sua construção no Editor de um amigo, para vocês construírem
+  juntos, ao vivo, cada um vendo os blocos do outro aparecerem e para onde
+  ele está apontando (veja [O
+  Editor](02-TheEditor.md#construir-comigo-construir-juntos-ao-vivo)). Na
+  Visão do mundo, veja os avatares de outros construtores e no que estão
+  trabalhando; depois use **Editar uma cópia** para levar ao Editor algo que
+  você encontrou e continuar a construção você mesmo.
 - **Descubra o mundo** — use a bússola, com marcadores de lugar conforme o
   contexto, para encontrar estruturas próximas e elementos do terreno como
   florestas, rios e campos.

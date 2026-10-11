@@ -194,6 +194,9 @@ export class DocumentOperationDeferralUseCase {
         // causalPredecessors }) — the entire "pending mechanism" this
         // milestone's own header calls for. Nothing more.
         this._deferredByDocumentId = new Map();
+        // Per document: operations already reflected in it when it was
+        // opened from someone else's copy (EditorSession#openSharedDocument()).
+        this._baselineByDocumentId = new Map();
         this._executionHistory = { isExecuted: (documentId, operationId) => this._isExecuted(documentId, operationId) };
     }
 
@@ -369,7 +372,26 @@ export class DocumentOperationDeferralUseCase {
         );
     }
 
+    // `operationIds` are already part of `documentId` as it was opened (a
+    // co-builder's copy, Build with me): operations that follow them are
+    // ready, though this replica never executed them itself.
+    markExecuted(documentId, operationIds = []) {
+        if (!documentId || typeof documentId !== 'string') {
+            throw new Error('DocumentOperationDeferralUseCase.markExecuted(): documentId is required');
+        }
+        const baseline = new Set(operationIds.filter((id) => typeof id === 'string' && id));
+        this._baselineByDocumentId.set(documentId, baseline);
+    }
+
+    // The operations markExecuted() last named for `documentId`.
+    baselineOf(documentId) {
+        return [...(this._baselineByDocumentId.get(documentId) || [])];
+    }
+
     _isExecuted(documentId, operationId) {
+        if (this._baselineByDocumentId.get(documentId)?.has(operationId)) {
+            return true;
+        }
         const history = this._commandHistoriesByDocumentId.get(documentId);
         return !!history && history.getExecutedCommands().some((command) => command.id === operationId);
     }

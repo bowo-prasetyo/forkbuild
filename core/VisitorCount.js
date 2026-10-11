@@ -60,7 +60,8 @@ export function visitorCountHitUrl(random) {
 // ForkBuild installed as an app, and a build's embed code copied, an embedded
 // build shown on another site, and opened from there in ForkBuild; the weekly
 // challenge joined, and its plaza visited; a "Walk here with me" link made,
-// and a friend arriving through one; and, when
+// and a friend arriving through one; a "Build with me" link made, and a
+// friend joining through one; and, when
 // a build is first published from this device, roughly how many bricks it
 // has, whether it is this device's second build, and whether it remixes
 // someone else's (publishedBuildEvents below).
@@ -88,7 +89,9 @@ export const FunnelEvent = Object.freeze({
     SECOND_BUILD: 'second-build',
     REMIX_PUBLISHED: 'remix-published',
     WALK_LINK: 'walk-link',
-    WALK_JOINED: 'walk-joined'
+    WALK_JOINED: 'walk-joined',
+    BUILD_LINK: 'build-link',
+    BUILD_JOINED: 'build-joined'
 });
 
 const FUNNEL_EVENTS = new Set(Object.values(FunnelEvent));

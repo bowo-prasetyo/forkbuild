@@ -136,6 +136,9 @@ const routes = [
     // A "Walk here with me" link: join the friend who made it, in their World
     // (core/WalkTogetherCode.js, application/walkTogether/WalkTogether.js).
     { path: '/walk/:code', name: 'walk-together', component: WalkTogetherJoinView },
+    // A "Build with me" link: join the friend who made it, building their
+    // build in the Editor (application/buildTogether/).
+    { path: '/build/:code', name: 'build-together', component: WalkTogetherJoinView, meta: { building: true } },
     { path: '/settings/language', name: 'language-settings', component: LanguageSettingsView },
     // 0.9.302 — Content Provider Preference Settings Entry Point. The one
     // ordinary product path to create/change the persisted CONTENT role

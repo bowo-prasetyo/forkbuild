@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: ee6ec2bdfb73a405 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 60fb1dcaa24488dc -->
 # 02 — Editor
 
 <!-- languages -->
@@ -260,6 +260,11 @@ Setiap perubahan dicatat, jadi Anda selalu dapat kembali:
 
 Memindahkan sepuluh balok dihitung sebagai **satu** langkah urung, jadi
 urungkan tetap mudah dikelola bahkan pada bangunan besar.
+
+Selama kalian membangun bersama (**Bangun bersamaku**, di bawah), Urungkan
+dan Ulangi dijeda: jika tidak, langkah Anda dan langkah teman Anda bisa
+terurung dalam urutan berbeda di tiap layar. Sebagai gantinya, hapus atau
+pindahkan balok.
 
 ## Grup
 
@@ -579,6 +584,35 @@ atau tekanan tombol pertama Anda, sebagaimana diwajibkan browser.
   tanpa perubahan, dan menyimpan salinan di samping dokumen yang ada dalam
   versi berbeda. Perubahan yang belum disimpan tidak disertakan, jadi
   simpan terlebih dahulu.
+
+## Bangun bersamaku: membangun bersama, secara langsung
+
+**Bangun bersamaku**, di bawah nama bangunan di bilah sisi, membuat tautan
+yang memungkinkan teman membangun bangunan ini bersama Anda, pada saat yang
+sama. Kirimkan dengan cara apa pun; tautan itu juga tampil sebagai kode QR
+untuk ponsel. Teman yang membukanya masuk jika belum (baloknya ditambahkan
+atas namanya), mengklik **Bergabung**, lalu bangunan Anda terbuka di
+Editor-nya. Sejak itu, setiap balok yang ditempatkan, dipindahkan, diwarnai
+ulang, atau dihapus oleh salah satu dari kalian muncul di kedua layar.
+
+- Sebuah strip di atas adegan menunjukkan siapa yang sedang membangun,
+  masing-masing dengan warnanya sendiri, dan kalian masing-masing melihat ke
+  mana yang lain menunjuk dan apa yang ia pilih, dengan warna itu.
+- Bangunan itu harus milik Anda sendiri: yang Anda mulai, atau salinan yang
+  Anda buat. Bangunan yang Anda mulai sebelum masuk menjadi milik Anda saat
+  Anda mengundang teman ke sana.
+- Siapa pun yang membuka tautan dalam 30 menit pertamanya dapat bergabung,
+  selama bangunan tetap terbuka di Editor Anda. Semua yang sudah bergabung
+  dapat membangun sampai Anda menekan **Hentikan**, membuka bangunan lain,
+  atau keluar dari Editor. **Tautan** di strip menampilkan tautan itu lagi.
+- Editor setiap teman menyimpan salinannya sendiri di perangkatnya. Saat
+  Anda berhenti, ia boleh menyimpannya, tetapi perubahannya tidak lagi
+  sampai kepada Anda.
+- Bergabung menghubungkan kedua perangkat Anda secara langsung, seperti
+  **Jalan di sini bersamaku**: masing-masing dapat melihat alamat IP yang
+  lain. Tidak ada yang menjadi rekan yang diingat atau teman kecuali Anda
+  memilihnya. Fitur ini memerlukan server rendezvous; situs resmi
+  memilikinya.
 
 ## Mengunduh model 3D
 

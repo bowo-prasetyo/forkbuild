@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 7bb42fbd771c7a59 -->
+<!-- translation-of: docs/user/README.md source-hash: ad61b5f6af2559db -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
@@ -116,10 +116,14 @@ ForkBuild memberi Anda kolaborasi melalui avatar dan penemuan dunia:
 - **Berjalan dan bernavigasi** — gunakan tombol WASD untuk menjalankan
   avatar Anda melintasi bangunan dan medan, melompat, memanjat, dan
   menjelajahi ruang bertingkat.
-- **Membangun bersama** — lihat avatar pembangun lain dan pahami apa yang
-  sedang mereka kerjakan melalui kesadaran spasial, lalu gunakan **Edit
-  Salinan** untuk membawa sesuatu yang Anda temukan ke Editor dan
-  mengembangkannya sendiri.
+- **Membangun bersama** — **Bangun bersamaku** di Editor membuat tautan yang
+  membuka bangunan Anda di Editor teman, sehingga kalian membangunnya
+  bersama secara langsung, masing-masing melihat balok yang lain muncul dan
+  ke mana ia menunjuk (lihat
+  [Editor](02-TheEditor.md#bangun-bersamaku-membangun-bersama-secara-langsung)).
+  Di Tampilan Dunia, lihat avatar pembangun lain dan apa yang sedang mereka
+  kerjakan, lalu gunakan **Edit Salinan** untuk membawa sesuatu yang Anda
+  temukan ke Editor dan mengembangkannya sendiri.
 - **Menemukan dunia** — gunakan kompas dengan penanda lokasi kontekstual
   untuk menemukan struktur di dekat Anda dan bentang alam seperti hutan,
   sungai, dan padang rumput.

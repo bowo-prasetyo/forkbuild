@@ -111,6 +111,8 @@ the week after, by day:
   `/e/challenge-join`: visits to a week's challenge plaza.
 - **Do people walk together?** `/e/walk-joined` against `/e/walk-link`:
   friends who arrived through a "Walk here with me" link, per link made.
+- **Do people build together?** `/e/build-joined` against `/e/build-link`:
+  friends who joined through a "Build with me" link, per link made.
 - **Do builds have a family tree?** `/e/remix-published` against the builds
   published: remixes per build. `/e/remix-from-link` counts copies started
   from a link; this counts the ones finished and published.

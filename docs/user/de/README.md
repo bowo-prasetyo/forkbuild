@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 7bb42fbd771c7a59 -->
+<!-- translation-of: docs/user/README.md source-hash: ad61b5f6af2559db -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
@@ -125,10 +125,14 @@ ForkBuild bietet verkörperte Zusammenarbeit und das Entdecken der Welt:
 - **Gehen und navigieren** — gehen Sie mit den Tasten WASD mit Ihrem
   Avatar über Gebäude und Gelände, springen, klettern und erkunden Sie
   Räume in der Höhe.
-- **Gemeinsam bauen** — sehen Sie die Avatare anderer Baumeister,
-  erkennen Sie räumlich, woran sie arbeiten, und nutzen Sie dann **Eine
-  Kopie bearbeiten**, um etwas Gefundenes in den Editor zu übernehmen und
-  selbst weiterzubauen.
+- **Gemeinsam bauen** — **Mit mir bauen** im Editor erstellt einen Link, der
+  Ihr Bauwerk im Editor eines Freundes öffnet, sodass Sie es gemeinsam
+  bauen, live, und jeder die Steine des anderen erscheinen sieht und wohin
+  er zeigt (siehe [Der
+  Editor](02-TheEditor.md#mit-mir-bauen-gemeinsam-bauen-live)). Sehen Sie in
+  der Weltansicht die Avatare anderer Baumeister und woran sie arbeiten, und
+  nutzen Sie dann **Eine Kopie bearbeiten**, um etwas Gefundenes in den
+  Editor zu übernehmen und selbst weiterzubauen.
 - **Die Welt entdecken** — nutzen Sie den Kompass mit Ortsmarkierungen,
   um Strukturen in der Nähe und Geländemerkmale wie Wälder, Flüsse und
   Grasland zu finden.

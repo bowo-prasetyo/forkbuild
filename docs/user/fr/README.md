@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 7bb42fbd771c7a59 -->
+<!-- translation-of: docs/user/README.md source-hash: ad61b5f6af2559db -->
 # Documentation utilisateur de ForkBuild
 
 <!-- languages -->
@@ -130,10 +130,15 @@ monde :
 - **Marcher et naviguer** — utilisez les touches WASD pour faire marcher
   votre avatar sur les bâtiments et le terrain, sauter, grimper et
   explorer les espaces en hauteur.
-- **Construire ensemble** — voyez les avatars des autres bâtisseurs et
-  comprenez sur quoi ils travaillent grâce à la conscience spatiale, puis
-  utilisez **Modifier une copie** pour emporter dans l’Éditeur quelque
-  chose que vous avez trouvé et le développer vous-même.
+- **Construire ensemble** — **Construire avec moi**, dans l’Éditeur, crée un
+  lien qui ouvre votre construction dans l’Éditeur d’un ami, pour la
+  construire ensemble, en direct, chacun voyant apparaître les briques de
+  l’autre et l’endroit qu’il vise (voir
+  [L’Éditeur](02-TheEditor.md#construire-avec-moi--construire-ensemble-en-direct)).
+  Dans la Vue du Monde, voyez les avatars des autres bâtisseurs et ce sur
+  quoi ils travaillent, puis utilisez **Modifier une copie** pour emporter
+  dans l’Éditeur quelque chose que vous avez trouvé et le développer
+  vous-même.
 - **Découvrir le monde** — utilisez la boussole et ses repères de lieux
   contextuels pour trouver les structures proches et les éléments du
   terrain comme les forêts, les rivières et les prairies.

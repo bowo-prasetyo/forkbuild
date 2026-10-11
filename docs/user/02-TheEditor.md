@@ -244,6 +244,10 @@ Every change is recorded, so you can always go back:
 Moving ten bricks counts as **one** undo step, so undo stays manageable even on
 big builds.
 
+While you build together (**Build with me**, below), Undo and Redo are paused:
+your step and your friend's could otherwise come undone in a different order
+on each screen. Delete or move a brick instead.
+
 ## Groups
 
 Groups let you name and reuse collections of bricks — like "Roof" or "Windows".
@@ -547,6 +551,31 @@ first click or key press, as browsers require.
   doesn't have (open them from Recent), skipping ones it has unchanged, and
   saving a copy beside any it has in a different version. Unsaved changes
   aren't included, so save first.
+
+## Build with me: building together, live
+
+**Build with me**, under the build's name in the sidebar, makes a link that
+lets friends build this build with you, at the same time. Send it any way you
+like; it also shows as a QR code for a phone. A friend who opens it logs in
+if they haven't yet (their bricks are added under their name), clicks
+**Join**, and your build opens in their Editor. From then on, each brick
+either of you places, moves, recolours or deletes appears on both screens.
+
+- A strip over the view shows who is building, each in their own colour, and
+  each of you sees where the other is pointing and what they have selected,
+  in that colour.
+- It has to be your own build: one you started, or a copy you made. A build
+  you began before logging in becomes yours when you invite friends to it.
+- Anyone who opens the link in its first 30 minutes can join, while the
+  build stays open in your Editor. Everyone who joined can build until you
+  press **Stop**, open another build, or leave the Editor. **Link** in the
+  strip shows the link again.
+- Each friend's Editor keeps its own copy, saved on their device. When you
+  stop, they can keep it, but what they change no longer reaches you.
+- Joining connects your two devices directly, as **Walk here with me**
+  does: each of you can see the other's IP address. Nobody becomes a Known
+  Peer or a friend unless you choose to. It needs a rendezvous server; the
+  official site has one.
 
 ## Downloading a 3D model
 

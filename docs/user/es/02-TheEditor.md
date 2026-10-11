@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: ee6ec2bdfb73a405 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 60fb1dcaa24488dc -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -268,6 +268,11 @@ Cada cambio queda registrado, así que siempre puede volver atrás:
 
 Mover diez bloques cuenta como **un** paso de deshacer, así que deshacer
 sigue siendo manejable incluso en construcciones grandes.
+
+Mientras construyen juntos (**Construir conmigo**, más abajo), Deshacer y
+Rehacer quedan en pausa: de lo contrario, su paso y el de su amigo podrían
+deshacerse en un orden distinto en cada pantalla. En su lugar, elimine o
+mueva un bloque.
 
 ## Grupos
 
@@ -603,6 +608,35 @@ presione, como exigen los navegadores.
   Recientes), omite los que tiene sin cambios y guarda una copia al lado de
   cualquiera que tenga en otra versión. Los cambios sin guardar no se
   incluyen, así que guarde primero.
+
+## Construir conmigo: construir juntos, en vivo
+
+**Construir conmigo**, bajo el nombre de la construcción en la barra
+lateral, crea un enlace que permite a sus amigos trabajar en esta
+construcción con usted, al mismo tiempo. Envíelo como prefiera; también
+aparece como código QR para un móvil. Un amigo que lo abre inicia sesión si
+aún no lo ha hecho (sus bloques se añaden con su nombre), pulsa **Unirse** y
+su construcción se abre en el Editor de su amigo. Desde entonces, cada
+bloque que cualquiera de los dos coloque, mueva, cambie de color o elimine
+aparece en ambas pantallas.
+
+- Una franja sobre la escena muestra quién está construyendo, cada uno en su
+  propio color, y cada uno ve adónde apunta el otro y qué tiene
+  seleccionado, en ese color.
+- Tiene que ser su propia construcción: una que usted empezó o una copia que
+  hizo. Una construcción que empezó antes de iniciar sesión pasa a ser suya
+  cuando invita a sus amigos a ella.
+- Cualquiera que abra el enlace en sus primeros 30 minutos puede unirse,
+  mientras la construcción siga abierta en su Editor. Todos los que se
+  unieron pueden construir hasta que usted pulse **Detener**, abra otra
+  construcción o salga del Editor. **Enlace**, en la franja, vuelve a
+  mostrar el enlace.
+- El Editor de cada amigo guarda su propia copia, en su dispositivo. Cuando
+  usted se detiene, pueden conservarla, pero lo que cambien ya no le llega.
+- Unirse conecta directamente sus dos dispositivos, como **Pasear aquí
+  conmigo**: cada uno puede ver la dirección IP del otro. Nadie pasa a ser
+  un par recordado ni un amigo si usted no lo elige. Necesita un servidor de
+  encuentro; el sitio oficial tiene uno.
 
 ## Descargar un modelo 3D
 

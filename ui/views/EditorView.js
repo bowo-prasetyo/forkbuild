@@ -62,6 +62,12 @@ import BuildPlotBanner from '../components/BuildPlotBanner.js';
 import { useBuildPlot } from './editorView/useBuildPlot.js';
 import { useFirstBuildGuide } from './editorView/useFirstBuildGuide.js';
 import { useWalkInside } from './editorView/useWalkInside.js';
+import { useBuildTogether } from './editorView/useBuildTogether.js';
+import BuildTogetherStrip from '../components/walkTogether/BuildTogetherStrip.js';
+import { BuildTogetherSession } from '../../application/buildTogether/BuildTogetherSession.js';
+import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
+import WalkTogetherDialog from '../components/walkTogether/WalkTogetherDialog.js';
+import LoginModal from '../components/LoginModal.js';
 import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
 import { usePostPublishDistribution } from './editorView/usePostPublishDistribution.js';
 import { useSelectionActions } from './editorView/useSelectionActions.js';
@@ -93,7 +99,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog, WalkTogetherDialog, LoginModal, BuildTogetherStrip },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -246,6 +252,14 @@ export default {
                     </p>
                     </template>
                     <DocumentInfoPanel compact :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
+                    <!-- Build with me: a link that lets friends build this with you, live. -->
+                    <button
+                        v-if="buildAvailable && buildRole !== 'guest'"
+                        type="button"
+                        class="action-btn editor-build-together"
+                        :title="t('buildTogether.buttonHint')"
+                        @click="openBuildDialog"
+                    >{{ t('buildTogether.button') }}</button>
                     <StructureInstancePanel
                         v-if="selectedPlacementInfo"
                         :info="selectedPlacementInfo"
@@ -320,6 +334,17 @@ export default {
                         :style="{ left: marqueeRect.left + 'px', top: marqueeRect.top + 'px', width: marqueeRect.width + 'px', height: marqueeRect.height + 'px' }"
                     ></div>
                     <TransformFeedback :feedback="transformFeedback" />
+                    <!-- Who is building this with you, each in their own colour. -->
+                    <BuildTogetherStrip
+                        v-if="buildRole"
+                        :role="buildRole"
+                        :title="buildStripTitle"
+                        :people="coBuilders"
+                        :sharing="buildSharing"
+                        @link="openBuildDialog"
+                        @stop="stopBuild"
+                        @leave="leaveBuild"
+                    />
                     <FirstBuildGuide
                         v-if="firstBuildVisible"
                         :progress="firstBuildProgress"
@@ -343,6 +368,18 @@ export default {
                 @close="closePalette"
             />
             <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
+            <WalkTogetherDialog
+                v-if="showBuildDialog"
+                kind="build"
+                :state="buildState"
+                :link="buildLink"
+                :available="buildAvailable"
+                :needs-publish="buildNeedsOwner"
+                @retry="startBuild"
+                @stop="stopBuild"
+                @close="closeBuildDialog"
+            />
+            <LoginModal v-if="signInToBuild" purpose="build" @signed-in="buildSignedIn" @close="signInToBuild = false" />
             <ModelExportDialog
                 v-if="modelExportOpen"
                 @choose="exportModel"
@@ -510,7 +547,11 @@ export default {
                         ? documentManager.document
                         : null
                 ),
-                isBlocked
+                isBlocked,
+                // Build with me: the host lets the friends who joined edit this
+                // build, and passes each one's edits on to the others.
+                resolveWorldEditGrant: (documentId, identityId) => Boolean(buildTogetherSession && buildTogetherSession.allows(documentId, identityId)),
+                shouldRelay: (documentId) => Boolean(buildTogetherSession && buildTogetherSession.isHosting(documentId))
             })
             : null;
         // Needs document propagation, whose trust chain it reuses. Without it, causal
@@ -552,6 +593,23 @@ export default {
             documentOperationRecovery,
             readyMadeBricks
         });
+
+        // Build with me (application/buildTogether/): this build, edited live
+        // with friends who joined through its link. Needs the peer stack the
+        // command protocol rides on.
+        const buildTogetherSession = documentCommandPropagation
+            ? new BuildTogetherSession({
+                peerMessageBus,
+                connectedPeerRegistry: peerSessionManager.registry,
+                resolveConnectionIdentity: (connectedPeer) => deviceAuthorizationUseCase.resolveConnectionIdentity(connectedPeer),
+                ownIdentityIds: () => [resolveSigningIdentityId(identityProvider)].filter(Boolean),
+                editor: {
+                    openDocument: () => documentManager.document,
+                    appliedOperationIds: () => editorSession.appliedOperationIds(),
+                    openShared: (document, operationIds) => editorSession.openSharedDocument(document, operationIds)
+                }
+            })
+            : null;
 
         const activeTool = ref(editorContext.tool.activeTool);
         const selectionCount = ref(0);
@@ -715,6 +773,15 @@ export default {
                 }, durationMs);
             }
         };
+
+        const buildTogether = useBuildTogether({
+            session: buildTogetherSession,
+            editorSession,
+            editorContext,
+            documentManager,
+            identityProvider,
+            feedback
+        });
 
         const {
             canDistributePublication, canDistributeSnapshot, dismissPublishAction, distributePublishedDocument,
@@ -1120,7 +1187,11 @@ export default {
             autosaveScheduler.start();
             recoveryObserver.start();
 
-            if (route.query.fork) {
+            if (route.query.together) {
+                // A Build with me link: the friend's build, asked of their Editor.
+                buildTogether.joinFromRoute(route.query);
+                router.replace({ path: '/editor' });
+            } else if (route.query.fork) {
                 const sourceDocumentId = route.query.fork;
                 // Decoded before the try because both outcomes need it: openDocument() on
                 // success and the return address on failure.
@@ -1209,6 +1280,7 @@ export default {
             };
             viewport.value.addEventListener('pointerdown', onPointerDown);
             onPointerMove = (event) => {
+                buildTogether.notePointer(event);
                 const result = editorSession.onPointerMove(event);
                 // Only a consumed result carries feedback; a plain hover must not blank it.
                 if (result) {
@@ -1217,6 +1289,7 @@ export default {
                 updateMarqueeRect();
             };
             viewport.value.addEventListener('pointermove', onPointerMove);
+            viewport.value.addEventListener('pointerleave', buildTogether.notePointerLeft);
             // Runs after every pointer-up/key-down: commits there surface through neither
             // a return value nor SELECTION_CHANGED. Cheap and a no-op without a placement
             // selected.
@@ -1375,6 +1448,7 @@ export default {
             window.removeEventListener('pointerup', onPointerUp);
             window.removeEventListener('pointercancel', onPointerCancel);
             viewport.value.removeEventListener('pointermove', onPointerMove);
+            viewport.value.removeEventListener('pointerleave', buildTogether.notePointerLeft);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
             stopSound();
             editorSession.dispose();
@@ -1389,6 +1463,7 @@ export default {
 
         return {
             t,
+            ...buildTogether,
             soundAvailable,
             soundMuted,
             soundVolume,

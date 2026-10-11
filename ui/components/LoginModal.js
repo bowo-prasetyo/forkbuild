@@ -71,14 +71,14 @@ export default {
             [...identities.value].sort((a, b) => b.createdAt - a.createdAt)
         );
         const showFullCreate = ref(false);
-        const quickStart = computed(() => (props.purpose === 'publish' || props.purpose === 'walk')
+        const quickStart = computed(() => (props.purpose === 'publish' || props.purpose === 'walk' || props.purpose === 'build')
             && identities.value.length === 0 && !showFullCreate.value);
         const quickName = computed(() => newLabel.value.trim());
         const quickActionText = computed(() => {
             if (!quickName.value) return t('loginModal.quick.continue');
-            return props.purpose === 'walk'
-                ? t('loginModal.quick.walkAs', { name: quickName.value })
-                : t('loginModal.quick.publishAs', { name: quickName.value });
+            if (props.purpose === 'walk') return t('loginModal.quick.walkAs', { name: quickName.value });
+            if (props.purpose === 'build') return t('loginModal.quick.buildAs', { name: quickName.value });
+            return t('loginModal.quick.publishAs', { name: quickName.value });
         });
 
         function signedIn() {
@@ -177,9 +177,9 @@ export default {
     template: `
         <div class="modal-overlay" @click.self="$emit('close')">
             <div v-if="quickStart" class="modal-content login-modal-quick">
-                <h3>{{ purpose === 'walk' ? t('loginModal.quick.walkTitle') : t('loginModal.quick.publishTitle') }}</h3>
+                <h3>{{ purpose === 'walk' ? t('loginModal.quick.walkTitle') : purpose === 'build' ? t('loginModal.quick.buildTitle') : t('loginModal.quick.publishTitle') }}</h3>
                 <p class="modal-subtitle login-modal-purpose">
-                    {{ purpose === 'walk' ? t('loginModal.quick.walkLead') : t('loginModal.quick.publishLead') }}
+                    {{ purpose === 'walk' ? t('loginModal.quick.walkLead') : purpose === 'build' ? t('loginModal.quick.buildLead') : t('loginModal.quick.publishLead') }}
                 </p>
                 <input
                     v-model="newLabel"
@@ -203,12 +203,15 @@ export default {
                 </div>
             </div>
             <div v-else class="modal-content">
-                <h3>{{ purpose === 'publish' ? t('loginModal.signInToPublish') : purpose === 'walk' ? t('loginModal.signInToWalk') : t('loginModal.logIn') }}</h3>
+                <h3>{{ purpose === 'publish' ? t('loginModal.signInToPublish') : purpose === 'walk' ? t('loginModal.signInToWalk') : purpose === 'build' ? t('loginModal.signInToBuild') : t('loginModal.logIn') }}</h3>
                 <p v-if="purpose === 'publish'" class="modal-subtitle login-modal-purpose">
                     {{ t('loginModal.publishWhy') }}
                 </p>
                 <p v-else-if="purpose === 'walk'" class="modal-subtitle login-modal-purpose">
                     {{ t('loginModal.walkWhy') }}
+                </p>
+                <p v-else-if="purpose === 'build'" class="modal-subtitle login-modal-purpose">
+                    {{ t('loginModal.buildWhy') }}
                 </p>
                 <p class="modal-subtitle">
                     {{ t('loginModal.unlockAnIdentityThisDevice') }}

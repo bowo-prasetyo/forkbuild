@@ -140,6 +140,8 @@ export class EditorSession {
         this._untrackDirtyState = null;
         this._unattachCommandHistoryPropagation = null;
         this._unattachRecoveryCommandHistory = null;
+        this._unattachLocalCausalRecord = null;
+        this._sharedEditing = false;
         this._unattachDeferralCommandHistory = null;
         this._editorCommandHistories = new Map();
         this._transformSettings = new TransformSettings();
@@ -238,11 +240,11 @@ export class EditorSession {
     }
 
     canUndo() {
-        return this._commandHistory ? this._commandHistory.canUndo() : false;
+        return this._commandHistory && !this.sharedEditing ? this._commandHistory.canUndo() : false;
     }
 
     canRedo() {
-        return this._commandHistory ? this._commandHistory.canRedo() : false;
+        return this._commandHistory && !this.sharedEditing ? this._commandHistory.canRedo() : false;
     }
 
     getUndoLabel() {
@@ -256,7 +258,7 @@ export class EditorSession {
     // The action registry calls session.undo()/redo() directly, so these must
     // exist even though canUndo()/canRedo() already do.
     undo() {
-        if (!this._commandHistory) {
+        if (!this._commandHistory || this.sharedEditing) {
             return false;
         }
         this._commandHistory.undo();
@@ -264,7 +266,7 @@ export class EditorSession {
     }
 
     redo() {
-        if (!this._commandHistory) {
+        if (!this._commandHistory || this.sharedEditing) {
             return false;
         }
         this._commandHistory.redo();
@@ -295,6 +297,79 @@ export class EditorSession {
             new CreateDocumentManagerUseCase().attachWorld(this._documentManager, world, this._identityProvider);
             return world;
         });
+    }
+
+    // Opens a co-builder's copy of their build (Build with me): the same as
+    // openDocument(), and `operationIds`, the operations already part of it,
+    // count as applied, so the operations that follow them apply as they
+    // arrive.
+    openSharedDocument(document, operationIds = []) {
+        this.openDocument(document);
+        const documentId = this._documentManager.document?.world.id;
+        if (!documentId) return;
+        for (const operationId of operationIds) {
+            if (typeof operationId !== 'string' || !operationId || this._causalGapDetector.isKnown(documentId, operationId)) continue;
+            try {
+                this._causalGapDetector.record(documentId, operationId, []);
+            } catch {
+                // A malformed id is left out; an operation naming it waits.
+            }
+        }
+        this._documentOperationDeferral.markExecuted(documentId, operationIds);
+    }
+
+    // The operations the open build already reflects, to hand a co-builder
+    // with a copy of it (openSharedDocument()).
+    appliedOperationIds() {
+        const documentId = this._documentManager.document?.world.id;
+        if (!documentId || !this._commandHistory) return [];
+        const ids = new Set(this._documentOperationDeferral.baselineOf(documentId));
+        for (const command of this._commandHistory.getExecutedCommands()) ids.add(command.id);
+        return [...ids];
+    }
+
+    // Where the pointer at screen (x, y) meets the scene, { x, y, z }, or
+    // null: shared with co-builders (Build with me).
+    pointAt(screenX, screenY) {
+        if (!this._session || typeof this._session.pickPoint !== 'function') return null;
+        const point = this._session.pickPoint(screenX, screenY);
+        return point ? { x: point.x, y: point.y, z: point.z } : null;
+    }
+
+    // Draws co-builders' pointers and selections (Build with me).
+    showCoBuilders(coBuilders) {
+        if (this._session && typeof this._session.showCoBuilders === 'function') this._session.showCoBuilders(coBuilders);
+    }
+
+    // The bricks selected in this Editor, by id.
+    selectedBrickIds() {
+        const selection = this._editorContext?.selection;
+        return selection && !selection.isEmpty && Array.isArray(selection.brickIds) ? [...selection.brickIds] : [];
+    }
+
+    // While building together (Build with me), Undo and Redo are paused:
+    // one person's Undo would take back a step only their own copy knows
+    // the order of.
+    setSharedEditing(shared) {
+        this._sharedEditing = Boolean(shared);
+    }
+
+    get sharedEditing() {
+        return this._sharedEditing === true;
+    }
+
+    _recordLocalOperations(documentId, commandHistory, isLocal) {
+        const subscription = commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_EXECUTED, ({ command }) => {
+            if (!isLocal() || !command?.id || this._causalGapDetector.isKnown(documentId, command.id)) return;
+            const executed = commandHistory.getExecutedCommands();
+            const preceding = executed.length >= 2 ? executed[executed.length - 2] : null;
+            try {
+                this._causalGapDetector.record(documentId, command.id, preceding ? [preceding.id] : []);
+            } catch {
+                // Recording is knowledge, never a precondition for the edit.
+            }
+        });
+        return () => subscription.unsubscribe();
     }
 
     openDocument(document, entryContext = null) {
@@ -329,6 +404,46 @@ export class EditorSession {
         }
     }
 
+    // A fresh CommandHistory for `world`, wired to dirty tracking, the
+    // command protocol, recovery and deferral; torn down by _teardown().
+    _attachCommandHistory(world) {
+        this._commandHistory = new CommandHistory({ world });
+        this._editorCommandHistories.set(world.id, this._commandHistory);
+        this._untrackDirtyState = this._documentManager.trackCommandHistory(this._commandHistory);
+        // Outgoing broadcast for this CommandHistory; torn down before the next
+        // rebuild.
+        // A collaborator's operation, applied through this same history, is
+        // theirs: never sent on again, nor answered for, as this replica's.
+        const isLocal = () => !this._applyingRemoteOperation;
+        this._unattachCommandHistoryPropagation = this._documentCommandPropagation
+            ? this._documentCommandPropagation.attachCommandHistory({
+                documentId: world.id,
+                commandHistory: this._commandHistory,
+                isLocal
+            })
+            : null;
+        // Records locally authored operations so recovery requests can be answered.
+        this._unattachRecoveryCommandHistory = this._documentOperationRecovery
+            ? this._documentOperationRecovery.attachCommandHistory({
+                documentId: world.id,
+                commandHistory: this._commandHistory,
+                isLocal
+            })
+            : null;
+        // This replica's own operations are known to its causal graph, as
+        // received ones are: a collaborator's next operation, which follows
+        // one of ours, is then ready to apply rather than held for ever.
+        this._unattachLocalCausalRecord = this._documentCommandPropagation
+            ? this._recordLocalOperations(world.id, this._commandHistory, isLocal)
+            : null;
+        // Lets anything executing on this document release deferred operations it
+        // just made ready. Always attached: it costs nothing when nothing is deferred.
+        this._unattachDeferralCommandHistory = this._documentOperationDeferral.attachCommandHistory({
+            documentId: world.id,
+            commandHistory: this._commandHistory
+        });
+    }
+
     _rebuild(populateWorldFn) {
         this._teardown();
         this._editorContext.clearSelection();
@@ -348,30 +463,7 @@ export class EditorSession {
             { gestureService: this._gizmoGestureRouter, structureResolver: this._structureResolver }
         );
         const world = populateWorldFn(eventBus);
-        this._commandHistory = new CommandHistory({ world });
-        this._editorCommandHistories.set(world.id, this._commandHistory);
-        this._untrackDirtyState = this._documentManager.trackCommandHistory(this._commandHistory);
-        // Outgoing broadcast for this CommandHistory; torn down before the next
-        // rebuild.
-        this._unattachCommandHistoryPropagation = this._documentCommandPropagation
-            ? this._documentCommandPropagation.attachCommandHistory({
-                documentId: world.id,
-                commandHistory: this._commandHistory
-            })
-            : null;
-        // Records locally authored operations so recovery requests can be answered.
-        this._unattachRecoveryCommandHistory = this._documentOperationRecovery
-            ? this._documentOperationRecovery.attachCommandHistory({
-                documentId: world.id,
-                commandHistory: this._commandHistory
-            })
-            : null;
-        // Lets anything executing on this document release deferred operations it
-        // just made ready. Always attached: it costs nothing when nothing is deferred.
-        this._unattachDeferralCommandHistory = this._documentOperationDeferral.attachCommandHistory({
-            documentId: world.id,
-            commandHistory: this._commandHistory
-        });
+        this._attachCommandHistory(world);
         const toolContext = {
             world,
             registry: this._registry,
@@ -494,6 +586,10 @@ export class EditorSession {
         if (this._unattachCommandHistoryPropagation) {
             this._unattachCommandHistoryPropagation();
             this._unattachCommandHistoryPropagation = null;
+        }
+        if (this._unattachLocalCausalRecord) {
+            this._unattachLocalCausalRecord();
+            this._unattachLocalCausalRecord = null;
         }
         if (this._unattachRecoveryCommandHistory) {
             this._unattachRecoveryCommandHistory();

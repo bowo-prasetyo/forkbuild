@@ -71,6 +71,10 @@ longer-term aim.
 - **Walk inside it**: once a build is published, one click opens World View
   with your avatar in front of its door, facing it; the door swings open as
   you walk up.
+- **Build with me** makes a link that opens your build in a friend's Editor,
+  so you build it together, live: each brick either of you places appears on
+  both screens, and each sees where the other is pointing and what they have
+  selected, until you press Stop.
 - Share a build the moment it's published: the link carries the signed build
   itself, so it opens on any device with no wallet or account,
   shows the build's title and a picture of it when pasted into a chat or a

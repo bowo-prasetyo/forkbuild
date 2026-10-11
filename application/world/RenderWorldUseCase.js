@@ -8,6 +8,7 @@ import { CompositionPreviewRenderer } from '../../renderer/CompositionPreviewRen
 import { TransformGizmoRenderer } from '../../renderer/TransformGizmoRenderer.js';
 import { TransformGizmoController } from '../../renderer/TransformGizmoController.js';
 import { TransformMath } from '../editor/TransformMath.js';
+import { CoBuilderRenderer } from '../../renderer/CoBuilderRenderer.js';
 
 // Wires the rendering pipeline up to a container element, the domain
 // EventBus, and the editor EventBus, then starts it. Also wires up
@@ -69,8 +70,16 @@ export class RenderWorldUseCase {
             controlsEnabler: renderer.cameraController,
             transformMath: TransformMath
         });
+        const coBuilderRenderer = new CoBuilderRenderer(renderer, worldRenderer.brickInstances);
         return {
             pick: (screenX, screenY) => pickingService.pick(screenX, screenY),
+            // Where the pointer is in the scene: on a brick, or on the ground.
+            pickPoint: (screenX, screenY) => {
+                const hit = pickingService.pickRich(screenX, screenY);
+                return hit && hit.point ? hit.point : pickingService.pickGroundPosition(screenX, screenY);
+            },
+            // Build with me: co-builders' pointers and selections.
+            showCoBuilders: (coBuilders) => coBuilderRenderer.show(coBuilders),
             pickGround: (screenX, screenY) => pickingService.pickGroundPosition(screenX, screenY),
             // 0.2.91 — resolves a screen position to { placementId,
             // point } | null, completely independent of pick()'s brick
@@ -110,6 +119,7 @@ export class RenderWorldUseCase {
             cancelGizmoGesture: () => transformGizmoController.cancelGesture(),
             isGizmoDragging: () => transformGizmoController.isDragging,
             dispose() {
+                coBuilderRenderer.dispose();
                 transformGizmoController.dispose();
                 transformGizmoRenderer.dispose();
                 compositionPreviewRenderer.unsubscribe();

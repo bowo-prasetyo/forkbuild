@@ -5657,3 +5657,56 @@ builder's own bricks), with every build has a family tree (remix weeks).
 - Not done: a challenge plot's pinned structures after the page reloads (they are offered while the plot stays open),
   and a remix week's entries remixed from builds shared only by link (only entries found under last week's tag are
   listed).
+
+## Build with me (unnumbered, 2026-10-11)
+
+**One link opens your build in a friend's Editor, and you build it together, live.** "With friends" meant visiting:
+the multiplayer a building game is remembered for is building together, and ForkBuild had the pieces (a command
+protocol, edit authorization at one gate, remote operations applied in the Editor) but no path to them. The
+creative-direction review of 2026-10-11 (finding 3, Release C) called it the biggest untapped asset. Pillar served:
+your work is yours, and lives in a world (a build is a place you make with friends).
+
+- **The link** (ui/views/editorView/useBuildTogether.js). **Build with me**, under the build's name in the Editor's
+  sidebar, opens the walk dialog in its own words (WalkTogetherDialog, kind `build`) with a `#/build/<code>` link and
+  its QR code. A friend who opens it logs in if they haven't (a "build" purpose for the login dialog), clicks **Join**
+  (ui/views/WalkTogetherJoinView.js, `meta.building`), and their Editor opens on the host's build. It must be the
+  host's own build; one begun before logging in becomes theirs (`DocumentMetadata#claimOwner()`, only for a build
+  that records no owner at all).
+- **How it connects.** The meeting is Walk here with me's (`createBuildHost`/`createBuildGuest`, its own protocol),
+  but the welcome names the build instead of carrying it. Over the ordinary connection it leaves,
+  application/buildTogether/BuildTogetherSession.js: the guest's Editor asks for the build; the host answers only
+  guests who joined through its link, with the Document and the operations it already reflects; the guest opens it
+  only when it is the host's own (its owner is the identity the connection proved). Edits then travel as the Editor's
+  command protocol: the host accepts a guest's for that one build through `resolveWorldEditGrant`, a session fact
+  asked per operation at the WorldAuthorizationService gate, never stored or signed, ended by **Stop**, another build
+  or leaving the Editor; and relays each guest's to the others (`shouldRelay`), since each is connected to the host
+  alone.
+- **Seeing each other.** A strip over the view (ui/components/walkTogether/BuildTogetherStrip.js) lists who is
+  building, each in a colour from their identity, and each Editor draws the others' pointer and selected bricks in that
+  colour (renderer/CoBuilderRenderer.js). Presence is ephemeral and never part of the build.
+- **Undo pauses while sharing** (`EditorSession#setSharedEditing`): no replica propagates Undo, so one person's would
+  take back a step in an order only their copy knows. The strip says so.
+- **Two-way editing in the Editor, fixed.** The Editor's replication had only been exercised one way. A collaborator's
+  operation, applied through the local history, was broadcast again as this replica's own (`isLocal` now leaves it
+  out of propagation and recovery); this replica's own operations weren't in its causal graph, so a collaborator's
+  next operation, which follows one of ours, was deferred for ever (they are recorded now); and a copy opened from a
+  co-builder had no way to treat the operations it already reflects as applied (`openSharedDocument()` and the
+  deferral boundary's baseline).
+- **Walk here with me, fixed too.** Its link asked the rendezvous servers to keep one standing offer for 30 minutes,
+  and the reference server refuses any over 15: each offer now lasts at most 10 minutes and is replaced shortly before
+  it ends, while the link lasts.
+- **Counting it.** `/e/build-link` when a link is made and `/e/build-joined` when a friend joins, and a `build-joined`
+  target of 50% (docs/Pillars.md, the launch kit, docs/Privacy.md).
+- Every language: the button, dialog, strip, guest's page and messages; guide 02's new section, the guide's index and
+  the Privacy page. docs/Protocol.md ("Build links") and docs/Architecture.md describe it; README.
+- Tests: `BuildWithMe` (a host and two guests on real Editor sessions and a real peer stack: the build reaches a guest
+  only once allowed, with edits made before they came; edits travel both ways, each applied once, the host's following
+  a guest's; an uninvited peer can neither edit nor fetch it; guests see each other's edits through the host;
+  presence, relayed and cleaned; Undo paused; Stop; a build claiming someone else as owner is refused; claiming an
+  unowned build); `WalkTogether` (a build link over real WebRTC names the build and both identities; a walk guest finds
+  no welcome there; offers shorter than the server's limit, renewed so the link outlasts it); `BuildWithMeBrowser`
+  (the build link's page, the host's dialog, joins, strip and Stop, another build stopping it, someone else's build,
+  an unowned one, and a guest's arrival and the host stopping, at phone width).
+- Not done: Undo while sharing (it needs an inverse operation every replica applies); a guest joining another
+  guest's link; crediting co-builders in the family tree when the build is published (the review's Release C, item
+  3); and a host's other devices accepting a guest's edits (the permission lives on the device that made the link).
