@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bbb4bcd1d65f4618 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 17fb6ab977019cd5 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -363,6 +363,17 @@ d’elles (**Remixer**) pour ouvrir votre propre copie dans l’Éditeur ; rien
 n’est publié tant que vous ne la publiez pas. Cliquez sur le titre pour
 replier la rangée.
 
+En dessous, **Comment grandissent les remix** montre trois familles
+d’exemple fournies avec ForkBuild, chacune une chaîne de remix d’une
+construction toute prête : la Maison, remixée en Maison avec porche, elle-même
+remixée deux fois (Maison avec jardin et Maison avec tour) ; la Tour de guet,
+remixée en Phare puis en Phare et maison du gardien ; et le Moulin, remixé en
+Moulin et grenier puis en Ferme. Chacune est sa parente avec quelque chose en
+plus, comme le serait un remix de votre part. Cliquez sur un nom pour en
+ouvrir votre propre copie. Ce sont les exemples de l’application, jamais les
+publications de quelqu’un ; ils sont aussi dans les **Structures** de la
+Bibliothèque de construction, sous *collection*.
+
 ### Créations distribuées par d’autres
 
 Chaque fois que vous ouvrez le Dépôt (ou une page d’auteur), il cherche sur
@@ -529,6 +540,9 @@ Chaque semaine, ForkBuild propose un thème à construire (un phare, un pont,
 une mini-maison, …), du lundi à la fin du dimanche (UTC). L’accueil le
 montre, et **Défi** dans la barre du haut ouvre sa page.
 
+Il y a 26 thèmes, si bien qu’une demi-année passe avant qu’un thème
+revienne, et chacun commence par une construction qui lui est propre.
+
 1. **Participer au défi** ouvre une construction de départ dans l’Éditeur
    comme votre propre copie, déjà étiquetée pour la semaine (une étiquette
    comme `#lighthouse-20261012` : le thème et le lundi où il a commencé). Le
@@ -558,6 +572,7 @@ ce que d’autres ont fait de la même idée.
 Quand des participations sont des remix les unes des autres, ou d’autres
 constructions, **Arbres généalogiques** sous les participations montre d’où
 elles viennent, un arbre par chaîne de remix.
+Une semaine encore sans participation montre à la place les familles d’exemple (voir [Constructions toutes prêtes](#constructions-toutes-prêtes)).
 
 ### La place du défi
 

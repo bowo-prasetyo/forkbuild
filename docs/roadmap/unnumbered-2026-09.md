@@ -5468,3 +5468,35 @@ to a ready-made start on that spot).
 - Not done: wishes drawn from what the World's own builds are (a village with no chapel), and a wish that changes with
   the week's challenge theme.
 
+## Half a year of themes, and families to start from (unnumbered, 2026-10-11)
+
+**More challenge themes, and shelves that are never empty.** The weekly challenge had eight themes, so they came round
+every two months, and "Lighthouse" and "Tower" both started from the Watchtower; a new player found "0 publications"
+in the Repository and "0 entries" on the challenge page, with nothing showing what a family of remixes looks like. The
+creative-direction review of 2026-10-11 asked for 26 or more themes, each with its own starter, and a curated set for
+empty shelves. Pillar served: remixing is how you play (the families show it before anyone has published), with
+building feels joyful (a fresh theme every week for half a year).
+
+- **26 themes** (core/BuildChallenge.js). Eighteen join the eight: village well, harbor, barn, garden, workshop,
+  fortress, bandstand, front porch, stables, round tower, island, harvest store, village hall, grand house, walls and
+  fences, village square, silo and family home, each starting from a build of its own (no two themes share a starter),
+  with three ideas. Lighthouse now starts from a real lighthouse. **Weeks before CHALLENGE_EPOCH keep the eight-theme
+  turn** they ran with, so the week of 5 October is still `chapel-20261005` and its entries still carry its tag; weeks
+  0–7 are as they were, and the ninth week brings the ninth theme instead of the first again.
+- **The collection library** (core/library/CollectionLibrary.js, `collection:*`): seven ready-made builds made as
+  real remix chains, each its parent's bricks with more added — the House → House with a Porch → House with a Garden
+  and House with a Tower; the Watchtower → Lighthouse → Lighthouse and Keeper's Cottage; the Mill → Mill and Granary
+  → Farmstead. Who came from whom lives beside the library (COLLECTION_REMIXED_FROM), never in a Structure. They are in
+  the Build Library under *collection* and start four themes.
+- **How remixes grow** (ui/components/featured/CollectionFamilies.js): the three families as trees, each name opening
+  a copy in the Editor, in the Repository's ready-made shelf and on any challenge week with no entries. They are the
+  app's own examples and are never shown as anyone's publications.
+- Every language: the 18 themes' titles and briefs, the seven builds' names and descriptions, the category and the
+  families' title and lead; guide 04 (Ready-made builds, The weekly build challenge); docs/Architecture.md.
+- Tests: `BuildChallenge` (past weeks keep their themes and tags, 26 themes, the ninth week's theme, distinct
+  starters); `CollectionLibrary` (registered, named, on the ground; each keeps every brick of its parent and adds to
+  it; the three families; every theme's starter and ideas exist and have words); `CollectionFamiliesBrowser` (nested
+  trees of links into the Editor); `ChallengeViewBrowser` (an empty week shows the families); `BuildLibraryUX` (the
+  collection category follows showcase).
+- Not done: thumbnails in the family trees, and families made from the community's own remixes once there are some.
+

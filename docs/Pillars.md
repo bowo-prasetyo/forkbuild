@@ -213,4 +213,6 @@ passphrase identity ("A first publish asks only for a name"), and World View
 opening as a visitor's view, with the plaza given a square of its own ("A
 visitor's World View"), Distribute folded into Publish ("Publish sends
 it where it goes"), and residents wondering aloud what the ground nearby
-lacks, with Build there ("Residents wonder what's missing").
+lacks, with Build there ("Residents wonder what's missing"), and 26 challenge
+themes with example remix families for empty shelves ("Half a year of
+themes, and families to start from").

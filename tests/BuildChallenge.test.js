@@ -24,7 +24,16 @@ import { assert } from './support/Assert.js';
     const wrapped = challengeAt(Date.parse('2026-10-12T00:00:00Z') + CHALLENGE_THEMES.length * 7 * 86400000);
     assert(wrapped.themeId === CHALLENGE_THEMES[0].id, 'the themes come round again');
     const before = challengeAt(Date.parse('2026-10-08T12:00:00Z'));
-    assert(before.id === '2026-10-05' && before.themeId === CHALLENGE_THEMES[CHALLENGE_THEMES.length - 1].id, 'a week before the first has the last theme');
+    // Weeks before the first keep the themes they ran with when there were
+    // eight, so their entries' tags still name them.
+    assert(before.id === '2026-10-05' && before.themeId === 'chapel' && before.tag === 'chapel-20261005',
+        `a week before the first keeps the theme it ran with (got ${before.themeId})`);
+    assert(challengeAt(Date.parse('2026-09-30T12:00:00Z')).themeId === 'tower', 'and so does the week before that');
+    assert(CHALLENGE_THEMES.length >= 26, `half a year of themes before one comes round again (got ${CHALLENGE_THEMES.length})`);
+    assert(challengeAt(Date.parse('2026-10-12T00:00:00Z') + 8 * 7 * 86400000).themeId === CHALLENGE_THEMES[8].id,
+        'the ninth week has the ninth theme, not the first again');
+    const starters = CHALLENGE_THEMES.map((theme) => theme.starterStructureId);
+    assert(new Set(starters).size === starters.length, 'every theme starts from a build of its own');
     assert(challengeAt(new Date('2026-10-14T00:00:00Z')).id === '2026-10-12', 'a Date works as well as a time');
     assert(challengeAt(NaN) === null, 'no time, no challenge');
     console.log('✓ one theme a week, Monday to Monday, in turn');

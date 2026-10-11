@@ -12,15 +12,40 @@ import { normalizeBuildTag } from './BuildTags.js';
 // is `challenge.theme.<id>.title` and `.brief`.
 
 export const CHALLENGE_THEMES = Object.freeze([
-    Object.freeze({ id: 'lighthouse', starterStructureId: 'village:watchtower', ideaStructureIds: Object.freeze(['showcase:harbor_island', 'village:watchtower', 'village:dock']) }),
+    Object.freeze({ id: 'lighthouse', starterStructureId: 'collection:lighthouse', ideaStructureIds: Object.freeze(['collection:lighthouse', 'collection:keepers_lighthouse', 'showcase:harbor_island']) }),
     Object.freeze({ id: 'bridge', starterStructureId: 'village:bridge', ideaStructureIds: Object.freeze(['village:bridge', 'village:dock', 'showcase:harbor_island']) }),
     Object.freeze({ id: 'tiny-home', starterStructureId: 'village:cottage', ideaStructureIds: Object.freeze(['village:cottage', 'village:house', 'village:tool_shed']) }),
     Object.freeze({ id: 'castle-gate', starterStructureId: 'village:village_gate', ideaStructureIds: Object.freeze(['village:village_gate', 'showcase:castle', 'village:fence_segment']) }),
     Object.freeze({ id: 'windmill', starterStructureId: 'village:mill', ideaStructureIds: Object.freeze(['village:mill', 'village:granary', 'village:barn']) }),
     Object.freeze({ id: 'market', starterStructureId: 'village:market_stall', ideaStructureIds: Object.freeze(['village:market_stall', 'village:market', 'showcase:village_square']) }),
     Object.freeze({ id: 'tower', starterStructureId: 'village:watchtower', ideaStructureIds: Object.freeze(['village:watchtower', 'village:silo', 'showcase:castle']) }),
-    Object.freeze({ id: 'chapel', starterStructureId: 'village:small_chapel', ideaStructureIds: Object.freeze(['village:small_chapel', 'village:pavilion', 'village:village_hall']) })
+    Object.freeze({ id: 'chapel', starterStructureId: 'village:small_chapel', ideaStructureIds: Object.freeze(['village:small_chapel', 'village:pavilion', 'village:village_hall']) }),
+    // Added 2026-10-11, so that half a year passes before a theme comes round
+    // again; each starts from a build of its own.
+    Object.freeze({ id: 'well', starterStructureId: 'village:well', ideaStructureIds: Object.freeze(['village:well', 'showcase:village_square', 'village:pavilion']) }),
+    Object.freeze({ id: 'harbor', starterStructureId: 'village:dock', ideaStructureIds: Object.freeze(['village:dock', 'showcase:harbor_island', 'collection:keepers_lighthouse']) }),
+    Object.freeze({ id: 'barn', starterStructureId: 'village:barn', ideaStructureIds: Object.freeze(['village:barn', 'collection:farmstead', 'village:fence_segment']) }),
+    Object.freeze({ id: 'garden', starterStructureId: 'village:garden_cottage', ideaStructureIds: Object.freeze(['village:garden_cottage', 'collection:house_with_garden', 'village:fence_segment']) }),
+    Object.freeze({ id: 'workshop', starterStructureId: 'village:tool_shed', ideaStructureIds: Object.freeze(['village:tool_shed', 'village:barn', 'village:stable']) }),
+    Object.freeze({ id: 'fortress', starterStructureId: 'showcase:castle', ideaStructureIds: Object.freeze(['showcase:castle', 'village:round_tower', 'village:village_gate']) }),
+    Object.freeze({ id: 'bandstand', starterStructureId: 'village:pavilion', ideaStructureIds: Object.freeze(['village:pavilion', 'village:market', 'showcase:village_square']) }),
+    Object.freeze({ id: 'porch', starterStructureId: 'collection:house_with_porch', ideaStructureIds: Object.freeze(['collection:house_with_porch', 'collection:house_with_garden', 'collection:house_with_tower']) }),
+    Object.freeze({ id: 'stables', starterStructureId: 'village:stable', ideaStructureIds: Object.freeze(['village:stable', 'village:barn', 'village:fence_segment']) }),
+    Object.freeze({ id: 'round-tower', starterStructureId: 'village:round_tower', ideaStructureIds: Object.freeze(['village:round_tower', 'collection:house_with_tower', 'showcase:castle']) }),
+    Object.freeze({ id: 'island', starterStructureId: 'showcase:harbor_island', ideaStructureIds: Object.freeze(['showcase:harbor_island', 'village:dock', 'collection:keepers_lighthouse']) }),
+    Object.freeze({ id: 'harvest', starterStructureId: 'village:granary', ideaStructureIds: Object.freeze(['village:granary', 'collection:mill_and_granary', 'village:silo']) }),
+    Object.freeze({ id: 'village-hall', starterStructureId: 'village:village_hall', ideaStructureIds: Object.freeze(['village:village_hall', 'village:small_chapel', 'showcase:village_square']) }),
+    Object.freeze({ id: 'grand-house', starterStructureId: 'village:large_house', ideaStructureIds: Object.freeze(['village:large_house', 'collection:house_with_tower', 'village:house']) }),
+    Object.freeze({ id: 'walls', starterStructureId: 'village:fence_segment', ideaStructureIds: Object.freeze(['village:fence_segment', 'village:village_gate', 'collection:house_with_garden']) }),
+    Object.freeze({ id: 'village-square', starterStructureId: 'showcase:village_square', ideaStructureIds: Object.freeze(['showcase:village_square', 'village:well', 'village:market']) }),
+    Object.freeze({ id: 'silo', starterStructureId: 'village:silo', ideaStructureIds: Object.freeze(['village:silo', 'village:granary', 'village:mill']) }),
+    Object.freeze({ id: 'family-home', starterStructureId: 'village:house', ideaStructureIds: Object.freeze(['village:house', 'collection:house_with_garden', 'village:large_house']) })
 ]);
+
+// How many themes there were before the 2026-10-11 additions. Weeks before
+// CHALLENGE_EPOCH keep the themes they ran with (their entries carry those
+// weeks' tags), taken in turn from the first this many.
+const ORIGINAL_THEME_COUNT = 8;
 
 // The Monday (UTC) whose week has the first theme.
 export const CHALLENGE_EPOCH = '2026-10-12';
@@ -32,7 +57,7 @@ const CHALLENGE_ID_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const CHALLENGE_TAG_PATTERN = /^([a-z][a-z0-9-]*)-(\d{4})(\d{2})(\d{2})$/;
 
 function themeForWeek(weekIndex) {
-    const count = CHALLENGE_THEMES.length;
+    const count = weekIndex < 0 ? ORIGINAL_THEME_COUNT : CHALLENGE_THEMES.length;
     return CHALLENGE_THEMES[((weekIndex % count) + count) % count];
 }
 

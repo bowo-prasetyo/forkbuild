@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bbb4bcd1d65f4618 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 17fb6ab977019cd5 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -353,6 +353,17 @@ yang diterbitkan atau ditemukan. Klik salah satunya (**Remix**) untuk
 membuka salinan Anda sendiri di Editor; tidak ada yang diterbitkan sampai
 Anda menerbitkannya. Klik judulnya untuk melipat baris itu.
 
+Di bawahnya, **Bagaimana remiks tumbuh** menampilkan tiga contoh
+keluarga yang disertakan bersama ForkBuild, masing-masing rantai remiks dari
+bangunan siap pakai: Rumah, diremiks menjadi Rumah dengan Teras, yang diremiks
+dua kali lagi (Rumah dengan Taman dan Rumah dengan Menara); Menara Pengawas,
+diremiks menjadi Mercusuar lalu Mercusuar dan Pondok Penjaga; dan Kincir,
+diremiks menjadi Kincir dan Lumbung lalu Rumah Pertanian. Masing-masing adalah
+induknya dengan tambahan, seperti remiks buatanmu. Klik sebuah nama untuk
+membuka salinanmu sendiri. Ini contoh dari aplikasi, bukan publikasi siapa
+pun; semuanya juga ada di **Struktur** Pustaka Bangunan, di bawah
+*koleksi*.
+
 ### Karya yang didistribusikan orang lain
 
 Setiap kali Anda membuka Repositori (atau halaman pembuat), Repositori
@@ -517,6 +528,9 @@ Setiap minggu ForkBuild memberi tema untuk dibangun (mercusuar, jembatan,
 rumah mungil, …), dari Senin sampai akhir Minggu (UTC). Beranda
 menampilkannya, dan **Tantangan** di bilah atas membuka halamannya.
 
+Ada 26 tema, sehingga setengah tahun berlalu sebelum satu tema muncul
+lagi, dan masing-masing dimulai dari bangunannya sendiri.
+
 1. **Ikut tantangan** membuka bangunan awal di Editor sebagai salinan Anda
    sendiri, sudah bertag minggu itu (tag seperti `#lighthouse-20261012`:
    temanya dan hari Senin saat dimulai). Tantangan juga menjadi pilihan
@@ -544,6 +558,7 @@ ide yang sama.
 Jika ada karya peserta yang di-remix dari satu sama lain, atau dari
 bangunan lain, **Silsilah** di bawah daftar peserta menunjukkan asalnya,
 satu pohon untuk setiap rantai remix.
+Minggu yang belum punya entri menampilkan contoh keluarga sebagai gantinya (lihat [Bangunan siap pakai](#bangunan-siap-pakai)).
 
 ### Alun-alun tantangan
 

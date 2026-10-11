@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bbb4bcd1d65f4618 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 17fb6ab977019cd5 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -356,6 +356,16 @@ oder gefunden wurde. Klicken Sie auf eines (**Remixen**), um Ihre eigene
 Kopie im Editor zu öffnen; veröffentlicht wird nichts, bis Sie es selbst
 veröffentlichen. Ein Klick auf die Überschrift klappt die Reihe ein.
 
+Darunter zeigt **Wie Remixe wachsen** drei Beispielfamilien, die mit
+ForkBuild kommen, jede eine Kette von Remixen eines fertigen Bauwerks: das
+Haus, remixt zum Haus mit Veranda, das noch zweimal remixt wurde (Haus mit
+Garten und Haus mit Turm); der Wachturm, remixt zum Leuchtturm und dann zum
+Leuchtturm mit Wärterhaus; und die Mühle, remixt zur Mühle mit Speicher und
+dann zum Bauernhof. Jedes ist sein Vorgänger mit mehr dazu, so wie ein Remix
+von Ihnen. Ein Klick auf einen Namen öffnet Ihre eigene Kopie davon. Es sind
+Beispiele der App, nie die Veröffentlichungen von jemandem; Sie finden sie
+auch in der Baubibliothek unter **Strukturen**, Kategorie *Sammlung*.
+
 ### Von anderen verteilte Kreationen
 
 Jedes Mal, wenn Sie das Repository (oder eine Autorenseite) öffnen, sucht es
@@ -526,6 +536,9 @@ Jede Woche stellt ForkBuild ein Thema zum Bauen (ein Leuchtturm, eine
 Brücke, ein Tiny House, …), von Montag bis Ende Sonntag (UTC). Start zeigt
 es, und **Challenge** in der oberen Leiste öffnet seine Seite.
 
+Es gibt 26 Themen, sodass ein halbes Jahr vergeht, bevor eines
+wiederkommt, und jedes beginnt mit einem eigenen Bauwerk.
+
 1. **Mitmachen** öffnet ein Startbauwerk im Editor als Ihre eigene Kopie,
    schon mit dem Tag der Woche (etwa `#lighthouse-20261012`: das Thema und
    der Montag, an dem es begann). Die Challenge ist auch die erste Wahl unter
@@ -554,6 +567,7 @@ gemacht haben.
 Wenn Beiträge voneinander oder aus anderen Bauten geremixt wurden, zeigt
 **Stammbäume** unter den Beiträgen, woher sie stammen, ein Baum für jede
 Kette von Remixen.
+Eine Woche ohne Einsendungen zeigt stattdessen die Beispielfamilien (siehe [Fertige Bauwerke](#fertige-bauwerke)).
 
 ### Der Challenge-Platz
 
