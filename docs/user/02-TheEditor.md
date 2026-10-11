@@ -75,7 +75,7 @@ that can't do anything yet:
 
 The first time you open the Editor on a device, a **Your first build** card
 sits in the bottom-left corner of the 3D view (on a phone it starts folded
-into a small **First build · 0/5** button at the top left). It lists five
+into a small **First build · 0/6** button at the top left). It lists six
 steps and shows a hint for the next one:
 
 1. **Place a brick**
@@ -84,10 +84,15 @@ steps and shows a hint for the next one:
    **Structures** tab.
 4. **Save your build**
 5. **Publish and share a link**: Publish, then **Copy link** or **Share…**.
+6. **Walk inside it**: click **Walk inside it**, beside the link Publish
+   shows (or in the card), and walk in through the door of your build in
+   World View (see
+   [Walk inside it](04-PublishingAndForking.md#walk-inside-it)).
 
 Each step is ticked off when you do it, in any order; undo and redo don't
-count. When all five are done, the card celebrates and offers **See other
-builds** or **Keep building**, then goes away. **–** folds it into the small
+count. When all six are done, the card celebrates and offers **See other
+builds** or **Keep building**, then goes away; if it was already done before walking inside
+was a step, it stays away. **–** folds it into the small
 button; **Hide guide** hides it for good on this device. To bring it back,
 open the command palette (**Ctrl+K**) and run **First-Build Guide**. A device
 that already has saved work starts with the guide hidden.

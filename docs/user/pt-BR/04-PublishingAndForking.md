@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 17fb6ab977019cd5 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 8a6d8b43407550d1 -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -32,6 +32,19 @@ As outras pessoas só a veem depois que você a compartilha ou distribui (veja
 a nota abaixo). Ela também recebe automaticamente uma posição no mundo
 compartilhado, para que **Explorar** sempre tenha aonde levar as pessoas —
 veja [Encontrando mundos](03-WorldView.md#encontrando-mundos).
+
+### Entrar andando
+
+Ao lado do link, o aviso que Publicar mostra tem **Entrar andando** (**Andar
+em volta** numa construção sem porta). Ele abre a Visão do Mundo com seu
+avatar no chão em frente à porta da construção, de frente para ela; a porta
+se abre quando você se aproxima, e entrar (**W**, ou o joystick no celular)
+marca o último passo de
+[Sua primeira construção](02-TheEditor.md#sua-primeira-construção). A porta é
+a entrada principal: uma porta numa parede ou torre maciça, sem lugar para
+ficar atrás dela, não conta, e numa construção sem porta você chega pela
+frente. O cartão **Sua primeira construção** oferece o mesmo botão depois que
+a construção é publicada.
 
 > **Nota:** Publicar guarda seu Documento/Mundo só neste dispositivo. O
 > cartão dele no Repositório diz onde este dispositivo registrou a

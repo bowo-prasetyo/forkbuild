@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9eb8c2a710f0b80 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ee6ec2bdfb73a405 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -88,7 +88,7 @@ jamais de boutons qui ne peuvent encore rien faire :
 La première fois que vous ouvrez l’Éditeur sur un appareil, une carte
 **Votre première construction** apparaît dans le coin inférieur gauche de
 la vue 3D (sur un téléphone, elle commence repliée en un petit bouton
-**Première construction · 0/5** en haut à gauche). Elle liste cinq
+**Première construction · 0/6** en haut à gauche). Elle liste six
 étapes et donne une indication pour la suivante :
 
 1. **Placer une brique**
@@ -98,11 +98,16 @@ la vue 3D (sur un téléphone, elle commence repliée en un petit bouton
 4. **Enregistrer votre construction**
 5. **Publier et partager un lien** : publiez, puis **Copier le lien** ou
    **Partager…**.
+6. **Entrer à pied** : cliquez sur **Entrer à pied**, à côté du lien que
+   montre Publier (ou dans la carte), et entrez par la porte de votre
+   construction dans le monde (voir
+   [Entrer à pied](04-PublishingAndForking.md#entrer-à-pied)).
 
 Chaque étape est cochée dès que vous la faites, dans n’importe quel
-ordre ; annuler et rétablir ne comptent pas. Quand les cinq sont faites,
+ordre ; annuler et rétablir ne comptent pas. Quand les six sont faites,
 la carte le fête et propose **Voir d’autres constructions** ou **Continuer
-à construire**, puis disparaît. **–** la replie en petit bouton ; **Masquer
+à construire**, puis disparaît ; si elle était déjà terminée avant qu’entrer à pied soit
+une étape, elle ne revient pas. **–** la replie en petit bouton ; **Masquer
 le guide** la masque pour de bon sur cet appareil. Pour la faire revenir,
 ouvrez la palette de commandes (**Ctrl+K**) et lancez **Guide de la
 première construction**. Un appareil qui a déjà du travail enregistré

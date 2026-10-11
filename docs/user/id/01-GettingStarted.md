@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: abb471311eb7fdd6 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8bcc959091ee56db -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -159,7 +159,7 @@ ForkBuild memiliki beberapa area utama:
 ## Menempatkan balok pertama Anda
 
 Saat pertama kali Anda membuka Editor, kartu **Bangunan pertama Anda** di
-sudut tampilan 3D memandu Anda melalui lima langkah dan mencentang
+sudut tampilan 3D memandu Anda melalui enam langkah dan mencentang
 masing-masing begitu Anda melakukannya; lihat
 [Bangunan pertama Anda](02-TheEditor.md#bangunan-pertama-anda).
 

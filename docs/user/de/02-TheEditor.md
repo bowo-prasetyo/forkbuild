@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9eb8c2a710f0b80 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ee6ec2bdfb73a405 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -84,8 +84,8 @@ Schaltflächen zeigt, die noch nichts tun können:
 
 Wenn Sie den Editor auf einem Gerät zum ersten Mal öffnen, steht unten
 links in der 3D-Ansicht eine Karte **Ihr erstes Bauwerk** (auf einem Telefon
-beginnt sie eingeklappt als kleine Schaltfläche **Erstes Bauwerk · 0/5** oben links).
-Sie listet fünf Schritte auf und zeigt einen Hinweis zum nächsten:
+beginnt sie eingeklappt als kleine Schaltfläche **Erstes Bauwerk · 0/6** oben links).
+Sie listet sechs Schritte auf und zeigt einen Hinweis zum nächsten:
 
 1. **Einen Stein platzieren**
 2. **Einen auf einen anderen setzen**: einen Stein auf einen anderen setzen.
@@ -94,11 +94,16 @@ Sie listet fünf Schritte auf und zeigt einen Hinweis zum nächsten:
 4. **Ihr Bauwerk speichern**
 5. **Veröffentlichen und einen Link teilen**: veröffentlichen, dann **Link
    kopieren** oder **Teilen …**.
+6. **Hineingehen**: auf **Hineingehen** neben dem Link klicken, den
+   Veröffentlichen zeigt (oder in der Karte), und in der Weltansicht durch die
+   Tür Ihres Bauwerks hineingehen (siehe
+   [Hineingehen](04-PublishingAndForking.md#hineingehen)).
 
 Jeder Schritt wird abgehakt, sobald Sie ihn erledigen, in beliebiger
-Reihenfolge; Rückgängig und Wiederholen zählen nicht. Sind alle fünf
+Reihenfolge; Rückgängig und Wiederholen zählen nicht. Sind alle sechs
 erledigt, feiert die Karte und bietet **Andere Bauwerke ansehen** oder
-**Weiterbauen** an, dann verschwindet sie. **–** klappt sie zur kleinen
+**Weiterbauen** an, dann verschwindet sie; war sie schon fertig, bevor Hineingehen ein Schritt
+war, bleibt sie weg. **–** klappt sie zur kleinen
 Schaltfläche ein; **Anleitung ausblenden** blendet sie auf diesem Gerät
 dauerhaft aus. Um sie zurückzuholen, öffnen Sie die Befehlspalette
 (**Strg+K**) und führen **Anleitung zum ersten Bauwerk** aus. Auf einem

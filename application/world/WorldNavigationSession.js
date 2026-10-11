@@ -33,6 +33,7 @@ import { worldStreamingMethods } from '../worldNavigation/worldStreamingMethods.
 import { documentOperationMethods } from '../worldNavigation/documentOperationMethods.js';
 import { soundObservationMethods } from '../worldNavigation/soundObservationMethods.js';
 import { remoteVehicleMethods } from '../worldNavigation/remoteVehicleMethods.js';
+import { arrivalMethods } from '../worldNavigation/arrivalMethods.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
 import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
 import { describeCommand } from '../commands/describeCommand.js';
@@ -421,6 +422,9 @@ export class WorldNavigationSession {
         // The first spawn made before its document was read from disk; see
         // _spawnAvatarNear().
         this._pendingAvatarSpawn = null;
+        // Arriving at a build's door, and whether the avatar has walked in;
+        // see arrivalMethods.
+        this._arrival = null;
         this._eventBus = null;
         this._discoveryProvider = discoveryProvider;
         // Falls back to `discoveryProvider` when no separate provider is supplied.
@@ -879,6 +883,7 @@ export class WorldNavigationSession {
         this._activeDocumentId = null;
         this._homeDocumentId = null;
         this._pendingAvatarSpawn = null;
+        this._arrival = null;
         // Reset so a fresh start() behaves like a new session. A leftover
         // `active: true` preview would permanently block undo()/redo(). Retired
         // histories belong to the disposed session too.
@@ -909,5 +914,6 @@ installMethods(
     worldStreamingMethods,
     documentOperationMethods,
     soundObservationMethods,
-    remoteVehicleMethods
+    remoteVehicleMethods,
+    arrivalMethods
 );

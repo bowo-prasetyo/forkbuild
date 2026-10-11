@@ -112,6 +112,9 @@ export const worldExperienceMethods = {
         if (experience.cameraPerspective && (!avatarPosition || this._isNearWorld(documentId, avatarPosition))) {
             this.setCameraPerspective(experience.cameraPerspective);
         } else if (experience.cameraPosition && experience.cameraTarget
+            // Arriving at this World's door (arrivalMethods) frames the door,
+            // not where the camera was last time.
+            && !(this._arrival && this._arrival.documentId === documentId)
             && this._isNearWorld(documentId, experience.cameraPosition)
             && this._isNearWorld(documentId, experience.cameraTarget)) {
             this._beginCameraFocus({ position: experience.cameraPosition, target: experience.cameraTarget });

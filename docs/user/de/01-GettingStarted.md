@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: abb471311eb7fdd6 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8bcc959091ee56db -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -168,7 +168,7 @@ ForkBuild hat mehrere Hauptbereiche:
 ## Ihren ersten Stein platzieren
 
 Wenn Sie den Editor zum ersten Mal öffnen, führt Sie eine Karte **Ihr
-erstes Bauwerk** in der Ecke der 3D-Ansicht durch fünf Schritte und hakt
+erstes Bauwerk** in der Ecke der 3D-Ansicht durch sechs Schritte und hakt
 jeden ab, sobald Sie ihn erledigt haben; siehe
 [Ihr erstes Bauwerk](02-TheEditor.md#ihr-erstes-bauwerk).
 

@@ -1,6 +1,7 @@
-// The guided first build (docs/user/02-TheEditor.md, "Your first build"): five
-// steps a newcomer works through in the Editor, ticked off by doing them, not
-// by reading about them. Pure decisions only; the Editor feeds in what
+// The guided first build (docs/user/02-TheEditor.md, "Your first build"): six
+// steps a newcomer works through, ticked off by doing them, not by reading
+// about them: five in the Editor, and the last, walking inside the published
+// build, in World View (core/BuildEntrance.js). Pure decisions only; the Editor feeds in what
 // happened (application/onboarding/FirstBuildChecklistTracker.js).
 
 export const FirstBuildStep = Object.freeze({
@@ -8,7 +9,8 @@ export const FirstBuildStep = Object.freeze({
     STACK: 'stack',
     STRUCTURE: 'structure',
     SAVE: 'save',
-    SHARE: 'share'
+    SHARE: 'share',
+    WALK_INSIDE: 'walk-inside'
 });
 
 export const FIRST_BUILD_STEPS = Object.freeze([
@@ -16,7 +18,8 @@ export const FIRST_BUILD_STEPS = Object.freeze([
     FirstBuildStep.STACK,
     FirstBuildStep.STRUCTURE,
     FirstBuildStep.SAVE,
-    FirstBuildStep.SHARE
+    FirstBuildStep.SHARE,
+    FirstBuildStep.WALK_INSIDE
 ]);
 
 const STEPS = new Set(FIRST_BUILD_STEPS);
@@ -53,11 +56,12 @@ export function nextFirstBuildStep(progress) {
 }
 
 // Whether the guide shows: until it is hidden, and once finished only until
-// its finish has been seen.
+// its finish has been seen. A finish already seen keeps it away, even when
+// the guide has since grown a step (walking inside came after five).
 export function shouldShowFirstBuildGuide(progress) {
     const current = normalizeFirstBuildProgress(progress);
     if (current.dismissed) return false;
-    return !(isFirstBuildComplete(current) && current.celebrated);
+    return !current.celebrated;
 }
 
 // The steps an edit in the Editor completes. `command` is as

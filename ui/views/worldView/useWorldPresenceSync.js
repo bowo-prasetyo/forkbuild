@@ -167,8 +167,14 @@ export function useWorldPresenceSync({
         }
     }
 
+    // Someone arriving at a build's door to walk in (useArrival) came for the
+    // build: the Welcome panel doesn't open over it. Explore still opens it.
+    function skipWelcomeFor(documentId) {
+        if (documentId) welcomeShownForDocumentId.add(documentId);
+    }
+
     return {
         _syncWorldExperience, _syncWorldPresence, _syncWorldSpatialPresence, disposeWorldPresence,
-        refreshCollaborationRoster, syncCurrentWorldSpatialPresence
+        refreshCollaborationRoster, syncCurrentWorldSpatialPresence, skipWelcomeFor
     };
 }

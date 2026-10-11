@@ -1150,6 +1150,17 @@ swing open away from whoever walks up and shut behind them (core/DoorSwing.js; r
 `WorldRenderer#animateDoors()`, fed every frame with where the local avatar, the remote avatars and the residents are
 drawn). The swing is drawing only: the build still holds a shut door, and the Editor never swings one.
 
+**Arriving at a build's door** (Walk inside it, after Publish): the Editor opens `/world/:id?arrive=door`, and
+World View calls `arriveAtEntrance()` (application/worldNavigation/arrivalMethods.js) instead of a plain
+`navigateToDocument()`. core/BuildEntrance.js picks the spot: the build's ground-level doors and doorway arches,
+each with outside found by flooding a plan of where an avatar can stand (doorways shut) from its edge, and room to
+stand on both sides of it; a door that leads in wins over a free-standing arch. The avatar is put a few steps in
+front of it, facing it, and the camera behind them; a build with no way in is arrived at from its -z side. An arrival
+asked for before the document is loaded finishes in `_loadWorld()`, it skips the automatic Welcome panel, and its
+framing wins over the World's remembered camera. `arrivalState()` says when the avatar has gone in
+(`hasWalkedInside()`: past the doorway and within the build), which ui/views/worldView/useArrival.js turns into the
+guided first build's last step (core/FirstBuildChecklist.js), on World View's existing 100 ms presence tick.
+
 `AvatarWaterConstraint` is not a step in that chain. It supplies water to the controller: the depth that slows wading
 (`core/AvatarWaterWalkability.js`), and where the surface lies in the presence frame. On foot, water deeper than half
 the avatar's height over whatever it would stand on (`core/AvatarSwimming.js#isSwimmableDepth()`) makes the avatar

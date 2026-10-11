@@ -61,9 +61,13 @@ longer-term aim.
   library, structure placements, and document export/import.
 - Save, autosave with crash recovery, and publishing to an immutable,
   content-hashed snapshot.
-- A guided first build: five steps (place a brick, stack one, drop in a
-  structure, save, share a link) ticked off as you do them, ending in a small
-  celebration. Logging in is asked for only when you first publish.
+- A guided first build: six steps (place a brick, stack one, drop in a
+  structure, save, share a link, walk inside it) ticked off as you do them,
+  ending in a small celebration. Logging in is asked for only when you first
+  publish.
+- **Walk inside it**: once a build is published, one click opens World View
+  with your avatar in front of its door, facing it; the door swings open as
+  you walk up.
 - Share a build the moment it's published: the link carries the signed build
   itself, so it opens on any device with no wallet or account,
   shows the build's title and a picture of it when pasted into a chat or a

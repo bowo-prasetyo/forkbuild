@@ -32,6 +32,18 @@ below). It's also automatically given a position in the shared world, so
 **Explore** always has somewhere to take people — see
 [Finding worlds](03-WorldView.md#finding-worlds).
 
+### Walk inside it
+
+Beside the link, the notice Publish shows has **Walk inside it** (**Walk
+around it** for a build with no door). It opens World View with your avatar
+on the ground in front of the build's door, facing it; the door swings open
+as you walk up, and walking in (**W**, or the joystick on a phone) ticks off
+the last step of [Your first build](02-TheEditor.md#your-first-build). The
+door is the build's main way in: a door set into a solid wall or tower, with
+nowhere to stand behind it, doesn't count, and a build without one is
+arrived at from the front. The **Your first build** card offers the same
+button once the build is published.
+
 > **Note:** Publishing stores your Document/World on this device only. Its
 > Repository card says where this device recorded distributing it (for
 > example **Stored on IPFS · Announced on Nostr**), or **No distribution

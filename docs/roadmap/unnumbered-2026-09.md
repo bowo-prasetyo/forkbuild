@@ -5568,3 +5568,42 @@ lives in a world ("makes a build more worth visiting"), with building feels joyf
 - Not done: doors set into solid towers (the Silo, the Watchtower, the Lighthouse, the castle's keep) still have nothing
   behind them, and the Stable's stalls are half a step deep; giving them insides is content work. A door is passable
   whether or not anyone is near, so someone walking faster than it swings passes through it as it opens.
+
+## Walk inside it (unnumbered, 2026-10-11)
+
+**Publishing ends at your build's door.** Doors and arches became walkable the same day ("Step inside"), but nothing
+led a new builder there: the guided first build stopped at sharing a link, and World View opened on a framing of the
+whole build, with a Welcome panel over it. The creative-direction audit's "Step inside" release asked for a sixth
+step, **Walk inside it**, and a button after Publish that opens World View at the build's door. Pillar served: your
+work lives in a world (the first session now reaches all three beats of the fantasy: build, share, walk inside), with
+building feels joyful (the guide ends inside what you made).
+
+- **Where you arrive** (core/BuildEntrance.js, pure). The build's ground-level doors, and doorway arches an avatar fits
+  through, are candidates. Which side is outside comes from where an avatar can walk: a plan of the build on a 0.25
+  grid (0.5 for big builds), every doorway shut, flooded from the edge. A door needs room to stand on both sides of
+  it, so doors set into solid towers (the Silo, the Watchtower, the Lighthouse) and the Stable's shallow stalls aren't
+  ways in. A door that leads in beats a free-standing arch or gate, a door beats an arch, then the lowest, then the
+  one nearest the middle. You stand 2.5 in front of it (2 or 1.5 if that isn't clear), facing it; a build with no way
+  in is arrived at 2.5 in front of its -z side. `hasWalkedInside()`: past the doorway by 0.6, within the build.
+- **Walk inside it** (ui/views/editorView/useWalkInside.js). After a successful Publish, beside the link: **Walk
+  inside it**, or **Walk around it** for a build with no door, opening `/world/:id?arrive=door`, for as long as the
+  published build is the one open.
+- **Arriving** (application/worldNavigation/arrivalMethods.js). `arriveAtEntrance()` focuses the build, puts the
+  avatar at the spot facing the door and the camera 5 behind and 2.5 above them, looking at it; for a build still
+  loading it finishes in `_loadWorld()`. The arrival skips the automatic Welcome panel and wins over the World's
+  remembered camera position. World View says "Here's the door. Walk in with W, or the joystick."
+- **The sixth step** (core/FirstBuildChecklist.js, `walk-inside`). ui/views/worldView/useArrival.js follows
+  `arrivalState()` on World View's existing 100 ms presence tick (no new timer) and ticks it off when the avatar walks
+  in ("You're inside! Have a look around.", or a celebration when it finishes the guide); with no avatar, arriving is
+  enough. While it's next and the build is published, the guide's hint has a Walk inside it button. A guide whose
+  finish was already seen stays away now that it has six steps.
+- Every language: the buttons, the step and its hint, the finish's text and World View's three messages; guides 01, 02
+  and 04 (a new "Walk inside it" section); docs/Architecture.md; the README.
+- Tests: `WalkInside` (the starter house's front door; the Garden Cottage entered from its garden; doors into nothing
+  and buildings without doors arrived at from the front; inside means through the door; from where you arrive,
+  walking ahead with the real movement pipeline goes inside, in all 15 ready-made builds with a door; World View's
+  arrival, a build still loading, and no avatar); `FirstBuildChecklist` (six steps, walking inside last, an old finish
+  stays away); `FirstBuildGuideBrowser` (the walk hint and its button); the bundled site's first visit (Publish → Walk
+  inside it → the house's door → W → inside, ticked off in the Editor's guide).
+- Not done: arriving at a structure placement's door (only a World's own bricks are searched), and choosing among
+  several doors.

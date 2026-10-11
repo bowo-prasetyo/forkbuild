@@ -16,9 +16,10 @@ import { Position } from '../core/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
-// The guided first build: five steps ticked off by doing them in the Editor
-// (place a brick, stack one, drop in a structure, save, share a link), kept on
-// this device, and hidden for someone who already knows the Editor.
+// The guided first build: six steps ticked off by doing them (in the Editor,
+// place a brick, stack one, drop in a structure, save, share a link; then, in
+// World View, walk inside it), kept on this device, and hidden for someone who
+// already knows the Editor.
 
 const registry = new CreateBrickRegistryUseCase().execute();
 const brickHeight = (id) => registry.get(id)?.height ?? 1;
@@ -59,6 +60,9 @@ function placed(y, definitionId = CUBE) {
     assert(isFirstBuildComplete(all) && nextFirstBuildStep(all) === null && shouldShowFirstBuildGuide(all), 'finished, it shows its finish');
     assert(!shouldShowFirstBuildGuide({ ...all, celebrated: true }), 'and goes once the finish was seen');
     assert(!shouldShowFirstBuildGuide({ dismissed: true }), 'hidden is hidden');
+    const oldFinish = normalizeFirstBuildProgress({ completed: ['place-brick', 'stack', 'structure', 'save', 'share'], celebrated: true });
+    assert(!isFirstBuildComplete(oldFinish) && !shouldShowFirstBuildGuide(oldFinish), 'a guide finished before walking inside was a step stays away');
+    assert(FIRST_BUILD_STEPS[FIRST_BUILD_STEPS.length - 1] === FirstBuildStep.WALK_INSIDE, 'walking inside is the last step');
     console.log('✓ progress');
 }
 
@@ -93,14 +97,16 @@ function placed(y, definitionId = CUBE) {
     const again = new FirstBuildChecklistTracker({ store: new FirstBuildChecklistStore({ storageProvider: storage }), brickHeight });
     assert(again.progress().completed.length === 4, 'progress is kept on the device');
     tracker.shared();
-    assert(isFirstBuildComplete(tracker.progress()) && shouldShowFirstBuildGuide(tracker.progress()), 'shared: finished, and its finish shows');
+    assert(!isFirstBuildComplete(tracker.progress()) && nextFirstBuildStep(tracker.progress()) === FirstBuildStep.WALK_INSIDE, 'shared: walking inside is next');
+    tracker.walkedInside();
+    assert(isFirstBuildComplete(tracker.progress()) && shouldShowFirstBuildGuide(tracker.progress()), 'walked inside: finished, and its finish shows');
     tracker.celebrated();
     assert(!shouldShowFirstBuildGuide(tracker.progress()), 'once seen, the guide goes');
     tracker.show();
     assert(shouldShowFirstBuildGuide(tracker.progress()), 'the palette command brings it back');
     stop();
     assert(listeners.size === 0, 'it stops following edits');
-    console.log('✓ the tracker follows edits, a save and a share, and remembers them');
+    console.log('✓ the tracker follows edits, a save, a share and a walk inside, and remembers them');
 }
 
 // Someone who already knows the Editor starts with it hidden, once.

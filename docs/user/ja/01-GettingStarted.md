@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: abb471311eb7fdd6 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8bcc959091ee56db -->
 # 01 — はじめに
 
 <!-- languages -->
@@ -151,7 +151,7 @@ ForkBuild には主に次の場所があります。
 ## 最初のブロックを置く
 
 はじめてエディターを開くと、3D ビューの隅に **はじめての作品** カードが
-表示され、5 つのステップを案内し、済んだものからチェックを付けます。
+表示され、6 つのステップを案内し、済んだものからチェックを付けます。
 [はじめての作品](02-TheEditor.md#はじめての作品) をご覧ください。
 
 1. 上部のバーで **エディター** をクリックします。

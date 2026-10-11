@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: abb471311eb7fdd6 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8bcc959091ee56db -->
 # 01 — Primeiros passos
 
 <!-- languages -->
@@ -157,7 +157,7 @@ O ForkBuild tem várias áreas principais:
 ## Colocando seu primeiro bloco
 
 Na primeira vez que você abre o Editor, um cartão **Sua primeira
-construção** no canto da visão 3D guia você por cinco passos e marca cada
+construção** no canto da visão 3D guia você por seis passos e marca cada
 um assim que você o faz; veja
 [Sua primeira construção](02-TheEditor.md#sua-primeira-construção).
 

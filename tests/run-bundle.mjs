@@ -482,6 +482,20 @@ async function firstVisit(browser, base) {
         const embed = await editor.$eval('.editor-post-publish-share .publication-share-embed-code', (area) => area.value);
         assert(embed.startsWith('<iframe ') && embed.includes(`embed.html#${payloadFromLinkPreviewUrl(link)}"`), `Embed offers the same build as an <iframe> (${embed.slice(0, 60)})`);
 
+        // Walk inside it: World View at the house's door; walking ahead goes
+        // in, which ticks off the guided first build's last step.
+        assert((await editor.textContent('.editor-post-publish-walk')).trim() === 'Walk inside it', 'Publish offers to walk inside the house');
+        await editor.click('.editor-post-publish-walk');
+        await editor.waitForSelector('.world-viewport canvas', { timeout: 60_000 });
+        await editor.waitForFunction(() => document.body.textContent.includes('Here\'s the door.'), null, { timeout: 30_000 });
+        assert(!editor.url().includes('arrive='), `the arrival leaves the address clean (${editor.url()})`);
+        await editor.click('.world-viewport canvas', { position: { x: 640, y: 120 } });
+        await editor.keyboard.down('w');
+        await editor.waitForFunction(() => document.body.textContent.includes('You\'re inside!'), null, { timeout: 30_000 });
+        await editor.keyboard.up('w');
+        await editor.goBack();
+        await editor.waitForSelector('.first-build-step--done[data-step="walk-inside"]', { timeout: 60_000 });
+
         const friend = await browser.newContext({ viewport: { width: 1280, height: 800 } });
         try {
             const visit = await friend.newPage();
@@ -642,7 +656,7 @@ try {
     await offlineAndNotifications(browser, `http://127.0.0.1:${server.address().port}`, published.precacheFiles, published.outdir);
     console.log(`✓ the published site keeps its ${published.precacheFiles} files on the first visit and opens offline, Home and the Editor; a new version is offered and starts on Reload; notifications on this device turn on and off (or say the browser blocks them)`);
     await firstVisit(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ a first visit: five pages and More in the nav, the guided first build in the Editor, Publish asking about remixes and to log in, and the published link copied on another device');
+    console.log('✓ a first visit: five pages and More in the nav, the guided first build in the Editor, Publish asking about remixes and to log in, the published link copied on another device, and Walk inside it arriving at the house door and walking in');
     await walkThePlaza(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ an entry published for the week stands in its plaza, reached from the challenge page, and World View stays there until Open takes you to the entry\'s World; an unknown week says so');
     await postingSwitches(browser, `http://127.0.0.1:${server.address().port}`);

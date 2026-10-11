@@ -84,6 +84,10 @@ export default Object.freeze({
 
     // World View (ui/views/WorldView.js).
     'worldView.forkCreated': '編集可能なあなた専用のコピーを作成しました — 「{title}」は変更されていません',
+    'worldView.arrivedAtDoor': 'ここがドアです。W キーかジョイスティックで中へ。',
+    'worldView.arrivedAtBuild': 'ここが作品です。W キーかジョイスティックでまわりを歩きましょう。',
+    'worldView.walkedInside': '中に入りました！見てまわりましょう。',
+    'worldView.firstBuildWalkedInside': '🎉 はじめての作品の中に入りました！',
 
     // Forking a published World (application/worldNavigation/forkOnWriteMethods.js).
     'fork.notice.blocked': '「{license}」で公開されています — 作者がフォークを許可していないため、このワールドは閲覧できますが編集はできません。',
@@ -881,6 +885,8 @@ export default Object.freeze({
     'editor.published': '公開しました！リンクを共有できます。リンクなしでもだれでも見つけられるように、送り先を選びましょう。',
     'editor.distribute': '送り先を選ぶ',
     'editor.dismiss': '閉じる',
+    'editor.walkInside': '中に入ってみる',
+    'editor.walkAround': 'まわりを歩く',
     'editor.publishedSending': '公開しました！{network} に送っています…',
     'editor.publishedSent': '公開して {network} に送りました。だれでも見つけられます。',
     'editor.publishedSendFailed': '公開しましたが、{network} への送信はうまくいきませんでした: {error}',
@@ -901,13 +907,16 @@ export default Object.freeze({
     'firstBuild.step.structure': '構造物を置く',
     'firstBuild.step.save': '作品を保存する',
     'firstBuild.step.share': '公開してリンクを共有する',
+    'firstBuild.step.walkInside': '中に入ってみる',
     'firstBuild.hint.placeBrick': '配置を選び、ビルドライブラリのブロックから 1 つ選んで、地面をクリックします。',
     'firstBuild.hint.stack': '配置のまま、ブロックの上面をクリックすると、その上にもう 1 つ置けます。',
     'firstBuild.hint.structure': 'ビルドライブラリの構造物を開き、家、塔、橋のどれかを選んで、置きたい場所をクリックします。',
     'firstBuild.hint.save': '保存をクリックするか、Ctrl+S（Mac では ⌘S）を押します。作品はこのブラウザーに残ります。',
     'firstBuild.hint.share': '公開をクリックし（作品に署名するためにログインを求められます）、リンクをコピーをクリックします。誰でもリンクを開いて、自分のコピーを作れます。',
+    'firstBuild.hint.walkInside': '「中に入ってみる」をクリックすると、作品のドアの前に着きます。W キー（スマートフォンではジョイスティック）で中へ歩きましょう。',
+    'firstBuild.walk': '中に入ってみる',
     'firstBuild.doneTitle': 'はじめての作品が世界に出ました！',
-    'firstBuild.doneText': 'リンクを持っている人は誰でも、3D で開いてリミックスできます。ほかの人の作品を見るか、作り続けましょう。',
+    'firstBuild.doneText': '場所を作り、共有して、その中に入りました。リンクを持っている人は誰でも、3D で開いてリミックスできます。ほかの人の作品を見るか、作り続けましょう。',
     'firstBuild.explore': 'ほかの作品を見る',
     'firstBuild.close': '作り続ける',
     'editor.touchPlaceHint': '地面をタップして配置します。先に「回転」でブロックの向きを変えられます。',
