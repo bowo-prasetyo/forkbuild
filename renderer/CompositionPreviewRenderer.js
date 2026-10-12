@@ -1,3 +1,4 @@
+import { editorFloorHeight } from './EditorFloor.js';
 import { applyBrickOrientation } from './applyBrickOrientation.js';
 import { normalizeTilt } from '../core/BrickOrientation.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
@@ -96,12 +97,13 @@ export class CompositionPreviewRenderer {
     // Mirrors StructurePreviewRenderer#_applyTransform() exactly — each
     // brick's local position, rotated around the origin by the
     // preview's own rotation, translated by the preview's position,
-    // lifted by terrain sampled at that position. The SAME math
+    // lifted onto the Editor's floor (renderer/EditorFloor.js), where the
+    // pasted bricks will stand. The SAME math
     // application/editor/StructureCompositionTransform.js#transformStructureBricks()
     // applies at commit time, so what the ghost shows is exactly what
     // PasteBricksCommand will insert.
     _applyTransform(preview) {
-        const groundY = this._terrainOffsetY(preview.position.x, preview.position.z);
+        const groundY = editorFloorHeight(this._renderer);
         for (const mesh of this._meshes) {
             const localPoint = this._rotateAroundOrigin(mesh.userData.localPosition, preview.rotation);
             mesh.position.set(
@@ -118,12 +120,6 @@ export class CompositionPreviewRenderer {
             return point;
         }
         return this._transformMath.rotatePointAroundPivotY(point, { x: 0, y: 0, z: 0 }, degrees);
-    }
-
-    _terrainOffsetY(x, z) {
-        return typeof this._renderer.terrainHeightAt === 'function'
-            ? this._renderer.terrainHeightAt(x, z)
-            : 0;
     }
 
     _applyValidity(valid) {

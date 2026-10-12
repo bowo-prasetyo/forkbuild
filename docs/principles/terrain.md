@@ -17,6 +17,13 @@ Placement and presence positions keep ground level at `y = 0`. The
 renderer adds terrain height to a mesh's Y only when drawing it, and
 never writes it back where a domain object could see it.
 
+Picking undoes the same offset. In the Editor, the build's ground is drawn
+as one flat floor at the terrain height under its origin
+(`renderer/EditorFloor.js`), and the ground under the pointer is picked on
+that floor, not at `y = 0`, so a brick lands where it is drawn: under the
+pointer. Every ghost (a brick's, a structure's, a composition's) stands on
+the same floor.
+
 [Full text](history/0.1-0.2.md#terrain-elevation-is-a-rendering-time-offset-never-a-presence-or-placement-fact-0276)
 
 ### The Terrain Height Field Is The Shared Authority; The Renderer Is An Adapter, Not The Owner (0.2.77)

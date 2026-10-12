@@ -6053,3 +6053,30 @@ world (a village it stands in from its first day).
   the phone's collapsed plaza panel; the passphrase nudge moved out of the celebration; the inspection's "Author" line
   reading the builder's name (it is advanced-only now); the launch order, a playtest and the orphaned systems, which
   are the owner's.
+
+## A brick lands under the pointer (unnumbered, 2026-10-12)
+
+**In the Editor, a brick is placed where the pointer is, and drawn there.** Checking Release F in the real app found
+that in a new build a cube appeared about 110 pixels above the cursor, and a click a little above it, on what looked
+like its top, missed it (the Place-and-stack check in the bundled-site test had to aim about 120 pixels higher to stack
+one). The cause: the Editor draws its build lifted onto the terrain under the build's origin (renderer/WorldRenderer.js
+samples the terrain at the World's offset, (0, 0), about 2.7 units up in the default World), while the ground under the
+pointer was picked on the plane `y = 0` (renderer/PickingService.js). The ray met that plane behind the point the
+pointer was over, and the brick placed there was then drawn lifted, far up the screen. Pillar served: building feels
+joyful (the first verb works where you point).
+
+- **One floor** (renderer/EditorFloor.js `editorFloorHeight()`): the terrain height under the build's origin, the
+  height its bricks and structure placements are already drawn at.
+- **The ground is picked on it** (renderer/PickingService.js, a `groundHeight` option;
+  application/world/RenderWorldUseCase.js passes the floor). The picked point keeps the scene's own coordinates (its y
+  the floor's height); the tools read only its x and z, and Build with me's pointers, already in scene coordinates,
+  now meet the ground where it is drawn. World View's picking is unchanged.
+- **Every ghost stands on it.** A brick's ghost already did (renderer/PreviewRenderer.js, now through the same
+  function). A structure's and a composition's ghosts (StructurePreviewRenderer, CompositionPreviewRenderer) sampled
+  the terrain under the ghost instead, so they rose and sank over the hills while what they placed stood on the floor;
+  they now stand where it will.
+- docs/principles/terrain.md says picking undoes the same offset.
+- Tests: `EditorFloor` (the floor; with a camera like the Editor's opening view, the ground picked on the floor and a
+  cube placed from it drawn with its foot under the pointer at three pointer positions, where picking at `y = 0` drew
+  it 40 pixels or more above; the three ghosts on the floor over a hill). It fails without the fix. The bundled site's
+  Place-and-stack check now stacks with a click at most 40 pixels above the first.

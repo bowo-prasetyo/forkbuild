@@ -478,11 +478,13 @@ async function firstVisit(browser, base) {
         await page.mouse.up();
         await page.waitForSelector('.first-build-step--done[data-step="place-brick"]', { timeout: 10_000 });
         assert(await page.$eval('.palette-item--active', (item) => item.textContent.includes('Cube')), 'the Build Library shows the Cube chosen');
-        // The cube is drawn higher on the screen than the ground point that
-        // was clicked: aim higher each time until a click lands on its top. A click that misses lands where the cube
-        // already stands, and places nothing.
+        // The cube stands on the ground point that was clicked
+        // (renderer/EditorFloor.js), so its top is just above the pointer:
+        // a click a few pixels higher lands on it. (When the ground was
+        // picked below the build's floor, the cube was drawn about 120
+        // pixels above the pointer, and these clicks all missed it.)
         let stacked = false;
-        for (let up = 12; up <= 240 && !stacked; up += 12) {
+        for (let up = 4; up <= 40 && !stacked; up += 4) {
             await page.mouse.move(middle.x, middle.y - up, { steps: 2 });
             await page.mouse.down();
             await page.mouse.up();
