@@ -135,7 +135,7 @@ export function useWorldPresenceSync({
                 refreshWelcomeContext();
             }
         });
-        if (!welcomeShownForDocumentId.has(presentSpatialWorldDocumentId)) {
+        if (!skippingArrivalWelcomes && !welcomeShownForDocumentId.has(presentSpatialWorldDocumentId)) {
             welcomeShownForDocumentId.add(presentSpatialWorldDocumentId);
             openWelcomePanel(true);
         }
@@ -173,8 +173,16 @@ export function useWorldPresenceSync({
         if (documentId) welcomeShownForDocumentId.add(documentId);
     }
 
+    // Someone on the challenge plaza came for the village round it, not for
+    // whichever nearby build is current: no Welcome panel opens over it on
+    // its own for the rest of the visit. Explore still opens it.
+    let skippingArrivalWelcomes = false;
+    function skipArrivalWelcomes() {
+        skippingArrivalWelcomes = true;
+    }
+
     return {
         _syncWorldExperience, _syncWorldPresence, _syncWorldSpatialPresence, disposeWorldPresence,
-        refreshCollaborationRoster, syncCurrentWorldSpatialPresence, skipWelcomeFor
+        refreshCollaborationRoster, syncCurrentWorldSpatialPresence, skipWelcomeFor, skipArrivalWelcomes
     };
 }

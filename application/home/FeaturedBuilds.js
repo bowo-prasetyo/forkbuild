@@ -1,6 +1,8 @@
 import { Brick } from '../../core/Brick.js';
 import { Position } from '../../core/Position.js';
 import { SpatialBounds } from '../../core/SpatialBounds.js';
+import { Building } from '../../core/Building.js';
+import { World } from '../../core/World.js';
 
 // The built-in structures offered as ready-made builds, in the order their
 // cards show them: the three showcase builds (core/library/ShowcaseLibrary.js)
@@ -81,4 +83,24 @@ export function composeShowcase(structures, brickRegistry, { gap = SHOWCASE_GAP 
         }
     });
     return bricks;
+}
+
+// A ready-made build as a World of one building, the shape a plaza exhibit
+// is drawn from (the challenge plaza's ready-made builds, while a week has
+// few entries). Every brick is a new Brick; the library's own are never
+// changed.
+export function structureWorld(structure) {
+    const building = new Building({ id: `ready-made:${structure.id}` });
+    for (const brick of structure.bricks) {
+        building.addBrick(new Brick({
+            definitionId: brick.definitionId,
+            position: new Position(brick.position.x, brick.position.y, brick.position.z),
+            rotation: brick.rotation,
+            tilt: brick.tilt || 0,
+            color: brick.color
+        }));
+    }
+    const world = new World({ id: `ready-made:${structure.id}` });
+    world.addBuilding(building);
+    return world;
 }

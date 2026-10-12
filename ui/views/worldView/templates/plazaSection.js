@@ -1,6 +1,6 @@
 // World view template: the challenge plaza's panel (ui/views/worldView/useChallengePlaza.js),
-// shown at the top while World View is on `/plaza/<week>`: the week, its exhibits, and
-// what isn't standing and why. It renders in WorldView's scope, so it uses the names its
+// shown at the top while World View is on `/plaza/<week>`: the week, its exhibits, the
+// ready-made builds standing while it has few, and what isn't standing and why. It renders in WorldView's scope, so it uses the names its
 // setup() returns.
 export const plazaSectionTemplate = `<section v-if="plaza" class="world-view-plaza" aria-labelledby="world-view-plaza-title">
                     <p class="world-view-plaza-kicker"><span aria-hidden="true">🏆</span> {{ t('plaza.kicker') }}</p>
@@ -23,6 +23,18 @@ export const plazaSectionTemplate = `<section v-if="plaza" class="world-view-pla
                             <button class="action-btn world-view-nearby-row-go world-view-plaza-open" @click="openExhibit(exhibit)">{{ t('plaza.open') }}</button>
                             <button class="action-btn world-view-nearby-row-go world-view-plaza-remix" @click="remixExhibit(exhibit)">{{ t('publicationLink.editCopy') }}</button>
                         </div>
+                        <template v-if="plaza.readyMades.length">
+                            <p class="world-view-plaza-ready-made-lead">{{ t('plaza.readyMadeLead') }}</p>
+                            <div
+                                v-for="exhibit in plaza.readyMades"
+                                :key="exhibit.key"
+                                class="world-view-nearby-row world-view-plaza-exhibit world-view-plaza-ready-made"
+                            >
+                                <span class="world-view-nearby-row-label">{{ exhibit.title }}</span>
+                                <button class="action-btn world-view-nearby-row-go world-view-plaza-focus" @click="focusExhibit(exhibit)">{{ t('worldView.navigate') }}</button>
+                                <button class="action-btn world-view-nearby-row-go world-view-plaza-remix" @click="remixExhibit(exhibit)">{{ t('plaza.remixReadyMade') }}</button>
+                            </div>
+                        </template>
                         <p v-if="plaza.notPlaceable" class="world-view-plaza-note">{{ t('plaza.notPlaceable', { count: plaza.notPlaceable }) }}</p>
                         <p v-if="plaza.unavailable" class="world-view-plaza-note">{{ t('plaza.unavailable', { count: plaza.unavailable }) }}</p>
                         <p v-if="plaza.beyond" class="world-view-plaza-note">{{ t('plaza.beyond', { count: plaza.beyond, max: plaza.max }) }}</p>

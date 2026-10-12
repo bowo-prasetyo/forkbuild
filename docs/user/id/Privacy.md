@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 0c17fa09c34c708f -->
+<!-- translation-of: docs/Privacy.md source-hash: 805558c8d685c7ff -->
 # Privasi
 
 <!-- languages -->
@@ -25,6 +25,8 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
 - identitas Anda: kunci publik masing-masing, dan kunci privatnya, yang
   dienkripsi dengan frasa sandi Anda kecuali Anda memilih membuatnya tanpa
   frasa sandi;
+- kunci pembawa yang mengirim bangunan Anda ke semua orang (kunci Nostr, dibuat pertama kali Anda memilih **Semua orang** di **Siapa yang bisa menemukannya?**). Kunci ini bukan identitas Anda dan tidak menandatangani apa pun milik Anda: siapa pun yang memilikinya hanya bisa mengirim catatan yang diperiksa setiap pembaca dengan tanda tangan identitas Anda sendiri;
+- jawaban Anda untuk **Siapa yang bisa menemukannya?**;
 - identitas yang dibuat hanya dengan nama, saat pertama kali menerbitkan
   atau berjalan bersama, tidak memiliki frasa sandi sampai Anda
   menambahkannya di **Identitas Saya**, jadi apa pun yang dapat membaca
@@ -103,6 +105,7 @@ Apakah notifikasi di perangkat ini aktif disimpan bersama pengaturan Anda
   dapat menemukan bangunan dengan tag tertentu, seperti karya peserta
   tantangan suatu minggu.
   Setelah Anda memilih ke mana bangunan Anda dikirim, setiap Terbitkan juga mengirim bangunan ke sana; sampai saat itu, Terbitkan tidak mengirim apa pun.
+- **Siapa yang bisa menemukannya?** ditanyakan sebelum Anda menerbitkan pertama kali. Dengan **Semua orang**, setiap bangunan bertanda tangan yang Anda terbitkan juga dikirim utuh ke relay Nostr publik di **Pengaturan Jaringan** sebagai catatan bangunan (docs/Protocol.md, "Build notes", bahasa Inggris), bersama tag dan tempatnya di Dunia, agar siapa pun yang memakai ForkBuild menemukannya di Jelajahi, di tantangan, dan di Dunia. Catatan itu ditandatangani dengan kunci pembawa perangkat ini, bukan identitas Anda. Relay menyimpan apa yang dikirim kepadanya; catatan tidak bisa ditarik kembali. Dengan **Hanya orang yang saya kirimi tautannya**, tidak ada yang dikirim dan bangunan hanya berpindah lewat tautannya. Pilihan ini diingat di perangkat ini dan bisa diubah dari pesan setelah Terbitkan.
 - **Rekan yang terhubung dengan Anda** mengetahui kunci publik identitas
   Anda dan alamat IP Anda (koneksi langsung memerlukannya; relay TURN
   menyembunyikannya dari rekan tetapi tidak dari relay itu sendiri). Rekan
@@ -214,7 +217,7 @@ bawah):
 
 Dan saat seseorang ikut tantangan membangun mingguan (**Ikut tantangan**,
 atau tantangan di **Baru** pada Editor): `/e/challenge-join`; dan saat seseorang membuka
-alun-alun tantangan suatu minggu di Tampilan Dunia: `/e/plaza-visit`. Dan saat seseorang membuat tautan **Jalan di sini bersamaku** di Tampilan Dunia: `/e/walk-link`; dan saat seorang teman tiba lewat tautan itu: `/e/walk-joined`. Dan saat seseorang membuat tautan **Bangun bersamaku** di Editor: `/e/build-link`; dan saat seorang teman bergabung lewat tautan itu: `/e/build-joined`; dan pertama kali sebuah bangunan diterbitkan dengan mencantumkan teman-teman yang membangunnya bersama: `/e/publish-together`.
+alun-alun tantangan suatu minggu di Tampilan Dunia: `/e/plaza-visit`. Dan saat seseorang membuat tautan **Jalan di sini bersamaku** di Tampilan Dunia: `/e/walk-link`; dan saat seorang teman tiba lewat tautan itu: `/e/walk-joined`. Dan saat seseorang membuat tautan **Bangun bersamaku** di Editor: `/e/build-link`; dan saat seorang teman bergabung lewat tautan itu: `/e/build-joined`; dan pertama kali sebuah bangunan diterbitkan dengan mencantumkan teman-teman yang membangunnya bersama: `/e/publish-together`. Dan setiap kali sebuah bangunan diterbitkan: `/e/publish-found` jika dikirim ke semua orang, atau `/e/publish-link-only` jika hanya lewat tautannya.
 
 Dan saat sebuah bangunan pertama kali diterbitkan dari browser ini
 (menerbitkannya lagi nanti tidak mengirim apa pun):
@@ -303,6 +306,8 @@ Anda dan apa yang Anda minta darinya.
 | Aplikasi terbuka dan tabnya terlihat (sinkronisasi pengumuman di latar belakang) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag penemuan ForkBuild: tag Snapshot dan Komentar bersama, serta wilayah Penamaan Tempat dan sel peta yang pernah Anda kunjungi |
 | Anda membuka Repositori atau halaman pembuat | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag Publikasi bersama (`forkbuild-publication`); lalu permintaan catatan bertandatangan untuk setiap publikasi yang baru diumumkan, paling banyak 20 per kunjungan atau per **Periksa lagi** |
 | Anda membuka tantangan membangun suatu minggu (**Tantangan**) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag minggu itu (`forkbuild-tag:<tag>`); lalu permintaan rekaman bertanda tangan untuk setiap karya peserta yang baru diumumkan, paling banyak 20 per kunjungan atau **Periksa lagi** |
+| Anda menerbitkan bangunan setelah memilih **Semua orang** di **Siapa yang bisa menemukannya?** | setiap relay Nostr di **Pengaturan Jaringan** (`relay.damus.io`, `nos.lol`, `relay.primal.net`) | catatan bangunan: bangunan bertanda tangan itu sendiri, tag-nya, dan penempatan bertanda tangan dari penerbitnya, ditandatangani dengan kunci pembawa perangkat ini |
+| Anda membuka Jelajahi, halaman seseorang, tantangan suatu minggu, atau alun-alunnya | setiap relay Nostr di **Pengaturan Jaringan** | kueri catatan bangunan (`forkbuild-build`, atau `forkbuild-tag:<tag>` minggu itu); setiap catatan baru diperiksa dan dibuka di perangkat ini, paling banyak 40 per kunjungan |
 | Anda mendistribusikan atau menemukan publikasi melalui Nostr | relay Nostr (`relay.damus.io`) | pengumuman bertanda tangan yang Anda terbitkan; kueri Anda |
 | Anda menyimpan atau mengambil konten di Arweave | gateway Arweave (`arweave.net`) | konten yang Anda terbitkan; apa yang Anda ambil |
 | Anda mengambil konten dari IPFS | gateway IPFS (`ipfs.filebase.io`), atau node IPFS Anda sendiri (`127.0.0.1:5001`) | apa yang Anda ambil atau tambahkan |

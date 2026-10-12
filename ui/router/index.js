@@ -4,6 +4,7 @@ import { loadServiceGroups } from '../serviceGroups.js';
 import { PAGE_SERVICE_GROUPS } from './pageServiceGroups.js';
 import { watchPageLoads } from '../pageLoadFailure.js';
 import HomeView from '../views/HomeView.js';
+import { challengeAt } from '../../core/BuildChallenge.js';
 
 // Each page but Home (a few lines, and the page most visits open) loads its
 // modules the first time it is opened, not with the app: together they are
@@ -85,6 +86,10 @@ const routes = [
     { path: '/world/:documentId', name: 'world', component: WorldView },
     // A week's challenge plaza (core/ChallengePlaza.js), in World View.
     { path: '/plaza/:challengeId', name: 'plaza', component: PlazaView },
+    // Walk, in the main menu: this week's plaza, the square the village
+    // grows round (core/BuildSettlement.js), worth a walk with no build of
+    // your own.
+    { path: '/walk', name: 'walk', redirect: () => ({ path: `/plaza/${challengeAt().id}` }) },
     // A link to a Publication, naming where its Signed Claim is stored: the
     // "see it in 3D" link on a Steem or Blurt post, or one shared with Share.
     // Opens World View on that Publication once it checks out.

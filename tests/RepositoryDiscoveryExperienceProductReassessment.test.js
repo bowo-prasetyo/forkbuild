@@ -224,9 +224,9 @@ async function main() {
         assert(authorEmpty.items.length === 0, '2. LIVE: an author with no publications reports zero items the same way.');
 
         const catalogSource = withEnglish(await codeOnlySource('ui/components/PublicationCatalog.js'));
-        assert(catalogSource.includes("'No publications yet. Publish a creation from the Editor to see it here.'"),
+        assert(catalogSource.includes("'No builds here yet. Build one and publish it to see it here.'"),
             '3. LIVE: Repository\'s own empty-state message (author: null) explains WHAT Repository is FOR, not merely that it is empty — a first-time Wanderer is told the one action that would populate it.');
-        assert(catalogSource.includes("'No publications found for this author.'"),
+        assert(catalogSource.includes("'No builds found for this builder.'"),
             '4. LIVE: Author view\'s own empty-state message is distinct from Repository\'s, and names the scope (this author) rather than reusing Repository\'s generic wording.');
         assert(catalogSource.includes("t('publicationCatalog.noMatches'") && en['publicationCatalog.noMatches'].startsWith('No matches for'),
             "5. LIVE: a SEARCH that matches nothing (catalog non-empty) is worded differently from an EMPTY catalog — 'no matches for X' vs 'no publications yet' are never conflated into one message.");

@@ -5847,3 +5847,77 @@ the one gap in building together. Pillar served: your work is yours (and so is t
   everyone's Undo; alone again, Undo is the Editor's own); `BuildWithMeBrowser` (the strip's note).
 - Not done: undoing a step from before the latest join, which would need the newcomer to have every earlier step;
   and Redo of a step whose brick a friend has since moved puts it back where you had it.
+
+## Find each other (unnumbered, 2026-10-12)
+
+**Anyone can find a build, with no link, wallet or extension, and builds stand together in a village.** The
+creative-direction audit of 2026-10-12 (docs/reviews/CreativeDirection-2026-10-12.md, findings 1, 2 and 5) found the
+multiplayer half of the fantasy resting on things a newcomer doesn't have: a build reached anyone without its link only
+through Nostr, Arweave, Steem or Blurt, each needing a browser wallet or extension, so the Repository, the challenge,
+the plaza and remix counts never saw it; builds landed by hash on a 2,560-unit grid, about 0.24 neighbours in view at
+50 builds; and the menu and first-contact pages still spoke the protocol's words. This is its Release D. Pillars
+served: every build has a family tree (anyone can find something to remix) and your work lives in a world (it has
+neighbours, and there is somewhere to walk).
+
+- **Who can find it?** (ui/components/FindabilityDialog.js, application/settings/FindabilityStore.js). Asked once per
+  device, after the remix question and before the first sign-in at Publish: **Everyone** or **Only people I send the
+  link to**. With Everyone, each signed publish is also sent to everyone and the notice says "Sending it to
+  everyone…", then "Published! Anyone can find it now…", or that it didn't reach everyone yet, with **Try again**
+  (ui/views/editorView/useBuildNoteSend.js). Kept to its link, the notice offers **Let everyone find it**; after a send,
+  **Only by link from now on**. The wallet networks' dialog stays, as **More networks** once a build went to everyone.
+- **Build notes** (core/BuildNote.js, docs/Protocol.md "Build notes"). A NIP-78 event (kind 30078, `d` =
+  `forkbuild-build:<publication>`, `t` = `forkbuild-build` and each `forkbuild-tag:<tag>`) whose content is the
+  link-only payload a shared link carries, the signed claim and the build's bytes, up to 48,000 characters (about
+  2,000 bricks), plus the publisher's signed placement. Sent to every relay under Network Settings
+  (application/buildNotes/PublishBuildNoteUseCase.js), each relay on its own.
+- **A carrier key** (nostr/AppNostrSigner.js, application/buildNotes/CarrierKeyStore.js). A secp256k1 key the device
+  makes the first time it sends, shaped like NIP-07's `window.nostr` so nostr/NostrInjectedProviderPublisher.js signs
+  with it unchanged; vendored noble-curves' BIP-340 Schnorr signs, and NIP-01 ids are SHA-256 of the serialized event.
+  It is not an identity and is trusted for nothing: the builder's own signature inside the payload is what readers
+  check. It and the choice are backed up with Your Data's settings.
+- **Finding them** (application/buildNotes/BuildNoteDiscovery.js, WithBuildNotes.js, ui/main/composeBuildNotes.js).
+  Explore's and an author's page's search, and the challenge's and its plaza's, now ask the relays for build notes
+  beside the other networks, each search on its own. The newest note per Publication whose Nostr signature checks out
+  is opened exactly as a link-only share (`openPublicationLink({ linkOnly })`) after checking the claim inside names
+  the Publication the note does; its placement goes to AdoptPublisherPlacementUseCase, which keeps only one the
+  publisher signed; a challenge entry is logged under a week only when the signed build carries the tag. At most 40
+  opened per visit; one that fails isn't tried again that visit. The signer, codec and link opener load only when a
+  note is sent or opened, never with the first screen.
+- **Builds settle together** (core/BuildSettlement.js, application/placement/SettledPlacementStrategy.js). A publish
+  places a build, after a Build here plot, where an earlier publish of it already stands (republishing never moves
+  a build); beside the build it remixes, on a ring 18 or 36 units round it, where this device knows that build to
+  stand (its placement, else its grid spot); else in the village round the challenge plaza, rings from 90 units out,
+  each walked from a slot the Publication id chooses, skipping water, rock, rivers and the plaza's clearing; else the
+  grid as before. PublishDocumentUseCase passes `parentDocumentId` to the strategy. World View's publish settles the
+  same way.
+- **Walk, and a village on the first day** (ui/router/index.js `/walk`, ui/App.js, ui/views/worldView/useChallengePlaza.js).
+  **Walk** in the main menu opens this week's plaza, highlighted on any plaza. While a week has fewer than six
+  entries, the six ready-made builds stand round the square after them, each with **Navigate** and **Remix**
+  (application/home/FeaturedBuilds.js `structureWorld()`). The plaza also runs Explore's search, so others' builds
+  settle into view, and no "quiet corner" Welcome panel opens over it (`skipArrivalWelcomes()`).
+- **The player's words.** The menu says Build · Explore · Challenge · Walk; the Repository is Explore; Home's
+  reasons, the challenge's How to enter, About, the shared link's errors, copy failures, sharing's reasons, the
+  Editor's info panel and Explore's search messages say build, remix and send instead of Shared World, fork,
+  document, creation and Distribute. tests/WordsTable.test.js fails when one of those words returns to the menu,
+  Home, the Editor, a shared link, Explore, the challenge or Publish's dialogs.
+- **Counting it.** `/e/publish-found` when a publish was sent to everyone, `/e/publish-link-only` when it was kept to
+  its link (core/VisitorCount.js).
+- Every language: the dialog, the notice, the plaza's ready-made builds, the menu and every reworded message; the
+  Privacy page (what is sent, the carrier key, the relays contacted, the counts). Guides 03 and 04 ("Who can find
+  it?", "Where a build stands", the plaza and Walk) in English, their translations marked out of date. Pillars ("one
+  choice inside Publish", build notes and the network gate, the Words table), docs/Protocol.md, README.
+- Tests: `BuildNotes` (NIP-01 ids against node's own SHA-256, signatures and tampering; the carrier key kept and a
+  damaged one replaced; the note's format and limits; Alice's build sent to two relays of three and found by Bob,
+  who never had her link, kept by hash, admitted and its placement offered, then known; a challenge entry logged under
+  its week only; republishing keeps one note; a changed build, a swapped Publication and a broken signature refused;
+  unsigned, missing, too large and refused builds reported; the searches adding together and surviving each other's
+  failure; the choice remembered and backed up); `BuildSettlement` (sixty builds round the plaza on good ground,
+  never sharing a spot, the first twenty on the first ring, the same id the same spot; a remix beside its source, a
+  found source by its grid spot, an unknown one in the village; republishing in place; a full village and a broken
+  index falling back to the grid); `WordsTable`. Checked in the real app in Chromium with two browsers and a relay
+  between them: the dialog, the send to three relays with the house's village spot, Bob finding Ana's house in
+  Explore, and Walk opening the plaza with the ready-made builds.
+- Not done: guides 03 and 04's translations; notes aren't read in the background sync, only when Explore, an author's
+  page, the challenge or its plaza opens; unpublishing a build doesn't withdraw its note (relays keep what they are
+  sent, as the Privacy page says); a remix of a build this device has never seen joins the village rather than its
+  source's street; residents in the starter village (Release E).

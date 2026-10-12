@@ -17,6 +17,7 @@ import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVer
 import { MoveWorldPlacementUseCase } from '../placement/MoveWorldPlacementUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../placement/RemoveWorldPlacementUseCase.js';
 import { GridPlacementStrategy } from '../placement/InitialPlacementStrategy.js';
+import { SettledPlacementStrategy } from '../placement/SettledPlacementStrategy.js';
 import { CreateCommandRegistryUseCase } from '../editor/CreateCommandRegistryUseCase.js';
 import { CreateBrickRegistryUseCase } from '../editor/CreateBrickRegistryUseCase.js';
 import { ReplayDocumentUseCase } from '../document/ReplayDocumentUseCase.js';
@@ -116,7 +117,13 @@ export class CreateWorldViewUseCase {
             spatialIndexProvider,
             placementRegistry
         );
-        const initialPlacementStrategy = new GridPlacementStrategy();
+        // Beside what it remixes, or in the village round the plaza
+        // (core/BuildSettlement.js), as a build published from the Editor.
+        const initialPlacementStrategy = new SettledPlacementStrategy({
+            spatialIndexProvider,
+            findPublicationsByDocumentId: (documentId) => publicationActionDiscoveryProvider.findByDocumentId(documentId),
+            fallback: new GridPlacementStrategy()
+        });
 
         const publisherProvider = new LocalPublisherProvider(storageProvider, contentStore);
         // Only a fallback for when this replica has no local copy of the document: it

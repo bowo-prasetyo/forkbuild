@@ -7,6 +7,7 @@ import { PublishDocumentUseCase } from '../publication/PublishDocumentUseCase.js
 import { PlacePublicationUseCase } from '../placement/PlacePublicationUseCase.js';
 import { GridPlacementStrategy } from '../placement/InitialPlacementStrategy.js';
 import { BuildPlotPlacementStrategy } from '../plot/BuildPlotPlacementStrategy.js';
+import { SettledPlacementStrategy } from '../placement/SettledPlacementStrategy.js';
 import { LoadPublicationDocumentUseCase } from '../publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../editor/CreateBrickRegistryUseCase.js';
 import { LocalContentStore } from '../../content/LocalContentStore.js';
@@ -26,7 +27,11 @@ import { LocalContentStore } from '../../content/LocalContentStore.js';
 export class CreatePublisherUseCase {
     // `buildPlotStore`, when given, puts a build started with Build here on
     // its plot when it is first published (BuildPlotPlacementStrategy).
-    execute(identityProvider, { buildPlotStore = null } = {}) {
+    // Otherwise a build settles beside what it remixes, or in the village
+    // round the challenge plaza (SettledPlacementStrategy);
+    // `foundPublications` (the Publications found elsewhere, with
+    // findByDocumentId()) lets a remix find the build it came from.
+    execute(identityProvider, { buildPlotStore = null, foundPublications = null } = {}) {
         const storageProvider = new LocalStorageProvider();
         const contentStore = new LocalContentStore(storageProvider);
         const publisherProvider = new LocalPublisherProvider(storageProvider, contentStore);
@@ -42,10 +47,17 @@ export class CreatePublisherUseCase {
             placementRegistry,
             identityProvider
         );
-        const gridPlacementStrategy = new GridPlacementStrategy();
+        const settledPlacementStrategy = new SettledPlacementStrategy({
+            spatialIndexProvider,
+            findPublicationsByDocumentId: (documentId) => [
+                ...discoveryProvider.findByDocumentId(documentId),
+                ...(foundPublications && typeof foundPublications.findByDocumentId === 'function' ? foundPublications.findByDocumentId(documentId) : [])
+            ],
+            fallback: new GridPlacementStrategy()
+        });
         const initialPlacementStrategy = buildPlotStore
-            ? new BuildPlotPlacementStrategy({ buildPlotStore, fallback: gridPlacementStrategy })
-            : gridPlacementStrategy;
+            ? new BuildPlotPlacementStrategy({ buildPlotStore, fallback: settledPlacementStrategy })
+            : settledPlacementStrategy;
 
         return {
             publishDocumentUseCase: new PublishDocumentUseCase(

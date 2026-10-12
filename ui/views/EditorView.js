@@ -70,6 +70,7 @@ import WalkTogetherDialog from '../components/walkTogether/WalkTogetherDialog.js
 import LoginModal from '../components/LoginModal.js';
 import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
 import { usePostPublishDistribution } from './editorView/usePostPublishDistribution.js';
+import { useBuildNoteSend } from './editorView/useBuildNoteSend.js';
 import { useSelectionActions } from './editorView/useSelectionActions.js';
 import { useStructureLibrary } from './editorView/useStructureLibrary.js';
 import { useBlueprintExchange } from './editorView/useBlueprintExchange.js';
@@ -145,8 +146,35 @@ export default {
                         <template v-if="sendStatus === 'sending'">{{ t('editor.publishedSending', { network: sendDestinationName }) }}</template>
                         <template v-else-if="sendStatus === 'sent'">{{ t('editor.publishedSent', { network: sendDestinationName }) }}</template>
                         <template v-else-if="sendStatus === 'failed'">{{ t('editor.publishedSendFailed', { network: sendDestinationName, error: sendError }) }}</template>
+                        <template v-else-if="noteStatus === 'sending'">{{ t('editor.publishedFinding') }}</template>
+                        <template v-else-if="noteStatus === 'sent'">{{ t('editor.publishedFound') }}</template>
+                        <template v-else-if="noteStatus === 'failed'">{{ t('editor.publishedFindFailed') }}</template>
+                        <template v-else-if="noteStatus === 'too-large'">{{ t('editor.publishedTooLargeToFind') }}</template>
+                        <template v-else-if="noteStatus === 'unsigned'">{{ t('editor.publishedUnsignedNotFound') }}</template>
+                        <template v-else-if="noteStatus === 'link'">{{ t('editor.publishedLinkOnly') }}</template>
+                        <template v-else-if="noteStatus === 'kept-to-links'">{{ t('editor.keptToLinks') }}</template>
                         <template v-else>{{ t('editor.published') }}</template>
                     </span>
+
+                    <!-- Sent to everyone as a build note (ui/views/editorView/useBuildNoteSend.js). -->
+                    <button
+                        v-if="sendStatus === 'local' && noteStatus === 'failed'"
+                        type="button"
+                        class="action-btn action-btn--primary editor-post-publish-note-retry"
+                        @click="retryNote"
+                    >{{ t('editor.tryAgain') }}</button>
+                    <button
+                        v-if="sendStatus === 'local' && noteStatus === 'link'"
+                        type="button"
+                        class="action-btn action-btn--secondary editor-post-publish-let-everyone"
+                        @click="letEveryoneFind"
+                    >{{ t('editor.letEveryoneFind') }}</button>
+                    <button
+                        v-if="sendStatus === 'local' && noteStatus === 'sent'"
+                        type="button"
+                        class="action-btn action-btn--secondary editor-post-publish-keep-to-links"
+                        @click="keepToLinks"
+                    >{{ t('editor.keepToLinks') }}</button>
 
                     <button
                         v-if="sendStatus === 'failed' && canDistributeSnapshot && canDistributePublication"
@@ -158,10 +186,10 @@ export default {
                     <button
                         v-if="canDistributeSnapshot || canDistributePublication"
                         type="button"
-                        :class="['action-btn', sendStatus === 'local' ? 'action-btn--primary' : 'action-btn--secondary', 'editor-post-publish-distribute-trigger']"
+                        :class="['action-btn', sendStatus === 'local' && !noteStatus ? 'action-btn--primary' : 'action-btn--secondary', 'editor-post-publish-distribute-trigger']"
                         :disabled="sendStatus === 'sending'"
                         @click="distributionDialogOpen = true"
-                    >{{ sendStatus === 'local' ? t('editor.distribute') : t('editor.changeWhereItGoes') }}</button>
+                    >{{ sendStatus !== 'local' ? t('editor.changeWhereItGoes') : (noteStatus ? t('editor.moreNetworks') : t('editor.distribute')) }}</button>
                     <!-- Walk inside it: World View, standing at the build's door. -->
                     <router-link
                         v-if="walkInside"
@@ -511,7 +539,10 @@ export default {
         const identityUseCase = inject('identityUseCase');
         const identityProvider = identityUseCase.provider;
         // A build started with Build here is published onto its plot.
-        const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider, { buildPlotStore: inject('buildPlotStore', null) });
+        const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider, {
+            buildPlotStore: inject('buildPlotStore', null),
+            foundPublications: inject('decentralizedPublicationDiscoveryProvider', null)
+        });
         // Fork/load lookups also search Repository-admitted decentralized publications.
         const decentralizedDiscoveryProviderForLookup = inject('decentralizedPublicationDiscoveryProvider', null);
         const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute({
@@ -837,6 +868,9 @@ export default {
             rememberDestination: true
         });
 
+        // Sending each published build to everyone, when this device's builder chose so.
+        const { noteStatus, onPublishedForNotes, retryNote, letEveryoneFind, keepToLinks } = useBuildNoteSend();
+
         // A second, independent offer for an authorship claim published from the
         // structure panel; it never touches the World's own offer above.
         const attributionDistribution = usePostPublishDistribution({ router, includeSnapshot: false });
@@ -901,6 +935,7 @@ export default {
             const publishedWorld = documentManager.document?.world;
             funnelEventCounter?.publishedBuild(publication, worldBrickCount(publishedWorld), readyMadeBricks?.placedCount(publishedWorld));
             onDocumentPublished(publication);
+            onPublishedForNotes(publication);
             onBuildPlotPublished(publication);
             walkInsidePublished(publication);
         }
@@ -1624,6 +1659,7 @@ export default {
             distributePublishedDocument,
             distributePublishedDocumentAndSnapshot,
             canRemember, rememberChoice, setRememberChoice, sendStatus, sendDestinationName, sendError,
+            noteStatus, retryNote, letEveryoneFind, keepToLinks,
             dismissPublishAction,
             viewDistributedPublicationInRepository,
             canDistributeAttribution,

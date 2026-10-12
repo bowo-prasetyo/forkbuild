@@ -19,8 +19,18 @@ released animal into the World as a decoration with **G** (see
 
 ## Opening World View
 
-From the **Repository**, click **Explore** on any creation — or navigate to a
+**Walk** in the main menu opens World View at this week's challenge plaza,
+with no build of your own needed: the village of published builds grows
+round it, and while the week has few entries the ready-made builds stand
+round the square, ready to remix (see
+[The challenge plaza](04-PublishingAndForking.md#the-challenge-plaza)).
+
+From **Explore**, click **Explore** on any creation — or navigate to a
 world's URL directly. You'll appear next to that creation in the shared world.
+Builds others sent to everyone are found there and in the challenge (see
+[Who can find it?](04-PublishingAndForking.md#who-can-find-it)), and stand
+where their builders put them: remixes beside what they remix, the rest in
+the village round the plaza.
 
 ## A visitor's view, and Advanced
 

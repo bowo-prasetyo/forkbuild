@@ -101,9 +101,21 @@ longer-term aim.
   background, for new work by people you follow, remixes of your builds and
   comments; nothing is sent anywhere to make them work.
 
+- **Who can find it?** is asked at your first Publish. With **Everyone**,
+  each build is sent, signed, to public Nostr relays with a key the app
+  holds itself, so anyone using ForkBuild finds it in **Explore**, the
+  challenge and the World with no link, wallet or account; with **Only
+  people I send the link to**, it travels only in its link.
+
 **World View**
 - A shared world where published creations are placed and streamed in around
   the camera, on deterministic terrain with vegetation, water and wildlife.
+  Builds settle next to what they belong with: a remix beside the build it
+  remixes, everything else in a village that grows round the weekly
+  challenge's plaza.
+- **Walk** in the main menu opens that plaza, with the ready-made builds
+  standing round the square while a week has few entries, so there is
+  somewhere to walk before you've built anything.
 - An avatar you can walk, run and jump with, which collides with buildings and
   can climb stairs and slopes; vehicles, an inventory, and catching and releasing
   animals.

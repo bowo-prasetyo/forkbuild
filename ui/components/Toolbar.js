@@ -1,6 +1,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue';
 import LoginModal from './LoginModal.js';
 import RemixPermissionDialog from './RemixPermissionDialog.js';
+import FindabilityDialog from './FindabilityDialog.js';
 import { License, LicenseId } from '../../core/License.js';
 import { UpdateDocumentMetadataUseCase } from '../../application/document/UpdateDocumentMetadataUseCase.js';
 import { saveFailureMessage } from './saveFailureMessages.js';
@@ -117,9 +118,10 @@ export default {
     // never calls editorSession.importDocument() itself.
     // `saved` follows a successful Save, for the Editor's save sound.
     emits: ['back-to-world', 'open-shortcuts', 'published', 'saved', 'export-document', 'export-model', 'export-all-documents', 'import-document', 'new-document'],
-    components: { LoginModal, RemixPermissionDialog },
+    components: { LoginModal, RemixPermissionDialog, FindabilityDialog },
     setup(props, { emit }) {
         const identityUseCase = inject('identityUseCase', null);
+        const findabilityStore = inject('findabilityStore', null);
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
         const recentOpen = ref(false);
@@ -204,7 +206,7 @@ export default {
                 askRemixPermission.value = true;
                 return;
             }
-            requestSignedPublish();
+            requestFindability();
         }
         function chooseRemixPermission(licenseId) {
             askRemixPermission.value = false;
@@ -213,6 +215,32 @@ export default {
             } catch (err) {
                 report(t('toolbar.publishFailed', { error: errorText(err) }));
                 return;
+            }
+            requestFindability();
+        }
+        // Who can find it? (FindabilityDialog), asked once per device, before
+        // its first publish; the answer decides whether each publish is also
+        // sent to everyone (ui/views/editorView/useBuildNoteSend.js).
+        const askFindability = ref(false);
+        function requestFindability() {
+            let chosen = null;
+            try {
+                chosen = findabilityStore ? findabilityStore.get() : 'none';
+            } catch {
+                chosen = null;
+            }
+            if (chosen === null) {
+                askFindability.value = true;
+                return;
+            }
+            requestSignedPublish();
+        }
+        function chooseFindability(findability) {
+            askFindability.value = false;
+            try {
+                findabilityStore.set(findability);
+            } catch {
+                // Asked again at the next publish.
             }
             requestSignedPublish();
         }
@@ -316,7 +344,7 @@ export default {
             searchThreshold: SEARCH_THRESHOLD,
             save, createNew, load, place, publish, saveAndReturnToWorld,
             signInToPublish, lockedIdentityId, requestPublish, publishAfterSignIn,
-            askRemixPermission, chooseRemixPermission,
+            askRemixPermission, chooseRemixPermission, askFindability, chooseFindability,
             importFileInput, triggerImportDocument, onImportDocumentFileChosen, exportAllDocuments
         };
     },
@@ -360,6 +388,11 @@ export default {
                 v-if="askRemixPermission"
                 @choose="chooseRemixPermission"
                 @cancel="askRemixPermission = false"
+            />
+            <FindabilityDialog
+                v-if="askFindability"
+                @choose="chooseFindability"
+                @cancel="askFindability = false"
             />
             <LoginModal
                 v-if="signInToPublish"
