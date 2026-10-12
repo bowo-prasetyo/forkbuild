@@ -1427,7 +1427,7 @@ geometry and materials are shared by every tile.
     renderer/BrickInstanceRegistry.js#setNightGlow()  the instanced bricks' nightGlow uniform
 
     core/DayCycle.js#skyBodiesAt(seconds)          where the sun and the moon are, and where the light comes from
-            │  (same clock; DAY_SKY_BODIES while Always day)
+            │  (same clock; DAY_SKY_BODIES, a still morning sun, while Always day)
     application/worldNavigation/dayCycleMethods.js  every render frame: setSkyBodies(bodies) on the render facade
     renderer/Renderer.js#setSkyBodies()            renderer/SkyBodies.js (made on first call) and
                                                     renderer/Lights.js#setDirection()
@@ -1440,17 +1440,20 @@ those frames. NIGHT keeps a moonlit hemisphere and moon (0.6 and 0.5, against da
 readable. Only World View follows the clock: the Editor, thumbnails, the Home turntable and link previews stay in
 DAY, which is what `Renderer` starts with.
 
-**The sun and the moon.** Both cross the sky from east (+x) to west (-x) on one arc leaning 50° south (+z) of
-overhead, so neither climbs above 40°: World View's orbiting camera looks at most about 30° above the horizon, and a
-higher sun would be out of sight most of the day. The sun is up from just before dawn until it sets in the dusk
+**The sun and the moon.** Both cross the sky from east to west on one arc leaning 50° south of overhead, by the
+compass World View shows (core/CompassHeading.js: North is +z, so East is -x, South -z, West +x), so neither climbs
+above 40°. The camera's view is 60° tall, so it sees at most about 30° above the horizon looking level (First
+Person) and about 15° in Third Person, which looks down at the avatar: there the sun is in view only for its first
+and last few minutes, near the horizon. The sun is up from just before dawn until it sets in the dusk
 (-0.02 to 0.70 of the day), the moon from late in the dusk until just after dawn (0.64 to 1.02); while both are up,
 the light's direction sweeps steadily back along the arc, overhead in the south, from the one setting to the one
 rising, and it never comes from lower than about 14.5°, so builds aren't lit from beneath. The scene has no shadows,
 so moving the light costs nothing. `renderer/SkyBodies.js` draws each as an unlit, fog-free disc (the sun with a
 soft halo, orange near the horizon) at 0.8 of the camera's far plane in its direction from the camera, facing the
 camera and placed again every frame, so it hangs in the sky however far you walk; builds and hills in front cover
-it, and under water neither shows. A renderer never given sky bodies (the Editor, thumbnails) draws neither and keeps
-`DAY_SKY_BODIES`'s light, the fixed daytime direction it always had.
+it, and under water neither shows. Always day (and no clock) is `DAY_SKY_BODIES`, the sun standing still partway
+through the morning, low in the south-east. A renderer never given sky bodies (the Editor, thumbnails) draws neither
+and keeps renderer/Lights.js's fixed daytime direction, the one it always had.
 
 **What shines.** A brick type's `nightGlow` (core/NightGlow.js; docs/BrickLibrary.md) gives the light its bricks
 give off: `BrickRenderer#describe()` adds it to a brick's visual as `glow`. Instanced bricks carry it in an

@@ -15,6 +15,8 @@ import { WorldSoundscapeService } from '../application/world/WorldSoundscapeServ
 import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.js';
 import { WorldViewSkyStore } from '../application/settings/WorldViewSkyStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { compassBearingFromYaw, compassLabelBetween } from '../core/CompassHeading.js';
+import { computeFacingYawDegrees } from '../core/AvatarFacing.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -61,42 +63,50 @@ const brightness = (look) => look.hemisphereIntensity + look.sunIntensity;
 }
 
 // The sun rises in the east, crosses the southern sky and sets in the west;
-// the moon does the same by night. The light comes from them, never from
-// below the horizon, and turns gradually, even as one hands over to the other.
+// the moon does the same by night. East, south and west are what World View's
+// compass shows (core/CompassHeading.js). The light comes from them, never
+// from below the horizon, and turns gradually, even as one hands over to the
+// other.
 {
     const isUnit = (d) => Math.abs(Math.hypot(d.x, d.y, d.z) - 1) < 1e-9;
     const angleBetween = (a, b) => Math.acos(Math.min(1, a.x * b.x + a.y * b.y + a.z * b.z));
+    // What the compass reads facing `d`, and its bearing (0 N, 90 E).
+    const compass = (d) => compassLabelBetween({ x: 0, z: 0 }, { x: d.x, z: d.z });
+    const bearing = (d) => compassBearingFromYaw(computeFacingYawDegrees({ x: 0, z: 0 }, { x: d.x, z: d.z }));
     const dawn = skyBodiesAtFraction(0.01);
-    assert(dawn.sun && dawn.sun.x > 0.9 && dawn.sun.y > 0 && dawn.sun.y < 0.15, 'the sun rises low in the east at dawn');
+    assert(dawn.sun && compass(dawn.sun) === 'E' && dawn.sun.y > 0 && dawn.sun.y < 0.15, 'the sun rises low in the east at dawn');
     const noon = skyBodiesAtFraction(0.34);
-    assert(noon.sun && noon.moon === null && Math.abs(noon.sun.x) < 1e-9 && noon.sun.y > 0.6 && noon.sun.z > 0.7,
+    assert(noon.sun && noon.moon === null && compass(noon.sun) === 'S' && Math.abs(bearing(noon.sun) - 180) < 1e-6 && noon.sun.y > 0.6,
         'at midday the sun stands high in the south, and the moon is down');
     const evening = skyBodiesAtFraction(0.68);
-    assert(evening.sun && evening.sun.x < -0.9 && evening.sun.y < 0.15, 'the sun sets low in the west in the dusk');
+    assert(evening.sun && compass(evening.sun) === 'W' && evening.sun.y < 0.15, 'the sun sets low in the west in the dusk');
     const night = skyBodiesAtFraction(0.8);
-    assert(night.sun === null && night.moon && night.moon.y > 0.4, 'at night the sun is down and the moon up');
-    assert(skyBodiesAtFraction(0.66).moon.x > 0.9, 'the moon rises in the east as the sun goes down');
-    assert(skyBodiesAtFraction(0.0).moon.x < -0.9, 'and sets in the west as it comes up');
+    assert(night.sun === null && night.moon && night.moon.y > 0.4 && compass(night.moon) !== 'N', 'at night the sun is down and the moon up');
+    assert(compass(skyBodiesAtFraction(0.66).moon) === 'E', 'the moon rises in the east as the sun goes down');
+    assert(compass(skyBodiesAtFraction(0.0).moon) === 'W', 'and sets in the west as it comes up');
     let previous = skyBodiesAtFraction(0);
-    let previousSunX = Infinity;
+    let previousSunBearing = -Infinity;
     for (let i = 0; i <= 4000; i++) {
         const bodies = skyBodiesAtFraction(i / 4000);
         assert(bodies.sun || bodies.moon, `the sun or the moon is always up (at ${i / 4000})`);
         for (const d of [bodies.sun, bodies.moon, bodies.light].filter(Boolean)) {
-            assert(isUnit(d) && d.y >= -1e-9 && d.z >= -1e-9, `a direction above the horizon, in the southern half (at ${i / 4000})`);
+            const b = bearing(d);
+            assert(isUnit(d) && d.y >= -1e-9 && b >= 90 - 1e-6 && b <= 270 + 1e-6,
+                `a direction above the horizon, in the southern half of the compass (at ${i / 4000})`);
         }
         assert(bodies.light.y >= 0.25 - 1e-9, `the light never comes from near the horizon (at ${i / 4000})`);
         assert(angleBetween(bodies.light, previous.light) < 0.03, `the light turns gradually (at ${i / 4000})`);
         if (bodies.sun && i / 4000 < 0.7) {
-            assert(bodies.sun.x < previousSunX, `the sun only moves west (at ${i / 4000})`);
-            previousSunX = bodies.sun.x;
+            assert(bearing(bodies.sun) > previousSunBearing, `the sun only moves on round from east to west (at ${i / 4000})`);
+            previousSunBearing = bearing(bodies.sun);
         }
         previous = bodies;
     }
     assert(JSON.stringify(skyBodiesAt(at(0.3) + DAY_CYCLE_SECONDS * 7)) === JSON.stringify(skyBodiesAtFraction(0.3)),
         'the sun and the moon follow the clock like the sky');
-    assert(skyBodiesAt(NaN) === DAY_SKY_BODIES && DAY_SKY_BODIES.moon === null && DAY_SKY_BODIES.sun.y > 0.5,
-        'no clock is broad day\'s sun');
+    assert(skyBodiesAt(NaN) === DAY_SKY_BODIES && DAY_SKY_BODIES.moon === null && compass(DAY_SKY_BODIES.sun) === 'SE'
+        && DAY_SKY_BODIES.sun.y > 0.2 && DAY_SKY_BODIES.sun.y < 0.5 && DAY_SKY_BODIES.light.y >= 0.25,
+        'no clock is Always day\'s morning sun, low in the south-east and in view');
     console.log('✓ the sun and the moon rise in the east and set in the west, and the light follows them');
 }
 
@@ -111,12 +121,13 @@ const brightness = (look) => look.hemisphereIntensity + look.sunIntensity;
     camera.lookAt(0, 30, 50);
     bodies.update(camera);
     assert(added.length === 3 && added.every((o) => o.visible === false), 'nothing shows until it is told where the sun is');
-    bodies.set(skyBodiesAtFraction(0.34));
+    const midday = skyBodiesAtFraction(0.34);
+    bodies.set(midday);
     bodies.update(camera);
     const sun = bodies.sun;
     const offset = sun.position.clone().sub(camera.position);
     assert(sun.visible && !bodies.moon.visible, 'by day the sun shows and the moon doesn\'t');
-    assert(Math.abs(offset.length() - 800) < 1e-6 && offset.normalize().angleTo(new THREE.Vector3(0, 0.643, 0.766)) < 0.01,
+    assert(Math.abs(offset.length() - 800) < 1e-6 && offset.normalize().angleTo(new THREE.Vector3(midday.sun.x, midday.sun.y, midday.sun.z)) < 1e-6,
         'the sun hangs far off in its direction from the camera, inside what it sees');
     assert(sun.quaternion.angleTo(camera.quaternion) < 1e-6 && sun.material.fog === false, 'facing the camera, untouched by fog');
     camera.position.set(500, 2, 500);
@@ -132,7 +143,7 @@ const brightness = (look) => look.hemisphereIntensity + look.sunIntensity;
 
     const lights = new Lights({ add() {} });
     const light = lights.directional.position.clone().normalize();
-    assert(light.angleTo(new THREE.Vector3(10, 15, 8).normalize()) < 1e-6, 'the light starts where broad day\'s sun is');
+    assert(light.angleTo(new THREE.Vector3(10, 15, 8).normalize()) < 1e-6, 'the light starts where it always stood (the Editor\'s)');
     const moonlight = skyBodiesAtFraction(0.8).light;
     lights.setDirection(moonlight);
     assert(lights.directional.position.clone().normalize().angleTo(new THREE.Vector3(moonlight.x, moonlight.y, moonlight.z)) < 1e-6,
@@ -254,7 +265,7 @@ const brightness = (look) => look.hemisphereIntensity + look.sunIntensity;
     assert(skies[skies.length - 1].moon && skies[skies.length - 1].sun === null, 'with the moon up and the sun down');
     assert(nav.setAlwaysDay(true) === true && looks[looks.length - 1] === DAY && nav.nightLevel() === 0,
         'Always day brings the day back at once');
-    assert(skies[skies.length - 1] === DAY_SKY_BODIES, 'with broad day\'s sun, standing still');
+    assert(skies[skies.length - 1] === DAY_SKY_BODIES, 'with the still morning sun');
     for (const frame of frames) frame(1 / 60);
     assert(looks[looks.length - 1] === DAY, 'and keeps it, whatever the clock');
     nav.setAlwaysDay(false);

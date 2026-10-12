@@ -121,32 +121,28 @@ function blendColor(a, b, t) {
     return (r << 16) | (g << 8) | bl;
 }
 
-// Where the sun and the moon stand. Each crosses the sky from east (+x) to
-// west (-x) along an arc leaning south (+z), as seen from the northern
-// hemisphere: the sun from just before dawn until it sets in the dusk, the
+// Where the sun and the moon stand. Each crosses the sky from east to west
+// along an arc leaning south, as seen from the northern hemisphere, by the
+// compass World View shows (core/CompassHeading.js: North is +z, so East is
+// -x, South -z and West +x): the sun from just before dawn until it sets in the dusk, the
 // moon from late in the dusk until just after dawn, so the two share the sky
 // only low down at either end.
 const SUN_ARC = Object.freeze({ rise: -0.02, set: 0.7 });
 const MOON_ARC = Object.freeze({ rise: 0.64, set: 1.02 });
 // How far the arc leans south of straight overhead: its highest point is
-// 90° - 50° = 40° up, low enough that World View's camera, which looks at
-// most about 30° above the horizon, has the sun or the moon in view for
-// most of its crossing.
+// 90° - 50° = 40° up. World View's camera sees at most about 30° above the
+// horizon looking level (First Person), and less looking down at an avatar.
 const ARC_TILT = (50 * Math.PI) / 180;
 // The light never comes from lower than this (the sine of about 14.5°), so a
 // sun or moon on the horizon doesn't light builds from underneath.
 const MIN_LIGHT_HEIGHT = 0.25;
 
-// Broad day's sun, where the scene's one directional light always stood
-// before the sun moved (renderer/Lights.js): what Always day, the Editor and
-// thumbnails keep.
-export const DAY_SKY_BODIES = Object.freeze({
-    sun: unit(10, 15, 8),
-    moon: null,
-    light: unit(10, 15, 8)
-});
+// Always day's sky: the sun standing still in the south-east, where it is
+// partway through the morning, about 19° up and in view.
+const ALWAYS_DAY_FRACTION = 0.1;
 
-// Where the sun and the moon are at `seconds` (Unix time).
+// Where the sun and the moon are at `seconds` (Unix time); with no clock,
+// Always day's still morning sun (DAY_SKY_BODIES).
 export function skyBodiesAt(seconds) {
     if (!Number.isFinite(seconds)) {
         return DAY_SKY_BODIES;
@@ -187,9 +183,10 @@ function bodyOnArc(arc, f) {
     return { angle: (into / length) * Math.PI, weight: Math.min(into, length - into) };
 }
 
+// East (-x) at 0, up and to the south (-z) by pi/2, west (+x) at pi.
 function arcDirection(angle) {
     const up = Math.sin(angle);
-    return Object.freeze({ x: Math.cos(angle), y: up * Math.cos(ARC_TILT), z: up * Math.sin(ARC_TILT) });
+    return Object.freeze({ x: -Math.cos(angle), y: up * Math.cos(ARC_TILT), z: -up * Math.sin(ARC_TILT) });
 }
 
 function lightDirection(dir) {
@@ -201,7 +198,5 @@ function lightDirection(dir) {
     return Object.freeze({ x: dir.x * across, y: MIN_LIGHT_HEIGHT, z: dir.z * across });
 }
 
-function unit(x, y, z) {
-    const length = Math.hypot(x, y, z);
-    return Object.freeze({ x: x / length, y: y / length, z: z / length });
-}
+// Always day's sun and light (see ALWAYS_DAY_FRACTION).
+export const DAY_SKY_BODIES = skyBodiesAtFraction(ALWAYS_DAY_FRACTION);

@@ -12,7 +12,7 @@ export const dayCycleMethods = {
     },
 
     // Where the sun and the moon are right now, and where the light comes
-    // from: broad day's sun, standing still, while Always day is on.
+    // from: a still morning sun while Always day is on.
     skyBodies() {
         return this._alwaysDay ? DAY_SKY_BODIES : skyBodiesAt(this._wildlifeClock());
     },
