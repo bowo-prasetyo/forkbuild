@@ -5921,3 +5921,63 @@ neighbours, and there is somewhere to walk).
   page, the challenge or its plaza opens; unpublishing a build doesn't withdraw its note (relays keep what they are
   sent, as the Privacy page says); a remix of a build this device has never seen joins the village rather than its
   source's street; residents in the starter village (Release E).
+
+## A room worth entering (unnumbered, 2026-10-12)
+
+**Walk into a build and you see the room you're in, and the starter house is a room worth seeing.** The
+creative-direction audit of 2026-10-12 (docs/reviews/CreativeDirection-2026-10-12.md, findings 3, 4, 5 and 6) found
+that walking in through a door, which worked since "Step inside", reached a room nobody could see: the camera stayed
+outside, in the wall; the House was about three bricks across and empty; nobody lived anywhere a newcomer went; and
+the moment after Publish read as a form. This is its Release E. Pillars served: your work lives in a world (a build is
+somewhere to be), with building feels joyful (furniture, and a room to put it in).
+
+- **Seeing inside** (core/IndoorView.js, pure). Under a ceiling (a box above the head, within 7 of the feet) the build
+  is every box connected to that ceiling, and everything of it higher than just above the head (`CUT_ABOVE_FEET`,
+  2.1, or the ceiling if lower) is cut away. The indoor camera stands behind and above, looking down into the room
+  through the cut; when a wall is in the way it tries steeper, nearer stands (`INDOOR_CAMERA_STANDS`) up to almost
+  overhead, and only then is pulled in front of the wall (`clearCameraPosition()`), boxes counting only up to the cut.
+  application/worldNavigation/avatarPresenceMethods.js (`_followIndoors()`) applies it for the free camera following
+  the avatar and for Third Person through the one camera write path; Bird's-Eye keeps its framing and gets the cut;
+  First Person gets neither. The boxes come from a box query with no step exclusion, so roof slopes count
+  (localAvatarMethods.js `_indoorBoxesNear()`, out to 20). Riding, you're never indoors.
+- **The cutaway** (renderer/CutawayClipping.js). Five shared clipping planes, clipping only where all agree
+  (`clipIntersection`): above the cut and inside the build's footprint. World View's instanced brick material, its
+  structure placements' meshes and the plaza's exhibits use them; the WebGL renderer has local clipping on. Moving the
+  planes recompiles nothing, and with no cutaway the height plane is far above the sky. Only drawing changes:
+  collision, picking and the build are untouched. The session tells the renderer only when the cutaway changes.
+- **Furniture** (core/library/CoreLibrary.js, renderer/ThreeBrickFactory.js `boxesGeometry()`). core:table, core:bed,
+  core:hearth and core:shelf, decorative and tagged `furniture`, each a few boxes joined into one geometry drawn at
+  exactly its declared size; the link-preview worker draws them too. Fifty-four bricks.
+- **The House, rebuilt** (core/library/VillageLibrary.js). Six across instead of four: nine floor plates, walls with a
+  door, a front window and windows on every side, a 3×3 hipped roof, a chimney over a hearth on the north wall, a
+  table with a bench, a bed along the west wall, a shelf on the east wall and a barrel by the door, with room to walk
+  round them. The House family (porch, garden, tower) moved out to fit.
+- **Lived in** (core/ReadyMadeHome.js). A copy of a ready-made home (a Structure tagged `dwelling`) starts with one
+  World Resident whose home is 2.5 beside the spot in front of its door, clear of the doorway
+  (application/editor/ForkStructureUseCase.js); its author is `ready-made`, and the builder removes it with R like any
+  resident. The plaza's ready-made exhibits are lived in the same way, and residents are read from the plaza's
+  exhibits as well as loaded Worlds (residentMethods.js).
+- **Settling clear of trees** (core/BuildSettlement.js). A spot needs no tree within 7 (`SETTLEMENT_TREE_CLEARANCE`):
+  checking the real app found a World tree in front of a settled house's door.
+- **A calmer panel** (ui/views/WorldView.js, templates/avatarSection.js). What a visitor came to do comes first, on its
+  own row: Build here, **Walk here with me** (the primary one) and Edit a Copy; then Home, Locations, the online count,
+  Lobby and ?. The four avatar switches, on for everyone, fold under **Avatar settings**; the camera choice stays.
+- **One celebration after Publish** (ui/components/PublicationShareLink.js `compact`, Toolbar.js, EditorView.js). The
+  notice is one sentence, **Walk inside it** first, then what the send to everyone offers; the share row is **Copy
+  link**, with the link itself, its hint, **Save picture** and **Embed** under **More ways to share**. Publishing also
+  saves, so a build just published no longer reads Draft and Unsaved changes.
+- Every language: the four bricks, the House's description, Avatar settings and More ways to share. Guides 02 and 03
+  (furniture, publishing saves, the panel, "Inside a build", the ready-made residents) in English, their translations
+  marked out of date; docs/BrickLibrary.md, docs/BrickIDs.md, README.
+- Tests: `IndoorView` (the geometry; a camera stopping in front of a wall and a wall cut below the line of sight being
+  none; the build found from its roof and not its neighbour; inside the House at four spots and four headings the cut
+  just above the head and the camera above it seeing the avatar; every ready-made home seen from inside; the clipping
+  planes clipping the roof and not the room or the neighbour; the House six across, furnished, walked into; a copy of a
+  home lived in, beside its door, a mill not, the plaza's house lived in, the resident saved). `BuildersKit` (fifty-four),
+  `BuildSettlement` (no tree where a build settles), `WalkInside` and `ShowcaseLibrary` (the House's new door and
+  floor), the bundled site (the compact share, the link under More ways to share, no Draft after Publish, and walking
+  into the new House). Checked in the real app in Chromium: the roof cut away with Ana in a furnished room, from the
+  free camera, Third Person and Bird's-Eye, and the House's resident beside its door.
+- Not done: a cut that follows the avatar between storeys of a taller build (it cuts above whoever stands inside, from
+  their floor); window glass and the cut walls' tops drawn as open shells; the other ready-made homes furnished; a
+  HUD laid over the view in place of the side panel, which this release only reorders.

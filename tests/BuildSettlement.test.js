@@ -1,6 +1,9 @@
 import {
-    REMIX_RING_RADII, SETTLEMENT_TAKEN_RADIUS, VILLAGE_FIRST_RING_RADIUS, isSettleableGround, ringSpots, settleBeside, settleInVillage
+    REMIX_RING_RADII, SETTLEMENT_TAKEN_RADIUS, SETTLEMENT_TREE_CLEARANCE, VILLAGE_FIRST_RING_RADIUS, VILLAGE_SLOT_SPACING,
+    isSettleableGround, ringSpots, settleBeside, settleInVillage
 } from '../core/BuildSettlement.js';
+import { naturalFeaturesInRegion } from '../core/NaturalFeatureField.js';
+import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { PLAZA_CENTER, PLAZA_CLEARING_RADIUS } from '../core/ChallengePlaza.js';
 import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
 import { SettledPlacementStrategy } from '../application/placement/SettledPlacementStrategy.js';
@@ -37,8 +40,14 @@ function spatialIndex(placements = []) {
         assert(distance(spot, PLAZA_CENTER) >= PLAZA_CLEARING_RADIUS, `build ${i} leaves the plaza's clearing open`);
         taken.push(spot);
     }
-    const nearest = taken.slice(0, 20).map((spot) => distance(spot, PLAZA_CENTER));
-    assert(Math.max(...nearest) <= VILLAGE_FIRST_RING_RADIUS + 0.01, 'the first twenty all stand on the first ring');
+    const firstRing = ringSpots(PLAZA_CENTER, VILLAGE_FIRST_RING_RADIUS, VILLAGE_SLOT_SPACING).filter((spot) => isSettleableGround(spot.x, spot.z)).length;
+    assert(firstRing >= 10, `the first ring has room (${firstRing} spots clear of water and trees)`);
+    const nearest = taken.slice(0, firstRing).map((spot) => distance(spot, PLAZA_CENTER));
+    assert(Math.max(...nearest) <= VILLAGE_FIRST_RING_RADIUS + 0.01, 'the first builds fill the first ring before the next');
+    for (const spot of taken) {
+        const trees = naturalFeaturesInRegion(DEFAULT_WORLD_SEED, spot.x - 8, spot.z - 8, spot.x + 8, spot.z + 8);
+        assert(trees.every((tree) => Math.hypot(tree.x - spot.x, tree.z - spot.z) >= SETTLEMENT_TREE_CLEARANCE), 'no tree grows where a build settles');
+    }
     for (let i = 0; i < taken.length; i++) {
         for (let j = i + 1; j < taken.length; j++) {
             assert(distance(taken[i], taken[j]) >= SETTLEMENT_TAKEN_RADIUS, `builds ${i} and ${j} don't share a spot`);

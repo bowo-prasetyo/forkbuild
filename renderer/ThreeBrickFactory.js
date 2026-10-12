@@ -335,6 +335,82 @@ function benchGeometry(width, height, depth) {
     };
 }
 
+// Boxes joined into one shape, each `[width, height, depth, x, y, z]` with
+// x, y, z its middle measured from the brick's bottom-front-left corner;
+// the result is centered like every other brick. For furniture.
+function boxesGeometry(width, height, depth, parts) {
+    return () => {
+        const positions = [];
+        const normals = [];
+        const uvs = [];
+        for (const [w, h, d, x, y, z] of parts) {
+            const part = new THREE.BoxGeometry(w, h, d).toNonIndexed();
+            part.translate(x - width / 2, y - height / 2, z - depth / 2);
+            positions.push(...part.getAttribute('position').array);
+            normals.push(...part.getAttribute('normal').array);
+            uvs.push(...part.getAttribute('uv').array);
+            part.dispose();
+        }
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+        geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+        return geometry;
+    };
+}
+
+// A top on four legs — core:table.
+function tableGeometry(width, height, depth) {
+    const top = 0.1;
+    const leg = 0.1;
+    const legHeight = height - top;
+    const parts = [[width, top, depth, width / 2, height - top / 2, depth / 2]];
+    for (const x of [leg / 2 + 0.05, width - leg / 2 - 0.05]) {
+        for (const z of [leg / 2 + 0.05, depth - leg / 2 - 0.05]) parts.push([leg, legHeight, leg, x, legHeight / 2, z]);
+    }
+    return boxesGeometry(width, height, depth, parts);
+}
+
+// A frame, a mattress and a headboard at the back (far end of the depth) — core:bed.
+function bedGeometry(width, height, depth) {
+    const headboard = 0.1;
+    return boxesGeometry(width, height, depth, [
+        [width, 0.25, depth - headboard, width / 2, 0.125, (depth - headboard) / 2],
+        [width - 0.1, 0.2, depth - headboard - 0.1, width / 2, 0.35, (depth - headboard) / 2],
+        [width, height, headboard, width / 2, height / 2, depth - headboard / 2]
+    ]);
+}
+
+// A stone fireplace open at the front: a back, two cheeks and a mantel — core:hearth.
+function hearthGeometry(width, height, depth) {
+    const back = 0.25;
+    const cheek = 0.3;
+    const opening = height * 0.6;
+    return boxesGeometry(width, height, depth, [
+        [width, height, back, width / 2, height / 2, depth - back / 2],
+        [cheek, opening, depth - back, cheek / 2, opening / 2, (depth - back) / 2],
+        [cheek, opening, depth - back, width - cheek / 2, opening / 2, (depth - back) / 2],
+        [width, height - opening, depth - back, width / 2, opening + (height - opening) / 2, (depth - back) / 2]
+    ]);
+}
+
+// Two sides, a back and three boards — core:shelf.
+function shelfGeometry(width, height, depth, boards = 3) {
+    const side = 0.08;
+    const board = 0.06;
+    const back = 0.04;
+    const parts = [
+        [side, height, depth, side / 2, height / 2, depth / 2],
+        [side, height, depth, width - side / 2, height / 2, depth / 2],
+        [width - 2 * side, height, back, width / 2, height / 2, depth - back / 2]
+    ];
+    for (let i = 0; i < boards; i++) {
+        const y = board / 2 + (i * (height - board)) / (boards - 1);
+        parts.push([width - 2 * side, board, depth - back, width / 2, y, (depth - back) / 2]);
+    }
+    return boxesGeometry(width, height, depth, parts);
+}
+
 // Faceted round shapes scaled to their box — core:bush and core:rock.
 function polyhedronGeometry(PolyhedronGeometry, detail, [width, height, depth]) {
     return () => {
@@ -398,6 +474,10 @@ const GEOMETRIES = new Map([
     ['core:chimney', boxGeometry([0.75, 1.5, 0.75])],
     ['core:barrel', cylinderGeometry(0.8, 1)],
     ['core:bench', benchGeometry(2, 0.5, 0.5)],
+    ['core:table', tableGeometry(1.5, 0.8, 1)],
+    ['core:bed', bedGeometry(1, 0.7, 2)],
+    ['core:hearth', hearthGeometry(1.5, 1.5, 0.75)],
+    ['core:shelf', shelfGeometry(1, 1.5, 0.4)],
     ['core:bush', polyhedronGeometry(THREE.IcosahedronGeometry, 1, [1, 1, 1])],
     ['core:pine_tree', coneGeometry(1.5, 2.5, 8)],
     ['core:rock', polyhedronGeometry(THREE.DodecahedronGeometry, 0, [1, 1, 1])],

@@ -88,7 +88,7 @@ const count = (structure, definitionId) => structure.bricks.filter((brick) => br
     }
     const house = VillageLibrary.structures.find((structure) => structure.id === 'village:house');
     const floor = house.bricks[0];
-    assert(floor.definitionId === 'core:slab_4x4' && floor.position.x === 0 && floor.position.y === 0.125 && floor.position.z === 0,
+    assert(floor.definitionId === 'core:plate_2x2' && floor.position.x === -2 && floor.position.y === 0.125 && floor.position.z === -2,
         'the Village house is where it always was');
     console.log('✓ the Village structures the showcase reuses are copied, not shared or moved');
 }

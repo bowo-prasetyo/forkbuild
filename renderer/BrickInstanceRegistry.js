@@ -49,6 +49,11 @@ export class BrickInstanceRegistry {
         return this._entries.size;
     }
 
+    // Lets every brick drawn here be cut away (renderer/CutawayClipping.js).
+    useCutaway(cutawayClipping) {
+        if (cutawayClipping) cutawayClipping.apply(this._material);
+    }
+
     has(brickId) {
         return this._entries.has(brickId);
     }

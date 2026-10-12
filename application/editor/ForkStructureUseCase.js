@@ -4,6 +4,9 @@ import { Brick } from '../../core/Brick.js';
 import { Document } from '../../core/Document.js';
 import { DocumentMetadata } from '../../core/DocumentMetadata.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
+import { moveInReadyMadeResident } from '../../core/ReadyMadeHome.js';
+import { createSecureId } from '../../core/createId.js';
+import { CreateBrickRegistryUseCase } from './CreateBrickRegistryUseCase.js';
 
 // Forks a library Structure (core/Structure.js) into a new, independent,
 // editable Document — the 0.2.81 flagship operation. Deliberately the
@@ -36,6 +39,16 @@ import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityI
 //   const document = new ForkStructureUseCase().execute(structure, identityProvider);
 //   editorSession.openDocument(document);  // same editor, no new UI
 export class ForkStructureUseCase {
+    // `brickRegistry` finds a ready-made home's door; built on first use.
+    constructor({ brickRegistry = null } = {}) {
+        this._registry = brickRegistry;
+    }
+
+    _brickRegistry() {
+        if (!this._registry) this._registry = new CreateBrickRegistryUseCase().execute();
+        return this._registry;
+    }
+
     execute(structure, identityProvider = null) {
         if (!structure || !structure.id) {
             throw new Error('ForkStructureUseCase: a valid Structure is required');
@@ -60,6 +73,8 @@ export class ForkStructureUseCase {
 
         const world = new World();
         world.addBuilding(building);
+        // A ready-made home comes lived in (core/ReadyMadeHome.js).
+        moveInReadyMadeResident(world, structure, this._brickRegistry(), createSecureId);
 
         const metadata = new DocumentMetadata({
             title: structure.name,

@@ -1519,8 +1519,12 @@ export default {
                     plain utilities (Notifications is in the app's header);
                     Explore / Map / Places are the three mutually exclusive primary modes.
                 -->
-                <div v-if="cameraPosition || activeDocumentInfo" class="world-view-actions world-view-actions--navigation">
-                    <button v-if="cameraPosition" class="action-btn" @click="goHome">{{ t('worldView.home') }}</button>
+                <!--
+                    What a visitor came to do, first: walk here with friends, build here, or
+                    make a copy of their own (docs/reviews/CreativeDirection-2026-10-12.md,
+                    finding 6). The utilities follow on a row of their own.
+                -->
+                <div v-if="activeDocumentInfo && !inPlaza" class="world-view-actions world-view-actions--verbs">
                     <button
                         v-if="cameraPosition && !inPlaza"
                         type="button"
@@ -1531,7 +1535,7 @@ export default {
                     <button
                         v-if="activeDocumentInfo && !inPlaza"
                         type="button"
-                        class="action-btn world-view-walk-together"
+                        class="action-btn action-btn--primary world-view-walk-together"
                         :title="t('walkTogether.buttonHint')"
                         @click="openWalkDialog"
                     >{{ t('walkTogether.button') }}</button>
@@ -1542,6 +1546,9 @@ export default {
                         :title="t('publicationLink.editCopyHint')"
                         @click="editActiveCopy"
                     >{{ t('publicationLink.editCopy') }}</button>
+                </div>
+                <div v-if="cameraPosition || activeDocumentInfo" class="world-view-actions world-view-actions--navigation">
+                    <button v-if="cameraPosition" class="action-btn" @click="goHome">{{ t('worldView.home') }}</button>
                     <button
                         v-if="activeDocumentInfo"
                         class="action-btn"

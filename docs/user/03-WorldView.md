@@ -35,8 +35,11 @@ the village round the plaza.
 ## A visitor's view, and Advanced
 
 World View opens as a visitor's view: the build's name and who made it,
-what's around you, and what you can do here (**Build here**, **Walk here
-with me**, and **Edit a Copy** when the build isn't yours). The tools for
+then what you can do here, first (**Build here**, **Walk here with me**,
+and **Edit a Copy** when the build isn't yours), then where to go and what's
+around you. Who is drawn, and whether the keys walk your avatar and the
+camera follows it, are on for everyone and wait under **Avatar settings**;
+the camera choice stays beside them. The tools for
 the networks behind the World wait at the bottom of the panel, under
 **Show advanced tools**:
 
@@ -121,8 +124,24 @@ A World can also have **residents** — people who live there and stroll
 around their homes, walking round buildings rather than through them, and
 turning to greet you when you come close; talk to one and it tells you
 what's around. Unlike wildlife they're part of
-the World's own content: its author adds them. See
-[Residents](06-AvatarsAndPresence.md#residents).
+the World's own content: its author adds them. The ready-made homes come
+lived in: a copy of the House, a cottage or another ready-made home starts
+with one resident living just beside its front door, and the ones standing
+round the challenge plaza have theirs too; remove yours with **R** like any
+other. See [Residents](06-AvatarsAndPresence.md#residents).
+
+### Inside a build
+
+Walk in through a door and the build above your head is cut away, so you
+see the room you're standing in rather than the wall behind you: its roof
+and everything higher than your head, for that build only, while the walls
+stand to just above your height. With the camera following you, or in
+**Third Person**, the camera comes in too, behind and above you looking
+down into the room, and rises rather than going through a wall when one is
+right behind you. **Bird's-Eye** looks straight down into the room;
+**First Person** sees it through your own eyes, with nothing cut away.
+Step back outside and the whole build is drawn again. Only what is drawn
+changes: the roof is still there, for everyone and for walking.
 
 ## Sound
 

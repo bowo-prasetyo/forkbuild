@@ -181,6 +181,13 @@ export default {
             try {
                 const publication = props.publishDocumentUseCase.execute(props.documentManager);
                 report(t('toolbar.published', { title: publication.title }));
+                // Publishing keeps the build too: what was just published is
+                // never left reading "Draft" and "Unsaved changes".
+                if (props.documentManager.state.dirty) {
+                    saveDocument(props.saveDocumentUseCase, props.documentManager)
+                        .then(() => emit('saved'))
+                        .catch((error) => console.error('Saving after publish failed:', error));
+                }
                 // 0.9.377 — forwards the exact just-published Publication
                 // to whichever host holds a `@published` listener. What,
                 // if anything, a listener does with it is entirely its

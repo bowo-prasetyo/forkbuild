@@ -156,6 +156,12 @@ export default {
                         <template v-else>{{ t('editor.published') }}</template>
                     </span>
 
+                    <!-- Walk inside it, first: World View, standing at the build's door. -->
+                    <router-link
+                        v-if="walkInside"
+                        :to="walkInside.route"
+                        class="action-btn action-btn--primary editor-post-publish-walk"
+                    >{{ walkInside.hasDoor ? t('editor.walkInside') : t('editor.walkAround') }}</router-link>
                     <!-- Sent to everyone as a build note (ui/views/editorView/useBuildNoteSend.js). -->
                     <button
                         v-if="sendStatus === 'local' && noteStatus === 'failed'"
@@ -190,12 +196,6 @@ export default {
                         :disabled="sendStatus === 'sending'"
                         @click="distributionDialogOpen = true"
                     >{{ sendStatus !== 'local' ? t('editor.changeWhereItGoes') : (noteStatus ? t('editor.moreNetworks') : t('editor.distribute')) }}</button>
-                    <!-- Walk inside it: World View, standing at the build's door. -->
-                    <router-link
-                        v-if="walkInside"
-                        :to="walkInside.route"
-                        class="action-btn action-btn--primary editor-post-publish-walk"
-                    >{{ walkInside.hasDoor ? t('editor.walkInside') : t('editor.walkAround') }}</router-link>
                     <button
                         type="button"
                         class="action-btn action-btn--secondary editor-post-publish-dismiss-btn"
@@ -209,6 +209,7 @@ export default {
                     :publication-id="publishedPublication.id"
                     :title="publishedPublication.title"
                     :publication="publishedPublication"
+                    compact
                     @shared="firstBuildShared"
                 />
                 <ProtectIdentityNote v-if="publishedPublication" class="editor-post-publish-protect" />

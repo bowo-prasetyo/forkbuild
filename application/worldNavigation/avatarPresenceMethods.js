@@ -19,7 +19,8 @@ import { toAvatarInteractionAdvertisement } from '../../core/AvatarInteractionAd
 import { signAvatarInteractionAdvertisement } from '../avatar/AvatarInteractionSigning.js';
 import { toAvatarProfileAdvertisement } from '../../core/AvatarProfileAdvertisement.js';
 import { signAvatarProfileAdvertisement } from '../avatar/AvatarProfileSigning.js';
-import { computeCameraFraming, isValidCameraPerspective } from '../../core/CameraPerspective.js';
+import { CameraPerspective, computeCameraFraming, isValidCameraPerspective } from '../../core/CameraPerspective.js';
+import { computeIndoorFraming, indoorCutaway } from '../../core/IndoorView.js';
 import { computeFacingYawDegrees } from '../../core/AvatarFacing.js';
 import { terrainHeightAt } from '../../core/TerrainHeightField.js';
 
@@ -347,6 +348,12 @@ export const avatarPresenceMethods = {
     _followAvatarIfEnabled(presence) {
         const previous = this._lastAvatarFollowPosition;
         this._lastAvatarFollowPosition = presence.position;
+        // Indoors (core/IndoorView.js), the build above the avatar's head is
+        // cut away and, unless the player looks through the avatar's eyes or
+        // from overhead, the camera comes in with it.
+        if (this._followIndoors(presence)) {
+            return;
+        }
         // A selected Camera Perspective takes over on every presence update with a
         // fixed offset from the avatar, superseding plain follow (see
         // core/CameraPerspective.js and docs/Principles.md, "Camera Perspective
@@ -388,6 +395,69 @@ export const avatarPresenceMethods = {
         if (framing) {
             this._spatialCameraController.applyFraming(framing);
         }
+    },
+
+    // Under a roof: cuts away the build above the avatar's head and, for the
+    // free camera following the avatar or the third-person view, frames the
+    // room from just behind and above, in front of any wall
+    // (core/IndoorView.js). Returns true when it framed the camera itself.
+    // Stepping back outside restores the build and hands the camera back to
+    // what it was doing, from where the indoor view left it.
+    _followIndoors(presence) {
+        const view = this._indoorViewAt(presence);
+        const perspective = this._cameraPerspective;
+        const cutaway = view && perspective !== CameraPerspective.FIRST_PERSON ? view.cutaway : null;
+        this._setIndoorCutaway(cutaway, view ? view.groundY : 0);
+        if (!view || !this._spatialCameraController) {
+            return false;
+        }
+        const frames = perspective === CameraPerspective.THIRD_PERSON || (!perspective && this._followAvatarEnabled);
+        if (!frames) {
+            return false;
+        }
+        const framing = computeIndoorFraming(view.position, presence.rotation ? presence.rotation.y : null, view.boxes, view.cutaway);
+        if (!framing) {
+            return false;
+        }
+        const lift = (point) => ({ x: point.x, y: point.y + view.groundY, z: point.z });
+        this._spatialCameraController.applyFraming({ position: lift(framing.position), target: lift(framing.target) });
+        return true;
+    },
+
+    // `{ position, boxes, cutaway, groundY }` while the avatar on foot stands
+    // under a roof, else null. Riding, it is never indoors.
+    _indoorViewAt(presence) {
+        if (!presence || !presence.position) return null;
+        if (typeof this._isRidingMovableVehicle === 'function' && this._isRidingMovableVehicle()) return null;
+        if (typeof this._indoorBoxesNear !== 'function') return null;
+        let boxes;
+        try {
+            boxes = this._indoorBoxesNear(presence.position);
+        } catch {
+            return null;
+        }
+        const cutaway = indoorCutaway(presence.position, boxes);
+        if (!cutaway) return null;
+        const groundY = terrainHeightAt(this.getWorldSeed(), presence.position.x, presence.position.z);
+        return { position: presence.position, boxes, cutaway, groundY };
+    },
+
+    // Tells the renderer what to cut away, in its own (ground-lifted)
+    // coordinates, only when that changes; null shows the whole build again.
+    _setIndoorCutaway(cutaway, groundY) {
+        const next = cutaway ? Object.freeze({ ...cutaway, y: cutaway.y + groundY }) : null;
+        const key = next ? `${next.minX.toFixed(2)},${next.maxX.toFixed(2)},${next.minZ.toFixed(2)},${next.maxZ.toFixed(2)},${next.y.toFixed(1)}` : null;
+        if (key === this._indoorCutawayKey) return;
+        this._indoorCutawayKey = key;
+        if (this._session && typeof this._session.setCutaway === 'function') {
+            this._session.setCutaway(next);
+        }
+    },
+
+    // Whether the player is inside a build right now (the last presence
+    // update stood under a roof).
+    isIndoors() {
+        return Boolean(this._indoorCutawayKey);
     },
 
     // Whether the camera currently follows the local avatar's

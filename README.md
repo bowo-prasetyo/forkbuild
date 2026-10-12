@@ -58,8 +58,9 @@ longer-term aim.
 - Groups, clipboard, brick colors with a palette of village colors, and a
   command palette (Ctrl/Cmd+K) that shares one action registry with the
   sidebar and keyboard shortcuts.
-- Fifty bricks, from half cubes, round bricks and logs to gable and cone
-  roofs, framed and round windows, fences, benches, bushes and pine trees.
+- Fifty-four bricks, from half cubes, round bricks and logs to gable and cone
+  roofs, framed and round windows, fences, benches, bushes and pine trees,
+  and furniture for inside: a table, a bed, a hearth and a shelf.
 - A Build Library of bricks and ready-made structures, a personal blueprint
   library, structure placements, and document export/import.
 - Save, autosave with crash recovery, and publishing to an immutable,

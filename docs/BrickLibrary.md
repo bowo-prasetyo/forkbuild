@@ -74,6 +74,14 @@ fence (panels with holes cut through, so they can be seen through), a
 double door, shutters, a small arch, a chimney, a barrel, a bench, and a
 new `nature` category (core:bush, core:pine_tree, core:rock,
 core:lawn_2x2) that the Build Library shows as its own Nature section.
+Furniture (2026-10-12, docs/reviews/CreativeDirection-2026-10-12.md,
+finding 3) brings it to fifty-four: core:table (a top on four legs),
+core:bed (a frame, mattress and headboard toward +z), core:hearth (a stone
+fireplace open toward -z, to stand against a wall under a chimney) and
+core:shelf (two sides, a back toward +z and three boards), each a few boxes
+joined into one geometry (renderer/ThreeBrickFactory.js, boxesGeometry())
+and colliding as its one box, in the decorative category and tagged
+`furniture`. The Village House is furnished with them.
 Every one is still one primitive with one geometry, drawn at exactly its
 declared size (tests/BuildersKit.test.js). Any brick can also be tilted onto
 another side (core/BrickOrientation.js, docs/Protocol.md "Brick Tilt"), so
