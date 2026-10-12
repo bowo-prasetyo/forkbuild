@@ -117,6 +117,19 @@ async function startFromHome(browser, base) {
         const editorText = await page.evaluate(() => document.body.innerText);
         assert(editorText.includes('Remixed from House') && !editorText.includes('village:house'),
             'the Editor says the copy came from the built-in House, by its name rather than its id');
+        // With a job left to do: no roof yet. Pick the roof, and one real
+        // click on the middle of the house puts it on the walls.
+        await page.waitForSelector('.starter-job:not(.starter-job--done)', { timeout: 10_000 });
+        assert((await page.textContent('.starter-job-title')).includes('give it a roof'), 'the House arrives with its roof to do');
+        await page.click('.starter-job-pick');
+        assert(await page.$eval('.tool-switcher--editor .tool-btn:nth-child(2)', (button) => button.classList.contains('tool-btn--active')), 'Pick the roof turns Place on');
+        const viewport = await page.$eval('.viewport', (element) => { const r = element.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+        await page.mouse.move(viewport.x - 20, viewport.y - 20);
+        await page.mouse.move(viewport.x, viewport.y, { steps: 4 });
+        await page.mouse.down();
+        await page.mouse.up();
+        await page.waitForSelector('.starter-job--done', { timeout: 10_000 });
+        assert((await page.textContent('.starter-job-title')).includes('yours now'), 'a roof on, the House is the builder\'s');
 
         // New offers the same builds: the castle opens as the visitor's own copy.
         await page.click('.toolbar-new');
@@ -455,6 +468,27 @@ async function firstVisit(browser, base) {
         await page.waitForSelector('.first-build-guide', { timeout: 60_000 });
         const current = await page.$eval('.first-build-step--current', (step) => step.dataset.step);
         assert(current === 'place-brick', `the guide starts at placing a brick (${current})`);
+        // Place, with no brick picked, and a real mouse: the first click
+        // places a cube, and a second on top of it stacks another.
+        await page.click('.tool-switcher--editor .tool-btn:nth-child(2)');
+        const middle = await page.$eval('.viewport', (element) => { const r = element.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height * 0.6 }; });
+        await page.mouse.move(middle.x - 30, middle.y);
+        await page.mouse.move(middle.x, middle.y, { steps: 4 });
+        await page.mouse.down();
+        await page.mouse.up();
+        await page.waitForSelector('.first-build-step--done[data-step="place-brick"]', { timeout: 10_000 });
+        assert(await page.$eval('.palette-item--active', (item) => item.textContent.includes('Cube')), 'the Build Library shows the Cube chosen');
+        // The cube is drawn higher on the screen than the ground point that
+        // was clicked: aim higher each time until a click lands on its top. A click that misses lands where the cube
+        // already stands, and places nothing.
+        let stacked = false;
+        for (let up = 12; up <= 240 && !stacked; up += 12) {
+            await page.mouse.move(middle.x, middle.y - up, { steps: 2 });
+            await page.mouse.down();
+            await page.mouse.up();
+            stacked = await page.waitForSelector('.first-build-step--done[data-step="stack"]', { timeout: 1500 }).then(() => true, () => false);
+        }
+        assert(stacked, 'a click on the cube\'s top stacks another on it');
         await page.click('.first-build-icon-btn');
         await page.waitForSelector('.first-build-guide-pill');
         await page.click('.first-build-guide-pill');
@@ -500,6 +534,11 @@ async function firstVisit(browser, base) {
     try {
         await editor.goto(`${base}/#/editor?start=village:house`);
         await editor.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });
+        // Published untouched, the ready-made House is asked about once.
+        await editor.click('.toolbar-publish');
+        await editor.waitForSelector('.nothing-added-dialog', { timeout: 10_000 });
+        await editor.click('.nothing-added-keep');
+        assert(!(await editor.$('.nothing-added-dialog')) && !(await editor.$('.remix-permission-dialog')), 'Keep building publishes nothing');
         await editor.click('.toolbar-publish');
         await editor.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
         await editor.click('.remix-permission-allow');
@@ -708,7 +747,7 @@ try {
     await startFromHome(browser, `http://127.0.0.1:${server.address().port}`);
     await joinChallenge(browser, `http://127.0.0.1:${server.address().port}`);
     await openLaunchLink(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle (which downloads as a 3D model), and the Repository lists them; Home\'s Join opens the week\'s challenge tagged, New offers it first, and its page explains how to enter; a launch post\'s ?ref= leaves the address, and a retired page\'s link says it is gone');
+    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the House in the Editor with its roof to do, which Pick the roof and one real click put on, New the castle (which downloads as a 3D model), and the Repository lists them; Home\'s Join opens the week\'s challenge tagged, New offers it first, and its page explains how to enter; a launch post\'s ?ref= leaves the address, and a retired page\'s link says it is gone');
     await openLinkOnlyShare(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a link that carries its build opens on it in the published build, with no network, and Edit a Copy makes the visitor a copy, or it downloads as a 3D model; it fits a phone');
     assert(html.includes('<meta name="forkbuild-service-worker" content="sw.js">') && readFileSync(join(published.outdir, 'sw.js'), 'utf8').includes('forkbuild-'),
@@ -716,7 +755,7 @@ try {
     await offlineAndNotifications(browser, `http://127.0.0.1:${server.address().port}`, published.precacheFiles, published.outdir);
     console.log(`✓ the published site keeps its ${published.precacheFiles} files on the first visit and opens offline, Home and the Editor; a new version is offered and starts on Reload; notifications on this device turn on and off (or say the browser blocks them)`);
     await firstVisit(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ a first visit: six pages and More in the nav, Walk opening the plaza with the ready-made builds, Publish asking who can find it, the guided first build in the Editor, Publish asking about remixes and to log in, the published link copied on another device, and Walk inside it arriving at the house door and walking in');
+    console.log('✓ a first visit: six pages and More in the nav, Walk opening the plaza with the ready-made builds, Publish asking who can find it, the guided first build in the Editor, where Place with no brick picked places a cube on the first real click and stacks a second, Publish asking about remixes and to log in, an untouched ready-made house asked about once, the published link copied on another device, and Walk inside it arriving at the house door and walking in');
     await walkThePlaza(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ an entry published for the week stands in its plaza, reached from the challenge page, and World View stays there until Open takes you to the entry\'s World; an unknown week says so');
     await postingSwitches(browser, `http://127.0.0.1:${server.address().port}`);

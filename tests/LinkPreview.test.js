@@ -98,7 +98,7 @@ function pixelAt(png, x, y) {
     const html = await page.text();
     assert(page.status === 200 && page.headers.get('content-type').startsWith('text/html'), 'an HTML page');
     assert(meta(html, 'og:title') === 'Castle on the hill' && html.includes('<title>Castle on the hill · ForkBuild</title>'), 'named after the build');
-    assert(meta(html, 'og:description').includes('A build by alice on ForkBuild, 127 bricks'), `with its author and size (${meta(html, 'og:description')})`);
+    assert(meta(html, 'og:description').includes('A build by alice on ForkBuild, 124 bricks'), `with its author and size (${meta(html, 'og:description')})`);
     assert(meta(html, 'og:image') === `${url}/preview.png` && meta(html, 'twitter:card') === 'summary_large_image', 'and its own picture, as a large card');
     assert(meta(html, 'og:image:width') === String(PREVIEW_WIDTH) && meta(html, 'og:image:height') === String(PREVIEW_HEIGHT), 'of the picture\'s size');
     assert(html.includes(`<meta http-equiv="refresh" content="0; url=${FORKBUILD_APP_URL}#/s/${payload}">`), 'people go straight on to the app, with the same payload');

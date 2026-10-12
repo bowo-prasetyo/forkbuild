@@ -432,9 +432,11 @@ the protocol: a reader only adopts the signed record. ForkBuild's own choice
 is a Build here plot when there is one; else the position an earlier
 Publication of the same world already has; else a free spot on a ring 18 or
 36 units round the world it remixes; else the first free spot of the
-village round the challenge plaza (rings from 90 units out, 22 apart, spots
+village round the challenge plaza (rings from 56 units out, 22 apart, spots
 20 apart, each ring walked from a slot chosen by the Publication id's
-FNV-1a hash, skipping water, rock, rivers and the plaza's clearing); else
+FNV-1a hash, skipping water, rock, rivers, trees and the 48 units round the
+plaza where its ready-made builds stand, core/StarterVillage.js; builds
+published before 2026-10-12's Release F settled from 90 out); else
 the id-keyed grid (core/DeterministicGridPlacement.js), as before.
 
 ## Rendezvous

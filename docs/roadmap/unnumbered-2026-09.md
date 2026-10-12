@@ -5981,3 +5981,75 @@ somewhere to be), with building feels joyful (furniture, and a room to put it in
 - Not done: a cut that follows the avatar between storeys of a taller build (it cuts above whoever stands inside, from
   their floor); window glass and the cut walls' tops drawn as open shells; the other ready-made homes furnished; a
   HUD laid over the view in place of the side panel, which this release only reorders.
+
+## Make it yours, in the village (unnumbered, 2026-10-12)
+
+**The village at the plaza is a place, Try it now hands over a house to finish, and the first click places a brick.**
+The second creative-direction audit of 2026-10-12 (docs/reviews/CreativeDirection-2026-10-12b.md, findings 1 to 5)
+found the village a stage set (the square and the ready-made builds existed only on `/plaza/…`, while a published
+house settled 90 units away in an empty field), Home's main button opening a finished House that could be published
+untouched, Place showing "click to place" while a click placed nothing until a brick was picked, every pitched roof a
+grid of small caps, and a click in World View opening the engine's inspection panel. This is its Release F. It takes
+the audit's recommendations on two open questions: the plaza is a place, and Try it now hands over a job. Pillars
+served: building feels joyful (a first click that works, a job, roofs that read as roofs), and your work lives in a
+world (a village it stands in from its first day).
+
+- **The village stands for everyone** (core/StarterVillage.js, ui/views/worldView/useStarterVillage.js). The square
+  (core/library/PlazaSquare.js) and the six ready-made builds stand round `PLAZA_CENTER` in every World View, wherever
+  it opens, laid out like the plaza's exhibits round the open square (`starterVillageLayout()`), drawn and walked into
+  through the exhibits' path (`showPlazaExhibit()`), never placed, signed or stored. They reach about 40 from the
+  middle, inside `PLAZA_VILLAGE_RADIUS` (48), where nothing settles; trees keep out to `PLAZA_CLEARING_RADIUS`, now 66.
+  The village's first ring (core/BuildSettlement.js, `VILLAGE_FIRST_RING_RADIUS`) is pulled in from 90 to 56, so the
+  first published house stands beside a ready-made build and in sight of the square. Builds already published keep
+  their signed placements.
+- **An entry stands in one place** (ui/views/worldView/useChallengePlaza.js). On the plaza, an entry whose placement
+  this device knows stands only where it settled; any other is shown, as an exhibit, on the spot `settleInVillage()`
+  gives it, clear of known placements and the entries before it, rather than on a ring of its own round the square.
+  The panel lists the entries and, always, the village's ready-made builds; the ready-made "fillers" while a week has
+  few entries are gone, since the ready-made builds now always stand.
+- **Try it now: a house to finish** (core/StarterJob.js, ui/components/StarterJobCard.js). Home's main button opens
+  `/editor?start=village:house&job=roof`: the House without its roof and chimney, walls up and room furnished (and
+  visible from the Editor's camera), with a **Your job: give it a roof** card at the top of the sidebar. **Pick the
+  roof** chooses Hip Roof 6x6, turns Place on and sets a placement guide (EditorContext `placementGuide`,
+  `starterJobGuide()`): while that brick is placed and the pointer is on the house (a brick hit within 5 of the roof's
+  spot, by the brick's own position), its ghost goes to where the finished House has its roof, so a click on a wall
+  puts the roof on, as checking it in the real app showed a click from the Editor's camera lands on the front wall's
+  face, not the floor. The guide goes once the job is done or another build opens. Once any roof brick stands, the card says **It's yours now!** and
+  suggests what else to add. The roof is the builder's own brick, so the publish counts it (core/PlacedBricks.js).
+- **Nothing of your own yet?** (ui/components/Toolbar.js). Publishing a build started from something ready-made with
+  no brick of the builder's in it asks once per build per visit: **Keep building** or **Publish anyway**.
+- **Place places** (application/tools/PlacementTool.js `activate()`). Place with no brick chosen loads the Cube (the
+  Build Library shows it chosen), so the hint's "click to place" is true from the first click; a brick already chosen
+  is kept. The first-build guide's hint says so.
+- **A brick on top rests on what's under it** (core/BrickResting.js). Stacking on a brick's top face lifts the new
+  brick until nothing its footprint overlaps is in its way, turned footprints included, so a 6x6 roof dropped on the
+  middle of a house's floor rests on its walls, and a beam across two posts on the posts. A turn (R) works the resting
+  height out again.
+- **Roofs that span** (core/library/CoreLibrary.js, renderer/ThreeBrickFactory.js `hippedRoofGeometry()`).
+  core:roof_hip_4x4, core:roof_hip_4x6 and core:roof_hip_6x6 (four slopes of one pitch to a ridge along the longer
+  side) and core:roof_gable_2x4: fifty-eight bricks. The House, Large House, Barn, Granary, Market, Pavilion and Village
+  Hall, and the castle's keep, are roofed with one instead of a grid of caps; the Large House's chimney comes down to its
+  slope; the well (and so the plaza's square) gets a little gable. The link-preview worker draws them.
+- **A visitor's click selects nothing** (application/worldNavigation/selectionMethods.js `pick({ builds })`,
+  ui/views/worldView/useViewportInput.js). Without Show advanced tools, a click in World View picks only another
+  avatar; bricks, placements and the ground are picked, and Inspection opens, only with Advanced on.
+- **Words.** tests/WordsTable.test.js covers World View as a visitor sees it (worldView, its Search, Focus, Map,
+  Locations and presence panels, and the starter job), with the brick inspection's one key exempt; nine messages
+  were reworded (History's tooltip, Locations' "documents", Edit a Copy's "independent copy of this document", a
+  build's signed check).
+- Every language: the job card, the publish question, the four roofs, the well, the plaza's two leads, the first
+  brick's hint and the reworded World View messages. Guides 02, 03 and 04 in English (Try it now, Place starting
+  with a cube and resting on top, the village standing for everyone, an entry in one place, the visitor's click),
+  their translations marked out of date; docs/BrickLibrary.md, docs/BrickIDs.md, Pillars.
+- Tests: `StarterJob` (the job and its unfinished House, the roof resting at the library House's height and finishing
+  the job as the builder's own brick, the tool placing it from a click on the floor, resting on a table and on turned
+  footprints, Place loading the Cube through the ToolManager and placing on the first click); `StarterVillage` (six
+  builds, deterministic, apart, off the square, inside the village radius, on dry level treeless ground, the first
+  eight published builds on the first ring beside a ready-made one); `VisitorClick`; `BuildSettlement`,
+  `StructureRoofSupport` (spanning roofs, nothing floating), `ShowcaseLibrary`, `BuildersKit`, `LinkPreview`; the
+  bundled site with a real mouse: Try it now's job card, Pick the roof and one click on the house finishing it; a new
+  build's Place placing a cube on the first click and stacking a second; the publish question's Keep building.
+- Not done: the Editor's camera still opens from above (with the roof off, the room is in view); World View's HUD and
+  the phone's collapsed plaza panel; the passphrase nudge moved out of the celebration; the inspection's "Author" line
+  reading the builder's name (it is advanced-only now); the launch order, a playtest and the orphaned systems, which
+  are the owner's.

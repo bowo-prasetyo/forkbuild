@@ -412,6 +412,52 @@ export const CoreLibrary = {
             depth: 1,
             color: 0xa63a3a
         }),
+        // Roofs that span a whole house in one piece, so a village's roofs read
+        // as roofs rather than a tray of caps (Make it yours, in the village).
+        new BrickDefinition({
+            id: 'core:roof_hip_4x4',
+            name: 'Hip Roof 4x4',
+            category: 'roof',
+            tags: ['roof', 'hip', 'pitched', 'spanning'],
+            description: 'A hipped roof that covers a 4x4 building in one piece.',
+            width: 4,
+            height: 2,
+            depth: 4,
+            color: 0xa63a3a
+        }),
+        new BrickDefinition({
+            id: 'core:roof_hip_4x6',
+            name: 'Hip Roof 4x6',
+            category: 'roof',
+            tags: ['roof', 'hip', 'pitched', 'spanning'],
+            description: 'A hipped roof with a ridge, covering a 4x6 building in one piece.',
+            width: 4,
+            height: 2,
+            depth: 6,
+            color: 0xa63a3a
+        }),
+        new BrickDefinition({
+            id: 'core:roof_hip_6x6',
+            name: 'Hip Roof 6x6',
+            category: 'roof',
+            tags: ['roof', 'hip', 'pitched', 'spanning'],
+            description: 'A hipped roof that covers a 6x6 house in one piece.',
+            width: 6,
+            height: 2.5,
+            depth: 6,
+            color: 0xa63a3a
+        }),
+        new BrickDefinition({
+            id: 'core:roof_gable_2x4',
+            name: 'Gable Roof 2x4',
+            category: 'roof',
+            tags: ['roof', 'gable', 'pitched', 'spanning'],
+            description: 'A long pitched roof with a gable at each end, covering a 2x4 cottage in one piece.',
+            width: 2,
+            height: 1,
+            depth: 4,
+            color: 0xa63a3a
+        }),
         new BrickDefinition({
             id: 'core:stair_wide',
             name: 'Wide Stair',

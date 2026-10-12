@@ -15,9 +15,31 @@ export const selectionMethods = {
     // {avatar target, brick/ground selection} is set at a time (see
     // docs/Principles.md, "Avatars Are Never Document Selection").
     // `toggle`/`additive` don't apply to avatars.
-    pick(screenX, screenY, { toggle = false, additive = false } = {}) {
+    //
+    // `builds: false` is a visitor's click (World View without Advanced;
+    // docs/reviews/CreativeDirection-2026-10-12b.md, finding 5): only an
+    // avatar can be picked, and a click anywhere else selects nothing, so
+    // clicking the view to walk never opens a brick's inspection.
+    pick(screenX, screenY, { toggle = false, additive = false, builds = true } = {}) {
         if (!this._session) {
             return null;
+        }
+        if (!builds) {
+            const avatarOnly = typeof this._session.pickAvatar === 'function'
+                ? this._session.pickAvatar(screenX, screenY)
+                : null;
+            if (avatarOnly) {
+                this._setAvatarInteraction(AvatarInteractionState.avatar(avatarOnly.avatarId));
+            } else {
+                this._setAvatarInteraction(AvatarInteractionState.empty());
+            }
+            this._setSpatialSelection(SpatialSelectionState.empty());
+            this._session.clearSelection();
+            this._session.clearHover();
+            this._refreshInspection();
+            this._refreshEditingContext();
+            this._refreshGizmo();
+            return avatarOnly ? this._avatarInteraction : null;
         }
         const brickHit = this._session.pick(screenX, screenY);
         const avatarHit = typeof this._session.pickAvatar === 'function'

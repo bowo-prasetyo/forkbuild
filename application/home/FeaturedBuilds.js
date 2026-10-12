@@ -21,9 +21,11 @@ export const FEATURED_STRUCTURE_IDS = Object.freeze([
     'village:bridge'
 ]);
 
-// What Home's main button opens: something whole to change, rather than an
-// empty plot.
+// What Home's main button opens: something to finish, rather than an empty
+// plot or a finished showcase. The House, with the job core/StarterJob.js
+// names (its roof) left to do.
 export const STARTER_STRUCTURE_ID = 'village:house';
+export const STARTER_JOB_ID = 'roof';
 
 // The small village Home's 3D showcase turns, laid out two by two: warm,
 // lived-in buildings (docs/Pillars.md, "Tone"), with the Garden Cottage

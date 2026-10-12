@@ -85,6 +85,7 @@ import { navigationHudSectionTemplate } from './worldView/templates/navigationHu
 import { publicationSectionTemplate } from './worldView/templates/publicationSection.js';
 import { plazaSectionTemplate } from './worldView/templates/plazaSection.js';
 import { useChallengePlaza } from './worldView/useChallengePlaza.js';
+import { useStarterVillage } from './worldView/useStarterVillage.js';
 import { hoverCardTemplate } from './worldView/templates/hoverCard.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 import { plotQuery } from '../../core/BuildPlot.js';
@@ -278,10 +279,12 @@ export default {
             decentralizedPublicationDiscoveryProvider: decentralizedDiscoveryProviderForEnrichment
         });
         const session = worldViewFactory.createSession(registry);
+        // The village at the plaza, standing in every World View (core/StarterVillage.js).
+        const village = useStarterVillage({ session });
         // `/plaza/<week>`: the week's challenge plaza instead of a World.
         const {
             plaza, inPlaza, enterPlaza, leavePlaza, backToPlaza, focusExhibit, openExhibit, remixExhibit
-        } = useChallengePlaza({ route, router, session, refreshSpatialUI: () => refreshSpatialUI() });
+        } = useChallengePlaza({ route, router, session, refreshSpatialUI: () => refreshSpatialUI(), village });
         // The automatic Snapshot cascade, scoped to this mount (a fresh idempotency map
         // per session). `automaticCascadeSessionActive` is set false first thing on
         // unmount; the cascade reads it through a closure so a long-running chain sees
@@ -1080,7 +1083,7 @@ export default {
         const {
             onKeyDown, onPointerDown, onPointerMove, onPointerUp
         } = useViewportInput({
-            compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
+            advanced, compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
         });
 
         const { arriveAtDoor, watchArrival } = useArrival({ session, feedback });
@@ -1088,6 +1091,7 @@ export default {
         onMounted(() => {
             allPublications.value = listPublicationsUseCase.execute();
             session.start(viewport.value);
+            village.standVillage();
             if (inPlaza.value) {
                 // The plaza's own panel says what stands there; "a quiet corner" would not.
                 skipArrivalWelcomes();
@@ -1191,6 +1195,7 @@ export default {
             automaticCascadeSessionActive = false;
             placeNamingDiscoveryPresentationActive = false;
             leavePlaza();
+            village.clearVillage();
             disposeClaimedBuilds();
             unsubscribeAnnouncementIndexChanges();
             if (placeNamingDiscoveryMonitor) {

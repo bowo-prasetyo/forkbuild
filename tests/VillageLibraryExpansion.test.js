@@ -293,7 +293,7 @@ async function run() {
             }
         }
         const allDefinitionIds = brickRegistry.getAll().map((def) => def.id);
-        assert(allDefinitionIds.length === 54, `sanity: BrickRegistry has 54 core definitions (got ${allDefinitionIds.length})`);
+        assert(allDefinitionIds.length === 58, `sanity: BrickRegistry has 58 core definitions (got ${allDefinitionIds.length})`);
         for (const definitionId of allDefinitionIds) {
             assert(usedDefinitionIds.has(definitionId),
                 `vocabulary: ${definitionId} is used by at least one Village structure`);

@@ -56,7 +56,7 @@ await nextTick();
 {
     assert(host.querySelector('h1').textContent.trim() === t('homeView.heroTitle'), 'the headline says what ForkBuild is');
     const primary = host.querySelector('.home-cta-primary');
-    assert(primary && primary.getAttribute('href') === '#/editor?start=village%3Ahouse', `the main button opens the ready-made house (${primary && primary.getAttribute('href')})`);
+    assert(primary && primary.getAttribute('href') === '#/editor?start=village%3Ahouse&job=roof', `the main button opens the House with its roof to do (${primary && primary.getAttribute('href')})`);
     const secondary = [...host.querySelectorAll('.home-actions .home-cta-secondary')].map((link) => link.getAttribute('href'));
     assert(secondary.join() === '#/editor,#/repository', `and the others an empty plot and the Repository (${secondary.join()})`);
     assert(host.querySelector('.home-reassurance').textContent.trim() === t('homeView.noAccountNeeded'), 'it says no account is needed');

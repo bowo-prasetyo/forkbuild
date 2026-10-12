@@ -5,8 +5,10 @@ const DRAG_THRESHOLD_PX = 6;
 // Viewport input: pointer picks and hovers (focus and inspection only), and
 // keyboard shortcuts routed to text inputs, Undo/Redo, Home, sound, then
 // Avatar Control Mode.
+// A click picks a brick, a build or the ground only with Advanced on
+// (`advanced`, a ref); a visitor's click picks nothing but another avatar.
 export function useViewportInput({
-    compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
+    advanced = null, compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
 }) {
     let pointerStart = null;
     let isDragging = false;
@@ -38,7 +40,8 @@ export function useViewportInput({
         if (!isDragging && pointerStart) {
             session.pick(event.clientX, event.clientY, {
                 toggle: event.ctrlKey || event.metaKey,
-                additive: event.shiftKey
+                additive: event.shiftKey,
+                builds: advanced ? advanced.value === true : true
             });
             refreshSpatialUI();
         } else if (isDragging) {

@@ -21,11 +21,11 @@ const factory = new ThreeBrickFactory();
 // sharing an id, all known to the registry.
 {
     const ids = CoreLibrary.definitions.map((definition) => definition.id);
-    assert(ids.length === 54, `fifty-four core bricks (got ${ids.length})`);
+    assert(ids.length === 58, `fifty-eight core bricks (got ${ids.length})`);
     assert(new Set(ids).size === ids.length, 'no id repeats');
     for (const id of ids) assert(registry.has(id), `${id} is registered`);
     assert(registry.getByCategory('primitive').length === 4, 'the kit adds nothing to the original primitive category');
-    console.log('✓ fifty-four core bricks');
+    console.log('✓ fifty-eight core bricks');
 }
 
 // Each is drawn exactly the size it declares, centred on its position,
