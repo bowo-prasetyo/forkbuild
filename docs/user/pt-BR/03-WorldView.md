@@ -142,6 +142,14 @@ a noite. A luz sobre as construções vem de quem estiver no céu, então as
 paredes voltadas para o leste pegam a manhã e as voltadas para o oeste, a
 tarde.
 
+O sol e a lua projetam sombras: a sua, a das árvores, a dos animais e a de
+cada construção, longas de manhã e à tarde, curtas ao meio-dia e mais fracas
+ao luar. Elas caem a cerca de 45 metros ao seu redor e somem por um instante
+enquanto o sol passa o céu para a lua e vice-versa. Sombras pesam mais num
+celular do que num computador, então começam ligadas com mouse e desligadas
+em celular ou tablet; marque ou desmarque **Sombras** no fim do painel para
+mudar isso neste dispositivo.
+
 Se você preferir que seja sempre dia, marque **Sempre de dia** no fim do
 painel, logo acima de **Mostrar ferramentas avançadas**. A escolha fica
 lembrada neste dispositivo e não muda nada para mais ninguém.

@@ -1430,7 +1430,9 @@ geometry and materials are shared by every tile.
             │  (same clock; DAY_SKY_BODIES, a still morning sun, while Always day)
     application/worldNavigation/dayCycleMethods.js  every render frame: setSkyBodies(bodies) on the render facade
     renderer/Renderer.js#setSkyBodies()            renderer/SkyBodies.js (made on first call) and
-                                                    renderer/Lights.js#setDirection()
+                                                    renderer/Lights.js#setDirection(light, lightStrength)
+    application/worldNavigation/dayCycleMethods.js  setShadowsOn(): setShadowsEnabled(on) on the render facade
+    renderer/Renderer.js#setShadowsEnabled()       renderer/SunShadows.js, which follows the camera's target each frame
 
 World View's sky turns once every `DAY_CYCLE_SECONDS` (40 minutes): dawn, about half the cycle in day, dusk, a
 little over a fifth in full night, dawn again, each look blending into the next. It is worked out from the wall
@@ -1454,6 +1456,19 @@ camera and placed again every frame, so it hangs in the sky however far you walk
 it, and under water neither shows. Always day (and no clock) is `DAY_SKY_BODIES`, the sun standing still partway
 through the morning, low in the south-east. A renderer never given sky bodies (the Editor, thumbnails) draws neither
 and keeps renderer/Lights.js's fixed daytime direction, the one it always had.
+
+**Shadows.** The directional light casts them when World View turns them on (`Renderer#setShadowsEnabled()`,
+renderer/SunShadows.js): one 2048² PCF-soft shadow map over a square 45 m each way round the camera's target (the
+avatar, or what the camera orbits), so things farther off cast none and the cost doesn't grow with the world. Every
+frame the square is moved to the target in whole texels measured across the light (`snapToTexels()`), so edges don't
+shimmer as you walk; the light stands 120 m towards the sun or the moon from it (`Lights#setFocus()`). Who casts and
+who receives is set where meshes are made (renderer/ShadowRoles.js): bricks, standalone and instanced, and trees cast
+and receive; avatars, vehicles and animals cast; terrain receives; water, life under water, markers and the sun and
+moon do neither. Off, as in the Editor and thumbnails, these flags draw nothing. Through each handover the light's
+`lightStrength` (core/DayCycle.js) eases from 1 to 0 and back, and `Lights` gives half of what the directional light
+loses to the hemisphere fill, so shadows fade out and in instead of swinging across the ground. Shadows are this
+device's choice (application/settings/WorldViewShadowStore.js, `world-view-shadows`): on by default unless the main
+pointer is coarse (phones, tablets), decided in ui/main.js. Turning them on or off rebuilds the lit materials once.
 
 **What shines.** A brick type's `nightGlow` (core/NightGlow.js; docs/BrickLibrary.md) gives the light its bricks
 give off: `BrickRenderer#describe()` adds it to a brick's visual as `glow`. Instanced bricks carry it in an

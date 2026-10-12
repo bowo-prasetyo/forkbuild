@@ -54,6 +54,11 @@ export class CameraController {
         return this._camera;
     }
 
+    // The point the camera looks at and orbits round (live; don't change it).
+    get target() {
+        return this._controls.target;
+    }
+
     get enabled() {
         return this._controls.enabled;
     }

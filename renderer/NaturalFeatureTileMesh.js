@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { naturalFeaturesInRegion, FEATURE_TYPE, TREE_SPECIES } from '../core/NaturalFeatureField.js';
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+import { castShadows } from './ShadowRoles.js';
 
 // The renderer-side counterpart to core/NaturalFeatureField.js — see
 // docs/Roadmap.md, 0.2.88: it knows nothing about WHERE a tree stands or
@@ -155,6 +156,8 @@ function buildSpeciesMeshes(preset, features) {
     if (canopyMesh.instanceColor) canopyMesh.instanceColor.needsUpdate = true;
     applyBoundingSphere(trunkMesh);
     applyBoundingSphere(canopyMesh);
+    castShadows(trunkMesh, { receive: true });
+    castShadows(canopyMesh, { receive: true });
 
     return [trunkMesh, canopyMesh];
 }

@@ -34,11 +34,24 @@ export const dayCycleMethods = {
         return this._alwaysDay;
     },
 
+    // Whether the sun and the moon cast shadows here: this device's choice
+    // (application/settings/WorldViewShadowStore.js), off until it is given.
+    areShadowsOn() {
+        return this._shadowsOn === true;
+    },
+
+    setShadowsOn(on) {
+        this._shadowsOn = on === true;
+        this._applyShadows();
+        return this._shadowsOn;
+    },
+
     // Absent when the render facade can't change its sky.
     _setupDayCycle() {
         if (!this._session || typeof this._session.setSkyLook !== 'function' || typeof this._session.onAnimationFrame !== 'function') {
             return;
         }
+        this._applyShadows();
         this._applySkyLook();
         this._dayCycleFrameSubscription = this._session.onAnimationFrame(() => this._applySkyLook());
     },
@@ -50,6 +63,13 @@ export const dayCycleMethods = {
         // A render facade that can't draw them keeps its light where it is.
         if (this._session && typeof this._session.setSkyBodies === 'function') {
             this._session.setSkyBodies(this.skyBodies());
+        }
+    },
+
+    // A render facade that can't draw shadows draws none.
+    _applyShadows() {
+        if (this._session && typeof this._session.setShadowsEnabled === 'function') {
+            this._session.setShadowsEnabled(this._shadowsOn === true);
         }
     }
 };

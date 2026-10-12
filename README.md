@@ -120,7 +120,8 @@ longer-term aim.
   somewhere to walk before you've built anything.
 - Day and night: every 40 minutes the sky turns through dusk to a moonlit
   night and back, the same for everyone; the sun and then the moon rise in
-  the east and set in the west, lighting builds from where they stand;
+  the east and set in the west, lighting builds from where they stand and
+  casting shadows near you (**Shadows**, on by default except on phones);
   windows and lanterns light up after dark and crickets take over from the
   birds. **Always day** keeps it day.
 - An avatar you can walk, run and jump with, which collides with buildings and

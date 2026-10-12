@@ -14,6 +14,7 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { WorldSoundscapeService } from '../application/world/WorldSoundscapeService.js';
 import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.js';
 import { WorldViewSkyStore } from '../application/settings/WorldViewSkyStore.js';
+import { WorldViewShadowStore } from '../application/settings/WorldViewShadowStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { compassBearingFromYaw, compassLabelBetween } from '../core/CompassHeading.js';
 import { computeFacingYawDegrees } from '../core/AvatarFacing.js';
@@ -149,6 +150,86 @@ const brightness = (look) => look.hemisphereIntensity + look.sunIntensity;
     assert(lights.directional.position.clone().normalize().angleTo(new THREE.Vector3(moonlight.x, moonlight.y, moonlight.z)) < 1e-6,
         'and is aimed from where it is told');
     console.log('✓ the sun and the moon are drawn far off round the camera, and the light aimed from them');
+}
+
+// The light's strength stays whole while one body is up and fades out and
+// back in through each handover, the fill taking up what it gives, so
+// shadows fade rather than swing across the ground.
+{
+    let previous = skyBodiesAtFraction(0).lightStrength;
+    let lowest = 1;
+    for (let i = 0; i <= 4000; i++) {
+        const bodies = skyBodiesAtFraction(i / 4000);
+        const strength = bodies.lightStrength;
+        assert(strength >= 0 && strength <= 1, `the strength is between 0 and 1 (at ${i / 4000})`);
+        if (!(bodies.sun && bodies.moon)) assert(strength === 1, `whole while one body is up (at ${i / 4000})`);
+        assert(Math.abs(strength - previous) < 0.05, `and changes gradually (at ${i / 4000})`);
+        lowest = Math.min(lowest, strength);
+        previous = strength;
+    }
+    assert(lowest < 0.01, 'halfway through a handover the light has handed over entirely');
+    assert(skyBodiesAtFraction(0.34).lightStrength === 1 && DAY_SKY_BODIES.lightStrength === 1, 'midday and Always day are whole');
+
+    const lights = new Lights({ add() {} });
+    lights.applyLook(DAY);
+    const total = () => lights.directional.intensity + lights.hemisphere.intensity;
+    lights.setDirection({ x: 0, y: 1, z: 0 }, 1);
+    assert(lights.directional.intensity === DAY.sunIntensity && lights.hemisphere.intensity === DAY.hemisphereIntensity,
+        'at full strength the look\'s own light');
+    const whole = total();
+    lights.setDirection({ x: 0, y: 1, z: 0 }, 0);
+    assert(lights.directional.intensity === 0 && lights.hemisphere.intensity > DAY.hemisphereIntensity && total() > whole * 0.6,
+        'handed over, the sun gives no direct light and the fill takes up some of it');
+    lights.setDirection({ x: 0, y: 1, z: 0 }, NaN);
+    assert(lights.directional.intensity === DAY.sunIntensity, 'nonsense is full strength');
+    lights.setFocus({ x: 30, y: 2, z: -10 });
+    const offset = lights.directional.position.clone().sub(lights.directional.target.position);
+    assert(lights.directional.target.position.equals(new THREE.Vector3(30, 2, -10)) && offset.normalize().y > 0.999,
+        'the light shines on its focus from its direction');
+    console.log('✓ the light fades through each handover, and the fill takes up what it gives');
+}
+
+// Shadows are this device's choice: on with a mouse, off with a finger,
+// until it chooses, and the session hands them to the renderer.
+{
+    const storage = new InMemoryStorageProvider();
+    assert(new WorldViewShadowStore({ storageProvider: storage }).areShadowsOn() === true, 'on by default where that is cheap');
+    const phone = new WorldViewShadowStore({ storageProvider: storage, onByDefault: false });
+    assert(phone.areShadowsOn() === false, 'off by default on a phone');
+    assert(phone.setShadowsOn(true) === true && phone.areShadowsOn() === true, 'turning them on is remembered');
+    assert(new WorldViewShadowStore({ storageProvider: storage, onByDefault: true }).setShadowsOn('yes') === false
+        && new WorldViewShadowStore({ storageProvider: storage, onByDefault: true }).areShadowsOn() === false,
+        'and so is turning them off, whatever the default; only true turns them on');
+    storage.save('world-view-shadows', 'garbage');
+    assert(phone.areShadowsOn() === false, 'a damaged entry falls back to the default');
+    class ThrowingStorage extends StorageProvider {
+        load() { throw new Error('not loaded'); }
+        save() { throw new Error('full'); }
+    }
+    const throwing = new WorldViewShadowStore({ storageProvider: new ThrowingStorage() });
+    assert(throwing.areShadowsOn() === true && throwing.setShadowsOn(false) === false, 'a storage error is tolerated');
+    let threw = false;
+    try {
+        new WorldViewShadowStore({ storageProvider: {} });
+    } catch {
+        threw = true;
+    }
+    assert(threw, 'a StorageProvider is required');
+
+    const nav = new WorldNavigationSession({ registry: new CreateBrickRegistryUseCase().execute(), wildlifeClock: () => 0 });
+    assert(nav.areShadowsOn() === false, 'the session draws none until told');
+    nav.setShadowsOn(true);
+    const shadows = [];
+    nav._session = { setSkyLook() {}, setSkyBodies() {}, setShadowsEnabled: (on) => shadows.push(on), onAnimationFrame: () => () => {} };
+    nav._setupDayCycle();
+    assert(shadows.length === 1 && shadows[0] === true, 'a choice made before World View drew anything reaches the renderer when it opens');
+    nav.setShadowsOn(false);
+    assert(shadows[shadows.length - 1] === false && nav.areShadowsOn() === false, 'and turning them off reaches it at once');
+    const old = new WorldNavigationSession({ registry: new CreateBrickRegistryUseCase().execute() });
+    old._session = { onAnimationFrame: () => () => {}, setSkyLook() {} };
+    old._setupDayCycle();
+    old.setShadowsOn(true);
+    console.log('✓ shadows are this device\'s choice, handed to the renderer');
 }
 
 // Lanterns shine in their own color and glass windows with lamplight; framed

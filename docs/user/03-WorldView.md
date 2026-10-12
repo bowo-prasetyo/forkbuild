@@ -167,6 +167,14 @@ glowing orange near the horizon; after it sets, the moon follows the same
 path through the night. The light on builds comes from whichever is up, so
 walls facing east catch the morning and walls facing west the evening.
 
+The sun and the moon cast shadows: yours, the trees', animals' and every
+build's, long in the morning and evening and short at midday, and fainter by
+moonlight. They fall within about 45 metres of you, and fade away for a
+moment while the sun hands the sky over to the moon and back. Shadows cost a
+phone more than a computer, so they start on with a mouse and off on a
+phone or tablet; tick or untick **Shadows** at the bottom of the panel to
+change it on this device.
+
 If you'd rather it were always day, tick **Always day** at the bottom of the
 panel, just above **Show advanced tools**. It's remembered on this device and
 changes nothing for anyone else.

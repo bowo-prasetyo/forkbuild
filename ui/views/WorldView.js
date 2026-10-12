@@ -958,6 +958,16 @@ export default {
         }
         if (typeof session.setAlwaysDay === 'function') session.setAlwaysDay(alwaysDay.value);
 
+        // Shadows from the sun and the moon, as this device chose
+        // (application/settings/WorldViewShadowStore.js).
+        const worldViewShadowStore = inject('worldViewShadowStore', null);
+        const shadowsOn = ref(worldViewShadowStore ? worldViewShadowStore.areShadowsOn() : false);
+        function setShadowsOn(next) {
+            shadowsOn.value = worldViewShadowStore ? worldViewShadowStore.setShadowsOn(next) : next === true;
+            if (typeof session.setShadowsOn === 'function') session.setShadowsOn(shadowsOn.value);
+        }
+        if (typeof session.setShadowsOn === 'function') session.setShadowsOn(shadowsOn.value);
+
         // Edit a Copy of the build this World is, when it isn't yours to change.
         function editActiveCopy() {
             const documentId = session.getActiveDocumentId() || route.params.documentId || null;
@@ -1463,7 +1473,7 @@ export default {
             adoptNearbyPlaceNamingClaim,
             goHome,
             buildHere,
-            advanced, setAdvanced, alwaysDay, setAlwaysDay, dayCycleMinutes: DAY_CYCLE_SECONDS / 60, editActiveCopy,
+            advanced, setAdvanced, alwaysDay, setAlwaysDay, shadowsOn, setShadowsOn, dayCycleMinutes: DAY_CYCLE_SECONDS / 60, editActiveCopy,
             plaza, inPlaza, backToPlaza, focusExhibit, openExhibit, remixExhibit,
             openLocationsPanel,
             closeLocationsPanel,
@@ -1647,6 +1657,16 @@ export default {
                     {{ t('worldView.alwaysDay') }}
                 </label>
                 <p class="form-hint form-hint--neutral world-view-advanced-hint">{{ t('worldView.alwaysDayHint', { minutes: dayCycleMinutes }) }}</p>
+                <label class="world-view-advanced-toggle">
+                    <input
+                        type="checkbox"
+                        class="world-view-shadows-toggle"
+                        :checked="shadowsOn"
+                        @change="setShadowsOn($event.target.checked)"
+                    />
+                    {{ t('worldView.shadows') }}
+                </label>
+                <p class="form-hint form-hint--neutral world-view-advanced-hint">{{ t('worldView.shadowsHint') }}</p>
                 <!-- A visitor's view by default; this device can choose every tool. -->
                 <label class="world-view-advanced-toggle">
                     <input

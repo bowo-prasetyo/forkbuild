@@ -150,11 +150,15 @@ export function skyBodiesAt(seconds) {
     return skyBodiesAtFraction(dayFractionAt(seconds));
 }
 
-// { sun, moon, light }: unit directions from the viewer, sun or moon null
-// while below the horizon; light is where the scene's directional light
-// shines from: the sun's or the moon's, and while both are up, low at either
-// end of the night, it sweeps steadily back over the southern sky from the
-// one setting to the one rising.
+// { sun, moon, light, lightStrength }: unit directions from the viewer, sun
+// or moon null while below the horizon; light is where the scene's
+// directional light shines from: the sun's or the moon's, and while both are
+// up, low at either end of the night, it sweeps steadily back over the
+// southern sky from the one setting to the one rising. lightStrength, from 0
+// to 1, is how much of the look's sun (moon) light comes from that direction:
+// 1 while only one is up, fading to nothing halfway through the handover and
+// back, so shadows fade out and in rather than swinging across the ground
+// (the rest of the light is spread as fill instead; renderer/Lights.js).
 export function skyBodiesAtFraction(fraction) {
     const f = Number.isFinite(fraction) ? fraction - Math.floor(fraction) : KEYFRAMES[1].at;
     const sun = bodyOnArc(SUN_ARC, f);
@@ -167,8 +171,23 @@ export function skyBodiesAtFraction(fraction) {
     return Object.freeze({
         sun: sun ? arcDirection(sun.angle) : null,
         moon: moon ? arcDirection(moon.angle) : null,
-        light: lightDirection(arcDirection(lightAngle))
+        light: lightDirection(arcDirection(lightAngle)),
+        lightStrength: handoverStrength(sun, moon)
     });
+}
+
+// 1 with one body up; while both are, how far the light is from an even
+// share between them, eased, so it falls smoothly from 1 to 0 and back.
+function handoverStrength(sun, moon) {
+    if (!sun || !moon) {
+        return 1;
+    }
+    const total = sun.weight + moon.weight;
+    if (total <= 0) {
+        return 0;
+    }
+    const lean = Math.abs(sun.weight - moon.weight) / total;
+    return lean * lean * (3 - 2 * lean);
 }
 
 // How far along its arc a body is at `f` (0 rising in the east, pi setting

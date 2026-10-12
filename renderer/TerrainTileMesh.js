@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { terrainHeightAt } from '../core/TerrainHeightField.js';
 import { hydrologyGroundColorAt } from '../core/Hydrology.js';
 import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
+import { receiveShadows } from './ShadowRoles.js';
 
 // The renderer-side counterpart to core/TerrainHeightField.js and
 // core/TerrainSurface.js: it knows nothing about WHAT elevation or
@@ -77,5 +78,5 @@ export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE)
     // worldX/worldZ above), so the mesh's own position.y stays 0 — only
     // x/z place the tile, matching where its vertices were sampled from.
     mesh.position.set(center.x, 0, center.z);
-    return mesh;
+    return receiveShadows(mesh);
 }

@@ -41,7 +41,7 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
   dikirim);
 - profil avatar Anda, pengaturan (termasuk apakah Tampilan Dunia
   memutar suara, seberapa keras, dalam 3D atau stereo, apakah Tampilan
-  Dunia menampilkan alat lanjutannya, apakah di sana selalu siang, ke mana Terbitkan mengirim bangunan Anda, dan bahasa yang
+  Dunia menampilkan alat lanjutannya, apakah di sana selalu siang, apakah matahari dan bulan menimbulkan bayangan di sana, ke mana Terbitkan mengirim bangunan Anda, dan bahasa yang
   Anda pilih; jika Anda belum memilih, ForkBuild membaca bahasa pilihan
   browser di perangkat dan tidak mengirimnya ke mana pun), serta nama
   pengguna dan kredensial server TURN jika Anda memasukkannya di

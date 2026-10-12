@@ -148,6 +148,15 @@ recorrido durante la noche. La luz sobre las construcciones viene del que
 esté en el cielo, así que las paredes que miran al este reciben la mañana y
 las que miran al oeste, la tarde.
 
+El sol y la luna proyectan sombras: la suya, la de los árboles, la de los
+animales y la de cada construcción, largas por la mañana y por la tarde,
+cortas a mediodía y más tenues a la luz de la luna. Caen a unos 45 metros a
+su alrededor y se desvanecen un momento mientras el sol cede el cielo a la
+luna y al revés. Las sombras le cuestan más a un teléfono que a un
+ordenador, así que empiezan activadas con ratón y desactivadas en un teléfono
+o tableta; marque o desmarque **Sombras** al final del panel para cambiarlo
+en este dispositivo.
+
 Si prefiere que siempre sea de día, marque **Siempre de día** al final del
 panel, justo encima de **Mostrar herramientas avanzadas**. Se recuerda en
 este dispositivo y no cambia nada para nadie más.

@@ -39,7 +39,7 @@ que você publique, exporte ou envie:
   nada sobre seguir é enviado);
 - seu perfil de avatar, as configurações (incluindo se a Visão do mundo toca
   som, o volume, em 3D ou estéreo, se ela mostra suas ferramentas
-  avançadas, se lá é sempre dia, para onde Publicar envia suas construções, e o idioma que você escolheu; quando você
+  avançadas, se lá é sempre dia, se lá o sol e a lua projetam sombras, para onde Publicar envia suas construções, e o idioma que você escolheu; quando você
   não escolheu um, o ForkBuild lê os idiomas preferidos do navegador no
   próprio dispositivo e não os envia para lugar nenhum), e o nome de usuário
   e a credencial de um servidor TURN, se você digitar um em **Configurações

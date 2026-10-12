@@ -794,6 +794,10 @@ export class RenderWorldViewUseCase {
             setSkyBodies: (bodies) => {
                 renderer.setSkyBodies(bodies);
             },
+            // Whether the sun and the moon cast shadows (renderer/SunShadows.js).
+            setShadowsEnabled: (enabled) => {
+                renderer.setShadowsEnabled(enabled);
+            },
             // A pure client rendering preference, exactly like
             // setLocalAvatarVisible — never touches presence sync or
             // the known-remote-avatar set, only which already-built

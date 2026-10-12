@@ -6263,3 +6263,38 @@ the compass read East. Pillar served: your work lives in a world whose direction
   sun's bearing only growing through the day; the earlier arc fails it at sunrise.
 - Not done: the sun climbs out of a Third Person view for most of the day; a lower arc for the discs, with the light
   kept higher, would keep it in view.
+
+## Shadows from the sun and the moon (unnumbered, 2026-10-12)
+
+**The sun and the moon now cast shadows in World View: yours, the trees', the animals' and every build's.** A sun
+that moves across the sky but leaves nothing on the ground makes builds look pasted on; with shadows a tower's falls
+long across the square at evening and short at noon, and a build sits in its world. Pillar served: your work lives in
+a world. The first ten minutes stay as easy: nothing to learn or set, and **Shadows** sits next to **Always day** for
+anyone whose device would rather not draw them.
+
+- **One shadow map round you** (renderer/SunShadows.js). The directional light that already follows the sun and the
+  moon casts them over a square 45 m each way round the camera's target, 2048² and PCF-soft, moved in whole texels
+  across the light so edges don't shimmer; nothing farther off casts one, so the cost doesn't grow with the world.
+- **Who casts, who receives** (renderer/ShadowRoles.js), set where meshes are made: bricks (instanced and standalone)
+  and trees cast and receive, avatars, vehicles and animals cast, the ground receives; water, life under water,
+  markers and the sun and moon do neither. The Editor and thumbnails never turn shadows on, so they are unchanged.
+- **Fading through the handover** (`lightStrength` in core/DayCycle.js, `Lights#setDirection()`). While the sun hands
+  the sky to the moon and back, the light's direction sweeps over the southern sky; its strength now eases to nothing
+  halfway and back, half of it spread as fill, so shadows fade out and in instead of swinging across the ground, and
+  moonlit shadows are fainter because moonlight is.
+- **Shadows** (application/settings/WorldViewShadowStore.js, `world-view-shadows`): a per-device choice under Always
+  day, on by default unless the main pointer is a finger (phones, tablets), whose GPUs feel a second pass over the
+  scene most. The Privacy page lists it.
+- Every language: the setting and its hint; guide 03's Day and night section and the Privacy page. docs/Architecture.md
+  and the README describe it.
+- Tests: `DayAndNight` (the strength whole with one body up, easing to nothing through each handover and back; the
+  fill taking up what the light gives; the light shining on its focus; the store's defaults, choices and damage; the
+  session handing the choice to the renderer, made before or after World View opens); `SunShadowsBrowser` (real
+  WebGL: an instanced and a standalone brick shadow the ground only while shadows are on, open ground looks the same
+  either way, a handed-over light casts none, the shaders compile beside the night glow, and the square follows its
+  focus in whole texels).
+- Measured in headless Chromium's software renderer at the plaza, shadows halve the frame rate (11.5 to 5.5 fps), and
+  neither the map's size nor its filtering changes that: the cost is drawing the casters again. A GPU feels far less
+  of it, which is why phones start with it off.
+- Not done: shadows stop 45 m away (no cascades); glowing lanterns cast no light or shadows of their own; clouds.
+
