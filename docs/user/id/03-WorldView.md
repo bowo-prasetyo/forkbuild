@@ -139,6 +139,12 @@ tidak pernah terlalu gelap untuk menemukan jalan. Hanya Tampilan Dunia yang
 mengenal malam: Editor, gambar bangunan, dan pratinjau tautan selalu terang
 siang hari.
 
+Matahari terbit di timur, melintasi langit selatan, dan terbenam di barat,
+berwarna jingga di dekat cakrawala; setelah ia terbenam, bulan menempuh
+jalan yang sama sepanjang malam. Cahaya pada bangunan datang dari yang
+sedang di langit, jadi dinding yang menghadap timur mendapat cahaya pagi dan
+yang menghadap barat cahaya sore.
+
 Jika Anda lebih suka selalu siang, centang **Selalu siang** di bagian bawah
 panel, tepat di atas **Tampilkan alat lanjutan**. Pilihan ini diingat di
 perangkat ini dan tidak mengubah apa pun bagi orang lain.

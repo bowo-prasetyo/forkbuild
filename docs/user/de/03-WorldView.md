@@ -143,6 +143,12 @@ nie so dunkel, dass Sie den Weg nicht finden. Nacht gibt es nur in der
 Weltansicht: der Editor, Bilder von Bauwerken und Linkvorschauen sind immer
 taghell.
 
+Die Sonne geht im Osten auf, zieht über den südlichen Himmel und geht im
+Westen unter, nah am Horizont orange; nach ihr nimmt der Mond in der Nacht
+denselben Weg. Das Licht auf den Bauten kommt von dem, der gerade am Himmel
+steht: Mauern nach Osten bekommen die Morgensonne, Mauern nach Westen die
+Abendsonne.
+
 Wenn Sie lieber immer Tag hätten, setzen Sie unten im Bereich, direkt über
 **Erweiterte Werkzeuge zeigen**, das Häkchen bei **Immer Tag**. Das wird auf
 diesem Gerät gespeichert und ändert für niemanden sonst etwas.

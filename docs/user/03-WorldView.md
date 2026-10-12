@@ -162,6 +162,11 @@ birds go quiet and crickets take over. The night is never too dark to find
 your way. Only World View has night: the Editor, pictures of builds and link
 previews are always in daylight.
 
+The sun rises in the east, crosses the southern sky and sets in the west,
+glowing orange near the horizon; after it sets, the moon follows the same
+path through the night. The light on builds comes from whichever is up, so
+walls facing east catch the morning and walls facing west the evening.
+
 If you'd rather it were always day, tick **Always day** at the bottom of the
 panel, just above **Show advanced tools**. It's remembered on this device and
 changes nothing for anyone else.

@@ -120,3 +120,88 @@ function blendColor(a, b, t) {
     const bl = Math.round(lerp(a & 0xff, b & 0xff, t));
     return (r << 16) | (g << 8) | bl;
 }
+
+// Where the sun and the moon stand. Each crosses the sky from east (+x) to
+// west (-x) along an arc leaning south (+z), as seen from the northern
+// hemisphere: the sun from just before dawn until it sets in the dusk, the
+// moon from late in the dusk until just after dawn, so the two share the sky
+// only low down at either end.
+const SUN_ARC = Object.freeze({ rise: -0.02, set: 0.7 });
+const MOON_ARC = Object.freeze({ rise: 0.64, set: 1.02 });
+// How far the arc leans south of straight overhead: its highest point is
+// 90° - 50° = 40° up, low enough that World View's camera, which looks at
+// most about 30° above the horizon, has the sun or the moon in view for
+// most of its crossing.
+const ARC_TILT = (50 * Math.PI) / 180;
+// The light never comes from lower than this (the sine of about 14.5°), so a
+// sun or moon on the horizon doesn't light builds from underneath.
+const MIN_LIGHT_HEIGHT = 0.25;
+
+// Broad day's sun, where the scene's one directional light always stood
+// before the sun moved (renderer/Lights.js): what Always day, the Editor and
+// thumbnails keep.
+export const DAY_SKY_BODIES = Object.freeze({
+    sun: unit(10, 15, 8),
+    moon: null,
+    light: unit(10, 15, 8)
+});
+
+// Where the sun and the moon are at `seconds` (Unix time).
+export function skyBodiesAt(seconds) {
+    if (!Number.isFinite(seconds)) {
+        return DAY_SKY_BODIES;
+    }
+    return skyBodiesAtFraction(dayFractionAt(seconds));
+}
+
+// { sun, moon, light }: unit directions from the viewer, sun or moon null
+// while below the horizon; light is where the scene's directional light
+// shines from: the sun's or the moon's, and while both are up, low at either
+// end of the night, it sweeps steadily back over the southern sky from the
+// one setting to the one rising.
+export function skyBodiesAtFraction(fraction) {
+    const f = Number.isFinite(fraction) ? fraction - Math.floor(fraction) : KEYFRAMES[1].at;
+    const sun = bodyOnArc(SUN_ARC, f);
+    const moon = bodyOnArc(MOON_ARC, f);
+    const up = [sun, moon].filter(Boolean);
+    const weight = up.reduce((sum, body) => sum + body.weight, 0);
+    const lightAngle = weight > 0
+        ? up.reduce((sum, body) => sum + body.angle * body.weight, 0) / weight
+        : up.reduce((sum, body) => sum + body.angle, 0) / Math.max(up.length, 1);
+    return Object.freeze({
+        sun: sun ? arcDirection(sun.angle) : null,
+        moon: moon ? arcDirection(moon.angle) : null,
+        light: lightDirection(arcDirection(lightAngle))
+    });
+}
+
+// How far along its arc a body is at `f` (0 rising in the east, pi setting
+// in the west), and how long it has been up or has left (whichever is less)
+// as its share of the light; null below the horizon.
+function bodyOnArc(arc, f) {
+    const length = arc.set - arc.rise;
+    const into = (((f - arc.rise) % 1) + 1) % 1;
+    if (into > length) {
+        return null;
+    }
+    return { angle: (into / length) * Math.PI, weight: Math.min(into, length - into) };
+}
+
+function arcDirection(angle) {
+    const up = Math.sin(angle);
+    return Object.freeze({ x: Math.cos(angle), y: up * Math.cos(ARC_TILT), z: up * Math.sin(ARC_TILT) });
+}
+
+function lightDirection(dir) {
+    if (dir.y >= MIN_LIGHT_HEIGHT) {
+        return dir;
+    }
+    const flat = Math.hypot(dir.x, dir.z);
+    const across = Math.sqrt(1 - MIN_LIGHT_HEIGHT * MIN_LIGHT_HEIGHT) / flat;
+    return Object.freeze({ x: dir.x * across, y: MIN_LIGHT_HEIGHT, z: dir.z * across });
+}
+
+function unit(x, y, z) {
+    const length = Math.hypot(x, y, z);
+    return Object.freeze({ x: x / length, y: y / length, z: z / length });
+}

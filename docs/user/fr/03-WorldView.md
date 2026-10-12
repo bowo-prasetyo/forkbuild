@@ -147,6 +147,12 @@ empêcher de trouver votre chemin. Seule la Vue du Monde connaît la nuit :
 l’Éditeur, les images des constructions et les aperçus de liens sont
 toujours en plein jour.
 
+Le soleil se lève à l’est, traverse le ciel du sud et se couche à l’ouest,
+orangé près de l’horizon ; une fois couché, la lune suit le même chemin
+pendant la nuit. La lumière sur les constructions vient de celui qui est
+dans le ciel : les murs tournés vers l’est prennent le matin, ceux tournés
+vers l’ouest le soir.
+
 Si vous préférez qu’il fasse toujours jour, cochez **Toujours le jour** en
 bas du panneau, juste au-dessus de **Afficher les outils avancés**. Ce choix
 est mémorisé sur cet appareil et ne change rien pour les autres.
