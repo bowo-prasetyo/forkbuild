@@ -613,9 +613,12 @@ builds grows just outside them, the week's entries among them. Walk among
 them, or pick one in the panel: **Navigate** flies to it, **Open** opens it
 as **Explore** would, and **Edit a Copy** starts your own copy of it.
 
-- An entry stands in one place. One whose spot this device knows stands
-  there, where it settled when it was published; any other is shown, while
-  you're at the plaza, on the spot it would settle on in the village.
+- Every entry stands in the village. One whose spot this device knows to be
+  in the village stands there, where it settled when it was published. Any
+  other (one placed far away, as builds published before they settled in
+  the village were, or one whose spot this device doesn't know) is shown,
+  while you're at the plaza, on the spot it would settle on in the village;
+  its own spot stays where it is.
 - The panel lists the first 24 entries published. The rest are on the
   challenge page.
 - Entries found on the networks are fetched and checked the way opening

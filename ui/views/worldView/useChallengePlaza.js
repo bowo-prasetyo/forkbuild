@@ -1,7 +1,7 @@
 import { computed, inject, ref } from 'vue';
 import { challengeById } from '../../../core/BuildChallenge.js';
 import { PLAZA_CENTER, PLAZA_MAX_EXHIBITS, plazaEntryOrder } from '../../../core/ChallengePlaza.js';
-import { SETTLEMENT_TAKEN_RADIUS, settleInVillage } from '../../../core/BuildSettlement.js';
+import { plazaEntrySpots } from '../../../core/PlazaEntrySpots.js';
 import { CreateChallengeEntriesUseCase } from '../../../application/challenge/CreateChallengeEntriesUseCase.js';
 import { OpenPublicationLinkOutcome } from '../../../application/publication/OpenPublicationLink.js';
 import { readSharedBuildDocument } from '../../../application/publication/sharing/ReadSharedBuild.js';
@@ -12,8 +12,9 @@ import { t } from '../../i18n/i18n.js';
 // The challenge plaza (core/ChallengePlaza.js), when World View opens on
 // `/plaza/<week>`: takes the visitor to the village square
 // (useStarterVillage.js, standing in every World View), and lists the
-// week's entries and the village's ready-made builds. An entry stands in one
-// place: where it settled, when this device knows its placement; otherwise
+// week's entries and the village's ready-made builds. Every entry stands in
+// the village (core/PlazaEntrySpots.js): where it settled, when this device
+// knows a placement for it there; otherwise, placed far away or not at all,
 // it is shown, as an exhibit, on the spot it would settle on
 // (core/BuildSettlement.js), among the village's builds rather than on a
 // stage of its own. An entry's build is read from this device, or fetched
@@ -120,22 +121,10 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI, vi
             if (build) ready.push(build);
             else unavailable += 1;
         }
-        const placed = knownPlacements();
-        const taken = [...placed.values()];
-        const isTaken = (x, z) => taken.some((spot) => Math.hypot(spot.x - x, spot.z - z) < SETTLEMENT_TAKEN_RADIUS);
-        const spots = new Map();
-        for (const build of ready) {
-            const key = build.publication.documentId;
-            const standing = placed.get(build.publication.id);
-            if (standing) {
-                spots.set(key, { position: standing, placed: true });
-                continue;
-            }
-            const spot = settleInVillage({ publicationId: build.publication.id, isTaken, seed: session.getWorldSeed?.() });
-            if (!spot) continue;
-            taken.push(spot);
-            spots.set(key, { position: spot, placed: false });
-        }
+        const spots = new Map(plazaEntrySpots(
+            ready.map((build) => ({ key: build.publication.documentId, publicationId: build.publication.id })),
+            { placedAt: knownPlacements(), seed: session.getWorldSeed?.() }
+        ).map((spot) => [spot.key, spot]));
 
         for (const [key, position] of Array.from(shown.entries())) {
             const next = spots.get(key);
