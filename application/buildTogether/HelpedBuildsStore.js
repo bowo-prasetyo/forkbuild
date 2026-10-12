@@ -4,10 +4,12 @@ const KEY_PREFIX = 'helped-builds:';
 const MAX_ENTRIES = 100;
 const MAX_TEXT_LENGTH = 120;
 
-// The builds someone helped make on this device (Build with me): each one
-// whose author credited this identity while they built together
-// (application/buildTogether/BuildTogetherSession.js), kept per identity, on
-// this device only, newest first. A build credited only after it is
+// The builds someone helped make (Build with me): each one whose author
+// credited this identity while they built together
+// (application/buildTogether/BuildTogetherSession.js), kept per identity,
+// newest first. Kept under the person's own identity (the one their devices
+// share, DeviceAuthorizationPropagationUseCase#resolveOwnSocialIdentity()),
+// so their other devices can be given it (HelpedBuildsSyncUseCase.js). A build credited only after it is
 // published is found through its Publication instead (ui/views/
 // RecentWorldsView.js lists both).
 export class HelpedBuildsStore {
@@ -16,6 +18,14 @@ export class HelpedBuildsStore {
             throw new Error('HelpedBuildsStore requires a StorageProvider');
         }
         this._storage = storageProvider;
+        this._listeners = new Set();
+    }
+
+    // callback(identityId, entry) for each build noted here (not for those
+    // merged in from another device). Returns an unsubscribe function.
+    onNoted(callback) {
+        this._listeners.add(callback);
+        return () => this._listeners.delete(callback);
     }
 
     // `identityId` helped make `documentId`: remembered, or moved to the top
@@ -36,10 +46,52 @@ export class HelpedBuildsStore {
         const rest = this.list(identityId).filter((known) => known.documentId !== documentId);
         try {
             this._storage.save(KEY_PREFIX + identityId, [merged, ...rest].slice(0, MAX_ENTRIES));
-            return true;
         } catch {
             return false;
         }
+        for (const listener of Array.from(this._listeners)) {
+            try {
+                listener(identityId, merged);
+            } catch {
+                // A listener's failure is its own.
+            }
+        }
+        return true;
+    }
+
+    // Builds `identityId` helped make, as another of their devices knows
+    // them: each kept by its newest note, what either knew of it kept.
+    // Returns how many were new or newer here.
+    merge(identityId, entries) {
+        if (!identityId || !Array.isArray(entries)) return 0;
+        const byDocument = new Map(this.list(identityId).map((entry) => [entry.documentId, entry]));
+        let changed = 0;
+        for (const raw of entries.slice(0, MAX_ENTRIES)) {
+            if (!raw || typeof raw.documentId !== 'string' || !raw.documentId || raw.documentId.length > 200) continue;
+            const at = new Date(raw.at);
+            if (Number.isNaN(at.getTime())) continue;
+            const incoming = {
+                documentId: raw.documentId,
+                title: cleanText(raw.title),
+                authorName: cleanText(raw.authorName),
+                authorIdentityId: typeof raw.authorIdentityId === 'string' && raw.authorIdentityId.length <= 200 ? raw.authorIdentityId : null,
+                at: at.toISOString()
+            };
+            const known = byDocument.get(incoming.documentId);
+            if (known && new Date(known.at).getTime() >= at.getTime()) continue;
+            byDocument.set(incoming.documentId, known
+                ? { ...incoming, title: incoming.title || known.title, authorName: incoming.authorName || known.authorName, authorIdentityId: incoming.authorIdentityId || known.authorIdentityId }
+                : incoming);
+            changed++;
+        }
+        if (changed === 0) return 0;
+        const all = [...byDocument.values()].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()).slice(0, MAX_ENTRIES);
+        try {
+            this._storage.save(KEY_PREFIX + identityId, all);
+        } catch {
+            return 0;
+        }
+        return changed;
     }
 
     // What `identityId` helped make, newest first.

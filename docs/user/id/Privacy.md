@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 472c2d45139f70da -->
+<!-- translation-of: docs/Privacy.md source-hash: 0c17fa09c34c708f -->
 # Privasi
 
 <!-- languages -->
@@ -64,7 +64,12 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
 - untuk setiap identitas, bangunan tempat seorang teman mencantumkannya saat
   kalian membangunnya bersama (**Bangun bersamaku**): judul setiap bangunan,
   nama dan identitas pembuatnya, dan kapan, untuk **Bangunan yang Anda bantu
-  buat** di Dunia Saya dan di halaman pembangun Anda sendiri. Cap Anda di
+  buat** di Dunia Saya dan di halaman pembangun Anda sendiri. Daftar ini
+  disimpan di bawah identitas yang dimiliki bersama oleh perangkat-perangkat
+  Anda, dan selama perangkat Anda yang lain terhubung (perangkat yang
+  diotorisasi dari identitas yang sama) keduanya saling memberikan
+  daftarnya; daftar ini tidak pernah dikirim ke perangkat orang lain. Cap
+  Anda di
   Beranda dihitung dari apa yang sudah tercantum di sini dan tidak disimpan.
 
 Menghapus data situs ini di browser akan menghapus semuanya, dan tidak ada

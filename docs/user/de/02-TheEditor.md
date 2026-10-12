@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c13a0384c503ab2c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 761f34649511fe59 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -642,10 +642,13 @@ umfärbt oder löscht, auf beiden Bildschirmen.
   seine ist ein neues Bauwerk.
 - Jeder genannte Name und der Autor eines geteilten Bauwerks öffnet die
   Seite dieser Person: die Bauwerke, die ihre Identität signiert hat, und
-  die Bauwerke, auf denen andere sie nennen. **Meine Welten** listet
-  **Bauten, an denen Sie mitgebaut haben** auf, also die, auf denen ein
-  Freund Sie genannt hat; jedes öffnet seine Welt, sobald es veröffentlicht
-  ist.
+  die Bauwerke, auf denen andere sie nennen. Im Stammbaum öffnet der Titel
+  jedes Bauwerks das Bauwerk, und die Namen seines Autors und seiner
+  Mitbauenden öffnen deren Seiten. **Meine Welten** listet **Bauten, an denen Sie
+  mitgebaut haben** auf, also die, auf denen ein Freund Sie genannt hat;
+  jedes öffnet seine Welt, sobald es veröffentlicht ist. Ihre anderen
+  Geräte listen sie ebenfalls auf, sobald sie mit diesem verbunden wurden
+  (oder eine Kopie Ihrer Daten erhalten haben).
 - Beim Beitreten werden Ihre beiden Geräte direkt verbunden, wie bei **Mit
   mir hier spazieren**: Jeder kann die IP-Adresse des anderen sehen. Niemand
   wird zu einem gemerkten Peer oder Freund, wenn Sie es nicht wählen. Es

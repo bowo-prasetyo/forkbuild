@@ -188,6 +188,7 @@ export default Object.freeze({
     'remixFamily.byAuthor': '{author}의 {title}',
     'remixFamily.byAuthorWith': '{author}의 {title}, {names} 님과 함께 만듦',
     'remixFamily.titleWith': '{title}, {names} 님과 함께 만듦',
+    'remixFamily.titleOnly': '{title}',
     'remixFamily.unseen': '이 기기가 아직 보지 못한 작품',
     'remixFamily.more': { other: '그 밖의 리믹스 {count}개' },
     'remix.count': { other: '{count}번 리믹스됨' },

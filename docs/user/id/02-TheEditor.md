@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c13a0384c503ab2c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 761f34649511fe59 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -617,9 +617,13 @@ ulang, atau dihapus oleh salah satu dari kalian muncul di kedua layar.
   bangunan baru.
 - Setiap nama yang dicantumkan, dan pembuat bangunan yang dibagikan, membuka
   halaman orang itu: bangunan yang ditandatangani identitasnya, dan bangunan
-  tempat orang lain mencantumkannya. **Dunia Saya** menampilkan **Bangunan
-  yang Anda bantu buat**, yaitu bangunan tempat seorang teman mencantumkan
-  Anda, masing-masing membuka Dunianya setelah diterbitkan.
+  tempat orang lain mencantumkannya. Di silsilah, judul setiap bangunan
+  membukanya, dan nama pembuatnya serta rekan-rekan pembangunnya membuka
+  halaman mereka. **Dunia Saya** menampilkan **Bangunan yang Anda bantu
+  buat**, yaitu bangunan tempat seorang teman mencantumkan Anda,
+  masing-masing membuka Dunianya setelah diterbitkan; perangkat Anda yang
+  lain juga menampilkannya, setelah terhubung ke perangkat ini (atau diberi
+  salinan data Anda).
 - Bergabung menghubungkan kedua perangkat Anda secara langsung, seperti
   **Jalan di sini bersamaku**: masing-masing dapat melihat alamat IP yang
   lain. Tidak ada yang menjadi rekan yang diingat atau teman kecuali Anda

@@ -189,6 +189,7 @@ export default Object.freeze({
     'remixFamily.byAuthor': '{title}, de {author}',
     'remixFamily.byAuthorWith': '{title}, de {author}, construida con {names}',
     'remixFamily.titleWith': '{title}, construida con {names}',
+    'remixFamily.titleOnly': '{title}',
     'remixFamily.unseen': 'Una construcción que este dispositivo no ha visto',
     'remixFamily.more': { one: 'y 1 remezcla más', other: 'y {count} remezclas más' },
     'remix.count': { one: 'Remezclada una vez', other: 'Remezclada {count} veces' },

@@ -68,7 +68,7 @@ discovery.add(tower);
 const helpedStore = new HelpedBuildsStore({ storageProvider: new InMemoryStorageProvider() });
 helpedStore.note(kim.id, { documentId: 'pages-draft', title: 'Pages Draft', authorName: 'pages-ana', authorIdentityId: ana.id, at: '2026-10-01T00:00:00Z' });
 
-async function mount(path, viewer) {
+async function mount(path, viewer, { actsFor = null } = {}) {
     const router = createRouter({
         history: createMemoryHistory(),
         routes: [
@@ -87,6 +87,7 @@ async function mount(path, viewer) {
     app.provide('decentralizedPublicationDiscoveryProvider', discovery);
     app.provide('identityUseCase', { provider: viewer.identity, currentUser: () => viewer.identity.currentUser() });
     app.provide('helpedBuildsStore', helpedStore);
+    if (actsFor) app.provide('deviceAuthorizationUseCase', { resolveOwnSocialIdentity: () => ({ identityId: actsFor }) });
     app.mount(host);
     await nextTick();
     return { host, router, unmount: () => { app.unmount(); host.remove(); } };
@@ -146,5 +147,21 @@ const texts = (host, selector) => [...host.querySelectorAll(selector)].map((node
         assert(!alone.host.querySelector('.helped-builds-shelf'), 'nobody who helped make nothing sees the section');
     } finally {
         alone.unmount();
+    }
+}
+
+// Another device of Kim's (its own key, acting for his identity): his page is
+// its own, with the builds he helped make, kept under the identity his
+// devices share.
+{
+    const phone = person('pages-kims-phone');
+    const view = await mount(`/builder/${encodeURIComponent(kim.id)}`, phone, { actsFor: kim.id });
+    try {
+        await until(() => view.host.querySelector('.builder-view'), 'the page');
+        assert(view.host.querySelector('.builder-you'), 'his other device knows the page is his');
+        assert(view.host.querySelectorAll('.helped-build').length === 2, 'and lists the builds he helped make');
+        console.log('✓ your other devices know your page, and the builds you helped make');
+    } finally {
+        view.unmount();
     }
 }

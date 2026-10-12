@@ -185,6 +185,7 @@ export default Object.freeze({
     'remixFamily.byAuthor': '{author}の{title}',
     'remixFamily.byAuthorWith': '{author}の{title}（{names}と一緒に作った）',
     'remixFamily.titleWith': '{title}（{names}と一緒に作った）',
+    'remixFamily.titleOnly': '{title}',
     'remixFamily.unseen': 'このデバイスがまだ見ていない作品',
     'remixFamily.more': { other: 'ほかに{count}件のリミックス' },
     'remix.count': { other: '{count}回リミックスされました' },

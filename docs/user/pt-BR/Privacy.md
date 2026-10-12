@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 472c2d45139f70da -->
+<!-- translation-of: docs/Privacy.md source-hash: 0c17fa09c34c708f -->
 # Privacidade
 
 <!-- languages -->
@@ -62,7 +62,11 @@ que você publique, exporte ou envie:
   enquanto vocês as construíam juntos (**Construir comigo**): o título de
   cada construção, o nome e a identidade do autor dela, e quando, para
   **Construções que você ajudou a fazer** em Meus mundos e na sua própria
-  página de construtor. Seus selos no Início são calculados a partir do que
+  página de construtor. Essa lista fica guardada sob a identidade que seus
+  dispositivos compartilham, e enquanto outro dispositivo seu estiver
+  conectado (um dispositivo autorizado da mesma identidade) os dois passam
+  um ao outro as suas listas; ela nunca vai para o dispositivo de mais
+  ninguém. Seus selos no Início são calculados a partir do que
   já está listado aqui e não são guardados.
 
 Limpar os dados deste site no navegador apaga tudo isso, e não há outra
