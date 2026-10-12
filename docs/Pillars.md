@@ -222,6 +222,22 @@ what brings a builder back, few copies per opened link at the shared link's
 **Edit a Copy**. The numbers are a first guess for launch; change them here
 and in core/LaunchTargets.js together, with the reason in the roadmap.
 
+## The side systems
+
+Catching and decorating with animals, the inventory, swimming, chat, voice
+and the public lobby serve no pillar directly, and the reviews of 2026-10-11
+and 2026-10-12 asked for a decision on each. The owner's decision
+(2026-10-12): **keep them, and watch them.** Each is counted when used, at
+most once a page load (core/SideSystemUse.js; `/e/swam`, `/e/animal-caught`,
+`/e/animal-decorated`, `/e/inventory-used`, `/e/chat-sent`, `/e/voice-call`,
+`/e/lobby-joined`), and scripts/launch-scorecard.mjs shows what share of
+visits used each: World View visits for the first four, daily visits for the
+rest (core/LaunchTargets.js, `SIDE_SYSTEMS`). One that fewer than 2% of
+visits use, once 50 World View visits or 100 daily visits are counted, is
+flagged **rarely used**, and the owner looks at it again: fold it into
+building, move it under Advanced, or remove it. Until then they stay frozen
+as above: kept working, with no new features.
+
 ## Where this came from
 
 A creative-direction review of 1.3.0 (October 2026) found four visions

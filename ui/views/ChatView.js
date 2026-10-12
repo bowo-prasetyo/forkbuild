@@ -146,6 +146,7 @@ export default {
         const identityUseCase = inject('identityUseCase');
         const peerSessionManager = inject('peerSessionManager');
         const peerRelationshipUseCase = inject('peerRelationshipUseCase');
+        const funnel = inject('funnelEventCounter', null);
         const friendRelationshipUseCase = inject('friendRelationshipUseCase');
         const peerBlockUseCase = inject('peerBlockUseCase');
         const chatUseCase = inject('chatUseCase');
@@ -314,6 +315,8 @@ export default {
             try {
                 chatUseCase.sendOrQueue(peerIdentityId, draft.value);
                 draft.value = '';
+                // A kept side system used (core/SideSystemUse.js).
+                funnel?.sentChat();
             } catch (e) {
                 sendError.value = errorText(e).replace(/^ChatUseCase:\s*/, '');
             }
@@ -377,6 +380,7 @@ export default {
                 // application/chat/VoiceUseCase.js#startCallToIdentity()'s own
                 // header.
                 voiceUseCase.startCallToIdentity(peerIdentityId);
+                funnel?.madeVoiceCall();
                 refreshVoice();
             } catch (e) {
                 voiceError.value = errorText(e).replace(/^VoiceUseCase:\s*/, '');
@@ -387,6 +391,7 @@ export default {
             voiceError.value = '';
             try {
                 await voiceUseCase.acceptCall(callForThisPeer.value.callId);
+                funnel?.madeVoiceCall();
                 // 0.2.75 — media is only actually attached once
                 // acceptCall() resolves; listing devices any earlier
                 // would show a picker with nothing yet to act on.

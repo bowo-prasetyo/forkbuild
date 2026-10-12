@@ -88,6 +88,7 @@ import { plazaSectionTemplate } from './worldView/templates/plazaSection.js';
 import { useChallengePlaza } from './worldView/useChallengePlaza.js';
 import { useStarterVillage } from './worldView/useStarterVillage.js';
 import { useNeighbourCount } from './worldView/useNeighbourCount.js';
+import { useSideSystemCount } from './worldView/useSideSystemCount.js';
 import { buildCreditName } from '../../core/BuildCredit.js';
 import { hoverCardTemplate } from './worldView/templates/hoverCard.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
@@ -286,6 +287,8 @@ export default {
         const village = useStarterVillage({ session });
         // Whether visitors see someone else's build, counted (useNeighbourCount.js).
         const neighbourCount = useNeighbourCount({ session });
+        // Whether the kept side systems are used, counted (useSideSystemCount.js).
+        const sideSystemCount = useSideSystemCount({ session });
         // `/plaza/<week>`: the week's challenge plaza instead of a World.
         const {
             plaza, inPlaza, enterPlaza, leavePlaza, backToPlaza, focusExhibit, openExhibit, remixExhibit
@@ -1116,6 +1119,7 @@ export default {
             session.start(viewport.value);
             village.standVillage();
             neighbourCount.startVisit();
+            sideSystemCount.startVisit();
             if (inPlaza.value) {
                 // The plaza's own panel says what stands there; "a quiet corner" would not.
                 skipArrivalWelcomes();
@@ -1210,6 +1214,7 @@ export default {
                     : null;
                 // Not gated on control mode: air runs out whether or not keys are held.
                 swimState.value = hasLocalAvatar.value ? session.avatarSwimState() : null;
+                if (hasLocalAvatar.value) sideSystemCount.observeAvatar(swimState.value);
             }, 150);
         });
 
@@ -1220,6 +1225,7 @@ export default {
             placeNamingDiscoveryPresentationActive = false;
             leavePlaza();
             village.clearVillage();
+            sideSystemCount.endVisit();
             disposeClaimedBuilds();
             unsubscribeAnnouncementIndexChanges();
             if (placeNamingDiscoveryMonitor) {

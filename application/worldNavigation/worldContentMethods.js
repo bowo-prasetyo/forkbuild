@@ -184,7 +184,23 @@ export const worldContentMethods = {
         });
         this._commandHistories.get(worldId).execute(cmd);
         this._animalRuntimeInstances.discard(target.id, target.position);
+        for (const listener of this._animalDecoratedListeners || []) {
+            try {
+                listener(cmd.executedDecorationId);
+            } catch {
+                // A listener (the side-system count) never stops decorating.
+            }
+        }
         return cmd.executedDecorationId;
+    },
+
+    // Called after each animal decorated with (G), with the decoration's id:
+    // World View counts the side system's use (core/SideSystemUse.js).
+    // Returns a function that stops the calls.
+    onAnimalDecorated(listener) {
+        if (!this._animalDecoratedListeners) this._animalDecoratedListeners = new Set();
+        this._animalDecoratedListeners.add(listener);
+        return () => this._animalDecoratedListeners.delete(listener);
     },
 
     // The 'G' key's dispatcher, mirroring the 'F' priority rule:

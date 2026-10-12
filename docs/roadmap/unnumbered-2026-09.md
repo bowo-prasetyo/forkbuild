@@ -6127,3 +6127,28 @@ built in).
   panel not; Walk on a phone opening with the panel closed and the plaza's line opening it.
 - Not done: a cut that follows the player between storeys; the HUD's own compact layout for very small screens beyond
   wrapping; showing the neighbour count anywhere but the scorecard.
+
+## The side systems, kept and watched (unnumbered, 2026-10-12)
+
+**Kept, and counted, so they are judged on use.** The creative-direction reviews of 2026-10-11 and 2026-10-12 asked the
+project owner to decide each of the systems that serve no pillar directly. The owner kept them all, to be looked at
+again if hardly anyone uses one (docs/Pillars.md, "The side systems").
+
+- **Seven counts** (core/VisitorCount.js; application/settings/FunnelEventCounter.js `countOnce()`), each at most once a
+  page load, under the visitor count's rules (official site only, the setting, Do Not Track and Global Privacy
+  Control): `/e/swam` (into the water), `/e/animal-caught`, `/e/animal-decorated` (G), `/e/inventory-used` (an animal
+  caught or a vehicle stored), `/e/chat-sent`, `/e/voice-call` (made or answered) and `/e/lobby-joined`. None says what
+  was caught, said, called or joined.
+- **Where they're heard.** Swimming, catching and carrying from World View's avatar tick (core/SideSystemUse.js, pure:
+  what changed between two moments, the first moment of a visit using nothing; ui/views/worldView/useSideSystemCount.js);
+  decorating from the session (`onAnimalDecorated()` in application/worldNavigation/worldContentMethods.js); chat and
+  voice in ui/views/ChatView.js; the lobby in ui/components/PublicLobbyPanel.js.
+- **Watched on the scorecard** (core/LaunchTargets.js `SIDE_SYSTEMS`, `evaluateSideSystems()`; scripts/launch-scorecard.mjs).
+  The share of visits that used each, out of World View visits (`/e/world-visit`) for the World View ones and daily
+  visits (`/`, which the scorecard now reads too) for chat, voice and the lobby; flagged rarely used under 2% once 50 or
+  100 visits are counted. Not targets: nothing gates on them.
+- docs/Privacy.md and its seven translations, stamped up to date; Pillars records the decision.
+- Tests: `SideSystems` (the snapshot and what changed; each count's fixed path, once a page load, off when turned off
+  or elsewhere; the decoration listener; the scorecard's shares and flags).
+- Not done: a count of how much each is used beyond once a page load; the side systems' guide pages, which are
+  unchanged.

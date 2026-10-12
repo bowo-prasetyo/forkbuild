@@ -10,8 +10,9 @@
 // a JSON object of { "/e/<event>": total }, GoatCounter's CSV export (one row
 // per hit), or lines of "/e/<event> total". Exits 0 whatever the numbers say.
 import { readFileSync } from 'node:fs';
-import { evaluateLaunchTargets, parseCounts, TARGET_STATUS } from '../core/LaunchTargets.js';
+import { evaluateLaunchTargets, evaluateSideSystems, parseCounts, SIDE_SYSTEM_STATUS, TARGET_STATUS } from '../core/LaunchTargets.js';
 
+const SIDE_MARK = { [SIDE_SYSTEM_STATUS.USED]: '✓ used', [SIDE_SYSTEM_STATUS.RARELY_USED]: '! rarely used', [SIDE_SYSTEM_STATUS.TOO_FEW]: '… too few' };
 const MARK = { [TARGET_STATUS.MET]: '✓ met', [TARGET_STATUS.MISSED]: '✗ below', [TARGET_STATUS.TOO_FEW]: '… too few' };
 const GATE = {
     open: 'OPEN: both building targets are met.',
@@ -41,6 +42,14 @@ export function formatScorecard(counts) {
         lines.push(`             ${result.question}`);
     }
     lines.push('', `New networks: ${GATE[gate]}`);
+    // The side systems the owner kept (docs/Pillars.md, "The side systems"):
+    // watched, not aimed at; one rarely used is for the owner to look at again.
+    lines.push('', 'SIDE SYSTEMS (kept; looked at again when rarely used)');
+    for (const result of evaluateSideSystems(counts)) {
+        const share = result.value === null ? '—' : `${(result.value * 100).toFixed(1)}%`;
+        lines.push(`  ${SIDE_MARK[result.status].padEnd(13)} ${result.id.padEnd(11)} ${share.padStart(7)} of ${result.sample} visits  (looked at again below ${(result.reevaluateBelow * 100).toFixed(0)}%; needs ${result.minimum})`);
+        lines.push(`                ${result.question}`);
+    }
     return lines.join('\n').trimStart();
 }
 

@@ -68,8 +68,10 @@ const byId = (results) => Object.fromEntries(results.map((result) => [result.id,
 
 // Counts come as JSON, as GoatCounter's CSV export, or as plain lines.
 {
-    const json = parseCounts('{"/e/share-link": 4, "/e/opened-shared-link": "6", "/": 900}');
-    assert(json['/e/share-link'] === 4 && json['/e/opened-shared-link'] === 6 && !('/' in json), 'JSON keeps the funnel paths');
+    const json = parseCounts('{"/e/share-link": 4, "/e/opened-shared-link": "6", "/": 900, "/about": 3}');
+    assert(json['/e/share-link'] === 4 && json['/e/opened-shared-link'] === 6 && !('/about' in json), 'JSON keeps the funnel paths');
+    // The daily visit count too: the side systems are read against it.
+    assert(json['/'] === 900, 'and the daily visit count');
     const csv = parseCounts([
         '2,Path,Title,Event,UserAgent,Browser,System,Session,Bot,Referrer,Referrer scheme,Screen size,Location,FirstVisit,Date',
         '2,/e/walk-link,,true,"Mozilla/5.0 (X11, Linux)",Chrome,Linux,1,0,,,,,0,2026-10-12',
@@ -88,6 +90,7 @@ const byId = (results) => Object.fromEntries(results.map((result) => [result.id,
     const text = formatScorecard({ '/e/publish-bricks-1': 60, '/e/publish-placed-1': 60, '/e/second-build': 3 });
     assert(text.includes('BUILDING') && text.includes('FAMILY') && text.includes('WORLD'), 'grouped by pillar');
     assert(/✗ below\s+median-placed/.test(text) && /✗ below\s+second-build/.test(text), 'a missed target says so');
-    assert(text.trim().endsWith('New networks: CLOSED: a building target is below where it should be.'), 'and ends with the gate');
-    console.log('✓ the scorecard groups targets by pillar and ends with the gate');
+    const gateAt = text.indexOf('New networks: CLOSED: a building target is below where it should be.');
+    assert(gateAt > 0 && text.indexOf('SIDE SYSTEMS') > gateAt, 'and ends with the gate, then the side systems it watches (tests/SideSystems.test.js)');
+    console.log('✓ the scorecard groups targets by pillar and ends with the gate, then the side systems');
 }
