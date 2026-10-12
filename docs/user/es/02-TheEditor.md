@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 761f34649511fe59 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 3be54646475153c8 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -269,10 +269,13 @@ Cada cambio queda registrado, así que siempre puede volver atrás:
 Mover diez bloques cuenta como **un** paso de deshacer, así que deshacer
 sigue siendo manejable incluso en construcciones grandes.
 
-Mientras construyen juntos (**Construir conmigo**, más abajo), Deshacer y
-Rehacer quedan en pausa: de lo contrario, su paso y el de su amigo podrían
-deshacerse en un orden distinto en cada pantalla. En su lugar, elimine o
-mueva un bloque.
+Mientras construyen juntos (**Construir conmigo**, más abajo), Deshacer solo
+retira sus propios pasos, nunca los de un amigo, y en todas las pantallas a la
+vez; Rehacer los vuelve a poner. Si desde entonces un amigo ha cambiado lo que
+hizo su paso (por ejemplo, eliminó el bloque que usted colocó), ese paso se
+omite y el Editor se lo indica. Cuando alguien se une, el Deshacer de todos
+vuelve a empezar desde ahí: el recién llegado nunca tuvo los pasos hechos
+antes.
 
 ## Grupos
 
@@ -623,6 +626,9 @@ aparece en ambas pantallas.
 - Una franja sobre la escena muestra quién está construyendo, cada uno en su
   propio color, y cada uno ve adónde apunta el otro y qué tiene
   seleccionado, en ese color.
+- **Deshacer** (`Ctrl/Cmd + Z`) retira su propio último paso en todas las
+  pantallas, y **Rehacer** lo vuelve a poner; los pasos de sus amigos solo
+  pueden deshacerlos ellos.
 - Tiene que ser su propia construcción: una que usted empezó o una copia que
   hizo. Una construcción que empezó antes de iniciar sesión pasa a ser suya
   cuando invita a sus amigos a ella.

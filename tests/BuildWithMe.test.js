@@ -19,6 +19,8 @@ import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
 import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
+import { DeleteBrickCommand } from '../application/commands/DeleteBrickCommand.js';
+import { UndoOperationCommand } from '../application/commands/SharedUndoCommands.js';
 import { DocumentCommandPropagationUseCase, DocumentOperationRejectionReason } from '../application/document/DocumentCommandPropagationUseCase.js';
 import { EditorSession } from '../application/editor/EditorSession.js';
 import { BuildTogetherSession, BuildTogetherOutcome, BuildTogetherRole, coBuilderColor } from '../application/buildTogether/BuildTogetherSession.js';
@@ -81,7 +83,7 @@ function makeEditor(label) {
         commandRegistry: new CreateCommandRegistryUseCase().execute(),
         resolveDocument: (id) => (documentManager.document && documentManager.document.world.id === id ? documentManager.document : null),
         resolveWorldEditGrant: (documentId, identityId) => together.allows(documentId, identityId),
-        shouldRelay: (documentId) => together.isHosting(documentId)
+        shouldRelay: (documentId, command, authorIdentityId) => together.isHosting(documentId) && session.acceptsSharedStep(command, authorIdentityId)
     });
     const rejected = [];
     propagation.onOperationRejected((reason) => rejected.push(reason));
@@ -110,12 +112,14 @@ function makeEditor(label) {
             openShared: (document, operationIds) => session.openSharedDocument(document, operationIds),
             creditBuilder: (builder) => Boolean(documentManager.document && documentManager.document.metadata.creditBuilder(builder)),
             adoptCredits: (builtWith) => Boolean(documentManager.document && documentManager.document.metadata.adoptBuiltWith(builtWith)),
-            notedHelped: (entry) => helped.push(entry)
+            notedHelped: (entry) => helped.push(entry),
+            resetUndo: () => { resets.push(session.resetSharedUndo()); }
         }
     });
     const helped = [];
+    const resets = [];
     return {
-        label, device, bus, registry, documentManager, session, together, rejected, helped,
+        label, device, bus, registry, documentManager, session, together, rejected, helped, resets,
         id: device.identity.identityId,
         get document() { return documentManager.document; },
         execute(command) { session.commandHistory.execute(command); return command; },
@@ -235,13 +239,72 @@ async function runTests() {
         console.log('✓ co-builders see where each other points and what each has selected');
     }
 
-    // Undo is paused while sharing.
+    // Undo while building together: each takes back only their own steps,
+    // and every copy changes the same way.
     {
-        ana.session.setSharedEditing(true);
-        assert(!ana.session.canUndo() && ana.session.undo() === false && ana.session.redo() === false, 'Undo and Redo pause while building together');
-        ana.session.setSharedEditing(false);
-        assert(ana.session.canUndo(), 'and come back after');
-        console.log('✓ Undo pauses while building together');
+        const everyone = [host, ana, ben];
+        for (const person of everyone) person.session.setSharedEditing(true);
+        const brickAt = (person, x) => person.document.world.getBuilding(BUILDING).getBricks().some((brick) => brick.position.x === x);
+        const same = (what) => assert(everyone.every((person) => person.bricks() === host.bricks()) && host.bricks() === what,
+            `every copy has ${what} bricks (${everyone.map((person) => person.bricks())})`);
+        assert(ana.resets.at(-1) === true, 'when Ben joined, Ana\'s Undo started again');
+        assert(!host.session.canUndo(), 'so the host\'s steps from before Ben joined are no longer Undo\'s');
+        const count = host.bricks();
+        ana.execute(place(10));
+        await wait(30);
+        same(count + 1);
+        assert(ana.session.canUndo() && ana.session.getUndoLabel(), 'Ana can take back the brick she just placed');
+        assert(ana.session.undo() === true, 'and does');
+        await wait(30);
+        same(count);
+        assert(!everyone.some((person) => brickAt(person, 10)), 'it is gone from every copy');
+        assert(ana.session.canRedo() && ana.session.getRedoLabel(), 'Redo can put it back');
+        assert(ana.session.redo() === true, 'and does');
+        await wait(30);
+        same(count + 1);
+        assert(everyone.every((person) => brickAt(person, 10)), 'back on every copy');
+
+        ben.execute(place(11));
+        await wait(30);
+        same(count + 2);
+        assert(ben.session.undo() === true, 'Ben takes back his brick, made after Ana\'s');
+        await wait(30);
+        same(count + 1);
+        assert(everyone.every((person) => brickAt(person, 10) && !brickAt(person, 11)), 'his, not Ana\'s');
+        assert(ana.session.canUndo(), 'Ana\'s step is still hers to take back');
+        console.log('✓ Undo and Redo take back your own steps on every copy');
+
+        // Ben's copy forges an undo of Ana's brick: every copy refuses it.
+        const anasBrick = ana.session.commandHistory.getExecutedCommands().find((command) => command.type === 'place-brick' && command.position.x === 10);
+        const forged = ben.execute(new UndoOperationCommand({ worldId: DOC, targetId: anasBrick.id }));
+        await wait(30);
+        assert(!forged.applied && brickAt(ben, 10), 'Ben\'s own copy won\'t take back Ana\'s step');
+        same(count + 1);
+        assert(!ana.session.commandHistory.getExecutedCommands().some((command) => command.id === forged.id), 'nor does the host pass it on');
+        console.log('✓ nobody\'s Undo takes back someone else\'s step');
+
+        // Ana's step that someone changed since can't be undone: skipped everywhere.
+        ana.execute(place(12));
+        await wait(30);
+        const twelve = host.document.world.getBuilding(BUILDING).getBricks().find((brick) => brick.position.x === 12);
+        host.execute(new DeleteBrickCommand({ worldId: DOC, buildingId: BUILDING, brickId: twelve.id }));
+        await wait(30);
+        same(count + 1);
+        assert(ana.session.undo() === false && ana.session.lastSharedStep.applied === false, 'Ana\'s Undo says it couldn\'t');
+        await wait(30);
+        same(count + 1);
+        assert(everyone.every((person) => brickAt(person, 10) && !brickAt(person, 12)), 'and changes no copy');
+        console.log('✓ a step someone changed since is skipped the same way everywhere');
+
+        // Someone else joins: everyone's Undo starts again.
+        host.execute(place(13));
+        host.together.allow('did:key:z6MkSomeoneNew', 'Cy');
+        await wait();
+        assert(!host.session.canUndo() && !ana.session.canUndo() && !ben.session.canUndo(), 'nobody can take back a step the newcomer never had');
+        assert(ana.resets.at(-1) === true, 'Ana, who lost steps by it, is told');
+        for (const person of everyone) person.session.setSharedEditing(false);
+        assert(ana.session.canUndo(), 'and alone again, her own Undo is back');
+        console.log('✓ when someone joins, Undo starts again for everyone');
     }
 
     // Stop: guests are told, and may edit no more.

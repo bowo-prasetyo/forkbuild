@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 761f34649511fe59 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 3be54646475153c8 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -255,10 +255,12 @@ Toda mudança é registrada, então você sempre pode voltar:
 Mover dez blocos conta como **um** passo de desfazer, então desfazer
 continua prático mesmo em construções grandes.
 
-Enquanto vocês constroem juntos (**Construir comigo**, abaixo), Desfazer e
-Refazer ficam pausados: senão, o seu passo e o do seu amigo poderiam ser
-desfeitos em uma ordem diferente em cada tela. Em vez disso, exclua ou mova
-um bloco.
+Enquanto vocês constroem juntos (**Construir comigo**, abaixo), Desfazer
+desfaz só os seus próprios passos, nunca os de um amigo, e em todas as telas
+ao mesmo tempo; Refazer os traz de volta. Se depois disso um amigo mudou o que
+o seu passo fez (excluiu o bloco que você colocou, por exemplo), esse passo é
+pulado e o Editor avisa. Quando alguém entra, o Desfazer de todo mundo
+recomeça a partir dali: quem chegou nunca teve os passos feitos antes.
 
 ## Grupos
 
@@ -589,6 +591,8 @@ colocar, mover, mudar de cor ou excluir aparece nas duas telas.
 - Uma faixa sobre a cena mostra quem está construindo, cada um com sua
   própria cor, e cada um de vocês vê para onde o outro está apontando e o
   que ele selecionou, nessa cor.
+- **Desfazer** (`Ctrl/Cmd + Z`) desfaz o seu último passo em todas as telas, e
+  **Refazer** o traz de volta; desfazer os passos dos seus amigos cabe a eles.
 - Precisa ser a sua própria construção: uma que você começou, ou uma cópia
   que você fez. Uma construção que você começou antes de entrar na conta
   passa a ser sua quando você convida amigos para ela.

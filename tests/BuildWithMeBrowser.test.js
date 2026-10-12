@@ -219,7 +219,7 @@ function mountEditor(authorIdentityId, session) {
     assert(session.allowed.length === 1, 'once');
     assert(host.querySelector('.build-together-strip-title').textContent === t('buildTogether.strip.hosting')
         && host.querySelector('.build-together-person').textContent.trim() === 'Kim', 'the strip shows who is building');
-    assert(host.textContent.includes(t('buildTogether.strip.undoPaused')) && stand.editorSession.shared, 'Undo pauses');
+    assert(host.textContent.includes(t('buildTogether.strip.undoOwn')) && stand.editorSession.shared, 'Undo takes back only your own steps');
     assert(stand.editorSession.shown.at(-1)[0].identityId === 'did:key:kim', 'and the Editor draws the co-builder');
     const strip = host.querySelector('.build-together-strip');
     assert(strip.getBoundingClientRect().right <= 360.5, 'the strip fits the viewport');

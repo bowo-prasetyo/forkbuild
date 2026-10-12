@@ -5808,3 +5808,42 @@ yours.
   for your identity knows your page and lists the builds you helped make).
 - Not done: a device of yours that is never connected at the same time as the one that built learns of an unpublished
   build helped make only through Your Data.
+
+## Undo while building together (unnumbered, 2026-10-12)
+
+**Undo works while you build with friends, and only ever takes back your own steps.** Build with me paused Undo and
+Redo while sharing: no replica propagated them, so one person's Undo would have taken back a step in an order only
+their copy knew. Building without Undo is building scared, and the creative-direction review's Release C left it as
+the one gap in building together. Pillar served: your work is yours (and so is taking it back).
+
+- **An Undo is an operation** (application/commands/SharedUndoCommands.js). While sharing, Undo sends
+  `undo-operation` and Redo `redo-operation`, each naming the step it takes back by id, on the ordinary command
+  protocol: authorized, ordered, deferred and relayed like any edit. Each replica finds that step in its own history
+  (`findOperation` in the command context) and runs the step's own `undo()` (or `execute()`): the same commands'
+  own reversal the conflict resolver already relies on, so nothing new is merged, and reordering one works as it does
+  for any command.
+- **Only your own steps.** EditorSession keeps the steps this replica made (`isLocal`), at most 200, which Undo goes
+  back through and Redo forward; a new step clears Redo's. Who made each operation is noted as it arrives, before it
+  is applied (the identity its connection proved), so every replica refuses an Undo whose author didn't make its step,
+  and the host doesn't relay one (`shouldRelay` now gets the command and its author;
+  `EditorSession#acceptsSharedStep()`).
+- **Skipped the same everywhere.** A step that would change nothing (a friend deleted the brick you placed) is
+  skipped on every replica, so a Redo can't bring back what someone else removed; the Editor says "That step can't be
+  undone any more". A skipped one is still sent, so the operations that follow it keep their order.
+- **Starts again when someone joins.** A newcomer's copy never had the steps made before they came, so when the host
+  allows someone, everyone's Undo starts from there (`undo-reset` on `forkbuild:build-together-sync`, from the host
+  alone), and anyone who lost steps by it is told. Undo and Redo name your step as ever; in the history, a shared one reads
+  "Take Back …" or "Put Back …".
+- **Replay and sound.** `CommandHistory#replay()` gives replayed shared steps the steps replayed before them, and one
+  skipped where it was made says so in the history (`skipped`), so the Operation Timeline replays a shared session
+  exactly. A co-builder's Undo sounds like Undo.
+- Every language: the strip's note, the reset and skip messages, the step labels; guide 02's Undo and Build with me
+  sections. docs/Protocol.md and docs/Architecture.md describe it; README.
+- Tests: `SharedUndo` (the commands: back and forth, reversing either, only the author's, an unknown step, a step
+  that would change nothing; the wire form through the registry; a replay ending where the build did; sounds);
+  `BuildWithMe` (a host and two guests on real Editors: a guest's Undo and Redo change every copy, another's step
+  stays theirs, the host's steps from before a guest joined are no longer Undo's; a forged Undo of a friend's step is
+  refused by its own copy and not relayed; a step a friend deleted since is skipped everywhere; someone joining resets
+  everyone's Undo; alone again, Undo is the Editor's own); `BuildWithMeBrowser` (the strip's note).
+- Not done: undoing a step from before the latest join, which would need the newcomer to have every earlier step;
+  and Redo of a step whose brick a friend has since moved puts it back where you had it.

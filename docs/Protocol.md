@@ -562,6 +562,7 @@ for the build over that connection, on `forkbuild:build-together-sync`:
                    (the host relays each guest's to the others with who and name)
     host → guests  { type: 'ended', documentId }
     host → guests  { type: 'credits', documentId, builtWith: [{ name, identityId }] }
+    host → guests  { type: 'undo-reset', documentId, name }
     guest → host   { type: 'left', documentId }
 
 `document` is the Document's JSON; the guest opens it only when its
@@ -587,6 +588,24 @@ take from it. A fork by anyone else starts with none. While building
 together, the host sends the list on `credits` each time it changes, and
 each guest's copy takes it from its host alone, for the build it opened
 from them.
+
+Undo and Redo while building together are operations of their own on
+`forkbuild:document-sync`, sent, authorized, ordered and relayed like any
+edit (application/commands/SharedUndoCommands.js):
+
+    command   { type: 'undo-operation' | 'redo-operation', id, timestamp, worldId, targetId, skipped? }
+
+Each replica finds the operation `targetId` names in its own history and
+runs that operation's own `undo()` (or `execute()` for a Redo); nothing
+else is merged. It is applied only when the same identity made both, as
+each replica knows them (the identity its connection proved for each, or
+itself), and the host relays one only then; otherwise, or when it would
+change nothing (what the step made is gone), it is skipped, the same on
+every replica. `skipped: true` records one skipped where it was made, for a
+replay of the history, which knows no authors; a receiver decides for
+itself. A replica only ever sends an Undo or Redo of its own steps. When the
+host allows someone new, everyone's Undo starts again (`undo-reset`, and the
+host's own): the newcomer's copy never had the steps made before.
 
 A guest's builds helped make are kept under the identity its devices share
 (DeviceAuthorizationPropagationUseCase#resolveOwnSocialIdentity()), and go

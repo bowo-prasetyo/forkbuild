@@ -621,9 +621,11 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             // helper. Null whenever ctx.canUndo is false, so this never
             // disagrees with disabledReason above.
             contextualLabel: (ctx) => ctx.undoLabel,
+            // While building together, an Undo whose step was changed since
+            // by a friend is skipped (application/commands/SharedUndoCommands.js),
+            // and says so.
             execute: () => surfaceCall('undo', 'undo', (undo) => {
-                undo();
-                feedback.show(done('history.undo'));
+                feedback.show(undo() === false ? message('history.sharedStepSkipped') : done('history.undo'));
             })
         }),
         define({
@@ -637,8 +639,7 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             // ctx.redoLabel is CommandHistory's own getRedoLabel().
             contextualLabel: (ctx) => ctx.redoLabel,
             execute: () => surfaceCall('redo', 'redo', (redo) => {
-                redo();
-                feedback.show(done('history.redo'));
+                feedback.show(redo() === false ? message('history.sharedStepSkipped') : done('history.redo'));
             })
         }),
 

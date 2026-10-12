@@ -972,8 +972,21 @@ signed), and `shouldRelay` passes each guest's on to the others, since each
 guest is connected to the host alone. A guest accepts the host's because the
 build's `authorIdentityId` is the host's, checked against the connection.
 Presence (pointer and selection) travels on the same protocol and is drawn by
-renderer/CoBuilderRenderer.js. While sharing, EditorSession pauses Undo and
-Redo, which no replica propagates. Making two-way editing work needed three
+renderer/CoBuilderRenderer.js. While sharing, Undo and Redo become
+operations of their own (application/commands/SharedUndoCommands.js:
+`UndoOperationCommand`, `RedoOperationCommand`) naming the step they take back
+by id: each replica finds that step in its own history (`findOperation` in the
+command context) and runs the step's own `undo()` or `execute()`, as the
+conflict resolver does, so no new merging is involved. EditorSession keeps the
+replica's own steps (made here, `isLocal`) for Undo and Redo to go through,
+and who made each operation (`operationAuthor`: the identity the command
+protocol proved, noted before applying, or this replica): a step is taken back
+only by an Undo from the same author, the host relays nothing else
+(`shouldRelay`, EditorSession#acceptsSharedStep()), and one that would change
+nothing is skipped on every replica. When the host allows someone new,
+BuildTogetherSession resets everyone's own steps (`undo-reset`), since the
+newcomer's copy never executed them. CommandHistory#replay() supplies the
+lookup among the steps it replays, so the Operation Timeline replays them too. Making two-way editing work needed three
 fixes in the Editor's replication: a collaborator's operation applied
 through the local history is never broadcast again as this replica's
 (`isLocal`), this replica's own operations are recorded in its causal graph

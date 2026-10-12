@@ -2,8 +2,8 @@ import { t } from '../../i18n/i18n.js';
 
 // Who is building this with you (ui/views/editorView/useBuildTogether.js):
 // over the Editor's viewport, each co-builder in their own colour, that
-// Undo is paused, and the way to the link, Stop (the host) or Leave (a
-// friend).
+// Undo takes back only your own steps, and the way to the link, Stop (the
+// host) or Leave (a friend).
 export default {
     name: 'BuildTogetherStrip',
     props: {
@@ -31,7 +31,7 @@ export default {
                     <span class="build-together-dot" :style="{ background: css(person.color) }" aria-hidden="true"></span>{{ personText(person) }}
                 </li>
             </ul>
-            <span v-if="sharing" class="build-together-undo-note">{{ t('buildTogether.strip.undoPaused') }}</span>
+            <span v-if="sharing" class="build-together-undo-note">{{ t('buildTogether.strip.undoOwn') }}</span>
             <span class="build-together-strip-actions">
                 <button v-if="role === 'host'" type="button" class="action-btn build-together-link-btn" @click="$emit('link')">{{ t('buildTogether.strip.link') }}</button>
                 <button v-if="role === 'host'" type="button" class="action-btn build-together-stop" @click="$emit('stop')">{{ t('buildTogether.strip.stop') }}</button>
