@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
   "world": {
-    "id": "4cde81c0-0cbd-4302-8842-74f1dca19942",
+    "id": "c567e727-138d-4240-9768-85cf30d16fa7",
     "metadata": {},
     "buildings": [
       {
-        "id": "6f2df624-940b-4625-9229-5d73ee4ac198",
+        "id": "7640c8d0-a898-4334-94d1-4a332675a444",
         "creator": "local",
         "library": "core",
         "brickTable": {
@@ -21,7 +21,7 @@
             "core:slab_4x4",
             "core:beam",
             "core:beam_short",
-            "core:round_1x1",
+            "core:lantern",
             "core:round_plate_2x2",
             "core:roof_cone",
             "core:post",
@@ -38,43 +38,43 @@
             16119285
           ],
           "ids": [
-            "a6cbe9af-bd0a-459d-9102-8db8e71a3350",
-            "0b646286-8214-48d9-98eb-72d241aa3aaf",
-            "fee6739e-b711-423d-a882-af5afef2460f",
-            "6e33b5fe-307b-4385-b0ec-85a1508c7e83",
-            "a0200814-489f-4530-849f-3d044b5512bf",
-            "6a9893be-bca3-4693-99ec-6a592948fdfa",
-            "199b8700-7d43-4679-a448-1cc5c921be05",
-            "11289a51-dd17-4a54-bdb3-322c9840f6e1",
-            "1068f165-4e96-46f4-ba06-1b75da72b854",
-            "e407d53f-a666-46d7-8a0d-23d198304922",
-            "94104614-a245-44bf-b5bc-c11887bd5bfe",
-            "5c112deb-004b-41da-bc80-70be9c6700ac",
-            "26caaa7b-a6fe-4974-b135-e2f4ffe1646f",
-            "c8dce20e-77de-4fec-a27e-d13c21cc6ab3",
-            "4e22f492-c96b-4aa2-924e-4a57b414e25e",
-            "b8c7d594-166a-4302-854e-e9cf44c5dff2",
-            "adfe92e0-c163-4099-bc0e-8c591b985a61",
-            "de63e6f3-c3a0-41c5-891b-0288b4676efd",
-            "890c259d-6fb8-4a08-bfc9-770ef0858ff5",
-            "8b0d7edc-b93b-4348-acd0-f2d49aba79d8",
-            "a54b8b33-8cea-4f03-a6d2-86a885f1ba7a",
-            "2f622fa5-0729-49a5-8837-90e2f725b14a",
-            "9150b489-31fd-4043-a82e-39c520f6dbf4",
-            "2a00b53c-7e2f-452d-a09b-d3eefe0a4b12",
-            "7faecb6f-662f-41a3-9d37-e4f7c409eb6b",
-            "02aa7925-7ce9-490a-9f3a-160b7287aa1a",
-            "8712b5eb-5f2f-4361-82c0-d96351bb979d",
-            "1a84b2fc-71b7-41bc-929e-a2bce0e6c0ab",
-            "2688d419-d1eb-476c-a7fa-279c99b5d0ff",
-            "317b97c2-172f-483d-95a9-255db10927f1",
-            "55090382-014e-4663-91e3-d1f82e9f4ad3",
-            "9c3d5355-f998-4c46-9d6b-7d56051e3bc1",
-            "5dd18ff9-96f1-4314-b36d-51c24d161e93",
-            "64a81133-5da9-4d09-a63b-9fc12c6fa9fe",
-            "45823509-4ad8-477a-9177-e1a93d201f9d",
-            "ca5925cb-9c16-4304-b7d4-8e8d72877895",
-            "3dff15a5-ef70-42cd-9180-c5c39576689f"
+            "fb5929b3-ae44-4596-bc4a-9a413c102b27",
+            "c7328ba7-1959-4437-b2d4-3c4cdc1320af",
+            "2417de2c-4836-4b98-870a-566b9173259f",
+            "ddd85efe-0d32-4245-a4c4-2a09fe280d16",
+            "8a2ffed7-ca9e-486e-ba4f-8dcc4ea11b0c",
+            "3b1efa1b-8fc5-4d93-98b6-bbd348602bd2",
+            "cc4c61c8-8f9c-4c5e-8608-4474daf86e89",
+            "a9a90c8f-a447-46f6-8397-114b862015ab",
+            "647491e4-b9a9-4a5e-84ab-32ffd1ef481e",
+            "2a524da6-a674-4e17-88cc-43eddd5b4e63",
+            "eab31266-8726-47b7-85f8-944498b1bba7",
+            "64dbe3f0-f723-4aa1-9925-cc613f346c57",
+            "07974473-bbf9-4a5d-b699-19cfb004d0e3",
+            "cbc087b6-0fb3-473f-878b-5539fd41b50b",
+            "acb82b5f-53a9-45e4-aafa-8cb47b4d1cf1",
+            "8db26d06-ae34-4263-b854-442b1f04563d",
+            "dc57dfb3-20fc-46d9-b544-f95026a9ef88",
+            "d0808f97-b21b-40c0-882e-1aa2a9b95fc3",
+            "0aaa4f59-6ad1-4851-9ad3-c8e3d4883d51",
+            "8d123d81-96e7-4f6f-a676-632a757ff83c",
+            "217d6c19-84c1-4e91-b47b-b2af2b04b92e",
+            "4da84f53-7f03-47f4-a7d9-a7f34d44d7f6",
+            "ff3c123b-8426-4c6e-86aa-0eb4336736bf",
+            "e9980494-d66e-4922-871f-d9b7863ce265",
+            "9d603cda-9a36-4b3f-8fb2-38da0cc16e1c",
+            "35c5d806-52e6-42ff-959f-0363c627e9b8",
+            "3d692f45-671f-4857-ad17-03aeb01481d2",
+            "51898451-1e0a-4382-8174-99393df3b87e",
+            "8dd0615d-bfd0-4ecc-89c7-31a24d2d0534",
+            "d1b70f75-7308-4a51-bac8-cacd2a6ad375",
+            "28cadf63-1148-4f6b-8e26-420d0004b563",
+            "a5b1e6ce-8c78-41bf-bb18-9ea8e5ed0a63",
+            "67605be5-4afc-4084-a1b2-1b92fce53c72",
+            "d9360a88-a7ff-450d-b8fe-f4bf2cf38915",
+            "a024f29d-0131-4636-9547-145a406cd529",
+            "f63610c5-dfbf-458b-84ab-56fe2105eca0",
+            "a8fa3197-25b8-4c3a-b630-8be84d6fca92"
           ],
           "values": [
             0,
@@ -305,76 +305,76 @@
     ],
     "groups": [
       {
-        "id": "b6e7f05f-ebce-4a6a-8d15-5ff77a797249",
+        "id": "5b651520-ea73-4597-92bf-54d3427b302f",
         "name": "1 Island",
         "brickIds": [
-          "a6cbe9af-bd0a-459d-9102-8db8e71a3350",
-          "0b646286-8214-48d9-98eb-72d241aa3aaf",
-          "fee6739e-b711-423d-a882-af5afef2460f",
-          "6e33b5fe-307b-4385-b0ec-85a1508c7e83",
-          "a0200814-489f-4530-849f-3d044b5512bf",
-          "6a9893be-bca3-4693-99ec-6a592948fdfa",
-          "199b8700-7d43-4679-a448-1cc5c921be05",
-          "11289a51-dd17-4a54-bdb3-322c9840f6e1",
-          "1068f165-4e96-46f4-ba06-1b75da72b854",
-          "e407d53f-a666-46d7-8a0d-23d198304922",
-          "94104614-a245-44bf-b5bc-c11887bd5bfe",
-          "5c112deb-004b-41da-bc80-70be9c6700ac",
-          "26caaa7b-a6fe-4974-b135-e2f4ffe1646f",
-          "c8dce20e-77de-4fec-a27e-d13c21cc6ab3"
+          "fb5929b3-ae44-4596-bc4a-9a413c102b27",
+          "c7328ba7-1959-4437-b2d4-3c4cdc1320af",
+          "2417de2c-4836-4b98-870a-566b9173259f",
+          "ddd85efe-0d32-4245-a4c4-2a09fe280d16",
+          "8a2ffed7-ca9e-486e-ba4f-8dcc4ea11b0c",
+          "3b1efa1b-8fc5-4d93-98b6-bbd348602bd2",
+          "cc4c61c8-8f9c-4c5e-8608-4474daf86e89",
+          "a9a90c8f-a447-46f6-8397-114b862015ab",
+          "647491e4-b9a9-4a5e-84ab-32ffd1ef481e",
+          "2a524da6-a674-4e17-88cc-43eddd5b4e63",
+          "eab31266-8726-47b7-85f8-944498b1bba7",
+          "64dbe3f0-f723-4aa1-9925-cc613f346c57",
+          "07974473-bbf9-4a5d-b699-19cfb004d0e3",
+          "cbc087b6-0fb3-473f-878b-5539fd41b50b"
         ]
       },
       {
-        "id": "022ed622-798a-4541-bfce-eed0938a801c",
+        "id": "98cc84a8-1945-4f65-9b47-12adc0c3b0c0",
         "name": "2 Jetty",
         "brickIds": [
-          "4e22f492-c96b-4aa2-924e-4a57b414e25e",
-          "b8c7d594-166a-4302-854e-e9cf44c5dff2",
-          "adfe92e0-c163-4099-bc0e-8c591b985a61",
-          "de63e6f3-c3a0-41c5-891b-0288b4676efd",
-          "890c259d-6fb8-4a08-bfc9-770ef0858ff5"
+          "acb82b5f-53a9-45e4-aafa-8cb47b4d1cf1",
+          "8db26d06-ae34-4263-b854-442b1f04563d",
+          "dc57dfb3-20fc-46d9-b544-f95026a9ef88",
+          "d0808f97-b21b-40c0-882e-1aa2a9b95fc3",
+          "0aaa4f59-6ad1-4851-9ad3-c8e3d4883d51"
         ]
       },
       {
-        "id": "a0bbc5c2-2f63-46b9-b4bf-ef1044514696",
+        "id": "b2212278-8702-4d8d-a376-b44d51ad17b9",
         "name": "3 Tower",
         "brickIds": [
-          "8b0d7edc-b93b-4348-acd0-f2d49aba79d8",
-          "a54b8b33-8cea-4f03-a6d2-86a885f1ba7a",
-          "2f622fa5-0729-49a5-8837-90e2f725b14a",
-          "9150b489-31fd-4043-a82e-39c520f6dbf4",
-          "2a00b53c-7e2f-452d-a09b-d3eefe0a4b12",
-          "7faecb6f-662f-41a3-9d37-e4f7c409eb6b"
+          "8d123d81-96e7-4f6f-a676-632a757ff83c",
+          "217d6c19-84c1-4e91-b47b-b2af2b04b92e",
+          "4da84f53-7f03-47f4-a7d9-a7f34d44d7f6",
+          "ff3c123b-8426-4c6e-86aa-0eb4336736bf",
+          "e9980494-d66e-4922-871f-d9b7863ce265",
+          "9d603cda-9a36-4b3f-8fb2-38da0cc16e1c"
         ]
       },
       {
-        "id": "5297049d-c995-4d8e-b259-792846352f4f",
+        "id": "f6d3e03a-5b11-4af4-aac3-f0550dc1a87c",
         "name": "4 Gallery",
         "brickIds": [
-          "02aa7925-7ce9-490a-9f3a-160b7287aa1a",
-          "8712b5eb-5f2f-4361-82c0-d96351bb979d",
-          "1a84b2fc-71b7-41bc-929e-a2bce0e6c0ab",
-          "2688d419-d1eb-476c-a7fa-279c99b5d0ff",
-          "317b97c2-172f-483d-95a9-255db10927f1"
+          "35c5d806-52e6-42ff-959f-0363c627e9b8",
+          "3d692f45-671f-4857-ad17-03aeb01481d2",
+          "51898451-1e0a-4382-8174-99393df3b87e",
+          "8dd0615d-bfd0-4ecc-89c7-31a24d2d0534",
+          "d1b70f75-7308-4a51-bac8-cacd2a6ad375"
         ]
       },
       {
-        "id": "46f540df-5c18-41aa-bd3d-bb9c94c56792",
+        "id": "2427d9b3-2cec-4c3e-8eaa-062d83033d06",
         "name": "5 Lantern",
         "brickIds": [
-          "55090382-014e-4663-91e3-d1f82e9f4ad3",
-          "9c3d5355-f998-4c46-9d6b-7d56051e3bc1",
-          "5dd18ff9-96f1-4314-b36d-51c24d161e93",
-          "64a81133-5da9-4d09-a63b-9fc12c6fa9fe"
+          "28cadf63-1148-4f6b-8e26-420d0004b563",
+          "a5b1e6ce-8c78-41bf-bb18-9ea8e5ed0a63",
+          "67605be5-4afc-4084-a1b2-1b92fce53c72",
+          "d9360a88-a7ff-450d-b8fe-f4bf2cf38915"
         ]
       },
       {
-        "id": "cd21cf63-0b45-4fd6-a75b-d4f643e1c8ea",
+        "id": "4553bdf4-aeaf-4581-82d4-42cd8a214148",
         "name": "6 Boat",
         "brickIds": [
-          "45823509-4ad8-477a-9177-e1a93d201f9d",
-          "ca5925cb-9c16-4304-b7d4-8e8d72877895",
-          "3dff15a5-ef70-42cd-9180-c5c39576689f"
+          "a024f29d-0131-4636-9547-145a406cd529",
+          "f63610c5-dfbf-458b-84ab-56fe2105eca0",
+          "a8fa3197-25b8-4c3a-b630-8be84d6fca92"
         ]
       }
     ],
@@ -385,7 +385,7 @@
   },
   "metadata": {
     "title": "The Islet Lighthouse",
-    "description": "A striped lighthouse on a rocky islet of its own, its lantern burning above the waves to guide ships home. A wooden jetty runs out to the south, and a small sailboat is on its way in. 37 bricks.\n\n## How it is built\n\nEach step is a group in the Editor, so you can select it, delete it or build it again yourself.\n\n1. **Island** — four grey Block 2x2s make a 4x4 islet, two blocks high. Rocks ring the waterline, with a gap on the south side for the jetty, and two more sit on top at the back corners.\n2. **Jetty** — a wooden Plate 2x4 runs south from the islet. Its far end stands on two Cube pilings; its near end meets the islet between two rocks, and a Half Cube makes a step up onto the island. A Barrel waits at the end.\n3. **Tower** — three Block 2x2s stacked white, red, white. The Door faces the jetty; a Small Window looks south from the red band and another north from the top.\n4. **Gallery** — a Slab 4x4 caps the tower and overhangs it by one on every side. Two Beams make the front and back railing, and two Short Beams, turned 90° (press **R**), the sides.\n5. **Lantern** — two yellow Round Bricks stacked in the middle of the gallery, under a Round Plate 2x2 and a red Cone Roof.\n6. **Boat** — a Plate 2x4 hull, a Post for the mast and a Large Window, turned 90°, for the sail.\n\n## Bricks\n\n- Island: 4 Block 2x2, 10 Rock\n- Jetty: 1 Plate 2x4, 2 Cube, 1 Half Cube, 1 Barrel\n- Tower: 3 Block 2x2, 1 Door, 2 Small Window\n- Gallery: 1 Slab 4x4, 2 Beam, 2 Short Beam\n- Lantern: 2 Round Brick, 1 Round Plate 2x2, 1 Cone Roof\n- Boat: 1 Plate 2x4, 1 Post, 1 Large Window\n\n37 bricks in all.\n",
+    "description": "A striped lighthouse on a rocky islet of its own, its lantern lighting up above the waves at night to guide ships home. A wooden jetty runs out to the south, and a small sailboat is on its way in. 37 bricks.\n\n## How it is built\n\nEach step is a group in the Editor, so you can select it, delete it or build it again yourself.\n\n1. **Island** — four grey Block 2x2s make a 4x4 islet, two blocks high. Rocks ring the waterline, with a gap on the south side for the jetty, and two more sit on top at the back corners.\n2. **Jetty** — a wooden Plate 2x4 runs south from the islet. Its far end stands on two Cube pilings; its near end meets the islet between two rocks, and a Half Cube makes a step up onto the island. A Barrel waits at the end.\n3. **Tower** — three Block 2x2s stacked white, red, white. The Door faces the jetty; a Small Window looks south from the red band and another north from the top.\n4. **Gallery** — a Slab 4x4 caps the tower and overhangs it by one on every side. Two Beams make the front and back railing, and two Short Beams, turned 90° (press **R**), the sides.\n5. **Lantern** — two Lanterns stacked in the middle of the gallery, under a Round Plate 2x2 and a red Cone Roof. In World View they light up at night.\n6. **Boat** — a Plate 2x4 hull, a Post for the mast and a Large Window, turned 90°, for the sail.\n\n## Bricks\n\n- Island: 4 Block 2x2, 10 Rock\n- Jetty: 1 Plate 2x4, 2 Cube, 1 Half Cube, 1 Barrel\n- Tower: 3 Block 2x2, 1 Door, 2 Small Window\n- Gallery: 1 Slab 4x4, 2 Beam, 2 Short Beam\n- Lantern: 2 Lantern, 1 Round Plate 2x2, 1 Cone Roof\n- Boat: 1 Plate 2x4, 1 Post, 1 Large Window\n\n37 bricks in all.\n",
     "author": "forkbuild",
     "created": "2026-10-12T00:00:00.000Z",
     "modified": "2026-10-12T00:00:00.000Z",
