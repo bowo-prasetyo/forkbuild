@@ -6152,3 +6152,22 @@ again if hardly anyone uses one (docs/Pillars.md, "The side systems").
   or elsewhere; the decoration listener; the scorecard's shares and flags).
 - Not done: a count of how much each is used beyond once a page load; the side systems' guide pages, which are
   unchanged.
+
+## Every entry in the village (unnumbered, 2026-10-12)
+
+**A week's entry placed far from the square is shown in the village while the plaza is visited.** This week's only
+entry, The Islet Lighthouse, was published before builds settled in the village ("Find each other"), so its signed spot
+is on the old grid, hundreds of units from the square. Since "Make it yours, in the village" the plaza showed an entry
+whose placement this device knows only at that placement, assuming World View draws it there; World View draws placed
+builds only within its streaming radius (150) of the camera, so the plaza said "1 entry stands here" and showed it
+nowhere near (**Navigate** went to it). Pillar served: your work lives in a world (entrants expect to see their entries
+in the village).
+
+- core/PlazaEntrySpots.js `plazaEntrySpots()` (pure, from ui/views/worldView/useChallengePlaza.js): an entry placed
+  within `PLAZA_IN_VIEW_RADIUS` (120, the first four village rings) of the middle stands there; one placed further
+  away, or not known to be placed, is shown as an exhibit on the spot it would settle on in the village, clear of the
+  placements and the entries before it. Its own spot never moves.
+- Guide 04 ("The challenge plaza") in English.
+- Tests: `PlazaEntrySpots` (a grid spot out of World View's reach of the square and a village spot within it; the Islet
+  Lighthouse case shown on the first ring with its own spot untouched; placed in the village standing there, far and
+  unknown ones shown, none sharing a spot, deterministic).
