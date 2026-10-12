@@ -154,6 +154,12 @@ jadi mula-mula menyala bila memakai tetikus dan mati di ponsel atau tablet;
 centang atau hapus centang **Bayangan** di bagian bawah panel untuk
 mengubahnya di perangkat ini.
 
+Pada malam hari, bintang-bintang muncul saat senja makin gelap, dengan Bima
+Sakti melintang di antaranya, lalu memudar lagi saat fajar. Seluruh langit
+berbintang berputar perlahan mengelilingi satu titik tinggi di utara, sehingga
+bintang terbit di timur dan terbenam di barat bersama bulan, dan semua orang
+melihat bintang yang sama pada saat yang sama.
+
 Jika Anda lebih suka selalu siang, centang **Selalu siang** di bagian bawah
 panel, tepat di atas **Tampilkan alat lanjutan**. Pilihan ini diingat di
 perangkat ini dan tidak mengubah apa pun bagi orang lain.

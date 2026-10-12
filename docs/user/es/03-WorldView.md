@@ -157,6 +157,12 @@ ordenador, así que empiezan activadas con ratón y desactivadas en un teléfono
 o tableta; marque o desmarque **Sombras** al final del panel para cambiarlo
 en este dispositivo.
 
+De noche, a medida que oscurece, salen las estrellas, con la Vía Láctea
+cruzándolas, y se apagan de nuevo al amanecer. Todo el cielo estrellado gira
+despacio alrededor de un punto alto en el norte, así que las estrellas salen
+por el este y se ponen por el oeste con la luna, y todos ven las mismas
+estrellas en el mismo momento.
+
 Si prefiere que siempre sea de día, marque **Siempre de día** al final del
 panel, justo encima de **Mostrar herramientas avanzadas**. Se recuerda en
 este dispositivo y no cambia nada para nadie más.

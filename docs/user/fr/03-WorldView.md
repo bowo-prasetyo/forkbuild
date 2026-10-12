@@ -162,6 +162,12 @@ elles sont d’abord activées avec une souris et désactivées sur un télépho
 ou une tablette ; cochez ou décochez **Ombres** en bas du panneau pour le
 changer sur cet appareil.
 
+La nuit, à mesure que le crépuscule s’assombrit, les étoiles apparaissent,
+traversées par la Voie lactée, puis s’effacent à l’aube. Tout le ciel étoilé
+tourne lentement autour d’un point haut dans le nord : les étoiles se lèvent
+à l’est et se couchent à l’ouest avec la lune, et chacun voit les mêmes
+étoiles au même moment.
+
 Si vous préférez qu’il fasse toujours jour, cochez **Toujours le jour** en
 bas du panneau, juste au-dessus de **Afficher les outils avancés**. Ce choix
 est mémorisé sur cet appareil et ne change rien pour les autres.

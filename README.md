@@ -122,6 +122,7 @@ longer-term aim.
   night and back, the same for everyone; the sun and then the moon rise in
   the east and set in the west, lighting builds from where they stand and
   casting shadows near you (**Shadows**, on by default except on phones);
+  at night the stars and the Milky Way come out and wheel across the sky;
   windows and lanterns light up after dark and crickets take over from the
   birds. **Always day** keeps it day.
 - An avatar you can walk, run and jump with, which collides with buildings and

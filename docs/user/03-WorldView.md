@@ -175,8 +175,13 @@ phone more than a computer, so they start on with a mouse and off on a
 phone or tablet; tick or untick **Shadows** at the bottom of the panel to
 change it on this device.
 
+At night the stars come out as the dusk deepens, with the Milky Way
+across them, and fade again at dawn. The whole starry sky turns slowly round
+a point high in the north, so the stars rise in the east and set in the west
+with the moon, and everyone sees the same stars at the same moment.
+
 If you'd rather it were always day, tick **Always day** at the bottom of the
-panel, just above **Show advanced tools**. It's remembered on this device and
+panel, just above **Shadows**. It's remembered on this device and
 changes nothing for anyone else.
 
 ## Sound
