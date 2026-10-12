@@ -23,9 +23,9 @@ transform bricks, and how to organize your build with groups.
 └──────────────────────┴──────────────────────────────────────┘
 ```
 
-- **Toolbar** — save, publish, start a new creation, export or import a
-  document as a file, reopen recent ones, and open the **⌨ Shortcuts**
-  overlay (also `?`).
+- **Toolbar** — **Save**, **Publish** and **New** first, then **File**, a
+  menu with **Export**, **3D model** and **Import**; reopen recent ones, and
+  open the **⌨ Shortcuts** overlay (also `?`).
 - **Tools** — switch between **Select** (`1`) and **Place** (`2`). **Place**
   stays highlighted while you're placing a brick or a structure.
 - **Document title** — the open creation's name. Click **✎** to edit its
@@ -547,13 +547,16 @@ first click or key press, as browsers require.
 - **Publish** — share it with everyone (see
   [Publishing & Forking](04-PublishingAndForking.md)). Publishing also saves
   it. A build started from a ready-made one that has nothing of your own in
-  it yet is asked about once: **Keep building**, or **Publish anyway**. The message after it offers **Walk inside it** and **Copy link**;
-  **More ways to share** holds the link itself, **Save picture** and
-  **Embed**.
+  it yet is asked about once: **Keep building**, or **Publish anyway**. The
+  message after it is one bar: **Walk inside it** and **Copy link**, with
+  **More ways to share** holding the link itself, **Save picture** and
+  **Embed**. A reminder to add a passphrase to the identity you published
+  with waits for your next publish when that identity was just made.
 - **New** — start something new: an **Empty plot**, or one of the
   ready-made builds (a castle, a harbor island, a village square, a house, a
   mill and a bridge) as your own copy, seen whole. If what's open has
   unsaved changes, New says so first; save it to keep them.
+- **File** holds the next three:
 - **Export** — download the current creation as a JSON file, to keep a copy
   or move it to another device. Files use a compact format that stores
   bricks as a table.
@@ -617,7 +620,7 @@ either of you places, moves, recolours or deletes appears on both screens.
 
 ## Downloading a 3D model
 
-**3D model** in the toolbar downloads what's open as a file other 3D
+**3D model**, under **File** in the toolbar, downloads what's open as a file other 3D
 programs open, made on this device (nothing is uploaded):
 
 - **glTF (.glb)** — in color. Opens in Blender, Windows 3D Viewer, game
@@ -643,6 +646,17 @@ the same downloads when its license allows copies (see
 - **Drag** — orbit around the scene
 - **Scroll** — zoom in and out
 - **Home** — reset the camera to the default view
+
+A build opens seen from above at an angle, framed whole.
+
+### See inside
+
+**See inside**, over the top left of the view (top right on a phone, under
+**Tools**), cuts the build away above its ground floor, as World View does
+when you walk in: the walls stand to about head height and the rooms, with
+their furniture, show from above. Build in them as usual: a click goes past
+what is cut away. **Show it whole** draws it all again. Nothing is removed;
+only what is drawn changes.
 
 ## On a phone or tablet
 

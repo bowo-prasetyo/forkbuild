@@ -884,6 +884,7 @@ export default Object.freeze({
     'toolbar.saved': '保存済み',
     'toolbar.unsaved': '● 未保存の変更',
     'toolbar.export': 'エクスポート',
+    'toolbar.file': 'ファイル',
     'toolbar.import': 'インポート',
     'toolbar.importFile': '作品ファイルをインポート',
     'toolbar.publish': '公開',
@@ -971,6 +972,9 @@ export default Object.freeze({
     'editor.touchPlaceHint': '地面をタップして配置します。先に「回転」でブロックの向きを変えられます。',
     'editor.touchPlacingHint': '「{title}」を配置中 — 地面をタップして配置します。先に「回転」で向きを変えられます。',
     'editor.placeHint': '地面にカーソルを合わせ、Rで回転、クリックで配置します。',
+    'editor.seeInside': '中を見る',
+    'editor.seeInsideOff': '全体を表示',
+    'editor.seeInsideHint': '1階より上を隠して、部屋の中を見たり作ったりします。何も消えません。',
     'editor.placingHint': '「{title}」を配置中 — 地面にカーソルを合わせ、Rで回転、クリックで配置します。',
     'editor.composingHint': '「{title}」を配置中 — 地面にカーソルを合わせ、Rで回転、クリックで配置、Escでキャンセルします。',
     'editor.tools': 'ツール',
@@ -2017,6 +2021,7 @@ export default Object.freeze({
 
     // World View: worldView, continued.
     'worldView.hidePanel': 'パネルを隠す',
+    'worldView.hudLabel': 'ここでできること',
     'worldView.panel': 'パネル',
     'worldView.world2': 'ワールド',
     'worldView.cameraAndEditing': 'カメラ: {camera} · 編集: {editing}',
@@ -2950,6 +2955,7 @@ export default Object.freeze({
     'plaza.backToMiddle': '中央に戻る',
     'plaza.toChallenge': 'チャレンジのページ',
     'plaza.notFound': 'ここにはチャレンジの週がありません。',
+    'plaza.chip': { other: '広場：{theme} · {count}件の作品' },
     'challenge.noEntries': 'まだ応募作品は見つかっていません。最初の一人になりましょう：参加して、作って、公開。',
     'challenge.noEntriesEnded': 'この週の応募作品は見つかりませんでした。',
     'challenge.familiesTitle': '系譜',

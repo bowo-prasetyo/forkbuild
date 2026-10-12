@@ -63,7 +63,8 @@ export function visitorCountHitUrl(random) {
 // and a friend arriving through one; a "Build with me" link made, and a
 // friend joining through one; a build published crediting friends who built
 // it together; a build published and sent to everyone, or kept to its link
-// (each publish, core/BuildNote.js); and, when
+// (each publish, core/BuildNote.js); World View opened, and someone else's
+// build seen there (once a visit); and, when
 // a build is first published from this device, roughly how many bricks it
 // has, whether it is this device's second build, and whether it remixes
 // someone else's (publishedBuildEvents below).
@@ -96,7 +97,13 @@ export const FunnelEvent = Object.freeze({
     BUILD_JOINED: 'build-joined',
     PUBLISH_TOGETHER: 'publish-together',
     PUBLISH_FOUND: 'publish-found',
-    PUBLISH_LINK_ONLY: 'publish-link-only'
+    PUBLISH_LINK_ONLY: 'publish-link-only',
+    // World View opened, and, once a visit, someone else's build standing in
+    // view there (docs/reviews/CreativeDirection-2026-10-12b.md, finding 1):
+    // the village's ready-made builds don't count, a build published by this
+    // device or open for it to edit neither.
+    WORLD_VISIT: 'world-visit',
+    WORLD_NEIGHBOUR: 'world-neighbour'
 });
 
 const FUNNEL_EVENTS = new Set(Object.values(FunnelEvent));

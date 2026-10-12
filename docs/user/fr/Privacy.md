@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 805558c8d685c7ff -->
+<!-- translation-of: docs/Privacy.md source-hash: ee59630a404503d3 -->
 # Confidentialité
 
 <!-- languages -->
@@ -219,7 +219,7 @@ pages d’autres sites (voir « Serveurs que ForkBuild contacte » plus bas) :
 Et quand quelqu’un participe au défi de construction hebdomadaire
 (**Participer au défi**, ou le défi dans **Nouveau** de l’Éditeur) :
 `/e/challenge-join` ; et quand quelqu’un ouvre la
-place du défi d’une semaine dans la vue du monde : `/e/plaza-visit`. Et quand quelqu’un crée un lien **Se promener ici avec moi** dans la vue du monde : `/e/walk-link` ; et quand un ami arrive par l’un d’eux : `/e/walk-joined`. Et quand quelqu’un crée un lien **Construire avec moi** dans l’Éditeur : `/e/build-link` ; et quand un ami vous rejoint par l’un d’eux : `/e/build-joined` ; et la première fois qu’une construction est publiée en créditant les amis qui l’ont construite ensemble : `/e/publish-together`. Et à chaque publication d’une construction : `/e/publish-found` quand elle a été envoyée à tout le monde, ou `/e/publish-link-only` quand elle est restée avec son lien.
+place du défi d’une semaine dans la vue du monde : `/e/plaza-visit`. Et chaque fois que la vue du monde s’ouvre : `/e/world-visit` ; et, une fois par visite, quand la construction de quelqu’un d’autre y est en vue (une que cet appareil n’a pas publiée et ne peut pas modifier ; les constructions toutes prêtes autour de la place ne comptent pas) : `/e/world-neighbour`. Et quand quelqu’un crée un lien **Se promener ici avec moi** dans la vue du monde : `/e/walk-link` ; et quand un ami arrive par l’un d’eux : `/e/walk-joined`. Et quand quelqu’un crée un lien **Construire avec moi** dans l’Éditeur : `/e/build-link` ; et quand un ami vous rejoint par l’un d’eux : `/e/build-joined` ; et la première fois qu’une construction est publiée en créditant les amis qui l’ont construite ensemble : `/e/publish-together`. Et à chaque publication d’une construction : `/e/publish-found` quand elle a été envoyée à tout le monde, ou `/e/publish-link-only` quand elle est restée avec son lien.
 
 Et la première fois qu’une construction est publiée depuis ce navigateur
 (la republier plus tard n’envoie rien) :
@@ -298,6 +298,7 @@ demandez.
 | Vous installez ForkBuild depuis le site officiel (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec le chemin fixe `/e/installed`, sans référent et sans cookie |
 | Sur le site officiel, vous copiez le code d’intégration d’une construction, ou une construction intégrée est affichée ou ouverte dans ForkBuild (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe indiquant lequel des trois cas, sans référent et sans cookie |
 | Sur le site officiel, vous participez au défi de construction hebdomadaire ou ouvrez sa place (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec le chemin fixe `/e/challenge-join` ou `/e/plaza-visit`, sans référent et sans cookie |
+| Sur le site officiel, vous ouvrez la vue du monde, et la construction de quelqu’un d’autre y est en vue (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec le chemin fixe `/e/world-visit`, et au plus une avec `/e/world-neighbour` par visite, sans référent ni cookie |
 | Sur le site officiel, vous créez un lien **Se promener ici avec moi** ou arrivez par l’un d’eux (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image au chemin fixe `/e/walk-link` ou `/e/walk-joined`, sans référent ni cookie |
 | Sur le site officiel, vous créez un lien **Construire avec moi** ou rejoignez une construction par l’un d’eux (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image au chemin fixe `/e/build-link` ou `/e/build-joined` (et `/e/publish-together` quand une construction faite ensemble est publiée pour la première fois en les créditant), sans référent ni cookie |
 | Sur le site officiel, vous publiez une construction pour la première fois (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe indiquant sa tranche de briques, et une de plus pour une deuxième construction ou un remix, sans référent et sans cookie |

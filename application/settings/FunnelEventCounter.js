@@ -65,6 +65,25 @@ export class FunnelEventCounter {
         return this.count(FunnelEvent.PLAZA_VISIT);
     }
 
+    // World View opened (ui/views/worldView/useNeighbourCount.js).
+    visitedWorld() {
+        return this.count(FunnelEvent.WORLD_VISIT);
+    }
+
+    // Someone else's build stood in view during that visit; counted once a visit.
+    sawNeighbour() {
+        return this.count(FunnelEvent.WORLD_NEIGHBOUR);
+    }
+
+    // The builds this device has published, by document id: a visitor's own.
+    ownDocumentIds() {
+        try {
+            return new Set((this._listOwnPublications() || []).map((publication) => publication && publication.documentId).filter(Boolean));
+        } catch {
+            return new Set();
+        }
+    }
+
     // A "Walk here with me" link made (application/walkTogether/).
     madeWalkLink() {
         return this.count(FunnelEvent.WALK_LINK);

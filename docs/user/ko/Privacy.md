@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 805558c8d685c7ff -->
+<!-- translation-of: docs/Privacy.md source-hash: ee59630a404503d3 -->
 # 개인정보 보호
 
 <!-- languages -->
@@ -162,7 +162,7 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 
 그리고 누군가 주간 건축 챌린지에 참여할 때(**챌린지 참여하기**, 또는
 에디터의 **새로 만들기**에 있는 챌린지): `/e/challenge-join`.
-그리고 월드 뷰에서 한 주의 챌린지 광장을 열 때: `/e/plaza-visit`. 그리고 월드 뷰에서 **여기서 같이 걷자** 링크를 만들 때: `/e/walk-link`, 그 링크로 친구가 도착할 때: `/e/walk-joined`. 그리고 에디터에서 **같이 만들자** 링크를 만들 때: `/e/build-link`, 그 링크로 친구가 참가할 때: `/e/build-joined`, 그리고 함께 만든 친구를 기록한 작품이 처음 게시될 때: `/e/publish-together`. 그리고 작품을 게시할 때마다, 모두에게 보냈으면 `/e/publish-found`, 링크로만 두었으면 `/e/publish-link-only`를 보냅니다.
+그리고 월드 뷰에서 한 주의 챌린지 광장을 열 때: `/e/plaza-visit`. 그리고 월드 뷰를 열 때마다: `/e/world-visit`, 그리고 방문마다 한 번, 그곳에서 다른 사람의 작품이 보일 때(이 기기가 게시하지 않았고 편집할 수 없는 작품, 광장 둘레의 미리 지어진 작품은 세지 않음): `/e/world-neighbour`. 그리고 월드 뷰에서 **여기서 같이 걷자** 링크를 만들 때: `/e/walk-link`, 그 링크로 친구가 도착할 때: `/e/walk-joined`. 그리고 에디터에서 **같이 만들자** 링크를 만들 때: `/e/build-link`, 그 링크로 친구가 참가할 때: `/e/build-joined`, 그리고 함께 만든 친구를 기록한 작품이 처음 게시될 때: `/e/publish-together`. 그리고 작품을 게시할 때마다, 모두에게 보냈으면 `/e/publish-found`, 링크로만 두었으면 `/e/publish-link-only`를 보냅니다.
 
 그리고 이 브라우저에서 작품을 처음 게시할 때(나중에 같은 작품을 다시 게시하면 아무것도 보내지 않음):
 
@@ -222,6 +222,7 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 | 공식 사이트에서 ForkBuild를 설치할 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/installed`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 작품의 임베드 코드를 복사하거나, 임베드된 작품이 표시되거나 ForkBuild에서 열릴 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 셋 중 어느 경우인지 나타내는 고정 경로의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 주간 건축 챌린지에 참여하거나 그 광장을 열 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/challenge-join` 또는 `/e/plaza-visit`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
+| 공식 사이트에서 월드 뷰를 열고, 그곳에서 다른 사람의 작품이 보일 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/world-visit`의 이미지 요청 하나, 그리고 방문마다 많아야 한 번 `/e/world-neighbour`, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 **여기서 같이 걷자** 링크를 만들거나 그 링크로 도착할 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/walk-link` 또는 `/e/walk-joined`의 이미지 요청 1건, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 **같이 만들자** 링크를 만들거나 그 링크로 참가할 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/build-link` 또는 `/e/build-joined`(함께 만든 작품이 그 친구들을 기록한 채 처음 게시될 때는 `/e/publish-together`도)의 이미지 요청 1건, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 작품을 처음 게시할 때("방문자 수 집계" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 블록 수 구간을 나타내는 고정 경로의 이미지 요청 하나와, 두 번째 작품이나 리믹스일 때 하나 더, 리퍼러와 쿠키 없음 |

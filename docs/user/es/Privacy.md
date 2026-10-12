@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 805558c8d685c7ff -->
+<!-- translation-of: docs/Privacy.md source-hash: ee59630a404503d3 -->
 # Privacidad
 
 <!-- languages -->
@@ -210,7 +210,7 @@ abajo):
 
 Y cuando alguien se une al desafío de construcción semanal (**Unirse al
 desafío**, o el desafío en **Nuevo** del Editor): `/e/challenge-join`; y cuando alguien abre
-la plaza del reto de una semana en la vista del mundo: `/e/plaza-visit`. Y cuando alguien crea un enlace **Pasear aquí conmigo** en la vista del mundo: `/e/walk-link`; y cuando un amigo llega por uno: `/e/walk-joined`. Y cuando alguien crea un enlace **Construir conmigo** en el Editor: `/e/build-link`; y cuando un amigo se une por uno: `/e/build-joined`; y la primera vez que se publica una construcción que da crédito a los amigos que la construyeron juntos: `/e/publish-together`. Y cada vez que se publica una construcción: `/e/publish-found` si se envió a todos, o `/e/publish-link-only` si se quedó con su enlace.
+la plaza del reto de una semana en la vista del mundo: `/e/plaza-visit`. Y cada vez que se abre la vista del mundo: `/e/world-visit`; y, una vez por visita, cuando allí se ve la construcción de otra persona (una que este dispositivo no publicó ni puede editar; las construcciones ya hechas alrededor de la plaza no cuentan): `/e/world-neighbour`. Y cuando alguien crea un enlace **Pasear aquí conmigo** en la vista del mundo: `/e/walk-link`; y cuando un amigo llega por uno: `/e/walk-joined`. Y cuando alguien crea un enlace **Construir conmigo** en el Editor: `/e/build-link`; y cuando un amigo se une por uno: `/e/build-joined`; y la primera vez que se publica una construcción que da crédito a los amigos que la construyeron juntos: `/e/publish-together`. Y cada vez que se publica una construcción: `/e/publish-found` si se envió a todos, o `/e/publish-link-only` si se quedó con su enlace.
 
 Y la primera vez que se publica una construcción desde este navegador
 (publicarla de nuevo más tarde no envía nada):
@@ -284,6 +284,7 @@ dirección IP y lo que usted le pide.
 | Instala ForkBuild desde el sitio oficial (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/e/installed`, sin referente y sin cookie |
 | En el sitio oficial, copia el código para insertar de una construcción, o una construcción insertada se muestra o se abre en ForkBuild (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con una ruta fija que indica cuál de los tres casos fue, sin referente y sin cookie |
 | En el sitio oficial, se une al desafío de construcción semanal o abre su plaza (vea «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/e/challenge-join` o `/e/plaza-visit`, sin referente y sin cookie |
+| En el sitio oficial, abre la vista del mundo y allí se ve la construcción de otra persona (vea «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una petición de imagen con la ruta fija `/e/world-visit`, y como mucho una con `/e/world-neighbour` por visita, sin referente ni cookie |
 | En el sitio oficial, crea un enlace **Pasear aquí conmigo** o llega por uno (vea «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/e/walk-link` o `/e/walk-joined`, sin referente y sin cookie |
 | En el sitio oficial, crea un enlace **Construir conmigo** o se une por uno (vea «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/e/build-link` o `/e/build-joined` (y `/e/publish-together` cuando una construcción hecha en conjunto se publica por primera vez dándoles crédito), sin referente y sin cookie |
 | En el sitio oficial, publica una construcción por primera vez (vea «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con una ruta fija que indica su rango de bloques, y otra más si es una segunda construcción o un remix, sin referente y sin cookie |

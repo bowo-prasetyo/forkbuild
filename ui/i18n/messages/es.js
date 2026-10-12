@@ -888,6 +888,7 @@ export default Object.freeze({
     'toolbar.saved': 'Guardado',
     'toolbar.unsaved': '● Cambios sin guardar',
     'toolbar.export': 'Exportar',
+    'toolbar.file': 'Archivo',
     'toolbar.import': 'Importar',
     'toolbar.importFile': 'Importar un archivo de construcción',
     'toolbar.publish': 'Publicar',
@@ -975,6 +976,9 @@ export default Object.freeze({
     'editor.touchPlaceHint': 'Toque el suelo para colocar; Girar gira el bloque antes.',
     'editor.touchPlacingHint': 'Colocando “{title}”: toque el suelo para colocar; Girar lo gira antes.',
     'editor.placeHint': 'Pase el puntero sobre el suelo, R para girar, haga clic para colocar.',
+    'editor.seeInside': 'Ver por dentro',
+    'editor.seeInsideOff': 'Mostrarla entera',
+    'editor.seeInsideHint': 'Ocultar la construcción por encima de la planta baja, para ver sus habitaciones y construir dentro. No se quita nada.',
     'editor.placingHint': 'Colocando “{title}”: pase el puntero sobre el suelo, R para girar, haga clic para colocar.',
     'editor.composingHint': 'Colocando “{title}”: pase el puntero sobre el suelo, R para girar, haga clic para colocar, Esc para cancelar.',
     'editor.tools': 'Herramientas',
@@ -2021,6 +2025,7 @@ export default Object.freeze({
 
     // World View: worldView, continued.
     'worldView.hidePanel': 'Ocultar panel',
+    'worldView.hudLabel': 'Lo que puede hacer aquí',
     'worldView.panel': 'Panel',
     'worldView.world2': 'Mundo',
     'worldView.cameraAndEditing': 'Cámara: {camera} · Edición: {editing}',
@@ -2954,6 +2959,7 @@ export default Object.freeze({
     'plaza.backToMiddle': 'Volver al centro',
     'plaza.toChallenge': 'La página del reto',
     'plaza.notFound': 'Aquí no hay ninguna semana de reto.',
+    'plaza.chip': { one: 'Plaza: {theme} · {count} construcción', other: 'Plaza: {theme} · {count} construcciones' },
     'challenge.noEntries': 'Aún no se han encontrado participaciones. Sea la primera persona: únase, construya y publique.',
     'challenge.noEntriesEnded': 'No se encontraron participaciones para esta semana.',
     'challenge.familiesTitle': 'Árboles familiares',

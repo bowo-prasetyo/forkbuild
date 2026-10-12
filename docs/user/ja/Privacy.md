@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 805558c8d685c7ff -->
+<!-- translation-of: docs/Privacy.md source-hash: ee59630a404503d3 -->
 # プライバシー
 
 <!-- languages -->
@@ -193,7 +193,7 @@ ForkBuild 自身のファイル（コード、スタイルシート、アイコ�
 
 また、毎週の建築チャレンジに参加したとき（**チャレンジに参加**、または
 エディターの **新規** のチャレンジ）: `/e/challenge-join`。
-ワールドビューでその週のチャレンジ広場を開いたとき: `/e/plaza-visit`。
+ワールドビューでその週のチャレンジ広場を開いたとき: `/e/plaza-visit`。そしてワールドビューを開くたびに: `/e/world-visit`。さらに 1 回の訪問につき 1 度だけ、ほかの人の作品が見えたとき（この端末が公開しておらず編集もできない作品。広場のまわりのできあがった作品は数えません）: `/e/world-neighbour`。
 また、ワールドビューで **ここで一緒に歩こう** のリンクを作ったとき: `/e/walk-link`。そのリンクから友だちが到着したとき: `/e/walk-joined`。
 また、エディターで **一緒に作ろう** のリンクを作ったとき: `/e/build-link`。そのリンクから友だちが参加したとき: `/e/build-joined`。
 また、一緒に作った友だちを記録した作品が初めて公開されたとき: `/e/publish-together`。 また、作品を公開するたびに、みんなに送ったときは `/e/publish-found`、リンクだけにしたときは `/e/publish-link-only` が送られます。
@@ -257,6 +257,7 @@ ForkBuild 自身のファイル（コード、スタイルシート、アイコ�
 | 公式サイトから ForkBuild をインストールしたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/installed` の画像リクエスト 1 件。リファラーなし、Cookie なし |
 | 公式サイトで作品の埋め込みコードをコピーしたとき、または埋め込まれた作品が表示されたり ForkBuild で開かれたりしたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 3 つのどれだったかを示す固定パスの画像リクエスト 1 件。リファラーなし、Cookie なし |
 | 公式サイトで、毎週の建築チャレンジに参加したとき、またはその広場を開いたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/challenge-join` または `/e/plaza-visit` の画像リクエスト 1 回。リファラーと Cookie はなし |
+| 公式サイトで、ワールドビューを開いたとき、そこでほかの人の作品が見えたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/world-visit` の画像リクエスト 1 回と、訪問ごとに多くても 1 回の `/e/world-neighbour`。リファラーと Cookie はなし |
 | 公式サイトで **ここで一緒に歩こう** のリンクを作ったとき、またはそのリンクから到着したとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/walk-link` または `/e/walk-joined` の画像リクエスト 1 件。リファラーも Cookie もなし |
 | 公式サイトで **一緒に作ろう** のリンクを作ったとき、またはそのリンクから参加したとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/build-link` または `/e/build-joined`（一緒に作った作品がその友だちを記録して初めて公開されたときは `/e/publish-together` も）の画像リクエスト 1 件。リファラーも Cookie もなし |
 | 公式サイトで、作品を初めて公開したとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | ブロック数の範囲を示す固定パスの画像リクエスト 1 回と、2 つ目の作品またはリミックスのときにもう 1 回。リファラーと Cookie はなし |

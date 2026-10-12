@@ -832,3 +832,63 @@
 .toolbar-publish:hover {
     background: #9b59b6;
 }
+
+/* The toolbar's File menu (ui/components/Toolbar.js): Export, 3D model and
+   Import, below Save, Publish and New. */
+.toolbar-file {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.toolbar-file-toggle {
+    padding: 0.3rem 0.8rem;
+    background: transparent;
+    color: #d0d0d0;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-file-toggle:hover,
+.toolbar-file-toggle[aria-expanded="true"] {
+    background: #262626;
+}
+
+/* Fixed under its button (Toolbar.js sets top and left), so a toolbar that
+   scrolls sideways on a phone doesn't clip it. */
+.toolbar-file-menu {
+    position: fixed;
+    z-index: 56;
+    min-width: 160px;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    padding: 0.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.toolbar-file-menu button {
+    text-align: left;
+    width: 100%;
+    border-color: transparent;
+}
+
+/* See inside (EditorView.js): over the viewport, top left. */
+.editor-see-inside {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 14;
+    background: rgba(18, 18, 18, 0.85);
+    color: #e0e0e0;
+    border: 1px solid #3a3a3a;
+}
+
+.editor-see-inside.action-btn--active {
+    border-color: #4caf7d;
+    color: #4caf7d;
+}

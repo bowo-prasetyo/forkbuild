@@ -211,6 +211,7 @@ number is "too few to say" rather than met or missed.
 | Yours, in a world | Friends joined per build link (`/e/build-joined` / `/e/build-link`) | 50% | 20 links |
 | Yours, in a world | Builds made together published, per friend joined (`/e/publish-together` / `/e/build-joined`) | 30% | 20 joins |
 | Yours, in a world | Plaza visits per challenge join (`/e/plaza-visit` / `/e/challenge-join`) | 25% | 20 joins |
+| Yours, in a world | World View visits that see someone else's build, the ready-made village left out (`/e/world-neighbour` / `/e/world-visit`) | 50% | 50 visits |
 
 The placed bricks and the second builds are the gate on new networks
 (above): a ready-made build published untouched holds plenty of bricks but

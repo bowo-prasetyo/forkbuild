@@ -887,6 +887,7 @@ export default Object.freeze({
     'toolbar.saved': 'Enregistré',
     'toolbar.unsaved': '● Modifications non enregistrées',
     'toolbar.export': 'Exporter',
+    'toolbar.file': 'Fichier',
     'toolbar.import': 'Importer',
     'toolbar.importFile': 'Importer un fichier de construction',
     'toolbar.publish': 'Publier',
@@ -974,6 +975,9 @@ export default Object.freeze({
     'editor.touchPlaceHint': 'Touchez le sol pour placer ; Pivoter tourne d’abord la brique.',
     'editor.touchPlacingHint': 'Placement de « {title} » — touchez le sol pour placer ; Pivoter le tourne d’abord.',
     'editor.placeHint': 'Survolez le sol, R pour pivoter, cliquez pour placer.',
+    'editor.seeInside': 'Voir l’intérieur',
+    'editor.seeInsideOff': 'La montrer en entier',
+    'editor.seeInsideHint': 'Masquer la construction au-dessus du rez-de-chaussée, pour voir ses pièces et construire dedans. Rien n’est supprimé.',
     'editor.placingHint': 'Placement de « {title} » — survolez le sol, R pour pivoter, cliquez pour placer.',
     'editor.composingHint': 'Placement de « {title} » — survolez le sol, R pour pivoter, cliquez pour placer, Échap pour annuler.',
     'editor.tools': 'Outils',
@@ -2020,6 +2024,7 @@ export default Object.freeze({
 
     // World View: worldView, continued.
     'worldView.hidePanel': 'Masquer le panneau',
+    'worldView.hudLabel': 'Ce que vous pouvez faire ici',
     'worldView.panel': 'Panneau',
     'worldView.world2': 'Monde',
     'worldView.cameraAndEditing': 'Caméra : {camera} · Modification : {editing}',
@@ -2953,6 +2958,7 @@ export default Object.freeze({
     'plaza.backToMiddle': 'Revenir au centre',
     'plaza.toChallenge': 'La page du défi',
     'plaza.notFound': 'Il n’y a pas de semaine de défi ici.',
+    'plaza.chip': { one: 'Place : {theme} · {count} construction', other: 'Place : {theme} · {count} constructions' },
     'challenge.noEntries': 'Aucune participation trouvée pour l’instant. Soyez la première personne : participez, construisez, publiez.',
     'challenge.noEntriesEnded': 'Aucune participation n’a été trouvée pour cette semaine.',
     'challenge.familiesTitle': 'Arbres généalogiques',

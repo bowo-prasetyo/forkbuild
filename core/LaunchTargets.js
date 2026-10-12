@@ -137,6 +137,16 @@ export const LAUNCH_TARGETS = Object.freeze([
         denominator: [path(FunnelEvent.CHALLENGE_JOIN)],
         target: 0.25,
         minimum: 20
+    }),
+    Object.freeze({
+        id: 'neighbours',
+        pillar: 'world',
+        question: 'Does World View show a visitor someone else\'s build, not just the ready-made village?',
+        kind: 'ratio',
+        numerator: [path(FunnelEvent.WORLD_NEIGHBOUR)],
+        denominator: [path(FunnelEvent.WORLD_VISIT)],
+        target: 0.5,
+        minimum: 50
     })
 ]);
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 805558c8d685c7ff -->
+<!-- translation-of: docs/Privacy.md source-hash: ee59630a404503d3 -->
 # Datenschutz
 
 <!-- languages -->
@@ -216,7 +216,7 @@ sind (siehe „Server, die ForkBuild kontaktiert“ unten):
 
 Und wenn jemand bei der wöchentlichen Bau-Challenge mitmacht (**Mitmachen**
 oder die Challenge unter **Neu** im Editor): `/e/challenge-join`; und wenn jemand den
-Challenge-Platz einer Woche in der Weltansicht öffnet: `/e/plaza-visit`. Und wenn jemand in der Weltansicht einen Link **Mit mir hier spazieren** erstellt: `/e/walk-link`; und wenn ein Freund über einen solchen ankommt: `/e/walk-joined`. Und wenn jemand im Editor einen Link **Mit mir bauen** erstellt: `/e/build-link`; und wenn ein Freund über einen solchen beitritt: `/e/build-joined`; und wenn zum ersten Mal ein Bauwerk veröffentlicht wird, das Freunde nennt, die es gemeinsam gebaut haben: `/e/publish-together`. Und bei jeder Veröffentlichung eines Bauwerks: `/e/publish-found`, wenn es an alle gesendet wurde, oder `/e/publish-link-only`, wenn es bei seinem Link blieb.
+Challenge-Platz einer Woche in der Weltansicht öffnet: `/e/plaza-visit`. Und jedes Mal, wenn sich die Weltansicht öffnet: `/e/world-visit`; und einmal pro Besuch, wenn dort das Bauwerk eines anderen in Sicht steht (eines, das dieses Gerät nicht veröffentlicht hat und nicht bearbeiten kann; die fertigen Bauwerke rund um den Platz zählen nicht): `/e/world-neighbour`. Und wenn jemand in der Weltansicht einen Link **Mit mir hier spazieren** erstellt: `/e/walk-link`; und wenn ein Freund über einen solchen ankommt: `/e/walk-joined`. Und wenn jemand im Editor einen Link **Mit mir bauen** erstellt: `/e/build-link`; und wenn ein Freund über einen solchen beitritt: `/e/build-joined`; und wenn zum ersten Mal ein Bauwerk veröffentlicht wird, das Freunde nennt, die es gemeinsam gebaut haben: `/e/publish-together`. Und bei jeder Veröffentlichung eines Bauwerks: `/e/publish-found`, wenn es an alle gesendet wurde, oder `/e/publish-link-only`, wenn es bei seinem Link blieb.
 
 Und wenn ein Bauwerk zum ersten Mal aus diesem Browser veröffentlicht wird
 (spätere Veröffentlichungen desselben Bauwerks senden nichts):
@@ -292,6 +292,7 @@ was Sie bei ihm anfragen.
 | Sie installieren ForkBuild von der offiziellen Seite (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/installed`, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website kopieren Sie den Einbettungscode eines Bauwerks, oder ein eingebettetes Bauwerk wird gezeigt oder in ForkBuild geöffnet (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit einem festen Pfad, der nennt, welcher der drei Fälle es war, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website machen Sie bei der wöchentlichen Bau-Challenge mit oder öffnen ihren Platz (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/challenge-join` oder `/e/plaza-visit`, ohne Referrer und ohne Cookie |
+| Auf der offiziellen Website öffnen Sie die Weltansicht, und dort steht das Bauwerk eines anderen in Sicht (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/world-visit` und höchstens eine mit `/e/world-neighbour` pro Besuch, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website erstellen Sie einen Link **Mit mir hier spazieren** oder kommen über einen an (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/walk-link` oder `/e/walk-joined`, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website erstellen Sie einen Link **Mit mir bauen** oder treten über einen bei (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/build-link` oder `/e/build-joined` (und `/e/publish-together`, wenn ein gemeinsam gebautes Bauwerk zum ersten Mal veröffentlicht wird und sie nennt), ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website veröffentlichen Sie ein Bauwerk zum ersten Mal (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit einem festen Pfad, der den Bereich der Steinanzahl nennt, und eine weitere für ein zweites Bauwerk oder einen Remix, ohne Referrer und ohne Cookie |

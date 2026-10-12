@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 805558c8d685c7ff -->
+<!-- translation-of: docs/Privacy.md source-hash: ee59630a404503d3 -->
 # Privasi
 
 <!-- languages -->
@@ -217,7 +217,7 @@ bawah):
 
 Dan saat seseorang ikut tantangan membangun mingguan (**Ikut tantangan**,
 atau tantangan di **Baru** pada Editor): `/e/challenge-join`; dan saat seseorang membuka
-alun-alun tantangan suatu minggu di Tampilan Dunia: `/e/plaza-visit`. Dan saat seseorang membuat tautan **Jalan di sini bersamaku** di Tampilan Dunia: `/e/walk-link`; dan saat seorang teman tiba lewat tautan itu: `/e/walk-joined`. Dan saat seseorang membuat tautan **Bangun bersamaku** di Editor: `/e/build-link`; dan saat seorang teman bergabung lewat tautan itu: `/e/build-joined`; dan pertama kali sebuah bangunan diterbitkan dengan mencantumkan teman-teman yang membangunnya bersama: `/e/publish-together`. Dan setiap kali sebuah bangunan diterbitkan: `/e/publish-found` jika dikirim ke semua orang, atau `/e/publish-link-only` jika hanya lewat tautannya.
+alun-alun tantangan suatu minggu di Tampilan Dunia: `/e/plaza-visit`. Dan setiap kali tampilan dunia dibuka: `/e/world-visit`; dan, sekali per kunjungan, saat bangunan milik orang lain terlihat di sana (bangunan yang tidak diterbitkan dan tidak bisa diedit perangkat ini; bangunan siap pakai di sekeliling alun-alun tidak dihitung): `/e/world-neighbour`. Dan saat seseorang membuat tautan **Jalan di sini bersamaku** di Tampilan Dunia: `/e/walk-link`; dan saat seorang teman tiba lewat tautan itu: `/e/walk-joined`. Dan saat seseorang membuat tautan **Bangun bersamaku** di Editor: `/e/build-link`; dan saat seorang teman bergabung lewat tautan itu: `/e/build-joined`; dan pertama kali sebuah bangunan diterbitkan dengan mencantumkan teman-teman yang membangunnya bersama: `/e/publish-together`. Dan setiap kali sebuah bangunan diterbitkan: `/e/publish-found` jika dikirim ke semua orang, atau `/e/publish-link-only` jika hanya lewat tautannya.
 
 Dan saat sebuah bangunan pertama kali diterbitkan dari browser ini
 (menerbitkannya lagi nanti tidak mengirim apa pun):
@@ -292,6 +292,7 @@ Anda dan apa yang Anda minta darinya.
 | Anda memasang ForkBuild dari situs resmi (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/installed`, tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda menyalin kode sematan sebuah bangunan, atau bangunan yang disematkan ditampilkan atau dibuka di ForkBuild (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut yang mana dari ketiganya, tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda ikut tantangan membangun mingguan atau membuka alun-alunnya (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/challenge-join` atau `/e/plaza-visit`, tanpa referrer dan tanpa cookie |
+| Di situs resmi, Anda membuka tampilan dunia, dan bangunan milik orang lain terlihat di sana (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/world-visit`, dan paling banyak satu dengan `/e/world-neighbour` per kunjungan, tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda membuat tautan **Jalan di sini bersamaku** atau tiba lewat tautan itu (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/walk-link` atau `/e/walk-joined`, tanpa perujuk dan tanpa cookie |
 | Di situs resmi, Anda membuat tautan **Bangun bersamaku** atau bergabung lewat tautan itu (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/build-link` atau `/e/build-joined` (dan `/e/publish-together` saat bangunan yang dibuat bersama pertama kali diterbitkan dengan mencantumkan mereka), tanpa perujuk dan tanpa cookie |
 | Di situs resmi, Anda menerbitkan sebuah bangunan untuk pertama kali (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut rentang baloknya, dan satu lagi untuk bangunan kedua atau remix, tanpa referrer dan tanpa cookie |
