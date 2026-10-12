@@ -36,9 +36,10 @@ transform bricks, and how to organize your build with groups.
 - **Build Library** — a search box and two tabs:
   - **Bricks** — everything you can place with the Place tool, as tiles in
     six sections (Basic, Structure, Roofs & Stairs, Openings, Details,
-    Nature): fifty pieces, from half cubes, round bricks and logs to gable
-    and cone roofs, framed and round windows, fences, benches, bushes and
-    pine trees.
+    Nature): fifty-one pieces, from half cubes, round bricks and logs to
+    gable and cone roofs, framed and round windows, fences, benches, bushes,
+    pine trees and a **Lantern** that lights up at night in World View (see
+    [Day and night](03-WorldView.md#day-and-night)).
     Click one to select it (and switch to the Place tool); a
     **Color** swatch then appears for choosing its color — see
     [Brick colors](#brick-colors) below.

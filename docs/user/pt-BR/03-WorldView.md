@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7d54451a79bc05d6 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: e66632c0b2bec761 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -118,6 +118,23 @@ que se viram para cumprimentar você quando você chega perto; converse com
 um e ele conta o que há por ali. Ao contrário da vida selvagem, eles fazem
 parte do conteúdo do próprio Mundo: quem os adiciona é o autor. Veja
 [Moradores](06-AvatarsAndPresence.md#moradores).
+
+## Dia e noite
+
+O céu da Visão do mundo passa do dia para a noite e volta a cada 40
+minutos: um entardecer quente, uma noite azul e enluarada, um amanhecer
+rosado e depois o dia de novo. Ele segue o relógio, então todo mundo que
+está numa construção vê o mesmo céu no mesmo momento. Quando escurece, as
+janelas de vidro brilham com luz de lâmpada e as **Lanternas** acendem na
+própria cor, de modo que um farol mostra o caminho até o porto e uma vila
+parece habitada; os pássaros se calam e os grilos assumem. A noite nunca
+fica escura demais para você encontrar o caminho. Só a Visão do mundo tem
+noite: o Editor, as imagens das construções e as prévias de links estão
+sempre em pleno dia.
+
+Se você preferir que seja sempre dia, marque **Sempre de dia** no fim do
+painel, logo acima de **Mostrar ferramentas avançadas**. A escolha fica
+lembrada neste dispositivo e não muda nada para mais ninguém.
 
 ## Som
 

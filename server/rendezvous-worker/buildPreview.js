@@ -90,7 +90,8 @@ export const BRICK_SHAPES = Object.freeze({
     'core:bush': [1, 1, 1, 0x4f8a3c, 'box'],
     'core:pine_tree': [1.5, 2.5, 1.5, 0x2f6b3a, 'hip'],
     'core:rock': [1, 1, 1, 0x8a8577, 'box'],
-    'core:lawn_2x2': [2, 0.1, 2, 0x7cb342, 'box']
+    'core:lawn_2x2': [2, 0.1, 2, 0x7cb342, 'box'],
+    'core:lantern': [0.75, 1, 0.75, 0xffd54f, 'box']
 });
 const UNKNOWN_SHAPE = [1, 1, 1, 0x9e9e9e, 'box'];
 

@@ -6,7 +6,9 @@ import { assert } from './support/Assert.js';
 // Draws instanced bricks with real WebGL and reads the pixels back: each
 // instance shows its own color, a highlight lights up only its own
 // instance (the shader change in renderer/BrickInstanceRegistry.js), and
-// moving or removing a brick changes only that brick on screen.
+// moving or removing a brick changes only that brick on screen, and a brick
+// that shines after dark lights up as night falls (setNightGlow()) while the
+// rest stay dark.
 
 const SIZE = 64;
 const shaderErrors = [];
@@ -21,7 +23,8 @@ const renderer = new THREE.WebGLRenderer({ canvas, preserveDrawingBuffer: true }
 renderer.setSize(SIZE, SIZE, false);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
-scene.add(new THREE.AmbientLight(0xffffff, 1));
+const ambient = new THREE.AmbientLight(0xffffff, 1);
+scene.add(ambient);
 const camera = new THREE.OrthographicCamera(-2, 2, 2, -2, 0.1, 100);
 // Looking at x 0..4, y -2..2: both bricks sit in the same chunk.
 camera.position.set(2, 0, 10);
@@ -76,6 +79,27 @@ registry.add('blue', 'doc', 'b', brick(3, 0x0000ff));
     registry.update('blue', brick(A, 0x0000ff));
     assert(pixelAt(B, 0).every((c) => c === 0) && pixelAt(A, 0)[2] > 150, 'a moved brick is drawn at its new place');
     console.log('✓ removing and moving bricks updates what is drawn');
+}
+
+{
+    registry.clear();
+    ambient.intensity = 0.05;
+    registry.add('lantern', 'doc', 'b', { ...brick(A, 0xffd54f), glow: 0xffd54f });
+    registry.add('plain', 'doc', 'b', brick(B, 0xffd54f));
+    const dayLantern = pixelAt(A, 0);
+    assert(dayLantern[0] < 40, `by day a lantern in the dark is as dark as any brick (got ${dayLantern})`);
+    registry.setNightGlow(1);
+    const nightLantern = pixelAt(A, 0);
+    const nightPlain = pixelAt(B, 0);
+    assert(nightLantern[0] > 200 && nightLantern[1] > 150 && nightLantern[2] < 150,
+        `at night the lantern shines in its own color (got ${nightLantern})`);
+    assert(nightPlain[0] < 40, `a brick that doesn't glow stays dark (got ${nightPlain})`);
+    registry.remove('plain');
+    registry.add('later', 'doc', 'b', { ...brick(B, 0xffffff), glow: 0xffc46b });
+    assert(pixelAt(B, 0)[0] > 200, 'a glowing brick added at night shines at once');
+    registry.setNightGlow(0);
+    assert(pixelAt(A, 0)[0] < 40 && pixelAt(B, 0)[0] < 40, 'and day puts every lamp out');
+    console.log('✓ bricks that shine after dark light up only at night');
 }
 
 assert(!shaderErrors.some((e) => /Shader|WebGLProgram/.test(e)), `the instanced brick shader compiles (${shaderErrors.join(' | ')})`);

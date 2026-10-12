@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7d54451a79bc05d6 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: e66632c0b2bec761 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -121,6 +121,23 @@ salah satunya dan ia memberi tahu apa yang ada di sekitar. Tidak seperti
 satwa liar, mereka adalah bagian dari konten Dunia itu sendiri: pembuatnya
 yang menambahkan mereka. Lihat
 [Penghuni](06-AvatarsAndPresence.md#penghuni).
+
+## Siang dan malam
+
+Langit di atas Tampilan Dunia berganti dari siang ke malam dan kembali
+setiap 40 menit: senja yang hangat, malam biru yang diterangi bulan, fajar
+merah muda, lalu siang lagi. Langit mengikuti jam, jadi semua orang di
+sebuah bangunan melihat langit yang sama pada saat yang sama. Setelah gelap,
+jendela kaca bersinar seperti diterangi lampu dan **Lentera** menyala dengan
+warnanya sendiri, sehingga mercusuar menunjukkan jalan pulang dan desa
+tampak berpenghuni; burung-burung diam dan jangkrik mengambil alih. Malam
+tidak pernah terlalu gelap untuk menemukan jalan. Hanya Tampilan Dunia yang
+mengenal malam: Editor, gambar bangunan, dan pratinjau tautan selalu terang
+siang hari.
+
+Jika Anda lebih suka selalu siang, centang **Selalu siang** di bagian bawah
+panel, tepat di atas **Tampilkan alat lanjutan**. Pilihan ini diingat di
+perangkat ini dan tidak mengubah apa pun bagi orang lain.
 
 ## Suara
 

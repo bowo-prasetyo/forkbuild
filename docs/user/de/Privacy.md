@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 0c17fa09c34c708f -->
+<!-- translation-of: docs/Privacy.md source-hash: c3e2eacf000f9c51 -->
 # Datenschutz
 
 <!-- languages -->
@@ -34,7 +34,7 @@ veröffentlichen, exportieren oder senden es:
   folgen, und nichts über ein Folgen wird je gesendet);
 - Ihr Avatarprofil, Einstellungen (darunter, ob die Weltansicht Ton
   abspielt, wie laut und ob in 3D oder Stereo, ob die Weltansicht ihre
-  erweiterten Werkzeuge zeigt, wohin Veröffentlichen Ihre Bauwerke sendet, und die von Ihnen gewählte
+  erweiterten Werkzeuge zeigt, ob dort immer Tag ist, wohin Veröffentlichen Ihre Bauwerke sendet, und die von Ihnen gewählte
   Sprache; haben Sie keine gewählt, liest ForkBuild die bevorzugten Sprachen
   des Browsers auf dem Gerät und sendet sie nirgendwohin) sowie Benutzername
   und Zugangsdaten eines TURN-Servers, falls Sie sie unter

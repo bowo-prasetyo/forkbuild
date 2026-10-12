@@ -10,7 +10,8 @@ export class BrickDefinition {
         width = 1,
         height = 1,
         depth = 1,
-        color = 0x4caf7d
+        color = 0x4caf7d,
+        nightGlow = null
     }) {
         this._id = id;
         this._name = name;
@@ -27,6 +28,9 @@ export class BrickDefinition {
         // specific was chosen for it while it was placed (see
         // ActiveBrickState's own color field) — see renderer/BrickRenderer.js.
         this._color = color;
+        // Whether a brick of this type shines after dark in World View, and
+        // with what light (core/NightGlow.js); null for most bricks.
+        this._nightGlow = nightGlow;
     }
 
     get id() { return this._id; }
@@ -40,4 +44,5 @@ export class BrickDefinition {
     get height() { return this._height; }
     get depth() { return this._depth; }
     get color() { return this._color; }
+    get nightGlow() { return this._nightGlow; }
 }

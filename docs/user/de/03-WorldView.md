@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7d54451a79bc05d6 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: e66632c0b2bec761 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -125,6 +125,23 @@ die sich zum Grüßen zu Ihnen drehen, wenn Sie näher kommen; sprechen Sie
 einen an, und er erzählt Ihnen, was es in der Umgebung gibt. Anders als
 Wildtiere sind sie Teil des eigenen Inhalts der Welt: Ihr Autor fügt sie
 hinzu. Siehe [Bewohner](06-AvatarsAndPresence.md#bewohner).
+
+## Tag und Nacht
+
+Der Himmel über der Weltansicht wechselt alle 40 Minuten von Tag zu Nacht
+und zurück: eine warme Abenddämmerung, eine blaue, mondhelle Nacht, ein
+rosa Morgengrauen, dann wieder Tag. Er folgt der Uhr, sodass alle an einem
+Bauwerk im selben Moment denselben Himmel sehen. Im Dunkeln leuchten
+Glasfenster wie von Lampenlicht, und **Laternen** strahlen in ihrer eigenen
+Farbe, sodass ein Leuchtturm den Weg in den Hafen zeigt und ein Dorf bewohnt
+aussieht; die Vögel verstummen, und die Grillen übernehmen. Die Nacht wird
+nie so dunkel, dass Sie den Weg nicht finden. Nacht gibt es nur in der
+Weltansicht: der Editor, Bilder von Bauwerken und Linkvorschauen sind immer
+taghell.
+
+Wenn Sie lieber immer Tag hätten, setzen Sie unten im Bereich, direkt über
+**Erweiterte Werkzeuge zeigen**, das Häkchen bei **Immer Tag**. Das wird auf
+diesem Gerät gespeichert und ändert für niemanden sonst etwas.
 
 ## Ton
 

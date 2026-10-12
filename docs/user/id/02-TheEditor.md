@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 855952f6b34672d8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 292450f615f65312 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -39,9 +39,11 @@ dengan grup.
 - **Pustaka Bangunan** — kotak pencarian dan dua tab:
   - **Balok** — semua yang dapat Anda tempatkan dengan alat Tempatkan,
     sebagai ubin dalam enam bagian (Dasar, Struktur, Atap & Tangga,
-    Bukaan, Detail, Alam): lima puluh keping, dari setengah kubus, balok
-    bulat, dan gelondong kayu hingga atap pelana dan kerucut, bingkai
-    jendela dan jendela bulat, pagar, bangku, semak, dan pohon pinus. Klik salah satunya untuk memilihnya (dan beralih ke
+    Bukaan, Detail, Alam): lima puluh satu keping, dari setengah kubus,
+    balok bulat, dan gelondong kayu hingga atap pelana dan kerucut, bingkai
+    jendela dan jendela bulat, pagar, bangku, semak, pohon pinus, dan
+    **Lentera** yang menyala di malam hari di Tampilan Dunia (lihat
+    [Siang dan malam](03-WorldView.md#siang-dan-malam)). Klik salah satunya untuk memilihnya (dan beralih ke
     alat Tempatkan); contoh warna **Warna** lalu muncul untuk memilih
     warnanya — lihat [Warna balok](#warna-balok) di bawah.
     **Lereng 45°**, **Lereng Landai 2x1**, **Tangga**, **Tangga Lebar**, dan

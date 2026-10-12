@@ -14,8 +14,8 @@ import { terrainHeightAt as computeTerrainHeightAt, DEFAULT_WORLD_SEED } from '.
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 import { underwaterViewAt, UNDERWATER_VIEW } from '../core/UnderwaterView.js';
 import { buildUnderwaterLifeTileMesh, updateUnderwaterLifeTileMesh } from './UnderwaterLifeTileMesh.js';
-
-const SKY_COLOR = 0x87ceeb;
+import { DAY } from '../core/DayCycle.js';
+import { makeNightGlowing } from './NightGlowMaterial.js';
 
 // Under water the view closes in to a blue-green haze: murkier and greener in a
 // lake, deeper blue at sea.
@@ -46,7 +46,13 @@ export class Renderer {
         container.appendChild(this._webglRenderer.domElement);
 
         this._sceneManager = new SceneManager();
-        this._sceneManager.scene.background = new THREE.Color(SKY_COLOR);
+        // The sky and its light: always day, unless World View's day and night
+        // changes it (setSkyLook()).
+        this._skyLook = DAY;
+        // How strongly standalone bricks that shine after dark shine
+        // (renderer/NightGlowMaterial.js), shared by every one this adds.
+        this._nightGlow = { value: 0 };
+        this._sceneManager.scene.background = new THREE.Color(DAY.sky);
 
         this._cameraController = new CameraController(
             this._webglRenderer.domElement,
@@ -201,11 +207,33 @@ export class Renderer {
     }
 
     add(object) {
+        if (object && object.userData && object.userData.nightGlow) {
+            makeNightGlowing(object.material, object.userData.nightGlow, this._nightGlow);
+        }
         this._sceneManager.add(object);
     }
 
     remove(object) {
         this._sceneManager.remove(object);
+    }
+
+    // Colors the sky and lights the scene as `look` (shaped like
+    // core/DayCycle.js's DAY) says. Under water, the haze stays until the
+    // camera surfaces into this sky.
+    setSkyLook(look) {
+        if (!look || look === this._skyLook) {
+            return;
+        }
+        this._skyLook = look;
+        this._lights.applyLook(look);
+        this._nightGlow.value = look.glow;
+        if (!UNDERWATER_LOOK[this._underwaterView]) {
+            this._sceneManager.scene.background.setHex(look.sky);
+        }
+    }
+
+    get skyLook() {
+        return this._skyLook;
     }
 
     resetCameraView() {
@@ -320,7 +348,7 @@ export class Renderer {
             scene.background = new THREE.Color(look.color);
             scene.fog = new THREE.Fog(look.color, look.near, look.far);
         } else {
-            scene.background = new THREE.Color(SKY_COLOR);
+            scene.background = new THREE.Color(this._skyLook.sky);
             scene.fog = null;
         }
     }

@@ -114,6 +114,21 @@ what's around. Unlike wildlife they're part of
 the World's own content: its author adds them. See
 [Residents](06-AvatarsAndPresence.md#residents).
 
+## Day and night
+
+The sky over World View turns from day to night and back every 40 minutes:
+a warm dusk, a blue, moonlit night, a pink dawn, then day again. It follows
+the clock, so everyone at a build sees the same sky at the same moment. After
+dark, glass windows glow with lamplight and **Lanterns** shine in their own
+color, so a lighthouse shows the way in and a village looks lived in; the
+birds go quiet and crickets take over. The night is never too dark to find
+your way. Only World View has night: the Editor, pictures of builds and link
+previews are always in daylight.
+
+If you'd rather it were always day, tick **Always day** at the bottom of the
+panel, just above **Show advanced tools**. It's remembered on this device and
+changes nothing for anyone else.
+
 ## Sound
 
 World View plays quiet background sound that matches where you are: wind on

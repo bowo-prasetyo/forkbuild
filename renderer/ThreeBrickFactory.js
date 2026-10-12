@@ -401,7 +401,8 @@ const GEOMETRIES = new Map([
     ['core:bush', polyhedronGeometry(THREE.IcosahedronGeometry, 1, [1, 1, 1])],
     ['core:pine_tree', coneGeometry(1.5, 2.5, 8)],
     ['core:rock', polyhedronGeometry(THREE.DodecahedronGeometry, 0, [1, 1, 1])],
-    ['core:lawn_2x2', boxGeometry([2, 0.1, 2])]
+    ['core:lawn_2x2', boxGeometry([2, 0.1, 2])],
+    ['core:lantern', cylinderGeometry(0.75, 1, 8)]
 ]);
 
 const FALLBACK_GEOMETRY = boxGeometry([1, 1, 1]);

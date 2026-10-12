@@ -57,6 +57,7 @@ core:bush
 core:pine_tree
 core:rock
 core:lawn_2x2
+core:lantern
 
 Namespace:
 

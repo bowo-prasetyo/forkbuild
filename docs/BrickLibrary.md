@@ -82,6 +82,17 @@ geometries need nothing for it. core/VillagePalette.js holds sixteen village col
 Build Library and the Selection Inspector offer beside the colour picker;
 a chosen swatch is an ordinary brick colour.
 
+Day and night (2026-10-12) adds the fifty-first, core:lantern: an
+eight-sided glass lantern, 0.75 × 1 × 0.75, in the decorative category. A
+BrickDefinition may say it shines after dark (`nightGlow`, core/NightGlow.js):
+the lantern in its own colour (`own-color`), and core:window_small and
+core:window_large with warm lamplight whatever their glass (`window`). The
+framed and round windows have holes through them and don't glow. Glowing is
+a property of the brick type, never of a brick, so documents are unchanged;
+only World View lights them, as night falls (docs/Architecture.md, "Day and
+night"). The built-in lighthouses, the Village Dock and the challenge plaza's
+lamp posts use it.
+
 0.2.80 (Expanded Brick Vocabulary) added eleven more: core:block_2x2,
 core:wall_1x3, core:slab_4x4, core:roof_hip, core:stair, core:column,
 core:beam, core:arch, core:window_large, core:door, core:trim — one per

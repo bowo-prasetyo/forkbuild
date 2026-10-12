@@ -640,7 +640,7 @@ const fenceSegmentBricks = [
 ];
 
 // Dock — a flat plank platform on column stilts extending out over
-// open water. Like Fence Segment, deliberately not a building: no
+// open water, with a lantern at its end. Like Fence Segment, deliberately not a building: no
 // walls, no roof, just a walkable surface raised above the ground.
 const dockBricks = [
     b('core:column', -1, 1.5, -1),
@@ -660,7 +660,10 @@ const dockBricks = [
     b('core:post', 0.75, 1.5, 5.75),
 
     b('core:slab_4x4', 0, 3.125, 0),
-    b('core:plate_2x4', 0, 3.125, 4)
+    b('core:plate_2x4', 0, 3.125, 4),
+
+    // A lantern at the far end, to show boats the way in after dark.
+    b('core:lantern', 0.6, 3.75, 5.6)
 ];
 
 // Garden Cottage — the Builder's kit (2026-10-10) in one small home: plastered

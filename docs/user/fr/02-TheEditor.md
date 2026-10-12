@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 855952f6b34672d8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 292450f615f65312 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -42,10 +42,11 @@ organiser votre construction avec des groupes.
   onglets :
   - **Briques** — tout ce que vous pouvez placer avec l’outil Placement,
     sous forme de vignettes réparties en six sections (Base, Structure,
-    Toits et escaliers, Ouvertures, Détails, Nature) : cinquante pièces,
-    des demi-cubes, briques rondes et rondins aux toits à pignon et
-    coniques, cadres de fenêtre et œils-de-bœuf, clôtures, bancs, buissons
-    et sapins. Cliquez sur l’une d’elles
+    Toits et escaliers, Ouvertures, Détails, Nature) : cinquante et une
+    pièces, des demi-cubes, briques rondes et rondins aux toits à pignon et
+    coniques, cadres de fenêtre et œils-de-bœuf, clôtures, bancs, buissons,
+    sapins et une **Lanterne** qui s’allume la nuit dans la Vue du Monde
+    (voir [Le jour et la nuit](03-WorldView.md#le-jour-et-la-nuit)). Cliquez sur l’une d’elles
     pour la sélectionner (et passer à l’outil Placement) ; un nuancier
     **Couleur** apparaît alors pour choisir sa couleur — voir
     [Couleurs des briques](#couleurs-des-briques) ci-dessous.

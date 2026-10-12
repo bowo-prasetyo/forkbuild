@@ -1,5 +1,6 @@
 import { normalizeTilt } from '../core/BrickOrientation.js';
 import { ThreeBrickFactory } from './ThreeBrickFactory.js';
+import { nightGlowColor } from '../core/NightGlow.js';
 
 // BrickRenderer no longer knows what a brick looks like. Given a Brick, it
 // asks the registry for its BrickDefinition (so an unknown definitionId
@@ -13,7 +14,7 @@ export class BrickRenderer {
         this._brickFactory = brickFactory;
     }
 
-    // { definitionId, x, y, z, rotationY, rotationX (radians), color }, in
+    // { definitionId, x, y, z, rotationY, rotationX (radians), color, glow }, in
     // the brick's own (document-local) coordinates. rotationX is its tilt
     // (core/BrickOrientation.js), applied before rotationY (Euler 'YXZ').
     describe(brick) {
@@ -21,6 +22,10 @@ export class BrickRenderer {
         if (!definition) {
             throw new Error(`Unknown brick definition: ${brick.definitionId}`);
         }
+        // Choose Your Brick Color: an instance override (Brick#color,
+        // set by SetBrickColorCommand) wins; otherwise fall back to
+        // this type's own default (BrickDefinition#color).
+        const color = brick.color !== null && brick.color !== undefined ? brick.color : definition.color;
         return {
             definitionId: brick.definitionId,
             x: brick.position.x,
@@ -28,16 +33,17 @@ export class BrickRenderer {
             z: brick.position.z,
             rotationY: brick.rotation * (Math.PI / 180),
             rotationX: normalizeTilt(brick.tilt) * (Math.PI / 180),
-            // Choose Your Brick Color: an instance override (Brick#color,
-            // set by SetBrickColorCommand) wins; otherwise fall back to
-            // this type's own default (BrickDefinition#color).
-            color: brick.color !== null && brick.color !== undefined ? brick.color : definition.color
+            color,
+            // The light it gives off at full night (core/NightGlow.js), 0 for none.
+            glow: nightGlowColor(definition, color)
         };
     }
 
     createMesh(brick) {
-        const { definitionId, x, y, z, rotationY, rotationX, color } = this.describe(brick);
+        const { definitionId, x, y, z, rotationY, rotationX, color, glow } = this.describe(brick);
         const mesh = this._brickFactory.createMesh(definitionId, color);
+        // Lit after dark once a Renderer adds it (Renderer#add()).
+        if (glow) mesh.userData.nightGlow = glow;
         mesh.position.set(x, y, z);
         mesh.rotation.order = 'YXZ';
         mesh.rotation.x = rotationX;

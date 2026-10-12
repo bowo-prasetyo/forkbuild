@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 855952f6b34672d8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 292450f615f65312 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -40,9 +40,11 @@ ordnen.
 - **Baubibliothek** — ein Suchfeld und zwei Reiter:
   - **Steine** — alles, was Sie mit dem Platzierwerkzeug setzen können,
     als Kacheln in sechs Abschnitten (Grundformen, Tragwerk, Dächer &
-    Treppen, Öffnungen, Details, Natur): fünfzig Teile, von halben Würfeln,
-    runden Steinen und Baumstämmen bis zu Sattel- und Kegeldächern,
-    Fensterrahmen und Rundfenstern, Zäunen, Bänken, Büschen und Kiefern. Klicken Sie auf eine, um sie auszuwählen
+    Treppen, Öffnungen, Details, Natur): einundfünfzig Teile, von halben
+    Würfeln, runden Steinen und Baumstämmen bis zu Sattel- und Kegeldächern,
+    Fensterrahmen und Rundfenstern, Zäunen, Bänken, Büschen, Kiefern und
+    einer **Laterne**, die in der Weltansicht nachts leuchtet (siehe
+    [Tag und Nacht](03-WorldView.md#tag-und-nacht)). Klicken Sie auf eine, um sie auszuwählen
     (und zum Platzierwerkzeug zu wechseln); dann erscheint ein Farbfeld
     **Farbe** zum Wählen ihrer Farbe — siehe [Steinfarben](#steinfarben)
     unten.

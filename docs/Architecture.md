@@ -1407,13 +1407,46 @@ wildlife. Each is a pure function of `(seed, x, z)`:
   their whole circle (`fishPoseAt()` adds time)
 
 Each frame the renderer also asks `core/UnderwaterView.js` whether the camera is under a lake or the sea, and if so
-swaps the sky for a blue-green background and fog. Water tiles carry a back-face-only underside, so a diver looking
+swaps the sky for a blue-green background and fog, until it surfaces into whatever sky day and night has made. Water tiles carry a back-face-only underside, so a diver looking
 up sees a bright surface.
 
 None of it is stored, so a tile that streams out and back in is identical. An unloaded tile is disposed through the
 `disposeTile` hook its controller was built with (`renderer/TileDisposal.js`): terrain and water tiles free their own
 geometry and material, vegetation, wildlife and underwater life tiles only their instance buffers, since their
 geometry and materials are shared by every tile.
+
+## Day and night
+
+    core/DayCycle.js#skyLookAt(seconds)            the sky's look: background, hemisphere sky/ground color and
+            │                                       intensity, sun (moon) color and intensity, glow 0..1
+            │  (WorldNavigationSession's wildlife clock: wall-clock seconds)
+    application/worldNavigation/dayCycleMethods.js  every render frame, unless Always day: setSkyLook(look)
+            │                                       on the render facade (RenderWorldViewUseCase)
+    renderer/Renderer.js#setSkyLook()              lights (renderer/Lights.js#applyLook()), background unless
+            │                                       under water, nightGlow uniform for standalone meshes
+    renderer/BrickInstanceRegistry.js#setNightGlow()  the instanced bricks' nightGlow uniform
+
+World View's sky turns once every `DAY_CYCLE_SECONDS` (40 minutes): dawn, about half the cycle in day, dusk, a
+little over a fifth in full night, dawn again, each look blending into the next. It is worked out from the wall
+clock, the same clock wildlife wanders by, so everyone at a build sees the same sky with nothing sent or stored. A
+look is a frozen object, and while the sky holds the same object comes back, so `setSkyLook()` does nothing on
+those frames. NIGHT keeps a moonlit hemisphere and moon (0.6 and 0.5, against day's 1.0 and 1.8): builds stay
+readable. Only World View follows the clock: the Editor, thumbnails, the Home turntable and link previews stay in
+DAY, which is what `Renderer` starts with.
+
+**What shines.** A brick type's `nightGlow` (core/NightGlow.js; docs/BrickLibrary.md) gives the light its bricks
+give off: `BrickRenderer#describe()` adds it to a brick's visual as `glow`. Instanced bricks carry it in an
+`instanceGlow` attribute beside the selection highlight's `instanceEmissive`, and the shader adds
+`instanceGlow × uNightGlow` to the emissive light, one uniform per registry, so night falls with one number per
+frame. Standalone brick meshes (structure placements, the plaza's square and exhibits, claimed builds) are marked
+by `BrickRenderer#createMesh()` (`userData.nightGlow`), and `Renderer#add()` gives their material the same shader
+addition over the renderer's own uniform (renderer/NightGlowMaterial.js); it is added to, never written into,
+`material.emissive`, which selection highlighting owns. Glowing bricks don't light their surroundings: there are no
+point lights and no bloom pass.
+
+**Always day.** A per-device choice, application/settings/WorldViewSkyStore.js (`world-view-sky`), provided as
+`worldViewSkyStore`. WorldView passes it to `session.setAlwaysDay()` before the session starts and whenever it is
+ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so sound stays daytime too.
 
 ## Sound
 
@@ -1442,10 +1475,12 @@ geometry and materials are shared by every tile.
   reached. LEAVES and PINES come from the trees themselves: every tree `naturalFeaturesInRegion()` puts within 20 m
   adds its nearness (1 − distance / 20) over 6 to its layer, BROADLEAF fully and SCRUB at 0.4 to LEAVES, CONIFER to
   PINES. Like the terrain it is a pure function of place: nothing is stored or sent, and every viewer at a spot
-  hears the same land.
+  hears the same land. After dark `ambientMixAtNight(mix, nightLevel)` turns birds down to a tenth and crickets up
+  (insects × (1 + night), plus 0.3 × night where there is no open water), `nightLevel` being
+  `WorldNavigationSession#nightLevel()` (see "Day and night").
 - **Service.** `WorldView` makes one through the `createWorldSoundscape` factory `ui/main.js` provides
   (`ui/views/worldView/useWorldSoundscape.js`), after `session.start()`, and disposes it on unmount. It resamples
-  only when the listener has moved at least 0.5 m, and plays silence while there is no listener position. `unlock()`
+  only when the listener has moved at least 0.5 m or night has deepened or lifted by 0.05, and plays silence while there is no listener position. `unlock()`
   is called from every pointerdown and keydown, because browsers only let audio start (and iOS only lets it resume)
   from a user gesture. `M` and the Sound button (`ui/components/SoundControl.js`) toggle mute; the preference is
   this device's own.
