@@ -34,6 +34,7 @@ import { documentOperationMethods } from '../worldNavigation/documentOperationMe
 import { soundObservationMethods } from '../worldNavigation/soundObservationMethods.js';
 import { remoteVehicleMethods } from '../worldNavigation/remoteVehicleMethods.js';
 import { arrivalMethods } from '../worldNavigation/arrivalMethods.js';
+import { dayCycleMethods } from '../worldNavigation/dayCycleMethods.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
 import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
 import { describeCommand } from '../commands/describeCommand.js';
@@ -460,6 +461,9 @@ export class WorldNavigationSession {
         this._cameraFocusFrameSubscription = null;
         // See _setupVehicleRendering() below.
         this._vehicleRenderFrameSubscription = null;
+        // Day and night (application/worldNavigation/dayCycleMethods.js).
+        this._alwaysDay = false;
+        this._dayCycleFrameSubscription = null;
         // Runtime vehicle positions (see application/world/VehicleRuntimeInstances.js).
         // Built unconditionally: a vehicle's position is a fact about the World,
         // independent of whether a local avatar exists (see docs/Principles.md,
@@ -603,6 +607,7 @@ export class WorldNavigationSession {
         this._setupWildlifeExclusionSync();
         this._setupAnimalRendering();
         this._setupResidentRendering();
+        this._setupDayCycle();
         this._setupVehicleRuntimePersistence();
         this._setupAnimalRuntimePersistence();
     }
@@ -780,6 +785,10 @@ export class WorldNavigationSession {
             this._cameraFocusFrameSubscription = null;
         }
         this._activeCameraFocus = null;
+        if (this._dayCycleFrameSubscription) {
+            this._dayCycleFrameSubscription();
+            this._dayCycleFrameSubscription = null;
+        }
         // Mirrors the camera-focus teardown above.
         if (this._vehicleRenderFrameSubscription) {
             this._vehicleRenderFrameSubscription();
@@ -915,5 +924,6 @@ installMethods(
     documentOperationMethods,
     soundObservationMethods,
     remoteVehicleMethods,
-    arrivalMethods
+    arrivalMethods,
+    dayCycleMethods
 );

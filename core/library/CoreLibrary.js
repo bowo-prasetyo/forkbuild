@@ -1,4 +1,5 @@
 import { BrickDefinition } from '../BrickDefinition.js';
+import { NIGHT_GLOW } from '../NightGlow.js';
 
 // The built-in "core" library — the minimal set of primitive shapes every
 // world can rely on, namespaced per docs/BrickIDs.md. Community libraries
@@ -59,7 +60,8 @@ export const CoreLibrary = {
             width: 1,
             height: 1,
             depth: 0.25,
-            color: 0x9ad0e6
+            color: 0x9ad0e6,
+            nightGlow: NIGHT_GLOW.WINDOW
         }),
 
         // ---------------------------------------------------------------
@@ -162,7 +164,8 @@ export const CoreLibrary = {
             width: 2,
             height: 1.5,
             depth: 0.25,
-            color: 0x8cc8e0
+            color: 0x8cc8e0,
+            nightGlow: NIGHT_GLOW.WINDOW
         }),
         new BrickDefinition({
             id: 'core:door',
@@ -668,6 +671,20 @@ export const CoreLibrary = {
             height: 0.1,
             depth: 2,
             color: 0x7cb342
+        }),
+        // Lit after dark in World View (core/DayCycle.js), for lighthouses,
+        // lamp posts and porches.
+        new BrickDefinition({
+            id: 'core:lantern',
+            name: 'Lantern',
+            category: 'decorative',
+            tags: ['decorative', 'light', 'lamp', 'lantern'],
+            description: 'A glass lantern that lights up at night: for lighthouses, lamp posts and porches.',
+            width: 0.75,
+            height: 1,
+            depth: 0.75,
+            color: 0xffd54f,
+            nightGlow: NIGHT_GLOW.OWN_COLOR
         })
     ]
 };

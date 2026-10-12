@@ -1,9 +1,13 @@
-<!-- translation-of: docs/Privacy.md source-hash: 697d4302a8ff4823 -->
+<!-- translation-of: docs/Privacy.md source-hash: c3e2eacf000f9c51 -->
 # プライバシー
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · **日本語** · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
+
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../../Privacy.md)も参照してください。
+<!-- /stale -->
 
 ForkBuild にはアカウントがなく、あなたを追跡しません。作業はあなた自身の
 ブラウザーに保存し、他のコンピューターと通信するのは、それが必要な機能の
@@ -32,7 +36,7 @@ ForkBuild にはアカウントがなく、あなたを追跡しません。作�
   送信待ちのメッセージ（フォローしても相手に知らされることはなく、
   フォローについての情報は一切送信されません）。
 - アバターのプロフィール、設定（ワールドビューで音を鳴らすか、音量、
-  3D かステレオか、ワールドビューで詳細ツールを表示するか、公開した作品の送り先、選んだ言語を
+  3D かステレオか、ワールドビューで詳細ツールを表示するか、そこを常に昼にするか、公開した作品の送り先、選んだ言語を
   含みます。言語を選んでいない場合、
   ForkBuild はデバイス上でブラウザーの優先言語を読みますが、どこにも
   送りません）、そして **ネットワーク設定** で入力した場合は TURN

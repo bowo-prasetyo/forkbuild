@@ -1,9 +1,13 @@
-<!-- translation-of: docs/Privacy.md source-hash: 697d4302a8ff4823 -->
+<!-- translation-of: docs/Privacy.md source-hash: c3e2eacf000f9c51 -->
 # 개인정보 보호
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · **한국어** · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
+
+<!-- stale -->
+> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../../Privacy.md)을 참고하세요.
+<!-- /stale -->
 
 ForkBuild에는 계정이 없고 나를 추적하지 않습니다. 작업은 내 브라우저에
 저장되며, 다른 컴퓨터와는 그것이 필요한 기능에서만 통신합니다. 예외는 만든
@@ -29,7 +33,7 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 - 알려진 피어, 친구, 팔로우하는 사람, 차단, 채팅 기록, 대기 중인 메시지(팔로우한
   사람에게 알리지 않으며, 팔로우에 관한 어떤 것도 보내지 않음).
 - 아바타 프로필, 설정(월드 보기에서 소리를 낼지, 크기, 3D 또는 스테레오, 고급
-  도구를 보일지, 게시한 작품을 보낼 곳, 고른
+  도구를 보일지, 그곳을 항상 낮으로 할지, 게시한 작품을 보낼 곳, 고른
   언어 포함. 언어를 고르지 않았다면 ForkBuild는 기기에서 브라우저의 선호 언어를
   읽기만 하고 아무 데도 보내지 않음), 그리고 **네트워크 설정**에서 입력했다면
   TURN 서버의 사용자 이름과 자격 증명.

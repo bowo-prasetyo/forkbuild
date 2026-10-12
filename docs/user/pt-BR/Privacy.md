@@ -1,9 +1,13 @@
-<!-- translation-of: docs/Privacy.md source-hash: 697d4302a8ff4823 -->
+<!-- translation-of: docs/Privacy.md source-hash: c3e2eacf000f9c51 -->
 # Privacidade
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · **Português (Brasil)**
 <!-- /languages -->
+
+<!-- stale -->
+> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../../Privacy.md).
+<!-- /stale -->
 
 O ForkBuild não tem contas e não rastreia você. Ele guarda seu trabalho no
 seu próprio navegador e só conversa com outros computadores nos recursos que
@@ -35,7 +39,7 @@ que você publique, exporte ou envie:
   nada sobre seguir é enviado);
 - seu perfil de avatar, as configurações (incluindo se a Visão do mundo toca
   som, o volume, em 3D ou estéreo, se ela mostra suas ferramentas
-  avançadas, para onde Publicar envia suas construções, e o idioma que você escolheu; quando você
+  avançadas, se lá é sempre dia, para onde Publicar envia suas construções, e o idioma que você escolheu; quando você
   não escolheu um, o ForkBuild lê os idiomas preferidos do navegador no
   próprio dispositivo e não os envia para lugar nenhum), e o nome de usuário
   e a credencial de um servidor TURN, se você digitar um em **Configurações

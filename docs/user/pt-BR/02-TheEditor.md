@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 855952f6b34672d8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 292450f615f65312 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -41,9 +41,14 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
 - **Biblioteca de construção** — uma caixa de pesquisa e duas guias:
   - **Blocos** — tudo o que você pode colocar com a ferramenta Colocar, em
     blocos de seis seções (Básicos, Estrutura, Telhados e escadas,
-    Aberturas, Detalhes, Natureza): cinquenta peças, de meios cubos, blocos
-    redondos e toras a telhados de duas águas e cônicos, molduras de
-    janela e janelas redondas, cercas, bancos, arbustos e pinheiros. Clique em um para selecioná-lo (e passar para a
+    Aberturas, Detalhes, Natureza): cinquenta e nove peças, de meios cubos,
+    blocos redondos e toras a telhados de duas águas e cônicos, telhados de
+    quatro águas que cobrem uma casa inteira numa peça só (4x4, 4x6 e 6x6) e
+    um telhado de duas águas comprido 2x4, molduras de janela e janelas
+    redondas, cercas, bancos, arbustos e pinheiros, móveis para os cômodos em
+    que você entra (uma mesa, uma cama, uma lareira e uma estante, em
+    Detalhes) e uma **Lanterna** que acende à noite na Visão do mundo (veja
+    [Dia e noite](03-WorldView.md#dia-e-noite)). Clique em um para selecioná-lo (e passar para a
     ferramenta Colocar); aparece então uma amostra **Cor** para escolher a
     cor dele — veja [Cores dos blocos](#cores-dos-blocos) abaixo.
     **Rampa 45°**, **Rampa suave 2x1**, **Escada**, **Escada larga** e

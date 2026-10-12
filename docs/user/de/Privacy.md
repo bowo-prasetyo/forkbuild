@@ -1,9 +1,13 @@
-<!-- translation-of: docs/Privacy.md source-hash: 697d4302a8ff4823 -->
+<!-- translation-of: docs/Privacy.md source-hash: c3e2eacf000f9c51 -->
 # Datenschutz
 
 <!-- languages -->
 [English](../../Privacy.md) · **Deutsch** · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
+
+<!-- stale -->
+> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../../Privacy.md).
+<!-- /stale -->
 
 ForkBuild hat keine Konten und verfolgt Sie nicht. Es speichert Ihre
 Arbeit in Ihrem eigenen Browser und spricht nur für die Funktionen mit
@@ -36,7 +40,7 @@ veröffentlichen, exportieren oder senden es:
   folgen, und nichts über ein Folgen wird je gesendet);
 - Ihr Avatarprofil, Einstellungen (darunter, ob die Weltansicht Ton
   abspielt, wie laut und ob in 3D oder Stereo, ob die Weltansicht ihre
-  erweiterten Werkzeuge zeigt, wohin Veröffentlichen Ihre Bauwerke sendet, und die von Ihnen gewählte
+  erweiterten Werkzeuge zeigt, ob dort immer Tag ist, wohin Veröffentlichen Ihre Bauwerke sendet, und die von Ihnen gewählte
   Sprache; haben Sie keine gewählt, liest ForkBuild die bevorzugten Sprachen
   des Browsers auf dem Gerät und sendet sie nirgendwohin) sowie Benutzername
   und Zugangsdaten eines TURN-Servers, falls Sie sie unter

@@ -58,9 +58,10 @@ longer-term aim.
 - Groups, clipboard, brick colors with a palette of village colors, and a
   command palette (Ctrl/Cmd+K) that shares one action registry with the
   sidebar and keyboard shortcuts.
-- Fifty-four bricks, from half cubes, round bricks and logs to gable and cone
+- Fifty-nine bricks, from half cubes, round bricks and logs to gable and cone
   roofs, framed and round windows, fences, benches, bushes and pine trees,
-  and furniture for inside: a table, a bed, a hearth and a shelf.
+  furniture for inside (a table, a bed, a hearth and a shelf), and a lantern
+  that lights up at night.
 - A Build Library of bricks and ready-made structures, a personal blueprint
   library, structure placements, and document export/import.
 - Save, autosave with crash recovery, and publishing to an immutable,
@@ -117,6 +118,9 @@ longer-term aim.
 - **Walk** in the main menu opens that plaza, with the ready-made builds
   standing round the square while a week has few entries, so there is
   somewhere to walk before you've built anything.
+- Day and night: every 40 minutes the sky turns through dusk to a moonlit
+  night and back, the same for everyone; windows and lanterns light up after
+  dark and crickets take over from the birds. **Always day** keeps it day.
 - An avatar you can walk, run and jump with, which collides with buildings and
   can climb stairs and slopes; vehicles, an inventory, and catching and releasing
   animals.

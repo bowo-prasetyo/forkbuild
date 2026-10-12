@@ -6171,3 +6171,51 @@ in the village).
 - Tests: `PlazaEntrySpots` (a grid spot out of World View's reach of the square and a village spot within it; the Islet
   Lighthouse case shown on the first ring with its own spot untouched; placed in the village standing there, far and
   unknown ones shown, none sharing a spot, deterministic).
+
+## Day and night in World View (unnumbered, 2026-10-12)
+
+**World View's sky now turns from day to night and back every 40 minutes, and windows and lanterns light up after
+dark.** A World that is always noon has no evenings to visit it in, and a lighthouse or a lamp post built in it has
+nothing to do. Pillar served: your work lives in a world. A player notices that a build looks different in the
+evening, with its windows lit, and the world gives them a reason to build: a lantern on the dock, lit windows, a
+lighthouse that shows the way in ("connects the world back to building"). The first ten minutes stay as easy: night is
+a blue, moonlit night that is never too dark to see, the Editor and every picture of a build stay in daylight, there
+is nothing to learn, and **Always day** sits next to **Show advanced tools** for anyone who would rather not have it.
+It doesn't lead a release: the creative-direction review's launch blockers (a wallet, a crowd, a place to meet) are
+still the next release's subject, and this is World View polish beside them.
+
+- **One sky for everyone, from the clock** (core/DayCycle.js). `skyLookAt(seconds)` gives the background, hemisphere
+  and sun (moon) colors and intensities and a glow strength for any moment: dawn, day for about half the cycle, dusk,
+  a little over a fifth in full night, dawn, each blending into the next. It is the wall clock, the same clock
+  wildlife wanders by, so everyone at a build sees the same sky without anything being sent or stored. 40 minutes,
+  not 24 hours, so nobody's evenings always fall in its night.
+- **World View only** (application/worldNavigation/dayCycleMethods.js, `Renderer#setSkyLook()`,
+  `Lights#applyLook()`). The session hands the render facade the sky every frame; while it holds, the same frozen look
+  comes back and nothing is redone. Under water the haze stays and surfacing returns to the current sky, not noon.
+  The Editor, thumbnails, the Home turntable and link previews keep DAY, which is what the renderer starts with.
+- **What shines** (core/NightGlow.js, `BrickDefinition#nightGlow`). Glowing belongs to a brick type, not a brick, so
+  documents and the protocol are unchanged. core:window_small and core:window_large glow with warm lamplight whatever
+  their glass (the framed and round windows have holes, and don't); the new **Lantern** shines in its own color.
+  Instanced bricks carry their light in an `instanceGlow` attribute beside the selection highlight, scaled by one
+  uniform (`BrickInstanceRegistry#setNightGlow()`); standalone meshes (structure placements, the plaza and its
+  exhibits, claimed builds) get the same shader addition over the renderer's uniform
+  (renderer/NightGlowMaterial.js), added to the emissive light so selection highlighting still owns
+  `material.emissive`.
+- **The Lantern** (core:lantern, the fifty-ninth core brick): an eight-sided glass lantern, 0.75 × 1 × 0.75, in
+  Details. The built-in lighthouses (collection:lighthouse, Harbor Island's) and the challenge plaza's lamp posts use
+  it instead of a plain yellow brick, and the Village Dock gains one at its far end.
+- **Crickets at night** (`ambientMixAtNight()` in core/AmbientSoundscape.js). Birds fall to a tenth and crickets rise,
+  on land more than over open water; World View's sound resamples when night deepens or lifts by 0.05.
+- **Always day** (application/settings/WorldViewSkyStore.js, `world-view-sky`): a per-device choice at the bottom of
+  World View's panel, which keeps DAY and daytime sound. The Privacy page lists it.
+- Every language: the setting and its hint, the Lantern's name and description; guide 03's new Day and night section,
+  guide 02's brick count and the Privacy page. docs/Architecture.md ("Day and night"), docs/BrickLibrary.md,
+  docs/BrickIDs.md and the README describe it.
+- Tests: `DayAndNight` (the cycle from the clock, its order, gradual changes and night's floor; what glows and in
+  what light; instanced bricks keeping their light through swaps and growth; birds and crickets, and resampling as
+  night falls; the session following the clock and Always day; the store); `BrickInstanceRenderingBrowser` and
+  `NightGlowMaterialBrowser` (real WebGL: a lantern is dark by day and lit at night in its own color, ordinary bricks
+  stay dark, a selection highlight comes and goes without putting it out); the brick-count tests and the Village
+  vocabulary test count the Lantern.
+- Not done: glowing bricks light nothing around them (no point lights, no bloom pass, which the renderer has avoided);
+  there is no sun or moon disc moving across the sky; the Editor can't preview a build at night.

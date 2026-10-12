@@ -100,7 +100,7 @@ const lighthouseBricks = [
     }),
     b('core:block_2x2', 0, 7, 0, 0, RED),
     b('core:round_plate_2x2', 0, 8.125, 0, 0, WHITE),
-    b('core:round_1x1', 0, 8.75, 0, 0, LAMP),
+    b('core:lantern', 0, 8.75, 0, 0, LAMP),
     b('core:roof_cone', 0, 10.25, 0, 0, SLATE)
 ];
 

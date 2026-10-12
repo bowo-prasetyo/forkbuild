@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { DAY } from '../core/DayCycle.js';
 
 // Every lit surface in this codebase (terrain, trees, wildlife, bricks,
 // avatars) uses THREE.MeshStandardMaterial, a physically-based material
@@ -13,25 +14,22 @@ import * as THREE from 'three';
 // rather than collapsing to near-black. Intensities are raised from their
 // original values (0.6 ambient / 0.8 directional) to compensate for
 // MeshStandardMaterial's dimmer response.
-const HEMISPHERE_SKY_COLOR = 0xbfd9ff;
-const HEMISPHERE_GROUND_COLOR = 0x4a3d2e;
-const HEMISPHERE_INTENSITY = 1.0;
-
-const DIRECTIONAL_COLOR = 0xffffff;
-const DIRECTIONAL_INTENSITY = 1.8;
+//
+// The daytime colors and intensities are core/DayCycle.js's DAY, which
+// World View's day and night (applyLook()) starts from.
 const DIRECTIONAL_POSITION = { x: 10, y: 15, z: 8 };
 
 export class Lights {
     constructor(sceneManager) {
         this._hemisphere = new THREE.HemisphereLight(
-            HEMISPHERE_SKY_COLOR,
-            HEMISPHERE_GROUND_COLOR,
-            HEMISPHERE_INTENSITY
+            DAY.hemisphereSky,
+            DAY.hemisphereGround,
+            DAY.hemisphereIntensity
         );
 
         this._directional = new THREE.DirectionalLight(
-            DIRECTIONAL_COLOR,
-            DIRECTIONAL_INTENSITY
+            DAY.sunColor,
+            DAY.sunIntensity
         );
         this._directional.position.set(
             DIRECTIONAL_POSITION.x,
@@ -41,6 +39,15 @@ export class Lights {
 
         sceneManager.add(this._hemisphere);
         sceneManager.add(this._directional);
+    }
+
+    // Lights the scene as `look` (shaped like core/DayCycle.js's DAY) says.
+    applyLook(look) {
+        this._hemisphere.color.setHex(look.hemisphereSky);
+        this._hemisphere.groundColor.setHex(look.hemisphereGround);
+        this._hemisphere.intensity = look.hemisphereIntensity;
+        this._directional.color.setHex(look.sunColor);
+        this._directional.intensity = look.sunIntensity;
     }
 
     get hemisphere() {

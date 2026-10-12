@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7d54451a79bc05d6 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: e66632c0b2bec761 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -132,6 +132,24 @@ approchez ; parlez à l’une d’elles et elle vous dit ce qu’il y a autour.
 Contrairement à la faune, ils font partie du contenu propre du Monde :
 c’est son auteur qui les ajoute. Voir
 [Habitants](06-AvatarsAndPresence.md#habitants).
+
+## Le jour et la nuit
+
+Le ciel de la Vue du Monde passe du jour à la nuit et revient toutes les
+40 minutes : un crépuscule chaud, une nuit bleue éclairée par la lune, une
+aube rose, puis de nouveau le jour. Il suit l’horloge, si bien que tout le
+monde voit le même ciel au même moment devant une construction. À la nuit
+tombée, les fenêtres vitrées brillent d’une lumière de lampe et les
+**Lanternes** s’allument de leur propre couleur : un phare montre l’entrée
+du port et un village a l’air habité ; les oiseaux se taisent et les
+grillons prennent le relais. La nuit n’est jamais assez sombre pour vous
+empêcher de trouver votre chemin. Seule la Vue du Monde connaît la nuit :
+l’Éditeur, les images des constructions et les aperçus de liens sont
+toujours en plein jour.
+
+Si vous préférez qu’il fasse toujours jour, cochez **Toujours le jour** en
+bas du panneau, juste au-dessus de **Afficher les outils avancés**. Ce choix
+est mémorisé sur cet appareil et ne change rien pour les autres.
 
 ## Son
 

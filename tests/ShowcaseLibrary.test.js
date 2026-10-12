@@ -63,7 +63,7 @@ const count = (structure, definitionId) => structure.bricks.filter((brick) => br
     const sand = island.bricks.filter((brick) => brick.definitionId === 'core:block_2x2' && brick.color === 0xd9c48a);
     const grass = island.bricks.filter((brick) => brick.definitionId === 'core:block_2x2' && brick.color === 0x6fa35a);
     assert(sand.length > grass.length && grass.length > 0, `a beach ring round a grassy middle (${sand.length} sand, ${grass.length} grass)`);
-    assert(island.bricks.some((brick) => brick.definitionId === 'core:cube' && brick.color === 0xffd54f), 'the lighthouse has a lit lantern');
+    assert(island.bricks.some((brick) => brick.definitionId === 'core:lantern' && brick.color === 0xffd54f), 'the lighthouse has a lit lantern');
     assert(count(island, 'core:door') === 1, 'the cottage stands on it');
     const dock = island.bricks.filter((brick) => brick.definitionId === 'core:plate_2x4' && brick.position.z < -6);
     assert(dock.length === 3, 'two dock plates and the boat run south of the beach');

@@ -783,6 +783,12 @@ export class RenderWorldViewUseCase {
             markAnimalCaught: (animalId, position) => {
                 renderer.markAnimalCaught(animalId, position);
             },
+            // The sky and its light (core/DayCycle.js's look), and how
+            // strongly lamps and lit windows shine with it.
+            setSkyLook: (look) => {
+                renderer.setSkyLook(look);
+                worldRenderer.brickInstances.setNightGlow(look.glow);
+            },
             // A pure client rendering preference, exactly like
             // setLocalAvatarVisible — never touches presence sync or
             // the known-remote-avatar set, only which already-built

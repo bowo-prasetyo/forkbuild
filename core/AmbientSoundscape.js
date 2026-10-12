@@ -90,3 +90,18 @@ export function ambientMixAt(seed, x, z) {
     }
     return mix;
 }
+
+// The same mix after dark (core/DayCycle.js): `nightLevel` from 0 (day) to 1
+// (night). Birds fall nearly silent and crickets take over, on land more than
+// over open water.
+export function ambientMixAtNight(mix, nightLevel) {
+    const night = Number.isFinite(nightLevel) ? Math.min(Math.max(nightLevel, 0), 1) : 0;
+    if (night === 0) {
+        return mix;
+    }
+    const next = { ...mix };
+    next[AMBIENT_LAYER.BIRDS] = mix[AMBIENT_LAYER.BIRDS] * (1 - 0.9 * night);
+    next[AMBIENT_LAYER.INSECTS] = Math.min(1,
+        mix[AMBIENT_LAYER.INSECTS] * (1 + night) + 0.3 * night * (1 - mix[AMBIENT_LAYER.WATER]));
+    return next;
+}

@@ -97,6 +97,7 @@ import { useWalkTogether } from './worldView/useWalkTogether.js';
 import WalkTogetherDialog from '../components/walkTogether/WalkTogetherDialog.js';
 import LoginModal from '../components/LoginModal.js';
 import { compassText, spatialContextDescription } from '../i18n/worldText.js';
+import { DAY_CYCLE_SECONDS } from '../../core/DayCycle.js';
 
 // Snapshot fetches the automatic cascade runs at once.
 const AUTOMATIC_SNAPSHOT_FETCH_CONCURRENCY = 4;
@@ -947,6 +948,16 @@ export default {
             advanced.value = worldViewDetailStore ? worldViewDetailStore.setAdvanced(next) : next === true;
         }
 
+        // Day and night, unless this device keeps World View in daylight
+        // (application/settings/WorldViewSkyStore.js).
+        const worldViewSkyStore = inject('worldViewSkyStore', null);
+        const alwaysDay = ref(worldViewSkyStore ? worldViewSkyStore.isAlwaysDay() : false);
+        function setAlwaysDay(next) {
+            alwaysDay.value = worldViewSkyStore ? worldViewSkyStore.setAlwaysDay(next) : next === true;
+            if (typeof session.setAlwaysDay === 'function') session.setAlwaysDay(alwaysDay.value);
+        }
+        if (typeof session.setAlwaysDay === 'function') session.setAlwaysDay(alwaysDay.value);
+
         // Edit a Copy of the build this World is, when it isn't yours to change.
         function editActiveCopy() {
             const documentId = session.getActiveDocumentId() || route.params.documentId || null;
@@ -1452,7 +1463,7 @@ export default {
             adoptNearbyPlaceNamingClaim,
             goHome,
             buildHere,
-            advanced, setAdvanced, editActiveCopy,
+            advanced, setAdvanced, alwaysDay, setAlwaysDay, dayCycleMinutes: DAY_CYCLE_SECONDS / 60, editActiveCopy,
             plaza, inPlaza, backToPlaza, focusExhibit, openExhibit, remixExhibit,
             openLocationsPanel,
             closeLocationsPanel,
@@ -1627,6 +1638,15 @@ export default {
 
                 ${worldListsSectionTemplate}
 
+                <label class="world-view-advanced-toggle">
+                    <input
+                        type="checkbox"
+                        :checked="alwaysDay"
+                        @change="setAlwaysDay($event.target.checked)"
+                    />
+                    {{ t('worldView.alwaysDay') }}
+                </label>
+                <p class="form-hint form-hint--neutral world-view-advanced-hint">{{ t('worldView.alwaysDayHint', { minutes: dayCycleMinutes }) }}</p>
                 <!-- A visitor's view by default; this device can choose every tool. -->
                 <label class="world-view-advanced-toggle">
                     <input

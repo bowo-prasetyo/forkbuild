@@ -19,7 +19,9 @@ const INITIAL_CAPACITY = 64;
 // (instanceColor, multiplied into a white material) and a highlight
 // (the `instanceEmissive` attribute, added to the material's emissive
 // light by onBeforeCompile), so selection glows exactly as a mesh's
-// material.emissive did.
+// material.emissive did. Bricks that shine after dark (core/NightGlow.js)
+// carry their light in `instanceGlow`, scaled by one strength the whole
+// registry shares (setNightGlow()), so night falls with one uniform.
 //
 // Also keeps brick id -> { documentId, buildingId } and answers the
 // questions picking, selection and presence rendering ask about a brick,
@@ -29,7 +31,8 @@ export class BrickInstanceRegistry {
     constructor(scene, brickFactory = new ThreeBrickFactory()) {
         this._scene = scene;
         this._brickFactory = brickFactory;
-        this._material = createInstancedBrickMaterial();
+        this._nightGlow = { value: 0 };
+        this._material = createInstancedBrickMaterial(this._nightGlow);
         // definitionId -> geometry every chunk of that definition clones.
         this._baseGeometries = new Map();
         // chunk key -> BrickChunk, and chunk mesh -> BrickChunk for picking.
@@ -204,6 +207,23 @@ export class BrickInstanceRegistry {
         return this._entries.get(brickId)?.highlight ?? null;
     }
 
+    // How strongly bricks that shine after dark shine, from 0 (by day) to 1
+    // (at night).
+    setNightGlow(strength) {
+        this._nightGlow.value = Number.isFinite(strength) ? Math.min(Math.max(strength, 0), 1) : 0;
+    }
+
+    get nightGlow() {
+        return this._nightGlow.value;
+    }
+
+    // The light the brick gives off at full night (0xRRGGBB), 0 for none, or
+    // null when it isn't here.
+    getGlow(brickId) {
+        const entry = this._entries.get(brickId);
+        return entry ? (entry.visual.glow || 0) : null;
+    }
+
     // Calls callback(brickId, x, y, z) for every brick, in world coordinates.
     forEachPosition(callback) {
         for (const [brickId, entry] of this._entries) {
@@ -263,6 +283,7 @@ export class BrickInstanceRegistry {
 
     _write(entry) {
         entry.chunk.writeInstance(entry.index, matrixOfEntry(entry, this._matrix), this._color.setHex(colorOf(entry.visual)));
+        entry.chunk.writeGlow(entry.index, entry.visual.glow || 0, this._color);
     }
 
     _indexDefinition(brickId, definitionId) {
@@ -348,6 +369,7 @@ class BrickChunk {
             copyItem(this.mesh.instanceMatrix, last, index);
             copyItem(this.mesh.instanceColor, last, index);
             copyItem(this._emissive, last, index);
+            copyItem(this._glow, last, index);
         }
         this.brickIds.pop();
         this.mesh.count = this.brickIds.length;
@@ -369,15 +391,23 @@ class BrickChunk {
         this._emissive.needsUpdate = true;
     }
 
+    writeGlow(index, hex, scratchColor) {
+        scratchColor.setHex(hex);
+        this._glow.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
+        this._glow.needsUpdate = true;
+    }
+
     // Replaces the mesh with one of twice the capacity, keeping every
     // instance. The caller swaps it into the scene and disposes the old one.
     grow() {
         const old = this.mesh;
         const oldEmissive = this._emissive;
+        const oldGlow = this._glow;
         this.mesh = this._createMesh(old.instanceMatrix.count * 2);
         this.mesh.instanceMatrix.array.set(old.instanceMatrix.array);
         this.mesh.instanceColor.array.set(old.instanceColor.array);
         this._emissive.array.set(oldEmissive.array);
+        this._glow.array.set(oldGlow.array);
         this.mesh.count = this.brickIds.length;
     }
 
@@ -387,6 +417,8 @@ class BrickChunk {
         const geometry = this._baseGeometry.clone();
         this._emissive = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
         geometry.setAttribute('instanceEmissive', this._emissive);
+        this._glow = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
+        geometry.setAttribute('instanceGlow', this._glow);
         const mesh = new THREE.InstancedMesh(geometry, this._material, capacity);
         mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
@@ -401,15 +433,17 @@ class BrickChunk {
     }
 }
 
-function createInstancedBrickMaterial() {
+// nightGlow: { value }, the uniform setNightGlow() changes.
+function createInstancedBrickMaterial(nightGlow) {
     const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
     material.onBeforeCompile = (shader) => {
+        shader.uniforms.uNightGlow = nightGlow;
         shader.vertexShader = shader.vertexShader
-            .replace('#include <common>', '#include <common>\nattribute vec3 instanceEmissive;\nvarying vec3 vInstanceEmissive;')
-            .replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvInstanceEmissive = instanceEmissive;');
+            .replace('#include <common>', '#include <common>\nattribute vec3 instanceEmissive;\nattribute vec3 instanceGlow;\nvarying vec3 vInstanceEmissive;\nvarying vec3 vInstanceGlow;')
+            .replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvInstanceEmissive = instanceEmissive;\n\tvInstanceGlow = instanceGlow;');
         shader.fragmentShader = shader.fragmentShader
-            .replace('#include <common>', '#include <common>\nvarying vec3 vInstanceEmissive;')
-            .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance += vInstanceEmissive;');
+            .replace('#include <common>', '#include <common>\nuniform float uNightGlow;\nvarying vec3 vInstanceEmissive;\nvarying vec3 vInstanceGlow;')
+            .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance += vInstanceEmissive + vInstanceGlow * uNightGlow;');
     };
     material.customProgramCacheKey = () => 'forkbuild-instanced-brick';
     return material;

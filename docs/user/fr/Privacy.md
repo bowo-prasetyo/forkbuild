@@ -1,9 +1,13 @@
-<!-- translation-of: docs/Privacy.md source-hash: 697d4302a8ff4823 -->
+<!-- translation-of: docs/Privacy.md source-hash: c3e2eacf000f9c51 -->
 # Confidentialité
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · **Français** · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
+
+<!-- stale -->
+> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../../Privacy.md).
+<!-- /stale -->
 
 ForkBuild n’a pas de comptes et ne vous suit pas. Il stocke votre travail
 dans votre propre navigateur et ne communique avec d’autres ordinateurs que
@@ -37,7 +41,7 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   jamais envoyé) ;
 - votre profil d’avatar, vos réglages (y compris si la Vue du Monde joue
   du son, à quel volume, en 3D ou en stéréo, si elle montre ses outils
-  avancés, où Publier envoie vos constructions, et la langue que vous avez
+  avancés, s’il y fait toujours jour, où Publier envoie vos constructions, et la langue que vous avez
   choisie ; quand vous n’en avez pas choisi, ForkBuild lit les langues
   préférées du navigateur sur l’appareil et ne les envoie nulle part), et
   le nom d’utilisateur et l’identifiant d’un serveur TURN si vous en

@@ -61,6 +61,7 @@ core:bush
 core:pine_tree
 core:rock
 core:lawn_2x2
+core:lantern
 
 Spanning roofs (Make it yours, in the village, 2026-10-12):
 

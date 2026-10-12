@@ -1,9 +1,13 @@
-<!-- translation-of: docs/Privacy.md source-hash: 697d4302a8ff4823 -->
+<!-- translation-of: docs/Privacy.md source-hash: c3e2eacf000f9c51 -->
 # Privasi
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · **Bahasa Indonesia** · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
+
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../../Privacy.md).
+<!-- /stale -->
 
 ForkBuild tidak memiliki akun dan tidak melacak Anda. ForkBuild menyimpan
 pekerjaan Anda di browser Anda sendiri dan berkomunikasi dengan komputer
@@ -37,7 +41,7 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
   dikirim);
 - profil avatar Anda, pengaturan (termasuk apakah Tampilan Dunia
   memutar suara, seberapa keras, dalam 3D atau stereo, apakah Tampilan
-  Dunia menampilkan alat lanjutannya, ke mana Terbitkan mengirim bangunan Anda, dan bahasa yang
+  Dunia menampilkan alat lanjutannya, apakah di sana selalu siang, ke mana Terbitkan mengirim bangunan Anda, dan bahasa yang
   Anda pilih; jika Anda belum memilih, ForkBuild membaca bahasa pilihan
   browser di perangkat dan tidak mengirimnya ke mana pun), serta nama
   pengguna dan kredensial server TURN jika Anda memasukkannya di

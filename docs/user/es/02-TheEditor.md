@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 855952f6b34672d8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 292450f615f65312 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -44,10 +44,14 @@ grupos.
 - **Biblioteca de construcción**: un cuadro de búsqueda y dos pestañas:
   - **Bloques**: todo lo que puede colocar con la herramienta Colocar,
     como mosaicos en seis secciones (Básicos, Estructura, Techos y
-    escaleras, Aberturas, Detalles, Naturaleza): cincuenta piezas, desde
-    medios cubos, bloques redondos y troncos hasta tejados a dos aguas y
-    cónicos, marcos de ventana y ventanas redondas, vallas, bancos,
-    arbustos y pinos. Haga clic en uno para seleccionarlo
+    escaleras, Aberturas, Detalles, Naturaleza): cincuenta y nueve piezas,
+    desde medios cubos, bloques redondos y troncos hasta tejados a dos aguas
+    y cónicos, tejados a cuatro aguas que cubren una casa entera de una sola
+    pieza (4x4, 4x6 y 6x6) y un tejado a dos aguas largo de 2x4, marcos de
+    ventana y ventanas redondas, vallas, bancos, arbustos y pinos, muebles
+    para las habitaciones en las que se entra (una mesa, una cama, un hogar
+    y un estante, en Detalles) y un **Farol** que se enciende de noche en la Vista del
+    mundo (vea [Día y noche](03-WorldView.md#día-y-noche)). Haga clic en uno para seleccionarlo
     (y pasar a la herramienta Colocar); aparece entonces una muestra de
     **Color** para elegir su color: consulte
     [Colores de los bloques](#colores-de-los-bloques) más abajo.

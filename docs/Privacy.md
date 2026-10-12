@@ -36,7 +36,7 @@ send it:
   is ever sent);
 - your avatar profile, settings (including whether World View plays sound,
   how loud, and in 3D or stereo, whether World View shows its advanced
-  tools, where Publish sends your builds, and the language you chose; when you
+  tools, whether it is always day there, where Publish sends your builds, and the language you chose; when you
   haven't chosen one, ForkBuild reads the browser's preferred languages on
   the device and sends them nowhere), and a TURN server's username and credential
   if you enter one under **Network Settings**;

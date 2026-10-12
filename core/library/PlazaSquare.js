@@ -54,7 +54,7 @@ function wellBricks(dx, dz) {
 function lampPost(x, z) {
     return [
         b('core:post', x, PAVING_TOP + 1.5, z),
-        b('core:round_1x1', x, PAVING_TOP + 3.5, z, 0, LAMP)
+        b('core:lantern', x, PAVING_TOP + 3.5, z, 0, LAMP)
     ];
 }
 

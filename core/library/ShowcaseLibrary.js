@@ -136,7 +136,7 @@ harborIslandBricks.push(
     b('core:block_2x2', -3, 5, 3, 0, WHITE),
     b('core:block_2x2', -3, 7, 3, 0, RED),
     b('core:block_2x2', -3, 9, 3, 0, WHITE),
-    b('core:cube', -3, 10.5, 3, 0, LAMP),
+    b('core:lantern', -3, 10.5, 3, 0, LAMP),
     b('core:roof_hip', -3, 11.75, 3)
 );
 // A cottage on the grass, its door facing the dock.

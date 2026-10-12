@@ -17,15 +17,15 @@ import { assert } from './support/Assert.js';
 const registry = new CreateBrickRegistryUseCase().execute();
 const factory = new ThreeBrickFactory();
 
-// Fifty-four bricks (the kit's fifty and four pieces of furniture), none
-// sharing an id, all known to the registry.
+// Fifty-nine bricks (the kit's fifty, four pieces of furniture, four
+// spanning roofs and the lantern), none sharing an id, all known to the registry.
 {
     const ids = CoreLibrary.definitions.map((definition) => definition.id);
-    assert(ids.length === 58, `fifty-eight core bricks (got ${ids.length})`);
+    assert(ids.length === 59, `fifty-nine core bricks (got ${ids.length})`);
     assert(new Set(ids).size === ids.length, 'no id repeats');
     for (const id of ids) assert(registry.has(id), `${id} is registered`);
     assert(registry.getByCategory('primitive').length === 4, 'the kit adds nothing to the original primitive category');
-    console.log('✓ fifty-eight core bricks');
+    console.log('✓ fifty-nine core bricks');
 }
 
 // Each is drawn exactly the size it declares, centred on its position,

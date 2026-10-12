@@ -4,7 +4,8 @@ import { useSoundControls } from '../../composables/useSoundControls.js';
 // avatar (or the camera, for a spectator), with the avatar's own footsteps,
 // jumps, landings and engine, the animals, residents and other players
 // around it (in 3D unless turned off) and the changes you make to a World,
-// and toggled with M or the sound button.
+// with crickets instead of birds after dark, and toggled with M or the sound
+// button.
 // Absent when the app provides no soundscape factory.
 export function useWorldSoundscape({ createWorldSoundscape, session }) {
     return useSoundControls(() => (typeof createWorldSoundscape === 'function'
@@ -15,7 +16,8 @@ export function useWorldSoundscape({ createWorldSoundscape, session }) {
             creatureObservation: () => session.creatureSoundObservation(),
             listenerPose: () => session.soundListenerPose(),
             onRenderFrame: (callback) => session.onRenderFrame(callback),
-            onCommandActivity: (listener) => session.onCommandActivity(listener)
+            onCommandActivity: (listener) => session.onCommandActivity(listener),
+            nightLevel: () => session.nightLevel()
         })
         : null));
 }
