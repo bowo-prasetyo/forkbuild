@@ -20,9 +20,10 @@ released animal into the World as a decoration with **G** (see
 ## Opening World View
 
 **Walk** in the main menu opens World View at this week's challenge plaza,
-with no build of your own needed: the village of published builds grows
-round it, and while the week has few entries the ready-made builds stand
-round the square, ready to remix (see
+with no build of your own needed. The plaza is the village square: the six
+ready-made builds stand round it for everyone, every time you open World
+View, ready to remix, and the village of published builds grows just
+outside them (see
 [The challenge plaza](04-PublishingAndForking.md#the-challenge-plaza)).
 
 From **Explore**, click **Explore** on any creation — or navigate to a
@@ -49,7 +50,10 @@ the networks behind the World wait at the bottom of the panel, under
   groups, with **Discover Shared World** inside World Encounters;
 - **My Shared World**, your publication's own network panel, and Move
   Placement beside it;
-- the list of Worlds that couldn't load, and the avatar diagnostics.
+- the list of Worlds that couldn't load, and the avatar diagnostics;
+- picking by clicking: as a visitor, clicking the view (to start walking,
+  say) selects nothing but another avatar, so no brick's details open; with
+  Advanced on, a click opens [Inspecting a brick](#inspecting-a-brick--or-a-placed-structure).
 
 The choice is remembered on this device and changes nothing for anyone
 else. The compass, the place names along the bottom, Search, Locations,
@@ -671,13 +675,15 @@ walking around. The dialog lists who is on the way and who has arrived.
 
 ### The challenge plaza
 
-**Walk the plaza** on a week's challenge page opens World View in a
-clearing where that week's entries stand round an open square, paved,
-with a well, benches and lamp posts, so the plaza is a place even in a week
-with no entries yet; a panel lists them (see
+**Walk the plaza** on a week's challenge page opens World View at the
+village square: paved, with a well, benches and lamp posts, and the six
+ready-made builds round it. The square and the ready-made builds are part
+of the World, like its hills and trees: they stand in every World View,
+for everyone, and nobody owns them. The village of published builds grows
+just outside them, so your own published house has neighbours. A panel
+lists the week's entries and the ready-made builds (see
 [The challenge plaza](04-PublishingAndForking.md#the-challenge-plaza)).
-No trees grow there, for any week. The entries are shown only while you're
-in the plaza, and **Build here** isn't offered there.
+No trees grow round the square, and **Build here** isn't offered there.
 
 ### Landmarks — marking a place worth remembering
 
@@ -863,7 +869,8 @@ row you can't do anything with.
 
 ## Inspecting a brick — or a placed structure
 
-Click any brick to open the **Inspection** panel, which tells you:
+With **Show advanced tools** on, click any brick to open the **Inspection**
+panel (as a visitor, a click selects nothing), which tells you:
 
 - What kind of brick it is
 - Its position and rotation

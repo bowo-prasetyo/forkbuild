@@ -57,6 +57,42 @@ function hipRoofGeometry(width, depth, height) {
     };
 }
 
+// A hipped roof over a whole footprint — core:roof_hip_4x4, _4x6 and _6x6:
+// four slopes rising from the eaves to a ridge along the longer side,
+// shortened by the shorter side so every slope has the same pitch; over a
+// square the ridge is a point. One closed shape, flat-shaded, base at
+// -height/2.
+function hippedRoofGeometry(width, depth, height) {
+    return () => {
+        const x = width / 2;
+        const z = depth / 2;
+        const y0 = -height / 2;
+        const y1 = height / 2;
+        const ridgeX = Math.max(0, (width - depth) / 2);
+        const ridgeZ = Math.max(0, (depth - width) / 2);
+        const corners = [[-x, y0, -z], [x, y0, -z], [x, y0, z], [-x, y0, z]];
+        const ridgeA = [-ridgeX, y1, -ridgeZ];
+        const ridgeB = [ridgeX, y1, ridgeZ];
+        const [sw, se, ne, nw] = corners;
+        const triangles = [
+            // South and north slopes, east and west ends (each wound to face out).
+            [sw, ridgeA, se], [se, ridgeA, ridgeB],
+            [ne, ridgeB, nw], [nw, ridgeB, ridgeA],
+            [se, ridgeB, ne], [nw, ridgeA, sw],
+            // The underside.
+            [sw, se, ne], [sw, ne, nw]
+        ].filter(([a, b, c]) => !(same(a, b) || same(b, c) || same(a, c)));
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(triangles.flat(2), 3));
+        geometry.computeVertexNormals();
+        return geometry;
+    };
+}
+
+function same(a, b) {
+    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+}
+
 // A stepped ascending profile, extruded along depth — core:stair. Built
 // from a single THREE.Shape (outline traced along the top of each tread,
 // then straight back down the riser face and along the base) rather than
@@ -463,6 +499,11 @@ const GEOMETRIES = new Map([
     ['core:roof_gable', gableGeometry(2, 1, 2)],
     ['core:roof_cone', coneGeometry(2, 2)],
     ['core:roof_ridge', gableGeometry(1, 0.5, 1)],
+    // Roofs that span a house (Make it yours, in the village, 2026-10-12).
+    ['core:roof_hip_4x4', hippedRoofGeometry(4, 4, 2)],
+    ['core:roof_hip_4x6', hippedRoofGeometry(4, 6, 2)],
+    ['core:roof_hip_6x6', hippedRoofGeometry(6, 6, 2.5)],
+    ['core:roof_gable_2x4', gableGeometry(2, 1, 4)],
     ['core:stair_wide', stairGeometry(1, 1, 2)],
     ['core:ladder', ladderGeometry(1, 3, 0.15)],
     ['core:window_frame', windowFrameGeometry(1, 1, 0.25)],

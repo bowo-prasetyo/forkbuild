@@ -57,8 +57,8 @@ const ORIGINAL_DEFINITION_IDS = [
     'core:cube', 'core:slope_45', 'core:plate_2x4', 'core:window_small'
 ];
 // Added after this milestone (tests/TimberBricksAndWedgeSlope.test.js,
-// tests/BuildersKit.test.js and tests/IndoorView.test.js, the furniture).
-const LATER_DEFINITION_IDS = ['core:post', 'core:brace_2x2', 'core:cube_half', 'core:brick_1x2', 'core:brick_1x4', 'core:plate_1x1', 'core:plate_2x2', 'core:round_1x1', 'core:round_plate_2x2', 'core:wall_1x1', 'core:wall_2x3', 'core:wall_half_2x1', 'core:pillar', 'core:beam_short', 'core:log', 'core:slope_shallow', 'core:slope_inverted', 'core:roof_gable', 'core:roof_cone', 'core:roof_ridge', 'core:stair_wide', 'core:ladder', 'core:window_frame', 'core:window_round', 'core:door_double', 'core:shutter', 'core:arch_small', 'core:fence', 'core:chimney', 'core:barrel', 'core:bench', 'core:bush', 'core:pine_tree', 'core:rock', 'core:lawn_2x2', 'core:table', 'core:bed', 'core:hearth', 'core:shelf'];
+// tests/BuildersKit.test.js, tests/IndoorView.test.js, the furniture, and the spanning roofs).
+const LATER_DEFINITION_IDS = ['core:post', 'core:brace_2x2', 'core:cube_half', 'core:brick_1x2', 'core:brick_1x4', 'core:plate_1x1', 'core:plate_2x2', 'core:round_1x1', 'core:round_plate_2x2', 'core:wall_1x1', 'core:wall_2x3', 'core:wall_half_2x1', 'core:pillar', 'core:beam_short', 'core:log', 'core:slope_shallow', 'core:slope_inverted', 'core:roof_gable', 'core:roof_cone', 'core:roof_ridge', 'core:stair_wide', 'core:ladder', 'core:window_frame', 'core:window_round', 'core:door_double', 'core:shutter', 'core:arch_small', 'core:fence', 'core:chimney', 'core:barrel', 'core:bench', 'core:bush', 'core:pine_tree', 'core:rock', 'core:lawn_2x2', 'core:table', 'core:bed', 'core:hearth', 'core:shelf', 'core:roof_hip_4x4', 'core:roof_hip_4x6', 'core:roof_hip_6x6', 'core:roof_gable_2x4'];
 const ALL_DEFINITION_IDS = [...ORIGINAL_DEFINITION_IDS, ...NEW_DEFINITION_IDS, ...LATER_DEFINITION_IDS];
 const TOTAL = ALL_DEFINITION_IDS.length;
 

@@ -1,9 +1,11 @@
 // The challenge plaza (docs/user/03-WorldView.md, "The challenge plaza"): a
-// square of open ground in the shared World where a week's challenge entries
-// stand in rings around an open middle, so that walking past them is the
-// gallery. The entries are exhibits, never placements: nothing is signed,
-// stored or claimed for anyone, and they are drawn only while someone visits
-// the plaza (ui/views/worldView/useChallengePlaza.js).
+// square of open ground in the shared World, the middle of its village
+// (core/StarterVillage.js), where a week's challenge entries can be found.
+// An entry stands where it settled (core/BuildSettlement.js); one this
+// device knows no placement for is shown, while someone visits the plaza,
+// at the spot it would settle on (ui/views/worldView/useChallengePlaza.js),
+// so a build stands in one place. Exhibits are never placements: nothing is
+// signed, stored or claimed for anyone.
 //
 // Everything here is pure, so every device that knows the same entries lays
 // them out the same way.
@@ -14,10 +16,16 @@
 // well short of the coast. tests/ChallengePlaza.test.js checks the ground stays so.
 export const PLAZA_CENTER = Object.freeze({ x: -170, y: 0, z: 300 });
 
+// The village round the middle (core/StarterVillage.js): its square and
+// ready-made builds stand inside this radius, and no published build settles
+// inside it (core/BuildSettlement.js), so the first ring of published builds
+// stands just outside them.
+export const PLAZA_VILLAGE_RADIUS = 48;
+
 // No tree grows within this distance of the middle
-// (core/NaturalFeatureField.js), so the exhibits stand on open ground: room
-// for the first two rings of builds of a typical size.
-export const PLAZA_CLEARING_RADIUS = 72;
+// (core/NaturalFeatureField.js): the village and its first ring of
+// published builds stand on open ground.
+export const PLAZA_CLEARING_RADIUS = 66;
 
 export function isInPlazaClearing(x, z) {
     const dx = x - PLAZA_CENTER.x;

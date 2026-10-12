@@ -194,8 +194,10 @@ with:
 - **a remix** stands beside the build it remixes, so a family tree becomes
   a street;
 - **anything else** joins the village that grows round the challenge
-  plaza, ring by ring from the inside out, so builds published about the
-  same time are neighbours;
+  plaza, ring by ring from the inside out, starting just outside the
+  ready-made builds that stand round its square, so builds published about
+  the same time are neighbours, and the first ones are in sight of the
+  square;
 - **Build here** still puts a build on the spot you chose, and publishing a
   build again never moves it.
 
@@ -604,17 +606,17 @@ families instead (see [Ready-made builds](#ready-made-builds)).
 ### The challenge plaza
 
 **Walk** in the main menu takes you to this week's plaza, and so does
-**Walk the plaza** on the challenge page once a week has entries. It is a
-clearing in the shared World where the week's entries stand in rings round
-an open square, and the village of published builds grows round it. While
-a week has fewer than six entries, the ready-made builds stand round the
-square too, each with **Remix**, so the plaza is worth a walk from the
-first day. Walk among them, or pick one in the
-panel: **Navigate** flies to it, **Open** opens it as **Explore** would,
-and **Edit a Copy** starts your own copy of it.
+**Walk the plaza** on the challenge page once a week has entries. It is the
+village square of the shared World: the six ready-made builds stand round
+it for everyone, always, each with **Remix**, and the village of published
+builds grows just outside them, the week's entries among them. Walk among
+them, or pick one in the panel: **Navigate** flies to it, **Open** opens it
+as **Explore** would, and **Edit a Copy** starts your own copy of it.
 
-- The first 24 entries published stand there, the oldest nearest the
-  middle, so a new entry joins the outer edge. The rest are on the
+- An entry stands in one place. One whose spot this device knows stands
+  there, where it settled when it was published; any other is shown, while
+  you're at the plaza, on the spot it would settle on in the village.
+- The panel lists the first 24 entries published. The rest are on the
   challenge page.
 - Entries found on the networks are fetched and checked the way opening
   their link would be. One that can't be fetched is left out, and the
@@ -622,8 +624,8 @@ and **Edit a Copy** starts your own copy of it.
 - An entry whose publisher chose **Only I may place it** doesn't stand in
   the plaza, since standing it there would be placing it. It stays on the
   challenge page.
-- The entries are exhibits, not placements: nothing is signed or kept for
-  anyone, and they're gone when you leave. Like the rest of World View, the
+- An entry shown on its spot is an exhibit, not a placement: nothing is
+  signed or kept for anyone, and it's gone when you leave. Like the rest of World View, the
   plaza shows what this device knows, so two visitors may see a different
   set.
 

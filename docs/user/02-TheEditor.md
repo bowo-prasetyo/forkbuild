@@ -36,10 +36,11 @@ transform bricks, and how to organize your build with groups.
 - **Build Library** — a search box and two tabs:
   - **Bricks** — everything you can place with the Place tool, as tiles in
     six sections (Basic, Structure, Roofs & Stairs, Openings, Details,
-    Nature): fifty-four pieces, from half cubes, round bricks and logs to
-    gable and cone roofs, framed and round windows, fences, benches, bushes
-    and pine trees, and furniture (a table, a bed, a hearth and a shelf, in
-    Details) for the rooms you walk into.
+    Nature): fifty-eight pieces, from half cubes, round bricks and logs to
+    gable and cone roofs, hipped roofs that cover a whole house in one piece
+    (4x4, 4x6 and 6x6) and a long 2x4 gable, framed and round windows,
+    fences, benches, bushes and pine trees, and furniture (a table, a bed, a
+    hearth and a shelf, in Details) for the rooms you walk into.
     Click one to select it (and switch to the Place tool); a
     **Color** swatch then appears for choosing its color — see
     [Brick colors](#brick-colors) below.
@@ -72,6 +73,16 @@ that can't do anything yet:
 > **Tip:** Press `Ctrl/Cmd+K` anywhere to open the **Command Palette** — a
 > searchable list of every action in this guide, by name.
 
+## Try it now: a house to finish
+
+Home's **Try it now** opens a house of your own that isn't finished: its
+walls are up and its room is furnished, but it has no roof. A **Your job:
+give it a roof** card at the top of the tools says so. Click **Pick the
+roof** (it chooses **Hip Roof 6x6** and switches to Place), then click
+anywhere on the house: the roof goes on top of the walls. The
+card then says the house is yours now. Publish it and walk inside, or keep
+going.
+
 ## Your first build
 
 The first time you open the Editor on a device, a **Your first build** card
@@ -103,8 +114,12 @@ that already has saved work starts with the guide hidden.
 ### Place tool (`2`)
 
 Pick a brick from the palette, hover in the viewport, and click to place it.
-A translucent ghost shows exactly where the brick will land. Hover over an
-existing brick's face to stack or attach.
+With no brick picked yet, Place starts with a **Cube**, so the first click
+always places something. A translucent ghost shows exactly where the brick
+will land. Hover over an existing brick's face to stack or attach. A brick
+put on top of another rests on the tallest brick under it, not inside it:
+a roof dropped on the middle of a house's floor sits on its walls, and a
+beam across two posts on the posts.
 
 > **Tip:** Press **Escape** to switch back to the Select tool.
 
@@ -531,7 +546,8 @@ first click or key press, as browsers require.
 - **Save** (`Ctrl+S`) — keep your work on this device.
 - **Publish** — share it with everyone (see
   [Publishing & Forking](04-PublishingAndForking.md)). Publishing also saves
-  it. The message after it offers **Walk inside it** and **Copy link**;
+  it. A build started from a ready-made one that has nothing of your own in
+  it yet is asked about once: **Keep building**, or **Publish anyway**. The message after it offers **Walk inside it** and **Copy link**;
   **More ways to share** holds the link itself, **Save picture** and
   **Embed**.
 - **New** — start something new: an **Empty plot**, or one of the

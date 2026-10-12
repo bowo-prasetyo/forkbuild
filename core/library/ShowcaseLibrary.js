@@ -100,9 +100,10 @@ for (const x of [-1, 1]) {
         for (const y of LAYER.slice(0, 3)) {
             castleBricks.push(b('core:block_2x2', x, y, z));
         }
-        castleBricks.push(b('core:roof_hip', x, FLOOR_TOP + 6 + 0.75, z));
     }
 }
+// One hipped roof over the whole keep.
+castleBricks.push(b('core:roof_hip_4x4', 0, FLOOR_TOP + 6 + 1, 2));
 castleBricks.push(b('core:door', 0, FLOOR_TOP + 1, -0.05));
 castleBricks.push(b('core:window_small', -1, LAYER[1], -0.125));
 castleBricks.push(b('core:window_small', 1, LAYER[1], -0.125));

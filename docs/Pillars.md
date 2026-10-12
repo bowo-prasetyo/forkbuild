@@ -285,3 +285,17 @@ the roadmap): the build above your head cut away and the camera coming in
 with you, furniture and a furnished House six across, ready-made homes that
 come lived in, World View's panel leading with what a visitor came to do,
 and one celebration after Publish.
+
+A fourth review the same day
+([reviews/CreativeDirection-2026-10-12b.md](reviews/CreativeDirection-2026-10-12b.md))
+found the vision coherent and three seams where the game broke its own
+promise. Its Release F, "Make it yours, in the village", followed (see the
+roadmap), taking the review's recommendation on two of its open questions:
+the plaza is a place, not a view, and Home's main button hands over a build
+with a job left to do. The square and the six ready-made builds stand in
+every World View, with published builds settling just outside them; **Try
+it now** opens the House with no roof and a card naming the job; Place with
+no brick chosen places a cube, and a brick put on top of others rests on
+them; hipped roofs that cover a whole building in one piece; and a
+visitor's click in World View selects nothing, with the Words test covering
+World View.

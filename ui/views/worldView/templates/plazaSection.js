@@ -1,6 +1,6 @@
 // World view template: the challenge plaza's panel (ui/views/worldView/useChallengePlaza.js),
-// shown at the top while World View is on `/plaza/<week>`: the week, its exhibits, the
-// ready-made builds standing while it has few, and what isn't standing and why. It renders in WorldView's scope, so it uses the names its
+// shown at the top while World View is on `/plaza/<week>`: the week, its entries, the
+// village's ready-made builds round the square, and what isn't standing and why. It renders in WorldView's scope, so it uses the names its
 // setup() returns.
 export const plazaSectionTemplate = `<section v-if="plaza" class="world-view-plaza" aria-labelledby="world-view-plaza-title">
                     <p class="world-view-plaza-kicker"><span aria-hidden="true">🏆</span> {{ t('plaza.kicker') }}</p>

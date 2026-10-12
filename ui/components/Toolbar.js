@@ -31,6 +31,9 @@ import { errorText, formatDate, t } from '../i18n/i18n.js';
 // of its own), with a search box once there are enough documents that
 // scrolling alone stops being the fastest way to find one.
 const SEARCH_THRESHOLD = 8;
+// The builds Publish has already asked "nothing of your own yet?" about in
+// this visit: asked once each, never again however often it is published.
+const NOTHING_ADDED_ASKED = new Set();
 
 // 0.9.653 — SaveDocumentUseCase.execute() performs multiple independent
 // StorageProvider writes (document blob, then manifest — see
@@ -122,6 +125,7 @@ export default {
     setup(props, { emit }) {
         const identityUseCase = inject('identityUseCase', null);
         const findabilityStore = inject('findabilityStore', null);
+        const readyMadeBricks = inject('readyMadeBricksStore', null);
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
         const recentOpen = ref(false);
@@ -207,7 +211,36 @@ export default {
         // publish the person says whether others may remix it
         // (RemixPermissionDialog); the answer becomes its license.
         const askRemixPermission = ref(false);
+        // A build started from something ready-made with nothing of the
+        // builder's own in it yet (core/PlacedBricks.js) is asked about once,
+        // kindly: publishing it untouched isn't building it
+        // (docs/reviews/CreativeDirection-2026-10-12b.md, finding 2).
+        const askNothingAdded = ref(false);
         function requestPublish() {
+            const world = props.documentManager.document?.world;
+            if (world && readyMadeBricks && !NOTHING_ADDED_ASKED.has(world.id)) {
+                let untouched = false;
+                try {
+                    untouched = readyMadeBricks.get(world.id) !== null && readyMadeBricks.placedCount(world) === 0;
+                } catch {
+                    untouched = false;
+                }
+                if (untouched) {
+                    NOTHING_ADDED_ASKED.add(world.id);
+                    askNothingAdded.value = true;
+                    return;
+                }
+            }
+            continueToPublish();
+        }
+        function keepBuilding() {
+            askNothingAdded.value = false;
+        }
+        function publishAnyway() {
+            askNothingAdded.value = false;
+            continueToPublish();
+        }
+        function continueToPublish() {
             const license = props.documentManager.document?.metadata?.license;
             if (license && license.id === LicenseId.UNSPECIFIED) {
                 askRemixPermission.value = true;
@@ -351,7 +384,7 @@ export default {
             searchThreshold: SEARCH_THRESHOLD,
             save, createNew, load, place, publish, saveAndReturnToWorld,
             signInToPublish, lockedIdentityId, requestPublish, publishAfterSignIn,
-            askRemixPermission, chooseRemixPermission, askFindability, chooseFindability,
+            askRemixPermission, chooseRemixPermission, askNothingAdded, keepBuilding, publishAnyway, askFindability, chooseFindability,
             importFileInput, triggerImportDocument, onImportDocumentFileChosen, exportAllDocuments
         };
     },
@@ -391,6 +424,24 @@ export default {
                 @change="onImportDocumentFileChosen"
             />
             <button class="toolbar-publish" @click="requestPublish">{{ t('toolbar.publish') }}</button>
+            <div
+                v-if="askNothingAdded"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="nothing-added-title"
+                class="modal-overlay"
+                @click.self="keepBuilding"
+                @keydown.esc.stop="keepBuilding"
+            >
+                <div class="modal-panel nothing-added-dialog">
+                    <h3 id="nothing-added-title">{{ t('toolbar.nothingAddedTitle') }}</h3>
+                    <p>{{ t('toolbar.nothingAddedText') }}</p>
+                    <div class="modal-actions">
+                        <button type="button" class="action-btn action-btn--primary nothing-added-keep" @click="keepBuilding">{{ t('toolbar.nothingAddedKeep') }}</button>
+                        <button type="button" class="action-btn action-btn--secondary nothing-added-publish" @click="publishAnyway">{{ t('toolbar.nothingAddedPublish') }}</button>
+                    </div>
+                </div>
+            </div>
             <RemixPermissionDialog
                 v-if="askRemixPermission"
                 @choose="chooseRemixPermission"

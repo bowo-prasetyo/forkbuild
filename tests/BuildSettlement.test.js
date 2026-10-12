@@ -4,7 +4,7 @@ import {
 } from '../core/BuildSettlement.js';
 import { naturalFeaturesInRegion } from '../core/NaturalFeatureField.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { PLAZA_CENTER, PLAZA_CLEARING_RADIUS } from '../core/ChallengePlaza.js';
+import { PLAZA_CENTER, PLAZA_VILLAGE_RADIUS } from '../core/ChallengePlaza.js';
 import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
 import { SettledPlacementStrategy } from '../application/placement/SettledPlacementStrategy.js';
 import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
@@ -37,7 +37,7 @@ function spatialIndex(placements = []) {
         const spot = settleInVillage({ publicationId: `pub-${i}`, isTaken });
         assert(spot, `build ${i} settles`);
         assert(isSettleableGround(spot.x, spot.z), `build ${i} stands on dry, open ground`);
-        assert(distance(spot, PLAZA_CENTER) >= PLAZA_CLEARING_RADIUS, `build ${i} leaves the plaza's clearing open`);
+        assert(distance(spot, PLAZA_CENTER) >= PLAZA_VILLAGE_RADIUS, `build ${i} leaves the village's ready-made builds room`);
         taken.push(spot);
     }
     const firstRing = ringSpots(PLAZA_CENTER, VILLAGE_FIRST_RING_RADIUS, VILLAGE_SLOT_SPACING).filter((spot) => isSettleableGround(spot.x, spot.z)).length;

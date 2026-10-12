@@ -62,6 +62,13 @@ core:pine_tree
 core:rock
 core:lawn_2x2
 
+Spanning roofs (Make it yours, in the village, 2026-10-12):
+
+core:roof_hip_4x4
+core:roof_hip_4x6
+core:roof_hip_6x6
+core:roof_gable_2x4
+
 Namespace:
 
 library:brick

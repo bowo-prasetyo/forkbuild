@@ -1,5 +1,5 @@
 import { defineAsyncComponent } from 'vue';
-import { STARTER_STRUCTURE_ID } from '../../application/home/FeaturedBuilds.js';
+import { STARTER_JOB_ID, STARTER_STRUCTURE_ID } from '../../application/home/FeaturedBuilds.js';
 import { currentLocale, t } from '../i18n/i18n.js';
 import { userGuideUrl } from '../i18n/userGuide.js';
 import InstallAppButton from '../components/pwa/InstallAppButton.js';
@@ -34,7 +34,7 @@ export default {
         return {
             t,
             reasons: REASONS,
-            starterRoute: { path: '/editor', query: { start: STARTER_STRUCTURE_ID } },
+            starterRoute: { path: '/editor', query: { start: STARTER_STRUCTURE_ID, job: STARTER_JOB_ID } },
             guideUrl: userGuideUrl(currentLocale().code),
             sourceUrl: SOURCE_URL
         };

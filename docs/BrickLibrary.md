@@ -82,6 +82,15 @@ core:shelf (two sides, a back toward +z and three boards), each a few boxes
 joined into one geometry (renderer/ThreeBrickFactory.js, boxesGeometry())
 and colliding as its one box, in the decorative category and tagged
 `furniture`. The Village House is furnished with them.
+Spanning roofs (2026-10-12, docs/reviews/CreativeDirection-2026-10-12b.md,
+finding 4) bring it to fifty-eight: core:roof_hip_4x4, core:roof_hip_4x6
+and core:roof_hip_6x6 (four slopes of one pitch to a ridge along the longer
+side, a point over a square; renderer/ThreeBrickFactory.js,
+hippedRoofGeometry()) and core:roof_gable_2x4, each covering a whole
+building in one piece, tagged `spanning`. The village's houses, barn,
+granary, market, pavilion and hall, and the castle's keep, are roofed with
+them instead of grids of core:roof_hip caps (the Cottage and Chapel keep
+their rows of slopes, which are walked as slopes).
 Every one is still one primitive with one geometry, drawn at exactly its
 declared size (tests/BuildersKit.test.js). Any brick can also be tilted onto
 another side (core/BrickOrientation.js, docs/Protocol.md "Brick Tilt"), so

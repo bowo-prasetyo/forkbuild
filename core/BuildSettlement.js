@@ -1,5 +1,5 @@
 import { computeFnv1a32 } from '../serializer/contentHash.js';
-import { PLAZA_CENTER, PLAZA_CLEARING_RADIUS } from './ChallengePlaza.js';
+import { PLAZA_CENTER, PLAZA_VILLAGE_RADIUS } from './ChallengePlaza.js';
 import { SURFACE_CATEGORY, surfaceCategoryAt } from './TerrainSurface.js';
 import { HYDROLOGY_FEATURE, hydrologyFeatureAt } from './Hydrology.js';
 import { DEFAULT_WORLD_SEED } from './TerrainHeightField.js';
@@ -23,8 +23,10 @@ import { naturalFeaturesInRegion } from './NaturalFeatureField.js';
 // builds sit in the same spot?"); the chosen position becomes the build's
 // signed placement, which everyone who finds the build adopts.
 
-// The village's first ring, just outside the plaza's clearing.
-export const VILLAGE_FIRST_RING_RADIUS = PLAZA_CLEARING_RADIUS + 18;
+// The village's first ring, just outside the plaza's clearing and its
+// ready-made builds (core/StarterVillage.js): close enough that a build on
+// it sees the square, well inside World View's streaming radius.
+export const VILLAGE_FIRST_RING_RADIUS = PLAZA_VILLAGE_RADIUS + 8;
 // Between two rings, and between two neighbours on a ring: room for a
 // house and its garden.
 export const VILLAGE_RING_SPACING = 22;
@@ -44,11 +46,11 @@ export const SETTLEMENT_TAKEN_RADIUS = VILLAGE_SLOT_SPACING * 0.75;
 export const SETTLEMENT_TREE_CLEARANCE = 7;
 
 // Whether a build can stand at x, z: dry, walkable ground with no river or
-// lake and no tree in the way, outside the plaza's own clearing.
+// lake and no tree in the way, outside the village's ready-made builds.
 export function isSettleableGround(x, z, seed = DEFAULT_WORLD_SEED) {
     const dx = x - PLAZA_CENTER.x;
     const dz = z - PLAZA_CENTER.z;
-    if (dx * dx + dz * dz < PLAZA_CLEARING_RADIUS * PLAZA_CLEARING_RADIUS) return false;
+    if (dx * dx + dz * dz < PLAZA_VILLAGE_RADIUS * PLAZA_VILLAGE_RADIUS) return false;
     const surface = surfaceCategoryAt(seed, x, z);
     if (surface === SURFACE_CATEGORY.WATER || surface === SURFACE_CATEGORY.ROCK) return false;
     if (hydrologyFeatureAt(seed, x, z) !== HYDROLOGY_FEATURE.NONE) return false;

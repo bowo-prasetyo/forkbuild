@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, inject, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../../application/editor/CreateStructureRegistryUseCase.js';
@@ -58,6 +58,9 @@ import EditorDistributionDialog from '../components/EditorDistributionDialog.js'
 import PublicationShareLink from '../components/PublicationShareLink.js';
 import ProtectIdentityNote from '../components/ProtectIdentityNote.js';
 import FirstBuildGuide from '../components/FirstBuildGuide.js';
+import StarterJobCard from '../components/StarterJobCard.js';
+import { isStarterJobDone, starterJobById, starterJobGuide, unfinishedStructure } from '../../core/StarterJob.js';
+import { worldBricks } from '../../core/PlacedBricks.js';
 import BuildPlotBanner from '../components/BuildPlotBanner.js';
 import { useBuildPlot } from './editorView/useBuildPlot.js';
 import { useFirstBuildGuide } from './editorView/useFirstBuildGuide.js';
@@ -100,7 +103,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog, WalkTogetherDialog, LoginModal, BuildTogetherStrip },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, StarterJobCard, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog, WalkTogetherDialog, LoginModal, BuildTogetherStrip },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -280,6 +283,8 @@ export default {
                         {{ t('editor.composingHint', { title: activeCompositionTitle }) }}
                     </p>
                     </template>
+                    <!-- The job Home's main button left (core/StarterJob.js). -->
+                    <StarterJobCard v-if="starterJobShown" :done="starterJobDone" @pick="pickStarterJobBrick" />
                     <DocumentInfoPanel compact :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
                     <!-- Build with me: a link that lets friends build this with you, live. -->
                     <button
@@ -783,6 +788,35 @@ export default {
             return pins && documentManager.document?.world.id === pins.worldId ? pins.structures : [];
         });
         const pinnedTitle = computed(() => challengePins.value?.title ?? '');
+        // The job Home's main button left to do (core/StarterJob.js), for as
+        // long as the build it opened is the open build.
+        const starterJob = ref(null);
+        // Any edit, undo or redo may finish (or unfinish) the job.
+        const starterJobEdits = ref(0);
+        let unwatchStarterJob = null;
+        function startStarterJob(job, structure) {
+            starterJob.value = { job, worldId: documentManager.document?.world.id ?? null, guide: starterJobGuide(job, structure) };
+            unwatchStarterJob?.();
+            unwatchStarterJob = editorSession.onCommandActivity(() => { starterJobEdits.value++; });
+        }
+        const starterJobShown = computed(() => {
+            void documentVersion.value;
+            return Boolean(starterJob.value) && documentManager.document?.world.id === starterJob.value.worldId;
+        });
+        const starterJobDone = computed(() => {
+            void documentVersion.value;
+            void starterJobEdits.value;
+            const job = starterJob.value?.job;
+            return Boolean(job) && isStarterJobDone(job, worldBricks(documentManager.document?.world), (id) => registry.get(id));
+        });
+        function pickStarterJobBrick() {
+            const job = starterJob.value?.job;
+            if (!job) return;
+            editorContext.setActiveBrick(job.brickId);
+            // The roof goes on the house wherever on it the pointer is.
+            editorContext.setPlacementGuide(starterJobShown.value && !starterJobDone.value ? starterJob.value.guide : null);
+            setTool(ToolId.PLACE);
+        }
         // A copy just opened from ?fork=: its bricks are someone else's, not its
         // builder's (core/PlacedBricks.js), and a remix week's entry (its
         // challenge page's Remix) is tagged for the week.
@@ -928,6 +962,10 @@ export default {
         // tracks it: otherwise the sidebar's groups and undo/redo would stay cached
         // when a group is created.
         const documentVersion = ref(0);
+        // Done, or another build opened: the roof goes wherever it is put.
+        watch([starterJobShown, starterJobDone], ([shown, done]) => {
+            if (!shown || done) editorContext.setPlacementGuide(null);
+        });
         const { buildPlot, buildPlotPublished, startBuildPlot, onBuildPlotPublished, forgetBuildPlot, visitBuildPlot } = useBuildPlot({
             documentManager, documentVersion, router, feedback
         });
@@ -1343,9 +1381,17 @@ export default {
                 const structure = findStarterStructure(structureRegistry, route.query.start);
                 // Joining a week's challenge (the challenge page, Home) also tags the copy.
                 const challenge = typeof route.query.challenge === 'string' ? challengeById(route.query.challenge) : null;
-                if (structure && editorSession.forkStructure(structure)) {
+                // Home's main button: the House with its job left to do (core/StarterJob.js).
+                const job = starterJobById(route.query.job);
+                const unfinished = job ? unfinishedStructure(job, structure) : null;
+                if (structure && editorSession.forkStructure(unfinished || structure)) {
                     editorSession.frameDocument();
-                    if (!joinChallenge(challenge)) feedback.show(t('editor.startedFromBuild', { name: libraryItemName(structure) }));
+                    if (unfinished) {
+                        startStarterJob(job, structure);
+                        feedback.show(t('starterJob.started', { name: libraryItemName(structure) }), { durationMs: 5000 });
+                    } else if (!joinChallenge(challenge)) {
+                        feedback.show(t('editor.startedFromBuild', { name: libraryItemName(structure) }));
+                    }
                 } else {
                     feedback.show(t('editor.starterNotFound'));
                 }
@@ -1493,6 +1539,7 @@ export default {
         });
 
         onBeforeUnmount(() => {
+            unwatchStarterJob?.();
             unmounted = true;
             if (unsubTool) {
                 unsubTool.unsubscribe();
@@ -1655,7 +1702,7 @@ export default {
             onDocumentPublished,
             onPublished, buildPlot, buildPlotPublished, forgetBuildPlot, visitBuildPlot,
             ...firstBuildGuide,
-            pinnedStructures, pinnedTitle,
+            pinnedStructures, pinnedTitle, starterJobShown, starterJobDone, pickStarterJobBrick,
             walkInside,
             distributePublishedDocument,
             distributePublishedDocumentAndSnapshot,
