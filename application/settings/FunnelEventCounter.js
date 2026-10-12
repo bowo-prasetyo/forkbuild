@@ -16,7 +16,25 @@ export class FunnelEventCounter {
         this._sendHit = sendHit;
         this._listOwnPublications = listOwnPublications;
         this._openedFromLink = new Set();
+        this._countedThisPage = new Set();
     }
+
+    // At most once a page load: a side system used (core/SideSystemUse.js),
+    // so the totals read as visits that used it.
+    countOnce(event) {
+        if (this._countedThisPage.has(event)) return false;
+        const sent = this.count(event);
+        if (sent) this._countedThisPage.add(event);
+        return sent;
+    }
+
+    swam() { return this.countOnce(FunnelEvent.SWAM); }
+    caughtAnimal() { return this.countOnce(FunnelEvent.ANIMAL_CAUGHT); }
+    decoratedWithAnimal() { return this.countOnce(FunnelEvent.ANIMAL_DECORATED); }
+    usedInventory() { return this.countOnce(FunnelEvent.INVENTORY_USED); }
+    sentChat() { return this.countOnce(FunnelEvent.CHAT_SENT); }
+    madeVoiceCall() { return this.countOnce(FunnelEvent.VOICE_CALL); }
+    joinedLobby() { return this.countOnce(FunnelEvent.LOBBY_JOINED); }
 
     // Returns true when a hit was sent.
     count(event) {

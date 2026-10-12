@@ -29,6 +29,7 @@ export default {
     },
     setup(props) {
         const publicLobbyUseCase = inject('publicLobbyUseCase');
+        const funnel = inject('funnelEventCounter', null);
         const available = publicLobbyUseCase.isAvailable();
         const displayName = ref(publicLobbyUseCase.rememberedDisplayName());
         const joined = ref(publicLobbyUseCase.isJoined(props.lobby));
@@ -82,6 +83,8 @@ export default {
                     await publicLobbyUseCase.leave(props.lobby);
                 } else {
                     await publicLobbyUseCase.join(props.lobby, { displayName: displayName.value });
+                    // A kept side system used (core/SideSystemUse.js).
+                    funnel?.joinedLobby();
                 }
             } catch (e) {
                 joinError.value = stripPrefix(e.message);
