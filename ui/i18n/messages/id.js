@@ -1715,6 +1715,8 @@ export default Object.freeze({
     'worldView.advancedToolsHint': 'Koordinat, pencarian lokasi, baris kamera dan penyuntingan, Perjumpaan Dunia, bangunan yang diklaim, nama tempat yang ditemukan, dan alat jaringan publikasimu. Diingat di perangkat ini.',
     'worldView.alwaysDay': 'Selalu siang',
     'worldView.alwaysDayHint': 'Di sini langit berganti dari siang ke malam dan kembali setiap {minutes} menit, dan jendela serta lentera menyala setelah gelap. Diingat di perangkat ini.',
+    'worldView.shadows': 'Bayangan',
+    'worldView.shadowsHint': 'Matahari dan bulan menimbulkan bayangan di sekitar Anda. Di ponsel, bayangan mula-mula mati agar Tampilan Dunia tetap lancar. Diingat di perangkat ini.',
     'worldView.askTheResidentNextTo': 'Tanyakan kepada penghuni di dekat Anda apa yang ada di sekitar (T)',
     'worldView.avatar': 'Avatar',
     'worldView.showMyAvatar': 'Tampilkan Avatar Saya',

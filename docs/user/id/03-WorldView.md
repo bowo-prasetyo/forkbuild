@@ -145,6 +145,15 @@ jalan yang sama sepanjang malam. Cahaya pada bangunan datang dari yang
 sedang di langit, jadi dinding yang menghadap timur mendapat cahaya pagi dan
 yang menghadap barat cahaya sore.
 
+Matahari dan bulan menimbulkan bayangan: bayangan Anda, pepohonan, hewan,
+dan setiap bangunan, panjang di pagi dan sore hari, pendek di tengah hari,
+dan lebih samar di bawah cahaya bulan. Bayangan jatuh dalam jarak sekitar 45
+meter dari Anda, dan memudar sejenak saat matahari menyerahkan langit kepada
+bulan dan sebaliknya. Bayangan lebih membebani ponsel daripada komputer,
+jadi mula-mula menyala bila memakai tetikus dan mati di ponsel atau tablet;
+centang atau hapus centang **Bayangan** di bagian bawah panel untuk
+mengubahnya di perangkat ini.
+
 Jika Anda lebih suka selalu siang, centang **Selalu siang** di bagian bawah
 panel, tepat di atas **Tampilkan alat lanjutan**. Pilihan ini diingat di
 perangkat ini dan tidak mengubah apa pun bagi orang lain.

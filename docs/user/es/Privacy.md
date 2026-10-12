@@ -40,7 +40,7 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
   usted lo sigue, y nunca se envía nada sobre un seguimiento);
 - el perfil de su avatar, la configuración (incluido si la Vista del mundo
   reproduce sonido, a qué volumen y en 3D o estéreo, si muestra sus
-  herramientas avanzadas, si allí siempre es de día, a dónde envía Publicar sus construcciones, y el idioma que eligió;
+  herramientas avanzadas, si allí siempre es de día, si allí el sol y la luna proyectan sombras, a dónde envía Publicar sus construcciones, y el idioma que eligió;
   si no eligió ninguno, ForkBuild lee en el dispositivo los idiomas
   preferidos del navegador y no los envía a ningún lugar), y el nombre de
   usuario y la credencial de un servidor TURN si ingresa uno en

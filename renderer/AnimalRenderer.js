@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { SPECIES_PRESET } from './WildlifeTileMesh.js';
+import { castShadows } from './ShadowRoles.js';
 
 // Names of the nodes in a built animal that renderer/AnimalVisual.js moves.
 export const BODY_FRAME = 'bodyFrame';
@@ -91,6 +92,6 @@ export class AnimalRenderer {
         head.position.copy(preset.neckPivot).negate();
         neck.add(head);
 
-        return group;
+        return castShadows(group);
     }
 }

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { getAvatarPoseOffsets } from '../core/AvatarPoseOffsets.js';
+import { castShadows } from './ShadowRoles.js';
 
 // 0.2.35 — the "dumb executor" that turns a declarative
 // AvatarTemplate + effective appearance into actual Three.js geometry
@@ -196,6 +197,7 @@ export class AvatarRenderer {
         }
 
         poseGroup.userData.avatarParts = parts;
+        castShadows(poseGroup);
         return { root, poseGroup };
     }
 

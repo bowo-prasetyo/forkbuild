@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ThreeBrickFactory, DEFAULT_COLOR } from './ThreeBrickFactory.js';
 import { doorSwingOffset } from '../core/DoorSwing.js';
+import { castShadows } from './ShadowRoles.js';
 
 // Edge length of the cube of space one batch covers.
 export const CHUNK_SIZE = 16;
@@ -423,6 +424,7 @@ class BrickChunk {
         mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
         mesh.count = 0;
+        castShadows(mesh, { receive: true });
         return mesh;
     }
 

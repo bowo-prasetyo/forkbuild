@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { VehicleType } from '../core/VehicleType.js';
+import { castShadows } from './ShadowRoles.js';
 
 // 0.9.115 — Vehicle Rendering.
 //
@@ -385,6 +386,6 @@ export class VehicleRenderer {
     // caller's problem, not this method's.
     build(type) {
         const builder = VEHICLE_BUILDERS[type];
-        return builder ? builder() : null;
+        return builder ? castShadows(builder()) : null;
     }
 }

@@ -1,6 +1,7 @@
 import { normalizeTilt } from '../core/BrickOrientation.js';
 import { ThreeBrickFactory } from './ThreeBrickFactory.js';
 import { nightGlowColor } from '../core/NightGlow.js';
+import { castShadows } from './ShadowRoles.js';
 
 // BrickRenderer no longer knows what a brick looks like. Given a Brick, it
 // asks the registry for its BrickDefinition (so an unknown definitionId
@@ -44,6 +45,7 @@ export class BrickRenderer {
         const mesh = this._brickFactory.createMesh(definitionId, color);
         // Lit after dark once a Renderer adds it (Renderer#add()).
         if (glow) mesh.userData.nightGlow = glow;
+        castShadows(mesh, { receive: true });
         mesh.position.set(x, y, z);
         mesh.rotation.order = 'YXZ';
         mesh.rotation.x = rotationX;

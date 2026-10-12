@@ -41,7 +41,7 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   jamais envoyé) ;
 - votre profil d’avatar, vos réglages (y compris si la Vue du Monde joue
   du son, à quel volume, en 3D ou en stéréo, si elle montre ses outils
-  avancés, s’il y fait toujours jour, où Publier envoie vos constructions, et la langue que vous avez
+  avancés, s’il y fait toujours jour, si le soleil et la lune y projettent des ombres, où Publier envoie vos constructions, et la langue que vous avez
   choisie ; quand vous n’en avez pas choisi, ForkBuild lit les langues
   préférées du navigateur sur l’appareil et ne les envoie nulle part), et
   le nom d’utilisateur et l’identifiant d’un serveur TURN si vous en

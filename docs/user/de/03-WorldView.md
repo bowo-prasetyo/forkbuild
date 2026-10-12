@@ -149,6 +149,14 @@ denselben Weg. Das Licht auf den Bauten kommt von dem, der gerade am Himmel
 steht: Mauern nach Osten bekommen die Morgensonne, Mauern nach Westen die
 Abendsonne.
 
+Sonne und Mond werfen Schatten: Ihren, den der Bäume, der Tiere und jedes
+Bauwerks, morgens und abends lang, mittags kurz und im Mondlicht schwächer.
+Sie fallen im Umkreis von etwa 45 Metern um Sie und verblassen kurz, während
+die Sonne den Himmel an den Mond übergibt und zurück. Schatten kosten ein
+Smartphone mehr als einen Computer, darum sind sie mit Maus zuerst an und auf
+Smartphone oder Tablet zuerst aus; mit dem Häkchen bei **Schatten** unten im
+Bereich ändern Sie das auf diesem Gerät.
+
 Wenn Sie lieber immer Tag hätten, setzen Sie unten im Bereich, direkt über
 **Erweiterte Werkzeuge zeigen**, das Häkchen bei **Immer Tag**. Das wird auf
 diesem Gerät gespeichert und ändert für niemanden sonst etwas.

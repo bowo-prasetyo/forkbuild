@@ -17,6 +17,7 @@ import { buildUnderwaterLifeTileMesh, updateUnderwaterLifeTileMesh } from './Und
 import { DAY } from '../core/DayCycle.js';
 import { makeNightGlowing } from './NightGlowMaterial.js';
 import { SkyBodies } from './SkyBodies.js';
+import { SunShadows } from './SunShadows.js';
 
 // Under water the view closes in to a blue-green haze: murkier and greener in a
 // lake, deeper blue at sea.
@@ -68,6 +69,8 @@ export class Renderer {
         );
 
         this._lights = new Lights(this._sceneManager);
+        // Off until World View turns them on (setShadowsEnabled()).
+        this._sunShadows = new SunShadows(this._webglRenderer, this._lights);
         this._grid = new GridHelper(this._sceneManager);
 
         // 0.2.76 — World Ground & Terrain Foundation. Lives alongside
@@ -256,7 +259,17 @@ export class Renderer {
             this._skyBodies = new SkyBodies(this._sceneManager);
         }
         this._skyBodies.set(bodies);
-        this._lights.setDirection(bodies.light);
+        this._lights.setDirection(bodies.light, bodies.lightStrength);
+    }
+
+    // Turns the sun's and the moon's shadows on or off
+    // (renderer/SunShadows.js). Only World View turns them on.
+    setShadowsEnabled(enabled) {
+        this._sunShadows.setEnabled(enabled);
+    }
+
+    get shadowsEnabled() {
+        return this._sunShadows.enabled;
     }
 
     resetCameraView() {
@@ -363,6 +376,7 @@ export class Renderer {
         for (const listener of this._frameListeners) {
             listener(deltaSeconds);
         }
+        this._sunShadows.follow(this._cameraController.target);
         this._webglRenderer.render(this._sceneManager.scene, this._cameraController.camera);
     }
 

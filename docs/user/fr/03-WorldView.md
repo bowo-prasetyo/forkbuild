@@ -153,6 +153,15 @@ pendant la nuit. La lumière sur les constructions vient de celui qui est
 dans le ciel : les murs tournés vers l’est prennent le matin, ceux tournés
 vers l’ouest le soir.
 
+Le soleil et la lune projettent des ombres : la vôtre, celles des arbres,
+des animaux et de chaque construction, longues le matin et le soir, courtes à
+midi et plus pâles au clair de lune. Elles tombent à environ 45 mètres autour
+de vous et s’effacent un instant pendant que le soleil cède le ciel à la lune
+et inversement. Les ombres coûtent plus à un téléphone qu’à un ordinateur :
+elles sont d’abord activées avec une souris et désactivées sur un téléphone
+ou une tablette ; cochez ou décochez **Ombres** en bas du panneau pour le
+changer sur cet appareil.
+
 Si vous préférez qu’il fasse toujours jour, cochez **Toujours le jour** en
 bas du panneau, juste au-dessus de **Afficher les outils avancés**. Ce choix
 est mémorisé sur cet appareil et ne change rien pour les autres.

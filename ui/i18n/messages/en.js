@@ -1717,6 +1717,8 @@ export default Object.freeze({
     'worldView.advancedToolsHint': 'Coordinates, location search, the camera and editing line, World Encounters, claimed builds, discovered place names and your publication\'s network tools. Remembered on this device.',
     'worldView.alwaysDay': 'Always day',
     'worldView.alwaysDayHint': 'Here the sky turns from day to night and back every {minutes} minutes, and windows and lanterns light up after dark. Remembered on this device.',
+    'worldView.shadows': 'Shadows',
+    'worldView.shadowsHint': 'The sun and the moon cast shadows near you. On phones they start off, to keep World View smooth. Remembered on this device.',
     'worldView.askTheResidentNextTo': 'Ask the resident next to you what\'s around (T)',
     'worldView.avatar': 'Avatar',
     'worldView.showMyAvatar': 'Show My Avatar',

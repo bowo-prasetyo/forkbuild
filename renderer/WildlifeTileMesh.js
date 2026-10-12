@@ -5,6 +5,7 @@ import { animalPoseAt, MAX_WANDER_DISTANCE } from '../core/WildlifeMotion.js';
 import { gaitOffsetsAt, REST_GAIT } from './AnimalGait.js';
 import { idleOffsetsAt } from './AnimalIdle.js';
 import { reactToObserver } from './AnimalReaction.js';
+import { castShadows } from './ShadowRoles.js';
 
 // The renderer-side counterpart to core/WildlifeField.js — the identical
 // "core decides, renderer builds" split renderer/NaturalFeatureTileMesh.js
@@ -264,6 +265,8 @@ function buildSpeciesMeshes(preset, animals) {
     if (bodyMesh.instanceColor) bodyMesh.instanceColor.needsUpdate = true;
     applyBoundingSphere(bodyMesh);
     applyBoundingSphere(headMesh);
+    castShadows(bodyMesh);
+    castShadows(headMesh);
 
     return [bodyMesh, headMesh];
 }
