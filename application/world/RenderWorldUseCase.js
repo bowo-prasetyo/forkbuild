@@ -1,6 +1,7 @@
 import { Renderer } from '../../renderer/Renderer.js';
 import { WorldRenderer } from '../../renderer/WorldRenderer.js';
 import { PickingService } from '../../renderer/PickingService.js';
+import { editorFloorHeight } from '../../renderer/EditorFloor.js';
 import { SelectionRenderer } from '../../renderer/SelectionRenderer.js';
 import { PreviewRenderer } from '../../renderer/PreviewRenderer.js';
 import { StructurePreviewRenderer } from '../../renderer/StructurePreviewRenderer.js';
@@ -44,7 +45,11 @@ export class RenderWorldUseCase {
             // brickId. See renderer/PickingService.js's own constructor
             // note and renderer/WorldRenderer.js's 0.2.90 header on why
             // this stays a distinct registry rather than merged in.
-            worldRenderer.placementMeshRegistry
+            worldRenderer.placementMeshRegistry,
+            // The ground a pointer is over is the floor the build stands
+            // on, not y = 0: a brick lands where it is drawn, under the
+            // pointer.
+            { groundHeight: () => editorFloorHeight(renderer) }
         );
         const selectionRenderer = new SelectionRenderer(worldRenderer.brickInstances, worldRenderer.placementMeshRegistry);
         selectionRenderer.subscribe(editorEventBus);
