@@ -35,10 +35,14 @@ the village round the plaza.
 
 ## A visitor's view, and Advanced
 
-World View opens as a visitor's view: the build's name and who made it,
-then what you can do here, first (**Build here**, **Walk here with me**,
-and **Edit a Copy** when the build isn't yours), then where to go and what's
-around you. Who is drawn, and whether the keys walk your avatar and the
+World View opens as a visitor's view. What you came to do sits on a bar at
+the bottom of the World: **Build here**, **Walk here with me**, and **Edit a
+Copy** when the build isn't yours. The side panel has the build's name and
+who made it (the same name wherever a build is credited), then where to go
+and what's around you. On a phone the panel starts closed, so the World
+fills the screen; **Panel** opens it. At the plaza, a phone shows one line
+over the World instead, **Plaza: …** and how many builds stand there, which
+opens the panel. Who is drawn, and whether the keys walk your avatar and the
 camera follows it, are on for everyone and wait under **Avatar settings**;
 the camera choice stays beside them. The tools for
 the networks behind the World wait at the bottom of the panel, under

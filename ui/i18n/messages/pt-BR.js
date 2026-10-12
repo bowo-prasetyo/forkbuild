@@ -888,6 +888,7 @@ export default Object.freeze({
     'toolbar.saved': 'Salvo',
     'toolbar.unsaved': '● Alterações não salvas',
     'toolbar.export': 'Exportar',
+    'toolbar.file': 'Arquivo',
     'toolbar.import': 'Importar',
     'toolbar.importFile': 'Importar arquivo de construção',
     'toolbar.publish': 'Publicar',
@@ -975,6 +976,9 @@ export default Object.freeze({
     'editor.touchPlaceHint': 'Toque no chão para colocar; Girar vira o bloco antes.',
     'editor.touchPlacingHint': 'Posicionando “{title}”: toque no chão para posicionar; Girar vira antes.',
     'editor.placeHint': 'Passe o cursor sobre o chão, R para girar, clique para colocar.',
+    'editor.seeInside': 'Ver por dentro',
+    'editor.seeInsideOff': 'Mostrar inteira',
+    'editor.seeInsideHint': 'Esconder a construção acima do térreo, para ver os cômodos e construir neles. Nada é removido.',
     'editor.placingHint': 'Posicionando “{title}”: passe o cursor sobre o chão, R para girar, clique para posicionar.',
     'editor.composingHint': 'Posicionando “{title}”: passe o cursor sobre o chão, R para girar, clique para posicionar, Esc para cancelar.',
     'editor.tools': 'Ferramentas',
@@ -2021,6 +2025,7 @@ export default Object.freeze({
 
     // World View: worldView, continued.
     'worldView.hidePanel': 'Ocultar painel',
+    'worldView.hudLabel': 'O que você pode fazer aqui',
     'worldView.panel': 'Painel',
     'worldView.world2': 'Mundo',
     'worldView.cameraAndEditing': 'Câmera: {camera} · Edição: {editing}',
@@ -2954,6 +2959,7 @@ export default Object.freeze({
     'plaza.backToMiddle': 'Voltar ao centro',
     'plaza.toChallenge': 'A página do desafio',
     'plaza.notFound': 'Não há semana de desafio aqui.',
+    'plaza.chip': { one: 'Praça: {theme} · {count} construção', other: 'Praça: {theme} · {count} construções' },
     'challenge.noEntries': 'Nenhuma participação encontrada ainda. Seja a primeira pessoa: participe, construa, publique.',
     'challenge.noEntriesEnded': 'Nenhuma participação foi encontrada para esta semana.',
     'challenge.familiesTitle': 'Árvores genealógicas',

@@ -197,7 +197,7 @@ It also hears, the same way, when ForkBuild is installed as an app
 
 And when someone joins the weekly build challenge (**Join the challenge**,
 or the challenge in the Editor's **New**): `/e/challenge-join`; and when someone
-opens a week's challenge plaza in World View: `/e/plaza-visit`. And when
+opens a week's challenge plaza in World View: `/e/plaza-visit`. And each time World View opens: `/e/world-visit`; and, once a visit, when someone else's build stands in view there (a build this device didn't publish and can't edit; the ready-made builds round the plaza don't count): `/e/world-neighbour`. And when
 someone makes a **Walk here with me** link in World View: `/e/walk-link`; and
 when a friend arrives through one: `/e/walk-joined`. And when someone makes a
 **Build with me** link in the Editor: `/e/build-link`; and when a friend joins
@@ -280,6 +280,7 @@ only when you use the feature, and each server can be changed under
 | You install ForkBuild from the official site (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/installed`, no referrer and no cookie |
 | On the official site, you copy a build's embed code, or an embedded build is shown, or opened in ForkBuild (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
 | On the official site, you join the weekly build challenge, or open its plaza (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/challenge-join` or `/e/plaza-visit`, no referrer and no cookie |
+| On the official site, you open World View, and someone else's build stands in view there (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/world-visit`, and at most one with `/e/world-neighbour` a visit, no referrer and no cookie |
 | On the official site, you make a **Walk here with me** link, or arrive through one (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/walk-link` or `/e/walk-joined`, no referrer and no cookie |
 | On the official site, you make a **Build with me** link, or join through one (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/build-link` or `/e/build-joined` (and `/e/publish-together` when a build made together is first published crediting them), no referrer and no cookie |
 | On the official site, you publish a build for the first time (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming its range of bricks, and one more for a second build or a remix, no referrer and no cookie |

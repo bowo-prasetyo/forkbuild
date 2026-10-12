@@ -2,6 +2,7 @@ import { Renderer } from '../../renderer/Renderer.js';
 import { WorldRenderer } from '../../renderer/WorldRenderer.js';
 import { PickingService } from '../../renderer/PickingService.js';
 import { editorFloorHeight } from '../../renderer/EditorFloor.js';
+import { CutawayClipping } from '../../renderer/CutawayClipping.js';
 import { SelectionRenderer } from '../../renderer/SelectionRenderer.js';
 import { PreviewRenderer } from '../../renderer/PreviewRenderer.js';
 import { StructurePreviewRenderer } from '../../renderer/StructurePreviewRenderer.js';
@@ -36,6 +37,10 @@ export class RenderWorldUseCase {
         // wildlife clock as the terrain's animals.
         renderer.addFrameListener(() => worldRenderer.animateDecorations(renderer.wildlifeTime()));
         renderer.start();
+        // See inside (EditorSession.setSeeInside()): the build cut away above
+        // its ground floor, as World View cuts one away indoors.
+        const cutawayClipping = new CutawayClipping();
+        worldRenderer.useCutaway(cutawayClipping);
         const pickingService = new PickingService(
             renderer.camera,
             renderer.domElement,
@@ -49,7 +54,7 @@ export class RenderWorldUseCase {
             // The ground a pointer is over is the floor the build stands
             // on, not y = 0: a brick lands where it is drawn, under the
             // pointer.
-            { groundHeight: () => editorFloorHeight(renderer) }
+            { groundHeight: () => editorFloorHeight(renderer), cutawayClipping }
         );
         const selectionRenderer = new SelectionRenderer(worldRenderer.brickInstances, worldRenderer.placementMeshRegistry);
         selectionRenderer.subscribe(editorEventBus);
@@ -86,6 +91,12 @@ export class RenderWorldUseCase {
             // Build with me: co-builders' pointers and selections.
             showCoBuilders: (coBuilders) => coBuilderRenderer.show(coBuilders),
             pickGround: (screenX, screenY) => pickingService.pickGroundPosition(screenX, screenY),
+            // The height of the floor the build stands on (renderer/EditorFloor.js):
+            // the camera frames the build where it is drawn.
+            floorHeight: () => editorFloorHeight(renderer),
+            // See inside: `cutaway` in the build's own coordinates
+            // (core/IndoorView.js, seeInsideCutaway()), or null.
+            setCutaway: (cutaway) => cutawayClipping.set(cutaway ? { ...cutaway, y: cutaway.y + editorFloorHeight(renderer) } : null),
             // 0.2.91 — resolves a screen position to { placementId,
             // point } | null, completely independent of pick()'s brick
             // raycast.

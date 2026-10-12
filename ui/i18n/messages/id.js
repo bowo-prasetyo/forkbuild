@@ -884,6 +884,7 @@ export default Object.freeze({
     'toolbar.saved': 'Tersimpan',
     'toolbar.unsaved': '● Perubahan belum disimpan',
     'toolbar.export': 'Ekspor',
+    'toolbar.file': 'Berkas',
     'toolbar.import': 'Impor',
     'toolbar.importFile': 'Impor file bangunan',
     'toolbar.publish': 'Terbitkan',
@@ -971,6 +972,9 @@ export default Object.freeze({
     'editor.touchPlaceHint': 'Ketuk tanah untuk menempatkan; Putar memutar balok terlebih dahulu.',
     'editor.touchPlacingHint': 'Menempatkan "{title}" — ketuk tanah untuk menempatkan; Putar memutarnya terlebih dahulu.',
     'editor.placeHint': 'Arahkan ke tanah, R untuk memutar, klik untuk menempatkan.',
+    'editor.seeInside': 'Lihat ke dalam',
+    'editor.seeInsideOff': 'Tampilkan utuh',
+    'editor.seeInsideHint': 'Sembunyikan bangunan di atas lantai dasarnya, untuk melihat dan membangun di ruangannya. Tidak ada yang dihapus.',
     'editor.placingHint': 'Menempatkan "{title}" — arahkan ke tanah, R untuk memutar, klik untuk menempatkan.',
     'editor.composingHint': 'Menempatkan "{title}" — arahkan ke tanah, R untuk memutar, klik untuk menempatkan, Esc untuk membatalkan.',
     'editor.tools': 'Alat',
@@ -2017,6 +2021,7 @@ export default Object.freeze({
 
     // World View: worldView, continued.
     'worldView.hidePanel': 'Sembunyikan Panel',
+    'worldView.hudLabel': 'Yang bisa Anda lakukan di sini',
     'worldView.panel': 'Panel',
     'worldView.world2': 'Dunia',
     'worldView.cameraAndEditing': 'Kamera: {camera} · Mengedit: {editing}',
@@ -2950,6 +2955,7 @@ export default Object.freeze({
     'plaza.backToMiddle': 'Kembali ke tengah',
     'plaza.toChallenge': 'Halaman tantangan',
     'plaza.notFound': 'Tidak ada minggu tantangan di sini.',
+    'plaza.chip': { other: 'Alun-alun: {theme} · {count} bangunan' },
     'challenge.noEntries': 'Belum ada karya yang ditemukan. Jadilah yang pertama: ikut, bangun, terbitkan.',
     'challenge.noEntriesEnded': 'Tidak ada karya yang ditemukan untuk minggu ini.',
     'challenge.familiesTitle': 'Silsilah',

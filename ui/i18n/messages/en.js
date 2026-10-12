@@ -886,6 +886,7 @@ export default Object.freeze({
     'toolbar.saved': 'Saved',
     'toolbar.unsaved': '● Unsaved changes',
     'toolbar.export': 'Export',
+    'toolbar.file': 'File',
     'toolbar.import': 'Import',
     'toolbar.importFile': 'Import a build file',
     'toolbar.publish': 'Publish',
@@ -973,6 +974,9 @@ export default Object.freeze({
     'editor.touchPlaceHint': 'Tap the ground to place; Rotate turns the brick first.',
     'editor.touchPlacingHint': 'Placing "{title}" — tap the ground to place; Rotate turns it first.',
     'editor.placeHint': 'Hover the ground, R to rotate, click to place.',
+    'editor.seeInside': 'See inside',
+    'editor.seeInsideOff': 'Show it whole',
+    'editor.seeInsideHint': 'Cut the build away above its ground floor, to see and build in its rooms. Nothing is removed.',
     'editor.placingHint': 'Placing "{title}" — hover the ground, R to rotate, click to place.',
     'editor.composingHint': 'Placing "{title}" — hover the ground, R to rotate, click to place, Esc to cancel.',
     'editor.tools': 'Tools',
@@ -2019,6 +2023,7 @@ export default Object.freeze({
 
     // World View: worldView, continued.
     'worldView.hidePanel': 'Hide Panel',
+    'worldView.hudLabel': 'What you can do here',
     'worldView.panel': 'Panel',
     'worldView.world2': 'World',
     'worldView.cameraAndEditing': 'Camera: {camera} · Editing: {editing}',
@@ -2953,6 +2958,7 @@ export default Object.freeze({
     'plaza.backToMiddle': 'Back to the middle',
     'plaza.toChallenge': 'The challenge page',
     'plaza.notFound': 'There is no challenge week here.',
+    'plaza.chip': { one: 'Plaza: {theme} · {count} build', other: 'Plaza: {theme} · {count} builds' },
     'challenge.noEntries': 'No entries found yet. Be the first: join, build, publish.',
     'challenge.noEntriesEnded': 'No entries were found for this week.',
     'challenge.familiesTitle': 'Family trees',

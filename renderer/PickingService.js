@@ -29,12 +29,17 @@ export class PickingService {
     // groundHeight (optional) — a function giving the height of the ground
     // pickGroundPosition() meets: the Editor's floor (renderer/EditorFloor.js),
     // which its bricks stand on. Without it the ground is y = 0.
-    constructor(camera, domElement, brickInstances, placementMeshRegistry = null, { groundHeight = null } = {}) {
+    //
+    // cutawayClipping (optional, renderer/CutawayClipping.js) — a brick hit
+    // where the cutaway hides it is passed over for the one behind it, so a
+    // click goes into the room that shows, not the roof that doesn't.
+    constructor(camera, domElement, brickInstances, placementMeshRegistry = null, { groundHeight = null, cutawayClipping = null } = {}) {
         this._camera = camera;
         this._domElement = domElement;
         this._brickInstances = brickInstances;
         this._placementMeshRegistry = placementMeshRegistry;
         this._groundHeight = typeof groundHeight === 'function' ? groundHeight : () => 0;
+        this._cutawayClipping = cutawayClipping;
         this._raycaster = new THREE.Raycaster();
         this._groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     }
@@ -59,11 +64,13 @@ export class PickingService {
 
         const objects = this._brickInstances.pickableObjects();
         const intersections = this._raycaster.intersectObjects(objects, false);
-        if (intersections.length === 0) {
+        const hit = this._cutawayClipping
+            ? intersections.find((candidate) => !this._cutawayClipping.clips(candidate.point))
+            : intersections[0];
+        if (!hit) {
             return null;
         }
 
-        const hit = intersections[0];
         const brickId = this._brickInstances.brickIdForIntersection(hit);
         if (!brickId) {
             return null;

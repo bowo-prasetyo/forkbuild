@@ -429,3 +429,33 @@
         display: none;
     }
 }
+
+/* The bar over World View (hudSection.js) on a phone: bottom left, clear of
+   the sound control at the bottom right; above the touch pad, the Walk
+   toggle and the raised sound control on a touch screen. */
+@media (max-width: 720px) {
+    .world-view-hud {
+        left: 0.5rem;
+        bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+        transform: none;
+        justify-content: flex-start;
+        max-width: calc(100% - 11rem);
+    }
+}
+
+@media (pointer: coarse) {
+    .world-view-hud {
+        bottom: calc(128px + 5.25rem + env(safe-area-inset-bottom, 0px));
+        max-width: calc(100% - 1rem);
+    }
+}
+
+/* See inside on a phone: below the Tools button, top right, clear of the
+   first-build pill at the top left. */
+@media (max-width: 720px) {
+    .editor-see-inside {
+        top: 3.25rem;
+        left: auto;
+        right: 0.5rem;
+    }
+}

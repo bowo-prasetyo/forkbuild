@@ -130,6 +130,11 @@ async function startFromHome(browser, base) {
         await page.mouse.up();
         await page.waitForSelector('.starter-job--done', { timeout: 10_000 });
         assert((await page.textContent('.starter-job-title')).includes('yours now'), 'a roof on, the House is the builder\'s');
+        // See inside cuts it away above the ground floor, and back.
+        await page.click('.editor-see-inside');
+        assert(await page.getAttribute('.editor-see-inside', 'aria-pressed') === 'true', 'See inside is on');
+        await page.click('.editor-see-inside');
+        assert(await page.getAttribute('.editor-see-inside', 'aria-pressed') === 'false', 'and off again');
 
         // New offers the same builds: the castle opens as the visitor's own copy.
         await page.click('.toolbar-new');
@@ -139,6 +144,8 @@ async function startFromHome(browser, base) {
         assert(!(await page.$('.new-document-dialog')), 'New closes once a build is chosen');
 
         // Download as a 3D model: a glTF binary named after the build.
+        // Under the toolbar's File menu, with Export and Import.
+        await page.click('.toolbar-file-toggle');
         await page.click('.toolbar-export-model');
         await page.waitForSelector('.model-export-dialog', { timeout: 10_000 });
         const [glb] = await Promise.all([page.waitForEvent('download', { timeout: 30_000 }), page.click('.model-export-option[data-format="glb"]')]);
@@ -562,7 +569,8 @@ async function firstVisit(browser, base) {
         assert((await editor.textContent('.user-widget')).includes('Bundle builder'), 'and leaves the new identity logged in');
         // Sent to everyone, or (with no relay reachable from the test) said not to have reached them yet.
         await editor.waitForFunction(() => /Anyone can find it now|couldn't reach everyone yet/.test(document.querySelector('.editor-post-publish-message')?.textContent || ''), null, { timeout: 60_000 });
-        assert(await editor.$('.editor-post-publish-protect .protect-identity-note-link'), 'and the Editor offers to add a passphrase');
+        // One celebration: a passphrase for the identity just made waits for the next publish.
+        assert(!(await editor.$('.editor-post-publish-protect .protect-identity-note-link')), 'the first publish of a new identity asks for no passphrase yet');
         // Publishing keeps the build too: nothing reads Draft or Unsaved once it is out.
         await editor.waitForFunction(() => !document.querySelector('.document-info-compact-draft'), null, { timeout: 30_000 });
         await editor.click('.editor-post-publish-share .publication-share-link-actions button:has-text("Copy link")');
@@ -570,6 +578,10 @@ async function firstVisit(browser, base) {
         await editor.click('.editor-post-publish-share .publication-share-link-embed');
         const embed = await editor.$eval('.editor-post-publish-share .publication-share-embed-code', (area) => area.value);
         assert(embed.startsWith('<iframe ') && embed.includes(`embed.html#${payloadFromLinkPreviewUrl(link)}"`), `Embed offers the same build as an <iframe> (${embed.slice(0, 60)})`);
+
+        // Published again, the Editor offers to add a passphrase.
+        await editor.click('.toolbar-publish');
+        await editor.waitForSelector('.editor-post-publish-protect .protect-identity-note-link', { timeout: 60_000 });
 
         // Walk inside it: World View at the house's door; walking ahead goes
         // in, which ticks off the guided first build's last step.
@@ -589,6 +601,9 @@ async function firstVisit(browser, base) {
         await editor.click('.editor-post-publish-walk');
         await editor.waitForSelector('.world-viewport canvas', { timeout: 60_000 });
         await said('Here\'s the door.');
+        // What a visitor came to do is on the bar over the view, not in the panel.
+        assert(await editor.isVisible('.world-view-hud .world-view-walk-together') && await editor.isVisible('.world-view-hud .world-view-build-here'), 'Walk here with me and Build here sit over the view');
+        assert(!(await editor.$('.world-view-overlay .world-view-walk-together')), 'and not in the side panel');
         assert(!editor.url().includes('arrive='), `the arrival leaves the address clean (${editor.url()})`);
         await editor.click('.world-viewport canvas', { position: { x: 640, y: 120 } });
         await editor.keyboard.down('w');
@@ -616,6 +631,16 @@ async function firstVisit(browser, base) {
     const phone = await browser.newContext({ viewport: { width: 390, height: 800 } });
     const small = await phone.newPage();
     try {
+        // Walk on a phone: the plaza in full view, its panel folded into one
+        // line over it that opens the panel.
+        await small.goto(`${base}/#/walk`);
+        await small.waitForSelector('.world-view-hud-plaza', { timeout: 60_000 });
+        assert(!(await small.isVisible('.world-view-overlay-scroll')), 'a phone opens the plaza with the panel closed');
+        assert(/Plaza: .+ · \d+ builds?/.test(await small.textContent('.world-view-hud-plaza')), `one line says where you are (${await small.textContent('.world-view-hud-plaza')})`);
+        await small.click('.world-view-hud-plaza');
+        await small.waitForSelector('.world-view-plaza-ready-made', { timeout: 30_000 });
+        assert(!(await small.$('.world-view-hud-plaza')), 'it opens the panel, and goes');
+
         await small.goto(`${base}/#/`);
         await small.waitForSelector('.home-view', { timeout: 60_000 });
         await small.click('.app-menu-toggle');

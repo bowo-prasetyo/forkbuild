@@ -82,7 +82,9 @@ export class RenderWorldViewUseCase {
             // stays a distinct registry rather than merged in. Mirrors
             // application/world/RenderWorldUseCase.js's identical wiring for
             // the Editor.
-            worldRenderer.placementMeshRegistry
+            worldRenderer.placementMeshRegistry,
+            // Indoors, a click goes past the cut-away roof into the room.
+            { cutawayClipping }
         );
         // 0.2.39 — a completely separate raycast target set from
         // pickingService above; see docs/Principles.md, "Avatars Are

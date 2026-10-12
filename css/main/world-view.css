@@ -876,3 +876,44 @@
     min-width: 4.5rem;
     font-variant-numeric: tabular-nums;
 }
+
+/* The controls over the view (ui/views/worldView/templates/hudSection.js):
+   Build here, Walk here with me and Edit a Copy, and on the plaza with the
+   panel closed its one-line chip, on a bar at the bottom of the World. */
+.world-view-hud {
+    position: absolute;
+    left: 50%;
+    bottom: 1.25rem;
+    transform: translateX(-50%);
+    z-index: 25;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    max-width: calc(100% - 2rem);
+    pointer-events: none;
+}
+
+.world-view-hud > * {
+    pointer-events: auto;
+}
+
+.world-view-hud .action-btn {
+    background: rgba(18, 18, 18, 0.85);
+    color: #e0e0e0;
+    border: 1px solid #3a3a3a;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.world-view-hud .action-btn--primary {
+    background: #4caf7d;
+    color: #0f2a1c;
+    border-color: #4caf7d;
+}
+
+.world-view-hud-plaza {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

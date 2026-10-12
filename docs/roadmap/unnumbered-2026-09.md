@@ -6080,3 +6080,50 @@ joyful (the first verb works where you point).
   cube placed from it drawn with its foot under the pointer at three pointer positions, where picking at `y = 0` drew
   it 40 pixels or more above; the three ghosts on the floor over a hill). It fails without the fix. The bundled site's
   Place-and-stack check now stacks with a click at most 40 pixels above the first.
+
+## Calmer screens, a measured village (unnumbered, 2026-10-12)
+
+**The World and the build get the screen back, and the village's purpose gets a number.** What was left of findings
+1, 2, 5 and 6 of the second creative-direction audit of 2026-10-12 (docs/reviews/CreativeDirection-2026-10-12b.md),
+with World View's controls laid over the view as the first audit of that day asked. Pillars served: your work lives in
+a world (a phone sees it; the village is measured), and building feels joyful (the room under the roof can be seen and
+built in).
+
+- **World View's controls over the view** (ui/views/worldView/templates/hudSection.js). Build here, **Walk here with
+  me** and Edit a Copy moved from a row in the side panel to a bar at the bottom of the World, centred on a desktop,
+  bottom left on a phone (clear of the sound control) and above the touch pad, the Walk toggle and the raised sound
+  control on a touch screen.
+- **A phone sees the plaza** (ui/views/WorldView.js). The panel starts closed on a phone, the plaza too (it used to open
+  there and cover about 85% of the screen); with it closed, the plaza is one line over the World, **Plaza: … · N
+  builds**, which opens it.
+- **One bar after Publish** (css/main/spatial-panels.css, ui/views/EditorView.js). The notice, Walk inside it, Copy
+  link and More ways to share flow on one line, Dismiss last, instead of three stacked bars. The passphrase reminder
+  waits for the next publish when the identity was made during this visit (a first publish's quick start); from the
+  second publish, or for an identity that was already there, it shows as before.
+- **A File menu** (ui/components/Toolbar.js). Save, Publish and New first; Export, 3D model and Import under **File**,
+  placed on the page under its button so a phone's sideways-scrolling toolbar doesn't clip it. New is on a phone's
+  screen again.
+- **See inside** (core/IndoorView.js `seeInsideCutaway()`, application/editorSession/selectionEditingMethods.js
+  `setSeeInside()`, application/world/RenderWorldUseCase.js). The Editor uses World View's cutaway planes
+  (renderer/CutawayClipping.js): the whole build cut away above where a person on its lowest floor would be cut
+  indoors, kept fitted as it changes. Picking passes over what is cut away (renderer/PickingService.js,
+  `cutawayClipping`), in the Editor and, indoors, in World View, so a click goes into the room that shows.
+- **The camera frames the build where it is drawn** (frameDocument()). It already opened at a three-quarter angle,
+  but aimed at the build's own coordinates, below the Editor's floor (renderer/EditorFloor.js); it now adds the floor.
+- **One name for whose a build is** (core/BuildCredit.js). The hover card's "by …" and the inspection's Author read the
+  Publication's signed author, else whoever placed the build (the placement's Owner), else the name in the build,
+  else "anonymous": no more "Author anonymous" beside "Owner Ana".
+- **Measuring the village** (core/VisitorCount.js `WORLD_VISIT` and `WORLD_NEIGHBOUR`, core/NeighbourSight.js,
+  ui/views/worldView/useNeighbourCount.js). `/e/world-visit` when World View opens; `/e/world-neighbour` once a visit
+  when a build stands in view (loaded, or the plaza's entries) that this device didn't publish and can't edit. The
+  village's ready-made builds are drawn, never loaded, so they don't count. A launch target (core/LaunchTargets.js,
+  `neighbours`): half of visits, once there are fifty. docs/Privacy.md and its translations say what is sent.
+- Every language: File, See inside, the bar's label and the plaza's line. Guides 02 (File, See inside, one bar) and 03
+  (the bar, a phone's panel and plaza line, one name) in English, their translations marked out of date; Pillars.
+- Tests: `CalmerScreens` (one name; a neighbour; the counts and the target; See inside cutting the House's roof and
+  not its table, on and off, and the camera on the floor; a click passing a cut-away roof to the floor). The bundled
+  site: the File menu's 3D model; See inside on and off; one bar after Publish with no passphrase reminder for a new
+  identity, and the reminder on the next publish; World View's bar holding Walk here with me and Build here, and the
+  panel not; Walk on a phone opening with the panel closed and the plaza's line opening it.
+- Not done: a cut that follows the player between storeys; the HUD's own compact layout for very small screens beyond
+  wrapping; showing the neighbour count anywhere but the scorecard.

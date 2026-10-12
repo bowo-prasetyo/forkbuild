@@ -887,6 +887,7 @@ export default Object.freeze({
     'toolbar.saved': '저장됨',
     'toolbar.unsaved': '● 저장하지 않은 변경 사항',
     'toolbar.export': '내보내기',
+    'toolbar.file': '파일',
     'toolbar.import': '가져오기',
     'toolbar.importFile': '작품 파일 가져오기',
     'toolbar.publish': '게시',
@@ -974,6 +975,9 @@ export default Object.freeze({
     'editor.touchPlaceHint': '지면을 탭해 배치하세요. 회전을 누르면 먼저 블록을 돌립니다.',
     'editor.touchPlacingHint': '“{title}” 배치 중 — 지면을 탭해 배치하세요. 회전을 누르면 먼저 돌립니다.',
     'editor.placeHint': '지면 위에 커서를 올리고, R로 회전, 클릭해 배치하세요.',
+    'editor.seeInside': '안 들여다보기',
+    'editor.seeInsideOff': '전체 보기',
+    'editor.seeInsideHint': '1층 위를 가려서 방 안을 보고 그 안에서 만들 수 있게 합니다. 지워지는 것은 없어요.',
     'editor.placingHint': '“{title}” 배치 중 — 지면 위에 커서를 올리고, R로 회전, 클릭해 배치하세요.',
     'editor.composingHint': '“{title}” 배치 중 — 지면 위에 커서를 올리고, R로 회전, 클릭해 배치, Esc로 취소하세요.',
     'editor.tools': '도구',
@@ -2020,6 +2024,7 @@ export default Object.freeze({
 
     // World View: worldView, continued.
     'worldView.hidePanel': '패널 숨기기',
+    'worldView.hudLabel': '여기서 할 수 있는 일',
     'worldView.panel': '패널',
     'worldView.world2': '월드',
     'worldView.cameraAndEditing': '카메라: {camera} · 편집: {editing}',
@@ -2953,6 +2958,7 @@ export default Object.freeze({
     'plaza.backToMiddle': '가운데로 돌아가기',
     'plaza.toChallenge': '챌린지 페이지',
     'plaza.notFound': '여기에는 챌린지 주간이 없습니다.',
+    'plaza.chip': { other: '광장: {theme} · 작품 {count}개' },
     'challenge.noEntries': '아직 찾은 참가작이 없습니다. 첫 번째가 되어 보세요: 참여하고, 짓고, 게시하세요.',
     'challenge.noEntriesEnded': '이 주에는 참가작을 찾지 못했습니다.',
     'challenge.familiesTitle': '계보',

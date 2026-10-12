@@ -76,6 +76,13 @@ export const stateQueryMethods = {
 
     // The one live seed (DEFAULT_WORLD_SEED), so spatial context never invents
     // its own.
+    // The ids of the Worlds loaded around the camera right now (World
+    // streaming): what stands in view. The village's ready-made builds and
+    // the plaza's exhibits are drawn, never loaded, so they aren't here.
+    listLoadedDocumentIds() {
+        return this._loadedDocuments ? Array.from(this._loadedDocuments.keys()) : [];
+    },
+
     getWorldSeed() {
         return DEFAULT_WORLD_SEED;
     },

@@ -337,6 +337,22 @@ export default {
             reader.readAsText(file);
         }
 
+        // The File menu: Export, 3D model and Import. Placed on the page under
+        // its button, since a phone's toolbar scrolls sideways and would clip a
+        // menu inside it.
+        const fileOpen = ref(false);
+        const fileMenuStyle = ref({});
+        function toggleFile(event) {
+            if (!fileOpen.value) {
+                const rect = event?.currentTarget?.getBoundingClientRect?.();
+                const viewportWidth = typeof window === 'undefined' ? Infinity : window.innerWidth;
+                fileMenuStyle.value = rect
+                    ? { top: `${Math.round(rect.bottom + 6)}px`, left: `${Math.round(Math.max(8, Math.min(rect.left, viewportWidth - 180)))}px` }
+                    : {};
+            }
+            fileOpen.value = !fileOpen.value;
+        }
+
         function toggleRecent() {
             recentOpen.value = !recentOpen.value;
             if (!recentOpen.value) {
@@ -380,7 +396,7 @@ export default {
         return {
             t,
             dirty, recentDocuments, sortedRecentDocuments, filteredRecentDocuments,
-            recentOpen, recentQuery, toggleRecent, formatModified,
+            recentOpen, recentQuery, toggleRecent, formatModified, fileOpen, fileMenuStyle, toggleFile,
             searchThreshold: SEARCH_THRESHOLD,
             save, createNew, load, place, publish, saveAndReturnToWorld,
             signInToPublish, lockedIdentityId, requestPublish, publishAfterSignIn,
@@ -411,10 +427,30 @@ export default {
             </template>
 
             <button class="toolbar-save" @click="save">{{ t('toolbar.save') }}</button>
-            <button class="toolbar-export" @click="$emit('export-document')">{{ t('toolbar.export') }}</button>
-            <!-- The build as a 3D model file other programs open; EditorView makes it. -->
-            <button class="toolbar-export-model" @click="$emit('export-model')">{{ t('toolbar.exportModel') }}</button>
-            <button class="toolbar-import" @click="triggerImportDocument">{{ t('toolbar.import') }}</button>
+            <button class="toolbar-publish" @click="requestPublish">{{ t('toolbar.publish') }}</button>
+            <button class="toolbar-new" @click="createNew">{{ t('toolbar.new') }}</button>
+            <!-- Files, under one menu so they don't sit beside Publish at the same
+                 weight, nor push New off a phone's toolbar
+                 (docs/reviews/CreativeDirection-2026-10-12b.md, finding 6). -->
+            <div class="toolbar-file">
+                <button
+                    type="button"
+                    class="toolbar-file-toggle"
+                    aria-haspopup="menu"
+                    :aria-expanded="fileOpen ? 'true' : 'false'"
+                    @click="toggleFile"
+                >{{ t('toolbar.file') }} <span class="toolbar-recent-caret">▾</span></button>
+                <template v-if="fileOpen">
+                    <div class="dropdown-backdrop" @click="fileOpen = false"></div>
+                    <!-- A choice closes the menu. -->
+                    <div class="toolbar-file-menu" role="menu" :style="fileMenuStyle" @click="fileOpen = false" @keydown.esc.stop="fileOpen = false">
+                        <button class="toolbar-export" role="menuitem" @click="$emit('export-document')">{{ t('toolbar.export') }}</button>
+                        <!-- The build as a 3D model file other programs open; EditorView makes it. -->
+                        <button class="toolbar-export-model" role="menuitem" @click="$emit('export-model')">{{ t('toolbar.exportModel') }}</button>
+                        <button class="toolbar-import" role="menuitem" @click="triggerImportDocument">{{ t('toolbar.import') }}</button>
+                    </div>
+                </template>
+            </div>
             <input
                 ref="importFileInput"
                 type="file"
@@ -423,7 +459,6 @@ export default {
                 :aria-label="t('toolbar.importFile')"
                 @change="onImportDocumentFileChosen"
             />
-            <button class="toolbar-publish" @click="requestPublish">{{ t('toolbar.publish') }}</button>
             <div
                 v-if="askNothingAdded"
                 role="dialog"
@@ -460,7 +495,6 @@ export default {
                 @skip="publishAfterSignIn"
                 @close="signInToPublish = false"
             />
-            <button class="toolbar-new" @click="createNew">{{ t('toolbar.new') }}</button>
             <button
                 v-if="entryContext && entryContext.returnWorldId"
                 class="toolbar-save-return"

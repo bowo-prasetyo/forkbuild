@@ -215,7 +215,7 @@ export default {
                     compact
                     @shared="firstBuildShared"
                 />
-                <ProtectIdentityNote v-if="publishedPublication" class="editor-post-publish-protect" />
+                <ProtectIdentityNote v-if="publishedPublication && protectNoteDue" class="editor-post-publish-protect" />
 
                 <EditorDistributionDialog
                     v-if="distributionDialogOpen"
@@ -368,6 +368,14 @@ export default {
                         :style="{ left: marqueeRect.left + 'px', top: marqueeRect.top + 'px', width: marqueeRect.width + 'px', height: marqueeRect.height + 'px' }"
                     ></div>
                     <TransformFeedback :feedback="transformFeedback" />
+                    <!-- See inside: the build cut away above its ground floor. -->
+                    <button
+                        type="button"
+                        :class="['action-btn', 'editor-see-inside', { 'action-btn--active': seeInside }]"
+                        :aria-pressed="seeInside ? 'true' : 'false'"
+                        :title="t('editor.seeInsideHint')"
+                        @click="toggleSeeInside"
+                    >{{ seeInside ? t('editor.seeInsideOff') : t('editor.seeInside') }}</button>
                     <!-- Who is building this with you, each in their own colour. -->
                     <BuildTogetherStrip
                         v-if="buildRole"
@@ -962,6 +970,15 @@ export default {
         // tracks it: otherwise the sidebar's groups and undo/redo would stay cached
         // when a group is created.
         const documentVersion = ref(0);
+        // See inside (finding 2 of docs/reviews/CreativeDirection-2026-10-12b.md):
+        // the build cut away above its ground floor, so its rooms show from the
+        // Editor's camera. Kept fitted to the build as it changes.
+        const seeInside = ref(false);
+        function toggleSeeInside() {
+            seeInside.value = editorSession.setSeeInside(!seeInside.value);
+        }
+        watch(documentVersion, () => { if (seeInside.value) editorSession.refreshSeeInside(); });
+        const unwatchSeeInside = editorSession.onCommandActivity(() => { if (seeInside.value) editorSession.refreshSeeInside(); });
         // Done, or another build opened: the roof goes wherever it is put.
         watch([starterJobShown, starterJobDone], ([shown, done]) => {
             if (!shown || done) editorContext.setPlacementGuide(null);
@@ -970,7 +987,26 @@ export default {
             documentManager, documentVersion, router, feedback
         });
         const { walkInside, walkInsidePublished } = useWalkInside({ documentManager, registry, documentVersion });
+        // The passphrase reminder (ProtectIdentityNote) waits for a second
+        // publish when the identity was made during this visit, as a first
+        // publish's quick start makes one: that publish's moment is one
+        // celebration, not three bars (docs/reviews/CreativeDirection-2026-10-12b.md,
+        // finding 6).
+        function currentIdentityId() {
+            try {
+                const session = identityUseCase.currentSession();
+                return session && session.isAuthenticated ? session.identityId : null;
+            } catch {
+                return null;
+            }
+        }
+        const identityAtStart = currentIdentityId();
+        let publishesThisVisit = 0;
+        const protectNoteDue = ref(false);
         function onPublished(publication) {
+            publishesThisVisit += 1;
+            const identityId = currentIdentityId();
+            protectNoteDue.value = publishesThisVisit > 1 || (identityId !== null && identityId === identityAtStart);
             const publishedWorld = documentManager.document?.world;
             funnelEventCounter?.publishedBuild(publication, worldBrickCount(publishedWorld), readyMadeBricks?.placedCount(publishedWorld));
             onDocumentPublished(publication);
@@ -1540,6 +1576,7 @@ export default {
 
         onBeforeUnmount(() => {
             unwatchStarterJob?.();
+            unwatchSeeInside?.();
             unmounted = true;
             if (unsubTool) {
                 unsubTool.unsubscribe();
@@ -1700,7 +1737,7 @@ export default {
             distributionError,
             distributionResult,
             onDocumentPublished,
-            onPublished, buildPlot, buildPlotPublished, forgetBuildPlot, visitBuildPlot,
+            onPublished, protectNoteDue, seeInside, toggleSeeInside, buildPlot, buildPlotPublished, forgetBuildPlot, visitBuildPlot,
             ...firstBuildGuide,
             pinnedStructures, pinnedTitle, starterJobShown, starterJobDone, pickStarterJobBrick,
             walkInside,

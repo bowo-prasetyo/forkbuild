@@ -887,6 +887,7 @@ export default Object.freeze({
     'toolbar.saved': 'Gespeichert',
     'toolbar.unsaved': '● Ungespeicherte Änderungen',
     'toolbar.export': 'Exportieren',
+    'toolbar.file': 'Datei',
     'toolbar.import': 'Importieren',
     'toolbar.importFile': 'Bauwerksdatei importieren',
     'toolbar.publish': 'Veröffentlichen',
@@ -974,6 +975,9 @@ export default Object.freeze({
     'editor.touchPlaceHint': 'Tippen Sie auf den Boden, um zu platzieren; Drehen dreht den Stein vorher.',
     'editor.touchPlacingHint': '„{title}“ wird platziert — auf den Boden tippen zum Platzieren; Drehen dreht es vorher.',
     'editor.placeHint': 'Über den Boden fahren, R zum Drehen, klicken zum Platzieren.',
+    'editor.seeInside': 'Hineinsehen',
+    'editor.seeInsideOff': 'Ganz zeigen',
+    'editor.seeInsideHint': 'Das Bauwerk über dem Erdgeschoss ausblenden, um seine Räume zu sehen und darin zu bauen. Nichts wird entfernt.',
     'editor.placingHint': '„{title}“ wird platziert — über den Boden fahren, R zum Drehen, klicken zum Platzieren.',
     'editor.composingHint': '„{title}“ wird platziert — über den Boden fahren, R zum Drehen, klicken zum Platzieren, Esc zum Abbrechen.',
     'editor.tools': 'Werkzeuge',
@@ -2020,6 +2024,7 @@ export default Object.freeze({
 
     // World View: worldView, continued.
     'worldView.hidePanel': 'Feld ausblenden',
+    'worldView.hudLabel': 'Was Sie hier tun können',
     'worldView.panel': 'Feld',
     'worldView.world2': 'Welt',
     'worldView.cameraAndEditing': 'Kamera: {camera} · Bearbeitung: {editing}',
@@ -2953,6 +2958,7 @@ export default Object.freeze({
     'plaza.backToMiddle': 'Zurück in die Mitte',
     'plaza.toChallenge': 'Zur Challenge-Seite',
     'plaza.notFound': 'Hier gibt es keine Challenge-Woche.',
+    'plaza.chip': { one: 'Platz: {theme} · {count} Bauwerk', other: 'Platz: {theme} · {count} Bauwerke' },
     'challenge.noEntries': 'Noch keine Beiträge gefunden. Seien Sie die erste Person: mitmachen, bauen, veröffentlichen.',
     'challenge.noEntriesEnded': 'Für diese Woche wurden keine Beiträge gefunden.',
     'challenge.familiesTitle': 'Stammbäume',

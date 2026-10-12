@@ -88,6 +88,27 @@ export function indoorCutaway(position, boxes) {
     return Object.freeze({ minX, maxX, minZ, maxZ, y, ceiling: ceiling.min.y });
 }
 
+// The Editor's See inside (docs/reviews/CreativeDirection-2026-10-12b.md,
+// finding 2): the whole build cut away above where a person standing on its
+// lowest floor would be cut indoors, so its ground-floor rooms and furniture
+// show from the Editor's camera. `bounds` are the build's
+// (core/SpatialBounds.js), in its own coordinates; null with none. The lowest
+// floor is taken to be one plate (0.25) above the build's lowest point.
+export const SEE_INSIDE_FLOOR = 0.25;
+
+export function seeInsideCutaway(bounds) {
+    const min = bounds?.min;
+    const max = bounds?.max;
+    if (!min || !max || ![min.x, min.y, min.z, max.x, max.z].every(Number.isFinite)) return null;
+    return Object.freeze({
+        minX: min.x - CAMERA_WALL_MARGIN,
+        maxX: max.x + CAMERA_WALL_MARGIN,
+        minZ: min.z - CAMERA_WALL_MARGIN,
+        maxZ: max.z + CAMERA_WALL_MARGIN,
+        y: min.y + SEE_INSIDE_FLOOR + CUT_ABOVE_FEET
+    });
+}
+
 // The fraction (0..1) along the segment from `a` to `b` where it first
 // enters `box`, or null when it misses it. A segment starting inside the
 // box enters it at 0.

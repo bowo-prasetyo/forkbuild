@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 805558c8d685c7ff -->
+<!-- translation-of: docs/Privacy.md source-hash: ee59630a404503d3 -->
 # Privacidade
 
 <!-- languages -->
@@ -205,7 +205,7 @@ páginas de outros sites (veja "Servidores que o ForkBuild contata" abaixo):
 
 E quando alguém entra no desafio de construção semanal (**Participar do
 desafio**, ou o desafio em **Novo** no Editor): `/e/challenge-join`; e quando alguém abre a
-praça do desafio de uma semana na visão do mundo: `/e/plaza-visit`. E quando alguém cria um link **Passear aqui comigo** na visão do mundo: `/e/walk-link`; e quando um amigo chega por um deles: `/e/walk-joined`. E quando alguém cria um link **Construir comigo** no Editor: `/e/build-link`; e quando um amigo entra por um deles: `/e/build-joined`; e a primeira vez que uma construção é publicada com créditos aos amigos que a construíram juntos: `/e/publish-together`. E cada vez que uma construção é publicada: `/e/publish-found` quando foi enviada para todo mundo, ou `/e/publish-link-only` quando ficou só com o link.
+praça do desafio de uma semana na visão do mundo: `/e/plaza-visit`. E cada vez que a vista do mundo abre: `/e/world-visit`; e, uma vez por visita, quando a construção de outra pessoa está à vista ali (uma que este dispositivo não publicou e não pode editar; as construções prontas em volta da praça não contam): `/e/world-neighbour`. E quando alguém cria um link **Passear aqui comigo** na visão do mundo: `/e/walk-link`; e quando um amigo chega por um deles: `/e/walk-joined`. E quando alguém cria um link **Construir comigo** no Editor: `/e/build-link`; e quando um amigo entra por um deles: `/e/build-joined`; e a primeira vez que uma construção é publicada com créditos aos amigos que a construíram juntos: `/e/publish-together`. E cada vez que uma construção é publicada: `/e/publish-found` quando foi enviada para todo mundo, ou `/e/publish-link-only` quando ficou só com o link.
 
 E na primeira vez que uma construção é publicada a partir deste navegador
 (publicá-la de novo depois não envia nada):
@@ -277,6 +277,7 @@ pede a ele.
 | Você instala o ForkBuild pelo site oficial (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com o caminho fixo `/e/installed`, sem referenciador e sem cookie |
 | No site oficial, você copia o código para incorporar de uma construção, ou uma construção incorporada é mostrada ou aberta no ForkBuild (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com um caminho fixo dizendo qual dos três casos foi, sem referenciador e sem cookie |
 | No site oficial, você entra no desafio de construção semanal ou abre a praça dele (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma requisição de imagem com o caminho fixo `/e/challenge-join` ou `/e/plaza-visit`, sem referenciador e sem cookie |
+| No site oficial, você abre a vista do mundo, e a construção de outra pessoa está à vista ali (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma requisição de imagem com o caminho fixo `/e/world-visit`, e no máximo uma com `/e/world-neighbour` por visita, sem referenciador e sem cookie |
 | No site oficial, você cria um link **Passear aqui comigo** ou chega por um deles (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com o caminho fixo `/e/walk-link` ou `/e/walk-joined`, sem referenciador e sem cookie |
 | No site oficial, você cria um link **Construir comigo** ou entra por um deles (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com o caminho fixo `/e/build-link` ou `/e/build-joined` (e `/e/publish-together` quando uma construção feita em conjunto é publicada pela primeira vez com os créditos deles), sem referenciador e sem cookie |
 | No site oficial, você publica uma construção pela primeira vez (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma requisição de imagem com um caminho fixo que indica a faixa de blocos, e mais uma para uma segunda construção ou um remix, sem referenciador e sem cookie |

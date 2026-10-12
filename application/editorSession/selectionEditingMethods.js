@@ -8,6 +8,7 @@ import { ToolId } from '../editor-state/ToolId.js';
 import { Position } from '../../core/Position.js';
 import { CameraState } from '../../renderer/CameraState.js';
 import { message } from '../../core/Message.js';
+import { seeInsideCutaway } from '../../core/IndoorView.js';
 import { SpatialBounds } from '../../core/SpatialBounds.js';
 import { computeThumbnailCamera } from '../../core/PreviewCameraFraming.js';
 
@@ -78,12 +79,38 @@ export const selectionEditingMethods = {
         }
         const framing = computeThumbnailCamera(SpatialBounds.fromBricks(bricks, this._registry), { fovDegrees: EDITOR_FOV_DEGREES });
         const { position, target } = framing;
+        // The build is drawn on the Editor's floor (renderer/EditorFloor.js),
+        // above y = 0: frame it there, not below it.
+        const floor = typeof this._session.floorHeight === 'function' ? Number(this._session.floorHeight()) || 0 : 0;
         this._session.setCameraState(new CameraState({
-            position: new Position(position.x, position.y, position.z),
-            target: new Position(target.x, target.y, target.z),
+            position: new Position(position.x, position.y + floor, position.z),
+            target: new Position(target.x, target.y + floor, target.z),
             zoom: 1
         }));
         return true;
+    },
+
+    // See inside (core/IndoorView.js, seeInsideCutaway()): the open build cut
+    // away above its ground floor, or drawn whole again. Only what is drawn
+    // changes; a click goes past what is cut away. Returns whether it is on.
+    setSeeInside(on) {
+        this._seeInside = on === true;
+        this.refreshSeeInside();
+        return this._seeInside;
+    },
+
+    get seeInside() {
+        return this._seeInside === true;
+    },
+
+    // Fits the cut to the build as it is now; called as the build changes.
+    refreshSeeInside() {
+        if (!this._session || typeof this._session.setCutaway !== 'function') return;
+        const document = this._documentManager.document;
+        const bricks = this._seeInside && document
+            ? document.world.getBuildings().flatMap((building) => building.getBricks())
+            : [];
+        this._session.setCutaway(bricks.length > 0 ? seeInsideCutaway(SpatialBounds.fromBricks(bricks, this._registry)) : null);
     },
 
     // Applies an EditorEntryContext after a fork opens: frames the camera and,
