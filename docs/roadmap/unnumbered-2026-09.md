@@ -6244,3 +6244,22 @@ the light always stood.
   camera, facing it, hidden under water and removed on dispose; the light aimed from them; the session handing them
   over every frame, and Always day's still sun).
 - Not done: the moon has no phases, there are no stars, and nothing casts a shadow.
+
+## The sun and the moon follow the compass (unnumbered, 2026-10-12)
+
+**The sun now rises where World View's compass says East and sets where it says West.** The first version put east
+at +x and south at +z, but the compass (core/CompassHeading.js) has North at +z, so East is -x: watching the sun set,
+the compass read East. Pillar served: your work lives in a world whose directions agree with each other.
+
+- `arcDirection()` in core/DayCycle.js mirrors the arc: east -x, south -z, west +x. The light follows, so it is the
+  compass's east walls that catch the morning.
+- **Always day** (`DAY_SKY_BODIES`) is now the sun standing still partway through the morning, low in the
+  south-east and in view, instead of the Editor's fixed light direction, which lay in the compass's north-west. The
+  Editor and thumbnails keep that direction (renderer/Lights.js), unchanged.
+- docs/Architecture.md corrects the camera's reach: about 30° above the horizon in First Person and about 15° in
+  Third Person, which looks down at the avatar, so there the sun is in view only near sunrise and sunset.
+- Tests: `DayAndNight` checks the sun's and the moon's directions with the compass itself (`compassLabelBetween()`,
+  `compassBearingFromYaw()`): E at sunrise, S at midday, W at sunset, always in the compass's southern half, and the
+  sun's bearing only growing through the day; the earlier arc fails it at sunrise.
+- Not done: the sun climbs out of a Third Person view for most of the day; a lower arc for the discs, with the light
+  kept higher, would keep it in view.
