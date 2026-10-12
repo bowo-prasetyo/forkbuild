@@ -159,6 +159,8 @@ export function skyBodiesAt(seconds) {
 // 1 while only one is up, fading to nothing halfway through the handover and
 // back, so shadows fade out and in rather than swinging across the ground
 // (the rest of the light is spread as fill instead; renderer/Lights.js).
+// skyTurn is how far the starry sky has turned round its pole since dawn,
+// once round a day, in radians (core/StarField.js).
 export function skyBodiesAtFraction(fraction) {
     const f = Number.isFinite(fraction) ? fraction - Math.floor(fraction) : KEYFRAMES[1].at;
     const sun = bodyOnArc(SUN_ARC, f);
@@ -172,7 +174,8 @@ export function skyBodiesAtFraction(fraction) {
         sun: sun ? arcDirection(sun.angle) : null,
         moon: moon ? arcDirection(moon.angle) : null,
         light: lightDirection(arcDirection(lightAngle)),
-        lightStrength: handoverStrength(sun, moon)
+        lightStrength: handoverStrength(sun, moon),
+        skyTurn: f * Math.PI * 2
     });
 }
 

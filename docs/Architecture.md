@@ -1457,6 +1457,18 @@ it, and under water neither shows. Always day (and no clock) is `DAY_SKY_BODIES`
 through the morning, low in the south-east. A renderer never given sky bodies (the Editor, thumbnails) draws neither
 and keeps renderer/Lights.js's fixed daytime direction, the one it always had.
 
+**The stars and the Milky Way.** core/StarField.js makes, from a fixed seed, 1500 stars spread evenly over the sphere
+(many faint, few bright, a few blue-white or warm) and 1600 fainter ones crowded in the Milky Way's band, plus the
+band's glow as a ribbon round its great circle, all in the sky's own frame. That frame turns once a day
+(`skyBodiesAt().skyTurn`, from dawn) round the celestial pole, due north and 50° up, so the celestial equator is the
+sun's and the moon's own arc and stars rise in the east and set in the west (`turnSky()`). renderer/StarSky.js draws
+the stars as one `Points` and the glow as one ribbon mesh, both `ShaderMaterial`s with additive blending in the opaque
+pass at the lowest `renderOrder`, so the sun, the moon, builds and hills drawn after them cover them; a group placed on
+the camera every frame at 0.85 of its far plane and turned by the quaternion for `-skyTurn` round the pole. They show
+as the look's glow goes from 0.72 to 0.98 (deep dusk to night) and fade the same way at dawn, twinkle by a per-star
+phase, thin out towards the horizon, and hide under water and in Always day. Made with the sun and the moon on the
+first `setSkyBodies()`, so the Editor and thumbnails never draw them.
+
 **Shadows.** The directional light casts them when World View turns them on (`Renderer#setShadowsEnabled()`,
 renderer/SunShadows.js): one 2048² PCF-soft shadow map over a square 45 m each way round the camera's target (the
 avatar, or what the camera orbits), so things farther off cast none and the cost doesn't grow with the world. Every

@@ -150,6 +150,12 @@ celular do que num computador, então começam ligadas com mouse e desligadas
 em celular ou tablet; marque ou desmarque **Sombras** no fim do painel para
 mudar isso neste dispositivo.
 
+À noite, conforme o crepúsculo escurece, as estrelas aparecem, com a Via
+Láctea atravessando o céu, e somem de novo ao amanhecer. Todo o céu estrelado
+gira devagar em torno de um ponto alto no norte, então as estrelas nascem no
+leste e se põem no oeste junto com a lua, e todos veem as mesmas estrelas no
+mesmo momento.
+
 Se você preferir que seja sempre dia, marque **Sempre de dia** no fim do
 painel, logo acima de **Mostrar ferramentas avançadas**. A escolha fica
 lembrada neste dispositivo e não muda nada para mais ninguém.

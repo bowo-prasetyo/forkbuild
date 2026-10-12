@@ -17,6 +17,7 @@ import { buildUnderwaterLifeTileMesh, updateUnderwaterLifeTileMesh } from './Und
 import { DAY } from '../core/DayCycle.js';
 import { makeNightGlowing } from './NightGlowMaterial.js';
 import { SkyBodies } from './SkyBodies.js';
+import { StarSky } from './StarSky.js';
 import { SunShadows } from './SunShadows.js';
 
 // Under water the view closes in to a blue-green haze: murkier and greener in a
@@ -57,8 +58,10 @@ export class Renderer {
         // How strongly standalone bricks that shine after dark shine
         // (renderer/NightGlowMaterial.js), shared by every one this adds.
         this._nightGlow = { value: 0 };
-        // The sun and the moon, made the first time setSkyBodies() is called.
+        // The sun, the moon and the stars, made the first time setSkyBodies()
+        // is called.
         this._skyBodies = null;
+        this._starSky = null;
         this._skyBodiesState = null;
         this._sceneManager.scene.background = new THREE.Color(DAY.sky);
 
@@ -247,9 +250,10 @@ export class Renderer {
     }
 
     // Shows World View's sun and moon where `bodies` (core/DayCycle.js's
-    // skyBodiesAt()) puts them, and aims the light from them. A renderer
-    // never given any (the Editor, thumbnails) draws neither and keeps the
-    // daytime light.
+    // skyBodiesAt()) puts them, and aims the light from them; at night the
+    // stars and the Milky Way come out, turned by bodies.skyTurn
+    // (renderer/StarSky.js). A renderer never given any (the Editor,
+    // thumbnails) draws none of them and keeps the daytime light.
     setSkyBodies(bodies) {
         if (!bodies || bodies === this._skyBodiesState) {
             return;
@@ -257,6 +261,7 @@ export class Renderer {
         this._skyBodiesState = bodies;
         if (!this._skyBodies) {
             this._skyBodies = new SkyBodies(this._sceneManager);
+            this._starSky = new StarSky(this._sceneManager, { pixelRatio: this._webglRenderer.getPixelRatio() });
         }
         this._skyBodies.set(bodies);
         this._lights.setDirection(bodies.light, bodies.lightStrength);
@@ -351,6 +356,7 @@ export class Renderer {
         this._wildlifeStreaming.dispose();
         if (this._skyBodies) {
             this._skyBodies.dispose();
+            this._starSky.dispose();
         }
         window.removeEventListener('resize', this._onResize);
         this._cameraController.dispose();
@@ -371,7 +377,10 @@ export class Renderer {
         this._underwaterLifeStreaming.forEachLoadedTile((tile) => updateUnderwaterLifeTileMesh(tile, wildlifeTime));
         this._applyUnderwaterView(underwaterViewAt(DEFAULT_WORLD_SEED, this._cameraController.camera.position));
         if (this._skyBodies) {
-            this._skyBodies.update(this._cameraController.camera, Boolean(UNDERWATER_LOOK[this._underwaterView]));
+            const underwater = Boolean(UNDERWATER_LOOK[this._underwaterView]);
+            this._skyBodies.update(this._cameraController.camera, underwater);
+            this._starSky.set(this._skyLook.glow, this._skyBodiesState.skyTurn);
+            this._starSky.update(this._cameraController.camera, performance.now() / 1000, underwater);
         }
         for (const listener of this._frameListeners) {
             listener(deltaSeconds);

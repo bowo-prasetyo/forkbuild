@@ -157,6 +157,12 @@ Smartphone mehr als einen Computer, darum sind sie mit Maus zuerst an und auf
 Smartphone oder Tablet zuerst aus; mit dem Häkchen bei **Schatten** unten im
 Bereich ändern Sie das auf diesem Gerät.
 
+Nachts kommen mit der tiefer werdenden Dämmerung die Sterne heraus, mit der
+Milchstraße quer darüber, und verblassen in der Morgendämmerung wieder. Der
+ganze Sternenhimmel dreht sich langsam um einen Punkt hoch im Norden, sodass
+die Sterne mit dem Mond im Osten aufgehen und im Westen untergehen, und alle
+sehen im selben Moment dieselben Sterne.
+
 Wenn Sie lieber immer Tag hätten, setzen Sie unten im Bereich, direkt über
 **Erweiterte Werkzeuge zeigen**, das Häkchen bei **Immer Tag**. Das wird auf
 diesem Gerät gespeichert und ändert für niemanden sonst etwas.

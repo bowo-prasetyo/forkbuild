@@ -6298,3 +6298,26 @@ anyone whose device would rather not draw them.
   of it, which is why phones start with it off.
 - Not done: shadows stop 45 m away (no cascades); glowing lanterns cast no light or shadows of their own; clouds.
 
+## Stars and the Milky Way in World View (unnumbered, 2026-10-12)
+
+**At night the stars come out over World View, with the Milky Way across them, and the whole sky wheels slowly from
+east to west.** A moonlit night with an empty sky felt unfinished; a night worth staying up in is one more reason to
+walk a build after dark. Pillar served: your work lives in a world. Nothing to learn or set, and it costs one more
+draw of small points, so there is no setting; Always day shows none.
+
+- **One sky for everyone** (core/StarField.js): 1500 stars from a fixed seed, evenly over the sphere, many faint and
+  few bright, a few blue-white or warm; 1600 fainter ones and a soft glow in the Milky Way's band, which crosses the
+  sky at a slant.
+- **Turning with the day** (`skyTurn` in `skyBodiesAt()`, `turnSky()`): once round a day round a pole due north and
+  50° up, so the celestial equator is the sun's and the moon's arc and stars rise and set with them, by the compass.
+- **Drawn far off** (renderer/StarSky.js): one `Points` and one ribbon, additive, drawn first so the moon, builds and
+  hills cover them; placed round the camera every frame, out from deep dusk to dawn, twinkling, thinner towards the
+  horizon, hidden under water. World View only.
+- Guide 03's Day and night section in every language, docs/Architecture.md and the README describe it.
+- Tests: `NightSky` (the field fixed and complete, spread evenly, a few bright stars, the Milky Way's stars in its
+  band and its glow round its middle; the pole due north and still; a star on the equator rising in the east, high in
+  the south and setting in the west, on the sun's arc; one turn a day from the clock; the renderer hidden by day, in an
+  orange dusk and under water, out at night, round the camera and turned with the sky); `NightSkyBrowser` (real WebGL:
+  the shaders compile, stars light the night sky and none by day, and anything in front hides them).
+- Not done: constellations, shooting stars, the moon's phases.
+
