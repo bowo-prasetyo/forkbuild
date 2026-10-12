@@ -7,6 +7,9 @@ import { OpenPublicationLinkOutcome } from '../../../application/publication/Ope
 import { readSharedBuildDocument } from '../../../application/publication/sharing/ReadSharedBuild.js';
 import { exploreRouteFor } from '../../components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import { challengeThemeTitle } from '../../components/challenge/challengeText.js';
+import { FEATURED_STRUCTURE_IDS, featuredStructures, structureWorld } from '../../../application/home/FeaturedBuilds.js';
+import { CreateStructureRegistryUseCase } from '../../../application/editor/CreateStructureRegistryUseCase.js';
+import { libraryItemName } from '../../i18n/libraryText.js';
 import { t } from '../../i18n/i18n.js';
 
 // The challenge plaza (core/ChallengePlaza.js), when World View opens on
@@ -20,6 +23,12 @@ import { t } from '../../i18n/i18n.js';
 // stands the same way, entries or none.
 // Exhibit keys are Document ids; this one can't be.
 const PLAZA_SQUARE_KEY = 'plaza:square';
+// While a week has fewer entries than this, the ready-made builds
+// (application/home/FeaturedBuilds.js) stand round the square after them, so
+// the plaza is a village on its first day (Walk in the main menu comes here).
+// Their keys can't be Document ids either.
+export const PLAZA_READY_MADE_UNTIL = 6;
+const READY_MADE_KEY_PREFIX = 'ready-made:';
 
 export function useChallengePlaza({ route, router, session, refreshSpatialUI }) {
     const challengeId = route.name === 'plaza' ? String(route.params.challengeId || '') : null;
@@ -27,6 +36,7 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI }) 
     const contentStore = inject('publicationContentStore', null);
     const openLink = inject('openPublicationLink', null);
     const entryDiscovery = inject('challengeEntryDiscovery', null);
+    const neighbourDiscovery = inject('repositoryNetworkDiscovery', null);
     const funnel = inject('funnelEventCounter', null);
     const networkPublicationLocatorStore = inject('networkPublicationLocatorStore', null);
     const { listEntries } = new CreateChallengeEntriesUseCase().execute({
@@ -42,6 +52,7 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI }) 
         challengeRoute: challenge ? { path: `/challenge/${challenge.id}` } : { path: '/challenge' },
         loading: Boolean(challenge),
         exhibits: [],
+        readyMades: [],
         fetching: 0,
         unavailable: 0,
         notPlaceable: 0,
@@ -54,6 +65,19 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI }) 
     const builds = new Map();
     const shown = new Map();
     let active = false;
+    // The ready-made builds, read once a visit.
+    let readyMades = null;
+    function readyMadeBuilds() {
+        if (!readyMades) {
+            try {
+                readyMades = featuredStructures(new CreateStructureRegistryUseCase().execute(), FEATURED_STRUCTURE_IDS)
+                    .map((structure) => ({ structure, world: structureWorld(structure) }));
+            } catch {
+                readyMades = [];
+            }
+        }
+        return readyMades;
+    }
 
     function isPlaceable(publication) {
         try {
@@ -101,7 +125,11 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI }) 
             if (build) ready.push(build);
             else unavailable += 1;
         }
-        const footprints = ready.map((build) => ({ key: build.publication.documentId, footprint: session.measurePlazaFootprint(build.world) }));
+        const fillers = settled && ready.length < PLAZA_READY_MADE_UNTIL ? readyMadeBuilds() : [];
+        const footprints = [
+            ...ready.map((build) => ({ key: build.publication.documentId, footprint: session.measurePlazaFootprint(build.world) })),
+            ...fillers.map(({ structure, world }) => ({ key: READY_MADE_KEY_PREFIX + structure.id, footprint: session.measurePlazaFootprint(world) }))
+        ];
         const positions = new Map(layoutPlazaExhibits(footprints).map(({ key, position }) => [key, position]));
         const footprintOf = new Map(footprints.map(({ key, footprint }) => [key, footprint]));
 
@@ -133,8 +161,30 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI }) 
                 })
             }));
         }
+        const readyMadeExhibits = [];
+        for (const { structure, world } of fillers) {
+            const key = READY_MADE_KEY_PREFIX + structure.id;
+            const position = positions.get(key);
+            if (!position) continue;
+            if (!shown.has(key)) {
+                session.showPlazaExhibit(key, world, position);
+                shown.set(key, position);
+            }
+            const footprint = footprintOf.get(key);
+            readyMadeExhibits.push(Object.freeze({
+                key,
+                readyMadeId: structure.id,
+                title: libraryItemName(structure),
+                author: null,
+                middle: Object.freeze({
+                    x: position.x + (footprint.minX + footprint.maxX) / 2,
+                    y: position.y,
+                    z: position.z + (footprint.minZ + footprint.maxZ) / 2
+                })
+            }));
+        }
         const beyond = Math.max(0, candidates.length - ready.length - unavailable - fetching);
-        plaza.value = { ...plaza.value, loading: !settled, exhibits, fetching: settled ? 0 : fetching, unavailable, beyond };
+        plaza.value = { ...plaza.value, loading: !settled, exhibits, readyMades: readyMadeExhibits, fetching: settled ? 0 : fetching, unavailable, beyond };
         refreshSpatialUI();
     }
 
@@ -169,6 +219,16 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI }) 
         if (!active || !entryDiscovery) return true;
         const result = await entryDiscovery.run(challenge.tag);
         if (active && result.found > 0) await load();
+        // The village round the plaza (core/BuildSettlement.js): the builds
+        // others sent to everyone, so they stand where their builders put them.
+        if (active && neighbourDiscovery) {
+            try {
+                const found = await neighbourDiscovery.run();
+                if (active && found.admitted.length > 0) refreshSpatialUI();
+            } catch {
+                // The village fills in on a later visit.
+            }
+        }
         return true;
     }
 
@@ -189,11 +249,16 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI }) 
     }
 
     function openExhibit(exhibit) {
-        if (exhibit) router.push(exploreRouteFor(exhibit.publication, networkPublicationLocatorStore));
+        if (exhibit?.publication) router.push(exploreRouteFor(exhibit.publication, networkPublicationLocatorStore));
     }
 
     function remixExhibit(exhibit) {
-        if (exhibit) router.push({ path: '/editor', query: { fork: exhibit.publication.documentId, publication: exhibit.publication.id } });
+        if (!exhibit) return;
+        if (exhibit.readyMadeId) {
+            router.push({ path: '/editor', query: { start: exhibit.readyMadeId } });
+            return;
+        }
+        router.push({ path: '/editor', query: { fork: exhibit.publication.documentId, publication: exhibit.publication.id } });
     }
 
     return { plaza, inPlaza, enterPlaza, leavePlaza, backToPlaza, focusExhibit, openExhibit, remixExhibit };

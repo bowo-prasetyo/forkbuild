@@ -74,8 +74,12 @@ networks, anchoring, peer connections, identities with succession and
 revocation. It is what makes "your work is yours" true, and it stays. But it
 is a means, not the game:
 
-- Players should see one verb, **Publish**, and one choice inside it: where
-  to send the build. Network-by-network detail belongs on the Publications
+- Players should see one verb, **Publish**, and one choice inside it: who
+  can find the build. **Who can find it?** is asked before the first
+  publish: **Everyone** sends each build as a build note to the Nostr relays
+  every copy of ForkBuild reads, with a key the device holds itself, so no
+  wallet or extension is needed; **Only people I send the link to** keeps it
+  in its link. Where else to send the build is a second, optional step. Network-by-network detail belongs on the Publications
   page and in Network Settings. Publish asks where the build goes once, in
   **Where it goes**, and sends each signed build there from then on.
 - Network Settings and the Publications page live under **More → Advanced**.
@@ -106,6 +110,12 @@ reworked, it comes in two parts:
   their settings. A writer is a plugin a player switches on. Nothing outside
   it names its network, and ForkBuild works with none switched on.
 
+Build notes (2026-10-12) are no new network: they are Nostr, already a
+reader on every copy, written with a key the device holds, and read by the
+same copies. Their reader is paid for like any other (it asks the relays
+under Network Settings only when Explore, an author's page or the challenge
+opens) and is named on the Privacy page.
+
 Today Nostr, Arweave, Steem and Blurt are the substrates discovery searches;
 Bitcoin and Base hold anchor proofs only, so their readers are proof checks.
 Bitcoin's and Base's wallets are split this way: each is a plugin switched on
@@ -122,11 +132,16 @@ old text is touched. Code and protocol documents keep their own terms.
 
 | Say | Not | Notes |
 |---|---|---|
-| **build** | document, creation, publication | What a player makes. A "World" is the same build seen from inside, in World View. (**My Worlds** lists the Worlds visited on this device, not your builds; a page of your own builds is open work.) |
+| **build** | document, creation, publication, Shared World | What a player makes. A "World" is the same build seen from inside, in World View. (**My Worlds** lists the Worlds visited on this device, not your builds; a page of your own builds is open work.) |
 | **Publish** | distribute, announce, anchor | Going public. Distribute, announce and anchor are steps inside Publish, named only on the Publications page. |
 | **remix**, **make your own copy** | fork | "Fork" stays in the name, the tagline and developer documents. |
 | **structure** | blueprint, preassembled | A ready-made group of bricks in the Build Library. |
 | **Advanced** | network | The menu group for everything a player doesn't need to build and share. |
+| **Build · Explore · Challenge · Walk** | Editor · Repository | The main menu. **Walk** opens this week's challenge plaza, the square the village of published builds grows round. |
+
+tests/WordsTable.test.js fails when a word from the *Not* column comes back
+on a screen a newcomer meets (the menu, Home, the Editor, a shared link,
+Explore, the challenge and Publish's dialogs).
 
 ## Tone
 
@@ -255,3 +270,14 @@ themes with example remix families for empty shelves ("Half a year of
 themes, and families to start from"), and numbers for the counters with the
 user guide split into Play and Advanced ("Numbers to reach, and a guide in
 two parts").
+
+A third review on 2026-10-12
+([reviews/CreativeDirection-2026-10-12.md](reviews/CreativeDirection-2026-10-12.md))
+found the single-player loop complete and the multiplayer half resting on a
+wallet, a crowd and a place to meet. Its Release D, "Find each other", was
+done the same day (see the roadmap, "Find each other"): Who can find it?
+inside Publish, with build notes needing no wallet; builds settling beside
+what they remix and in a village round the plaza; **Walk** in the menu,
+opening the plaza with the ready-made builds round it; and the player's
+words in the menu, Explore, a shared link's page and the Editor, kept so by
+a test.

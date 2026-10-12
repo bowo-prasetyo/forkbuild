@@ -258,9 +258,9 @@ function discovery({ services, sources, isKnown, admitted = [], maxInspectionsPe
     assert(exposed.networkDiscovery.value.searching && exposed.networkDiscoveryText.value.includes('Nostr'), 'G1. it says it is searching');
     await searching;
     assert(reloads === 1 && provider.list().length === 1, 'G2. an admission reloads the catalog');
-    assert(exposed.networkDiscoveryText.value === '1 new creation found on the networks.', `G3. and says so — got "${exposed.networkDiscoveryText.value}"`);
+    assert(exposed.networkDiscoveryText.value === '1 new build found on the networks.', `G3. and says so — got "${exposed.networkDiscoveryText.value}"`);
     await exposed.searchNetworks();
-    assert(reloads === 1 && exposed.networkDiscoveryText.value === 'No new creations on the networks.', 'G4. a search finding nothing new does not reload');
+    assert(reloads === 1 && exposed.networkDiscoveryText.value === 'No new builds on the networks.', 'G4. a search finding nothing new does not reload');
 
     assert(exploreRouteFor(good, locators).path === `/view/ar/${'a'.repeat(43)}`, 'G5. a network find explores through its link view');
     const local = signedPublication(bob, { id: 'pub-local' });

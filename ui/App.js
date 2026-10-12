@@ -38,7 +38,11 @@ export default {
         });
         const PRIMARY_PATHS = ['/', '/editor', '/repository', '/challenge', '/worlds/recent'];
         const inMore = computed(() => !PRIMARY_PATHS.includes(route.path)
-            && !route.path.startsWith('/challenge/') && !route.path.startsWith('/world/') && !route.path.startsWith('/view/') && !route.path.startsWith('/s/'));
+            && !route.path.startsWith('/challenge/') && !route.path.startsWith('/world/') && !route.path.startsWith('/view/') && !route.path.startsWith('/s/')
+            && !route.path.startsWith('/plaza/'));
+        // Walk goes to this week's plaza (ui/router/index.js, `/walk`), so it is
+        // the page shown on any plaza.
+        const inWalk = computed(() => route.path.startsWith('/plaza/'));
         function closeMoreOnOutsideClick(event) {
             if (moreOpen.value && moreMenu.value && !moreMenu.value.contains(event.target)) {
                 moreOpen.value = false;
@@ -105,7 +109,7 @@ export default {
         }
 
         return {
-            t, menuOpen, moreOpen, moreMenu, inMore, notificationsOpen, openNotifications,
+            t, menuOpen, moreOpen, moreMenu, inMore, inWalk, notificationsOpen, openNotifications,
             getRecipientNotificationEventsCommand, viewNotificationPublication, describeNotification
         };
     },
@@ -125,6 +129,7 @@ export default {
                         <router-link to="/editor" class="app-nav-link">{{ t('app.nav.editor') }}</router-link>
                         <router-link to="/repository" class="app-nav-link">{{ t('app.nav.repository') }}</router-link>
                         <router-link to="/challenge" class="app-nav-link">{{ t('app.nav.challenge') }}</router-link>
+                        <router-link to="/walk" :class="['app-nav-link', { 'router-link-active': inWalk }]">{{ t('app.nav.walk') }}</router-link>
                         <router-link to="/worlds/recent" class="app-nav-link">{{ t('app.nav.myWorlds') }}</router-link>
                         <div ref="moreMenu" :class="['app-nav-more', { 'app-nav-more--open': moreOpen }]">
                             <button

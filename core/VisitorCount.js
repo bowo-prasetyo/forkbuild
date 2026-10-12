@@ -62,7 +62,8 @@ export function visitorCountHitUrl(random) {
 // challenge joined, and its plaza visited; a "Walk here with me" link made,
 // and a friend arriving through one; a "Build with me" link made, and a
 // friend joining through one; a build published crediting friends who built
-// it together; and, when
+// it together; a build published and sent to everyone, or kept to its link
+// (each publish, core/BuildNote.js); and, when
 // a build is first published from this device, roughly how many bricks it
 // has, whether it is this device's second build, and whether it remixes
 // someone else's (publishedBuildEvents below).
@@ -93,7 +94,9 @@ export const FunnelEvent = Object.freeze({
     WALK_JOINED: 'walk-joined',
     BUILD_LINK: 'build-link',
     BUILD_JOINED: 'build-joined',
-    PUBLISH_TOGETHER: 'publish-together'
+    PUBLISH_TOGETHER: 'publish-together',
+    PUBLISH_FOUND: 'publish-found',
+    PUBLISH_LINK_ONLY: 'publish-link-only'
 });
 
 const FUNNEL_EVENTS = new Set(Object.values(FunnelEvent));

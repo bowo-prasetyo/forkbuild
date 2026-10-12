@@ -719,7 +719,7 @@ export default {
 
         const {
             _syncWorldExperience, _syncWorldPresence, _syncWorldSpatialPresence, disposeWorldPresence,
-            refreshCollaborationRoster, syncCurrentWorldSpatialPresence, skipWelcomeFor
+            refreshCollaborationRoster, syncCurrentWorldSpatialPresence, skipWelcomeFor, skipArrivalWelcomes
         } = useWorldPresenceSync({
             cameraPerspective, openWelcomePanel, refreshWelcomeContext, resolveIdentityDisplayName, session, showWelcomePanel,
             spatialCollaboratorRows, worldMembers, worldPresenceRoster, worldReturnInfo
@@ -1089,6 +1089,8 @@ export default {
             allPublications.value = listPublicationsUseCase.execute();
             session.start(viewport.value);
             if (inPlaza.value) {
+                // The plaza's own panel says what stands there; "a quiet corner" would not.
+                skipArrivalWelcomes();
                 enterPlaza();
             } else if (route.query.arrive === 'door') {
                 // Walk inside it (the Editor, after Publish): at the build's door.

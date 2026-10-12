@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 0c17fa09c34c708f -->
+<!-- translation-of: docs/Privacy.md source-hash: 805558c8d685c7ff -->
 # Privacidade
 
 <!-- languages -->
@@ -24,6 +24,8 @@ que você publique, exporte ou envie:
 - suas identidades: a chave pública de cada uma, e a chave privada,
   criptografada com sua frase secreta, a menos que você tenha escolhido
   criá-la sem uma;
+- a chave portadora que envia suas construções para todo mundo (uma chave do Nostr, criada na primeira vez que você escolhe **Todo mundo** em **Quem pode encontrá-la?**). Ela não é a sua identidade e não assina nada seu: quem a tivesse só poderia enviar notas que cada leitor confere com a assinatura da sua própria identidade;
+- a sua resposta a **Quem pode encontrá-la?**;
 - uma identidade criada só com um nome, ao publicar ou passear pela
   primeira vez, não tem frase secreta até você adicionar uma em
   **Minhas identidades**, então qualquer coisa que consiga ler o
@@ -98,6 +100,7 @@ com suas configurações (veja "Notificações neste dispositivo" abaixo).
   encontre as construções com uma tag, como as participações do desafio de
   uma semana.
   Quando você escolhe para onde suas construções vão, cada Publicar também envia a construção para lá; até então, Publicar não envia nada.
+- **Quem pode encontrá-la?** é perguntado antes da sua primeira publicação. Com **Todo mundo**, cada construção assinada que você publica também é enviada, inteira, aos relays públicos do Nostr em **Configurações de rede** como uma nota de construção (docs/Protocol.md, "Build notes", em inglês), com as tags e o lugar onde ela fica no Mundo, para que qualquer pessoa que use o ForkBuild a encontre em Explorar, no desafio e no Mundo. A nota é assinada com a chave portadora deste dispositivo, não com a sua identidade. Os relays guardam o que recebem; uma nota não pode ser retirada. Com **Só quem receber o meu link**, nada é enviado e a construção viaja só no link. A escolha fica guardada neste dispositivo e pode ser mudada na mensagem depois de Publicar.
 - **Os pares a que você se conecta** ficam sabendo a chave pública da sua
   identidade e seu endereço IP (uma conexão direta precisa dele; um relay
   TURN o esconde do par, mas não do relay). Os pares conectados podem ver seu
@@ -202,7 +205,7 @@ páginas de outros sites (veja "Servidores que o ForkBuild contata" abaixo):
 
 E quando alguém entra no desafio de construção semanal (**Participar do
 desafio**, ou o desafio em **Novo** no Editor): `/e/challenge-join`; e quando alguém abre a
-praça do desafio de uma semana na visão do mundo: `/e/plaza-visit`. E quando alguém cria um link **Passear aqui comigo** na visão do mundo: `/e/walk-link`; e quando um amigo chega por um deles: `/e/walk-joined`. E quando alguém cria um link **Construir comigo** no Editor: `/e/build-link`; e quando um amigo entra por um deles: `/e/build-joined`; e a primeira vez que uma construção é publicada com créditos aos amigos que a construíram juntos: `/e/publish-together`.
+praça do desafio de uma semana na visão do mundo: `/e/plaza-visit`. E quando alguém cria um link **Passear aqui comigo** na visão do mundo: `/e/walk-link`; e quando um amigo chega por um deles: `/e/walk-joined`. E quando alguém cria um link **Construir comigo** no Editor: `/e/build-link`; e quando um amigo entra por um deles: `/e/build-joined`; e a primeira vez que uma construção é publicada com créditos aos amigos que a construíram juntos: `/e/publish-together`. E cada vez que uma construção é publicada: `/e/publish-found` quando foi enviada para todo mundo, ou `/e/publish-link-only` quando ficou só com o link.
 
 E na primeira vez que uma construção é publicada a partir deste navegador
 (publicá-la de novo depois não envia nada):
@@ -288,6 +291,8 @@ pede a ele.
 | O app está aberto e a aba visível (sincronização de anúncios em segundo plano) | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | consultas pelas etiquetas de descoberta do ForkBuild: as etiquetas compartilhadas de Snapshot e de Comentários, e as regiões de nomes de lugares e células do mapa que você visitou |
 | Você abre o Repositório ou a página de um autor | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | uma consulta pela etiqueta compartilhada de publicações (`forkbuild-publication`); depois um pedido do registro assinado de cada publicação recém-anunciada, no máximo 20 por visita ou por **Verificar de novo** |
 | Você abre o desafio de construção de uma semana (**Desafio**) | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | uma consulta pela tag dessa semana (`forkbuild-tag:<tag>`); depois, uma requisição do registro assinado de cada participação recém-anunciada, no máximo 20 por visita ou **Verificar de novo** |
+| Você publica uma construção depois de escolher **Todo mundo** em **Quem pode encontrá-la?** | cada relay do Nostr em **Configurações de rede** (`relay.damus.io`, `nos.lol`, `relay.primal.net`) | uma nota de construção: a própria construção assinada, as tags e o posicionamento assinado de quem a publicou, assinada com a chave portadora deste dispositivo |
+| Você abre Explorar, a página de uma pessoa, o desafio de uma semana ou a praça dele | cada relay do Nostr em **Configurações de rede** | uma consulta de notas de construção (`forkbuild-build`, ou `forkbuild-tag:<tag>` da semana); cada nota nova é conferida e aberta neste dispositivo, no máximo 40 por visita |
 | Você distribui ou descobre publicações pelo Nostr | relays do Nostr (`relay.damus.io`) | os anúncios assinados que você publica; suas consultas |
 | Você guarda ou busca conteúdo no Arweave | um gateway do Arweave (`arweave.net`) | o conteúdo que você publica; o que você busca |
 | Você busca conteúdo no IPFS | um gateway IPFS (`ipfs.filebase.io`), ou seu próprio nó IPFS (`127.0.0.1:5001`) | o que você busca ou adiciona |

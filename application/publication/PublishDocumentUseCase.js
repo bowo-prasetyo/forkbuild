@@ -58,7 +58,9 @@ export class PublishDocumentUseCase {
             return;
         }
         try {
-            const position = this._initialPlacementStrategy.computePosition({ publicationId: publication.id, documentId: publication.documentId });
+            const position = this._initialPlacementStrategy.computePosition({
+                publicationId: publication.id, documentId: publication.documentId, parentDocumentId: publication.parentDocumentId || null
+            });
             this._placePublicationUseCase.execute(publication.id, position);
         } catch (err) {
             // Best-effort: WorldLayoutProvider's deterministic-grid

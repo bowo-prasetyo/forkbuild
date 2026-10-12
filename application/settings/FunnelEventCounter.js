@@ -85,6 +85,16 @@ export class FunnelEventCounter {
         return this.count(FunnelEvent.BUILD_JOINED);
     }
 
+    // A build just published and sent to everyone (core/BuildNote.js).
+    publishedFound() {
+        return this.count(FunnelEvent.PUBLISH_FOUND);
+    }
+
+    // A build just published and kept to its link.
+    publishedLinkOnly() {
+        return this.count(FunnelEvent.PUBLISH_LINK_ONLY);
+    }
+
     // Counted once per build opened from a link.
     forked(sourceDocumentId) {
         if (!this._openedFromLink.delete(sourceDocumentId)) return false;
