@@ -16,7 +16,25 @@ export class FunnelEventCounter {
         this._sendHit = sendHit;
         this._listOwnPublications = listOwnPublications;
         this._openedFromLink = new Set();
+        this._countedThisPage = new Set();
     }
+
+    // At most once a page load: a side system used (core/SideSystemUse.js),
+    // so the totals read as visits that used it.
+    countOnce(event) {
+        if (this._countedThisPage.has(event)) return false;
+        const sent = this.count(event);
+        if (sent) this._countedThisPage.add(event);
+        return sent;
+    }
+
+    swam() { return this.countOnce(FunnelEvent.SWAM); }
+    caughtAnimal() { return this.countOnce(FunnelEvent.ANIMAL_CAUGHT); }
+    decoratedWithAnimal() { return this.countOnce(FunnelEvent.ANIMAL_DECORATED); }
+    usedInventory() { return this.countOnce(FunnelEvent.INVENTORY_USED); }
+    sentChat() { return this.countOnce(FunnelEvent.CHAT_SENT); }
+    madeVoiceCall() { return this.countOnce(FunnelEvent.VOICE_CALL); }
+    joinedLobby() { return this.countOnce(FunnelEvent.LOBBY_JOINED); }
 
     // Returns true when a hit was sent.
     count(event) {
@@ -65,6 +83,25 @@ export class FunnelEventCounter {
         return this.count(FunnelEvent.PLAZA_VISIT);
     }
 
+    // World View opened (ui/views/worldView/useNeighbourCount.js).
+    visitedWorld() {
+        return this.count(FunnelEvent.WORLD_VISIT);
+    }
+
+    // Someone else's build stood in view during that visit; counted once a visit.
+    sawNeighbour() {
+        return this.count(FunnelEvent.WORLD_NEIGHBOUR);
+    }
+
+    // The builds this device has published, by document id: a visitor's own.
+    ownDocumentIds() {
+        try {
+            return new Set((this._listOwnPublications() || []).map((publication) => publication && publication.documentId).filter(Boolean));
+        } catch {
+            return new Set();
+        }
+    }
+
     // A "Walk here with me" link made (application/walkTogether/).
     madeWalkLink() {
         return this.count(FunnelEvent.WALK_LINK);
@@ -83,6 +120,16 @@ export class FunnelEventCounter {
     // A friend joined through one.
     joinedBuild() {
         return this.count(FunnelEvent.BUILD_JOINED);
+    }
+
+    // A build just published and sent to everyone (core/BuildNote.js).
+    publishedFound() {
+        return this.count(FunnelEvent.PUBLISH_FOUND);
+    }
+
+    // A build just published and kept to its link.
+    publishedLinkOnly() {
+        return this.count(FunnelEvent.PUBLISH_LINK_ONLY);
     }
 
     // Counted once per build opened from a link.

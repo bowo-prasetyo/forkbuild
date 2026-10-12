@@ -33,7 +33,11 @@ export default {
         title: { type: String, default: null },
         // The Publication itself, for a link-only share and a picture; without
         // it only a distributed Publication's link is offered.
-        publication: { type: Object, default: null }
+        publication: { type: Object, default: null },
+        // Right after Publish (ui/views/EditorView.js): Copy link up front, the
+        // rest under More ways to share, so the moment reads as a celebration
+        // rather than a form.
+        compact: { type: Boolean, default: false }
     },
     // `shared` once a link is shared or copied.
     emits: ['shared'],
@@ -172,15 +176,31 @@ export default {
                 <div class="publication-share-link-actions">
                     <button v-if="shareSheet" type="button" class="action-btn action-btn--primary" @click="shareNow">{{ t('share.share') }}</button>
                     <button type="button" :class="['action-btn', shareSheet ? 'action-btn--secondary' : 'action-btn--primary']" @click="copy">{{ t('share.copy') }}</button>
-                    <button v-if="canSavePicture" type="button" class="action-btn action-btn--secondary publication-share-link-picture" :disabled="pictureState === 'drawing'" @click="savePicture">{{ t('share.savePicture') }}</button>
-                    <button v-if="embed" type="button" class="action-btn action-btn--secondary publication-share-link-embed" :aria-expanded="embedOpen ? 'true' : 'false'" @click="toggleEmbed">{{ t('share.embed') }}</button>
+                    <template v-if="!compact">
+                        <button v-if="canSavePicture" type="button" class="action-btn action-btn--secondary publication-share-link-picture" :disabled="pictureState === 'drawing'" @click="savePicture">{{ t('share.savePicture') }}</button>
+                        <button v-if="embed" type="button" class="action-btn action-btn--secondary publication-share-link-embed" :aria-expanded="embedOpen ? 'true' : 'false'" @click="toggleEmbed">{{ t('share.embed') }}</button>
+                    </template>
                     <span class="publication-share-link-feedback" role="status">{{ feedback }}</span>
                 </div>
-                <input class="publication-share-link-url" readonly :value="share.url" :aria-label="t('share.linkLabel')" @focus="$event.target.select()">
-                <p class="form-hint form-hint--neutral">
-                    {{ share.hint }}
-                    <template v-if="share.note">{{ ' ' + share.note }}</template>
-                </p>
+                <details v-if="compact" class="publication-share-more">
+                    <summary>{{ t('share.moreWays') }}</summary>
+                    <div class="publication-share-link-actions">
+                        <button v-if="canSavePicture" type="button" class="action-btn action-btn--secondary publication-share-link-picture" :disabled="pictureState === 'drawing'" @click="savePicture">{{ t('share.savePicture') }}</button>
+                        <button v-if="embed" type="button" class="action-btn action-btn--secondary publication-share-link-embed" :aria-expanded="embedOpen ? 'true' : 'false'" @click="toggleEmbed">{{ t('share.embed') }}</button>
+                    </div>
+                    <input class="publication-share-link-url" readonly :value="share.url" :aria-label="t('share.linkLabel')" @focus="$event.target.select()">
+                    <p class="form-hint form-hint--neutral">
+                        {{ share.hint }}
+                        <template v-if="share.note">{{ ' ' + share.note }}</template>
+                    </p>
+                </details>
+                <template v-else>
+                    <input class="publication-share-link-url" readonly :value="share.url" :aria-label="t('share.linkLabel')" @focus="$event.target.select()">
+                    <p class="form-hint form-hint--neutral">
+                        {{ share.hint }}
+                        <template v-if="share.note">{{ ' ' + share.note }}</template>
+                    </p>
+                </template>
                 <div v-if="embed && embedOpen" class="publication-share-embed">
                     <textarea class="publication-share-embed-code" readonly rows="3" :value="embed" :aria-label="t('share.embedLabel')" @focus="$event.target.select()"></textarea>
                     <div class="publication-share-link-actions">

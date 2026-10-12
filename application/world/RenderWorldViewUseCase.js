@@ -1,6 +1,7 @@
 import { Renderer } from '../../renderer/Renderer.js';
 import { WorldRenderer } from '../../renderer/WorldRenderer.js';
 import { ClaimedBuildGhostRenderer } from '../../renderer/ClaimedBuildGhostRenderer.js';
+import { CutawayClipping } from '../../renderer/CutawayClipping.js';
 import { PickingService } from '../../renderer/PickingService.js';
 import { AvatarPickingService } from '../../renderer/AvatarPickingService.js';
 import { SpatialSelectionRenderer } from '../../renderer/SpatialSelectionRenderer.js';
@@ -63,7 +64,12 @@ export class RenderWorldViewUseCase {
         const claimedBuildGhostRenderer = new ClaimedBuildGhostRenderer(renderer, registry);
         // The challenge plaza's exhibits (core/ChallengePlaza.js): drawn like a
         // claimed build, but solid.
-        const plazaExhibitRenderer = new ClaimedBuildGhostRenderer(renderer, registry, { translucent: false });
+        // Inside a build, what is above the avatar's head is cut away
+        // (core/IndoorView.js, renderer/CutawayClipping.js): the Worlds' own
+        // bricks, their placed structures and the plaza's exhibits.
+        const cutawayClipping = new CutawayClipping();
+        worldRenderer.useCutaway(cutawayClipping);
+        const plazaExhibitRenderer = new ClaimedBuildGhostRenderer(renderer, registry, { translucent: false, cutawayClipping });
         renderer.start();
         const pickingService = new PickingService(
             renderer.camera,
@@ -76,7 +82,9 @@ export class RenderWorldViewUseCase {
             // stays a distinct registry rather than merged in. Mirrors
             // application/world/RenderWorldUseCase.js's identical wiring for
             // the Editor.
-            worldRenderer.placementMeshRegistry
+            worldRenderer.placementMeshRegistry,
+            // Indoors, a click goes past the cut-away roof into the room.
+            { cutawayClipping }
         );
         // 0.2.39 — a completely separate raycast target set from
         // pickingService above; see docs/Principles.md, "Avatars Are
@@ -377,6 +385,9 @@ export class RenderWorldViewUseCase {
             removeWorld: (world, documentId) => worldRenderer.removeWorld(world, documentId),
             showClaimedBuild: (key, world, position) => claimedBuildGhostRenderer.show(key, world, position),
             hideClaimedBuild: (key) => claimedBuildGhostRenderer.hide(key),
+            // What is cut away above someone's head inside a build
+            // (core/IndoorView.js), in world coordinates; null for none.
+            setCutaway: (cutaway) => cutawayClipping.set(cutaway),
             showPlazaExhibit: (key, world, position) => plazaExhibitRenderer.show(key, world, position),
             hidePlazaExhibit: (key) => plazaExhibitRenderer.hide(key),
             selectBrick: (brickId) => spatialSelectionRenderer.select(brickId),

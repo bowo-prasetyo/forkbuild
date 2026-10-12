@@ -346,6 +346,35 @@ check out as above; anything else is 404, and a `format` other than `json`
 is 501. The `/b/` page of such a build names it with
 `<link rel="alternate" type="application/json+oembed">`.
 
+### Build notes
+
+A build note sends a Publication and its snapshot to everyone over Nostr,
+with no wallet or extension (core/BuildNote.js,
+application/buildNotes/). It is a NIP-78 event carrying a link-only
+payload (above):
+
+    kind    = 30078                                   (replaceable per key and `d`)
+    tags    = [ ["d", "forkbuild-build:<publicationId>"],
+                ["t", "forkbuild-build"],
+                ["t", "forkbuild-tag:<tag>"] …          (one per build tag)
+                ["alt", "A ForkBuild build, signed by its builder"] ]
+    content = JSON { "v": 1, "payload": "<link-only payload>",
+                     "placement": <PlacementRecord JSON, signed> }  (placement optional)
+
+`v` is the format version; a reader refuses any other. The payload is at
+most 48,000 characters (about 2,000 bricks). The event is signed (NIP-01,
+BIP-340) with the sending device's *carrier key*
+(nostr/AppNostrSigner.js), a secp256k1 key kept on that device; it is not
+an identity and is trusted for nothing. A reader asks its relays for
+`{"kinds":[30078],"#t":["forkbuild-build"]}` (or one week's
+`forkbuild-tag:<tag>`), keeps the newest note per Publication, drops any
+whose Nostr signature fails, and opens each payload as a link-only share,
+after checking that the claim inside has the id the `d` tag names. The
+claim's own signature and the snapshot's hash decide, as for any link. A
+`placement`, when present, goes to AdoptPublisherPlacementUseCase, which
+keeps it only if the Publication's publisher signed it. A challenge entry
+is logged under a week's tag only when the snapshot itself carries that tag.
+
 ## Signatures
 
 Every signed object is signed over a canonical envelope built in fixed
@@ -396,6 +425,19 @@ Delegation is signed like every other record, under the signature type
 `delegation`, over `{ id, issuer, delegate, issuedFor, action, subject,
 constraints, expiresAt, issuedAt, nonce, parentDelegationId }` with
 `revision` 1, and is valid only with the key its issuer's did:key encodes.
+
+Where a publish first places a world is the publisher's choice, not part of
+the protocol: a reader only adopts the signed record. ForkBuild's own choice
+(application/placement/SettledPlacementStrategy.js, core/BuildSettlement.js)
+is a Build here plot when there is one; else the position an earlier
+Publication of the same world already has; else a free spot on a ring 18 or
+36 units round the world it remixes; else the first free spot of the
+village round the challenge plaza (rings from 56 units out, 22 apart, spots
+20 apart, each ring walked from a slot chosen by the Publication id's
+FNV-1a hash, skipping water, rock, rivers, trees and the 48 units round the
+plaza where its ready-made builds stand, core/StarterVillage.js; builds
+published before 2026-10-12's Release F settled from 90 out); else
+the id-keyed grid (core/DeterministicGridPlacement.js), as before.
 
 ## Rendezvous
 

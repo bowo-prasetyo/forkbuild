@@ -58,51 +58,56 @@ const ROOF_COLOR = 0xd08a3e;
 const OAK = 0x8b5a2b;
 const STONE = 0x9a9a9a;
 
+// Home's starter (application/home/FeaturedBuilds.js): a house worth walking
+// into (docs/reviews/CreativeDirection-2026-10-12.md, finding 3). A 6x6
+// room, furnished: a table and bench in the middle, a bed along the west
+// wall, a hearth under the chimney on the north wall, a shelf on the east
+// wall and a barrel by the door, with room to walk round them all.
+const HOUSE_HALF = 3;
 const houseBricks = [
-    // Floor — one slab_4x4, top surface at y = 0.25.
-    b('core:slab_4x4', 0, 0.125, 0),
+    // Floor — nine plate_2x2, top surface at y = 0.25.
+    ...[-2, 0, 2].flatMap((x) => [-2, 0, 2].map((z) => b('core:plate_2x2', x, 0.125, z, 0, OAK))),
 
-    // South (front) wall — three wall_1x3 segments, one gap left open
-    // for the door.
-    b('core:wall_1x3', -1.5, 1.75, -2),
-    b('core:wall_1x3', 0.5, 1.75, -2),
-    b('core:wall_1x3', 1.5, 1.75, -2),
-    b('core:door', -0.5, 1.25, -2),
+    // South (front) wall — six wall_1x3 segments but one, left open for the
+    // door, and a small window to the right of it.
+    ...[-2.5, -1.5, 0.5, 1.5, 2.5].map((x) => b('core:wall_1x3', x, 1.75, -HOUSE_HALF)),
+    b('core:door', -0.5, 1.25, -HOUSE_HALF),
+    b('core:window_small', 1.5, 1.75, -HOUSE_HALF),
     // The doorstep: level with the floor, so the door opens onto it.
-    b('core:plate_1x1', -0.5, 0.125, -2.5, 0, STONE),
+    b('core:plate_1x1', -0.5, 0.125, -HOUSE_HALF - 0.5, 0, STONE),
 
-    // North (back) wall — four full segments plus a large window.
-    b('core:wall_1x3', -1.5, 1.75, 2),
-    b('core:wall_1x3', -0.5, 1.75, 2),
-    b('core:wall_1x3', 0.5, 1.75, 2),
-    b('core:wall_1x3', 1.5, 1.75, 2),
-    b('core:window_large', 0, 1.75, 2),
+    // North (back) wall — six segments plus a large window.
+    ...[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5].map((x) => b('core:wall_1x3', x, 1.75, HOUSE_HALF)),
+    b('core:window_large', -1, 1.75, HOUSE_HALF),
 
-    // East wall — four segments plus a small window, rotated 90° so
-    // the wall's own width axis runs along Z instead of X.
-    b('core:wall_1x3', 2, 1.75, -1.5, 90),
-    b('core:wall_1x3', 2, 1.75, -0.5, 90),
-    b('core:wall_1x3', 2, 1.75, 0.5, 90),
-    b('core:wall_1x3', 2, 1.75, 1.5, 90),
-    b('core:window_small', 2, 1.75, 0, 90),
+    // East and west walls — six segments each, rotated 90° so the wall's
+    // width runs along Z, each with a small window.
+    ...[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5].map((z) => b('core:wall_1x3', HOUSE_HALF, 1.75, z, 90)),
+    b('core:window_small', HOUSE_HALF, 1.75, 0.5, 90),
+    ...[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5].map((z) => b('core:wall_1x3', -HOUSE_HALF, 1.75, z, 90)),
+    b('core:window_small', -HOUSE_HALF, 1.75, -0.5, 90),
 
-    // West wall — mirrored.
-    b('core:wall_1x3', -2, 1.75, -1.5, 90),
-    b('core:wall_1x3', -2, 1.75, -0.5, 90),
-    b('core:wall_1x3', -2, 1.75, 0.5, 90),
-    b('core:wall_1x3', -2, 1.75, 1.5, 90),
-    b('core:window_small', -2, 1.75, 0, 90),
+    // Hipped roof — one roof_hip_6x6 over the 6x6 footprint; the walls top
+    // out at y = 3.25.
+    b('core:roof_hip_6x6', 0, 4.5, 0),
 
-    // Hipped roof — four roof_hip caps tiled 2x2 to cover the 4x4
-    // footprint, walls top out at y = 3.25.
-    b('core:roof_hip', -1, 4.0, -1),
-    b('core:roof_hip', -1, 4.0, 1),
-    b('core:roof_hip', 1, 4.0, -1),
-    b('core:roof_hip', 1, 4.0, 1),
+    // Chimney — a brick stack rising through the north-east roof cap, in
+    // its middle, so its foot is below the slope all round and it never
+    // floats above the roof.
+    b('core:chimney', 2, 4.5, 2),
 
-    // Chimney — a brick stack rising through the south-east roof cap, its
-    // foot below the slope all round so it never floats above the roof.
-    b('core:chimney', 1.25, 4.5, -1.25)
+    // Inside. The hearth stands against the north wall under the chimney,
+    // open to the room.
+    b('core:hearth', 2, 1.0, HOUSE_HALF - 0.125 - 0.375),
+    // A table in the middle with a bench along its south side.
+    b('core:table', 0, 0.65, 0.25),
+    b('core:bench', 0, 0.5, -0.75),
+    // The bed along the west wall, its headboard to the north.
+    b('core:bed', -HOUSE_HALF + 0.125 + 0.5, 0.6, 1.625),
+    // A shelf against the east wall, its back to the wall.
+    b('core:shelf', HOUSE_HALF - 0.125 - 0.2, 1.0, -1.5, 90),
+    // A barrel in the corner by the door.
+    b('core:barrel', -2.35, 0.75, -2.35)
 ];
 
 const barnBricks = [
@@ -116,11 +121,8 @@ const barnBricks = [
     b('core:beam', 0, 2.25, -1),
     b('core:beam', 0, 2.25, 1),
 
-    // Hipped roof, same 2x2 tiling the house uses.
-    b('core:roof_hip', -1, 3.25, -1),
-    b('core:roof_hip', -1, 3.25, 1),
-    b('core:roof_hip', 1, 3.25, -1),
-    b('core:roof_hip', 1, 3.25, 1)
+    // A hipped roof over the whole frame.
+    b('core:roof_hip_4x4', 0, 3.5, 0)
 ];
 
 const wellBricks = [
@@ -140,7 +142,10 @@ const wellBricks = [
     b('core:column', 1, 2.5, 0),
 
     // An arch spans the two columns as the well-house's own lintel.
-    b('core:arch', 0, 5.0, 0)
+    b('core:arch', 0, 5.0, 0),
+
+    // A little gable roof over the lintel, its ridge running east-west.
+    b('core:roof_gable_2x4', 0, 6.5, 0, 90)
 ];
 
 const marketBricks = [
@@ -157,10 +162,7 @@ const marketBricks = [
     b('core:beam', 1.5, 3.25, 0, 90),
 
     // Hipped roof over the frame.
-    b('core:roof_hip', -1, 4.25, -1),
-    b('core:roof_hip', -1, 4.25, 1),
-    b('core:roof_hip', 1, 4.25, -1),
-    b('core:roof_hip', 1, 4.25, 1),
+    b('core:roof_hip_4x4', 0, 4.5, 0),
 
     // Decorative trim along the beam edges.
     b('core:trim', 0, 3.625, -1.5),
@@ -229,7 +231,7 @@ const bridgeBricks = [
 // a single door and a single window rather than one on every wall, and a
 // gable roof built from core:slope_45 — the primitive's first use
 // anywhere in this library — running its ridge lengthwise instead of
-// House's hipped pyramid. Also core:plate_2x4's first use as a floor.
+// House's hipped roof. Also core:plate_2x4's first use as a floor.
 const cottageBricks = [
     b('core:plate_2x4', 0, 0.125, 0),
 
@@ -328,16 +330,12 @@ const largeHouseBricks = [
     b('core:wall_1x3', -3, 5.0, 1.5, 90),
     b('core:window_small', -3, 5.0, 0.5, 90),
 
-    // Hipped roof, 3x2 tiling over the 6x4 footprint.
-    b('core:roof_hip', -2, 7.25, -1),
-    b('core:roof_hip', -2, 7.25, 1),
-    b('core:roof_hip', 0, 7.25, -1),
-    b('core:roof_hip', 0, 7.25, 1),
-    b('core:roof_hip', 2, 7.25, -1),
-    b('core:roof_hip', 2, 7.25, 1),
+    // Hipped roof over the 6x4 footprint: a roof_hip_4x6 turned so its
+    // ridge runs east-west.
+    b('core:roof_hip_4x6', 0, 7.5, 0, 90),
 
-    // Chimney — through the south-east cap, as on House.
-    b('core:chimney', 2.25, 7.75, -1.25)
+    // Chimney — through the south-east slope, as on House.
+    b('core:chimney', 2.25, 7.5, -1.25)
 ];
 
 // Tool Shed — deliberately tiny: an open, doorless front (a lean-to,
@@ -450,10 +448,7 @@ const granaryBricks = [
     b('core:wall_1x3', -2, 4.75, 0.5, 90),
     b('core:wall_1x3', -2, 4.75, 1.5, 90),
 
-    b('core:roof_hip', -1, 7.0, -1),
-    b('core:roof_hip', -1, 7.0, 1),
-    b('core:roof_hip', 1, 7.0, -1),
-    b('core:roof_hip', 1, 7.0, 1)
+    b('core:roof_hip_4x4', 0, 7.25, 0)
 ];
 
 // Silo — a tall, slender, sealed agricultural tower: two block_2x2
@@ -523,18 +518,10 @@ const villageHallBricks = [
     b('core:wall_1x3', -3, 1.5, 2.5, 90),
     b('core:window_large', -3, 1.5, 0, 90),
 
-    b('core:roof_hip', -2, 3.75, -2),
-    b('core:roof_hip', -2, 3.75, 0),
-    b('core:roof_hip', -2, 3.75, 2),
-    b('core:roof_hip', 0, 3.75, -2),
-    b('core:roof_hip', 0, 3.75, 0),
-    b('core:roof_hip', 0, 3.75, 2),
-    b('core:roof_hip', 2, 3.75, -2),
-    b('core:roof_hip', 2, 3.75, 0),
-    b('core:roof_hip', 2, 3.75, 2),
+    b('core:roof_hip_6x6', 0, 4.25, 0),
 
-    // The cupola: two wall-coloured cubes rising from inside the centre
-    // cap, so it stands in the roof rather than balancing on its peak, and
+    // The cupola: two wall-coloured cubes rising from inside the roof's
+    // peak, so it stands in the roof rather than balancing on its peak, and
     // a cap of its own.
     b('core:cube', 0, 4.25, 0, 0, HALL_WALL),
     b('core:cube', 0, 5.25, 0, 0, HALL_WALL),
@@ -551,10 +538,7 @@ const pavilionBricks = [
     b('core:column', -1.5, 1.5, 1.5),
     b('core:column', 1.5, 1.5, 1.5),
 
-    b('core:roof_hip', -1, 3.75, -1),
-    b('core:roof_hip', -1, 3.75, 1),
-    b('core:roof_hip', 1, 3.75, -1),
-    b('core:roof_hip', 1, 3.75, 1)
+    b('core:roof_hip_4x4', 0, 4.0, 0)
 ];
 
 // Small Chapel — a narrow, tall community building: a full-width
@@ -796,7 +780,7 @@ export const VillageLibrary = {
             name: 'House',
             category: 'residential',
             tags: ['house', 'residential', 'dwelling'],
-            description: 'A small hipped-roof cottage with a raised entry step, a chimney, a door, and windows on every wall.',
+            description: 'A hipped-roof house with a doorstep, a chimney and windows on every wall, furnished inside with a table and bench, a bed, a hearth, a shelf and a barrel.',
             bricks: houseBricks
         }),
         new Structure({
@@ -924,7 +908,7 @@ export const VillageLibrary = {
             name: 'Well',
             category: 'infrastructure',
             tags: ['well', 'infrastructure'],
-            description: 'A stone well ring with two columns supporting an arched well-house frame.',
+            description: 'A stone well ring with two columns supporting an arched well-house frame under a little gable roof.',
             bricks: wellBricks
         }),
         new Structure({

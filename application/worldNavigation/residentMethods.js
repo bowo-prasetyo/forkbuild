@@ -72,9 +72,11 @@ export const residentMethods = {
                 maxStepHeight: DEFAULT_MAX_STEP_HEIGHT,
                 structureResolver: this._structureResolver
             });
+            // The loaded Worlds and the plaza's exhibits (_solidDocuments()),
+            // so a ready-made home in the plaza is lived in too.
             this._residentRuntimeInstance = new ResidentRuntime({
-                loadedDocuments: this._loadedDocuments,
-                getWorldPosition: (documentId) => this._getWorldPosition(documentId),
+                loadedDocuments: this._solidDocuments(),
+                getWorldPosition: (documentId) => this._solidWorldPosition(documentId),
                 obstaclesNear: (position) => obstacles.obstaclesNear(position, {
                     supportHeight: 0,
                     avatarRadius: RESIDENT_COLLISION_RADIUS

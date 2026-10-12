@@ -62,7 +62,11 @@ export function visitorCountHitUrl(random) {
 // challenge joined, and its plaza visited; a "Walk here with me" link made,
 // and a friend arriving through one; a "Build with me" link made, and a
 // friend joining through one; a build published crediting friends who built
-// it together; and, when
+// it together; a build published and sent to everyone, or kept to its link
+// (each publish, core/BuildNote.js); World View opened, and someone else's
+// build seen there (once a visit); each kept side system used (once a page
+// load: swimming, an animal caught or decorated with, the inventory, chat,
+// voice, a public lobby); and, when
 // a build is first published from this device, roughly how many bricks it
 // has, whether it is this device's second build, and whether it remixes
 // someone else's (publishedBuildEvents below).
@@ -93,7 +97,27 @@ export const FunnelEvent = Object.freeze({
     WALK_JOINED: 'walk-joined',
     BUILD_LINK: 'build-link',
     BUILD_JOINED: 'build-joined',
-    PUBLISH_TOGETHER: 'publish-together'
+    PUBLISH_TOGETHER: 'publish-together',
+    PUBLISH_FOUND: 'publish-found',
+    PUBLISH_LINK_ONLY: 'publish-link-only',
+    // World View opened, and, once a visit, someone else's build standing in
+    // view there (docs/reviews/CreativeDirection-2026-10-12b.md, finding 1):
+    // the village's ready-made builds don't count, a build published by this
+    // device or open for it to edit neither.
+    WORLD_VISIT: 'world-visit',
+    WORLD_NEIGHBOUR: 'world-neighbour',
+    // The side systems the owner kept (docs/Pillars.md, "The side systems";
+    // core/SideSystemUse.js), each at most once a page load: in the water,
+    // an animal caught, one decorated with (G), something carried (an animal
+    // or a stored vehicle), a chat message sent, a voice call made or
+    // answered, a public lobby joined.
+    SWAM: 'swam',
+    ANIMAL_CAUGHT: 'animal-caught',
+    ANIMAL_DECORATED: 'animal-decorated',
+    INVENTORY_USED: 'inventory-used',
+    CHAT_SENT: 'chat-sent',
+    VOICE_CALL: 'voice-call',
+    LOBBY_JOINED: 'lobby-joined'
 });
 
 const FUNNEL_EVENTS = new Set(Object.values(FunnelEvent));

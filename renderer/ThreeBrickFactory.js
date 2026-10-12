@@ -57,6 +57,42 @@ function hipRoofGeometry(width, depth, height) {
     };
 }
 
+// A hipped roof over a whole footprint — core:roof_hip_4x4, _4x6 and _6x6:
+// four slopes rising from the eaves to a ridge along the longer side,
+// shortened by the shorter side so every slope has the same pitch; over a
+// square the ridge is a point. One closed shape, flat-shaded, base at
+// -height/2.
+function hippedRoofGeometry(width, depth, height) {
+    return () => {
+        const x = width / 2;
+        const z = depth / 2;
+        const y0 = -height / 2;
+        const y1 = height / 2;
+        const ridgeX = Math.max(0, (width - depth) / 2);
+        const ridgeZ = Math.max(0, (depth - width) / 2);
+        const corners = [[-x, y0, -z], [x, y0, -z], [x, y0, z], [-x, y0, z]];
+        const ridgeA = [-ridgeX, y1, -ridgeZ];
+        const ridgeB = [ridgeX, y1, ridgeZ];
+        const [sw, se, ne, nw] = corners;
+        const triangles = [
+            // South and north slopes, east and west ends (each wound to face out).
+            [sw, ridgeA, se], [se, ridgeA, ridgeB],
+            [ne, ridgeB, nw], [nw, ridgeB, ridgeA],
+            [se, ridgeB, ne], [nw, ridgeA, sw],
+            // The underside.
+            [sw, se, ne], [sw, ne, nw]
+        ].filter(([a, b, c]) => !(same(a, b) || same(b, c) || same(a, c)));
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(triangles.flat(2), 3));
+        geometry.computeVertexNormals();
+        return geometry;
+    };
+}
+
+function same(a, b) {
+    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+}
+
 // A stepped ascending profile, extruded along depth — core:stair. Built
 // from a single THREE.Shape (outline traced along the top of each tread,
 // then straight back down the riser face and along the base) rather than
@@ -335,6 +371,82 @@ function benchGeometry(width, height, depth) {
     };
 }
 
+// Boxes joined into one shape, each `[width, height, depth, x, y, z]` with
+// x, y, z its middle measured from the brick's bottom-front-left corner;
+// the result is centered like every other brick. For furniture.
+function boxesGeometry(width, height, depth, parts) {
+    return () => {
+        const positions = [];
+        const normals = [];
+        const uvs = [];
+        for (const [w, h, d, x, y, z] of parts) {
+            const part = new THREE.BoxGeometry(w, h, d).toNonIndexed();
+            part.translate(x - width / 2, y - height / 2, z - depth / 2);
+            positions.push(...part.getAttribute('position').array);
+            normals.push(...part.getAttribute('normal').array);
+            uvs.push(...part.getAttribute('uv').array);
+            part.dispose();
+        }
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+        geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+        return geometry;
+    };
+}
+
+// A top on four legs — core:table.
+function tableGeometry(width, height, depth) {
+    const top = 0.1;
+    const leg = 0.1;
+    const legHeight = height - top;
+    const parts = [[width, top, depth, width / 2, height - top / 2, depth / 2]];
+    for (const x of [leg / 2 + 0.05, width - leg / 2 - 0.05]) {
+        for (const z of [leg / 2 + 0.05, depth - leg / 2 - 0.05]) parts.push([leg, legHeight, leg, x, legHeight / 2, z]);
+    }
+    return boxesGeometry(width, height, depth, parts);
+}
+
+// A frame, a mattress and a headboard at the back (far end of the depth) — core:bed.
+function bedGeometry(width, height, depth) {
+    const headboard = 0.1;
+    return boxesGeometry(width, height, depth, [
+        [width, 0.25, depth - headboard, width / 2, 0.125, (depth - headboard) / 2],
+        [width - 0.1, 0.2, depth - headboard - 0.1, width / 2, 0.35, (depth - headboard) / 2],
+        [width, height, headboard, width / 2, height / 2, depth - headboard / 2]
+    ]);
+}
+
+// A stone fireplace open at the front: a back, two cheeks and a mantel — core:hearth.
+function hearthGeometry(width, height, depth) {
+    const back = 0.25;
+    const cheek = 0.3;
+    const opening = height * 0.6;
+    return boxesGeometry(width, height, depth, [
+        [width, height, back, width / 2, height / 2, depth - back / 2],
+        [cheek, opening, depth - back, cheek / 2, opening / 2, (depth - back) / 2],
+        [cheek, opening, depth - back, width - cheek / 2, opening / 2, (depth - back) / 2],
+        [width, height - opening, depth - back, width / 2, opening + (height - opening) / 2, (depth - back) / 2]
+    ]);
+}
+
+// Two sides, a back and three boards — core:shelf.
+function shelfGeometry(width, height, depth, boards = 3) {
+    const side = 0.08;
+    const board = 0.06;
+    const back = 0.04;
+    const parts = [
+        [side, height, depth, side / 2, height / 2, depth / 2],
+        [side, height, depth, width - side / 2, height / 2, depth / 2],
+        [width - 2 * side, height, back, width / 2, height / 2, depth - back / 2]
+    ];
+    for (let i = 0; i < boards; i++) {
+        const y = board / 2 + (i * (height - board)) / (boards - 1);
+        parts.push([width - 2 * side, board, depth - back, width / 2, y, (depth - back) / 2]);
+    }
+    return boxesGeometry(width, height, depth, parts);
+}
+
 // Faceted round shapes scaled to their box — core:bush and core:rock.
 function polyhedronGeometry(PolyhedronGeometry, detail, [width, height, depth]) {
     return () => {
@@ -387,6 +499,11 @@ const GEOMETRIES = new Map([
     ['core:roof_gable', gableGeometry(2, 1, 2)],
     ['core:roof_cone', coneGeometry(2, 2)],
     ['core:roof_ridge', gableGeometry(1, 0.5, 1)],
+    // Roofs that span a house (Make it yours, in the village, 2026-10-12).
+    ['core:roof_hip_4x4', hippedRoofGeometry(4, 4, 2)],
+    ['core:roof_hip_4x6', hippedRoofGeometry(4, 6, 2)],
+    ['core:roof_hip_6x6', hippedRoofGeometry(6, 6, 2.5)],
+    ['core:roof_gable_2x4', gableGeometry(2, 1, 4)],
     ['core:stair_wide', stairGeometry(1, 1, 2)],
     ['core:ladder', ladderGeometry(1, 3, 0.15)],
     ['core:window_frame', windowFrameGeometry(1, 1, 0.25)],
@@ -398,6 +515,10 @@ const GEOMETRIES = new Map([
     ['core:chimney', boxGeometry([0.75, 1.5, 0.75])],
     ['core:barrel', cylinderGeometry(0.8, 1)],
     ['core:bench', benchGeometry(2, 0.5, 0.5)],
+    ['core:table', tableGeometry(1.5, 0.8, 1)],
+    ['core:bed', bedGeometry(1, 0.7, 2)],
+    ['core:hearth', hearthGeometry(1.5, 1.5, 0.75)],
+    ['core:shelf', shelfGeometry(1, 1.5, 0.4)],
     ['core:bush', polyhedronGeometry(THREE.IcosahedronGeometry, 1, [1, 1, 1])],
     ['core:pine_tree', coneGeometry(1.5, 2.5, 8)],
     ['core:rock', polyhedronGeometry(THREE.DodecahedronGeometry, 0, [1, 1, 1])],

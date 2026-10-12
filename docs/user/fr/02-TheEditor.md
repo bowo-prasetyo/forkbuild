@@ -5,6 +5,10 @@
 [English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · **Français** · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../02-TheEditor.md).
+<!-- /stale -->
+
 L’Éditeur est l’endroit où vous construisez. Ce guide présente les outils,
 la façon de sélectionner et de transformer des briques, et comment
 organiser votre construction avec des groupes.
@@ -42,10 +46,13 @@ organiser votre construction avec des groupes.
   onglets :
   - **Briques** — tout ce que vous pouvez placer avec l’outil Placement,
     sous forme de vignettes réparties en six sections (Base, Structure,
-    Toits et escaliers, Ouvertures, Détails, Nature) : cinquante et une
+    Toits et escaliers, Ouvertures, Détails, Nature) : cinquante-neuf
     pièces, des demi-cubes, briques rondes et rondins aux toits à pignon et
-    coniques, cadres de fenêtre et œils-de-bœuf, clôtures, bancs, buissons,
-    sapins et une **Lanterne** qui s’allume la nuit dans la Vue du Monde
+    coniques, des toits en croupe qui couvrent toute une maison d’une seule
+    pièce (4x4, 4x6 et 6x6) et un long toit à pignon 2x4, cadres de fenêtre
+    et œils-de-bœuf, clôtures, bancs, buissons et sapins, des meubles pour
+    les pièces où l’on entre (une table, un lit, un âtre et une étagère,
+    dans Détails) et une **Lanterne** qui s’allume la nuit dans la Vue du Monde
     (voir [Le jour et la nuit](03-WorldView.md#le-jour-et-la-nuit)). Cliquez sur l’une d’elles
     pour la sélectionner (et passer à l’outil Placement) ; un nuancier
     **Couleur** apparaît alors pour choisir sa couleur — voir

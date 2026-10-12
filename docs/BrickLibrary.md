@@ -74,6 +74,23 @@ fence (panels with holes cut through, so they can be seen through), a
 double door, shutters, a small arch, a chimney, a barrel, a bench, and a
 new `nature` category (core:bush, core:pine_tree, core:rock,
 core:lawn_2x2) that the Build Library shows as its own Nature section.
+Furniture (2026-10-12, docs/reviews/CreativeDirection-2026-10-12.md,
+finding 3) brings it to fifty-four: core:table (a top on four legs),
+core:bed (a frame, mattress and headboard toward +z), core:hearth (a stone
+fireplace open toward -z, to stand against a wall under a chimney) and
+core:shelf (two sides, a back toward +z and three boards), each a few boxes
+joined into one geometry (renderer/ThreeBrickFactory.js, boxesGeometry())
+and colliding as its one box, in the decorative category and tagged
+`furniture`. The Village House is furnished with them.
+Spanning roofs (2026-10-12, docs/reviews/CreativeDirection-2026-10-12b.md,
+finding 4) bring it to fifty-eight: core:roof_hip_4x4, core:roof_hip_4x6
+and core:roof_hip_6x6 (four slopes of one pitch to a ridge along the longer
+side, a point over a square; renderer/ThreeBrickFactory.js,
+hippedRoofGeometry()) and core:roof_gable_2x4, each covering a whole
+building in one piece, tagged `spanning`. The village's houses, barn,
+granary, market, pavilion and hall, and the castle's keep, are roofed with
+them instead of grids of core:roof_hip caps (the Cottage and Chapel keep
+their rows of slopes, which are walked as slopes).
 Every one is still one primitive with one geometry, drawn at exactly its
 declared size (tests/BuildersKit.test.js). Any brick can also be tilted onto
 another side (core/BrickOrientation.js, docs/Protocol.md "Brick Tilt"), so
@@ -82,7 +99,7 @@ geometries need nothing for it. core/VillagePalette.js holds sixteen village col
 Build Library and the Selection Inspector offer beside the colour picker;
 a chosen swatch is an ordinary brick colour.
 
-Day and night (2026-10-12) adds the fifty-first, core:lantern: an
+Day and night (2026-10-12) adds the fifty-ninth, core:lantern: an
 eight-sided glass lantern, 0.75 × 1 × 0.75, in the decorative category. A
 BrickDefinition may say it shines after dark (`nightGlow`, core/NightGlow.js):
 the lantern in its own colour (`own-color`), and core:window_small and

@@ -41,6 +41,9 @@ export class Renderer {
         this._wildlifeObserver = () => null;
 
         this._webglRenderer = new THREE.WebGLRenderer({ antialias: true });
+        // Per-material clipping, which World View's cutaway uses
+        // (renderer/CutawayClipping.js); a material with no planes is unaffected.
+        this._webglRenderer.localClippingEnabled = true;
         this._webglRenderer.setPixelRatio(window.devicePixelRatio || 1);
         this._webglRenderer.setSize(container.clientWidth, container.clientHeight);
         container.appendChild(this._webglRenderer.domElement);

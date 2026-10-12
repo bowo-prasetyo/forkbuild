@@ -63,10 +63,14 @@ function serve(dir) {
     return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
 }
 
-// Every route the router defines, with each parameter filled in.
+// Every route the router defines, with each parameter filled in. A route
+// that only redirects (`/walk`) is left out: the page it opens has a route
+// of its own.
 function routePaths() {
     const source = readFileSync(join(root, 'ui/router/index.js'), 'utf8');
-    return [...new Set([...source.matchAll(/\{\s*path:\s*'([^']+)'/g)].map((m) => m[1].replace(/:[A-Za-z]+/g, 'bundle-test')))];
+    return [...new Set([...source.matchAll(/\{\s*path:\s*'([^']+)'([^\n]*)/g)]
+        .filter((m) => !/\bredirect:/.test(m[2]))
+        .map((m) => m[1].replace(/:[A-Za-z]+/g, 'bundle-test')))];
 }
 
 async function openEveryPage(browser, base, paths) {
@@ -113,6 +117,24 @@ async function startFromHome(browser, base) {
         const editorText = await page.evaluate(() => document.body.innerText);
         assert(editorText.includes('Remixed from House') && !editorText.includes('village:house'),
             'the Editor says the copy came from the built-in House, by its name rather than its id');
+        // With a job left to do: no roof yet. Pick the roof, and one real
+        // click on the middle of the house puts it on the walls.
+        await page.waitForSelector('.starter-job:not(.starter-job--done)', { timeout: 10_000 });
+        assert((await page.textContent('.starter-job-title')).includes('give it a roof'), 'the House arrives with its roof to do');
+        await page.click('.starter-job-pick');
+        assert(await page.$eval('.tool-switcher--editor .tool-btn:nth-child(2)', (button) => button.classList.contains('tool-btn--active')), 'Pick the roof turns Place on');
+        const viewport = await page.$eval('.viewport', (element) => { const r = element.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+        await page.mouse.move(viewport.x - 20, viewport.y - 20);
+        await page.mouse.move(viewport.x, viewport.y, { steps: 4 });
+        await page.mouse.down();
+        await page.mouse.up();
+        await page.waitForSelector('.starter-job--done', { timeout: 10_000 });
+        assert((await page.textContent('.starter-job-title')).includes('yours now'), 'a roof on, the House is the builder\'s');
+        // See inside cuts it away above the ground floor, and back.
+        await page.click('.editor-see-inside');
+        assert(await page.getAttribute('.editor-see-inside', 'aria-pressed') === 'true', 'See inside is on');
+        await page.click('.editor-see-inside');
+        assert(await page.getAttribute('.editor-see-inside', 'aria-pressed') === 'false', 'and off again');
 
         // New offers the same builds: the castle opens as the visitor's own copy.
         await page.click('.toolbar-new');
@@ -122,6 +144,8 @@ async function startFromHome(browser, base) {
         assert(!(await page.$('.new-document-dialog')), 'New closes once a build is chosen');
 
         // Download as a 3D model: a glTF binary named after the build.
+        // Under the toolbar's File menu, with Export and Import.
+        await page.click('.toolbar-file-toggle');
         await page.click('.toolbar-export-model');
         await page.waitForSelector('.model-export-dialog', { timeout: 10_000 });
         const [glb] = await Promise.all([page.waitForEvent('download', { timeout: 30_000 }), page.click('.model-export-option[data-format="glb"]')]);
@@ -200,6 +224,9 @@ async function walkThePlaza(browser, base) {
         await page.click('.toolbar-publish');
         await page.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
         await page.click('.remix-permission-allow');
+        // Who can find it? is asked once per device; an unsigned build can only travel by link.
+        await page.waitForSelector('.findability-dialog', { timeout: 10_000 });
+        await page.click('.findability-link');
         await page.waitForSelector('.login-modal-purpose', { timeout: 10_000 });
         await page.click('.login-modal-skip');
         await page.waitForSelector('.editor-post-publish-share', { timeout: 60_000 });
@@ -208,7 +235,9 @@ async function walkThePlaza(browser, base) {
         await page.waitForSelector('.challenge-plaza-link', { timeout: 60_000 });
         await page.click('.challenge-plaza-link');
         await page.waitForSelector('.world-view-plaza-exhibit', { timeout: 60_000 });
-        assert(await page.locator('.world-view-plaza-exhibit').count() === 1, 'the entry stands in the plaza');
+        assert(await page.locator('.world-view-plaza-exhibit:not(.world-view-plaza-ready-made)').count() === 1, 'the entry stands in the plaza');
+        await page.waitForSelector('.world-view-plaza-ready-made', { timeout: 60_000 });
+        assert(await page.locator('.world-view-plaza-ready-made').count() === 6, 'and, with so few entries, the ready-made builds round the square');
         await page.click('.world-view-plaza-focus');
         await page.waitForTimeout(4000);
         assert(/^#\/plaza\/\d{4}-\d{2}-\d{2}$/.test(await page.evaluate(() => location.hash)), 'World View stays on the plaza');
@@ -411,7 +440,7 @@ async function openEmbed(browser, base, payload) {
     }
 }
 
-// A newcomer's first visit to the published build: five pages in the nav and
+// A newcomer's first visit to the published build: six pages in the nav and
 // the rest under More (laid out open in a phone's Menu); the guided first build
 // in the Editor, which folds, hides for good and comes back from the command
 // palette; and Publish asking to log in first, then publishing signed with a
@@ -423,7 +452,17 @@ async function firstVisit(browser, base) {
         await page.goto(`${base}/#/`);
         await page.waitForSelector('.home-view', { timeout: 60_000 });
         const topLinks = await page.$$eval('.app-nav > .app-nav-link', (links) => links.map((link) => link.getAttribute('href')));
-        assert(topLinks.join() === '#/,#/editor,#/repository,#/challenge,#/worlds/recent', `the nav shows five pages before More (${topLinks})`);
+        assert(topLinks.join() === '#/,#/editor,#/repository,#/challenge,#/walk,#/worlds/recent', `the nav shows six pages before More (${topLinks})`);
+        const navNames = await page.$$eval('.app-nav > .app-nav-link', (links) => links.map((link) => link.textContent.trim()));
+        assert(navNames.join() === 'Home,Build,Explore,Challenge,Walk,My Worlds', `in the player's words (${navNames})`);
+        // Walk opens this week's plaza, with the ready-made builds round it.
+        await page.click('.app-nav > a[href="#/walk"]');
+        await page.waitForFunction(() => location.hash.startsWith('#/plaza/'), null, { timeout: 30_000 });
+        await page.waitForSelector('.world-view-plaza-ready-made', { timeout: 60_000 });
+        assert(await page.$$eval('.world-view-plaza-ready-made', (rows) => rows.length) === 6, 'the six ready-made builds stand round the plaza');
+        assert(await page.$eval('.app-nav > a[href="#/walk"]', (link) => link.classList.contains('router-link-active')), 'Walk is marked on the plaza');
+        await page.evaluate(() => { location.hash = '#/'; });
+        await page.waitForSelector('.home-view', { timeout: 60_000 });
         assert(!(await page.isVisible('.app-nav-more-panel')), 'More starts closed');
         await page.click('.app-nav-more-toggle');
         assert(await page.isVisible('.app-nav-more-panel a[href="#/peers"]'), 'More holds the rest');
@@ -436,6 +475,29 @@ async function firstVisit(browser, base) {
         await page.waitForSelector('.first-build-guide', { timeout: 60_000 });
         const current = await page.$eval('.first-build-step--current', (step) => step.dataset.step);
         assert(current === 'place-brick', `the guide starts at placing a brick (${current})`);
+        // Place, with no brick picked, and a real mouse: the first click
+        // places a cube, and a second on top of it stacks another.
+        await page.click('.tool-switcher--editor .tool-btn:nth-child(2)');
+        const middle = await page.$eval('.viewport', (element) => { const r = element.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height * 0.6 }; });
+        await page.mouse.move(middle.x - 30, middle.y);
+        await page.mouse.move(middle.x, middle.y, { steps: 4 });
+        await page.mouse.down();
+        await page.mouse.up();
+        await page.waitForSelector('.first-build-step--done[data-step="place-brick"]', { timeout: 10_000 });
+        assert(await page.$eval('.palette-item--active', (item) => item.textContent.includes('Cube')), 'the Build Library shows the Cube chosen');
+        // The cube stands on the ground point that was clicked
+        // (renderer/EditorFloor.js), so its top is just above the pointer:
+        // a click a few pixels higher lands on it. (When the ground was
+        // picked below the build's floor, the cube was drawn about 120
+        // pixels above the pointer, and these clicks all missed it.)
+        let stacked = false;
+        for (let up = 4; up <= 40 && !stacked; up += 4) {
+            await page.mouse.move(middle.x, middle.y - up, { steps: 2 });
+            await page.mouse.down();
+            await page.mouse.up();
+            stacked = await page.waitForSelector('.first-build-step--done[data-step="stack"]', { timeout: 1500 }).then(() => true, () => false);
+        }
+        assert(stacked, 'a click on the cube\'s top stacks another on it');
         await page.click('.first-build-icon-btn');
         await page.waitForSelector('.first-build-guide-pill');
         await page.click('.first-build-guide-pill');
@@ -451,6 +513,8 @@ async function firstVisit(browser, base) {
         await page.click('.toolbar-publish');
         await page.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
         await page.click('.remix-permission-look');
+        await page.waitForSelector('.findability-dialog', { timeout: 10_000 });
+        await page.click('.findability-link');
         await page.waitForSelector('.login-modal-purpose', { timeout: 10_000 });
         await page.click('.login-modal-skip');
         await page.waitForFunction(() => !document.querySelector('.login-modal-purpose'), null, { timeout: 10_000 });
@@ -479,24 +543,45 @@ async function firstVisit(browser, base) {
     try {
         await editor.goto(`${base}/#/editor?start=village:house`);
         await editor.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });
+        // Published untouched, the ready-made House is asked about once.
+        await editor.click('.toolbar-publish');
+        await editor.waitForSelector('.nothing-added-dialog', { timeout: 10_000 });
+        await editor.click('.nothing-added-keep');
+        assert(!(await editor.$('.nothing-added-dialog')) && !(await editor.$('.remix-permission-dialog')), 'Keep building publishes nothing');
         await editor.click('.toolbar-publish');
         await editor.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
         await editor.click('.remix-permission-allow');
+        // Who can find it? Everyone: the build is also sent to everyone as a build note.
+        await editor.waitForSelector('.findability-dialog', { timeout: 10_000 });
+        await editor.click('.findability-everyone');
         // A first publish on a new device asks only for a name.
         await editor.waitForSelector('.login-modal-quick', { timeout: 10_000 });
         assert(!(await editor.$('.login-modal-quick input[type="password"]')), 'a first publish asks for no passphrase');
         await editor.fill('.login-modal-quick-name', 'Bundle builder');
         await editor.click('.login-modal-quick-go');
-        await editor.waitForSelector('.editor-post-publish-share .publication-share-link-url', { timeout: 60_000 });
+        // One celebration: Copy link up front, the link itself and the rest under More ways to share.
+        await editor.waitForSelector('.editor-post-publish-share .publication-share-link-actions button:has-text("Copy link")', { timeout: 60_000 });
+        assert(!(await editor.isVisible('.editor-post-publish-share .publication-share-link-url')), 'the long link waits under More ways to share');
+        await editor.click('.editor-post-publish-share .publication-share-more summary');
+        await editor.waitForSelector('.editor-post-publish-share .publication-share-link-url', { timeout: 10_000 });
         const link = await editor.$eval('.editor-post-publish-share .publication-share-link-url', (input) => input.value);
         assert(link.includes('/b/1'), `a name is enough to publish it signed, with a link ready (${link.slice(0, 60)})`);
         assert((await editor.textContent('.user-widget')).includes('Bundle builder'), 'and leaves the new identity logged in');
-        assert(await editor.$('.editor-post-publish-protect .protect-identity-note-link'), 'and the Editor offers to add a passphrase');
+        // Sent to everyone, or (with no relay reachable from the test) said not to have reached them yet.
+        await editor.waitForFunction(() => /Anyone can find it now|couldn't reach everyone yet/.test(document.querySelector('.editor-post-publish-message')?.textContent || ''), null, { timeout: 60_000 });
+        // One celebration: a passphrase for the identity just made waits for the next publish.
+        assert(!(await editor.$('.editor-post-publish-protect .protect-identity-note-link')), 'the first publish of a new identity asks for no passphrase yet');
+        // Publishing keeps the build too: nothing reads Draft or Unsaved once it is out.
+        await editor.waitForFunction(() => !document.querySelector('.document-info-compact-draft'), null, { timeout: 30_000 });
         await editor.click('.editor-post-publish-share .publication-share-link-actions button:has-text("Copy link")');
         await editor.waitForSelector('.first-build-step--done[data-step="share"]', { timeout: 10_000 });
         await editor.click('.editor-post-publish-share .publication-share-link-embed');
         const embed = await editor.$eval('.editor-post-publish-share .publication-share-embed-code', (area) => area.value);
         assert(embed.startsWith('<iframe ') && embed.includes(`embed.html#${payloadFromLinkPreviewUrl(link)}"`), `Embed offers the same build as an <iframe> (${embed.slice(0, 60)})`);
+
+        // Published again, the Editor offers to add a passphrase.
+        await editor.click('.toolbar-publish');
+        await editor.waitForSelector('.editor-post-publish-protect .protect-identity-note-link', { timeout: 60_000 });
 
         // Walk inside it: World View at the house's door; walking ahead goes
         // in, which ticks off the guided first build's last step.
@@ -516,6 +601,9 @@ async function firstVisit(browser, base) {
         await editor.click('.editor-post-publish-walk');
         await editor.waitForSelector('.world-viewport canvas', { timeout: 60_000 });
         await said('Here\'s the door.');
+        // What a visitor came to do is on the bar over the view, not in the panel.
+        assert(await editor.isVisible('.world-view-hud .world-view-walk-together') && await editor.isVisible('.world-view-hud .world-view-build-here'), 'Walk here with me and Build here sit over the view');
+        assert(!(await editor.$('.world-view-overlay .world-view-walk-together')), 'and not in the side panel');
         assert(!editor.url().includes('arrive='), `the arrival leaves the address clean (${editor.url()})`);
         await editor.click('.world-viewport canvas', { position: { x: 640, y: 120 } });
         await editor.keyboard.down('w');
@@ -543,6 +631,16 @@ async function firstVisit(browser, base) {
     const phone = await browser.newContext({ viewport: { width: 390, height: 800 } });
     const small = await phone.newPage();
     try {
+        // Walk on a phone: the plaza in full view, its panel folded into one
+        // line over it that opens the panel.
+        await small.goto(`${base}/#/walk`);
+        await small.waitForSelector('.world-view-hud-plaza', { timeout: 60_000 });
+        assert(!(await small.isVisible('.world-view-overlay-scroll')), 'a phone opens the plaza with the panel closed');
+        assert(/Plaza: .+ · \d+ builds?/.test(await small.textContent('.world-view-hud-plaza')), `one line says where you are (${await small.textContent('.world-view-hud-plaza')})`);
+        await small.click('.world-view-hud-plaza');
+        await small.waitForSelector('.world-view-plaza-ready-made', { timeout: 30_000 });
+        assert(!(await small.$('.world-view-hud-plaza')), 'it opens the panel, and goes');
+
         await small.goto(`${base}/#/`);
         await small.waitForSelector('.home-view', { timeout: 60_000 });
         await small.click('.app-menu-toggle');
@@ -676,7 +774,7 @@ try {
     await startFromHome(browser, `http://127.0.0.1:${server.address().port}`);
     await joinChallenge(browser, `http://127.0.0.1:${server.address().port}`);
     await openLaunchLink(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the ready-made house in the Editor, New the castle (which downloads as a 3D model), and the Repository lists them; Home\'s Join opens the week\'s challenge tagged, New offers it first, and its page explains how to enter; a launch post\'s ?ref= leaves the address, and a retired page\'s link says it is gone');
+    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the House in the Editor with its roof to do, which Pick the roof and one real click put on, New the castle (which downloads as a 3D model), and the Repository lists them; Home\'s Join opens the week\'s challenge tagged, New offers it first, and its page explains how to enter; a launch post\'s ?ref= leaves the address, and a retired page\'s link says it is gone');
     await openLinkOnlyShare(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a link that carries its build opens on it in the published build, with no network, and Edit a Copy makes the visitor a copy, or it downloads as a 3D model; it fits a phone');
     assert(html.includes('<meta name="forkbuild-service-worker" content="sw.js">') && readFileSync(join(published.outdir, 'sw.js'), 'utf8').includes('forkbuild-'),
@@ -684,7 +782,7 @@ try {
     await offlineAndNotifications(browser, `http://127.0.0.1:${server.address().port}`, published.precacheFiles, published.outdir);
     console.log(`✓ the published site keeps its ${published.precacheFiles} files on the first visit and opens offline, Home and the Editor; a new version is offered and starts on Reload; notifications on this device turn on and off (or say the browser blocks them)`);
     await firstVisit(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ a first visit: five pages and More in the nav, the guided first build in the Editor, Publish asking about remixes and to log in, the published link copied on another device, and Walk inside it arriving at the house door and walking in');
+    console.log('✓ a first visit: six pages and More in the nav, Walk opening the plaza with the ready-made builds, Publish asking who can find it, the guided first build in the Editor, where Place with no brick picked places a cube on the first real click and stacks a second, Publish asking about remixes and to log in, an untouched ready-made house asked about once, the published link copied on another device, and Walk inside it arriving at the house door and walking in');
     await walkThePlaza(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ an entry published for the week stands in its plaza, reached from the challenge page, and World View stays there until Open takes you to the entry\'s World; an unknown week says so');
     await postingSwitches(browser, `http://127.0.0.1:${server.address().port}`);

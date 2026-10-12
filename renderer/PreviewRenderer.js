@@ -1,3 +1,4 @@
+import { editorFloorHeight } from './EditorFloor.js';
 import { applyBrickOrientation } from './applyBrickOrientation.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
 import { ThreeBrickFactory } from './ThreeBrickFactory.js';
@@ -76,9 +77,7 @@ export class PreviewRenderer {
     }
 
     _terrainOffsetY() {
-        return typeof this._renderer.terrainHeightAt === 'function'
-            ? this._renderer.terrainHeightAt(0, 0)
-            : 0;
+        return editorFloorHeight(this._renderer);
     }
 
     _applyValidity(valid) {

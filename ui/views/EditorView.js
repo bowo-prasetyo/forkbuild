@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, inject, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../../application/editor/CreateStructureRegistryUseCase.js';
@@ -58,6 +58,9 @@ import EditorDistributionDialog from '../components/EditorDistributionDialog.js'
 import PublicationShareLink from '../components/PublicationShareLink.js';
 import ProtectIdentityNote from '../components/ProtectIdentityNote.js';
 import FirstBuildGuide from '../components/FirstBuildGuide.js';
+import StarterJobCard from '../components/StarterJobCard.js';
+import { isStarterJobDone, starterJobById, starterJobGuide, unfinishedStructure } from '../../core/StarterJob.js';
+import { worldBricks } from '../../core/PlacedBricks.js';
 import BuildPlotBanner from '../components/BuildPlotBanner.js';
 import { useBuildPlot } from './editorView/useBuildPlot.js';
 import { useFirstBuildGuide } from './editorView/useFirstBuildGuide.js';
@@ -70,6 +73,7 @@ import WalkTogetherDialog from '../components/walkTogether/WalkTogetherDialog.js
 import LoginModal from '../components/LoginModal.js';
 import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
 import { usePostPublishDistribution } from './editorView/usePostPublishDistribution.js';
+import { useBuildNoteSend } from './editorView/useBuildNoteSend.js';
 import { useSelectionActions } from './editorView/useSelectionActions.js';
 import { useStructureLibrary } from './editorView/useStructureLibrary.js';
 import { useBlueprintExchange } from './editorView/useBlueprintExchange.js';
@@ -99,7 +103,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog, WalkTogetherDialog, LoginModal, BuildTogetherStrip },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, StarterJobCard, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog, WalkTogetherDialog, LoginModal, BuildTogetherStrip },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -145,8 +149,41 @@ export default {
                         <template v-if="sendStatus === 'sending'">{{ t('editor.publishedSending', { network: sendDestinationName }) }}</template>
                         <template v-else-if="sendStatus === 'sent'">{{ t('editor.publishedSent', { network: sendDestinationName }) }}</template>
                         <template v-else-if="sendStatus === 'failed'">{{ t('editor.publishedSendFailed', { network: sendDestinationName, error: sendError }) }}</template>
+                        <template v-else-if="noteStatus === 'sending'">{{ t('editor.publishedFinding') }}</template>
+                        <template v-else-if="noteStatus === 'sent'">{{ t('editor.publishedFound') }}</template>
+                        <template v-else-if="noteStatus === 'failed'">{{ t('editor.publishedFindFailed') }}</template>
+                        <template v-else-if="noteStatus === 'too-large'">{{ t('editor.publishedTooLargeToFind') }}</template>
+                        <template v-else-if="noteStatus === 'unsigned'">{{ t('editor.publishedUnsignedNotFound') }}</template>
+                        <template v-else-if="noteStatus === 'link'">{{ t('editor.publishedLinkOnly') }}</template>
+                        <template v-else-if="noteStatus === 'kept-to-links'">{{ t('editor.keptToLinks') }}</template>
                         <template v-else>{{ t('editor.published') }}</template>
                     </span>
+
+                    <!-- Walk inside it, first: World View, standing at the build's door. -->
+                    <router-link
+                        v-if="walkInside"
+                        :to="walkInside.route"
+                        class="action-btn action-btn--primary editor-post-publish-walk"
+                    >{{ walkInside.hasDoor ? t('editor.walkInside') : t('editor.walkAround') }}</router-link>
+                    <!-- Sent to everyone as a build note (ui/views/editorView/useBuildNoteSend.js). -->
+                    <button
+                        v-if="sendStatus === 'local' && noteStatus === 'failed'"
+                        type="button"
+                        class="action-btn action-btn--primary editor-post-publish-note-retry"
+                        @click="retryNote"
+                    >{{ t('editor.tryAgain') }}</button>
+                    <button
+                        v-if="sendStatus === 'local' && noteStatus === 'link'"
+                        type="button"
+                        class="action-btn action-btn--secondary editor-post-publish-let-everyone"
+                        @click="letEveryoneFind"
+                    >{{ t('editor.letEveryoneFind') }}</button>
+                    <button
+                        v-if="sendStatus === 'local' && noteStatus === 'sent'"
+                        type="button"
+                        class="action-btn action-btn--secondary editor-post-publish-keep-to-links"
+                        @click="keepToLinks"
+                    >{{ t('editor.keepToLinks') }}</button>
 
                     <button
                         v-if="sendStatus === 'failed' && canDistributeSnapshot && canDistributePublication"
@@ -158,16 +195,10 @@ export default {
                     <button
                         v-if="canDistributeSnapshot || canDistributePublication"
                         type="button"
-                        :class="['action-btn', sendStatus === 'local' ? 'action-btn--primary' : 'action-btn--secondary', 'editor-post-publish-distribute-trigger']"
+                        :class="['action-btn', sendStatus === 'local' && !noteStatus ? 'action-btn--primary' : 'action-btn--secondary', 'editor-post-publish-distribute-trigger']"
                         :disabled="sendStatus === 'sending'"
                         @click="distributionDialogOpen = true"
-                    >{{ sendStatus === 'local' ? t('editor.distribute') : t('editor.changeWhereItGoes') }}</button>
-                    <!-- Walk inside it: World View, standing at the build's door. -->
-                    <router-link
-                        v-if="walkInside"
-                        :to="walkInside.route"
-                        class="action-btn action-btn--primary editor-post-publish-walk"
-                    >{{ walkInside.hasDoor ? t('editor.walkInside') : t('editor.walkAround') }}</router-link>
+                    >{{ sendStatus !== 'local' ? t('editor.changeWhereItGoes') : (noteStatus ? t('editor.moreNetworks') : t('editor.distribute')) }}</button>
                     <button
                         type="button"
                         class="action-btn action-btn--secondary editor-post-publish-dismiss-btn"
@@ -181,9 +212,10 @@ export default {
                     :publication-id="publishedPublication.id"
                     :title="publishedPublication.title"
                     :publication="publishedPublication"
+                    compact
                     @shared="firstBuildShared"
                 />
-                <ProtectIdentityNote v-if="publishedPublication" class="editor-post-publish-protect" />
+                <ProtectIdentityNote v-if="publishedPublication && protectNoteDue" class="editor-post-publish-protect" />
 
                 <EditorDistributionDialog
                     v-if="distributionDialogOpen"
@@ -251,6 +283,8 @@ export default {
                         {{ t('editor.composingHint', { title: activeCompositionTitle }) }}
                     </p>
                     </template>
+                    <!-- The job Home's main button left (core/StarterJob.js). -->
+                    <StarterJobCard v-if="starterJobShown" :done="starterJobDone" @pick="pickStarterJobBrick" />
                     <DocumentInfoPanel compact :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
                     <!-- Build with me: a link that lets friends build this with you, live. -->
                     <button
@@ -334,6 +368,14 @@ export default {
                         :style="{ left: marqueeRect.left + 'px', top: marqueeRect.top + 'px', width: marqueeRect.width + 'px', height: marqueeRect.height + 'px' }"
                     ></div>
                     <TransformFeedback :feedback="transformFeedback" />
+                    <!-- See inside: the build cut away above its ground floor. -->
+                    <button
+                        type="button"
+                        :class="['action-btn', 'editor-see-inside', { 'action-btn--active': seeInside }]"
+                        :aria-pressed="seeInside ? 'true' : 'false'"
+                        :title="t('editor.seeInsideHint')"
+                        @click="toggleSeeInside"
+                    >{{ seeInside ? t('editor.seeInsideOff') : t('editor.seeInside') }}</button>
                     <!-- Who is building this with you, each in their own colour. -->
                     <BuildTogetherStrip
                         v-if="buildRole"
@@ -511,7 +553,10 @@ export default {
         const identityUseCase = inject('identityUseCase');
         const identityProvider = identityUseCase.provider;
         // A build started with Build here is published onto its plot.
-        const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider, { buildPlotStore: inject('buildPlotStore', null) });
+        const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider, {
+            buildPlotStore: inject('buildPlotStore', null),
+            foundPublications: inject('decentralizedPublicationDiscoveryProvider', null)
+        });
         // Fork/load lookups also search Repository-admitted decentralized publications.
         const decentralizedDiscoveryProviderForLookup = inject('decentralizedPublicationDiscoveryProvider', null);
         const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute({
@@ -751,6 +796,35 @@ export default {
             return pins && documentManager.document?.world.id === pins.worldId ? pins.structures : [];
         });
         const pinnedTitle = computed(() => challengePins.value?.title ?? '');
+        // The job Home's main button left to do (core/StarterJob.js), for as
+        // long as the build it opened is the open build.
+        const starterJob = ref(null);
+        // Any edit, undo or redo may finish (or unfinish) the job.
+        const starterJobEdits = ref(0);
+        let unwatchStarterJob = null;
+        function startStarterJob(job, structure) {
+            starterJob.value = { job, worldId: documentManager.document?.world.id ?? null, guide: starterJobGuide(job, structure) };
+            unwatchStarterJob?.();
+            unwatchStarterJob = editorSession.onCommandActivity(() => { starterJobEdits.value++; });
+        }
+        const starterJobShown = computed(() => {
+            void documentVersion.value;
+            return Boolean(starterJob.value) && documentManager.document?.world.id === starterJob.value.worldId;
+        });
+        const starterJobDone = computed(() => {
+            void documentVersion.value;
+            void starterJobEdits.value;
+            const job = starterJob.value?.job;
+            return Boolean(job) && isStarterJobDone(job, worldBricks(documentManager.document?.world), (id) => registry.get(id));
+        });
+        function pickStarterJobBrick() {
+            const job = starterJob.value?.job;
+            if (!job) return;
+            editorContext.setActiveBrick(job.brickId);
+            // The roof goes on the house wherever on it the pointer is.
+            editorContext.setPlacementGuide(starterJobShown.value && !starterJobDone.value ? starterJob.value.guide : null);
+            setTool(ToolId.PLACE);
+        }
         // A copy just opened from ?fork=: its bricks are someone else's, not its
         // builder's (core/PlacedBricks.js), and a remix week's entry (its
         // challenge page's Remix) is tagged for the week.
@@ -837,6 +911,9 @@ export default {
             rememberDestination: true
         });
 
+        // Sending each published build to everyone, when this device's builder chose so.
+        const { noteStatus, onPublishedForNotes, retryNote, letEveryoneFind, keepToLinks } = useBuildNoteSend();
+
         // A second, independent offer for an authorship claim published from the
         // structure panel; it never touches the World's own offer above.
         const attributionDistribution = usePostPublishDistribution({ router, includeSnapshot: false });
@@ -893,14 +970,47 @@ export default {
         // tracks it: otherwise the sidebar's groups and undo/redo would stay cached
         // when a group is created.
         const documentVersion = ref(0);
+        // See inside (finding 2 of docs/reviews/CreativeDirection-2026-10-12b.md):
+        // the build cut away above its ground floor, so its rooms show from the
+        // Editor's camera. Kept fitted to the build as it changes.
+        const seeInside = ref(false);
+        function toggleSeeInside() {
+            seeInside.value = editorSession.setSeeInside(!seeInside.value);
+        }
+        watch(documentVersion, () => { if (seeInside.value) editorSession.refreshSeeInside(); });
+        const unwatchSeeInside = editorSession.onCommandActivity(() => { if (seeInside.value) editorSession.refreshSeeInside(); });
+        // Done, or another build opened: the roof goes wherever it is put.
+        watch([starterJobShown, starterJobDone], ([shown, done]) => {
+            if (!shown || done) editorContext.setPlacementGuide(null);
+        });
         const { buildPlot, buildPlotPublished, startBuildPlot, onBuildPlotPublished, forgetBuildPlot, visitBuildPlot } = useBuildPlot({
             documentManager, documentVersion, router, feedback
         });
         const { walkInside, walkInsidePublished } = useWalkInside({ documentManager, registry, documentVersion });
+        // The passphrase reminder (ProtectIdentityNote) waits for a second
+        // publish when the identity was made during this visit, as a first
+        // publish's quick start makes one: that publish's moment is one
+        // celebration, not three bars (docs/reviews/CreativeDirection-2026-10-12b.md,
+        // finding 6).
+        function currentIdentityId() {
+            try {
+                const session = identityUseCase.currentSession();
+                return session && session.isAuthenticated ? session.identityId : null;
+            } catch {
+                return null;
+            }
+        }
+        const identityAtStart = currentIdentityId();
+        let publishesThisVisit = 0;
+        const protectNoteDue = ref(false);
         function onPublished(publication) {
+            publishesThisVisit += 1;
+            const identityId = currentIdentityId();
+            protectNoteDue.value = publishesThisVisit > 1 || (identityId !== null && identityId === identityAtStart);
             const publishedWorld = documentManager.document?.world;
             funnelEventCounter?.publishedBuild(publication, worldBrickCount(publishedWorld), readyMadeBricks?.placedCount(publishedWorld));
             onDocumentPublished(publication);
+            onPublishedForNotes(publication);
             onBuildPlotPublished(publication);
             walkInsidePublished(publication);
         }
@@ -1307,9 +1417,17 @@ export default {
                 const structure = findStarterStructure(structureRegistry, route.query.start);
                 // Joining a week's challenge (the challenge page, Home) also tags the copy.
                 const challenge = typeof route.query.challenge === 'string' ? challengeById(route.query.challenge) : null;
-                if (structure && editorSession.forkStructure(structure)) {
+                // Home's main button: the House with its job left to do (core/StarterJob.js).
+                const job = starterJobById(route.query.job);
+                const unfinished = job ? unfinishedStructure(job, structure) : null;
+                if (structure && editorSession.forkStructure(unfinished || structure)) {
                     editorSession.frameDocument();
-                    if (!joinChallenge(challenge)) feedback.show(t('editor.startedFromBuild', { name: libraryItemName(structure) }));
+                    if (unfinished) {
+                        startStarterJob(job, structure);
+                        feedback.show(t('starterJob.started', { name: libraryItemName(structure) }), { durationMs: 5000 });
+                    } else if (!joinChallenge(challenge)) {
+                        feedback.show(t('editor.startedFromBuild', { name: libraryItemName(structure) }));
+                    }
                 } else {
                     feedback.show(t('editor.starterNotFound'));
                 }
@@ -1457,6 +1575,8 @@ export default {
         });
 
         onBeforeUnmount(() => {
+            unwatchStarterJob?.();
+            unwatchSeeInside?.();
             unmounted = true;
             if (unsubTool) {
                 unsubTool.unsubscribe();
@@ -1617,13 +1737,14 @@ export default {
             distributionError,
             distributionResult,
             onDocumentPublished,
-            onPublished, buildPlot, buildPlotPublished, forgetBuildPlot, visitBuildPlot,
+            onPublished, protectNoteDue, seeInside, toggleSeeInside, buildPlot, buildPlotPublished, forgetBuildPlot, visitBuildPlot,
             ...firstBuildGuide,
-            pinnedStructures, pinnedTitle,
+            pinnedStructures, pinnedTitle, starterJobShown, starterJobDone, pickStarterJobBrick,
             walkInside,
             distributePublishedDocument,
             distributePublishedDocumentAndSnapshot,
             canRemember, rememberChoice, setRememberChoice, sendStatus, sendDestinationName, sendError,
+            noteStatus, retryNote, letEveryoneFind, keepToLinks,
             dismissPublishAction,
             viewDistributedPublicationInRepository,
             canDistributeAttribution,

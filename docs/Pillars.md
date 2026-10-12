@@ -74,8 +74,12 @@ networks, anchoring, peer connections, identities with succession and
 revocation. It is what makes "your work is yours" true, and it stays. But it
 is a means, not the game:
 
-- Players should see one verb, **Publish**, and one choice inside it: where
-  to send the build. Network-by-network detail belongs on the Publications
+- Players should see one verb, **Publish**, and one choice inside it: who
+  can find the build. **Who can find it?** is asked before the first
+  publish: **Everyone** sends each build as a build note to the Nostr relays
+  every copy of ForkBuild reads, with a key the device holds itself, so no
+  wallet or extension is needed; **Only people I send the link to** keeps it
+  in its link. Where else to send the build is a second, optional step. Network-by-network detail belongs on the Publications
   page and in Network Settings. Publish asks where the build goes once, in
   **Where it goes**, and sends each signed build there from then on.
 - Network Settings and the Publications page live under **More → Advanced**.
@@ -106,6 +110,12 @@ reworked, it comes in two parts:
   their settings. A writer is a plugin a player switches on. Nothing outside
   it names its network, and ForkBuild works with none switched on.
 
+Build notes (2026-10-12) are no new network: they are Nostr, already a
+reader on every copy, written with a key the device holds, and read by the
+same copies. Their reader is paid for like any other (it asks the relays
+under Network Settings only when Explore, an author's page or the challenge
+opens) and is named on the Privacy page.
+
 Today Nostr, Arweave, Steem and Blurt are the substrates discovery searches;
 Bitcoin and Base hold anchor proofs only, so their readers are proof checks.
 Bitcoin's and Base's wallets are split this way: each is a plugin switched on
@@ -122,11 +132,16 @@ old text is touched. Code and protocol documents keep their own terms.
 
 | Say | Not | Notes |
 |---|---|---|
-| **build** | document, creation, publication | What a player makes. A "World" is the same build seen from inside, in World View. (**My Worlds** lists the Worlds visited on this device, not your builds; a page of your own builds is open work.) |
+| **build** | document, creation, publication, Shared World | What a player makes. A "World" is the same build seen from inside, in World View. (**My Worlds** lists the Worlds visited on this device, not your builds; a page of your own builds is open work.) |
 | **Publish** | distribute, announce, anchor | Going public. Distribute, announce and anchor are steps inside Publish, named only on the Publications page. |
 | **remix**, **make your own copy** | fork | "Fork" stays in the name, the tagline and developer documents. |
 | **structure** | blueprint, preassembled | A ready-made group of bricks in the Build Library. |
 | **Advanced** | network | The menu group for everything a player doesn't need to build and share. |
+| **Build · Explore · Challenge · Walk** | Editor · Repository | The main menu. **Walk** opens this week's challenge plaza, the square the village of published builds grows round. |
+
+tests/WordsTable.test.js fails when a word from the *Not* column comes back
+on a screen a newcomer meets (the menu, Home, the Editor, a shared link,
+Explore, the challenge and Publish's dialogs).
 
 ## Tone
 
@@ -196,6 +211,7 @@ number is "too few to say" rather than met or missed.
 | Yours, in a world | Friends joined per build link (`/e/build-joined` / `/e/build-link`) | 50% | 20 links |
 | Yours, in a world | Builds made together published, per friend joined (`/e/publish-together` / `/e/build-joined`) | 30% | 20 joins |
 | Yours, in a world | Plaza visits per challenge join (`/e/plaza-visit` / `/e/challenge-join`) | 25% | 20 joins |
+| Yours, in a world | World View visits that see someone else's build, the ready-made village left out (`/e/world-neighbour` / `/e/world-visit`) | 50% | 50 visits |
 
 The placed bricks and the second builds are the gate on new networks
 (above): a ready-made build published untouched holds plenty of bricks but
@@ -205,6 +221,22 @@ build points at the kit and the guided first build, few second builds at
 what brings a builder back, few copies per opened link at the shared link's
 **Edit a Copy**. The numbers are a first guess for launch; change them here
 and in core/LaunchTargets.js together, with the reason in the roadmap.
+
+## The side systems
+
+Catching and decorating with animals, the inventory, swimming, chat, voice
+and the public lobby serve no pillar directly, and the reviews of 2026-10-11
+and 2026-10-12 asked for a decision on each. The owner's decision
+(2026-10-12): **keep them, and watch them.** Each is counted when used, at
+most once a page load (core/SideSystemUse.js; `/e/swam`, `/e/animal-caught`,
+`/e/animal-decorated`, `/e/inventory-used`, `/e/chat-sent`, `/e/voice-call`,
+`/e/lobby-joined`), and scripts/launch-scorecard.mjs shows what share of
+visits used each: World View visits for the first four, daily visits for the
+rest (core/LaunchTargets.js, `SIDE_SYSTEMS`). One that fewer than 2% of
+visits use, once 50 World View visits or 100 daily visits are counted, is
+flagged **rarely used**, and the owner looks at it again: fold it into
+building, move it under Advanced, or remove it. Until then they stay frozen
+as above: kept working, with no new features.
 
 ## Where this came from
 
@@ -255,3 +287,32 @@ themes with example remix families for empty shelves ("Half a year of
 themes, and families to start from"), and numbers for the counters with the
 user guide split into Play and Advanced ("Numbers to reach, and a guide in
 two parts").
+
+A third review on 2026-10-12
+([reviews/CreativeDirection-2026-10-12.md](reviews/CreativeDirection-2026-10-12.md))
+found the single-player loop complete and the multiplayer half resting on a
+wallet, a crowd and a place to meet. Its Release D, "Find each other", was
+done the same day (see the roadmap, "Find each other"): Who can find it?
+inside Publish, with build notes needing no wallet; builds settling beside
+what they remix and in a village round the plaza; **Walk** in the menu,
+opening the plaza with the ready-made builds round it; and the player's
+words in the menu, Explore, a shared link's page and the Editor, kept so by
+a test. Its Release E, "A room worth entering", followed the same day (see
+the roadmap): the build above your head cut away and the camera coming in
+with you, furniture and a furnished House six across, ready-made homes that
+come lived in, World View's panel leading with what a visitor came to do,
+and one celebration after Publish.
+
+A fourth review the same day
+([reviews/CreativeDirection-2026-10-12b.md](reviews/CreativeDirection-2026-10-12b.md))
+found the vision coherent and three seams where the game broke its own
+promise. Its Release F, "Make it yours, in the village", followed (see the
+roadmap), taking the review's recommendation on two of its open questions:
+the plaza is a place, not a view, and Home's main button hands over a build
+with a job left to do. The square and the six ready-made builds stand in
+every World View, with published builds settling just outside them; **Try
+it now** opens the House with no roof and a card naming the job; Place with
+no brick chosen places a cube, and a brick put on top of others rests on
+them; hipped roofs that cover a whole building in one piece; and a
+visitor's click in World View selects nothing, with the Words test covering
+World View.

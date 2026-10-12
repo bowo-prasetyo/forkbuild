@@ -5,6 +5,10 @@
 [English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · **Bahasa Indonesia** · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../02-TheEditor.md).
+<!-- /stale -->
+
 Editor adalah tempat Anda membangun. Panduan ini membahas alat-alatnya,
 cara memilih dan mentransformasi balok, dan cara menata bangunan Anda
 dengan grup.
@@ -39,9 +43,12 @@ dengan grup.
 - **Pustaka Bangunan** — kotak pencarian dan dua tab:
   - **Balok** — semua yang dapat Anda tempatkan dengan alat Tempatkan,
     sebagai ubin dalam enam bagian (Dasar, Struktur, Atap & Tangga,
-    Bukaan, Detail, Alam): lima puluh satu keping, dari setengah kubus,
-    balok bulat, dan gelondong kayu hingga atap pelana dan kerucut, bingkai
-    jendela dan jendela bulat, pagar, bangku, semak, pohon pinus, dan
+    Bukaan, Detail, Alam): lima puluh sembilan keping, dari setengah
+    kubus, balok bulat, dan gelondong kayu hingga atap pelana dan kerucut,
+    atap limas yang menutupi seluruh rumah dalam satu keping (4x4, 4x6, dan
+    6x6) dan atap pelana panjang 2x4, bingkai jendela dan jendela bulat,
+    pagar, bangku, semak, dan pohon pinus, perabot untuk ruangan yang Anda
+    masuki (meja, ranjang, perapian, dan rak, di Detail), serta
     **Lentera** yang menyala di malam hari di Tampilan Dunia (lihat
     [Siang dan malam](03-WorldView.md#siang-dan-malam)). Klik salah satunya untuk memilihnya (dan beralih ke
     alat Tempatkan); contoh warna **Warna** lalu muncul untuk memilih

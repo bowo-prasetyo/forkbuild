@@ -5848,6 +5848,330 @@ the one gap in building together. Pillar served: your work is yours (and so is t
 - Not done: undoing a step from before the latest join, which would need the newcomer to have every earlier step;
   and Redo of a step whose brick a friend has since moved puts it back where you had it.
 
+## Find each other (unnumbered, 2026-10-12)
+
+**Anyone can find a build, with no link, wallet or extension, and builds stand together in a village.** The
+creative-direction audit of 2026-10-12 (docs/reviews/CreativeDirection-2026-10-12.md, findings 1, 2 and 5) found the
+multiplayer half of the fantasy resting on things a newcomer doesn't have: a build reached anyone without its link only
+through Nostr, Arweave, Steem or Blurt, each needing a browser wallet or extension, so the Repository, the challenge,
+the plaza and remix counts never saw it; builds landed by hash on a 2,560-unit grid, about 0.24 neighbours in view at
+50 builds; and the menu and first-contact pages still spoke the protocol's words. This is its Release D. Pillars
+served: every build has a family tree (anyone can find something to remix) and your work lives in a world (it has
+neighbours, and there is somewhere to walk).
+
+- **Who can find it?** (ui/components/FindabilityDialog.js, application/settings/FindabilityStore.js). Asked once per
+  device, after the remix question and before the first sign-in at Publish: **Everyone** or **Only people I send the
+  link to**. With Everyone, each signed publish is also sent to everyone and the notice says "Sending it to
+  everyone…", then "Published! Anyone can find it now…", or that it didn't reach everyone yet, with **Try again**
+  (ui/views/editorView/useBuildNoteSend.js). Kept to its link, the notice offers **Let everyone find it**; after a send,
+  **Only by link from now on**. The wallet networks' dialog stays, as **More networks** once a build went to everyone.
+- **Build notes** (core/BuildNote.js, docs/Protocol.md "Build notes"). A NIP-78 event (kind 30078, `d` =
+  `forkbuild-build:<publication>`, `t` = `forkbuild-build` and each `forkbuild-tag:<tag>`) whose content is the
+  link-only payload a shared link carries, the signed claim and the build's bytes, up to 48,000 characters (about
+  2,000 bricks), plus the publisher's signed placement. Sent to every relay under Network Settings
+  (application/buildNotes/PublishBuildNoteUseCase.js), each relay on its own.
+- **A carrier key** (nostr/AppNostrSigner.js, application/buildNotes/CarrierKeyStore.js). A secp256k1 key the device
+  makes the first time it sends, shaped like NIP-07's `window.nostr` so nostr/NostrInjectedProviderPublisher.js signs
+  with it unchanged; vendored noble-curves' BIP-340 Schnorr signs, and NIP-01 ids are SHA-256 of the serialized event.
+  It is not an identity and is trusted for nothing: the builder's own signature inside the payload is what readers
+  check. It and the choice are backed up with Your Data's settings.
+- **Finding them** (application/buildNotes/BuildNoteDiscovery.js, WithBuildNotes.js, ui/main/composeBuildNotes.js).
+  Explore's and an author's page's search, and the challenge's and its plaza's, now ask the relays for build notes
+  beside the other networks, each search on its own. The newest note per Publication whose Nostr signature checks out
+  is opened exactly as a link-only share (`openPublicationLink({ linkOnly })`) after checking the claim inside names
+  the Publication the note does; its placement goes to AdoptPublisherPlacementUseCase, which keeps only one the
+  publisher signed; a challenge entry is logged under a week only when the signed build carries the tag. At most 40
+  opened per visit; one that fails isn't tried again that visit. The signer, codec and link opener load only when a
+  note is sent or opened, never with the first screen.
+- **Builds settle together** (core/BuildSettlement.js, application/placement/SettledPlacementStrategy.js). A publish
+  places a build, after a Build here plot, where an earlier publish of it already stands (republishing never moves
+  a build); beside the build it remixes, on a ring 18 or 36 units round it, where this device knows that build to
+  stand (its placement, else its grid spot); else in the village round the challenge plaza, rings from 90 units out,
+  each walked from a slot the Publication id chooses, skipping water, rock, rivers and the plaza's clearing; else the
+  grid as before. PublishDocumentUseCase passes `parentDocumentId` to the strategy. World View's publish settles the
+  same way.
+- **Walk, and a village on the first day** (ui/router/index.js `/walk`, ui/App.js, ui/views/worldView/useChallengePlaza.js).
+  **Walk** in the main menu opens this week's plaza, highlighted on any plaza. While a week has fewer than six
+  entries, the six ready-made builds stand round the square after them, each with **Navigate** and **Remix**
+  (application/home/FeaturedBuilds.js `structureWorld()`). The plaza also runs Explore's search, so others' builds
+  settle into view, and no "quiet corner" Welcome panel opens over it (`skipArrivalWelcomes()`).
+- **The player's words.** The menu says Build · Explore · Challenge · Walk; the Repository is Explore; Home's
+  reasons, the challenge's How to enter, About, the shared link's errors, copy failures, sharing's reasons, the
+  Editor's info panel and Explore's search messages say build, remix and send instead of Shared World, fork,
+  document, creation and Distribute. tests/WordsTable.test.js fails when one of those words returns to the menu,
+  Home, the Editor, a shared link, Explore, the challenge or Publish's dialogs.
+- **Counting it.** `/e/publish-found` when a publish was sent to everyone, `/e/publish-link-only` when it was kept to
+  its link (core/VisitorCount.js).
+- Every language: the dialog, the notice, the plaza's ready-made builds, the menu and every reworded message; the
+  Privacy page (what is sent, the carrier key, the relays contacted, the counts). Guides 03 and 04 ("Who can find
+  it?", "Where a build stands", the plaza and Walk) in English, their translations marked out of date. Pillars ("one
+  choice inside Publish", build notes and the network gate, the Words table), docs/Protocol.md, README.
+- Tests: `BuildNotes` (NIP-01 ids against node's own SHA-256, signatures and tampering; the carrier key kept and a
+  damaged one replaced; the note's format and limits; Alice's build sent to two relays of three and found by Bob,
+  who never had her link, kept by hash, admitted and its placement offered, then known; a challenge entry logged under
+  its week only; republishing keeps one note; a changed build, a swapped Publication and a broken signature refused;
+  unsigned, missing, too large and refused builds reported; the searches adding together and surviving each other's
+  failure; the choice remembered and backed up); `BuildSettlement` (sixty builds round the plaza on good ground,
+  never sharing a spot, the first twenty on the first ring, the same id the same spot; a remix beside its source, a
+  found source by its grid spot, an unknown one in the village; republishing in place; a full village and a broken
+  index falling back to the grid); `WordsTable`. Checked in the real app in Chromium with two browsers and a relay
+  between them: the dialog, the send to three relays with the house's village spot, Bob finding Ana's house in
+  Explore, and Walk opening the plaza with the ready-made builds.
+- Not done: guides 03 and 04's translations; notes aren't read in the background sync, only when Explore, an author's
+  page, the challenge or its plaza opens; unpublishing a build doesn't withdraw its note (relays keep what they are
+  sent, as the Privacy page says); a remix of a build this device has never seen joins the village rather than its
+  source's street; residents in the starter village (Release E).
+
+## A room worth entering (unnumbered, 2026-10-12)
+
+**Walk into a build and you see the room you're in, and the starter house is a room worth seeing.** The
+creative-direction audit of 2026-10-12 (docs/reviews/CreativeDirection-2026-10-12.md, findings 3, 4, 5 and 6) found
+that walking in through a door, which worked since "Step inside", reached a room nobody could see: the camera stayed
+outside, in the wall; the House was about three bricks across and empty; nobody lived anywhere a newcomer went; and
+the moment after Publish read as a form. This is its Release E. Pillars served: your work lives in a world (a build is
+somewhere to be), with building feels joyful (furniture, and a room to put it in).
+
+- **Seeing inside** (core/IndoorView.js, pure). Under a ceiling (a box above the head, within 7 of the feet) the build
+  is every box connected to that ceiling, and everything of it higher than just above the head (`CUT_ABOVE_FEET`,
+  2.1, or the ceiling if lower) is cut away. The indoor camera stands behind and above, looking down into the room
+  through the cut; when a wall is in the way it tries steeper, nearer stands (`INDOOR_CAMERA_STANDS`) up to almost
+  overhead, and only then is pulled in front of the wall (`clearCameraPosition()`), boxes counting only up to the cut.
+  application/worldNavigation/avatarPresenceMethods.js (`_followIndoors()`) applies it for the free camera following
+  the avatar and for Third Person through the one camera write path; Bird's-Eye keeps its framing and gets the cut;
+  First Person gets neither. The boxes come from a box query with no step exclusion, so roof slopes count
+  (localAvatarMethods.js `_indoorBoxesNear()`, out to 20). Riding, you're never indoors.
+- **The cutaway** (renderer/CutawayClipping.js). Five shared clipping planes, clipping only where all agree
+  (`clipIntersection`): above the cut and inside the build's footprint. World View's instanced brick material, its
+  structure placements' meshes and the plaza's exhibits use them; the WebGL renderer has local clipping on. Moving the
+  planes recompiles nothing, and with no cutaway the height plane is far above the sky. Only drawing changes:
+  collision, picking and the build are untouched. The session tells the renderer only when the cutaway changes.
+- **Furniture** (core/library/CoreLibrary.js, renderer/ThreeBrickFactory.js `boxesGeometry()`). core:table, core:bed,
+  core:hearth and core:shelf, decorative and tagged `furniture`, each a few boxes joined into one geometry drawn at
+  exactly its declared size; the link-preview worker draws them too. Fifty-four bricks.
+- **The House, rebuilt** (core/library/VillageLibrary.js). Six across instead of four: nine floor plates, walls with a
+  door, a front window and windows on every side, a 3×3 hipped roof, a chimney over a hearth on the north wall, a
+  table with a bench, a bed along the west wall, a shelf on the east wall and a barrel by the door, with room to walk
+  round them. The House family (porch, garden, tower) moved out to fit.
+- **Lived in** (core/ReadyMadeHome.js). A copy of a ready-made home (a Structure tagged `dwelling`) starts with one
+  World Resident whose home is 2.5 beside the spot in front of its door, clear of the doorway
+  (application/editor/ForkStructureUseCase.js); its author is `ready-made`, and the builder removes it with R like any
+  resident. The plaza's ready-made exhibits are lived in the same way, and residents are read from the plaza's
+  exhibits as well as loaded Worlds (residentMethods.js).
+- **Settling clear of trees** (core/BuildSettlement.js). A spot needs no tree within 7 (`SETTLEMENT_TREE_CLEARANCE`):
+  checking the real app found a World tree in front of a settled house's door.
+- **A calmer panel** (ui/views/WorldView.js, templates/avatarSection.js). What a visitor came to do comes first, on its
+  own row: Build here, **Walk here with me** (the primary one) and Edit a Copy; then Home, Locations, the online count,
+  Lobby and ?. The four avatar switches, on for everyone, fold under **Avatar settings**; the camera choice stays.
+- **One celebration after Publish** (ui/components/PublicationShareLink.js `compact`, Toolbar.js, EditorView.js). The
+  notice is one sentence, **Walk inside it** first, then what the send to everyone offers; the share row is **Copy
+  link**, with the link itself, its hint, **Save picture** and **Embed** under **More ways to share**. Publishing also
+  saves, so a build just published no longer reads Draft and Unsaved changes.
+- Every language: the four bricks, the House's description, Avatar settings and More ways to share. Guides 02 and 03
+  (furniture, publishing saves, the panel, "Inside a build", the ready-made residents) in English, their translations
+  marked out of date; docs/BrickLibrary.md, docs/BrickIDs.md, README.
+- Tests: `IndoorView` (the geometry; a camera stopping in front of a wall and a wall cut below the line of sight being
+  none; the build found from its roof and not its neighbour; inside the House at four spots and four headings the cut
+  just above the head and the camera above it seeing the avatar; every ready-made home seen from inside; the clipping
+  planes clipping the roof and not the room or the neighbour; the House six across, furnished, walked into; a copy of a
+  home lived in, beside its door, a mill not, the plaza's house lived in, the resident saved). `BuildersKit` (fifty-four),
+  `BuildSettlement` (no tree where a build settles), `WalkInside` and `ShowcaseLibrary` (the House's new door and
+  floor), the bundled site (the compact share, the link under More ways to share, no Draft after Publish, and walking
+  into the new House). Checked in the real app in Chromium: the roof cut away with Ana in a furnished room, from the
+  free camera, Third Person and Bird's-Eye, and the House's resident beside its door.
+- Not done: a cut that follows the avatar between storeys of a taller build (it cuts above whoever stands inside, from
+  their floor); window glass and the cut walls' tops drawn as open shells; the other ready-made homes furnished; a
+  HUD laid over the view in place of the side panel, which this release only reorders.
+
+## Make it yours, in the village (unnumbered, 2026-10-12)
+
+**The village at the plaza is a place, Try it now hands over a house to finish, and the first click places a brick.**
+The second creative-direction audit of 2026-10-12 (docs/reviews/CreativeDirection-2026-10-12b.md, findings 1 to 5)
+found the village a stage set (the square and the ready-made builds existed only on `/plaza/…`, while a published
+house settled 90 units away in an empty field), Home's main button opening a finished House that could be published
+untouched, Place showing "click to place" while a click placed nothing until a brick was picked, every pitched roof a
+grid of small caps, and a click in World View opening the engine's inspection panel. This is its Release F. It takes
+the audit's recommendations on two open questions: the plaza is a place, and Try it now hands over a job. Pillars
+served: building feels joyful (a first click that works, a job, roofs that read as roofs), and your work lives in a
+world (a village it stands in from its first day).
+
+- **The village stands for everyone** (core/StarterVillage.js, ui/views/worldView/useStarterVillage.js). The square
+  (core/library/PlazaSquare.js) and the six ready-made builds stand round `PLAZA_CENTER` in every World View, wherever
+  it opens, laid out like the plaza's exhibits round the open square (`starterVillageLayout()`), drawn and walked into
+  through the exhibits' path (`showPlazaExhibit()`), never placed, signed or stored. They reach about 40 from the
+  middle, inside `PLAZA_VILLAGE_RADIUS` (48), where nothing settles; trees keep out to `PLAZA_CLEARING_RADIUS`, now 66.
+  The village's first ring (core/BuildSettlement.js, `VILLAGE_FIRST_RING_RADIUS`) is pulled in from 90 to 56, so the
+  first published house stands beside a ready-made build and in sight of the square. Builds already published keep
+  their signed placements.
+- **An entry stands in one place** (ui/views/worldView/useChallengePlaza.js). On the plaza, an entry whose placement
+  this device knows stands only where it settled; any other is shown, as an exhibit, on the spot `settleInVillage()`
+  gives it, clear of known placements and the entries before it, rather than on a ring of its own round the square.
+  The panel lists the entries and, always, the village's ready-made builds; the ready-made "fillers" while a week has
+  few entries are gone, since the ready-made builds now always stand.
+- **Try it now: a house to finish** (core/StarterJob.js, ui/components/StarterJobCard.js). Home's main button opens
+  `/editor?start=village:house&job=roof`: the House without its roof and chimney, walls up and room furnished (and
+  visible from the Editor's camera), with a **Your job: give it a roof** card at the top of the sidebar. **Pick the
+  roof** chooses Hip Roof 6x6, turns Place on and sets a placement guide (EditorContext `placementGuide`,
+  `starterJobGuide()`): while that brick is placed and the pointer is on the house (a brick hit within 5 of the roof's
+  spot, by the brick's own position), its ghost goes to where the finished House has its roof, so a click on a wall
+  puts the roof on, as checking it in the real app showed a click from the Editor's camera lands on the front wall's
+  face, not the floor. The guide goes once the job is done or another build opens. Once any roof brick stands, the card says **It's yours now!** and
+  suggests what else to add. The roof is the builder's own brick, so the publish counts it (core/PlacedBricks.js).
+- **Nothing of your own yet?** (ui/components/Toolbar.js). Publishing a build started from something ready-made with
+  no brick of the builder's in it asks once per build per visit: **Keep building** or **Publish anyway**.
+- **Place places** (application/tools/PlacementTool.js `activate()`). Place with no brick chosen loads the Cube (the
+  Build Library shows it chosen), so the hint's "click to place" is true from the first click; a brick already chosen
+  is kept. The first-build guide's hint says so.
+- **A brick on top rests on what's under it** (core/BrickResting.js). Stacking on a brick's top face lifts the new
+  brick until nothing its footprint overlaps is in its way, turned footprints included, so a 6x6 roof dropped on the
+  middle of a house's floor rests on its walls, and a beam across two posts on the posts. A turn (R) works the resting
+  height out again.
+- **Roofs that span** (core/library/CoreLibrary.js, renderer/ThreeBrickFactory.js `hippedRoofGeometry()`).
+  core:roof_hip_4x4, core:roof_hip_4x6 and core:roof_hip_6x6 (four slopes of one pitch to a ridge along the longer
+  side) and core:roof_gable_2x4: fifty-eight bricks. The House, Large House, Barn, Granary, Market, Pavilion and Village
+  Hall, and the castle's keep, are roofed with one instead of a grid of caps; the Large House's chimney comes down to its
+  slope; the well (and so the plaza's square) gets a little gable. The link-preview worker draws them.
+- **A visitor's click selects nothing** (application/worldNavigation/selectionMethods.js `pick({ builds })`,
+  ui/views/worldView/useViewportInput.js). Without Show advanced tools, a click in World View picks only another
+  avatar; bricks, placements and the ground are picked, and Inspection opens, only with Advanced on.
+- **Words.** tests/WordsTable.test.js covers World View as a visitor sees it (worldView, its Search, Focus, Map,
+  Locations and presence panels, and the starter job), with the brick inspection's one key exempt; nine messages
+  were reworded (History's tooltip, Locations' "documents", Edit a Copy's "independent copy of this document", a
+  build's signed check).
+- Every language: the job card, the publish question, the four roofs, the well, the plaza's two leads, the first
+  brick's hint and the reworded World View messages. Guides 02, 03 and 04 in English (Try it now, Place starting
+  with a cube and resting on top, the village standing for everyone, an entry in one place, the visitor's click),
+  their translations marked out of date; docs/BrickLibrary.md, docs/BrickIDs.md, Pillars.
+- Tests: `StarterJob` (the job and its unfinished House, the roof resting at the library House's height and finishing
+  the job as the builder's own brick, the tool placing it from a click on the floor, resting on a table and on turned
+  footprints, Place loading the Cube through the ToolManager and placing on the first click); `StarterVillage` (six
+  builds, deterministic, apart, off the square, inside the village radius, on dry level treeless ground, the first
+  eight published builds on the first ring beside a ready-made one); `VisitorClick`; `BuildSettlement`,
+  `StructureRoofSupport` (spanning roofs, nothing floating), `ShowcaseLibrary`, `BuildersKit`, `LinkPreview`; the
+  bundled site with a real mouse: Try it now's job card, Pick the roof and one click on the house finishing it; a new
+  build's Place placing a cube on the first click and stacking a second; the publish question's Keep building.
+- Not done: the Editor's camera still opens from above (with the roof off, the room is in view); World View's HUD and
+  the phone's collapsed plaza panel; the passphrase nudge moved out of the celebration; the inspection's "Author" line
+  reading the builder's name (it is advanced-only now); the launch order, a playtest and the orphaned systems, which
+  are the owner's.
+
+## A brick lands under the pointer (unnumbered, 2026-10-12)
+
+**In the Editor, a brick is placed where the pointer is, and drawn there.** Checking Release F in the real app found
+that in a new build a cube appeared about 110 pixels above the cursor, and a click a little above it, on what looked
+like its top, missed it (the Place-and-stack check in the bundled-site test had to aim about 120 pixels higher to stack
+one). The cause: the Editor draws its build lifted onto the terrain under the build's origin (renderer/WorldRenderer.js
+samples the terrain at the World's offset, (0, 0), about 2.7 units up in the default World), while the ground under the
+pointer was picked on the plane `y = 0` (renderer/PickingService.js). The ray met that plane behind the point the
+pointer was over, and the brick placed there was then drawn lifted, far up the screen. Pillar served: building feels
+joyful (the first verb works where you point).
+
+- **One floor** (renderer/EditorFloor.js `editorFloorHeight()`): the terrain height under the build's origin, the
+  height its bricks and structure placements are already drawn at.
+- **The ground is picked on it** (renderer/PickingService.js, a `groundHeight` option;
+  application/world/RenderWorldUseCase.js passes the floor). The picked point keeps the scene's own coordinates (its y
+  the floor's height); the tools read only its x and z, and Build with me's pointers, already in scene coordinates,
+  now meet the ground where it is drawn. World View's picking is unchanged.
+- **Every ghost stands on it.** A brick's ghost already did (renderer/PreviewRenderer.js, now through the same
+  function). A structure's and a composition's ghosts (StructurePreviewRenderer, CompositionPreviewRenderer) sampled
+  the terrain under the ghost instead, so they rose and sank over the hills while what they placed stood on the floor;
+  they now stand where it will.
+- docs/principles/terrain.md says picking undoes the same offset.
+- Tests: `EditorFloor` (the floor; with a camera like the Editor's opening view, the ground picked on the floor and a
+  cube placed from it drawn with its foot under the pointer at three pointer positions, where picking at `y = 0` drew
+  it 40 pixels or more above; the three ghosts on the floor over a hill). It fails without the fix. The bundled site's
+  Place-and-stack check now stacks with a click at most 40 pixels above the first.
+
+## Calmer screens, a measured village (unnumbered, 2026-10-12)
+
+**The World and the build get the screen back, and the village's purpose gets a number.** What was left of findings
+1, 2, 5 and 6 of the second creative-direction audit of 2026-10-12 (docs/reviews/CreativeDirection-2026-10-12b.md),
+with World View's controls laid over the view as the first audit of that day asked. Pillars served: your work lives in
+a world (a phone sees it; the village is measured), and building feels joyful (the room under the roof can be seen and
+built in).
+
+- **World View's controls over the view** (ui/views/worldView/templates/hudSection.js). Build here, **Walk here with
+  me** and Edit a Copy moved from a row in the side panel to a bar at the bottom of the World, centred on a desktop,
+  bottom left on a phone (clear of the sound control) and above the touch pad, the Walk toggle and the raised sound
+  control on a touch screen.
+- **A phone sees the plaza** (ui/views/WorldView.js). The panel starts closed on a phone, the plaza too (it used to open
+  there and cover about 85% of the screen); with it closed, the plaza is one line over the World, **Plaza: … · N
+  builds**, which opens it.
+- **One bar after Publish** (css/main/spatial-panels.css, ui/views/EditorView.js). The notice, Walk inside it, Copy
+  link and More ways to share flow on one line, Dismiss last, instead of three stacked bars. The passphrase reminder
+  waits for the next publish when the identity was made during this visit (a first publish's quick start); from the
+  second publish, or for an identity that was already there, it shows as before.
+- **A File menu** (ui/components/Toolbar.js). Save, Publish and New first; Export, 3D model and Import under **File**,
+  placed on the page under its button so a phone's sideways-scrolling toolbar doesn't clip it. New is on a phone's
+  screen again.
+- **See inside** (core/IndoorView.js `seeInsideCutaway()`, application/editorSession/selectionEditingMethods.js
+  `setSeeInside()`, application/world/RenderWorldUseCase.js). The Editor uses World View's cutaway planes
+  (renderer/CutawayClipping.js): the whole build cut away above where a person on its lowest floor would be cut
+  indoors, kept fitted as it changes. Picking passes over what is cut away (renderer/PickingService.js,
+  `cutawayClipping`), in the Editor and, indoors, in World View, so a click goes into the room that shows.
+- **The camera frames the build where it is drawn** (frameDocument()). It already opened at a three-quarter angle,
+  but aimed at the build's own coordinates, below the Editor's floor (renderer/EditorFloor.js); it now adds the floor.
+- **One name for whose a build is** (core/BuildCredit.js). The hover card's "by …" and the inspection's Author read the
+  Publication's signed author, else whoever placed the build (the placement's Owner), else the name in the build,
+  else "anonymous": no more "Author anonymous" beside "Owner Ana".
+- **Measuring the village** (core/VisitorCount.js `WORLD_VISIT` and `WORLD_NEIGHBOUR`, core/NeighbourSight.js,
+  ui/views/worldView/useNeighbourCount.js). `/e/world-visit` when World View opens; `/e/world-neighbour` once a visit
+  when a build stands in view (loaded, or the plaza's entries) that this device didn't publish and can't edit. The
+  village's ready-made builds are drawn, never loaded, so they don't count. A launch target (core/LaunchTargets.js,
+  `neighbours`): half of visits, once there are fifty. docs/Privacy.md and its translations say what is sent.
+- Every language: File, See inside, the bar's label and the plaza's line. Guides 02 (File, See inside, one bar) and 03
+  (the bar, a phone's panel and plaza line, one name) in English, their translations marked out of date; Pillars.
+- Tests: `CalmerScreens` (one name; a neighbour; the counts and the target; See inside cutting the House's roof and
+  not its table, on and off, and the camera on the floor; a click passing a cut-away roof to the floor). The bundled
+  site: the File menu's 3D model; See inside on and off; one bar after Publish with no passphrase reminder for a new
+  identity, and the reminder on the next publish; World View's bar holding Walk here with me and Build here, and the
+  panel not; Walk on a phone opening with the panel closed and the plaza's line opening it.
+- Not done: a cut that follows the player between storeys; the HUD's own compact layout for very small screens beyond
+  wrapping; showing the neighbour count anywhere but the scorecard.
+
+## The side systems, kept and watched (unnumbered, 2026-10-12)
+
+**Kept, and counted, so they are judged on use.** The creative-direction reviews of 2026-10-11 and 2026-10-12 asked the
+project owner to decide each of the systems that serve no pillar directly. The owner kept them all, to be looked at
+again if hardly anyone uses one (docs/Pillars.md, "The side systems").
+
+- **Seven counts** (core/VisitorCount.js; application/settings/FunnelEventCounter.js `countOnce()`), each at most once a
+  page load, under the visitor count's rules (official site only, the setting, Do Not Track and Global Privacy
+  Control): `/e/swam` (into the water), `/e/animal-caught`, `/e/animal-decorated` (G), `/e/inventory-used` (an animal
+  caught or a vehicle stored), `/e/chat-sent`, `/e/voice-call` (made or answered) and `/e/lobby-joined`. None says what
+  was caught, said, called or joined.
+- **Where they're heard.** Swimming, catching and carrying from World View's avatar tick (core/SideSystemUse.js, pure:
+  what changed between two moments, the first moment of a visit using nothing; ui/views/worldView/useSideSystemCount.js);
+  decorating from the session (`onAnimalDecorated()` in application/worldNavigation/worldContentMethods.js); chat and
+  voice in ui/views/ChatView.js; the lobby in ui/components/PublicLobbyPanel.js.
+- **Watched on the scorecard** (core/LaunchTargets.js `SIDE_SYSTEMS`, `evaluateSideSystems()`; scripts/launch-scorecard.mjs).
+  The share of visits that used each, out of World View visits (`/e/world-visit`) for the World View ones and daily
+  visits (`/`, which the scorecard now reads too) for chat, voice and the lobby; flagged rarely used under 2% once 50 or
+  100 visits are counted. Not targets: nothing gates on them.
+- docs/Privacy.md and its seven translations, stamped up to date; Pillars records the decision.
+- Tests: `SideSystems` (the snapshot and what changed; each count's fixed path, once a page load, off when turned off
+  or elsewhere; the decoration listener; the scorecard's shares and flags).
+- Not done: a count of how much each is used beyond once a page load; the side systems' guide pages, which are
+  unchanged.
+
+## Every entry in the village (unnumbered, 2026-10-12)
+
+**A week's entry placed far from the square is shown in the village while the plaza is visited.** This week's only
+entry, The Islet Lighthouse, was published before builds settled in the village ("Find each other"), so its signed spot
+is on the old grid, hundreds of units from the square. Since "Make it yours, in the village" the plaza showed an entry
+whose placement this device knows only at that placement, assuming World View draws it there; World View draws placed
+builds only within its streaming radius (150) of the camera, so the plaza said "1 entry stands here" and showed it
+nowhere near (**Navigate** went to it). Pillar served: your work lives in a world (entrants expect to see their entries
+in the village).
+
+- core/PlazaEntrySpots.js `plazaEntrySpots()` (pure, from ui/views/worldView/useChallengePlaza.js): an entry placed
+  within `PLAZA_IN_VIEW_RADIUS` (120, the first four village rings) of the middle stands there; one placed further
+  away, or not known to be placed, is shown as an exhibit on the spot it would settle on in the village, clear of the
+  placements and the entries before it. Its own spot never moves.
+- Guide 04 ("The challenge plaza") in English.
+- Tests: `PlazaEntrySpots` (a grid spot out of World View's reach of the square and a village spot within it; the Islet
+  Lighthouse case shown on the first ring with its own spot untouched; placed in the village standing there, far and
+  unknown ones shown, none sharing a spot, deterministic).
+
 ## Day and night in World View (unnumbered, 2026-10-12)
 
 **World View's sky now turns from day to night and back every 40 minutes, and windows and lanterns light up after
@@ -5877,7 +6201,7 @@ still the next release's subject, and this is World View polish beside them.
   exhibits, claimed builds) get the same shader addition over the renderer's uniform
   (renderer/NightGlowMaterial.js), added to the emissive light so selection highlighting still owns
   `material.emissive`.
-- **The Lantern** (core:lantern, the fifty-first core brick): an eight-sided glass lantern, 0.75 × 1 × 0.75, in
+- **The Lantern** (core:lantern, the fifty-ninth core brick): an eight-sided glass lantern, 0.75 × 1 × 0.75, in
   Details. The built-in lighthouses (collection:lighthouse, Harbor Island's) and the challenge plaza's lamp posts use
   it instead of a plain yellow brick, and the Village Dock gains one at its far end.
 - **Crickets at night** (`ambientMixAtNight()` in core/AmbientSoundscape.js). Birds fall to a tenth and crickets rise,

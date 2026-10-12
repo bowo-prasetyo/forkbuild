@@ -1,3 +1,4 @@
+import { editorFloorHeight } from './EditorFloor.js';
 import { applyBrickOrientation } from './applyBrickOrientation.js';
 import { normalizeTilt } from '../core/BrickOrientation.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
@@ -103,11 +104,14 @@ export class StructurePreviewRenderer {
     // Mirrors WorldRenderer#_renderStructurePlacement()'s own
     // composition exactly: each brick's local position, rotated around
     // the origin by the PREVIEW's rotation, translated by the preview's
-    // position, then lifted by terrain sampled at that position — a
-    // structure placement transforms its content at render time, never
-    // at rest, and the ghost is no exception.
+    // position, then lifted onto the Editor's floor (renderer/EditorFloor.js),
+    // as WorldRenderer lifts the committed placement by the terrain at its
+    // World's origin — a structure placement transforms its content at
+    // render time, never at rest, and the ghost is no exception. (It used
+    // to sample the terrain under the ghost, so it rose and sank over the
+    // hills while what it placed stood on the floor.)
     _applyTransform(preview) {
-        const groundY = this._terrainOffsetY(preview.position.x, preview.position.z);
+        const groundY = editorFloorHeight(this._renderer);
         for (const mesh of this._meshes) {
             const localPoint = this._rotateAroundOrigin(mesh.userData.localPosition, preview.rotation);
             mesh.position.set(
@@ -124,12 +128,6 @@ export class StructurePreviewRenderer {
             return point;
         }
         return this._transformMath.rotatePointAroundPivotY(point, { x: 0, y: 0, z: 0 }, degrees);
-    }
-
-    _terrainOffsetY(x, z) {
-        return typeof this._renderer.terrainHeightAt === 'function'
-            ? this._renderer.terrainHeightAt(x, z)
-            : 0;
     }
 
     _applyValidity(valid) {

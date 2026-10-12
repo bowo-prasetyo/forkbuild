@@ -5,6 +5,10 @@
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · **Français** · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../03-WorldView.md).
+<!-- /stale -->
+
 La Vue du Monde est l’espace 3D partagé où **toutes les créations publiées
 existent côte à côte**. Déplacez-vous, cherchez ce que vous voulez,
 découvrez ce que d’autres ont construit à proximité et inspectez leurs

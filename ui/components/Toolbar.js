@@ -1,6 +1,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue';
 import LoginModal from './LoginModal.js';
 import RemixPermissionDialog from './RemixPermissionDialog.js';
+import FindabilityDialog from './FindabilityDialog.js';
 import { License, LicenseId } from '../../core/License.js';
 import { UpdateDocumentMetadataUseCase } from '../../application/document/UpdateDocumentMetadataUseCase.js';
 import { saveFailureMessage } from './saveFailureMessages.js';
@@ -30,6 +31,9 @@ import { errorText, formatDate, t } from '../i18n/i18n.js';
 // of its own), with a search box once there are enough documents that
 // scrolling alone stops being the fastest way to find one.
 const SEARCH_THRESHOLD = 8;
+// The builds Publish has already asked "nothing of your own yet?" about in
+// this visit: asked once each, never again however often it is published.
+const NOTHING_ADDED_ASKED = new Set();
 
 // 0.9.653 — SaveDocumentUseCase.execute() performs multiple independent
 // StorageProvider writes (document blob, then manifest — see
@@ -117,9 +121,11 @@ export default {
     // never calls editorSession.importDocument() itself.
     // `saved` follows a successful Save, for the Editor's save sound.
     emits: ['back-to-world', 'open-shortcuts', 'published', 'saved', 'export-document', 'export-model', 'export-all-documents', 'import-document', 'new-document'],
-    components: { LoginModal, RemixPermissionDialog },
+    components: { LoginModal, RemixPermissionDialog, FindabilityDialog },
     setup(props, { emit }) {
         const identityUseCase = inject('identityUseCase', null);
+        const findabilityStore = inject('findabilityStore', null);
+        const readyMadeBricks = inject('readyMadeBricksStore', null);
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
         const recentOpen = ref(false);
@@ -179,6 +185,13 @@ export default {
             try {
                 const publication = props.publishDocumentUseCase.execute(props.documentManager);
                 report(t('toolbar.published', { title: publication.title }));
+                // Publishing keeps the build too: what was just published is
+                // never left reading "Draft" and "Unsaved changes".
+                if (props.documentManager.state.dirty) {
+                    saveDocument(props.saveDocumentUseCase, props.documentManager)
+                        .then(() => emit('saved'))
+                        .catch((error) => console.error('Saving after publish failed:', error));
+                }
                 // 0.9.377 — forwards the exact just-published Publication
                 // to whichever host holds a `@published` listener. What,
                 // if anything, a listener does with it is entirely its
@@ -198,13 +211,42 @@ export default {
         // publish the person says whether others may remix it
         // (RemixPermissionDialog); the answer becomes its license.
         const askRemixPermission = ref(false);
+        // A build started from something ready-made with nothing of the
+        // builder's own in it yet (core/PlacedBricks.js) is asked about once,
+        // kindly: publishing it untouched isn't building it
+        // (docs/reviews/CreativeDirection-2026-10-12b.md, finding 2).
+        const askNothingAdded = ref(false);
         function requestPublish() {
+            const world = props.documentManager.document?.world;
+            if (world && readyMadeBricks && !NOTHING_ADDED_ASKED.has(world.id)) {
+                let untouched = false;
+                try {
+                    untouched = readyMadeBricks.get(world.id) !== null && readyMadeBricks.placedCount(world) === 0;
+                } catch {
+                    untouched = false;
+                }
+                if (untouched) {
+                    NOTHING_ADDED_ASKED.add(world.id);
+                    askNothingAdded.value = true;
+                    return;
+                }
+            }
+            continueToPublish();
+        }
+        function keepBuilding() {
+            askNothingAdded.value = false;
+        }
+        function publishAnyway() {
+            askNothingAdded.value = false;
+            continueToPublish();
+        }
+        function continueToPublish() {
             const license = props.documentManager.document?.metadata?.license;
             if (license && license.id === LicenseId.UNSPECIFIED) {
                 askRemixPermission.value = true;
                 return;
             }
-            requestSignedPublish();
+            requestFindability();
         }
         function chooseRemixPermission(licenseId) {
             askRemixPermission.value = false;
@@ -213,6 +255,32 @@ export default {
             } catch (err) {
                 report(t('toolbar.publishFailed', { error: errorText(err) }));
                 return;
+            }
+            requestFindability();
+        }
+        // Who can find it? (FindabilityDialog), asked once per device, before
+        // its first publish; the answer decides whether each publish is also
+        // sent to everyone (ui/views/editorView/useBuildNoteSend.js).
+        const askFindability = ref(false);
+        function requestFindability() {
+            let chosen = null;
+            try {
+                chosen = findabilityStore ? findabilityStore.get() : 'none';
+            } catch {
+                chosen = null;
+            }
+            if (chosen === null) {
+                askFindability.value = true;
+                return;
+            }
+            requestSignedPublish();
+        }
+        function chooseFindability(findability) {
+            askFindability.value = false;
+            try {
+                findabilityStore.set(findability);
+            } catch {
+                // Asked again at the next publish.
             }
             requestSignedPublish();
         }
@@ -269,6 +337,22 @@ export default {
             reader.readAsText(file);
         }
 
+        // The File menu: Export, 3D model and Import. Placed on the page under
+        // its button, since a phone's toolbar scrolls sideways and would clip a
+        // menu inside it.
+        const fileOpen = ref(false);
+        const fileMenuStyle = ref({});
+        function toggleFile(event) {
+            if (!fileOpen.value) {
+                const rect = event?.currentTarget?.getBoundingClientRect?.();
+                const viewportWidth = typeof window === 'undefined' ? Infinity : window.innerWidth;
+                fileMenuStyle.value = rect
+                    ? { top: `${Math.round(rect.bottom + 6)}px`, left: `${Math.round(Math.max(8, Math.min(rect.left, viewportWidth - 180)))}px` }
+                    : {};
+            }
+            fileOpen.value = !fileOpen.value;
+        }
+
         function toggleRecent() {
             recentOpen.value = !recentOpen.value;
             if (!recentOpen.value) {
@@ -312,11 +396,11 @@ export default {
         return {
             t,
             dirty, recentDocuments, sortedRecentDocuments, filteredRecentDocuments,
-            recentOpen, recentQuery, toggleRecent, formatModified,
+            recentOpen, recentQuery, toggleRecent, formatModified, fileOpen, fileMenuStyle, toggleFile,
             searchThreshold: SEARCH_THRESHOLD,
             save, createNew, load, place, publish, saveAndReturnToWorld,
             signInToPublish, lockedIdentityId, requestPublish, publishAfterSignIn,
-            askRemixPermission, chooseRemixPermission,
+            askRemixPermission, chooseRemixPermission, askNothingAdded, keepBuilding, publishAnyway, askFindability, chooseFindability,
             importFileInput, triggerImportDocument, onImportDocumentFileChosen, exportAllDocuments
         };
     },
@@ -343,10 +427,30 @@ export default {
             </template>
 
             <button class="toolbar-save" @click="save">{{ t('toolbar.save') }}</button>
-            <button class="toolbar-export" @click="$emit('export-document')">{{ t('toolbar.export') }}</button>
-            <!-- The build as a 3D model file other programs open; EditorView makes it. -->
-            <button class="toolbar-export-model" @click="$emit('export-model')">{{ t('toolbar.exportModel') }}</button>
-            <button class="toolbar-import" @click="triggerImportDocument">{{ t('toolbar.import') }}</button>
+            <button class="toolbar-publish" @click="requestPublish">{{ t('toolbar.publish') }}</button>
+            <button class="toolbar-new" @click="createNew">{{ t('toolbar.new') }}</button>
+            <!-- Files, under one menu so they don't sit beside Publish at the same
+                 weight, nor push New off a phone's toolbar
+                 (docs/reviews/CreativeDirection-2026-10-12b.md, finding 6). -->
+            <div class="toolbar-file">
+                <button
+                    type="button"
+                    class="toolbar-file-toggle"
+                    aria-haspopup="menu"
+                    :aria-expanded="fileOpen ? 'true' : 'false'"
+                    @click="toggleFile"
+                >{{ t('toolbar.file') }} <span class="toolbar-recent-caret">▾</span></button>
+                <template v-if="fileOpen">
+                    <div class="dropdown-backdrop" @click="fileOpen = false"></div>
+                    <!-- A choice closes the menu. -->
+                    <div class="toolbar-file-menu" role="menu" :style="fileMenuStyle" @click="fileOpen = false" @keydown.esc.stop="fileOpen = false">
+                        <button class="toolbar-export" role="menuitem" @click="$emit('export-document')">{{ t('toolbar.export') }}</button>
+                        <!-- The build as a 3D model file other programs open; EditorView makes it. -->
+                        <button class="toolbar-export-model" role="menuitem" @click="$emit('export-model')">{{ t('toolbar.exportModel') }}</button>
+                        <button class="toolbar-import" role="menuitem" @click="triggerImportDocument">{{ t('toolbar.import') }}</button>
+                    </div>
+                </template>
+            </div>
             <input
                 ref="importFileInput"
                 type="file"
@@ -355,11 +459,33 @@ export default {
                 :aria-label="t('toolbar.importFile')"
                 @change="onImportDocumentFileChosen"
             />
-            <button class="toolbar-publish" @click="requestPublish">{{ t('toolbar.publish') }}</button>
+            <div
+                v-if="askNothingAdded"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="nothing-added-title"
+                class="modal-overlay"
+                @click.self="keepBuilding"
+                @keydown.esc.stop="keepBuilding"
+            >
+                <div class="modal-panel nothing-added-dialog">
+                    <h3 id="nothing-added-title">{{ t('toolbar.nothingAddedTitle') }}</h3>
+                    <p>{{ t('toolbar.nothingAddedText') }}</p>
+                    <div class="modal-actions">
+                        <button type="button" class="action-btn action-btn--primary nothing-added-keep" @click="keepBuilding">{{ t('toolbar.nothingAddedKeep') }}</button>
+                        <button type="button" class="action-btn action-btn--secondary nothing-added-publish" @click="publishAnyway">{{ t('toolbar.nothingAddedPublish') }}</button>
+                    </div>
+                </div>
+            </div>
             <RemixPermissionDialog
                 v-if="askRemixPermission"
                 @choose="chooseRemixPermission"
                 @cancel="askRemixPermission = false"
+            />
+            <FindabilityDialog
+                v-if="askFindability"
+                @choose="chooseFindability"
+                @cancel="askFindability = false"
             />
             <LoginModal
                 v-if="signInToPublish"
@@ -369,7 +495,6 @@ export default {
                 @skip="publishAfterSignIn"
                 @close="signInToPublish = false"
             />
-            <button class="toolbar-new" @click="createNew">{{ t('toolbar.new') }}</button>
             <button
                 v-if="entryContext && entryContext.returnWorldId"
                 class="toolbar-save-return"

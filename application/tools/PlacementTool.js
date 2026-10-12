@@ -1,8 +1,12 @@
 import { nextTilt } from '../../core/BrickOrientation.js';
+import { restingHeight } from '../../core/BrickResting.js';
 import { Tool } from './Tool.js';
 import { PlacementValidator } from '../../core/PlacementValidator.js';
 import { PlaceBrickCommand } from '../commands/PlaceBrickCommand.js';
 import { PlacementPositionService } from '../editor/PlacementPositionService.js';
+import { Position } from '../../core/Position.js';
+
+export const DEFAULT_BRICK_ID = 'core:cube';
 
 // Pointer move -> read pointerEvent.pickedBrick/worldPosition (already
 // computed by InputDispatcher) -> snap -> PreviewUseCase.show(). Pointer
@@ -62,6 +66,17 @@ export class PlacementTool extends Tool {
         this._lastPosition = null;
     }
 
+    // Place with nothing chosen yet (a new build's first click on Place, or
+    // the 2 key) loads the Cube, so the hint's "click to place" is true from
+    // the first click; the Build Library highlights it through
+    // ACTIVE_BRICK_CHANGED. A brick already chosen is kept.
+    activate() {
+        const editorContext = this.context.editorContext;
+        if (!editorContext.activeBrick.definitionId && this.context.registry?.has(DEFAULT_BRICK_ID)) {
+            editorContext.setActiveBrick(DEFAULT_BRICK_ID);
+        }
+    }
+
     deactivate() {
         this.context.previewUseCase.hide();
         this._rotation = 0;
@@ -98,6 +113,11 @@ export class PlacementTool extends Tool {
                     this.context.editorContext.settings,
                     this._tilt
                 );
+                // On top of a brick, a wider one rests on whatever else is
+                // under it (core/BrickResting.js): a roof on the walls.
+                if (position && pointerEvent.pickedBrick.normal.y > 0.5) {
+                    position = this._restOnTop(building, definitionId, position);
+                }
             }
         }
 
@@ -109,6 +129,8 @@ export class PlacementTool extends Tool {
                 this._tilt
             );
         }
+
+        position = this._guided(definitionId, position, pointerEvent);
 
         // Kept so a tilt can work out the pending brick's resting height again.
         this._lastPointer = pointerEvent;
@@ -171,6 +193,11 @@ export class PlacementTool extends Tool {
         }
         const delta = keyEvent.modifiers?.shift ? -90 : 90;
         this._rotation += delta;
+        // A turn changes the footprint, so where it rests is worked out again.
+        if (this._lastPointer) {
+            this.onPointerMove(this._lastPointer);
+            return;
+        }
         // With nothing hovered yet (always so on touch, which has no hover) the
         // turn still applies to the next preview and placement.
         if (this._lastPosition) {
@@ -190,6 +217,33 @@ export class PlacementTool extends Tool {
         if (this._lastPointer) {
             this.onPointerMove(this._lastPointer);
         }
+    }
+
+    // EditorContext.placementGuide: the brick it names goes to its spot while
+    // the pointer is over the build near it (a brick hit counts by the
+    // brick's own position, so a click on a wall of the house counts).
+    _guided(definitionId, position, pointerEvent) {
+        const guide = this.context.editorContext.placementGuide;
+        if (!guide || guide.definitionId !== definitionId || !position) return position;
+        let near = pointerEvent.worldPosition;
+        if (pointerEvent.pickedBrick) {
+            const building = this.context.world.getBuilding(pointerEvent.pickedBrick.buildingId);
+            near = building?.findBrick(pointerEvent.pickedBrick.brickId)?.position || near;
+        }
+        if (!near || Math.hypot(near.x - guide.position.x, near.z - guide.position.z) > (guide.radius ?? 0)) return position;
+        return new Position(guide.position.x, guide.position.y, guide.position.z);
+    }
+
+    _restOnTop(building, definitionId, position) {
+        const registry = this.context.registry;
+        const definition = registry?.get(definitionId);
+        if (!definition) return position;
+        const y = restingHeight(
+            { definition, position, rotation: this._rotation, tilt: this._tilt },
+            building.getBricks(),
+            (id) => registry.get(id)
+        );
+        return y === position.y ? position : new Position(position.x, y, position.z);
     }
 
     get pendingTilt() {

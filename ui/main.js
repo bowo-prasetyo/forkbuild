@@ -64,6 +64,8 @@ import { composeIdentityAndPeers } from './main/composeIdentityAndPeers.js';
 import { composeContentAndSnapshots } from './main/composeContentAndSnapshots.js';
 import { composeWorldDiscovery } from './main/composeWorldDiscovery.js';
 import { composeInjectedWalletServices } from './main/composeInjectedWalletServices.js';
+import { composeBuildNotes } from './main/composeBuildNotes.js';
+import { challengeDiscoveryWithBuildNotes, repositoryDiscoveryWithBuildNotes } from '../application/buildNotes/WithBuildNotes.js';
 import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
 import { ExperimentalToolsSettingsStore } from '../application/settings/ExperimentalToolsSettingsStore.js';
@@ -441,7 +443,8 @@ app.provide('sharePublicationWithPeersUseCase', sharePublicationWithPeersUseCase
 app.provide('findOwnSharedPublicationUseCase', new CreateFindOwnSharedPublicationUseCase().execute({ contentStore: publicationContentStore }));
 // The publisher's signed placement of a World, announced beside its Snapshot
 // when the Publications page distributes it, as World View does.
-app.provide('publisherPlacementClaimLookup', new CreatePublisherPlacementClaimLookupUseCase().execute());
+const publisherPlacementClaimLookup = new CreatePublisherPlacementClaimLookupUseCase().execute();
+app.provide('publisherPlacementClaimLookup', publisherPlacementClaimLookup);
 app.provide('retrieveSharedPublicationUseCase', retrieveSharedPublicationUseCase);
 app.provide('autoRetrieveSharedPublicationsUseCase', autoRetrieveSharedPublicationsUseCase);
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
@@ -676,21 +679,39 @@ const repositoryNetworkDiscovery = new RepositoryNetworkDiscovery({
     isKnown: repositoryNetworkDiscoveryIsKnown,
     admit: repositoryNetworkDiscoveryAdmit
 });
-app.provide('repositoryNetworkDiscovery', repositoryNetworkDiscovery);
+// Builds others sent to everyone as build notes (core/BuildNote.js), found
+// beside what the other networks hold, and this device's own sent the same
+// way when its builder chose so (application/settings/FindabilityStore.js).
+const challengeEntryLog = new ChallengeEntryLog(new LocalStorageProvider());
+const { findabilityStore, publishBuildNoteUseCase, buildNoteDiscovery } = composeBuildNotes({
+    relayUrls: resolvedNostrRelayUrls,
+    queryRelay: nostrRelayQueryClient,
+    publicationContentStore,
+    verifier: worldEncounterMaterialVerifier,
+    storeSnapshotContentUseCase,
+    decentralizedPublicationDiscoveryProvider,
+    admissionLog: worldEncounterPublicationAdmissionLog,
+    isKnown: repositoryNetworkDiscoveryIsKnown,
+    entryLog: challengeEntryLog,
+    placementClaimLookup: publisherPlacementClaimLookup
+});
+app.provide('findabilityStore', findabilityStore);
+app.provide('publishBuildNoteUseCase', publishBuildNoteUseCase);
+app.provide('buildNoteDiscovery', buildNoteDiscovery);
+app.provide('repositoryNetworkDiscovery', repositoryDiscoveryWithBuildNotes(repositoryNetworkDiscovery, buildNoteDiscovery));
 // A week's challenge entries (core/BuildChallenge.js): found under the week's
 // `forkbuild-tag:` tag on Nostr and Arweave, and by the tags Blurt build posts
 // list, when the challenge page opens,
 // verified and admitted as the Repository's own discovery does.
-const challengeEntryLog = new ChallengeEntryLog(new LocalStorageProvider());
 app.provide('challengeEntryLog', challengeEntryLog);
-app.provide('challengeEntryDiscovery', new ChallengeEntryDiscovery({
+app.provide('challengeEntryDiscovery', challengeDiscoveryWithBuildNotes(new ChallengeEntryDiscovery({
     services: buildTagQueryServices,
     materialSources: worldEncounterMaterialSources,
     verifier: worldEncounterMaterialVerifier,
     isKnown: repositoryNetworkDiscoveryIsKnown,
     admit: repositoryNetworkDiscoveryAdmit,
     entryLog: challengeEntryLog
-}));
+}), buildNoteDiscovery));
 app.provide('networkPublicationLocatorStore', networkPublicationLocatorStore);
 app.provide('worldEncounterLeadAssociationsQuery', worldEncounterLeadAssociationsQuery);
 app.provide('publicationDiscoveryTag', PUBLICATION_DISCOVERY_TAG);

@@ -19,14 +19,32 @@ released animal into the World as a decoration with **G** (see
 
 ## Opening World View
 
-From the **Repository**, click **Explore** on any creation — or navigate to a
+**Walk** in the main menu opens World View at this week's challenge plaza,
+with no build of your own needed. The plaza is the village square: the six
+ready-made builds stand round it for everyone, every time you open World
+View, ready to remix, and the village of published builds grows just
+outside them (see
+[The challenge plaza](04-PublishingAndForking.md#the-challenge-plaza)).
+
+From **Explore**, click **Explore** on any creation — or navigate to a
 world's URL directly. You'll appear next to that creation in the shared world.
+Builds others sent to everyone are found there and in the challenge (see
+[Who can find it?](04-PublishingAndForking.md#who-can-find-it)), and stand
+where their builders put them: remixes beside what they remix, the rest in
+the village round the plaza.
 
 ## A visitor's view, and Advanced
 
-World View opens as a visitor's view: the build's name and who made it,
-what's around you, and what you can do here (**Build here**, **Walk here
-with me**, and **Edit a Copy** when the build isn't yours). The tools for
+World View opens as a visitor's view. What you came to do sits on a bar at
+the bottom of the World: **Build here**, **Walk here with me**, and **Edit a
+Copy** when the build isn't yours. The side panel has the build's name and
+who made it (the same name wherever a build is credited), then where to go
+and what's around you. On a phone the panel starts closed, so the World
+fills the screen; **Panel** opens it. At the plaza, a phone shows one line
+over the World instead, **Plaza: …** and how many builds stand there, which
+opens the panel. Who is drawn, and whether the keys walk your avatar and the
+camera follows it, are on for everyone and wait under **Avatar settings**;
+the camera choice stays beside them. The tools for
 the networks behind the World wait at the bottom of the panel, under
 **Show advanced tools**:
 
@@ -36,7 +54,10 @@ the networks behind the World wait at the bottom of the panel, under
   groups, with **Discover Shared World** inside World Encounters;
 - **My Shared World**, your publication's own network panel, and Move
   Placement beside it;
-- the list of Worlds that couldn't load, and the avatar diagnostics.
+- the list of Worlds that couldn't load, and the avatar diagnostics;
+- picking by clicking: as a visitor, clicking the view (to start walking,
+  say) selects nothing but another avatar, so no brick's details open; with
+  Advanced on, a click opens [Inspecting a brick](#inspecting-a-brick--or-a-placed-structure).
 
 The choice is remembered on this device and changes nothing for anyone
 else. The compass, the place names along the bottom, Search, Locations,
@@ -111,8 +132,24 @@ A World can also have **residents** — people who live there and stroll
 around their homes, walking round buildings rather than through them, and
 turning to greet you when you come close; talk to one and it tells you
 what's around. Unlike wildlife they're part of
-the World's own content: its author adds them. See
-[Residents](06-AvatarsAndPresence.md#residents).
+the World's own content: its author adds them. The ready-made homes come
+lived in: a copy of the House, a cottage or another ready-made home starts
+with one resident living just beside its front door, and the ones standing
+round the challenge plaza have theirs too; remove yours with **R** like any
+other. See [Residents](06-AvatarsAndPresence.md#residents).
+
+### Inside a build
+
+Walk in through a door and the build above your head is cut away, so you
+see the room you're standing in rather than the wall behind you: its roof
+and everything higher than your head, for that build only, while the walls
+stand to just above your height. With the camera following you, or in
+**Third Person**, the camera comes in too, behind and above you looking
+down into the room, and rises rather than going through a wall when one is
+right behind you. **Bird's-Eye** looks straight down into the room;
+**First Person** sees it through your own eyes, with nothing cut away.
+Step back outside and the whole build is drawn again. Only what is drawn
+changes: the roof is still there, for everyone and for walking.
 
 ## Day and night
 
@@ -657,13 +694,15 @@ walking around. The dialog lists who is on the way and who has arrived.
 
 ### The challenge plaza
 
-**Walk the plaza** on a week's challenge page opens World View in a
-clearing where that week's entries stand round an open square, paved,
-with a well, benches and lamp posts, so the plaza is a place even in a week
-with no entries yet; a panel lists them (see
+**Walk the plaza** on a week's challenge page opens World View at the
+village square: paved, with a well, benches and lamp posts, and the six
+ready-made builds round it. The square and the ready-made builds are part
+of the World, like its hills and trees: they stand in every World View,
+for everyone, and nobody owns them. The village of published builds grows
+just outside them, so your own published house has neighbours. A panel
+lists the week's entries and the ready-made builds (see
 [The challenge plaza](04-PublishingAndForking.md#the-challenge-plaza)).
-No trees grow there, for any week. The entries are shown only while you're
-in the plaza, and **Build here** isn't offered there.
+No trees grow round the square, and **Build here** isn't offered there.
 
 ### Landmarks — marking a place worth remembering
 
@@ -849,7 +888,8 @@ row you can't do anything with.
 
 ## Inspecting a brick — or a placed structure
 
-Click any brick to open the **Inspection** panel, which tells you:
+With **Show advanced tools** on, click any brick to open the **Inspection**
+panel (as a visitor, a click selects nothing), which tells you:
 
 - What kind of brick it is
 - Its position and rotation

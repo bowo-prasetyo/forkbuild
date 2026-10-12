@@ -58,9 +58,10 @@ longer-term aim.
 - Groups, clipboard, brick colors with a palette of village colors, and a
   command palette (Ctrl/Cmd+K) that shares one action registry with the
   sidebar and keyboard shortcuts.
-- Fifty-one bricks, from half cubes, round bricks and logs to gable and cone
-  roofs, framed and round windows, fences, benches, bushes, pine trees and a
-  lantern that lights up at night.
+- Fifty-nine bricks, from half cubes, round bricks and logs to gable and cone
+  roofs, framed and round windows, fences, benches, bushes and pine trees,
+  furniture for inside (a table, a bed, a hearth and a shelf), and a lantern
+  that lights up at night.
 - A Build Library of bricks and ready-made structures, a personal blueprint
   library, structure placements, and document export/import.
 - Save, autosave with crash recovery, and publishing to an immutable,
@@ -102,9 +103,21 @@ longer-term aim.
   background, for new work by people you follow, remixes of your builds and
   comments; nothing is sent anywhere to make them work.
 
+- **Who can find it?** is asked at your first Publish. With **Everyone**,
+  each build is sent, signed, to public Nostr relays with a key the app
+  holds itself, so anyone using ForkBuild finds it in **Explore**, the
+  challenge and the World with no link, wallet or account; with **Only
+  people I send the link to**, it travels only in its link.
+
 **World View**
 - A shared world where published creations are placed and streamed in around
   the camera, on deterministic terrain with vegetation, water and wildlife.
+  Builds settle next to what they belong with: a remix beside the build it
+  remixes, everything else in a village that grows round the weekly
+  challenge's plaza.
+- **Walk** in the main menu opens that plaza, with the ready-made builds
+  standing round the square while a week has few entries, so there is
+  somewhere to walk before you've built anything.
 - Day and night: every 40 minutes the sky turns through dusk to a moonlit
   night and back, the same for everyone; windows and lanterns light up after
   dark and crickets take over from the birds. **Always day** keeps it day.

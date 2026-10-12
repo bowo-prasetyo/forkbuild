@@ -87,6 +87,10 @@ const EXACT_NAMES = new Map([
     ['ipfs-remote-pinning-settings', BackupEntryGroup.SETTINGS],
     ['arweave-gateway-configuration', BackupEntryGroup.SETTINGS],
     ['nostr-relay-configuration', BackupEntryGroup.SETTINGS],
+    // Who can find it? (application/settings/FindabilityStore.js), and the
+    // carrier key that sends builds to everyone (application/buildNotes/CarrierKeyStore.js).
+    ['publish-findability', BackupEntryGroup.SETTINGS],
+    ['nostr-carrier-key', BackupEntryGroup.SETTINGS],
     ['steem-reading-configuration', BackupEntryGroup.SETTINGS],
     ['steem-announcing-configuration', BackupEntryGroup.SETTINGS],
     ['blurt-reading-configuration', BackupEntryGroup.SETTINGS],

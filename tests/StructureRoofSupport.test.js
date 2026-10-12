@@ -4,7 +4,8 @@ import { orientedSize } from '../core/BrickOrientation.js';
 import { assert } from './support/Assert.js';
 
 // Nothing in a built-in structure floats above a hipped roof. A hip roof
-// (core:roof_hip) is a pyramid, so a brick resting on its bounding box, like
+// (core:roof_hip, and the spanning core:roof_hip_4x4, _4x6 and _6x6) slopes
+// to its eaves on every side, so a brick resting on its bounding box, like
 // a chimney set on a roof cap, can stand in mid-air over the lower part of
 // the slope. Every brick that stands on or through a hip roof must reach
 // down to the slope at the lowest point under it, unless it stands on
@@ -25,13 +26,16 @@ function box(brick) {
     return { minX: x - halfX, maxX: x + halfX, minZ: z - halfZ, maxZ: z + halfZ, bottom: y - size.height / 2, top: y + size.height / 2 };
 }
 
-// The height of a hip roof's slope above (x, z), inside its footprint.
+const HIP_ROOFS = new Set(['core:roof_hip', 'core:roof_hip_4x4', 'core:roof_hip_4x6', 'core:roof_hip_6x6']);
+
+// The height of a hip roof's slope above (x, z), inside its footprint: every
+// slope has one pitch, rising from the nearest eave to the ridge, which is
+// as far in from each eave as half the shorter side.
 function roofSurface(roof, x, z) {
     const halfX = (roof.maxX - roof.minX) / 2;
     const halfZ = (roof.maxZ - roof.minZ) / 2;
-    const dx = Math.abs(x - (roof.minX + halfX)) / halfX;
-    const dz = Math.abs(z - (roof.minZ + halfZ)) / halfZ;
-    return roof.bottom + (roof.top - roof.bottom) * (1 - Math.max(dx, dz));
+    const fromEave = Math.min(halfX - Math.abs(x - (roof.minX + halfX)), halfZ - Math.abs(z - (roof.minZ + halfZ)));
+    return roof.bottom + (roof.top - roof.bottom) * Math.min(1, fromEave / Math.min(halfX, halfZ));
 }
 
 function overlaps(a, b) {
@@ -40,11 +44,11 @@ function overlaps(a, b) {
 }
 
 function floatingBricks(structure) {
-    const roofs = structure.bricks.filter((brick) => brick.definitionId === 'core:roof_hip').map(box);
-    const others = structure.bricks.filter((brick) => brick.definitionId !== 'core:roof_hip').map(box);
+    const roofs = structure.bricks.filter((brick) => HIP_ROOFS.has(brick.definitionId)).map(box);
+    const others = structure.bricks.filter((brick) => !HIP_ROOFS.has(brick.definitionId)).map(box);
     const problems = [];
     for (const brick of structure.bricks) {
-        if (brick.definitionId === 'core:roof_hip') continue;
+        if (HIP_ROOFS.has(brick.definitionId)) continue;
         const b = box(brick);
         if (others.some((o) => o !== b && Math.abs(o.top - b.bottom) < EPSILON && overlaps(o, b))) continue;
         for (const roof of roofs) {
@@ -66,14 +70,17 @@ function floatingBricks(structure) {
 // The check finds the chimney House used to have: a cube set on top of a
 // roof cap's box, off its peak.
 {
-    const house = structureRegistry.get('village:house');
-    const old = {
-        bricks: [
-            ...house.bricks.filter((brick) => brick.definitionId === 'core:roof_hip'),
-            { definitionId: 'core:cube', position: { x: 1.5, y: 5.25, z: -1.5 }, rotation: 0, tilt: 0 }
-        ]
-    };
+    const cap = { definitionId: 'core:roof_hip', position: { x: 1, y: 4.0, z: -1 }, rotation: 0, tilt: 0 };
+    const old = { bricks: [cap, { definitionId: 'core:cube', position: { x: 1.5, y: 5.25, z: -1.5 }, rotation: 0, tilt: 0 }] };
     assert(floatingBricks(old).length === 1, 'a cube resting on a hip roof cap\'s box floats');
+    // And on a spanning roof, off its ridge.
+    const spanning = { bricks: [
+        { definitionId: 'core:roof_hip_4x6', position: { x: 0, y: 4.25, z: 0 }, rotation: 0, tilt: 0 },
+        { definitionId: 'core:cube', position: { x: 1.5, y: 5.75, z: 2.5 }, rotation: 0, tilt: 0 },
+        { definitionId: 'core:chimney', position: { x: 1, y: 4.5, z: 1 }, rotation: 0, tilt: 0 }
+    ] };
+    const found = floatingBricks(spanning);
+    assert(found.length === 1 && found[0].startsWith('core:cube'), `a cube on a spanning roof's box floats, a chimney through its slope doesn't (${found})`);
     console.log('✓ a brick standing on a hip roof\'s box, off its peak, is found');
 }
 

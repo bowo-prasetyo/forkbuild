@@ -31,6 +31,7 @@ export class EditorContext {
         this._structurePreview = StructurePreviewState.hidden();
         this._activeComposition = ActiveCompositionState.none();
         this._compositionPreview = CompositionPreviewState.hidden();
+        this._placementGuide = null;
     }
 
     get eventBus() {
@@ -76,6 +77,18 @@ export class EditorContext {
     // activeBrick.color on every pointer move.
     setActiveBrickColor(color) {
         this._activeBrick = new ActiveBrickState(this._activeBrick.definitionId, color);
+    }
+
+    // Where one brick is meant to go (a starter job's roof, core/StarterJob.js):
+    // `{ definitionId, position, radius }`, or null. While that brick is the
+    // one being placed, PlacementTool puts its ghost there whenever the
+    // pointer is within `radius` of it. Transient, like everything here.
+    get placementGuide() {
+        return this._placementGuide;
+    }
+
+    setPlacementGuide(guide) {
+        this._placementGuide = guide && guide.definitionId && guide.position ? Object.freeze({ ...guide }) : null;
     }
 
     get preview() {

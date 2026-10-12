@@ -82,9 +82,14 @@ import { dialogsTemplate } from './worldView/templates/dialogs.js';
 import { headerSectionTemplate } from './worldView/templates/headerSection.js';
 import { worldListsSectionTemplate } from './worldView/templates/worldListsSection.js';
 import { navigationHudSectionTemplate } from './worldView/templates/navigationHudSection.js';
+import { hudSectionTemplate } from './worldView/templates/hudSection.js';
 import { publicationSectionTemplate } from './worldView/templates/publicationSection.js';
 import { plazaSectionTemplate } from './worldView/templates/plazaSection.js';
 import { useChallengePlaza } from './worldView/useChallengePlaza.js';
+import { useStarterVillage } from './worldView/useStarterVillage.js';
+import { useNeighbourCount } from './worldView/useNeighbourCount.js';
+import { useSideSystemCount } from './worldView/useSideSystemCount.js';
+import { buildCreditName } from '../../core/BuildCredit.js';
 import { hoverCardTemplate } from './worldView/templates/hoverCard.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 import { plotQuery } from '../../core/BuildPlot.js';
@@ -279,10 +284,16 @@ export default {
             decentralizedPublicationDiscoveryProvider: decentralizedDiscoveryProviderForEnrichment
         });
         const session = worldViewFactory.createSession(registry);
+        // The village at the plaza, standing in every World View (core/StarterVillage.js).
+        const village = useStarterVillage({ session });
+        // Whether visitors see someone else's build, counted (useNeighbourCount.js).
+        const neighbourCount = useNeighbourCount({ session });
+        // Whether the kept side systems are used, counted (useSideSystemCount.js).
+        const sideSystemCount = useSideSystemCount({ session });
         // `/plaza/<week>`: the week's challenge plaza instead of a World.
         const {
             plaza, inPlaza, enterPlaza, leavePlaza, backToPlaza, focusExhibit, openExhibit, remixExhibit
-        } = useChallengePlaza({ route, router, session, refreshSpatialUI: () => refreshSpatialUI() });
+        } = useChallengePlaza({ route, router, session, refreshSpatialUI: () => refreshSpatialUI(), village });
         // The automatic Snapshot cascade, scoped to this mount (a fresh idempotency map
         // per session). `automaticCascadeSessionActive` is set false first thing on
         // unmount; the cascade reads it through a closure so a long-running chain sees
@@ -560,6 +571,7 @@ export default {
             : () => {};
 
         function refreshSpatialUI() {
+            neighbourCount.checkNeighbours(plaza.value ? plaza.value.exhibits.map((exhibit) => exhibit.key) : []);
             const state = session.getSpatialState();
             const docs = session.getLoadedDocuments();
             const pubMap = new Map(allPublications.value.map((p) => [p.documentId, p]));
@@ -639,6 +651,9 @@ export default {
                     documentId: inspection.documentId,
                     ...inspection.data
                 };
+                if ('worldAuthor' in spatialInspection.value) {
+                    spatialInspection.value.worldAuthor = creditFor(inspection.documentId, spatialInspection.value.worldAuthor);
+                }
             } else {
                 spatialInspection.value = null;
             }
@@ -720,7 +735,7 @@ export default {
 
         const {
             _syncWorldExperience, _syncWorldPresence, _syncWorldSpatialPresence, disposeWorldPresence,
-            refreshCollaborationRoster, syncCurrentWorldSpatialPresence, skipWelcomeFor
+            refreshCollaborationRoster, syncCurrentWorldSpatialPresence, skipWelcomeFor, skipArrivalWelcomes
         } = useWorldPresenceSync({
             cameraPerspective, openWelcomePanel, refreshWelcomeContext, resolveIdentityDisplayName, session, showWelcomePanel,
             spatialCollaboratorRows, worldMembers, worldPresenceRoster, worldReturnInfo
@@ -764,6 +779,19 @@ export default {
             return pub ? (pub.title || t('worldView.untitled')) : null;
         }
 
+        // One name for whose a build is (core/BuildCredit.js), in the hover card
+        // and the inspection alike.
+        function creditFor(documentId, documentAuthor = null) {
+            const pub = allPublications.value.find((p) => p.documentId === documentId);
+            let placementOwner = null;
+            try {
+                placementOwner = documentId ? session.getPlacementInfo(documentId)?.owner ?? null : null;
+            } catch {
+                placementOwner = null;
+            }
+            return buildCreditName({ publicationAuthor: pub?.author, placementOwner, documentAuthor }) || t('worldLocationBrowser.anonymous');
+        }
+
         function refreshHoverUI() {
             const pubMap = new Map(allPublications.value.map((p) => [p.documentId, p]));
             const hover = session.getSpatialHover();
@@ -776,7 +804,7 @@ export default {
                     brickId: hover.brickId,
                     position: hover.position,
                     worldTitle: pub?.title || t('worldView.untitled'),
-                    worldAuthor: pub?.author || t('worldLocationBrowser.anonymous')
+                    worldAuthor: creditFor(hover.documentId)
                 };
             } else {
                 spatialHover.value = null;
@@ -1017,8 +1045,9 @@ export default {
         // side panel starts closed so the World fills the screen.
         const touchInput = useMediaQuery(TOUCH_INPUT_QUERY);
         const compactLayout = useMediaQuery(COMPACT_LAYOUT_QUERY);
-        // Open in the plaza even on a phone: its panel is what says where you are.
-        const panelOpen = ref(!compactLayout.value || inPlaza.value);
+        // A phone starts with the panel closed, on the plaza too: the view is the
+        // point, and the bar over it (hudSection.js) holds what a visitor came to do.
+        const panelOpen = ref(!compactLayout.value);
         // The camera and walking controls hint, behind the panel's ? button.
         const controlsHintOpen = ref(false);
         const touchPadVisible = computed(() => touchInput.value && hasLocalAvatar.value && avatarControlMode.value);
@@ -1091,7 +1120,7 @@ export default {
         const {
             onKeyDown, onPointerDown, onPointerMove, onPointerUp
         } = useViewportInput({
-            compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
+            advanced, compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
         });
 
         const { arriveAtDoor, watchArrival } = useArrival({ session, feedback });
@@ -1099,7 +1128,12 @@ export default {
         onMounted(() => {
             allPublications.value = listPublicationsUseCase.execute();
             session.start(viewport.value);
+            village.standVillage();
+            neighbourCount.startVisit();
+            sideSystemCount.startVisit();
             if (inPlaza.value) {
+                // The plaza's own panel says what stands there; "a quiet corner" would not.
+                skipArrivalWelcomes();
                 enterPlaza();
             } else if (route.query.arrive === 'door') {
                 // Walk inside it (the Editor, after Publish): at the build's door.
@@ -1191,6 +1225,7 @@ export default {
                     : null;
                 // Not gated on control mode: air runs out whether or not keys are held.
                 swimState.value = hasLocalAvatar.value ? session.avatarSwimState() : null;
+                if (hasLocalAvatar.value) sideSystemCount.observeAvatar(swimState.value);
             }, 150);
         });
 
@@ -1200,6 +1235,8 @@ export default {
             automaticCascadeSessionActive = false;
             placeNamingDiscoveryPresentationActive = false;
             leavePlaza();
+            village.clearVillage();
+            sideSystemCount.endVisit();
             disposeClaimedBuilds();
             unsubscribeAnnouncementIndexChanges();
             if (placeNamingDiscoveryMonitor) {
@@ -1528,29 +1565,9 @@ export default {
                     plain utilities (Notifications is in the app's header);
                     Explore / Map / Places are the three mutually exclusive primary modes.
                 -->
+                <!-- What a visitor came to do is on the bar over the view (./worldView/templates/hudSection.js). -->
                 <div v-if="cameraPosition || activeDocumentInfo" class="world-view-actions world-view-actions--navigation">
                     <button v-if="cameraPosition" class="action-btn" @click="goHome">{{ t('worldView.home') }}</button>
-                    <button
-                        v-if="cameraPosition && !inPlaza"
-                        type="button"
-                        class="action-btn world-view-build-here"
-                        :title="t('buildPlot.buildHereHint')"
-                        @click="buildHere"
-                    >{{ t('buildPlot.buildHere') }}</button>
-                    <button
-                        v-if="activeDocumentInfo && !inPlaza"
-                        type="button"
-                        class="action-btn world-view-walk-together"
-                        :title="t('walkTogether.buttonHint')"
-                        @click="openWalkDialog"
-                    >{{ t('walkTogether.button') }}</button>
-                    <button
-                        v-if="activeDocumentInfo && !activeDocumentInfo.editable && !inPlaza"
-                        type="button"
-                        class="action-btn world-view-edit-copy"
-                        :title="t('publicationLink.editCopyHint')"
-                        @click="editActiveCopy"
-                    >{{ t('publicationLink.editCopy') }}</button>
                     <button
                         v-if="activeDocumentInfo"
                         class="action-btn"
@@ -1645,6 +1662,7 @@ export default {
             <div ref="viewport" class="world-viewport"></div>
             ${dialogsTemplate}
             ${navigationHudSectionTemplate}
+            ${hudSectionTemplate}
             ${hoverCardTemplate}
             <TouchMovementPad
                 v-if="touchPadVisible"

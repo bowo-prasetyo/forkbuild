@@ -5,6 +5,10 @@
 [English](../02-TheEditor.md) · **Deutsch** · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../02-TheEditor.md).
+<!-- /stale -->
+
 Im Editor wird gebaut. Diese Anleitung behandelt die Werkzeuge, wie Sie
 Steine auswählen und transformieren und wie Sie Ihr Bauwerk mit Gruppen
 ordnen.
@@ -40,10 +44,13 @@ ordnen.
 - **Baubibliothek** — ein Suchfeld und zwei Reiter:
   - **Steine** — alles, was Sie mit dem Platzierwerkzeug setzen können,
     als Kacheln in sechs Abschnitten (Grundformen, Tragwerk, Dächer &
-    Treppen, Öffnungen, Details, Natur): einundfünfzig Teile, von halben
+    Treppen, Öffnungen, Details, Natur): neunundfünfzig Teile, von halben
     Würfeln, runden Steinen und Baumstämmen bis zu Sattel- und Kegeldächern,
-    Fensterrahmen und Rundfenstern, Zäunen, Bänken, Büschen, Kiefern und
-    einer **Laterne**, die in der Weltansicht nachts leuchtet (siehe
+    Walmdächern, die ein ganzes Haus in einem Stück decken (4x4, 4x6 und
+    6x6), und einem langen Satteldach 2x4, Fensterrahmen und Rundfenstern,
+    Zäunen, Bänken, Büschen und Kiefern, Möbeln für die Räume, die Sie
+    betreten (ein Tisch, ein Bett, ein Herd und ein Regal, unter Details),
+    und einer **Laterne**, die in der Weltansicht nachts leuchtet (siehe
     [Tag und Nacht](03-WorldView.md#tag-und-nacht)). Klicken Sie auf eine, um sie auszuwählen
     (und zum Platzierwerkzeug zu wechseln); dann erscheint ein Farbfeld
     **Farbe** zum Wählen ihrer Farbe — siehe [Steinfarben](#steinfarben)

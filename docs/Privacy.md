@@ -23,6 +23,11 @@ send it:
   structures;
 - your identities: each one's public key, and its private key, encrypted with
   your passphrase unless you chose to create it without one;
+- the carrier key that sends your builds to everyone (a Nostr key, made the
+  first time you choose **Everyone** under **Who can find it?**). It is not
+  your identity and signs nothing of yours: anyone who had it could only send
+  notes that every reader checks against your identity's own signature;
+- your answer to **Who can find it?**;
 - an identity made with just a name, at a first publish or walk, has no
   passphrase until you add one on **My Identities**, so anything that can
   read this site's storage could sign as it;
@@ -85,7 +90,17 @@ settings (see "Notifications on this device" below).
 
 - **Anything you publish** is public: its content, title, description,
   tags and license, and your identity's public key, which signs it. Once
-  other people have a copy, you can't take it back. Once you choose where
+  other people have a copy, you can't take it back.
+- **Who can find it?** is asked before your first publish. With
+  **Everyone**, each signed build you publish is also sent, whole, to the
+  public Nostr relays under **Network Settings** as a build note
+  (docs/Protocol.md, "Build notes"), with its tags and where it stands in the
+  World, so anyone using ForkBuild finds it in Explore, the challenge and the
+  World. The note is signed with this device's carrier key, not your identity.
+  Relays keep what they are sent; you can't take a note back. With **Only
+  people I send the link to**, nothing is sent and the build travels only in
+  its link. The choice is remembered on this device and can be changed from
+  the message after Publish. Once you choose where
   your builds go, each Publish sends the build there too; until then,
   Publish sends nothing. When you distribute it
   to Nostr or Arweave, its announcement also lists its tags (as
@@ -182,12 +197,14 @@ It also hears, the same way, when ForkBuild is installed as an app
 
 And when someone joins the weekly build challenge (**Join the challenge**,
 or the challenge in the Editor's **New**): `/e/challenge-join`; and when someone
-opens a week's challenge plaza in World View: `/e/plaza-visit`. And when
+opens a week's challenge plaza in World View: `/e/plaza-visit`. And each time World View opens: `/e/world-visit`; and, once a visit, when someone else's build stands in view there (a build this device didn't publish and can't edit; the ready-made builds round the plaza don't count): `/e/world-neighbour`. And, at most once each time ForkBuild is opened, when someone uses one of the side systems: swims (`/e/swam`), catches an animal (`/e/animal-caught`), decorates a build with one (`/e/animal-decorated`), carries something, an animal or a stored vehicle (`/e/inventory-used`), sends a chat message (`/e/chat-sent`), makes or answers a voice call (`/e/voice-call`), or joins a public lobby (`/e/lobby-joined`). None of these says what was caught, said, called or joined. And when
 someone makes a **Walk here with me** link in World View: `/e/walk-link`; and
 when a friend arrives through one: `/e/walk-joined`. And when someone makes a
 **Build with me** link in the Editor: `/e/build-link`; and when a friend joins
 through one: `/e/build-joined`; and the first time a build is published
-crediting friends who built it together: `/e/publish-together`.
+crediting friends who built it together: `/e/publish-together`. And each time
+a build is published: `/e/publish-found` when it was sent to everyone, or
+`/e/publish-link-only` when it was kept to its link.
 
 And the first time a build is published from this browser (publishing it
 again later sends nothing):
@@ -250,7 +267,9 @@ image a day described above. One more thing starts on its own: about
 visible, it reads new announcements from the Nostr relays, the Arweave
 gateway, and the Steem and Blurt nodes configured under **Network Settings**
 (docs/AnnouncementIndex.md). It reads only announcements (small pointers and
-signed claims), never content, and publishes nothing. Everything else happens
+signed claims), never content, and publishes nothing. Build notes, which
+carry whole builds, are read only when you open Explore, an author's page,
+the challenge or its plaza (see the table). Everything else happens
 only when you use the feature, and each server can be changed under
 **Network Settings**. Each server sees your IP address and what you ask it for.
 
@@ -261,6 +280,8 @@ only when you use the feature, and each server can be changed under
 | You install ForkBuild from the official site (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/installed`, no referrer and no cookie |
 | On the official site, you copy a build's embed code, or an embedded build is shown, or opened in ForkBuild (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
 | On the official site, you join the weekly build challenge, or open its plaza (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/challenge-join` or `/e/plaza-visit`, no referrer and no cookie |
+| On the official site, you open World View, and someone else's build stands in view there (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/world-visit`, and at most one with `/e/world-neighbour` a visit, no referrer and no cookie |
+| On the official site, you swim, catch an animal, decorate a build with one, carry something, send a chat message, make or answer a voice call, or join a public lobby (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | at most one image request a page load for each, with its fixed path (`/e/swam`, `/e/animal-caught`, `/e/animal-decorated`, `/e/inventory-used`, `/e/chat-sent`, `/e/voice-call`, `/e/lobby-joined`), no referrer and no cookie |
 | On the official site, you make a **Walk here with me** link, or arrive through one (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/walk-link` or `/e/walk-joined`, no referrer and no cookie |
 | On the official site, you make a **Build with me** link, or join through one (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/build-link` or `/e/build-joined` (and `/e/publish-together` when a build made together is first published crediting them), no referrer and no cookie |
 | On the official site, you publish a build for the first time (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming its range of bricks, and one more for a second build or a remix, no referrer and no cookie |
@@ -273,8 +294,10 @@ only when you use the feature, and each server can be changed under
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |
 | You start a peer connection, if the rendezvous server offers a relay | the rendezvous server's `/turn-credentials`, then its TURN relay (Cloudflare) | a request for short-lived relay credentials, at most about once an hour; relayed traffic is end-to-end encrypted by WebRTC |
 | The app is open and its tab visible (background announcement sync) | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`), Blurt nodes (`rpc.blurt.blog`) | queries for ForkBuild's discovery tags: the shared Snapshot and Commentary tags, and the Place Naming regions and map cells you have visited |
-| You open the Repository or an author's page | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`), Blurt nodes (`rpc.blurt.blog`) | a query for the shared Publication tag (`forkbuild-publication`); then a request for each newly announced Publication's signed record, at most 20 per visit or **Check again** |
+| You open Explore (the Repository) or an author's page | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`), Blurt nodes (`rpc.blurt.blog`) | a query for the shared Publication tag (`forkbuild-publication`); then a request for each newly announced Publication's signed record, at most 20 per visit or **Check again** |
 | You open a week's build challenge (**Challenge**) | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`), Blurt nodes (`rpc.blurt.blog`) | a query for that week's tag (`forkbuild-tag:<tag>`); then a request for each newly announced entry's signed record, at most 20 per visit or **Check again** |
+| You publish a build with **Everyone** chosen under **Who can find it?** | every Nostr relay under **Network Settings** (`relay.damus.io`, `nos.lol`, `relay.primal.net`) | a build note: the signed build itself, its tags and its publisher's signed placement, signed with this device's carrier key |
+| You open Explore, an author's page, a week's challenge or its plaza | every Nostr relay under **Network Settings** | a query for build notes (`forkbuild-build`, or that week's `forkbuild-tag:<tag>`); each new note is checked and opened on this device, at most 40 per visit |
 | You distribute or discover publications over Nostr | Nostr relays (`relay.damus.io`) | signed announcements you publish; your queries |
 | You store or fetch content on Arweave | an Arweave gateway (`arweave.net`) | the content you publish; what you fetch |
 | You fetch content from IPFS | an IPFS gateway (`ipfs.filebase.io`, then others), or your own IPFS node (`127.0.0.1:5001`) | what you fetch or add |

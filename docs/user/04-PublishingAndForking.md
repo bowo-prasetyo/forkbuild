@@ -23,13 +23,16 @@ history preserved.
    whether others may remix it (see
    [Letting others remix it](#letting-others-remix-it)).
 4. Press **Save** so it's stored.
-5. Click **Publish**.
+5. Click **Publish**. The first time, ForkBuild also asks
+   [Who can find it?](#who-can-find-it).
 
-Your creation now appears in **your own Repository** on this device, where
+Your creation now appears in **Explore** on this device, where
 you can search for it, open it, and fork it, with your name as the author.
-Other people see it only once you share or distribute it (see the note
-below). It's also automatically given a position in the shared world, so
-**Explore** always has somewhere to take people — see
+Other people see it once you share its link, or right away when you chose
+**Everyone** under [Who can find it?](#who-can-find-it). It's also given a
+spot in the shared world, next to what it belongs with (see
+[Where a build stands](#where-a-build-stands)), so **Explore** always has
+somewhere to take people — see
 [Finding worlds](03-WorldView.md#finding-worlds).
 
 ### Walk inside it
@@ -152,13 +155,62 @@ build's own page in ForkBuild in a new tab (see
 Copying embed code, and an embed being shown or opened in ForkBuild, are
 counted anonymously too.
 
+## Who can find it?
+
+The first time you click **Publish**, ForkBuild asks **Who can find it?**:
+
+- **Everyone**: each build you publish is also sent to everyone. It appears
+  in **Explore**, in the week's challenge and its plaza, and in the World,
+  for anyone using ForkBuild, with no link, wallet or account on either
+  side. Right after Publish the Editor says "Sending it to everyone…", then
+  "Published! Anyone can find it now, in Explore, the challenge and the
+  World." If the networks couldn't be reached, it says so and offers **Try
+  again**; the link works either way.
+- **Only people I send the link to**: the build stays on this device and
+  inside its link. The notice says "Only people you send its link to can
+  see it." with **Let everyone find it**, which sends this build and makes
+  **Everyone** the choice from then on.
+
+The answer is remembered on this device. After a build was sent to
+everyone, **Only by link from now on** in the same notice keeps your next
+builds to their links.
+
+How it works: the build, signed by you, is sent as a *build note* to the
+public Nostr relays under **Network Settings**, together with its tags and
+where it stands in the World. The note is signed with a key this device
+makes for the purpose (its *carrier key*), not with your identity, so
+nothing needs installing. Everyone who finds the note opens it exactly as
+they'd open your link: your signature and the build's content are checked
+first, and a note that doesn't match is ignored. A build too big for a note
+(about 2,000 bricks) says so; share its link, or choose where it goes
+below. Builds published without a name can't be sent. See
+[Privacy](Privacy.md).
+
+### Where a build stands
+
+A published build stands in the shared World next to what it belongs
+with:
+
+- **a remix** stands beside the build it remixes, so a family tree becomes
+  a street;
+- **anything else** joins the village that grows round the challenge
+  plaza, ring by ring from the inside out, starting just outside the
+  ready-made builds that stand round its square, so builds published about
+  the same time are neighbours, and the first ones are in sight of the
+  square;
+- **Build here** still puts a build on the spot you chose, and publishing a
+  build again never moves it.
+
+Everyone who finds the build sees it on the same spot, since its place
+travels with it, signed by you.
+
 ## Where it goes — sending a build as you publish
 
 **Publish** keeps your build on this device and in its links until you
-choose where it goes. Right after your first Publish, the Editor says
-"Published! Share its link. To let anyone find it without a link, choose
-where it goes." with a **Choose where it goes** button beside the share
-link, and a **Dismiss**.
+choose where it goes, apart from sending it to everyone (above). Right
+after a Publish, the notice offers **Choose where it goes** (or **More
+networks**, once it was sent to everyone) beside the share link, and a
+**Dismiss**.
 
 **Choose where it goes** opens the **Where it goes** dialog: pick a
 **Storage** (where the build itself is kept: Arweave, IPFS, or Steem or
@@ -553,14 +605,21 @@ families instead (see [Ready-made builds](#ready-made-builds)).
 
 ### The challenge plaza
 
-Once a week has entries, **Walk the plaza** on its page takes you into
-World View, to a clearing in the shared World where the week's entries
-stand in rings round an open square. Walk among them, or pick one in the
-panel: **Navigate** flies to it, **Open** opens it as **Explore** would,
-and **Edit a Copy** starts your own copy of it.
+**Walk** in the main menu takes you to this week's plaza, and so does
+**Walk the plaza** on the challenge page once a week has entries. It is the
+village square of the shared World: the six ready-made builds stand round
+it for everyone, always, each with **Remix**, and the village of published
+builds grows just outside them, the week's entries among them. Walk among
+them, or pick one in the panel: **Navigate** flies to it, **Open** opens it
+as **Explore** would, and **Edit a Copy** starts your own copy of it.
 
-- The first 24 entries published stand there, the oldest nearest the
-  middle, so a new entry joins the outer edge. The rest are on the
+- Every entry stands in the village. One whose spot this device knows to be
+  in the village stands there, where it settled when it was published. Any
+  other (one placed far away, as builds published before they settled in
+  the village were, or one whose spot this device doesn't know) is shown,
+  while you're at the plaza, on the spot it would settle on in the village;
+  its own spot stays where it is.
+- The panel lists the first 24 entries published. The rest are on the
   challenge page.
 - Entries found on the networks are fetched and checked the way opening
   their link would be. One that can't be fetched is left out, and the
@@ -568,8 +627,8 @@ and **Edit a Copy** starts your own copy of it.
 - An entry whose publisher chose **Only I may place it** doesn't stand in
   the plaza, since standing it there would be placing it. It stays on the
   challenge page.
-- The entries are exhibits, not placements: nothing is signed or kept for
-  anyone, and they're gone when you leave. Like the rest of World View, the
+- An entry shown on its spot is an exhibit, not a placement: nothing is
+  signed or kept for anyone, and it's gone when you leave. Like the rest of World View, the
   plaza shows what this device knows, so two visitors may see a different
   set.
 

@@ -415,6 +415,52 @@ export const CoreLibrary = {
             depth: 1,
             color: 0xa63a3a
         }),
+        // Roofs that span a whole house in one piece, so a village's roofs read
+        // as roofs rather than a tray of caps (Make it yours, in the village).
+        new BrickDefinition({
+            id: 'core:roof_hip_4x4',
+            name: 'Hip Roof 4x4',
+            category: 'roof',
+            tags: ['roof', 'hip', 'pitched', 'spanning'],
+            description: 'A hipped roof that covers a 4x4 building in one piece.',
+            width: 4,
+            height: 2,
+            depth: 4,
+            color: 0xa63a3a
+        }),
+        new BrickDefinition({
+            id: 'core:roof_hip_4x6',
+            name: 'Hip Roof 4x6',
+            category: 'roof',
+            tags: ['roof', 'hip', 'pitched', 'spanning'],
+            description: 'A hipped roof with a ridge, covering a 4x6 building in one piece.',
+            width: 4,
+            height: 2,
+            depth: 6,
+            color: 0xa63a3a
+        }),
+        new BrickDefinition({
+            id: 'core:roof_hip_6x6',
+            name: 'Hip Roof 6x6',
+            category: 'roof',
+            tags: ['roof', 'hip', 'pitched', 'spanning'],
+            description: 'A hipped roof that covers a 6x6 house in one piece.',
+            width: 6,
+            height: 2.5,
+            depth: 6,
+            color: 0xa63a3a
+        }),
+        new BrickDefinition({
+            id: 'core:roof_gable_2x4',
+            name: 'Gable Roof 2x4',
+            category: 'roof',
+            tags: ['roof', 'gable', 'pitched', 'spanning'],
+            description: 'A long pitched roof with a gable at each end, covering a 2x4 cottage in one piece.',
+            width: 2,
+            height: 1,
+            depth: 4,
+            color: 0xa63a3a
+        }),
         new BrickDefinition({
             id: 'core:stair_wide',
             name: 'Wide Stair',
@@ -534,6 +580,52 @@ export const CoreLibrary = {
             width: 2,
             height: 0.5,
             depth: 0.5,
+            color: 0x8b5a2b
+        }),
+        // Furniture (2026-10-12): what makes a room worth walking into
+        // (docs/reviews/CreativeDirection-2026-10-12.md, finding 3).
+        new BrickDefinition({
+            id: 'core:table',
+            name: 'Table',
+            category: 'decorative',
+            tags: ['decorative', 'furniture', 'indoor', 'table'],
+            description: 'A wooden table on four legs.',
+            width: 1.5,
+            height: 0.8,
+            depth: 1,
+            color: 0x9b6a3c
+        }),
+        new BrickDefinition({
+            id: 'core:bed',
+            name: 'Bed',
+            category: 'decorative',
+            tags: ['decorative', 'furniture', 'indoor', 'bed'],
+            description: 'A single bed with a headboard.',
+            width: 1,
+            height: 0.7,
+            depth: 2,
+            color: 0x6f8fb5
+        }),
+        new BrickDefinition({
+            id: 'core:hearth',
+            name: 'Hearth',
+            category: 'decorative',
+            tags: ['decorative', 'furniture', 'indoor', 'fireplace', 'chimney'],
+            description: 'A stone fireplace to stand against a wall, under the chimney.',
+            width: 1.5,
+            height: 1.5,
+            depth: 0.75,
+            color: 0x8a7f72
+        }),
+        new BrickDefinition({
+            id: 'core:shelf',
+            name: 'Shelf',
+            category: 'decorative',
+            tags: ['decorative', 'furniture', 'indoor', 'shelf', 'storage'],
+            description: 'Open shelves to stand against a wall.',
+            width: 1,
+            height: 1.5,
+            depth: 0.4,
             color: 0x8b5a2b
         }),
         new BrickDefinition({

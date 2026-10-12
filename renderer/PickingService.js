@@ -25,11 +25,21 @@ export class PickingService {
     // with brickInstances at all (renderer/WorldRenderer.js's own 0.2.90
     // header), so ordinary brick picking is completely unaffected by
     // whether a caller also constructs this with a placement registry.
-    constructor(camera, domElement, brickInstances, placementMeshRegistry = null) {
+    //
+    // groundHeight (optional) — a function giving the height of the ground
+    // pickGroundPosition() meets: the Editor's floor (renderer/EditorFloor.js),
+    // which its bricks stand on. Without it the ground is y = 0.
+    //
+    // cutawayClipping (optional, renderer/CutawayClipping.js) — a brick hit
+    // where the cutaway hides it is passed over for the one behind it, so a
+    // click goes into the room that shows, not the roof that doesn't.
+    constructor(camera, domElement, brickInstances, placementMeshRegistry = null, { groundHeight = null, cutawayClipping = null } = {}) {
         this._camera = camera;
         this._domElement = domElement;
         this._brickInstances = brickInstances;
         this._placementMeshRegistry = placementMeshRegistry;
+        this._groundHeight = typeof groundHeight === 'function' ? groundHeight : () => 0;
+        this._cutawayClipping = cutawayClipping;
         this._raycaster = new THREE.Raycaster();
         this._groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     }
@@ -54,11 +64,13 @@ export class PickingService {
 
         const objects = this._brickInstances.pickableObjects();
         const intersections = this._raycaster.intersectObjects(objects, false);
-        if (intersections.length === 0) {
+        const hit = this._cutawayClipping
+            ? intersections.find((candidate) => !this._cutawayClipping.clips(candidate.point))
+            : intersections[0];
+        if (!hit) {
             return null;
         }
 
-        const hit = intersections[0];
         const brickId = this._brickInstances.brickIdForIntersection(hit);
         if (!brickId) {
             return null;
@@ -128,11 +140,15 @@ export class PickingService {
     }
 
     // Returns a core/Position (never a Three.js type) where the ray from
-    // this screen position hits the ground plane (y = 0), or null if the
-    // ray doesn't hit it at all (e.g. looking straight up).
+    // this screen position hits the ground plane (y = groundHeight(), 0 by
+    // default), or null if the ray doesn't hit it at all (e.g. looking
+    // straight up). The point is in the scene's own coordinates, its y the
+    // ground's height; the tools read only its x and z.
     pickGroundPosition(screenX, screenY) {
         const ndc = this._toNormalizedDeviceCoordinates(screenX, screenY);
         this._raycaster.setFromCamera(ndc, this._camera);
+        const height = Number(this._groundHeight());
+        this._groundPlane.constant = Number.isFinite(height) ? -height : 0;
 
         const target = new THREE.Vector3();
         const hit = this._raycaster.ray.intersectPlane(this._groundPlane, target);

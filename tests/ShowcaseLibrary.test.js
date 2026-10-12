@@ -54,7 +54,7 @@ const count = (structure, definitionId) => structure.bricks.filter((brick) => br
     const bounds = SpatialBounds.fromBricks(castle.bricks, brickRegistry);
     assert(bounds.size.x === 16 && bounds.size.z === 16, `the castle is 16 × 16 (${bounds.size.x} × ${bounds.size.z})`);
     assert(count(castle, 'core:arch') === 2, 'the castle\'s gate is two arches wide');
-    assert(count(castle, 'core:roof_hip') === 8, 'four towers and the keep carry hipped roofs');
+    assert(count(castle, 'core:roof_hip') === 4 && count(castle, 'core:roof_hip_4x4') === 1, 'four towers and the keep carry hipped roofs');
     assert(count(castle, 'core:door') === 1, 'the keep has a door');
     const merlons = castle.bricks.filter((brick) => brick.definitionId === 'core:cube');
     assert(merlons.length === 24 && merlons.every((brick) => brick.color === 0x7d7d7d), 'twenty-four battlements, stone-colored');
@@ -88,7 +88,7 @@ const count = (structure, definitionId) => structure.bricks.filter((brick) => br
     }
     const house = VillageLibrary.structures.find((structure) => structure.id === 'village:house');
     const floor = house.bricks[0];
-    assert(floor.definitionId === 'core:slab_4x4' && floor.position.x === 0 && floor.position.y === 0.125 && floor.position.z === 0,
+    assert(floor.definitionId === 'core:plate_2x2' && floor.position.x === -2 && floor.position.y === 0.125 && floor.position.z === -2,
         'the Village house is where it always was');
     console.log('✓ the Village structures the showcase reuses are copied, not shared or moved');
 }

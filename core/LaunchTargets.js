@@ -137,8 +137,68 @@ export const LAUNCH_TARGETS = Object.freeze([
         denominator: [path(FunnelEvent.CHALLENGE_JOIN)],
         target: 0.25,
         minimum: 20
+    }),
+    Object.freeze({
+        id: 'neighbours',
+        pillar: 'world',
+        question: 'Does World View show a visitor someone else\'s build, not just the ready-made village?',
+        kind: 'ratio',
+        numerator: [path(FunnelEvent.WORLD_NEIGHBOUR)],
+        denominator: [path(FunnelEvent.WORLD_VISIT)],
+        target: 0.5,
+        minimum: 50
     })
 ]);
+
+// The daily visit count's own path (core/VisitorCount.js): one hit a day per
+// browser that opened ForkBuild.
+export const DAILY_VISIT_PATH = '/';
+
+// The side systems the owner kept (docs/Pillars.md, "The side systems"),
+// watched rather than aimed at: how many visits use each, out of World View
+// visits for the ones in World View and out of daily visits for the rest.
+// Once enough visits are counted, one used by fewer than `reevaluateBelow`
+// of them is flagged for the owner to look at again.
+export const SIDE_SYSTEM_STATUS = Object.freeze({
+    USED: 'used',
+    RARELY_USED: 'rarely-used',
+    TOO_FEW: 'too-few'
+});
+
+const worldVisits = [path(FunnelEvent.WORLD_VISIT)];
+const dailyVisits = [DAILY_VISIT_PATH];
+export const SIDE_SYSTEMS = Object.freeze([
+    Object.freeze({ id: 'swimming', question: 'Do visitors swim?', numerator: [path(FunnelEvent.SWAM)], denominator: worldVisits, minimum: 50, reevaluateBelow: 0.02 }),
+    Object.freeze({ id: 'catching', question: 'Do visitors catch animals?', numerator: [path(FunnelEvent.ANIMAL_CAUGHT)], denominator: worldVisits, minimum: 50, reevaluateBelow: 0.02 }),
+    Object.freeze({ id: 'decorating', question: 'Do visitors decorate a build with an animal?', numerator: [path(FunnelEvent.ANIMAL_DECORATED)], denominator: worldVisits, minimum: 50, reevaluateBelow: 0.02 }),
+    Object.freeze({ id: 'inventory', question: 'Do visitors carry things (an animal, a stored vehicle)?', numerator: [path(FunnelEvent.INVENTORY_USED)], denominator: worldVisits, minimum: 50, reevaluateBelow: 0.02 }),
+    Object.freeze({ id: 'chat', question: 'Do visitors send chat messages?', numerator: [path(FunnelEvent.CHAT_SENT)], denominator: dailyVisits, minimum: 100, reevaluateBelow: 0.02 }),
+    Object.freeze({ id: 'voice', question: 'Do visitors make or answer voice calls?', numerator: [path(FunnelEvent.VOICE_CALL)], denominator: dailyVisits, minimum: 100, reevaluateBelow: 0.02 }),
+    Object.freeze({ id: 'lobby', question: 'Do visitors join a public lobby?', numerator: [path(FunnelEvent.LOBBY_JOINED)], denominator: dailyVisits, minimum: 100, reevaluateBelow: 0.02 })
+]);
+
+// One side system against `counts`: { id, question, value, sample, minimum,
+// reevaluateBelow, status }, `value` the share of visits that used it.
+export function evaluateSideSystem(system, counts) {
+    const sample = total(counts, system.denominator);
+    const value = sample > 0 ? total(counts, system.numerator) / sample : null;
+    const status = sample < system.minimum || value === null
+        ? SIDE_SYSTEM_STATUS.TOO_FEW
+        : (value < system.reevaluateBelow ? SIDE_SYSTEM_STATUS.RARELY_USED : SIDE_SYSTEM_STATUS.USED);
+    return Object.freeze({
+        id: system.id,
+        question: system.question,
+        value,
+        sample,
+        minimum: system.minimum,
+        reevaluateBelow: system.reevaluateBelow,
+        status
+    });
+}
+
+export function evaluateSideSystems(counts) {
+    return SIDE_SYSTEMS.map((system) => evaluateSideSystem(system, counts));
+}
 
 // The targets that must all be met before a new network or chain joins: the
 // bricks builders placed themselves, so a ready-made build published
@@ -221,13 +281,13 @@ export function evaluateLaunchTargets(counts) {
 // Counts from the forms a person is likely to have: a JSON object of
 // { path: total }; GoatCounter's CSV export, one row per hit with a "Path"
 // column (counted per path); or plain lines of "path total" or "path,total".
-// Only funnel paths (/e/...) are kept.
+// Only funnel paths (/e/...) and the daily visit count (/) are kept.
 export function parseCounts(text) {
     const source = String(text || '').trim();
     const counts = {};
     const add = (key, amount) => {
         const name = String(key || '').trim().replace(/^"|"$/g, '');
-        if (!name.startsWith('/e/') || !Number.isFinite(amount) || amount < 0) return;
+        if ((!name.startsWith('/e/') && name !== DAILY_VISIT_PATH) || !Number.isFinite(amount) || amount < 0) return;
         counts[name] = (counts[name] || 0) + amount;
     };
     if (!source) return counts;

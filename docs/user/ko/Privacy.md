@@ -5,6 +5,10 @@
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · **한국어** · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../../Privacy.md)을 참고하세요.
+<!-- /stale -->
+
 ForkBuild에는 계정이 없고 나를 추적하지 않습니다. 작업은 내 브라우저에
 저장되며, 다른 컴퓨터와는 그것이 필요한 기능에서만 통신합니다. 예외는 만든
 사람들이 대략 몇 명이 사용하고 작품을 공유하는지 알 수 있도록, 하루에 한 번, 공유 링크가 쓰일 때, 그리고 설치될 때 보내는 익명 방문자 집계뿐입니다(아래 “방문자 수
@@ -21,6 +25,8 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 - 문서, 저장하지 않은 변경 사항의 충돌 복구용 사본, 저장한 구조물.
 - 신원: 각각의 공개 키와, 암호 문구 없이 만들기를 고르지 않았다면 암호 문구로
   암호화된 개인 키.
+- 내 작품을 모두에게 보내는 운반 키(**누가 찾을 수 있나요?**에서 처음 **모두**를 고를 때 만들어지는 Nostr 키). 이 키는 내 신원이 아니며 내 것에는 아무것도 서명하지 않습니다. 이 키를 가진 사람이 할 수 있는 일은 모든 읽는 사람이 내 신원 자체의 서명으로 확인하는 노트를 보내는 것뿐입니다;
+- **누가 찾을 수 있나요?**에 대한 내 답;
 - 처음 게시하거나 함께 걸을 때 이름만으로 만든 신원은 **내 신원**에서
   암호 문구를 추가할 때까지 암호 문구가 없으므로, 이 사이트의 저장소를 읽을 수
   있는 것은 무엇이든 그 신원으로 서명할 수 있습니다.
@@ -76,6 +82,7 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
   (`forkbuild-tag:<tag>`로) 실리므로, 누구나 어떤 주의 챌린지 참가작처럼
   태그가 붙은 작품을 찾을 수 있습니다.
   작품을 보낼 곳을 고르면 게시할 때마다 작품이 그곳에도 보내집니다. 그전까지 게시는 아무것도 보내지 않습니다.
+- **누가 찾을 수 있나요?**는 처음 게시하기 전에 묻습니다. **모두**를 고르면, 서명해 게시하는 작품마다 태그와 월드에서의 위치와 함께 작품 노트(docs/Protocol.md의 "Build notes", 영어)로 통째로 **네트워크 설정**의 공개 Nostr 릴레이에도 보내져, ForkBuild를 쓰는 누구나 둘러보기, 챌린지, 월드에서 찾을 수 있습니다. 노트에는 내 신원이 아니라 이 기기의 운반 키로 서명합니다. 릴레이는 받은 것을 보관하므로 노트를 되돌릴 수 없습니다. **링크를 보낸 사람만**을 고르면 아무것도 보내지 않고, 작품은 링크 안에서만 전달됩니다. 이 선택은 이 기기에 기억되며 게시 후 나오는 메시지에서 바꿀 수 있습니다.
 - **내가 연결하는 피어**는 내 신원의 공개 키와 IP 주소를 알게 됩니다(직접
   연결에는 필요함. TURN 릴레이는 피어에게는 숨겨 주지만 릴레이 자체에게는 숨기지
   않음). 연결된 피어는 공개 범위 설정에 따라 내 아바타와 접속 상태를 볼 수 있으며,
@@ -159,7 +166,7 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 
 그리고 누군가 주간 건축 챌린지에 참여할 때(**챌린지 참여하기**, 또는
 에디터의 **새로 만들기**에 있는 챌린지): `/e/challenge-join`.
-그리고 월드 뷰에서 한 주의 챌린지 광장을 열 때: `/e/plaza-visit`. 그리고 월드 뷰에서 **여기서 같이 걷자** 링크를 만들 때: `/e/walk-link`, 그 링크로 친구가 도착할 때: `/e/walk-joined`. 그리고 에디터에서 **같이 만들자** 링크를 만들 때: `/e/build-link`, 그 링크로 친구가 참가할 때: `/e/build-joined`, 그리고 함께 만든 친구를 기록한 작품이 처음 게시될 때: `/e/publish-together`.
+그리고 월드 뷰에서 한 주의 챌린지 광장을 열 때: `/e/plaza-visit`. 그리고 월드 뷰를 열 때마다: `/e/world-visit`, 그리고 방문마다 한 번, 그곳에서 다른 사람의 작품이 보일 때(이 기기가 게시하지 않았고 편집할 수 없는 작품, 광장 둘레의 미리 지어진 작품은 세지 않음): `/e/world-neighbour`. 그리고 ForkBuild를 열 때마다 많아야 한 번씩, 누군가 부가 시스템을 쓸 때: 수영할 때(`/e/swam`), 동물을 잡을 때(`/e/animal-caught`), 동물로 작품을 꾸밀 때(`/e/animal-decorated`), 동물이나 보관한 탈것을 지닐 때(`/e/inventory-used`), 채팅 메시지를 보낼 때(`/e/chat-sent`), 음성 통화를 걸거나 받을 때(`/e/voice-call`), 공개 로비에 참여할 때(`/e/lobby-joined`). 무엇을 잡았는지, 무슨 말을 했는지, 누구에게 전화했는지, 어디에 참여했는지는 보내지 않습니다. 그리고 월드 뷰에서 **여기서 같이 걷자** 링크를 만들 때: `/e/walk-link`, 그 링크로 친구가 도착할 때: `/e/walk-joined`. 그리고 에디터에서 **같이 만들자** 링크를 만들 때: `/e/build-link`, 그 링크로 친구가 참가할 때: `/e/build-joined`, 그리고 함께 만든 친구를 기록한 작품이 처음 게시될 때: `/e/publish-together`. 그리고 작품을 게시할 때마다, 모두에게 보냈으면 `/e/publish-found`, 링크로만 두었으면 `/e/publish-link-only`를 보냅니다.
 
 그리고 이 브라우저에서 작품을 처음 게시할 때(나중에 같은 작품을 다시 게시하면 아무것도 보내지 않음):
 
@@ -219,6 +226,8 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 | 공식 사이트에서 ForkBuild를 설치할 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/installed`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 작품의 임베드 코드를 복사하거나, 임베드된 작품이 표시되거나 ForkBuild에서 열릴 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 셋 중 어느 경우인지 나타내는 고정 경로의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 주간 건축 챌린지에 참여하거나 그 광장을 열 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/challenge-join` 또는 `/e/plaza-visit`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
+| 공식 사이트에서 월드 뷰를 열고, 그곳에서 다른 사람의 작품이 보일 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/world-visit`의 이미지 요청 하나, 그리고 방문마다 많아야 한 번 `/e/world-neighbour`, 리퍼러와 쿠키 없음 |
+| 공식 사이트에서 수영하거나, 동물을 잡거나, 동물로 작품을 꾸미거나, 무언가를 지니거나, 채팅 메시지를 보내거나, 음성 통화를 걸거나 받거나, 공개 로비에 참여할 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 각각 페이지를 열 때마다 많아야 한 번, 고정 경로(`/e/swam`, `/e/animal-caught`, `/e/animal-decorated`, `/e/inventory-used`, `/e/chat-sent`, `/e/voice-call`, `/e/lobby-joined`)의 이미지 요청, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 **여기서 같이 걷자** 링크를 만들거나 그 링크로 도착할 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/walk-link` 또는 `/e/walk-joined`의 이미지 요청 1건, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 **같이 만들자** 링크를 만들거나 그 링크로 참가할 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/build-link` 또는 `/e/build-joined`(함께 만든 작품이 그 친구들을 기록한 채 처음 게시될 때는 `/e/publish-together`도)의 이미지 요청 1건, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 작품을 처음 게시할 때("방문자 수 집계" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 블록 수 구간을 나타내는 고정 경로의 이미지 요청 하나와, 두 번째 작품이나 리믹스일 때 하나 더, 리퍼러와 쿠키 없음 |
@@ -233,6 +242,8 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 | 앱이 열려 있고 탭이 보일 때(백그라운드 공지 동기화) | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`), Blurt 노드(`rpc.blurt.blog`) | ForkBuild 발견 태그에 대한 조회: 공유 스냅샷과 댓글 태그, 내가 방문한 장소 이름 지역과 지도 칸 |
 | 저장소나 작성자 페이지를 열 때 | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`), Blurt 노드(`rpc.blurt.blog`) | 공유 게시물 태그(`forkbuild-publication`)에 대한 조회, 그다음 새로 공지된 게시물마다 서명된 기록 요청(방문 또는 **다시 확인** 한 번에 최대 20개) |
 | 어떤 주의 건축 챌린지(**챌린지**)를 열 때 | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`), Blurt 노드(`rpc.blurt.blog`) | 그 주의 태그(`forkbuild-tag:<tag>`) 조회, 그다음 새로 알려진 참가작마다 서명된 레코드 요청(방문 또는 **다시 확인** 한 번에 최대 20개) |
+| **누가 찾을 수 있나요?**에서 **모두**를 고른 뒤 작품을 게시할 때 | **네트워크 설정**의 모든 Nostr 릴레이(`relay.damus.io`, `nos.lol`, `relay.primal.net`) | 작품 노트: 서명된 작품 자체, 그 태그, 게시한 사람의 서명된 배치. 이 기기의 운반 키로 서명합니다 |
+| 둘러보기, 누군가의 페이지, 어떤 주의 챌린지나 그 광장을 열 때 | **네트워크 설정**의 모든 Nostr 릴레이 | 작품 노트 조회(`forkbuild-build` 또는 그 주의 `forkbuild-tag:<tag>`). 새 노트는 이 기기에서 확인한 뒤 열며, 한 번 방문에 최대 40개입니다 |
 | Nostr로 게시물을 배포하거나 발견할 때 | Nostr 릴레이(`relay.damus.io`) | 내가 게시하는 서명된 공지, 내 조회 |
 | Arweave에 콘텐츠를 저장하거나 가져올 때 | Arweave 게이트웨이(`arweave.net`) | 내가 게시하는 콘텐츠, 내가 가져오는 것 |
 | IPFS에서 콘텐츠를 가져올 때 | IPFS 게이트웨이(`ipfs.filebase.io`), 또는 내 IPFS 노드(`127.0.0.1:5001`) | 내가 가져오거나 추가하는 것 |

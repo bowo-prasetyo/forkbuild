@@ -228,3 +228,33 @@
         font-size: 0.82rem;
     }
 }
+
+/* The job Home's main button leaves (ui/components/StarterJobCard.js): at
+   the top of the Editor's sidebar, under Select and Place. */
+.starter-job {
+    margin: 0.5rem 0;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid rgba(255, 193, 7, 0.55);
+    border-radius: 8px;
+    background: rgba(255, 193, 7, 0.08);
+}
+
+.starter-job--done {
+    border-color: rgba(76, 175, 125, 0.6);
+    background: rgba(76, 175, 125, 0.1);
+}
+
+.starter-job-title {
+    margin: 0 0 0.3rem;
+    font-size: 0.95rem;
+}
+
+.starter-job-text {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.starter-job--done .starter-job-text {
+    margin-bottom: 0;
+}

@@ -5,6 +5,10 @@
 [English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · **Português (Brasil)**
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../02-TheEditor.md).
+<!-- /stale -->
+
 O Editor é onde você constrói. Este guia mostra as ferramentas, como
 selecionar e transformar blocos e como organizar sua construção com grupos.
 
@@ -37,10 +41,13 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
 - **Biblioteca de construção** — uma caixa de pesquisa e duas guias:
   - **Blocos** — tudo o que você pode colocar com a ferramenta Colocar, em
     blocos de seis seções (Básicos, Estrutura, Telhados e escadas,
-    Aberturas, Detalhes, Natureza): cinquenta e uma peças, de meios cubos,
-    blocos redondos e toras a telhados de duas águas e cônicos, molduras de
-    janela e janelas redondas, cercas, bancos, arbustos, pinheiros e uma
-    **Lanterna** que acende à noite na Visão do mundo (veja
+    Aberturas, Detalhes, Natureza): cinquenta e nove peças, de meios cubos,
+    blocos redondos e toras a telhados de duas águas e cônicos, telhados de
+    quatro águas que cobrem uma casa inteira numa peça só (4x4, 4x6 e 6x6) e
+    um telhado de duas águas comprido 2x4, molduras de janela e janelas
+    redondas, cercas, bancos, arbustos e pinheiros, móveis para os cômodos em
+    que você entra (uma mesa, uma cama, uma lareira e uma estante, em
+    Detalhes) e uma **Lanterna** que acende à noite na Visão do mundo (veja
     [Dia e noite](03-WorldView.md#dia-e-noite)). Clique em um para selecioná-lo (e passar para a
     ferramenta Colocar); aparece então uma amostra **Cor** para escolher a
     cor dele — veja [Cores dos blocos](#cores-dos-blocos) abaixo.

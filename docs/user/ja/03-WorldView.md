@@ -5,6 +5,10 @@
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · **日本語** · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../03-WorldView.md)も参照してください。
+<!-- /stale -->
+
 ワールドビューは、**公開されたすべての作品が並んで存在する** 共有の 3D
 空間です。飛び回り、探しているものを検索し、ほかの人が近くに作った
 ものを見つけ、そのブロックを調べられます。ワールドビューは読み取り専用の

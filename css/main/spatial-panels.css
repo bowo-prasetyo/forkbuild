@@ -180,23 +180,35 @@
    overlap. */
 .editor-post-publish-overlay {
     display: flex;
-    flex-direction: column;
-}
-
-.editor-post-publish-action {
-    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.6rem 1rem;
+    gap: 0.5rem 0.75rem;
+    padding: 0.5rem 1rem;
     background: rgba(76, 175, 125, 0.12);
     border-bottom: 1px solid rgba(76, 175, 125, 0.4);
 }
 
+/* One celebration on one line (docs/reviews/CreativeDirection-2026-10-12b.md,
+   finding 6): the message, Walk inside it, Copy link and More ways to share
+   flow together, Dismiss last; anything that doesn't fit wraps. */
+.editor-post-publish-action {
+    display: contents;
+}
+
+.editor-post-publish-dismiss-btn {
+    order: 10;
+    margin-left: auto;
+}
+
 .editor-post-publish-share {
     margin: 0;
-    padding: 0.5rem 1rem;
-    background: rgba(76, 175, 125, 0.06);
-    border-bottom: 1px solid rgba(76, 175, 125, 0.4);
+    padding: 0;
+    background: none;
+    border: 0;
+}
+
+.editor-post-publish-overlay > :not(.editor-post-publish-action):not(.editor-post-publish-share):not(.editor-post-publish-dismiss-btn) {
+    flex-basis: 100%;
 }
 
 /* "Where it goes" (ui/components/EditorDistributionDialog.js after Publish):
@@ -223,7 +235,8 @@
    (ui/components/ProtectIdentityNote.js). */
 .editor-post-publish-protect {
     margin: 0;
-    padding: 0.45rem 1rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
     font-size: 0.85rem;
     color: #f0d08a;
     background: rgba(240, 208, 138, 0.06);
@@ -841,4 +854,23 @@
     flex: 1 1 16rem;
     color: #a8d878;
     font-size: 0.85rem;
+}
+
+.editor-post-publish-share {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+}
+
+.editor-post-publish-share .publication-share-link-actions {
+    margin: 0;
+}
+
+.editor-post-publish-share .publication-share-more {
+    font-size: 0.85rem;
+}
+
+.editor-post-publish-share .publication-share-more[open] {
+    flex-basis: 100%;
 }

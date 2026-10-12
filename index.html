@@ -121,6 +121,8 @@
     <link rel="modulepreload" href="ui/main/composeContentAndSnapshots.js">
     <link rel="modulepreload" href="ui/main/composeWorldDiscovery.js">
     <link rel="modulepreload" href="ui/main/composeInjectedWalletServices.js">
+    <link rel="modulepreload" href="ui/main/composeBuildNotes.js">
+    <link rel="modulepreload" href="application/buildNotes/WithBuildNotes.js">
     <link rel="modulepreload" href="application/settings/ExperimentalToolsSettingsStore.js">
     <link rel="modulepreload" href="application/settings/NetworkWriterSettingsStore.js">
     <link rel="modulepreload" href="application/settings/WorldViewDetailStore.js">
@@ -169,6 +171,7 @@
     <link rel="modulepreload" href="ui/router/pageServiceGroups.js">
     <link rel="modulepreload" href="ui/pageLoadFailure.js">
     <link rel="modulepreload" href="ui/views/HomeView.js">
+    <link rel="modulepreload" href="core/BuildChallenge.js">
     <link rel="modulepreload" href="storage/PublicationCommentaryStore.js">
     <link rel="modulepreload" href="identity/LocalAuthorizationVerifier.js">
     <link rel="modulepreload" href="application/publication/commentary/PublicationCommentaryDistributionExchange.js">
@@ -364,6 +367,10 @@
     <link rel="modulepreload" href="application/nostr/NostrPublicationDistributionRuntimeAdapter.js">
     <link rel="modulepreload" href="arweave/ArweaveInjectedProviderSigner.js">
     <link rel="modulepreload" href="nostr/NostrInjectedProviderPublisher.js">
+    <link rel="modulepreload" href="application/buildNotes/BuildNoteDiscovery.js">
+    <link rel="modulepreload" href="application/buildNotes/PublishBuildNoteUseCase.js">
+    <link rel="modulepreload" href="application/buildNotes/CarrierKeyStore.js">
+    <link rel="modulepreload" href="application/settings/FindabilityStore.js">
     <link rel="modulepreload" href="core/SteemAnnouncingConfiguration.js">
     <link rel="modulepreload" href="core/BlurtAnnouncingConfiguration.js">
     <link rel="modulepreload" href="core/BuildPlot.js">
@@ -596,6 +603,7 @@
     <link rel="modulepreload" href="application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js">
     <link rel="modulepreload" href="application/publication/distribution/PublicationMaterialProvenance.js">
     <link rel="modulepreload" href="application/worldEncounter/DiscoverWorldEncounterPublicationCommand.js">
+    <link rel="modulepreload" href="core/BuildNote.js">
     <link rel="modulepreload" href="core/BlurtPost.js">
     <link rel="modulepreload" href="application/worldEncounter/DecentralizedWorldEncounterLeadAwareMaterialLoading.js">
     <link rel="modulepreload" href="application/worldEncounter/WorldEncounterMaterialVerification.js">
@@ -615,7 +623,9 @@
     <link rel="modulepreload" href="core/library/CoreLibrary.js">
     <link rel="modulepreload" href="core/DocumentPreview.js">
     <link rel="modulepreload" href="core/Brick.js">
-    <link rel="modulepreload" href="core/BuildChallenge.js">
+    <link rel="modulepreload" href="core/Building.js">
+    <link rel="modulepreload" href="core/World.js">
+    <link rel="modulepreload" href="core/ReadyMadeHome.js">
     <link rel="modulepreload" href="ui/components/challenge/challengeText.js">
     <link rel="modulepreload" href="identity/DelegationVerifier.js">
     <link rel="modulepreload" href="core/AvatarInteractionKind.js">
@@ -699,6 +709,14 @@
     <link rel="modulepreload" href="serializer/WorldSerializer.js">
     <link rel="modulepreload" href="core/BrickDefinition.js">
     <link rel="modulepreload" href="core/NightGlow.js">
+    <link rel="modulepreload" href="core/Group.js">
+    <link rel="modulepreload" href="core/StructurePlacement.js">
+    <link rel="modulepreload" href="core/WorldLandmark.js">
+    <link rel="modulepreload" href="core/WorldRegion.js">
+    <link rel="modulepreload" href="core/AnimalDecoration.js">
+    <link rel="modulepreload" href="core/WorldResident.js">
+    <link rel="modulepreload" href="core/events/Event.js">
+    <link rel="modulepreload" href="core/BuildEntrance.js">
     <link rel="modulepreload" href="vendor/noble-curves/abstract/curve.js">
     <link rel="modulepreload" href="vendor/noble-curves/abstract/edwards.js">
     <link rel="modulepreload" href="vendor/noble-curves/abstract/frost.js">
@@ -714,36 +732,30 @@
     <link rel="modulepreload" href="core/DecentralizedWorldDiscoveryLead.js">
     <link rel="modulepreload" href="core/GrapheneBlockEvidence.js">
     <link rel="modulepreload" href="core/BlurtBinary.js">
-    <link rel="modulepreload" href="core/World.js">
     <link rel="modulepreload" href="core/DocumentMetadata.js">
-    <link rel="modulepreload" href="vendor/noble-curves/abstract/fft.js">
-    <link rel="modulepreload" href="core/GrapheneBinary.js">
-    <link rel="modulepreload" href="vendor/noble-curves/secp256k1.js">
-    <link rel="modulepreload" href="core/Building.js">
-    <link rel="modulepreload" href="core/Group.js">
-    <link rel="modulepreload" href="core/StructurePlacement.js">
-    <link rel="modulepreload" href="core/WorldLandmark.js">
-    <link rel="modulepreload" href="core/WorldRegion.js">
-    <link rel="modulepreload" href="core/AnimalDecoration.js">
-    <link rel="modulepreload" href="core/WorldResident.js">
-    <link rel="modulepreload" href="core/events/Event.js">
-    <link rel="modulepreload" href="core/version.js">
-    <link rel="modulepreload" href="vendor/noble-hashes/legacy.js">
-    <link rel="modulepreload" href="vendor/noble-curves/abstract/weierstrass.js">
     <link rel="modulepreload" href="core/RegionKind.js">
     <link rel="modulepreload" href="core/WorldSpatialAnchor.js">
     <link rel="modulepreload" href="core/AnimalPresence.js">
-    <link rel="modulepreload" href="vendor/noble-hashes/hmac.js">
-    <link rel="modulepreload" href="vendor/noble-curves/abstract/der.js">
+    <link rel="modulepreload" href="core/AvatarCollision.js">
+    <link rel="modulepreload" href="core/BrickWalkability.js">
+    <link rel="modulepreload" href="core/BrickPassage.js">
+    <link rel="modulepreload" href="vendor/noble-curves/abstract/fft.js">
+    <link rel="modulepreload" href="core/GrapheneBinary.js">
+    <link rel="modulepreload" href="vendor/noble-curves/secp256k1.js">
+    <link rel="modulepreload" href="core/version.js">
     <link rel="modulepreload" href="core/AvatarFacing.js">
     <link rel="modulepreload" href="core/WorldSpatialActivity.js">
     <link rel="modulepreload" href="core/WildlifeField.js">
     <link rel="modulepreload" href="core/FiniteCoordinates.js">
+    <link rel="modulepreload" href="vendor/noble-hashes/legacy.js">
+    <link rel="modulepreload" href="vendor/noble-curves/abstract/weierstrass.js">
     <link rel="modulepreload" href="core/TerrainHeightField.js">
     <link rel="modulepreload" href="core/TerrainEcology.js">
     <link rel="modulepreload" href="core/Hydrology.js">
     <link rel="modulepreload" href="core/AnimalIdentity.js">
     <link rel="modulepreload" href="utils/interpolation.js">
+    <link rel="modulepreload" href="vendor/noble-hashes/hmac.js">
+    <link rel="modulepreload" href="vendor/noble-curves/abstract/der.js">
     <link rel="modulepreload" href="core/TerrainSurface.js">
     <!-- modulepreload:end -->
 </head>
