@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: d70cb11661c7d2d4 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7d54451a79bc05d6 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -817,6 +817,16 @@ memasukinya, dan tetap di sini (hanya di perangkat ini) bahkan jika Anda
 tidak pernah menerbitkan atau membagikan apa pun milik Anda. Belum
 mengunjungi tempat mana pun? **Jelajahi Repositori** untuk menemukan yang
 pertama, atau mulai dari salah satu bangunan siap pakai di bawahnya.
+
+Di bawah Dunia, **Bangunan yang Anda bantu buat** mencantumkan bangunan yang
+mencantumkan nama Anda oleh seorang teman karena Anda membangunnya bersama
+dengan **Bangun bersamaku** (lihat
+[Editor](02-TheEditor.md#bangun-bersamaku-membangun-bersama-secara-langsung)):
+judul masing-masing, milik siapa (**bersama** namanya, yang membuka halaman
+orang itu), dan **Belum diterbitkan** sampai teman Anda menerbitkannya;
+setelah itu judulnya membuka Dunianya. Perangkat Anda yang lain juga
+mencantumkannya, setelah terhubung ke perangkat ini. Bagian ini baru muncul
+bila ada isinya.
 
 ## Menemukan dunia
 

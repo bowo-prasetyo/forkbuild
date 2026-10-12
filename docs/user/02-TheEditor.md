@@ -630,7 +630,9 @@ The Editor works by touch. Drag with one finger to orbit, two to pan, and
 pinch to zoom. A tap selects or places, and a drag never does. On a narrow
 screen, the sidebar opens from the **Tools** button at the top right of the
 scene. A bar at the bottom of the scene has **Undo**, **Redo**, **Rotate**,
-**Delete**, **Multi** (each tap adds a brick to the selection or removes
-it), **Box** (drag to draw a selection box; the camera stays still until you
-turn it off), and **More**, which opens the Command Palette. See
+**Tilt**, **Delete**, **Multi** (each tap adds a brick to the selection or
+removes it), **Box** (drag to draw a selection box; the camera stays still
+until you turn it off), and **More**, which opens the Command Palette. On a
+phone the toolbar above the scene scrolls sideways, so **Save** and
+**Publish** come first in it (after **Back to World**, when there is one). See
 [Touch screens](ControlsReference.md#touch-screens) for the details.

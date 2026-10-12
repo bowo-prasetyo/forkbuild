@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: d70cb11661c7d2d4 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7d54451a79bc05d6 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -839,6 +839,16 @@ betreten haben, und sie bleibt hier (nur auf diesem Gerät), auch wenn Sie
 nie etwas Eigenes veröffentlichen oder teilen. Noch nirgends gewesen?
 **Durchsuchen Sie das Repository**, um Ihre erste zu finden, oder beginnen
 Sie mit einem der fertigen Bauwerke, die darunter stehen.
+
+Unter den Welten listet **Bauten, an denen Sie mitgebaut haben** die Bauten,
+in denen ein Freund Sie genannt hat, weil Sie sie mit **Mit mir bauen**
+gemeinsam gebaut haben (siehe
+[Der Editor](02-TheEditor.md#mit-mir-bauen-gemeinsam-bauen-live)): jeweils
+den Titel, wessen Bau es ist (**mit** dem Namen, der die Seite dieser Person
+öffnet) und **Noch nicht veröffentlicht**, bis Ihr Freund ihn veröffentlicht;
+danach öffnet der Titel seine Welt. Ihre anderen Geräte listen sie ebenfalls,
+sobald sie mit diesem verbunden wurden. Der Abschnitt erscheint erst, wenn
+etwas darin steht.
 
 ## Welten finden
 

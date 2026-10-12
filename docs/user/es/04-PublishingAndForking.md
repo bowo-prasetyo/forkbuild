@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 60a63aedcbfe91d7 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 49fc848526dee427 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
@@ -106,7 +106,12 @@ Un enlace a una construcción, tanto si la lleva dentro como si indica
 dónde está guardada, abre la página propia de esa construcción:
 
 - la construcción, girando despacio;
-- su título y quién la hizo;
+- su título y quién la hizo, y **Construida con …** y sus nombres cuando
+  unos amigos la construyeron junto con su autor (consulte
+  [Construir conmigo](02-TheEditor.md#construir-conmigo-construir-juntos-en-vivo)).
+  El nombre del autor y el de cada coconstructor abren la página de esa
+  persona: las construcciones que firmó su identidad y aquellas en las que
+  otros le dan crédito;
 - **Remezcla de “…” de …** cuando es una remezcla, y **Remezclada N veces**
   cuando este dispositivo ha encontrado remezclas de ella (vea
   [Recuentos de remezclas](#recuentos-de-remezclas));
@@ -633,7 +638,10 @@ variaciones, y que todos en la cadena reciben crédito.
 La página propia de una construcción, abierta desde un enlace compartido,
 muestra el mismo linaje como **Árbol familiar**: de qué se remezcló, hasta
 la original, luego la construcción misma y después las remezclas hechas de
-ella, hasta donde sabe este dispositivo.
+ella, hasta donde sabe este dispositivo. La página del desafío muestra uno
+por cada cadena de participaciones. Cada construcción del árbol nombra a su
+autor y a los amigos que la construyeron con él; su título abre la
+construcción, y cada nombre abre la página de esa persona.
 
 ## Un ciclo creativo típico
 

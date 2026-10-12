@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 60a63aedcbfe91d7 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 49fc848526dee427 -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
@@ -103,7 +103,12 @@ Um link para uma construção, seja ele com a construção dentro ou dizendo
 onde ela está guardada, abre a página própria dessa construção:
 
 - a construção, girando devagar;
-- o título e quem a fez;
+- o título e quem a fez, e **Construída com …** e os nomes quando amigos a
+  construíram junto com o autor (veja
+  [Construir comigo](02-TheEditor.md#construir-comigo-construir-juntos-ao-vivo)).
+  O nome do autor e o de cada coconstrutor abrem a página dessa pessoa: as
+  construções que a identidade dela assinou e aquelas em que outros lhe dão
+  crédito;
 - **Remix de “…”, de …** quando é um remix, e **Remixada N vezes** quando
   este dispositivo encontrou remixes dela (veja
   [Contagem de remixes](#contagem-de-remixes));
@@ -619,7 +624,10 @@ variações — e todos na cadeia recebem crédito.
 A página própria de uma construção, aberta de um link compartilhado,
 mostra a mesma linhagem como **Árvore genealógica**: de que ela é remix,
 até a original, depois a própria construção e depois os remixes feitos
-dela, até onde este dispositivo sabe.
+dela, até onde este dispositivo sabe. A página do desafio mostra uma para
+cada cadeia de participações. Cada construção da árvore traz o nome do autor
+e dos amigos que a construíram com ele; o título abre a construção, e cada
+nome abre a página dessa pessoa.
 
 ## Um ciclo criativo típico
 

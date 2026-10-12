@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 3be54646475153c8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 855952f6b34672d8 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -698,9 +698,11 @@ para desplazar la vista y pellizque para hacer zoom. Un toque selecciona o
 coloca, y arrastrar nunca lo hace. En una pantalla angosta, la barra
 lateral se abre desde el botón **Herramientas**, arriba a la derecha de la
 escena. Una barra al pie de la escena tiene **Deshacer**, **Rehacer**,
-**Girar**, **Eliminar**, **Múltiple** (cada toque agrega un bloque a la
+**Girar**, **Inclinar**, **Eliminar**, **Múltiple** (cada toque agrega un bloque a la
 selección o lo quita), **Recuadro** (arrastre para dibujar un recuadro de
 selección; la cámara queda quieta hasta que lo desactive) y **Más**, que
-abre la Paleta de comandos. Consulte
+abre la Paleta de comandos. En un teléfono, la barra de herramientas sobre la
+escena se desplaza de lado, así que **Guardar** y **Publicar** van primero en
+ella (después de **← Volver al Mundo**, cuando lo hay). Consulte
 [Pantallas táctiles](ControlsReference.md#pantallas-táctiles) para ver los
 detalles.

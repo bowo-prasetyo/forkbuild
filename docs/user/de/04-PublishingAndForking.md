@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 60a63aedcbfe91d7 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 49fc848526dee427 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
@@ -108,7 +108,12 @@ Ein Link zu einem Bauwerk, ob er das Bauwerk trägt oder nennt, wo es
 gespeichert ist, öffnet die eigene Seite dieses Bauwerks:
 
 - das Bauwerk, langsam drehend;
-- sein Titel und wer es gemacht hat;
+- sein Titel und wer es gemacht hat, dazu **Gebaut mit …** und die Namen,
+  wenn Freunde es zusammen mit dem Autor gebaut haben (siehe
+  [Mit mir bauen](02-TheEditor.md#mit-mir-bauen-gemeinsam-bauen-live)). Der
+  Name des Autors und jeder Mitbauende öffnen die Seite dieser Person: die
+  Bauten, die ihre Identität signiert hat, und die, in denen andere sie
+  nennen;
 - **Remix von „…“ von …**, wenn es ein Remix ist, und **N-mal geremixt**,
   wenn dieses Gerät Remixe davon gefunden hat (siehe
   [Remix-Zähler](#remix-zähler));
@@ -636,7 +641,9 @@ anstoßen — und jeder in der Kette wird genannt.
 Die eigene Seite eines Baus, geöffnet über einen geteilten Link, zeigt
 dieselbe Abstammung als **Stammbaum**: woraus er geremixt wurde, bis zum
 Original, dann den Bau selbst, dann die Remixe daraus, soweit dieses Gerät
-sie kennt.
+sie kennt. Die Challenge-Seite zeigt einen für jede Kette von Beiträgen. Jeder
+Bau im Stammbaum nennt seinen Autor und die Freunde, die ihn mit ihm gebaut
+haben; sein Titel öffnet den Bau, und jeder Name die Seite dieser Person.
 
 ## Ein typischer kreativer Kreislauf
 

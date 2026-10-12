@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 3be54646475153c8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 855952f6b34672d8 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -661,9 +661,11 @@ O Editor funciona com toque. Arraste com um dedo para orbitar, com dois para
 mover a vista, e faça pinça para o zoom. Um toque seleciona ou coloca, e
 arrastar nunca faz isso. Em uma tela estreita, a barra lateral abre pelo
 botão **Ferramentas** no canto superior direito da cena. Uma barra na parte
-de baixo da cena tem **Desfazer**, **Refazer**, **Girar**, **Excluir**,
+de baixo da cena tem **Desfazer**, **Refazer**, **Girar**, **Tombar**, **Excluir**,
 **Múltiplo** (cada toque põe um bloco na seleção ou tira dela), **Caixa**
 (arraste para desenhar uma caixa de seleção; a câmera fica parada até você
-desativar) e **Mais**, que abre a Paleta de comandos. Veja
+desativar) e **Mais**, que abre a Paleta de comandos. Em um celular, a barra de ferramentas acima da cena rola
+para o lado, então **Salvar** e **Publicar** vêm primeiro nela (depois de
+**← Voltar ao Mundo**, quando houver). Veja
 [Telas sensíveis ao toque](ControlsReference.md#telas-sensíveis-ao-toque)
 para os detalhes.

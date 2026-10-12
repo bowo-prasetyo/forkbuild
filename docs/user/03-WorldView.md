@@ -754,6 +754,15 @@ device only) even if you never publish or share anything of your own.
 Haven't visited anywhere yet? **Browse the Repository** to find your first
 one, or start from one of the ready-made builds listed under it.
 
+Below the Worlds, **Builds you helped make** lists the builds a friend
+credited you on when you built them together with **Build with me** (see
+[The Editor](02-TheEditor.md#build-with-me-building-together-live)): each
+one's title, whose build it is (**with** their name, which opens their
+page), and **Not published yet** until your friend publishes it, after
+which its title opens its World. Your other devices list them too, once
+they have been connected to this one. The section shows only once there is
+something in it.
+
 ## Finding worlds
 
 There are three ways to find something in the shared world, each answering a

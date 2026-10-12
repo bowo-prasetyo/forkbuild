@@ -100,7 +100,11 @@ A link to a build, whether it carries the build or names where it is
 stored, opens on that build's own page:
 
 - the build, turning slowly;
-- its title and who made it;
+- its title and who made it, and **Built with …** and their names when
+  friends built it together with its author (see
+  [Build with me](02-TheEditor.md#build-with-me-building-together-live)).
+  The author's name and each co-builder's open that person's page: the
+  builds their identity signed, and the builds others credit them on;
 - **Remixed from "…" by …** when it is a remix, and **Remixed N times**
   when this device has found remixes of it (see
   [Remix counts](#remix-counts));
@@ -586,6 +590,9 @@ and everyone in the chain gets credit.
 A build's own page, opened from a shared link, shows the same lineage as a
 **Family tree**: what it was remixed from, back to the original, then the
 build itself, then the remixes made from it, as far as this device knows.
+The challenge page shows one for each chain of entries. Each build in the
+tree names its author, and the friends who built it with them; its title
+opens the build, and each name opens that person's page.
 
 ## A typical creative loop
 
