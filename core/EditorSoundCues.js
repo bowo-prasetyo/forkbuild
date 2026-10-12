@@ -53,7 +53,10 @@ const CUE_BY_COMMAND_TYPE = Object.freeze({
     'create-world-resident': EDITOR_SOUND_CUE.PLACE,
     'remove-world-resident': EDITOR_SOUND_CUE.REMOVE,
     'create-world-animal-decoration': EDITOR_SOUND_CUE.PLACE,
-    'remove-world-animal-decoration': EDITOR_SOUND_CUE.REMOVE
+    'remove-world-animal-decoration': EDITOR_SOUND_CUE.REMOVE,
+    // Undo and Redo while building together, each an edit of its own.
+    'undo-operation': EDITOR_SOUND_CUE.UNDO,
+    'redo-operation': EDITOR_SOUND_CUE.REDO
 });
 
 // A composite command (one undo step of several changes) sounds like its

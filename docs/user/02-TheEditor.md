@@ -244,9 +244,12 @@ Every change is recorded, so you can always go back:
 Moving ten bricks counts as **one** undo step, so undo stays manageable even on
 big builds.
 
-While you build together (**Build with me**, below), Undo and Redo are paused:
-your step and your friend's could otherwise come undone in a different order
-on each screen. Delete or move a brick instead.
+While you build together (**Build with me**, below), Undo takes back only
+your own steps, never a friend's, and on every screen at once; Redo puts them
+back. If a friend has changed what your step made since (deleted the brick
+you placed, say), that step is skipped and the Editor says so. When someone
+joins, everyone's Undo starts again from there: the newcomer never had the
+steps made before.
 
 ## Groups
 
@@ -564,6 +567,8 @@ either of you places, moves, recolours or deletes appears on both screens.
 - A strip over the view shows who is building, each in their own colour, and
   each of you sees where the other is pointing and what they have selected,
   in that colour.
+- **Undo** (`Ctrl/Cmd + Z`) takes back your own last step on every screen,
+  and **Redo** puts it back; your friends' steps are theirs to undo.
 - It has to be your own build: one you started, or a copy you made. A build
   you began before logging in becomes yours when you invite friends to it.
 - Anyone who opens the link in its first 30 minutes can join, while the

@@ -211,15 +211,21 @@ export class CommandHistory {
             );
         }
         const executed = [];
+        // A shared Undo or Redo (application/commands/SharedUndoCommands.js)
+        // finds the step it takes back among the ones replayed before it.
+        const findOperation = (id) => executed.findLast((command) => command.id === id) || null;
+        const context = targetContext && typeof targetContext === 'object' && typeof targetContext.findOperation !== 'function'
+            ? new Proxy(targetContext, { get: (target, key) => (key === 'findOperation' ? findOperation : Reflect.get(target, key)) })
+            : targetContext;
         try {
             for (let i = startCursor; i < end; i++) {
                 const command = registry.fromJSON(commands[i]);
-                command.execute(targetContext);
+                command.execute(context);
                 executed.push(command);
             }
         } catch (error) {
             for (let i = executed.length - 1; i >= 0; i--) {
-                executed[i].undo(targetContext);
+                executed[i].undo(context);
             }
             throw error;
         }

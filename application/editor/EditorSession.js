@@ -10,6 +10,8 @@ import { InputDispatcher } from './InputDispatcher.js';
 import { ToolManager } from './ToolManager.js';
 import { CommandHistory } from './CommandHistory.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
+import { UndoOperationCommand, RedoOperationCommand, isSharedStepCommand } from '../commands/SharedUndoCommands.js';
+import { message } from '../../core/Message.js';
 import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
 import { describeCommand } from '../commands/describeCommand.js';
 import { RemoteDocumentOperationApplicationUseCase } from '../document/RemoteDocumentOperationApplicationUseCase.js';
@@ -46,6 +48,11 @@ import { pointerInputMethods } from '../editorSession/pointerInputMethods.js';
 //
 // Most methods live in application/editorSession/, one module per concern,
 // and are installed on the prototype as if written in the class body.
+
+// Who made a step this replica made itself (EditorSession#_operationAuthors).
+const SELF = Symbol('this replica');
+// The own steps a shared Undo can go back through.
+const MAX_OWN_STEPS = 200;
 
 export class EditorSession {
     constructor({
@@ -141,7 +148,16 @@ export class EditorSession {
         this._unattachCommandHistoryPropagation = null;
         this._unattachRecoveryCommandHistory = null;
         this._unattachLocalCausalRecord = null;
+        this._unattachOwnSteps = null;
         this._sharedEditing = false;
+        // Building together: who made each step (a collaborator's proved
+        // identity, or SELF), and this replica's own steps that Undo can
+        // take back and Redo put back (application/commands/SharedUndoCommands.js).
+        this._operationAuthors = new Map();
+        this._ownDone = [];
+        this._ownUndone = [];
+        // The last shared Undo or Redo: { kind, applied }.
+        this.lastSharedStep = null;
         this._unattachDeferralCommandHistory = null;
         this._editorCommandHistories = new Map();
         this._transformSettings = new TransformSettings();
@@ -180,6 +196,13 @@ export class EditorSession {
         // looking at now"; an operation for another document is not applied and not
         // queued. Causal-gap observation is registered first (a documented order, not
         // a correctness requirement).
+        // Who made each operation that arrives, noted before it is applied, so a
+        // shared Undo can check it takes back only its own author's step.
+        this._unattachAuthorRecord = this._documentCommandPropagation
+            ? this._documentCommandPropagation.onOperationReceived((documentId, command, authorIdentityId) => {
+                if (command?.id) this._operationAuthors.set(command.id, authorIdentityId || null);
+            })
+            : null;
         this._unattachCausalGapObservation = this._documentCommandPropagation
             ? this._documentOperationCausalGapObservation.attachToPropagation(this._documentCommandPropagation)
             : null;
@@ -240,37 +263,102 @@ export class EditorSession {
     }
 
     canUndo() {
-        return this._commandHistory && !this.sharedEditing ? this._commandHistory.canUndo() : false;
+        if (!this._commandHistory) return false;
+        return this.sharedEditing ? Boolean(this._nextOwnStep(this._ownDone)) : this._commandHistory.canUndo();
     }
 
     canRedo() {
-        return this._commandHistory && !this.sharedEditing ? this._commandHistory.canRedo() : false;
+        if (!this._commandHistory) return false;
+        return this.sharedEditing ? Boolean(this._nextOwnStep(this._ownUndone)) : this._commandHistory.canRedo();
     }
 
     getUndoLabel() {
-        return this._commandHistory ? this._commandHistory.getUndoLabel() : null;
+        if (!this._commandHistory) return null;
+        if (!this.sharedEditing) return this._commandHistory.getUndoLabel();
+        const step = this._nextOwnStep(this._ownDone);
+        return step ? message('history.undo', { action: step.describe() }) : null;
     }
 
     getRedoLabel() {
-        return this._commandHistory ? this._commandHistory.getRedoLabel() : null;
+        if (!this._commandHistory) return null;
+        if (!this.sharedEditing) return this._commandHistory.getRedoLabel();
+        const step = this._nextOwnStep(this._ownUndone);
+        return step ? message('history.redo', { action: step.describe() }) : null;
     }
 
     // The action registry calls session.undo()/redo() directly, so these must
-    // exist even though canUndo()/canRedo() already do.
+    // exist even though canUndo()/canRedo() already do. While building
+    // together they take back (and put back) only this replica's own steps,
+    // as operations every co-builder applies (SharedUndoCommands.js); false
+    // when there was none, or it couldn't be undone any more
+    // (lastSharedStep says which).
     undo() {
-        if (!this._commandHistory || this.sharedEditing) {
+        if (!this._commandHistory) {
             return false;
         }
+        if (this.sharedEditing) return this._sharedStep(UndoOperationCommand, this._ownDone, this._ownUndone);
         this._commandHistory.undo();
         return true;
     }
 
     redo() {
-        if (!this._commandHistory || this.sharedEditing) {
+        if (!this._commandHistory) {
             return false;
         }
+        if (this.sharedEditing) return this._sharedStep(RedoOperationCommand, this._ownUndone, this._ownDone);
         this._commandHistory.redo();
         return true;
+    }
+
+    // Whether an operation `authorIdentityId` sent is one a host passes on to
+    // the other co-builders: anything but a shared Undo or Redo of a step
+    // someone else made (which every replica that knows the step refuses).
+    acceptsSharedStep(command, authorIdentityId) {
+        if (!isSharedStepCommand(command)) return true;
+        const its = this._operationAuthors.get(command.targetId);
+        return its === undefined || its === authorIdentityId;
+    }
+
+    // Undo starts again from here: a co-builder who joined now never had the
+    // steps made before, so undoing one would change their copy differently.
+    // True when it dropped steps Undo could have taken back.
+    resetSharedUndo() {
+        const dropped = this._ownDone.length > 0 || this._ownUndone.length > 0;
+        this._ownDone = [];
+        this._ownUndone = [];
+        return dropped;
+    }
+
+    _sharedStep(StepCommand, from, to) {
+        this.lastSharedStep = null;
+        while (from.length > 0) {
+            const targetId = from.pop();
+            if (!this._findOperation(targetId)) continue;
+            const step = new StepCommand({ worldId: this._documentManager.document?.world.id, targetId });
+            this._commandHistory.execute(step);
+            this.lastSharedStep = { kind: StepCommand === UndoOperationCommand ? 'undo' : 'redo', applied: step.applied };
+            if (step.applied) to.push(targetId);
+            return step.applied;
+        }
+        return false;
+    }
+
+    _nextOwnStep(stack) {
+        for (let i = stack.length - 1; i >= 0; i--) {
+            const step = this._findOperation(stack[i]);
+            if (step) return step;
+        }
+        return null;
+    }
+
+    // The step with this id this Editor executed, newest first.
+    _findOperation(id) {
+        if (!this._commandHistory || !id) return null;
+        const executed = this._commandHistory.getExecutedCommands();
+        for (let i = executed.length - 1; i >= 0; i--) {
+            if (executed[i].id === id) return executed[i];
+        }
+        return null;
     }
 
     // ------------------------------------------------------ lifecycle
@@ -347,9 +435,8 @@ export class EditorSession {
         return selection && !selection.isEmpty && Array.isArray(selection.brickIds) ? [...selection.brickIds] : [];
     }
 
-    // While building together (Build with me), Undo and Redo are paused:
-    // one person's Undo would take back a step only their own copy knows
-    // the order of.
+    // While building together (Build with me), Undo and Redo take back only
+    // this replica's own steps, as operations every co-builder applies.
     setSharedEditing(shared) {
         this._sharedEditing = Boolean(shared);
     }
@@ -386,6 +473,10 @@ export class EditorSession {
     dispose() {
         this._teardown();
         this._commandActivityListeners.clear();
+        if (this._unattachAuthorRecord) {
+            this._unattachAuthorRecord();
+            this._unattachAuthorRecord = null;
+        }
         if (this._unattachRemoteApplication) {
             this._unattachRemoteApplication();
             this._unattachRemoteApplication = null;
@@ -407,7 +498,20 @@ export class EditorSession {
     // A fresh CommandHistory for `world`, wired to dirty tracking, the
     // command protocol, recovery and deferral; torn down by _teardown().
     _attachCommandHistory(world) {
-        this._commandHistory = new CommandHistory({ world });
+        // findOperation/operationAuthor: what a shared Undo or Redo looks up
+        // (application/commands/SharedUndoCommands.js). An operation that
+        // arrives has its author noted before it is applied; one being made
+        // here, not yet noted, is this replica's own.
+        this._commandHistory = new CommandHistory({
+            world,
+            findOperation: (id) => this._findOperation(id),
+            operationAuthor: (id) => {
+                if (this._operationAuthors.has(id)) return this._operationAuthors.get(id);
+                return this._applyingRemoteOperation ? undefined : SELF;
+            }
+        });
+        this._operationAuthors = new Map();
+        this.resetSharedUndo();
         this._editorCommandHistories.set(world.id, this._commandHistory);
         this._untrackDirtyState = this._documentManager.trackCommandHistory(this._commandHistory);
         // Outgoing broadcast for this CommandHistory; torn down before the next
@@ -436,6 +540,18 @@ export class EditorSession {
         this._unattachLocalCausalRecord = this._documentCommandPropagation
             ? this._recordLocalOperations(world.id, this._commandHistory, isLocal)
             : null;
+        // This replica's own steps: made here (SELF), and the ones a shared
+        // Undo can take back. A new step clears what Redo could put back.
+        const ownHistory = this._commandHistory;
+        const ownSteps = ownHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_EXECUTED, ({ command }) => {
+            if (!command?.id || !isLocal()) return;
+            this._operationAuthors.set(command.id, SELF);
+            if (isSharedStepCommand(command)) return;
+            this._ownDone.push(command.id);
+            if (this._ownDone.length > MAX_OWN_STEPS) this._ownDone.shift();
+            this._ownUndone = [];
+        });
+        this._unattachOwnSteps = () => ownSteps.unsubscribe();
         // Lets anything executing on this document release deferred operations it
         // just made ready. Always attached: it costs nothing when nothing is deferred.
         this._unattachDeferralCommandHistory = this._documentOperationDeferral.attachCommandHistory({
@@ -590,6 +706,10 @@ export class EditorSession {
         if (this._unattachLocalCausalRecord) {
             this._unattachLocalCausalRecord();
             this._unattachLocalCausalRecord = null;
+        }
+        if (this._unattachOwnSteps) {
+            this._unattachOwnSteps();
+            this._unattachOwnSteps = null;
         }
         if (this._unattachRecoveryCommandHistory) {
             this._unattachRecoveryCommandHistory();

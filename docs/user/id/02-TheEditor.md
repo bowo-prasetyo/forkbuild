@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 761f34649511fe59 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 3be54646475153c8 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -262,9 +262,12 @@ Memindahkan sepuluh balok dihitung sebagai **satu** langkah urung, jadi
 urungkan tetap mudah dikelola bahkan pada bangunan besar.
 
 Selama kalian membangun bersama (**Bangun bersamaku**, di bawah), Urungkan
-dan Ulangi dijeda: jika tidak, langkah Anda dan langkah teman Anda bisa
-terurung dalam urutan berbeda di tiap layar. Sebagai gantinya, hapus atau
-pindahkan balok.
+hanya membatalkan langkah Anda sendiri, tidak pernah langkah teman, dan di
+semua layar sekaligus; Ulangi mengembalikannya. Jika sejak itu teman telah
+mengubah apa yang dibuat oleh langkah Anda (misalnya menghapus balok yang Anda
+tempatkan), langkah itu dilewati dan Editor memberi tahu Anda. Saat seseorang
+bergabung, Urungkan semua orang dimulai lagi dari situ: pendatang baru tidak
+pernah memiliki langkah-langkah yang dibuat sebelumnya.
 
 ## Grup
 
@@ -598,6 +601,9 @@ ulang, atau dihapus oleh salah satu dari kalian muncul di kedua layar.
 - Sebuah strip di atas adegan menunjukkan siapa yang sedang membangun,
   masing-masing dengan warnanya sendiri, dan kalian masing-masing melihat ke
   mana yang lain menunjuk dan apa yang ia pilih, dengan warna itu.
+- **Urungkan** (`Ctrl/Cmd + Z`) membatalkan langkah terakhir Anda sendiri di
+  semua layar, dan **Ulangi** mengembalikannya; langkah teman-teman Anda hanya
+  bisa diurungkan oleh mereka sendiri.
 - Bangunan itu harus milik Anda sendiri: yang Anda mulai, atau salinan yang
   Anda buat. Bangunan yang Anda mulai sebelum masuk menjadi milik Anda saat
   Anda mengundang teman ke sana.

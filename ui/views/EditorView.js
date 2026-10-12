@@ -551,7 +551,8 @@ export default {
                 // Build with me: the host lets the friends who joined edit this
                 // build, and passes each one's edits on to the others.
                 resolveWorldEditGrant: (documentId, identityId) => Boolean(buildTogetherSession && buildTogetherSession.allows(documentId, identityId)),
-                shouldRelay: (documentId) => Boolean(buildTogetherSession && buildTogetherSession.isHosting(documentId))
+                shouldRelay: (documentId, command, authorIdentityId) => Boolean(buildTogetherSession && buildTogetherSession.isHosting(documentId))
+                    && editorSession.acceptsSharedStep(command, authorIdentityId)
             })
             : null;
         // Needs document propagation, whose trust chain it reuses. Without it, causal
@@ -619,6 +620,12 @@ export default {
                     openDocument: () => documentManager.document,
                     appliedOperationIds: () => editorSession.appliedOperationIds(),
                     openShared: (document, operationIds) => editorSession.openSharedDocument(document, operationIds),
+                    // Someone joined: Undo starts again from here, said only to
+                    // one already building with others who loses steps by it.
+                    resetUndo: ({ name } = {}) => {
+                        const sharing = editorSession.sharedEditing;
+                        if (editorSession.resetSharedUndo() && sharing) feedback.show(t('buildTogether.undoReset', { name: name || t('walkTogether.someone') }));
+                    },
                     adoptCredits: (builtWith) => {
                         const document = documentManager.document;
                         if (!document || !document.metadata.adoptBuiltWith(builtWith)) return false;

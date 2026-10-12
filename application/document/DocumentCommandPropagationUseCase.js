@@ -193,8 +193,8 @@ export class DocumentCommandPropagationUseCase {
         // (application/buildTogether/BuildTogetherSession.js). Asked at the
         // same WorldAuthorizationService gate as ownership, per operation.
         this._resolveWorldEditGrant = typeof resolveWorldEditGrant === 'function' ? resolveWorldEditGrant : null;
-        // documentId => whether this replica passes on what it accepts for
-        // that document to its other peers. Build with me's host does: each
+        // (documentId, command, authorIdentityId) => whether this replica
+        // passes on what it accepts for that document to its other peers. Build with me's host does: each
         // co-builder is connected to the host alone, so the host is how one
         // co-builder's edits reach the others. A relayed operation is sent
         // under this replica's own identity, which is what vouches for it.
@@ -485,7 +485,7 @@ export class DocumentCommandPropagationUseCase {
             authorIdentityId: result.authorIdentityId,
             causalPredecessors: result.causalPredecessors
         });
-        if (this._shouldRelay && this._shouldRelay(result.documentId)) {
+        if (this._shouldRelay && this._shouldRelay(result.documentId, result.command, result.authorIdentityId)) {
             this._relay(payload, meta.connectedPeer);
         }
     }

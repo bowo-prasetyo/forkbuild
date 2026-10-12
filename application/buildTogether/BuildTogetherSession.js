@@ -85,7 +85,8 @@ export class BuildTogetherSession {
     //   adoptCredits(builtWith): a co-builder's copy takes the author's
     //     credits (DocumentMetadata#adoptBuiltWith);
     //   notedHelped({ documentId, title, authorName, authorIdentityId }):
-    //     the author credits this replica: a build it helped make.
+    //     the author credits this replica: a build it helped make;
+    //   resetUndo({ name }): someone joined; Undo starts again from here.
     // resolveConnectionIdentity(connectedPeer): { identityId } for who is
     //   behind a connection, an authorized device's owner included (the
     //   app's DeviceAuthorizationPropagationUseCase), as the command
@@ -190,8 +191,31 @@ export class BuildTogetherSession {
         const peer = this._peerOf(identityId);
         const resolved = peer ? this._identityOf(peer) : null;
         if (resolved && resolved !== identityId) this._allowed.set(resolved, cleanName);
+        this._resetUndo(cleanName);
         this._changed();
         return true;
+    }
+
+    // Someone joined: they never had the steps made before now, so everyone's
+    // Undo starts again from here (EditorSession#resetSharedUndo).
+    _resetUndo(name) {
+        if (typeof this._editor.resetUndo === 'function') {
+            try {
+                this._editor.resetUndo({ name });
+            } catch {
+                // Undo is a convenience; building goes on.
+            }
+        }
+        for (const peer of this._coBuilderPeers()) this._send(peer, { type: 'undo-reset', documentId: this._hosted, name: cleanText(name, MAX_NAME_LENGTH) });
+    }
+
+    _acceptUndoReset(payload, peer) {
+        if (!this._fromHost(payload, peer) || typeof this._editor.resetUndo !== 'function') return;
+        try {
+            this._editor.resetUndo({ name: cleanText(payload.name, MAX_NAME_LENGTH) });
+        } catch {
+            // As above.
+        }
     }
 
     // Whether `identityId` may edit `documentId`: asked by the command
@@ -345,6 +369,7 @@ export class BuildTogetherSession {
         case 'left': return this._guestLeft(payload, peer);
         case 'presence': return this._acceptPresence(payload, peer);
         case 'credits': return this._acceptCredits(payload, peer);
+        case 'undo-reset': return this._acceptUndoReset(payload, peer);
         default:
         }
     }

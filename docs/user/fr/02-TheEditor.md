@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 761f34649511fe59 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 3be54646475153c8 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -275,9 +275,12 @@ Déplacer dix briques compte pour **une seule** étape d’annulation,
 l’annulation reste donc gérable même sur de grosses constructions.
 
 Pendant que vous construisez ensemble (**Construire avec moi**, plus bas),
-Annuler et Rétablir sont suspendus : sinon, votre étape et celle de votre
-ami pourraient être annulées dans un ordre différent sur chaque écran.
-Supprimez ou déplacez plutôt une brique.
+Annuler ne reprend que vos propres étapes, jamais celles d’un ami, et sur tous
+les écrans à la fois ; Rétablir les remet. Si un ami a modifié depuis ce que
+votre étape avait produit (en supprimant la brique que vous aviez placée, par
+exemple), cette étape est ignorée et l’Éditeur vous le signale. Quand
+quelqu’un rejoint, Annuler repart de là pour tout le monde : le nouveau venu
+n’a jamais eu les étapes faites avant.
 
 ## Groupes
 
@@ -636,6 +639,9 @@ sur les deux écrans.
 - Un bandeau au-dessus de la scène montre qui construit, chacun dans sa
   couleur, et chacun voit où l’autre pointe et ce qu’il a sélectionné, dans
   cette couleur.
+- **Annuler** (`Ctrl/Cmd + Z`) reprend votre propre dernière étape sur tous
+  les écrans, et **Rétablir** la remet ; c’est à vos amis d’annuler leurs
+  propres étapes.
 - Il doit s’agir de votre propre construction : une que vous avez commencée,
   ou une copie que vous avez faite. Une construction commencée avant de vous
   connecter devient la vôtre quand vous y invitez des amis.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 761f34649511fe59 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 3be54646475153c8 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -268,10 +268,13 @@ Jede Änderung wird festgehalten, sodass Sie immer zurückgehen können:
 Zehn Steine zu verschieben zählt als **ein** Rückgängig-Schritt, sodass
 Rückgängig auch bei großen Bauwerken überschaubar bleibt.
 
-Während Sie gemeinsam bauen (**Mit mir bauen**, unten), sind Rückgängig und
-Wiederholen pausiert: Ihr Schritt und der Ihres Freundes könnten sonst auf
-jedem Bildschirm in einer anderen Reihenfolge rückgängig gemacht werden.
-Löschen oder verschieben Sie stattdessen einen Stein.
+Während Sie gemeinsam bauen (**Mit mir bauen**, unten), nimmt Rückgängig nur
+Ihre eigenen Schritte zurück, nie die eines Freundes, und zwar auf allen
+Bildschirmen zugleich; Wiederholen stellt sie wieder her. Hat ein Freund
+seitdem verändert, was Ihr Schritt bewirkt hat (etwa den Stein gelöscht, den
+Sie platziert haben), wird dieser Schritt übersprungen, und der Editor sagt es
+Ihnen. Wenn jemand beitritt, beginnt Rückgängig für alle von dort an neu: Der
+Neue hatte die vorher gemachten Schritte nie.
 
 ## Gruppen
 
@@ -624,6 +627,9 @@ umfärbt oder löscht, auf beiden Bildschirmen.
 - Eine Leiste über der Szene zeigt, wer baut, jeden in seiner eigenen Farbe,
   und jeder von Ihnen sieht in dieser Farbe, wohin der andere zeigt und was
   er ausgewählt hat.
+- **Rückgängig** (`Strg/Cmd + Z`) nimmt Ihren eigenen letzten Schritt auf
+  allen Bildschirmen zurück, und **Wiederholen** stellt ihn wieder her; die
+  Schritte Ihrer Freunde machen diese selbst rückgängig.
 - Es muss Ihr eigenes Bauwerk sein: eines, das Sie begonnen haben, oder eine
   Kopie, die Sie erstellt haben. Ein Bauwerk, das Sie vor der Anmeldung
   begonnen haben, wird Ihres, wenn Sie Freunde dazu einladen.

@@ -408,14 +408,14 @@ async function run() {
         assert(!/Recovery|Autosave|Publication|Snapshot/.test(registrySource), '10. EditorActionRegistry.js carries no Recovery/Autosave/Publication/Snapshot reference');
         assert(!/Recovery|Autosave|Publication|Snapshot/.test(paletteSource), '11. CommandPalette.js carries none either');
 
-        // EditorSession.js itself needed no change — getUndoLabel()/
-        // getRedoLabel() are still the exact pre-existing one-line
-        // delegations to this._commandHistory.
+        // getUndoLabel()/getRedoLabel() still delegate to this._commandHistory
+        // whenever the Editor isn't building together (where they name this
+        // replica's own next step instead: SharedUndoCommands.js).
         const sessionSource = codeOnlyLines((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n'));
-        assert(/getUndoLabel\(\)\s*\{\s*return this\._commandHistory \? this\._commandHistory\.getUndoLabel\(\) : null;\s*\}/.test(sessionSource),
-            '12. EditorSession.getUndoLabel() is still the unchanged one-line CommandHistory delegation');
-        assert(/getRedoLabel\(\)\s*\{\s*return this\._commandHistory \? this\._commandHistory\.getRedoLabel\(\) : null;\s*\}/.test(sessionSource),
-            '13. EditorSession.getRedoLabel() is still the unchanged one-line CommandHistory delegation');
+        assert(/getUndoLabel\(\)\s*\{\s*if \(!this\._commandHistory\) return null;\s*if \(!this\.sharedEditing\) return this\._commandHistory\.getUndoLabel\(\);/.test(sessionSource),
+            '12. EditorSession.getUndoLabel() is still the CommandHistory delegation, alone');
+        assert(/getRedoLabel\(\)\s*\{\s*if \(!this\._commandHistory\) return null;\s*if \(!this\.sharedEditing\) return this\._commandHistory\.getRedoLabel\(\);/.test(sessionSource),
+            '13. EditorSession.getRedoLabel() is still the CommandHistory delegation, alone');
 
         // The static label stays a plain string — KeyboardShortcutsOverlay.js
         // (no context available there) keeps working unchanged, still

@@ -16,8 +16,9 @@ import { displayText, t } from '../../i18n/i18n.js';
 //
 // While building together, each Editor shares where its pointer is and what
 // it has selected, drawn in the other Editors in that person's colour, and
-// Undo is paused (EditorSession#setSharedEditing). Leaving the Editor, or
-// opening another build, ends it.
+// Undo takes back only that person's own steps, on every copy
+// (EditorSession#setSharedEditing). Leaving the Editor, or opening another
+// build, ends it.
 
 const PRESENCE_INTERVAL_MS = 150;
 // Presence is sent again now and then while nothing moves, so a co-builder

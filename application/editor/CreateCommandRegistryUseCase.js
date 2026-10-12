@@ -30,6 +30,7 @@ import { CreateWorldAnimalDecorationCommand } from '../commands/CreateWorldAnima
 import { RemoveWorldAnimalDecorationCommand } from '../commands/RemoveWorldAnimalDecorationCommand.js';
 import { CreateWorldResidentCommand } from '../commands/CreateWorldResidentCommand.js';
 import { RemoveWorldResidentCommand } from '../commands/RemoveWorldResidentCommand.js';
+import { UndoOperationCommand, RedoOperationCommand } from '../commands/SharedUndoCommands.js';
 
 // Builds the CommandRegistry and registers every built-in command type.
 // Later, community tools or plugin commands get one extra line here —
@@ -96,6 +97,9 @@ export class CreateCommandRegistryUseCase {
         // World Residents: ambient people authored into a World.
         registry.register('create-world-resident', CreateWorldResidentCommand);
         registry.register('remove-world-resident', RemoveWorldResidentCommand);
+        // Undo and Redo while building together (application/commands/SharedUndoCommands.js).
+        registry.register('undo-operation', UndoOperationCommand);
+        registry.register('redo-operation', RedoOperationCommand);
         return registry;
     }
 }
