@@ -136,6 +136,12 @@ fica escura demais para você encontrar o caminho. Só a Visão do mundo tem
 noite: o Editor, as imagens das construções e as prévias de links estão
 sempre em pleno dia.
 
+O sol nasce no leste, atravessa o céu do sul e se põe no oeste, alaranjado
+perto do horizonte; depois que ele se põe, a lua faz o mesmo caminho durante
+a noite. A luz sobre as construções vem de quem estiver no céu, então as
+paredes voltadas para o leste pegam a manhã e as voltadas para o oeste, a
+tarde.
+
 Se você preferir que seja sempre dia, marque **Sempre de dia** no fim do
 painel, logo acima de **Mostrar ferramentas avançadas**. A escolha fica
 lembrada neste dispositivo e não muda nada para mais ninguém.

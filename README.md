@@ -119,8 +119,10 @@ longer-term aim.
   standing round the square while a week has few entries, so there is
   somewhere to walk before you've built anything.
 - Day and night: every 40 minutes the sky turns through dusk to a moonlit
-  night and back, the same for everyone; windows and lanterns light up after
-  dark and crickets take over from the birds. **Always day** keeps it day.
+  night and back, the same for everyone; the sun and then the moon rise in
+  the east and set in the west, lighting builds from where they stand;
+  windows and lanterns light up after dark and crickets take over from the
+  birds. **Always day** keeps it day.
 - An avatar you can walk, run and jump with, which collides with buildings and
   can climb stairs and slopes; vehicles, an inventory, and catching and releasing
   animals.

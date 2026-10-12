@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DAY } from '../core/DayCycle.js';
+import { DAY, DAY_SKY_BODIES } from '../core/DayCycle.js';
 
 // Every lit surface in this codebase (terrain, trees, wildlife, bricks,
 // avatars) uses THREE.MeshStandardMaterial, a physically-based material
@@ -16,8 +16,10 @@ import { DAY } from '../core/DayCycle.js';
 // MeshStandardMaterial's dimmer response.
 //
 // The daytime colors and intensities are core/DayCycle.js's DAY, which
-// World View's day and night (applyLook()) starts from.
-const DIRECTIONAL_POSITION = { x: 10, y: 15, z: 8 };
+// World View's day and night (applyLook()) starts from, and the light comes
+// from DAY_SKY_BODIES's sun until World View's sun and moon move it
+// (setDirection()).
+const DIRECTIONAL_DISTANCE = 20;
 
 export class Lights {
     constructor(sceneManager) {
@@ -31,11 +33,7 @@ export class Lights {
             DAY.sunColor,
             DAY.sunIntensity
         );
-        this._directional.position.set(
-            DIRECTIONAL_POSITION.x,
-            DIRECTIONAL_POSITION.y,
-            DIRECTIONAL_POSITION.z
-        );
+        this.setDirection(DAY_SKY_BODIES.light);
 
         sceneManager.add(this._hemisphere);
         sceneManager.add(this._directional);
@@ -48,6 +46,17 @@ export class Lights {
         this._hemisphere.intensity = look.hemisphereIntensity;
         this._directional.color.setHex(look.sunColor);
         this._directional.intensity = look.sunIntensity;
+    }
+
+    // Aims the directional light from `direction` (a unit vector towards the
+    // sun or the moon); the light shines on the origin, and as it is
+    // directional only its direction matters.
+    setDirection(direction) {
+        this._directional.position.set(
+            direction.x * DIRECTIONAL_DISTANCE,
+            direction.y * DIRECTIONAL_DISTANCE,
+            direction.z * DIRECTIONAL_DISTANCE
+        );
     }
 
     get hemisphere() {

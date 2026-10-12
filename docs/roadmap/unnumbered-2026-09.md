@@ -6219,3 +6219,28 @@ still the next release's subject, and this is World View polish beside them.
   vocabulary test count the Lantern.
 - Not done: glowing bricks light nothing around them (no point lights, no bloom pass, which the renderer has avoided);
   there is no sun or moon disc moving across the sky; the Editor can't preview a build at night.
+
+## A sun and a moon in World View (unnumbered, 2026-10-12)
+
+**The sun and the moon now cross World View's sky, rising in the east and setting in the west, and the light on builds
+comes from them.** Day and night changed the sky's color, but nothing in it moved, and a build was lit from the same
+side at noon and at midnight. Pillar served: your work lives in a world, one where a build's east wall catches the
+morning and its west wall the evening. Nothing to learn and nothing to set: **Always day** keeps broad day's sun where
+the light always stood.
+
+- **Where they are, from the clock** (`skyBodiesAt()` in core/DayCycle.js). One arc from east (+x) to west (-x)
+  leaning 50° south, so neither climbs above 40°: World View's camera looks at most about 30° up, and a higher sun
+  would be out of sight most of the day. The sun is up from just before dawn until it sets in the dusk, the moon from
+  late in the dusk until just after dawn; while both are low in the sky the light sweeps steadily back over the
+  south from the one setting to the one rising, and it never comes from lower than about 14.5°.
+- **Drawn far off** (renderer/SkyBodies.js, `Renderer#setSkyBodies()`, `Lights#setDirection()`): an unlit, fog-free
+  disc each, the sun with a soft halo and orange near the horizon, placed every frame at 0.8 of the camera's far
+  plane in its direction, so it hangs in the sky however far you walk; builds and hills cover it, and under water
+  neither shows. The scene casts no shadows, so moving the light costs nothing. Made only when World View first asks,
+  so the Editor and thumbnails are unchanged.
+- Guide 03's Day and night section in every language, docs/Architecture.md and the README describe it.
+- Tests: `DayAndNight` (sunrise in the east, midday in the south, sunset in the west and the moon by night; the sun
+  only moving west; the light never low and turning gradually through both handovers; the discs placed round the
+  camera, facing it, hidden under water and removed on dispose; the light aimed from them; the session handing them
+  over every frame, and Always day's still sun).
+- Not done: the moon has no phases, there are no stars, and nothing casts a shadow.

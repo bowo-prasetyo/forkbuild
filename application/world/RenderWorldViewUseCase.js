@@ -789,6 +789,11 @@ export class RenderWorldViewUseCase {
                 renderer.setSkyLook(look);
                 worldRenderer.brickInstances.setNightGlow(look.glow);
             },
+            // Where the sun and the moon are (core/DayCycle.js#skyBodiesAt()),
+            // and so where the light comes from.
+            setSkyBodies: (bodies) => {
+                renderer.setSkyBodies(bodies);
+            },
             // A pure client rendering preference, exactly like
             // setLocalAvatarVisible — never touches presence sync or
             // the known-remote-avatar set, only which already-built

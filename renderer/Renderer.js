@@ -16,6 +16,7 @@ import { underwaterViewAt, UNDERWATER_VIEW } from '../core/UnderwaterView.js';
 import { buildUnderwaterLifeTileMesh, updateUnderwaterLifeTileMesh } from './UnderwaterLifeTileMesh.js';
 import { DAY } from '../core/DayCycle.js';
 import { makeNightGlowing } from './NightGlowMaterial.js';
+import { SkyBodies } from './SkyBodies.js';
 
 // Under water the view closes in to a blue-green haze: murkier and greener in a
 // lake, deeper blue at sea.
@@ -55,6 +56,9 @@ export class Renderer {
         // How strongly standalone bricks that shine after dark shine
         // (renderer/NightGlowMaterial.js), shared by every one this adds.
         this._nightGlow = { value: 0 };
+        // The sun and the moon, made the first time setSkyBodies() is called.
+        this._skyBodies = null;
+        this._skyBodiesState = null;
         this._sceneManager.scene.background = new THREE.Color(DAY.sky);
 
         this._cameraController = new CameraController(
@@ -239,6 +243,22 @@ export class Renderer {
         return this._skyLook;
     }
 
+    // Shows World View's sun and moon where `bodies` (core/DayCycle.js's
+    // skyBodiesAt()) puts them, and aims the light from them. A renderer
+    // never given any (the Editor, thumbnails) draws neither and keeps the
+    // daytime light.
+    setSkyBodies(bodies) {
+        if (!bodies || bodies === this._skyBodiesState) {
+            return;
+        }
+        this._skyBodiesState = bodies;
+        if (!this._skyBodies) {
+            this._skyBodies = new SkyBodies(this._sceneManager);
+        }
+        this._skyBodies.set(bodies);
+        this._lights.setDirection(bodies.light);
+    }
+
     resetCameraView() {
         this._cameraController.resetView();
     }
@@ -316,6 +336,9 @@ export class Renderer {
         this._waterStreaming.dispose();
         this._underwaterLifeStreaming.dispose();
         this._wildlifeStreaming.dispose();
+        if (this._skyBodies) {
+            this._skyBodies.dispose();
+        }
         window.removeEventListener('resize', this._onResize);
         this._cameraController.dispose();
         this._container.removeChild(this._webglRenderer.domElement);
@@ -334,6 +357,9 @@ export class Renderer {
         this._underwaterLifeStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         this._underwaterLifeStreaming.forEachLoadedTile((tile) => updateUnderwaterLifeTileMesh(tile, wildlifeTime));
         this._applyUnderwaterView(underwaterViewAt(DEFAULT_WORLD_SEED, this._cameraController.camera.position));
+        if (this._skyBodies) {
+            this._skyBodies.update(this._cameraController.camera, Boolean(UNDERWATER_LOOK[this._underwaterView]));
+        }
         for (const listener of this._frameListeners) {
             listener(deltaSeconds);
         }

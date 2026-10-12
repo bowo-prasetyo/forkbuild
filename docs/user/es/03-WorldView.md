@@ -142,6 +142,12 @@ noche nunca es tan oscura que usted no encuentre el camino. Solo la Vista
 del mundo tiene noche: el Editor, las imágenes de las construcciones y las
 vistas previas de enlaces siempre están a pleno día.
 
+El sol sale por el este, cruza el cielo del sur y se pone por el oeste,
+anaranjado cerca del horizonte; cuando se pone, la luna hace el mismo
+recorrido durante la noche. La luz sobre las construcciones viene del que
+esté en el cielo, así que las paredes que miran al este reciben la mañana y
+las que miran al oeste, la tarde.
+
 Si prefiere que siempre sea de día, marque **Siempre de día** al final del
 panel, justo encima de **Mostrar herramientas avanzadas**. Se recuerda en
 este dispositivo y no cambia nada para nadie más.

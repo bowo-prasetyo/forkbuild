@@ -3,12 +3,18 @@
 // sees the same sky without exchanging anything. "Always day" is this device's
 // own choice (application/settings/WorldViewSkyStore.js) and changes nothing
 // for anyone else.
-import { DAY, skyLookAt } from '../../core/DayCycle.js';
+import { DAY, DAY_SKY_BODIES, skyBodiesAt, skyLookAt } from '../../core/DayCycle.js';
 
 export const dayCycleMethods = {
     // The sky's look right now: core/DayCycle.js's DAY while Always day is on.
     skyLook() {
         return this._alwaysDay ? DAY : skyLookAt(this._wildlifeClock());
+    },
+
+    // Where the sun and the moon are right now, and where the light comes
+    // from: broad day's sun, standing still, while Always day is on.
+    skyBodies() {
+        return this._alwaysDay ? DAY_SKY_BODIES : skyBodiesAt(this._wildlifeClock());
     },
 
     // How deep into the night the world is, from 0 (day) to 1 (night): how
@@ -40,6 +46,10 @@ export const dayCycleMethods = {
     _applySkyLook() {
         if (this._session && typeof this._session.setSkyLook === 'function') {
             this._session.setSkyLook(this.skyLook());
+        }
+        // A render facade that can't draw them keeps its light where it is.
+        if (this._session && typeof this._session.setSkyBodies === 'function') {
+            this._session.setSkyBodies(this.skyBodies());
         }
     }
 };
