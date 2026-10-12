@@ -3,6 +3,7 @@ import { Position } from '../../core/Position.js';
 import { SpatialBounds } from '../../core/SpatialBounds.js';
 import { Building } from '../../core/Building.js';
 import { World } from '../../core/World.js';
+import { moveInReadyMadeResident } from '../../core/ReadyMadeHome.js';
 
 // The built-in structures offered as ready-made builds, in the order their
 // cards show them: the three showcase builds (core/library/ShowcaseLibrary.js)
@@ -88,8 +89,8 @@ export function composeShowcase(structures, brickRegistry, { gap = SHOWCASE_GAP 
 // A ready-made build as a World of one building, the shape a plaza exhibit
 // is drawn from (the challenge plaza's ready-made builds, while a week has
 // few entries). Every brick is a new Brick; the library's own are never
-// changed.
-export function structureWorld(structure) {
+// changed. With `brickRegistry`, a ready-made home has its resident.
+export function structureWorld(structure, brickRegistry = null) {
     const building = new Building({ id: `ready-made:${structure.id}` });
     for (const brick of structure.bricks) {
         building.addBrick(new Brick({
@@ -102,5 +103,8 @@ export function structureWorld(structure) {
     }
     const world = new World({ id: `ready-made:${structure.id}` });
     world.addBuilding(building);
+    // A ready-made home stands lived in, as a copy of one starts
+    // (core/ReadyMadeHome.js).
+    if (brickRegistry) moveInReadyMadeResident(world, structure, brickRegistry, () => `ready-made-resident:${structure.id}`);
     return world;
 }

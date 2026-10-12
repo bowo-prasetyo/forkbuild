@@ -36,9 +36,10 @@ transform bricks, and how to organize your build with groups.
 - **Build Library** — a search box and two tabs:
   - **Bricks** — everything you can place with the Place tool, as tiles in
     six sections (Basic, Structure, Roofs & Stairs, Openings, Details,
-    Nature): fifty pieces, from half cubes, round bricks and logs to gable
-    and cone roofs, framed and round windows, fences, benches, bushes and
-    pine trees.
+    Nature): fifty-four pieces, from half cubes, round bricks and logs to
+    gable and cone roofs, framed and round windows, fences, benches, bushes
+    and pine trees, and furniture (a table, a bed, a hearth and a shelf, in
+    Details) for the rooms you walk into.
     Click one to select it (and switch to the Place tool); a
     **Color** swatch then appears for choosing its color — see
     [Brick colors](#brick-colors) below.
@@ -529,7 +530,10 @@ first click or key press, as browsers require.
 
 - **Save** (`Ctrl+S`) — keep your work on this device.
 - **Publish** — share it with everyone (see
-  [Publishing & Forking](04-PublishingAndForking.md)).
+  [Publishing & Forking](04-PublishingAndForking.md)). Publishing also saves
+  it. The message after it offers **Walk inside it** and **Copy link**;
+  **More ways to share** holds the link itself, **Save picture** and
+  **Embed**.
 - **New** — start something new: an **Empty plot**, or one of the
   ready-made builds (a castle, a harbor island, a village square, a house, a
   mill and a bridge) as your own copy, seen whole. If what's open has

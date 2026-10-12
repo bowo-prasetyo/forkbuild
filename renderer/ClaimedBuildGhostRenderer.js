@@ -22,8 +22,11 @@ export const DEFAULT_MAX_GHOST_BRICKS = 4000;
 const GHOST_OPACITY = 0.35;
 
 export class ClaimedBuildGhostRenderer {
-    constructor(renderer, registry, { buildingRenderer = new BuildingRenderer(registry), maxBricks = DEFAULT_MAX_GHOST_BRICKS, translucent = true } = {}) {
+    // `cutawayClipping` (renderer/CutawayClipping.js) lets solid exhibits be
+    // cut away while someone stands inside one.
+    constructor(renderer, registry, { buildingRenderer = new BuildingRenderer(registry), maxBricks = DEFAULT_MAX_GHOST_BRICKS, translucent = true, cutawayClipping = null } = {}) {
         this._renderer = renderer;
+        this._cutawayClipping = cutawayClipping;
         this._translucent = translucent;
         this._buildingRenderer = buildingRenderer;
         this._maxBricks = maxBricks;
@@ -69,6 +72,7 @@ export class ClaimedBuildGhostRenderer {
                     makeGhostly(mesh);
                 } else {
                     mesh.userData.plazaExhibit = true;
+                    if (this._cutawayClipping) this._cutawayClipping.apply(mesh.material);
                 }
                 this._renderer.add(mesh);
                 meshes.push(mesh);

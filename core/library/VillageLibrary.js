@@ -58,51 +58,56 @@ const ROOF_COLOR = 0xd08a3e;
 const OAK = 0x8b5a2b;
 const STONE = 0x9a9a9a;
 
+// Home's starter (application/home/FeaturedBuilds.js): a house worth walking
+// into (docs/reviews/CreativeDirection-2026-10-12.md, finding 3). A 6x6
+// room, furnished: a table and bench in the middle, a bed along the west
+// wall, a hearth under the chimney on the north wall, a shelf on the east
+// wall and a barrel by the door, with room to walk round them all.
+const HOUSE_HALF = 3;
 const houseBricks = [
-    // Floor — one slab_4x4, top surface at y = 0.25.
-    b('core:slab_4x4', 0, 0.125, 0),
+    // Floor — nine plate_2x2, top surface at y = 0.25.
+    ...[-2, 0, 2].flatMap((x) => [-2, 0, 2].map((z) => b('core:plate_2x2', x, 0.125, z, 0, OAK))),
 
-    // South (front) wall — three wall_1x3 segments, one gap left open
-    // for the door.
-    b('core:wall_1x3', -1.5, 1.75, -2),
-    b('core:wall_1x3', 0.5, 1.75, -2),
-    b('core:wall_1x3', 1.5, 1.75, -2),
-    b('core:door', -0.5, 1.25, -2),
+    // South (front) wall — six wall_1x3 segments but one, left open for the
+    // door, and a small window to the right of it.
+    ...[-2.5, -1.5, 0.5, 1.5, 2.5].map((x) => b('core:wall_1x3', x, 1.75, -HOUSE_HALF)),
+    b('core:door', -0.5, 1.25, -HOUSE_HALF),
+    b('core:window_small', 1.5, 1.75, -HOUSE_HALF),
     // The doorstep: level with the floor, so the door opens onto it.
-    b('core:plate_1x1', -0.5, 0.125, -2.5, 0, STONE),
+    b('core:plate_1x1', -0.5, 0.125, -HOUSE_HALF - 0.5, 0, STONE),
 
-    // North (back) wall — four full segments plus a large window.
-    b('core:wall_1x3', -1.5, 1.75, 2),
-    b('core:wall_1x3', -0.5, 1.75, 2),
-    b('core:wall_1x3', 0.5, 1.75, 2),
-    b('core:wall_1x3', 1.5, 1.75, 2),
-    b('core:window_large', 0, 1.75, 2),
+    // North (back) wall — six segments plus a large window.
+    ...[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5].map((x) => b('core:wall_1x3', x, 1.75, HOUSE_HALF)),
+    b('core:window_large', -1, 1.75, HOUSE_HALF),
 
-    // East wall — four segments plus a small window, rotated 90° so
-    // the wall's own width axis runs along Z instead of X.
-    b('core:wall_1x3', 2, 1.75, -1.5, 90),
-    b('core:wall_1x3', 2, 1.75, -0.5, 90),
-    b('core:wall_1x3', 2, 1.75, 0.5, 90),
-    b('core:wall_1x3', 2, 1.75, 1.5, 90),
-    b('core:window_small', 2, 1.75, 0, 90),
+    // East and west walls — six segments each, rotated 90° so the wall's
+    // width runs along Z, each with a small window.
+    ...[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5].map((z) => b('core:wall_1x3', HOUSE_HALF, 1.75, z, 90)),
+    b('core:window_small', HOUSE_HALF, 1.75, 0.5, 90),
+    ...[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5].map((z) => b('core:wall_1x3', -HOUSE_HALF, 1.75, z, 90)),
+    b('core:window_small', -HOUSE_HALF, 1.75, -0.5, 90),
 
-    // West wall — mirrored.
-    b('core:wall_1x3', -2, 1.75, -1.5, 90),
-    b('core:wall_1x3', -2, 1.75, -0.5, 90),
-    b('core:wall_1x3', -2, 1.75, 0.5, 90),
-    b('core:wall_1x3', -2, 1.75, 1.5, 90),
-    b('core:window_small', -2, 1.75, 0, 90),
+    // Hipped roof — nine roof_hip caps tiled 3x3 over the 6x6 footprint;
+    // the walls top out at y = 3.25.
+    ...[-2, 0, 2].flatMap((x) => [-2, 0, 2].map((z) => b('core:roof_hip', x, 4.0, z))),
 
-    // Hipped roof — four roof_hip caps tiled 2x2 to cover the 4x4
-    // footprint, walls top out at y = 3.25.
-    b('core:roof_hip', -1, 4.0, -1),
-    b('core:roof_hip', -1, 4.0, 1),
-    b('core:roof_hip', 1, 4.0, -1),
-    b('core:roof_hip', 1, 4.0, 1),
+    // Chimney — a brick stack rising through the north-east roof cap, in
+    // its middle, so its foot is below the slope all round and it never
+    // floats above the roof.
+    b('core:chimney', 2, 4.5, 2),
 
-    // Chimney — a brick stack rising through the south-east roof cap, its
-    // foot below the slope all round so it never floats above the roof.
-    b('core:chimney', 1.25, 4.5, -1.25)
+    // Inside. The hearth stands against the north wall under the chimney,
+    // open to the room.
+    b('core:hearth', 2, 1.0, HOUSE_HALF - 0.125 - 0.375),
+    // A table in the middle with a bench along its south side.
+    b('core:table', 0, 0.65, 0.25),
+    b('core:bench', 0, 0.5, -0.75),
+    // The bed along the west wall, its headboard to the north.
+    b('core:bed', -HOUSE_HALF + 0.125 + 0.5, 0.6, 1.625),
+    // A shelf against the east wall, its back to the wall.
+    b('core:shelf', HOUSE_HALF - 0.125 - 0.2, 1.0, -1.5, 90),
+    // A barrel in the corner by the door.
+    b('core:barrel', -2.35, 0.75, -2.35)
 ];
 
 const barnBricks = [
@@ -793,7 +798,7 @@ export const VillageLibrary = {
             name: 'House',
             category: 'residential',
             tags: ['house', 'residential', 'dwelling'],
-            description: 'A small hipped-roof cottage with a raised entry step, a chimney, a door, and windows on every wall.',
+            description: 'A hipped-roof house with a doorstep, a chimney and windows on every wall, furnished inside with a table and bench, a bed, a hearth, a shelf and a barrel.',
             bricks: houseBricks
         }),
         new Structure({

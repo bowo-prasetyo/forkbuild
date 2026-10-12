@@ -511,13 +511,19 @@ async function firstVisit(browser, base) {
         assert(!(await editor.$('.login-modal-quick input[type="password"]')), 'a first publish asks for no passphrase');
         await editor.fill('.login-modal-quick-name', 'Bundle builder');
         await editor.click('.login-modal-quick-go');
-        await editor.waitForSelector('.editor-post-publish-share .publication-share-link-url', { timeout: 60_000 });
+        // One celebration: Copy link up front, the link itself and the rest under More ways to share.
+        await editor.waitForSelector('.editor-post-publish-share .publication-share-link-actions button:has-text("Copy link")', { timeout: 60_000 });
+        assert(!(await editor.isVisible('.editor-post-publish-share .publication-share-link-url')), 'the long link waits under More ways to share');
+        await editor.click('.editor-post-publish-share .publication-share-more summary');
+        await editor.waitForSelector('.editor-post-publish-share .publication-share-link-url', { timeout: 10_000 });
         const link = await editor.$eval('.editor-post-publish-share .publication-share-link-url', (input) => input.value);
         assert(link.includes('/b/1'), `a name is enough to publish it signed, with a link ready (${link.slice(0, 60)})`);
         assert((await editor.textContent('.user-widget')).includes('Bundle builder'), 'and leaves the new identity logged in');
         // Sent to everyone, or (with no relay reachable from the test) said not to have reached them yet.
         await editor.waitForFunction(() => /Anyone can find it now|couldn't reach everyone yet/.test(document.querySelector('.editor-post-publish-message')?.textContent || ''), null, { timeout: 60_000 });
         assert(await editor.$('.editor-post-publish-protect .protect-identity-note-link'), 'and the Editor offers to add a passphrase');
+        // Publishing keeps the build too: nothing reads Draft or Unsaved once it is out.
+        await editor.waitForFunction(() => !document.querySelector('.document-info-compact-draft'), null, { timeout: 30_000 });
         await editor.click('.editor-post-publish-share .publication-share-link-actions button:has-text("Copy link")');
         await editor.waitForSelector('.first-build-step--done[data-step="share"]', { timeout: 10_000 });
         await editor.click('.editor-post-publish-share .publication-share-link-embed');

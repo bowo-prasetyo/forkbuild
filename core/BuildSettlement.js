@@ -3,6 +3,7 @@ import { PLAZA_CENTER, PLAZA_CLEARING_RADIUS } from './ChallengePlaza.js';
 import { SURFACE_CATEGORY, surfaceCategoryAt } from './TerrainSurface.js';
 import { HYDROLOGY_FEATURE, hydrologyFeatureAt } from './Hydrology.js';
 import { DEFAULT_WORLD_SEED } from './TerrainHeightField.js';
+import { naturalFeaturesInRegion } from './NaturalFeatureField.js';
 
 // Where a newly published build settles in the shared World
 // (docs/reviews/CreativeDirection-2026-10-12.md, finding 2): next to what it
@@ -37,15 +38,23 @@ export const REMIX_RING_RADII = Object.freeze([18, 36]);
 // Two builds closer than this are taken to share a spot.
 export const SETTLEMENT_TAKEN_RADIUS = VILLAGE_SLOT_SPACING * 0.75;
 
+// No tree may grow this close to a spot: room for a house of six across and
+// the path to its door (the World's trees are a function of its seed,
+// core/NaturalFeatureField.js, so every device agrees where they are).
+export const SETTLEMENT_TREE_CLEARANCE = 7;
+
 // Whether a build can stand at x, z: dry, walkable ground with no river or
-// lake, and outside the plaza's own clearing.
+// lake and no tree in the way, outside the plaza's own clearing.
 export function isSettleableGround(x, z, seed = DEFAULT_WORLD_SEED) {
     const dx = x - PLAZA_CENTER.x;
     const dz = z - PLAZA_CENTER.z;
     if (dx * dx + dz * dz < PLAZA_CLEARING_RADIUS * PLAZA_CLEARING_RADIUS) return false;
     const surface = surfaceCategoryAt(seed, x, z);
     if (surface === SURFACE_CATEGORY.WATER || surface === SURFACE_CATEGORY.ROCK) return false;
-    return hydrologyFeatureAt(seed, x, z) === HYDROLOGY_FEATURE.NONE;
+    if (hydrologyFeatureAt(seed, x, z) !== HYDROLOGY_FEATURE.NONE) return false;
+    const r = SETTLEMENT_TREE_CLEARANCE;
+    return !naturalFeaturesInRegion(seed, x - r, z - r, x + r, z + r)
+        .some((tree) => Math.hypot(tree.x - x, tree.z - z) < r);
 }
 
 // The spots on a ring of `radius` round `center`, `spacing` apart, starting

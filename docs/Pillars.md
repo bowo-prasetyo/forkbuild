@@ -280,4 +280,8 @@ inside Publish, with build notes needing no wallet; builds settling beside
 what they remix and in a village round the plaza; **Walk** in the menu,
 opening the plaza with the ready-made builds round it; and the player's
 words in the menu, Explore, a shared link's page and the Editor, kept so by
-a test.
+a test. Its Release E, "A room worth entering", followed the same day (see
+the roadmap): the build above your head cut away and the camera coming in
+with you, furniture and a furnished House six across, ready-made homes that
+come lived in, World View's panel leading with what a visitor came to do,
+and one celebration after Publish.

@@ -53,6 +53,10 @@ core:fence
 core:chimney
 core:barrel
 core:bench
+core:table
+core:bed
+core:hearth
+core:shelf
 core:bush
 core:pine_tree
 core:rock

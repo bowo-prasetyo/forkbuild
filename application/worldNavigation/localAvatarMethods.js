@@ -9,6 +9,9 @@ import {
     VehicleSteeringIntent, isValidVehicleSteeringIntent, createVehicleSteeringIntent
 } from '../../core/VehicleSteeringIntent.js';
 import { AvatarMovementConstraint } from '../avatar/AvatarMovementConstraint.js';
+
+// How far round the avatar the indoor view looks for the build it is in.
+const INDOOR_QUERY_RADIUS = 20;
 import { DEFAULT_MAX_STEP_HEIGHT } from '../../core/BrickWalkability.js';
 import { AvatarTerrainConstraint } from '../avatar/AvatarTerrainConstraint.js';
 import { AvatarStepConstraint } from '../avatar/AvatarStepConstraint.js';
@@ -309,6 +312,25 @@ export const localAvatarMethods = {
             // ordinary buildings.
             structureResolver: this._structureResolver
         });
+    },
+
+    // Every brick's box near `position`, the roofs and floors a walk steps
+    // over included, out to INDOOR_QUERY_RADIUS: what core/IndoorView.js
+    // looks for a ceiling, a build and the walls in a camera's way among. The
+    // same documents and positions collision uses (_solidDocuments()).
+    _indoorBoxesNear(position) {
+        if (!this._indoorBoxConstraint) {
+            this._indoorBoxConstraint = new AvatarMovementConstraint({
+                loadedDocuments: this._solidDocuments(),
+                getWorldPosition: (documentId) => this._solidWorldPosition(documentId),
+                brickRegistry: this._registry,
+                // No step exclusion: a roof's slopes are what it is looked for by.
+                maxStepHeight: 0,
+                structureResolver: this._structureResolver,
+                queryRadius: INDOOR_QUERY_RADIUS
+            });
+        }
+        return this._indoorBoxConstraint.obstaclesNear(position);
     },
 
     // Terrain is a pure function of (seed, x, z), so this needs no session

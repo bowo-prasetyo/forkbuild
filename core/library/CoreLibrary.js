@@ -533,6 +533,52 @@ export const CoreLibrary = {
             depth: 0.5,
             color: 0x8b5a2b
         }),
+        // Furniture (2026-10-12): what makes a room worth walking into
+        // (docs/reviews/CreativeDirection-2026-10-12.md, finding 3).
+        new BrickDefinition({
+            id: 'core:table',
+            name: 'Table',
+            category: 'decorative',
+            tags: ['decorative', 'furniture', 'indoor', 'table'],
+            description: 'A wooden table on four legs.',
+            width: 1.5,
+            height: 0.8,
+            depth: 1,
+            color: 0x9b6a3c
+        }),
+        new BrickDefinition({
+            id: 'core:bed',
+            name: 'Bed',
+            category: 'decorative',
+            tags: ['decorative', 'furniture', 'indoor', 'bed'],
+            description: 'A single bed with a headboard.',
+            width: 1,
+            height: 0.7,
+            depth: 2,
+            color: 0x6f8fb5
+        }),
+        new BrickDefinition({
+            id: 'core:hearth',
+            name: 'Hearth',
+            category: 'decorative',
+            tags: ['decorative', 'furniture', 'indoor', 'fireplace', 'chimney'],
+            description: 'A stone fireplace to stand against a wall, under the chimney.',
+            width: 1.5,
+            height: 1.5,
+            depth: 0.75,
+            color: 0x8a7f72
+        }),
+        new BrickDefinition({
+            id: 'core:shelf',
+            name: 'Shelf',
+            category: 'decorative',
+            tags: ['decorative', 'furniture', 'indoor', 'shelf', 'storage'],
+            description: 'Open shelves to stand against a wall.',
+            width: 1,
+            height: 1.5,
+            depth: 0.4,
+            color: 0x8b5a2b
+        }),
         new BrickDefinition({
             id: 'core:bush',
             name: 'Bush',

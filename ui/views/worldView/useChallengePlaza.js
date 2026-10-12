@@ -9,6 +9,7 @@ import { exploreRouteFor } from '../../components/publicationCatalog/useReposito
 import { challengeThemeTitle } from '../../components/challenge/challengeText.js';
 import { FEATURED_STRUCTURE_IDS, featuredStructures, structureWorld } from '../../../application/home/FeaturedBuilds.js';
 import { CreateStructureRegistryUseCase } from '../../../application/editor/CreateStructureRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../../../application/editor/CreateBrickRegistryUseCase.js';
 import { libraryItemName } from '../../i18n/libraryText.js';
 import { t } from '../../i18n/i18n.js';
 
@@ -70,8 +71,9 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI }) 
     function readyMadeBuilds() {
         if (!readyMades) {
             try {
+                const brickRegistry = new CreateBrickRegistryUseCase().execute();
                 readyMades = featuredStructures(new CreateStructureRegistryUseCase().execute(), FEATURED_STRUCTURE_IDS)
-                    .map((structure) => ({ structure, world: structureWorld(structure) }));
+                    .map((structure) => ({ structure, world: structureWorld(structure, brickRegistry) }));
             } catch {
                 readyMades = [];
             }

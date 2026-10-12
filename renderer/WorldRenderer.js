@@ -341,6 +341,7 @@ export class WorldRenderer {
                     localPoint.z + placement.position.z + offset.z
                 );
                 applyBrickOrientation(mesh, brick.rotation + placement.rotation, brick.tilt);
+                if (this._cutawayClipping) this._cutawayClipping.apply(mesh.material);
                 this._renderer.add(mesh);
                 meshes.push(mesh);
                 this._addPlacementDoor(placement.id, brick, mesh, doorKeys);
@@ -457,6 +458,16 @@ export class WorldRenderer {
     // never does, so its doors stay shut.
     animateDoors(observers, deltaSeconds) {
         this._doorSwing.animate(observers, deltaSeconds);
+    }
+
+    // Lets everything this draws be cut away while someone stands inside a
+    // build (renderer/CutawayClipping.js): a World's own bricks, and its
+    // placed structures from now on.
+    useCutaway(cutawayClipping) {
+        this._cutawayClipping = cutawayClipping || null;
+        this._brickInstances.useCutaway(this._cutawayClipping);
+        if (!this._cutawayClipping) return;
+        for (const mesh of this._placementMeshRegistry.getAllMeshes()) this._cutawayClipping.apply(mesh.material);
     }
 
     _removeStructurePlacementMeshes(placementId) {

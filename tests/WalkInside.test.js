@@ -35,8 +35,8 @@ const structure = (id) => [VillageLibrary, CollectionLibrary, ShowcaseLibrary]
 {
     const entrance = findBuildEntrance(structure(STARTER_STRUCTURE_ID).bricks, registry);
     assert(entrance.kind === 'door' && entrance.door.definitionId === 'core:door', 'the house is entered by its door');
-    assert(near(entrance.door.x, -0.5) && near(entrance.door.z, -2), 'its front door');
-    assert(near(entrance.stand.x, -0.5) && near(entrance.stand.z, -2 - ENTRANCE_STAND_DISTANCES[0]) && entrance.stand.y === 0, 'a few steps in front of it, on the ground');
+    assert(near(entrance.door.x, -0.5) && near(entrance.door.z, -3), 'its front door');
+    assert(near(entrance.stand.x, -0.5) && near(entrance.stand.z, -3 - ENTRANCE_STAND_DISTANCES[0]) && entrance.stand.y === 0, 'a few steps in front of it, on the ground');
     assert(entrance.heading === 0 && near(entrance.inward.x, 0) && near(entrance.inward.z, 1), 'facing it, with the way in toward +z');
     console.log('✓ the starter house is entered by its front door');
 }
@@ -74,9 +74,9 @@ const structure = (id) => [VillageLibrary, CollectionLibrary, ShowcaseLibrary]
 {
     const entrance = findBuildEntrance(structure(STARTER_STRUCTURE_ID).bricks, registry);
     assert(!hasWalkedInside(entrance, entrance.stand), 'standing at the door is not inside');
-    assert(!hasWalkedInside(entrance, { x: -0.5, z: -2 + INSIDE_DEPTH / 2 }), 'in the doorway is not yet inside');
-    assert(hasWalkedInside(entrance, { x: -0.5, z: -0.5 }), 'past it is');
-    assert(!hasWalkedInside(entrance, { x: 6, z: 0 }), 'round the side of the house is not');
+    assert(!hasWalkedInside(entrance, { x: -0.5, z: -3 + INSIDE_DEPTH / 2 }), 'in the doorway is not yet inside');
+    assert(hasWalkedInside(entrance, { x: -0.5, z: -1.5 }), 'past it is');
+    assert(!hasWalkedInside(entrance, { x: 7, z: 0 }), 'round the side of the house is not');
     assert(!hasWalkedInside(null, { x: 0, z: 0 }), 'no entrance, nothing to be inside');
     console.log('✓ inside means through the door');
 }
@@ -152,11 +152,11 @@ function arrivalHost({ loaded = true, avatar = true } = {}) {
     const { host, calls, where, move } = arrivalHost();
     assert(host.arriveAtEntrance('doc-1') === true && calls.focus.join() === 'doc-1', 'it focuses the build');
     const { position, rotation } = where();
-    assert(near(position.x, 99.5) && near(position.z, -42 - ENTRANCE_STAND_DISTANCES[0]) && rotation.y === 0, 'the avatar stands in front of the door, facing it');
+    assert(near(position.x, 99.5) && near(position.z, -43 - ENTRANCE_STAND_DISTANCES[0]) && rotation.y === 0, 'the avatar stands in front of the door, facing it');
     const camera = calls.camera[0];
-    assert(camera && camera.position.z < position.z && near(camera.target.x, 99.5) && near(camera.target.z, -42), 'the camera looks past them at the door');
+    assert(camera && camera.position.z < position.z && near(camera.target.x, 99.5) && near(camera.target.z, -43), 'the camera looks past them at the door');
     assert(host.arrivalState().walkedInside === false && host.arrivalState().kind === 'door', 'not inside yet');
-    move({ x: 99.5, y: 0.25, z: -41 });
+    move({ x: 99.5, y: 0.25, z: -41.5 });
     assert(host.arrivalState().walkedInside === true, 'through the door: inside');
     move({ x: 99.5, y: 0, z: -50 });
     assert(host.arrivalState().walkedInside === true, 'and it stays done');
@@ -169,7 +169,7 @@ function arrivalHost({ loaded = true, avatar = true } = {}) {
     assert(host.arrivalState() === null && calls.camera.length === 0, 'still loading: nothing yet');
     host._loadedDocuments.set('doc-1', { world });
     host._settlePendingArrival('doc-1');
-    assert(near(where().position.z, -42 - ENTRANCE_STAND_DISTANCES[0]) && calls.camera.length === 1, 'arrives once the build has loaded');
+    assert(near(where().position.z, -43 - ENTRANCE_STAND_DISTANCES[0]) && calls.camera.length === 1, 'arrives once the build has loaded');
     host._settlePendingArrival('doc-1');
     assert(calls.camera.length === 1, 'only once');
     const { host: noAvatar } = arrivalHost({ avatar: false });

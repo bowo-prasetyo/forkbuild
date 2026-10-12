@@ -54,34 +54,35 @@ const GRASS = 0x6fa35a;
 // ---------------------------------------------------------------------------
 
 // A porch out front: an oak deck, two posts carrying a beam, and a bench.
+// The House's front wall stands at z = -3, its doorstep just outside.
 const houseWithPorchBricks = [
     ...copyOf(village('village:house')),
-    b('core:plate_2x2', -1, 0.125, -4, 0, OAK),
-    b('core:plate_2x2', 1, 0.125, -4, 0, OAK),
-    b('core:post', -1.75, 1.75, -4.75),
-    b('core:post', 1.75, 1.75, -4.75),
-    b('core:beam', 0, 3.5, -4.75, 0, OAK),
-    b('core:bench', 1, 0.5, -3.5)
+    b('core:plate_2x2', -1, 0.125, -5, 0, OAK),
+    b('core:plate_2x2', 1, 0.125, -5, 0, OAK),
+    b('core:post', -1.75, 1.75, -5.75),
+    b('core:post', 1.75, 1.75, -5.75),
+    b('core:beam', 0, 3.5, -5.75, 0, OAK),
+    b('core:bench', 1, 0.5, -4.5)
 ];
 
 // The porch house, with lawns either side, bushes by the door and a fence
 // along the back.
 const houseWithGardenBricks = [
     ...copyOf(houseWithPorchBricks),
-    b('core:lawn_2x2', -4, 0.05, -1, 0, GRASS),
-    b('core:lawn_2x2', -4, 0.05, 1, 0, GRASS),
-    b('core:lawn_2x2', 4, 0.05, -1, 0, GRASS),
-    b('core:lawn_2x2', 4, 0.05, 1, 0, GRASS),
-    b('core:bush', -3, 0.5, -3.5),
-    b('core:bush', 3, 0.5, -3.5),
-    ...copyOf(village('village:fence_segment'), -2, 0, 3.5),
-    ...copyOf(village('village:fence_segment'), 2, 0, 3.5)
+    b('core:lawn_2x2', -5, 0.05, -1, 0, GRASS),
+    b('core:lawn_2x2', -5, 0.05, 1, 0, GRASS),
+    b('core:lawn_2x2', 5, 0.05, -1, 0, GRASS),
+    b('core:lawn_2x2', 5, 0.05, 1, 0, GRASS),
+    b('core:bush', -3, 0.5, -4.5),
+    b('core:bush', 3, 0.5, -4.5),
+    ...copyOf(village('village:fence_segment'), -2, 0, 4.5),
+    ...copyOf(village('village:fence_segment'), 2, 0, 4.5)
 ];
 
 // The porch house, with a round stone tower built on to its east.
 const houseWithTowerBricks = [
     ...copyOf(houseWithPorchBricks),
-    ...copyOf(village('village:round_tower'), 6, 0, 0)
+    ...copyOf(village('village:round_tower'), 7, 0, 0)
 ];
 
 // ---------------------------------------------------------------------------
