@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 60a63aedcbfe91d7 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 49fc848526dee427 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
@@ -106,7 +106,12 @@ Tautan ke sebuah bangunan, baik yang membawa bangunannya maupun yang
 menyebut tempat ia disimpan, membuka halaman bangunan itu sendiri:
 
 - bangunannya, berputar perlahan;
-- judulnya dan siapa pembuatnya;
+- judulnya dan siapa pembuatnya, serta **Dibangun bersama …** dan nama-nama
+  mereka bila teman-teman membangunnya bersama pembuatnya (lihat
+  [Bangun bersamaku](02-TheEditor.md#bangun-bersamaku-membangun-bersama-secara-langsung)).
+  Nama pembuat dan nama setiap rekan pembangun membuka halaman orang itu:
+  bangunan yang ditandatangani identitasnya, dan bangunan yang mencantumkan
+  namanya oleh orang lain;
 - **Remix dari "…" oleh …** jika itu remix, dan **Di-remix N kali** jika
   perangkat ini telah menemukan remix-nya (lihat
   [Jumlah remix](#jumlah-remix));
@@ -630,7 +635,10 @@ dan setiap orang dalam rantai itu mendapat penghargaan.
 Halaman sebuah bangunan, yang dibuka dari tautan yang dibagikan,
 menampilkan garis keturunan yang sama sebagai **Silsilah**: asal remix-nya
 sampai yang asli, lalu bangunan itu sendiri, lalu remix yang dibuat
-darinya, sejauh yang diketahui perangkat ini.
+darinya, sejauh yang diketahui perangkat ini. Halaman tantangan
+menampilkan satu silsilah untuk setiap rantai peserta. Setiap bangunan dalam
+silsilah menyebut pembuatnya dan teman-teman yang membangunnya bersamanya;
+judulnya membuka bangunan itu, dan setiap nama membuka halaman orang itu.
 
 ## Alur kreatif yang umum
 

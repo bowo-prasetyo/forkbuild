@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: d70cb11661c7d2d4 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7d54451a79bc05d6 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -826,6 +826,16 @@ queda aquí (solo en este dispositivo) aunque usted nunca publique ni
 comparta nada propio. ¿Todavía no visitó ninguno? Use **Explore el
 Repositorio** para encontrar el primero, o empiece con una de las
 construcciones ya hechas que aparecen debajo.
+
+Debajo de los Mundos, **Construcciones que ayudó a hacer** lista las
+construcciones en las que un amigo le dio crédito por haberlas construido
+juntos con **Construir conmigo** (consulte
+[El Editor](02-TheEditor.md#construir-conmigo-construir-juntos-en-vivo)): el
+título de cada una, de quién es (**con** su nombre, que abre la página de esa
+persona) y **Aún sin publicar** hasta que su amigo la publique; a partir de
+entonces, su título abre su Mundo. Sus otros dispositivos también las
+listan, una vez conectados a este. La sección solo aparece cuando hay algo
+en ella.
 
 ## Encontrar mundos
 

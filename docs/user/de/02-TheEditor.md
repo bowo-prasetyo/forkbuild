@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 3be54646475153c8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 855952f6b34672d8 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -698,9 +698,11 @@ Umkreisen, mit zwei zum Schwenken, und ziehen Sie zwei Finger zusammen
 zum Zoomen. Ein Tippen wählt aus oder platziert, ein Ziehen nie. Auf einem
 schmalen Bildschirm öffnet sich die Seitenleiste über die Schaltfläche
 **Werkzeuge** oben rechts in der Szene. Eine Leiste unten in der Szene hat
-**Rückgängig**, **Wiederholen**, **Drehen**, **Löschen**, **Mehrfach**
+**Rückgängig**, **Wiederholen**, **Drehen**, **Kippen**, **Löschen**, **Mehrfach**
 (jedes Tippen fügt der Auswahl einen Stein hinzu oder entfernt ihn),
 **Rahmen** (ziehen, um einen Auswahlrahmen aufzuziehen; die Kamera bleibt
 still, bis Sie es ausschalten) und **Mehr**, das die Befehlspalette
-öffnet. Einzelheiten unter
+öffnet. Auf einem Handy lässt sich die Werkzeugleiste über der Szene seitlich
+scrollen, deshalb stehen **Speichern** und **Veröffentlichen** darin ganz vorn
+(nach **← Zurück zur Welt**, wenn es das gibt). Einzelheiten unter
 [Touchscreens](ControlsReference.md#touchscreens).

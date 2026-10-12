@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: d70cb11661c7d2d4 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7d54451a79bc05d6 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -853,6 +853,16 @@ entré, et il y reste (sur cet appareil seulement) même si vous ne publiez
 ou ne partagez jamais rien vous-même. Vous n’êtes encore allé nulle
 part ? **Parcourez le Dépôt** pour trouver votre premier Monde, ou partez
 de l’une des constructions toutes prêtes proposées en dessous.
+
+Sous les Mondes, **Constructions auxquelles vous avez participé** liste les
+constructions où un ami vous a crédité parce que vous les avez construites
+ensemble avec **Construire avec moi** (voir
+[L’Éditeur](02-TheEditor.md#construire-avec-moi--construire-ensemble-en-direct)) :
+pour chacune, son titre, à qui elle est (**avec** son nom, qui ouvre la page
+de cette personne) et **Pas encore publiée** jusqu’à ce que votre ami la
+publie ; son titre ouvre ensuite son Monde. Vos autres appareils les listent
+aussi, une fois connectés à celui-ci. La section n’apparaît que lorsqu’elle
+contient quelque chose.
 
 ## Trouver des mondes
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 3be54646475153c8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 855952f6b34672d8 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -672,9 +672,11 @@ Editor bekerja dengan sentuhan. Seret dengan satu jari untuk mengorbit,
 dua jari untuk menggeser, dan cubit untuk zoom. Ketukan memilih atau
 menempatkan, dan seretan tidak pernah melakukannya. Di layar sempit, bilah
 sisi dibuka dari tombol **Alat** di kanan atas adegan. Bilah di bagian
-bawah adegan memiliki **Urungkan**, **Ulangi**, **Putar**, **Hapus**,
+bawah adegan memiliki **Urungkan**, **Ulangi**, **Putar**, **Miringkan**, **Hapus**,
 **Multi** (setiap ketukan menambahkan balok ke pilihan atau
 mengeluarkannya), **Kotak** (seret untuk menggambar kotak pilihan; kamera
 tetap diam sampai Anda mematikannya), dan **Lainnya**, yang membuka Palet
-Perintah. Lihat [Layar sentuh](ControlsReference.md#layar-sentuh) untuk
+Perintah. Di ponsel, bilah alat di atas adegan bergulir ke samping, jadi
+**Simpan** dan **Terbitkan** ada paling depan (setelah **← Kembali ke Dunia**,
+bila ada). Lihat [Layar sentuh](ControlsReference.md#layar-sentuh) untuk
 detailnya.

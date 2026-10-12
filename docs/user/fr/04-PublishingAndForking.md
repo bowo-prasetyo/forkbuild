@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 60a63aedcbfe91d7 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 49fc848526dee427 -->
 # 04 — Publier et forker
 
 <!-- languages -->
@@ -108,7 +108,12 @@ Un lien vers une construction, qu’il la porte ou qu’il indique où elle
 est stockée, ouvre la page propre à cette construction :
 
 - la construction, qui tourne lentement ;
-- son titre et qui l’a faite ;
+- son titre et qui l’a faite, et **Construit avec …** suivi des noms quand
+  des amis l’ont construite avec son auteur (voir
+  [Construire avec moi](02-TheEditor.md#construire-avec-moi--construire-ensemble-en-direct)).
+  Le nom de l’auteur et celui de chaque co-constructeur ouvrent la page de
+  cette personne : les constructions que son identité a signées, et celles
+  où d’autres la créditent ;
 - **Remix de « … » par …** quand c’est un remix, et **Remixée N fois**
   quand cet appareil a trouvé des remix de celle-ci (voir
   [Nombre de remix](#nombre-de-remix)) ;
@@ -643,7 +648,10 @@ et chacun dans la chaîne est crédité.
 La page propre d’une construction, ouverte depuis un lien partagé, montre
 la même lignée en **Arbre généalogique** : ce dont elle est un remix,
 jusqu’à l’originale, puis la construction elle-même, puis les remix qui en
-ont été faits, pour autant que cet appareil les connaisse.
+ont été faits, pour autant que cet appareil les connaisse. La page du défi
+en montre un pour chaque chaîne de participations. Chaque construction de
+l’arbre nomme son auteur et les amis qui l’ont construite avec lui ; son
+titre ouvre la construction, et chaque nom la page de cette personne.
 
 ## Une boucle créative typique
 
