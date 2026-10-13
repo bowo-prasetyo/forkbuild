@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: e66632c0b2bec761 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3a4a0c4e45f32875 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · **Bahasa Indonesia** · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../03-WorldView.md).
-<!-- /stale -->
 
 Tampilan Dunia adalah ruang 3D bersama tempat **setiap karya yang
 diterbitkan berada berdampingan**. Terbanglah berkeliling, cari apa yang
@@ -25,16 +21,35 @@ menjadikan hewan yang dilepaskan sebagai hiasan Dunia dengan **G** (lihat
 
 ## Membuka Tampilan Dunia
 
-Dari **Repositori**, klik **Jelajahi** pada karya mana pun — atau buka URL
+**Jalan-jalan** di menu utama membuka Tampilan Dunia di alun-alun tantangan
+minggu ini, tanpa perlu bangunan sendiri. Alun-alun itu adalah alun-alun
+desa: enam bangunan siap pakai berdiri mengelilinginya untuk semua orang,
+setiap kali Anda membuka Tampilan Dunia, siap di-remix, dan desa bangunan
+terbitan tumbuh tepat di luarnya (lihat
+[Alun-alun tantangan](04-PublishingAndForking.md#alun-alun-tantangan)).
+
+Dari **Jelajahi**, klik **Jelajahi** pada karya mana pun — atau buka URL
 sebuah dunia secara langsung. Anda akan muncul di samping karya itu di
-dunia bersama.
+dunia bersama. Bangunan yang dikirim orang lain ke semua orang ditemukan di
+sana dan di tantangan (lihat
+[Siapa yang bisa menemukannya?](04-PublishingAndForking.md#siapa-yang-bisa-menemukannya)),
+dan berdiri di tempat pembangunnya menaruhnya: remix di samping apa yang
+di-remix-nya, sisanya di desa sekeliling alun-alun.
 
 ## Tampilan pengunjung, dan Lanjutan
 
-Tampilan Dunia terbuka sebagai tampilan pengunjung: nama bangunan dan
-siapa pembuatnya, apa yang ada di sekitar Anda, dan apa yang bisa Anda
-lakukan di sini (**Bangun di sini**, **Jalan di sini bersamaku**, dan **Edit
-Salinan** bila bangunan itu bukan milik Anda). Alat untuk jaringan di balik
+Tampilan Dunia terbuka sebagai tampilan pengunjung. Apa yang ingin Anda
+lakukan ada di bilah di bagian bawah Dunia: **Bangun di sini**, **Jalan di
+sini bersamaku**, dan **Edit Salinan** bila bangunan itu bukan milik Anda.
+Panel samping memuat nama bangunan dan siapa pembuatnya (nama yang sama di
+mana pun bangunan dicantumkan), lalu ke mana bisa pergi dan apa yang ada di
+sekitar Anda. Di ponsel, panel mula-mula tertutup, sehingga Dunia memenuhi
+layar; **Panel** membukanya. Di alun-alun, ponsel justru menampilkan satu
+baris di atas Dunia, **Alun-alun: …** dan berapa banyak bangunan yang
+berdiri di sana, yang membuka panel. Siapa yang digambar, dan apakah tombol
+menggerakkan avatar Anda dan kamera mengikutinya, aktif untuk semua orang
+dan menunggu di bawah **Pengaturan avatar**; pilihan kamera tetap di
+sebelahnya. Alat untuk jaringan di balik
 Dunia menunggu di bagian bawah panel, di bawah **Tampilkan alat lanjutan**:
 
 - koordinat di atas tampilan, kolom **Lokasi** di Cari, dan baris
@@ -44,7 +59,11 @@ Dunia menunggu di bagian bawah panel, di bawah **Tampilkan alat lanjutan**:
   di Sekitar, dengan **Penemuan Dunia Bersama** di dalam Perjumpaan;
 - **Dunia Bersama Saya**, panel jaringan publikasi Anda, dan **Pindahkan
   Penempatan** di sebelahnya;
-- daftar Dunia yang gagal dimuat, dan diagnostik avatar.
+- daftar Dunia yang gagal dimuat, dan diagnostik avatar;
+- memilih dengan klik: sebagai pengunjung, mengeklik tampilan (untuk mulai
+  berjalan, misalnya) tidak memilih apa pun kecuali avatar lain, sehingga
+  detail balok tidak terbuka; dengan Lanjutan aktif, klik membuka
+  [Memeriksa balok](#memeriksa-balok--atau-struktur-yang-ditempatkan).
 
 Pilihan ini diingat di perangkat ini dan tidak mengubah apa pun bagi orang
 lain. Kompas, nama tempat di bagian bawah, Cari, Lokasi, Peta dan Tempat,
@@ -123,8 +142,27 @@ sana dan berjalan-jalan di sekitar rumahnya, memutari bangunan alih-alih
 menembusnya, dan berbalik menyapa Anda saat Anda mendekat; ajak bicara
 salah satunya dan ia memberi tahu apa yang ada di sekitar. Tidak seperti
 satwa liar, mereka adalah bagian dari konten Dunia itu sendiri: pembuatnya
-yang menambahkan mereka. Lihat
+yang menambahkan mereka. Rumah siap pakai datang sudah berpenghuni: salinan
+Rumah, pondok, atau rumah siap pakai lainnya dimulai dengan satu penghuni
+yang tinggal tepat di samping pintu depannya, dan rumah-rumah yang berdiri
+di sekeliling alun-alun tantangan juga punya penghuninya; hapus penghuni
+Anda dengan **R** seperti yang lain. Lihat
 [Penghuni](06-AvatarsAndPresence.md#penghuni).
+
+### Di dalam bangunan
+
+Masuklah lewat pintu dan bagian bangunan di atas kepala Anda dipotong,
+sehingga Anda melihat ruangan tempat Anda berdiri, bukan dinding di
+belakang Anda: atapnya dan semua yang lebih tinggi dari kepala Anda, hanya
+untuk bangunan itu, sementara dinding tetap berdiri sampai sedikit di atas
+tinggi Anda. Saat kamera mengikuti Anda, atau dalam **Orang Ketiga**, kamera
+ikut masuk, di belakang dan di atas Anda sambil memandang ke bawah ke dalam
+ruangan, dan naik alih-alih menembus dinding jika ada dinding tepat di
+belakang Anda. **Pandangan Burung** memandang lurus ke bawah ke dalam
+ruangan; **Orang Pertama** melihatnya lewat mata Anda sendiri, tanpa ada
+yang dipotong. Melangkahlah keluar lagi dan seluruh bangunan digambar
+kembali. Hanya yang digambar yang berubah: atapnya tetap ada, bagi semua
+orang dan untuk berjalan.
 
 ## Siang dan malam
 
@@ -161,7 +199,7 @@ bintang terbit di timur dan terbenam di barat bersama bulan, dan semua orang
 melihat bintang yang sama pada saat yang sama.
 
 Jika Anda lebih suka selalu siang, centang **Selalu siang** di bagian bawah
-panel, tepat di atas **Tampilkan alat lanjutan**. Pilihan ini diingat di
+panel, tepat di atas **Bayangan**. Pilihan ini diingat di
 perangkat ini dan tidak mengubah apa pun bagi orang lain.
 
 ## Suara
@@ -736,16 +774,16 @@ siapa yang sedang dalam perjalanan dan siapa yang sudah tiba.
 ### Alun-alun tantangan
 
 **Jelajahi alun-alun** di halaman tantangan suatu minggu membuka Tampilan
-Dunia di sebuah tanah lapang tempat karya minggu itu berdiri mengelilingi
-alun-alun terbuka, dengan panel yang mendaftarnya (lihat
-[Alun-alun tantangan](04-PublishingAndForking.md#alun-alun-tantangan)). Tidak ada pohon
-yang tumbuh di sana, minggu apa pun. Karya-karya itu hanya ditampilkan
-selama kamu berada di alun-alun, dan **Bangun di sini** tidak ditawarkan di
-sana.
-
-Lapangan terbuka di tengah dilapisi batu, dengan sumur, bangku, dan
-lampu jalan, sehingga alun-alun tetap menjadi tempat bahkan pada minggu
-tanpa entri.
+Dunia di alun-alun desa: dilapisi batu, dengan sumur, bangku, dan lampu
+jalan, serta enam bangunan siap pakai di sekelilingnya. Alun-alun dan
+bangunan siap pakai itu adalah bagian dari Dunia, seperti bukit dan
+pohonnya: semuanya berdiri di setiap Tampilan Dunia, bagi semua orang, dan
+tidak dimiliki siapa pun. Desa bangunan terbitan tumbuh tepat di luarnya,
+sehingga rumah terbitanmu sendiri punya tetangga. Sebuah panel mendaftar
+karya minggu itu dan bangunan siap pakai (lihat
+[Alun-alun tantangan](04-PublishingAndForking.md#alun-alun-tantangan)).
+Tidak ada pohon yang tumbuh di sekeliling alun-alun, dan **Bangun di sini**
+tidak ditawarkan di sana.
 
 ### Penanda — menandai tempat yang layak diingat
 
@@ -947,8 +985,9 @@ dapat diapa-apakan.
 
 ## Memeriksa balok — atau struktur yang ditempatkan
 
-Klik balok mana pun untuk membuka panel **Pemeriksaan**, yang memberi tahu
-Anda:
+Dengan **Tampilkan alat lanjutan** aktif, klik balok mana pun untuk membuka
+panel **Pemeriksaan** (sebagai pengunjung, klik tidak memilih apa pun), yang
+memberi tahu Anda:
 
 - Jenis baloknya
 - Posisi dan rotasinya

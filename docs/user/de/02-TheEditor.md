@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 292450f615f65312 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 0597b11a718701f3 -->
 # 02 — Der Editor
 
 <!-- languages -->
 [English](../02-TheEditor.md) · **Deutsch** · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../02-TheEditor.md).
-<!-- /stale -->
 
 Im Editor wird gebaut. Diese Anleitung behandelt die Werkzeuge, wie Sie
 Steine auswählen und transformieren und wie Sie Ihr Bauwerk mit Gruppen
@@ -29,10 +25,10 @@ ordnen.
 └──────────────────────┴──────────────────────────────────────┘
 ```
 
-- **Werkzeugleiste** — speichern, veröffentlichen, eine neue Kreation
-  beginnen, ein Dokument als Datei exportieren oder importieren, zuletzt
-  geöffnete wieder öffnen und die Übersicht **⌨ Tastenkürzel** öffnen
-  (auch `?`).
+- **Werkzeugleiste** — zuerst **Speichern**, **Veröffentlichen** und
+  **Neu**, dann **Datei**, ein Menü mit **Exportieren**, **3D-Modell** und
+  **Importieren**; zuletzt geöffnete wieder öffnen und die Übersicht
+  **⌨ Tastenkürzel** öffnen (auch `?`).
 - **Werkzeuge** — wechseln Sie zwischen **Auswählen** (`1`) und
   **Platzieren** (`2`). **Platzieren** bleibt hervorgehoben, solange Sie
   einen Stein oder eine Struktur platzieren.
@@ -89,6 +85,17 @@ Schaltflächen zeigt, die noch nichts tun können:
 > öffnen — eine durchsuchbare Liste aller Aktionen dieser Anleitung, nach
 > Namen.
 
+## Jetzt ausprobieren: ein Haus zum Fertigbauen
+
+**Jetzt ausprobieren** auf **Start** öffnet ein eigenes Haus, das noch
+nicht fertig ist: Seine Wände stehen und sein Raum ist eingerichtet, aber
+es hat kein Dach. Eine Karte **Ihre Aufgabe: ein Dach** oben bei den
+Werkzeugen sagt das. Klicken Sie auf **Dach wählen** (es wählt
+**Walmdach 6x6** und wechselt zu Platzieren) und dann irgendwo auf das
+Haus: Das Dach kommt oben auf die Wände. Danach sagt die Karte, dass das
+Haus jetzt Ihnen gehört. Veröffentlichen Sie es und gehen Sie hinein, oder
+bauen Sie weiter.
+
 ## Ihr erstes Bauwerk
 
 Wenn Sie den Editor auf einem Gerät zum ersten Mal öffnen, steht unten
@@ -124,9 +131,14 @@ ausgeblendet.
 ### Platzierwerkzeug (`2`)
 
 Wählen Sie einen Stein aus der Palette, fahren Sie ins Ansichtsfenster und
-klicken Sie, um ihn zu platzieren. Ein durchscheinender Geist zeigt genau,
-wo der Stein landen wird. Fahren Sie über die Fläche eines vorhandenen
-Steins, um zu stapeln oder anzusetzen.
+klicken Sie, um ihn zu platzieren. Ist noch kein Stein gewählt, beginnt
+Platzieren mit einem **Würfel**, sodass der erste Klick immer etwas setzt.
+Ein durchscheinender Geist zeigt genau, wo der Stein landen wird. Fahren
+Sie über die Fläche eines vorhandenen Steins, um zu stapeln oder
+anzusetzen. Ein Stein, den Sie auf einen anderen setzen, ruht auf dem
+höchsten Stein darunter, nicht in ihm: Ein Dach, das Sie mitten auf den
+Boden eines Hauses fallen lassen, sitzt auf seinen Wänden, und ein Balken
+über zwei Pfosten auf den Pfosten.
 
 > **Tipp:** Drücken Sie **Escape**, um zum Auswahlwerkzeug zurückzukehren.
 
@@ -593,12 +605,21 @@ Beim Bauen spielt leise Musik, etwas lebhafter als in der Weltansicht. Die Schal
 
 - **Speichern** (`Strg+S`) — Ihre Arbeit auf diesem Gerät behalten.
 - **Veröffentlichen** — mit allen teilen (siehe
-  [Veröffentlichen & Forken](04-PublishingAndForking.md)).
+  [Veröffentlichen & Forken](04-PublishingAndForking.md)). Veröffentlichen
+  speichert es auch. Bei einem Bauwerk, das aus einem fertigen begonnen
+  wurde und noch nichts Eigenes enthält, wird einmal nachgefragt:
+  **Weiterbauen** oder **Trotzdem veröffentlichen**. Die Meldung danach ist
+  eine einzige Leiste: **Hineingehen** und **Link kopieren**, und unter
+  **Weitere Möglichkeiten zum Teilen** der Link selbst, **Bild speichern**
+  und **Einbetten**. Eine Erinnerung, der Identität, mit der Sie
+  veröffentlicht haben, eine Passphrase zu geben, wartet bis zu Ihrer
+  nächsten Veröffentlichung, wenn diese Identität gerade erst erstellt wurde.
 - **Neu** — etwas Neues beginnen: ein **Leeres Grundstück** oder eines der
   fertigen Bauwerke (eine Burg, eine Hafeninsel, ein Dorfplatz, ein Haus,
   eine Mühle und eine Brücke) als Ihre eigene Kopie, ganz im Blick. Hat das
   Geöffnete ungespeicherte Änderungen, sagt Neu das zuerst; speichern Sie
   es, um sie zu behalten.
+- **Datei** enthält die nächsten drei:
 - **Exportieren** — die aktuelle Kreation als JSON-Datei herunterladen, um
   eine Kopie zu behalten oder sie auf ein anderes Gerät zu bringen. Die
   Dateien nutzen ein kompaktes Format, das Steine als Tabelle speichert.
@@ -673,7 +694,7 @@ umfärbt oder löscht, auf beiden Bildschirmen.
 
 ## Ein 3D-Modell herunterladen
 
-**3D-Modell** in der Werkzeugleiste lädt das Geöffnete als Datei herunter,
+**3D-Modell** unter **Datei** in der Werkzeugleiste lädt das Geöffnete als Datei herunter,
 die andere 3D-Programme öffnen, erstellt auf diesem Gerät (nichts wird
 hochgeladen):
 
@@ -701,6 +722,18 @@ Bauwerks bietet dieselben Downloads an, wenn seine Lizenz Kopien erlaubt
 - **Ziehen** — um die Szene kreisen
 - **Scrollen** — hinein- und herauszoomen
 - **Pos1** — die Kamera auf die Standardansicht zurücksetzen
+
+Ein Bauwerk öffnet sich schräg von oben gesehen, ganz im Bild.
+
+### Hineinsehen
+
+**Hineinsehen** oben links über der Ansicht (auf einem Telefon oben rechts,
+unter **Werkzeuge**) schneidet das Bauwerk oberhalb seines Erdgeschosses
+weg, wie die Weltansicht, wenn Sie hineingehen: Die Wände stehen bis etwa
+Kopfhöhe, und die Räume zeigen sich samt Möbeln von oben. Bauen Sie darin
+wie gewohnt: Ein Klick geht an dem vorbei, was weggeschnitten ist.
+**Ganz zeigen** zeichnet wieder alles. Nichts wird entfernt; nur was
+gezeichnet wird, ändert sich.
 
 ## Auf Telefon oder Tablet
 

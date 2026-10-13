@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 292450f615f65312 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 0597b11a718701f3 -->
 # 02 — Editor
 
 <!-- languages -->
 [English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · **Bahasa Indonesia** · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../02-TheEditor.md).
-<!-- /stale -->
 
 Editor adalah tempat Anda membangun. Panduan ini membahas alat-alatnya,
 cara memilih dan mentransformasi balok, dan cara menata bangunan Anda
@@ -29,9 +25,9 @@ dengan grup.
 └──────────────────────┴──────────────────────────────────────┘
 ```
 
-- **Bilah alat** — menyimpan, menerbitkan, memulai karya baru, mengekspor
-  atau mengimpor dokumen sebagai file, membuka kembali yang terbaru, dan
-  membuka daftar **⌨ Pintasan** (juga `?`).
+- **Bilah alat** — pertama **Simpan**, **Terbitkan**, dan **Baru**, lalu
+  **Berkas**, menu berisi **Ekspor**, **Model 3D**, dan **Impor**; membuka
+  kembali yang terbaru, dan membuka daftar **⌨ Pintasan** (juga `?`).
 - **Alat** — beralih antara **Pilih** (`1`) dan **Tempatkan** (`2`).
   **Tempatkan** tetap tersorot selama Anda menempatkan balok atau
   struktur.
@@ -85,6 +81,16 @@ tombol yang belum bisa melakukan apa-apa:
 > Perintah** — daftar yang dapat dicari berisi setiap tindakan di panduan
 > ini, berdasarkan nama.
 
+## Coba sekarang: rumah yang perlu diselesaikan
+
+**Coba sekarang** di **Beranda** membuka rumah milik Anda sendiri yang belum
+selesai: dindingnya sudah berdiri dan ruangannya sudah berperabot, tetapi
+belum beratap. Kartu **Tugas Anda: beri atap** di bagian atas alat
+mengatakannya. Klik **Ambil atap** (ini memilih **Atap Limas 6x6** dan
+beralih ke Tempatkan), lalu klik di mana saja pada rumah: atapnya terpasang
+di atas dinding. Kartu itu lalu mengatakan bahwa rumah itu kini milik Anda.
+Terbitkan dan masuklah ke dalamnya, atau lanjutkan membangun.
+
 ## Bangunan pertama Anda
 
 Saat pertama kali Anda membuka Editor di sebuah perangkat, kartu
@@ -120,9 +126,13 @@ tersimpan memulai dengan panduan tersembunyi.
 ### Alat Tempatkan (`2`)
 
 Pilih balok dari palet, arahkan penunjuk ke viewport, lalu klik untuk
-menempatkannya. Bayangan tembus pandang menunjukkan persis di mana balok
-akan mendarat. Arahkan penunjuk ke sisi balok yang sudah ada untuk menumpuk
-atau menempelkan.
+menempatkannya. Jika belum ada balok yang dipilih, Tempatkan dimulai dengan
+**Kubus**, sehingga klik pertama selalu menempatkan sesuatu. Bayangan tembus
+pandang menunjukkan persis di mana balok akan mendarat. Arahkan penunjuk ke
+sisi balok yang sudah ada untuk menumpuk atau menempelkan. Balok yang
+ditaruh di atas balok lain bertumpu pada balok tertinggi di bawahnya, bukan
+di dalamnya: atap yang dijatuhkan di tengah lantai rumah duduk di atas
+dindingnya, dan balok melintang di atas dua tiang bertumpu pada tiangnya.
 
 > **Kiat:** Tekan **Escape** untuk kembali ke alat Pilih.
 
@@ -569,12 +579,21 @@ Musik diputar pelan saat Anda membangun, sedikit lebih riang daripada di Tampila
 
 - **Simpan** (`Ctrl+S`) — menyimpan pekerjaan Anda di perangkat ini.
 - **Terbitkan** — membagikannya kepada semua orang (lihat
-  [Penerbitan & Fork](04-PublishingAndForking.md)).
+  [Penerbitan & Fork](04-PublishingAndForking.md)). Menerbitkan juga
+  menyimpannya. Bangunan yang dimulai dari bangunan siap pakai dan belum
+  berisi apa pun buatan Anda ditanyai sekali: **Terus membangun**, atau
+  **Tetap terbitkan**. Pesan sesudahnya berupa satu bilah: **Masuk ke
+  dalamnya** dan **Salin tautan**, dengan **Cara lain untuk berbagi** yang
+  berisi tautan itu sendiri, **Simpan gambar**, dan **Sematkan**. Pengingat
+  untuk menambahkan frasa sandi ke identitas yang Anda pakai untuk
+  menerbitkan menunggu penerbitan berikutnya jika identitas itu baru saja
+  dibuat.
 - **Baru** — memulai sesuatu yang baru: **Lahan kosong**, atau salah satu
   bangunan siap pakai (kastil, pulau pelabuhan, alun-alun desa, rumah,
   kincir, dan jembatan) sebagai salinan Anda sendiri, terlihat utuh. Jika
   yang sedang terbuka memiliki perubahan belum disimpan, Baru memberi tahu
   dulu; simpan untuk mempertahankannya.
+- **Berkas** berisi tiga berikut ini:
 - **Ekspor** — mengunduh karya saat ini sebagai file JSON, untuk menyimpan
   salinan atau memindahkannya ke perangkat lain. File memakai format ringkas
   yang menyimpan balok sebagai tabel.
@@ -649,7 +668,7 @@ ulang, atau dihapus oleh salah satu dari kalian muncul di kedua layar.
 
 ## Mengunduh model 3D
 
-**Model 3D** di bilah alat mengunduh yang sedang terbuka sebagai berkas
+**Model 3D**, di bawah **Berkas** di bilah alat, mengunduh yang sedang terbuka sebagai berkas
 yang dapat dibuka program 3D lain, dibuat di perangkat ini (tidak ada yang
 diunggah):
 
@@ -676,6 +695,18 @@ menawarkan unduhan yang sama jika lisensinya mengizinkan salinan (lihat
 - **Seret** — mengorbit di sekitar adegan
 - **Gulir** — memperbesar dan memperkecil
 - **Home** — mengembalikan kamera ke tampilan bawaan
+
+Bangunan terbuka dilihat dari atas secara miring, terbingkai utuh.
+
+### Lihat ke dalam
+
+**Lihat ke dalam**, di kiri atas tampilan (kanan atas di ponsel, di bawah
+**Alat**), memotong bangunan di atas lantai dasarnya, seperti yang dilakukan
+Tampilan Dunia saat Anda masuk: dinding berdiri kira-kira setinggi kepala
+dan ruangan-ruangannya, beserta perabotnya, terlihat dari atas. Bangunlah
+di dalamnya seperti biasa: klik menembus bagian yang terpotong.
+**Tampilkan utuh** menggambar semuanya lagi. Tidak ada yang dihapus; hanya
+yang digambar yang berubah.
 
 ## Di ponsel atau tablet
 

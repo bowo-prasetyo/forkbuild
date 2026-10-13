@@ -1,13 +1,9 @@
-<!-- translation-of: docs/Privacy.md source-hash: c3e2eacf000f9c51 -->
+<!-- translation-of: docs/Privacy.md source-hash: 8ab09781761d8e4a -->
 # Datenschutz
 
 <!-- languages -->
 [English](../../Privacy.md) · **Deutsch** · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../../Privacy.md).
-<!-- /stale -->
 
 ForkBuild hat keine Konten und verfolgt Sie nicht. Es speichert Ihre
 Arbeit in Ihrem eigenen Browser und spricht nur für die Funktionen mit
@@ -38,10 +34,12 @@ veröffentlichen, exportieren oder senden es:
 - bekannte Peers, Freunde, die Personen, denen Sie folgen, Blockierungen,
   Chatverläufe und vorgemerkte Nachrichten (niemand erfährt, dass Sie ihm
   folgen, und nichts über ein Folgen wird je gesendet);
-- Ihr Avatarprofil, Einstellungen (darunter, ob die Weltansicht Ton
-  abspielt, wie laut und ob in 3D oder Stereo, ob die Weltansicht ihre
-  erweiterten Werkzeuge zeigt, ob dort immer Tag ist, ob Sonne und Mond dort Schatten werfen, wohin Veröffentlichen Ihre Bauwerke sendet, und die von Ihnen gewählte
-  Sprache; haben Sie keine gewählt, liest ForkBuild die bevorzugten Sprachen
+- Ihr Avatarprofil (wenn Sie die Weltansicht durchstreifen, bevor Sie einen
+  Namen wählen, sind Sie ein Gast: Dieser Avatar wird nirgends gespeichert,
+  auch hier nicht, und nie an jemanden gesendet), Einstellungen (darunter, ob die Weltansicht Ton
+  abspielt, wie laut, ob in 3D oder Stereo und ob mit oder ohne Musik, ob die Weltansicht ihre
+  erweiterten Werkzeuge zeigt, ob dort immer Tag ist, ob Sonne und Mond dort Schatten werfen, wohin Veröffentlichen Ihre Bauwerke sendet, die von Ihnen gewählte
+  Sprache und ob das Aussehen hell oder dunkel ist oder dem Gerät folgt; haben Sie keine gewählt, liest ForkBuild die bevorzugten Sprachen
   des Browsers auf dem Gerät und sendet sie nirgendwohin) sowie Benutzername
   und Zugangsdaten eines TURN-Servers, falls Sie sie unter
   **Netzwerkeinstellungen** eingeben;
@@ -220,7 +218,7 @@ sind (siehe „Server, die ForkBuild kontaktiert“ unten):
 
 Und wenn jemand bei der wöchentlichen Bau-Challenge mitmacht (**Mitmachen**
 oder die Challenge unter **Neu** im Editor): `/e/challenge-join`; und wenn jemand den
-Challenge-Platz einer Woche in der Weltansicht öffnet: `/e/plaza-visit`. Und jedes Mal, wenn sich die Weltansicht öffnet: `/e/world-visit`; und einmal pro Besuch, wenn dort das Bauwerk eines anderen in Sicht steht (eines, das dieses Gerät nicht veröffentlicht hat und nicht bearbeiten kann; die fertigen Bauwerke rund um den Platz zählen nicht): `/e/world-neighbour`. Und höchstens einmal pro Öffnen von ForkBuild, wenn jemand eines der Nebensysteme nutzt: schwimmt (`/e/swam`), ein Tier fängt (`/e/animal-caught`), ein Bauwerk mit einem schmückt (`/e/animal-decorated`), etwas trägt, ein Tier oder ein verstautes Fahrzeug (`/e/inventory-used`), eine Chat-Nachricht sendet (`/e/chat-sent`), einen Sprachanruf tätigt oder annimmt (`/e/voice-call`) oder einer öffentlichen Lobby beitritt (`/e/lobby-joined`). Keine davon sagt, was gefangen, gesagt, angerufen oder betreten wurde. Und wenn jemand in der Weltansicht einen Link **Mit mir hier spazieren** erstellt: `/e/walk-link`; und wenn ein Freund über einen solchen ankommt: `/e/walk-joined`. Und wenn jemand im Editor einen Link **Mit mir bauen** erstellt: `/e/build-link`; und wenn ein Freund über einen solchen beitritt: `/e/build-joined`; und wenn zum ersten Mal ein Bauwerk veröffentlicht wird, das Freunde nennt, die es gemeinsam gebaut haben: `/e/publish-together`. Und bei jeder Veröffentlichung eines Bauwerks: `/e/publish-found`, wenn es an alle gesendet wurde, oder `/e/publish-link-only`, wenn es bei seinem Link blieb.
+Challenge-Platz einer Woche in der Weltansicht öffnet: `/e/plaza-visit`. Und jedes Mal, wenn sich die Weltansicht öffnet: `/e/world-visit`; und einmal pro Besuch, wenn dort das Bauwerk eines anderen in Sicht steht (eines, das dieses Gerät nicht veröffentlicht hat und nicht bearbeiten kann; die fertigen Bauwerke rund um den Platz zählen nicht): `/e/world-neighbour`. Und höchstens einmal pro Öffnen von ForkBuild, wenn jemand ohne Namen dort als Gast spazieren geht: `/e/guest-walk`; nichts darüber, wo er gegangen ist, wird gesendet. Und höchstens einmal pro Öffnen von ForkBuild, wenn jemand eines der Nebensysteme nutzt: schwimmt (`/e/swam`), ein Tier fängt (`/e/animal-caught`), ein Bauwerk mit einem schmückt (`/e/animal-decorated`), etwas trägt, ein Tier oder ein verstautes Fahrzeug (`/e/inventory-used`), eine Chat-Nachricht sendet (`/e/chat-sent`), einen Sprachanruf tätigt oder annimmt (`/e/voice-call`) oder einer öffentlichen Lobby beitritt (`/e/lobby-joined`). Keine davon sagt, was gefangen, gesagt, angerufen oder betreten wurde. Und wenn jemand in der Weltansicht einen Link **Mit mir hier spazieren** erstellt: `/e/walk-link`; und wenn ein Freund über einen solchen ankommt: `/e/walk-joined`. Und wenn jemand im Editor einen Link **Mit mir bauen** erstellt: `/e/build-link`; und wenn ein Freund über einen solchen beitritt: `/e/build-joined`; und wenn zum ersten Mal ein Bauwerk veröffentlicht wird, das Freunde nennt, die es gemeinsam gebaut haben: `/e/publish-together`. Und bei jeder Veröffentlichung eines Bauwerks: `/e/publish-found`, wenn es an alle gesendet wurde, oder `/e/publish-link-only`, wenn es bei seinem Link blieb.
 
 Und wenn ein Bauwerk zum ersten Mal aus diesem Browser veröffentlicht wird
 (spätere Veröffentlichungen desselben Bauwerks senden nichts):
@@ -284,7 +282,9 @@ Minuten, solange ihr Tab sichtbar ist, liest sie neue Ankündigungen von den
 Nostr-Relays, dem Arweave-Gateway sowie den Steem- und Blurt-Knoten, die unter
 **Netzwerkeinstellungen** konfiguriert sind (docs/AnnouncementIndex.md). Sie
 liest nur Ankündigungen (kleine Verweise und signierte Ansprüche), nie
-Inhalte, und veröffentlicht nichts. Alles andere geschieht nur, wenn Sie die
+Inhalte, und veröffentlicht nichts. Bauwerk-Notizen, die ganze Bauwerke
+tragen, werden nur gelesen, wenn Sie „Entdecken“, eine Autorenseite, die
+Challenge oder ihren Platz öffnen (siehe die Tabelle). Alles andere geschieht nur, wenn Sie die
 jeweilige Funktion nutzen, und jeder Server lässt sich unter
 **Netzwerkeinstellungen** ändern. Jeder Server sieht Ihre IP-Adresse und
 was Sie bei ihm anfragen.
@@ -297,6 +297,7 @@ was Sie bei ihm anfragen.
 | Auf der offiziellen Website kopieren Sie den Einbettungscode eines Bauwerks, oder ein eingebettetes Bauwerk wird gezeigt oder in ForkBuild geöffnet (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit einem festen Pfad, der nennt, welcher der drei Fälle es war, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website machen Sie bei der wöchentlichen Bau-Challenge mit oder öffnen ihren Platz (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/challenge-join` oder `/e/plaza-visit`, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website öffnen Sie die Weltansicht, und dort steht das Bauwerk eines anderen in Sicht (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/world-visit` und höchstens eine mit `/e/world-neighbour` pro Besuch, ohne Referrer und ohne Cookie |
+| Auf der offiziellen Website gehen Sie in der Weltansicht spazieren, bevor Sie einen Namen wählen (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | höchstens eine Bildanfrage mit dem festen Pfad `/e/guest-walk` pro Öffnen von ForkBuild, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website schwimmen Sie, fangen ein Tier, schmücken ein Bauwerk mit einem, tragen etwas, senden eine Chat-Nachricht, tätigen oder nehmen einen Sprachanruf an oder treten einer öffentlichen Lobby bei (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | höchstens eine Bildanfrage pro Seitenaufruf für jedes, mit seinem festen Pfad (`/e/swam`, `/e/animal-caught`, `/e/animal-decorated`, `/e/inventory-used`, `/e/chat-sent`, `/e/voice-call`, `/e/lobby-joined`), ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website erstellen Sie einen Link **Mit mir hier spazieren** oder kommen über einen an (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/walk-link` oder `/e/walk-joined`, ohne Referrer und ohne Cookie |
 | Auf der offiziellen Website erstellen Sie einen Link **Mit mir bauen** oder treten über einen bei (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/build-link` oder `/e/build-joined` (und `/e/publish-together`, wenn ein gemeinsam gebautes Bauwerk zum ersten Mal veröffentlicht wird und sie nennt), ohne Referrer und ohne Cookie |
@@ -310,7 +311,7 @@ was Sie bei ihm anfragen.
 | Eine Peer-Verbindung beginnt | STUN-Server (`stun.l.google.com`) | nichts außer einer Anfrage nach Ihrer öffentlichen IP-Adresse |
 | Sie beginnen eine Peer-Verbindung, wenn der Rendezvous-Server ein Relay anbietet | `/turn-credentials` des Rendezvous-Servers, dann sein TURN-Relay (Cloudflare) | eine Anfrage nach kurzlebigen Relay-Zugangsdaten, höchstens etwa einmal pro Stunde; weitergeleiteter Verkehr ist durch WebRTC Ende-zu-Ende-verschlüsselt |
 | Die App ist geöffnet und ihr Tab sichtbar (Synchronisierung der Ankündigungen im Hintergrund) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | Abfragen nach den Entdeckungs-Tags von ForkBuild: den gemeinsamen Tags für Snapshots und Kommentare sowie den Ortsnamen-Regionen und Kartenzellen, die Sie besucht haben |
-| Sie öffnen das Repository oder eine Autorenseite | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | eine Abfrage nach dem gemeinsamen Veröffentlichungs-Tag (`forkbuild-publication`); dann eine Anfrage nach dem signierten Eintrag jeder neu angekündigten Veröffentlichung, höchstens 20 pro Besuch oder **Erneut prüfen** |
+| Sie öffnen „Entdecken“ (das Repository) oder eine Autorenseite | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | eine Abfrage nach dem gemeinsamen Veröffentlichungs-Tag (`forkbuild-publication`); dann eine Anfrage nach dem signierten Eintrag jeder neu angekündigten Veröffentlichung, höchstens 20 pro Besuch oder **Erneut prüfen** |
 | Sie öffnen die Bau-Challenge einer Woche (**Challenge**) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | eine Abfrage nach dem Tag dieser Woche (`forkbuild-tag:<tag>`); dann eine Anfrage nach dem signierten Datensatz jedes neu angekündigten Beitrags, höchstens 20 pro Besuch oder **Erneut prüfen** |
 | Sie veröffentlichen ein Bauwerk, nachdem Sie unter **Wer kann es finden?** **Alle** gewählt haben | jedes Nostr-Relay unter **Netzwerkeinstellungen** (`relay.damus.io`, `nos.lol`, `relay.primal.net`) | eine Bauwerk-Notiz: das signierte Bauwerk selbst, seine Tags und die signierte Platzierung seines Herausgebers, signiert mit dem Trägerschlüssel dieses Geräts |
 | Sie öffnen „Entdecken“, die Seite einer Person, die Challenge einer Woche oder ihren Platz | jedes Nostr-Relay unter **Netzwerkeinstellungen** | eine Abfrage nach Bauwerk-Notizen (`forkbuild-build` oder `forkbuild-tag:<tag>` der Woche); jede neue Notiz wird auf diesem Gerät geprüft und geöffnet, höchstens 40 pro Besuch |

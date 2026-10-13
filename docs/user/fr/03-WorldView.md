@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: e66632c0b2bec761 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3a4a0c4e45f32875 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · **Français** · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../03-WorldView.md).
-<!-- /stale -->
 
 La Vue du Monde est l’espace 3D partagé où **toutes les créations publiées
 existent côte à côte**. Déplacez-vous, cherchez ce que vous voulez,
@@ -27,16 +23,36 @@ et intégrer au Monde un animal relâché comme décoration avec **G** (voir
 
 ## Ouvrir la Vue du Monde
 
-Depuis le **Dépôt**, cliquez sur **Explorer** sur n’importe quelle
+**Se promener**, dans le menu principal, ouvre la Vue du Monde sur la place
+du défi de cette semaine, sans qu’il faille une construction à vous. La
+place est la place du village : les six constructions toutes prêtes se
+dressent autour pour tout le monde, chaque fois que vous ouvrez la Vue du
+Monde, prêtes à être remixées, et le village des constructions publiées
+grandit juste à l’extérieur (voir
+[La place du défi](04-PublishingAndForking.md#la-place-du-défi)).
+
+Depuis **Explorer**, cliquez sur **Explorer** sur n’importe quelle
 création — ou allez directement à l’URL d’un monde. Vous apparaissez à
-côté de cette création dans le monde partagé.
+côté de cette création dans le monde partagé. Les constructions que
+d’autres ont envoyées à tout le monde s’y trouvent, ainsi que dans le défi
+(voir [Qui peut la trouver ?](04-PublishingAndForking.md#qui-peut-la-trouver-)),
+et se dressent là où leurs bâtisseurs les ont mises : les remix à côté de ce
+qu’ils remixent, les autres dans le village autour de la place.
 
 ## Une vue de visiteur, et Avancé
 
-La Vue du Monde s’ouvre en vue de visiteur : le nom de la construction et
-qui l’a faite, ce qui vous entoure et ce que vous pouvez faire ici
-(**Construire ici**, **Se promener ici avec moi** et **Modifier une copie**
-quand la construction n’est pas la vôtre). Les outils des réseaux derrière le
+La Vue du Monde s’ouvre en vue de visiteur. Ce que vous êtes venu faire se
+trouve sur une barre en bas du Monde : **Construire ici**, **Se promener ici
+avec moi** et **Modifier une copie** quand la construction n’est pas la
+vôtre. Le panneau latéral donne le nom de la construction et qui l’a faite
+(le même nom partout où une construction est créditée), puis où aller et ce
+qui vous entoure. Sur un téléphone, le panneau commence fermé, pour que le
+Monde remplisse l’écran ; **Panneau** l’ouvre. Sur la place, un téléphone
+affiche à la place une ligne au-dessus du Monde, **Place : …** et le nombre
+de constructions qui s’y dressent, qui ouvre le panneau. Qui est dessiné, et
+si les touches font marcher votre avatar et si la caméra le suit, sont
+activés pour tout le monde et attendent sous **Réglages de l’avatar** ; le
+choix de la caméra reste à côté. Les outils des réseaux derrière le
 Monde attendent en bas du panneau, sous **Afficher les outils avancés** :
 
 - les coordonnées au-dessus de la vue, les champs **Emplacement** de la
@@ -48,7 +64,11 @@ Monde attendent en bas du panneau, sous **Afficher les outils avancés** :
 - **Mon Monde partagé**, le panneau réseau de votre publication, et
   **Déplacer le placement** à côté ;
 - la liste des Mondes qui n’ont pas pu se charger, et les diagnostics des
-  avatars.
+  avatars ;
+- la sélection par clic : en visiteur, cliquer dans la vue (pour commencer
+  à marcher, par exemple) ne sélectionne rien d’autre qu’un autre avatar, si
+  bien qu’aucun détail de brique ne s’ouvre ; avec Avancé, un clic ouvre
+  [Inspecter une brique](#inspecter-une-brique--ou-une-structure-placée).
 
 Le choix est mémorisé sur cet appareil et ne change rien pour personne
 d’autre. La boussole, les noms de lieux en bas, Rechercher, Lieux, la Carte et
@@ -130,8 +150,27 @@ et se promènent autour de chez elles, en contournant les bâtiments plutôt
 qu’en les traversant, et qui se tournent pour vous saluer quand vous vous
 approchez ; parlez à l’une d’elles et elle vous dit ce qu’il y a autour.
 Contrairement à la faune, ils font partie du contenu propre du Monde :
-c’est son auteur qui les ajoute. Voir
+c’est son auteur qui les ajoute. Les maisons toutes prêtes sont habitées :
+une copie de la Maison, d’un cottage ou d’une autre maison toute prête
+commence avec un habitant qui vit juste à côté de sa porte d’entrée, et
+celles qui se dressent autour de la place du défi ont aussi le leur ;
+retirez le vôtre avec **R** comme n’importe quel autre. Voir
 [Habitants](06-AvatarsAndPresence.md#habitants).
+
+### À l’intérieur d’une construction
+
+Entrez par une porte et la construction au-dessus de votre tête est coupée,
+pour que vous voyiez la pièce où vous êtes plutôt que le mur derrière vous :
+son toit et tout ce qui est plus haut que votre tête, pour cette
+construction seulement, tandis que les murs restent debout jusqu’un peu
+au-dessus de votre taille. Quand la caméra vous suit, ou en **Troisième
+personne**, la caméra entre aussi, derrière et au-dessus de vous, regardant
+la pièce d’en haut, et monte plutôt que de traverser un mur quand il y en a
+un juste derrière vous. **Vue aérienne** regarde droit vers le bas dans la
+pièce ; **Première personne** la voit par vos propres yeux, sans rien
+couper. Ressortez et la construction entière est de nouveau dessinée. Seul
+ce qui est dessiné change : le toit est toujours là, pour tout le monde et
+pour marcher.
 
 ## Le jour et la nuit
 
@@ -169,7 +208,7 @@ tourne lentement autour d’un point haut dans le nord : les étoiles se lèvent
 étoiles au même moment.
 
 Si vous préférez qu’il fasse toujours jour, cochez **Toujours le jour** en
-bas du panneau, juste au-dessus de **Afficher les outils avancés**. Ce choix
+bas du panneau, juste au-dessus de **Ombres**. Ce choix
 est mémorisé sur cet appareil et ne change rien pour les autres.
 
 ## Son
@@ -767,15 +806,17 @@ arrive et qui est là.
 ### La place du défi
 
 **Parcourir la place** sur la page du défi d’une semaine ouvre la vue du
-monde dans une clairière où les participations de cette semaine se dressent
-autour d’une place dégagée, avec un panneau qui les liste (voir
-[La place du défi](04-PublishingAndForking.md#la-place-du-défi)). Aucun arbre n’y
-pousse, quelle que soit la semaine. Les participations ne sont montrées que
-tant que vous êtes sur la place, et **Construire ici** n’y est pas proposé.
-
-La place ouverte au milieu est pavée, avec un puits, des bancs et des
-lampadaires, pour que la place soit un lieu même une semaine sans
-participation.
+monde sur la place du village : pavée, avec un puits, des bancs et des
+lampadaires, et les six constructions toutes prêtes autour. La place et les
+constructions toutes prêtes font partie du Monde, comme ses collines et ses
+arbres : elles se dressent dans chaque Vue du Monde, pour tout le monde, et
+n’appartiennent à personne. Le village des constructions publiées grandit
+juste à l’extérieur, pour que votre propre maison publiée ait des voisins.
+Un panneau liste les participations de la semaine et les constructions
+toutes prêtes (voir
+[La place du défi](04-PublishingAndForking.md#la-place-du-défi)). Aucun
+arbre ne pousse autour de la place, et **Construire ici** n’y est pas
+proposé.
 
 ### Points de repère — marquer un lieu qui mérite qu’on s’en souvienne
 
@@ -985,8 +1026,9 @@ comme une ligne inutilisable.
 
 ## Inspecter une brique — ou une structure placée
 
-Cliquez sur n’importe quelle brique pour ouvrir le panneau
-**Inspection**, qui vous indique :
+Avec **Afficher les outils avancés**, cliquez sur n’importe quelle brique
+pour ouvrir le panneau **Inspection** (en visiteur, un clic ne sélectionne
+rien), qui vous indique :
 
 - De quel type de brique il s’agit
 - Sa position et sa rotation

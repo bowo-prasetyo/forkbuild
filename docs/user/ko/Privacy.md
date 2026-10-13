@@ -1,13 +1,9 @@
-<!-- translation-of: docs/Privacy.md source-hash: c3e2eacf000f9c51 -->
+<!-- translation-of: docs/Privacy.md source-hash: 8ab09781761d8e4a -->
 # 개인정보 보호
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · **한국어** · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../../Privacy.md)을 참고하세요.
-<!-- /stale -->
 
 ForkBuild에는 계정이 없고 나를 추적하지 않습니다. 작업은 내 브라우저에
 저장되며, 다른 컴퓨터와는 그것이 필요한 기능에서만 통신합니다. 예외는 만든
@@ -32,9 +28,10 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
   있는 것은 무엇이든 그 신원으로 서명할 수 있습니다.
 - 알려진 피어, 친구, 팔로우하는 사람, 차단, 채팅 기록, 대기 중인 메시지(팔로우한
   사람에게 알리지 않으며, 팔로우에 관한 어떤 것도 보내지 않음).
-- 아바타 프로필, 설정(월드 보기에서 소리를 낼지, 크기, 3D 또는 스테레오, 고급
+- 아바타 프로필(이름을 정하기 전에 월드 보기를 걸으면 손님입니다. 그 아바타는
+  어디에도, 여기에도 보관되지 않으며 누구에게도 보내지지 않음), 설정(월드 보기에서 소리를 낼지, 크기, 3D 또는 스테레오, 음악을 켤지, 고급
   도구를 보일지, 그곳을 항상 낮으로 할지, 그곳에서 해와 달이 그림자를 드리울지, 게시한 작품을 보낼 곳, 고른
-  언어 포함. 언어를 고르지 않았다면 ForkBuild는 기기에서 브라우저의 선호 언어를
+  언어, 모양을 밝게 할지 어둡게 할지 기기를 따를지 포함. 언어를 고르지 않았다면 ForkBuild는 기기에서 브라우저의 선호 언어를
   읽기만 하고 아무 데도 보내지 않음), 그리고 **네트워크 설정**에서 입력했다면
   TURN 서버의 사용자 이름과 자격 증명.
 - 이 브라우저가 일일 방문자 수 집계에 참여하는지 여부와 마지막으로 집계된 날.
@@ -166,7 +163,7 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 
 그리고 누군가 주간 건축 챌린지에 참여할 때(**챌린지 참여하기**, 또는
 에디터의 **새로 만들기**에 있는 챌린지): `/e/challenge-join`.
-그리고 월드 뷰에서 한 주의 챌린지 광장을 열 때: `/e/plaza-visit`. 그리고 월드 뷰를 열 때마다: `/e/world-visit`, 그리고 방문마다 한 번, 그곳에서 다른 사람의 작품이 보일 때(이 기기가 게시하지 않았고 편집할 수 없는 작품, 광장 둘레의 미리 지어진 작품은 세지 않음): `/e/world-neighbour`. 그리고 ForkBuild를 열 때마다 많아야 한 번씩, 누군가 부가 시스템을 쓸 때: 수영할 때(`/e/swam`), 동물을 잡을 때(`/e/animal-caught`), 동물로 작품을 꾸밀 때(`/e/animal-decorated`), 동물이나 보관한 탈것을 지닐 때(`/e/inventory-used`), 채팅 메시지를 보낼 때(`/e/chat-sent`), 음성 통화를 걸거나 받을 때(`/e/voice-call`), 공개 로비에 참여할 때(`/e/lobby-joined`). 무엇을 잡았는지, 무슨 말을 했는지, 누구에게 전화했는지, 어디에 참여했는지는 보내지 않습니다. 그리고 월드 뷰에서 **여기서 같이 걷자** 링크를 만들 때: `/e/walk-link`, 그 링크로 친구가 도착할 때: `/e/walk-joined`. 그리고 에디터에서 **같이 만들자** 링크를 만들 때: `/e/build-link`, 그 링크로 친구가 참가할 때: `/e/build-joined`, 그리고 함께 만든 친구를 기록한 작품이 처음 게시될 때: `/e/publish-together`. 그리고 작품을 게시할 때마다, 모두에게 보냈으면 `/e/publish-found`, 링크로만 두었으면 `/e/publish-link-only`를 보냅니다.
+그리고 월드 뷰에서 한 주의 챌린지 광장을 열 때: `/e/plaza-visit`. 그리고 월드 뷰를 열 때마다: `/e/world-visit`, 그리고 방문마다 한 번, 그곳에서 다른 사람의 작품이 보일 때(이 기기가 게시하지 않았고 편집할 수 없는 작품, 광장 둘레의 미리 지어진 작품은 세지 않음): `/e/world-neighbour`. 그리고 ForkBuild를 열 때마다 많아야 한 번, 아직 이름이 없는 사람이 그곳을 손님으로 걸을 때: `/e/guest-walk`. 어디를 걸었는지는 아무것도 보내지 않습니다. 그리고 ForkBuild를 열 때마다 많아야 한 번씩, 누군가 부가 시스템을 쓸 때: 수영할 때(`/e/swam`), 동물을 잡을 때(`/e/animal-caught`), 동물로 작품을 꾸밀 때(`/e/animal-decorated`), 동물이나 보관한 탈것을 지닐 때(`/e/inventory-used`), 채팅 메시지를 보낼 때(`/e/chat-sent`), 음성 통화를 걸거나 받을 때(`/e/voice-call`), 공개 로비에 참여할 때(`/e/lobby-joined`). 무엇을 잡았는지, 무슨 말을 했는지, 누구에게 전화했는지, 어디에 참여했는지는 보내지 않습니다. 그리고 월드 뷰에서 **여기서 같이 걷자** 링크를 만들 때: `/e/walk-link`, 그 링크로 친구가 도착할 때: `/e/walk-joined`. 그리고 에디터에서 **같이 만들자** 링크를 만들 때: `/e/build-link`, 그 링크로 친구가 참가할 때: `/e/build-joined`, 그리고 함께 만든 친구를 기록한 작품이 처음 게시될 때: `/e/publish-together`. 그리고 작품을 게시할 때마다, 모두에게 보냈으면 `/e/publish-found`, 링크로만 두었으면 `/e/publish-link-only`를 보냅니다.
 
 그리고 이 브라우저에서 작품을 처음 게시할 때(나중에 같은 작품을 다시 게시하면 아무것도 보내지 않음):
 
@@ -215,7 +212,8 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 앱을 열고 약 10초 뒤, 그리고 탭이 보이는 동안 몇 분마다, **네트워크 설정**에 설정된
 Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지를 읽습니다
 (docs/AnnouncementIndex.md). 공지(작은 포인터와 서명된 클레임)만 읽고 콘텐츠는
-절대 읽지 않으며, 아무것도 게시하지 않습니다. 나머지는 모두 기능을 쓸 때만
+절대 읽지 않으며, 아무것도 게시하지 않습니다. 작품을 통째로 담은 작품 노트는
+둘러보기, 작성자 페이지, 챌린지나 그 광장을 열 때만 읽습니다(표 참고). 나머지는 모두 기능을 쓸 때만
 일어나며, 각 서버는 **네트워크 설정**에서 바꿀 수 있습니다. 각 서버는 내 IP 주소와
 내가 요청하는 것을 봅니다.
 
@@ -227,6 +225,7 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 | 공식 사이트에서 작품의 임베드 코드를 복사하거나, 임베드된 작품이 표시되거나 ForkBuild에서 열릴 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 셋 중 어느 경우인지 나타내는 고정 경로의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 주간 건축 챌린지에 참여하거나 그 광장을 열 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/challenge-join` 또는 `/e/plaza-visit`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 월드 뷰를 열고, 그곳에서 다른 사람의 작품이 보일 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/world-visit`의 이미지 요청 하나, 그리고 방문마다 많아야 한 번 `/e/world-neighbour`, 리퍼러와 쿠키 없음 |
+| 공식 사이트에서 이름을 정하기 전에 월드 보기를 걸을 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | ForkBuild를 열 때마다 많아야 한 번, 고정 경로 `/e/guest-walk`의 이미지 요청, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 수영하거나, 동물을 잡거나, 동물로 작품을 꾸미거나, 무언가를 지니거나, 채팅 메시지를 보내거나, 음성 통화를 걸거나 받거나, 공개 로비에 참여할 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 각각 페이지를 열 때마다 많아야 한 번, 고정 경로(`/e/swam`, `/e/animal-caught`, `/e/animal-decorated`, `/e/inventory-used`, `/e/chat-sent`, `/e/voice-call`, `/e/lobby-joined`)의 이미지 요청, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 **여기서 같이 걷자** 링크를 만들거나 그 링크로 도착할 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/walk-link` 또는 `/e/walk-joined`의 이미지 요청 1건, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 **같이 만들자** 링크를 만들거나 그 링크로 참가할 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/build-link` 또는 `/e/build-joined`(함께 만든 작품이 그 친구들을 기록한 채 처음 게시될 때는 `/e/publish-together`도)의 이미지 요청 1건, 리퍼러와 쿠키 없음 |
@@ -240,7 +239,7 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 | 피어 연결이 시작될 때 | STUN 서버(`stun.l.google.com`) | 내 공개 IP 주소 요청 외에는 없음 |
 | 피어 연결을 시작할 때, 랑데부 서버가 릴레이를 제공하면 | 랑데부 서버의 `/turn-credentials`, 그다음 그 TURN 릴레이(Cloudflare) | 단기 릴레이 자격 증명 요청(많아야 약 1시간에 한 번). 중계되는 트래픽은 WebRTC로 종단 간 암호화됨 |
 | 앱이 열려 있고 탭이 보일 때(백그라운드 공지 동기화) | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`), Blurt 노드(`rpc.blurt.blog`) | ForkBuild 발견 태그에 대한 조회: 공유 스냅샷과 댓글 태그, 내가 방문한 장소 이름 지역과 지도 칸 |
-| 저장소나 작성자 페이지를 열 때 | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`), Blurt 노드(`rpc.blurt.blog`) | 공유 게시물 태그(`forkbuild-publication`)에 대한 조회, 그다음 새로 공지된 게시물마다 서명된 기록 요청(방문 또는 **다시 확인** 한 번에 최대 20개) |
+| 둘러보기(저장소)나 작성자 페이지를 열 때 | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`), Blurt 노드(`rpc.blurt.blog`) | 공유 게시물 태그(`forkbuild-publication`)에 대한 조회, 그다음 새로 공지된 게시물마다 서명된 기록 요청(방문 또는 **다시 확인** 한 번에 최대 20개) |
 | 어떤 주의 건축 챌린지(**챌린지**)를 열 때 | Nostr 릴레이(`relay.damus.io`), Arweave 게이트웨이(`arweave.net`), Steem 노드(`api.steemit.com`), Blurt 노드(`rpc.blurt.blog`) | 그 주의 태그(`forkbuild-tag:<tag>`) 조회, 그다음 새로 알려진 참가작마다 서명된 레코드 요청(방문 또는 **다시 확인** 한 번에 최대 20개) |
 | **누가 찾을 수 있나요?**에서 **모두**를 고른 뒤 작품을 게시할 때 | **네트워크 설정**의 모든 Nostr 릴레이(`relay.damus.io`, `nos.lol`, `relay.primal.net`) | 작품 노트: 서명된 작품 자체, 그 태그, 게시한 사람의 서명된 배치. 이 기기의 운반 키로 서명합니다 |
 | 둘러보기, 누군가의 페이지, 어떤 주의 챌린지나 그 광장을 열 때 | **네트워크 설정**의 모든 Nostr 릴레이 | 작품 노트 조회(`forkbuild-build` 또는 그 주의 `forkbuild-tag:<tag>`). 새 노트는 이 기기에서 확인한 뒤 열며, 한 번 방문에 최대 40개입니다 |

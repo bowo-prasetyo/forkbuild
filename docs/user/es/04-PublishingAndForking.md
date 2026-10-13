@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 49fc848526dee427 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d63d0904aac96490 -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · **Español** · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Este es el corazón de ForkBuild. **Publicar** comparte su creación con el
 mundo. **Remezclar** permite que cualquiera copie una creación y la haga
@@ -28,13 +24,15 @@ evolucionar, conservando todo el historial.
    lo publique, ForkBuild le preguntará si otros pueden remezclarlo (vea
    [Dejar que otros la remezclen](#dejar-que-otros-la-remezclen)).
 4. Presione **Guardar** para que quede guardado.
-5. Haga clic en **Publicar**.
+5. Haga clic en **Publicar**. La primera vez, ForkBuild también pregunta
+   [¿Quién puede encontrarla?](#quién-puede-encontrarla)
 
-Su creación aparece ahora en **su propio Repositorio** en este
-dispositivo, donde puede buscarla, abrirla y bifurcarla, con su nombre como
-autor. Otras personas solo la ven cuando usted la comparte o la distribuye
-(consulte la nota de abajo). También recibe automáticamente una posición en
-el mundo compartido, así que **Explorar** siempre tiene adónde llevar a la
+Su creación aparece ahora en **Explorar** en este dispositivo, donde puede
+buscarla, abrirla y bifurcarla, con su nombre como autor. Otras personas la
+ven cuando comparte su enlace, o enseguida si eligió **Todos** en
+[¿Quién puede encontrarla?](#quién-puede-encontrarla). También recibe un
+lugar en el mundo compartido, junto a aquello con lo que va (consulte
+[Dónde se alza una construcción](#dónde-se-alza-una-construcción)), así que **Explorar** siempre tiene adónde llevar a la
 gente: consulte [Encontrar mundos](03-WorldView.md#encontrar-mundos).
 
 ### Entrar caminando
@@ -166,13 +164,64 @@ pestaña nueva (consulte [Lo que abre un enlace](#lo-que-abre-un-enlace)).
 Copiar el código, y que una inserción se muestre o se abra en ForkBuild,
 también se cuentan de forma anónima.
 
+## ¿Quién puede encontrarla?
+
+La primera vez que hace clic en **Publicar**, ForkBuild pregunta
+**¿Quién puede encontrarla?**:
+
+- **Todos**: cada construcción que publique también se envía a todos.
+  Aparece en **Explorar**, en el reto de la semana y su plaza, y en el
+  Mundo, para cualquiera que use ForkBuild, sin enlace, monedero ni cuenta
+  por ninguna de las partes. Justo después de Publicar, el Editor dice
+  «¡Publicada! Enviándola a todos…» y luego «¡Publicada! Ahora cualquiera
+  puede encontrarla en Explorar, en el desafío y en el Mundo.». Si no se
+  pudo llegar a las redes, lo dice y ofrece **Intentar de nuevo**; el
+  enlace funciona de todos modos.
+- **Solo quien reciba mi enlace**: la construcción se queda en este
+  dispositivo y dentro de su enlace. El aviso dice «Solo quien reciba su
+  enlace puede verla.» con **Que todos la encuentren**, que envía esta
+  construcción y hace de **Todos** la elección a partir de entonces.
+
+La respuesta se recuerda en este dispositivo. Después de que una
+construcción se haya enviado a todos, **Desde ahora, solo por enlace** en el
+mismo aviso deja sus próximas construcciones solo en sus enlaces.
+
+Cómo funciona: la construcción, firmada por usted, se envía como *nota de
+construcción* a los relays públicos de Nostr de **Configuración de red**,
+junto con sus etiquetas y el lugar que ocupa en el Mundo. La nota se firma
+con una clave que este dispositivo crea para ello (su *clave portadora*), no
+con su identidad, así que no hace falta instalar nada. Quien encuentra la
+nota la abre exactamente como abriría su enlace: primero se comprueban su
+firma y el contenido de la construcción, y una nota que no coincide se
+ignora. Una construcción demasiado grande para una nota (unos 2000
+bloques) lo dice; comparta su enlace o elija a dónde va, más abajo. Las
+construcciones publicadas sin nombre no se pueden enviar. Consulte
+[Privacidad](Privacy.md).
+
+### Dónde se alza una construcción
+
+Una construcción publicada se alza en el Mundo compartido junto a aquello
+con lo que va:
+
+- **un remix** se alza junto a la construcción que remezcla, así que un
+  árbol genealógico se convierte en una calle;
+- **todo lo demás** se suma al pueblo que crece alrededor de la plaza del
+  reto, anillo a anillo de dentro hacia fuera, empezando justo fuera de las
+  construcciones ya hechas que rodean su plaza, así que las construcciones
+  publicadas más o menos al mismo tiempo son vecinas, y las primeras se ven
+  desde la plaza;
+- **Construir aquí** sigue poniendo una construcción en el lugar que eligió,
+  y volver a publicar una construcción nunca la mueve.
+
+Todos los que encuentran la construcción la ven en el mismo lugar, porque su
+sitio viaja con ella, firmado por usted.
+
 ## A dónde va — enviar una construcción al publicar
 
 **Publicar** guarda su construcción en este dispositivo y en sus enlaces
-hasta que usted elija a dónde va. Justo después de su primer Publicar, el
-Editor dice «¡Publicada! Comparta su enlace. Para que cualquiera la
-encuentre sin enlace, elija a dónde va.» con un botón **Elegir a dónde va**
-junto al enlace, y **Descartar**.
+hasta que usted elija a dónde va, salvo el envío a todos (arriba). Justo
+después de Publicar, el aviso ofrece **Elegir a dónde va** (o **Más redes**,
+si ya se envió a todos) junto al enlace, y **Descartar**.
 
 **Elegir a dónde va** abre el diálogo **A dónde va**: elija un
 **Almacenamiento** (dónde se guarda la construcción misma: Arweave, IPFS, o
@@ -603,24 +652,32 @@ Una semana sin entradas todavía muestra en su lugar las familias de ejemplo (ve
 
 ### La plaza del reto
 
-En cuanto una semana tiene participaciones, **Recorrer la plaza** en su
-página te lleva a la vista del mundo, a un claro del mundo compartido donde
-las participaciones de la semana se alzan en anillos alrededor de una plaza
-abierta. Pasea entre ellas o elige una en el panel: **Navegar** vuela hasta
+**Pasear**, en el menú principal, te lleva a la plaza de esta semana, y
+también **Recorrer la plaza** en la página del reto en cuanto una semana
+tiene participaciones. Es la plaza del pueblo del mundo compartido: las seis
+construcciones ya hechas se alzan a su alrededor para todos, siempre, cada
+una con **Remezclar**, y el pueblo de construcciones publicadas crece justo
+fuera de ellas, con las participaciones de la semana entre ellas. Pasea entre ellas o elige una en el panel: **Navegar** vuela hasta
 ella, **Abrir** la abre como lo haría **Explorar**, y **Editar una copia**
 empieza tu propia copia.
 
-- Se alzan allí las primeras 24 participaciones publicadas, las más
-  antiguas más cerca del centro, así que una nueva se suma al borde
-  exterior. El resto está en la página del reto.
+- Cada participación se alza en el pueblo. Una cuyo lugar sabe este
+  dispositivo que está en el pueblo se alza allí, donde se asentó al
+  publicarse. Cualquier otra (una colocada lejos, como las construcciones
+  publicadas antes de que se asentaran en el pueblo, o una cuyo lugar este
+  dispositivo no conoce) se muestra, mientras estás en la plaza, en el lugar
+  donde se asentaría en el pueblo; su propio lugar sigue donde está.
+- El panel enumera las primeras 24 participaciones publicadas. El resto
+  está en la página del reto.
 - Las participaciones encontradas en las redes se obtienen y comprueban
   como al abrir su enlace. Si una no se puede obtener, se deja fuera, y el
   panel dice cuántas fueron.
 - Una participación cuyo autor eligió **Solo yo puedo colocarlo** no se
   alza en la plaza, porque ponerla allí sería colocarla. Sigue en la página
   del reto.
-- Las participaciones son piezas expuestas, no colocaciones: no se firma
-  ni se guarda nada para nadie, y desaparecen al salir. Como el resto de la
+- Una participación mostrada en su lugar es una pieza expuesta, no una
+  colocación: no se firma ni se guarda nada para nadie, y desaparece al
+  salir. Como el resto de la
   vista del mundo, la plaza muestra lo que conoce este dispositivo, así que
   dos visitantes pueden ver conjuntos distintos.
 

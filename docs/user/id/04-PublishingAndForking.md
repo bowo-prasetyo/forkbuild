@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 49fc848526dee427 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d63d0904aac96490 -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · **Bahasa Indonesia** · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Inilah inti ForkBuild. **Menerbitkan** membagikan karya Anda kepada dunia.
 **Remix** memungkinkan siapa pun menyalin sebuah karya dan
@@ -29,13 +25,17 @@ mengembangkannya — dengan seluruh riwayatnya tetap terjaga.
    bertanya apakah orang lain boleh me-remix-nya (lihat
    [Mengizinkan orang lain me-remix](#mengizinkan-orang-lain-me-remix)).
 4. Tekan **Simpan** agar tersimpan.
-5. Klik **Terbitkan**.
+5. Klik **Terbitkan**. Pertama kali, ForkBuild juga bertanya
+   [Siapa yang bisa menemukannya?](#siapa-yang-bisa-menemukannya)
 
-Karya Anda kini muncul di **Repositori Anda sendiri** di perangkat ini,
-tempat Anda dapat mencarinya, membukanya, dan mem-fork-nya, dengan nama
-Anda sebagai pembuatnya. Orang lain baru melihatnya setelah Anda
-membagikan atau mendistribusikannya (lihat catatan di bawah). Karya itu
-juga otomatis diberi posisi di dunia bersama, sehingga **Jelajahi** selalu
+Karya Anda kini muncul di **Jelajahi** di perangkat ini, tempat Anda dapat
+mencarinya, membukanya, dan mem-fork-nya, dengan nama Anda sebagai
+pembuatnya. Orang lain melihatnya setelah Anda membagikan tautannya, atau
+langsung jika Anda memilih **Semua orang** di
+[Siapa yang bisa menemukannya?](#siapa-yang-bisa-menemukannya). Karya itu
+juga diberi tempat di dunia bersama, di samping apa yang menjadi
+pasangannya (lihat
+[Tempat bangunan berdiri](#tempat-bangunan-berdiri)), sehingga **Jelajahi** selalu
 punya tempat untuk dituju — lihat
 [Menemukan dunia](03-WorldView.md#menemukan-dunia).
 
@@ -167,13 +167,66 @@ di tab baru (lihat
 Menyalin kode sematan, serta sematan yang ditampilkan atau dibuka di
 ForkBuild, juga dihitung secara anonim.
 
+## Siapa yang bisa menemukannya?
+
+Pertama kali Anda mengeklik **Terbitkan**, ForkBuild bertanya **Siapa yang
+bisa menemukannya?**:
+
+- **Semua orang**: setiap bangunan yang Anda terbitkan juga dikirim ke
+  semua orang. Bangunan itu muncul di **Jelajahi**, di tantangan minggu itu
+  dan alun-alunnya, dan di Dunia, bagi siapa pun yang memakai ForkBuild,
+  tanpa tautan, dompet, atau akun di kedua sisi. Tepat setelah Terbitkan,
+  Editor berkata "Diterbitkan! Sedang dikirim ke semua orang…", lalu
+  "Diterbitkan! Kini siapa pun bisa menemukannya di Jelajahi, di tantangan,
+  dan di Dunia." Jika jaringan tidak dapat dijangkau, Editor mengatakannya
+  dan menawarkan **Coba lagi**; tautannya tetap berfungsi.
+- **Hanya orang yang saya kirimi tautannya**: bangunan tetap di perangkat
+  ini dan di dalam tautannya. Pemberitahuannya berkata "Hanya orang yang
+  Anda kirimi tautannya yang bisa melihatnya." dengan **Biarkan semua orang
+  menemukannya**, yang mengirim bangunan ini dan menjadikan **Semua orang**
+  pilihan sejak saat itu.
+
+Jawabannya diingat di perangkat ini. Setelah sebuah bangunan dikirim ke
+semua orang, **Mulai sekarang hanya lewat tautan** di pemberitahuan yang sama
+menjaga bangunan Anda berikutnya hanya di tautannya.
+
+Cara kerjanya: bangunan, yang Anda tandatangani, dikirim sebagai *catatan
+bangunan* ke relay Nostr publik di **Pengaturan Jaringan**, bersama tag-nya
+dan tempatnya di Dunia. Catatan itu ditandatangani dengan kunci yang dibuat
+perangkat ini untuk keperluan itu (*kunci pembawa*-nya), bukan dengan
+identitas Anda, jadi tidak ada yang perlu dipasang. Siapa pun yang
+menemukan catatan itu membukanya persis seperti membuka tautan Anda: tanda
+tangan Anda dan isi bangunan diperiksa lebih dulu, dan catatan yang tidak
+cocok diabaikan. Bangunan yang terlalu besar untuk sebuah catatan (sekitar
+2.000 balok) mengatakannya; bagikan tautannya, atau pilih ke mana dikirim
+di bawah. Bangunan yang diterbitkan tanpa nama tidak bisa dikirim. Lihat
+[Privasi](Privacy.md).
+
+### Tempat bangunan berdiri
+
+Bangunan terbitan berdiri di Dunia bersama di samping apa yang menjadi
+pasangannya:
+
+- **remix** berdiri di samping bangunan yang di-remix-nya, sehingga pohon
+  keluarga menjadi sebuah jalan;
+- **yang lainnya** bergabung dengan desa yang tumbuh di sekeliling
+  alun-alun tantangan, cincin demi cincin dari dalam ke luar, mulai tepat
+  di luar bangunan siap pakai yang berdiri mengelilingi lapangannya,
+  sehingga bangunan yang diterbitkan sekitar waktu yang sama bertetangga,
+  dan yang pertama terlihat dari lapangan;
+- **Bangun di sini** tetap menaruh bangunan di tempat yang Anda pilih, dan
+  menerbitkan ulang bangunan tidak pernah memindahkannya.
+
+Semua orang yang menemukan bangunan itu melihatnya di tempat yang sama,
+karena tempatnya ikut bersamanya, ditandatangani oleh Anda.
+
 ## Ke mana dikirim — mengirim bangunan saat menerbitkan
 
 **Terbitkan** menyimpan bangunan Anda di perangkat ini dan di tautannya
-sampai Anda memilih ke mana dikirim. Tepat setelah Terbitkan pertama Anda,
-Editor berkata "Diterbitkan! Bagikan tautannya. Agar siapa pun bisa
-menemukannya tanpa tautan, pilih ke mana dikirim." dengan tombol **Pilih ke
-mana dikirim** di samping tautan, dan **Tutup**.
+sampai Anda memilih ke mana dikirim, kecuali pengiriman ke semua orang (di
+atas). Tepat setelah Terbitkan, pemberitahuannya menawarkan **Pilih ke mana
+dikirim** (atau **Jaringan lain**, setelah bangunan dikirim ke semua orang)
+di samping tautan, dan **Tutup**.
 
 **Pilih ke mana dikirim** membuka dialog **Ke mana dikirim**: pilih
 **Penyimpanan** (tempat bangunan itu sendiri disimpan: Arweave, IPFS, atau
@@ -599,25 +652,32 @@ Minggu yang belum punya entri menampilkan contoh keluarga sebagai gantinya (liha
 
 ### Alun-alun tantangan
 
-Begitu satu minggu punya karya, **Jelajahi alun-alun** di halamannya
-membawamu ke Tampilan Dunia, ke sebuah tanah lapang di dunia bersama tempat
-karya minggu itu berdiri melingkar mengelilingi alun-alun terbuka.
-Berjalanlah di antaranya, atau pilih satu di panel: **Navigasi** terbang ke
+**Jalan-jalan** di menu utama membawamu ke alun-alun minggu ini, begitu
+pula **Jelajahi alun-alun** di halaman tantangan begitu satu minggu punya
+karya. Itulah alun-alun desa di dunia bersama: enam bangunan siap pakai
+berdiri mengelilinginya untuk semua orang, selalu, masing-masing dengan
+**Remix**, dan desa bangunan terbitan tumbuh tepat di luarnya, dengan karya
+minggu itu di antaranya. Berjalanlah di antaranya, atau pilih satu di panel: **Navigasi** terbang ke
 sana, **Buka** membukanya seperti **Jelajahi**, dan **Edit Salinan** memulai
 salinanmu sendiri.
 
-- 24 karya pertama yang diterbitkan berdiri di sana, yang paling lama
-  paling dekat ke tengah, sehingga karya baru bergabung di tepi luar.
-  Sisanya ada di halaman tantangan.
+- Setiap karya berdiri di desa. Karya yang tempatnya diketahui perangkat
+  ini berada di desa berdiri di sana, tempat ia menetap saat diterbitkan.
+  Karya lainnya (yang ditempatkan jauh, seperti bangunan yang diterbitkan
+  sebelum bangunan menetap di desa, atau yang tempatnya tidak diketahui
+  perangkat ini) ditampilkan, selama kamu berada di alun-alun, di tempat
+  ia akan menetap di desa; tempatnya sendiri tetap di tempatnya.
+- Panel mendaftar 24 karya pertama yang diterbitkan. Sisanya ada di
+  halaman tantangan.
 - Karya yang ditemukan di jaringan diambil dan diperiksa seperti saat
   tautannya dibuka. Karya yang tidak bisa diambil ditinggalkan, dan panel
   menyebutkan berapa banyak.
 - Karya yang penerbitnya memilih **Hanya saya yang boleh menempatkannya**
   tidak berdiri di alun-alun, karena menaruhnya di sana sama dengan
   menempatkannya. Karya itu tetap di halaman tantangan.
-- Karya-karya itu adalah pajangan, bukan penempatan: tidak ada yang
-  ditandatangani atau disimpan untuk siapa pun, dan semuanya hilang saat kamu
-  pergi. Seperti bagian lain Tampilan Dunia, alun-alun menampilkan apa yang
+- Karya yang ditampilkan di tempatnya adalah pajangan, bukan penempatan:
+  tidak ada yang ditandatangani atau disimpan untuk siapa pun, dan karya itu
+  hilang saat kamu pergi. Seperti bagian lain Tampilan Dunia, alun-alun menampilkan apa yang
   diketahui perangkat ini, jadi dua pengunjung bisa melihat kumpulan yang
   berbeda.
 

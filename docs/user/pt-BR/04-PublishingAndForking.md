@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 49fc848526dee427 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d63d0904aac96490 -->
 # 04 — Publicar e bifurcar
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Este é o coração do ForkBuild. **Publicar** compartilha sua criação com o
 mundo. **Remixar** deixa qualquer pessoa copiar uma criação e fazê-la
@@ -28,13 +24,16 @@ evoluir — com todo o histórico preservado.
    ForkBuild pergunta se outras pessoas podem remixá-lo (veja
    [Deixando outras pessoas remixarem](#deixando-outras-pessoas-remixarem)).
 4. Pressione **Salvar** para guardá-la.
-5. Clique em **Publicar**.
+5. Clique em **Publicar**. Na primeira vez, o ForkBuild também pergunta
+   [Quem pode encontrá-la?](#quem-pode-encontrá-la)
 
-Sua criação agora aparece no **seu próprio Repositório** neste dispositivo,
-onde você pode pesquisá-la, abri-la e bifurcá-la, com seu nome como autor.
-As outras pessoas só a veem depois que você a compartilha ou distribui (veja
-a nota abaixo). Ela também recebe automaticamente uma posição no mundo
-compartilhado, para que **Explorar** sempre tenha aonde levar as pessoas —
+Sua criação agora aparece em **Explorar** neste dispositivo, onde você pode
+pesquisá-la, abri-la e bifurcá-la, com seu nome como autor. As outras
+pessoas a veem quando você compartilha o link dela, ou na hora se você
+escolheu **Todo mundo** em [Quem pode encontrá-la?](#quem-pode-encontrá-la).
+Ela também recebe um lugar no mundo compartilhado, ao lado daquilo a que
+pertence (veja [Onde uma construção fica](#onde-uma-construção-fica)), para
+que **Explorar** sempre tenha aonde levar as pessoas —
 veja [Encontrando mundos](03-WorldView.md#encontrando-mundos).
 
 ### Entrar andando
@@ -162,13 +161,65 @@ página da própria construção no ForkBuild em uma nova aba (veja
 Copiar o código, e uma incorporação ser mostrada ou aberta no ForkBuild,
 também são contados de forma anônima.
 
+## Quem pode encontrá-la?
+
+Na primeira vez que você clica em **Publicar**, o ForkBuild pergunta
+**Quem pode encontrá-la?**:
+
+- **Todo mundo**: cada construção que você publica também é enviada para
+  todo mundo. Ela aparece em **Explorar**, no desafio da semana e na praça
+  dele, e no Mundo, para qualquer pessoa que use o ForkBuild, sem link,
+  carteira ou conta de nenhum dos lados. Logo depois de Publicar, o Editor
+  diz "Publicada! Enviando para todo mundo…", depois "Publicada! Agora
+  qualquer pessoa pode encontrá-la em Explorar, no desafio e no Mundo." Se
+  não foi possível alcançar as redes, ele avisa e oferece **Tentar de
+  novo**; o link funciona de qualquer jeito.
+- **Só quem receber o meu link**: a construção fica neste dispositivo e
+  dentro do link dela. O aviso diz "Só quem receber o link pode vê-la." com
+  **Deixar todo mundo encontrar**, que envia esta construção e torna
+  **Todo mundo** a escolha daí em diante.
+
+A resposta fica lembrada neste dispositivo. Depois que uma construção foi
+enviada para todo mundo, **Daqui em diante, só por link** no mesmo aviso
+mantém suas próximas construções só nos links delas.
+
+Como funciona: a construção, assinada por você, é enviada como *nota de
+construção* aos relays públicos do Nostr em **Configurações de rede**,
+junto com as tags dela e o lugar onde ela fica no Mundo. A nota é assinada
+com uma chave que este dispositivo cria para isso (a *chave portadora*
+dele), não com a sua identidade, então não é preciso instalar nada. Quem
+encontra a nota a abre exatamente como abriria o seu link: a sua assinatura
+e o conteúdo da construção são conferidos primeiro, e uma nota que não
+confere é ignorada. Uma construção grande demais para uma nota (uns 2.000
+blocos) avisa isso; compartilhe o link dela, ou escolha para onde ela vai,
+abaixo. Construções publicadas sem nome não podem ser enviadas. Veja
+[Privacidade](Privacy.md).
+
+### Onde uma construção fica
+
+Uma construção publicada fica no Mundo compartilhado ao lado daquilo a que
+pertence:
+
+- **um remix** fica ao lado da construção que ele remixa, então uma árvore
+  genealógica vira uma rua;
+- **todo o resto** entra na vila que cresce ao redor da praça do desafio,
+  anel por anel, de dentro para fora, começando logo do lado de fora das
+  construções prontas que ficam ao redor da praça, então construções
+  publicadas mais ou menos ao mesmo tempo são vizinhas, e as primeiras ficam
+  à vista da praça;
+- **Construir aqui** continua pondo uma construção no lugar que você
+  escolheu, e publicar uma construção de novo nunca a move.
+
+Todos que encontram a construção a veem no mesmo lugar, já que o lugar dela
+viaja com ela, assinado por você.
+
 ## Para onde vai — enviando uma construção ao publicar
 
 **Publicar** mantém sua construção neste dispositivo e nos links dela até
-você escolher para onde ela vai. Logo depois do seu primeiro Publicar, o
-Editor diz "Publicada! Compartilhe o link. Para que qualquer pessoa a
-encontre sem link, escolha para onde ela vai." com um botão **Escolher para
-onde vai** ao lado do link, e **Dispensar**.
+você escolher para onde ela vai, fora o envio para todo mundo (acima). Logo
+depois de um Publicar, o aviso oferece **Escolher para onde vai** (ou
+**Mais redes**, depois que ela foi enviada para todo mundo) ao lado do
+link, e **Dispensar**.
 
 **Escolher para onde vai** abre o diálogo **Para onde vai**: escolha um
 **Armazenamento** (onde a construção em si fica: Arweave, IPFS, ou Steem ou
@@ -589,15 +640,22 @@ Uma semana ainda sem participações mostra as famílias de exemplo no lugar (ve
 
 ### A praça do desafio
 
-Assim que uma semana tem participações, **Passear pela praça** na página
-dela leva você à visão do mundo, a uma clareira no mundo compartilhado onde
-as participações da semana ficam em anéis ao redor de uma praça aberta.
-Passeie entre elas ou escolha uma no painel: **Navegar** voa até ela,
+**Passear**, no menu principal, leva você à praça desta semana, e
+**Passear pela praça** na página do desafio também, assim que uma semana
+tem participações. Ela é a praça da vila do mundo compartilhado: as seis
+construções prontas ficam ao redor dela para todo mundo, sempre, cada uma
+com **Remixar**, e a vila de construções publicadas cresce logo do lado de
+fora delas, com as participações da semana entre elas. Passeie entre elas ou escolha uma no painel: **Navegar** voa até ela,
 **Abrir** a abre como **Explorar** faria, e **Editar uma cópia** começa a
 sua própria cópia.
 
-- As primeiras 24 participações publicadas ficam lá, as mais antigas mais
-  perto do centro, então uma nova entra na borda de fora. As demais estão
+- Toda participação fica na vila. Uma cujo lugar este dispositivo sabe que
+  está na vila fica lá, onde se assentou quando foi publicada. Qualquer
+  outra (uma posicionada longe, como as construções publicadas antes de se
+  assentarem na vila, ou uma cujo lugar este dispositivo não conhece) é
+  mostrada, enquanto você está na praça, no lugar onde se assentaria na
+  vila; o lugar dela mesma continua onde está.
+- O painel lista as primeiras 24 participações publicadas. As demais estão
   na página do desafio.
 - Participações encontradas nas redes são buscadas e conferidas como ao
   abrir o link delas. Uma que não pode ser buscada fica de fora, e o painel
@@ -605,8 +663,9 @@ sua própria cópia.
 - Uma participação cujo autor escolheu **Só eu posso posicioná-lo** não
   fica na praça, já que colocá-la lá seria posicioná-la. Ela continua na
   página do desafio.
-- As participações são peças expostas, não posicionamentos: nada é
-  assinado nem guardado para ninguém, e elas somem quando você sai. Como o
+- Uma participação mostrada no lugar dela é uma peça exposta, não um
+  posicionamento: nada é assinado nem guardado para ninguém, e ela some
+  quando você sai. Como o
   resto da visão do mundo, a praça mostra o que este dispositivo conhece,
   então dois visitantes podem ver conjuntos diferentes.
 

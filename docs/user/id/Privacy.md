@@ -1,13 +1,9 @@
-<!-- translation-of: docs/Privacy.md source-hash: c3e2eacf000f9c51 -->
+<!-- translation-of: docs/Privacy.md source-hash: 8ab09781761d8e4a -->
 # Privasi
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · **Bahasa Indonesia** · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../../Privacy.md).
-<!-- /stale -->
 
 ForkBuild tidak memiliki akun dan tidak melacak Anda. ForkBuild menyimpan
 pekerjaan Anda di browser Anda sendiri dan berkomunikasi dengan komputer
@@ -39,10 +35,12 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
   obrolan, dan pesan yang diantrekan (tidak ada yang diberi tahu bahwa
   Anda mengikutinya, dan tidak ada informasi tentang mengikuti yang pernah
   dikirim);
-- profil avatar Anda, pengaturan (termasuk apakah Tampilan Dunia
-  memutar suara, seberapa keras, dalam 3D atau stereo, apakah Tampilan
-  Dunia menampilkan alat lanjutannya, apakah di sana selalu siang, apakah matahari dan bulan menimbulkan bayangan di sana, ke mana Terbitkan mengirim bangunan Anda, dan bahasa yang
-  Anda pilih; jika Anda belum memilih, ForkBuild membaca bahasa pilihan
+- profil avatar Anda (jika Anda menjelajahi Tampilan Dunia sebelum memilih
+  nama, Anda adalah tamu: avatar itu tidak disimpan di mana pun, bahkan di
+  sini, dan tidak pernah dikirim ke siapa pun), pengaturan (termasuk apakah Tampilan Dunia
+  memutar suara, seberapa keras, dalam 3D atau stereo, dan dengan atau tanpa musik, apakah Tampilan
+  Dunia menampilkan alat lanjutannya, apakah di sana selalu siang, apakah matahari dan bulan menimbulkan bayangan di sana, ke mana Terbitkan mengirim bangunan Anda, bahasa yang
+  Anda pilih, dan apakah tampilannya terang, gelap, atau mengikuti perangkat; jika Anda belum memilih, ForkBuild membaca bahasa pilihan
   browser di perangkat dan tidak mengirimnya ke mana pun), serta nama
   pengguna dan kredensial server TURN jika Anda memasukkannya di
   **Pengaturan Jaringan**;
@@ -221,7 +219,7 @@ bawah):
 
 Dan saat seseorang ikut tantangan membangun mingguan (**Ikut tantangan**,
 atau tantangan di **Baru** pada Editor): `/e/challenge-join`; dan saat seseorang membuka
-alun-alun tantangan suatu minggu di Tampilan Dunia: `/e/plaza-visit`. Dan setiap kali tampilan dunia dibuka: `/e/world-visit`; dan, sekali per kunjungan, saat bangunan milik orang lain terlihat di sana (bangunan yang tidak diterbitkan dan tidak bisa diedit perangkat ini; bangunan siap pakai di sekeliling alun-alun tidak dihitung): `/e/world-neighbour`. Dan, paling banyak sekali setiap kali ForkBuild dibuka, saat seseorang memakai salah satu sistem sampingan: berenang (`/e/swam`), menangkap hewan (`/e/animal-caught`), menghias bangunan dengan hewan (`/e/animal-decorated`), membawa sesuatu, hewan atau kendaraan yang disimpan (`/e/inventory-used`), mengirim pesan obrolan (`/e/chat-sent`), membuat atau menjawab panggilan suara (`/e/voice-call`), atau bergabung ke lobi publik (`/e/lobby-joined`). Tidak satu pun menyebut apa yang ditangkap, dikatakan, dipanggil, atau diikuti. Dan saat seseorang membuat tautan **Jalan di sini bersamaku** di Tampilan Dunia: `/e/walk-link`; dan saat seorang teman tiba lewat tautan itu: `/e/walk-joined`. Dan saat seseorang membuat tautan **Bangun bersamaku** di Editor: `/e/build-link`; dan saat seorang teman bergabung lewat tautan itu: `/e/build-joined`; dan pertama kali sebuah bangunan diterbitkan dengan mencantumkan teman-teman yang membangunnya bersama: `/e/publish-together`. Dan setiap kali sebuah bangunan diterbitkan: `/e/publish-found` jika dikirim ke semua orang, atau `/e/publish-link-only` jika hanya lewat tautannya.
+alun-alun tantangan suatu minggu di Tampilan Dunia: `/e/plaza-visit`. Dan setiap kali tampilan dunia dibuka: `/e/world-visit`; dan, sekali per kunjungan, saat bangunan milik orang lain terlihat di sana (bangunan yang tidak diterbitkan dan tidak bisa diedit perangkat ini; bangunan siap pakai di sekeliling alun-alun tidak dihitung): `/e/world-neighbour`. Dan, paling banyak sekali setiap kali ForkBuild dibuka, saat seseorang yang belum punya nama berjalan-jalan di sana sebagai tamu: `/e/guest-walk`; tidak ada yang dikirim tentang ke mana ia berjalan. Dan, paling banyak sekali setiap kali ForkBuild dibuka, saat seseorang memakai salah satu sistem sampingan: berenang (`/e/swam`), menangkap hewan (`/e/animal-caught`), menghias bangunan dengan hewan (`/e/animal-decorated`), membawa sesuatu, hewan atau kendaraan yang disimpan (`/e/inventory-used`), mengirim pesan obrolan (`/e/chat-sent`), membuat atau menjawab panggilan suara (`/e/voice-call`), atau bergabung ke lobi publik (`/e/lobby-joined`). Tidak satu pun menyebut apa yang ditangkap, dikatakan, dipanggil, atau diikuti. Dan saat seseorang membuat tautan **Jalan di sini bersamaku** di Tampilan Dunia: `/e/walk-link`; dan saat seorang teman tiba lewat tautan itu: `/e/walk-joined`. Dan saat seseorang membuat tautan **Bangun bersamaku** di Editor: `/e/build-link`; dan saat seorang teman bergabung lewat tautan itu: `/e/build-joined`; dan pertama kali sebuah bangunan diterbitkan dengan mencantumkan teman-teman yang membangunnya bersama: `/e/publish-together`. Dan setiap kali sebuah bangunan diterbitkan: `/e/publish-found` jika dikirim ke semua orang, atau `/e/publish-link-only` jika hanya lewat tautannya.
 
 Dan saat sebuah bangunan pertama kali diterbitkan dari browser ini
 (menerbitkannya lagi nanti tidak mengirim apa pun):
@@ -284,7 +282,9 @@ dibuka, dan setiap beberapa menit selama tabnya terlihat, aplikasi membaca
 pengumuman baru dari relay Nostr, gateway Arweave, serta node Steem dan Blurt yang
 dikonfigurasi di **Pengaturan Jaringan** (docs/AnnouncementIndex.md).
 Aplikasi hanya membaca pengumuman (penunjuk kecil dan klaim yang
-ditandatangani), tidak pernah konten, dan tidak menerbitkan apa pun. Semua
+ditandatangani), tidak pernah konten, dan tidak menerbitkan apa pun. Catatan
+bangunan, yang membawa bangunan utuh, hanya dibaca saat Anda membuka
+Jelajahi, halaman pembuat, tantangan, atau alun-alunnya (lihat tabel). Semua
 hal lainnya hanya terjadi saat Anda memakai fiturnya, dan setiap server
 dapat diubah di **Pengaturan Jaringan**. Setiap server melihat alamat IP
 Anda dan apa yang Anda minta darinya.
@@ -297,6 +297,7 @@ Anda dan apa yang Anda minta darinya.
 | Di situs resmi, Anda menyalin kode sematan sebuah bangunan, atau bangunan yang disematkan ditampilkan atau dibuka di ForkBuild (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut yang mana dari ketiganya, tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda ikut tantangan membangun mingguan atau membuka alun-alunnya (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/challenge-join` atau `/e/plaza-visit`, tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda membuka tampilan dunia, dan bangunan milik orang lain terlihat di sana (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/world-visit`, dan paling banyak satu dengan `/e/world-neighbour` per kunjungan, tanpa referrer dan tanpa cookie |
+| Di situs resmi, Anda berjalan-jalan di tampilan dunia sebelum memilih nama (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | paling banyak satu permintaan gambar dengan jalur tetap `/e/guest-walk` setiap kali ForkBuild dibuka, tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda berenang, menangkap hewan, menghias bangunan dengan hewan, membawa sesuatu, mengirim pesan obrolan, membuat atau menjawab panggilan suara, atau bergabung ke lobi publik (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | paling banyak satu permintaan gambar per pemuatan halaman untuk masing-masing, dengan jalur tetapnya (`/e/swam`, `/e/animal-caught`, `/e/animal-decorated`, `/e/inventory-used`, `/e/chat-sent`, `/e/voice-call`, `/e/lobby-joined`), tanpa referrer dan tanpa cookie |
 | Di situs resmi, Anda membuat tautan **Jalan di sini bersamaku** atau tiba lewat tautan itu (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/walk-link` atau `/e/walk-joined`, tanpa perujuk dan tanpa cookie |
 | Di situs resmi, Anda membuat tautan **Bangun bersamaku** atau bergabung lewat tautan itu (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/build-link` atau `/e/build-joined` (dan `/e/publish-together` saat bangunan yang dibuat bersama pertama kali diterbitkan dengan mencantumkan mereka), tanpa perujuk dan tanpa cookie |
@@ -310,7 +311,7 @@ Anda dan apa yang Anda minta darinya.
 | Koneksi rekan dimulai | server STUN (`stun.l.google.com`) | hanya permintaan alamat IP publik Anda |
 | Anda memulai koneksi rekan, jika server rendezvous menawarkan relay | `/turn-credentials` pada server rendezvous, lalu relay TURN-nya (Cloudflare) | permintaan kredensial relay berumur pendek, paling sering sekitar sekali sejam; lalu lintas yang direlay dienkripsi ujung ke ujung oleh WebRTC |
 | Aplikasi terbuka dan tabnya terlihat (sinkronisasi pengumuman di latar belakang) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag penemuan ForkBuild: tag Snapshot dan Komentar bersama, serta wilayah Penamaan Tempat dan sel peta yang pernah Anda kunjungi |
-| Anda membuka Repositori atau halaman pembuat | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag Publikasi bersama (`forkbuild-publication`); lalu permintaan catatan bertandatangan untuk setiap publikasi yang baru diumumkan, paling banyak 20 per kunjungan atau per **Periksa lagi** |
+| Anda membuka Jelajahi (Repositori) atau halaman pembuat | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag Publikasi bersama (`forkbuild-publication`); lalu permintaan catatan bertandatangan untuk setiap publikasi yang baru diumumkan, paling banyak 20 per kunjungan atau per **Periksa lagi** |
 | Anda membuka tantangan membangun suatu minggu (**Tantangan**) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag minggu itu (`forkbuild-tag:<tag>`); lalu permintaan rekaman bertanda tangan untuk setiap karya peserta yang baru diumumkan, paling banyak 20 per kunjungan atau **Periksa lagi** |
 | Anda menerbitkan bangunan setelah memilih **Semua orang** di **Siapa yang bisa menemukannya?** | setiap relay Nostr di **Pengaturan Jaringan** (`relay.damus.io`, `nos.lol`, `relay.primal.net`) | catatan bangunan: bangunan bertanda tangan itu sendiri, tag-nya, dan penempatan bertanda tangan dari penerbitnya, ditandatangani dengan kunci pembawa perangkat ini |
 | Anda membuka Jelajahi, halaman seseorang, tantangan suatu minggu, atau alun-alunnya | setiap relay Nostr di **Pengaturan Jaringan** | kueri catatan bangunan (`forkbuild-build`, atau `forkbuild-tag:<tag>` minggu itu); setiap catatan baru diperiksa dan dibuka di perangkat ini, paling banyak 40 per kunjungan |

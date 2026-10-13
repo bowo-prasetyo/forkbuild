@@ -1,13 +1,9 @@
-<!-- translation-of: docs/Privacy.md source-hash: c3e2eacf000f9c51 -->
+<!-- translation-of: docs/Privacy.md source-hash: 8ab09781761d8e4a -->
 # Privacidade
 
 <!-- languages -->
 [English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../../Privacy.md).
-<!-- /stale -->
 
 O ForkBuild não tem contas e não rastreia você. Ele guarda seu trabalho no
 seu próprio navegador e só conversa com outros computadores nos recursos que
@@ -37,9 +33,11 @@ que você publique, exporte ou envie:
 - pares conhecidos, amigos, as pessoas que você segue, bloqueios, histórico
   de conversas e mensagens na fila (ninguém é avisado de que você o segue, e
   nada sobre seguir é enviado);
-- seu perfil de avatar, as configurações (incluindo se a Visão do mundo toca
-  som, o volume, em 3D ou estéreo, se ela mostra suas ferramentas
-  avançadas, se lá é sempre dia, se lá o sol e a lua projetam sombras, para onde Publicar envia suas construções, e o idioma que você escolheu; quando você
+- seu perfil de avatar (passeando pela Visão do mundo antes de escolher um
+  nome, você é um convidado: esse avatar não é guardado em lugar nenhum, nem
+  aqui, e nunca é enviado a ninguém), as configurações (incluindo se a Visão do mundo toca
+  som, o volume, em 3D ou estéreo, e com ou sem música, se ela mostra suas ferramentas
+  avançadas, se lá é sempre dia, se lá o sol e a lua projetam sombras, para onde Publicar envia suas construções, o idioma que você escolheu, e se a aparência é clara, escura ou segue o dispositivo; quando você
   não escolheu um, o ForkBuild lê os idiomas preferidos do navegador no
   próprio dispositivo e não os envia para lugar nenhum), e o nome de usuário
   e a credencial de um servidor TURN, se você digitar um em **Configurações
@@ -209,7 +207,7 @@ páginas de outros sites (veja "Servidores que o ForkBuild contata" abaixo):
 
 E quando alguém entra no desafio de construção semanal (**Participar do
 desafio**, ou o desafio em **Novo** no Editor): `/e/challenge-join`; e quando alguém abre a
-praça do desafio de uma semana na visão do mundo: `/e/plaza-visit`. E cada vez que a vista do mundo abre: `/e/world-visit`; e, uma vez por visita, quando a construção de outra pessoa está à vista ali (uma que este dispositivo não publicou e não pode editar; as construções prontas em volta da praça não contam): `/e/world-neighbour`. E, no máximo uma vez a cada vez que o ForkBuild é aberto, quando alguém usa um dos sistemas secundários: nada (`/e/swam`), pega um animal (`/e/animal-caught`), decora uma construção com um (`/e/animal-decorated`), carrega algo, um animal ou um veículo guardado (`/e/inventory-used`), envia uma mensagem de chat (`/e/chat-sent`), faz ou atende uma chamada de voz (`/e/voice-call`) ou entra num lobby público (`/e/lobby-joined`). Nenhum diz o que foi pego, dito, chamado ou onde se entrou. E quando alguém cria um link **Passear aqui comigo** na visão do mundo: `/e/walk-link`; e quando um amigo chega por um deles: `/e/walk-joined`. E quando alguém cria um link **Construir comigo** no Editor: `/e/build-link`; e quando um amigo entra por um deles: `/e/build-joined`; e a primeira vez que uma construção é publicada com créditos aos amigos que a construíram juntos: `/e/publish-together`. E cada vez que uma construção é publicada: `/e/publish-found` quando foi enviada para todo mundo, ou `/e/publish-link-only` quando ficou só com o link.
+praça do desafio de uma semana na visão do mundo: `/e/plaza-visit`. E cada vez que a vista do mundo abre: `/e/world-visit`; e, uma vez por visita, quando a construção de outra pessoa está à vista ali (uma que este dispositivo não publicou e não pode editar; as construções prontas em volta da praça não contam): `/e/world-neighbour`. E, no máximo uma vez a cada vez que o ForkBuild é aberto, quando alguém ainda sem nome passeia lá como convidado: `/e/guest-walk`; nada sobre por onde a pessoa passeou é enviado. E, no máximo uma vez a cada vez que o ForkBuild é aberto, quando alguém usa um dos sistemas secundários: nada (`/e/swam`), pega um animal (`/e/animal-caught`), decora uma construção com um (`/e/animal-decorated`), carrega algo, um animal ou um veículo guardado (`/e/inventory-used`), envia uma mensagem de chat (`/e/chat-sent`), faz ou atende uma chamada de voz (`/e/voice-call`) ou entra num lobby público (`/e/lobby-joined`). Nenhum diz o que foi pego, dito, chamado ou onde se entrou. E quando alguém cria um link **Passear aqui comigo** na visão do mundo: `/e/walk-link`; e quando um amigo chega por um deles: `/e/walk-joined`. E quando alguém cria um link **Construir comigo** no Editor: `/e/build-link`; e quando um amigo entra por um deles: `/e/build-joined`; e a primeira vez que uma construção é publicada com créditos aos amigos que a construíram juntos: `/e/publish-together`. E cada vez que uma construção é publicada: `/e/publish-found` quando foi enviada para todo mundo, ou `/e/publish-link-only` quando ficou só com o link.
 
 E na primeira vez que uma construção é publicada a partir deste navegador
 (publicá-la de novo depois não envia nada):
@@ -269,7 +267,10 @@ sozinha: uns 10 segundos depois de o app abrir, e a cada poucos minutos
 enquanto a aba dele está visível, ele lê anúncios novos dos relays do Nostr,
 do gateway do Arweave e dos nós do Steem e do Blurt configurados em **Configurações de
 rede** (docs/AnnouncementIndex.md). Ele só lê anúncios (pequenos ponteiros e
-declarações assinadas), nunca conteúdo, e não publica nada. Todo o resto só
+declarações assinadas), nunca conteúdo, e não publica nada. As notas de
+construção, que levam construções inteiras, só são lidas quando você abre
+Explorar, a página de um autor, o desafio ou a praça dele (veja a tabela).
+Todo o resto só
 acontece quando você usa o recurso, e cada servidor pode ser trocado em
 **Configurações de rede**. Cada servidor vê seu endereço IP e o que você
 pede a ele.
@@ -282,6 +283,7 @@ pede a ele.
 | No site oficial, você copia o código para incorporar de uma construção, ou uma construção incorporada é mostrada ou aberta no ForkBuild (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com um caminho fixo dizendo qual dos três casos foi, sem referenciador e sem cookie |
 | No site oficial, você entra no desafio de construção semanal ou abre a praça dele (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma requisição de imagem com o caminho fixo `/e/challenge-join` ou `/e/plaza-visit`, sem referenciador e sem cookie |
 | No site oficial, você abre a vista do mundo, e a construção de outra pessoa está à vista ali (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma requisição de imagem com o caminho fixo `/e/world-visit`, e no máximo uma com `/e/world-neighbour` por visita, sem referenciador e sem cookie |
+| No site oficial, você passeia pela vista do mundo antes de escolher um nome (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | no máximo uma requisição de imagem com o caminho fixo `/e/guest-walk` a cada vez que o ForkBuild é aberto, sem referenciador e sem cookie |
 | No site oficial, você nada, pega um animal, decora uma construção com um, carrega algo, envia uma mensagem de chat, faz ou atende uma chamada de voz ou entra num lobby público (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | no máximo uma requisição de imagem por carregamento de página para cada um, com seu caminho fixo (`/e/swam`, `/e/animal-caught`, `/e/animal-decorated`, `/e/inventory-used`, `/e/chat-sent`, `/e/voice-call`, `/e/lobby-joined`), sem referenciador e sem cookie |
 | No site oficial, você cria um link **Passear aqui comigo** ou chega por um deles (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com o caminho fixo `/e/walk-link` ou `/e/walk-joined`, sem referenciador e sem cookie |
 | No site oficial, você cria um link **Construir comigo** ou entra por um deles (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com o caminho fixo `/e/build-link` ou `/e/build-joined` (e `/e/publish-together` quando uma construção feita em conjunto é publicada pela primeira vez com os créditos deles), sem referenciador e sem cookie |
@@ -295,7 +297,7 @@ pede a ele.
 | Uma conexão entre pares começa | servidores STUN (`stun.l.google.com`) | nada além de um pedido do seu endereço IP público |
 | Você começa uma conexão entre pares, se o servidor de encontro oferece um relay | o `/turn-credentials` do servidor de encontro, e depois o relay TURN dele (Cloudflare) | um pedido de credenciais de relay de curta duração, no máximo cerca de uma vez por hora; o tráfego retransmitido é criptografado de ponta a ponta pelo WebRTC |
 | O app está aberto e a aba visível (sincronização de anúncios em segundo plano) | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | consultas pelas etiquetas de descoberta do ForkBuild: as etiquetas compartilhadas de Snapshot e de Comentários, e as regiões de nomes de lugares e células do mapa que você visitou |
-| Você abre o Repositório ou a página de um autor | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | uma consulta pela etiqueta compartilhada de publicações (`forkbuild-publication`); depois um pedido do registro assinado de cada publicação recém-anunciada, no máximo 20 por visita ou por **Verificar de novo** |
+| Você abre Explorar (o Repositório) ou a página de um autor | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | uma consulta pela etiqueta compartilhada de publicações (`forkbuild-publication`); depois um pedido do registro assinado de cada publicação recém-anunciada, no máximo 20 por visita ou por **Verificar de novo** |
 | Você abre o desafio de construção de uma semana (**Desafio**) | relays do Nostr (`relay.damus.io`), um gateway do Arweave (`arweave.net`), nós do Steem (`api.steemit.com`), nós do Blurt (`rpc.blurt.blog`) | uma consulta pela tag dessa semana (`forkbuild-tag:<tag>`); depois, uma requisição do registro assinado de cada participação recém-anunciada, no máximo 20 por visita ou **Verificar de novo** |
 | Você publica uma construção depois de escolher **Todo mundo** em **Quem pode encontrá-la?** | cada relay do Nostr em **Configurações de rede** (`relay.damus.io`, `nos.lol`, `relay.primal.net`) | uma nota de construção: a própria construção assinada, as tags e o posicionamento assinado de quem a publicou, assinada com a chave portadora deste dispositivo |
 | Você abre Explorar, a página de uma pessoa, o desafio de uma semana ou a praça dele | cada relay do Nostr em **Configurações de rede** | uma consulta de notas de construção (`forkbuild-build`, ou `forkbuild-tag:<tag>` da semana); cada nota nova é conferida e aberta neste dispositivo, no máximo 40 por visita |

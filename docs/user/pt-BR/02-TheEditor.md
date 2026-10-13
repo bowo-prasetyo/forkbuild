@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 292450f615f65312 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 0597b11a718701f3 -->
 # 02 — O Editor
 
 <!-- languages -->
 [English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../02-TheEditor.md).
-<!-- /stale -->
 
 O Editor é onde você constrói. Este guia mostra as ferramentas, como
 selecionar e transformar blocos e como organizar sua construção com grupos.
@@ -28,9 +24,9 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
 └──────────────────────┴──────────────────────────────────────┘
 ```
 
-- **Barra de ferramentas** — salvar, publicar, começar uma criação nova,
-  exportar ou importar um documento como arquivo, reabrir os recentes e abrir
-  a sobreposição **⌨ Atalhos** (também `?`).
+- **Barra de ferramentas** — primeiro **Salvar**, **Publicar** e **Novo**,
+  depois **Arquivo**, um menu com **Exportar**, **Modelo 3D** e **Importar**;
+  reabrir os recentes e abrir a sobreposição **⌨ Atalhos** (também `?`).
 - **Ferramentas** — alterne entre **Selecionar** (`1`) e **Colocar** (`2`).
   **Colocar** fica destacado enquanto você coloca um bloco ou uma estrutura.
 - **Título do documento** — o nome da criação aberta. Clique em **✎** para
@@ -84,6 +80,16 @@ ainda não podem fazer nada:
 > de comandos** — uma lista pesquisável, por nome, de todas as ações deste
 > guia.
 
+## Experimente agora: uma casa para terminar
+
+**Experimente agora**, no **Início**, abre uma casa sua que ainda não está
+pronta: as paredes estão de pé e o cômodo está mobiliado, mas ela não tem
+telhado. Um cartão **Sua tarefa: colocar o telhado** no alto das ferramentas
+avisa isso. Clique em **Pegar o telhado** (ele escolhe
+**Telhado de quatro águas 6x6** e muda para Colocar) e depois em qualquer
+lugar da casa: o telhado vai para cima das paredes. Então o cartão diz que
+a casa agora é sua. Publique-a e entre andando, ou continue construindo.
+
 ## Sua primeira construção
 
 Na primeira vez que você abre o Editor em um dispositivo, um cartão **Sua
@@ -118,9 +124,13 @@ já tem trabalho salvo começa com o guia oculto.
 ### Ferramenta Colocar (`2`)
 
 Escolha um bloco na paleta, passe o mouse pela área de visualização e
-clique para colocá-lo. Um fantasma translúcido mostra exatamente onde o
-bloco vai parar. Passe o mouse sobre a face de um bloco existente para
-empilhar ou prender.
+clique para colocá-lo. Sem nenhum bloco escolhido ainda, Colocar começa
+com um **Cubo**, então o primeiro clique sempre coloca alguma coisa. Um
+fantasma translúcido mostra exatamente onde o bloco vai parar. Passe o mouse
+sobre a face de um bloco existente para empilhar ou prender. Um bloco posto
+em cima de outro se apoia no bloco mais alto embaixo dele, não dentro dele:
+um telhado solto no meio do piso de uma casa fica sobre as paredes, e uma
+viga atravessada em dois postes, sobre os postes.
 
 > **Dica:** Pressione **Esc** para voltar à ferramenta Selecionar.
 
@@ -561,12 +571,20 @@ Enquanto você constrói, toca uma música suave, um pouco mais animada que a da
 
 - **Salvar** (`Ctrl+S`) — guarda seu trabalho neste dispositivo.
 - **Publicar** — compartilha com todo mundo (veja
-  [Publicar e bifurcar](04-PublishingAndForking.md)).
+  [Publicar e bifurcar](04-PublishingAndForking.md)). Publicar também salva.
+  Uma construção começada a partir de uma pronta que ainda não tem nada seu
+  é perguntada uma vez: **Continuar construindo** ou **Publicar mesmo
+  assim**. A mensagem depois disso é uma barra só: **Entrar andando** e
+  **Copiar link**, com **Mais formas de compartilhar** reunindo o próprio
+  link, **Salvar imagem** e **Incorporar**. Um lembrete para adicionar uma
+  frase secreta à identidade com que você publicou espera sua próxima
+  publicação quando essa identidade acabou de ser criada.
 - **Novo** — começa algo novo: um **Terreno vazio**, ou uma das
   construções prontas (um castelo, uma ilha do porto, uma praça da vila, uma
   casa, um moinho e uma ponte) como sua própria cópia, vista inteira. Se o
   que está aberto tem alterações não salvas, Novo avisa primeiro; salve
   para mantê-las.
+- **Arquivo** reúne os três seguintes:
 - **Exportar** — baixa a criação atual como arquivo JSON, para guardar uma
   cópia ou levá-la a outro dispositivo. Os arquivos usam um formato compacto
   que guarda os blocos como uma tabela.
@@ -636,7 +654,7 @@ colocar, mover, mudar de cor ou excluir aparece nas duas telas.
 
 ## Baixando um modelo 3D
 
-**Modelo 3D** na barra de ferramentas baixa o que está aberto como um
+**Modelo 3D**, em **Arquivo** na barra de ferramentas, baixa o que está aberto como um
 arquivo que outros programas 3D abrem, feito neste dispositivo (nada é
 enviado):
 
@@ -665,6 +683,17 @@ compartilhada oferece os mesmos downloads quando a licença permite cópias
 - **Arrastar** — orbitar em torno da cena
 - **Rolar** — aproximar e afastar
 - **Home** — voltar a câmera à visualização padrão
+
+Uma construção abre vista de cima, em ângulo, enquadrada inteira.
+
+### Ver por dentro
+
+**Ver por dentro**, no alto à esquerda da vista (no alto à direita no
+celular, embaixo de **Ferramentas**), corta a construção acima do térreo,
+como a Visão do mundo faz quando você entra: as paredes ficam mais ou menos
+na altura da cabeça e os cômodos, com os móveis, aparecem de cima. Construa
+neles como sempre: um clique passa pelo que foi cortado. **Mostrar inteira**
+desenha tudo de novo. Nada é removido; só muda o que é desenhado.
 
 ## Em um celular ou tablet
 
