@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 84ecfec9734a26aa -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: debe706fb81d65f3 -->
 # 02 — 에디터
 
 <!-- languages -->
@@ -477,7 +477,7 @@ ForkBuild에서는 선택을 정밀하게 다룰 수 있습니다:
 고르기 전까지는 다른 사람이 포크할 수 없습니다. 설명은 **둘러보기** 카드에 짧게
 표시되고 검색도 됩니다. 라이선스는 다른 사람이 포크할 수 있는지, 어떻게
 할 수 있는지를 정합니다. 각 라이선스의 뜻은
-[게시와 포크](04-PublishingAndForking.md)를 보세요.
+[게시와 리믹스](04-PublishingAndForking.md)를 보세요.
 
 긴 설명은 약간의 서식을 쓰면 읽기 쉬워집니다. 서식은 문서 정보 패널, 월드
 보기의 위치 탐색기, Steem과 Blurt 게시물에 표시됩니다.
@@ -521,7 +521,7 @@ Blurt 게시물에는 ForkBuild 자체 태그 뒤에 표시되므로, Blurt를 �
 ## 저장, 게시, 새로 시작
 
 - **저장** (`Ctrl+S`) — 작업을 이 기기에 보관합니다.
-- **게시** — 모두와 공유합니다([게시와 포크](04-PublishingAndForking.md)
+- **게시** — 모두와 공유합니다([게시와 리믹스](04-PublishingAndForking.md)
   참고). 게시하면 저장도 됩니다. 미리 지어진 작품에서 시작해 아직 내 것이
   하나도 없는 작품은 한 번 묻습니다: **계속 만들기** 또는 **그래도 게시하기**.
   그다음 메시지는 하나의 막대입니다: **안으로 걸어 들어가기**와 **링크 복사**,

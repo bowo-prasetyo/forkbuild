@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 84ecfec9734a26aa -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: debe706fb81d65f3 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -552,7 +552,7 @@ documento nuevo empieza sin licencia, lo que significa que nadie más puede
 bifurcarlo hasta que usted elija una. La descripción aparece como un
 fragmento en su tarjeta de **Explorar** y también se puede buscar allí; la
 licencia controla si otras personas pueden bifurcarlo, y cómo. Consulte
-[Publicar y bifurcar](04-PublishingAndForking.md) para saber qué significa
+[Publicar y remezclar](04-PublishingAndForking.md) para saber qué significa
 cada licencia.
 
 Una descripción larga se lee mejor con un poco de formato, que muestran el
@@ -605,7 +605,7 @@ Mientras construye suena una música suave, algo más animada que la de la Vista
 
 - **Guardar** (`Ctrl+S`): conserva su trabajo en este dispositivo.
 - **Publicar**: lo comparte con todos (consulte
-  [Publicar y bifurcar](04-PublishingAndForking.md)). Publicar también la
+  [Publicar y remezclar](04-PublishingAndForking.md)). Publicar también la
   guarda. A una construcción empezada a partir de una ya hecha que todavía
   no tiene nada suyo se le pregunta una vez: **Seguir construyendo** o
   **Publicar de todos modos**. El mensaje que sigue es una sola barra:

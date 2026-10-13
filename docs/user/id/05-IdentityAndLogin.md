@@ -1,15 +1,15 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 9cd714dbbc4a41d4 -->
-# 05 — Identitas & Masuk
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 6c3356512aea6399 -->
+# 05 — Nama & Identitas Anda
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · **Bahasa Indonesia** · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
-ForkBuild tidak memiliki kata sandi dan tidak ada server akun pusat.
-**Identitas Anda adalah pasangan kunci kriptografis yang tersimpan di
-browser ini** — kunci yang sama yang menandatangani semua yang Anda bangun,
-terbitkan, kirim sebagai pesan, atau pindahkan. Panduan ini membahas cara
-membuat, melindungi, dan mencadangkan identitas itu.
+ForkBuild tidak memakai kata sandi atau akun. **Di balik nama Anda ada
+sebuah identitas: pasangan kunci kriptografis yang tersimpan di browser
+ini** — kunci yang sama yang menandatangani semua yang Anda terbitkan,
+kirim sebagai pesan, atau pindahkan. Panduan ini membahas cara memilih
+nama, melindunginya dengan frasa sandi, dan mencadangkannya.
 
 ## Membuat identitas
 

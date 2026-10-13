@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 941edcaf2e7249c7 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 0f7d63110556987a -->
 # 13 — Vos données : sauvegarder et restaurer
 
 <!-- languages -->
@@ -200,7 +200,7 @@ se déplacent qu’avec une sauvegarde complète.
 
 Une création que vous **Publiez** n’est stockée que sur cet appareil,
 jusqu’à ce que vous la distribuiez (voir
-[Publier et forker](04-PublishingAndForking.md)). Sa carte dans **Explorer**
+[Publier et remixer](04-PublishingAndForking.md)). Sa carte dans **Explorer**
 indique où cet appareil a enregistré sa distribution, par exemple
 **Stocké sur IPFS · Annoncé sur Nostr** : où la construction ou sa
 Déclaration signée a été envoyée (IPFS, Arweave, Steem ou Blurt) et où elle

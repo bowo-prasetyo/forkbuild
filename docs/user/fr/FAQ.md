@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: d0ced791059d2485 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 06d073f252435c51 -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -51,7 +51,7 @@ lister dans *votre* **Explorer**. Pour qu’elle arrive à votre ami :
   expérimentale, sur Steem ou Blurt) et l’annonce, pour qu’on puisse la trouver
   sans être connecté à vous.
 
-Voir [Publier et forker](04-PublishingAndForking.md#partager-avec-les-pairs-connectés).
+Voir [Publier et remixer](04-PublishingAndForking.md#partager-avec-les-pairs-connectés).
 
 ### Comment rendre mon travail accessible à tous ?
 
@@ -136,7 +136,7 @@ Non. La phrase secrète est le seul moyen de déchiffrer la clé de cette
 identité, et aucun serveur n’en détient de copie. Si vous avez exporté
 l’identité, il vous faut quand même la phrase secrète choisie pour
 l’export. Sinon, créez une nouvelle identité. Voir
-[Identité et connexion](05-IdentityAndLogin.md).
+[Votre nom et votre identité](05-IdentityAndLogin.md).
 
 ### Pourquoi mon identité se verrouille-t-elle sans cesse ?
 

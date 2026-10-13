@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 84ecfec9734a26aa -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: debe706fb81d65f3 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -562,7 +562,7 @@ dire que personne d’autre ne peut le forker tant que vous n’en choisissez
 pas une. La description apparaît comme extrait sur sa carte dans **Explorer** et y
 est aussi consultable par recherche ; la licence détermine si — et
 comment — d’autres personnes peuvent la forker. Voir
-[Publier et forker](04-PublishingAndForking.md) pour la signification de
+[Publier et remixer](04-PublishingAndForking.md) pour la signification de
 chaque licence.
 
 Une longue description se lit mieux avec un peu de mise en forme, que
@@ -616,7 +616,7 @@ Une musique douce accompagne la construction, un peu plus vive que celle de la V
 
 - **Enregistrer** (`Ctrl+S`) — garder votre travail sur cet appareil.
 - **Publier** — le partager avec tout le monde (voir
-  [Publier et forker](04-PublishingAndForking.md)). Publier l’enregistre
+  [Publier et remixer](04-PublishingAndForking.md)). Publier l’enregistre
   aussi. Pour une construction commencée à partir d’une construction toute
   prête qui ne contient encore rien de vous, la question est posée une
   fois : **Continuer à construire**, ou **Publier quand même**. Le message

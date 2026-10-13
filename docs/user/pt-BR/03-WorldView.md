@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: ccdc007eba11d015 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: bf4c383f3135e813 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -403,7 +403,7 @@ O que é copiado depende do que você escolheu:
   não o Mundo em que ela está.
 
 O ForkBuild avisa assim que sua cópia fica pronta (veja
-[Publicar e bifurcar](04-PublishingAndForking.md)). Se não der para fazer
+[Publicar e remixar](04-PublishingAndForking.md)). Se não der para fazer
 a cópia, uma caixa de diálogo **Não dá para fazer uma cópia** explica o
 motivo, normalmente porque a licença da construção não permite cópias ou
 porque ela ainda não pode ser buscada, e **Voltar à construção** leva você
@@ -798,7 +798,7 @@ automaticamente sua própria cópia editável, com o título *"Bifurcação de
 &lt;nome original&gt;"*, e um aviso curto ("Sua própria cópia editável foi
 criada; … não muda") informa isso. Ela segue as mesmas regras de licença que
 qualquer outra bifurcação (veja
-[Publicar e bifurcar](04-PublishingAndForking.md#bifurcar-torne-a-sua)).
+[Publicar e remixar](04-PublishingAndForking.md#bifurcar-torne-a-sua)).
 
 ## Histórico — visualizar e restaurar estados anteriores
 
@@ -1335,4 +1335,4 @@ novo, depois da mesma verificação de conteúdo.
 ## E agora?
 
 Pronto para compartilhar o que você fez, ou remixar o trabalho de outra
-pessoa? Continue em **[Publicar e bifurcar](04-PublishingAndForking.md)**.
+pessoa? Continue em **[Publicar e remixar](04-PublishingAndForking.md)**.

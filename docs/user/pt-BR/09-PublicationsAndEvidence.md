@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 60b09baf9d911d48 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 554ed0580b2c3b36 -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -48,7 +48,7 @@ declaração:
 | O que compartilha | Um Documento ou Mundo | Um registro assinado: um Mundo compartilhado, a autoria de uma estrutura ou um nome de lugar |
 | Onde você vê | Repositório, página do autor, Visão do mundo | A página **Publicações** |
 | O que você faz com ele | Abrir, explorar, bifurcar | Verificar, buscar o conteúdo, distribuir e ancorar |
-| Guia | [Publicar e bifurcar](04-PublishingAndForking.md) | Este |
+| Guia | [Publicar e remixar](04-PublishingAndForking.md) | Este |
 
 **Publicar** sozinho não coloca um Mundo na página Publicações. **Compartilhar
 com pares** coloca: ele assina o Mundo como um **Mundo compartilhado** que
@@ -500,5 +500,5 @@ pinning, para continuar.
 ## E agora?
 
 Compartilhar suas construções continua sendo em
-[Publicar e bifurcar](04-PublishingAndForking.md). Para ir mais longe aqui,
+[Publicar e remixar](04-PublishingAndForking.md). Para ir mais longe aqui,
 continue com [Evidências e armazenamento](11-EvidenceAndStorage.md).

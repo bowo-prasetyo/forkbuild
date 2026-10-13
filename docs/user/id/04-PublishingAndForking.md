@@ -1,19 +1,21 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ba7ee7cf8bfc4b8a -->
-# 04 — Penerbitan & Fork
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+# 04 — Penerbitan & Remix
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · **Bahasa Indonesia** · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
 
-Inilah inti ForkBuild. **Menerbitkan** membagikan karya Anda kepada dunia.
-**Remix** memungkinkan siapa pun menyalin sebuah karya dan
-mengembangkannya — dengan seluruh riwayatnya tetap terjaga.
+Inilah inti ForkBuild. **Menerbitkan** membagikan bangunan Anda kepada
+dunia. **Remix** memungkinkan siapa pun membuat salinan sendiri dari sebuah
+bangunan dan mengembangkannya, dengan seluruh riwayatnya tetap terjaga.
+(Beberapa pesan dan dokumen pengembang menyebut remix sebagai *fork*,
+seperti dalam ForkBuild.)
 
 ## Menerbitkan karya Anda
 
 1. Bangun sesuatu di Editor.
 2. Miliki sebuah nama, dan pastikan nama itu tidak terkunci (lihat
-   [Identitas & Masuk](05-IdentityAndLogin.md)). Menerbitkan
+   [Nama & Identitas Anda](05-IdentityAndLogin.md)). Menerbitkan
    menandatangani bangunan itu dengannya. Jika Anda belum punya nama,
    **Terbitkan** meminta Anda memilih nama lebih dulu; **Terbitkan tanpa
    tanda tangan** di sana menerbitkannya tanpa pembuat dan tanpa tautan.

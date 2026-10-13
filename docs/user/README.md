@@ -44,7 +44,7 @@ Everything you need to build, share, remix and walk around with friends.
    looking at things, **Build here**, **Walk here with me**, residents,
    and **Edit a Copy** to take something into the Editor. Its network
    tools wait under **Show advanced tools**.
-4. **[Publishing & Forking](04-PublishingAndForking.md)** —
+4. **[Publishing & Remixing](04-PublishingAndForking.md)** —
    publishing and sharing a link, choosing where your builds go,
    licenses, remixing, Explore and its ready-made builds, the
    weekly challenge and its plaza, and family trees. For everything a
@@ -62,9 +62,9 @@ The machinery underneath: your identity in detail, direct connections to
 other people, the networks a build can be sent to, and the experimental
 tools. You don't need any of it to play.
 
-- **[Identity & Login](05-IdentityAndLogin.md)** — your cryptographic
-  identity, the vault (locking/unlocking), backing it up with
-  export/import, and managing identities from **My Identities**.
+- **[Your Name & Identity](05-IdentityAndLogin.md)** — your name and the
+  cryptographic identity behind it, the vault (locking/unlocking), backing
+  it up with export/import, and managing identities from **My Identities**.
 - **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)** —
   connecting directly to other people, remembering, friending, following,
   blocking, automatic reconnection, and your own TURN relay.

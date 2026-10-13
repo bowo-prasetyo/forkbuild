@@ -214,11 +214,13 @@ the toolbar rather than under **File**. **Fixed.**
    the main screens, in every language"). Only the light look is shown.
    Until then the guide had no screenshots or diagrams apart from two ASCII
    sketches.
-3. **Page titles still use protocol words.** "Publishing & Forking" and
-   "Identity & Login" name a page by words Pillars says not to show a
-   newcomer (fork, Login). Renaming changes file names or headings that
-   seven translations and the app's About link depend on, so it's left for
-   a deliberate change.
+3. **Page titles still use protocol words.** *Done the same day:* the
+   pages are now titled "Publishing & Remixing" and "Your Name & Identity"
+   in every language, and every link names them so (see the roadmap entry
+   "Two guide pages named in the player's words"). Their file names stay
+   `04-PublishingAndForking.md` and `05-IdentityAndLogin.md`, so links into
+   them from outside the guide keep working. Until then the titles used
+   words Pillars says not to show a newcomer (fork, Login).
 4. **World View is still long** (1,275 lines). Splitting it into "Visiting
    the World" and "World View: advanced tools" is the natural next step
    now that the advanced material sits together.

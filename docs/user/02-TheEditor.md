@@ -502,7 +502,7 @@ the **Edit Metadata** button). A new document starts with no license, which
 means nobody else can fork it until you choose one. The description shows up as a
 snippet on its card in Explore and is searchable there too; the license
 controls whether — and how — other people are allowed to fork it. See
-[Publishing & Forking](04-PublishingAndForking.md) for what each license
+[Publishing & Remixing](04-PublishingAndForking.md) for what each license
 means.
 
 A long description reads better with a little formatting, which the
@@ -552,7 +552,7 @@ Music plays softly while you build, a little livelier than World View's. The **�
 
 - **Save** (`Ctrl+S`) — keep your work on this device.
 - **Publish** — share it with everyone (see
-  [Publishing & Forking](04-PublishingAndForking.md)). Publishing also saves
+  [Publishing & Remixing](04-PublishingAndForking.md)). Publishing also saves
   it. A build started from a ready-made one that has nothing of your own in
   it yet is asked about once: **Keep building**, or **Publish anyway**. The
   message after it is one bar: **Walk inside it** and **Copy link**, with

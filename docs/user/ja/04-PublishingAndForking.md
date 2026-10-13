@@ -1,19 +1,21 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ba7ee7cf8bfc4b8a -->
-# 04 — 公開とフォーク
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+# 04 — 公開とリミックス
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · **日本語** · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
 
 ここが ForkBuild の中心です。**公開** は、あなたの作品を世界と共有
-します。**リミックス** は、誰でも作品をコピーして発展させられるように
-します。履歴はすべて保たれます。
+します。**リミックス** は、誰でも作品の自分用のコピーを作って発展させ
+られるようにします。履歴はすべて保たれます。（一部のメッセージや開発者
+向けのドキュメントでは、ForkBuild の名前のとおり、リミックスを *フォーク*
+と呼びます。）
 
 ## 作品を公開する
 
 1. エディターで何かを作ります。
 2. 名前を決めて、そのロックが解除されていることを確認します
-   （[アイデンティティとログイン](05-IdentityAndLogin.md) を参照）。公開
+   （[名前とアイデンティティ](05-IdentityAndLogin.md) を参照）。公開
    すると、作品にその名前で署名されます。まだ名前がない場合、**公開** は
    先に名前を決めるよう求めます。そこで **署名せずに公開** を選ぶと、
    作者もリンクもない状態で公開されます。

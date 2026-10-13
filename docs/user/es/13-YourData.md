@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 941edcaf2e7249c7 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 0f7d63110556987a -->
 # 13 — Sus datos
 
 <!-- languages -->
@@ -202,7 +202,7 @@ configuración solo se trasladan con una copia de seguridad completa.
 ## Sus publicaciones
 
 Una creación que **publica** se guarda solo en este dispositivo, hasta que
-la distribuya (consulte [Publicar y bifurcar](04-PublishingAndForking.md)).
+la distribuya (consulte [Publicar y remezclar](04-PublishingAndForking.md)).
 Su tarjeta en **Explorar** indica dónde registró este dispositivo su
 distribución, por ejemplo **Guardado en IPFS · Anunciado en Nostr**: dónde
 se subió la construcción o su Declaración firmada (IPFS, Arweave, Steem o

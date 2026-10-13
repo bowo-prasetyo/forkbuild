@@ -1,15 +1,15 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 9cd714dbbc4a41d4 -->
-# 05 — Identität & Anmeldung
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 6c3356512aea6399 -->
+# 05 — Ihr Name & Ihre Identität
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · **Deutsch** · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
-ForkBuild hat keine Passwörter und keinen zentralen Kontoserver. **Ihre
-Identität ist ein kryptografisches Schlüsselpaar, das in diesem Browser
-gespeichert ist** — derselbe Schlüssel, der alles signiert, was Sie bauen,
-veröffentlichen, senden oder bewegen. Diese Anleitung behandelt das
-Erstellen, Schützen und Sichern dieser Identität.
+ForkBuild hat keine Passwörter und keine Konten. **Hinter Ihrem Namen steht
+eine Identität: ein kryptografisches Schlüsselpaar, das in diesem Browser
+gespeichert ist** — derselbe Schlüssel, der alles signiert, was Sie
+veröffentlichen, senden oder bewegen. Diese Anleitung behandelt, wie Sie
+einen Namen wählen, ihn mit einer Passphrase schützen und ihn sichern.
 
 ## Eine Identität erstellen
 

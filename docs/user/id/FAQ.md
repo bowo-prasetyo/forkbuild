@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: d0ced791059d2485 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 06d073f252435c51 -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -51,7 +51,7 @@ mencantumkannya di **Jelajahi** *Anda*. Agar sampai ke teman Anda:
   eksperimental, Steem atau Blurt) dan mengumumkannya, sehingga orang dapat
   menemukannya tanpa terhubung dengan Anda.
 
-Lihat [Penerbitan & Fork](04-PublishingAndForking.md#berbagi-dengan-rekan-yang-terhubung).
+Lihat [Penerbitan & Remix](04-PublishingAndForking.md#berbagi-dengan-rekan-yang-terhubung).
 
 ### Bagaimana cara membuat karya saya tersedia untuk semua orang?
 
@@ -138,7 +138,7 @@ Tidak. Frasa sandi adalah satu-satunya cara untuk mendekripsi kunci
 identitas itu, dan tidak ada server yang menyimpan salinannya. Jika Anda
 pernah mengekspor identitas itu, Anda tetap memerlukan frasa sandi yang
 Anda pilih untuk ekspornya. Jika tidak, buat identitas baru. Lihat
-[Identitas & Masuk](05-IdentityAndLogin.md).
+[Nama & Identitas Anda](05-IdentityAndLogin.md).
 
 ### Mengapa identitas saya terus terkunci sendiri?
 

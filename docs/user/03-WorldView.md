@@ -392,7 +392,7 @@ What gets copied depends on what you picked:
   the World it happens to be sitting in.
 
 ForkBuild tells you the moment your copy is ready (see
-[Publishing & Forking](04-PublishingAndForking.md)). If the copy can't be
+[Publishing & Remixing](04-PublishingAndForking.md)). If the copy can't be
 made, a **Can't make a copy** dialog says why, usually because the
 build's license doesn't allow copies or the build can't be fetched yet,
 and **Back to the build** returns you to where you were (see
@@ -767,7 +767,7 @@ renaming a landmark or region, or decorating it with an animal —
 automatically creates your own editable copy, titled *"Fork of &lt;original
 name&gt;"*, and a short notice ("Created your own editable copy — … is
 unchanged") tells you so. It follows the same license rules as any other
-fork (see [Publishing & Forking](04-PublishingAndForking.md#forking-make-it-your-own)).
+fork (see [Publishing & Remixing](04-PublishingAndForking.md#forking-make-it-your-own)).
 
 ## History — previewing and restoring earlier states
 
@@ -1275,4 +1275,4 @@ check.
 ## What's next?
 
 Ready to share what you've made, or remix someone else's work? Continue to
-**[Publishing & Forking](04-PublishingAndForking.md)**.
+**[Publishing & Remixing](04-PublishingAndForking.md)**.

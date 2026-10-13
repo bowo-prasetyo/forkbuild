@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 49f2f034ec1550ac -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b3d70584719e6278 -->
 # 01 — 시작하기
 
 <!-- languages -->
@@ -59,7 +59,7 @@ ForkBuild는 최신 웹 브라우저라면 어디서든 실행됩니다: 호스�
 |---|---|
 | **홈** | 첫 페이지 |
 | **짓기** | 작품을 짓는 에디터([에디터](02-TheEditor.md) 참고) |
-| **둘러보기** | 모두가 게시한 작품. 열거나, 리믹스하거나, 방문할 수 있습니다([게시와 포크](04-PublishingAndForking.md#저장소) 참고) |
+| **둘러보기** | 모두가 게시한 작품. 열거나, 리믹스하거나, 방문할 수 있습니다([게시와 리믹스](04-PublishingAndForking.md#저장소) 참고) |
 | **챌린지** | 이번 주 건축 챌린지와 참가작([주간 건축 챌린지](04-PublishingAndForking.md#주간-건축-챌린지) 참고) |
 | **걷기** | 이번 주 챌린지 광장에서 월드 보기를 열어, 게시된 작품들의 마을을 걸어 봅니다([월드 보기](03-WorldView.md) 참고) |
 | **내 월드** | 이 기기에서 가 본 월드([내 월드](03-WorldView.md#내-월드--실제로-가-본-월드) 참고) |
@@ -73,7 +73,7 @@ ForkBuild는 최신 웹 브라우저라면 어디서든 실행됩니다: 호스�
   - **내 아바타** — 월드 보기에서 다른 사람에게 내가 어떻게 보이는지,
     [아바타와 접속 상태](06-AvatarsAndPresence.md) 참고
   - **내 신원** — 이 기기에 저장된 이름(신원),
-    [신원과 로그인](05-IdentityAndLogin.md) 참고
+    [이름과 신원](05-IdentityAndLogin.md) 참고
   - **내 데이터** — 모든 것을 파일 하나로 백업하거나 다른 기기로 복사,
     [내 데이터](13-YourData.md) 참고
 - **사람**
@@ -194,7 +194,7 @@ ForkBuild에는 비밀번호도 계정도 없습니다. 이름 뒤에는 이 기
 내 **둘러보기**에만 두려는 것이 아니라면 이름을 정하세요.
 
 암호 문구가 보호하는 것, 잠그기와 잠금 해제, 신원 백업은
-[신원과 로그인](05-IdentityAndLogin.md)에서 다룹니다.
+[이름과 신원](05-IdentityAndLogin.md)에서 다룹니다.
 
 ## ForkBuild 설치하기
 
@@ -219,7 +219,7 @@ iPhone이나 iPad의 Safari에서는 버튼이 대신 방법을 알려 줍니다
 ## 다음은?
 
 - 짓는 도구 전체는 **[에디터](02-TheEditor.md)**에서 배우세요.
-- 공유할 준비가 되었다면 **[게시와 포크](04-PublishingAndForking.md)**로.
+- 공유할 준비가 되었다면 **[게시와 리믹스](04-PublishingAndForking.md)**로.
 - **[월드 보기](03-WorldView.md)**에서 게시된 작품들의 마을을 걸어 보세요.
 - 아바타를 꾸미고 사람을 만나려면
   **[아바타와 접속 상태](06-AvatarsAndPresence.md)**와

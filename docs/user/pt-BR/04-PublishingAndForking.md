@@ -1,19 +1,21 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ba7ee7cf8bfc4b8a -->
-# 04 — Publicar e bifurcar
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+# 04 — Publicar e remixar
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · **Português (Brasil)**
 <!-- /languages -->
 
-Este é o coração do ForkBuild. **Publicar** compartilha sua criação com o
-mundo. **Remixar** deixa qualquer pessoa copiar uma criação e fazê-la
-evoluir — com todo o histórico preservado.
+Este é o coração do ForkBuild. **Publicar** compartilha sua construção com
+o mundo. **Remixar** deixa qualquer pessoa fazer uma cópia sua de uma
+construção e levá-la adiante, com todo o histórico preservado. (Algumas
+mensagens e documentos para desenvolvedores chamam um remix de *fork*, como
+em ForkBuild.)
 
 ## Publicando sua criação
 
 1. Construa algo no Editor.
 2. Tenha um nome e confira se ele está desbloqueado (veja
-   [Identidade e login](05-IdentityAndLogin.md)). Publicar assina a
+   [Seu nome e sua identidade](05-IdentityAndLogin.md)). Publicar assina a
    construção com ele. Se você ainda não tem nome, **Publicar** pede que
    você escolha um primeiro; **Publicar sem assinar** ali a publica sem
    autor e sem link.

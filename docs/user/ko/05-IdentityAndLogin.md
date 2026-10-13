@@ -1,17 +1,14 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 9cd714dbbc4a41d4 -->
-# 05 — 신원과 로그인
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 6c3356512aea6399 -->
+# 05 — 이름과 신원
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · **한국어** · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
-<!-- languages -->
-<!-- /languages -->
-
-ForkBuild에는 비밀번호도 중앙 계정 서버도 없습니다. **신원은 이 브라우저에
-저장된 암호학적 키 쌍입니다** — 내가 짓고, 게시하고, 메시지를 보내고, 옮기는
-모든 것에 서명하는 바로 그 키입니다. 이 안내에서는 신원을 만들고, 보호하고,
-백업하는 방법을 다룹니다.
+ForkBuild에는 비밀번호도 계정도 없습니다. **내 이름 뒤에는 신원, 즉 이
+브라우저에 저장된 암호학적 키 쌍이 있습니다** — 내가 게시하고, 메시지를
+보내고, 옮기는 모든 것에 서명하는 바로 그 키입니다. 이 안내에서는 이름을
+정하고, 암호 문구로 보호하고, 백업하는 방법을 다룹니다.
 
 ## 신원 만들기
 
