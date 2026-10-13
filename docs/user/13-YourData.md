@@ -170,7 +170,7 @@ backup.
 
 A creation you **Publish** is stored on this device only, until you
 distribute it (see [Publishing & Forking](04-PublishingAndForking.md)).
-Its Repository card says where this device recorded distributing it, for
+Its card in Explore says where this device recorded distributing it, for
 example **Stored on IPFS · Announced on Nostr**: where the build or its
 Signed Claim was uploaded (IPFS, Arweave, Steem or Blurt) and where it was
 announced (Nostr, Arweave, Steem or Blurt). Hold the pointer over a name to see

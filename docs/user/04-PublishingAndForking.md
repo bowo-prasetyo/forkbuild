@@ -11,11 +11,11 @@ history preserved.
 ## Publishing your creation
 
 1. Build something in the Editor.
-2. Log in and make sure your identity is unlocked (see
+2. Have a name, and make sure it's unlocked (see
    [Identity & Login](05-IdentityAndLogin.md)). Publishing signs the
-   creation with it. If you aren't logged in, **Publish** asks you to log
-   in or create an identity first; **Publish unsigned** there publishes it
-   with no author, and no link.
+   build with it. If you have no name yet, **Publish** asks you to choose
+   one first; **Publish unsigned** there publishes it with no author, and
+   no link.
 3. Give it a title — Publish refuses an untitled or empty creation — and,
    optionally, a description and a license: click **✎** beside the
    document title in the sidebar to open **Document Properties**. A new
@@ -47,8 +47,8 @@ nowhere to stand behind it, doesn't count, and a build without one is
 arrived at from the front. The **Your first build** card offers the same
 button once the build is published.
 
-> **Note:** Publishing stores your Document/World on this device only. Its
-> Repository card says where this device recorded distributing it (for
+> **Note:** Publishing stores your build on this device. Its
+> card in **Explore** says where this device recorded distributing it (for
 > example **Stored on IPFS · Announced on Nostr**), or **No distribution
 > recorded on this device**. Back it up on [Your Data](13-YourData.md) to
 > keep a copy in the meantime.
@@ -78,8 +78,8 @@ picture** and **Embed**, with the link below them. The same buttons are under
   link shows your build's title, your name and a picture of the build,
   drawn by ForkBuild's link server, which then sends whoever opens it on to
   ForkBuild. A link that was changed shows only "A shared build".
-- **It needs a signature.** Publish while logged in; a creation published
-  while logged out gets no link.
+- **It needs a signature.** Publish under a name; a build published
+  without one (**Publish unsigned**) gets no link.
 - **Size.** A build of up to about 500 bricks fits; the ready-made castle's
   link is about 3,700 characters. Email and most chat apps and social sites
   keep a link that long, but Discord and Telegram limit how long a message
@@ -184,7 +184,7 @@ they'd open your link: your signature and the build's content are checked
 first, and a note that doesn't match is ignored. A build too big for a note
 (about 2,000 bricks) says so; share its link, or choose where it goes
 below. Builds published without a name can't be sent. See
-[Privacy](Privacy.md).
+[Privacy](../Privacy.md).
 
 ### Where a build stands
 
@@ -273,22 +273,23 @@ builds go is.
 
 ## Sharing with connected peers
 
-A World you publish is listed in *your* Repository only, until you
-distribute it on Nostr, Arweave, Steem or Blurt (see [Distribution](Distribution.md)):
-then anyone's Repository finds it (see
-[Creations others distributed](#creations-others-distributed)). To put it in the
-Repository of someone you're connected to (see
+A build you publish is listed in *your* Explore only, until it is sent to
+everyone (see [Who can find it?](#who-can-find-it)) or you distribute it on
+Nostr, Arweave, Steem or Blurt (see [Distribution](Distribution.md)): then
+anyone's Explore finds it (see
+[Creations others distributed](#creations-others-distributed)). To put it in
+the Explore of someone you're connected to (see
 [Peer Connections & Friends](07-PeerConnectionsAndFriends.md)), click
-**Share with Peers** under it in the Repository. The button appears only on
+**Share with Peers** under it in Explore. The button appears only on
 your own published Worlds.
 
 - Sharing offers the World to everyone connected right now, and to anyone
   who connects later. **Shared ✓ · Share Again** announces it again to the
   people connected now.
 - On their side, a World shared by one of their **Friends** or **Known
-  Peers** is added to their Repository by itself, along with everything
+  Peers** is added to their Explore by itself, along with everything
   needed to **Explore** it. A World shared by anyone else waits under
-  **Shared with you** at the top of their Repository until they click
+  **Shared with you** at the top of their Explore until they click
   **Retrieve**. Nobody's device downloads a stranger's World without
   being asked. Each one is listed by its title, so they can choose; their
   device makes sure the World they retrieve is the one that title names.
@@ -387,8 +388,9 @@ The original is never touched, no matter how much you change your copy.
 
 ## The Repository
 
-The **Repository** is the searchable catalog of every published creation
-this device knows about: your own, ones peers have shared with you, and
+**Explore** in the top bar (called the *Repository* in older versions and
+in a few advanced messages) is the searchable catalog of every published
+build this device knows about: your own, ones peers have shared with you, and
 ones found on decentralized networks. It's built to stay usable whether it
 holds ten creations or ten thousand.
 
@@ -413,7 +415,7 @@ publications; they're also in the Build Library's **Structures**, under
 
 ### Creations others distributed
 
-Each time you open the Repository (or an author's page), it looks on Nostr,
+Each time you open Explore (or an author's page), it looks on Nostr,
 Arweave, Steem and Blurt for creations other people distributed there, and
 adds the ones it can verify. A line above the list says what it's doing, then
 how many new creations it found; **Check again** looks once more.
@@ -423,7 +425,7 @@ how many new creations it found; **Check again** looks once more.
   skipped, and a record that failed isn't fetched again.
 - It checks up to 20 new creations at a time. If there are more, the line
   says how many are left for next time.
-- A creation found this way stays in your Repository after a reload.
+- A creation found this way stays in your Explore after a reload.
 - Its build isn't on your device yet. **Explore** fetches it from where it
   was stored and checks it, then opens it in World View, just like opening
   a shared link.
@@ -475,8 +477,8 @@ visited rather than one you're finding for the first time.)
 
 Click any **author's name** to visit their **Author view** — a portfolio of
 everything they've made, including their originals and all the forks that grew
-from them, using the exact same search/sort/pagination catalog as the
-Repository, just scoped to that one author.
+from them, using the exact same search/sort/pagination catalog as
+Explore, just scoped to that one author.
 
 A card whose signature checks out also has a **Follow** button, and an
 Author view shows **Signed by …** with **Follow** for each identity that
@@ -484,8 +486,8 @@ published under that name. Following someone puts their new work on your
 **Following** page and in your notifications; see
 [Following people](07-PeerConnectionsAndFriends.md#following-people).
 
-The Repository isn't limited to what was published from this device or
-discovered outright, either: a decentralized Repository creation a peer
+Explore isn't limited to what was published from this device or
+discovered outright, either: a decentralized build a peer
 showed you in World View's own
 [World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
 map, once its content actually resolves, joins this same search and its
@@ -507,13 +509,13 @@ published world — see
 
 > **Also called "Edit a Copy" in World View.** It's the same underlying
 > operation either way, with the same license rules and the same
-> [Fork Unavailable](#when-a-fork-cant-complete) handling. See
+> [Can't make a copy](#when-a-fork-cant-complete) handling. See
 > [Edit a Copy](03-WorldView.md#edit-a-copy--taking-something-into-the-editor)
 > for World View's own walkthrough of it.
 
 ### How to fork
 
-1. Find a creation in the **Repository** (or in World View).
+1. Find a build in **Explore** (or in World View).
 2. Click **Remix**.
 3. The copy opens in the Editor, titled *"Fork of &lt;original name&gt;"*.
 4. Build on it, then save and publish it as your own.
@@ -523,7 +525,7 @@ it back to the original.
 
 ### Remix counts
 
-A build's page and its Repository card say how many times it was remixed
+A build's page and its card in Explore say how many times it was remixed
 (**Remixed 3 times**): how many different builds this device has found
 that were forked from it and published. A remix published twice counts
 once, and a build nobody has remixed shows nothing. The count is only what
@@ -540,18 +542,17 @@ shows it too, if you turned on
 Occasionally a fork can't go through — most often when forking a Shared World
 found through a peer or a decentralized network (see
 [Publications & External Evidence](09-PublicationsAndEvidence.md)) rather
-than an ordinary Repository entry. Instead of dropping you into a blank,
-unrelated Editor document, ForkBuild shows a **Fork Unavailable** dialog
+than an ordinary build in Explore. Instead of dropping you into a blank,
+unrelated Editor document, ForkBuild shows a **Can't make a copy** dialog
 naming exactly what went wrong:
 
-- **This Shared World cannot be forked under its license** — the license
-  attached to what you were trying to fork doesn't allow it (see
-  [Choosing a license](#choosing-a-license) above).
-- **This Shared World's material is currently unavailable** — the license
-  allows forking, but the actual content isn't on this device (or
-  reachable through a connected peer) yet.
+- **This build's license doesn't allow copies.** — see
+  [Choosing a license](#choosing-a-license) above.
+- **This build can't be fetched right now.** — the license allows copies,
+  but the build itself isn't on this device (or reachable through a
+  connected peer) yet.
 
-Either way, the dialog's one button, **Back to Shared World**, takes you back
+Either way, the dialog's one button, **Back to the build**, takes you back
 to wherever you found it — the World it was placed in, or the Shared World
 itself — rather than leaving you stranded in the Editor with nothing to
 build on.
@@ -591,7 +592,7 @@ The challenge's page lists the entries this device knows of: your own
 published builds with the tag, and others' builds found on the networks.
 When a build is distributed to Nostr, Arweave, Steem or Blurt, its announcement (on Blurt, its post) lists its tags, and the page asks those networks for the week's tag each time it
 opens (**Check again** asks again). Each entry found is checked like
-anything the Repository finds, and is listed in the Repository too. A build shared only by its link isn't found this way, nor one announced only on Steem before 8 October 2026, when Steem announcements began to list tags. Earlier weeks stay open by their Monday (**Last week: …**), without
+anything Explore finds, and is listed in Explore too. A build shared only by its link isn't found this way, nor one announced only on Steem before 8 October 2026, when Steem announcements began to list tags. Earlier weeks stay open by their Monday (**Last week: …**), without
 **Join**.
 
 Entries are shown newest first, with their remix counts. Nobody judges
@@ -657,9 +658,9 @@ opens the build, and each name opens that person's page.
 
 Here's the whole journey in one flow:
 
-1. **Build** a creation in the Editor.
+1. **Build** something in the Editor.
 2. **Save** it.
-3. **Publish** it to the Repository.
+3. **Publish** it, and send it to everyone or share its link.
 4. Someone **finds** it — by searching, by exploring nearby in World View, or
    by browsing your Author page — and **forks** it.
 5. They **publish** their fork.

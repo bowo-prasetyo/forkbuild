@@ -5,6 +5,10 @@
 [English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · [Español](../es/06-AvatarsAndPresence.md) · [Français](../fr/06-AvatarsAndPresence.md) · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · [日本語](../ja/06-AvatarsAndPresence.md) · [한국어](../ko/06-AvatarsAndPresence.md) · **Português (Brasil)**
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../06-AvatarsAndPresence.md).
+<!-- /stale -->
+
 Seu **avatar** é como as outras pessoas veem você na Visão do mundo — a
 aparência, a posição e como ele se move. Este guia mostra como
 personalizá-lo, controlar quem pode vê-lo e interagir com os avatares de

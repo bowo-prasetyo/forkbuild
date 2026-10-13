@@ -11,7 +11,7 @@ become friends with someone first.
 ## Starting a conversation
 
 Chat is reached from a friend's **Chat** button on the **Peers** page, or
-from the **Conversations** page in the top bar — there's no chat entry point
+from the **Conversations** page (**More → Conversations**) — there's no chat entry point
 from World View or an avatar. Opening chat with someone who isn't currently
 a friend (or who's blocked) shows an explanation instead of a compose box:
 friendship, not being online, is what unlocks chat.

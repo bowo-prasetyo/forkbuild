@@ -4,17 +4,37 @@
 **English** · [Deutsch](de/README.md) · [Español](es/README.md) · [Français](fr/README.md) · [Bahasa Indonesia](id/README.md) · [日本語](ja/README.md) · [한국어](ko/README.md) · [Português (Brasil)](pt-BR/README.md)
 <!-- /languages -->
 
-How-to guides for using ForkBuild in the browser. Everything here
-describes the product as it works today; engine internals live in
-[docs/Architecture.md](../Architecture.md) and the rest of the
+How-to guides for using ForkBuild in the browser. New here? Start with
+**[Getting Started](01-GettingStarted.md)**: five minutes from opening the
+app to walking inside your first build.
+
+## I want to…
+
+| I want to… | Read |
+|---|---|
+| Build my first thing | [Getting Started](01-GettingStarted.md#placing-your-first-brick) |
+| Learn the building tools | [The Editor](02-TheEditor.md) |
+| Share a build with a friend | [Sharing a link](04-PublishingAndForking.md#sharing-a-link) |
+| Let everyone find my build | [Who can find it?](04-PublishingAndForking.md#who-can-find-it) |
+| Remix someone else's build | [Forking: make it your own](04-PublishingAndForking.md#forking-make-it-your-own) |
+| Build together with a friend, live | [Build with me](02-TheEditor.md#build-with-me-building-together-live) |
+| Walk around with friends | [Walk here with me](03-WorldView.md#walk-here-with-me--bringing-friends-into-this-world) |
+| Change how my avatar looks | [Avatars & Presence](06-AvatarsAndPresence.md#customizing-your-avatar) |
+| Back up my work, or move it to another device | [Your Data](13-YourData.md) |
+| Look up a key or mouse control | [Controls Reference](ControlsReference.md) |
+| Fix something that isn't working | [FAQ](FAQ.md) |
+
+Everything here describes the product as it works today; engine internals
+live in [docs/Architecture.md](../Architecture.md) and the rest of the
 top-level [docs/](..) folder.
 
 ## Play (read in order)
 
 Everything you need to build, share, remix and walk around with friends.
 
-1. **[Getting Started](01-GettingStarted.md)** — open the app, place
-   your first brick, and log in only when you publish.
+1. **[Getting Started](01-GettingStarted.md)** — open the app, find your
+   way around the menu, place your first brick, and choose a name only
+   when you publish.
 2. **[The Editor](02-TheEditor.md)** — the building toolkit: tools,
    selection, transforms, brick colors, groups, the Build Library's
    structures and your own blueprints, structure instances, and a
@@ -26,7 +46,7 @@ Everything you need to build, share, remix and walk around with friends.
    tools wait under **Show advanced tools**.
 4. **[Publishing & Forking](04-PublishingAndForking.md)** —
    publishing and sharing a link, choosing where your builds go,
-   licenses, remixing, the Repository and its ready-made builds, the
+   licenses, remixing, Explore and its ready-made builds, the
    weekly challenge and its plaza, and family trees. For everything a
    build can be sent to, see [Distributing Your Work](Distribution.md).
 5. **[Avatars & Presence](06-AvatarsAndPresence.md)** — customizing your
@@ -93,12 +113,13 @@ tools. You don't need any of it to play.
 The Editor is the one place ForkBuild ever builds; World View is a
 read-only exploration surface:
 
-- **Editor** (`/editor`) — your private workspace. Place bricks from
-  the palette, select them, and transform them with the keyboard or
-  the gizmo. Save, load, and publish documents from the toolbar.
-- **World View** (`/world/:id`) — the shared spatial world. Fly between
-  published worlds, search for and explore what's around you, inspect
-  bricks and placed structures, walk your avatar across structures and
+- **Editor** (**Build** in the menu) — your private workspace. Place
+  bricks from the Build Library, select them, and move or turn them with
+  the keyboard or the gizmo. Save, open and publish builds from the
+  toolbar.
+- **World View** (**Walk** in the menu, or **Explore** on any build) — the
+  shared world. Walk or fly between published builds, search for and
+  explore what's around you, walk your avatar across buildings and
   terrain, and use **Edit a Copy** to open whatever you found in the
   Editor, ready to build on.
 

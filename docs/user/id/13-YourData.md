@@ -5,6 +5,10 @@
 [English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Español](../es/13-YourData.md) · [Français](../fr/13-YourData.md) · **Bahasa Indonesia** · [日本語](../ja/13-YourData.md) · [한국어](../ko/13-YourData.md) · [Português (Brasil)](../pt-BR/13-YourData.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../13-YourData.md).
+<!-- /stale -->
+
 ForkBuild tidak memiliki akun dan tidak ada server yang menyimpan pekerjaan
 Anda. Semua yang disimpannya berada di browser ini, di perangkat ini:
 dokumen, identitas beserta kunci privatnya, struktur, publikasi, rekan dan

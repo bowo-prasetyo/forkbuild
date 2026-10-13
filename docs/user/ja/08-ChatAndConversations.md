@@ -5,6 +5,10 @@
 [English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · **日本語** · [한국어](../ko/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../08-ChatAndConversations.md)も参照してください。
+<!-- /stale -->
+
 ForkBuild の直接メッセージはピアツーピアで、**友達どうしだけ** のもの
 です。先に誰かと友達になる方法は
 [ピア接続と友達](07-PeerConnectionsAndFriends.md) を参照してください。

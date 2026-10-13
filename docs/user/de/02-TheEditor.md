@@ -5,6 +5,10 @@
 [English](../02-TheEditor.md) · **Deutsch** · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../02-TheEditor.md).
+<!-- /stale -->
+
 Im Editor wird gebaut. Diese Anleitung behandelt die Werkzeuge, wie Sie
 Steine auswählen und transformieren und wie Sie Ihr Bauwerk mit Gruppen
 ordnen.

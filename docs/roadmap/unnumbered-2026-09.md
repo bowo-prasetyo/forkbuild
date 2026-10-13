@@ -6489,3 +6489,27 @@ building feels joyful (comfortable at any hour, on any device).
   follows the device, and the picker applies and keeps a choice).
 - Not done: a dark sky for the Home turntable and the build pictures (they show the village by day); music for other
   places.
+
+## A user guide for the menu as it is (unnumbered, 2026-10-13)
+
+**Why.** A technical writer's audit of the user guide
+(docs/reviews/UserGuide-2026-10-13.md) found it complete and accurate about behaviour but unfriendly to a newcomer:
+it still sent people to **Editor**, **Repository** and **Login**, which the menu renamed on 2026-10-12, Getting Started
+reached the first brick only after self-hosting and login, and World View put its advanced network panels ahead of
+**Edit a Copy**, **Build here** and **Walk here with me**. Pillar served: building feels joyful (the first ten minutes
+of reading match the first ten minutes of playing).
+
+- **The menu's own words**: Build, Explore, Walk, **Choose a name**, **Publish unsigned** and the **Can't make a copy**
+  dialog on the newcomer pages; **More → …** for pages that aren't in the top bar; a FAQ entry for where the old names
+  went.
+- **Getting Started** opens with a four-step short version (Try it now, Pick the roof, Publish, Walk inside it), a
+  table of the top bar and More's four groups, and the first brick before naming; self-hosting moves to a final
+  section for developers.
+- **World View** gains a short-version table and gathers everything **Show advanced tools** reveals into one final
+  **Advanced tools** section, with headings unchanged so every link still works; its densest visitor passages are
+  rewritten in shorter sentences, and Sound starts with its controls.
+- **README** gains an "I want to…" table; the FAQ's sharing and wallet answers now agree with **Who can find it?**;
+  one broken Privacy link and the Editor's File menu list are fixed.
+- The 77 translations of the 11 changed pages carry the out-of-date banner until a translation pass.
+- Not done: pictures of the screens, renaming "Publishing & Forking" and "Identity & Login", splitting World View in
+  two, and the same prose pass for the rest of World View, Residents and distribution.

@@ -5,6 +5,10 @@
 [English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · **日本語** · [한국어](../ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../07-PeerConnectionsAndFriends.md)も参照してください。
+<!-- /stale -->
+
 ForkBuild は、あなたを他の人のブラウザーに直接つなぎます。友達リストを
 保管する中央サーバーはありません。上部のバーで **ピア** を開くと、
 接続中の人、記憶している人、友達を管理できます。

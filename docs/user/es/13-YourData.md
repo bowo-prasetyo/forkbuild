@@ -5,6 +5,10 @@
 [English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · **Español** · [Français](../fr/13-YourData.md) · [Bahasa Indonesia](../id/13-YourData.md) · [日本語](../ja/13-YourData.md) · [한국어](../ko/13-YourData.md) · [Português (Brasil)](../pt-BR/13-YourData.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../13-YourData.md).
+<!-- /stale -->
+
 ForkBuild no tiene cuentas ni un servidor que guarde su trabajo. Todo lo
 que guarda vive en este navegador, en este dispositivo: sus documentos, sus
 identidades y sus claves privadas, estructuras, publicaciones, pares y

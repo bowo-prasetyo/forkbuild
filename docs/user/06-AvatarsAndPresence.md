@@ -10,7 +10,7 @@ who can see it, and interacting with everyone else's.
 
 ## Customizing your avatar
 
-Open **My Avatar** in the top bar:
+Open **More → My Avatar** (or click your name in the top bar):
 
 1. Pick a **Template** — a body type (e.g. "Humanoid 01") — from the
    dropdown. A flat preview updates live as you choose.

@@ -5,6 +5,10 @@
 [English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · [한국어](../ko/08-ChatAndConversations.md) · **Português (Brasil)**
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../08-ChatAndConversations.md).
+<!-- /stale -->
+
 As mensagens diretas no ForkBuild são entre pares e **só entre amigos** —
 veja [Conexões entre pares e amigos](07-PeerConnectionsAndFriends.md) para
 saber como ficar amigo de alguém antes.
