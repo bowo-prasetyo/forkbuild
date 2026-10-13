@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: d8dfa742e1512331 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 84ecfec9734a26aa -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -10,6 +10,9 @@ seleccionar y transformar bloques, y cómo organizar su construcción con
 grupos.
 
 ## La disposición
+
+![El Editor](../img/es/editor.jpg)
+*La barra de herramientas arriba; a la izquierda, las herramientas, el nombre de la construcción, el panel Selección y la Biblioteca de construcción; en el centro, la vista 3D.*
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

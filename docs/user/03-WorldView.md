@@ -35,6 +35,9 @@ The network tools behind the World are described at the end, under
 
 ## Opening World View
 
+![World View at the challenge plaza](img/en/world-view.jpg)
+*World View at the challenge plaza: the side panel on the left, your avatar in the square, and sound and the compass at the top right.*
+
 **Walk** in the main menu opens World View at this week's challenge plaza,
 with no build of your own needed. The plaza is the village square: the six
 ready-made builds stand round it for everyone, every time you open World

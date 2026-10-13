@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: da5501ad67f233f7 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: ccdc007eba11d015 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -38,6 +38,9 @@ Las herramientas de red que hay detrás del Mundo se describen al final, en
 [Herramientas avanzadas](#herramientas-avanzadas).
 
 ## Abrir la Vista del mundo
+
+![La Vista del mundo en la plaza del desafío](../img/es/world-view.jpg)
+*La Vista del mundo en la plaza del desafío: el panel lateral a la izquierda, su avatar en la plaza, y el sonido y la brújula arriba a la derecha.*
 
 **Pasear**, en el menú principal, abre la Vista del mundo en la plaza del
 reto de esta semana, sin necesidad de una construcción propia. La plaza es

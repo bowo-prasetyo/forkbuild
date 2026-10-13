@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: da5501ad67f233f7 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: ccdc007eba11d015 -->
 # 03 — ワールドビュー
 
 <!-- languages -->
@@ -36,6 +36,9 @@ ForkBuild で作品を作るのはエディターだけです。下の
 [詳細ツール](#詳細ツール) で説明しています。
 
 ## ワールドビューを開く
+
+![チャレンジの広場のワールドビュー](../img/ja/world-view.jpg)
+*チャレンジの広場のワールドビュー：左にサイドパネル、広場にあなたのアバター、右上にサウンドとコンパス。*
 
 メインメニューの **歩く** で、今週のチャレンジ広場でワールドビューが
 開きます。自分の作品はいりません。広場は村の広場で、6 つのできあがった

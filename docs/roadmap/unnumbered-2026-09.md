@@ -6532,3 +6532,23 @@ joyful (the first ten minutes read the same in every language the app ships).
 - Two stray, empty language-link blocks in the Korean Getting Started, World View and FAQ are gone.
 - Every translation is stamped with scripts/check-doc-translations.mjs, which also checks each link and the heading
   it points to.
+
+## Pictures of the main screens, in every language (unnumbered, 2026-10-13)
+
+**Why.** The user-guide audit (docs/reviews/UserGuide-2026-10-13.md, open item 2) found the guide had no pictures:
+a newcomer reading "the panel on the left" or "the bar at the top" had to imagine the screen. One picture each of
+Home, the Editor and World View does more for a first read than any rewrite, but only if each language shows its
+own screens and they can be retaken when the screens change. Pillar served: building feels joyful (the first ten
+minutes of reading look like the first ten minutes of playing).
+
+- **scripts/user-guide-screenshots.mjs** takes Home, the Editor with Home's "Try it now" house, and World View at
+  the challenge plaza, in a real browser from this checkout with no network, once per shipped language (the browser
+  asks for that language), into `docs/user/img/<code>/` as 1280 × 800 JPEGs (about 85 KB each, 2.3 MB for all
+  eight). The clock starts at the same mid-morning on the same Tuesday every run, so the challenge and the daylight
+  never change between runs, and it waits for a passing message to go.
+- **Getting Started, The Editor and World View** show them, in every language, each with alt text and a one-line
+  caption in that language.
+- **tests/UserGuideScreenshots.test.js**: every shipped language has the pictures, every picture a guide page names
+  exists, and a translation shows its own language's pictures.
+- docs/Translating.md ("Pictures") and CONTRIBUTING.md say when and how to retake them.
+- Not done: the dark look, a phone-sized picture, and pictures for the other pages.

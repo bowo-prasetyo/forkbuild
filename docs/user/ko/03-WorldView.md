@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: da5501ad67f233f7 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: ccdc007eba11d015 -->
 # 03 — 월드 보기
 
 <!-- languages -->
@@ -33,6 +33,9 @@
 네트워크 도구는 마지막의 [고급 도구](#고급-도구)에서 설명합니다.
 
 ## 월드 보기 열기
+
+![챌린지 광장의 월드 보기](../img/ko/world-view.jpg)
+*챌린지 광장의 월드 보기: 왼쪽에 사이드 패널, 광장에 내 아바타, 오른쪽 위에 소리와 나침반.*
 
 메인 메뉴의 **걷기**는 내 작품이 없어도 이번 주 챌린지 광장에서 월드 보기를
 엽니다. 광장은 마을 광장입니다. 미리 지어진 작품 여섯 개가 월드 보기를 열 때마다

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: da5501ad67f233f7 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: ccdc007eba11d015 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -38,6 +38,9 @@ Les outils réseau derrière le Monde sont décrits à la fin, sous
 [Outils avancés](#outils-avancés).
 
 ## Ouvrir la Vue du Monde
+
+![La Vue du Monde sur la place du défi](../img/fr/world-view.jpg)
+*La Vue du Monde sur la place du défi : le panneau latéral à gauche, votre avatar sur la place, et le son et la boussole en haut à droite.*
 
 **Se promener**, dans le menu principal, ouvre la Vue du Monde sur la place
 du défi de cette semaine, sans qu’il faille une construction à vous. La

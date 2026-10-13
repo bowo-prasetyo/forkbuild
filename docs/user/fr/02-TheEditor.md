@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: d8dfa742e1512331 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 84ecfec9734a26aa -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -10,6 +10,9 @@ la façon de sélectionner et de transformer des briques, et comment
 organiser votre construction avec des groupes.
 
 ## La disposition
+
+![L’Éditeur](../img/fr/editor.jpg)
+*La barre d’outils en haut ; à gauche, les outils, le nom de la construction, le panneau Sélection et la Bibliothèque de construction ; au milieu, la vue 3D.*
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

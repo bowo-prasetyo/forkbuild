@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 165df6470706acd1 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 49f2f034ec1550ac -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -24,6 +24,9 @@ Der Rest dieser Seite erklärt jeden Teil, und wie Sie stattdessen auf einem
 leeren Grundstück anfangen.
 
 ## ForkBuild öffnen
+
+![Die Seite Start von ForkBuild](../img/de/home.jpg)
+*Die Seite Start: die obere Leiste, die drei Einstiege und die Bau-Challenge der Woche.*
 
 ForkBuild läuft in jedem aktuellen Webbrowser: Öffnen Sie die gehostete
 Website, und Sie landen auf der Seite **Start**. (Wie Sie eine eigene Kopie
@@ -113,6 +116,9 @@ alle auf einmal.
     [ForkBuild installieren](#forkbuild-installieren))
 
 ## Ihren ersten Stein platzieren
+
+![Der Editor mit dem Haus von der Seite Start](../img/de/editor.jpg)
+*Der Editor mit dem Haus von der Seite Start: links Ihre Werkzeuge und die Baubibliothek, in der Mitte das Bauwerk, dazu die Karte Ihr erstes Bauwerk.*
 
 Wenn Sie den Editor zum ersten Mal öffnen, führt Sie eine Karte **Ihr
 erstes Bauwerk** in der Ecke der 3D-Ansicht durch sechs Schritte und hakt

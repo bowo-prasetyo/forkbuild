@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: da5501ad67f233f7 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: ccdc007eba11d015 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -38,6 +38,9 @@ Die Netzwerkwerkzeuge hinter der Welt sind am Ende beschrieben, unter
 [Erweiterte Werkzeuge](#erweiterte-werkzeuge).
 
 ## Die Weltansicht öffnen
+
+![Die Weltansicht auf dem Challenge-Platz](../img/de/world-view.jpg)
+*Die Weltansicht auf dem Challenge-Platz: links das Seitenfeld, Ihr Avatar auf dem Platz, oben rechts Ton und Kompass.*
 
 **Spazieren** im Hauptmenü öffnet die Weltansicht auf dem Challenge-Platz
 dieser Woche, ganz ohne eigenes Bauwerk. Der Platz ist der Dorfplatz: Die

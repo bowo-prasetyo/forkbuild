@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: d8dfa742e1512331 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 84ecfec9734a26aa -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -10,6 +10,9 @@ Steine auswählen und transformieren und wie Sie Ihr Bauwerk mit Gruppen
 ordnen.
 
 ## Der Aufbau
+
+![Der Editor](../img/de/editor.jpg)
+*Oben die Werkzeugleiste; links die Werkzeuge, der Name des Bauwerks, das Feld Auswahl und die Baubibliothek; in der Mitte die 3D-Ansicht.*
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
