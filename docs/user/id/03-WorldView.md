@@ -1,16 +1,12 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3a4a0c4e45f32875 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: da5501ad67f233f7 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · **Bahasa Indonesia** · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
 
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../03-WorldView.md).
-<!-- /stale -->
-
-Tampilan Dunia adalah ruang 3D bersama tempat **setiap karya yang
-diterbitkan berada berdampingan**. Terbanglah berkeliling, cari apa yang
+Tampilan Dunia adalah ruang 3D bersama tempat **setiap bangunan yang
+diterbitkan berdiri berdampingan**. Terbanglah berkeliling, cari apa yang
 Anda cari, temukan apa yang dibangun orang lain di dekat Anda, dan periksa
 balok-baloknya — Tampilan Dunia adalah ruang jelajah yang hanya dapat
 dilihat, tidak pernah menjadi tempat kedua untuk membangun. Begitu Anda
@@ -22,6 +18,22 @@ Pengecualiannya hanya anotasi, bukan konstruksi: memberi nama Wilayah Dunia
 dan [Penanda](#penanda--menandai-tempat-yang-layak-diingat), serta
 menjadikan hewan yang dilepaskan sebagai hiasan Dunia dengan **G** (lihat
 [Avatar & Kehadiran](06-AvatarsAndPresence.md#menghiasi-dunia-dengan-hewan)).
+
+**Versi singkatnya:**
+
+| Untuk… | Lakukan ini |
+|---|---|
+| Datang ke sini | **Jalan-jalan** di bilah atas, atau **Jelajahi** pada bangunan mana pun |
+| Berjalan | `W` `A` `S` `D` untuk bergerak, `Shift` untuk berlari, `Spasi` untuk melompat (di ponsel, joystick) |
+| Melihat-lihat | Seret untuk memutar kamera, gulir untuk zoom |
+| Mengubah apa yang Anda lihat | **Edit Salinan** membuka salinan Anda sendiri di Editor |
+| Memulai bangunan tepat di sini | **Bangun di sini** |
+| Mengajak teman | **Jalan di sini bersamaku** membuat tautan untuk dikirim kepada mereka |
+| Mematikan atau menyalakan suara | Tombol **Suara**, atau `M` |
+
+Semua kontrol tercantum di [Referensi Kontrol](ControlsReference.md). Alat
+jaringan di balik Dunia dijelaskan di akhir, di
+[Alat lanjutan](#alat-lanjutan).
 
 ## Membuka Tampilan Dunia
 
@@ -208,6 +220,15 @@ perangkat ini dan tidak mengubah apa pun bagi orang lain.
 
 ## Suara
 
+**Kontrol:** tombol **Suara** di kanan atas tampilan (kanan bawah di
+ponsel), atau `M`, mematikan atau menyalakan semua suara; penggeser di
+sampingnya mengatur volume (di ponsel atau tablet, gunakan tombol volume
+perangkat). **♪ Musik** mematikan atau menyalakan musiknya saja, dan
+**3D** beralih antara suara 3D dan **Stereo** biasa. Suara dimulai dengan
+klik, ketukan, atau tekanan tombol pertama Anda, seperti yang diminta
+browser, dan berhenti selama tabnya tersembunyi. ForkBuild mengingat
+pilihan ini di perangkat ini, untuk kedua tampilan.
+
 Tampilan Dunia memutar suara latar yang tenang sesuai tempat Anda berada:
 angin di dataran tinggi dan berbatu, kicau burung di hutan, jangkrik di
 ladang dan padang rumput, air yang beriak di danau, dan air mengalir di
@@ -259,16 +280,12 @@ kendaraan Anda seperti Anda mendengar milik mereka: browser mereka
 membuatnya dari tempat mereka sudah melihat avatar Anda berjalan atau
 berkendara.
 
-Browser tidak mengizinkan halaman memutar suara sampai Anda berinteraksi
-dengannya, jadi suara dimulai dengan klik, ketukan, atau tekanan tombol
-pertama Anda. Matikan atau nyalakan dengan tombol **Suara** di kanan atas
-tampilan (kanan bawah di ponsel) atau dengan menekan `M`, dan atur
-kerasnya dengan penggeser di sampingnya; di ponsel atau tablet, gunakan
-tombol volume perangkat itu sendiri. ForkBuild mengingat pilihan Anda,
-termasuk 3D atau Stereo, di perangkat ini. Suara berhenti selama tabnya
-tersembunyi.
-
-**Musik** diputar pelan di bawah suara-suara: nada lembut yang dikarang peramban Anda sambil berjalan, hangat di siang hari serta lebih lambat dan rendah setelah gelap, dengan jeda hening di antara lagu agar suara dunia itu sendiri tetap terdengar. Musik ini tidak pernah persis sama dua kali. Nyalakan atau matikan dengan tombol **♪ Musik** di samping penggeser volume; tombol **Suara** dan penggeser membisukan serta mengatur volumenya bersama yang lain. ForkBuild mengingat pilihan ini di perangkat ini, untuk kedua tampilan.
+**Musik** diputar pelan di bawah suara-suara: nada lembut yang dikarang
+peramban Anda sambil berjalan, hangat di siang hari serta lebih lambat dan
+rendah setelah gelap, dengan jeda hening di antara lagu agar suara dunia
+itu sendiri terdengar. Musiknya tidak pernah sama persis dua kali. Tombol
+**Suara** dan penggesernya membisukan musik dan mengatur volumenya bersama
+semua suara lain.
 
 ## Orientasi dan Lokasi
 
@@ -276,17 +293,12 @@ Di samping koordinat kamera Anda, sebuah **kompas** kecil menunjukkan ke
 arah mana Anda menghadap (hanya dapat dilihat — tidak pernah menggerakkan
 kamera). Sederet tombol di dekat bagian atas panel menangani perpindahan:
 
-- **Beranda** membawa Anda — kamera dan avatar — kembali ke dunia Anda
-  sendiri saat ini, yang sedang terbuka atau terakhir difokuskan, bukan ke
-  titik asal tetap (0,0,0) di peta bersama. Anda mendarat tepat di luar
-  jejak dunia Anda sendiri, tidak pernah di dalamnya, bahkan jika konten
-  dunia itu berpusat di titik asal lokalnya. Jika Anda belum memfokuskan
-  dunia milik Anda di sesi ini, Beranda kembali ke titik asal bersama itu —
-  yang tetap dapat dijangkau kapan saja dari **Lokasi** di bawah,
-  tercantum di sana secara permanen di bawah "Dunia." Berkelana cukup jauh
-  sampai dunia Anda sendiri terlepas dari pemuatan (berjalan kaki atau
-  berkendara) tidak membuat Anda kehilangan jalan pulang; Beranda tetap
-  mengembalikan Anda ke sana.
+- **Beranda** membawa Anda, kamera dan avatar, kembali ke dunia Anda
+  sendiri saat ini: yang sedang terbuka, atau yang terakhir difokuskan.
+  Anda mendarat tepat di luarnya, tidak pernah di dalamnya, seberapa jauh
+  pun Anda berkelana. Jika Anda belum memfokuskan dunia milik Anda di sesi
+  ini, Beranda membawa Anda ke tengah peta bersama (juga tercantum di
+  bawah "Dunia" di **Lokasi**).
 - **Lokasi** membuka daftar setiap tempat yang saat ini diketahui sesi ini,
   dikelompokkan menjadi **Dunia**, **Struktur**, **Penanda**, dan
   **Tempat** — masing-masing dengan satu tombol **Fokus**. Seperti Cari dan
@@ -299,7 +311,7 @@ kamera). Sederet tombol di dekat bagian atas panel menangani perpindahan:
   gulir untuk zoom, serta WASD, Shift, dan Spasi saat Anda mengendalikan
   avatar); klik lagi untuk menyembunyikannya.
 
-**Notifikasi** adalah tombol 🔔 di kepala aplikasi, di samping Masuk, jadi
+**Notifikasi** adalah tombol 🔔 di kepala aplikasi, di samping nama Anda (atau **Pilih nama**), jadi
 ada di setiap halaman, bukan hanya di Tampilan Dunia. Tombol ini membuka
 **Riwayat Notifikasi** Anda — catatan yang tahan lama berisi fakta
 notifikasi yang ditujukan ke identitas Anda, dari aktivitas terbaru. Tiga hal menghasilkan notifikasi: seseorang mengomentari publikasi yang
@@ -339,36 +351,594 @@ pengaturan situs peramban untuk mengaktifkannya.
 ### Jelajahi, Peta, dan Tempat — tiga cara menelusuri, tidak pernah sekaligus
 
 Di bawah tombol-tombol navigasi ada tiga tab: **Jelajahi**, **Peta**, dan
-**Tempat**. Inilah tiga cara utama Tampilan Dunia untuk melihat-lihat, yang
-saling meniadakan — membuka salah satunya selalu menutup yang lain, sehingga
-Anda tidak pernah menangani beberapa panel penelusuran yang bertumpuk
-sekaligus.
+**Tempat**. Hanya satu yang terbuka pada satu waktu.
 
-- **Jelajahi** adalah bawaan. Tab ini menampilkan panel kedatangan/sambutan
-  (siapa yang ada di sini, dan beberapa tujuan yang disarankan) ditambah
-  bagian **Di Sekitar** dengan kelompok-kelompok yang dapat dilipat —
-  **Tempat**, **Penanda**, **Orang**, **Nama Tempat** (lihat
-  [Nama Tempat di Sekitar](#nama-tempat-di-sekitar--menemukan-klaim-dari-siapa-pun)
-  di bawah), **Bangunan yang Diklaim** (lihat
-  [Bangunan yang Diklaim](#bangunan-yang-diklaim--bangunan-orang-lain-di-tempat-yang-dinyatakan-penerbitnya)
-  di bawah, hanya ditampilkan jika ada), dan **Perjumpaan Dunia** (lihat
-  [Perjumpaan Dunia](#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda)
-  di bawah) — masing-masing hanya nama, jarak, dan tombol **Pergi** yang
-  ringkas (Perjumpaan Dunia dan Nama Tempat menampilkan konten berbentuk
-  lain milik mereka sendiri, dijelaskan di bawah). Tempat, Penanda, dan
-  Orang hanya muncul jika ada isinya; selama ketiganya kosong, satu baris
-  menyebutkannya. Klik judul sebuah kelompok untuk membukanya — Tampilan
-  Dunia mengingat kelompok mana yang Anda biarkan terbuka bahkan setelah
-  Anda beralih ke Peta atau Tempat lalu kembali.
+- **Jelajahi** adalah bawaan. Tab ini menampilkan siapa yang ada di sini
+  dan beberapa tujuan yang disarankan, lalu bagian **Di Sekitar** dengan
+  kelompok yang dapat dilipat: **Tempat**, **Penanda**, dan **Orang**,
+  setiap baris berisi nama, jarak, dan tombol **Pergi**. Sebuah kelompok
+  hanya muncul jika ada isinya. Klik judul kelompok untuk membuka atau
+  melipatnya; Tampilan Dunia mengingat mana yang Anda biarkan terbuka.
+  Dengan **Tampilkan alat lanjutan** menyala, muncul tiga kelompok lagi:
+  **Nama Tempat**, **Bangunan yang Diklaim**, dan **Perjumpaan Dunia**
+  (lihat [Alat lanjutan](#alat-lanjutan)).
 - **Peta** membuka Peta Dunia datar dari atas yang sama seperti dijelaskan
   di bawah.
 - **Tempat** membuka direktori tempat geografis yang dijelaskan di
   [Tempat geografis](#tempat-geografis) di bawah.
 
-Beralih antara Jelajahi, Peta, dan Tempat tidak pernah memuat dokumen,
-mengedit apa pun, atau memindahkan avatar Anda — hanya mengubah apa yang
-sedang ditampilkan panel ini, batas "Navigasi ≠ Ubah" yang sama yang sudah
-dipegang setiap kontrol navigasi lain di Tampilan Dunia.
+Berpindah tab hanya mengubah apa yang ditampilkan panel: tidak pernah
+memindahkan avatar Anda atau mengubah apa pun.
+
+### Info — apa yang sedang saya lihat?
+
+Di samping kebanyakan tombol **Pergi**, di baris Di Sekitar milik
+Jelajahi dan di panel Lokasi, ada tombol **Info**. **Pergi** membawa
+kamera Anda ke sana; **Info** menjelaskan tempat itu tanpa memindahkan apa
+pun: apa itu, seberapa jauh, dan di tempat bernama mana ia berada ("Anda
+berada di Willow Village") atau di dekat mana ("Anda berada di dekat
+Kawahara Village").
+
+Dari panel Info Anda bisa:
+
+- **Pergi** — pergi ke sana;
+- **Tampilkan di Peta** — melihatnya di Peta Dunia;
+- **Nama** (untuk tempat bernama) — melihat, atau menerbitkan, sebutan
+  orang untuk tempat itu;
+- **Edit Salinan** — membuka salinan Anda sendiri di Editor (lihat di
+  bawah).
+
+### Edit Salinan — membawa sesuatu ke Editor
+
+**Edit Salinan** adalah cara mengubah sesuatu yang Anda temukan di
+Tampilan Dunia. Ia membuat salinan bangunan yang independen milik Anda
+sendiri dan membukanya di Editor, siap dikembangkan. Aslinya tidak pernah
+disentuh.
+
+Anda akan menemukannya:
+
+- di bilah bawah Dunia, jika bangunan yang Anda kunjungi bukan milik
+  Anda: ia menyalin seluruh bangunan;
+- di panel **Info** untuk sebuah wilayah, penanda, atau struktur yang
+  ditempatkan;
+- di panel **Pemeriksaan**, saat Anda mengeklik balok, tanah kosong, atau
+  struktur yang ditempatkan dengan **Tampilkan alat lanjutan** menyala.
+
+Apa yang disalin bergantung pada apa yang Anda pilih:
+
+- Untuk **penanda**, **wilayah**, **balok**, atau **tanah kosong**, itu
+  adalah dokumen Dunia tempat mereka berada.
+- Untuk **struktur yang ditempatkan**, itu adalah konten struktur itu
+  sendiri — bukan Dunia tempat struktur itu kebetulan berada.
+
+ForkBuild memberi tahu Anda begitu salinan Anda siap (lihat
+[Penerbitan & Fork](04-PublishingAndForking.md)). Jika salinan tidak bisa
+dibuat, dialog **Tidak bisa membuat salinan** menjelaskan alasannya,
+biasanya karena lisensi bangunan itu tidak mengizinkan salinan atau
+bangunannya belum bisa diambil, dan **Kembali ke bangunan** membawa Anda
+kembali ke tempat semula (lihat
+[Saat fork tidak dapat diselesaikan](04-PublishingAndForking.md#saat-fork-tidak-dapat-diselesaikan)).
+
+**Tempat geografis** dan **orang** tidak pernah menawarkan Edit Salinan:
+tempat geografis mengelompokkan wilayah beberapa orang, tanpa satu bangunan
+untuk disalin (buka salah satu wilayahnya sebagai gantinya).
+
+Edit Salinan adalah tindakan yang sama dengan **Remix** di **Jelajahi** dan
+di halaman pembuat: salinan baru milik Anda, dengan aturan lisensi yang
+sama (lihat
+[Fork: jadikan milik Anda](04-PublishingAndForking.md#fork-jadikan-milik-anda)).
+Semua hal lain di Tampilan Dunia, seperti Cari, kompas, Peta, dan Info,
+hanya untuk melihat.
+
+### Bangun di sini — memulai bangunan untuk tempat ini
+
+**Bangun di sini**, di samping **Beranda**, memulai bangunan baru yang
+kosong di Editor untuk tempat avatar Anda berdiri (atau, saat terbang,
+tempat di bawah kamera). Editor menyebutkan untuk Dunia mana bangunan itu.
+Saat Anda menerbitkannya, bangunan itu berdiri tepat di sana: penempatan
+pertamanya adalah tempat itu, bukan lahan kosong yang dipilih ForkBuild,
+dan **Lihat ke sana** membawa Anda kembali untuk melihatnya. **Lupakan
+tempat ini** membuatnya ditempatkan seperti biasa. Tempat itu hanyalah
+catatan Anda sendiri tentang di mana bangunan Anda ditampilkan, disimpan di
+perangkat ini dan cadangannya; tempat itu tidak mengklaim lahan, dan orang
+lain juga boleh membangun di sana.
+
+### Jalan di sini bersamaku — membawa teman ke Dunia ini
+
+**Jalan di sini bersamaku**, di samping **Bangun di sini**, membuat tautan
+yang membawa teman ke Dunia tempat Anda berada, untuk berjalan-jalan
+bersama. Kirimkan dengan cara apa pun; tautan itu juga tampil sebagai kode
+QR untuk ponsel. Teman yang membukanya masuk jika belum (ia berjalan sebagai
+avatarnya sendiri, dengan namanya), mengklik **Bergabung**, lalu tiba di
+Dunia ini, tempat kalian saling melihat berjalan-jalan. Dialog menunjukkan
+siapa yang sedang dalam perjalanan dan siapa yang sudah tiba.
+
+- Dunia harus diterbitkan lebih dulu: ForkBuild teman Anda memeriksa tanda
+  tangan dan bangunannya, seperti untuk tautan yang dibagikan, lalu
+  menyimpan salinannya.
+- Tautan berfungsi untuk siapa pun yang membukanya, selama 30 menit, selama
+  Anda tetap di Tampilan Dunia. Menutup dialog tidak menghentikannya;
+  **Hentikan tautan** menghentikannya. Teman yang sudah bergabung tetap
+  terhubung dalam kedua kasus.
+- Bergabung menghubungkan kedua perangkat Anda secara langsung, seperti
+  undangan di **Rekan**: masing-masing dapat melihat alamat IP yang lain, dan
+  avatar kalian tampil sesuai izin visibilitas kehadiran tiap pihak (lihat
+  [Avatar & Kehadiran](06-AvatarsAndPresence.md)). Tidak ada yang menjadi
+  rekan yang diingat atau teman kecuali Anda memilihnya.
+- Fitur ini memerlukan server rendezvous. Situs resmi memilikinya; salinan
+  yang Anda jalankan sendiri memerlukan server sendiri (lihat
+  [Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)).
+
+### Alun-alun tantangan
+
+**Jelajahi alun-alun** di halaman tantangan suatu minggu membuka Tampilan
+Dunia di alun-alun desa: dilapisi batu, dengan sumur, bangku, dan lampu
+jalan, serta enam bangunan siap pakai di sekelilingnya. Alun-alun dan
+bangunan siap pakai itu adalah bagian dari Dunia, seperti bukit dan
+pohonnya: semuanya berdiri di setiap Tampilan Dunia, bagi semua orang, dan
+tidak dimiliki siapa pun. Desa bangunan terbitan tumbuh tepat di luarnya,
+sehingga rumah terbitanmu sendiri punya tetangga. Sebuah panel mendaftar
+karya minggu itu dan bangunan siap pakai (lihat
+[Alun-alun tantangan](04-PublishingAndForking.md#alun-alun-tantangan)).
+Tidak ada pohon yang tumbuh di sekeliling alun-alun, dan **Bangun di sini**
+tidak ditawarkan di sana.
+
+### Penanda — menandai tempat yang layak diingat
+
+**Penanda** adalah titik bernama yang Anda taruh di sebuah Dunia, seperti
+"Old Bridge" atau "Great View", dengan deskripsi opsional. Penanda
+ditempatkan tepat di tempat avatar Anda berdiri.
+
+Jika Anda memiliki akses EDIT ke Dunia tempat Anda berada, bagian Penanda
+di panel **Lokasi** menampilkan tombol **+ Tambah Penanda**. Beri judul
+(dan deskripsi, jika mau) lalu klik **Tempatkan di Sini** — penanda itu
+langsung muncul untuk Anda dan, beberapa saat kemudian, untuk setiap
+kolaborator lain di Dunia yang sama, di kompas, di panel Lokasi mereka
+sendiri, dan sebagai tujuan yang bisa didatangi. Penanda milik Dunia,
+bukan milik Anda: siapa pun yang memiliki akses EDIT dapat mengganti nama,
+mengganti deskripsi, atau menghapus penanda mana pun, bukan hanya orang
+yang membuatnya.
+
+### Peta Dunia
+
+Tab **Peta** membuka tampilan datar dari atas berisi setiap tempat yang
+saat ini diketahui sesi ini di Dunia — tempat bernama, penanda, struktur,
+semua orang lain yang ada di sini, dan penanda untuk Anda. Gulir atau
+gunakan +/− untuk zoom, klik ruang kosong untuk menggeser peta, dan klik
+tempat atau orang mana pun untuk langsung menggerakkan kamera ke sana.
+Tidak ada yang dapat diedit di peta, dan melihatnya tidak pernah mengubah
+apa pun — ini sekadar cara melihat geografi yang sudah dibangun dan diberi
+nama oleh kolaborator Dunia, sekaligus, alih-alih satu penanda demi satu
+penanda.
+
+### Tempat geografis
+
+Tab **Tempat** membuka direktori setiap **tempat geografis** yang telah
+diidentifikasi sesi ini — tempat yang dinamai atau dideskripsikan beberapa
+orang secara terpisah (sebagai wilayah — lihat bagian Tempat di Lokasi)
+yang ternyata menempati tanah yang kurang lebih sama. Klik sebuah baris
+untuk membuka layar detailnya: berapa banyak deskripsi dan Dunia yang
+dicakupnya, **Nama dari Komunitas**-nya sendiri, serta tombol **Pergi ke
+Tempat** / **Tampilkan di Peta**. Klik **← Kembali** (atau tekan Escape)
+untuk kembali ke direktori — beralih ke Peta atau Jelajahi lalu kembali ke
+Tempat nanti membuka kembali persis layar yang Anda tinggalkan, detail atau
+daftar.
+
+**Nama dari Komunitas** sebuah tempat menampilkan beberapa nama teratasnya;
+**Nama lainnya** menampilkan daftar lengkap yang diperingkat. Di bawahnya
+Anda dapat menerbitkan nama Anda sendiri. Semua hal lain (deskripsi lain
+tentang tempat itu, riwayat lengkap nama, impor dan ekspor) dilipat di
+bawah **Lainnya**.
+
+> Menerbitkan nama mengumumkannya kepada rekan yang terhubung dengan cara
+> yang sama seperti mengklaim kepengarangan struktur — lihat
+> [Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md) jika Anda
+> ingin melihat setiap klaim yang telah diterbitkan atau diketahui
+> perangkat ini, di satu tempat.
+
+## Dunia Saya — dunia yang benar-benar pernah Anda kunjungi
+
+Klik **Dunia Saya** di bilah atas untuk melihat setiap Dunia yang pernah
+dikunjungi perangkat ini, yang terbaru lebih dulu, dengan judul, pembuat,
+dan jumlah struktur serta penandanya. Klik **Lanjutkan Menjelajah** pada
+sebuah kartu untuk langsung masuk kembali.
+
+Daftar ini hanya disimpan di perangkat ini, dan tidak ada orang lain yang
+melihatnya. Sebuah Dunia muncul di sini begitu Anda pernah berada di
+dalamnya. Belum pernah ke mana-mana? **Jelajahi Repositori** membuka
+**Jelajahi**, tempat Anda dapat menemukan Dunia pertama Anda atau memulai
+dari bangunan siap pakai.
+
+Di bawah Dunia, **Bangunan yang Anda bantu buat** mencantumkan bangunan yang
+mencantumkan nama Anda oleh seorang teman karena Anda membangunnya bersama
+dengan **Bangun bersamaku** (lihat
+[Editor](02-TheEditor.md#bangun-bersamaku-membangun-bersama-secara-langsung)):
+judul masing-masing, milik siapa (**bersama** namanya, yang membuka halaman
+orang itu), dan **Belum diterbitkan** sampai teman Anda menerbitkannya;
+setelah itu judulnya membuka Dunianya. Perangkat Anda yang lain juga
+mencantumkannya, setelah terhubung ke perangkat ini. Bagian ini baru muncul
+bila ada isinya.
+
+## Menemukan dunia
+
+Ada tiga cara menemukan sesuatu di dunia bersama, masing-masing menjawab
+pertanyaan yang berbeda.
+
+### Cari — "publikasi mana yang cocok dengan ini?"
+
+Panel **Cari** mencari berdasarkan **judul atau pembuat**, di seluruh yang
+diterbitkan — bukan hanya yang saat ini dimuat di sekitar Anda. Ketik
+sebuah kata dan klik **Cari**.
+
+Anda dapat mempersempitnya secara opsional ke sebuah **Lokasi**: isi X/Y/Z
+dan **Radius** (dalam Satuan Dunia) maka pencarian hanya mengembalikan hasil
+dalam jarak itu dari titik tersebut. Biarkan Lokasi kosong untuk pencarian
+teks biasa.
+(Kolom lokasi hanya muncul bila **Tampilkan alat lanjutan** aktif.)
+
+Setiap hasil menampilkan:
+
+- 📍 posisinya
+- 📏 seberapa jauh (hanya ditampilkan untuk pencarian lokasi)
+- catatan jika posisi yang ditampilkan adalah **posisi bawaan**, bukan
+  yang benar-benar dipilih pembuatnya (lihat
+  [Posisi di dunia](#posisi-di-dunia) di bawah)
+
+Klik **Fokus** untuk terbang ke sana.
+
+### Jelajahi di Sini / Ada Apa di Sini? — "apa yang ada di sekitar saya sekarang?"
+
+Kedua tombol ini, di bagian atas bagian Di Sekitar milik Jelajahi, mencari
+**dari mana pun kamera Anda saat ini berada** — Anda tidak perlu sudah
+mengetahui judul atau mengetik koordinat.
+
+- **Jelajahi di Sini** mencari area yang cukup luas di sekitar kamera, dan
+  memungkinkan Anda memperlebar atau mempersempit radius itu setelahnya.
+- **Ada Apa di Sini?** hanya memeriksa area terdekat — berguna saat Anda
+  ingin tahu "apakah ada sesuatu tepat di tempat saya berdiri?"
+
+Keduanya membuka dialog **Jelajahi Lokasi**:
+
+```
+📍 Pusat: 100.0, 50.0, 250.0
+⭕ Radius: 25 Satuan Dunia
+
+Menampilkan 3 dari 3 dokumen yang dapat ditemukan
+
+📍 City Hall            📏 4,2 Satuan Dunia
+oleh alice
+[Fokus] [Pilih] [Periksa]
+```
+
+Setiap hasil memberi Anda tiga tindakan yang berbeda:
+
+| Tombol | Fungsinya |
+|---|---|
+| **Fokus** | Menerbangkan kamera ke sana *dan* menjadikannya yang sedang Anda edit |
+| **Pilih** | Menjadikannya yang sedang Anda edit, **tanpa** menggerakkan kamera |
+| **Periksa** | Membuka ringkasan di tempat — judul, pembuat, status, posisi, pemilik — tanpa menggerakkan apa pun |
+
+Dialog ini tidak pernah memindahkan penempatan, mengedit dokumen, atau
+menerbitkan apa pun dengan sendirinya — dialog ini murni untuk
+melihat-lihat dan memilih ke mana pergi berikutnya.
+
+### Dokumen di Sini
+
+Saat panel info sebuah penempatan memberi tahu bahwa dokumen lain berbagi
+posisi yang persis sama, klik **Lihat** untuk membuka **Dokumen di Sini** —
+daftar sederhana semua yang ada di titik itu, masing-masing dengan tombol
+**Fokus**-nya sendiri. Hanya dokumen yang masih benar-benar diterbitkan yang
+muncul di sini — jika salah satunya pernah dibatalkan penerbitannya, dokumen
+itu cukup tidak dicantumkan, alih-alih muncul sebagai baris yang tidak
+dapat diapa-apakan.
+
+## Informasi Dokumen dan Penempatan
+
+Di bawah kepala panel, Anda akan menemukan dua panel untuk dokumen mana pun
+yang sedang Anda edit:
+
+- **Informasi Dokumen** — judul, deskripsi, lisensi, siapa yang dapat
+  menempatkannya, status, dan (jika berupa fork) dari dunia mana ia
+  di-fork. Klik **Edit Metadata** untuk mengubah judul, deskripsi, lisensi,
+  atau siapa yang dapat menempatkannya.
+- **Penempatan** — *di mana* dokumen itu berada di ruang bersama, dalam
+  **Satuan Dunia** (sistem koordinat ForkBuild sendiri, bukan koordinat
+  GPS — satu Satuan Dunia mewakili satu meter panjang di dunia nyata). Klik
+  **Pindahkan** untuk memberinya koordinat X/Y/Z baru secara langsung, atau
+  gunakan tombol dorong ± (1 / 10 / 100 Satuan Dunia) untuk menggeser
+  posisi saat ini secara relatif sebelum mengonfirmasi. **Fokus** terbang
+  ke sana.
+
+Keduanya sengaja dibuat sebagai dua panel terpisah: apa *isi* sebuah karya
+dan di mana ia *berada* adalah dua pertanyaan yang berbeda, dan memindahkan
+penempatan tidak pernah mengedit dokumen itu sendiri (atau sebaliknya).
+
+### Posisi di dunia
+
+Jika dokumen lain sudah menempati titik persis tempat Anda akan pindah,
+Anda akan melihat peringatan yang mencantumkan siapa yang ada di sana
+sebelum diminta mengonfirmasi — berbagi lokasi diperbolehkan (adegan
+halaman dalam dan bangunan di sekelilingnya bisa saja wajar berada di tempat
+yang sama), ForkBuild hanya memastikan Anda melihatnya lebih dulu.
+
+### Penempatan yang bukan milik Anda
+
+Jika sebuah penempatan milik orang lain, panel Penempatan menampilkan
+**🔒 Ditempatkan oleh &lt;nama&gt; — Anda dapat melihat penempatan ini tetapi
+tidak dapat memindahkannya.** dan tombol **Pindahkan** dinonaktifkan. Anda
+tetap dapat **Fokus** ke sana, memeriksanya, dan memakai **Edit Salinan**
+untuk mengembangkan apa yang ada di sana; hanya *di mana ia berada di ruang
+bersama* yang menjadi hak mereka untuk dipindahkan.
+
+### Mengapa saya bisa menempatkan bangunan orang lain?
+
+Bangunan sungguhan tidak dapat diangkat dan ditaruh di tempat lain, jadi
+mungkin terasa aneh bahwa ForkBuild membiarkan Anda menempatkan bangunan
+terbitan siapa pun di mana pun Anda suka. Bangunan yang diterbitkan bukanlah
+satu benda fisik. Ia adalah konten tetap, diidentifikasi oleh hash
+kontennya, mirip seperti file atau repositori Git. **Penempatan** adalah
+catatan bertanda tangan yang terpisah yang menyatakan "tampilkan bangunan
+ini di sini". Penempatan menunjuk ke bangunan itu; tidak menyalinnya.
+Bangunan yang sama dapat memiliki banyak penempatan, dan masing-masing
+menampilkan konten terbitan yang persis sama.
+
+Jadi menempatkan bangunan orang lain tidak pernah memindahkan atau
+mengubah milik mereka:
+
+- **Penempatan mereka tetap di tempat mereka menaruhnya.** Hanya mereka
+  yang dapat memindahkannya (lihat
+  [Penempatan yang bukan milik Anda](#penempatan-yang-bukan-milik-anda) di
+  atas).
+- **Penempatan Anda ditandatangani oleh Anda**, dan hanya menyatakan di
+  mana *Anda* menampilkan bangunan mereka.
+- **Bangunan itu tetap membawa pembuat dan riwayatnya.** Itu tetap persis
+  konten yang mereka terbitkan, dan siapa pun dapat memeriksanya terhadap
+  hash dan tanda tangannya.
+
+Juga tidak ada satu dunia pusat yang menentukan siapa pemilik petak tanah
+mana. Setiap Dunia menampilkan penempatan yang telah diterimanya. Itulah
+sebabnya bangunan yang diumumkan seseorang di dekat Anda hanya muncul
+sebagai bayangan sampai Anda memilih **Terima Posisi** (lihat
+[Bangunan yang Diklaim](#bangunan-yang-diklaim--bangunan-orang-lain-di-tempat-yang-dinyatakan-penerbitnya)).
+Tidak ada yang dapat menjatuhkan bangunan ke Dunia Anda tanpa persetujuan
+Anda.
+
+Beberapa alasan untuk menempatkan bangunan yang bukan buatan Anda:
+
+- **Mengkurasi**, seperti Dunia galeri yang mengumpulkan bangunan yang Anda
+  sukai.
+- **Menyusun adegan**, seperti menaruh kastel teman di samping desa Anda.
+- **Memakainya ulang apa adanya.** Tempatkan jika Anda ingin tidak diubah,
+  dan gunakan [Edit Salinan](#edit-salinan--membawa-sesuatu-ke-editor) hanya
+  jika Anda ingin mengubahnya.
+
+Penerbit yang tidak menginginkan ini dapat memilih **Hanya saya yang boleh
+menempatkannya** saat menerbitkan (lihat
+[Memilih siapa yang dapat menempatkannya](04-PublishingAndForking.md#memilih-siapa-yang-dapat-menempatkannya)).
+Anda tetap dapat menemukan, melihat, dan, jika lisensi mengizinkan,
+mem-fork bangunan mereka, tetapi Anda tidak dapat menempatkannya.
+
+### Mengapa dua bangunan bisa berada di tempat yang sama?
+
+Di dunia nyata, dua bangunan tidak bisa berdiri di tempat yang sama. Di
+ForkBuild bisa, karena penempatan tidak memakan lahan. Penempatan hanyalah
+catatan bertanda tangan yang menyatakan "tampilkan bangunan ini di sini",
+dan dua catatan dapat menyebut titik yang sama.
+
+ForkBuild mengizinkannya dengan sengaja:
+
+- **Tidak ada yang membagikan lahan.** Tidak ada server pusat yang
+  menentukan siapa yang lebih dulu mendapatkan suatu tempat, dan ForkBuild
+  tidak pernah memilih pemenang di antara dua penempatan bertanda tangan.
+  Keduanya tetap sah.
+- **Setiap perangkat mengetahui kumpulan penempatan yang berbeda.** Tempat
+  yang sudah terisi di perangkat teman Anda mungkin masih kosong di
+  perangkat Anda, sampai penempatan itu sampai kepada Anda. Aturan ketat
+  "satu bangunan per tempat" akan memberi jawaban yang berbeda di perangkat
+  yang berbeda, jadi ForkBuild tidak berpura-pura menegakkannya.
+- **Kadang Anda memang menginginkannya.** Adegan halaman dalam di dalam
+  bangunan, versi lama yang ditampilkan menggantikan versi baru, atau
+  pameran yang sengaja ditumpuk semuanya adalah bangunan yang memang
+  seharusnya berada di tempat yang sama.
+
+Itu tidak berarti siapa pun dapat memadati bangunan Anda:
+
+- **Anda diperingatkan terlebih dahulu.** **Pindahkan…** mencantumkan apa
+  yang sudah ada di suatu titik sebelum Anda mengonfirmasi, dan ForkBuild
+  tidak pernah diam-diam memindahkan bangunan Anda ke tempat lain (lihat
+  [Posisi di dunia](#posisi-di-dunia)).
+- **Tidak ada duplikat yang tidak disengaja.** **Tambahkan Penempatan di
+  Sini** menolak jika sudah ada penempatan tepat di tempat Anda berada.
+- **Klaim orang lain hanya bayangan.** Posisi yang diumumkan oleh siapa pun
+  selain penerbit bangunan itu sendiri hanya ditampilkan sebagai bayangan
+  tembus pandang, dan tidak pernah di titik tempat perangkat ini sudah
+  mengetahui penempatan sungguhan (lihat
+  [Bangunan yang Diklaim](#bangunan-yang-diklaim--bangunan-orang-lain-di-tempat-yang-dinyatakan-penerbitnya)).
+- **Hanya pemilik yang dapat memindahkan atau menghapus penempatan** (lihat
+  [Penempatan yang bukan milik Anda](#penempatan-yang-bukan-milik-anda)).
+
+ForkBuild hanya memeriksa bangunan di titik yang persis sama. Dua bangunan
+di titik yang berdekatan yang baloknya kebetulan bersentuhan tidak
+ditandai. Untuk alasan desainnya, lihat
+[Overlap Is A Fact; Collision Is A Policy Decision](../../principles/placement.md#overlap-is-a-fact-collision-is-a-policy-decision-0225)
+(bahasa Inggris) dan aturan-aturan setelahnya.
+
+### Menempatkan vs mem-fork
+
+Keduanya memungkinkan Anda memiliki bangunan orang lain di Dunia milik
+Anda, tetapi keduanya hal yang berbeda:
+
+| | Menempatkan | Mem-fork (Fork, atau Edit Salinan) |
+|---|---|---|
+| Apa yang dibuat | Penempatan: catatan kecil bertanda tangan tentang di mana bangunan ditampilkan | Dokumen baru, dengan id baru, yang menjadi milik Anda |
+| Bangunannya | Dunia Bersama yang sama, ditampilkan seperti diterbitkan | Salinan Anda sendiri, dengan catatan yang menaut kembali ke aslinya |
+| Bisakah Anda mengubah baloknya? | Tidak | Ya, di Editor |
+| Siapa pembuatnya | Penerbit aslinya | Anda, dengan yang asli dicatat sebagai induknya |
+| Diatur oleh | Pengaturan **Siapa yang dapat menempatkannya di Dunia** milik penerbit | Lisensinya |
+| Menerbitkannya | Tidak ada yang baru diterbitkan | Membuat Dunia Bersama baru atas nama Anda |
+
+Menempatkan seperti menautkan ke file yang sama dari halaman lain; mem-fork
+seperti meng-clone repositori untuk mengerjakan salinan Anda sendiri. Jadi
+hanya fork yang merupakan salinan sungguhan. Seseorang yang memilih **Hanya
+saya yang boleh menempatkannya** tetap dapat mengizinkan fork melalui
+lisensinya, dan fork itu lalu menjadi milik Anda untuk ditempatkan di mana
+pun Anda suka.
+
+## Tampilan Dunia hanya dapat dilihat — membangun dilakukan di Editor
+
+Tidak ada alat Tempatkan, tidak ada gizmo transformasi, tidak ada
+salin/tempel, dan tidak ada grup di sini — mengeklik, menyeret, atau
+menekan tombol tidak pernah mengubah balok. Untuk mengembangkan sesuatu,
+gunakan **[Edit Salinan](#edit-salinan--membawa-sesuatu-ke-editor)** dan
+lanjutkan di [Editor](02-TheEditor.md). Pengecualian anotasi yang
+disebutkan di awal panduan ini tetap berlaku.
+
+## Melihat kolaborator lain
+
+Saat beberapa orang hadir di Dunia yang sama:
+
+- **Melihat orang lain** — avatar mereka muncul dengan nama tampilan dan
+  penanda aktivitas (mis., "**Bob — sedang menjelajah di sekitar**").
+- **Pembaruan langsung** — apa pun yang mereka terbitkan (penanda, nama,
+  fork baru milik mereka) muncul untuk Anda saat itu juga.
+- **Umpan aktivitas sementara** — panel lokal menampilkan aktivitas terbaru
+  untuk membantu Anda memahami apa yang berubah bahkan di luar tampilan
+  Anda saat ini. Umpan ini sementara dan tidak disimpan.
+
+> **Kehadiran menggambarkan aktivitas; kehadiran tidak pernah mengubah apa
+> pun dengan sendirinya.** Kehadiran spasial membantu Anda memahami apa yang
+> sedang dilakukan orang lain, tetapi hanya perubahan sungguhan — yang
+> dibuat di Editor, atau salah satu pengecualian anotasi Tampilan Dunia —
+> yang mengubah lingkungan bersama.
+
+## Menyimpan dan menerbitkan di sini juga
+
+Kepala panel memiliki tombol **Simpan**, **Terbitkan**, dan **Edit Metadata**
+setiap kali Anda sedang mengedit sesuatu, sehingga Anda dapat merekam dan
+membagikan sebuah dunia tanpa meninggalkannya. Baris statusnya
+(**🔒 Diterbitkan** atau **✎ Mengedit salinan Anda**) selalu menunjukkan yang mana.
+
+Dunia yang diterbitkan tidak pernah dapat berubah. Jika dunia yang sedang
+Anda edit sudah diterbitkan, perubahan pertama Anda di sini — mengedit
+metadatanya, menambahkan atau mengganti nama penanda atau wilayah, atau
+menghiasinya dengan hewan — otomatis membuat salinan Anda sendiri yang
+dapat diedit, berjudul *"Fork dari &lt;nama asli&gt;"*, dan pemberitahuan
+singkat ("Salinan Anda sendiri yang dapat diedit telah dibuat — "…" tidak
+berubah") memberi tahu Anda. Salinan ini mengikuti aturan lisensi yang sama
+seperti fork lainnya (lihat
+[Penerbitan & Fork](04-PublishingAndForking.md#fork-jadikan-milik-anda)).
+
+## Riwayat — melihat pratinjau dan memulihkan keadaan sebelumnya
+
+Setiap perubahan yang Anda buat di sini — menambah, mengganti nama, atau
+menghapus penanda atau wilayah — dicatat dalam riwayat dokumen. Klik
+**Riwayat** di kepala panel untuk membukanya. Anda akan melihat daftar
+bernomor dengan stempel waktu, seperti:
+
+```
+1. Buat Penanda “Old Bridge”
+2. Perbarui Wilayah “Willow Village”
+3. Hapus Penanda
+```
+
+Entri yang sudah Anda urungkan ditandai **diurungkan**. Mengeklik sebuah
+entri hanya memilihnya; tidak ada yang berubah sampai Anda menekan salah
+satu tombol:
+
+- **Pratinjau** — menampilkan seperti apa dunia itu *tepat setelah*
+  langkah yang dipilih, di samping yang sekarang, tanpa mengubah apa pun.
+  **Batalkan Pratinjau** kembali ke saat ini.
+- **Pulihkan** — menjadikan langkah yang dipilih sebagai keadaan **saat
+  ini** Anda. Dokumen dibiarkan dengan perubahan yang belum disimpan,
+  sehingga Anda tetap dapat memutuskan apakah akan menyimpannya. Tidak ada
+  konfirmasi terpisah.
+- **Tutup** — menutup panel.
+
+## Alat lanjutan
+
+Semua yang ada di bagian ini hanya muncul dengan **Tampilkan alat
+lanjutan** menyala, di bagian bawah panel (lihat
+[Tampilan pengunjung, dan Lanjutan](#tampilan-pengunjung-dan-lanjutan)).
+Alat-alat ini untuk jaringan di balik Dunia: memeriksa di mana sebuah
+bangunan disimpan, mengirim bangunan Anda sendiri secara manual, dan
+melihat apa yang diumumkan orang lain di sekitar. Anda tidak memerlukan
+satu pun untuk berjalan, membangun, me-remix, atau membagikan tautan.
+
+### Memeriksa balok — atau struktur yang ditempatkan
+
+Dengan **Tampilkan alat lanjutan** aktif, klik balok mana pun untuk membuka
+panel **Pemeriksaan** (sebagai pengunjung, klik tidak memilih apa pun), yang
+memberi tahu Anda:
+
+- Jenis baloknya
+- Posisi dan rotasinya
+- Dunia dan bangunan mana tempatnya berada
+- Siapa pembuat dunia itu
+
+Gunakan **Fokus ke Balok** untuk memperbesar ke sana, atau **Fokus ke
+Dunia** untuk melompat ke posisi asal karya itu. Tepat di sampingnya,
+tombol **Edit Salinan** mem-fork Dunia tempat balok ini berada dan membuka
+salinannya di Editor — yang asli tidak tersentuh. Mengeklik tanah kosong di
+dalam sebuah karya membuka panel yang sejenis (posisi dan dunia/pembuat
+yang memuatnya, tanpa kolom khusus balok) dengan tombol **Edit Salinan**-nya
+sendiri, karena alasan yang sama: fork tidak memerlukan Anda menemukan
+sesuatu yang menonjol dulu, cukup klik di mana saja di dalam Dunia yang
+ingin Anda kembangkan.
+
+Klik **struktur yang ditempatkan** (instans dari seluruh dokumen, yang
+dijatuhkan ke dalam karya dari Editor — lihat
+[Editor](02-TheEditor.md#instans-struktur-referensi-hidup)) dan panel yang
+sama menampilkan apa yang dirujuknya: judul dokumen sumbernya, posisi lokal
+dan di dunia, rotasi, ketinggian tanah, serta judul dan pembuat dunia yang
+memuatnya. Ini hanya dapat dilihat di Tampilan Dunia — tidak ada gizmo,
+tidak ada kolom angka, tidak ada yang dapat diseret. Klik **Buka Sumber**
+untuk langsung masuk ke Editor pada dokumen yang dirujuk itu sendiri; setiap
+instans lain darinya, di mana pun ditempatkan, mencerminkan apa pun yang
+Anda edit di sana. Tombol **Edit Salinan**-nya sendiri, tepat di samping
+Buka Sumber, menyasar dokumen yang dirujuk yang sama itu alih-alih Dunia
+yang sekadar memosisikannya — jika Anda lebih suka mengerjakan salinan
+mandiri, tanpa menyentuh setiap instans lain (dan yang asli), gunakan
+tombol itu alih-alih Buka Sumber.
+
+Setiap tombol "Edit Salinan" di Tampilan Dunia — di sini, dan di panel
+Fokus milik wilayah/penanda/struktur — adalah tindakan yang sama; lihat
+[Edit Salinan](#edit-salinan--membawa-sesuatu-ke-editor) di atas.
+
+### Kamera vs. Mengedit
+
+(Ditampilkan bila **Tampilkan alat lanjutan** aktif; lihat [Tampilan pengunjung, dan Lanjutan](#tampilan-pengunjung-dan-lanjutan).)
+
+Kepala panel menampilkan dua hal yang memang bisa berbeda:
+
+```
+Kamera: Alice's Castle · Mengedit: Bob's Castle
+```
+
+**Kamera** adalah tempat yang sedang Anda lihat — terbang ke sebuah dunia,
+atau mengeklik tombol **Fokus** pada hasil pencarian, menggerakkan kamera
+ke sana. **Mengedit** adalah dokumen mana yang akan benar-benar dikenai
+tindakan Anda berikutnya (menambah penanda atau wilayah, mengedit metadata,
+menerbitkan) — mengeklik balok atau penempatan, atau tombol **Pilih** pada
+hasil pencarian/lokasi, mengubahnya *tanpa* menggerakkan kamera. (Mengubah
+baloknya sendiri hanya terjadi di Editor — lihat
+[Edit Salinan](#edit-salinan--membawa-sesuatu-ke-editor) di atas.)
+
+Keduanya biasanya bergerak bersama (Fokus melakukan keduanya), tetapi dua
+karya bisa menempati titik yang persis sama di dunia — memfokuskan yang
+satu, lalu yang lain, tidak menggerakkan kamera ke mana pun untuk kedua
+kalinya, tetapi kepala panel tetap memberi tahu mana yang sekarang sedang
+Anda edit. Terbang berkeliling dan melihat-lihat tidak pernah mengubah apa
+yang sedang Anda edit dengan sendirinya; hanya benar-benar memilih balok
+atau dokumen yang mengubahnya.
+
+"Pergi," di baris Di Sekitar milik Jelajahi dan di panel Info, menamai
+mekanisme penggerak kamera yang sama dengan tombol "Fokus" di Cari, Lokasi,
+dan Penempatan — hanya labelnya yang berbeda; masing-masing menggerakkan
+kamera. Apa lagi yang dilakukannya — apakah juga mengubah dokumen yang
+sedang Anda edit, seperti Fokus milik
+[Cari](#cari--publikasi-mana-yang-cocok-dengan-ini) — tetap bergantung pada
+konteks persis seperti dijelaskan di bagian masing-masing panel; menyebut
+"Pergi" alih-alih "Fokus" tidak mengubah semua itu.
 
 ### Perjumpaan Dunia — publikasi dan avatar yang dibagikan rekan Anda
 
@@ -672,557 +1242,6 @@ memiliki:
 - **Sembunyikan** — menghapus bayangan itu dan barisnya sampai Anda
   meninggalkan Tampilan Dunia. Tidak ada yang dilaporkan atau dihapus.
 
-### Info — apa yang sedang saya lihat?
-
-Di samping kebanyakan tombol **Pergi** — di baris Di Sekitar milik
-Jelajahi, dan di panel Lokasi — Anda juga akan menemukan tombol **Info**.
-Jika Pergi menggerakkan kamera Anda, Info membuka panel kecil yang
-menjelaskan apa pun yang Anda pilih tanpa menggerakkan apa pun: apa itu,
-seberapa jauh, di dalam tempat bernama mana ia berada ("Anda berada di
-Willow Village") atau di dekat kandidat tempat geografis mana ("Anda berada
-di dekat Kawahara Village") jika keduanya tidak diketahui dengan pasti.
-Dari sana Anda tetap dapat menekan **Pergi** untuk ke sana, **Tampilkan di
-Peta** untuk melihatnya di Peta Dunia, **Nama** (untuk tempat bernama)
-untuk melihat atau menerbitkan nama komunitas untuknya, atau **Edit
-Salinan** untuk membukanya di Editor — lihat di bawah. Info sendiri tidak
-pernah melakukan salah satu dari hal itu dengan sendirinya.
-
-### Edit Salinan — membawa sesuatu ke Editor
-
-Di mana pun Tampilan Dunia menunjukkan sesuatu yang spesifik — wilayah,
-penanda, struktur yang ditempatkan, balok, atau tanah kosong — panel yang
-menjelaskannya memiliki satu tombol lagi: **Edit Salinan**. Tombol ini
-membuat salinan mandiri dari dokumen yang benar-benar berisi apa yang
-sedang Anda lihat — tidak pernah seluruh Dunia, tidak pernah karya asli
-orang lain — dan membukanya langsung di Editor, siap dikembangkan. Dua panel
-menawarkannya: panel **Fokus** (tombol Info di baris Jelajahi/Lokasi, untuk
-wilayah/penanda/struktur) dan panel **Pemeriksaan** (klik langsung di
-tampilan 3D, untuk balok, tanah kosong, atau struktur yang ditempatkan) —
-tindakan yang sama, tombol yang sama, dari mana pun Anda sampai di sana.
-
-Bila Dunia tempat Anda berada adalah bangunan orang lain, baris teratas
-panel juga menawarkan **Edit Salinan** untuk seluruhnya.
-
-- Untuk **penanda**, **wilayah**, **balok**, atau **tanah kosong**, itu
-  adalah dokumen Dunia tempat mereka berada.
-- Untuk **struktur yang ditempatkan**, itu adalah konten struktur itu
-  sendiri — bukan Dunia tempat ia kebetulan berada.
-
-Yang asli tidak pernah tersentuh — ForkBuild memberi tahu Anda begitu
-salinan Anda siap, persis seperti fork lainnya (lihat
-[Penerbitan & Fork](04-PublishingAndForking.md)). Jika salinannya tidak
-dapat dibuat — paling sering karena sumbernya adalah Dunia Bersama yang
-ditemukan melalui rekan atau jaringan terdesentralisasi yang materinya
-belum tersedia, atau yang lisensinya menolak fork — dialog **Fork Tidak
-Tersedia** menyebutkan persis alasannya dan menawarkan **Kembali ke Dunia
-Bersama** untuk mengembalikan Anda ke tempat Anda memulai, alih-alih
-meninggalkan Anda di dokumen Editor yang kosong (lihat
-[Saat fork tidak dapat diselesaikan](04-PublishingAndForking.md#saat-fork-tidak-dapat-diselesaikan)).
-**Tempat geografis** dan **kolaborator** tidak pernah menawarkan Edit
-Salinan — tempat geografis adalah pengelompokan wilayah milik beberapa
-orang tanpa satu dokumen pun yang dapat disalin (buka salah satu wilayahnya
-sebagai gantinya), dan orang sama sekali bukan dokumen.
-
-**Ini tindakan yang sama dengan tombol "Fork" milik Repositori, Halaman
-pembuat, dan Perjumpaan Dunia** — lihat
-[Fork: jadikan milik Anda](04-PublishingAndForking.md#fork-jadikan-milik-anda).
-Label mana pun yang Anda klik, hasilnya identik: salinan baru yang mandiri,
-yang asli dibiarkan persis seperti semula, dan aturan lisensi yang sama.
-"Edit Salinan" hanya diberi kata-kata berbeda di sini karena Anda sudah
-melihat satu hal spesifik yang akan disalin, alih-alih memilihnya dari
-daftar.
-
-Inilah *satu-satunya* pintu keluar dari ruang baca-saja Tampilan Dunia.
-Semua hal lain di sini — terbang berkeliling, Cari, Jelajahi di Sini/Ada
-Apa di Sini?, kompas, Peta, Info — hanya melihat.
-
-### Bangun di sini — memulai bangunan untuk tempat ini
-
-**Bangun di sini**, di samping **Beranda**, memulai bangunan baru yang
-kosong di Editor untuk tempat avatar Anda berdiri (atau, saat terbang,
-tempat di bawah kamera). Editor menyebutkan untuk Dunia mana bangunan itu.
-Saat Anda menerbitkannya, bangunan itu berdiri tepat di sana: penempatan
-pertamanya adalah tempat itu, bukan lahan kosong yang dipilih ForkBuild,
-dan **Lihat ke sana** membawa Anda kembali untuk melihatnya. **Lupakan
-tempat ini** membuatnya ditempatkan seperti biasa. Tempat itu hanyalah
-catatan Anda sendiri tentang di mana bangunan Anda ditampilkan, disimpan di
-perangkat ini dan cadangannya; tempat itu tidak mengklaim lahan, dan orang
-lain juga boleh membangun di sana.
-
-### Jalan di sini bersamaku — membawa teman ke Dunia ini
-
-**Jalan di sini bersamaku**, di samping **Bangun di sini**, membuat tautan
-yang membawa teman ke Dunia tempat Anda berada, untuk berjalan-jalan
-bersama. Kirimkan dengan cara apa pun; tautan itu juga tampil sebagai kode
-QR untuk ponsel. Teman yang membukanya masuk jika belum (ia berjalan sebagai
-avatarnya sendiri, dengan namanya), mengklik **Bergabung**, lalu tiba di
-Dunia ini, tempat kalian saling melihat berjalan-jalan. Dialog menunjukkan
-siapa yang sedang dalam perjalanan dan siapa yang sudah tiba.
-
-- Dunia harus diterbitkan lebih dulu: ForkBuild teman Anda memeriksa tanda
-  tangan dan bangunannya, seperti untuk tautan yang dibagikan, lalu
-  menyimpan salinannya.
-- Tautan berfungsi untuk siapa pun yang membukanya, selama 30 menit, selama
-  Anda tetap di Tampilan Dunia. Menutup dialog tidak menghentikannya;
-  **Hentikan tautan** menghentikannya. Teman yang sudah bergabung tetap
-  terhubung dalam kedua kasus.
-- Bergabung menghubungkan kedua perangkat Anda secara langsung, seperti
-  undangan di **Rekan**: masing-masing dapat melihat alamat IP yang lain, dan
-  avatar kalian tampil sesuai izin visibilitas kehadiran tiap pihak (lihat
-  [Avatar & Kehadiran](06-AvatarsAndPresence.md)). Tidak ada yang menjadi
-  rekan yang diingat atau teman kecuali Anda memilihnya.
-- Fitur ini memerlukan server rendezvous. Situs resmi memilikinya; salinan
-  yang Anda jalankan sendiri memerlukan server sendiri (lihat
-  [Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)).
-
-### Alun-alun tantangan
-
-**Jelajahi alun-alun** di halaman tantangan suatu minggu membuka Tampilan
-Dunia di alun-alun desa: dilapisi batu, dengan sumur, bangku, dan lampu
-jalan, serta enam bangunan siap pakai di sekelilingnya. Alun-alun dan
-bangunan siap pakai itu adalah bagian dari Dunia, seperti bukit dan
-pohonnya: semuanya berdiri di setiap Tampilan Dunia, bagi semua orang, dan
-tidak dimiliki siapa pun. Desa bangunan terbitan tumbuh tepat di luarnya,
-sehingga rumah terbitanmu sendiri punya tetangga. Sebuah panel mendaftar
-karya minggu itu dan bangunan siap pakai (lihat
-[Alun-alun tantangan](04-PublishingAndForking.md#alun-alun-tantangan)).
-Tidak ada pohon yang tumbuh di sekeliling alun-alun, dan **Bangun di sini**
-tidak ditawarkan di sana.
-
-### Penanda — menandai tempat yang layak diingat
-
-Tidak seperti struktur (bangunan yang ditempatkan, dibangun oleh Anda atau
-orang lain) atau pembacaan kompas (diturunkan baru dari tempat Anda
-berdiri), **penanda** adalah sesuatu yang Anda buat dengan sengaja: titik
-bernama — "Old Bridge," "Great View" — dengan deskripsi opsional,
-ditempatkan tepat di tempat avatar Anda sedang berdiri.
-
-Jika Anda memiliki akses EDIT ke Dunia tempat Anda berada, bagian Penanda
-di panel **Lokasi** menampilkan tombol **+ Tambah Penanda**. Beri judul
-(dan deskripsi, jika mau) lalu klik **Tempatkan di Sini** — penanda itu
-langsung muncul untuk Anda dan, beberapa saat kemudian, untuk setiap
-kolaborator lain di Dunia yang sama, di kompas, di panel Lokasi mereka
-sendiri, dan sebagai tujuan yang dapat dinavigasi. Siapa pun yang memiliki
-akses EDIT dapat mengganti nama, mengganti deskripsi, atau menghapus
-penanda mana pun di Dunia itu, bukan hanya orang yang membuatnya — penanda
-adalah konten Dunia, diatur oleh izin kolaborasi yang sama seperti semua
-hal lain yang Anda bangun bersama, tidak pernah pin pribadi yang hanya
-dapat Anda lihat atau sentuh.
-
-### Peta Dunia
-
-Tab **Peta** membuka tampilan datar dari atas berisi setiap tempat yang
-saat ini diketahui sesi ini di Dunia — tempat bernama, penanda, struktur,
-semua orang lain yang ada di sini, dan penanda untuk Anda. Gulir atau
-gunakan +/− untuk zoom, klik ruang kosong untuk menggeser peta, dan klik
-tempat atau orang mana pun untuk langsung menggerakkan kamera ke sana.
-Tidak ada yang dapat diedit di peta, dan melihatnya tidak pernah mengubah
-apa pun — ini sekadar cara melihat geografi yang sudah dibangun dan diberi
-nama oleh kolaborator Dunia, sekaligus, alih-alih satu penanda demi satu
-penanda.
-
-### Tempat geografis
-
-Tab **Tempat** membuka direktori setiap **tempat geografis** yang telah
-diidentifikasi sesi ini — tempat yang dinamai atau dideskripsikan beberapa
-orang secara terpisah (sebagai wilayah — lihat bagian Tempat di Lokasi)
-yang ternyata menempati tanah yang kurang lebih sama. Klik sebuah baris
-untuk membuka layar detailnya: berapa banyak deskripsi dan Dunia yang
-dicakupnya, **Nama dari Komunitas**-nya sendiri, serta tombol **Pergi ke
-Tempat** / **Tampilkan di Peta**. Klik **← Kembali** (atau tekan Escape)
-untuk kembali ke direktori — beralih ke Peta atau Jelajahi lalu kembali ke
-Tempat nanti membuka kembali persis layar yang Anda tinggalkan, detail atau
-daftar.
-
-Bagian Nama dari Komunitas sebuah tempat pada awalnya hanya menampilkan
-beberapa nama teratas, dengan tombol **Nama lainnya** untuk melihat daftar
-lengkap yang diperingkat — dan semua yang ada setelah "terbitkan nama Anda
-sendiri" (deskripsi geografis lain, riwayat klaim mentah, impor/ekspor)
-berada di balik satu bagian **Lainnya**, sehingga kasus umum — "apa sebutan
-orang untuk tempat ini, dan apa sebutan saya?" — tidak pernah bersaing
-dengan semua hal lain yang dapat dilakukan sistem penamaan.
-
-> Menerbitkan nama mengumumkannya kepada rekan yang terhubung dengan cara
-> yang sama seperti mengklaim kepengarangan struktur — lihat
-> [Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md) jika Anda
-> ingin melihat setiap klaim yang telah diterbitkan atau diketahui
-> perangkat ini, di satu tempat.
-
-## Kamera vs. Mengedit
-
-(Ditampilkan bila **Tampilkan alat lanjutan** aktif; lihat [Tampilan pengunjung, dan Lanjutan](#tampilan-pengunjung-dan-lanjutan).)
-
-Kepala panel menampilkan dua hal yang memang bisa berbeda:
-
-```
-Kamera: Alice's Castle · Mengedit: Bob's Castle
-```
-
-**Kamera** adalah tempat yang sedang Anda lihat — terbang ke sebuah dunia,
-atau mengeklik tombol **Fokus** pada hasil pencarian, menggerakkan kamera
-ke sana. **Mengedit** adalah dokumen mana yang akan benar-benar dikenai
-tindakan Anda berikutnya (menambah penanda atau wilayah, mengedit metadata,
-menerbitkan) — mengeklik balok atau penempatan, atau tombol **Pilih** pada
-hasil pencarian/lokasi, mengubahnya *tanpa* menggerakkan kamera. (Mengubah
-baloknya sendiri hanya terjadi di Editor — lihat
-[Edit Salinan](#edit-salinan--membawa-sesuatu-ke-editor) di atas.)
-
-Keduanya biasanya bergerak bersama (Fokus melakukan keduanya), tetapi dua
-karya bisa menempati titik yang persis sama di dunia — memfokuskan yang
-satu, lalu yang lain, tidak menggerakkan kamera ke mana pun untuk kedua
-kalinya, tetapi kepala panel tetap memberi tahu mana yang sekarang sedang
-Anda edit. Terbang berkeliling dan melihat-lihat tidak pernah mengubah apa
-yang sedang Anda edit dengan sendirinya; hanya benar-benar memilih balok
-atau dokumen yang mengubahnya.
-
-"Pergi," di baris Di Sekitar milik Jelajahi dan di panel Info, menamai
-mekanisme penggerak kamera yang sama dengan tombol "Fokus" di Cari, Lokasi,
-dan Penempatan — hanya labelnya yang berbeda; masing-masing menggerakkan
-kamera. Apa lagi yang dilakukannya — apakah juga mengubah dokumen yang
-sedang Anda edit, seperti Fokus milik
-[Cari](#cari--publikasi-mana-yang-cocok-dengan-ini) — tetap bergantung pada
-konteks persis seperti dijelaskan di bagian masing-masing panel; menyebut
-"Pergi" alih-alih "Fokus" tidak mengubah semua itu.
-
-## Dunia Saya — dunia yang benar-benar pernah Anda kunjungi
-
-Klik **Dunia Saya** di bilah atas untuk melihat setiap Dunia yang pernah
-dikunjungi perangkat ini, dari yang terakhir dikunjungi, masing-masing
-menampilkan judul, pembuat, dan jumlah struktur/penanda jika diketahui.
-Klik tombol **Lanjutkan Menjelajah** pada sebuah kartu untuk langsung
-terbang kembali — pintu masuk baru yang sama ke Tampilan Dunia seperti
-tombol **Jelajahi** milik Repositori dan Halaman pembuat (lihat
-[Repositori](04-PublishingAndForking.md#repositori)), hanya dengan
-kata-kata untuk Dunia yang sudah pernah Anda kunjungi, bukan yang baru
-pertama kali Anda temukan.
-
-Ini riwayat pribadi yang sepenuhnya lokal — tidak pernah daftar yang
-dibagikan atau diterbitkan, dan tidak sama dengan Repositori atau hasil
-pencarian: sebuah Dunia hanya muncul di sini setelah Anda benar-benar
-memasukinya, dan tetap di sini (hanya di perangkat ini) bahkan jika Anda
-tidak pernah menerbitkan atau membagikan apa pun milik Anda. Belum
-mengunjungi tempat mana pun? **Jelajahi Repositori** untuk menemukan yang
-pertama, atau mulai dari salah satu bangunan siap pakai di bawahnya.
-
-Di bawah Dunia, **Bangunan yang Anda bantu buat** mencantumkan bangunan yang
-mencantumkan nama Anda oleh seorang teman karena Anda membangunnya bersama
-dengan **Bangun bersamaku** (lihat
-[Editor](02-TheEditor.md#bangun-bersamaku-membangun-bersama-secara-langsung)):
-judul masing-masing, milik siapa (**bersama** namanya, yang membuka halaman
-orang itu), dan **Belum diterbitkan** sampai teman Anda menerbitkannya;
-setelah itu judulnya membuka Dunianya. Perangkat Anda yang lain juga
-mencantumkannya, setelah terhubung ke perangkat ini. Bagian ini baru muncul
-bila ada isinya.
-
-## Menemukan dunia
-
-Ada tiga cara menemukan sesuatu di dunia bersama, masing-masing menjawab
-pertanyaan yang berbeda.
-
-### Cari — "publikasi mana yang cocok dengan ini?"
-
-Panel **Cari** mencari berdasarkan **judul atau pembuat**, di seluruh yang
-diterbitkan — bukan hanya yang saat ini dimuat di sekitar Anda. Ketik
-sebuah kata dan klik **Cari**.
-
-Anda dapat mempersempitnya secara opsional ke sebuah **Lokasi**: isi X/Y/Z
-dan **Radius** (dalam Satuan Dunia) maka pencarian hanya mengembalikan hasil
-dalam jarak itu dari titik tersebut. Biarkan Lokasi kosong untuk pencarian
-teks biasa.
-(Kolom lokasi hanya muncul bila **Tampilkan alat lanjutan** aktif.)
-
-Setiap hasil menampilkan:
-
-- 📍 posisinya
-- 📏 seberapa jauh (hanya ditampilkan untuk pencarian lokasi)
-- catatan jika posisi yang ditampilkan adalah **posisi bawaan**, bukan
-  yang benar-benar dipilih pembuatnya (lihat
-  [Posisi di dunia](#posisi-di-dunia) di bawah)
-
-Klik **Fokus** untuk terbang ke sana.
-
-### Jelajahi di Sini / Ada Apa di Sini? — "apa yang ada di sekitar saya sekarang?"
-
-Kedua tombol ini, di bagian atas bagian Di Sekitar milik Jelajahi, mencari
-**dari mana pun kamera Anda saat ini berada** — Anda tidak perlu sudah
-mengetahui judul atau mengetik koordinat.
-
-- **Jelajahi di Sini** mencari area yang cukup luas di sekitar kamera, dan
-  memungkinkan Anda memperlebar atau mempersempit radius itu setelahnya.
-- **Ada Apa di Sini?** hanya memeriksa area terdekat — berguna saat Anda
-  ingin tahu "apakah ada sesuatu tepat di tempat saya berdiri?"
-
-Keduanya membuka dialog **Jelajahi Lokasi**:
-
-```
-📍 Pusat: 100.0, 50.0, 250.0
-⭕ Radius: 25 Satuan Dunia
-
-Menampilkan 3 dari 3 dokumen yang dapat ditemukan
-
-📍 City Hall            📏 4,2 Satuan Dunia
-oleh alice
-[Fokus] [Pilih] [Periksa]
-```
-
-Setiap hasil memberi Anda tiga tindakan yang berbeda:
-
-| Tombol | Fungsinya |
-|---|---|
-| **Fokus** | Menerbangkan kamera ke sana *dan* menjadikannya yang sedang Anda edit |
-| **Pilih** | Menjadikannya yang sedang Anda edit, **tanpa** menggerakkan kamera |
-| **Periksa** | Membuka ringkasan di tempat — judul, pembuat, status, posisi, pemilik — tanpa menggerakkan apa pun |
-
-Dialog ini tidak pernah memindahkan penempatan, mengedit dokumen, atau
-menerbitkan apa pun dengan sendirinya — dialog ini murni untuk
-melihat-lihat dan memilih ke mana pergi berikutnya.
-
-### Dokumen di Sini
-
-Saat panel info sebuah penempatan memberi tahu bahwa dokumen lain berbagi
-posisi yang persis sama, klik **Lihat** untuk membuka **Dokumen di Sini** —
-daftar sederhana semua yang ada di titik itu, masing-masing dengan tombol
-**Fokus**-nya sendiri. Hanya dokumen yang masih benar-benar diterbitkan yang
-muncul di sini — jika salah satunya pernah dibatalkan penerbitannya, dokumen
-itu cukup tidak dicantumkan, alih-alih muncul sebagai baris yang tidak
-dapat diapa-apakan.
-
-## Memeriksa balok — atau struktur yang ditempatkan
-
-Dengan **Tampilkan alat lanjutan** aktif, klik balok mana pun untuk membuka
-panel **Pemeriksaan** (sebagai pengunjung, klik tidak memilih apa pun), yang
-memberi tahu Anda:
-
-- Jenis baloknya
-- Posisi dan rotasinya
-- Dunia dan bangunan mana tempatnya berada
-- Siapa pembuat dunia itu
-
-Gunakan **Fokus ke Balok** untuk memperbesar ke sana, atau **Fokus ke
-Dunia** untuk melompat ke posisi asal karya itu. Tepat di sampingnya,
-tombol **Edit Salinan** mem-fork Dunia tempat balok ini berada dan membuka
-salinannya di Editor — yang asli tidak tersentuh. Mengeklik tanah kosong di
-dalam sebuah karya membuka panel yang sejenis (posisi dan dunia/pembuat
-yang memuatnya, tanpa kolom khusus balok) dengan tombol **Edit Salinan**-nya
-sendiri, karena alasan yang sama: fork tidak memerlukan Anda menemukan
-sesuatu yang menonjol dulu, cukup klik di mana saja di dalam Dunia yang
-ingin Anda kembangkan.
-
-Klik **struktur yang ditempatkan** (instans dari seluruh dokumen, yang
-dijatuhkan ke dalam karya dari Editor — lihat
-[Editor](02-TheEditor.md#instans-struktur-referensi-hidup)) dan panel yang
-sama menampilkan apa yang dirujuknya: judul dokumen sumbernya, posisi lokal
-dan di dunia, rotasi, ketinggian tanah, serta judul dan pembuat dunia yang
-memuatnya. Ini hanya dapat dilihat di Tampilan Dunia — tidak ada gizmo,
-tidak ada kolom angka, tidak ada yang dapat diseret. Klik **Buka Sumber**
-untuk langsung masuk ke Editor pada dokumen yang dirujuk itu sendiri; setiap
-instans lain darinya, di mana pun ditempatkan, mencerminkan apa pun yang
-Anda edit di sana. Tombol **Edit Salinan**-nya sendiri, tepat di samping
-Buka Sumber, menyasar dokumen yang dirujuk yang sama itu alih-alih Dunia
-yang sekadar memosisikannya — jika Anda lebih suka mengerjakan salinan
-mandiri, tanpa menyentuh setiap instans lain (dan yang asli), gunakan
-tombol itu alih-alih Buka Sumber.
-
-Setiap tombol "Edit Salinan" di Tampilan Dunia — di sini, dan di panel
-Fokus milik wilayah/penanda/struktur — adalah tindakan yang sama; lihat
-[Edit Salinan](#edit-salinan--membawa-sesuatu-ke-editor) di atas.
-
-## Informasi Dokumen dan Penempatan
-
-Di bawah kepala panel, Anda akan menemukan dua panel untuk dokumen mana pun
-yang sedang Anda edit:
-
-- **Informasi Dokumen** — judul, deskripsi, lisensi, siapa yang dapat
-  menempatkannya, status, dan (jika berupa fork) dari dunia mana ia
-  di-fork. Klik **Edit Metadata** untuk mengubah judul, deskripsi, lisensi,
-  atau siapa yang dapat menempatkannya.
-- **Penempatan** — *di mana* dokumen itu berada di ruang bersama, dalam
-  **Satuan Dunia** (sistem koordinat ForkBuild sendiri, bukan koordinat
-  GPS — satu Satuan Dunia mewakili satu meter panjang di dunia nyata). Klik
-  **Pindahkan** untuk memberinya koordinat X/Y/Z baru secara langsung, atau
-  gunakan tombol dorong ± (1 / 10 / 100 Satuan Dunia) untuk menggeser
-  posisi saat ini secara relatif sebelum mengonfirmasi. **Fokus** terbang
-  ke sana.
-
-Keduanya sengaja dibuat sebagai dua panel terpisah: apa *isi* sebuah karya
-dan di mana ia *berada* adalah dua pertanyaan yang berbeda, dan memindahkan
-penempatan tidak pernah mengedit dokumen itu sendiri (atau sebaliknya).
-
-### Posisi di dunia
-
-Jika dokumen lain sudah menempati titik persis tempat Anda akan pindah,
-Anda akan melihat peringatan yang mencantumkan siapa yang ada di sana
-sebelum diminta mengonfirmasi — berbagi lokasi diperbolehkan (adegan
-halaman dalam dan bangunan di sekelilingnya bisa saja wajar berada di tempat
-yang sama), ForkBuild hanya memastikan Anda melihatnya lebih dulu.
-
-### Penempatan yang bukan milik Anda
-
-Jika sebuah penempatan milik orang lain, panel Penempatan menampilkan
-**🔒 Ditempatkan oleh &lt;nama&gt; — Anda dapat melihat penempatan ini tetapi
-tidak dapat memindahkannya.** dan tombol **Pindahkan** dinonaktifkan. Anda
-tetap dapat **Fokus** ke sana, memeriksanya, dan memakai **Edit Salinan**
-untuk mengembangkan apa yang ada di sana; hanya *di mana ia berada di ruang
-bersama* yang menjadi hak mereka untuk dipindahkan.
-
-### Mengapa saya bisa menempatkan bangunan orang lain?
-
-Bangunan sungguhan tidak dapat diangkat dan ditaruh di tempat lain, jadi
-mungkin terasa aneh bahwa ForkBuild membiarkan Anda menempatkan bangunan
-terbitan siapa pun di mana pun Anda suka. Bangunan yang diterbitkan bukanlah
-satu benda fisik. Ia adalah konten tetap, diidentifikasi oleh hash
-kontennya, mirip seperti file atau repositori Git. **Penempatan** adalah
-catatan bertanda tangan yang terpisah yang menyatakan "tampilkan bangunan
-ini di sini". Penempatan menunjuk ke bangunan itu; tidak menyalinnya.
-Bangunan yang sama dapat memiliki banyak penempatan, dan masing-masing
-menampilkan konten terbitan yang persis sama.
-
-Jadi menempatkan bangunan orang lain tidak pernah memindahkan atau
-mengubah milik mereka:
-
-- **Penempatan mereka tetap di tempat mereka menaruhnya.** Hanya mereka
-  yang dapat memindahkannya (lihat
-  [Penempatan yang bukan milik Anda](#penempatan-yang-bukan-milik-anda) di
-  atas).
-- **Penempatan Anda ditandatangani oleh Anda**, dan hanya menyatakan di
-  mana *Anda* menampilkan bangunan mereka.
-- **Bangunan itu tetap membawa pembuat dan riwayatnya.** Itu tetap persis
-  konten yang mereka terbitkan, dan siapa pun dapat memeriksanya terhadap
-  hash dan tanda tangannya.
-
-Juga tidak ada satu dunia pusat yang menentukan siapa pemilik petak tanah
-mana. Setiap Dunia menampilkan penempatan yang telah diterimanya. Itulah
-sebabnya bangunan yang diumumkan seseorang di dekat Anda hanya muncul
-sebagai bayangan sampai Anda memilih **Terima Posisi** (lihat
-[Bangunan yang Diklaim](#bangunan-yang-diklaim--bangunan-orang-lain-di-tempat-yang-dinyatakan-penerbitnya)).
-Tidak ada yang dapat menjatuhkan bangunan ke Dunia Anda tanpa persetujuan
-Anda.
-
-Beberapa alasan untuk menempatkan bangunan yang bukan buatan Anda:
-
-- **Mengkurasi**, seperti Dunia galeri yang mengumpulkan bangunan yang Anda
-  sukai.
-- **Menyusun adegan**, seperti menaruh kastel teman di samping desa Anda.
-- **Memakainya ulang apa adanya.** Tempatkan jika Anda ingin tidak diubah,
-  dan gunakan [Edit Salinan](#edit-salinan--membawa-sesuatu-ke-editor) hanya
-  jika Anda ingin mengubahnya.
-
-Penerbit yang tidak menginginkan ini dapat memilih **Hanya saya yang boleh
-menempatkannya** saat menerbitkan (lihat
-[Memilih siapa yang dapat menempatkannya](04-PublishingAndForking.md#memilih-siapa-yang-dapat-menempatkannya)).
-Anda tetap dapat menemukan, melihat, dan, jika lisensi mengizinkan,
-mem-fork bangunan mereka, tetapi Anda tidak dapat menempatkannya.
-
-### Mengapa dua bangunan bisa berada di tempat yang sama?
-
-Di dunia nyata, dua bangunan tidak bisa berdiri di tempat yang sama. Di
-ForkBuild bisa, karena penempatan tidak memakan lahan. Penempatan hanyalah
-catatan bertanda tangan yang menyatakan "tampilkan bangunan ini di sini",
-dan dua catatan dapat menyebut titik yang sama.
-
-ForkBuild mengizinkannya dengan sengaja:
-
-- **Tidak ada yang membagikan lahan.** Tidak ada server pusat yang
-  menentukan siapa yang lebih dulu mendapatkan suatu tempat, dan ForkBuild
-  tidak pernah memilih pemenang di antara dua penempatan bertanda tangan.
-  Keduanya tetap sah.
-- **Setiap perangkat mengetahui kumpulan penempatan yang berbeda.** Tempat
-  yang sudah terisi di perangkat teman Anda mungkin masih kosong di
-  perangkat Anda, sampai penempatan itu sampai kepada Anda. Aturan ketat
-  "satu bangunan per tempat" akan memberi jawaban yang berbeda di perangkat
-  yang berbeda, jadi ForkBuild tidak berpura-pura menegakkannya.
-- **Kadang Anda memang menginginkannya.** Adegan halaman dalam di dalam
-  bangunan, versi lama yang ditampilkan menggantikan versi baru, atau
-  pameran yang sengaja ditumpuk semuanya adalah bangunan yang memang
-  seharusnya berada di tempat yang sama.
-
-Itu tidak berarti siapa pun dapat memadati bangunan Anda:
-
-- **Anda diperingatkan terlebih dahulu.** **Pindahkan…** mencantumkan apa
-  yang sudah ada di suatu titik sebelum Anda mengonfirmasi, dan ForkBuild
-  tidak pernah diam-diam memindahkan bangunan Anda ke tempat lain (lihat
-  [Posisi di dunia](#posisi-di-dunia)).
-- **Tidak ada duplikat yang tidak disengaja.** **Tambahkan Penempatan di
-  Sini** menolak jika sudah ada penempatan tepat di tempat Anda berada.
-- **Klaim orang lain hanya bayangan.** Posisi yang diumumkan oleh siapa pun
-  selain penerbit bangunan itu sendiri hanya ditampilkan sebagai bayangan
-  tembus pandang, dan tidak pernah di titik tempat perangkat ini sudah
-  mengetahui penempatan sungguhan (lihat
-  [Bangunan yang Diklaim](#bangunan-yang-diklaim--bangunan-orang-lain-di-tempat-yang-dinyatakan-penerbitnya)).
-- **Hanya pemilik yang dapat memindahkan atau menghapus penempatan** (lihat
-  [Penempatan yang bukan milik Anda](#penempatan-yang-bukan-milik-anda)).
-
-ForkBuild hanya memeriksa bangunan di titik yang persis sama. Dua bangunan
-di titik yang berdekatan yang baloknya kebetulan bersentuhan tidak
-ditandai. Untuk alasan desainnya, lihat
-[Overlap Is A Fact; Collision Is A Policy Decision](../../principles/placement.md#overlap-is-a-fact-collision-is-a-policy-decision-0225)
-(bahasa Inggris) dan aturan-aturan setelahnya.
-
-### Menempatkan vs mem-fork
-
-Keduanya memungkinkan Anda memiliki bangunan orang lain di Dunia milik
-Anda, tetapi keduanya hal yang berbeda:
-
-| | Menempatkan | Mem-fork (Fork, atau Edit Salinan) |
-|---|---|---|
-| Apa yang dibuat | Penempatan: catatan kecil bertanda tangan tentang di mana bangunan ditampilkan | Dokumen baru, dengan id baru, yang menjadi milik Anda |
-| Bangunannya | Dunia Bersama yang sama, ditampilkan seperti diterbitkan | Salinan Anda sendiri, dengan catatan yang menaut kembali ke aslinya |
-| Bisakah Anda mengubah baloknya? | Tidak | Ya, di Editor |
-| Siapa pembuatnya | Penerbit aslinya | Anda, dengan yang asli dicatat sebagai induknya |
-| Diatur oleh | Pengaturan **Siapa yang dapat menempatkannya di Dunia** milik penerbit | Lisensinya |
-| Menerbitkannya | Tidak ada yang baru diterbitkan | Membuat Dunia Bersama baru atas nama Anda |
-
-Menempatkan seperti menautkan ke file yang sama dari halaman lain; mem-fork
-seperti meng-clone repositori untuk mengerjakan salinan Anda sendiri. Jadi
-hanya fork yang merupakan salinan sungguhan. Seseorang yang memilih **Hanya
-saya yang boleh menempatkannya** tetap dapat mengizinkan fork melalui
-lisensinya, dan fork itu lalu menjadi milik Anda untuk ditempatkan di mana
-pun Anda suka.
-
-## Tampilan Dunia hanya dapat dilihat — membangun dilakukan di Editor
-
-Tidak ada alat Tempatkan, tidak ada gizmo transformasi, tidak ada
-salin/tempel, dan tidak ada grup di sini — mengeklik, menyeret, atau
-menekan tombol tidak pernah mengubah balok. Untuk mengembangkan sesuatu,
-gunakan **[Edit Salinan](#edit-salinan--membawa-sesuatu-ke-editor)** dan
-lanjutkan di [Editor](02-TheEditor.md). Pengecualian anotasi yang
-disebutkan di awal panduan ini tetap berlaku.
-
-## Melihat kolaborator lain
-
-Saat beberapa orang hadir di Dunia yang sama:
-
-- **Melihat orang lain** — avatar mereka muncul dengan nama tampilan dan
-  penanda aktivitas (mis., "**Bob — sedang menjelajah di sekitar**").
-- **Pembaruan langsung** — apa pun yang mereka terbitkan (penanda, nama,
-  fork baru milik mereka) muncul untuk Anda saat itu juga.
-- **Umpan aktivitas sementara** — panel lokal menampilkan aktivitas terbaru
-  untuk membantu Anda memahami apa yang berubah bahkan di luar tampilan
-  Anda saat ini. Umpan ini sementara dan tidak disimpan.
-
-> **Kehadiran menggambarkan aktivitas; kehadiran tidak pernah mengubah apa
-> pun dengan sendirinya.** Kehadiran spasial membantu Anda memahami apa yang
-> sedang dilakukan orang lain, tetapi hanya perubahan sungguhan — yang
-> dibuat di Editor, atau salah satu pengecualian anotasi Tampilan Dunia —
-> yang mengubah lingkungan bersama.
-
-## Menyimpan dan menerbitkan di sini juga
-
-Kepala panel memiliki tombol **Simpan**, **Terbitkan**, dan **Edit Metadata**
-setiap kali Anda sedang mengedit sesuatu, sehingga Anda dapat merekam dan
-membagikan sebuah dunia tanpa meninggalkannya. Baris statusnya
-(**🔒 Diterbitkan** atau **✎ Mengedit salinan Anda**) selalu menunjukkan yang mana.
-
-Dunia yang diterbitkan tidak pernah dapat berubah. Jika dunia yang sedang
-Anda edit sudah diterbitkan, perubahan pertama Anda di sini — mengedit
-metadatanya, menambahkan atau mengganti nama penanda atau wilayah, atau
-menghiasinya dengan hewan — otomatis membuat salinan Anda sendiri yang
-dapat diedit, berjudul *"Fork dari &lt;nama asli&gt;"*, dan pemberitahuan
-singkat ("Salinan Anda sendiri yang dapat diedit telah dibuat — "…" tidak
-berubah") memberi tahu Anda. Salinan ini mengikuti aturan lisensi yang sama
-seperti fork lainnya (lihat
-[Penerbitan & Fork](04-PublishingAndForking.md#fork-jadikan-milik-anda)).
-
 ### Dunia Bersama Saya — mendistribusikan Snapshot Anda sendiri, tanpa rekan
 
 (Ditampilkan bila **Tampilkan alat lanjutan** aktif; lihat [Tampilan pengunjung, dan Lanjutan](#tampilan-pengunjung-dan-lanjutan).)
@@ -1366,32 +1385,6 @@ menyebutkan tempatnya. Snapshot yang lebih jauh diunduh begitu Anda
 berjalan mendekatinya. Paling banyak empat diunduh sekaligus. Snapshot yang
 sudah pernah diunduh perangkat ini dibaca dari penyimpanannya sendiri
 alih-alih diunduh lagi, setelah pemeriksaan konten yang sama.
-
-## Riwayat — melihat pratinjau dan memulihkan keadaan sebelumnya
-
-Setiap perubahan yang Anda buat di sini — menambah, mengganti nama, atau
-menghapus penanda atau wilayah — dicatat dalam riwayat dokumen. Klik
-**Riwayat** di kepala panel untuk membukanya. Anda akan melihat daftar
-bernomor dengan stempel waktu, seperti:
-
-```
-1. Buat Penanda “Old Bridge”
-2. Perbarui Wilayah “Willow Village”
-3. Hapus Penanda
-```
-
-Entri yang sudah Anda urungkan ditandai **diurungkan**. Mengeklik sebuah
-entri hanya memilihnya; tidak ada yang berubah sampai Anda menekan salah
-satu tombol:
-
-- **Pratinjau** — menampilkan seperti apa dunia itu *tepat setelah*
-  langkah yang dipilih, di samping yang sekarang, tanpa mengubah apa pun.
-  **Batalkan Pratinjau** kembali ke saat ini.
-- **Pulihkan** — menjadikan langkah yang dipilih sebagai keadaan **saat
-  ini** Anda. Dokumen dibiarkan dengan perubahan yang belum disimpan,
-  sehingga Anda tetap dapat memutuskan apakah akan menyimpannya. Tidak ada
-  konfirmasi terpisah.
-- **Tutup** — menutup panel.
 
 ## Apa selanjutnya?
 

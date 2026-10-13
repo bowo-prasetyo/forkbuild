@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 406b0d8076916c27 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: d5ddd1ed7cb40c91 -->
 # 08 — Obrolan & Percakapan
 
 <!-- languages -->
 [English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · **Bahasa Indonesia** · [日本語](../ja/08-ChatAndConversations.md) · [한국어](../ko/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../08-ChatAndConversations.md).
-<!-- /stale -->
 
 Pesan langsung di ForkBuild bersifat rekan-ke-rekan dan **khusus teman** —
 lihat [Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md) untuk cara
@@ -16,7 +12,7 @@ berteman dengan seseorang terlebih dahulu.
 ## Memulai percakapan
 
 Obrolan dibuka dari tombol **Obrolan** milik seorang teman di halaman
-**Rekan**, atau dari halaman **Percakapan** di bilah atas — tidak ada jalan
+**Rekan**, atau dari halaman **Percakapan** (**Lainnya → Percakapan**) — tidak ada jalan
 masuk obrolan dari Tampilan Dunia atau dari avatar. Membuka obrolan dengan
 seseorang yang saat ini bukan teman (atau yang diblokir) menampilkan
 penjelasan alih-alih kotak tulis: yang membuka obrolan adalah pertemanan,

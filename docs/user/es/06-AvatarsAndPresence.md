@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 331ff412e7f1ca0d -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 36d3d49f37473bfe -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
 [English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · **Español** · [Français](../fr/06-AvatarsAndPresence.md) · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · [日本語](../ja/06-AvatarsAndPresence.md) · [한국어](../ko/06-AvatarsAndPresence.md) · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../06-AvatarsAndPresence.md).
-<!-- /stale -->
 
 Su **avatar** es cómo lo ven las demás personas en la Vista del mundo: su
 apariencia, su posición y cómo se mueve. Esta guía cubre cómo
@@ -16,7 +12,7 @@ de todos los demás.
 
 ## Personalizar su avatar
 
-Abra **Mi avatar** en la barra superior:
+Abra **Más → Mi avatar** (o haga clic en su nombre en la barra superior):
 
 1. Elija una **Plantilla** (un tipo de cuerpo, por ejemplo “Humanoid 01”)
    en el menú desplegable. Una vista previa plana se actualiza en vivo

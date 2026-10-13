@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 185649658a1144d2 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 9cd714dbbc4a41d4 -->
 # 05 — Identidade e login
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../05-IdentityAndLogin.md).
-<!-- /stale -->
 
 O ForkBuild não tem senhas nem servidor central de contas. **Sua identidade é
 um par de chaves criptográficas guardado neste navegador** — a mesma chave
@@ -72,7 +68,7 @@ memória —, mesmo que o app ainda lembre com quem você tinha entrado.
 
 ## Gerenciando identidades — a página Minhas identidades
 
-Abra **Minhas identidades** na barra superior para ver todas as identidades
+Abra **Mais → Minhas identidades** (ou clique no seu nome na barra superior) para ver todas as identidades
 que este dispositivo tem, cada uma com seu estado de bloqueio, independente
 de com qual você entrou. Daqui você pode:
 

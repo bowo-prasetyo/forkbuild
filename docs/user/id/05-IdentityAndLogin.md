@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 185649658a1144d2 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 9cd714dbbc4a41d4 -->
 # 05 — Identitas & Masuk
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · **Bahasa Indonesia** · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../05-IdentityAndLogin.md).
-<!-- /stale -->
 
 ForkBuild tidak memiliki kata sandi dan tidak ada server akun pusat.
 **Identitas Anda adalah pasangan kunci kriptografis yang tersimpan di
@@ -75,7 +71,7 @@ siapa Anda masuk.
 
 ## Mengelola identitas — halaman Identitas Saya
 
-Buka **Identitas Saya** di bilah atas untuk melihat setiap identitas yang
+Buka **Lainnya → Identitas Saya** (atau klik nama Anda di bilah atas) untuk melihat setiap identitas yang
 ada di perangkat ini, masing-masing dengan status kuncinya sendiri, terlepas
 dari identitas mana yang sedang Anda pakai untuk masuk. Dari sini Anda dapat:
 

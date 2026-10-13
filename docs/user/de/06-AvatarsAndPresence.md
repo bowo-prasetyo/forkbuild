@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 331ff412e7f1ca0d -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 36d3d49f37473bfe -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
 [English](../06-AvatarsAndPresence.md) · **Deutsch** · [Español](../es/06-AvatarsAndPresence.md) · [Français](../fr/06-AvatarsAndPresence.md) · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · [日本語](../ja/06-AvatarsAndPresence.md) · [한국어](../ko/06-AvatarsAndPresence.md) · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../06-AvatarsAndPresence.md).
-<!-- /stale -->
 
 Ihr **Avatar** ist, wie andere Sie in der Weltansicht sehen — sein
 Aussehen, seine Position und wie er sich bewegt. Diese Anleitung behandelt,
@@ -16,7 +12,7 @@ aller anderen umgehen.
 
 ## Ihren Avatar anpassen
 
-Öffnen Sie in der oberen Leiste **Mein Avatar**:
+Öffnen Sie **Mehr → Mein Avatar** (oder klicken Sie oben auf Ihren Namen):
 
 1. Wählen Sie im Auswahlmenü eine **Vorlage** — einen Körpertyp (z. B.
    „Humanoid 01“). Eine flache Vorschau aktualisiert sich live, während Sie

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 0597b11a718701f3 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: d8dfa742e1512331 -->
 # 02 — Der Editor
 
 <!-- languages -->
 [English](../02-TheEditor.md) · **Deutsch** · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../02-TheEditor.md).
-<!-- /stale -->
 
 Im Editor wird gebaut. Diese Anleitung behandelt die Werkzeuge, wie Sie
 Steine auswählen und transformieren und wie Sie Ihr Bauwerk mit Gruppen
@@ -553,7 +549,7 @@ Schaltfläche **✎** neben dem Dokumenttitel oben in der Seitenleiste des
 Editors öffnet (in der Weltansicht ist es die Schaltfläche **Metadaten
 bearbeiten**). Ein neues Dokument beginnt ohne Lizenz, was bedeutet, dass
 niemand sonst es forken kann, bis Sie eine wählen. Die Beschreibung
-erscheint als Auszug auf seiner Karte im Repository und ist dort auch
+erscheint als Auszug auf seiner Karte in **Entdecken** und ist dort auch
 durchsuchbar; die Lizenz legt fest, ob — und wie — andere es forken
 dürfen. Was jede Lizenz bedeutet, steht unter
 [Veröffentlichen & Forken](04-PublishingAndForking.md).
@@ -572,7 +568,7 @@ Steem- und Blurt-Beiträge zeigen sie an:
 | `\*`, `\#`, `\-` | das Zeichen selbst |
 
 Alles andere ist keine Formatierung: Links, Bilder und HTML bleiben
-einfacher Text. Repository-Karten zeigen die Wörter der Beschreibung in einer Zeile, ohne
+einfacher Text. Karten in **Entdecken** zeigen die Wörter der Beschreibung in einer Zeile, ohne
 Formatierung.
 
 **Tags** sagen, was das Bauwerk ist, etwa `japanisch tempel garten`: bis zu
@@ -623,17 +619,17 @@ Beim Bauen spielt leise Musik, etwas lebhafter als in der Weltansicht. Die Schal
   eine Mühle und eine Brücke) als Ihre eigene Kopie, ganz im Blick. Hat das
   Geöffnete ungespeicherte Änderungen, sagt Neu das zuerst; speichern Sie
   es, um sie zu behalten.
-- **Datei** enthält die nächsten drei:
-- **Exportieren** — die aktuelle Kreation als JSON-Datei herunterladen, um
-  eine Kopie zu behalten oder sie auf ein anderes Gerät zu bringen. Die
-  Dateien nutzen ein kompaktes Format, das Steine als Tabelle speichert.
-- **3D-Modell** — die Kreation als 3D-Modell für andere Programme
-  herunterladen (siehe [Ein 3D-Modell herunterladen](#ein-3d-modell-herunterladen)).
-- **Importieren** — eine exportierte Datei als neue Kreation mit eigener
-  Identität öffnen; nichts wird behalten, bis Sie **Speichern**. Dateien,
-  die frühere Versionen exportiert haben, lassen sich weiterhin öffnen (sie
-  werden beim Laden umgewandelt), aber ForkBuild 1.0.0 und älter kann von
-  dieser Version exportierte Dateien nicht öffnen.
+- **Datei** — ein Menü mit drei weiteren:
+  - **Exportieren** — das aktuelle Bauwerk als JSON-Datei herunterladen, um
+    eine Kopie zu behalten oder sie auf ein anderes Gerät zu bringen. Die
+    Dateien nutzen ein kompaktes Format, das Steine als Tabelle speichert.
+  - **3D-Modell** — das Bauwerk als 3D-Modell für andere Programme
+    herunterladen (siehe [Ein 3D-Modell herunterladen](#ein-3d-modell-herunterladen)).
+  - **Importieren** — eine exportierte Datei als neues Bauwerk mit eigener
+    Identität öffnen; nichts wird behalten, bis Sie **Speichern**. Dateien,
+    die frühere Versionen exportiert haben, lassen sich weiterhin öffnen (sie
+    werden beim Laden umgewandelt), aber ForkBuild 1.0.0 und älter kann von
+    dieser Version exportierte Dateien nicht öffnen.
 - **Zuletzt** — etwas wieder öffnen, das Sie früher gespeichert haben (es
   erscheint nach dem ersten Speichern; klicken Sie auf den Namen eines
   Dokuments, um es zu öffnen). Sobald Sie genug Dokumente gespeichert

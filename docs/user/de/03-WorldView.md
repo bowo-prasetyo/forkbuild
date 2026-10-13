@@ -1,16 +1,12 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3a4a0c4e45f32875 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: da5501ad67f233f7 -->
 # 03 — Weltansicht
 
 <!-- languages -->
 [English](../03-WorldView.md) · **Deutsch** · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
 
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../03-WorldView.md).
-<!-- /stale -->
-
-Die Weltansicht ist der geteilte 3D-Raum, in dem **jede veröffentlichte
-Kreation Seite an Seite existiert**. Fliegen Sie herum, suchen Sie, was Sie
+Die Weltansicht ist der geteilte 3D-Raum, in dem **jedes veröffentlichte
+Bauwerk Seite an Seite steht**. Fliegen Sie herum, suchen Sie, was Sie
 suchen, entdecken Sie, was andere in der Nähe gebaut haben, und
 untersuchen Sie ihre Steine — die Weltansicht ist eine schreibgeschützte
 Fläche zum Erkunden, nie ein zweiter Ort zum Bauen. Sobald Sie etwas
@@ -24,6 +20,22 @@ Die einzigen Ausnahmen sind Anmerkungen, kein Bauen: Regionen der Welt und
 benennen und ein freigelassenes Tier mit **G** als Schmuck in die Welt
 einbringen (siehe
 [Avatare & Anwesenheit](06-AvatarsAndPresence.md#eine-welt-mit-einem-tier-schmücken)).
+
+**Die Kurzfassung:**
+
+| Um … | Tun Sie das |
+|---|---|
+| hierherzukommen | **Spazieren** in der oberen Leiste, oder **Erkunden** bei einem beliebigen Bauwerk |
+| zu gehen | `W` `A` `S` `D` zum Gehen, `Umschalt` zum Laufen, `Leertaste` zum Springen (auf einem Telefon der Joystick) |
+| sich umzusehen | Ziehen, um die Kamera zu drehen, scrollen zum Zoomen |
+| zu ändern, was Sie sehen | **Eine Kopie bearbeiten** öffnet Ihre eigene Kopie im Editor |
+| genau hier ein Bauwerk zu beginnen | **Hier bauen** |
+| Freunde mitzubringen | **Mit mir hier spazieren** erstellt einen Link, den Sie ihnen schicken |
+| den Ton aus- oder einzuschalten | Die Schaltfläche **Ton**, oder `M` |
+
+Jede Steuerung steht in der [Steuerungsreferenz](ControlsReference.md).
+Die Netzwerkwerkzeuge hinter der Welt sind am Ende beschrieben, unter
+[Erweiterte Werkzeuge](#erweiterte-werkzeuge).
 
 ## Die Weltansicht öffnen
 
@@ -211,6 +223,15 @@ diesem Gerät gespeichert und ändert für niemanden sonst etwas.
 
 ## Ton
 
+**Steuerung:** Die Schaltfläche **Ton** oben rechts in der Ansicht (auf
+einem Telefon unten rechts) oder `M` schaltet allen Ton aus oder ein; der
+Regler daneben stellt die Lautstärke ein (auf einem Telefon oder Tablet
+nutzen Sie die Lautstärketasten des Geräts). **♪ Musik** schaltet nur die
+Musik aus oder ein, und **3D** wechselt zwischen 3D-Ton und einfachem
+**Stereo**. Der Ton beginnt, wie Browser es verlangen, mit Ihrem ersten
+Klick, Tippen oder Tastendruck und pausiert, solange der Tab verborgen ist.
+ForkBuild merkt sich diese Wahl auf diesem Gerät, für beide Ansichten.
+
 Die Weltansicht spielt leise Hintergrundklänge, die zu Ihrem Ort passen:
 Wind auf hohem und felsigem Gelände, Vogelgesang in Wäldern, Grillen auf
 Feldern und Grasland, Wellen am Seeufer und rauschendes Wasser neben einem
@@ -265,16 +286,12 @@ nie ein Klang gesendet. Andere hören Ihre Schritte und Ihr Fahrzeug so,
 wie Sie ihre hören: Ihr Browser erzeugt sie dort, wo er Ihren Avatar
 bereits gehen oder fahren sieht.
 
-Browser lassen eine Seite erst Ton abspielen, wenn Sie mit ihr
-interagieren; der Ton beginnt also mit Ihrem ersten Klick, Tippen oder
-Tastendruck. Schalten Sie ihn mit der Schaltfläche **Ton** oben rechts in
-der Ansicht (auf einem Telefon unten rechts) oder mit `M` aus oder ein und
-stellen Sie mit dem Regler daneben die Lautstärke ein; auf einem Telefon
-oder Tablet nutzen Sie die Lautstärketasten des Geräts. ForkBuild merkt
-sich Ihre Wahl, einschließlich 3D oder Stereo, auf diesem Gerät. Der Ton
-pausiert, solange der Tab verborgen ist.
-
-**Musik** spielt leise unter den Klängen: eine sanfte Melodie, die Ihr Browser beim Spielen erfindet, warm am Tag und langsamer und tiefer nach Einbruch der Dunkelheit, mit stillen Pausen zwischen den Stücken, damit die Klänge der Welt durchkommen. Sie klingt nie zweimal genau gleich. Schalten Sie sie mit der Schaltfläche **♪ Musik** neben dem Lautstärkeregler aus oder ein; die Schaltfläche **Ton** und der Regler schalten sie mit allem anderen stumm und stellen ihre Lautstärke ein. ForkBuild merkt sich die Wahl auf diesem Gerät, für beide Ansichten.
+**Musik** spielt leise unter den Klängen: eine sanfte Melodie, die Ihr
+Browser beim Spielen erfindet, warm am Tag und langsamer und tiefer nach
+Einbruch der Dunkelheit, mit stillen Pausen zwischen den Stücken, damit die
+Klänge der Welt durchkommen. Sie klingt nie zweimal genau gleich. Die
+Schaltfläche **Ton** und der Regler schalten sie mit allem anderen stumm
+und stellen ihre Lautstärke ein.
 
 ## Orientierung und Orte
 
@@ -282,17 +299,12 @@ Neben den Kamerakoordinaten zeigt ein kleiner **Kompass**, in welche
 Richtung Sie blicken (er ist schreibgeschützt — er bewegt nie die Kamera).
 Eine Reihe von Schaltflächen oben im Feld dient dem Fortbewegen:
 
-- **Start** bringt Sie — Kamera und Avatar — zurück zu Ihrer eigenen
-  aktuellen Welt, der, die Sie geöffnet oder zuletzt fokussiert haben,
-  statt zum festen Ursprung (0,0,0) der geteilten Karte. Es setzt Sie
-  knapp außerhalb der Grundfläche Ihrer Welt ab, nie mitten hinein, selbst
-  wenn der Inhalt dieser Welt um ihren lokalen Ursprung zentriert ist.
-  Haben Sie in dieser Sitzung noch keine eigene Welt fokussiert, weicht es
-  stattdessen auf diesen gemeinsamen Ursprung aus — jederzeit auch über
-  **Orte** unten erreichbar, dort dauerhaft unter „Welt“ aufgeführt.
-  Wandern Sie so weit, dass Ihre eigene Welt aus dem Blick ausgeladen wird
-  (zu Fuß oder mit einem Fahrzeug), verlieren Sie den Heimweg nicht; Start
-  bringt Sie trotzdem dorthin zurück.
+- **Start** bringt Sie, Kamera und Avatar, zurück zu Ihrer eigenen
+  aktuellen Welt: der, die Sie geöffnet oder zuletzt fokussiert haben. Sie
+  landen knapp außerhalb von ihr, nie mitten darin, wie weit Sie auch
+  gewandert sind. Haben Sie in dieser Sitzung noch keine eigene Welt
+  fokussiert, bringt Start Sie stattdessen in die Mitte der geteilten Karte
+  (auch unter „Welt“ in **Orte** aufgeführt).
 - **Orte** öffnet eine Liste aller Orte, die diese Sitzung gerade kennt,
   gruppiert in **Welt**, **Strukturen**, **Wahrzeichen** und **Gegenden** —
   jeweils mit einer Schaltfläche **Fokussieren**. Wie Suche und Hier
@@ -306,7 +318,7 @@ Eine Reihe von Schaltflächen oben im Feld dient dem Fortbewegen:
   steuern); klicken Sie erneut, um sie auszublenden.
 
 **Benachrichtigungen** ist die Schaltfläche 🔔 in der Kopfzeile der App,
-neben Anmelden, und daher auf jeder Seite da, nicht nur in der
+neben Ihrem Namen (oder **Namen wählen**), und daher auf jeder Seite da, nicht nur in der
 Weltansicht. Sie öffnet Ihren **Benachrichtigungsverlauf** — eine
 dauerhafte Aufzeichnung der an Ihre Identität gerichteten
 Benachrichtigungen, die jüngste Aktivität zuerst. Drei Dinge erzeugen eine: wenn jemand eine Veröffentlichung kommentiert, die
@@ -347,38 +359,607 @@ Website-Einstellungen des Browsers, um sie einzuschalten.
 ### Erkunden, Karte und Gegenden — drei Arten zu stöbern, nie gleichzeitig
 
 Unter den Navigationsschaltflächen sitzen drei Reiter: **Erkunden**,
-**Karte** und **Gegenden**. Das sind die drei wichtigsten, einander
-ausschließenden Arten der Weltansicht, sich umzusehen — einen zu öffnen
-schließt immer den gerade offenen anderen, sodass Sie nie mit mehreren
-überlappenden Feldern zum Stöbern gleichzeitig hantieren.
+**Karte** und **Gegenden**. Es ist immer nur einer offen.
 
-- **Erkunden** ist der Standard. Es zeigt das Ankunfts-/Willkommensfeld
-  (wer da ist und einige vorgeschlagene Ziele) sowie einen Abschnitt **In
-  der Nähe** mit einklappbaren Gruppen — **Gegenden**, **Wahrzeichen**,
-  **Personen**, **Ortsnamen** (siehe
-  [Ortsnamen in der Nähe](#ortsnamen-in-der-nähe--ansprüche-von-jedem-entdecken)
-  unten), **Beanspruchte Bauwerke** (siehe
-  [Beanspruchte Bauwerke](#beanspruchte-bauwerke--die-bauwerke-anderer-dort-wo-ihre-herausgeber-sie-hinstellen)
-  unten, nur sichtbar, wenn es eines gibt) und **Begegnungen in der Welt**
-  (siehe
-  [Begegnungen in der Welt](#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen)
-  unten) — jeweils nur ein Name, eine Entfernung und eine kompakte
-  Schaltfläche **Hin** (Begegnungen in der Welt und Ortsnamen zeigen
-  stattdessen eigene, anders aufgebaute Inhalte, unten beschrieben).
-  Gegenden, Wahrzeichen und Personen erscheinen nur, wenn sie etwas
-  enthalten; sind alle drei leer, sagt das eine einzige Zeile. Klicken Sie
-  auf den Titel einer Gruppe, um sie aufzuklappen — die Weltansicht merkt
-  sich, welche Gruppen Sie offen gelassen haben, auch wenn Sie zu Karte
-  oder Gegenden wechseln und zurückkommen.
+- **Erkunden** ist der Standard. Es zeigt, wer da ist, und einige
+  vorgeschlagene Ziele, dann einen Abschnitt **In der Nähe** mit
+  einklappbaren Gruppen: **Gegenden**, **Wahrzeichen** und **Personen**,
+  jede Zeile ein Name, eine Entfernung und eine Schaltfläche **Hin**. Eine
+  Gruppe erscheint nur, wenn sie etwas enthält. Klicken Sie auf den Titel
+  einer Gruppe, um sie auf- oder zuzuklappen; die Weltansicht merkt sich,
+  welche Sie offen gelassen haben. Mit **Erweiterte Werkzeuge zeigen**
+  erscheinen drei weitere Gruppen: **Ortsnamen**, **Beanspruchte
+  Bauwerke** und **Begegnungen in der Welt** (siehe
+  [Erweiterte Werkzeuge](#erweiterte-werkzeuge)).
 - **Karte** öffnet dieselbe flache Weltkarte von oben, die unten
   beschrieben ist.
 - **Gegenden** öffnet das Verzeichnis geografischer Orte, das unter
   [Geografische Orte](#geografische-orte) unten beschrieben ist.
 
-Der Wechsel zwischen Erkunden, Karte und Gegenden lädt nie ein Dokument,
-bearbeitet nichts und bewegt Ihren Avatar nicht — er ändert nur, was dieses
-Feld gerade zeigt, dieselbe Grenze „Navigieren ≠ Ändern“, die jedes andere
-Navigationselement der Weltansicht bereits einhält.
+Der Wechsel der Reiter ändert nur, was das Feld zeigt: Er bewegt nie
+Ihren Avatar und ändert nichts.
+
+### Info — was sehe ich mir an?
+
+Neben den meisten Schaltflächen **Hin**, in den Zeilen unter In der Nähe
+von Erkunden und im Feld Orte, gibt es eine Schaltfläche **Info**. **Hin**
+bewegt Ihre Kamera dorthin; **Info** beschreibt den Ort, ohne etwas zu
+bewegen: was er ist, wie weit entfernt er ist und in welchem benannten Ort
+er liegt („Sie sind in Weidendorf“) oder nahe welchem („Sie sind in der
+Nähe von Kawahara-Dorf“).
+
+Im Feld Info können Sie:
+
+- **Hin** — dorthin reisen;
+- **Auf der Karte zeigen** — es auf der Weltkarte sehen;
+- **Namen** (bei einem benannten Ort) — sehen oder veröffentlichen, wie
+  andere ihn nennen;
+- **Eine Kopie bearbeiten** — Ihre eigene Kopie im Editor öffnen (siehe
+  unten).
+
+### Eine Kopie bearbeiten — etwas in den Editor übernehmen
+
+Mit **Eine Kopie bearbeiten** ändern Sie etwas, das Sie in der
+Weltansicht gefunden haben. Es macht eine eigene, unabhängige Kopie des
+Bauwerks und öffnet sie im Editor, bereit zum Weiterbauen. Das Original
+wird nie berührt.
+
+Sie finden es:
+
+- auf der Leiste unten in der Welt, wenn das Bauwerk, das Sie besuchen,
+  nicht Ihnen gehört: Es kopiert das ganze Bauwerk;
+- im Feld **Info** einer Region, eines Wahrzeichens oder einer
+  platzierten Struktur;
+- im Feld **Untersuchung**, wenn Sie mit **Erweiterte Werkzeuge zeigen**
+  auf einen Stein, bloßen Boden oder eine platzierte Struktur klicken.
+
+Was kopiert wird, hängt davon ab, was Sie gewählt haben:
+
+- Bei einem **Wahrzeichen**, einer **Region**, einem **Stein** oder
+  **bloßem Boden** ist es das Weltdokument, zu dem sie gehören.
+- Bei einer **platzierten Struktur** ist es der eigene Inhalt der
+  Struktur — nicht die Welt, in der sie gerade steht.
+
+ForkBuild sagt Ihnen, sobald Ihre Kopie bereit ist (siehe
+[Veröffentlichen & Forken](04-PublishingAndForking.md)). Kann die Kopie
+nicht erstellt werden, sagt ein Dialog **Keine Kopie möglich**, warum,
+meist weil die Lizenz des Bauwerks keine Kopien erlaubt oder das Bauwerk
+noch nicht abgerufen werden kann, und **Zurück zum Bauwerk** bringt Sie
+dorthin zurück, wo Sie waren (siehe
+[Wenn ein Fork nicht möglich ist](04-PublishingAndForking.md#wenn-ein-fork-nicht-möglich-ist)).
+
+Ein **geografischer Ort** und eine **Person** bieten Eine Kopie bearbeiten
+nie an: Ein geografischer Ort fasst die Regionen mehrerer Menschen
+zusammen, ohne ein einzelnes Bauwerk zum Kopieren (öffnen Sie stattdessen
+eine seiner Regionen).
+
+Eine Kopie bearbeiten ist dieselbe Aktion wie **Remixen** in **Entdecken**
+und auf der Seite eines Autors: eine neue, eigene Kopie, mit denselben
+Lizenzregeln (siehe
+[Forken: machen Sie es zu Ihrem eigenen](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen)).
+Alles andere in der Weltansicht, etwa die Suche, der Kompass, die Karte
+und Info, sieht nur hin.
+
+### Hier bauen — einen Bau für diese Stelle beginnen
+
+**Hier bauen**, neben **Start**, beginnt im Editor einen neuen, leeren
+Bau für die Stelle, an der Ihr Avatar steht (oder, im Flug, die Stelle
+unter der Kamera). Der Editor zeigt an, für welche Welt er ist. Wenn Sie
+den Bau veröffentlichen, steht er genau dort: Seine erste Platzierung ist
+diese Stelle statt eines freien Platzes, den ForkBuild wählt, und
+**Ansehen** bringt Sie zurück, um ihn anzuschauen. Mit **Diese Stelle
+vergessen** wird der Bau wie gewohnt platziert. Die Stelle ist nur Ihre
+eigene Notiz, wo Ihr Bau gezeigt wird, auf diesem Gerät und in seinen
+Sicherungen; sie beansprucht kein Land, und andere dürfen dort ebenfalls
+bauen.
+
+### Mit mir hier spazieren — Freunde in diese Welt holen
+
+**Mit mir hier spazieren**, neben **Hier bauen**, erstellt einen Link, der
+Freunde in die Welt holt, in der Sie gerade sind, um gemeinsam darin
+herumzugehen. Schicken Sie ihn auf jedem Weg, der Ihnen passt; er erscheint
+auch als QR-Code für ein Handy. Ein Freund, der ihn öffnet, meldet sich an,
+falls noch nicht geschehen (er spaziert als sein eigener Avatar, unter
+seinem Namen), klickt auf **Beitreten** und kommt in diese Welt, wo Sie
+einander herumgehen sehen. Der Dialog zeigt, wer unterwegs ist und wer
+angekommen ist.
+
+- Die Welt muss zuerst veröffentlicht sein: Das ForkBuild Ihres Freundes
+  prüft ihre Signatur und ihr Bauwerk wie bei einem geteilten Link und
+  behält eine Kopie.
+- Der Link funktioniert 30 Minuten lang für alle, die ihn öffnen, solange
+  Sie in der Weltansicht bleiben. Das Schließen des Dialogs lässt ihn weiter
+  funktionieren; **Link beenden** beendet ihn. Freunde, die schon
+  dazugekommen sind, bleiben in jedem Fall verbunden.
+- Beim Beitreten werden Ihre beiden Geräte direkt verbunden, wie bei einer
+  Einladung unter **Peers**: Jeder kann die IP-Adresse des anderen sehen, und
+  Ihre Avatare erscheinen so, wie die Präsenz-Sichtbarkeit beider Seiten es
+  erlaubt (siehe [Avatare & Präsenz](06-AvatarsAndPresence.md)). Niemand wird
+  zu einem gemerkten Peer oder Freund, wenn Sie es nicht wählen.
+- Es braucht einen Rendezvous-Server. Die offizielle Website hat einen; eine
+  Kopie, die Sie selbst betreiben, braucht einen eigenen (siehe
+  [Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)).
+
+### Der Challenge-Platz
+
+**Über den Platz gehen** auf der Challenge-Seite einer Woche öffnet die
+Weltansicht auf dem Dorfplatz: gepflastert, mit einem Brunnen, Bänken und
+Laternen, und den sechs fertigen Bauwerken rundherum. Der Platz und die
+fertigen Bauwerke gehören zur Welt wie ihre Hügel und Bäume: Sie stehen in
+jeder Weltansicht, für alle, und niemandem gehören sie. Gleich außerhalb
+davon wächst das Dorf der veröffentlichten Bauwerke, sodass dein eigenes
+veröffentlichtes Haus Nachbarn hat. Ein Panel listet die Beiträge der Woche
+und die fertigen Bauwerke auf (siehe
+[Der Challenge-Platz](04-PublishingAndForking.md#der-challenge-platz)).
+Rund um den Platz wachsen keine Bäume, und **Hier bauen** wird dort nicht
+angeboten.
+
+### Wahrzeichen — einen Ort markieren, den man sich merken sollte
+
+Ein **Wahrzeichen** ist ein benannter Punkt, den Sie in eine Welt setzen,
+etwa „Alte Brücke“ oder „Schöne Aussicht“, mit optionaler Beschreibung. Es
+wird genau dort gesetzt, wo Ihr Avatar steht.
+
+Haben Sie Bearbeitungsrechte für die Welt, in der Sie sind, zeigt der
+Abschnitt Wahrzeichen im Feld **Orte** eine Schaltfläche **+ Wahrzeichen
+hinzufügen**. Geben Sie ihm einen Titel (und optional eine Beschreibung)
+und klicken Sie auf **Hier setzen** — es erscheint sofort für Sie und
+Augenblicke später für jeden anderen Mitwirkenden in derselben Welt, auf
+dem Kompass, in deren eigenem Feld Orte und als Ziel, zu dem man gehen
+kann. Wahrzeichen gehören der Welt, nicht Ihnen: Jeder mit
+Bearbeitungsrechten kann jedes Wahrzeichen umbenennen, neu beschreiben
+oder entfernen, nicht nur die Person, die es gesetzt hat.
+
+### Die Weltkarte
+
+Der Reiter **Karte** öffnet eine flache Ansicht von oben auf alles, was
+diese Sitzung in der Welt gerade kennt — benannte Orte, Wahrzeichen,
+Strukturen, alle anderen, die da sind, und eine Markierung für Sie.
+Scrollen Sie oder nutzen Sie +/−, um zu zoomen, klicken Sie auf eine leere
+Stelle, um die Karte zu schwenken, und klicken Sie auf einen Ort oder eine
+Person, um Ihre Kamera direkt dorthin zu bewegen. Nichts an der Karte lässt
+sich bearbeiten, und sie anzusehen ändert nie etwas — sie ist einfach ein
+Weg, die Geografie, die die Mitwirkenden einer Welt bereits gebaut und
+benannt haben, auf einmal zu sehen statt Wahrzeichen für Wahrzeichen.
+
+### Geografische Orte
+
+Der Reiter **Gegenden** öffnet ein Verzeichnis jedes **geografischen
+Ortes**, den diese Sitzung erkannt hat — Orte, die mehrere Menschen
+unabhängig voneinander benannt oder beschrieben haben (als Region — siehe
+den Abschnitt Gegenden im Feld Orte) und die sich als ungefähr dasselbe
+Gelände herausstellen. Klicken Sie auf eine Zeile, um ihre eigene
+Detailansicht zu öffnen: wie viele Beschreibungen und Welten sie umfasst,
+ihre eigenen **Namen aus der Gemeinschaft** und die Schaltflächen **Zum Ort
+gehen** / **Auf der Karte zeigen**. Klicken Sie auf **← Zurück** (oder
+drücken Sie Escape), um zum Verzeichnis zurückzukehren — wechseln Sie zu
+Karte oder Erkunden und später zurück zu Gegenden, öffnet sich genau die
+Ansicht wieder, die Sie verlassen haben, Detail oder Liste.
+
+Die **Namen aus der Gemeinschaft** eines Ortes zeigen seine wichtigsten
+Namen; **Weitere Namen** zeigt die vollständige gereihte Liste. Darunter
+können Sie einen eigenen Namen veröffentlichen. Alles andere (andere
+Beschreibungen des Ortes, der ganze Verlauf der Namen, Import und Export)
+ist unter **Mehr** eingeklappt.
+
+> Einen Namen zu veröffentlichen kündigt ihn Ihren verbundenen Peers auf
+> dieselbe Weise an wie das Beanspruchen der Urheberschaft einer Struktur —
+> siehe
+> [Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md),
+> wenn Sie jeden Anspruch, den dieses Gerät veröffentlicht oder erfahren
+> hat, an einem Ort sehen möchten.
+
+## Meine Welten — Welten, in denen Sie wirklich waren
+
+Klicken Sie in der oberen Leiste auf **Meine Welten**, um jede Welt zu
+sehen, die dieses Gerät besucht hat, die neueste zuerst, mit Titel, Autor
+und der Zahl ihrer Strukturen und Wahrzeichen. Klicken Sie auf einer Karte
+auf **Weiter erkunden**, um direkt wieder hineinzugehen.
+
+Die Liste liegt nur auf diesem Gerät, und niemand sonst sieht sie. Eine
+Welt erscheint hier, sobald Sie darin waren. Noch nirgends gewesen?
+**Durchsuchen Sie das Repository** öffnet **Entdecken**, wo Sie Ihre erste
+Welt finden oder mit einem fertigen Bauwerk beginnen können.
+
+Unter den Welten listet **Bauten, an denen Sie mitgebaut haben** die Bauten,
+in denen ein Freund Sie genannt hat, weil Sie sie mit **Mit mir bauen**
+gemeinsam gebaut haben (siehe
+[Der Editor](02-TheEditor.md#mit-mir-bauen-gemeinsam-bauen-live)): jeweils
+den Titel, wessen Bau es ist (**mit** dem Namen, der die Seite dieser Person
+öffnet) und **Noch nicht veröffentlicht**, bis Ihr Freund ihn veröffentlicht;
+danach öffnet der Titel seine Welt. Ihre anderen Geräte listen sie ebenfalls,
+sobald sie mit diesem verbunden wurden. Der Abschnitt erscheint erst, wenn
+etwas darin steht.
+
+## Welten finden
+
+Es gibt drei Wege, etwas in der geteilten Welt zu finden, und jeder
+beantwortet eine andere Frage.
+
+### Suche — welche Veröffentlichungen passen dazu?
+
+Das Feld **Suche** sucht nach **Titel oder Autor**, über alles
+Veröffentlichte — nicht nur über das, was gerade um Sie herum geladen ist.
+Geben Sie einen Begriff ein und klicken Sie auf **Suchen**.
+
+Optional können Sie die Suche auf einen **Ort** eingrenzen: Füllen Sie
+X/Y/Z und einen **Radius** (in Welteinheiten) aus, und die Suche liefert
+nur Ergebnisse innerhalb dieser Entfernung um diesen Punkt. Lassen Sie Ort
+leer für eine reine Textsuche.
+(Die Felder für den Ort gibt es nur mit **Erweiterte Werkzeuge zeigen**.)
+
+Jedes Ergebnis zeigt:
+
+- 📍 seine Position
+- 📏 wie weit entfernt es ist (nur bei einer Ortssuche)
+- einen Hinweis, wenn die angezeigte Position eine **Standardposition**
+  ist und keine, die der Autor tatsächlich gewählt hat (siehe
+  [Position in der Welt](#position-in-der-welt) unten)
+
+Klicken Sie auf **Fokussieren**, um dorthin zu fliegen.
+
+### Hier erkunden / Was ist hier? — was ist gerade um mich herum?
+
+Diese beiden Schaltflächen oben im Abschnitt In der Nähe von Erkunden
+suchen **von dort aus, wo Ihre Kamera gerade ist** — Sie müssen keinen
+Titel schon kennen oder Koordinaten eingeben.
+
+- **Hier erkunden** durchsucht ein recht großes Gebiet um die Kamera und
+  lässt Sie den Radius danach vergrößern oder verkleinern.
+- **Was ist hier?** prüft nur die unmittelbare Umgebung — nützlich, wenn
+  Sie wissen möchten: „Ist genau hier, wo ich stehe, irgendetwas?“
+
+Beide öffnen den Dialog **Ort erkunden**:
+
+```
+📍 Mitte: 100.0, 50.0, 250.0
+⭕ Radius: 25 Welteinheiten
+
+3 von 3 auffindbaren Dokumenten werden angezeigt
+
+📍 Rathaus             📏 4.2 Welteinheiten entfernt
+von alice
+[Fokussieren] [Auswählen] [Untersuchen]
+```
+
+Jedes Ergebnis bietet drei verschiedene Aktionen:
+
+| Schaltfläche | Was sie tut |
+|---|---|
+| **Fokussieren** | Fliegt die Kamera dorthin *und* macht es zu dem, das Sie bearbeiten |
+| **Auswählen** | Macht es zu dem, das Sie bearbeiten, **ohne** die Kamera zu bewegen |
+| **Untersuchen** | Klappt eine Zusammenfassung an Ort und Stelle auf — Titel, Autor, Status, Position, Eigentümer —, ohne etwas zu bewegen |
+
+Dieser Dialog verschiebt nie von selbst eine Platzierung, bearbeitet kein
+Dokument und veröffentlicht nichts — er dient nur dem Umsehen und der
+Wahl, wohin es als Nächstes geht.
+
+### Dokumente hier
+
+Sagt das Infofeld einer Platzierung, dass andere Dokumente genau ihre
+Position teilen, klicken Sie auf **Ansehen**, um **Dokumente hier** zu
+öffnen — eine schlichte Liste aller an dieser Stelle, jeweils mit eigener
+Schaltfläche **Fokussieren**. Hier erscheinen nur Dokumente, die noch
+tatsächlich veröffentlicht sind — wurde eines je zurückgezogen, fehlt es
+einfach in der Liste, statt als Zeile aufzutauchen, mit der Sie nichts
+anfangen können.
+
+## Dokumentinformationen und Platzierung
+
+Unter der Kopfzeile finden Sie zwei Felder für das Dokument, das Sie gerade
+bearbeiten:
+
+- **Dokumentinformationen** — Titel, Beschreibung, Lizenz, wer es
+  platzieren darf, Status und (bei einem Fork) aus welcher Welt es geforkt
+  wurde. Klicken Sie auf **Metadaten bearbeiten**, um Titel,
+  Beschreibung, Lizenz oder wer es platzieren darf zu ändern.
+- **Platzierung** — *wo* dieses Dokument im geteilten Raum liegt, in
+  **Welteinheiten** (dem eigenen Koordinatensystem von ForkBuild, keine
+  GPS-Koordinaten — eine Welteinheit entspricht einem Meter echter Länge).
+  Klicken Sie auf **Verschieben**, um ihm direkt neue X/Y/Z-Koordinaten zu
+  geben, oder nutzen Sie die Schaltflächen ± (1 / 10 / 100 Welteinheiten),
+  um die aktuelle Position vor dem Bestätigen relativ zu verschieben.
+  **Fokussieren** fliegt dorthin.
+
+Das sind absichtlich zwei getrennte Felder: Was eine Kreation *ist* und wo
+sie *liegt*, sind zwei verschiedene Fragen, und eine Platzierung zu
+verschieben bearbeitet nie das Dokument selbst (oder umgekehrt).
+
+### Position in der Welt
+
+Belegt bereits ein anderes Dokument genau die Stelle, an die Sie
+verschieben, sehen Sie vor der Bestätigung eine Warnung mit einer Liste,
+wer dort ist — einen Ort zu teilen ist erlaubt (eine Hofszene und das
+Gebäude darum können zu Recht am selben Ort liegen), ForkBuild sorgt nur
+dafür, dass Sie es zuerst sehen.
+
+### Platzierungen, die Ihnen nicht gehören
+
+Gehört eine Platzierung jemand anderem, zeigt das Feld Platzierung
+**🔒 Platziert von &lt;Name&gt; — Sie können diese Platzierung ansehen,
+aber nicht verschieben.**, und die Schaltfläche **Verschieben** ist
+deaktiviert. Sie können sie trotzdem **fokussieren**, untersuchen und mit
+**Eine Kopie bearbeiten** auf dem aufbauen, was dort ist; nur *wo sie im
+geteilten Raum liegt*, darf allein ihr Eigentümer verschieben.
+
+### Warum kann ich die Bauwerke anderer platzieren?
+
+Ein echtes Gebäude lässt sich nicht aufheben und woanders hinstellen,
+daher mag es seltsam wirken, dass ForkBuild Sie das veröffentlichte
+Bauwerk eines jeden platzieren lässt, wo Sie möchten. Ein veröffentlichtes
+Bauwerk ist kein einzelner physischer Gegenstand. Es ist fester Inhalt,
+erkennbar an seinem Inhalts-Hash, ähnlich wie eine Datei oder ein
+Git-Repository. Eine **Platzierung** ist ein eigener, signierter Datensatz,
+der sagt: „Zeige dieses Bauwerk hier.“ Sie verweist auf das Bauwerk; sie
+kopiert es nicht. Dasselbe Bauwerk kann viele Platzierungen haben, und
+jede zeigt genau denselben veröffentlichten Inhalt.
+
+Das Bauwerk eines anderen zu platzieren verschiebt oder verändert dessen
+also nie:
+
+- **Seine Platzierung bleibt, wo er sie hingestellt hat.** Nur er kann sie
+  verschieben (siehe
+  [Platzierungen, die Ihnen nicht gehören](#platzierungen-die-ihnen-nicht-gehören)
+  oben).
+- **Ihre Platzierung ist von Ihnen signiert** und sagt nur, wo *Sie* sein
+  Bauwerk zeigen.
+- **Das Bauwerk behält seinen Autor und seinen Verlauf.** Es ist weiterhin
+  genau der Inhalt, den er veröffentlicht hat, und jeder kann das gegen
+  Hash und Signatur prüfen.
+
+Es gibt auch keine einzelne, zentrale Welt, die entscheidet, wem welches
+Grundstück gehört. Jede Welt zeigt die Platzierungen, die sie angenommen
+hat. Deshalb erscheint ein Bauwerk, das jemand in Ihrer Nähe ankündigt,
+nur als Geist, bis Sie **Position annehmen** wählen (siehe
+[Beanspruchte Bauwerke](#beanspruchte-bauwerke--die-bauwerke-anderer-dort-wo-ihre-herausgeber-sie-hinstellen)).
+Niemand kann ohne Ihr Einverständnis ein Bauwerk in Ihre Welt setzen.
+
+Einige Gründe, ein Bauwerk zu platzieren, das Sie nicht gemacht haben:
+
+- **Kuratieren**, etwa eine Galeriewelt, die Bauwerke sammelt, die Ihnen
+  gefallen.
+- **Eine Szene zusammenstellen**, etwa die Burg eines Freundes neben Ihr
+  Dorf stellen.
+- **Es unverändert wiederverwenden.** Platzieren Sie es, wenn Sie es
+  unverändert möchten, und nutzen Sie
+  [Eine Kopie bearbeiten](#eine-kopie-bearbeiten--etwas-in-den-editor-übernehmen)
+  nur, wenn Sie es ändern möchten.
+
+Ein Herausgeber, der das nicht möchte, kann beim Veröffentlichen **Nur ich
+darf es platzieren** wählen (siehe
+[Wählen, wer es platzieren darf](04-PublishingAndForking.md#wählen-wer-es-platzieren-darf)).
+Sie können sein Bauwerk dann weiterhin finden, ansehen und, wenn die
+Lizenz es erlaubt, forken, aber nicht platzieren.
+
+### Warum können zwei Bauwerke an derselben Stelle stehen?
+
+Im echten Leben können zwei Gebäude nicht am selben Ort stehen. In
+ForkBuild können sie es, weil eine Platzierung kein Land belegt. Sie ist
+nur eine signierte Notiz „Zeige dieses Bauwerk hier“, und zwei Notizen
+können dieselbe Stelle nennen.
+
+ForkBuild erlaubt das mit Absicht:
+
+- **Niemand vergibt Land.** Es gibt keinen zentralen Server, der
+  entscheidet, wer zuerst da war, und ForkBuild kürt nie einen Sieger
+  zwischen zwei signierten Platzierungen. Beide bleiben gültig.
+- **Jedes Gerät kennt andere Platzierungen.** Eine Stelle, die auf dem
+  Gerät Ihres Freundes belegt ist, kann auf Ihrem noch leer sein, bis die
+  Platzierungen bei Ihnen ankommen. Eine strenge Regel „ein Bauwerk pro
+  Stelle“ würde auf verschiedenen Geräten verschiedene Antworten geben,
+  daher tut ForkBuild nicht so, als könnte es eine durchsetzen.
+- **Manchmal will man es.** Eine Hofszene in einem Gebäude, eine ältere
+  Version anstelle der neuen oder bewusst geschichtete Ausstellungsstücke
+  sind alles Bauwerke, die an denselben Ort gehören.
+
+Das heißt nicht, dass jeder Ihre Bauwerke bedrängen kann:
+
+- **Sie werden vorher gewarnt.** **Verschieben …** listet vor Ihrer
+  Bestätigung auf, was schon an einer Stelle ist, und ForkBuild verschiebt
+  Ihr Bauwerk nie stillschweigend woandershin (siehe
+  [Position in der Welt](#position-in-der-welt)).
+- **Keine versehentlichen Duplikate.** **Hier eine Platzierung
+  hinzufügen** verweigert, wenn genau dort, wo Sie sind, schon eine
+  Platzierung liegt.
+- **Der Anspruch eines anderen ist nur ein Geist.** Eine Position, die
+  jemand anderes als der eigene Herausgeber des Bauwerks ankündigt, wird
+  nur als durchscheinender Geist gezeigt, und nie an einer Stelle, an der
+  dieses Gerät schon eine echte Platzierung kennt (siehe
+  [Beanspruchte Bauwerke](#beanspruchte-bauwerke--die-bauwerke-anderer-dort-wo-ihre-herausgeber-sie-hinstellen)).
+- **Nur der Eigentümer kann eine Platzierung verschieben oder entfernen**
+  (siehe
+  [Platzierungen, die Ihnen nicht gehören](#platzierungen-die-ihnen-nicht-gehören)).
+
+ForkBuild prüft nur auf Bauwerke an genau demselben Punkt. Zwei Bauwerke an
+benachbarten Punkten, deren Steine sich zufällig berühren, werden nicht
+gemeldet. Die Begründung des Designs finden Sie unter
+[Overlap Is A Fact; Collision Is A Policy Decision](../../principles/placement.md#overlap-is-a-fact-collision-is-a-policy-decision-0225)
+(Englisch) und in den Regeln danach.
+
+### Platzieren oder forken
+
+Beides bringt das Bauwerk eines anderen in eine Ihrer Welten, aber es sind
+verschiedene Dinge:
+
+| | Platzieren | Forken (Forken oder Eine Kopie bearbeiten) |
+|---|---|---|
+| Was entsteht | Eine Platzierung: ein kleiner signierter Datensatz, wo das Bauwerk gezeigt wird | Ein neues Dokument mit neuen IDs, das Ihnen gehört |
+| Das Bauwerk | Dieselbe Geteilte Welt, so gezeigt, wie sie veröffentlicht wurde | Ihre eigene Kopie, mit einem Vermerk, der auf das Original zurückverweist |
+| Können Sie die Steine ändern? | Nein | Ja, im Editor |
+| Wer ist der Autor | Der ursprüngliche Herausgeber | Sie, mit dem Original als Elternteil festgehalten |
+| Geregelt durch | Die Einstellung **Wer es platzieren darf** des Herausgebers | Die Lizenz |
+| Veröffentlichen | Nichts Neues wird veröffentlicht | Erstellt eine neue Geteilte Welt unter Ihrem Namen |
+
+Platzieren ist wie das Verlinken derselben Datei von einer anderen Seite
+aus; Forken ist wie das Klonen eines Repositorys, um an einer eigenen
+Kopie zu arbeiten. Nur ein Fork ist also eine echte Kopie. Wer **Nur ich
+darf es platzieren** gewählt hat, kann über seine Lizenz trotzdem Forks
+erlauben, und ein Fork gehört dann Ihnen und lässt sich platzieren, wo Sie
+möchten.
+
+## Die Weltansicht ist schreibgeschützt — gebaut wird im Editor
+
+Hier gibt es kein Platzierwerkzeug, kein Transformations-Gizmo, kein
+Kopieren/Einfügen und keine Gruppen — Klicken, Ziehen oder ein Tastendruck
+ändert nie einen Stein. Um auf etwas aufzubauen, nutzen Sie **[Eine Kopie
+bearbeiten](#eine-kopie-bearbeiten--etwas-in-den-editor-übernehmen)** und
+machen Sie im [Editor](02-TheEditor.md) weiter. Die oben in dieser
+Anleitung aufgeführten Ausnahmen für Anmerkungen gelten weiterhin.
+
+## Andere Mitwirkende sehen
+
+Wenn mehrere Menschen in derselben Welt sind:
+
+- **Andere Menschen sehen** — ihre Avatare erscheinen mit Anzeigenamen und
+  Aktivitätshinweisen (z. B. „**Bob — erkundet die Umgebung**“).
+- **Aktualisierungen in Echtzeit** — alles, was sie veröffentlichen (ein
+  Wahrzeichen, einen Namen, einen frischen eigenen Fork), erscheint für Sie
+  in dem Moment, in dem es geschieht.
+- **Flüchtiger Aktivitätsfeed** — ein lokales Feld zeigt die jüngste
+  Aktivität, damit Sie verstehen, was sich auch außerhalb Ihrer aktuellen
+  Ansicht geändert hat. Dieser Feed ist vorübergehend und wird nicht
+  gespeichert.
+
+> **Anwesenheit beschreibt Aktivität; sie ändert nie von selbst etwas.**
+> Räumliche Anwesenheit hilft Ihnen zu verstehen, was andere tun, aber nur
+> eine tatsächliche Änderung — im Editor oder eine der Ausnahmen für
+> Anmerkungen in der Weltansicht — ändert die geteilte Umgebung.
+
+## Auch hier speichern und veröffentlichen
+
+Die Kopfzeile hat die Schaltflächen **Speichern**, **Veröffentlichen** und
+**Metadaten bearbeiten**, sobald Sie etwas bearbeiten, sodass Sie eine Welt
+festhalten und teilen können, ohne sie zu verlassen. Die Statuszeile
+(**🔒 Veröffentlicht** oder **✎ Ihre Kopie wird bearbeitet**) zeigt immer, was
+davon zutrifft.
+
+Eine veröffentlichte Welt kann sich nie ändern. Ist die Welt, die Sie
+bearbeiten, veröffentlicht, erstellt Ihre erste Änderung hier — ihre
+Metadaten bearbeiten, ein Wahrzeichen oder eine Region hinzufügen oder
+umbenennen oder sie mit einem Tier schmücken — automatisch Ihre eigene
+bearbeitbare Kopie mit dem Titel *„Fork von &lt;ursprünglicher
+Name&gt;“*, und ein kurzer Hinweis („Ihre eigene bearbeitbare Kopie wurde
+erstellt — … bleibt unverändert“) sagt es Ihnen. Es gelten dieselben
+Lizenzregeln wie für jeden anderen Fork (siehe
+[Veröffentlichen & Forken](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen)).
+
+## Verlauf — frühere Zustände in der Vorschau ansehen und wiederherstellen
+
+Jede Änderung, die Sie hier vornehmen — ein Wahrzeichen oder eine Region
+hinzufügen, umbenennen oder entfernen —, wird im Verlauf des Dokuments
+festgehalten. Klicken Sie in der Kopfzeile auf **Verlauf**, um ihn zu
+öffnen. Sie sehen eine nummerierte Liste mit Zeitstempeln, etwa:
+
+```
+1. Wahrzeichen „Alte Brücke“ erstellen
+2. Region „Weidendorf“ aktualisieren
+3. Wahrzeichen entfernen
+```
+
+Einträge, die Sie rückgängig gemacht haben, sind mit **rückgängig
+gemacht** markiert. Ein Klick auf einen Eintrag wählt ihn nur aus; nichts
+ändert sich, bis Sie eine der Schaltflächen drücken:
+
+- **Vorschau** — zeigt, wie die Welt *direkt nach* dem ausgewählten
+  Schritt aussah, neben der aktuellen, ohne etwas zu ändern. **Vorschau
+  abbrechen** kehrt zur Gegenwart zurück.
+- **Wiederherstellen** — macht den ausgewählten Schritt zu Ihrem
+  **aktuellen** Zustand. Das Dokument bleibt mit ungespeicherten
+  Änderungen zurück, sodass Sie noch entscheiden können, ob Sie es
+  speichern. Es gibt keine eigene Bestätigung.
+- **Schließen** — schließt das Feld.
+
+## Erweiterte Werkzeuge
+
+Alles in diesem Abschnitt erscheint nur mit **Erweiterte Werkzeuge
+zeigen**, unten im Feld (siehe
+[Ein Besucherblick und Erweitert](#ein-besucherblick-und-erweitert)).
+Diese Werkzeuge gehören zu den Netzwerken hinter der Welt: prüfen, wo ein
+Bauwerk gespeichert ist, das eigene Bauwerk von Hand hinausschicken und
+sehen, was andere in der Nähe angekündigt haben. Zum Gehen, Bauen, Remixen
+oder Teilen eines Links brauchen Sie keines davon.
+
+### Einen Stein untersuchen — oder eine platzierte Struktur
+
+Ist **Erweiterte Werkzeuge zeigen** eingeschaltet, klicken Sie auf einen
+beliebigen Stein, um das Feld **Untersuchung** zu öffnen (als Besucher
+wählt ein Klick nichts aus), das Ihnen sagt:
+
+- was für ein Stein es ist
+- seine Position und Drehung
+- zu welcher Welt und welchem Gebäude er gehört
+- wer die Welt erstellt hat
+
+Nutzen Sie **Stein fokussieren**, um ganz heranzuzoomen, oder **Welt
+fokussieren**, um zur Ausgangsposition dieser Kreation zu springen. Direkt
+daneben forkt eine Schaltfläche **Eine Kopie bearbeiten** die Welt, zu der
+dieser Stein gehört, und öffnet die Kopie im Editor — das Original bleibt
+unberührt. Ein Klick auf bloßen Boden innerhalb einer Kreation öffnet
+dieselbe Art von Feld (Position sowie die enthaltende Welt und ihr Autor,
+ohne steinspezifische Felder) mit einer eigenen Schaltfläche **Eine Kopie
+bearbeiten**, aus demselben Grund: Zum Forken müssen Sie nicht erst etwas
+Bemerkenswertes finden, sondern nur irgendwo in die Welt klicken, auf der
+Sie aufbauen möchten.
+
+Klicken Sie auf eine **platzierte Struktur** (eine Instanz eines ganzen
+Dokuments, aus dem Editor in eine Kreation gesetzt — siehe
+[Der Editor](02-TheEditor.md#strukturinstanzen-eine-lebendige-referenz)),
+und dasselbe Feld zeigt stattdessen, worauf sie verweist: den Titel ihres
+Quelldokuments, lokale Position und Weltposition, Drehung, Bodenhöhe sowie
+Titel und Autor der enthaltenden Welt. In der Weltansicht ist das
+schreibgeschützt — es gibt kein Gizmo, kein Zahlenfeld, nichts zum Ziehen.
+Klicken Sie auf **Quelle öffnen**, um direkt im Editor das referenzierte
+Dokument selbst zu öffnen; jede andere Instanz davon, wo auch immer sie
+platziert ist, spiegelt wider, was Sie dort bearbeiten. Ihre eigene
+Schaltfläche **Eine Kopie bearbeiten**, direkt neben Quelle öffnen, zielt
+auf dasselbe referenzierte Dokument statt auf die Welt, die es nur
+positioniert — wenn Sie lieber an einer unabhängigen Kopie arbeiten und
+jede andere Instanz (und das Original) unberührt lassen möchten, nutzen
+Sie diese statt Quelle öffnen.
+
+Jede Schaltfläche „Eine Kopie bearbeiten“ in der Weltansicht — hier und im
+eigenen Feld Fokus einer Region, eines Wahrzeichens oder einer Struktur —
+ist dieselbe Aktion; siehe
+[Eine Kopie bearbeiten](#eine-kopie-bearbeiten--etwas-in-den-editor-übernehmen)
+oben.
+
+### Kamera und Bearbeitung
+
+(Zu sehen, wenn **Erweiterte Werkzeuge zeigen** an ist; siehe [Ein Besucherblick und Erweitert](#ein-besucherblick-und-erweitert).)
+
+Die Kopfzeile zeigt zwei Dinge, die sich wirklich unterscheiden können:
+
+```
+Kamera: Alices Burg · Bearbeitung: Bobs Burg
+```
+
+**Kamera** ist, wohin Sie gerade blicken — zu einer Welt fliegen oder auf
+die Schaltfläche **Fokussieren** eines Suchergebnisses klicken bewegt die
+Kamera dorthin. **Bearbeitung** ist das Dokument, auf das Ihre nächste
+Aktion (ein Wahrzeichen oder eine Region hinzufügen, Metadaten bearbeiten,
+veröffentlichen) tatsächlich wirken würde — ein Klick auf einen Stein oder
+eine Platzierung oder auf die Schaltfläche **Auswählen** eines Such- oder
+Ortsergebnisses ändert es, *ohne* die Kamera zu bewegen. (Die Steine selbst
+werden nur im Editor geändert — siehe
+[Eine Kopie bearbeiten](#eine-kopie-bearbeiten--etwas-in-den-editor-übernehmen)
+oben.)
+
+Meist bewegen sich beide zusammen (Fokussieren tut beides), aber zwei
+Kreationen können sich genau dieselbe Stelle der Welt teilen — fokussieren
+Sie erst die eine, dann die andere, bewegt sich die Kamera beim zweiten Mal
+nirgendwohin, und doch sagt Ihnen die Kopfzeile, welche Sie jetzt
+bearbeiten. Herumfliegen und Dinge ansehen ändert nie von selbst, was Sie
+bearbeiten; das tut nur das tatsächliche Auswählen eines Steins oder eines
+Dokuments.
+
+„Hin“, in den Zeilen unter In der Nähe von Erkunden und im Feld Info,
+bezeichnet dieselbe Kamerabewegung wie die Schaltflächen „Fokussieren“ in
+Suche, Orte und Platzierung — nur die Beschriftung unterscheidet sich;
+jede bewegt die Kamera. Was sie sonst tut — ob sie auch das Dokument
+ändert, das Sie bearbeiten, wie es das eigene Fokussieren der
+[Suche](#suche--welche-veröffentlichungen-passen-dazu) tut —, hängt
+weiterhin genau so vom Kontext ab, wie im eigenen Abschnitt jedes Feldes
+beschrieben; „Hin“ statt „Fokussieren“ zu sagen ändert daran nichts.
 
 ### Begegnungen in der Welt — Veröffentlichungen und Avatare, die Ihre Peers teilen
 
@@ -683,576 +1264,6 @@ Bauwerks und sind genauso unüberprüft wie seine Position. Jede Zeile hat:
 - **Ausblenden** — entfernt diesen Geist und seine Zeile, bis Sie die
   Weltansicht verlassen. Nichts wird gemeldet oder gelöscht.
 
-### Info — was sehe ich mir an?
-
-Neben den meisten Schaltflächen **Hin** — in den Zeilen unter In der Nähe
-von Erkunden und im Feld Orte — finden Sie außerdem eine Schaltfläche
-**Info**. Während Hin Ihre Kamera bewegt, öffnet Info ein kleines Feld,
-das beschreibt, was Sie ausgewählt haben, ohne etwas zu bewegen: was es
-ist, wie weit entfernt es ist, in welchem benannten Ort es liegt („Sie sind
-in Weidendorf“) oder in der Nähe welches möglichen geografischen Ortes es
-ist („Sie sind in der Nähe von Kawahara-Dorf“), wenn keines von beiden
-sicher bekannt ist. Von dort aus können Sie weiterhin **Hin** drücken, um
-dorthin zu reisen, **Auf der Karte zeigen**, um es auf der Weltkarte zu
-sehen, **Namen** (bei einem benannten Ort), um Namen aus der Gemeinschaft
-dafür zu sehen oder zu veröffentlichen, oder **Eine Kopie bearbeiten**, um
-es im Editor zu öffnen — siehe unten. Info selbst tut nichts davon von
-sich aus.
-
-### Eine Kopie bearbeiten — etwas in den Editor übernehmen
-
-Wo immer die Weltansicht Ihnen etwas Bestimmtes zeigt — eine Region, ein
-Wahrzeichen, eine platzierte Struktur, einen Stein oder bloßen Boden —,
-hat das Feld, das es beschreibt, eine weitere Schaltfläche: **Eine Kopie
-bearbeiten**. Sie erstellt eine unabhängige Kopie des Dokuments, das
-tatsächlich enthält, was Sie angesehen haben — nie die ganze Welt, nie das
-Original eines anderen — und öffnet sie direkt im Editor, bereit zum
-Weiterbauen. Zwei Felder bieten sie an: das Feld **Fokus** (die
-Schaltfläche Info in den Zeilen von Erkunden/Orte, für eine
-Region/ein Wahrzeichen/eine Struktur) und das Feld **Untersuchung** (ein
-direkter Klick in die 3D-Ansicht, für einen Stein, bloßen Boden oder eine
-platzierte Struktur) — dieselbe Aktion, dieselbe Schaltfläche, egal auf
-welchem Weg Sie dorthin gekommen sind.
-
-Ist die Welt, in der Sie sind, der Bau eines anderen, bietet die oberste
-Zeile des Panels auch **Eine Kopie bearbeiten** für den ganzen Bau an.
-
-- Bei einem **Wahrzeichen**, einer **Region**, einem **Stein** oder
-  **bloßem Boden** ist es das Weltdokument, zu dem sie gehören.
-- Bei einer **platzierten Struktur** ist es der eigene Inhalt der
-  Struktur — nicht die Welt, in der sie gerade steht.
-
-Das Original wird nie berührt — ForkBuild sagt Ihnen, sobald Ihre Kopie
-bereit ist, genau wie bei jedem anderen Fork (siehe
-[Veröffentlichen & Forken](04-PublishingAndForking.md)). Kann die Kopie
-nicht erstellt werden — meistens, weil die Quelle eine über einen Peer
-oder ein dezentrales Netzwerk gefundene Geteilte Welt ist, deren Material
-noch nicht verfügbar ist oder deren Lizenz das Forken verbietet —, sagt
-ein Dialog **Forken nicht möglich** genau, warum, und bietet **Zurück zur
-Geteilten Welt** an, um Sie dorthin zurückzubringen, wo Sie begonnen haben,
-statt Sie in einem leeren Editor-Dokument zurückzulassen (siehe
-[Wenn ein Fork nicht möglich ist](04-PublishingAndForking.md#wenn-ein-fork-nicht-möglich-ist)).
-Ein **geografischer Ort** und ein **Mitwirkender** bieten nie Eine Kopie
-bearbeiten an — ein geografischer Ort ist eine Gruppierung der eigenen
-Regionen mehrerer Menschen ohne ein eigenes Dokument zum Kopieren (öffnen
-Sie stattdessen eine seiner Regionen), und eine Person ist überhaupt kein
-Dokument.
-
-**Das ist dieselbe Aktion wie die eigene Schaltfläche „Forken“ im
-Repository, in der Autorenansicht und unter Begegnungen in der Welt** —
-siehe
-[Forken: machen Sie es zu Ihrem eigenen](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen).
-Welche Bezeichnung Sie auch anklicken, Sie erhalten dasselbe Ergebnis: eine
-ganz neue, unabhängige Kopie, das Original genau so, wie es war, und
-dieselben Lizenzregeln. „Eine Kopie bearbeiten“ ist hier nur anders
-formuliert, weil Sie bereits das eine bestimmte Ding ansehen, das kopiert
-wird, statt es aus einer Liste auszuwählen.
-
-Das ist die *einzige* Tür aus der schreibgeschützten Fläche der
-Weltansicht hinaus. Alles andere hier — Herumfliegen, Suche, Hier
-erkunden/Was ist hier?, der Kompass, die Karte, Info — sieht nur hin.
-
-### Hier bauen — einen Bau für diese Stelle beginnen
-
-**Hier bauen**, neben **Start**, beginnt im Editor einen neuen, leeren
-Bau für die Stelle, an der Ihr Avatar steht (oder, im Flug, die Stelle
-unter der Kamera). Der Editor zeigt an, für welche Welt er ist. Wenn Sie
-den Bau veröffentlichen, steht er genau dort: Seine erste Platzierung ist
-diese Stelle statt eines freien Platzes, den ForkBuild wählt, und
-**Ansehen** bringt Sie zurück, um ihn anzuschauen. Mit **Diese Stelle
-vergessen** wird der Bau wie gewohnt platziert. Die Stelle ist nur Ihre
-eigene Notiz, wo Ihr Bau gezeigt wird, auf diesem Gerät und in seinen
-Sicherungen; sie beansprucht kein Land, und andere dürfen dort ebenfalls
-bauen.
-
-### Mit mir hier spazieren — Freunde in diese Welt holen
-
-**Mit mir hier spazieren**, neben **Hier bauen**, erstellt einen Link, der
-Freunde in die Welt holt, in der Sie gerade sind, um gemeinsam darin
-herumzugehen. Schicken Sie ihn auf jedem Weg, der Ihnen passt; er erscheint
-auch als QR-Code für ein Handy. Ein Freund, der ihn öffnet, meldet sich an,
-falls noch nicht geschehen (er spaziert als sein eigener Avatar, unter
-seinem Namen), klickt auf **Beitreten** und kommt in diese Welt, wo Sie
-einander herumgehen sehen. Der Dialog zeigt, wer unterwegs ist und wer
-angekommen ist.
-
-- Die Welt muss zuerst veröffentlicht sein: Das ForkBuild Ihres Freundes
-  prüft ihre Signatur und ihr Bauwerk wie bei einem geteilten Link und
-  behält eine Kopie.
-- Der Link funktioniert 30 Minuten lang für alle, die ihn öffnen, solange
-  Sie in der Weltansicht bleiben. Das Schließen des Dialogs lässt ihn weiter
-  funktionieren; **Link beenden** beendet ihn. Freunde, die schon
-  dazugekommen sind, bleiben in jedem Fall verbunden.
-- Beim Beitreten werden Ihre beiden Geräte direkt verbunden, wie bei einer
-  Einladung unter **Peers**: Jeder kann die IP-Adresse des anderen sehen, und
-  Ihre Avatare erscheinen so, wie die Präsenz-Sichtbarkeit beider Seiten es
-  erlaubt (siehe [Avatare & Präsenz](06-AvatarsAndPresence.md)). Niemand wird
-  zu einem gemerkten Peer oder Freund, wenn Sie es nicht wählen.
-- Es braucht einen Rendezvous-Server. Die offizielle Website hat einen; eine
-  Kopie, die Sie selbst betreiben, braucht einen eigenen (siehe
-  [Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)).
-
-### Der Challenge-Platz
-
-**Über den Platz gehen** auf der Challenge-Seite einer Woche öffnet die
-Weltansicht auf dem Dorfplatz: gepflastert, mit einem Brunnen, Bänken und
-Laternen, und den sechs fertigen Bauwerken rundherum. Der Platz und die
-fertigen Bauwerke gehören zur Welt wie ihre Hügel und Bäume: Sie stehen in
-jeder Weltansicht, für alle, und niemandem gehören sie. Gleich außerhalb
-davon wächst das Dorf der veröffentlichten Bauwerke, sodass dein eigenes
-veröffentlichtes Haus Nachbarn hat. Ein Panel listet die Beiträge der Woche
-und die fertigen Bauwerke auf (siehe
-[Der Challenge-Platz](04-PublishingAndForking.md#der-challenge-platz)).
-Rund um den Platz wachsen keine Bäume, und **Hier bauen** wird dort nicht
-angeboten.
-
-### Wahrzeichen — einen Ort markieren, den man sich merken sollte
-
-Anders als eine Struktur (ein platziertes Gebäude, das Sie oder jemand
-anderes gebaut hat) oder eine Kompassanzeige (jeweils neu daraus
-abgeleitet, wo Sie stehen) ist ein **Wahrzeichen** etwas, das Sie bewusst
-erstellen: ein benannter Punkt — „Alte Brücke“, „Schöne Aussicht“ — mit
-optionaler Beschreibung, genau dort gesetzt, wo Ihr Avatar gerade steht.
-
-Haben Sie Bearbeitungsrechte für die Welt, in der Sie sind, zeigt der
-Abschnitt Wahrzeichen im Feld **Orte** eine Schaltfläche **+ Wahrzeichen
-hinzufügen**. Geben Sie ihm einen Titel (und optional eine Beschreibung)
-und klicken Sie auf **Hier setzen** — es erscheint sofort für Sie und
-Augenblicke später für jeden anderen Mitwirkenden in derselben Welt, auf
-dem Kompass, in deren eigenem Feld Orte und als ansteuerbares Ziel. Jeder
-mit Bearbeitungsrechten kann jedes Wahrzeichen der Welt umbenennen, neu
-beschreiben oder entfernen, nicht nur die Person, die es erstellt hat —
-Wahrzeichen sind Inhalt der Welt, für den dieselben
-Zusammenarbeitsrechte gelten wie für alles andere, was Sie gemeinsam
-bauen, nie eine persönliche, private Markierung, die nur Sie sehen oder
-berühren können.
-
-### Die Weltkarte
-
-Der Reiter **Karte** öffnet eine flache Ansicht von oben auf alles, was
-diese Sitzung in der Welt gerade kennt — benannte Orte, Wahrzeichen,
-Strukturen, alle anderen, die da sind, und eine Markierung für Sie.
-Scrollen Sie oder nutzen Sie +/−, um zu zoomen, klicken Sie auf eine leere
-Stelle, um die Karte zu schwenken, und klicken Sie auf einen Ort oder eine
-Person, um Ihre Kamera direkt dorthin zu bewegen. Nichts an der Karte lässt
-sich bearbeiten, und sie anzusehen ändert nie etwas — sie ist einfach ein
-Weg, die Geografie, die die Mitwirkenden einer Welt bereits gebaut und
-benannt haben, auf einmal zu sehen statt Wahrzeichen für Wahrzeichen.
-
-### Geografische Orte
-
-Der Reiter **Gegenden** öffnet ein Verzeichnis jedes **geografischen
-Ortes**, den diese Sitzung erkannt hat — Orte, die mehrere Menschen
-unabhängig voneinander benannt oder beschrieben haben (als Region — siehe
-den Abschnitt Gegenden im Feld Orte) und die sich als ungefähr dasselbe
-Gelände herausstellen. Klicken Sie auf eine Zeile, um ihre eigene
-Detailansicht zu öffnen: wie viele Beschreibungen und Welten sie umfasst,
-ihre eigenen **Namen aus der Gemeinschaft** und die Schaltflächen **Zum Ort
-gehen** / **Auf der Karte zeigen**. Klicken Sie auf **← Zurück** (oder
-drücken Sie Escape), um zum Verzeichnis zurückzukehren — wechseln Sie zu
-Karte oder Erkunden und später zurück zu Gegenden, öffnet sich genau die
-Ansicht wieder, die Sie verlassen haben, Detail oder Liste.
-
-Der Abschnitt Namen aus der Gemeinschaft eines Ortes zeigt zunächst nur
-seine wichtigsten Namen, mit einer Schaltfläche **Weitere Namen**, um die
-vollständige gereihte Liste zu sehen — und alles jenseits von „einen
-eigenen Namen veröffentlichen“ (andere geografische Beschreibungen, der
-rohe Anspruchsverlauf, Import/Export) liegt hinter einer Aufklappung
-**Mehr**, sodass der häufige Fall — „Wie nennen andere das, und wie nenne
-ich es?“ — nie mit allem anderen konkurriert, was das Namenssystem kann.
-
-> Einen Namen zu veröffentlichen kündigt ihn Ihren verbundenen Peers auf
-> dieselbe Weise an wie das Beanspruchen der Urheberschaft einer Struktur —
-> siehe
-> [Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md),
-> wenn Sie jeden Anspruch, den dieses Gerät veröffentlicht oder erfahren
-> hat, an einem Ort sehen möchten.
-
-## Kamera und Bearbeitung
-
-(Zu sehen, wenn **Erweiterte Werkzeuge zeigen** an ist; siehe [Ein Besucherblick und Erweitert](#ein-besucherblick-und-erweitert).)
-
-Die Kopfzeile zeigt zwei Dinge, die sich wirklich unterscheiden können:
-
-```
-Kamera: Alices Burg · Bearbeitung: Bobs Burg
-```
-
-**Kamera** ist, wohin Sie gerade blicken — zu einer Welt fliegen oder auf
-die Schaltfläche **Fokussieren** eines Suchergebnisses klicken bewegt die
-Kamera dorthin. **Bearbeitung** ist das Dokument, auf das Ihre nächste
-Aktion (ein Wahrzeichen oder eine Region hinzufügen, Metadaten bearbeiten,
-veröffentlichen) tatsächlich wirken würde — ein Klick auf einen Stein oder
-eine Platzierung oder auf die Schaltfläche **Auswählen** eines Such- oder
-Ortsergebnisses ändert es, *ohne* die Kamera zu bewegen. (Die Steine selbst
-werden nur im Editor geändert — siehe
-[Eine Kopie bearbeiten](#eine-kopie-bearbeiten--etwas-in-den-editor-übernehmen)
-oben.)
-
-Meist bewegen sich beide zusammen (Fokussieren tut beides), aber zwei
-Kreationen können sich genau dieselbe Stelle der Welt teilen — fokussieren
-Sie erst die eine, dann die andere, bewegt sich die Kamera beim zweiten Mal
-nirgendwohin, und doch sagt Ihnen die Kopfzeile, welche Sie jetzt
-bearbeiten. Herumfliegen und Dinge ansehen ändert nie von selbst, was Sie
-bearbeiten; das tut nur das tatsächliche Auswählen eines Steins oder eines
-Dokuments.
-
-„Hin“, in den Zeilen unter In der Nähe von Erkunden und im Feld Info,
-bezeichnet dieselbe Kamerabewegung wie die Schaltflächen „Fokussieren“ in
-Suche, Orte und Platzierung — nur die Beschriftung unterscheidet sich;
-jede bewegt die Kamera. Was sie sonst tut — ob sie auch das Dokument
-ändert, das Sie bearbeiten, wie es das eigene Fokussieren der
-[Suche](#suche--welche-veröffentlichungen-passen-dazu) tut —, hängt
-weiterhin genau so vom Kontext ab, wie im eigenen Abschnitt jedes Feldes
-beschrieben; „Hin“ statt „Fokussieren“ zu sagen ändert daran nichts.
-
-## Meine Welten — Welten, in denen Sie wirklich waren
-
-Klicken Sie in der oberen Leiste auf **Meine Welten**, um jede Welt zu
-sehen, die dieses Gerät schon besucht hat, die zuletzt besuchte zuerst,
-jeweils mit Titel, Autor und, soweit bekannt, der Zahl der Strukturen und
-Wahrzeichen. Klicken Sie auf die Schaltfläche **Weiter erkunden** einer
-Karte, um direkt zurückzufliegen — derselbe frische Einstieg in die
-Weltansicht wie die eigene Schaltfläche **Erkunden** im Repository und in
-der Autorenansicht (siehe
-[Das Repository](04-PublishingAndForking.md#das-repository)), nur
-formuliert für eine Welt, die Sie schon besucht haben, statt für eine, die
-Sie zum ersten Mal finden.
-
-Das ist ein rein lokaler, persönlicher Verlauf — nie eine geteilte oder
-veröffentlichte Liste und nicht dasselbe wie das Repository oder ein
-Suchergebnis: Eine Welt erscheint hier erst, wenn Sie sie tatsächlich
-betreten haben, und sie bleibt hier (nur auf diesem Gerät), auch wenn Sie
-nie etwas Eigenes veröffentlichen oder teilen. Noch nirgends gewesen?
-**Durchsuchen Sie das Repository**, um Ihre erste zu finden, oder beginnen
-Sie mit einem der fertigen Bauwerke, die darunter stehen.
-
-Unter den Welten listet **Bauten, an denen Sie mitgebaut haben** die Bauten,
-in denen ein Freund Sie genannt hat, weil Sie sie mit **Mit mir bauen**
-gemeinsam gebaut haben (siehe
-[Der Editor](02-TheEditor.md#mit-mir-bauen-gemeinsam-bauen-live)): jeweils
-den Titel, wessen Bau es ist (**mit** dem Namen, der die Seite dieser Person
-öffnet) und **Noch nicht veröffentlicht**, bis Ihr Freund ihn veröffentlicht;
-danach öffnet der Titel seine Welt. Ihre anderen Geräte listen sie ebenfalls,
-sobald sie mit diesem verbunden wurden. Der Abschnitt erscheint erst, wenn
-etwas darin steht.
-
-## Welten finden
-
-Es gibt drei Wege, etwas in der geteilten Welt zu finden, und jeder
-beantwortet eine andere Frage.
-
-### Suche — welche Veröffentlichungen passen dazu?
-
-Das Feld **Suche** sucht nach **Titel oder Autor**, über alles
-Veröffentlichte — nicht nur über das, was gerade um Sie herum geladen ist.
-Geben Sie einen Begriff ein und klicken Sie auf **Suchen**.
-
-Optional können Sie die Suche auf einen **Ort** eingrenzen: Füllen Sie
-X/Y/Z und einen **Radius** (in Welteinheiten) aus, und die Suche liefert
-nur Ergebnisse innerhalb dieser Entfernung um diesen Punkt. Lassen Sie Ort
-leer für eine reine Textsuche.
-(Die Felder für den Ort gibt es nur mit **Erweiterte Werkzeuge zeigen**.)
-
-Jedes Ergebnis zeigt:
-
-- 📍 seine Position
-- 📏 wie weit entfernt es ist (nur bei einer Ortssuche)
-- einen Hinweis, wenn die angezeigte Position eine **Standardposition**
-  ist und keine, die der Autor tatsächlich gewählt hat (siehe
-  [Position in der Welt](#position-in-der-welt) unten)
-
-Klicken Sie auf **Fokussieren**, um dorthin zu fliegen.
-
-### Hier erkunden / Was ist hier? — was ist gerade um mich herum?
-
-Diese beiden Schaltflächen oben im Abschnitt In der Nähe von Erkunden
-suchen **von dort aus, wo Ihre Kamera gerade ist** — Sie müssen keinen
-Titel schon kennen oder Koordinaten eingeben.
-
-- **Hier erkunden** durchsucht ein recht großes Gebiet um die Kamera und
-  lässt Sie den Radius danach vergrößern oder verkleinern.
-- **Was ist hier?** prüft nur die unmittelbare Umgebung — nützlich, wenn
-  Sie wissen möchten: „Ist genau hier, wo ich stehe, irgendetwas?“
-
-Beide öffnen den Dialog **Ort erkunden**:
-
-```
-📍 Mitte: 100.0, 50.0, 250.0
-⭕ Radius: 25 Welteinheiten
-
-3 von 3 auffindbaren Dokumenten werden angezeigt
-
-📍 Rathaus             📏 4.2 Welteinheiten entfernt
-von alice
-[Fokussieren] [Auswählen] [Untersuchen]
-```
-
-Jedes Ergebnis bietet drei verschiedene Aktionen:
-
-| Schaltfläche | Was sie tut |
-|---|---|
-| **Fokussieren** | Fliegt die Kamera dorthin *und* macht es zu dem, das Sie bearbeiten |
-| **Auswählen** | Macht es zu dem, das Sie bearbeiten, **ohne** die Kamera zu bewegen |
-| **Untersuchen** | Klappt eine Zusammenfassung an Ort und Stelle auf — Titel, Autor, Status, Position, Eigentümer —, ohne etwas zu bewegen |
-
-Dieser Dialog verschiebt nie von selbst eine Platzierung, bearbeitet kein
-Dokument und veröffentlicht nichts — er dient nur dem Umsehen und der
-Wahl, wohin es als Nächstes geht.
-
-### Dokumente hier
-
-Sagt das Infofeld einer Platzierung, dass andere Dokumente genau ihre
-Position teilen, klicken Sie auf **Ansehen**, um **Dokumente hier** zu
-öffnen — eine schlichte Liste aller an dieser Stelle, jeweils mit eigener
-Schaltfläche **Fokussieren**. Hier erscheinen nur Dokumente, die noch
-tatsächlich veröffentlicht sind — wurde eines je zurückgezogen, fehlt es
-einfach in der Liste, statt als Zeile aufzutauchen, mit der Sie nichts
-anfangen können.
-
-## Einen Stein untersuchen — oder eine platzierte Struktur
-
-Ist **Erweiterte Werkzeuge zeigen** eingeschaltet, klicken Sie auf einen
-beliebigen Stein, um das Feld **Untersuchung** zu öffnen (als Besucher
-wählt ein Klick nichts aus), das Ihnen sagt:
-
-- was für ein Stein es ist
-- seine Position und Drehung
-- zu welcher Welt und welchem Gebäude er gehört
-- wer die Welt erstellt hat
-
-Nutzen Sie **Stein fokussieren**, um ganz heranzuzoomen, oder **Welt
-fokussieren**, um zur Ausgangsposition dieser Kreation zu springen. Direkt
-daneben forkt eine Schaltfläche **Eine Kopie bearbeiten** die Welt, zu der
-dieser Stein gehört, und öffnet die Kopie im Editor — das Original bleibt
-unberührt. Ein Klick auf bloßen Boden innerhalb einer Kreation öffnet
-dieselbe Art von Feld (Position sowie die enthaltende Welt und ihr Autor,
-ohne steinspezifische Felder) mit einer eigenen Schaltfläche **Eine Kopie
-bearbeiten**, aus demselben Grund: Zum Forken müssen Sie nicht erst etwas
-Bemerkenswertes finden, sondern nur irgendwo in die Welt klicken, auf der
-Sie aufbauen möchten.
-
-Klicken Sie auf eine **platzierte Struktur** (eine Instanz eines ganzen
-Dokuments, aus dem Editor in eine Kreation gesetzt — siehe
-[Der Editor](02-TheEditor.md#strukturinstanzen-eine-lebendige-referenz)),
-und dasselbe Feld zeigt stattdessen, worauf sie verweist: den Titel ihres
-Quelldokuments, lokale Position und Weltposition, Drehung, Bodenhöhe sowie
-Titel und Autor der enthaltenden Welt. In der Weltansicht ist das
-schreibgeschützt — es gibt kein Gizmo, kein Zahlenfeld, nichts zum Ziehen.
-Klicken Sie auf **Quelle öffnen**, um direkt im Editor das referenzierte
-Dokument selbst zu öffnen; jede andere Instanz davon, wo auch immer sie
-platziert ist, spiegelt wider, was Sie dort bearbeiten. Ihre eigene
-Schaltfläche **Eine Kopie bearbeiten**, direkt neben Quelle öffnen, zielt
-auf dasselbe referenzierte Dokument statt auf die Welt, die es nur
-positioniert — wenn Sie lieber an einer unabhängigen Kopie arbeiten und
-jede andere Instanz (und das Original) unberührt lassen möchten, nutzen
-Sie diese statt Quelle öffnen.
-
-Jede Schaltfläche „Eine Kopie bearbeiten“ in der Weltansicht — hier und im
-eigenen Feld Fokus einer Region, eines Wahrzeichens oder einer Struktur —
-ist dieselbe Aktion; siehe
-[Eine Kopie bearbeiten](#eine-kopie-bearbeiten--etwas-in-den-editor-übernehmen)
-oben.
-
-## Dokumentinformationen und Platzierung
-
-Unter der Kopfzeile finden Sie zwei Felder für das Dokument, das Sie gerade
-bearbeiten:
-
-- **Dokumentinformationen** — Titel, Beschreibung, Lizenz, wer es
-  platzieren darf, Status und (bei einem Fork) aus welcher Welt es geforkt
-  wurde. Klicken Sie auf **Metadaten bearbeiten**, um Titel,
-  Beschreibung, Lizenz oder wer es platzieren darf zu ändern.
-- **Platzierung** — *wo* dieses Dokument im geteilten Raum liegt, in
-  **Welteinheiten** (dem eigenen Koordinatensystem von ForkBuild, keine
-  GPS-Koordinaten — eine Welteinheit entspricht einem Meter echter Länge).
-  Klicken Sie auf **Verschieben**, um ihm direkt neue X/Y/Z-Koordinaten zu
-  geben, oder nutzen Sie die Schaltflächen ± (1 / 10 / 100 Welteinheiten),
-  um die aktuelle Position vor dem Bestätigen relativ zu verschieben.
-  **Fokussieren** fliegt dorthin.
-
-Das sind absichtlich zwei getrennte Felder: Was eine Kreation *ist* und wo
-sie *liegt*, sind zwei verschiedene Fragen, und eine Platzierung zu
-verschieben bearbeitet nie das Dokument selbst (oder umgekehrt).
-
-### Position in der Welt
-
-Belegt bereits ein anderes Dokument genau die Stelle, an die Sie
-verschieben, sehen Sie vor der Bestätigung eine Warnung mit einer Liste,
-wer dort ist — einen Ort zu teilen ist erlaubt (eine Hofszene und das
-Gebäude darum können zu Recht am selben Ort liegen), ForkBuild sorgt nur
-dafür, dass Sie es zuerst sehen.
-
-### Platzierungen, die Ihnen nicht gehören
-
-Gehört eine Platzierung jemand anderem, zeigt das Feld Platzierung
-**🔒 Platziert von &lt;Name&gt; — Sie können diese Platzierung ansehen,
-aber nicht verschieben.**, und die Schaltfläche **Verschieben** ist
-deaktiviert. Sie können sie trotzdem **fokussieren**, untersuchen und mit
-**Eine Kopie bearbeiten** auf dem aufbauen, was dort ist; nur *wo sie im
-geteilten Raum liegt*, darf allein ihr Eigentümer verschieben.
-
-### Warum kann ich die Bauwerke anderer platzieren?
-
-Ein echtes Gebäude lässt sich nicht aufheben und woanders hinstellen,
-daher mag es seltsam wirken, dass ForkBuild Sie das veröffentlichte
-Bauwerk eines jeden platzieren lässt, wo Sie möchten. Ein veröffentlichtes
-Bauwerk ist kein einzelner physischer Gegenstand. Es ist fester Inhalt,
-erkennbar an seinem Inhalts-Hash, ähnlich wie eine Datei oder ein
-Git-Repository. Eine **Platzierung** ist ein eigener, signierter Datensatz,
-der sagt: „Zeige dieses Bauwerk hier.“ Sie verweist auf das Bauwerk; sie
-kopiert es nicht. Dasselbe Bauwerk kann viele Platzierungen haben, und
-jede zeigt genau denselben veröffentlichten Inhalt.
-
-Das Bauwerk eines anderen zu platzieren verschiebt oder verändert dessen
-also nie:
-
-- **Seine Platzierung bleibt, wo er sie hingestellt hat.** Nur er kann sie
-  verschieben (siehe
-  [Platzierungen, die Ihnen nicht gehören](#platzierungen-die-ihnen-nicht-gehören)
-  oben).
-- **Ihre Platzierung ist von Ihnen signiert** und sagt nur, wo *Sie* sein
-  Bauwerk zeigen.
-- **Das Bauwerk behält seinen Autor und seinen Verlauf.** Es ist weiterhin
-  genau der Inhalt, den er veröffentlicht hat, und jeder kann das gegen
-  Hash und Signatur prüfen.
-
-Es gibt auch keine einzelne, zentrale Welt, die entscheidet, wem welches
-Grundstück gehört. Jede Welt zeigt die Platzierungen, die sie angenommen
-hat. Deshalb erscheint ein Bauwerk, das jemand in Ihrer Nähe ankündigt,
-nur als Geist, bis Sie **Position annehmen** wählen (siehe
-[Beanspruchte Bauwerke](#beanspruchte-bauwerke--die-bauwerke-anderer-dort-wo-ihre-herausgeber-sie-hinstellen)).
-Niemand kann ohne Ihr Einverständnis ein Bauwerk in Ihre Welt setzen.
-
-Einige Gründe, ein Bauwerk zu platzieren, das Sie nicht gemacht haben:
-
-- **Kuratieren**, etwa eine Galeriewelt, die Bauwerke sammelt, die Ihnen
-  gefallen.
-- **Eine Szene zusammenstellen**, etwa die Burg eines Freundes neben Ihr
-  Dorf stellen.
-- **Es unverändert wiederverwenden.** Platzieren Sie es, wenn Sie es
-  unverändert möchten, und nutzen Sie
-  [Eine Kopie bearbeiten](#eine-kopie-bearbeiten--etwas-in-den-editor-übernehmen)
-  nur, wenn Sie es ändern möchten.
-
-Ein Herausgeber, der das nicht möchte, kann beim Veröffentlichen **Nur ich
-darf es platzieren** wählen (siehe
-[Wählen, wer es platzieren darf](04-PublishingAndForking.md#wählen-wer-es-platzieren-darf)).
-Sie können sein Bauwerk dann weiterhin finden, ansehen und, wenn die
-Lizenz es erlaubt, forken, aber nicht platzieren.
-
-### Warum können zwei Bauwerke an derselben Stelle stehen?
-
-Im echten Leben können zwei Gebäude nicht am selben Ort stehen. In
-ForkBuild können sie es, weil eine Platzierung kein Land belegt. Sie ist
-nur eine signierte Notiz „Zeige dieses Bauwerk hier“, und zwei Notizen
-können dieselbe Stelle nennen.
-
-ForkBuild erlaubt das mit Absicht:
-
-- **Niemand vergibt Land.** Es gibt keinen zentralen Server, der
-  entscheidet, wer zuerst da war, und ForkBuild kürt nie einen Sieger
-  zwischen zwei signierten Platzierungen. Beide bleiben gültig.
-- **Jedes Gerät kennt andere Platzierungen.** Eine Stelle, die auf dem
-  Gerät Ihres Freundes belegt ist, kann auf Ihrem noch leer sein, bis die
-  Platzierungen bei Ihnen ankommen. Eine strenge Regel „ein Bauwerk pro
-  Stelle“ würde auf verschiedenen Geräten verschiedene Antworten geben,
-  daher tut ForkBuild nicht so, als könnte es eine durchsetzen.
-- **Manchmal will man es.** Eine Hofszene in einem Gebäude, eine ältere
-  Version anstelle der neuen oder bewusst geschichtete Ausstellungsstücke
-  sind alles Bauwerke, die an denselben Ort gehören.
-
-Das heißt nicht, dass jeder Ihre Bauwerke bedrängen kann:
-
-- **Sie werden vorher gewarnt.** **Verschieben …** listet vor Ihrer
-  Bestätigung auf, was schon an einer Stelle ist, und ForkBuild verschiebt
-  Ihr Bauwerk nie stillschweigend woandershin (siehe
-  [Position in der Welt](#position-in-der-welt)).
-- **Keine versehentlichen Duplikate.** **Hier eine Platzierung
-  hinzufügen** verweigert, wenn genau dort, wo Sie sind, schon eine
-  Platzierung liegt.
-- **Der Anspruch eines anderen ist nur ein Geist.** Eine Position, die
-  jemand anderes als der eigene Herausgeber des Bauwerks ankündigt, wird
-  nur als durchscheinender Geist gezeigt, und nie an einer Stelle, an der
-  dieses Gerät schon eine echte Platzierung kennt (siehe
-  [Beanspruchte Bauwerke](#beanspruchte-bauwerke--die-bauwerke-anderer-dort-wo-ihre-herausgeber-sie-hinstellen)).
-- **Nur der Eigentümer kann eine Platzierung verschieben oder entfernen**
-  (siehe
-  [Platzierungen, die Ihnen nicht gehören](#platzierungen-die-ihnen-nicht-gehören)).
-
-ForkBuild prüft nur auf Bauwerke an genau demselben Punkt. Zwei Bauwerke an
-benachbarten Punkten, deren Steine sich zufällig berühren, werden nicht
-gemeldet. Die Begründung des Designs finden Sie unter
-[Overlap Is A Fact; Collision Is A Policy Decision](../../principles/placement.md#overlap-is-a-fact-collision-is-a-policy-decision-0225)
-(Englisch) und in den Regeln danach.
-
-### Platzieren oder forken
-
-Beides bringt das Bauwerk eines anderen in eine Ihrer Welten, aber es sind
-verschiedene Dinge:
-
-| | Platzieren | Forken (Forken oder Eine Kopie bearbeiten) |
-|---|---|---|
-| Was entsteht | Eine Platzierung: ein kleiner signierter Datensatz, wo das Bauwerk gezeigt wird | Ein neues Dokument mit neuen IDs, das Ihnen gehört |
-| Das Bauwerk | Dieselbe Geteilte Welt, so gezeigt, wie sie veröffentlicht wurde | Ihre eigene Kopie, mit einem Vermerk, der auf das Original zurückverweist |
-| Können Sie die Steine ändern? | Nein | Ja, im Editor |
-| Wer ist der Autor | Der ursprüngliche Herausgeber | Sie, mit dem Original als Elternteil festgehalten |
-| Geregelt durch | Die Einstellung **Wer es platzieren darf** des Herausgebers | Die Lizenz |
-| Veröffentlichen | Nichts Neues wird veröffentlicht | Erstellt eine neue Geteilte Welt unter Ihrem Namen |
-
-Platzieren ist wie das Verlinken derselben Datei von einer anderen Seite
-aus; Forken ist wie das Klonen eines Repositorys, um an einer eigenen
-Kopie zu arbeiten. Nur ein Fork ist also eine echte Kopie. Wer **Nur ich
-darf es platzieren** gewählt hat, kann über seine Lizenz trotzdem Forks
-erlauben, und ein Fork gehört dann Ihnen und lässt sich platzieren, wo Sie
-möchten.
-
-## Die Weltansicht ist schreibgeschützt — gebaut wird im Editor
-
-Hier gibt es kein Platzierwerkzeug, kein Transformations-Gizmo, kein
-Kopieren/Einfügen und keine Gruppen — Klicken, Ziehen oder ein Tastendruck
-ändert nie einen Stein. Um auf etwas aufzubauen, nutzen Sie **[Eine Kopie
-bearbeiten](#eine-kopie-bearbeiten--etwas-in-den-editor-übernehmen)** und
-machen Sie im [Editor](02-TheEditor.md) weiter. Die oben in dieser
-Anleitung aufgeführten Ausnahmen für Anmerkungen gelten weiterhin.
-
-## Andere Mitwirkende sehen
-
-Wenn mehrere Menschen in derselben Welt sind:
-
-- **Andere Menschen sehen** — ihre Avatare erscheinen mit Anzeigenamen und
-  Aktivitätshinweisen (z. B. „**Bob — erkundet die Umgebung**“).
-- **Aktualisierungen in Echtzeit** — alles, was sie veröffentlichen (ein
-  Wahrzeichen, einen Namen, einen frischen eigenen Fork), erscheint für Sie
-  in dem Moment, in dem es geschieht.
-- **Flüchtiger Aktivitätsfeed** — ein lokales Feld zeigt die jüngste
-  Aktivität, damit Sie verstehen, was sich auch außerhalb Ihrer aktuellen
-  Ansicht geändert hat. Dieser Feed ist vorübergehend und wird nicht
-  gespeichert.
-
-> **Anwesenheit beschreibt Aktivität; sie ändert nie von selbst etwas.**
-> Räumliche Anwesenheit hilft Ihnen zu verstehen, was andere tun, aber nur
-> eine tatsächliche Änderung — im Editor oder eine der Ausnahmen für
-> Anmerkungen in der Weltansicht — ändert die geteilte Umgebung.
-
-## Auch hier speichern und veröffentlichen
-
-Die Kopfzeile hat die Schaltflächen **Speichern**, **Veröffentlichen** und
-**Metadaten bearbeiten**, sobald Sie etwas bearbeiten, sodass Sie eine Welt
-festhalten und teilen können, ohne sie zu verlassen. Die Statuszeile
-(**🔒 Veröffentlicht** oder **✎ Ihre Kopie wird bearbeitet**) zeigt immer, was
-davon zutrifft.
-
-Eine veröffentlichte Welt kann sich nie ändern. Ist die Welt, die Sie
-bearbeiten, veröffentlicht, erstellt Ihre erste Änderung hier — ihre
-Metadaten bearbeiten, ein Wahrzeichen oder eine Region hinzufügen oder
-umbenennen oder sie mit einem Tier schmücken — automatisch Ihre eigene
-bearbeitbare Kopie mit dem Titel *„Fork von &lt;ursprünglicher
-Name&gt;“*, und ein kurzer Hinweis („Ihre eigene bearbeitbare Kopie wurde
-erstellt — … bleibt unverändert“) sagt es Ihnen. Es gelten dieselben
-Lizenzregeln wie für jeden anderen Fork (siehe
-[Veröffentlichen & Forken](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen)).
-
 ### Meine Geteilte Welt — Ihren eigenen Snapshot verteilen, ohne Peers
 
 (Zu sehen, wenn **Erweiterte Werkzeuge zeigen** an ist; siehe [Ein Besucherblick und Erweitert](#ein-besucherblick-und-erweitert).)
@@ -1403,32 +1414,6 @@ Höchstens vier werden gleichzeitig heruntergeladen. Ein Snapshot, den
 dieses Gerät schon heruntergeladen hat, wird nach derselben
 Inhaltsprüfung aus dem eigenen Speicher gelesen, statt erneut
 heruntergeladen zu werden.
-
-## Verlauf — frühere Zustände in der Vorschau ansehen und wiederherstellen
-
-Jede Änderung, die Sie hier vornehmen — ein Wahrzeichen oder eine Region
-hinzufügen, umbenennen oder entfernen —, wird im Verlauf des Dokuments
-festgehalten. Klicken Sie in der Kopfzeile auf **Verlauf**, um ihn zu
-öffnen. Sie sehen eine nummerierte Liste mit Zeitstempeln, etwa:
-
-```
-1. Wahrzeichen „Alte Brücke“ erstellen
-2. Region „Weidendorf“ aktualisieren
-3. Wahrzeichen entfernen
-```
-
-Einträge, die Sie rückgängig gemacht haben, sind mit **rückgängig
-gemacht** markiert. Ein Klick auf einen Eintrag wählt ihn nur aus; nichts
-ändert sich, bis Sie eine der Schaltflächen drücken:
-
-- **Vorschau** — zeigt, wie die Welt *direkt nach* dem ausgewählten
-  Schritt aussah, neben der aktuellen, ohne etwas zu ändern. **Vorschau
-  abbrechen** kehrt zur Gegenwart zurück.
-- **Wiederherstellen** — macht den ausgewählten Schritt zu Ihrem
-  **aktuellen** Zustand. Das Dokument bleibt mit ungespeicherten
-  Änderungen zurück, sodass Sie noch entscheiden können, ob Sie es
-  speichern. Es gibt keine eigene Bestätigung.
-- **Schließen** — schließt das Feld.
 
 ## Wie geht es weiter?
 

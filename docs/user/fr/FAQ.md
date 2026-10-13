@@ -1,27 +1,49 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 30c9430bdca078bf -->
+<!-- translation-of: docs/user/FAQ.md source-hash: d0ced791059d2485 -->
 # Questions fréquentes
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · **Français** · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
 
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../FAQ.md).
-<!-- /stale -->
-
 Des réponses courtes aux questions les plus fréquentes, chacune renvoyant
 vers le guide qui l’explique en détail.
 
+## Se repérer
+
+### Où sont passés l’Éditeur, le Dépôt et Se connecter ?
+
+Ils ont été renommés dans le menu. **Construire** ouvre l’Éditeur,
+**Explorer** est l’ancien Dépôt, et **Choisir un nom** (ou votre nom, une
+fois que vous en avez un) remplace Se connecter. **Se promener** ouvre le
+Monde sur la place du défi de la semaine. Voir
+[Se repérer](01-GettingStarted.md#se-repérer).
+
+### Je ne trouve pas Mon avatar, Pairs ou Paramètres réseau
+
+Ils sont sous **Plus** dans la barre du haut (sur un téléphone, sous
+**Menu**) : **Vous** contient Mon avatar, Mes identités et Vos données ;
+**Personnes** contient Pairs, Abonnements et Conversations ; **Avancé**
+contient Publications et Paramètres réseau. Cliquer sur votre nom en haut à
+droite ouvre aussi Mon avatar, Mes identités et Vos données.
+
 ## Publier et partager
 
-### J’ai publié ma création, mais mon ami ne la trouve pas dans son Dépôt
+### J’ai publié ma construction, mais mon ami ne la trouve pas dans Explorer
 
-Publier ne fait que stocker la création sur votre propre appareil et la
-lister dans *votre* Dépôt. Rien n’est envoyé nulle part tant que vous ne
-le choisissez pas :
+Sauf si vous avez choisi **Tout le monde** quand Publier a demandé
+[Qui peut la trouver ?](04-PublishingAndForking.md#qui-peut-la-trouver-),
+publier ne fait que stocker la construction sur votre propre appareil et la
+lister dans *votre* **Explorer**. Pour qu’elle arrive à votre ami :
 
-- **Partager avec les pairs**, sous votre création dans le Dépôt, la
-  propose aux personnes auxquelles vous êtes connecté. L’appareil d’un
+- **Envoyez le lien.** Publier affiche **Copier le lien** (et
+  **Partager…** là où votre appareil sait partager) ; la construction
+  voyage dans le lien, votre ami peut donc l’ouvrir sur n’importe quel
+  appareil. Voir [Partager un lien](04-PublishingAndForking.md#partager-un-lien).
+- **Laissez tout le monde la trouver.** Cliquez sur **Laisser tout le
+  monde la trouver** dans le message qui suit la publication : elle
+  apparaît dans l’**Explorer** de chacun, dans le défi et dans le Monde.
+- **Partager avec les pairs**, sous votre construction dans **Explorer**,
+  la propose aux personnes auxquelles vous êtes connecté. L’appareil d’un
   Ami ou d’un Pair connu l’ajoute de lui-même ; les autres la voient sous
   **Partagés avec vous** et cliquent sur **Récupérer**. Vous devez être
   connectés en même temps pour qu’elle arrive.
@@ -33,13 +55,19 @@ Voir [Publier et forker](04-PublishingAndForking.md#partager-avec-les-pairs-conn
 
 ### Comment rendre mon travail accessible à tous ?
 
-Distribuez-le : stockez-le sur Arweave ou IPFS (ou, de façon
-expérimentale, sur Steem ou Blurt) et annoncez-le sur Nostr ou Arweave (ou Steem ou Blurt),
-pour que n’importe qui puisse le trouver et le vérifier sans être
-connecté à vous. Cliquez sur **Distribuer** juste après la publication, ou
-sous **Mon Monde partagé** dans la Vue du Monde. Il vous faut une
-extension de navigateur capable de signer pour les réseaux choisis, comme
-Wander pour Arweave ou nos2x pour Nostr.
+Choisissez **Tout le monde** quand Publier demande
+[Qui peut la trouver ?](04-PublishingAndForking.md#qui-peut-la-trouver-)
+(ou cliquez sur **Laisser tout le monde la trouver** après la
+publication). Chaque construction que vous publiez est alors envoyée à tout
+le monde et apparaît dans **Explorer**, dans le défi de la semaine et dans
+le Monde, sans rien à installer.
+
+Pour garder en plus une copie sur un réseau de stockage décentralisé,
+distribuez-la : stockez-la sur Arweave ou IPFS (ou, de façon
+expérimentale, sur Steem ou Blurt) et annoncez-la sur Nostr ou Arweave (ou
+Steem ou Blurt). Il vous faut alors une extension de navigateur capable de
+signer pour les réseaux choisis, comme Wander pour Arweave ou nos2x pour
+Nostr.
 [Distribuer votre travail](Distribution.md) liste tout ce que vous pouvez
 distribuer, où, et ce dont chaque réseau a besoin.
 
@@ -64,19 +92,22 @@ publiées gardent donc la licence qu’elles avaient. Voir
 
 Ces messages sont aujourd’hui affichés en anglais.
 
-### Faut-il être connecté pour publier ?
+### Faut-il un nom pour publier ?
 
-La publication fonctionne sans être connecté, mais le résultat n’a ni
-auteur ni signature : vous ne pouvez donc pas le partager avec des pairs
-ni le distribuer plus tard. Connectez-vous avant de publier.
+En pratique, oui. Publier vous demande d’en choisir un, ce qui prend
+quelques secondes et ne demande aucun compte. **Publier sans signer**, dans
+cette fenêtre, publie sans nom, mais le résultat n’a ni auteur ni
+signature : il n’obtient pas de lien, et vous ne pouvez ni le partager avec
+des pairs ni l’envoyer à tout le monde plus tard. Voir
+[Choisir un nom](01-GettingStarted.md#choisir-un-nom).
 
 ### Puis-je dépublier quelque chose ?
 
 Oui : ouvrez le Monde dans la Vue du Monde, puis dans **Mon Monde
 partagé** choisissez **Plus ▾ → Dépublier…**. Cela le retire de votre
-Dépôt. Cela ne peut pas rappeler les copies que d’autres ont déjà reçues
+**Explorer**. Cela ne peut pas rappeler les copies que d’autres ont déjà reçues
 ni ce que vous avez distribué sur Arweave, IPFS, Nostr, Steem ou Blurt. Cet appareil se souvient toutefois de ce que
-vous avez dépublié : la recherche du Dépôt sur les réseaux n’affichera plus
+vous avez dépublié : la recherche d’**Explorer** sur les réseaux n’affichera plus
 ces copies ici ; d’autres appareils et d’autres personnes peuvent encore les
 trouver.
 
@@ -153,11 +184,11 @@ jour dans un dossier synchronisé par votre stockage en ligne. Voir
 Non. Les identités sont faites pour durer. Pour arrêter d’en utiliser
 une, déclarez un successeur ou révoquez-la dans **Mes identités**.
 
-### J’ai révoqué mon identité, alors pourquoi puis-je encore me connecter avec elle ?
+### J’ai révoqué mon identité, alors pourquoi puis-je encore l’utiliser ?
 
 C’est normal. Révoquer empêche l’identité de signer quoi que ce soit de
 nouveau, y compris ce dont elle a besoin pour se connecter à d’autres
-personnes, mais cela ne vous empêche pas de vous connecter. Vous pouvez
+personnes, mais vous pouvez encore la choisir sur cet appareil. Vous pouvez
 ainsi encore la consulter ou l’exporter. Elle affiche **Révoquée** dans
 **Mes identités**, et la révocation ne peut jamais être annulée. Créez une
 nouvelle identité pour continuer à travailler. Voir
@@ -269,14 +300,17 @@ chat ont besoin d’une connexion. Voir
 
 ### Puis-je imprimer ma construction en 3D, ou l’ouvrir dans Blender ?
 
-Oui. **Modèle 3D** dans la barre d’outils de l’Éditeur la télécharge en STL
+Oui. **Fichier → Modèle 3D** dans la barre d’outils de l’Éditeur la télécharge en STL
 pour l’impression 3D (en millimètres, posée sur le plateau) ou en glTF ou
 OBJ en couleur pour Blender et d’autres logiciels. Voir
 [Télécharger un modèle 3D](02-TheEditor.md#télécharger-un-modèle-3d).
 
 ### Ai-je besoin d’un portefeuille crypto ?
 
-Non. Construire, enregistrer, publier, forker, les pairs et le chat n’en
-ont pas besoin. Un portefeuille ou une extension de signature n’est
-nécessaire que pour les fonctions expérimentales de distribution et
-d’ancrage de [Preuves et stockage](11-EvidenceAndStorage.md).
+Non. Construire, enregistrer, publier, partager un lien, envoyer une
+construction à tout le monde, remixer, les pairs et le chat n’en ont pas
+besoin. Un portefeuille ou une extension de signature n’est nécessaire que
+si vous choisissez de distribuer vous-même une construction sur un réseau
+de stockage (Arweave demande un portefeuille Arweave comme Wander ; Nostr,
+une extension de signature comme nos2x), et pour les fonctions
+expérimentales d’ancrage de [Preuves et stockage](11-EvidenceAndStorage.md).

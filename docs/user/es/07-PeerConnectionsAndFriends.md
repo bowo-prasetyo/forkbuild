@@ -1,17 +1,13 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 02e25094626dc446 -->
 # 07 — Conexiones entre pares y amigos
 
 <!-- languages -->
 [English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · **Español** · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · [日本語](../ja/07-PeerConnectionsAndFriends.md) · [한국어](../ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../07-PeerConnectionsAndFriends.md).
-<!-- /stale -->
-
 ForkBuild lo conecta directamente con los navegadores de otras personas:
 no hay ningún servidor central que guarde una lista de amigos. Abra
-**Pares** en la barra superior para administrar con quién está conectado,
+**Más → Pares** para administrar con quién está conectado,
 a quién conoce y quiénes son sus amigos.
 
 ## La página de un vistazo
@@ -199,7 +195,7 @@ otro.
   nombre de autor escrito: varias personas pueden publicar con el mismo
   nombre, así que la página de un autor muestra un **Seguir** por cada
   identidad que firmó trabajos con ese nombre.
-- **La página Siguiendo** (**Siguiendo** en la barra superior) muestra a
+- **La página Siguiendo** (**Más → Siguiendo**) muestra a
   las personas que sigue, cada una con **Dejar de seguir**, y debajo, el
   trabajo más reciente de ellas que llegó a este dispositivo, del más nuevo
   al más antiguo. Haga clic en un nombre para ver solo el trabajo de esa
@@ -248,7 +244,7 @@ cuando usted inicia una conexión (nunca solo por abrir la app) y las usa
 automáticamente. El servidor entrega una cantidad limitada de credenciales
 de relay por mes; cuando se agotan, las conexiones se siguen intentando,
 solo que sin relay, hasta el mes siguiente. Para usar un relay propio,
-abra **Servidor TURN** desde **Configuración de red** en la barra superior
+abra **Servidor TURN** desde **Más → Configuración de red**
 (`/settings/turn-server`) y configure su propio relay TURN: un servidor que
 realmente reenvía los datos de la conexión cuando no se puede establecer
 un camino directo.

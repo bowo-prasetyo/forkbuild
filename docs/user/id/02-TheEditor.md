@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 0597b11a718701f3 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: d8dfa742e1512331 -->
 # 02 — Editor
 
 <!-- languages -->
 [English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · **Bahasa Indonesia** · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../02-TheEditor.md).
-<!-- /stale -->
 
 Editor adalah tempat Anda membangun. Panduan ini membahas alat-alatnya,
 cara memilih dan mentransformasi balok, dan cara menata bangunan Anda
@@ -530,7 +526,7 @@ dialog **Properti Dokumen**, yang dibuka dengan tombol **✎** di samping
 judul dokumen di bagian atas bilah sisi Editor (di Tampilan Dunia,
 tombolnya **Edit Metadata**). Dokumen baru dimulai tanpa lisensi, yang
 berarti tidak ada orang lain yang dapat mem-fork-nya sampai Anda memilih
-lisensi. Deskripsinya muncul sebagai cuplikan di kartu Repositori-nya dan
+lisensi. Deskripsinya muncul sebagai cuplikan di kartunya di **Jelajahi** dan
 juga dapat dicari di sana; lisensi menentukan apakah — dan bagaimana —
 orang lain boleh mem-fork-nya. Lihat
 [Penerbitan & Fork](04-PublishingAndForking.md) untuk arti setiap lisensi.
@@ -548,8 +544,8 @@ Dunia, serta postingan Steem dan Blurt:
 | `*kata*` | *miring* |
 | `\*`, `\#`, `\-` | karakter itu sendiri |
 
-Selain itu bukan format: tautan, gambar, dan HTML tetap teks biasa. Kartu
-Repositori menampilkan kata-kata deskripsi dalam satu baris, tanpa format.
+Selain itu bukan format: tautan, gambar, dan HTML tetap teks biasa. Kartu di
+**Jelajahi** menampilkan kata-kata deskripsi dalam satu baris, tanpa format.
 
 **Tag** menyebut apa bangunan ini, misalnya `jepang kuil taman`: hingga 5,
 dipisahkan spasi atau koma, masing-masing dari huruf kecil, angka, dan tanda
@@ -597,17 +593,17 @@ Musik diputar pelan saat Anda membangun, sedikit lebih riang daripada di Tampila
   kincir, dan jembatan) sebagai salinan Anda sendiri, terlihat utuh. Jika
   yang sedang terbuka memiliki perubahan belum disimpan, Baru memberi tahu
   dulu; simpan untuk mempertahankannya.
-- **Berkas** berisi tiga berikut ini:
-- **Ekspor** — mengunduh karya saat ini sebagai file JSON, untuk menyimpan
-  salinan atau memindahkannya ke perangkat lain. File memakai format ringkas
-  yang menyimpan balok sebagai tabel.
-- **Model 3D** — mengunduh karya sebagai model 3D untuk program lain
-  (lihat [Mengunduh model 3D](#mengunduh-model-3d)).
-- **Impor** — membuka file yang diekspor sebagai karya baru dengan
-  identitasnya sendiri; tidak ada yang disimpan sampai Anda **Simpan**. File
-  yang diekspor versi sebelumnya tetap dapat dibuka (dikonversi saat
-  dimuat), tetapi ForkBuild 1.0.0 dan yang lebih lama tidak dapat membuka
-  file yang diekspor versi ini.
+- **Berkas** — menu berisi tiga lagi:
+  - **Ekspor** — mengunduh bangunan saat ini sebagai file JSON, untuk menyimpan
+    salinan atau memindahkannya ke perangkat lain. File memakai format ringkas
+    yang menyimpan balok sebagai tabel.
+  - **Model 3D** — mengunduh bangunan sebagai model 3D untuk program lain
+    (lihat [Mengunduh model 3D](#mengunduh-model-3d)).
+  - **Impor** — membuka file yang diekspor sebagai bangunan baru dengan
+    identitasnya sendiri; tidak ada yang disimpan sampai Anda **Simpan**. File
+    yang diekspor versi sebelumnya tetap dapat dibuka (dikonversi saat
+    dimuat), tetapi ForkBuild 1.0.0 dan yang lebih lama tidak dapat membuka
+    file yang diekspor versi ini.
 - **Terbaru** — membuka kembali sesuatu yang pernah Anda simpan (muncul
   setelah penyimpanan pertama; klik nama dokumen untuk membukanya). Begitu
   Anda menyimpan cukup banyak dokumen, kotak saring muncul sehingga Anda

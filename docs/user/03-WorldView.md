@@ -294,7 +294,7 @@ the top of the panel handles getting around:
   zoom, and WASD, Shift and Space while you control your avatar); click it
   again to hide them.
 
-**Notifications** is the 🔔 button in the app's header, beside Login, so it's there on
+**Notifications** is the 🔔 button in the app's header, beside your name (or **Choose a name**), so it's there on
 every page, not just in World View. It opens your **Notification History** —
 a durable record of notification facts addressed to your identity, most
 recent activity first. Three things produce one: someone commenting on a

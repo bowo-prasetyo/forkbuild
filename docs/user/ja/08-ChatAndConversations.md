@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 406b0d8076916c27 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: d5ddd1ed7cb40c91 -->
 # 08 — チャットと会話
 
 <!-- languages -->
 [English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · **日本語** · [한국어](../ko/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../08-ChatAndConversations.md)も参照してください。
-<!-- /stale -->
 
 ForkBuild の直接メッセージはピアツーピアで、**友達どうしだけ** のもの
 です。先に誰かと友達になる方法は
@@ -15,8 +11,8 @@ ForkBuild の直接メッセージはピアツーピアで、**友達どうし�
 
 ## 会話を始める
 
-チャットは、**ピア** ページの友達の **チャット** ボタンか、上部のバーの
-**会話** ページから開きます。ワールドビューやアバターからチャットを
+チャットは、**ピア** ページの友達の **チャット** ボタンか、**会話** ページ
+（**その他 → 会話**）から開きます。ワールドビューやアバターからチャットを
 始める入り口はありません。今は友達でない人（またはブロックしている人）と
 チャットを開くと、入力欄の代わりに説明が表示されます。チャットを使える
 ようにするのは、オンラインかどうかではなく、友達関係です。

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d63d0904aac96490 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ba7ee7cf8bfc4b8a -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · **Deutsch** · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Das ist das Herz von ForkBuild. **Veröffentlichen** teilt Ihre Kreation mit
 der Welt. **Remixen** erlaubt jedem, eine Kreation zu kopieren und
@@ -16,12 +12,11 @@ weiterzuentwickeln — wobei der ganze Verlauf erhalten bleibt.
 ## Ihre Kreation veröffentlichen
 
 1. Bauen Sie etwas im Editor.
-2. Melden Sie sich an und stellen Sie sicher, dass Ihre Identität entsperrt
-   ist (siehe [Identität & Anmeldung](05-IdentityAndLogin.md)).
-   Veröffentlichen signiert die Kreation damit. Wenn Sie nicht angemeldet
-   sind, bittet **Veröffentlichen** Sie, sich zuerst anzumelden oder eine
-   Identität zu erstellen; **Unsigniert veröffentlichen** veröffentlicht sie
-   dort ohne Autor und ohne Link.
+2. Haben Sie einen Namen, und sorgen Sie dafür, dass er entsperrt ist
+   (siehe [Identität & Anmeldung](05-IdentityAndLogin.md)).
+   Veröffentlichen signiert das Bauwerk damit. Haben Sie noch keinen Namen,
+   bittet **Veröffentlichen** Sie zuerst, einen zu wählen; **Unsigniert
+   veröffentlichen** veröffentlicht es dort ohne Autor und ohne Link.
 3. Geben Sie ihr einen Titel — Veröffentlichen verweigert eine Kreation
    ohne Titel oder eine leere — und, optional, eine Beschreibung und eine
    Lizenz: Klicken Sie in der Seitenleiste auf **✎** neben dem
@@ -54,8 +49,8 @@ hinter der man nicht stehen kann, zählt nicht, und an ein Bauwerk ohne Tür
 kommen Sie von vorn. Die Karte **Ihr erstes Bauwerk** bietet dieselbe
 Schaltfläche an, sobald das Bauwerk veröffentlicht ist.
 
-> **Hinweis:** Veröffentlichen speichert Ihr Dokument bzw. Ihre Welt nur
-> auf diesem Gerät. Ihre Karte im Repository sagt, wo dieses Gerät das
+> **Hinweis:** Veröffentlichen speichert Ihr Bauwerk auf diesem Gerät.
+> Seine Karte in **Entdecken** sagt, wo dieses Gerät das
 > Verteilen festgehalten hat (zum Beispiel **Gespeichert auf IPFS ·
 > Angekündigt auf Nostr**), oder **Auf diesem Gerät ist keine Verteilung
 > verzeichnet.** Sichern Sie es unter [Ihre Daten](13-YourData.md), um in
@@ -87,8 +82,8 @@ Weltansicht unter **Meine Geteilte Welt**.
   und ein Bild des Bauwerks, gezeichnet vom Link-Server von ForkBuild, der
   jeden, der ihn öffnet, weiter zu ForkBuild schickt. Ein veränderter Link
   zeigt nur „A shared build“.
-- **Er braucht eine Signatur.** Veröffentlichen Sie angemeldet; eine
-  abgemeldet veröffentlichte Kreation bekommt keinen Link.
+- **Er braucht eine Signatur.** Veröffentlichen Sie unter einem Namen; ein
+  Bauwerk ohne Namen (**Unsigniert veröffentlichen**) bekommt keinen Link.
 - **Größe.** Ein Bauwerk mit bis zu etwa 500 Steinen passt hinein; der Link
   der mitgelieferten Burg hat etwa 3.700 Zeichen. E-Mail und die meisten
   Chat-Apps und sozialen Netzwerke behalten einen so langen Link, Discord
@@ -298,23 +293,24 @@ irgendwo gespeichert; nur, wohin Ihre Bauwerke gehen.
 
 ## Mit verbundenen Peers teilen
 
-Eine Welt, die Sie veröffentlichen, steht nur in *Ihrem* Repository, bis
-Sie sie auf Nostr, Arweave, Steem oder Blurt verteilen (siehe
-[Verteilung](Distribution.md)): Dann findet sie das Repository aller (siehe
+Ein Bauwerk, das Sie veröffentlichen, steht nur in *Ihrem* **Entdecken**,
+bis es an alle gesendet wird (siehe [Wer kann es finden?](#wer-kann-es-finden))
+oder Sie es auf Nostr, Arweave, Steem oder Blurt verteilen (siehe
+[Verteilung](Distribution.md)): Dann findet es **Entdecken** bei allen (siehe
 [Von anderen verteilte Kreationen](#von-anderen-verteilte-kreationen)). Um
-sie in das Repository von jemandem zu bringen, mit dem Sie verbunden sind
+es in **Entdecken** von jemandem zu bringen, mit dem Sie verbunden sind
 (siehe [Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)),
-klicken Sie im Repository darunter auf **Mit Peers teilen**. Die
+klicken Sie in **Entdecken** darunter auf **Mit Peers teilen**. Die
 Schaltfläche erscheint nur bei Ihren eigenen veröffentlichten Welten.
 
 - Teilen bietet die Welt allen an, die gerade verbunden sind, und allen,
   die sich später verbinden. **Geteilt ✓ · Erneut teilen** kündigt sie
   den jetzt Verbundenen erneut an.
 - Auf deren Seite wird eine Welt, die einer ihrer **Freunde** oder
-  **bekannten Peers** geteilt hat, von selbst ihrem Repository
+  **bekannten Peers** geteilt hat, von selbst ihrem **Entdecken**
   hinzugefügt, samt allem, was zum **Erkunden** nötig ist. Eine Welt, die
   jemand anderes geteilt hat, wartet unter **Mit Ihnen geteilt** oben in
-  ihrem Repository, bis sie auf **Abrufen** klicken. Kein Gerät lädt
+  ihrem **Entdecken**, bis sie auf **Abrufen** klicken. Kein Gerät lädt
   ungefragt die Welt eines Fremden herunter. Jede steht dort mit ihrem
   Titel, damit sie wählen können; ihr Gerät stellt sicher, dass die Welt,
   die sie abrufen, die ist, die dieser Titel nennt. Eine Welt, die Sie
@@ -419,8 +415,9 @@ Das Original wird nie berührt, egal wie sehr Sie Ihre Kopie ändern.
 
 ## Das Repository
 
-Das **Repository** ist der durchsuchbare Katalog aller veröffentlichten
-Kreationen, die dieses Gerät kennt: Ihrer eigenen, solcher, die Peers mit
+**Entdecken** in der oberen Leiste (in älteren Versionen und in einigen
+erweiterten Meldungen *Repository* genannt) ist der durchsuchbare Katalog
+aller veröffentlichten Bauwerke, die dieses Gerät kennt: Ihrer eigenen, solcher, die Peers mit
 Ihnen geteilt haben, und solcher, die in dezentralen Netzwerken gefunden
 wurden. Es ist so gebaut, dass es benutzbar bleibt, ob es zehn Kreationen
 enthält oder zehntausend.
@@ -446,7 +443,7 @@ auch in der Baubibliothek unter **Strukturen**, Kategorie *Sammlung*.
 
 ### Von anderen verteilte Kreationen
 
-Jedes Mal, wenn Sie das Repository (oder eine Autorenseite) öffnen, sucht es
+Jedes Mal, wenn Sie **Entdecken** (oder eine Autorenseite) öffnen, sucht es
 auf Nostr, Arweave, Steem und Blurt nach Kreationen, die andere dort verteilt
 haben, und fügt die hinzu, die es überprüfen kann. Eine Zeile über der Liste
 sagt, was es gerade tut, und dann, wie viele neue Kreationen es gefunden
@@ -459,7 +456,7 @@ hat; **Erneut prüfen** sucht noch einmal.
 - Es prüft bis zu 20 neue Kreationen auf einmal. Gibt es mehr, sagt die
   Zeile, wie viele für das nächste Mal übrig sind.
 - Eine so gefundene Kreation bleibt auch nach dem Neuladen in Ihrem
-  Repository.
+  **Entdecken**.
 - Ihr Build ist noch nicht auf Ihrem Gerät. **Erkunden** holt ihn von dort,
   wo er gespeichert wurde, prüft ihn und öffnet ihn dann in der
   Weltansicht, genau wie beim Öffnen eines geteilten Links.
@@ -516,7 +513,7 @@ schon besucht haben, statt für eine, die Sie zum ersten Mal finden.)
 Klicken Sie auf den **Namen eines Autors**, um seine **Autorenansicht** zu
 besuchen — ein Portfolio von allem, was er gemacht hat, einschließlich
 seiner Originale und aller Forks, die daraus gewachsen sind, mit genau
-demselben Katalog für Suche, Sortierung und Seiten wie das Repository, nur
+demselben Katalog für Suche, Sortierung und Seiten wie **Entdecken**, nur
 auf diesen einen Autor beschränkt.
 
 Eine Karte, deren Signatur gültig ist, hat außerdem eine Schaltfläche
@@ -526,9 +523,8 @@ folgen bringt seine neuen Werke auf Ihre Seite **Gefolgt** und in Ihre
 Benachrichtigungen; siehe
 [Personen folgen](07-PeerConnectionsAndFriends.md#personen-folgen).
 
-Das Repository ist auch nicht auf das beschränkt, was von diesem Gerät
-veröffentlicht oder direkt entdeckt wurde: Eine dezentrale Kreation im
-Repository, die ein Peer Ihnen in der eigenen Karte
+**Entdecken** ist auch nicht auf das beschränkt, was von diesem Gerät
+veröffentlicht oder direkt entdeckt wurde: Ein dezentrales Bauwerk, das ein Peer Ihnen in der eigenen Karte
 [Begegnungen in der Welt](03-WorldView.md#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen)
 der Weltansicht gezeigt hat, kommt, sobald ihr Inhalt sich tatsächlich
 auflösen lässt, ebenfalls in diese Suche und in die Autorenansicht ihres
@@ -555,13 +551,13 @@ oben.)
 
 > **In der Weltansicht auch „Eine Kopie bearbeiten“ genannt.** Es ist so
 > oder so derselbe Vorgang, mit denselben Lizenzregeln und derselben
-> Behandlung von [Forken nicht möglich](#wenn-ein-fork-nicht-möglich-ist).
+> Behandlung von [Keine Kopie möglich](#wenn-ein-fork-nicht-möglich-ist).
 > Die eigene Anleitung der Weltansicht dazu steht unter
 > [Eine Kopie bearbeiten](03-WorldView.md#eine-kopie-bearbeiten--etwas-in-den-editor-übernehmen).
 
 ### So forken Sie
 
-1. Finden Sie eine Kreation im **Repository** (oder in der Weltansicht).
+1. Finden Sie ein Bauwerk in **Entdecken** (oder in der Weltansicht).
 2. Klicken Sie auf **Remixen**.
 3. Die Kopie öffnet sich im Editor, mit dem Titel *„Fork von
    &lt;ursprünglicher Name&gt;“*.
@@ -573,7 +569,7 @@ der auf das Original zurückverweist.
 
 ### Remix-Zähler
 
-Die Seite eines Bauwerks und seine Repository-Karte sagen, wie oft es
+Die Seite eines Bauwerks und seine Karte in **Entdecken** sagen, wie oft es
 geremixt wurde (**3-mal geremixt**): wie viele verschiedene Bauwerke dieses
 Gerät gefunden hat, die davon geforkt und veröffentlicht wurden. Ein
 zweimal veröffentlichter Remix zählt einmal, und ein Bauwerk, das niemand
@@ -592,19 +588,18 @@ Gelegentlich kann ein Fork nicht durchgeführt werden — meistens beim
 Forken einer Geteilten Welt, die über einen Peer oder ein dezentrales
 Netzwerk gefunden wurde (siehe
 [Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md)),
-statt eines gewöhnlichen Eintrags im Repository. Statt Sie in ein leeres,
-fremdes Editor-Dokument zu werfen, zeigt ForkBuild einen Dialog **Forken
-nicht möglich**, der genau nennt, was schiefgegangen ist:
+statt eines gewöhnlichen Bauwerks in **Entdecken**. Statt Sie in ein leeres,
+fremdes Editor-Dokument zu werfen, zeigt ForkBuild einen Dialog **Keine
+Kopie möglich**, der genau nennt, was schiefgegangen ist:
 
-- **Diese Geteilte Welt kann unter ihrer Lizenz nicht geforkt werden.** —
-  die Lizenz dessen, was Sie forken wollten, erlaubt es nicht (siehe
-  [Eine Lizenz wählen](#eine-lizenz-wählen) oben).
-- **Das Material dieser Geteilten Welt ist derzeit nicht verfügbar.** —
-  die Lizenz erlaubt das Forken, aber der eigentliche Inhalt ist noch
-  nicht auf diesem Gerät (oder über einen verbundenen Peer erreichbar).
+- **Die Lizenz dieses Bauwerks erlaubt keine Kopien.** — siehe
+  [Eine Lizenz wählen](#eine-lizenz-wählen) oben.
+- **Dieses Bauwerk lässt sich gerade nicht abrufen.** — die Lizenz erlaubt
+  Kopien, aber das Bauwerk selbst ist noch nicht auf diesem Gerät (oder
+  über einen verbundenen Peer erreichbar).
 
-So oder so bringt Sie die einzige Schaltfläche des Dialogs, **Zurück zur
-Geteilten Welt**, dorthin zurück, wo Sie sie gefunden haben — in die Welt,
+So oder so bringt Sie die einzige Schaltfläche des Dialogs, **Zurück zum
+Bauwerk**, dorthin zurück, wo Sie sie gefunden haben — in die Welt,
 in der sie platziert war, oder zur Geteilten Welt selbst —, statt Sie ohne
 Grundlage im Editor stehen zu lassen.
 
@@ -646,8 +641,8 @@ Die Seite der Challenge listet die Beiträge, die dieses Gerät kennt: Ihre
 eigenen veröffentlichten Bauwerke mit dem Tag und die anderer, die in den
 Netzwerken gefunden wurden. Wird ein Bauwerk über Nostr, Arweave, Steem oder Blurt verteilt, nennt seine Ankündigung (auf Blurt sein Post) seine Tags, und die Seite fragt diese
 Netzwerke bei jedem Öffnen nach dem Tag der Woche (**Erneut prüfen** fragt
-noch einmal). Jeder gefundene Beitrag wird geprüft wie alles, was das
-Repository findet, und steht auch im Repository. Ein Bauwerk, das nur per Link geteilt wurde, wird so nicht gefunden, ebenso wenig eines, das nur vor dem 8. Oktober 2026 auf Steem angekündigt wurde, als Steem-Ankündigungen begannen, Tags zu nennen. Frühere Wochen bleiben über ihren Montag erreichbar (**Letzte
+noch einmal). Jeder gefundene Beitrag wird geprüft wie alles, was
+**Entdecken** findet, und steht auch in **Entdecken**. Ein Bauwerk, das nur per Link geteilt wurde, wird so nicht gefunden, ebenso wenig eines, das nur vor dem 8. Oktober 2026 auf Steem angekündigt wurde, als Steem-Ankündigungen begannen, Tags zu nennen. Frühere Wochen bleiben über ihren Montag erreichbar (**Letzte
 Woche: …**), ohne **Mitmachen**.
 
 Beiträge erscheinen mit den neuesten zuerst, mit ihren Remix-Zahlen.
@@ -718,12 +713,13 @@ haben; sein Titel öffnet den Bau, und jeder Name die Seite dieser Person.
 
 Hier ist der ganze Weg in einem Ablauf:
 
-1. **Bauen** Sie eine Kreation im Editor.
-2. **Speichern** Sie sie.
-3. **Veröffentlichen** Sie sie im Repository.
-4. Jemand **findet** sie — durch Suchen, durch Erkunden in der Nähe in der
-   Weltansicht oder durch Stöbern auf Ihrer Autorenseite — und **forkt**
-   sie.
+1. **Bauen** Sie etwas im Editor.
+2. **Speichern** Sie es.
+3. **Veröffentlichen** Sie es, und senden Sie es an alle oder teilen Sie
+   seinen Link.
+4. Jemand **findet** es — durch Suchen, durch Erkunden in der Nähe in der
+   Weltansicht oder durch Stöbern auf Ihrer Autorenseite — und **remixt**
+   es.
 5. Diese Person **veröffentlicht** ihren Fork.
 6. Andere **erkunden** beide in der Weltansicht, und der Baum wächst.
 

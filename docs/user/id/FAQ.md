@@ -1,27 +1,49 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 30c9430bdca078bf -->
+<!-- translation-of: docs/user/FAQ.md source-hash: d0ced791059d2485 -->
 # Pertanyaan Umum
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · **Bahasa Indonesia** · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
 
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../FAQ.md).
-<!-- /stale -->
-
 Jawaban singkat atas pertanyaan yang paling sering muncul, masing-masing
 dengan tautan ke panduan yang menjelaskannya secara lengkap.
 
+## Mengenal menu
+
+### Ke mana Editor, Repositori, dan Masuk?
+
+Namanya berubah di menu. **Bangun** membuka Editor, **Jelajahi** adalah
+yang dulu bernama Repositori, dan **Pilih nama** (atau nama Anda, setelah
+Anda punya nama) menggantikan Masuk. **Jalan-jalan** membuka Dunia di
+alun-alun tantangan minggu ini. Lihat
+[Mengenal menu](01-GettingStarted.md#mengenal-menu).
+
+### Saya tidak menemukan Avatar Saya, Rekan, atau Pengaturan Jaringan
+
+Semuanya ada di **Lainnya** di bilah atas (di ponsel, di **Menu**):
+**Anda** berisi Avatar Saya, Identitas Saya, dan Data Anda; **Orang**
+berisi Rekan, Diikuti, dan Percakapan; **Lanjutan** berisi Publikasi dan
+Pengaturan Jaringan. Mengeklik nama Anda di pojok kanan atas juga membuka
+Avatar Saya, Identitas Saya, dan Data Anda.
+
 ## Menerbitkan dan berbagi
 
-### Saya sudah menerbitkan karya saya, tetapi teman saya tidak menemukannya di Repositori mereka
+### Saya sudah menerbitkan bangunan saya, tetapi teman saya tidak menemukannya di Jelajahi
 
-Menerbitkan hanya menyimpan karya di perangkat Anda sendiri dan
-mencantumkannya di Repositori *Anda*. Tidak ada yang dikirim ke mana pun
-sampai Anda memilihnya:
+Kecuali Anda memilih **Semua orang** saat Terbitkan bertanya
+[Siapa yang bisa menemukannya?](04-PublishingAndForking.md#siapa-yang-bisa-menemukannya),
+menerbitkan hanya menyimpan bangunan di perangkat Anda sendiri dan
+mencantumkannya di **Jelajahi** *Anda*. Agar sampai ke teman Anda:
 
-- **Bagikan dengan Rekan**, di bawah karya Anda di Repositori, menawarkan
-  karya itu kepada orang-orang yang terhubung dengan Anda. Perangkat Teman
+- **Kirim tautannya.** Terbitkan menampilkan **Salin tautan** (dan
+  **Bagikan…** jika perangkat Anda bisa berbagi); bangunan itu ikut di
+  dalam tautan, jadi teman Anda bisa membukanya di perangkat apa pun. Lihat
+  [Membagikan tautan](04-PublishingAndForking.md#membagikan-tautan).
+- **Biarkan semua orang menemukannya.** Klik **Biarkan semua orang
+  menemukannya** di pemberitahuan setelah menerbitkan, dan bangunan itu
+  muncul di **Jelajahi** semua orang, di tantangan, dan di Dunia.
+- **Bagikan dengan Rekan**, di bawah bangunan Anda di **Jelajahi**,
+  menawarkan bangunan itu kepada orang-orang yang terhubung dengan Anda. Perangkat Teman
   atau Rekan yang Dikenal menambahkannya dengan sendirinya; orang lain
   melihatnya di **Dibagikan kepada Anda** dan mengeklik **Ambil**. Anda
   perlu terhubung pada saat yang sama agar karya itu sampai.
@@ -33,13 +55,19 @@ Lihat [Penerbitan & Fork](04-PublishingAndForking.md#berbagi-dengan-rekan-yang-t
 
 ### Bagaimana cara membuat karya saya tersedia untuk semua orang?
 
-Distribusikan: simpan di Arweave atau IPFS (atau, secara eksperimental,
-Steem atau Blurt) dan umumkan di Nostr atau Arweave (atau Steem atau Blurt), sehingga siapa pun
-dapat menemukan dan memeriksanya tanpa terhubung dengan Anda. Klik
-**Distribusikan** tepat setelah menerbitkan, atau di bawah
-**Dunia Bersama Saya** di Tampilan Dunia. Anda memerlukan ekstensi browser
-penanda tangan untuk jaringan yang Anda pilih, seperti Wander untuk Arweave
-atau nos2x untuk Nostr. [Mendistribusikan Karya Anda](Distribution.md)
+Pilih **Semua orang** saat Terbitkan bertanya
+[Siapa yang bisa menemukannya?](04-PublishingAndForking.md#siapa-yang-bisa-menemukannya)
+(atau klik **Biarkan semua orang menemukannya** setelah menerbitkan).
+Setiap bangunan yang Anda terbitkan lalu dikirim ke semua orang dan muncul
+di **Jelajahi**, tantangan mingguan, dan Dunia, tanpa perlu memasang apa
+pun.
+
+Untuk juga menyimpan salinan di jaringan penyimpanan terdesentralisasi,
+distribusikan: simpan di Arweave atau IPFS (atau, secara eksperimental,
+Steem atau Blurt) dan umumkan di Nostr atau Arweave (atau Steem atau
+Blurt). Untuk itu Anda memerlukan ekstensi browser penanda tangan untuk
+jaringan yang Anda pilih, seperti Wander untuk Arweave atau nos2x untuk
+Nostr. [Mendistribusikan Karya Anda](Distribution.md)
 mencantumkan semua yang dapat Anda distribusikan, ke mana semuanya dapat
 dikirim, dan apa yang dibutuhkan setiap jaringan.
 
@@ -65,20 +93,23 @@ Alasan setelah "Gagal menerbitkan:" ditampilkan dalam bahasa Inggris.
   identitas terkunci) — identitas Anda terkunci dengan sendirinya; klik
   **Buka Kunci** di samping nama Anda di bilah atas dan terbitkan lagi.
 
-### Apakah saya harus masuk untuk menerbitkan?
+### Apakah saya perlu nama untuk menerbitkan?
 
-Menerbitkan tetap bisa saat Anda belum masuk, tetapi hasilnya tidak
-memiliki pembuat dan tanda tangan, sehingga tidak dapat Anda bagikan kepada
-rekan atau distribusikan nanti. Masuklah sebelum menerbitkan.
+Pada praktiknya, ya. Terbitkan meminta Anda memilih nama, yang hanya butuh
+beberapa detik dan tidak perlu akun. **Terbitkan tanpa tanda tangan** di
+dialog itu menerbitkan tanpa nama, tetapi hasilnya tidak memiliki pembuat
+dan tanda tangan: tidak mendapat tautan, dan tidak dapat Anda bagikan
+kepada rekan atau kirim ke semua orang nanti. Lihat
+[Memilih nama](01-GettingStarted.md#memilih-nama).
 
 ### Bisakah saya membatalkan penerbitan?
 
 Bisa: buka Dunia itu di Tampilan Dunia, lalu di **Dunia Bersama Saya**
 pilih **Lainnya ▾ → Batalkan Penerbitan…**. Dunia itu dihapus dari
-Repositori Anda. Salinan yang sudah diterima orang lain atau apa pun yang
+**Jelajahi** Anda. Salinan yang sudah diterima orang lain atau apa pun yang
 sudah Anda distribusikan ke Arweave, IPFS, Nostr, Steem, atau Blurt tidak dapat
 ditarik kembali. Perangkat ini tetap mengingat apa yang Anda batalkan
-penerbitannya, sehingga pencarian Repositori di jaringan tidak akan
+penerbitannya, sehingga pencarian **Jelajahi** di jaringan tidak akan
 menampilkan salinan itu lagi di sini; perangkat lain dan orang lain masih
 bisa menemukannya.
 
@@ -154,11 +185,11 @@ Tidak. Identitas dimaksudkan untuk bertahan lama. Untuk berhenti
 memakainya, nyatakan penggantinya atau cabut identitas itu di **Identitas
 Saya**.
 
-### Saya sudah mencabut identitas saya, mengapa saya masih bisa masuk dengannya?
+### Saya sudah mencabut identitas saya, mengapa saya masih bisa memakainya?
 
 Itu memang seharusnya. Mencabut menghentikan identitas dari menandatangani
 apa pun yang baru, termasuk yang dibutuhkannya untuk terhubung dengan orang
-lain, tetapi tidak menghentikan Anda untuk masuk. Dengan begitu Anda masih
+lain, tetapi Anda masih bisa memilihnya di perangkat ini. Dengan begitu Anda masih
 bisa melihat atau mengekspornya. Identitas itu menampilkan **Dicabut** di
 **Identitas Saya**, dan pencabutan tidak pernah bisa dibatalkan. Buat
 identitas baru untuk terus bekerja. Lihat
@@ -265,14 +296,17 @@ orang, mendistribusikan, dan obrolan memerlukan koneksi. Lihat
 
 ### Bisakah saya mencetak 3D bangunan saya, atau membukanya di Blender?
 
-Bisa. **Model 3D** di bilah alat Editor mengunduhnya sebagai STL untuk cetak
+Bisa. **Berkas → Model 3D** di bilah alat Editor mengunduhnya sebagai STL untuk cetak
 3D (dalam milimeter, berdiri di alas cetak) atau sebagai glTF atau OBJ
 berwarna untuk Blender dan program lain. Lihat
 [Mengunduh model 3D](02-TheEditor.md#mengunduh-model-3d).
 
 ### Apakah saya memerlukan dompet kripto?
 
-Tidak. Membangun, menyimpan, menerbitkan, mem-fork, rekan, dan obrolan
-tidak memerlukannya. Dompet atau ekstensi penanda tangan hanya diperlukan
-untuk fitur distribusi dan penjangkaran eksperimental di
+Tidak. Membangun, menyimpan, menerbitkan, membagikan tautan, mengirim
+bangunan ke semua orang, me-remix, rekan, dan obrolan tidak memerlukannya.
+Dompet atau ekstensi penanda tangan hanya diperlukan jika Anda memilih
+mendistribusikan sendiri bangunan ke jaringan penyimpanan (Arweave
+memerlukan dompet Arweave seperti Wander; Nostr memerlukan ekstensi penanda
+tangan seperti nos2x), dan untuk fitur penjangkaran eksperimental di
 [Bukti & Penyimpanan](11-EvidenceAndStorage.md).

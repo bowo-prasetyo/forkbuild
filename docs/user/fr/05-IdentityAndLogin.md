@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 185649658a1144d2 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 9cd714dbbc4a41d4 -->
 # 05 — Identité et connexion
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · **Français** · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../05-IdentityAndLogin.md).
-<!-- /stale -->
 
 ForkBuild n’a ni mot de passe ni serveur de comptes central. **Votre
 identité est une paire de clés cryptographiques stockée dans ce
@@ -79,7 +75,7 @@ se souvient encore de l’identité avec laquelle vous étiez connecté.
 
 ## Gérer les identités — la page Mes identités
 
-Ouvrez **Mes identités** dans la barre du haut pour voir toutes les
+Ouvrez **Plus → Mes identités** (ou cliquez sur votre nom dans la barre du haut) pour voir toutes les
 identités que cet appareil détient, chacune avec son propre état de
 verrouillage, indépendamment de celle avec laquelle vous êtes connecté.
 De là, vous pouvez :

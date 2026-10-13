@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: ceaf8eebe8c02fe4 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 941edcaf2e7249c7 -->
 # 13 — Data Anda: mencadangkan dan memulihkan
 
 <!-- languages -->
 [English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Español](../es/13-YourData.md) · [Français](../fr/13-YourData.md) · **Bahasa Indonesia** · [日本語](../ja/13-YourData.md) · [한국어](../ko/13-YourData.md) · [Português (Brasil)](../pt-BR/13-YourData.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../13-YourData.md).
-<!-- /stale -->
 
 ForkBuild tidak memiliki akun dan tidak ada server yang menyimpan pekerjaan
 Anda. Semua yang disimpannya berada di browser ini, di perangkat ini:
@@ -198,7 +194,7 @@ pindah dengan cadangan penuh.
 Karya yang Anda **Terbitkan** hanya disimpan di perangkat ini, sampai Anda
 mendistribusikannya (lihat
 [Penerbitan & Fork](04-PublishingAndForking.md)).
-Kartunya di Repositori menyebutkan di mana perangkat ini mencatat
+Kartunya di **Jelajahi** menyebutkan di mana perangkat ini mencatat
 distribusinya, misalnya **Disimpan di IPFS · Diumumkan di Nostr**: tempat
 bangunan atau Klaim Bertanda Tangannya diunggah (IPFS, Arweave, Steem, atau
 Blurt) dan tempat diumumkan (Nostr, Arweave, Steem, atau Blurt). Arahkan penunjuk

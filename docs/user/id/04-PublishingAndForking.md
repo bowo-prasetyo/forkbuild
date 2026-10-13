@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d63d0904aac96490 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ba7ee7cf8bfc4b8a -->
 # 04 — Penerbitan & Fork
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · **Bahasa Indonesia** · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Inilah inti ForkBuild. **Menerbitkan** membagikan karya Anda kepada dunia.
 **Remix** memungkinkan siapa pun menyalin sebuah karya dan
@@ -16,12 +12,11 @@ mengembangkannya — dengan seluruh riwayatnya tetap terjaga.
 ## Menerbitkan karya Anda
 
 1. Bangun sesuatu di Editor.
-2. Masuk dan pastikan identitas Anda tidak terkunci (lihat
+2. Miliki sebuah nama, dan pastikan nama itu tidak terkunci (lihat
    [Identitas & Masuk](05-IdentityAndLogin.md)). Menerbitkan
-   menandatangani karya itu dengan identitas tersebut. Jika Anda belum
-   masuk, **Terbitkan** meminta Anda masuk atau membuat identitas lebih
-   dulu; **Terbitkan tanpa tanda tangan** di sana menerbitkannya tanpa
-   pembuat dan tanpa tautan.
+   menandatangani bangunan itu dengannya. Jika Anda belum punya nama,
+   **Terbitkan** meminta Anda memilih nama lebih dulu; **Terbitkan tanpa
+   tanda tangan** di sana menerbitkannya tanpa pembuat dan tanpa tautan.
 3. Beri judul — Terbitkan menolak karya tanpa judul atau kosong — dan,
    secara opsional, deskripsi dan lisensi: klik **✎** di samping judul
    dokumen di bilah sisi untuk membuka **Properti Dokumen**. Dokumen baru
@@ -56,8 +51,8 @@ tempat berdiri di baliknya, tidak dihitung, dan bangunan tanpa pintu didatangi
 dari depan. Kartu **Bangunan pertama Anda** menawarkan tombol yang sama
 setelah bangunan diterbitkan.
 
-> **Catatan:** Menerbitkan hanya menyimpan Dokumen/Dunia Anda di perangkat
-> ini. Kartunya di Repositori menyebutkan di mana perangkat ini mencatat
+> **Catatan:** Menerbitkan menyimpan bangunan Anda di perangkat ini.
+> Kartunya di **Jelajahi** menyebutkan di mana perangkat ini mencatat
 > distribusinya (misalnya **Disimpan di IPFS · Diumumkan di Nostr**), atau
 > **Tidak ada distribusi yang tercatat di perangkat ini.** Cadangkan di
 > [Data Anda](13-YourData.md) untuk menyimpan salinan sementara itu.
@@ -88,8 +83,9 @@ bawah **Dunia Bersama Saya** di Tampilan Dunia.
   dan gambar bangunan itu, yang digambar oleh server tautan ForkBuild, lalu
   mengarahkan siapa pun yang membukanya ke ForkBuild. Tautan yang diubah
   hanya menampilkan "A shared build".
-- **Perlu tanda tangan.** Terbitkan saat masuk; karya yang diterbitkan saat
-  keluar tidak mendapat tautan.
+- **Perlu tanda tangan.** Terbitkan dengan sebuah nama; bangunan yang
+  diterbitkan tanpa nama (**Terbitkan tanpa tanda tangan**) tidak mendapat
+  tautan.
 - **Ukuran.** Bangunan hingga sekitar 500 balok muat; tautan kastel siap
   pakai sekitar 3.700 karakter. Email serta sebagian besar aplikasi obrolan
   dan media sosial mempertahankan tautan sepanjang itu, tetapi Discord dan
@@ -296,25 +292,26 @@ ke mana bangunan Anda dikirim.
 
 ## Berbagi dengan rekan yang terhubung
 
-Dunia yang Anda terbitkan hanya tercantum di Repositori *Anda*, sampai Anda
+Bangunan yang Anda terbitkan hanya tercantum di **Jelajahi** *Anda*,
+sampai bangunan itu dikirim ke semua orang (lihat
+[Siapa yang bisa menemukannya?](#siapa-yang-bisa-menemukannya)) atau Anda
 mendistribusikannya di Nostr, Arweave, Steem, atau Blurt (lihat
-[Distribusi](Distribution.md)): setelah itu Repositori siapa pun dapat
+[Distribusi](Distribution.md)): setelah itu **Jelajahi** siapa pun dapat
 menemukannya (lihat
 [Karya yang didistribusikan orang lain](#karya-yang-didistribusikan-orang-lain)).
-Untuk
-memasukkannya ke Repositori orang yang terhubung dengan Anda (lihat
-[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)), klik
-**Bagikan dengan Rekan** di bawahnya di Repositori. Tombol ini hanya muncul
+Untuk memasukkannya ke **Jelajahi** orang yang terhubung dengan Anda
+(lihat [Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)), klik
+**Bagikan dengan Rekan** di bawahnya di **Jelajahi**. Tombol ini hanya muncul
 pada Dunia terbitan Anda sendiri.
 
 - Berbagi menawarkan Dunia itu kepada semua orang yang terhubung sekarang,
   dan kepada siapa pun yang terhubung kemudian. **Dibagikan ✓ · Bagikan
   Lagi** mengumumkannya lagi kepada orang yang terhubung sekarang.
 - Di sisi mereka, Dunia yang dibagikan oleh salah satu **Teman** atau
-  **Rekan yang Dikenal** mereka ditambahkan ke Repositori mereka dengan
+  **Rekan yang Dikenal** mereka ditambahkan ke **Jelajahi** mereka dengan
   sendirinya, beserta semua yang diperlukan untuk **Jelajahi**. Dunia yang
   dibagikan orang lain menunggu di **Dibagikan kepada Anda** di bagian atas
-  Repositori mereka sampai mereka mengeklik **Ambil**. Tidak ada perangkat
+  **Jelajahi** mereka sampai mereka mengeklik **Ambil**. Tidak ada perangkat
   yang mengunduh Dunia orang asing tanpa diminta. Masing-masing tercantum
   dengan judulnya, jadi mereka dapat memilih; perangkat mereka memastikan
   bahwa Dunia yang mereka ambil adalah Dunia yang disebut judul itu. Dunia
@@ -417,8 +414,9 @@ salinan Anda.
 
 ## Repositori
 
-**Repositori** adalah katalog yang dapat dicari berisi setiap karya
-terbitan yang diketahui perangkat ini: milik Anda sendiri, yang dibagikan
+**Jelajahi** di bilah atas (disebut *Repositori* di versi lama dan di
+beberapa pesan lanjutan) adalah katalog yang dapat dicari berisi setiap
+bangunan terbitan yang diketahui perangkat ini: milik Anda sendiri, yang dibagikan
 rekan kepada Anda, dan yang ditemukan di jaringan terdesentralisasi.
 Repositori dibuat agar tetap mudah dipakai baik berisi sepuluh karya
 maupun sepuluh ribu.
@@ -445,7 +443,7 @@ pun; semuanya juga ada di **Struktur** Pustaka Bangunan, di bawah
 
 ### Karya yang didistribusikan orang lain
 
-Setiap kali Anda membuka Repositori (atau halaman pembuat), Repositori
+Setiap kali Anda membuka **Jelajahi** (atau halaman pembuat), **Jelajahi**
 mencari di Nostr, Arweave, Steem, dan Blurt karya yang didistribusikan orang lain
 di sana, lalu menambahkan yang dapat diverifikasinya. Sebuah baris di atas
 daftar menjelaskan apa yang sedang dilakukannya, lalu berapa banyak karya
@@ -457,7 +455,7 @@ baru yang ditemukannya; **Periksa lagi** mencari sekali lagi.
   diambil lagi.
 - Repositori memeriksa hingga 20 karya baru sekaligus. Jika ada lebih
   banyak, baris itu menyebutkan berapa yang tersisa untuk lain kali.
-- Karya yang ditemukan dengan cara ini tetap ada di Repositori Anda setelah
+- Karya yang ditemukan dengan cara ini tetap ada di **Jelajahi** Anda setelah
   dimuat ulang.
 - Build-nya belum ada di perangkat Anda. **Jelajahi** mengambilnya dari
   tempat penyimpanannya dan memeriksanya, lalu membukanya di Tampilan
@@ -514,7 +512,7 @@ baru pertama kali Anda temukan.)
 Klik **nama pembuat** mana pun untuk mengunjungi **Halaman pembuat** milik
 mereka — portofolio semua yang telah mereka buat, termasuk karya asli dan
 semua fork yang tumbuh darinya, memakai katalog pencarian/urutan/penomoran
-halaman yang persis sama dengan Repositori, hanya dibatasi pada satu
+halaman yang persis sama dengan **Jelajahi**, hanya dibatasi pada satu
 pembuat itu.
 
 Kartu yang tanda tangannya valid juga memiliki tombol **Ikuti**, dan
@@ -524,8 +522,8 @@ seseorang menempatkan karya baru mereka di halaman **Diikuti** dan di
 notifikasi Anda; lihat
 [Mengikuti orang](07-PeerConnectionsAndFriends.md#mengikuti-orang).
 
-Repositori juga tidak terbatas pada apa yang diterbitkan dari perangkat ini
-atau ditemukan secara langsung: karya Repositori terdesentralisasi yang
+**Jelajahi** juga tidak terbatas pada apa yang diterbitkan dari perangkat ini
+atau ditemukan secara langsung: bangunan terdesentralisasi yang
 ditunjukkan seorang rekan kepada Anda di peta
 [Perjumpaan Dunia](03-WorldView.md#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda) di Tampilan Dunia, begitu kontennya benar-benar
 terselesaikan, juga bergabung ke pencarian yang sama ini dan ke Halaman
@@ -551,13 +549,13 @@ di atas.)
 
 > **Disebut juga "Edit Salinan" di Tampilan Dunia.** Keduanya operasi yang
 > sama di baliknya, dengan aturan lisensi yang sama dan penanganan
-> [Fork Tidak Tersedia](#saat-fork-tidak-dapat-diselesaikan) yang sama.
+> [Tidak bisa membuat salinan](#saat-fork-tidak-dapat-diselesaikan) yang sama.
 > Lihat
 > [Edit Salinan](03-WorldView.md#edit-salinan--membawa-sesuatu-ke-editor) untuk panduan Tampilan Dunia sendiri.
 
 ### Cara mem-fork
 
-1. Temukan sebuah karya di **Repositori** (atau di Tampilan Dunia).
+1. Temukan sebuah bangunan di **Jelajahi** (atau di Tampilan Dunia).
 2. Klik **Remix**.
 3. Salinannya terbuka di Editor, berjudul *"Fork dari &lt;nama asli&gt;"*.
 4. Kembangkan, lalu simpan dan terbitkan sebagai milik Anda.
@@ -567,7 +565,7 @@ menautkannya kembali ke yang asli.
 
 ### Jumlah remix
 
-Halaman sebuah bangunan dan kartu Repositori-nya menyebutkan berapa kali
+Halaman sebuah bangunan dan kartunya di **Jelajahi** menyebutkan berapa kali
 ia di-remix (**Di-remix 3 kali**): berapa banyak bangunan berbeda yang
 di-fork darinya dan diterbitkan yang telah ditemukan perangkat ini. Remix
 yang diterbitkan dua kali dihitung sekali, dan bangunan yang belum pernah
@@ -585,19 +583,18 @@ per remix (dan perangkat Anda juga menampilkannya, jika Anda mengaktifkan
 Sesekali fork tidak dapat dilakukan — paling sering saat mem-fork Dunia
 Bersama yang ditemukan melalui rekan atau jaringan terdesentralisasi
 (lihat [Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md)),
-bukan entri Repositori biasa. Alih-alih melempar Anda ke dokumen Editor
-kosong yang tidak berhubungan, ForkBuild menampilkan dialog **Fork Tidak
-Tersedia** yang menyebutkan persis apa yang salah:
+bukan bangunan biasa di **Jelajahi**. Alih-alih melempar Anda ke dokumen
+Editor kosong yang tidak berhubungan, ForkBuild menampilkan dialog **Tidak
+bisa membuat salinan** yang menyebutkan persis apa yang salah:
 
-- **Dunia Bersama ini tidak dapat di-fork berdasarkan lisensinya.** —
-  lisensi yang melekat pada apa yang ingin Anda fork tidak mengizinkannya
-  (lihat [Memilih lisensi](#memilih-lisensi) di atas).
-- **Materi Dunia Bersama ini sedang tidak tersedia.** — lisensinya
-  mengizinkan fork, tetapi konten sebenarnya belum ada di perangkat ini
-  (atau belum dapat dijangkau melalui rekan yang terhubung).
+- **Lisensi bangunan ini tidak mengizinkan salinan.** — lihat
+  [Memilih lisensi](#memilih-lisensi) di atas.
+- **Bangunan ini tidak bisa diambil saat ini.** — lisensinya mengizinkan
+  salinan, tetapi bangunan itu sendiri belum ada di perangkat ini (atau
+  belum dapat dijangkau melalui rekan yang terhubung).
 
-Bagaimanapun juga, satu-satunya tombol di dialog itu, **Kembali ke Dunia
-Bersama**, membawa Anda kembali ke tempat Anda menemukannya — Dunia tempat
+Bagaimanapun juga, satu-satunya tombol di dialog itu, **Kembali ke
+bangunan**, membawa Anda kembali ke tempat Anda menemukannya — Dunia tempat
 karya itu ditempatkan, atau Dunia Bersama itu sendiri — alih-alih
 meninggalkan Anda terdampar di Editor tanpa apa pun untuk dibangun.
 
@@ -641,7 +638,7 @@ bangunan Anda sendiri yang diterbitkan dengan tag itu, dan bangunan orang
 lain yang ditemukan di jaringan. Saat bangunan didistribusikan ke Nostr, Arweave, Steem, atau Blurt, pengumumannya (di Blurt, postingannya) mencantumkan tagnya, dan halaman itu menanyakan
 tag minggu itu ke jaringan tersebut setiap kali dibuka (**Periksa lagi**
 menanyakan lagi). Setiap karya yang ditemukan diperiksa seperti semua yang
-ditemukan Repositori, dan juga muncul di Repositori. Bangunan yang hanya dibagikan lewat tautannya tidak ditemukan dengan cara ini, begitu pula bangunan yang hanya diumumkan di Steem sebelum 8 Oktober 2026, saat pengumuman Steem mulai mencantumkan tag. Minggu-minggu sebelumnya tetap bisa dibuka
+ditemukan **Jelajahi**, dan juga muncul di **Jelajahi**. Bangunan yang hanya dibagikan lewat tautannya tidak ditemukan dengan cara ini, begitu pula bangunan yang hanya diumumkan di Steem sebelum 8 Oktober 2026, saat pengumuman Steem mulai mencantumkan tag. Minggu-minggu sebelumnya tetap bisa dibuka
 lewat hari Seninnya (**Minggu lalu: …**), tanpa **Ikut**.
 
 Karya peserta ditampilkan dari yang terbaru, dengan jumlah remix-nya. Tidak
@@ -712,13 +709,13 @@ judulnya membuka bangunan itu, dan setiap nama membuka halaman orang itu.
 
 Inilah seluruh perjalanannya dalam satu alur:
 
-1. **Bangun** sebuah karya di Editor.
+1. **Bangun** sesuatu di Editor.
 2. **Simpan**.
-3. **Terbitkan** ke Repositori.
+3. **Terbitkan**, lalu kirim ke semua orang atau bagikan tautannya.
 4. Seseorang **menemukannya** — dengan mencari, dengan menjelajahi sekitar
    di Tampilan Dunia, atau dengan menelusuri Halaman pembuat Anda — lalu
-   **mem-fork**-nya.
-5. Mereka **menerbitkan** fork mereka.
+   **me-remix**-nya.
+5. Mereka **menerbitkan** remix mereka.
 6. Orang lain **menjelajahi** keduanya di Tampilan Dunia, dan pohonnya
    tumbuh.
 

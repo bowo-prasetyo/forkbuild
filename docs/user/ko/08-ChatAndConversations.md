@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 406b0d8076916c27 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: d5ddd1ed7cb40c91 -->
 # 08 — 채팅과 대화
 
 <!-- languages -->
 [English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · **한국어** · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../08-ChatAndConversations.md)을 참고하세요.
-<!-- /stale -->
 
 <!-- languages -->
 <!-- /languages -->
@@ -18,7 +14,7 @@ ForkBuild의 직접 메시지는 P2P이며 **친구끼리만** 주고받습니�
 
 ## 대화 시작하기
 
-채팅은 **피어** 페이지에 있는 친구의 **채팅** 버튼이나, 맨 위 막대의 **대화**
+채팅은 **피어** 페이지에 있는 친구의 **채팅** 버튼이나, **대화**(**더 보기 → 대화**)
 페이지에서 엽니다 — 월드 보기나 아바타에서 채팅으로 들어가는 곳은 없습니다.
 지금 친구가 아닌(또는 차단된) 사람과 채팅을 열면 입력 상자 대신 설명이
 나타납니다: 채팅을 여는 것은 온라인 여부가 아니라 친구 관계입니다.

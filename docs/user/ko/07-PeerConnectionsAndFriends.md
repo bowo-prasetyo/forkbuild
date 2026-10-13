@@ -1,19 +1,15 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 02e25094626dc446 -->
 # 07 — 피어 연결과 친구
 
 <!-- languages -->
 [English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · [日本語](../ja/07-PeerConnectionsAndFriends.md) · **한국어** · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../07-PeerConnectionsAndFriends.md)을 참고하세요.
-<!-- /stale -->
-
 <!-- languages -->
 <!-- /languages -->
 
 ForkBuild는 다른 사람의 브라우저와 직접 연결합니다 — 친구 목록을 쥐고 있는
-중앙 서버는 없습니다. 맨 위 막대에서 **피어**를 열어 연결된 사람, 알고 있는
+중앙 서버는 없습니다. **더 보기 → 피어**를 열어 연결된 사람, 알고 있는
 사람, 친구를 관리하세요.
 
 ## 페이지 한눈에 보기
@@ -163,7 +159,7 @@ ID로 찾기에는 상대의 전체 신원 ID가 필요합니다. **공개 로�
   이름이 아니라 *신원*입니다: 여러 사람이 같은 이름으로 게시할 수 있으므로,
   작성자 페이지에는 그 이름으로 작품에 서명한 신원마다 **팔로우**가 하나씩
   있습니다.
-- **팔로잉 페이지**(맨 위 막대의 **팔로잉**)에는 내가 팔로우하는 사람이 각각
+- **팔로잉 페이지**(**더 보기 → 팔로잉**)에는 내가 팔로우하는 사람이 각각
   **언팔로우**와 함께 나열되고, 그 아래에 이 기기에 도착한 그들의 최신 작품이
   새것부터 표시됩니다. 이름을 클릭하면 그 사람의 작품만 봅니다.
 - **알림.** 내가 팔로우하는 사람의 새 작품이 이 기기에 도착하면, 🔔 패널에 작품마다 한 번 **… 님이 새 작품을 게시했습니다** 항목이
@@ -198,7 +194,7 @@ ForkBuild의 기본 공개 STUN 서버가 각자 자신의 접근 가능한 주�
 서버가 TURN 릴레이를 제공하면, ForkBuild는 연결을 시작할 때(앱을 열기만 할
 때는 아님) 단기 릴레이 자격 증명을 요청해 자동으로 씁니다. 서버는 매달 정해진
 수의 릴레이 자격 증명을 나눠 주며, 다 떨어지면 다음 달까지 연결은 릴레이 없이
-계속 시도됩니다. 내 릴레이를 쓰려면 맨 위 막대의 **네트워크 설정**에서 **TURN
+계속 시도됩니다. 내 릴레이를 쓰려면 **더 보기 → 네트워크 설정**에서 **TURN
 서버**(`/settings/turn-server`)를 열고 내 TURN 릴레이를 설정하세요: 직접
 경로를 만들 수 없을 때 연결의 데이터를 실제로 전달해 주는 서버입니다.
 

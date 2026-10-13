@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 331ff412e7f1ca0d -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 36d3d49f37473bfe -->
 # 06 — アバターと在席状況
 
 <!-- languages -->
 [English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · [Español](../es/06-AvatarsAndPresence.md) · [Français](../fr/06-AvatarsAndPresence.md) · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · **日本語** · [한국어](../ko/06-AvatarsAndPresence.md) · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../06-AvatarsAndPresence.md)も参照してください。
-<!-- /stale -->
 
 **アバター** は、ワールドビューで他の人からあなたがどう見えるかです。
 その外見、位置、動き方です。このガイドでは、アバターのカスタマイズ、
@@ -15,7 +11,7 @@
 
 ## アバターをカスタマイズする
 
-上部のバーで **マイアバター** を開きます。
+**その他 → マイアバター** を開きます（または上部のバーで自分の名前をクリックします）。
 
 1. ドロップダウンから **テンプレート**（体の種類。たとえば
    「Humanoid 01」）を選びます。選ぶと平面のプレビューがすぐに更新

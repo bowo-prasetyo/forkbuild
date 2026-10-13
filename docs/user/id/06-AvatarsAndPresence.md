@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 331ff412e7f1ca0d -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 36d3d49f37473bfe -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
 [English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · [Español](../es/06-AvatarsAndPresence.md) · [Français](../fr/06-AvatarsAndPresence.md) · **Bahasa Indonesia** · [日本語](../ja/06-AvatarsAndPresence.md) · [한국어](../ko/06-AvatarsAndPresence.md) · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../06-AvatarsAndPresence.md).
-<!-- /stale -->
 
 **Avatar** Anda adalah cara orang lain melihat Anda di Tampilan Dunia —
 penampilannya, posisinya, dan cara bergeraknya. Panduan ini membahas cara
@@ -16,7 +12,7 @@ dengan avatar orang lain.
 
 ## Menyesuaikan avatar Anda
 
-Buka **Avatar Saya** di bilah atas:
+Buka **Lainnya → Avatar Saya** (atau klik nama Anda di bilah atas):
 
 1. Pilih **Templat** — jenis tubuh (mis. "Humanoid 01") — dari dropdown.
    Pratinjau datar langsung diperbarui saat Anda memilih.

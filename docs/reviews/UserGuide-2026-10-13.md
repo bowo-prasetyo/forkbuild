@@ -202,11 +202,11 @@ the toolbar rather than under **File**. **Fixed.**
 
 ## Open, for the owner or a later pass
 
-1. **Translations.** The English of 11 pages changed, so their 77
-   translations now carry the standard "the English has changed" banner,
-   which `scripts/check-doc-translations.mjs --update` added. A translation
-   pass, as on 2026-10-13 for pages 02, 03, 04 and Privacy, brings them back.
-   Priority: README, 01 and FAQ (a newcomer's first pages), then 03.
+1. **Translations.** *Done the same day:* all 77 translations of the 11
+   changed pages were brought up to date in all seven languages and
+   stamped (see the roadmap entry "The user guide's fixes, in every
+   language"). The English of 11 pages had changed, so their translations
+   had carried the standard "the English has changed" banner until then.
 2. **No pictures.** The guide has no screenshots or diagrams apart from
    two ASCII sketches. One picture each of Home, the Editor's layout and
    World View's panel would do more for a newcomer than any rewrite. They

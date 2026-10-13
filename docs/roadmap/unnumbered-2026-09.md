@@ -6513,3 +6513,22 @@ of reading match the first ten minutes of playing).
 - The 77 translations of the 11 changed pages carry the out-of-date banner until a translation pass.
 - Not done: pictures of the screens, renaming "Publishing & Forking" and "Identity & Login", splitting World View in
   two, and the same prose pass for the rest of World View, Residents and distribution.
+
+## The user guide's fixes, in every language (unnumbered, 2026-10-13)
+
+**Why.** "A user guide for the menu as it is" changed the English of 11 user-guide pages, so their 77 translations
+carried the out-of-date banner: a German, Spanish, French, Indonesian, Japanese, Korean or Brazilian Portuguese reader
+met the old menu (Editor, Repository, Login) on exactly the pages a newcomer reads first. Pillar served: building feels
+joyful (the first ten minutes read the same in every language the app ships).
+
+- **Every changed page, in all seven languages**, using each language's own words from `ui/i18n/messages/`: Getting
+  Started rewritten (the short version, the top bar and More's groups, the first brick before a name, Running your
+  own copy at the end); the guide's index with its "I want to…" table; World View with its short version, the
+  advanced panels gathered under one Advanced tools section and the plainer visitor passages; the FAQ's new "Getting
+  around" answers and the sharing, naming and wallet answers; Explore, Choose a name, Publish unsigned and **Can't
+  make a copy** in Publishing & Forking; More → … in Identity, Avatars, Peers and Chat; the File menu in the Editor.
+- World View's notification button is now said to sit beside your name (or **Choose a name**), not Login, in English
+  and every translation.
+- Two stray, empty language-link blocks in the Korean Getting Started, World View and FAQ are gone.
+- Every translation is stamped with scripts/check-doc-translations.mjs, which also checks each link and the heading
+  it points to.
