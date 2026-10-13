@@ -83,7 +83,7 @@
 }
 
 .peer-badge--unchecked {
-    background: rgba(96, 72, 40, 0.18);
+    background: rgba(var(--edge-rgb), 0.18);
     color: var(--ink-subtle);
 }
 
@@ -138,7 +138,7 @@
 .evidence-convergence-conflict {
     margin: 0.6rem 0 0;
     font-size: 0.78rem;
-    color: #825617;
+    color: var(--ink-amber);
 }
 
 /* 0.9.525 — Repository Discovery & Material Trust Product
@@ -150,7 +150,7 @@
 .author-identity-convergence-notice {
     margin: 0.35rem 0 0.75rem;
     font-size: 0.8rem;
-    color: #825617;
+    color: var(--ink-amber);
 }
 
 /* 0.8.27 — Unified Publication Decentralization View. Sits ABOVE

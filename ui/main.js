@@ -67,6 +67,7 @@ import { composeInjectedWalletServices } from './main/composeInjectedWalletServi
 import { composeBuildNotes } from './main/composeBuildNotes.js';
 import { challengeDiscoveryWithBuildNotes, repositoryDiscoveryWithBuildNotes } from '../application/buildNotes/WithBuildNotes.js';
 import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
+import { LookSettingsStore } from '../application/settings/LookSettingsStore.js';
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
 import { ExperimentalToolsSettingsStore } from '../application/settings/ExperimentalToolsSettingsStore.js';
 import { NetworkWriterSettingsStore } from '../application/settings/NetworkWriterSettingsStore.js';
@@ -469,6 +470,7 @@ app.provide('preferredSnapshotPlacementCreationCoordinator', preferredSnapshotPl
 app.provide('roleProviderPreferenceStore', roleProviderPreferenceStore);
 // Read once by ui/boot.js before the app loads; the Language page saves to it.
 app.provide('languageSettingsStore', new LanguageSettingsStore({ storageProvider: new LocalStorageProvider() }));
+app.provide('lookSettingsStore', new LookSettingsStore({ storageProvider: new LocalStorageProvider() }));
 // Counted once a day by ui/start.js; Your Data turns it off.
 const visitorCountSettingsStore = new VisitorCountSettingsStore({ storageProvider: new LocalStorageProvider() });
 app.provide('visitorCountSettingsStore', visitorCountSettingsStore);

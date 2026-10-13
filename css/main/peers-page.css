@@ -172,22 +172,22 @@
 
 .peers-tag--friend {
     border-color: rgba(76, 175, 125, 0.5);
-    color: #28714b;
+    color: var(--ink-green);
 }
 
 .peers-tag--following {
     border-color: rgba(90, 150, 224, 0.5);
-    color: #194b80;
+    color: var(--ink-blue);
 }
 
 .peers-tag--blocked {
     border-color: rgba(224, 90, 90, 0.5);
-    color: #792020;
+    color: var(--ink-red);
 }
 
 .peers-tag--warning {
     border-color: rgba(230, 180, 80, 0.5);
-    color: #825e17;
+    color: var(--ink-amber);
 }
 
 /* The ⋯ menu is a native <details>, so it opens by keyboard with no
@@ -228,7 +228,7 @@
     background: var(--surface);
     border: 1px solid var(--line-strong);
     border-radius: 6px;
-    box-shadow: 0 6px 18px rgba(74, 52, 24, 0.2);
+    box-shadow: 0 6px 18px rgba(var(--shade-rgb), 0.2);
 }
 
 .peers-menu-item {
@@ -252,7 +252,7 @@
 }
 
 .peers-menu-item--danger {
-    color: #792020;
+    color: var(--ink-red);
 }
 
 .peers-menu-note {

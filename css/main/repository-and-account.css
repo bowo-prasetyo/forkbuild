@@ -54,7 +54,7 @@
 .publication-card:hover {
     transform: translateY(-3px);
     border-color: #3a6ea5;
-    box-shadow: 0 10px 28px rgba(74, 52, 24, 0.18);
+    box-shadow: 0 10px 28px rgba(var(--shade-rgb), 0.18);
 }
 
 .publication-card h3 {
@@ -322,7 +322,7 @@
     background: var(--surface-low);
     border: 1px solid var(--line);
     border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(74, 52, 24, 0.2);
+    box-shadow: 0 8px 24px rgba(var(--shade-rgb), 0.2);
 }
 
 .user-menu--open .user-menu-panel {
@@ -478,7 +478,7 @@
 
 .identity-list-item:hover {
     border-color: var(--accent);
-    background: #f5f0e5;
+    background: var(--tint-amber);
 }
 
 .identity-list-item-label {
@@ -558,19 +558,19 @@
 
 .identity-unlock-error {
     margin: -0.4rem 0 0.75rem;
-    color: #811818;
+    color: var(--ink-red);
     font-size: 0.8rem;
 }
 
 /* Identity Lifecycle Hardening (0.2.67) */
 .identity-revoked-badge {
-    color: #811818;
+    color: var(--ink-red);
     font-weight: 600;
 }
 
 .publication-fork-of {
     margin: 0.25rem 0;
-    color: #825617;
+    color: var(--ink-amber);
     font-size: 0.85rem;
 }
 
@@ -582,7 +582,7 @@
 
 .publication-distribution {
     margin: 0.35rem 0;
-    color: #326749;
+    color: var(--ink-green);
     font-size: 0.78rem;
 }
 
@@ -607,7 +607,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 6px;
-    color: rgba(96, 72, 40, 0.6);
+    color: rgba(var(--edge-rgb), 0.6);
     font-weight: 700;
     user-select: none;
     overflow: hidden;
@@ -673,7 +673,7 @@
    a plain Publication Card (its visit line already takes
    .publication-date's own color). */
 .world-card-perspective {
-    color: #284c71;
+    color: var(--ink-blue);
 }
 
 /* Toolbar */
@@ -744,6 +744,20 @@
     margin: 0 0 1rem;
     color: var(--ink-muted);
     font-size: 0.85rem;
+}
+
+.publication-catalog-network-again {
+    padding: 0.15rem 0.6rem;
+    background: var(--surface-raised);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    font: inherit;
+    cursor: pointer;
+}
+
+.publication-catalog-network-again:hover {
+    background: var(--surface-hover);
 }
 
 .publication-catalog-group {
@@ -868,7 +882,7 @@
 }
 
 .identity-unprotected-badge {
-    color: #825617;
+    color: var(--ink-amber);
 }
 
 /* The landing page for a "see it in 3D" link on a Steem post. */
@@ -881,7 +895,7 @@
 
 .publication-link-message {
     margin: 0 0 1rem;
-    color: #822117;
+    color: var(--ink-red);
 }
 
 .publication-link-actions {

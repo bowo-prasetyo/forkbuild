@@ -225,7 +225,7 @@ export default {
                                 {{ displayLabel(row.action) }}
                                 <span
                                     v-if="!actionEnabled(row.action) && reasonFor(row.action)"
-                                    :style="{ marginLeft: '8px', fontSize: '11px', color: '#816637' }"
+                                    :style="{ marginLeft: '8px', fontSize: '11px', color: 'var(--ink-amber)' }"
                                 >— {{ reasonFor(row.action) }}</span>
                             </span>
                             <span

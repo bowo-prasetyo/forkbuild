@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 1aaeba5f85662d3b -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a2f8d3c2e13430e9 -->
 # 01 — Primeiros passos
 
 <!-- languages -->
@@ -55,7 +55,7 @@ A barra no topo está sempre visível:
 
 **Mais** abre o resto, em quatro grupos: **Você** (Meu avatar, Minhas identidades,
 Seus dados), **Pessoas** (Pares, Seguindo, Conversas), **Avançado**
-(Publicações, Configurações de rede) e **Aplicativo** (Idioma, Sobre e **Instalar o ForkBuild** onde o navegador consegue instalá-lo). No celular,
+(Publicações, Configurações de rede) e **Aplicativo** (Idioma, Aparência, Sobre e **Instalar o ForkBuild** onde o navegador consegue instalá-lo). No celular,
 **Menu** mostra todos de uma vez.
 
 - **Meu avatar** — como os outros veem você na Visão do mundo; veja
@@ -78,6 +78,9 @@ Seus dados), **Pessoas** (Pares, Seguindo, Conversas), **Avançado**
   página, então salve seu trabalho antes. O ForkBuild está disponível em
   inglês, alemão, espanhol, francês, bahasa indonesia, japonês, coreano e português do Brasil
   (veja [Translating ForkBuild](../../Translating.md), em inglês).
+- **Aparência** — **Auto**, **Clara** ou **Escura**, direto no menu. Auto segue
+  o modo claro ou escuro do seu dispositivo; Clara é a vila de dia, Escura a
+  mesma vila à noite. Muda na hora e fica guardada neste dispositivo.
 - **Sobre** — informações de versão
 
 ## Instalando o ForkBuild

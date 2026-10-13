@@ -24,8 +24,8 @@
     aspect-ratio: 4 / 3;
     border-radius: 12px;
     overflow: hidden;
-    background: #deeaf3;
-    box-shadow: 0 12px 40px rgba(74, 52, 24, 0.2);
+    background: var(--tint-blue);
+    box-shadow: 0 12px 40px rgba(var(--shade-rgb), 0.2);
 }
 
 .shared-build-kicker {
@@ -61,7 +61,7 @@
 
 .shared-build-built-with {
     margin: 0 0 1rem;
-    color: #2f6a48;
+    color: var(--ink-green);
     overflow-wrap: anywhere;
 }
 
@@ -82,13 +82,13 @@
 }
 
 .shared-build-remixed-from {
-    background: #f5eedb;
-    color: #826517;
+    background: var(--tint-amber);
+    color: var(--ink-amber);
 }
 
 .shared-build-remix-count {
     background: var(--accent-tint);
-    color: #217849;
+    color: var(--ink-green);
     font-weight: 600;
 }
 
@@ -202,8 +202,8 @@
 }
 
 .remix-permission-allow {
-    border-color: #99d6b7;
-    background: #ddf3e8;
+    border-color: var(--edge-green);
+    background: var(--tint-green);
 }
 
 .remix-permission-name {
@@ -315,7 +315,7 @@
 .remix-family-remixes {
     margin-left: 0.6rem;
     padding-left: 0.8rem;
-    border-left: 2px solid rgba(96, 72, 40, 0.48);
+    border-left: 2px solid rgba(var(--edge-rgb), 0.48);
 }
 
 .remix-family-member {
@@ -354,7 +354,7 @@
 .collection-family {
     margin: 0;
     padding: 0.6rem 0.8rem;
-    border: 1px solid rgba(96, 72, 40, 0.42);
+    border: 1px solid rgba(var(--edge-rgb), 0.42);
     border-radius: 8px;
 }
 
@@ -375,7 +375,7 @@
 
 .challenge-families .remix-family {
     padding: 0.6rem 0.8rem;
-    border: 1px solid rgba(96, 72, 40, 0.42);
+    border: 1px solid rgba(var(--edge-rgb), 0.42);
     border-radius: 8px;
 }
 

@@ -135,7 +135,7 @@
 }
 
 .editor-panel-btn--danger:hover:not(:disabled) {
-    border-color: #e05252;
+    border-color: var(--edge-red);
 }
 
 .editor-panel-btn:disabled {
@@ -188,7 +188,7 @@
 }
 
 .editing-sidebar-group--selected {
-    background: #e0f0e0;
+    background: var(--tint-green);
     border-color: var(--accent);
     color: var(--ink-strong);
 }

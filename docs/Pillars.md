@@ -191,7 +191,13 @@ so it comes and goes rather than droning, and it sits below the ambience.
 One **♪ Music** button turns it off; mute and volume take it with
 everything else.
 
-Not decided yet: a dark version for those who ask for one.
+The same village after dark (2026-10-13), for a device set to dark mode or
+anyone who picks **Dark** under More → App: lamp-lit wood for the grounds,
+cream ink for the words, the same meadow green to press. Every colour has a
+name in css/main/theme.css and a dark value beside it; the stylesheets use
+only the names, so both looks reach every page. **Auto** (the default)
+follows the device; **Light** keeps the village by day. The 3D view keeps
+its own sky either way: day and night there are the World's.
 
 ## What we are not making
 

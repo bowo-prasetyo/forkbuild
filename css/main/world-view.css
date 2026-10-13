@@ -27,8 +27,8 @@
     top: 5rem;
     right: 1.5rem;
     z-index: 10;
-    background: rgba(253, 248, 238, 0.68);
-    border: 1px solid rgba(96, 72, 40, 0.6);
+    background: rgba(var(--overlay-rgb), 0.68);
+    border: 1px solid rgba(var(--edge-rgb), 0.6);
     border-radius: 6px;
     padding: 0.75rem 1rem;
     pointer-events: none;
@@ -70,7 +70,7 @@
     color: var(--ink-soft) !important;
     margin: 0.25rem 0 0 0;
     padding-top: 0.5rem;
-    border-top: 1px solid rgba(96, 72, 40, 0.6);
+    border-top: 1px solid rgba(var(--edge-rgb), 0.6);
     font-style: italic;
 }
 
@@ -81,7 +81,7 @@
     gap: 0.25rem;
     margin-top: 0.5rem;
     padding-top: 0.5rem;
-    border-top: 1px solid rgba(96, 72, 40, 0.6);
+    border-top: 1px solid rgba(var(--edge-rgb), 0.6);
 }
 
 .world-view-nav-marker {
@@ -94,7 +94,7 @@
 
 .world-view-nav-marker .marker-direction {
     font-weight: bold;
-    color: #a18b17;
+    color: var(--ink-amber);
     min-width: 24px;
     text-align: center;
 }
@@ -107,17 +107,17 @@
 }
 
 .world-view-nav-marker.collaborator .marker-direction {
-    color: #227771;
+    color: var(--ink-teal);
 }
 
 .world-view-nav-marker.collaborator .marker-label {
-    color: #175882;
+    color: var(--ink-blue);
 }
 
 /* 0.3.7 — matches .compass-indicator-marker--landmark, so a landmark's
    HUD row and its compass dot read as one system. */
 .world-view-nav-marker.landmark .marker-direction {
-    color: #821741;
+    color: var(--ink-rose);
 }
 
 /* Original overlay style - keep for title/author info */
@@ -132,7 +132,7 @@
     top: 1rem;
     left: 1rem;
     z-index: 10;
-    background: rgba(253, 248, 238, 0.93);
+    background: rgba(var(--overlay-rgb), 0.93);
     border: 1px solid var(--line);
     border-radius: 4px;
     padding: 1rem 1.25rem;
@@ -422,7 +422,7 @@
     flex-shrink: 0;
 }
 .world-view-error {
-    color: #822117;
+    color: var(--ink-red);
     font-size: 0.9rem;
     margin: 0.5rem 0;
 }
@@ -432,12 +432,12 @@
 }
 
 .world-view-section--error h4 {
-    color: #822117;
+    color: var(--ink-red);
 }
 
 .world-item--failed {
     opacity: 0.5;
-    border-color: #d49b9b;
+    border-color: var(--edge-red);
     background: var(--surface);
 }
 
@@ -567,7 +567,7 @@
 }
 
 .world-search-item-note {
-    color: #8d6f2a;
+    color: var(--ink-amber);
     font-size: 0.72rem;
     margin-top: 0.15rem;
 }
@@ -728,7 +728,7 @@
     flex-basis: 100%;
     margin: 0;
     font-size: 0.8rem !important;
-    color: #825617 !important;
+    color: var(--ink-amber) !important;
 }
 
 .own-publication-placement-actions {
@@ -750,7 +750,7 @@
     flex-wrap: wrap;
     gap: 0.4rem;
     padding: 0.5rem;
-    background: rgba(96, 72, 40, 0.03);
+    background: rgba(var(--edge-rgb), 0.03);
     border: 1px solid var(--line);
     border-radius: 4px;
 }
@@ -765,7 +765,7 @@
 .own-publication-unpublish-confirm-text {
     flex-basis: 100%;
     font-size: 0.8rem !important;
-    color: #825617 !important;
+    color: var(--ink-amber) !important;
 }
 
 /* Commentary collapses to its title line, which is the toggle. */
@@ -805,8 +805,8 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.25rem 0.5rem;
-    background: rgba(253, 248, 238, 0.68);
-    border: 1px solid rgba(96, 72, 40, 0.6);
+    background: rgba(var(--overlay-rgb), 0.68);
+    border: 1px solid rgba(var(--edge-rgb), 0.6);
     border-radius: 6px;
 }
 
@@ -825,7 +825,7 @@
 .world-view-sound-music {
     background: transparent;
     color: var(--ink);
-    border: 1px solid rgba(96, 72, 40, 0.3);
+    border: 1px solid rgba(var(--edge-rgb), 0.3);
     font-size: 0.8rem;
     padding: 0.1rem 0.4rem;
 }
@@ -847,8 +847,8 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.3rem 0.6rem;
-    background: rgba(253, 248, 238, 0.68);
-    border: 1px solid rgba(96, 72, 40, 0.6);
+    background: rgba(var(--overlay-rgb), 0.68);
+    border: 1px solid rgba(var(--edge-rgb), 0.6);
     border-radius: 6px;
     color: var(--ink);
     font-size: 0.85rem;
@@ -860,7 +860,7 @@
     width: 140px;
     height: 8px;
     border-radius: 4px;
-    background: rgba(96, 72, 40, 0.2);
+    background: rgba(var(--edge-rgb), 0.2);
     overflow: hidden;
 }
 
@@ -902,10 +902,10 @@
 }
 
 .world-view-hud .action-btn {
-    background: rgba(253, 248, 238, 0.93);
+    background: rgba(var(--overlay-rgb), 0.93);
     color: var(--ink);
     border: 1px solid var(--line-strong);
-    box-shadow: 0 4px 14px rgba(74, 52, 24, 0.16);
+    box-shadow: 0 4px 14px rgba(var(--shade-rgb), 0.16);
 }
 
 .world-view-hud .action-btn--primary {

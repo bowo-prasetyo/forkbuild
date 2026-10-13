@@ -80,6 +80,13 @@ export default Object.freeze({
     'language.pseudoNote': 'La pseudo-langue est de l’anglais avec des lettres accentuées, allongé et entre crochets. Un texte qui reste normal n’a pas encore été préparé pour la traduction.',
     'language.helpTranslate': 'Pour aider à traduire ForkBuild dans une autre langue, consultez docs/Translating.md dans le code source.',
     'language.unavailable': 'Le réglage de la langue n’est pas disponible ici.',
+    'look.label': 'Apparence',
+    'look.auto': 'Auto',
+    'look.light': 'Clair',
+    'look.dark': 'Sombre',
+    'look.autoHint': 'Suivre le mode clair ou sombre de cet appareil',
+    'look.lightHint': 'Le village de jour : papier chaud et encre sombre',
+    'look.darkHint': 'Le village la nuit : bois éclairé par les lanternes et encre crème',
 
     // Le comptage quotidien des visiteurs sur la page Vos données (ui/components/VisitorCountSetting.js).
     'visitorCount.title': 'Comptage quotidien des visiteurs',

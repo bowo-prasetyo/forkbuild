@@ -81,7 +81,7 @@
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    box-shadow: 0 0 0 1px rgba(74, 52, 24, 0.27);
+    box-shadow: 0 0 0 1px rgba(var(--shade-rgb), 0.27);
 }
 
 .compass-indicator-marker--structure {
@@ -351,7 +351,7 @@
 }
 
 .world-members-panel-item--editor {
-    border-left-color: #5a9bd8;
+    border-left-color: var(--edge-blue);
 }
 
 .world-members-panel-item-info {
@@ -469,11 +469,11 @@
 }
 
 .world-location-browser-diagnostics--warning .world-location-browser-diagnostics-line {
-    color: #8d6f2a;
+    color: var(--ink-amber);
 }
 
 .world-location-browser-diagnostics--fatal .world-location-browser-diagnostics-line {
-    color: #732626;
+    color: var(--ink-red);
 }
 
 .world-location-browser-empty {
@@ -541,7 +541,7 @@
 }
 
 .world-location-browser-item-note {
-    color: #8d6f2a;
+    color: var(--ink-amber);
     font-size: 0.72rem;
     margin-top: 0.15rem;
 }

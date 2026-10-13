@@ -1972,9 +1972,22 @@ way, through RenderWorldUseCase and RenderWorldViewUseCase.
 The look round the 3D view (docs/Pillars.md, "Look") is named once in
 css/main/theme.css, the first part css/main.css imports and the one
 css/embed.css imports: grounds (`--paper`, `--surface`…), lines, inks
-(`--ink`…) and the green `--accent`. The other stylesheets and the few
-inline styles in components use those names; tests/VillageLook.test.js
-checks their contrast.
+(`--ink`…), the green `--accent`, inks, tints and edges per meaning
+(`--ink-amber`, `--tint-green`, `--edge-red`…) and the paper, line and
+shadow colours as RGB triplets for any strength (`rgba(var(--overlay-rgb),
+0.68)`). The other stylesheets and the few inline styles in components use
+those names; tests/VillageLook.test.js checks their contrast in both looks,
+and that no stylesheet draws a colour of its own that the dark look would
+miss.
+
+The dark look redefines every name, once under
+`@media (prefers-color-scheme: dark)` for `:root:not([data-look="light"])`
+and again, identically, for `:root[data-look="dark"]`. The choice
+(core/LookSettings.js: auto, light or dark) is kept by
+application/settings/LookSettingsStore.js (`look-settings`); ui/start.js
+applies it with ui/look.js#applyLook() before the app loads, which sets or
+clears `data-look` on `<html>` and points both `theme-color` metas at the
+chosen paper; ui/components/LookChoice.js offers it in the More menu.
 
 ui/main.js builds every store, adapter and use case once, reads the
 saved settings, and provides them to the Vue app. The compose functions in

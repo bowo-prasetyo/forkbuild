@@ -30,7 +30,7 @@ html, body, #app {
     position: relative;
     flex: 1;
     min-height: 0;
-    background: #deeaf3;
+    background: var(--tint-blue);
 }
 
 .build-turntable-canvas {
@@ -65,7 +65,7 @@ html, body, #app {
     margin: 0;
     padding: 0.2rem 0.55rem;
     border-radius: 999px;
-    background: rgba(253, 248, 238, 0.68);
+    background: rgba(var(--overlay-rgb), 0.68);
     color: var(--ink-strong);
     font-size: 0.8rem;
     pointer-events: none;

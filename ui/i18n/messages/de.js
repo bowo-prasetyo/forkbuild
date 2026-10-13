@@ -80,6 +80,13 @@ export default Object.freeze({
     'language.pseudoNote': 'Die Pseudo-Locale ist Englisch mit Akzentbuchstaben, aufgefüllt und in Klammern. Text, der noch normal erscheint, ist noch nicht für die Übersetzung vorbereitet.',
     'language.helpTranslate': 'Wenn Sie helfen möchten, ForkBuild in eine andere Sprache zu übersetzen, lesen Sie docs/Translating.md im Quellcode.',
     'language.unavailable': 'Die Spracheinstellung ist hier nicht verfügbar.',
+    'look.label': 'Aussehen',
+    'look.auto': 'Auto',
+    'look.light': 'Hell',
+    'look.dark': 'Dunkel',
+    'look.autoHint': 'Dem hellen oder dunklen Modus dieses Geräts folgen',
+    'look.lightHint': 'Das Dorf am Tag: warmes Papier und dunkle Schrift',
+    'look.darkHint': 'Das Dorf bei Nacht: lampenbeschienenes Holz und cremefarbene Schrift',
 
     // Die tägliche Besucherzählung auf der Seite „Ihre Daten“ (ui/components/VisitorCountSetting.js).
     'visitorCount.title': 'Tägliche Besucherzählung',

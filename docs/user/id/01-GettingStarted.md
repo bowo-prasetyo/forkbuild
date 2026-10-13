@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 1aaeba5f85662d3b -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a2f8d3c2e13430e9 -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -57,7 +57,7 @@ Bilah di bagian atas selalu terlihat:
 
 **Lainnya** membuka sisanya, dalam empat kelompok: **Anda** (Avatar Saya, Identitas Saya,
 Data Anda), **Orang** (Rekan, Diikuti, Percakapan), **Lanjutan**
-(Publikasi, Pengaturan Jaringan), dan **Aplikasi** (Bahasa, Tentang, dan **Pasang ForkBuild** jika peramban dapat memasangnya). Di ponsel,
+(Publikasi, Pengaturan Jaringan), dan **Aplikasi** (Bahasa, Tampilan, Tentang, dan **Pasang ForkBuild** jika peramban dapat memasangnya). Di ponsel,
 **Menu** menampilkan semuanya sekaligus.
 
 - **Avatar Saya** — bagaimana Anda terlihat oleh orang lain di Tampilan
@@ -79,6 +79,10 @@ Data Anda), **Orang** (Rekan, Diikuti, Percakapan), **Lanjutan**
   menyimpan akan memuat ulang halaman, jadi simpan pekerjaan Anda dulu.
   ForkBuild tersedia dalam bahasa Inggris, bahasa Jerman, bahasa Spanyol, bahasa Prancis, Bahasa Indonesia,
   bahasa Jepang, bahasa Korea, dan bahasa Portugis Brasil (lihat [Translating ForkBuild](../../Translating.md), bahasa Inggris).
+- **Tampilan** — **Otomatis**, **Terang**, atau **Gelap**, langsung di menu.
+  Otomatis mengikuti mode terang atau gelap perangkat Anda; Terang adalah desa
+  di siang hari, Gelap desa yang sama di malam hari. Berubah seketika dan
+  disimpan di perangkat ini.
 - **Tentang** — informasi versi
 
 ## Memasang ForkBuild

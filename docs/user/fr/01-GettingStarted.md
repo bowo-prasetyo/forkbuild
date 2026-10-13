@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 1aaeba5f85662d3b -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a2f8d3c2e13430e9 -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -60,7 +60,7 @@ La barre du haut est toujours visible :
 
 **Plus** ouvre le reste, en quatre groupes : **Vous** (Mon avatar, Mes identités,
 Vos données), **Personnes** (Pairs, Abonnements, Conversations), **Avancé**
-(Publications, Paramètres réseau) et **Application** (Langue, À propos, et **Installer ForkBuild** là où le navigateur peut l’installer). Sur un téléphone,
+(Publications, Paramètres réseau) et **Application** (Langue, Apparence, À propos, et **Installer ForkBuild** là où le navigateur peut l’installer). Sur un téléphone,
 **Menu** les affiche tous d’un coup.
 
 - **Mon avatar** — votre apparence pour les autres dans la Vue du Monde,
@@ -84,6 +84,10 @@ Vos données), **Personnes** (Pairs, Abonnements, Conversations), **Avancé**
   d’abord votre travail. ForkBuild existe en anglais, allemand, espagnol,
   français, bahasa indonesia, japonais, coréen et portugais du Brésil (voir
   [Translating ForkBuild](../../Translating.md), en anglais).
+- **Apparence** — **Auto**, **Clair** ou **Sombre**, directement dans le menu.
+  Auto suit le mode clair ou sombre de votre appareil ; Clair, c’est le village
+  de jour, Sombre le même village la nuit. Le changement est immédiat et
+  enregistré sur cet appareil.
 - **À propos** — informations de version
 
 ## Installer ForkBuild

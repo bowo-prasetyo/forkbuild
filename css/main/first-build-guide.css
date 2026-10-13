@@ -12,10 +12,10 @@
 .first-build-guide {
     width: min(19rem, calc(100% - 2rem));
     padding: 0.75rem 0.9rem;
-    background: rgba(253, 248, 238, 0.96);
+    background: rgba(var(--overlay-rgb), 0.96);
     border: 1px solid rgba(76, 175, 125, 0.45);
     border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(74, 52, 24, 0.2);
+    box-shadow: 0 8px 24px rgba(var(--shade-rgb), 0.2);
     color: var(--ink);
     font-size: 0.88rem;
 }
@@ -24,7 +24,7 @@
     padding: 0.45rem 0.9rem;
     border: 1px solid rgba(76, 175, 125, 0.6);
     border-radius: 999px;
-    background: rgba(253, 248, 238, 0.96);
+    background: rgba(var(--overlay-rgb), 0.96);
     color: var(--accent-ink);
     font-family: inherit;
     font-size: 0.85rem;
@@ -115,7 +115,7 @@
     padding: 0.5rem 0.6rem;
     border-radius: 6px;
     background: rgba(76, 175, 125, 0.12);
-    color: #2b6e47;
+    color: var(--ink-green);
     line-height: 1.4;
 }
 

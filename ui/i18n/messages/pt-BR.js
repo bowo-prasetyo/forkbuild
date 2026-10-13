@@ -81,6 +81,13 @@ export default Object.freeze({
     'language.pseudoNote': 'O pseudoidioma é o inglês com letras acentuadas, alongado e entre colchetes. Um texto que ainda aparece sem alterações ainda não foi preparado para tradução.',
     'language.helpTranslate': 'Para ajudar a traduzir o ForkBuild para outro idioma, veja docs/Translating.md no código-fonte.',
     'language.unavailable': 'A configuração de idioma não está disponível aqui.',
+    'look.label': 'Aparência',
+    'look.auto': 'Auto',
+    'look.light': 'Clara',
+    'look.dark': 'Escura',
+    'look.autoHint': 'Seguir o modo claro ou escuro deste dispositivo',
+    'look.lightHint': 'A vila de dia: papel quente e tinta escura',
+    'look.darkHint': 'A vila à noite: madeira iluminada por lampiões e tinta creme',
 
     // A contagem diária de visitantes na página Seus dados (ui/components/VisitorCountSetting.js).
     'visitorCount.title': 'Contagem diária de visitantes',

@@ -6459,3 +6459,33 @@ unhurried tune is what gives an afternoon of building its mood. Pillar served: b
   View and the Editor handing choice and mood to the provider); `MusicBrowser` (a real OfflineAudioContext: every mood
   heard, never clipping, silent while off; the provider playing only while chosen, unmuted, unlocked and shown).
 - Not done: a dark version of the look; music for other places (a plaza's own tune, a resident's song).
+
+## The village after dark (unnumbered, 2026-10-13)
+
+**Why.** The app went light and warm to match the village, but someone whose device is set to dark mode still got a
+bright page, at night, beside a dark 3D view; docs/Pillars.md's "Look" left a dark version undecided. Pillar served:
+building feels joyful (comfortable at any hour, on any device).
+
+- **The look after dark** (css/main/theme.css): the same village lamp-lit: dark warm wood for the grounds (`--paper`
+  #1c1712 up to `--surface-pressed`), cream inks, the same meadow-green buttons with a lighter green for links and
+  what is on, and every other name given a dark value beside its light one. The browser's own controls follow
+  (`color-scheme: dark`), and so does its bar (`theme-color` per scheme).
+- **Every colour a name**: the stylesheets' own colours became names first, so the dark look reaches every page:
+  inks, tints and edges per meaning (amber for a warning or something pending, red for an error, green for done, blue
+  for information; purple, indigo, teal and rose for kinds of things), and the paper glass over the 3D view, faint
+  lines and shadows as RGB triplets at any strength. Saturated buttons and markers with white words keep their colour
+  in both looks.
+- **Auto, Light or Dark** (core/LookSettings.js, application/settings/LookSettingsStore.js, ui/look.js,
+  ui/components/LookChoice.js): under More → App, beside Language; Auto, the default, follows the device; the choice
+  applies at once, needs no reload, and is applied before the app loads next time. Kept on this device only
+  (`look-settings`).
+- The 3D view keeps its own sky: day and night there belong to the World.
+- Docs: Pillars' "Look", Privacy, docs/Architecture.md ("UI"), and Getting Started's menu in every language.
+- Tests: `VillageLook` (the dark block names every colour, the same for the device's dark mode and a chosen Dark;
+  every ink at 4.5:1 or more on the page, its panels and its tints in both looks; the dark grounds dark and warm; no
+  stylesheet writing a dark colour, painting a pale ground or using the paper, line or shadow colour of its own, nor a
+  name theme.css lacks); `LookSettings` (Auto by default, lenient reading, only the choice stored); `DarkLookBrowser`
+  (the shipped CSS in a real browser: Dark turns the page, panels, controls and bar dark, Light keeps them light, Auto
+  follows the device, and the picker applies and keeps a choice).
+- Not done: a dark sky for the Home turntable and the build pictures (they show the village by day); music for other
+  places.

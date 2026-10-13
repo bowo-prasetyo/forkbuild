@@ -77,6 +77,13 @@ export default Object.freeze({
     'language.pseudoNote': 'Pseudo-locale adalah bahasa Inggris dengan huruf beraksen, diberi tambahan dan tanda kurung. Teks yang masih tampak biasa belum disiapkan untuk diterjemahkan.',
     'language.helpTranslate': 'Untuk membantu menerjemahkan ForkBuild ke bahasa lain, lihat docs/Translating.md di kode sumber.',
     'language.unavailable': 'Pengaturan bahasa tidak tersedia di sini.',
+    'look.label': 'Tampilan',
+    'look.auto': 'Otomatis',
+    'look.light': 'Terang',
+    'look.dark': 'Gelap',
+    'look.autoHint': 'Ikuti mode terang atau gelap perangkat ini',
+    'look.lightHint': 'Desa di siang hari: kertas hangat dan tinta gelap',
+    'look.darkHint': 'Desa di malam hari: kayu diterangi lentera dan tinta krem',
 
     // Hitungan pengunjung harian di halaman Data Anda (ui/components/VisitorCountSetting.js).
     'visitorCount.title': 'Hitungan pengunjung harian',
