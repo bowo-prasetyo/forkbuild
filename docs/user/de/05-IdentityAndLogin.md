@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: a155256d8ce4d313 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 185649658a1144d2 -->
 # 05 — Identität & Anmeldung
 
 <!-- languages -->
@@ -13,15 +13,22 @@ Erstellen, Schützen und Sichern dieser Identität.
 
 ## Eine Identität erstellen
 
-Klicken Sie in der oberen Leiste auf **Anmelden**. Der Dialog listet jede
-Identität auf, die dieses Gerät bereits besitzt — klicken Sie auf eine, um
-sie zu verwenden —, oder erstellen Sie eine neue:
+Ohne Namen klicken Sie in der oberen Leiste auf **Namen wählen**: Geben Sie
+einen Namen ein und klicken Sie auf **Weiter als …**, dann wird eine
+Identität mit diesem Namen erstellt, ohne Passphrase, bis Sie eine
+hinzufügen. Um sie gleich zu schützen, klicken Sie stattdessen auf **Jetzt
+mit einer Passphrase schützen**.
 
-1. Geben Sie einen **Anzeigenamen** ein. Das sehen andere; Sie können
-   mehrere Identitäten mit verschiedenen Namen haben.
+Mit einem Namen klicken Sie in der oberen Leiste darauf und dann auf
+**Namen wechseln**. Der Dialog listet jede Identität auf, die dieses Gerät
+bereits besitzt — klicken Sie auf eine, um sie zu verwenden —, oder legt eine
+neue an:
+
+1. Geben Sie einen **Namen** ein. Das sehen andere; Sie können mehrere
+   Identitäten mit verschiedenen Namen haben.
 2. Geben Sie eine **Passphrase** ein (mindestens 8 Zeichen) und dann zur
    Bestätigung noch einmal.
-3. Klicken Sie auf **Erstellen & anmelden**.
+3. Klicken Sie auf **Diesen Namen nutzen**.
 
 Das erstellt eine **geschützte** Identität (mit 🔒 angezeigt): Der
 Schlüssel wird verschlüsselt gespeichert und erst nach Eingabe der
@@ -51,11 +58,12 @@ sind:
   weiterhin Sie selbst und können weiter stöbern, bauen und speichern, aber
   alles, was eine frische Signatur braucht (Veröffentlichen, Auffindbar
   sein, einer Lobby beitreten), schlägt mit einer Meldung „identity is
-  locked“ (Identität gesperrt) fehl, bis Sie entsperren. Klicken Sie neben
-  Ihrem Namen auf **Entsperren**, geben Sie Ihre Passphrase ein und
+  locked“ (Identität gesperrt) fehl, bis Sie entsperren. Klicken Sie auf
+  Ihren Namen und dann auf **Entsperren**, geben Sie Ihre Passphrase ein und
   versuchen Sie es dann erneut.
-- **Abgemeldet** — Sie sind niemand; öffnen Sie **Anmelden**, um wieder
-  eine Identität zu wählen oder zu entsperren.
+- **Kein Name** — nach **Namen wechseln → Ohne Namen weiter** sind Sie ein
+  Gast; **Namen wählen** in der oberen Leiste wählt oder entsperrt wieder
+  eine Identität.
 
 Ein Tresor sperrt sich automatisch **15 Minuten nach dem Entsperren**, ob
 Sie die App noch benutzen oder nicht (es ist kein Inaktivitäts-Timer), oder

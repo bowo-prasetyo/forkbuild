@@ -467,6 +467,9 @@ async function firstVisit(browser, base) {
         assert(topLinks.join() === '#/,#/editor,#/repository,#/challenge,#/walk,#/worlds/recent', `the nav shows six pages before More (${topLinks})`);
         const navNames = await page.$$eval('.app-nav > .app-nav-link', (links) => links.map((link) => link.textContent.trim()));
         assert(navNames.join() === 'Home,Build,Explore,Challenge,Walk,My Worlds', `in the player's words (${navNames})`);
+        // No account: the header offers a name, never Login.
+        assert((await page.textContent('.user-widget .user-choose-name')).trim() === 'Choose a name' && !/log ?in/i.test(await page.textContent('.user-widget')),
+            'the header offers Choose a name, not Login');
         // Walk opens this week's plaza, with the ready-made builds round it.
         await page.click('.app-nav > a[href="#/walk"]');
         await page.waitForFunction(() => location.hash.startsWith('#/plaza/'), null, { timeout: 30_000 });
@@ -578,7 +581,7 @@ async function firstVisit(browser, base) {
         await editor.waitForSelector('.editor-post-publish-share .publication-share-link-url', { timeout: 10_000 });
         const link = await editor.$eval('.editor-post-publish-share .publication-share-link-url', (input) => input.value);
         assert(link.includes('/b/1'), `a name is enough to publish it signed, with a link ready (${link.slice(0, 60)})`);
-        assert((await editor.textContent('.user-widget')).includes('Bundle builder'), 'and leaves the new identity logged in');
+        assert((await editor.textContent('.user-widget .user-chip')).includes('Bundle builder'), 'and the header shows the name it was published under');
         // Sent to everyone, or (with no relay reachable from the test) said not to have reached them yet.
         await editor.waitForFunction(() => /Anyone can find it now|couldn't reach everyone yet/.test(document.querySelector('.editor-post-publish-message')?.textContent || ''), null, { timeout: 60_000 });
         // One celebration: a passphrase for the identity just made waits for the next publish.

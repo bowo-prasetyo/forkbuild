@@ -101,7 +101,7 @@ async function type(input, text) {
     await type(host.querySelector('.login-modal-quick-name'), 'Kim');
     host.querySelector('.login-modal-quick-protect').click();
     await nextTick();
-    assert(host.querySelector('h3').textContent === t('loginModal.signInToPublish'), 'Protect it with a passphrase now opens the full form');
+    assert(host.querySelector('h3').textContent === t('loginModal.quick.publishTitle'), 'Protect it with a passphrase now opens the full form, still asking for a name to publish under');
     const passwords = host.querySelectorAll('input[type=password]');
     assert(passwords.length >= 1, 'which asks for a passphrase');
     assert(Array.from(host.querySelectorAll('input.modal-input')).some((input) => input.value === 'Kim'), 'and keeps the name already typed');
@@ -119,7 +119,7 @@ async function type(input, text) {
     withIdentity.unmount();
     const plain = mount(LoginModal, { identityUseCase: fakeIdentities(), props: {} });
     await nextTick();
-    assert(!plain.host.querySelector('.login-modal-quick'), 'Login from the header keeps the full form');
+    assert(!plain.host.querySelector('.login-modal-quick'), 'Unlock from the header keeps the full form');
     plain.unmount();
     console.log('✓ the quick start is only for a first publish or walk');
 }

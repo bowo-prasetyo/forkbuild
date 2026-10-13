@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: bb51e610ce073878 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 331ff412e7f1ca0d -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -126,10 +126,10 @@ marchez en **invité** : un avatar à l’apparence par défaut, que vous seul
 voyez et dont personne d’autre n’est informé. Un invité peut parler aux
 habitants, mais ne peut ni en ajouter ni en retirer, ni décorer un Monde
 avec un animal, car ce sont des modifications signées d’un nom. Choisissez
-un nom (en publiant, avec **Se promener ici avec moi** ou sous **Se
-connecter**) et l’avatar devient le vôtre là où il se tient, avec
-l’apparence enregistrée dans **Mon avatar**, et les autres peuvent le voir.
-Une déconnexion le refait invité.
+un nom (en publiant, avec **Se promener ici avec moi** ou avec **Choisir un
+nom** dans la barre du haut) et l’avatar devient le vôtre là où il se
+tient, avec l’apparence enregistrée dans **Mon avatar**, et les autres
+peuvent le voir. **Changer de nom → Continuer sans nom** le refait invité.
 
 | Touche | Action |
 |---|---|

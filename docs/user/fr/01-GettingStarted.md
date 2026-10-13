@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8bcc959091ee56db -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 1aaeba5f85662d3b -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -130,23 +130,25 @@ choisir une phrase secrète tout de suite, cliquez plutôt sur **La protéger
 maintenant par une phrase secrète**. Un lien de promenade demande de la
 même façon, avec **Se promener en tant que …**.
 
-Vous pouvez aussi vous connecter à tout moment :
-Cliquez sur **Se connecter** en haut à droite. ForkBuild n’utilise ni mot
-de passe ni compte central — **votre identité est une paire de clés
-cryptographiques stockée sur cet appareil**. La boîte de dialogue de
-connexion liste toutes les identités que ce navigateur détient déjà ;
-cliquez sur l’une d’elles pour l’utiliser, ou créez-en une nouvelle :
+Vous pouvez aussi choisir un nom à tout moment : cliquez sur **Choisir un
+nom** en haut à droite, saisissez-en un et cliquez sur **Continuer en tant
+que …**. ForkBuild n’utilise ni mot de passe ni compte central — **derrière
+votre nom, il y a une paire de clés cryptographiques stockée sur cet
+appareil**, appelée identité.
 
-1. Saisissez un **nom affiché** — c’est ce que les autres verront.
-2. Saisissez deux fois une **phrase secrète** d’au moins 8 caractères.
-   Elle chiffre votre clé sur cet appareil, et il n’y a pas de
-   réinitialisation : choisissez-en une que vous garderez. (Pour vous en
-   passer, cochez **Créer sans phrase secrète** ; la clé est alors stockée
-   non chiffrée dans ce navigateur.)
-3. Cliquez sur **Créer et se connecter**.
+Une fois que vous avez un nom, le coin en haut à droite l’affiche.
+Cliquez dessus pour **Mon avatar**, **Mes identités**, **Vos données** et
+**Changer de nom**, qui liste tous les noms que ce navigateur détient déjà
+(cliquez sur l’un d’eux pour l’utiliser), en crée un nouveau ou continue
+avec **Continuer sans nom**. Créer un nouveau nom y demande aussi deux fois
+une **phrase secrète** d’au moins 8 caractères. Elle chiffre votre clé sur
+cet appareil, et il n’y a pas de réinitialisation : choisissez-en une que
+vous garderez. (Pour vous en passer, cochez **Créer sans phrase secrète** ;
+la clé est alors stockée non chiffrée dans ce navigateur.) Cliquez ensuite
+sur **Utiliser ce nom**.
 
-C’est tout — vous êtes maintenant connecté, et tout ce que vous
-construisez, publiez ou envoyez est signé avec cette identité.
+Tout ce que vous construisez, publiez ou envoyez est alors signé sous ce
+nom.
 
 Ce que protège une phrase secrète, le verrouillage et le déverrouillage,
 et la sauvegarde de votre identité sont expliqués dans

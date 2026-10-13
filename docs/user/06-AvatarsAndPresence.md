@@ -111,9 +111,9 @@ You don't need a name to walk. Until you choose one, you walk as a
 nobody else is told about. A guest can talk to residents, but can't add or
 remove them or decorate a World with an animal, because those are changes
 signed with a name. Choose a name (when you publish, with **Walk here with
-me**, or under **Login**) and your avatar becomes yours where it stands, in
-the look saved on **My Avatar**, and others can see it. Logging out turns
-it back into a guest.
+me**, or with **Choose a name** in the top bar) and your avatar becomes
+yours where it stands, in the look saved on **My Avatar**, and others can
+see it. **Switch name → Go on without a name** turns it back into a guest.
 
 | Key | Action |
 |---|---|

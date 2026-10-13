@@ -6367,3 +6367,33 @@ needs nothing first), and building feels joyful (the screens round a build look 
   words dark, Try it now green with white words; the plaza walked as a guest after an unsigned publish).
 - Not done: the header's **Login** still says Login rather than the player's name; bricks have no texture or edge yet;
   music; a dark version of the look for those who want one.
+
+## Your name in the header (unnumbered, 2026-10-13)
+
+**The header says Choose a name, or the player's name, never Login or Logout.** ForkBuild has no accounts, Home says
+"No account", and since "A guest walks" nobody needs a name to walk; the header's **Login** and **Logout** were the
+last place every screen spoke of an account ("Not done" in "A guest walks, in a village-coloured shell"). Pillar
+served: building feels joyful, through a first ten minutes that never asks for an account.
+
+- **With no name** (ui/components/UserWidget.js): **Choose a name** opens the short name-only dialog Publish already
+  uses (LoginModal's quick start, `purpose: 'name'`): *Choose your name*, what it is for, a name, **Continue as …**,
+  and **Protect it with a passphrase now** for the full form. A device that already holds names lists them instead.
+- **With a name**: a chip with its first letter and the name. Its menu holds My Avatar, My Identities, Your Data and
+  **Switch name** (`purpose: 'switch'`), which lists the names this device holds, makes a new one, or **Go on without a
+  name**, the old Logout. A locked name shows a lock, and **Unlock** comes first in its menu. The menu closes on a
+  click elsewhere, Escape or a new page.
+- **The name dialog speaks of names wherever it opens**: Publish, a walk or build link and Build with me now title it
+  as their quick start does (*Choose a name to publish under* …), and its parts read *Or make a new name*, *Your name*
+  and **Use this name**, not *Create new identity* and *Create & Log In*. The passphrase hints, shared with My
+  Identities, keep their words. Eleven messages it no longer shows are gone from every language.
+- **Log in said nowhere a newcomer reads**: the first-build guide's Share hint, World View's and My Avatar's hints,
+  Unlock, and the walk and build links' buttons and refusal now say *choose a name*. The Words table in docs/Pillars.md
+  gains the row, and tests/WordsTable.test.js fails when log in, log out or sign in comes back to the menu, Home, the
+  Editor, a shared link, Explore, the challenge, World View, the header, a walk or build link or My Avatar.
+- Every language: the new messages and the reworded ones; guides 01, 05 and 06 say Choose a name and Switch name.
+- Tests: `HeaderNameBrowser` (real Vue and CSS: Choose a name asks only for a name and the header then shows it with its
+  first letter; the menu's four items, closed by a click elsewhere; Switch name to another name, and Go on without a
+  name ending the session; a locked name unlocked from its menu; Login or Logout never on screen);
+  `LoginModalQuickStartBrowser` (the full form titled as its quick start); `WordsTable`.
+- Not done: the avatar's own colour on the chip (its profile is read only by My Avatar and World View today);
+  "identity" on My Identities and in the passphrase hints.

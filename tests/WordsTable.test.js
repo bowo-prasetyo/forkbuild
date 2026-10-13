@@ -53,6 +53,25 @@ const checked = Object.keys(en).filter((key) => PLAYER_NAMESPACES.includes(key.s
 assert(checked > 300, `the namespaces still exist (${checked} messages checked)`);
 console.log(`✓ ${checked} messages a newcomer meets use the player's words`);
 
+// There is no account, so nothing a newcomer meets says log in or out: the
+// header says Choose a name or the player's name, with Switch name in its
+// menu, and so do Publish, a walk or build link and My Avatar
+// (docs/reviews/CreativeDirection-2026-10-12c.md).
+{
+    const namespaces = [...PLAYER_NAMESPACES, 'userWidget', 'walkTogether', 'buildTogether', 'avatarSettingsView'];
+    const account = /\blog ?(?:in|out)\b|\blog-?(?:in|out)\b|\blogged (?:in|out)\b|\bsign(?:ed)? ?(?:in|out)\b/i;
+    const saying = [];
+    for (const [key, value] of Object.entries(en)) {
+        if (!namespaces.includes(key.split('.')[0])) continue;
+        for (const text of typeof value === 'string' ? [value] : Object.values(value || {})) {
+            if (typeof text === 'string' && account.test(text)) saying.push(`${key}: ${text}`);
+        }
+    }
+    assert(saying.length === 0, `say Choose a name or Switch name, never log in or out:\n  ${saying.join('\n  ')}`);
+    assert(en['userWidget.chooseName'] === 'Choose a name' && en['userWidget.switchName'] === 'Switch name', 'the header offers Choose a name and Switch name');
+    console.log('✓ nothing a newcomer meets says log in or out');
+}
+
 // The main menu names what a player does.
 assert(en['app.nav.editor'] === 'Build' && en['app.nav.repository'] === 'Explore' && en['app.nav.walk'] === 'Walk', 'Build · Explore · Challenge · Walk in the menu');
 console.log('✓ the menu says Build, Explore, Challenge and Walk');

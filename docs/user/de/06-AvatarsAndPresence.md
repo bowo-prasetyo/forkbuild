@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: bb51e610ce073878 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 331ff412e7f1ca0d -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -125,9 +125,10 @@ niemandem sonst etwas gesagt wird. Ein Gast kann mit Bewohnern sprechen,
 aber keine hinzufügen oder entfernen und keine Welt mit einem Tier
 schmücken, denn das sind Änderungen, die mit einem Namen signiert werden.
 Wählen Sie einen Namen (beim Veröffentlichen, mit **Mit mir hier
-spazieren** oder unter **Anmelden**), dann wird der Avatar dort, wo er
-steht, zu Ihrem, im Aussehen, das unter **Mein Avatar** gespeichert ist,
-und andere können ihn sehen. Nach dem Abmelden wird er wieder zum Gast.
+spazieren** oder mit **Namen wählen** in der oberen Leiste), dann wird der
+Avatar dort, wo er steht, zu Ihrem, im Aussehen, das unter **Mein Avatar**
+gespeichert ist, und andere können ihn sehen. **Namen wechseln → Ohne Namen
+weiter** macht ihn wieder zum Gast.
 
 | Taste | Aktion |
 |---|---|

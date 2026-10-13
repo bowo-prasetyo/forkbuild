@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8bcc959091ee56db -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 1aaeba5f85662d3b -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -126,24 +126,24 @@ añade una cuando quiera. Para elegir una frase de contraseña desde el
 principio, haga clic en **Protegerla ahora con una frase de contraseña**.
 Un enlace para pasear pregunta igual, con **Pasear como …**.
 
-También puede
-iniciar sesión en cualquier momento:
-Haga clic en **Iniciar sesión**, en la esquina superior derecha. ForkBuild
-no usa contraseñas ni cuentas centrales: **su identidad es un par de
-claves criptográficas guardado en este dispositivo**. El diálogo Iniciar
-sesión muestra todas las identidades que ya tiene este navegador; haga
-clic en una para usarla, o cree una nueva:
+También puede elegir un nombre en cualquier momento: haga clic en **Elegir
+un nombre**, en la esquina superior derecha, escriba uno y haga clic en
+**Continuar como …**. ForkBuild no usa contraseñas ni cuentas centrales:
+**detrás de su nombre hay un par de claves criptográficas guardado en este
+dispositivo**, llamado identidad.
 
-1. Escriba un **nombre visible**: es lo que verán las demás personas.
-2. Escriba dos veces una **frase de contraseña** de al menos 8 caracteres.
-   Cifra su clave en este dispositivo y no se puede restablecer, así que
-   elija una que vaya a conservar. (Para omitirla, marque **Crear sin
-   frase de contraseña**; la clave se guarda entonces sin cifrar en este
-   navegador).
-3. Haga clic en **Crear e iniciar sesión**.
+Cuando tiene un nombre, la esquina superior derecha lo muestra. Haga clic en
+él para ver **Mi avatar**, **Mis identidades**, **Sus datos** y **Cambiar de
+nombre**, que muestra todos los nombres que ya tiene este navegador (haga
+clic en uno para usarlo), crea uno nuevo o sigue con **Seguir sin nombre**.
+Al crear un nombre nuevo ahí, también se le pide dos veces una **frase de
+contraseña** de al menos 8 caracteres. Cifra su clave en este dispositivo y
+no se puede restablecer, así que elija una que vaya a conservar. (Para
+omitirla, marque **Crear sin frase de contraseña**; la clave se guarda
+entonces sin cifrar en este navegador). Luego haga clic en **Usar este
+nombre**.
 
-Eso es todo: ya inició sesión, y todo lo que construya, publique o envíe
-se firma con esta identidad.
+Todo lo que construya, publique o envíe se firma entonces con ese nombre.
 
 Qué protege una frase de contraseña, cómo bloquear y desbloquear, y cómo
 hacer una copia de seguridad de su identidad se explica en

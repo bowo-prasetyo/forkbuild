@@ -171,7 +171,7 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     assert(JSON.stringify(toggleLabels(loggedOut.host)) === JSON.stringify(['Show Other Avatars']),
         `without an avatar only Show Other Avatars shows — got ${toggleLabels(loggedOut.host).join(', ')}`);
     assert(!loggedOut.host.querySelector('.world-view-camera-perspective'), 'and no camera perspective buttons');
-    assert(loggedOut.host.textContent.includes('create an avatar'), 'the hint says how to get an avatar');
+    assert(loggedOut.host.textContent.includes('Choose a name to appear here'), 'the hint says how to get an avatar: choose a name');
     assert(!loggedOut.host.querySelector('input:disabled, button:disabled'), 'nothing disabled is left on screen');
     loggedOut.unmount();
 

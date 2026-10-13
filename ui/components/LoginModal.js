@@ -24,6 +24,11 @@ import I18nText from '../i18n/I18nText.js';
 // NewPassphraseFields.js); an unprotected identity takes an explicit
 // opt-out.
 //
+// Every way in speaks of names, not identities or logging in
+// (docs/Pillars.md, "Words"): the header's Choose a name ('name') and Switch
+// name ('switch'), Publish, a walk link and Build with me. Opened with no
+// purpose, it unlocks the identity the header names.
+//
 // Quick start: opened by Publish or a walk link on a device that holds no
 // identity yet, the modal asks only for a name, and "Publish as …" (or
 // "Walk as …") creates an identity without a passphrase and goes on, so a
@@ -45,11 +50,13 @@ export default {
         // 'publish' when opened by Publish: it says why, and offers to
         // publish unsigned instead. 'walk' when opened to walk together
         // (ui/views/WalkTogetherJoinView.js, World View's Walk here with
-        // me): it says why.
+        // me): it says why. 'name' when opened by the header's Choose a name,
+        // and 'switch' by its Switch name, which can also go on with no name.
         purpose: { type: String, default: null }
     },
-    // `signed-in` follows `close` after a sign-in; `skip` asks to go on without one.
-    emits: ['close', 'signed-in', 'skip'],
+    // `signed-in` follows `close` after a sign-in; `skip` asks to go on without
+    // one; `no-name` (Switch name) asks to stop using a name.
+    emits: ['close', 'signed-in', 'skip', 'no-name'],
     components: { I18nText, NewPassphraseFields },
     setup(props, { emit }) {
         const identityUseCase = inject('identityUseCase');
@@ -71,13 +78,14 @@ export default {
             [...identities.value].sort((a, b) => b.createdAt - a.createdAt)
         );
         const showFullCreate = ref(false);
-        const quickStart = computed(() => (props.purpose === 'publish' || props.purpose === 'walk' || props.purpose === 'build')
+        const quickStart = computed(() => ['publish', 'walk', 'build', 'name'].includes(props.purpose)
             && identities.value.length === 0 && !showFullCreate.value);
         const quickName = computed(() => newLabel.value.trim());
         const quickActionText = computed(() => {
             if (!quickName.value) return t('loginModal.quick.continue');
             if (props.purpose === 'walk') return t('loginModal.quick.walkAs', { name: quickName.value });
             if (props.purpose === 'build') return t('loginModal.quick.buildAs', { name: quickName.value });
+            if (props.purpose === 'name') return t('loginModal.quick.nameAs', { name: quickName.value });
             return t('loginModal.quick.publishAs', { name: quickName.value });
         });
 
@@ -177,9 +185,9 @@ export default {
     template: `
         <div class="modal-overlay" @click.self="$emit('close')">
             <div v-if="quickStart" class="modal-content login-modal-quick">
-                <h3>{{ purpose === 'walk' ? t('loginModal.quick.walkTitle') : purpose === 'build' ? t('loginModal.quick.buildTitle') : t('loginModal.quick.publishTitle') }}</h3>
+                <h3>{{ purpose === 'walk' ? t('loginModal.quick.walkTitle') : purpose === 'build' ? t('loginModal.quick.buildTitle') : purpose === 'name' ? t('loginModal.quick.nameTitle') : t('loginModal.quick.publishTitle') }}</h3>
                 <p class="modal-subtitle login-modal-purpose">
-                    {{ purpose === 'walk' ? t('loginModal.quick.walkLead') : purpose === 'build' ? t('loginModal.quick.buildLead') : t('loginModal.quick.publishLead') }}
+                    {{ purpose === 'walk' ? t('loginModal.quick.walkLead') : purpose === 'build' ? t('loginModal.quick.buildLead') : purpose === 'name' ? t('loginModal.quick.nameLead') : t('loginModal.quick.publishLead') }}
                 </p>
                 <input
                     v-model="newLabel"
@@ -203,18 +211,18 @@ export default {
                 </div>
             </div>
             <div v-else class="modal-content">
-                <h3>{{ purpose === 'publish' ? t('loginModal.signInToPublish') : purpose === 'walk' ? t('loginModal.signInToWalk') : purpose === 'build' ? t('loginModal.signInToBuild') : t('loginModal.logIn') }}</h3>
+                <h3>{{ purpose === 'publish' ? t('loginModal.quick.publishTitle') : purpose === 'walk' ? t('loginModal.quick.walkTitle') : purpose === 'build' ? t('loginModal.quick.buildTitle') : purpose === 'name' ? t('loginModal.quick.nameTitle') : purpose === 'switch' ? t('loginModal.switchTitle') : t('userWidget.unlock') }}</h3>
                 <p v-if="purpose === 'publish'" class="modal-subtitle login-modal-purpose">
-                    {{ t('loginModal.publishWhy') }}
+                    {{ t('loginModal.quick.publishLead') }}
                 </p>
                 <p v-else-if="purpose === 'walk'" class="modal-subtitle login-modal-purpose">
-                    {{ t('loginModal.walkWhy') }}
+                    {{ t('loginModal.quick.walkLead') }}
                 </p>
                 <p v-else-if="purpose === 'build'" class="modal-subtitle login-modal-purpose">
-                    {{ t('loginModal.buildWhy') }}
+                    {{ t('loginModal.quick.buildLead') }}
                 </p>
                 <p class="modal-subtitle">
-                    {{ t('loginModal.unlockAnIdentityThisDevice') }}
+                    {{ t('loginModal.pickOrMakeName') }}
                 </p>
 
                 <div v-if="sortedIdentities.length" class="identity-list">
@@ -253,15 +261,16 @@ export default {
                     </template>
                 </div>
                 <p v-else class="modal-subtitle">{{ t('loginModal.noIdentitiesOnThisDevice') }}</p>
+                <button v-if="purpose === 'switch'" type="button" class="login-modal-quick-protect login-modal-no-name" @click="$emit('close'); $emit('no-name')">{{ t('loginModal.useNoName') }}</button>
 
                 <div class="identity-divider">
-                    <span>{{ t('loginModal.createNewIdentity') }}</span>
+                    <span>{{ t('loginModal.makeNewName') }}</span>
                 </div>
 
                 <input
                     v-model="newLabel"
                     type="text"
-                    :placeholder="t('loginModal.displayNameForTheNew')"
+                    :placeholder="t('loginModal.quick.name')"
                     class="modal-input"
                     @keydown.enter="createAndLogIn"
                 />
@@ -277,7 +286,7 @@ export default {
                     <button class="modal-btn modal-btn--secondary" @click="$emit('close')">{{ t('loginModal.cancel') }}</button>
                     <button v-if="purpose === 'publish'" class="modal-btn modal-btn--secondary login-modal-skip" @click="$emit('close'); $emit('skip')">{{ t('loginModal.publishUnsigned') }}</button>
                     <button class="modal-btn modal-btn--primary" :disabled="creating" @click="createAndLogIn">
-                        {{ creating ? t('loginModal.creating') : t('loginModal.createLogIn') }}
+                        {{ creating ? t('loginModal.creating') : t('loginModal.useThisName') }}
                     </button>
                 </div>
             </div>

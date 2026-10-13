@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8bcc959091ee56db -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 1aaeba5f85662d3b -->
 # 01 — Primeiros passos
 
 <!-- languages -->
@@ -120,24 +120,24 @@ escolher uma frase secreta logo de início, clique em **Protegê-la agora com
 uma frase secreta**. Um link para passear pergunta do mesmo jeito, com
 **Passear como …**.
 
-Você também pode
-entrar a qualquer momento:
-Clique em **Entrar** no canto superior direito. O ForkBuild não usa senhas
-nem contas centrais — em vez disso, **sua identidade é um par de chaves
-criptográficas guardado neste dispositivo**. A caixa de diálogo Entrar lista
-todas as identidades que este navegador já tem; clique em uma para usá-la,
-ou crie uma nova:
+Você também pode escolher um nome a qualquer momento: clique em
+**Escolher um nome** no canto superior direito, digite um e clique em
+**Continuar como …**. O ForkBuild não usa senhas nem contas centrais — em
+vez disso, **por trás do seu nome há um par de chaves criptográficas
+guardado neste dispositivo**, chamado identidade.
 
-1. Digite um **nome de exibição** — é o que as outras pessoas vão ver.
-2. Digite duas vezes uma **frase secreta** de pelo menos 8 caracteres. Ela
-   criptografa sua chave neste dispositivo, e não há como redefini-la, então
-   escolha uma que você vá guardar. (Para pular essa etapa, marque **Criar
-   sem frase secreta**; a chave fica então guardada sem criptografia neste
-   navegador.)
-3. Clique em **Criar e entrar**.
+Quando você tem um nome, o canto superior direito o mostra. Clique nele
+para ver **Meu avatar**, **Minhas identidades**, **Seus dados** e **Trocar
+de nome**, que lista todos os nomes que este navegador já tem (clique em um
+para usá-lo), cria um novo ou segue com **Seguir sem nome**. Criar um nome
+novo ali também pede duas vezes uma **frase secreta** de pelo menos 8
+caracteres. Ela criptografa sua chave neste dispositivo, e não há como
+redefinir, então escolha uma que você vá guardar. (Para pular, marque
+**Criar sem frase secreta**; a chave fica então guardada sem criptografia
+neste navegador.) Depois clique em **Usar este nome**.
 
-Pronto — você entrou, e tudo o que construir, publicar ou enviar é assinado
-com esta identidade.
+Tudo o que você construir, publicar ou enviar passa a ser assinado com esse
+nome.
 
 O que uma frase secreta protege, bloquear e desbloquear, e o backup da sua
 identidade estão em [Identidade e login](05-IdentityAndLogin.md).

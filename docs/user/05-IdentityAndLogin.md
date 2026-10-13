@@ -11,14 +11,20 @@ protecting, and backing up that identity.
 
 ## Creating an identity
 
-Click **Login** in the top bar. The dialog lists every identity this device
-already holds — click one to use it — or create a new one:
+With no name yet, click **Choose a name** in the top bar: type a name and
+click **Continue as …**, and an identity with that name is made, without a
+passphrase until you add one. To protect it straight away, click **Protect
+it with a passphrase now** instead.
 
-1. Type a **display name**. This is what other people see; you can have
-   several identities with different names.
+With a name, click it in the top bar, then **Switch name**. The dialog lists
+every identity this device already holds — click one to use it — or makes a
+new one:
+
+1. Type a **name**. This is what other people see; you can have several
+   identities with different names.
 2. Type a **passphrase** (at least 8 characters), then type it again to
    confirm it.
-3. Click **Create & Log In**.
+3. Click **Use this name**.
 
 This creates a **protected** identity (shown with a 🔒): the key is encrypted
 at rest and only decrypted, in memory, after you enter the passphrase.
@@ -44,10 +50,11 @@ question from whether you're logged in:
   still yourself, and you can still browse, build and save, but anything
   that needs a fresh signature (publishing, being discoverable,
   joining a lobby) fails with an "identity is locked"
-  message until you unlock. Click **Unlock** next to your name to enter
+  message until you unlock. Click your name, then **Unlock**, to enter
   your passphrase, then try again.
-- **Logged out** — you're no one; open **Login** to pick or unlock an
-  identity again.
+- **No name** — after **Switch name → Go on without a name** you're a
+  guest; **Choose a name** in the top bar picks or unlocks an identity
+  again.
 
 A vault locks automatically **15 minutes after you unlock it**, whether or
 not you're still using the app (it isn't an inactivity timer), or whenever

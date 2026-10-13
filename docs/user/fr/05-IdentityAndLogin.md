@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: a155256d8ce4d313 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 185649658a1144d2 -->
 # 05 — Identité et connexion
 
 <!-- languages -->
@@ -13,15 +13,22 @@ sauvegarder cette identité.
 
 ## Créer une identité
 
-Cliquez sur **Se connecter** dans la barre du haut. La boîte de dialogue
-liste toutes les identités que cet appareil détient déjà — cliquez sur
-l’une d’elles pour l’utiliser — ou créez-en une nouvelle :
+Sans nom, cliquez sur **Choisir un nom** dans la barre du haut : saisissez
+un nom et cliquez sur **Continuer en tant que …**, et une identité de ce nom
+est créée, sans phrase secrète jusqu’à ce que vous en ajoutiez une. Pour la
+protéger tout de suite, cliquez plutôt sur **La protéger maintenant par une
+phrase secrète**.
 
-1. Saisissez un **nom affiché**. C’est ce que voient les autres ; vous
-   pouvez avoir plusieurs identités avec des noms différents.
+Avec un nom, cliquez dessus dans la barre du haut, puis sur **Changer de
+nom**. La boîte de dialogue liste toutes les identités que cet appareil
+détient déjà — cliquez sur l’une d’elles pour l’utiliser — ou en crée une
+nouvelle :
+
+1. Saisissez un **nom**. C’est ce que voient les autres ; vous pouvez avoir
+   plusieurs identités avec des noms différents.
 2. Saisissez une **phrase secrète** (au moins 8 caractères), puis
    saisissez-la de nouveau pour la confirmer.
-3. Cliquez sur **Créer et se connecter**.
+3. Cliquez sur **Utiliser ce nom**.
 
 Cela crée une identité **protégée** (marquée d’un 🔒) : la clé est chiffrée
 au repos et n’est déchiffrée, en mémoire, qu’après la saisie de la phrase
@@ -52,10 +59,11 @@ connecté :
   construire et enregistrer, mais tout ce qui demande une nouvelle
   signature (publier, être découvrable, rejoindre un salon) échoue avec
   un message indiquant que l’identité est verrouillée jusqu’à ce que vous
-  la déverrouilliez. Cliquez sur **Déverrouiller** à côté de votre nom pour
+  la déverrouilliez. Cliquez sur votre nom, puis sur **Déverrouiller**, pour
   saisir votre phrase secrète, puis réessayez.
-- **Déconnecté** — vous n’êtes personne ; ouvrez **Se connecter** pour
-  choisir ou déverrouiller de nouveau une identité.
+- **Sans nom** — après **Changer de nom → Continuer sans nom**, vous êtes
+  un invité ; **Choisir un nom** dans la barre du haut choisit ou
+  déverrouille de nouveau une identité.
 
 Un coffre se verrouille automatiquement **15 minutes après son
 déverrouillage**, que vous utilisiez encore l’application ou non (ce

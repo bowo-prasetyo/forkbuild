@@ -136,6 +136,7 @@ old text is touched. Code and protocol documents keep their own terms.
 | **Publish** | distribute, announce, anchor | Going public. Distribute, announce and anchor are steps inside Publish, named only on the Publications page. |
 | **remix**, **make your own copy** | fork | "Fork" stays in the name, the tagline and developer documents. The name stays **ForkBuild**: the owner confirmed it on 2026-10-13. |
 | **structure** | blueprint, preassembled | A ready-made group of bricks in the Build Library. |
+| **Choose a name**, **Switch name**, your name | Login, Logout, log in, sign in | There is no account. The header shows **Choose a name** or the player's name, whose menu holds My Avatar, My Identities, Your Data and **Switch name** (another name, a new one, or **Go on without a name**). "Identity" stays on My Identities and in developer documents. |
 | **Advanced** | network | The menu group for everything a player doesn't need to build and share. |
 | **Build · Explore · Challenge · Walk** | Editor · Repository | The main menu. **Walk** opens this week's challenge plaza, the square the village of published builds grows round. |
 
