@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { ThreeBrickFactory, DEFAULT_COLOR } from './ThreeBrickFactory.js';
 import { doorSwingOffset } from '../core/DoorSwing.js';
 import { castShadows } from './ShadowRoles.js';
+import { applyBrickSurface, withBrickBounds } from './BrickSurfaceMaterial.js';
+import { brickSurfaceOf } from '../core/BrickSurface.js';
 
 // Edge length of the cube of space one batch covers.
 export const CHUNK_SIZE = 16;
@@ -10,8 +12,9 @@ const INITIAL_CAPACITY = 64;
 // Draws a World's bricks as instances rather than one mesh each. Bricks of
 // the same definition within the same CHUNK_SIZE cube of space share one
 // THREE.InstancedMesh (a "chunk"), so a scene costs one draw call per
-// chunk instead of one per brick, and all chunks share one material and,
-// per definition, one geometry shape. Chunks are spatial so that the
+// chunk instead of one per brick, and all chunks of one surface (masonry,
+// wood, tiles…; core/BrickSurface.js, renderer/BrickSurfaceMaterial.js)
+// share one material and, per definition, one geometry shape. Chunks are spatial so that the
 // renderer's frustum culling and the raycaster's bounding-sphere test can
 // skip whole regions at once: a large build stays cheap to draw and to
 // pick.
@@ -33,7 +36,9 @@ export class BrickInstanceRegistry {
         this._scene = scene;
         this._brickFactory = brickFactory;
         this._nightGlow = { value: 0 };
-        this._material = createInstancedBrickMaterial(this._nightGlow);
+        // surface -> material, made the first time a brick of it is drawn.
+        this._materials = new Map();
+        this._cutaway = null;
         // definitionId -> geometry every chunk of that definition clones.
         this._baseGeometries = new Map();
         // chunk key -> BrickChunk, and chunk mesh -> BrickChunk for picking.
@@ -55,7 +60,9 @@ export class BrickInstanceRegistry {
 
     // Lets every brick drawn here be cut away (renderer/CutawayClipping.js).
     useCutaway(cutawayClipping) {
-        if (cutawayClipping) cutawayClipping.apply(this._material);
+        if (!cutawayClipping) return;
+        this._cutaway = cutawayClipping;
+        for (const material of this._materials.values()) cutawayClipping.apply(material);
     }
 
     has(brickId) {
@@ -255,7 +262,7 @@ export class BrickInstanceRegistry {
         const key = chunkKeyOf(entry.visual);
         let chunk = this._chunks.get(key);
         if (!chunk) {
-            chunk = new BrickChunk(key, this._baseGeometry(entry.visual.definitionId), this._material);
+            chunk = new BrickChunk(key, this._baseGeometry(entry.visual.definitionId), this._materialFor(entry.visual));
             this._chunks.set(key, chunk);
             this._chunksByMesh.set(chunk.mesh, chunk);
             this._scene.add(chunk.mesh);
@@ -323,10 +330,22 @@ export class BrickInstanceRegistry {
         disposeMesh(chunk.mesh);
     }
 
+    // The material every chunk of this brick's surface shares.
+    _materialFor(visual) {
+        const surface = surfaceOfVisual(visual);
+        let material = this._materials.get(surface);
+        if (!material) {
+            material = applyBrickSurface(createInstancedBrickMaterial(this._nightGlow), surface);
+            if (this._cutaway) this._cutaway.apply(material);
+            this._materials.set(surface, material);
+        }
+        return material;
+    }
+
     _baseGeometry(definitionId) {
         let geometry = this._baseGeometries.get(definitionId);
         if (!geometry) {
-            geometry = this._brickFactory.createGeometry(definitionId);
+            geometry = withBrickBounds(this._brickFactory.createGeometry(definitionId));
             this._baseGeometries.set(definitionId, geometry);
         }
         return geometry;
@@ -451,8 +470,13 @@ function createInstancedBrickMaterial(nightGlow) {
     return material;
 }
 
+// A chunk holds one definition drawn with one surface (a cube's depends on its colour).
 function chunkKeyOf(visual) {
-    return `${visual.definitionId}|${Math.floor(visual.x / CHUNK_SIZE)},${Math.floor(visual.y / CHUNK_SIZE)},${Math.floor(visual.z / CHUNK_SIZE)}`;
+    return `${visual.definitionId}|${surfaceOfVisual(visual)}|${Math.floor(visual.x / CHUNK_SIZE)},${Math.floor(visual.y / CHUNK_SIZE)},${Math.floor(visual.z / CHUNK_SIZE)}`;
+}
+
+function surfaceOfVisual(visual) {
+    return brickSurfaceOf(visual.definitionId, colorOf(visual));
 }
 
 function colorOf(visual) {

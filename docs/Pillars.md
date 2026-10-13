@@ -175,8 +175,14 @@ near-black shell the app had until then.
 - A panel over the 3D view is warm paper, nearly opaque, so the world shows
   at its edges and the words don't fight it.
 
-Not decided yet: a texture or edge for the bricks themselves, music, and a
-dark version for those who ask for one.
+Bricks look like what they are made of (2026-10-13): a soft dark line
+along every brick's edges, a slight shade of its own, and the grain of its
+surface, masonry courses, plaster, wood, roof tiles, glass, leaves or rough
+stone (core/BrickSurface.js). A plain block is read by its colour: grass
+green is grass, pale sand smooth, dark brown timber, the rest laid in
+courses. The brick's colour still decides its colour.
+
+Not decided yet: music, and a dark version for those who ask for one.
 
 ## What we are not making
 

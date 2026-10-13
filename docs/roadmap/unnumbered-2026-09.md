@@ -6397,3 +6397,37 @@ served: building feels joyful, through a first ten minutes that never asks for a
   `LoginModalQuickStartBrowser` (the full form titled as its quick start); `WordsTable`.
 - Not done: the avatar's own colour on the chip (its profile is read only by My Avatar and World View today);
   "identity" on My Identities and in the passphrase hints.
+
+## Bricks that look like what they are made of (unnumbered, 2026-10-13)
+
+**Every brick now has a soft dark line along its edges, a slight shade of its own, and the grain of what it is made
+of.** A wall of flat-coloured boxes read as one panel, and a house as a toy; the third creative-direction audit of
+2026-10-12 (docs/reviews/CreativeDirection-2026-10-12c.md, finding 4) named the bricks themselves the biggest gain left
+for the look, and docs/Pillars.md's "Look" left them undecided. Pillar served: building feels joyful (what you build
+looks hand-built, and every screenshot and shared picture with it).
+
+- **What a brick is made of** (core/BrickSurface.js): bricks, arches, chimneys, hearths, pillars and steps are laid in
+  masonry courses; walls are plastered; beams, posts, logs, doors, shutters, fences and furniture are wood; roofs and
+  slopes are tiled; windows are glass; bushes, pines and lawns are leaves; the rock is rough stone; anything else
+  (plates, round bricks, the lantern, a community library's bricks) is plain. The plain blocks (cube, half cube, 2×2
+  block, slab) are read by their colour: the village's grass and leaf greens are grass, pale sand and plaster colours
+  are smooth, dark brown is timber, and the rest, the cube's own mint green included, is laid in courses. Each surface
+  has its roughness, so glass catches a highlight and stone none.
+- **Drawn by the shader** (renderer/BrickSurfaceMaterial.js): `withBrickBounds()` gives a geometry its bounding box as
+  two attributes; `applyBrickSurface()` patches a material to multiply its colour by an edge line (where a point is
+  near two of the box's faces), a per-brick shade from where it stands, and its surface's grain, all from the brick's
+  object-space position: no image files, no reliance on UVs, the same look however a brick is turned or placed. The
+  brick's colour still decides its colour.
+- **Everywhere bricks are drawn**: instanced chunks are keyed by surface too, one material per surface (a cube painted
+  grass green moves to the grass material), the cutaway reaching each; standalone meshes (plaza exhibits, placements,
+  previews, thumbnails, the Home turntable) get theirs from ThreeBrickFactory; `makeNightGlowing()` now goes on top of
+  a material's surface instead of replacing it. Exported 3D models take the bare geometry and are unchanged.
+- Docs: Pillars' "Look", docs/Architecture.md and the README.
+- Tests: `BrickSurface` (every core brick has a surface and a roughness; the plain blocks by colour, the cube's own
+  green not grass; bounds on a geometry; a material's surface, its own program, under the night glow; standalone and
+  instanced bricks drawn with theirs, one draw per kind and surface, a recoloured cube changing material, the cutaway
+  on every surface, an export's geometry bare); `BrickSurfaceBrowser` (real WebGL: a brick's edge drawn darker than its
+  face, its grain close to its colour, and every surface's shader compiling and linking, instanced and standalone,
+  beside the night glow).
+- Not done: studs or bevelled geometry; a per-brick choice of surface (it follows the brick's kind and, for the plain
+  blocks, its colour); music.

@@ -61,7 +61,9 @@ longer-term aim.
 - Fifty-nine bricks, from half cubes, round bricks and logs to gable and cone
   roofs, framed and round windows, fences, benches, bushes and pine trees,
   furniture for inside (a table, a bed, a hearth and a shelf), and a lantern
-  that lights up at night.
+  that lights up at night. Each looks like what it is made of: masonry
+  courses, plaster, wood grain, roof tiles, glass or leaves, with a soft
+  line along its edges, in whatever colour you paint it.
 - A Build Library of bricks and ready-made structures, a personal blueprint
   library, structure placements, and document export/import.
 - Save, autosave with crash recovery, and publishing to an immutable,

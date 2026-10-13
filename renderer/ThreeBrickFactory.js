@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { DEFAULT_STAIR_STEP_COUNT } from '../core/WalkableSurface.js';
 import { ARCH_OPENINGS } from '../core/BrickPassage.js';
+import { brickSurfaceOf } from '../core/BrickSurface.js';
+import { applyBrickSurface, withBrickBounds } from './BrickSurfaceMaterial.js';
 
 // The renderer-side counterpart to core/BrickRegistry: it knows nothing
 // about what a brick *means*, only how to turn one specific definitionId
@@ -534,9 +536,11 @@ export class ThreeBrickFactory {
     // BrickDefinition/Brick color (renderer/BrickRenderer.js,
     // renderer/PreviewRenderer.js) pass it explicitly instead of leaving
     // every brick the same hardcoded shade.
+    // Drawn with its surface (renderer/BrickSurfaceMaterial.js), as the
+    // instanced bricks are.
     createMesh(definitionId, color = DEFAULT_COLOR) {
-        const material = new THREE.MeshStandardMaterial({ color });
-        return new THREE.Mesh(this.createGeometry(definitionId), material);
+        const material = applyBrickSurface(new THREE.MeshStandardMaterial({ color }), brickSurfaceOf(definitionId, color));
+        return new THREE.Mesh(withBrickBounds(this.createGeometry(definitionId)), material);
     }
 
     // A new geometry for this id, centered at the origin, with no color:

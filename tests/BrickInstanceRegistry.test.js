@@ -74,7 +74,7 @@ function instanceState(registry, brickId) {
     const scene = fakeScene();
     const registry = new BrickInstanceRegistry(scene);
     registry.add('a', 'doc', 'b', cube(0, 0.5, 0, { color: 0xff0000 }));
-    registry.add('b', 'doc', 'b', cube(1, 0.5, 0, { color: 0x00ff00 }));
+    registry.add('b', 'doc', 'b', cube(1, 0.5, 0, { color: 0xff00ff }));
     registry.add('c', 'doc', 'b', cube(2, 0.5, 0, { color: 0x0000ff }));
     registry.setHighlight('c', 0x4488ff);
     registry.remove('a');
