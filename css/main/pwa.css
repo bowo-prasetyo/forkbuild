@@ -9,9 +9,9 @@
     justify-content: space-between;
     gap: 0.5rem 1rem;
     padding: 0.55rem 0.9rem;
-    border-bottom: 1px solid #99d6b7;
-    background: #ddf3e8;
-    color: #29704a;
+    border-bottom: 1px solid var(--edge-green);
+    background: var(--tint-green);
+    color: var(--ink-green);
     font-size: 0.88rem;
 }
 
@@ -35,7 +35,7 @@
 
 .install-app--button .install-app-button:hover,
 .install-app--button .install-app-button:focus-visible {
-    background: #ddf3e8;
+    background: var(--tint-green);
 }
 
 /* In the More menu it reads as one more of its items. */

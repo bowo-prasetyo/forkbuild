@@ -80,6 +80,13 @@ export default Object.freeze({
     'language.pseudoNote': '의사 로캘은 악센트가 붙고 길이가 늘어난 괄호 속 영어입니다. 그대로 일반 텍스트로 보이는 부분은 아직 번역 준비가 되지 않은 것입니다.',
     'language.helpTranslate': 'ForkBuild를 다른 언어로 번역하는 데 도움을 주려면 소스 코드의 docs/Translating.md를 참고하세요.',
     'language.unavailable': '여기서는 언어 설정을 사용할 수 없습니다.',
+    'look.label': '모양',
+    'look.auto': '자동',
+    'look.light': '밝게',
+    'look.dark': '어둡게',
+    'look.autoHint': '이 기기의 밝은 모드나 어두운 모드를 따릅니다',
+    'look.lightHint': '낮의 마을: 따뜻한 종이와 짙은 잉크',
+    'look.darkHint': '밤의 마을: 등불이 비친 나무와 크림색 글씨',
 
     // 내 데이터 페이지의 일일 방문자 수(ui/components/VisitorCountSetting.js).
     'visitorCount.title': '일일 방문자 수',

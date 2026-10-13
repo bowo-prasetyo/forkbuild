@@ -77,6 +77,13 @@ export default Object.freeze({
     'language.pseudoNote': '疑似ロケールは、アクセント付きの文字に置き換え、長さを水増しして括弧で囲んだ英語です。普通の文字のまま表示されるテキストは、まだ翻訳の準備ができていません。',
     'language.helpTranslate': 'ForkBuildを他の言語に翻訳するのを手伝うには、ソースコードの docs/Translating.md をご覧ください。',
     'language.unavailable': 'ここでは言語設定を利用できません。',
+    'look.label': '見た目',
+    'look.auto': '自動',
+    'look.light': 'ライト',
+    'look.dark': 'ダーク',
+    'look.autoHint': 'このデバイスのライト／ダークモードに合わせます',
+    'look.lightHint': '昼の村：温かい紙と濃いインク',
+    'look.darkHint': '夜の村：ランプに照らされた木とクリーム色の文字',
 
     // 「あなたのデータ」ページの1日の訪問者数（ui/components/VisitorCountSetting.js）。
     'visitorCount.title': '1日の訪問者数',

@@ -81,6 +81,13 @@ export default Object.freeze({
     'language.pseudoNote': 'La pseudolocalización es inglés con letras acentuadas, alargado y entre corchetes. El texto que todavía aparece normal aún no está preparado para traducirse.',
     'language.helpTranslate': 'Para ayudar a traducir ForkBuild a otro idioma, consulte docs/Translating.md en el código fuente.',
     'language.unavailable': 'La configuración de idioma no está disponible aquí.',
+    'look.label': 'Aspecto',
+    'look.auto': 'Auto',
+    'look.light': 'Claro',
+    'look.dark': 'Oscuro',
+    'look.autoHint': 'Seguir el modo claro u oscuro de este dispositivo',
+    'look.lightHint': 'El pueblo de día: papel cálido y tinta oscura',
+    'look.darkHint': 'El pueblo de noche: madera a la luz de los faroles y tinta crema',
 
     // El recuento diario de visitantes en la página Sus datos (ui/components/VisitorCountSetting.js).
     'visitorCount.title': 'Recuento diario de visitantes',

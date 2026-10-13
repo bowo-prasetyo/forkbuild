@@ -10,7 +10,8 @@
     <!-- What search engines and link previews show for the site (docs/Deployment.md, "Link previews").
          og:url and og:image are the official site's; a copy hosted elsewhere can point them at itself. -->
     <meta name="description" content="ForkBuild is a free, open-source 3D building game in your browser. Snap bricks into houses and villages, remix other people's builds, and explore a shared world with friends. No account needed.">
-    <meta name="theme-color" content="#f6efe2">
+    <meta name="theme-color" content="#f6efe2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1712" media="(prefers-color-scheme: dark)">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="ForkBuild">
     <meta property="og:title" content="ForkBuild: build in 3D, right in your browser">
@@ -49,11 +50,13 @@
     <link rel="modulepreload" href="storage/openBrowserStorage.js">
     <link rel="modulepreload" href="storage/LocalStorageProvider.js">
     <link rel="modulepreload" href="application/settings/LanguageSettingsStore.js">
+    <link rel="modulepreload" href="application/settings/LookSettingsStore.js">
     <link rel="modulepreload" href="application/settings/VisitorCountSettingsStore.js">
     <link rel="modulepreload" href="application/settings/CountDailyVisit.js">
     <link rel="modulepreload" href="application/settings/CountLaunchChannel.js">
     <link rel="modulepreload" href="core/LaunchChannel.js">
     <link rel="modulepreload" href="ui/i18n/i18n.js">
+    <link rel="modulepreload" href="ui/look.js">
     <link rel="modulepreload" href="ui/i18n/locales.js">
     <link rel="modulepreload" href="ui/importWithRetry.js">
     <link rel="modulepreload" href="ui/counterHit.js">
@@ -154,6 +157,7 @@
     <link rel="modulepreload" href="storage/StorageFullError.js">
     <link rel="modulepreload" href="storage/StorageEntryNotLoadedError.js">
     <link rel="modulepreload" href="core/LanguageSettings.js">
+    <link rel="modulepreload" href="core/LookSettings.js">
     <link rel="modulepreload" href="core/VisitorCount.js">
     <link rel="modulepreload" href="ui/i18n/Translator.js">
     <link rel="modulepreload" href="core/Message.js">
@@ -168,6 +172,7 @@
     <link rel="modulepreload" href="ui/components/PageLoadFailureNotice.js">
     <link rel="modulepreload" href="ui/components/pwa/AppUpdateBanner.js">
     <link rel="modulepreload" href="ui/components/pwa/InstallAppButton.js">
+    <link rel="modulepreload" href="ui/components/LookChoice.js">
     <link rel="modulepreload" href="application/editor/CreatePreviewUseCase.js">
     <link rel="modulepreload" href="ui/router/pageServiceGroups.js">
     <link rel="modulepreload" href="ui/pageLoadFailure.js">

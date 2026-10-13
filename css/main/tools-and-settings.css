@@ -48,7 +48,7 @@
 
 .placement-hint {
     margin: 0.5rem 0 0;
-    color: #6b3880;
+    color: var(--ink-purple);
     font-size: 0.8rem;
     font-style: italic;
 }
@@ -72,7 +72,7 @@
     margin-top: 0.75rem;
 }
 .world-view-dirty {
-    color: #825617;
+    color: var(--ink-amber);
     font-size: 0.8rem;
 }
 .world-view-dirty--clean {
@@ -87,7 +87,7 @@
     background: #9b59b6;
 }
 .world-item-dirty {
-    color: #825617;
+    color: var(--ink-amber);
     flex-shrink: 0;
     margin-left: 0.35rem;
 }
@@ -198,8 +198,8 @@
     background: var(--surface-pressed);
 }
 .group-action-btn--danger {
-    border-color: #c0392b;
-    color: #822117;
+    border-color: var(--edge-red);
+    color: var(--ink-red);
 }
 /* Advanced selection (0.1.45) */
 .viewport,
@@ -338,7 +338,7 @@
 
 .network-settings-link:hover {
     border-color: var(--accent);
-    background: #f5f0e5;
+    background: var(--tint-amber);
 }
 
 .network-settings-link-title {
@@ -508,7 +508,7 @@
     color: var(--ink-soft);
     margin-top: 0.8rem;
     padding-top: 0.6rem;
-    border-top: 1px solid rgba(96, 72, 40, 0.08);
+    border-top: 1px solid rgba(var(--edge-rgb), 0.08);
 }
 
 .world-view-advanced-hint {

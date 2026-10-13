@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 1aaeba5f85662d3b -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: a2f8d3c2e13430e9 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -59,7 +59,7 @@ Die Leiste oben ist immer sichtbar:
 
 **Mehr** öffnet den Rest, in vier Gruppen: **Persönlich** (Mein Avatar, Meine Identitäten,
 Ihre Daten), **Menschen** (Peers, Gefolgt, Unterhaltungen), **Erweitert**
-(Veröffentlichungen, Netzwerkeinstellungen) und **App** (Sprache, Über und **ForkBuild installieren**, wo der Browser es installieren kann). Auf einem Telefon zeigt
+(Veröffentlichungen, Netzwerkeinstellungen) und **App** (Sprache, Aussehen, Über und **ForkBuild installieren**, wo der Browser es installieren kann). Auf einem Telefon zeigt
 **Menü** alle auf einmal.
 
 - **Mein Avatar** — wie andere Sie in der Weltansicht sehen, siehe
@@ -85,6 +85,9 @@ Ihre Daten), **Menschen** (Peers, Gefolgt, Unterhaltungen), **Erweitert**
   ForkBuild gibt es auf Englisch, Deutsch, Spanisch, Französisch, Indonesisch (Bahasa Indonesia),
   Japanisch, Koreanisch und brasilianischem Portugiesisch (siehe [Translating ForkBuild](../../Translating.md)
   (Englisch)).
+- **Aussehen** — **Auto**, **Hell** oder **Dunkel**, direkt im Menü. Auto folgt
+  dem hellen oder dunklen Modus Ihres Geräts; Hell ist das Dorf am Tag, Dunkel
+  dasselbe Dorf bei Nacht. Es wechselt sofort und wird auf diesem Gerät gespeichert.
 - **Über** — Versionsinformationen
 
 ## ForkBuild installieren

@@ -3,6 +3,11 @@
    a meadow green for the one thing to press. Every colour the stylesheets
    share is named here; use these names in new rules rather than new colours.
 
+   The same village after dark, below: lamp-lit wood and cream ink, for a
+   device set to dark mode, or anyone who picks Dark under More → App
+   (ui/look.js puts data-look on <html>: "light" or "dark" to choose, absent
+   to follow the device). tests/VillageLook.test.js checks both.
+
    Contrast, against --paper: --ink 13:1, --ink-soft 9.8:1, --ink-muted 6.8:1,
    --ink-subtle 5.2:1, --ink-faint 4.5:1, --accent-ink 5.4:1. White on
    --accent 4.9:1, on --accent-hover 5.6:1. */
@@ -17,8 +22,13 @@
     --surface-raised: #f1e8d8;
     --surface-hover: #ebdfca;
     --surface-pressed: #e2d3b8;
-    /* A panel laid over the 3D view. */
-    --overlay: rgba(253, 248, 238, 0.93);
+    /* A panel laid over the 3D view, and the same paper at other
+       strengths: rgba(var(--overlay-rgb), 0.68). */
+    --overlay-rgb: 253, 248, 238;
+    --overlay: rgba(var(--overlay-rgb), 0.93);
+    /* Faint lines and shadows of any strength: rgba(var(--edge-rgb), 0.3). */
+    --edge-rgb: 96, 72, 40;
+    --shade-rgb: 74, 52, 24;
 
     --line-soft: #eee4d3;
     --line: #e3d6c0;
@@ -38,9 +48,140 @@
     --accent-ink: #2b6e45;
     --accent-tint: #e2f0e5;
 
-    --shadow: 0 4px 16px rgba(74, 52, 24, 0.14);
+    /* What a message is about, as words, a soft ground and a border:
+       amber for a warning or something pending, red for an error or a
+       loss, green for done, blue for information; purple, indigo, teal and
+       rose name kinds of things (a region, a route, a landmark). */
+    --ink-amber: #7f5518;
+    --ink-red: #822117;
+    --ink-green: #2a6f47;
+    --ink-blue: #1f4f80;
+    --ink-purple: #6b3880;
+    --ink-indigo: #251782;
+    --ink-teal: #1d6a64;
+    --ink-rose: #821741;
+    --tint-amber: #f5eedb;
+    --tint-red: #f5e3db;
+    --tint-green: #ddf3e8;
+    --tint-blue: #deeaf3;
+    --tint-purple: #e8dff1;
+    --edge-amber: #d29a46;
+    --edge-red: #d77070;
+    --edge-green: #9fd2b6;
+    --edge-blue: #8fbcd8;
+    --edge-purple: #9b59b6;
+
+    --shadow: 0 4px 16px rgba(var(--shade-rgb), 0.14);
 
     --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* After dark: following the device unless Light was chosen, or chosen.
+   The two blocks are the same; tests/VillageLook.test.js keeps them so. */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-look="light"]) {
+        color-scheme: dark;
+
+        --paper: #1c1712;
+        --surface-low: #211b15;
+        --surface: #28211a;
+        --surface-raised: #332a20;
+        --surface-hover: #3c3226;
+        --surface-pressed: #463a2c;
+        --overlay-rgb: 36, 30, 23;
+        --edge-rgb: 232, 214, 186;
+        --shade-rgb: 0, 0, 0;
+
+        --line-soft: #2c241c;
+        --line: #3a3025;
+        --line-strong: #4b3f31;
+        --line-bold: #66574a;
+
+        --ink-strong: #fbf4e8;
+        --ink: #f0e6d5;
+        --ink-soft: #dccfba;
+        --ink-muted: #c4b59f;
+        --ink-subtle: #af9f88;
+        --ink-faint: #a39279;
+
+        --accent: #357f52;
+        --accent-hover: #2f7549;
+        --accent-ink: #7fcf9d;
+        --accent-tint: #1d3527;
+
+        --ink-amber: #e3b866;
+        --ink-red: #f29484;
+        --ink-green: #7fcf9d;
+        --ink-blue: #91bdea;
+        --ink-purple: #cfa2e6;
+        --ink-indigo: #b5acff;
+        --ink-teal: #6ccfc5;
+        --ink-rose: #f094b8;
+        --tint-amber: #362b19;
+        --tint-red: #3a221d;
+        --tint-green: #1d3527;
+        --tint-blue: #1c2c3b;
+        --tint-purple: #2d2338;
+        --edge-amber: #8f6b2c;
+        --edge-red: #9a4a42;
+        --edge-green: #3d7a58;
+        --edge-blue: #3f6c90;
+        --edge-purple: #7d4c94;
+
+        --shadow: 0 4px 16px rgba(var(--shade-rgb), 0.45);
+    }
+}
+
+:root[data-look="dark"] {
+    color-scheme: dark;
+
+    --paper: #1c1712;
+    --surface-low: #211b15;
+    --surface: #28211a;
+    --surface-raised: #332a20;
+    --surface-hover: #3c3226;
+    --surface-pressed: #463a2c;
+    --overlay-rgb: 36, 30, 23;
+    --edge-rgb: 232, 214, 186;
+    --shade-rgb: 0, 0, 0;
+
+    --line-soft: #2c241c;
+    --line: #3a3025;
+    --line-strong: #4b3f31;
+    --line-bold: #66574a;
+
+    --ink-strong: #fbf4e8;
+    --ink: #f0e6d5;
+    --ink-soft: #dccfba;
+    --ink-muted: #c4b59f;
+    --ink-subtle: #af9f88;
+    --ink-faint: #a39279;
+
+    --accent: #357f52;
+    --accent-hover: #2f7549;
+    --accent-ink: #7fcf9d;
+    --accent-tint: #1d3527;
+
+    --ink-amber: #e3b866;
+    --ink-red: #f29484;
+    --ink-green: #7fcf9d;
+    --ink-blue: #91bdea;
+    --ink-purple: #cfa2e6;
+    --ink-indigo: #b5acff;
+    --ink-teal: #6ccfc5;
+    --ink-rose: #f094b8;
+    --tint-amber: #362b19;
+    --tint-red: #3a221d;
+    --tint-green: #1d3527;
+    --tint-blue: #1c2c3b;
+    --tint-purple: #2d2338;
+    --edge-amber: #8f6b2c;
+    --edge-red: #9a4a42;
+    --edge-green: #3d7a58;
+    --edge-blue: #3f6c90;
+    --edge-purple: #7d4c94;
+
+    --shadow: 0 4px 16px rgba(var(--shade-rgb), 0.45);
 }
 
 /* A link the stylesheets don't style otherwise reads as the village's green. */

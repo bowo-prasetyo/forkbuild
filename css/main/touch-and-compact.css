@@ -47,8 +47,8 @@
     width: 128px;
     height: 128px;
     border-radius: 50%;
-    background: rgba(253, 248, 238, 0.53);
-    border: 2px solid rgba(96, 72, 40, 0.35);
+    background: rgba(var(--overlay-rgb), 0.53);
+    border: 2px solid rgba(var(--edge-rgb), 0.35);
 }
 
 .touch-pad-joystick-thumb {
@@ -60,7 +60,7 @@
     margin: -28px 0 0 -28px;
     border-radius: 50%;
     background: rgba(76, 175, 125, 0.75);
-    border: 2px solid rgba(96, 72, 40, 0.6);
+    border: 2px solid rgba(var(--edge-rgb), 0.6);
     pointer-events: none;
 }
 
@@ -78,8 +78,8 @@
     min-height: 56px;
     padding: 0 0.75rem;
     border-radius: 28px;
-    border: 2px solid rgba(96, 72, 40, 0.35);
-    background: rgba(253, 248, 238, 0.68);
+    border: 2px solid rgba(var(--edge-rgb), 0.35);
+    background: rgba(var(--overlay-rgb), 0.68);
     color: var(--ink-strong);
     font-size: 0.9rem;
     font-weight: 600;
@@ -109,7 +109,7 @@
 
 .touch-pad-btn--active {
     background: rgba(58, 110, 165, 0.85);
-    border-color: rgba(96, 72, 40, 0.6);
+    border-color: rgba(var(--edge-rgb), 0.6);
 }
 
 .touch-pad-btn--primary {
@@ -125,7 +125,7 @@
     left: 1rem;
     bottom: calc(128px + 2rem + env(safe-area-inset-bottom, 0px));
     z-index: 30;
-    background: rgba(253, 248, 238, 0.78);
+    background: rgba(var(--overlay-rgb), 0.78);
     color: var(--ink);
     border: 1px solid var(--line-strong);
 }
@@ -145,7 +145,7 @@
     overflow-x: auto;
     padding: 0.3rem;
     border-radius: 8px;
-    background: rgba(253, 248, 238, 0.93);
+    background: rgba(var(--overlay-rgb), 0.93);
     border: 1px solid var(--line);
 }
 
@@ -323,7 +323,7 @@
 
     .world-view-overlay--collapsed .world-view-panel-toggle {
         margin-bottom: 0;
-        background: rgba(253, 248, 238, 0.93);
+        background: rgba(var(--overlay-rgb), 0.93);
         color: var(--ink);
         border: 1px solid var(--line-strong);
     }
@@ -364,7 +364,7 @@
         z-index: 30;
         /* Leaves room for the Hide Tools button at the top right. */
         width: min(320px, calc(100% - 7rem));
-        box-shadow: 4px 0 16px rgba(74, 52, 24, 0.23);
+        box-shadow: 4px 0 16px rgba(var(--shade-rgb), 0.23);
     }
 
     /* Top right, so the open drawer never covers the button that closes it. */
@@ -374,7 +374,7 @@
         top: 0.5rem;
         right: 0.5rem;
         z-index: 25;
-        background: rgba(253, 248, 238, 0.93);
+        background: rgba(var(--overlay-rgb), 0.93);
         color: var(--ink);
         border: 1px solid var(--line-strong);
     }

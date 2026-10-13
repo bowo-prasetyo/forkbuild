@@ -51,7 +51,7 @@ The bar at the top is always visible:
 
 **More** opens the rest, in four groups: **You** (My Avatar, My Identities,
 Your Data), **People** (Peers, Following, Conversations), **Advanced**
-(Publications, Network Settings) and **App** (Language, About, and
+(Publications, Network Settings) and **App** (Language, Look, About, and
 **Install ForkBuild** where the browser can install it). On a phone,
 **Menu** shows them all at once.
 
@@ -73,6 +73,9 @@ Your Data), **People** (Peers, Following, Conversations), **Advanced**
   your browser's languages until you choose one; saving reloads the page, so
   save your work first. ForkBuild comes in English, German, Spanish,
   French, Bahasa Indonesia, Japanese, Korean and Brazilian Portuguese (see [Translating ForkBuild](../Translating.md)).
+- **Look** — **Auto**, **Light** or **Dark**, right in the menu. Auto follows
+  your device's light or dark mode; Light is the village by day, Dark the
+  same village after dark. It changes at once and is kept on this device.
 - **About** — version info
 
 ## Installing ForkBuild

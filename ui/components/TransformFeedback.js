@@ -120,7 +120,7 @@ export default {
                 minWidth: '150px'
             }"
         >
-            <div :style="{ color: invalid ? '#821717' : 'var(--accent-ink)', fontWeight: '600', marginBottom: '2px' }">{{ title }}</div>
+            <div :style="{ color: invalid ? 'var(--ink-red)' : 'var(--accent-ink)', fontWeight: '600', marginBottom: '2px' }">{{ title }}</div>
             <div v-for="(line, index) in lines" :key="index" :style="{ color: 'var(--ink-soft)' }">{{ line }}</div>
         </div>
     `

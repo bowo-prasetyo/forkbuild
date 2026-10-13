@@ -113,7 +113,7 @@
 }
 
 .toolbar-dirty {
-    color: #825617;
+    color: var(--ink-amber);
     font-size: 0.8rem;
 }
 
@@ -170,14 +170,14 @@
     padding: 0.3rem 0.8rem;
     background: transparent;
     color: var(--accent-ink);
-    border: 1px solid #9bd4b8;
+    border: 1px solid var(--edge-green);
     border-radius: 4px;
     font-size: 0.8rem;
     cursor: pointer;
 }
 
 .toolbar-save-return:hover {
-    background: #dff1e9;
+    background: var(--tint-green);
 }
 
 /* Hardening: Recent Documents — a dropdown instead of an
@@ -237,7 +237,7 @@
     background: var(--surface-low);
     border: 1px solid var(--line);
     border-radius: 6px;
-    box-shadow: 0 12px 32px rgba(74, 52, 24, 0.23);
+    box-shadow: 0 12px 32px rgba(var(--shade-rgb), 0.23);
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
@@ -431,7 +431,7 @@
 
 .village-palette-swatch:hover,
 .village-palette-swatch:focus-visible {
-    outline: 2px solid #9ad0e6;
+    outline: 2px solid var(--edge-blue);
     outline-offset: 1px;
 }
 
@@ -569,7 +569,7 @@
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(74, 52, 24, 0.18);
+    box-shadow: 0 4px 12px rgba(var(--shade-rgb), 0.18);
 }
 
 /* Every action inside the menu (Fork, and — for a personal Structure —
@@ -736,7 +736,7 @@
 .build-library-preview-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: rgba(96, 72, 40, 0.6);
+    color: rgba(var(--edge-rgb), 0.6);
 }
 
 /* 0.6.4 — Blueprint Discovery, Search & Library Organization. The
@@ -864,7 +864,7 @@
     background: var(--surface-low);
     border: 1px solid var(--line);
     border-radius: 6px;
-    box-shadow: 0 12px 32px rgba(74, 52, 24, 0.23);
+    box-shadow: 0 12px 32px rgba(var(--shade-rgb), 0.23);
     padding: 0.35rem;
     display: flex;
     flex-direction: column;
@@ -883,7 +883,7 @@
     top: 1rem;
     left: 1rem;
     z-index: 14;
-    background: rgba(253, 248, 238, 0.93);
+    background: rgba(var(--overlay-rgb), 0.93);
     color: var(--ink);
     border: 1px solid var(--line-strong);
 }

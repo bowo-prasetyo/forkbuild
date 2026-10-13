@@ -79,6 +79,13 @@ export default Object.freeze({
     'language.pseudoNote': 'The pseudo-locale is English with accented letters, padded and bracketed. Text that still appears plain has not been prepared for translation yet.',
     'language.helpTranslate': 'To help translate ForkBuild into another language, see docs/Translating.md in the source code.',
     'language.unavailable': 'The language setting is unavailable here.',
+    'look.label': 'Look',
+    'look.auto': 'Auto',
+    'look.light': 'Light',
+    'look.dark': 'Dark',
+    'look.autoHint': 'Follow this device’s light or dark mode',
+    'look.lightHint': 'The village by day: warm paper and dark ink',
+    'look.darkHint': 'The village after dark: lamp-lit wood and cream ink',
 
     // The daily visitor count on the Your Data page (ui/components/VisitorCountSetting.js).
     'visitorCount.title': 'Daily visitor count',

@@ -335,12 +335,12 @@
 
 .peer-badge--pending {
     background: rgba(230, 180, 80, 0.15);
-    color: #825e17;
+    color: var(--ink-amber);
 }
 
 .peer-badge--failed {
     background: rgba(224, 90, 90, 0.15);
-    color: #811818;
+    color: var(--ink-red);
 }
 
 .peer-alias-field {
@@ -487,7 +487,7 @@
 .call-btn--end {
     background: rgba(224, 90, 90, 0.18);
     border-color: rgba(224, 90, 90, 0.4);
-    color: #811818;
+    color: var(--ink-red);
 }
 
 /* 0.2.75 — Voice UX & Device Controls. Reuses the .call-bar/.action-btn
@@ -497,7 +497,7 @@
     font-size: 0.8rem;
     padding: 0.3rem 0.5rem;
     border-radius: 6px;
-    border: 1px solid rgba(96, 72, 40, 0.15);
+    border: 1px solid rgba(var(--edge-rgb), 0.15);
     background: var(--surface-low);
     color: inherit;
     max-width: 11rem;
@@ -505,7 +505,7 @@
 
 .call-bar-note {
     font-size: 0.8rem;
-    color: #9a7c1e;
+    color: var(--ink-amber);
     margin-top: 0.4rem;
 }
 
@@ -535,7 +535,7 @@
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
     background: rgba(90, 140, 224, 0.18);
-    color: #173982;
+    color: var(--ink-blue);
     white-space: nowrap;
 }
 
@@ -544,7 +544,7 @@
     border: none;
     padding: 0;
     margin-left: 0.5rem;
-    color: #173982;
+    color: var(--ink-blue);
     font-size: 0.78rem;
     cursor: pointer;
     text-decoration: underline;
@@ -609,6 +609,6 @@
 }
 
 .structure-instance-btn--danger:hover {
-    border-color: #e05252;
+    border-color: var(--edge-red);
     color: var(--ink-strong);
 }

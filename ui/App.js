@@ -7,6 +7,7 @@ import NotificationHistoryPanel from './components/NotificationHistoryPanel.js';
 import PageLoadFailureNotice from './components/PageLoadFailureNotice.js';
 import AppUpdateBanner from './components/pwa/AppUpdateBanner.js';
 import InstallAppButton from './components/pwa/InstallAppButton.js';
+import LookChoice from './components/LookChoice.js';
 import DeviceNotificationSetting from './components/DeviceNotificationSetting.js';
 import { describeNotification } from './notifications/notificationText.js';
 import { CreatePreviewUseCase } from '../application/editor/CreatePreviewUseCase.js';
@@ -14,7 +15,7 @@ import { t } from './i18n/i18n.js';
 
 export default {
     name: 'App',
-    components: { UserWidget, ExperimentalBanner, BackupReminderBanner, NotificationHistoryPanel, PageLoadFailureNotice, AppUpdateBanner, InstallAppButton, DeviceNotificationSetting },
+    components: { UserWidget, ExperimentalBanner, BackupReminderBanner, NotificationHistoryPanel, PageLoadFailureNotice, AppUpdateBanner, InstallAppButton, DeviceNotificationSetting, LookChoice },
     // 0.2.32: one app-wide PreviewService, provided here (same
     // provide/inject convention LoginModal's identityUseCase already
     // uses) so its cache and generation queue survive navigating
@@ -160,6 +161,7 @@ export default {
                                 <div class="app-nav-group" role="group" :aria-label="t('app.nav.group.app')">
                                     <span class="app-nav-group-label" aria-hidden="true">{{ t('app.nav.group.app') }}</span>
                                     <router-link to="/settings/language" class="app-nav-link">{{ t('app.nav.language') }}</router-link>
+                                    <LookChoice />
                                     <router-link to="/about" class="app-nav-link">{{ t('app.nav.about') }}</router-link>
                                     <InstallAppButton variant="link" />
                                 </div>

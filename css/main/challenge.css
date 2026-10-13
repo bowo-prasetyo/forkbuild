@@ -5,9 +5,9 @@
 .challenge-card,
 .challenge-header {
     padding: 1.5rem 1.75rem;
-    border: 1px solid #a3ccb1;
+    border: 1px solid var(--edge-green);
     border-radius: 12px;
-    background: linear-gradient(135deg, #dff1e6 0%, var(--surface-low) 70%);
+    background: linear-gradient(135deg, var(--tint-green) 0%, var(--surface-low) 70%);
 }
 
 .challenge-card {
@@ -25,14 +25,14 @@
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #2a6f47;
+    color: var(--ink-green);
 }
 
 .challenge-card-time {
     padding: 0.1rem 0.6rem;
     border-radius: 999px;
-    background: #def2e6;
-    color: #1e7b45;
+    background: var(--tint-green);
+    color: var(--ink-green);
     font-weight: 600;
     letter-spacing: normal;
     text-transform: none;
@@ -62,10 +62,10 @@
     margin: 0 0 0.5rem;
     max-width: 46rem;
     padding: 0.4rem 0.6rem;
-    border-left: 3px solid #e0a040;
+    border-left: 3px solid var(--edge-amber);
     background: rgba(224, 160, 64, 0.1);
     line-height: 1.45;
-    color: #7c541d;
+    color: var(--ink-amber);
 }
 
 .challenge-dates {
@@ -76,7 +76,7 @@
 .challenge-card-tag {
     margin: 0 0 1rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    color: #2a6f47;
+    color: var(--ink-green);
     overflow-wrap: anywhere;
 }
 
@@ -136,8 +136,8 @@
 
 .new-document-challenge {
     margin-bottom: 0.5rem;
-    border-color: #a3ccb1;
-    background: linear-gradient(135deg, #dff1e6 0%, var(--surface-low) 70%);
+    border-color: var(--edge-green);
+    background: linear-gradient(135deg, var(--tint-green) 0%, var(--surface-low) 70%);
 }
 
 @media (max-width: 640px) {

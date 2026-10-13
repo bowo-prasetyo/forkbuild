@@ -23,14 +23,14 @@
     background: transparent;
     border: 1px dashed var(--line-strong);
     border-radius: 3px;
-    color: #6b3880;
+    color: var(--ink-purple);
     font-size: 0.75rem;
     cursor: pointer;
 }
 
 .structure-instance-edit-source:hover {
-    background: #e8dff1;
-    border-color: #9b59b6;
+    background: var(--tint-purple);
+    border-color: var(--edge-purple);
     color: var(--ink-strong);
 }
 
@@ -83,7 +83,7 @@
    hook, a "what happens next" hint line one step quieter than the
    position readout above it. */
 .selection-inspector-next {
-    color: #486f59;
+    color: var(--ink-green);
 }
 
 /* 0.3.0 — ui/components/WorldCollaboratorIndicator.js: deliberately as
@@ -104,7 +104,7 @@
     align-items: center;
     gap: 0.4rem;
     padding: 0.25rem 0.5rem;
-    background: rgba(253, 248, 238, 0.83);
+    background: rgba(var(--overlay-rgb), 0.83);
     border: 1px solid var(--line);
     border-radius: 4px;
     font-size: 0.76rem;
@@ -194,7 +194,7 @@
     display: block;
     width: 100%;
     aspect-ratio: 1;
-    background: #f8f4ec;
+    background: var(--tint-amber);
     border: 1px solid var(--line);
     border-radius: 6px;
     cursor: crosshair;
@@ -223,7 +223,7 @@
 }
 
 .world-map-region-label {
-    fill: #306949;
+    fill: var(--ink-green);
     text-anchor: middle;
     dominant-baseline: middle;
     pointer-events: none;
@@ -246,11 +246,11 @@
 }
 
 .world-map-marker--structure .world-map-marker-glyph {
-    fill: #174482;
+    fill: var(--ink-blue);
 }
 
 .world-map-marker--landmark .world-map-marker-glyph {
-    fill: #826617;
+    fill: var(--ink-amber);
 }
 
 .world-map-marker--viewer .world-map-marker-glyph {
@@ -271,7 +271,7 @@
 }
 
 .world-map-collaborator-dot {
-    fill: #7d341c;
+    fill: var(--ink-red);
     stroke: #1a1a1a;
     stroke-width: 1.5;
 }
@@ -406,7 +406,7 @@
     flex-direction: column;
     gap: 0.25rem;
     font-size: 0.82rem;
-    color: #2f6a48;
+    color: var(--ink-green);
 }
 
 /* 0.5.5 — "Show on Map" highlights the geometry that already exists;
@@ -416,7 +416,7 @@
    it. */
 .world-map-region--highlighted {
     fill: rgba(217, 119, 87, 0.18);
-    stroke: #7d341c;
+    stroke: var(--ink-red);
     stroke-width: 2.5;
 }
 
@@ -429,7 +429,7 @@
 }
 
 .world-view-nav-marker.place .marker-direction {
-    color: #251782;
+    color: var(--ink-indigo);
 }
 
 /* ui/components/GeographicPlaceDirectoryPanel.js: the "Nearby Places"
@@ -449,7 +449,7 @@
 .world-welcome-panel-arrival-note {
     margin: 0 0 0.3rem;
     font-size: 0.85rem;
-    color: #251782;
+    color: var(--ink-indigo);
 }
 
 /* ===================================================================
@@ -611,7 +611,7 @@
 }
 
 .world-view-place-naming-error {
-    color: #7e5c39;
+    color: var(--ink-amber);
 }
 
 /* 0.9.263 — Nearby Place Naming Claim Adoption UI. Same compact sizing as
@@ -632,7 +632,7 @@
     flex-shrink: 0;
     padding: 0.15rem 0.5rem;
     font-size: 0.72rem;
-    color: #4a6d4a;
+    color: var(--ink-green);
 }
 
 /* ui/components/PlaceNamingPanel.js: the "More — other descriptions,
@@ -690,7 +690,7 @@
 .world-focus-panel-arrival {
     margin: 0.5rem 0 0.3rem;
     font-size: 0.85rem;
-    color: #251782;
+    color: var(--ink-indigo);
 }
 
 .world-focus-panel-nearby {
@@ -716,7 +716,7 @@
 }
 
 .world-view-claimed-build-hint {
-    color: #816536;
+    color: var(--ink-amber);
 }
 
 /* The challenge plaza's panel (ui/views/worldView/templates/plazaSection.js),
@@ -724,7 +724,7 @@
 .world-view-plaza {
     margin-bottom: 0.75rem;
     padding: 0.6rem 0.7rem;
-    border: 1px solid #9ad5b6;
+    border: 1px solid var(--edge-green);
     border-radius: 6px;
     background: rgba(76, 175, 125, 0.08);
 }
@@ -735,7 +735,7 @@
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #2d6c4b;
+    color: var(--ink-green);
 }
 
 .world-view-plaza-title {
