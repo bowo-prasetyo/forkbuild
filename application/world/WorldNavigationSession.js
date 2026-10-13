@@ -206,8 +206,9 @@ export class WorldNavigationSession {
         // available". See docs/Principles.md, "Diagnostics Are Received From The
         // Discovery Layer, Never Invented By The UI".
         this._spatialDiscoveryProvider = spatialDiscoveryProvider;
-        // Both null when nobody is logged in; the session then renders no local
-        // avatar.
+        // A guest's when nobody is logged in (application/avatar/GuestAvatar.js);
+        // both null only without avatar wiring, when the session renders no local
+        // avatar. adoptLocalAvatar() swaps them.
         this._avatarProfileUseCase = avatarProfileUseCase;
         this._avatarPresenceSession = avatarPresenceSession;
         this._avatarProfileSubscription = null;
@@ -744,23 +745,7 @@ export class WorldNavigationSession {
             }
         }
         this._presentSpatialWorldDocumentIds.clear();
-        if (this._avatarProfileSubscription) {
-            this._avatarProfileSubscription();
-            this._avatarProfileSubscription = null;
-        }
-        if (this._avatarPresenceSubscription) {
-            this._avatarPresenceSubscription();
-            this._avatarPresenceSubscription = null;
-        }
-        if (this._avatarFrameSubscription) {
-            this._avatarFrameSubscription();
-            this._avatarFrameSubscription = null;
-        }
-        this._avatarMovementController = null;
-        this._avatarVehicleInteractionController = null;
-        this._avatarAnimalInteractionController = null;
-        this._avatarVehicleMovementController = null;
-        this._vehicleSteeringIntent = null;
+        this._teardownLocalAvatar();
         this._avatarControlModeActive = false;
         this._altDown = false;
         this._shiftDown = false;

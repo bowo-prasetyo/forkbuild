@@ -87,6 +87,7 @@ import { publicationSectionTemplate } from './worldView/templates/publicationSec
 import { plazaSectionTemplate } from './worldView/templates/plazaSection.js';
 import { useChallengePlaza } from './worldView/useChallengePlaza.js';
 import { useStarterVillage } from './worldView/useStarterVillage.js';
+import { useLocalAvatarOwner } from './worldView/useLocalAvatarOwner.js';
 import { useNeighbourCount } from './worldView/useNeighbourCount.js';
 import { useSideSystemCount } from './worldView/useSideSystemCount.js';
 import { buildCreditName } from '../../core/BuildCredit.js';
@@ -356,6 +357,16 @@ export default {
         // avatar usually means walking around. The session applies them on mount.
         const avatarControlMode = ref(true);
         const followAvatar = ref(true);
+        // A guest walks with no name; logging in or out swaps the avatar
+        // where it stands (useLocalAvatarOwner.js).
+        const { guestAvatar, checkGuestWalk } = useLocalAvatarOwner({
+            session,
+            worldViewFactory,
+            identityUseCase,
+            onAdopted: () => {
+                hasLocalAvatar.value = session.hasLocalAvatar();
+            }
+        });
         // Mirrors the session's state, polled on a short interval of its own: the
         // prompt must track proximity far more closely than the 3-second refresh.
         const vehicleInteractionState = ref(null);
@@ -1236,6 +1247,7 @@ export default {
                 // Not gated on control mode: air runs out whether or not keys are held.
                 swimState.value = hasLocalAvatar.value ? session.avatarSwimState() : null;
                 if (hasLocalAvatar.value) sideSystemCount.observeAvatar(swimState.value);
+                checkGuestWalk();
             }, 150);
         });
 
@@ -1283,6 +1295,7 @@ export default {
             author,
             showMyAvatar,
             hasLocalAvatar,
+            guestAvatar,
             toggleShowMyAvatar,
             avatarControlMode,
             followAvatar,

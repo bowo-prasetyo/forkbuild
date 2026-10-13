@@ -1726,6 +1726,7 @@ export default Object.freeze({
     'worldView.avatarSettings': 'Pengaturan avatar',
     'worldView.talk': 'Bicara',
     'worldView.logInAndCreateAn': 'Masuk dan buat avatar (Avatar Saya) untuk muncul di sini.',
+    'worldView.walkingAsGuest': 'Kamu berjalan sebagai tamu: hanya kamu yang bisa melihat dirimu di sini. Pilih nama (saat menerbitkan, atau dengan "Jalan di sini bersamaku") agar teman juga bisa melihatmu.',
     'worldView.camera': 'Kamera',
     'worldView.free': 'Bebas',
     'worldView.firstPerson': 'Orang Pertama',

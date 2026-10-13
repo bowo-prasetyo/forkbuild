@@ -88,39 +88,39 @@ export default {
                     maxHeight: '78vh',
                     display: 'flex',
                     flexDirection: 'column',
-                    background: '#1a1a1a',
-                    border: '1px solid #2a2a2a',
+                    background: 'var(--surface-low)',
+                    border: '1px solid var(--line)',
                     borderRadius: '6px',
                     boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5)',
                     overflow: 'hidden'
                 }"
             >
-                <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #2a2a2a' }">
-                    <strong :style="{ fontSize: '13px', color: '#e0e0e0' }">{{ t('shortcuts.title') }}</strong>
-                    <button type="button" @click="$emit('close')" :style="{ background: 'transparent', border: 'none', color: '#909090', fontSize: '16px', cursor: 'pointer', lineHeight: 1 }" :aria-label="t('shortcuts.close')">×</button>
+                <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid var(--line)' }">
+                    <strong :style="{ fontSize: '13px', color: 'var(--ink)' }">{{ t('shortcuts.title') }}</strong>
+                    <button type="button" @click="$emit('close')" :style="{ background: 'transparent', border: 'none', color: 'var(--ink-subtle)', fontSize: '16px', cursor: 'pointer', lineHeight: 1 }" :aria-label="t('shortcuts.close')">×</button>
                 </div>
                 <div :style="{ overflowY: 'auto', padding: '6px 12px 12px' }">
-                    <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#707070' }">{{ t('shortcuts.camera') }}</div>
-                    <div v-for="row in CAMERA_SHORTCUTS" :key="'camera-' + row.label" :style="{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', color: '#d0d0d0' }">
+                    <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)' }">{{ t('shortcuts.camera') }}</div>
+                    <div v-for="row in CAMERA_SHORTCUTS" :key="'camera-' + row.label" :style="{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', color: 'var(--ink-soft)' }">
                         <span>{{ t(row.label) }}</span>
-                        <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: '#707070' }">{{ cameraShortcut(row) }}</span>
+                        <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--ink-faint)' }">{{ cameraShortcut(row) }}</span>
                     </div>
 
-                    <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#707070' }">{{ t('shortcuts.toolsAndView') }}</div>
-                    <div v-for="row in VIEW_LOCAL_SHORTCUTS" :key="'view-' + row.label" :style="{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', color: '#d0d0d0' }">
+                    <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)' }">{{ t('shortcuts.toolsAndView') }}</div>
+                    <div v-for="row in VIEW_LOCAL_SHORTCUTS" :key="'view-' + row.label" :style="{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', color: 'var(--ink-soft)' }">
                         <span>{{ t(row.label) }}</span>
-                        <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: '#707070' }">{{ row.shortcut }}</span>
+                        <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--ink-faint)' }">{{ row.shortcut }}</span>
                     </div>
 
                     <template v-for="group in registryGroups" :key="group.category">
-                        <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#707070' }">{{ categoryName(group.category) }}</div>
-                        <div v-for="action in group.actions" :key="action.id" :style="{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', color: '#d0d0d0' }">
+                        <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)' }">{{ categoryName(group.category) }}</div>
+                        <div v-for="action in group.actions" :key="action.id" :style="{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', color: 'var(--ink-soft)' }">
                             <span>{{ t(action.label) }}</span>
-                            <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: '#707070' }">{{ action.shortcut }}</span>
+                            <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--ink-faint)' }">{{ action.shortcut }}</span>
                         </div>
                     </template>
 
-                    <p :style="{ margin: '10px 0 0', color: '#707070', fontSize: '11px' }">
+                    <p :style="{ margin: '10px 0 0', color: 'var(--ink-faint)', fontSize: '11px' }">
                         {{ t('shortcuts.paletteHint') }}
                     </p>
                 </div>

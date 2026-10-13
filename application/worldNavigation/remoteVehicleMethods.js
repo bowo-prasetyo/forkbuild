@@ -65,9 +65,10 @@ export const remoteVehicleMethods = {
     },
 
     // What the local avatar rides, told to others when it changes and again
-    // every VEHICLE_HEARTBEAT_MS. Called every frame of the local avatar.
+    // every VEHICLE_HEARTBEAT_MS. Called every frame of the local avatar. A
+    // guest's ride is told to nobody, as nothing else about a guest is.
     _publishLocalVehicle(now = Date.now()) {
-        if (!this._avatarVehicleSyncService || !this._avatarPresenceSession) {
+        if (!this._avatarVehicleSyncService || !this._avatarPresenceSession || this.isLocalAvatarGuest()) {
             return;
         }
         const mount = this.avatarVehicleMount();

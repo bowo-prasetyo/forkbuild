@@ -1,6 +1,7 @@
 /* Stylesheet entry point. The parts are one stylesheet cut into contiguous
    pieces, imported in their original order: later rules still win ties
    against earlier ones, so keep this order when adding or moving rules. */
+@import url('main/theme.css');
 @import url('main/app-shell.css');
 @import url('main/home.css');
 @import url('main/featured-builds.css');

@@ -1173,6 +1173,16 @@ who you are, what your avatar looks like, and where it is right now.
   authenticated peers (`forkbuild:avatar-presence`) when peers are
   available, LocalAvatarPresenceBroadcastProvider (BroadcastChannel,
   development only) otherwise. An idle avatar sends nothing.
+- **A guest.** With nobody logged in, CreateWorldViewUseCase's
+  `localAvatarWiring()` builds a guest's avatar instead
+  (application/avatar/GuestAvatar.js): a GuestAvatarProfileUseCase holding
+  the default look in memory, and visibility policies that never advertise,
+  so its presence, profile, gestures and ride reach nobody. It walks like
+  any avatar but makes no signed change to a World (residents,
+  decorations). When someone logs in or out while World View is open,
+  ui/views/worldView/useLocalAvatarOwner.js calls
+  `WorldNavigationSession#adoptLocalAvatar()` with a new wiring built where
+  the avatar stands; the peer channels read whichever wiring is current.
 - **Receiving presence.** PresenceTrustBoundary and core/ PresenceIngestion,
   PresenceReplayWindow, PresenceFreshness and PresenceEquivocation decide
   what to accept: a claim is bound to the connection it arrived on, and
@@ -1933,6 +1943,13 @@ way, through RenderWorldUseCase and RenderWorldViewUseCase.
   village, with no controls or picking.
 
 ## UI
+
+The look round the 3D view (docs/Pillars.md, "Look") is named once in
+css/main/theme.css, the first part css/main.css imports and the one
+css/embed.css imports: grounds (`--paper`, `--surface`…), lines, inks
+(`--ink`…) and the green `--accent`. The other stylesheets and the few
+inline styles in components use those names; tests/VillageLook.test.js
+checks their contrast.
 
 ui/main.js builds every store, adapter and use case once, reads the
 saved settings, and provides them to the Vue app. The compose functions in

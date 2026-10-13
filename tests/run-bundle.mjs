@@ -111,6 +111,16 @@ async function startFromHome(browser, base) {
         await page.goto(`${base}/#/`);
         await page.waitForSelector('.featured-build-card', { timeout: 60_000 });
         assert(await page.locator('.featured-build-card').count() === 6, 'Home shows its six ready-made builds');
+        // The village's look (css/main/theme.css): warm paper and dark ink,
+        // and a green main button with white words.
+        const look = await page.evaluate(() => {
+            const rgb = (value) => value.match(/\d+/g).slice(0, 3).map(Number);
+            const button = getComputedStyle(document.querySelector('.home-cta-primary'));
+            return { page: rgb(getComputedStyle(document.body).backgroundColor), ink: rgb(getComputedStyle(document.body).color), button: rgb(button.backgroundColor), words: rgb(button.color) };
+        });
+        assert(Math.min(...look.page) > 225 && look.page[0] > look.page[2], `the page is light and warm (${look.page})`);
+        assert(Math.max(...look.ink) < 70, `its words are dark (${look.ink})`);
+        assert(look.button[1] > look.button[0] && look.button[1] > look.button[2] && look.words.every((c) => c === 255), `Try it now is green with white words (${look.button} / ${look.words})`);
         await page.click('.home-cta-primary');
         await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });
         await page.waitForFunction(() => location.hash === '#/editor', null, { timeout: 10_000 });
@@ -238,6 +248,8 @@ async function walkThePlaza(browser, base) {
         assert(await page.locator('.world-view-plaza-exhibit:not(.world-view-plaza-ready-made)').count() === 1, 'the entry stands in the plaza');
         await page.waitForSelector('.world-view-plaza-ready-made', { timeout: 60_000 });
         assert(await page.locator('.world-view-plaza-ready-made').count() === 6, 'and, with so few entries, the ready-made builds round the square');
+        // Published unsigned, so still with no name: walking as a guest.
+        assert(await page.$('.world-view-guest-hint'), 'someone with no name walks the plaza as a guest');
         await page.click('.world-view-plaza-focus');
         await page.waitForTimeout(4000);
         assert(/^#\/plaza\/\d{4}-\d{2}-\d{2}$/.test(await page.evaluate(() => location.hash)), 'World View stays on the plaza');

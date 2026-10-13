@@ -210,7 +210,7 @@ export const avatarPresenceMethods = {
     getAvatarDisplayName(avatarId) {
         if (this.isLocalAvatarId(avatarId)) {
             const profile = this._avatarProfileUseCase ? this._avatarProfileUseCase.getProfile() : null;
-            return (profile && (profile.displayName || profile.ownerIdentity)) || 'You';
+            return (profile && (profile.displayName || (this.isLocalAvatarGuest() ? '' : profile.ownerIdentity))) || 'You';
         }
         const knownProfile = this._avatarProfileSyncService ? this._avatarProfileSyncService.getKnownProfile(avatarId) : null;
         if (knownProfile && knownProfile.displayName) {

@@ -12,11 +12,11 @@
 .first-build-guide {
     width: min(19rem, calc(100% - 2rem));
     padding: 0.75rem 0.9rem;
-    background: rgba(18, 18, 18, 0.92);
+    background: rgba(253, 248, 238, 0.96);
     border: 1px solid rgba(76, 175, 125, 0.45);
     border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-    color: #e0e0e0;
+    box-shadow: 0 8px 24px rgba(74, 52, 24, 0.2);
+    color: var(--ink);
     font-size: 0.88rem;
 }
 
@@ -24,8 +24,8 @@
     padding: 0.45rem 0.9rem;
     border: 1px solid rgba(76, 175, 125, 0.6);
     border-radius: 999px;
-    background: rgba(18, 18, 18, 0.92);
-    color: #4caf7d;
+    background: rgba(253, 248, 238, 0.96);
+    color: var(--accent-ink);
     font-family: inherit;
     font-size: 0.85rem;
     font-weight: 600;
@@ -47,17 +47,17 @@
 
 .first-build-count {
     margin-left: auto;
-    color: #909090;
+    color: var(--ink-subtle);
     font-size: 0.8rem;
 }
 
 .first-build-icon-btn {
     width: 1.6rem;
     height: 1.6rem;
-    border: 1px solid #3a3a3a;
+    border: 1px solid var(--line-strong);
     border-radius: 6px;
-    background: #232323;
-    color: #e0e0e0;
+    background: var(--surface-raised);
+    color: var(--ink);
     font-family: inherit;
     line-height: 1;
     cursor: pointer;
@@ -75,7 +75,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #b0b0b0;
+    color: var(--ink-muted);
 }
 
 .first-build-check {
@@ -85,29 +85,29 @@
     justify-content: center;
     width: 1.15rem;
     height: 1.15rem;
-    border: 1px solid #4a4a4a;
+    border: 1px solid var(--line-bold);
     border-radius: 50%;
     font-size: 0.75rem;
 }
 
 .first-build-step--done {
-    color: #808080;
+    color: var(--ink-subtle);
     text-decoration: line-through;
 }
 
 .first-build-step--done .first-build-check {
-    border-color: #4caf7d;
-    background: #4caf7d;
-    color: #101010;
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #ffffff;
 }
 
 .first-build-step--current {
-    color: #ffffff;
+    color: var(--ink-strong);
     font-weight: 600;
 }
 
 .first-build-step--current .first-build-check {
-    border-color: #4caf7d;
+    border-color: var(--accent);
 }
 
 .first-build-hint {
@@ -115,7 +115,7 @@
     padding: 0.5rem 0.6rem;
     border-radius: 6px;
     background: rgba(76, 175, 125, 0.12);
-    color: #d8f0e2;
+    color: #2b6e47;
     line-height: 1.4;
 }
 
@@ -136,7 +136,7 @@
     padding: 0;
     border: 0;
     background: none;
-    color: #909090;
+    color: var(--ink-subtle);
     font-family: inherit;
     font-size: 0.8rem;
     text-decoration: underline;
@@ -153,12 +153,12 @@
     margin: 0.25rem 0 0.35rem;
     font-size: 1.05rem;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--ink-strong);
 }
 
 .first-build-celebration-text {
     margin: 0 0 0.75rem;
-    color: #c0c0c0;
+    color: var(--ink-soft);
     line-height: 1.4;
 }
 
@@ -185,7 +185,7 @@
     animation: first-build-confetti-fall 1.6s ease-in 2;
 }
 
-.first-build-confetti-piece:nth-child(3n) { background: #4caf7d; }
+.first-build-confetti-piece:nth-child(3n) { background: var(--accent); }
 .first-build-confetti-piece:nth-child(3n + 1) { background: #ffd54f; }
 .first-build-confetti-piece:nth-child(3n + 2) { background: #e57373; }
 

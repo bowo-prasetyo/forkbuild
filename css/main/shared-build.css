@@ -24,8 +24,8 @@
     aspect-ratio: 4 / 3;
     border-radius: 12px;
     overflow: hidden;
-    background: #1e2a33;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    background: #deeaf3;
+    box-shadow: 0 12px 40px rgba(74, 52, 24, 0.2);
 }
 
 .shared-build-kicker {
@@ -34,14 +34,14 @@
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #4caf7d;
+    color: var(--accent-ink);
 }
 
 .shared-build-title {
     margin: 0.3rem 0 0.4rem;
     font-size: clamp(1.8rem, 4vw, 2.6rem);
     line-height: 1.1;
-    color: #ffffff;
+    color: var(--ink-strong);
     overflow-wrap: anywhere;
     word-break: auto-phrase;
     text-wrap: balance;
@@ -50,7 +50,7 @@
 .shared-build-author {
     margin: 0 0 1rem;
     font-size: 1.05rem;
-    color: #c8c8c8;
+    color: var(--ink-soft);
     overflow-wrap: anywhere;
 }
 
@@ -61,7 +61,7 @@
 
 .shared-build-built-with {
     margin: 0 0 1rem;
-    color: #a8d8bc;
+    color: #2f6a48;
     overflow-wrap: anywhere;
 }
 
@@ -82,13 +82,13 @@
 }
 
 .shared-build-remixed-from {
-    background: #3a2f12;
-    color: #f0d48a;
+    background: #f5eedb;
+    color: #826517;
 }
 
 .shared-build-remix-count {
-    background: #234433;
-    color: #8fe0b4;
+    background: var(--accent-tint);
+    color: #217849;
     font-weight: 600;
 }
 
@@ -114,7 +114,7 @@
 
 .shared-build-edit-copy:hover,
 .shared-build-actions .cta-button:hover {
-    background: #5fc490;
+    background: var(--accent-hover);
 }
 
 /* The second action, when Edit a Copy is offered: a plain link-like button. */
@@ -122,7 +122,7 @@
     padding: 0;
     border: none;
     background: none;
-    color: #4caf7d;
+    color: var(--accent-ink);
     font: inherit;
     font-weight: 600;
     cursor: pointer;
@@ -136,18 +136,18 @@
     margin: 1rem 0 0;
     font-size: 0.92rem;
     line-height: 1.45;
-    color: #a8a8a8;
+    color: var(--ink-muted);
 }
 
 .shared-build-license,
 .shared-build-about {
     margin: 0.6rem 0 0;
     font-size: 0.85rem;
-    color: #8a8a8a;
+    color: var(--ink-subtle);
 }
 
 .shared-build-about a {
-    color: #4caf7d;
+    color: var(--accent-ink);
 }
 
 @media (max-width: 720px) {
@@ -176,7 +176,7 @@
 
 .remix-permission-lead {
     margin: 0 0 1rem;
-    color: #c8c8c8;
+    color: var(--ink-soft);
     line-height: 1.45;
 }
 
@@ -187,9 +187,9 @@
     width: 100%;
     margin-bottom: 0.6rem;
     padding: 0.75rem 0.85rem;
-    border: 1px solid #2a2a2a;
+    border: 1px solid var(--line);
     border-radius: 8px;
-    background: #1a1a1a;
+    background: var(--surface-low);
     color: inherit;
     font: inherit;
     text-align: left;
@@ -198,29 +198,29 @@
 
 .remix-permission-option:hover,
 .remix-permission-option:focus-visible {
-    border-color: #4caf7d;
+    border-color: var(--accent);
 }
 
 .remix-permission-allow {
-    border-color: #2f5c45;
-    background: #182a21;
+    border-color: #99d6b7;
+    background: #ddf3e8;
 }
 
 .remix-permission-name {
     font-weight: 600;
-    color: #ffffff;
+    color: var(--ink-strong);
 }
 
 .remix-permission-description {
     font-size: 0.85rem;
     line-height: 1.35;
-    color: #a8a8a8;
+    color: var(--ink-muted);
 }
 
 .remix-permission-note {
     margin: 0.4rem 0 0;
     font-size: 0.82rem;
-    color: #8a8a8a;
+    color: var(--ink-subtle);
 }
 
 /* Download as a 3D model: the Editor's dialog
@@ -233,7 +233,7 @@
 
 .model-export-lead {
     margin: 0 0 1rem;
-    color: #c8c8c8;
+    color: var(--ink-soft);
     line-height: 1.45;
 }
 
@@ -244,9 +244,9 @@
     width: 100%;
     margin-bottom: 0.6rem;
     padding: 0.75rem 0.85rem;
-    border: 1px solid #2a2a2a;
+    border: 1px solid var(--line);
     border-radius: 8px;
-    background: #1a1a1a;
+    background: var(--surface-low);
     color: inherit;
     font: inherit;
     text-align: left;
@@ -255,38 +255,38 @@
 
 .model-export-option:hover,
 .model-export-option:focus-visible {
-    border-color: #4caf7d;
+    border-color: var(--accent);
 }
 
 .model-export-name {
     font-weight: 600;
-    color: #ffffff;
+    color: var(--ink-strong);
 }
 
 .model-export-description,
 .model-export-note {
     font-size: 0.85rem;
     line-height: 1.35;
-    color: #a8a8a8;
+    color: var(--ink-muted);
 }
 
 .model-export-note {
     margin: 0.4rem 0 0;
-    color: #8a8a8a;
+    color: var(--ink-subtle);
 }
 
 .shared-build-model,
 .shared-build-model-message {
     margin: 0.6rem 0 0;
     font-size: 0.85rem;
-    color: #8a8a8a;
+    color: var(--ink-subtle);
 }
 
 .shared-build-model-link {
     padding: 0;
     border: none;
     background: none;
-    color: #4caf7d;
+    color: var(--accent-ink);
     font: inherit;
     text-decoration: underline;
     cursor: pointer;
@@ -315,7 +315,7 @@
 .remix-family-remixes {
     margin-left: 0.6rem;
     padding-left: 0.8rem;
-    border-left: 2px solid rgba(127, 127, 127, 0.4);
+    border-left: 2px solid rgba(96, 72, 40, 0.48);
 }
 
 .remix-family-member {
@@ -354,7 +354,7 @@
 .collection-family {
     margin: 0;
     padding: 0.6rem 0.8rem;
-    border: 1px solid rgba(127, 127, 127, 0.35);
+    border: 1px solid rgba(96, 72, 40, 0.42);
     border-radius: 8px;
 }
 
@@ -364,7 +364,7 @@
 
 /* The ready-made cards' green, so each name reads as "open this one". */
 .collection-family .remix-family-link {
-    color: #4caf7d;
+    color: var(--accent-ink);
     text-decoration: none;
 }
 
@@ -375,7 +375,7 @@
 
 .challenge-families .remix-family {
     padding: 0.6rem 0.8rem;
-    border: 1px solid rgba(127, 127, 127, 0.35);
+    border: 1px solid rgba(96, 72, 40, 0.42);
     border-radius: 8px;
 }
 
@@ -401,7 +401,7 @@
 .builder-identity,
 .builder-empty,
 .helped-builds-lead {
-    color: #b8b8b8;
+    color: var(--ink-muted);
     font-size: 0.9rem;
     overflow-wrap: anywhere;
 }
@@ -420,13 +420,13 @@
     flex-wrap: wrap;
     gap: 0.25rem 0.6rem;
     padding: 0.35rem 0;
-    border-bottom: 1px solid #2a2a2a;
+    border-bottom: 1px solid var(--line);
     overflow-wrap: anywhere;
 }
 
 .helped-build-author,
 .helped-build-note {
-    color: #b8b8b8;
+    color: var(--ink-muted);
     font-size: 0.85rem;
 }
 

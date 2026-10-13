@@ -107,7 +107,7 @@ export default {
                     fontSize: '10px',
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',
-                    color: '#707070'
+                    color: 'var(--ink-faint)'
                 };
             }
             const enabled = this.actionEnabled(row.action);
@@ -125,8 +125,8 @@ export default {
                 fontFamily: 'inherit',
                 fontSize: '13px',
                 cursor: enabled ? 'pointer' : 'not-allowed',
-                background: active ? '#234433' : 'transparent',
-                color: enabled ? (active ? '#ffffff' : '#d0d0d0') : '#606060'
+                background: active ? 'var(--accent-tint)' : 'transparent',
+                color: enabled ? (active ? 'var(--ink-strong)' : 'var(--ink-soft)') : 'var(--ink-faint)'
             };
         },
         onKeydown(event) {
@@ -180,8 +180,8 @@ export default {
                     maxHeight: '60vh',
                     display: 'flex',
                     flexDirection: 'column',
-                    background: '#1a1a1a',
-                    border: '1px solid #2a2a2a',
+                    background: 'var(--surface-low)',
+                    border: '1px solid var(--line)',
                     borderRadius: '6px',
                     boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5)',
                     overflow: 'hidden'
@@ -196,17 +196,17 @@ export default {
                     @keydown="onKeydown"
                     :style="{
                         padding: '10px 12px',
-                        background: '#121212',
+                        background: 'var(--paper)',
                         border: 'none',
-                        borderBottom: '1px solid #2a2a2a',
-                        color: '#e0e0e0',
+                        borderBottom: '1px solid var(--line)',
+                        color: 'var(--ink)',
                         fontFamily: 'monospace',
                         fontSize: '13px',
                         outline: 'none'
                     }"
                 />
                 <div :style="{ overflowY: 'auto', padding: '6px' }">
-                    <div v-if="rows.length === 0" :style="{ padding: '12px 10px', color: '#707070', fontSize: '12px' }">
+                    <div v-if="rows.length === 0" :style="{ padding: '12px 10px', color: 'var(--ink-faint)', fontSize: '12px' }">
                         {{ t('commandPalette.noMatches') }}
                     </div>
                     <template v-for="(row, rowIndex) in rows" :key="rowIndex">
@@ -225,12 +225,12 @@ export default {
                                 {{ displayLabel(row.action) }}
                                 <span
                                     v-if="!actionEnabled(row.action) && reasonFor(row.action)"
-                                    :style="{ marginLeft: '8px', fontSize: '11px', color: '#8a6d3b' }"
+                                    :style="{ marginLeft: '8px', fontSize: '11px', color: '#816637' }"
                                 >— {{ reasonFor(row.action) }}</span>
                             </span>
                             <span
                                 v-if="row.action.shortcut"
-                                :style="{ fontFamily: 'monospace', fontSize: '11px', color: '#707070', flexShrink: 0 }"
+                                :style="{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--ink-faint)', flexShrink: 0 }"
                             >{{ row.action.shortcut }}</span>
                         </button>
                     </template>

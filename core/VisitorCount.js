@@ -106,6 +106,9 @@ export const FunnelEvent = Object.freeze({
     // device or open for it to edit neither.
     WORLD_VISIT: 'world-visit',
     WORLD_NEIGHBOUR: 'world-neighbour',
+    // Someone with no name yet walking in World View, at most once a page
+    // load (docs/reviews/CreativeDirection-2026-10-12c.md, finding 1).
+    GUEST_WALK: 'guest-walk',
     // The side systems the owner kept (docs/Pillars.md, "The side systems";
     // core/SideSystemUse.js), each at most once a page load: in the water,
     // an animal caught, one decorated with (G), something carried (an animal

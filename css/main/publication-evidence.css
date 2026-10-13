@@ -13,7 +13,7 @@
 .evidence-section {
     margin-top: 1rem;
     padding-top: 0.85rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
 }
 
 .evidence-summary {
@@ -25,7 +25,7 @@
 
 .evidence-summary-title {
     font-weight: 600;
-    color: #c9c9c9;
+    color: var(--ink-soft);
     font-size: 0.85rem;
 }
 
@@ -37,8 +37,8 @@
 }
 
 .evidence-anchor-card {
-    background: #161616;
-    border: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
     border-radius: 6px;
     padding: 0.75rem 0.9rem;
 }
@@ -52,7 +52,7 @@
 
 .evidence-anchor-type {
     font-weight: 600;
-    color: #e0e0e0;
+    color: var(--ink);
     font-size: 0.88rem;
 }
 
@@ -69,22 +69,22 @@
 }
 
 .evidence-field dt {
-    color: #808080;
+    color: var(--ink-subtle);
     font-size: 0.75rem;
     white-space: nowrap;
 }
 
 .evidence-field dd {
     margin: 0;
-    color: #c9c9c9;
+    color: var(--ink-soft);
     font-size: 0.78rem;
     font-family: monospace;
     word-break: break-all;
 }
 
 .peer-badge--unchecked {
-    background: rgba(144, 144, 144, 0.15);
-    color: #909090;
+    background: rgba(96, 72, 40, 0.18);
+    color: var(--ink-subtle);
 }
 
 /* 0.8.13 — Multi-Evidence Comparison & Conflict UX. Sits between
@@ -98,15 +98,15 @@
 .evidence-convergence {
     margin-top: 0.75rem;
     padding: 0.75rem 0.9rem;
-    background: #161616;
-    border: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
     border-radius: 6px;
 }
 
 .evidence-convergence-title {
     display: block;
     font-weight: 600;
-    color: #c9c9c9;
+    color: var(--ink-soft);
     font-size: 0.85rem;
     margin-bottom: 0.5rem;
 }
@@ -122,8 +122,8 @@
     flex-direction: column;
     gap: 0.2rem;
     padding: 0.5rem 0.7rem;
-    background: #1e1e1e;
-    border: 1px solid #2f2f2f;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 5px;
     min-width: 9rem;
 }
@@ -131,14 +131,14 @@
 .evidence-convergence-hash {
     font-family: monospace;
     font-size: 0.78rem;
-    color: #c9c9c9;
+    color: var(--ink-soft);
     word-break: break-all;
 }
 
 .evidence-convergence-conflict {
     margin: 0.6rem 0 0;
     font-size: 0.78rem;
-    color: #e0a34c;
+    color: #825617;
 }
 
 /* 0.9.525 — Repository Discovery & Material Trust Product
@@ -150,7 +150,7 @@
 .author-identity-convergence-notice {
     margin: 0.35rem 0 0.75rem;
     font-size: 0.8rem;
-    color: #e0a34c;
+    color: #825617;
 }
 
 /* 0.8.27 — Unified Publication Decentralization View. Sits ABOVE
@@ -167,8 +167,8 @@
 .decentralization-summary {
     margin-top: 1rem;
     padding: 0.75rem 0.9rem;
-    background: #161616;
-    border: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
     border-radius: 6px;
 }
 
@@ -185,14 +185,14 @@
     flex-direction: column;
     gap: 0.15rem;
     padding: 0.5rem 0.7rem;
-    background: #1e1e1e;
-    border: 1px solid #2f2f2f;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 5px;
 }
 
 .decentralization-dimension-title {
     font-weight: 600;
-    color: #c9c9c9;
+    color: var(--ink-soft);
     font-size: 0.8rem;
     margin-bottom: 0.15rem;
 }
@@ -206,15 +206,15 @@
 .evidence-inspection {
     margin-top: 0.75rem;
     padding: 0.75rem 0.9rem;
-    background: #161616;
-    border: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
     border-radius: 6px;
 }
 
 .evidence-inspection-title {
     display: block;
     font-weight: 600;
-    color: #c9c9c9;
+    color: var(--ink-soft);
     font-size: 0.85rem;
     margin-bottom: 0.5rem;
 }
@@ -222,13 +222,13 @@
 .evidence-inspection-adapter {
     margin-top: 0.75rem;
     padding-top: 0.65rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
 }
 
 .evidence-inspection-adapter-title {
     display: block;
     font-weight: 600;
-    color: #c9c9c9;
+    color: var(--ink-soft);
     font-size: 0.8rem;
     margin-bottom: 0.4rem;
 }
@@ -240,7 +240,7 @@
 .evidence-inspection-knowledge {
     margin-top: 0.75rem;
     padding-top: 0.65rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
 }
 
 .evidence-inspection-proof {
@@ -249,17 +249,17 @@
 
 .evidence-inspection-proof summary {
     cursor: pointer;
-    color: #909090;
+    color: var(--ink-subtle);
     font-size: 0.78rem;
 }
 
 .evidence-inspection-proof-json {
     margin: 0.5rem 0 0;
     padding: 0.5rem 0.6rem;
-    background: #101010;
-    border: 1px solid #2a2a2a;
+    background: var(--paper);
+    border: 1px solid var(--line);
     border-radius: 4px;
-    color: #c9c9c9;
+    color: var(--ink-soft);
     font-size: 0.72rem;
     font-family: monospace;
     white-space: pre-wrap;
@@ -325,8 +325,8 @@
     flex-direction: column;
     gap: 0.4rem;
     padding: 0.5rem 0.7rem;
-    background: #1e1e1e;
-    border: 1px solid #2f2f2f;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 5px;
 }
 
@@ -341,8 +341,8 @@
 
 .replica-knowledge-claim {
     padding: 0.5rem 0.6rem;
-    background: #161616;
-    border: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
     border-radius: 4px;
 }
 

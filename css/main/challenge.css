@@ -5,9 +5,9 @@
 .challenge-card,
 .challenge-header {
     padding: 1.5rem 1.75rem;
-    border: 1px solid #3d5a47;
+    border: 1px solid #a3ccb1;
     border-radius: 12px;
-    background: linear-gradient(135deg, #1d2a22 0%, #1a1a1a 70%);
+    background: linear-gradient(135deg, #dff1e6 0%, var(--surface-low) 70%);
 }
 
 .challenge-card {
@@ -25,14 +25,14 @@
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #8fd4ac;
+    color: #2a6f47;
 }
 
 .challenge-card-time {
     padding: 0.1rem 0.6rem;
     border-radius: 999px;
-    background: #2c4636;
-    color: #d6f5e3;
+    background: #def2e6;
+    color: #1e7b45;
     font-weight: 600;
     letter-spacing: normal;
     text-transform: none;
@@ -43,7 +43,7 @@
     margin: 0 0 0.4rem;
     font-size: clamp(1.6rem, 3.5vw, 2.2rem);
     line-height: 1.15;
-    color: #ffffff;
+    color: var(--ink-strong);
     word-break: auto-phrase;
 }
 
@@ -53,7 +53,7 @@
     max-width: 46rem;
     font-size: 1.05rem;
     line-height: 1.5;
-    color: #c8c8c8;
+    color: var(--ink-soft);
 }
 
 /* The week's twist: a constraint, set apart from the brief. */
@@ -65,18 +65,18 @@
     border-left: 3px solid #e0a040;
     background: rgba(224, 160, 64, 0.1);
     line-height: 1.45;
-    color: #f0dcc0;
+    color: #7c541d;
 }
 
 .challenge-dates {
     margin: 0 0 0.75rem;
-    color: #a0a0a0;
+    color: var(--ink-muted);
 }
 
 .challenge-card-tag {
     margin: 0 0 1rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    color: #8fd4ac;
+    color: #2a6f47;
     overflow-wrap: anywhere;
 }
 
@@ -114,20 +114,20 @@
     gap: 0.75rem;
     margin: 0 0 0.75rem;
     font-size: 1.4rem;
-    color: #ffffff;
+    color: var(--ink-strong);
 }
 
 .challenge-entry-count {
     font-size: 0.95rem;
     font-weight: normal;
-    color: #a0a0a0;
+    color: var(--ink-muted);
 }
 
 .challenge-steps {
     margin: 0;
     padding-left: 1.4rem;
     line-height: 1.6;
-    color: #c8c8c8;
+    color: var(--ink-soft);
 }
 
 .challenge-steps li + li {
@@ -136,8 +136,8 @@
 
 .new-document-challenge {
     margin-bottom: 0.5rem;
-    border-color: #3d5a47;
-    background: linear-gradient(135deg, #1d2a22 0%, #1a1a1a 70%);
+    border-color: #a3ccb1;
+    background: linear-gradient(135deg, #dff1e6 0%, var(--surface-low) 70%);
 }
 
 @media (max-width: 640px) {

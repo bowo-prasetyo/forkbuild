@@ -149,12 +149,13 @@ older versions still open here.
 
 ### WASD doesn't move my avatar
 
-Walking is off until you turn it on:
+Walking is on when World View opens, with or without a name: someone
+with no name yet walks as a guest, seen only on their own screen. If the
+keys don't move your avatar:
 
-1. Log in and save an avatar on **My Avatar**.
-2. In World View's **Avatar** section, tick **Control My Avatar (WASD,
-   Shift, Space)**.
-3. Click the 3D view, so the keys aren't going into a text field.
+1. In World View's **Avatar settings**, check that **Control My Avatar
+   (WASD, Shift, Space)** is ticked.
+2. Click the 3D view, so the keys aren't going into a text field.
 
 On a touch screen, tap **Walk** above the joystick instead. See
 [Walking your avatar](06-AvatarsAndPresence.md#walking-your-avatar).

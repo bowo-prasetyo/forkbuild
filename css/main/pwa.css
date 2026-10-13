@@ -9,9 +9,9 @@
     justify-content: space-between;
     gap: 0.5rem 1rem;
     padding: 0.55rem 0.9rem;
-    border-bottom: 1px solid #2f5c45;
-    background: #182a21;
-    color: #d6f0e2;
+    border-bottom: 1px solid #99d6b7;
+    background: #ddf3e8;
+    color: #29704a;
     font-size: 0.88rem;
 }
 
@@ -24,10 +24,10 @@
 
 .install-app--button .install-app-button {
     padding: 0.45rem 0.9rem;
-    border: 1px solid #4caf7d;
+    border: 1px solid var(--accent);
     border-radius: 6px;
     background: transparent;
-    color: #4caf7d;
+    color: var(--accent-ink);
     font: inherit;
     font-weight: 600;
     cursor: pointer;
@@ -35,7 +35,7 @@
 
 .install-app--button .install-app-button:hover,
 .install-app--button .install-app-button:focus-visible {
-    background: #182a21;
+    background: #ddf3e8;
 }
 
 /* In the More menu it reads as one more of its items. */
@@ -55,7 +55,7 @@
 .install-app-why,
 .install-app-hint {
     font-size: 0.9rem;
-    color: #9a9a9a;
+    color: var(--ink-subtle);
 }
 
 .home-install {
@@ -69,14 +69,14 @@
     gap: 0.4rem 0.75rem;
     margin: 0 0 1rem;
     padding: 0.65rem 0.8rem;
-    border: 1px solid #2a2a2a;
+    border: 1px solid var(--line);
     border-radius: 8px;
-    background: #1a1a1a;
+    background: var(--surface-low);
 }
 
 .device-notification-status {
     margin: 0;
-    color: #c8c8c8;
+    color: var(--ink-soft);
 }
 
 .device-notification-hint {
@@ -84,5 +84,5 @@
     margin: 0;
     font-size: 0.82rem;
     line-height: 1.4;
-    color: #8a8a8a;
+    color: var(--ink-subtle);
 }

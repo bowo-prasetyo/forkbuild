@@ -83,10 +83,10 @@ export default {
             return {
                 flex: 1,
                 padding: '4px 6px',
-                background: enabled ? '#1f1f1f' : '#181818',
-                border: '1px solid ' + (enabled ? '#3a3a3a' : '#262626'),
+                background: enabled ? 'var(--surface)' : 'var(--surface-low)',
+                border: '1px solid ' + (enabled ? 'var(--line-strong)' : 'var(--line-strong)'),
                 borderRadius: '3px',
-                color: enabled ? '#d0d0d0' : '#606060',
+                color: enabled ? 'var(--ink-soft)' : 'var(--ink-faint)',
                 fontSize: '11px',
                 cursor: enabled ? 'pointer' : 'not-allowed',
                 whiteSpace: 'nowrap'

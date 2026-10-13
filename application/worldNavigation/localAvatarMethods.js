@@ -440,6 +440,10 @@ export const localAvatarMethods = {
         if (!avatarPos) {
             return null;
         }
+        // Decorating changes a World, which a guest can't sign.
+        if (this.isLocalAvatarGuest()) {
+            return Object.freeze({ canDecorate: false, canUndecorate: false, species: null, targetAnimalId: null, targetDecorationId: null });
+        }
         const releaseTarget = this._animalRuntimeInstances.nearestReleased(avatarPos, ANIMAL_INTERACTION_RADIUS);
         if (releaseTarget) {
             return Object.freeze({
@@ -775,11 +779,81 @@ export const localAvatarMethods = {
         return true;
     },
 
-    // Whether a local avatar was actually wired for this session (i.e.
-    // someone was logged in when it started) — lets the UI decide
+    // Whether a local avatar was wired for this session: a named one, or a
+    // guest's (application/avatar/GuestAvatar.js) — lets the UI decide
     // whether "Show My Avatar" is even a meaningful control to offer.
     hasLocalAvatar() {
         return Boolean(this._avatarProfileUseCase && this._avatarPresenceSession);
+    },
+
+    // Whether the local avatar is a guest's: walked here, seen by nobody else.
+    isLocalAvatarGuest() {
+        return Boolean(this._avatarProfileUseCase && this._avatarProfileUseCase.isGuest === true);
+    },
+
+    // The username the local avatar belongs to; null without one.
+    localAvatarOwnerIdentity() {
+        return this._avatarPresenceSession ? this._avatarPresenceSession.current.ownerIdentity : null;
+    },
+
+    // Where the local avatar stands and which way it faces, as the
+    // `initialState` a new avatar wiring starts from; null without one.
+    localAvatarPlacement() {
+        if (!this._avatarPresenceSession) {
+            return null;
+        }
+        const current = this._avatarPresenceSession.current;
+        return { position: current.position, rotation: current.rotation };
+    },
+
+    // Swaps the local avatar for another built where it stands
+    // (CreateWorldViewUseCase's `localAvatarWiring(localAvatarPlacement())`):
+    // a guest who chooses a name walks on as themselves, and someone who logs
+    // out walks on as a guest. Walking, following and visibility carry over;
+    // a ride doesn't (the vehicle stays where it is, and the avatar beside it).
+    adoptLocalAvatar(wiring) {
+        if (!wiring || !wiring.avatarProfileUseCase || !wiring.presenceSession) {
+            return;
+        }
+        const controlMode = this._avatarControlModeActive;
+        const follow = this._followAvatarEnabled;
+        this._teardownLocalAvatar();
+        if (this._session && typeof this._session.removeLocalAvatar === 'function') {
+            this._session.removeLocalAvatar();
+        }
+        this._avatarProfileUseCase = wiring.avatarProfileUseCase;
+        this._avatarPresenceSession = wiring.presenceSession;
+        this._presenceVisibilityUseCase = wiring.presenceVisibilityUseCase || null;
+        this._avatarProfileVisibilityUseCase = wiring.avatarProfileVisibilityUseCase || null;
+        if (this._session) {
+            this._setupLocalAvatar();
+        }
+        this.setAvatarControlMode(controlMode);
+        this.setFollowAvatar(follow);
+    },
+
+    // Stops the local avatar's subscriptions and controllers; dispose() and
+    // adoptLocalAvatar() share it.
+    _teardownLocalAvatar() {
+        if (this._avatarProfileSubscription) {
+            this._avatarProfileSubscription();
+            this._avatarProfileSubscription = null;
+        }
+        if (this._avatarPresenceSubscription) {
+            this._avatarPresenceSubscription();
+            this._avatarPresenceSubscription = null;
+        }
+        if (this._avatarFrameSubscription) {
+            this._avatarFrameSubscription();
+            this._avatarFrameSubscription = null;
+        }
+        this._avatarMovementController = null;
+        this._avatarVehicleInteractionController = null;
+        this._avatarAnimalInteractionController = null;
+        this._avatarVehicleMovementController = null;
+        this._vehicleSteeringIntent = null;
+        this._lastPresenceUpdateAt = 0;
+        this._lastProfilePublishAt = 0;
     },
 
     isLocalAvatarVisible() {

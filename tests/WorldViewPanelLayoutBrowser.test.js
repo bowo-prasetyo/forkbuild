@@ -153,8 +153,8 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
 
 // Avatar: without an avatar of your own, only what works shows.
 {
-    const avatarState = (hasLocalAvatar) => ({
-        hasLocalAvatar, showMyAvatar: hasLocalAvatar, showOtherAvatars: true, avatarControlMode: false,
+    const avatarState = (hasLocalAvatar, guestAvatar = false) => ({
+        hasLocalAvatar, guestAvatar, showMyAvatar: hasLocalAvatar, showOtherAvatars: true, avatarControlMode: false,
         followAvatar: false, cameraPerspective: null, CameraPerspective,
         remoteAvatarDiagnostics: { total: 0 }, nearbyAvatars: []
     });
@@ -181,8 +181,21 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     });
     assert(toggleLabels(withAvatar.host).length === 4 && withAvatar.host.querySelector('.world-view-camera-perspective'),
         'with an avatar, all four toggles and the camera perspectives show');
+    assert(!withAvatar.host.querySelector('.world-view-guest-hint'), 'a named avatar has no guest line');
     withAvatar.unmount();
-    console.log('✓ Avatar shows only usable controls');
+
+    // Someone with no name walks as a guest (application/avatar/GuestAvatar.js).
+    const guest = mount({
+        components: { NearbyAvatarsPanel: { template: '<div></div>' } },
+        data: () => avatarState(true, true), methods: avatarMethods, template: avatarSectionTemplate
+    });
+    assert(toggleLabels(guest.host).length === 4 && guest.host.querySelector('.world-view-camera-perspective'),
+        'a guest walks with every avatar control');
+    const guestHint = guest.host.querySelector('.world-view-guest-hint');
+    assert(guestHint && guestHint.textContent.includes('guest') && !guest.host.textContent.includes('create an avatar'),
+        'and is told only they can see themselves until they choose a name');
+    guest.unmount();
+    console.log('✓ Avatar shows only usable controls, and a guest is told who can see them');
 }
 
 // Avatar: the Residents row — one button that does what R would, or the

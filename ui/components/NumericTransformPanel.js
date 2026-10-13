@@ -107,10 +107,10 @@ export default {
             return {
                 width: '100%',
                 padding: '3px 6px',
-                background: this.enabled ? '#121212' : '#181818',
-                border: '1px solid ' + (invalid ? '#e74c3c' : '#2a2a2a'),
+                background: this.enabled ? 'var(--paper)' : 'var(--surface-low)',
+                border: '1px solid ' + (invalid ? '#e74c3c' : 'var(--line)'),
                 borderRadius: '3px',
-                color: this.enabled ? '#e0e0e0' : '#606060',
+                color: this.enabled ? 'var(--ink)' : 'var(--ink-faint)',
                 fontFamily: 'monospace',
                 fontSize: '12px'
             };
@@ -119,7 +119,7 @@ export default {
             return {
                 width: '16px',
                 flexShrink: 0,
-                color: '#909090',
+                color: 'var(--ink-subtle)',
                 fontFamily: 'monospace',
                 fontSize: '12px'
             };
@@ -131,10 +131,10 @@ export default {
             return {
                 flex: 1,
                 padding: '3px 6px',
-                background: active ? '#234433' : '#1f1f1f',
-                border: '1px solid ' + (active ? '#4caf7d' : '#3a3a3a'),
+                background: active ? 'var(--accent-tint)' : 'var(--surface)',
+                border: '1px solid ' + (active ? 'var(--accent)' : 'var(--line-strong)'),
                 borderRadius: '3px',
-                color: active ? '#ffffff' : '#b0b0b0',
+                color: active ? 'var(--ink-strong)' : 'var(--ink-muted)',
                 fontSize: '12px',
                 cursor: this.enabled ? 'pointer' : 'not-allowed'
             };
@@ -143,10 +143,10 @@ export default {
             return {
                 flex: 1,
                 padding: '4px 6px',
-                background: primary ? (this.enabled ? '#4caf7d' : '#2a3f33') : '#1f1f1f',
-                border: '1px solid ' + (primary ? '#4caf7d' : '#3a3a3a'),
+                background: primary ? (this.enabled ? 'var(--accent)' : '#dff1e7') : 'var(--surface)',
+                border: '1px solid ' + (primary ? 'var(--accent)' : 'var(--line-strong)'),
                 borderRadius: '3px',
-                color: primary ? '#121212' : '#b0b0b0',
+                color: primary ? '#121212' : 'var(--ink-muted)',
                 fontSize: '12px',
                 fontWeight: primary ? '600' : '400',
                 cursor: this.enabled ? 'pointer' : 'not-allowed'

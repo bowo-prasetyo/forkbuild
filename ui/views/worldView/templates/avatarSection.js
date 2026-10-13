@@ -94,6 +94,10 @@ export const avatarSectionTemplate = `<!--
                     <p v-if="!hasLocalAvatar" class="form-hint form-hint--neutral">
                         {{ t('worldView.logInAndCreateAn') }}
                     </p>
+                    <!-- Someone with no name walks as a guest, seen by nobody else (application/avatar/GuestAvatar.js). -->
+                    <p v-else-if="guestAvatar" class="form-hint form-hint--neutral world-view-guest-hint">
+                        {{ t('worldView.walkingAsGuest') }}
+                    </p>
                     <!--
                         Fixed offsets around the avatar; clicking the active one returns to Free.
                         Local only.

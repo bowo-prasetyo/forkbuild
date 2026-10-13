@@ -3,26 +3,26 @@
 .spatial-panel {
     margin-top: 1rem;
     padding: 0.75rem;
-    background: rgba(26, 26, 26, 0.95);
-    border: 1px solid #2a2a2a;
+    background: rgba(253, 248, 238, 0.96);
+    border: 1px solid var(--line);
     border-radius: 4px;
 }
 
 .spatial-panel--selection {
-    border-color: #4caf7d;
+    border-color: var(--accent);
 }
 
 .spatial-panel h4 {
     margin: 0 0 0.5rem;
     font-size: 0.75rem;
-    color: #909090;
+    color: var(--ink-subtle);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
 
 .spatial-type {
     margin: 0;
-    color: #4caf7d;
+    color: var(--accent-ink);
     font-weight: 600;
     font-size: 0.9rem;
     text-transform: capitalize;
@@ -30,12 +30,12 @@
 
 .spatial-world {
     margin: 0.5rem 0 0;
-    color: #d0d0d0;
+    color: var(--ink-soft);
     font-size: 0.85rem;
 }
 
 .spatial-author {
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.8rem;
 }
 
@@ -43,25 +43,25 @@
     margin: 0.25rem 0 0;
     font-family: monospace;
     font-size: 0.8rem;
-    color: #909090;
+    color: var(--ink-subtle);
 }
 
 .spatial-pos {
     margin: 0.25rem 0 0.5rem;
     font-family: monospace;
     font-size: 0.8rem;
-    color: #707070;
+    color: var(--ink-faint);
 }
 .spatial-panel--hover {
     border-color: #3a6ea5;
 }
 
 .spatial-panel--hover h4 {
-    color: #3a6ea5;
+    color: #305b88;
 }
 
 .spatial-panel--hover .spatial-type {
-    color: #3a6ea5;
+    color: #305b88;
 }
 /* ... existing styles above remain unchanged ... */
 
@@ -70,11 +70,11 @@
 }
 
 .spatial-panel--inspection h4 {
-    color: #e0a34c;
+    color: #825617;
 }
 
 .spatial-panel--inspection .spatial-type {
-    color: #e0a34c;
+    color: #825617;
 }
 
 .inspection-fields {
@@ -92,12 +92,12 @@
 }
 
 .inspection-label {
-    color: #707070;
+    color: var(--ink-faint);
     flex-shrink: 0;
 }
 
 .inspection-value {
-    color: #d0d0d0;
+    color: var(--ink-soft);
     text-align: right;
     word-break: break-all;
 }
@@ -116,22 +116,23 @@
     line-height: 1.35;
     background: rgba(76, 175, 125, 0.12);
     border: 1px solid rgba(76, 175, 125, 0.35);
-    color: #a8e0c2;
+    color: #28714a;
 }
 
 .editability-notice--blocked {
     background: rgba(224, 108, 108, 0.12);
     border-color: rgba(224, 108, 108, 0.4);
-    color: #e0a0a0;
+    color: #732626;
 }
 
 .action-btn--primary {
-    background: #4caf7d;
-    color: #121212;
+    background: var(--accent);
+    color: #ffffff;
+    border-color: transparent;
 }
 
 .action-btn--primary:hover {
-    background: #5fc490;
+    background: var(--accent-hover);
 }
 
 .action-btn:disabled {
@@ -156,7 +157,7 @@
 }
 
 .recovery-banner-message {
-    color: #e0a34c;
+    color: #825617;
     font-size: 0.85rem;
 }
 
@@ -238,19 +239,19 @@
     padding: 0.35rem 0.6rem;
     border-radius: 6px;
     font-size: 0.85rem;
-    color: #f0d08a;
+    color: #826017;
     background: rgba(240, 208, 138, 0.06);
     border-bottom: 1px solid rgba(240, 208, 138, 0.35);
 }
 
 .protect-identity-note-link {
-    color: #f0d08a;
+    color: #826017;
     font-weight: 600;
     margin-left: 0.25rem;
 }
 
 .editor-post-publish-message {
-    color: #4caf7d;
+    color: var(--accent-ink);
     font-size: 0.85rem;
     font-weight: 600;
 }
@@ -260,7 +261,7 @@
     padding: 0.6rem 1rem;
     background: rgba(224, 90, 90, 0.12);
     border-bottom: 1px solid rgba(224, 90, 90, 0.4);
-    color: #e0a0a0;
+    color: #732626;
     font-size: 0.85rem;
 }
 
@@ -280,12 +281,12 @@
 }
 
 .editor-post-publish-distribution-detail dt {
-    color: #808080;
+    color: var(--ink-subtle);
 }
 
 .editor-post-publish-distribution-detail dd {
     margin: 0;
-    color: #e0e0e0;
+    color: var(--ink);
     word-break: break-all;
 }
 
@@ -296,15 +297,15 @@
 .document-info-panel {
     margin-top: 1rem;
     padding: 0.75rem;
-    background: rgba(26, 26, 26, 0.95);
-    border: 1px solid #2a2a2a;
+    background: rgba(253, 248, 238, 0.96);
+    border: 1px solid var(--line);
     border-radius: 4px;
 }
 
 .document-info-panel h4 {
     margin: 0 0 0.5rem;
     font-size: 0.75rem;
-    color: #909090;
+    color: var(--ink-subtle);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -315,7 +316,7 @@
     gap: 0.75rem;
     padding: 0.25rem 0;
     font-size: 0.82rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(96, 72, 40, 0.04);
 }
 
 .info-row:last-of-type {
@@ -323,12 +324,12 @@
 }
 
 .info-label {
-    color: #909090;
+    color: var(--ink-subtle);
     flex-shrink: 0;
 }
 
 .info-value {
-    color: #d0d0d0;
+    color: var(--ink-soft);
     text-align: right;
     word-break: break-word;
 }
@@ -348,7 +349,7 @@
     position: fixed;
     inset: 0;
     z-index: 70;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(52, 38, 22, 0.33);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -359,17 +360,17 @@
     max-width: 90vw;
     max-height: 85vh;
     overflow-y: auto;
-    background: #1a1a1a;
-    border: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
     border-radius: 6px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 12px 40px rgba(74, 52, 24, 0.23);
     padding: 1.25rem;
 }
 
 .modal-panel h3 {
     margin: 0 0 1rem;
     font-size: 1rem;
-    color: #e0e0e0;
+    color: var(--ink);
 }
 
 .form-field {
@@ -381,7 +382,7 @@
     display: block;
     margin-bottom: 0.3rem;
     font-size: 0.78rem;
-    color: #909090;
+    color: var(--ink-subtle);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -391,11 +392,11 @@
 .form-select {
     width: 100%;
     box-sizing: border-box;
-    background: #121212;
-    border: 1px solid #3a3a3a;
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
     padding: 0.5rem 0.6rem;
-    color: #e0e0e0;
+    color: var(--ink);
     font-family: inherit;
     font-size: 0.88rem;
 }
@@ -404,7 +405,7 @@
 .form-textarea:focus,
 .form-select:focus {
     outline: none;
-    border-color: #4caf7d;
+    border-color: var(--accent);
 }
 
 .form-textarea {
@@ -414,12 +415,12 @@
 .form-hint {
     margin: -0.4rem 0 0.85rem;
     font-size: 0.78rem;
-    color: #c9a24a;
+    color: #8d6f2a;
 }
 
 .form-hint--neutral {
     margin: 0 0 0.85rem;
-    color: #909090;
+    color: var(--ink-subtle);
 }
 
 /* Document Properties (ui/components/MetadataEditorDialog.js) is wider than
@@ -455,7 +456,7 @@
 
 .commentary-remote-check-status {
     font-size: 0.8rem;
-    color: #909090;
+    color: var(--ink-subtle);
 }
 
 /* 0.2.23: Placement Info panel — same card language as
@@ -464,15 +465,15 @@
 .placement-info-panel {
     margin-top: 1rem;
     padding: 0.75rem;
-    background: rgba(26, 26, 26, 0.95);
-    border: 1px solid #2a2a2a;
+    background: rgba(253, 248, 238, 0.96);
+    border: 1px solid var(--line);
     border-radius: 4px;
 }
 
 .placement-info-panel h4 {
     margin: 0 0 0.5rem;
     font-size: 0.75rem;
-    color: #909090;
+    color: var(--ink-subtle);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -486,15 +487,15 @@
 .avatar-info-panel {
     margin-top: 1rem;
     padding: 0.75rem;
-    background: rgba(26, 26, 26, 0.95);
-    border: 1px solid #2a2a2a;
+    background: rgba(253, 248, 238, 0.96);
+    border: 1px solid var(--line);
     border-radius: 4px;
 }
 
 .avatar-info-panel h4 {
     margin: 0 0 0.5rem;
     font-size: 0.95rem;
-    color: #e0e0e0;
+    color: var(--ink);
 }
 
 .avatar-info-status-dot {
@@ -503,7 +504,7 @@
     height: 0.5rem;
     border-radius: 50%;
     margin-right: 0.3rem;
-    background: #4caf7d;
+    background: var(--accent);
 }
 
 .avatar-info-status-dot--stale {
@@ -517,7 +518,7 @@
 .avatar-info-placeholder-note {
     display: block;
     font-size: 0.7rem;
-    color: #707070;
+    color: var(--ink-faint);
 }
 
 .modal-actions {
@@ -540,7 +541,7 @@
 
 .create-blueprint-preview-count {
     font-size: 0.82rem;
-    color: #b0b0b0;
+    color: var(--ink-muted);
 }
 
 /* 0.9.353 — ui/components/ForkFailureDialog.js: same .modal-overlay/
@@ -549,7 +550,7 @@
    message a fork failure needs. */
 .fork-failure-dialog-message {
     margin: 0 0 0.85rem;
-    color: #c0c0c0;
+    color: var(--ink-soft);
     line-height: 1.4;
 }
 
@@ -559,7 +560,7 @@
 .structure-info-panel .structure-info-category {
     margin: -0.5rem 0 0.85rem;
     font-size: 0.78rem;
-    color: #909090;
+    color: var(--ink-subtle);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -572,19 +573,19 @@
 }
 
 .structure-info-facts dt {
-    color: #909090;
+    color: var(--ink-subtle);
     font-size: 0.82rem;
 }
 
 .structure-info-facts dd {
     margin: 0;
-    color: #e0e0e0;
+    color: var(--ink);
     font-size: 0.82rem;
 }
 
 .structure-info-description {
     margin: 0 0 0.85rem;
-    color: #c0c0c0;
+    color: var(--ink-soft);
     font-size: 0.85rem;
     line-height: 1.4;
 }
@@ -635,8 +636,8 @@
 .placement-nudge {
     margin: 0.5rem 0 0.25rem;
     padding: 0.65rem 0.75rem;
-    background: #141414;
-    border: 1px solid #2a2a2a;
+    background: var(--paper);
+    border: 1px solid var(--line);
     border-radius: 4px;
 }
 
@@ -657,24 +658,24 @@
 }
 
 .placement-nudge-step-btn {
-    background: #1f1f1f;
-    border: 1px solid #3a3a3a;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
-    color: #b0b0b0;
+    color: var(--ink-muted);
     font-size: 0.78rem;
     padding: 0.2rem 0.55rem;
     cursor: pointer;
 }
 
 .placement-nudge-step-btn:hover {
-    border-color: #4caf7d;
-    color: #e0e0e0;
+    border-color: var(--accent);
+    color: var(--ink);
 }
 
 .placement-nudge-step-btn--active {
-    background: #234433;
-    border-color: #4caf7d;
-    color: #4caf7d;
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    color: var(--accent-ink);
 }
 
 .placement-nudge-row {
@@ -690,7 +691,7 @@
 .placement-nudge-axis {
     width: 1.2rem;
     font-size: 0.8rem;
-    color: #909090;
+    color: var(--ink-subtle);
     text-transform: uppercase;
 }
 
@@ -716,14 +717,14 @@
 .placement-overlap-warning-text {
     margin: 0;
     font-size: 0.82rem;
-    color: #d9b968;
+    color: #7a601f;
 }
 
 .placement-overlap-warning-list {
     margin: 0.4rem 0 0;
     padding-left: 1.1rem;
     font-size: 0.78rem;
-    color: #c0c0c0;
+    color: var(--ink-soft);
 }
 
 .placement-overlap-warning-list li {
@@ -735,19 +736,19 @@
 .placement-overlap-notice {
     margin: 0.5rem 0 0;
     font-size: 0.78rem;
-    color: #d9b968;
+    color: #7a601f;
 }
 
 .spatial-panel--editing {
-    border-color: #4caf7d;
+    border-color: var(--accent);
 }
 
 .spatial-panel--editing h4 {
-    color: #4caf7d;
+    color: var(--accent-ink);
 }
 
 .spatial-panel--editing .spatial-type {
-    color: #4caf7d;
+    color: var(--accent-ink);
 }
 
 .editing-actions {
@@ -759,13 +760,14 @@
 
 .editing-hint {
     margin: 0;
-    color: #909090;
+    color: var(--ink-subtle);
     font-size: 0.8rem;
 }
 
 .action-btn--danger {
     background: #c0392b;
     color: #ffffff;
+    border-color: transparent;
 }
 
 .action-btn--danger:hover {
@@ -777,11 +779,11 @@
 }
 
 .spatial-panel--placement h4 {
-    color: #9b59b6;
+    color: #6b3880;
 }
 
 .spatial-panel--placement .spatial-type {
-    color: #9b59b6;
+    color: #6b3880;
 }
 
 /* 0.2.87 — the hovered position is occupied (core/PlacementValidator.js);
@@ -793,11 +795,11 @@
 
 .spatial-panel--placement.spatial-panel--blocked h4,
 .spatial-panel--placement.spatial-panel--blocked .spatial-type {
-    color: #e05252;
+    color: #821717;
 }
 
 .editing-hint--blocked {
-    color: #e05252;
+    color: #821717;
     font-weight: 500;
 }
 
@@ -811,10 +813,10 @@
 .placement-select {
     width: 100%;
     padding: 0.4rem 0.6rem;
-    background: #121212;
-    border: 1px solid #2a2a2a;
+    background: var(--paper);
+    border: 1px solid var(--line);
     border-radius: 4px;
-    color: #e0e0e0;
+    color: var(--ink);
     font-size: 0.85rem;
     cursor: pointer;
 }
@@ -825,13 +827,13 @@
 }
 
 .action-btn--secondary {
-    background: #2a2a2a;
-    color: #d0d0d0;
-    border: 1px solid #3a3a3a;
+    background: var(--surface-hover);
+    color: var(--ink-soft);
+    border: 1px solid var(--line-strong);
 }
 
 .action-btn--secondary:hover {
-    background: #333333;
+    background: var(--surface-pressed);
 }
 
 .action-btn:disabled {
@@ -852,7 +854,7 @@
 
 .build-plot-banner-text {
     flex: 1 1 16rem;
-    color: #a8d878;
+    color: #4d7722;
     font-size: 0.85rem;
 }
 

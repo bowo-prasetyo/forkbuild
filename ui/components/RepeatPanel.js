@@ -60,17 +60,17 @@ export default {
             return {
                 width: '40px',
                 padding: '3px 6px',
-                background: this.enabled ? '#121212' : '#181818',
-                border: '1px solid ' + (this.invalid ? '#e74c3c' : '#2a2a2a'),
+                background: this.enabled ? 'var(--paper)' : 'var(--surface-low)',
+                border: '1px solid ' + (this.invalid ? '#e74c3c' : 'var(--line)'),
                 borderRadius: '3px',
-                color: this.enabled ? '#e0e0e0' : '#606060',
+                color: this.enabled ? 'var(--ink)' : 'var(--ink-faint)',
                 fontFamily: 'monospace',
                 fontSize: '12px'
             };
         },
         labelStyle() {
             return {
-                color: '#909090',
+                color: 'var(--ink-subtle)',
                 fontSize: '11px'
             };
         },
@@ -78,10 +78,10 @@ export default {
             return {
                 flex: 1,
                 padding: '4px 6px',
-                background: this.enabled ? '#1f1f1f' : '#181818',
-                border: '1px solid ' + (this.enabled ? '#3a3a3a' : '#262626'),
+                background: this.enabled ? 'var(--surface)' : 'var(--surface-low)',
+                border: '1px solid ' + (this.enabled ? 'var(--line-strong)' : 'var(--line-strong)'),
                 borderRadius: '3px',
-                color: this.enabled ? '#d0d0d0' : '#606060',
+                color: this.enabled ? 'var(--ink-soft)' : 'var(--ink-faint)',
                 fontSize: '11px',
                 whiteSpace: 'nowrap',
                 cursor: this.enabled ? 'pointer' : 'not-allowed'

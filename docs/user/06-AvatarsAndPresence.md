@@ -102,11 +102,18 @@ camera back toward them and they reappear.
 
 Flying the camera ([World View](03-WorldView.md#flying-around)) is one way
 to move, but you can also walk your avatar directly with **Avatar Control
-Mode**. To turn it on, you need to be logged in with an avatar saved on
-**My Avatar**; then tick **Control My Avatar (WASD, Shift, Space)** in
-World View's **Avatar** section. The keys don't do anything until you do,
-and they're ignored while a text field has focus — click the 3D view
-first.
+Mode**, which is on when World View opens (**Control My Avatar (WASD,
+Shift, Space)** under **Avatar settings**). The keys are ignored while a
+text field has focus — click the 3D view first.
+
+You don't need a name to walk. Until you choose one, you walk as a
+**guest**: an avatar in the default look that only you can see, which
+nobody else is told about. A guest can talk to residents, but can't add or
+remove them or decorate a World with an animal, because those are changes
+signed with a name. Choose a name (when you publish, with **Walk here with
+me**, or under **Login**) and your avatar becomes yours where it stands, in
+the look saved on **My Avatar**, and others can see it. Logging out turns
+it back into a guest.
 
 | Key | Action |
 |---|---|

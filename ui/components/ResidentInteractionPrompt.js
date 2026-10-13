@@ -41,13 +41,13 @@ export default {
                 zIndex: 34,
                 pointerEvents: 'none',
                 background: 'rgba(18, 18, 18, 0.92)',
-                border: '1px solid #3a3a3a',
+                border: '1px solid var(--line-strong)',
                 borderLeft: '3px solid #6f9b5a',
                 borderRadius: '4px',
                 padding: '6px 14px',
                 fontFamily: 'monospace',
                 fontSize: '12px',
-                color: '#e0e0e0',
+                color: 'var(--ink)',
                 whiteSpace: 'nowrap'
             }"
         >{{ label }}</div>

@@ -126,8 +126,9 @@ longer-term aim.
   windows and lanterns light up after dark and crickets take over from the
   birds. **Always day** keeps it day.
 - An avatar you can walk, run and jump with, which collides with buildings and
-  can climb stairs and slopes; vehicles, an inventory, and catching and releasing
-  animals.
+  can climb stairs and slopes, with no name needed: until you choose one you
+  walk as a guest only you can see; vehicles, an inventory, and catching and
+  releasing animals.
 - Residents: people a World's author adds, who stroll around their homes,
   walking round buildings, turn to greet you, and tell you what's around —
   with a Focus button to look at what they mention.

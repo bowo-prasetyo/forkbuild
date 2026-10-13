@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: ec20eefd36a2abe5 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: bb51e610ce073878 -->
 # 06 — Avatares e presença
 
 <!-- languages -->
@@ -105,13 +105,21 @@ para a pessoa e ela reaparece.
 
 ## Caminhando com seu avatar
 
-Voar com a câmera ([Visão do mundo](03-WorldView.md#voando-por-aí)) é um
-jeito de se mover, mas você também pode caminhar com seu avatar diretamente,
-controlando-o. Para ativar, você precisa ter entrado e ter um avatar salvo em
-**Meu avatar**; depois marque **Controlar meu avatar (WASD, Shift, Espaço)**
-na seção **Avatar** da Visão do mundo. As teclas não fazem nada até você
-marcar, e são ignoradas enquanto um campo de texto está em foco — clique
-antes na visualização 3D.
+Voar com a câmera ([Visão do mundo](03-WorldView.md#voando-por-aí)) é
+uma forma de se mover, mas você também pode andar com seu avatar
+diretamente no **Modo de controle do avatar**, que já está ligado quando a
+Visão do mundo abre (**Controlar meu avatar (WASD, Shift, Espaço)** em
+**Configurações do avatar**). As teclas são ignoradas enquanto um campo de
+texto está em foco — clique primeiro na visualização 3D.
+
+Você não precisa de um nome para andar. Até escolher um, você anda como
+**convidado**: um avatar com a aparência padrão que só você vê e do qual
+ninguém mais fica sabendo. Um convidado pode conversar com os moradores,
+mas não pode adicioná-los nem removê-los, nem decorar um mundo com um
+animal, porque são mudanças assinadas com um nome. Escolha um nome (ao
+publicar, com **Passear aqui comigo** ou em **Entrar**) e o avatar passa a
+ser seu ali onde está, com a aparência salva em **Meu avatar**, e os outros
+podem vê-lo. Ao sair, ele volta a ser convidado.
 
 | Tecla | Ação |
 |---|---|
