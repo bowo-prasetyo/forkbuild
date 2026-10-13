@@ -1912,10 +1912,11 @@ way, through RenderWorldUseCase and RenderWorldViewUseCase.
 
 - WorldRenderer turns domain events into brick instances, one at a
   time, in BrickInstanceRegistry: bricks are not meshes of their own but
-  instances of one InstancedMesh per definition and 16-unit cube of
-  space (a chunk), so a scene costs one draw call per chunk, and frustum
+  instances of one InstancedMesh per definition, surface and 16-unit cube
+  of space (a chunk), so a scene costs one draw call per chunk, and frustum
   culling and raycasting skip whole chunks. Each instance carries its
-  transform, its color (instanceColor over one shared white material)
+  transform, its color (instanceColor over a white material shared by
+  every chunk of one surface)
   and a highlight (an `instanceEmissive` attribute the material's shader
   adds to its emissive light); a chunk grows by doubling, and removing a
   brick moves the chunk's last instance into its slot. The registry maps
@@ -1927,6 +1928,18 @@ way, through RenderWorldUseCase and RenderWorldViewUseCase.
   with ThreeBrickFactory, builds standalone meshes for placements,
   previews and thumbnails; ThreeBrickFactory also supplies the geometry
   instances share.
+- The brick look (docs/Pillars.md, "Look"): core/BrickSurface.js says what
+  each brick is made of (masonry, plaster, wood, tile, glass, foliage,
+  stone or plain; the plain blocks by their colour), and
+  renderer/BrickSurfaceMaterial.js draws it. `withBrickBounds()` gives a
+  geometry its bounding box as two attributes, and `applyBrickSurface()`
+  patches a material's shader, on top of the instanced highlight and the
+  night glow (makeNightGlowing() chains it), to multiply its colour by a
+  soft dark line along the brick's edges, a slight shade of its own and
+  its surface's grain, all worked out from the brick's object-space
+  position: no images, and no reliance on UVs. Exported models
+  (BuildMeshExtraction) take ThreeBrickFactory's bare geometry and carry
+  none of it.
 - PickingService answers "what brick is here" (a ray hit on a chunk,
   resolved through the instance id; the hit normal includes the
   instance's rotation) and "where does the ray hit the ground";

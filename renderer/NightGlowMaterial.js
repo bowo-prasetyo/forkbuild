@@ -12,13 +12,18 @@ export function makeNightGlowing(material, glow, nightGlow) {
     }
     const glowColor = { value: new THREE.Color(glow) };
     material.userData.nightGlowing = true;
-    material.onBeforeCompile = (shader) => {
+    // On top of what the material already does (its brick surface,
+    // renderer/BrickSurfaceMaterial.js).
+    const previous = material.onBeforeCompile;
+    const previousKey = material.userData.brickSurface ? material.customProgramCacheKey : null;
+    material.onBeforeCompile = (shader, renderer) => {
+        if (typeof previous === 'function') previous.call(material, shader, renderer);
         shader.uniforms.uNightGlow = nightGlow;
         shader.uniforms.uGlowColor = glowColor;
         shader.fragmentShader = shader.fragmentShader
             .replace('#include <common>', '#include <common>\nuniform float uNightGlow;\nuniform vec3 uGlowColor;')
             .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance += uGlowColor * uNightGlow;');
     };
-    material.customProgramCacheKey = () => 'forkbuild-night-glow';
+    material.customProgramCacheKey = () => `${previousKey ? previousKey.call(material) : ''}|forkbuild-night-glow`;
     material.needsUpdate = true;
 }
