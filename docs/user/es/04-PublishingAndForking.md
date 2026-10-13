@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d63d0904aac96490 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ba7ee7cf8bfc4b8a -->
 # 04 — Publicar y bifurcar
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · **Español** · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Este es el corazón de ForkBuild. **Publicar** comparte su creación con el
 mundo. **Remezclar** permite que cualquiera copie una creación y la haga
@@ -16,11 +12,11 @@ evolucionar, conservando todo el historial.
 ## Publicar su creación
 
 1. Construya algo en el Editor.
-2. Inicie sesión y asegúrese de que su identidad esté desbloqueada
-   (consulte [Identidad e inicio de sesión](05-IdentityAndLogin.md)).
-   Publicar firma la creación con ella. Si no inició sesión, **Publicar** le
-   pide iniciar sesión o crear una identidad primero; **Publicar sin
-   firmar** la publica ahí sin autor y sin enlace.
+2. Tenga un nombre y asegúrese de que esté desbloqueado (consulte
+   [Identidad e inicio de sesión](05-IdentityAndLogin.md)). Publicar firma
+   la construcción con él. Si todavía no tiene nombre, **Publicar** le pide
+   elegir uno primero; **Publicar sin firmar** la publica ahí sin autor y
+   sin enlace.
 3. Póngale un título (Publicar rechaza una creación sin título o vacía) y,
    si quiere, una descripción y una licencia: haga clic en **✎** junto al
    título del documento en la barra lateral para abrir **Propiedades del
@@ -52,8 +48,8 @@ donde pararse detrás, no cuenta, y a una construcción sin puerta se llega por
 delante. La tarjeta **Su primera construcción** ofrece el mismo botón cuando
 la construcción está publicada.
 
-> **Nota:** Publicar guarda su documento/Mundo solo en este dispositivo. Su
-> tarjeta del Repositorio indica dónde registró este dispositivo su
+> **Nota:** Publicar guarda su construcción en este dispositivo. Su
+> tarjeta en **Explorar** indica dónde registró este dispositivo su
 > distribución (por ejemplo, **Guardado en IPFS · Anunciado en Nostr**), o
 > **No hay ninguna distribución registrada en este dispositivo.** Mientras
 > tanto, haga una copia de seguridad en [Sus datos](13-YourData.md) para
@@ -85,8 +81,8 @@ están en **Mi Mundo compartido** en la Vista de mundo.
   una imagen de la construcción, dibujada por el servidor de enlaces de
   ForkBuild, que luego lleva a quien lo abra a ForkBuild. Un enlace
   modificado solo muestra “A shared build”.
-- **Necesita una firma.** Publique con la sesión iniciada; una creación
-  publicada sin sesión no recibe enlace.
+- **Necesita una firma.** Publique con un nombre; una construcción
+  publicada sin nombre (**Publicar sin firmar**) no recibe enlace.
 - **Tamaño.** Cabe una construcción de hasta unos 500 bloques; el enlace del
   castillo listo para usar tiene unos 3.700 caracteres. El correo y la
   mayoría de las aplicaciones de chat y redes sociales conservan un enlace
@@ -292,15 +288,15 @@ sus construcciones.
 
 ## Compartir con pares conectados
 
-Un Mundo que publica aparece solo en *su* Repositorio, hasta que lo
-distribuye en Nostr, Arweave, Steem o Blurt (consulte
-[Distribución](Distribution.md)): entonces el Repositorio de cualquiera lo
+Una construcción que publica aparece solo en *su* **Explorar**, hasta que
+se envía a todos (consulte [¿Quién puede encontrarla?](#quién-puede-encontrarla))
+o la distribuye en Nostr, Arweave, Steem o Blurt (consulte
+[Distribución](Distribution.md)): entonces el **Explorar** de cualquiera la
 encuentra (consulte
 [Creaciones que otros distribuyeron](#creaciones-que-otros-distribuyeron)).
-Para ponerlo en el
-Repositorio de alguien con quien está conectado (consulte
-[Conexiones entre pares y amigos](07-PeerConnectionsAndFriends.md)), haga
-clic en **Compartir con pares** debajo de él en el Repositorio. El botón
+Para ponerla en el **Explorar** de alguien con quien está conectado
+(consulte [Conexiones entre pares y amigos](07-PeerConnectionsAndFriends.md)),
+haga clic en **Compartir con pares** debajo de ella en **Explorar**. El botón
 solo aparece en sus propios Mundos publicados.
 
 - Compartir ofrece el Mundo a todos los que están conectados en ese
@@ -308,9 +304,9 @@ solo aparece en sus propios Mundos publicados.
   Compartir de nuevo** lo vuelve a anunciar a las personas conectadas
   ahora.
 - Del lado de ellos, un Mundo compartido por uno de sus **Amigos** o
-  **Pares conocidos** se agrega solo a su Repositorio, junto con todo lo
+  **Pares conocidos** se agrega solo a su **Explorar**, junto con todo lo
   necesario para **Explorarlo**. Un Mundo compartido por cualquier otra
-  persona espera en **Compartido con usted**, arriba en su Repositorio,
+  persona espera en **Compartido con usted**, arriba en su **Explorar**,
   hasta que haga clic en **Recuperar**. El dispositivo de nadie descarga el
   Mundo de un desconocido sin que se lo pidan. Cada uno aparece con su
   título, para que puedan elegir; su dispositivo se asegura de que el Mundo
@@ -412,8 +408,9 @@ El original nunca se toca, por mucho que cambie su copia.
 
 ## El Repositorio
 
-El **Repositorio** es el catálogo, con búsqueda, de todas las creaciones
-publicadas que conoce este dispositivo: las suyas, las que le compartieron
+**Explorar**, en la barra superior (llamado *Repositorio* en versiones
+anteriores y en algunos mensajes avanzados), es el catálogo, con búsqueda,
+de todas las construcciones publicadas que conoce este dispositivo: las suyas, las que le compartieron
 sus pares y las que se encontraron en redes descentralizadas. Está hecho
 para seguir siendo útil tanto si tiene diez creaciones como diez mil.
 
@@ -439,7 +436,7 @@ en *colección*.
 
 ### Creaciones que otros distribuyeron
 
-Cada vez que abre el Repositorio (o la página de un autor), busca en Nostr,
+Cada vez que abre **Explorar** (o la página de un autor), busca en Nostr,
 Arweave, Steem y Blurt creaciones que otras personas distribuyeron allí, y agrega
 las que puede verificar. Una línea encima de la lista dice lo que está
 haciendo y luego cuántas creaciones nuevas encontró; **Volver a buscar**
@@ -451,7 +448,7 @@ busca una vez más.
   obtener.
 - Verifica hasta 20 creaciones nuevas a la vez. Si hay más, la línea dice
   cuántas quedan para la próxima vez.
-- Una creación encontrada así permanece en su Repositorio después de
+- Una creación encontrada así permanece en su **Explorar** después de
   recargar.
 - Su compilación todavía no está en su dispositivo. **Explorar** la obtiene
   de donde se almacenó y la verifica, y luego la abre en la Vista del
@@ -508,7 +505,7 @@ ya visitó en lugar de uno que encuentra por primera vez).
 Haga clic en el **nombre de cualquier autor** para visitar su **Vista del
 autor**: un portafolio de todo lo que hizo, incluidos sus originales y
 todas las bifurcaciones que surgieron de ellos, con exactamente el mismo
-catálogo de búsqueda, orden y paginación que el Repositorio, solo que
+catálogo de búsqueda, orden y paginación que **Explorar**, solo que
 limitado a ese autor.
 
 Una tarjeta cuya firma pasa la comprobación también tiene un botón
@@ -517,9 +514,8 @@ para cada identidad que publicó con ese nombre. Seguir a alguien pone su
 trabajo nuevo en su página **Siguiendo** y en sus notificaciones; consulte
 [Seguir a personas](07-PeerConnectionsAndFriends.md#seguir-a-personas).
 
-El Repositorio tampoco se limita a lo que se publicó desde este dispositivo
-o se descubrió directamente: una creación descentralizada del Repositorio
-que un par le mostró en el mapa de
+**Explorar** tampoco se limita a lo que se publicó desde este dispositivo
+o se descubrió directamente: una construcción descentralizada que un par le mostró en el mapa de
 [Encuentros en el Mundo](03-WorldView.md#encuentros-en-el-mundo--publicaciones-y-avatares-que-comparten-sus-pares)
 de la Vista del mundo, una vez que su contenido realmente se resuelve,
 también se suma a esta misma búsqueda y a la Vista del autor de su autor, y
@@ -545,14 +541,14 @@ publicado: consulte
 > **En la Vista del mundo también se llama “Editar una copia”.** Es la
 > misma operación de fondo en ambos casos, con las mismas reglas de
 > licencia y el mismo manejo de
-> [Bifurcación no disponible](#cuando-una-bifurcación-no-se-puede-completar).
+> [No se puede hacer una copia](#cuando-una-bifurcación-no-se-puede-completar).
 > Consulte
 > [Editar una copia](03-WorldView.md#editar-una-copia--llevar-algo-al-editor)
 > para ver cómo funciona en la Vista del mundo.
 
 ### Cómo bifurcar
 
-1. Encuentre una creación en el **Repositorio** (o en la Vista del mundo).
+1. Encuentre una construcción en **Explorar** (o en la Vista del mundo).
 2. Haga clic en **Remezclar**.
 3. La copia se abre en el Editor, titulada *“Bifurcación de &lt;nombre
    original&gt;”*.
@@ -563,7 +559,7 @@ que la vincula con el original.
 
 ### Recuentos de remezclas
 
-La página de una construcción y su tarjeta del Repositorio dicen cuántas
+La página de una construcción y su tarjeta en **Explorar** dicen cuántas
 veces se remezcló (**Remezclada 3 veces**): cuántas construcciones
 distintas, bifurcadas de ella y publicadas, ha encontrado este
 dispositivo. Una remezcla publicada dos veces cuenta una vez, y una
@@ -582,19 +578,17 @@ A veces una bifurcación no puede completarse; la mayoría de las veces al
 bifurcar un Mundo compartido encontrado mediante un par o una red
 descentralizada (consulte
 [Publicaciones y evidencia externa](09-PublicationsAndEvidence.md)) en
-lugar de una entrada común del Repositorio. En lugar de dejarlo en un
-documento del Editor vacío y sin relación, ForkBuild muestra un diálogo
-**Bifurcación no disponible** que indica exactamente qué salió mal:
+lugar de una construcción común de **Explorar**. En lugar de dejarlo en
+un documento del Editor vacío y sin relación, ForkBuild muestra un diálogo
+**No se puede hacer una copia** que indica exactamente qué salió mal:
 
-- **Este Mundo compartido no se puede bifurcar bajo su licencia.** La
-  licencia de lo que intentaba bifurcar no lo permite (consulte
-  [Elegir una licencia](#elegir-una-licencia) arriba).
-- **El material de este Mundo compartido no está disponible por
-  ahora.** La licencia permite bifurcar, pero el contenido en sí todavía
-  no está en este dispositivo (ni se puede alcanzar mediante un par
-  conectado).
+- **La licencia de esta construcción no permite copias.** Consulte
+  [Elegir una licencia](#elegir-una-licencia) arriba.
+- **Ahora mismo no se puede obtener esta construcción.** La licencia
+  permite copias, pero la construcción en sí todavía no está en este
+  dispositivo (ni se puede alcanzar mediante un par conectado).
 
-En ambos casos, el único botón del diálogo, **Volver al Mundo compartido**,
+En ambos casos, el único botón del diálogo, **Volver a la construcción**,
 lo lleva de vuelta a donde lo encontró (el Mundo en el que estaba colocado,
 o el Mundo compartido en sí), en lugar de dejarlo varado en el Editor sin
 nada sobre lo que construir.
@@ -639,8 +633,8 @@ conoce: sus propias construcciones publicadas con la etiqueta y las de
 otras personas encontradas en las redes. Cuando una construcción se distribuye en Nostr, Arweave, Steem o Blurt, su anuncio (en Blurt, su publicación) enumera sus etiquetas, y la
 página pregunta a esas redes por la etiqueta de la semana cada vez que se
 abre (**Volver a buscar** vuelve a preguntar). Cada participación
-encontrada se comprueba como todo lo que encuentra el Repositorio, y
-aparece también en el Repositorio. Una construcción compartida solo por su enlace no se encuentra así, ni una anunciada solo en Steem antes del 8 de octubre de 2026, cuando los anuncios en Steem empezaron a incluir etiquetas. Las
+encontrada se comprueba como todo lo que encuentra **Explorar**, y
+aparece también en **Explorar**. Una construcción compartida solo por su enlace no se encuentra así, ni una anunciada solo en Steem antes del 8 de octubre de 2026, cuando los anuncios en Steem empezaron a incluir etiquetas. Las
 semanas anteriores siguen disponibles por su lunes (**La semana pasada:
 …**), sin **Unirse**.
 
@@ -712,12 +706,12 @@ construcción, y cada nombre abre la página de esa persona.
 
 Este es todo el recorrido en un solo flujo:
 
-1. **Construya** una creación en el Editor.
-2. **Guárdela**.
-3. **Publíquela** en el Repositorio.
-4. Alguien la **encuentra** (buscando, explorando cerca en la Vista del
-   mundo o recorriendo su página de autor) y la **bifurca**.
-5. Esa persona **publica** su bifurcación.
+1. **Construya** algo en el Editor.
+2. **Guárdelo**.
+3. **Publíquelo**, y envíelo a todos o comparta su enlace.
+4. Alguien lo **encuentra** (buscando, explorando cerca en la Vista del
+   mundo o recorriendo su página de autor) y lo **remezcla**.
+5. Esa persona **publica** su remezcla.
 6. Otras personas **exploran** ambas en la Vista del mundo, y el árbol
    crece.
 

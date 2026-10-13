@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: ceaf8eebe8c02fe4 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 941edcaf2e7249c7 -->
 # 13 — Ihre Daten
 
 <!-- languages -->
 [English](../13-YourData.md) · **Deutsch** · [Español](../es/13-YourData.md) · [Français](../fr/13-YourData.md) · [Bahasa Indonesia](../id/13-YourData.md) · [日本語](../ja/13-YourData.md) · [한국어](../ko/13-YourData.md) · [Português (Brasil)](../pt-BR/13-YourData.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../13-YourData.md).
-<!-- /stale -->
 
 ForkBuild hat keine Konten und keinen Server, der Ihre Arbeit aufbewahrt.
 Alles, was es speichert, liegt in diesem Browser auf diesem Gerät: Ihre
@@ -206,8 +202,8 @@ einer vollständigen Sicherung mit.
 
 Eine Kreation, die Sie **veröffentlichen**, wird nur auf diesem Gerät
 gespeichert, bis Sie sie verteilen (siehe
-[Veröffentlichen & Forken](04-PublishingAndForking.md)). Ihre Karte im
-Repository sagt, wo dieses Gerät das Verteilen festgehalten hat, zum
+[Veröffentlichen & Forken](04-PublishingAndForking.md)). Ihre Karte in
+**Entdecken** sagt, wo dieses Gerät das Verteilen festgehalten hat, zum
 Beispiel **Gespeichert auf IPFS · Angekündigt auf Nostr**: wohin das
 Bauwerk oder sein Signierter Anspruch hochgeladen wurde (IPFS, Arweave, Steem
 oder Blurt) und wo es angekündigt wurde (Nostr, Arweave, Steem oder Blurt). Halten Sie

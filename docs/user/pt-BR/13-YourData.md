@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: ceaf8eebe8c02fe4 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 941edcaf2e7249c7 -->
 # 13 — Seus dados
 
 <!-- languages -->
 [English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Español](../es/13-YourData.md) · [Français](../fr/13-YourData.md) · [Bahasa Indonesia](../id/13-YourData.md) · [日本語](../ja/13-YourData.md) · [한국어](../ko/13-YourData.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../13-YourData.md).
-<!-- /stale -->
 
 O ForkBuild não tem contas nem servidor que guarde seu trabalho. Tudo o que
 ele guarda fica neste navegador, neste dispositivo: seus documentos,
@@ -191,7 +187,7 @@ junto num backup completo.
 
 Uma criação que você **Publica** fica guardada só neste dispositivo, até você
 distribuí-la (veja [Publicar e bifurcar](04-PublishingAndForking.md)). O
-cartão dela no Repositório diz onde este dispositivo registrou a
+cartão dela em **Explorar** diz onde este dispositivo registrou a
 distribuição, por exemplo **Guardado no IPFS · Anunciado no Nostr**: para
 onde a construção ou a Declaração assinada dela foi enviada (IPFS, Arweave,
 Steem ou Blurt) e onde foi anunciada (Nostr, Arweave, Steem ou Blurt). Pare o ponteiro

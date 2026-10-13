@@ -1,26 +1,42 @@
-<!-- translation-of: docs/user/README.md source-hash: ad61b5f6af2559db -->
+<!-- translation-of: docs/user/README.md source-hash: 0a529ac2186a5c9d -->
 # Documentação do ForkBuild para usuários
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [한국어](../ko/README.md) · **Português (Brasil)**
 <!-- /languages -->
 
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../README.md).
-<!-- /stale -->
+Guias práticos para usar o ForkBuild no navegador. É novo por aqui?
+Comece por **[Primeiros passos](01-GettingStarted.md)**: cinco minutos
+entre abrir o aplicativo e entrar andando na sua primeira construção.
 
-Guias práticos para usar o ForkBuild no navegador. Tudo aqui descreve o
-produto como ele funciona hoje; os detalhes internos do motor estão em
-[docs/Architecture.md](../../Architecture.md) (em inglês) e no restante da
-pasta [docs/](../..) de nível superior.
+## Eu quero…
+
+| Eu quero… | Leia |
+|---|---|
+| Construir minha primeira coisa | [Primeiros passos](01-GettingStarted.md#colocando-seu-primeiro-bloco) |
+| Aprender as ferramentas de construção | [O Editor](02-TheEditor.md) |
+| Compartilhar uma construção com um amigo | [Compartilhando um link](04-PublishingAndForking.md#compartilhando-um-link) |
+| Deixar todo mundo encontrar minha construção | [Quem pode encontrá-la?](04-PublishingAndForking.md#quem-pode-encontrá-la) |
+| Remixar a construção de outra pessoa | [Bifurcar: torne-a sua](04-PublishingAndForking.md#bifurcar-torne-a-sua) |
+| Construir com um amigo, ao vivo | [Construir comigo](02-TheEditor.md#construir-comigo-construir-juntos-ao-vivo) |
+| Passear com amigos | [Passear aqui comigo](03-WorldView.md#passear-aqui-comigo--trazer-amigos-para-este-mundo) |
+| Mudar a aparência do meu avatar | [Avatares e presença](06-AvatarsAndPresence.md#personalizando-seu-avatar) |
+| Fazer backup do meu trabalho, ou levá-lo para outro dispositivo | [Seus dados](13-YourData.md) |
+| Consultar uma tecla ou um controle do mouse | [Referência de controles](ControlsReference.md) |
+| Consertar algo que não está funcionando | [Perguntas frequentes](FAQ.md) |
+
+Tudo aqui descreve o produto como ele funciona hoje; os detalhes internos
+do motor estão em [docs/Architecture.md](../../Architecture.md) e no resto
+da pasta [docs/](../..) de nível superior (só em inglês).
 
 ## Jogar (leia em ordem)
 
 Tudo o que você precisa para construir, compartilhar, remixar e passear
 com amigos.
 
-1. **[Primeiros passos](01-GettingStarted.md)** — abra o app, coloque
-   seu primeiro bloco e entre só na hora de publicar.
+1. **[Primeiros passos](01-GettingStarted.md)** — abra o app, oriente-se
+   no menu, coloque seu primeiro bloco e escolha um nome só na hora de
+   publicar.
 2. **[O Editor](02-TheEditor.md)** — o kit de construção: ferramentas,
    seleção, transformações, cores dos blocos, grupos, as estruturas da
    Biblioteca de construção e suas próprias plantas, instâncias de
@@ -32,7 +48,7 @@ com amigos.
    ferramentas de rede ficam em **Mostrar ferramentas avançadas**.
 4. **[Publicar e bifurcar](04-PublishingAndForking.md)** — publicar e
    compartilhar um link, escolher para onde suas construções vão,
-   licenças, remixar, o Repositório e suas construções prontas, o
+   licenças, remixar, o **Explorar** e suas construções prontas, o
    desafio semanal e sua praça, e as árvores genealógicas. Para tudo
    para onde uma construção pode ir, veja [Distribuindo seu
    trabalho](Distribution.md).
@@ -104,14 +120,15 @@ ferramentas experimentais. Você não precisa de nada disso para jogar.
 O Editor é o único lugar onde se constrói no ForkBuild; a Visão do mundo é
 uma superfície de exploração somente leitura:
 
-- **Editor** (`/editor`) — seu espaço de trabalho particular. Coloque blocos
-  da paleta, selecione-os e transforme-os com o teclado ou com o gizmo.
-  Salve, carregue e publique documentos pela barra de ferramentas.
-- **Visão do mundo** (`/world/:id`) — o mundo espacial compartilhado. Voe
-  entre mundos publicados, pesquise e explore o que há ao seu redor,
-  inspecione blocos e estruturas posicionadas, caminhe com seu avatar sobre
-  estruturas e terreno, e use **Editar uma cópia** para abrir no Editor o que
-  encontrou, pronto para continuar a construção.
+- **Editor** (**Construir** no menu) — seu espaço de trabalho particular.
+  Coloque blocos da Biblioteca de construção, selecione-os e mova-os ou
+  gire-os com o teclado ou com o gizmo. Salve, abra e publique construções
+  pela barra de ferramentas.
+- **Visão do mundo** (**Passear** no menu, ou **Explorar** em qualquer
+  construção) — o mundo compartilhado. Ande ou voe entre construções
+  publicadas, pesquise e explore o que há ao seu redor, caminhe com seu
+  avatar sobre edifícios e terreno, e use **Editar uma cópia** para abrir
+  no Editor o que encontrou, pronto para continuar a construção.
 
 Tudo o que você faz no Editor é um passo que pode ser desfeito, e
 `Ctrl/Cmd+Z` o desfaz.

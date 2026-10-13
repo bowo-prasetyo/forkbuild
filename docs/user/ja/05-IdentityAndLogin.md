@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 185649658a1144d2 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 9cd714dbbc4a41d4 -->
 # 05 — アイデンティティとログイン
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · **日本語** · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../05-IdentityAndLogin.md)も参照してください。
-<!-- /stale -->
 
 ForkBuild にはパスワードも中央のアカウントサーバーもありません。
 **あなたのアイデンティティは、このブラウザーに保存された暗号学的な鍵ペア
@@ -74,7 +70,7 @@ ForkBuild にはパスワードも中央のアカウントサーバーもあり�
 
 ## アイデンティティの管理 — マイアイデンティティページ
 
-上部のバーで **マイアイデンティティ** を開くと、このデバイスにある
+**その他 → マイアイデンティティ** を開く（または上部のバーで自分の名前をクリックする）と、このデバイスにある
 すべてのアイデンティティが、それぞれのロック状態とともに表示されます。
 これは、今どのアイデンティティでログインしているかとは関係ありません。
 ここでは次のことができます。

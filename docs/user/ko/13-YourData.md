@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: ceaf8eebe8c02fe4 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 941edcaf2e7249c7 -->
 # 13 — 내 데이터
 
 <!-- languages -->
 [English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Español](../es/13-YourData.md) · [Français](../fr/13-YourData.md) · [Bahasa Indonesia](../id/13-YourData.md) · [日本語](../ja/13-YourData.md) · **한국어** · [Português (Brasil)](../pt-BR/13-YourData.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../13-YourData.md)을 참고하세요.
-<!-- /stale -->
 
 <!-- languages -->
 <!-- /languages -->
@@ -164,7 +160,7 @@ ForkBuild에는 계정도, 작업을 보관해 주는 서버도 없습니다. Fo
 ## 내 게시물
 
 내가 **게시**한 작품은 배포하기 전까지 이 기기에만 저장됩니다
-([게시와 포크](04-PublishingAndForking.md) 참고). 저장소 카드에는 이 기기가 배포를
+([게시와 포크](04-PublishingAndForking.md) 참고). **둘러보기** 카드에는 이 기기가 배포를
 어디에 기록했는지 표시됩니다. 예를 들어 **저장 위치 IPFS · 공지 위치 Nostr**:
 작품이나 서명 클레임을 업로드한 곳(IPFS, Arweave, Steem, Blurt)과 공지한 곳(Nostr,
 Arweave, Steem, Blurt)입니다. 이름 위에 포인터를 올리면 주소나 공지 id가 보입니다.

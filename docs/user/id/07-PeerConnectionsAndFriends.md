@@ -1,16 +1,12 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 02e25094626dc446 -->
 # 07 — Koneksi Rekan & Teman
 
 <!-- languages -->
 [English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · **Bahasa Indonesia** · [日本語](../ja/07-PeerConnectionsAndFriends.md) · [한국어](../ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../07-PeerConnectionsAndFriends.md).
-<!-- /stale -->
-
 ForkBuild menghubungkan Anda langsung ke browser orang lain — tidak ada
-server pusat yang menyimpan daftar teman. Buka **Rekan** di bilah atas
+server pusat yang menyimpan daftar teman. Buka **Lainnya → Rekan**
 untuk mengelola siapa yang terhubung, Anda kenal, dan berteman dengan Anda.
 
 ## Sekilas tentang halaman ini
@@ -202,7 +198,7 @@ pun kepada yang lain.
   nama pembuat yang diketik: beberapa orang dapat menerbitkan dengan nama
   yang sama, jadi halaman pembuat menampilkan satu **Ikuti** per identitas
   yang menandatangani karya dengan nama itu.
-- **Halaman Diikuti** (**Diikuti** di bilah atas) mencantumkan orang yang
+- **Halaman Diikuti** (**Lainnya → Diikuti**) mencantumkan orang yang
   Anda ikuti, masing-masing dengan **Berhenti Mengikuti**, dan di bawahnya
   karya terbaru mereka yang telah sampai di perangkat ini, dari yang
   terbaru. Klik sebuah nama untuk melihat karya orang itu saja.
@@ -251,7 +247,7 @@ koneksi (tidak pernah hanya karena membuka aplikasi) dan memakainya secara
 otomatis. Server membagikan kredensial relay dalam jumlah terbatas setiap
 bulan; begitu habis, koneksi tetap dicoba, hanya tanpa relay, sampai bulan
 berikutnya. Untuk memakai relay milik Anda sendiri, buka **Server TURN**
-dari **Pengaturan Jaringan** di bilah atas (`/settings/turn-server`) dan
+dari **Lainnya → Pengaturan Jaringan** (`/settings/turn-server`) dan
 konfigurasikan relay TURN Anda sendiri: server yang benar-benar meneruskan
 data koneksi saat jalur langsung tidak dapat dibuat.
 

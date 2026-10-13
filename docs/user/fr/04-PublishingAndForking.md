@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d63d0904aac96490 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ba7ee7cf8bfc4b8a -->
 # 04 — Publier et forker
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · **Français** · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 C’est le cœur de ForkBuild. **Publier** partage votre création avec le
 monde. **Remixer** permet à n’importe qui de copier une création et de la
@@ -16,11 +12,11 @@ faire évoluer — en conservant tout l’historique.
 ## Publier votre création
 
 1. Construisez quelque chose dans l’Éditeur.
-2. Connectez-vous et vérifiez que votre identité est déverrouillée (voir
+2. Ayez un nom, et vérifiez qu’il est déverrouillé (voir
    [Identité et connexion](05-IdentityAndLogin.md)). Publier signe la
-   création avec elle. Si vous n’êtes pas connecté, **Publier** vous demande
-   d’abord de vous connecter ou de créer une identité ; **Publier sans
-   signer** la publie alors sans auteur et sans lien.
+   construction avec lui. Si vous n’avez pas encore de nom, **Publier**
+   vous demande d’abord d’en choisir un ; **Publier sans signer** la publie
+   alors sans auteur et sans lien.
 3. Donnez-lui un titre — Publier refuse une création sans titre ou vide —
    et, si vous le souhaitez, une description et une licence : cliquez sur
    **✎** à côté du titre du document dans la barre latérale pour ouvrir
@@ -54,8 +50,8 @@ sans place pour se tenir derrière, ne compte pas, et on arrive devant une
 construction sans porte. La carte **Votre première construction** propose le
 même bouton une fois la construction publiée.
 
-> **Remarque :** publier ne stocke votre Document/Monde que sur cet
-> appareil. Sa carte dans le Dépôt indique où cet appareil a enregistré sa
+> **Remarque :** publier stocke votre construction sur cet appareil. Sa
+> carte dans **Explorer** indique où cet appareil a enregistré sa
 > distribution (par exemple **Stocké sur IPFS · Annoncé sur Nostr**), ou
 > **Aucune distribution enregistrée sur cet appareil**. Sauvegardez-la
 > dans [Vos données](13-YourData.md) pour en garder une copie en
@@ -87,8 +83,8 @@ boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
   et une image de la construction, dessinée par le serveur de liens de
   ForkBuild, qui envoie ensuite quiconque l’ouvre vers ForkBuild. Un lien
   modifié n’affiche que « A shared build ».
-- **Il faut une signature.** Publiez en étant connecté ; une création
-  publiée sans être connecté n’obtient pas de lien.
+- **Il faut une signature.** Publiez sous un nom ; une construction
+  publiée sans nom (**Publier sans signer**) n’obtient pas de lien.
 - **Taille.** Une construction d’environ 500 briques au plus y tient ; le
   lien du château prêt à l’emploi fait environ 3 700 caractères. Le
   courriel et la plupart des messageries et des réseaux sociaux gardent un
@@ -304,14 +300,15 @@ vos constructions l’est.
 
 ## Partager avec les pairs connectés
 
-Un Monde que vous publiez n’est listé que dans *votre* Dépôt, jusqu’à ce
-que vous le distribuiez sur Nostr, Arweave, Steem ou Blurt (voir
-[Distribution](Distribution.md)) : le Dépôt de chacun le trouve alors (voir
+Une construction que vous publiez n’est listée que dans *votre*
+**Explorer**, jusqu’à ce qu’elle soit envoyée à tout le monde (voir
+[Qui peut la trouver ?](#qui-peut-la-trouver-)) ou que vous la distribuiez
+sur Nostr, Arweave, Steem ou Blurt (voir [Distribution](Distribution.md)) :
+l’**Explorer** de chacun la trouve alors (voir
 [Créations distribuées par d’autres](#créations-distribuées-par-dautres)).
-Pour le
-mettre dans le Dépôt de quelqu’un à qui vous êtes connecté (voir
-[Connexions entre pairs et amis](07-PeerConnectionsAndFriends.md)),
-cliquez sur **Partager avec les pairs** sous ce Monde dans le Dépôt. Le
+Pour la mettre dans l’**Explorer** de quelqu’un à qui vous êtes connecté
+(voir [Connexions entre pairs et amis](07-PeerConnectionsAndFriends.md)),
+cliquez sur **Partager avec les pairs** sous elle dans **Explorer**. Le
 bouton n’apparaît que sur vos propres Mondes publiés.
 
 - Partager propose le Monde à toutes les personnes connectées en ce
@@ -319,9 +316,9 @@ bouton n’apparaît que sur vos propres Mondes publiés.
   Partager de nouveau** l’annonce de nouveau aux personnes connectées
   maintenant.
 - De leur côté, un Monde partagé par l’un de leurs **Amis** ou **Pairs
-  connus** est ajouté de lui-même à leur Dépôt, avec tout ce qu’il faut
+  connus** est ajouté de lui-même à leur **Explorer**, avec tout ce qu’il faut
   pour l’**Explorer**. Un Monde partagé par quelqu’un d’autre attend sous
-  **Partagés avec vous** en haut de leur Dépôt jusqu’à ce qu’ils cliquent
+  **Partagés avec vous** en haut de leur **Explorer** jusqu’à ce qu’ils cliquent
   sur **Récupérer**. Aucun appareil ne télécharge le Monde d’un inconnu
   sans qu’on le lui demande. Chacun est listé sous son titre, pour qu’ils
   puissent choisir ; leur appareil s’assure que le Monde qu’ils récupèrent
@@ -426,8 +423,9 @@ L’original n’est jamais touché, quoi que vous changiez dans votre copie.
 
 ## Le Dépôt
 
-Le **Dépôt** est le catalogue, avec recherche, de toutes les créations
-publiées que cet appareil connaît : les vôtres, celles que des pairs ont
+**Explorer**, dans la barre du haut (appelé *Dépôt* dans les versions
+antérieures et dans quelques messages avancés), est le catalogue, avec
+recherche, de toutes les constructions publiées que cet appareil connaît : les vôtres, celles que des pairs ont
 partagées avec vous, et celles trouvées sur des réseaux décentralisés. Il
 est conçu pour rester utilisable qu’il contienne dix créations ou dix
 mille.
@@ -455,7 +453,7 @@ Bibliothèque de construction, sous *collection*.
 
 ### Créations distribuées par d’autres
 
-Chaque fois que vous ouvrez le Dépôt (ou une page d’auteur), il cherche sur
+Chaque fois que vous ouvrez **Explorer** (ou une page d’auteur), il cherche sur
 Nostr, Arweave, Steem et Blurt les créations que d’autres personnes y ont
 distribuées, et ajoute celles qu’il peut vérifier. Une ligne au-dessus de
 la liste indique ce qu’il fait, puis combien de nouvelles créations il a
@@ -467,7 +465,7 @@ trouvées ; **Vérifier à nouveau** cherche encore une fois.
   nouveau.
 - Il vérifie jusqu’à 20 nouvelles créations à la fois. S’il y en a plus,
   la ligne indique combien il en reste pour la prochaine fois.
-- Une création trouvée ainsi reste dans votre Dépôt après un
+- Une création trouvée ainsi reste dans votre **Explorer** après un
   rechargement.
 - Son build n’est pas encore sur votre appareil. **Explorer** le récupère
   là où il a été stocké, le vérifie, puis l’ouvre dans la Vue du Monde,
@@ -524,7 +522,7 @@ déjà visité plutôt que pour un Monde que vous découvrez.)
 Cliquez sur le **nom d’un auteur** pour ouvrir sa **page d’auteur** — un
 portfolio de tout ce qu’il a créé, y compris ses originaux et tous les
 forks qui en sont nés, avec exactement le même catalogue de recherche, de
-tri et de pagination que le Dépôt, simplement limité à cet auteur.
+tri et de pagination qu’**Explorer**, simplement limité à cet auteur.
 
 Une carte dont la signature est valide a aussi un bouton **Suivre**, et
 une page d’auteur affiche **Signé par …** avec **Suivre** pour chaque
@@ -532,8 +530,8 @@ identité qui a publié sous ce nom. Suivre quelqu’un place ses nouvelles
 créations sur votre page **Abonnements** et dans vos notifications ; voir
 [Suivre des personnes](07-PeerConnectionsAndFriends.md#suivre-des-personnes).
 
-Le Dépôt ne se limite pas non plus à ce qui a été publié depuis cet
-appareil ou découvert directement : une création décentralisée qu’un pair
+**Explorer** ne se limite pas non plus à ce qui a été publié depuis cet
+appareil ou découvert directement : une construction décentralisée qu’un pair
 vous a montrée sur la carte des
 [Rencontres dans le Monde](03-WorldView.md#rencontres-dans-le-monde--publications-et-avatars-que-vos-pairs-partagent)
 de la Vue du Monde, une fois son contenu réellement résolu, rejoint aussi
@@ -562,13 +560,13 @@ ci-dessus.)
 > **Aussi appelé « Modifier une copie » dans la Vue du Monde.** C’est la
 > même opération sous-jacente dans les deux cas, avec les mêmes règles de
 > licence et la même gestion de
-> [Fork impossible](#quand-un-fork-ne-peut-pas-aboutir). Voir
+> [Impossible de faire une copie](#quand-un-fork-ne-peut-pas-aboutir). Voir
 > [Modifier une copie](03-WorldView.md#modifier-une-copie--emporter-quelque-chose-dans-léditeur)
 > pour la présentation propre à la Vue du Monde.
 
 ### Comment forker
 
-1. Trouvez une création dans le **Dépôt** (ou dans la Vue du Monde).
+1. Trouvez une construction dans **Explorer** (ou dans la Vue du Monde).
 2. Cliquez sur **Remixer**.
 3. La copie s’ouvre dans l’Éditeur, intitulée *« Fork de &lt;nom
    d’origine&gt; »*.
@@ -579,7 +577,7 @@ relie à l’original.
 
 ### Nombre de remix
 
-La page d’une construction et sa carte dans le Dépôt disent combien de
+La page d’une construction et sa carte dans **Explorer** disent combien de
 fois elle a été remixée (**Remixée 3 fois**) : combien de constructions
 différentes, forkées à partir d’elle et publiées, cet appareil a trouvées.
 Un remix publié deux fois compte une fois, et une construction que
@@ -597,19 +595,19 @@ vous avez activé [Notifications sur cet appareil](03-WorldView.md#notifications
 Il arrive qu’un fork ne puisse pas aboutir — le plus souvent en forkant un
 Monde partagé trouvé via un pair ou un réseau décentralisé (voir
 [Publications et preuves externes](09-PublicationsAndEvidence.md)) plutôt
-qu’une entrée ordinaire du Dépôt. Au lieu de vous déposer dans un
-document vide et sans rapport de l’Éditeur, ForkBuild affiche une boîte
-de dialogue **Fork impossible** qui nomme exactement le problème :
+qu’une construction ordinaire d’**Explorer**. Au lieu de vous déposer
+dans un document vide et sans rapport de l’Éditeur, ForkBuild affiche une
+boîte de dialogue **Impossible de faire une copie** qui nomme exactement le
+problème :
 
-- **Ce Monde partagé ne peut pas être forké selon sa licence** — la
-  licence de ce que vous essayiez de forker ne le permet pas (voir
-  [Choisir une licence](#choisir-une-licence) ci-dessus).
-- **Le contenu de ce Monde partagé est actuellement indisponible** — la
-  licence autorise les forks, mais le contenu lui-même n’est pas encore
-  sur cet appareil (ni accessible via un pair connecté).
+- **La licence de cette construction n’autorise pas les copies.** — voir
+  [Choisir une licence](#choisir-une-licence) ci-dessus.
+- **Impossible de récupérer cette construction pour l’instant.** — la
+  licence autorise les copies, mais la construction elle-même n’est pas
+  encore sur cet appareil (ni accessible via un pair connecté).
 
-Dans les deux cas, l’unique bouton de la boîte de dialogue, **Retour au
-Monde partagé**, vous ramène là où vous l’avez trouvé — le Monde où il
+Dans les deux cas, l’unique bouton de la boîte de dialogue, **Retour à la
+construction**, vous ramène là où vous l’avez trouvé — le Monde où il
 était placé, ou le Monde partagé lui-même — plutôt que de vous laisser
 bloqué dans l’Éditeur sans rien à développer.
 
@@ -654,7 +652,7 @@ propres constructions publiées avec l’étiquette, et celles des autres
 trouvées sur les réseaux. Quand une construction est diffusée sur Nostr, Arweave, Steem ou Blurt, son annonce (sur Blurt, sa publication) liste ses étiquettes, et la page demande l’étiquette
 de la semaine à ces réseaux à chaque ouverture (**Vérifier à nouveau**
 redemande). Chaque participation trouvée est vérifiée comme tout ce que
-trouve le Dépôt, et apparaît aussi dans le Dépôt. Une construction partagée seulement par son lien n’est pas trouvée ainsi, pas plus qu’une construction annoncée seulement sur Steem avant le 8 octobre 2026, date à laquelle les annonces Steem ont commencé à lister les étiquettes. Les semaines précédentes restent ouvertes par leur
+trouve **Explorer**, et apparaît aussi dans **Explorer**. Une construction partagée seulement par son lien n’est pas trouvée ainsi, pas plus qu’une construction annoncée seulement sur Steem avant le 8 octobre 2026, date à laquelle les annonces Steem ont commencé à lister les étiquettes. Les semaines précédentes restent ouvertes par leur
 lundi (**La semaine dernière : …**), sans **Participer**.
 
 Les participations sont montrées de la plus récente à la plus ancienne,
@@ -727,13 +725,13 @@ titre ouvre la construction, et chaque nom la page de cette personne.
 
 Voici tout le parcours en un seul enchaînement :
 
-1. **Construisez** une création dans l’Éditeur.
-2. **Enregistrez**-la.
-3. **Publiez**-la dans le Dépôt.
-4. Quelqu’un la **trouve** — en cherchant, en explorant les alentours
-   dans la Vue du Monde, ou en parcourant votre page d’auteur — et la
-   **forke**.
-5. Il **publie** son fork.
+1. **Construisez** quelque chose dans l’Éditeur.
+2. **Enregistrez**-le.
+3. **Publiez**-le, et envoyez-le à tout le monde ou partagez son lien.
+4. Quelqu’un le **trouve** — en cherchant, en explorant les alentours
+   dans la Vue du Monde, ou en parcourant votre page d’auteur — et le
+   **remixe**.
+5. Il **publie** son remix.
 6. D’autres **explorent** les deux dans la Vue du Monde, et l’arbre
    grandit.
 

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 0597b11a718701f3 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: d8dfa742e1512331 -->
 # 02 — El Editor
 
 <!-- languages -->
 [English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · **Español** · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../02-TheEditor.md).
-<!-- /stale -->
 
 El Editor es donde construye. Esta guía cubre las herramientas, cómo
 seleccionar y transformar bloques, y cómo organizar su construcción con
@@ -551,7 +547,7 @@ el botón **✎** junto al título del documento, arriba en la barra lateral
 del Editor (en la Vista del mundo, es el botón **Editar metadatos**). Un
 documento nuevo empieza sin licencia, lo que significa que nadie más puede
 bifurcarlo hasta que usted elija una. La descripción aparece como un
-fragmento en su tarjeta del Repositorio y también se puede buscar allí; la
+fragmento en su tarjeta de **Explorar** y también se puede buscar allí; la
 licencia controla si otras personas pueden bifurcarlo, y cómo. Consulte
 [Publicar y bifurcar](04-PublishingAndForking.md) para saber qué significa
 cada licencia.
@@ -570,7 +566,7 @@ mundo y las publicaciones en Steem y Blurt:
 | `\*`, `\#`, `\-` | el carácter mismo |
 
 Nada más es formato: los enlaces, las imágenes y el HTML quedan como texto
-simple. Las tarjetas del Repositorio muestran las palabras de la descripción en una
+simple. Las tarjetas de **Explorar** muestran las palabras de la descripción en una
 línea, sin formato.
 
 Las **etiquetas** dicen qué es la construcción, como `japones templo
@@ -620,17 +616,17 @@ Mientras construye suena una música suave, algo más animada que la de la Vista
   pueblo, una casa, un molino y un puente) como su propia copia, vista
   entera. Si lo que tiene abierto tiene cambios sin guardar, Nuevo se lo
   avisa primero; guárdelo para conservarlos.
-- **Archivo** reúne los tres siguientes:
-- **Exportar**: descarga la creación actual como archivo JSON, para
-  conservar una copia o llevarla a otro dispositivo. Los archivos usan un
-  formato compacto que guarda los bloques como una tabla.
-- **Modelo 3D**: descarga la creación como modelo 3D para otros programas
-  (consulte [Descargar un modelo 3D](#descargar-un-modelo-3d)).
-- **Importar**: abre un archivo exportado como una creación nueva con su
-  propia identidad; no se guarda nada hasta que use **Guardar**. Los
-  archivos exportados por versiones anteriores siguen abriéndose (se
-  convierten al cargarse), pero ForkBuild 1.0.0 y anteriores no pueden
-  abrir archivos exportados por esta versión.
+- **Archivo**: un menú con tres más:
+  - **Exportar**: descarga la construcción actual como archivo JSON, para
+    conservar una copia o llevarla a otro dispositivo. Los archivos usan un
+    formato compacto que guarda los bloques como una tabla.
+  - **Modelo 3D**: descarga la construcción como modelo 3D para otros programas
+    (consulte [Descargar un modelo 3D](#descargar-un-modelo-3d)).
+  - **Importar**: abre un archivo exportado como una construcción nueva con su
+    propia identidad; no se guarda nada hasta que use **Guardar**. Los
+    archivos exportados por versiones anteriores siguen abriéndose (se
+    convierten al cargarse), pero ForkBuild 1.0.0 y anteriores no pueden
+    abrir archivos exportados por esta versión.
 - **Recientes**: vuelve a abrir algo que guardó antes (aparece después de
   su primer guardado; haga clic en el nombre de un documento para
   abrirlo). Cuando ya guardó suficientes documentos, aparece un cuadro de

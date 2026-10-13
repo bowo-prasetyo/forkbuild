@@ -1,17 +1,13 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 02e25094626dc446 -->
 # 07 — Connexions entre pairs et amis
 
 <!-- languages -->
 [English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · **Français** · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · [日本語](../ja/07-PeerConnectionsAndFriends.md) · [한국어](../ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../07-PeerConnectionsAndFriends.md).
-<!-- /stale -->
-
 ForkBuild vous connecte directement aux navigateurs des autres personnes
-— aucun serveur central ne détient de liste d’amis. Ouvrez **Pairs** dans
-la barre du haut pour gérer les personnes avec qui vous êtes connecté, que
+— aucun serveur central ne détient de liste d’amis. Ouvrez **Plus → Pairs**
+pour gérer les personnes avec qui vous êtes connecté, que
 vous connaissez et dont vous êtes ami.
 
 ## La page en un coup d’œil
@@ -207,7 +203,7 @@ l’autre.
   *identité*, jamais un nom d’auteur saisi : plusieurs personnes peuvent
   publier sous le même nom, la page d’un auteur affiche donc un
   **Suivre** par identité ayant signé des créations sous ce nom.
-- **La page Abonnements** (**Abonnements** dans la barre du haut) liste
+- **La page Abonnements** (**Plus → Abonnements**) liste
   les personnes que vous suivez, chacune avec **Ne plus suivre**, et en
   dessous leurs créations les plus récentes arrivées sur cet appareil, des
   plus récentes aux plus anciennes. Cliquez sur un nom pour ne voir que
@@ -261,8 +257,8 @@ identifiants de relais de courte durée quand vous démarrez une connexion
 automatiquement. Le serveur distribue un nombre limité d’identifiants de
 relais chaque mois ; une fois épuisés, les connexions sont toujours
 tentées, simplement sans relais, jusqu’au mois suivant. Pour utiliser
-votre propre relais, ouvrez **Serveur TURN** depuis **Paramètres réseau**
-dans la barre du haut (`/settings/turn-server`) et configurez votre propre
+votre propre relais, ouvrez **Serveur TURN** depuis **Plus → Paramètres réseau**
+(`/settings/turn-server`) et configurez votre propre
 relais TURN : un serveur qui transmet réellement les données de la
 connexion quand un chemin direct ne peut pas être établi.
 

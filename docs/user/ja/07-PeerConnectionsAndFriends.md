@@ -1,16 +1,12 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 02e25094626dc446 -->
 # 07 — ピア接続と友達
 
 <!-- languages -->
 [English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · **日本語** · [한국어](../ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../07-PeerConnectionsAndFriends.md)も参照してください。
-<!-- /stale -->
-
 ForkBuild は、あなたを他の人のブラウザーに直接つなぎます。友達リストを
-保管する中央サーバーはありません。上部のバーで **ピア** を開くと、
+保管する中央サーバーはありません。**その他 → ピア** を開くと、
 接続中の人、記憶している人、友達を管理できます。
 
 ## ページの概要
@@ -187,7 +183,7 @@ IDで探すには、相手の完全なアイデンティティ ID が必要で�
   ありません。同じ名前で公開する人が何人もいる可能性があるので、作者
   ページには、その名前で作品に署名したアイデンティティごとに 1 つずつ
   **フォロー** が表示されます。
-- **フォロー中ページ**（上部のバーの **フォロー中**）には、フォロー
+- **フォロー中ページ**（**その他 → フォロー中**）には、フォロー
   している人がそれぞれ **フォロー解除** 付きで表示され、その下に、
   このデバイスに届いたその人たちの新しい作品が新しい順に並びます。
   名前をクリックすると、その人の作品だけが表示されます。
@@ -231,8 +227,8 @@ IDで探すには、相手の完全なアイデンティティ ID が必要で�
 始めるときに（アプリを開いただけでは決して求めません）短期間有効な
 リレーの認証情報をそこに求め、自動で使います。サーバーが毎月配る
 リレーの認証情報の数には限りがあり、使い切ると、翌月まではリレーなしで
-接続を試みます。自分のリレーを使うには、上部のバーの
-**ネットワーク設定** から **TURNサーバー** を開き
+接続を試みます。自分のリレーを使うには、**その他 →
+ネットワーク設定** から **TURNサーバー** を開き
 （`/settings/turn-server`）、自分の TURN リレーを設定します。直接の
 経路を確立できないときに、接続のデータを実際に転送するサーバーです。
 

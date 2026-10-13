@@ -1,25 +1,47 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 30c9430bdca078bf -->
+<!-- translation-of: docs/user/FAQ.md source-hash: d0ced791059d2485 -->
 # Perguntas frequentes
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · **Português (Brasil)**
 <!-- /languages -->
 
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../FAQ.md).
-<!-- /stale -->
-
 Respostas curtas às dúvidas mais comuns, cada uma com um link para o guia
 que explica o assunto por inteiro.
 
+## Orientando-se
+
+### Para onde foram o Editor, o Repositório e Entrar?
+
+Eles mudaram de nome no menu. **Construir** abre o Editor, **Explorar** é o
+antigo Repositório, e **Escolher um nome** (ou o seu nome, quando você tem
+um) substitui Entrar. **Passear** abre o Mundo na praça do desafio desta
+semana. Veja [Orientando-se](01-GettingStarted.md#orientando-se).
+
+### Não encontro Meu avatar, Pares ou Configurações de rede
+
+Eles ficam em **Mais**, na barra superior (no celular, em **Menu**):
+**Você** tem Meu avatar, Minhas identidades e Seus dados; **Pessoas** tem
+Pares, Seguindo e Conversas; **Avançado** tem Publicações e Configurações
+de rede. Clicar no seu nome, no canto superior direito, também abre Meu
+avatar, Minhas identidades e Seus dados.
+
 ## Publicar e compartilhar
 
-### Publiquei minha criação, mas meu amigo não a encontra no Repositório dele
+### Publiquei minha construção, mas meu amigo não a encontra no Explorar
 
-Publicar só guarda a criação no seu próprio dispositivo e a lista no *seu*
-Repositório. Nada é enviado a lugar nenhum até você escolher:
+A não ser que você tenha escolhido **Todo mundo** quando Publicar perguntou
+[Quem pode encontrá-la?](04-PublishingAndForking.md#quem-pode-encontrá-la),
+publicar só guarda a construção no seu próprio dispositivo e a lista no
+*seu* **Explorar**. Para ela chegar ao seu amigo:
 
-- **Compartilhar com pares**, abaixo da sua criação no Repositório, a oferece
+- **Mande o link.** Publicar mostra **Copiar link** (e **Compartilhar…**
+  onde seu dispositivo pode compartilhar); a construção vai dentro do link,
+  então seu amigo pode abri-la em qualquer dispositivo. Veja
+  [Compartilhando um link](04-PublishingAndForking.md#compartilhando-um-link).
+- **Deixe todo mundo encontrar.** Clique em **Deixar todo mundo encontrar**
+  no aviso que aparece depois de publicar, e ela aparece no **Explorar** de
+  todo mundo, no desafio e no Mundo.
+- **Compartilhar com pares**, abaixo da sua construção no **Explorar**, a oferece
   às pessoas com quem você está conectado. O dispositivo de um Amigo ou Par
   conhecido a adiciona sozinho; qualquer outra pessoa a vê em
   **Compartilhado com você** e clica em **Recuperar**. Vocês precisam estar
@@ -33,12 +55,18 @@ Veja
 
 ### Como deixo meu trabalho disponível para todos?
 
-Distribua-o: guarde-o no Arweave ou no IPFS (ou, de forma experimental, no
-Steem ou no Blurt) e anuncie-o no Nostr ou no Arweave (ou no Steem ou no Blurt), para que qualquer
-pessoa possa encontrá-lo e conferi-lo sem estar conectada a você. Clique em
-**Distribuir** logo depois de publicar, ou em **Meu Mundo compartilhado** na
-Visão do mundo. Você precisa de uma extensão de navegador que assine para as
-redes que escolher, como a Wander para o Arweave ou a nos2x para o Nostr.
+Escolha **Todo mundo** quando Publicar perguntar
+[Quem pode encontrá-la?](04-PublishingAndForking.md#quem-pode-encontrá-la)
+(ou clique em **Deixar todo mundo encontrar** depois de publicar). Cada
+construção que você publica passa a ser enviada a todo mundo e aparece no
+**Explorar**, no desafio semanal e no Mundo, sem precisar instalar nada.
+
+Para guardar também uma cópia numa rede de armazenamento descentralizada,
+distribua-a: guarde-a no Arweave ou no IPFS (ou, de forma experimental, no
+Steem ou no Blurt) e anuncie-a no Nostr ou no Arweave (ou no Steem ou no
+Blurt). Para isso você precisa de uma extensão de navegador que assine para
+as redes que escolher, como a Wander para o Arweave ou a nos2x para o
+Nostr.
 [Distribuindo seu trabalho](Distribution.md) lista tudo o que
 você pode distribuir, para onde pode ir e do que cada rede precisa.
 
@@ -64,19 +92,22 @@ Estas mensagens aparecem em inglês no app:
   está bloqueada) — sua identidade se bloqueou sozinha; clique em
   **Desbloquear** ao lado do seu nome na barra superior e publique de novo.
 
-### Preciso ter entrado para publicar?
+### Preciso de um nome para publicar?
 
-Publicar funciona sem ter entrado, mas o resultado não tem autor nem
-assinatura, então você não consegue compartilhá-lo com pares nem
-distribuí-lo depois. Entre antes de publicar.
+Na prática, sim. Publicar pede que você escolha um, o que leva alguns
+segundos e não exige conta. **Publicar sem assinar**, nessa caixa de
+diálogo, publica sem nome, mas o resultado não tem autor nem assinatura:
+não ganha link, e você não consegue compartilhá-lo com pares nem enviá-lo
+a todo mundo depois. Veja
+[Escolhendo um nome](01-GettingStarted.md#escolhendo-um-nome).
 
 ### Posso despublicar alguma coisa?
 
 Sim: abra o Mundo na Visão do mundo e, em **Meu Mundo compartilhado**,
-escolha **Mais ▾ → Despublicar…**. Isso o tira do seu Repositório. Não
+escolha **Mais ▾ → Despublicar…**. Isso o tira do seu **Explorar**. Não
 recupera as cópias que outras pessoas já receberam nem nada que você tenha
 distribuído no Arweave, no IPFS, no Nostr, no Steem ou no Blurt. Este dispositivo
-lembra o que você despublicou, então a busca do Repositório nas redes não
+lembra o que você despublicou, então a busca do **Explorar** nas redes não
 volta a listar essas cópias aqui; outros dispositivos e outras pessoas ainda
 podem encontrá-las.
 
@@ -151,11 +182,11 @@ armazenamento em nuvem sincroniza. Veja [Seus dados](13-YourData.md) e
 Não. As identidades são feitas para durar. Para parar de usar uma, declare
 uma sucessora ou revogue-a em **Minhas identidades**.
 
-### Revoguei minha identidade, então por que ainda consigo entrar com ela?
+### Revoguei minha identidade, então por que ainda consigo usá-la?
 
 Isso é esperado. Revogar impede a identidade de assinar qualquer coisa
-nova, inclusive o que ela precisa para se conectar a outras pessoas, mas não
-impede você de entrar. Assim você ainda pode consultá-la ou exportá-la. Ela
+nova, inclusive o que ela precisa para se conectar a outras pessoas, mas você
+ainda pode escolhê-la neste dispositivo. Assim você ainda pode consultá-la ou exportá-la. Ela
 mostra **Revogada** em **Minhas identidades**, e a revogação nunca pode ser
 desfeita. Crie uma nova identidade para continuar trabalhando. Veja
 [O que revogar faz — e o que não faz](05-IdentityAndLogin.md#o-que-revogar-faz--e-o-que-não-faz).
@@ -260,14 +291,17 @@ distribuir e o chat precisam de conexão. Veja
 
 ### Posso imprimir minha construção em 3D, ou abri-la no Blender?
 
-Pode. **Modelo 3D** na barra de ferramentas do Editor a baixa como STL para
+Pode. **Arquivo → Modelo 3D** na barra de ferramentas do Editor a baixa como STL para
 impressão 3D (em milímetros, apoiada na mesa) ou como glTF ou OBJ colorido
 para o Blender e outros programas. Veja
 [Baixando um modelo 3D](02-TheEditor.md#baixando-um-modelo-3d).
 
 ### Preciso de uma carteira de criptomoedas?
 
-Não. Construir, salvar, publicar, bifurcar, pares e conversas não precisam
-de nenhuma. Uma carteira ou extensão de assinatura só é necessária para os
-recursos experimentais de distribuição e ancoragem de
-[Evidências e armazenamento](11-EvidenceAndStorage.md).
+Não. Construir, salvar, publicar, compartilhar um link, enviar uma
+construção a todo mundo, remixar, pares e conversas não precisam de
+nenhuma. Uma carteira ou extensão de assinatura só é necessária se você
+quiser distribuir você mesmo uma construção numa rede de armazenamento (o
+Arweave precisa de uma carteira Arweave como a Wander; o Nostr, de uma
+extensão de assinatura como a nos2x), e para os recursos experimentais de
+ancoragem de [Evidências e armazenamento](11-EvidenceAndStorage.md).

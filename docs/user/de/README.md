@@ -1,26 +1,42 @@
-<!-- translation-of: docs/user/README.md source-hash: ad61b5f6af2559db -->
+<!-- translation-of: docs/user/README.md source-hash: 0a529ac2186a5c9d -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
 [English](../README.md) · **Deutsch** · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [한국어](../ko/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
 
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../README.md).
-<!-- /stale -->
+Anleitungen zur Nutzung von ForkBuild im Browser. Neu hier? Beginnen Sie
+mit **[Erste Schritte](01-GettingStarted.md)**: fünf Minuten vom Öffnen der
+App bis zum Spaziergang durch Ihr erstes Bauwerk.
 
-Anleitungen zur Nutzung von ForkBuild im Browser. Alles hier beschreibt
-das Produkt so, wie es heute funktioniert; die Interna der Engine stehen
-in [docs/Architecture.md](../../Architecture.md) und im übrigen
-[docs/](../..)-Ordner auf oberster Ebene (nur auf Englisch).
+## Ich möchte …
+
+| Ich möchte … | Lesen Sie |
+|---|---|
+| Mein erstes Bauwerk bauen | [Erste Schritte](01-GettingStarted.md#ihren-ersten-stein-platzieren) |
+| Die Bauwerkzeuge lernen | [Der Editor](02-TheEditor.md) |
+| Ein Bauwerk mit einem Freund teilen | [Einen Link teilen](04-PublishingAndForking.md#einen-link-teilen) |
+| Mein Bauwerk für alle auffindbar machen | [Wer kann es finden?](04-PublishingAndForking.md#wer-kann-es-finden) |
+| Das Bauwerk eines anderen remixen | [Forken: machen Sie es zu Ihrem eigenen](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen) |
+| Live mit einem Freund zusammen bauen | [Mit mir bauen](02-TheEditor.md#mit-mir-bauen-gemeinsam-bauen-live) |
+| Mit Freunden spazieren gehen | [Mit mir hier spazieren](03-WorldView.md#mit-mir-hier-spazieren--freunde-in-diese-welt-holen) |
+| Das Aussehen meines Avatars ändern | [Avatare & Anwesenheit](06-AvatarsAndPresence.md#ihren-avatar-anpassen) |
+| Meine Arbeit sichern oder auf ein anderes Gerät bringen | [Ihre Daten](13-YourData.md) |
+| Eine Taste oder Maussteuerung nachschlagen | [Steuerungsreferenz](ControlsReference.md) |
+| Etwas reparieren, das nicht funktioniert | [FAQ](FAQ.md) |
+
+Alles hier beschreibt das Produkt so, wie es heute funktioniert; die
+Interna der Engine stehen in [docs/Architecture.md](../../Architecture.md)
+und im übrigen [docs/](../..)-Ordner auf oberster Ebene (nur auf Englisch).
 
 ## Spielen (der Reihe nach lesen)
 
 Alles, was Sie brauchen, um zu bauen, zu teilen, zu remixen und mit
 Freunden herumzulaufen.
 
-1. **[Erste Schritte](01-GettingStarted.md)** — die App öffnen, den
-   ersten Stein platzieren und sich erst zum Veröffentlichen anmelden.
+1. **[Erste Schritte](01-GettingStarted.md)** — die App öffnen, sich im
+   Menü zurechtfinden, den ersten Stein platzieren und einen Namen erst
+   zum Veröffentlichen wählen.
 2. **[Der Editor](02-TheEditor.md)** — das Baukastenwerkzeug: Werkzeuge,
    Auswahl, Transformationen, Steinfarben, Gruppen, die Strukturen der
    Baubibliothek und Ihre eigenen Baupläne, Strukturinstanzen sowie Titel,
@@ -33,7 +49,7 @@ Freunden herumzulaufen.
    zeigen**.
 4. **[Veröffentlichen & Forken](04-PublishingAndForking.md)** —
    veröffentlichen und einen Link teilen, wählen, wohin Ihre Bauwerke
-   gehen, Lizenzen, remixen, das Repository und seine fertigen Bauwerke,
+   gehen, Lizenzen, remixen, **Entdecken** und seine fertigen Bauwerke,
    die wöchentliche Challenge und ihr Platz und Stammbäume. Alles, wohin
    ein Bauwerk gehen kann, steht unter [Ihre Arbeit
    verteilen](Distribution.md).
@@ -108,14 +124,14 @@ experimentellen Werkzeuge. Zum Spielen brauchen Sie nichts davon.
 Der Editor ist der einzige Ort, an dem in ForkBuild gebaut wird; die
 Weltansicht ist eine schreibgeschützte Fläche zum Erkunden:
 
-- **Editor** (`/editor`) — Ihr privater Arbeitsbereich. Platzieren Sie
-  Steine aus der Palette, wählen Sie sie aus und transformieren Sie sie
-  mit der Tastatur oder dem Gizmo. Speichern, laden und veröffentlichen
-  Sie Dokumente über die Werkzeugleiste.
-- **Weltansicht** (`/world/:id`) — die geteilte räumliche Welt. Fliegen
-  Sie zwischen veröffentlichten Welten hin und her, suchen und erkunden
-  Sie, was um Sie herum ist, untersuchen Sie Steine und platzierte
-  Strukturen, gehen Sie mit Ihrem Avatar über Strukturen und Gelände und
+- **Editor** (**Bauen** im Menü) — Ihr privater Arbeitsbereich.
+  Platzieren Sie Steine aus der Baubibliothek, wählen Sie sie aus und
+  bewegen oder drehen Sie sie mit der Tastatur oder dem Gizmo. Speichern,
+  öffnen und veröffentlichen Sie Bauwerke über die Werkzeugleiste.
+- **Weltansicht** (**Spazieren** im Menü, oder **Erkunden** bei einem
+  beliebigen Bauwerk) — die geteilte Welt. Gehen oder fliegen Sie zwischen
+  veröffentlichten Bauwerken hin und her, suchen und erkunden Sie, was um
+  Sie herum ist, gehen Sie mit Ihrem Avatar über Gebäude und Gelände und
   nutzen Sie **Eine Kopie bearbeiten**, um das Gefundene im Editor zu
   öffnen und darauf aufzubauen.
 

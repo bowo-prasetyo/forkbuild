@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 0597b11a718701f3 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: d8dfa742e1512331 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
 [English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · **Français** · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../02-TheEditor.md).
-<!-- /stale -->
 
 L’Éditeur est l’endroit où vous construisez. Ce guide présente les outils,
 la façon de sélectionner et de transformer des briques, et comment
@@ -560,7 +556,7 @@ le bouton **✎** à côté du titre du document en haut de la barre latérale
 de l’Éditeur (dans la Vue du Monde, c’est le bouton **Modifier les
 métadonnées**). Un nouveau document commence sans licence, ce qui veut
 dire que personne d’autre ne peut le forker tant que vous n’en choisissez
-pas une. La description apparaît comme extrait sur sa carte du Dépôt et y
+pas une. La description apparaît comme extrait sur sa carte dans **Explorer** et y
 est aussi consultable par recherche ; la licence détermine si — et
 comment — d’autres personnes peuvent la forker. Voir
 [Publier et forker](04-PublishingAndForking.md) pour la signification de
@@ -580,7 +576,7 @@ Vue du monde et les articles Steem et Blurt :
 | `\*`, `\#`, `\-` | le caractère lui-même |
 
 Rien d’autre n’est de la mise en forme : liens, images et HTML restent du
-texte simple. Les cartes du Dépôt montrent les mots de la description sur une ligne, sans
+texte simple. Les cartes d’**Explorer** montrent les mots de la description sur une ligne, sans
 mise en forme.
 
 Les **étiquettes** disent ce qu’est la construction, comme `japonais temple
@@ -631,19 +627,19 @@ Une musique douce accompagne la construction, un peu plus vive que celle de la V
   port, une place du village, une maison, un moulin et un pont) comme votre
   propre copie, vue en entier. Si ce qui est ouvert a des modifications non
   enregistrées, Nouveau le signale d’abord ; enregistrez pour les garder.
-- **Fichier** regroupe les trois suivants :
-- **Exporter** — télécharger la création actuelle sous forme de fichier
-  JSON, pour en garder une copie ou la déplacer vers un autre appareil.
-  Les fichiers utilisent un format compact qui stocke les briques sous
-  forme de tableau.
-- **Modèle 3D** — télécharger la création comme modèle 3D pour d’autres
-  logiciels (voir [Télécharger un modèle 3D](#télécharger-un-modèle-3d)).
-- **Importer** — ouvrir un fichier exporté comme une nouvelle création
-  avec sa propre identité ; rien n’est conservé tant que vous
-  n’**Enregistrez** pas. Les fichiers exportés par des versions
-  antérieures s’ouvrent toujours (ils sont convertis au chargement), mais
-  ForkBuild 1.0.0 et les versions antérieures ne peuvent pas ouvrir les
-  fichiers exportés par cette version.
+- **Fichier** — un menu avec trois autres :
+  - **Exporter** — télécharger la construction actuelle sous forme de fichier
+    JSON, pour en garder une copie ou la déplacer vers un autre appareil.
+    Les fichiers utilisent un format compact qui stocke les briques sous
+    forme de tableau.
+  - **Modèle 3D** — télécharger la construction comme modèle 3D pour d’autres
+    logiciels (voir [Télécharger un modèle 3D](#télécharger-un-modèle-3d)).
+  - **Importer** — ouvrir un fichier exporté comme une nouvelle construction
+    avec sa propre identité ; rien n’est conservé tant que vous
+    n’**Enregistrez** pas. Les fichiers exportés par des versions
+    antérieures s’ouvrent toujours (ils sont convertis au chargement), mais
+    ForkBuild 1.0.0 et les versions antérieures ne peuvent pas ouvrir les
+    fichiers exportés par cette version.
 - **Récents** — rouvrir quelque chose que vous avez enregistré (la liste
   apparaît après votre premier enregistrement ; cliquez sur le nom d’un
   document pour l’ouvrir). Dès que vous avez enregistré assez de

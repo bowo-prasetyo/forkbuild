@@ -1,45 +1,75 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 30c9430bdca078bf -->
+<!-- translation-of: docs/user/FAQ.md source-hash: d0ced791059d2485 -->
 # Häufige Fragen
 
 <!-- languages -->
 [English](../FAQ.md) · **Deutsch** · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
 
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../FAQ.md).
-<!-- /stale -->
-
 Kurze Antworten auf die Fragen, auf die man am häufigsten stößt, jeweils
 mit einem Link zur Anleitung, die es ausführlich erklärt.
 
+## Sich zurechtfinden
+
+### Wo sind der Editor, das Repository und Anmelden geblieben?
+
+Sie wurden im Menü umbenannt. **Bauen** öffnet den Editor, **Entdecken**
+ist das frühere Repository, und **Namen wählen** (oder Ihr Name, sobald
+Sie einen haben) ersetzt Anmelden. **Spazieren** öffnet die Welt am Platz
+der Challenge dieser Woche. Siehe
+[Sich zurechtfinden](01-GettingStarted.md#sich-zurechtfinden).
+
+### Ich finde Mein Avatar, Peers oder die Netzwerkeinstellungen nicht
+
+Sie stehen in der oberen Leiste unter **Mehr** (auf einem Telefon unter
+**Menü**): **Persönlich** enthält Mein Avatar, Meine Identitäten und Ihre
+Daten; **Menschen** enthält Peers, Gefolgt und Unterhaltungen;
+**Erweitert** enthält Veröffentlichungen und Netzwerkeinstellungen. Ein
+Klick auf Ihren Namen oben rechts öffnet ebenfalls Mein Avatar, Meine
+Identitäten und Ihre Daten.
+
 ## Veröffentlichen und teilen
 
-### Ich habe meine Kreation veröffentlicht, aber mein Freund findet sie nicht in seinem Repository
+### Ich habe mein Bauwerk veröffentlicht, aber mein Freund findet es nicht in Entdecken
 
-Veröffentlichen speichert die Kreation nur auf Ihrem eigenen Gerät und
-führt sie in *Ihrem* Repository auf. Nichts wird irgendwohin gesendet,
-bis Sie es so entscheiden:
+Sofern Sie nicht **Alle** gewählt haben, als Veröffentlichen
+[Wer kann es finden?](04-PublishingAndForking.md#wer-kann-es-finden)
+gefragt hat, speichert Veröffentlichen das Bauwerk nur auf Ihrem eigenen
+Gerät und führt es in *Ihrem* **Entdecken** auf. So kommt es zu Ihrem
+Freund:
 
-- **Mit Peers teilen**, unter Ihrer Kreation im Repository, bietet sie den
+- **Schicken Sie den Link.** Veröffentlichen zeigt **Link kopieren** (und
+  **Teilen …**, wo Ihr Gerät teilen kann); das Bauwerk reist im Link mit,
+  sodass Ihr Freund es auf jedem Gerät öffnen kann. Siehe
+  [Einen Link teilen](04-PublishingAndForking.md#einen-link-teilen).
+- **Machen Sie es für alle auffindbar.** Klicken Sie in der Meldung nach
+  dem Veröffentlichen auf **Für alle auffindbar machen**, und es erscheint
+  in **Entdecken** bei allen, in der Challenge und in der Welt.
+- **Mit Peers teilen**, unter Ihrem Bauwerk in **Entdecken**, bietet es den
   Menschen an, mit denen Sie verbunden sind. Das Gerät eines Freundes oder
-  bekannten Peers fügt sie von selbst hinzu; alle anderen sehen sie unter
+  bekannten Peers fügt es von selbst hinzu; alle anderen sehen es unter
   **Mit Ihnen geteilt** und klicken auf **Abrufen**. Sie müssen
-  gleichzeitig verbunden sein, damit sie ankommt.
-- **Verteilen** lädt sie auf Arweave oder IPFS (oder, experimentell,
-  Steem oder Blurt) hoch und kündigt sie an, sodass andere sie finden können, ohne
+  gleichzeitig verbunden sein, damit es ankommt.
+- **Verteilen** lädt es auf Arweave oder IPFS (oder, experimentell,
+  Steem oder Blurt) hoch und kündigt es an, sodass andere es finden können, ohne
   mit Ihnen verbunden zu sein.
 
 Siehe [Veröffentlichen & Forken](04-PublishingAndForking.md#mit-verbundenen-peers-teilen).
 
 ### Wie mache ich meine Arbeit für alle zugänglich?
 
-Verteilen Sie sie: Speichern Sie sie auf Arweave oder IPFS (oder,
-experimentell, auf Steem oder Blurt) und kündigen Sie sie auf Nostr oder Arweave (oder
-Steem oder Blurt) an, sodass jeder sie finden und prüfen kann, ohne mit Ihnen verbunden
-zu sein. Klicken Sie direkt nach dem Veröffentlichen auf **Verteilen** oder
-in der Weltansicht unter **Meine Geteilte Welt**. Für die gewählten
-Netzwerke brauchen Sie eine signierende Browsererweiterung, etwa Wander für
-Arweave oder nos2x für Nostr. [Ihre Arbeit verteilen](Distribution.md)
+Wählen Sie **Alle**, wenn Veröffentlichen
+[Wer kann es finden?](04-PublishingAndForking.md#wer-kann-es-finden)
+fragt (oder klicken Sie nach dem Veröffentlichen auf **Für alle auffindbar
+machen**). Jedes Bauwerk, das Sie veröffentlichen, wird dann an alle
+gesendet und erscheint in **Entdecken**, in der Wochen-Challenge und in der
+Welt, ohne dass etwas installiert werden muss.
+
+Um zusätzlich eine Kopie in einem dezentralen Speichernetz zu behalten,
+verteilen Sie es: Speichern Sie es auf Arweave oder IPFS (oder,
+experimentell, auf Steem oder Blurt) und kündigen Sie es auf Nostr oder
+Arweave (oder Steem oder Blurt) an. Dafür brauchen Sie eine signierende
+Browsererweiterung für die gewählten Netzwerke, etwa Wander für Arweave
+oder nos2x für Nostr. [Ihre Arbeit verteilen](Distribution.md)
 listet alles auf, was Sie verteilen können, wohin es gehen kann und was
 jedes Netzwerk braucht.
 
@@ -67,20 +97,23 @@ Diese Meldungen zeigt die App nur auf Englisch:
   oberen Leiste neben Ihrem Namen auf **Entsperren** und veröffentlichen
   Sie erneut.
 
-### Muss ich zum Veröffentlichen angemeldet sein?
+### Brauche ich zum Veröffentlichen einen Namen?
 
-Veröffentlichen funktioniert auch abgemeldet, aber das Ergebnis hat
-keinen Autor und keine Signatur, sodass Sie es später weder mit Peers
-teilen noch verteilen können. Melden Sie sich vor dem Veröffentlichen an.
+Praktisch ja. Veröffentlichen bittet Sie, einen zu wählen; das dauert ein
+paar Sekunden und braucht kein Konto. **Unsigniert veröffentlichen** in
+diesem Dialog veröffentlicht ohne Namen, aber das Ergebnis hat keinen Autor
+und keine Signatur: Es bekommt keinen Link, und Sie können es später weder
+mit Peers teilen noch an alle senden. Siehe
+[Einen Namen wählen](01-GettingStarted.md#einen-namen-wählen).
 
 ### Kann ich eine Veröffentlichung zurückziehen?
 
 Ja: Öffnen Sie die Welt in der Weltansicht und wählen Sie dann unter
 **Meine Geteilte Welt** **Mehr ▾ → Veröffentlichung zurückziehen …**. Das
-entfernt sie aus Ihrem Repository. Kopien, die andere bereits erhalten
+entfernt sie aus Ihrem **Entdecken**. Kopien, die andere bereits erhalten
 haben, oder was Sie auf Arweave, IPFS, Nostr, Steem oder Blurt verteilt haben,
 lassen sich damit nicht zurückholen. Dieses Gerät merkt sich aber, was Sie
-zurückgezogen haben, sodass die Suche des Repository in den Netzwerken diese
+zurückgezogen haben, sodass die Suche von **Entdecken** in den Netzwerken diese
 Kopien hier nicht wieder auflistet; andere Geräte und andere Menschen können
 sie weiterhin finden.
 
@@ -159,11 +192,11 @@ Nein. Identitäten sind auf Dauer angelegt. Um eine nicht mehr zu
 verwenden, benennen Sie unter **Meine Identitäten** einen Nachfolger oder
 widerrufen Sie sie.
 
-### Ich habe meine Identität widerrufen — warum kann ich mich trotzdem damit anmelden?
+### Ich habe meine Identität widerrufen — warum kann ich sie trotzdem benutzen?
 
 Das ist so gewollt. Widerrufen hindert die Identität daran, noch etwas
 Neues zu signieren, auch das, was sie braucht, um sich mit anderen Personen
-zu verbinden, aber es hindert Sie nicht daran, sich anzumelden. So können
+zu verbinden, aber Sie können sie auf diesem Gerät weiterhin wählen. So können
 Sie sie weiterhin ansehen oder exportieren. Sie zeigt **Widerrufen** unter
 **Meine Identitäten**, und der Widerruf lässt sich nie rückgängig machen.
 Erstellen Sie eine neue Identität, um weiterzuarbeiten. Siehe
@@ -274,14 +307,17 @@ Verteilen und Chat brauchen eine Verbindung. Siehe
 
 ### Kann ich mein Bauwerk 3D-drucken oder in Blender öffnen?
 
-Ja. **3D-Modell** in der Werkzeugleiste des Editors lädt es als STL für den
+Ja. **Datei → 3D-Modell** in der Werkzeugleiste des Editors lädt es als STL für den
 3D-Druck (in Millimetern, auf dem Druckbett stehend) oder als farbiges glTF
 oder OBJ für Blender und andere Programme herunter. Siehe
 [Ein 3D-Modell herunterladen](02-TheEditor.md#ein-3d-modell-herunterladen).
 
 ### Brauche ich eine Krypto-Wallet?
 
-Nein. Bauen, Speichern, Veröffentlichen, Forken, Peers und Chat brauchen
-keine. Eine Wallet oder Signiererweiterung ist nur für die experimentellen
-Funktionen zum Verteilen und Verankern in
-[Nachweise & Speicher](11-EvidenceAndStorage.md) nötig.
+Nein. Bauen, Speichern, Veröffentlichen, einen Link teilen, ein Bauwerk
+an alle senden, Remixen, Peers und Chat brauchen keine. Eine Wallet oder
+Signiererweiterung brauchen Sie nur, wenn Sie ein Bauwerk selbst in ein
+Speichernetz verteilen wollen (Arweave braucht eine Arweave-Wallet wie
+Wander, Nostr eine Signiererweiterung wie nos2x), und für die
+experimentellen Funktionen zum Verankern in
+[Nachweise & Speicher](11-EvidenceAndStorage.md).

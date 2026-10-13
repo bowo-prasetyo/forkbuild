@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 406b0d8076916c27 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: d5ddd1ed7cb40c91 -->
 # 08 — Chat et conversations
 
 <!-- languages -->
 [English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · **Français** · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · [한국어](../ko/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../08-ChatAndConversations.md).
-<!-- /stale -->
 
 La messagerie directe de ForkBuild fonctionne de pair à pair et est
 **réservée aux amis** — voir
@@ -17,7 +13,7 @@ devenir d’abord ami avec quelqu’un.
 ## Démarrer une conversation
 
 On accède au chat par le bouton **Discuter** d’un ami sur la page
-**Pairs**, ou par la page **Conversations** de la barre du haut — il n’y a
+**Pairs**, ou par la page **Conversations** (**Plus → Conversations**) — il n’y a
 pas d’accès au chat depuis la Vue du Monde ou un avatar. Ouvrir le chat
 avec quelqu’un qui n’est pas actuellement votre ami (ou qui est bloqué)
 affiche une explication au lieu d’une zone de saisie : c’est l’amitié, et

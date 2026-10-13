@@ -1,26 +1,49 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 30c9430bdca078bf -->
+<!-- translation-of: docs/user/FAQ.md source-hash: d0ced791059d2485 -->
 # Preguntas frecuentes
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · **Español** · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
 
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../FAQ.md).
-<!-- /stale -->
-
 Respuestas breves a las preguntas con las que más se encuentra la gente,
 cada una con un enlace a la guía que la explica por completo.
 
+## Orientarse
+
+### ¿Dónde quedaron el Editor, el Repositorio e Iniciar sesión?
+
+Cambiaron de nombre en el menú. **Construir** abre el Editor, **Explorar**
+es lo que antes era el Repositorio, y **Elegir un nombre** (o su nombre,
+cuando ya tiene uno) reemplaza a Iniciar sesión. **Pasear** abre el Mundo
+en la plaza del desafío de esta semana. Consulte
+[Orientarse](01-GettingStarted.md#orientarse).
+
+### No encuentro Mi avatar, Pares ni Configuración de red
+
+Están en **Más**, en la barra superior (en un teléfono, en **Menú**):
+**Personal** tiene Mi avatar, Mis identidades y Sus datos; **Personas**
+tiene Pares, Siguiendo y Conversaciones; **Avanzado** tiene Publicaciones
+y Configuración de red. Al hacer clic en su nombre, en la esquina superior
+derecha, también se abren Mi avatar, Mis identidades y Sus datos.
+
 ## Publicar y compartir
 
-### Publiqué mi creación, pero mi amigo no la encuentra en su Repositorio
+### Publiqué mi construcción, pero mi amigo no la encuentra en Explorar
 
-Publicar solo guarda la creación en su propio dispositivo y la muestra en
-*su* Repositorio. No se envía nada a ningún lugar hasta que usted lo
-decida:
+Salvo que haya elegido **Todos** cuando Publicar preguntó
+[¿Quién puede encontrarla?](04-PublishingAndForking.md#quién-puede-encontrarla),
+publicar solo guarda la construcción en su propio dispositivo y la muestra
+en *su* **Explorar**. Para que le llegue a su amigo:
 
-- **Compartir con pares**, debajo de su creación en el Repositorio, se la
+- **Envíe el enlace.** Publicar muestra **Copiar enlace** (y
+  **Compartir…** donde su dispositivo puede compartir); la construcción
+  viaja dentro del enlace, así que su amigo puede abrirla en cualquier
+  dispositivo. Consulte
+  [Compartir un enlace](04-PublishingAndForking.md#compartir-un-enlace).
+- **Que todos la encuentren.** Haga clic en **Que todos la encuentren** en
+  el aviso que aparece después de publicar, y aparecerá en el **Explorar**
+  de todos, en el desafío y en el Mundo.
+- **Compartir con pares**, debajo de su construcción en **Explorar**, se la
   ofrece a las personas con las que está conectado. El dispositivo de un
   Amigo o de un Par conocido la agrega solo; cualquier otra persona la ve
   en **Compartido con usted** y hace clic en **Recuperar**. Tienen que
@@ -33,11 +56,16 @@ Consulte [Publicar y bifurcar](04-PublishingAndForking.md#compartir-con-pares-co
 
 ### ¿Cómo hago que mi trabajo esté disponible para todos?
 
-Distribúyalo: guárdelo en Arweave o IPFS (o, de forma experimental, en
-Steem o Blurt) y anúncielo en Nostr o Arweave (o Steem o Blurt), para que cualquiera pueda
-encontrarlo y comprobarlo sin estar conectado con usted. Haga clic en
-**Distribuir** justo después de publicar, o en **Mi Mundo compartido** en la
-Vista del mundo. Necesita una extensión del navegador que firme para las
+Elija **Todos** cuando Publicar pregunte
+[¿Quién puede encontrarla?](04-PublishingAndForking.md#quién-puede-encontrarla)
+(o haga clic en **Que todos la encuentren** después de publicar). Cada
+construcción que publique se envía entonces a todos y aparece en
+**Explorar**, en el desafío semanal y en el Mundo, sin instalar nada.
+
+Para guardar además una copia en una red de almacenamiento
+descentralizada, distribúyala: guárdela en Arweave o IPFS (o, de forma
+experimental, en Steem o Blurt) y anúnciela en Nostr o Arweave (o Steem o
+Blurt). Para eso necesita una extensión del navegador que firme para las
 redes que elija, como Wander para Arweave o nos2x para Nostr.
 [Distribuir su trabajo](Distribution.md) enumera todo lo que
 puede distribuir, adónde puede ir y qué necesita cada red.
@@ -66,19 +94,21 @@ Estos mensajes aparecen en inglés en la app:
   **Desbloquear** junto a su nombre en la barra superior y vuelva a
   publicar.
 
-### ¿Necesito haber iniciado sesión para publicar?
+### ¿Necesito un nombre para publicar?
 
-Publicar funciona sin haber iniciado sesión, pero el resultado no tiene
-autor ni firma, así que no puede compartirlo con pares ni distribuirlo
-después. Inicie sesión antes de publicar.
+En la práctica, sí. Publicar le pide elegir uno, lo que toma unos segundos
+y no necesita cuenta. **Publicar sin firmar**, en ese diálogo, publica sin
+nombre, pero el resultado no tiene autor ni firma: no recibe enlace, y no
+puede compartirlo con pares ni enviarlo a todos más tarde. Consulte
+[Elegir un nombre](01-GettingStarted.md#elegir-un-nombre).
 
 ### ¿Puedo retirar la publicación de algo?
 
 Sí: abra el Mundo en la Vista del mundo y luego, en **Mi Mundo
 compartido**, elija **Más ▾ → Retirar publicación…**. Eso lo quita de su
-Repositorio. No puede recuperar las copias que otras personas ya
+**Explorar**. No puede recuperar las copias que otras personas ya
 recibieron ni nada de lo que distribuyó a Arweave, IPFS, Nostr, Steem o Blurt. Este dispositivo sí recuerda lo que retiró,
-así que la búsqueda del Repositorio en las redes no volverá a mostrar esas
+así que la búsqueda de **Explorar** en las redes no volverá a mostrar esas
 copias aquí; otros dispositivos y otras personas aún pueden encontrarlas.
 
 ### Alguien colocó mi construcción en su Mundo. ¿Movió la mía?
@@ -152,11 +182,11 @@ almacenamiento en la nube. Consulte [Sus datos](13-YourData.md) y
 No. Las identidades están pensadas para perdurar. Para dejar de usar una,
 declare una sucesora o revóquela en **Mis identidades**.
 
-### Revoqué mi identidad, ¿por qué todavía puedo iniciar sesión con ella?
+### Revoqué mi identidad, ¿por qué todavía puedo usarla?
 
 Es lo esperado. Revocar impide que la identidad firme nada nuevo, incluido
-lo que necesita para conectarse con otras personas, pero no le impide
-iniciar sesión. Así todavía puede consultarla o exportarla. Muestra
+lo que necesita para conectarse con otras personas, pero todavía puede
+elegirla en este dispositivo. Así todavía puede consultarla o exportarla. Muestra
 **Revocada** en **Mis identidades**, y la revocación nunca se puede
 deshacer. Cree una identidad nueva para seguir trabajando. Consulte
 [Qué hace revocar — y qué no](05-IdentityAndLogin.md#qué-hace-revocar--y-qué-no).
@@ -263,14 +293,17 @@ y personas, distribuir y el chat necesitan conexión. Consulte
 
 ### ¿Puedo imprimir mi construcción en 3D o abrirla en Blender?
 
-Sí. **Modelo 3D** en la barra de herramientas del Editor la descarga como
+Sí. **Archivo → Modelo 3D** en la barra de herramientas del Editor la descarga como
 STL para impresión 3D (en milímetros, apoyada en la cama) o como glTF u OBJ
 en color para Blender y otros programas. Consulte
 [Descargar un modelo 3D](02-TheEditor.md#descargar-un-modelo-3d).
 
 ### ¿Necesito una billetera de criptomonedas?
 
-No. Construir, guardar, publicar, bifurcar, los pares y el chat no
-necesitan ninguna. Solo se necesita una billetera o una extensión de firma
-para las funciones experimentales de distribución y anclaje de
+No. Construir, guardar, publicar, compartir un enlace, enviar una
+construcción a todos, remezclar, los pares y el chat no necesitan ninguna.
+Solo necesita una billetera o una extensión de firma si decide distribuir
+usted mismo una construcción a una red de almacenamiento (Arweave necesita
+una billetera de Arweave como Wander; Nostr, una extensión de firma como
+nos2x), y para las funciones experimentales de anclaje de
 [Evidencia y almacenamiento](11-EvidenceAndStorage.md).

@@ -1,17 +1,13 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 02e25094626dc446 -->
 # 07 — Conexões entre pares e amigos
 
 <!-- languages -->
 [English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · [日本語](../ja/07-PeerConnectionsAndFriends.md) · [한국어](../ko/07-PeerConnectionsAndFriends.md) · **Português (Brasil)**
 <!-- /languages -->
 
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../07-PeerConnectionsAndFriends.md).
-<!-- /stale -->
-
 O ForkBuild conecta você diretamente aos navegadores de outras pessoas — não
-há um servidor central guardando uma lista de amigos. Abra **Pares** na barra
-superior para gerenciar com quem você está conectado, quem você conhece e de
+há um servidor central guardando uma lista de amigos. Abra **Mais → Pares**
+para gerenciar com quem você está conectado, quem você conhece e de
 quem é amigo.
 
 ## A página em resumo
@@ -187,7 +183,7 @@ conta numa rede social, sem que nenhum dos dois peça nada ao outro.
   digitado: várias pessoas podem publicar com o mesmo nome, então a página de
   um autor mostra um **Seguir** para cada identidade que assinou trabalhos
   com aquele nome.
-- **A página Seguindo** (**Seguindo** na barra superior) lista as pessoas que
+- **A página Seguindo** (**Mais → Seguindo**) lista as pessoas que
   você segue, cada uma com **Deixar de seguir**, e abaixo delas os trabalhos
   mais novos delas que chegaram a este dispositivo, do mais novo para o mais
   antigo. Clique num nome para ver só os trabalhos daquela pessoa.
@@ -233,8 +229,8 @@ ForkBuild pede a ele credenciais de relay de curta duração quando você
 começa uma conexão (nunca só por abrir o app) e as usa automaticamente. O
 servidor distribui um número limitado de credenciais de relay por mês;
 quando acabam, as conexões continuam sendo tentadas, só que sem relay, até o
-mês seguinte. Para usar um relay seu, abra **Servidor TURN** nas
-**Configurações de rede** da barra superior (`/settings/turn-server`) e
+mês seguinte. Para usar um relay seu, abra **Servidor TURN** em
+**Mais → Configurações de rede** (`/settings/turn-server`) e
 configure seu próprio relay TURN: um servidor que de fato repassa os dados
 da conexão quando não dá para estabelecer um caminho direto.
 

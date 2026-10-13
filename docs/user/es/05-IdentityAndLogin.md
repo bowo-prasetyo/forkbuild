@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 185649658a1144d2 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 9cd714dbbc4a41d4 -->
 # 05 — Identidad e inicio de sesión
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · **Español** · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../05-IdentityAndLogin.md).
-<!-- /stale -->
 
 ForkBuild no tiene contraseñas ni un servidor central de cuentas. **Su
 identidad es un par de claves criptográficas guardado en este navegador**:
@@ -77,7 +73,7 @@ iniciado sesión.
 
 ## Administrar identidades — la página Mis identidades
 
-Abra **Mis identidades** en la barra superior para ver todas las
+Abra **Más → Mis identidades** (o haga clic en su nombre en la barra superior) para ver todas las
 identidades que tiene este dispositivo, cada una con su propio estado de
 bloqueo, independientemente de con cuál haya iniciado sesión. Desde aquí
 puede:

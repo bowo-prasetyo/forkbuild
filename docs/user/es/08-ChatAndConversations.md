@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 406b0d8076916c27 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: d5ddd1ed7cb40c91 -->
 # 08 — Chat y conversaciones
 
 <!-- languages -->
 [English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · **Español** · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · [한국어](../ko/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../08-ChatAndConversations.md).
-<!-- /stale -->
 
 Los mensajes directos en ForkBuild van de par a par y son **solo entre
 amigos**: consulte
@@ -17,7 +13,7 @@ saber cómo hacerse amigo de alguien primero.
 ## Iniciar una conversación
 
 Al chat se llega desde el botón **Chat** de un amigo en la página
-**Pares**, o desde la página **Conversaciones** de la barra superior: no
+**Pares**, o desde la página **Conversaciones** (**Más → Conversaciones**): no
 hay acceso al chat desde la Vista del mundo ni desde un avatar. Abrir el
 chat con alguien que en ese momento no es amigo suyo (o que está
 bloqueado) muestra una explicación en lugar de un cuadro de redacción: lo

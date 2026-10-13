@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 406b0d8076916c27 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: d5ddd1ed7cb40c91 -->
 # 08 — Chat & Unterhaltungen
 
 <!-- languages -->
 [English](../08-ChatAndConversations.md) · **Deutsch** · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · [한국어](../ko/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../08-ChatAndConversations.md).
-<!-- /stale -->
 
 Direktnachrichten in ForkBuild laufen Peer-to-Peer und **nur unter
 Freunden** — wie Sie sich zuerst mit jemandem befreunden, steht unter
@@ -16,8 +12,8 @@ Freunden** — wie Sie sich zuerst mit jemandem befreunden, steht unter
 ## Eine Unterhaltung beginnen
 
 Den Chat erreichen Sie über die Schaltfläche **Chat** eines Freundes auf
-der Seite **Peers** oder über die Seite **Unterhaltungen** in der oberen
-Leiste — aus der Weltansicht oder von einem Avatar aus gibt es keinen
+der Seite **Peers** oder über die Seite **Unterhaltungen** (**Mehr →
+Unterhaltungen**) — aus der Weltansicht oder von einem Avatar aus gibt es keinen
 Zugang zum Chat. Öffnen Sie den Chat mit jemandem, der gerade kein Freund
 ist (oder blockiert ist), erscheint statt eines Eingabefelds eine
 Erklärung: Die Freundschaft, nicht das Online-Sein, schaltet den Chat

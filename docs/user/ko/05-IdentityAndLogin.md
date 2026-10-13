@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 185649658a1144d2 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 9cd714dbbc4a41d4 -->
 # 05 — 신원과 로그인
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · **한국어** · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../05-IdentityAndLogin.md)을 참고하세요.
-<!-- /stale -->
 
 <!-- languages -->
 <!-- /languages -->
@@ -70,7 +66,7 @@ ForkBuild에는 비밀번호도 중앙 계정 서버도 없습니다. **신원�
 
 ## 신원 관리하기 — 내 신원 페이지
 
-맨 위 막대에서 **내 신원**을 열면 지금 어느 신원으로 로그인했는지와 상관없이,
+**더 보기 → 내 신원**을 열면(또는 맨 위 막대에서 내 이름을 클릭하면) 지금 어느 신원으로 로그인했는지와 상관없이,
 이 기기가 가진 모든 신원이 각각의 잠금 상태와 함께 표시됩니다. 여기서 다음을
 할 수 있습니다:
 

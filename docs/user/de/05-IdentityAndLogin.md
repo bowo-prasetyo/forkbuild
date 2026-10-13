@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 185649658a1144d2 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 9cd714dbbc4a41d4 -->
 # 05 — Identität & Anmeldung
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · **Deutsch** · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../05-IdentityAndLogin.md).
-<!-- /stale -->
 
 ForkBuild hat keine Passwörter und keinen zentralen Kontoserver. **Ihre
 Identität ist ein kryptografisches Schlüsselpaar, das in diesem Browser
@@ -79,7 +75,7 @@ wer Sie angemeldet waren.
 
 ## Identitäten verwalten — die Seite Meine Identitäten
 
-Öffnen Sie in der oberen Leiste **Meine Identitäten**, um jede Identität
+Öffnen Sie **Mehr → Meine Identitäten** (oder klicken Sie oben auf Ihren Namen), um jede Identität
 dieses Geräts zu sehen, jeweils mit ihrem eigenen Sperrzustand, unabhängig
 davon, mit welcher Sie gerade angemeldet sind. Von hier aus können Sie:
 

@@ -1,17 +1,13 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: dd33ad8a85582812 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 02e25094626dc446 -->
 # 07 — Peer-Verbindungen & Freunde
 
 <!-- languages -->
 [English](../07-PeerConnectionsAndFriends.md) · **Deutsch** · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · [日本語](../ja/07-PeerConnectionsAndFriends.md) · [한국어](../ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../07-PeerConnectionsAndFriends.md).
-<!-- /stale -->
-
 ForkBuild verbindet Sie direkt mit den Browsern anderer Menschen — es gibt
-keinen zentralen Server mit einer Freundesliste. Öffnen Sie in der oberen
-Leiste **Peers**, um zu verwalten, mit wem Sie verbunden sind, wen Sie
+keinen zentralen Server mit einer Freundesliste. Öffnen Sie
+**Mehr → Peers**, um zu verwalten, mit wem Sie verbunden sind, wen Sie
 kennen und mit wem Sie befreundet sind.
 
 ## Die Seite auf einen Blick
@@ -206,7 +202,7 @@ den anderen um etwas bitten muss.
   Menschen können unter demselben Namen veröffentlichen, daher zeigt die
   Seite eines Autors ein **Folgen** pro Identität, die unter diesem Namen
   Werke signiert hat.
-- **Die Seite Gefolgt** (**Gefolgt** in der oberen Leiste) listet die
+- **Die Seite Gefolgt** (**Mehr → Gefolgt**) listet die
   Menschen auf, denen Sie folgen, jeweils mit **Nicht mehr folgen**, und
   darunter ihre neuesten Werke, die dieses Gerät erreicht haben, das
   neueste zuerst. Klicken Sie auf einen Namen, um nur die Werke dieser
@@ -257,7 +253,7 @@ Relay-Zugangsdaten und nutzt sie automatisch. Der Server gibt pro Monat
 eine begrenzte Zahl von Relay-Zugangsdaten aus; sind sie aufgebraucht,
 werden Verbindungen weiterhin versucht, nur ohne Relay, bis zum nächsten
 Monat. Um ein eigenes Relay zu nutzen, öffnen Sie **TURN-Server** in den
-**Netzwerkeinstellungen** in der oberen Leiste (`/settings/turn-server`)
+**Netzwerkeinstellungen** unter **Mehr** (`/settings/turn-server`)
 und konfigurieren Sie Ihr eigenes TURN-Relay: einen Server, der die Daten
 der Verbindung tatsächlich weiterleitet, wenn kein direkter Weg aufgebaut
 werden kann.
