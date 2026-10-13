@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 292450f615f65312 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 0597b11a718701f3 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
 [English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · **Français** · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../02-TheEditor.md).
-<!-- /stale -->
 
 L’Éditeur est l’endroit où vous construisez. Ce guide présente les outils,
 la façon de sélectionner et de transformer des briques, et comment
@@ -29,10 +25,10 @@ organiser votre construction avec des groupes.
 └──────────────────────┴──────────────────────────────────────┘
 ```
 
-- **Barre d’outils** — enregistrer, publier, commencer une nouvelle
-  création, exporter ou importer un document sous forme de fichier,
-  rouvrir les documents récents, et ouvrir le panneau **⌨ Raccourcis**
-  (aussi `?`).
+- **Barre d’outils** — d’abord **Enregistrer**, **Publier** et
+  **Nouveau**, puis **Fichier**, un menu avec **Exporter**, **Modèle 3D** et
+  **Importer** ; rouvrir les documents récents, et ouvrir le panneau
+  **⌨ Raccourcis** (aussi `?`).
 - **Outils** — basculer entre **Sélection** (`1`) et **Placement** (`2`).
   **Placement** reste en surbrillance pendant que vous placez une brique
   ou une structure.
@@ -91,6 +87,16 @@ jamais de boutons qui ne peuvent encore rien faire :
 > **Palette de commandes** — une liste, avec recherche par nom, de toutes
 > les actions de ce guide.
 
+## Essayez maintenant : une maison à finir
+
+**Essayez maintenant**, sur l’**Accueil**, ouvre une maison à vous qui n’est
+pas finie : ses murs sont montés et sa pièce est meublée, mais elle n’a pas
+de toit. Une carte **Votre mission : un toit** en haut des outils vous le
+dit. Cliquez sur **Prendre le toit** (il choisit **Toit en croupe 6x6** et
+passe en Placement), puis n’importe où sur la maison : le toit se pose sur
+les murs. La carte dit alors que la maison est à vous. Publiez-la et entrez
+dedans, ou continuez.
+
 ## Votre première construction
 
 La première fois que vous ouvrez l’Éditeur sur un appareil, une carte
@@ -126,8 +132,13 @@ commence avec le guide masqué.
 ### Outil Placement (`2`)
 
 Choisissez une brique dans la palette, survolez la vue et cliquez pour la
-placer. Un fantôme translucide montre exactement où la brique va se
-poser. Survolez la face d’une brique existante pour empiler ou accrocher.
+placer. Quand aucune brique n’est encore choisie, Placement commence avec
+un **Cube**, pour que le premier clic place toujours quelque chose. Un
+fantôme translucide montre exactement où la brique va se poser. Survolez la
+face d’une brique existante pour empiler ou accrocher. Une brique posée sur
+une autre repose sur la brique la plus haute en dessous, pas dedans : un toit
+lâché au milieu du sol d’une maison se pose sur ses murs, et une poutre
+en travers de deux poteaux, sur les poteaux.
 
 > **Astuce :** appuyez sur **Échap** pour revenir à l’outil Sélection.
 
@@ -602,12 +613,21 @@ Une musique douce accompagne la construction, un peu plus vive que celle de la V
 
 - **Enregistrer** (`Ctrl+S`) — garder votre travail sur cet appareil.
 - **Publier** — le partager avec tout le monde (voir
-  [Publier et forker](04-PublishingAndForking.md)).
+  [Publier et forker](04-PublishingAndForking.md)). Publier l’enregistre
+  aussi. Pour une construction commencée à partir d’une construction toute
+  prête qui ne contient encore rien de vous, la question est posée une
+  fois : **Continuer à construire**, ou **Publier quand même**. Le message
+  qui suit tient en une barre : **Entrer à pied** et **Copier le lien**, avec
+  **Autres façons de partager**, qui regroupe le lien lui-même,
+  **Enregistrer l’image** et **Intégrer**. Un rappel d’ajouter une phrase de
+  passe à l’identité avec laquelle vous avez publié attend votre publication
+  suivante quand cette identité vient d’être créée.
 - **Nouveau** — commencer quelque chose de nouveau : un **Terrain vide**,
   ou l’une des constructions toutes prêtes (un château fort, une île du
   port, une place du village, une maison, un moulin et un pont) comme votre
   propre copie, vue en entier. Si ce qui est ouvert a des modifications non
   enregistrées, Nouveau le signale d’abord ; enregistrez pour les garder.
+- **Fichier** regroupe les trois suivants :
 - **Exporter** — télécharger la création actuelle sous forme de fichier
   JSON, pour en garder une copie ou la déplacer vers un autre appareil.
   Les fichiers utilisent un format compact qui stocke les briques sous
@@ -685,7 +705,7 @@ sur les deux écrans.
 
 ## Télécharger un modèle 3D
 
-**Modèle 3D** dans la barre d’outils télécharge ce qui est ouvert sous
+**Modèle 3D**, sous **Fichier** dans la barre d’outils, télécharge ce qui est ouvert sous
 forme de fichier que d’autres logiciels 3D ouvrent, créé sur cet appareil
 (rien n’est envoyé) :
 
@@ -715,6 +735,18 @@ téléchargements quand sa licence autorise les copies (voir
 - **Glisser** — orbiter autour de la scène
 - **Molette** — zoomer et dézoomer
 - **Origine** — remettre la caméra dans la vue par défaut
+
+Une construction s’ouvre vue d’en haut, en biais, cadrée en entier.
+
+### Voir l’intérieur
+
+**Voir l’intérieur**, en haut à gauche de la vue (en haut à droite sur un
+téléphone, sous **Outils**), coupe la construction au-dessus de son
+rez-de-chaussée, comme la Vue du Monde quand vous entrez : les murs
+s’arrêtent à hauteur de tête environ et les pièces, avec leurs meubles, se
+voient d’en haut. Construisez-y comme d’habitude : un clic passe à travers
+ce qui est coupé. **La montrer en entier** dessine de nouveau tout. Rien
+n’est retiré ; seul ce qui est dessiné change.
 
 ## Sur un téléphone ou une tablette
 

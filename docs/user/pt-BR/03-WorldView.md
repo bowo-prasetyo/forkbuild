@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: e66632c0b2bec761 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3a4a0c4e45f32875 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../03-WorldView.md).
-<!-- /stale -->
 
 A Visão do mundo é o espaço 3D compartilhado onde **todas as criações
 publicadas existem lado a lado**. Voe por ele, procure o que você quer,
@@ -25,16 +21,34 @@ Mundo, como decoração, um animal solto, com **G** (veja
 
 ## Abrindo a Visão do mundo
 
-No **Repositório**, clique em **Explorar** em qualquer criação — ou vá
-direto à URL de um mundo. Você aparece ao lado daquela criação no mundo
-compartilhado.
+**Passear**, no menu principal, abre a Visão do mundo na praça do desafio
+desta semana, sem precisar de uma construção sua. A praça é a praça da vila:
+as seis construções prontas ficam ao redor dela para todo mundo, toda vez
+que você abre a Visão do mundo, prontas para remixar, e a vila de
+construções publicadas cresce logo do lado de fora delas (veja
+[A praça do desafio](04-PublishingAndForking.md#a-praça-do-desafio)).
+
+Em **Explorar**, clique em **Explorar** em qualquer criação — ou vá direto à
+URL de um mundo. Você aparece ao lado daquela criação no mundo
+compartilhado. Construções que outras pessoas enviaram para todo mundo são
+encontradas lá e no desafio (veja
+[Quem pode encontrá-la?](04-PublishingAndForking.md#quem-pode-encontrá-la)),
+e ficam onde quem as construiu as pôs: remixes ao lado do que remixam, o
+resto na vila ao redor da praça.
 
 ## Uma visão de visitante, e Avançado
 
-A Visão do mundo abre como uma visão de visitante: o nome da construção e
-quem a fez, o que há ao seu redor e o que você pode fazer aqui (**Construir
-aqui**, **Passear aqui comigo** e **Editar uma cópia** quando a construção
-não é sua). As ferramentas das redes por trás do Mundo ficam no fim do
+A Visão do mundo abre como uma visão de visitante. O que você veio fazer
+fica numa barra na parte de baixo do Mundo: **Construir aqui**, **Passear
+aqui comigo** e **Editar uma cópia** quando a construção não é sua. O painel
+lateral traz o nome da construção e quem a fez (o mesmo nome em todo lugar
+onde uma construção é creditada), depois para onde ir e o que há ao seu
+redor. No celular o painel começa fechado, para o Mundo ocupar a tela;
+**Painel** o abre. Na praça, o celular mostra em vez disso uma linha sobre o
+Mundo, **Praça: …** e quantas construções estão lá, que abre o painel. Quem
+é desenhado, e se as teclas fazem seu avatar andar e a câmera o segue, ficam
+ligados para todo mundo e esperam em **Configurações do avatar**; a escolha
+de câmera continua ao lado. As ferramentas das redes por trás do Mundo ficam no fim do
 painel, em **Mostrar ferramentas avançadas**:
 
 - as coordenadas sobre a visão, os campos **Local** da busca e a linha
@@ -45,7 +59,11 @@ painel, em **Mostrar ferramentas avançadas**:
   dos Encontros;
 - **Meu Mundo compartilhado**, o painel de rede da sua publicação, e **Mover
   posicionamento** ao lado;
-- a lista de Mundos que não puderam carregar e os diagnósticos de avatares.
+- a lista de Mundos que não puderam carregar e os diagnósticos de avatares;
+- selecionar com um clique: como visitante, clicar na vista (para começar a
+  andar, por exemplo) não seleciona nada além de outro avatar, então os
+  detalhes de nenhum bloco se abrem; com Avançado ligado, um clique abre
+  [Inspecionando um bloco](#inspecionando-um-bloco--ou-uma-estrutura-posicionada).
 
 A escolha fica guardada neste dispositivo e não muda nada para mais
 ninguém. A bússola, os nomes de lugares embaixo, Buscar, Locais, o Mapa e
@@ -120,8 +138,26 @@ Um Mundo também pode ter **moradores** — pessoas que moram lá e passeiam em
 volta de suas casas, contornando as construções em vez de atravessá-las, e
 que se viram para cumprimentar você quando você chega perto; converse com
 um e ele conta o que há por ali. Ao contrário da vida selvagem, eles fazem
-parte do conteúdo do próprio Mundo: quem os adiciona é o autor. Veja
+parte do conteúdo do próprio Mundo: quem os adiciona é o autor. As casas
+prontas já vêm habitadas: uma cópia da Casa, de um chalé ou de outra moradia
+pronta começa com um morador que vive logo ao lado da porta da frente, e as
+que ficam ao redor da praça do desafio também têm o seu; remova o seu com
+**R** como qualquer outro. Veja
 [Moradores](06-AvatarsAndPresence.md#moradores).
+
+### Dentro de uma construção
+
+Entre por uma porta e a construção acima da sua cabeça é cortada, para você
+ver o cômodo onde está em vez da parede atrás de você: o telhado e tudo o
+que fica mais alto que a sua cabeça, só daquela construção, enquanto as
+paredes ficam de pé até um pouco acima da sua altura. Com a câmera seguindo
+você, ou em **Terceira pessoa**, a câmera entra também, atrás e acima de
+você, olhando para dentro do cômodo, e sobe em vez de atravessar uma parede
+quando há uma logo atrás de você. **Vista aérea** olha direto para baixo
+dentro do cômodo; **Primeira pessoa** o vê pelos seus próprios olhos, sem
+cortar nada. Saia de novo e a construção inteira volta a ser desenhada. Só
+muda o que é desenhado: o telhado continua lá, para todo mundo e para
+andar.
 
 ## Dia e noite
 
@@ -157,7 +193,7 @@ leste e se põem no oeste junto com a lua, e todos veem as mesmas estrelas no
 mesmo momento.
 
 Se você preferir que seja sempre dia, marque **Sempre de dia** no fim do
-painel, logo acima de **Mostrar ferramentas avançadas**. A escolha fica
+painel, logo acima de **Sombras**. A escolha fica
 lembrada neste dispositivo e não muda nada para mais ninguém.
 
 ## Som
@@ -709,14 +745,16 @@ caminho e quem já chegou.
 ### A praça do desafio
 
 **Passear pela praça** na página do desafio de uma semana abre a visão do
-mundo numa clareira onde as participações daquela semana ficam ao redor de
-uma praça aberta, com um painel que as lista (veja
-[A praça do desafio](04-PublishingAndForking.md#a-praça-do-desafio)). Nenhuma árvore
-cresce lá, em semana nenhuma. As participações só aparecem enquanto você
-está na praça, e **Construir aqui** não é oferecido lá.
-
-A praça aberta no meio é calçada, com um poço, bancos e postes de luz,
-para que a praça seja um lugar mesmo numa semana sem participações.
+mundo na praça da vila: calçada, com um poço, bancos e postes de luz, e as
+seis construções prontas ao redor. A praça e as construções prontas fazem
+parte do Mundo, como os morros e as árvores: ficam em toda Visão do mundo,
+para todo mundo, e não são de ninguém. A vila de construções publicadas
+cresce logo do lado de fora delas, então a sua própria casa publicada tem
+vizinhos. Um painel lista as participações da semana e as construções
+prontas (veja
+[A praça do desafio](04-PublishingAndForking.md#a-praça-do-desafio)).
+Nenhuma árvore cresce ao redor da praça, e **Construir aqui** não é
+oferecido lá.
 
 ### Marcos — marcando um lugar que vale lembrar
 
@@ -907,7 +945,9 @@ lista, em vez de aparecer como uma linha com que você não pode fazer nada.
 
 ## Inspecionando um bloco — ou uma estrutura posicionada
 
-Clique em qualquer bloco para abrir o painel **Inspeção**, que diz:
+Com **Mostrar ferramentas avançadas** ligado, clique em qualquer bloco para
+abrir o painel **Inspeção** (como visitante, um clique não seleciona nada),
+que diz:
 
 - Que tipo de bloco é
 - A posição e a rotação dele

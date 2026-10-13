@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 49fc848526dee427 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d63d0904aac96490 -->
 # 04 — Veröffentlichen & Forken
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · **Deutsch** · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Das ist das Herz von ForkBuild. **Veröffentlichen** teilt Ihre Kreation mit
 der Welt. **Remixen** erlaubt jedem, eine Kreation zu kopieren und
@@ -29,13 +25,16 @@ weiterzuentwickeln — wobei der ganze Verlauf erhalten bleibt.
    Dokument hat keine Lizenz; beim ersten Veröffentlichen fragt ForkBuild,
    ob andere es remixen dürfen (siehe [Andere remixen lassen](#andere-remixen-lassen)).
 4. Drücken Sie **Speichern**, damit sie gespeichert ist.
-5. Klicken Sie auf **Veröffentlichen**.
+5. Klicken Sie auf **Veröffentlichen**. Beim ersten Mal fragt ForkBuild
+   außerdem [Wer kann es finden?](#wer-kann-es-finden)
 
-Ihre Kreation erscheint jetzt in **Ihrem eigenen Repository** auf diesem
-Gerät, wo Sie sie suchen, öffnen und forken können, mit Ihrem Namen als
-Autor. Andere sehen sie erst, wenn Sie sie teilen oder verteilen (siehe den
-Hinweis unten). Sie erhält außerdem automatisch eine Position in der
-geteilten Welt, sodass **Erkunden** immer ein Ziel hat — siehe
+Ihre Kreation erscheint jetzt unter **Entdecken** auf diesem Gerät, wo Sie
+sie suchen, öffnen und forken können, mit Ihrem Namen als Autor. Andere
+sehen sie, sobald Sie ihren Link teilen, oder sofort, wenn Sie unter
+[Wer kann es finden?](#wer-kann-es-finden) **Alle** gewählt haben. Sie
+erhält außerdem einen Platz in der geteilten Welt, neben dem, wozu sie
+gehört (siehe [Wo ein Bauwerk steht](#wo-ein-bauwerk-steht)), sodass
+**Erkunden** immer ein Ziel hat — siehe
 [Welten finden](03-WorldView.md#welten-finden).
 
 ### Hineingehen
@@ -167,13 +166,66 @@ eigene Seite des Bauwerks in ForkBuild in einem neuen Tab öffnet (siehe
 Auch das Kopieren des Codes und das Zeigen oder Öffnen einer Einbettung in
 ForkBuild werden anonym gezählt.
 
+## Wer kann es finden?
+
+Wenn Sie zum ersten Mal auf **Veröffentlichen** klicken, fragt ForkBuild
+**Wer kann es finden?**:
+
+- **Alle**: Jedes Bauwerk, das Sie veröffentlichen, wird zusätzlich an alle
+  gesendet. Es erscheint unter **Entdecken**, in der Challenge der Woche und
+  auf ihrem Platz sowie in der Welt, für alle, die ForkBuild nutzen, ohne
+  Link, Wallet oder Konto auf beiden Seiten. Direkt nach dem
+  Veröffentlichen sagt der Editor „Veröffentlicht! Es wird an alle
+  gesendet …“, dann „Veröffentlicht! Jetzt können alle es finden: unter
+  „Entdecken“, in der Challenge und in der Welt.“ Waren die Netzwerke nicht
+  erreichbar, sagt er das und bietet **Erneut versuchen** an; der Link
+  funktioniert so oder so.
+- **Nur wer den Link von mir bekommt**: Das Bauwerk bleibt auf diesem Gerät
+  und in seinem Link. Die Meldung sagt „Nur wer den Link von Ihnen bekommt,
+  kann es sehen.“ mit **Für alle auffindbar machen**, was dieses Bauwerk
+  sendet und **Alle** von da an zur Wahl macht.
+
+Die Antwort wird auf diesem Gerät gespeichert. Nachdem ein Bauwerk an alle
+gesendet wurde, hält **Ab jetzt nur per Link** in derselben Meldung Ihre
+nächsten Bauwerke bei ihren Links.
+
+So funktioniert es: Das von Ihnen signierte Bauwerk wird als *Bauwerk-Notiz*
+an die öffentlichen Nostr-Relays unter **Netzwerkeinstellungen** gesendet,
+zusammen mit seinen Tags und seinem Platz in der Welt. Die Notiz ist mit
+einem Schlüssel signiert, den dieses Gerät dafür erstellt (sein
+*Trägerschlüssel*), nicht mit Ihrer Identität, sodass nichts installiert
+werden muss. Alle, die die Notiz finden, öffnen sie genau so, wie sie Ihren
+Link öffnen würden: Ihre Signatur und der Inhalt des Bauwerks werden zuerst
+geprüft, und eine Notiz, die nicht passt, wird ignoriert. Ein Bauwerk, das
+für eine Notiz zu groß ist (etwa 2.000 Steine), sagt das; teilen Sie seinen
+Link oder wählen Sie unten, wohin es geht. Ohne Namen veröffentlichte
+Bauwerke lassen sich nicht senden. Siehe [Datenschutz](Privacy.md).
+
+### Wo ein Bauwerk steht
+
+Ein veröffentlichtes Bauwerk steht in der geteilten Welt neben dem, wozu es
+gehört:
+
+- **ein Remix** steht neben dem Bauwerk, das er remixt, sodass ein
+  Stammbaum zu einer Straße wird;
+- **alles andere** kommt in das Dorf, das rund um den Challenge-Platz
+  wächst, Ring für Ring von innen nach außen, beginnend gleich außerhalb der
+  fertigen Bauwerke rund um den Platz, sodass ungefähr gleichzeitig
+  veröffentlichte Bauwerke Nachbarn sind und die ersten vom Platz aus zu
+  sehen sind;
+- **Hier bauen** setzt ein Bauwerk weiterhin an die gewählte Stelle, und ein
+  erneutes Veröffentlichen verschiebt es nie.
+
+Alle, die das Bauwerk finden, sehen es an derselben Stelle, da sein Platz
+mit ihm reist, von Ihnen signiert.
+
 ## Wohin es geht — ein Bauwerk beim Veröffentlichen senden
 
 **Veröffentlichen** behält Ihr Bauwerk auf diesem Gerät und in seinen Links,
-bis Sie wählen, wohin es geht. Direkt nach Ihrem ersten Veröffentlichen sagt
-der Editor „Veröffentlicht! Teilen Sie den Link. Damit alle es auch ohne
-Link finden, wählen Sie, wohin es geht.“ mit einer Schaltfläche **Wählen,
-wohin es geht** neben dem Link und **Ausblenden**.
+bis Sie wählen, wohin es geht, abgesehen vom Senden an alle (oben). Direkt
+nach einem Veröffentlichen bietet die Meldung **Wählen, wohin es geht** (oder
+**Weitere Netzwerke**, wenn es schon an alle gesendet wurde) neben dem Link
+an, und **Ausblenden**.
 
 **Wählen, wohin es geht** öffnet den Dialog **Wohin es geht**: Wählen Sie
 einen **Speicher** (wo das Bauwerk selbst liegt: Arweave, IPFS, oder Steem
@@ -606,24 +658,33 @@ Eine Woche ohne Einsendungen zeigt stattdessen die Beispielfamilien (siehe [Fert
 
 ### Der Challenge-Platz
 
-Sobald eine Woche Beiträge hat, bringt dich **Über den Platz gehen** auf
-ihrer Seite in die Weltansicht, auf eine Lichtung in der gemeinsamen Welt,
-wo die Beiträge der Woche in Ringen um einen offenen Platz stehen. Geh
-zwischen ihnen umher oder wähle einen im Panel: **Navigieren** fliegt hin,
-**Öffnen** öffnet ihn wie **Erkunden**, und **Eine Kopie bearbeiten**
-beginnt deine eigene Kopie.
+**Spazieren** im Hauptmenü bringt dich auf den Platz dieser Woche, und
+ebenso **Über den Platz gehen** auf der Challenge-Seite, sobald eine Woche
+Beiträge hat. Er ist der Dorfplatz der geteilten Welt: Die sechs fertigen
+Bauwerke stehen für alle immer darum herum, jedes mit **Remixen**, und
+gleich außerhalb davon wächst das Dorf der veröffentlichten Bauwerke, die
+Beiträge der Woche darunter. Geh zwischen ihnen umher oder wähle einen im
+Panel: **Navigieren** fliegt hin, **Öffnen** öffnet ihn wie **Erkunden**,
+und **Eine Kopie bearbeiten** beginnt deine eigene Kopie.
 
-- Die ersten 24 veröffentlichten Beiträge stehen dort, die ältesten der
-  Mitte am nächsten, sodass ein neuer Beitrag am äußeren Rand hinzukommt.
-  Die übrigen sind auf der Challenge-Seite.
+- Jeder Beitrag steht im Dorf. Einer, von dem dieses Gerät weiß, dass sein
+  Platz im Dorf liegt, steht dort, wo er sich beim Veröffentlichen
+  niedergelassen hat. Jeder andere (einer, der weit weg platziert wurde, wie
+  Bauwerke, die veröffentlicht wurden, bevor sie sich im Dorf niederließen,
+  oder einer, dessen Platz dieses Gerät nicht kennt) wird, solange du auf
+  dem Platz bist, an der Stelle gezeigt, an der er sich im Dorf niederlassen
+  würde; sein eigener Platz bleibt, wo er ist.
+- Das Panel listet die ersten 24 veröffentlichten Beiträge. Die übrigen
+  sind auf der Challenge-Seite.
 - Beiträge aus den Netzwerken werden geladen und geprüft, so wie beim
   Öffnen ihres Links. Einer, der sich nicht laden lässt, fehlt, und das
   Panel sagt, wie viele es sind.
 - Ein Beitrag, dessen Veröffentlicher **Nur ich darf es platzieren**
   gewählt hat, steht nicht auf dem Platz, denn ihn dort aufzustellen hieße,
   ihn zu platzieren. Er bleibt auf der Challenge-Seite.
-- Die Beiträge sind Ausstellungsstücke, keine Platzierungen: Für niemanden
-  wird etwas signiert oder gespeichert, und sie verschwinden, wenn du gehst.
+- Ein an seiner Stelle gezeigter Beitrag ist ein Ausstellungsstück, keine
+  Platzierung: Für niemanden wird etwas signiert oder gespeichert, und er
+  verschwindet, wenn du gehst.
   Wie die übrige Weltansicht zeigt der Platz, was dieses Gerät kennt, also
   sehen zwei Besucher womöglich verschiedene Beiträge.
 

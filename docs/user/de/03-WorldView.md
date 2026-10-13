@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: e66632c0b2bec761 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3a4a0c4e45f32875 -->
 # 03 — Weltansicht
 
 <!-- languages -->
 [English](../03-WorldView.md) · **Deutsch** · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../03-WorldView.md).
-<!-- /stale -->
 
 Die Weltansicht ist der geteilte 3D-Raum, in dem **jede veröffentlichte
 Kreation Seite an Seite existiert**. Fliegen Sie herum, suchen Sie, was Sie
@@ -27,16 +23,35 @@ einbringen (siehe
 
 ## Die Weltansicht öffnen
 
-Klicken Sie im **Repository** bei einer beliebigen Kreation auf
+**Spazieren** im Hauptmenü öffnet die Weltansicht auf dem Challenge-Platz
+dieser Woche, ganz ohne eigenes Bauwerk. Der Platz ist der Dorfplatz: Die
+sechs fertigen Bauwerke stehen für alle darum herum, jedes Mal, wenn Sie die
+Weltansicht öffnen, bereit zum Remixen, und gleich außerhalb davon wächst
+das Dorf der veröffentlichten Bauwerke (siehe
+[Der Challenge-Platz](04-PublishingAndForking.md#der-challenge-platz)).
+
+Klicken Sie unter **Entdecken** bei einer beliebigen Kreation auf
 **Erkunden** — oder rufen Sie direkt die URL einer Welt auf. Sie erscheinen
-neben dieser Kreation in der geteilten Welt.
+neben dieser Kreation in der geteilten Welt. Bauwerke, die andere an alle
+gesendet haben, finden sich dort und in der Challenge (siehe
+[Wer kann es finden?](04-PublishingAndForking.md#wer-kann-es-finden)) und
+stehen dort, wo ihre Erbauer sie hingestellt haben: Remixe neben dem, was
+sie remixen, die übrigen im Dorf rund um den Platz.
 
 ## Ein Besucherblick und Erweitert
 
-Die Weltansicht öffnet sich als Besucherblick: der Name des Baus und wer
-ihn gemacht hat, was um Sie herum ist und was Sie hier tun können (**Hier
-bauen**, **Mit mir hier spazieren** und **Eine Kopie bearbeiten**, wenn der
-Bau nicht Ihnen gehört). Die Werkzeuge für die Netzwerke hinter der Welt
+Die Weltansicht öffnet sich als Besucherblick. Was Sie hier tun wollten,
+liegt auf einer Leiste unten in der Welt: **Hier bauen**, **Mit mir hier
+spazieren** und **Eine Kopie bearbeiten**, wenn der Bau nicht Ihnen gehört.
+Das seitliche Feld zeigt den Namen des Baus und wer ihn gemacht hat
+(überall derselbe Name, wo ein Bauwerk genannt wird), dann, wohin Sie
+gehen können und was um Sie herum ist. Auf einem Telefon ist das Feld zuerst
+geschlossen, sodass die Welt den Bildschirm füllt; **Feld** öffnet es. Auf
+dem Platz zeigt ein Telefon stattdessen eine Zeile über der Welt,
+**Platz: …** und wie viele Bauwerke dort stehen, die das Feld öffnet. Wer
+gezeichnet wird und ob die Tasten Ihren Avatar bewegen und die Kamera ihm
+folgt, ist für alle eingeschaltet und wartet unter **Avatar-Einstellungen**;
+die Wahl der Kamera bleibt daneben. Die Werkzeuge für die Netzwerke hinter der Welt
 warten unten im Panel unter **Erweiterte Werkzeuge zeigen**:
 
 - die Koordinaten über der Ansicht, die Felder **Ort** der Suche und die
@@ -48,7 +63,11 @@ warten unten im Panel unter **Erweiterte Werkzeuge zeigen**:
 - **Meine Geteilte Welt**, das Netzwerk-Panel Ihrer Veröffentlichung, und
   daneben **Platzierung verschieben**;
 - die Liste der Welten, die nicht geladen werden konnten, und die
-  Avatar-Diagnose.
+  Avatar-Diagnose;
+- Auswählen per Klick: Als Besucher wählt ein Klick in die Ansicht (etwa
+  um loszugehen) nichts aus außer einem anderen Avatar, sodass sich keine
+  Steindetails öffnen; mit Erweitert öffnet ein Klick
+  [Einen Stein untersuchen](#einen-stein-untersuchen--oder-eine-platzierte-struktur).
 
 Die Wahl wird auf diesem Gerät gespeichert und ändert für niemanden sonst
 etwas. Kompass, Ortsnamen am unteren Rand, Suche, Orte, Karte und Plätze,
@@ -128,7 +147,26 @@ ihr Zuhause herumspazieren, um Gebäude herum statt durch sie hindurch, und
 die sich zum Grüßen zu Ihnen drehen, wenn Sie näher kommen; sprechen Sie
 einen an, und er erzählt Ihnen, was es in der Umgebung gibt. Anders als
 Wildtiere sind sie Teil des eigenen Inhalts der Welt: Ihr Autor fügt sie
-hinzu. Siehe [Bewohner](06-AvatarsAndPresence.md#bewohner).
+hinzu. Die fertigen Häuser sind bewohnt: Eine Kopie des Hauses, einer
+Hütte oder eines anderen fertigen Zuhauses beginnt mit einem Bewohner, der
+gleich neben seiner Haustür lebt, und die rund um den Challenge-Platz haben
+auch ihre; entfernen Sie Ihren wie jeden anderen mit **R**. Siehe
+[Bewohner](06-AvatarsAndPresence.md#bewohner).
+
+### In einem Bauwerk
+
+Gehen Sie durch eine Tür hinein, und das Bauwerk über Ihrem Kopf wird
+weggeschnitten, sodass Sie den Raum sehen, in dem Sie stehen, statt der Wand
+hinter Ihnen: sein Dach und alles, was höher ist als Ihr Kopf, nur bei
+diesem Bauwerk, während die Wände bis knapp über Ihre Größe stehen bleiben.
+Folgt die Kamera Ihnen oder ist **Verfolgerperspektive** gewählt, kommt die
+Kamera mit hinein, hinter und über Ihnen, mit Blick hinunter in den Raum,
+und steigt, statt durch eine Wand zu gehen, wenn eine direkt hinter Ihnen
+ist. **Vogelperspektive** blickt senkrecht hinunter in den Raum;
+**Ich-Perspektive** sieht ihn mit Ihren eigenen Augen, ohne dass etwas
+weggeschnitten wird. Treten Sie wieder hinaus, und das ganze Bauwerk wird
+wieder gezeichnet. Nur was gezeichnet wird, ändert sich: Das Dach ist noch
+da, für alle und zum Gehen.
 
 ## Tag und Nacht
 
@@ -164,7 +202,7 @@ die Sterne mit dem Mond im Osten aufgehen und im Westen untergehen, und alle
 sehen im selben Moment dieselben Sterne.
 
 Wenn Sie lieber immer Tag hätten, setzen Sie unten im Bereich, direkt über
-**Erweiterte Werkzeuge zeigen**, das Häkchen bei **Immer Tag**. Das wird auf
+**Schatten**, das Häkchen bei **Immer Tag**. Das wird auf
 diesem Gerät gespeichert und ändert für niemanden sonst etwas.
 
 ## Ton
@@ -753,14 +791,16 @@ angekommen ist.
 ### Der Challenge-Platz
 
 **Über den Platz gehen** auf der Challenge-Seite einer Woche öffnet die
-Weltansicht auf einer Lichtung, wo die Beiträge dieser Woche um einen
-offenen Platz stehen, mit einem Panel, das sie auflistet (siehe
-[Der Challenge-Platz](04-PublishingAndForking.md#der-challenge-platz)). Dort wachsen in
-keiner Woche Bäume. Die Beiträge werden nur gezeigt, solange du auf dem
-Platz bist, und **Hier bauen** wird dort nicht angeboten.
-
-Der offene Platz in der Mitte ist gepflastert, mit einem Brunnen, Bänken
-und Laternen, damit der Platz auch in einer Woche ohne Einsendungen ein Ort ist.
+Weltansicht auf dem Dorfplatz: gepflastert, mit einem Brunnen, Bänken und
+Laternen, und den sechs fertigen Bauwerken rundherum. Der Platz und die
+fertigen Bauwerke gehören zur Welt wie ihre Hügel und Bäume: Sie stehen in
+jeder Weltansicht, für alle, und niemandem gehören sie. Gleich außerhalb
+davon wächst das Dorf der veröffentlichten Bauwerke, sodass dein eigenes
+veröffentlichtes Haus Nachbarn hat. Ein Panel listet die Beiträge der Woche
+und die fertigen Bauwerke auf (siehe
+[Der Challenge-Platz](04-PublishingAndForking.md#der-challenge-platz)).
+Rund um den Platz wachsen keine Bäume, und **Hier bauen** wird dort nicht
+angeboten.
 
 ### Wahrzeichen — einen Ort markieren, den man sich merken sollte
 
@@ -968,8 +1008,9 @@ anfangen können.
 
 ## Einen Stein untersuchen — oder eine platzierte Struktur
 
-Klicken Sie auf einen beliebigen Stein, um das Feld **Untersuchung** zu
-öffnen, das Ihnen sagt:
+Ist **Erweiterte Werkzeuge zeigen** eingeschaltet, klicken Sie auf einen
+beliebigen Stein, um das Feld **Untersuchung** zu öffnen (als Besucher
+wählt ein Klick nichts aus), das Ihnen sagt:
 
 - was für ein Stein es ist
 - seine Position und Drehung

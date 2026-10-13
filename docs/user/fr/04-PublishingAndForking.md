@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 49fc848526dee427 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d63d0904aac96490 -->
 # 04 — Publier et forker
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · **Français** · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 C’est le cœur de ForkBuild. **Publier** partage votre création avec le
 monde. **Remixer** permet à n’importe qui de copier une création et de la
@@ -28,13 +24,16 @@ faire évoluer — en conservant tout l’historique.
    la première fois que vous le publiez, ForkBuild demande si d’autres
    peuvent le remixer (voir [Laisser les autres la remixer](#laisser-les-autres-la-remixer)).
 4. Appuyez sur **Enregistrer** pour qu’elle soit stockée.
-5. Cliquez sur **Publier**.
+5. Cliquez sur **Publier**. La première fois, ForkBuild demande aussi
+   [Qui peut la trouver ?](#qui-peut-la-trouver-)
 
-Votre création apparaît maintenant dans **votre propre Dépôt** sur cet
-appareil, où vous pouvez la chercher, l’ouvrir et la forker, avec votre
-nom comme auteur. Les autres ne la voient qu’une fois que vous la
-partagez ou la distribuez (voir la remarque ci-dessous). Elle reçoit aussi
-automatiquement une position dans le monde partagé, pour qu’**Explorer**
+Votre création apparaît maintenant dans **Explorer** sur cet appareil, où
+vous pouvez la chercher, l’ouvrir et la forker, avec votre nom comme
+auteur. Les autres la voient dès que vous partagez son lien, ou tout de
+suite si vous avez choisi **Tout le monde** sous
+[Qui peut la trouver ?](#qui-peut-la-trouver-). Elle reçoit aussi une
+place dans le monde partagé, à côté de ce avec quoi elle va (voir
+[Où se dresse une construction](#où-se-dresse-une-construction)), pour qu’**Explorer**
 ait toujours un endroit où emmener les gens — voir
 [Trouver des mondes](03-WorldView.md#trouver-des-mondes).
 
@@ -171,13 +170,67 @@ ForkBuild dans un nouvel onglet (voir
 Copier le code, et l’affichage ou l’ouverture d’une intégration dans
 ForkBuild, sont aussi comptés anonymement.
 
+## Qui peut la trouver ?
+
+La première fois que vous cliquez sur **Publier**, ForkBuild demande
+**Qui peut la trouver ?** :
+
+- **Tout le monde** : chaque construction que vous publiez est aussi envoyée
+  à tout le monde. Elle apparaît dans **Explorer**, dans le défi de la
+  semaine et sur sa place, et dans le Monde, pour quiconque utilise
+  ForkBuild, sans lien, portefeuille ni compte d’un côté comme de l’autre.
+  Juste après Publier, l’Éditeur dit « Publiée ! Envoi à tout le monde… »,
+  puis « Publiée ! Tout le monde peut maintenant la trouver dans Explorer,
+  dans le défi et dans le Monde. » Si les réseaux n’ont pas pu être
+  joints, il le dit et propose **Réessayer** ; le lien fonctionne dans tous
+  les cas.
+- **Seulement les personnes à qui j’envoie le lien** : la construction reste
+  sur cet appareil et dans son lien. La notification dit « Seules les
+  personnes à qui vous envoyez son lien peuvent la voir. » avec **Laisser
+  tout le monde la trouver**, qui envoie cette construction et fait de
+  **Tout le monde** le choix à partir de là.
+
+La réponse est mémorisée sur cet appareil. Une fois qu’une construction a été
+envoyée à tout le monde, **Désormais, seulement par lien** dans la même
+notification garde vos prochaines constructions dans leurs liens.
+
+Comment ça marche : la construction, signée par vous, est envoyée comme
+*note de construction* aux relais Nostr publics de **Paramètres réseau**,
+avec ses étiquettes et sa place dans le Monde. La note est signée avec une
+clé que cet appareil crée à cet effet (sa *clé porteuse*), pas avec votre
+identité, si bien qu’il n’y a rien à installer. Quiconque trouve la note
+l’ouvre exactement comme il ouvrirait votre lien : votre signature et le
+contenu de la construction sont vérifiés d’abord, et une note qui ne
+correspond pas est ignorée. Une construction trop grande pour une note
+(environ 2 000 briques) le dit ; partagez son lien, ou choisissez où elle
+va ci-dessous. Les constructions publiées sans nom ne peuvent pas être
+envoyées. Voir [Confidentialité](Privacy.md).
+
+### Où se dresse une construction
+
+Une construction publiée se dresse dans le Monde partagé à côté de ce avec
+quoi elle va :
+
+- **un remix** se dresse à côté de la construction qu’il remixe, si bien
+  qu’un arbre généalogique devient une rue ;
+- **tout le reste** rejoint le village qui grandit autour de la place du
+  défi, anneau par anneau de l’intérieur vers l’extérieur, en commençant
+  juste à l’extérieur des constructions toutes prêtes qui entourent sa
+  place, si bien que des constructions publiées à peu près en même temps
+  sont voisines, et que les premières sont en vue de la place ;
+- **Construire ici** pose toujours une construction à l’endroit que vous
+  avez choisi, et publier de nouveau une construction ne la déplace jamais.
+
+Tous ceux qui trouvent la construction la voient au même endroit, puisque
+sa place voyage avec elle, signée par vous.
+
 ## Où elle va — envoyer une construction en publiant
 
 **Publier** garde votre construction sur cet appareil et dans ses liens
-jusqu’à ce que vous choisissiez où elle va. Juste après votre premier
-Publier, l’Éditeur dit « Publiée ! Partagez son lien. Pour que tout le monde
-la trouve sans lien, choisissez où elle va. » avec un bouton **Choisir où
-elle va** à côté du lien, et **Ignorer**.
+jusqu’à ce que vous choisissiez où elle va, à part l’envoi à tout le monde
+(ci-dessus). Juste après un Publier, la notification propose **Choisir où
+elle va** (ou **Autres réseaux**, une fois qu’elle a été envoyée à tout le
+monde) à côté du lien, et **Ignorer**.
 
 **Choisir où elle va** ouvre la boîte de dialogue **Où elle va** : choisissez
 un **Stockage** (où la construction elle-même est gardée : Arweave, IPFS, ou
@@ -612,25 +665,34 @@ Une semaine encore sans participation montre à la place les familles d’exempl
 
 ### La place du défi
 
-Dès qu’une semaine a des participations, **Parcourir la place** sur sa page
-vous emmène dans la vue du monde, dans une clairière du monde partagé où les
-participations de la semaine se dressent en anneaux autour d’une place
-dégagée. Promenez-vous parmi elles ou choisissez-en une dans le panneau :
+**Se promener**, dans le menu principal, vous emmène sur la place de cette
+semaine, et **Parcourir la place** sur la page du défi aussi, dès qu’une
+semaine a des participations. C’est la place du village du monde partagé :
+les six constructions toutes prêtes se dressent autour pour tout le monde,
+toujours, chacune avec **Remixer**, et le village des constructions
+publiées grandit juste à l’extérieur, les participations de la semaine
+parmi elles. Promenez-vous parmi elles ou choisissez-en une dans le panneau :
 **Naviguer** vole jusqu’à elle, **Ouvrir** l’ouvre comme le ferait
 **Explorer**, et **Modifier une copie** commence votre propre copie.
 
-- Les 24 premières participations publiées s’y dressent, les plus anciennes
-  au plus près du centre, si bien qu’une nouvelle rejoint le bord extérieur.
-  Les autres sont sur la page du défi.
+- Chaque participation se dresse dans le village. Celle dont cet appareil
+  sait que l’emplacement est dans le village s’y dresse, là où elle s’est
+  installée à sa publication. Toute autre (une placée loin, comme les
+  constructions publiées avant qu’elles ne s’installent dans le village, ou
+  une dont cet appareil ne connaît pas l’emplacement) est montrée, tant que
+  vous êtes sur la place, à l’endroit où elle s’installerait dans le
+  village ; son propre emplacement reste où il est.
+- Le panneau liste les 24 premières participations publiées. Les autres
+  sont sur la page du défi.
 - Les participations trouvées sur les réseaux sont récupérées et vérifiées
   comme à l’ouverture de leur lien. Celle qui ne peut pas être récupérée est
   laissée de côté, et le panneau dit combien l’ont été.
 - Une participation dont l’auteur a choisi **Moi seul peux le placer** ne se
   dresse pas sur la place, puisque l’y mettre reviendrait à la placer. Elle
   reste sur la page du défi.
-- Les participations sont des pièces exposées, pas des placements : rien
-  n’est signé ni conservé pour personne, et elles disparaissent quand vous
-  partez. Comme le reste de la vue du monde, la place montre ce que cet
+- Une participation montrée à son emplacement est une pièce exposée, pas un
+  placement : rien n’est signé ni conservé pour personne, et elle disparaît
+  quand vous partez. Comme le reste de la vue du monde, la place montre ce que cet
   appareil connaît : deux visiteurs peuvent donc en voir un ensemble
   différent.
 

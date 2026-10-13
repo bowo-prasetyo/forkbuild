@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: e66632c0b2bec761 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3a4a0c4e45f32875 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · **Español** · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../03-WorldView.md).
-<!-- /stale -->
 
 La Vista del mundo es el espacio 3D compartido donde **todas las
 creaciones publicadas existen una junto a otra**. Vuele por él, busque lo
@@ -27,16 +23,35 @@ incorporar al Mundo como decoración un animal soltado, con **G**
 
 ## Abrir la Vista del mundo
 
-Desde el **Repositorio**, haga clic en **Explorar** en cualquier creación,
-o vaya directamente a la URL de un mundo. Aparecerá junto a esa creación en
-el mundo compartido.
+**Pasear**, en el menú principal, abre la Vista del mundo en la plaza del
+reto de esta semana, sin necesidad de una construcción propia. La plaza es
+la plaza del pueblo: las seis construcciones ya hechas se alzan a su
+alrededor para todos, cada vez que abre la Vista del mundo, listas para
+remezclar, y el pueblo de construcciones publicadas crece justo fuera de
+ellas (vea [La plaza del reto](04-PublishingAndForking.md#la-plaza-del-reto)).
+
+Desde **Explorar**, haga clic en **Explorar** en cualquier creación, o vaya
+directamente a la URL de un mundo. Aparecerá junto a esa creación en el
+mundo compartido. Las construcciones que otros enviaron a todos se
+encuentran allí y en el reto (vea
+[¿Quién puede encontrarla?](04-PublishingAndForking.md#quién-puede-encontrarla)),
+y se alzan donde las pusieron quienes las construyeron: los remixes junto a
+lo que remezclan, el resto en el pueblo alrededor de la plaza.
 
 ## Una vista de visitante, y Avanzado
 
-La Vista del mundo se abre como vista de visitante: el nombre de la
-construcción y quién la hizo, lo que hay a su alrededor y lo que puede hacer
-aquí (**Construir aquí**, **Pasear aquí conmigo** y **Editar una copia**
-cuando la construcción no es suya). Las herramientas de las redes que hay
+La Vista del mundo se abre como vista de visitante. Lo que vino a hacer está
+en una barra en la parte inferior del Mundo: **Construir aquí**, **Pasear
+aquí conmigo** y **Editar una copia** cuando la construcción no es suya. El
+panel lateral tiene el nombre de la construcción y quién la hizo (el mismo
+nombre en todos los lugares donde se acredita una construcción), y luego
+adónde ir y lo que hay a su alrededor. En un teléfono el panel empieza
+cerrado, para que el Mundo llene la pantalla; **Panel** lo abre. En la
+plaza, un teléfono muestra en su lugar una línea sobre el Mundo,
+**Plaza: …** y cuántas construcciones hay allí, que abre el panel. Quién se
+dibuja, y si las teclas mueven su avatar y la cámara lo sigue, están
+activados para todos y esperan en **Ajustes del avatar**; la elección de
+cámara sigue a su lado. Las herramientas de las redes que hay
 detrás del Mundo esperan al final del panel, en **Mostrar herramientas
 avanzadas**:
 
@@ -48,7 +63,12 @@ avanzadas**:
   compartidos** dentro de los Encuentros;
 - **Mi Mundo compartido**, el panel de red de su publicación, y **Mover
   colocación** a su lado;
-- la lista de Mundos que no se pudieron cargar y los diagnósticos de avatares.
+- la lista de Mundos que no se pudieron cargar y los diagnósticos de avatares;
+- seleccionar con un clic: como visitante, hacer clic en la vista (para
+  empezar a caminar, por ejemplo) no selecciona nada salvo otro avatar, así
+  que no se abren los detalles de ningún bloque; con Avanzado activado, un
+  clic abre
+  [Inspeccionar un bloque](#inspeccionar-un-bloque--o-una-estructura-colocada).
 
 La elección se recuerda en este dispositivo y no cambia nada para nadie más.
 La brújula, los nombres de lugares de abajo, Buscar, Ubicaciones, el Mapa y
@@ -126,8 +146,26 @@ Un Mundo también puede tener **habitantes**: personas que viven allí y
 pasean alrededor de sus casas, rodeando los edificios en lugar de
 atravesarlos, y que se giran para saludarlo cuando se acerca; hable con uno
 y le contará qué hay alrededor. A diferencia de la fauna, forman parte del
-contenido propio del Mundo: los agrega su autor. Consulte
+contenido propio del Mundo: los agrega su autor. Las casas ya hechas vienen
+habitadas: una copia de la Casa, de una cabaña o de otra vivienda ya hecha
+empieza con un habitante que vive justo al lado de su puerta principal, y
+las que se alzan alrededor de la plaza del reto también tienen el suyo;
+quite el suyo con **R** como cualquier otro. Consulte
 [Habitantes](06-AvatarsAndPresence.md#habitantes).
+
+### Dentro de una construcción
+
+Entre por una puerta y la construcción que tiene sobre la cabeza se corta,
+para que vea la habitación en la que está y no la pared que tiene detrás: su
+techo y todo lo que esté más alto que su cabeza, solo de esa construcción,
+mientras las paredes se mantienen hasta justo por encima de su estatura.
+Con la cámara siguiéndolo, o en **Tercera persona**, la cámara también
+entra, detrás y por encima de usted, mirando hacia la habitación, y sube en
+lugar de atravesar una pared cuando tiene una justo detrás. **Vista de
+pájaro** mira directamente hacia abajo a la habitación; **Primera persona**
+la ve con sus propios ojos, sin cortar nada. Vuelva a salir y la
+construcción entera se dibuja de nuevo. Solo cambia lo que se dibuja: el
+techo sigue ahí, para todos y para caminar.
 
 ## Día y noche
 
@@ -164,7 +202,7 @@ por el este y se ponen por el oeste con la luna, y todos ven las mismas
 estrellas en el mismo momento.
 
 Si prefiere que siempre sea de día, marque **Siempre de día** al final del
-panel, justo encima de **Mostrar herramientas avanzadas**. Se recuerda en
+panel, justo encima de **Sombras**. Se recuerda en
 este dispositivo y no cambia nada para nadie más.
 
 ## Sonido
@@ -746,14 +784,16 @@ diálogo indica quién está en camino y quién ha llegado.
 ### La plaza del reto
 
 **Recorrer la plaza** en la página del reto de una semana abre la vista del
-mundo en un claro donde las participaciones de esa semana se alzan
-alrededor de una plaza abierta, con un panel que las enumera (ver
-[La plaza del reto](04-PublishingAndForking.md#la-plaza-del-reto)). Allí no crecen
-árboles, ninguna semana. Las participaciones solo se muestran mientras
-estás en la plaza, y allí no se ofrece **Construir aquí**.
-
-La plaza abierta del centro está pavimentada, con un pozo, bancos y
-farolas, para que la plaza sea un lugar incluso en una semana sin entradas.
+mundo en la plaza del pueblo: pavimentada, con un pozo, bancos y farolas, y
+las seis construcciones ya hechas a su alrededor. La plaza y las
+construcciones ya hechas forman parte del Mundo, como sus colinas y sus
+árboles: se alzan en todas las vistas del mundo, para todos, y no son de
+nadie. El pueblo de construcciones publicadas crece justo fuera de ellas,
+así que tu propia casa publicada tiene vecinos. Un panel enumera las
+participaciones de la semana y las construcciones ya hechas (ver
+[La plaza del reto](04-PublishingAndForking.md#la-plaza-del-reto)). No
+crecen árboles alrededor de la plaza, y allí no se ofrece **Construir
+aquí**.
 
 ### Hitos — marcar un lugar que vale la pena recordar
 
@@ -955,8 +995,9 @@ fila con la que no se puede hacer nada.
 
 ## Inspeccionar un bloque — o una estructura colocada
 
-Haga clic en cualquier bloque para abrir el panel **Inspección**, que le
-indica:
+Con **Mostrar herramientas avanzadas** activado, haga clic en cualquier
+bloque para abrir el panel **Inspección** (como visitante, un clic no
+selecciona nada), que le indica:
 
 - Qué tipo de bloque es
 - Su posición y su rotación
